@@ -10,13 +10,30 @@ Add an SQA interview-preparation module to this site, under `/prep/`. A reader b
 
 | Topic | Decision |
 |---|---|
-| "REA" | Read as React. The app already uses React 19 and Next.js 16. |
+| "REA" | REA is the reverse-engineering tool https://github.com/morluto/rea ("Reverse Engineer Anything", MIT licence). The owner wants it used to study prep.galib.dev. See section 2a. The module itself is React, which the app already uses (React 19, Next.js 16). |
 | Approach | A: a data-driven `/prep/` section in this app. Typed TS data, static pages, client components for progress. Approaches B (MDX pages in `lib/nav.ts`) and C (separate Vite app) are rejected. |
 | Content source | All content is original. No text, wording, or item order is copied from prep.galib.dev. The owner has no permission from its author, and the site marks its advanced items as Pro-only. |
 | First version | All 13 areas, about 8 items for each area (about 100 items). |
 | Persistence | `localStorage` only. No backend. |
 
 Out of scope for version 1: sign-in, a Pro tier, AI explanations, sync between devices, quiz scores over time.
+
+## 2a. What REA showed about prep.galib.dev (2026-10-13)
+
+I ran REA 1 time through `npx -y rea-agents@latest` (`list-browser-targets`, `inspect-web-page`, `analyze-web-bundle`) against the public home page, in a headless Chrome with a temporary profile. I did not run `rea-agents setup`, so no agent config changed. REA read the page in a passive way and logged in to nothing.
+
+| Finding | Evidence |
+|---|---|
+| A client-side React app (medium confidence) | `analyze-web-bundle`: one script, `index-*.js`, 1.55 MB, 217,280 AST nodes, React runtime detected. |
+| No routes and no backend endpoints in the code | `routes: []`, `endpoints: []`. No network request during the page load. REA warns that string-built endpoints can stay unknown. The Pro tier and sign-in are therefore unobserved. |
+| The state is kept in `localStorage` | Key names only (values stay hidden): `qa_v3_completed`, `qa_v3_mcq_answers`, `qa_v3_active_cat`, `qa_v3_view`, `qa_v3_auto_mode`, `qa_v3_scenario_lvl`, `qa_v3_theme`, `qa_v3_client_id`. |
+| The areas are switched by state, not by URL | Sidebar links are `#`; the key `qa_v3_active_cat` holds the open area. |
+
+What the evidence suggests, and what is not confirmed: `view`, `auto_mode` and `scenario_lvl` look like a layout toggle, an auto-advance mode, and a scenario difficulty level. Only the key names are known, not their behavior.
+
+This module uses real URLs for each area, and not state-only switching. A static site needs them for search hits, the PWA, and shared links.
+
+REA can also read the content inside the bundle. The owner has no permission from the author, so this module does not use that content (see section 2).
 
 ## 3. Routes
 
