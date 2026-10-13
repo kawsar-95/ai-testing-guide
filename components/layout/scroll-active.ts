@@ -20,7 +20,11 @@ export function scrollActiveIntoView(root: HTMLElement | null) {
   if (!root) return;
   const link = root.querySelector<HTMLElement>('[aria-current="page"]');
   if (!link) {
-    const container = scrollParent(root, false);
+    // In the drawer the root is the scroller itself. In the sidebar it is a
+    // wrapper inside the scroller.
+    const { overflowY } = getComputedStyle(root);
+    const own = overflowY === "auto" || overflowY === "scroll";
+    const container = own ? root : scrollParent(root, false);
     if (container) container.scrollTop = 0;
     return;
   }
