@@ -1,4 +1,6 @@
-# Fact-check: Prep, Mid-Level (round 2, 2026-10-13)
+# Fact-check: Prep, Mid-Level (round 3, 2026-10-13)
+
+Round 3 on 4db3a45 (mid-level-004 only; other rows from round 2 on c712e21). In round 3 the checker re-fetched the glossary term `continuous-integration` and replaced row 21 (marked "R3").
 
 Round 2 on c712e21 (changed items re-checked; other rows from round 1 on 49f7044). Changed items: `mid-level-001`, `mid-level-002`, `mid-level-003` (source only: now https://playwright.dev/docs/test-retries), `mid-level-004`, `mid-level-006`, `mid-level-007` (`git diff 82e6908 c712e21 -- content/prep/mid-level.ts`). Rows marked "R2" are new or replaced in round 2. In round 2 the checker re-fetched S1 (HTTP 200), the glossary terms `continuous-integration`, `test-data-management` and `risk`, and the Pact intro page (HTTP 200).
 
@@ -35,7 +37,7 @@ Page-link note: an item has one `source` URL. When a claim is on a different pag
 | 18 | mid-level-003 | Playwright auto-waits for actions until checks such as visible, stable and enabled pass | S3 actionability | PASS | actionability: "It auto-waits for all the relevant checks to pass and only then performs the requested action."; "element is Visible"; "element is Stable"; "element is Enabled". R2 note: the item `source` is now test-retries, so this claim is on the Playwright auto-waiting page, not the linked page. Same doc site. |
 | 19 | mid-level-003 | Its auto-retrying assertions wait until the condition is met | S3 actionability | PASS | actionability: "Playwright includes auto-retrying assertions that remove flakiness by waiting until the condition is met". test-assertions agrees: "The following assertions will retry until the assertion passes, or the assertion timeout is reached." |
 | 20 | mid-level-003 | Fixes per cause; retries can hide flakiness; quarantine with owner and ticket | - | OPINION-OK | Framed as practice ("In my view"). Consistent with test-retries: "It is usually better to make your tests isolated". |
-| 21 | mid-level-004 | R2: "With continuous integration, a tool builds and tests each change automatically soon after a developer commits it." | S2 term `continuous-integration` | FAIL | API term `continuous-integration` (v1, old_version false, re-read in round 2): "An automated software development procedure that merges, integrates and tests all changes as soon as they are committed." The paraphrase drops "merges, integrates" (the core of CI) and adds "builds", which is not in the definition. The S1 syllabus has no definition of CI that says "builds" either. Fix: "a tool merges, integrates and tests each change automatically as soon as it is committed". |
+| 21 | mid-level-004 | R3: "With continuous integration, a tool merges, integrates and tests each change automatically, as soon as a developer commits it." | S2 term `continuous-integration` | PASS | API term `continuous-integration` (v1, old_version false, re-fetched in round 3): "An automated software development procedure that merges, integrates and tests all changes as soon as they are committed." Same three actions (merges, integrates, tests), same timing ("as soon as"), automated. "builds" is removed, so no fact is added; "a tool" and "a developer" are plain-language framing of "automated procedure" and "committed". Round 2 FAIL fixed. |
 | 22 | mid-level-004 | Tests give fast feedback on code quality and show if a change harmed existing behavior | S1 #page=27 | PASS | p. 26: "Fast feedback on the code quality, and whether changes adversely affect existing code". Note: p. 26. |
 | 23 | mid-level-004 | "The syllabus says that component tests should be automated and included in the CI process" | S1 #page=27 | PASS | p. 51 (Quadrant Q1): "This quadrant contains component tests and component integration tests. These tests should be automated and included in the CI process." Note: p. 51, not the linked page. |
 | 24 | mid-level-004 | My pipeline stages; slow or unstable checks run on a schedule | - | OPINION-OK | The candidate's own practice ("In my pipelines"). |
@@ -75,4 +77,4 @@ Page-link note: an item has one `source` URL. When a claim is on a different pag
 | 57 | mid-level-008 | Do not read one number alone; compare leakage over releases and ask why each defect escaped | - | OPINION-OK | Practice. |
 | 58 | all | `behind` texts and templates | - | OPINION-OK | Interviewer intent and answer scaffolds; no factual claims. |
 
-Open FAILs: 1
+Open FAILs: 0
