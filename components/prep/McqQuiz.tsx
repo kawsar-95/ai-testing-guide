@@ -13,8 +13,11 @@ export const ADVANCE_DELAY_MS = 1200;
 
 const LETTERS = "ABCDEFGHIJ";
 
+/** A, B, C, … for the first 10 options, then the number. */
+const letterOf = (index: number) => LETTERS[index] ?? String(index + 1);
+
 const NAV_BUTTON =
-  "cursor-pointer rounded-[8px] border border-border-strong bg-bg-raised px-4 py-2 font-mono text-[13px] text-text transition-colors hover:bg-bg-raised-2 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-bg-raised";
+  "cursor-pointer rounded-[8px] border border-border-strong bg-bg-raised px-4 py-2 font-mono text-[13px] text-text transition-[background-color,border-color,color] hover:bg-bg-raised-2 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-bg-raised";
 
 /** One question at a time. A right answer marks the item done. */
 export function McqQuiz({ items }: { items: readonly McqItem[] }) {
@@ -35,15 +38,21 @@ export function McqQuiz({ items }: { items: readonly McqItem[] }) {
   }, []);
 
   // The first question comes from the URL hash. The server render shows question 1.
+  // A later hash change moves the quiz only if the hash names a question of this quiz. Other jumps
+  // (the skip link, a heading link) leave the question and the pick as they are.
   useEffect(() => {
-    const fromHash = () => {
+    const show = () => {
       clearTimer();
       setPick(null);
       setIndex(startIndex(items, window.location.hash));
     };
-    fromHash();
-    window.addEventListener("hashchange", fromHash);
-    return () => window.removeEventListener("hashchange", fromHash);
+    const onHashChange = () => {
+      const id = window.location.hash.slice(1);
+      if (items.some((entry) => entry.id === id)) show();
+    };
+    show();
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
   }, [items, clearTimer]);
 
   // No timer outlives the quiz.
@@ -115,12 +124,12 @@ export function McqQuiz({ items }: { items: readonly McqItem[] }) {
         id={item.id}
         ref={heading}
         tabIndex={-1}
-        className="mt-4 scroll-mt-20 font-display text-2xl leading-snug font-medium text-text outline-none! focus-visible:outline-2! focus-visible:outline-offset-4 focus-visible:outline-accent!"
+        className="mt-4 scroll-mt-20 whitespace-pre-line font-display text-2xl leading-snug font-medium text-text outline-none! focus-visible:outline-2! focus-visible:outline-offset-4 focus-visible:outline-accent!"
       >
         {item.question}
       </h2>
 
-      <div role="radiogroup" aria-label={PREP_UI.quizOptions} className="mt-6 grid gap-3">
+      <div role="group" aria-labelledby={item.id} className="mt-6 grid gap-3">
         {item.options.map((option, i) => {
           const isAnswer = i === item.answer;
           const isPicked = i === picked;
@@ -138,14 +147,14 @@ export function McqQuiz({ items }: { items: readonly McqItem[] }) {
               aria-disabled={locked}
               data-option={i}
               onClick={() => onPick(i)}
-              className={`flex w-full items-start gap-3 rounded-[8px] border px-4 py-3 text-left text-[15px] leading-relaxed text-text transition-colors ${
+              className={`flex w-full items-start gap-3 rounded-[8px] border px-4 py-3 text-left text-[15px] leading-relaxed text-text transition-[background-color,border-color,color] ${
                 locked ? "cursor-default" : "cursor-pointer"
               } ${state}`}
             >
               <span aria-hidden="true" className="font-mono text-[13px] text-text-dim">
-                {LETTERS[i]}
+                {letterOf(i)}
               </span>
-              <span className="min-w-0 flex-1">{option}</span>
+              <span className="min-w-0 flex-1 whitespace-pre-line">{option}</span>
               {locked && isAnswer ? (
                 <span className="font-mono text-[12px] text-good">
                   <span aria-hidden="true">✓ </span>
@@ -168,13 +177,13 @@ export function McqQuiz({ items }: { items: readonly McqItem[] }) {
           <div data-quiz-result={correct ? "correct" : "wrong"}>
             <p className={`font-medium ${correct ? "text-good" : "text-danger"}`}>
               <span aria-hidden="true">{correct ? "✓ " : "✗ "}</span>
-              {correct ? PREP_UI.quizCorrectResult : PREP_UI.quizWrongResult(LETTERS[item.answer])}
+              {correct ? PREP_UI.quizCorrectResult : PREP_UI.quizWrongResult(letterOf(item.answer))}
             </p>
             <p className="mt-3 font-mono text-[11px] font-medium uppercase tracking-[0.15em] text-text-dim">
               {PREP_UI.quizExplanation}
             </p>
             <p className="mt-1 text-[15px] leading-relaxed whitespace-pre-line text-text">{item.explanation}</p>
-            <SourceLink href={item.source} />
+            <SourceLink href={item.source} title={item.question} />
           </div>
         ) : null}
       </div>

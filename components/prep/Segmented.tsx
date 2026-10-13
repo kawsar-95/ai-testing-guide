@@ -20,7 +20,7 @@ export function Segmented<T extends string>({
     <div
       role="group"
       aria-label={label}
-      className={`inline-flex overflow-hidden rounded-[8px] border border-border-strong ${className}`}
+      className={`inline-flex rounded-[8px] border border-border-strong ${className}`}
     >
       {options.map((option) => {
         const pressed = option.value === value;
@@ -30,7 +30,7 @@ export function Segmented<T extends string>({
             type="button"
             aria-pressed={pressed}
             onClick={() => onChange(option.value)}
-            className={`cursor-pointer px-3.5 py-1.5 font-mono text-[12px] transition-colors focus-visible:relative focus-visible:z-10 ${
+            className={`cursor-pointer px-3.5 py-1.5 first:rounded-l-[7px] last:rounded-r-[7px] font-mono text-[12px] transition-[background-color,border-color,color] focus-visible:relative focus-visible:z-10 ${
               pressed
                 ? "bg-accent text-bg"
                 : "bg-bg-raised text-text-dim hover:bg-bg-raised-2 hover:text-text"

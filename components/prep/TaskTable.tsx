@@ -32,7 +32,7 @@ export function TaskTable({ items }: { items: readonly TaskItem[] }) {
               </td>
               <td data-label={PREP_UI.colDetails} className={c.cell}>
                 <p className={TEXT}>{item.details}</p>
-                {item.source ? <SourceLink href={item.source} /> : null}
+                {item.source ? <SourceLink href={item.source} title={item.title} /> : null}
               </td>
             </tr>
           ))}

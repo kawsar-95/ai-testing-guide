@@ -44,6 +44,35 @@ export function filterByLevel<T extends { level?: Level }>(items: readonly T[], 
   return level === "all" ? [...items] : items.filter((item) => item.level === level);
 }
 
+/** True when at least one item has a level. Only then does the level filter apply. */
+export function hasLevels(items: readonly { level?: Level }[]): boolean {
+  return items.some((item) => item.level !== undefined);
+}
+
+/**
+ * The filter of an area. An area without levels shows every item, whatever the stored level is,
+ * because the level is one global preference and such an area has no control to reset it.
+ */
+export function applyLevelFilter<T extends { level?: Level }>(items: readonly T[], level: "all" | Level): T[] {
+  return hasLevels(items) ? filterByLevel(items, level) : [...items];
+}
+
+/**
+ * The level to use for a link `#<id>`. It is `"all"` when the hash names an item that `level` hides.
+ * Else it is `level`. An empty or unknown hash keeps `level`.
+ */
+export function levelForHash(
+  items: readonly { id: string; level?: Level }[],
+  level: "all" | Level,
+  hash: string,
+): "all" | Level {
+  const id = hash.startsWith("#") ? hash.slice(1) : hash;
+  if (!id || level === "all") return level;
+  const item = items.find((entry) => entry.id === id);
+  if (!item) return level;
+  return applyLevelFilter(items, level).includes(item) ? level : "all";
+}
+
 const samePrefs = (a: Prefs, b: Prefs) =>
   a.view === b.view && a.autoAdvance === b.autoAdvance && a.level === b.level;
 

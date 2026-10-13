@@ -26,18 +26,21 @@ export function listClasses(view: "table" | "cards") {
 export function DoneCheckbox({ id, title }: { id: string; title: string }) {
   const { done, toggle } = useProgress();
   return (
-    <input
-      type="checkbox"
-      checked={done.includes(id)}
-      onChange={() => toggle(id)}
-      aria-label={PREP_UI.markDone(title)}
-      className="mt-1 size-[18px] shrink-0 cursor-pointer accent-accent"
-    />
+    // The label gives a hit area of 26 px around the 18 px box (WCAG 2.2 target size).
+    <label className="-mx-1 -mb-1 -mt-px shrink-0 cursor-pointer p-1">
+      <input
+        type="checkbox"
+        checked={done.includes(id)}
+        onChange={() => toggle(id)}
+        aria-label={PREP_UI.markDone(title)}
+        className="block size-[18px] cursor-pointer accent-accent"
+      />
+    </label>
   );
 }
 
-/** A link to the source. It opens in a new tab and has visible text. */
-export function SourceLink({ href }: { href: string }) {
+/** A link to the source. It opens in a new tab and has visible text. `title` names the item for screen readers. */
+export function SourceLink({ href, title }: { href: string; title: string }) {
   return (
     <a
       href={href}
@@ -47,7 +50,10 @@ export function SourceLink({ href }: { href: string }) {
     >
       {PREP_UI.sourceLink}
       <span aria-hidden="true"> ↗</span>
-      <span className="sr-only">{PREP_UI.opensInNewTab}</span>
+      <span className="sr-only">
+        {PREP_UI.sourceFor(title)}
+        {PREP_UI.opensInNewTab}
+      </span>
     </a>
   );
 }

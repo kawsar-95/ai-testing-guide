@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AREAS, PREP_HOME, getArea } from "@/lib/prep/areas";
 import { itemsOf } from "@/lib/prep/items";
+import { hasLevels } from "@/lib/prep/prefs";
 import type { McqItem, PrepArea, QaItem, TaskItem } from "@/lib/prep/types";
 import { PREP_UI } from "@/lib/prep/ui";
 import { LevelFilter } from "@/components/prep/LevelFilter";
@@ -66,7 +67,8 @@ export default async function AreaPage({ params }: PageProps<"/prep/[area]">) {
   const number = AREAS.indexOf(area) + 1;
   const items = itemsOf(area.slug);
   const ids = items.map((item) => item.id);
-  const hasLevels = items.some((item) => item.kind === "qa" && item.level !== undefined);
+  const qaItems = items.filter((item): item is QaItem => item.kind === "qa");
+  const showLevels = hasLevels(qaItems);
 
   let body;
   if (items.length === 0) {
@@ -76,7 +78,7 @@ export default async function AreaPage({ params }: PageProps<"/prep/[area]">) {
   } else if (area.kind === "task") {
     body = <TaskTable items={items.filter((item): item is TaskItem => item.kind === "task")} />;
   } else {
-    body = <QaTable items={items.filter((item): item is QaItem => item.kind === "qa")} />;
+    body = <QaTable items={qaItems} />;
   }
 
   const showControls = items.length > 0 && area.kind !== "mcq";
@@ -98,9 +100,12 @@ export default async function AreaPage({ params }: PageProps<"/prep/[area]">) {
       </div>
 
       {showControls ? (
-        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+        // The view toggle is hidden below md. A row that holds only the toggle would leave a gap there.
+        <div
+          className={`mt-8 flex-wrap items-center gap-x-6 gap-y-3 ${showLevels ? "flex" : "hidden md:flex"}`}
+        >
           <ViewToggle />
-          {hasLevels ? <LevelFilter /> : null}
+          {showLevels ? <LevelFilter /> : null}
         </div>
       ) : null}
 

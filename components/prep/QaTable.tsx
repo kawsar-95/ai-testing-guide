@@ -1,6 +1,7 @@
 "use client";
 
-import { filterByLevel } from "@/lib/prep/prefs";
+import { useEffect, useRef } from "react";
+import { applyLevelFilter, levelForHash } from "@/lib/prep/prefs";
 import type { QaItem } from "@/lib/prep/types";
 import { PREP_UI } from "@/lib/prep/ui";
 import { DoneCheckbox, LevelBadge, SourceLink, listClasses } from "./item-parts";
@@ -10,8 +11,32 @@ const TEXT = "whitespace-pre-line";
 
 /** The questions of an area. A table from `md` up, or cards, by the `view` preference. */
 export function QaTable({ items }: { items: readonly QaItem[] }) {
-  const { prefs } = usePrefs();
-  const shown = filterByLevel(items, prefs.level);
+  const { prefs, readPrefs, setPref } = usePrefs();
+  const pendingScroll = useRef<string | null>(null);
+
+  // A link to a row that the level filter hides resets the filter. The native hash scroll ran
+  // before the row existed, so the row is scrolled into view after it renders (see the next effect).
+  useEffect(() => {
+    const onHash = () => {
+      const level = readPrefs().level;
+      if (levelForHash(items, level, window.location.hash) === level) return;
+      pendingScroll.current = window.location.hash.slice(1);
+      setPref("level", "all");
+    };
+    onHash();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [items, readPrefs, setPref]);
+
+  useEffect(() => {
+    if (pendingScroll.current === null) return;
+    const row = document.getElementById(pendingScroll.current);
+    if (!row) return;
+    pendingScroll.current = null;
+    row.scrollIntoView();
+  });
+
+  const shown = applyLevelFilter(items, prefs.level);
   if (shown.length === 0) {
     return <p className="text-text-dim">{items.length === 0 ? PREP_UI.areaEmpty : PREP_UI.levelEmpty}</p>;
   }
@@ -47,7 +72,7 @@ export function QaTable({ items }: { items: readonly QaItem[] }) {
               </td>
               <td data-label={PREP_UI.colBehind} className={c.cell}>
                 <p className={TEXT}>{item.behind}</p>
-                {item.source ? <SourceLink href={item.source} /> : null}
+                {item.source ? <SourceLink href={item.source} title={item.question} /> : null}
               </td>
             </tr>
           ))}

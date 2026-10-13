@@ -41,14 +41,13 @@ export const PREP_UI = {
   colTask: "Task",
   colDetails: "Details",
   markDone: (title: string) => `Mark done: ${title}`,
-  doneBadge: "Done",
   sourceLink: "Source",
+  sourceFor: (title: string) => ` for ${title}`,
   opensInNewTab: " (opens in a new tab)",
   levelBadge: (level: string) => `Level: ${level}`,
 
   // The quiz.
   quizLabel: "Quiz",
-  quizOptions: "Answer options",
   quizPosition: (index: number, total: number) => `Question ${index} of ${total}`,
   quizPrevious: "Previous",
   quizNext: "Next",

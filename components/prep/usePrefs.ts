@@ -21,6 +21,8 @@ const getServerSnapshot = () => DEFAULT_PREFS;
 
 export function usePrefs(): {
   prefs: Prefs;
+  /** The current preferences from the store. For event handlers and effects. */
+  readPrefs(): Prefs;
   setPref<K extends keyof Prefs>(key: K, value: Prefs[K]): void;
 } {
   const prefs = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -28,5 +30,6 @@ export function usePrefs(): {
     <K extends keyof Prefs>(key: K, value: Prefs[K]) => getStore().set(key, value),
     [],
   );
-  return useMemo(() => ({ prefs, setPref }), [prefs, setPref]);
+  const readPrefs = useCallback(() => getStore().getSnapshot(), []);
+  return useMemo(() => ({ prefs, readPrefs, setPref }), [prefs, readPrefs, setPref]);
 }

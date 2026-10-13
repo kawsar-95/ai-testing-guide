@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { McqItem } from "../lib/prep/types.ts";
+import type { Level, McqItem } from "../lib/prep/types.ts";
 import {
   STORAGE_KEY,
   parseProgress,
@@ -17,6 +17,9 @@ import {
   parsePrefs,
   serializePrefs,
   filterByLevel,
+  hasLevels,
+  applyLevelFilter,
+  levelForHash,
   createPrefsStore,
 } from "../lib/prep/prefs.ts";
 
@@ -379,4 +382,55 @@ test("prefs store: a throwing or null storage falls back to memory (Review Focus
     store.refresh();
     assert.equal(store.getSnapshot().view, "cards");
   }
+});
+
+// --- level scope and hash links ---
+
+type Fixture = { id: string; level?: Level };
+const LEVELED: Fixture[] = [
+  { id: "a-001", level: "easy" },
+  { id: "a-002", level: "medium" },
+  { id: "a-003", level: "hard" },
+];
+const PLAIN: Fixture[] = [{ id: "b-001" }, { id: "b-002" }];
+
+test("hasLevels: true with one level, false without levels, false for an empty list", () => {
+  assert.equal(hasLevels(LEVELED), true);
+  assert.equal(hasLevels([{}, { level: "easy" }]), true);
+  assert.equal(hasLevels(PLAIN), false);
+  assert.equal(hasLevels([]), false);
+});
+
+test("applyLevelFilter: a stored level of hard leaves an area without levels untouched (global level key)", () => {
+  assert.deepEqual(applyLevelFilter(PLAIN, "hard"), PLAIN);
+  assert.deepEqual(applyLevelFilter(PLAIN, "easy"), PLAIN);
+  assert.deepEqual(applyLevelFilter([], "hard"), []);
+});
+
+test("applyLevelFilter: an area with levels is filtered", () => {
+  assert.deepEqual(applyLevelFilter(LEVELED, "hard"), [LEVELED[2]]);
+  assert.deepEqual(applyLevelFilter(LEVELED, "all"), LEVELED);
+});
+
+test("levelForHash: the hash of a hidden item resets the level to all", () => {
+  assert.equal(levelForHash(LEVELED, "hard", "#a-001"), "all");
+  assert.equal(levelForHash(LEVELED, "hard", "a-002"), "all");
+});
+
+test("levelForHash: the hash of a visible item keeps the level", () => {
+  assert.equal(levelForHash(LEVELED, "hard", "#a-003"), "hard");
+});
+
+test("levelForHash: an unknown or empty hash keeps the level", () => {
+  assert.equal(levelForHash(LEVELED, "hard", "#nope"), "hard");
+  assert.equal(levelForHash(LEVELED, "hard", ""), "hard");
+  assert.equal(levelForHash(LEVELED, "hard", "#"), "hard");
+});
+
+test("levelForHash: level all stays all", () => {
+  assert.equal(levelForHash(LEVELED, "all", "#a-001"), "all");
+});
+
+test("levelForHash: an area without levels is never filtered, so the level stays", () => {
+  assert.equal(levelForHash(PLAIN, "hard", "#b-001"), "hard");
 });
