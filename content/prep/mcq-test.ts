@@ -59,7 +59,7 @@ export const items: readonly PrepItem[] = [
     ],
     answer: 0,
     explanation:
-      "In 2-value BVA each boundary value has 2 coverage items: the boundary value and its closest neighbor in the adjacent partition. The boundaries 18 and 60 give the pairs 17 and 18, and 60 and 61. The set with 19 and 59 holds the 6 items of 3-value BVA, so it has values that 2-value BVA does not need. The set with only 18 and 60 misses the neighbors, and 0 and 100 are not next to the boundaries.",
+      "In 2-value BVA each boundary value has 2 coverage items: the boundary value and its closest neighbor in the adjacent partition. The boundaries 18 and 60 give the pairs 17 and 18, and 60 and 61. The set with 19 and 59 adds inner neighbors that 3-value BVA uses and 2-value BVA does not need. The set with only 18 and 60 misses the neighbors, and 0 and 100 are not next to the boundaries.",
     source: SYLLABUS + "#page=40",
   },
   {
