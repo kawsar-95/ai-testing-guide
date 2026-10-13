@@ -21,7 +21,7 @@ export const items: readonly PrepItem[] = [
     example:
       "My strength is that I find the cause of a problem and do not stop at the symptom. For example, a checkout test failed on some runs and passed on others. I traced it to a shared test account that two tests used at the same time, and I gave each test its own account. A weakness of mine is that I used to say yes to every request, so my plan was often too full. Now I write down my tasks with estimates. When the list is too long, I ask the product owner to choose the priorities. It is working. For the last two quarters I have delivered what I promised in my sprint plans.",
     behind:
-      "The interviewer checks that you know yourself. A strength needs proof from real work. A weakness needs to be real and not a hidden strength, and it needs an action and some progress.",
+      "The interviewer checks that you know yourself. A strength needs proof from real work. A weakness needs to be real and not a hidden strength, and it needs an action and some progress. The story in the example is a model. Replace it with your own.",
   },
   {
     kind: "qa",
@@ -32,7 +32,7 @@ export const items: readonly PrepItem[] = [
     example:
       "A developer closed my bug report as 'not a bug', because the behavior matched his reading of the story. I did not argue by message. I asked for a 10-minute talk and I showed the steps with the acceptance criteria next to the screen. He had read one criterion in a different way. We asked the product owner, who agreed with my reading, and the developer fixed the bug that day. I learned to talk early, to start from our shared goal and to bring the written requirement. After that, we agreed that I add the acceptance criteria to each bug report.",
     behind:
-      "The interviewer checks that you handle a disagreement calmly and with respect, that you use facts, and that the result is good for both sides. The story must not blame the developer. Note that the story has a situation, an action, a result and a lesson.",
+      "The interviewer checks that you handle a disagreement calmly and with respect, that you use facts, and that the result is good for both sides. The story must not blame the developer. Note that the story has a situation, an action, a result and a lesson. The story in the example is a model. Replace it with your own.",
   },
   {
     kind: "qa",
@@ -43,7 +43,7 @@ export const items: readonly PrepItem[] = [
     example:
       "A discount code gave the discount twice when the user went back and forward in the cart. Customer support found it on the second day after the release. I owned that area. First I helped to confirm the bug and its impact, and the team fixed it and released the fix. Then I looked for the root cause. My tests covered the cart flow once, but not the back navigation. I added tests for that flow and for similar flows, and I added a check for repeated actions to our release checklist. In the retrospective I told the team what I missed and what we changed, without blame. I learned to test the paths that users take in an unexpected order.",
     behind:
-      "The interviewer checks for honesty and ownership. They want to see that you reacted fast, that you looked for the root cause and not for a person to blame, and that you changed your tests or your process after it.",
+      "The interviewer checks for honesty and ownership. They want to see that you reacted fast, that you looked for the root cause and not for a person to blame, and that you changed your tests or your process after it. The story in the example is a model. Replace it with your own.",
   },
   {
     kind: "qa",
@@ -54,7 +54,7 @@ export const items: readonly PrepItem[] = [
     example:
       "Once, a release date moved forward by one week, and I had more tests than time. I listed the features by risk with the product owner, and we agreed on the order: payments first, then accounts, then reports. Each day I told the team what was tested and what was not. I did not build new automation that week. I used the existing regression suite, and I ran short exploratory sessions on the riskiest areas. We shipped on time, and the product owner knew which minor areas had less testing. After the release we tested those areas and fixed two small defects. Next time I would raise the schedule risk earlier, at planning.",
     behind:
-      "The interviewer checks that you stay calm, that you set priorities with the business by risk, and that you tell people what is not covered. The last sentence shows that you learn from the event.",
+      "The interviewer checks that you stay calm, that you set priorities with the business by risk, and that you tell people what is not covered. The last sentence shows that you learn from the event. The story in the example is a model. Replace it with your own.",
   },
   {
     kind: "qa",
