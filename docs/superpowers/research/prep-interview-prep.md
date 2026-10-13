@@ -16,4 +16,4 @@ S1. ISTQB Certified Tester Foundation Level Syllabus v4.0.1 — ISTQB — https:
 | C6 | interview-prep-006 | Boundary value analysis is a black-box test technique. | same list, bullet "Boundary Value Analysis" (p. 39) | S1 |
 
 ## Items with no fact to source
-`interview-prep-001`, `-002`, `-003`, `-004`, `-007`, `-008` are advice on how to prepare. They state no version, number, limit or behavior of a tool, so they have no `source` (spec section 8: "Advice items need none").
+`interview-prep-001`, `-002`, `-003`, `-004`, `-007`, `-008` are advice on how to prepare. They state no version, number, limit or behavior of a tool, so they have no `source` (spec section 8: "Advice items need none"). The figures in them (30 min of product use, about 250 words, about 120 words, a reminder after a few days) are the author's own rules of thumb. The item text labels them as advice ("my own rule of thumb", "my advice"). No official source sets them.
