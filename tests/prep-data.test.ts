@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { AREAS, PREP_HOME, PREP_ROUTES, getArea } from "../lib/prep/areas.ts";
 import { ALL_ITEMS, ITEMS_BY_AREA, itemsOf } from "../lib/prep/items.ts";
 
@@ -139,4 +139,14 @@ test("only realistic-scenarios items have a level, and it is easy, medium or har
       }
     }
   }
+});
+
+test("prep-route-map.json is the identity map of PREP_ROUTES", () => {
+  const map = JSON.parse(readFileSync(new URL("../scripts/prep-route-map.json", import.meta.url), "utf8")) as Record<
+    string,
+    string
+  >;
+  assert.deepEqual(Object.keys(map), [...PREP_ROUTES]);
+  assert.deepEqual(Object.values(map), [...PREP_ROUTES]);
+  for (const [key, value] of Object.entries(map)) assert.equal(key, value);
 });

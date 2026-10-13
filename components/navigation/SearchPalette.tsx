@@ -275,11 +275,18 @@ export function SearchPalette() {
                       : "")
                   }
                 >
-                  {/* An intro hit has the page title as its title: the label
+                  {/* A prep hit has no part: its label is PREP and the area.
+                      An intro hit has the page title as its title: the label
                       line then shows only the part, so the title shows once. */}
                   <div className="font-mono text-[11px] uppercase tracking-wide text-text-faint">
-                    {partLabel(hit.part)}
-                    {hit.title !== hit.page && ` · ${hit.page}`}
+                    {hit.part === null ? (
+                      `PREP · ${hit.page}`
+                    ) : (
+                      <>
+                        {partLabel(hit.part)}
+                        {hit.title !== hit.page && ` · ${hit.page}`}
+                      </>
+                    )}
                   </div>
                   <div className={"mt-0.5 text-[15px] " + (i === active ? "text-text" : "text-text-dim")}>
                     {hit.title}

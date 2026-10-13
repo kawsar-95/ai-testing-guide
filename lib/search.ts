@@ -6,11 +6,13 @@ import MiniSearch from "minisearch";
 import { headingsFromSource, plainTitle, sourceLines } from "./headings.ts";
 import type { SourceLine } from "./headings.ts";
 import type { NavPage } from "./nav.ts";
+import type { PrepArea, PrepItem } from "./prep/types.ts";
 
 export type SearchDoc = {
   id: string;
   href: string;
-  part: number;
+  /** The part number of a tutorial page. `null` for a prep item (group "prep"). */
+  part: number | null;
   group: string;
   page: string;
   title: string;
@@ -97,6 +99,29 @@ export function buildSearchDocs(pages: { page: NavPage; source: string }[]): Sea
   });
 }
 
+/** The text of an item without its title: the other text fields, joined by a space. */
+function prepFields(item: PrepItem): { title: string; text: string } {
+  switch (item.kind) {
+    case "qa":
+      return { title: item.question, text: [item.template, item.example, item.behind].join(" ") };
+    case "task":
+      return { title: item.title, text: item.details };
+    case "mcq":
+      return { title: item.question, text: [...item.options, item.explanation].join(" ") };
+  }
+}
+
+/**
+ * One doc for each prep item. The id and the href are `/prep/<area>/#<item id>`:
+ * the area page gives each item an element with the id of the item.
+ */
+export function buildPrepSearchDocs(entries: { area: PrepArea; item: PrepItem }[]): SearchDoc[] {
+  return entries.map(({ area, item }) => {
+    const href = `${area.href}#${item.id}`;
+    return { id: href, href, part: null, group: "prep", page: area.title, ...prepFields(item) };
+  });
+}
+
 const SEARCH_OPTIONS = {
   prefix: true,
   fuzzy: 0.2,
@@ -121,7 +146,7 @@ export function runSearch(index: MiniSearch<SearchDoc>, query: string, limit = 8
     .map((hit) => ({
       id: String(hit.id),
       href: hit.href as string,
-      part: hit.part as number,
+      part: hit.part as number | null,
       page: hit.page as string,
       title: hit.title as string,
     }));

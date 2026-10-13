@@ -4,6 +4,7 @@
  */
 import type { MetadataRoute } from "next";
 import { PAGES } from "./nav.ts";
+import { PREP_ROUTES } from "./prep/areas.ts";
 
 const ICONS = [
   { file: "icon-192.png", sizes: "192x192", purpose: "any" },
@@ -45,6 +46,7 @@ export function precacheUrls(basePath: string): string[] {
   return [
     `${basePath}/`,
     ...PAGES.map((page) => `${basePath}${page.href}`),
+    ...PREP_ROUTES.map((route) => `${basePath}${route}`),
     offlinePage(basePath),
     `${basePath}/search-index.json`,
     `${basePath}/manifest.webmanifest`,
