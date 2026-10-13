@@ -15,6 +15,7 @@ Add an SQA interview-preparation module to this site, under `/prep/`. A reader b
 | Content source | All content is original. No text, wording, or item order is copied from prep.galib.dev. The owner has no permission from its author, and the site marks its advanced items as Pro-only. |
 | First version | All 13 areas, about 8 items for each area (about 100 items). |
 | Persistence | `localStorage` only. No backend. |
+| Extra features | The owner chose all 3 features that the `localStorage` keys of the reference site hint at. REA gave only the key names, so the behavior below is this module's own design. (a) A table/cards view toggle for the `qa` and `task` areas. (b) Quiz auto-advance. (c) A difficulty level on Realistic Scenarios items, with a filter. |
 
 Out of scope for version 1: sign-in, a Pro tier, AI explanations, sync between devices, quiz scores over time.
 
@@ -72,6 +73,20 @@ Item kind of each area:
 | `qa` | the other 9 areas: `intern`, `junior`, `mid-level`, `senior`, `leadership`, `programming-problems`, `tools-mastery`, `hr-soft-skills`, `realistic-scenarios` |
 
 Minimum size: 8 items for each area, and 12 for `mcq-test`.
+
+Difficulty level: a `qa` item has an optional `level` field, `"easy" | "medium" | "hard"`. Each item of `realistic-scenarios` has one, and at least 2 items have each level. No other area uses it.
+
+## 4a. Preferences
+
+A reader preference is not progress. All 3 preferences live in one `localStorage` key, `prep-prefs`, as JSON:
+
+| Preference | Values | Default | Effect |
+|---|---|---|---|
+| `view` | `table`, `cards` | `table` | `table` shows a table from `md` up. `cards` shows stacked cards at every width. Below `md` both show cards. |
+| `autoAdvance` | `true`, `false` | `false` | In the quiz, a right answer moves to the next question after 1.2 s. A wrong answer, the last question, or any click on Previous, Next or an option cancels it. |
+| `level` | `all`, `easy`, `medium`, `hard` | `all` | Filters the items of an area that has levels. The progress bar still counts all items of the area. |
+
+A bad or missing value falls back to the default. A filter with no match shows an empty-state sentence.
 - A `source` is an `https://` link to an official source (for example ISTQB or tool docs).
 
 ## 5. Progress
@@ -122,7 +137,7 @@ Rules: use the existing tokens and Tailwind classes. No inline styles. No icon p
 
 `node --test`, no new dependencies:
 
-- `tests/prep-progress.test.ts`: parse, toggle, count and percent, with bad input.
+- `tests/prep-progress.test.ts`: parse, toggle, count and percent, with bad input; the preferences (parse with bad input, defaults, store), `filterByLevel`, and `advanceTarget`.
 - `tests/prep-data.test.ts`: area slugs are unique and match the files in `content/prep/`. Item ids are unique. Each `mcq` answer index exists. Each `qa` item has all 4 text fields. Each factual item has an `https://` source.
 - Extended tests: `pwa` (prep routes in the precache), `search` (prep docs), `ui` (new strings).
 - Final: `npm test`, `npm run build`, then `check_routes`, `check_links`, `check_outline`, `check_sources` on `out/`. Then a browser test: checkbox, quiz, dark and light theme, a phone width, and offline after install.

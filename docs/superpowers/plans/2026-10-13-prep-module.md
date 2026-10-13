@@ -32,6 +32,8 @@ Inputs that the spec implies and no task's happy-path test covers. Each line has
 3. Stored ids that no longer exist (an item was removed or renamed): they do not count, so the percent never passes 100. [Task 2]
 4. An area with 0 items: percent is 0, no `NaN`, and the page shows an empty state. [Task 2, Task 5]
 5. Quiz: a wrong answer does not mark done, picking again after the reveal does not change the result, a hit link `…/mcq-test/#mcq-test-005` opens that question, and an unknown hash opens question 1. [Task 2, Task 5]
+6. `prep-prefs` holds invalid JSON, an unknown `view`, or `level: "expert"`: every preference falls back to its default. [Task 2]
+7. Auto-advance: no advance after a wrong answer or on the last question, and a click on Previous, Next, or an option, or a leave of the page, cancels the timer (no state update after unmount). A level filter with no match shows an empty-state sentence. [Task 2, Task 5]
 
 ## File Structure
 
@@ -42,10 +44,11 @@ Inputs that the spec implies and no task's happy-path test covers. Each line has
 | `lib/prep/items.ts` | Registers the 13 content files: `ITEMS_BY_AREA`, `ALL_ITEMS`, `itemsOf` |
 | `lib/prep/progress.ts` | Pure progress functions |
 | `lib/prep/store.ts` | `createProgressStore`: storage-backed store with subscribe |
-| `lib/prep/quiz.ts` | `isCorrect`, `startIndex` |
+| `lib/prep/quiz.ts` | `isCorrect`, `startIndex`, `advanceTarget` |
+| `lib/prep/prefs.ts` | The 3 reader preferences (`view`, `autoAdvance`, `level`), their store, and `filterByLevel` |
 | `lib/prep/ui.ts` | English strings of the module |
 | `content/prep/<area>.ts` | The items of one area (13 files) |
-| `components/prep/` | `useProgress`, `ProgressSummary`, `AreaCard`, `QaTable`, `TaskTable`, `McqQuiz`, `PrepSidebarList` |
+| `components/prep/` | `useProgress`, `usePrefs`, `ProgressSummary`, `AreaCard`, `QaTable`, `TaskTable`, `McqQuiz`, `ViewToggle`, `LevelFilter`, `PrepSidebarList` |
 | `components/pages/PrepHome.tsx` | The `/prep/` page body |
 | `components/layout/NavList.tsx` | Chooses the tutorial list or the prep list from the path |
 | `app/(site)/prep/page.tsx`, `app/(site)/prep/[area]/page.tsx` | The routes |
@@ -60,7 +63,7 @@ Inputs that the spec implies and no task's happy-path test covers. Each line has
 
 **Interfaces:**
 - Produces:
-  - Types as in the File Structure table. `QaItem = { kind: "qa"; id; question; template; example; behind: string; source?: string }`. `TaskItem = { kind: "task"; id; title; details: string; source?: string }`. `McqItem = { kind: "mcq"; id; question: string; options: readonly string[]; answer: number; explanation: string; source: string }`. `PrepArea = { slug: AreaSlug; title; description: string; kind: "qa" | "task" | "mcq"; href: string }`.
+  - Types as in the File Structure table. `Level = "easy" | "medium" | "hard"`. `QaItem = { kind: "qa"; id; question; template; example; behind: string; level?: Level; source?: string }`. `TaskItem = { kind: "task"; id; title; details: string; source?: string }`. `McqItem = { kind: "mcq"; id; question: string; options: readonly string[]; answer: number; explanation: string; source: string }`. `PrepArea = { slug: AreaSlug; title; description: string; kind: "qa" | "task" | "mcq"; href: string }`.
   - `AREAS: readonly PrepArea[]` in the spec order (spec §3 list), `href = "/prep/<slug>/"`. Kinds as in spec §4. Titles: Interview Preparation, Intern, Junior, Mid-Level, Senior, Leadership, Programming Problems, Practical Tasks, Tools Mastery, Hands-on Automation, HR & Soft Skills, Realistic Scenarios, MCQ Test. Write one original description line for each.
   - `getArea(slug: string): PrepArea | undefined`, `PREP_HOME = "/prep/"`, `PREP_ROUTES: readonly string[]` (`PREP_HOME` then each area `href`).
   - `ITEMS_BY_AREA: Record<AreaSlug, readonly PrepItem[]>`, `ALL_ITEMS: readonly PrepItem[]`, `itemsOf(slug: AreaSlug): readonly PrepItem[]`.
@@ -75,6 +78,7 @@ Inputs that the spec implies and no task's happy-path test covers. Each line has
   - `each mcq answer index is inside options and has 2 to 5 options`.
   - `each qa item has 4 non-empty text fields and each task item has title and details`.
   - `every source is an https URL, and every mcq item has one`.
+  - `only realistic-scenarios items have a level, and it is easy, medium or hard` (the rule "each item has one, at least 2 of each" joins the gate test in Task 11).
 - [ ] **Step 2: Run `npm test`.** Expected: FAIL (modules missing).
 - [ ] **Step 3: Implement the files.** Use `satisfies` or an explicit `Record<AreaSlug, …>` so a missing area fails the type check.
 - [ ] **Step 4: Run `npm test`.** Expected: all pass (the new tests pass on empty arrays).
@@ -82,13 +86,13 @@ Inputs that the spec implies and no task's happy-path test covers. Each line has
 
 ---
 
-### Task 2: Progress logic, store, and quiz helpers
+### Task 2: Progress logic, preferences, store, and quiz helpers
 
 **Files:**
-- Create: `lib/prep/progress.ts`, `lib/prep/store.ts`, `lib/prep/quiz.ts`, `tests/prep-progress.test.ts`
+- Create: `lib/prep/progress.ts`, `lib/prep/store.ts`, `lib/prep/quiz.ts`, `lib/prep/prefs.ts`, `tests/prep-progress.test.ts`
 
 **Interfaces:**
-- Consumes: `McqItem` from `lib/prep/types.ts`.
+- Consumes: `McqItem` and `Level` from `lib/prep/types.ts`.
 - Produces:
   - `STORAGE_KEY = "prep-progress"`.
   - `parseProgress(raw: string | null): string[]` — a JSON array of strings, without duplicates. Anything else gives `[]`.
@@ -100,6 +104,8 @@ Inputs that the spec implies and no task's happy-path test covers. Each line has
   - `createProgressStore(storage: StorageLike | null): { subscribe(listener: () => void): () => void; getSnapshot(): readonly string[]; refresh(): void; toggle(id: string): void; markDone(id: string): void }`. `getSnapshot` returns the same array object until the content changes. A `getItem` or `setItem` that throws, or `null` storage, falls back to memory. `refresh` re-reads storage (the hook calls it on the `storage` event).
   - `isCorrect(item: McqItem, choice: number): boolean`.
   - `startIndex(items: readonly { id: string }[], hash: string): number` — the index of the item whose id equals `hash` without `#`, else `0`.
+  - `advanceTarget(index: number, total: number, correct: boolean, autoAdvance: boolean): number | null` — `index + 1` only if `autoAdvance`, `correct`, and `index + 1 < total`; else `null`.
+  - In `lib/prep/prefs.ts`: `PREFS_KEY = "prep-prefs"`, `type Prefs = { view: "table" | "cards"; autoAdvance: boolean; level: "all" | Level }`, `DEFAULT_PREFS: Prefs` (`table`, `false`, `all`), `parsePrefs(raw: string | null): Prefs` (each bad field falls back to its default on its own), `serializePrefs(prefs: Prefs): string`, `filterByLevel<T extends { level?: Level }>(items: readonly T[], level: "all" | Level): T[]`, and `createPrefsStore(storage: StorageLike | null)` with `subscribe`, `getSnapshot(): Prefs` (same object until a change), `refresh()`, and `set<K extends keyof Prefs>(key: K, value: Prefs[K]): void` (memory fallback like the progress store).
 
 - [ ] **Step 1: Write the failing tests** in `tests/prep-progress.test.ts`:
   - parse: `null`, `""`, `"{"`, `"{}"`, `'["a",1,null,"a"]'` → `[]`, `[]`, `[]`, `[]`, `["a"]`.
@@ -111,10 +117,14 @@ Inputs that the spec implies and no task's happy-path test covers. Each line has
   - store with a storage whose `getItem` and `setItem` throw: `toggle("x")` still gives snapshot `["x"]`. Same for `null` storage.
   - `isCorrect` true for the answer index, false for others.
   - `startIndex` for `"#b"` is `1`, for `"#nope"` and `""` is `0`.
+  - `advanceTarget(0,3,true,true)` is `1`; it is `null` for a wrong answer, for `autoAdvance` false, and for `advanceTarget(2,3,true,true)` (last question).
+  - `parsePrefs`: `null`, `"{"`, `'{"view":"grid","autoAdvance":"yes","level":"expert"}'` all give `DEFAULT_PREFS`; `'{"view":"cards","level":"hard"}'` gives `{ view: "cards", autoAdvance: false, level: "hard" }`; serialize then parse round-trips.
+  - `filterByLevel(items, "all")` returns every item; `"easy"` returns only easy items; an item without a level is kept only for `"all"`.
+  - The prefs store: `set("view","cards")` writes JSON under `prep-prefs`, keeps the snapshot reference without a change, notifies once per change, and works with a throwing or `null` storage.
 - [ ] **Step 2: Run `npm test`.** Expected: FAIL.
-- [ ] **Step 3: Implement the three files.** Plain TS, no React, no `window` access.
+- [ ] **Step 3: Implement the four files.** Plain TS, no React, no `window` access. `StorageLike` lives in `store.ts`; `prefs.ts` imports it.
 - [ ] **Step 4: Run `npm test`.** Expected: PASS.
-- [ ] **Step 5: Commit** `feat(prep): add the progress, store and quiz logic`.
+- [ ] **Step 5: Commit** `feat(prep): add the progress, preferences, store and quiz logic`.
 
 ---
 
@@ -148,12 +158,13 @@ Topics (one item each, in this order):
 ### Task 4: Progress hook, summary, area card, and the `/prep/` page
 
 **Files:**
-- Create: `lib/prep/ui.ts`, `components/prep/useProgress.ts`, `components/prep/ProgressSummary.tsx`, `components/prep/AreaCard.tsx`, `components/pages/PrepHome.tsx`, `app/(site)/prep/page.tsx`
+- Create: `lib/prep/ui.ts`, `components/prep/useProgress.ts`, `components/prep/usePrefs.ts`, `components/prep/ProgressSummary.tsx`, `components/prep/AreaCard.tsx`, `components/pages/PrepHome.tsx`, `app/(site)/prep/page.tsx`
 
 **Interfaces:**
 - Consumes: `createProgressStore`, `STORAGE_KEY`, `countDone`, `percent`; `AREAS`, `itemsOf`.
 - Produces:
   - `useProgress(): { done: readonly string[]; toggle(id: string): void; markDone(id: string): void }` (client). One lazy store on `window.localStorage` (`null` if access throws). `useSyncExternalStore` with `getServerSnapshot` returning one constant empty array. A `storage` event calls `store.refresh()`.
+  - `usePrefs(): { prefs: Prefs; setPref<K extends keyof Prefs>(key: K, value: Prefs[K]): void }` (client). The same pattern as `useProgress`, with `DEFAULT_PREFS` as the server snapshot and a `storage` event that calls `refresh()`.
   - `ProgressSummary({ ids }: { ids: readonly string[] })`: `role="progressbar"` with `aria-valuenow/min/max`, the text `Done N · Remaining M`, and the percent.
   - `AreaCard({ area, ids }: { area: PrepArea; ids: readonly string[] })`: a link card with the title, description, and `N / M done`.
   - `PrepHome()` (server): eyebrow `INTERVIEW PREP · 13 AREAS · N ITEMS` (counts from data), `h1`, a lede, a `note` note that progress stays in this browser only, the overall `ProgressSummary`, and a grid of `AreaCard`.
@@ -169,18 +180,20 @@ Topics (one item each, in this order):
 ### Task 5: Area page, tables, and quiz
 
 **Files:**
-- Create: `components/prep/QaTable.tsx`, `components/prep/TaskTable.tsx`, `components/prep/McqQuiz.tsx`, `app/(site)/prep/[area]/page.tsx`
+- Create: `components/prep/QaTable.tsx`, `components/prep/TaskTable.tsx`, `components/prep/McqQuiz.tsx`, `components/prep/ViewToggle.tsx`, `components/prep/LevelFilter.tsx`, `app/(site)/prep/[area]/page.tsx`
 
 **Interfaces:**
-- Consumes: `useProgress`, `ProgressSummary`, `isCorrect`, `startIndex`, `getArea`, `AREAS`, `itemsOf`.
+- Consumes: `useProgress`, `usePrefs`, `ProgressSummary`, `isCorrect`, `startIndex`, `advanceTarget`, `filterByLevel`, `getArea`, `AREAS`, `itemsOf`.
 - Produces:
-  - `QaTable({ items }: { items: readonly QaItem[] })`, `TaskTable({ items }: { items: readonly TaskItem[] })`: each row has `id={item.id}`, a checkbox with `aria-label` "Mark done: …", and the optional source link. Below `md`, each row is a stacked card. QA columns: Question, Answer template, Example answer, Behind the question. Task columns: Task, Details.
-  - `McqQuiz({ items }: { items: readonly McqItem[] })`: shows one question; `startIndex(items, location.hash)` sets the first question in an effect after mount. The options are buttons in a `role="radiogroup"`. After a pick, the quiz locks the options, marks the right and the wrong option (not with color alone), shows the explanation and source, and calls `markDone` only for a right answer. Buttons: Previous, Next, and "Question N of M". It shows `done` state for an already done item.
+  - `QaTable({ items }: { items: readonly QaItem[] })`, `TaskTable({ items }: { items: readonly TaskItem[] })`: each row has `id={item.id}`, a checkbox with `aria-label` "Mark done: …", and the optional source link. The layout follows `prefs.view` (spec §4a). QA columns: Question, Answer template, Example answer, Behind the question. Task columns: Task, Details. `QaTable` shows a level badge (text, not color alone) for an item that has a `level`, and applies `filterByLevel` with `prefs.level`. A filter with no match shows an empty-state sentence.
+  - `ViewToggle()` (client): two buttons with `aria-pressed`, "Table" and "Cards", writing `view` with `setPref`. The page shows it for `qa` and `task` areas.
+  - `LevelFilter()` (client): buttons All, Easy, Medium, Hard with `aria-pressed`, writing `level`. The page shows it only for an area whose items have levels (`realistic-scenarios`).
+  - `McqQuiz({ items }: { items: readonly McqItem[] })`: shows one question; `startIndex(items, location.hash)` sets the first question in an effect after mount. The options are buttons in a `role="radiogroup"`. After a pick, the quiz locks the options, marks the right and the wrong option (not with color alone), shows the explanation and source, and calls `markDone` only for a right answer. Buttons: Previous, Next, and "Question N of M". It shows `done` state for an already done item. A checkbox "Auto-advance" writes `autoAdvance`. After a pick, `advanceTarget(index, items.length, correct, prefs.autoAdvance)` decides whether a 1.2 s timer moves to the next question. The timer is cleared on any manual navigation, on a new pick, and on unmount.
   - The route `/prep/[area]/`: `dynamicParams = false`, `generateStaticParams` from `AREAS`, `generateMetadata`, `notFound()` for an unknown slug. The page shows the eyebrow `AREA NN · INTERVIEW PREP`, `h1`, the description, `ProgressSummary` for the area, the right component for the area `kind`, and links to the previous area, the next area, and `/prep/`. An area with 0 items shows an empty-state sentence.
 
 - [ ] **Step 1: Implement the components and the route.** Write each as a client component where it needs state. Keep the page itself a server component.
 - [ ] **Step 2: Run `npm run build`.** Expected: PASS, `out/prep/<slug>/index.html` for all 13 slugs.
-- [ ] **Step 3: Check in `npm run dev`:** `/prep/intern/` (tick a row, reload, the tick stays), `/prep/interview-prep/`, `/prep/mcq-test/` (right and wrong answer; `#mcq-test-005` opens question 5), `/prep/senior/` (empty state), `/prep/nope/` (404). Check at 375 px width and in the light theme.
+- [ ] **Step 3: Check in `npm run dev`:** `/prep/intern/` (tick a row, reload, the tick stays), `/prep/interview-prep/`, `/prep/mcq-test/` (right and wrong answer; `#mcq-test-005` opens question 5; auto-advance moves on after a right answer only, and a click cancels it), `/prep/senior/` (empty state), `/prep/nope/` (404). Check the table/cards toggle on `/prep/intern/` (it survives a reload). Check at 375 px width and in the light theme. The level filter is checked in Task 10, when `realistic-scenarios` has items.
 - [ ] **Step 4: Commit** `feat(prep): add the area pages, the tables and the quiz`.
 
 ---
@@ -290,8 +303,8 @@ Topics (8 items each; `task` kind for the first two, `qa` for the last):
 | `realistic-scenarios` | A page is slow only on Mondays; A developer says "not a bug"; A release is tomorrow and 20 bugs are open; The requirements are missing; Only you can reproduce a bug; A production incident in your area; A flaky test blocks the pipeline; A third-party API is down during testing |
 
 - [ ] **Step 1: Write the research notes first.** Sources for `hands-on-automation`: `playwright.dev` docs. Check every Playwright API name and flag against the docs.
-- [ ] **Step 2: Write the three content files.**
-- [ ] **Step 3: Run `npm test`.** Expected: PASS.
+- [ ] **Step 2: Write the three content files.** Each `realistic-scenarios` item has a `level` (`easy`, `medium` or `hard`), with at least 2 items for each level. The level reflects how much judgment the scenario needs, not the length of the answer.
+- [ ] **Step 3: Run `npm test`.** Expected: PASS. Then run `npm run dev` and check `/prep/realistic-scenarios/`: each level button filters the list, the progress bar still counts all 8 items, and a reload keeps the chosen level.
 - [ ] **Step 4: Fact-check with a fresh agent** until each report ends with `Open FAILs: 0`.
 - [ ] **Step 5: Commit** `docs(prep): add the practical content`.
 
@@ -302,7 +315,7 @@ Topics (8 items each; `task` kind for the first two, `qa` for the last):
 **Files:**
 - Modify: `tests/prep-data.test.ts`, `CLAUDE.md`, `README.md`
 
-- [ ] **Step 1: Add the failing gate test** `every area has at least 8 items, and mcq-test has at least 12`, and `every area has a research note and a fact-check report that ends with "Open FAILs: 0"` (read `docs/superpowers/research/prep-<slug>.factcheck.md`). Run `npm test`. Expected: PASS if Tasks 3, 8, 9, 10 are complete; otherwise FAIL — finish the content first.
+- [ ] **Step 1: Add the failing gate test** `every area has at least 8 items, and mcq-test has at least 12`, `every realistic-scenarios item has a level and each level has at least 2 items`, and `every area has a research note and a fact-check report that ends with "Open FAILs: 0"` (read `docs/superpowers/research/prep-<slug>.factcheck.md`). Run `npm test`. Expected: PASS if Tasks 3, 8, 9, 10 are complete; otherwise FAIL — finish the content first.
 - [ ] **Step 2: Update `CLAUDE.md`:** the structure table (the new paths), the route count (24 → 38), the checks table (`prep-route-map.json`, `check_routes.py` reads both maps), a short "Interview Prep module" section (data format, content rules, how to add an area or an item). Update `README.md` with the module and the counts.
 - [ ] **Step 3: Run the full verification.**
   - `npm test` — all pass.
@@ -310,6 +323,6 @@ Topics (8 items each; `task` kind for the first two, `qa` for the last):
   - `npm run build` — PASS, 38 routes.
   - `python3 scripts/check_routes.py out`, `check_links.py out`, `check_outline.py out` — exit 0. `python3 scripts/check_sources.py out` — `OK 23 pages checked, 0 skipped`.
   - Base-path build as in `CLAUDE.md`: `PAGES_BASE_PATH=/learn-software-testing-with-ai npm run build`; serve it; open `/learn-software-testing-with-ai/prep/` and one area. Expected: links and search hits keep the base path.
-- [ ] **Step 4: Run the browser test.** Serve `out/` (`python3 -m http.server 8000 -d out`). Drive Chrome with the Playwright package of `/home/nuruddin-kawsar/Documents/hris-web-automation/node_modules` from a script in the scratchpad directory (do not add it to this repo). Check: tick a row, reload, the tick stays; a second tab updates after a tick (the `storage` event); the quiz wrong and right paths; a search hit opens its item; corrupt `prep-progress` in `localStorage` gives an empty state and no console error; 375 px width; both themes; offline reload after the service worker installs (production build). Save screenshots in the scratchpad directory and report any failure.
+- [ ] **Step 4: Run the browser test.** Serve `out/` (`python3 -m http.server 8000 -d out`). Drive Chrome with the Playwright package of `/home/nuruddin-kawsar/Documents/hris-web-automation/node_modules` from a script in the scratchpad directory (do not add it to this repo). Check: tick a row, reload, the tick stays; a second tab updates after a tick (the `storage` event); the quiz wrong and right paths and auto-advance; the table/cards toggle and the level filter survive a reload; corrupt `prep-prefs` gives the defaults; a search hit opens its item; corrupt `prep-progress` in `localStorage` gives an empty state and no console error; 375 px width; both themes; offline reload after the service worker installs (production build). Save screenshots in the scratchpad directory and report any failure.
 - [ ] **Step 5: Commit** `docs(prep): update CLAUDE.md and README for the prep module`.
 - [ ] **Step 6: Use superpowers:finishing-a-development-branch** to decide how to integrate the branch.
