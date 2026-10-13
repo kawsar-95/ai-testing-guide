@@ -15,4 +15,57 @@ export const PREP_UI = {
   cardCount: (done: number, total: number) => `${done} / ${total} done`,
   cardEmpty: "No items yet",
   cardProgressLabel: (title: string) => `Progress of ${title}`,
+
+  // The area page.
+  areaEyebrow: (number: number) => `AREA ${String(number).padStart(2, "0")} · INTERVIEW PREP`,
+  areaEmpty: "No items yet. Check back soon.",
+  areaNav: "Interview Prep areas",
+  allAreas: "All areas",
+  previousArea: "Previous area",
+  nextArea: "Next area",
+
+  // The sidebar, the drawer, and the header.
+  sidebarNav: "Areas",
+  sidebarAreaLabel: (number: number) => `AREA ${String(number).padStart(2, "0")}`,
+  sidebarCount: (done: number, total: number) => `${done}/${total}`,
+  sidebarCountSr: (done: number, total: number) => `${done} of ${total} done`,
+  sidebarEmpty: "No items",
+  crossToPrep: "Interview Prep",
+  crossToTutorial: "Tutorial",
+  headerLink: "Interview Prep",
+
+  // The view toggle and the level filter.
+  viewGroupLabel: "Layout",
+  viewTable: "Table",
+  viewCards: "Cards",
+  levelGroupLabel: "Level",
+  levelAll: "All",
+  levelLabels: { easy: "Easy", medium: "Medium", hard: "Hard" },
+  levelEmpty: "No items match this level. Choose another level.",
+
+  // The tables.
+  colQuestion: "Question",
+  colTemplate: "Answer template",
+  colExample: "Example answer",
+  colBehind: "Behind the question",
+  colTask: "Task",
+  colDetails: "Details",
+  markDone: (title: string) => `Mark done: ${title}`,
+  sourceLink: "Source",
+  sourceFor: (title: string) => ` for ${title}`,
+  opensInNewTab: " (opens in a new tab)",
+  levelBadge: (level: string) => `Level: ${level}`,
+
+  // The quiz.
+  quizLabel: "Quiz",
+  quizPosition: (index: number, total: number) => `Question ${index} of ${total}`,
+  quizPrevious: "Previous",
+  quizNext: "Next",
+  quizAutoAdvance: "Auto-advance",
+  quizCorrectMark: "Correct answer",
+  quizWrongMark: "Your answer",
+  quizCorrectResult: "Correct.",
+  quizWrongResult: (letter: string) => `Not correct. The right answer is ${letter}.`,
+  quizExplanation: "Explanation",
+  quizDone: "Done",
 } as const;
