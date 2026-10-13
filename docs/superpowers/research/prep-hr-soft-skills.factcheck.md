@@ -1,6 +1,8 @@
-# Fact-check: Prep, HR & Soft Skills (round 1, 2026-10-13)
+# Fact-check: Prep, HR & Soft Skills (round 2, 2026-10-13)
 
-Round 1 on 49f7044. Content under check: `content/prep/hr-soft-skills.ts` at commit 49f7044 (8 `qa` items). The author's research notes (`prep-hr-soft-skills.md`) say that the area has no factual claim. The checker did not accept that statement. The checker read every sentence of `question`, `template`, `example` and `behind` of all 8 items.
+Round 2 on c712e21 (changed items re-checked; other rows from round 1 on 49f7044). Changed items: `hr-soft-skills-002` to `hr-soft-skills-005`. In each, only the `behind` text changed: it now ends with "The story in the example is a model. Replace it with your own." The checker read the new sentences again for hidden facts and found none. The rows of the changed items are replaced. The other rows are kept from round 1.
+
+Round 1 content under check: `content/prep/hr-soft-skills.ts` at commit 49f7044 (8 `qa` items). The author's research notes (`prep-hr-soft-skills.md`) say that the area has no factual claim. The checker did not accept that statement. The checker read every sentence of `question`, `template`, `example` and `behind` of all 8 items.
 
 Sources fetched: none. No item has a `source`, and the checker found no claim that needs one.
 
@@ -16,10 +18,10 @@ Findings:
 | # | Item id | Claim | Source URL | Verdict | Quote from the content, and why |
 |---|---|---|---|---|---|
 | 1 | hr-soft-skills-001 | "Tell me about yourself" sample and advice | - | OPINION-OK | Sample story. Hidden-fact search: none found. "The details in the example are samples." |
-| 2 | hr-soft-skills-002 | Strength with proof, real weakness with action | - | OPINION-OK | First-person sample. "For the last two quarters" is part of the story. Hidden-fact search: none found. |
-| 3 | hr-soft-skills-003 | Conflict with a developer | - | OPINION-OK | Sample story. "situation, an action, a result and a lesson" names no framework. Hidden-fact search: none found. |
-| 4 | hr-soft-skills-004 | Bug that reached production | - | OPINION-OK | Sample story. Hidden-fact search: none found. |
-| 5 | hr-soft-skills-005 | Tight deadline | - | OPINION-OK | Sample story. "two small defects" is part of the story. Hidden-fact search: none found. |
+| 2 | hr-soft-skills-002 | Strength with proof, real weakness with action | - | OPINION-OK | First-person sample. Round 2 `behind` adds "The story in the example is a model. Replace it with your own.": an instruction, not a fact. Hidden-fact search: none found. |
+| 3 | hr-soft-skills-003 | Conflict with a developer | - | OPINION-OK | Sample story. "situation, an action, a result and a lesson" names no framework. Round 2 `behind` adds the "model" sentence: an instruction, not a fact. Hidden-fact search: none found. |
+| 4 | hr-soft-skills-004 | Bug that reached production | - | OPINION-OK | Sample story. Round 2 `behind` adds the "model" sentence: an instruction, not a fact. Hidden-fact search: none found. |
+| 5 | hr-soft-skills-005 | Tight deadline | - | OPINION-OK | Sample story. Round 2 `behind` adds the "model" sentence: an instruction, not a fact. Hidden-fact search: none found. |
 | 6 | hr-soft-skills-006 | Why leave the current job; "A positive reason that points to the future is best." | - | OPINION-OK | Advice, not a fact from a source. Hidden-fact search: none found. |
 | 7 | hr-soft-skills-007 | Salary expectations | - | OPINION-OK | No salary number ("X to Y" placeholders), no claim about salary law or HR rules. Hidden-fact search: none found. |
 | 8 | hr-soft-skills-008 | Five-year plan; "They also like to see that you stay flexible" | - | OPINION-OK | Advice about interviewer intent. Hidden-fact search: none found. |
