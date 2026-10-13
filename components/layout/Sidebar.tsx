@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { SidebarList, withTrailingSlash } from "./SidebarList";
+import { NavList } from "./NavList";
+import { withTrailingSlash } from "./SidebarList";
 import { scrollActiveIntoView } from "./scroll-active";
 
 /**
@@ -21,7 +22,7 @@ export function Sidebar() {
 
   return (
     <div ref={ref}>
-      <SidebarList activePath={withTrailingSlash(pathname)} />
+      <NavList activePath={withTrailingSlash(pathname)} />
     </div>
   );
 }

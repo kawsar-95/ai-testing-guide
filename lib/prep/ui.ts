@@ -24,6 +24,15 @@ export const PREP_UI = {
   previousArea: "Previous area",
   nextArea: "Next area",
 
+  // The sidebar, the drawer, and the header.
+  sidebarAreaLabel: (number: number) => `AREA ${String(number).padStart(2, "0")}`,
+  sidebarCount: (done: number, total: number) => `${done}/${total}`,
+  sidebarCountSr: (done: number, total: number) => `${done} of ${total} done`,
+  sidebarEmpty: "No items",
+  crossToPrep: "Interview Prep",
+  crossToTutorial: "Tutorial",
+  headerLink: "Interview Prep",
+
   // The view toggle and the level filter.
   viewGroupLabel: "Layout",
   viewTable: "Table",

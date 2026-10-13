@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { SidebarList, withTrailingSlash } from "./SidebarList";
+import { NavList } from "./NavList";
+import { withTrailingSlash } from "./SidebarList";
 import { scrollActiveIntoView } from "./scroll-active";
 import { lockScroll } from "@/lib/scroll-lock";
 import { menuClose, menuOpen } from "@/lib/ui";
@@ -139,7 +140,7 @@ export function MobileNav() {
             </button>
           </div>
           <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <SidebarList activePath={withTrailingSlash(pathname)} onNavigate={() => setOpen(false)} />
+            <NavList activePath={withTrailingSlash(pathname)} onNavigate={() => setOpen(false)} />
           </div>
         </div>
       </div>
