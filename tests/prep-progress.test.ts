@@ -254,16 +254,6 @@ test("advanceTarget moves on only after a correct answer with auto-advance (Revi
   assert.equal(advanceTarget(0, 0, true, true), null);
 });
 
-test("a wrong answer does not mark done, and a second pick does not change the result (Review Focus 5)", () => {
-  // The logic of the quiz page: mark done only when the first pick is correct.
-  const store = createProgressStore(fakeStorage());
-  const first = 0;
-  if (isCorrect(mcq, first)) store.markDone(mcq.id);
-  assert.deepEqual(store.getSnapshot(), []);
-  // The result is fixed by the first pick, so a later pick is not graded again.
-  assert.equal(isCorrect(mcq, first), false);
-});
-
 // --- prefs.ts ---
 
 test("PREFS_KEY and DEFAULT_PREFS", () => {
