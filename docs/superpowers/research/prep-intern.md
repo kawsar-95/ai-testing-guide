@@ -8,12 +8,17 @@ S2. ISTQB Glossary — ISTQB — https://glossary.istqb.org/en_US/term/<slug> �
 
 Terms that the glossary does not define (the data service returned "404 Not Found" for `test-scenario` and `sanity-testing`): "test scenario", "sanity testing". No item states a fact about these two terms. `intern-004` and `intern-007` give the answer as the candidate's own working definition and advise the reader to ask what the team means.
 
+Item `source` pages (the page that holds the main claim of the item; the other pages are in the rows below):
+`intern-001` p. 16, `intern-002` p. 15, `intern-003` glossary `severity`, `intern-004` glossary `test-case`, `intern-005` p. 56 (the workflow; the status list is on p. 57 and the confirmation-testing sentence on p. 30), `intern-006` p. 39, `intern-007` glossary `smoke-testing`, `intern-008` p. 57.
+
 ## Claims
 | # | Item id | Claim | Exact short quote | Source |
 |---|---|---|---|---|
-| C1 | intern-001 | Software testing is a set of activities to discover defects and evaluate the quality of software work products. | "Software testing is a set of activities to discover defects and evaluate the quality of software work products." (p. 15) | S1 |
+| C1 | intern-001 (item source: p. 16; C1 is on p. 15) | Software testing is a set of activities to discover defects and evaluate the quality of software work products. | "Software testing is a set of activities to discover defects and evaluate the quality of software work products." (p. 15) | S1 |
 | C2 | intern-001 | Testing is a cost-effective way to detect defects. | "Testing provides a cost-effective means of detecting defects." (p. 16) | S1 |
 | C3 | intern-001 | Testing and debugging are separate activities. | "Testing and debugging are separate activities." (p. 16) | S1 |
+| C3a | intern-002 | Testing involves verification, which checks whether the system meets specified requirements. | "While testing involves verification, i.e., checking whether the system meets specified requirements" (p. 15) | S1 |
+| C3b | intern-002 | Testing also involves validation, which checks whether the system meets the needs of users and other stakeholders in its operational environment. | "it also involves validation, which means checking whether the system meets users’ and other stakeholders’ needs in its operational environment." (p. 15) | S1 |
 | C4 | intern-002 | Verification confirms that a work product fulfills its specification. | "The process of confirming that a work product fulfills its specification." (term `verification`) | S2 |
 | C5 | intern-002 | Validation confirms that a work product matches the needs of a stakeholder. | "Confirmation by examination that a work product matches a stakeholder's needs." (term `validation`) | S2 |
 | C6 | intern-003 | Severity is the degree of impact of a defect. | "The degree of impact that a defect has on the development, testing or operation of a component or system." (term `severity`) | S2 |

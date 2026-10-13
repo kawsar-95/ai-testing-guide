@@ -17,7 +17,7 @@ export const items: readonly PrepItem[] = [
     ],
     answer: 1,
     explanation:
-      "Tests wear out. If the same tests repeat many times, they become increasingly ineffective in detecting new defects, so the team may need to change the tests and the test data.",
+      "Tests wear out. If the same tests repeat many times, they become increasingly ineffective in detecting new defects, so the team may need to change the existing tests and test data, and write new tests.",
     source: SYLLABUS + "#page=18",
   },
   {
@@ -39,9 +39,9 @@ export const items: readonly PrepItem[] = [
     kind: "mcq",
     id: "mcq-test-003",
     question:
-      "A field accepts whole numbers from 18 to 60. With equivalence partitioning, how many test cases do you need at least to cover every partition, valid and invalid?",
-    options: ["1", "2", "4", "3"],
-    answer: 3,
+      "A field accepts whole numbers from 18 to 60. Assume the input is always a whole number. With equivalence partitioning, how many test cases do you need at least to cover every partition, valid and invalid?",
+    options: ["2", "3", "4", "5"],
+    answer: 1,
     explanation:
       "There are 3 partitions: below 18 (invalid), 18 to 60 (valid), and above 60 (invalid). Full coverage means each partition, including the invalid ones, is exercised at least once, and one test for each partition is enough.",
     source: SYLLABUS + "#page=40",
@@ -50,7 +50,7 @@ export const items: readonly PrepItem[] = [
     kind: "mcq",
     id: "mcq-test-004",
     question:
-      "A field accepts whole numbers from 18 to 60. Which values give full coverage with 2-value boundary value analysis?",
+      "A field accepts whole numbers from 18 to 60. Which set holds exactly the coverage items of 2-value boundary value analysis, and no other values?",
     options: [
       "17, 18, 60, 61",
       "18 and 60",
@@ -59,7 +59,7 @@ export const items: readonly PrepItem[] = [
     ],
     answer: 0,
     explanation:
-      "In 2-value BVA each boundary value has 2 coverage items: the boundary value and its closest neighbor in the adjacent partition. The boundaries 18 and 60 give 17 and 18, and 60 and 61. The set with 19 and 59 is for 3-value BVA.",
+      "In 2-value BVA each boundary value has 2 coverage items: the boundary value and its closest neighbor in the adjacent partition. The boundaries 18 and 60 give the pairs 17 and 18, and 60 and 61. The set with 19 and 59 adds inner neighbors that 3-value BVA uses and 2-value BVA does not need. The set with only 18 and 60 misses the neighbors, and 0 and 100 are not next to the boundaries.",
     source: SYLLABUS + "#page=40",
   },
   {
@@ -70,7 +70,7 @@ export const items: readonly PrepItem[] = [
     options: ["Priority", "Severity", "Coverage", "Risk appetite"],
     answer: 1,
     explanation:
-      "Severity is the degree of impact that a defect has on the development, testing or operation of a component or system. Priority is the level of importance assigned to a task, so it sets the order of the work and is a different thing.",
+      "Severity says how much impact a defect has on the development, the testing or the operation of a component or system. Priority is the importance that the team gives to a task, so it is a different thing.",
     source: GLOSSARY + "severity",
   },
   {
@@ -78,14 +78,14 @@ export const items: readonly PrepItem[] = [
     id: "mcq-test-006",
     question: "What is the purpose of regression testing?",
     options: [
-      "To confirm that the original defect is fixed",
-      "To measure the speed of the system under load",
-      "To detect defects that a change introduced or uncovered in unchanged areas",
-      "To check that the code follows the coding standard",
+      "To confirm that the defect found earlier has now been fixed",
+      "To measure how fast the system answers under a heavy load",
+      "To find defects that a change caused in unchanged areas",
+      "To check that the source code follows the coding standard",
     ],
     answer: 2,
     explanation:
-      "Regression testing detects whether defects have been introduced or uncovered in unchanged areas of the software. Checking that the original defect is fixed is confirmation testing, which is a different thing.",
+      "Regression testing looks for defects that a change has introduced or uncovered in parts of the software that were not changed. Checking that the original defect is fixed is confirmation testing, which is a different thing.",
     source: GLOSSARY + "regression-testing",
   },
   {
@@ -100,7 +100,7 @@ export const items: readonly PrepItem[] = [
     ],
     answer: 0,
     explanation:
-      "Exit criteria define what must be achieved to declare an activity completed, and 'planned tests have been executed' is a typical example. The other options are things that must exist before the work starts, so they are entry criteria.",
+      "Exit criteria define what must be achieved to declare an activity completed, and 'planned tests have been executed' is a typical example. The other options are typical conditions to have before the work starts, so they are entry criteria.",
     source: SYLLABUS + "#page=49",
   },
   {
@@ -111,7 +111,7 @@ export const items: readonly PrepItem[] = [
     options: ["401", "403", "404", "500"],
     answer: 1,
     explanation:
-      "403 Forbidden means that the server understood the request but refused to process it, and authenticating or re-authenticating makes no difference. The 401 code is similar, but it is the 403 code that matches a refusal where a new sign-in does not help.",
+      "403 Forbidden means that the server understood the request but refused to process it, and authenticating or re-authenticating makes no difference. The failure is tied to application logic, such as insufficient permissions to a resource or action.",
     source: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/403",
   },
   {
@@ -119,9 +119,9 @@ export const items: readonly PrepItem[] = [
     id: "mcq-test-009",
     question: "In the test pyramid, which tests are usually the most numerous?",
     options: [
-      "Small, fast, isolated tests such as unit tests",
-      "End-to-end tests through the user interface",
-      "Exploratory testing sessions",
+      "Small, isolated unit tests",
+      "End-to-end tests that drive the user interface",
+      "Exploratory sessions with the whole team",
     ],
     answer: 0,
     explanation:
@@ -133,14 +133,14 @@ export const items: readonly PrepItem[] = [
     id: "mcq-test-010",
     question: "What is the goal of a smoke test?",
     options: [
-      "To prove that the product has no defects",
-      "To measure the behavior of the system under a heavy load",
-      "To replace the regression test suite",
-      "To gain enough confidence that a build is ready for the planned testing",
+      "To prove that the product has no defects left in it",
+      "To measure how the system behaves under a heavy load",
+      "To replace the whole regression test suite for a release",
+      "To check that a build is ready for planned testing",
     ],
     answer: 3,
     explanation:
-      "Smoke testing is a test type to gain sufficient confidence that a test object is ready for planned testing. It is a short check of the build, and it is not a proof that no defects remain.",
+      "A smoke test is a test type that builds enough confidence that the test object is ready for the testing that was planned. The other options describe different goals.",
     source: GLOSSARY + "smoke-testing",
   },
   {
@@ -160,13 +160,13 @@ export const items: readonly PrepItem[] = [
     question: "Which statement describes validation?",
     options: [
       "Confirming that a work product fulfills its specification",
-      "Running the same tests again after a change",
+      "Running the same tests again after every change to the code",
       "Checking that the source code follows the style guide",
-      "Confirming that a work product matches the needs of the stakeholders",
+      "Confirming that the product matches stakeholder needs",
     ],
     answer: 3,
     explanation:
-      "Validation is confirmation by examination that a work product matches a stakeholder's needs. The first option describes verification, which checks the work product against its specification.",
+      "Validation checks, by examination, that a work product matches what a stakeholder needs. The first option is the definition of verification, which compares a work product with its specification.",
     source: GLOSSARY + "validation",
   },
 ];
