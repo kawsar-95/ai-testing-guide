@@ -46,7 +46,7 @@ export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
         <div className="ml-auto flex items-center gap-2">
           <Link
             href={PREP_HOME}
-            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent sm:inline"
+            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent md:inline"
           >
             {PREP_UI.headerLink}
           </Link>
