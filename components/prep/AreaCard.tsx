@@ -14,11 +14,11 @@ export function AreaCard({ area, ids }: { area: PrepArea; ids: readonly string[]
   const count = countDone(ids, done);
   return (
     <li data-area-card className="group relative list-none">
-      <div className="flex h-full flex-col rounded-[10px] border border-border bg-bg-raised px-5 py-4 transition-colors group-hover:border-accent">
+      <div className="flex h-full flex-col rounded-[10px] border border-border bg-bg-raised px-5 py-4 transition-colors group-hover:border-accent has-[:focus-visible]:border-accent has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
         <h3 className="font-display text-xl font-medium leading-snug text-text">
           <Link
             href={area.href}
-            className="text-text no-underline transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-accent"
+            className="text-text no-underline outline-none! transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-accent"
           >
             {area.title}
           </Link>
@@ -32,6 +32,7 @@ export function AreaCard({ area, ids }: { area: PrepArea; ids: readonly string[]
         <ProgressBar
           value={percent(count, total)}
           label={PREP_UI.cardProgressLabel(area.title)}
+          valueText={total === 0 ? PREP_UI.cardEmpty : PREP_UI.summaryText(count, total - count)}
           className="mt-2"
         />
       </div>

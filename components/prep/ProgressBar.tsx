@@ -2,11 +2,14 @@
 export function ProgressBar({
   value,
   label,
+  valueText,
   className = "",
 }: {
   /** An integer from 0 to 100. */
   value: number;
   label: string;
+  /** Text for screen readers, for example `Done 2 · Remaining 6`. */
+  valueText?: string;
   className?: string;
 }) {
   return (
@@ -14,6 +17,7 @@ export function ProgressBar({
       role="progressbar"
       aria-label={label}
       aria-valuenow={value}
+      aria-valuetext={valueText}
       aria-valuemin={0}
       aria-valuemax={100}
       className={`h-2 overflow-hidden rounded-full ${className}`}

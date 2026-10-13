@@ -17,17 +17,18 @@ export function ProgressSummary({
   const total = new Set(ids).size;
   const count = countDone(ids, done);
   const value = percent(count, total);
+  const text = PREP_UI.summaryText(count, total - count);
   return (
     <div className="rounded-[10px] border border-border bg-bg-raised px-5 py-4">
       <div className="flex items-baseline justify-between gap-4">
         <p data-progress-text className="font-mono text-[13px] text-text-dim">
-          {PREP_UI.summaryText(count, total - count)}
+          {text}
         </p>
         <p className="font-display text-2xl font-medium tabular-nums text-text">
           {PREP_UI.percentText(value)}
         </p>
       </div>
-      <ProgressBar value={value} label={label} className="mt-3" />
+      <ProgressBar value={value} label={label} valueText={text} className="mt-3" />
     </div>
   );
 }
