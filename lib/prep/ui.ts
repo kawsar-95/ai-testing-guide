@@ -25,6 +25,7 @@ export const PREP_UI = {
   nextArea: "Next area",
 
   // The sidebar, the drawer, and the header.
+  sidebarNav: "Areas",
   sidebarAreaLabel: (number: number) => `AREA ${String(number).padStart(2, "0")}`,
   sidebarCount: (done: number, total: number) => `${done}/${total}`,
   sidebarCountSr: (done: number, total: number) => `${done} of ${total} done`,

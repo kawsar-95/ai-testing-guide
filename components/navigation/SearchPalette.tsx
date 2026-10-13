@@ -178,7 +178,7 @@ export function SearchPalette() {
         aria-expanded={open}
         aria-keyshortcuts="Control+K Meta+K"
         onClick={openPalette}
-        className="flex h-9 items-center gap-2 rounded-md border border-border bg-bg-raised/60 px-2.5 text-sm text-text-dim transition-colors hover:border-border-strong hover:text-text sm:min-w-52"
+        className="flex h-9 items-center gap-2 rounded-md border border-border bg-bg-raised/60 px-2.5 text-sm text-text-dim transition-colors hover:border-border-strong hover:text-text md:min-w-52"
       >
         <svg aria-hidden="true" viewBox="0 0 20 20" className="size-4 shrink-0" fill="none">
           <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.6" />

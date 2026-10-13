@@ -21,7 +21,7 @@ export function PrepSidebarList({
 }) {
   const { done } = useProgress();
   return (
-    <nav aria-label={PREP_UI.areaNav} className="px-3 py-6">
+    <nav aria-label={PREP_UI.sidebarNav} className="px-3 py-6">
       <ol className="m-0 list-none space-y-px p-0">
         {AREAS.map((area, index) => {
           const active = area.href === activePath;
