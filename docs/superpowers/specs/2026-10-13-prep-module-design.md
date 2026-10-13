@@ -44,7 +44,17 @@ The 13 area slugs: `interview-prep`, `intern`, `junior`, `mid-level`, `senior`, 
 | `task` | `id`, `title`, `details`, optional `source` | Practical Tasks, Interview Preparation |
 | `mcq` | `id`, `question`, `options`, `answer` (index), `explanation`, `source` | MCQ Test |
 
-- Each `id` is stable and unique across all areas, for example `junior-007`. Progress uses these ids.
+- Each `id` is stable and unique across all areas. The format is `<area-slug>-NNN` (3 digits, from `001`), for example `junior-007`. Progress uses these ids.
+
+Item kind of each area:
+
+| Kind | Areas |
+|---|---|
+| `task` | `interview-prep`, `practical-tasks`, `hands-on-automation` |
+| `mcq` | `mcq-test` |
+| `qa` | the other 9 areas: `intern`, `junior`, `mid-level`, `senior`, `leadership`, `programming-problems`, `tools-mastery`, `hr-soft-skills`, `realistic-scenarios` |
+
+Minimum size: 8 items for each area, and 12 for `mcq-test`.
 - A `source` is an `https://` link to an official source (for example ISTQB or tool docs).
 
 ## 5. Progress
@@ -82,13 +92,14 @@ Rules: use the existing tokens and Tailwind classes. No inline styles. No icon p
 
 ## 9. Search and PWA
 
-- `lib/search.ts` gets `buildPrepSearchDocs`: one doc for each item. `/search-index.json` adds them. A prep hit shows the area title. A tutorial hit shows the part label.
+- `lib/search.ts` gets `buildPrepSearchDocs`: one doc for each item, with `part: null` and `group: "prep"`. `/search-index.json` adds them. A prep hit shows the area title. A tutorial hit shows the part label. A hit links to `/prep/<area>/#<item-id>`, so each item row has `id={item.id}`. The quiz opens the question that the URL hash names.
+- `app/sitemap.ts` adds the 14 prep routes.
 - `lib/pwa.ts` adds the 14 prep routes to the precache list, so the module works offline.
 
 ## 10. Checks
 
 - `scripts/route-map.json` stays tutorial-only. `check_sources.py` would fail on prep pages, because they have no meta line and no sources list.
-- New file `scripts/prep-route-map.json` (identity map of the 14 prep routes). `check_routes.py` and `check_links.py` read both maps. `check_sources.py` reads only the tutorial map and must still print `OK 23 pages checked, 0 skipped`.
+- New file `scripts/prep-route-map.json` (identity map of the 14 prep routes). `check_routes.py` reads both maps. `check_links.py` scans the whole build and needs no change. `check_outline.py` and `check_sources.py` read only the tutorial map. `check_sources.py` must still print `OK 23 pages checked, 0 skipped`.
 
 ## 11. Testing
 
