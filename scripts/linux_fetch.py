@@ -9,7 +9,8 @@ index, topic, url, status, bytes.
 Status values: ok, title-only, robots, http-<code>, error:<name>.
 
 Rules: one request at a time, at least 2 s between requests to one host,
-a 20 s timeout, robots.txt respected, no retries.
+a 20 s timeout, robots.txt respected (also after a redirect, and a
+robots.txt that fails means skip the origin), no retries.
 """
 
 import re
@@ -23,6 +24,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 USER_AGENT = "Mozilla/5.0 (compatible; linux-notes-research/1.0)"
+AGENT_TOKEN = "linux-notes-research"
 TIMEOUT = 20
 HOST_DELAY = 2.0
 MAX_BYTES = 5_000_000
@@ -117,6 +119,23 @@ def should_fetch(link: dict) -> bool:
     return True
 
 
+class RobotsBlocked(Exception):
+    """A URL, or a redirect target, is disallowed by robots.txt."""
+
+
+class _RobotsRedirect(urllib.request.HTTPRedirectHandler):
+    """Follow a redirect only if robots.txt allows the target URL."""
+
+    def __init__(self, fetcher: "Fetcher") -> None:
+        self.fetcher = fetcher
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # A redirect of robots.txt itself must not check robots.txt again.
+        if urlparse(newurl).path != "/robots.txt" and not self.fetcher.allowed(newurl):
+            raise RobotsBlocked(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 class Fetcher:
     """Send one request at a time and keep a pause between requests to one host."""
 
@@ -131,7 +150,7 @@ class Fetcher:
             time.sleep(wait)
         request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
         try:
-            return urllib.request.urlopen(request, timeout=TIMEOUT)
+            return urllib.request.build_opener(_RobotsRedirect(self)).open(request, timeout=TIMEOUT)
         finally:
             self.last_request[host] = time.monotonic()
 
@@ -146,17 +165,18 @@ class Fetcher:
                 body = response.read(MAX_BYTES).decode("utf-8", errors="replace")
             parser.parse(body.splitlines())
         except urllib.error.HTTPError as error:
-            if error.code in (401, 403):
+            # 401, 403, and 5xx: skip the origin. Other 4xx (404, 410): no rules.
+            if error.code in (401, 403) or error.code >= 500:
                 parser.disallow_all = True
             else:
                 parser.allow_all = True
         except Exception:
-            parser.allow_all = True
+            parser.disallow_all = True  # a network error: skip the origin
         self.robots[origin] = parser
         return parser
 
     def allowed(self, url: str) -> bool:
-        return self._robots_for(url).can_fetch(USER_AGENT, url)
+        return self._robots_for(url).can_fetch(AGENT_TOKEN, url)
 
     def get_text(self, url: str) -> str:
         """Fetch a URL and return its visible text. Raise on a failure."""
@@ -179,6 +199,8 @@ def fetch_one(fetcher: Fetcher, link: dict) -> tuple[str, str]:
         if not fetcher.allowed(link["url"]):
             return "robots", ""
         return "ok", fetcher.get_text(link["url"])
+    except RobotsBlocked:
+        return "robots", ""
     except urllib.error.HTTPError as error:
         return f"http-{error.code}", ""
     except Exception as error:

@@ -3,6 +3,7 @@ import sys
 import tempfile
 import unittest
 import urllib.error
+import urllib.request
 from email.message import Message
 from unittest import mock
 from pathlib import Path
@@ -131,6 +132,105 @@ class RunTest(unittest.TestCase):
                 linux_fetch.run([self.LINKS[0], self.LINKS[2]], Path(tmp))
             rows = (Path(tmp) / "report.tsv").read_text().splitlines()
         self.assertEqual(len(rows), 2)  # header + the first link
+
+
+def _http_error(url, code):
+    return urllib.error.HTTPError(url, code, "x", Message(), io.BytesIO(b""))
+
+
+class RobotsTest(unittest.TestCase):
+    def _fetcher(self, robots):
+        """Return a Fetcher whose robots.txt is `robots`: text, an int status, or an exception."""
+        def fake_open(self, url):
+            if url.endswith("/robots.txt"):
+                if isinstance(robots, int):
+                    raise _http_error(url, robots)
+                if isinstance(robots, Exception):
+                    raise robots
+                return _FakeResponse(robots.encode())
+            return _FakeResponse(b"<p>hello</p>")
+
+        patcher = mock.patch.object(linux_fetch.Fetcher, "_open", fake_open)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return linux_fetch.Fetcher()
+
+    def test_rules_for_our_agent_token_apply(self):
+        fetcher = self._fetcher("User-agent: linux-notes-research\nDisallow: /private\n")
+        self.assertFalse(fetcher.allowed("http://a.test/private/x"))
+        self.assertTrue(fetcher.allowed("http://a.test/public"))
+
+    def test_star_rules_still_apply(self):
+        fetcher = self._fetcher("User-agent: *\nDisallow: /private\n")
+        self.assertFalse(fetcher.allowed("http://a.test/private/x"))
+
+    def test_robots_5xx_skips_the_origin(self):
+        for code in (500, 503):
+            fetcher = self._fetcher(code)
+            self.assertFalse(fetcher.allowed("http://a.test/x"), code)
+
+    def test_robots_network_error_skips_the_origin(self):
+        for error in (TimeoutError(), urllib.error.URLError("down")):
+            fetcher = self._fetcher(error)
+            self.assertFalse(fetcher.allowed("http://a.test/x"), type(error))
+
+    def test_robots_401_and_403_disallow_all(self):
+        for code in (401, 403):
+            self.assertFalse(self._fetcher(code).allowed("http://a.test/x"), code)
+
+    def test_robots_404_410_and_other_4xx_allow_all(self):
+        for code in (404, 410, 429):
+            self.assertTrue(self._fetcher(code).allowed("http://a.test/x"), code)
+
+    def test_fetch_one_reports_robots_for_a_5xx_robots_file(self):
+        fetcher = self._fetcher(503)
+        link = {"topic": "T", "type": "article", "title": "A", "url": "http://a.test/x"}
+        self.assertEqual(linux_fetch.fetch_one(fetcher, link), ("robots", ""))
+
+
+class RedirectTest(unittest.TestCase):
+    def _handler(self, robots):
+        def fake_open(self, url):
+            if url.endswith("/robots.txt"):
+                return _FakeResponse(robots.encode())
+            return _FakeResponse(b"<p>hello</p>")
+
+        patcher = mock.patch.object(linux_fetch.Fetcher, "_open", fake_open)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return linux_fetch._RobotsRedirect(linux_fetch.Fetcher())
+
+    def _redirect(self, handler, new_url):
+        request = urllib.request.Request("http://a.test/old")
+        return handler.redirect_request(request, None, 302, "Found", Message(), new_url)
+
+    def test_redirect_to_a_disallowed_other_host_is_blocked(self):
+        handler = self._handler("User-agent: *\nDisallow: /\n")
+        with self.assertRaises(linux_fetch.RobotsBlocked):
+            self._redirect(handler, "http://b.test/new")
+
+    def test_redirect_to_an_allowed_other_host_is_followed(self):
+        handler = self._handler("User-agent: *\nDisallow: /secret\n")
+        self.assertIsNotNone(self._redirect(handler, "http://b.test/new"))
+
+    def test_redirect_to_a_disallowed_path_on_the_same_host_is_blocked(self):
+        handler = self._handler("User-agent: *\nDisallow: /new\n")
+        with self.assertRaises(linux_fetch.RobotsBlocked):
+            self._redirect(handler, "http://a.test/new")
+
+    def test_redirect_of_a_robots_file_skips_the_check(self):
+        handler = self._handler("User-agent: *\nDisallow: /\n")
+        self.assertIsNotNone(self._redirect(handler, "http://www.a.test/robots.txt"))
+
+    def test_fetch_one_reports_robots_when_a_redirect_is_blocked(self):
+        def blocked(self, url):
+            if url.endswith("/robots.txt"):
+                raise _http_error(url, 404)
+            raise linux_fetch.RobotsBlocked(url)
+
+        link = {"topic": "T", "type": "article", "title": "A", "url": "http://a.test/x"}
+        with mock.patch.object(linux_fetch.Fetcher, "_open", blocked):
+            self.assertEqual(linux_fetch.fetch_one(linux_fetch.Fetcher(), link), ("robots", ""))
 
 
 class OverlapTest(unittest.TestCase):
