@@ -51,6 +51,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `app/globals.css` | Design tokens (both themes), Tailwind, the MDX element styles (`.mdx`, `.code-block`, `.mdx-table`, `details`) |
 | `app/(site)/layout.tsx` | The site shell (`SiteShell`) and the search dialog |
 | `app/(site)/page.tsx` | The home page (`components/pages/HomePage.tsx`): the START HERE strip, then the contents by group with a part count per group and a tagline per page |
+| `app/(site)/linux/page.tsx`, `app/(site)/linux/[stage]/page.tsx` | The Linux module: the roadmap home (`components/pages/LinuxHome.tsx`) and the notes of one stage. `[stage]` loads `content/linux/<stage>.mdx`. Static params come from `lib/linux/stages.ts`. |
 | `app/(site)/[group]/[page]/page.tsx` | Loads `content/<group>/<page>.mdx`. Static params come from `lib/nav.ts`. It renders the meta line for `<PageMeta />`, the Sources list from `page.sources`, the reading progress bar, and the back-to-top button. |
 | `app/search-index.json/route.ts` | The static search index: one doc per page intro and one per `##` section |
 | `app/sitemap.ts`, `app/robots.ts`, `app/not-found.tsx` | Sitemap, robots, 404 page |
@@ -60,12 +61,15 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `components/navigation/` | `SectionNav` ("On this page"), `SearchPalette` (Ctrl/Cmd+K) |
 | `components/content/` | `PageHeader` (the `PART 05 · CONFIGURE` eyebrow), `MetaLine` (the meta line), `Sources`, `ReadingProgress`, `BackToTop`, `PrevNext`, `CopyButton` |
 | `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper) |
+| `components/linux/` | `useLinuxProgress.ts` (the progress store), `LinuxProgressSummary`, `StageProgress`, `TopicChecklist`, `LinuxSidebarList` |
+| `lib/linux/stages.ts` | The one ordered list of the 12 stages and their 102 topics. See "Linux Module". |
+| `lib/linux/ui.ts` | The English strings of the Linux module |
 | `lib/nav.ts` | The single source of the page order. See below. |
 | `lib/outline.ts`, `lib/headings.ts` | The `##`/`###` outline of an MDX file, with the same ids as `rehype-slug` |
 | `lib/search.ts` | Builds the search docs, the index, and runs a search |
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
-| `lib/pwa.ts` | The web manifest, the precache list (all 24 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (all 51 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels and the three START HERE pages |
 | `lib/reading.ts` | `articleProgress` and `showBackToTop` for the reading aids |
@@ -73,13 +77,25 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `lib/scroll-lock.ts` | One page-scroll lock, shared by the drawer and the search dialog |
 | `mdx-components.tsx` | Registers the MDX components |
 | `content/<group>/<page>.mdx` | The 23 tutorial pages |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `reading`, `search`, `theme`, `ui` |
+| `content/linux/<stage>.mdx` | The 12 Linux stage pages |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `reading`, `search`, `theme`, `ui`, `linux-data`, `linux-progress` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
+| `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
+| `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the sidebar, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 24 routes: `/` and `/<group>/<page>/` for the 23 pages.
+The site has 51 routes:
+
+| Routes | Count |
+|---|---|
+| `/` | 1 |
+| `/<group>/<page>/` for the 23 tutorial pages | 23 |
+| `/prep/` and the 13 prep areas | 14 |
+| `/linux/` and the 12 Linux stages | 13 |
+
+The prep module has its own design: `docs/superpowers/specs/2026-10-13-prep-module-design.md`.
 
 | Group | Folder | Pages |
 |---|---|---|
@@ -89,6 +105,22 @@ The site has 24 routes: `/` and `/<group>/<page>/` for the 23 pages.
 | Extend | `content/extend/` | `skills`, `subagents`, `hooks`, `mcp`, `plugins` |
 | Automate | `content/automate/` | `headless`, `github-actions`, `playwright` |
 | Case Study | `content/case-study/` | `overview`, `bug-hunt`, `pr-review`, `test-and-retest`, `automation`, `lessons` |
+
+## Linux Module
+
+The Linux module is the roadmap at `/linux/` and 12 stage pages at `/linux/<stage>/`. The design is `docs/superpowers/specs/2026-10-16-linux-module-design.md`.
+
+`lib/linux/stages.ts` is the one ordered list of the stages and their topics. It drives the sidebar, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `linux-progress`).
+
+| Rule | Detail |
+|---|---|
+| Sources | Each page cites its roadmap.sh/linux links. Each fact about a command, a flag, or a path also has an official source: `man7.org`, `kernel.org`, `systemd.io`, or a GNU manual. This replaces "No blogs" of the Content Workflow for this module only, because most roadmap links are blogs. |
+| Research notes | `docs/superpowers/research/linux-*.md`. Each stage has a notes file and a `.factcheck.md` report. |
+| Raw text | `scripts/linux_fetch.py` downloads the roadmap links as text. Never commit this text. It is third-party text. `scripts/linux_overlap.py` finds word runs that a page copies from it. |
+| Done | A stage is done only when its fact-check report ends with `Open FAILs: 0`. |
+| Topics | `npm test` checks that each stage has an MDX file and that each topic anchor is the id of a `##` heading. |
+
+To add or change a topic, edit `lib/linux/stages.ts` and the `##` heading of the MDX file together. The title of a topic is its heading. The `anchor` comes from the title with the `rehype-slug` rules. Six topics have an anchor that ends in `-1`, because the `#` title of the page takes the plain slug first.
 
 ## How to Add a Page
 
@@ -190,7 +222,7 @@ To change a page:
 
 The site installs as an app and works offline.
 
-- The service worker caches all 24 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
+- The service worker caches all 51 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Each build writes a new cache version into `/sw.js`. The new worker deletes the old caches.
 - Only production builds register the service worker. `npm run dev` has none. To test it, run `npm run build` and serve `out/`.
 - A new page in `lib/nav.ts` goes into the precache list automatically.
@@ -208,17 +240,18 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, and the page and route-map lists |
+| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
-| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json` that has no page in `out/` |
+| `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
+| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `prep-route-map.json`, and `linux-route-map.json` that has no page in `out/` |
 | `python3 scripts/check_links.py out` | Lists broken internal links and assets |
 | `python3 scripts/check_outline.py out` | Checks that each "On this page" link points to an element id |
-| `python3 scripts/check_sources.py out` | Checks each content page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
+| `python3 scripts/check_sources.py out` | Checks each tutorial page and each Linux stage page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
 | `scripts/compare_text.py` | Historical record of the phase-3 migration. It cannot run now. See below. |
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 23 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 35 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 
