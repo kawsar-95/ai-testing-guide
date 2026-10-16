@@ -137,3 +137,25 @@ FAILs (all minor):
 - Row 68: copied wording from S6 (`/var` table cell).
 
 Open FAILs: 4
+
+## Round 2 (2026-10-16)
+
+Checked commit b415ef9 (page and notes only) against 32c2e95 with `git diff 32c2e95 b415ef9 -- content/linux/shell-basics.mdx docs/superpowers/research/linux-shell-basics.md`. Sources: the same fetched text as round 1. For the S5 title the checker also fetched the live page `<title>`.
+
+What changed: 6 sentences or titles in the MDX (rows R2-1 to R2-6) and 1 line in the notes (the S5 entry). One new cite was added (`<Cite n={11} />`), so the page has 68 cites. All 21 sources are cited and every cite number 1 to 21 has a source. The page has exactly the 7 topic `##` headings (Shell Basics, Basic Commands, Navigation Basics, Command Help, Command Path, Directory Hierarchy, Environment Variables).
+
+Overlap: `linux_overlap.py content/linux/shell-basics.mdx` prints nothing and exits 0 against the roadmap raw dir. It also prints nothing and exits 0 against the checker's official-pages dir (man pages and the web pages of round 1).
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| R2-1 | Shell Basics | "Bash is a newer shell that builds on the old Bourne shell." (was row 4) | 1, 11 | PASS | S1: "It is a reimplementation and extension of the Bourne shell". S11: "an enhanced version of the original Unix shell program, sh". True, and no copied run. Row 4 is fixed. |
+| R2-2 | Shell Basics | "The terminal is the program that opens a window for you." (was row 7) | 11 | PASS | S11: "It's a program called a terminal emulator. This is a program that opens a window and lets you interact with the shell." Row 7 is fixed. |
+| R2-3 | Shell Basics | "The shell is the program inside it that reads your commands." | 12 | PASS | S12: "Shell: It is a program that interprets the commands entered via the terminal" |
+| R2-4 | Shell Basics (bullet 2) | "A shell that you open at a prompt, but not as a login, reads `~/.bashrc`." | 1 | FAIL | New error. S1: "When an interactive shell that is not a login shell is started, bash reads ... ~/.bashrc". The new wording drops "interactive". A shell that you start at a prompt can be non-interactive: `bash script.sh` or `bash -c 'cmd'` do not read `~/.bashrc` (S1: BASH_ENV is read instead, and the page's own bullet 3 says so). So the bullet can be read as wrong, and it no longer links to the `$-` and `i` text below. Fix: use the standard term, "An interactive shell that is not a login shell reads `~/.bashrc`." (round 1 judged this term as not a copy), or say "A shell that reads its input from a terminal and is not a login shell". |
+| R2-5 | Command Path | "`whereis` shows where the program, the source, and the manual page of a command are." (was row 54) | 5 | PASS | S5: "whereis locates the binary, source and manual files for the specified command names." True, and no copied run. Row 54 is fixed. |
+| R2-6 | Directory Hierarchy (table) | `/var`: "Data that grows and shrinks while the system runs, for example logs and spool files." (was row 68) | 6 | PASS | S6: "/var This directory contains files which may change in size, such as spool and log files." "Grows and shrinks" is "change in size". True, and no copied run. Row 68 is fixed. |
+| R2-7 | Sources (S5 title) | Title of source 5 is now "whereis(1) - find files of a command"; the notes say this is the "page title on the site" | 5 | FAIL | The live page `<title>` is "whereis(1) - Linux manual page", and the NAME line is "whereis - locate the binary, source, and manual page files for a command". "find files of a command" is on neither, so the title is invented and the note is false. A source title may copy its source (round 1 did not flag the old title as a copy). Fix: restore the NAME title ("whereis(1) - locate the binary, source, and manual page files for a command"), or use the site title "whereis(1) - Linux manual page", and correct the S5 line of the notes. |
+
+Row 4, row 7, row 54, and row 68 of round 1 are fixed. Two new FAILs (R2-4 and R2-7) came from the rewording.
+
+Open FAILs: 2
