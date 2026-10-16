@@ -6,7 +6,8 @@ import { PAGES } from "../lib/nav.ts";
 import { getOutline } from "../lib/outline.ts";
 import { AREAS } from "../lib/prep/areas.ts";
 import { ALL_ITEMS, itemsOf as ITEMS_OF } from "../lib/prep/items.ts";
-import { buildPrepSearchDocs, buildSearchDocs, createIndex, runSearch } from "../lib/search.ts";
+import { STAGES } from "../lib/linux/stages.ts";
+import { buildLinuxSearchDocs, buildPrepSearchDocs, buildSearchDocs, createIndex, runSearch } from "../lib/search.ts";
 import type { SearchDoc } from "../lib/search.ts";
 
 const read = (group: string, slug: string) => readFileSync(join("content", group, `${slug}.mdx`), "utf8");
@@ -14,6 +15,8 @@ const docs = buildSearchDocs(PAGES.map((page) => ({ page, source: read(page.grou
 
 const prepEntries = AREAS.flatMap((area) => ITEMS_OF(area.slug).map((item) => ({ area, item })));
 const prepDocs = buildPrepSearchDocs(prepEntries);
+
+const linuxDocs = buildLinuxSearchDocs(STAGES.map((stage) => ({ stage, source: read("linux", stage.slug) })));
 
 test("every page has at least one doc", () => {
   for (const page of PAGES) {
@@ -138,7 +141,7 @@ test("runSearch ranks the Hooks page first for hooks", () => {
 test("runSearch hits carry the stored fields and no text", () => {
   const index = createIndex(docs);
   const hit = runSearch(index, "hooks")[0];
-  assert.deepEqual(Object.keys(hit).sort(), ["href", "id", "page", "part", "title"]);
+  assert.deepEqual(Object.keys(hit).sort(), ["group", "href", "id", "page", "part", "title"]);
 });
 
 test("runSearch returns nothing for a blank query and honors the limit", () => {
@@ -216,4 +219,63 @@ test("a prep question is found by runSearch", () => {
   assert.equal(hits[0].page, "Intern");
   // A tutorial hit keeps its part number.
   assert.equal(runSearch(index, "hooks")[0].part, PAGES.find((page) => page.slug === "hooks")?.part);
+});
+
+test("buildLinuxSearchDocs gives an intro doc and one doc per ## section for each stage", () => {
+  for (const stage of STAGES) {
+    const own = linuxDocs.filter((doc) => doc.page === stage.title);
+    const sections = getOutline("linux", stage.slug).filter((item) => item.level === 2);
+    assert.equal(own[0].href, stage.href, `${stage.href} intro`);
+    assert.equal(own[0].title, stage.title);
+    assert.equal(own.length, sections.length + 1, stage.href);
+    assert.deepEqual(
+      own.slice(1).map((doc) => doc.href),
+      sections.map((item) => `${stage.href}#${item.id}`),
+      stage.href,
+    );
+  }
+  assert.deepEqual(buildLinuxSearchDocs([]), []);
+});
+
+test("a linux doc has group 'linux', part null, and an href '/linux/<stage>/#<anchor>' for a section", () => {
+  assert.ok(linuxDocs.length > STAGES.length);
+  for (const doc of linuxDocs) {
+    assert.equal(doc.group, "linux", doc.id);
+    assert.equal(doc.part, null, doc.id);
+    assert.equal(doc.id, doc.href);
+    assert.ok(doc.title.length > 0, doc.id);
+  }
+  for (const stage of STAGES) {
+    for (const topic of stage.topics) {
+      assert.ok(
+        linuxDocs.some((doc) => doc.href === `${stage.href}#${topic.anchor}`),
+        `${stage.href}#${topic.anchor}`,
+      );
+    }
+  }
+  // The topic with the stage title gets the -1 anchor: the # title takes the plain slug.
+  const shell = linuxDocs.find((doc) => doc.title === "Shell Basics" && doc.href.includes("#"));
+  assert.ok(shell);
+  assert.equal(shell.href, "/linux/shell-basics/#shell-basics-1");
+});
+
+test("linux doc ids are unique and do not clash with tutorial or prep ids", () => {
+  const ids = new Set([...docs, ...prepDocs].map((doc) => doc.id));
+  for (const doc of linuxDocs) assert.ok(!ids.has(doc.id), doc.id);
+  const all = [...docs, ...prepDocs, ...linuxDocs].map((doc) => doc.id);
+  assert.equal(new Set(all).size, all.length);
+});
+
+test("a search for the topic title 'Cgroups' finds a hit with group 'linux' and href '/linux/containers/#cgroups'", () => {
+  const index = createIndex([...docs, ...prepDocs, ...linuxDocs]);
+  const hit = runSearch(index, "Cgroups").find((h) => h.href === "/linux/containers/#cgroups");
+  assert.ok(hit);
+  assert.equal(hit.group, "linux");
+  assert.equal(hit.part, null);
+});
+
+test("runSearch hits carry the group", () => {
+  const index = createIndex([...docs, ...prepDocs, ...linuxDocs]);
+  assert.equal(runSearch(index, "hooks")[0].group, "extend");
+  assert.equal(runSearch(index, "difference between verification and validation")[0].group, "prep");
 });

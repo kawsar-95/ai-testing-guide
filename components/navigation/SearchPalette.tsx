@@ -275,12 +275,12 @@ export function SearchPalette() {
                       : "")
                   }
                 >
-                  {/* A prep hit has no part: its label is PREP and the area.
+                  {/* A hit with no part (prep, linux): its label is the group and the page.
                       An intro hit has the page title as its title: the label
                       line then shows only the part, so the title shows once. */}
                   <div className="font-mono text-[11px] uppercase tracking-wide text-text-faint">
                     {hit.part === null ? (
-                      `PREP · ${hit.page}`
+                      `${hit.group.toUpperCase()} · ${hit.page}`
                     ) : (
                       <>
                         {partLabel(hit.part)}

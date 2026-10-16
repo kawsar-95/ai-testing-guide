@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { LINUX_ROUTES, STAGES } from "../lib/linux/stages.ts";
 import { PAGES } from "../lib/nav.ts";
 import { PREP_ROUTES } from "../lib/prep/areas.ts";
 import { assetPattern, precacheUrls, serviceWorkerSource, webManifest } from "../lib/pwa.ts";
@@ -22,6 +23,18 @@ test("the precache list has every prep route, with and without a base path", () 
     const urls = precacheUrls(basePath);
     for (const route of PREP_ROUTES) assert.ok(urls.includes(`${basePath}${route}`), `${basePath}${route}`);
     assert.ok(urls.includes(`${basePath}/prep/intern/`));
+    assert.equal(new Set(urls).size, urls.length, "no duplicates");
+  }
+});
+
+test("precacheUrls includes /linux/ and the 12 stage routes", () => {
+  assert.equal(STAGES.length, 12);
+  assert.equal(LINUX_ROUTES.length, 13);
+  for (const basePath of ["", "/repo"]) {
+    const urls = precacheUrls(basePath);
+    assert.ok(urls.includes(`${basePath}/linux/`));
+    for (const stage of STAGES) assert.ok(urls.includes(`${basePath}${stage.href}`), stage.href);
+    for (const route of LINUX_ROUTES) assert.ok(urls.includes(`${basePath}${route}`), route);
     assert.equal(new Set(urls).size, urls.length, "no duplicates");
   }
 });

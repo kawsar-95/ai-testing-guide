@@ -5,7 +5,7 @@
 import MiniSearch from "minisearch";
 import { headingsFromSource, plainTitle, sourceLines } from "./headings.ts";
 import type { SourceLine } from "./headings.ts";
-import type { NavPage } from "./nav.ts";
+import type { LinuxStage } from "./linux/stages.ts";
 import type { PrepArea, PrepItem } from "./prep/types.ts";
 
 export type SearchDoc = {
@@ -19,8 +19,11 @@ export type SearchDoc = {
   text: string;
 };
 
+/** The page fields that a doc needs. A `NavPage` fits. */
+export type SearchPage = { href: string; title: string; part: number | null; group: string };
+
 /** A search result: the stored fields of a doc, without the body text. */
-export type SearchHit = Pick<SearchDoc, "id" | "href" | "part" | "page" | "title">;
+export type SearchHit = Pick<SearchDoc, "id" | "href" | "part" | "group" | "page" | "title">;
 
 const TAG = /<\/?[A-Za-z][^>]*>/g;
 const ATTRIBUTE = /\b(?:title|subtitle)="([^"]*)"/g;
@@ -76,27 +79,36 @@ function textOf(lines: SourceLine[]): string {
  * section. Section ids come from lib/headings.ts, so they match the ids of
  * the built page.
  */
-export function buildSearchDocs(pages: { page: NavPage; source: string }[]): SearchDoc[] {
-  return pages.flatMap(({ page, source }) => {
-    const lines = sourceLines(source);
-    const sections = headingsFromSource(source).filter((heading) => heading.level === 2);
-    const make = (href: string, title: string, from: number, to: number): SearchDoc => ({
-      id: href,
-      href,
-      part: page.part,
-      group: page.group,
-      page: page.title,
-      title,
-      text: textOf(lines.slice(from, to)),
-    });
-
-    return [
-      make(page.href, page.title, 0, sections[0]?.line ?? lines.length),
-      ...sections.map((section, i) =>
-        make(`${page.href}#${section.id}`, section.title, section.line + 1, sections[i + 1]?.line ?? lines.length),
-      ),
-    ];
+function pageDocs(page: SearchPage, source: string): SearchDoc[] {
+  const lines = sourceLines(source);
+  const sections = headingsFromSource(source).filter((heading) => heading.level === 2);
+  const make = (href: string, title: string, from: number, to: number): SearchDoc => ({
+    id: href,
+    href,
+    part: page.part,
+    group: page.group,
+    page: page.title,
+    title,
+    text: textOf(lines.slice(from, to)),
   });
+
+  return [
+    make(page.href, page.title, 0, sections[0]?.line ?? lines.length),
+    ...sections.map((section, i) =>
+      make(`${page.href}#${section.id}`, section.title, section.line + 1, sections[i + 1]?.line ?? lines.length),
+    ),
+  ];
+}
+
+export function buildSearchDocs(pages: { page: SearchPage; source: string }[]): SearchDoc[] {
+  return pages.flatMap(({ page, source }) => pageDocs(page, source));
+}
+
+/** The docs of the Linux stage pages: the same sections as a tutorial page, with no part number. */
+export function buildLinuxSearchDocs(entries: { stage: LinuxStage; source: string }[]): SearchDoc[] {
+  return entries.flatMap(({ stage, source }) =>
+    pageDocs({ href: stage.href, title: stage.title, part: null, group: "linux" }, source),
+  );
 }
 
 /** The text of an item without its title: the other text fields, joined by a space. */
@@ -131,7 +143,7 @@ const SEARCH_OPTIONS = {
 export function createIndex(docs: SearchDoc[]): MiniSearch<SearchDoc> {
   const index = new MiniSearch<SearchDoc>({
     fields: ["title", "page", "text"],
-    storeFields: ["href", "part", "page", "title"],
+    storeFields: ["href", "part", "group", "page", "title"],
     searchOptions: SEARCH_OPTIONS,
   });
   index.addAll(docs);
@@ -147,6 +159,7 @@ export function runSearch(index: MiniSearch<SearchDoc>, query: string, limit = 8
       id: String(hit.id),
       href: hit.href as string,
       part: hit.part as number | null,
+      group: hit.group as string,
       page: hit.page as string,
       title: hit.title as string,
     }));
