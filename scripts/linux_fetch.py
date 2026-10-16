@@ -130,9 +130,11 @@ class _RobotsRedirect(urllib.request.HTTPRedirectHandler):
         self.fetcher = fetcher
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        # A redirect of robots.txt itself must not check robots.txt again.
-        if urlparse(newurl).path != "/robots.txt" and not self.fetcher.allowed(newurl):
-            raise RobotsBlocked(newurl)
+        # A robots.txt request must not check robots.txt again (it would recurse).
+        if urlparse(req.full_url).path != "/robots.txt":
+            if not self.fetcher.allowed(newurl):
+                raise RobotsBlocked(newurl)
+            self.fetcher.wait_for_host(urlparse(newurl).netloc)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
@@ -143,14 +145,22 @@ class Fetcher:
         self.last_request: dict[str, float] = {}
         self.robots: dict[str, urllib.robotparser.RobotFileParser] = {}
 
-    def _open(self, url: str):
-        host = urlparse(url).netloc
+    def wait_for_host(self, host: str) -> None:
+        """Sleep until HOST_DELAY has passed since the last request to the host. Then record a request."""
         wait = self.last_request.get(host, 0.0) + HOST_DELAY - time.monotonic()
         if wait > 0:
             time.sleep(wait)
+        self.last_request[host] = time.monotonic()
+
+    def _open(self, url: str):
+        host = urlparse(url).netloc
+        self.wait_for_host(host)
         request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
         try:
-            return urllib.request.build_opener(_RobotsRedirect(self)).open(request, timeout=TIMEOUT)
+            response = urllib.request.build_opener(_RobotsRedirect(self)).open(request, timeout=TIMEOUT)
+            # After a redirect, the last request went to the final host.
+            self.last_request[urlparse(response.geturl()).netloc] = time.monotonic()
+            return response
         finally:
             self.last_request[host] = time.monotonic()
 

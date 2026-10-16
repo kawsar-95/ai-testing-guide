@@ -218,9 +218,56 @@ class RedirectTest(unittest.TestCase):
         with self.assertRaises(linux_fetch.RobotsBlocked):
             self._redirect(handler, "http://a.test/new")
 
-    def test_redirect_of_a_robots_file_skips_the_check(self):
+    def test_redirect_waits_for_the_host_delay_and_records_the_request(self):
+        for cached in (False, True):
+            clock = [100.0]
+            sleeps = []
+
+            def fake_sleep(seconds):
+                sleeps.append(seconds)
+                clock[0] += seconds
+
+            handler = self._handler("User-agent: *\nDisallow: /secret\n")
+            fetcher = handler.fetcher
+            if cached:
+                # The robots.txt of host B is cached. The last request to B was 0.5 s ago.
+                fetcher.allowed("http://b.test/x")
+                fetcher.last_request["b.test"] = 99.5
+            with mock.patch.object(linux_fetch.time, "monotonic", lambda: clock[0]), \
+                    mock.patch.object(linux_fetch.time, "sleep", fake_sleep):
+                if not cached:
+                    # The robots.txt fetch (patched _open) is not timed. Mark it 0.5 s ago.
+                    original = linux_fetch.Fetcher.allowed
+
+                    def allowed(url):
+                        result = original(fetcher, url)
+                        fetcher.last_request["b.test"] = 99.5
+                        return result
+
+                    fetcher.allowed = allowed
+                self.assertIsNotNone(self._redirect(handler, "http://b.test/new"))
+            self.assertEqual(sleeps, [1.5], cached)
+            self.assertEqual(fetcher.last_request["b.test"], 101.5, cached)
+
+    def test_redirect_of_a_robots_file_to_another_path_does_not_check_robots_again(self):
         handler = self._handler("User-agent: *\nDisallow: /\n")
-        self.assertIsNotNone(self._redirect(handler, "http://www.a.test/robots.txt"))
+        request = urllib.request.Request("http://a.test/robots.txt")
+        result = handler.redirect_request(request, None, 302, "Found", Message(), "http://a.test/other")
+        self.assertIsNotNone(result)
+
+    def test_open_records_the_time_for_the_host_after_a_redirect(self):
+        class Opener:
+            def open(self, request, timeout):
+                response = _FakeResponse(b"x")
+                response.geturl = lambda: "http://b.test/final"
+                return response
+
+        fetcher = linux_fetch.Fetcher()
+        with mock.patch.object(linux_fetch.urllib.request, "build_opener", lambda *a: Opener()), \
+                mock.patch.object(linux_fetch.time, "monotonic", lambda: 50.0):
+            fetcher._open("http://a.test/old")
+        self.assertEqual(fetcher.last_request["a.test"], 50.0)
+        self.assertEqual(fetcher.last_request["b.test"], 50.0)
 
     def test_fetch_one_reports_robots_when_a_redirect_is_blocked(self):
         def blocked(self, url):
