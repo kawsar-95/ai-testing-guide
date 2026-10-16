@@ -1,7 +1,8 @@
 """Check that each "On this page" link of a built page points to an element id.
 
 usage: check_outline.py <out-dir> [--routes ROUTE ...]
-Without --routes it checks every page in route-map.json except "/".
+Without --routes it checks every page in route-map.json except "/", and every
+Linux stage page in linux-route-map.json (not "/linux/", which has no meta line).
 """
 import argparse
 import json
@@ -12,8 +13,13 @@ import checks
 
 
 def default_routes():
-    route_map = json.loads((Path(__file__).resolve().parent / "route-map.json").read_text())
-    return [route for route in route_map.values() if route != "/"]
+    """The tutorial pages (not "/") and the Linux stage pages (not "/linux/")."""
+    here = Path(__file__).resolve().parent
+    routes = []
+    for name, home in (("route-map.json", "/"), ("linux-route-map.json", "/linux/")):
+        route_map = json.loads((here / name).read_text())
+        routes += [route for route in route_map.values() if route != home]
+    return routes
 
 
 def main(argv=None):
