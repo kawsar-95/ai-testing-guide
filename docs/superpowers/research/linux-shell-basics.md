@@ -7,7 +7,7 @@ S1. bash(1) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/
 S2. ls(1) — man7.org (GNU coreutils 9.11) — https://man7.org/linux/man-pages/man1/ls.1.html — accessed 2026-10-16
 S3. pwd(1) — man7.org (GNU coreutils 9.11) — https://man7.org/linux/man-pages/man1/pwd.1.html — accessed 2026-10-16
 S4. man(1) — man7.org (man-db) — https://man7.org/linux/man-pages/man1/man.1.html — accessed 2026-10-16
-S5. whereis(1) — man7.org (util-linux) — https://man7.org/linux/man-pages/man1/whereis.1.html — accessed 2026-10-16
+S5. whereis(1) (page title on the site: "find files of a command") — man7.org (util-linux) — https://man7.org/linux/man-pages/man1/whereis.1.html — accessed 2026-10-16
 S6. hier(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/hier.7.html — accessed 2026-10-16
 S7. environ(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/environ.7.html — accessed 2026-10-16
 S8. env(1) — man7.org (GNU coreutils 9.11) — https://man7.org/linux/man-pages/man1/env.1.html — accessed 2026-10-16
