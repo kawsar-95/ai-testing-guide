@@ -84,9 +84,10 @@ export function createStorageStore<T>(storage: StorageLike | null, options: Stor
 const sameIds = (a: readonly string[], b: readonly string[]) =>
   a.length === b.length && a.every((id, i) => id === b[i]);
 
-export function createProgressStore(storage: StorageLike | null) {
+/** A progress store. `key` is the localStorage key. The default is the key of the Interview Prep module. */
+export function createProgressStore(storage: StorageLike | null, key: string = STORAGE_KEY) {
   const store = createStorageStore<readonly string[]>(storage, {
-    key: STORAGE_KEY,
+    key,
     parse: parseProgress,
     serialize: serializeProgress,
     equals: sameIds,

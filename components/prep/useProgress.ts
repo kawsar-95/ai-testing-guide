@@ -9,25 +9,34 @@ type ProgressStore = ReturnType<typeof createProgressStore>;
 
 const EMPTY: readonly string[] = [];
 
-let store: ProgressStore | null = null;
-
-/** One lazy store for the page. */
-function getStore(): ProgressStore {
-  if (!store) store = createProgressStore(getBrowserStorage());
-  return store;
-}
-
-const subscribe = createSubscribe(getStore, STORAGE_KEY);
-const getSnapshot = () => getStore().getSnapshot();
-const getServerSnapshot = () => EMPTY;
-
-export function useProgress(): {
+/**
+ * Make a progress hook for one localStorage key.
+ * Each call has its own lazy store, so two keys do not change each other.
+ */
+export function createUseProgress(key: string): () => {
   done: readonly string[];
   toggle(id: string): void;
   markDone(id: string): void;
 } {
-  const done = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const toggle = useCallback((id: string) => getStore().toggle(id), []);
-  const markDone = useCallback((id: string) => getStore().markDone(id), []);
-  return useMemo(() => ({ done, toggle, markDone }), [done, toggle, markDone]);
+  let store: ProgressStore | null = null;
+
+  /** One lazy store for the page. */
+  function getStore(): ProgressStore {
+    if (!store) store = createProgressStore(getBrowserStorage(), key);
+    return store;
+  }
+
+  const subscribe = createSubscribe(getStore, key);
+  const getSnapshot = () => getStore().getSnapshot();
+  const getServerSnapshot = () => EMPTY;
+
+  return function useProgress() {
+    const done = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    const toggle = useCallback((id: string) => getStore().toggle(id), []);
+    const markDone = useCallback((id: string) => getStore().markDone(id), []);
+    return useMemo(() => ({ done, toggle, markDone }), [done, toggle, markDone]);
+  };
 }
+
+/** The progress hook of the Interview Prep module. */
+export const useProgress = createUseProgress(STORAGE_KEY);
