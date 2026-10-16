@@ -210,8 +210,11 @@ const SOURCE: readonly StageEntry[] = [
 ];
 
 export const STAGES: readonly LinuxStage[] = SOURCE.map((stage, index) => {
-  // One slugger for each stage, as rehype-slug does for each page.
+  // One slugger for each stage, as rehype-slug does for each page. The `#`
+  // heading of the page takes its slug first, so a topic with the title of the
+  // stage gets the suffix "-1".
   const slugger = new GithubSlugger();
+  slugger.slug(stage.title);
   return {
     slug: stage.slug,
     title: stage.title,
