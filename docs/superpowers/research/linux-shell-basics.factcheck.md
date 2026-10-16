@@ -159,3 +159,21 @@ Overlap: `linux_overlap.py content/linux/shell-basics.mdx` prints nothing and ex
 Row 4, row 7, row 54, and row 68 of round 1 are fixed. Two new FAILs (R2-4 and R2-7) came from the rewording.
 
 Open FAILs: 2
+
+## Round 3 (2026-10-16)
+
+Checked commit 27b4d7b against ed74ba2 with `git diff ed74ba2 HEAD -- content/linux/shell-basics.mdx docs/superpowers/research/linux-shell-basics.md`. The diff has 2 changes in the MDX (bullet 2 of the startup files, and the S5 title) and 1 line in the notes (the S5 entry).
+
+Checks: `linux_overlap.py content/linux/shell-basics.mdx` prints nothing and exits 0 against the roadmap raw dir, and also against the checker's official-pages dir. The page has exactly 7 `##` headings (the topic titles). It has 68 cites. Cite numbers 1 to 21 all exist in `sources`, and every source is cited.
+
+Local test (scratchpad, fake `HOME` with a `.bashrc` that prints `BASHRC_READ`, no system change): `bash -i -c true` prints `BASHRC_READ`. `bash s.sh` prints only the script output. `bash -c 'echo x'` prints only `x`. `bash -il -c true` (login) does not print `BASHRC_READ`.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| R3-1 | Shell Basics (bullet 2) | "A `bash` that you start by hand at the prompt reads `~/.bashrc`, if it is interactive and was not started as a login shell." (R2-4) | 1 | PASS | S1: "When an interactive shell that is not a login shell is started, bash reads and executes commands from ~/.bashrc, if that file exists." Ran: the interactive non-login `bash` read the file. The condition "if it is interactive" keeps the sentence true for `bash -c`. R2-4 is fixed. |
+| R3-2 | Shell Basics (bullet 2) | "A script that you run with `bash script.sh` does not read this file." | 1 | PASS | S1: "When bash is started non-interactively, to run a shell script, for example, it looks for the variable BASH_ENV" (and no `~/.bashrc`). Ran: `bash s.sh` did not read the fake `.bashrc`. It agrees with bullet 3. The sshd case of S1 does not apply to `bash script.sh`. |
+| R3-3 | Sources (S5 title) | Title of source 5 is "whereis(1) - Linux manual page" | 5 | PASS | The live page `<title>` fetched in round 2 is "whereis(1) - Linux manual page". Publisher and URL are right. The S5 line of the notes has the same title. R2-7 is fixed. |
+
+Round 2 FAILs R2-4 and R2-7 are fixed. No new FAIL.
+
+Open FAILs: 0
