@@ -96,3 +96,87 @@ test("anchor of 'Stdout, Stdin, and Stderr' is 'stdout-stdin-and-stderr' and of 
   const tcp = getStage("networking")!.topics.find((t) => t.title === "TCP/IP");
   assert.equal(tcp?.anchor, "tcpip");
 });
+
+// The literals below are copied from the "Stage and topic table" of the plan.
+// They fail if a title, a description, or the order of the topics changes.
+const TABLE: readonly { slug: string; title: string; description: string; topics: readonly string[] }[] = [
+  {
+    slug: "shell-basics",
+    title: "Shell Basics",
+    description: "Move around the system, read help, and understand the shell and its paths.",
+    topics: ["Shell Basics", "Basic Commands", "Navigation Basics", "Command Help", "Command Path", "Directory Hierarchy", "Environment Variables"],
+  },
+  {
+    slug: "files",
+    title: "Working with Files",
+    description: "Create, copy, move, edit, link, archive, and compress files.",
+    topics: ["Working with Files", "Creating Files and Directories", "Copying and Renaming", "Moving Files and Directories", "Editing Files", "Nano", "Vim", "Soft and Hard Links", "Archiving and Compressing"],
+  },
+  {
+    slug: "text-processing",
+    title: "Text Processing",
+    description: "Use streams, pipes, and small tools to search and shape text.",
+    topics: ["Text Processing", "Stdout, Stdin, and Stderr", "Redirects", "Pipes", "Tee", "grep", "awk", "cut", "sort", "uniq", "wc", "head", "tail", "nl", "paste", "join", "split", "tr", "expand", "unexpand"],
+  },
+  {
+    slug: "users-permissions",
+    title: "Users and Permissions",
+    description: "Manage users and groups, use root with care, and control access to files.",
+    topics: ["User Management", "Users and Groups", "Create, Update, and Delete Users", "Super User", "File Permissions", "Managing Permissions"],
+  },
+  {
+    slug: "processes",
+    title: "Processes",
+    description: "List, run in the background, signal, and limit processes.",
+    topics: ["Process Management", "Listing and Finding Processes", "Background and Foreground Processes", "Killing Processes", "Process Signals", "Process Priorities", "Process Forking", "Ulimits"],
+  },
+  {
+    slug: "shell-scripting",
+    title: "Shell Scripting",
+    description: "Automate work with variables, conditions, loops, and debugging.",
+    topics: ["Shell Programming", "Variables", "Literals", "Conditionals", "Loops", "Debugging"],
+  },
+  {
+    slug: "packages",
+    title: "Packages",
+    description: "Find, install, update, and remove software with package managers.",
+    topics: ["Package Management", "Package Repositories", "Finding and Installing Packages", "Installing, Removing, and Upgrading Packages", "Listing Installed Packages", "Snap"],
+  },
+  {
+    slug: "disks-filesystems",
+    title: "Disks and Filesystems",
+    description: "Understand disks, filesystems, mounts, swap, and LVM.",
+    topics: ["Disks and Filesystems", "Filesystems", "Inodes", "Mounts", "Adding Disks", "Swap", "LVM"],
+  },
+  {
+    slug: "networking",
+    title: "Networking",
+    description: "Understand the network stack and use the tools that test and protect it.",
+    topics: ["Networking", "TCP/IP", "Ethernet, ARP, and RARP", "Subnetting", "IP Routing", "DHCP", "DNS Resolution", "ICMP", "ping", "traceroute", "netstat", "Netfilter", "Packet Analysis", "SSH", "File Transfer"],
+  },
+  {
+    slug: "boot-services",
+    title: "Boot and Services",
+    description: "See how Linux starts, and manage services with systemd.",
+    topics: ["Booting Linux", "Boot Loaders", "Service Management", "Creating Services", "Starting and Stopping Services", "Checking Service Status", "Checking Service Logs", "Running Services"],
+  },
+  {
+    slug: "troubleshooting",
+    title: "Troubleshooting",
+    description: "Check the health of a server, read the logs, and find the cause of a fault.",
+    topics: ["Server Review", "Uptime and Load", "Available Memory and Disk", "System Logs", "Authentication Logs", "Troubleshooting"],
+  },
+  {
+    slug: "containers",
+    title: "Containers",
+    description: "Learn how containers isolate processes: runtimes, Docker, and cgroups.",
+    topics: ["Containerization", "Container Runtime", "Docker", "Cgroups"],
+  },
+];
+
+test("the stage titles, descriptions, and topic titles match the table in the plan", () => {
+  assert.deepEqual(STAGES.map((s) => s.title), TABLE.map((t) => t.title));
+  assert.deepEqual(STAGES.map((s) => s.description), TABLE.map((t) => t.description));
+  assert.deepEqual(STAGES.map((s) => s.topics.map((t) => t.title)), TABLE.map((t) => t.topics));
+  assert.equal(TABLE.flatMap((t) => t.topics).length, 102);
+});
