@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import {
   ALL_TOPIC_IDS,
   LINUX_HOME,
@@ -10,6 +11,7 @@ import {
   getStage,
   studyMinutes,
 } from "../lib/linux/stages.ts";
+import { outlineFromSource } from "../lib/outline.ts";
 
 const SLUGS = [
   "shell-basics",
@@ -179,4 +181,44 @@ test("the stage titles, descriptions, and topic titles match the table in the pl
   assert.deepEqual(STAGES.map((s) => s.description), TABLE.map((t) => t.description));
   assert.deepEqual(STAGES.map((s) => s.topics.map((t) => t.title)), TABLE.map((t) => t.topics));
   assert.equal(TABLE.flatMap((t) => t.topics).length, 102);
+});
+
+const linuxDir = new URL("../content/linux/", import.meta.url);
+const readStage = (slug: string) => readFileSync(new URL(`${slug}.mdx`, linuxDir), "utf8");
+
+test("content/linux has exactly one MDX file for each stage", () => {
+  assert.ok(existsSync(linuxDir), "content/linux does not exist");
+  const files = readdirSync(linuxDir).sort();
+  assert.deepEqual(files, SLUGS.map((s) => `${s}.mdx`).sort());
+});
+
+test("every stage MDX exports its metadata and its page", () => {
+  for (const slug of SLUGS) {
+    const source = readStage(slug);
+    assert.match(source, /^export const metadata = \{/m, `${slug}.mdx has no "export const metadata"`);
+    assert.match(source, /^export const page = \{/m, `${slug}.mdx has no "export const page"`);
+  }
+});
+
+test("every topic anchor is a ## heading id in its stage MDX, in the order of the data", () => {
+  for (const stage of STAGES) {
+    const ids = outlineFromSource(readStage(stage.slug))
+      .filter((item) => item.level === 2)
+      .map((item) => item.id);
+    assert.deepEqual(
+      ids,
+      stage.topics.map((t) => t.anchor),
+      stage.slug,
+    );
+  }
+});
+
+test("every ## heading of a stage MDX is a topic of that stage", () => {
+  for (const stage of STAGES) {
+    const titles = new Set(stage.topics.map((t) => t.title));
+    for (const item of outlineFromSource(readStage(stage.slug))) {
+      if (item.level !== 2) continue;
+      assert.ok(titles.has(item.title), `${stage.slug}: "${item.title}" is not a topic`);
+    }
+  }
 });

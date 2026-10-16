@@ -8,9 +8,9 @@ const routeMap: Record<string, string> = JSON.parse(
 );
 const routes = new Set(Object.values(routeMap));
 
-/** Every content/<group>/<slug>.mdx file, as "<group>/<slug>". */
+/** Every tutorial content/<group>/<slug>.mdx file (not content/linux/), as "<group>/<slug>". */
 const mdxFiles = readdirSync(new URL("../content", import.meta.url), { recursive: true, encoding: "utf8" })
-  .filter((file) => file.endsWith(".mdx"))
+  .filter((file) => file.endsWith(".mdx") && !file.startsWith("linux/"))
   .map((file) => file.replace(/\.mdx$/, ""))
   .sort();
 
