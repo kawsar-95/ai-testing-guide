@@ -1,5 +1,10 @@
+import io
 import sys
+import tempfile
 import unittest
+import urllib.error
+from email.message import Message
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -65,6 +70,67 @@ class ShouldFetchTest(unittest.TestCase):
             self.assertFalse(linux_fetch.should_fetch(link(type_)), type_)
         self.assertFalse(linux_fetch.should_fetch(link("article", "https://www.youtube.com/watch?v=1")))
         self.assertFalse(linux_fetch.should_fetch(link("article", "https://youtu.be/1")))
+
+
+class _FakeResponse:
+    def __init__(self, body: bytes):
+        self._body = body
+        self.headers = Message()
+        self.headers["Content-Type"] = "text/html; charset=utf-8"
+
+    def read(self, size=-1):
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def _fake_open(self, url):
+    if url.endswith("/robots.txt"):
+        raise urllib.error.HTTPError(url, 404, "nf", Message(), io.BytesIO(b""))
+    return _FakeResponse(b"<p>hello</p>")
+
+
+class RunTest(unittest.TestCase):
+    LINKS = [
+        {"topic": "T", "type": "article", "title": "A", "url": "http://one.test/a"},
+        {"topic": "T", "type": "article", "title": "B", "url": "http://[bad"},
+        {"topic": "T", "type": "article", "title": "C", "url": "http://two.test/c"},
+    ]
+
+    def test_run_turns_a_malformed_url_into_an_error_row(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(linux_fetch.Fetcher, "_open", _fake_open), \
+                mock.patch("sys.stdout", new_callable=io.StringIO):
+            linux_fetch.run(self.LINKS, Path(tmp))
+            rows = (Path(tmp) / "report.tsv").read_text().splitlines()
+        self.assertEqual(len(rows), 4)  # header + 3 links
+        cols = [row.split("\t") for row in rows[1:]]
+        self.assertEqual(cols[0][3], "ok")
+        self.assertTrue(cols[1][3].startswith("error:"))
+        self.assertNotRegex(cols[1][3], r"\s")
+        self.assertEqual(cols[2][3], "ok")
+
+    def test_run_keeps_finished_rows_when_the_run_crashes(self):
+        calls = []
+
+        def crash(self, url):
+            calls.append(url)
+            if len(calls) > 1:
+                raise KeyboardInterrupt
+            return "text"
+
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(linux_fetch.Fetcher, "_open", _fake_open), \
+                mock.patch.object(linux_fetch.Fetcher, "get_text", crash), \
+                mock.patch("sys.stdout", new_callable=io.StringIO):
+            with self.assertRaises(KeyboardInterrupt):
+                linux_fetch.run([self.LINKS[0], self.LINKS[2]], Path(tmp))
+            rows = (Path(tmp) / "report.tsv").read_text().splitlines()
+        self.assertEqual(len(rows), 2)  # header + the first link
 
 
 class OverlapTest(unittest.TestCase):

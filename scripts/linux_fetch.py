@@ -171,33 +171,38 @@ class Fetcher:
         raise ValueError("content-type")
 
 
+def fetch_one(fetcher: Fetcher, link: dict) -> tuple[str, str]:
+    """Return (status, text) for one link. Any failure becomes a status."""
+    try:
+        if not should_fetch(link):
+            return "title-only", f"{link['title']}\n{link['url']}\n"
+        if not fetcher.allowed(link["url"]):
+            return "robots", ""
+        return "ok", fetcher.get_text(link["url"])
+    except urllib.error.HTTPError as error:
+        return f"http-{error.code}", ""
+    except Exception as error:
+        if isinstance(error, ValueError) and str(error) == "content-type":
+            return "error:content-type", ""
+        return f"error:{type(error).__name__}", ""
+
+
 def run(links: list[dict], out_dir: Path) -> None:
+    """Fetch each link. Write each report row at once, so a crash keeps finished rows."""
     out_dir.mkdir(parents=True, exist_ok=True)
     fetcher = Fetcher()
-    rows = ["index\ttopic\turl\tstatus\tbytes"]
-    for index, link in enumerate(links, start=1):
-        text = ""
-        if not should_fetch(link):
-            status = "title-only"
-            text = f"{link['title']}\n{link['url']}\n"
-        elif not fetcher.allowed(link["url"]):
-            status = "robots"
-        else:
-            try:
-                text = fetcher.get_text(link["url"])
-                status = "ok"
-            except urllib.error.HTTPError as error:
-                status = f"http-{error.code}"
-            except Exception as error:
-                status = f"error:{type(error).__name__}"
-                if isinstance(error, ValueError):
-                    status = f"error:{error}"
-        data = text.encode("utf-8")
-        if status in ("ok", "title-only"):
-            (out_dir / f"{index:03d}.txt").write_bytes(data)
-        rows.append(f"{index}\t{link['topic']}\t{link['url']}\t{status}\t{len(data)}")
-        print(rows[-1], flush=True)
-    (out_dir / "report.tsv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    with open(out_dir / "report.tsv", "w", encoding="utf-8") as report:
+        report.write("index\ttopic\turl\tstatus\tbytes\n")
+        report.flush()
+        for index, link in enumerate(links, start=1):
+            status, text = fetch_one(fetcher, link)
+            data = text.encode("utf-8")
+            if status in ("ok", "title-only"):
+                (out_dir / f"{index:03d}.txt").write_bytes(data)
+            row = f"{index}\t{link['topic']}\t{link['url']}\t{status}\t{len(data)}"
+            report.write(row + "\n")
+            report.flush()
+            print(row, flush=True)
 
 
 def main(argv: list[str]) -> int:
