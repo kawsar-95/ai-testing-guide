@@ -1,9 +1,10 @@
 """Check the meta line, the citations and the sources list of each built content page.
 
 usage: check_sources.py <out-dir> [--routes ROUTE ...] [--allow-missing]
-Without --routes it checks every tutorial page in route-map.json except "/", and
-every Linux stage page in linux-route-map.json, and every System Design case
-page in system-design-route-map.json.
+Without --routes it checks every tutorial page in route-map.json except "/",
+every Linux stage page in linux-route-map.json, every System Design case page
+in system-design-route-map.json, and every Fundamentals chapter page in
+fundamentals-route-map.json.
 A page needs exactly one [data-page-meta] element with "updated Mon YYYY", at
 least one li[id^="src-"], a #src-k target for each a.cite link, a cite for
 each source, and https links in the sources. --allow-missing skips a page

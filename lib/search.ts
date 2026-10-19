@@ -5,6 +5,7 @@
 import MiniSearch from "minisearch";
 import { headingsFromSource, plainTitle, sourceLines } from "./headings.ts";
 import type { SourceLine } from "./headings.ts";
+import type { FundamentalsChapter } from "./fundamentals/chapters.ts";
 import type { LinuxStage } from "./linux/stages.ts";
 import type { SystemDesignCase } from "./system-design/cases.ts";
 
@@ -13,7 +14,8 @@ export type SearchDoc = {
   href: string;
   /**
    * The part number of a tutorial page. `null` for a Linux stage page (group
-   * "linux") and for a System Design case (group "system design").
+   * "linux"), a Fundamentals chapter (group "fundamentals"), and a System
+   * Design case (group "system design").
    */
   part: number | null;
   group: string;
@@ -111,6 +113,18 @@ export function buildSearchDocs(pages: { page: SearchPage; source: string }[]): 
 export function buildLinuxSearchDocs(entries: { stage: LinuxStage; source: string }[]): SearchDoc[] {
   return entries.flatMap(({ stage, source }) =>
     pageDocs({ href: stage.href, title: stage.title, part: null, group: "linux" }, source),
+  );
+}
+
+/**
+ * The docs of the Fundamentals chapter pages, in the same form as the Linux docs.
+ * A section doc holds the text of both versions (notes and ISTQB).
+ */
+export function buildFundamentalsSearchDocs(
+  entries: { chapter: FundamentalsChapter; source: string }[],
+): SearchDoc[] {
+  return entries.flatMap(({ chapter, source }) =>
+    pageDocs({ href: chapter.href, title: chapter.title, part: null, group: "fundamentals" }, source),
   );
 }
 

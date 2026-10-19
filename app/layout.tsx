@@ -3,6 +3,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
+import { DEFAULT_VERSION, VERSION_INIT_SCRIPT } from "@/lib/fundamentals/version";
 import { RegisterServiceWorker } from "@/components/layout/RegisterServiceWorker";
 import { GA_ID, OWNER, SITE_DESCRIPTION, SITE_NAME, SITE_SHORT_NAME, SITE_URL } from "@/lib/site";
 
@@ -61,16 +62,19 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // The inline script changes data-theme before React hydrates, so React
-    // must accept the DOM value (suppressHydrationWarning).
+    // The inline scripts change data-theme and data-fundamentals-version
+    // before React hydrates, so React must accept the DOM values
+    // (suppressHydrationWarning).
     <html
       lang="en"
       data-theme="dark"
+      data-fundamentals-version={DEFAULT_VERSION}
       suppressHydrationWarning
       className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: VERSION_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full bg-bg text-text">
         {children}

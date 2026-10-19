@@ -1,5 +1,13 @@
 import type { MDXComponents } from "mdx/types";
 import Link from "next/link";
+import { BugLifeCycleDiagram } from "@/components/fundamentals/diagrams/BugLifeCycleDiagram";
+import { PinStateDiagram } from "@/components/fundamentals/diagrams/PinStateDiagram";
+import { StlcDiagram } from "@/components/fundamentals/diagrams/StlcDiagram";
+import { TestLevelsDiagram } from "@/components/fundamentals/diagrams/TestLevelsDiagram";
+import { TestPyramidDiagram } from "@/components/fundamentals/diagrams/TestPyramidDiagram";
+import { TestQuadrantsDiagram } from "@/components/fundamentals/diagrams/TestQuadrantsDiagram";
+import { TestingClassificationDiagram } from "@/components/fundamentals/diagrams/TestingClassificationDiagram";
+import { Version } from "@/components/fundamentals/Version";
 import { Callout } from "@/components/mdx/Callout";
 import { Cite } from "@/components/mdx/Cite";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
@@ -9,11 +17,20 @@ import { MdxImage } from "@/components/mdx/MdxImage";
 
 // The custom components the MDX files in content/ use without an import.
 const components: MDXComponents = {
+  BugLifeCycleDiagram,
   Callout,
   CardGrid,
   Cite,
   InfoCard,
   MdxImage,
+  PinStateDiagram,
+  StlcDiagram,
+  TestLevelsDiagram,
+  TestPyramidDiagram,
+  TestQuadrantsDiagram,
+  TestingClassificationDiagram,
+  // The two versions of a Fundamentals topic (notes and ISTQB).
+  Version,
   // Images get the basePath and a full-size link (a plain <img> has no basePath).
   img: MdxImage,
   pre: CodeBlock,

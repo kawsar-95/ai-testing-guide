@@ -4,14 +4,25 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PAGES } from "../lib/nav.ts";
 import { getOutline } from "../lib/outline.ts";
+import { CHAPTERS } from "../lib/fundamentals/chapters.ts";
 import { STAGES } from "../lib/linux/stages.ts";
-import { buildLinuxSearchDocs, buildSearchDocs, createIndex, runSearch } from "../lib/search.ts";
+import {
+  buildFundamentalsSearchDocs,
+  buildLinuxSearchDocs,
+  buildSearchDocs,
+  createIndex,
+  runSearch,
+} from "../lib/search.ts";
 import type { SearchDoc } from "../lib/search.ts";
 
 const read = (group: string, slug: string) => readFileSync(join("content", group, `${slug}.mdx`), "utf8");
 const docs = buildSearchDocs(PAGES.map((page) => ({ page, source: read(page.group, page.slug) })));
 
 const linuxDocs = buildLinuxSearchDocs(STAGES.map((stage) => ({ stage, source: read("linux", stage.slug) })));
+
+const fundamentalsDocs = buildFundamentalsSearchDocs(
+  CHAPTERS.map((chapter) => ({ chapter, source: read("fundamentals", chapter.slug) })),
+);
 
 test("every page has at least one doc", () => {
   for (const page of PAGES) {
@@ -205,4 +216,28 @@ test("a search for the topic title 'Cgroups' finds a hit with group 'linux' and 
 test("runSearch hits carry the group", () => {
   const index = createIndex([...docs, ...linuxDocs]);
   assert.equal(runSearch(index, "hooks")[0].group, "extend");
+});
+
+test("buildFundamentalsSearchDocs gives an intro doc and one doc per topic, with group 'fundamentals' and part null", () => {
+  for (const chapter of CHAPTERS) {
+    const own = fundamentalsDocs.filter((doc) => doc.page === chapter.title);
+    assert.equal(own[0].href, chapter.href, `${chapter.href} intro`);
+    assert.equal(own[0].title, chapter.title);
+    assert.deepEqual(
+      own.slice(1).map((doc) => doc.href),
+      chapter.topics.map((topic) => `${chapter.href}#${topic.anchor}`),
+      chapter.href,
+    );
+  }
+  for (const doc of fundamentalsDocs) {
+    assert.equal(doc.group, "fundamentals", doc.id);
+    assert.equal(doc.part, null, doc.id);
+    assert.equal(doc.id, doc.href);
+  }
+  assert.deepEqual(buildFundamentalsSearchDocs([]), []);
+});
+
+test("fundamentals doc ids do not clash with tutorial or linux ids", () => {
+  const all = [...docs, ...linuxDocs, ...fundamentalsDocs].map((doc) => doc.id);
+  assert.equal(new Set(all).size, all.length);
 });
