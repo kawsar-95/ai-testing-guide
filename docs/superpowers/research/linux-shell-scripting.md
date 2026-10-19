@@ -1,8 +1,8 @@
 # Shell Scripting (Linux stage 6) — research notes (2026-10-19)
 
-Fetch note: the official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay) into `/home/nuruddin-kawsar/.cache/linux-stage-shell-scripting/` (`off/`, `off2/`, `off3/`; flat copies `A001.txt`…, `B001.txt`…, `C001.txt`… for the overlap check). The roadmap pages were fetched into `/home/nuruddin-kawsar/.cache/linux-roadmap-raw/` (`NNN.txt`). The GNU Bash Reference Manual pages are the current (Bash 5.3) manual: they describe the `${ command; }` form of command substitution and the `$'...'` and `declare -I` features of Bash 5.x. The test machine runs GNU bash 5.3.9 and dash (`/bin/sh -> dash`); `shellcheck` is not installed there.
+Fetch note: the official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay) into `<scratch dir>/stage-shell-scripting/` (`off/`, `off2/`, `off3/`; flat copies `A001.txt`…, `B001.txt`…, `C001.txt`… for the overlap check). The roadmap pages were fetched into `<scratch dir>/roadmap-raw/` (`NNN.txt`). The GNU Bash Reference Manual pages are the current (Bash 5.3) manual: they describe the `${ command; }` form of command substitution and the `$'...'` and `declare -I` features of Bash 5.x. The local checks ran GNU bash 5.3.9 and dash (`sh` was dash); I did not run `shellcheck`.
 
-Safety rule of this stage: every example runs in a sandbox directory (`/home/nuruddin-kawsar/.cache/linux-stage-shell-scripting/sandbox/`). No example uses root, `sudo`, or `rm -r` on a variable that was not guarded. The only `rm -rf` of the page is `rm -rf -- "${tmp:?}"` on a directory that `mktemp -d` made, inside a `danger` callout.
+Safety rule of this stage: every example runs in a sandbox directory (`<scratch dir>/stage-shell-scripting/sandbox/`). No example uses root, `sudo`, or `rm -r` on a variable that was not guarded. The only `rm -rf` of the page is `rm -rf -- "${tmp:?}"` on a directory that `mktemp -d` made, inside a `danger` callout.
 
 ## Sources
 Numbers S1…S50 are the indexes of `page.sources`. A page cite `<Cite n={k} />` points to S_k.
@@ -172,7 +172,7 @@ Fetched or listed, but not cited (reasons):
 | C76 | `read -r` keeps backslashes. | S36 | "If this option is given, backslash does not act as an escape character. The backslash is considered to be part of the line." |
 | C77 | An empty `IFS` keeps leading spaces when `read` splits. | S32, S6 | S32: "Word splitting begins by removing sequences of IFS whitespace characters from the beginning and end" S6: "we’ll need to nullify (empty) the IFS" |
 | C78 | Each command of a pipeline runs in its own subshell, so variables set in a `while` after a pipe are lost. | S33 | "Each command in a multi-command pipeline, where pipes are created, is executed in its own subshell, which is a separate process" (LC11 shows `after pipe: 0`) |
-| C79 | Code: `touch -- "my report.txt" "-odd.txt"` and a glob loop list both files. | local check | LC12. The test machine's `touch` rejects `-odd.txt` without `--`. |
+| C79 | Code: `touch -- "my report.txt" "-odd.txt"` and a glob loop list both files. | local check | LC12. The local `touch` rejects `-odd.txt` without `--`. |
 | C80 | (Tip) Poll with `until` and always add a counter or time limit. | none | Tutorial's own advice. |
 
 ### Debugging
@@ -198,7 +198,7 @@ Fetched or listed, but not cited (reasons):
 | C96 | (Tip) In CI trace with `set -x` only around the failing step; a trace can put tokens in the log. | none | Tutorial's own advice. (S34 says a trace shows commands "after they are expanded", which is why values show.) |
 
 ## Local checks (not a citable page)
-Machine: GNU bash 5.3.9(1), dash (`/bin/sh -> dash`), GNU/uutils tools. Every code block of the page was extracted and run with `bash` in an empty directory. All six exited 0, and a second run also exited 0.
+Tools: GNU bash 5.3.9(1), dash as `sh`, GNU and uutils tools. Every code block of the page was extracted and run with `bash` in an empty directory. All six exited 0, and a second run also exited 0.
 
 LC1 (Shell Programming block, bash and dash, same output):
 ```text
@@ -210,7 +210,7 @@ after run: unset
 args: 0
 after source: hello from setup.sh
 ```
-`./nothere` gives status 127 and a file without `+x` gives status 126 (both seen, not on the page). `shellcheck` is not installed on the test machine, so the `if command -v shellcheck` guard prints nothing. I could not run ShellCheck, so the page shows no ShellCheck output of its own.
+`./nothere` gives status 127 and a file without `+x` gives status 126 (both seen, not on the page). I did not run `shellcheck`, so the `if command -v shellcheck` guard prints nothing. I could not run ShellCheck, so the page shows no ShellCheck output of its own.
 
 LC2 (Variables block): prints `suite: smoke tests`, `env: staging`, `count: 2, first: alpha`, `arg: alpha`, `arg: beta gamma`, `child sees: qa`, `BASE_URL: readonly variable`, `BASE_URL is read-only`, `the date has 10 characters`, `2 urls, last: https://example.test/cart`.
 
@@ -245,5 +245,5 @@ F1 "bash-only" removed from the page (words "not defined by POSIX", "a Bash form
 - Claim C21 ("no spaces around `=`"): the manual shows the form `name=[value]`; it has no sentence that forbids spaces. LC4 supports it.
 - Claim C36 uses the Bash manual node "Quoting" (`A010.txt`), which is not a separate page source; the page cites S20, S21, S22 for the quoting rules.
 - Claim C63 (`a && b || c`) is derived from the left-associativity sentence; LC10 shows the behavior.
-- The page says "In a test with dash" for `[[`, arrays, `$'...'`, and `base#n` (LC3, LC5, LC6). These are local observations of one dash version on the test machine, not statements of a source.
-- ShellCheck output was not run (not installed). The page states what ShellCheck flags only from its wiki pages.
+- The page says "In a test with dash" for `[[`, arrays, `$'...'`, and `base#n` (LC3, LC5, LC6). These are local observations of one dash version, not statements of a source.
+- ShellCheck output was not run. The page states what ShellCheck flags only from its wiki pages.

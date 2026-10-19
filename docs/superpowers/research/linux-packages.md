@@ -1,6 +1,6 @@
 # Packages (Linux stage 7) — research notes (2026-10-19)
 
-Fetch note: the roadmap pages were fetched into `/home/nuruddin-kawsar/.cache/linux-roadmap-raw/` (`NNN.txt`, index in `report.tsv`). The official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay, no spoofed user agent) into the flat directory `/home/nuruddin-kawsar/.cache/linux-stage-packages/` (the overlap-check directory; file names `001`–`021` = first list, `B…` = second list, `C…`/`D…` = Snap docs, `E…` = DNF 5, `F002` = Ubuntu automatic updates, `G001` = PPA). The Debian manpages pages are the `unstable` version (apt 3.3.3, dpkg-query 1.23.x, apt-file 3.4). The test machine runs Ubuntu 26.04 with apt 3.2.0 and snapd 2.77.1. I used it only for read-only queries (`dpkg -l`, `dpkg -S`, `dpkg-query -W`, `apt-cache policy|search`, `apt list --installed`, `apt-mark showmanual|showhold`, `apt-get -s upgrade|autoremove`, `snap list`, `snap refresh --time`). `rpm`, `dnf`, and `apt-file` are not installed there, so the RHEL, Fedora, and `apt-file` lines come from the manuals only.
+Fetch note: the roadmap pages were fetched into `<scratch dir>/roadmap-raw/` (`NNN.txt`, index in `report.tsv`). The official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay, no spoofed user agent) into the flat directory `<scratch dir>/stage-packages/` (the overlap-check directory; file names `001`–`021` = first list, `B…` = second list, `C…`/`D…` = Snap docs, `E…` = DNF 5, `F002` = Ubuntu automatic updates, `G001` = PPA). The Debian manpages pages are the `unstable` version (apt 3.3.3, dpkg-query 1.23.x, apt-file 3.4). I used a local Ubuntu 26.04 system with apt 3.2.0 and snapd 2.77.1 only for read-only queries (`dpkg -l`, `dpkg -S`, `dpkg-query -W`, `apt-cache policy|search`, `apt list --installed`, `apt-mark showmanual|showhold`, `apt-get -s upgrade|autoremove`, `snap list`, `snap refresh --time`). I did not run `rpm`, `dnf`, or `apt-file`, so the RHEL, Fedora, and `apt-file` lines come from the manuals only.
 
 Safety rule of this stage: no command in the page changes the system when you copy it. The code blocks hold read-only queries and simulations (`apt-get -s`, `dnf install --assumeno`, `unattended-upgrade --dry-run`). Every command that installs, removes, or upgrades appears only in prose, inside or next to a `danger` callout.
 
@@ -150,7 +150,7 @@ Tutorial advice (no cite): "Never pipe `curl` into `sudo sh`" and "Keep the key 
 | C70 | `apt-mark showmanual` lists manually installed packages; the rules for auto vs manual. | S12 | "the package you installed explicitly is marked as manually installed" / "showmanual … print a list of manually installed packages" |
 | C71 | `dpkg -l` output is for humans; use `-W` and `-f` for formats; default `-W` output is name and version, tab separated. | S8 | "not easily machine-readable. See -W (--show) and --showformat" / "name and its installed version" |
 | C72 | Debian Reference lists `apt-mark showmanual` and `apt list --manual-installed` as equal. | S17 | "apt list --manual-installed … apt-mark showmanual   list manually installed packages" |
-| C73 | Example `dpkg -S /etc/host.conf` → `base-files`. | S18 | "base-files: /etc/host.conf" (also seen on the test machine) |
+| C73 | Example `dpkg -S /etc/host.conf` → `base-files`. | S18 | "base-files: /etc/host.conf" (also seen in a local run) |
 
 ## Snap
 | # | Claim | Source | Quote |
@@ -178,7 +178,7 @@ Further reading (not cited): the roadmap links #158, #190, #208 and the title-on
 - The page says "Ubuntu releases before 24.04 LTS use `sources.list`" (C19). The page names no other distro version.
 - The "three families" tip texts are tutorial advice and carry "Tutorial's own advice:".
 - `dnf check-update` exit status 100 (C49) is in the prose, with its cite. The code comment repeats it.
-- `apt-cache policy | head -n 12` and the other read-only commands were run on the test machine. Output was as expected.
+- `apt-cache policy | head -n 12` and the other read-only commands were run locally. Output was as expected.
 
 ## Fix round 1 (jargon glosses)
 The page now glosses at first use: exit status (Installing section), maintainer scripts (Repositories danger callout; short repeat in Listing), snapd daemon ("a background service", S34), deb822 ("`Field: value` stanzas", S14: "multiline stanzas"), `Release` file ("lists the checksums of the repository files", S13: "checksums of all of the Packages files are then computed and put into the Release file").

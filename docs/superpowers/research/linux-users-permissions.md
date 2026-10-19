@@ -1,6 +1,6 @@
 # Users and Permissions (Linux stage 4) — research notes (2026-10-19)
 
-Fetch note: the official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay) into `/home/nuruddin-kawsar/.cache/linux-stage-users-permissions/` (`NNN.txt`). The roadmap pages were fetched into `/home/nuruddin-kawsar/.cache/linux-roadmap-raw/`. The man7.org pages are HTML renderings of man pages. The shadow-utils pages on man7.org came from shadow-utils 4.19.0; the id, groups, chmod and stat pages came from coreutils 9.11; the GNU manual pages say "GNU Coreutils 9.12"; the sudo pages are the sudo.ws manual (sudoers grammar of sudo 1.9.x). Page claims are for current mainstream Linux (systemd distributions, GNU coreutils, shadow-utils, sudo.ws).
+Fetch note: the official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay) into `<scratch dir>/stage-users-permissions/` (`NNN.txt`). The roadmap pages were fetched into `<scratch dir>/roadmap-raw/`. The man7.org pages are HTML renderings of man pages. The shadow-utils pages on man7.org came from shadow-utils 4.19.0; the id, groups, chmod and stat pages came from coreutils 9.11; the GNU manual pages say "GNU Coreutils 9.12"; the sudo pages are the sudo.ws manual (sudoers grammar of sudo 1.9.x). Page claims are for current mainstream Linux (systemd distributions, GNU coreutils, shadow-utils, sudo.ws).
 
 Security rule of this stage: no command that needs root or changes accounts, groups, passwords, sudoers or system files was run. The account commands (`useradd`, `usermod`, `userdel`, `passwd`, `groupadd`, `visudo`, `sudo`, `newgrp`) were learned from the man pages and manuals only.
 
@@ -155,7 +155,7 @@ The sentence "Use `sudo -n` in CI, so a missing rule fails at once" is the tutor
 | F14 | `/tmp` has the sticky bit (`drwxrwxrwt` in the example). | S25 | "commonly found on world-writable directories like /tmp." |
 | F15 | `stat -c` prints with a format; `%A` symbolic mode, `%a` octal, `%U` owner, `%G` group, `%n` name. | S28 | "%a permission bits in octal" / "%A permission bits and file type in human readable form" / "%n file name" |
 | F17 | The `ls -l` comment of the first File Permissions block depends on the umask (664 with umask 002, 644 with umask 022); the page states both. The comment is code, with no cite. The umask rule itself is row M8 (S35, Managing Permissions). | none | local check (umask 0002 gave `-rw-rw-r--`) |
-| F16 | `/usr/bin/passwd` is setuid root on the test machine (`-rwsr-xr-x`). | local check | not a citable page; shown as an example of the `s` bit |
+| F16 | `/usr/bin/passwd` is setuid root on a standard system (`-rwsr-xr-x`). | local check | not a citable page; shown as an example of the `s` bit |
 
 ### Managing Permissions
 | # | Claim | Source | Quote (max 25 words) |

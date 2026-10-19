@@ -1,6 +1,6 @@
 # Text Processing (Linux stage 3) — research notes (2026-10-19)
 
-Fetch note: all pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay). Roadmap links come from `/home/nuruddin-kawsar/.cache/linux-roadmap-raw/` (re-fetched 2026-10-19). Official pages are in `/home/nuruddin-kawsar/.cache/linux-stage-text-processing/` (files 001-034). The man7.org pages are HTML renderings of man pages (coreutils 9.11, man-pages 6.19). The GNU manual pages are coreutils 9.12 and the current gawk, bash, and grep manuals. Quotes are at most 25 words. The index of a source in `page.sources` is the same as its S number. Part A (topics 1-10) is written first. Part B (topics 11-20) appends sources S26 and up and must not renumber S1-S25.
+Fetch note: all pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay). Roadmap links come from `<scratch dir>/roadmap-raw/` (re-fetched 2026-10-19). Official pages are in `<scratch dir>/stage-text-processing/` (files 001-034). The man7.org pages are HTML renderings of man pages (coreutils 9.11, man-pages 6.19). The GNU manual pages are coreutils 9.12 and the current gawk, bash, and grep manuals. Quotes are at most 25 words. The index of a source in `page.sources` is the same as its S number. Part A (topics 1-10) is written first. Part B (topics 11-20) appends sources S26 and up and must not renumber S1-S25.
 
 ## Sources
 S1. Linux Tutorial - 9. Discover Filters — Ryan's Tutorials (roadmap #247) — https://ryanstutorials.net/linuxtutorial/filters.php — accessed 2026-10-19
@@ -174,7 +174,7 @@ Local checks: the key sort outputs were run (`-k2,2n` gave 95, 120, 340, 410). W
 Local check: the `events.txt` outputs match the page comments.
 
 ## Part B sources (topics 11-20, appended 2026-10-19)
-Part B official pages are in `/home/nuruddin-kawsar/.cache/linux-stage-text-processing-b2/` (files 001-017). They are GNU Coreutils 9.12 manual nodes, plus journalctl(1) on man7.org. The `join` and `tr` nodes of the manual are split into sub-nodes; the short parent nodes (`join-invocation`, `tr-invocation`) hold only the synopsis, so the sub-nodes are separate sources. Man pages join(1), expand(1), and the other coreutils man pages were not fetched: the GNU manual nodes hold the same facts. Roadmap #111 (join(1)) and #082 (expand(1)) were read in the roadmap raw directory but are not cited.
+Part B official pages are in `<scratch dir>/stage-text-processing-b2/` (files 001-017). They are GNU Coreutils 9.12 manual nodes, plus journalctl(1) on man7.org. The `join` and `tr` nodes of the manual are split into sub-nodes; the short parent nodes (`join-invocation`, `tr-invocation`) hold only the synopsis, so the sub-nodes are separate sources. Man pages join(1), expand(1), and the other coreutils man pages were not fetched: the GNU manual nodes hold the same facts. Roadmap #111 (join(1)) and #082 (expand(1)) were read in the roadmap raw directory but are not cited.
 
 S26. wc invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/wc-invocation.html — accessed 2026-10-19
 S27. head invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/head-invocation.html — accessed 2026-10-19
@@ -343,7 +343,7 @@ The gloss of "tab stop" is the tutorial's own paraphrase of C145.
 S40 does not say `--first-only` is GNU-only; the page says "Other versions of `unexpand` may lack it" (hedged). Local run of the `code.txt` example: tab counts 0, 1, 2.
 
 ## Fix round 1 (2026-10-19): new sources and claims
-Official pages fetched for the fix are in `/home/nuruddin-kawsar/.cache/linux-stage-text-processing-fix/` (gawk Expression Patterns, utf-8(7), systemd-journald.service(8), POSIX head, tail, unexpand, and the man7 pages of wc, head, tail, nl, paste, join, split, tr, expand, unexpand).
+Official pages fetched for the fix are in `<scratch dir>/stage-text-processing-fix/` (gawk Expression Patterns, utf-8(7), systemd-journald.service(8), POSIX head, tail, unexpand, and the man7 pages of wc, head, tail, nl, paste, join, split, tr, expand, unexpand).
 
 S44. Expressions as Patterns (The GNU Awk User's Guide) — GNU Project — https://www.gnu.org/software/gawk/manual/html_node/Expression-Patterns.html — accessed 2026-10-19
 S45. utf-8(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/utf-8.7.html — accessed 2026-10-19
