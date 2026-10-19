@@ -216,3 +216,21 @@ Re-checked: the 17 FAIL rows of round 1 (all but FAIL 4 are fixed) and every cha
 Round 2 FAILs: R2 (notes table of Process Management lacks the S25 row), R5 (package names: `procps-ng` on RHEL; the advice needs its case).
 
 Open FAILs: 2
+
+## Round 3 (2026-10-19)
+
+Checked: writer commit 42443af (`git diff 27fb858 42443af`: 2 paragraphs of the Listing section and 2 lines of the notes). Package pages fetched by me: Rocky Linux 9 BaseOS directory (`dl.rockylinux.org`, status `ok`), Fedora Packages `psmisc` and `procps-ng` (round 2), `packages.debian.org` (the site returned an anti-bot stub of 94 bytes, no text). Local: `dpkg -L` on this Ubuntu machine. No code block changed.
+
+| # | Location | Claim / earlier FAIL | Cite | Verdict | Evidence / Fix |
+|---|---|---|---|---|---|
+| T1 | Listing | Round 2 FAIL R5: "Tutorial's own advice: in a minimal container, install `procps` (Debian, Ubuntu) or `procps-ng` (RHEL), and `psmisc`." Now labeled as the tutorial's own advice, with the case and the package names per family | none | PASS | Debian and Ubuntu: `dpkg -L procps` lists `/usr/bin/ps`, `/usr/bin/top`, `/usr/bin/pgrep`; `dpkg -L psmisc` lists `/usr/bin/pstree`. RHEL family: Rocky 9 BaseOS (a RHEL rebuild) lists `procps-ng-3.3.17-14.el9.x86_64.rpm` and `psmisc-23.4-3.el9.x86_64.rpm`. Fedora Packages: "The psmisc package contains utilities for managing processes on your system: pstree, killall, fuser and pslog." and `procps-ng`: "Procps includes ps, free, skill, pkill, pgrep, snice, tload, top". |
+| T2 | Listing | `psmisc` is the package name on RHEL, and `pstree` is in it on both families | none | PASS | Name `psmisc` is the same on Debian, Ubuntu, Fedora, and Rocky 9 (see T1). `pstree` is in `psmisc` on Ubuntu (`dpkg -L`) and in the Fedora description. Not verified on Red Hat's own site: `access.redhat.com` needs a login, so I used Rocky 9 and Fedora; the Debian package page was blocked, so I used the Ubuntu package (same Debian packaging). |
+| T3 | Listing | Removed "(a GNU option)" after `--sort`; `--sort` still has Cite 16 | 16 | PASS | S16: "GNU long options, which are preceded by two dashes." and "--sort spec Specify sorting order." The page no longer calls it a GNU option; it states no wrong fact. |
+| T4 | Listing | "`top -b -n 1` prints one frame for a log." | 32 | PASS | S32: "Starts top in Batch mode, which could be useful for sending output from top to other programs or to a file." |
+| T5 | Process Management (notes) | Round 2 FAIL R2: the S25 row is now in the Process Management notes table | 25 | PASS | Script: per section, the S numbers of the notes tables equal the page cites (0 mismatch). The new row has the quote "A child that terminates, but has not been waited for becomes a "zombie"." |
+| T6 | Quality | Words per section with tables and callout text (heading words in, cites and callout titles out) | none | PASS | Process Management 233, Listing 246, Background 247, Killing 245, Signals 243, Priorities 246, Forking 245, Ulimits 246. All at most 250. With 5-word titles counted: 238, 251, 252, 250, 248, 251, 250, 251 (earlier rounds did not count titles). |
+| T7 | Quality | No sentence above 25 words; 8 `##` headings equal the topics; 1 code block and 1 tip callout per topic; 13 callouts with closing tags at column 0 | none | PASS | Longest sentence 24 words. Script output as listed. |
+| T8 | Quality | Sources: 49 entries, all cited, highest cite 49 | none | PASS | Script: 0 uncited sources. |
+| T9 | Quality | Overlap, 8-word runs | none | PASS | `linux_overlap.py`: roadmap raw directory and my official directory (35 pages): both give only `www kernel org doc html latest filesystems proc`, the URL of source 3 (accepted). `npm test`: 145 pass, 0 fail. |
+
+Open FAILs: 0
