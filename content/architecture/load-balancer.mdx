@@ -64,16 +64,16 @@ A rule picks the next server <Cite n={3} />:
 - **Least Connections.** The server with the fewest active connections gets the request.
 - **IP Hash.** The IP address that sends the request picks the server. Requests from one address go to the same server, if that server is available.
 
-On AWS, a health check is a test request to each server, about every 30 seconds by default. By default, 2 failed checks in a row make a server "unhealthy", and 5 good checks in a row make it "healthy" again <Cite n={2} />. If all servers in a group are unhealthy, AWS sends requests to all of them anyway <Cite n={2} />.
+On the AWS Application Load Balancer, a health check is a test request to each server, about every 30 seconds by default. By default, 2 failed checks in a row make a server "unhealthy", and 5 good checks in a row make it "healthy" again <Cite n={2} />. If all servers in a group are unhealthy, AWS sends requests to all of them anyway <Cite n={2} />.
 
 </Layman>
 <Bangla>
 
-Load balancer হলো এমন একটি component, যা আসা request গুলো গ্রহণ করে এবং কয়েকটি backend server-এর মধ্যে ভাগ করে দেয়। AWS এই server গুলোকে "target" বলে। একটি target হতে পারে একটি virtual server, একটি container, অথবা একটি IP address <Cite n={1} />। Load balancer প্রতিটি target-এর health খেয়াল রাখে এবং শুধু healthy target-এ traffic পাঠায় <Cite n={1} />। এর ফলে application বেশি available থাকে এবং failure ভালোভাবে সামলাতে পারে <Cite n={1} />।
+Load balancer হলো এমন একটি component, যা আসা request-গুলো গ্রহণ করে এবং কয়েকটি backend server-এর মধ্যে ভাগ করে দেয়। AWS এই server-গুলোকে "target" বলে। একটি target হতে পারে একটি virtual server, একটি container, অথবা একটি IP address <Cite n={1} />। Load balancer প্রতিটি target-এর health খেয়াল রাখে এবং শুধু healthy target-এ traffic পাঠায় <Cite n={1} />। এর ফলে application বেশি available থাকে এবং failure ভালোভাবে সামলাতে পারে <Cite n={1} />।
 
-Load balancer আরও কিছু কাজ করতে পারে। এটি `https` traffic decrypt করতে পারে (TLS termination), যাতে app server-কে এই কাজ করতে না হয় <Cite n={1} />। এটি URL path-এর মতো content দেখে request আলাদা server group-এ পাঠাতে পারে <Cite n={5} />। আর যে server সরে যাচ্ছে, তার খোলা request গুলো শেষ করার সময় দিতে পারে (draining; AWS-এ default হিসেবে সর্বোচ্চ 300 সেকেন্ড) <Cite n={4} />।
+Load balancer আরও কিছু কাজ করতে পারে। এটি `https` traffic decrypt করতে পারে (TLS termination), যাতে app server-কে এই কাজ করতে না হয় <Cite n={1} />। এটি URL path-এর মতো content দেখে request আলাদা server group-এ পাঠাতে পারে <Cite n={5} />। আর যে server সরে যাচ্ছে, তার খোলা request-গুলো শেষ করার সময় দিতে পারে (draining; AWS-এ default হিসেবে সর্বোচ্চ 300 সেকেন্ড) <Cite n={4} />।
 
-পরের server বাছাই করতে load balancer একটি নিয়ম, অর্থাৎ algorithm, ব্যবহার করে <Cite n={3} />। Round Robin-এ request গুলো একটির পর একটি server-এ সমানভাবে যায়; এটি NGINX-এর default। Least Connections-এ request যায় সবচেয়ে কম active connection থাকা server-এ। IP Hash-এ client-এর IP address দেখে server ঠিক হয়, তাই একই address-এর request একই server-এ যায়, যদি না সেই server unavailable থাকে।
+পরের server বাছাই করতে load balancer একটি নিয়ম, অর্থাৎ algorithm, ব্যবহার করে <Cite n={3} />। Round Robin-এ request-গুলো একটির পর একটি server-এ সমানভাবে যায়; এটি NGINX-এর default। Least Connections-এ request যায় সবচেয়ে কম active connection থাকা server-এ। IP Hash-এ client-এর IP address দেখে server ঠিক হয়, তাই একই address-এর request একই server-এ যায়, যদি না সেই server unavailable থাকে।
 
 AWS Application Load Balancer default হিসেবে প্রায় প্রতি 30 সেকেন্ডে প্রতিটি server-এ একটি test request পাঠায়। Default হিসেবে পরপর 2টি check fail করলে server "unhealthy" হয়, আর পরপর 5টি check সফল হলে আবার "healthy" হয় <Cite n={2} />। তাই একটি নষ্ট server পরপর 2টি check fail করার আগ পর্যন্ত traffic পেতে পারে। একটি বিশেষ ক্ষেত্র মনে রাখুন: group-এর সব server unhealthy হলে AWS load balancer তবুও সবগুলোতে request পাঠায় <Cite n={2} />।
 
@@ -175,7 +175,7 @@ Look out for these common mistakes:
 
 - **Health check শুধু বলে "আমি বেঁচে আছি"।** একটি `/health` endpoint সবসময় `200 OK` দিতে পারে, এমনকি server database-এ পৌঁছাতে না পারলেও। তখন একটি "healthy" server থেকেও user-রা error পান।
 - **Health check খুব ভারী।** Check যদি প্রতিটি dependency call করে, তাহলে একটি ধীর service একই সময়ে সব server-কে unhealthy করে দিতে পারে।
-- **Deploy খুব তাড়াতাড়ি server বন্ধ করে দেয়।** Draining-এর সময় AWS load balancer খোলা request গুলো শেষ করার জন্য সময় দেয়, default হিসেবে সর্বোচ্চ 300 সেকেন্ড <Cite n={4} />। Drain শেষ হওয়ার আগে server connection বন্ধ করলে client একটি 500-level error পায় <Cite n={4} />।
+- **Deploy খুব তাড়াতাড়ি server বন্ধ করে দেয়।** Draining-এর সময় AWS load balancer খোলা request-গুলো শেষ করার জন্য সময় দেয়, default হিসেবে সর্বোচ্চ 300 সেকেন্ড <Cite n={4} />। Drain শেষ হওয়ার আগে server connection বন্ধ করলে client একটি 500-level error পায় <Cite n={4} />।
 - **Sticky session একটি stateful app-কে আড়াল করে।** Sticky session একজন user-এর session-কে একটি নির্দিষ্ট server-এর সাথে বেঁধে রাখে <Cite n={4} />। এতে আসল সমস্যাটি চাপা পড়ে যায়। [Stateless Service](/architecture/stateless-service/) পাতাটি দেখুন।
 - **মাত্র একটি load balancer।** আপনি যদি নিজের একটিমাত্র load balancer চালান, তাহলে সেটিই একটি নতুন single point of failure হয়ে যায়।
 
@@ -217,7 +217,7 @@ These test ideas are the tutorial's own advice.
 
 - **Server down।** Load test চলার সময় একটি app server বন্ধ করুন। Error থামতে কত সময় লাগে, তা মাপুন। সময়টি health check interval আর failure count-এর সাথে মিলিয়ে দেখুন।
 - **Server ফিরে আসা।** Server-টি আবার চালু করুন। দেখুন, health check pass করার পরেই কেবল এটি আবার traffic পায় কি না।
-- **সৎ health check।** একটি server-এর database connection ভেঙে দিন। দেখুন, তার health check fail করে কি না এবং load balancer তাকে সরিয়ে দেয় কি না।
+- **সঠিক health check।** একটি server-এর database connection ভেঙে দিন। দেখুন, তার health check fail করে কি না এবং load balancer তাকে সরিয়ে দেয় কি না।
 - **Traffic-এর বণ্টন।** অনেক request পাঠান। Log বা response header থেকে প্রতিটি server-এর response গুনুন। সংখ্যাটি algorithm-এর সাথে মিলিয়ে দেখুন।
 - **Load-এর মধ্যে deploy।** Load test চলার সময় একটি নতুন version deploy করুন। প্রতিটি server সরানোর মুহূর্তে 5xx error আসে কি না, খেয়াল করুন।
 - **সব server অসুস্থ।** একটি test environment-এ প্রতিটি server-কে তার health check-এ fail করান। User-রা কী দেখেন, তা লিখে রাখুন।
