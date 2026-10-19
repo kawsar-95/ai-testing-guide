@@ -42,6 +42,7 @@ export const page = {
     { title: 'Snap documentation', publisher: 'Snap documentation (Canonical)', url: 'https://snapcraft.io/docs/', accessed: '2026-10-19' },
     { title: 'Get started', publisher: 'Snap documentation (Canonical)', url: 'https://snapcraft.io/docs/tutorials/get-started/', accessed: '2026-10-19' },
     { title: 'Install the daemon', publisher: 'Snap documentation (Canonical)', url: 'https://snapcraft.io/docs/tutorials/install-the-daemon/', accessed: '2026-10-19' },
+    { title: 'Check-Upgrade Command', publisher: 'DNF5 documentation', url: 'https://dnf5.readthedocs.io/en/latest/commands/check-upgrade.8.html', accessed: '2026-10-19' },
   ],
 }
 
@@ -80,11 +81,11 @@ Tutorial's own advice: put the package manager and the package versions in each 
 
 A repository is a server that holds packages and their metadata. <Cite n={3} /> A mirror is a copy of a repository on another server.
 
-Debian and Ubuntu read `/etc/apt/sources.list` and the files in `/etc/apt/sources.list.d/`. The one-line `.list` format is deprecated. The deb822 `.sources` format has the fields `Types`, `URIs`, `Suites`, and `Components`. <Cite n={14} /> Ubuntu releases before 24.04 LTS use `sources.list`. <Cite n={18} /> Debian has the components `main`, `contrib`, and `non-free`. <Cite n={14} /> Ubuntu adds `universe`, without official support. <Cite n={18} />
+Debian and Ubuntu read `/etc/apt/sources.list` and the files in `/etc/apt/sources.list.d/`. The one-line `.list` format is deprecated. The deb822 `.sources` format uses `Field: value` stanzas, with `Types`, `URIs`, `Suites`, and `Components`. <Cite n={14} /> Ubuntu releases before 24.04 LTS use `sources.list`. <Cite n={18} /> Debian has the components `main`, `contrib`, and `non-free`. <Cite n={14} /> Ubuntu adds `universe`, without official support. <Cite n={18} />
 
 RHEL and Fedora use `*.repo` files in `/etc/yum.repos.d`. A repository has a `baseurl`, `mirrorlist`, or `metalink`, plus `gpgcheck` and `gpgkey`. <Cite n={22} /> The DNF default of `gpgcheck` is off, so set it. <Cite n={22} />
 
-A GPG signature proves who published a file. A keyring is a file of the public keys that check it. APT checks the signature of the `Release` file of each repository. <Cite n={13} /> `Signed-By` limits a repository to the keys that you name. <Cite n={14} /> A PPA is an apt repository of one user or team, hosted by Launchpad. <Cite n={20} />
+A GPG signature proves who published a file. A keyring is a file of the public keys that check it. APT checks the signature of the `Release` file, which lists the checksums of the repository files. <Cite n={13} /> `Signed-By` limits a repository to the keys that you name. <Cite n={14} /> A PPA is an apt repository of one user or team, hosted by Launchpad. <Cite n={20} />
 
 ```bash
 ls /etc/apt/sources.list.d/    # Debian, Ubuntu: one file per source
@@ -95,7 +96,7 @@ dnf repolist                   # RHEL, Fedora: the enabled repositories
 
 <Callout type="danger" title="A new repository or key can run code as root">
 
-A third-party package runs scripts as root. <Cite n={17} /> A trusted archive means a trusted maintainer, not safe code. <Cite n={13} /> Check the key fingerprint with the publisher. Keep the key in `/etc/apt/keyrings` and use `Signed-By`, not the deprecated `apt-key add`. <Cite n={14} /> <Cite n={15} /> Never pipe `curl` into `sudo sh`.
+A third-party package runs maintainer scripts, its install-time scripts, as root. <Cite n={17} /> A trusted archive means a trusted maintainer, not safe code. <Cite n={13} /> Check the key fingerprint with the publisher. Keep the key in `/etc/apt/keyrings` and use `Signed-By`, not the deprecated `apt-key add`. <Cite n={14} /> <Cite n={15} /> Never pipe `curl` into `sudo sh`.
 
 </Callout>
 
@@ -121,7 +122,7 @@ apt show jq                            # details, with dependencies
 apt-cache policy jq                    # which source supplies it
 apt-get -s install jq                  # -s: simulate only, nothing changes
 dnf provides /usr/bin/jq               # RHEL, Fedora: which package has this file
-dnf install --assumeno jq              # RHEL, Fedora: show the plan, answer no
+sudo dnf install --assumeno jq         # needs root; RHEL, Fedora: show the plan, answer no
 ```
 
 <Callout type="danger" title="Install runs code as root">
@@ -138,20 +139,20 @@ Tutorial's own advice: pin the version of a tool in a test image, for example `j
 
 ## Installing, Removing, and Upgrading Packages
 
-Update and upgrade are two steps. `apt update` only refreshes the package index. <Cite n={10} /> `apt upgrade` installs newer versions but never removes a package. <Cite n={9} /> `apt full-upgrade` may remove packages. <Cite n={9} /> `dnf upgrade` updates each package to its latest version. <Cite n={21} /> `dnf check-update` exits with status 100 if upgrades exist. <Cite n={21} /> In DNF, `update` is a deprecated alias of `upgrade`. <Cite n={21} /> Simulate with `apt-get -s`. <Cite n={10} />
+Update and upgrade are two steps. `apt update` only refreshes the package index. <Cite n={10} /> `apt upgrade` installs newer versions but never removes a package. <Cite n={9} /> `apt full-upgrade` may remove packages. <Cite n={9} /> `dnf upgrade` updates each package to its latest version. <Cite n={21} /> In DNF 4, `dnf check-update` returns exit status 100 if upgrades exist. <Cite n={21} /> An exit status is the number that a command returns. DNF 5 names the check `dnf check-upgrade`. <Cite n={37} />
 
 `remove` keeps the configuration files. `purge` deletes them but not your home data. <Cite n={9} /> `autoremove` deletes dependencies that nobody needs now. List them first with `apt-get -s autoremove`. <Cite n={17} /> `dnf remove` also removes the packages that depend on the target. <Cite n={21} />
 
 `apt-mark hold` stops the automatic install, upgrade, and removal of one package. <Cite n={12} /> DNF has the versionlock plugin. <Cite n={23} />
 
-Ubuntu Server installs security updates by itself and can reboot. <Cite n={19} /> `dnf-automatic` runs from a systemd timer. Its defaults download and apply nothing. <Cite n={24} />
+On Ubuntu Server, the default `unattended-upgrades` package installs security updates by itself and can reboot. <Cite n={19} /> `unattended-upgrade --dry-run` only simulates a run. <Cite n={27} /> `dnf-automatic` runs from a systemd timer. Its defaults download and apply nothing. <Cite n={24} />
 
 ```bash
 apt-get -s upgrade       # preview: what an upgrade would change
 apt-get -s autoremove    # preview: what autoremove would delete
 apt-mark showhold        # which packages are held
-dnf check-update         # RHEL, Fedora: list upgrades; exit status 100 means some exist
-sudo unattended-upgrade --dry-run   # needs root: simulate the automatic run
+dnf check-update         # DNF 4: list upgrades; exit status 100 means some exist (DNF 5: check-upgrade)
+sudo unattended-upgrade --dry-run   # needs root and the unattended-upgrades package: simulate a run
 ```
 
 <Callout type="danger" title="These commands change or delete software">
@@ -162,15 +163,15 @@ sudo unattended-upgrade --dry-run   # needs root: simulate the automatic run
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: on a CI runner, run `apt-get update` and install named packages with fixed versions. Do not upgrade the whole machine. Automatic upgrades can change a package during a test run, so turn them off on test machines or note them in the log. <Cite n={27} />
+Tutorial's own advice: on a CI runner, run `apt-get update` and install named packages with fixed versions. Do not upgrade the whole machine. Automatic upgrades can change a package during a test run, so turn them off on test machines or note them in the log. <Cite n={19} />
 
 </Callout>
 
 ## Listing Installed Packages
 
-`dpkg -l` lists packages. The letters `ii` in the first column mean wanted and installed. Quote a pattern, as in `'libc6*'`. <Cite n={8} /> `apt list --installed` lists them too. <Cite n={9} /> On RHEL and Fedora, use `rpm -qa` or `dnf list --installed`. <Cite n={26} /> <Cite n={21} />
+`dpkg -l` lists packages. The first two letters, `ii`, mean wanted (install) and installed. Quote a pattern, as in `'libc6*'`. <Cite n={8} /> `apt list --installed` lists them too. <Cite n={9} /> On RHEL and Fedora, use `rpm -qa` or `dnf list --installed`. <Cite n={26} /> <Cite n={21} />
 
-To find the owner of a file, use `dpkg -S` or `rpm -qf`. <Cite n={8} /> <Cite n={26} /> `dpkg -S` cannot see files that maintainer scripts create. <Cite n={8} /> `dpkg -L` lists the files of a package. <Cite n={7} />
+To find the owner of a file, use `dpkg -S` or `rpm -qf`. <Cite n={8} /> <Cite n={26} /> `dpkg -S` cannot see files that maintainer scripts (install-time scripts) create. <Cite n={8} /> `dpkg -L` lists the files of a package. <Cite n={7} />
 
 APT marks a package as manual if you asked for it and as automatic if it came as a dependency. `apt-mark showmanual` lists the manual ones. <Cite n={12} />
 
@@ -193,7 +194,7 @@ Tutorial's own advice: save the package list as an artifact of every test run or
 
 ## Snap
 
-A snap is a self-contained app package. It bundles the app with its libraries. <Cite n={5} /> The `snapd` daemon installs, confines, and updates snaps. <Cite n={34} /> It must run before you can install a snap, and some distributions need you to install it. <Cite n={36} />
+A snap is a self-contained app package. It bundles the app with its libraries. <Cite n={5} /> The `snapd` daemon, a background service, installs, confines, and updates snaps. <Cite n={34} /> It must run before you can install a snap, and some distributions need you to install it. <Cite n={36} />
 
 ```bash
 snap list                 # installed snaps, with channel and notes

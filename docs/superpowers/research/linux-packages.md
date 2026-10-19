@@ -7,7 +7,7 @@ Safety rule of this stage: no command in the page changes the system when you co
 Versions: the page names one release, Ubuntu 24.04 LTS, because the Ubuntu Server page (S18) states it. It names no other distro version or default that no source gave. The DNF pages are DNF 4 (`dnf.readthedocs.io`, `dnf-plugins-core` 4.4.2). The DNF 5 pages list the same command names (S25).
 
 ## Sources
-Numbers S1…S36 are the indexes of `page.sources`. A page cite `<Cite n={k} />` points to S_k.
+Numbers S1…S37 are the indexes of `page.sources`. A page cite `<Cite n={k} />` points to S_k.
 
 S1. Linux Roadmap — roadmap.sh — https://roadmap.sh/linux — accessed 2026-10-19
 S2. Linux Package Manager Explained — Geekflare — https://geekflare.com/dev/linux-package-manager-explained/ — accessed 2026-10-19 (roadmap #157, `157.txt`; the same link is #095 and #123)
@@ -45,6 +45,7 @@ S33. System snap directory — Snap documentation (Canonical) — https://snapcr
 S34. Snap documentation (home) — Canonical — https://snapcraft.io/docs/ — accessed 2026-10-19 (`C006.txt`)
 S35. Get started — Snap documentation (Canonical) — https://snapcraft.io/docs/tutorials/get-started/ — accessed 2026-10-19 (`D005.txt`)
 S36. Install the daemon — Snap documentation (Canonical) — https://snapcraft.io/docs/tutorials/install-the-daemon/ — accessed 2026-10-19 (`C004.txt`)
+S37. Check-Upgrade Command — DNF5 documentation — https://dnf5.readthedocs.io/en/latest/commands/check-upgrade.8.html — accessed 2026-10-19 (`H001.txt`; added in fix round 1)
 
 Links not used as a source:
 - #159 (labex, `http-403`) and #162 (Fedora quick-docs DNF, `error:URLError` in the old fetch; with this fetch it returned an Anubis proof-of-work page, 0 usable text): no text, no claim. The DNF facts come from the DNF project docs (S21–S25).
@@ -111,7 +112,7 @@ Tutorial advice (no cite): "Never pipe `curl` into `sudo sh`" and "Keep the key 
 | C41 | `apt` may change behavior between versions; scripts should use `apt-get`. | S9 | "it may change behavior between versions" … "you should prefer using these commands … in your scripts" |
 | C42 | Ubuntu: `apt-get` should be used in scripts. | S18 | "The apt-get command should be used in scripts" |
 | C43 | `apt-get -s` simulates. | S10 | "-s, --simulate, --just-print, --dry-run, --recon, --no-act" |
-| C44 | `dnf install --assumeno` answers no to the prompt. | S22 | "assumeno … If enabled dnf will assume No where it would normally prompt for confirmation" (also option `--assumeno` in S21) |
+| C44 | `dnf install --assumeno` answers no to the prompt. No manual says it runs without root, so the code line is `sudo dnf install --assumeno jq` with `# needs root` (fix round 1). | S22 | "assumeno … If enabled dnf will assume No where it would normally prompt for confirmation" (also option `--assumeno` in S21) |
 | C45 | DNF 5 command list includes the commands used here. | S25 | Commands list: `info`, `install`, `list`, `provides`, `remove`, `search`, `upgrade`, `versionlock` |
 
 ## Installing, Removing, and Upgrading Packages
@@ -119,8 +120,9 @@ Tutorial advice (no cite): "Never pipe `curl` into `sudo sh`" and "Keep the key 
 |---|---|---|---|
 | C46 | `apt update` only downloads the index. | S10 | "update is used to resynchronize the package index files from their sources." |
 | C47 | `apt upgrade` installs newer versions, never removes. `full-upgrade` may remove. | S9 | "existing packages will never be removed" / "full-upgrade … will remove currently installed packages if this is needed" |
-| C48 | `dnf upgrade` updates each package to the latest version; `update` is a deprecated alias. | S21 | "Updates each package to the latest version that is both available and resolvable." / "Deprecated aliases: update" |
-| C49 | `dnf check-update` exit status 100 when updates exist. | S21 | "DNF exit code will be 100 when there are updates available" |
+| C48 | `dnf upgrade` updates each package to the latest version. (The "`update` is a deprecated alias" sentence was dropped in fix round 1: no DNF 5 page gives it.) | S21 | "Updates each package to the latest version that is both available and resolvable." |
+| C49 | In DNF 4, `dnf check-update` returns exit status 100 when updates exist. The page says "DNF 4". | S21 | "DNF exit code will be 100 when there are updates available" |
+| C49b | DNF 5 names the check `dnf check-upgrade` (fix round 1). The page says only that DNF 5 uses this name; the exit status 100 is in the source but not repeated in the page. | S37 | "DNF5 will exit with code 100 if updates are available and list them; 0 if no updates are available." |
 | C50 | `remove` leaves configuration files; `purge` removes them; neither touches the home directory. | S9 | "Removing a package … leaves usually small (modified) user configuration files behind" … "this does not affect any data or configuration stored in your home directory" |
 | C51 | `autoremove` removes packages that were installed as dependencies and are not needed. | S9 | "remove packages that were automatically installed to satisfy dependencies for other packages and are now no longer needed" |
 | C52 | Run `apt-get -s autoremove` first to see what would go. | S17 | "Start \"apt-get -s autoremove\|less\" as root to check what are not used." |
@@ -129,14 +131,14 @@ Tutorial advice (no cite): "Never pipe `curl` into `sudo sh`" and "Keep the key 
 | C55 | `apt-mark hold` prevents automatic install, upgrade, removal. | S12 | "hold is used to mark a package as held back, which will prevent the package from being automatically installed, upgraded or removed." |
 | C56 | `apt-mark showhold` lists held packages. | S12 | "showhold is used to print a list of packages on hold" |
 | C57 | The `dnf versionlock` plugin keeps only chosen versions available. | S23 | "only versions of packages represented by <package-name-spec> will be available for transaction operations" |
-| C58 | Ubuntu Server applies security updates automatically (via `unattended-upgrades`) and can reboot. | S19 | "Ubuntu will apply security updates automatically, without user interaction." / "It can reboot the system, if an update warrants it." |
-| C59 | `unattended-upgrade --dry-run` only simulates. | S27 | "Just simulate installing updates, do not actually do it" |
+| C58 | On Ubuntu Server the default `unattended-upgrades` package applies security updates automatically and can reboot. The tip about automatic upgrades changing a package during a test run also cites S19 (fix round 1; it cited S27 before). | S19 | "Ubuntu will apply security updates automatically, without user interaction." / "It can reboot the system, if an update warrants it." |
+| C59 | `unattended-upgrade --dry-run` only simulates. The prose now cites S27 for it; the code line says it needs root and the `unattended-upgrades` package (S19: "installed by default" on Ubuntu Server). | S27 | "Just simulate installing updates, do not actually do it" |
 | C60 | `dnf-automatic` runs from systemd timers; `apply_updates` and `download_updates` default to False. | S24 | "apply_updates  boolean, default: False" / "download_updates  boolean, default: False" |
 
 ## Listing Installed Packages
 | # | Claim | Source | Quote |
 |---|---|---|---|
-| C61 | `dpkg -l` / `dpkg-query -l`: three leading columns (action, status, error); `ii` = install wanted, installed. | S8 | "Desired action: … i = Install" / "Package status: … i = Installed" |
+| C61 | `dpkg -l` / `dpkg-query -l`: three leading columns (action, status, error); the first two letters `ii` = install wanted, installed (fix round 1: not "the first column"). | S8 | "Desired action: … i = Install" / "Package status: … i = Installed" |
 | C62 | A pattern needs quoting for the shell. | S8 | "you will probably have to quote package-name-pattern to prevent the shell from performing filename expansion" |
 | C63 | `apt list --installed` lists installed packages. | S9 | "list … options to list installed (--installed)" |
 | C64 | `rpm -qa` lists all installed packages. | S26 | "rpm -qa  List all installed packages, using the default formatting." |
@@ -177,3 +179,6 @@ Further reading (not cited): the roadmap links #158, #190, #208 and the title-on
 - The "three families" tip texts are tutorial advice and carry "Tutorial's own advice:".
 - `dnf check-update` exit status 100 (C49) is in the prose, with its cite. The code comment repeats it.
 - `apt-cache policy | head -n 12` and the other read-only commands were run on the test machine. Output was as expected.
+
+## Fix round 1 (jargon glosses)
+The page now glosses at first use: exit status (Installing section), maintainer scripts (Repositories danger callout; short repeat in Listing), snapd daemon ("a background service", S34), deb822 ("`Field: value` stanzas", S14: "multiline stanzas"), `Release` file ("lists the checksums of the repository files", S13: "checksums of all of the Packages files are then computed and put into the Release file").
