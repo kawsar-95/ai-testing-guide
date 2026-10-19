@@ -51,8 +51,9 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 ## Booting Linux
 | # | Claim | Source | Quote (at most 25 words) |
 |---|---|---|---|
+| C0 | (Lede, cite 1) The roadmap lists these topics: booting, boot loaders, service management, creating, starting, status, logs, running services. | S1 | Roadmap topics of the Linux roadmap, stage "Boot and Services". OPINION-OK: the cite only names the topic source. |
 | C1 | Boot has four steps: system startup, boot loader, kernel, init process. | S2 | "Those are grouped into 4 steps: system startup, bootloader stage, kernel stage, and init process." |
-| C2 | The firmware does basic hardware set-up and hands control to a boot loader. | S9 | "the system firmware will do minimal hardware initialization, and hand control over to a boot loader" |
+| C2 | The firmware does basic hardware set-up and usually hands control to a boot loader. On some UEFI systems the firmware loads the kernel itself. | S9 | "the system firmware will do minimal hardware initialization, and hand control over to a boot loader" / "this firmware may also load the kernel directly" |
 | C3 | A BIOS machine starts boot code at the start of the first disk (MBR). A UEFI machine starts EFI programs from the ESP. | S3 | "BIOS launches the first 440 bytes (the Master Boot Record bootstrap code area) of the first disk" / "UEFI launches EFI applications, e.g. boot loaders" |
 | C4 | The boot loader loads the kernel and the initramfs into memory. | S9 | "It's the boot loader or the firmware that loads both the kernel and initrd/initramfs images into memory" |
 | C5 | The initramfs is a compressed archive that the kernel unpacks into memory. | S26 | "the new initramfs archive is a gzipped cpio archive" ; S9: "a compressed CPIO archive that the kernel extracts into a tmpfs" |
@@ -61,7 +62,7 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C8 | On systemd systems PID 1 is systemd. It activates `default.target` at boot. | S11 | "When run as first process on boot (as PID 1), it acts as init system" / "On boot systemd activates the target unit default.target" |
 | C9 | A target groups units and is a synchronization point. | S16 | "Target units are used to group units and to set synchronization points for ordering dependencies" |
 | C10 | `default.target` is usually an alias of `multi-user.target` or `graphical.target`. | S9 | "default.target is simply an alias of graphical.target or multi-user.target" |
-| C11 | `systemd-analyze time` splits the time into kernel, initrd, userspace. `blame` lists units by start time. `critical-chain` prints the time-critical chain. | S17 | "the time spent in the kernel before userspace has been reached, the time spent in the initrd" / "ordered by the time they took to initialize" / "a tree of the time-critical chain of units" |
+| C11 | `systemd-analyze time` splits the time into kernel, initrd, userspace. `blame` lists units by the time each took to start. `critical-chain` prints the time-critical chain. | S17 | "the time spent in the kernel before userspace has been reached, the time spent in the initrd" / "ordered by the time they took to initialize" / "a tree of the time-critical chain of units" |
 | C12 | `blame` can mislead. | S17 | "the output might be misleading as the initialization of one service might be slow simply because it waits" |
 | C13 | `/proc/cmdline` is where the kernel command line shows. | S20 | Synopsis of kernel-command-line(7): "/proc/cmdline" |
 
@@ -81,7 +82,7 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C24 | `systemd.unit=` is a kernel command-line parameter that systemd understands. | S20 | "systemd.unit=, rd.systemd.unit=, ... Parameters understood by the system and service manager" |
 | C25 | GRUB generates a recovery entry for each Linux kernel unless it is disabled. | S23 | "two menu entries will be generated for each Linux kernel: one default entry and one entry for recovery mode" |
 | C26 | `grub-install` installs GRUB on a drive and runs as root. | S23 | "invoke the program grub-install ... as the superuser (root)" |
-| C27 | (Tutorial's own judgement, not a source claim) A wrong boot configuration can leave a machine unbootable and a remote machine unreachable. | none | Marked as a danger callout; the sources describe the tools, not this risk. |
+| C27 | (Tutorial's own judgement, not a source claim; the page has no cite on this callout) A wrong boot configuration can leave a machine unbootable and a remote machine unreachable. | none | Marked as a danger callout; the sources describe the tools, not this risk. |
 
 ## Service Management
 | # | Claim | Source | Quote |
@@ -90,11 +91,11 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C29 | A service unit starts and controls daemons. | S11 | "Service units, which start and control daemons and the processes they consist of." |
 | C30 | A socket unit can start a service on demand. | S22 | "Socket units may be used to implement on-demand starting of services" |
 | C31 | A timer unit does timer-based activation of another unit. | S21 | "a timer controlled and supervised by systemd, for timer-based activation" |
-| C32 | Unit directories: `/etc/systemd/system` (administrator), `/run/systemd/system` (runtime), `/usr/lib/systemd/system` (package manager). Earlier directories override later ones. | S13 | "Unit files found in directories listed earlier override files with the same name in directories lower in the list" |
+| C32 | Unit directories, in the order of S13 (earlier overrides later): `/etc/systemd/system` (administrator), `/run/systemd/system` (runtime), `/usr/lib/systemd/system` (package manager). | S13 | "Unit files found in directories listed earlier override files with the same name in directories lower in the list" |
 | C33 | A drop-in is a `.conf` file in `UNIT.d/` that merges with the unit file. | S13 | "a "drop-in" directory foo.service.d/ may exist. All files with the suffix ".conf" from this directory will be merged" |
 | C34 | `systemctl cat` prints the unit file and its drop-ins. | S12 | "Prints the "fragment" and "drop-ins" (source files) of units." |
 | C35 | SysV init starts services with scripts, in `/etc/init.d` on most Linux versions. | S10 | "a single startup script located in a specific directory (/etc/init.d in most versions of Linux)" |
-| C36 | Systemd has largely replaced SysV init. | S5 | "An older init system that uses simple scripts to start and stop services. It is still used in some distributions but has largely been replaced by systemd." |
+| C36 | Systemd has largely replaced SysV init. | S5 | "has largely been replaced by systemd" (8 words); the SysV description is "An older init system that uses simple scripts" (7 words) |
 | C37 | The `service` command works with SysV and with systemd. | S7 | "the service command has evolved to also function with the systemd initialization system" |
 
 ## Creating Services
@@ -103,13 +104,13 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C38 | A unit file has `[Unit]`, `[Service]`, `[Install]`. `WantedBy=` makes `enable` link the unit into the target. | S13, S14 | S13: "After running systemctl enable, a symlink /etc/systemd/system/multi-user.target.wants/foo.service ... will be created." S14 example: `[Service] ExecStart=/usr/sbin/foo-daemon` |
 | C39 | `Restart=on-failure` is the recommended choice for long-running services. | S14 | "Setting this to on-failure is the recommended choice for long-running services" |
 | C40 | The first word of `ExecStart=` is an absolute path or a plain file name. | S14 | "the first argument must be either an absolute path to an executable or a simple file name without any slashes" |
-| C41 | `User=` defaults to root for system services. The user must exist when the service starts. | S15 | "the default is "root", but User= may be used to specify a different user" / "must have been created statically in the user database no later than the moment the service is started" |
+| C41 | `User=` defaults to root for system services (not for user services). The user must exist when the service starts. | S15 | "For system services ... the default is "root"" / "must have been created statically in the user database no later than the moment the service is started" |
 | C42 | System services get only a few environment variables. `Environment=` sets more. | S15 | "will be started, without additional service-specific configuration, with just a few environment variables" |
 | C43 | With `Type=simple`, `systemctl start` reports success when the binary is missing. `Type=exec` reports failure. | S14 | simple: "systemctl start command lines for simple services will report success even if the service's binary cannot be invoked successfully"; exec: "will report failure when the service's binary cannot be invoked successfully" |
 | C44 | `systemd-analyze verify` warns about unknown keys and missing or non-executable commands. | S17 | "unknown sections and directives" / "commands listed in ExecStart= and similar which are not found in the system or not executable" |
 | C45 | `daemon-reload` makes systemd read all unit files again. | S12 | "This will rerun all generators, reload all unit files, and recreate the entire dependency tree." |
 | C46 | `systemctl edit` writes a drop-in file (override.conf) and reloads. | S12 | "to extend or override the definition of the specified unit" / "After the editing is finished, configuration is reloaded" |
-| C47 | `systemctl revert` removes drop-ins. | S12 | "removes drop-in configuration files that modify the specified units" |
+| C47 | `systemctl revert` removes drop-ins and also a user-configured unit file that overrides a vendor unit (a copy in `/etc`). | S12 | "removes drop-in configuration files that modify the specified units, as well as any user-configured unit file that overrides a matching vendor supplied unit file" (25 words) |
 | C48 | (Tutorial's own advice) Use root only when the program needs it. | none | Marked on the page as the tutorial's own advice. |
 
 ## Starting and Stopping Services
@@ -122,7 +123,7 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C53 | `disable` removes the symlinks and does not stop the unit. | S12 | "this command does not implicitly stop the units that are being disabled" |
 | C54 | `mask` links the unit to `/dev/null` and blocks all activation. | S12 | "link these unit files to /dev/null, making it impossible to start them" / "prohibits all kinds of activation of the unit" |
 | C55 | `stop` warns when another unit can still trigger the unit. | S12 | "If a unit that gets stopped can still be triggered by other units, a warning containing the names of the triggering units is shown." |
-| C56 | `--user` talks to the user's own manager. | S12 | "Talk to the service manager of the calling user, rather than the service manager of the system." |
+| C56 | `--user` talks to the user's own manager. That manager reads units from `~/.config/systemd/user`, not from `/etc/systemd/system`. | S12, S13 | S12: "Talk to the service manager of the calling user, rather than the service manager of the system." S13 (user unit search path): "~/.config/systemd/user/*". Local test (my machine, read-only): `systemctl --user cat` of a system-only unit printed "No files found". |
 | C57 | `systemctl isolate` stops all units outside the target. It is dangerous. | S12 | "This command is dangerous, since it will immediately stop processes that are not enabled in the new target" |
 | C58 | For `simple` and `exec` units, systemd treats the unit as started when the process is forked or executed. | S14 | simple: "immediately after the main service process has been forked off"; exec: "immediately after the main service binary has been executed" |
 | C59 | (Tutorial's own judgement) Stopping `ssh` or the network service can make a remote machine unreachable. | none | Marked as a danger callout. |
@@ -150,7 +151,7 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C73 | `journalctl -u UNIT` shows messages of one unit. | S18 | "Show messages for the specified systemd unit UNIT (such as a service unit)" |
 | C74 | `-b` selects the current boot. `-b -1` selects the boot before the last. | S18, S8 | S18: "-0 is the last boot, -1 the boot before last" ; S8: "journalctl -b -1 (previous boot)" |
 | C75 | `-n` limits the entries. `-f` follows. `--since` takes relative times. `-p err` shows `err` and more important. | S18 | "relative times may be specified, prefixed with "-" or "+"" / "all messages with this log level or a lower (hence more important) log level are shown" |
-| C76 | The journal is persistent when `/var/log/journal` exists at boot; otherwise volatile in `/run/log/journal`, lost at reboot. | S19 | "By default, log data is stored persistently if /var/log/journal/ exists during boot, with an implicit fallback to volatile storage otherwise." |
+| C76 | By default the journal is persistent when `/var/log/journal` exists at boot; otherwise it is volatile in `/run/log/journal`, lost at reboot. `Storage=` can change it. | S19 | "By default, log data is stored persistently if /var/log/journal/ exists during boot, with an implicit fallback to volatile storage otherwise." |
 | C77 | Root and members of `systemd-journal`, `adm`, `wheel` read all journal files. | S18 | "Members of the groups "systemd-journal", "adm", and "wheel" can read all journal files." |
 | C78 | `StandardOutput=` can send output to a file. | S15 | "The file:path option may be used to connect a specific file system object to standard output." |
 | C79 | `--no-pager` stops the pager. | S18 | "Do not pipe output into a pager." |
@@ -159,14 +160,14 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 ## Running Services
 | # | Claim | Source | Quote |
 |---|---|---|---|
-| C81 | `systemctl list-units --type=service --state=running` lists running services; `list-unit-files --state=enabled` lists enabled unit files. | S6 | "you can run "systemctl --type=service --state=running" to see running services" / "systemctl list-unit-files --state=enabled" |
+| C81 | `systemctl list-units --type=service --state=running` lists running services; `list-unit-files --state=enabled` lists the enabled unit files (not all that starts at boot). | S6 | "you can run "systemctl --type=service --state=running" to see running services" / "To see all enabled unit files on your system" |
 | C82 | `list-units` shows by default only active units, units with pending jobs, and failed units. `--all` shows more. | S12 | "By default, only units which are active, have pending jobs, or have failed are shown; this can be changed with --all." |
 | C83 | `list-timers` shows NEXT and LAST. | S12 | "NEXT shows the next time the timer will run." / "LAST shows the last time the timer ran." |
-| C84 | A timer activates the service with the same name. | S21 | "a service by the same name as the timer (except for the suffix) is activated" |
+| C84 | By default, a timer activates the service with the same name (`Unit=` can name another). | S21 | "By default, a service by the same name as the timer (except for the suffix) is activated" |
 | C85 | `list-sockets` shows the socket units and the units they activate. | S12 | Column headers: "LISTEN UNIT ACTIVATES" |
 | C86 | Socket activation: systemd holds the socket and starts the service on demand. | S22 | "Socket units may be used to implement on-demand starting of services, as well as parallelized starting of services." |
-| C87 | `ss -tulpn`: TCP, UDP, listening, processes, numeric. | S28 | "-t, --tcp Display TCP sockets." / "-l, --listening Display only listening sockets" / "-p, --processes Show processes using sockets." |
+| C87 | `ss -tulpn`: TCP, UDP, listening, processes, numeric. Without root, the process column is empty for sockets of other users. | S28 | "-t, --tcp Display TCP sockets." / "-l, --listening Display only listening sockets" / "-p, --processes Show processes using sockets." The root note is a local test (my machine), not a quote of S28; the page says "Use `sudo`". |
 | C88 | `ps xawf -eo pid,user,cgroup,args` lists processes with their units. | S11 | "ps xawf -eo pid,user,cgroup,args is particularly useful to list all processes and the systemd units they belong to." |
 | C89 | `systemctl status PID` shows the unit of a PID. | S12 | "or a PID to show the unit containing that PID" |
 | C90 | A container's main process is the `ENTRYPOINT`/`CMD`; Docker advises one service per container. | S29 | "A container's main running process is the ENTRYPOINT and/or CMD at the end of the Dockerfile." / "It's best practice to separate areas of concern by using one service per container." |
-| C91 | (Tutorial's inference from C90) A container often has no systemd, so `ps` is the tool there. | S29 | Not stated in S29; the page says "often" and does not name a distribution or an image. |
+| C91 | (Tutorial's own note, marked on the page) Many container images start no systemd, so `systemctl` can fail there. A minimal image may also lack `ps`. | none | Not stated in S29; the page labels it "Tutorial's own note" and puts it after the cited S29 sentence. |
