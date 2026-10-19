@@ -39,7 +39,7 @@ npm test         # node --test on tests/*.test.ts
 - `PAGES_BASE_PATH` (`/learn-software-testing-with-ai`): `next.config.ts` uses it as `basePath` and exposes it as `NEXT_PUBLIC_BASE_PATH`. Local builds leave it empty and serve from `/`.
 - `NEXT_PUBLIC_SITE_URL`: canonical URLs, Open Graph URLs, sitemap, and robots.
 
-Base-path rule: `next/link`, `router.push`, and the metadata add the base path. Plain `fetch()` and plain `<a>` do not. So `SearchPalette` prefixes `NEXT_PUBLIC_BASE_PATH` to its fetch, and `mdx-components.tsx` renders MDX links that start with `/` through `next/link`. Write internal links as `/group/page/`, never with the repo name.
+Base-path rule: `next/link`, `router.push`, and the metadata add the base path. Plain `fetch()` and plain `<a>` do not. So `SearchPalette` prefixes `NEXT_PUBLIC_BASE_PATH` to its fetch, `mdx-components.tsx` renders MDX links that start with `/` through `next/link`, and `MdxImage` prefixes the base path to the `src` of an image with `withBasePath` (`lib/base-path.ts`). Write internal links as `/group/page/`, never with the repo name.
 
 To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-with-ai npm run build`, copy `out/` to `<dir>/learn-software-testing-with-ai/`, and run `python3 -m http.server 8000 -d <dir>`. The Python check scripts expect a root build (no base path).
 
@@ -72,6 +72,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `lib/outline.ts`, `lib/headings.ts` | The `##`/`###` outline of an MDX file, with the same ids as `rehype-slug` |
 | `lib/search.ts` | Builds the search docs, the index, and runs a search |
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
+| `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
 | `lib/pwa.ts` | The web manifest, the precache list (all 53 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
@@ -80,6 +81,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `lib/ui.ts` | The English strings of the shell |
 | `lib/scroll-lock.ts` | One page-scroll lock, shared by the drawer and the search dialog |
 | `mdx-components.tsx` | Registers the MDX components |
+| `public/images/<group>/` | The images of the content pages, for example `public/images/linux/`. A page refers to one as `/images/<group>/<file>`. |
 | `content/<group>/<page>.mdx` | The 23 tutorial pages |
 | `content/linux/<stage>.mdx` | The 12 Linux stage pages |
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
@@ -205,6 +207,7 @@ To add a group, add it to `SOURCE` in `lib/nav.ts` and to the `GroupSlug` type, 
 | `Cite` (`n`) | A small `[n]` link to source n of `page.sources` (`#src-n`). Put it after the claim that it supports. |
 | Fenced code block | Shiki colors, a language label (hidden for `text`) and a Copy button |
 | GFM table | A raised box that scrolls sideways on narrow screens |
+| `MdxImage` (`src`, `alt`, optional `width` and `height`), also the mapping for Markdown images `![alt](/images/…)` | An `<img>` with lazy loading and a text link "Open the image in full size" below it. It adds the base path to `src` and to the link, because a plain `<img>` does not get it. Give `width` and `height` (use `<MdxImage … />`) so that the page does not jump while the image loads. Write `alt` as a short description and add a text description in a `<details>` block for a dense image. |
 
 Code blocks stay dark in both themes. Use fenced code blocks for code, prompts, diagrams and trees.
 
