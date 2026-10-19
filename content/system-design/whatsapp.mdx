@@ -1,0 +1,123 @@
+export const metadata = { title: 'How WhatsApp Works', description: 'How a chat app keeps a line open to each phone, finds the right server, and delivers each message even when the receiver is offline.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'System Design Interview: Design WhatsApp', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/whatsapp-system-design', accessed: '2026-10-20' },
+  ],
+}
+
+# How WhatsApp Works
+
+WhatsApp lets you send a text, a photo, or a voice note to a friend, and it arrives almost at once. A good chat app also shows if each message was sent, delivered, and read. That sounds simple. It is hard, because phones lose signal, switch off, and move between networks, and billions of people use the app. This page explains the free part of one article that designs a WhatsApp-like app the way you would in a job interview. The article describes one way to build this. It is not always the exact system that WhatsApp runs.
+
+<PageMeta />
+
+## The problem in plain words
+
+The article says that WhatsApp handles more than 100 billion messages a day for more than 2 billion users.<Cite n={1} /> The design in the article must do these things:<Cite n={1} />
+
+- Send text in one-to-one chats and in groups of up to 100 people.
+- Send photos, videos, and audio clips.
+- Keep messages for an offline user for up to 30 days.
+- Show the status of each message: sent, delivered, or read.
+- Show if a user is online, and when the user was last seen.
+
+It also sets quality goals. A message to an online user must arrive in under 500 ms. No message may get lost. Messages must not stay on the servers longer than needed.<Cite n={1} />
+
+To size the system, the article assumes 500 million daily users who send up to 20 messages each. That is 10 billion messages a day, or about 115,000 a second.<Cite n={1} /> At busy times the rate is 3 to 5 times higher.<Cite n={1} /> At about 1 KB per message, that is 10 TB of new data a day.<Cite n={1} /> But most messages leave the server within seconds of delivery. So the article expects only 400 to 500 TB of stored data at any time.<Cite n={1} />
+
+## The big picture
+
+```text
+                                   +--> [Connection cache: who is on which server]
+                                   |
+[Phone A] ==open line==> [Load balancer] ==> [Chat server] --> [Message queue] --> [Storage service] --> [Message database]
+                                                  |
+                                                  +--> [Chat server of B] ==open line==> [Phone B]
+                                                  |
+                                                  +--> (B offline) --> [Notification service] --> push to Phone B
+
+[Phone A] --upload photo--> [Blob storage] --> [CDN] --> [Phone B]
+```
+
+Each phone keeps one open line to a chat server.<Cite n={1} /> When A sends a message, A's chat server confirms it at once and puts it in a queue for storage.<Cite n={1} /> A fast cache says which chat server holds B's line.<Cite n={1} /> If B is offline, a push message wakes B's phone instead.<Cite n={1} /> Photos and videos skip the chat servers and go through file storage.<Cite n={1} />
+
+## Keeping a line open
+
+Think of three ways to wait for a letter. You can walk to the mailbox every few minutes. You can stand at the mailbox until a letter comes, then walk home and come back. Or the postman can ring your doorbell. Only the last one is fast and saves your legs.
+
+| Method | How it works | Problem |
+|---|---|---|
+| Polling | The phone asks "anything new?" every few seconds. | It wastes data, and a new message waits until the next ask.<Cite n={1} /> |
+| Long polling | The server holds each ask open until a message comes or time runs out. | Each message needs a new connection and a new HTTP handshake.<Cite n={1} /> |
+| WebSocket | One connection stays open, and both sides can send at any time. | Each open line uses some server memory.<Cite n={1} /> |
+
+The article picks WebSockets.<Cite n={1} /> A handshake is the back-and-forth that sets up a connection. With a WebSocket, the handshake runs a single time, at app start. After that, only message content travels.<Cite n={1} /> WebSockets also need load balancers that work at Layer 4, the level of raw connections, instead of Layer 7, the level of HTTP requests.<Cite n={1} />
+
+An open line can go quiet for hours. So the phone sends a small "ping" every 30 seconds, and the server answers.<Cite n={1} /> If the server hears nothing for 60 seconds, it treats the line as dead and closes it.<Cite n={1} /> This stops dead "zombie" connections from piling up and wasting memory.<Cite n={1} />
+
+## Finding the right server
+
+Think of a big hotel. The front desk keeps a board that shows which guest is in which room. A message for a guest goes straight to the right room.
+
+A load balancer is a server that spreads new connections over many chat servers. It uses sticky sessions: once your phone connects to one server, it stays on that server.<Cite n={1} /> It also stops sending traffic to servers that have died.<Cite n={1} /> Each chat server can hold hundreds of thousands of open connections.<Cite n={1} />
+
+To deliver a message, a chat server must know where the receiver is. The article keeps this in Redis, an in-memory store. It records who is online, which chat server they use, and when they were last active.<Cite n={1} /> Memory is fast: a Redis lookup takes microseconds, but a database query takes milliseconds.<Cite n={1} />
+
+Servers also come and go. They crash, get updated, or get added at busy times.<Cite n={1} /> So the article adds a service registry. Its examples are Consul and AWS Cloud Map.<Cite n={1} /> A service registry is a live phone book of servers. Each chat server adds itself when it starts and sends a heartbeat every 10 seconds.<Cite n={1} /> If the heartbeats stop, Consul marks the server unhealthy after 30 seconds.<Cite n={1} /> The load balancer asks the registry for healthy servers, so nobody has to edit lists of addresses by hand.<Cite n={1} />
+
+## Sending, storing, and the ticks
+
+Think of a post office counter. The clerk gives you a receipt at once. Sorting and delivery happen later, in the back room.
+
+When a chat server gets a message, it sends a receipt to the sender right away. Then it pushes the message to a message queue.<Cite n={1} /> A queue is a waiting line that holds work until another service is ready. The article names Kafka or RabbitMQ for this.<Cite n={1} /> A storage service reads from the queue and writes to the message database. It also deletes old messages after 30 days.<Cite n={1} />
+
+The article uses a NoSQL database, such as Cassandra or DynamoDB, for messages. These databases take a very high number of writes, and chat lookups are simple: by user, chat, and time.<Cite n={1} /> User accounts and groups go in a SQL database such as PostgreSQL.<Cite n={1} />
+
+The ticks come from small messages between the phones and the server.<Cite n={1} />
+
+1. The phone sends a message with its own ID. The server replies with a "sent" status and a server ID.
+2. The receiver's phone gets the message and replies with a delivery receipt.
+3. When the receiver opens the chat, the phone sends a read receipt. The server passes it to the sender.
+
+If the receiver is offline, the message waits on the server for up to 30 days.<Cite n={1} /> A notification service sends a push through APNs for iPhones or FCM for Android phones. This makes the phone buzz.<Cite n={1} />
+
+<Callout type="tip" title="Tutorial advice">
+In the message format of the article, the phone gives each message its own ID, and the receipt from the server repeats that ID.<Cite n={1} /> This tutorial suggests a test: make the phone send a message again after a network error. The receiver must not get it two times.
+</Callout>
+
+## Photos and videos
+
+Think of a large parcel. You do not hand it to the letter clerk. It goes through a separate loading dock.
+
+Big files do not pass through the chat servers. They go to blob storage, a store for large files, such as AWS S3 or Google Cloud Storage.<Cite n={1} /> A CDN (content delivery network) keeps copies of popular files in places around the world, so downloads are fast everywhere.<Cite n={1} />
+
+To upload, the phone first asks the server for permission. The server returns a signed upload address and a media ID. In the example, the reply gives the address a lifetime value, `expires_in`, of 3600.<Cite n={1} /> The phone then uploads the file straight to storage, and the chat message carries only a link.<Cite n={1} />
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| WebSocket | A connection that stays open so both sides can send at any time |
+| Load balancer | A server that spreads connections over many other servers |
+| Sticky session | A rule that keeps one user on the same server |
+| Heartbeat | A small "I am alive" message sent at fixed times |
+| Cache | Fast storage in memory for data that is read often |
+| Message queue | A waiting line that holds messages until a service can handle them |
+| NoSQL database | A database built for huge numbers of simple reads and writes |
+| Service registry | A live list of which servers are up and where they are |
+| Blob storage | A store for large files such as photos and videos |
+| CDN | A network of servers near users that keeps copies of files |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are this tutorial's own advice, not claims from the sources.
+
+- Turn on flight mode while a message is in flight. Turn it off. Check that the message arrives exactly once and in the right order.
+- Send to a user who stays offline for a long time. Check the push, the delivery when the user comes back, and what happens after the keep period ends.
+- Check each tick change: sent, delivered, read. Check them in groups, and with the receiver on two devices.
+- Kill a chat server during a chat. Check that phones reconnect to another server and no message is lost.
+- Upload a large file on a slow network, and try an expired upload link. Check the error and the retry.
+- Measure delivery time under load against the goal of the design, such as 500 ms for online users.
+</Callout>

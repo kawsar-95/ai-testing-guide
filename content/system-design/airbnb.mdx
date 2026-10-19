@@ -1,0 +1,121 @@
+export const metadata = { title: 'How Airbnb Works', description: 'How a booking site like Airbnb or Booking.com stops two guests from booking the same room, and stays fast for millions of searches.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'System Design Interview: Design Airbnb', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/airbnb-system-design', accessed: '2026-10-20' },
+  ],
+}
+
+# How Airbnb Works
+
+On a booking site, you pick a city and dates, see the free rooms, and pay to book one. That sounds simple. It is hard, because many people look at the same rooms at the same time, and a room for one night can be sold only once. The article behind this page does not describe the real Airbnb system. It designs a booking system for hotels, of the kind that Booking.com and Airbnb run, the way you would in a job interview.<Cite n={1} /> The article describes one way to build this. It is not the exact system that Airbnb runs. This page covers the free part of the article.
+
+<PageMeta />
+
+## The problem in plain words
+
+The article starts with the worst case. Two users click "Book" on the last free room in the same second. Both requests check the database, and both see a free room. The system then charges two cards for one room.<Cite n={1} /> The article says this is what happens by default if the design is wrong.<Cite n={1} />
+
+So the system must do these things:<Cite n={1} />
+
+- Let admins add hotels and room types, and set prices and the number of free rooms.
+- Let users search by place, dates, number of guests, price, and features.
+- Let users book, view, and cancel, with no double bookings.
+- Take payments through a payment gateway and handle failures.
+- Send confirmations for bookings, cancellations, and payments.
+
+The quality goals are strict. Two users must never get the same room for the same dates.<Cite n={1} /> Search must answer in under 500 ms, and a booking must be confirmed in 2 to 3 seconds.<Cite n={1} /> The site must be up 99.9% of the time or more.<Cite n={1} />
+
+The article uses Booking.com numbers to size the system. Booking Holdings reported more than 1.1 billion room nights in 2024.<Cite n={1} /> A room night is one room for one night. With 2 nights per booking, that is about 1.5 million bookings a day, or about 17 a second.<Cite n={1} /> But people look much more than they book. The article estimates about 1,000 reads a second against those 17 writes.<Cite n={1} />
+
+## The big picture
+
+```text
+[Web / mobile app] --photos, scripts--> [CDN]
+        |
+        v
+[API gateway: login, rate limit, routing]
+        |
+        +--> [Search service] ------> [Elasticsearch]
+        +--> [Hotel service] -------> [Redis cache] --> [PostgreSQL]
+        +--> [Rate service] (prices by date)
+        +--> [Reservation service] -> [PostgreSQL: bookings + free rooms, same database]
+        +--> [Payment service] -----> [Payment gateway]
+        +--> [Notification service] -> email, push
+```
+
+Every request enters through one front door, the API gateway. It checks who you are, limits how fast one user can call, and sends the request to the right service.<Cite n={1} /> Each service owns one job, such as search, prices, or bookings.<Cite n={1} /> PostgreSQL holds the main data, Redis holds hot data, and Elasticsearch powers search.<Cite n={1} /> A CDN serves static files such as photos.<Cite n={1} />
+
+## The race for the last room
+
+Think of the last concert ticket on a counter. Two people reach for it at the same moment. If the clerk does not watch, both pay, and one of them goes home angry.
+
+A database has the same trap. Each request does two steps: first "is the room free?", then "book it". If two requests run the first step before either runs the second, both see a free room. This is a race condition: the result depends on the exact timing of the two requests.
+
+The article requires strong consistency for the room stock: a room can never go to two users for the same nights.<Cite n={1} /> It names this the one goal that cannot be traded away.<Cite n={1} /> Strong consistency means every reader sees the latest booking at once. The tool it relies on is the ACID transaction of PostgreSQL.<Cite n={1} />
+
+<Callout type="note">
+A transaction is a group of database steps that runs as one unit. ACID names four promises. Atomic: all steps happen, or none. Consistent: the rules of the data stay true. Isolated: transactions that run at the same time do not see each other's half-done work. Durable: a finished booking survives a crash. The article's exact locking method is in the paid part, so this page does not describe it.
+</Callout>
+
+The article also asks if the site may sell more rooms than it has. It notes that hotels often allow 5 to 10% overbooking.<Cite n={1} /> The article lists this as a question to settle before the design starts.<Cite n={1} />
+
+## One database for bookings and rooms
+
+Think of a small shop where the till and the stock book sit on the same desk. When you sell an item, you write the sale and cross the item off the stock in one move. Nobody can sell it again in between.
+
+The article splits the code into services, but it keeps bookings and free-room counts in the same database.<Cite n={1} /> Then one local ACID transaction can create the booking and lower the count together.<Cite n={1} />
+
+The other option is two databases, one for bookings and one for room stock. Then the system needs a way to keep them in step.<Cite n={1} />
+
+| Method | How it works | Cost |
+|---|---|---|
+| Two-phase commit (2PC) | A coordinator asks both databases to get ready, then tells both to commit, or both to cancel. | Slower, holds locks, and if the coordinator fails, the system can stall.<Cite n={1} /> |
+| Saga | Each step runs alone. If a later step fails, "undo" steps reverse the earlier ones. | No long locks, but data is only eventually consistent, and failures are hard to handle.<Cite n={1} /> |
+| One database (the article's choice) | One transaction covers both tables. | Simple and safe at this size.<Cite n={1} /> |
+
+Eventually consistent means the copies agree only after a delay. For a booking, that delay can mean an angry guest.<Cite n={1} /> At about 17 writes a second, the article says the extra complexity is not worth it.<Cite n={1} />
+
+## Pressing "Book" twice
+
+Think of a parcel with a tracking number. If the courier sees the same number two times, he knows it is one parcel, not two.
+
+Users can click "Book" more than one time. So the request that creates a booking carries an idempotency key.<Cite n={1} /> Idempotent means that doing an action two times has the same effect as doing it one time. In the article, the app creates a booking ID before it sends the request. If the same ID arrives again, the server does not book a second time.<Cite n={1} />
+
+## Many lookers, few bookers
+
+Think of a museum. Thousands of people walk through and look. Only a few go to the gift shop till. You build wide halls for the lookers and one careful till for the buyers.
+
+The numbers show the same shape. The article uses Similarweb data: about 516.5 million visits a month to booking.com.<Cite n={1} /> That is about 200 visits a second. At about 5 backend reads per visit, that is about 1,000 reads a second.<Cite n={1} /> The article calls the system strongly read-heavy. It says the design should make reads fast and keep writes correct.<Cite n={1} />
+
+So each service scales on its own.<Cite n={1} /> Hotel data rarely changes, so it can be cached heavily.<Cite n={1} /> A cache is fast memory that keeps copies of data that people read often. The article's example: the Hotel Service might need 10 copies for search traffic, but the Reservation Service only 3.<Cite n={1} />
+
+The data is large. The article estimates about 85,000 hotels and 4.3 million rooms.<Cite n={1} /> A table of free rooms by room type and date, 2 years ahead, has about 620 million rows, or about 62 GB.<Cite n={1} /> With indexes and the other tables, the total is 500 GB or more.<Cite n={1} /> An index is a lookup list that makes searches fast. At this size, the article says the system needs a plan for sharding and indexing.<Cite n={1} /> Sharding means splitting one big table over many database servers.
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| API gateway | The single front door that checks and routes every request |
+| Race condition | A bug where the result depends on the exact timing of two actions |
+| Transaction | A group of database steps that all happen, or none happen |
+| ACID | Four promises of a safe transaction: atomic, consistent, isolated, durable |
+| Strong consistency | Every reader sees the newest data at once |
+| Eventual consistency | Copies of the data agree only after a delay |
+| Idempotency key | An ID that lets the server spot a repeated request |
+| Cache | Fast memory that keeps copies of data that is read often |
+| Shard | One part of a big table, stored on its own database server |
+| CDN | A network of servers near users that keeps copies of static files |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are this tutorial's own advice, not claims from the sources.
+
+- Send two booking requests for the last room at the same moment, from two users. Exactly one must succeed.
+- Click "Book" many times fast, and resend the same request with the same idempotency key. Check for one booking and one charge.
+- Make the payment fail, time out, or answer late. Check that the room is not lost and not sold twice.
+- Test the date edges: check-in equals check-out, a stay across a month or year end, and time zones.
+- Cancel a booking and check that the room becomes free again in search.
+- Load-test search apart from booking. Check the 500 ms search goal while bookings still run.
+</Callout>

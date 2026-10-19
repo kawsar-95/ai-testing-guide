@@ -1,0 +1,134 @@
+export const metadata = {
+  title: 'How Google Search Works',
+  description: 'How a search engine finds web pages, visits them politely, skips repeats, stores them, and builds an index to answer queries.',
+}
+
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'System Design Interview: Design Web Crawler and Search Engine', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/web-crawler-system-design', accessed: '2026-10-20' },
+    { title: 'In-depth guide to how Google Search works', publisher: 'Google Search Central', url: 'https://developers.google.com/search/docs/fundamentals/how-search-works', accessed: '2026-10-20' },
+    { title: 'How Google Search organizes information', publisher: 'Google', url: 'https://www.google.com/search/howsearchworks/how-search-works/organizing-information/', accessed: '2026-10-20' },
+    { title: 'Introduction to robots.txt', publisher: 'Google Search Central', url: 'https://developers.google.com/search/docs/crawling-indexing/robots/intro', accessed: '2026-10-20' },
+  ],
+}
+
+# How Google Search Works
+
+You type a few words, and a search engine shows matching pages in a moment. To do that, it must first find and read the pages of the web, long before you ask. This page follows the article's design of the web crawler, the program that visits and saves web pages. <Cite n={1} /> It then uses Google's own guides to explain the index that answers your query. <Cite n={2} /> The hard part is size: the web is huge, it changes all the time, and each website must not be overloaded.
+
+<PageMeta />
+
+## The problem in plain words
+
+A search system has two parts. A web crawler visits pages and saves them in a data store. A search engine looks in that data to answer queries. <Cite n={1} /> The results must show the page URL, a title, and a short text, and they must not be out of date. <Cite n={1} /> The system must stay up, give correct results, grow with the web, and answer in milliseconds. <Cite n={1} />
+
+The article makes rough estimates of the size, as you would in an interview:
+
+| Item | Estimate |
+|---|---|
+| Active websites | 200 million <Cite n={1} /> |
+| Pages per website | 50 on average, so 10 billion pages <Cite n={1} /> |
+| Storage | 2 MB per page, so 20 PB <Cite n={1} /> |
+| Searches | 8.5 billion per day, about 100,000 per second <Cite n={1} /> |
+
+Google's real index is larger. It covers hundreds of billions of web pages and is more than 100,000,000 GB in size. <Cite n={3} />
+
+<Callout type="note">
+
+The article describes one way to build a crawler, as for a system design interview. It is not the exact system that Google runs. The article itself says that Google has changed a lot over time and that one post cannot show all the details. <Cite n={1} /> The free part of the article covers the crawler. The index and the query part come from Google's own documents.
+
+</Callout>
+
+## The big picture
+
+```text
+[Seed URLs] --> [URL frontier] --> [Checks: seen before? robots.txt? DNS]
+                     ^                         |
+                     |                         v
+          [New links] <-- [Page processor] <-- [Page fetcher] --> [Content store]
+                                                                       |
+                                                                       v
+[User query] --> [Search engine] --> [Index] <-------------------- [Indexer]
+```
+
+The crawler starts with a list of known URLs. The URL frontier picks the next URL, and the checks stop repeats and forbidden pages. The fetcher downloads the page and stores it. The processor finds new links and sends them back to the frontier. Separately, the indexer reads the stored pages and builds the index that answers user queries.
+
+## Finding pages: seed URLs and new links
+
+Think of a tourist in a new city. At first, the tourist knows a few famous places. At each place, the tourist hears about new places to visit.
+
+No single list of all websites exists. <Cite n={1} /> So the crawler starts with a list of well-known sites, called seed URLs. It finds new URLs as it crawls. <Cite n={1} /> The article names three ways to discover a new site: the owner submits it, a crawled page links to it, or a user searches for it. <Cite n={1} /> Google adds one more way: a site owner can send a sitemap, which is a list of the pages of the site. <Cite n={2} />
+
+Google calls this step "URL discovery". Its crawler program is called Googlebot. <Cite n={2} /> Many pages build their content with JavaScript after they load. So a crawler may need a headless browser, which is a browser without a screen, to see the final page. <Cite n={1} /> Google renders pages with a recent version of Chrome for this reason. <Cite n={2} />
+
+## The URL frontier: what to visit next, and how fast
+
+Think of a delivery company. Urgent parcels go first. But each customer can take only one delivery at a time, so the driver must wait between visits to the same address.
+
+The URL frontier is the part that chooses the next URL to crawl. <Cite n={1} /> The article bases its frontier on the design of the Mercator crawler. It has two layers of queues, one for priority and one for politeness. <Cite n={1} /> A queue is a waiting line.
+
+| Layer | What it does |
+|---|---|
+| Front queues | Each queue holds one priority level. The selector picks more often from the high-priority queues. <Cite n={1} /> |
+| Back queues | All URLs of one host go to the same back queue, so the crawler can limit its speed for each host. <Cite n={1} /> |
+| Heap of times | It stores the next allowed visit time of each host. The crawler takes the host with the earliest time. <Cite n={1} /> |
+
+Politeness means that the crawler does not send too many requests to one site. Fixed rules are not enough. If a site gets slow or returns errors, the crawler should slow down. <Cite n={1} /> For example, after an HTTP 429 (too many requests) answer, it crawls slower and tries again later. After an HTTP 500 (server error) answer, it waits longer. <Cite n={1} /> Google's own crawlers also react to the answers of a site. For them, HTTP 500 errors mean "slow down". <Cite n={2} />
+
+Many domains can share one IP address, for example on shared hosting. So the crawler sets limits for each host and also for each IP address. <Cite n={1} />
+
+## Skipping repeats: duplicate URLs and duplicate pages
+
+Think of a librarian with a stamp list. Before the librarian buys a book, the librarian checks the list. If the book is on the list, the librarian does not buy it again.
+
+A crawler can go round in a loop. For example, a page links to itself, or a site makes very many new URLs on the fly. <Cite n={1} /> So the crawler checks each URL before it crawls it. The list of seen URLs is too large for one machine, so it is split, or sharded, across many machines. <Cite n={1} />
+
+To save memory, the crawler can use a Bloom filter. This is a small data structure that answers "have I seen this?" If it says no, the answer is sure. If it says yes, the answer is only probable, so a few new URLs get skipped. <Cite n={1} /> For a crawler of this size, the article says that this cost is acceptable. <Cite n={1} />
+
+Two different URLs can show the same content. A word-by-word comparison costs too much. So the crawler makes a fingerprint, a short summary of the page, for example with the Simhash method. Similar pages get similar fingerprints. <Cite n={1} /> A site owner can also mark the preferred URL of a page with a canonical link. <Cite n={1} /> Google groups similar pages and picks the most typical one as the canonical page. <Cite n={2} />
+
+## Rules, storage, and teamwork
+
+Before it crawls a URL, the crawler reads the site's robots.txt file. In this file, the site owner says which URLs crawlers may visit. <Cite n={1} /> Google says that robots.txt mainly protects a site from too many requests. It does not hide a page from search results. To keep a page out, the owner uses a `noindex` rule or a password. <Cite n={4} />
+
+The article stores each page as it was downloaded, in an object store such as Amazon S3. <Cite n={1} /> The article says that an object store grows easily and keeps data safe. <Cite n={1} /> A separate key-value database keeps the facts about each page: the URL, where the content is, when it was last crawled, and the result. <Cite n={1} /> Google runs its own distributed storage system, called Colossus. It replaced the Google File System. <Cite n={1} />
+
+The crawler parts must work together. The article compares three ways and picks orchestration. One central program, the orchestrator, starts each step, tracks progress, and retries failed steps. <Cite n={1} /> It can also schedule a new crawl of old pages. <Cite n={1} />
+
+## Indexing and serving: from pages to answers
+
+Think of the index at the back of a book. You look up a word, and the index tells you the pages where it appears.
+
+The free part of the article stops after the crawler. So this section uses Google's guides. Google Search works in three stages: crawling, indexing, and serving results. <Cite n={2} /> In the indexing stage, Google reads the text of the page and key tags such as the `title` element. <Cite n={2} /> Google compares its index to such a book index, with an entry for each word on each indexed page. <Cite n={3} /> The index runs on thousands of computers, and Google does not index every page it processes. <Cite n={2} />
+
+When you search, Google's machines look in the index for matching pages. They return the pages that seem best and most relevant. <Cite n={2} /> Hundreds of factors decide relevance, such as your location, your language, and your device. So the same query can give different results in Paris and in Hong Kong. <Cite n={2} /> Crawlers keep running all the time, and they learn how often each page changes. <Cite n={3} />
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Web crawler | A program that visits web pages and saves them |
+| Seed URL | A known URL that the crawl starts from |
+| URL frontier | The part that chooses which URL to crawl next |
+| Queue | A waiting line of jobs |
+| Politeness | Rules that stop the crawler from overloading one site |
+| robots.txt | A file where a site owner says what crawlers may visit |
+| Bloom filter | A small memory structure that says "surely new" or "maybe seen" |
+| Canonical page | The main version of a page that has copies |
+| Object store | A storage service for large files, such as Amazon S3 |
+| Index | A lookup table from words to the pages that contain them |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+
+These ideas are the tutorial's own advice.
+
+- Make a small test site with a page that links to itself and a page that makes endless URLs. Check that the crawler stops.
+- Return HTTP 429 and HTTP 500 from a test server. Check that the crawler slows down and retries later.
+- Put a `Disallow` rule in robots.txt and check that the crawler never requests those URLs.
+- Serve the same content at two URLs, one with a canonical link. Check that only one copy goes to the index.
+- Change a page and check how long it takes until search shows the new text.
+- Measure the search answer time while the indexer works under full load.
+</Callout>

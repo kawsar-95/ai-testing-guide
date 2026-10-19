@@ -1,0 +1,153 @@
+export const metadata = { title: 'How a Payment System Works', description: 'How Uber charges a rider, keeps card numbers safe, and splits each fare between the driver, Uber, and taxes without losing a cent.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'How Uber Payment System Handles 30 Million Transactions Per Day', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/payment-system-design', accessed: '2026-10-20' },
+    { title: 'Zero-Sum by Design: 10 Years of Uber’s Payments Platform', publisher: 'Uber Engineering Blog', url: 'https://www.uber.com/en-US/blog/ubers-payments-platform/', accessed: '2026-10-20' },
+    { title: 'Revolutionizing Money Movements at Scale with Strong Data Consistency', publisher: 'Uber Engineering Blog', url: 'https://www.uber.com/en-US/blog/money-scale-strong-data/', accessed: '2026-10-20' },
+  ],
+}
+
+# How a Payment System Works
+
+When a ride ends, the app takes the fare from your card and you walk away. You never hand over cash, and the driver still gets paid. A payment system makes this happen. It must keep card numbers safe, split each fare between several parties, and survive slow or broken banks. Above all, it must never lose money or charge you twice. This page uses Uber as the example. It follows the free part of one newsletter article, plus two posts from Uber's own engineering blog.
+
+<PageMeta />
+
+## The problem in plain words
+
+The article's title puts Uber's load at 30 million transactions per day <Cite n={1} />. Uber's engineers give a wider view. Over ten years, Uber's yearly gross bookings grew from 50 billion dollars to 217 billion dollars <Cite n={2} />. It tracks the balance of over 1.2 billion entities, such as riders, drivers, and businesses <Cite n={2} />.
+
+The article names three hard problems <Cite n={1} />:
+
+| Problem | What it means |
+|---|---|
+| Security | A phone can be stolen and a server can be hacked, so storing card details there is risky |
+| Disbursement | One payment must be split between the driver, Uber, and taxes and fees, so money cannot go straight from rider to driver |
+| Reliability | Banks, card networks, and payment providers are outside systems that can fail, time out, or go partly down |
+
+Disbursement means paying money out. A payment provider is a company that talks to the card networks and banks for you.
+
+## The big picture
+
+```text
+[Rider app + provider SDK] --card details--> [Payment provider]
+          ^                                          |
+          +-------------- token ---------------------+
+
+[Rider app] --trip ends, token--> [Uber backend]
+                                        |
+                                        v
+                               [Money order store]
+                                        |
+                                        v
+                          [Kafka] --> [Order processing]
+                                        |            |
+                                        v            v
+                          [Payment providers]   [Ledger balances]
+                          (charge, pay out)     (who owns what)
+```
+
+First, the card details go straight to the payment provider, and the app gets back a token <Cite n={1} />. Later, when a trip ends, Uber writes a money order that lists every debit and credit <Cite n={2} />. A queue carries the order to the services that charge the card, pay the driver, and update each balance <Cite n={3} />.
+
+The token step comes from the newsletter article. The free part of the article stops after tokenization. So the money order, pipeline, retry, and ledger sections come from Uber's own engineering posts.
+
+## Keeping card numbers away from Uber
+
+Think of a hotel key card. The card opens your room but holds no copy of your passport. If you lose it, the front desk cancels it, and a thief cannot use it anywhere else.
+
+A token works the same way. This section follows the newsletter article. The app uses an SDK from the payment provider to collect the card number and CVV <Cite n={1} />. An SDK (software development kit) is a ready-made code package from another company. The SDK sends the card details straight to the provider, not to Uber's servers <Cite n={1} />. The provider then returns a token, a stand-in that lets Uber charge the card <Cite n={1} />. From then on, the app uses the token, not the card <Cite n={1} />.
+
+The article explains why a stolen token is of little use. The provider ties it to Uber's account and app, and it allows only certain uses, such as charges made by Uber <Cite n={1} />. Another app or phone cannot use it <Cite n={1} />. This also helps Uber avoid heavy legal compliance work for storing card data <Cite n={1} />.
+
+## Money orders: every cent has a home
+
+Think of a shared bill at a restaurant. The waiter writes down who pays what. The total of all payments must equal the bill, not one coin more or less.
+
+This section comes from Uber's own engineering posts. Uber records each payment as a money order. A money order lists the debits and credits between the parties of one real deal, such as a trip or a food order <Cite n={2} />. A debit takes money from an account. A credit adds money to one.
+
+Uber checks one rule before it saves any money order: all its entries must add up to zero <Cite n={2} />. This means the system can never create or destroy money <Cite n={2} />. Uber also uses double-entry bookkeeping, where each credit has a matching debit <Cite n={2} />.
+
+An older Uber post shows a 20-dollar trip as an example <Cite n={3} />:
+
+| Account | Change | Reason |
+|---|---|---|
+| Payer escrow | 18 dollars out | The trip fare |
+| Payer escrow | 2 dollars out | The service fee |
+| Payee escrow | 18 dollars in | The trip fare |
+| Uber escrow | 2 dollars in | The service fee |
+
+The 20 dollars that leave the payer equal the 20 dollars that arrive, so the four lines add up to zero. Escrow is a holding account where money waits until the deal is complete.
+
+A money order can never change after Uber writes it <Cite n={2} />. If a trip price is adjusted, or a food item was missing, Uber writes a new money order for the difference <Cite n={2} />. Uber says this immutability keeps its audit trail clean <Cite n={2} />.
+
+## A pipeline of small services
+
+Think of a restaurant kitchen. The waiter pins the ticket on a rail. Each cook takes the ticket, does one step, and passes it on. If one cook is slow, tickets wait on the rail. They do not get lost.
+
+This section comes from Uber's own engineering posts. Uber built its payments platform as many small, stateless services <Cite n={2} />. Stateless means a service keeps no memory between requests, so any copy of it can take the next job. Each service owns one step: creating the order, processing it, collecting money, or paying out <Cite n={2} />. Apache Kafka carries the messages between them <Cite n={2} />. Kafka is a message queue: a durable line of messages that services read in order.
+
+The 2020 post describes two of these services <Cite n={3} />:
+
+- An **order insertion** service creates the payment order, saves it, and publishes it to a queue topic.
+- An **order processing** service reads the order, sends charge or payout requests to the payment providers, and records success or failure.
+
+Most of Uber's money traffic flows through this asynchronous pipeline <Cite n={2} />. Asynchronous means the caller does not wait for the work to finish. When a user waits on screen, Uber instead uses its internal workflow engine, Cadence, for a synchronous flow <Cite n={2} />.
+
+## Charging once, even when things fail
+
+Picture a parcel locker with a unique code on each parcel. If the courier delivers the same parcel twice, the locker sees the code and refuses the copy.
+
+In payments, a retry is normal. A bank may time out, and the system tries again. But a retry must not charge the rider twice. The property that makes a repeated request safe is called idempotency.
+
+Uber's 2020 post lists how it gets idempotency <Cite n={3} />:
+
+- It gives users, jobs, and orders unique IDs, and it generates those IDs in a deterministic way.
+- It uses the ID of each processed order to make sure it handles each order exactly once.
+- It never changes an order after saving it.
+- It saves an order first, and only then processes it.
+
+The same post says a reliable payment system retries failing payments with growing delays over a long time <Cite n={3} />. The queues also run in many regions. If one region goes down, services in another region keep processing the orders <Cite n={3} />.
+
+<Callout type="note" title="Deterministic IDs">
+This is a general explanation. Uber's post does not say which facts its IDs come from. A deterministic ID comes from fixed facts, such as the trip and the step, not from a random roll. So a retry of the same step produces the same ID. The system then sees that it already handled that ID.
+</Callout>
+
+## The ledger: who owns what
+
+A ledger is the book of balances. Think of a savings passbook. Each line shows money in or out, and the last line shows what you have now.
+
+This section comes from Uber's own engineering posts. Uber wanted ledger balances with strong consistency <Cite n={2} />. In 2016, no option it had could promise strong consistency for this, so it built the balance store on Amazon DynamoDB <Cite n={2} />. Strong consistency means every reader sees the latest write at once.
+
+Each balance change also goes into an entity changelog. This log gives a full audit trail and can rebuild any ledger from the start <Cite n={2} />. As audit needs grew, Uber built a custom store called LedgerStore for records that show any tampering <Cite n={2} />.
+
+Busy business accounts caused a "hot entity" problem: many writes hit the same ledger row at once <Cite n={2} />. Uber solved it with batched writes, which gave 10 times more throughput for those accounts <Cite n={2} />.
+
+The core platform also knows nothing about card brands or wallets. Each payment method plugs in through one shared interface with actions such as charge, disburse, and refund <Cite n={2} />. Uber Pay alone handles more than 50 payment methods around the world <Cite n={2} />.
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Payment provider | A company that connects a business to card networks and banks |
+| Token | A safe stand-in for a card number that works only for one business |
+| Ledger | The record of balances for each account |
+| Double-entry bookkeeping | Each credit has a matching debit, so the books always balance |
+| Idempotency | Doing the same request twice has the same effect as doing it once |
+| Queue | A durable line of messages that services read in order |
+| Database | The system that stores data for the long term |
+| Strong consistency | Every reader sees the newest write at once |
+| Audit trail | A complete history that shows who changed what, and when |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not claims from the article or the Uber posts.
+
+- **No card data at rest.** Search app storage, logs, and backend requests for card numbers or CVVs. Only tokens should appear.
+- **Duplicate requests.** Send the same charge twice, or replay a queue message, and check that the rider pays one time.
+- **Timeouts and partial failures.** Make a mocked provider time out, fail, or answer late. Check that retries stop at success and that the status is right.
+- **Zero-sum checks.** For each test trip, add up all ledger entries and check that the total is exactly zero, including tips, refunds, and adjustments.
+- **Adjustments.** Change a fare after the trip. Check that a new money order appears and the old one stays unchanged.
+- **Hot accounts.** Load test many parallel writes to one business account and check that the final balance is correct.
+</Callout>

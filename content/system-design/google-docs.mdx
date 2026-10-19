@@ -1,0 +1,135 @@
+export const metadata = { title: 'How Google Docs Works', description: 'How Google Docs lets many people type in one document at the same time, and how every copy ends up the same.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'How Does Google Docs Work', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/how-does-google-docs-work', accessed: '2026-10-20' },
+    { title: 'What’s different about the new Google Docs: Working together, even apart', publisher: 'Google Drive Blog', url: 'https://drive.googleblog.com/2010/09/whats-different-about-new-google-docs_21.html', accessed: '2026-10-20' },
+    { title: 'What’s different about the new Google Docs: Conflict resolution', publisher: 'Google Drive Blog', url: 'https://drive.googleblog.com/2010/09/whats-different-about-new-google-docs_22.html', accessed: '2026-10-20' },
+    { title: 'What’s different about the new Google Docs: Making collaboration fast', publisher: 'Google Drive Blog', url: 'https://drive.googleblog.com/2010/09/whats-different-about-new-google-docs.html', accessed: '2026-10-20' },
+  ],
+}
+
+# How Google Docs Works
+
+Google Docs lets a group of people type in the same document at the same time. Each person sees the edits of the others a moment later, and nobody has to email copies around. That sounds simple. It is hard, because each computer holds its own copy, the network is slow, and two people can change the same words at the same moment. This page uses the free part of one newsletter article and three posts by a Google engineer. The Google posts are from 2010, so today's system can be different.
+
+<PageMeta />
+
+## The problem in plain words
+
+The newsletter names three hard parts.<Cite n={1} />
+
+- When people edit at the same time, all copies of the document must end up the same.
+- Edits made at the same time must not clash.
+- Each person must see the edits of the others in real time.
+
+A person should also be able to keep editing while offline.<Cite n={1} /> Distance makes this harder. A message that goes across the Earth and back takes about 200 milliseconds (ms).<Cite n={1} /> The newsletter says this delay can make the app feel poor to use.<Cite n={1} />
+
+Google's engineer puts the core task in one line: every open editing session must finally reach the same, correct document.<Cite n={2} /> Until it does, each person looks at a slightly different version.
+
+## The big picture
+
+```text
+[Browser of Luiz]                          [Browser of John]
+  own copy, edits shown at once              own copy, edits shown at once
+      |        ^                                 |        ^
+  one change   | changes of others,          one change   | changes of others,
+  at a time    | "got it" messages           at a time    | "got it" messages
+      v        |                                 v        |
+  +----------------------------------------------------------+
+  |                     [Google server]                       |
+  |  waiting changes --> fix positions --> revision log       |
+  |  document = all changes in the log, replayed in order     |
+  +----------------------------------------------------------+
+```
+
+This picture follows Google's posts from 2010. The code in your browser is the client. It shows the document, takes your edits, and talks to the server.<Cite n={4} /> Your edits appear in your own copy at once. The client then sends them to the server, one change at a time.<Cite n={4} /> The server puts each change in order, fixes its position if needed, and adds it to the revision log.<Cite n={4} /> Then it sends the change to every other editor.<Cite n={4} />
+
+## Why a lock is too slow
+
+Think of a meeting room with one marker pen. Only the person with the pen can write on the board. Everyone else can only watch.
+
+A lock works the same way. The newsletter calls this pessimistic concurrency control. Concurrency means many things happen at the same time. With a lock, only one person can write at a time, and every other copy is read-only.<Cite n={1} /> The data is always correct. But there is no live group editing, and nobody can edit offline.<Cite n={1} />
+
+Google's engineer looked at a smaller lock: one lock for each paragraph. He said it makes the editing experience worse. Also, two people can still start in the same paragraph at the same moment.<Cite n={2} /> Then one of them loses the lock, and the edits must be merged or thrown away.<Cite n={2} />
+
+## Hiding the wait
+
+Think of a shared shopping list. Each person writes on a notepad in their pocket. Later, everyone copies their notes to the list on the fridge. Writing is fast, but the copying step needs rules.
+
+The newsletter calls this latency hiding. Latency is the delay of the network. Each user edits a local copy, so the app feels faster than the network really is.<Cite n={1} /> The system then sends the edits to everyone, so the copies match again.<Cite n={1} /> The hard part is the merge. The table shows three simple ways to merge, and why each one falls short.
+
+| Way to merge | How it works | Weak point |
+|---|---|---|
+| Last write wins | The newest update replaces the older ones. | Edits made at the same time can be lost.<Cite n={1} /> |
+| Differential sync | Each copy sends only the diff, the part that changed. | A diff says what changed, not why. So conflicts are hard to settle.<Cite n={1} /> |
+| Compare versions | The server compares two whole versions and merges them. | The server cannot tell what the editor meant.<Cite n={2} /> |
+
+The old Google Docs compared versions.<Cite n={2} /> Google gives an example. The text is "The quick brown fox". John makes "brown fox" bold. At the same time, Luiz replaces "fox" with "dog".<Cite n={2} /> The right result is "The quick brown dog". But from the two versions alone, "fox dog" and "dog fox" look just as valid.<Cite n={2} />
+
+## Store the edits, not the text
+
+Think of a bank account. The bank does not just keep your balance. It keeps every deposit and every withdrawal. Your balance is what you get when you add them up in order.
+
+In 2010, Google said that the new Google Docs stores a document as a list of changes in time order.<Cite n={2} /> Each edit is one of three kinds: insert text, delete text, or apply a style to a range of text.<Cite n={3} /> An edit does not change the stored characters. It adds one new entry at the tail of the revision log. To show the document, Google replays the log from the first entry.<Cite n={3} /> Because each change records which revision the editor saw, Google can work out how to merge it with later changes.<Cite n={2} />
+
+The merge method is operational transformation (OT).<Cite n={3} /> The newsletter calls OT optimistic: many copies accept edits at once, and conflicts get settled later with no locks and no user action.<Cite n={1} />
+
+Here is the idea behind the word "transformation". The text reads "EASY AS 123". John starts to change the end to "ABC". At the same time, Luiz starts to change it to "IT'S EASY AS 123", and he types "IT" first.<Cite n={3} /> John's delete says "remove the characters at positions 9 to 11". In Luiz's copy, the text has moved 2 places to the right. If Luiz applies John's delete as it is, the wrong characters disappear.<Cite n={3} /> So Luiz's client first shifts John's change by 2 places. That shift is the transformation.<Cite n={3} />
+
+Some pairs need no shift. Text can be italic and red at the same time, so those two style edits do not clash.<Cite n={3} /> Google says that if OT is built correctly, every editor sees the same document once all changes have arrived.<Cite n={3} />
+
+<Callout type="note">
+OT is powerful, but the newsletter warns that it is hard to build correctly.<Cite n={1} /> The code must handle every way that two kinds of edit can meet.<Cite n={3} />
+</Callout>
+
+## Who sends what, and when
+
+Think of a restaurant kitchen with a ticket rail. The head chef numbers each order. A waiter hands over one ticket and waits for a nod before the next one.
+
+The collaboration protocol is the set of rules for these messages. Each side keeps a small amount of state.<Cite n={4} />
+
+| Side | What it keeps |
+|---|---|
+| Client | The last revision number from the server, edits not yet sent, edits sent but not yet confirmed, and the document as this editor sees it |
+| Server | Edits received but not yet processed, the revision log, and the current document |
+
+A client sends only one change at a time.<Cite n={4} /> New typing waits in a pending list until the server sends an acknowledgement, a short "got it" message, for the change in flight.<Cite n={4} />
+
+Sometimes a change arrives late. John's client expects its change to get revision number 2. But the server already gave number 2 to a change from Luiz.<Cite n={4} /> The server transforms John's change against every change stored since John last synced. Then it saves John's change as revision 3.<Cite n={4} />
+
+In 2010, Google listed the gains of this design.<Cite n={4} />
+
+- You never wait for the server before your own edits appear, so a slow network does not slow your typing.
+- The network carries only the smallest description of each change.
+- The server does not track the state of each client, so handling a change does not get more complex as more editors join.
+
+Google wrote that the move to this design ended the collaboration conflicts. Editors could then see each other's edits letter by letter.<Cite n={4} />
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Client | The code that runs in your browser and talks to the server |
+| Server | The computer at Google that orders and stores all changes |
+| Concurrency | Many things happening at the same time |
+| Lock | A rule that lets only one person change something at a time |
+| Latency | The delay before a message reaches the other side |
+| Diff | Only the part of a document that changed |
+| Revision log | The full, ordered list of every change to a document |
+| Operational transformation | A method that shifts an edit so it still fits after other edits |
+| Acknowledgement | A short message that says "I got your change" |
+| Converge | Different copies end up the same |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are this tutorial's own advice, not claims from the sources.
+
+- Open one document in two browsers. Type at the same spot at the same moment. Check that both copies end up with the same text.
+- Slow the network down in the browser tools, or go offline. Edit, then reconnect. Check that no edit is lost and none is applied twice.
+- Mix edit types: one user deletes a paragraph while another types or applies bold inside it.
+- Check what the app shows while changes are still unsent, and what happens if the user closes the tab then.
+- Put many editors in one document. Measure how long an edit takes to reach the others.
+- Restore an old version from the history. Check that it matches what users saw at that time.
+</Callout>

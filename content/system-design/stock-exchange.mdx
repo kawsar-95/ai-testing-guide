@@ -1,0 +1,155 @@
+export const metadata = { title: 'How a Stock Exchange Works', description: 'How an exchange takes buy and sell orders, puts them in a fair order, and matches them into trades in real time.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'How Stock Exchange Works', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/stock-exchange-system-design', accessed: '2026-10-20' },
+  ],
+}
+
+# How a Stock Exchange Works
+
+A stock exchange is a meeting place where people who want to buy a share meet people who want to sell it. You tap "buy" in a trading app, and the exchange tries to pair your order with a seller. Behind that tap, the exchange must check your money, put your order in a fair place in line, and find the right seller. It must do this for huge numbers of orders, and it must never break the rules of fairness. This page follows one article that designs a simple exchange. The article describes one way to build it. It does not describe one named exchange.
+
+<PageMeta />
+
+## The problem in plain words
+
+The article starts with a farmer's market <Cite n={1} />. Each stock is like one stall. Sellers ask for a price. Buyers look for the cheapest seller first. When a buyer offers at least what a seller asks, the two make a deal <Cite n={1} />. The exchange earns fees on trades, so it wants as many trades as possible <Cite n={1} />.
+
+The article's design must do these jobs <Cite n={1} />:
+
+- Trade stocks only.
+- Let users place buy orders and sell orders.
+- Let users cancel an order at any time.
+- Match buyers and sellers in real time.
+- Limit how many shares one user can trade each day.
+- Publish market data (prices and trades) in real time.
+
+The article does not give user counts or trades per second. It gives the mix of messages that most exchanges see <Cite n={1} />:
+
+| Message type | Share of all messages |
+|---|---|
+| New orders | about 50% |
+| Cancels | about 40% |
+| Executions (real trades) | about 2% |
+
+This mix surprises many people. Only a tiny share of messages turns into a trade. Most of the work is adding orders and taking them back. So cancels must be just as fast as new orders.
+
+## The big picture
+
+```text
+[User app] --REST / WebSocket--> [Broker] --FIX--> [Gateway]
+                                                      |
+                                    +-----------------+-----------------+
+                                    |                 |                 |
+                              [Risk manager]      [Wallet]      [Order manager]
+                                                                        |
+                                                                 sequence number
+                                                                        v
+                                                              [Matching engine]
+                                                              (order book + logic)
+                                                                        |
+                                                                        v
+                                                        trades + market data out
+```
+
+The user talks to a broker, which is the trading app. The broker sends orders to the exchange gateway <Cite n={1} />. The gateway checks the order and stamps it with a number that fixes its place in line <Cite n={1} />. Then the matching engine pairs buy and sell orders and reports the trades <Cite n={1} />. The article calls the whole design asynchronous and event-sourced <Cite n={1} />.
+
+<Callout type="note" title="What event-sourced means">
+In an event-sourced system, the main record is a list of everything that happened, in order. The current state is what you get when you replay that list from the start. A bank statement works the same way: your balance is the sum of all the lines.
+</Callout>
+
+## Orders and the order book
+
+Think of two queues at a busy market stall. One queue holds buyers, sorted so the highest offer stands at the front. The other holds sellers, sorted so the lowest price stands at the front.
+
+That pair of queues is the order book. For one stock, it shows every waiting buy and sell order, with its amount and its price <Cite n={1} />. Buy orders are sorted from the highest price down. Sell orders are sorted from the lowest price up <Cite n={1} />. A trade happens where the two sides meet <Cite n={1} />.
+
+The article explains a few trading terms <Cite n={1} />:
+
+| Term | Plain meaning |
+|---|---|
+| Market order | "Buy or sell now at the current price." It fills at once if there are enough shares on the other side. |
+| Limit order | "Buy or sell only at my price or better." A buy limit of 100 can fill at 100 or less. A sell limit of 100 can fill at 100 or more. |
+| Spread | The gap from the best (highest) buy offer to the best (lowest) sell offer |
+
+## The broker and the FIX protocol
+
+A broker is like a travel agent. You do not phone each airline. You ask the agent, and the agent talks to the airlines in their own language.
+
+A user connects to the broker with REST APIs, and with WebSockets for live prices <Cite n={1} />. A WebSocket is a connection that stays open, so the server can push updates without being asked. The broker then talks to the exchange gateway in the Financial Information Exchange protocol, or FIX <Cite n={1} />.
+
+FIX is a standard message format for trading. The article says FIX gives each order message a unique sequence number <Cite n={1} />. It also adds a checksum and the message length, so the receiver can see if a message got damaged on the way <Cite n={1} />. A checksum is a small number computed from the message. If the number does not match on arrival, the message is broken.
+
+## The gateway: checks before the line
+
+Think of the security desk at an office. Before you get into the lift, a guard checks your badge and writes your name in the visitor book.
+
+The gateway is the front door for brokers <Cite n={1} />. It turns each order into the exchange's internal format and later sends results back <Cite n={1} />. A gateway can also sit close to the exchange servers to cut delay. This is called co-location <Cite n={1} />.
+
+The article splits the gateway into three parts <Cite n={1} />:
+
+| Part | Job |
+|---|---|
+| Risk manager | Checks that the user has enough funds, blocks odd trading, and works out fees |
+| Wallet | Holds the user's money and shares for trading |
+| Order manager | Gives each order a sequence number, tracks its state, and sends approved orders on |
+
+The order manager keeps a light list of every order: open, cancelled, and rejected <Cite n={1} />. It also handles cancel requests <Cite n={1} />.
+
+## Sequence numbers: a ticket for every order
+
+At a bakery, you pull a paper ticket when you walk in. The baker serves ticket 41 before ticket 42, no matter who shouts louder. Nobody can argue about who came first.
+
+The order manager does the same. It gives every order, cancel, and fill a number that always goes up across the whole exchange <Cite n={1} />. A fill is a completed trade, in full or in part. The article lists what these numbers give <Cite n={1} />:
+
+- **Fair order.** Orders are handled in the order they arrived.
+- **Fast recovery.** After a crash, the system can replay events in the same order and reach the same state.
+- **Exactly once.** Each event takes effect one time, not zero times and not twice.
+- **Gap detection.** A missing number shows at once that an event got lost <Cite n={1} />.
+
+The article adds one more idea. Each message type (new order, cancel, trade) gets its own topic queue with its own numbers <Cite n={1} />. A topic queue is a named line of messages that a program reads in order. Separate lines keep each stream in order, let each type move at its own pace, and make replay simpler <Cite n={1} />.
+
+## The matching engine
+
+The matching engine is the heart of the exchange. It checks the sequence numbers, pairs buy and sell orders, and turns trades into market data <Cite n={1} />.
+
+**The order book in memory.** The engine keeps the order book in memory, not on disk, for each stock <Cite n={1} />. Each stock has one list for buys and one for sells <Cite n={1} />. Inside each price level, orders wait in arrival order, first in and first out <Cite n={1} />. The article uses a doubly linked list for each price level. A doubly linked list is a chain where each item knows its neighbour on both sides. Adding to the end takes constant time, and so does removing a known item <Cite n={1} />.
+
+**Fast cancels.** Searching every price level for one order would be slow. So the engine keeps an index from order ID to the order in memory, which makes a cancel a single lookup <Cite n={1} />. This matters because cancels are about 40% of all messages.
+
+**The matching rule.** The engine makes a trade when the buy price is equal to or higher than the sell price <Cite n={1} />. The engine also tracks the best buy and best sell prices so it can match quickly <Cite n={1} />. A closed order leaves the book and goes into the trade history <Cite n={1} />.
+
+<Callout type="note" title="Why the engine must be deterministic">
+The article says the same input sequence must always produce the same output sequence <Cite n={1} />. "Deterministic" means no luck and no timing effects. If a replay after a crash gave different trades, the exchange could not prove what really happened.
+</Callout>
+
+The free part of the article stops after the matching logic. This page covers only that free part.
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Order | A request to buy or sell a number of shares, maybe at a set price |
+| Order book | The two sorted lists of waiting buy and sell orders for one stock |
+| Matching engine | The program that pairs buy and sell orders into trades |
+| Broker | The app or firm that sends your orders to the exchange |
+| Gateway | The front door that checks orders before they reach the engine |
+| Sequence number | A number that always goes up and fixes the order of events |
+| Queue | A line of messages read in order |
+| Market data | The live stream of prices and trades that the exchange publishes |
+| Event sourcing | Storing every change as an event, so you can replay history |
+| Latency | The delay between sending a message and getting the result |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not claims from the article.
+
+- **Price and time priority.** Place two buy orders at the same price a moment apart. Check that the earlier one fills first.
+- **Replay gives the same result.** Feed a recorded order stream into the engine twice. Check that the two trade outputs are byte for byte the same.
+- **Cancel races.** Send a cancel at the same moment as a matching order. Check that the order either fills or cancels, never both.
+- **Gaps and duplicates.** Drop or repeat one sequence number on purpose. Check that the system detects the gap and does not apply a trade twice.
+- **Limits and funds.** Try to trade more than the daily limit, or more than the wallet holds. Check that the risk manager rejects the order.
+- **Cancel storms.** Load test with about 40% cancels, not only new orders, to match the real message mix.
+</Callout>

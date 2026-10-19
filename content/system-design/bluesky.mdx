@@ -1,0 +1,143 @@
+export const metadata = { title: 'How Bluesky Works', description: 'How Bluesky keeps each user in a portable repository, joins all changes into one stream, and builds feeds, counts, moderation, and video on top.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'How Bluesky Works', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/how-does-bluesky-work', accessed: '2026-10-20' },
+    { title: 'Glossary of terms', publisher: 'AT Protocol (atproto.com)', url: 'https://atproto.com/guides/glossary', accessed: '2026-10-20' },
+  ],
+}
+
+# How Bluesky Works
+
+Bluesky is a social network for short posts, much like Twitter. The big difference is that no single company holds all the data. Each person has a personal store of posts that can move from one server to another. This makes it hard to build: many independent servers must work together, and the app must still feel fast.
+
+<PageMeta />
+
+## The problem in plain words
+
+In a central social network, one company runs all the servers and makes every moderation decision. But one authority can make mistakes, it can be biased, and the moderation work becomes a bottleneck as the site grows <Cite n={1} />. Bluesky started as a research project to build a decentralized network instead <Cite n={1} />.
+
+Bluesky uses the federated model. It keeps the usual client and server roles, but different people can run the servers, and the servers talk to each other over HTTP <Cite n={1} />. Email works the same way: a Gmail user can write to a Proton Mail user.
+
+The rules are an open protocol, the Authenticated Transfer Protocol (ATProto), and Bluesky is one app built on it <Cite n={1} />. Your data is shared by all ATProto apps, so you keep your followers if you move to another app on the protocol <Cite n={1} />.
+
+The article gives a few numbers. One data server holds 6 million user repositories and costs about 150 USD a month <Cite n={1} />. Users can choose from more than 50,000 custom feeds <Cite n={1} />.
+
+## The big picture
+
+```text
+[Your app] --> [Data server (PDS)] --> your repository (SQLite)
+                      |
+                      |  live changes over websockets
+                      v
+               [Crawler (Relay)] --> one stream of all changes
+                      |
+       +--------------+------------------+---------------------+
+       v                                 v                     v
+[Index server (AppView)]          [Feed generators]   [Moderation service]
+ ScyllaDB, Redis cache             custom feeds         labels on posts
+       |
+       v
+     [CDN] --> images and videos to the app
+```
+
+You write a post, and your data server saves it in your repository. The crawler listens to many data servers and joins their changes into one stream. The index server, the feed generators, and the moderation service read that stream and build what the app shows. The protocol names these parts the PDS, the Relay, and the AppView <Cite n={2} />.
+
+## Your posts live in your own repository
+
+Think of a personal notebook that you can carry from one library to another.
+
+Bluesky saves the text and the time of each post in your repository: the collection of all data that one user publishes <Cite n={1} />. Each repository is a separate SQLite database, a small database engine that keeps its data in one file <Cite n={1} />. Each record is first encoded in CBOR, a compact binary format, to keep storage costs low <Cite n={1} />.
+
+Many repositories sit on one data server, which the protocol calls a Personal Data Server (PDS) <Cite n={2} />. The data server receives every request from the app, and it checks who the user is and what the user may do <Cite n={1} />. The article compares it to Git. You can move a project from GitHub to GitLab, and you can move a repository to another data server in the same way <Cite n={1} />.
+
+When someone likes your post, the like is saved only in the repository of the person who liked it <Cite n={1} />. So another part of the system must add up the likes and followers.
+
+## From one stream to your screen
+
+Think of a news agency. Reporters in many towns send in stories, and the agency sends one combined wire to every newspaper.
+
+To copy every post into the repository of each follower would cost too much <Cite n={1} />. Instead, a crawler, which the protocol calls a Relay, collects changes from all data servers <Cite n={1} /> <Cite n={2} />. Each data server pushes new posts, likes, and comments to the crawler in real time over websockets <Cite n={1} />. A websocket is a connection that stays open, so the server can send a message at any time. The crawler does not index anything; it only forwards the changes as one stream <Cite n={1} />.
+
+The raw stream does not say how many likes a post has. The index server, which the protocol calls an AppView, reads the stream and turns raw changes into a form the app can show <Cite n={1} /> <Cite n={2} />. It is written in Go, and it keeps its data in ScyllaDB, a NoSQL database that grows when you add machines <Cite n={1} />. A home feed loads in these steps <Cite n={1} />:
+
+1. The app sends the request through your data server to the index server.
+2. The data server reads your repository to find the people that you follow.
+3. The index server makes a list of post IDs, newest first, and fills in the full posts.
+
+<Callout type="note" title="Primary data and derived data">
+Your repository holds the primary data. The index server holds data that it derives from all repositories <Cite n={1} />. So a like count on screen is a calculation, not a stored fact.
+</Callout>
+
+The index server is the most read-heavy part, so Redis, an in-memory store, caches its results <Cite n={1} />. Images and videos stay on the disk of the data server. The index server fetches a file when a user asks for it and caches it on a content delivery network (CDN) <Cite n={1} />.
+
+## Names that change and IDs that do not
+
+Your nickname can change, but your passport number stays the same.
+
+Each user has a decentralized identifier (DID) that never changes <Cite n={1} />. Each user also has a handle, a readable name based on a domain name. A new account gets a handle under `bsky.social` <Cite n={1} />. Posts are stored under the DID, and the app shows the handle next to them. So a new handle does not break old posts <Cite n={1} />.
+
+You can use your own domain name as your handle. Bluesky gives you a unique text value, and you put it in a DNS TXT record of your domain. A TXT record is a free-text field in the settings of a domain name. The index server checks the record from time to time and confirms the handle <Cite n={1} />.
+
+To follow someone, you add their DID to your own repository, and their repository does not change <Cite n={1} />. So to count the followers of a user, the index server must look at every repository. A search engine does the same when it crawls the web to find all links to one page <Cite n={1} />.
+
+## Custom feeds and moderation
+
+Think of many radio stations that play from one music library, each with its own playlist rules.
+
+A custom feed is a filter, for example for a set of keywords or users <Cite n={1} />. A feed generator is a separate service. It reads the stream, filters and ranks posts with its own logic, and gives back a list of post IDs. The index server fills in the content <Cite n={1} />.
+
+Feeds load page by page with a cursor, which works like a bookmark. Each response carries a cursor value, for example the timestamp of a post, and the app sends it back to get the next page <Cite n={1} />. This lets the index server avoid a full table scan, which means reading every row <Cite n={1} />.
+
+A moderation service also reads the stream. It checks content and gives it a label, a tag that puts content in a category <Cite n={1} />. Each user chooses to hide posts with a label or to show a warning, and the data server stores that choice <Cite n={1} />. The data server puts the label choices in the HTTP headers of each request, and the index server applies them <Cite n={1} />.
+
+## Social proof with Roaring Bitmaps
+
+On a profile, Bluesky shows how many of the people that you follow also follow that user <Cite n={1} />. This is social proof. Think of two guest lists: you want the names that are on both.
+
+The simple method runs one database query for each person you follow, so it does not scale <Cite n={1} />. The better method is a set intersection. Set 1 is the people you follow, set 2 is the followers of the other user, and the overlap is the answer <Cite n={1} />.
+
+Bluesky built an in-memory graph service for this. Redis Sets were not a fit, because they do not use many CPU cores at once <Cite n={1} />. The first version turned each 32-character DID into a 64-bit number to save memory. It still used a lot of memory and was slow to start <Cite n={1} />. So the team moved to Roaring Bitmaps. The table compares the three methods <Cite n={1} />.
+
+| Method | How it stores "who I follow" | Weak point |
+|---|---|---|
+| Bitmap | One bit for each user, 1 means "I follow" | A long row of bits even if you follow one person |
+| Run-length encoding | Counts of repeated bits, for example "90 zeros, then 10 ones" | Poor for random data, and a lookup walks the whole list |
+| Roaring Bitmap | Containers: a bitmap for dense data, run-length for long runs, a sorted list for sparse data | The article names none |
+
+The intersection runs in parallel, and many copies of the graph service run at once for high availability <Cite n={1} />.
+
+## Short videos with HLS
+
+Videos on Bluesky can be up to 90 seconds long. They play through HTTP Live Streaming (HLS), a standard for adaptive bitrate streaming <Cite n={1} />. Adaptive means that the quality follows the network speed.
+
+Think of a menu that lists meal sizes, with a list of courses for each size. In HLS, the master playlist lists the quality levels, and each media playlist lists the segments of one quality <Cite n={1} />. Each video is encoded at levels such as 480p, 720p, and 1080p, and cut into segments of 5 seconds <Cite n={1} />. The app picks a media playlist for the current network and downloads its segments in order <Cite n={1} />.
+
+A CDN caches the videos and playlists <Cite n={1} />. Bluesky counts a view when the app asks for the master playlist. The last segment that the app fetched shows how many seconds the user watched <Cite n={1} />.
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Repository | The collection of all data that one user publishes, like a personal notebook |
+| Data server (PDS) | The server that hosts user repositories and handles requests from the app |
+| Crawler (Relay) | The service that collects changes from all data servers into one stream |
+| Index server (AppView) | The service that turns the stream into feeds, counts, and pages the app can show |
+| DID | A permanent ID for a user that never changes |
+| Handle | The readable name of a user, based on a domain name; it can change |
+| Websocket | A network connection that stays open so the server can push messages |
+| Cache | Fast memory that keeps recent answers so the system does not repeat work |
+| CDN | Servers around the world that keep copies of files close to users |
+| Cursor | A bookmark value that tells the server where the next page starts |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These ideas are the tutorial's own advice.
+
+- Move a test account to another data server. Check that posts, follows, and the handle still work.
+- Like and unlike a post quickly from two clients. Check that the count settles at the right number.
+- Change a handle. Check that old posts show the new handle. Try a custom domain with a wrong TXT record and expect a clear failure.
+- Add new posts while you scroll a feed with a cursor. Check that no post shows twice and that no post is missing.
+- Throttle the network during a video. Check that the player changes quality and that one view is not counted twice.
+</Callout>

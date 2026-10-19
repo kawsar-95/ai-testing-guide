@@ -1,0 +1,128 @@
+export const metadata = { title: 'How Spotify Works', description: 'How a music streaming app stores millions of songs and starts playback fast, explained from an interview-style design.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'System Design Interview Question: Design Spotify', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/spotify-system-design', accessed: '2026-10-20' },
+  ],
+}
+
+# How Spotify Works
+
+A music app lets you tap a song and hear it almost at once, on a fast home network or a weak mobile signal. Behind that tap, the app must find one song among millions, check that you may play it, and send the sound in small parts without gaps. This page explains one article that designs a Spotify-like service for a job interview.<Cite n={1} /> The article describes one way to build this. It is not the exact system that Spotify runs. The second half of the article is for paid subscribers only, so this page covers the free part: the sizes, the main parts, and what happens when you press play.
+
+<PageMeta />
+
+## The problem in plain words
+
+The article sets a modest interview size: about 500,000 users and about 30 million songs.<Cite n={1} /> The service must do five things:<Cite n={1} />
+
+- Let artists upload songs.
+- Let users search for songs and play them.
+- Let users make and edit playlists.
+- Let users keep a profile.
+- Give the team basic health checks, error tracking, and speed numbers.
+
+The main goals are a fast start of playback and few pauses to load more sound.<Cite n={1} /> Such a pause is called rebuffering.
+
+The sizes show where the cost is. One song at normal quality takes about 3 MB, so 30 million songs take about 90 TB.<Cite n={1} /> Copies in other regions and new uploads of old songs push the real need to 2 to 3 times that.<Cite n={1} /> The facts about each song are tiny next to that. At about 100 bytes per song, all song details fit in about 3 GB.<Cite n={1} /> User profiles and playlists take about 1 KB per user, or about 0.5 GB in total.<Cite n={1} /> One play of an average 3.5-minute song moves about 3 to 4 MB, and the article assumes 10 to 15 plays per user each day.<Cite n={1} /> The article's lesson is clear: the audio is most of the storage and most of the network traffic.<Cite n={1} />
+
+## The big picture
+
+```text
+[Mobile app] --> [Load balancer] --> [API servers] --> [SQL database]
+     |                                    |             (song details)
+     |                                    v
+     |                          creates a signed URL
+     |                                    |
+     |  <------------- signed URL --------+
+     |
+     +--- fetch audio in chunks ---> [CDN] --> [Blob storage]
+                                                (audio files)
+```
+
+The app asks the API servers for a song, through a load balancer. The API servers check the user, read the song details from a database, and return a signed URL.<Cite n={1} /> The app then downloads the sound itself straight from blob storage or a CDN, not through the API servers.<Cite n={1} />
+
+## One song, several qualities
+
+Think of a water tap. When the pipe is narrow, you open the tap less, but the water does not stop. Adaptive streaming does the same for sound. The app picks a smaller file when the network is slow and a larger file when it is fast.
+
+The article stores each song in the Ogg and AAC audio formats, at several bitrates.<Cite n={1} /> A bitrate is the amount of data for each second of sound. More data gives better sound but needs a faster network.
+
+| Bitrate | Use in the article |
+|---|---|
+| 64 kbps | Saves mobile data<Cite n={1} /> |
+| 128 kbps | Standard quality<Cite n={1} /> |
+| 320 kbps | Premium users<Cite n={1} /> |
+
+The article handles rebuffering with this switch of quality.<Cite n={1} /> If the signal drops, the app moves to a lower bitrate and keeps playing.
+
+## Where the songs live
+
+Think of a huge warehouse with numbered shelves. You do not need to know how the building works. You only need the shelf address. Blob storage, also called object storage, works this way. It keeps large files, such as audio, and gives each file an address.
+
+The article suggests a service like AWS S3 for all audio files.<Cite n={1} /> It arranges the files in folders by artist, then album, then song.<Cite n={1} /> Blob storage can grow almost without limit, keeps files safe, and costs little for large files.<Cite n={1} /> The design copies the files to several regions, so a fault in one place does not lose them.<Cite n={1} />
+
+There is a cost. Blob storage is slower to answer than a local disk, and sending data out of it can be expensive.<Cite n={1} /> The article names a distributed file system, the Hadoop Distributed File System (HDFS), as an option. It still prefers blob storage, because it is a more managed service and is reliable for most cases.<Cite n={1} />
+
+## Signed URLs and the CDN
+
+Think of a ticket for a concert. The ticket names one show and one date. After that date, it is useless. A signed URL is a web address with that kind of ticket built in. It gives access to one file for a short time.
+
+The API servers create a signed URL for each song.<Cite n={1} /> The link stops working after a few hours, so a copied link does not give access for ever.<Cite n={1} /> With that link, the app gets the audio straight from blob storage or from a CDN.<Cite n={1} /> A CDN, or content delivery network, is a set of servers in many cities that keep copies of popular files close to users.
+
+The app also keeps recently played songs on the phone, so a replay starts faster.<Cite n={1} />
+
+## Load balancer and API servers
+
+Think of a host at the door of a restaurant. The host sends each new guest to a table with a free waiter, and closes a table when its waiter is sick. A load balancer does this for requests.
+
+The article's load balancer shares requests among many API servers. It can send them in turn (round-robin) or to the server with the fewest open connections.<Cite n={1} /> It checks each server every 30 seconds and stops sending traffic to a server that fails the check.<Cite n={1} /> This matters most when a big album comes out and traffic jumps.<Cite n={1} /> It also lets the team deploy new code without downtime.<Cite n={1} />
+
+The API servers are stateless. That means they keep no user data between requests, so any server can answer any request.<Cite n={1} /> They check a JWT, which is a signed login token, and they read song details from the database.<Cite n={1} /> They also protect themselves in three ways:<Cite n={1} />
+
+- A circuit breaker stops calls to a failing service, so one failure does not spread to others.
+- A connection pool reuses open database connections and does not open a new one for each request.
+- A fallback gives a simple answer for features that are not critical when a service they need is down.
+
+## What happens when you press play
+
+The article lists the read path step by step.<Cite n={1} />
+
+1. The app sends `GET /songs/{id}`.
+2. The API server checks the JWT.
+3. The API server reads the song details from the SQL database.
+4. The API server creates a signed URL for the audio file.
+5. The app downloads the audio in chunks with range requests. A range request asks for only one part of a file.
+6. From time to time, the app sends `POST /songs/{id}/play` to record plays and listening time.
+
+For step 5, the article uses HTTP streaming standards called HLS or DASH. They give smooth playback, switch bitrate on their own, and work on many devices.<Cite n={1} />
+
+The app also plans for failure. It retries API calls that fail.<Cite n={1} /> If the network drops, it pauses the song until the connection comes back.<Cite n={1} />
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Bitrate | The amount of data for each second of sound. A higher bitrate gives better sound. |
+| Adaptive streaming | Changing the quality of the sound during playback to match the speed of the network |
+| Rebuffering | A pause in playback while the app waits for more sound data |
+| Blob storage | A store for large files, where each file has an address |
+| CDN | Servers in many cities that keep copies of popular files close to users |
+| Signed URL | A link to one file that works only for a short time |
+| Load balancer | A server that shares incoming requests among many servers |
+| Stateless server | A server that keeps no user data between requests, so any copy can answer |
+| Circuit breaker | A switch that stops calls to a failing service for a while |
+| Metadata | Facts about a song, such as title, artist, and length, but not the sound itself |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice. They are not from the source.
+
+- Play a song on a slow, then fast, then lost network. Check that the quality changes, playback pauses when the network is gone, and resumes without a restart.
+- Use a signed URL after it expires, and from another account. Check that both requests fail and the app gets a new link.
+- Measure the time from tap to first sound for a new song and for a cached song. Set a target for each.
+- Stop the database for a short time. Check that the circuit breaker opens, non-critical features show a fallback, and the app recovers.
+- Send a burst of play requests, as for a big album release. Check that the load balancer removes an unhealthy server and that users see no errors.
+- Check that the play count and the listening time are correct when the user skips, repeats, or plays offline.
+</Callout>

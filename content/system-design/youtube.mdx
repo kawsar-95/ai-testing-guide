@@ -1,0 +1,134 @@
+export const metadata = {
+  title: 'How YouTube Works',
+  description: 'How a video site takes huge uploads, turns each video into many versions, and plays it fast on any device and any network.',
+}
+
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'System Design Interview: Design YouTube', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/youtube-system-design', accessed: '2026-10-20' },
+    { title: 'Uploading objects with presigned URLs', publisher: 'Amazon Web Services (Amazon S3 User Guide)', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html', accessed: '2026-10-20' },
+    { title: 'Uploading and copying objects using multipart upload', publisher: 'Amazon Web Services (Amazon S3 User Guide)', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html', accessed: '2026-10-20' },
+    { title: 'RFC 8216: HTTP Live Streaming', publisher: 'RFC Editor (IETF)', url: 'https://www.rfc-editor.org/rfc/rfc8216', accessed: '2026-10-20' },
+    { title: 'YouTube recommended upload encoding settings', publisher: 'YouTube Help (Google)', url: 'https://support.google.com/youtube/answer/1722171', accessed: '2026-10-20' },
+  ],
+}
+
+# How YouTube Works
+
+YouTube lets anyone upload a video and lets anyone else watch it, on a phone, a laptop, or a TV. The hard part is size and variety. People upload hundreds of hours of video every minute, and viewers use fast and slow networks. <Cite n={1} /> The system must store all of it, prepare each video for every kind of screen, and start playback almost at once.
+
+<PageMeta />
+
+## The problem in plain words
+
+The article says that people upload more than 500 hours of video to YouTube each minute. It also says that YouTube serves billions of video streams each day. <Cite n={1} /> A video site cannot send the same file to every viewer. It changes each upload into many versions, so that playback stays smooth on small phones, 4K TVs, and slow networks. <Cite n={1} />
+
+The article then sets the targets of its design, as in an interview:
+
+| Requirement | Target |
+|---|---|
+| Uploads | 1 million per day <Cite n={1} /> |
+| Daily active users | 100 million <Cite n={1} /> |
+| Views for each upload | About 100 <Cite n={1} /> |
+| Largest upload | 256 GB <Cite n={1} /> |
+| Input formats and quality | MP4, AVI, and MOV, from 240p to 4K <Cite n={1} /> |
+| Time to the first frame | Less than 500 ms <Cite n={1} /> |
+| Time to process an upload | About 10 to 30 minutes <Cite n={1} /> |
+| Uptime | 99.9 % <Cite n={1} /> |
+
+The site has three main jobs: upload videos, stream videos, and search videos. <Cite n={1} /> Live streams are out of scope in the article. <Cite n={1} />
+
+<Callout type="note">
+
+The article describes one way to build a video site, as for a system design interview. It is not the exact system that YouTube runs. Only the first part of the article is free. This page uses that part, plus official documents from Amazon, the IETF, and YouTube Help for the details.
+
+</Callout>
+
+## The big picture
+
+```text
+UPLOAD
+[Creator app] --1. ask to upload--> [API server] --> [Metadata DB]
+[Creator app] <--2. signed upload link--
+[Creator app] --3. send file in parts--> [Blob storage: raw video]
+                                               |
+                                               v
+                                   [Transcoding workers]
+                                               |
+                                               v
+                       [Blob storage: many versions + manifest]
+
+WATCH
+[Viewer app] --ask for video--> [API server] --> returns manifest URL
+[Viewer app] --get small segments--> [CDN] --> [Blob storage]
+```
+
+To upload, the app first asks the API server for a link. Then it sends the file straight to blob storage, a store for very large files. Workers then change the raw file into many versions. To watch, the viewer app gets a manifest, a list of the versions, and downloads small pieces of video from the nearest CDN server.
+
+## Uploading a huge file: a signed link and many parts
+
+Think of a large furniture delivery to an office tower. The front desk does not carry the sofa. It gives the driver a pass to the goods lift, and the driver takes the sofa straight to the right floor.
+
+In the article's design, the API servers do not carry the video bytes. The client asks for an upload, and the server gives back a video ID and a pre-signed URL. <Cite n={1} /> A pre-signed URL is a short-lived link that allows an upload to Amazon S3 without the app server in the path. <Cite n={1} /> So the app servers handle only small metadata, and the large video data goes straight to storage. <Cite n={1} /> Amazon's guide confirms the idea: with a pre-signed URL, a person can upload an object without their own AWS credentials. <Cite n={2} />
+
+A very large file is hard to send in one piece over a home network. So the design uses a multipart upload: the client cuts the file into chunks and retries only a failed chunk. <Cite n={1} /> An interrupted upload can resume without loss of progress. <Cite n={1} /> Amazon S3 works the same way. You can send the parts in any order, and you can send a failed part again without the other parts. <Cite n={3} /> Amazon advises multipart upload for objects of 100 MB or more. <Cite n={3} />
+
+## Transcoding: one upload, many versions
+
+Think of a book publisher. From one manuscript, it prints a hardcover, a paperback, a large-print edition, and an e-book. Each reader gets the version that suits them.
+
+Transcoding means to convert a video into other formats, sizes, and quality levels. The article says that each upload becomes 6 or more resolutions, and each resolution has hundreds of segments. <Cite n={1} /> A segment is a short piece of video, a few seconds long. A resolution is the picture size, such as 720p or 1080p.
+
+This work is slow, so the design does it in the background. The article accepts 10 to 30 minutes of processing for each upload. <Cite n={1} /> It also accepts that a new video is not visible to everyone at once. This is called eventual consistency: all parts of the system show the same data after a short delay. <Cite n={1} />
+
+YouTube Help shows what YouTube asks for on the input side. It recommends the MP4 container and the H.264 video codec for uploads. <Cite n={5} /> A codec is a method to compress video. YouTube Help also lists a suggested bitrate for each upload resolution. For SDR (standard dynamic range) video at a standard frame rate, it lists 8 Mbps for 1080p and 35 to 45 Mbps for 4K. <Cite n={5} /> To watch new 4K uploads in 4K, the browser or device must support the VP9 codec. <Cite n={5} /> So the video that you watch is not the file that the creator sent. <Cite n={1} />
+
+## Adaptive streaming: the quality follows your network
+
+Think of a car with an automatic gearbox. On a hill, it changes to a lower gear. On a flat road, it changes up again. The driver does not need to act.
+
+When you press play, the server returns the video's metadata and the URL of a manifest file. The player uses it to start adaptive bitrate streaming from a CDN. <Cite n={1} /> The manifest tells the player which segments and resolutions exist. <Cite n={1} /> Adaptive bitrate streaming means that the quality changes by itself to match the speed of the network. <Cite n={1} />
+
+The free part of the article does not name the streaming format that YouTube uses. HTTP Live Streaming (HLS) is one public standard for this idea. In HLS, a playlist is a text file of segment links. A master playlist lists several variant streams of the same content. <Cite n={4} /> Each variant has its own bit rate, format, and resolution. Players should switch between the variants when the network changes. <Cite n={4} /> The article also uses smaller segments to keep playback stable on weak networks. <Cite n={1} />
+
+## The CDN: copies close to the viewer
+
+Think of a soft drink company. It does not ship each bottle from one factory. It keeps stock in local warehouses near the shops.
+
+A CDN (content delivery network) is a group of servers in many cities that keep copies of popular files near the users. YouTube is read-heavy: there are about 100 views for each upload in the article's numbers. <Cite n={1} /> So the design must use a lot of caching. <Cite n={1} /> A cache is a store of copies that is fast to reach. The aim of the first frame in less than 500 ms needs a CDN and adaptive streaming. <Cite n={1} /> The CDN does the real streaming, and the API servers only point the player to it. <Cite n={1} />
+
+## Small but busy: watch progress and search
+
+Some data is small but very frequent. The player reports your playback position, so you can continue later. The article says this endpoint alone takes millions of writes each second. <Cite n={1} /> So the player sends the update and does not wait for an answer. The design stores it in a fast database such as DynamoDB. <Cite n={1} />
+
+Search uses a search index and returns results in pages. <Cite n={1} /> The design uses cursor-based pagination. Each page of results holds a token that points to the next page. <Cite n={1} /> The article says that this scales better than an offset, which would make the database skip millions of rows to reach a deep page. <Cite n={1} />
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Blob storage | A store for very large files, such as Amazon S3 |
+| Pre-signed URL | A short-lived link that allows an upload or a download without AWS credentials |
+| Multipart upload | A large file sent as many small parts, with a retry for each part |
+| Transcoding | Converting one video into other formats and sizes |
+| Resolution | The picture size, such as 720p or 4K |
+| Segment | A short piece of a video, a few seconds long |
+| Manifest | A file that lists the versions and segments of a video |
+| Adaptive bitrate | The player changes the quality to match the network speed |
+| CDN | Servers in many places that keep copies near the users |
+| Eventual consistency | All parts show the same data after a short delay |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+
+These ideas are the tutorial's own advice.
+
+- Cut the network in the middle of a large upload. Check that the upload resumes and does not start again from zero.
+- Use the pre-signed link after it expires. Check that the storage refuses it.
+- Throttle the network in the browser tools while a video plays. Check that the quality goes down and the video does not stop.
+- Watch a video right after its upload. Check the message that the app shows while the video is still processing.
+- Upload a file in an unsupported format, a zero-byte file, and a file at the size limit.
+- Load deep pages of search results. Check that no result repeats or goes missing between pages.
+</Callout>
