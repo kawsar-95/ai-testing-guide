@@ -46,7 +46,7 @@ function TopicNav({ item }: { item: ArchitectureTopic }) {
   return (
     <nav
       aria-label={ARCHITECTURE_UI.topicNav}
-      className="mt-16 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-6 text-[15px]"
+      className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-6 text-[15px]"
     >
       {previous ? (
         <Link href={previous.href} className={NAV_LINK}>
@@ -85,9 +85,9 @@ export default async function TopicPage({ params }: PageProps<"/architecture/[to
   return (
     <>
       <ReadingProgress />
-      <div className="mx-auto w-full max-w-[728px] px-4 py-12 sm:px-6 sm:py-16 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
+      <div className="mx-auto w-full max-w-[728px] px-4 py-7 sm:px-6 sm:py-10 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
         <div className="min-w-0">
-          <p className={`mb-5 ${LABEL} text-accent`}>
+          <p className={`mb-3 ${LABEL} text-accent`}>
             {practice ? ARCHITECTURE_UI.practiceEyebrow : ARCHITECTURE_UI.topicEyebrow(item.number)}
           </p>
           <article data-content className="mdx">

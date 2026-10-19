@@ -14,9 +14,14 @@ export const themeToDark = "Switch to dark theme";
 export const themeGeneric = "Switch color theme";
 export const footerSummary = `${PAGES.length} parts · Software Testing with AI`;
 
-/** `PART 05`: the part number, zero-padded to 2 digits. */
+/** `05`: the part number, zero-padded to 2 digits. */
+export function partNumber(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/** `PART 05`: the part number with its label. */
 export function partLabel(n: number): string {
-  return `PART ${String(n).padStart(2, "0")}`;
+  return `PART ${partNumber(n)}`;
 }
 
 export const search = "Search";

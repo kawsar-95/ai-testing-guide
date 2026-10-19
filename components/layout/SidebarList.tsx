@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { GROUPS } from "@/lib/nav";
-import { partLabel, partsNav } from "@/lib/ui";
+import { partLabel, partNumber, partsNav } from "@/lib/ui";
 
 /** The export uses trailing slashes, but usePathname may not return one. */
 export function withTrailingSlash(pathname: string | null): string | null {
@@ -21,10 +21,10 @@ export function SidebarList({
   onNavigate?: () => void;
 }) {
   return (
-    <nav aria-label={partsNav} className="px-3 py-6">
+    <nav aria-label={partsNav} className="px-3 py-4">
       {GROUPS.map((group) => (
-        <div key={group.slug} className="mb-6 last:mb-0">
-          <p className="mb-2 px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-text-faint">
+        <div key={group.slug} className="mb-4 last:mb-0">
+          <p className="mb-1 px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-text-faint">
             {group.title}
           </p>
           <ol className="m-0 list-none space-y-px p-0">
@@ -37,7 +37,7 @@ export function SidebarList({
                     aria-current={active ? "page" : undefined}
                     onClick={onNavigate}
                     className={
-                      "group block rounded-r-md border-l-2 px-3 py-2 no-underline transition-colors " +
+                      "group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
                       (active
                         ? "border-accent bg-bg-raised"
                         : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")
@@ -45,15 +45,16 @@ export function SidebarList({
                   >
                     <span
                       className={
-                        "block font-mono text-[10.5px] uppercase tracking-[0.12em] " +
+                        "w-5 shrink-0 font-mono text-[10.5px] tabular-nums " +
                         (active ? "text-accent" : "text-text-faint")
                       }
                     >
-                      {partLabel(page.part)}
+                      <span className="sr-only">{partLabel(page.part)}</span>
+                      <span aria-hidden="true">{partNumber(page.part)}</span>
                     </span>
                     <span
                       className={
-                        "mt-0.5 block text-[13.5px] leading-snug " +
+                        "min-w-0 text-[13.5px] leading-snug " +
                         (active ? "text-text" : "text-text-dim group-hover:text-text")
                       }
                     >

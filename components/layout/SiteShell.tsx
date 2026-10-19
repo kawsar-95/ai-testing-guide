@@ -28,7 +28,7 @@ export function SiteShell({ children, searchSlot }: { children: ReactNode; searc
           <main id="content" tabIndex={-1} style={{ outline: "none" }} className="flex-1">
             {children}
           </main>
-          <footer className="mt-24 border-t border-border px-6 py-8 font-mono text-xs leading-relaxed text-text-faint">
+          <footer className="mt-10 border-t border-border px-6 py-5 font-mono text-xs leading-relaxed text-text-faint">
             <p className="mx-auto max-w-3xl">
               {footerSummary} · © 2026{" "}
               <a href={OWNER.url} className="underline underline-offset-2 hover:text-accent">

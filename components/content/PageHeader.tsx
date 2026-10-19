@@ -6,7 +6,7 @@ import { partLabel } from "@/lib/ui";
 export function PageHeader({ page }: { page: NavPage }) {
   const group = GROUPS.find((g) => g.slug === page.group);
   return (
-    <p className="mb-5 font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-accent">
+    <p className="mb-3 font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-accent">
       {partLabel(page.part)} · {(group?.title ?? page.group).toUpperCase()}
     </p>
   );
