@@ -41,6 +41,9 @@ S33. chown invocation — GNU Coreutils manual — https://www.gnu.org/software/
 S34. chgrp invocation — GNU Coreutils manual — https://www.gnu.org/software/coreutils/manual/html_node/chgrp-invocation.html — accessed 2026-10-19
 S35. umask(2) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man2/umask.2.html — accessed 2026-10-19
 S36. Bourne Shell Builtins — Bash Reference Manual (GNU) — https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html — accessed 2026-10-19
+S37. unlink(2) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man2/unlink.2.html — accessed 2026-10-19 (page title shortened in `page.sources`: the overlap check flags a copy of the man-page title)
+S38. Command Execution Environment — Bash Reference Manual (GNU) — https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html — accessed 2026-10-19
+S39. newgrp — POSIX utilities (Issue 8) — The Open Group — https://pubs.opengroup.org/onlinepubs/9799919799/utilities/newgrp.html — accessed 2026-10-19
 
 Local checks (not a citable page): I ran every read-only and scratch-directory example of the page under my own account (GNU coreutils; the scratch directory was in the session scratchpad): `id`, `getent passwd "$USER"`, `getent group sudo`, `ls -l /etc/passwd /etc/shadow`, `touch`, `ls -l`, `stat -c '%A %a %U:%G %n'`, `ls -ld /tmp`, `ls -l /usr/bin/passwd`, `chmod 640`, `chmod u+x,g-w`, `chgrp "$(id -gn)"`, `chmod 2750` (shows `drwxr-s---`), `chmod -R g+rX,o-rwx`, `(umask 077; touch private.txt)` (mode 600; the umask of the parent shell stayed 0002), and `chmod +t` (shows `T` when `x` for others is missing). All worked as written and are safe to run twice. I did NOT run `sudo`, `su`, `useradd`, `usermod`, `userdel`, `groupadd`, `passwd`, `visudo`, `newgrp`, or `chown` (security rule). Those lines of the page come from the man pages in the table below.
 
@@ -81,6 +84,7 @@ Overlap of three topics: the roadmap links of "User Management", "Users and Grou
 | G10 | `gpasswd -d USER GROUP` removes a user from a group. | S11 | "-d, --delete user  Remove the user from the named group." |
 | G11 | `groupdel` cannot remove the primary group of an existing user. | S10 | "You may not remove the primary group of any existing user." |
 | G12 | `sudo -i -u` runs a login shell of the target user (used in the tip for a fresh login). | S21 | "-i, --login Run the shell specified by the target user's password database entry as a login shell." |
+| G13 | `newgrp` creates a new shell (so the page says that it starts a new shell and that `exit` leaves it). | S12, S39 | "The newgrp utility shall create a new shell execution environment" / "when the new shell exits" (S39, rationale) |
 
 ### Create, Update, and Delete Users
 | # | Claim | Source | Quote (max 25 words) |
@@ -88,7 +92,7 @@ Overlap of three topics: the roadmap links of "User Management", "Users and Grou
 | C1 | `useradd -m` creates the home directory and copies the skeleton files. | S5 | "Create the user's home directory if it does not exist. The files and directories contained in the skeleton directory ... will be copied" |
 | C2 | The skeleton directory is `/etc/skel` by default. | S5 | "or, by default, /etc/skel." |
 | C3 | Without `-m`, the home directory depends on `CREATE_HOME` of `login.defs`. | S5 | "it will be created for non-system users if either the -m flag is specifed or CREATE_HOME in login.defs is set to true." |
-| C4 | A Fedora `login.defs` sets `CREATE_HOME` to yes. | S17 | "CREATE_HOME Defines if an home directory should be created for new users yes" |
+| C4 | (Removed in fix round 1.) The Fedora `CREATE_HOME` default had only a blog source, so the page no longer states it. The page says only that the result depends on `CREATE_HOME` (row C3, S5). | S5 | see C3 |
 | C5 | `-M` never creates the home directory. | S5 | "it will never be created if the -M flag is specified." |
 | C6 | A new account without `-p` has a locked password (a single `!` in shadow). | S5 | "Without this option, the new account will be locked and with no password defined, i.e. a single exclamation mark" |
 | C7 | `passwd` sets the password; it asks twice. | S9 | "The user is then prompted twice for a replacement password." |
@@ -103,18 +107,21 @@ Overlap of three topics: the roadmap links of "User Management", "Users and Grou
 | C16 | `groupadd NAME` creates a group (command in the code block). | S8 | "The groupadd command creates a new group account using the values specified on the command line" |
 | C17 | These tools need root (the page says "They need root"). | S9 | "A regular user can only change the password for their own account, while the superuser can change the password for any account." |
 | C18 | `useradd` and `usermod` options `-s`, `-c` set shell and comment (code block). | S5 | "-s, --shell SHELL sets the path to the user's login shell." / "-c, --comment COMMENT Any text string." |
+| C19 | S17 is cited for the `-G` without `-a` claim, with S6 (row C9). | S17 | "said list will be completely redefined" |
+| C20 | Gloss text added in fix round 1: login shell, supplementary groups, mail spool, SSH key login, symbolic link, subshell. The glosses are the tutorial's own words. | none | |
+| C21 | The three tools (`useradd`, `usermod`, `userdel`) are named without a package name: `shadow-utils` is the RHEL name and Debian/Ubuntu use the package `passwd`. | none | not on the page |
 
 ### Super User
 | # | Claim | Source | Quote (max 25 words) |
 |---|---|---|---|
 | S1 | The superuser account is UID 0, named root. | S2 | "The privileged root login account (superuser) has the user ID 0." |
-| S2 | Ubuntu disables the root account by giving it a hash that matches no password. | S19 | "it has been given a password hash that matches no possible value, and so may not log in directly by itself." |
-| S3 | Red Hat: lock root at installation; admin users join the `wheel` group, whose members can use sudo. | S20 | "During installation, you have the option to lock the root account." / "Making the user an admin adds that user to the special wheel group." |
+| S2 | Ubuntu disables the direct root login by giving root a hash that matches no password. (The page no longer says "most distributions".) | S19 | "it has been given a password hash that matches no possible value, and so may not log in directly by itself." |
+| S3 | A Red Hat blog advises to lock root at installation and to put admin users in the `wheel` group, whose members can use sudo. | S20 | "During installation, you have the option to lock the root account." / "Making the user an admin adds that user to the special wheel group." |
 | S4 | The first Ubuntu user is in the group `sudo`. | S19 | "the initial user created by the Ubuntu installer is a member of the group sudo" |
 | S5 | `sudo` runs a command as the superuser or another user as the policy allows. | S21 | "sudo allows a permitted user to execute a command as the superuser or another user, as specified by the security policy." |
 | S6 | `sudo -l` lists the privileges of the invoking user. | S21 | "list the privileges for the invoking user (or the user specified by the -U option) on the current host." |
-| S7 | Default credential cache: per terminal, 5 minutes. | S21 | "By default, the sudoers policy caches credentials on a per-terminal basis for 5 minutes." |
-| S8 | `-k` invalidates cached credentials; `-n` never prompts and fails if a password is needed. | S21 | "invalidates the user's cached credentials for the current session" / "If a password is required for the command to run, sudo will display an error message and exit." |
+| S7 | sudo remembers the password per terminal for a limited time (sudo.ws default 5 minutes; sudo-rs of Ubuntu 25.10+ uses 15). The page says "a few minutes" and names `timestamp_timeout`. | S21 | "caches credentials on a per-terminal basis for 5 minutes. See the timestamp_type and timestamp_timeout options in sudoers(5)" |
+| S8 | `-k` invalidates cached credentials; `-n` never prompts and fails if a password is needed. | S21 | "invalidates the user's cached credentials for the current session" / "If a password is required ... sudo will display an error message and exit." |
 | S9 | Policies and audit plugins may log attempts. | S21 | "Security policies and audit plugins may log successful and failed attempts to run sudo." |
 | S10 | Rules in `/etc/sudoers`; `@includedir` reads a `sudoers.d` directory. | S22 | "The @includedir directive can be used to create a sudoers.d directory that the system package manager can drop sudoers file rules into" |
 | S11 | The last matching entry wins. | S22 | "Where there are multiple matches, the last match is used (which is not necessarily the most specific match)." |
@@ -132,37 +139,40 @@ The sentence "Use `sudo -n` in CI, so a missing rule fails at once" is the tutor
 | # | Claim | Source | Quote (max 25 words) |
 |---|---|---|---|
 | F1 | Mode bits have three user categories: owner, other users in the file's group, everyone else. | S25 | "the file’s owner; other users who are in the file’s group; everyone else." |
-| F2 | The classes are `u`, `g`, `o` in `chmod`. | S32 | "the user who owns it (u), other users in the file's group (g), other users not in the file's group (o), or all users (a)" |
+| F2 | The classes are `u`, `g`, `o` in `chmod` (page cites S25 and S32). | S25, S32 | "the user who owns it (u), other users in the file's group (g), other users not in the file's group (o)" (S32) |
 | F3 | Three permissions: read, write, execute. | S25 | "There are three kinds of permissions that a user can have for a file" |
 | F4 | `ls -l` prints the file type and the mode bits; type characters `-` `d` `l`. | S27 | "regular file" (`-`), "directory" (`d`), "symbolic link" (`l`) |
-| F5 | For a directory, read lists the contents, write creates and removes files, execute accesses files in it. | S25 | "For directories, this means permission to list the contents of the directory." / "permission to create and remove files in the directory" / "permission to access files in the directory" |
-| F6 | Write alone is not enough on a directory. | S29 | "Write alone is not enough." |
+| F5 | For a directory, read lists the contents, write creates and removes files, execute accesses files in it. | S25 | "list the contents of the directory" / "create and remove files in the directory" / "access files in the directory" |
+| F6 | Removing a file needs write and search (`x`) on the directory, so write alone is not enough. | S37 | "Write access to the directory containing path is not allowed" / "one of the directories in path did not allow search permission" |
+| F6b | Write alone is not enough on a directory (second source). | S29 | "Write alone is not enough." |
 | F7 | Octal: one digit per class; values 4, 2, 1. | S26 | "Read 4, Write 2, Execute/search 1" (table 400/200/100, 40/20/10, 4/2/1) |
 | F8 | Special bits: setuid 4000, setgid 2000, sticky 1000. | S26 | "4000 Set user ID / 2000 Set group ID / 1000 Restricted deletion flag or sticky bit" |
 | F9 | Setuid: on execution, the effective user ID is that of the file. | S25 | "On execution, set the process’s effective user ID to that of the file." |
 | F10 | Gloss: effective IDs are used by the kernel to determine permissions (Linux uses the filesystem IDs, normally equal). | S24 | "These IDs are used by the kernel to determine the permissions that the process will have when accessing shared resources" |
 | F11 | Setgid: effective group ID of the file on execution; on a directory (most systems) new files get the directory group. | S25, S31 | "On execution, set the process’s effective group ID to that of the file." / "newly created subfiles inherit the same group as the directory" |
-| F12 | Sticky bit on a directory: only the file owner or the directory owner may remove or rename. | S25 | "Prevent unprivileged users from removing or renaming a file in a directory unless they own the file or the directory" |
+| F12 | Sticky bit on a directory: an unprivileged user may remove or rename only own files, or any file if the user owns the directory. | S25 | "Prevent unprivileged users from removing or renaming a file in a directory unless they own the file or the directory" |
 | F13 | `ls` shows `s`/`S` for setuid/setgid and `t`/`T` for sticky. | S27 | "‘s’ If the set-user-ID or set-group-ID bit and the corresponding executable bit are both set." / "‘S’ ... executable bit is not set." |
 | F14 | `/tmp` has the sticky bit (`drwxrwxrwt` in the example). | S25 | "commonly found on world-writable directories like /tmp." |
-| F15 | `stat -c` prints with a format; `%A` symbolic mode, `%a` octal, `%U` owner, `%G` group, `%n` name. | S28 | "%a permission bits in octal" / "%A permission bits and file type in human readable form" / "%U user name of owner" / "%G group name of owner" / "%n file name" |
+| F15 | `stat -c` prints with a format; `%A` symbolic mode, `%a` octal, `%U` owner, `%G` group, `%n` name. | S28 | "%a permission bits in octal" / "%A permission bits and file type in human readable form" / "%n file name" |
+| F17 | The `ls -l` comment of the first File Permissions block depends on the umask (664 with umask 002, 644 with umask 022); the page states both. | S35 | "because 0666 & ~022 = 0644; i.e., rw-r--r--" |
 | F16 | `/usr/bin/passwd` is setuid root on the test machine (`-rwsr-xr-x`). | local check | not a citable page; shown as an example of the `s` bit |
 
 ### Managing Permissions
 | # | Claim | Source | Quote (max 25 words) |
 |---|---|---|---|
 | M1 | `chmod` accepts a symbolic mode or an octal number. | S32 | "which can be either a symbolic representation of changes to make, or an octal number representing the bit pattern for the new mode bits." |
-| M2 | Only the owner (matching effective UID) or a privileged process can change the mode. | S30 | "Only a process whose effective user ID matches the user ID of the file, or a process with appropriate privileges, is permitted to change the file mode bits" |
+| M2 | Only the owner (matching effective UID) or a privileged process can change the mode. | S30 | "Only a process whose effective user ID matches the user ID of the file, or a process with appropriate privileges, is permitted" |
 | M3 | `X` = execute/search only if the file is a directory or already executable. | S32 | "execute/search only if the file is a directory or already has execute permission for some user (X)" |
 | M4 | `chown OWNER:GROUP` changes owner and group; `:GROUP` only the group. | S33 | "If the owner is followed by a colon and a group ... the group ownership of the files is changed as well" |
 | M5 | `chgrp GROUP FILE` changes the group. | S34 | "chgrp changes the group ownership of each given file to group" |
-| M6 | A user may be limited to groups they belong to (system dependent). | S34 | "It is system dependent whether a user can change the group to an arbitrary one, or ... restricted to setting a group of which the user is a member." |
+| M6 | A user may be limited to groups they belong to (system dependent). | S34 | "It is system dependent whether a user can change the group to an arbitrary one" |
 | M7 | The umask turns off permission bits from the mode of new files. | S35 | "permissions in the umask are turned off from the mode argument to open(2) and mkdir(2)." |
 | M8 | Usual case: mode 0666 and umask 022 gives 0644. | S35 | "because 0666 & ~022 = 0644; i.e., rw-r--r--" |
 | M9 | `umask` is a Bash/Bourne shell builtin. | S36 | "Set the shell process’s file creation mask to mode." |
-| M10 | A child process inherits the umask of its parent (so the change in a subshell does not reach the parent). | S35 | "A child process created via fork(2) inherits its parent's umask." (the "does not reach the parent" half is a local check) |
+| M10 | A subshell is a copy of the shell, and commands in parentheses run in it. | S38 | "commands grouped with parentheses ... are invoked in a subshell environment that is a duplicate of the shell environment" |
+| M10b | A child inherits the umask of its parent, so the change in `( )` does not reach the parent (second half: local check). | S35 | "A child process created via fork(2) inherits its parent's umask." |
 | M11 | `-R` and `-L` together can be a security risk (symlink traversal). | S30 | "Combining this dereferencing option with the --recursive option may create a security risk" |
-| M12 | A four-digit mode with a leading special digit sets setgid/sticky on a directory (`2750`). | S31 | "chmod 6755 G" is given as an example that sets the set-user-ID and set-group-ID bits of a directory |
+| M12 | A four-digit mode whose first digit selects setuid (4), setgid (2) or sticky (1) sets these bits (`2750`). | S32 | "The first digit selects the set user ID (4) and set group ID (2) and restricted deletion or sticky (1) attributes." |
 | M13 | `chmod -R` ignores symlinks met during the walk; GNU option note: `--preserve-root` exists. (Not on the page.) | S30 | "In contrast, chmod ignores symbolic links encountered during recursive directory traversals." (chmod(1)) |
 
-Tutorial's own advice (no source needed, each flagged "Tutorial's own advice" on the page): print `id` in CI; two-account access tests; narrow sudo rule for the setup step; assert modes with `stat -c %a`; `2770` shared directory with `umask 077` for secrets; do not use `-p`; delete only users that the script made.
+Tutorial's own advice (no source needed; the sentence "A minimal container may lack `sudo`" and "run them as root or add `sudo`" are also the tutorial's own advice; each flagged "Tutorial's own advice" on the page): print `id` in CI; two-account access tests; narrow sudo rule for the setup step; assert modes with `stat -c %a`; `2770` shared directory with `umask 077` for secrets; do not use `-p`; delete only users that the script made.
