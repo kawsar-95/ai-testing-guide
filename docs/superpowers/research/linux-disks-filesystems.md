@@ -19,7 +19,7 @@ Deliberate deviations from the stage brief:
 - S12 says `/boot` cannot be on a logical volume. No official page in this stage supports it, so the page does not state it.
 
 ## Sources
-Numbers S1…S52 are the indexes of `page.sources`. A page cite `<Cite n={k} />` points to S_k.
+Numbers S1…S53 are the indexes of `page.sources`. A page cite `<Cite n={k} />` points to S_k.
 
 S1. Linux Roadmap — roadmap.sh — https://roadmap.sh/linux — accessed 2026-10-19
 S2. Partitions And Filesystems In Linux - Introduction — LinuxForDevices — https://www.linuxfordevices.com/tutorials/linux/partitions-and-filesystems — accessed 2026-10-19 (roadmap #060 and #093, `060.txt`)
@@ -73,8 +73,9 @@ S49. proc_pid_oom_score(5) — man7.org — https://man7.org/linux/man-pages/man
 S50. OverlayFS storage driver — Docker Docs — https://docs.docker.com/engine/storage/drivers/overlayfs-driver/ — accessed 2026-10-19 (`C001.txt`)
 S51. tmpfs mounts — Docker Docs — https://docs.docker.com/engine/storage/tmpfs/ — accessed 2026-10-19 (`C002.txt`)
 S52. Allocated devices — The Linux Kernel documentation — https://docs.kernel.org/admin-guide/devices.html — accessed 2026-10-19 (`D001.txt`)
+S53. systemd.mount(5) — man7.org — https://man7.org/linux/man-pages/man5/systemd.mount.5.html — accessed 2026-10-19 (`B011.txt`; added in fix round 1, at the end of the list so that no number moves)
 
-Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmpfs(5)` (`B009`), `systemd.mount(5)` (`B011`), `proc_partitions(5)` (`B006`), `proc_pid_oom_score_adj(5)` (`B005`), `pvs(8)` (`026`), `vgs(8)` (`027`), `lvs(8)` (`028`), and the roadmap link #132 (phoenixnap, `132.txt`; nothing in it that the man pages do not say better). Further reading: none of the links of this stage is `title-only`.
+Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmpfs(5)` (`B009`), `proc_partitions(5)` (`B006`), `proc_pid_oom_score_adj(5)` (`B005`), `pvs(8)` (`026`), `vgs(8)` (`027`), `lvs(8)` (`028`), and the roadmap link #132 (phoenixnap, `132.txt`; nothing in it that the man pages do not say better). Further reading: none of the links of this stage is `title-only`.
 
 ## Claims
 
@@ -90,30 +91,32 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | D7 | MBR limits a partition to 2 TB. | S2 | Table row of "Partition tables": `Master Boot Record (MBR) 4 2TB` (max primary partitions 4, max size per partition 2TB; the table text is garbled in the fetch). |
 | D8 | `df` reports the space of a whole filesystem. | S17 | "df displays the amount of space available on the file system containing each file name argument." |
 | D9 | `du` adds up usage of the files below a path; `-x` skips other filesystems. | S18 | "Summarize device usage of the set of FILEs, recursively for directories." / "-x, --one-file-system skip directories on different file systems" |
-| D10 | `df -T` and `du -x` are GNU options (the `df` page documents "the GNU version of df"). | S17 | "This manual page documents the GNU version of df." / "-T, --print-type print file system type" |
+| D10 | `df -T` is a GNU option (the `df` page documents the GNU version). `du -x` is not called GNU, so the page no longer says so. | S17 | "This manual page documents the GNU version of df." / "-T, --print-type print file system type" |
 | D11 | `lsblk -f` shows filesystem information; it is equal to `-o NAME,FSTYPE,FSVER,LABEL,UUID,FSAVAIL,FSUSE%,MOUNTPOINTS`. | S14 | "-f, --fs Output info about filesystems. This option is equivalent to -o NAME,FSTYPE,FSVER,LABEL,UUID,FSAVAIL,FSUSE%,MOUNTPOINTS." |
-| D12 | The "disk becomes usable" order (partition, filesystem, mount). | S8 | "To add a new disk to Linux, partition it with fdisk, format with mkfs, then mount permanently via /etc/fstab." |
+| D12 | The "disk becomes usable" order (partition, filesystem, mount); the page sentence now has `<Cite n={8} />`. | S8 | "partition it with fdisk, format with mkfs, then mount permanently via /etc/fstab." |
 | D13 | Lede: a disk-full or boot failure on a CI runner is a disk topic (stage framing, no fact). | S1, S2 | The roadmap lists "Disks and Filesystems" as a topic. S2: "To store data on a device you need at least 1 partition on the device." |
+| D14 | Glosses added in fix round 1 (own words, no cite): NVMe = "a flash disk interface"; virtio = "virtual disks of a VM"; MBR = Master Boot Record; GPT = GUID Partition Table; UUIDs = unique IDs. | S15, S2 | fdisk(8): "GPT (GUID Partition Table)". S2: "Master Boot Record (MBR)". |
 
 ### Filesystems
 | # | Claim | Source | Quote |
 |---|---|---|---|
-| F1 | `ext4` is an upgrade of ext3 (a journaling ext2). `xfs` is a journaling filesystem. `vfat` is the extended FAT filesystem of Windows. `tmpfs` contents reside in virtual memory. | S23 | "XFS is a journaling filesystem, developed by SGI" / "tmpfs is a filesystem whose contents reside in virtual memory." / "vfat is an extended FAT filesystem used by Microsoft Windows95" |
+| F1 | `ext4` is an upgrade of ext3 (a journaling ext2). `vfat` is the FAT type of Windows. `tmpfs` contents reside in virtual memory. | S23 | "tmpfs is a filesystem whose contents reside in virtual memory." / "vfat is an extended FAT filesystem" |
 | F2 | XFS is a journaling filesystem. | S36 | "XFS is a high performance journaling filesystem which originated on the SGI IRIX platform." |
 | F3 | Btrfs is copy-on-write, with writable snapshots and checksums. | S37 | "Btrfs is a copy on write filesystem for Linux" / "Writable snapshots" / "Checksums on data and metadata (multiple algorithms available)" |
 | F4 | A journal lets the kernel replay and bring ext4 to a consistent state after a crash. | S35 | "In the event of a crash, the journal can be replayed, bringing both data and metadata into a consistent state." (data=journal mode; default `ordered` journals metadata only) |
-| F5 | The kernel VFS layer sits above the filesystems. | S4 | "provide comprehensive information on how the Linux virtual filesystem (VFS) layer works, along with the filesystems that sit below it." |
-| F6 | `/proc/filesystems` lists the supported types; `nodev` means no block device is needed. | S46 | "A text listing of the filesystems which are supported by the kernel" / "If a filesystem is marked with "nodev", this means that it does not require a block device to be mounted" |
+| F5 | The kernel VFS layer sits above the filesystems (page text changed from "one interface" to "sits above all types"). | S4 | "how the Linux virtual filesystem (VFS) layer works, along with the filesystems that sit below it." |
+| F6 | `/proc/filesystems` lists the supported types; `nodev` means no block device is needed. | S46 | "filesystems which are supported by the kernel" / "marked with \"nodev\", this means that it does not require a block device" |
 | F7 | `stat -f` shows filesystem status; its format has `%S` (fundamental block size), `%c` (total file nodes), `%d`, `%f`. | S25 | "-f, --file-system display file system status instead of file status" / "%S fundamental block size (for block counts)" / "%c total file nodes in file system" |
 | F8 | ext2, ext3, and ext4 share one magic number, so `stat -f` prints a vague type. | S26 | `EXT2_SUPER_MAGIC 0xef53`, `EXT3_SUPER_MAGIC 0xef53`, `EXT4_SUPER_MAGIC 0xef53` (local check: `stat -f -c %T /` printed `ext2/ext3`). |
 | F9 | A block is the smallest unit of data storage in a filesystem. | S3 | "A block is the smallest unit of data storage in a filesystem." |
-| F10 | `overlay` stacks an upper (writable) directory on lower directories; Docker's `overlay2` uses OverlayFS. | S39, S50 | S39: "an overlay-filesystem tries to present a filesystem which is the result of overlaying one filesystem on top of the other." S50: "OverlayFS layers two directories on a single Linux host and presents them as a single directory." |
+| F10 | `overlay` stacks a writable layer on read-only layers; Docker's `overlay2` uses OverlayFS. | S39, S50 | S39: "overlaying one filesystem on top of the other." S50: "OverlayFS layers two directories on a single Linux host" |
 | F11 | `mkfs` is a front end, deprecated in favour of `mkfs.<type>`. | S32 | "This mkfs frontend is deprecated in favour of filesystem specific mkfs.<type> utils." |
 | F12 | Utilities like `mkfs` erase the first block, so the old filesystem is not visible. | S30 | "mkswap, like many others mkfs-like utils, erases the first partition block to make any previous filesystem invisible." |
 | F13 | `mke2fs -n` creates nothing and shows what it would do. | S33 | "-n Causes mke2fs to not actually create a file system, but display what it would do" |
 | F14 | `wipefs -n` does everything except the write. | S34 | "-n, --no-act Causes everything to be done except for the write(2) call." |
 | F15 | Writing to `/dev/full` returns `ENOSPC`. | S52 | "7 = /dev/full Returns ENOSPC on write" (local check: `echo x > /dev/full` prints "No space left on device"). |
 | F16 | `mkfs.ext4` is `mke2fs` with `-t ext4` (page names `mkfs.ext4` in the Adding Disks list; cited with S32). | S33 | "If mke2fs is run as mkfs.XXX (i.e., mkfs.ext2, mkfs.ext3, or mkfs.ext4) the option -t XXX is implied" |
+| F17 | Glosses added in fix round 1 (own words, no cite): copy-on-write = "changes go to new blocks"; inodes = "file records" (defined in the Inodes section); the `statfs` magic value is called a "type code" in the page. | S37, S26 | S37: "Btrfs is a copy on write filesystem for Linux". S26: "f_type; Type of filesystem" |
 
 ### Inodes
 | # | Claim | Source | Quote |
@@ -135,16 +138,16 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 |---|---|---|---|
 | M1 | Mounting hides the previous contents of the directory. | S20 | "The previous contents (if any) and owner and mode of dir become invisible, and as long as this filesystem remains mounted" |
 | M2 | The files in the mount directory are inaccessible by name while mounted. | S7 | "Any files in it, however, will be inaccessible by name while the filesystem is mounted." |
-| M3 | `findmnt` lists mounted filesystems as a tree; `--target` shows the filesystem of a path. | S19 | "The command prints all mounted filesystems in the tree-like format by default." / "The command-line option --target accepts any file or directory and then findmnt displays the filesystem for the given path." |
-| M4 | `/proc/mounts` lists the mounts of the process's own mount namespace, in fstab(5) format. | S47 | "this file became a link to /proc/self/mounts, which lists the mounts of the process's own mount namespace. The format of this file is documented in fstab(5)." |
+| M3 | `findmnt` lists mounted filesystems as a tree; `--target` shows the filesystem of a path. | S19 | "prints all mounted filesystems in the tree-like format by default." / "--target accepts any file or directory" |
+| M4 | `/proc/mounts` lists the mounts that the current process sees, in fstab(5) format. | S47 | "lists the mounts of the process's own mount namespace. The format of this file is documented in fstab(5)." |
 | M5 | `/etc/fstab` has six fields: spec, file, vfstype, mntops, freq, passno. | S22 | "The first field (fs_spec)" … "The sixth field (fs_passno)"; "LABEL=<label> or UUID=<uuid> may be given instead of a device name." |
-| M6 | `ro`, `noexec`, `nofail` options. | S20 | "ro ... Mount the filesystem read-only." / "noexec Do not permit direct execution of any binaries on the mounted filesystem." / "nofail Do not report errors for this device if it does not exist." |
+| M6 | `ro`, `noexec`, `nofail` options. | S20 | "Mount the filesystem read-only." / "Do not permit direct execution of any binaries" / "Do not report errors for this device if it does not exist." |
 | M7 | A bind mount makes a directory visible at a second place. | S20 | "mount --bind olddir newdir" / "It is important to understand that "bind" does not create any second-class or special node in the kernel VFS." |
-| M8 | tmpfs lives in memory; the default size is half of RAM; contents are lost on unmount. | S38 | "Everything in tmpfs is temporary in the sense that no files will be created on your hard drive. If you unmount a tmpfs instance, everything stored therein is lost." / "the default, when neither size nor nr_blocks is specified, is size=50%" |
+| M8 | tmpfs lives in memory; contents are lost on unmount; default size is half of RAM (`size=50%`). | S38 | "If you unmount a tmpfs instance, everything stored therein is lost." / "the default ... is size=50%" |
 | M9 | A tmpfs mount counts against the container memory limit. | S51 | "that usage counts against the container's memory cgroup limit (--memory / Compose mem_limit)." |
-| M10 | A filesystem cannot be unmounted when busy (open files, a working directory). | S21 | "a filesystem cannot be unmounted when it is 'busy' - for example, when there are open files on it, or when some process has its working directory there" |
-| M11 | `umount -f` is for an unreachable NFS system and may still hang; `-l` detaches now and cleans up when not busy. | S21 | "-f, --force Force an unmount (in case of an unreachable NFS system)." / "this option does not guarantee that umount command does not hang" / "-l, --lazy Lazy unmount. Detach the filesystem from the file hierarchy now" |
-| M12 | `fuser -m` lists processes that access the files of a filesystem. | S45 | "-m NAME, --mount NAME NAME specifies a file on a mounted file system or a block device that is mounted. All processes accessing files on that file system are listed." |
+| M10 | A filesystem cannot be unmounted when busy (open files, a working directory). | S21 | "a filesystem cannot be unmounted when it is 'busy' - for example, when there are open files on it" |
+| M11 | `umount -f` is for an unreachable NFS (network filesystem) share and may still hang; `-l` detaches now and cleans up later. | S21 | "(in case of an unreachable NFS system)" / "does not guarantee that umount command does not hang" / "Detach the filesystem from the file hierarchy now" |
+| M12 | `fuser -m` lists processes that access the files of a filesystem. | S45 | "All processes accessing files on that file system are listed." |
 | M13 | The `tmpfs` option `size=` caps a tmpfs (tip). | S38 | "mount -t tmpfs -o size=10G,nr_inodes=10k,mode=700 tmpfs /mytmpfs" |
 
 ### Adding Disks
@@ -157,9 +160,10 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | A5 | `mount -t type device dir` attaches a filesystem. | S20 | "mount -t type device dir This tells the kernel to attach the filesystem found on device (which is of type type) at the directory dir." |
 | A6 | `blkid` prints `LABEL` and `UUID`; `lsblk -f` is the recommended overview. | S16 | "It can determine the type of content (e.g., filesystem or swap) that a block device holds, and also the attributes (tokens, NAME=value pairs)" |
 | A7 | Device names follow the order of hardware detection and can change; use `UUID=` or `LABEL=`. | S22 | "device names are often a coincidence of hardware detection order, and can change when other disks are added or removed." |
-| A8 | `findmnt --verify` checks fstab; `mount -a` is a bad way to check. | S19, S20 | S20: "it is a bad practice to use mount -a for fstab checking. The recommended solution is findmnt --verify." S19: "-x, --verify Check mount table content. The default is to verify /etc/fstab parsability and usability." |
+| A8 | `findmnt --verify` checks fstab; `mount -a` is a bad way to check. | S19, S20 | S20: "it is a bad practice to use mount -a for fstab checking. The recommended solution is findmnt --verify." S19: "-x, --verify Check mount table content." |
 | A9 | `nofail`: no error if the device does not exist. | S22 | "nofail do not report errors for this device if it does not exist." |
-| A10 | A wrong fstab line can stop the boot (callout; practical warning). | S22 | "the order of records in fstab is important because fsck(8), mount(8), and umount(8) sequentially iterate through fstab" (the boot-stop effect is the tutorial's own advice, not a quote). |
+| A10 | Without `nofail`, a failing fstab line can stop the boot (page text, danger callout, cite S53). The page states it with "can". S53 gives the `nofail` side: with `nofail` the mount is only wanted, so the boot goes on. The "required" side is the logical converse. | S53 | "With nofail, this mount will be only wanted, not required, by local-fs.target or remote-fs.target." |
+| A11 | `defaults` means the usual options (page gloss in the Adding Disks paragraph). | S22 | "defaults use default options." |
 
 ### Swap
 | # | Claim | Source | Quote |
@@ -169,9 +173,9 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | W3 | `free` shows total and used physical and swap memory. | S31 | "free displays the total amount of free and used physical and swap memory in the system" |
 | W4 | `/proc/swaps` lists swap areas in use. | S48 | "/proc/swaps Swap areas in use." |
 | W5 | `mkswap` sets up the swap area; `swapon` starts it. | S30 | "After creating the swap area, you need the swapon(8) command to start using it." |
-| W6 | Files with holes (`cp`, `truncate`) are rejected; `dd` and `/dev/zero` is the most portable way. | S29 | "Commands like cp(1) or truncate(1) create files with holes. These files will be rejected by swapon." / "The most portable solution to create a swap file is to use dd(1) and /dev/zero." |
+| W6 | Files with holes (`cp`, `truncate`) are rejected; `dd` and `/dev/zero` is the most portable way. The page glosses "holes" as "unwritten gaps". | S29 | "Commands like cp(1) or truncate(1) create files with holes. These files will be rejected by swapon." |
 | W7 | A swap entry in fstab has type `swap`. | S29 | "Only fstab entries with the filesystem type (3rd field) set to "swap" are relevant." |
-| W8 | `vm.swappiness`: 0 to 200, default 60; lower values mean swap IO is more expensive. | S40 | "a value between 0 and 200" / "lower values signify more expensive swap IO" / "The default value is 60." |
+| W8 | In the latest kernel docs, `vm.swappiness` takes 0 to 200, default 60; lower values mean swap IO is more expensive. The page adds "Older kernels may allow a smaller range" as a hedge (some older kernels take 0 to 100; the fetched page does not say so). | S40 | "as a value between 0 and 200" / "lower values signify more expensive swap IO" / "The default value is 60." |
 | W9 | The OOM killer kills a process when memory runs out. | S40 | "If this is set to 0, the kernel will kill some rogue process, called oom_killer." (`panic_on_oom`) |
 | W10 | A higher `oom_score` makes a process more likely to be killed. | S49 | "A higher score means that the process is more likely to be selected by the OOM-killer." |
 | W11 | `mkswap` erases the first block of its target. | S30 | "mkswap, like many others mkfs-like utils, erases the first partition block to make any previous filesystem invisible." |
@@ -182,15 +186,16 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 ### LVM
 | # | Claim | Source | Quote |
 |---|---|---|---|
-| L1 | LVM builds virtual block devices from physical devices. A VG is a collection of PVs. An LV is a virtual block device. | S41 | "provides tools to create virtual block devices from physical devices." / "A Volume Group (VG) is a collection of one or more physical devices, each called a Physical Volume (PV)." |
+| L1 | LVM builds virtual block devices from physical devices. A VG is a collection of PVs. An LV is a virtual block device. | S41 | "create virtual block devices from physical devices." / "A Volume Group (VG) is a collection of one or more physical devices" |
 | L2 | `pvcreate` initializes a disk or partition for LVM. (Page says: a PV is a disk or partition given to LVM.) | S41 | "pvcreate Initialize a disk or partition for use by LVM." |
-| L3 | An LV acts like a partition (you format and mount it). | S13 | "Logical Volume (LV): Virtual partitions within a VG that users can interact with (think of them as disk partitions)." |
+| L3 | An LV acts like a partition (you format and mount it). The page sentence cites S41 and S13. | S13 | "Logical Volume (LV): Virtual partitions within a VG that users can interact with (think of them as disk partitions)." |
 | L4 | An extent is the smallest unit of storage; LVM allocates extents. | S13, S42 | S13: "Physical Extent (PE): Smallest units of storage in a PV." S42: "this requires allocating logical extents from the VG's free physical extents." |
 | L5 | `pvs`, `vgs`, `lvs` report on PVs, VGs, LVs. | S41 | "pvs Report information about Physical Volumes." (the `lvm(8)` command list) / S41 `lvm fullreport`: "Report information about PVs, PV segments, VGs, LVs and LV segments, all at once." |
-| L6 | `lvextend` extends an LV from the free physical extents of the VG; `-r` resizes the filesystem. | S43 | "lvextend extends the size of an LV. This requires allocating logical extents from the VG's free physical extents." / "-r\|--resizefs Resize the fs using the fs-specific resize command." |
-| L7 | An ext4 filesystem can be resized online or offline (with `resize2fs`). | S35 | "further resize has to be done with resize2fs, either online, or offline." |
+| L6 | `lvextend` extends an LV from the free physical extents of the VG; `-r` resizes the filesystem. | S43 | "lvextend extends the size of an LV." / "allocating logical extents from the VG's free physical extents" / "-r\|--resizefs Resize the fs using the fs-specific resize command." |
+| L7 | An ext4 filesystem can be resized online (page gloss: while mounted) or offline (with `resize2fs`). | S35 | "further resize has to be done with resize2fs, either online, or offline." |
 | L8 | A snapshot is a frozen image of an origin LV; `lvcreate -s -L size` makes a COW snapshot. | S42 | "Snapshots provide a "frozen image" of an origin LV." / "lvcreate -s\|--snapshot -L\|--size Size[m\|UNIT] LV" |
 | L9 | The main advantage of LVM is easy resizing. | S12 | "The main advantage of LVM is how easy it is to resize a logical volume or volume group." |
 | L10 | `lvreduce` destroys data in the removed area; shrink the filesystem first. | S44 | "data in the reduced area is lost. Ensure that any file system on the LV is resized before running lvreduce" |
 | L11 | Costs (one more layer, VG spanning several disks) are the tutorial's own view, not a sourced fact. The VG spanning several PVs follows from L1. | S41 | "Each block of data in an LV is stored on one or more PV in the VG" (lvm(8) description). |
 | L12 | A snapshot LV holds space (the `-L` size is allocated). | S42 | "Extending a copy-on-write snapshot LV adds space for COW blocks." (S43) / `lvcreate -s -L Size` (S42) |
+| L13 | `lvcreate` and `lvextend` take free extents from the VG; `lvextend -r` resizes a filesystem. First check `vgs` and `lvs` (the tutorial's own advice, not a quote). | S42, S43 | S42: "requires allocating logical extents from the VG's free physical extents." S43: "-r\|--resizefs Resize the fs using the fs-specific resize command." |

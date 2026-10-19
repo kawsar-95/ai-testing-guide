@@ -58,6 +58,7 @@ export const page = {
     { title: 'OverlayFS storage driver', publisher: 'Docker Docs', url: 'https://docs.docker.com/engine/storage/drivers/overlayfs-driver/', accessed: '2026-10-19' },
     { title: 'tmpfs mounts', publisher: 'Docker Docs', url: 'https://docs.docker.com/engine/storage/tmpfs/', accessed: '2026-10-19' },
     { title: 'Allocated devices', publisher: 'The Linux Kernel documentation', url: 'https://docs.kernel.org/admin-guide/devices.html', accessed: '2026-10-19' },
+    { title: 'systemd.mount(5)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man5/systemd.mount.5.html', accessed: '2026-10-19' },
   ],
 }
 
@@ -69,11 +70,11 @@ A disk is useless until you partition it, put a filesystem on it, and mount it. 
 
 ## Disks and Filesystems
 
-A block device is a device that the kernel reads and writes in fixed-size blocks, such as a disk. A whole disk has a name like `/dev/sda`. A partition adds a number, as in `/dev/sda1`. <Cite n={15} /> A virtual disk may have another name, such as `/dev/xvdc`. <Cite n={9} /> `lsblk -N` lists only NVMe disks, and `lsblk -v` lists only virtio disks. <Cite n={14} />
+A block device is a device that the kernel reads and writes in fixed-size blocks, such as a disk. A whole disk has a name like `/dev/sda`. A partition adds a number, as in `/dev/sda1`. <Cite n={15} /> A virtual disk may have another name, such as `/dev/xvdc`. <Cite n={9} /> `lsblk -N` lists only NVMe disks (a flash disk interface), and `lsblk -v` lists only virtio disks (virtual disks of a VM). <Cite n={14} />
 
-A partition is a slice of a disk. The partition table records where each slice starts and ends, usually in sector 0. A sector is the unit in which a disk addresses its data. <Cite n={15} /> MBR (DOS) tables hold 4 primary partitions. One of them may be an extended partition that holds logical partitions. GPT is the modern standard, with checksums, UUIDs, and usually 128 partitions at most. <Cite n={15} /> MBR also limits a partition to 2 TB. <Cite n={2} />
+A partition is a slice of a disk. The partition table records where each slice starts and ends, usually in sector 0. A sector is the unit in which a disk addresses its data. <Cite n={15} /> MBR (Master Boot Record, DOS) tables hold 4 primary partitions. One of them may be an extended partition that holds logical partitions. GPT (GUID Partition Table) is the modern standard, with checksums, UUIDs (unique IDs), and usually 128 partitions at most. <Cite n={15} /> MBR also limits a partition to 2 TB. <Cite n={2} />
 
-A disk becomes usable in three steps: partition, make a filesystem, mount. `df` and `du` answer different questions. `df` reports the space of a whole filesystem. <Cite n={17} /> `du` adds up the space of the files below a path, so the two numbers can differ. `du -x` stays on one filesystem. <Cite n={18} /> `df -T` and `du -x` are GNU options.
+A disk becomes usable in three steps: partition, make a filesystem, mount. <Cite n={8} /> `df` and `du` answer different questions. `df` reports the space of a whole filesystem. <Cite n={17} /> `du` adds up the space of the files below a path, so the two numbers can differ. `du -x` stays on one filesystem. <Cite n={18} /> `df -T` is a GNU option. <Cite n={17} />
 
 ```bash
 lsblk -f                  # the tree: disks, partitions, filesystems, mount points
@@ -89,9 +90,9 @@ Tutorial's own advice: print `lsblk -f` and `df -hT` at the start of each CI job
 
 ## Filesystems
 
-A filesystem is the structure that stores file names, data, and metadata on a device. The kernel's virtual filesystem (VFS) layer gives all types one interface. <Cite n={4} /> `ext4` and `xfs` are journaling filesystems. `btrfs` is copy-on-write, with snapshots and checksums. `vfat` is the FAT type. `tmpfs` keeps its files in memory. <Cite n={23} /> <Cite n={36} /> <Cite n={37} /> A journal is a log of metadata changes. After a crash, the kernel replays it to restore a consistent state. <Cite n={35} />
+A filesystem is the structure that stores file names, data, and metadata on a device. The kernel's virtual filesystem (VFS) layer sits above all types. <Cite n={4} /> `ext4` and `xfs` are journaling filesystems. `btrfs` is copy-on-write (changes go to new blocks), with snapshots and checksums. `vfat` is the FAT type. `tmpfs` keeps its files in memory. <Cite n={23} /> <Cite n={36} /> <Cite n={37} /> A journal is a log of metadata changes. After a crash, the kernel replays it to restore a consistent state. <Cite n={35} />
 
-`/proc/filesystems` lists the types that the kernel supports. A `nodev` mark means that the type needs no block device. <Cite n={46} /> `stat -f` prints the block size and the inode counts of a filesystem. <Cite n={25} /> Its type name can be vague, because `ext2`, `ext3`, and `ext4` share one magic number. <Cite n={26} /> A block is the smallest unit that a filesystem allocates. <Cite n={3} /> The `overlay` filesystem stacks a writable layer on read-only layers. Docker uses it for container storage. <Cite n={39} /> <Cite n={50} />
+`/proc/filesystems` lists the types that the kernel supports. A `nodev` mark means that the type needs no block device. <Cite n={46} /> `stat -f` prints the block size and the number of inodes (file records) of a filesystem. <Cite n={25} /> Its type name can be vague, because `ext2`, `ext3`, and `ext4` share one type code. <Cite n={26} /> A block is the smallest unit that a filesystem allocates. <Cite n={3} /> The `overlay` filesystem stacks a writable layer on read-only layers. Docker uses it for container storage. <Cite n={39} /> <Cite n={50} />
 
 `mkfs.<type>` builds a filesystem. Plain `mkfs` is a deprecated front end. <Cite n={32} />
 
@@ -151,13 +152,13 @@ A mount point is a directory where a filesystem is attached to the tree. A new m
 | 2 | Mount point |
 | 3 | Type |
 | 4 | Options, such as `ro`, `noexec`, `nofail` |
-| 5, 6 | `dump` flag, `fsck` order |
+| 5, 6 | `dump` backup flag; `fsck` (disk check) order |
 
 `ro` mounts read-only. `noexec` blocks direct execution of programs. `nofail` hides the error when the device is absent. <Cite n={20} /> A bind mount shows a directory at a second place. <Cite n={20} /> A `tmpfs` mount lives in memory. <Cite n={38} /> Its size counts against the memory limit of a container. <Cite n={51} /> `umount` fails with "busy" when a process uses the filesystem. <Cite n={21} />
 
 <Callout type="danger" title="Mount and unmount with care">
 
-`umount -f` is for unreachable NFS and may still hang. `umount -l` detaches a busy filesystem now and cleans up later. <Cite n={21} /> Find the user with `fuser -m` first. <Cite n={45} /> Run `findmnt --target /path` before you mount over a directory that has files.
+`umount -f` is for an unreachable NFS (network filesystem) share and may still hang. `umount -l` detaches a busy filesystem now and cleans up later. <Cite n={21} /> Find the user with `fuser -m` first. <Cite n={45} /> Run `findmnt --target /path` before you mount over a directory that has files.
 
 </Callout>
 
@@ -184,7 +185,7 @@ Add a disk in a fixed order. Each step needs the result of the step before it.
 5. Read the UUID with `blkid` or `lsblk -f`. Device names follow the order of detection and can change. Use `UUID=` in `/etc/fstab`. <Cite n={16} /> <Cite n={22} />
 6. Check `/etc/fstab` before a reboot. `findmnt --verify` is the recommended check, and the manual calls `mount -a` a bad way to check. <Cite n={19} /> <Cite n={20} />
 
-Add `nofail` for a disk that the boot does not need. <Cite n={22} />
+`defaults` means the usual options. Add `nofail` for a disk that the boot does not need. <Cite n={22} />
 
 ```bash
 lsblk -f                  # 1. read-only: the new disk has no FSTYPE and no MOUNTPOINTS
@@ -199,7 +200,7 @@ findmnt --verify          # 6. read-only check of /etc/fstab
 
 <Callout type="danger" title="The wrong device name destroys data">
 
-`fdisk`, `mkfs`, and `dd of=` overwrite whatever is on the device that you name. A wrong line in `/etc/fstab` can stop the boot. Check the name with `lsblk -f`, keep a backup, and test the file before you reboot.
+`fdisk` rewrites the partition table, and `mkfs` erases the start of the partition. Both act on the device that you name. Without `nofail`, a failing `/etc/fstab` line can stop the boot. <Cite n={53} /> Check the name with `lsblk -f`, keep a backup, and test the file before you reboot.
 
 </Callout>
 
@@ -213,9 +214,9 @@ Tutorial's own advice: practice on a throw-away virtual machine with a spare vir
 
 Swap is disk space that the kernel uses when memory is short. It can be a partition or a file. <Cite n={10} /> `swapon --show` lists the active swap areas. `free -h` shows memory and swap use. `/proc/swaps` has the same list. <Cite n={29} /> <Cite n={31} /> <Cite n={48} />
 
-A new swap area needs two steps: `mkswap` prepares it, and `swapon` starts it. <Cite n={30} /> A swap file must not have holes. `cp` and `truncate` make files with holes, and `swapon` rejects them. The portable way to make the file is `dd` with `/dev/zero`. <Cite n={29} /> <Cite n={11} /> To keep swap after a reboot, add an entry of type `swap` to `/etc/fstab`. <Cite n={29} />
+A new swap area needs two steps: `mkswap` prepares it, and `swapon` starts it. <Cite n={30} /> A swap file must not have holes (unwritten gaps). `cp` and `truncate` make files with holes, and `swapon` rejects them. The portable way to make the file is `dd` with `/dev/zero`. <Cite n={29} /> <Cite n={11} /> To keep swap after a reboot, add an entry of type `swap` to `/etc/fstab`. <Cite n={29} />
 
-`vm.swappiness` takes a value from 0 to 200, and the default is 60. A low value tells the kernel that swap IO is costly. <Cite n={40} /> When the kernel runs out of memory, the OOM killer ends a process. <Cite n={40} /> A higher `oom_score` means a more likely victim. <Cite n={49} />
+In the latest kernel docs, `vm.swappiness` takes 0 to 200, and the default is 60. Older kernels may allow a smaller range. A low value tells the kernel that swap IO is costly. <Cite n={40} /> When the kernel runs out of memory, the OOM killer ends a process. <Cite n={40} /> A higher `oom_score` means a more likely victim. <Cite n={49} />
 
 ```bash
 swapon --show                  # active swap areas
@@ -239,11 +240,11 @@ Tutorial's own advice: record `free -h` in the test logs. A runner with no swap 
 
 ## LVM
 
-LVM (Logical Volume Manager) builds virtual block devices from physical devices. A physical volume (PV) is a disk or partition given to LVM. A volume group (VG) is a pool of PVs. A logical volume (LV) is a part of a VG that acts like a partition: you format it and mount it. <Cite n={41} /> An extent is the smallest unit of storage that LVM allocates. <Cite n={13} /> <Cite n={42} />
+LVM (Logical Volume Manager) builds virtual block devices from physical devices. A physical volume (PV) is a disk or partition given to LVM. A volume group (VG) is a pool of PVs. A logical volume (LV) is a part of a VG that acts like a partition: you format it and mount it. <Cite n={41} /> <Cite n={13} /> An extent is the smallest unit of storage that LVM allocates. <Cite n={13} /> <Cite n={42} />
 
 `pvs`, `vgs`, and `lvs` report on each layer. <Cite n={41} /> They only report.
 
-`lvextend` grows an LV from the free extents of its VG. With `-r` it also resizes the filesystem. <Cite n={43} /> `ext4` can be resized online or offline. <Cite n={35} /> A snapshot is a frozen image of an LV, for example for a backup. `lvcreate -s` makes one. <Cite n={42} /> The main gain is resizing without repartitioning. <Cite n={12} /> In this tutorial's view, the costs are one more layer to learn and a VG that can span several disks.
+`lvextend` grows an LV from the free extents of its VG. With `-r` it also resizes the filesystem. <Cite n={43} /> `ext4` can be resized online (mounted) or offline. <Cite n={35} /> A snapshot is a frozen image of an LV, for example for a backup. `lvcreate -s` makes one. <Cite n={42} /> The main gain is resizing without repartitioning. <Cite n={12} /> In this tutorial's view, the costs are one more layer to learn and a VG that can span several disks.
 
 ```bash
 pvs                          # needs root and the lvm2 tools; physical volumes
@@ -255,9 +256,9 @@ lvs                          # logical volumes
 # lvcreate -s -L 1G -n snap vg0/data   # a snapshot with 1 GiB for changes
 ```
 
-<Callout type="danger" title="Shrinking an LV loses data">
+<Callout type="danger" title="Resizing an LV can lose data">
 
-`lvreduce` destroys the data in the removed area. Shrink the filesystem first, and back up before you try. <Cite n={44} /> Check the names with `lvs` before any `lvreduce` or `lvremove`.
+`lvreduce` destroys the data in the removed area. Shrink the filesystem first, and back up before you try. <Cite n={44} /> `lvcreate` and `lvextend` take free extents from the VG, and `lvextend -r` changes a filesystem. Run `vgs` and `lvs` first. Check the names before any `lvreduce` or `lvremove`.
 
 </Callout>
 
