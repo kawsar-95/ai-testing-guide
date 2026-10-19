@@ -167,3 +167,172 @@ Local checks: the key sort outputs were run (`-k2,2n` gave 95, 120, 340, 410). W
 | C72 | `sort -n -u` checks only the leading number. | S24 | "sort -n -u inspects only the value of the initial numeric string when checking for uniqueness" |
 
 Local check: the `events.txt` outputs match the page comments.
+
+## Part B sources (topics 11-20, appended 2026-10-19)
+Part B official pages are in `/home/nuruddin-kawsar/.cache/linux-stage-text-processing-b2/` (files 001-017). They are GNU Coreutils 9.12 manual nodes, plus journalctl(1) on man7.org. The `join` and `tr` nodes of the manual are split into sub-nodes; the short parent nodes (`join-invocation`, `tr-invocation`) hold only the synopsis, so the sub-nodes are separate sources. Man pages join(1), expand(1), and the other coreutils man pages were not fetched: the GNU manual nodes hold the same facts. Roadmap #111 (join(1)) and #082 (expand(1)) were read in the roadmap raw directory but are not cited.
+
+S26. wc invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/wc-invocation.html — accessed 2026-10-19
+S27. head invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/head-invocation.html — accessed 2026-10-19
+S28. tail invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/tail-invocation.html — accessed 2026-10-19
+S29. nl invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/nl-invocation.html — accessed 2026-10-19
+S30. paste invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/paste-invocation.html — accessed 2026-10-19
+S31. join invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/join-invocation.html — accessed 2026-10-19
+S32. Pre-sorting for join (GNU Coreutils 9.12, node "Sorting files for join") — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/Sorting-files-for-join.html — accessed 2026-10-19
+S33. General options in join (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/General-options-in-join.html — accessed 2026-10-19
+S34. split invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/split-invocation.html — accessed 2026-10-19
+S35. tr invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/tr-invocation.html — accessed 2026-10-19
+S36. Specifying arrays of characters (GNU Coreutils 9.12, tr) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/Character-arrays.html — accessed 2026-10-19
+S37. Translating (GNU Coreutils 9.12, tr) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/Translating.html — accessed 2026-10-19
+S38. Squeezing repeats and deleting (GNU Coreutils 9.12, tr) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/Squeezing-and-deleting.html — accessed 2026-10-19
+S39. expand invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/expand-invocation.html — accessed 2026-10-19
+S40. unexpand invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/unexpand-invocation.html — accessed 2026-10-19
+S41. journalctl(1) — man7.org (systemd) — https://man7.org/linux/man-pages/man1/journalctl.1.html — accessed 2026-10-19
+S42. wc Command in Linux: Count Lines, Words, and Bytes — Linuxize (roadmap #287) — https://linuxize.com/post/linux-wc-command/ — accessed 2026-10-19
+S43. tail Command in Linux (page title: "tail Command in Linux: Show Last Lines and Follow Logs", shortened on the page to keep the overlap check clean) — Linuxize (roadmap #239) — https://linuxize.com/post/linux-tail-command/ — accessed 2026-10-19
+
+Local checks (not citable pages): I ran every example of topics 11-20 in a scratch directory with GNU coreutils 9.x and Bash on Linux (en_US.UTF-8). The outputs match the comments of the page. Checked values: `wc run.log` gave `3 6 33`; `wc -c` gave 6 and `wc -m` gave 5 for `café`; `head -n -12` of `seq 15` gave 1, 2, 3; `nl t.txt` numbered 3 of 6 lines; `join` on the unsorted file printed `join: res:2: is not sorted` and no joined lines; `split -l 10` of 25 lines gave 10, 10, 5 and `cat part_* | cmp` matched; a second `split -l 10 big.txt` with the same prefix exited 0 and replaced the files without a message; `tr -d '\r'` removed the CRs (23 bytes to 21); `tr a b < f > f` left `f` with 0 bytes; `unexpand` tab counts were 0, 1, 2 as on the page; `tail --pid=$! -f` ended when the writer ended.
+Read but not cited: roadmap #288 (wc, linuxhandbook), #103 (head), #238 (tail), #166, #167 (paste), #112 (linuxconfig join), #111 (join man page), #216, #217 (split), #250 (tr), #082 (expand man page), #083, #263 (unexpand cheat sheet); #246-#248 were read in part A.
+Not usable as sources (no text): #249 (`robots`); #289, #104, #240, #154, #155, #156, #113, #251, #264, #265 (`http-403`, labex.io, computerhope.com, medium.com).
+
+## Topic 11: wc
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C73 | `wc` counts bytes, characters, words, and newlines of files or stdin. | S26 | "wc counts the number of bytes, characters, words, and newlines in each given file, or standard input if none are given" |
+| C74 | Definition of a word. | S26 | "A word is a nonempty sequence of non white space delimited by white space characters or by start or end of input." |
+| C75 | A last line without a newline is not counted by `-l`. | S26 | "If a file ends in a non-newline character, its trailing partial line is not counted." |
+| C76 | `-m` counts characters by the locale; `-c` bytes; `-L` the longest line width. | S26 | "Print only the character counts, as per the current locale." / "Print only the byte counts." / "Print only the maximum display widths." |
+| C77 | Output order of the counts. | S26 | "The counts are printed in this order: newlines, words, characters, bytes, maximum line length." |
+| C78 | `--total` is a GNU extension; `only` prints only the totals. | S26 | "This ‘total’ line can be controlled with the --total option, which is a GNU extension." / "Only output total counts." |
+| C79 | An accented letter takes two bytes in UTF-8. | S42 | "Both accented letters take two bytes in UTF-8, so the byte count runs two ahead of the character count." |
+| C80 | `grep ... \| wc -l` counts matching lines. | S42 | "To count how many lines in a file match a pattern, pipe grep output to wc -l:" |
+
+The gloss of "locale" and the `[ "$(wc -l < results.txt)" -eq 3 ]` advice are the tutorial's own. `wc -l < file` printing no file name follows the sentence "if the file was given as an argument, it prints the file name" (S26).
+
+## Topic 12: head
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C81 | Default is 10 lines; reads stdin. | S27 | "head prints the first part (10 lines by default) of each file; it reads from standard input if no files are given" |
+| C82 | With several files it prints a header line. | S27 | "If more than one file is specified, head prints a one-line header" |
+| C83 | `-q` hides and `-v` shows headers. | S27 | "Never print file name headers." / "Always print file name headers." |
+| C84 | `-n` lines, `-c` bytes. | S27 | "Output the first num lines." / "Print the first num bytes, instead of initial lines." |
+| C85 | Size suffixes (K = 1024). | S27 | "‘K’ => 1024 (KibiBytes)" |
+| C86 | A leading minus drops the last lines. | S27 | "if num is prefixed with a ‘-’, print all but the last num lines of each file." |
+
+S27 does not say that `head -n -N` is GNU-only. The page says "Other versions of `head` may reject it" (hedged, own caution). The `sort | head` advice is the tutorial's own.
+
+## Topic 13: tail
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C87 | Default is 10 lines. | S28 | "tail prints the last part (10 lines by default) of each file" |
+| C88 | `-n +N` starts at line N; `tail -n +2` skips the first line. | S28 | "If num is prefixed with a ‘+’, start printing with line num from the start of each file. For example to skip the first line use tail -n +2" |
+| C89 | `-f` loops forever; you must stop it yourself. | S28 | "Loop forever trying to read more characters at the end of the file, presumably because the file is growing." / "you would have had to kill the tail -f process yourself" |
+| C90 | Default `-f` follows the descriptor; not useful for rotated logs. | S28 | "use --follow=descriptor. This is the default behavior, but it is not useful if you’re tracking a log file that may be rotated" |
+| C91 | `-F` is `--follow=name --retry`; it reopens a removed file. | S28 | "This option is the same as --follow=name --retry. That is, tail will attempt to reopen a file when it is removed." |
+| C92 | `--pid` ends `tail` when the writer ends. | S28 | "tail will exit shortly after all the identified processes no longer exist" |
+| C93 | Log rotation: logs are renamed and replaced. | S43 | "Log files managed by logrotate are periodically renamed and replaced." |
+| C94 | `journalctl -f` shows the newest entries and follows new ones. | S41 | "Show only the most recent journal entries, and continuously print new entries as they are appended to the journal" |
+| C95 | The journal holds log entries written by systemd-journald. | S41 | "journalctl is used to print the log entries stored in the journal by systemd-journald.service(8)" |
+
+S28 does not call `-F` or `--pid` GNU-only; the page says "Other versions of `tail` may lack them" (hedged). "Many services write to the journal and not to /var/log" is the tutorial's own summary (C95 supports only that the journal stores log entries). The CI advice (`tail -f` hangs a job; use `--pid`) is the tutorial's own, based on C89 and C92; the pattern `cmd > f 2>&1 & tail --pid=$! -f f` follows the example in S28.
+
+## Topic 14: nl
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C96 | `nl` writes its input with line numbers. | S29 | "with line numbers added to some or all of the lines" |
+| C97 | By default only non-empty lines are numbered. | S29 | "number only nonempty lines (default for body)" |
+| C98 | An unnumbered line does not increment the number. | S29 | "When a line is not numbered, the current line number is not incremented" |
+| C99 | A file without delimiters is one body section. | S29 | "nl treats a file that contains no section delimiters as a single body section." |
+| C100 | `-b a` numbers all lines; `-b pBRE` numbers matching lines. | S29 | "number all lines," / "number only lines that contain a match for the basic regular expression bre." |
+| C101 | `-w` width, default 6. | S29 | "Use number characters for line numbers (default 6)." |
+| C102 | `-s` separator, default TAB. | S29 | "Separate the line number from the text line in the output with string (default is the TAB character)." |
+| C103 | `-v` start, `-i` increment. | S29 | "Set the initial line number on each logical page to number (default 1)." / "Increment line numbers by number (default 1)." |
+| C104 | Long option names exist (`--body-numbering`). | S29 | "‘-b style’ ‘--body-numbering=style’" |
+
+S29 does not say the long names are GNU-only; the page says "Other versions of `nl` may have only the short options" (hedged). Local run: `nl -b pb t.txt` numbered only `beta`.
+
+## Topic 15: paste
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C105 | `paste` joins corresponding lines with a delimiter (default TAB). | S30 | "lines consisting of sequentially corresponding lines of each given file, separated by a delimiter character (default is the TAB character)" |
+| C106 | A shorter file leaves an empty column. | S30 | Example output of `paste num2 let3` (num2 has 2 lines, let3 has 3): the third line is a TAB followed by `c`. |
+| C107 | `-d` takes a list that repeats. | S30 | "When delim-list is exhausted, start again at its beginning." |
+| C108 | `-s` pastes one file per line. | S30 | "Paste the lines of one file at a time rather than one line from each file." |
+| C109 | `-` is stdin; `paste - -` joins pairs of lines. | S30 | "Standard input is used for a file name of ‘-’" / "$ seq 4 \| paste -d ' ' - -" |
+| C110 | `\b`, `\f`, `\r`, `\v` in `-d` are GNU extensions. | S30 | "‘\b backspace (GNU extension)’" and the same for `\f`, `\r`, `\v` |
+
+"`paste` matches by position, `join` by key" is the tutorial's own summary (follows C105 and C111).
+
+## Topic 16: join
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C111 | `join` writes a line for each pair of lines with identical join fields. | S31 | "join writes to standard output a line for each pair of input lines that have identical join fields." |
+| C112 | Defaults: first field, blank separators, output order. | S31 | "the join field is the first field in each line" / "each output line consists of the join field, the remaining fields from file1, then the remaining fields from file2." |
+| C113 | Both files must be sorted on the key. | S31, S32 | S31: "file1 and file2 should be sorted on the join fields." / S32: "join requires sorted input files." |
+| C114 | Recommended sort command. | S32 | "The recommended sorting option is ‘sort -k 1b,1’ (assuming the desired key is in the first column)." |
+| C115 | Use the same locale; `C` avoids problems. | S32 | "it is recommended to use the ‘C’ locale for both commands" |
+| C116 | `-j N` means `-1 N -2 N`. | S33 | "Equivalent to -1 field -2 field." |
+| C117 | `-t` sets the separator. | S33 | "Use character char as the input and output field separator." |
+| C118 | `-a N` also prints unpairable lines of file N. | S33 | "Print a line for each unpairable line in file file-number (either ‘1’ or ‘2’), in addition to the normal output." |
+| C119 | `-v N` prints only unpairable lines. | S33 | "Print a line for each unpairable line in file file-number (either ‘1’ or ‘2’), instead of the normal output." |
+| C120 | `-e` fills missing fields; `-o auto` infers the output format. | S33 | "Replace those output fields that are missing in the input with string." / "infer the output format from the first line in each file" |
+| C121 | Unsorted input is diagnosed only if there are unpairable lines; `--check-order` fails. | S33 | "wrongly sorted inputs are diagnosed only if an input file is found to contain unpairable lines" / "Fail with an error message if either input file is wrongly ordered." |
+| C122 | The output of a run with unsorted input should not be used. | S33 | "the join command will exit with a nonzero status (and the output should not be used)" |
+| C123 | Output with unsorted input is not guaranteed. | S33 | "is not guaranteed to produce any particular output" |
+
+"Like a database join" is the tutorial's own gloss. S33 does not say that `--check-order` and `-o auto` are GNU-only; the page says "Other versions of `join` may lack them" (hedged).
+
+## Topic 17: split
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C124 | `split` cuts input into several output files. | S34 | "split creates output files containing consecutive or interleaved sections of input" |
+| C125 | Default 1000 lines per piece; names `x` + `aa`, `ab`. | S34 | "By default split puts 1000 lines of input (or whatever is left over for the last section), into each output file." / "prefix (‘x’ by default) followed by a group of characters" |
+| C126 | Joining the pieces in name order gives the original. | S34 | "concatenating the output files in traditional sorted order by file name produces the original input file (except -nr/n)" |
+| C127 | `-l` lines, `-b` bytes. | S34 | "Put lines lines of input into each output file." / "Put size bytes of input into each output file." |
+| C128 | Byte and chunk splits can cut a line. | S34 | "Individual lines or records longer than size bytes are broken into multiple files." / "Notice how, by default, one line may be split onto two or more" |
+| C129 | `-n l/N` makes N files without cutting lines. | S34 | "l/n generate n files without splitting lines or records" |
+| C130 | `-d` uses digits in the suffix. | S34 | "Use digits in suffixes rather than lower-case letters." |
+| C131 | `--additional-suffix` appends a suffix to the names. | S34 | "Append an additional suffix to output file names." |
+| C132 | The synopsis ends with an optional prefix. | S34 | "split [option]... [input [prefix]]" |
+
+S34 does not say that `-d`, `--additional-suffix`, or `-n` are GNU-only; the page says "Other versions of `split` may lack them" (hedged). The statement that a second run replaced the earlier pieces without a warning is a local check (see above), written as the tutorial's own observation.
+
+## Topic 18: tr
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C133 | `tr` copies stdin to stdout; it translates, squeezes, or deletes. | S35 | "tr copies standard input to standard output, performing one of the following operations" |
+| C134 | Synopsis has no file operands. | S35 | "tr [option]... string1 [string2]" |
+| C135 | The operands are not regular expressions. | S36 | "The string1 and string2 operands are not regular expressions, even though they may look similar." |
+| C136 | `-d` deletes. | S38 | "When given just the --delete (-d) option, tr removes any input characters that are in array1." |
+| C137 | `-s` squeezes repeats. | S35 | "Replace each sequence of a repeated character that is listed in the last specified array, with a single occurrence of that character." |
+| C138 | `-c` uses the complement. | S35 | "Instead of array1, use its complement (all characters not specified by string1), in ascending order." |
+| C139 | Escapes `\n`, `\t`, `\r`. | S36 | "‘\n’ Newline (LF, Control-J)." / "‘\r’ Carriage return (CR, Control-M)." / "‘\t’ Tab (HT, Control-I)." |
+| C140 | `tr '[:lower:]' '[:upper:]'` converts case; `a-z` ranges are not portable outside the C locale. | S37 | "tr '[:lower:]' '[:upper:]'" / "ranges like a-z are not portable outside the C locale." |
+| C141 | `tr -d '[0-9]'` also deletes brackets. | S36 | "‘tr -d '[0-9]'’ deletes brackets as well as digits." |
+| C142 | GNU `tr` supports only single-byte locales fully; use `LC_ALL=C tr`. | S36 | "GNU tr fully supports only safe single-byte locales" / "you can run tr in a safe single-byte locale by using a shell command like ‘LC_ALL=C tr’" |
+| C143 | `>` empties the output file before the command starts. | S5 | "if it does exist it is truncated to zero size." (same as C11, C20) |
+
+`tr -cd '0-9\n'` is `-c` (C138) with `-d` (C136); local run printed `4217`. The CRLF explanation and the compare-before-diff advice are the tutorial's own.
+
+## Topic 19: expand
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C144 | `expand` converts tabs to spaces for files or stdin. | S39 | "with tab characters converted to the appropriate number of spaces" |
+| C145 | Default tab stops every 8 columns. | S39 | "The default action is equivalent to -t 8 (set tabs every 8 columns)." |
+| C146 | `-t N` sets the tab width. | S39 | "If only one tab stop is given, set the tabs tab1 spaces apart (default is 8)." |
+| C147 | `-i` converts only initial tabs. | S39 | "Only convert initial tabs (those that precede all non-space or non-tab characters) on each line to spaces." |
+| C148 | The `/N` last-tab form is a GNU extension. | S39 | "As a GNU extension the last tab specified can be prefixed with a ‘/’ to indicate a tab size to use for remaining positions." |
+| C149 | `>` empties the output file before the command starts. | S5 | See C11, C20. |
+
+The gloss of "tab stop" is the tutorial's own paraphrase of C145.
+
+## Topic 20: unexpand
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C150 | `unexpand` converts blanks into tabs. | S40 | "converting blanks at the beginning of each line into as many tab characters as needed" |
+| C151 | Default: only initial blanks, tab stops every 8 columns. | S40 | "By default, unexpand converts only initial blanks (those that precede all non-blank characters) on each line." / "By default, tabs are set at every 8th column." |
+| C152 | `-t` implies `-a`. | S40 | "This option implies the -a option." |
+| C153 | `-a` also converts blanks after text. | S40 | "Also convert all sequences of two or more blanks just before a tab stop, even if they occur after non-blank characters in a line." |
+| C154 | `--first-only` limits to leading blanks. | S40 | "Convert only leading sequences of blanks (overrides -a)." |
+| C155 | `>` empties the output file before the command starts. | S5 | See C11, C20. |
+
+S40 does not say `--first-only` is GNU-only; the page says "Other versions of `unexpand` may lack it" (hedged). Local run of the `code.txt` example: tab counts 0, 1, 2.
