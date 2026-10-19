@@ -299,5 +299,34 @@ class OverlapTest(unittest.TestCase):
         self.assertEqual(got, {("one", "two", "three")})
 
 
+class OverlapMainTest(unittest.TestCase):
+    def _run(self, mdx_text, raw_dir):
+        with tempfile.TemporaryDirectory() as tmp:
+            mdx = Path(tmp) / "page.mdx"
+            mdx.write_text(mdx_text, encoding="utf-8")
+            out, err = io.StringIO(), io.StringIO()
+            with mock.patch.object(sys, "stdout", out), mock.patch.object(sys, "stderr", err):
+                code = linux_overlap.main(["linux_overlap.py", str(mdx), str(raw_dir)])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_main_reads_nested_txt_files(self):
+        with tempfile.TemporaryDirectory() as raw:
+            nested = Path(raw) / "a" / "b"
+            nested.mkdir(parents=True)
+            (nested / "001.txt").write_text(f"Intro. {EIGHT} and more.", encoding="utf-8")
+            code, out, err = self._run(f"My page.\n\nSo {EIGHT} is here.\n", raw)
+        self.assertEqual(code, 1)
+        self.assertIn(EIGHT, out)
+        self.assertIn("1 file", err)
+
+    def test_main_fails_when_the_directory_has_no_txt_files(self):
+        with tempfile.TemporaryDirectory() as raw:
+            (Path(raw) / "sub").mkdir()
+            (Path(raw) / "sub" / "note.md").write_text("x", encoding="utf-8")
+            code, out, err = self._run("My page.\n", raw)
+        self.assertEqual(code, 2)
+        self.assertIn("no .txt files", err)
+
+
 if __name__ == "__main__":
     unittest.main()
