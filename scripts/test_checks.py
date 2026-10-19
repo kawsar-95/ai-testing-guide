@@ -84,37 +84,15 @@ class RouteMapTest(unittest.TestCase):
             self.assertTrue(new.endswith("/"))
 
 
-class PrepRouteMapTest(unittest.TestCase):
+class LoadRoutesTest(unittest.TestCase):
     HERE = Path(__file__).resolve().parent
 
-    def test_prep_route_map_is_an_identity_map_of_the_prep_routes(self):
-        route_map = json.loads((self.HERE / "prep-route-map.json").read_text())
-        # One route per area file, plus "/prep/".
-        expected = len(list((self.HERE.parent / "content" / "prep").glob("*.ts"))) + 1
-        self.assertEqual(expected, 14)
-        self.assertEqual(len(route_map), expected)
-        self.assertIn("/prep/", route_map)
-        self.assertIn("/prep/intern/", route_map)
-        for key, value in route_map.items():
-            self.assertTrue(key.endswith("/"))
-            self.assertTrue(value.endswith("/"))
-            self.assertEqual(key, value)
-
-    def test_load_routes_returns_tutorial_routes_then_prep_routes(self):
+    def test_load_routes_returns_tutorial_then_linux_routes(self):
         tutorial = list(json.loads((self.HERE / "route-map.json").read_text()).values())
-        prep = list(json.loads((self.HERE / "prep-route-map.json").read_text()).values())
-        routes = check_routes.load_routes()
-        self.assertEqual(routes[: 24 + 14], tutorial + prep)
-        self.assertIn("/getting-started/setup/", routes)
-        self.assertIn("/prep/mcq-test/", routes)
-
-    def test_load_routes_returns_tutorial_then_prep_then_linux_routes(self):
-        tutorial = list(json.loads((self.HERE / "route-map.json").read_text()).values())
-        prep = list(json.loads((self.HERE / "prep-route-map.json").read_text()).values())
         linux = list(json.loads((self.HERE / "linux-route-map.json").read_text()).values())
         routes = check_routes.load_routes()
-        self.assertEqual(routes, tutorial + prep + linux)
-        self.assertEqual(len(routes), 24 + 14 + 13)
+        self.assertEqual(routes, tutorial + linux)
+        self.assertIn("/getting-started/setup/", routes)
         self.assertIn("/linux/containers/", routes)
 
 

@@ -8,6 +8,6 @@ test("the page count in the strings comes from PAGES", () => {
   assert.ok(searchType.includes(`the ${PAGES.length} parts`));
 });
 
-test("searchType mentions the interview prep", () => {
-  assert.ok(searchType.includes("interview prep"));
+test("searchType mentions the Linux stages", () => {
+  assert.ok(searchType.includes("Linux stages"));
 });
