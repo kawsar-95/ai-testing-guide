@@ -52,6 +52,7 @@ export const page = {
     { title: 'systemd-cgls(1) - show control group contents', publisher: 'man7.org (systemd)', url: 'https://man7.org/linux/man-pages/man1/systemd-cgls.1.html', accessed: '2026-10-19' },
     { title: 'uname(1) - print system information', publisher: 'man7.org (GNU coreutils)', url: 'https://man7.org/linux/man-pages/man1/uname.1.html', accessed: '2026-10-19' },
     { title: 'Run containerd in the Docker daemon', publisher: 'Docker Docs', url: 'https://docs.docker.com/engine/daemon/embedded-containerd/', accessed: '2026-10-19' },
+    { title: 'containerd README', publisher: 'containerd project (GitHub)', url: 'https://github.com/containerd/containerd/blob/main/README.md', accessed: '2026-10-19' },
   ],
 }
 
@@ -72,7 +73,10 @@ A container is not a virtual machine (VM). A VM runs its own kernel, the core of
 uname -r                    # kernel release; a container shows the kernel that runs it
                             # (on Docker Desktop, the kernel of its Linux VM)
 ls -l /proc/self/ns         # one link for each namespace type, plus two *_for_children links;
-                            # the same number = the same namespace
+                            # the same number = the same namespace. The 8 types and what they isolate:
+                            # cgroup (cgroup root), ipc (System V IPC), mnt (mount points),
+                            # net (network devices, ports), pid (process IDs), time (boot and
+                            # monotonic clocks), user (user and group IDs), uts (hostname)
 readlink /proc/self/ns/pid  # for example pid:[4026531836] (an illustration)
 cat /proc/self/cgroup       # the cgroup of this process
 ```
@@ -85,24 +89,24 @@ Tutorial's own advice: log `uname -r` (it prints the kernel release <Cite n={45}
 
 ## Container Runtime
 
-A **container runtime** starts and manages the container process. <Cite n={5} /> It acts as an intermediary between the container and the operating system, and it sets up namespaces and cgroups. <Cite n={2} /> <Cite n={5} />
+A **container runtime** starts and manages the container process. <Cite n={5} /> It acts as an intermediary between the container and the operating system, and sets up namespaces and cgroups. <Cite n={2} /> <Cite n={5} />
 
 Two Open Container Initiative (OCI) standards matter. The image spec defines the image: a manifest, filesystem layers (sets of file changes), and a configuration. <Cite n={15} /> The runtime spec defines the `config.json` file and the container lifecycle. <Cite n={13} /> Its Linux part names the namespaces, cgroups, and capabilities (small units of root power) to set. <Cite n={14} /> <Cite n={11} />
 
-A low-level runtime, such as `runc`, creates one container from an OCI bundle (a folder with `config.json` and a root filesystem). <Cite n={16} /> <Cite n={5} /> A high-level runtime, such as `containerd`, is a daemon (a background service) that also moves images and supervises containers. <Cite n={17} /> <Cite n={5} /> Docker Engine starts and manages containerd. <Cite n={46} /> <Cite n={5} /> CRI-O is a runtime for Kubernetes, which needs a runtime with the Container Runtime Interface (CRI). <Cite n={18} /> <Cite n={4} />
+A low-level runtime, such as `runc`, creates one container from an OCI bundle (a folder with `config.json` and a root filesystem). <Cite n={16} /> <Cite n={5} /> A high-level runtime, such as `containerd`, is a daemon (a background service) that also moves images and supervises containers. <Cite n={17} /> <Cite n={5} /> By default, Docker Engine starts containerd, which uses `runc` for most container work. <Cite n={46} /> <Cite n={47} /> <Cite n={5} /> CRI-O is a runtime for Kubernetes, which needs a runtime with the Container Runtime Interface (CRI). <Cite n={18} /> <Cite n={4} />
 
 | | Docker Engine | Podman |
 |---|---|---|
 | Daemon | `dockerd` is a long-running daemon <Cite n={22} /> | none <Cite n={19} /> |
 | Root | The daemon needs root, unless rootless <Cite n={39} /> | A normal user can run containers <Cite n={19} /> |
 
-**Rootless** means that the runtime and containers run as a normal user, inside a user namespace (a private view of user IDs). <Cite n={40} /> Podman then needs ID ranges in `/etc/subuid`. <Cite n={20} />
+**Rootless** means the runtime and containers run as a normal user, inside a user namespace (a private view of user IDs). <Cite n={40} /> Rootless setups need ID ranges in `/etc/subuid` and `/etc/subgid`. <Cite n={40} /> <Cite n={20} />
 
 ```bash
 command -v docker podman runc containerd   # read-only: which of these tools exist here
 # The runc README shows this flow. Do not run it on a shared host:
 #   runc spec                  # write a template config.json in the bundle directory
-#   runc run mycontainerid     # start the container from the bundle
+#   runc run mycontainerid     # start the container from the bundle; needs root (unless rootless)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
@@ -122,6 +126,7 @@ A **volume** is storage that Docker manages. <Cite n={30} /> A **bind mount** sh
 ```bash
 # Illustration. registry.invalid is a name that cannot resolve: use your own image.
 # Run it only where you may start containers. -p is HOST_IP:HOST_PORT:CONTAINER_PORT.
+# Needs access to the Docker daemon, which runs as root unless it is rootless.
 docker run -d --rm --name web1 -p 127.0.0.1:8080:80 registry.invalid/app:1.0
 docker ps                    # CONTAINER ID 3f4e..., IMAGE registry.invalid/app:1.0, NAMES web1
 docker logs --tail 20 web1   # the last 20 lines; add -f to follow
@@ -165,14 +170,14 @@ If a v2 cgroup reaches `memory.max` and cannot shrink, the OOM killer (the kerne
 cat /proc/self/cgroup                   # v2: one line such as 0::/user.slice/... (an illustration)
 systemd-cgls --no-pager | head -n 20    # the cgroup tree on a systemd host
 # Documented, not run. Use a test host only:
-#   docker run --memory=256m --cpus=0.5 --pids-limit=100 registry.invalid/app:1.0
-#   systemd-run --scope -p MemoryMax=256M ./suite.sh
-#   (cgroup v2; the system manager may ask you to authenticate; --user uses your own manager)
+#   docker run --memory=256m --cpus=0.5 --pids-limit=100 registry.invalid/app:1.0   # needs the Docker daemon
+#   systemd-run --scope -p MemoryMax=256M ./suite.sh   # system scope: authentication or root
+#   (cgroup v2; --user uses your own service manager)
 ```
 
 <Callout type="danger" title="Do not change limits or kill the main process">
 
-Tutorial's own advice: do not write into `/sys/fs/cgroup` on a shared host, because a wrong limit can kill services. `kill -9` gives the main process of a container no time to clean up. When it ends, the kernel kills every other process in its PID namespace. <Cite n={8} /> `docker stop` sends SIGTERM first. <Cite n={28} />
+Tutorial's own advice: do not write into `/sys/fs/cgroup` on a shared host, because a wrong limit can kill services. `kill -9` gives the usual main process of a container no time to clean up. When it ends, the kernel kills every other process in its PID namespace. <Cite n={8} /> `docker stop` sends SIGTERM first. <Cite n={28} />
 
 </Callout>
 
