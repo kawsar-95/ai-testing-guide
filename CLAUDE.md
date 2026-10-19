@@ -118,7 +118,7 @@ The Linux module is the roadmap at `/linux/` and 12 stage pages at `/linux/<stag
 | Research notes | `docs/superpowers/research/linux-*.md`. Each stage has a notes file and a `.factcheck.md` report. |
 | Raw text | `scripts/linux_fetch.py` downloads the roadmap links as text. Never commit this text. It is third-party text. `scripts/linux_overlap.py` finds word runs that a page copies from it. |
 | Done | A stage is done only when its fact-check report ends with `Open FAILs: 0`. |
-| Cheat sheet topic | The last topic of stage 4, `Permissions Cheat Sheet`, is not from the roadmap. It is the cheat sheet of abrahimcse (GitHub), included with attribution and kept in its original wording. It has no 250-word limit. Each factual correction is a Callout with an official cite. |
+| Cheat sheet topic | The last topic of stage 4, `Permissions Cheat Sheet`, is not from the roadmap. It is the cheat sheet of abrahimcse (GitHub), included with attribution and kept in its original wording. It has no 250-word limit. Each factual correction is marked "Correction" and has an official cite. |
 | Topics | `npm test` checks that each stage has an MDX file and that each topic anchor is the id of a `##` heading. |
 
 To add or change a topic, edit `lib/linux/stages.ts` and the `##` heading of the MDX file together. The title of a topic is its heading. The `anchor` comes from the title with the `rehype-slug` rules. Six topics have an anchor that ends in `-1`, because the `#` title of the page takes the plain slug first.

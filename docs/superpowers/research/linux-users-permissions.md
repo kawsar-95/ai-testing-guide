@@ -48,6 +48,7 @@ S40. Linux File Permission (Linux-CLI-Cheatsheet) — GitHub (abrahimcse) — ht
 S41. inode(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/inode.7.html — accessed 2026-10-20
 S42. chown(2) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man2/chown.2.html — accessed 2026-10-20
 S43. path_resolution(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/path_resolution.7.html — accessed 2026-10-20
+S44. execve(2) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man2/execve.2.html — accessed 2026-10-20 (fetched in fix round 1)
 
 Local checks (not a citable page): I ran every read-only and scratch-directory example of the page under my own account (GNU coreutils; the scratch directory was in the session scratchpad): `id`, `getent passwd "$USER"`, `getent group sudo`, `ls -l /etc/passwd /etc/shadow`, `touch`, `ls -l`, `stat -c '%A %a %U:%G %n'`, `ls -ld /tmp`, `ls -l /usr/bin/passwd`, `chmod 640`, `chmod u+x,g-w`, `chgrp "$(id -gn)"`, `chmod 2750` (shows `drwxr-s---`), `chmod -R g+rX,o-rwx`, `(umask 077; touch private.txt)` (mode 600; the umask of the parent shell stayed 0002), and `chmod +t` (shows `T` when `x` for others is missing). All worked as written and are safe to run twice. I did NOT run `sudo`, `su`, `useradd`, `usermod`, `userdel`, `groupadd`, `passwd`, `visudo`, `newgrp`, or `chown` (security rule). Those lines of the page come from the man pages in the table below.
 
@@ -191,12 +192,13 @@ Pasted facts that were checked (the pasted text is quoted only in short pieces; 
 | P1 | `r` on a directory lists the files. | S25 | "For directories, this means permission to list the contents of the directory." |
 | P2 | `w` on a directory creates or deletes files. | S25 | "For directories, this means permission to create and remove files in the directory." |
 | P3 | `x` on a directory gives access to the files in it. | S25 | "For directories, this means permission to access files in the directory." |
-| P4 | `ls -l` starts with a file-type character: `-` regular file, `d` directory. | S27 | "The file type is one of the following characters:" |
+| P4 | `ls -l` starts with a file-type character: `-` regular file, `d` directory. (Cross-check, not cited on the page: the page cites S40 for the paste.) | S27 | "The file type is one of the following characters:" |
 | P5 | `chmod` takes a symbolic mode or an octal number. | S32 | "which can be either a symbolic representation of changes to make, or an octal number representing the bit pattern for the new mode bits." |
 | P6 | Octal values: read 4, write 2, execute 1. | S32 | "read (4), write (2), and execute (1)" |
 | P7 | Symbolic letters `s` (setuid, setgid) and `t` (sticky). | S32 | "set user or group ID on execution (s), restricted deletion flag or sticky bit (t)" |
 | P8 | Setuid on an executable: the program runs with the owner's permissions (effective user ID of the file). | S25 | "On execution, set the process’s effective user ID to that of the file." |
-| P9 | Setgid on a directory: new files inherit the group of the directory. | S31 | "newly created subfiles inherit the same group as the directory" |
+| P9 | Setgid on a directory: new files inherit the group of the directory. (Cross-check, not cited on the page: the page cites S40 for the paste.) | S31 | "newly created subfiles inherit the same group as the directory" |
+| P0 | Attribution line: the page cites S40 as the source of the pasted text. The line says that the text is kept with the marked corrections. | S40 | the repo has no licence; the owner decided to include it with attribution (see the S40 entry) |
 | P10 | `chown OWNER:GROUP FILE` form. | S33 | "that user is made the owner of each given file" |
 
 Note on the pasted "10-character string": S27 says the `ls -l` mode field is the file-type character and the three sets of permission bits. S27 also says that one more character may follow (a space, `.` or `+`). The page keeps the pasted sentence and does not add this (rule: add nothing else).
@@ -220,6 +222,17 @@ Corrections (each is a short sentence on the page after the pasted sentence):
 | C5b | Same claim: a lookup in a directory without search permission fails. | S43 | "If the process does not have search permission on the current lookup directory, an EACCES error is returned" |
 | C5c | Removing a name needs write access to the directory and search permission on the path. | S37 | "Write access to the directory containing path is not allowed for the process's effective UID" (EACCES; the same line adds "or one of the directories in path did not allow search permission.") |
 | C5d | Local check: in a temporary directory, a directory with mode 200 (write, no execute) gave `touch: setting times of 'w_only/x': Permission denied`. | local check | not a citable page |
+
+Fix round 1 additions:
+
+| # | Claim | Source | Quote (max 25 words) |
+|---|---|---|---|
+| C6 | On Linux, setuid and setgid are ignored on scripts. This limits the "runs as root" effect to compiled programs. | S44 | "Linux (like most other modern UNIX systems) ignores the set-user- ID and set-group-ID bits on scripts." (the fetched text wraps the word "set-user-ID" after the hyphen) |
+| C7 | The bits are also ignored on a filesystem that is mounted `nosuid`. | S44 | "the underlying filesystem is mounted nosuid (the MS_NOSUID flag for mount(2))" |
+| C8 | The symbolic form is not only `[u/g/o][+/-][r/w/x]`: `a`, `=`, joined letters (`ug+rw`), no user letter (`+x`), and `s` and `t` are valid. | S32 | "A combination of the letters ugoa controls which users' access to the file will be changed" |
+| C8b | Same claim: `=` sets exactly these bits. | S32 | "and = causes them to be added and causes unmentioned bits to be removed" |
+| C8c | Same claim: without a user letter, the effect is as if `a` were given (bits in the umask are not affected). | S32 | "If none of these are given, the effect is as if (a) were given, but bits that are set in the umask are not affected." |
+| T1 | Tip callout: `stat -c %a` prints the octal mode (GNU option). Cite S28; see row F15 for the quote. | S28 | "%a permission bits in octal" |
 
 Danger Callout (the page cites S25 and S32 and S33 for each fact):
 
