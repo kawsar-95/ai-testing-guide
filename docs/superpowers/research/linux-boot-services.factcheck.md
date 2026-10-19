@@ -283,4 +283,22 @@ New FAILs (location and fix):
 - Row 172, Running Services: cite 12 does not document `list-unit-files --state=enabled`. Fix: remove the second `<Cite n={12} />` there and correct notes C81 (S6 and a local test only), or use `list-unit-files --no-pager | grep enabled`.
 - Row 173, Running Services (code): the comment "needs root" is false. Fix: "# with root, shows the process of every socket".
 
-Open FAILs: 3
+Open FAILs: 3 (round 4; checked in round 5)
+
+## Round 5 — closure (2026-10-19)
+
+The writer made the last cite fixes in commit b3f44e4. I read `git diff 815e993 b3f44e4` (the page and notes C81).
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 180 | Creating Services (danger) | "`systemctl revert` also deletes a copy of a vendor unit in `/etc`." now has `<Cite n={12} />` (old row 169) | 12 | PASS | S12 `revert`: "removes drop-in configuration files that modify the specified units, as well as any user-configured unit file that overrides a matching vendor supplied unit file". It adds: "if the unit file has a vendor-supplied version (i.e. a unit file located below /usr/) any matching persistent or runtime unit file that overrides it is removed, too." Both support the sentence. A unit with no vendor version is not removed, and the sentence says "a copy of a vendor unit", so it is correct. |
+| 181 | Running Services | The comment "# with root, shows the process of every socket" (old row 173) | none | PASS | True by the local test of round 1 (as a normal user, 12 of 37 rows had no process column). The comment no longer says that `ss` needs root. |
+| 182 | Running Services | "`list-unit-files --state=enabled` lists the enabled unit files." Only `<Cite n={6} />` remains (old row 172); notes C81 says that S12 does not document the option | 6 | FAIL | The option fact now rests on S6 (a blog) and a local run. No official page that I can read documents `--state=` for `list-unit-files`: S12 (version 262) names only `list-units`, `list-dependencies`, `show` and `status` and the LOAD, SUB, ACTIVE states; the 252 manual and `systemctl --help` say the same ("List units with particular LOAD or SUB or ACTIVE state"). The stage rule asks for an official source for each option fact. Fix: use a form that S12 supports. Text: "`systemctl list-unit-files` lists each unit file with its enablement state. Look for the state `enabled`." with `<Cite n={12} />` (S12: "List unit files installed on the system, in combination with their enablement state"). Code: `systemctl list-unit-files --no-pager \| awk '$2 == "enabled"' \| head   # enabled unit files`. Do not use `\| grep enabled`: it also matches the PRESET column (local: 224 lines with `grep -w enabled`, 156 with the `awk` test and with `--state=enabled`). Update notes C81 to match. Keep the S6 cite only for `--type=service --state=running`. The section has 237 words; the new text must stay at 250 or less. |
+| 183 | Page quality: word counts | Each section has 100 to 250 words (heading, callout titles and table cell text; no pipes) | none | PASS | Booting Linux 244, Boot Loaders 245, Service Management 220, Creating Services 244, Starting and Stopping Services 246, Checking Service Status 221, Checking Service Logs 212, Running Services 237. Sentences: none over 25 words. |
+| 184 | Page quality: sources, overlap, privacy | All 30 sources cited; no copied run; no home path or login name in the page, notes, or report | none | PASS | 87 cites, no uncited source. `linux_overlap.py` on the page body (without `page.sources`) prints nothing and exits 0 against my flat 30-file dir and the 243-file roadmap dir. A search for a home path and the user name in the three files found nothing. |
+
+Counts of round 5: 5 rows (180 to 184). PASS 4, FAIL 1, OPINION-OK 0.
+
+New FAIL: row 182, Running Services: `list-unit-files --state=enabled` has no official source. Fix: the `list-unit-files` plus `awk '$2 == "enabled"'` form above, cited to S12. My round-4 hint `grep enabled` was wrong: it matches the PRESET column.
+
+Open FAILs: 1
