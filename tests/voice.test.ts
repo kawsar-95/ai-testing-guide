@@ -110,7 +110,6 @@ test("voice colors have 4.5:1 contrast on --bg and --bg-raised in both themes", 
     for (const bg of ["--bg", "--bg-raised"]) {
       for (const voice of ["--voice-layman", "--voice-bangla"]) {
         const ratio = contrast(tokenHex(block, voice), tokenHex(block, bg));
-        console.log(`# ${theme} ${voice} on ${bg}: ${ratio.toFixed(2)}`);
         assert.ok(ratio >= 4.5, `${theme} ${voice} on ${bg} is ${ratio.toFixed(2)}`);
       }
     }

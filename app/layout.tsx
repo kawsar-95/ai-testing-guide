@@ -34,6 +34,9 @@ const notoBengali = Noto_Sans_Bengali({
   variable: "--font-noto-bengali",
   subsets: ["bengali"],
   display: "swap",
+  // No preload: a reader of the Technical voice does not download the font.
+  // The browser loads it when Bengali text appears on the page.
+  preload: false,
 });
 
 export const metadata: Metadata = {

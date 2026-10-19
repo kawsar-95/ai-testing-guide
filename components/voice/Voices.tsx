@@ -23,6 +23,8 @@ function targetOf(hash: string): HTMLElement | null {
  *
  * - local is null (follow the site default) or the voice that the reader
  *   clicked. If the site default changes, local goes back to null.
+ * - data-voice-user is set only if local is not null. The CSS fades a panel
+ *   in only then, so the site default does not fade at hydration.
  * - Before hydration, def is null. Then the wrapper has no data-voice, and
  *   the CSS shows the panel of data-voice-default on <html>.
  * - If a hash or an in-page link points into a hidden panel, the section
@@ -90,7 +92,12 @@ export function Voices({ children }: { children?: ReactNode }) {
   }, [local, def]);
 
   return (
-    <div ref={wrapper} className="voices" data-voice={def === null ? undefined : effective}>
+    <div
+      ref={wrapper}
+      className="voices"
+      data-voice={def === null ? undefined : effective}
+      data-voice-user={local === null ? undefined : ""}
+    >
       <VoiceSwitcher value={effective} order={voiceOrder(def ?? "technical")} onChange={setLocal} />
       {children}
     </div>
