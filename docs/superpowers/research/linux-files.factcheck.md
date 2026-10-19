@@ -196,3 +196,23 @@ Re-run checks: `linux_overlap.py` against the roadmap raw dir and against the ch
 Fixed since round 1: rows 22, 45, 66, Q3, Q6, Q8, Q11 (7 of 8). Not fixed: row 65 (nano cancel key), see R4.
 
 Open FAILs: 1
+
+## Round 3 (2026-10-19)
+
+Writer's fix commit: 25c4eaf. I read `git diff b3d9397 25c4eaf -- content/linux/files.mdx docs/superpowers/research/linux-files.md`. Three things changed: the nano save-prompt sentences, the Vim tip, and the notes rows C54/C54b.
+
+Re-run checks: `linux_overlap.py` against the roadmap raw dir and against the checker's official-pages dir: both exit 0, no output. `npm test`: 145 pass, 0 fail. Section words: 167, 199, 201, 169, 172, 222 (Nano), 232 (Vim), 220, 167 (all within 100–250). No sentence above 23 words. Each of the 9 sections has 1 tip callout and 1 fenced code block. 9 `##` headings. All 28 sources are cited. All `</Callout>` tags are at column 0. No notes row has more than 25 words of quote.
+
+| # | Location (heading) | Claim / change (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| S1 | Nano | "The prompt lists its keys on screen. In nano 8.7.1 it shows `^C Cancel`, so Ctrl+C cancels it." (no cite) | none | PASS | Observation, true and tied to a version. Local pty test (nano 8.7.1): `Save modified buffer?  Y Yes  N No  ^C Cancel`; Ctrl+C printed "[ Cancelled ]"; `c` and `C` left the prompt open. The sentence makes no claim that the manual backs, and it has no cite, so no cite can be wrong. |
+| S2 | Nano | "The manual does not name this key." | none | PASS | True. In S16 the only cancel text is "cancel: Cancels the current command." (a function name, no key). `^C` appears there as "Display Cursor Position" (main window) and, with `--modernbindings`, as "^C copies". nano.1 and the FAQ of nano-editor.org (checked in round 2) do not name it either. |
+| S3 | Nano | Is the sentence marked as the tutorial's own observation, as CLAUDE.md asks? | none | PASS | The CLAUDE.md rule is for a callout that gives the tutorial's own advice. This is a prose fact, not advice. It is marked in a plain way: it has no cite, it names the version that shows the text on screen, and it says that the manual is silent. A reader can tell that it is an observation and not a manual quote. Optional wording (not a FAIL): "In nano 8.7.1 the prompt shows ..." is already clear. |
+| S4 | Nano | Round 2 row R4: the S16 cite and the "because" are removed | none | PASS | The new text has no unsupported "because" and no wrong cite. Round 1 row 65 and round 2 row R4 are fixed. |
+| S5 | Vim (tip) | "a remote host or a container may offer only `vi`, which takes the same keys as above" | none | OPINION-OK | Marked "Tutorial's own advice". True for the survival set that the tip names. Local: in `vi` (`vim.tiny`, Vim 9.1) I sent `dd`, `dd`, `u`, `:wq` + Enter in a pty and the file held the second line: `dd` and `u` work, and `:wq` and `:q!` worked in round 2. Note (not FAIL): "the same keys as above" is wider than the survival set. The table also has `Ctrl-R` and `:help`, which classic `vi` and `vim.tiny` may lack. The tip only asks the reader to learn the set that works, so the sentence is acceptable. |
+| S6 | Notes | C54 and C54b | none | PASS | C54 ("Y saves, N discards", S14, 2 short quotes) is within 25 words. C54b says that the claim is the tutorial's own observation, has no cite (source `none`, "no quote"), and explains the S14 error and the S16 silence. It matches the page. |
+| S7 | All | Page-quality checklist re-run | none | PASS | See "Re-run checks" above. |
+
+All 8 round 1 FAILs are now fixed.
+
+Open FAILs: 0
