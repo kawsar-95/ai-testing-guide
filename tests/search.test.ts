@@ -4,17 +4,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PAGES } from "../lib/nav.ts";
 import { getOutline } from "../lib/outline.ts";
-import { AREAS } from "../lib/prep/areas.ts";
-import { ALL_ITEMS, itemsOf as ITEMS_OF } from "../lib/prep/items.ts";
 import { STAGES } from "../lib/linux/stages.ts";
-import { buildLinuxSearchDocs, buildPrepSearchDocs, buildSearchDocs, createIndex, runSearch } from "../lib/search.ts";
+import { buildLinuxSearchDocs, buildSearchDocs, createIndex, runSearch } from "../lib/search.ts";
 import type { SearchDoc } from "../lib/search.ts";
 
 const read = (group: string, slug: string) => readFileSync(join("content", group, `${slug}.mdx`), "utf8");
 const docs = buildSearchDocs(PAGES.map((page) => ({ page, source: read(page.group, page.slug) })));
-
-const prepEntries = AREAS.flatMap((area) => ITEMS_OF(area.slug).map((item) => ({ area, item })));
-const prepDocs = buildPrepSearchDocs(prepEntries);
 
 const linuxDocs = buildLinuxSearchDocs(STAGES.map((stage) => ({ stage, source: read("linux", stage.slug) })));
 
@@ -47,13 +42,6 @@ test("doc ids are unique and every doc has its page fields", () => {
     const page = PAGES.find((p) => p.group === doc.group && p.title === doc.page);
     assert.ok(page, doc.id);
     assert.equal(doc.part, page.part);
-    assert.ok(doc.title.length > 0, doc.id);
-  }
-  // A prep doc has no part number.
-  for (const doc of prepDocs) {
-    assert.equal(doc.group, "prep", doc.id);
-    assert.equal(doc.part, null, doc.id);
-    assert.ok(AREAS.some((area) => area.title === doc.page), doc.id);
     assert.ok(doc.title.length > 0, doc.id);
   }
 });
@@ -156,68 +144,8 @@ test("docs are JSON-safe", () => {
   assert.deepEqual(copy, docs);
 });
 
-test("buildPrepSearchDocs gives one doc for each item with a /prep/<area>/#<id> href", () => {
-  assert.equal(prepDocs.length, ALL_ITEMS.length);
-  assert.ok(prepDocs.length > 0);
-  const intern = prepDocs.find((doc) => doc.id === "/prep/intern/#intern-001");
-  assert.ok(intern);
-  assert.equal(intern.href, "/prep/intern/#intern-001");
-  assert.equal(intern.page, "Intern");
-  assert.equal(intern.group, "prep");
-  assert.equal(intern.part, null);
-  assert.equal(intern.title, "What is software testing, and why does it matter?");
-  assert.ok(intern.text.includes("A simple example"), "template text");
-  assert.ok(intern.text.includes("cost-effective way to find defects"), "example text");
-  assert.ok(intern.text.includes("The interviewer checks"), "behind text");
-  assert.ok(!intern.text.includes(intern.title), "the title is not repeated in the text");
-  for (const { area, item } of prepEntries) {
-    const doc = prepDocs.find((d) => d.href === `/prep/${area.slug}/#${item.id}`);
-    assert.ok(doc, item.id);
-    assert.equal(doc.id, doc.href);
-    assert.equal(doc.page, area.title);
-  }
-});
-
-test("a task doc uses the title, and an mcq doc has the options and the explanation", () => {
-  const task = prepEntries.find((entry) => entry.item.kind === "task");
-  assert.ok(task && task.item.kind === "task");
-  const [taskDoc] = buildPrepSearchDocs([task]);
-  assert.equal(taskDoc.title, task.item.title);
-  assert.equal(taskDoc.text, task.item.details);
-
-  const mcq = prepEntries.find((entry) => entry.item.id === "mcq-test-001");
-  assert.ok(mcq && mcq.item.kind === "mcq");
-  const [mcqDoc] = buildPrepSearchDocs([mcq]);
-  assert.equal(mcqDoc.href, "/prep/mcq-test/#mcq-test-001");
-  assert.equal(mcqDoc.page, "MCQ Test");
-  assert.equal(mcqDoc.title, mcq.item.question);
-  for (const option of mcq.item.options) assert.ok(mcqDoc.text.includes(option), option);
-  assert.ok(mcqDoc.text.includes(mcq.item.explanation));
-});
-
-test("buildPrepSearchDocs gives no docs for no entries", () => {
-  assert.deepEqual(buildPrepSearchDocs([]), []);
-});
-
-test("prep doc ids are unique and do not clash with tutorial ids", () => {
-  const ids = new Set(docs.map((doc) => doc.id));
-  for (const doc of prepDocs) assert.ok(!ids.has(doc.id), doc.id);
-  const all = [...docs, ...prepDocs].map((doc) => doc.id);
-  assert.equal(new Set(all).size, all.length);
-});
-
-test("prep docs are JSON-safe", () => {
-  const copy = JSON.parse(JSON.stringify(prepDocs)) as SearchDoc[];
-  assert.deepEqual(copy, prepDocs);
-});
-
-test("a prep question is found by runSearch", () => {
-  const index = createIndex([...docs, ...prepDocs]);
-  const hits = runSearch(index, "difference between verification and validation");
-  assert.equal(hits[0].href, "/prep/intern/#intern-002");
-  assert.equal(hits[0].part, null);
-  assert.equal(hits[0].page, "Intern");
-  // A tutorial hit keeps its part number.
+test("a tutorial hit keeps its part number", () => {
+  const index = createIndex(docs);
   assert.equal(runSearch(index, "hooks")[0].part, PAGES.find((page) => page.slug === "hooks")?.part);
 });
 
@@ -259,15 +187,15 @@ test("a linux doc has group 'linux', part null, and an href '/linux/<stage>/#<an
   assert.equal(shell.href, "/linux/shell-basics/#shell-basics-1");
 });
 
-test("linux doc ids are unique and do not clash with tutorial or prep ids", () => {
-  const ids = new Set([...docs, ...prepDocs].map((doc) => doc.id));
+test("linux doc ids are unique and do not clash with tutorial ids", () => {
+  const ids = new Set(docs.map((doc) => doc.id));
   for (const doc of linuxDocs) assert.ok(!ids.has(doc.id), doc.id);
-  const all = [...docs, ...prepDocs, ...linuxDocs].map((doc) => doc.id);
+  const all = [...docs, ...linuxDocs].map((doc) => doc.id);
   assert.equal(new Set(all).size, all.length);
 });
 
 test("a search for the topic title 'Cgroups' finds a hit with group 'linux' and href '/linux/containers/#cgroups'", () => {
-  const index = createIndex([...docs, ...prepDocs, ...linuxDocs]);
+  const index = createIndex([...docs, ...linuxDocs]);
   const hit = runSearch(index, "Cgroups").find((h) => h.href === "/linux/containers/#cgroups");
   assert.ok(hit);
   assert.equal(hit.group, "linux");
@@ -275,7 +203,6 @@ test("a search for the topic title 'Cgroups' finds a hit with group 'linux' and 
 });
 
 test("runSearch hits carry the group", () => {
-  const index = createIndex([...docs, ...prepDocs, ...linuxDocs]);
+  const index = createIndex([...docs, ...linuxDocs]);
   assert.equal(runSearch(index, "hooks")[0].group, "extend");
-  assert.equal(runSearch(index, "difference between verification and validation")[0].group, "prep");
 });

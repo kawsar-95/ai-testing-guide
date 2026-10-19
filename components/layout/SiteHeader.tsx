@@ -3,8 +3,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { LINUX_HOME } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
-import { PREP_HOME } from "@/lib/prep/areas";
-import { PREP_UI } from "@/lib/prep/ui";
 import { SITE_NAME } from "@/lib/site";
 import { MobileNav } from "./MobileNav";
 import { ThemeToggle } from "./ThemeToggle";
@@ -46,12 +44,6 @@ export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
           <span className="truncate font-display text-[17px] font-semibold tracking-tight">{SITE_NAME}</span>
         </Link>
         <div className="ml-auto flex items-center gap-2">
-          <Link
-            href={PREP_HOME}
-            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent md:inline"
-          >
-            {PREP_UI.headerLink}
-          </Link>
           <Link
             href={LINUX_HOME}
             className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent md:inline"

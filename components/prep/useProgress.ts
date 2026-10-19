@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { createProgressStore } from "@/lib/prep/store";
-import { STORAGE_KEY } from "@/lib/prep/progress";
 import { createSubscribe, getBrowserStorage } from "./browser-store";
 
 type ProgressStore = ReturnType<typeof createProgressStore>;
@@ -37,6 +36,3 @@ export function createUseProgress(key: string): () => {
     return useMemo(() => ({ done, toggle, markDone }), [done, toggle, markDone]);
   };
 }
-
-/** The progress hook of the Interview Prep module. */
-export const useProgress = createUseProgress(STORAGE_KEY);

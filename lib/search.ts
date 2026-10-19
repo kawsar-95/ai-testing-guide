@@ -6,12 +6,11 @@ import MiniSearch from "minisearch";
 import { headingsFromSource, plainTitle, sourceLines } from "./headings.ts";
 import type { SourceLine } from "./headings.ts";
 import type { LinuxStage } from "./linux/stages.ts";
-import type { PrepArea, PrepItem } from "./prep/types.ts";
 
 export type SearchDoc = {
   id: string;
   href: string;
-  /** The part number of a tutorial page. `null` for a prep item (group "prep"). */
+  /** The part number of a tutorial page. `null` for a Linux stage page (group "linux"). */
   part: number | null;
   group: string;
   page: string;
@@ -109,29 +108,6 @@ export function buildLinuxSearchDocs(entries: { stage: LinuxStage; source: strin
   return entries.flatMap(({ stage, source }) =>
     pageDocs({ href: stage.href, title: stage.title, part: null, group: "linux" }, source),
   );
-}
-
-/** The text of an item without its title: the other text fields, joined by a space. */
-function prepFields(item: PrepItem): { title: string; text: string } {
-  switch (item.kind) {
-    case "qa":
-      return { title: item.question, text: [item.template, item.example, item.behind].join(" ") };
-    case "task":
-      return { title: item.title, text: item.details };
-    case "mcq":
-      return { title: item.question, text: [...item.options, item.explanation].join(" ") };
-  }
-}
-
-/**
- * One doc for each prep item. The id and the href are `/prep/<area>/#<item id>`:
- * the area page gives each item an element with the id of the item.
- */
-export function buildPrepSearchDocs(entries: { area: PrepArea; item: PrepItem }[]): SearchDoc[] {
-  return entries.map(({ area, item }) => {
-    const href = `${area.href}#${item.id}`;
-    return { id: href, href, part: null, group: "prep", page: area.title, ...prepFields(item) };
-  });
 }
 
 const SEARCH_OPTIONS = {

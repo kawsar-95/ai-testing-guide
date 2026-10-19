@@ -69,7 +69,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `lib/search.ts` | Builds the search docs, the index, and runs a search |
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
-| `lib/pwa.ts` | The web manifest, the precache list (all 51 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (all 37 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels and the three START HERE pages |
 | `lib/reading.ts` | `articleProgress` and `showBackToTop` for the reading aids |
@@ -78,7 +78,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `mdx-components.tsx` | Registers the MDX components |
 | `content/<group>/<page>.mdx` | The 23 tutorial pages |
 | `content/linux/<stage>.mdx` | The 12 Linux stage pages |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `reading`, `search`, `theme`, `ui`, `linux-data`, `linux-progress` |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `reading`, `search`, `theme`, `ui`, `progress`, `linux-data`, `linux-progress` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
 | `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
@@ -86,16 +86,13 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the sidebar, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 51 routes:
+The site has 37 routes:
 
 | Routes | Count |
 |---|---|
 | `/` | 1 |
 | `/<group>/<page>/` for the 23 tutorial pages | 23 |
-| `/prep/` and the 13 prep areas | 14 |
 | `/linux/` and the 12 Linux stages | 13 |
-
-The prep module has its own design: `docs/superpowers/specs/2026-10-13-prep-module-design.md`.
 
 | Group | Folder | Pages |
 |---|---|---|
@@ -111,6 +108,8 @@ The prep module has its own design: `docs/superpowers/specs/2026-10-13-prep-modu
 The Linux module is the roadmap at `/linux/` and 12 stage pages at `/linux/<stage>/`. The design is `docs/superpowers/specs/2026-10-16-linux-module-design.md`.
 
 `lib/linux/stages.ts` is the one ordered list of the stages and their topics. It drives the sidebar, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `linux-progress`).
+
+The progress code is shared and lives under `prep` names, left from the Interview Prep module that was removed on 2026-10-20: `lib/prep/progress.ts`, `lib/prep/store.ts`, and `components/prep/{useProgress,ProgressBar,browser-store}`. `tests/progress.test.ts` tests it. The Linux module uses it. Its default `localStorage` key is still `prep-progress`. The removed module (the `/prep/` pages, `content/prep/`, the quiz and tables) is in the git history. Its spec, plan, and research notes stay in `docs/superpowers/`.
 
 | Rule | Detail |
 |---|---|
@@ -223,7 +222,7 @@ To change a page:
 
 The site installs as an app and works offline.
 
-- The service worker caches all 51 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
+- The service worker caches all 37 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Each build writes a new cache version into `/sw.js`. The new worker deletes the old caches.
 - Only production builds register the service worker. `npm run dev` has none. To test it, run `npm run build` and serve `out/`.
 - A new page in `lib/nav.ts` goes into the precache list automatically.
@@ -244,7 +243,7 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 | `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
-| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `prep-route-map.json`, and `linux-route-map.json` that has no page in `out/` |
+| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json` and `linux-route-map.json` that has no page in `out/` |
 | `python3 scripts/check_links.py out` | Lists broken internal links and assets |
 | `python3 scripts/check_outline.py out` | Checks that each "On this page" link points to an element id |
 | `python3 scripts/check_sources.py out` | Checks each tutorial page and each Linux stage page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |

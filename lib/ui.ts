@@ -23,7 +23,9 @@ export const search = "Search";
 export const searchAll = "Search all parts";
 export const searchClose = "Close search";
 export const searchResults = "Search results";
-export const searchType = `Type to search the ${PAGES.length} parts and the interview prep.`;
+export const searchType = `Type to search the ${PAGES.length} parts and the Linux stages.`;
+/** The text of the link to the tutorial in the sidebar of another section. */
+export const crossToTutorial = "Tutorial";
 export const searchLoading = "Loading the search index…";
 export const searchNone = "No results.";
 export const searchUnavailable = "Search is not available now. Try again later.";
