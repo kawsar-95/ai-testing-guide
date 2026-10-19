@@ -154,7 +154,7 @@ The sentence "Use `sudo -n` in CI, so a missing rule fails at once" is the tutor
 | F13 | `ls` shows `s`/`S` for setuid/setgid and `t`/`T` for sticky. | S27 | "‘s’ If the set-user-ID or set-group-ID bit and the corresponding executable bit are both set." / "‘S’ ... executable bit is not set." |
 | F14 | `/tmp` has the sticky bit (`drwxrwxrwt` in the example). | S25 | "commonly found on world-writable directories like /tmp." |
 | F15 | `stat -c` prints with a format; `%A` symbolic mode, `%a` octal, `%U` owner, `%G` group, `%n` name. | S28 | "%a permission bits in octal" / "%A permission bits and file type in human readable form" / "%n file name" |
-| F17 | The `ls -l` comment of the first File Permissions block depends on the umask (664 with umask 002, 644 with umask 022); the page states both. | S35 | "because 0666 & ~022 = 0644; i.e., rw-r--r--" |
+| F17 | The `ls -l` comment of the first File Permissions block depends on the umask (664 with umask 002, 644 with umask 022); the page states both. The comment is code, with no cite. The umask rule itself is row M8 (S35, Managing Permissions). | none | local check (umask 0002 gave `-rw-rw-r--`) |
 | F16 | `/usr/bin/passwd` is setuid root on the test machine (`-rwsr-xr-x`). | local check | not a citable page; shown as an example of the `s` bit |
 
 ### Managing Permissions
