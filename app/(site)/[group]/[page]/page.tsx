@@ -46,7 +46,7 @@ export default async function ContentPage({ params }: PageProps<"/[group]/[page]
   return (
     <>
       <ReadingProgress />
-      <div className="mx-auto w-full max-w-[728px] px-4 py-12 sm:px-6 sm:py-16 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
+      <div className="mx-auto w-full max-w-[728px] px-4 py-7 sm:px-6 sm:py-10 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
         <div className="min-w-0">
           <PageHeader page={page} />
           <article data-content className="mdx">
@@ -65,7 +65,7 @@ export default async function ContentPage({ params }: PageProps<"/[group]/[page]
             />
           </article>
           {info ? <Sources sources={info.sources} /> : null}
-          <div className="mt-28">
+          <div className="mt-12">
             <PrevNext prev={prev} next={next} />
           </div>
         </div>

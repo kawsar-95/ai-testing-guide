@@ -45,7 +45,7 @@ function StageNav({ stage }: { stage: LinuxStage }) {
   return (
     <nav
       aria-label={LINUX_UI.stageNav}
-      className="mt-16 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-6 text-[15px]"
+      className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-6 text-[15px]"
     >
       {previous ? (
         <Link href={previous.href} className={NAV_LINK}>
@@ -84,10 +84,10 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
   return (
     <>
       <ReadingProgress />
-      <div className="mx-auto w-full max-w-[728px] px-4 py-12 sm:px-6 sm:py-16 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
+      <div className="mx-auto w-full max-w-[728px] px-4 py-7 sm:px-6 sm:py-10 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
         <div className="min-w-0">
-          <p className={`mb-5 ${LABEL} text-accent`}>{LINUX_UI.stageEyebrow(stage.number)}</p>
-          <div className="mb-8">
+          <p className={`mb-3 ${LABEL} text-accent`}>{LINUX_UI.stageEyebrow(stage.number)}</p>
+          <div className="mb-6">
             <LinuxProgressSummary ids={ids} label={LINUX_UI.stageProgressLabel(stage.title)} />
           </div>
           <article data-content className="mdx">
@@ -106,7 +106,7 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
             />
           </article>
           {info ? <Sources sources={info.sources} /> : null}
-          <section aria-labelledby="checklist-heading" className="mt-16">
+          <section aria-labelledby="checklist-heading" className="mt-10">
             <h2
               id="checklist-heading"
               className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}

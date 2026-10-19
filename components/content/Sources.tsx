@@ -9,14 +9,14 @@ import { sourceAccessed, sourcesHeading } from "@/lib/ui";
 export function Sources({ sources }: { sources: Source[] }) {
   if (sources.length === 0) return null;
   return (
-    <section aria-labelledby="sources" className="mt-20 border-t border-border pt-10">
+    <section aria-labelledby="sources" className="mt-12 border-t border-border pt-6">
       <h2
         id="sources"
-        className="scroll-mt-20 font-display text-3xl font-medium tracking-[-0.01em] text-text"
+        className="scroll-mt-20 font-display text-2xl font-medium tracking-[-0.01em] text-text"
       >
         {sourcesHeading}
       </h2>
-      <ol role="list" className="mt-6 list-none divide-y divide-border p-0">
+      <ol role="list" className="mt-4 list-none divide-y divide-border p-0">
         {sources.map((source, index) => (
           <li
             key={`${index}-${source.url}`}

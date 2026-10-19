@@ -43,34 +43,34 @@ export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
         <Link href="/" className="flex min-w-0 items-center gap-2.5 text-text no-underline">
           <span
             aria-hidden="true"
-            className="grid size-7 shrink-0 place-items-center rounded-md border border-border-strong bg-bg-raised font-display text-[15px] font-semibold italic leading-none text-accent"
+            className="grid size-7 shrink-0 place-items-center rounded-md border max-[420px]:hidden border-border-strong bg-bg-raised font-display text-[15px] font-semibold italic leading-none text-accent"
           >
             QA
           </span>
-          <span className="truncate font-display text-[17px] font-semibold tracking-tight">{SITE_NAME}</span>
+          <span className="truncate font-display text-[15px] font-semibold sm:text-[16px] tracking-tight">{SITE_NAME}</span>
         </Link>
         <div className="ml-auto flex items-center gap-2">
           <Link
             href={LINUX_HOME}
-            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent md:inline"
+            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent lg:inline"
           >
             {LINUX_UI.headerLink}
           </Link>
           <Link
             href={FUNDAMENTALS_HOME}
-            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent md:inline"
+            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent lg:inline"
           >
             {FUNDAMENTALS_UI.headerLink}
           </Link>
           <Link
             href={SYSTEM_DESIGN_HOME}
-            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent md:inline"
+            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent lg:inline"
           >
             {SYSTEM_DESIGN_UI.headerLink}
           </Link>
           <Link
             href={ARCHITECTURE_HOME}
-            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent md:inline"
+            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent lg:inline"
           >
             {ARCHITECTURE_UI.headerLink}
           </Link>

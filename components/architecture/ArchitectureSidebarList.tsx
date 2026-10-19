@@ -19,7 +19,7 @@ export function ArchitectureSidebarList({
 }) {
   const { done } = useArchitectureProgress();
   return (
-    <nav aria-label={ARCHITECTURE_UI.sidebarNav} className="px-3 py-6">
+    <nav aria-label={ARCHITECTURE_UI.sidebarNav} className="px-3 py-4">
       <ol className="m-0 list-none space-y-px p-0">
         {TOPICS.map((item) => {
           const active = item.href === activePath;
@@ -31,7 +31,7 @@ export function ArchitectureSidebarList({
                 aria-current={active ? "page" : undefined}
                 onClick={onNavigate}
                 className={
-                  "group block rounded-r-md border-l-2 px-3 py-2 no-underline transition-colors " +
+                  "group block rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
                   (active
                     ? "border-accent bg-bg-raised"
                     : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")

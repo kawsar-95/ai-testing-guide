@@ -48,13 +48,13 @@ export function NavList({
   const current = sectionOf(activePath);
   return (
     <>
-      <div className="space-y-2 px-3 pt-6">
+      <div className="flex flex-wrap gap-1.5 px-3 pt-4">
         {SECTIONS.filter((section) => section.id !== current).map((section) => (
           <Link
             key={section.id}
             href={section.href}
             onClick={onNavigate}
-            className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-[13.5px] text-text-dim no-underline transition-colors hover:border-accent hover:text-accent"
+            className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[12.5px] text-text-dim no-underline transition-colors hover:border-accent hover:text-accent"
           >
             <span>{section.label}</span>
             <span aria-hidden="true">{section.arrow}</span>
