@@ -5,6 +5,7 @@ import { Cite } from "@/components/mdx/Cite";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
 import { CardGrid } from "@/components/mdx/CardGrid";
 import { InfoCard } from "@/components/mdx/InfoCard";
+import { MdxImage } from "@/components/mdx/MdxImage";
 
 // The custom components the MDX files in content/ use without an import.
 const components: MDXComponents = {
@@ -12,6 +13,9 @@ const components: MDXComponents = {
   CardGrid,
   Cite,
   InfoCard,
+  MdxImage,
+  // Images get the basePath and a full-size link (a plain <img> has no basePath).
+  img: MdxImage,
   pre: CodeBlock,
   // Site-internal links ("/group/page/") go through next/link, which adds the
   // basePath on GitHub Pages. In-page anchors and external links stay plain.

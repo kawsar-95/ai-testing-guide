@@ -30,6 +30,7 @@ export const searchLoading = "Loading the search index…";
 export const searchNone = "No results.";
 export const searchUnavailable = "Search is not available now. Try again later.";
 
+export const openImageFullSize = "Open the image in full size";
 export const sourcesHeading = "Sources";
 export const suggestEdit = "Suggest an edit";
 export const metaSections = (n: number) => `${n} ${n === 1 ? "section" : "sections"}`;
