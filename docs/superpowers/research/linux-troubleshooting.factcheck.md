@@ -179,3 +179,32 @@ Checked commit 3d7b8e8 (`git diff 77340d5 3d7b8e8`) against my 4 round-2 FAILs.
 Round 3 counts: 9 rows, PASS 9, FAIL 0.
 
 Open FAILs: 0
+
+## Round 4 (2026-10-19)
+
+Checked commit 48bb752 (`git diff 3d7b8e8 48bb752` of the page and the notes). S45 read again with WebFetch from `salsa.debian.org` and `sources.debian.org`.
+
+| # | Location | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| R4-1 | System Logs | RHEL uses `/var/log/messages` | 29 | PASS | S29: `*.info;mail.none;authpriv.none;cron.none action(type="omfile" file="/var/log/messages")` |
+| R4-2 | System Logs | Debian uses `/var/log/syslog` | 45 | PASS | S45 (both hosts): `*.*;auth,authpriv.none		-/var/log/syslog`; no line names `/var/log/messages`. |
+| R4-3 | System Logs | Ubuntu uses `/var/log/syslog` | 26 | PASS | S26 is the rsyslog doc "Understanding the Default Configuration": "Distributions like Ubuntu, Debian, or RHEL ship rsyslog with a mixed configuration style", with the example line `*.* /var/log/syslog`. It names the file for the layout, not one file per distribution; together with S45 (Debian) the sentence is acceptable. |
+| R4-4 | Uptime and Load | PSI: `some` = some tasks stall; `full` = all non-idle tasks stall | 13 | PASS | S13: "The "full" line indicates the share of time in which all non-idle tasks are stalled on a given resource simultaneously." Note (not blocking): S13 says cpu `full` is "undefined at the system level" and reads 0; the page's code uses `io`. |
+| R4-5 | Uptime and Load | `avg10`, `avg60`, `avg300` = percentages over 10, 60, 300 s; `total` in microseconds | 13 | PASS | S13: "The ratios (in %) are tracked as recent trends over ten, sixty, and three hundred second windows" / "The total absolute stall time (in us)" |
+| R4-6 | Uptime and Load | "No file means PSI is off (tutorial's own note)" | 13 | OPINION-OK | Marked as the tutorial's own note. Plausible: the three files exist here, and S13 does not describe the absent case. |
+| R4-7 | Intro | Cite 1 after the first sentence; ranges reordered (`192.0.2.0/24`, `203.0.113.0/24`, `198.51.100.0/24`) with cite 48 | 1, 48 | PASS | RFC 5737 s.3 (fetched again): "192.0.2.0/24 (TEST-NET-1), 198.51.100.0/24 (TEST-NET-2), and 203.0.113.0/24 (TEST-NET-3) are provided for use in documentation." The three values match; the order is only different. The page has no wrong range. |
+| R4-8 | Available Memory and Disk (code) | `du -x` label "GNU option" removed | 17 | PASS | S17: "-x, --one-file-system skip directories on different file systems". The comment is now only "stays on one filesystem". |
+| R4-9 | Server Review (code) | `ss -tuln # (-p adds the process; other users' processes need root)` | 37 | PASS | S37: "-p, --processes Show processes using sockets." The root need is not in S37; local run as a normal user: 25 of 37 sockets show process data with `-p`. Matches the comment. |
+| R4-10 | Server Review, Available Memory and Disk, System Logs, Authentication Logs (code) | "root or journal group" comments on `journalctl` lines | 21 | PASS | S21: "only root and users who are members of a few special groups are granted access to the system journal". |
+| R4-11 | Authentication Logs (code) | `sudo faillock --user alice # needs root; only with pam_faillock` | 31 | PASS | S31: "It can display the recent failed authentication attempts of the username". The record files live under `/var/run/faillock/`; "needs root" is right for another user's records. Comment is clear. |
+| R4-12 | Authentication Logs | "Recent Debian and Ubuntu may lack them: install the package that provides `last` (tutorial's own note)" | 30 | PASS | Marked as the tutorial's own note. Local: `last` and `lastb` are not installed on Ubuntu 26.04. No package name is claimed. |
+| R4-13 | Whole diff | Reworded sentences: `uptime` "(1, 5, 15 minutes)", "Load is not divided by CPUs", `st` "time the hypervisor took", tip "tasks queue for a CPU or for I/O", logrotate sentence, brute-force sentence, warning callout "They hold user names and IP addresses." | 8, 10, 11, 12, 24 | PASS | Meaning is the same as the sentences that passed earlier (S8 "idle 75% of the time", S11/S12 `st`, S24 rotation, compression, removal). The callout still has its title "These logs hold personal data". |
+| R4-14 | Sources and notes | New S48 is cited; notes rows 75 to 80 match the page; quote cells are 25 words or fewer | 48 | PASS | Script checks: 48 of 48 sources cited, every page cite has a notes row and the reverse, no notes row has more than 25 quote words. |
+| R4-15 | Sections | Words per section with heading, callout titles, and table cell text, no pipes | - | PASS | Server Review 226, Uptime and Load 248, Available Memory and Disk 245, System Logs 242, Authentication Logs 248, Troubleshooting 240. All at most 250. |
+| R4-16 | Structure | 6 headings; 1 code fence and 1 tip callout per topic; no sentence above 25 words | - | PASS | Longest sentence: 25 words ("Compare the load with `nproc`; with a cgroup v2 CPU quota ..."). No table cell above 25 words. |
+| R4-17 | Overlap | `linux_overlap.py` on flat dirs | - | PASS | Official dir: 46 files read, exit 0, 0 hits. Roadmap raw dir: exit 0, 0 hits. |
+| R4-18 | Privacy | No home path, login name, or host data in the page, the notes, or this report | - | PASS | `grep` for a home path and the login name: 0 hits in the three files. |
+
+Round 4 counts: 18 rows, PASS 17, OPINION-OK 1, FAIL 0.
+
+Open FAILs: 0
