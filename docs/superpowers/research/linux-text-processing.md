@@ -110,6 +110,7 @@ The `sudo tee -a` advice is the tutorial's own, based on C9. The danger and tip 
 | C38 | Options `-i`, `-v`, `-n`, `-c`. | S12 | "Ignore case distinctions" / "Invert the sense of matching" / "1-based line number" / "a count of matching lines" |
 | C38b | Options `-o`, `-r`, `-q`, `-A/-B/-C`. | S12 | "Print only the matched" / "under each directory, recursively" / "Exit immediately with zero status if any match is found" / "Print NUM lines of trailing context" |
 | C39 | Exit status 0, 1, 2. | S12 | "the exit status is 0 if a line is selected, 1 if no lines were selected, and 2 if an error occurred" |
+| C39b | Tip: `grep -q ERROR app.log && exit 1; [ $? -eq 1 ] \|\| exit 1` fails on a match (0) and on an error (2), and continues on no match (1). This is the tutorial's own advice and a local check, not a cited claim. | S12 (for 0, 1, 2) | "the exit status is 0 if a line is selected, 1 if no lines were selected, and 2 if an error occurred" |
 | C40 | `-H` is a GNU extension; `-P` selects Perl-style patterns. | S12 | "-H, --with-filename ... This is a GNU extension." / "-P ... Perl-compatible regular expressions" |
 
 Local checks: `grep -n ERROR`, `-c`, `-E`, `-v`, `-q` gave the outputs in the page comments; `grep -q nothing` returned 1.
@@ -341,6 +342,7 @@ The gloss of "tab stop" is the tutorial's own paraphrase of C145.
 | C155 | `>` empties the output file before the command starts. | S5 | See C11, C20. |
 
 S40 does not say `--first-only` is GNU-only; the page says "Other versions of `unexpand` may lack it" (hedged). Local run of the `code.txt` example: tab counts 0, 1, 2.
+Order of options: the S40 text says that `--first-only` "(overrides -a)" and "New scripts should use --first-only -t tab1[,tab2]… instead". A local run of GNU coreutils 9.7 `unexpand` gave 1 tab for `-t 4 --first-only` and for `--first-only -t 4` (uutils 0.10.0 gave the same). So the tip may use either order.
 
 ## Fix round 1 (2026-10-19): new sources and claims
 Official pages fetched for the fix are in `<scratch dir>/stage-text-processing-fix/` (gawk Expression Patterns, utf-8(7), systemd-journald.service(8), POSIX head, tail, unexpand, and the man7 pages of wc, head, tail, nl, paste, join, split, tr, expand, unexpand).
