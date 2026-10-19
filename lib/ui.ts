@@ -45,3 +45,8 @@ export const sourceAccessed = (date: string) => `accessed ${date}`;
 export const citeLabel = (n: number) => `Source ${n}`;
 export const doLabel = "Do";
 export const dontLabel = "Don't";
+
+export const voiceToBangla = "Show the Bangla text in every section";
+export const voiceToTechnical = "Show the Technical text in every section";
+export const voiceGroup = "Text version";
+export const installApp = "Install this site as an app";
