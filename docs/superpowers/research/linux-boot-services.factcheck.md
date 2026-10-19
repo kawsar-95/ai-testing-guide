@@ -230,4 +230,20 @@ New and open FAILs (location and fix):
 
 All 18 FAILs of round 1 are fixed. Rows 122 to 148 re-check them.
 
-Open FAILs: 3
+Open FAILs: 3 (round 2; fixed in round 3)
+
+## Round 3 (2026-10-19)
+
+The writer fixed the 3 FAILs of round 2 in commit 054d210. I read `git diff 5607ee2 054d210` for the page (2 lines changed; the notes did not change). No new source was fetched.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 155 | Starting and Stopping Services (old row 136) | "That manager reads units from `~/.config/systemd/user` and other user directories, not from `/etc/systemd/system`." | 13 | PASS | True and clear: "That manager" now means the user manager. S13 user table: "$XDG_CONFIG_HOME/systemd/user or $HOME/.config/systemd/user User configuration". The user search path also has other directories, and `/etc/systemd/system` is not in it (local `systemctl --user show -p UnitPath`, round 1). Notes C56 has the same wording. |
+| 156 | Checking Service Status (old row 139) | "the newest lines of the journal (the log records that systemd keeps)" | 12, 18 | PASS | True and clear. S12: "followed by most recent log data from the journal". S18: "print the log entries stored in the journal by systemd-journald.service(8)". The gloss comes at the first use of "journal". |
+| 157 | Page quality: word counts (old row 149) | Each section has 100 to 250 words, counted without table pipes and separator tokens (headings, callout titles, and table cell text counted) | none | PASS | My count: Booting Linux 244, Boot Loaders 246, Service Management 226, Creating Services 249, Starting and Stopping Services 246, Checking Service Status 231, Checking Service Logs 212, Running Services 237. All are 250 or less. With the pipe tokens, Starting and Stopping Services would count 271; the coordinator set the method without pipes for the final round, so this row closes under that method. |
+| 158 | Page quality: sentences and structure | No sentence above 25 words; 8 headings; one code block and one tip per topic | none | PASS | Script: no sentence over 25 words (the one hit in Boot Loaders joins a callout title to the next sentence, 9 and 20 words). 8 headings = topic titles, 8 code blocks, 8 tips. |
+| 159 | Page quality: overlap and privacy | No copied run; no home-directory path or user name in the page, the notes, or this report | none | PASS | `linux_overlap.py` on the page body (without `page.sources`) prints nothing and exits 0 against my flat 30-file dir and the 243-file roadmap raw dir. A search for a home-directory path and for the user name in the page, the notes, and this report found nothing. |
+
+Counts of round 3: 5 rows (155 to 159). PASS 5, FAIL 0, OPINION-OK 0.
+
+Open FAILs: 0
