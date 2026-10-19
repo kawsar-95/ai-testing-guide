@@ -14,6 +14,8 @@ import { CodeBlock } from "@/components/mdx/CodeBlock";
 import { CardGrid } from "@/components/mdx/CardGrid";
 import { InfoCard } from "@/components/mdx/InfoCard";
 import { MdxImage } from "@/components/mdx/MdxImage";
+import { Bangla, Layman, Technical } from "@/components/voice/panels";
+import { Voices } from "@/components/voice/Voices";
 
 // The custom components the MDX files in content/ use without an import.
 const components: MDXComponents = {
@@ -31,6 +33,11 @@ const components: MDXComponents = {
   TestingClassificationDiagram,
   // The two versions of a Fundamentals topic (notes and ISTQB).
   Version,
+  // One ## section in three voices. See components/voice/Voices.tsx.
+  Voices,
+  Technical,
+  Layman,
+  Bangla,
   // Images get the basePath and a full-size link (a plain <img> has no basePath).
   img: MdxImage,
   pre: CodeBlock,

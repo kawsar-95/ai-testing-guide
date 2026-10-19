@@ -21,7 +21,9 @@ export function SectionNav({ items }: { items: OutlineItem[] }) {
       let current: string | null = null;
       for (const item of items) {
         const el = document.getElementById(item.id);
-        if (el && el.getBoundingClientRect().top <= line) current = item.id;
+        // An element in a hidden voice panel has no box. Skip it.
+        if (!el || el.getClientRects().length === 0) continue;
+        if (el.getBoundingClientRect().top <= line) current = item.id;
       }
       setActive(current);
     };
@@ -34,9 +36,19 @@ export function SectionNav({ items }: { items: OutlineItem[] }) {
       const el = document.getElementById(item.id);
       if (el) observer.observe(el);
     }
+    // A change of voice shows or hides panels, so the headings move.
+    const voices = new MutationObserver(update);
+    voices.observe(document.documentElement, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["data-voice", "data-voice-default"],
+    });
     update();
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      voices.disconnect();
+    };
   }, [items]);
 
   if (items.length === 0) return null;

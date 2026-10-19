@@ -45,3 +45,10 @@ export const sourceAccessed = (date: string) => `accessed ${date}`;
 export const citeLabel = (n: number) => `Source ${n}`;
 export const doLabel = "Do";
 export const dontLabel = "Don't";
+
+// The name of the header voice button starts with its visible word
+// (WCAG 2.5.3 Label in Name), so a speech user can say the word.
+export const voiceToBangla = "বাংলা – Show the Bangla text in every section";
+export const voiceToTechnical = "English – Show the Technical text in every section";
+export const voiceGroup = "Text version";
+export const installApp = "Install this site as an app";
