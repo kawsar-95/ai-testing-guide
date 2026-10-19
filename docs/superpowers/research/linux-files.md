@@ -120,7 +120,8 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 | C51 | `^K` cuts a line; `^U` pastes. | S16 | "Text can be cut from a file a whole line at a time with ^K." / "can be pasted at the current cursor position with ^U." |
 | C52 | `^W` searches. | S16 | "With the Search command (^F or ^W) you can search the current buffer" |
 | C53 | `^G` opens the help. | S16 | "The built-in help in nano is available by pressing ^G." |
-| C54 | At the save prompt Y saves and N discards, and `^C` cancels. The S14 tutorial says "C" cancels; that is wrong. Local test by the fact-checker: nano 8.7.1 shows `^C Cancel`, and typing c or C leaves the prompt open. The page uses `^C`. | S14, S16 | "Y to save the file and exit the editor" / "N to discard changes" / "Cancels the current command." |
+| C54 | At the save prompt Y saves and N discards. | S14 | "Y to save the file and exit the editor" / "N to discard changes" |
+| C54b | Ctrl+C cancels the save prompt. This is the tutorial's own observation, not a cited claim: the page has no cite for it. The S14 tutorial says "C" cancels; that is wrong. The nano manual (S16) does not name the key (it names only a cancel function: "Cancels the current command."). Local test by the fact-checker: nano 8.7.1 shows `^C Cancel`, typing c or C leaves the prompt open, and Ctrl+C cancels. | none | no quote |
 | C55 | The title bar shows "Modified" on the right for unsaved changes. | S16 | "displays "Modified" if the file has been modified since it was last saved or opened." |
 | C55c | With `-%` (`--stateflags`), a star after the file name shows the state instead; a nanorc file may set this option. | S16 | "When the buffer is modified, a star (*) is shown after the filename in the center of the title bar." |
 | C55b | A buffer is the text in memory. | S14 | "a new, unsaved file in the memory buffer" |
