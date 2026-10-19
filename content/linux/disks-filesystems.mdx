@@ -59,6 +59,8 @@ export const page = {
     { title: 'tmpfs mounts', publisher: 'Docker Docs', url: 'https://docs.docker.com/engine/storage/tmpfs/', accessed: '2026-10-19' },
     { title: 'Allocated devices', publisher: 'The Linux Kernel documentation', url: 'https://docs.kernel.org/admin-guide/devices.html', accessed: '2026-10-19' },
     { title: 'systemd.mount(5)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man5/systemd.mount.5.html', accessed: '2026-10-19' },
+    { title: 'lsof(8)', publisher: 'Debian Manpages (lsof)', url: 'https://manpages.debian.org/unstable/lsof/lsof.8.en.html', accessed: '2026-10-19' },
+    { title: 'resize2fs(8)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man8/resize2fs.8.html', accessed: '2026-10-19' },
   ],
 }
 
@@ -70,21 +72,21 @@ A disk is useless until you partition it, put a filesystem on it, and mount it. 
 
 ## Disks and Filesystems
 
-A block device is a device that the kernel reads and writes in fixed-size blocks, such as a disk. A whole disk has a name like `/dev/sda`. A partition adds a number, as in `/dev/sda1`. <Cite n={15} /> A virtual disk may have another name, such as `/dev/xvdc`. <Cite n={9} /> `lsblk -N` lists only NVMe disks (a flash disk interface), and `lsblk -v` lists only virtio disks (virtual disks of a VM). <Cite n={14} />
+A block device is a device that the kernel reads and writes in fixed-size blocks, such as a disk. A whole disk has a name like `/dev/sda`. A partition adds a number, as in `/dev/sda1`. <Cite n={15} /> `lsblk -N` and `lsblk -v` list only NVMe and virtio (virtual) disks. <Cite n={14} />
 
-A partition is a slice of a disk. The partition table records where each slice starts and ends, usually in sector 0. A sector is the unit in which a disk addresses its data. <Cite n={15} /> MBR (Master Boot Record, DOS) tables hold 4 primary partitions. One of them may be an extended partition that holds logical partitions. GPT (GUID Partition Table) is the modern standard, with checksums, UUIDs (unique IDs), and usually 128 partitions at most. <Cite n={15} /> MBR also limits a partition to 2 TB. <Cite n={2} />
+A partition is a slice of a disk. The partition table records where each slice starts and ends. A sector is the unit in which a disk addresses its data. <Cite n={15} /> An MBR (Master Boot Record) table sits in sector 0 and holds 4 primary partitions. GPT (GUID Partition Table) is the modern standard, with checksums and UUIDs (unique IDs). A GPT disk keeps a protective (guard) MBR in sector 0. <Cite n={15} /> MBR stores sector numbers in 32 bits, which allows about 2 TiB with 512-byte sectors. <Cite n={15} />
 
-A disk becomes usable in three steps: partition, make a filesystem, mount. <Cite n={8} /> `df` and `du` answer different questions. `df` reports the space of a whole filesystem. <Cite n={17} /> `du` adds up the space of the files below a path, so the two numbers can differ. `du -x` stays on one filesystem. <Cite n={18} /> `df -T` is a GNU option. <Cite n={17} />
+A disk becomes usable in three steps: partition, make a filesystem, mount. <Cite n={8} /> `df` reports the space of a whole filesystem. <Cite n={17} /> `du` adds up the files that it can see below a path, so the two numbers can differ. <Cite n={18} /> A mount can hide files below it. <Cite n={20} /> Reserved blocks, which only root may use, also lower the free space. <Cite n={33} /> `df -T` is a GNU option. <Cite n={17} />
 
 ```bash
 lsblk -f                  # the tree: disks, partitions, filesystems, mount points
 df -hT /                  # type and free space of the filesystem that holds /
-du -xsh /var/log          # space used by the files below one path
+du -xsh /var/log          # space of the files below one path (-x: one filesystem)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: print `lsblk -f` and `df -hT` at the start of each CI job. When a test fails with "No space left on device", the log then shows which filesystem was full.
+Tutorial's own advice: print `lsblk -f` and `df -hT` at the start of each CI job. If `df` shows a full disk and `du` does not, a deleted file that a process still holds open may be the cause. `lsof +L1` lists such files. <Cite n={54} />
 
 </Callout>
 
@@ -144,7 +146,7 @@ Tutorial's own advice: a test that makes thousands of tiny files can fill the in
 
 A mount point is a directory where a filesystem is attached to the tree. A new mount hides the old contents of that directory. <Cite n={20} /> <Cite n={7} /> `findmnt` prints the mounts as a tree, and `findmnt --target /path` shows the filesystem of a path. <Cite n={19} /> `/proc/mounts` lists the mounts that the current process sees, in `fstab` format. <Cite n={47} />
 
-`/etc/fstab` has one filesystem per line, with six fields. <Cite n={22} />
+`/etc/fstab` has six fields on each line. <Cite n={22} />
 
 | Field | Meaning |
 |---|---|
@@ -158,7 +160,7 @@ A mount point is a directory where a filesystem is attached to the tree. A new m
 
 <Callout type="danger" title="Mount and unmount with care">
 
-`umount -f` is for an unreachable NFS (network filesystem) share and may still hang. `umount -l` detaches a busy filesystem now and cleans up later. <Cite n={21} /> Find the user with `fuser -m` first. <Cite n={45} /> Run `findmnt --target /path` before you mount over a directory that has files.
+`umount -f` is for an unreachable NFS (network filesystem) share and may still hang. `umount -l` detaches a busy filesystem now and cleans up later. <Cite n={21} /> Find the user with `fuser -m` first. <Cite n={45} /> Before you mount over a directory, run `ls -A /path` to see files and `findmnt --target /path` to see mounts. <Cite n={27} /> <Cite n={19} />
 
 </Callout>
 
@@ -189,7 +191,7 @@ Add a disk in a fixed order. Each step needs the result of the step before it.
 
 ```bash
 lsblk -f                  # 1. read-only: the new disk has no FSTYPE and no MOUNTPOINTS
-# All lines below need root. /dev/sdX is a fake name: replace it with your checked device.
+# All commented lines below need root. /dev/sdX is a fake name: replace it with your checked device.
 # fdisk /dev/sdX          # 2. partition: n, then w to write
 # mkfs.ext4 /dev/sdX1     # 3. make the filesystem (ERASES the partition)
 # mkdir -p /mnt/data && mount /dev/sdX1 /mnt/data   # 4. mount
@@ -216,25 +218,25 @@ Swap is disk space that the kernel uses when memory is short. It can be a partit
 
 A new swap area needs two steps: `mkswap` prepares it, and `swapon` starts it. <Cite n={30} /> A swap file must not have holes (unwritten gaps). `cp` and `truncate` make files with holes, and `swapon` rejects them. The portable way to make the file is `dd` with `/dev/zero`. <Cite n={29} /> <Cite n={11} /> To keep swap after a reboot, add an entry of type `swap` to `/etc/fstab`. <Cite n={29} />
 
-In the latest kernel docs, `vm.swappiness` takes 0 to 200, and the default is 60. Older kernels may allow a smaller range. A low value tells the kernel that swap IO is costly. <Cite n={40} /> When the kernel runs out of memory, the OOM killer ends a process. <Cite n={40} /> A higher `oom_score` means a more likely victim. <Cite n={49} />
+In the latest kernel docs, `vm.swappiness` takes 0 to 200 (older kernels: less), and the default is 60. A low value tells the kernel that swap IO is costly. <Cite n={40} /> When the kernel runs out of memory, the OOM killer ends a process. <Cite n={40} /> A higher `oom_score` means a more likely victim. <Cite n={49} />
 
 ```bash
 swapon --show                  # active swap areas
 free -h                        # memory and swap, human units
 cat /proc/swaps                # the same areas, from the kernel
 cat /proc/sys/vm/swappiness    # the current swappiness
-cat /proc/self/oom_score       # the OOM score of this shell
+cat /proc/$$/oom_score         # the OOM score of this shell ($$ is its process ID)
 ```
 
 <Callout type="danger" title="Swap commands can lose data">
 
-`mkswap` erases the start of its target, so run it only on a checked partition or a new file. <Cite n={30} /> `swapoff` needs enough free memory to take the swapped pages back. Without it, `swapoff` fails with an out-of-memory status. <Cite n={29} />
+`mkswap` erases the start of its target, and `dd of=` overwrites its target. <Cite n={30} /> Check the target with `lsblk -f` first. A wrong `/etc/fstab` line can stop the boot. <Cite n={53} /> `swapoff` fails with an out-of-memory status when free memory cannot take the swapped pages back. <Cite n={29} /> Tutorial's own advice: it may also slow the host or start the OOM killer.
 
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: record `free -h` in the test logs. A runner with no swap may kill a test with the OOM killer, and a runner with swap may only run slowly. A container also counts `tmpfs` against its memory limit. <Cite n={51} />
+Tutorial's own advice: record `free -h` in the test logs. Without swap, memory pressure may kill a test. With swap, the test may only run slowly.
 
 </Callout>
 
@@ -244,16 +246,16 @@ LVM (Logical Volume Manager) builds virtual block devices from physical devices.
 
 `pvs`, `vgs`, and `lvs` report on each layer. <Cite n={41} /> They only report.
 
-`lvextend` grows an LV from the free extents of its VG. With `-r` it also resizes the filesystem. <Cite n={43} /> `ext4` can be resized online (mounted) or offline. <Cite n={35} /> A snapshot is a frozen image of an LV, for example for a backup. `lvcreate -s` makes one. <Cite n={42} /> The main gain is resizing without repartitioning. <Cite n={12} /> In this tutorial's view, the costs are one more layer to learn and a VG that can span several disks.
+`lvextend` grows an LV from the free extents of its VG. With `-r` it also resizes the filesystem. <Cite n={43} /> `ext4` can grow while mounted, but it shrinks only when unmounted. <Cite n={55} /> A snapshot is a frozen image of an LV, for example for a backup. `lvcreate -s` makes one. <Cite n={42} /> The main gain is resizing without repartitioning. <Cite n={12} /> In this tutorial's view, the costs are one more layer to learn and a VG that can span several disks.
 
 ```bash
 pvs                          # needs root and the lvm2 tools; physical volumes
 vgs                          # volume groups
 lvs                          # logical volumes
-# All lines below need root. vg0 and data are example names.
-# lvcreate -L 10G -n data vg0          # a new LV of 10 GiB
-# lvextend -r -L +5G vg0/data          # grow the LV and its filesystem
-# lvcreate -s -L 1G -n snap vg0/data   # a snapshot with 1 GiB for changes
+# All commented lines below need root. vgX and lvX are fake names.
+# lvcreate -L 10G -n lvX vgX           # a new LV of 10 GiB
+# lvextend -r -L +5G vgX/lvX           # grow the LV and its filesystem
+# lvcreate -s -L 1G -n snapX vgX/lvX   # a snapshot with 1 GiB for changes
 ```
 
 <Callout type="danger" title="Resizing an LV can lose data">

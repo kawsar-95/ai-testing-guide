@@ -9,7 +9,7 @@ Local checks (not citable pages), on Ubuntu with kernel 7.x, util-linux and core
 - `stat -f -c %T /` prints `ext2/ext3` on an `ext4` root. `findmnt -no FSTYPE /` prints `ext4`. This matches S26 (one magic number `0xef53` for ext2, ext3, ext4).
 - `echo x > /dev/full` fails with `No space left on device` and exit status 1.
 - The inode demo of the page ran: `ls -i a.txt b.txt` printed the same number twice, and `stat -c '%i inode, %h links' a.txt` printed `2 links`.
-- `swapon --show`, `free -h`, `cat /proc/swaps`, `cat /proc/sys/vm/swappiness` (60), `cat /proc/self/oom_score`, `df -i`, `findmnt --verify`, `findmnt --target /tmp` ran without root.
+- `swapon --show`, `free -h`, `cat /proc/swaps`, `cat /proc/sys/vm/swappiness` (60), `cat /proc/$$/oom_score` (733, same as `/proc/self/oom_score`), `df -i`, `findmnt --verify`, `findmnt --target /tmp` ran without root.
 - `lvs`, `vgs`, `pvs` are not installed on the test machine. The LVM section comes from the manuals only.
 
 Deliberate deviations from the stage brief:
@@ -19,7 +19,7 @@ Deliberate deviations from the stage brief:
 - S12 says `/boot` cannot be on a logical volume. No official page in this stage supports it, so the page does not state it.
 
 ## Sources
-Numbers S1…S53 are the indexes of `page.sources`. A page cite `<Cite n={k} />` points to S_k.
+Numbers S1…S55 are the indexes of `page.sources`. A page cite `<Cite n={k} />` points to S_k.
 
 S1. Linux Roadmap — roadmap.sh — https://roadmap.sh/linux — accessed 2026-10-19
 S2. Partitions And Filesystems In Linux - Introduction — LinuxForDevices — https://www.linuxfordevices.com/tutorials/linux/partitions-and-filesystems — accessed 2026-10-19 (roadmap #060 and #093, `060.txt`)
@@ -74,6 +74,8 @@ S50. OverlayFS storage driver — Docker Docs — https://docs.docker.com/engine
 S51. tmpfs mounts — Docker Docs — https://docs.docker.com/engine/storage/tmpfs/ — accessed 2026-10-19 (`C002.txt`)
 S52. Allocated devices — The Linux Kernel documentation — https://docs.kernel.org/admin-guide/devices.html — accessed 2026-10-19 (`D001.txt`)
 S53. systemd.mount(5) — man7.org — https://man7.org/linux/man-pages/man5/systemd.mount.5.html — accessed 2026-10-19 (`B011.txt`; added in fix round 1, at the end of the list so that no number moves)
+S54. lsof(8) — Debian Manpages (lsof) — https://manpages.debian.org/unstable/lsof/lsof.8.en.html — accessed 2026-10-19 (`E001.txt`; added in review fix 1)
+S55. resize2fs(8) — man7.org — https://man7.org/linux/man-pages/man8/resize2fs.8.html — accessed 2026-10-19 (`E002.txt`; added in review fix 1)
 
 Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmpfs(5)` (`B009`), `proc_partitions(5)` (`B006`), `proc_pid_oom_score_adj(5)` (`B005`), `pvs(8)` (`026`), `vgs(8)` (`027`), `lvs(8)` (`028`), and the roadmap link #132 (phoenixnap, `132.txt`; nothing in it that the man pages do not say better). Further reading: none of the links of this stage is `title-only`.
 
@@ -83,19 +85,23 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | # | Claim (as the page states it) | Source | Quote (≤25 words) |
 |---|---|---|---|
 | D1 | A whole disk is named like `/dev/sda`; a partition adds a number. | S15 | "A device name refers to the entire disk." / "/dev/sda1 is the first partition on the first hard disk in the system." |
-| D2 | A virtual disk can have another name, such as `/dev/xvdc`. | S9 | "New disk added is shown as /dev/xvdc. If we are adding physical disk it will show as /dev/sda" |
+| D2 | (Removed from the page in review fix 1: the `/dev/xvdc` sentence.) Source kept for step 2 of Adding Disks (S9: `w` and `q`). | S9 | "New disk added is shown as /dev/xvdc." |
 | D3 | `lsblk -N` lists only NVMe devices. `lsblk -v` lists only virtio devices. | S14 | "-N, --nvme Output info about NVMe devices only." / "-v, --virtio Output info about virtio devices only." |
-| D4 | The partition table is usually in sector 0. It records the division into partitions. | S15 | "This division is recorded in the partition table, usually found in sector 0 of the disk." |
+| D4 | The partition table records the division of a disk into partitions. The page no longer says "usually in sector 0" for every table; an MBR table sits in sector 0 (see D15). | S15 | "This division is recorded in the partition table, usually found in sector 0 of the disk." |
 | D5 | MBR has room for 4 primary partitions; one may be an extended partition that holds logical partitions. | S15 | "In sector 0 there is room for the description of 4 partitions (called `primary'). One of these may be an extended partition" |
-| D6 | GPT has checksums, UUIDs, and the number of partitions is usually restricted to 128. | S15 | "GPT uses 64-bit logical block addresses, checksums, UUIDs and names for partitions" / "usually restricted to 128 in many partitioning tools" |
-| D7 | MBR limits a partition to 2 TB. | S2 | Table row of "Partition tables": `Master Boot Record (MBR) 4 2TB` (max primary partitions 4, max size per partition 2TB; the table text is garbled in the fetch). |
+| D6 | GPT has checksums and UUIDs (the "usually 128 partitions" clause was cut for the word budget). | S15 | "GPT uses 64-bit logical block addresses, checksums, UUIDs and names for partitions" |
+| D7 | MBR stores sector numbers in 32 bits; with 512-byte sectors this allows about 2 TiB (fdisk writes "2 TB"; 2^32 x 512 bytes = 2 TiB). The page cites S15, not S2, for this. | S15 | "as an absolute number of sectors (given in 32 bits)" / "with 512-byte sectors this will work up to 2 TB" |
 | D8 | `df` reports the space of a whole filesystem. | S17 | "df displays the amount of space available on the file system containing each file name argument." |
-| D9 | `du` adds up usage of the files below a path; `-x` skips other filesystems. | S18 | "Summarize device usage of the set of FILEs, recursively for directories." / "-x, --one-file-system skip directories on different file systems" |
+| D9 | `du` adds up the files that it can see below a path. (`-x` is only in a code comment now.) | S18 | "Summarize device usage of the set of FILEs, recursively for directories." |
 | D10 | `df -T` is a GNU option (the `df` page documents the GNU version). `du -x` is not called GNU, so the page no longer says so. | S17 | "This manual page documents the GNU version of df." / "-T, --print-type print file system type" |
 | D11 | `lsblk -f` shows filesystem information; it is equal to `-o NAME,FSTYPE,FSVER,LABEL,UUID,FSAVAIL,FSUSE%,MOUNTPOINTS`. | S14 | "-f, --fs Output info about filesystems. This option is equivalent to -o NAME,FSTYPE,FSVER,LABEL,UUID,FSAVAIL,FSUSE%,MOUNTPOINTS." |
 | D12 | The "disk becomes usable" order (partition, filesystem, mount); the page sentence now has `<Cite n={8} />`. | S8 | "partition it with fdisk, format with mkfs, then mount permanently via /etc/fstab." |
 | D13 | Lede: a disk-full or boot failure on a CI runner is a disk topic (stage framing, no fact). | S1, S2 | The roadmap lists "Disks and Filesystems" as a topic. S2: "To store data on a device you need at least 1 partition on the device." |
 | D14 | Glosses added in fix round 1 (own words, no cite): NVMe = "a flash disk interface"; virtio = "virtual disks of a VM"; MBR = Master Boot Record; GPT = GUID Partition Table; UUIDs = unique IDs. | S15, S2 | fdisk(8): "GPT (GUID Partition Table)". S2: "Master Boot Record (MBR)". |
+| D15 | MBR table: sector 0, 4 primary partitions. A GPT disk keeps a protective MBR in sector 0. | S15 | "In sector 0 there is room for the description of 4 partitions" / "the first sector is still reserved for a protective MBR" |
+| D16 | A mount can hide files below it, so `df` counts files that `du` cannot see. | S20 | "The previous contents (if any) and owner and mode of dir become invisible" |
+| D17 | Reserved blocks only root may use lower the free space of other users (`mke2fs -m`, default 5%). | S33 | "the percentage of the file system blocks reserved for the super-user." |
+| D18 | `lsof +L1` lists open files that were deleted (unlinked). The page tip says a deleted file held open "may be the cause" when `df` is full and `du` is not; the space-held effect is the tutorial's own advice. | S54 | "A specification of the form ``+L1'' will select open files that have been unlinked." |
 
 ### Filesystems
 | # | Claim | Source | Quote |
@@ -149,6 +155,7 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | M11 | `umount -f` is for an unreachable NFS (network filesystem) share and may still hang; `-l` detaches now and cleans up later. | S21 | "(in case of an unreachable NFS system)" / "does not guarantee that umount command does not hang" / "Detach the filesystem from the file hierarchy now" |
 | M12 | `fuser -m` lists processes that access the files of a filesystem. | S45 | "All processes accessing files on that file system are listed." |
 | M13 | The `tmpfs` option `size=` caps a tmpfs (tip). | S38 | "mount -t tmpfs -o size=10G,nr_inodes=10k,mode=700 tmpfs /mytmpfs" |
+| M14 | `ls -A` lists files without `.` and `..`; `findmnt --target` shows the filesystem and mount of a path. The page uses `ls -A` to see files and `findmnt --target` to see mounts. | S27, S19 | S27: "-A, --almost-all do not list implied . and .." S19: "displays the filesystem for the given path." |
 
 ### Adding Disks
 | # | Claim | Source | Quote |
@@ -183,6 +190,8 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | W12 | `swapoff` can fail with exit status 2 when memory is too small to take the pages back. | S29 | "2 system has insufficient memory to stop swapping (OOM)" |
 | W13 | A tmpfs counts against the memory limit of a container (tip). | S51 | "that usage counts against the container's memory cgroup limit" |
 | W14 | The roadmap guide makes a swap file with `dd` as an alternative to `fallocate`, then `mkswap` and `swapon`. | S11 | "If fallocate is not available, you can use dd as an alternative: $ sudo dd if=/dev/zero of=/swapfile bs=1G count=1" |
+| W15 | Danger callout: `mkswap` erases the start of its target (S30); `dd of=` overwrites its target (own words); a wrong fstab line can stop the boot (S53, `nofail` side); `swapoff` fails with an out-of-memory status (S29); "may also slow the host or start the OOM killer" is the tutorial's own advice (marked on the page). | S30, S53, S29 | S53: "With nofail, this mount will be only wanted, not required, by local-fs.target" |
+| W16 | `cat /proc/$$/oom_score` prints the score of the shell (`$$` = its process ID). | S49 | "This file displays the current score that the kernel gives to this process" (local check: ran OK) |
 
 ### LVM
 | # | Claim | Source | Quote |
@@ -193,10 +202,11 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | L4 | An extent is the smallest unit of storage; LVM allocates extents. | S13, S42 | S13: "Physical Extent (PE): Smallest units of storage in a PV." S42: "this requires allocating logical extents from the VG's free physical extents." |
 | L5 | `pvs`, `vgs`, `lvs` report on PVs, VGs, LVs. | S41 | "pvs Report information about Physical Volumes." (the `lvm(8)` command list) / S41 `lvm fullreport`: "Report information about PVs, PV segments, VGs, LVs and LV segments, all at once." |
 | L6 | `lvextend` extends an LV from the free physical extents of the VG; `-r` resizes the filesystem. | S43 | "lvextend extends the size of an LV." / "allocating logical extents from the VG's free physical extents" / "-r\|--resizefs Resize the fs using the fs-specific resize command." |
-| L7 | An ext4 filesystem can be resized online (page gloss: while mounted) or offline (with `resize2fs`). | S35 | "further resize has to be done with resize2fs, either online, or offline." |
+| L7 | `ext4` can grow while mounted, but shrinks only unmounted (the page cites S55; S35 remains cited in Filesystems). | S55 | "enlarge or shrink an unmounted file system." / "If the file system is mounted, it can be used to expand the size" |
 | L8 | A snapshot is a frozen image of an origin LV; `lvcreate -s -L size` makes a COW snapshot. | S42 | "Snapshots provide a "frozen image" of an origin LV." / "lvcreate -s\|--snapshot -L\|--size Size[m\|UNIT] LV" |
 | L9 | The main advantage of LVM is easy resizing. | S12 | "The main advantage of LVM is how easy it is to resize a logical volume or volume group." |
 | L10 | `lvreduce` destroys data in the removed area; shrink the filesystem first. | S44 | "data in the reduced area is lost. Ensure that any file system on the LV is resized before running lvreduce" |
 | L11 | Costs (one more layer, VG spanning several disks) are the tutorial's own view, not a sourced fact. The VG spanning several PVs follows from L1. | S41 | "Each block of data in an LV is stored on one or more PV in the VG" (lvm(8) description). |
 | L12 | A snapshot LV holds space (the `-L` size is allocated). | S42 | "Extending a copy-on-write snapshot LV adds space for COW blocks." (S43) / `lvcreate -s -L Size` (S42) |
 | L13 | `lvcreate` and `lvextend` take free extents from the VG; `lvextend -r` resizes a filesystem. First check `vgs` and `lvs` (the tutorial's own advice, not a quote). | S42, S43 | S42: "requires allocating logical extents from the VG's free physical extents." S43: "-r\|--resizefs Resize the fs using the fs-specific resize command." |
+| L14 | The LVM example names are now fake (`vgX`, `lvX`, `snapX`) so that they cannot match a real VG or LV. | none | (no fact; safety wording) |
