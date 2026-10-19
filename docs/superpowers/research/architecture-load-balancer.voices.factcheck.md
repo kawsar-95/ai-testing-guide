@@ -22,10 +22,10 @@ Flagged items from the writer:
 | 7 | In plain words | Layman | Round Robin: the servers get the requests one after the other; NGINX default | "The requests go evenly across the servers, one after the other. This is the NGINX default [3]." | PASS ("evenly" omitted) | – |
 | 8 | In plain words | Layman | Least Connections: the server with the fewest active connections gets the request | "The request goes to the server with the fewest active connections [3]." | PASS | – |
 | 9 | In plain words | Layman | IP Hash: the sender's IP address picks the server; same address, same server, if that server is available | "The client's IP address picks the server. So requests from the same address go to the same server, unless that server is not available [3]." | PASS ("if available" = "unless not available") | – |
-| 10 | In plain words | Layman | "On AWS, a health check is a test request to each server, about every 30 seconds by default." | "The AWS Application Load Balancer sends a test request to each server about every 30 seconds by default [2]." | FAIL: the scope changes from the Application Load Balancer to all of AWS. The defaults in S2 are for the ALB (and the 30 s is for `instance`/`ip` targets). Other AWS load balancers have other defaults. | – |
+| 10 | In plain words | Layman | "On the AWS Application Load Balancer, a health check is a test request to each server, about every 30 seconds by default." | "The AWS Application Load Balancer sends a test request to each server about every 30 seconds by default [2]." | FAIL→fixed: was "On AWS, ..." (the scope changed from the Application Load Balancer to all of AWS). Now "On the AWS Application Load Balancer, a health check is a test request to each server, about every 30 seconds by default." This matches the Technical scope and number. | – |
 | 11 | In plain words | Layman | By default, 2 failed checks in a row make a server unhealthy, 5 good checks make it healthy [2] | "By default, 2 failed checks in a row make a server \"unhealthy\", and 5 good checks in a row make it \"healthy\" again [2]." | PASS (same numbers) | – |
 | 12 | In plain words | Layman | If all servers in a group are unhealthy, AWS sends requests to all of them [2] | "If all the servers in a group are unhealthy, the AWS load balancer sends requests to all of them anyway [2]." | PASS | – |
-| 13 | In plain words | Bangla | An LB is a component that receives incoming requests and divides them among several backend servers | "a component that receives the incoming requests and spreads them across several backend servers" | PASS | OK. Style: "request গুলো" → "request-গুলো" (the page uses the hyphen with "-এর", "-এ"; see notes). |
+| 13 | In plain words | Bangla | An LB is a component that receives incoming requests and divides them among several backend servers | "a component that receives the incoming requests and spreads them across several backend servers" | PASS | OK (fixed: "request-গুলো", "server-গুলোকে") |
 | 14 | In plain words | Bangla | AWS calls these servers "target" | "AWS calls these servers \"targets\"" | PASS | OK |
 | 15 | In plain words | Bangla | A target can be a virtual server, a container, or an IP address [1] | "A target can be a virtual server, a container, or an IP address [1]" | PASS | OK |
 | 16 | In plain words | Bangla | The LB watches each target's health and sends traffic only to healthy targets [1] | "watches the health of each target and sends traffic only to the healthy ones [1]" | PASS | OK |
@@ -82,10 +82,10 @@ Flagged items from the writer:
 | 67 | What a tester can check | Bangla | These test ideas are the tutorial's own advice | "These test ideas are the tutorial's own advice." | PASS | OK |
 | 68 | What a tester can check | Bangla | Server down: stop one server in a load test; measure the time until errors stop; compare with the interval and the failure count | "Stop one app server during a load test. Measure how long until the errors stop, and compare it with the health check interval and the failure count." | PASS | OK |
 | 69 | What a tester can check | Bangla | Server back: check whether it gets traffic again only after it passes the health check | "Check that it gets traffic again only after it passes the health checks." | PASS | OK |
-| 70 | What a tester can check | Bangla | Honest health check: break one server's DB connection; check whether its check fails and the LB removes it | "Break the database connection of one server. Check that its health check fails and that the load balancer removes it." | PASS | Note: "সৎ health check" is a word-for-word "honest"; it reads odd. "সঠিক health check" or "নির্ভরযোগ্য health check" is more natural. Meaning is clear. |
+| 70 | What a tester can check | Bangla | Honest health check: break one server's DB connection; check whether its check fails and the LB removes it | "Break the database connection of one server. Check that its health check fails and that the load balancer removes it." | PASS | OK (fixed: "সৎ health check" → "সঠিক health check"; the body is unchanged, so the meaning is the same) |
 | 71 | What a tester can check | Bangla | Spread of traffic, deploy under load, all servers sick: same steps as Technical | "Send many requests and count the responses per server ..." / "Deploy a new version while a load test runs. Look for 5xx errors ..." / "make every server fail its health check. Write down what users see." | PASS | OK |
 
-## FAIL
+## FAIL (round 1, now fixed)
 
 - Row 10 (In plain words, Layman). Text: "On AWS, a health check is a test request to each server, about every 30 seconds by default." The Technical sentence and S2 are about the AWS Application Load Balancer only. "On AWS" widens the scope to all AWS load balancers, which can have other defaults. Suggested text: "On the AWS Application Load Balancer, a health check is a test request to each server, about every 30 seconds by default."
 
@@ -95,4 +95,13 @@ Flagged items from the writer:
 - Row 70: "সৎ health check" → "সঠিক health check" reads more naturally.
 - The Bangla keeps the common technical terms in English (load balancer, target, health check, traffic, algorithm, draining, sticky session, single point of failure, high availability, downtime, TLS termination). Good.
 
-Open FAILs: 1
+## Recheck 2026-10-20
+
+I read the diff of commit `ebe69f7` (`git diff HEAD~1`). It changes only 6 voice-panel lines: 67, 72, 74, 76, 178, and 220.
+
+- Row 10 (line 67): the Layman sentence now names the AWS Application Load Balancer. This is the same scope and the same 30 s default as the Technical sentence and S2. FAIL→fixed.
+- Lines 72, 74, 76, 178: only the space before "গুলো" changed to a hyphen ("request-গুলো", "server-গুলোকে"). The words and the meaning stay the same. No new problem.
+- Line 220: "সঠিক health check" (correct health check) is a heading label. The steps under it did not change. No new problem.
+- Bangla line 78 already named the AWS Application Load Balancer. It did not need a change.
+
+Open FAILs: 0
