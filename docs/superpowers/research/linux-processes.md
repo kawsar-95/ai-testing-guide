@@ -52,6 +52,8 @@ S44. Signals — Bash Reference Manual (GNU) — https://www.gnu.org/software/ba
 S45. nohup invocation — GNU Coreutils manual — https://www.gnu.org/software/coreutils/manual/html_node/nohup-invocation.html — accessed 2026-10-19 (`027.txt`)
 S46. Special Parameters — Bash Reference Manual (GNU) — https://www.gnu.org/software/bash/manual/html_node/Special-Parameters.html — accessed 2026-10-19 (`039.txt`)
 S47. Lists of Commands — Bash Reference Manual (GNU) — https://www.gnu.org/software/bash/manual/html_node/Lists.html — accessed 2026-10-19 (`040.txt`)
+S48. termios(3) — man7.org (Linux man-pages 6.19) — https://man7.org/linux/man-pages/man3/termios.3.html — accessed 2026-10-19 (`041.txt`; added in fix round 1)
+S49. Exit Status — Bash Reference Manual (GNU) — https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html — accessed 2026-10-19 (`042.txt`; added in fix round 1)
 
 Local checks (not a citable page): I ran every example of the page under my own account (procps-ng 4.0.4, util-linux 2.41.3, Bash 5.x, dash as `sh`, uutils `nice` on this machine), in a scratch directory of the session scratchpad, each with its own `sleep NNN` and cleaned up. Results: `ps -o pid,ppid,stat,etime,args -p`, `/proc/PID/status` (State S, PPid), `pgrep -a -f`, `pidof`, `pstree -p`, `top -b -n 1`; `nohup` shows `SigIgn: 0000000000000007` (HUP, INT, QUIT ignored); `setsid sh -c 'echo $$ > pid; exec sleep'` gives a process with its own session ID; `kill -STOP` gives STAT `T`, `kill -CONT` gives `S`; `kill` of a `sleep` gives `wait` status 143 and `kill -l 143` prints `TERM`; the `trap cleanup INT TERM` script printed `cleaned up` and exit status 0; `nice -n 10 ionice -c 3 sleep` keeps one PID (both programs `exec`), `ps -o ni` shows 10, `ionice -p` prints `idle`, `renice 15 -p` works, and `renice 5 -p` back down fails with `Permission denied`; the zombie demo shows `[sleep] <defunct>` with STAT `Z`; the orphan demo shows PPID of a subreaper (a systemd user manager) and not 1; in a subshell `ulimit -n 20` makes `exec {fd}<file` fail after about 10 opens ("Too many open files") and the parent shell keeps 524288. The `kill -l` of dash prints names only.
 
@@ -102,6 +104,7 @@ GNU/procps notes on the page: `--sort` (GNU option of procps `ps`), `ps -ef` and
 ### Listing and Finding Processes
 | Claim | Source | Quote |
 |---|---|---|
+| The procps `ps` accepts Unix, BSD and GNU options | S16 | "This version of ps accepts several kinds of options." |
 | `ps` prints a snapshot | S16 | "ps - report a snapshot of the current processes." |
 | Default selection: own processes on this terminal | S16 | "ps selects all processes with the same effective user ID (euid=EUID) as the current user and associated with the same terminal as the invoker." |
 | Unix style `ps -ef` shows every process | S16 | "To see every process on the system using standard syntax: ps -e ps -ef" |
@@ -154,6 +157,7 @@ GNU/procps notes on the page: `--sort` (GNU option of procps `ps`), `ps -ef` and
 | A separate `/bin/kill` | S9 | "If you want to use the binary, type the full path to the file /bin/kill." |
 | Signal 0 only checks | S18 | "If signal is 0, then no actual signal is sent, but error checking is still performed." |
 | `pkill` signals the matches | S17 | "pkill will send the specified signal (by default SIGTERM) to each process instead of listing them on stdout." |
+| `killall` sends SIGTERM by default | S34 | "If no signal name is specified, SIGTERM is sent." |
 | `killall` signals by name | S34 | "killall sends a signal to all processes running any of the specified commands." |
 | `killall` on non-Linux | S34 | "Be warned that typing killall name may not have the desired effect on non-Linux systems, especially when done by a privileged user." |
 | A PID can be reused | S3 | "does not prevent <pid> from being reused for some other process in the event that <pid> exits." |
@@ -181,7 +185,7 @@ GNU/procps notes on the page: `--sort` (GNU option of procps `ps`), `ps -ef` and
 | SIGSTOP number 19 | S19 | "SIGSTOP 19 17 23 24" |
 | SIGTSTP row | S19 | "SIGTSTP P1990 Stop Stop typed at terminal" |
 | SIGTSTP number 20 | S19 | "SIGTSTP 20 18 24 25" |
-| SIGTSTP is Ctrl+Z | S11 | "Interactive stop request, can be ignored by a process" |
+| SIGTSTP is Ctrl+Z | S48 | "VSUSP (032, SUB, Ctrl-Z) Suspend character (SUSP). Send SIGTSTP" |
 | SIGCONT row | S19 | "SIGCONT P1990 Cont Continue if stopped" |
 | SIGCONT number 18 | S19 | "SIGCONT 18 19 25 26" |
 | SIGUSR1 row | S19 | "SIGUSR1 P1990 Term User-defined signal 1" |
@@ -189,7 +193,7 @@ GNU/procps notes on the page: `--sort` (GNU option of procps `ps`), `ps -ef` and
 | Numbers differ by CPU | S19 | "many signals have different numeric values on different architectures." |
 | `kill -l` lists names | S18 | "Print a list of signal names, convert the given signal number to a name, or convert the given signal mask to names." |
 | `kill -l` lists names and values | S8 | "List all signal names and their corresponding values." |
-| Exit status above 128 for a signal | S41 | "kill assumes that process exit statuses are greater than 128; anything less than that is a signal number." |
+| Exit status 128 plus N for a signal (SIGTERM gives 143) | S49 | "When a command terminates on a fatal signal whose number is N, Bash uses the value 128+N as the exit status." |
 | `trap` runs a command at a signal | S43 | "The action is a command that is read and executed when the shell receives any of the signals sigspec." |
 | `trap` is a POSIX builtin | S43 | "These commands are implemented as specified by the POSIX standard." |
 | `EXIT` | S43 | "If a sigspec is 0 or EXIT, action is executed when the shell exits." |
@@ -207,7 +211,9 @@ GNU/procps notes on the page: `--sort` (GNU option of procps `ps`), `ps -ef` and
 | `renice` changes running processes | S21 | "renice alters the scheduling priority of one or more running processes." |
 | A user changes only own processes | S21 | "Users other than the superuser may alter the priority only of processes they own." |
 | Raise only, irreversible | S21 | "an unprivileged user can only increase the "nice value" (that is: lower the urgency), and such changes are irreversible" |
+| A non-root user may lower niceness only with a suitable nice resource limit (so "usually need root") | S21 | "unless (since Linux 2.6.12) the user has a suitable "nice" resource limit" |
 | The superuser may set negative | S21 | "The superuser may alter the priority of any process and set the priority to any value in the range -20 to 19." |
+| `renice -u USER` changes all processes of a user | S21 | "renice'ing a user causes all processes owned by the user to have their scheduling priority altered." |
 | `renice -n` is absolute in util-linux | S21 | "instead of setting a relative priority, it sets an absolute priority by default." |
 | `renice` first argument is the priority | S21 | "By default, priority is understood as an absolute value." |
 | `ionice` for I/O | S22 | "This program sets or gets the I/O scheduling class and priority for a program." |
@@ -239,7 +245,7 @@ GNU/procps notes on the page: `--sort` (GNU option of procps `ps`), `ps -ef` and
 | The `EAGAIN` error | S23 | "EAGAIN A system-imposed limit on the number of threads was encountered." |
 | A PID namespace is a separate set of PIDs (as in a container) | S39 | "PID namespaces isolate the process ID number space, meaning that processes in different PID namespaces can have the same PID." |
 | `init` has PID 1 in a namespace | S39 | "has the PID 1, and is the "init" process for the namespace" |
-| A zombie is a process that ended but waits for its parent | S25 | "A child that terminates, but has not been waited for becomes a "zombie"." |
+| `Z` is a zombie: a process that ended but waits for its parent (also the Process Management sentence) | S25 | "A child that terminates, but has not been waited for becomes a "zombie"." |
 | Container PID 1 adopts orphans | S39 | "This process becomes the parent of any child processes that are orphaned because a process that resides in this PID namespace terminated" |
 | Fork-bomb danger callout | — | Own advice; no source (the page does not show a bomb). |
 
@@ -274,3 +280,7 @@ GNU/procps notes on the page: `--sort` (GNU option of procps `ps`), `ps -ef` and
 | Keep a second root session; subshell advice | — | Own advice; no source. |
 
 Further reading (title only, not cited): none in this stage.
+
+## Fix round 1 (2026-10-19)
+Changes after the fact-check (17 FAILs): added S48 (termios(3)) and S49 (Bash Exit Status) at the end of the source list; cited S25 for the zombie meaning; cited S16 for "ps accepts both styles"; reworded the macOS/BusyBox sentence and the CI sentences as hedges; dropped the false "when no file is given" for `nohup.out`; changed the SIGHUP sentence to the terminal-close case (S44: "The shell exits by default upon receipt of a SIGHUP."); changed the script sentence to "job numbers may fail in `sh`" (a Bash 5.3 script accepts `kill %1`; local test of the checker); split the danger claim (`kill -9` gives no clean-up; `killall` and `pkill` send SIGTERM by default); cited S48 for Ctrl+Z and S49 for 143; changed "need root" to "usually need root"; renamed the `renice` note; cited S21 in the Priorities danger callout; cut the signals table and prose to 241 words; added one-line glosses for builtin, exit status and session.
+Tutorial's own advice, no source: a minimal container may lack `ps`, `pstree` and `top`; the packages are `procps` (ps, pgrep, top, pidof) and `psmisc` (pstree, killall) on Debian and Ubuntu (the checker's note; I did not fetch a package page).

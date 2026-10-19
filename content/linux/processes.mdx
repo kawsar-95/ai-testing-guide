@@ -53,6 +53,8 @@ export const page = {
     { title: 'nohup invocation (GNU Coreutils manual)', publisher: 'GNU Project', url: 'https://www.gnu.org/software/coreutils/manual/html_node/nohup-invocation.html', accessed: '2026-10-19' },
     { title: 'Special Parameters (Bash Reference Manual)', publisher: 'GNU Project', url: 'https://www.gnu.org/software/bash/manual/html_node/Special-Parameters.html', accessed: '2026-10-19' },
     { title: 'Lists of Commands (Bash Reference Manual)', publisher: 'GNU Project', url: 'https://www.gnu.org/software/bash/manual/html_node/Lists.html', accessed: '2026-10-19' },
+    { title: 'termios(3) - get and set terminal attributes', publisher: 'man7.org (Linux man-pages)', url: 'https://man7.org/linux/man-pages/man3/termios.3.html', accessed: '2026-10-19' },
+    { title: 'Exit Status (Bash Reference Manual)', publisher: 'GNU Project', url: 'https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html', accessed: '2026-10-19' },
   ],
 }
 
@@ -66,7 +68,7 @@ A process is a running program. This stage shows how to list processes, run them
 
 A process is a program in execution. <Cite n={2} /> Each process has a PID (process ID), a unique number. <Cite n={31} /> It also has a PPID, the PID of its parent, which is the process that created it with `fork`. <Cite n={31} /> Both numbers stay the same when the process starts a new program with `execve`. <Cite n={31} /> In a shell, `$$` is the PID of the shell and `$!` is the PID of the last background command. <Cite n={46} /> A daemon is a background process that runs without a terminal, such as a web server. <Cite n={4} />
 
-Linux shows each live process as a directory `/proc/PID`. <Cite n={3} /> The file `status` in it holds the name, the PID, the PPID, and a state letter. <Cite n={26} /> The state letter is `R` for running, `S` for sleeping, `D` for a wait on the disk, and `T` for stopped. `Z` is a zombie, a process that ended but still waits for its parent. <Cite n={26} /> The files in `/proc` are virtual: `ls -l` shows size 0, but they hold live data. <Cite n={5} /> The tools of this page fall in three groups: monitor (`top`, `ps`), control (`bg`, `fg`, `kill`), and priority (`nice`, `renice`). <Cite n={2} />
+Linux shows each live process as a directory `/proc/PID`. <Cite n={3} /> The file `status` in it holds the name, the PID, the PPID, and a state letter. <Cite n={26} /> The state letter is `R` for running, `S` for sleeping, `D` for a wait on the disk, and `T` for stopped. `Z` is a zombie, a process that ended but still waits for its parent. <Cite n={26} /> <Cite n={25} /> The files in `/proc` are virtual: `ls -l` shows size 0, but they hold live data. <Cite n={5} /> The tools of this page fall in three groups: monitor (`top`, `ps`), control (`bg`, `fg`, `kill`), and priority (`nice`, `renice`). <Cite n={2} />
 
 ```bash
 echo "this shell: PID $$"
@@ -87,9 +89,9 @@ Tutorial's own advice: save the output of `ps -eo pid,ppid,stat,etime,args` at t
 
 ## Listing and Finding Processes
 
-`ps` prints a snapshot of the processes. <Cite n={16} /> By default, it shows only your own processes on the current terminal. <Cite n={16} /> Use `ps -ef` (Unix options) or `ps aux` (BSD options, written without a dash) to see all processes. <Cite n={16} /> The procps `ps` of most Linux systems accepts both styles. The `ps` of macOS or BusyBox accepts fewer options, so check its man page there. Choose the columns with `-o` and the order with `--sort` (a GNU option). <Cite n={16} />
+`ps` prints a snapshot of the processes. <Cite n={16} /> By default, it shows only your own processes on the current terminal. <Cite n={16} /> Use `ps -ef` (Unix options) or `ps aux` (BSD options, written without a dash) to see all processes. <Cite n={16} /> The procps `ps` accepts both styles. <Cite n={16} /> Other systems, such as macOS or BusyBox, may differ: check their man page. Choose the columns with `-o` and the order with `--sort` (a GNU option). <Cite n={16} /> A minimal container may lack `ps`, `pstree`, and `top`: install `procps` and `psmisc`.
 
-`pgrep` prints the PIDs of the processes whose name matches a pattern, which is an extended regular expression. <Cite n={17} /> Option `-a` adds the full command line, `-x` demands an exact name, and `-f` matches the whole command line. <Cite n={17} /> Without `-f`, only the first 15 characters of the name count. <Cite n={17} /> The exit status is 0 for a match and 1 for no match. <Cite n={17} /> Other versions of `pgrep` may use these letters differently. `pidof` prints the PIDs of a named program. <Cite n={35} /> `pstree -p` draws the tree of processes with PIDs. <Cite n={33} /> `top -b -n 1` prints one frame of the live view, which suits a log. <Cite n={32} />
+`pgrep` prints the PIDs of the processes whose name matches a pattern (an extended regular expression). <Cite n={17} /> Option `-a` adds the full command line, `-x` demands an exact name, and `-f` matches the whole command line. <Cite n={17} /> Without `-f`, only the first 15 characters of the name count. <Cite n={17} /> The exit status (the number a command returns) is 0 for a match and 1 for no match. <Cite n={17} /> `pidof` prints the PIDs of a named program. <Cite n={35} /> `pstree -p` draws the tree of processes with PIDs. <Cite n={33} /> `top -b -n 1` prints one frame, which suits a log. <Cite n={32} />
 
 ```bash
 sleep 30 &                                   # a demo process; it ends by itself
@@ -114,9 +116,9 @@ Tutorial's own advice: do not start a test before the service exists. Poll with 
 
 A foreground process owns the terminal, and the shell waits for it. A background process runs while the shell accepts new commands. End a command with `&` to start it in the background. <Cite n={7} /> The shell does not wait for it, and the status of the `&` command is 0. <Cite n={47} />
 
-To move a running command, press Ctrl+Z, which stops it. <Cite n={6} /> Then `bg` resumes it in the background, and `fg` brings it back to the foreground. <Cite n={41} /> `jobs -l` lists the jobs with their PIDs, and `%1` names job 1. <Cite n={41} /> <Cite n={40} /> A script has no job control, so `kill` and `wait` there need PIDs and not job numbers. <Cite n={44} /> <Cite n={41} />
+To move a running command, press Ctrl+Z, which stops it. <Cite n={6} /> Then `bg` resumes it in the background, and `fg` brings it back to the foreground. <Cite n={41} /> `jobs -l` lists the jobs with their PIDs, and `%1` names job 1. <Cite n={41} /> <Cite n={40} /> In a script, use PIDs with `kill` and `wait`: job numbers may fail in `sh`. <Cite n={44} /> <Cite n={41} />
 
-A background job can die when you log out, because an interactive Bash that exits resends SIGHUP (the hangup signal) to its jobs. <Cite n={44} /> Three tools prevent this. `nohup` runs a command with hangup signals ignored and writes its output to `nohup.out` when no file is given. <Cite n={45} /> `disown -h` tells the shell not to send SIGHUP to a job. <Cite n={41} /> `setsid` starts a program in its own session, away from the terminal. <Cite n={36} />
+A background job can die when the terminal closes, because Bash gets SIGHUP (the hangup signal) and resends it to its jobs. <Cite n={44} /> Three tools prevent this. `nohup` runs a command with hangup signals ignored and appends its output to `nohup.out` when standard output is a terminal. <Cite n={45} /> `disown -h` tells the shell not to send SIGHUP to a job. <Cite n={41} /> `setsid` starts a program in its own session, a separate group of processes not tied to your terminal. <Cite n={36} />
 
 ```bash
 sleep 60 &                  # job 1; the shell prints [1] and the PID
@@ -130,15 +132,15 @@ setsid sleep 60 > setsid-demo.log 2>&1 < /dev/null &    # own session
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: in a CI job, start a helper (a mock server, for example) in the background and save its PID from `$!`. Redirect its output to a file, so that the log survives. At the end of the job, stop the helper by that PID. Some CI systems end all processes of a step when the step ends, so do not rely on a background job between steps.
+Tutorial's own advice: in a CI job, start a helper in the background and save its PID from `$!`. Redirect its output to a file, so that the log survives. At the end of the job, stop the helper by that PID. Check whether your CI system ends the processes of a step at its end before you rely on a background job between steps.
 
 </Callout>
 
 ## Killing Processes
 
-The command `kill` sends a signal, and it does not always kill. <Cite n={18} /> The default signal is SIGTERM, which a program can handle to clean up before it exits. <Cite n={18} /> SIGKILL cannot be caught, so the program cannot clean up. <Cite n={18} /> Send SIGTERM first, wait, and use SIGKILL only if the process stays alive. <Cite n={10} />
+The command `kill` sends a signal, and it does not always kill. <Cite n={18} /> The default signal is SIGTERM, which a program can handle to clean up before it exits. <Cite n={18} /> SIGKILL cannot be caught, so the program cannot clean up. <Cite n={18} /> Send SIGTERM first, wait, and use SIGKILL only if the process lives. <Cite n={10} />
 
-Bash has a builtin `kill`, and the system has a separate program, often `/bin/kill`. <Cite n={9} /> Signal 0 sends nothing, but it checks that the PID exists and that you may signal it. <Cite n={18} />
+Bash has a builtin `kill` (a command inside the shell), and the system has a separate program, often `/bin/kill`. <Cite n={9} /> Signal 0 sends nothing, but checks that the PID exists and that you may signal it. <Cite n={18} />
 
 `pkill` signals the processes that `pgrep` lists. <Cite n={17} /> `killall` signals every process that has a given name. On non-Linux systems, `killall name` may act differently. <Cite n={34} />
 
@@ -155,9 +157,9 @@ kill -0 "$pid" 2>/dev/null && kill -KILL "$pid"    # 4. SIGKILL only if it still
 
 <Callout type="danger">
 
-`kill -9`, `killall`, and `pkill` end processes at once, with no clean-up and no undo. A wrong PID or pattern can stop the CI agent. The kernel can reuse a PID after a process exits. <Cite n={3} /> Follow these rules:
+`kill -9` gives no clean-up. `killall` and `pkill` signal many processes at once, with no undo. A wrong PID or pattern can stop the CI agent. The kernel can reuse a PID after a process exits. <Cite n={3} /> Follow these rules:
 
-- Take the PID from `$!` or `pgrep -a`. Do not type it from memory.
+- Take the PID from `$!` or `pgrep -a`.
 - Run `pgrep -a` with the same pattern before `pkill`.
 - `-f` also matches the command line of a wrapper such as `sh -c 'pkill -f x'`. <Cite n={17} />
 - Never run `kill -9 -1`. PID -1 means every process with a PID above 1 that you may signal. <Cite n={18} />
@@ -172,20 +174,19 @@ Tutorial's own advice: in teardown, stop only the processes that your job starte
 
 ## Process Signals
 
-A signal is a short message that the kernel or another process sends to a process. Each signal has a name, a number, and a default action. <Cite n={19} /> The actions are `Term` (end the process), `Core` (end it and dump core), `Stop`, `Cont` (continue), and `Ign` (ignore). <Cite n={19} /> A process can use the default, ignore the signal, or catch it with a handler (a function that runs when the signal arrives). <Cite n={19} /> A process cannot catch, block, or ignore SIGKILL or SIGSTOP. <Cite n={19} />
+A signal is a short message that the kernel or another process sends to a process. Each signal has a name, a number, and a default action: `Term` (end the process), `Stop`, or `Cont` (continue). <Cite n={19} /> A process can use the default, ignore the signal, or catch it with a handler (a function that runs when the signal arrives). <Cite n={19} /> A process cannot catch, block, or ignore SIGKILL or SIGSTOP. <Cite n={19} />
 
-| Signal | Number (x86, ARM) | Default | Common meaning |
+| Signal | Number (x86, ARM) | Default | Meaning |
 |---|---|---|---|
-| `SIGHUP` | 1 | Term | The terminal hung up. Some daemons reload their configuration. <Cite n={19} /> <Cite n={9} /> |
+| `SIGHUP` | 1 | Term | Hangup; some daemons reload <Cite n={19} /> <Cite n={9} /> |
 | `SIGINT` | 2 | Term | Ctrl+C <Cite n={19} /> <Cite n={11} /> |
-| `SIGTERM` | 15 | Term | Polite request to end <Cite n={19} /> |
-| `SIGKILL` | 9 | Term | Forced end, cannot be caught <Cite n={19} /> |
-| `SIGSTOP` | 19 | Stop | Freeze, cannot be caught <Cite n={19} /> |
-| `SIGTSTP` | 20 | Stop | Ctrl+Z <Cite n={19} /> <Cite n={11} /> |
-| `SIGCONT` | 18 | Cont | Continue a stopped process <Cite n={19} /> |
-| `SIGUSR1` | 10 | Term | Free for the program to use <Cite n={19} /> |
+| `SIGTERM` | 15 | Term | Polite stop <Cite n={19} /> |
+| `SIGKILL` | 9 | Term | Forced stop <Cite n={19} /> |
+| `SIGSTOP` | 19 | Stop | Freeze <Cite n={19} /> |
+| `SIGTSTP` | 20 | Stop | Ctrl+Z <Cite n={19} /> <Cite n={48} /> |
+| `SIGCONT` | 18 | Cont | Resume <Cite n={19} /> |
 
-The numbers differ on some CPU types, so use names. <Cite n={19} /> `kill -l` lists the names. <Cite n={18} /> <Cite n={8} /> In Bash, a process that a signal ended has an exit status of 128 plus the signal number, so SIGTERM gives 143. <Cite n={41} /> The builtin `trap` runs a command when the shell gets a signal. It is a Bourne shell builtin, so it also works in `sh`. <Cite n={43} /> The name `EXIT` runs the command when the shell ends. <Cite n={43} />
+`kill -l` lists the names. <Cite n={18} /> <Cite n={8} /> In Bash, a process that a signal ended has an exit status of 128 plus the signal number, so SIGTERM gives 143. <Cite n={49} /> `trap` runs a command when the shell gets a signal, and the name `EXIT` runs it when the shell ends. <Cite n={43} /> It is part of the POSIX shell, so it works in `sh`. <Cite n={43} />
 
 ```bash
 kill -l | head -n 4                      # signal names (bash also prints numbers)
@@ -210,23 +211,23 @@ sh trap-demo.sh & demo=$!; sleep 1; kill -TERM "$demo"; wait "$demo"; rm -f trap
 
 <Callout type="danger">
 
-`kill -STOP` freezes a process until someone sends `SIGCONT`. A frozen process still holds its open files and locks. Freeze only the demo process that you started, and always continue or end it.
+`kill -STOP` freezes a process, and a frozen process still holds its files and locks. Freeze only your own demo process, and always continue or end it.
 
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: add a `trap` for `INT` and `TERM` to every test-runner script that starts helpers or makes temporary files. CI systems cancel a job with a signal. Without a trap, the helpers stay alive and the next run may fail on a busy port.
+Tutorial's own advice: add a `trap` for `INT` and `TERM` to every test-runner script that starts helpers or makes temporary files. If a CI system cancels a job with a signal, the helpers stay alive without a trap. Then the next run may fail on a busy port.
 
 </Callout>
 
 ## Process Priorities
 
-The scheduler is the part of the kernel that picks which process runs on a CPU next. The niceness of a process is a number that tells the scheduler how much to favor it. On Linux it runs from -20 (most favor) to 19 (least favor), and the default is 0. <Cite n={38} /> <Cite n={20} /> <Cite n={12} /> A higher number means a nicer process, which takes less CPU when others compete. <Cite n={12} />
+The scheduler is the part of the kernel that picks which process runs on a CPU. The niceness of a process is a number that tells the scheduler how much to favor it. On Linux it runs from -20 (most favor) to 19 (least favor), and the default is 0. <Cite n={38} /> <Cite n={20} /> <Cite n={12} /> A higher number means a nicer process, which takes less CPU when others compete. <Cite n={12} />
 
-`nice -n 10 command` starts a command with 10 added to the niceness. With no command, `nice` prints the current niceness. <Cite n={20} /> `renice` changes a process that already runs. <Cite n={21} /> A normal user can only change their own processes, and can usually only raise the niceness, not lower it again. Negative values need root. <Cite n={21} />
+`nice -n 10 command` starts a command with 10 added to the niceness. With no command, `nice` prints the current niceness. <Cite n={20} /> `renice` changes a process that already runs. <Cite n={21} /> A normal user can only change their own processes, and can usually only raise the niceness, not lower it again. Negative values usually need root. <Cite n={21} />
 
-GNU option and util-linux note: the `renice -n 5` of util-linux sets the absolute value 5, but POSIX says relative. Write `renice 5 -p PID` to be clear. <Cite n={21} /> `ionice` sets the priority of disk I/O, and class 3 is idle. Its man page describes the CFQ I/O scheduler, so check that your kernel honors it. <Cite n={22} />
+Note on `renice -n 5`: the util-linux tool sets the absolute value 5, but POSIX says relative. Write `renice 5 -p PID` to be clear. <Cite n={21} /> `ionice` sets the priority of disk I/O, and class 3 is idle. Its man page describes the CFQ I/O scheduler, so check that your kernel honors it. <Cite n={22} />
 
 ```bash
 nice                                      # print the niceness of this shell
@@ -240,7 +241,7 @@ ps -o pid,ni,args -p "$pid"               # NI shows 15
 
 <Callout type="danger">
 
-Do not use negative niceness for tests. `nice -n -5` and `renice -5` need root and can starve the rest of the system. `renice -u USER` changes every process of a user. Practice only on a `sleep` that you started yourself.
+Do not use negative niceness for tests. `nice -n -5` and `renice -5` usually need root and can starve the rest of the system. <Cite n={21} /> `renice -u USER` changes every process of a user. <Cite n={21} /> Practice only on a `sleep` that you started yourself.
 
 </Callout>
 
@@ -254,7 +255,7 @@ Tutorial's own advice: timeouts often fail because of CPU competition. Before yo
 
 `fork` creates a child process as a copy of the caller. <Cite n={23} /> The child gets its own PID, and its PPID is the PID of the parent. <Cite n={23} /> Then `execve` replaces the program in the child with a new one, and the PID stays the same. <Cite n={24} /> Fork then `execve` is the classic way to start a new program. <Cite n={13} />
 
-The parent should call `wait` to collect the exit status of a child. <Cite n={25} /> A child that ended but was not waited for is a zombie. It keeps only a table entry. <Cite n={25} /> A signal cannot remove it. The parent must wait, or end. Then `init` (PID 1) adopts the zombie and removes it. <Cite n={25} /> An orphan is a running process whose parent has ended. <Cite n={4} /> The kernel gives it to the `init` process of its PID namespace, or to a subreaper (a process that volunteered to adopt). <Cite n={39} /> A PID namespace is a separate set of PIDs, like in a container. `fork` fails with `EAGAIN` at a process limit like `RLIMIT_NPROC`. <Cite n={23} />
+The parent should call `wait` to collect the exit status of a child. <Cite n={25} /> A child that ended but was not waited for is a zombie. It keeps only a table entry. <Cite n={25} /> A signal cannot remove it. The parent must wait, or end. Then `init` (PID 1) adopts the zombie and removes it. <Cite n={25} /> An orphan is a running process whose parent has ended. <Cite n={4} /> The kernel gives it to the `init` process of its PID namespace, or to a subreaper (a volunteer adopter). <Cite n={39} /> A PID namespace is a separate set of PIDs, like in a container. `fork` fails with `EAGAIN` at a process limit like `RLIMIT_NPROC`. <Cite n={23} />
 
 ```bash
 echo "shell PID $$"
@@ -286,7 +287,7 @@ Tutorial's own advice: after a test run, list the zombies on the runner. In a co
 
 A resource limit caps what one process may use, such as open files, processes, or memory. <Cite n={29} /> Each limit has a soft value, which the kernel enforces, and a hard value, which is the ceiling for the soft value. <Cite n={29} /> A normal user can raise the soft limit up to the hard limit. A user can lower the hard limit, but not raise it. <Cite n={29} /> <Cite n={15} /> A child inherits the limits. <Cite n={29} />
 
-`ulimit` is a shell builtin for the limits of the shell and of the programs it starts. <Cite n={42} /> `ulimit -a` prints all limits. <Cite n={42} /> <Cite n={14} /> `-n` is the number of open file descriptors (numbers for open files, sockets, and pipes), and `-u` is the number of processes. <Cite n={42} /> `-S` and `-H` choose soft or hard. Without them, a change sets both. <Cite n={42} /> For a running process, read `/proc/PID/limits`. <Cite n={27} /> Above the limit of open files, `open` fails with `EMFILE`, shown as `Too many open files`. <Cite n={29} /> <Cite n={14} />
+`ulimit` is a shell builtin for the limits of the shell and its programs. <Cite n={42} /> `ulimit -a` prints all limits. <Cite n={42} /> <Cite n={14} /> `-n` is the number of open file descriptors (numbers for open files, sockets, pipes), and `-u` is the number of processes. <Cite n={42} /> `-S` and `-H` choose soft or hard. Without them, a change sets both. <Cite n={42} /> For a running process, read `/proc/PID/limits`. <Cite n={27} /> Above the limit of open files, `open` fails with `EMFILE`, shown as `Too many open files`. <Cite n={29} /> <Cite n={14} />
 
 For a permanent value for logins, add a line `domain type item value` to `/etc/security/limits.conf`. <Cite n={30} /> A service that systemd starts takes its limits from its unit, such as `LimitNOFILE=` in `[Service]`. <Cite n={37} />
 
