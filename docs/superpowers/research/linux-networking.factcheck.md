@@ -351,3 +351,26 @@ Counts (part B, round 2): 25 rows. PASS 21, FAIL 2, OPINION-OK 1, EXAMPLE-OK 1. 
 Total of the whole page: part A 2 FAILs (lede sentence and notes line 85, not rechecked by me: the writer fixed them in 95391d4, part A checks that) + part B 2 FAILs (R2-11, R2-14).
 
 Open FAILs: 4
+
+## Round 3 — whole page
+
+Date: 2026-10-19. Checked the commits 95391d4 (lede, notes line 85) and 3933c7b (two SSH sentences, note C132) with `git diff 34f3148 3933c7b`, and the state of the whole page. Pages fetched in this round (copied into my flat directory as 103, 104, 105): ssh-keygen(1) (S58), OpenSSH 9.5 notes (S66), ssh_config(5) (S56). No other traffic; no `dig`, no `ping` to other hosts; no sudo.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 1 | Lede | New lede, sentence 3: "Every example here reads state, writes to a temporary directory, or sends traffic only to your own host." and sentence 4: "An example that needs a network, root, or a host that you own says so." | none | PASS | Word counts (script): 16, 21, 18, 15; none above 25. True for every block of the page: topics 1-8 read state, `ping` goes to 127.0.0.1, `dig example.com A` says "needs network"; ping, netstat, SSH, File Transfer use 127.0.0.1 or a temporary directory; traceroute lines say "your own host only" and "plan to use root"; Netfilter says "The next commands need root"; `tcpdump -w` says "needs root"; remote ssh, rsync, scp lines are comments that say "a host that you own". (Round 2 part A FAIL, row 1: fixed.) |
+| 2 | Notes (local checks) | Line 85 now says that the page uses `nmcli -f DHCP4 connection show NAME` (C54, C162) | 31 | PASS | The sentence matches the page, C54, and C162; the stale text is gone. (Round 2 part A FAIL, row 20 / new: fixed.) |
+| 3 | SSH | "Older versions can differ, so use `-t ed25519`." | 58, 66 | PASS | Hedged; no claim about the old default. S58: "-t ecdsa \| ecdsa-sk \| ed25519 \| ed25519-sk \| mldsa44-ed25519 \| rsa" and "ed25519 (the default),". S66: "ssh-keygen(1): generate Ed25519 keys by default." (Part B round 2 FAIL R2-11: fixed.) |
+| 4 | SSH | "A `UserKnownHostsFile` of `/dev/null` (tutorial's own note) makes `ssh` ignore your saved keys." | 56 | PASS | Marked as the tutorial's own note. S56: "Specifies one or more files to use for the user host key database" and "A value of none causes ssh(1) to ignore any user-specific known hosts files." "Your saved keys" = the user file; the system file is not claimed. (Part B round 2 FAIL R2-14: fixed.) |
+| 5 | Notes | C132: "the default changed in OpenSSH 9.5 (S66)" with the quotes of S58 and S66 | 58, 66 | PASS | Quotes found in my files: "If invoked without any arguments, ssh-keygen will generate an Ed25519 key." and "ssh-keygen(1): generate Ed25519 keys by default." "(before: RSA)" is gone. |
+| 6 | All | 15 `##` headings equal the 15 topic titles of lib/linux/stages.ts, in order | none | PASS | Networking, TCP/IP, Ethernet, ARP, and RARP, Subnetting, IP Routing, DHCP, DNS Resolution, ICMP, ping, traceroute, netstat, Netfilter, Packet Analysis, SSH, File Transfer. No other `##`. |
+| 7 | All | Words per section, with table separators, callout titles, headings; no code, no Cite tags | none | PASS | 248, 235, 235, 236, 250, 239, 246, 243, 238, 244, 203, 247, 245, 249, 235. All between 100 and 250 (IP Routing is exactly 250). No sentence above 25 words (the tables were left out of the sentence count: they have no sentence end). |
+| 8 | All | One code fence and one tip callout per topic; each tip starts "Tutorial's own advice:"; callout closing tags at column 0 | none | PASS | 15 fences, 15 tips, all tips start as required; 22 callouts, 22 closing tags at column 0, none indented. |
+| 9 | All | 67 sources, all cited; no cite without a source; no unfinished section | all | PASS | Script: 67 `page.sources`, 0 uncited, 0 cites below 1 or above 67. No "in progress", "TODO", or "Part A/B" text on the page. |
+| 10 | All | Overlap check, flat directories | none | PASS | Page body (without `page.sources`): roadmap raw directory (243 files) and my official directory (42 files): no hit. Whole file: only the 3 runs inside the real RFC 894 title in `page.sources` (a title, not prose; accepted in round 2). Writer's part B directory (39 files): clean. |
+| 11 | Notes | Notes rows against the page | none | PASS | Every source that the page cites (S2-S67) has a claim row; S1 (lede framing) has none. 0 claim rows with a wrong cell count, 0 rows with more than 25 quote words. |
+| 12 | All | Open FAILs from earlier rounds | none | PASS | Part A round 2: 2 FAILs (lede length, notes line 85): fixed (rows 1, 2). Part B round 2: 2 FAILs (R2-11, R2-14): fixed (rows 3, 4). No new FAIL. |
+
+Counts (round 3): 12 rows. PASS 12, FAIL 0.
+
+Open FAILs: 0
