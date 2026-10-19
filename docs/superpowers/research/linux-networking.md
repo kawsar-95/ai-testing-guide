@@ -2,7 +2,7 @@
 
 Part A (topics 1–8: Networking, TCP/IP, Ethernet/ARP/RARP, Subnetting, IP Routing, DHCP, DNS Resolution, ICMP) is written. Part B (topics 9–15) appends its own sources from S42 and its own claims from C87. Do not renumber S1–S41.
 
-Fetch note: the official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay) into `/home/nuruddin-kawsar/.cache/linux-stage-networking/` (`NNN.txt`; the number is the position in the fetch list, given after each official source). The roadmap pages were fetched into `/home/nuruddin-kawsar/.cache/linux-roadmap-raw/`. The man7.org pages are HTML renderings of man pages (Linux man-pages 6.19, iproute2 6.19 on the test machine). The RFCs are the plain-text files of rfc-editor.org.
+Fetch note: the official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay) into `~/.cache/linux-stage-networking/` (`NNN.txt`; the number is the position in the fetch list, given after each official source). The roadmap pages were fetched into `~/.cache/linux-roadmap-raw/`. The man7.org pages are HTML renderings of man pages (Linux man-pages 6.19, iproute2 6.19 on the test machine). The RFCs are the plain-text files of rfc-editor.org.
 
 Safety rule of this stage: I sent traffic only to 127.0.0.1, `localhost`, and `127.0.0.53` (the local resolver stub). I ran no packet capture, no scan, no `traceroute`, no `ssh`/`scp`, no `sudo`, and no command that changes an interface, address, route, DNS setting, or firewall rule. `ip route get 192.0.2.1` only asks the kernel for a route and sends no packet (S18). The page uses documentation addresses (RFC 5737) and `example.com` in prose.
 
@@ -234,7 +234,7 @@ Statements without a cite: TTL gloss "a counter in the IP header" (C86); an echo
 
 ## Part B (topics 9–15)
 
-Fetch note (part B): the official pages of S42–S65 are in `/home/nuruddin-kawsar/.cache/linux-stage-networking-b/` (`NNN.txt` from `scripts/linux_fetch.py`; `101.txt`–`104.txt` are copies of pages that were fetched in extra runs, so that the overlap check sees them). The numbers are given after each source. S45 is roadmap link #148. The other roadmap links of topics 9–15 were read and are not cited (see below). Fetch results: the man7.org page of nft(8) (`404`), the netfilter.org page of iptables (`404`), the Wireshark guide page on capture privileges (`404`), and the OpenBSD page of ssh-copy-id (`404`) failed, so the page states nothing that only they could support. The Netfilter hooks page of the nftables wiki timed out.
+Fetch note (part B): the official pages of S42–S65 are in `~/.cache/linux-stage-networking-b/` (`NNN.txt` from `scripts/linux_fetch.py`; `101.txt`–`104.txt` are copies of pages that were fetched in extra runs, so that the overlap check sees them). The numbers are given after each source. S45 is roadmap link #148. The other roadmap links of topics 9–15 were read and are not cited (see below). Fetch results: the man7.org page of nft(8) (`404`), the netfilter.org page of iptables (`404`), the Wireshark guide page on capture privileges (`404`), and the OpenBSD page of ssh-copy-id (`404`) failed, so the page states nothing that only they could support. The Netfilter hooks page of the nftables wiki timed out.
 
 Safety rule (part B): I sent traffic only to 127.0.0.1 and `localhost` (`ping -c 3 127.0.0.1`, a local `python3 -m http.server` on 127.0.0.1:18080 with `curl` and `wget -c`). I ran no capture (tcpdump only read a pcap file that I made with Python; no tshark is installed), no `traceroute` (not installed), no `mtr`, no `nmap`, no `ssh`/`scp`/`sftp` to another host, no `sudo`, and no firewall or network change. Local rsync tests used a temporary directory. I made one ed25519 key in a sandbox directory and ran `ssh-keygen -lf` on it, and `ssh -G -F /dev/null localhost` (it prints settings and does not connect).
 
@@ -432,7 +432,7 @@ The Packet Analysis block now uses `-Z "$USER"` and the comment "send test traff
 
 | # | Claim | Source | Quote (≤25 words) |
 |---|---|---|---|
-| C168 | As root, `tcpdump` can drop to another user (`-Z user`) before it opens the output file; `-Z "$USER"` keeps the write in the caller's own directory (a `mktemp -d` directory is mode 0700 and owned by the caller). | S51 | "If tcpdump is running as root, after opening the capture device or input savefile, but before opening any savefiles for output, change the user ID to user" |
+| C168 | As root, `tcpdump` can drop to another user (`-Z user`) before it opens the output file; `-Z "$USER"` keeps the write in the caller's own directory (a `mktemp -d` directory is mode 0700 and owned by the caller). | S51 | "after opening the capture device or input savefile, but before opening any savefiles for output, change the user ID to user" |
 
 The `mktemp -d` mode is local knowledge (it creates a directory that only the owner can use); it is not cited. The command was not run (needs root).
 
