@@ -17,15 +17,15 @@
 | 7 | Before you install | Layman | Install on the computer that runs your tests: laptop, WSL 2 shell, or CI runner (no cite) | "Install Claude Code on the machine that runs your tests. For most teams, that is a developer laptop, a WSL 2 shell, or a CI runner." | PASS | OK |
 | 8 | Before you install | Bangla | You need a Pro, Max, Team, Enterprise, or Console account; the claude.ai free plan has no Claude Code [1] | as row 1 | PASS | OK |
 | 9 | Before you install | Bangla | You can also use Claude Code through a third-party API provider: Amazon Bedrock, Google Cloud's Agent Platform, Microsoft Foundry [1] | as row 2 | PASS | OK |
-| 10 | Before you install | Bangla | OS: macOS 13.0 or newer, Windows 10 1809 or newer, Windows Server 2019 or newer, Ubuntu 20.04, Debian 10, Alpine Linux 3.19 or newer [1] | as row 3 | PASS | OK. "বা নতুন" for "or later" is understandable; "বা তার পরের" is a little more natural. Optional. |
+| 10 | Before you install | Bangla | OS: macOS 13.0 or newer, Windows 10 1809 or newer, Windows Server 2019 or newer, Ubuntu 20.04, Debian 10, Alpine Linux 3.19 or newer [1] | as row 3 | PASS | OK (fix round 1: "বা তার পরের") |
 | 11 | Before you install | Bangla | At least 4 GB RAM and an x64 or ARM64 processor [1] | as row 4 | PASS | OK |
 | 12 | Before you install | Bangla | A shell: Bash, Zsh, PowerShell, or CMD [1] | as row 5 | PASS | OK |
 | 13 | Before you install | Bangla | Internet connection [1] | as row 6 | PASS | OK |
 | 14 | Before you install | Bangla | Install on the machine where your tests run; laptop, WSL 2 shell, or CI runner; for CI runners read Headless & CI after this page | Row 7 quote + "For CI runners, read [Headless & CI](/automate/headless/) after this page." | PASS | OK |
 | 15 | Install the CLI | Layman | The docs recommend the native installer [1] | "The docs label the native installer as the recommended install." | PASS | OK |
-| 16 | Install the CLI | Layman | One command for macOS/Linux/WSL, one for Windows PowerShell, one for Windows CMD [1] | "macOS, Linux, or WSL:" / "Windows PowerShell:" / "Windows CMD:" (three code blocks) | PASS | OK |
-| 17 | Install the CLI | Layman | "If you get an error about `&&` or `irm`, you used the command for the wrong Windows shell." [1] | "If you see `The token '&&' is not a valid statement separator`, you are in PowerShell, not CMD. Use the PowerShell command." / "If you see `'irm' is not recognized as an internal or external command`, you are in CMD, not PowerShell. Use the CMD command." | FAIL: the condition is wider than the Technical one. Technical gives two exact error texts. "Any error about `irm`" also covers, for example, a network error from `irm` in the correct shell (PowerShell), where the wrong-shell diagnosis is false. The panel also drops which command to use. | OK |
-| 18 | Install the CLI | Layman | The installer shows no progress [1] | "The installer shows no progress while it downloads." | PASS (drops "while it downloads"; this does not change the action. Optional: add "while it downloads", as the Bangla does.) | OK |
+| 16 | Install the CLI | Layman | One command for macOS/Linux/WSL, one for Windows PowerShell, one for CMD [1] (reworded in fix round 1) | "macOS, Linux, or WSL:" / "Windows PowerShell:" / "Windows CMD:" (three code blocks) | PASS | OK |
+| 17 | Install the CLI | Layman | (Fix round 1) "If Windows says that `&&` is not a valid statement separator, you are in PowerShell: use the PowerShell command. If Windows says that `irm` is not recognized, you are in CMD: use the CMD command." [1] | "If you see `The token '&&' is not a valid statement separator`, you are in PowerShell, not CMD. Use the PowerShell command." / "If you see `'irm' is not recognized as an internal or external command`, you are in CMD, not PowerShell. Use the CMD command." | PASS (recheck): each error now maps to the shell and the command that the Technical panel gives. Cite 1 matches the Technical cite. Was FAIL in round 1: the condition "an error about `&&` or `irm`" was wider than the two exact error texts. | OK |
+| 18 | Install the CLI | Layman | The installer shows no progress while it downloads [1] (fix round 1) | "The installer shows no progress while it downloads." | PASS | OK |
 | 19 | Install the CLI | Layman | When it finishes, open a new terminal and run `claude --version` [1] | "When it finishes, open a new terminal window and run `claude --version`." | PASS | OK |
 | 20 | Install the CLI | Layman | A native install updates itself in the background [1] | "Native installs update automatically in the background." | PASS | OK |
 | 21 | Install the CLI | Layman | You can also install with Homebrew, WinGet, apt, dnf, or apk [1] | "Homebrew: …", "WinGet: …", "Claude Code also publishes signed apt, dnf, and apk repositories…" | PASS | OK |
@@ -34,20 +34,20 @@
 | 24 | Install the CLI | Layman | npm package works; needs Node.js 22 or later [1] | "The npm package still works. It needs Node.js 22 or later…" | PASS | OK |
 | 25 | Install the CLI | Layman | Do not run `sudo npm install -g`: permission problems and security risks [1] | "Do not run `sudo npm install -g`. The docs say it can cause permission issues and security risks." | PASS | OK |
 | 26 | Install the CLI | Layman | To upgrade, install `@anthropic-ai/claude-code@latest` [1] | "To upgrade an npm install, install the `@latest` tag." + `npm install -g @anthropic-ai/claude-code@latest` | PASS | OK |
-| 27 | Install the CLI | Layman | On native Windows, the docs recommend Git for Windows [1] | "On native Windows, Git for Windows is recommended." | PASS | OK |
+| 27 | Install the CLI | Layman | (Removed in fix round 1 for the word limit.) Was: On native Windows, the docs recommend Git for Windows [1] | "On native Windows, Git for Windows is recommended." | N/A (removed; an omission is not a FAIL. Technical and Bangla row 43 still state it.) | OK |
 | 28 | Install the CLI | Layman | For a Bash sandbox use WSL 2; native Windows and WSL 1 do not support sandboxing [1] | "If your team works on Windows and wants Claude Code to run Bash commands in a sandbox, use WSL 2. Native Windows and WSL 1 do not support sandboxing." | PASS | OK |
 | 29 | Install the CLI | Layman | In WSL, use the Linux installer and start `claude` inside WSL [1] | "To install in WSL, open your WSL distribution and run the Linux installer. Start `claude` inside WSL, not from PowerShell or CMD." | PASS | OK |
 | 30 | Install the CLI | Bangla | Per the docs, the native installer is the recommended way [1] | as row 15 | PASS | OK |
 | 31 | Install the CLI | Bangla | Three install commands: macOS/Linux/WSL, Windows PowerShell, Windows CMD [1] | as row 16 | PASS | OK |
-| 32 | Install the CLI | Bangla | "If you see an error about `&&` or `irm`, you ran the command of the wrong Windows shell." [1] | as row 17 | FAIL: same as row 17. The condition is wider than the two exact error texts, and the fix (which command to use) is missing. | OK |
+| 32 | Install the CLI | Bangla | (Fix round 1) If you see `The token '&&' is not a valid statement separator`, you are in PowerShell, so run the PowerShell command; if you see `'irm' is not recognized as an internal or external command`, you are in CMD, so run the CMD command [1] | as row 17 | PASS (recheck): both error texts are exact copies of the Technical text, and each maps to the correct shell and command. Was FAIL in round 1 (same reason as row 17). | OK |
 | 33 | Install the CLI | Bangla | The installer shows no progress while it downloads [1] | "The installer shows no progress while it downloads." | PASS | OK |
 | 34 | Install the CLI | Bangla | When it finishes, open a new terminal window and run `claude --version` [1] | as row 19 | PASS | OK |
 | 35 | Install the CLI | Bangla | A native install updates itself in the background [1] | as row 20 | PASS | OK |
 | 36 | Install the CLI | Bangla | You can also install with Homebrew, WinGet, apt, dnf, or apk [1] | as row 21 | PASS | OK |
-| 37 | Install the CLI | Bangla | Homebrew and WinGet installs do not update themselves by default [1] | as row 22 | PASS | "default-ভাবে" is unusual; "default হিসেবে" is more natural. Optional. |
+| 37 | Install the CLI | Bangla | Homebrew and WinGet installs do not update themselves by default [1] | as row 22 | PASS | OK (fix round 1: "default হিসেবে") |
 | 38 | Install the CLI | Bangla | If you set `CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE` to `1`, Claude Code runs the upgrade command for you [1] | "To have Claude Code run the upgrade command for you on Homebrew or WinGet, set `CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE` to `1`." | PASS (the Homebrew/WinGet scope comes from the sentence before it) | OK |
 | 39 | Install the CLI | Bangla | apt, dnf, and apk installs always need a manual upgrade [1] | as row 23 | PASS | OK |
-| 40 | Install the CLI | Bangla | npm package works; needs Node.js 22 or newer [1] | as row 24 | PASS | OK |
+| 40 | Install the CLI | Bangla | npm package works; needs Node.js 22 or newer [1] | as row 24 | PASS | OK (fix round 1: "বা তার পরের") |
 | 41 | Install the CLI | Bangla | Do not run `sudo npm install -g`: permission problems and security risk [1] | as row 25 | PASS | OK |
 | 42 | Install the CLI | Bangla | To upgrade, do not use `npm update -g`; install `@anthropic-ai/claude-code@latest` [1] | "Do not use `npm update -g`: it respects the semver range of the first install…" + row 26 quote | PASS | OK |
 | 43 | Install the CLI | Bangla | Git for Windows is recommended on native Windows; with it, Claude Code uses Git Bash for the Bash tool [1] | "On native Windows, Git for Windows is recommended. With it, Claude Code uses Git Bash for the Bash tool." | PASS | OK |
@@ -64,7 +64,7 @@
 | 54 | Verify the install | Bangla | If the shell cannot find `claude`, the install directory is not in your `PATH` [1] | as row 48 | PASS | OK |
 | 55 | Verify the install | Bangla | Run `claude doctor` as a health check; it starts no session and changes nothing [1] | as row 49 | PASS | OK |
 | 56 | Verify the install | Bangla | It shows install state, settings-file validation errors, warnings with fix suggestions [1] | as row 50 | PASS | OK |
-| 57 | Verify the install | Bangla | `/doctor` in a session also proposes fixes; Claude applies them after you confirm [2] | as row 51 | PASS | "fix গুলো" is normally written "fixগুলো" or "fix-গুলো". Optional. |
+| 57 | Verify the install | Bangla | `/doctor` in a session also proposes fixes; Claude applies them after you confirm [2] | as row 51 | PASS | OK (fix round 1: "fix-গুলো") |
 | 58 | Log in | Layman | Run `claude` and log in through the browser [1] | "Run `claude` and follow the browser prompts to log in." | PASS | OK |
 | 59 | Log in | Layman | If the browser does not open, press `c` to copy the login link [3] | "If the browser does not open, press `c` to copy the login URL." | PASS | OK |
 | 60 | Log in | Layman | If the browser shows a code, paste it into the terminal; this happens often in WSL 2, SSH sessions, containers [3] | "If the browser shows a code, paste it at the `Paste code here if prompted` prompt. This code step is common in WSL 2, SSH sessions, and containers." | PASS | OK |
@@ -90,7 +90,7 @@
 | 80 | Log in | Bangla | `claude auth status` exits `0` if logged in, else `1`; a test script can check login first [5] | as rows 67, 68 | PASS | OK |
 | 81 | Log in | Bangla | Use `/login` and `/logout` inside a session [2] | "`/login` Signs in from inside a session." / "`/logout` Signs out from inside a session." | PASS | OK |
 | 82 | Log in | Bangla | `claude setup-token` makes a one-year OAuth token for CI [3] | as row 69 | PASS | OK |
-| 83 | Log in | Bangla | The command does not save the token, so keep it in CI secrets as `CLAUDE_CODE_OAUTH_TOKEN` [3] | as row 70 | PASS | "Command টি", "token টি" are normally written "commandটি" / "command-টি". Optional. |
+| 83 | Log in | Bangla | The command does not save the token, so keep it in CI secrets as `CLAUDE_CODE_OAUTH_TOKEN` [3] | as row 70 | PASS | OK (fix round 1: "Command-টি", "token-টি") |
 | 84 | Connect your IDE | Layman | VS Code needs version 1.94.0 or later [6] | "The VS Code extension needs VS Code 1.94.0 or later." | PASS | OK |
 | 85 | Connect your IDE | Layman | Any paid subscription (Pro, Max, Team, Enterprise) or Console account; no API key needed [6] | "Any paid Claude subscription (Pro, Max, Team, or Enterprise) or a Console account works, and no API key is required." | PASS | OK |
 | 86 | Connect your IDE | Layman | Open the Extensions view, search "Claude Code", click Install [6] | Steps 1-2 of the VS Code list | PASS | OK |
@@ -100,7 +100,7 @@
 | 90 | Connect your IDE | Layman | The plugin does not include the CLI; it runs `claude` in the IDE terminal, so install the CLI first [8] | "The plugin runs the `claude` command in the IDE's integrated terminal. It does not bundle its own copy of the CLI." + step 1 | PASS | OK |
 | 91 | Connect your IDE | Layman | If `claude` is not on `PATH`, the plugin shows "Cannot launch Claude Code" [8] | "If `claude` is not on your `PATH`, the plugin shows \"Cannot launch Claude Code\"." | PASS | OK |
 | 92 | Connect your IDE | Layman | In both IDEs, `Ctrl+Esc` (Windows/Linux) or `Cmd+Esc` (Mac) goes from the editor to Claude [6][8] | VS Code: "`Cmd+Esc` (Mac) or `Ctrl+Esc` (Windows/Linux) moves focus between the editor and Claude." JetBrains: "Press `Cmd+Esc` (Mac) or `Ctrl+Esc` (Windows/Linux) to open Claude Code from the editor." | PASS (true for both IDEs; it omits that in VS Code the key also moves focus back. Cites 6 and 8 each support their IDE.) | OK |
-| 93 | Connect your IDE | Bangla | VS Code needs version 1.94.0 or newer [6] | as row 84 | PASS | OK |
+| 93 | Connect your IDE | Bangla | VS Code needs version 1.94.0 or newer [6] | as row 84 | PASS | OK (fix round 1: "1.94.0 বা তার পরের version"; same number) |
 | 94 | Connect your IDE | Bangla | Any paid subscription or Console account works; no API key needed [6] | as row 85 | PASS | OK |
 | 95 | Connect your IDE | Bangla | Open Extensions view, search "Claude Code", click Install; open Claude with the Spark icon [6] | as rows 86, 87 | PASS | OK |
 | 96 | Connect your IDE | Bangla | Same extension works in Cursor and other VS Code forks [6] | as row 88 | PASS | OK |
@@ -136,15 +136,25 @@
 | 126 | Uninstall | Layman | Native on macOS/Linux/WSL: remove `~/.local/bin/claude` and `~/.local/share/claude` with `rm -f …` and `rm -rf …` [1] | `rm -f ~/.local/bin/claude` / `rm -rf ~/.local/share/claude` | PASS (paths and commands match) | OK |
 | 127 | Uninstall | Layman | npm: run `npm uninstall -g @anthropic-ai/claude-code`; it removes the global npm package [1] | `npm uninstall -g @anthropic-ai/claude-code` | PASS ("removes the global npm package" explains what the `-g` command does; no new product fact) | OK |
 | 128 | Uninstall | Bangla | How you remove Claude Code depends on how you installed it; two methods shown: native and npm [1] | as row 125 | PASS | OK |
-| 129 | Uninstall | Bangla | Native on macOS/Linux/WSL: delete the `~/.local/bin/claude` file and `~/.local/share/claude` folder with the two `rm` commands [1] | as row 126 | PASS | OK |
-| 130 | Uninstall | Bangla | npm: run `npm uninstall -g @anthropic-ai/claude-code`; it removes the global npm package [1] | as row 127 | PASS | "command টি", "package টি": see row 83. Optional. |
+| 129 | Uninstall | Bangla | If you installed with the native installer on macOS/Linux/WSL, delete the `~/.local/bin/claude` file and `~/.local/share/claude` folder with the two `rm` commands [1] (fix round 1 adds "আপনি যদি … তাহলে", same meaning) | as row 126 | PASS | OK |
+| 130 | Uninstall | Bangla | If you installed with npm, run `npm uninstall -g @anthropic-ai/claude-code`; it removes the global npm package [1] (fix round 1 adds "আপনি") | as row 127 | PASS | OK (fix round 1: "command-টি", "package-টি") |
 | 131 | Next steps | Layman | Claude Code also runs on the web, as a desktop app, in Slack, and in CI/CD with GitHub Actions and GitLab [4] | "Claude Code also runs on the web, as a desktop app, in Slack, and in CI/CD with GitHub Actions and GitLab." | PASS | OK |
-| 132 | Next steps | Layman | Link list: Models (model and effort level), Permission Modes, Headless & CI (scripts and pipelines) | The three link items | PASS | Permission Modes: "decide what Claude can do before it asks you" is not the same as Technical "without asking". Suggest "decide what Claude can do without asking you". Not a FAIL: link text, no product fact. |
+| 132 | Next steps | Layman | Link list: Models (model and effort level), Permission Modes, Headless & CI (scripts and pipelines) | The three link items | PASS | OK (fix round 1: "without asking you", same as Technical) |
 | 133 | Next steps | Bangla | Claude Code also runs on the web, as a desktop app, in Slack, and in CI/CD with GitHub Actions and GitLab [4] | as row 131 | PASS | OK |
 | 134 | Next steps | Bangla | Link list: Models, Permission Modes (what Claude can do without asking you), Headless & CI | The three link items | PASS | OK |
 
 ## FAILs
 
-1. Rows 17 and 32 (Install the CLI, Layman and Bangla). The wrong-shell sentence makes the condition wider than the Technical panel. Technical gives two exact error texts and the command to use for each. "An error about `&&` or `irm`" also includes errors that do not come from the wrong shell, for example a network error from `irm` in PowerShell. Suggested Layman text: "If Windows says that `&&` is not a valid statement separator, you are in PowerShell: use the PowerShell command. If Windows says that `irm` is not recognized, you are in CMD: use the CMD command. <Cite n={1} />" Suggested Bangla text: "যদি `The token '&&' is not a valid statement separator` দেখেন, তাহলে আপনি PowerShell-এ আছেন, তাই PowerShell-এর command-টি চালান। যদি `'irm' is not recognized as an internal or external command` দেখেন, তাহলে আপনি CMD-তে আছেন, তাই CMD-এর command-টি চালান। <Cite n={1} />"
+Round 1 (2026-10-20): rows 17 and 32. The wrong-shell sentence made the condition wider than the Technical panel. Fixed in fix round 1 (commit 5889547).
 
-Open FAILs: 2
+## Recheck 2026-10-20
+
+- Scope: `git diff HEAD~1 -- content/getting-started/setup.mdx` (commit 5889547). The Technical panels did not change.
+- Rows 17 and 32: now PASS. Each error text maps to the shell and the command that the Technical warning gives. The Bangla error texts are exact copies.
+- Row 18: "while it downloads" was added. PASS.
+- Row 27: the Layman Git for Windows sentence was removed for the word limit. This is an omission, not a FAIL.
+- Rows 129, 130: the Bangla Uninstall panel adds "আপনি যদি … তাহলে" and "আপনি". The condition, paths, and commands do not change. PASS.
+- Language fixes (rows 10, 37, 40, 57, 83, 93, 130, 132): checked. No number, version, or command changed.
+- No new claims, so no new rows.
+
+Open FAILs: 0
