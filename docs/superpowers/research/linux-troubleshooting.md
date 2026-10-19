@@ -1,6 +1,6 @@
 # Troubleshooting (Linux stage 11) — research notes (2026-10-19)
 
-Fetch note: the roadmap pages were fetched earlier into `/home/nuruddin-kawsar/.cache/linux-roadmap-raw/` (`NNN.txt`, index in `report.tsv`). The official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay) into a flat directory outside the repo. The man7.org pages are HTML renderings of man pages. Quotes are at most 25 words. The index of a source in `page.sources` is the same as its S number here.
+Fetch note: the roadmap pages were fetched earlier into `~/.cache/linux-roadmap-raw/` (`NNN.txt`, index in `report.tsv`). The official pages were fetched with `scripts/linux_fetch.py` (robots.txt respected, 2 s host delay) into a flat directory outside the repo. The man7.org pages are HTML renderings of man pages. Quotes are at most 25 words. The index of a source in `page.sources` is the same as its S number here.
 
 Safety and privacy rule of this stage: the page shows read-only commands only. Every output on the page is an invented illustration (`web01`, `alice`, `203.0.113.7`). No real host name, user name, address, or log line of the research machine is in the page or in these notes. Commands that need root are marked in the code blocks. Logs, `kill -9`, `drop_caches`, `sysctl -w`, `swapoff`, and service restarts carry a `danger` callout.
 
@@ -49,10 +49,13 @@ S41. w(1) — man7.org (procps-ng) — https://man7.org/linux/man-pages/man1/w.1
 S42. ptrace(2) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man2/ptrace.2.html — accessed 2026-10-19
 S43. Debian Reference, chapter 3: system initialization — The Debian Project — https://www.debian.org/doc/manuals/debian-reference/ch03.en.html — accessed 2026-10-19
 S44. proc_pid_oom_score(5) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man5/proc_pid_oom_score.5.html — accessed 2026-10-19
+S45. debian/rsyslog.conf of the Debian rsyslog package — The Debian Project (Salsa) — https://salsa.debian.org/debian/rsyslog/-/raw/debian/latest/debian/rsyslog.conf — accessed 2026-10-19 (read by the fact-checker in round 1 with WebFetch; the polite fetcher got only a bot challenge, 94 bytes; the line is `auth,authpriv.*` to `/var/log/auth.log`)
+S46. hier(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/hier.7.html — accessed 2026-10-19
+S47. OpenSSH server — Ubuntu Server documentation — https://documentation.ubuntu.com/server/how-to/security/openssh-server/ — accessed 2026-10-19
 
 Not usable as sources (no text): #254 Red Hat learning post (the fetch returned only the Red Hat Learning Community closing notice), #255 Medium (`http-403`), #271 DigitalOcean load average (only site boilerplate, 798 bytes), and #007 linuxblog.io (`http-500` in `report.tsv`).
 Read but not cited: #006 itslinuxfoss (it calls "available" memory "unused" memory, which conflicts with free(1), so it is not used), #195 ictbroadcast, #197 Linux Journal, #236 FOSS Linux, #237 linuxconfig dmesg, #269 TecMint uptime. Their facts that the page uses are also in the official pages above.
-Official pages that I could not fetch: Filesystem Hierarchy Standard (`robots`), docs.redhat.com (`robots`), wiki.debian.org/Rsyslog (JavaScript challenge, 94 bytes), sources.debian.org and the Ubuntu `rsyslog.conf` (`robots`), man.openbsd.org/sshd (`robots`), man7 lastb(8) (404), and the Ubuntu security-suggestions page (404). So the page does not cite the FHS for `/var/log`; S7 supports "most logs are in `/var/log`". The Debian and Ubuntu path `/var/log/auth.log` has no official page in my sources; only S4 (a roadmap article) supports it. The Fedora/RHEL path `/var/log/secure` is also in the official CentOS Stream package file (S29).
+Official pages that I could not fetch: Filesystem Hierarchy Standard (`robots`), docs.redhat.com (`robots`), wiki.debian.org/Rsyslog (JavaScript challenge, 94 bytes), sources.debian.org and the Ubuntu `rsyslog.conf` (`robots`), man.openbsd.org/sshd (`robots`), man7 lastb(8) (404), and the Ubuntu security-suggestions page (404). So the page cites hier(7) (S46) for `/var/log`, with S7 as a second source. The path `/var/log/auth.log` is now backed by the Debian package file (S45), which exists only when rsyslog is installed (S43 says rsyslog may be absent). The path `/var/log/secure` is backed by the CentOS Stream package file (S29); Fedora is no longer named, because S29 covers CentOS Stream 9 only. Also dropped: `journalctl _COMM=sshd` (not defined in S21; `sshd-session` since OpenSSH 9.8 can hide lines). The Debian file S45 was not fetched by the polite fetcher (bot challenge); the fact-checker read it in round 1.
 
 Local checks (not citable pages), on Ubuntu with kernel 7.x, procps-ng, util-linux, coreutils 9.x, systemd. All outputs were read only and are not copied here:
 - `uptime`, `nproc`, `free -h`, `vmstat 1 2`, `df -h`, `df -i`, `ss -tuln`, `cat /proc/loadavg /proc/pressure/cpu` ran without root. `/proc/loadavg` has 5 fields. `/proc/pressure/` has `cpu`, `io`, `memory`. `vmstat` printed 18 columns.
@@ -78,68 +81,68 @@ Local checks (not citable pages), on Ubuntu with kernel 7.x, procps-ng, util-lin
 ## Topic: Uptime and Load
 | # | Claim | Source | Quote |
 |---|---|---|---|
-| 10 | `uptime` prints time, time since boot, user count, and load averages for 1, 5, 15 minutes. | S8 | "The current time, how long the system has been running, how many users are currently logged on, and the system load averages for the past 1, 5, and 15 minutes." |
-| 11 | Load average counts runnable and uninterruptible processes. Runnable = using or waiting for a CPU. Uninterruptible = waiting for I/O. | S8 | "the average number of processes that are either in a runnable or uninterruptible state" / "A process in uninterruptible state is waiting for some I/O access, eg waiting for disk." |
+| 10 | `uptime` prints time, time since boot, user count, and load averages for 1, 5, 15 minutes. | S8 | "The current time, how long the system has been running, how many users are currently logged on, and the system load averages" |
+| 11 | Load average counts runnable and uninterruptible processes. Runnable = using or waiting for a CPU. Uninterruptible = waiting for I/O. | S8 | "either in a runnable or uninterruptible state" / "waiting for some I/O access, eg waiting for disk" |
 | 12 | `uptime -s` prints the boot time. | S3 | "If you want to know since when the Linux server is running, you can use the option -s" (S8: "-s, --since system up since") |
-| 13 | Load is not divided by CPU count. 1 on one CPU = always busy. 1 on four CPUs = 75 % idle. | S8 | "Load averages are not normalized for the number of CPUs ... a load average of 1 means a single CPU system is loaded all the time" |
+| 13 | Load is not divided by CPU count. On four CPUs, a load of 1 means 75 % idle time. | S8 | "Load averages are not normalized for the number of CPUs" / "on a 4 CPU system it means it was idle 75% of the time" |
 | 14 | `nproc` prints units available to the process. A cgroup v2 CPU quota can lower it. `--all` prints installed processors. | S10 | "Linux cgroup version 2 CPU quotas may also limit the maximum returned value." / "--all Print the number of installed processors on the system" |
 | 15 | `/proc/loadavg` has the same three numbers as `uptime`. | S9 | "They are the same as the load average numbers given by uptime(1) and other programs." |
-| 16 | `vmstat`: `r` runnable, `b` blocked on I/O, `wa` I/O wait, `st` stolen time. The first report is an average since boot. | S12 | "r: The number of runnable processes" / "b: The number of processes blocked waiting for I/O to complete." / "The first report produced gives averages since the last reboot." |
-| 17 | `st` is time taken by the hypervisor from a virtual machine. (Tip callout: "the host slowed your test" is the tutorial's own reading.) | S11 | "st : time stolen from this vm by the hypervisor" |
+| 16 | `vmstat`: `r` runnable, `b` blocked on I/O, `wa` I/O wait. The first report is an average since boot (the page says it only in a code comment). | S12 | "r: The number of runnable processes" / "b: The number of processes blocked waiting for I/O" / "averages since the last reboot" |
+| 17 | `st` in `vmstat` is time stolen from a virtual machine (S12). `top` says the hypervisor takes it (S11). The page cites both. | S12, S11 | "st: Time stolen from a virtual machine." (S12) / "st : time stolen from this vm by the hypervisor" (S11) |
 | 18 | `top` shows the load line and the CPU states `us sy ni id wa hi si st`. | S11 | "system load avg over the last 1, 5 and 15 minutes" / "wa : time waiting for I/O completion" |
 | 19 | PSI files: `/proc/pressure/cpu`, `memory`, `io`. The `some` line = share of time at least some tasks stall. | S13 | "The “some” line indicates the share of time in which at least some tasks are stalled on a given resource." |
-| 20 | Inference (not a source quote): high load with low CPU use points to slow storage, because tasks in uninterruptible sleep count in the load (claim 11). | S8 | see claim 11 |
+| 20 | Hedged inference (not a source quote): high load with low CPU use can mean I/O waits, because tasks in uninterruptible sleep count in the load (claim 11). A load above the CPU count means more tasks want to run, or wait for I/O, than there are CPUs. A high `st` can mean that the host gave CPU time to other machines, so timings vary. | S8, S11, S12 | see claims 11 and 17 |
 
 ## Topic: Available Memory and Disk
 | # | Claim | Source | Quote |
 |---|---|---|---|
 | 21 | `free` columns: total, used, free, shared, buff/cache, available. | S14 | "total ... used ... free ... shared ... buff/cache Sum of buffers and cache ... available" |
 | 22 | `available` estimates memory for new programs without swapping. It is `MemAvailable`. | S15 | "An estimate of how much memory is available for starting new applications, without swapping." |
-| 23 | Page cache holds file data in RAM. The kernel reclaims it when needed. | S20 | "Whenever a file is read, the data is put into the page cache to avoid expensive disk access on the subsequent reads." / "page cache and anonymous memory" are "reclaimable" |
+| 23 | Page cache holds file data in RAM. The kernel reclaims it when needed. | S20 | "Whenever a file is read, the data is put into the page cache to avoid expensive disk access on the subsequent reads." |
 | 24 | `vmstat` `si` and `so`: memory swapped in from and out to disk, per second. | S12 | "si: Amount of memory swapped in from disk (/s)." / "so: Amount of memory swapped to disk (/s)." |
 | 25 | `df -h` shows space per filesystem. `df -i` shows inodes instead of blocks. | S16 | "-h, --human-readable print sizes in powers of 1024" / "-i, --inodes list inode information instead of block usage" |
 | 26 | `du -s` totals one directory. `-k` prints KiB. `-x` skips other filesystems. | S17 | "-s, --summarize display only a total for each argument" / "-k like --block-size=1K" / "-x, --one-file-system skip directories on different file systems" |
 | 27 | `lsof +L1` selects open files that are unlinked (deleted). | S18 | "A specification of the form ``+L1'' will select open files that have been unlinked." |
-| 28 | Inference (not stated by S18): when `df` shows full space and `du` finds less, a deleted file that a process holds open is one cause. | S18 | see claim 27 |
+| 28 | Tutorial's own explanation (labelled so on the page, not stated by S18): when `df` shows full space and `du` finds less, a deleted file that a process holds open is one cause. | S18 | see claim 27 |
 | 29 | The OOM killer ends a task when memory is exhausted and cannot be reclaimed. | S20 | "on a loaded machine memory will be exhausted and the kernel will be unable to reclaim enough memory ... it invokes the OOM killer." |
 | 30 | A higher `oom_score` means the process is more likely to be chosen. | S44 | "A higher score means that the process is more likely to be selected by the OOM-killer." |
 | 31 | `drop_caches` drops clean caches. It can cost I/O and CPU. Use outside testing or debugging is not recommended. | S19 | "use outside of a testing or debugging environment is not recommended." |
-| 32 | The page greps the kernel log for `oom` or `out of memory`. The exact kernel message text is not claimed. | S20 | (no quote; a search pattern only) |
+| 32 | The page greps the kernel log for `out of memory` or `oom-kill`. A local run showed that `oom` alone also matches a `systemd-oomd` start-up line. The page says that kernel wording varies. | S20 | (no quote; a search pattern only) |
 
 ## Topic: System Logs
 | # | Claim | Source | Quote |
 |---|---|---|---|
 | 33 | Most plain-text logs are in `/var/log`. | S7 | "You can find most of these in the /var/log" |
-| 34 | `systemd-journald` collects kernel messages, `syslog(3)` calls, and service output. | S22 | "Kernel log messages, via kmsg" / "Simple system log messages, via the libc syslog(3) call" / "Standard output and standard error of service units." |
-| 35 | Storage: persistent below `/var/log/journal` if it exists, else volatile below `/run/log/journal`, lost at reboot. | S22 | "stores log data either persistently below /var/log/journal or in a volatile way below /run/log/journal/ (in the latter case, it is lost at reboot)" |
+| 34 | `systemd-journald` collects kernel messages, `syslog(3)` calls, and service output. | S22 | "Kernel log messages, via kmsg" / "via the libc syslog(3) call" / "Standard output and standard error of service units." |
+| 35 | Storage: persistent below `/var/log/journal` if it exists, else volatile below `/run/log/journal`, lost at reboot. | S22 | "persistently below /var/log/journal or in a volatile way below /run/log/journal/ (in the latter case, it is lost at reboot)" |
 | 36 | `Storage=` in `journald.conf` sets where data goes. | S23 | "Controls where to store journal data. One of "volatile", "persistent", "auto" and "none"." |
 | 37 | Some distributions do not enable persistent journal logs by default. | S6 | "Some Linux distributions, specially the desktop ones, don't enable the journal logs by default." |
 | 38 | Under systemd, `rsyslog` may be absent. If present, it writes text log files. | S43 | "the system logging utility rsyslogd(8) may be uninstalled. If it is installed ... create traditional permanent ASCII system log data." |
 | 39 | The rsyslog default file layout comes from distributions. | S26 | "This layout comes from how many Linux distributions package rsyslog." |
 | 40 | `journalctl` filters: `-u` unit, `-b` boot, `-p` priority, `--since`/`--until` time, `-k` kernel. | S21 | "-u, --unit=UNIT|PATTERN Show messages for the specified systemd unit" / "-k, --dmesg Show only kernel messages." |
-| 41 | Priorities `emerg` (0) to `debug` (7). | S21, S25 | "emerg" (0), "alert" (1), "crit" (2), "err" (3), "warning" (4), "notice" (5), "info" (6), "debug" (7)" (S21); LOG_EMERG ... LOG_DEBUG in order of decreasing importance (S25) |
-| 42 | Reading all journal files needs a group: `systemd-journal`, `adm`, or `wheel`. | S21 | "Members of the groups "systemd-journal", "adm", and "wheel" can read all journal files." |
-| 43 | `--utc` shows UTC. `-o short-iso` uses ISO 8601 (RFC 3339 profile) timestamps. | S21 | "--utc Express time in Coordinated Universal Time (UTC)." / "short-iso ... shows timestamps in the RFC 3339 profile of ISO 8601." Local test: output has a zone offset. |
+| 41 | Priorities `emerg` (0) to `debug` (7). | S21, S25 | "emerg" (0), "alert" (1), "crit" (2), "err" (3) ... "info" (6), "debug" (7)" (S21); S25 lists LOG_EMERG to LOG_DEBUG |
+| 42 | Only root and members of `systemd-journal`, `adm`, or `wheel` can read the whole journal. Others see their private per-user journals. | S21 | "All users are granted access to their private per-user journals." / "only root and users who are members of a few special groups" |
+| 43 | `--utc` shows UTC. `-o short-iso` uses ISO 8601 (RFC 3339 profile) timestamps. | S21 | "--utc Express time in Coordinated Universal Time (UTC)." / "RFC 3339 profile of ISO 8601". Local test: output has a zone offset. |
 | 44 | `dmesg` examines the kernel ring buffer. `-c` and `-C` clear it. | S27 | "dmesg is used to examine or control the kernel ring buffer." / "-C, --clear Clear the ring buffer." |
 | 45 | With `dmesg_restrict` = 1, users need `CAP_SYSLOG` to use `dmesg`. | S28 | "When dmesg_restrict is set to 1, users must have CAP_SYSLOG to use dmesg(8)." |
-| 46 | `logrotate` rotates, compresses, removes log files per day, week, month, or size. | S24 | "It allows automatic rotation, compression, removal, and mailing of log files." |
+| 46 | `logrotate` rotates logs: it keeps old logs for a while, compresses them, and removes the oldest. (The word "renames" was dropped.) | S24 | "automatic rotation, compression, removal, and mailing of log files" / "rotated count times before being removed" |
 | 47 | `journalctl --vacuum-size=` removes the oldest archived journal files. `--disk-usage` shows journal size. | S21 | "--vacuum-size= removes the oldest archived journal files until the disk space they use falls below the specified size." |
 
 ## Topic: Authentication Logs
 | # | Claim | Source | Quote |
 |---|---|---|---|
-| 48 | Ubuntu/Debian: `/var/log/auth.log`. Fedora/Red Hat/CentOS: `/var/log/secure`. | S4 | "For Ubuntu/Debian systems: sudo tail -f /var/log/auth.log" / "For Fedora, Red Hat, or CentOS: sudo tail -f /var/log/secure" |
-| 49 | The CentOS Stream rsyslog package sends `authpriv` messages to `/var/log/secure`. | S29 | `authpriv.* action(type="omfile" file="/var/log/secure")` and the comment "The authpriv file has restricted access." |
-| 50 | `sshd` logs to facility `AUTH` at level `INFO` by default. | S34 | "The default is INFO." (LogLevel) / "The default is AUTH." (SyslogFacility) |
-| 51 | `journalctl` takes `FIELD=VALUE` matches, for example `_COMM=`. (Limit: on the research machine `_COMM=sshd` gave "No entries"; no real `sshd` lines were seen.) | S21 | "A match is in the format "FIELD=VALUE"" / "a "_COMM=" match for the script name is added to the query" |
-| 52 | `last` reads `/var/log/wtmp`. `lastb` shows `/var/log/btmp`, the bad logins. | S30 | "last searches back through the /var/log/wtmp file" / "lastb is the same as last, except that by default it shows a log of the /var/log/btmp file, which contains all the bad login attempts." |
-| 53 | `last --time-format iso` shows the time zone. These are util-linux options. | S30 | "The ISO format contains timezone information, making it preferable when printouts are investigated outside of the system." |
-| 54 | `last` has other versions with other options (the GNU accounting `last` page differs: it has `-n num` and `-f`, but no `--time-format`). | S30 | man7 has two `last(1)` pages: acct 6.6.4 (default) and `last(1@@util-linux)` (used here) |
-| 55 | `faillock --user NAME` displays failure records. Default directory `/var/run/faillock`. | S31 | "It can display the recent failed authentication attempts of the username" / "then /var/run/faillock is used" |
+| 48 | Plain-text logs are in `/var/log`. The page cites the Debian file for `auth.log` (rsyslog installed) and the CentOS Stream file for `secure`. | S7, S46, S4, S45, S29 | "/var/log Miscellaneous log files." (S46) / "For Ubuntu/Debian systems: sudo tail -f /var/log/auth.log" (S4) / `auth,authpriv.*   /var/log/auth.log` (S45) |
+| 49 | The CentOS Stream rsyslog package sends only `authpriv` to `/var/log/secure`. The Debian package sends `auth` and `authpriv` to `auth.log`. S45 was read by the fact-checker (round 1) with WebFetch; the writer fetcher got a bot challenge. | S29, S45 | `authpriv.* action(type="omfile" file="/var/log/secure")` / "The authpriv file has restricted access." |
+| 50 | Upstream `sshd` uses facility `AUTH` and `LogLevel INFO`. A distribution can change it, so the page tells the reader to check `SyslogFacility` in `sshd_config`. The page does not claim any distribution value. | S34 | "SyslogFacility ... The default is AUTH." |
+| 51 | Journal read for `sshd`: `journalctl -u ssh` on Ubuntu (unit `ssh.service`). `-u sshd` on other hosts is the tutorial's own advice, not sourced. (`_COMM=sshd` was dropped: it is not defined in S21 and can miss `sshd-session` in OpenSSH 9.8 and later.) | S47, S21 | "sudo journalctl -fu ssh.service" (S47) / "-u, --unit=UNIT|PATTERN Show messages for the specified systemd unit" (S21) |
+| 52 | `last` reads `/var/log/wtmp`. `lastb` shows `/var/log/btmp`, the bad logins. | S30 | "last searches back through the /var/log/wtmp file" / "lastb ... by default it shows a log of the /var/log/btmp file" |
+| 53 | `last --time-format iso` shows the time zone (util-linux). The page says `last` and `lastb` may be missing on recent Debian and Ubuntu: tutorial's own note, not sourced (the checker saw `command not found` on Ubuntu 26.04). | S30 | "The ISO format contains timezone information" |
+| 54 | `last` has other versions with other options (the GNU accounting `last` page differs). The page says "With util-linux" before `--time-format iso`. | S30 | man7 has two `last(1)` pages: acct 6.6.4 (default) and `last(1@@util-linux)` (used here) |
+| 55 | `faillock --user NAME` displays failure records. The page says "with `pam_faillock` (see `/etc/security/faillock.conf`)". | S31 | "It can display the recent failed authentication attempts of the username" / "/etc/security/faillock.conf" |
 | 56 | `pam_faillock` locks an account after more than `deny` consecutive failures. | S32 | "locks the account in case there were more than deny consecutive failed authentications" |
-| 57 | `faillog` reads `/var/log/faillog`. | S33 | "faillog displays the contents of the failure log database (/var/log/faillog)." |
-| 58 | A failed login line gives who, what, when, where, how. The article's sample line has the form `Failed password for <user> from <address> port <n> ssh2`; the page uses an invented line with `203.0.113.7`. | S4 | "The log provides the "who" root), the "what" (Failed password), the "when" ..., the "where" ... and the "how" (ssh2)" |
-| 59 | Brute-force signs: many tries from one address for `root`; `Invalid user` lines. Brute force = many password guesses. | S5, S4 | "too many login attempts from a certain IP with user root, probably someone is trying to attack your system by bruteforcing" (S5); S4 parses `Invalid user` lines |
+| 57 | `faillog` reads `/var/log/faillog`. "Older database" and "may be empty" are the tutorial's own words. | S33 | "faillog displays the contents of the failure log database (/var/log/faillog)." |
+| 58 | Brute force (gloss) means many password guesses in a row. The article's sample line has the form `Failed password for <user> from <address> port <n> ssh2`; the page uses an invented line. | S4 | "The log provides the "who" ... the "what" (Failed password) ... the "where" ... and the "how" (ssh2)" |
+| 59 | Brute-force signs: many tries from one address for `root`; `Invalid user` lines. Brute force = many password guesses. | S5, S4 | "too many login attempts from a certain IP with user root, probably someone is trying to attack your system" (S5); S4 parses `Invalid user` lines |
 | 60 | Authentication logs hold user names and addresses (privacy callout). | S4 | The sample lines show user names and source IP addresses. The advice to restrict access is the tutorial's own. |
 
 ## Topic: Troubleshooting
@@ -148,12 +151,16 @@ Local checks (not citable pages), on Ubuntu with kernel 7.x, procps-ng, util-lin
 | 61 | Method: document symptoms, read logs, compare with a working system, check it is reproducible, document the solution. | S7 | "Document the problem. Write down any and all symptoms" / "Check to see whether the problem is reproducible." / "document the situation" |
 | 62 | "Change one thing at a time" and "keep a rollback step" are the tutorial's own advice (stated as such). | — | not a sourced claim |
 | 63 | `ss` is a read-only socket tool (network layer). | S37 | "ss is used to dump socket statistics." |
-| 64 | `strace` records system calls and signals. `-f` follows children. `-e trace=` limits the calls. `-c` summarizes. `%file` = calls that take a file name. | S35 | "It intercepts and records the system calls made by a process" / "--follow-forks Traces child processes" / "Counts time, calls, and errors for each system call" |
+| 64 | `strace` records system calls and signals. `-f` follows children. `-e trace=` limits the calls. `-c` summarizes. `%file` = calls that take a file name (open, stat, access, ...). | S35 | "intercepts and records the system calls made by a process" / "Traces all system calls that take a file name as an argument." |
 | 65 | A traced process runs slower. | S35 | "A traced process runs more slowly than a non-traced one." |
-| 66 | Where Yama is active, attaching needs `CAP_SYS_PTRACE` or a predefined relationship (default `ptrace_scope` 1). | S42 | "the calling process must either have the CAP_SYS_PTRACE capability in the user namespace of the target process or it must have a predefined relationship" |
+| 66 | Where Yama is active, attaching needs `CAP_SYS_PTRACE` or a predefined relationship (default `ptrace_scope` 1). The page glosses Yama and capability. | S42 | "must either have the CAP_SYS_PTRACE capability ... or it must have a predefined relationship with the target process" |
 | 67 | `ltrace` records dynamic library calls. | S36 | "It intercepts and records the dynamic library calls which are called by the executed process" |
-| 68 | `lsof -p PID` lists the files of the given process. | S18 | "-p s excludes or selects the listing of files for the processes whose optional process IDentification (PID) numbers are in the comma-separated set s" |
+| 68 | (removed from the page in fix round 1: the sentence on `lsof -p` was cut for the word budget; `lsof -p PID` stays in the code block with a comment.) | S18 | "-p s excludes or selects the listing of files for the processes whose ... (PID) numbers are in the comma-separated set s" |
 | 69 | A syscall is a request from a program to the kernel (gloss). | S35 | "system calls and signals occur at the user/kernel interface" |
 | 70 | The bundle script uses `date -u`, `uname -a`, `/etc/os-release`, `uptime`, `free -h`, `df -h`, `journalctl --since "-30min"`. Relative times with `-` are allowed. | S21 | "relative times may be specified, prefixed with "-" or "+", referring to times before or after the current time" |
+| 71 | Tutorial's own advice (stated so on the page): a minimal image may lack tools. `w`, `free`, `vmstat`, `top` are procps-ng programs; `ss` is iproute2; `systemctl` and `journalctl` need systemd; `strace`, `ltrace`, `lsof` are other packages. | S41, S14, S12, S11, S37 | man7 colophons: "This page is part of the procps-ng ... project" (S41, S14, S12, S11); "iproute2" (S37). Package split is not sourced further. |
+| 72 | A cgroup is a kernel group of processes with shared limits (gloss). cgroup v2 CPU quotas can lower the `nproc` result. | S10 | "Linux cgroup version 2 CPU quotas may also limit the maximum returned value." |
+| 73 | An inode is the filesystem record of one file (gloss; own words). `df -i` lists inode information. | S16 | "-i, --inodes list inode information instead of block usage" |
+| 74 | Glosses in the page (own words): unit, hypervisor, cgroup v2, inode, kernel ring buffer, capability, facility, child process, Yama. | S38, S11, S10, S16, S27, S28, S34, S35, S42 | Each term comes from the cited man page. |
 
 Further reading (title only, not cited): none.

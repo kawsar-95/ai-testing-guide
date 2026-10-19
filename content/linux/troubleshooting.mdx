@@ -50,18 +50,21 @@ export const page = {
     { title: 'ptrace(2)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man2/ptrace.2.html', accessed: '2026-10-19' },
     { title: 'Debian Reference, chapter 3: system initialization', publisher: 'The Debian Project', url: 'https://www.debian.org/doc/manuals/debian-reference/ch03.en.html', accessed: '2026-10-19' },
     { title: 'proc_pid_oom_score(5)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man5/proc_pid_oom_score.5.html', accessed: '2026-10-19' },
+    { title: 'debian/rsyslog.conf of the Debian rsyslog package', publisher: 'The Debian Project (Salsa)', url: 'https://salsa.debian.org/debian/rsyslog/-/raw/debian/latest/debian/rsyslog.conf', accessed: '2026-10-19' },
+    { title: 'hier(7)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man7/hier.7.html', accessed: '2026-10-19' },
+    { title: 'OpenSSH server', publisher: 'Ubuntu Server documentation', url: 'https://documentation.ubuntu.com/server/how-to/security/openssh-server/', accessed: '2026-10-19' },
   ],
 }
 
 # Troubleshooting
 
-This stage shows the first checks to run on a Linux server that misbehaves: who is on it, how loaded it is, whether memory or disk is full, and what the logs say. A tester needs these checks to attach evidence to a bug report. Every output on this page is an invented illustration. Hosts such as `web01` and the documentation address ranges `192.0.2.0/24`, `198.51.100.0/24`, and `203.0.113.0/24` stand in for real ones. <Cite n={1} />
+This stage shows the first checks for a Linux server that misbehaves. They tell you who is on it, how loaded it is, whether memory or disk is full, and what the logs say. A tester needs these checks to attach evidence to a bug report. Every output on this page is an invented illustration. Hosts such as `web01` and the documentation address ranges `192.0.2.0/24`, `198.51.100.0/24`, and `203.0.113.0/24` stand in for real ones. <Cite n={1} />
 
 <PageMeta />
 
 ## Server Review
 
-Read before you change anything. A read-only look keeps the evidence intact. A maintenance checklist covers the same ground: logs, disk use, load, and open ports. <Cite n={2} /> Answer five questions in this order. Note each answer with the time before you act.
+Read before you change anything. A read-only look keeps the evidence intact. A maintenance checklist covers the same ground: logs, disk use, load, and open ports. <Cite n={2} /> Answer five questions in this order.
 
 | Question | Command |
 |---|---|
@@ -71,7 +74,9 @@ Read before you change anything. A read-only look keeps the evidence intact. A m
 | What listens? | `ss -tuln`: TCP and UDP, listening only, numeric <Cite n={37} /> |
 | What is broken? | `systemctl --failed` <Cite n={38} />, `journalctl -p err -b` <Cite n={21} /> |
 
-Start with the oldest facts. The kernel release and the distribution tell you which documents and which log file names apply. `w` lists each user, the terminal, the login time, and the current command. <Cite n={41} /> If another person works on the host, ask before you test. A failed unit or a recent boot often explains a symptom at once.
+`w` lists each user, the terminal, the login time, and the current command. <Cite n={41} /> If another person works on the host, ask before you test. A unit is a service or other object that systemd manages.
+
+Tutorial's own advice: a minimal container image may lack some tools. `w`, `free`, `vmstat`, and `top` come from procps-ng, and `ss` comes from iproute2. `systemctl` and `journalctl` need a systemd host. `strace`, `ltrace`, and `lsof` are separate packages. Install what is missing before you start.
 
 ```bash
 # First look. None of these commands changes the system.
@@ -90,13 +95,13 @@ Tutorial's own advice: run this list on the test environment before a run and ag
 
 ## Uptime and Load
 
-`uptime` prints the time, the time since boot, the user count, and the load averages for 1, 5, and 15 minutes. <Cite n={8} /> A load average is the mean number of processes that are runnable or in uninterruptible sleep. A runnable process uses a CPU or waits for one. An uninterruptible process waits for I/O, for example a disk. <Cite n={8} /> `uptime -s` prints the boot time. <Cite n={3} />
+`uptime` prints the time, the time since boot, the user count, and the load averages for 1, 5, and 15 minutes. <Cite n={8} /> A load average is the mean number of processes that are runnable or in uninterruptible sleep. A runnable process uses a CPU or waits for one. An uninterruptible process waits for I/O. <Cite n={8} /> `uptime -s` prints the boot time. <Cite n={3} />
 
-The numbers are not divided by the CPU count. A load of 1 keeps one CPU busy all the time. On four CPUs it means 75 % idle time. <Cite n={8} /> Compare the load with `nproc`. <Cite n={10} /> With a cgroup CPU quota, `nproc` can be lower than `nproc --all`. <Cite n={10} />
+The numbers are not divided by the CPU count. On four CPUs, a load of 1 means 75 % idle time. <Cite n={8} /> Compare the load with `nproc`. <Cite n={10} /> With a cgroup v2 CPU quota (a kernel limit on a group of processes), `nproc` can be lower than `nproc --all`. <Cite n={10} />
 
-`/proc/loadavg` holds the same three numbers. <Cite n={9} /> In `vmstat`, `r` counts runnable processes, `b` counts blocked ones, `wa` is I/O wait, and `st` is time stolen by the hypervisor. The first line is an average since boot, so skip it. <Cite n={12} /> `top` shows these states too. <Cite n={11} />
+`/proc/loadavg` holds the same three numbers. <Cite n={9} /> In `vmstat`, `r` counts runnable processes, `b` blocked ones, and `wa` is I/O wait. `st` is time that the hypervisor (the VM host software) took from the virtual machine. <Cite n={12} /> <Cite n={11} />
 
-PSI (pressure stall information) measures the share of time that tasks wait for CPU, memory, or I/O. Read `/proc/pressure/cpu`, `memory`, and `io`. The `some` line counts time when at least one task stalls. <Cite n={13} />
+PSI (pressure stall information) measures the share of time that tasks wait for CPU, memory, or I/O. Files: `/proc/pressure/cpu`, `memory`, `io`. The `some` line counts time when at least one task stalls. <Cite n={13} />
 
 ```bash
 uptime                 # ... load average: 0.52, 0.48, 0.45   (illustration)
@@ -107,14 +112,14 @@ cat /proc/pressure/io  # some avg10=... avg60=... avg300=... total=...
 ```
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: before a load test, write down `nproc` and the load numbers. A load above the CPU count means work waits in a queue. A high load with low CPU use points to slow storage. On a shared CI virtual machine, a high `st` means the host slowed your test.
+Tutorial's own advice: before a load test, write down `nproc` and the load numbers. A load above the CPU count means more tasks want to run, or wait for I/O, than there are CPUs. A high load with low CPU use can mean I/O waits; check `wa`, `b`, and `/proc/pressure/io`. A high `st` can mean that the host gave CPU time to other machines, so timings vary.
 </Callout>
 
 ## Available Memory and Disk
 
 `free -h` shows total, used, free, shared, buff/cache, and available memory. <Cite n={14} /> Page cache is file data that the kernel keeps in RAM to avoid disk reads. The kernel can reclaim it. <Cite n={20} /> So a small `free` value is normal. Read `available`, the estimate of memory for new programs without swapping. It comes from `MemAvailable`. <Cite n={15} /> Swap is disk space used when RAM runs short. In `vmstat`, `si` and `so` show memory moved from and to swap. <Cite n={12} />
 
-`df -h` shows space per filesystem, and `df -i` shows inode use. <Cite n={16} /> `du -sh <dir>` totals one directory. <Cite n={17} /> If `df` says full but `du` finds less, a process may hold a deleted file open. `lsof +L1` lists such unlinked open files. <Cite n={18} />
+`df -h` shows space per filesystem, `df -i` shows inode use, and `du -sh <dir>` totals one directory. <Cite n={16} /> <Cite n={17} /> An inode is the filesystem record of one file. Tutorial's own explanation: if `df` says full but `du` finds less, a process may hold a deleted file open. `lsof +L1` lists unlinked open files. <Cite n={18} />
 
 When memory runs out and the kernel cannot reclaim enough, the OOM (out-of-memory) killer ends a task. <Cite n={20} /> A higher `/proc/<pid>/oom_score` makes a process more likely to be chosen. <Cite n={44} />
 
@@ -123,7 +128,7 @@ free -h                  # read the "available" column
 df -h; df -i             # space and inodes per filesystem
 du -xsk /var/* 2>/dev/null | sort -n | tail -n 5   # sizes in KiB; -x (GNU option) stays on one filesystem
 lsof +L1                 # deleted but still open (run as root to see all users)
-journalctl -k -b --no-pager | grep -i -E 'oom|out of memory'
+journalctl -k -b --no-pager | grep -i -E 'out of memory|oom-kill'   # kernel wording varies by version
 ```
 
 <Callout type="danger" title="Do not tune memory on a production host">
@@ -136,11 +141,11 @@ Tutorial's own advice: a full disk or an OOM kill can look like a flaky test. Ru
 
 ## System Logs
 
-Most plain-text logs live in `/var/log`. <Cite n={7} /> Many services log to the journal instead: the structured log store of `systemd-journald`. It collects kernel messages, `syslog(3)` calls, and service output. <Cite n={22} /> It writes to `/var/log/journal` if that directory exists, else to `/run/log/journal`, which is lost at reboot. <Cite n={22} /> `Storage=` in `journald.conf` changes this. <Cite n={23} /> Some distributions do not keep the journal by default. <Cite n={6} /> If `rsyslog` runs, it writes text files. <Cite n={43} /> File names differ by distribution. <Cite n={26} />
+Most plain-text logs live in `/var/log`. <Cite n={7} /> <Cite n={46} /> Many services log to the journal instead: the structured log store of `systemd-journald`. It collects kernel messages, `syslog(3)` calls, and service output. <Cite n={22} /> It writes to `/var/log/journal` if that directory exists, else to `/run/log/journal`, which is lost at reboot. <Cite n={22} /> `Storage=` in `journald.conf` changes this, and some distributions do not keep the journal by default. <Cite n={23} /> <Cite n={6} /> If `rsyslog` runs, it writes text files <Cite n={43} />, and file names differ by distribution. <Cite n={26} />
 
-Read the journal with `journalctl`. Filters: unit (`-u`), boot (`-b`), priority (`-p`), time (`--since`, `--until`), kernel (`-k`). <Cite n={21} /> Priorities run from `emerg` (0) to `debug` (7). `-p err` also shows the more severe levels. <Cite n={21} /> <Cite n={25} /> Without the group `systemd-journal`, `adm`, or `wheel`, you see only your own entries. <Cite n={21} /> Add `--utc` or `-o short-iso` to remove doubt about time zones. <Cite n={21} /> `dmesg` prints the kernel ring buffer. <Cite n={27} /> Some systems need `CAP_SYSLOG` for it. <Cite n={28} />
+Filters of `journalctl`: unit (`-u`), boot (`-b`), priority (`-p`), time (`--since`, `--until`), kernel (`-k`). <Cite n={21} /> Priorities run from `emerg` (0) to `debug` (7). `-p err` also shows the more severe levels. <Cite n={21} /> <Cite n={25} /> Only root and members of `systemd-journal`, `adm`, or `wheel` can read the whole journal. Others see only their own. <Cite n={21} /> Use `--utc` or `-o short-iso` for clear time zones. <Cite n={21} /> `dmesg` prints the kernel ring buffer (the kernel message log). <Cite n={27} /> Some systems need `CAP_SYSLOG` for it. A capability is one right of the root account. <Cite n={28} />
 
-`logrotate` rotates logs: it renames, compresses, and removes old files on a schedule or at a size limit. <Cite n={24} />
+`logrotate` rotates logs: it keeps old logs for a while, compresses them, and removes the oldest. <Cite n={24} />
 
 ```bash
 journalctl -u myapp.service --since "-1h" -p warning --no-pager
@@ -151,7 +156,7 @@ ls -l /var/log
 ```
 
 <Callout type="danger" title="Never delete or truncate logs to free space">
-Tutorial's own advice: on a production host, do not run `rm`, `truncate`, or `> file` on a log. Do not run `journalctl --vacuum-size` or `dmesg -c`. <Cite n={21} /> <Cite n={27} /> These commands destroy evidence. Fix rotation instead.
+Tutorial's own advice: on a production host, do not run `rm`, `truncate`, or `> file` on a log. Do not run `journalctl --vacuum-size` or `dmesg -c`. <Cite n={21} /> <Cite n={27} /> These commands destroy evidence.
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
@@ -160,18 +165,18 @@ Tutorial's own advice: after a failed run, save the unit name, the time range wi
 
 ## Authentication Logs
 
-Authentication logs record logins, failed passwords, and `sudo` use. Debian and Ubuntu usually write them to `/var/log/auth.log`. Fedora, Red Hat, and CentOS use `/var/log/secure`. <Cite n={4} /> <Cite n={29} /> `sshd` logs with facility `AUTH` and level `INFO` by default. <Cite n={34} /> On a systemd host, `journalctl _COMM=sshd` selects the entries of the `sshd` process, so you need no file name. <Cite n={21} />
+Authentication logs record logins and `sudo` use. When rsyslog is installed, Debian and Ubuntu write them to `/var/log/auth.log`. <Cite n={4} /> <Cite n={45} /> RHEL and CentOS Stream write them to `/var/log/secure`. <Cite n={29} /> A facility is the category of a syslog message. The Debian file collects `auth` and `authpriv`. The CentOS file collects only `authpriv`. Upstream `sshd` uses facility `AUTH`, but a distribution can change it. <Cite n={34} /> Check it with `grep -i '^SyslogFacility' /etc/ssh/sshd_config`. Without rsyslog, read the journal: `journalctl -u ssh` on Ubuntu <Cite n={47} />, or `-u sshd` elsewhere.
 
-`last` reads `/var/log/wtmp`, the record of logins. `lastb` reads `/var/log/btmp`, the record of bad logins. <Cite n={30} /> `last` options differ by package. These are util-linux options, and `--time-format iso` adds the time zone. <Cite n={30} /> `faillock --user alice` shows failed-attempt records. <Cite n={31} /> The module `pam_faillock` locks an account after more than `deny` consecutive failures. <Cite n={32} /> `faillog` reads `/var/log/faillog`. <Cite n={33} />
+`last` reads `/var/log/wtmp`, the record of logins. `lastb` reads `/var/log/btmp`, the record of bad logins. <Cite n={30} /> With util-linux, `--time-format iso` adds the time zone. <Cite n={30} /> Recent Debian and Ubuntu may not install them (tutorial's own note). With `pam_faillock` (see `/etc/security/faillock.conf`), `faillock --user alice` shows failed attempts. <Cite n={31} /> That module locks an account after more than `deny` consecutive failures. <Cite n={32} /> `faillog` is an older database, `/var/log/faillog`, and may be empty. <Cite n={33} />
 
-A failed login line gives the user, the source address, and the method. <Cite n={4} /> Brute force means many password guesses in a row. Signs: many failures from one address, many tries for `root`, and many `invalid user` lines. <Cite n={5} /> <Cite n={4} />
+Brute force means many password guesses in a row. Signs: many failures from one address, many tries for `root`, and many `invalid user` lines. <Cite n={5} /> <Cite n={4} />
 
 ```bash
 sudo grep 'Failed password' /var/log/auth.log | tail -n 3   # needs root; Debian, Ubuntu
-sudo grep 'Failed password' /var/log/secure | tail -n 3     # needs root; Fedora, RHEL
-journalctl _COMM=sshd --since today --no-pager | tail -n 3  # systemd hosts
-last -n 5 --time-format iso
-sudo lastb -n 5                                             # needs root
+sudo grep 'Failed password' /var/log/secure | tail -n 3     # needs root; RHEL, CentOS
+journalctl -u ssh --since today --no-pager | tail -n 3      # root or journal group; -u sshd on some hosts
+last -n 5 --time-format iso                                 # if installed
+sudo lastb -n 5                                             # needs root; if installed
 # Illustration: Failed password for invalid user alice from 203.0.113.7 port 51234 ssh2
 ```
 
@@ -185,7 +190,7 @@ Tutorial's own advice: when a login test fails, read the matching line and decid
 
 ## Troubleshooting
 
-A method beats a guess. Reproduce the fault. Write down every symptom and error message. Check the logs. Compare with a working system. Write down the cause and the fix. <Cite n={7} /> Tutorial's own advice: change one thing at a time, and keep a rollback step for each change.
+Reproduce the fault. Write down every symptom and error message. Check the logs. Compare with a working system. Write down the cause and the fix. <Cite n={7} /> Tutorial's own advice: change one thing at a time, and keep a rollback step for each change.
 
 Work through the layers in order:
 
@@ -197,10 +202,10 @@ Work through the layers in order:
 | Config | What changed? | `diff` with a working host |
 | Logs | What was said? | `journalctl`, `dmesg` |
 
-`strace` records the system calls of a process. A syscall is a request from a program to the kernel. `-f` follows child processes, `-e trace=` limits the calls, and `-c` prints a summary. <Cite n={35} /> A traced process runs slower. <Cite n={35} /> Where the Yama module is active, attaching with `-p` can need `CAP_SYS_PTRACE`, often root. <Cite n={42} /> `ltrace` traces library calls. <Cite n={36} /> `lsof -p` lists the open files of a process. <Cite n={18} />
+`strace` records the system calls of a process. A syscall is a request from a program to the kernel. `-f` follows child processes (processes that the traced one starts), `-e trace=` limits the calls, and `-c` prints a summary. <Cite n={35} /> A traced process runs slower. <Cite n={35} /> Where Yama (a kernel module that limits tracing) is active, attaching with `-p` can need `CAP_SYS_PTRACE`, often root. <Cite n={42} /> `ltrace` traces library calls. <Cite n={36} />
 
 ```bash
-strace -f -e trace=%file -o trace.txt myapp --check   # files the app opens
+strace -f -e trace=%file -o trace.txt myapp --check   # calls that take a file name (open, stat, ...)
 grep ENOENT trace.txt | tail -n 5                     # "no such file" errors
 strace -c -f myapp --check                            # summary of calls
 lsof -p 1234                                          # open files of PID 1234
