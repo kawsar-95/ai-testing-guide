@@ -164,4 +164,21 @@ Counts (round 2): 27 rows (#100 to #126). PASS 25, FAIL 2. All 19 FAILs of round
 
 FAIL rows to fix (writer, round 3): #120 (the `FROM` layer example), #121 (notes D4, G4, and line 5).
 
-Open FAILs: 2
+Open FAILs: 2 (end of round 2)
+
+## Round 3 (writer fix commit 522b75e)
+
+Date: 2026-10-19. I read `git diff 4532f10 522b75e` (page and notes). Same safety rules: no docker, podman, runc, unshare, mount, sudo; no registry contact.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 127 | Docker | Round 2 #120: "Each Dockerfile instruction, such as `RUN` or `COPY`, adds a layer." | 21, 23 | PASS | S21: "Each instruction in a Dockerfile creates a layer in the image." S23 (found again in my copy): "RUNExecute build commands." and "COPYCopy files and directories." Both instructions change files, so the example is right. |
+| 128 | Notes file | Round 2 #121: row D3 quote | none | PASS | D3 now quotes S23 "RUNExecute build commands." / "COPYCopy files and directories." (quotes of 11, 3, and 4 words; each found in the fetched text). |
+| 129 | Notes file | Round 2 #121: rows D4 and G4 marked "(Removed in round 1: the page no longer has this sentence.)"; line 5 names `registry.invalid/app:1.0` | none | PASS | Read in the diff. The old `example/app:1.0` name remains only in the history note of row D25. |
+| 130 | Whole page | Words per section (same method as round 2: separator rows, headings, callout titles; no `\|` marks, no Cite tags) | none | PASS | Containerization 230, Container Runtime 233, Docker 248, Cgroups 241 (all at most 250). The change is word-neutral (`FROM` to `RUN`). |
+| 131 | Whole page | Overlap check on flat directories | none | PASS | `python3 scripts/linux_overlap.py content/linux/containers.mdx <dir>`: roadmap raw directory (243 files read) and my official directory (54 files read): no output, exit 0. |
+| 132 | Page and notes | No machine data | none | PASS | `grep -i` for `/home/`, `nuruddin`, `kawsar` in `content/linux/containers.mdx` and `docs/superpowers/research/linux-containers.md`: 0 matches. |
+
+Counts (round 3): 6 rows (#127 to #132), PASS 6, FAIL 0. Both FAILs of round 2 (#120, #121) are fixed.
+
+Open FAILs: 0
