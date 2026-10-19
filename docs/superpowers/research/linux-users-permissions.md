@@ -44,6 +44,10 @@ S36. Bourne Shell Builtins — Bash Reference Manual (GNU) — https://www.gnu.o
 S37. unlink(2) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man2/unlink.2.html — accessed 2026-10-19 (page title shortened in `page.sources`: the overlap check flags a copy of the man-page title)
 S38. Command Execution Environment — Bash Reference Manual (GNU) — https://www.gnu.org/software/bash/manual/html_node/Command-Execution-Environment.html — accessed 2026-10-19
 S39. newgrp — POSIX utilities (Issue 8) — The Open Group — https://pubs.opengroup.org/onlinepubs/9799919799/utilities/newgrp.html — accessed 2026-10-19
+S40. Linux File Permission (Linux-CLI-Cheatsheet) — GitHub (abrahimcse) — https://github.com/abrahimcse/Linux-CLI-Cheatsheet/blob/main/Linux%20File%20Permission.md — accessed 2026-10-20 (the owner's pasted cheat sheet; the repo has no licence; the owner decided to include it with attribution; topic 7)
+S41. inode(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/inode.7.html — accessed 2026-10-20
+S42. chown(2) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man2/chown.2.html — accessed 2026-10-20
+S43. path_resolution(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/path_resolution.7.html — accessed 2026-10-20
 
 Local checks (not a citable page): I ran every read-only and scratch-directory example of the page under my own account (GNU coreutils; the scratch directory was in the session scratchpad): `id`, `getent passwd "$USER"`, `getent group sudo`, `ls -l /etc/passwd /etc/shadow`, `touch`, `ls -l`, `stat -c '%A %a %U:%G %n'`, `ls -ld /tmp`, `ls -l /usr/bin/passwd`, `chmod 640`, `chmod u+x,g-w`, `chgrp "$(id -gn)"`, `chmod 2750` (shows `drwxr-s---`), `chmod -R g+rX,o-rwx`, `(umask 077; touch private.txt)` (mode 600; the umask of the parent shell stayed 0002), and `chmod +t` (shows `T` when `x` for others is missing). All worked as written and are safe to run twice. I did NOT run `sudo`, `su`, `useradd`, `usermod`, `userdel`, `groupadd`, `passwd`, `visudo`, `newgrp`, or `chown` (security rule). Those lines of the page come from the man pages in the table below.
 
@@ -176,3 +180,55 @@ The sentence "Use `sudo -n` in CI, so a missing rule fails at once" is the tutor
 | M13 | `chmod -R` ignores symlinks met during the walk; GNU option note: `--preserve-root` exists. (Not on the page.) | S30 | "In contrast, chmod ignores symbolic links encountered during recursive directory traversals." (chmod(1)) |
 
 Tutorial's own advice (no source needed; the sentence "A minimal container may lack `sudo`" and "run them as root or add `sudo`" are also the tutorial's own advice; each flagged "Tutorial's own advice" on the page): print `id` in CI; two-account access tests; narrow sudo rule for the setup step; assert modes with `stat -c %a`; `2770` shared directory with `umask 077` for secrets; do not use `-p`; delete only users that the script made.
+
+### Permissions Cheat Sheet
+Topic 7, added 2026-10-20. The owner pasted the cheat sheet S40 and asked to include it as pasted. The page keeps the pasted wording and structure. Changes to the paste: Markdown conversion, the removed remote image, the attribution line, five factual corrections (rows C1 to C5, each a Callout or an inline sentence with an official cite), a danger Callout and a tip Callout. Fetch note: the pages were fetched on 2026-10-20 with `scripts/linux_fetch.py` into a directory outside the repo. The pasted text matches the live S40 page (checked by reading it). No `chmod`, `chown` or `sudo` ran on real files. The local checks ran in a temporary directory of the cache.
+
+Pasted facts that were checked (the pasted text is quoted only in short pieces; the page cites S40 for the paste, and the rows below show that the official pages agree):
+
+| # | Pasted claim | Source | Quote (max 25 words) |
+|---|---|---|---|
+| P1 | `r` on a directory lists the files. | S25 | "For directories, this means permission to list the contents of the directory." |
+| P2 | `w` on a directory creates or deletes files. | S25 | "For directories, this means permission to create and remove files in the directory." |
+| P3 | `x` on a directory gives access to the files in it. | S25 | "For directories, this means permission to access files in the directory." |
+| P4 | `ls -l` starts with a file-type character: `-` regular file, `d` directory. | S27 | "The file type is one of the following characters:" |
+| P5 | `chmod` takes a symbolic mode or an octal number. | S32 | "which can be either a symbolic representation of changes to make, or an octal number representing the bit pattern for the new mode bits." |
+| P6 | Octal values: read 4, write 2, execute 1. | S32 | "read (4), write (2), and execute (1)" |
+| P7 | Symbolic letters `s` (setuid, setgid) and `t` (sticky). | S32 | "set user or group ID on execution (s), restricted deletion flag or sticky bit (t)" |
+| P8 | Setuid on an executable: the program runs with the owner's permissions (effective user ID of the file). | S25 | "On execution, set the process’s effective user ID to that of the file." |
+| P9 | Setgid on a directory: new files inherit the group of the directory. | S31 | "newly created subfiles inherit the same group as the directory" |
+| P10 | `chown OWNER:GROUP FILE` form. | S33 | "that user is made the owner of each given file" |
+
+Note on the pasted "10-character string": S27 says the `ls -l` mode field is the file-type character and the three sets of permission bits. S27 also says that one more character may follow (a space, `.` or `+`). The page keeps the pasted sentence and does not add this (rule: add nothing else).
+
+Corrections (each is a short sentence on the page after the pasted sentence):
+
+| # | Claim on the page | Source | Quote (max 25 words) |
+|---|---|---|---|
+| C1 | Sticky bit: the owner of the file, the owner of the directory, or a privileged process can delete or rename the file. The paste says only the owner of the file. | S41 | "can be renamed or deleted only by the owner of the file, by the owner of the directory, and by a privileged process." |
+| C1b | Same claim, second source (chmod manual; the owner of the directory is also allowed). | S32 | "it prevents unprivileged users from removing or renaming a file in the directory unless they own the file or the directory" |
+| C1c | Same claim: on Linux the privilege is CAP_FOWNER (root has it). | S37 | "the process is not privileged (Linux: does not have the CAP_FOWNER capability)." |
+| C2 | Setgid also works on an executable file: the process gets the group of the file. The paste names directories only. | S41 | "For an executable file, the set-group-ID bit causes the effective group ID of a process that executes the file to change" |
+| C2b | Same claim. | S25 | "On execution, set the process’s effective group ID to that of the file." |
+| C3 | The 4, 2 or 1 is the first digit of a four-digit octal mode (`chmod 4755 file`, `chmod 2755 directory`, `chmod 1777 directory`). | S32 | "The first digit selects the set user ID (4) and set group ID (2) and restricted deletion or sticky (1) attributes." |
+| C3b | A numeric mode has one to four digits, so a three-digit mode has no special digit. | S32 | "A numeric mode is from one to four octal digits (0-7)" |
+| C3c | Local check: in a temporary directory, `chmod 4755 f`, `chmod 2755 d2` and `chmod 1777 d3` gave `-rwsr-xr-x`, `drwxr-sr-x` and `drwxrwxrwt` (`stat -c '%a %A'`: 4755, 2755, 1777). | local check | not a citable page |
+| C4 | Changing the owner needs a privileged process. A user may change the group only, and only to a group that the user belongs to (Linux). | S42 | "Only a privileged process (Linux: one with the CAP_CHOWN capability) may change the owner of a file." |
+| C4b | Same claim, the group part. | S42 | "The owner of a file may change the group of the file to any group of which that owner is a member." |
+| C4c | The GNU manual says the group rule is system dependent; the portable rule is the group of which the user is a member. | S33 | "or the more portable behavior of being restricted to setting a group of which the user is a member." |
+| C5 | A directory `w` works only with `x` on the directory: the process needs search permission on a directory to look up a name in it (`x` on a directory is search permission). | S43 | "execute permission in case of ordinary files, or search permission in case of directories." |
+| C5b | Same claim: a lookup in a directory without search permission fails. | S43 | "If the process does not have search permission on the current lookup directory, an EACCES error is returned" |
+| C5c | Removing a name needs write access to the directory and search permission on the path. | S37 | "Write access to the directory containing path is not allowed for the process's effective UID" (EACCES; the same line adds "or one of the directories in path did not allow search permission.") |
+| C5d | Local check: in a temporary directory, a directory with mode 200 (write, no execute) gave `touch: setting times of 'w_only/x': Permission denied`. | local check | not a citable page |
+
+Danger Callout (the page cites S25 and S32 and S33 for each fact):
+
+| # | Claim | Source | Quote (max 25 words) |
+|---|---|---|---|
+| D1 | Setuid makes the program run with the user ID of the file owner. If root owns it, it runs as root. | S25 | "On execution, set the process’s effective user ID to that of the file." |
+| D2 | Mode 777 gives write permission to the owner, the group and everyone else (the second, third and fourth digit of the mode select the classes). | S32 | "the fourth for other users not in the file's group, with the same values." |
+| D3 | `chown` changes the owner of every given file (so a wrong path changes the wrong file). | S33 | "that user is made the owner of each given file" |
+
+Tutorial's own advice (no source needed; each flagged "Tutorial's own advice" on the page): set setuid only on a program that you trust; do not use `chmod 777`; check the path with `ls -ld` before `chown`; after a test writes a key file, check `ls -l` or `stat -c %a` (GNU option, S28, row F15); if a test fails with `Permission denied`, find the missing bit and fix that bit, not the mode of the whole file.
+
+Not corrected, by order of the owner (rule: add nothing else): the paste says that numeric mode is a "three-digit octal number" (true for the common case; C3 covers the fourth digit); `chmod +t directoryname` without `u`, `g` or `o` is valid GNU `chmod` (S32: without `ugoa` the effect is as if `a` were given, but bits in the umask are not affected).
