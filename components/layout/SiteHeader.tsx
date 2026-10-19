@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { FUNDAMENTALS_HOME } from "@/lib/fundamentals/chapters";
+import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
 import { LINUX_HOME } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
 import { SITE_NAME } from "@/lib/site";
@@ -51,6 +53,12 @@ export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
             className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent md:inline"
           >
             {LINUX_UI.headerLink}
+          </Link>
+          <Link
+            href={FUNDAMENTALS_HOME}
+            className="hidden whitespace-nowrap rounded-md px-1.5 py-1.5 text-[13.5px] text-text-dim no-underline transition-colors hover:text-accent md:inline"
+          >
+            {FUNDAMENTALS_UI.headerLink}
           </Link>
           <Link
             href={SYSTEM_DESIGN_HOME}

@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { CHAPTERS, FUNDAMENTALS_ROUTES } from "../lib/fundamentals/chapters.ts";
 import { LINUX_ROUTES, STAGES } from "../lib/linux/stages.ts";
 import { PAGES } from "../lib/nav.ts";
 import { assetPattern, precacheUrls, serviceWorkerSource, webManifest } from "../lib/pwa.ts";
@@ -24,6 +25,16 @@ test("precacheUrls includes /linux/ and the 12 stage routes", () => {
     assert.ok(urls.includes(`${basePath}/linux/`));
     for (const stage of STAGES) assert.ok(urls.includes(`${basePath}${stage.href}`), stage.href);
     for (const route of LINUX_ROUTES) assert.ok(urls.includes(`${basePath}${route}`), route);
+    assert.equal(new Set(urls).size, urls.length, "no duplicates");
+  }
+});
+
+test("precacheUrls includes /fundamentals/ and the 11 chapter routes", () => {
+  assert.equal(CHAPTERS.length, 11);
+  assert.equal(FUNDAMENTALS_ROUTES.length, 12);
+  for (const basePath of ["", "/repo"]) {
+    const urls = precacheUrls(basePath);
+    for (const route of FUNDAMENTALS_ROUTES) assert.ok(urls.includes(`${basePath}${route}`), route);
     assert.equal(new Set(urls).size, urls.length, "no duplicates");
   }
 });

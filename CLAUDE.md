@@ -47,11 +47,12 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 
 | Path | Content |
 |---|---|
-| `app/layout.tsx` | Fonts, the theme init script, the metadata, optional Google Analytics |
-| `app/globals.css` | Design tokens (both themes), Tailwind, the MDX element styles (`.mdx`, `.code-block`, `.mdx-table`, `details`) |
+| `app/layout.tsx` | Fonts, the theme init script, the version init script of the Fundamentals module, the metadata, optional Google Analytics |
+| `app/globals.css` | Design tokens (both themes), Tailwind, the MDX element styles (`.mdx`, `.code-block`, `.mdx-table`, `details`), the rule that hides the other `[data-version]` block |
 | `app/(site)/layout.tsx` | The site shell (`SiteShell`) and the search dialog |
 | `app/(site)/page.tsx` | The home page (`components/pages/HomePage.tsx`): the START HERE strip, then the contents by group with a part count per group and a tagline per page |
 | `app/(site)/linux/page.tsx`, `app/(site)/linux/[stage]/page.tsx` | The Linux module: the roadmap home (`components/pages/LinuxHome.tsx`) and the notes of one stage. `[stage]` loads `content/linux/<stage>.mdx`. Static params come from `lib/linux/stages.ts`. |
+| `app/(site)/fundamentals/page.tsx`, `app/(site)/fundamentals/[chapter]/page.tsx` | The Fundamentals module: the home (`components/pages/FundamentalsHome.tsx`) and one chapter. `[chapter]` loads `content/fundamentals/<chapter>.mdx` and shows the version switch if the chapter has versions. Static params come from `lib/fundamentals/chapters.ts`. |
 | `app/(site)/[group]/[page]/page.tsx` | Loads `content/<group>/<page>.mdx`. Static params come from `lib/nav.ts`. It renders the meta line for `<PageMeta />`, the Sources list from `page.sources`, the reading progress bar, and the back-to-top button. |
 | `app/search-index.json/route.ts` | The static search index: one doc per page intro and one per `##` section |
 | `app/sitemap.ts`, `app/robots.ts`, `app/not-found.tsx` | Sitemap, robots, 404 page |
@@ -63,18 +64,25 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper) |
 | `app/(site)/system-design/page.tsx`, `app/(site)/system-design/[topic]/page.tsx` | The System Design module: the home (`components/pages/SystemDesignHome.tsx`) and one case study. `[topic]` loads `content/system-design/<topic>.mdx`. Static params come from `lib/system-design/cases.ts`. |
 | `components/linux/` | `useLinuxProgress.ts` (the progress store), `LinuxProgressSummary`, `StageProgress`, `TopicChecklist`, `LinuxSidebarList` |
+| `components/fundamentals/` | `useFundamentalsProgress.ts`, `FundamentalsProgressSummary`, `ChapterProgress`, `TopicChecklist`, `FundamentalsSidebarList`, `Version` (one version block), `VersionSwitch`, and `diagrams/` (the inline SVG diagrams of the ISTQB version, each in a `Figure` with a visible description) |
 | `lib/linux/stages.ts` | The one ordered list of the 12 stages and their 103 topics. See "Linux Module". |
 | `lib/linux/ui.ts` | The English strings of the Linux module |
 | `components/system-design/` | `SystemDesignSidebarList` |
 | `lib/system-design/cases.ts` | The one ordered list of the 15 System Design case studies. See "System Design Module". |
 | `lib/system-design/ui.ts` | The English strings of the System Design module |
+| `lib/fundamentals/chapters.ts` | The one ordered list of the 11 chapters and their 117 topics. See "Fundamentals Module". |
+| `lib/fundamentals/version.ts` | The version switch values, `resolveVersion`, and the init script |
+| `lib/fundamentals/structure.ts` | `topicVersionCounts` and `headingsInsideVersions`: the structure checks of a chapter file |
+| `lib/fundamentals/ui.ts` | The English strings of the Fundamentals module |
+| `lib/base-path.ts` | `withBasePath` for an image `src` (`MdxImage`) |
 | `lib/nav.ts` | The single source of the page order. See below. |
 | `lib/outline.ts`, `lib/headings.ts` | The `##`/`###` outline of an MDX file, with the same ids as `rehype-slug` |
 | `lib/search.ts` | Builds the search docs, the index, and runs a search |
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
-| `lib/pwa.ts` | The web manifest, the precache list (all 53 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design). It has relative `.ts` imports, so `node --test` can load it. |
+| `lib/pwa.ts` | The web manifest, the precache list (all 65 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels and the three START HERE pages |
 | `lib/reading.ts` | `articleProgress` and `showBackToTop` for the reading aids |
@@ -85,16 +93,19 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `content/<group>/<page>.mdx` | The 23 tutorial pages |
 | `content/linux/<stage>.mdx` | The 12 Linux stage pages |
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `reading`, `search`, `theme`, `ui`, `progress`, `linux-data`, `linux-progress`, `system-design` |
+| `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
+| `public/images/fundamentals/` | The images of the owner's notes |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
 | `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
 | `scripts/system-design-route-map.json` | The 16 System Design routes: `/system-design/` and the 15 cases. Same identity map. |
 | `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
+| `scripts/fundamentals-route-map.json` | The 12 Fundamentals routes: `/fundamentals/` and the 11 chapters. Same identity map as `route-map.json`. |
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the sidebar, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 53 routes:
+The site has 65 routes:
 
 | Routes | Count |
 |---|---|
@@ -102,6 +113,7 @@ The site has 53 routes:
 | `/<group>/<page>/` for the 23 tutorial pages | 23 |
 | `/linux/` and the 12 Linux stages | 13 |
 | `/system-design/` and the 15 case studies | 16 |
+| `/fundamentals/` and the 11 Fundamentals chapters | 12 |
 
 | Group | Folder | Pages |
 |---|---|---|
@@ -118,7 +130,7 @@ The Linux module is the roadmap at `/linux/` and 12 stage pages at `/linux/<stag
 
 `lib/linux/stages.ts` is the one ordered list of the stages and their topics. It drives the sidebar, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `linux-progress`).
 
-The progress code is shared and lives under `prep` names, left from the Interview Prep module that was removed on 2026-10-20: `lib/prep/progress.ts`, `lib/prep/store.ts`, and `components/prep/{useProgress,ProgressBar,browser-store}`. `tests/progress.test.ts` tests it. The Linux module uses it. Its default `localStorage` key is still `prep-progress`. The removed module (the `/prep/` pages, `content/prep/`, the quiz and tables) is in the git history. Its spec, plan, and research notes stay in `docs/superpowers/`.
+The progress code is shared and lives under `prep` names, left from the Interview Prep module that was removed on 2026-10-20: `lib/prep/progress.ts`, `lib/prep/store.ts`, and `components/prep/{useProgress,ProgressBar,browser-store}`. `tests/progress.test.ts` tests it. The Linux and Fundamentals modules use it. Its default `localStorage` key is still `prep-progress`. The removed module (the `/prep/` pages, `content/prep/`, the quiz and tables) is in the git history. Its spec, plan, and research notes stay in `docs/superpowers/`.
 
 | Rule | Detail |
 |---|---|
@@ -146,6 +158,36 @@ The System Design module is the home at `/system-design/` and 15 case pages at `
 | Done | A case is done only when its fact-check report ends with `Open FAILs: 0`. |
 
 To add a case, add it to `lib/system-design/cases.ts` and to `SystemDesignSlug`, create `content/system-design/<slug>.mdx`, and add its route to `scripts/system-design-route-map.json`. `npm test` checks that the three agree.
+
+## Fundamentals Module
+
+The Fundamentals module teaches manual software testing in 11 chapters: the home at `/fundamentals/` and one page for each chapter at `/fundamentals/<chapter>/`. Chapters 1–10 have two versions of the text: the owner's notes and an ISTQB version. Chapter 11 is 50 interview questions with one text. The design is `docs/superpowers/specs/2026-10-20-fundamentals-module-design.md`. The plan is `docs/superpowers/plans/2026-10-20-fundamentals-module.md`.
+
+`lib/fundamentals/chapters.ts` is the one ordered list of the chapters and their topics. It drives the sidebar, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `fundamentals-progress`). A topic id is `<chapter-slug>-NNN` from `001`. The `anchor` comes from the title with the `rehype-slug` rules, with the chapter title slugged first (as in `lib/linux/stages.ts`).
+
+The version switch:
+
+| Part | Detail |
+|---|---|
+| MDX | Each `##` topic of chapters 1–10 has one `<Version of="notes">` block and one `<Version of="istqb">` block. `Version` renders `<div data-version="notes">` or `<div data-version="istqb">`. The interview chapter has no `<Version>` block. |
+| Attribute | `<html data-fundamentals-version>` is `notes` or `istqb`. The server HTML has `istqb`. |
+| Init script | `VERSION_INIT_SCRIPT` (`lib/fundamentals/version.ts`) runs in `<head>` before the first paint. A saved choice (`localStorage` key `fundamentals-version`) wins. Any other value gives `istqb`. If storage is blocked, the attribute stays `istqb`. |
+| Switch | `VersionSwitch` shows two buttons with `aria-pressed` above the text of a chapter with versions. A click sets the attribute, saves the choice in `try/catch`, and fires `fundamentals-version-change`. |
+| CSS | `app/globals.css` hides the `[data-version]` block that is not the one on `<html>`. Both versions are in the HTML, so search and `check_sources.py` see both. |
+
+| Rule | Detail |
+|---|---|
+| Headings | No heading (`#` to `######`) inside a `<Version>` block. Use bold labels for sub-topics. `npm test` (`tests/fundamentals-structure.test.ts`) checks this and the one-block-per-version rule. |
+| Cites | `<Cite>` only in `istqb` blocks and in interview answers. `page.sources` lists only ISTQB sources (syllabus and glossary). |
+| Owner text | Kept. Fix only spelling and broken formatting. If it conflicts with ISTQB, add a one-sentence `<Callout type="warning">` in the `notes` block that ends with "Switch to the ISTQB version at the top of the page to see the ISTQB definition." |
+| Terms that ISTQB does not define | The `istqb` block says "The ISTQB syllabus and glossary do not define this term." and gives the common meaning in `<Callout type="note" title="The tutorial's own explanation">`, with no `<Cite>`. |
+| Images | Only in `notes` blocks, through `<MdxImage src="/images/fundamentals/…" alt="…" />`. The `src` must be a file in `public/` (`npm test` checks this). `MdxImage` adds the base path. |
+| Diagrams | Only in `istqb` blocks: `<StlcDiagram />`, `<TestingClassificationDiagram />`, `<TestLevelsDiagram />`, `<TestPyramidDiagram />`, `<TestQuadrantsDiagram />`, `<PinStateDiagram />`, `<BugLifeCycleDiagram />`. Colors come only from the theme tokens. The description under a diagram is page text, so the fact-check checks it. A diagram that is not ISTQB content says so in its description. |
+| Research notes | `docs/superpowers/research/fundamentals-<slug>.md` and `docs/superpowers/research/fundamentals-<slug>.factcheck.md`. The ISTQB sources are in `docs/superpowers/research/fundamentals-sources.md`. |
+| Done | A chapter is done only when its fact-check report ends with `Open FAILs: 0`, written by an agent that did not write the chapter. |
+| Privacy | No real person's name, email, home path, or login name in new text. |
+
+To add or change a topic, edit `lib/fundamentals/chapters.ts` and the `##` heading of the MDX file together.
 
 ## How to Add a Page
 
@@ -205,6 +247,9 @@ To add a group, add it to `SOURCE` in `lib/nav.ts` and to the `GroupSlug` type, 
 | `CardGrid` (`cols`: 1–4, default 2) | A grid of cards. One column on phones. |
 | `InfoCard` (`title`, optional `subtitle`, optional `tone`: `good` or `bad`) | A raised card with a Markdown body. `tone="good"` adds a green top border and a ✓; `tone="bad"` adds a red top border and a ✗. Screen readers hear "Do" or "Don't". |
 | `Cite` (`n`) | A small `[n]` link to source n of `page.sources` (`#src-n`). Put it after the claim that it supports. |
+| `Version` (`of`: `notes` or `istqb`) | One version of a Fundamentals topic. See "Fundamentals Module". |
+| `MdxImage` (`src`, `alt`), or a Markdown image | An image from `public/`, with the base path added. A text link below the image opens the file in full size. |
+| The Fundamentals diagrams | Inline SVG diagrams with a visible description. See "Fundamentals Module". |
 | Fenced code block | Shiki colors, a language label (hidden for `text`) and a Copy button |
 | GFM table | A raised box that scrolls sideways on narrow screens |
 | `MdxImage` (`src`, `alt`, optional `width` and `height`), also the mapping for Markdown images `![alt](/images/…)` | An `<img>` with lazy loading and a text link "Open the image in full size" below it. It adds the base path to `src` and to the link, because a plain `<img>` does not get it. Give `width` and `height` (use `<MdxImage … />`) so that the page does not jump while the image loads. Write `alt` as a short description and add a text description in a `<details>` block for a dense image. |
@@ -248,10 +293,10 @@ To change a page:
 
 The site installs as an app and works offline.
 
-- The service worker caches all 53 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
+- The service worker caches all 65 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Each build writes a new cache version into `/sw.js`. The new worker deletes the old caches.
 - Only production builds register the service worker. `npm run dev` has none. To test it, run `npm run build` and serve `out/`.
-- A new page in `lib/nav.ts` goes into the precache list automatically.
+- A new page in `lib/nav.ts`, a new stage in `lib/linux/stages.ts`, or a new chapter in `lib/fundamentals/chapters.ts` goes into the precache list automatically.
 
 ## Environment Variables
 
@@ -266,18 +311,18 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), and the page and route-map lists |
+| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
-| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, and `system-design-route-map.json` that has no page in `out/` |
+| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, and `fundamentals-route-map.json` that has no page in `out/` |
 | `python3 scripts/check_links.py out` | Lists broken internal links and assets |
 | `python3 scripts/check_outline.py out` | Checks that each "On this page" link points to an element id |
-| `python3 scripts/check_sources.py out` | Checks each tutorial page, each Linux stage page, and each System Design case page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
+| `python3 scripts/check_sources.py out` | Checks each tutorial page, each Linux stage page, each System Design case page, and each Fundamentals chapter page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
 | `scripts/compare_text.py` | Historical record of the phase-3 migration. It cannot run now. See below. |
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 50 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 61 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 

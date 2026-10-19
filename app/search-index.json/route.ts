@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { CHAPTERS } from "@/lib/fundamentals/chapters";
 import { STAGES } from "@/lib/linux/stages";
 import { PAGES } from "@/lib/nav";
-import { buildLinuxSearchDocs, buildSearchDocs, buildSystemDesignSearchDocs } from "@/lib/search";
+import { buildFundamentalsSearchDocs, buildLinuxSearchDocs, buildSearchDocs, buildSystemDesignSearchDocs } from "@/lib/search";
 import { CASES } from "@/lib/system-design/cases";
 
 export const dynamic = "force-static";
@@ -20,9 +21,14 @@ export function GET() {
     item,
     source: readFileSync(join(process.cwd(), "content", "system-design", `${item.slug}.mdx`), "utf8"),
   }));
+  const fundamentals = CHAPTERS.map((chapter) => ({
+    chapter,
+    source: readFileSync(join(process.cwd(), "content", "fundamentals", `${chapter.slug}.mdx`), "utf8"),
+  }));
   return Response.json([
     ...buildSearchDocs(pages),
     ...buildLinuxSearchDocs(linux),
     ...buildSystemDesignSearchDocs(systemDesign),
+    ...buildFundamentalsSearchDocs(fundamentals),
   ]);
 }
