@@ -8,14 +8,16 @@ import type { SourceLine } from "./headings.ts";
 import type { FundamentalsChapter } from "./fundamentals/chapters.ts";
 import type { LinuxStage } from "./linux/stages.ts";
 import type { SystemDesignCase } from "./system-design/cases.ts";
+import type { ArchitectureTopic } from "./architecture/topics.ts";
 
 export type SearchDoc = {
   id: string;
   href: string;
   /**
    * The part number of a tutorial page. `null` for a Linux stage page (group
-   * "linux"), a Fundamentals chapter (group "fundamentals"), and a System
-   * Design case (group "system design").
+   * "linux"), a Fundamentals chapter (group "fundamentals"), a System Design
+   * case (group "system design"), and an Architecture topic (group
+   * "architecture").
    */
   part: number | null;
   group: string;
@@ -132,6 +134,13 @@ export function buildFundamentalsSearchDocs(
 export function buildSystemDesignSearchDocs(entries: { item: SystemDesignCase; source: string }[]): SearchDoc[] {
   return entries.flatMap(({ item, source }) =>
     pageDocs({ href: item.href, title: item.title, part: null, group: "system design" }, source),
+  );
+}
+
+/** The docs of the Architecture topic pages: the same sections as a tutorial page, with no part number. */
+export function buildArchitectureSearchDocs(entries: { item: ArchitectureTopic; source: string }[]): SearchDoc[] {
+  return entries.flatMap(({ item, source }) =>
+    pageDocs({ href: item.href, title: item.title, part: null, group: "architecture" }, source),
   );
 }
 

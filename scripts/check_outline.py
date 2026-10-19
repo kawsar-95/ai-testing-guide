@@ -3,9 +3,10 @@
 usage: check_outline.py <out-dir> [--routes ROUTE ...]
 Without --routes it checks every page in route-map.json except "/", every Linux
 stage page in linux-route-map.json, every System Design case page in
-system-design-route-map.json, and every Fundamentals chapter page in
-fundamentals-route-map.json (not the homes "/linux/", "/system-design/" and
-"/fundamentals/", which have no meta line).
+system-design-route-map.json, every Fundamentals chapter page in
+fundamentals-route-map.json, and every Architecture page in
+architecture-route-map.json (not the homes "/linux/", "/system-design/",
+"/fundamentals/" and "/architecture/", which have no meta line).
 """
 import argparse
 import json
@@ -16,7 +17,7 @@ import checks
 
 
 def default_routes():
-    """The tutorial pages, the Linux stage pages, the System Design case pages, and the Fundamentals chapter pages, without the four homes."""
+    """The tutorial pages, the Linux stage pages, the System Design case pages, the Fundamentals chapter pages, and the Architecture pages, without the five homes."""
     here = Path(__file__).resolve().parent
     routes = []
     for name, home in (
@@ -24,6 +25,7 @@ def default_routes():
         ("linux-route-map.json", "/linux/"),
         ("system-design-route-map.json", "/system-design/"),
         ("fundamentals-route-map.json", "/fundamentals/"),
+        ("architecture-route-map.json", "/architecture/"),
     ):
         route_map = json.loads((here / name).read_text())
         routes += [route for route in route_map.values() if route != home]

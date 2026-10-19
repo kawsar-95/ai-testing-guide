@@ -71,9 +71,9 @@ class RouteMapTest(unittest.TestCase):
         path = Path(__file__).resolve().parent / "route-map.json"
         route_map = json.loads(path.read_text())
         # One route per content page, plus "/".
-        # The Linux, System Design, and Fundamentals pages have their own maps.
+        # The Linux, System Design, Fundamentals, and Architecture pages have their own maps.
         content = path.parent.parent / "content"
-        own_map = ("linux", "system-design", "fundamentals")
+        own_map = ("linux", "system-design", "fundamentals", "architecture")
         expected = (
             len([f for f in content.rglob("*.mdx") if f.relative_to(content).parts[0] not in own_map])
             + 1
@@ -88,13 +88,15 @@ class RouteMapTest(unittest.TestCase):
 class LoadRoutesTest(unittest.TestCase):
     HERE = Path(__file__).resolve().parent
 
-    def test_load_routes_returns_tutorial_then_linux_then_system_design_then_fundamentals_routes(self):
+    def test_load_routes_returns_tutorial_then_linux_then_system_design_then_fundamentals_then_architecture_routes(self):
         tutorial = list(json.loads((self.HERE / "route-map.json").read_text()).values())
         linux = list(json.loads((self.HERE / "linux-route-map.json").read_text()).values())
         system_design = list(json.loads((self.HERE / "system-design-route-map.json").read_text()).values())
         fundamentals = list(json.loads((self.HERE / "fundamentals-route-map.json").read_text()).values())
+        architecture = list(json.loads((self.HERE / "architecture-route-map.json").read_text()).values())
         routes = check_routes.load_routes()
-        self.assertEqual(routes, tutorial + linux + system_design + fundamentals)
+        self.assertEqual(routes, tutorial + linux + system_design + fundamentals + architecture)
+        self.assertIn("/architecture/idempotency/", routes)
         self.assertIn("/system-design/kafka/", routes)
         self.assertIn("/getting-started/setup/", routes)
         self.assertIn("/linux/containers/", routes)
@@ -116,7 +118,9 @@ class LinuxRouteMapTest(unittest.TestCase):
 
     def test_default_routes_has_the_tutorial_pages_and_the_stage_and_chapter_pages_without_the_homes(self):
         routes = check_outline.default_routes()
-        self.assertEqual(len(routes), 61)
+        self.assertEqual(len(routes), 81)
+        self.assertNotIn("/architecture/", routes)
+        self.assertIn("/architecture/practice/", routes)
         self.assertNotIn("/system-design/", routes)
         self.assertIn("/system-design/kafka/", routes)
         self.assertNotIn("/", routes)
@@ -152,6 +156,19 @@ class FundamentalsRouteMapTest(unittest.TestCase):
         for key, value in route_map.items():
             self.assertTrue(key.endswith("/"))
             self.assertTrue(value.endswith("/"))
+            self.assertEqual(key, value)
+
+
+class ArchitectureRouteMapTest(unittest.TestCase):
+    HERE = Path(__file__).resolve().parent
+
+    def test_architecture_route_map_is_an_identity_map_of_the_topic_routes(self):
+        route_map = json.loads((self.HERE / "architecture-route-map.json").read_text())
+        self.assertEqual(len(route_map), 21)
+        self.assertIn("/architecture/", route_map)
+        for key, value in route_map.items():
+            self.assertTrue(key.startswith("/architecture/"))
+            self.assertTrue(key.endswith("/"))
             self.assertEqual(key, value)
 
 

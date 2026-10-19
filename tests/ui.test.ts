@@ -9,9 +9,10 @@ test("the page count in the strings comes from PAGES", () => {
   assert.ok(searchType.includes(`the ${PAGES.length} parts`));
 });
 
-test("searchType mentions the Linux stages and the System Design case studies", () => {
+test("searchType mentions the Linux stages, the System Design case studies, and the Architecture topics", () => {
   assert.ok(searchType.includes("Linux stages"));
   assert.ok(searchType.includes("System Design case studies"));
+  assert.ok(searchType.includes("Architecture topics"));
 });
 
 test("searchType mentions the Fundamentals chapters", () => {

@@ -23,7 +23,7 @@ export const search = "Search";
 export const searchAll = "Search all parts";
 export const searchClose = "Close search";
 export const searchResults = "Search results";
-export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, and the System Design case studies.`;
+export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, and the Architecture topics.`;
 /** The text of the link to the tutorial in the sidebar of another section. */
 export const crossToTutorial = "Tutorial";
 export const searchLoading = "Loading the search index…";
