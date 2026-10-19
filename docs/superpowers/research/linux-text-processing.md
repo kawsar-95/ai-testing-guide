@@ -15,7 +15,7 @@ S9. Pipelines (Bash Reference Manual) — GNU Project (also the official page of
 S10. pipe(7) — man7.org (Linux man-pages 6.19) — https://man7.org/linux/man-pages/man7/pipe.7.html — accessed 2026-10-19
 S11. tee invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/tee-invocation.html — accessed 2026-10-19
 S12. grep(1) — man7.org (GNU grep) — https://man7.org/linux/man-pages/man1/grep.1.html — accessed 2026-10-19
-S13. Grep and Regular Expressions for Beginners — Ryan's Tutorials (roadmap #100) — https://ryanstutorials.net/linuxtutorial/grep.php — accessed 2026-10-19
+S13. Linux Tutorial - 10. Grep and Regular Expressions (the page heading; the roadmap link text is "Grep and Regular Expressions for Beginners") — Ryan's Tutorials (roadmap #100) — https://ryanstutorials.net/linuxtutorial/grep.php — accessed 2026-10-19
 S14. Getting Started with awk (The GNU Awk User's Guide) — GNU Project — https://www.gnu.org/software/gawk/manual/html_node/Getting-Started.html — accessed 2026-10-19
 S15. How Input Is Split into Records (GNU Awk User's Guide) — GNU Project — https://www.gnu.org/software/gawk/manual/html_node/Records.html — accessed 2026-10-19
 S16. Examining Fields (GNU Awk User's Guide) — GNU Project — https://www.gnu.org/software/gawk/manual/html_node/Fields.html — accessed 2026-10-19
@@ -47,11 +47,11 @@ The three topic groups and the first example are the tutorial's own structure. T
 ## Topic 2: Stdout, Stdin, and Stderr
 | # | Claim | Source | Quote |
 |---|---|---|---|
-| C3 | Each program starts with three streams: input, output, errors and diagnostics. | S3 | "every UNIX program has three streams opened for it when it starts up, one for input, one for output, and one for printing diagnostic or error messages" |
+| C3 | Each program starts with three streams: input, output, errors and diagnostics. | S3 | "three streams opened for it when it starts up, one for input, one for output, and one for printing diagnostic or error messages" |
 | C4 | The short names are stdin, stdout, stderr. | S3 | "namely stdin, stdout, and stderr" |
 | C5 | The file descriptors are 0, 1, 2. | S3 | "the integer file descriptors associated with the streams stdin, stdout, and stderr are 0, 1, and 2, respectively" |
 | C6 | Meaning of each descriptor (table). | S2 | "STDIN (0) - Standard input (data fed into the program)" / "STDERR (2) - Standard error (for error messages, also defaults to the terminal)" |
-| C7 | The terminal is usually behind the streams; the shell can connect them to files or programs. | S4, S2, S3 | S4: "Streams are usually connected to the terminal in which they are executed, but that can be changed using redirection operators" / S2: "Piping and redirection is the means by which we may connect these streams between programs and files" |
+| C7 | The terminal is usually behind the streams; the shell can connect them to files or programs. | S4, S2 | S4: "Streams are usually connected to the terminal in which they are executed" / S2: "Piping and redirection is the means by which we may connect these streams" |
 | C8 | stderr is unbuffered. stdout is line-buffered on a terminal. | S3 | "The stream stderr is unbuffered. The stream stdout is line-buffered when it points to a terminal." |
 
 The gloss of "stream", "file descriptor", and "line-buffered" is the tutorial's own wording. The meaning of "line-buffered" ("waits for a newline") follows the S3 sentence "Partial lines will not appear until fflush(3) or exit(3) is called, or a newline is printed". The `ls` example (status 2 with one bad path) is a local run; GNU `ls` documents exit status 2 for serious trouble, but the page does not state that claim.
@@ -79,12 +79,12 @@ Local check: with `set -C`, `echo hi > names.txt` printed `cannot overwrite exis
 ## Topic 4: Pipes
 | # | Claim | Source | Quote |
 |---|---|---|---|
-| C23 | A pipeline is commands joined by `\|`; each command reads the output of the one before. | S9 | "A pipeline is a sequence of one or more commands separated by one of the control operators ‘\|’ or ‘\|&’." / "each command reads the previous command’s output" |
+| C23 | A pipeline is commands joined by `\|`; each command reads the output of the one before. | S9 | "A pipeline is a sequence of one or more commands separated by one of the control operators" / "each command reads the previous command’s output" |
 | C24 | A pipe is a one-way channel with a read end and a write end. | S10 | "provide a unidirectional interprocess communication channel. A pipe has a read end and a write end." |
 | C25 | The pipe is connected before the redirects of the first command. | S9 | "This connection is performed before any redirections specified by command1." |
 | C26 | `\|&` also sends stderr into the pipe (Bash). Only stdout goes through a plain pipe. | S9 | "command1’s standard error, in addition to its standard output, is connected to command2’s standard input through the pipe" |
 | C27 | A pipeline returns the status of its last command. | S9 | "The exit status of a pipeline is the exit status of the last command in the pipeline, unless the pipefail option is enabled" |
-| C28 | With `pipefail`, the status is that of the last failed command, or 0. | S8 | "the return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status, or zero if all commands in the pipeline exit successfully" |
+| C28 | With `pipefail`, the status is that of the last failed command, or 0. | S8 | "the value of the last (rightmost) command to exit with a non-zero status, or zero if all commands in the pipeline exit successfully" |
 | C29 | The 2024 POSIX standard defines `pipefail`. | S6 | "The exit status of a pipeline shall depend on whether or not the pipefail option (see set) is enabled" |
 
 Local checks: `false | true; echo $?` printed 0; with `set -o pipefail` in a subshell it printed 1. The advice "check that your CI shell supports pipefail" is the tutorial's own. The `pytest | tee` advice follows from C27.
@@ -103,10 +103,12 @@ The `sudo tee -a` advice is the tutorial's own, based on C9. The danger and tip 
 | # | Claim | Source | Quote |
 |---|---|---|---|
 | C34 | `grep` prints lines that match a pattern. | S12 | "grep prints each line that matches a pattern" |
-| C35 | A regular expression is a pattern language. | S13 | "Regular expressions ... allow us to create a pattern." (Gloss in the tutorial's own words.) |
+| C35 | A regular expression is a pattern that describes a set of strings. | S12 | "A regular expression is a pattern that describes a set of strings." (the page says it in its own words) |
+| C35b | A regular expression is more powerful than a wildcard. | S13 | "They are a bit more powerful however." |
 | C36 | Default is basic regex; `-E` extended; `-F` fixed strings. | S12 | "-G, --basic-regexp ... This is the default." / "-E ... extended regular expressions" / "-F ... fixed strings, not regular expressions" |
 | C37 | Quote the pattern. | S12 | "Typically PATTERNS should be quoted when grep is used in a shell command." |
-| C38 | Options `-i`, `-v`, `-n`, `-c`, `-o`, `-r`, `-q`, `-A/-B/-C`. | S12 | "Ignore case distinctions" / "Invert the sense of matching" / "Prefix each line of output with the 1-based line number" / "print a count of matching lines" / "Print only the matched (non-empty) parts" / "Read all files under each directory, recursively" / "Exit immediately with zero status if any match is found" / "Print NUM lines of trailing context" |
+| C38 | Options `-i`, `-v`, `-n`, `-c`. | S12 | "Ignore case distinctions" / "Invert the sense of matching" / "1-based line number" / "a count of matching lines" |
+| C38b | Options `-o`, `-r`, `-q`, `-A/-B/-C`. | S12 | "Print only the matched" / "under each directory, recursively" / "Exit immediately with zero status if any match is found" / "Print NUM lines of trailing context" |
 | C39 | Exit status 0, 1, 2. | S12 | "the exit status is 0 if a line is selected, 1 if no lines were selected, and 2 if an error occurred" |
 | C40 | `-H` is a GNU extension; `-P` selects Perl-style patterns. | S12 | "-H, --with-filename ... This is a GNU extension." / "-P ... Perl-compatible regular expressions" |
 
@@ -121,7 +123,9 @@ Local checks: `grep -n ERROR`, `-c`, `-E`, `-v`, `-q` gave the outputs in the pa
 | C44 | `$1`, `$0`, `NF`, `$NF`. | S16 | "$1 refers to the first field" / "NF ... the number of fields" / "$NF" / "$0 ... represents the whole input record" |
 | C45 | `FS` holds the field separator. | S17 | "The field separator is represented by the predefined variable FS." |
 | C46 | `-F` sets FS; `-v` sets a variable. | S21 | "Set the FS variable to fs" / "Set the variable var to the value val before execution of the program begins." |
-| C47 | A regex between slashes is a pattern; comparisons are patterns. | S18 | "A regular expression can be used as a pattern by enclosing it in slashes." |
+| C47 | A regex between slashes is a pattern. | S18 | "A regular expression can be used as a pattern by enclosing it in slashes." |
+| C47b | A comparison is also a pattern. | S44 | "Comparison expressions, using the comparison operators described in Variable Typing and Comparison Expressions, are a very common kind of pattern." |
+| C47c | The gawk manual describes extras that other awk programs may lack. | S21 | "The following list describes gawk-specific options:" |
 | C48 | Input that looks numeric compares as a number; a string constant compares as text. | S19 | "when one operand is a “pure” string, such as a string constant, then a string comparison is performed. Otherwise, a numeric comparison is performed." |
 | C49 | `BEGIN` and `END` give startup and cleanup actions. | S20 | "supply startup and cleanup actions for awk programs" |
 | C50 | Pass a shell variable with `-v`. | S22 | "A better method is to use awk’s variable assignment feature ... to assign the shell variable’s value to an awk variable." |
@@ -147,11 +151,12 @@ The remark that `cut` does not know CSV quotes is the tutorial's own advice (it 
 |---|---|---|---|
 | C59 | `sort` writes sorted lines; default key is the whole line. | S24 | "If no key fields are specified, sort uses a default key of the entire line." |
 | C60 | The locale sets the order; `LC_ALL=C` helps when the order is unexpected. | S24 | "all comparisons use the character collating sequence specified by the LC_COLLATE locale" / footnote: "set the LC_ALL environment variable to ‘C’" |
-| C61 | `-n`, `-r`, `-u`, `-k`, `-t`, `-c`. | S24 | "Sort numerically." / "Reverse the result of comparison" / "output only the first of a sequence of lines that compare equal" / "Specify a sort field" / "Use character separator as the field separator" / "Check whether the given file is already sorted" |
+| C61 | `-n`, `-r`, `-u`, `-k`. | S24 | "Sort numerically." / "Reverse the result of comparison" / "only the first of a sequence of lines that compare equal" / "Specify a sort field" |
+| C61b | `-t`, `-c`. | S24 | "Use character separator as the field separator" / "Check whether the given file is already sorted" |
 | C62 | `-c` exits with status 1 if the input is not sorted. | S24 | "exit with a status of 1" |
-| C63 | `-k 2,2n`, not `-k 2n`. | S24 | "If you had written -k 2n instead of -k 2,2n sort would have used all characters beginning in the second field and extending to the end of the line" |
+| C63 | `-k 2,2n`, not `-k 2n`. | S24 | "sort would have used all characters beginning in the second field and extending to the end of the line" |
 | C64 | `-h`, `-V`: GNU extras. | S24 | "-h: Sort numerically, first by numeric sign ...; then by SI suffix" / "As a GNU extension, ... a ‘V’ version type" |
-| C65 | `sort -o F F` works; safer to use another file. | S24 | "you can sort a file in place by using commands like sort -o F F ... it is often safer to output to an otherwise-unused file, as data may be lost if the system crashes" |
+| C65 | `sort -o F F` works; safer to use another file. | S24 | "you can sort a file in place" / "it is often safer to output to an otherwise-unused file" |
 
 Local checks: the key sort outputs were run (`-k2,2n` gave 95, 120, 340, 410). Whether `-h` exists outside GNU is not in S24, so the page only says "Other versions of `sort` may lack them".
 
@@ -177,7 +182,7 @@ S28. tail invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.or
 S29. nl invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/nl-invocation.html — accessed 2026-10-19
 S30. paste invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/paste-invocation.html — accessed 2026-10-19
 S31. join invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/join-invocation.html — accessed 2026-10-19
-S32. Pre-sorting for join (GNU Coreutils 9.12, node "Sorting files for join") — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/Sorting-files-for-join.html — accessed 2026-10-19
+S32. Sorting files for join (GNU Coreutils 9.12; the node heading is "Pre-sorting") — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/Sorting-files-for-join.html — accessed 2026-10-19
 S33. General options in join (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/General-options-in-join.html — accessed 2026-10-19
 S34. split invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/split-invocation.html — accessed 2026-10-19
 S35. tr invocation (GNU Coreutils 9.12) — GNU Project — https://www.gnu.org/software/coreutils/manual/html_node/tr-invocation.html — accessed 2026-10-19
@@ -224,8 +229,8 @@ S27 does not say that `head -n -N` is GNU-only. The page says "Other versions of
 | # | Claim | Source | Quote |
 |---|---|---|---|
 | C87 | Default is 10 lines. | S28 | "tail prints the last part (10 lines by default) of each file" |
-| C88 | `-n +N` starts at line N; `tail -n +2` skips the first line. | S28 | "If num is prefixed with a ‘+’, start printing with line num from the start of each file. For example to skip the first line use tail -n +2" |
-| C89 | `-f` loops forever; you must stop it yourself. | S28 | "Loop forever trying to read more characters at the end of the file, presumably because the file is growing." / "you would have had to kill the tail -f process yourself" |
+| C88 | `-n +N` starts at line N; `tail -n +2` skips the first line. | S28 | "start printing with line num from the start of each file" / "to skip the first line use tail -n +2" |
+| C89 | `-f` loops forever; you must stop it yourself. | S28 | "Loop forever trying to read more characters at the end of the file" / "you would have had to kill the tail -f process yourself" |
 | C90 | Default `-f` follows the descriptor; not useful for rotated logs. | S28 | "use --follow=descriptor. This is the default behavior, but it is not useful if you’re tracking a log file that may be rotated" |
 | C91 | `-F` is `--follow=name --retry`; it reopens a removed file. | S28 | "This option is the same as --follow=name --retry. That is, tail will attempt to reopen a file when it is removed." |
 | C92 | `--pid` ends `tail` when the writer ends. | S28 | "tail will exit shortly after all the identified processes no longer exist" |
@@ -266,7 +271,7 @@ S29 does not say the long names are GNU-only; the page says "Other versions of `
 | # | Claim | Source | Quote |
 |---|---|---|---|
 | C111 | `join` writes a line for each pair of lines with identical join fields. | S31 | "join writes to standard output a line for each pair of input lines that have identical join fields." |
-| C112 | Defaults: first field, blank separators, output order. | S31 | "the join field is the first field in each line" / "each output line consists of the join field, the remaining fields from file1, then the remaining fields from file2." |
+| C112 | Defaults: first field, output order. | S31 | "the join field is the first field in each line" / "the remaining fields from file1, then the remaining fields from file2" |
 | C113 | Both files must be sorted on the key. | S31, S32 | S31: "file1 and file2 should be sorted on the join fields." / S32: "join requires sorted input files." |
 | C114 | Recommended sort command. | S32 | "The recommended sorting option is ‘sort -k 1b,1’ (assuming the desired key is in the first column)." |
 | C115 | Use the same locale; `C` avoids problems. | S32 | "it is recommended to use the ‘C’ locale for both commands" |
@@ -275,7 +280,7 @@ S29 does not say the long names are GNU-only; the page says "Other versions of `
 | C118 | `-a N` also prints unpairable lines of file N. | S33 | "Print a line for each unpairable line in file file-number (either ‘1’ or ‘2’), in addition to the normal output." |
 | C119 | `-v N` prints only unpairable lines. | S33 | "Print a line for each unpairable line in file file-number (either ‘1’ or ‘2’), instead of the normal output." |
 | C120 | `-e` fills missing fields; `-o auto` infers the output format. | S33 | "Replace those output fields that are missing in the input with string." / "infer the output format from the first line in each file" |
-| C121 | Unsorted input is diagnosed only if there are unpairable lines; `--check-order` fails. | S33 | "wrongly sorted inputs are diagnosed only if an input file is found to contain unpairable lines" / "Fail with an error message if either input file is wrongly ordered." |
+| C121 | Unsorted input is diagnosed only if there are unpairable lines; `--check-order` fails. | S33 | "diagnosed only if an input file is found to contain unpairable lines" / "Fail with an error message if either input file is wrongly ordered." |
 | C122 | The output of a run with unsorted input should not be used. | S33 | "the join command will exit with a nonzero status (and the output should not be used)" |
 | C123 | Output with unsorted input is not guaranteed. | S33 | "is not guaranteed to produce any particular output" |
 
@@ -285,10 +290,10 @@ S29 does not say the long names are GNU-only; the page says "Other versions of `
 | # | Claim | Source | Quote |
 |---|---|---|---|
 | C124 | `split` cuts input into several output files. | S34 | "split creates output files containing consecutive or interleaved sections of input" |
-| C125 | Default 1000 lines per piece; names `x` + `aa`, `ab`. | S34 | "By default split puts 1000 lines of input (or whatever is left over for the last section), into each output file." / "prefix (‘x’ by default) followed by a group of characters" |
+| C125 | Default 1000 lines per piece; names `x` + `aa`, `ab`. | S34 | "By default split puts 1000 lines of input" / "prefix (‘x’ by default) followed by a group of characters" |
 | C126 | Joining the pieces in name order gives the original. | S34 | "concatenating the output files in traditional sorted order by file name produces the original input file (except -nr/n)" |
 | C127 | `-l` lines, `-b` bytes. | S34 | "Put lines lines of input into each output file." / "Put size bytes of input into each output file." |
-| C128 | Byte and chunk splits can cut a line. | S34 | "Individual lines or records longer than size bytes are broken into multiple files." / "Notice how, by default, one line may be split onto two or more" |
+| C128 | A byte split (`-b`) does not keep lines whole; `-C` does. | S34 | -b: "Put size bytes of input into each output file." / -C: "as many complete lines of input as possible without exceeding size bytes" |
 | C129 | `-n l/N` makes N files without cutting lines. | S34 | "l/n generate n files without splitting lines or records" |
 | C130 | `-d` uses digits in the suffix. | S34 | "Use digits in suffixes rather than lower-case letters." |
 | C131 | `--additional-suffix` appends a suffix to the names. | S34 | "Append an additional suffix to output file names." |
@@ -336,3 +341,24 @@ The gloss of "tab stop" is the tutorial's own paraphrase of C145.
 | C155 | `>` empties the output file before the command starts. | S5 | See C11, C20. |
 
 S40 does not say `--first-only` is GNU-only; the page says "Other versions of `unexpand` may lack it" (hedged). Local run of the `code.txt` example: tab counts 0, 1, 2.
+
+## Fix round 1 (2026-10-19): new sources and claims
+Official pages fetched for the fix are in `/home/nuruddin-kawsar/.cache/linux-stage-text-processing-fix/` (gawk Expression Patterns, utf-8(7), systemd-journald.service(8), POSIX head, tail, unexpand, and the man7 pages of wc, head, tail, nl, paste, join, split, tr, expand, unexpand).
+
+S44. Expressions as Patterns (The GNU Awk User's Guide) — GNU Project — https://www.gnu.org/software/gawk/manual/html_node/Expression-Patterns.html — accessed 2026-10-19
+S45. utf-8(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/utf-8.7.html — accessed 2026-10-19
+S46. systemd-journald.service(8) — man7.org (systemd) — https://man7.org/linux/man-pages/man8/systemd-journald.service.8.html — accessed 2026-10-19
+S47. head (POSIX.1-2024) — The Open Group — https://pubs.opengroup.org/onlinepubs/9799919799/utilities/head.html — accessed 2026-10-19
+S48. tail (POSIX.1-2024) — The Open Group — https://pubs.opengroup.org/onlinepubs/9799919799/utilities/tail.html — accessed 2026-10-19
+S49. unexpand (POSIX.1-2024) — The Open Group — https://pubs.opengroup.org/onlinepubs/9799919799/utilities/unexpand.html — accessed 2026-10-19
+
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| C156 | UTF-8 is a multibyte encoding; a Unicode character takes 1 to 4 bytes. | S45 | "UTF-8 - an ASCII compatible multibyte Unicode encoding" / "Unicode characters can be only up to four bytes long in UTF-8." |
+| C157 | A letter such as é (U+00E9) takes two bytes in UTF-8. | S45 | Encoding table: "0x00000080 - 0x000007FF: 110xxxxx 10xxxxxx" (two bytes). Local run: `printf 'h\303\251llo' \| wc -c` gave 6, `wc -m` gave 5. |
+| C158 | The journal collects what services write to stdout and stderr, so some services have no file in `/var/log`. | S46 | "systemd-journald is a system service that collects and stores logging data." / "Standard output and standard error of service units." |
+| C159 | `head -n -N` is not in POSIX (only a positive number). | S47 | "head [-c number\|-n number] [file...]" / "The application shall ensure that the number option-argument is a positive decimal integer." |
+| C160 | POSIX `tail` has only `-f`, `-c`, `-n`, `-r`; `-F` and `--pid` are not in it. | S48 | "tail [-f] [-c number\|-n number] [file]" / "tail -r [-n number] [file]" |
+| C161 | POSIX `unexpand` has only `-a` and `-t`; `--first-only` is not in it. | S49 | "unexpand [-a\|-t tablist] [file...]" |
+
+Own statements without a source: a "systemd host" is a Linux system that uses systemd (gloss); "a minimal container may have no `journalctl`" (own caution, as in the notes of earlier stages); the `nl` note says only that not every version has the long names (hedged, no claim of who lacks them). Local check: `split -l 10` of 25 lines, then `split -l 10` of 5 lines with the same prefix, left `p_ab` and `p_ac` from the first run (wc -l: 5, 10, 5): stale pieces stay behind. The code comments of the `uniq` example were re-run: `uniq events.txt` prints `timeout, ok, timeout, ok, error`.
