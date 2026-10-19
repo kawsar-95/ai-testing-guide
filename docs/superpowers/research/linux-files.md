@@ -164,6 +164,7 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 | C84 | `stat` format `%h` is the number of hard links. | S4 | "%h number of hard links" |
 | C85 | `ln TARGET LINK_NAME` is the first form. | S23 | "ln [option]... [-T] target linkname" |
 | C86 | `ln -f` removes existing destination files. | S23 | "Remove existing destination files." |
+| C86b | `ln -n` treats the link name as a normal file when it is a symlink to a directory. Without `-n`, `ln -sf` makes the new link inside the old target directory. Checked in a local run (GNU `ln` and uutils `ln`: `-sf` made `v3` inside `releases/v2`; `-sfn` changed the link). | S23 | "Do not treat the last operand specially when it is a symbolic link to a directory." / "The default is to treat a destination that is a symlink to a directory just like a directory." |
 
 ## Archiving and Compressing
 | # | Claim | Source | Quote |
@@ -175,6 +176,7 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 | C91 | `-f` names the archive. | S25 | "Use archive file or device ARCHIVE." |
 | C92 | `-C DIR` changes to DIR first. | S25 | "Change to DIR before performing any operations." |
 | C93 | `gzip` replaces a file with a `.gz` file; `-k` keeps the original; `-d` decompresses. | S26 | "each file is replaced by one with the extension ‘.gz’" / "Keep (don’t delete) input files during compression or decompression." / "Decompress." |
+| C93b | `gzip -d` replaces the `.gz` file with the plain file (`-k` keeps it). `gzip` without `-k` replaces the original. Checked in a local run. | S26 | "replaces each file whose name ends with ‘.gz’" |
 | C94 | ZIP packs compressed files in one archive. | S27 | "Zip puts one or more compressed files into a single ZIP archive" |
 | C95 | Use `unzip` for a ZIP file with many members. | S26 | "To extract zip files with several members, use unzip instead of gunzip." |
 | C96 | Extraction can overwrite files; extract an untrusted archive in a new directory. | S28 | "Extracting files from archives can overwrite files that already exist." / "you should make a new directory and extract into that directory" |
