@@ -71,10 +71,10 @@ class RouteMapTest(unittest.TestCase):
         path = Path(__file__).resolve().parent / "route-map.json"
         route_map = json.loads(path.read_text())
         # One route per content page, plus "/".
-        # The Linux stage pages have their own map (linux-route-map.json).
+        # The Linux stage pages and the System Design pages have their own maps.
         content = path.parent.parent / "content"
         expected = (
-            len([f for f in content.rglob("*.mdx") if "linux" not in f.relative_to(content).parts[:1]])
+            len([f for f in content.rglob("*.mdx") if f.relative_to(content).parts[0] not in ("linux", "system-design")])
             + 1
         )
         self.assertEqual(len(route_map), expected)
@@ -87,11 +87,13 @@ class RouteMapTest(unittest.TestCase):
 class LoadRoutesTest(unittest.TestCase):
     HERE = Path(__file__).resolve().parent
 
-    def test_load_routes_returns_tutorial_then_linux_routes(self):
+    def test_load_routes_returns_tutorial_then_linux_then_system_design_routes(self):
         tutorial = list(json.loads((self.HERE / "route-map.json").read_text()).values())
         linux = list(json.loads((self.HERE / "linux-route-map.json").read_text()).values())
+        system_design = list(json.loads((self.HERE / "system-design-route-map.json").read_text()).values())
         routes = check_routes.load_routes()
-        self.assertEqual(routes, tutorial + linux)
+        self.assertEqual(routes, tutorial + linux + system_design)
+        self.assertIn("/system-design/kafka/", routes)
         self.assertIn("/getting-started/setup/", routes)
         self.assertIn("/linux/containers/", routes)
 
@@ -111,11 +113,26 @@ class LinuxRouteMapTest(unittest.TestCase):
 
     def test_default_routes_has_the_tutorial_pages_and_the_stage_pages_without_the_linux_home(self):
         routes = check_outline.default_routes()
-        self.assertEqual(len(routes), 35)
+        self.assertEqual(len(routes), 50)
+        self.assertNotIn("/system-design/", routes)
+        self.assertIn("/system-design/kafka/", routes)
         self.assertNotIn("/", routes)
         self.assertNotIn("/linux/", routes)
         self.assertIn("/linux/files/", routes)
         self.assertIn("/getting-started/setup/", routes)
+
+
+class SystemDesignRouteMapTest(unittest.TestCase):
+    HERE = Path(__file__).resolve().parent
+
+    def test_system_design_route_map_is_an_identity_map_of_the_case_routes(self):
+        route_map = json.loads((self.HERE / "system-design-route-map.json").read_text())
+        self.assertEqual(len(route_map), 16)
+        self.assertIn("/system-design/", route_map)
+        for key, value in route_map.items():
+            self.assertTrue(key.startswith("/system-design/"))
+            self.assertTrue(key.endswith("/"))
+            self.assertEqual(key, value)
 
 
 class BrokenLinksTest(unittest.TestCase):

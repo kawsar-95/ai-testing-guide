@@ -6,11 +6,15 @@ import MiniSearch from "minisearch";
 import { headingsFromSource, plainTitle, sourceLines } from "./headings.ts";
 import type { SourceLine } from "./headings.ts";
 import type { LinuxStage } from "./linux/stages.ts";
+import type { SystemDesignCase } from "./system-design/cases.ts";
 
 export type SearchDoc = {
   id: string;
   href: string;
-  /** The part number of a tutorial page. `null` for a Linux stage page (group "linux"). */
+  /**
+   * The part number of a tutorial page. `null` for a Linux stage page (group
+   * "linux") and for a System Design case (group "system design").
+   */
   part: number | null;
   group: string;
   page: string;
@@ -107,6 +111,13 @@ export function buildSearchDocs(pages: { page: SearchPage; source: string }[]): 
 export function buildLinuxSearchDocs(entries: { stage: LinuxStage; source: string }[]): SearchDoc[] {
   return entries.flatMap(({ stage, source }) =>
     pageDocs({ href: stage.href, title: stage.title, part: null, group: "linux" }, source),
+  );
+}
+
+/** The docs of the System Design case pages: the same sections as a tutorial page, with no part number. */
+export function buildSystemDesignSearchDocs(entries: { item: SystemDesignCase; source: string }[]): SearchDoc[] {
+  return entries.flatMap(({ item, source }) =>
+    pageDocs({ href: item.href, title: item.title, part: null, group: "system design" }, source),
   );
 }
 

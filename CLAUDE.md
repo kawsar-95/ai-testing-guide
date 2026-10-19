@@ -61,15 +61,19 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `components/navigation/` | `SectionNav` ("On this page"), `SearchPalette` (Ctrl/Cmd+K) |
 | `components/content/` | `PageHeader` (the `PART 05 · CONFIGURE` eyebrow), `MetaLine` (the meta line), `Sources`, `ReadingProgress`, `BackToTop`, `PrevNext`, `CopyButton` |
 | `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper) |
+| `app/(site)/system-design/page.tsx`, `app/(site)/system-design/[topic]/page.tsx` | The System Design module: the home (`components/pages/SystemDesignHome.tsx`) and one case study. `[topic]` loads `content/system-design/<topic>.mdx`. Static params come from `lib/system-design/cases.ts`. |
 | `components/linux/` | `useLinuxProgress.ts` (the progress store), `LinuxProgressSummary`, `StageProgress`, `TopicChecklist`, `LinuxSidebarList` |
 | `lib/linux/stages.ts` | The one ordered list of the 12 stages and their 103 topics. See "Linux Module". |
 | `lib/linux/ui.ts` | The English strings of the Linux module |
+| `components/system-design/` | `SystemDesignSidebarList` |
+| `lib/system-design/cases.ts` | The one ordered list of the 15 System Design case studies. See "System Design Module". |
+| `lib/system-design/ui.ts` | The English strings of the System Design module |
 | `lib/nav.ts` | The single source of the page order. See below. |
 | `lib/outline.ts`, `lib/headings.ts` | The `##`/`###` outline of an MDX file, with the same ids as `rehype-slug` |
 | `lib/search.ts` | Builds the search docs, the index, and runs a search |
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
-| `lib/pwa.ts` | The web manifest, the precache list (all 37 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (all 53 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels and the three START HERE pages |
 | `lib/reading.ts` | `articleProgress` and `showBackToTop` for the reading aids |
@@ -78,21 +82,24 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `mdx-components.tsx` | Registers the MDX components |
 | `content/<group>/<page>.mdx` | The 23 tutorial pages |
 | `content/linux/<stage>.mdx` | The 12 Linux stage pages |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `reading`, `search`, `theme`, `ui`, `progress`, `linux-data`, `linux-progress` |
+| `content/system-design/<slug>.mdx` | The 15 System Design case pages |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `reading`, `search`, `theme`, `ui`, `progress`, `linux-data`, `linux-progress`, `system-design` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
 | `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
+| `scripts/system-design-route-map.json` | The 16 System Design routes: `/system-design/` and the 15 cases. Same identity map. |
 | `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the sidebar, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 37 routes:
+The site has 53 routes:
 
 | Routes | Count |
 |---|---|
 | `/` | 1 |
 | `/<group>/<page>/` for the 23 tutorial pages | 23 |
 | `/linux/` and the 12 Linux stages | 13 |
+| `/system-design/` and the 15 case studies | 16 |
 
 | Group | Folder | Pages |
 |---|---|---|
@@ -121,6 +128,22 @@ The progress code is shared and lives under `prep` names, left from the Intervie
 | Topics | `npm test` checks that each stage has an MDX file and that each topic anchor is the id of a `##` heading. |
 
 To add or change a topic, edit `lib/linux/stages.ts` and the `##` heading of the MDX file together. The title of a topic is its heading. The `anchor` comes from the title with the `rehype-slug` rules. Six topics have an anchor that ends in `-1`, because the `#` title of the page takes the plain slug first.
+
+## System Design Module
+
+The System Design module is the home at `/system-design/` and 15 case pages at `/system-design/<slug>/`. Each case explains how one well-known system works (Kafka, Google Search, YouTube, WhatsApp, Uber ETA, payments, …), in plain words for testers. It has no progress checklist.
+
+`lib/system-design/cases.ts` is the one ordered list of the cases (slug, title, description). It drives the sidebar, the home page, prev/next, search (group `system design`), the sitemap, and the precache. The `#` heading of each MDX file is the case title.
+
+| Rule | Detail |
+|---|---|
+| Sources | Source 1 of each page is its article of The System Design Newsletter by Neo Kim (systemdesign.one). A page can also cite primary sources that the article links to (company engineering blogs, official docs). This replaces "No blogs" of the Content Workflow for this module only. If the article shows one possible design and not the real company system, the page says so. |
+| Research notes | `docs/superpowers/research/system-design-<slug>.md` and `system-design-<slug>.factcheck.md` |
+| Raw text | Never commit the article text. It is third-party text. Run `python3 scripts/linux_overlap.py content/system-design/<slug>.mdx <raw-dir>` to find word runs that a page copies from it. |
+| Page shape | `## The problem in plain words`, `## The big picture` (a text diagram), 3 to 6 mechanism sections, `## Key words` (a table), `## What a tester can learn` (a "Tutorial advice" tip with no cites) |
+| Done | A case is done only when its fact-check report ends with `Open FAILs: 0`. |
+
+To add a case, add it to `lib/system-design/cases.ts` and to `SystemDesignSlug`, create `content/system-design/<slug>.mdx`, and add its route to `scripts/system-design-route-map.json`. `npm test` checks that the three agree.
 
 ## How to Add a Page
 
@@ -222,7 +245,7 @@ To change a page:
 
 The site installs as an app and works offline.
 
-- The service worker caches all 37 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
+- The service worker caches all 53 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Each build writes a new cache version into `/sw.js`. The new worker deletes the old caches.
 - Only production builds register the service worker. `npm run dev` has none. To test it, run `npm run build` and serve `out/`.
 - A new page in `lib/nav.ts` goes into the precache list automatically.
@@ -240,18 +263,18 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), and the page and route-map lists |
+| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
-| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json` and `linux-route-map.json` that has no page in `out/` |
+| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, and `system-design-route-map.json` that has no page in `out/` |
 | `python3 scripts/check_links.py out` | Lists broken internal links and assets |
 | `python3 scripts/check_outline.py out` | Checks that each "On this page" link points to an element id |
-| `python3 scripts/check_sources.py out` | Checks each tutorial page and each Linux stage page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
+| `python3 scripts/check_sources.py out` | Checks each tutorial page, each Linux stage page, and each System Design case page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
 | `scripts/compare_text.py` | Historical record of the phase-3 migration. It cannot run now. See below. |
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 35 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 50 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 
