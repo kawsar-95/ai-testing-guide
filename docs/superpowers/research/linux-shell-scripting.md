@@ -136,7 +136,7 @@ Fetched or listed, but not cited (reasons):
 | C48 | POSIX requires only decimal, octal, and hexadecimal constants, so other shells may reject `base#n`. Dash did in a test. | S25, S39 | S39: "Only the decimal-constant, octal-constant, and hexadecimal-constant constants ... are required to be recognized as constants." (dash rejected `2#101`, LC6) |
 | C49 | `$((08))` is an error because `08` is not octal. | S25, local check | S25: "Constants with a leading 0 are interpreted as octal numbers." LC7: `08: value too great for base`. |
 | C50 | `10 / 3` is 3 (whole numbers). | S25, local check | S25: "Evaluation is done in the largest fixed-width integers available". LC8 prints 3. |
-| C51 | (Tip) Write test data with a quoted here-document; put regexes in single quotes. | none | Tutorial's own advice. |
+| C51 | (Tip) Write test data with a quoted here-document; put `grep` patterns in single quotes. | none | Tutorial's own advice. |
 
 ### Conditionals
 | # | Claim | Source | Quote (≤ 25 words) |
@@ -146,6 +146,7 @@ Fetched or listed, but not cited (reasons):
 | C54 | `[ ... ]` is the `test` command. Each operator and operand is a separate argument. The last argument of `[` is `]`. | S35, S43 | S35: "Each operator and operand must be a separate argument." / "When using the [ form, the last argument to the command must be a ]." S43 synopsis: `test EXPRESSION`, `[ EXPRESSION ]` |
 | C55 | `[[ ... ]]` does not split words. | S27 | "The words between the [[ and ]] do not undergo word splitting and filename expansion." |
 | C56 | In `[[`, `==` matches a pattern. `=~` matches a POSIX extended regular expression. | S27 | "the string to the right of the operator is considered a pattern" / "a POSIX extended regular expression pattern" |
+| C56b | In `[[ =~ ]]`, a quoted pattern or a quoted variable matches literally; keep the pattern unquoted or in an unquoted variable. Local check, bash 5.3.9: `[[ a123b =~ a.*b ]]` and `[[ a123b =~ $p ]]` match; `[[ a123b =~ "a.*b" ]]`, `[[ a123b =~ 'a.*b' ]]`, and `[[ a123b =~ "$p" ]]` do not. | S27 | "If you quote any part of the pattern, using any of the shell’s quoting mechanisms, the quoted portion is matched literally." / "If the pattern is stored in a shell variable, quoting the variable expansion forces the entire pattern to be matched literally." |
 | C57 | `[[ ... ]]` is a Bash keyword that POSIX leaves unspecified. | S27, S39 | S27: "[[ expression ]]" (a compound command of Bash). S39: "the following words may be recognized as reserved words, in which case the results are unspecified" (the list includes `[[`) |
 | C58 | Use `=` with `test` for POSIX conformance. | S28 | "‘=’ should be used with the test command for POSIX conformance." |
 | C59 | File tests `-f` (regular file), `-d` (directory), `-e` (exists), `-r` (readable). | S28 | "-f file True if file exists and is a regular file." / "-r file True if file exists and is readable." (`-d` and `-e` have the same form in the table) |
