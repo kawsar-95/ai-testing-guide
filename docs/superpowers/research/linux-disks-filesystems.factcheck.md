@@ -249,3 +249,27 @@ Checklist recount (prose, headings, tables with separators, callout text and tit
 | 168 | all | Overlap, counts, structure, sources, tests | none | PASS | See the lines above the table: 0 overlap hits, all sections 250 or below, 55 of 55 sources cited, 145 of 145 tests. |
 
 Open FAILs: 5
+
+---
+
+# Round 5 (2026-10-19)
+
+Checked: writer commit `3c9aa79` (diff `dba4b39..3c9aa79` of the page and the notes). New source S56 `dd(1)` fetched by me from `https://man7.org/linux/man-pages/man1/dd.1.html` (status `ok`).
+
+Overlap check on flat directories: roadmap raw dir (243 `*.txt` files read) and official dir (52 files read, with dd(1)): no output, exit 0. `npm test`: 145 of 145 pass.
+
+Checklist recount (prose, headings, tables with separators, callout text and titles; no code fences, no cite tags): 247, 241, 202, 247, 215, 237, 236. All are 250 or below. Longest sentence: 23 words. 7 headings (the topic titles, in order), 7 tip callouts, 7 code fences. 56 of 56 sources are cited, no cite above 56. Notes rows and page cites match per section. The only notes-only sources are S1, S2, S9 (lede and the removed D2 row) and S51 (row W13, marked as removed).
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 169 | Disks and Filesystems | Round 4 FAIL 1: "On ext4, reserved blocks, which only root may use, lower the free space that `df` shows." | 33, 6 | PASS | Linuxize: "Ext2, ext3, and ext4 filesystems reserve blocks for privileged processes, typically 5% by default. This reserved space is not counted as "available" for regular users." mke2fs(8): "the percentage of the file system blocks reserved for the super-user." |
+| 170 | Mounts | Round 4 FAIL 2: "`/etc/fstab` has up to six fields on each line." | 22 | PASS | fstab(5): fs_mntops "is optional"; fs_freq "Defaults to zero (don't dump) if not present"; fs_passno "Defaults to zero ... if not present". |
+| 171 | Swap (danger) | Round 4 FAIL 3: "`dd of=` writes into its target file or device." | 56 | PASS | dd(1): "of=FILE write to FILE instead of standard output"; "notrunc do not truncate the output file". The sentence is cited to dd(1) now and claims no more than "writes". Note (not a FAIL): in a danger callout "overwrites" would state the risk more clearly; dd(1) supports it by `notrunc` (the default truncates the output file). |
+| 172 | Swap (danger) | Round 4 FAIL 4: the unqualified fstab-boot sentence is deleted from the Swap callout | none | PASS | The Swap callout has no fstab sentence. Adding Disks keeps "Without `nofail`, a failing `/etc/fstab` line can stop the boot." with cite 53 (checked in round 2). |
+| 173 | Notes file | Round 4 FAIL 5: rows D5 and W13 | none | PASS | Both rows now start "(Removed from the page in review fix 1.)". Rows D17, M5, W15, S56 match the new page text. |
+| 174 | Swap (danger) | `mkswap` erases the start of its target; `swapoff` fails with an out-of-memory status; advice marked | 30, 29 | PASS | Unchanged support: mkswap(8) "erases the first partition block"; swapon(8) "2 system has insufficient memory to stop swapping (OOM)". |
+| 175 | Disks and Filesystems | "A whole disk is `/dev/sda`." (changed from "has a name like `/dev/sda`" in the last fix round, not named in the fix report) | 15 | FAIL | The text now says that a whole disk *is* `/dev/sda`. That is wrong in general: the test machine has `/dev/nvme0n1` and `/dev/nvme1n1`, and fdisk(8) only says "The device is usually /dev/sda, /dev/sdb or so." Fix: "A whole disk is named like `/dev/sda`." (3 words instead of 4, so the word count does not grow). |
+| 176 | Disks and Filesystems | "A GPT disk keeps a protective MBR in sector 0." (the gloss "(guard)" was dropped) | 15 | PASS | fdisk(8): "the first sector is still reserved for a protective MBR in the GPT specification." |
+| 177 | whole page | Short hostile pass on the lines changed in rounds 4 and 5 (ext4 reserved blocks, fstab fields, dd sentence, swap callout, MBR/GPT lines) | none | PASS | No other error. All changing commands stay as `#` comments with fake names under danger callouts. |
+
+Open FAILs: 1
