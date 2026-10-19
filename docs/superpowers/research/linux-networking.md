@@ -426,3 +426,13 @@ Changes of the page and what they mean for the notes:
 - `rsync -a` sentence now follows the quote of C148: links, attributes, permissions, owners.
 - scp overwrite warning: tutorial's own advice (no source; the scp(1) manual does not say it), marked as such in the danger callout. The `rsync -c` sentence of the tip was not changed.
 
+## Fix round 4 (tcpdump example)
+
+The Packet Analysis block now uses `-Z "$USER"` and the comment "send test traffic from a second terminal" (the capture must run while the traffic is sent). New claim:
+
+| # | Claim | Source | Quote (≤25 words) |
+|---|---|---|---|
+| C168 | As root, `tcpdump` can drop to another user (`-Z user`) before it opens the output file; `-Z "$USER"` keeps the write in the caller's own directory (a `mktemp -d` directory is mode 0700 and owned by the caller). | S51 | "If tcpdump is running as root, after opening the capture device or input savefile, but before opening any savefiles for output, change the user ID to user" |
+
+The `mktemp -d` mode is local knowledge (it creates a directory that only the owner can use); it is not cited. The command was not run (needs root).
+
