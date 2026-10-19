@@ -315,4 +315,6 @@ Scope: the fix commit 7c8a252 (the `<details>` top panel, the last sentence of t
 
 Round 2 (image) totals: 12 rows. PASS 11, FAIL 1. Round 1 FAILs: CI-3 fixed (CI2-1), CI-4 fixed (CI2-7), CI-10 fixed on the page (CI2-8). The open item is the weak quote of the notes row I7b (CI2-9); the page text is correct. Advisories of round 1 stay (the alt text is long; the panel captions are not in the text; "not an error" is the tutorial's reading; the precache has no image; the JPEG equals the repo file only by name and watermark).
 
-Open FAILs: 1
+Round 2 resolution (2026-10-20): CI2-9 is fixed in commit 76a7289. Row I7b now quotes two exact substrings of S27 (the GNU Coreutils page "What information is listed"): "ls combines multiple bits into the third character of each set of permissions" and "-rw-r--r-- 1". The lead checked both with `grep -F` on the fetched page text. The page text did not change.
+
+Open FAILs: 0
