@@ -42,12 +42,12 @@ test("there are 12 stages in the order of the table, with unique slugs", () => {
   assert.equal(LINUX_STORAGE_KEY, "linux-progress");
 });
 
-test("the stage topic counts are 7, 9, 20, 6, 8, 6, 6, 7, 15, 8, 6, 4 and the total is 102", () => {
+test("the stage topic counts are 7, 9, 20, 7, 8, 6, 6, 7, 15, 8, 6, 4 and the total is 103", () => {
   assert.deepEqual(
     STAGES.map((s) => s.topics.length),
-    [7, 9, 20, 6, 8, 6, 6, 7, 15, 8, 6, 4],
+    [7, 9, 20, 7, 8, 6, 6, 7, 15, 8, 6, 4],
   );
-  assert.equal(ALL_TOPIC_IDS.length, 102);
+  assert.equal(ALL_TOPIC_IDS.length, 103);
 });
 
 test("topic ids are '<stage-slug>-NNN' from 001, unique across all stages", () => {
@@ -56,7 +56,7 @@ test("topic ids are '<stage-slug>-NNN' from 001, unique across all stages", () =
       assert.equal(topic.id, `${stage.slug}-${String(i + 1).padStart(3, "0")}`);
     });
   }
-  assert.equal(new Set(ALL_TOPIC_IDS).size, 102);
+  assert.equal(new Set(ALL_TOPIC_IDS).size, 103);
   assert.deepEqual(
     ALL_TOPIC_IDS,
     STAGES.flatMap((s) => s.topics.map((t) => t.id)),
@@ -124,7 +124,7 @@ const TABLE: readonly { slug: string; title: string; description: string; topics
     slug: "users-permissions",
     title: "Users and Permissions",
     description: "Manage users and groups, use root with care, and control access to files.",
-    topics: ["User Management", "Users and Groups", "Create, Update, and Delete Users", "Super User", "File Permissions", "Managing Permissions"],
+    topics: ["User Management", "Users and Groups", "Create, Update, and Delete Users", "Super User", "File Permissions", "Managing Permissions", "Permissions Cheat Sheet"],
   },
   {
     slug: "processes",
@@ -180,7 +180,7 @@ test("the stage titles, descriptions, and topic titles match the table in the pl
   assert.deepEqual(STAGES.map((s) => s.title), TABLE.map((t) => t.title));
   assert.deepEqual(STAGES.map((s) => s.description), TABLE.map((t) => t.description));
   assert.deepEqual(STAGES.map((s) => s.topics.map((t) => t.title)), TABLE.map((t) => t.topics));
-  assert.equal(TABLE.flatMap((t) => t.topics).length, 102);
+  assert.equal(TABLE.flatMap((t) => t.topics).length, 103);
 });
 
 const linuxDir = new URL("../content/linux/", import.meta.url);
