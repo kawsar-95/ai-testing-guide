@@ -245,3 +245,32 @@ Danger Callout (the page cites S25 and S32 and S33 for each fact):
 Tutorial's own advice (no source needed; each flagged "Tutorial's own advice" on the page): set setuid only on a program that you trust; do not use `chmod 777`; check the path with `ls -ld` before `chown`; after a test writes a key file, check `ls -l` or `stat -c %a` (GNU option, S28, row F15); if a test fails with `Permission denied`, find the missing bit and fix that bit, not the mode of the whole file.
 
 Not corrected, by order of the owner (rule: add nothing else): the paste says that numeric mode is a "three-digit octal number" (true for the common case; C3 covers the fourth digit); `chmod +t directoryname` without `u`, `g` or `o` is valid GNU `chmod` (S32: without `ugoa` the effect is as if `a` were given, but bits in the umask are not affected).
+
+### Permissions Cheat Sheet: the image
+Added 2026-10-20. The owner attached the infographic "Linux File Permission Cheatsheet" by abrahimcse (watermark `linkedin.com/in/abrahimcse`; 1280 x 1745 px JPEG, file `public/images/linux/linux-file-permission-cheatsheet.jpg`, copied without change). The paste of S40 had a remote link to the same image (`Images/Linux File Permission.jpg` in the repo of S40). The repo has no licence. The owner decided to include the image with attribution, like the text. The page cites S40 for the image. No new source was added: S25, S27, S31, S32 and S41 already support the corrections.
+
+Fetch note: S25, S27, S31, S32, S41, S44 were fetched again on 2026-10-20 with `scripts/linux_fetch.py` (list and output outside the repo). Each quote below was tested as an exact substring (spaces normalized) of the fetched text and has 25 words or fewer. Local check (temporary directory, no root): `chmod u+s f` on `-rw-r--r--` gave `-rwSr--r--`; after `chmod u+x f` it gave `-rwsr--r--`; `chmod g+s d` on a directory gave `drwxrwsr-x`, and mode 774 with the setgid bit gave `drwxrwsr--` (the string of the middle panel); `chmod +t e` on `drwxrwxrw-` gave `drwxrwxrwT`; after `chmod o+x e` it gave `drwxrwxrwt`.
+
+What the image shows (a transcription for the text description on the page):
+- Top panel: `total 20`, five `ls -l` rows (names `shum`, `staff`, files `Public`, `Public_html`, `Mail`, `verse`; invented sample data), arrows for the columns of the last row, and the box `rws` with "Readable", "Writeable", "Executable".
+- Left table: Binary, Octal, Permissions, Representation for 000 to 111.
+- Right diagrams: Owner, Group, Other with `r`, `w`, `x`; Owner and Group show `S`, `s`; Other shows `T`, `t`. Two notes: "Capital S is an error it occurs if you set SUID bit or SGID bit to a file without execute (x) bit set" and "Capital T is an error it occurs if you set Stick bit to a file without execute (x) bit set".
+- Bottom panels: "SUID Permission" `-rwsrw-r--` with `$chmod u+s file`; "SUID Permission" `drwxrwsr--` with `$chmod g+s directory_name`; "Stick Bit Permission" `drwxrwxrwt` with `$chmod +t directory_name`.
+
+| # | Claim on the page | Source | Quote (max 25 words) |
+|---|---|---|---|
+| I1 | The columns of an `ls -l` line: file type, mode bits, number of hard links, owner name, group name, size, time. (The image and the text description agree; the description cites S27.) | S27 | "print the file type, file mode bits, number of hard links, owner name, group name, size, and timestamp" |
+| I2 | Correction: the command `chmod g+s directory_name` sets the setgid bit, not setuid. The letters `u+s` and `g-s` are the symbolic modes for the set-user-ID and set-group-ID bits. | S32 | "You can set or clear the bits with symbolic modes like u+s and g-s." |
+| I2b | Same claim: `s` in a symbolic mode means "set user or group ID"; the group class `g` therefore gives set-group-ID. Local check: `chmod g+s d` gave `drwxrwsr-x`. | S32 | "set user or group ID on execution (s), restricted deletion flag or sticky bit (t)" |
+| I2c | Same claim: the set-group-ID bit is the setgid bit. | S25 | "The set-group-ID bit (setgid bit)." |
+| I2d | On a directory, setgid makes new files inherit the group of the directory (the effect of the panel's command). | S31 | "newly created subfiles inherit the same group as the directory" |
+| I3 | Correction: capital `S` means setuid or setgid is set and the matching execute bit is not set. | S27 | "If the set-user-ID or set-group-ID bit is set but the corresponding executable bit is not set." |
+| I3b | Correction: capital `T` means the sticky bit is set and the execute bit for others is not set. Local check: `chmod +t` on `drwxrwxrw-` gave `drwxrwxrwT`. | S27 | "If the restricted deletion flag or sticky bit is set but the other-executable bit is not set." |
+| I4 | Correction: in the owner part, `s` means setuid and execute are both set. | S27 | "If the set-user-ID or set-group-ID bit and the corresponding executable bit are both set." |
+| I5 | Correction: "Stick Bit" is the sticky bit, also called the restricted deletion flag. | S27 | "The restricted deletion flag is another name for the sticky bit." |
+| I5b | Same claim: the `t` letter of `chmod` selects this bit. | S32 | "set user or group ID on execution (s), restricted deletion flag or sticky bit (t)" |
+| I6 | The octal values of the table are sums of 4, 2 and 1 (the description refers to the numeric mode list of the topic). | S32 | "derived by adding up the bits with values 4, 2, and 1" |
+| I7 | The sample `ls -l` lines (names `shum` and `staff`, dates) are an illustration. | none | the tutorial's own note; the lines show invented data |
+| I0 | Attribution line: the image is by abrahimcse and comes from the repository of S40. The page cites S40. | S40 | the paste of S40 linked `Images/Linux File Permission.jpg` of that repo (see `cheatsheet-paste.md` of the task folder); not a quote |
+
+Not added (checked, dropped): the brief proposed "S or T: then setuid and setgid have no effect". The text of S41 says that a regular file without the group execute bit and with the set-group-ID bit set means mandatory file locking (an old Linux feature): "For a file that does not have the group execution bit (S_IXGRP) set, the set-group-ID bit indicates mandatory file/record locking." The statement is therefore not true for every case, and the page says only what the `ls` manual (S27) says about the letters. Not corrected: the table of the image and the three-digit mode examples are right; the image calls the owner `s` "Executable" only in the `rws` box, which is covered by I4.
