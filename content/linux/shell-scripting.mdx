@@ -55,6 +55,7 @@ export const page = {
     { title: 'ShellCheck wiki: SC2045', publisher: 'ShellCheck project', url: 'https://www.shellcheck.net/wiki/SC2045', accessed: '2026-10-19' },
     { title: 'ShellCheck wiki: SC2164', publisher: 'ShellCheck project', url: 'https://www.shellcheck.net/wiki/SC2164', accessed: '2026-10-19' },
     { title: 'koalaman/shellcheck README', publisher: 'GitHub', url: 'https://github.com/koalaman/shellcheck', accessed: '2026-10-19' },
+    { title: 'signal(7) - overview of signals', publisher: 'man7.org (Linux man-pages)', url: 'https://man7.org/linux/man-pages/man7/signal.7.html', accessed: '2026-10-19' },
   ],
 }
 
@@ -73,7 +74,7 @@ The first line is the shebang, `#!` plus the path of an interpreter. The kernel 
 `./setup.sh` runs the file in a child shell, so its variables vanish at the end. <Cite n={11} /> `. ./setup.sh` (or `source`) runs it in the current shell. <Cite n={35} /> <Cite n={36} /> Every command ends with an exit status from 0 to 255. Zero means success. `$?` holds the last status. <Cite n={12} /> <Cite n={15} /> A script returns the status of its last command. <Cite n={38} />
 
 ```bash
-mkdir -p demo && cd demo || exit 1
+cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
 cat > setup.sh <<'EOF'
 #!/usr/bin/env bash
 GREETING="hello from setup.sh"
@@ -88,22 +89,21 @@ echo "after run: ${GREETING:-unset}"
 . ./setup.sh                  # source it: it runs in the current shell
 echo "after source: ${GREETING:-unset}"
 if command -v shellcheck >/dev/null; then shellcheck setup.sh; fi
+
+# Output:
+#   args: 1
+#   status: 0
+#   args: 1
+#   status: 1
+#   after run: unset
+#   args: 0
+#   after source: hello from setup.sh
 ```
 
-```text
-args: 1
-status: 0
-args: 1
-status: 1
-after run: unset
-args: 0
-after source: hello from setup.sh
-```
-
-POSIX defines the portable shell language. <Cite n={39} /> Debian policy lets a `sh` script assume POSIX plus a few extras. A script that needs more must name its shell. <Cite n={40} /> This page marks a feature that POSIX does not define as bash-only. In a test with dash, `[[` and arrays gave errors. ShellCheck finds mistakes before a run and reports through its exit status, so CI can run it. <Cite n={49} />
+POSIX defines the portable shell language. <Cite n={39} /> Debian policy lets a `sh` script in a Debian package assume POSIX plus a few extras. A package script that needs more must name its shell. <Cite n={40} /> In a test with dash, `[[` and arrays gave errors. ShellCheck finds mistakes before a run and reports through its exit status, so CI can run it. <Cite n={45} /> <Cite n={49} />
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: start each CI script with a shebang and run `shellcheck` on it in the pipeline. Check the exit status, not the printed text. Run it with `bash` and with `sh` to find bash-only code early.
+Tutorial's own advice: start each CI script with a shebang and run `shellcheck` on it in the pipeline. Check the exit status, not the printed text. To find non-POSIX code, run the script under `dash` if installed, or give it a `#!/bin/sh` shebang so ShellCheck warns. <Cite n={45} />
 </Callout>
 
 ## Variables
@@ -114,7 +114,7 @@ Parameter expansion changes a value as the shell reads it. `${name:-default}` gi
 
 Script arguments arrive as positional parameters `$1`, `$2`, and so on. <Cite n={14} /> `$#` is their count, and `$0` is the name of the script. `"$@"` gives each argument as one separate word. <Cite n={15} />
 
-A shell variable lives in the current shell only. `export` adds it to the environment, the list of name-value pairs that child processes inherit. <Cite n={35} /> <Cite n={19} /> `readonly` blocks later changes with an error. <Cite n={4} /> `$(command)` is command substitution: it is replaced by the output of the command. <Cite n={17} /> An array is a list of values. It works in bash, ksh, and zsh, but dash rejected it in a test. <Cite n={18} /> <Cite n={46} />
+A shell variable lives in the current shell only. `export` adds it to the environment, the list of name-value pairs that child processes inherit. <Cite n={35} /> <Cite n={19} /> `readonly` blocks later changes with an error. <Cite n={4} /> <Cite n={35} /> `$(command)` is command substitution: it is replaced by the output of the command. <Cite n={17} /> An array is a list of values. It works in bash, ksh, and zsh, but dash rejected it in a test. <Cite n={18} /> <Cite n={46} />
 
 ```bash
 suite="smoke tests"                    # no spaces around =
@@ -132,7 +132,7 @@ readonly BASE_URL="https://example.test"
 
 stamp=$(date +%F)                      # command substitution
 echo "the date has ${#stamp} characters"
-urls=("$BASE_URL/login" "$BASE_URL/cart")   # array: not in dash
+urls=("$BASE_URL/login" "$BASE_URL/cart")   # array: dash rejected this in our test
 echo "${#urls[@]} urls, last: ${urls[1]}"
 ```
 
@@ -148,9 +148,10 @@ A literal is text that the shell takes as written. Quoting switches off the spec
 
 A here-document gives several lines to a command as input. The word after `<<` is the end marker. If you quote the marker, nothing inside expands. Otherwise variables and `$(...)` expand. With `<<-`, the shell strips leading tabs, so you can indent the text. <Cite n={24} />
 
-Number literals are plain digits. `$((expression))` does arithmetic on whole numbers with C operators. <Cite n={26} /> <Cite n={25} /> A leading `0` means octal, and `0x` means hexadecimal. <Cite n={25} /> The form `base#n` writes a number in another base. POSIX requires only decimal, octal, and hexadecimal constants, so `base#n` is bash-only. <Cite n={25} /> <Cite n={39} />
+Number literals are plain digits. `$((expression))` does arithmetic on whole numbers with C operators. <Cite n={26} /> <Cite n={25} /> A leading `0` means octal, and `0x` means hexadecimal. <Cite n={25} /> The form `base#n` writes a number in another base. POSIX requires only decimal, octal, and hexadecimal constants, so other shells may reject `base#n`. Dash did in a test. <Cite n={25} /> <Cite n={39} />
 
 ```bash
+cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
 user="qa"
 echo 'single: $user stays $(whoami)'    # nothing expands
 echo "double: $user and \$5 and \"quoted\""
@@ -166,7 +167,7 @@ EOF
 cat report.txt
 
 echo $((7 * 6 + 1)) $((10 / 3)) $((10 % 3))   # whole numbers only
-echo $((0x1F)) $((2#101)) $((010))            # hex, base 2, octal
+echo $((0x1F)) $((2#101)) $((010))            # hex, base 2 (not required by POSIX), octal
 ```
 
 <Callout type="tip" title="Why it matters for testing">
@@ -175,15 +176,16 @@ Tutorial's own advice: write test data such as JSON bodies with a quoted here-do
 
 ## Conditionals
 
-`if` runs a command and reads its exit status. Zero means true. Any other value means false. The command can be any program, such as `grep -q`. `elif` and `else` add more branches. <Cite n={27} />
+`if` runs a command and reads its exit status. Zero means true. Any other value means false. <Cite n={12} /> The command can be any program, such as `grep -q`. `elif` and `else` add more branches. <Cite n={27} />
 
-Two forms compare values. `[ ... ]` is the `test` command, so it needs spaces around the brackets and around each operator. <Cite n={35} /> <Cite n={43} /> `[[ ... ]]` is a bash-only keyword, which POSIX does not define. <Cite n={39} /> It does not split words, it matches patterns with `==`, and `=~` matches a regular expression. <Cite n={27} /> Use a single `=` inside `[ ]` for portability. <Cite n={28} />
+Two forms compare values. `[ ... ]` is the `test` command, so it needs spaces around the brackets and around each operator. <Cite n={35} /> <Cite n={43} /> `[[ ... ]]` is a Bash keyword that POSIX leaves unspecified. <Cite n={27} /> <Cite n={39} /> It does not split words, it matches patterns with `==`, and `=~` matches a regular expression. <Cite n={27} /> Use a single `=` inside `[ ]` for portability. <Cite n={28} />
 
-File tests: `-f` regular file, `-d` directory, `-e` exists, `-r` readable. <Cite n={28} /> Numbers use `-eq -ne -lt -le -gt -ge`. Strings use `= !=`. <Cite n={7} /> In `[ ]`, quote each variable. An empty unquoted variable vanishes and leaves a broken test. <Cite n={32} />
+File tests: `-f` regular file, `-d` directory, `-e` exists, `-r` readable. <Cite n={28} /> Numbers use `-eq -ne -lt -le -gt -ge`. Strings use `= !=`. <Cite n={7} /> <Cite n={28} /> In `[ ]`, quote each variable. An empty unquoted variable vanishes and leaves a broken test. <Cite n={32} />
 
 `&&` runs the next command only after success. `||` runs it only after failure. <Cite n={29} /> `a && b || c` is not if/else: `c` also runs when `b` fails. `cd "$dir" || exit 1` stops a script when `cd` fails. <Cite n={48} /> `case` compares one word with patterns and ends each branch with `;;`. <Cite n={27} />
 
 ```bash
+cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
 path=notes.txt count=12 name="smoke test"
 printf 'ok\n' > "$path"               # the demo creates its own file
 
@@ -197,7 +199,7 @@ fi
 
 [ "$count" -ge 10 ] && echo "count: 10 or more"
 [ "$name" = "smoke test" ] && echo "same name"
-[[ $name == smoke* ]] && echo "bash-only: pattern match"
+[[ $name == smoke* ]] && echo "pattern match"   # POSIX leaves [[ unspecified
 if grep -q '^root:' /etc/passwd; then echo "if tests any command"; fi
 
 case "$name" in
@@ -214,14 +216,14 @@ Tutorial's own advice: check preconditions at the top of a script, for example `
 
 ## Loops
 
-A loop repeats commands. `for name in words; do ...; done` runs once for each word. `while` repeats as long as its test succeeds. `until` repeats as long as it fails, so it is a `while` with the test reversed. <Cite n={30} /> <Cite n={8} /> Put `;` or a newline before `do`. <Cite n={9} /> `break` leaves the loop, and `continue` starts the next round. <Cite n={35} /> The C-style `for ((i=0; i<3; i++))` is bash-only. <Cite n={30} />
+A loop repeats commands. `for name in words; do ...; done` runs once for each word. `while` repeats as long as its test succeeds. `until` repeats as long as it fails, so it is a `while` with the test reversed. <Cite n={30} /> <Cite n={8} /> Put `;` or a newline before `do`. <Cite n={9} /> <Cite n={30} /> `break` leaves the loop, and `continue` starts the next round. <Cite n={35} /> The C-style `for ((i=0; i<3; i++))` is a Bash form; dash rejected it in a test. <Cite n={30} />
 
 To loop over files, use a glob, not `$(ls)`. The output of `ls` is split at spaces, so `my report.txt` becomes two words. <Cite n={47} /> If nothing matches, the glob stays as typed, so test with `[ -e "$f" ] || continue`. <Cite n={31} /> Use `--` before names that may start with a dash. <Cite n={6} />
 
 To read a file line by line, use `while IFS= read -r line`. `-r` keeps backslashes. <Cite n={36} /> An empty `IFS` keeps leading spaces. <Cite n={32} /> <Cite n={6} /> Do not pipe into `while`. Each part of a pipeline runs in its own subshell, a child copy of the shell, so variables set in the loop are lost. <Cite n={33} /> Write `done < file` instead.
 
 ```bash
-mkdir -p data && cd data || exit 1
+cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
 touch -- "my report.txt" "-odd.txt"     # a space in one name, a dash in the other
 for f in ./*.txt; do                    # a glob: safe for odd names
   [ -e "$f" ] || continue               # no match: the glob stays as typed
@@ -252,19 +254,20 @@ Tutorial's own advice: use `until` to wait for a service, and always add a count
 
 ## Debugging
 
-`bash -n script.sh` reads a script, reports syntax errors, and runs nothing. <Cite n={34} /> <Cite n={10} /> `bash -x script.sh` prints each command after expansion, so you see real values. <Cite n={34} /> The `PS4` variable sets the prefix of each trace line, and `BASH_SOURCE` and `LINENO` add file and line. Use single quotes, so `PS4` expands at each trace. <Cite n={37} />
+`bash -n script.sh` reads a script, reports syntax errors, and runs nothing. <Cite n={34} /> <Cite n={10} /> `bash -x script.sh` prints each command after expansion. <Cite n={34} /> The `PS4` variable sets the prefix of each trace line, and `BASH_SOURCE` and `LINENO` add file and line. Use single quotes, so `PS4` expands at each trace. <Cite n={37} />
 
-`set -e` stops a script after a failed command. It ignores a failure in an `if` test. It also ignores a failure in a pipeline before its last command, or in a `&&` or `||` list before its last command. `set -o pipefail` makes a pipeline fail when any part fails. `set -u` makes an unset variable an error. <Cite n={34} /> These are aids, not guarantees.
+`set -e` stops a script after a failed command. It ignores a failure in an `if` test. It also ignores failures before the last command of a pipeline or of a `&&` or `||` list. `set -o pipefail` makes a pipeline fail when any part fails. `set -u` makes an unset variable an error. <Cite n={34} /> These are aids, not guarantees.
 
-A trap runs a command on an event. `trap '...' ERR` fires when a command fails, with the same exceptions as `set -e`. `trap '...' EXIT` fires on every exit, which suits clean-up. <Cite n={35} /> `ERR` is bash-only: POSIX lists `EXIT` and signals. <Cite n={39} /> Print to the error stream with `echo "x=$x" >&2`. <Cite n={24} /> ShellCheck flags unquoted variables, loops over `$(ls)`, and unchecked `cd`. <Cite n={45} /> <Cite n={46} /> <Cite n={47} /> <Cite n={48} />
+A trap runs a command on an event. `trap 'cmd' ERR` fires when a command fails, with the same exceptions as `set -e`. `trap 'cmd' EXIT` fires when the shell exits, which suits clean-up, but not after SIGKILL, which no trap can catch. <Cite n={35} /> <Cite n={50} /> `ERR` is not a POSIX condition: POSIX lists `EXIT` and signals. <Cite n={39} /> Print to the error stream with `echo "x=$x" >&2`. <Cite n={24} /> ShellCheck finds quoting, `$(ls)`, and `cd` mistakes. <Cite n={45} /> <Cite n={46} /> <Cite n={47} /> <Cite n={48} />
 
 ```bash
-cat > flaky.sh <<'EOF'                  # creates flaky.sh in the current directory
+cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
+cat > flaky.sh <<'EOF'                  # creates flaky.sh in the scratch directory
 #!/usr/bin/env bash
 set -euo pipefail
 tmp=$(mktemp -d)
 trap 'rm -rf -- "${tmp:?}"' EXIT
-trap 'echo "failed at line $LINENO, status $?" >&2' ERR   # bash-only
+trap 'echo "failed at line $LINENO, status $?" >&2' ERR   # ERR: not a POSIX condition
 echo "start" > "$tmp/log.txt"
 grep -c "missing" "$tmp/log.txt"        # exits 1: no match
 echo "never reached"
@@ -272,18 +275,17 @@ EOF
 bash -n flaky.sh && echo "syntax ok"
 bash flaky.sh; echo "status: $?"
 PS4='+ ${BASH_SOURCE##*/}:${LINENO}: ' bash -x flaky.sh 2>&1 | tail -5
-```
 
-```text
-syntax ok
-0
-failed at line 7, status 1
-status: 1
-+ flaky.sh:7: grep -c missing /tmp/tmp.XXXXXXXXXX/log.txt
-0
-++ flaky.sh:7: echo 'failed at line 7, status 1'
-failed at line 7, status 1
-+ flaky.sh:1: rm -rf -- /tmp/tmp.XXXXXXXXXX
+# Output (the temporary path differs on each run):
+#   syntax ok
+#   0
+#   failed at line 7, status 1
+#   status: 1
+#   + flaky.sh:7: grep -c missing /tmp/tmp.XXXXXXXXXX/log.txt
+#   0
+#   ++ flaky.sh:7: echo 'failed at line 7, status 1'
+#   failed at line 7, status 1
+#   + flaky.sh:1: rm -rf -- /tmp/tmp.XXXXXXXXXX
 ```
 
 <Callout type="danger">
