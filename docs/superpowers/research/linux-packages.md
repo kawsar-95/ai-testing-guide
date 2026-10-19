@@ -104,7 +104,7 @@ Tutorial advice (no cite): "Never pipe `curl` into `sudo sh`" and "Keep the key 
 | C33 | `apt update` refreshes the package index; `apt search` looks in names and descriptions. | S10 / S11 | "update is used to resynchronize the package index files from their sources" / "It searches the package names and the descriptions" |
 | C34 | `apt show` shows dependencies, size, and sources. | S9 | "Show information about the given package(s) including its dependencies, installation and download size, sources the package is available from" |
 | C35 | `apt-cache policy pkg` shows priority selection for a package. | S11 | "it prints out detailed information about the priority selection of the named package" |
-| C36 | `apt install` installs required dependencies; `pkg=version` and `pkg/release` select a version. | S10 / S9 | "All packages required by the package(s) specified for installation will also be retrieved and installed." / "A specific version … following the package name with an equals (=) and the version" |
+| C36 | `apt install` installs required dependencies; `pkg=version` and `pkg/release` select a version. | S10 / S9 | "All packages required … will also be retrieved and installed." / "following the package name with an equals (=) and the version" |
 | C37 | `apt-file search` finds the package that contains a file. | S16 | "Search in which package a file is included. A list of all packages containing the pattern pattern is returned." |
 | C38 | `dnf search` matches names and summaries, case-insensitive; `dnf info`; `dnf install`. | S21 | "Keywords are matched as case-insensitive substrings … Keys are searched in package names and summaries." |
 | C39 | `dnf provides` finds the package (installed or not) for a file; accepts a command name. | S21 | "This is useful when one knows a filename and wants to find what package (installed or not) provides this file." / `dnf provides zless` example |
@@ -148,7 +148,7 @@ Tutorial advice (no cite): "Never pipe `curl` into `sudo sh`" and "Keep the key 
 | C68 | `dpkg -L` lists files of a package; `dpkg -s` reports status. | S7 | "-L, --listfiles package-name... List files installed to your system" / "-s, --status package-name... Report status of specified package." |
 | C69 | `rpm -qi` shows information; `rpm -ql` lists files. | S26 | "-i, --info  Display package information" / "-l, --list  List files in package." |
 | C70 | `apt-mark showmanual` lists manually installed packages; the rules for auto vs manual. | S12 | "the package you installed explicitly is marked as manually installed" / "showmanual … print a list of manually installed packages" |
-| C71 | `dpkg -l` output is for humans; use `-W` and `-f` for formats; default `-W` output is name and version, tab separated. | S8 | "It is intended for human readers, and is not easily machine-readable. See -W (--show) and --showformat" / "The default output format … name and its installed version" |
+| C71 | `dpkg -l` output is for humans; use `-W` and `-f` for formats; default `-W` output is name and version, tab separated. | S8 | "not easily machine-readable. See -W (--show) and --showformat" / "name and its installed version" |
 | C72 | Debian Reference lists `apt-mark showmanual` and `apt list --manual-installed` as equal. | S17 | "apt list --manual-installed … apt-mark showmanual   list manually installed packages" |
 | C73 | Example `dpkg -S /etc/host.conf` → `base-files`. | S18 | "base-files: /etc/host.conf" (also seen on the test machine) |
 
@@ -157,7 +157,7 @@ Tutorial advice (no cite): "Never pipe `curl` into `sudo sh`" and "Keep the key 
 |---|---|---|---|
 | C74 | A snap bundles an app with its dependencies and libraries. | S5 | "Snaps are basically an application compiled together with their dependencies and libraries" |
 | C75 | Snaps are self-contained app packages; snapd handles installation, confinement, and updates. | S34 | "Snaps are self-contained application packages … The snap daemon, snapd, handles installation, confinement, and updates" |
-| C76 | snapd must run before a snap is installed; many distributions have it, others need install. | S36 | "It needs to be running before a snap can be installed." / "pre-installed and running on many distributions by default, and it's easy to install on most other distributions" |
+| C76 | snapd must run before a snap is installed; many distributions have it, others need install. | S36 | "It needs to be running before a snap can be installed." / "pre-installed and running on many distributions by default" |
 | C77 | `snap list`, `snap find`, `snap info`, `sudo snap install`, `sudo snap remove`. | S35 | "snap list command" / "snap find \"media player\"" / "snap info command" / "sudo snap install vlc" / "sudo snap remove vlc" |
 | C78 | Channel form `<track>/<risk>/<branch>`; the branch is optional. | S29 | "<track>/<risk>/<branch>" / "A branch is an optional, fine-grained subdivision of a channel" |
 | C79 | Risk levels: stable, candidate, beta, edge; stable is the default. | S29 | "There are four risk-levels: stable, candidate, beta and edge." / "Snaps are installed from the stable risk-level by default." |
@@ -182,3 +182,15 @@ Further reading (not cited): the roadmap links #158, #190, #208 and the title-on
 
 ## Fix round 1 (jargon glosses)
 The page now glosses at first use: exit status (Installing section), maintainer scripts (Repositories danger callout; short repeat in Listing), snapd daemon ("a background service", S34), deb822 ("`Field: value` stanzas", S14: "multiline stanzas"), `Release` file ("lists the checksums of the repository files", S13: "checksums of all of the Packages files are then computed and put into the Release file").
+
+## Fix round 2 (review findings)
+| # | Claim (page text after the fix) | Source | Quote (≤25 words) |
+|---|---|---|---|
+| R1 | `-y` runs apt-get without prompts, so a script on a disposable container or CI runner needs it; do not use it on a shared machine (advice). | S10 | "Automatic yes to prompts; assume \"yes\" as answer to all prompts and run non-interactively." |
+| R2 | A pinned `pkg=version` does not pin the dependencies; old versions can leave the repository; keep a local copy or snapshot (advice; the list records all installed packages). | S8 / S17 | S8: "list all packages in /var/lib/dpkg/status"; S17: "download it from archive of https://snapshot.debian.org/ or copy it from package cache of a functioning machine" |
+| R3 | `dnf-automatic.timer` follows the config file; the install timer unit applies updates. Config defaults download and apply nothing. | S24 | "The systemd timer unit dnf-automatic.timer will behave as the configuration file specifies" / "The third will download and install them." / "apply_updates … default: False" |
+| R4 | On Ubuntu Server the reboot after unattended upgrades is off by default. | S19 | "Unattended-Upgrade::Automatic-Reboot \"false\"; … The default value is false." |
+| R5 | Log `sources.list` and `sources.list.d`: older Ubuntu releases keep the main repositories in `sources.list`. | S18 | "have repository information defined in the /etc/apt/sources.list file" |
+| R6 | "In current APT" the one-line format is deprecated. | S14 | "This format is deprecated and may eventually be removed, but not before 2029." (page is `unstable`, apt 3.3.3) |
+| R7 | `apt-cache policy` without an argument lists the priority of each source; with a name it gives the priority choice for that package. | S11 | "With no arguments it will print out the priorities of each source. Otherwise it prints detailed information about the priority selection" |
+| R8 | `apt-file` is a separate package and `apt-file update` is its update action. | S16 | "update  This action that just calls apt update or apt-get update" |

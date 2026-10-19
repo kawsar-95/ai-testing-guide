@@ -81,7 +81,7 @@ Tutorial's own advice: put the package manager and the package versions in each 
 
 A repository is a server that holds packages and their metadata. <Cite n={3} /> A mirror is a copy of a repository on another server.
 
-Debian and Ubuntu read `/etc/apt/sources.list` and the files in `/etc/apt/sources.list.d/`. The one-line `.list` format is deprecated. The deb822 `.sources` format uses `Field: value` stanzas, with `Types`, `URIs`, `Suites`, and `Components`. <Cite n={14} /> Ubuntu releases before 24.04 LTS use `sources.list`. <Cite n={18} /> Debian has the components `main`, `contrib`, and `non-free`. <Cite n={14} /> Ubuntu adds `universe`, without official support. <Cite n={18} />
+Debian and Ubuntu read `/etc/apt/sources.list` and the files in `/etc/apt/sources.list.d/`. In current APT, the one-line `.list` format is deprecated. The deb822 `.sources` format uses `Field: value` stanzas, with fields such as `Types` and `URIs`. <Cite n={14} /> Ubuntu releases before 24.04 LTS use `sources.list`. <Cite n={18} /> Debian has the components `main`, `contrib`, and `non-free`. <Cite n={14} /> Ubuntu adds `universe`, without official support. <Cite n={18} />
 
 RHEL and Fedora use `*.repo` files in `/etc/yum.repos.d`. A repository has a `baseurl`, `mirrorlist`, or `metalink`, plus `gpgcheck` and `gpgkey`. <Cite n={22} /> The DNF default of `gpgcheck` is off, so set it. <Cite n={22} />
 
@@ -102,13 +102,13 @@ A third-party package runs maintainer scripts, its install-time scripts, as root
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: log `sources.list.d` in each test run. An extra repository can give two machines different packages.
+Tutorial's own advice: log `sources.list` and `sources.list.d` in each test run. Extra repositories explain package differences.
 
 </Callout>
 
 ## Finding and Installing Packages
 
-APT searches a local index, which `apt update` refreshes. <Cite n={10} /> `apt search` looks in package names and descriptions. <Cite n={11} /> `apt show` prints dependencies, sizes, and sources. <Cite n={9} /> `apt-cache policy` shows the priority of each source for one package. <Cite n={11} /> `apt install` also installs the dependencies. <Cite n={10} /> `apt-file search` finds the package that contains a file. <Cite n={16} />
+APT searches a local index, which `apt update` refreshes. <Cite n={10} /> `apt search` looks in package names and descriptions. <Cite n={11} /> `apt show` prints dependencies, sizes, and sources. <Cite n={9} /> `apt-cache policy` without a name lists the sources and their priorities. With a name, it shows how apt picks that package. <Cite n={11} /> `apt install` also installs the dependencies. <Cite n={10} /> `apt-file search` finds the package that contains a file. It is a separate package, and `apt-file update` must run first. <Cite n={16} />
 
 DNF has `dnf search`, `dnf info`, and `dnf install`. <Cite n={21} /> `dnf search` matches names and summaries, and ignores case. <Cite n={21} /> `dnf provides /path/to/file` finds the package that holds a file, installed or not. <Cite n={21} /> It also accepts a command name, such as `zless`. <Cite n={21} /> DNF 5 keeps these commands. <Cite n={25} />
 
@@ -133,7 +133,7 @@ sudo dnf install --assumeno jq         # needs root; RHEL, Fedora: show the plan
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: pin the version of a tool in a test image, for example `jq=<version>`. A new release then cannot change the result of a test by surprise.
+Tutorial's own advice: pin the version of a tool in a test image, for example `jq=<version>`. This does not pin its dependencies. An old version may leave the repository, so keep a local copy or a package snapshot for long-lived images.
 
 </Callout>
 
@@ -145,7 +145,7 @@ Update and upgrade are two steps. `apt update` only refreshes the package index.
 
 `apt-mark hold` stops the automatic install, upgrade, and removal of one package. <Cite n={12} /> DNF has the versionlock plugin. <Cite n={23} />
 
-On Ubuntu Server, the default `unattended-upgrades` package installs security updates by itself and can reboot. <Cite n={19} /> `unattended-upgrade --dry-run` only simulates a run. <Cite n={27} /> `dnf-automatic` runs from a systemd timer. Its defaults download and apply nothing. <Cite n={24} />
+On Ubuntu Server, the default `unattended-upgrades` package installs security updates. Reboot is off by default. <Cite n={19} /> `unattended-upgrade --dry-run` only simulates a run. <Cite n={27} /> `dnf-automatic.timer` follows `/etc/dnf/automatic.conf`, whose defaults download and apply nothing. The install timer unit applies updates. <Cite n={24} />
 
 ```bash
 apt-get -s upgrade       # preview: what an upgrade would change
@@ -157,13 +157,13 @@ sudo unattended-upgrade --dry-run   # needs root and the unattended-upgrades pac
 
 <Callout type="danger" title="These commands change or delete software">
 
-`apt remove`, `apt purge`, `apt autoremove`, and `dnf remove` delete packages. `-y` answers every prompt with yes. <Cite n={10} /> Do not put `-y` or `apt upgrade` in a script on a shared machine. Preview first.
+`apt remove`, `apt purge`, `apt autoremove`, and `dnf remove` delete packages. `-y` answers every prompt with yes. <Cite n={10} /> `-y` runs a command without prompts, so a script on a disposable container or CI runner needs it. On a shared machine, do not use `-y` or `apt upgrade`. <Cite n={10} />
 
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: on a CI runner, run `apt-get update` and install named packages with fixed versions. Do not upgrade the whole machine. Automatic upgrades can change a package during a test run, so turn them off on test machines or note them in the log. <Cite n={19} />
+Tutorial's own advice: on a CI runner, run `apt-get update`, then `apt-get install -y` with named packages and fixed versions. Automatic upgrades can change a package during a test run. Turn them off or log them. <Cite n={19} />
 
 </Callout>
 
@@ -188,7 +188,7 @@ rpm -qf "$(command -v bash)"        # RHEL, Fedora: owner of bash
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: save the package list as an artifact of every test run or image build. Compare two lists with `diff` to explain why a test passes on one machine and fails on another. Install from the list to build the same image again.
+Tutorial's own advice: save the package list as an artifact of every test run or image build. Compare two lists with `diff` to explain why a test passes on one machine and fails on another. The list also records the dependencies. An old version may leave the repository, so for long-lived images keep a local copy or a package snapshot.
 
 </Callout>
 
