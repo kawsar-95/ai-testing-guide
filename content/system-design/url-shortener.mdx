@@ -1,0 +1,150 @@
+export const metadata = { title: 'How a URL Shortener Works', description: 'How a service like TinyURL or Bitly turns a long link into a short one and sends millions of clicks to the right page.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'URL Shortening System Design', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://systemdesign.one/url-shortening-system-design/', accessed: '2026-10-20' },
+  ],
+}
+
+# How a URL Shortener Works
+
+A URL shortener takes a long web address and gives you a short one, like a nickname for a link. When someone clicks the short link, the service sends them on to the real page. This sounds simple. But a public service must create millions of these nicknames, never give the same nickname to two pages, and answer every click fast. This page follows one article that designs such a service step by step. The article describes one way to build it. It is not the exact system that TinyURL or Bitly runs.
+
+<PageMeta />
+
+## The problem in plain words
+
+The service does two jobs. First, a person gives it a long link and gets back a short link. Second, anyone who opens the short link must land on the long page <Cite n={1} />. The article names tinyurl.com and bitly.com as well-known public services of this kind <Cite n={1} />.
+
+People use short links for several reasons. Short links look cleaner, they let the owner count clicks, and some chat tools limit how many characters a link can have <Cite n={1} />.
+
+The article sets these numbers for its design <Cite n={1} />:
+
+| Item | Value in the article |
+|---|---|
+| Daily active users who create links | 100 million |
+| Reads for each write | 100 to 1 |
+| How long a short link lives by default | 5 years |
+| Longest allowed short code | 9 characters |
+| Read requests per second | about 100 thousand |
+| Size of one stored link record | about 2.5 KB |
+
+The read-to-write ratio is the key number. For each link that somebody creates, the service handles about 100 clicks <Cite n={1} />. So the design must make clicks very fast and very cheap. The article also expects that most short links get opened only one time after they are made <Cite n={1} />.
+
+## The big picture
+
+```text
+                 WRITE PATH (create a link)
+[User] --> [Load balancer] --> [Server] --> [Key Generation Service]
+                                   |                 |
+                                   v                 v
+                              [Database] <-- short code + long URL
+
+                 READ PATH (open a link)
+[Browser] --> [DNS] --> [CDN] --> [Reverse proxy] --> [Cache] --> [Database]
+     ^                                                    |
+     +------------------ 301 redirect to long URL --------+
+```
+
+On the write path, the server asks a separate service for a fresh short code, then saves the pair "short code to long link" in the database <Cite n={1} />. On the read path, the click passes through layers of copies (CDN, proxy, cache) before it touches the database <Cite n={1} />. Each layer tries to answer from memory so the database stays calm. The service then tells the browser where to go next.
+
+## Making a short code
+
+Think of a coat check at a theatre. You hand over your coat and get a small numbered ticket. The ticket must be unique, or two people walk home with the same coat.
+
+The short code is that ticket. The article encodes it in base62, which uses only letters and digits <Cite n={1} />. A related format, base58, drops look-alike characters such as zero and capital O <Cite n={1} />. With 7 base62 characters there are about 3.5 trillion possible codes <Cite n={1} />. The article says that supply lasts about 100 years if the service uses 1,000 codes every second <Cite n={1} />. So 7 characters is the length it picks <Cite n={1} />.
+
+The article compares three ways to make the code <Cite n={1} />:
+
+| Way | How it works | Main problem |
+|---|---|---|
+| Random ID | Pick a random value for each link | Two links can get the same code, so every new code needs a database check |
+| Hash of the long URL | Run a hash function such as MD5 and keep the first 7 characters | Different links can share the first 7 characters, and the code is easy to guess |
+| Token range | Each server counts up through its own block of numbers | Codes come in order, so they are easy to guess unless you add random bits |
+
+A hash function turns any input into a fixed-size fingerprint. The same input always gives the same fingerprint.
+
+The article picks the token range method <Cite n={1} />. A coordinator hands each code-making server its own block of numbers, so two servers never hand out the same code. The article names Apache ZooKeeper or Amazon DynamoDB as possible coordinators <Cite n={1} />. When a server uses up its block, it asks for a new one <Cite n={1} />.
+
+<Callout type="note" title="What a Bloom filter is">
+A Bloom filter is a small, fast memory check that answers "have I seen this before?" It can say "maybe yes" by mistake, but it never says "no" by mistake. The article uses one to skip slow database lookups <Cite n={1} />.
+</Callout>
+
+## Sending the click to the right page
+
+Picture a mail forwarding service. Your old address gets a letter, and the post office puts a new label on it and sends it to your new home.
+
+When a browser opens a short link, the server answers with an HTTP redirect. The redirect is a short reply that says "the page you want is over there." It carries the long address in the `location` header <Cite n={1} />. The browser then makes a second request to the long address by itself <Cite n={1} />.
+
+The article compares redirect codes <Cite n={1} />:
+
+| Code | Meaning | Effect |
+|---|---|---|
+| 301 Moved Permanently | The short link always points here | Search engines update their records; browsers keep a copy |
+| 302 Found | A temporary move | No search ranking benefit for the long page |
+| 307 Temporary Redirect | A temporary move that keeps the method | The browser may repeat a PUT or POST to the new address |
+| 404 Not Found | No such short code | The user sees an error |
+
+The article chooses 301 <Cite n={1} />. But a 301 lets the browser keep its own copy. If the browser never asks the server again, the service cannot count the click. So the article sets the cache header to public. This moves the copy to the CDN and proxy layer, where the service still sees the traffic <Cite n={1} />.
+
+## Keeping popular links fast
+
+Think of a library with a "most borrowed" shelf at the front desk. The staff do not walk to the back rooms for the books that everyone wants.
+
+A cache is that front shelf. It keeps recent answers in fast memory. The article follows an 80/20 rule: about 20% of links get about 80% of clicks, so it caches those <Cite n={1} />. It suggests a time-to-live of one day, after which a cached entry expires <Cite n={1} />. It names Redis or Memcached as cache servers <Cite n={1} />.
+
+The design uses the cache-aside pattern. The server checks the cache first. On a miss, it reads the database and then fills the cache <Cite n={1} />. When the cache is full, it removes the least recently used entries <Cite n={1} />.
+
+Two extra tricks protect the system:
+
+- **One-click links.** Many links are opened only once. Filling the cache with them wastes space. So a Bloom filter records the first visit, and the cache stores a link only on a repeat visit <Cite n={1} />.
+- **Codes that do not exist.** A second Bloom filter on short codes lets the service return 404 without a cache or database lookup <Cite n={1} />.
+
+Sometimes thousands of people open the same hot link at the same moment. Then the cache or proxy sends just one request to the origin server and shares the answer with all of them. The article calls this collapsed forwarding <Cite n={1} />.
+
+## Storing links and cleaning up
+
+The article stores the link table in a NoSQL database such as DynamoDB or MongoDB <Cite n={1} />. NoSQL means a database that does not use fixed relational tables, and it spreads data across many machines easily. The user accounts go into a SQL database (Postgres or MySQL), because that data is relational and needs strict rules <Cite n={1} />. The article suggests at least three copies of the stored data for safety <Cite n={1} />.
+
+The data is split into shards by short code <Cite n={1} />. A shard is one slice of the data on its own machine. To find the code of a long link that is already stored, the article adds a second store keyed by the long link <Cite n={1} />.
+
+Old links must go. The article offers two ways <Cite n={1} />:
+
+- **Lazy removal.** When someone opens an expired link, the service deletes it and returns 404.
+- **A cleanup job.** A job scans for expired links during quiet hours and stops if traffic spikes.
+
+Links that nobody opened for a long time, such as 3 years, can be compressed and moved to object storage like AWS S3 <Cite n={1} />.
+
+## Same link, many users at once
+
+The design wants a one-to-one rule: the same long link always gets the same short code <Cite n={1} />. If two people submit the same link at the same instant, both could get different codes. The article solves this with a distributed lock on the long link <Cite n={1} />. A lock is like a "room in use" sign: only one request can work on that link at a time. The article names Chubby or a Redis lock as options <Cite n={1} />.
+
+The article also adds rate limiting, which caps how many requests one client can send <Cite n={1} />. For analytics, each click puts a message on a queue such as Apache Kafka, and a batch job processes the clicks later <Cite n={1} />. The article says Bitly earns money by offering analytics on redirects <Cite n={1} />.
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Short code | The few characters at the end of a short link that identify it |
+| Redirect | A reply that tells the browser to go to a different address |
+| Cache | Fast memory that keeps copies of popular answers |
+| CDN | A network of servers close to users that serves copies of content |
+| Shard | One slice of a big database, stored on its own machine |
+| Replica | A full copy of data kept on another machine for safety |
+| Bloom filter | A tiny memory check for "seen before?" that can give false "yes" answers |
+| Hash | A fixed-size fingerprint of some data |
+| Rate limiting | A cap on how many requests one client can send in a time window |
+| Lock | A rule that lets only one worker change something at a time |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not claims from the article.
+
+- **Uniqueness under load.** Create many links in parallel from many clients and check that no two long links share a short code.
+- **Same link, same code.** Submit one long link from many clients at the same instant. Check that all of them get the same short code.
+- **Redirect codes.** Check the status code and `location` header for a valid code, an unknown code (404), and an expired code.
+- **Cache staleness.** Expire or delete a link, then open it again through every layer. Check that no cache still sends users to the old page.
+- **Bad input.** Try very long URLs, custom codes with odd characters, and script tags, to check validation and the defenses against XSS and injection.
+- **Lost analytics.** Kill the analytics queue consumer during a click burst and check that clicks still redirect and that counts recover later.
+</Callout>

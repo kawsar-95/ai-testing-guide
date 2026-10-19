@@ -1,0 +1,124 @@
+export const metadata = { title: 'How Slack Works', description: 'How a team chat app sends each message to every member of a channel at once, in order, and stays fast when millions are online.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Slack Architecture', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://systemdesign.one/slack-architecture/', accessed: '2026-10-20' },
+    { title: 'Real-time Messaging', publisher: 'Engineering at Slack', url: 'https://slack.engineering/real-time-messaging/', accessed: '2026-10-20' },
+  ],
+}
+
+# How Slack Works
+
+Slack is a chat app for work teams. You type a line in a channel, and every member sees it a moment later, on a phone, a laptop, or a browser. That sounds simple. It is hard because millions of people are online at the same time.<Cite n={2} /> Each person can be in many channels, and every reader must see the messages in the same order.<Cite n={1} /> This page explains the main ideas from one article that designs Slack the way you would in a job interview. The article says that its design can be different from the real system.<Cite n={1} /> Where Slack's own engineering blog describes the real system, the page says so.
+
+<PageMeta />
+
+## The problem in plain words
+
+A chat system must do a small number of things very well. It must deliver each message to all members of a channel in real time. It must store the history and show it in time order. It must show who is online. It must never show one message to a user two times.<Cite n={1} />
+
+The article uses interview numbers to size the system. It assumes 10 million daily users, about 7 million users connected at the same time, and 10 reads for each write.<Cite n={1} /> It allows up to 10,000 users in a channel and up to 200,000 users in a workspace.<Cite n={1} /> If each user sends 100 messages a day, the system takes about 12,000 new messages per second and serves about 120,000 reads per second.<Cite n={1} /> At about 100 bytes per message, that is roughly 100 GB of new text each day and 150 TB in 5 years.<Cite n={1} />
+
+The real traffic has a clear daily shape. Slack's blog says that on a work day, the busy hours are 9am to 5pm in each region. The two daily peaks come at 11am and 2pm.<Cite n={2} />
+
+## The big picture
+
+```text
+                 HTTP (send, history)
+[Client] ---------------------------> [Chat service] --> [Chat database]
+   ^                                        |
+   |                                        v
+   |                                [Dispatcher / channel servers]
+   |                                        |
+   |        WebSocket (live events)         v
+   +------------------------------- [Gateway servers]
+
+[Client] --HTTP (start-up data)--> [Snapshot service at the edge] --> [Cache]
+```
+
+A client sends a new message to the chat service over normal HTTP. The chat service saves it in the database first, and then passes it on.<Cite n={1} /> Servers that know which gateways care about that channel forward it. Each gateway then pushes the message down an open WebSocket line to every connected member.<Cite n={2} /> A separate snapshot service gives the app its start-up data quickly.<Cite n={1} />
+
+## Two lines to the server
+
+Think of a letter and a phone call. You send a letter when you have one thing to say. You keep a phone line open when the other person must hear you at once. Slack uses both.
+
+The web API is the letter. It is a set of HTTP addresses for one-off actions, such as login, sending a message, or creating a channel.<Cite n={1} /> The real-time API is the open phone line. It uses a WebSocket, which is a connection that stays open so the server can push data to the client at any time.<Cite n={1} /> Slack uses this line for live events such as new messages, typing signals, and online status.<Cite n={1} />
+
+Slack's blog confirms that every client keeps one long-lived WebSocket to Slack's servers.<Cite n={2} /> At start, the client gets a token and the connection details from the main web backend. Then it opens the WebSocket to the nearest edge region.<Cite n={2} /> An open-source proxy named Envoy receives the connection and passes it to a gateway server.<Cite n={2} />
+
+<Callout type="note">
+A typing signal is a "transient event". The system does not save it in the database. It only passes it to the online members of that channel.<Cite n={2} />
+</Callout>
+
+## One message, many readers
+
+Think of a radio station. The presenter speaks one time, and every radio tuned to that station hears it. Slack must do the same thing for each channel.
+
+In the real system, Slack's core real-time services are written in Java. Two of them are channel servers and gateway servers.<Cite n={2} /> A channel server holds recent messages for a fixed set of channels in memory.<Cite n={2} /> Slack picks the channel server with consistent hashing. That is a rule that turns a channel ID into one server, and it moves few channels when a server joins or leaves.<Cite n={2} /> If a channel server fails, a manager service puts a new one in place in under 20 seconds.<Cite n={2} />
+
+Gateway servers hold the WebSocket connections of users and the list of channels each user follows. Unlike the other servers, they run in many geographic regions, so each client connects to a nearby one.<Cite n={2} /> When a message arrives, the channel server sends it to every gateway that follows that channel. Each gateway sends it to its own connected clients.<Cite n={2} /> Slack's blog says this delivers messages around the world in 500 ms.<Cite n={2} />
+
+The article adds a bandwidth idea. It keeps a list of which data centers have followers of each channel, so a message goes only to those data centers.<Cite n={1} />
+
+## A fast start with a snapshot
+
+When you open Slack, the app must show your channels and the members of each channel. The article calls this start-up package a snapshot.<Cite n={1} /> For a large company, the full snapshot can grow to tens of megabytes, which makes start-up slow.<Cite n={1} />
+
+Think of a shop that keeps the most popular items at the front counter. You do not wait for the warehouse. The snapshot service is that counter. It is a cache close to the user, and it returns a smaller start-up package. The app then loads the rest only when it needs it. This is called lazy loading.<Cite n={1} /> The article says this in-memory service should handle about 1 million queries per second.<Cite n={1} /> It also sends all users of one team to the same instance, so that instance holds that team's data and answers more requests from memory.<Cite n={1} />
+
+## Storing the history
+
+The article stores messages in a relational database such as MySQL. It gives four reasons: the technology is mature, the data model is disciplined, the tools are good, and many engineers know it.<Cite n={1} /> One database cannot hold every message. So the article splits the data into shards, which are smaller databases that each hold part of the data. The shard key is the channel ID.<Cite n={1} /> A tool called Vitess sits on top of MySQL and hides the shards from the application code. It can also split or merge shards later.<Cite n={1} />
+
+To read history, the app asks for one page of messages at a time. The article compares two ways to ask for the next page.<Cite n={1} />
+
+| Method | How it asks | Problem or benefit |
+|---|---|---|
+| Offset | "Skip 40 messages, give me 20" | The database reads and throws away the skipped rows. New messages shift the pages, so a user can see a message twice or miss one. |
+| Cursor | "Give me 20 messages older than this marker" | The database jumps to the marker with an index. New messages do not move the window. You cannot jump to page 7. |
+
+The article chooses the cursor method for chat history.<Cite n={1} />
+
+## Order and duplicates
+
+Every reader must see the same order. A clock on each server is not good enough, because server clocks drift and network delays differ.<Cite n={1} /> The clock of the user's device is worse, because a user can set it to any time.<Cite n={1} /> The article suggests a logical clock, such as a Lamport clock. It is a counter that goes up with each message, so it records which message came after which.<Cite n={1} />
+
+Duplicates are a different risk. The article tags each message with a random unique token. The client uses this token to skip a message that it already shows.<Cite n={1} />
+
+## Staying up under load
+
+Think of a store that opens its doors after a power cut. Every customer rushes in at once. Engineers call this a thundering herd. The article warns that a whole company can reconnect at the same time after an outage.<Cite n={1} /> It lists these defenses:
+
+- Add jitter, a small random delay, so each client reconnects at a slightly different time.<Cite n={1} />
+- Rate limit each service, and drop requests when a server reaches its limit.<Cite n={1} />
+- Answer start-up requests from the in-memory snapshot service, so the databases get less load.<Cite n={1} />
+
+The real system can also move users away from a failing region. Slack's blog calls this draining. When one region has trouble, the system moves its users to the closest healthy region.<Cite n={2} /> The article adds that a gateway keeps a queue in memory of transient events that are not yet committed. If the gateway fails, the system replays them.<Cite n={1} />
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| WebSocket | A connection that stays open, so the server can push data to the app at any time |
+| Gateway server | The server that holds the open connections of users and pushes messages to them |
+| Fan-out | Sending one message to many receivers |
+| Consistent hashing | A rule that maps each key, such as a channel ID, to one server and moves few keys when servers change |
+| Cache | A fast copy of data kept in memory, so the system does not ask the database every time |
+| Shard | One part of a database that is split into smaller pieces |
+| Cursor pagination | Asking for "the next page after this marker" and not "page number N" |
+| Logical clock | A counter that records which event came first, without real time |
+| Thundering herd | Many clients that hit a server at the same moment, for example after an outage |
+| Jitter | A small random delay that spreads requests over time |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice. They are not from the sources.
+
+- Send many messages fast from two clients in the same channel. Check that a third client shows them in the same order, with no gaps and no copies.
+- Kill the WebSocket in the middle of a conversation. Check that the app reconnects, fetches the missed messages, and does not show any message twice.
+- Scroll back through history while other users post new messages. Check that the pages do not skip or repeat a message.
+- Disconnect a large group of test clients and reconnect them all at once. Measure how the server and the start-up time behave.
+- Measure the delay from send to display between clients in different regions, and set a target for it.
+- Test channel edge cases: an empty channel, a channel at the member limit, and a user who leaves while a message is in flight.
+</Callout>

@@ -1,0 +1,130 @@
+export const metadata = { title: 'How Uber Computes ETA', description: 'How Uber turns a road map into a graph, adds traffic, cleans GPS data, and corrects its estimate with a learning model at huge scale.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'How Uber Computes ETA at Half a Million Requests per Second', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/uber-eta', accessed: '2026-10-20' },
+    { title: 'DeepETA: How Uber Predicts Arrival Times Using Deep Learning', publisher: 'Uber Engineering Blog', url: 'https://www.uber.com/blog/deepeta-how-uber-predicts-arrival-times/', accessed: '2026-10-20' },
+  ],
+}
+
+# How Uber Computes ETA
+
+When you type a destination in the Uber app, it tells you how long the trip will take. That number is the ETA. To get it right, Uber must find the best route through a huge road network, add live traffic, and clean up noisy GPS data. It must do all this hundreds of thousands of times each second.
+
+<PageMeta />
+
+## The problem in plain words
+
+ETA means the expected time of arrival: the time to travel from point A to point B <Cite n={1} />. Uber computes an ETA in four situations <Cite n={1} />:
+
+| Situation | Question the ETA answers |
+|---|---|
+| Eyeball | The rider types a destination. How long is the trip? |
+| Dispatch | Which car can reach the rider in the shortest time? |
+| Pick up | How long until the car arrives? |
+| On-trip | How long until the rider reaches the destination, updated live? |
+
+Uber also uses ETAs to calculate fares, match riders to drivers, and plan deliveries <Cite n={2} />.
+
+The scale is large. One trip usually needs about 1,000 ETA requests <Cite n={1} />. More than 18 million Uber trips finish each day, and the system handles half a million ETA requests per second <Cite n={1} />. The task is hard because a trip is not a straight line. It follows streets and highways <Cite n={1} />. Accuracy matters for the business too. If a trip takes longer than promised, the rider may not book again, and the article says bad ETAs could cost billions of dollars <Cite n={1} />.
+
+## The big picture
+
+```text
+[Rider app] --> [uRoute: front door for all route requests]
+                      |
+                      v
+              [Routing engine]
+              road graph + traffic speeds
+                      |  best route + first ETA
+                      v
+              [DeepETA model on Michelangelo]
+              predicts the usual error and corrects it
+                      |
+                      v
+              final ETA --> [Rider app]
+
+[GPS points from cars] --> [Map matching] --> positions on real roads
+```
+
+A request goes to uRoute. uRoute asks the routing engine for a route and an ETA. Then it sends that ETA and other details to the prediction service, which runs the DeepETA model <Cite n={2} />. Separately, map matching turns noisy GPS points into positions on real roads, which makes the ETA more accurate <Cite n={1} />.
+
+## The map as a graph
+
+Think of a subway map. Each station is a dot, and each line between two stations is a connection.
+
+Uber turns the street map into a graph. Each road intersection is a node, and each road segment is a directed edge <Cite n={1} />. Directed means that the edge goes one way, so a two-way street is two edges. Each edge has a weight, which is the time to drive that segment <Cite n={2} />. Now the ETA question becomes a classic graph problem: find the cheapest path between two nodes <Cite n={1} />.
+
+Dijkstra's algorithm is the well-known way to find a shortest path. Its work grows as n log n, where n is the number of intersections <Cite n={1} />. The San Francisco Bay Area alone has about half a million intersections, so plain Dijkstra is too slow at Uber's scale <Cite n={1} />.
+
+## Cut the map into pieces
+
+Think of a road trip across three countries. You already know the best roads between the border crossings inside each country. So you only plan from border to border, not street by street.
+
+Uber splits the graph into partitions and precomputes the best path inside each one <Cite n={1} />. To precompute means to work out the answer before anyone asks. At request time, the search only needs to visit the nodes on the borders of the partitions <Cite n={1} />.
+
+The article explains the gain with a circle. Picture a dense road graph that fills a circle. Without partitions, the search may visit every node inside, so the work grows with the area of the circle, pi times r squared. With partitions, the search only visits the edge of the circle, so the work grows with the perimeter, 2 times pi times r <Cite n={1} />. For the Bay Area, this cuts the work from about 500,000 nodes to about 700 <Cite n={1} />.
+
+## Traffic on each road
+
+The same road can take 10 minutes at midnight and 40 minutes at rush hour. A good ETA must know which one it is.
+
+Traffic depends on the time of day, the weather, and the number of cars on the road <Cite n={1} />. Uber puts traffic information into the edge weights of the graph, so a slow road gets a high weight <Cite n={1} />. It mixes historical average speeds with real-time speeds, because more data gives a better picture <Cite n={1} />. Uber's own blog describes the routing engine the same way. It uses map data and live traffic, and it adds up the travel times of the segments along the best path <Cite n={2} />.
+
+## Cleaning up GPS with map matching
+
+Think of a friend who gives you directions over a bad phone line. You miss some words, but you can guess them from the words around them.
+
+GPS signals from phones can be noisy, with wrong points, and sparse, with gaps. This is worse in a tunnel <Cite n={1} />. Tall buildings can also reflect the signal, which is called the multipath effect <Cite n={1} />. Bad GPS data makes the ETA worse <Cite n={1} />.
+
+Map matching fixes this. It takes the raw GPS points and places each one on a real road segment <Cite n={1} />. Uber uses two tools for it <Cite n={1} />:
+
+- A **Kalman filter** makes a best guess of where the car is. It combines the new GPS reading with what it already knew.
+- The **Viterbi algorithm** finds the most likely chain of road segments. It uses dynamic programming, which means it solves small parts of the problem and reuses those answers.
+
+## A learning model fixes the rest
+
+Think of a weather forecaster who knows that the computer model is always 2 degrees too warm in July. The forecaster takes the model's number and corrects it.
+
+A road graph is only a model of the real world. It cannot capture every condition on the ground, and the driver may not take the route that the engine picked <Cite n={2} />. So Uber trains a machine learning model on top of the routing engine. The model predicts the residual: the gap between the routing engine ETA and the real trip time <Cite n={2} />. Uber calls this ETA post-processing, and DeepETA is one such model <Cite n={2} />.
+
+| Part | What Uber's blog says |
+|---|---|
+| Inputs | Origin, destination, time of the request, live traffic, and the type of request, for example a delivery or a ride pickup |
+| Speed | The model must answer within a few milliseconds |
+| Load | It is the model with the most queries per second at Uber |
+| Old model | Gradient-boosted trees in XGBoost, until they became too big to grow further |
+| New model | A linear transformer, chosen because a full transformer was too slow |
+| Size | Hundreds of millions of parameters, but each prediction uses only about 0.25 % of them |
+
+The table follows the blog <Cite n={2} />. The team tested seven types of neural network before it chose this design <Cite n={2} />.
+
+The model also uses a special way to score its mistakes, an asymmetric Huber loss. One of its settings, omega, controls the cost of a guess that is too low against a guess that is too high. This helps when a late arrival hurts more than an early one <Cite n={2} />. Uber trains and serves the model on Michelangelo, its machine learning platform, and retrains it on a schedule <Cite n={2} />.
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| ETA | Expected time of arrival: how long a trip will take |
+| Graph | Dots (nodes) joined by lines (edges); here, intersections joined by roads |
+| Edge weight | The cost of one edge; here, the time to drive that road segment |
+| Shortest path | The cheapest chain of edges from start to end |
+| Partition | One piece of a graph that was cut into smaller pieces |
+| Precompute | Work out answers before anyone asks, so requests are fast |
+| Map matching | Placing raw GPS points on the real roads |
+| Residual | The gap between a first estimate and the real result |
+| Latency | The time that one request takes |
+| Requests per second | How many requests a system handles each second; also called QPS |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These ideas are the tutorial's own advice.
+
+- Compare predicted ETAs with real trip times. Split the results by short and long trips, rides and deliveries, and city.
+- Replay GPS traces with gaps (a tunnel) and jumps (tall buildings). Check that the matched route stays on real roads.
+- Test edge cases: the same start and end point, one-way streets, closed roads, and trips that cross partition borders.
+- Load test at peak traffic. Check that each layer stays inside its time budget, especially the model.
+- Stop the model service in a test setup. Check that the app still shows an ETA from the routing engine, or a clear message.
+- Check that an ETA is never negative and that it updates during the trip.
+</Callout>

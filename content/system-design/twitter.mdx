@@ -1,0 +1,146 @@
+export const metadata = { title: 'How Twitter Works', description: 'How the Twitter timeline front end is built: rendering, a normalized store, the API, fast scrolling, instant likes, and cursor paging.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'System Design Interview: Design Twitter/X Timeline - A Frontend Deep Dive', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/system-design-interview-twitter', accessed: '2026-10-20' },
+  ],
+}
+
+# How Twitter Works
+
+When you open Twitter (now X), you see a long list of tweets that loads fast and grows as you scroll. This page covers the part that runs in your browser: the front end of the timeline. The hard part is to keep a huge, always-changing list fast and correct, even on a slow phone or a weak network.
+
+<PageMeta />
+
+## The problem in plain words
+
+Most system design talks are about servers: databases, caches, and load balancers. Front-end system design looks at similar problems inside the browser. It asks how fast the page draws, how much data it sends, and how the screen stays in step with the server <Cite n={1} />. For a site like Twitter, the front end is a distributed system of its own. It holds state, fetches and caches data, and syncs with the backend in real time <Cite n={1} />.
+
+<Callout type="note" title="An interview-style design">
+The article is a guest post by Yangshun Tay, written as an answer to the interview question "Design the Twitter timeline" <Cite n={1} />. It describes one way to build this. It is not always the exact system that Twitter runs.
+</Callout>
+
+The author uses his RADIO framework: Requirements, Architecture, Data model, Interface, and Optimizations <Cite n={1} />. The core requirements are these <Cite n={1} />:
+
+- Users scroll a timeline of tweets with text and images.
+- Users can like and retweet a tweet, and click it to see the replies.
+- More tweets load when users reach the bottom.
+- Users can write new tweets.
+
+The free part of the article gives few hard numbers. It says the front end must scale to millions of users, and that a timeline fetch on Twitter takes less than 1 second <Cite n={1} />.
+
+## The big picture
+
+```text
+[You] --> [View: timeline page, tweet page, composer]
+               ^                    |
+     redraw    |                    |  your action (like, post)
+               |                    v
+          [Store: tweets, users, timeline, kept in memory]
+                                    |
+                                    v
+          [Data access: requests, retries, paging, caching]
+                                    |
+                                    v  HTTP
+          [Server: timeline, tweets, likes, media]
+```
+
+The view draws what is in the store. When you act, the store changes first, and the data access layer sends the change to the server. Data that comes back goes through the data access layer into the store, and the view draws again <Cite n={1} />.
+
+## Where the page is built
+
+Think of a restaurant. It can serve a plated meal that is ready to eat, or a meal kit that you cook at home. A plated meal is faster to start, and a kit gives you more control.
+
+| Approach | What happens | Good | Bad |
+|---|---|---|---|
+| Server-side rendering (SSR) | The server builds the full HTML page | Fast first paint, good for search engines | Needs more server resources |
+| Client-side rendering (CSR) | The server sends a small HTML shell and JavaScript; the browser fetches data and draws | Very interactive after load | Slow first load, weak for search engines |
+| Hybrid | The server draws the first page, the browser handles updates | A fast first page and fast updates | The article names none. Tutorial's view: the first page still costs server resources |
+
+The table follows the article, except the last cell <Cite n={1} />. With SSR, the browser later "hydrates" the page: it attaches the code that makes buttons work <Cite n={1} />. The article thinks Twitter likely uses CSR. Timelines are personal, so SSR helps speed more than search, and the timeline fetch is already fast <Cite n={1} />.
+
+The second choice is how you move between pages. A single-page application (SPA) loads one HTML page and then changes its content with JavaScript, with no full reload. A multi-page application (MPA) loads a new HTML page for each route <Cite n={1} />. For Twitter, an SPA is the better fit <Cite n={1} />. When you click a tweet in the timeline, its text and images are already in memory, so the tweet page opens at once. Only the replies must load <Cite n={1} />.
+
+## The store keeps one copy of everything
+
+Think of the contact list on your phone. Your chat apps show the name from your contacts. If you change a name one time, every chat shows the new name.
+
+The store is the single source of truth in the browser. It keeps the timeline, the tweets, the users, and the text you are typing in memory <Cite n={1} />. It uses normalization: each item is stored exactly one time, and other items point to it by its ID <Cite n={1} />. A tweet does not hold a full copy of its author. It holds the ID of the author. So when a user changes an avatar, the store updates one entry, and every tweet by that user shows the new picture <Cite n={1} />.
+
+| Item | What it holds |
+|---|---|
+| Tweet | Text, author ID, times, like and retweet counts, media |
+| User | Name, username, picture, verified status, "you follow them" flag |
+| Timeline | An ordered list of tweet IDs and the paging details |
+
+The table follows the article <Cite n={1} />. The work to normalize data can happen on the server or in the browser. The article says that, as of 2025, Twitter normalizes the timeline on its servers, so the browser gets a small, ready-made payload <Cite n={1} />.
+
+## The API between browser and server
+
+Think of an order form at a restaurant. Each form has fixed fields, so the kitchen always knows what you want. An API is that form for software.
+
+```text
+GET  /timeline?count=10&cursor=abc   a page of tweets, with paging details
+GET  /tweets/{id}                    one tweet
+POST /tweets                         create a tweet
+POST /media/upload                   upload an image, get back a media ID
+POST /tweets/{id}/like               like a tweet
+POST /tweets/{id}/retweet            retweet a tweet
+```
+
+The list follows the article <Cite n={1} />. A request must not carry the user ID as proof of who the user is, because an attacker can fake it. The server reads the identity from the session cookie <Cite n={1} />. To post an image, the app first uploads it to blob storage, a store for large files. It gets back an ID and puts that ID in the new tweet <Cite n={1} />.
+
+## Making a long timeline fast
+
+Think of a theatre stage. Only the actors in the current scene stand on it. The rest wait backstage until they are needed.
+
+- **Code splitting.** The app downloads only the JavaScript for the current view <Cite n={1} />. Code for each tweet type, the emoji picker, or the tweet detail page loads only when the app needs it <Cite n={1} />.
+- **List virtualization.** The app draws only the tweets in view. Empty blocks keep the scrollbar the right size, and tweets that leave the screen are removed or reused <Cite n={1} />.
+- **Lazy media.** Images load only when they come near the screen. The app asks for an image size that fits the device and can show a blurred preview first <Cite n={1} />.
+
+The page must also say clearly when it is busy or broken. Twitter shows one loading spinner. The article suggests gray "skeleton" blocks in the shape of tweets, so the layout does not jump <Cite n={1} />. If the feed fails to load, Twitter shows a short message and a Retry button, not a blank page <Cite n={1} />.
+
+## Likes that feel instant
+
+Think of a waiter who says "coming right up" before the kitchen confirms. If the kitchen has run out, the waiter comes back and says so.
+
+An optimistic update changes the screen before the server confirms the action <Cite n={1} />. When you tap like, the heart fills and the count goes up at once. At the same time, the app sends the request. If the server says yes, nothing more happens. If the request fails, the app rolls the screen back to the old state <Cite n={1} />. The normalized store makes this easy. There is one copy of the tweet, so the app changes `likedCount` by 1 and sets `likedByUser` to true in one place <Cite n={1} />.
+
+## Loading more tweets: offset or cursor
+
+Think of a long book. You can say "start at line 200", or you can put a bookmark after the last line you read. If someone adds lines at the top, "line 200" now points to a different line. The bookmark still works.
+
+| Method | Request | Problem or benefit |
+|---|---|---|
+| Offset | `?offset=20&limit=10` | New tweets shift the positions, so items repeat or go missing; big offsets are slow |
+| Cursor | "the next 10 after tweet X" | Stable when data changes; works for newer and older tweets |
+
+The table follows the article <Cite n={1} />. A cursor is a unique value, often a tweet ID or a timestamp, that marks the edge of a page <Cite n={1} />. The article picks cursor paging for Twitter, because new tweets arrive all the time and old ones can be deleted or ranked again <Cite n={1} />.
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Front end | The part of an app that runs on your device and draws the screen |
+| SSR / CSR | Build the page on the server, or build it in the browser |
+| SPA | A web app that loads one page and then changes its content without a reload |
+| Store | The memory in the browser that holds all app data, one copy of each item |
+| Normalization | Store each item one time and point to it by ID |
+| API | The fixed set of requests that the browser can send to the server |
+| Optimistic update | Change the screen first, confirm with the server after |
+| Virtualization | Draw only the items that are on screen |
+| Lazy loading | Load a file only when it is about to be needed |
+| Cursor | A bookmark value that tells the server where the next page starts |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These ideas are the tutorial's own advice.
+
+- Like a tweet while the network is offline or the server returns an error. Check that the heart and the count roll back and that the user sees a message.
+- Show the same tweet in two places, for example the timeline and the tweet page. Like it in one place and check the other.
+- Post new tweets from another account while you scroll. Check that no tweet shows twice and that no tweet is missing.
+- Throttle the network. Check the loading state, the error state, and that Retry works.
+- Send a request with the user ID of another account in the body. The server must use the session cookie, not that ID.
+- Scroll through hundreds of tweets. Check that memory and the number of page elements stay stable.
+</Callout>

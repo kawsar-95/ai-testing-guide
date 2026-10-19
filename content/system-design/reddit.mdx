@@ -1,0 +1,111 @@
+export const metadata = { title: 'How Reddit Works', description: 'How Reddit keeps its ranked lists of posts fresh while millions of people post, vote, and comment at the same time.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'How Reddit Works', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/reddit-architecture', accessed: '2026-10-20' },
+    { title: "The Evolution of Reddit.com's Architecture (Neil Williams, QCon San Francisco 2017)", publisher: 'InfoQ', url: 'https://www.infoq.com/presentations/reddit-architecture-evolution/', accessed: '2026-10-20' },
+  ],
+}
+
+# How Reddit Works
+
+Reddit is a large set of discussion boards. People share posts, vote them up or down, and reply in long threads of comments. Each board shows its posts as a ranked list, and every vote can change that order. The hard part is to keep these lists correct and fast while huge numbers of people vote on the same popular posts at the same moment. The article says it is based on the author's research and can differ from the real system.<Cite n={1} /> Its later sections are for paid subscribers only. So for comments, this page uses a 2017 conference talk by a Reddit engineer, which describes the real system.<Cite n={2} />
+
+<PageMeta />
+
+## The problem in plain words
+
+Reddit started small. In June 2005, two university students first pitched a food ordering idea, were turned down, and built a social site in its place.<Cite n={1} /> At first, the whole site ran on one machine, with its data in a Postgres database.<Cite n={1} /> Later, they moved the app and the database to separate machines.<Cite n={1} />
+
+Growth then caused two problems. First, one database and one big codebase could not keep up.<Cite n={1} /> Second, popular posts got so many votes and comments that the newest data appeared late.<Cite n={1} />
+
+The scale explains why. In 2017, the speaker said Reddit served 320 million users each month. He also said users posted about a million times a day and cast 75 million votes.<Cite n={2} /> The title of the article speaks of 100 million daily users.<Cite n={1} />
+
+## The big picture
+
+```text
+[Browser / app] --> [CDN] --> [Load balancer] --> [App servers]
+                                                    |   |   |
+                       +----------------------------+   |   +-----------------+
+                       v                                v                     v
+                 [Cache: ranked lists]          [Postgres primary     [Job queue]
+                 [and post objects]              + read replicas]          |
+                       ^                                ^                  v
+                       |                                |            [Processors]
+                       +--------------------------------+--------------------+
+                            processors update the cache and the database
+```
+
+A request passes a CDN and a load balancer, then reaches an app server.<Cite n={2} /> The app server reads ranked lists from the cache.<Cite n={1} /> It reads a post from the cache first, and goes to the database only on a miss.<Cite n={2} /> Slow work, such as a new post or a vote, goes into a job queue. Background processors take each job and update the database and the cache later.<Cite n={1} />
+
+## Growing past one machine
+
+Think of a small café that gets famous. First, you hire more waiters. Then you buy a bigger stove. A bigger stove has a limit, so in the end you open a second kitchen.
+
+Reddit did the same. It added more app servers and put a load balancer in front of them. A load balancer shares requests among servers.<Cite n={1} /> It made the database server bigger, which is called vertical scaling. That has a hardware limit, so Reddit then split the database into parts to spread the writes.<Cite n={1} /> It also added replicas, which are read-only copies of the database, to serve more reads.<Cite n={1} />
+
+The talk adds detail about the real system. The main database holds accounts, links, subreddits, and comments in Postgres, with memcache in front.<Cite n={2} /> Memcache is a fast in-memory cache. In the database cluster, the primary servers take the writes. Read-only replicas copy its data with a short delay, which is called asynchronous replication.<Cite n={2} />
+
+## Slow work goes into a queue
+
+Think of a dry cleaner. You hand over your shirt and get a ticket at once. The cleaning happens later, in the back room. You do not stand at the counter and wait.
+
+A new post is expensive work. Reddit must update several tables, such as posts, subreddits, and accounts. Each post must also pass rate limits and spam filters.<Cite n={1} /> So the app server puts a message in a job queue and replies to the user. A processor takes the job later, does the work, and updates the databases.<Cite n={1} /> The talk names the queue software: RabbitMQ.<Cite n={2} />
+
+## Ranked lists of posts
+
+Every board and the front page show an ordered list of posts.<Cite n={1} /> The order comes from a function named "hot", which takes the up votes and down votes of each post.<Cite n={1} /> To sort all posts in the database for each page view would be slow.<Cite n={1} />
+
+Think of a library that prints a "top 100 books" sheet. The library does not count all loans each time someone asks. It keeps the printed sheet and changes one line when a loan changes the order.
+
+Reddit keeps each list in the cache as post IDs with their rank. To show the page, it fetches each post by its ID, which is fast.<Cite n={1} /> One post can appear in many lists. So background jobs build each list ahead of time and save it in the cache.<Cite n={1} /> Reddit also keeps popular lists in Cassandra, a distributed database, so they are not lost.<Cite n={1} />
+
+The talk explains the trick. When a vote arrives, the processor already knows the new score. It reads the saved list, moves the post to its new place, and writes the list back.<Cite n={2} /> The speaker says that at this point the list is no longer a true cache. It is stored data in its own right, and today it lives in Cassandra.<Cite n={2} />
+
+## Votes, locks, and a traffic jam
+
+Votes go through the job queue too.<Cite n={1} /> The "read, change, write" step is risky. If two processors change the same list at the same time, one change can overwrite the other. This is a race condition.<Cite n={1} /> So a processor takes a lock on the list first, and only one processor can hold it.<Cite n={2} /> The article says Reddit used ZooKeeper for these locks.<Cite n={1} />
+
+Locks caused a new problem. Think of one bathroom key at a busy office. More staff do not help. They only make the queue for the key longer.
+
+In mid-2012, the vote queues backed up at peak hours. Scores on the front page rose slowly and caught up many hours later.<Cite n={2} /> The team added more processors, and it got worse.<Cite n={2} /> Timers in the code showed the cause. Many votes on popular boards waited for the same lock.<Cite n={2} />
+
+The fix was to split the vote queue. Reddit took the board ID, divided it by 10, and used the remainder to choose one of 10 queues.<Cite n={2} /> The total number of processors stayed the same, but fewer processors fought for any one lock.<Cite n={2} />
+
+The fix did not last. By late 2012, a few votes were slow again. The team found them only in the 99th percentile, the slowest 1 % of jobs.<Cite n={2} /> The new hot spot was a list of all links to one web domain, which crossed the board partitions.<Cite n={2} /> The later fix split each vote job into smaller messages, each on its own partition.<Cite n={2} />
+
+## Comment trees
+
+This section uses the talk, because the article's comments section is behind the paywall.
+
+Reddit comments are threaded. A reply sits under the comment that it answers, so a thread is a tree.<Cite n={2} /> A thread with 10,000 comments is costly to draw if the server must look up every comment and its parent.<Cite n={2} /> So Reddit saves the parent links of the whole tree in one place. It can then choose which part of the tree to show and load only those comments.<Cite n={2} /> Updates to this tree also run as background jobs, in batches.<Cite n={2} />
+
+Order matters in a tree. A reply cannot attach to a parent that is not there yet.<Cite n={2} /> In early 2016, a huge news thread got its own fast queue. Older comments of that thread were still in the normal queue. The system saw missing parents and kept asking for repairs. The fast queue filled the memory of the message broker.<Cite n={2} /> The team had to restart the broker and lose the queued messages. Now Reddit sets quotas on its queues.<Cite n={2} />
+
+## Key words
+
+| Word | Plain meaning |
+|---|---|
+| Database | The permanent store of posts, comments, users, and votes |
+| Replica | A read-only copy of a database that serves extra reads |
+| Cache | Fast memory that keeps ready answers, such as ranked lists |
+| Job queue | A waiting line for slow work, which background processors handle later |
+| Processor | A background worker that takes jobs from a queue |
+| Race condition | A bug where two workers change the same data at once and one change is lost |
+| Lock | A rule that only one worker may change a piece of data at a time |
+| Lock contention | Many workers that wait for the same lock |
+| Partition | One part of data or work that is split by a key, such as a board ID |
+| 99th percentile (p99) | The time under which 99 % of jobs finish. It shows the slowest jobs. |
+
+## What a tester can learn
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice. They are not from the sources.
+
+- Send many votes on one post from many users at once. Check that the final score is exact and that no vote is lost.
+- Load test the vote path at peak traffic. Watch the queue length and the p99 time, not only the average.
+- Measure the delay between a vote and the new order of the list. Set a limit for it, and test that the list catches up after a backlog.
+- Post a reply to a comment that is deleted or not yet processed. Check that the tree does not break and does not loop on repairs.
+- Fill one queue on purpose. Check that a quota stops it and that other features of the site still work.
+- Stop the cache and check that pages still load from the database, and that the database survives the extra load.
+</Callout>
