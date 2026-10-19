@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { PAGES } from "../lib/nav.ts";
 import { FUNDAMENTALS_UI } from "../lib/fundamentals/ui.ts";
-import { footerSummary, partLabel, partNumber, searchType } from "../lib/ui.ts";
+import { footerSummary, partLabel, partNumber, searchType, voiceToBangla, voiceToTechnical } from "../lib/ui.ts";
+import { VOICE_TOGGLE_TEXT } from "../lib/voice.ts";
 
 test("the page count in the strings comes from PAGES", () => {
   assert.ok(footerSummary.startsWith(`${PAGES.length} parts`));
@@ -28,4 +29,9 @@ test("partNumber pads to 2 digits and partLabel adds PART", () => {
   assert.equal(partNumber(5), "05");
   assert.equal(partNumber(23), "23");
   assert.equal(partLabel(5), "PART 05");
+});
+
+test("the accessible name of the voice toggle starts with its visible word (WCAG 2.5.3)", () => {
+  assert.equal(voiceToBangla, `${VOICE_TOGGLE_TEXT.technical} – Show the Bangla text in every section`);
+  assert.equal(voiceToTechnical, `${VOICE_TOGGLE_TEXT.bangla} – Show the Technical text in every section`);
 });

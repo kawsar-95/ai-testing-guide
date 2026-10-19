@@ -19,6 +19,10 @@ function readStored(): string | null {
  * changes it and saves the choice. Both spans are always in the HTML. CSS
  * shows one of them from data-voice-default, so the text is right before
  * hydration too.
+ *
+ * The button has no aria-pressed: its word names the voice that a click
+ * selects, not the current state. Its name starts with that word (WCAG
+ * 2.5.3 Label in Name).
  */
 export function VoiceToggle() {
   const def = useVoiceDefault();
@@ -36,7 +40,6 @@ export function VoiceToggle() {
     <button
       type="button"
       onClick={() => setVoiceDefault(def === "bangla" ? "technical" : "bangla")}
-      aria-pressed={def === "bangla"}
       aria-label={label}
       title={label}
       className="grid h-9 shrink-0 place-items-center rounded-md border border-border bg-bg-raised/60 px-2.5 text-[13px] font-medium text-text-dim transition-colors hover:border-border-strong hover:text-text"

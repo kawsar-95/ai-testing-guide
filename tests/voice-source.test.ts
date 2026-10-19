@@ -107,6 +107,54 @@ test("tags inside a fenced code block are ignored", () => {
   assert.deepEqual(voiceBlocks(src), []);
 });
 
+test("a non-blank line inside <Voices> but outside every panel is an error", () => {
+  assertOneError(GOOD.replace("</Technical>\n<Layman>", "</Technical>\n\nStray.\n\n<Layman>"), "outside a panel");
+  assertOneError(GOOD.replace("<Voices>\n<Technical>", "<Voices>\nStray.\n<Technical>"), "outside a panel");
+  // Blank lines between the panels are allowed.
+  assert.deepEqual(voiceErrors(GOOD.replace("</Technical>\n<Layman>", "</Technical>\n\n<Layman>")), []);
+});
+
+test("a non-blank line after </Voices> and before the next ## heading is an error", () => {
+  assertOneError(GOOD + "\nStray.\n", "after </Voices>");
+  assertOneError(GOOD + "\nStray.\n\n## B\n\nText.\n", "after </Voices>");
+  // Text under the next ## heading is allowed.
+  assert.deepEqual(voiceErrors(GOOD + "\n## B\n\nText.\n"), []);
+});
+
+test("an empty <Layman> or <Bangla> body is an error", () => {
+  assertOneError(GOOD.replace("\nPlain text.\n", ""), "empty");
+  assertOneError(GOOD.replace("\nবাংলা লেখা।\n", ""), "empty");
+});
+
+test("a nested second <Voices> is an error", () => {
+  const errors = voiceErrors(GOOD.replace("Tech text", "<Voices>\n\nTech text"));
+  assert.ok(errors.length > 0);
+  assert.ok(errors.every((e) => /^line \d+: /.test(e)), errors.join(" | "));
+});
+
+test("a <Voices> tag in inline code is not a tag", () => {
+  assert.deepEqual(voiceErrors(GOOD + "\n## B\n\nWrap the text in `<Voices>` and `</Voices>`.\n"), []);
+  assert.deepEqual(voiceErrors(GOOD.replace("Plain text.", "Plain text with `<Voices>`.")), []);
+});
+
+test("a stray </Voices> is an error", () => {
+  assertOneError(GOOD + "\n## B\n\nText.\n\n</Voices>\n", "no <Voices>");
+  assertOneError(GOOD.replace("</Voices>\n", "</Voices>\n</Voices>\n"), "no <Voices>");
+});
+
+test("<Cite n={k}/> with no space before the slash is still checked", () => {
+  assertOneError(GOOD.replace("Plain text.", "Plain text <Cite n={2}/>."), "cite 2");
+});
+
+test("a ### heading in a fenced code block of <Bangla> is allowed", () => {
+  assert.deepEqual(voiceErrors(GOOD.replace("বাংলা লেখা।", "বাংলা লেখা।\n\n```md\n### উদাহরণ\n```")), []);
+});
+
+test("two <Voices> blocks under one ## heading are an error", () => {
+  const block = GOOD.slice(GOOD.indexOf("<Voices>"));
+  assertOneError(GOOD + "\n" + block, "first after ##");
+});
+
 test("every content/**/*.mdx file follows the voice rules", () => {
   const files = readdirSync(new URL("../content", import.meta.url), { recursive: true, encoding: "utf8" })
     .filter((file) => file.endsWith(".mdx"))

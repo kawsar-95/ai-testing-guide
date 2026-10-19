@@ -5,6 +5,7 @@ import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { DEFAULT_VERSION, VERSION_INIT_SCRIPT } from "@/lib/fundamentals/version";
 import { VOICE_INIT_SCRIPT } from "@/lib/voice";
+import { INSTALL_CAPTURE_SCRIPT } from "@/lib/pwa-install";
 import { RegisterServiceWorker } from "@/components/layout/RegisterServiceWorker";
 import { GA_ID, OWNER, SITE_DESCRIPTION, SITE_NAME, SITE_SHORT_NAME, SITE_URL } from "@/lib/site";
 
@@ -34,8 +35,10 @@ const notoBengali = Noto_Sans_Bengali({
   variable: "--font-noto-bengali",
   subsets: ["bengali"],
   display: "swap",
-  // No preload: a reader of the Technical voice does not download the font.
-  // The browser loads it when Bengali text appears on the page.
+  // The browser loads the font when Bengali text first shows. The header
+  // button shows বাংলা on every page, so every reader downloads it one time.
+  // No preload: it prevents a preload warning and a high-priority fetch.
+  // The service worker caches the font at its first use, not at install.
   preload: false,
 });
 
@@ -90,6 +93,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: VERSION_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: VOICE_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: INSTALL_CAPTURE_SCRIPT }} />
       </head>
       <body className="min-h-full bg-bg text-text">
         {children}

@@ -28,6 +28,8 @@ type Open = {
   step: number; // index in ORDER of the next expected tag
   orderBad: boolean;
   panel: Panel | null;
+  /** Length of the body of `panel` when its opening tag came. */
+  bodyStart: number;
   bodies: Record<Panel, string[]>;
   technicalCites: Set<number>;
   otherCites: { n: number; line: number }[];
@@ -42,6 +44,7 @@ function scan(source: string): { blocks: VoiceBlock[]; errors: string[] } {
 
   let heading = "";
   let afterHeading = false; // only blank lines since the last ## heading
+  let afterBlock = false; // a </Voices> closed a block in this ## section
   let open: Open | null = null;
 
   /** Ends the open block and runs the checks that need the whole block. */
@@ -87,13 +90,16 @@ function scan(source: string): { blocks: VoiceBlock[]; errors: string[] } {
           step: 0,
           orderBad: false,
           panel: null,
+          bodyStart: 0,
           bodies: { technical: [], layman: [], bangla: [] },
           technicalCites: new Set(),
           otherCites: [],
         };
       } else if (name === "Voices") {
-        if (open) finish(true);
-        else fail(index, "</Voices> has no <Voices> before it");
+        if (open) {
+          finish(true);
+          afterBlock = true;
+        } else fail(index, "</Voices> has no <Voices> before it");
       } else if (!open) {
         fail(index, `${full} is outside a <Voices> block`);
       } else {
@@ -105,10 +111,17 @@ function scan(source: string): { blocks: VoiceBlock[]; errors: string[] } {
         }
         if (closing) {
           if (!blank(index - 1)) fail(index, `a blank line must come before ${full}`);
+          // A <Layman> or <Bangla> body with only blank lines shows an empty box.
+          const panel = open.panel;
+          if ((panel === "layman" || panel === "bangla") && name.toLowerCase() === panel) {
+            const body = open.bodies[panel].slice(open.bodyStart);
+            if (body.every((line) => line.trim() === "")) fail(index, `<${name}> is empty`);
+          }
           open.panel = null;
         } else {
           if (!blank(index + 1)) fail(index, `a blank line must follow ${full}`);
           open.panel = PANELS[ORDER.indexOf(full) / 2] ?? null;
+          if (open.panel) open.bodyStart = open.bodies[open.panel].length;
         }
       }
       afterHeading = false;
@@ -120,6 +133,7 @@ function scan(source: string): { blocks: VoiceBlock[]; errors: string[] } {
       finish(false);
       heading = plainTitle(section[1]);
       afterHeading = true;
+      afterBlock = false;
       continue;
     }
 
@@ -131,6 +145,10 @@ function scan(source: string): { blocks: VoiceBlock[]; errors: string[] } {
         if (ANY_HEADING.test(text)) fail(index, "a Markdown heading is not allowed in <Layman> or <Bangla>");
         cites.forEach((n) => open!.otherCites.push({ n, line: index }));
       }
+    } else if (open && !isBlank) {
+      fail(index, "text inside <Voices> is outside a panel");
+    } else if (afterBlock && !isBlank) {
+      fail(index, "text after </Voices> must move into a panel or under a new ## heading");
     }
     if (!isBlank) afterHeading = false;
   }

@@ -1,18 +1,10 @@
 "use client";
 
 import { useRef } from "react";
-import type { CSSProperties, KeyboardEvent } from "react";
-import { VOICE_LABELS } from "@/lib/voice";
+import type { KeyboardEvent } from "react";
+import { VOICE_LABELS, switchStyle } from "@/lib/voice";
 import type { Voice } from "@/lib/voice";
 import { voiceGroup } from "@/lib/ui";
-
-/** The color of the selected button of each voice. */
-const VOICE_COLOR: Record<Voice, string> = {
-  technical: "var(--accent)",
-  layman: "var(--voice-layman)",
-  bangla: "var(--voice-bangla)",
-  all: "var(--text)",
-};
 
 /**
  * A segmented control that selects the voice of one section. The Left and
@@ -53,15 +45,7 @@ export function VoiceSwitcher({
     >
       {order.map((v) => {
         const active = v === value;
-        const color = VOICE_COLOR[v];
-        // Only CSS variables come in through style. The values stay in globals.css.
-        const style: CSSProperties | undefined = active
-          ? {
-              color,
-              borderColor: `color-mix(in srgb, ${color} 55%, transparent)`,
-              backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
-            }
-          : undefined;
+        const style = active ? switchStyle(v) : undefined;
         return (
           <button
             key={v}
@@ -73,7 +57,7 @@ export function VoiceSwitcher({
             aria-pressed={active}
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(v)}
-            lang={v === "bangla" ? "bn" : undefined}
+            lang={v === "bangla" || v === "all" ? "bn" : undefined}
             style={style}
             className={
               "rounded-lg border px-3 py-1.5 text-[13px] leading-5 font-medium transition-colors " +

@@ -43,7 +43,34 @@ export function voiceOrder(def: VoiceDefault): Voice[] {
   return def === "bangla" ? ["bangla", "technical", "layman", "all"] : ["technical", "layman", "bangla", "all"];
 }
 
-/** A panel shows if the voice is its own voice or "all". */
+/** The color of the selected switcher button of each voice. */
+export const VOICE_COLOR: Record<Voice, string> = {
+  technical: "var(--accent)",
+  layman: "var(--voice-layman)",
+  bangla: "var(--voice-bangla)",
+  all: "var(--text)",
+};
+
+/**
+ * The inline style of the selected switcher button. Only CSS variables go
+ * in, so the values stay in globals.css. tests/voice.test.ts measures the
+ * contrast of the text on its tint in both themes.
+ */
+export function switchStyle(voice: Voice): { color: string; borderColor: string; backgroundColor: string } {
+  const color = VOICE_COLOR[voice];
+  return {
+    // Mixed with --text, as .mdx a.cite in globals.css: the plain color falls
+    // below 4.5:1 on the tint in the light theme.
+    color: `color-mix(in srgb, ${color} 80%, var(--text))`,
+    borderColor: `color-mix(in srgb, ${color} 55%, transparent)`,
+    backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
+  };
+}
+
+/**
+ * A panel shows if the voice is its own voice or "all".
+ * The CSS in app/globals.css applies the same rule. The test documents it.
+ */
 export function isPanelVisible(panel: PanelVoice, voice: Voice): boolean {
   return voice === "all" || voice === panel;
 }

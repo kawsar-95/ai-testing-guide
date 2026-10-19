@@ -62,9 +62,11 @@ export function Voices({ children }: { children?: ReactNode }) {
 
     // A click covers a second click on the current hash. The hash does not
     // change, so no hashchange event fires. The capture phase runs before
-    // the browser follows the link.
+    // the browser follows the link. A click with a modifier key opens a new
+    // tab or window, so this tab stays as it is.
     const onClick = (event: MouseEvent) => {
       if (event.button !== 0 || !(event.target instanceof Element)) return;
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
       const link = event.target.closest('a[href^="#"]');
       if (link) reveal(link.getAttribute("href") ?? "");
     };

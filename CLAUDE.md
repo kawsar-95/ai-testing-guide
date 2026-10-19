@@ -90,6 +90,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
 | `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture). It has relative `.ts` imports, so `node --test` can load it. |
 | `lib/pwa.ts` | The web manifest, the precache list (all 86 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels and the three START HERE pages |
 | `lib/reading.ts` | `articleProgress` and `showBackToTop` for the reading aids |
@@ -102,7 +103,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
 | `public/images/fundamentals/` | The images of the owner's notes |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source` |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
 | `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
@@ -224,10 +225,10 @@ A `##` section can have 3 voices of its text: Technical (the current text), `স
 | Part | Behavior |
 |---|---|
 | Switcher | A group of 4 buttons under the `##` heading: `Technical`, `সহজ English`, `বাংলা`, `সবগুলো`. `সবগুলো` shows all 3 texts, each extra text in a tinted box with a 3 px left border and a title. The Left, Right, Home, and End keys move the selection. Only the selected button is in the tab order. |
-| `বাংলা` header button | `VoiceToggle` sets the site-wide default voice. The text is `বাংলা` if the default is Technical, and `English` if the default is Bangla. A click saves `bangla` or `technical` in `localStorage` key `voice` and sets `data-voice-default` on `<html>`. Every section follows the new default. |
+| `বাংলা` header button | `VoiceToggle` sets the site-wide default voice. The text is `বাংলা` if the default is Technical, and `English` if the default is Bangla. A click saves `bangla` or `technical` in `localStorage` key `voice` and sets `data-voice-default` on `<html>`. Every section follows the new default. The button has no `aria-pressed`. Its accessible name starts with the visible word (WCAG 2.5.3 Label in Name): `voiceToBangla` and `voiceToTechnical` in `lib/ui.ts`. |
 | Section choice | A click on the switcher changes one section only. If the site-wide default changes, every section goes back to the default. |
 | Bangla default | `বাংলা` moves to the first position of each switcher. |
-| Install button | `InstallButton` shows only after the browser fires `beforeinstallprompt` (Chromium). A click shows the install prompt. Other browsers use their own menu. |
+| Install button | `InstallButton` shows only after the browser fires `beforeinstallprompt` (Chromium). If the event comes before hydration, the head script `INSTALL_CAPTURE_SCRIPT` (`lib/pwa-install.ts`) keeps it, and the button reads it on mount. A click shows the install prompt. Other browsers use their own menu. |
 
 The menus and the other UI text stay in English. There is one URL for each page. There is no `/bn/` copy.
 
@@ -261,19 +262,22 @@ Plain English text.
 |---|---|
 | `<Voices>` is the first element after a `##` heading and ends before the next `##` heading. | yes |
 | A block has one `<Technical>`, one `<Layman>`, and one `<Bangla>`, in this order. | yes |
+| Inside `<Voices>`, each non-blank line is in a panel. Only blank lines can come between the panels. | yes |
+| No non-blank line comes after `</Voices>` and before the next `##` heading or the end of the file. A `##` section has one `<Voices>` block at most. | yes |
+| A `<Layman>` or `<Bangla>` body is not empty (not only blank lines). | yes |
 | Each tag is alone on its line at column 0. A blank line follows each opening panel tag and comes before each closing panel tag. | yes |
 | `<Layman>` and `<Bangla>` have no Markdown heading, so the "On this page" outline does not change. A `###` heading in `<Technical>` is allowed. | yes |
 | A `<Cite n>` in `<Layman>` or `<Bangla>` uses only an `n` that `<Technical>` of the same block cites. | yes |
 | `<Layman>` and `<Bangla>` give no fact that `<Technical>` does not give. | no (fact check) |
 | Commands, flags, paths, product names, and common technical terms stay in English in the Bangla text. | no (fact check) |
 
-`tests/voice-source.test.ts` checks every `content/**/*.mdx` file with `lib/voice-source.ts`. It is a line scan, not an MDX parser. It ignores tags in fenced code blocks and in inline code. A section without `<Voices>` renders as before.
+`tests/voice-source.test.ts` checks every `content/**/*.mdx` file with `lib/voice-source.ts`. It is a line scan, not an MDX parser. It ignores tags in fenced code blocks and in inline code. The rules about text outside a panel and after `</Voices>` also ignore the lines of fenced code blocks. A section without `<Voices>` renders as before.
 
 ### How it works
 
 | Part | Detail |
 |---|---|
-| `lib/voice.ts` | The types, the labels, `VOICE_STORAGE_KEY` (`voice`), `resolveVoiceDefault`, `voiceOrder`, `isPanelVisible`, and `VOICE_INIT_SCRIPT`. Only the stored value `bangla` gives Bangla. Any other value gives Technical. |
+| `lib/voice.ts` | The types, the labels, `VOICE_STORAGE_KEY` (`voice`), `resolveVoiceDefault`, `voiceOrder`, `isPanelVisible`, `switchStyle` (the colors of the selected switcher button), and `VOICE_INIT_SCRIPT`. Only the stored value `bangla` gives Bangla. Any other value gives Technical. |
 | `components/voice/useVoiceDefault.ts` | A `useSyncExternalStore` hook on `data-voice-default` of `<html>`. A `storage` event of another tab updates it. `setVoiceDefault` sets the attribute and saves the value. A blocked storage does not throw. |
 | `components/voice/Voices.tsx`, `VoiceSwitcher.tsx`, `panels.tsx` | `Voices` holds the state of one section. `Technical`, `Layman`, and `Bangla` render `<div data-panel="…">`. `Layman` and `Bangla` add the tinted box and the title. `Bangla` adds `lang="bn"`. |
 | `components/layout/VoiceToggle.tsx`, `InstallButton.tsx` | The 2 header buttons. |
@@ -397,14 +401,14 @@ To change a page:
 - The tokens are CSS variables on `:root` in `app/globals.css`: dark (the default) and light. `@theme inline` maps them to Tailwind colors (`bg-bg-raised`, `text-text-dim`, `text-accent`, …). The values come from the reference repo's `globals.css`.
 - The theme is on `<html data-theme>`. The server HTML has `data-theme="dark"`. The init script in `lib/theme.ts` runs in `<head>` before the first paint: a saved choice (`localStorage` key `theme`) wins, else it follows `prefers-color-scheme`. `tests/theme.test.ts` checks that the script and `resolveTheme` agree.
 - Fonts come from `next/font/google`: Fraunces (display), Inter (body), JetBrains Mono (labels).
-- Voices: the tokens `--voice-layman` and `--voice-bangla` (both themes, Tailwind `voice-layman` and `voice-bangla`) color the extra panels and the switcher. Noto Sans Bengali (`preload: false`, variable `--font-noto-bengali`) comes after each Latin font in the font stacks. The voice head script (`VOICE_INIT_SCRIPT`) runs after the theme script and sets `data-voice-default` on `<html>`. The server HTML has `data-voice-default="technical"`.
+- Voices: the tokens `--voice-layman` and `--voice-bangla` (both themes, Tailwind `voice-layman` and `voice-bangla`) color the extra panels and the switcher. Noto Sans Bengali (`preload: false`, variable `--font-noto-bengali`) comes after each Latin font in the font stacks. The browser loads it when Bengali text first shows. The header button shows `বাংলা` on every page, so every reader downloads the font one time. `preload: false` prevents a preload warning and a high-priority fetch. The voice head script (`VOICE_INIT_SCRIPT`) runs after the theme script and sets `data-voice-default` on `<html>`. The server HTML has `data-voice-default="technical"`.
 - Every text color has 4.5:1 contrast or more on its background in both themes. If you change a token, measure it again.
 
 ## PWA
 
 The site installs as an app and works offline.
 
-- The service worker caches all 86 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
+- The service worker caches all 86 routes and their build files at install. It caches a file that a page loads later (for example the Bengali font) at its first use. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Each build writes a new cache version into `/sw.js`. The new worker deletes the old caches.
 - Only production builds register the service worker. `npm run dev` has none. To test it, run `npm run build` and serve `out/`.
 - A new page in `lib/nav.ts`, a new stage in `lib/linux/stages.ts`, or a new chapter in `lib/fundamentals/chapters.ts` goes into the precache list automatically.

@@ -91,8 +91,9 @@ Rules (`npm test` checks the rules marked ✓):
 
 The right side of the header is: Linux, System Design, Architecture links, Search, `বাংলা`, the install button, and the theme button.
 
-- `VoiceToggle` is a button with `aria-pressed`. The text is `বাংলা` (with `lang="bn"`) when the default is Technical, and `English` when the default is Bangla. A click writes `localStorage.voice` and sets the `<html>` attribute.
-- `InstallButton` is a port of the reference component. It listens for `beforeinstallprompt` and shows only when the browser fires that event (Chromium browsers). Safari and Firefox users use their own browser menu. The site already has a manifest and a service worker (`lib/pwa.ts`), so no PWA change is necessary.
+- `VoiceToggle` is a button with no `aria-pressed`. Its word names the voice that a click selects, not the current state, so a pressed state would contradict it. The text is `বাংলা` (with `lang="bn"`) when the default is Technical, and `English` when the default is Bangla. A click writes `localStorage.voice` and sets the `<html>` attribute.
+- The accessible name (`aria-label` and `title`) starts with the visible word: `বাংলা – Show the Bangla text in every section`, or `English – Show the Technical text in every section`. The strings are `voiceToBangla` and `voiceToTechnical` in `lib/ui.ts`. The reason is WCAG 2.5.3 Label in Name: a speech-input user says the visible word to click the button. `tests/ui.test.ts` checks the two strings.
+- `InstallButton` is a port of the reference component. It listens for `beforeinstallprompt` and shows only when the browser fires that event (Chromium browsers). The browser can fire the event before hydration. A head script (`INSTALL_CAPTURE_SCRIPT` in `lib/pwa-install.ts`, after the theme and voice scripts) keeps it on `window.__installPrompt`, and the button reads it on mount. Safari and Firefox users use their own browser menu. The site already has a manifest and a service worker (`lib/pwa.ts`), so no PWA change is necessary.
 - On phones the header is narrow. The `বাংলা` button and the install button stay visible. The text links are already hidden below `md`.
 
 ### 4.4 Fonts and colors
@@ -140,5 +141,5 @@ Phase 1 is done when these pass: `npm test`, `npm run build`, `check_routes.py`,
 |---|---|
 | A wrong Bangla or Layman text changes a fact. | The voice fact check, by an agent that did not write the text. |
 | Hidden panels break the scroll spy of "On this page". | A hidden heading has `getBoundingClientRect().top = 0`, so `SectionNav` now marks it as current. Phase 1 changes `SectionNav` to skip an element with no box (`getClientRects().length === 0`). A browser check on the pilot page confirms it. |
-| A larger font download for Bangla. | `next/font` loads the Bengali subset only when the page shows Bengali characters (`unicode-range`). |
+| A larger font download for Bangla. | Accepted. `next/font` loads the Bengali subset when Bengali text first shows (`unicode-range`). The header button shows `বাংলা` on every page, so every reader downloads the font one time. `preload: false` stays: it prevents a preload warning and a high-priority fetch. The service worker caches the font at its first use, not at install. |
 | An indented closing tag breaks a panel. | The column-0 rule and its test. |
