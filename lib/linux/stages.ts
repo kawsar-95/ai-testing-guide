@@ -109,6 +109,7 @@ const SOURCE: readonly StageEntry[] = [
       "Super User",
       "File Permissions",
       "Managing Permissions",
+      "Permissions Cheat Sheet",
     ],
   },
   {
