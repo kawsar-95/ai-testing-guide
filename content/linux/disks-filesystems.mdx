@@ -61,6 +61,7 @@ export const page = {
     { title: 'systemd.mount(5)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man5/systemd.mount.5.html', accessed: '2026-10-19' },
     { title: 'lsof(8)', publisher: 'Debian Manpages (lsof)', url: 'https://manpages.debian.org/unstable/lsof/lsof.8.en.html', accessed: '2026-10-19' },
     { title: 'resize2fs(8)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man8/resize2fs.8.html', accessed: '2026-10-19' },
+    { title: 'dd(1)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man1/dd.1.html', accessed: '2026-10-19' },
   ],
 }
 
@@ -72,11 +73,11 @@ A disk is useless until you partition it, put a filesystem on it, and mount it. 
 
 ## Disks and Filesystems
 
-A block device is a device that the kernel reads and writes in fixed-size blocks, such as a disk. A whole disk has a name like `/dev/sda`. A partition adds a number, as in `/dev/sda1`. <Cite n={15} /> `lsblk -N` and `lsblk -v` list only NVMe and virtio (virtual) disks. <Cite n={14} />
+A block device is a device that the kernel reads and writes in fixed-size blocks, such as a disk. A whole disk is `/dev/sda`. A partition adds a number, as in `/dev/sda1`. <Cite n={15} /> `lsblk -N` and `lsblk -v` list only NVMe and virtio (virtual) disks. <Cite n={14} />
 
-A partition is a slice of a disk. The partition table records where each slice starts and ends. A sector is the unit in which a disk addresses its data. <Cite n={15} /> An MBR (Master Boot Record) table sits in sector 0 and holds 4 primary partitions. GPT (GUID Partition Table) is the modern standard, with checksums and UUIDs (unique IDs). A GPT disk keeps a protective (guard) MBR in sector 0. <Cite n={15} /> MBR stores sector numbers in 32 bits, which allows about 2 TiB with 512-byte sectors. <Cite n={15} />
+A partition is a slice of a disk. The partition table records where each slice starts and ends. A sector is the unit in which a disk addresses its data. <Cite n={15} /> An MBR (Master Boot Record) table sits in sector 0 and holds 4 primary partitions. GPT (GUID Partition Table) is the modern standard, with checksums and UUIDs (unique IDs). A GPT disk keeps a protective MBR in sector 0. <Cite n={15} /> MBR stores sector numbers in 32 bits, which allows about 2 TiB with 512-byte sectors. <Cite n={15} />
 
-A disk becomes usable in three steps: partition, make a filesystem, mount. <Cite n={8} /> `df` reports the space of a whole filesystem. <Cite n={17} /> `du` adds up the files that it can see below a path, so the two numbers can differ. <Cite n={18} /> A mount can hide files below it. <Cite n={20} /> Reserved blocks, which only root may use, also lower the free space. <Cite n={33} /> `df -T` is a GNU option. <Cite n={17} />
+A disk becomes usable in three steps: partition, make a filesystem, mount. <Cite n={8} /> `df` reports the space of a whole filesystem. <Cite n={17} /> `du` adds up the files that it can see below a path, so the two numbers can differ. <Cite n={18} /> A mount can hide files below it. <Cite n={20} /> On ext4, reserved blocks, which only root may use, lower the free space that `df` shows. <Cite n={33} /> <Cite n={6} /> `df -T` is a GNU option. <Cite n={17} />
 
 ```bash
 lsblk -f                  # the tree: disks, partitions, filesystems, mount points
@@ -146,7 +147,7 @@ Tutorial's own advice: a test that makes thousands of tiny files can fill the in
 
 A mount point is a directory where a filesystem is attached to the tree. A new mount hides the old contents of that directory. <Cite n={20} /> <Cite n={7} /> `findmnt` prints the mounts as a tree, and `findmnt --target /path` shows the filesystem of a path. <Cite n={19} /> `/proc/mounts` lists the mounts that the current process sees, in `fstab` format. <Cite n={47} />
 
-`/etc/fstab` has six fields on each line. <Cite n={22} />
+`/etc/fstab` has up to six fields on each line. <Cite n={22} />
 
 | Field | Meaning |
 |---|---|
@@ -230,7 +231,7 @@ cat /proc/$$/oom_score         # the OOM score of this shell ($$ is its process 
 
 <Callout type="danger" title="Swap commands can lose data">
 
-`mkswap` erases the start of its target, and `dd of=` overwrites its target. <Cite n={30} /> Check the target with `lsblk -f` first. A wrong `/etc/fstab` line can stop the boot. <Cite n={53} /> `swapoff` fails with an out-of-memory status when free memory cannot take the swapped pages back. <Cite n={29} /> Tutorial's own advice: it may also slow the host or start the OOM killer.
+`mkswap` erases the start of its target. <Cite n={30} /> `dd of=` writes into its target file or device. <Cite n={56} /> Check the target with `lsblk -f` first. `swapoff` fails with an out-of-memory status when free memory cannot take the swapped pages back. <Cite n={29} /> Tutorial's own advice: it may also slow the host or start the OOM killer.
 
 </Callout>
 

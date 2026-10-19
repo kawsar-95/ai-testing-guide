@@ -19,7 +19,7 @@ Deliberate deviations from the stage brief:
 - S12 says `/boot` cannot be on a logical volume. No official page in this stage supports it, so the page does not state it.
 
 ## Sources
-Numbers S1…S55 are the indexes of `page.sources`. A page cite `<Cite n={k} />` points to S_k.
+Numbers S1…S56 are the indexes of `page.sources`. A page cite `<Cite n={k} />` points to S_k.
 
 S1. Linux Roadmap — roadmap.sh — https://roadmap.sh/linux — accessed 2026-10-19
 S2. Partitions And Filesystems In Linux - Introduction — LinuxForDevices — https://www.linuxfordevices.com/tutorials/linux/partitions-and-filesystems — accessed 2026-10-19 (roadmap #060 and #093, `060.txt`)
@@ -76,6 +76,7 @@ S52. Allocated devices — The Linux Kernel documentation — https://docs.kerne
 S53. systemd.mount(5) — man7.org — https://man7.org/linux/man-pages/man5/systemd.mount.5.html — accessed 2026-10-19 (`B011.txt`; added in fix round 1, at the end of the list so that no number moves)
 S54. lsof(8) — Debian Manpages (lsof) — https://manpages.debian.org/unstable/lsof/lsof.8.en.html — accessed 2026-10-19 (`E001.txt`; added in review fix 1)
 S55. resize2fs(8) — man7.org — https://man7.org/linux/man-pages/man8/resize2fs.8.html — accessed 2026-10-19 (`E002.txt`; added in review fix 1)
+S56. dd(1) — man7.org — https://man7.org/linux/man-pages/man1/dd.1.html — accessed 2026-10-19 (`F001.txt`; added in round 4 fix)
 
 Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmpfs(5)` (`B009`), `proc_partitions(5)` (`B006`), `proc_pid_oom_score_adj(5)` (`B005`), `pvs(8)` (`026`), `vgs(8)` (`027`), `lvs(8)` (`028`), and the roadmap link #132 (phoenixnap, `132.txt`; nothing in it that the man pages do not say better). Further reading: none of the links of this stage is `title-only`.
 
@@ -88,7 +89,7 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | D2 | (Removed from the page in review fix 1: the `/dev/xvdc` sentence.) Source kept for step 2 of Adding Disks (S9: `w` and `q`). | S9 | "New disk added is shown as /dev/xvdc." |
 | D3 | `lsblk -N` lists only NVMe devices. `lsblk -v` lists only virtio devices. | S14 | "-N, --nvme Output info about NVMe devices only." / "-v, --virtio Output info about virtio devices only." |
 | D4 | The partition table records the division of a disk into partitions. The page no longer says "usually in sector 0" for every table; an MBR table sits in sector 0 (see D15). | S15 | "This division is recorded in the partition table, usually found in sector 0 of the disk." |
-| D5 | MBR has room for 4 primary partitions; one may be an extended partition that holds logical partitions. | S15 | "In sector 0 there is room for the description of 4 partitions (called `primary'). One of these may be an extended partition" |
+| D5 | (Removed from the page in review fix 1.) MBR has room for 4 primary partitions; the page still says an MBR table holds 4 primary partitions (see D15). | S15 | "In sector 0 there is room for the description of 4 partitions" |
 | D6 | GPT has checksums and UUIDs (the "usually 128 partitions" clause was cut for the word budget). | S15 | "GPT uses 64-bit logical block addresses, checksums, UUIDs and names for partitions" |
 | D7 | MBR stores sector numbers in 32 bits; with 512-byte sectors this allows about 2 TiB (fdisk writes "2 TB"; 2^32 x 512 bytes = 2 TiB). The page cites S15, not S2, for this. | S15 | "as an absolute number of sectors (given in 32 bits)" / "with 512-byte sectors this will work up to 2 TB" |
 | D8 | `df` reports the space of a whole filesystem. | S17 | "df displays the amount of space available on the file system containing each file name argument." |
@@ -100,7 +101,7 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | D14 | Glosses added in fix round 1 (own words, no cite): NVMe = "a flash disk interface"; virtio = "virtual disks of a VM"; MBR = Master Boot Record; GPT = GUID Partition Table; UUIDs = unique IDs. | S15, S2 | fdisk(8): "GPT (GUID Partition Table)". S2: "Master Boot Record (MBR)". |
 | D15 | MBR table: sector 0, 4 primary partitions. A GPT disk keeps a protective MBR in sector 0. | S15 | "In sector 0 there is room for the description of 4 partitions" / "the first sector is still reserved for a protective MBR" |
 | D16 | A mount can hide files below it, so `df` counts files that `du` cannot see. | S20 | "The previous contents (if any) and owner and mode of dir become invisible" |
-| D17 | Reserved blocks only root may use lower the free space of other users (`mke2fs -m`, default 5%). | S33 | "the percentage of the file system blocks reserved for the super-user." |
+| D17 | On ext4, reserved blocks only root may use lower the free space that `df` shows (S6 says "typically 5% by default"; `mke2fs -m` sets the percentage). | S33, S6 | S6: "This reserved space is not counted as “available” for regular users." S33: "the percentage of the file system blocks reserved for the super-user." |
 | D18 | `lsof +L1` lists open files that were deleted (unlinked). The page tip says a deleted file held open "may be the cause" when `df` is full and `du` is not; the space-held effect is the tutorial's own advice. | S54 | "A specification of the form ``+L1'' will select open files that have been unlinked." |
 
 ### Filesystems
@@ -146,7 +147,7 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | M2 | The files in the mount directory are inaccessible by name while mounted. | S7 | "Any files in it, however, will be inaccessible by name while the filesystem is mounted." |
 | M3 | `findmnt` lists mounted filesystems as a tree; `--target` shows the filesystem of a path. | S19 | "prints all mounted filesystems in the tree-like format by default." / "--target accepts any file or directory" |
 | M4 | `/proc/mounts` lists the mounts that the current process sees, in fstab(5) format. | S47 | "lists the mounts of the process's own mount namespace. The format of this file is documented in fstab(5)." |
-| M5 | `/etc/fstab` has six fields: spec, file, vfstype, mntops, freq, passno. | S22 | "The first field (fs_spec)" … "The sixth field (fs_passno)"; "LABEL=<label> or UUID=<uuid> may be given instead of a device name." |
+| M5 | `/etc/fstab` has up to six fields (fields 4 to 6 are optional; the page says "up to six"): spec, file, vfstype, mntops, freq, passno. | S22 | "The first field (fs_spec)" … "The sixth field (fs_passno)"; "LABEL=<label> or UUID=<uuid> may be given instead of a device name." |
 | M6 | `ro`, `noexec`, `nofail` options. | S20 | "Mount the filesystem read-only." / "Do not permit direct execution of any binaries" / "Do not report errors for this device if it does not exist." |
 | M7 | A bind mount makes a directory visible at a second place. | S20 | "mount --bind olddir newdir" / "It is important to understand that "bind" does not create any second-class or special node in the kernel VFS." |
 | M8 | tmpfs lives in memory; contents are lost on unmount; default size is half of RAM (`size=50%`). | S38 | "If you unmount a tmpfs instance, everything stored therein is lost." / "the default ... is size=50%" |
@@ -188,9 +189,9 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | W10 | A higher `oom_score` makes a process more likely to be killed. | S49 | "A higher score means that the process is more likely to be selected by the OOM-killer." |
 | W11 | `mkswap` erases the first block of its target. | S30 | "mkswap, like many others mkfs-like utils, erases the first partition block to make any previous filesystem invisible." |
 | W12 | `swapoff` can fail with exit status 2 when memory is too small to take the pages back. | S29 | "2 system has insufficient memory to stop swapping (OOM)" |
-| W13 | A tmpfs counts against the memory limit of a container (tip). | S51 | "that usage counts against the container's memory cgroup limit" |
+| W13 | (Removed from the page in review fix 1: the tmpfs sentence of the Swap tip. S51 stays cited in Mounts, M9.) | S51 | "that usage counts against the container's memory cgroup limit" |
 | W14 | The roadmap guide makes a swap file with `dd` as an alternative to `fallocate`, then `mkswap` and `swapon`. | S11 | "If fallocate is not available, you can use dd as an alternative: $ sudo dd if=/dev/zero of=/swapfile bs=1G count=1" |
-| W15 | Danger callout: `mkswap` erases the start of its target (S30); `dd of=` overwrites its target (own words); a wrong fstab line can stop the boot (S53, `nofail` side); `swapoff` fails with an out-of-memory status (S29); "may also slow the host or start the OOM killer" is the tutorial's own advice (marked on the page). | S30, S53, S29 | S53: "With nofail, this mount will be only wanted, not required, by local-fs.target" |
+| W15 | Danger callout: `mkswap` erases the start of its target (S30); `dd of=` writes into its target (S56: `of=FILE` writes to FILE); `swapoff` fails with an out-of-memory status (S29); "it may also slow the host or start the OOM killer" is the tutorial's own advice (marked on the page). The fstab-boot sentence was deleted from this callout (round 4 FAIL 4); Adding Disks keeps it with S53. | S30, S56, S29 | S56: "write to FILE instead of standard output" |
 | W16 | `cat /proc/$$/oom_score` prints the score of the shell (`$$` = its process ID). | S49 | "This file displays the current score that the kernel gives to this process" (local check: ran OK) |
 
 ### LVM
