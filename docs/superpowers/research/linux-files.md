@@ -32,7 +32,7 @@ S26. GNU Gzip: General file (de)compression — GNU Project — https://www.gnu.
 S27. Info-ZIP's Zip — Info-ZIP — https://infozip.sourceforge.net/Zip.html — accessed 2026-10-19
 S28. GNU tar: an archiver tool (manual) — GNU Project — https://www.gnu.org/software/tar/manual/tar.html — accessed 2026-10-19
 
-Local checks (not a citable page): I ran every example of the page in an empty scratch directory with GNU coreutils, GNU tar 1.35, and gzip, and each one worked as written (`gzip -d` needs a `.gz` file whose plain name does not exist, so the page uses `old-run.log.gz`). `nano` 8.7.1 was installed; `vimtutor` was not installed on the test machine, so the `vimtutor` claim rests on S18 only.
+Local checks (not a citable page): I ran every example of the page in an empty scratch directory with GNU coreutils, GNU tar 1.35, and gzip, and each one worked as written (`mv --no-copy` was removed from the page after the fact-check: it needs coreutils 9.2 or newer, and no fetched source gives the version. `gzip -d` needs a `.gz` file whose plain name does not exist, so the page uses `old-run.log.gz`). `nano` 8.7.1 was installed; `vimtutor` was not installed on the test machine, so the `vimtutor` claim rests on S18 only.
 
 Not usable as sources (no text): #293 Linux Basic Files Operations, #043 Linux cp Command, #044 and #136 Linux mv Command, #212 hard and symbolic links, #003 Linux File Packaging and Compression (labex.io, `http-403`); #294 and #048 What is the Difference Between Cat and Touch Command (linuxways.net, `robots`: 45 bytes of text, no content).
 Read, but not cited: #041 mv and cp (Linux.org forum thread; it says that cp and mv "usually" prompt before an overwrite, which disagrees with S11 and S13, so the page follows the GNU manual); #135 mv Cheat Sheet (the page is mostly advertisement); #138 Nano in Linux (the host says "The IOFlood blog is temporarily unavailable"); #139 nano homepage (title and version only; S16 is the manual of the same project); #211 Difference between hard link and soft link (it calls a hard link a "mirror copy", which disagrees with S2 and S23: a hard link is another name, not a copy; the page follows S2 and S23); #291/#042 Mastering cp and mv (its cp and mv option lists agree with S11 and S12, and the page cites the official manual for each option); #073/#292 Vim Tutorial for Beginners (its `:q!` and `:wq` facts agree with S18 and S20; the page cites the Vim help).
@@ -71,7 +71,7 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 | # | Claim | Source | Quote |
 |---|---|---|---|
 | C17 | A `cp` copy is independent of the original. | S11 | "The copy is completely independent of the original." |
-| C18 | `cp` copies a directory only with `-r` (or `-R`, `-a`). | S11 | "By default, cp does not copy directories. However, the -R, -a, and -r options cause cp to copy recursively" |
+| C18 | `cp` copies a directory only with `-r`, `-R`, or `-a`. | S11 | "By default, cp does not copy directories. However, the -R, -a, and -r options cause cp to copy recursively" |
 | C19 | If the last argument is a directory, `cp` puts each source inside it. | S11 | "if the last file is a directory and the --no-target-directory (-T) option is not given, cp copies each source file to the specified directory" |
 | C20 | `mv` renames files. | S12 | "mv moves or renames files (or directories)." |
 | C21 | By default `cp` replaces all existing destination files (no prompt without `-i`). | S11 | (under `all`) "This is the default operation when an --update option is not specified, and results in all existing files in the destination being replaced." |
@@ -93,7 +93,6 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 | C33 | Across filesystems `mv` copies as with `cp -a` and removes the original. | S12 | "if renaming does not work because the destination’s file system differs, mv falls back on copying as if by cp -a" |
 | C34 | If a copy fails, `mv` removes the partial copy; a multi-directory move can stop halfway. | S12 | "If the copy fails, then mv removes any partially created copy in the destination." / "the first would be left on the destination file system" |
 | C35 | `mv -t DIRECTORY SOURCE...` is a valid form. | S12 | "mv [option]... -t directory source..." |
-| C36 | `--no-copy` fails instead of copying. | S12 | "fail with a diagnostic instead of copying and then removing the file." |
 | C37 | `mv` overwrites an existing file at once. | S13 | "the contents of the existing file will be overwritten immediately." |
 | C38 | `mv -n` and `mv -i` prevent or prompt for an overwrite. | S13 | "To prevent overwriting existing files, you can use the -n option." |
 | C38b | `mv` prompts only when the destination is unwritable (so the page says "writable destination"). | S12 | "If a destination file exists but is normally unwritable, standard input is a terminal, and the -f or --force option is not given, mv prompts" |
@@ -104,7 +103,7 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 | C39 | Vi, Vim, Nano, Emacs are common terminal editors. | S14 | "Vi, Vim, Nano, Emacs are just a few of the most popular ones out there." |
 | C40 | Vim needs no X session and works over SSH. | S15 | "Doesn‘t require an active X session – Works over SSH or the console" |
 | C41 | Editing config files in `/etc` is a use for a terminal editor. | S14 | "modifying config files located in the /etc directory" |
-| C42 | `>>` appends and creates the file if missing. | S8 | "Redirecting output in this fashion opens the file whose name results from the expansion of word for appending" / "If the file does not exist it is created." |
+| C42 | `>>` appends and creates the file if missing. | S8 | "opens the file … for appending" / "If the file does not exist it is created." |
 | C43 | A here document feeds lines to a command until a delimiter line. | S8 | "read input from the current source until it reads a line containing only delimiter" |
 | C44 | `>` replaces the content, `>>` appends (danger callout). | S8 | "it is truncated to zero size" / "opens the file whose name results from the expansion of word for appending" |
 
@@ -121,8 +120,9 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 | C51 | `^K` cuts a line; `^U` pastes. | S16 | "Text can be cut from a file a whole line at a time with ^K." / "can be pasted at the current cursor position with ^U." |
 | C52 | `^W` searches. | S16 | "With the Search command (^F or ^W) you can search the current buffer" |
 | C53 | `^G` opens the help. | S16 | "The built-in help in nano is available by pressing ^G." |
-| C54 | At the save prompt Y saves, N discards, C cancels. | S14 | "Y to save the file and exit the editor" / "N to discard changes" / "C to cancel saving but continue to edit" |
-| C55 | The title bar shows "Modified" for unsaved changes. | S16 | "displays "Modified" if the file has been modified since it was last saved or opened." |
+| C54 | At the save prompt Y saves and N discards, and `^C` cancels. The S14 tutorial says "C" cancels; that is wrong. Local test by the fact-checker: nano 8.7.1 shows `^C Cancel`, and typing c or C leaves the prompt open. The page uses `^C`. | S14, S16 | "Y to save the file and exit the editor" / "N to discard changes" / "Cancels the current command." |
+| C55 | The title bar shows "Modified" on the right for unsaved changes. | S16 | "displays "Modified" if the file has been modified since it was last saved or opened." |
+| C55c | With `-%` (`--stateflags`), a star after the file name shows the state instead; a nanorc file may set this option. | S16 | "When the buffer is modified, a star (*) is shown after the filename in the center of the title bar." |
 | C55b | A buffer is the text in memory. | S14 | "a new, unsaved file in the memory buffer" |
 | C56 | `+LINE` before the file name opens at that line. | S16 | "The cursor can be put on a specific line of a file by adding the line number with a plus sign before the filename" |
 | C57 | `-l` shows line numbers; `-v` is read-only. | S16 | "Display line numbers to the left of the text area." / "Don’t allow the contents of the file to be altered: read-only mode." |
@@ -133,7 +133,7 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 |---|---|---|---|
 | C59 | Vim is modal. | S18 | "The Vim editor is a modal editor. That means that the editor behaves differently, depending on which mode you are in." |
 | C60 | Normal mode keys are commands; Insert mode keys are text. | S18 | "In Normal mode the characters you type are commands. In Insert mode the characters are inserted as text." |
-| C61 | Vim starts in Normal mode; `i` starts Insert mode; `Esc` leaves it. | S18 | "Since you have just started Vim it will be in Normal mode." / "To start Insert mode you type the "i" command" / "press the <Esc> key to stop Insert mode" |
+| C61 | Vim starts in Normal mode; `i` starts Insert mode; `Esc` leaves it. | S18 | "it will be in Normal mode." / "To start Insert mode you type the "i" command" / "press the <Esc> key to stop Insert mode" |
 | C62 | `Esc` returns to Normal mode, sometimes twice. | S18 | "press the <Esc> key. Sometimes you have to press it twice." |
 | C63 | `:` opens Command-line mode (one line at the bottom). | S19 | "In Command-line mode (also called Cmdline mode) you … can enter one line of text at the bottom of the window." |
 | C64 | Vim reads the file into a buffer, changes it, and writes it. | S20 | "reading the file into a buffer" / "changing the buffer with editor commands" / "writing the buffer into a file" |

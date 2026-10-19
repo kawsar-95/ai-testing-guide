@@ -45,7 +45,7 @@ This stage covers the commands that create, copy, move, edit, link, and archive 
 
 ## Working with Files
 
-Every file on a Linux filesystem has an inode. An inode is a record of the metadata of the file, such as its owner, size, and timestamps. <Cite n={1} /> The name of a file is a hard link: a reference to that inode number. <Cite n={2} />
+Every file on a Linux filesystem (the structure that stores files on a disk) has an inode. An inode is a record of the metadata of the file, such as its owner, size, and timestamps. <Cite n={1} /> The name of a file is a hard link: a reference to that inode number. <Cite n={2} />
 
 Two commands show this data. `ls -l` lists files in the long format. <Cite n={3} /> `stat` prints the full status, and `-c` chooses the fields. <Cite n={4} />
 
@@ -59,7 +59,7 @@ The code `%s` is the size in bytes, `%h` is the number of hard links, and `%i` i
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: after a test run, use `stat` to check the size and the modification time of each output file. A report of 0 bytes often means that the step crashed before it wrote any data. In a CI log, one `ls -l` of the artifact folder is a cheap check.
+Tutorial's own advice: after a test run, use `stat` to check the size and the modification time of each output file. A report of 0 bytes often means that the step crashed before it wrote any data. In a CI log (the log of an automated test job), one `ls -l` of the artifact folder is a cheap check.
 
 </Callout>
 
@@ -77,7 +77,7 @@ echo "first line" > hello.txt
 cat > draft.txt                          # type text, then press Ctrl+D
 ```
 
-A redirection with `>` also makes a file. <Cite n={8} /> The command `cat > file` reads your text until you press Ctrl+D. <Cite n={9} /> To remove things, `rm` deletes files, and it needs `-r` for a directory. <Cite n={10} /> `rmdir` removes only empty directories. <Cite n={9} />
+A redirection (a shell feature that sends output to a file) with `>` also makes a file. <Cite n={8} /> The command `cat > file` reads your text until you press Ctrl+D. <Cite n={9} /> To remove things, `rm` deletes files, and it needs `-r` for a directory. <Cite n={10} /> `rmdir` removes only empty directories. <Cite n={9} />
 
 <Callout type="danger" title="Deletion and redirection lose data">
 
@@ -93,7 +93,7 @@ Tutorial's own advice: start each test setup with `mkdir -p`. It succeeds when t
 
 ## Copying and Renaming
 
-`cp` makes a copy that is independent of the original. <Cite n={11} /> It copies a directory only with `-r`. <Cite n={11} /> If the last argument is a directory, `cp` puts each source inside it. <Cite n={11} /> To rename a file, use `mv` with a new name. <Cite n={12} />
+`cp` makes a copy that is independent of the original. <Cite n={11} /> It copies a directory only with `-r`, `-R`, or `-a`. <Cite n={11} /> If the last argument is a directory, `cp` puts each source inside it. <Cite n={11} /> To rename a file, use `mv` with a new name. <Cite n={12} />
 
 By default, `cp` replaces an existing destination file without a prompt. <Cite n={11} /> `mv` does the same. <Cite n={13} /> These options change that:
 
@@ -101,11 +101,11 @@ By default, `cp` replaces an existing destination file without a prompt. <Cite n
 |---|---|
 | `-i` | Ask before each overwrite. <Cite n={11} /> |
 | `-n` | Skip a file that exists. <Cite n={11} /> |
-| `-p` | Keep the mode, owner, and times. <Cite n={11} /> |
+| `-p` | Keep the mode (permission bits), owner, and times. <Cite n={11} /> |
 | `-a` | Archive mode: copy a tree and keep as much as possible. <Cite n={11} /> |
 | `-v` | Print what happens. <Cite n={11} /> |
 
-The manual marks `-n` as deprecated, because its exit status differs from other platforms. In newer versions, `--update=none` also skips existing files. <Cite n={11} />
+The manual marks `-n` as deprecated, because its exit status (the number that a command returns to the shell) differs from other platforms. In newer versions, `--update=none` also skips existing files. <Cite n={11} />
 
 ```bash
 cp config.yml config.yml.bak
@@ -139,10 +139,7 @@ mv build/app.log logs/
 mv *.log logs/                       # the shell expands the pattern
 mv -t archive/ run1.log run2.log     # target directory first
 mv -i old-name.txt new-name.txt
-mv --no-copy big-dir /mnt/other/     # example path: fail if a copy is needed
 ```
-
-The option `--no-copy` makes `mv` fail instead of copy. <Cite n={12} />
 
 <Callout type="danger" title="A move can overwrite">
 
@@ -152,13 +149,13 @@ Without `-i` or `-n`, `mv` replaces a writable destination file and gives no war
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: a CI workspace and `/tmp` can be on different filesystems. A `mv` between them is a slow copy. Use `--no-copy` when your job needs a fast rename, so that a surprise copy fails the job early.
+Tutorial's own advice: a CI workspace and `/tmp` can be on different filesystems. A `mv` between them is a slow copy that can stop halfway. Build your output on the same filesystem as its final place, so that the move is a fast rename.
 
 </Callout>
 
 ## Editing Files
 
-You edit a text file in a terminal with a text editor. Vi, Vim, Nano, and Emacs are the common ones. <Cite n={14} /> A terminal editor such as Vim needs no X session and works over SSH. <Cite n={15} /> You need it for files such as the config files in `/etc`. <Cite n={14} />
+You edit a text file in a terminal with a text editor. Vi, Vim, Nano, and Emacs are the common ones. <Cite n={14} /> A terminal editor such as Vim needs no X session (a graphical desktop) and works over SSH (a remote login to another machine). <Cite n={15} /> You need it for files such as the config files in `/etc`. <Cite n={14} />
 
 For a small change, you may need no editor. The `>>` operator adds text to the end of a file and makes the file if it does not exist. <Cite n={8} /> A here document (text that follows the command, up to a delimiter line) feeds many lines to a command. <Cite n={8} />
 
@@ -195,7 +192,7 @@ Nano is a small editor with no modes: every key types text, except the Control a
 | `^W` | Search. <Cite n={16} /> |
 | `^G` | Open the built-in help. <Cite n={16} /> |
 
-At the save prompt, `Y` saves, `N` discards, and `C` cancels. <Cite n={14} /> The title bar shows "Modified" when the buffer (the text in memory) has unsaved changes. <Cite n={16} />
+At the save prompt, `Y` saves and `N` discards. <Cite n={14} /> The key `^C` cancels the prompt, because nano has a cancel function that stops the current command. <Cite n={16} /> The title bar shows "Modified" when the buffer (the text in memory) has unsaved changes. <Cite n={16} /> With the option `-%` (`--stateflags`), a star `*` after the file name shows this state instead. <Cite n={16} /> Your nanorc file may set that option.
 
 ```bash
 nano report.txt
@@ -218,6 +215,14 @@ Vim is a modal editor: the same key does a different job in each mode. <Cite n={
 
 Vim reads the file into a buffer, changes the buffer, and writes it back. <Cite n={20} /> The buffer is the copy in memory. The file changes only when you write.
 
+```bash
+vim notes.txt
+# i     start Insert mode, then type your text
+# Esc   go back to Normal mode
+# :wq   write the file and quit (type it, then press Enter)
+# :q!   quit and drop all changes
+```
+
 | Keys | Action |
 |---|---|
 | `i`, `Esc` | Start Insert mode, and leave it. <Cite n={18} /> |
@@ -230,7 +235,7 @@ Vim reads the file into a buffer, changes the buffer, and writes it back. <Cite 
 
 `:q` alone fails with error E37 when you have unsaved changes. <Cite n={18} /> The `vimtutor` command is a lesson that teaches by doing. <Cite n={18} /> VIM Adventures is a browser game that teaches Vim commands. <Cite n={22} />
 
-<Callout type="warning" title="No backup and no way back">
+<Callout type="danger" title="No backup and no way back">
 
 Vim makes no backup file unless you set it up. After `ZZ`, there is no turning back. <Cite n={18} /> `:q!` drops every change since the last write.
 
