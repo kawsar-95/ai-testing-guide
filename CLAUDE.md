@@ -58,7 +58,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `app/sitemap.ts`, `app/robots.ts`, `app/not-found.tsx` | Sitemap, robots, 404 page |
 | `app/manifest.ts`, `app/sw.js/route.ts` | The PWA: `/manifest.webmanifest` and the service worker `/sw.js`, both from `lib/pwa.ts` |
 | `app/icon.svg`, `app/apple-icon.png`, `public/icons/` | The favicon, the iOS home-screen icon, and the manifest icons (192 px, 512 px, maskable 512 px) |
-| `components/layout/` | `SiteShell`, `SiteHeader`, `Sidebar`, `SidebarList`, `MobileNav`, `ThemeToggle`, `RegisterServiceWorker` |
+| `components/layout/` | `SiteShell`, `SiteHeader`, `Sidebar`, `SidebarList`, `MobileNav`, `ThemeToggle`, `VoiceToggle` (the `বাংলা` default-voice button), `InstallButton` (the install prompt), `RegisterServiceWorker` |
+| `components/voice/` | `Voices`, `VoiceSwitcher`, `panels.tsx` (`Technical`, `Layman`, `Bangla`), `useVoiceDefault.ts`. See "Voices". |
 | `components/navigation/` | `SectionNav` ("On this page"), `SearchPalette` (Ctrl/Cmd+K) |
 | `components/content/` | `PageHeader` (the `PART 05 · CONFIGURE` eyebrow), `MetaLine` (the meta line), `Sources`, `ReadingProgress`, `BackToTop`, `PrevNext`, `CopyButton` |
 | `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper), `MdxImage` (an image with the base path) |
@@ -82,6 +83,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `lib/nav.ts` | The single source of the page order. See below. |
 | `lib/outline.ts`, `lib/headings.ts` | The `##`/`###` outline of an MDX file, with the same ids as `rehype-slug` |
 | `lib/search.ts` | Builds the search docs, the index, and runs a search |
+| `lib/voice.ts` | The voice types, the labels, `VOICE_STORAGE_KEY`, `resolveVoiceDefault`, and `VOICE_INIT_SCRIPT`. See "Voices". |
+| `lib/voice-source.ts` | The authoring check for `<Voices>` blocks. `npm test` uses it. |
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
@@ -99,7 +102,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
 | `public/images/fundamentals/` | The images of the owner's notes |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture` |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
 | `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
@@ -212,6 +215,88 @@ The System Architecture Foundations module is the home at `/architecture/`, 19 t
 
 To add a topic, add it to `lib/architecture/topics.ts` and to `ArchitectureSlug`, create `content/architecture/<slug>.mdx`, and add its route to `scripts/architecture-route-map.json`. `npm test` checks that the three agree.
 
+## Voices
+
+A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). Phase 1 is done in code. Only 2 pilot pages have voices: `content/getting-started/setup.mdx` and `content/architecture/load-balancer.mdx`. Phase 2 (all other pages, one module at a time) is pending. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
+
+### What the reader sees
+
+| Part | Behavior |
+|---|---|
+| Switcher | A group of 4 buttons under the `##` heading: `Technical`, `সহজ English`, `বাংলা`, `সবগুলো`. `সবগুলো` shows all 3 texts, each extra text in a tinted box with a 3 px left border and a title. The Left, Right, Home, and End keys move the selection. Only the selected button is in the tab order. |
+| `বাংলা` header button | `VoiceToggle` sets the site-wide default voice. The text is `বাংলা` if the default is Technical, and `English` if the default is Bangla. A click saves `bangla` or `technical` in `localStorage` key `voice` and sets `data-voice-default` on `<html>`. Every section follows the new default. |
+| Section choice | A click on the switcher changes one section only. If the site-wide default changes, every section goes back to the default. |
+| Bangla default | `বাংলা` moves to the first position of each switcher. |
+| Install button | `InstallButton` shows only after the browser fires `beforeinstallprompt` (Chromium). A click shows the install prompt. Other browsers use their own menu. |
+
+The menus and the other UI text stay in English. There is one URL for each page. There is no `/bn/` copy.
+
+### How to write voices
+
+Put `<Voices>` directly after the `##` heading:
+
+```mdx
+## How a load balancer picks a server
+
+<Voices>
+<Technical>
+
+The current text, cites, code blocks, callouts, and ### headings.
+
+</Technical>
+<Layman>
+
+Plain English text.
+
+</Layman>
+<Bangla>
+
+বাংলা ব্যাখ্যা।
+
+</Bangla>
+</Voices>
+```
+
+| Rule | `npm test` checks it |
+|---|---|
+| `<Voices>` is the first element after a `##` heading and ends before the next `##` heading. | yes |
+| A block has one `<Technical>`, one `<Layman>`, and one `<Bangla>`, in this order. | yes |
+| Each tag is alone on its line at column 0. A blank line follows each opening panel tag and comes before each closing panel tag. | yes |
+| `<Layman>` and `<Bangla>` have no Markdown heading, so the "On this page" outline does not change. A `###` heading in `<Technical>` is allowed. | yes |
+| A `<Cite n>` in `<Layman>` or `<Bangla>` uses only an `n` that `<Technical>` of the same block cites. | yes |
+| `<Layman>` and `<Bangla>` give no fact that `<Technical>` does not give. | no (fact check) |
+| Commands, flags, paths, product names, and common technical terms stay in English in the Bangla text. | no (fact check) |
+
+`tests/voice-source.test.ts` checks every `content/**/*.mdx` file with `lib/voice-source.ts`. It is a line scan, not an MDX parser. It ignores tags in fenced code blocks and in inline code. A section without `<Voices>` renders as before.
+
+### How it works
+
+| Part | Detail |
+|---|---|
+| `lib/voice.ts` | The types, the labels, `VOICE_STORAGE_KEY` (`voice`), `resolveVoiceDefault`, `voiceOrder`, `isPanelVisible`, and `VOICE_INIT_SCRIPT`. Only the stored value `bangla` gives Bangla. Any other value gives Technical. |
+| `components/voice/useVoiceDefault.ts` | A `useSyncExternalStore` hook on `data-voice-default` of `<html>`. A `storage` event of another tab updates it. `setVoiceDefault` sets the attribute and saves the value. A blocked storage does not throw. |
+| `components/voice/Voices.tsx`, `VoiceSwitcher.tsx`, `panels.tsx` | `Voices` holds the state of one section. `Technical`, `Layman`, and `Bangla` render `<div data-panel="…">`. `Layman` and `Bangla` add the tinted box and the title. `Bangla` adds `lang="bn"`. |
+| `components/layout/VoiceToggle.tsx`, `InstallButton.tsx` | The 2 header buttons. |
+| No flash | `VOICE_INIT_SCRIPT` runs in `<head>` after the theme script and sets `data-voice-default` before the first paint. Before hydration, a `.voices` wrapper has no `data-voice`. The CSS then shows the panel of `html[data-voice-default]`. After hydration, the wrapper has `data-voice` and the CSS uses it. The switcher is hidden (`visibility`) until the wrapper has `data-voice`. `tests/voice.test.ts` checks that the script and `resolveVoiceDefault` agree. |
+| Motion | A panel that the reader selects fades in (180 ms). The site default shows with no motion. The fade is off if the reader asks for reduced motion. |
+| Reveal | If the URL hash, or a click on an in-page `#` link, targets an element in a hidden panel, the section shows that panel and the page scrolls to the element. A target in a visible panel does nothing. |
+| "On this page" | `SectionNav` skips a heading with no box (`getClientRects().length === 0`), so a heading in a hidden panel is never current. |
+| Search | `lib/search.ts` removes the JSX tags and keeps the text. The Layman and Bangla texts go into the doc of their `##` section. |
+
+### Fact check
+
+Every page with voices has a report: `docs/superpowers/research/<group>-<slug>.voices.factcheck.md`. An agent that did not write the voices checks them against the Technical text of the same section. The report ends with `Open FAILs: N`. A page with voices is done only when `N` is 0. This is separate from the report of the Technical text.
+
+### No voices
+
+| Part | Why |
+|---|---|
+| `## Key words` sections and the `## Sources` area | The terms and the source list stay as they are. |
+| `architecture/practice` | The page is a question list. |
+| The `Permissions Cheat Sheet` topic of Linux stage 4 | It keeps its original wording. |
+
+Case Study pages (parts 18–23): the voices restate the workspace facts of the Technical text. They add no new workspace fact.
+
 ## How to Add a Page
 
 Do all three steps. Each step is required.
@@ -274,6 +359,8 @@ To add a group, add it to `SOURCE` in `lib/nav.ts` and to the `GroupSlug` type, 
 | `MdxImage` (`src`, `alt`), or a Markdown image | An image from `public/`, with the base path added. A text link below the image opens the file in full size. |
 | The Fundamentals diagrams | Inline SVG diagrams with a visible description. See "Fundamentals Module". |
 | Fenced code block | Shiki colors, a language label (hidden for `text`) and a Copy button |
+| `Voices` (wraps `Technical`, `Layman`, `Bangla`) | The body of one `##` section in 3 voices, with a switcher. Put it directly after the `##` heading. See "Voices". |
+| `Technical`, `Layman`, `Bangla` | The 3 panels of `Voices`, in this order. Each tag is alone on its line at column 0. `Layman` and `Bangla` show in a tinted box. |
 | GFM table | A raised box that scrolls sideways on narrow screens |
 | `MdxImage` (`src`, `alt`, optional `width` and `height`), also the mapping for Markdown images `![alt](/images/…)` | An `<img>` with lazy loading and a text link "Open the image in full size" below it. It adds the base path to `src` and to the link, because a plain `<img>` does not get it. Give `width` and `height` (use `<MdxImage … />`) so that the page does not jump while the image loads. Write `alt` as a short description and add a text description in a `<details>` block for a dense image. |
 
@@ -310,6 +397,7 @@ To change a page:
 - The tokens are CSS variables on `:root` in `app/globals.css`: dark (the default) and light. `@theme inline` maps them to Tailwind colors (`bg-bg-raised`, `text-text-dim`, `text-accent`, …). The values come from the reference repo's `globals.css`.
 - The theme is on `<html data-theme>`. The server HTML has `data-theme="dark"`. The init script in `lib/theme.ts` runs in `<head>` before the first paint: a saved choice (`localStorage` key `theme`) wins, else it follows `prefers-color-scheme`. `tests/theme.test.ts` checks that the script and `resolveTheme` agree.
 - Fonts come from `next/font/google`: Fraunces (display), Inter (body), JetBrains Mono (labels).
+- Voices: the tokens `--voice-layman` and `--voice-bangla` (both themes, Tailwind `voice-layman` and `voice-bangla`) color the extra panels and the switcher. Noto Sans Bengali (`preload: false`, variable `--font-noto-bengali`) comes after each Latin font in the font stacks. The voice head script (`VOICE_INIT_SCRIPT`) runs after the theme script and sets `data-voice-default` on `<html>`. The server HTML has `data-voice-default="technical"`.
 - Every text color has 4.5:1 contrast or more on its background in both themes. If you change a token, measure it again.
 
 ## PWA
@@ -334,7 +422,7 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), and the page and route-map lists |
+| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), the voice helpers and head script (`tests/voice.test.ts`), the authoring rules of `<Voices>` in every MDX file (`tests/voice-source.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
 | `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, `fundamentals-route-map.json`, and `architecture-route-map.json` that has no page in `out/` |
