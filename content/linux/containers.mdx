@@ -51,25 +51,28 @@ export const page = {
     { title: 'systemd-run(1) - run programs in transient units', publisher: 'man7.org (systemd)', url: 'https://man7.org/linux/man-pages/man1/systemd-run.1.html', accessed: '2026-10-19' },
     { title: 'systemd-cgls(1) - show control group contents', publisher: 'man7.org (systemd)', url: 'https://man7.org/linux/man-pages/man1/systemd-cgls.1.html', accessed: '2026-10-19' },
     { title: 'uname(1) - print system information', publisher: 'man7.org (GNU coreutils)', url: 'https://man7.org/linux/man-pages/man1/uname.1.html', accessed: '2026-10-19' },
+    { title: 'Run containerd in the Docker daemon', publisher: 'Docker Docs', url: 'https://docs.docker.com/engine/daemon/embedded-containerd/', accessed: '2026-10-19' },
   ],
 }
 
 # Containers
 
-A container is a normal Linux process that the kernel isolates and limits. This stage explains containers, runtimes, Docker, and cgroups. A tester needs them because CI jobs often run inside containers and behave differently there. <Cite n={1} />
+A container is one or more Linux processes that the kernel isolates and limits. This stage explains containers, runtimes, Docker, and cgroups. A tester needs them because CI jobs often run inside containers and behave differently there. <Cite n={1} />
 
 <PageMeta />
 
 ## Containerization
 
-A container is a process that the kernel isolates from the rest of the host. <Cite n={21} /> <Cite n={7} /> Three parts build it. A **namespace** gives a process its own view of one global resource, such as process IDs, mounts, network devices, or the hostname. <Cite n={7} /> A **cgroup** (control group) limits and counts the resources of a group of processes. <Cite n={6} /> An **image** is a read-only package of the application and the files that it needs. <Cite n={2} /> <Cite n={21} /> The `unshare` command builds new namespaces for one program by hand. <Cite n={10} />
+A container is a group of processes that the kernel isolates from the rest of the host. <Cite n={21} /> <Cite n={7} /> Three main parts build it. A **namespace** gives a process its own view of one global resource, such as process IDs, mounts, network devices, or the hostname. <Cite n={7} /> A **cgroup** (control group) limits and counts the resources of a group of processes. <Cite n={6} /> An **image** is a read-only package of the application and the files that it needs. <Cite n={2} /> <Cite n={21} /> The `unshare` command builds new namespaces for one program by hand. <Cite n={10} />
 
-A container is not a virtual machine (VM). A VM runs its own kernel, the core of the operating system. A container shares the kernel of the host. <Cite n={3} /> So the host kernel decides which features exist. By default, a container has no limit and can use all the resources that the kernel scheduler allows. <Cite n={41} /> Some views show host data: inside a container, `free` reports the swap of the host. <Cite n={41} /> The time namespace isolates the boot and monotonic clocks. <Cite n={7} />
+A container is not a virtual machine (VM). A VM runs its own kernel, the core of the operating system. A container shares the kernel of the host. <Cite n={3} /> So the host kernel decides which features exist. <Cite n={41} /> By default, a container has no limit and can use all the resources that the kernel scheduler allows. <Cite n={41} /> Some views show host data: inside a container, `free` reports the swap of the host. <Cite n={41} /> The time namespace isolates only the boot and monotonic clocks, not the wall clock. <Cite n={7} />
 
 ```bash
 # Read-only. Run it on the host and inside a container, then compare.
-uname -r                    # kernel release; a container shows the kernel of its host
-ls -l /proc/self/ns         # one link for each namespace; the same number = the same namespace
+uname -r                    # kernel release; a container shows the kernel that runs it
+                            # (on Docker Desktop, the kernel of its Linux VM)
+ls -l /proc/self/ns         # one link for each namespace type, plus two *_for_children links;
+                            # the same number = the same namespace
 readlink /proc/self/ns/pid  # for example pid:[4026531836] (an illustration)
 cat /proc/self/cgroup       # the cgroup of this process
 ```
@@ -82,18 +85,18 @@ Tutorial's own advice: log `uname -r` (it prints the kernel release <Cite n={45}
 
 ## Container Runtime
 
-A **container runtime** starts the container process and keeps it running. <Cite n={5} /> It sits between the engine (the tool you type, such as `docker`) and the kernel, and it sets up namespaces and cgroups. <Cite n={5} />
+A **container runtime** starts and manages the container process. <Cite n={5} /> It acts as an intermediary between the container and the operating system, and it sets up namespaces and cgroups. <Cite n={2} /> <Cite n={5} />
 
-Two standards of the Open Container Initiative (OCI) keep the parts exchangeable. The image spec defines the image: a manifest, filesystem layers (sets of file changes), and a configuration. <Cite n={15} /> The runtime spec defines the `config.json` file and the container lifecycle. <Cite n={13} /> Its Linux part names the namespaces, cgroups, and capabilities (small units of root power) that a runtime sets. <Cite n={14} /> <Cite n={11} />
+Two Open Container Initiative (OCI) standards matter. The image spec defines the image: a manifest, filesystem layers (sets of file changes), and a configuration. <Cite n={15} /> The runtime spec defines the `config.json` file and the container lifecycle. <Cite n={13} /> Its Linux part names the namespaces, cgroups, and capabilities (small units of root power) to set. <Cite n={14} /> <Cite n={11} />
 
-Runtimes work at two levels. A low-level runtime, such as `runc`, creates one container from an OCI bundle. <Cite n={16} /> <Cite n={5} /> A high-level runtime, such as `containerd`, is a daemon (a background service) that also moves images and supervises containers. <Cite n={17} /> <Cite n={5} /> Docker Engine uses containerd. <Cite n={5} /> CRI-O is a runtime for Kubernetes, which needs a runtime with the Container Runtime Interface (CRI). <Cite n={18} /> <Cite n={4} />
+A low-level runtime, such as `runc`, creates one container from an OCI bundle (a folder with `config.json` and a root filesystem). <Cite n={16} /> <Cite n={5} /> A high-level runtime, such as `containerd`, is a daemon (a background service) that also moves images and supervises containers. <Cite n={17} /> <Cite n={5} /> Docker Engine starts and manages containerd. <Cite n={46} /> <Cite n={5} /> CRI-O is a runtime for Kubernetes, which needs a runtime with the Container Runtime Interface (CRI). <Cite n={18} /> <Cite n={4} />
 
 | | Docker Engine | Podman |
 |---|---|---|
-| Daemon | `dockerd` runs all the time <Cite n={22} /> | none <Cite n={19} /> |
+| Daemon | `dockerd` is a long-running daemon <Cite n={22} /> | none <Cite n={19} /> |
 | Root | The daemon needs root, unless rootless <Cite n={39} /> | A normal user can run containers <Cite n={19} /> |
 
-**Rootless** means that the runtime and containers run as a normal user, inside a user namespace. <Cite n={40} /> Podman then needs ID ranges in `/etc/subuid`. <Cite n={20} />
+**Rootless** means that the runtime and containers run as a normal user, inside a user namespace (a private view of user IDs). <Cite n={40} /> Podman then needs ID ranges in `/etc/subuid`. <Cite n={20} />
 
 ```bash
 command -v docker podman runc containerd   # read-only: which of these tools exist here
@@ -110,46 +113,45 @@ Tutorial's own advice: log the engine and runtime, for example `docker version` 
 
 ## Docker
 
-Docker Engine has a long-running daemon (`dockerd`) and the `docker` client. <Cite n={22} /> An **image** is a read-only template. A **container** is a runnable instance of it. <Cite n={21} /> Each Dockerfile instruction, such as `FROM`, `COPY`, `USER`, or `CMD`, adds a layer. <Cite n={21} /> <Cite n={23} /> Changes inside a container vanish on removal. <Cite n={21} />
+Docker Engine has a long-running daemon (`dockerd`) and the `docker` client. <Cite n={22} /> An **image** is a read-only template. A **container** is a runnable instance of it. <Cite n={21} /> Each Dockerfile instruction, such as `FROM` or `COPY`, adds a layer. <Cite n={21} /> <Cite n={23} /> 
 
-A **volume** is storage that Docker manages. <Cite n={30} /> A **bind mount** shares a host path and is writable unless you add `ro`. <Cite n={31} /> Publish a port with `-p`. Without a host address, the port opens on all interfaces. <Cite n={24} /> On a user-defined network, containers reach each other by name. <Cite n={32} /> A tag can move, but a digest pins one exact image. <Cite n={35} /> `.dockerignore` keeps files out of the build context. <Cite n={34} /> Compose starts several containers from one YAML file. <Cite n={36} /> Docker Desktop bundles the engine, and its daemon runs in a Linux VM. <Cite n={37} /> <Cite n={31} />
+A **volume** is storage that Docker manages. <Cite n={30} /> A **bind mount** shares a host path and is writable unless you add `ro`. <Cite n={31} /> `-p` publishes a port on all host interfaces, unless you give an address. <Cite n={24} /> On a user-defined network, containers reach each other by name. <Cite n={32} /> A tag can move, but a digest (the hash of the image) pins one exact image. <Cite n={35} /> `.dockerignore` keeps files out of the build context (files that the build can read). <Cite n={34} /> Compose starts several containers from one YAML file. <Cite n={36} /> Docker Desktop bundles the engine and runs its daemon in a Linux VM. <Cite n={37} /> <Cite n={31} />
 
-`docker ps -a`, `logs`, `exec`, `stop`, and `rm` manage containers. <Cite n={25} /> <Cite n={26} /> <Cite n={27} /> `stop` sends SIGTERM, then SIGKILL after a timeout. <Cite n={28} /> <Cite n={29} />
+`docker ps -a`, `logs`, `exec`, `stop`, and `rm` manage containers. <Cite n={25} /> <Cite n={26} /> <Cite n={27} /> By default, `stop` sends SIGTERM (ask to end), then SIGKILL (force end) after a timeout. <Cite n={28} /> <Cite n={29} />
 
 ```bash
-# Illustration with an invented image. Run it only where you may start containers.
-docker run -d --rm --name web1 -p 127.0.0.1:8080:80 example/app:1.0
-docker ps                    # CONTAINER ID 3f4e..., IMAGE example/app:1.0, NAMES web1
+# Illustration. registry.invalid is a name that cannot resolve: use your own image.
+# Run it only where you may start containers. -p is HOST_IP:HOST_PORT:CONTAINER_PORT.
+docker run -d --rm --name web1 -p 127.0.0.1:8080:80 registry.invalid/app:1.0
+docker ps                    # CONTAINER ID 3f4e..., IMAGE registry.invalid/app:1.0, NAMES web1
 docker logs --tail 20 web1   # the last 20 lines; add -f to follow
 docker exec web1 ls /app     # one command in the running container
 docker stop web1             # --rm removes the container after it stops
-# Dockerfile lines: FROM alpine:3.21@sha256:<digest>, COPY app /app, USER 1000, CMD ["/app/run"]
+# Dockerfile lines: FROM alpine:<tag>@sha256:<digest>, COPY app /app, USER 1000, CMD ["/app/run"]
 ```
 
 <Callout type="danger" title="Options that remove isolation or delete data">
 
-Never use these on a shared host:
+Tutorial's own advice: avoid these options on a shared host:
 
 - `--privileged`, `--pid host`, `--security-opt seccomp=unconfined`, and a mount of `/var/run/docker.sock` <Cite n={24} />
 - `-v /:/host` <Cite n={39} />
 - `--network host` <Cite n={32} />
-- `docker rm -f` <Cite n={29} /> and `docker system prune -a` <Cite n={38} />
+- `docker rm -f` <Cite n={29} /> and `docker system prune -a` <Cite n={38} />, on things that you did not start
 
-Tutorial's own advice: run only trusted images, and set `USER` so the process does not run as root. <Cite n={5} />
+Run only trusted images. Set `USER` to avoid root. <Cite n={5} />
 
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: pin the base image by digest. Publish ports on `127.0.0.1`, so that only the Docker host can reach them. <Cite n={33} /> Add `--rm` to remove finished containers. <Cite n={24} />
+Tutorial's own advice: pin the base image by digest. Publish ports on `127.0.0.1`: only the Docker host can reach them. <Cite n={33} /> Add `--rm` to remove finished containers. <Cite n={24} />
 
 </Callout>
 
 ## Cgroups
 
-A cgroup puts processes in a hierarchy of groups. Each group has resource limits and counters. <Cite n={6} /> A **controller** manages one resource: `cpu`, `memory`, `io` (`blkio` in v1), and `pids`. <Cite n={6} /> The interface is a file tree, usually at `/sys/fs/cgroup`. <Cite n={6} />
-
-A system can mix the two versions, but one controller cannot be in both. <Cite n={6} />
+A cgroup puts processes in a hierarchy of groups with limits and counters. <Cite n={6} /> A **controller** manages one resource: `cpu`, `memory`, `io` (`blkio` in v1), and `pids`. <Cite n={6} /> The interface is a file tree, usually at `/sys/fs/cgroup`. <Cite n={6} />
 
 | | cgroup v1 | cgroup v2 |
 |---|---|---|
@@ -157,24 +159,25 @@ A system can mix the two versions, but one controller cannot be in both. <Cite n
 | Memory limit | `memory.limit_in_bytes` <Cite n={12} /> | `memory.max` <Cite n={12} /> |
 | `/proc/self/cgroup` | `ID:controllers:path` <Cite n={6} /> | `0::path` <Cite n={6} /> |
 
-If a v2 cgroup reaches `memory.max` and cannot shrink, the OOM killer (the kernel's process killer) runs inside that cgroup. <Cite n={12} /> `cpu.max` caps CPU time and `pids.max` caps the process count. <Cite n={12} /> Docker sets cgroup limits with `--memory`, `--cpus`, and `--pids-limit`. <Cite n={41} /> <Cite n={24} /> systemd uses `MemoryMax=`, and `systemd-run --scope` applies it to one command. <Cite n={42} /> <Cite n={43} /> `systemd-cgls` prints the cgroup tree. <Cite n={44} /> A cgroup namespace makes `/proc/self/cgroup` show paths from its own root. <Cite n={9} />
+If a v2 cgroup reaches `memory.max` and cannot shrink, the OOM killer (the kernel's process killer) runs inside that cgroup. <Cite n={12} /> `cpu.max` caps CPU time and `pids.max` caps the number of tasks (processes and threads). <Cite n={12} /> Docker sets cgroup limits with `--memory`, `--cpus`, and `--pids-limit`. <Cite n={41} /> <Cite n={24} /> On cgroup v2, systemd uses `MemoryMax=`, and `systemd-run --scope` applies it to one command. <Cite n={42} /> <Cite n={43} /> `systemd-cgls` prints the cgroup tree. <Cite n={44} /> A cgroup namespace makes `/proc/self/cgroup` show paths from its own root. <Cite n={9} />
 
 ```bash
 cat /proc/self/cgroup                   # v2: one line such as 0::/user.slice/... (an illustration)
 systemd-cgls --no-pager | head -n 20    # the cgroup tree on a systemd host
 # Documented, not run. Use a test host only:
-#   docker run --memory=256m --cpus=0.5 --pids-limit=100 example/app:1.0
-#   systemd-run --scope -p MemoryMax=256M ./suite.sh   # needs root
+#   docker run --memory=256m --cpus=0.5 --pids-limit=100 registry.invalid/app:1.0
+#   systemd-run --scope -p MemoryMax=256M ./suite.sh
+#   (cgroup v2; the system manager may ask you to authenticate; --user uses your own manager)
 ```
 
 <Callout type="danger" title="Do not change limits or kill the main process">
 
-Tutorial's own advice: do not write into `/sys/fs/cgroup` on a shared host, because a wrong limit can kill services. Do not `kill -9` the main process of a container. When that process ends, the kernel kills every process in the namespace. <Cite n={8} /> Use `docker stop`. <Cite n={28} />
+Tutorial's own advice: do not write into `/sys/fs/cgroup` on a shared host, because a wrong limit can kill services. `kill -9` gives the main process of a container no time to clean up. When it ends, the kernel kills every other process in its PID namespace. <Cite n={8} /> `docker stop` sends SIGTERM first. <Cite n={28} />
 
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: test with the limits of CI. A low memory limit shows as an OOM kill in `memory.events`, not as a test error. A CPU limit shows as `nr_throttled` in `cpu.stat`. A `pids.max` limit makes `fork` fail with `EAGAIN`. <Cite n={12} />
+Tutorial's own advice: test with the limits of CI. A low memory limit shows as an OOM kill in `memory.events`, not as a test error. A CPU limit shows as `nr_throttled` in `cpu.stat`. A `pids.max` limit makes `fork` (create a process) fail with `EAGAIN` (try again). <Cite n={12} />
 
 </Callout>
