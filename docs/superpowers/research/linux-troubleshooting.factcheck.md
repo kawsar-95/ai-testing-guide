@@ -93,7 +93,7 @@ Page-quality checks run: `##` headings equal the 6 topic titles of `lib/linux/st
 | 75 | Authentication Logs | `faillog` reads `/var/log/faillog` | 33 | PASS | S33: "faillog displays the contents of the failure log database (/var/log/faillog)." |
 | 76 | Authentication Logs | A failed-login line gives user, source address, method | 4 | PASS | S4: "the "who" ... the "what" (Failed password) ... the "where" ... the "how" (ssh2)". Sample form `Failed password for root from <addr> port <n> ssh2`; the page's illustration (invented `alice`, `203.0.113.7`) has the same shape. |
 | 77 | Authentication Logs | Brute force = many guesses; signs: many failures from one address, many tries for `root`, many `invalid user` lines | 5, 4 | PASS | S5: "too many login attempts from a certain IP with user root, probably someone is trying to attack your system by bruteforcing." S4: "Brute force attacks typically involve numerous attempts at guessing username and password combinations." The `Invalid user` sign is an inference from the S4 parser; acceptable. |
-| 78 | Authentication Logs | Auth logs record logins, failed passwords, `sudo` use | 4 | PASS | S4 sample lines: "Failed password for root from ..." and "ayo : TTY=pts/5 ; PWD=/home/ayo ; USER=root ; COMMAND=..." in `auth.log`. |
+| 78 | Authentication Logs | Auth logs record logins, failed passwords, `sudo` use | 4 | PASS | S4 sample lines: "Failed password for root from ..." and "ayo : TTY=pts/5 ; PWD=... ; USER=root ; COMMAND=..." in `auth.log`. |
 | 79 | Authentication Logs (warning, tip) | Logs hold personal data; advice on redaction and the shared test account | 4 | OPINION-OK | Advice; S4 sample lines show user names and addresses. Page uses only `alice` and `203.0.113.7`. |
 | 80 | Troubleshooting | Method: reproduce, write down symptoms, check logs, compare, write down cause and fix | 7 | PASS | S7: "Document the problem. Write down any and all symptoms" / "Check to see whether the problem is reproducible." / "take a few moments to document the situation." |
 | 81 | Troubleshooting (table) | Layers and read-only tools; order Network, Process, Resource, Config, Logs | 37 | OPINION-OK | `ss`, `systemctl status`, `ps`, `uptime`, `free`, `df`, `journalctl` are read-only. Order is the tutorial's own choice. `ss`: S37 "ss is used to dump socket statistics." |
@@ -109,7 +109,7 @@ Page-quality checks run: `##` headings equal the 6 topic titles of `lib/linux/st
 | 91 | Troubleshooting (danger, tip) | Do not `kill -9`, restart, or attach `strace` on production without approval; bundle advice | - | OPINION-OK | Labelled "Tutorial's own advice:". |
 | 92 | Uptime and Load, System Logs, Available Memory and Disk, Troubleshooting | Jargon without a gloss at first use | - | FAIL | Missing one-line glosses: "inode" (`df -i`, Available Memory and Disk), "cgroup" and "hypervisor" (Uptime and Load), "kernel ring buffer" and "unit" (a systemd unit, Server Review and System Logs), "`CAP_SYSLOG`" / "`CAP_SYS_PTRACE`" (a capability: one right of the root account that a process can hold), "Yama" (a kernel module that limits ptrace), "facility" and "level" (syslog message category and importance; Authentication Logs), "child processes" (`-f`, Troubleshooting). Fix: add one short gloss each. |
 | 93 | Notes file `docs/superpowers/research/linux-troubleshooting.md` | Quotes are 25 words or fewer per claim row | - | FAIL | Over the limit: row 10 (30 words), row 11 (14 + 15), row 13 (26), row 16 (6 + 11 + 10), row 23 (22 + 5 + 1), row 52 (7 + 25). Fix: shorten each quote cell to 25 words in total. |
-| 94 | Notes file, line 3 | No real user name in the notes | - | FAIL | Line 3 holds the real home path `/home/<os-user>/.cache/linux-roadmap-raw/` with the owner's login name. Fix: write `~/.cache/linux-roadmap-raw/`. |
+| 94 | Notes file, line 3 | No real user name in the notes | - | FAIL | Line 3 holds the real home path a real home path (`<home>/.cache/linux-roadmap-raw/`) with the owner's login name. Fix: write `~/.cache/linux-roadmap-raw/`. |
 | 95 | Notes file, row 48 | auth.log claim has only the article S4 | 4 | FAIL | Same as row 64: add the Debian rsyslog file as source 45 in the notes and in `page.sources`; update row 49 for the `authpriv` versus `AUTH` point (row 66); add `hier(7)` and `systemd.journal-fields(7)` (rows 48, 67) as sources 46 and 47. |
 | 96 | Page and notes | Cite numbers equal the S numbers; every source is cited | 1-44 | PASS | Script check: all 44 sources are cited, no cite above 44. |
 | 97 | Whole page | Hostile re-read: sample numbers consistent (`uptime` sample 0.52, 0.48, 0.45; no `free`/`df` sample tables) | - | PASS | The page has no sample table that can disagree; the only sample lines are the `uptime` load and one failed-password line with invented data. |
@@ -121,7 +121,7 @@ Open FAILs: 23
 
 ## Round 2 (2026-10-19)
 
-Checked commit 77340d5 against my 23 round-1 FAILs and the diff `f3d1371..77340d5` of the page and the notes. S45 read again, S46 and S47 fetched with the polite fetcher (S45 gave the same 94-byte challenge; its line was read with WebFetch from two Debian hosts). Local re-runs: the new `grep` pattern, the page and notes `grep` for `/home/` and the login name, the overlap script, word and sentence counts.
+Checked commit 77340d5 against my 23 round-1 FAILs and the diff `f3d1371..77340d5` of the page and the notes. S45 read again, S46 and S47 fetched with the polite fetcher (S45 gave the same 94-byte challenge; its line was read with WebFetch from two Debian hosts). Local re-runs: the new `grep` pattern, the page and notes `grep` for a home path and the login name, the overlap script, word and sentence counts.
 
 | # | Location (round 1 row / heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
 |---|---|---|---|---|---|
@@ -147,7 +147,7 @@ Checked commit 77340d5 against my 23 round-1 FAILs and the diff `f3d1371..77340d
 | R2-20 | 92 | New glosses: unit, cgroup v2, hypervisor, inode, kernel ring buffer, capability, facility, child processes, Yama | - | PASS | All nine are present at first use and are correct (own words). |
 | R2-21 | 92 (rsyslog) | `rsyslog` and `PID` used without a gloss | - | FAIL | New problem. System Logs says "If `rsyslog` runs" and Authentication Logs says "When rsyslog is installed"; the term is never explained (the checklist asks for a one-line gloss of jargon). Fix (the section has 247 words, so trim as well): "If `rsyslog` (the classic syslog service) runs" and cut the tip sentence "Put the full `journalctl` line in the report." (9 words). `PID` (process ID) is optional. |
 | R2-22 | 93 | Notes quote rows are 25 words or fewer | - | PASS | Script check on the 74 claim rows: no row has more than 25 words in quotes. |
-| R2-23 | 94 | No `/home/` and no login name in page or notes | - | PASS | `grep -i '/home/\|nuruddin\|kawsar'` on the page and the notes: 0 hits. |
+| R2-23 | 94 | No home path and no login name in page or notes | - | PASS | `grep` for a home path and for the login name on the page and the notes: 0 hits. |
 | R2-24 | 95 | Notes updated for S45 to S47 and the changed rows | - | PASS | Script check: every source number used in a notes row is cited on the page, and every page cite has a notes row (47 of 47); S45 row says that the checker read it with WebFetch. |
 | R2-25 | S46 | hier(7) is a valid source | 46 | PASS | Fetched with the polite fetcher: "/var/log Miscellaneous log files." |
 | R2-26 | S47 | Ubuntu OpenSSH server docs is a valid source for `ssh.service` | 47 | PASS | Fetched: "sudo journalctl -fu ssh.service" and "sudo systemctl restart ssh.service". The page does not mention `auth.log`. |
@@ -159,3 +159,23 @@ Checked commit 77340d5 against my 23 round-1 FAILs and the diff `f3d1371..77340d
 Round 2 counts: 30 rows, PASS 26, FAIL 4 (rows R2-9, R2-13, R2-15, R2-21). Of the 23 round-1 FAILs, 22 are closed and round-1 row 61 is reopened as R2-9. Three new FAILs came from the hostile re-read: R2-13, R2-15, R2-21 (round-1 rows 66, 67, 92 closed otherwise).
 
 Open FAILs: 4
+
+## Round 3 (2026-10-19)
+
+Checked commit 3d7b8e8 (`git diff 77340d5 3d7b8e8`) against my 4 round-2 FAILs.
+
+| # | Location | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| R3-1 | System Logs (R2-9) | logrotate "keeps old logs for a while, can compress them, and removes the oldest" | 24 | PASS | S24: "compress ... Old versions of log files are compressed with /bin/gzip(1) by default" is a directive, and S24 lists `nocompress`; "can compress" is correct. |
+| R3-2 | Authentication Logs (R2-13) | "Check `SyslogFacility` in `/etc/ssh/sshd_config`; no active line means the default." | 34 | PASS | S34: "SyslogFacility ... The default is AUTH." True and clear: the old `grep '^...'` command is gone. |
+| R3-3 | Authentication Logs (R2-15) | "`journalctl -u ssh` on Ubuntu, or `-u sshd` on RHEL (tutorial's own note; check `systemctl list-units '*ssh*'`)" | 47 | PASS | S47: "sudo journalctl -fu ssh.service". The RHEL unit name is marked as the tutorial's own note, with a command that lets the reader check it. Code comment now says "-u sshd on RHEL". |
+| R3-4 | System Logs (R2-21) | "If `rsyslog` (the classic syslog service) runs ..."; tip sentence about the full `journalctl` line removed | 43 | PASS | Gloss present at the first use of `rsyslog` and correct (S43: "the system logging utility rsyslogd(8)"). The tip still has one code block and starts "Tutorial's own advice:". |
+| R3-5 | Authentication Logs | Other edits in the diff: "With rsyslog, Debian and Ubuntu write them ...", "A facility is a syslog message category", "Else read the journal", shorter tip | 4, 45 | PASS | Meaning is unchanged; S45 line `auth,authpriv.*  /var/log/auth.log` as in round 2. "Else read the journal" is clear enough after "With rsyslog". |
+| R3-6 | Sections | Words per section with heading, callout titles, and table cell text, no pipes | - | PASS | Server Review 226, Uptime and Load 248, Available Memory and Disk 245, System Logs 244, Authentication Logs 248, Troubleshooting 240. All at most 250. |
+| R3-7 | Structure | 6 headings; 1 code fence and 1 tip callout per topic; 47 of 47 sources cited; no sentence of 24 words or more | - | PASS | Script checks. |
+| R3-8 | Overlap | `linux_overlap.py` on flat dirs | - | PASS | Official dir: 46 files read, exit 0, 0 hits. Roadmap raw dir: exit 0, 0 hits. |
+| R3-9 | Privacy | No home path, login name, or host data in the page, the notes, or this report | - | PASS | `grep` for a home path and for the login name: 0 hits in the three files (round 1 and 2 text of this file was cleaned in this commit). |
+
+Round 3 counts: 9 rows, PASS 9, FAIL 0.
+
+Open FAILs: 0
