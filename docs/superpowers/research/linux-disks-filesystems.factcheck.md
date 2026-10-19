@@ -273,3 +273,17 @@ Checklist recount (prose, headings, tables with separators, callout text and tit
 | 177 | whole page | Short hostile pass on the lines changed in rounds 4 and 5 (ext4 reserved blocks, fstab fields, dd sentence, swap callout, MBR/GPT lines) | none | PASS | No other error. All changing commands stay as `#` comments with fake names under danger callouts. |
 
 Open FAILs: 1
+
+---
+
+# Round 6 (2026-10-19)
+
+Checked: writer commit `28895d5`. `git diff d216d79 28895d5` shows one changed line of the page (the first paragraph of "Disks and Filesystems") and no other file.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 178 | Disks and Filesystems | Round 5 FAIL (row 175): "A whole disk is named like `/dev/sda`." | 15 | PASS | fdisk(8): "The device is usually /dev/sda, /dev/sdb or so. A device name refers to the entire disk." The sentence now says "named like", so NVMe names such as `nvme0n1` do not contradict it. |
+| 179 | Disks and Filesystems | Word count of the section (prose, heading, callout text and title, no code, no cite tags) | none | PASS | 249 (the limit is 250). The other sections are unchanged: 241, 202, 247, 215, 237, 236. |
+| 180 | whole page | Overlap and tests | none | PASS | `linux_overlap.py` on the flat official dir (52 `*.txt` files read) and the raw dir (243 files read): no output, exit 0. `npm test`: 145 of 145 pass. |
+
+Open FAILs: 0
