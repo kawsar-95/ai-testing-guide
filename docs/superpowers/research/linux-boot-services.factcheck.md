@@ -176,4 +176,58 @@ FAIL list (location and fix, one line each):
 
 Row 114 collects rows 38 and 70. Each FAIL row is one open item that needs a change.
 
-Open FAILs: 18
+Open FAILs: 18 (round 1; all but the items of the next section were fixed in round 2)
+
+## Round 2 (2026-10-19)
+
+The writer fixed the 18 FAILs of round 1 in commit 5607ee2. I read `git diff e5d8202 5607ee2` for the page and the notes, and I read the whole page again from the top. I used the same 30 fetched pages of round 1 and fetched nothing new. The local checks of round 1 stand.
+
+What changed since round 1: the lede ("a chain"), Booting Linux (usually, `blame`, systemd comment, shorter tip), Boot Loaders (comment, danger callout without cite), Service Management (socket gloss, directory order), Creating Services (`User=`, vendor unit gloss, `revert`, shorter danger callout), Starting and Stopping Services (symlink gloss, user path sentence, removed `--user` line), Checking Service Status (exit status gloss), Checking Service Logs ("By default", pager gloss), Running Services (enabled wording, timer, `sudo`, container note, code), and the notes (C0, C2, C11, C27, C32, C36, C41, C47, C56, C76, C81, C84, C87, C91).
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 122 | Booting Linux (old row 4) | Firmware "usually runs a boot loader"; the lede says "a chain of steps" | 9 | PASS | S9: "hand control over to a boot loader"; "this firmware may also load the kernel directly". "Usually" fits both. The page does not name the UEFI case; the notes (C2) do. The notes are wider than the page, which is allowed. |
+| 123 | Booting Linux (old row 14) | `blame` lists units by the time each took to start | 17 | PASS | S17: "ordered by the time they took to initialize". The code comment ("slowest units first") agrees. |
+| 124 | Booting Linux (old row 111) | Comment "Needs a host where systemd runs as PID 1. A container may not have it." | 11 | PASS | S11: "When run as first process on boot (as PID 1), it acts as init system". The comment is in the first block, and the last section states the container case. |
+| 125 | Booting Linux (tip) | Shorter tip, still "Tutorial's own advice:" | none | OPINION-OK | Advice only. |
+| 126 | Boot Loaders (old row 29) | Comment "GRUB usually keeps grub.cfg in /boot/grub"; "Path and tool name are for Debian" | 23, 30 | PASS | S23: "usually located under /boot/grub". S30: "update-grub is a stub for running grub-mkconfig -o /boot/grub/grub.cfg". The comment scopes the path and the tool name. No Fedora or RHEL fact is stated. |
+| 127 | Boot Loaders (old row 31) | The danger callout has no cite | none | OPINION-OK | `<Cite n={23} />` is gone. Notes C27 says "the page has no cite on this callout". They agree. |
+| 128 | Service Management (old row 38) | Directory order /etc, /run, /usr/lib; earlier overrides later | 13 | PASS | S13 table order: "/etc/systemd/system System units created by the administrator", "/run/systemd/system Runtime units", "/usr/lib/systemd/system System units installed by the distribution package manager"; "Unit files found in directories listed earlier override files with the same name". |
+| 129 | Service Management (old row 113) | "a socket (a channel that programs use to talk)" gloss | 22 | PASS | Gloss of a term. S22: socket units "implement on-demand starting of services". Acceptable one-line gloss. |
+| 130 | Creating Services (old row 49) | "A system service runs as root by default, and the user must exist at start" | 15 | PASS | S15: "For system services ... the default is "root""; "must have been created statically in the user database no later than the moment the service is started". |
+| 131 | Creating Services | "avoid root unless the program needs it" | none | OPINION-OK | Marked "Tutorial's own advice:". |
+| 132 | Creating Services (old row 113) | "vendor unit (a file from a package)" gloss | 13 | PASS | S13: "System units installed by the distribution package manager". Right gloss. |
+| 133 | Creating Services (old row 58) | `revert` removes your drop-ins and also a copy of a vendor unit in `/etc` | 12 | PASS | S12: "removes drop-in configuration files that modify the specified units, as well as any user-configured unit file that overrides a matching vendor supplied unit file". |
+| 134 | Creating Services (danger) | Shorter danger callout; title "not a remote one" | none | OPINION-OK | Advice; the `daemon-reload` fact stands (row 54). |
+| 135 | Starting and Stopping Services (old row 70) | `--user` line removed; new sentence: the user manager reads units from `~/.config/systemd/user`, not `/etc/systemd/system` | 13 | PASS | S13 user table: "$XDG_CONFIG_HOME/systemd/user or $HOME/.config/systemd/user User configuration". The system path is not in the user list. Local: `systemctl --user show -p UnitPath` has `~/.config/systemd/user` and no `/etc/systemd/system`. S13 supports the path. |
+| 136 | Starting and Stopping Services | The sentence "It reads units from ..." follows "The option `--user` talks to your own user manager." | 13 | FAIL | New finding. "It" can mean the option, and an option does not read units. The notes (C56) say "That manager reads units". Fix: "That manager reads units from `~/.config/systemd/user` and other user directories, not from `/etc/systemd/system`." |
+| 137 | Starting and Stopping Services (old row 113) | "symlinks (files that point to other files)" gloss | 12 | PASS | Right gloss. |
+| 138 | Checking Service Status (old row 113) | "exit status (the number a command returns; 0 means success)" gloss | 12 | PASS | S12: "On success, 0 is returned, a non-zero failure code otherwise." |
+| 139 | Checking Service Status | "the newest journal lines": the word "journal" has no gloss at first use (the logs section comes later) | 12 | FAIL | New finding. Jargon without a gloss. Fix: "the newest journal lines (the log records that systemd keeps)". The section has room (223 words). |
+| 140 | Checking Service Logs (old row 91) | "By default, the journal is on disk in `/var/log/journal` if that directory exists at boot" | 19 | PASS | S19: "By default, log data is stored persistently if /var/log/journal/ exists during boot, with an implicit fallback to volatile storage otherwise." |
+| 141 | Checking Service Logs (old row 113) | "a pager (a program that shows text one screen at a time)" gloss | 18 | PASS | S18: "The output is paged through less by default". Right gloss. |
+| 142 | Running Services (old row 99) | `list-unit-files --state=enabled` "lists the enabled unit files"; comment "# enabled unit files" | 6 | PASS | S6: "To see all enabled unit files on your system". |
+| 143 | Running Services (old row 101) | "By default, a timer starts the service with the same name" | 21 | PASS | S21: "By default, a service by the same name as the timer (except for the suffix) is activated". |
+| 144 | Running Services (old row 104) | "Use `sudo` to see the processes of other users"; code and tip use `sudo ss -tulpn` | 28 | PASS | S28 gives the flags only ("-p, --processes Show processes using sockets."); it does not state the root rule. The rule rests on my local test of round 1 (as a normal user, 12 of 37 rows had no process column). Notes C87 says so ("a local test, not a quote of S28"). The page sentence is an instruction with no cite, so it does not claim S28. Acceptable. Optional: start it with "Tutorial's note:". |
+| 145 | Running Services (old row 107) | "Tutorial's own note: many images start no systemd, so `systemctl` can fail there. A minimal image may also lack `ps`." | 29 | PASS | The cite 29 stands only after the ENTRYPOINT/CMD and one-service sentence (S29: "It's best practice to separate areas of concern by using one service per container."). The note is marked and hedged ("many", "can", "may"). Notes C91 agrees. |
+| 146 | Notes (old row 118) | C36 quotes of at most 25 words | none | PASS | C36 has two short quotes (8 and 7 words). A script found no notes quote over 25 words (C47 has 25). |
+| 147 | Notes (old row 119) | Notes row C0 for cite 1; C27 agrees with the page | none | PASS | C0 exists (S1, OPINION-OK). C27 and the page both say that the callout has no cite. The notes now name all 30 sources. |
+| 148 | Notes | C2, C11, C32, C41, C47, C56, C76, C81, C84, C87, C91 match the page | none | PASS | Each changed row has the wording of the changed sentence, and each quote is in a fetched source. C2 names the UEFI case that the page leaves out (allowed). |
+| 149 | Page quality: word counts | Each section has 100 to 250 words | none | FAIL | Count with headings, callout titles, and table pipes and separators (as `wc -w` counts): Booting Linux 244, Boot Loaders 246, Service Management 226, Creating Services 249, Starting and Stopping Services 266, Checking Service Status 223, Checking Service Logs 228, Running Services 237. Without table pipes and headings (the writer's method): 242, 244, 224, 247, 237, 220, 209, 235. Starting and Stopping Services is 16 words over the limit when the 25 pipe tokens count. Fix: cut at least 16 words in that section (for example the sentence "If another unit can still trigger a stopped service, for example a socket, `stop` prints a warning." of 19 words, or two sentences of the danger callout). Creating Services (249) has no room. |
+| 150 | Page quality: sentence length | No sentence above 25 words | none | PASS | The script found no sentence over 25 words in the prose. The only hit joined a callout title to the next sentence (9 and 20 words, so two units). |
+| 151 | Page quality: structure | 8 `##` headings = topic titles; one code block and one tip per topic, each starting "Tutorial's own advice:"; callout closing tags at column 0 | none | PASS | Headings: Booting Linux, Boot Loaders, Service Management, Creating Services, Starting and Stopping Services, Checking Service Status, Checking Service Logs, Running Services. Script: 8 tips, 8 code blocks, 11 `</Callout>` at column 0 for 11 `<Callout`. |
+| 152 | Page quality: sources and cites | All 30 sources cited; cites match the notes | none | PASS | 87 cites; no uncited source. S23 keeps 4 cites after the cite on the danger callout was removed. |
+| 153 | Page quality: overlap | No copied run of 8 or more words | none | PASS | `linux_overlap.py` on the page body (without `page.sources`) prints nothing and exits 0 against the roadmap raw dir (243 files), my 30-file dir, and the 7-file extra dir. With `page.sources` the only hits are source titles (3 and 6 hits). |
+| 154 | Whole page (hostile re-read) | All 8 sections read again | none | PASS | No other new error. Checked again: `Type=exec` (no version stated), `list-units` default, `is-*` codes, `--now`, `mask`, `journalctl` options, groups, `list-timers`, `list-sockets`, `ss` flags, `ps xawf`, the sample status output (labelled invented), the unit file (valid keys, `verify` output as described). No real host, user, or IP name in the page or the notes. |
+
+Counts of round 2: 33 rows (122 to 154). PASS 26, FAIL 3, OPINION-OK 4.
+
+New and open FAILs (location and fix):
+
+- Row 136, Starting and Stopping Services: "It reads units ..." is ambiguous (option or manager). Fix: "That manager reads units from `~/.config/systemd/user` and other user directories, not from `/etc/systemd/system`."
+- Row 139, Checking Service Status: "journal" has no gloss at first use. Fix: "the newest journal lines (the log records that systemd keeps)".
+- Row 149, Starting and Stopping Services: 266 words when the table pipes count (241 without). Fix: cut at least 16 words, and 21 if the fix of row 136 adds 5 words.
+
+All 18 FAILs of round 1 are fixed. Rows 122 to 148 re-check them.
+
+Open FAILs: 3
