@@ -19,6 +19,9 @@ Think of the host at the door of a busy restaurant. Guests do not pick a table t
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 A load balancer is a component that receives the incoming requests and spreads them across several backend servers. AWS calls these servers "targets". A target can be a virtual server, a container, or an IP address <Cite n={1} />. The load balancer also watches the health of each target and sends traffic only to the healthy ones <Cite n={1} />. Because of this, a load balancer makes an application more available and more tolerant of failures <Cite n={1} />.
 
 A load balancer can do these jobs:
@@ -50,7 +53,37 @@ Watch one special case. If all the servers in a group are unhealthy, the AWS loa
 
 <MdxImage src="/images/architecture/06-load-balancer.webp" alt="Diagram: Users send requests to a Load Balancer. Green arrows marked Healthy go to App Server 1 and App Server 2, which have check marks. A red arrow marked Unhealthy - No Traffic points to App Server 3, which is marked Down. App Servers 1 and 2 connect to one Database." />
 
+</Technical>
+<Layman>
+
+A load balancer receives the requests that come in and spreads them across several servers. AWS calls each server a "target". A target can be a virtual server, a container, or an IP address <Cite n={1} />. It checks the health of each target and sends traffic only to the healthy ones <Cite n={1} />. This makes the app more available and more tolerant of failures <Cite n={1} />.
+
+A rule picks the next server <Cite n={3} />:
+
+- **Round Robin.** The servers get the requests one after the other. This is the NGINX default.
+- **Least Connections.** The server with the fewest active connections gets the request.
+- **IP Hash.** The IP address that sends the request picks the server. Requests from one address go to the same server, if that server is available.
+
+On AWS, a health check is a test request to each server, about every 30 seconds by default. By default, 2 failed checks in a row make a server "unhealthy", and 5 good checks in a row make it "healthy" again <Cite n={2} />. If all servers in a group are unhealthy, AWS sends requests to all of them anyway <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+Load balancer হলো এমন একটি component, যা আসা request গুলো গ্রহণ করে এবং কয়েকটি backend server-এর মধ্যে ভাগ করে দেয়। AWS এই server গুলোকে "target" বলে। একটি target হতে পারে একটি virtual server, একটি container, অথবা একটি IP address <Cite n={1} />। Load balancer প্রতিটি target-এর health খেয়াল রাখে এবং শুধু healthy target-এ traffic পাঠায় <Cite n={1} />। এর ফলে application বেশি available থাকে এবং failure ভালোভাবে সামলাতে পারে <Cite n={1} />।
+
+Load balancer আরও কিছু কাজ করতে পারে। এটি `https` traffic decrypt করতে পারে (TLS termination), যাতে app server-কে এই কাজ করতে না হয় <Cite n={1} />। এটি URL path-এর মতো content দেখে request আলাদা server group-এ পাঠাতে পারে <Cite n={5} />। আর যে server সরে যাচ্ছে, তার খোলা request গুলো শেষ করার সময় দিতে পারে (draining; AWS-এ default হিসেবে সর্বোচ্চ 300 সেকেন্ড) <Cite n={4} />।
+
+পরের server বাছাই করতে load balancer একটি নিয়ম, অর্থাৎ algorithm, ব্যবহার করে <Cite n={3} />। Round Robin-এ request গুলো একটির পর একটি server-এ সমানভাবে যায়; এটি NGINX-এর default। Least Connections-এ request যায় সবচেয়ে কম active connection থাকা server-এ। IP Hash-এ client-এর IP address দেখে server ঠিক হয়, তাই একই address-এর request একই server-এ যায়, যদি না সেই server unavailable থাকে।
+
+AWS Application Load Balancer default হিসেবে প্রায় প্রতি 30 সেকেন্ডে প্রতিটি server-এ একটি test request পাঠায়। Default হিসেবে পরপর 2টি check fail করলে server "unhealthy" হয়, আর পরপর 5টি check সফল হলে আবার "healthy" হয় <Cite n={2} />। তাই একটি নষ্ট server পরপর 2টি check fail করার আগ পর্যন্ত traffic পেতে পারে। একটি বিশেষ ক্ষেত্র মনে রাখুন: group-এর সব server unhealthy হলে AWS load balancer তবুও সবগুলোতে request পাঠায় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 - You run more than one app server. See [Horizontal Scaling](/architecture/horizontal-scaling/).
 - You need high availability: the system must stay usable when one server fails.
@@ -58,13 +91,65 @@ Watch one special case. If all the servers in a group are unhealthy, the AWS loa
 - You want the traffic spread evenly across the servers.
 - You want to deploy without downtime. You can add and remove servers without a break in the flow of requests <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+You need a load balancer in these cases:
+
+- You run more than one app server. See [Horizontal Scaling](/architecture/horizontal-scaling/).
+- The system must stay usable when one server fails. This is called high availability.
+- You want to stop the traffic to servers that are not healthy.
+- You want to spread the traffic evenly across the servers.
+- You want to deploy a new version with no downtime. With a load balancer, you can add and remove servers, and the requests continue to flow with no break <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+নিচের যেকোনো একটি অবস্থা আপনার system-এর সাথে মিলে গেলে, আপনার একটি load balancer দরকার:
+
+- আপনি একাধিক app server চালান। এ বিষয়ে আরও জানতে [Horizontal Scaling](/architecture/horizontal-scaling/) পাতাটি দেখুন।
+- আপনার high availability দরকার, অর্থাৎ একটি server fail করলেও পুরো system ব্যবহারযোগ্য থাকতে হবে।
+- আপনি unhealthy server-এ traffic পাঠানো বন্ধ করতে চান।
+- আপনি চান, traffic সব server-এর মধ্যে সমানভাবে ভাগ হোক।
+- আপনি downtime ছাড়া, অর্থাৎ service না থামিয়েই, নতুন version deploy করতে চান। Load balancer থাকলে request-এর প্রবাহ না থামিয়েই আপনি server যোগ করতে বা সরিয়ে নিতে পারেন <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 The LMS runs on three app servers. App Server 3 has a memory problem, and it stops answering.
 
 The load balancer sends its regular health check, and App Server 3 fails it. The load balancer marks App Server 3 as unhealthy and stops sending traffic to it. Students continue to use the LMS through App Server 1 and App Server 2. After the team restarts App Server 3, it passes the health checks again, and the load balancer sends it traffic again.
 
+</Technical>
+<Layman>
+
+The LMS runs on three app servers. App Server 3 has a memory problem, and it stops answering.
+
+The load balancer sends its regular health check. App Server 3 fails the check. The load balancer marks App Server 3 as unhealthy and stops sending traffic to it. The students continue to use the LMS through App Server 1 and App Server 2.
+
+Then the team restarts App Server 3. The server passes the health checks again. Now the load balancer sends traffic to it again.
+
+</Layman>
+<Bangla>
+
+ধরুন, LMS তিনটি app server-এ চলে। App Server 3-এ একটি memory সমস্যা হয়েছে, তাই এটি আর সাড়া দিচ্ছে না।
+
+Load balancer তার নিয়মিত health check পাঠায়, আর App Server 3 সেই check-এ fail করে। তখন load balancer App Server 3-কে unhealthy হিসেবে চিহ্নিত করে এবং সেখানে traffic পাঠানো বন্ধ করে দেয়। শিক্ষার্থীরা App Server 1 আর App Server 2-এর মাধ্যমে LMS ব্যবহার করতে থাকে।
+
+এরপর team App Server 3 restart করে। Server-টি আবার health check pass করে। তখন load balancer আবার সেখানে traffic পাঠাতে শুরু করে।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **The health check only says "I am alive".** A `/health` endpoint that always returns `200 OK` can pass while the server cannot reach the database. Then users get errors from a "healthy" server.
 - **The health check is too heavy.** If the check calls every dependency, one slow service can mark all servers unhealthy at the same time.
@@ -72,7 +157,35 @@ The load balancer sends its regular health check, and App Server 3 fails it. The
 - **Sticky sessions hide a stateful app.** A sticky session ties a user's session to one server <Cite n={4} />. This hides the real problem. See [Stateless Service](/architecture/stateless-service/).
 - **Only one load balancer.** If you run your own single load balancer, it is a new single point of failure.
 
+</Technical>
+<Layman>
+
+Look out for these common mistakes:
+
+- **The health check only says "I am alive".** A `/health` endpoint can always return `200 OK`, also when the server cannot reach the database. Then users get errors from a server that looks "healthy".
+- **The health check is too heavy.** If the check calls every service that the server needs, one slow service can make all servers unhealthy at the same time.
+- **The deploy stops a server too early.** On AWS, draining gives the open requests time to finish, up to 300 seconds by default <Cite n={4} />. If the server closes the connection before the drain ends, the user gets a 500-level error <Cite n={4} />.
+- **Sticky sessions hide a stateful app.** A sticky session ties the session of a user to one server <Cite n={4} />. This hides the real problem. See [Stateless Service](/architecture/stateless-service/).
+- **Only one load balancer.** If you run your own single load balancer, it becomes a new single point of failure.
+
+</Layman>
+<Bangla>
+
+এই সাধারণ ভুলগুলোর দিকে খেয়াল রাখুন:
+
+- **Health check শুধু বলে "আমি বেঁচে আছি"।** একটি `/health` endpoint সবসময় `200 OK` দিতে পারে, এমনকি server database-এ পৌঁছাতে না পারলেও। তখন একটি "healthy" server থেকেও user-রা error পান।
+- **Health check খুব ভারী।** Check যদি প্রতিটি dependency call করে, তাহলে একটি ধীর service একই সময়ে সব server-কে unhealthy করে দিতে পারে।
+- **Deploy খুব তাড়াতাড়ি server বন্ধ করে দেয়।** Draining-এর সময় AWS load balancer খোলা request গুলো শেষ করার জন্য সময় দেয়, default হিসেবে সর্বোচ্চ 300 সেকেন্ড <Cite n={4} />। Drain শেষ হওয়ার আগে server connection বন্ধ করলে client একটি 500-level error পায় <Cite n={4} />।
+- **Sticky session একটি stateful app-কে আড়াল করে।** Sticky session একজন user-এর session-কে একটি নির্দিষ্ট server-এর সাথে বেঁধে রাখে <Cite n={4} />। এতে আসল সমস্যাটি চাপা পড়ে যায়। [Stateless Service](/architecture/stateless-service/) পাতাটি দেখুন।
+- **মাত্র একটি load balancer।** আপনি যদি নিজের একটিমাত্র load balancer চালান, তাহলে সেটিই একটি নতুন single point of failure হয়ে যায়।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice.
@@ -84,6 +197,33 @@ These test ideas are the tutorial's own advice.
 - **Deploy under load.** Deploy a new version while a load test runs. Look for 5xx errors at the moment each server is removed.
 - **All servers sick.** In a test environment, make every server fail its health check. Write down what users see.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Server down.** Stop one app server during a load test. Measure the time until the errors stop. Compare that time with the health check interval and the number of failed checks.
+- **Server back.** Start the server again. Make sure that it gets traffic again only after it passes the health checks.
+- **Honest health check.** Break the database connection of one server. Make sure that its health check fails and that the load balancer removes it.
+- **Spread of traffic.** Send many requests. Count the responses for each server, from the logs or from a response header. Compare the count with the algorithm.
+- **Deploy under load.** Deploy a new version during a load test. Look for 5xx errors at the moment when each server is removed.
+- **All servers sick.** In a test environment, make every server fail its health check. Write down what users see.
+
+</Layman>
+<Bangla>
+
+নিচের test ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- **Server down।** Load test চলার সময় একটি app server বন্ধ করুন। Error থামতে কত সময় লাগে, তা মাপুন। সময়টি health check interval আর failure count-এর সাথে মিলিয়ে দেখুন।
+- **Server ফিরে আসা।** Server-টি আবার চালু করুন। দেখুন, health check pass করার পরেই কেবল এটি আবার traffic পায় কি না।
+- **সৎ health check।** একটি server-এর database connection ভেঙে দিন। দেখুন, তার health check fail করে কি না এবং load balancer তাকে সরিয়ে দেয় কি না।
+- **Traffic-এর বণ্টন।** অনেক request পাঠান। Log বা response header থেকে প্রতিটি server-এর response গুনুন। সংখ্যাটি algorithm-এর সাথে মিলিয়ে দেখুন।
+- **Load-এর মধ্যে deploy।** Load test চলার সময় একটি নতুন version deploy করুন। প্রতিটি server সরানোর মুহূর্তে 5xx error আসে কি না, খেয়াল করুন।
+- **সব server অসুস্থ।** একটি test environment-এ প্রতিটি server-কে তার health check-এ fail করান। User-রা কী দেখেন, তা লিখে রাখুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
