@@ -1,0 +1,101 @@
+export const metadata = { title: 'Distributed Cache', description: 'A shared, fast store that all app servers use, so a session, an OTP, or a counter looks the same on every server.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Caching guidance', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/best-practices/caching', accessed: '2026-10-20' },
+    { title: 'What is Azure Managed Redis?', publisher: 'Microsoft Learn', url: 'https://learn.microsoft.com/en-us/azure/redis/overview', accessed: '2026-10-20' },
+    { title: 'High availability with Redis Sentinel', publisher: 'Redis docs', url: 'https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/', accessed: '2026-10-20' },
+    { title: 'Scale with Redis Cluster', publisher: 'Redis docs', url: 'https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/', accessed: '2026-10-20' },
+    { title: 'EXPIRE', publisher: 'Redis docs', url: 'https://redis.io/docs/latest/commands/expire/', accessed: '2026-10-20' },
+    { title: 'Distributed Locks with Redis', publisher: 'Redis docs', url: 'https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/', accessed: '2026-10-20' },
+    { title: 'Keys and values', publisher: 'Redis docs', url: 'https://redis.io/docs/latest/develop/using-commands/keyspace/', accessed: '2026-10-20' },
+    { title: 'INCR', publisher: 'Redis docs', url: 'https://redis.io/docs/latest/commands/incr/', accessed: '2026-10-20' },
+  ],
+}
+
+# Distributed Cache
+
+Think of an office where each person keeps notes on their own sticky pads. When a fact changes, some pads get the update and some do not. Now put one whiteboard on the wall that everyone reads and writes. Everyone sees the same fact. A distributed cache is that whiteboard for your app servers: one fast, shared store that all of them use.
+
+<PageMeta />
+
+## In plain words
+
+A cache keeps copies of data in fast memory, so the app does not ask the database every time. There are two kinds. A private cache, or local cache, keeps the data on the computer that runs the app <Cite n={1} />. A shared cache is one common store that many processes and machines can use <Cite n={1} />. A distributed cache is a shared cache.
+
+The problem with a local cache starts when you run more than one app server. Each server then has its own separate copy of the data <Cite n={1} />. If the data changes between two reads, two servers can hold two different answers <Cite n={1} />. With a shared cache, all servers see the same cached data <Cite n={1} />. The price is speed and effort: a shared cache is slower than local memory, and it is one more service to run <Cite n={1} />.
+
+This page uses Redis as the example. Redis can serve as a shared cache for many app instances <Cite n={1} />. Redis Cluster splits the data across many Redis nodes automatically <Cite n={4} />. Redis Sentinel watches a main Redis server and, if it fails, promotes a replica (a copy) to be the new main server <Cite n={3} />. A managed Redis, such as Azure Managed Redis, is run for you by the cloud vendor <Cite n={2} />.
+
+Common uses are:
+
+- **Session store.** Data that the app links to each user's session, such as a shopping cart <Cite n={2} />.
+- **OTP and other short-lived data.** Redis can give a key a timeout. After the timeout, Redis deletes the key by itself <Cite n={5} />.
+- **Rate limit counter.** A counter that limits how often an action can happen <Cite n={8} />. See [Rate Limiting](/architecture/rate-limiting/).
+- **Leaderboard.** Redis has a sorted set type for ranked lists <Cite n={2} />.
+- **Distributed lock.** A "room in use" sign, so only one server does a job at a time <Cite n={6} />.
+- **Feature flags and temporary state.** Small values that every server must read the same way.
+
+<MdxImage src="/images/architecture/13-distributed-cache.webp" alt="Users send requests to a load balancer. The load balancer sends them to App Server 1, 2, or 3. All three app servers read and write one shared Redis distributed cache. Redis sits in front of the database, which the servers use only when needed." />
+
+## Frontend-facing Redis and backend Redis
+
+One system can use Redis for two different jobs. "Frontend-facing" and "backend" are this tutorial's names for the two jobs. They are not product terms.
+
+| Role | Goal | Examples |
+|---|---|---|
+| Frontend-facing Redis | Make answers to users faster | Course lists, public landing page data, dashboard summaries, menu and config data, popular API responses. Azure calls this a data cache or a content cache <Cite n={2} />. |
+| Backend Redis | Run internal logic and background work | OTP, login and session data, rate limit counters, job queue state, distributed locks, payment state, temporary workflow data. Session store and job queuing are common Redis patterns <Cite n={2} />. |
+
+<Callout type="tip" title="Tutorial advice">
+The two roles have different risks. If a frontend-facing cache loses data, the page is a little slower. If a backend Redis loses an OTP or a lock, a user cannot log in, or two servers do the same job. Think about separate Redis instances for the two roles, so that a big page cache cannot push out login data.
+</Callout>
+
+## When you need it
+
+- You run more than one app server.
+- A session, an OTP, or a rate limit counter must be the same on all servers.
+- A local memory cache gives different answers on different servers.
+- You need fast, shared, temporary state.
+- You plan [horizontal scaling](/architecture/horizontal-scaling/).
+
+## A real-life example
+
+An LMS uses OTP login. When a student asks for a code, the app stores it in Redis with a key such as `otp:<phone>` and a time-to-live (TTL) of 2 minutes:
+
+```text
+SET otp:8801700000000 482913 EX 120
+```
+
+The load balancer can send the verify request to App Server 1, 2, or 3. All three read the same key from Redis, so the check works on any server. After 2 minutes, Redis deletes the key, and the old code stops working.
+
+## Common mistakes
+
+- **A local cache on many servers.** Each server keeps its own copy, so users see different data on each request.
+- **No plan for a cache failure.** The app should keep working when the shared cache is down <Cite n={1} />. For data that lives only in Redis, such as an OTP, the app must fail with a clear message, not a crash.
+- **The cache as a permanent database.** A cache can lose its data at any time. Keep valuable data in the real data store too <Cite n={1} />.
+- **A lock that never ends.** If a server takes a lock and then crashes, other servers wait forever. A Redis lock should set the key only if it does not exist (`NX`) and with an expiry (`PX`) <Cite n={6} />. The holder must remove only its own lock <Cite n={6} />.
+- **No key naming rule.** Redis advises a schema such as `object-type:id`, for example `user:1000` <Cite n={7} />. Without a rule, two features can use the same key.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+- **Same answer on every server.** Send the same read to each app server (or repeat it many times through the load balancer). Change the data, then check that no server returns the old value.
+- **OTP across servers.** Request an OTP on one server and verify it on another. Then wait past the TTL and check that the code fails.
+- **Redis down.** Stop Redis in a test environment. Check that cached pages still load from the database, and that login fails with a clear error.
+- **Lock expiry.** Kill a worker while it holds a lock. Check that another worker can take the lock after the expiry.
+- **Key collisions.** Check that each key has a type prefix and an ID, so that `session:42` and `otp:42` never mix.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Cache | Fast memory that keeps copies of data |
+| Local (private) cache | A cache inside one app server, seen only by that server |
+| Distributed (shared) cache | One cache that all app servers use |
+| TTL | Time to live: how long a key stays before Redis deletes it |
+| Redis Cluster | Redis spread over many nodes, with the data split between them |
+| Redis Sentinel | A Redis tool that watches the main server and switches to a replica if it fails |
+| Distributed lock | A shared "in use" sign, so only one server does a job at a time |
+| Key schema | A naming rule for keys, such as `otp:<phone>` |

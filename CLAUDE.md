@@ -61,7 +61,11 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `components/layout/` | `SiteShell`, `SiteHeader`, `Sidebar`, `SidebarList`, `MobileNav`, `ThemeToggle`, `RegisterServiceWorker` |
 | `components/navigation/` | `SectionNav` ("On this page"), `SearchPalette` (Ctrl/Cmd+K) |
 | `components/content/` | `PageHeader` (the `PART 05 · CONFIGURE` eyebrow), `MetaLine` (the meta line), `Sources`, `ReadingProgress`, `BackToTop`, `PrevNext`, `CopyButton` |
-| `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper) |
+| `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper), `MdxImage` (an image with the base path) |
+| `app/(site)/architecture/page.tsx`, `app/(site)/architecture/[topic]/page.tsx` | The Architecture module: the home (`components/pages/ArchitectureHome.tsx`) and one topic or the practice page. `[topic]` loads `content/architecture/<topic>.mdx`. Static params come from `lib/architecture/topics.ts`. |
+| `components/architecture/` | `useArchitectureProgress.ts`, `ArchitectureProgressSummary`, `MarkDoneButton`, `PracticeQuestion`, `TopicDoneMark`, `ArchitectureSidebarList` |
+| `lib/architecture/topics.ts`, `lib/architecture/ui.ts` | The one ordered list of the 19 Architecture topics and the practice page, the progress ids, and the English strings. See "Architecture Module". |
+| `public/images/architecture/` | The owner's 19 diagrams (WebP), one for each topic |
 | `app/(site)/system-design/page.tsx`, `app/(site)/system-design/[topic]/page.tsx` | The System Design module: the home (`components/pages/SystemDesignHome.tsx`) and one case study. `[topic]` loads `content/system-design/<topic>.mdx`. Static params come from `lib/system-design/cases.ts`. |
 | `components/linux/` | `useLinuxProgress.ts` (the progress store), `LinuxProgressSummary`, `StageProgress`, `TopicChecklist`, `LinuxSidebarList` |
 | `components/fundamentals/` | `useFundamentalsProgress.ts`, `FundamentalsProgressSummary`, `ChapterProgress`, `TopicChecklist`, `FundamentalsSidebarList`, `Version` (one version block), `VersionSwitch`, and `diagrams/` (the inline SVG diagrams of the ISTQB version, each in a `Figure` with a visible description) |
@@ -81,8 +85,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
-| `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 65 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture). It has relative `.ts` imports, so `node --test` can load it. |
+| `lib/pwa.ts` | The web manifest, the precache list (all 86 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels and the three START HERE pages |
 | `lib/reading.ts` | `articleProgress` and `showBackToTop` for the reading aids |
@@ -95,17 +99,18 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-wit
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
 | `public/images/fundamentals/` | The images of the owner's notes |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design` |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
 | `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
 | `scripts/system-design-route-map.json` | The 16 System Design routes: `/system-design/` and the 15 cases. Same identity map. |
+| `scripts/architecture-route-map.json` | The 21 Architecture routes: `/architecture/`, the 19 topics, and the practice page. Same identity map. |
 | `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
 | `scripts/fundamentals-route-map.json` | The 12 Fundamentals routes: `/fundamentals/` and the 11 chapters. Same identity map as `route-map.json`. |
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the sidebar, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 65 routes:
+The site has 86 routes:
 
 | Routes | Count |
 |---|---|
@@ -114,6 +119,7 @@ The site has 65 routes:
 | `/linux/` and the 12 Linux stages | 13 |
 | `/system-design/` and the 15 case studies | 16 |
 | `/fundamentals/` and the 11 Fundamentals chapters | 12 |
+| `/architecture/`, the 19 topics, and the practice page | 21 |
 
 | Group | Folder | Pages |
 |---|---|---|
@@ -188,6 +194,23 @@ The version switch:
 | Privacy | No real person's name, email, home path, or login name in new text. |
 
 To add or change a topic, edit `lib/fundamentals/chapters.ts` and the `##` heading of the MDX file together.
+
+## Architecture Module
+
+The System Architecture Foundations module is the home at `/architecture/`, 19 topic pages, and a practice page with 30 questions, all at `/architecture/<slug>/`. It teaches the building blocks of system architecture in plain words for testers. The base is the owner's notes (`docs/superpowers/research/architecture-owner-notes.md`) and the owner's diagrams. The design is `docs/superpowers/specs/2026-10-20-architecture-module-design.md`.
+
+`lib/architecture/topics.ts` is the one ordered list (slug, title, description). It drives the sidebar, the home page, prev/next, search (group `architecture`), the sitemap, the precache, and the progress store (`localStorage` key `architecture-progress`). The progress ids are the 19 topic slugs and `practice-01` … `practice-30`.
+
+| Rule | Detail |
+|---|---|
+| Page shape | `## In plain words` (with the topic's `<MdxImage>`), `## When you need it`, `## A real-life example`, `## Common mistakes`, `## What a tester can check` (a "Tutorial advice" tip with no cites), `## Key words` |
+| Sources | The owner's notes have no `<Cite>`, because they are not public. Each fact has a `<Cite>` to an official source: vendor docs, IETF RFCs, MDN, OpenTelemetry, Prometheus, or the Google SRE books. The LMS examples and the tester tips are the tutorial's own text. |
+| Images | `<MdxImage src="/images/architecture/NN-<slug>.webp" alt="…" />`. `npm test` checks that each topic shows its own image and that each `src` is a file in `public/`. |
+| Practice | `<PracticeQuestion n={k} topic="<slug>" question="…">` with the model answer as the body and the closing tag at column 0. The `[topic]` page passes the component. `npm test` checks the numbers 1–30 and the topic slugs. |
+| Research notes | `docs/superpowers/research/architecture-<slug>.md` and `architecture-<slug>.factcheck.md` |
+| Done | A page is done only when its fact-check report ends with `Open FAILs: 0`, written by an agent that did not write the page. |
+
+To add a topic, add it to `lib/architecture/topics.ts` and to `ArchitectureSlug`, create `content/architecture/<slug>.mdx`, and add its route to `scripts/architecture-route-map.json`. `npm test` checks that the three agree.
 
 ## How to Add a Page
 
@@ -293,7 +316,7 @@ To change a page:
 
 The site installs as an app and works offline.
 
-- The service worker caches all 65 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
+- The service worker caches all 86 routes and their build files at install. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Each build writes a new cache version into `/sw.js`. The new worker deletes the old caches.
 - Only production builds register the service worker. `npm run dev` has none. To test it, run `npm run build` and serve `out/`.
 - A new page in `lib/nav.ts`, a new stage in `lib/linux/stages.ts`, or a new chapter in `lib/fundamentals/chapters.ts` goes into the precache list automatically.
@@ -311,18 +334,18 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), and the page and route-map lists |
+| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
-| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, and `fundamentals-route-map.json` that has no page in `out/` |
+| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, `fundamentals-route-map.json`, and `architecture-route-map.json` that has no page in `out/` |
 | `python3 scripts/check_links.py out` | Lists broken internal links and assets |
 | `python3 scripts/check_outline.py out` | Checks that each "On this page" link points to an element id |
-| `python3 scripts/check_sources.py out` | Checks each tutorial page, each Linux stage page, each System Design case page, and each Fundamentals chapter page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
+| `python3 scripts/check_sources.py out` | Checks each tutorial page, each Linux stage page, each System Design case page, each Fundamentals chapter page, and each Architecture page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
 | `scripts/compare_text.py` | Historical record of the phase-3 migration. It cannot run now. See below. |
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 61 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 81 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 

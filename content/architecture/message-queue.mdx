@@ -1,0 +1,96 @@
+export const metadata = { title: 'Message Queue and Async Processing', description: 'How a queue lets background workers do slow work, so the API answers fast, and what happens when a worker fails.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'What is a Message Queue?', publisher: 'AWS', url: 'https://aws.amazon.com/message-queue/', accessed: '2026-10-20' },
+    { title: 'Queue-Based Load Leveling pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/queue-based-load-leveling', accessed: '2026-10-20' },
+    { title: 'Asynchronous Request-Reply pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/asynchronous-request-reply', accessed: '2026-10-20' },
+    { title: 'Amazon SQS visibility timeout', publisher: 'AWS docs', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html', accessed: '2026-10-20' },
+    { title: 'Amazon SQS at-least-once delivery', publisher: 'AWS docs', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html', accessed: '2026-10-20' },
+    { title: 'Using dead-letter queues in Amazon SQS', publisher: 'AWS docs', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html', accessed: '2026-10-20' },
+    { title: 'Available CloudWatch metrics for Amazon SQS', publisher: 'AWS docs', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-available-cloudwatch-metrics.html', accessed: '2026-10-20' },
+  ],
+}
+
+# Message Queue and Async Processing
+
+In a busy restaurant, the waiter does not cook your meal while you wait at the counter. The waiter writes an order ticket, puts it on the kitchen rail, and goes back to the next guest. The cooks take the tickets one by one. A message queue is that ticket rail: the API writes a job, and background workers do the slow work later.
+
+<PageMeta />
+
+## In plain words
+
+A message queue lets two parts of a system talk without waiting for each other. This is called asynchronous (async) communication <Cite n={1} />. A message stays in the queue until a worker processes it and deletes it <Cite n={1} />.
+
+There are two roles. The **producer** adds a message to the queue. The **consumer**, often called a worker, takes the message and does the job <Cite n={1} />. In a simple queue, each message goes to one consumer <Cite n={1} />.
+
+Common jobs are email, SMS, PDF generation, image resize, payment post-processing, analytics updates, and notifications.
+
+A queue gives three benefits:
+
+- **Fast answers.** The API does not wait for the slow job. For long work, the API can answer `202 Accepted` at once <Cite n={3} />. The answer points to a status endpoint that the client can check again later <Cite n={3} />.
+- **Smooth peaks.** The queue is a buffer. Workers handle messages at their own pace, even when many requests arrive at once <Cite n={2} />. Queues smooth spiky workloads <Cite n={1} />.
+- **Safe from a slow service.** The API can keep adding jobs even when the worker or the service behind it is down <Cite n={2} />.
+
+What happens when a worker fails? In Amazon SQS, a worker that receives a message makes it invisible to other workers for a time, the visibility timeout <Cite n={4} />. If the worker does not delete the message before the visibility timeout ends, for example because it crashed, the message becomes visible again, and another worker can try <Cite n={4} />. So a job can run more than once. For SQS standard queues, AWS also says that, on rare occasions, you can get the same message copy again. So your app must be idempotent: safe when it processes the same message twice <Cite n={5} />. See [Idempotency](/architecture/idempotency/).
+
+Some messages fail every time, for example a job with bad data. A **dead-letter queue** (DLQ) is a side queue for messages that the worker cannot process <Cite n={6} />. It keeps them apart, so you can find out why they failed <Cite n={6} />. In SQS, `maxReceiveCount` sets how many times a worker can receive a message before it moves to the DLQ <Cite n={6} />.
+
+<MdxImage src="/images/architecture/15-message-queue.webp" alt="A user request goes to the backend API. The API returns 'Processing' to the user and puts a job in the message queue. A worker takes the job from the queue and then generates a PDF, uploads it to object storage, sends an email, and updates the status." />
+
+## When you need it
+
+- A task is slow or long-running.
+- An external service is slow or unreliable.
+- The user should get a fast API response.
+- The task needs retries.
+- Heavy tasks should run in the background.
+- You want to smooth out peak traffic.
+
+## A real-life example
+
+A student clicks **Generate Certificate**.
+
+**Bad design.** The request waits 20 to 30 seconds. In that time the server makes the PDF, uploads it, and sends the email. If the browser times out, the student clicks again and gets two certificates.
+
+**Better design.** The API puts a job in the queue and answers at once:
+
+```text
+POST /certificates          -> 202 Accepted, { "jobId": "c-981", "status": "processing" }
+GET  /certificates/c-981    -> 200 OK, { "status": "processing" }
+GET  /certificates/c-981    -> 200 OK, { "status": "done", "url": "..." }
+```
+
+A worker makes the PDF, uploads it to object storage, sends the email, and sets the status to `done`. The page shows "Processing" until then.
+
+## Common mistakes
+
+- **No job status for the user.** The user clicks, sees nothing, and clicks again. Give each job a status that the client can check <Cite n={3} />.
+- **Retries on a job that is not safe to repeat.** A message can arrive more than once <Cite n={5} />. Without idempotency, the student gets two emails or two certificates.
+- **No dead-letter queue.** A bad message fails, comes back, and fails again. It wastes worker time and hides the real error. A DLQ isolates it <Cite n={6} />.
+- **No plan for a worker crash.** If the visibility timeout is too short, a second worker starts the same job while the first one is still busy. If it is too long, retries come late <Cite n={4} />.
+- **No queue monitoring.** Watch the number of waiting messages and the age of the oldest message <Cite n={7} />. A growing queue means the workers cannot keep up.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+- **Fast answer.** Check that the API returns at once with a job ID and a "processing" status, not after the slow work.
+- **Status flow.** Poll the status endpoint. Check each state: processing, done, and failed.
+- **Duplicate message.** Send the same job twice. Check that the student gets one certificate and one email.
+- **Worker crash.** Kill a worker in the middle of a job. Check that another worker finishes it and that no half-made result stays.
+- **Poison message.** Send a job with bad data. Check that it lands in the DLQ after the set number of tries and that an alert fires.
+- **Backlog.** Send a burst of jobs. Check the queue length and the age of the oldest message, and check that the queue drains.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Message queue | A list of jobs that waits until a worker takes them |
+| Async | Work that runs later, so the caller does not wait for it |
+| Producer | The part that adds a message to the queue |
+| Consumer (worker) | The part that takes a message and does the job |
+| 202 Accepted | The HTTP status code for "I got your request and will do it later" |
+| Visibility timeout | The time a received message stays hidden from other workers |
+| Dead-letter queue (DLQ) | A side queue for messages that keep failing |
+| Queue length | The number of messages that wait to be processed |

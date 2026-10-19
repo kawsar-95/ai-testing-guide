@@ -1,0 +1,103 @@
+export const metadata = { title: 'Functional and Non-functional Requirements', description: 'What a system must do and how well it must do it, and why the second list shapes the architecture.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Identify non-functional requirements', publisher: 'Microsoft Learn (Training)', url: 'https://learn.microsoft.com/en-us/training/modules/work-with-requirements/4-non-functional-requirements', accessed: '2026-10-20' },
+    { title: 'Azure Well-Architected Framework workloads', publisher: 'Microsoft Learn', url: 'https://learn.microsoft.com/en-us/azure/well-architected/workloads', accessed: '2026-10-20' },
+    { title: 'Architecture strategies for identifying and rating flows', publisher: 'Microsoft Learn (Azure Well-Architected Framework)', url: 'https://learn.microsoft.com/en-us/azure/well-architected/reliability/identify-flows', accessed: '2026-10-20' },
+    { title: 'Site Reliability Engineering, Chapter 4: Service Level Objectives', publisher: 'Google', url: 'https://sre.google/sre-book/service-level-objectives/', accessed: '2026-10-20' },
+    { title: 'Architecture strategies for performing failure mode analysis', publisher: 'Microsoft Learn (Azure Well-Architected Framework)', url: 'https://learn.microsoft.com/en-us/azure/well-architected/reliability/failure-mode-analysis', accessed: '2026-10-20' },
+    { title: 'REL13-BP01 Define recovery objectives for downtime and data loss', publisher: 'AWS Well-Architected Framework, Reliability Pillar', url: 'https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/rel_planning_for_recovery_objective_defined_recovery.html', accessed: '2026-10-20' },
+  ],
+}
+
+# Functional and Non-functional Requirements
+
+Think of a pizza order. "One large pizza with cheese" says what you want. "Hot, in 30 minutes, at the right address" says how well it must arrive. A pizza that comes cold after two hours is the correct pizza, but the order still failed. Software requirements work the same way. Some say what the system does. Others say how well it must do it.
+
+<PageMeta />
+
+## In plain words
+
+Requirements are commonly split into two kinds <Cite n={1} />.
+
+**Functional requirements** describe what the system must do, or its behavior <Cite n={1} />. For an online learning platform (LMS), examples are registration, login, payment, course enrollment, watching videos, and certificate generation.
+
+**Non-functional requirements** describe how well the system must work. Microsoft calls them the non-behavior parts of a solution, such as performance <Cite n={1} />. Common types are availability, compliance, data retention, performance (response time), privacy, recovery time, security, and scalability <Cite n={1} />. This module also adds reliability, maintainability (how easy the system is to change), observability (how well you can see what happens inside it), and cost control. Users might not care about these items directly, but they are important for the architecture and for daily operations <Cite n={1} />.
+
+A feature list is not enough for good architecture. Architects design a system to meet both functional and non-functional requirements <Cite n={2} />. In this tutorial's view, the non-functional side drives most architecture choices. Two systems with the same features can need very different designs if one has 200 users and the other has 200,000.
+
+### Make each requirement measurable
+
+A good non-functional requirement has a number. Microsoft gives these examples <Cite n={1} />:
+
+| Good | Bad |
+|---|---|
+| "Average screen load time for internal users that are not mobile will be less than three seconds." | "All screens in the app should load as fast as possible." |
+| "External portal must be able to handle 100 concurrent users who are performing case submission." | "External portal must be able to handle peak traffic." |
+
+When a requirement has a measurement, it should also say how you will measure it <Cite n={1} />. The target must be realistic, too. For example, 99.999% availability is not realistic when the core app has 99.9% <Cite n={1} />.
+
+Google's SRE book gives names to these numbers. A **service level indicator (SLI)** is a carefully defined measure of some part of the service <Cite n={4} />. A **service level objective (SLO)** is a target value for an SLI <Cite n={4} />. Most services use request latency, the time to return a response, as a key SLI <Cite n={4} />. Google prefers percentiles to the average, because a high percentile such as the 99th shows a plausible worst case <Cite n={4} />.
+
+<MdxImage src="/images/architecture/02-requirements.webp" alt="A mind map of LMS requirements. The functional branch lists registration, login, course enrollment, payment, watch video, and generate certificate. The non-functional branch lists fast response, high traffic handling, reliable payment, secure video access, data backup, monitoring, and cost control." />
+
+## When you need it
+
+- Before you start the architecture design.
+- When you plan a new feature.
+- When there is a risk for performance, security, or scalability.
+- When the system depends on payment, SMS, email, maps, an AI API, or other third-party services. These are external dependencies, and the team must find and document them <Cite n={5} />.
+- When uptime, response time, the backup policy, or compliance matters. AWS asks teams to set two recovery targets. The recovery time objective (RTO) is the maximum acceptable delay before the service is back <Cite n={6} />. The recovery point objective (RPO) is the maximum acceptable time since the last data recovery point, so it limits how much recent data you can lose <Cite n={6} />.
+
+## A real-life example
+
+The requirement is: "Students can watch course videos." This is a functional requirement.
+
+For the architecture, the team needs more answers:
+
+- How many students will watch at the same time?
+- Where will the videos be stored? (See [File Storage and Object Storage](/architecture/object-storage/).)
+- Do we need a CDN? (See [CDN for Static Content](/architecture/cdn/).)
+- How fast must a video start to play?
+- What will the storage cost be?
+
+After these questions, the team can write measurable requirements. For example: "On admission day, 2,000 students can stream videos at the same time. For 95% of plays, the video starts in less than 3 seconds. Only enrolled students can open a video link."
+
+Not every flow is equally important, either. Microsoft suggests a criticality scale to put flows in order <Cite n={3} />. High-criticality flows directly affect things such as the customer experience and financial transactions <Cite n={3} />. Low-criticality flows include optional features such as feedback surveys <Cite n={3} />. In the LMS, payment and login are high. A course feedback form is low.
+
+## Common mistakes
+
+- **Writing only a feature list and calling it the complete requirements.** The design then has no target for speed, load, or recovery.
+- **Treating login, payment, reports, and video as equally critical.** The team spends the same effort on a report page as on payment. The weak spot is then often in the flow that matters most.
+- **No performance targets or traffic estimates.** "Fast" and "many users" cannot be tested. Nobody can say if a release passes.
+- **Ignoring security, backup, monitoring, and cost.** These items appear late, after an incident or a large bill.
+- **Choosing a technology before the non-functional requirements are known.** The tool may not fit the real load, budget, or recovery need.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- For each non-functional requirement, ask "How will we measure it?" If there is no number, report it as a gap before testing starts.
+- Turn each target into a test. Run a load test at the stated number of users, and check the 95th or 99th percentile response time, not only the average.
+- Test the high-criticality flows (payment, login, enrollment) first and in the most depth.
+- For each third-party service, test a slow response, a timeout, and an error response. Check what the user sees.
+- Ask for the RTO and RPO. Then take part in a restore test and check the time and the data loss against them.
+- Test the security requirements too. For example, check that a video link does not work for a student who is not enrolled.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Functional requirement | What the system must do (a behavior), such as "students can log in" |
+| Non-functional requirement | How well the system must work, such as speed, uptime, or security |
+| SLI | Service level indicator: a measured number about the service, such as response time |
+| SLO | Service level objective: the target value for an SLI |
+| Latency | The time it takes to return a response to a request |
+| Percentile | The value below which a given share of results falls. For example, a target can say that 99% of calls complete in less than 100 ms <Cite n={4} />. |
+| Criticality | How important a flow is to the business |
+| External dependency | A part outside your system that your system needs, such as a payment provider |
+| RTO | Recovery time objective: the longest acceptable time before the service is back |
+| RPO | Recovery point objective: the longest acceptable time since the last data recovery point |

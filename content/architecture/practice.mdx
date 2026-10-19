@@ -1,0 +1,372 @@
+export const metadata = { title: 'Practice Questions', description: 'Thirty system design questions for testers, from a single server to trade-offs, each with a model answer and a link to its topic.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'What is Elastic Load Balancing?', publisher: 'AWS', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html', accessed: '2026-10-20' },
+    { title: 'EXPIRE', publisher: 'Redis', url: 'https://redis.io/docs/latest/commands/expire/', accessed: '2026-10-20' },
+    { title: 'Cache-Control header', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control', accessed: '2026-10-20' },
+    { title: 'Serve private content with signed URLs and signed cookies', publisher: 'AWS', url: 'https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html', accessed: '2026-10-20' },
+    { title: 'Working with DB instance read replicas', publisher: 'AWS', url: 'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html', accessed: '2026-10-20' },
+    { title: 'Receive Stripe events in your webhook endpoint', publisher: 'Stripe', url: 'https://docs.stripe.com/webhooks', accessed: '2026-10-20' },
+    { title: 'Amazon SQS visibility timeout', publisher: 'AWS', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html', accessed: '2026-10-20' },
+    { title: 'Using dead-letter queues in Amazon SQS', publisher: 'AWS', url: 'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html', accessed: '2026-10-20' },
+    { title: 'RFC 6585: Additional HTTP Status Codes', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc6585.html', accessed: '2026-10-20' },
+    { title: 'Sharing objects with presigned URLs', publisher: 'AWS', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html', accessed: '2026-10-20' },
+    { title: 'Working with a DB instance in a VPC', publisher: 'AWS', url: 'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html', accessed: '2026-10-20' },
+    { title: 'Use API gateways in microservices', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/microservices/design/gateway', accessed: '2026-10-20' },
+    { title: 'Throttle requests to your REST APIs for better throughput in API Gateway', publisher: 'AWS', url: 'https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html', accessed: '2026-10-20' },
+    { title: 'Observability primer', publisher: 'OpenTelemetry', url: 'https://opentelemetry.io/docs/concepts/observability-primer/', accessed: '2026-10-20' },
+    { title: 'Monitoring Distributed Systems (Site Reliability Engineering, chapter 6)', publisher: 'Google', url: 'https://sre.google/sre-book/monitoring-distributed-systems/', accessed: '2026-10-20' },
+    { title: 'Trace Context', publisher: 'W3C', url: 'https://www.w3.org/TR/trace-context/', accessed: '2026-10-20' },
+    { title: "What's the Difference Between Monolithic and Microservices Architecture?", publisher: 'AWS', url: 'https://aws.amazon.com/compare/the-difference-between-monolithic-and-microservices-architecture/', accessed: '2026-10-20' },
+    { title: 'Microservices architecture style', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/microservices', accessed: '2026-10-20' },
+    { title: 'REL03-BP01 Choose how to segment your workload', publisher: 'AWS Well-Architected Framework', url: 'https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_service_architecture_monolith_soa_microservice.html', accessed: '2026-10-20' },
+  ],
+}
+
+# Practice Questions
+
+These 30 questions are like the practice drills before a driving test. Reading about the rules is one thing. Answering a question out loud shows what you really know. Try to answer each question yourself first, in a few sentences. Then open the model answer and compare. Each question links to the topic page that it practices, and you can tick it as done.
+
+<PageMeta />
+
+## Basics
+
+<PracticeQuestion n={1} topic="single-server" question="Design a simple LMS for 500 students. Which components will you use?">
+
+For 500 students, keep it simple. One server (a VPS) can run:
+
+- A web server such as Nginx, in front of the app.
+- The backend application, for login, courses, enrollment, and payment.
+- One database, such as MySQL or PostgreSQL.
+- File storage for course files and certificates. Object storage is a good choice from day one, so the files are not lost with the server.
+- Logs, daily backups, and basic monitoring of CPU, RAM, and disk.
+
+Add a payment gateway and an email or SMS provider as external services. Do not add microservices, many servers, or a cache before you measure a real need.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={2} topic="single-server" question="What are the limitations of Single Server Architecture?">
+
+- **Single point of failure.** If the server goes down, the whole system goes down.
+- **Limited capacity.** CPU, RAM, disk, and network have a fixed size. A traffic spike, such as admission day, can fill them.
+- **Shared resources.** The app, the database, and file downloads fight for the same CPU and disk. One heavy report can slow down login.
+- **Risky updates.** A deploy or a restart stops the whole service.
+- **Data risk.** If the files and the database are on the same disk with no backup, one disk failure can lose everything.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={3} topic="vertical-scaling" question="When should you use Vertical Scaling and when should you use Horizontal Scaling?">
+
+Use **vertical scaling** (a bigger server) first when the bottleneck is clear, such as CPU or RAM, and traffic growth is moderate. It is fast and needs no change to the code. But it has an upper limit, and the server is still a single point of failure.
+
+Use **horizontal scaling** (more servers) when one server cannot handle the traffic, or when the service must stay up if one server fails. It also allows deploys with no downtime. It needs a load balancer and a stateless app: sessions in Redis or tokens, and files in object storage. Remember that the database can still be the bottleneck.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={4} topic="load-balancer" question="What does a Load Balancer do? Why is health check important?">
+
+A load balancer receives incoming requests and spreads them across many servers <Cite n={1} />. It can also take over the work of encryption and decryption (HTTPS) from the servers <Cite n={1} />.
+
+A health check is a regular test of each server, such as a call to `/health`. The load balancer uses it to send requests only to healthy servers <Cite n={1} />. Without health checks, the load balancer keeps sending users to a crashed or stuck server, and those users get errors. A good health check tests what the app really needs, such as the database connection, and not only "the process is running".
+
+</PracticeQuestion>
+
+<PracticeQuestion n={5} topic="stateless-service" question="What is a Stateless Service? Where should session data be stored?">
+
+A stateless service keeps no important user state in the memory or on the local disk of one app server. So any request can go to any server and still work.
+
+Store session data in a shared place that all servers can reach:
+
+- **Redis** or another shared cache, with an expiry time. Redis deletes a key by itself when its timeout ends <Cite n={2} />.
+- **The database**, for data that must last.
+- **A signed token (JWT)** that the client sends with each request.
+
+Store uploaded files in object storage, not on the local disk.
+
+</PracticeQuestion>
+
+## Caching, CDN, and databases
+
+<PracticeQuestion n={6} topic="caching" question="How would you optimize a course list page that gets thousands of hits?">
+
+The course list is read very often but changes rarely, so it is a good cache candidate.
+
+- Cache the list in Redis with a TTL (expiry time), for example 10 min. When the timeout ends, Redis deletes the key by itself <Cite n={2} />.
+- Clear the cache key when an admin changes a course.
+- Serve course images, CSS, and JavaScript from a CDN.
+- Add pagination, so one request does not load every course.
+- Check the database query: add the right index and select only the fields that the page needs.
+
+Then measure p95 latency and database load before and after.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={7} topic="caching" question="What is the cache invalidation problem? What will you do when course price is updated?">
+
+Cache invalidation means removing or updating old data in the cache when the real data changes. The problem is that the cache does not know by itself that the database changed. So users can see old data until the cached copy expires.
+
+When an admin updates a course price:
+
+1. Write the new price to the database.
+2. Delete (or update) every cache key that holds this price, such as the course detail and the course list.
+3. Keep a TTL on these keys as a safety net. Redis deletes an expired key by itself <Cite n={2} />.
+
+At checkout, always read the price from the database, not from the cache. A wrong price at payment is a real money problem.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={8} topic="cdn" question="When should you use CDN? How can private video delivery be secured?">
+
+Use a CDN for static files that many users ask for: images, videos, CSS, JavaScript, fonts, and PDFs. It is most useful when users are far from the server or when static traffic overloads the backend.
+
+To secure private videos:
+
+- Keep the files in a private bucket. Do not make them public.
+- Give each paying user a short-lived signed URL or signed cookie. Amazon CloudFront supports both for private content <Cite n={4} />.
+- Make users go through the CDN, not directly to the origin. AWS recommends this so that users cannot bypass the signed URL rules <Cite n={4} />.
+- Create the signed URL only after the backend checks that the user is enrolled.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={9} topic="database-replication" question="What will you do if database read load becomes high?">
+
+First, find the slow and frequent queries. Add indexes and fix the worst queries. Then reduce the reads:
+
+- **Cache** data that many users read, such as the course list, in Redis.
+- **Add read replicas.** A read replica is a read-only copy of the database. Send read queries to it to reduce the load on the primary database <Cite n={5} />.
+- **Move reports and analytics** to a replica, so they do not slow down payments and enrollments.
+
+Keep writes, and reads that must be fresh, on the primary database.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={10} topic="database-replication" question="How will you handle replication lag when using read replicas?">
+
+Replication lag is the delay before a change on the primary reaches a replica. For example, Amazon RDS copies updates to read replicas asynchronously <Cite n={5} />. So for a short time, a replica can return stale (old) data.
+
+- **Read your own writes from the primary.** Right after a payment, read the payment status from the primary database.
+- **Show a "Processing" state** while the change spreads, instead of a wrong "Unpaid".
+- **Send only non-critical reads to replicas**, such as reports and course lists.
+- **Monitor the lag** and alert when it is too high. Stop sending reads to a replica that is far behind.
+
+</PracticeQuestion>
+
+## Reliability and async work
+
+<PracticeQuestion n={11} topic="idempotency" question="How will you prevent duplicate payment gateway callbacks?">
+
+Expect duplicates. Stripe, for example, says a webhook endpoint can get the same event more than once <Cite n={6} />.
+
+- Make the gateway's `transaction_id` (or event ID) unique in the database, with a unique constraint.
+- Record the event IDs that you processed, and skip an event that you already processed <Cite n={6} />.
+- Check the status first. If the order is already "paid", do nothing more.
+- Return a success code for the duplicate too. Return the `2xx` quickly, before slow work <Cite n={6} />. If you return an error (a non-`2xx` code), Stripe sends the event again <Cite n={6} />. It retries for up to three days in live mode <Cite n={6} />.
+- Do the slow work (emails, certificates) in a queue job that is also safe to run twice.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={12} topic="message-queue" question="Certificate generation takes one minute. Should it be synchronous or asynchronous? Why?">
+
+Asynchronous. One minute is too long to keep an HTTP request open. The browser, the load balancer, or the gateway can time out, and the user may click again and start a second job.
+
+A better flow: the API puts a job in a queue and returns "Processing" at once, with a job ID. A worker makes the PDF, stores it in object storage, and sends an email. The page shows the job status, and the user downloads the certificate when it is ready. The job must be safe to retry, so a retry does not make two certificates.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={13} topic="message-queue" question="What happens if a queue worker fails?">
+
+It depends on the queue, so check its delivery rules. In Amazon SQS, a worker must delete a message after it finishes the job. If the worker crashes before that, the message becomes visible again when its visibility timeout ends, and another worker can take it <Cite n={7} />. So the job is not lost, but it can run again. SQS can also deliver a message more than once <Cite n={7} />.
+
+So:
+
+- Make each job idempotent (safe to run twice).
+- Set a retry limit, and send failed jobs to a dead letter queue.
+- Run more than one worker, and alert when no worker is running or the queue keeps growing.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={14} topic="message-queue" question="Why do we need a Dead Letter Queue?">
+
+Some messages fail every time, for example because of bad data. Without a limit, the worker retries them forever. This wastes work and can block other jobs.
+
+A dead letter queue (DLQ) is a separate queue for messages that were not processed successfully. It lets the team look at those messages and find out why they failed <Cite n={8} />. In Amazon SQS, a setting called `maxReceiveCount` sets how many times a message can be received before it moves to the DLQ <Cite n={8} />. Monitor the DLQ: one new message there is often a bug, such as a failed certificate or a lost payment step.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={15} topic="message-queue" question="How will you design login flow if the external SMS service is slow?">
+
+Do not let the login request wait for the SMS provider.
+
+1. The API creates the OTP, stores it in Redis with a short expiry, and puts a "send SMS" job in a queue.
+2. The API returns at once: "We are sending your code."
+3. A worker sends the SMS with a strict timeout and a limited number of retries.
+4. If the provider fails often, switch to a second SMS provider or offer email as a backup.
+
+Also rate limit OTP requests, so a slow provider does not cause many repeat clicks and SMS costs. Monitor the SMS send time and the failure rate, and alert on them.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={16} topic="rate-limiting" question="How will you rate limit an OTP login endpoint?">
+
+Use more than one key, because one key alone is easy to get around:
+
+- **Per phone number:** for example, at most 3 OTP requests in 5 min.
+- **Per IP address:** for example, at most 10 requests in 10 min. Do not use IP alone, because many real users can share one IP.
+- **Per phone number for verify attempts:** lock the OTP after a few wrong codes.
+
+Keep the counters in Redis, so all servers share them. When the limit is passed, return `429 Too Many Requests` <Cite n={9} />. The response can include a `Retry-After` header that says how long to wait <Cite n={9} />.
+
+</PracticeQuestion>
+
+## Security and gateways
+
+<PracticeQuestion n={17} topic="object-storage" question="What is the difference between public file delivery and private file delivery?">
+
+**Public files** are the same for everyone, such as course thumbnails, CSS, and JavaScript. Anyone with the link can download them, and a CDN can cache them for a long time.
+
+**Private files** belong to some users only, such as a paid video, a certificate, or an assignment. The system must check access first. Then it gives a short-lived link:
+
+- In Amazon S3, objects are private by default <Cite n={10} />. A presigned URL gives time-limited permission to download one object <Cite n={10} />.
+- Through Amazon CloudFront, signed URLs or signed cookies protect private content <Cite n={4} />.
+
+Never put private files in a public bucket and hope that nobody guesses the link.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={18} topic="cloud-architecture" question="Why is it risky to keep a database accessible from the public internet?">
+
+A public database is one more door that attackers can try. Anyone on the internet can try to connect to it. Attackers can try default passwords, stolen passwords, and known bugs. One weak password or one unpatched bug can leak all student and payment data.
+
+A safer setup puts the database in a private subnet, so only the web servers can reach it <Cite n={11} />. A security group (a firewall rule) controls who can connect <Cite n={11} />. Admins connect through a VPN or a bastion host, not straight from the internet.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={19} topic="api-gateway" question="Where can an API Gateway handle auth and rate limiting?">
+
+At the front door, before any request reaches a backend service. An API gateway is a central entry point. It can do authentication, SSL termination, and rate limiting for all services <Cite n={12} />. Without it, each public service must do these jobs itself <Cite n={12} />.
+
+- **Auth:** the gateway checks the token on every route and rejects bad tokens early. The services still check permissions for business rules, such as "can this student see this course".
+- **Rate limiting:** the gateway counts requests per user, API key, or IP. AWS API Gateway uses a token bucket for this, and clients can get `429 Too Many Requests` <Cite n={13} />.
+
+Make sure no backend service is reachable without going through the gateway.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={20} topic="caching" question="What concerns are important when caching sensitive data?">
+
+- **The right cache key.** Put the user ID in the key of user data. A wrong key shows one student's data to another.
+- **Not in a shared cache.** A shared cache, such as a proxy or a CDN, reuses one stored response for many users. So do not store personal content there <Cite n={3} />.
+- **The right HTTP headers.** `Cache-Control: private` lets only the browser store the response <Cite n={3} />. `no-store` tells every cache not to store it <Cite n={3} />.
+- **A short TTL**, and clear the cache at logout or when permissions change.
+- **Do not cache secrets at all**, such as passwords, OTPs in plain text, or full card numbers.
+- **Protect the cache server**: a password, a private network, and encryption where needed.
+
+</PracticeQuestion>
+
+## Monitoring
+
+<PracticeQuestion n={21} topic="observability" question="What is the difference between logs, metrics, and traces?">
+
+- **Logs** are timestamped messages about events <Cite n={14} />. They tell you what happened, for example "payment 123 failed: card declined".
+- **Metrics** are numbers collected over time, such as error rate, CPU use, or request rate <Cite n={14} />. They tell you how much or how often.
+- **Traces** record the path of one request through many services <Cite n={14} />. They tell you where the request spent its time.
+
+Metrics show that something is wrong. Traces show where. Logs show the details of why.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={22} topic="observability" question="Which logs should be kept for a payment flow?">
+
+Log each step of the payment with the same request ID and the order ID:
+
+- Payment started: user ID, course, amount, currency.
+- Redirect to, or request to, the payment gateway, and the gateway's response code.
+- Each callback or webhook: the event ID, the status, and whether it was a duplicate. Stripe advises tracking event IDs to find duplicate deliveries <Cite n={6} />.
+- The status change: pending, paid, failed, or refunded.
+- Side effects: enrollment unlocked, receipt sent.
+- Every error and retry, with the reason.
+
+Never log card numbers, CVV codes, passwords, or full tokens.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={23} topic="observability" question="Why is p95 latency more useful than average latency?">
+
+p95 latency is the time that 95 % of requests are faster than. It shows what the slowest 5 % of users feel.
+
+An average hides these slow requests. Google's SRE book gives an example: a service with an average of 100 ms can still have 1 % of requests that take 5 s <Cite n={15} />. Also, if a page calls many backends, the slow tail of one backend can become the normal speed of the page <Cite n={15} />. So use p95 and p99 for alerts and for performance test reports.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={24} topic="observability" question="What does high queue length indicate?">
+
+High queue length means that jobs arrive faster than the workers finish them. It is a saturation signal: it shows how full a part of the system is. Saturation is one of the four golden signals of Google's SRE book <Cite n={15} />.
+
+Common causes:
+
+- Too few workers, or a worker crashed.
+- A slow dependency, such as an SMS provider or the database.
+- A bug that makes jobs fail and retry again and again.
+- A real traffic spike, such as admission day.
+
+Users feel it as late emails, late certificates, or late notifications. Alert on queue length and on the age of the oldest message.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={25} topic="observability" question="Why is request ID important for production incident debugging?">
+
+One user action can touch the gateway, many services, a queue, and a worker. Each part writes its own logs. A request ID is one ID that follows the request through all of them. With it, you can search one ID and see the whole story of one failed request.
+
+Logs become much more useful when they are linked to a trace <Cite n={14} />. The W3C Trace Context standard defines HTTP headers that carry this ID from service to service <Cite n={16} />. Without a request ID, the team must guess which log lines belong together, and debugging takes hours instead of minutes.
+
+</PracticeQuestion>
+
+## Trade-offs
+
+<PracticeQuestion n={26} topic="monolith-microservices" question="For an LMS, would you choose monolith or microservices? Why?">
+
+In this tutorial's view, start with a monolith, and make it a modular monolith with clear modules: user, course, payment, and notification. A monolith is easier to start, with little planning up front <Cite n={17} />. AWS says it suits simple applications and prototypes <Cite n={17} />. AWS Well-Architected is stricter. It says to avoid a monolithic architecture whenever possible, and that a monolith you start with must be modular <Cite n={19} />. A small team can then move fast with one deploy and one database.
+
+Later, move out only the parts that need it. Notification fits, because it is async background work. Payment fits, because it needs strict reliability and security. Video or certificate processing fits, because it is heavy CPU work. Each microservice can then be deployed on its own <Cite n={18} />.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={27} topic="why-system-design" question="Give an example of consistency vs performance tradeoff.">
+
+Read replicas are a good example. Sending reads to replicas makes the system faster and takes load off the primary database. But the copy to a replica can be asynchronous <Cite n={5} />, so a replica can show old data for a short time.
+
+For a course list, a few seconds of old data is fine, so performance wins. For payment status right after a payment, the data must be correct, so read from the primary and accept a little more load. A cache has the same trade-off: a long TTL is fast, and a short TTL is more correct.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={28} topic="why-system-design" question="Explain cost vs availability tradeoff.">
+
+Availability means the share of time that the system works. More availability usually needs more copies of everything: more servers, a load balancer, database replicas, and copies in more than one data center. Each copy costs money every month.
+
+For example, a load balancer with two or more app servers increases availability and fault tolerance <Cite n={1} />. But it costs more than one server. A small training institute may accept one server and a few minutes of downtime. A large LMS on admission day may lose much more money from one hour of downtime than from the extra servers. So set the availability target from the business cost of downtime, not from a wish for "100 %".
+
+</PracticeQuestion>
+
+<PracticeQuestion n={29} topic="monolith-microservices" question="When should you not use microservices?">
+
+- **The team is small** or new to distributed systems. Microservices need skills in cloud, APIs, and containers <Cite n={17} />.
+- **The product is new** and the business areas are not clear yet. Wrong service borders are expensive to fix.
+- **Traffic is low.** A simple app or a prototype suits a monolith better <Cite n={17} />.
+- **DevOps, monitoring, and tracing are not ready.** Microservices need a mature DevOps culture <Cite n={18} />.
+- **You want less complexity.** Each service is simpler, but the whole system has more moving parts <Cite n={18} />.
+
+</PracticeQuestion>
+
+<PracticeQuestion n={30} topic="why-system-design" question="Why is it important to explain the “why” of an architecture decision?">
+
+Every architecture choice is a trade-off. "We use Redis" says nothing. "We cache the course list in Redis for 10 min because it gets thousands of reads and changes rarely, and we accept 10 min of old data" explains the trade-off.
+
+The "why" helps in four ways:
+
+- Other people can check the reasoning and find a mistake early.
+- Testers know what to test, such as stale data after a price change.
+- When traffic or the business changes, the team can see if the reason still holds.
+- New team members understand the system without guessing.
+
+</PracticeQuestion>

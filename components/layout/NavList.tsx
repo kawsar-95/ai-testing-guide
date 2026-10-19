@@ -5,13 +5,16 @@ import { FUNDAMENTALS_HOME } from "@/lib/fundamentals/chapters";
 import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
 import { LINUX_HOME } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
+import { ArchitectureSidebarList } from "@/components/architecture/ArchitectureSidebarList";
+import { ARCHITECTURE_HOME } from "@/lib/architecture/topics";
+import { ARCHITECTURE_UI } from "@/lib/architecture/ui";
 import { SystemDesignSidebarList } from "@/components/system-design/SystemDesignSidebarList";
 import { SYSTEM_DESIGN_HOME } from "@/lib/system-design/cases";
 import { SYSTEM_DESIGN_UI } from "@/lib/system-design/ui";
 import { crossToTutorial } from "@/lib/ui";
 import { SidebarList } from "./SidebarList";
 
-type Section = "tutorial" | "linux" | "fundamentals" | "system-design";
+type Section = "tutorial" | "linux" | "fundamentals" | "system-design" | "architecture";
 
 /** For each section: its home, the text of the link to it, and the arrow of that link. */
 const SECTIONS: readonly { id: Section; href: string; label: string; arrow: string }[] = [
@@ -19,12 +22,14 @@ const SECTIONS: readonly { id: Section; href: string; label: string; arrow: stri
   { id: "linux", href: LINUX_HOME, label: LINUX_UI.crossToLinux, arrow: "→" },
   { id: "fundamentals", href: FUNDAMENTALS_HOME, label: FUNDAMENTALS_UI.crossToFundamentals, arrow: "→" },
   { id: "system-design", href: SYSTEM_DESIGN_HOME, label: SYSTEM_DESIGN_UI.crossToSystemDesign, arrow: "→" },
+  { id: "architecture", href: ARCHITECTURE_HOME, label: ARCHITECTURE_UI.crossToArchitecture, arrow: "→" },
 ];
 
 function sectionOf(activePath: string | null): Section {
   if (activePath?.startsWith(LINUX_HOME)) return "linux";
   if (activePath?.startsWith(FUNDAMENTALS_HOME)) return "fundamentals";
   if (activePath?.startsWith(SYSTEM_DESIGN_HOME)) return "system-design";
+  if (activePath?.startsWith(ARCHITECTURE_HOME)) return "architecture";
   return "tutorial";
 }
 
@@ -62,6 +67,8 @@ export function NavList({
         <FundamentalsSidebarList activePath={activePath} onNavigate={onNavigate} />
       ) : current === "system-design" ? (
         <SystemDesignSidebarList activePath={activePath} onNavigate={onNavigate} />
+      ) : current === "architecture" ? (
+        <ArchitectureSidebarList activePath={activePath} onNavigate={onNavigate} />
       ) : (
         <SidebarList activePath={activePath} onNavigate={onNavigate} />
       )}

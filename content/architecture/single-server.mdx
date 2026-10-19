@@ -1,0 +1,89 @@
+export const metadata = { title: 'Single Server Architecture', description: 'One machine runs the web server, the app, the database, the files, and the logs: when that is enough and what breaks first.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Virtual private server instances in Lightsail', publisher: 'Amazon Lightsail Documentation (AWS)', url: 'https://docs.aws.amazon.com/lightsail/latest/userguide/understanding-instances-virtual-private-servers-in-amazon-lightsail.html', accessed: '2026-10-20' },
+    { title: "Beginner's Guide", publisher: 'nginx documentation', url: 'https://nginx.org/en/docs/beginners_guide.html', accessed: '2026-10-20' },
+    { title: 'Design reliable infrastructure for your workloads in Google Cloud', publisher: 'Google Cloud Architecture Center', url: 'https://docs.cloud.google.com/architecture/infra-reliability-guide/design', accessed: '2026-10-20' },
+    { title: 'Site Reliability Engineering, Chapter 6: Monitoring Distributed Systems', publisher: 'Google', url: 'https://sre.google/sre-book/monitoring-distributed-systems/', accessed: '2026-10-20' },
+    { title: 'REL09-BP04 Perform periodic recovery of the data to verify backup integrity and processes', publisher: 'AWS Well-Architected Framework, Reliability Pillar', url: 'https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/rel_backing_up_data_periodic_recovery_testing_data.html', accessed: '2026-10-20' },
+    { title: 'Architecture strategies for optimizing scaling and partitioning', publisher: 'Microsoft Learn (Azure Well-Architected Framework)', url: 'https://learn.microsoft.com/en-us/azure/well-architected/performance-efficiency/scale-partition', accessed: '2026-10-20' },
+  ],
+}
+
+# Single Server Architecture
+
+Think of a small corner shop where one person takes the orders, cooks, cleans, and keeps the money box. The shop is cheap to run and easy to understand. But when a bus full of customers arrives, the line goes out the door. And if that one person is sick, the shop closes. A single server is that shop.
+
+<PageMeta />
+
+## In plain words
+
+Single server architecture means that the main parts of an application run on one server. Often this server is a VPS. A VPS is a virtual private server, also called a virtual machine <Cite n={1} />. For example, an Amazon Lightsail instance is a VPS, and you choose an operating system image when you create it <Cite n={1} />.
+
+One machine runs all of these parts:
+
+- **A web server**, such as Nginx. It receives the requests from browsers. Nginx can serve files such as images and static HTML pages <Cite n={2} />. It can also work as a proxy: it receives requests, passes them to another server, and sends the responses back to the clients <Cite n={2} />.
+- **The backend application**, for example a Node.js app with the business logic.
+- **The database**, for example MySQL.
+- **File storage**: the uploaded files, on the local disk.
+- **Logs**: the record of what the app did.
+- **Background processes**, such as scheduled jobs (cron jobs) and email sending.
+
+This setup is common and practical for small applications, MVPs (minimum viable products: the first small version of a product), internal tools, portfolio websites, small LMS platforms, and launches with low traffic. Google Cloud says that a single-zone design suits workloads that can tolerate downtime <Cite n={3} />.
+
+The big risk is that the server is a **single point of failure (SPOF)**. If a part of the system depends on one single resource, a failure of that resource can affect the whole system <Cite n={3} />. Google Cloud gives this example: if the application runs on a single VM and the VM crashes, the entire stack is effectively unavailable <Cite n={3} />.
+
+All parts also share the same CPU, RAM, disk, and network. So one busy part can slow down all the others. And every resource has an upper limit <Cite n={6} />.
+
+<MdxImage src="/images/architecture/03-single-server.webp" alt="A user sends requests to an Nginx web server. Nginx passes them to the backend application. The backend application uses three parts on the same machine: a database, local file storage, and local logs." />
+
+## When you need it
+
+- The project is new and has few users.
+- The traffic is low and easy to predict.
+- The budget is small.
+- The team is small.
+- A fast launch is more important than a complex scaling design.
+- High availability (the system stays up when one part fails) is not required yet.
+
+## A real-life example
+
+A small training institute runs Nginx, a Node.js backend, a MySQL database, the uploaded files, and the logs on one VPS. For 200 to 500 students, this is cheap, simple, and easy to debug. There is one machine to check and one folder of logs to read.
+
+Then 5,000 to 10,000 visitors come at the same time. The CPU and the RAM become full. The database slows down. File downloads become slow, because large downloads and logins now fight for the same CPU, disk, and network. In the worst case, the whole system goes down, and every feature stops at the same time.
+
+## Common mistakes
+
+- **Running production without a backup.** A failed disk or a bad command can delete everything. AWS lists "Assuming that a backup exists" as a common anti-pattern <Cite n={5} />. Restore your backups from time to time and check that the data is complete and not corrupted <Cite n={5} />.
+- **Keeping the uploaded files and the database on the same server with no backup.** If that one disk fails, you lose both at the same time.
+- **Not monitoring disk usage.** Logs and uploads grow every day. When the disk is full, the database and the app can stop writing. Monitoring should warn early, for example: "It looks like your database will fill its hard drive in 4 hours" <Cite n={4} />.
+- **Assuming that one server can handle very large traffic forever.** Every resource has a limit <Cite n={6} />. See [Vertical Scaling](/architecture/vertical-scaling/) for the first step past it.
+- **Making everything tightly coupled.** For example, the code saves files to a fixed local folder and reads them from the same place. A later move to more servers or to object storage then needs many code changes. Separate components let you isolate failures <Cite n={6} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- In a test environment, restart the server. Check that the web server, the app, the database, and the background jobs all start again without manual work.
+- Fill the disk close to its limit in a test environment. Check what happens to uploads, logs, and database writes, and check that an alert fires first.
+- Run a small load test while a large file download runs. Watch the login response time.
+- Ask for the backup schedule. Then restore a backup to a clean server and check that the data and the uploaded files are complete.
+- Check that log files rotate (old logs are compressed or deleted), so that they do not fill the disk.
+- Check that the database port is not open to the public internet, because the database runs on the same machine as the public web server.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Server | A computer that answers requests from other computers |
+| VPS | Virtual private server, also called a virtual machine <Cite n={1} /> |
+| Web server | The program that receives HTTP requests and serves files, such as Nginx |
+| Proxy | A server that receives requests, passes them to another server, and returns the responses |
+| SPOF | Single point of failure: one part whose failure stops the whole system |
+| MVP | Minimum viable product: the first small version of a product |
+| Backup | A copy of the data that you can restore after a loss |
+| Saturation | How "full" a resource is, such as CPU, RAM, or disk <Cite n={4} /> |
+| Tightly coupled | Parts that depend on each other so much that you cannot change one without the other. Decoupled parts can change without an effect on the others <Cite n={6} />. |

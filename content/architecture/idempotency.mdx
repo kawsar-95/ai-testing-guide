@@ -1,0 +1,98 @@
+export const metadata = { title: 'Idempotency', description: 'Why the same request can arrive twice, and how idempotency keys, unique IDs, and status checks stop double payments and double emails.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'RFC 9110: HTTP Semantics (Idempotent Methods)', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html#name-idempotent-methods', accessed: '2026-10-20' },
+    { title: 'Idempotent (Glossary)', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Glossary/Idempotent', accessed: '2026-10-20' },
+    { title: 'Idempotent requests', publisher: 'Stripe API Reference', url: 'https://docs.stripe.com/api/idempotent_requests', accessed: '2026-10-20' },
+    { title: 'Receive Stripe events in your webhook endpoint', publisher: 'Stripe docs', url: 'https://docs.stripe.com/webhooks', accessed: '2026-10-20' },
+    { title: 'Making retries safe with idempotent APIs', publisher: "Amazon Builders' Library (AWS)", url: 'https://builder.aws.com/content/3Ev0BENTyBr0XxzRk5FDZzgNYos/making-retries-safe-with-idempotent-apis', accessed: '2026-10-20' },
+    { title: 'Constraints', publisher: 'PostgreSQL documentation', url: 'https://www.postgresql.org/docs/current/ddl-constraints.html', accessed: '2026-10-20' },
+  ],
+}
+
+# Idempotency
+
+Press the call button of a lift five times. Only one lift comes. The extra presses change nothing. Idempotency is that rule for software: if the same request arrives two or more times, the final result is the same as if it arrived once. It is the reason a payment retry does not take your money twice.
+
+<PageMeta />
+
+## In plain words
+
+An operation is idempotent when many identical requests have the same intended effect as one request <Cite n={1} />. You can retry it with no extra side effects <Cite n={5} />. A side effect is a change that the request causes, such as a new row, a sent email, or money that moves.
+
+In HTTP, `GET`, `PUT`, and `DELETE` are idempotent by definition <Cite n={1} />. `POST` and `PATCH` are not guaranteed to be idempotent <Cite n={2} />. "Create a payment" is usually a `POST`, so the server must make it safe. A client should not retry a non-idempotent request by itself unless it knows the retry is safe <Cite n={1} />.
+
+In a distributed system, you must expect duplicate requests. They can come from many places:
+
+- A user double-clicks the **Pay** button.
+- A mobile app loses the network and sends the request again.
+- A payment gateway sends the same callback twice. Stripe, for example, says a webhook endpoint can get the same event more than once <Cite n={4} />. A webhook is a call that another system sends to your API when something happens.
+- A queue gives the same job to a worker again. See [Message Queue](/architecture/message-queue/).
+
+Four tools stop duplicate side effects:
+
+| Tool | How it works |
+|---|---|
+| Idempotency key | The client makes a unique key and sends it with the request. The server uses it to spot retries <Cite n={3} />. Stripe suggests a random V4 UUID <Cite n={3} />. AWS calls this a client request identifier <Cite n={5} />. |
+| Transaction ID | The gateway's own ID for one payment, such as `TX123`. Stripe advises to log the event IDs that you processed and to skip the ones that are already logged <Cite n={4} />. |
+| Unique constraint | A database rule that keeps a column unique among all rows <Cite n={6} />. A second insert of the same ID fails, even if the code has a bug. |
+| Status check | Before the work, read the current status. If it is already `paid`, do nothing more. |
+
+A good server also returns the same answer for a retry. In its API v1, Stripe saves the status code and body of the first request and returns the saved answer for each retry with the same key <Cite n={3} />. If the same key comes with different data, Stripe returns an error <Cite n={3} />.
+
+<MdxImage src="/images/architecture/16-idempotency.webp" alt="A sequence diagram with a payment gateway, a payment API, and a database. The gateway sends 'Callback TX123 Success'. The API checks transaction TX123 in the database. If it is not processed, the API marks it paid and unlocks the course. If it is already processed, the API returns OK without a duplicate action. A second, duplicate callback for TX123 gets 'Already processed, no duplicate enrollment'." />
+
+## When you need it
+
+- You receive payment callbacks or webhooks.
+- Users place orders.
+- You have wallet transactions.
+- Course enrollment depends on a payment.
+- You calculate commissions.
+- You retry certificate generation or notifications.
+
+## A real-life example
+
+A student pays for a course. The payment gateway sends the success callback for `TX123` two times.
+
+**Without idempotency**, the system can unlock the course twice, credit the trainer's commission twice, send the receipt email many times, and create duplicate rows.
+
+**With idempotency:**
+
+1. The `transaction_id` column has a unique constraint.
+2. The first callback finds `TX123` not processed. The system marks it `paid`, unlocks the course, and returns `200 OK`.
+3. The second callback finds `TX123` already `paid`. The system returns `200 OK` and does nothing else.
+
+The system must save the "processed" mark and the changes in one step. AWS says that recording the token and all the changes must be atomic: all or nothing <Cite n={5} />. If not, a crash between the two steps can leave a paid order with no course access.
+
+## Common mistakes
+
+- **Only disabling the button on the frontend.** It stops some double-clicks. It does not stop network retries, gateway callbacks, or queue retries.
+- **Retries without idempotency.** Each retry runs the side effect again.
+- **No unique transaction ID.** Without an ID, the system cannot tell a retry from a new payment.
+- **No database unique constraint.** Two copies of the same callback can arrive at the same moment. Both pass the status check, and both insert a row. The constraint stops the second insert <Cite n={6} />.
+- **An error for a duplicate webhook.** If your endpoint answers a duplicate with an error, the gateway thinks the delivery failed and tries again. Stripe retries a delivery after a non-2xx answer <Cite n={4} />, for up to three days in live mode <Cite n={4} />. Other gateways have their own rules. Answer a known duplicate with success.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+- **Replay the callback.** Send the same payment callback two or more times. Check one enrollment, one commission, and one receipt email.
+- **Parallel duplicates.** Send two copies of the callback at the same moment. Check that the database has one row.
+- **Duplicate answer.** Check that a duplicate callback gets a 2xx answer, not an error.
+- **Same key, other data.** Reuse an idempotency key with a different amount. Check that the API rejects it.
+- **Crash in the middle.** Stop the service after it marks the payment but before it unlocks the course. Check that a retry finishes the job without a double effect.
+- **Double-click.** Click **Pay** fast many times, also with the network slowed down. Check one charge.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Idempotent | Safe to repeat: many identical requests have the same effect as one |
+| Side effect | A change that a request causes, such as a new row or a sent email |
+| Idempotency key | A unique key from the client that marks retries of one request |
+| Webhook (callback) | A call that another system sends to your API when an event happens |
+| Unique constraint | A database rule that stops two rows with the same value |
+| Atomic | All steps happen, or none of them happen |
+| Retry | Sending the same request again after a failure or a timeout |

@@ -1,0 +1,116 @@
+export const metadata = { title: 'Why System Design Matters', description: 'Why a working feature is not yet a working system, what system design is, and when a team must think about it.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'How to Use the Azure Well-Architected Framework Documentation', publisher: 'Microsoft Learn', url: 'https://learn.microsoft.com/en-us/azure/well-architected/what-is-well-architected-framework', accessed: '2026-10-20' },
+    { title: 'AWS Well-Architected Framework: Introduction', publisher: 'Amazon Web Services', url: 'https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html', accessed: '2026-10-20' },
+    { title: 'Site Reliability Engineering, Chapter 3: Embracing Risk', publisher: 'Google', url: 'https://sre.google/sre-book/embracing-risk/', accessed: '2026-10-20' },
+    { title: 'Architecture strategies for designing for redundancy', publisher: 'Microsoft Learn (Azure Well-Architected Framework)', url: 'https://learn.microsoft.com/en-us/azure/well-architected/reliability/redundancy', accessed: '2026-10-20' },
+    { title: 'Architecture strategies for optimizing scaling and partitioning', publisher: 'Microsoft Learn (Azure Well-Architected Framework)', url: 'https://learn.microsoft.com/en-us/azure/well-architected/performance-efficiency/scale-partition', accessed: '2026-10-20' },
+    { title: 'Architecture strategies for performing failure mode analysis', publisher: 'Microsoft Learn (Azure Well-Architected Framework)', url: 'https://learn.microsoft.com/en-us/azure/well-architected/reliability/failure-mode-analysis', accessed: '2026-10-20' },
+    { title: 'Site Reliability Engineering, Chapter 6: Monitoring Distributed Systems', publisher: 'Google', url: 'https://sre.google/sre-book/monitoring-distributed-systems/', accessed: '2026-10-20' },
+    { title: 'Asynchronous (Glossary)', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Glossary/Asynchronous', accessed: '2026-10-20' },
+    { title: 'AWS Well-Architected Framework: Definitions', publisher: 'Amazon Web Services', url: 'https://docs.aws.amazon.com/wellarchitected/latest/framework/definitions.html', accessed: '2026-10-20' },
+  ],
+}
+
+# Why System Design Matters
+
+Think of a home kitchen and a restaurant kitchen. Both can cook the same meal. But the restaurant must cook 300 meals in one evening, keep the food safe, and stay open when one cook is sick. Software works the same way. A feature that works for one user is a good start. System design asks if the whole system still works when many users, failures, and costs come at the same time.
+
+<PageMeta />
+
+## In plain words
+
+Most people start to learn software with one question: "How can I build this feature?" That skill is important. But in real work, a working feature is only the first step.
+
+A beginner often thinks: login works, the payment button works, and file upload works, so the system is complete. An engineer asks more questions:
+
+- What happens if 10,000 users come at the same time?
+- What happens if the server suddenly stops?
+- What if a payment succeeds, but the confirmation message fails?
+- What if a user uploads a file that is much larger than expected?
+- What if one user sends thousands of requests per minute?
+- Which data must never be lost?
+- Which part becomes slow first when traffic grows?
+- Which work can run in the background, so that users do not wait?
+- How will we find a problem before customers report it?
+
+These are not rare cases. Microsoft's reliability guide says that failures happen no matter how many layers of protection you add <Cite n={6} />. One job of monitoring is alerting: it tells the team that something is broken, or that something might break soon <Cite n={7} />.
+
+In this module, **system design** means the high-level plan of a software system. It shows how the main parts work together. A design plan usually covers how traffic comes in, the network, compute (the servers that run code), data, storage, and supporting services such as login and messaging <Cite n={6} />. In this module, the main parts are the client, the backend, the database, the cache, the queue, file storage, monitoring, security, and deployment.
+
+System design is not only drawing diagrams. The real work is making **trade-offs**. A trade-off is a choice where you get more of one good quality and accept less of another. Microsoft calls trade-offs accepted compromises that balance the different qualities <Cite n={1} />. Microsoft's Well-Architected Framework has five areas, or pillars: reliability, security, cost optimization, operational excellence, and performance efficiency <Cite n={1} />. It says that design decisions must be balanced across all pillars, given the business requirements <Cite n={1} />. The AWS Well-Architected Framework also exists to help you understand the pros and cons of your decisions <Cite n={2} />.
+
+| Trade-off | What it means |
+|---|---|
+| Simplicity vs scalability | A system that splits its work across many parts can grow, but the split adds complexity to the design <Cite n={5} />. |
+| Cost vs availability | More spare copies of each part keep the system up, but more redundancy means more cost <Cite n={4} />. |
+| Performance vs consistency | In a distributed database, the consistency level sets the trade-off between consistency and performance <Cite n={5} />. Consistency means that all copies have the same data at the same time <Cite n={5} />. |
+| Synchronous vs asynchronous | In synchronous work, the caller waits until the work ends. Asynchronous code asks for a task to run without stopping to wait for it to complete <Cite n={8} />. With a message queue, parts can do their tasks independently, at their own pace <Cite n={5} />. |
+
+Perfect reliability is not the goal. Google's SRE book says that extreme reliability comes at a cost <Cite n={3} />, and that 100% is probably never the right reliability target <Cite n={3} />. So the question is always: how reliable, how fast, and how cheap must this system be for its users?
+
+Coding teaches you how to build a feature. System design teaches you how to build a system that survives.
+
+<MdxImage src="/images/architecture/01-why-system-design.webp" alt="A user uses a web or mobile client app. The client app calls a backend API. The backend API connects to four parts: a database, file storage, external services for payment, SMS, and email, and logs and monitoring." />
+
+## When you need it
+
+- The number of users or the traffic grows.
+- A campaign, a product launch, a flash sale, or a seasonal peak is near.
+- The system handles payments, wallets, orders, enrollments, or other money.
+- The system handles files, images, videos, PDFs, or large uploads and downloads.
+- Downtime can cause lost business or lost user trust. Without spare parts, there is a high risk of long downtime when something fails <Cite n={4} />.
+- The product has a plan to grow in the future.
+
+## A real-life example
+
+An online learning platform, or LMS (learning management system), works well with 200 students. Then admission day comes. Now 10,000 visitors try to log in, pay, watch videos, and download certificates at the same time.
+
+The team sees these problems:
+
+- Login is slow.
+- The payment callback is late. (A callback is the message from the payment provider that confirms a payment.)
+- Videos do not load.
+- Certificate downloads time out.
+- The database is overloaded.
+
+These are not only coding bugs. Many of them are architecture risks. The login code can be correct and still be slow, because every request waits for the same busy database. A system that cannot grow can be slow at peak times <Cite n={5} />.
+
+## Common mistakes
+
+- **Thinking that system design is only a diagram.** The diagram is the output. The trade-off decisions are the real work.
+- **Testing with one user and small data only.** Problems with load, large files, and failures stay hidden until production.
+- **Designing for millions of users on day one.** The system becomes expensive and complex before it needs to be.
+- **Aiming for 100% uptime.** It is not possible, and the cost grows fast as you get close to it <Cite n={3} />.
+- **Testing only the happy path.** A payment provider, an SMS service, or the network can fail. If nobody planned for that, users see strange errors or lose data.
+- **Adding monitoring after the first outage.** Then customers find the problem first.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- Ask for the expected peak traffic (for example, admission day). Test at that load, not only at normal load.
+- For each money flow, test the case where the payment succeeds but the confirmation step fails. Check that the user is not charged two times and that the order is not lost.
+- Upload a file that is much larger than the limit. Check the error message, and check that the server stays healthy.
+- Send many requests per minute from one user. Check that the system limits that user and that other users are not affected.
+- In a test environment, stop one dependency (the database, the SMS service, or the email service). Check what the user sees.
+- Ask how the team will know about a failure. Check that an alert fires before a user reports the problem.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| System design | The high-level plan that shows how the main parts of a system work together |
+| Trade-off | A choice where you get more of one quality and accept less of another |
+| Scalability | The ability of a system to change its capacity when demand goes up or down <Cite n={5} /> |
+| Availability | How much of the time the system is up. It is often measured as the share of uptime <Cite n={3} />. |
+| Reliability | The ability of a system to do its job correctly and consistently when users expect it to <Cite n={9} /> |
+| Redundancy | Multiple identical copies of a part <Cite n={4} />, so that the system keeps working when one copy fails |
+| Consistency | All copies of the data show the same value at the same time <Cite n={5} /> |
+| Synchronous | The caller waits until the work is done. It is the opposite of asynchronous <Cite n={8} />. |
+| Asynchronous | The caller does not stop to wait for the work to complete <Cite n={8} />. A message queue is one way to do this <Cite n={5} />. |
+| LMS | Learning management system: a platform for online courses |

@@ -1,0 +1,89 @@
+export const metadata = { title: 'Vertical Scaling', description: 'Make one server bigger with more CPU, RAM, or a faster disk: a quick fix with a ceiling and a single point of failure.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Autoscaling guidance', publisher: 'Azure Architecture Center (Microsoft Learn)', url: 'https://learn.microsoft.com/en-us/azure/architecture/best-practices/auto-scaling', accessed: '2026-10-20' },
+    { title: 'Architecture strategies for optimizing scaling and partitioning', publisher: 'Microsoft Learn (Azure Well-Architected Framework)', url: 'https://learn.microsoft.com/en-us/azure/well-architected/performance-efficiency/scale-partition', accessed: '2026-10-20' },
+    { title: 'Design reliable infrastructure for your workloads in Google Cloud', publisher: 'Google Cloud Architecture Center', url: 'https://docs.cloud.google.com/architecture/infra-reliability-guide/design', accessed: '2026-10-20' },
+    { title: 'Site Reliability Engineering, Chapter 6: Monitoring Distributed Systems', publisher: 'Google', url: 'https://sre.google/sre-book/monitoring-distributed-systems/', accessed: '2026-10-20' },
+    { title: 'MySQL 8.4 Reference Manual: The Slow Query Log', publisher: 'Oracle (MySQL documentation)', url: 'https://dev.mysql.com/doc/refman/8.4/en/slow-query-log.html', accessed: '2026-10-20' },
+    { title: 'Virtual private server instances in Lightsail', publisher: 'Amazon Lightsail Documentation (AWS)', url: 'https://docs.aws.amazon.com/lightsail/latest/userguide/understanding-instances-virtual-private-servers-in-amazon-lightsail.html', accessed: '2026-10-20' },
+  ],
+}
+
+# Vertical Scaling
+
+Your family grows, and your small car is now too small. So you sell it and buy a bigger car. The trip is more comfortable, and you change nothing else in your life. But you still have only one car. If it breaks down, nobody goes anywhere. And there is a biggest car that you can buy. Vertical scaling is the bigger car.
+
+<PageMeta />
+
+## In plain words
+
+**Vertical scaling**, also called **scaling up**, means that you change the capacity of a resource <Cite n={1} />. You make the same machine more powerful. For example, you move the application to a larger virtual machine size <Cite n={1} />. In practice, you add more CPU, more RAM, a faster disk, or a bigger database instance. Microsoft describes it as adding compute capacity to existing resources <Cite n={2} />.
+
+In this tutorial's view, it is often the first practical scaling step, because the code and the architecture can stay the same. Microsoft says vertical scaling is useful when more processing power or memory in a single instance helps the workload <Cite n={2} />. It is also a good fit when the work is not easy to divide, or when the app architecture does not support horizontal scaling <Cite n={2} />. Horizontal scaling means adding more instances of a resource <Cite n={1} />; see [Horizontal Scaling](/architecture/horizontal-scaling/).
+
+Vertical scaling has four limits:
+
+- **Downtime.** A resize often makes the system temporarily unavailable while it is redeployed <Cite n={1} />.
+- **A ceiling.** Every resource has an upper scale limit <Cite n={2} />.
+- **Cost.** Larger and more powerful resources can cost more <Cite n={2} />.
+- **Still one machine.** If the application runs on a single VM and that VM crashes, the whole system is effectively unavailable. That VM is a single point of failure (SPOF) <Cite n={3} />. Horizontal scaling gives better resiliency, because the work is spread across more servers <Cite n={2} />.
+
+A bigger machine also does not fix every slow system. Adding resources does not guarantee better performance <Cite n={1} />. Find the bottleneck (the one part that limits the speed) before you add capacity. A database, for example, can limit throughput even when you add more compute <Cite n={1} />.
+
+<MdxImage src="/images/architecture/04-vertical-scaling.webp" alt="Three servers in a row with arrows between them, each one larger than the last: a small VPS with 2 CPU and 4 GB RAM, a bigger VPS with 8 CPU and 16 GB RAM, and a high memory server with 16 CPU and 64 GB RAM." />
+
+## When you need it
+
+- You want to keep the architecture simple.
+- You need a quick performance improvement.
+- The bottleneck is mainly CPU, RAM, disk I/O (reading from and writing to the disk), or the size of the database instance.
+- The traffic grows at a moderate rate.
+- The team is not ready yet to run a system with many servers.
+
+To know which resource is the bottleneck, measure saturation. Google's SRE book says to watch the resource that is most constrained: memory in a memory-constrained system, I/O in an I/O-constrained system <Cite n={4} />. Many systems become slow before they reach 100% use <Cite n={4} />. So a CPU at 85% can already mean slow pages.
+
+## A real-life example
+
+During an admission campaign, the LMS server CPU reaches 95%, and the RAM is almost full. As a quick fix, the team upgrades the VPS from 2 CPU and 4 GB RAM to 8 CPU and 16 GB RAM. (A VPS is a virtual private server, also called a virtual machine <Cite n={6} />.)
+
+The response time improves. But the server is still a single point of failure. If that server goes down, the full system goes down.
+
+Two more things can go wrong. First, the resize itself can need a restart, so the team must do it outside the busy hours. Second, if the real cause was one slow database query, the bigger server only hides the problem until traffic grows again.
+
+## Common mistakes
+
+- **Upgrading the server without measuring the real bottleneck.** If the database waits for the disk, more CPU does not help.
+- **Thinking that vertical scaling gives high availability.** It does not. There is still one machine, and when it stops, everything stops.
+- **Upgrading the server but not fixing slow database queries.** MySQL has a slow query log for this. It records SQL statements that take more than `long_query_time` seconds <Cite n={5} />, and these queries are candidates for optimization <Cite n={5} />. The log is disabled by default <Cite n={5} />, so the team must turn it on.
+- **Ignoring backup, monitoring, and alerting.** A bigger server fails in the same ways as a small one.
+- **Thinking that one machine can scale forever.** Every resource has a limit <Cite n={2} />. Plan the next step before you reach it.
+- **Resizing during peak traffic.** The resize can make the system unavailable for a short time <Cite n={1} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- Run the same load test before and after the upgrade. Compare the 95th percentile response time and the error rate. Without a "before" number, nobody can prove that the upgrade helped.
+- During the load test, watch CPU, RAM, disk I/O, and database connections. Find the resource that becomes full first.
+- After a load test, read the slow query log (or ask the team for it). Report the slowest queries.
+- Test the resize window in a test environment. Check what users see, and check if sessions and background jobs survive the restart.
+- Push the load past the new limit. Record the new breaking point, so that the team knows how much room is left.
+- Stop the server in a test environment. Check that the monitoring alert fires, because the server is still a single point of failure.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Vertical scaling (scale up) | Make one machine more powerful: more CPU, RAM, or a faster disk |
+| Horizontal scaling (scale out) | Add more machines that share the work |
+| Bottleneck | The one part that limits the speed of the whole system |
+| Saturation | How "full" a resource is, such as CPU, RAM, or disk <Cite n={4} /> |
+| Disk I/O | Reading data from the disk and writing data to it |
+| Instance size | The amount of CPU and RAM that a virtual machine or database instance has |
+| SPOF | Single point of failure: one part whose failure stops the whole system |
+| Slow query log | A MySQL log of the SQL statements that take too long |
+| Baseline | A measurement before a change, used to compare with the result after the change |

@@ -1,0 +1,127 @@
+export const metadata = { title: 'Monitoring and Observability', description: 'Logs, metrics, and traces in plain words: how a team finds out that a system is sick, why it is sick, and what a tester can check.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Observability primer', publisher: 'OpenTelemetry', url: 'https://opentelemetry.io/docs/concepts/observability-primer/', accessed: '2026-10-20' },
+    { title: 'Monitoring Distributed Systems (Site Reliability Engineering, chapter 6)', publisher: 'Google', url: 'https://sre.google/sre-book/monitoring-distributed-systems/', accessed: '2026-10-20' },
+    { title: 'Overview', publisher: 'Prometheus', url: 'https://prometheus.io/docs/introduction/overview/', accessed: '2026-10-20' },
+    { title: 'Alertmanager', publisher: 'Prometheus', url: 'https://prometheus.io/docs/alerting/latest/alertmanager/', accessed: '2026-10-20' },
+    { title: 'Grafana Loki documentation', publisher: 'Grafana Labs', url: 'https://grafana.com/docs/loki/latest/', accessed: '2026-10-20' },
+    { title: 'Introduction to Grafana', publisher: 'Grafana Labs', url: 'https://grafana.com/docs/grafana/latest/introduction/', accessed: '2026-10-20' },
+    { title: 'Introduction', publisher: 'Jaeger', url: 'https://www.jaegertracing.io/docs/latest/', accessed: '2026-10-20' },
+    { title: 'What is Amazon CloudWatch?', publisher: 'AWS', url: 'https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html', accessed: '2026-10-20' },
+    { title: 'Trace Context', publisher: 'W3C', url: 'https://www.w3.org/TR/trace-context/', accessed: '2026-10-20' },
+  ],
+}
+
+# Monitoring and Observability
+
+Think of a car dashboard. The warning light tells you that something is wrong with the engine. That is monitoring. The mechanic who plugs in a reader and finds that one sensor failed at 80 km/h is doing observability. You need both: the light to know that there is a problem, and the reader to know why.
+
+<PageMeta />
+
+## In plain words
+
+**Monitoring** means to collect, process, and show live numbers about a system, such as request counts, error counts, and processing times <Cite n={2} />. Google's SRE book says monitoring must answer two questions: what is broken, and why <Cite n={2} />. Monitoring tells you that the system is not healthy.
+
+**Observability** lets you understand a system from the outside, by asking it questions. It helps you answer "Why is this happening?" <Cite n={1} />. For this, the application must send out three kinds of signals: logs, metrics, and traces <Cite n={1} />.
+
+| Signal | What it is | What it tells you |
+|---|---|---|
+| Log | A message with a timestamp that a service writes <Cite n={1} /> | What happened |
+| Metric | A number collected over a period of time, such as error rate, CPU use, or request rate <Cite n={1} /> | How much, or how often |
+| Trace | The path of one request through many services <Cite n={1} /> | Where the request spent its time |
+
+A trace is made of spans. A span is one unit of work, such as one database call <Cite n={1} />. For example, one page load can pass through an API gateway, a backend service, and a database. Each step is a span, and together they make one trace <Cite n={1} />.
+
+Logs alone often miss context, such as where the code was called from. They become much more useful when they are linked to a trace <Cite n={1} />. That link is a shared ID. The W3C Trace Context standard defines HTTP headers that carry an ID for each request from service to service <Cite n={9} />.
+
+<MdxImage src="/images/architecture/19-observability.webp" alt="An application sends three streams, logs, metrics, and traces, into one observability platform. The platform sends alerts, and the alerts go to the engineering team." />
+
+### The numbers to watch
+
+Google's SRE book names four golden signals: latency, traffic, errors, and saturation <Cite n={2} />. In everyday terms:
+
+- **RPS** (requests per second): the traffic. For a web service, the SRE book says traffic is usually HTTP requests per second <Cite n={2} />.
+- **Error rate**: the share of requests that fail. A failure can also be a `200 OK` with the wrong content <Cite n={2} />.
+- **p95 and p99 latency**: 95 % or 99 % of requests are faster than this time. Averages hide slow requests. The SRE book gives an example: with an average of 100 ms, 1 % of requests can still take 5 s <Cite n={2} />.
+- **Queue length, slow database queries, and replication lag**: signs that a part behind the API is falling behind.
+- **CPU, RAM, and disk use**: how full the servers are. The SRE book calls this saturation: how "full" your service is <Cite n={2} />.
+
+## When you need it
+
+- A production system is running.
+- There are critical flows: payment, login, order, or enrollment.
+- The system uses more than one service or server.
+- The system depends on a queue, a cache, or an external API.
+- The team must find the cause of an incident fast.
+- There is an uptime target or an SLA (service level agreement, a promise to customers).
+
+## A real-life example
+
+Students say that login in the LMS is slow. Without observability, developers guess and read code at random.
+
+With observability, the team sees the problem in steps:
+
+1. **Metrics** show that login p95 latency went up from 300 ms to 3 s.
+2. **Logs** show timeouts from the SMS provider that sends the login code.
+3. **A trace** of one slow login shows that the call to the SMS provider takes 2.5 s.
+
+Now the cause is clear, and nobody had to guess.
+
+## Common tools
+
+The tool names below come from common practice. They are examples, not a recommendation.
+
+| Area | Popular tools |
+|---|---|
+| Logs | ELK Stack / Elastic Stack, Grafana Loki, Splunk, Datadog Logs, AWS CloudWatch Logs |
+| Metrics | Prometheus, Grafana, Datadog, New Relic, AWS CloudWatch |
+| Traces / APM | Jaeger, Zipkin, OpenTelemetry, Datadog APM, New Relic APM |
+| Alerting | Alertmanager, Grafana Alerting, PagerDuty, Opsgenie, AWS CloudWatch Alarms |
+| Cloud monitoring | AWS CloudWatch, Google Cloud Monitoring, Azure Monitor |
+
+APM means application performance monitoring. What some of these tools do, in one line each:
+
+- **Prometheus** is an open-source monitoring and alerting toolkit. It stores metrics as time series, which are values with a timestamp <Cite n={3} />.
+- **Alertmanager** removes duplicate alerts, groups them, and sends them to a receiver such as email, PagerDuty, or OpsGenie <Cite n={4} />.
+- **Grafana Loki** is an open-source logging stack. It indexes only the labels of the logs, not the full text <Cite n={5} />.
+- **Grafana** lets you query, show, and alert on metrics, logs, and traces <Cite n={6} />.
+- **Jaeger** is an open-source distributed tracing platform <Cite n={7} />.
+- **OpenTelemetry** is the way to add the code that sends out the signals <Cite n={1} />.
+- **AWS CloudWatch** monitors AWS resources and apps. Its alarms watch metrics against limits that you set <Cite n={8} />.
+
+## Common mistakes
+
+- **Logs with no context.** "Error occurred" with no user, no request, and no step is noise.
+- **No request ID or correlation ID.** Without one shared ID, you cannot join the log lines of one request across services. The W3C Trace Context standard exists to carry an ID that identifies each request from service to service <Cite n={9} />.
+- **Only CPU alerts.** CPU can be fine while payments fail. Watch business signals too, such as failed payments per minute.
+- **Metrics but no useful alert.** Google's SRE book says every page to a human should be actionable <Cite n={2} />.
+- **Microservices with no traces.** When a request crosses ten services, logs alone cannot show where the time went.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Log content.** Run a payment and a failed login. Check that each log line has a timestamp, a request ID, the user ID, and the step. Check that no password, OTP, or card number is in the logs.
+- **Request ID end to end.** Send one request with a known ID. Find it in the gateway, the service, and the worker logs.
+- **Alert fires.** In a test environment, make a dependency slow or make payments fail. Check that the right alert fires within the promised time, and that it says what to do.
+- **Trace is complete.** Open the trace of one checkout. Check that each service and each external call shows up as a span.
+- **Performance tests report p95 and p99.** Do not accept a report that shows only the average.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Monitoring | Collecting and showing live numbers that tell you if a system is healthy |
+| Observability | The power to find out why a system behaves as it does, from its signals |
+| Log | A timestamped message about one event |
+| Metric | A number measured over time, such as requests per second |
+| Trace | The path of one request through all the services it touches |
+| Span | One step inside a trace, such as one database call |
+| p95 latency | The time that 95 % of requests are faster than |
+| Saturation | How full a resource is, such as CPU or a queue |
+| Correlation ID | One ID that follows a request through every service |
+| SLA | A promise to customers about uptime or speed |
