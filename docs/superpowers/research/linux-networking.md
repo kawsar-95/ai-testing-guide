@@ -13,7 +13,7 @@ S3. RFC 791: Internet Protocol — IETF — https://www.rfc-editor.org/rfc/rfc79
 S4. RFC 9293: Transmission Control Protocol (TCP) — IETF — https://www.rfc-editor.org/rfc/rfc9293.txt — accessed 2026-10-19 (`002.txt`)
 S5. RFC 826: An Ethernet Address Resolution Protocol — IETF — https://www.rfc-editor.org/rfc/rfc826.txt — accessed 2026-10-19 (`004.txt`)
 S6. RFC 903: A Reverse Address Resolution Protocol — IETF — https://www.rfc-editor.org/rfc/rfc903.txt — accessed 2026-10-19 (`005.txt`)
-S7. RFC 894: IP Datagrams over Ethernet Networks — IETF — https://www.rfc-editor.org/rfc/rfc894.txt — accessed 2026-10-19 (`006.txt`; the full title is "A Standard for the Transmission of IP Datagrams over Ethernet Networks")
+S7. RFC 894: A Standard for the Transmission of IP Datagrams over Ethernet Networks — IETF — https://www.rfc-editor.org/rfc/rfc894.txt — accessed 2026-10-19 (`006.txt`; the full RFC title is used in `page.sources` since fix round 1)
 S8. RFC 4861: Neighbor Discovery for IP version 6 — IETF — https://www.rfc-editor.org/rfc/rfc4861.txt — accessed 2026-10-19 (`007.txt`)
 S9. RFC 4632: Classless Inter-domain Routing (CIDR) — IETF — https://www.rfc-editor.org/rfc/rfc4632.txt — accessed 2026-10-19 (`008.txt`)
 S10. RFC 1918: Address Allocation for Private Internets — IETF — https://www.rfc-editor.org/rfc/rfc1918.txt — accessed 2026-10-19 (`009.txt`)
@@ -44,7 +44,7 @@ S34. IP Sysctl — Linux kernel documentation (kernel.org) — https://www.kerne
 S35. ip-netns(8) — man7.org (iproute2) — https://man7.org/linux/man-pages/man8/ip-netns.8.html — accessed 2026-10-19 (`034.txt`)
 S36. network_namespaces(7) — man7.org (Linux man-pages 6.19) — https://man7.org/linux/man-pages/man7/network_namespaces.7.html — accessed 2026-10-19 (`035.txt`)
 S37. ipaddress — Python documentation — https://docs.python.org/3/library/ipaddress.html — accessed 2026-10-19 (`036.txt`)
-S38. A Beginner's Guide to Linux Networking Fundamentals — DEV Community (iaadidev) — https://dev.to/iaadidev/a-beginners-guide-to-linux-networking-fundamentals-dev-ops-prerequisite-7-434o — accessed 2026-10-19 (roadmap #152, `152.txt`; #079 is the same page; page title shortened in `page.sources` because the overlap check flags the full title)
+S38. A Beginner's Guide to Linux Networking Fundamentals — DEV Community (iaadidev) — https://dev.to/iaadidev/a-beginners-guide-to-linux-networking-fundamentals-dev-ops-prerequisite-7-434o — accessed 2026-10-19 (roadmap #152, `152.txt`; #079 is the same page; `page.sources` gives the page title without the site suffix, as the page itself does; the overlap check gives no hit)
 S39. The Basics of IP Subnetting — Linux Journal — https://www.linuxjournal.com/article/6287 — accessed 2026-10-19 (roadmap #228, `228.txt`)
 S40. Domain name resolution — ArchWiki — https://wiki.archlinux.org/title/Domain_name_resolution — accessed 2026-10-19 (roadmap #064, `064.txt`)
 S41. journalctl(1) — man7.org (systemd) — https://man7.org/linux/man-pages/man1/journalctl.1.html — accessed 2026-10-19 (`037.txt`)
@@ -72,6 +72,8 @@ S62. rsync(1) — rsync project (Samba) — https://download.samba.org/pub/rsync
 S63. curl man page — curl project — https://curl.se/docs/manpage.html — accessed 2026-10-19 (`035.txt`)
 S64. GNU Wget Manual — GNU Project — https://www.gnu.org/software/wget/manual/wget.html — accessed 2026-10-19 (`036.txt`)
 S65. RFC 4217: Securing FTP with TLS — IETF — https://www.rfc-editor.org/rfc/rfc4217.txt — accessed 2026-10-19 (`104.txt`)
+S67. OpenSSH 9.0 release notes — OpenSSH — https://www.openssh.com/txt/release-9.0 — accessed 2026-10-19 (`106.txt` of the part B directory; added in fix round 1)
+S66. OpenSSH 9.5 release notes — OpenSSH — https://www.openssh.com/txt/release-9.5 — accessed 2026-10-19 (`105.txt` of the part B directory; added in fix round 1)
 
 Local checks (not a citable page): iproute2 6.19.0 (`ip -V`), `ss` 6.19.0, `dig` 9.20.24, systemd-resolved on Ubuntu, Python 3. Read-only commands that I ran: `ip -br addr`, `ip -4 route`, `ip neigh`, `ip -br neigh` (it omits the state column on iproute2 6.19, so the page uses `ip neigh` for states), `ip route show proto dhcp`, `ip route get 192.0.2.1`, `ip -4 addr show lo`, `ss -tuln`, `ss -tn state established`, `getent hosts localhost`, `getent ahosts localhost`, `resolvectl status`, `resolvectl query localhost`, `dig +short @127.0.0.53 localhost`, `nmcli device show`, `cat /etc/resolv.conf /etc/hosts`, `grep ^hosts /etc/nsswitch.conf`, `cat /proc/sys/net/ipv4/{ip_local_port_range,ip_forward}`, `ping -c 1 -W 1 127.0.0.1`. Results that the page uses:
 - `ip -4 addr show lo` → `inet 127.0.0.1/8 scope host lo`. `ip -4 -br addr show lo` → `lo UNKNOWN 127.0.0.1/8`.
@@ -92,8 +94,8 @@ Conflicts between sources: none that matter. Blogs show `ifconfig` for setting a
 ## Topic 1: Networking
 | # | Claim | Source | Quote (≤25 words) |
 |---|---|---|---|
-| C1 | RFC 1122 covers three layers of host software: link, IP, transport. | S2 | "This RFC covers the communications protocol layers: link layer, IP layer, and transport layer" |
-| C2 | The application layer is covered by the companion RFC, so application protocols sit above the three layers. | S2 | "its companion RFC-1123 covers the application and support protocols." |
+| C1 | RFC 1122 lists four layers (application, transport, internet, link). It covers the link, IP, and transport layers. | S2 | "The protocol layers used in the Internet architecture are as follows" / "This RFC covers the communications protocol layers: link layer, IP layer, and transport layer" |
+| C2 | The application layer is covered by the companion RFC, so the application layer is the fourth layer (see C1). | S2 | "its companion RFC-1123 covers the application and support protocols." |
 | C3 | 127.0.0.1 always means the local host through the loopback device. | S22 | "INADDR_LOOPBACK (127.0.0.1) always refers to the local host via the loopback device;" |
 | C4 | `ip` shows and manipulates routing, devices, interfaces (iproute2). | S16 | "ip - show / manipulate routing, network devices, interfaces and" |
 | C5 | `ip -br` prints basic information in a table for `addr show`, `link show`, `neigh show`. | S16 | "Print only basic information in a tabular format for better readability." |
@@ -113,7 +115,7 @@ Statements without a cite (definitions of terms for the reader): a protocol is a
 | C13 | UDP uses datagram sockets, TCP uses stream sockets. | S22 | "tcp_socket = socket(AF_INET, SOCK_STREAM, 0);" / "udp_socket = socket(AF_INET, SOCK_DGRAM, 0);" |
 | C14 | A socket is an IP address joined with a port. | S4 | "An address that specifically includes a port identifier, that is, the concatenation of an Internet Address with a TCP port." |
 | C15 | A connection is a pair of sockets. | S4 | "A connection is defined by a pair of sockets." |
-| C16 | Ports below 1024 are privileged. Binding needs `CAP_NET_BIND_SERVICE`. | S22 | "port numbers below 1024 are called privileged ports" / "that has the CAP_NET_BIND_SERVICE capability in the user namespace" |
+| C16 | By default, ports below 1024 are privileged. Binding needs `CAP_NET_BIND_SERVICE` (see C156 for the sysctl that changes the limit). | S22 | "port numbers below 1024 are called privileged ports" / "that has the CAP_NET_BIND_SERVICE capability in the user namespace" |
 | C17 | Default local port range 32768–60999 for automatic source ports. | S34 | "Defines the local port range that is used by TCP and UDP to choose the local port." / "The default values are 32768 and 60999 respectively." |
 | C18 | `ss` options: `-t` TCP, `-u` UDP, `-l` listening, `-n` numeric. | S30 | "-t, --tcp Display TCP sockets." / "-l, --listening Display only listening sockets" / "-n, --numeric" |
 | C19 | `ss` filter `state established` selects connections in a TCP state. | S30 | "All standard TCP states: established, syn-sent, syn-recv," / "FILTER := [ state STATE-FILTER ] [ EXPRESSION ]" |
@@ -125,15 +127,16 @@ Tip text (advice, no cite): a service that listens only on 127.0.0.1 is unreacha
 |---|---|---|---|
 | C20 | An Ethernet address has 48 bits. | S5 | "To actually transmit the Ethernet packet a 48.bit Ethernet address must be generated." |
 | C21 | An IP datagram rides in an Ethernet frame whose type field is hex 0800. | S7 | "The type field of the Ethernet frame must contain the value hexadecimal 0800." |
-| C22 | An IP datagram on Ethernet is at most 1500 octets. | S7 | "the maximum length of an IP datagram sent over an Ethernet is 1500 octets." (The RFC text has a typo "minimum length" in the sentence before; the maximum sentence is the one used.) |
+| C22 | An IP datagram on standard Ethernet frames is at most 1500 octets. (The RFC text has a typo "minimum length" in the sentence before; the maximum sentence is the one used.) | S7 | "IP datagrams are transmitted in standard Ethernet frames." / "the maximum length of an IP datagram sent over an Ethernet is 1500 octets." |
 | C23 | ARP converts between layer-2 hardware addresses and IPv4 addresses on directly connected networks. | S20 | "It is used to convert between Layer2 hardware addresses and IPv4 protocol addresses on directly connected networks." |
 | C24 | The ARP request is broadcast to all stations. | S5 | "this packet to be broadcast to all stations on the Ethernet cable" |
 | C25 | The IPv4 neighbour table is the ARP table. | S19 | "The IPv4 neighbour table is also known by another name - the ARP table." |
 | C26 | An ARP cache entry becomes stale without positive feedback. | S20 | "When there is no positive feedback for an existing mapping after some time ... a neighbor cache entry is considered stale." |
-| C27 | IPv6 uses Neighbor Solicitation instead of ARP. | S8 | "Nodes accomplish address resolution by multicasting a Neighbor Solicitation that asks the target node to return its link-layer address." / "corresponds to a combination of the IPv4 protocols Address Resolution Protocol" |
+| C27 | IPv6 uses Neighbor Solicitation instead of ARP. | S8 | "Nodes accomplish address resolution by multicasting a Neighbor Solicitation that asks the target node to return its link-layer address." |
+| C27-b | IPv6 uses Neighbor Solicitation instead of ARP (continued) | S8 | "corresponds to a combination of the IPv4 protocols Address Resolution Protocol" |
 | C28 | RARP: a host that knows only its hardware address finds its protocol address. | S6 | "a method for workstations to dynamically find their protocol address ... when they know only their hardware address" |
 | C29 | DHCP gives a client all its IP settings. | S12 | "DHCP provides the mechanism for a client to acquire all of the IP configuration parameters that it needs in order to operate." |
-| C30 | Neighbour states `incomplete` and `failed`. | S19 | "incomplete the neighbour entry has not (yet) been validated/resolved." / "failed max number of probes exceeded without success" |
+| C30 | Neighbour states `incomplete` (not yet resolved) and `failed` (probes ran out). | S19 | "incomplete the neighbour entry has not (yet) been validated/resolved." / "failed max number of probes exceeded without success" |
 | C31 | `ip neigh` shows ARP or NDISC cache entries. | S16 | "neighbour - manage ARP or NDISC cache entries." |
 
 Statements without a cite: a frame is the link-layer unit; "DHCP covers the same need" is a summary of C28 and C29; two hosts with one IP can show changing MAC addresses (tutorial advice, hedged with "can").
@@ -147,7 +150,7 @@ Statements without a cite: a frame is the link-layer unit; "DHCP covers the same
 | C35 | Directed broadcast: the host field is all 1 bits. | S2 | "{ <Network-number>, -1 } Directed broadcast to the specified network." / "the notation "-1" for a field that contains all 1 bits." |
 | C36 | RFC 1918 private blocks: 10/8, 172.16/12, 192.168/16. | S10 | "10.0.0.0 - 10.255.255.255 (10/8 prefix)" / "172.16.0.0 - 172.31.255.255 (172.16/12 prefix)" / "192.168.0.0 - 192.168.255.255 (192.168/16 prefix)" |
 | C37 | RFC 5737 documentation blocks. | S11 | "The blocks 192.0.2.0/24 (TEST-NET-1), 198.51.100.0/24 (TEST-NET-2), and 203.0.113.0/24 (TEST-NET-3) are provided for use in documentation." |
-| C38 | `ip addr` writes an address as a prefix (address/length). | S17 | "IFADDR := PREFIX | ADDR peer PREFIX [ broadcast ADDR ]" (syntax line) |
+| C38 | `ip addr` writes an address as a prefix (address/length). | S17 | "IFADDR := PREFIX \| ADDR peer PREFIX [ broadcast ADDR ]" (syntax line) |
 | C39 | Python `ipaddress` has `ip_network`, `netmask`, `broadcast_address`, `num_addresses`. | S37 | "ipaddress.ip_network(address, strict=True)" / "broadcast_address" / "The network address for the network." |
 
 Arithmetic (local check with S37, see above): /26 has 6 host bits, 64 addresses, 62 for hosts, mask 255.255.255.192, broadcast 192.0.2.63. The page states these as the worked example. A gateway is "the router that leads out of the subnet" (gloss; see C44 for `via`).
@@ -165,7 +168,8 @@ Arithmetic (local check with S37, see above): /26 has 6 host bits, 64 addresses,
 | C47 | `ip route get` shows the route the kernel would use and sends no packet. | S18 | "get is equivalent to sending a packet along this path" / "however, no packets are actually sent." |
 | C48 | `blackhole` drops silently. `unreachable` drops and sends ICMP host unreachable. | S18 | "blackhole - these destinations are unreachable. Packets are discarded silently." / "Packets are discarded and the ICMP message host unreachable is generated." |
 | C49 | Linux does not forward between interfaces by default (`ip_forward` = 0). | S34 | "Forward Packets between interfaces." / "Default: 0 (disabled)" |
-| C50 | `ip route` manipulates the kernel routing tables. `add`, `del`, `replace`, `flush` exist. | S18 | "ip route is used to manipulate entries in the kernel routing tables." / "ip route { add | del | change | append | replace } ROUTE" / "ip route { show | flush } SELECTOR" |
+| C50 | `ip route` manipulates the kernel routing tables. `add`, `del`, `replace`, `flush` exist. | S18 | "ip route is used to manipulate entries in the kernel routing tables." |
+| C50-b | `ip route` manipulates the kernel routing tables (continued) | S18 | "ip route { add \| del \| change \| append \| replace } ROUTE" / "ip route { show \| flush } SELECTOR" |
 | C51 | A namespace has its own routing tables, so route tests can run in one. | S36 | "IP routing tables, firewall rules" (inside the C8 quote) |
 
 Danger callout: it states that these commands change the kernel routing table (C50). That a deleted default route cuts an SSH session follows from C42 and C41; it is the tutorial's own warning. `ip netns add` needs privileges; the page says only "a network namespace that you made for the test".
@@ -173,13 +177,15 @@ Danger callout: it states that these commands change the kernel routing table (C
 ## Topic 6: DHCP
 | # | Claim | Source | Quote (≤25 words) |
 |---|---|---|---|
-| C52 | DHCP gives a client an address and other IP settings. A lease is a finite time. | S12 | "DHCP provides the mechanism for a client to acquire all of the IP configuration parameters" / "the period over which a network address is allocated to a client is referred to as a "lease"" |
-| C53 | The four steps: DISCOVER (broadcast on the local subnet), OFFER, REQUEST, ACK. | S12 | "The client broadcasts a DHCPDISCOVER message on its local physical subnet." / "DHCPOFFER - Server to client in response to DHCPDISCOVER" / "DHCPACK - Server to client with configuration parameters, including committed network address." |
-| C54 | `nmcli device show` prints properties by group, including DHCP4. | S31 | "For active data use GENERAL, IP4, DHCP4, IP6, DHCP6, VPN." / "nmcli device show" |
+| C52 | DHCP gives a client an address and other IP settings. A lease is a fixed period of time that may be infinite; the page says "a limited time that the client can extend". | S12 | "A client acquires a lease for a network address for a fixed period of time (which may be infinite)." |
+| C52-b | DHCP gives a client an address and other IP settings (continued) | S12 | "DHCP provides the mechanism for a client to acquire all of the IP configuration parameters" |
+| C53 | The four steps: DISCOVER (broadcast on the local subnet), OFFER, REQUEST, ACK. | S12 | "The client broadcasts a DHCPDISCOVER message on its local physical subnet." / "DHCPOFFER - Server to client in response to DHCPDISCOVER" |
+| C53-b | The four steps: DISCOVER (broadcast on the local subnet), OFFER, REQUEST, ACK (continued) | S12 | "DHCPACK - Server to client with configuration parameters, including committed network address." |
+| C54 | `nmcli -f DHCP4 connection show NAME` prints the DHCP4 properties of an active connection. (The fact-check found that `nmcli device show` has no DHCP4 lines; the page now uses `connection show`.) | S31 | "nmcli connection show ID" / "For active data use GENERAL, IP4, DHCP4, IP6, DHCP6, VPN." |
 | C55 | T1 defaults to half of the lease time. T2 defaults to 0.875 of it. At T2 the client asks any server. | S12 | "T1 defaults to (0.5 * duration_of_lease). T2 defaults to (0.875 * duration_of_lease)." / "REBINDING state and attempts to contact any server." |
 | C56 | `systemd-networkd` starts a DHCP client with `DHCP=`. The default is `no`. | S32 | "Enables DHCPv4 and/or DHCPv6 client support. Accepts "yes", "no", "ipv4", or "ipv6". Defaults to "no"." |
 | C57 | `journalctl -u UNIT` shows messages of one unit. | S41 | "Show messages for the specified systemd unit UNIT (such as a service unit)" |
-| C58 | `ip route show proto dhcp` selects routes of one protocol. | S18 | "protocol RTPROTO only list routes of this protocol." (the `show` selector `proto RTPROTO`) |
+| C58 | `ip route show proto dhcp` selects routes with one protocol tag. A tag is not reserved: other clients can use another tag (see C160). | S18 | "protocol RTPROTO only list routes of this protocol." (the `show` selector `proto RTPROTO`) |
 | C59 | `nmcli connection up` activates a connection (which can start the DHCP client). | S31 | "Activate a connection." / "nmcli con up default" in the DHCP-profile example |
 
 Inference (marked in the page by "can"): activating a connection can start a DHCP exchange (C59 with C54). A restart of the network service can do the same (tutorial warning). The remark "Read their logs with journalctl -u UNIT" does not name the unit, because the unit name depends on the distribution.
@@ -187,7 +193,8 @@ Inference (marked in the page by "can"): activating a connection can start a DHC
 ## Topic 7: DNS Resolution
 | # | Claim | Source | Quote (≤25 words) |
 |---|---|---|---|
-| C60 | Name servers hold the data. A resolver extracts it for clients. | S13 | "NAME SERVERS are server programs which hold information about the domain tree's structure and set information." / "RESOLVERS are programs that extract information from name servers in response to client requests." |
+| C60 | Name servers hold the data. A resolver extracts it for clients. | S13 | "NAME SERVERS are server programs which hold information about the domain tree's structure and set information." |
+| C60-b | Name servers hold the data (continued) | S13 | "RESOLVERS are programs that extract information from name servers in response to client requests." |
 | C61 | The resolver is C-library code. | S26 | "The resolver is a set of routines in the C library that provide access to the Internet Domain Name System (DNS)." |
 | C62 | TTL: how long a record may be cached. | S13 | "The meaning of the TTL field is a time limit on how long an RR can be kept in a cache." |
 | C63 | TTL in the record format. | S14 | "a 32 bit signed integer that specifies the time interval that the resource record may be cached" |
@@ -201,7 +208,8 @@ Inference (marked in the page by "can"): activating a connection can start a DHC
 | C71 | systemd-resolved has a stub listener on 127.0.0.53. | S27 | "systemd-resolved provides a local DNS stub listener on the IP addresses 127.0.0.53 and 127.0.0.54" |
 | C72 | `resolv.conf` can be a symlink to the stub file (resolved reads it otherwise). | S27 | "only if it is not a symlink to /run/systemd/resolve/stub-resolv.conf" |
 | C73 | `resolvectl status` shows the DNS settings in effect. | S28 | "Shows the global and per-link DNS settings currently in effect." |
-| C74 | `dig` asks the servers of `resolv.conf`; no search list by default; `+search` turns it on. | S33 | "Unless it is told to query a specific name server, dig tries each of the servers listed in /etc/resolv.conf." / "The search list is not used by default." |
+| C74 | `dig` asks the servers of `resolv.conf`; no search list by default; `+search` turns it on. | S33 | "Unless it is told to query a specific name server, dig tries each of the servers listed in /etc/resolv.conf." |
+| C74-b | `dig` asks the servers of `resolv (continued) | S33 | "The search list is not used by default." |
 
 Inference: `dig` can disagree with `getent` because `dig` is "a flexible tool for interrogating DNS name servers" (S33) and does not read `/etc/hosts`, while `getent hosts` follows `nsswitch.conf` (C64, C67). The `dig` page does not state "dig ignores /etc/hosts" in those words. `resolvectl query` resolves names (S28: "Resolve domain names, as well as IPv4 and IPv6 addresses."). The TTL advice in the tip rests on S13: "If a change can be anticipated, the TTL can be reduced prior to the change to minimize inconsistency".
 
@@ -219,7 +227,8 @@ Inference: `dig` can disagree with `getent` because `dig` is "a flexible tool fo
 | C83 | A closed TCP port gets a reset. | S4 | "An incoming segment not containing a RST causes a RST to be sent in response." (state CLOSED) |
 | C84 | If TCP cannot get through, it retries and then reports `ETIMEDOUT`. | S23 | "When a network error occurs, TCP tries to resend the packet. If it doesn't succeed after some time, either ETIMEDOUT or the last received error" |
 | C85 | The fragmentation-needed message supports path MTU discovery. | S21 | "The limit does not affect sending of ICMP_FRAG_NEEDED packets needed for path MTU discovery." |
-| C86 | TTL: each router lowers it, the packet is dropped at zero. | S15 | "as this field is decremented at each machine in which the datagram is processed" / "finds the time to live field is zero it must discard the datagram." |
+| C86 | TTL: each router lowers it, the packet is dropped at zero. | S15 | "as this field is decremented at each machine in which the datagram is processed" |
+| C86-b | TTL: each router lowers it, the packet is dropped at zero (continued) | S15 | "finds the time to live field is zero it must discard the datagram." |
 
 Statements without a cite: TTL gloss "a counter in the IP header" (C86); an echo reply proves only that IP works up to the host (follows from C78 and C77).
 
@@ -250,10 +259,14 @@ Conflicts between sources: the scp(1) manual says that `scp` now uses the SFTP p
 | C87 | `ping` sends ICMP echo requests and waits for echo replies. | S42 | "ping uses the ICMP protocol's mandatory ECHO_REQUEST datagram to elicit an ICMP ECHO_RESPONSE from a host or gateway." |
 | C88 | Each reply prints the TTL. The summary has loss and min/avg/max/mdev of the round-trip time. | S42 | "In normal operation ping prints the TTL value from the packet it receives." / "Round-trip times and packet loss statistics are computed." / "minimum/average/maximum/mdev round-trip time numbers" |
 | C89 | The page describes the Linux iputils `ping`. | S42 | "The version described here is its descendant specific to Linux." / "ping is part of iputils package." |
-| C90 | Options `-c`, `-W`, `-w`, `-i` (below 2 ms: root), `-n`. | S42 | "Stop after sending count ECHO_REQUEST packets." / "Time to wait for a response, in seconds." / "Specify a timeout, in seconds, before ping exits regardless of how many packets have been sent or received." / "Only super-user may set interval to values less than 2 ms." / "Numeric output only." |
-| C91 | Exit status 0, 1, 2. | S42 | "If ping does not receive any reply packets at all it will exit with code 1." / "On other error it exits with code 2. Otherwise it exits with code 0." |
+| C90 | Options `-c`, `-W`, `-w`, `-i` (below 2 ms: root), `-n`. | S42 | "Stop after sending count ECHO_REQUEST packets." / "Time to wait for a response, in seconds." |
+| C90-b | Options `-c`, `-W`, `-w`, `-i` (below 2 ms: root), `-n` (continued) | S42 | "Specify a timeout, in seconds, before ping exits regardless of how many packets have been sent or received." |
+| C90-c | Options `-c`, `-W`, `-w`, `-i` (below 2 ms: root), `-n` (continued) | S42 | "Only super-user may set interval to values less than 2 ms." / "Numeric output only." |
+| C91 | Exit status 0, 1, 2. | S42 | "If ping does not receive any reply packets at all it will exit with code 1." |
+| C91-b | Exit status 0, 1, 2 (continued) | S42 | "On other error it exits with code 2. Otherwise it exits with code 0." |
 | C92 | `CAP_NET_RAW` is needed if the user may not create an ICMP echo socket. | S42 | "ping requires CAP_NET_RAW capability to be executed" ... "if the user is not allowed to create an ICMP echo socket." |
-| C93 | The manual calls `ping` in automated scripts unwise because of the load. Flood mode is not recommended. | S42 | "Because of the load it can impose on the network, it is unwise to use ping during normal operations or from automated scripts." / "Flood pinging is not recommended in general" |
+| C93 | The manual calls `ping` in automated scripts unwise because of the load. Flood mode is not recommended. | S42 | "Because of the load it can impose on the network, it is unwise to use ping during normal operations or from automated scripts." |
+| C93-b | The manual calls `ping` in automated scripts unwise because of the load (continued) | S42 | "Flood pinging is not recommended in general" |
 
 Statements without a cite: "an echo request is a small test message that asks a host to answer" (gloss); "a locked-down container can fail for this reason" (inference from C92; hedged with "can"); the reply-line sequence number is from the local run (`icmp_seq=1`). The sample line in the code block is real output of `ping -c 3 127.0.0.1` on the test machine. The CI advice is the tutorial's own.
 
@@ -261,9 +274,11 @@ Statements without a cite: "an echo request is a small test message that asks a 
 | # | Claim | Source | Quote (≤25 words) |
 |---|---|---|---|
 | C94 | `traceroute` uses the TTL field to elicit ICMP time exceeded from each gateway. | S43 | "It utilizes the IP protocol's time to live (TTL) field and attempts to elicit an ICMP TIME_EXCEEDED response from each gateway" |
-| C95 | TTL starts at 1 and grows by 1. Max 30 hops by default. 3 probes per hop by default. `*` for no reply. | S43 | "We start our probes with a ttl of one and increase by one" / "which defaults to 30 hops" / "Three probes (by default) are sent at each ttl setting" / "an "*" (asterisk) is printed for that probe." |
+| C95 | TTL starts at 1 and grows by 1. Max 30 hops by default. 3 probes per hop by default. `*` for no reply. | S43 | "We start our probes with a ttl of one and increase by one" / "which defaults to 30 hops" |
+| C95-b | TTL starts at 1 and grows by 1 (continued) | S43 | "Three probes (by default) are sent at each ttl setting" / "an "*" (asterisk) is printed for that probe." |
 | C96 | Default probes: UDP to unlikely ports from 33434; unprivileged users may use them. | S43 | "The "unlikely" port of the first probe is 33434" / "This method is allowed for unprivileged users." |
-| C97 | Firewalls filter the UDP ports and ICMP echo. `-I` ICMP echo, `-T` TCP SYN, `-p` port. | S43 | "Such firewalls filter the "unlikely" UDP ports, or even ICMP echoes." / "-I, --icmp Use ICMP ECHO for probes" / "-T, --tcp Use TCP SYN for probes" / "For TCP and others specifies just the (constant) destination port to connect." |
+| C97 | Firewalls filter the UDP ports and ICMP echo. `-I` ICMP echo, `-T` TCP SYN, `-p` port. | S43 | "Such firewalls filter the "unlikely" UDP ports, or even ICMP echoes." / "-I, --icmp Use ICMP ECHO for probes" / "-T, --tcp Use TCP SYN for probes" |
+| C97-b | Firewalls filter the UDP ports and ICMP echo (continued) | S43 | "For TCP and others specifies just the (constant) destination port to connect." |
 | C98 | `-n` skips name lookups. `-m` sets the maximum hops. | S43 | "Do not try to map IP addresses to host names when displaying them." / "Specifies the maximum number of hops (max time-to-live value) traceroute will probe." |
 | C99 | Routers can rate-limit ICMP, so a star is not always a fault. | S43 | "Note that some routers and hosts can use ICMP rate throttling." / "Useful when some routers use rate-limit for ICMP messages." |
 | C100 | `-T -p PORT` can reach a host when `-I` cannot. | S43 | "If we trace for some, say, mailserver, then more likely -T -p 25 can reach it, even when -I can not." |
@@ -274,12 +289,14 @@ Statements without a cite: a hop is one router (gloss; "gateway along the path" 
 | # | Claim | Source | Quote (≤25 words) |
 |---|---|---|---|
 | C101 | `netstat` prints connections, routing tables, interface statistics; it is part of net-tools. | S44 | "netstat - print network connections, routing tables, interface statistics, masquerade connections, and multicast memberships" / footer "net-tools" |
-| C102 | The manual calls it mostly obsolete and names the replacements. | S44 | "This program is mostly obsolete. Replacement for netstat is ss." / "Replacement for netstat -r is ip route. Replacement for netstat -i is ip -s link." / "Replacement for netstat -g is ip maddr." |
+| C102 | The manual calls it mostly obsolete and names the replacements. | S44 | "This program is mostly obsolete. Replacement for netstat is ss." / "Replacement for netstat -r is ip route. Replacement for netstat -i is ip -s link." |
+| C102-b | The manual calls it mostly obsolete and names the replacements (continued) | S44 | "Replacement for netstat -g is ip maddr." |
 | C103 | `netstat -l` listening only. `-n` numbers. (`-t`, `-u` select TCP and UDP.) | S44 | "--listening, -l Show only listening sockets." / "--numeric, -n Show numerical addresses instead of trying to determine symbolic host, port or user names." |
 | C104 | Without `-n`, `netstat` resolves addresses and ports to names. | S44 | "Unless the --numeric (-n) option is specified, the socket address is resolved to its canonical host name (FQDN)" |
-| C105 | `-p` shows PID and program. Other users' sockets need superuser. | S44 | "--program Show the PID and name of the program (this is not trustworthy) to which each socket belongs." / "You will also need superuser privileges to see this information on sockets you don't own." |
+| C105 | `-p` shows PID and program. Other users' sockets need superuser. | S44 | "--program Show the PID and name of the program (this is not trustworthy) to which each socket belongs." |
+| C105-b | `-p` shows PID and program (continued) | S44 | "You will also need superuser privileges to see this information on sockets you don't own." |
 | C106 | State `LISTEN` and `TIME_WAIT`. | S44 | "LISTEN The socket is listening for incoming connections." / "TIME_WAIT The socket is waiting after close to handle packets still in the network." |
-| C107 | `ss` has `-t`, `-u`, `-l`, `-n` (see C18) and the filter `sport = :PORT`. | S30 | "-t, --tcp Display TCP sockets." / "{dport|sport} [OP] [FAMILY:]:PORT" / example "ss -o state established '( dport = :ssh or sport = :ssh )'" |
+| C107 | `ss` has `-t`, `-u`, `-l`, `-n` (see C18) and the filter `sport = :PORT`. | S30 | "-t, --tcp Display TCP sockets." / "{dport\|sport} [OP] [FAMILY:]:PORT" / example "ss -o state established '( dport = :ssh or sport = :ssh )'" |
 
 Statements without a cite: a socket is one end of a connection (gloss, as in topic 1); "a minimal container can have neither tool" (hedged; `ss` is part of iproute2 (S30), which a minimal image may omit, and `netstat` is not installed on the test machine). `ss -p` shows the processes of the own user only: local observation (the Process column was empty for sockets of other users). The code-block example runs a local Python server on 127.0.0.1:18080; I ran it and `ss -tlnp 'sport = :18080'` showed the listener. The tip (check the port before and after a run) is the tutorial's own advice.
 
@@ -288,17 +305,22 @@ Statements without a cite: a socket is one end of a connection (gloss, as in top
 |---|---|---|---|
 | C108 | Netfilter hooks let kernel modules register callbacks in the network stack. | S45 | "The netfilter hooks are a framework inside the Linux kernel that allows kernel modules to register callback functions" |
 | C109 | `iptables` and its successor `nftables`. | S45 | "iptables is a generic firewalling software that allows you to define rulesets." / "nftables is the successor of iptables" |
-| C110 | Tables hold chains. A chain is a list of rules. A rule has criteria and a target (`ACCEPT`, `DROP`). | S48 | "Each table contains a number of built-in chains and may also contain user-defined chains." / "Each chain is a list of rules which can match a set of packets." / "A firewall rule specifies criteria for a packet and a target." / "ACCEPT means to let the packet through. DROP means to drop the packet on the floor." |
+| C110 | Tables hold chains. A chain is a list of rules. A rule has criteria and a target (`ACCEPT`, `DROP`). | S48 | "Each table contains a number of built-in chains and may also contain user-defined chains." |
+| C110-b | Tables hold chains (continued) | S48 | "Each chain is a list of rules which can match a set of packets." / "A firewall rule specifies criteria for a packet and a target." |
+| C110-c | Tables hold chains (continued) | S48 | "ACCEPT means to let the packet through. DROP means to drop the packet on the floor." |
 | C111 | If no rule decides, the chain policy decides; policy is ACCEPT or DROP. | S48 | "the target specified by the chain policy determines the fate of the packet." / "The policy target must be either ACCEPT or DROP." |
-| C112 | `nft` is the new tool with a different syntax. No predefined tables or chains. Family `inet` sees IPv4 and IPv6. | S46 | "It comes with a new command line utility nft whose syntax is different to iptables." / "With nftables there are no pre-defined tables or chains." / "the new inet family that allows you to register base chains that see both IPv4 and IPv6 traffic" |
-| C113 | The `iptables` command can be a front end to nftables; the version string says so. | S50 | "xtables-nft are versions of iptables that use the nftables API." / "The iptables version string will indicate whether the legacy API (get/setsockopt) or the new nf_tables api is used" / "iptables v1.7 (nf_tables)" |
+| C112 | `nft` is the new tool with a different syntax. No predefined tables or chains. Family `inet` sees IPv4 and IPv6. | S46 | "It comes with a new command line utility nft whose syntax is different to iptables." / "With nftables there are no pre-defined tables or chains." |
+| C112-b | `nft` is the new tool with a different syntax (continued) | S46 | "the new inet family that allows you to register base chains that see both IPv4 and IPv6 traffic" |
+| C113 | The `iptables` command can be a front end to nftables; the version string says so. | S50 | "xtables-nft are versions of iptables that use the nftables API." |
+| C113-b | The `iptables` command can be a front end to nftables; the version string says so (continued) | S50 | "The iptables version string will indicate whether the legacy API (get/setsockopt) or the new nf_tables api is used" / "iptables v1.7 (nf_tables)" |
 | C114 | `iptables -F` flushes (deletes) rules. | S48 | "Flush the selected chain (all the chains in the table if none is given). This is equivalent to deleting all the rules one by one." |
 | C115 | `nft flush ruleset` removes all tables. | S47 | "Clear the whole ruleset. Note that, unlike iptables, this will remove all tables and whatever they contain" |
-| C116 | `iptables-save` dumps rules to stdout or a file. `nft list ruleset` output can be input to `nft -f`. | S49, S47 | "used to dump the contents of IP or IPv6 Table in easily parseable format either to STDOUT or to a specified file" / "By design, list ruleset command output may be used as input to nft -f." |
+| C116 | `iptables-save` dumps rules to stdout or a file. `nft list ruleset` output can be input to `nft -f`. | S49, S47 | "used to dump the contents of IP or IPv6 Table in easily parseable format either to STDOUT or to a specified file" |
+| C116-b | `iptables-save` dumps rules to stdout or a file (continued) | S49, S47 | "By design, list ruleset command output may be used as input to nft -f." |
 | C117 | `nft -c` checks a file and applies nothing. | S47 | "Check commands validity without actually applying the changes." |
 | C118 | A namespace has its own firewall rules (C8). | S36 | "Network namespaces provide isolation of the system resources associated with networking" ... "firewall rules" |
 | C119 | The ruleset is what is "in place in kernel". | S47 | "The ruleset keyword is used to identify the whole set of tables, chains, etc. currently in place in kernel." |
-| C120 | A drop policy needs an accept rule, or all packets drop (nft). | S47 | "if any base chain uses drop as its policy, the same base chain ... must contain at least one matching accept rule or the packet will be dropped." |
+| C120 | A drop policy needs an accept rule, or all packets drop (nft). | S47 | "the same base chain ... must contain at least one matching accept rule or the packet will be dropped." |
 
 Statements without a cite: a firewall is a set of rules that accepts or drops packets (gloss); "a DROP policy without an SSH accept rule cuts your own session" follows from C111 and C120; "rules live in kernel memory, so a reboot can remove unsaved rules" is the tutorial's own warning, based on C119 (the manuals fetched do not describe boot-time loading, which differs by distribution; the page does not describe it). I could not run `iptables -S`, `iptables -L`, or any `nft` command (root); `iptables -V` ran. The man7.org page of nft(8) gave 404, so S47 is the netfilter.org page. On "on some hosts": the test machine shows `iptables v1.8.11 (nf_tables)`, and S50 describes the mechanism. The `-F` and `flush ruleset` sentence does not say that the two commands do the same: C114 and C115 differ (see the nft manual: "unlike iptables").
 
@@ -307,10 +329,14 @@ Statements without a cite: a firewall is a set of rules that accepts or drops pa
 |---|---|---|---|
 | C121 | `tcpdump` prints packets that match an expression (pcap-filter syntax). `-w` saves, `-r` reads. | S51 | "tcpdump prints out a description of the contents of packets on a network interface that match the Boolean expression" |
 | C122 | Reading live packets can need special privileges. Reading a file does not. | S51 | "Reading packets from a network interface may require that you have special privileges" / "Reading a saved packet file doesn't require special privileges." |
-| C123 | `-i` (`any` = all interfaces), `-c`, `-n`, `-w`, `-r`. | S51 | "an interface argument of ``any'' means a special pseudo-interface, which captures packets from all regular network interfaces" / "Exit after receiving or reading count packets." / "Don't convert addresses (i.e., host addresses, port numbers, etc.) to names." / "Write the raw packets to file rather than parsing and printing them out." / "Read packets from file" |
+| C123 | `-i` (`any` = all interfaces), `-c`, `-n`, `-w`, `-r`. | S51 | "an interface argument of ``any'' means a special pseudo-interface, which captures packets from all regular network interfaces" / "Exit after receiving or reading count packets." |
+| C123-b | `-i` (`any` = all interfaces), `-c`, `-n`, `-w`, `-r` (continued) | S51 | "Don't convert addresses (i.e., host addresses, port numbers, etc.) to names." / "Write the raw packets to file rather than parsing and printing them out." |
+| C123-c | `-i` (`any` = all interfaces), `-c`, `-n`, `-w`, `-r` (continued) | S51 | "Read packets from file" |
 | C124 | pcap file: files written with `-w`; extension `.pcap`. | S51 | "The filename extension .pcap appears to be the most commonly used along with .cap and .dmp." |
-| C125 | Filters use primitives (`host`, `port`, `tcp`) joined by `and`, `or`, `not`. | S52 | "More complex filter expressions are built up by using the words and, or and not" / "Possible types are host, net, proto, port, portrange, protochain and gateway." |
-| C126 | `tshark -f` capture filter (pcap syntax); `-Y` display filter; capture filters are more efficient. | S53 | "The -f option is used to specify a capture filter." / "a display filter is specified with the -Y option." / "capture filters are much more efficient than display filters" |
+| C125 | Filters use primitives (`host`, `port`, `tcp`) joined by `and`, `or`, `not`. | S52 | "More complex filter expressions are built up by using the words and, or and not" |
+| C125-b | Filters use primitives (`host`, `port`, `tcp`) joined by `and`, `or`, `not` (continued) | S52 | "Possible types are host, net, proto, port, portrange, protochain and gateway." |
+| C126 | `tshark -f` capture filter (pcap syntax); `-Y` display filter; capture filters are more efficient. | S53 | "The -f option is used to specify a capture filter." / "a display filter is specified with the -Y option." |
+| C126-b | `tshark -f` capture filter (pcap syntax); `-Y` display filter; capture filters are more efficient (continued) | S53 | "capture filters are much more efficient than display filters" |
 | C127 | The Wireshark guide lists QA engineers as users. | S54 | "QA engineers use it to verify network applications" |
 | C128 | `-A` and `-X` print the payload. | S51 | "Print each packet (minus its link level header) in ASCII." / "print the data of each packet (minus its link level header) in hex and ASCII" |
 
@@ -319,36 +345,47 @@ Statements without a cite: "a packet capture is a copy of the packets that pass 
 ## Topic 14: SSH
 | # | Claim | Source | Quote (≤25 words) |
 |---|---|---|---|
-| C129 | `ssh` logs in and runs commands on a remote machine over an encrypted channel. | S55 | "ssh (SSH client) is a program for logging into a remote machine and for executing commands on a remote machine." / "secure encrypted communications between two untrusted hosts" |
+| C129 | `ssh` logs in and runs commands on a remote machine over an encrypted channel. | S55 | "ssh (SSH client) is a program for logging into a remote machine and for executing commands on a remote machine." |
+| C129-b | `ssh` logs in and runs commands on a remote machine over an encrypted channel (continued) | S55 | "secure encrypted communications between two untrusted hosts" |
 | C130 | `sshd` is the OpenSSH daemon; default port 22. | S57 | "sshd_config — OpenSSH daemon configuration file" / "Specifies the port number that sshd(8) listens on. The default is 22." |
-| C131 | Key pair: the server knows the public key; only the user knows the private key. `authorized_keys` lists the allowed public keys. | S55 | "The server knows the public key, and only the user knows the private key." / "The file ~/.ssh/authorized_keys lists the public keys that are permitted for logging in." |
-| C132 | `ssh-keygen` makes Ed25519 keys by default. | S58 | "If invoked without any arguments, ssh-keygen will generate an Ed25519 key." |
+| C131 | Key pair: the server knows the public key; only the user knows the private key. `authorized_keys` lists the allowed public keys. | S55 | "The server knows the public key, and only the user knows the private key." |
+| C131-b | Key pair: the server knows the public key; only the user knows the private key (continued) | S55 | "The file ~/.ssh/authorized_keys lists the public keys that are permitted for logging in." |
+| C132 | `ssh-keygen` makes Ed25519 keys by default; the default changed in OpenSSH 9.5 (before: RSA). | S58, S66 | "If invoked without any arguments, ssh-keygen will generate an Ed25519 key." / S66: "ssh-keygen(1): generate Ed25519 keys by default." |
 | C133 | `ssh` ignores a private key that others can access (mode 0600 is the usual mode). | S55 | "ssh will simply ignore a private key file if it is accessible by others." |
 | C134 | Host keys are stored in `~/.ssh/known_hosts`. A changed key gives a warning and disables password login. | S55 | "Host keys are stored in ~/.ssh/known_hosts in the user's home directory." / "If a host's identification ever changes, ssh warns about this and disables password authentication" |
-| C135 | `StrictHostKeyChecking`: `accept-new` adds new keys and refuses changed keys. `no` lets changed keys pass. | S56 | "If this flag is set to accept-new then ssh will automatically add new host keys to the user's known_hosts file, but will not permit connections to hosts with changed host keys." / "If this flag is set to no or off, ssh will automatically add new host keys" |
+| C135 | `StrictHostKeyChecking`: `accept-new` adds new keys and refuses changed keys. `no` lets changed keys pass, subject to some restrictions. | S56 | "accept-new then ssh will automatically add new host keys to the user's known_hosts file, but will not permit connections to hosts with changed host keys" |
+| C135-b | `StrictHostKeyChecking`: `accept-new` adds new keys and refuses changed keys (continued) | S56 | "allow connections to hosts with changed hostkeys to proceed, subject to some restrictions" |
 | C136 | `StrictHostKeyChecking yes` gives maximum protection against MITM. | S56 | "This provides maximum protection against man-in-the-middle (MITM) attacks" |
-| C137 | `UserKnownHostsFile` names the user host key database. | S56 | "Specifies one or more files to use for the user host key database" |
+| C137 | `UserKnownHostsFile` names the user host key database; `none` ignores user files. `/dev/null` is an inference (empty database); the system file is still read. | S56 | "Specifies one or more files to use for the user host key database" |
 | C138 | Agent forwarding: users who bypass file permissions on the remote host can use the agent. | S55 | "Agent forwarding should be enabled with caution. Users with the ability to bypass file permissions on the remote host" |
 | C139 | `PasswordAuthentication` default is yes. | S57 | "Specifies whether password authentication is allowed. The default is yes." |
-| C140 | `BatchMode=yes` turns off prompts. `ConnectTimeout` is the connect timeout in seconds. | S56 | "If set to yes, user interaction such as password prompts and host key confirmation requests will be disabled." / "Specifies the timeout (in seconds) used when connecting to the SSH server" |
-| C141 | Code block options: `-G` prints the configuration and exits; `-i` file; `-p` port. | S55 | "Causes ssh to print its configuration after evaluating Host and Match blocks and exit." / "-i identity_file" / "-p port Port to connect to on the remote host." |
+| C140 | `BatchMode=yes` turns off prompts. `ConnectTimeout` is the connect timeout in seconds. | S56 | "If set to yes, user interaction such as password prompts and host key confirmation requests will be disabled." |
+| C140-b | `BatchMode=yes` turns off prompts (continued) | S56 | "Specifies the timeout (in seconds) used when connecting to the SSH server" |
+| C141 | Code block options: `-G` prints the configuration and exits; `-i` file; `-p` port. | S55 | "Causes ssh to print its configuration after evaluating Host and Match blocks and exit." / "-i identity_file" |
+| C141-b | Code block options: `-G` prints the configuration and exits; `-i` file; `-p` port (continued) | S55 | "-p port Port to connect to on the remote host." |
 
 Statements without a cite: "a key pair is a private key and a public key", "a host key identifies a server" and "a daemon is a background service" (glosses); `UserKnownHostsFile` set to `/dev/null` "throws the known keys away" is an inference from C137 (an empty database), a common idiom that the manual does not state; "man-in-the-middle, an attacker in the path" is a gloss. The tip (one key pair per pipeline, secret store, host key first) is the tutorial's own advice. I dropped the exit status 255 sentence for length (ssh(1) EXIT STATUS: "ssh exits with the exit status of the remote command or with 255 if an error occurred."). Local runs: see the local checks (`ssh-keygen`, `ssh -G`, mode 600). The login line is a comment and was not run.
 
 ## Topic 15: File Transfer
 | # | Claim | Source | Quote (≤25 words) |
 |---|---|---|---|
-| C142 | `scp` and `sftp` run over ssh. | S59, S60 | "scp uses the SFTP protocol over an ssh(1) connection for data transfer" / "sftp is a file transfer program ... which performs all operations over an encrypted ssh(1) transport." |
-| C143 | `rsync` uses ssh by default and sends only the differences. | S62 | "For remote transfers, rsync normally uses ssh for its communications." / "the rsync remote-update protocol is used to update the file by sending only the differences in the data." |
+| C142 | `scp` and `sftp` run over ssh. | S59, S60 | "scp uses the SFTP protocol over an ssh(1) connection for data transfer" |
+| C142-b | `scp` and `sftp` run over ssh (continued) | S59, S60 | "sftp is a file transfer program ... which performs all operations over an encrypted ssh(1) transport." |
+| C143 | `rsync` uses ssh by default and sends only the differences. | S62 | "For remote transfers, rsync normally uses ssh for its communications." |
+| C143-b | `rsync` uses ssh by default and sends only the differences (continued) | S62 | "the rsync remote-update protocol is used to update the file by sending only the differences in the data." |
 | C144 | `curl` and `wget` support HTTP, HTTPS, FTP. | S63, S64 | "It supports these protocols: DICT, FILE, FTP, FTPS, GOPHER, GOPHERS, HTTP, HTTPS" / "It supports HTTP, HTTPS, and FTP protocols" |
-| C145 | Since OpenSSH 9.0 `scp` uses SFTP. `-O` selects the old protocol. `-P` is the port. | S59 | "Since OpenSSH 9.0, scp has used the SFTP protocol for transfers by default." / "Use the legacy SCP protocol for file transfers instead of the SFTP protocol." / "-P port Specifies the port to connect to on the remote host." |
+| C145 | Since OpenSSH 9.0 `scp` uses SFTP. `-O` selects the old protocol. `-P` is the port. | S59 | "Since OpenSSH 9.0, scp has used the SFTP protocol for transfers by default." |
+| C145-b | Since OpenSSH 9 (continued) | S59 | "Use the legacy SCP protocol for file transfers instead of the SFTP protocol." / "-P port Specifies the port to connect to on the remote host." |
+| C145-c | Since OpenSSH 9.0 `scp` uses SFTP (the version) | S67 | "This release switches scp(1) from using the legacy scp/rcp protocol to using the SFTP protocol by default." |
 | C146 | The OpenSSH 8.0 notes call the scp protocol outdated and recommend sftp and rsync. | S61 | "The scp protocol is outdated, inflexible and not readily fixed. We recommend the use of more modern protocols like sftp and rsync" |
 | C147 | FTPS adds TLS to FTP. | S65 | "describes a mechanism that can be used by FTP clients and servers to implement security and authentication using the TLS protocol" |
-| C148 | `rsync -a` keeps symlinks, attributes, permissions, owners. `-n` is a dry run. | S62 | "archive mode, which ensures that symbolic links, devices, attributes, permissions, ownerships, etc. are preserved in the transfer." / "This makes rsync perform a trial run that doesn't make any changes" |
+| C148 | `rsync -a` keeps symlinks, attributes, permissions, owners. `-n` is a dry run. | S62 | "archive mode, which ensures that symbolic links, devices, attributes, permissions, ownerships, etc. are preserved in the transfer." |
+| C148-b | `rsync -a` keeps symlinks, attributes, permissions, owners (continued) | S62 | "This makes rsync perform a trial run that doesn't make any changes" |
 | C149 | A trailing slash on the source copies the contents. | S62 | "You can think of a trailing / on a source as meaning "copy the contents of this directory" as opposed to "copy the directory by name"" |
 | C150 | `curl -f` fails with exit 22 on HTTP codes of 400 or more. | S63 | "Fail with error code 22 and with no response body output at all for HTTP transfers returning HTTP response codes at 400 or greater." |
 | C151 | `wget -c` resumes a partial download. | S64 | "Continue getting a partially-downloaded file." |
-| C152 | `rsync --delete` deletes destination files that the source lacks. The manual advises a dry run. | S62 | "This tells rsync to delete extraneous files from the receiving side (those that don't exist on the sending side)" / "It is a very good idea to first try a run using the --dry-run (-n) option" |
+| C152 | `rsync --delete` deletes destination files that the source lacks. The manual advises a dry run. | S62 | "This tells rsync to delete extraneous files from the receiving side (those that don't exist on the sending side)" |
+| C152-b | `rsync --delete` deletes destination files that the source lacks (continued) | S62 | "It is a very good idea to first try a run using the --dry-run (-n) option" |
 | C153 | `curl -k` skips certificate checks. | S63 | "This option makes curl skip the verification step and proceed without checking." |
 | C154 | `sftp -a` resume: a differing partial file is likely corrupt. | S60 | "If the partial contents differ from those being transferred, then the resultant file is likely to be corrupt." |
 | C155 | `rsync -c` compares checksums, not time and size. | S62 | "--checksum, -c skip based on checksum, not mod-time & size" |
@@ -356,3 +393,24 @@ Statements without a cite: "a key pair is a private key and a public key", "a ho
 Statements without a cite: "SFTP is a different protocol, which runs over ssh" (C142; S60 describes sftp as an ssh transport program, and RFC 4217 describes FTPS: the page states the difference in its own words). The tip (`curl -fsS` so that a 404 fails a job) is the tutorial's own advice and rests on C150 (local run: exit 22 for a 404). The code-block examples: the `rsync -avn` and `rsync -ai` lines ran in a temporary directory (see the local checks); the remote lines are comments and were not run. The code line `curl -fsS -o out.txt http://127.0.0.1:18080/a.txt` was run against a local server; `-s` and `-S` are explained in the curl manual ("--silent", "--show-error"), and the page does not explain them in the prose.
 
 Part B totals: sources S42–S65 (24 new, 65 in all); claims C87–C155 (69 new, 155 in all; claims with a gloss or an inference are marked above).
+
+## Fix round 1 (whole page, topics 1–15)
+
+Two fact-checkers found 35 FAILs (`linux-networking.factcheck.md`). Changes of the notes: S7 has its real RFC title, S38 its real page title, S66 and S67 are new (OpenSSH 9.5 and 9.0 release notes, fetched with `scripts/linux_fetch.py` into the part B directory as `105.txt` and `106.txt`). Every claim row has at most 25 words of quote: a row with more quote words is split into rows with the suffix `-b`, `-c`; the pipes in the syntax lines of C38, C50, and C107 are escaped. C54 now names `nmcli connection show` (the DHCP4 text of the nmcli manual is under that command). Rows C1, C2, C16, C22, C30, C52, C58, C120, C132, C135, C137, and C145 follow the new wording of the page. New claims:
+
+| # | Claim | Source | Quote (≤25 words) |
+|---|---|---|---|
+| C156 | `net.ipv4.ip_unprivileged_port_start` sets the first unprivileged port (default 1024); a sysctl is a kernel setting. | S34 | "It defines the first unprivileged port in the network namespace." / "Default: 1024" |
+| C157 | `ip route` fields: `dev` is the output device, `src` the preferred source address, a lower `metric` is preferred, `scope link` is for direct routes. | S18 | "the output device name." / "the source address to prefer when sending to the destinations covered by the route prefix." / "routes with lower values are preferred." |
+| C158 | `scope link` is the default scope of direct unicast routes. | S18 | "scope link for direct unicast and broadcast routes" |
+| C159 | A DHCP lease is for a fixed period that may be infinite. | S12 | "A client acquires a lease for a network address for a fixed period of time (which may be infinite)." |
+| C160 | The `proto` value is a tag; the administrator may use other tags. | S18 | "the administrator is free to assign (or not to assign) protocol tags." |
+| C161 | The `hosts` database is used by `gethostbyname(3)` and related functions, so programs that call them use the Name Service Switch. | S25 | "Host names and numbers, used by gethostbyname(3) and related functions." |
+| C162 | `nmcli -f DHCP4 connection show NAME` (see C54). | S31 | "For active data use GENERAL, IP4, DHCP4, IP6, DHCP6, VPN." |
+| C163 | `-T` of `traceroute`: S43 names the default method as allowed for unprivileged users and gives no such rule for TCP. | S43 | "This method is allowed for unprivileged users." (the default method) |
+| C164 | OpenSSH 9.5 made Ed25519 the default key type of `ssh-keygen` (see C132). | S66 | "ssh-keygen(1): generate Ed25519 keys by default." |
+| C165 | `StrictHostKeyChecking=no` lets a changed key pass "subject to some restrictions", and known hosts are still verified. | S56 | "The host keys of known hosts will be verified automatically in all cases." |
+| C166 | Chain policy is only for built-in chains. | S48 | "Set the policy for the built-in (non-user-defined) chain to the given target." |
+| C167 | `iptables-save` and `nft list ruleset` print rules; a redirect writes them to a file. | S49, S47 | "dump the contents of IP or IPv6 Table in easily parseable format either to STDOUT or to a specified file" |
+
+Statements without a cite (fix round 1): the package advice of topic 1 ("install them with the package manager"; `iproute2` for Debian and Ubuntu, `iproute` for RHEL) is the tutorial's own advice and is marked so in the page; the minimal-image remark is said once in topic 1 for the whole page. "Plan to use root" for `traceroute -T` is the tutorial's own advice (C163: the manual gives no unprivileged mode for TCP). "`/dev/null` makes ssh ignore saved keys" is marked "tutorial's own note" (the manual names `none`; the system known_hosts file is still read). The danger callouts (routing, DHCP, scanning, capture, firewall) say "Tutorial's own advice" or "warning". The legal sentence about scanning was removed.
