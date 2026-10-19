@@ -24,6 +24,7 @@ S18. Linux path environment variable — LinuxConfig — https://linuxconfig.org
 S19. Linux Directory Structure Explained for Beginners — Linux Handbook — https://linuxhandbook.com/linux-directory-structure/ — accessed 2026-10-16 (roadmap #260)
 S20. Linux Environment Variables List, Set, Create & Remove — Computer Networking Notes — https://www.computernetworkingnotes.com/linux-tutorials/linux-environment-variables-list-set-create-remove.html — accessed 2026-10-16 (roadmap #076)
 S21. How to Set and List Environment Variables in Linux — Linuxize — https://linuxize.com/post/how-to-set-and-list-environment-variables-in-linux/ — accessed 2026-10-16 (roadmap #077)
+S22. journalctl(1) - Print log entries from the systemd journal — man7.org (systemd) — https://man7.org/linux/man-pages/man1/journalctl.1.html — accessed 2026-10-16 (added in review fix round 1)
 
 Not usable as sources (no text): #203 Learn Linux Easily and #143 Practice on Linux Fundamentals (linuxjourney.com, status `robots`); #029 Get Help on Linux Commands, #075 Environment Variables in Linux (labex.io, `http-403`); #032 How to find a path of a Linux command (cyberciti.biz, `http-403`); #261 Overview of File System Hierarchy Standard (access.redhat.com, `robots`).
 Further reading (title only, not cited): #144 Linux for Noobs (labex.io course); #145 Terminal Introduction (webterm.app course); #146 Linux fundamentals (TryHackMe video); #262 The Linux File System Explained in 1,233 Seconds (video). The page of #117 (DigitalOcean) returned only a site footer, so it is not used.
@@ -104,7 +105,7 @@ Note: S16 says there is no man page for shell builtins. The page does not repeat
 | # | Claim | Source | Quote |
 |---|---|---|---|
 | 46 | Everything sits under `/`; absolute paths go through the root. | S19 | "Since all other directories or files are descended from root, the absolute path of any file is traversed through root." |
-| 47 | The FHS defines the structure and purpose of the directories. | S19 | "the Linux Foundation maintains a Filesystem Hierarchy Standard (FHS). This FHS defines the directory structure and the content/purpose of the directories" |
+| 47 | The FHS defines the structure and purpose of the directories. | S19, S10 (S10 lists a Purpose section for each directory of chapter 3, for example "3.4. /bin : Essential user command binaries" with "3.4.1. Purpose") | "the Linux Foundation maintains a Filesystem Hierarchy Standard (FHS). This FHS defines the directory structure and the content/purpose of the directories" |
 | 48 | Root filesystem must allow boot and repair. | S10 | "The contents of the root filesystem must be adequate to boot, restore, recover, and/or repair the system." |
 | 49 | `/etc` | S6 | "Contains configuration files which are local to the machine." |
 | 50 | `/home` | S6 | "On machines with home directories for users, these are usually beneath this directory" |
@@ -136,3 +137,19 @@ Note: S16 says there is no man page for shell builtins. The page does not repeat
 Local check: in bash, `X=1; bash -c 'echo "[$X]"'` printed `[]`; after `export X` it printed `[1]`. `env -i HOME=/tmp printenv` printed `HOME=/tmp`.
 
 Each Callout starts with "Tutorial's own advice:". It gives a suggestion, not a sourced fact. A sourced fact in a Callout has a `<Cite>`.
+
+## Added in review fix round 1 (2026-10-16)
+| # | Claim | Source | Quote |
+|---|---|---|---|
+| 71 | A login shell is the shell that starts when you log in; bash reads only the first of `~/.bash_profile`, `~/.bash_login`, `~/.profile` that exists. | S1 | "A login shell is one whose first character of argument zero is a -, or one started with the --login option." and "reads and executes commands from the first one that exists and is readable" |
+| 72 | A script run with `bash script.sh` is non-interactive and does not read `~/.bashrc`; it uses `BASH_ENV`. | S1 | "When bash is started non-interactively, to run a shell script, for example, it looks for the variable BASH_ENV in the environment" |
+| 73 | The `#!` line names the interpreter of a script. | S1 | "If the program is a file beginning with #!, the remainder of the first line specifies an interpreter for the program." |
+| 74 | A non-interactive shell started by sshd (or rshd) reads `~/.bashrc`. | S1 | "executed by the historical and rarely-seen remote shell daemon, usually rshd, or the secure shell daemon sshd" ... "it reads and executes commands from ~/.bashrc" |
+| 75 | Use `~/.bashrc` for interactive terminals, a login file for login shells. A login file does not read `~/.bashrc` automatically. | S21 | "For a variable needed in interactive Bash terminals, add the export statement to ~/.bashrc." / "A login file can explicitly source ~/.bashrc, but Bash does not do that automatically." |
+| 76 | `~/.bash_profile` is run at each login. | S20 | "Shell executes it every time the user logs in." |
+| 77 | `env -i` starts with an empty environment (so `PATH` and `HOME` are gone). | S8 | "-i, --ignore-environment start with an empty environment" |
+| 78 | `journalctl` prints log entries from the systemd journal. `-u` selects a unit. | S22 | "journalctl is used to print the log entries stored in the journal by systemd-journald.service(8)" / "-u, --unit=UNIT ... Show messages for the specified systemd unit UNIT" |
+| 79 | A builtin is a command inside the shell (gloss). | S1 | "help [-dms] [pattern] Display helpful information about builtin commands." (the gloss "a command inside the shell itself" is the tutorial's own words; S16 says: "Shell only has a few commands that are built into it as a part of the shell itself") |
+| 80 | A bash feature list: `BASH_ENV`, `~/.bashrc`, `help`, `type -t`, `hash` are described in bash(1). The page does not claim that dash or ash lack them; it says only "a minimal container may have no bash". | S1 | Section SHELL BUILTIN COMMANDS of bash(1). |
+
+Not sourced on purpose (tutorial advice, marked "Tutorial's own advice"): `cd "$(dirname "$0")" || exit 1` and "do not `source` the script" (the fact-checker ran it in round 1); a minimal container may have no `man` or `tldr`; a CI job must set its variables in the job or script.

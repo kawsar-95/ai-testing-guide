@@ -3,7 +3,9 @@
 Usage: python3 scripts/linux_overlap.py <file.mdx> <raw-dir>
 
 The script prints each n-word run of the page (outside code fences) that
-also occurs in a file of <raw-dir>. It exits 1 if it finds any.
+also occurs in a .txt file of <raw-dir> or of a sub-directory. It prints the
+number of files read to stderr. It exits 1 if it finds any run. It exits 2 if
+it finds no .txt file.
 """
 
 import re
@@ -53,10 +55,12 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
     mdx = Path(argv[1]).read_text(encoding="utf-8")
-    corpus = [
-        p.read_text(encoding="utf-8", errors="replace")
-        for p in sorted(Path(argv[2]).glob("*.txt"))
-    ]
+    files = sorted(p for p in Path(argv[2]).rglob("*.txt") if p.is_file())
+    if not files:
+        print(f"error: no .txt files found in {argv[2]}", file=sys.stderr)
+        return 2
+    print(f"{len(files)} file(s) read", file=sys.stderr)
+    corpus = [p.read_text(encoding="utf-8", errors="replace") for p in files]
     hits = overlap(mdx, corpus)
     for hit in hits:
         print(hit)

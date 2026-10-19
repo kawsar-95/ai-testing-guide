@@ -27,26 +27,27 @@ export const page = {
     { title: 'Linux Directory Structure Explained for Beginners', publisher: 'Linux Handbook', url: 'https://linuxhandbook.com/linux-directory-structure/', accessed: '2026-10-16' },
     { title: 'Linux Environment Variables List, Set, Create & Remove', publisher: 'Computer Networking Notes', url: 'https://www.computernetworkingnotes.com/linux-tutorials/linux-environment-variables-list-set-create-remove.html', accessed: '2026-10-16' },
     { title: 'How to Set and List Environment Variables in Linux', publisher: 'Linuxize', url: 'https://linuxize.com/post/how-to-set-and-list-environment-variables-in-linux/', accessed: '2026-10-16' },
+    { title: 'journalctl(1) - Print log entries from the systemd journal', publisher: 'man7.org (systemd)', url: 'https://man7.org/linux/man-pages/man1/journalctl.1.html', accessed: '2026-10-16' },
   ],
 }
 
 # Shell Basics
 
-This stage covers the shell, the first commands you type in it, and the layout of the system around you. A tester needs it because each CI log, test runner, and server check starts at a shell prompt, and many failures come from a wrong directory, a missing command, or a wrong variable.
+This stage covers the shell, the first commands you type in it, and the layout of the system around you. A tester needs it because each CI log, test runner, and server check starts at a shell prompt. Many failures come from a wrong directory, a missing command, or a wrong variable.
 
 <PageMeta />
 
 ## Shell Basics
 
-The shell is a program. It takes the commands that you type and gives them to the operating system. <Cite n={11} /> On most Linux systems the shell is bash. Bash is a newer shell that builds on the old Bourne shell. <Cite n={1} /> <Cite n={11} /> Other shells exist, for example ksh, tcsh, and zsh. <Cite n={11} />
+The shell is a program that passes your typed commands to the operating system. <Cite n={11} /> On most Linux systems the shell is bash. Bash is a newer shell that builds on the old Bourne shell. <Cite n={1} /> <Cite n={11} /> Other shells exist, for example ksh, tcsh, and zsh. <Cite n={11} />
 
 A terminal is not a shell. The terminal is the program that opens a window for you. <Cite n={11} /> The shell is the program inside it that reads your commands. <Cite n={12} />
 
 Bash reads different startup files in different modes. <Cite n={1} />
 
-- A login shell reads `/etc/profile`. Then it reads the first file that it finds of `~/.bash_profile`, `~/.bash_login`, and `~/.profile`.
-- A `bash` that you start by hand at the prompt reads `~/.bashrc`, if it is interactive and was not started as a login shell. A script that you run with `bash script.sh` does not read this file.
-- A non-interactive shell, for example a script, reads the file that `BASH_ENV` names.
+- A login shell (the shell that starts when you log in) reads `/etc/profile`. Then it reads only the first file that exists of `~/.bash_profile`, `~/.bash_login`, and `~/.profile`.
+- A `bash` that you start by hand at the prompt reads `~/.bashrc`, if it is interactive and was not started as a login shell.
+- A script that you run with `bash script.sh` does not read `~/.bashrc`. A non-interactive shell reads the file that `BASH_ENV` names instead.
 
 ```bash
 echo "$SHELL"   # the login shell of your user
@@ -54,11 +55,11 @@ echo "$-"       # contains i in an interactive shell
 bash --version
 ```
 
-`SHELL` holds the absolute path of the login shell of the user. <Cite n={7} /> Bash puts `i` in `$-` when the shell is interactive. <Cite n={1} />
+`SHELL` holds the absolute path of the login shell of the user. <Cite n={7} /> Bash puts `i` in `$-` when the shell is interactive. <Cite n={1} /> The `#!` line of a script names the program that runs it. <Cite n={1} />
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: a CI job often runs a non-interactive shell, so it does not read `~/.bashrc`. If a command works in your terminal but fails in the job, print `$-` and `$PATH` at the start of the job. Then compare them with your terminal.
+Tutorial's own advice: a CI job often runs a non-interactive shell. It does not read `~/.bashrc`, except over ssh. <Cite n={1} /> A minimal container may have no bash at all, so check the `#!` line and the shell of the runner. Compare `$-` and `$PATH` in the job with your terminal.
 
 </Callout>
 
@@ -109,11 +110,11 @@ cd -           # back in /usr/local
 pwd -P         # print the path without symbolic links
 ```
 
-By default, `cd` follows symbolic links logically (`-L`). The option `-P` makes `cd` use the physical directory structure. <Cite n={1} /> The option `-P` of `pwd` prints a path with no symbolic links. <Cite n={1} />
+By default, `cd` follows symbolic links (files that point to another path) in the logical way (`-L`). The option `-P` makes `cd` use the physical directory structure. <Cite n={1} /> The option `-P` of `pwd` prints a path with no symbolic links. <Cite n={1} />
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: use absolute paths in test scripts, or set the directory at the top with `cd "$(dirname "$0")"`. A relative path works only from the directory where you started the test. A CI runner often starts in another one.
+Tutorial's own advice: use absolute paths in test scripts, or set the directory at the top with `cd "$(dirname "$0")" || exit 1`. Run the script. Do not `source` it, because then `$0` is not the path of the script. A relative path works only from the directory where you started the test. A CI runner often starts in another one.
 
 </Callout>
 
@@ -122,7 +123,7 @@ Tutorial's own advice: use absolute paths in test scripts, or set the directory 
 The system holds its own documentation. Use the tool that fits the command.
 
 - `man name` shows the manual page of a program. <Cite n={4} />
-- `help name` shows help for a bash builtin such as `cd`. <Cite n={1} />
+- `help name` shows help for a bash builtin, a command inside the shell itself, such as `cd`. <Cite n={1} />
 - `name --help` prints a short usage text. `ls` and `pwd` accept it. <Cite n={2} /> <Cite n={3} /> Many other commands do, but the rule is not fixed. <Cite n={16} />
 - `tldr name` shows short examples. The tldr-pages project is a community collection that is simpler than a man page. <Cite n={17} />
 
@@ -139,13 +140,13 @@ type -t cd        # builtin
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: read the help on the machine that runs your tests, not on your laptop. The options of a tool can differ between versions and images. Then copy the exact flag into your script.
+Tutorial's own advice: read the help on the machine that runs your tests, not on your laptop. The options of a tool can differ between versions and images. Then copy the exact flag into your script. A minimal container may have no `man` or `tldr`.
 
 </Callout>
 
 ## Command Path
 
-When a command name has no slash, bash looks in a fixed order: a shell function, then a builtin, then the directories of `PATH`. <Cite n={1} /> `PATH` is a list of directories with a colon between them. The shell searches the list from the first to the last. <Cite n={7} /> Bash remembers the full path of a command it found. `hash -r` clears this memory. <Cite n={1} /> If bash finds no command, it prints an error and returns exit status 127. <Cite n={1} />
+When a command name has no slash, bash looks in a fixed order. It tries a shell function, then a builtin, then the directories of `PATH`. <Cite n={1} /> `PATH` is a list of directories with a colon between them. The shell searches the list from the first to the last. <Cite n={7} /> Bash remembers the full path of a command it found. `hash -r` clears this memory. <Cite n={1} /> If bash finds no command, it prints an error and returns exit status 127, the number that a command returns. <Cite n={1} />
 
 ```bash
 echo "$PATH" | tr ':' '\n'
@@ -156,7 +157,7 @@ export PATH="$HOME/bin:$PATH"
 hash -r
 ```
 
-`whereis` shows where the program, the source, and the manual page of a command are. <Cite n={5} /> To keep a `PATH` change, put the `export` line in `~/.bashrc`. <Cite n={18} />
+`whereis` shows where the program, the source, and the manual page of a command are. <Cite n={5} /> To keep a `PATH` change for new terminals, put the `export` line in `~/.bashrc`. <Cite n={18} /> The section on environment variables says which file to use for logins.
 
 <Callout type="warning" title="Common mistake: an empty entry in PATH">
 
@@ -166,13 +167,13 @@ A zero-length entry in `PATH` means the current directory. You get it from two c
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: "command not found" with status 127 in a CI step usually means that `PATH` has no directory for the tool. Print `$PATH` and run `command -v tool` at the start of the job. Because the first match wins, an old copy of a tool in an early directory can hide the new one.
+Tutorial's own advice: if a CI step prints "command not found" with status 127, check `PATH` first. It often has no directory for the tool. Print `$PATH` and run `command -v tool` at the start of the job. The first match wins, so an old copy of a tool in an early directory can hide the new one.
 
 </Callout>
 
 ## Directory Hierarchy
 
-All files sit under one root, `/`. The absolute path of each file goes through the root. <Cite n={19} /> The Filesystem Hierarchy Standard (FHS) defines what the main directories hold. <Cite n={10} /> The root filesystem must be enough to boot, restore, recover, and repair the system. <Cite n={10} />
+All files sit under one root, `/`. The absolute path of each file goes through the root. <Cite n={19} /> The Filesystem Hierarchy Standard (FHS) defines the directory structure and the purpose of each directory. <Cite n={19} /> <Cite n={10} /> The root filesystem must be enough to boot, restore, recover, and repair the system. <Cite n={10} />
 
 | Path | What it holds |
 |---|---|
@@ -181,7 +182,7 @@ All files sit under one root, `/`. The absolute path of each file goes through t
 | `/root` | The home directory of the root user. <Cite n={6} /> |
 | `/usr/bin` | The main directory for executable programs. <Cite n={6} /> |
 | `/usr/local` | Programs that are local to the site. <Cite n={6} /> |
-| `/var` | Data that grows and shrinks while the system runs, for example logs and spool files. <Cite n={6} /> |
+| `/var` | Data that changes while the system runs, for example logs and caches. <Cite n={6} /> |
 | `/tmp` | Temporary files. The system may delete them without notice. <Cite n={6} /> |
 | `/dev` | Special files that refer to devices. <Cite n={6} /> |
 | `/proc` | Information about running processes and the kernel. <Cite n={6} /> |
@@ -195,13 +196,13 @@ man 7 hier        # the full list
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: do not keep test evidence in `/tmp`. The system may delete it. Copy reports and logs to a folder that your CI job saves. When a service under test fails, look in `/var/log` for its logs <Cite n={6} /> and in `/etc` for its configuration.
+Tutorial's own advice: do not keep test evidence in `/tmp`. The system may delete it. Copy reports and logs to a folder that your CI job saves. When a service under test fails, look in `/var/log` for its log files <Cite n={6} /> and in `/etc` for its configuration. A service can also write to the systemd journal. Read it with `journalctl -u name`. <Cite n={22} />
 
 </Callout>
 
 ## Environment Variables
 
-The environment is a list of strings in the form `name=value`. A new program gets it at start. A child process gets a copy of the environment of its parent. <Cite n={7} /> The name is case-sensitive. <Cite n={7} />
+The environment is a list of strings in the form `name=value`. A new program gets it at start. A child process (a program that another program starts) gets a copy of the environment of its parent. <Cite n={7} /> The name is case-sensitive. <Cite n={7} />
 
 A normal assignment makes a shell variable. A child process does not see it. The `export` command marks the name for the environment of later commands. <Cite n={1} /> <Cite n={21} /> `unset` removes a variable. <Cite n={1} />
 
@@ -213,13 +214,13 @@ export API_URL
 bash -c 'echo "[$API_URL]"'    # prints [http://localhost:8080]
 API_URL=http://staging.example.test bash -c 'echo "$API_URL"'   # one command only
 unset API_URL
-env -i HOME=/tmp printenv      # a clean environment
+env -i PATH="$PATH" HOME="$HOME" printenv   # a clean environment
 ```
 
-`printenv` prints the named variables, or all of them. <Cite n={9} /> The form `NAME=value command` sets a variable only for that command. <Cite n={7} /> With `env -i`, a command starts with an empty environment. <Cite n={8} /> To keep a variable for each login, add it to `~/.bash_profile`. <Cite n={20} /> Common names are `HOME`, `PATH`, `PWD`, `SHELL`, `USER`, `LANG`, and `TMPDIR`. <Cite n={7} />
+`printenv` prints the named variables, or all of them. <Cite n={9} /> The form `NAME=value command` sets a variable only for that command. <Cite n={7} /> `env -i` empties the environment. The command then gets only the variables that you list, so keep `PATH` and `HOME` if it needs them. <Cite n={8} /> A login shell runs `~/.bash_profile` at each login. <Cite n={20} /> Use `~/.bashrc` for interactive terminals and `~/.bash_profile` or `~/.profile` for login shells. <Cite n={21} /> A login file does not read `~/.bashrc` unless you source it. <Cite n={21} /> Common names are `HOME`, `PATH`, `PWD`, `SHELL`, `USER`, `LANG`, and `TMPDIR`. <Cite n={7} />
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: a test that reads a URL, a token, or `LANG` from the environment can behave differently on a laptop and on a runner. Run it with `env -i` and set only the variables that you need. Do not run `printenv` in a shared CI log, because it can print secrets.
+Tutorial's own advice: a test can read a URL, a token, or `LANG` from the environment. It can behave differently on a laptop and on a runner. Run it with `env -i` and set only the variables that you need, such as `PATH` and `HOME`. A CI job or script must set its variables in the job or in the script, not in these files. Do not run `printenv` in a shared CI log. It can print secrets.
 
 </Callout>
