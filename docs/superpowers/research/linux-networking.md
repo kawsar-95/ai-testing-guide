@@ -414,3 +414,15 @@ Two fact-checkers found 35 FAILs (`linux-networking.factcheck.md`). Changes of t
 | C167 | `iptables-save` and `nft list ruleset` print rules; a redirect writes them to a file. | S49, S47 | "dump the contents of IP or IPv6 Table in easily parseable format either to STDOUT or to a specified file" |
 
 Statements without a cite (fix round 1): the package advice of topic 1 ("install them with the package manager"; `iproute2` for Debian and Ubuntu, `iproute` for RHEL) is the tutorial's own advice and is marked so in the page; the minimal-image remark is said once in topic 1 for the whole page. "Plan to use root" for `traceroute -T` is the tutorial's own advice (C163: the manual gives no unprivileged mode for TCP). "`/dev/null` makes ssh ignore saved keys" is marked "tutorial's own note" (the manual names `none`; the system known_hosts file is still read). The danger callouts (routing, DHCP, scanning, capture, firewall) say "Tutorial's own advice" or "warning". The legal sentence about scanning was removed.
+
+## Review fix round 1 (task reviewer)
+
+Changes of the page and what they mean for the notes:
+- Packet Analysis code block: the capture is on `lo`, so the invented sample line and the `tshark` filter now use 127.0.0.1 (`ip.addr == 127.0.0.1`). The pcap goes to `"$d/test.pcap"` in a `mktemp` directory that the block removes. The comment says to send test traffic first (`-c 100` waits for 100 matching packets; Ctrl-C stops it). The earlier local check of `tcpdump -n -r` used a synthetic pcap with documentation addresses; the sample line is invented and not from that file.
+- File Transfer code block: it starts its own local server (`python3 -m http.server 18080 --bind 127.0.0.1 -d "$d/src/app"`), runs `curl`, and stops the server. I ran the block as written in a temporary directory with loopback traffic only: the rsync dry run listed `a.txt`, the copy printed `>f+++++++++ a.txt`, and the server log showed `GET /a.txt ... 200`.
+- Lede: "Most examples here read state, write to a temporary directory, or use only your own host. An example that sends traffic to another host, or needs a network or root, says so."
+- TTL: "IP TTL (not the DNS TTL)" in the ping and ICMP sections, "IP TTL" in the traceroute section.
+- The second definition of "socket" (netstat section) is removed; topic 1 defines it once (C14, C15).
+- `rsync -a` sentence now follows the quote of C148: links, attributes, permissions, owners.
+- scp overwrite warning: tutorial's own advice (no source; the scp(1) manual does not say it), marked as such in the danger callout. The `rsync -c` sentence of the tip was not changed.
+

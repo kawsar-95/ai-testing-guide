@@ -78,7 +78,7 @@ export const page = {
 
 # Networking
 
-This stage shows how a Linux machine talks to a network and how to test that. <Cite n={1} /> A tester needs it because many failures that appear only in CI come from a wrong address, route, name, or port. Every example here reads state, writes to a temporary directory, or sends traffic only to your own host. An example that needs a network, root, or a host that you own says so.
+This stage shows how a Linux machine talks to a network and how to test that. <Cite n={1} /> A tester needs it because many failures that appear only in CI come from a wrong address, route, name, or port. Most examples here read state, write to a temporary directory, or use only your own host. An example that sends traffic to another host, or needs a network or root, says so.
 
 <PageMeta />
 
@@ -252,7 +252,7 @@ Tutorial's own advice: when a name fails in a test, compare `getent hosts NAME` 
 
 ICMP (Internet Control Message Protocol) carries error and control messages for IP. <Cite n={15} /> Its messages travel inside IP datagrams, and the first octet is the Type. <Cite n={15} /> ICMP does not make IP reliable. A datagram can still vanish without a report. <Cite n={15} />
 
-Four messages matter most. Echo request is type 8 and echo reply is type 0. Destination unreachable is type 3. Its codes include 0 for net, 1 for host, 3 for port, and 4 for fragmentation needed with DF (the Don't Fragment flag) set. Time exceeded is type 11 with code 0, which means that the TTL ran out. <Cite n={15} /> TTL (time to live) is a counter in the IP header. Each router lowers it, and the packet dies at zero. <Cite n={15} />
+Four messages matter most. Echo request is type 8 and echo reply is type 0. Destination unreachable is type 3. Its codes include 0 for net, 1 for host, 3 for port, and 4 for fragmentation needed with DF (the Don't Fragment flag) set. Time exceeded is type 11 with code 0, which means that the TTL ran out. <Cite n={15} /> TTL (time to live) is a counter in the IP header, not the DNS TTL. Each router lowers it, and the packet dies at zero. <Cite n={15} />
 
 The Linux kernel answers echo requests itself, and it limits the rate of ICMP error packets. <Cite n={21} /> The sysctl `icmp_echo_ignore_all` stops the answers. <Cite n={34} />
 
@@ -272,7 +272,7 @@ Tutorial's own advice: an echo reply proves only that IP works up to the host. I
 
 ## ping
 
-`ping` sends ICMP echo requests and waits for echo replies. <Cite n={42} /> An echo request is a small test message that asks a host to answer. Each reply line shows the sequence number, the TTL, and the round-trip time (the time of a request and its reply). The summary shows the packet loss and the minimum, average, maximum, and deviation of the round-trip time. <Cite n={42} /> This page describes the iputils `ping` of Linux. <Cite n={42} />
+`ping` sends ICMP echo requests and waits for echo replies. <Cite n={42} /> An echo request is a small test message that asks a host to answer. Each reply line shows the sequence number, the IP TTL (not the DNS TTL), and the round-trip time. That is the time of a request and its reply. The summary shows the packet loss and the minimum, average, maximum, and deviation of the round-trip time. <Cite n={42} /> This page describes the iputils `ping` of Linux. <Cite n={42} />
 
 | Option | Effect |
 |---|---|
@@ -301,13 +301,13 @@ Tutorial's own advice: for a CI health check, test the TCP port of the service. 
 
 ## traceroute
 
-`traceroute` lists the routers between your host and a destination. Each router on the path is a hop. It sends probe packets with a TTL that starts at 1 and grows by 1. A router that drops a probe because the TTL ended sends back an ICMP time exceeded message. <Cite n={43} /> By default, each hop gets 3 probes, and the limit is 30 hops. A `*` means that no reply came before the timeout. <Cite n={43} />
+`traceroute` lists the routers between your host and a destination. Each router on the path is a hop. It sends probe packets with an IP TTL that starts at 1 and grows by 1. A router that drops a probe because the TTL ended sends back an ICMP time exceeded message. <Cite n={43} /> By default, each hop gets 3 probes, and the limit is 30 hops. A `*` means that no reply came before the timeout. <Cite n={43} />
 
 The default probes are UDP datagrams to unlikely ports, starting at 33434. This method works without root. <Cite n={43} /> Firewalls often filter these probes. Then use `-I` for ICMP echo probes, or `-T` for TCP SYN probes (the first packet of a TCP connection) with `-p` for the port. <Cite n={43} /> The manual names no unprivileged mode for `-T`, so plan to use root. <Cite n={43} /> Option `-n` skips name lookups, and `-m` sets the maximum hops. <Cite n={43} /> A router can limit its ICMP replies, so a star in the middle is not always a fault. <Cite n={43} />
 
 ```bash
 traceroute --help                                # the options of your version
-traceroute -n -m 15 test-host.example.com        # numeric, 15 hops at most; your own host only
+traceroute -n -m 15 test-host.example.com        # 15 hops at most; needs a network and your own host
 traceroute -n -T -p 443 test-host.example.com    # TCP SYN probes to port 443; plan to use root
 # Example output (documentation addresses):
 #  1  198.51.100.1  0.6 ms  0.5 ms  0.5 ms
@@ -329,7 +329,7 @@ Tutorial's own advice: when a test cannot connect, run `traceroute -n HOST` on t
 
 ## netstat
 
-`netstat` comes from the net-tools package. It prints open sockets, routing tables, and interface counters. <Cite n={44} /> Its manual calls it mostly obsolete. The `ss` command replaces it, and commands of iproute2 replace its other modes. <Cite n={44} /> A socket is one end of a network connection. A minimal container can have neither tool.
+`netstat` comes from the net-tools package. It prints open sockets, routing tables, and interface counters. <Cite n={44} /> Its manual calls it mostly obsolete. The `ss` command replaces it, and commands of iproute2 replace its other modes. <Cite n={44} /> A minimal container can have neither tool.
 
 | Old command | Replacement |
 |---|---|
@@ -402,12 +402,14 @@ A packet capture is a copy of the packets that pass a network interface. A pcap 
 A filter uses primitives such as `host`, `port`, and `tcp`, joined with `and`, `or`, and `not`. <Cite n={52} /> `tshark` is the command-line tool of Wireshark. Option `-f` takes a capture filter, and `-Y` takes a display filter. Capture filters are more efficient on a busy network. <Cite n={53} /> The Wireshark guide lists QA engineers as users. <Cite n={54} />
 
 ```bash
-tcpdump -D                                              # list interfaces
-tcpdump -n -i lo -c 100 -w test.pcap 'tcp port 8080'    # needs root
-tcpdump -n -r test.pcap                                 # read the file; no root
-# Example tcpdump line (invented, documentation addresses):
-# 14:53:20.000000 IP 198.51.100.7.40000 > 192.0.2.10.8080: Flags [S], seq 1000, ...
-tshark -r test.pcap -Y 'ip.addr == 192.0.2.10'          # display filter
+d=$(mktemp -d)
+tcpdump -D                                                  # list interfaces
+tcpdump -n -i lo -c 100 -w "$d/test.pcap" 'tcp port 8080'   # needs root; send test traffic first; Ctrl-C stops it
+tcpdump -n -r "$d/test.pcap"                                # read the file; no root
+# Example tcpdump line (invented, from a capture on lo):
+# 14:53:20.000000 IP 127.0.0.1.40000 > 127.0.0.1.8080: Flags [S], seq 1000, ...
+tshark -r "$d/test.pcap" -Y 'ip.addr == 127.0.0.1'          # display filter
+rm -rf "$d"                                                 # remove the temporary directory
 ```
 
 <Callout type="danger" title="A capture can hold secrets">
@@ -459,7 +461,7 @@ Several tool families move files. `scp` and `sftp` use an ssh connection. <Cite 
 
 Since OpenSSH 9.0, `scp` moves files with the SFTP protocol. <Cite n={67} /> The option `-O` selects the old protocol, and `-P` sets the port. <Cite n={59} /> The OpenSSH 8.0 notes call the old scp protocol outdated and recommend sftp and rsync. <Cite n={61} /> FTPS adds TLS, the encryption of HTTPS, to FTP, an old file transfer protocol. <Cite n={65} /> SFTP is a different protocol, which runs over ssh. <Cite n={60} />
 
-For `rsync`, `-a` keeps permissions, times, and links, and `-n` makes a dry run, which changes nothing. <Cite n={62} /> A trailing slash on the source copies the contents of the directory. Without it, `rsync` copies the directory itself. <Cite n={62} /> `curl -f` fails with status 22 on an HTTP error, and `wget -c` resumes a partial download. <Cite n={63} /> <Cite n={64} />
+For `rsync`, `-a` keeps links, attributes, permissions, and owners, and `-n` makes a dry run, which changes nothing. <Cite n={62} /> A trailing slash on the source copies the contents of the directory. Without it, `rsync` copies the directory itself. <Cite n={62} /> `curl -f` fails with status 22 on an HTTP error, and `wget -c` resumes a partial download. <Cite n={63} /> <Cite n={64} />
 
 ```bash
 d=$(mktemp -d); mkdir -p "$d/src/app" "$d/dst"; echo hi > "$d/src/app/a.txt"
@@ -468,13 +470,15 @@ rsync -ai  "$d/src/app/" "$d/dst/"    # the real copy; -i lists each change
 # Remote forms need a host that you own:
 # rsync -av --dry-run ./build/ testuser@test-host.example.com:/srv/app/
 # scp -P 22 ./report.xml testuser@test-host.example.com:/tmp/
-curl -fsS -o "$d/out.txt" http://127.0.0.1:18080/a.txt   # needs a local server; -f fails on HTTP errors
+python3 -m http.server 18080 --bind 127.0.0.1 -d "$d/src/app" & s=$!; sleep 1   # local test server
+curl -fsS -o "$d/out.txt" http://127.0.0.1:18080/a.txt   # -f fails on HTTP errors
+kill "$s"                                                # stop the server
 rm -rf "$d"                                              # remove the temporary directory
 ```
 
 <Callout type="danger" title="Check before you delete or skip verification">
 
-The option `rsync --delete` removes destination files that the source does not have. The manual advises a dry run with `-n` first. <Cite n={62} /> The option `curl -k` turns off certificate checks. <Cite n={63} /> If you resume a partial file with `sftp -a`, and the partial content differs, the file is likely corrupt. <Cite n={60} />
+The option `rsync --delete` removes destination files that the source does not have. The manual advises a dry run with `-n` first. <Cite n={62} /> The option `curl -k` turns off certificate checks. <Cite n={63} /> If you resume a partial file with `sftp -a`, and the partial content differs, the file is likely corrupt. <Cite n={60} /> Tutorial's own advice: `scp` can overwrite existing files, so copy to a new name.
 
 </Callout>
 
