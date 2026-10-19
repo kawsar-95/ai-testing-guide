@@ -126,7 +126,7 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 | C55c | With `-%` (`--stateflags`), a star after the file name shows the state instead; a nanorc file may set this option. | S16 | "When the buffer is modified, a star (*) is shown after the filename in the center of the title bar." |
 | C55b | A buffer is the text in memory. | S14 | "a new, unsaved file in the memory buffer" |
 | C56 | `+LINE` before the file name opens at that line. | S16 | "The cursor can be put on a specific line of a file by adding the line number with a plus sign before the filename" |
-| C57 | `-l` shows line numbers; `-v` is read-only. | S16 | "Display line numbers to the left of the text area." / "Don’t allow the contents of the file to be altered: read-only mode." |
+| C57 | `-v` is read-only. (The page no longer mentions `-l`: it means `--linenumbers` only in nano 4.0 and later, and `--nofollow` in nano 2.9.x, and no fetched source gives the version.) | S16 | "Don’t allow the contents of the file to be altered: read-only mode." |
 | C58 | `-v` is not a replacement for file permissions. | S16 | "this option should NOT be used in place of correct file permissions to implement a read-only file" |
 
 ## Vim

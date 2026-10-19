@@ -286,4 +286,12 @@ Checked: writer commit `28895d5`. `git diff d216d79 28895d5` shows one changed l
 | 179 | Disks and Filesystems | Word count of the section (prose, heading, callout text and title, no code, no cite tags) | none | PASS | 249 (the limit is 250). The other sections are unchanged: 241, 202, 247, 215, 237, 236. |
 | 180 | whole page | Overlap and tests | none | PASS | `linux_overlap.py` on the flat official dir (52 `*.txt` files read) and the raw dir (243 files read): no output, exit 0. `npm test`: 145 of 145 pass. |
 
+## Final review follow-up (2026-10-19)
+
+| # | Section | Claim | Cite | Verdict | Check |
+|---|---|---|---|---|---|
+| R1 | Disks and Filesystems | The page no longer says that `lsblk -N` and `lsblk -v` list only NVMe and virtio disks. These options need util-linux 2.40 (2024). Ubuntu 24.04 has util-linux 2.39 and prints `invalid option`. | 14 | PASS | I read no official release note that gives the version, so I deleted the sentence. Notes rows D3 and D14 and the safety note now match the page. Source 14 stays cited by the `lsblk -f` sentence in the Adding Disks section. |
+| R2 | Disks and Filesystems | Word count of the section. | none | PASS | 249 to 237 (own script: prose, heading, callout text and title; no code, no cite tags). The limit is 250. |
+| R3 | Whole page | Tests, build, checks, overlap | none | PASS | `npm test` 145 of 145 pass. `npm run build` passes. `check_sources.py` prints `OK 2 pages checked, 0 skipped`. `check_outline.py` prints `OK 16 TOC links`. `linux_overlap.py` exits 0 with no output against the raw dir (243 files read) and the official dir (52 files read). |
+
 Open FAILs: 0

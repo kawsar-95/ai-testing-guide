@@ -5,7 +5,7 @@ Fetch note: the roadmap pages were fetched earlier into `<scratch dir>/roadmap-r
 Safety rule of this stage: no command in the page changes a disk when you copy it. The code blocks hold read-only queries (`lsblk -f`, `df`, `findmnt`, `swapon --show`, `free`) and one demo that makes two files in a new `mktemp -d` directory and removes them. Every command that partitions, formats, mounts, resizes, or removes is a comment line with a clearly fake device name (`/dev/sdX1`), marked "needs root", and has a `danger` callout. I ran no command that writes to a block device, no `sudo`, and no `mount`, `mkfs`, `fdisk`, `swapon`, or `lvcreate`.
 
 Local checks (not citable pages), on Ubuntu with util-linux and coreutils 9.x:
-- `lsblk -f` and `lsblk -o NAME,SIZE,TYPE,FSTYPE` run without root. The root partition has type `ext4`. The page does not state a device name pattern for NVMe disks; it only says that `lsblk -N` lists NVMe disks.
+- `lsblk -f` and `lsblk -o NAME,SIZE,TYPE,FSTYPE` run without root. The root partition has type `ext4`. The page does not state a device name pattern for NVMe disks and does not mention `lsblk -N` or `lsblk -v`.
 - `stat -f -c %T /` prints `ext2/ext3` on an `ext4` root. `findmnt -no FSTYPE /` prints `ext4`. This matches S26 (one magic number `0xef53` for ext2, ext3, ext4).
 - `echo x > /dev/full` fails with `No space left on device` and exit status 1.
 - The inode demo of the page ran: `ls -i a.txt b.txt` printed the same number twice, and `stat -c '%i inode, %h links' a.txt` printed `2 links`.
@@ -87,7 +87,7 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 |---|---|---|---|
 | D1 | A whole disk is named like `/dev/sda`; a partition adds a number. | S15 | "A device name refers to the entire disk." / "/dev/sda1 is the first partition on the first hard disk in the system." |
 | D2 | (Removed from the page in review fix 1: the `/dev/xvdc` sentence.) Source kept for step 2 of Adding Disks (S9: `w` and `q`). | S9 | "New disk added is shown as /dev/xvdc." |
-| D3 | `lsblk -N` lists only NVMe devices. `lsblk -v` lists only virtio devices. | S14 | "-N, --nvme Output info about NVMe devices only." / "-v, --virtio Output info about virtio devices only." |
+| D3 | Removed from the page after the final review: `lsblk -N` and `lsblk -v` need util-linux 2.40 (2024); util-linux 2.39 (Ubuntu 24.04) prints `invalid option`. No fetched source gives the version, so the page no longer mentions the options. S14 stays cited for `lsblk -f`. | S14 | no quote |
 | D4 | The partition table records the division of a disk into partitions. The page no longer says "usually in sector 0" for every table; an MBR table sits in sector 0 (see D15). | S15 | "This division is recorded in the partition table, usually found in sector 0 of the disk." |
 | D5 | (Removed from the page in review fix 1.) MBR has room for 4 primary partitions; the page still says an MBR table holds 4 primary partitions (see D15). | S15 | "In sector 0 there is room for the description of 4 partitions" |
 | D6 | GPT has checksums and UUIDs (the "usually 128 partitions" clause was cut for the word budget). | S15 | "GPT uses 64-bit logical block addresses, checksums, UUIDs and names for partitions" |
@@ -98,7 +98,7 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | D11 | `lsblk -f` shows filesystem information; it is equal to `-o NAME,FSTYPE,FSVER,LABEL,UUID,FSAVAIL,FSUSE%,MOUNTPOINTS`. | S14 | "-f, --fs Output info about filesystems. This option is equivalent to -o NAME,FSTYPE,FSVER,LABEL,UUID,FSAVAIL,FSUSE%,MOUNTPOINTS." |
 | D12 | The "disk becomes usable" order (partition, filesystem, mount); the page sentence now has `<Cite n={8} />`. | S8 | "partition it with fdisk, format with mkfs, then mount permanently via /etc/fstab." |
 | D13 | Lede: a disk-full or boot failure on a CI runner is a disk topic (stage framing, no fact). | S1, S2 | The roadmap lists "Disks and Filesystems" as a topic. S2: "To store data on a device you need at least 1 partition on the device." |
-| D14 | Glosses added in fix round 1 (own words, no cite): NVMe = "a flash disk interface"; virtio = "virtual disks of a VM"; MBR = Master Boot Record; GPT = GUID Partition Table; UUIDs = unique IDs. | S15, S2 | fdisk(8): "GPT (GUID Partition Table)". S2: "Master Boot Record (MBR)". |
+| D14 | Glosses added in fix round 1 (own words, no cite): MBR = Master Boot Record; GPT = GUID Partition Table; UUIDs = unique IDs. | S15, S2 | fdisk(8): "GPT (GUID Partition Table)". S2: "Master Boot Record (MBR)". |
 | D15 | MBR table: sector 0, 4 primary partitions. A GPT disk keeps a protective MBR in sector 0. | S15 | "In sector 0 there is room for the description of 4 partitions" / "the first sector is still reserved for a protective MBR" |
 | D16 | A mount can hide files below it, so `df` counts files that `du` cannot see. | S20 | "The previous contents (if any) and owner and mode of dir become invisible" |
 | D17 | On ext4, reserved blocks only root may use lower the free space that `df` shows (S6 says "typically 5% by default"; `mke2fs -m` sets the percentage). | S33, S6 | S6: "This reserved space is not counted as “available” for regular users." S33: "the percentage of the file system blocks reserved for the super-user." |

@@ -330,3 +330,23 @@ Whole-page sanity check: 20 `##` headings, in the order of `lib/linux/stages.ts`
 | B2-26 | Whole page | 20 `##` headings in order; 49 sources cited; every cite has a source; no "in progress" | none | PASS | See the sanity check above. |
 
 Open FAILs: 0
+
+## Final accuracy pass (2026-10-19)
+
+Checked commit: a866b7f (`git diff a866b7f^ a866b7f -- content/linux/text-processing.mdx docs/superpowers/research/linux-text-processing.md`), on merge head 38223ba. Changed: the tip of the "grep" section and the notes rows C39b and the unexpand option-order note. The "unexpand" section has no change.
+
+Fetched again to `<scratch dir>` with `scripts/linux_fetch.py`: S12 (grep(1), man7.org) and S40 (GNU unexpand manual). Local runs: bash 5.3.9, dash, `bash -e`, `dash -e`, GNU coreutils 9.7 `unexpand` (`gnuunexpand`), uutils `unexpand` 0.10.0.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| T1 | grep (tip) | "Status 2 is a real error, for example a missing file." | none (marked "Tutorial's own advice"; the status list is cited in the section by Cite 12) | PASS | S12: "the exit status is 0 if a line is selected, 1 if no lines were selected, and 2 if an error occurred". Local run: `grep -q ERROR missing.log` returned 2. |
+| T2 | grep (tip, code) | `grep -q ERROR app.log && exit 1; [ $? -eq 1 ] \|\| exit 1` fails the step on a match and on an error, and goes on when no line matches | none | PASS | Local run in `bash`, `bash -e`, `dash` and `dash -e` with a log with ERROR, a log without it, and a missing file: match gives exit 1, no match goes on (status 0, next command runs), missing file gives exit 1. Under `-e` the first list does not stop the shell, because the failing `grep` is not the last command of the `&&` list. |
+| T3 | grep (tip) | "This line fails a CI step when the log has an error, or when `grep` cannot read the log" | none | PASS | Same runs. The sentence is true for a step that runs under `bash -e` (GitHub Actions default) or without `-e`. |
+| T4 | grep (tip) | Sentence length | none | PASS | The prose before the colon has 19 words. With the 14 tokens of the inline example, the sentence has 33 tokens. Advisory (not FAIL): the example has no final full stop, and a reader that counts every token may want a split into "Use this line:" and the code. |
+| T5 | unexpand | `--first-only -t 4` and `-t 4 --first-only` give the same result (page example uses `-t 4 --first-only`, the tip uses `--first-only -t 4`) | 40 | PASS | S40: "Convert only leading sequences of blanks (overrides -a)." and "New scripts should use --first-only -t tab1[,tab2]… instead." Local run on the `code.txt` of the page, GNU 9.7 and uutils 0.10.0: both orders gave 1 tab; `-t 4` alone gave 2; `-a` gave 1. The order does not change the result, so no page change is needed. |
+| T6 | Notes | Rows C39b and the unexpand order note match the page | 12, 40 | PASS | C39b: S12, 22 words, found in the fetched man page; it says that the tip is the tutorial's own advice and that it has no cite. The unexpand note quotes S40 in 2 short quotes, both found. |
+| T7 | Word counts | Touched section has 100–250 words | none | PASS | Heading, callout title and table text counted; no code, no Cite tags, no table pipes. grep 213. |
+| T8 | Word counts | The other sections | none | PASS | Text Processing 145; Stdout, Stdin, and Stderr 234; Redirects 237; Pipes 187; Tee 205; awk 223; cut 170; sort 216; uniq 156; wc 187; head 143; tail 241; nl 160; paste 174; join 244; split 217; tr 229; expand 177; unexpand 211. All within 100–250. |
+| T9 | Whole page | Overlap check | none | PASS | `linux_overlap.py` exit 0, no output, against the roadmap raw dir (243 files read), the stage official dirs (28, 17, 16 files read), the second fact-check dir (202 files read) and the fresh fetch (7 files read). One older fact-check dir (80 files read) printed 3 runs: they are the gawk manual URLs in `page.sources` that also appear as link text in those saved pages. They are not prose. |
+
+Open FAILs: 0
