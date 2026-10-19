@@ -1,0 +1,85 @@
+export const metadata = { title: 'Stateless Service', description: 'Keep sessions, tokens, and files out of the app server, so that any server can answer any request.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'REL05-BP06 Make systems stateless where possible', publisher: 'AWS Well-Architected Framework', url: 'https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/rel_mitigate_interaction_failure_stateless.html', accessed: '2026-10-20' },
+    { title: 'Design to scale out', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/design-principles/scale-out', accessed: '2026-10-20' },
+    { title: 'What is Azure Cache for Redis?', publisher: 'Microsoft Learn', url: 'https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-overview', accessed: '2026-10-20' },
+    { title: 'RFC 7519: JSON Web Token (JWT)', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc7519.html', accessed: '2026-10-20' },
+    { title: 'Edit target group attributes for your Application Load Balancer', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html', accessed: '2026-10-20' },
+  ],
+}
+
+# Stateless Service
+
+Think of a bank with many counters. Your account details are not in the memory of one clerk. They are in the bank's central system. So any free clerk can serve you, and if one clerk goes home, your money is still safe. A stateless service works the same way: the app servers are the clerks, and the important data lives in a shared place. This page tells you what "stateless" means, where the state goes, and what a tester can check.
+
+<PageMeta />
+
+## In plain words
+
+"State" is data that must survive from one request to the next. The most common example is a session. A session is the data of one user that stays between requests while the user works in the app <Cite n={1} />. A stateless application does not need to know about earlier requests, and it does not keep session data itself <Cite n={1} />.
+
+The state does not disappear. A stateless service moves it out of the app server. Then no request depends on data on the local disk or in the local memory of one server. So you can replace a server at any time, and users do not notice <Cite n={1} />. Because any server can answer any request, you can [scale horizontally](/architecture/horizontal-scaling/) <Cite n={1} />.
+
+Where does the state go? Here are the usual places:
+
+| State | Shared place |
+|---|---|
+| Login session | A shared cache or a database <Cite n={1} />. Redis can work as a session store <Cite n={3} />. |
+| Token data | A JWT, a token that carries claims between two parties <Cite n={4} /> |
+| Uploaded files | [Object storage](/architecture/object-storage/), such as Amazon S3 <Cite n={1} /> |
+| Slow or heavy work | Background jobs, outside the request <Cite n={2} /> |
+
+With a session store, the browser keeps a cookie. The app uses the cookie as a key to find the session data in the shared store <Cite n={3} />.
+
+A JWT (JSON Web Token) is a short, URL-safe string that carries claims, such as "this is user 42" <Cite n={4} />. The claims can be digitally signed <Cite n={4} />. A server that has the key can check the signature. If a check step fails, the server must reject the token <Cite n={4} />. So the server can trust a valid token without a session in its own memory. A JWT can also have an expiry time (`exp`). After that time, the server must not accept the token <Cite n={4} />.
+
+<MdxImage src="/images/architecture/07-stateless-service.webp" alt="Sequence diagram with five parts: User, Load Balancer, App Server 1, App Server 2, and Redis Session Store. In the login flow, the user sends a login request to the load balancer, which forwards it to App Server 1. App Server 1 stores the session or token data in Redis. In the next request flow, the load balancer forwards the request to App Server 2. App Server 2 validates the session in Redis, and Success goes back to the user." />
+
+## When you need it
+
+- You want horizontal scaling, with many app servers behind a [load balancer](/architecture/load-balancer/).
+- You want rolling deployments, where servers restart one at a time.
+- User sessions must survive a server restart.
+- You use cloud or container platforms. AWS says that once an app is stateless, you can run it on serverless compute such as AWS Lambda or AWS Fargate <Cite n={1} />.
+
+## A real-life example
+
+A student logs in to the LMS through App Server 1. The next request goes to App Server 2.
+
+If the session is only in the memory of App Server 1, App Server 2 does not know the student. The student seems logged out and must log in again. Now the team moves the sessions to Redis. App Server 1 writes the session to Redis at login. App Server 2 reads the same session from Redis and accepts the request. A JWT gives the same result: App Server 2 checks the token signature and accepts the request.
+
+## Common mistakes
+
+- **Sessions in local memory.** Users seem logged out when the next request goes to another server. Microsoft names session state in memory as a cause of "stickiness" <Cite n={2} />.
+- **Uploaded files on the local disk.** The file exists on one server only.
+- **Background jobs inside the app process.** A heavy task slows down the user requests on that server. Move high-CPU or high-I/O tasks to background jobs <Cite n={2} />.
+- **The same cron job on every server.** A cron job is a task that runs on a schedule. With three servers, the nightly email can go out three times.
+- **Sticky sessions to hide a weak design.** A sticky session (session affinity) makes the load balancer send all requests of one user to the same server <Cite n={5} />. AWS says this is useful for servers that keep state <Cite n={5} />. But stickiness limits scale-out <Cite n={2} />, and the user still loses the session when that server dies.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Server hop.** Log in, then send requests that land on different servers. Check that the user stays logged in on each one.
+- **Restart during a session.** Restart one app server, or all of them one by one. Check that logged-in users stay logged in.
+- **Token expiry.** Send a request with an expired JWT, and with a JWT that has one changed character. Both must fail with `401`.
+- **Logout everywhere.** Log out, then replay the old cookie or token. Check that no server still accepts it.
+- **Duplicate jobs.** Run three servers and wait for a scheduled job. Check that it runs only one time.
+- **Sticky sessions off.** In a test environment, turn off sticky sessions. Run the main user flows and look for lost data.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| State | Data that must survive from one request to the next |
+| Session | The data of one user that stays between requests |
+| Stateless service | An app server that keeps no important state in its own memory or disk |
+| Session store | A shared place, such as Redis, that keeps the sessions for all servers |
+| JWT | JSON Web Token: a signed string that carries claims about the user |
+| Claim | One piece of information in a token, such as the user id |
+| Sticky session | The load balancer sends all requests of one user to the same server |
+| Cron job | A task that runs on a schedule |

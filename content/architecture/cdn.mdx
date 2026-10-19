@@ -1,0 +1,78 @@
+export const metadata = { title: 'CDN for Static Content', description: 'How a content delivery network keeps copies of images, videos, CSS, and JavaScript near the user, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'What is a CDN (Content Delivery Network)?', publisher: 'Amazon Web Services', url: 'https://aws.amazon.com/what-is/cdn/', accessed: '2026-10-20' },
+    { title: 'Cache-Control header', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control', accessed: '2026-10-20' },
+    { title: 'HTTP caching', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching', accessed: '2026-10-20' },
+    { title: 'Invalidate files to remove content', publisher: 'Amazon CloudFront Developer Guide', url: 'https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Invalidation.html', accessed: '2026-10-20' },
+    { title: 'Serve private content with signed URLs and signed cookies', publisher: 'Amazon CloudFront Developer Guide', url: 'https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html', accessed: '2026-10-20' },
+    { title: 'Optimize high availability with CloudFront origin failover', publisher: 'Amazon CloudFront Developer Guide', url: 'https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/high_availability_origin_failover.html', accessed: '2026-10-20' },
+  ],
+}
+
+# CDN for Static Content
+
+Think of a bakery with one kitchen in the capital. If every customer must travel to that kitchen, the trip is long and the kitchen is crowded. So the bakery opens small shops in every town, and each shop keeps the popular loaves. A CDN does the same for files. It keeps copies of images, videos, CSS, and JavaScript in many places, so each user gets them from a place near them.
+
+<PageMeta />
+
+## In plain words
+
+A **CDN** (content delivery network) is a network of connected servers that makes web pages load faster <Cite n={1} />. Its main job is to reduce latency, which is the delay before data arrives <Cite n={1} />. The CDN has a **point of presence** (POP) in many places. A POP is a group of **edge servers**, which are CDN servers close to the users <Cite n={1} />.
+
+The original file stays on the **origin**. The origin is your own server, or object storage such as Amazon S3, where you keep the original files <Cite n={5} />. The first time a user asks for a file, the request goes to the origin. The origin sends the file to the user and also sends a copy to the nearest POP <Cite n={1} />. After that, the next user in that area gets the file from the CDN, not from the origin <Cite n={1} />.
+
+A CDN works best for **static content**. Static content is data that does not change from user to user, such as logos, header images, and fonts <Cite n={1} />. **Dynamic content**, such as login status or chat messages, is different for each user <Cite n={1} />. Because the CDN answers many requests, the origin gets less traffic and uses less bandwidth <Cite n={1} />. If some CDN servers go offline, other servers can take their place <Cite n={1} />.
+
+The origin tells the CDN what it can keep with the `Cache-Control` HTTP header. This header controls caching in browsers and in shared caches such as CDNs <Cite n={2} />. For example, `max-age=N` says that a copy stays fresh for N seconds <Cite n={2} />. HTTP decides if a copy is fresh by its age, the time since the response was made. This age is like the TTL (time to live) of other caches <Cite n={3} />.
+
+<MdxImage src="/images/architecture/09-cdn.webp" alt="Diagram: users in different regions get images, videos, CSS, and JavaScript from a nearby CDN edge server. On a cache miss, the edge server fetches the file from the origin, which is object storage or the backend, and keeps a copy." />
+
+## When you need it
+
+- The system serves a lot of static content.
+- Videos, images, PDFs, or JS and CSS bundles are large or are requested often.
+- Your users live in many different regions.
+- Static file traffic overloads the backend server.
+- You want pages to load faster.
+
+## A real-life example
+
+An LMS (learning management system) has course thumbnails, recorded class videos, certificate PDFs, and JavaScript bundles. The backend API should not send these files itself.
+
+A better design keeps these files in object storage and serves them through a CDN. The backend can then focus on business logic, such as enrollment and payments, and the CDN carries the file traffic.
+
+## Common mistakes
+
+- **Caching personal data in the CDN.** A shared cache keeps one copy and gives it to many users <Cite n={2} />. If a response with personal content does not have the `private` directive, the CDN can give one user's data to another user <Cite n={2} />. Use `private`, or `no-store`, which tells all caches not to store the response <Cite n={2} />.
+- **Private files on public CDN links.** A paid course video must not be open to everyone who has the link. CloudFront, for example, serves private content through signed URLs or signed cookies <Cite n={5} />. AWS also recommends that users cannot reach the origin directly, so they cannot bypass those checks <Cite n={5} />.
+- **Forgetting to refresh the cache.** After you change a file, the old copy can stay at the edge until it expires <Cite n={4} />. An invalidation removes the copy, and the CDN fetches the latest file from the origin on the next request <Cite n={4} />. But a user can still see the old file from a browser or proxy cache <Cite n={4} />.
+- **Changing JS or CSS but keeping the same file name.** If the JavaScript and CSS versions that a browser uses are out of sync, the page display breaks <Cite n={3} />. Put a version number or a hash in the file name, and never change the file at that name. MDN calls this the cache-busting pattern <Cite n={2} />. AWS also recommends versioned file names for files that you update often <Cite n={4} />.
+- **Ignoring CDN or origin failure.** Plan what happens when the origin is down. CloudFront can switch to a second origin when the first one fails <Cite n={6} />. The `stale-if-error` directive lets a cache send an old copy when the server returns a 500, 502, 503, or 504 error <Cite n={2} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Cache headers.** Open the network tab and check the `Cache-Control` header of a static file and of a logged-in API response. A personal response must not say `public`.
+- **Two users, one URL.** Log in as user A and load a personal page through the CDN. Then load the same URL as user B. User B must never see user A's data.
+- **Private file links.** Copy the link of a paid video or a certificate PDF. Open it in a private window with no login, and after the signed link expires. You must get an error, not the file.
+- **New release, new files.** Deploy a JS or CSS change. Check that the file name changes and that a normal reload shows the new version with no broken layout.
+- **Origin down.** In a test environment, stop the origin or object storage. Check what users see: a cached copy, a clear error page, or a blank page.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| CDN | Content delivery network: servers in many places that keep copies of files near users |
+| Edge server | A CDN server close to the user |
+| POP | Point of presence: a CDN location with a group of edge servers |
+| Origin | The server or storage that holds the original file |
+| Static content | Data that is the same for every user, such as images and CSS |
+| Cache-Control | The HTTP header that says who can keep a copy and for how long |
+| Invalidation | A request to remove a file from the CDN cache before it expires |
+| Cache busting | Putting a version or hash in a file name so a changed file gets a new URL |
+| Signed URL | A special link with a signature that gives access to a private file |

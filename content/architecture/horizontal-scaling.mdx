@@ -1,0 +1,78 @@
+export const metadata = { title: 'Horizontal Scaling', description: 'Add more servers that run the same app, and share the traffic between them. What it fixes, what it does not fix, and what a tester can check.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Autoscaling', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/best-practices/auto-scaling', accessed: '2026-10-20' },
+    { title: 'Design to scale out', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/design-principles/scale-out', accessed: '2026-10-20' },
+    { title: 'Reliability Pillar: Design principles', publisher: 'AWS Well-Architected Framework', url: 'https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/design-principles.html', accessed: '2026-10-20' },
+    { title: 'Performing a Rolling Update', publisher: 'Kubernetes Documentation', url: 'https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/', accessed: '2026-10-20' },
+    { title: 'What is Elastic Load Balancing?', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html', accessed: '2026-10-20' },
+  ],
+}
+
+# Horizontal Scaling
+
+Think of a supermarket on a busy Saturday. One cashier cannot serve a long queue, so the shop opens more checkout counters, and each new customer goes to a free counter. Horizontal scaling does the same for software. You run the same application on more servers, and you share the traffic between them. This page tells you what horizontal scaling fixes, what it does not fix, and what a tester can check.
+
+<PageMeta />
+
+## In plain words
+
+Horizontal scaling, also called scaling out, means that you add more instances of a resource. An instance is one running copy of the application, for example one app server. Scaling in is the opposite: you remove instances when the demand goes down <Cite n={1} />. [Vertical scaling](/architecture/vertical-scaling/) is different. It makes one machine bigger, for example a larger virtual machine <Cite n={1} />.
+
+With horizontal scaling, the same code runs on two, three, or more app servers. A [load balancer](/architecture/load-balancer/) receives the requests and spreads them across the servers. It sends traffic only to the servers that are healthy <Cite n={5} />.
+
+More servers give more capacity. They can also make the system more reliable <Cite n={2} />. AWS advises you to replace one large resource with many small ones, so that one failure has a smaller effect on the whole system <Cite n={3} />. If one app server stops, the other servers continue to serve users.
+
+But scaling out does not fix every problem. If the database is the slow part, more web servers do not help <Cite n={2} />. Microsoft tells you to check the capacity of the data stores separately, because their scaling limits can differ from the limits of the app servers <Cite n={1} />. Also, the old servers can continue to serve requests while new servers start. But this depends on the application design, on how the traffic is routed, and on the safe removal of servers <Cite n={1} />.
+
+<MdxImage src="/images/architecture/05-horizontal-scaling.webp" alt="Diagram: Users send requests to one Load Balancer. The load balancer sends traffic to App Server 1, App Server 2, and App Server 3. All three app servers connect to one shared Database." />
+
+## When you need it
+
+- One server cannot handle the traffic.
+- The service must continue when one server crashes. This is high availability: the system stays usable when a part fails.
+- The application can be stateless. This means that any server can handle any request <Cite n={2} />. See [Stateless Service](/architecture/stateless-service/).
+- The traffic peaks are predictable. For a regular load, you can scale out on a schedule, for example during business hours <Cite n={2} />.
+- You need deployments with zero downtime. A rolling update replaces the old instances with new ones step by step. This lets the update happen with zero downtime <Cite n={4} />.
+
+## A real-life example
+
+On admission day, thousands of students try to log in to the LMS (Learning Management System) at the same time. One server gets overloaded. Pages load slowly, and some requests fail.
+
+The team runs three app servers and puts a load balancer in front of them. The load balancer shares the logins between the three servers. Then App Server 2 crashes. The load balancer sends the traffic to App Server 1 and App Server 3, and the students can still log in.
+
+## Common mistakes
+
+- **"More app servers make the full system scalable."** The database can still be the bottleneck. Three app servers that wait for one slow database are not faster than one.
+- **The session is in local memory.** A student logs in on Server 1, and the next request goes to Server 2. Server 2 does not know the student, so the student seems logged out. Microsoft names session state in memory as a cause of "stickiness", and stickiness limits scale-out <Cite n={2} />.
+- **Uploaded files are on the local disk.** A file that is on Server 1 is not on Server 2. Use shared [object storage](/architecture/object-storage/).
+- **No central logs.** One user's request can touch three servers. If each server keeps its own log file, you cannot follow the request from start to end.
+- **The configuration is not the same on all servers.** If one server has an old setting, a bug shows on only one request in three. Such a bug is hard to reproduce.
+- **Servers are removed without care.** When the system scales in, the app must handle the removal. Microsoft gives ways to do this: shut down cleanly, and put work items on a queue so that another instance can pick up the unfinished work <Cite n={2} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Kill one server under load.** Run a load test, then stop one app server. Check the error rate, and check that users stay logged in.
+- **Session across servers.** Log in, then send many requests. Use the logs or a response header to see that different servers answered. The user must stay logged in.
+- **Same build, same config.** Call a version or health endpoint many times. Each server must report the same build number and the same configuration.
+- **Files across servers.** Upload a file, then download it many times. Every server must return the file.
+- **Scaling curve.** Run the same load test with 1, 2, and 3 servers. If the throughput does not go up, look for the bottleneck, often the database.
+- **Deploy during traffic.** Run a rolling deployment while a load test runs. Count the failed requests.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Instance | One running copy of the application, for example one app server |
+| Scale out / scale in | Add instances / remove instances |
+| Scale up | Make one machine bigger (vertical scaling) |
+| Load balancer | A component that spreads requests across several servers |
+| High availability | The system stays usable when one part fails |
+| Bottleneck | The slowest part, which limits the whole system |
+| Stickiness | All requests from one client always go to the same server |
+| Rolling update | A deployment that replaces old instances with new ones step by step |

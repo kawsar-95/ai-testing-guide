@@ -1,0 +1,88 @@
+export const metadata = { title: 'API Gateway', description: 'What an API gateway does, how it differs from a load balancer, and what a tester can check at the single front door of many services.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Use API gateways in microservices', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/microservices/design/gateway', accessed: '2026-10-20' },
+    { title: 'Gateway Aggregation pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/gateway-aggregation', accessed: '2026-10-20' },
+    { title: 'Gateway Offloading pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/gateway-offloading', accessed: '2026-10-20' },
+    { title: 'What is Amazon API Gateway?', publisher: 'AWS', url: 'https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html', accessed: '2026-10-20' },
+    { title: 'What is Elastic Load Balancing?', publisher: 'AWS', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html', accessed: '2026-10-20' },
+    { title: 'Throttle requests to your REST APIs for better throughput in API Gateway', publisher: 'AWS', url: 'https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html', accessed: '2026-10-20' },
+  ],
+}
+
+# API Gateway
+
+Think of the reception desk in a big hotel. Guests do not walk to the kitchen, the laundry, and the accounts office one by one. They go to one desk. The desk checks who they are, sends each request to the right team, and gives back one answer. An API gateway is that reception desk for the backend services of an app.
+
+<PageMeta />
+
+## In plain words
+
+An API (application programming interface) is the set of addresses, or endpoints, that an app calls to get or change data. An API gateway is one central entry point between the clients (the web app and the mobile app) and the backend services <Cite n={1} />. It works as a reverse proxy: it takes each request and sends it on to the correct service <Cite n={1} />. AWS calls its gateway a "front door" to backend services <Cite n={4} />.
+
+The gateway can also do jobs that every service needs, so each service does not do them again. Microsoft calls these jobs cross-cutting tasks. Examples are authentication (checking who the caller is), SSL termination (ending the encrypted HTTPS connection), and rate limiting (a cap on how many requests a client can send) <Cite n={1} />. Other jobs that a gateway can take over are logging, monitoring, and response caching <Cite n={1} />. If the caller sends too many requests, AWS API Gateway can answer with `429 Too Many Requests` <Cite n={6} />.
+
+A gateway can also combine answers. This is called aggregation. The client sends one request. The gateway calls the services that it needs, joins the results, and sends back one response <Cite n={1} />.
+
+<MdxImage src="/images/architecture/17-api-gateway.webp" alt="A web app and a mobile app both send their requests to one API gateway. The gateway sends them on to five backend parts: an auth and user service, a course service, a payment service, a notification service, and a rate limit, logging, and metrics part." />
+
+### Gateway or load balancer?
+
+People often mix these up. A load balancer spreads incoming traffic across many copies of a server. It also checks their health and sends traffic only to healthy copies <Cite n={5} />. Its main job is to share the load.
+
+An API gateway works at the API level. It decides which service gets a request, and it applies rules such as authentication and rate limits <Cite n={1} />. The two often work together. For example, Azure API Management does no load balancing, so Microsoft says to put a load balancer or a reverse proxy next to it <Cite n={1} />.
+
+## When you need it
+
+Without a gateway, each client calls each service directly. Microsoft lists the problems: the client code gets complex, the client must know how the backend is split, each public service must repeat authentication and rate limiting, and each public endpoint is one more door for an attacker <Cite n={1} />.
+
+Think about a gateway when:
+
+- The backend has more than one service.
+- The web app and the mobile app need the same entry point.
+- Authentication, rate limits, and logging must be in one place.
+- You want simpler clients and you want to hide the backend structure from them.
+
+## A real-life example
+
+A student opens the dashboard of the LMS (learning management system). The dashboard shows four things: the profile, the enrolled courses, the payment status, and the upcoming classes. Each comes from a different service.
+
+Without a gateway, the mobile app makes four calls to four services. With a gateway, the app makes one call to `/student/dashboard`. The gateway checks the login token one time. Then it calls the four services, joins their answers, and returns one response.
+
+Now the payment service becomes slow. A good gateway has a timeout for each call. It can still return the profile, courses, and classes, and mark the payment part as "not available right now". The student sees most of the dashboard and does not stare at a spinner.
+
+## Common mistakes
+
+- **Business logic in the gateway.** Rules such as "who can enroll" belong in the services. Microsoft says never to move business logic into the gateway <Cite n={3} />. Logic in the gateway couples all services to it.
+- **One gateway, no backup.** All traffic passes through the gateway, so it can become a single point of failure <Cite n={2} />. Run more than one gateway instance <Cite n={3} />. The gateway can also become a bottleneck, so load test it <Cite n={2} />.
+- **Auth bypass routes.** A route that skips the auth check, or a service that is also reachable directly, lets callers go around the front door.
+- **One slow service fails the full page.** Without timeouts, the whole dashboard waits for the slowest service. Microsoft says that a partial response can be acceptable when one call takes too long <Cite n={2} />.
+- **No request ID.** Without a correlation ID (one ID that follows a request through every service), nobody can link the gateway log to the service logs. Microsoft advises correlation IDs to track each call <Cite n={2} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Auth at the door.** Call each route through the gateway with no token, an expired token, and a token of the wrong role. Then try to call each backend service directly. Every call must fail.
+- **Rate limit.** Send requests faster than the limit. Check for `429`, a clear error body, and a `Retry-After` value if the API promises one.
+- **Partial failure.** Slow down or stop one service behind an aggregated endpoint. Check that the response comes back in time and that the missing part is marked clearly.
+- **Request ID.** Send a request and find the same request ID in the gateway log and in each service log.
+- **Routing table.** After a new service or a new version goes live, check that each old route still reaches the right service.
+- **Gateway failover.** Stop one gateway instance under load. Check that clients still get answers.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| API gateway | One entry point that receives client requests and sends each to the right backend service |
+| Endpoint | One address of an API, such as `/student/dashboard` |
+| Reverse proxy | A server that takes requests for other servers and passes them on |
+| Cross-cutting task | A job that every service needs, such as authentication or logging |
+| Aggregation | The gateway calls many services and joins the answers into one response |
+| Load balancer | A component that spreads traffic across many copies of a server |
+| Rate limiting | A cap on how many requests a client can send in a time window |
+| Single point of failure | One part that stops the whole system when it fails |
+| Correlation ID | One ID that follows a request through every service, so logs can be linked |

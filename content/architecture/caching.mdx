@@ -1,0 +1,101 @@
+export const metadata = { title: 'Caching with Redis', description: 'How a Redis cache keeps popular data in fast memory, what TTL and invalidation mean, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'What is Caching and How it Works', publisher: 'Amazon Web Services', url: 'https://aws.amazon.com/caching/', accessed: '2026-10-20' },
+    { title: 'Get started with Redis', publisher: 'Redis Docs', url: 'https://redis.io/docs/latest/get-started/', accessed: '2026-10-20' },
+    { title: 'EXPIRE', publisher: 'Redis Docs', url: 'https://redis.io/docs/latest/commands/expire/', accessed: '2026-10-20' },
+    { title: 'TTL', publisher: 'Redis Docs', url: 'https://redis.io/docs/latest/commands/ttl/', accessed: '2026-10-20' },
+    { title: 'Key eviction', publisher: 'Redis Docs', url: 'https://redis.io/docs/latest/develop/reference/eviction/', accessed: '2026-10-20' },
+    { title: 'Cache-Aside pattern', publisher: 'Azure Architecture Center (Microsoft Learn)', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside', accessed: '2026-10-20' },
+    { title: 'Caching guidance', publisher: 'Azure Architecture Center (Microsoft Learn)', url: 'https://learn.microsoft.com/en-us/azure/architecture/best-practices/caching', accessed: '2026-10-20' },
+  ],
+}
+
+# Caching with Redis
+
+Think of a busy café. The menu board on the wall shows the prices, so the cashier does not walk to the office to read the price list for every order. The board is fast to read. But when the owner changes a price in the office, someone must also change the board. If nobody does, customers see the old price. A cache is that menu board, and Redis is a popular tool to build it.
+
+<PageMeta />
+
+## In plain words
+
+A **cache** is a fast storage layer that keeps a part of your data, so the next request for that data is faster than a trip to the main store <Cite n={1} />. The data is usually kept in fast memory (RAM) <Cite n={1} />. The main store is often a database, but a cache can also keep the results of API requests <Cite n={1} />.
+
+**Redis** is an in-memory data store. Many teams use it as a cache <Cite n={2} />.
+
+Two words describe each lookup:
+
+- **Cache hit:** the data is in the cache. The app returns it at once <Cite n={1} />.
+- **Cache miss:** the data is not in the cache <Cite n={1} />. The app must get it from the database or the source API.
+
+A common way to use a cache is the **cache-aside** pattern. The app loads data into the cache on demand, when somebody asks for it <Cite n={6} />:
+
+```text
+Read:   app --> Redis --hit--> return data
+                  |
+                miss
+                  v
+              database --> app saves a copy in Redis --> return data
+
+Write:  app --> database (save the change)
+        app --> Redis (delete the old copy)
+```
+
+When the app changes data, it writes to the database first. Then it **invalidates** the cache item, which means it removes or updates the old copy. The next read loads the new data and caches it again <Cite n={6} />.
+
+**TTL** (time to live) is the expiry time of a cached item <Cite n={1} />. In Redis, the `EXPIRE` command sets a timeout on a key. When the timeout ends, Redis deletes the key automatically <Cite n={3} />. The `TTL` command shows how much time a key has left <Cite n={4} />. It returns `-1` if the key has no expiry, and `-2` if the key does not exist <Cite n={4} />.
+
+Memory is limited. If you set an eviction policy, Redis removes keys by itself when the cache passes a memory limit. This is called **eviction** <Cite n={5} />. For example, the `allkeys-lru` policy removes the keys that were used least recently <Cite n={5} />. Eviction is usually safe, because cache entries are only copies of data that is stored elsewhere <Cite n={5} />.
+
+<MdxImage src="/images/architecture/12-caching.webp" alt="Diagram: the application checks Redis first. On a cache hit, Redis returns the data fast. On a cache miss, the application reads the database, saves a copy in Redis with a TTL, and returns the data. When an admin updates the data, the application invalidates the old cache key." />
+
+## When you need it
+
+- The same data is read often.
+- The database load is high.
+- Response time must improve.
+- The data does not change very often. Caching works best for data that is read a lot, changes rarely, and can be a little old <Cite n={6} />.
+- External API calls are expensive or slow.
+
+## A real-life example
+
+In an LMS (learning management system), students open the course list thousands of times each day. But the course information changes only sometimes.
+
+So the app caches the course list in Redis for 10 minutes. Most requests then never touch the database.
+
+Then an admin changes the price of a course. If the app does not invalidate the related cache key, students see the old price for up to 10 minutes. Worse, the checkout can show a price that is different from the list. So the update code must also delete the course list key and the key of that course.
+
+## Common mistakes
+
+- **Caching user data with the wrong key.** If the key is `dashboard` and not `dashboard:user:42`, user B can get user A's dashboard. Use clear, structured keys, such as `customer:100` <Cite n={7} />. Also protect the cache itself from unauthorized access <Cite n={7} />.
+- **Using a very long TTL.** If the expiry is too long, the cached data becomes stale. If it is too short, the app keeps going back to the database <Cite n={6} />.
+- **No invalidation plan.** Cache-aside does not guarantee that the cache and the database agree <Cite n={6} />. Decide which change deletes which keys.
+- **Making the whole app fail when Redis is down.** The app should keep working if the cache is not available <Cite n={7} />. It should fall back to the database <Cite n={7} />. But plan for the extra load: while the cache recovers, the database can get too many requests and time out <Cite n={7} />.
+- **Confusing speed with correctness.** A fast answer is not always a correct answer. Right after a write, a reader can briefly see stale data <Cite n={6} />. Do not use the cache as the only store of critical data. Save every important change to a persistent store <Cite n={7} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Update, then read.** Change a course price as an admin. Open the course list and the checkout at once. Both must show the new price.
+- **Two users.** Log in as user A, then as user B, and open the same personal page. User B must never see user A's data from the cache.
+- **Check the TTL.** In a test environment, run `TTL` on a cached key. A key with `-1` never expires. Ask if that is on purpose.
+- **Redis down.** Stop Redis in a test environment. The app must still answer from the database, maybe slower, with no error page.
+- **Cold cache.** Clear the cache and send a burst of traffic. Watch the database load and the response times while the cache fills again.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Cache | Fast temporary storage that keeps copies of often-used data |
+| Redis | An in-memory data store, often used as a cache |
+| Cache hit | The data is found in the cache |
+| Cache miss | The data is not in the cache, so the app reads the main store |
+| TTL | Time to live: how long a cached item stays before it expires |
+| Invalidation | Removing or updating an old item in the cache |
+| Cache-aside | A pattern where the app reads the cache first and fills it on a miss |
+| Eviction | Removing items automatically when the cache is full |
+| Stale data | Old data that no longer matches the main store |

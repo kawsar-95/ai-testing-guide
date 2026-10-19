@@ -1,0 +1,89 @@
+export const metadata = { title: 'File Storage and Object Storage', description: 'Why uploaded files break on a multi-server system, and how object storage such as Amazon S3 fixes it.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'What is Amazon S3?', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html', accessed: '2026-10-20' },
+    { title: 'Cloud Storage overview', publisher: 'Google Cloud Documentation', url: 'https://cloud.google.com/storage/docs/introduction', accessed: '2026-10-20' },
+    { title: 'Introduction to Blob (object) Storage', publisher: 'Microsoft Learn', url: 'https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction', accessed: '2026-10-20' },
+    { title: 'REL05-BP06 Make systems stateless where possible', publisher: 'AWS Well-Architected Framework', url: 'https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/rel_mitigate_interaction_failure_stateless.html', accessed: '2026-10-20' },
+    { title: 'Blocking public access to your Amazon S3 storage', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html', accessed: '2026-10-20' },
+    { title: 'Download and upload objects with presigned URLs', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html', accessed: '2026-10-20' },
+    { title: 'Uploading and copying objects using multipart upload in Amazon S3', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html', accessed: '2026-10-20' },
+    { title: 'Valet Key pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/valet-key', accessed: '2026-10-20' },
+    { title: 'Static Content Hosting pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/static-content-hosting', accessed: '2026-10-20' },
+  ],
+}
+
+# File Storage and Object Storage
+
+Think of a school where each teacher keeps the students' papers in a desk drawer. If you ask the wrong teacher, your paper is not there. A better school keeps all papers in one central archive room, and every teacher can ask the archive for a paper by its label. Object storage is that central archive for the files of your app. This page tells you why local files break on many servers, how object storage works, and what a tester can check.
+
+<PageMeta />
+
+## In plain words
+
+On a [single server](/architecture/single-server/), a file upload is simple. The app saves the file to its own disk. But with [many app servers](/architecture/horizontal-scaling/), each server has its own disk. A file that is on Server 1 is not on Server 2. So the local disk is not a good place for files.
+
+Object storage is a shared store for files. Amazon S3, Google Cloud Storage, and Azure Blob Storage are examples <Cite n={1} /> <Cite n={2} /> <Cite n={3} />. In S3, an object is a file plus the metadata that describes it. A bucket is a container for objects <Cite n={1} />. Each object has a key, which is its unique name in the bucket <Cite n={1} />. Clients can read Azure Blob Storage objects over HTTP or HTTPS <Cite n={3} />.
+
+Azure Blob Storage is made for large amounts of unstructured data, such as text or binary data <Cite n={3} />. Microsoft lists uses such as images or documents for a browser, files for distributed access, video, and backup <Cite n={3} />. AWS advises you to keep large files, such as images and documents, in S3. The app gets a file when it needs it <Cite n={4} />.
+
+This tutorial advises one design: keep the file bytes in object storage, and keep only the file key or URL and its metadata in the database. Metadata is data about the file, for example the owner, the size, the type, and the upload date.
+
+Object storage also helps with security and speed:
+
+- **Private by default.** S3 buckets and objects are private until you give access <Cite n={1} />. New buckets do not allow public access by default. But a user can change the policies and make files public <Cite n={5} />.
+- **Short-lived links.** A presigned URL gives time-limited access to one object <Cite n={6} />. The link works until its expiry time <Cite n={6} />.
+- **Direct upload.** If the app server moves every file itself, the transfer uses its compute, memory, and bandwidth <Cite n={8} />. The Valet Key pattern gives the client a limited token, so the client talks to the storage directly <Cite n={8} />.
+- **Fast delivery.** The storage can serve static files directly to the client <Cite n={9} />. A [CDN](/architecture/cdn/) can keep copies of them in many datacenters <Cite n={9} />.
+
+<MdxImage src="/images/architecture/08-object-storage.webp" alt="Diagram with two rows. Top row: a user uploads a file through the Load Balancer to App Server 1. App Server 1 saves the file to Object Storage and saves the file URL and metadata to the database. Bottom row: another request goes through the Load Balancer to App Server 2. App Server 2 reads the same file URL and metadata from the database and the same file from Object Storage." />
+
+## When you need it
+
+- You run more than one app server.
+- The system stores images, videos, PDFs, assignment files, certificates, or reports.
+- The files are large.
+- You need backup, durability, and access control for the files.
+- You want to serve static files through a CDN.
+
+## A real-life example
+
+A student uploads a profile image to the LMS. The request goes to App Server 1. The next request, which shows the profile page, goes to App Server 2.
+
+If App Server 1 saved the image on its local disk, App Server 2 cannot find it. The student sees a broken image. Now the team uses object storage. App Server 1 puts the image in a bucket and saves the image key in the database. App Server 2 reads the key from the database and loads the same image from the bucket.
+
+## Common mistakes
+
+- **Large files in the database.** Large images or videos in database rows make the database big, slow, and costly to back up.
+- **No split between public and private files.** A course banner can be public. An exam answer sheet or a certificate must stay private.
+- **Metadata out of sync.** The app deletes or replaces a file but does not update the database row, or the reverse. Then users see broken links, or old files stay forever.
+- **Permissions that are too public.** S3 is private by default, but a user can change the policies to allow public access <Cite n={5} />. One wrong policy can expose every file.
+- **Large uploads time out.** AWS calls multipart upload a best practice for objects of 100 MB or larger <Cite n={7} />. If one part fails, you send only that part again <Cite n={7} />.
+- **No way to undo a delete.** S3 Versioning keeps old versions, so you can restore a file that someone deleted or overwrote by accident <Cite n={1} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Cross-server read.** Upload a file, then load it many times so that different servers answer. Every request must show the file.
+- **Private means private.** Open the direct URL of a private file without logging in, and as a different user. Both must be denied.
+- **Expired link.** Get a presigned URL, wait until it expires, and open it again. It must fail.
+- **Delete is complete.** Delete a file in the app. Check that the database row and the stored object are both gone.
+- **Big and slow uploads.** Upload a file at the size limit on a slow network. Check the timeout, the progress bar, and the error message.
+- **Bad files.** Upload a wrong file type, a file over the limit, and a file name with spaces or non-English letters.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Object storage | A shared store that keeps files as objects |
+| Object | A file plus the metadata that describes it |
+| Bucket | A container for objects |
+| Key | The unique name of an object in its bucket |
+| Metadata | Data about a file, such as its owner, size, and type |
+| Presigned URL | A link that gives access to one object for a limited time |
+| Multipart upload | Sending a large file in parts, so that a failed part can be sent again |
+| Versioning | Keeping old versions of an object, so that you can restore it |

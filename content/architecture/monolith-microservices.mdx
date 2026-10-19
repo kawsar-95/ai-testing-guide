@@ -1,0 +1,106 @@
+export const metadata = { title: 'Monolith, Modular Monolith, and Microservices', description: 'Three ways to split an application, when each one fits, and what a tester must check when a system moves from one to the next.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Microservices architecture style', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/microservices', accessed: '2026-10-20' },
+    { title: "What's the Difference Between Monolithic and Microservices Architecture?", publisher: 'AWS', url: 'https://aws.amazon.com/compare/the-difference-between-monolithic-and-microservices-architecture/', accessed: '2026-10-20' },
+    { title: 'REL03-BP01 Choose how to segment your workload', publisher: 'AWS Well-Architected Framework', url: 'https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_service_architecture_monolith_soa_microservice.html', accessed: '2026-10-20' },
+    { title: 'Use domain analysis to model microservices', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/microservices/model/domain-analysis', accessed: '2026-10-20' },
+    { title: 'Saga distributed transactions pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/saga', accessed: '2026-10-20' },
+    { title: 'Strangler Fig pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/strangler-fig', accessed: '2026-10-20' },
+  ],
+}
+
+# Monolith, Modular Monolith, and Microservices
+
+Think of three ways to run a restaurant. In the first, one cook does everything in one kitchen. In the second, there is still one kitchen, but it has clear stations: one for salads, one for grills, one for desserts. In the third, each dish comes from a separate small kitchen with its own staff and its own fridge. The three ways are a monolith, a modular monolith, and microservices. Each fits a different stage of a product.
+
+<PageMeta />
+
+## In plain words
+
+A **monolith** is one application with one code base that does many business jobs <Cite n={2} />. You build it, test it, and deploy it as one unit <Cite n={2} />. A monolith is easy to start, because it needs little planning up front <Cite n={2} />. It is also simpler to deploy than microservices <Cite n={2} />.
+
+A monolith has limits as it grows. A small change in one part can affect many other parts, and the team must retest and redeploy the whole system <Cite n={2} />. To scale it, you must scale the whole application, even if only one part is busy <Cite n={2} />.
+
+The vendor docs give no one definition of a modular monolith. In this tutorial, a **modular monolith** is still one application that you deploy as one unit. But inside, the code is split into clear modules, such as user, course, payment, and notification. Each module has its own area of the code and talks to other modules through a clear interface. AWS says that if you start with a monolith, you must make sure it is modular, so it can later grow into smaller services <Cite n={3} />. Clear borders between parts let you move each part out on its own later <Cite n={6} />.
+
+**Microservices** are small, independent services. A small team can build and run each one, and each one can be deployed without redeploying the rest <Cite n={1} />. Each service owns its own data <Cite n={1} />. Each service can also be scaled on its own <Cite n={1} />.
+
+<MdxImage src="/images/architecture/18-monolith-microservices.webp" alt="Two panels side by side. Left, the modular monolith: one application box with four modules under it, user, course, payment, and notification. Right, microservices: four separate services, user, course, payment, and notification, each with an arrow to its own database." />
+
+Microservices do not remove complexity. AWS says they reveal the complexity that is already there <Cite n={2} />. Each service is simpler, but the whole system has more moving parts <Cite n={1} />. Smaller services can add latency (waiting time), harder debugging, and more operations work <Cite n={3} />.
+
+## When you need it
+
+<Callout type="note" title="Tutorial view and the AWS view">
+The lists below are the tutorial's own advice. In the tutorial's view, a monolith is often the best start for a new product. AWS Well-Architected is stricter. It says that a monolithic architecture "should be avoided whenever possible" <Cite n={3} />. It also says that if you start with a monolith, it must be modular, so it can later move to smaller services <Cite n={3} />.
+</Callout>
+
+Choose a **monolith** when:
+
+- The team is small and the product is new.
+- Traffic is low or moderate.
+- The team must change things fast.
+
+AWS says a monolith suits a simple application or a prototype <Cite n={2} />.
+
+Choose a **modular monolith** when:
+
+- The code base grows and the team grows.
+- You want clear borders inside the code, but not the cost of microservices yet.
+
+Choose **microservices** when:
+
+- The borders between business areas are clear.
+- Parts of the system must scale or deploy on their own.
+- The team has the skills. Microsoft says to check this with care <Cite n={1} />.
+- DevOps, monitoring, and tracing are ready. Microservices need a mature DevOps culture <Cite n={1} />.
+
+## A real-life example
+
+An LMS (learning management system) starts as a monolith. One team builds sign-up, courses, payment, and notifications in one app. This is fast and cheap.
+
+Later, the team moves some parts out:
+
+- **Notification** becomes a separate service. Email and SMS work runs in the background and does not depend on the rest.
+- **Payment** becomes a separate service. It must be very reliable and very secure, so it gets its own team, tests, and release plan.
+- **Certificate and video processing** become separate services. They are heavy, CPU-bound background jobs that need to scale on their own.
+
+The course catalog and the student profile stay in the modular monolith. Microsoft describes this step-by-step move as the Strangler Fig pattern: you replace one piece of the old system at a time <Cite n={6} />.
+
+## Common mistakes
+
+- **Too many services too early.** A small team with small traffic gets all the cost of microservices and few of the gains.
+- **One shared database, called "microservices".** Shared database schemas couple the services together <Cite n={1} />.
+- **No monitoring or tracing.** A request now crosses many services. Microsoft says logs must be correlated across services, and that you need central logs, distributed tracing, and metrics <Cite n={1} />.
+- **Services split by technical layer.** A "database service" and a "UI service" are layers, not business areas. Microsoft says to design services around business capabilities, not layers <Cite n={4} />.
+- **Ignoring distributed transactions.** When one change touches many services, it is unlikely to be one ACID transaction (atomic, consistent, isolated, and durable) <Cite n={1} />. A common answer is a saga: a chain of local steps, with "undo" steps if a later step fails <Cite n={5} />.
+- **A "Death Star".** If services depend on each other too much, one failure spreads, and the system is as fragile as a monolith <Cite n={3} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Contract tests.** When a module becomes a service, test the API between them. Check that both sides agree on fields, types, and error codes.
+- **Partial failure.** Stop one service, such as notification. Check that payment and enrollment still work, and that the missed messages go out later.
+- **Data across services.** Pay for a course, then fail the enrollment step. Check that the system undoes the payment or retries the enrollment, and never leaves the student charged but not enrolled.
+- **One request, one trace.** Follow one checkout through all services with one request ID. Check that each log line has that ID.
+- **Independent deploys.** Deploy a new version of one service. Run the end-to-end flows and check that the other services still work with it.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Monolith | One application with one code base, deployed as one unit |
+| Modular monolith | One deployed application, split inside into modules with clear borders |
+| Microservice | A small service that a small team owns, deploys on its own, and that owns its own data |
+| Code base | All the source code of one application |
+| Deploy | Put a new version of the software into use |
+| Business capability | A thing that the business does, such as payment or enrollment |
+| ACID transaction | A database change that is atomic (it happens fully or not at all), consistent, isolated, and durable |
+| Saga | A chain of local steps across services, with undo steps if one step fails |
+| Strangler Fig pattern | Replace an old system one piece at a time |
+| Latency | The time that a request waits for an answer |

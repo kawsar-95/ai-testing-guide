@@ -1,0 +1,104 @@
+export const metadata = { title: 'Rate Limiting', description: 'How a system caps the number of requests a user, an IP, or a phone number can send in a time window, and what the 429 response tells the client.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'RFC 6585: Additional HTTP Status Codes', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc6585.html', accessed: '2026-10-20' },
+    { title: 'RFC 9110: HTTP Semantics (Retry-After)', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html#name-retry-after', accessed: '2026-10-20' },
+    { title: 'Throttling pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/throttling', accessed: '2026-10-20' },
+    { title: 'INCR (Pattern: rate limiter)', publisher: 'Redis docs', url: 'https://redis.io/docs/latest/commands/incr/', accessed: '2026-10-20' },
+    { title: 'Rate limiting rules', publisher: 'Cloudflare docs', url: 'https://developers.cloudflare.com/waf/rate-limiting-rules/', accessed: '2026-10-20' },
+    { title: 'Rate limiting best practices', publisher: 'Cloudflare docs', url: 'https://developers.cloudflare.com/waf/rate-limiting-rules/best-practices/', accessed: '2026-10-20' },
+    { title: 'Rate limiting parameters', publisher: 'Cloudflare docs', url: 'https://developers.cloudflare.com/waf/rate-limiting-rules/parameters/', accessed: '2026-10-20' },
+  ],
+}
+
+# Rate Limiting
+
+A cash machine lets you take out only a set amount of money each day. If you try again, it says "no" and tells you to come back tomorrow. This protects you and the bank, even if someone steals your card. Rate limiting does the same for an API: it lets each user send only a set number of requests in a time window, and then it says "wait".
+
+<PageMeta />
+
+## In plain words
+
+A rate limit has two numbers: a time window (the period) and the number of requests that the client can send in that period <Cite n={5} />. "3 requests in 5 minutes" is one rate limit.
+
+The system must decide who "the client" is. It can count by user, IP address, API key, or phone number. The HTTP standard does not fix this choice. A server can identify the user by login details or a cookie, for example <Cite n={1} />.
+
+Rate limits protect the system from abuse. They protect a login page from brute-force attacks and cap how many API calls one client can make <Cite n={5} />. They also stop one user from taking all the resources <Cite n={3} />. And they protect money: each OTP SMS or each AI call costs the company.
+
+When a client goes over the limit, the server usually answers with **HTTP 429 Too Many Requests** <Cite n={3} />. When a Cloudflare rate limiting rule blocks a request, the default response code is 429 <Cite n={7} />. The standard defines 429 as "too many requests in a given amount of time" <Cite n={1} />. The response may include a `Retry-After` header that says how long to wait <Cite n={1} />. Its value is a number of seconds or a date. `Retry-After: 120` means "wait 2 minutes" <Cite n={2} />. A cache must not store a 429 response <Cite n={1} />.
+
+<Callout type="note" title="Retry-After and retryAfterSeconds">
+The owner's diagram shows `retryAfterSeconds`. The standard place for the wait time is the `Retry-After` header. Some APIs also put a field such as `retryAfterSeconds` in the JSON body. That field is an app choice, not a standard. It is still useful: Azure advises to name the limit and its scope, so the client does not guess <Cite n={3} />.
+</Callout>
+
+There are four common ways to count <Cite n={3} />:
+
+| Algorithm | How it behaves |
+|---|---|
+| Fixed window | Simple. A client can send a burst at the end of one window and another at the start of the next. |
+| Sliding window | Smooths the burst at the window edge, but keeps more data. |
+| Token bucket | Allows short bursts, then refills at a steady rate. |
+| Leaky bucket | Lets requests out at a constant rate. |
+
+The counter must live in one shared place. If each server counts in its own memory, a client that reaches many servers gets more requests than the limit. A shared counter in Redis sees every request, but each check takes a little time <Cite n={3} />. The Redis docs show a classic rate limiter: increase a counter for each request, and give the counter an expiry so that Redis removes it after the window <Cite n={4} />.
+
+<MdxImage src="/images/architecture/14-rate-limiting.webp" alt="A flow chart. An incoming request reaches the check 'Rate Limit OK?'. If yes, the API processes the request and updates a Redis counter with a TTL. If no, the API returns 429 Too Many Requests with a retryAfterSeconds value." />
+
+## When you need it
+
+- You have login, OTP, or password reset endpoints.
+- You have payment start or payment callback endpoints.
+- Search, file upload, AI calls, or report generation costs a lot.
+- You expose a public API.
+- You pay for each SMS or email.
+
+## A real-life example
+
+An LMS has OTP login. The team sets two rules:
+
+- At most 3 OTP requests from the same phone number in 5 minutes.
+- At most 10 OTP requests from the same IP address in 10 minutes.
+
+The fourth request from one phone gets this answer:
+
+```text
+HTTP/1.1 429 Too Many Requests
+Retry-After: 180
+Content-Type: application/json
+
+{ "error": "too_many_otp_requests", "retryAfterSeconds": 180 }
+```
+
+The two rules cut SMS cost, spam, and brute-force attempts.
+
+## Common mistakes
+
+- **Only IP-based limits.** Many devices behind NAT can share one IP address <Cite n={7} />. A school or an office network often works this way, so one strict IP limit can block a whole class. Combine IP limits with user or phone limits.
+- **The same limit for every endpoint.** OTP and verify endpoints are frequent brute-force targets <Cite n={6} />. Give them stricter limits. One option is to count only failed attempts, so real users with valid codes are not blocked <Cite n={6} />.
+- **No wait time in the 429.** Without `Retry-After`, the client cannot pick a retry plan and must guess <Cite n={3} />.
+- **Counters in local memory.** Each server counts on its own, so the servers undercount, and a client that reaches many servers can go over the limit <Cite n={3} />.
+- **Forgetting admin and internal endpoints.** An admin login or an internal report API can be abused too.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+- **The edge of the limit.** Send exactly the limit, then one more. Check that only the extra request gets 429.
+- **The wait time.** Check the `Retry-After` header (and any body field). Wait that long, then check that the next request passes.
+- **Many servers.** Send requests through the load balancer so that they reach different servers. Check that the limit still holds in total.
+- **Different keys.** Use one phone from many IPs, and many phones from one IP. Check that each rule fires on its own.
+- **Window edges.** For a fixed window, send a burst just before and just after the window resets.
+- **Sensitive endpoints.** Check that OTP, password reset, and payment endpoints have stricter limits than read-only pages.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Rate limit | A cap on requests per client in a time window |
+| Time window | The period in which requests are counted, such as 5 minutes |
+| 429 Too Many Requests | The HTTP status code for "you sent too many requests" |
+| Retry-After | The HTTP header that tells the client how long to wait |
+| Brute force | Trying many guesses, such as every OTP code, until one works |
+| NAT | Network address translation: many devices share one public IP address |
+| Token bucket | An algorithm that allows short bursts and then a steady rate |

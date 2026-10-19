@@ -1,0 +1,100 @@
+export const metadata = { title: 'Load Balancer', description: 'The component that spreads requests across many app servers, checks their health, and stops traffic to a broken server.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'What is Elastic Load Balancing?', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html', accessed: '2026-10-20' },
+    { title: 'Health checks for Application Load Balancer target groups', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html', accessed: '2026-10-20' },
+    { title: 'HTTP Load Balancing', publisher: 'NGINX Documentation', url: 'https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/', accessed: '2026-10-20' },
+    { title: 'Edit target group attributes for your Application Load Balancer', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html', accessed: '2026-10-20' },
+    { title: 'What is an Application Load Balancer?', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html', accessed: '2026-10-20' },
+    { title: 'NGINX SSL Termination', publisher: 'NGINX Documentation', url: 'https://docs.nginx.com/nginx/admin-guide/security-controls/terminating-ssl-http/', accessed: '2026-10-20' },
+  ],
+}
+
+# Load Balancer
+
+Think of the host at the door of a busy restaurant. Guests do not pick a table themselves. The host sees which waiters have space and sends each guest to a free table. If one waiter goes home sick, the host stops sending guests to that waiter's tables. A load balancer is that host for your app servers. This page tells you what a load balancer does, how it picks a server, and what a tester can check.
+
+<PageMeta />
+
+## In plain words
+
+A load balancer is a component that receives the incoming requests and spreads them across several backend servers. AWS calls these servers "targets". A target can be a virtual server, a container, or an IP address <Cite n={1} />. The load balancer also watches the health of each target and sends traffic only to the healthy ones <Cite n={1} />. Because of this, a load balancer makes an application more available and more tolerant of failures <Cite n={1} />.
+
+A load balancer can do these jobs:
+
+| Job | What it does |
+|---|---|
+| Traffic distribution | Spreads the requests across the servers <Cite n={1} /> |
+| Health check | Sends test requests to each server at regular times <Cite n={2} /> |
+| Failover | Takes a failed server out of service, and puts it back when it is healthy again <Cite n={2} /> |
+| TLS termination | Does the encryption and decryption work, so the servers can focus on their main work <Cite n={1} /> |
+| Routing rules | Sends requests to different server groups based on the content, for example the URL path <Cite n={5} /> |
+| Draining | Stops new requests to a server that is leaving, and gives its open requests time to finish (on AWS, up to 300 seconds by default) <Cite n={4} /> |
+
+The traffic of an `https://` site is encrypted. "TLS termination" means that the load balancer ends the encrypted connection and decrypts the requests, so the app servers do not have to <Cite n={1} />. NGINX calls the same job "SSL termination" <Cite n={6} />.
+
+### How it picks a server
+
+The load balancer uses a rule, called an algorithm, to pick the next server. NGINX, a web server that can also work as a load balancer, supports these methods <Cite n={3} />:
+
+- **Round Robin.** The requests go evenly across the servers, one after the other. This is the NGINX default <Cite n={3} />.
+- **Least Connections.** The request goes to the server with the fewest active connections <Cite n={3} />.
+- **IP Hash.** The client's IP address picks the server. So requests from the same address go to the same server, unless that server is not available <Cite n={3} />.
+
+### How a health check works
+
+The AWS Application Load Balancer sends a test request to each server about every 30 seconds by default <Cite n={2} />. By default, 2 failed checks in a row make a server "unhealthy", and 5 good checks in a row make it "healthy" again <Cite n={2} />. The result of each check lasts for the whole interval <Cite n={2} />. So a server that breaks can still get traffic until it fails 2 checks in a row.
+
+Watch one special case. If all the servers in a group are unhealthy, the AWS load balancer sends requests to all of them anyway <Cite n={2} />.
+
+<MdxImage src="/images/architecture/06-load-balancer.webp" alt="Diagram: Users send requests to a Load Balancer. Green arrows marked Healthy go to App Server 1 and App Server 2, which have check marks. A red arrow marked Unhealthy - No Traffic points to App Server 3, which is marked Down. App Servers 1 and 2 connect to one Database." />
+
+## When you need it
+
+- You run more than one app server. See [Horizontal Scaling](/architecture/horizontal-scaling/).
+- You need high availability: the system must stay usable when one server fails.
+- You want to stop sending traffic to unhealthy servers.
+- You want the traffic spread evenly across the servers.
+- You want to deploy without downtime. You can add and remove servers without a break in the flow of requests <Cite n={1} />.
+
+## A real-life example
+
+The LMS runs on three app servers. App Server 3 has a memory problem, and it stops answering.
+
+The load balancer sends its regular health check, and App Server 3 fails it. The load balancer marks App Server 3 as unhealthy and stops sending traffic to it. Students continue to use the LMS through App Server 1 and App Server 2. After the team restarts App Server 3, it passes the health checks again, and the load balancer sends it traffic again.
+
+## Common mistakes
+
+- **The health check only says "I am alive".** A `/health` endpoint that always returns `200 OK` can pass while the server cannot reach the database. Then users get errors from a "healthy" server.
+- **The health check is too heavy.** If the check calls every dependency, one slow service can mark all servers unhealthy at the same time.
+- **The deploy kills a server too early.** During draining, the AWS load balancer gives the open requests time to finish, up to 300 seconds by default <Cite n={4} />. If the server closes the connection before the drain ends, the client gets a 500-level error <Cite n={4} />.
+- **Sticky sessions hide a stateful app.** A sticky session ties a user's session to one server <Cite n={4} />. This hides the real problem. See [Stateless Service](/architecture/stateless-service/).
+- **Only one load balancer.** If you run your own single load balancer, it is a new single point of failure.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Server down.** Stop one app server during a load test. Measure how long until the errors stop, and compare it with the health check interval and the failure count.
+- **Server back.** Start the server again. Check that it gets traffic again only after it passes the health checks.
+- **Honest health check.** Break the database connection of one server. Check that its health check fails and that the load balancer removes it.
+- **Spread of traffic.** Send many requests and count the responses per server, from logs or a response header. Compare the count with the algorithm.
+- **Deploy under load.** Deploy a new version while a load test runs. Look for 5xx errors at the moment each server is removed.
+- **All servers sick.** In a test environment, make every server fail its health check. Write down what users see.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Load balancer | A component that spreads requests across several servers |
+| Target | One backend server (or container, or IP address) that gets requests |
+| Health check | A regular test request that shows if a server works |
+| Failover | Moving traffic away from a failed server to the healthy ones |
+| TLS termination | The load balancer decrypts the `https` traffic for the servers |
+| Round Robin | Requests go to the servers one after the other |
+| Least Connections | The request goes to the server with the fewest active connections |
+| Draining | Giving open requests time to finish before a server leaves |
+| Sticky session | All requests of one user's session go to the same server |

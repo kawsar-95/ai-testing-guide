@@ -1,0 +1,88 @@
+export const metadata = { title: 'Database Replication and Read/Write Splitting', description: 'How a primary database copies its data to read replicas, why replicas can show old data, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-20',
+  sources: [
+    { title: 'Working with DB instance read replicas', publisher: 'Amazon RDS User Guide', url: 'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html', accessed: '2026-10-20' },
+    { title: 'Monitoring read replication', publisher: 'Amazon RDS User Guide', url: 'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.Monitoring.html', accessed: '2026-10-20' },
+    { title: 'High Availability, Load Balancing, and Replication', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/high-availability.html', accessed: '2026-10-20' },
+    { title: 'Hot Standby', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/hot-standby.html', accessed: '2026-10-20' },
+    { title: 'Redundancy, replication, and backup', publisher: 'Microsoft Learn', url: 'https://learn.microsoft.com/en-us/azure/reliability/concept-redundancy-replication-backup', accessed: '2026-10-20' },
+    { title: 'Multi-AZ DB instance deployments for Amazon RDS', publisher: 'Amazon RDS User Guide', url: 'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZSingleStandby.html', accessed: '2026-10-20' },
+    { title: 'Replication lag', publisher: 'Google Cloud SQL for MySQL documentation', url: 'https://cloud.google.com/sql/docs/mysql/replication/replication-lag', accessed: '2026-10-20' },
+  ],
+}
+
+# Database Replication and Read/Write Splitting
+
+Think of a school with one head teacher who keeps the official mark book. Only the head teacher writes new marks in it. Every evening, assistants copy the new marks into their own books, so students can ask any assistant for their marks. But if you ask an assistant just after a new mark goes in, the assistant may not have it yet. Database replication works the same way, with the same risk.
+
+<PageMeta />
+
+## In plain words
+
+**Database replication** means that one database copies its data to one or more other databases. Each copy is a **replica** <Cite n={5} />. The database that can change data is the **primary**. The copies that follow its changes are **standby** or **secondary** servers <Cite n={3} />. A **read replica** is a read-only copy of the database <Cite n={1} />.
+
+**Read/write splitting** means that the application sends each query to the right place. Writes go to the primary, such as registration, payment, enrollment, and updates. Reads that are heavy but not urgent go to replicas, such as course lists, reports, analytics, and dashboards. Clients can read and write on the primary, but they can only read on the replica <Cite n={1} />. When you send queries to the replica, the primary gets less load <Cite n={1} />.
+
+The copy can be **synchronous** or **asynchronous**:
+
+- **Synchronous:** a change is done only when all servers have it. A failover then loses no data <Cite n={3} />.
+- **Asynchronous:** the replica gets the change a little later. A failover can lose some changes, and replicas can return slightly old ("stale") results <Cite n={3} />. Systems use it when synchronous copying is too slow <Cite n={3} />.
+
+Amazon RDS, for example, copies changes to a read replica asynchronously <Cite n={1} />. The delay is called **replication lag** <Cite n={2} />. The PostgreSQL manual says that the same query on the primary and the standby, at almost the same time, can return different results <Cite n={4} />. It calls the standby "eventually consistent": it gets the change, but not at once <Cite n={4} />.
+
+Lag grows when the primary cannot send changes fast enough, the replica cannot receive them fast enough, or the replica cannot apply them fast enough <Cite n={7} />.
+
+<MdxImage src="/images/architecture/11-database-replication.webp" alt="Diagram: the application sends writes such as registration and payment to the primary database. The primary copies its changes to two read replicas. The application sends reads such as course lists and reports to the replicas. A label shows replication lag between the primary and the replicas." />
+
+## When you need it
+
+- Read traffic is very high.
+- Reports or analytics slow down the primary database. AWS names business reporting as a use case for read replicas <Cite n={1} />.
+- You must plan for high availability.
+- You want to keep critical writes apart from reads that are not critical.
+- You need a failover plan for the future. A replica can become a standalone database if the primary fails <Cite n={1} />.
+
+## A real-life example
+
+A student pays for a course in the LMS (learning management system). The payment success is written to the primary database.
+
+Then the app opens the dashboard at once and reads the payment status from a replica. If there is replication lag, the replica does not have the payment yet. So the student sees "Unpaid" and may pay again.
+
+A better design reads critical data, such as payment status, from the primary right after the payment. Another option is to show a "Processing" state until the status is confirmed. Course lists and reports can still come from replicas, where a few seconds of delay is safe.
+
+## Common mistakes
+
+- **Sending all reads to replicas.** This breaks "read after write" flows, where users must see their own change at once. Replicas can return stale results <Cite n={3} />.
+- **Thinking replication is the same as backup.** Replication copies every change and keeps no old copies <Cite n={5} />. If someone deletes data by mistake, the delete goes to every replica too <Cite n={5} />. A backup is a copy from a point in time that you can restore <Cite n={5} />.
+- **Not monitoring replication lag.** Lag grows silently. On Amazon RDS, you can watch it with the `ReplicaLag` metric in CloudWatch <Cite n={2} />. Set an alert on it.
+- **Not testing failover.** With asynchronous copying, some changes can be lost when the system switches to another server <Cite n={3} />. Also, not every copy is a read replica. An RDS Multi-AZ standby, for example, is a synchronous copy for high availability, and it cannot serve reads <Cite n={6} />. Know which copy does which job, and test the switch.
+- **Ignoring report load on the primary.** Heavy reports on the primary slow down payments and logins. Move them to a replica.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Read after write.** Make a payment, change a profile, or enroll in a course. Then open the page that shows it at once. The new value must show, or the page must say "Processing".
+- **Lag on purpose.** In a test environment, add replication lag, or pause the replica. Check which pages show old data, and whether any of them is critical.
+- **Double action.** While the status is stale, try to pay or enroll again. The system must not charge or enroll the student two times.
+- **Write to a replica.** Check that no write goes to a replica. A write there must fail with a clear error, not succeed silently in the wrong place.
+- **Failover drill.** Stop the primary in a test environment. Measure how long writes fail, and check that no confirmed payment is lost after the switch.
+- **Restore from backup.** Delete a test record, then restore it from a backup, not from a replica.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Primary | The database that accepts writes |
+| Replica | A copy of the primary that follows its changes |
+| Read replica | A replica that serves read-only queries |
+| Read/write splitting | Sending writes to the primary and some reads to replicas |
+| Replication lag | The delay before a change on the primary reaches a replica |
+| Stale read | A read that returns old data because the replica is behind |
+| Synchronous | A change is done only when every copy has it |
+| Asynchronous | Copies get the change a little later |
+| Failover | Switching to another database when the primary fails |
+| Backup | A copy from a point in time that you can restore |
