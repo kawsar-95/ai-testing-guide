@@ -164,6 +164,7 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | A9 | `nofail`: no error if the device does not exist. | S22 | "nofail do not report errors for this device if it does not exist." |
 | A10 | Without `nofail`, a failing fstab line can stop the boot (page text, danger callout, cite S53). The page states it with "can". S53 gives the `nofail` side: with `nofail` the mount is only wanted, so the boot goes on. The "required" side is the logical converse. | S53 | "With nofail, this mount will be only wanted, not required, by local-fs.target or remote-fs.target." |
 | A11 | `defaults` means the usual options (page gloss in the Adding Disks paragraph). | S22 | "defaults use default options." |
+| A12 | Danger callout: `fdisk` rewrites the partition table; `mkfs` erases the start of the partition (page cites S15 and S30). | S15, S30 | S15: "dialog-driven program for creation and manipulation of partition tables." S30: "erases the first partition block to make any previous filesystem invisible." |
 
 ### Swap
 | # | Claim | Source | Quote |
