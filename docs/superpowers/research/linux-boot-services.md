@@ -82,7 +82,7 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C24 | `systemd.unit=` is a kernel command-line parameter that systemd understands. | S20 | "systemd.unit=, rd.systemd.unit=, ... Parameters understood by the system and service manager" |
 | C25 | GRUB generates a recovery entry for each Linux kernel unless it is disabled. | S23 | "two menu entries will be generated for each Linux kernel: one default entry and one entry for recovery mode" |
 | C26 | `grub-install` installs GRUB on a drive and runs as root. | S23 | "invoke the program grub-install ... as the superuser (root)" |
-| C27 | (Tutorial's own judgement, not a source claim; the page has no cite on this callout) A wrong boot configuration can leave a machine unbootable and a remote machine unreachable. | none | Marked as a danger callout; the sources describe the tools, not this risk. |
+| C27 | (Tutorial's own judgement, not a source claim; the page has no cite on this callout) A wrong boot configuration can leave a machine unbootable and a remote machine unreachable. A rescue boot can cut the network, so use it only at the console of a VM. | none | Marked as a danger callout; the sources describe the tools, not this risk. |
 
 ## Service Management
 | # | Claim | Source | Quote |
@@ -94,9 +94,9 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C32 | Unit directories, in the order of S13 (earlier overrides later): `/etc/systemd/system` (administrator), `/run/systemd/system` (runtime), `/usr/lib/systemd/system` (package manager). | S13 | "Unit files found in directories listed earlier override files with the same name in directories lower in the list" |
 | C33 | A drop-in is a `.conf` file in `UNIT.d/` that merges with the unit file. | S13 | "a "drop-in" directory foo.service.d/ may exist. All files with the suffix ".conf" from this directory will be merged" |
 | C34 | `systemctl cat` prints the unit file and its drop-ins. | S12 | "Prints the "fragment" and "drop-ins" (source files) of units." |
-| C35 | SysV init starts services with scripts, in `/etc/init.d` on most Linux versions. | S10 | "a single startup script located in a specific directory (/etc/init.d in most versions of Linux)" |
+| C35 | SysV init starts services with scripts, in `/etc/init.d` on most Linux versions. | S10, S7 | "a single startup script located in a specific directory (/etc/init.d in most versions of Linux)" ; S7: "Services are started with initialization shell scripts, located under the /etc/init.d directory." |
 | C36 | Systemd has largely replaced SysV init. | S5 | "has largely been replaced by systemd" (8 words); the SysV description is "An older init system that uses simple scripts" (7 words) |
-| C37 | The `service` command works with SysV and with systemd. | S7 | "the service command has evolved to also function with the systemd initialization system" |
+| C37 | (Removed from the page in review fix 1: the claim that the `service` command works with both init systems rested on a blog only.) | S7 | not used |
 
 ## Creating Services
 | # | Claim | Source | Quote |
@@ -140,7 +140,7 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C66 | The exit-code mapping is imperfect. | S12 | "The mapping of LSB service states to systemd unit states is imperfect, so it is better to not rely on those return values" |
 | C67 | `--failed` lists failed units. `reset-failed` clears the failed state and the restart counter. | S12 | "List units in failed state." / "the restart counter of service units" is reset |
 | C68 | `status` shows only the current or most recent run; `journalctl --unit` gives older runs. | S12 | "Information about earlier invocations, invocations from previous system boots ... may be retrieved via journalctl --unit=." |
-| C69 | `service --status-all` lists SysV services. | S7 | "it has a handy option called –status-all that outputs a list of all system services and their status" |
+| C69 | (Removed from the page in review fix 1: `service --status-all` rested on a blog only.) | S7 | not used |
 | C70 | `--quiet` stops the state output of `is-active`. | S12 | "Unless --quiet is specified, this will also print the current unit state to standard output." |
 
 ## Checking Service Logs
@@ -160,7 +160,7 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 ## Running Services
 | # | Claim | Source | Quote |
 |---|---|---|---|
-| C81 | `systemctl list-units --type=service --state=running` lists running services; `list-unit-files --state=enabled` lists the enabled unit files (not all that starts at boot). | S6 | "you can run "systemctl --type=service --state=running" to see running services" / "To see all enabled unit files on your system" |
+| C81 | `systemctl list-units --type=service --state=running` lists running services; `list-unit-files --state=enabled` lists the enabled unit files (not all that starts at boot). | S6, S12 | "you can run "systemctl --type=service --state=running" to see running services" / "To see all enabled unit files on your system" ; S12: "--type=: ... only units of the specified types will be shown" / "--state=: ... show only those in the specified states" ; "list-unit-files [PATTERN…]: List unit files installed on the system, in combination with their enablement state" |
 | C82 | `list-units` shows by default only active units, units with pending jobs, and failed units. `--all` shows more. | S12 | "By default, only units which are active, have pending jobs, or have failed are shown; this can be changed with --all." |
 | C83 | `list-timers` shows NEXT and LAST. | S12 | "NEXT shows the next time the timer will run." / "LAST shows the last time the timer ran." |
 | C84 | By default, a timer activates the service with the same name (`Unit=` can name another). | S21 | "By default, a service by the same name as the timer (except for the suffix) is activated" |

@@ -41,7 +41,7 @@ export const page = {
 
 # Boot and Services
 
-A Linux machine starts in a chain of steps. On most distributions, systemd then runs the long-lived programs, called services, that your tests depend on. This stage shows the boot chain, the boot loader, and the daily `systemctl` and `journalctl` work: create a service, start it, check it, and read its logs. A tester needs this to find out why a test host, a CI runner, or an application under test does not come up. <Cite n={1} />
+A Linux machine starts in a chain of steps. On most distributions, systemd then runs the long-lived programs, called services, that your tests depend on. This stage shows the boot chain, the boot loader, and the daily `systemctl` and `journalctl` work. You create a service, start it, check it, and read its logs. A tester needs this to find out why a test host, a CI runner, or an application under test does not come up. <Cite n={1} />
 
 <PageMeta />
 
@@ -72,9 +72,9 @@ Tutorial's own advice: a VM or CI runner that boots slowly can make the first te
 
 A boot loader is the program that the firmware starts to load the kernel. <Cite n={9} /> GRUB 2 is the boot loader of the GNU project, and GRUB Legacy is no longer developed. <Cite n={4} /> `systemd-boot` is a simple boot manager for UEFI firmware only. <Cite n={25} />
 
-GRUB reads its menu from `grub.cfg`, usually in `/boot/grub`. The program `grub-mkconfig` generates this file, so do not edit it by hand. <Cite n={23} /> Change settings in `/etc/default/grub` instead, for example `GRUB_CMDLINE_LINUX` (extra kernel command-line words), and run the generator again. <Cite n={23} /> On Debian, `update-grub` runs it. <Cite n={30} /> `systemd-boot` reads entry files from `/loader/entries/` on the ESP or the XBOOTLDR partition (an extra boot partition), in the format of the Boot Loader Specification. <Cite n={24} /> <Cite n={25} />
+GRUB reads its menu from `grub.cfg`, usually in `/boot/grub`. The program `grub-mkconfig` generates this file, so do not edit it by hand. <Cite n={23} /> Change settings in `/etc/default/grub` instead, for example `GRUB_CMDLINE_LINUX` (extra kernel command-line words), and run the generator again. <Cite n={23} /> On Debian, `update-grub` runs it. <Cite n={30} /> Path and tool name can differ on other distributions. `systemd-boot` reads entry files from `/loader/entries/` on the ESP or the XBOOTLDR partition (an extra boot partition). The Boot Loader Specification defines their format. <Cite n={24} /> <Cite n={25} />
 
-At the menu, the key `e` opens an editor for one entry. GRUB boots the edited entry with Ctrl-x. <Cite n={23} /> <Cite n={25} /> To reach a rescue shell, add `systemd.unit=rescue.target` to the kernel command line. The word `1` is a short form. <Cite n={11} /> <Cite n={20} /> GRUB can also generate a recovery entry for each kernel. <Cite n={23} />
+At the menu, the key `e` opens an editor for one entry. GRUB boots the edited entry with Ctrl-x. <Cite n={23} /> <Cite n={25} /> To reach a rescue shell, add `systemd.unit=rescue.target` to the kernel command line. The word `1` is a short form. <Cite n={11} /> <Cite n={20} />
 
 ```bash
 cat /proc/cmdline    # the kernel command line of this boot
@@ -84,11 +84,11 @@ ls /boot             # boot files; GRUB usually keeps grub.cfg in /boot/grub
 ```
 
 <Callout type="danger" title="A wrong boot configuration can leave a machine unbootable">
-Do not run `grub-install` or `grub-mkconfig -o`, or edit `/etc/default/grub`, on a machine that you cannot reach at its console. A broken boot loader can leave a remote machine unreachable. Use a VM snapshot for practice.
+Do not run `grub-install` or `grub-mkconfig -o`, or edit `/etc/default/grub`, on a machine that you cannot reach at its console. A broken boot loader can leave a remote machine unreachable. A rescue boot can cut the network. Use it only at the console of a VM. Use a VM snapshot for practice.
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: keep one disposable VM for boot experiments. A VM that boots into `rescue.target` lets you test recovery steps. Read `/proc/cmdline` in a CI image: words such as `systemd.unit=` change how the machine behaves.
+Tutorial's own advice: keep one disposable VM for boot experiments. A VM that boots into `rescue.target` lets you test recovery steps.
 </Callout>
 
 ## Service Management
@@ -99,7 +99,7 @@ Unit files live in several directories. `/etc/systemd/system` holds units of the
 
 `systemctl` is the main tool. `systemctl cat UNIT` prints the unit file and its drop-ins, so you see the real configuration. <Cite n={12} />
 
-Other init systems exist. The older SysV init starts services with scripts in `/etc/init.d`. <Cite n={10} /> Systemd has largely replaced it. <Cite n={5} /> The `service` command works with both. <Cite n={7} />
+Other init systems exist. The older SysV init starts services with scripts in `/etc/init.d`. <Cite n={10} /> <Cite n={7} /> Systemd has largely replaced it. <Cite n={5} />
 
 ```bash
 systemctl --version | head -n 1                    # the systemd version
@@ -114,7 +114,7 @@ Tutorial's own advice: before you test a service, run `systemctl cat` on it. It 
 
 ## Creating Services
 
-A service is a unit file that ends in `.service`. A small file has three sections. `[Unit]` describes the unit. `[Service]` says what to run. `[Install]` says which target pulls the unit in when you enable it. <Cite n={13} /> <Cite n={14} /> `Restart=on-failure` is the recommended choice for a long-running service. <Cite n={14} />
+A service is a unit file that ends in `.service`. `[Unit]` describes the unit. `[Service]` says what to run. `[Install]` says which target pulls the unit in when you enable it. <Cite n={13} /> <Cite n={14} /> `Restart=on-failure` is the recommended choice for a long-running service. <Cite n={14} />
 
 The first word of `ExecStart=` must be an absolute path or a plain file name. <Cite n={14} /> `User=` sets the user. A system service runs as root by default, and the user must exist at start. <Cite n={15} /> Tutorial's own advice: avoid root unless the program needs it.
 
@@ -148,11 +148,11 @@ systemd-analyze verify "$HOME/unit-test/myapp.service"   # warns: myapp does not
 ```
 
 <Callout type="danger" title="Test new units on a lab machine, not a remote one">
-A wrong unit in `/etc/systemd/system` can change what starts at boot. `systemctl daemon-reload` makes systemd read all unit files at once.
+A wrong unit in `/etc/systemd/system` can change what starts at boot. `systemctl daemon-reload` makes systemd read all unit files at once. `systemctl revert` also deletes a copy of a vendor unit in `/etc`.
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: for a test run, change one setting with a drop-in, such as `Environment=APP_ENV=test`. `systemctl revert UNIT` (needs root) removes your drop-ins. It also removes a copy of a vendor unit in `/etc`. <Cite n={12} />
+Tutorial's own advice: for a test run, change one setting with a drop-in, such as `Environment=APP_ENV=test`. `systemctl revert UNIT` (needs root) removes your drop-ins. <Cite n={12} />
 </Callout>
 
 ## Starting and Stopping Services
@@ -193,7 +193,7 @@ Tutorial's own advice: `systemctl start` can return before the program is ready.
 
 For scripts, use the `is-*` commands. They print one word and set the exit status (the number a command returns; 0 means success). `is-active` returns 0 for active, 3 for not active, and 4 for an unknown unit. <Cite n={12} /> `is-failed` is the other way round: it returns 0 when the unit has failed. <Cite n={12} /> `is-enabled` returns 0 also for `static` units, which cannot be enabled. <Cite n={12} /> The manual says that these codes map the states only roughly. Read the printed word when it matters. <Cite n={12} />
 
-`systemctl list-units --failed` lists all failed units. `systemctl reset-failed` clears the failed state and the restart counter. <Cite n={12} /> The status shows only the newest run. Use `journalctl -u` for earlier runs and boots. <Cite n={12} /> On a system without systemd, `service --status-all` lists SysV services. <Cite n={7} />
+`systemctl list-units --failed` lists all failed units. `systemctl reset-failed` clears the failed state and the restart counter. <Cite n={12} /> The status shows only the newest run. Use `journalctl -u` for earlier runs and boots. <Cite n={12} />
 
 ```text
 $ systemctl status myapp.service      # sample output: invented, trimmed
@@ -239,7 +239,7 @@ Tutorial's own advice: attach `journalctl -u myapp.service -b --no-pager` to the
 
 ## Running Services
 
-"Running" is a different question from "enabled". `systemctl list-units --type=service --state=running` lists the services that run now. <Cite n={6} /> `list-units` shows only active, failed, and pending units unless you add `--all`. <Cite n={12} /> `list-unit-files --state=enabled` lists the enabled unit files. <Cite n={6} /> A unit can be enabled but not running, or running but not enabled. Compare both lists.
+"Running" is a different question from "enabled". `systemctl list-units --type=service --state=running` lists the services that run now. <Cite n={6} /> <Cite n={12} /> `list-units` shows only active, failed, and pending units unless you add `--all`. <Cite n={12} /> `list-unit-files --state=enabled` lists the enabled unit files. <Cite n={6} /> <Cite n={12} /> A unit can be enabled but not running, or running but not enabled. Compare both lists.
 
 Timers and sockets start work too. `list-timers` shows when each timer runs next and last. <Cite n={12} /> By default, a timer starts the service with the same name. <Cite n={21} /> `list-sockets` shows each socket unit and the unit that it activates. <Cite n={12} /> Socket activation lets systemd hold a port before the service starts. <Cite n={22} />
 
@@ -252,7 +252,7 @@ systemctl list-units --type=service --state=running --no-pager
 systemctl list-unit-files --state=enabled --no-pager | head   # enabled unit files
 systemctl list-timers --no-pager
 systemctl list-sockets --no-pager
-sudo ss -tulpn                              # listening ports and their process
+sudo ss -tulpn                              # needs root; ports and their process
 ps xawf -eo pid,user,cgroup,args | head     # processes with their unit
 ```
 
