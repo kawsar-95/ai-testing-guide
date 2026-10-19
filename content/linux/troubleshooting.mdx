@@ -141,11 +141,11 @@ Tutorial's own advice: a full disk or an OOM kill can look like a flaky test. Ru
 
 ## System Logs
 
-Most plain-text logs live in `/var/log`. <Cite n={7} /> <Cite n={46} /> Many services log to the journal instead: the structured log store of `systemd-journald`. It collects kernel messages, `syslog(3)` calls, and service output. <Cite n={22} /> It writes to `/var/log/journal` if that directory exists, else to `/run/log/journal`, which is lost at reboot. <Cite n={22} /> `Storage=` in `journald.conf` changes this, and some distributions do not keep the journal by default. <Cite n={23} /> <Cite n={6} /> If `rsyslog` runs, it writes text files <Cite n={43} />, and file names differ by distribution. <Cite n={26} />
+Most plain-text logs live in `/var/log`. <Cite n={7} /> <Cite n={46} /> Many services log to the journal instead: the structured log store of `systemd-journald`. It collects kernel messages, `syslog(3)` calls, and service output. <Cite n={22} /> It writes to `/var/log/journal` if that directory exists, else to `/run/log/journal`, which is lost at reboot. <Cite n={22} /> `Storage=` in `journald.conf` changes this, and some distributions do not keep the journal by default. <Cite n={23} /> <Cite n={6} /> If `rsyslog` (the classic syslog service) runs, it writes text files <Cite n={43} />, and file names differ by distribution. <Cite n={26} />
 
 Filters of `journalctl`: unit (`-u`), boot (`-b`), priority (`-p`), time (`--since`, `--until`), kernel (`-k`). <Cite n={21} /> Priorities run from `emerg` (0) to `debug` (7). `-p err` also shows the more severe levels. <Cite n={21} /> <Cite n={25} /> Only root and members of `systemd-journal`, `adm`, or `wheel` can read the whole journal. Others see only their own. <Cite n={21} /> Use `--utc` or `-o short-iso` for clear time zones. <Cite n={21} /> `dmesg` prints the kernel ring buffer (the kernel message log). <Cite n={27} /> Some systems need `CAP_SYSLOG` for it. A capability is one right of the root account. <Cite n={28} />
 
-`logrotate` rotates logs: it keeps old logs for a while, compresses them, and removes the oldest. <Cite n={24} />
+`logrotate` rotates logs: it keeps old logs for a while, can compress them, and removes the oldest. <Cite n={24} />
 
 ```bash
 journalctl -u myapp.service --since "-1h" -p warning --no-pager
@@ -160,21 +160,21 @@ Tutorial's own advice: on a production host, do not run `rm`, `truncate`, or `> 
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: after a failed run, save the unit name, the time range with its time zone, and the priority filter. Put the full `journalctl` line in the report.
+Tutorial's own advice: after a failed run, save the unit name, the time range with its time zone, and the priority filter.
 </Callout>
 
 ## Authentication Logs
 
-Authentication logs record logins and `sudo` use. When rsyslog is installed, Debian and Ubuntu write them to `/var/log/auth.log`. <Cite n={4} /> <Cite n={45} /> RHEL and CentOS Stream write them to `/var/log/secure`. <Cite n={29} /> A facility is the category of a syslog message. The Debian file collects `auth` and `authpriv`. The CentOS file collects only `authpriv`. Upstream `sshd` uses facility `AUTH`, but a distribution can change it. <Cite n={34} /> Check it with `grep -i '^SyslogFacility' /etc/ssh/sshd_config`. Without rsyslog, read the journal: `journalctl -u ssh` on Ubuntu <Cite n={47} />, or `-u sshd` elsewhere.
+Authentication logs record logins and `sudo` use. With rsyslog, Debian and Ubuntu write them to `/var/log/auth.log`. <Cite n={4} /> <Cite n={45} /> RHEL and CentOS Stream write them to `/var/log/secure`. <Cite n={29} /> A facility is a syslog message category. The Debian file collects `auth` and `authpriv`; the CentOS file, only `authpriv`. Upstream `sshd` uses facility `AUTH`, but a distribution can change it. <Cite n={34} /> Check `SyslogFacility` in `/etc/ssh/sshd_config`; no active line means the default. Else read the journal: `journalctl -u ssh` on Ubuntu <Cite n={47} />, or `-u sshd` on RHEL (tutorial's own note; check `systemctl list-units '*ssh*'`).
 
 `last` reads `/var/log/wtmp`, the record of logins. `lastb` reads `/var/log/btmp`, the record of bad logins. <Cite n={30} /> With util-linux, `--time-format iso` adds the time zone. <Cite n={30} /> Recent Debian and Ubuntu may not install them (tutorial's own note). With `pam_faillock` (see `/etc/security/faillock.conf`), `faillock --user alice` shows failed attempts. <Cite n={31} /> That module locks an account after more than `deny` consecutive failures. <Cite n={32} /> `faillog` is an older database, `/var/log/faillog`, and may be empty. <Cite n={33} />
 
-Brute force means many password guesses in a row. Signs: many failures from one address, many tries for `root`, and many `invalid user` lines. <Cite n={5} /> <Cite n={4} />
+Brute force means many password guesses in a row. Signs: many failures from one address, many tries for `root`, many `invalid user` lines. <Cite n={5} /> <Cite n={4} />
 
 ```bash
 sudo grep 'Failed password' /var/log/auth.log | tail -n 3   # needs root; Debian, Ubuntu
 sudo grep 'Failed password' /var/log/secure | tail -n 3     # needs root; RHEL, CentOS
-journalctl -u ssh --since today --no-pager | tail -n 3      # root or journal group; -u sshd on some hosts
+journalctl -u ssh --since today --no-pager | tail -n 3      # root or journal group; -u sshd on RHEL
 last -n 5 --time-format iso                                 # if installed
 sudo lastb -n 5                                             # needs root; if installed
 # Illustration: Failed password for invalid user alice from 203.0.113.7 port 51234 ssh2
@@ -185,7 +185,7 @@ Authentication logs contain user names and IP addresses. Only authorized adminis
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: when a login test fails, read the matching line and decide the cause: wrong password, locked account, or rejected key. Never lock the shared test account with a loop of bad passwords.
+Tutorial's own advice: when a login test fails, find the cause in the log: wrong password, locked account, or rejected key. Never lock the shared test account with bad-password loops.
 </Callout>
 
 ## Troubleshooting
