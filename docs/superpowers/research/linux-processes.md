@@ -97,6 +97,7 @@ GNU/procps notes on the page: `--sort` (GNU option of procps `ps`), `ps -ef` and
 | `/proc/PID` for each process | S3 | "one subdirectory for each process running on the system, which is named after the process ID (PID)." |
 | `status` holds name, PID, PPID, state | S26 | "Name: bash Umask: 0022 State: S (sleeping) Tgid: 17248 Ngid: 0 Pid: 17248 PPid: 17200" |
 | State letters | S26 | "One of "R (running)", "S (sleeping)", "D (disk sleep)", "T (stopped)", "t (tracing stop)", "Z (zombie)", or "X (dead)"." |
+| `Z` is a zombie: a process that ended but waits for its parent | S25 | "A child that terminates, but has not been waited for becomes a "zombie"." |
 | `/proc` files are virtual, size 0, hold data | S5 | "the regular text files have a size of 0." |
 | `/proc` files are virtual | S5 | "these /proc files, like the /proc filesystem itself (procfs), are virtual." |
 | Tools in groups monitor, control, priority | S2 | "Monitoring top, ps, pidof Controlling bg, fg, kill, killall Priority nice, renice" |
@@ -283,4 +284,4 @@ Further reading (title only, not cited): none in this stage.
 
 ## Fix round 1 (2026-10-19)
 Changes after the fact-check (17 FAILs): added S48 (termios(3)) and S49 (Bash Exit Status) at the end of the source list; cited S25 for the zombie meaning; cited S16 for "ps accepts both styles"; reworded the macOS/BusyBox sentence and the CI sentences as hedges; dropped the false "when no file is given" for `nohup.out`; changed the SIGHUP sentence to the terminal-close case (S44: "The shell exits by default upon receipt of a SIGHUP."); changed the script sentence to "job numbers may fail in `sh`" (a Bash 5.3 script accepts `kill %1`; local test of the checker); split the danger claim (`kill -9` gives no clean-up; `killall` and `pkill` send SIGTERM by default); cited S48 for Ctrl+Z and S49 for 143; changed "need root" to "usually need root"; renamed the `renice` note; cited S21 in the Priorities danger callout; cut the signals table and prose to 241 words; added one-line glosses for builtin, exit status and session.
-Tutorial's own advice, no source: a minimal container may lack `ps`, `pstree` and `top`; the packages are `procps` (ps, pgrep, top, pidof) and `psmisc` (pstree, killall) on Debian and Ubuntu (the checker's note; I did not fetch a package page).
+Tutorial's own advice, no source: a minimal container may lack `ps`, `pstree` and `top`; the packages are `procps` (Debian, Ubuntu; ps, pgrep, top, pidof), `procps-ng` (RHEL, Fedora) and `psmisc` (pstree, killall). The page marks it as the tutorial's own advice (the checker's note; I did not fetch a package page).
