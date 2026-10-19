@@ -53,12 +53,13 @@ export const page = {
     { title: 'debian/rsyslog.conf of the Debian rsyslog package', publisher: 'The Debian Project (Salsa)', url: 'https://salsa.debian.org/debian/rsyslog/-/raw/debian/latest/debian/rsyslog.conf', accessed: '2026-10-19' },
     { title: 'hier(7)', publisher: 'Linux man-pages (man7.org)', url: 'https://man7.org/linux/man-pages/man7/hier.7.html', accessed: '2026-10-19' },
     { title: 'OpenSSH server', publisher: 'Ubuntu Server documentation', url: 'https://documentation.ubuntu.com/server/how-to/security/openssh-server/', accessed: '2026-10-19' },
+    { title: 'IPv4 Address Blocks Reserved for Documentation (RFC 5737)', publisher: 'IETF (rfc-editor.org)', url: 'https://www.rfc-editor.org/rfc/rfc5737.html', accessed: '2026-10-19' },
   ],
 }
 
 # Troubleshooting
 
-This stage shows the first checks for a Linux server that misbehaves. They tell you who is on it, how loaded it is, whether memory or disk is full, and what the logs say. A tester needs these checks to attach evidence to a bug report. Every output on this page is an invented illustration. Hosts such as `web01` and the documentation address ranges `192.0.2.0/24`, `198.51.100.0/24`, and `203.0.113.0/24` stand in for real ones. <Cite n={1} />
+This stage shows the first checks for a Linux server that misbehaves. <Cite n={1} /> They tell you who is on it, how loaded it is, whether memory or disk is full, and what the logs say. A tester needs these checks to attach evidence to a bug report. Every output on this page is an invented illustration. Hosts such as `web01` and the documentation address ranges `192.0.2.0/24`, `203.0.113.0/24`, and `198.51.100.0/24` stand in for real ones. <Cite n={48} />
 
 <PageMeta />
 
@@ -84,9 +85,9 @@ uname -a                        # kernel release, host name, hardware
 cat /etc/os-release             # distribution and version
 uptime; w                       # boot age, load, logged-in users
 df -h; free -h                  # disk and memory
-ss -tuln                        # listening ports (add -p for the process)
+ss -tuln                        # listening ports (-p adds the process; other users' processes need root)
 systemctl --failed --no-pager   # units in the failed state
-journalctl -p err -b --no-pager | tail -n 20   # last errors since boot
+journalctl -p err -b --no-pager | tail -n 20   # last errors since boot (root or journal group sees all)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
@@ -95,13 +96,13 @@ Tutorial's own advice: run this list on the test environment before a run and ag
 
 ## Uptime and Load
 
-`uptime` prints the time, the time since boot, the user count, and the load averages for 1, 5, and 15 minutes. <Cite n={8} /> A load average is the mean number of processes that are runnable or in uninterruptible sleep. A runnable process uses a CPU or waits for one. An uninterruptible process waits for I/O. <Cite n={8} /> `uptime -s` prints the boot time. <Cite n={3} />
+`uptime` prints the time, the time since boot, the user count, and the load averages (1, 5, 15 minutes). <Cite n={8} /> A load average is the mean number of processes that are runnable or in uninterruptible sleep. A runnable process uses a CPU or waits for one. An uninterruptible process waits for I/O. <Cite n={8} /> `uptime -s` prints the boot time. <Cite n={3} />
 
-The numbers are not divided by the CPU count. On four CPUs, a load of 1 means 75 % idle time. <Cite n={8} /> Compare the load with `nproc`. <Cite n={10} /> With a cgroup v2 CPU quota (a kernel limit on a group of processes), `nproc` can be lower than `nproc --all`. <Cite n={10} />
+Load is not divided by CPUs: on four CPUs, a load of 1 means 75 % idle time. <Cite n={8} /> Compare the load with `nproc`; with a cgroup v2 CPU quota (a kernel limit on a process group), it can be lower than `nproc --all`. <Cite n={10} />
 
-`/proc/loadavg` holds the same three numbers. <Cite n={9} /> In `vmstat`, `r` counts runnable processes, `b` blocked ones, and `wa` is I/O wait. `st` is time that the hypervisor (the VM host software) took from the virtual machine. <Cite n={12} /> <Cite n={11} />
+`/proc/loadavg` holds the same three numbers. <Cite n={9} /> In `vmstat`, `r` counts runnable processes, `b` blocked ones, and `wa` is I/O wait. `st` is time the hypervisor (the VM host software) took from the virtual machine. <Cite n={12} /> <Cite n={11} />
 
-PSI (pressure stall information) measures the share of time that tasks wait for CPU, memory, or I/O. Files: `/proc/pressure/cpu`, `memory`, `io`. The `some` line counts time when at least one task stalls. <Cite n={13} />
+PSI (pressure stall information) is in `/proc/pressure/cpu`, `memory`, and `io`. `some` is the share of time when some tasks stall; `full`, when all non-idle tasks stall. `avg10`, `avg60`, `avg300` are percentages over 10, 60, 300 s; `total` is in microseconds. <Cite n={13} /> No file means PSI is off (tutorial's own note).
 
 ```bash
 uptime                 # ... load average: 0.52, 0.48, 0.45   (illustration)
@@ -112,7 +113,7 @@ cat /proc/pressure/io  # some avg10=... avg60=... avg300=... total=...
 ```
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: before a load test, write down `nproc` and the load numbers. A load above the CPU count means more tasks want to run, or wait for I/O, than there are CPUs. A high load with low CPU use can mean I/O waits; check `wa`, `b`, and `/proc/pressure/io`. A high `st` can mean that the host gave CPU time to other machines, so timings vary.
+Tutorial's own advice: before a load test, write down `nproc` and the load numbers. A load above the CPU count means tasks queue for a CPU or for I/O. High load with low CPU use can mean I/O waits: check `wa`, `b`, and `io` pressure. A high `st` can mean the host lent CPU time to others.
 </Callout>
 
 ## Available Memory and Disk
@@ -126,9 +127,9 @@ When memory runs out and the kernel cannot reclaim enough, the OOM (out-of-memor
 ```bash
 free -h                  # read the "available" column
 df -h; df -i             # space and inodes per filesystem
-du -xsk /var/* 2>/dev/null | sort -n | tail -n 5   # sizes in KiB; -x (GNU option) stays on one filesystem
+du -xsk /var/* 2>/dev/null | sort -n | tail -n 5   # sizes in KiB; -x stays on one filesystem
 lsof +L1                 # deleted but still open (run as root to see all users)
-journalctl -k -b --no-pager | grep -i -E 'out of memory|oom-kill'   # kernel wording varies by version
+journalctl -k -b --no-pager | grep -i -E 'out of memory|oom-kill'   # kernel wording varies; needs root or journal group
 ```
 
 <Callout type="danger" title="Do not tune memory on a production host">
@@ -141,15 +142,15 @@ Tutorial's own advice: a full disk or an OOM kill can look like a flaky test. Ru
 
 ## System Logs
 
-Most plain-text logs live in `/var/log`. <Cite n={7} /> <Cite n={46} /> Many services log to the journal instead: the structured log store of `systemd-journald`. It collects kernel messages, `syslog(3)` calls, and service output. <Cite n={22} /> It writes to `/var/log/journal` if that directory exists, else to `/run/log/journal`, which is lost at reboot. <Cite n={22} /> `Storage=` in `journald.conf` changes this, and some distributions do not keep the journal by default. <Cite n={23} /> <Cite n={6} /> If `rsyslog` (the classic syslog service) runs, it writes text files <Cite n={43} />, and file names differ by distribution. <Cite n={26} />
+Most plain-text logs live in `/var/log`. <Cite n={7} /> <Cite n={46} /> Many services log to the journal, the structured log store of `systemd-journald`. It collects kernel messages, `syslog(3)` calls, and service output. <Cite n={22} /> It writes to `/var/log/journal` if that directory exists, else to `/run/log/journal`, which is lost at reboot. <Cite n={22} /> `Storage=` in `journald.conf` changes this, and some distributions do not keep the journal. <Cite n={23} /> <Cite n={6} /> If `rsyslog` (the classic syslog service) runs, it writes text files <Cite n={43} />; RHEL uses `/var/log/messages` <Cite n={29} />, and Debian and Ubuntu use `/var/log/syslog`. <Cite n={26} /> <Cite n={45} />
 
 Filters of `journalctl`: unit (`-u`), boot (`-b`), priority (`-p`), time (`--since`, `--until`), kernel (`-k`). <Cite n={21} /> Priorities run from `emerg` (0) to `debug` (7). `-p err` also shows the more severe levels. <Cite n={21} /> <Cite n={25} /> Only root and members of `systemd-journal`, `adm`, or `wheel` can read the whole journal. Others see only their own. <Cite n={21} /> Use `--utc` or `-o short-iso` for clear time zones. <Cite n={21} /> `dmesg` prints the kernel ring buffer (the kernel message log). <Cite n={27} /> Some systems need `CAP_SYSLOG` for it. A capability is one right of the root account. <Cite n={28} />
 
-`logrotate` rotates logs: it keeps old logs for a while, can compress them, and removes the oldest. <Cite n={24} />
+`logrotate` keeps old logs for a while, can compress them, and removes the oldest. <Cite n={24} />
 
 ```bash
-journalctl -u myapp.service --since "-1h" -p warning --no-pager
-journalctl -k -b -p err --no-pager                  # kernel errors since boot
+journalctl -u myapp.service --since "-1h" -p warning --no-pager   # root or journal group
+journalctl -k -b -p err --no-pager                  # kernel errors; root or journal group
 journalctl -b -o short-iso --no-pager | head -n 5   # ISO time with zone offset
 journalctl --disk-usage                             # space used by the journal
 ls -l /var/log
@@ -167,21 +168,22 @@ Tutorial's own advice: after a failed run, save the unit name, the time range wi
 
 Authentication logs record logins and `sudo` use. With rsyslog, Debian and Ubuntu write them to `/var/log/auth.log`. <Cite n={4} /> <Cite n={45} /> RHEL and CentOS Stream write them to `/var/log/secure`. <Cite n={29} /> A facility is a syslog message category. The Debian file collects `auth` and `authpriv`; the CentOS file, only `authpriv`. Upstream `sshd` uses facility `AUTH`, but a distribution can change it. <Cite n={34} /> Check `SyslogFacility` in `/etc/ssh/sshd_config`; no active line means the default. Else read the journal: `journalctl -u ssh` on Ubuntu <Cite n={47} />, or `-u sshd` on RHEL (tutorial's own note; check `systemctl list-units '*ssh*'`).
 
-`last` reads `/var/log/wtmp`, the record of logins. `lastb` reads `/var/log/btmp`, the record of bad logins. <Cite n={30} /> With util-linux, `--time-format iso` adds the time zone. <Cite n={30} /> Recent Debian and Ubuntu may not install them (tutorial's own note). With `pam_faillock` (see `/etc/security/faillock.conf`), `faillock --user alice` shows failed attempts. <Cite n={31} /> That module locks an account after more than `deny` consecutive failures. <Cite n={32} /> `faillog` is an older database, `/var/log/faillog`, and may be empty. <Cite n={33} />
+`last` reads `/var/log/wtmp`, the record of logins. `lastb` reads `/var/log/btmp`, the record of bad logins. <Cite n={30} /> `--time-format iso` (util-linux) adds the time zone. <Cite n={30} /> Recent Debian and Ubuntu may lack them: install the package that provides `last` (tutorial's own note). With `pam_faillock` (see `/etc/security/faillock.conf`), `faillock --user alice` shows failed attempts. <Cite n={31} /> That module locks an account after more than `deny` consecutive failures. <Cite n={32} /> `faillog` is an older database, `/var/log/faillog`, and may be empty. <Cite n={33} />
 
-Brute force means many password guesses in a row. Signs: many failures from one address, many tries for `root`, many `invalid user` lines. <Cite n={5} /> <Cite n={4} />
+Brute force means many password guesses. Signs: many failures from one address, many tries for `root`, many `invalid user` lines. <Cite n={5} /> <Cite n={4} />
 
 ```bash
 sudo grep 'Failed password' /var/log/auth.log | tail -n 3   # needs root; Debian, Ubuntu
 sudo grep 'Failed password' /var/log/secure | tail -n 3     # needs root; RHEL, CentOS
 journalctl -u ssh --since today --no-pager | tail -n 3      # root or journal group; -u sshd on RHEL
 last -n 5 --time-format iso                                 # if installed
+sudo faillock --user alice                                  # needs root; only with pam_faillock
 sudo lastb -n 5                                             # needs root; if installed
 # Illustration: Failed password for invalid user alice from 203.0.113.7 port 51234 ssh2
 ```
 
 <Callout type="warning" title="These logs hold personal data">
-Authentication logs contain user names and IP addresses. Only authorized administrators may read them. Never post them in a public ticket or chat. Replace names and addresses with `alice` and `203.0.113.7` first.
+They hold user names and IP addresses. Only authorized administrators may read them. Never post them in a public ticket or chat. Replace names and addresses with `alice` and `203.0.113.7` first.
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">

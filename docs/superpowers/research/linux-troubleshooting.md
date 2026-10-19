@@ -52,6 +52,7 @@ S44. proc_pid_oom_score(5) — man7.org (Linux man-pages) — https://man7.org/l
 S45. debian/rsyslog.conf of the Debian rsyslog package — The Debian Project (Salsa) — https://salsa.debian.org/debian/rsyslog/-/raw/debian/latest/debian/rsyslog.conf — accessed 2026-10-19 (read by the fact-checker in round 1 with WebFetch; the polite fetcher got only a bot challenge, 94 bytes; the line is `auth,authpriv.*` to `/var/log/auth.log`)
 S46. hier(7) — man7.org (Linux man-pages) — https://man7.org/linux/man-pages/man7/hier.7.html — accessed 2026-10-19
 S47. OpenSSH server — Ubuntu Server documentation — https://documentation.ubuntu.com/server/how-to/security/openssh-server/ — accessed 2026-10-19
+S48. IPv4 Address Blocks Reserved for Documentation (RFC 5737) — IETF (rfc-editor.org) — https://www.rfc-editor.org/rfc/rfc5737.html — accessed 2026-10-19
 
 Not usable as sources (no text): #254 Red Hat learning post (the fetch returned only the Red Hat Learning Community closing notice), #255 Medium (`http-403`), #271 DigitalOcean load average (only site boilerplate, 798 bytes), and #007 linuxblog.io (`http-500` in `report.tsv`).
 Read but not cited: #006 itslinuxfoss (it calls "available" memory "unused" memory, which conflicts with free(1), so it is not used), #195 ictbroadcast, #197 Linux Journal, #236 FOSS Linux, #237 linuxconfig dmesg, #269 TecMint uptime. Their facts that the page uses are also in the official pages above.
@@ -162,5 +163,11 @@ Local checks (not citable pages), on Ubuntu with kernel 7.x, procps-ng, util-lin
 | 72 | A cgroup is a kernel group of processes with shared limits (gloss). cgroup v2 CPU quotas can lower the `nproc` result. | S10 | "Linux cgroup version 2 CPU quotas may also limit the maximum returned value." |
 | 73 | An inode is the filesystem record of one file (gloss; own words). `df -i` lists inode information. | S16 | "-i, --inodes list inode information instead of block usage" |
 | 74 | Glosses in the page (own words): unit, hypervisor, cgroup v2, inode, kernel ring buffer, capability, facility, child process, Yama. | S38, S11, S10, S16, S27, S28, S34, S35, S42 | Each term comes from the cited man page. |
+| 75 | The ranges `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24` are reserved for documentation. (S1 is now cited only for the roadmap sentence.) | S48 | "The blocks 192.0.2.0/24 (TEST-NET-1), 198.51.100.0/24 (TEST-NET-2), and 203.0.113.0/24 (TEST-NET-3) are provided for use in" documentation |
+| 76 | PSI `full` = share of time when all non-idle tasks stall. `avg10`, `avg60`, `avg300` are percentages over 10, 60, 300 s. `total` is stall time in microseconds. | S13 | "all non-idle tasks are stalled" / "ten, sixty, and three hundred second windows" / "total absolute stall time (in us)" |
+| 77 | "No `/proc/pressure` file means PSI is off" is the tutorial's own note (labelled so); S13 does not say it. | S13 | (not a source quote) |
+| 78 | General log files: the CentOS Stream file sends level `info` and above (not mail, authpriv, cron) to `/var/log/messages`. S26 names `/var/log/syslog` (line `*.* /var/log/syslog`) in distribution layouts of Ubuntu, Debian, and RHEL. S45 (Debian file) was read by the fact-checker, not the writer; the notes make no claim about `kern.log`. | S29, S26, S45 | `*.info;mail.none;authpriv.none;cron.none action(type="omfile" file="/var/log/messages")` (S29) / "*.* /var/log/syslog" (S26) |
+| 79 | `du -x` and `-k` are POSIX options; the page no longer calls `-x` a GNU option. Code comments mark `ss -p`, `journalctl`, and `faillock` as needing root or a journal group. | S17, S21, S31 | (page wording only) |
+| 80 | "Install the package that provides `last`" is the tutorial's own advice (no source for the package name `wtmpdb`; the page does not name it). | S30 | (not a source quote) |
 
 Further reading (title only, not cited): none.
