@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Inter, JetBrains_Mono, Noto_Sans_Bengali } from "next/font/google";
 import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { DEFAULT_VERSION, VERSION_INIT_SCRIPT } from "@/lib/fundamentals/version";
+import { VOICE_INIT_SCRIPT } from "@/lib/voice";
 import { RegisterServiceWorker } from "@/components/layout/RegisterServiceWorker";
 import { GA_ID, OWNER, SITE_DESCRIPTION, SITE_NAME, SITE_SHORT_NAME, SITE_URL } from "@/lib/site";
 
@@ -24,6 +25,14 @@ const inter = Inter({
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono-jb",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// The Bengali font draws only Bengali letters. It comes after each Latin font
+// in the font lists of globals.css.
+const notoBengali = Noto_Sans_Bengali({
+  variable: "--font-noto-bengali",
+  subsets: ["bengali"],
   display: "swap",
 });
 
@@ -62,19 +71,22 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // The inline scripts change data-theme and data-fundamentals-version
-    // before React hydrates, so React must accept the DOM values
-    // (suppressHydrationWarning).
+    // The inline scripts change data-theme, data-fundamentals-version, and
+    // data-voice-default before React hydrates, so React must accept the DOM
+    // values (suppressHydrationWarning). The server value of the voice is
+    // technical.
     <html
       lang="en"
       data-theme="dark"
       data-fundamentals-version={DEFAULT_VERSION}
+      data-voice-default="technical"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} ${notoBengali.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: VERSION_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: VOICE_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full bg-bg text-text">
         {children}
