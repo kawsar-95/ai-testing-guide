@@ -301,4 +301,23 @@ Counts of round 5: 5 rows (180 to 184). PASS 4, FAIL 1, OPINION-OK 0.
 
 New FAIL: row 182, Running Services: `list-unit-files --state=enabled` has no official source. Fix: the `list-unit-files` plus `awk '$2 == "enabled"'` form above, cited to S12. My round-4 hint `grep enabled` was wrong: it matches the PRESET column.
 
-Open FAILs: 1
+Open FAILs: 1 (round 5; fixed in round 6)
+
+## Round 6 — closure (2026-10-19)
+
+The writer fixed the last FAIL in commit 91277ee. I read `git diff b3f44e4 91277ee` (the page and notes C81).
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 185 | Running Services (old row 182) | "`list-unit-files` lists each unit file with its enablement state." | 12 | PASS | S12: "List unit files installed on the system, in combination with their enablement state (as reported by is-enabled)." |
+| 186 | Running Services (code) | `systemctl list-unit-files --no-pager \| awk '$2 == "enabled"' \| head   # enabled unit files` | 12 | PASS | The columns are UNIT FILE, STATE, PRESET, so `$2` is the state. Local run: 156 lines with the `awk` test, the same number as the old `--state=enabled` run. The header and the footer lines do not match. The comment is true. |
+| 187 | Running Services | `systemctl list-units --type=service --state=running` "lists the services that run now" (cites 6 and 12) | 6, 12 | PASS | An official cite is on the sentence next to S6. S12 `--type=`: "When units are listed with list-units ... only units of the specified types will be shown." S12 `--state=`: "a comma-separated list of unit LOAD, SUB, or ACTIVE states. When listing units with list-units ... show only those in the specified states" ("running" is a SUB state). S6 only adds the example. |
+| 188 | Notes | C81 matches the page | S6, S12 | PASS | C81 now names `list-units` (S6, S12), `list-unit-files` with its enablement state (S12) and the `awk` filter. Quotes are at most 25 words. |
+| 189 | Page quality: word counts | Each section has 100 to 250 words (heading, callout titles and table cell text; no pipes) | none | PASS | Booting Linux 244, Boot Loaders 245, Service Management 220, Creating Services 244, Starting and Stopping Services 246, Checking Service Status 221, Checking Service Logs 212, Running Services 239. All are 250 or less. No sentence is over 25 words. |
+| 190 | Page quality: sources, overlap, privacy | All 30 sources cited; no copied run; no home path or login name in the page, notes, or report | none | PASS | 87 cites, no uncited source. `linux_overlap.py` on the page body (without `page.sources`) prints nothing and exits 0 against my flat 30-file dir and the 243-file roadmap dir. A search for a home path and the user name in the three files found nothing. |
+
+Counts of round 6: 6 rows (185 to 190). PASS 6, FAIL 0, OPINION-OK 0.
+
+All FAILs of rounds 1 to 5 are fixed.
+
+Open FAILs: 0
