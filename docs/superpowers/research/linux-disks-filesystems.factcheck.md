@@ -189,3 +189,22 @@ Word counts per section (prose, headings, table with separators, callout text an
 | 138 | all | Page-wide overlap and `npm test` | none | PASS | 0 overlap hits in both flat directories (243 and 49 files read); 145 of 145 tests pass. |
 
 Open FAILs: 2
+
+---
+
+# Round 3 (2026-10-19)
+
+Checked: writer commit `02a5fc2`. `git diff 99f6e1d 02a5fc2` shows that the page changed in 2 lines only (4 cite tags added, no wording changed) and the notes got one new row (A12). The other changed lines in that diff are my round 2 text.
+
+Consistency pass on the whole page: 53 sources in `page.sources`, 53 cited, no cite above 53. Per section, the notes source sets equal the page cite sets (apart from the lede cite S1). No notes row has more than 25 quote words. Words per section (prose, headings, tables, callouts, no cite tags) are unchanged: 244 to 247 at most, all 250 or below. Overlap on flat directories: roadmap raw dir (243 `*.txt` files read) and official dir (49 files read): no output, exit 0. `npm test`: 145 of 145 pass.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 139 | Adding Disks (danger) | "`fdisk` rewrites the partition table" | 15 | PASS | fdisk(8): "fdisk is a dialog-driven program for creation and manipulation of partition tables." |
+| 140 | Adding Disks (danger) | "`mkfs` erases the start of the partition" | 30 | PASS | mkswap(8): "mkswap, like many others mkfs-like utils, erases the first partition block to make any previous filesystem invisible." (indirect, accepted as in the Filesystems callout) |
+| 141 | LVM (danger) | "`lvcreate` and `lvextend` take free extents from the VG" | 42, 43 | PASS | lvcreate(8): "For standard LVs, this requires allocating logical extents from the VG's free physical extents." lvextend(8): "This requires allocating logical extents from the VG's free physical extents." |
+| 142 | LVM (danger) | "`lvextend -r` changes a filesystem" | 43 | PASS | lvextend(8): "-r\|--resizefs Resize the fs using the fs-specific resize command. May include mounting, unmounting, or running fsck." |
+| 143 | Notes file | Row A12 matches the page cites S15 and S30; row L13 matches S42 and S43 | none | PASS | A12 quotes are 25 words or fewer; the sets match the page. |
+| 144 | all | Round 2 FAIL rows 124 and 129 are closed | none | PASS | Both sentences now have cites that support each part. |
+
+Open FAILs: 0
