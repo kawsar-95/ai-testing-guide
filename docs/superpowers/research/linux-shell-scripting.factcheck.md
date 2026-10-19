@@ -195,3 +195,23 @@ Local checks: the six blocks were extracted into a directory that held only the 
 Round 1 note on row 40 and row 74 (not FAILs) is unchanged.
 
 Open FAILs: 0
+
+## Final accuracy pass (2026-10-19)
+
+Checked commit: 3031daf (`git diff 3031daf^ 3031daf -- content/linux/shell-scripting.mdx docs/superpowers/research/linux-shell-scripting.md`), on merge head 38223ba. Changed: the "Literals" tip, one new sentence in "Conditionals", one sentence in "Debugging", and the notes rows C51 and C56b.
+
+Fetched again to `<scratch dir>` with `scripts/linux_fetch.py`: S27 (Conditional Constructs), S34 (The Set Builtin) and the Bash "Pipelines" page. Local runs: bash 5.3.9 and dash, with and without `-e`.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| H1 | Literals (tip) | "Put `grep` patterns in single quotes." | none (marked "Tutorial's own advice") | OPINION-OK | Advice, scoped to `grep`. It no longer clashes with the `[[ =~ ]]` rule of the Conditionals section. |
+| H2 | Conditionals | "In `[[ =~ ]]`, keep the pattern unquoted or in a variable: quotes make the match literal." | 27 | PASS | S27: "If you quote any part of the pattern, using any of the shell’s quoting mechanisms, the quoted portion is matched literally." Also: "quoting the variable expansion forces the entire pattern to be matched literally." Local run, bash 5.3.9: `[[ a123b =~ a.*b ]]` and `[[ a123b =~ $p ]]` match; `"a.*b"`, `'a.*b'` and `"$p"` do not. |
+| H3 | Debugging | "It also ignores failures before the last command of a `&&` or `\|\|` list" | 34 | PASS | S34 (`-e`): "part of any command executed in a && or \|\| list except the command following the final && or \|\|". Local run, `bash -e` and `dash -e`: `false && true; echo cont` goes on; `true && false` stops the script with status 1. |
+| H4 | Debugging | "and of a pipeline without `pipefail`" | 34 | PASS | S34 (`-e`): "any command in a pipeline but the last (subject to the state of the pipefail shell option)". Pipelines page: "The exit status of a pipeline is the exit status of the last command in the pipeline, unless the pipefail option is enabled". Local run: `false \| true; echo cont` goes on under `bash -e` and `dash -e`; with `set -eo pipefail` the script stops with status 1. |
+| H5 | Notes | Rows C51 and C56b match the page | 27 | PASS | C51: no source, "Tutorial's own advice", as the page. C56b: S27, 2 quotes of 21 words each, both found in the fetched text; the page cites 27. |
+| H6 | Sentences | The changed sentences have 25 words or fewer | none | PASS | Longest changed sentence: 20 words (Debugging). The new Conditionals sentence has 17. |
+| H7 | Word counts | Touched sections have 100–250 words | none | PASS | Heading, callout titles and table text counted; no code, no Cite tags, no table pipes. Literals 235; Conditionals 240; Debugging 245. |
+| H8 | Word counts | The other sections | none | PASS | Shell Programming 242; Variables 222; Loops 216. All within 100–250. A count that also includes the tag text of each `<Callout ...>` line gives 253 for Debugging; the method of the task does not count tag text. |
+| H9 | Whole page | Overlap check | none | PASS | `linux_overlap.py` exit 0, no output, against the roadmap raw dir (243 files read), the stage official dirs (144 and 55 files read) and the fresh fetch (7 files read). |
+
+Open FAILs: 0

@@ -216,3 +216,26 @@ Re-run checks: `linux_overlap.py` against the roadmap raw dir and against the ch
 All 8 round 1 FAILs are now fixed.
 
 Open FAILs: 0
+
+## Final accuracy pass (2026-10-19)
+
+Checked commit: f5cdced (`git diff f5cdced^ f5cdced -- content/linux/files.mdx docs/superpowers/research/linux-files.md`), on merge head 38223ba. Changed: the `ln -sfn` line in the code block and in the "Soft and Hard Links" tip, two code comments about `gzip` in "Archiving and Compressing", and the notes rows C86b and C93b.
+
+Fetched again to `<scratch dir>` with `scripts/linux_fetch.py`: S23 (GNU ln manual) and S26 (GNU gzip manual, version 1.15). Local runs: GNU `ln` 9.7 (`gnuln`), the default uutils `ln` 0.10, and gzip 1.14, all in a temporary directory.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| F1 | Soft and Hard Links (tip) | "Without `-n`, `ln` makes the new link inside the old target directory." | 23 | PASS | S23: "The default is to treat a destination that is a symlink to a directory just like a directory." Local run, GNU and uutils: with `current -> releases/v2`, `ln -sf releases/v3 current` kept `current -> releases/v2` and made `releases/v2/v3`. |
+| F2 | Soft and Hard Links (tip, code) | `ln -sfn releases/v3 current` switches the link to `releases/v3` | 23 | PASS | S23 `--no-dereference`: "Do not treat the last operand specially when it is a symbolic link to a directory." Local run, GNU and uutils: `current -> releases/v3`, `releases/v2` stayed empty. The new `mkdir -p releases/v3` line is there, so the block runs in one pass. |
+| F3 | Soft and Hard Links (code comment) | "-n replaces the link itself" | 23 | PASS | Same local run, and S23 text: "ln must delete or backup that symlink before creating the new link". With `-f` in the same option group, the link is replaced. |
+| F4 | Soft and Hard Links (tip) | The tip starts "Tutorial's own advice:" and the new sentences use Cite 23 | 23 | PASS | The advice is marked. The `-n` fact is cited in the tip. Longest sentence: 19 words. |
+| F5 | Archiving and Compressing (code comment) | "compress; without -k, gzip deletes app.log" | 26 | PASS | S26: "each file is replaced by one with the extension ‘.gz’" and "Keep (don’t delete) input files during compression or decompression." Local run: `gzip -k app.log` left both files; plain `gzip app.log` left only `app.log.gz`. The prose line below the block already cites 26. |
+| F6 | Archiving and Compressing (code comment) | "decompress; deletes the .gz file (-k keeps it)" | 26 | PASS | S26 (gunzip): "replaces each file whose name ends with ‘.gz’". Local run: `gzip -d app.log.gz` left only `app.log`; `gzip -dk app.log.gz` left both. Advisory (not FAIL): a code comment has no Cite, and the prose line below cites 26 only for compression. |
+| F7 | Notes | Rows C86b and C93b match the page cites and quotes | 23, 26 | PASS | C86b: S23, quotes of 16 and 18 words, both found in the fetched text. C93b: S26, 8 words, found. Page cites are 23 and 26. |
+| F8 | Word counts | Touched sections have 100–250 words | none | PASS | Heading, callout titles and table text counted; no code, no Cite tags, no table pipes. Soft and Hard Links 243; Archiving and Compressing 179. |
+| F9 | Word counts | Vim section (the writer feared 251) | none | PASS | Vim 244 by the same method. The count rises to 250 only if the tag text of the two `<Callout ...>` lines is counted as words. |
+| F10 | Word counts | The other sections | none | PASS | Working with Files 172; Creating Files and Directories 212; Copying and Renaming 209; Moving Files and Directories 178; Editing Files 188; Nano 230. All within 100–250. |
+| F11 | Whole page | Overlap check | none | PASS | `linux_overlap.py` exit 0, no output, against the roadmap raw dir (243 files read), the stage official dirs (26 and 44 files read), and the fresh fetch (7 files read). |
+| F12 | Note (not FAIL) | The first example block is not safe to run twice | none | OPINION-OK | A second run of `ln -s releases/v2 current` makes a link inside `releases/v3`. This was true before f5cdced. A reader who runs the block once gets the stated result. |
+
+Open FAILs: 0
