@@ -161,3 +161,19 @@ The writer changed the page and the notes in commit 2e75cbf. I re-checked the 19
 Round 2 totals: 27 rows. PASS 24, FAIL 1, OPINION-OK 2. The 19 FAIL rows of round 1 are fixed on the page, except that the notes cite check still has one small mismatch (R2-18).
 
 Open FAILs: 1
+
+## Round 3 (2026-10-19)
+
+The writer changed one notes row in commit 269ced1 (`git diff 2e75cbf 269ced1`). No sudo or root command was run in this round.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| R3-1 | Notes, row F17 | Row F17 no longer names S35: source is `none`, the quote is "local check (umask 0002 gave `-rw-rw-r--`)", and it points to row M8 for the umask rule | none | PASS | `git diff 2e75cbf 269ced1`: only row F17 changed. My sandbox run in round 2 gave `-rw-rw-r--` for umask 002 and `-rw-r--r--` for umask 022. |
+| R3-2 | Notes, row M8 | The pointer is right: M8 holds the umask rule with S35, and the Managing Permissions section cites 35 | 35 | PASS | M8: "because 0666 & ~022 = 0644; i.e., rw-r--r--"; the page cites 35 in Managing Permissions. |
+| R3-3 | Page | The page text is unchanged | none | PASS | `git diff 2e75cbf 269ced1 -- content/linux/users-permissions.mdx` is empty (0 bytes). |
+| R3-4 | Page | Every source 1 to 39 is cited; no cite above 39 | none | PASS | Script: 39 source entries, uncited [], cites above 39 []. |
+| R3-5 | Notes (whole) | Each notes row names only sources that the matching page section cites, and the reverse | none | PASS | Script over 92 claim rows: for all 6 sections, notes-only [] and page-only []. No row has more than 25 words of quote. |
+
+Round 3 totals: 5 rows. PASS 5, FAIL 0, OPINION-OK 0. The round 2 FAIL (R2-18) is fixed.
+
+Open FAILs: 0
