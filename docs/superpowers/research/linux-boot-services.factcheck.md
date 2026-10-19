@@ -246,4 +246,41 @@ The writer fixed the 3 FAILs of round 2 in commit 054d210. I read `git diff 5607
 
 Counts of round 3: 5 rows (155 to 159). PASS 5, FAIL 0, OPINION-OK 0.
 
-Open FAILs: 0
+Open FAILs: 0 (round 3; the review fixes of round 4 are checked below)
+
+## Round 4 (2026-10-19)
+
+The writer made the review fixes in commit 815e993. I read `git diff 054d210 815e993` for the page and the notes. I used the 30 pages fetched in round 1. I checked S7, S9 and S12 again for the changed claims.
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| 160 | Lede | The lede is split: "...daily `systemctl` and `journalctl` work. You create a service, start it, check it, and read its logs." | 1 | OPINION-OK | Framing, as in round 1. The split gives shorter sentences and does not change a fact. |
+| 161 | Boot Loaders | "Path and tool name can differ on other distributions." | none | OPINION-OK | A hedge with no distribution named. It does not state any `grub2-mkconfig` or `/boot/grub2` fact (a search of the page for `grub2` finds nothing). S23 says "usually located under /boot/grub", and S30 shows that `update-grub` is a Debian stub, so the hedge is true. There is no notes row for it, which is allowed for a hedge. |
+| 162 | Boot Loaders | `systemd-boot` reads entry files from `/loader/entries/` on the ESP or the XBOOTLDR partition. The Boot Loader Specification defines their format. | 24, 25 | PASS | S25: "Boot Loader Specification Type #1 description files located in /loader/entries/ on the ESP and the Extended Boot Loader Partition." S24: "This specification only defines semantics of the /loader/entries/ directory". |
+| 163 | Boot Loaders | The sentence about the GRUB recovery entry is removed; no cite is left without a sentence | 23 | PASS | Cite 23 remains on 3 sentences (grub.cfg and `grub-mkconfig`; `/etc/default/grub`; `e` and Ctrl-x). Notes C25 stays as an unused row (allowed). |
+| 164 | Boot Loaders (danger) | "A rescue boot can cut the network. Use it only at the console of a VM." | none | OPINION-OK | Marked as the callout's own advice; no cite. S9 shows `rescue.target` after `basic.target` in the boot chart, before the multi-user units. I found no source text about the network, so the sentence stays an own judgement. Notes C27 has the same wording. The callout and the notes agree. |
+| 165 | Boot Loaders (tip) | Shorter tip (the `/proc/cmdline` sentence is removed) | none | OPINION-OK | Advice only; starts "Tutorial's own advice:". |
+| 166 | Service Management | SysV init starts services with scripts in `/etc/init.d` | 10, 7 | PASS | S10: "(/etc/init.d in most versions of Linux)". S7: "Services are started with initialization shell scripts, located under the /etc/init.d directory." Both support the sentence; S7 is cited once. |
+| 167 | Service Management; Checking Service Status | The claims about the `service` command and `service --status-all` are removed | none | PASS | A search of the page for "status-all" and for the `service` command finds nothing. No cite is left without a sentence (S5 and S7 are still cited). Notes C37 and C69 say "removed". |
+| 168 | Creating Services | The sentence "A small file has three sections." is removed | 13, 14 | PASS | The three section sentences still carry cites 13 and 14, with the same support as in round 1. |
+| 169 | Creating Services (danger) | "`systemctl revert` also deletes a copy of a vendor unit in `/etc`." | none | FAIL | True (S12: "any user-configured unit file that overrides a matching vendor supplied unit file" is removed), but the sentence is a fact about a command and has no cite. The cite 12 stayed on the tip, which now speaks only of drop-ins. Fix: add `<Cite n={12} />` at the end of that sentence. |
+| 170 | Checking Service Status | The tip and the status text still match S12 after the `service` sentence was removed | 12 | PASS | Rows 74 to 82 still hold; the removed sentence was the only S7 cite there. |
+| 171 | Running Services | `systemctl list-units --type=service --state=running` (cites 6, 12) | 6, 12 | PASS | S12 `--type=`: "When units are listed with list-units ... only units of the specified types will be shown." `--state=`: "a comma-separated list of unit LOAD, SUB, or ACTIVE states" ("running" is a SUB state). Local run works. |
+| 172 | Running Services | `list-unit-files --state=enabled` "lists the enabled unit files" (cites 6, 12) | 6, 12 | FAIL | S12 says `list-unit-files` lists "unit files installed on the system, in combination with their enablement state". The S12 text of `--state=` names only `list-units`, `list-dependencies`, `show` and `status`, and it names LOAD, SUB, ACTIVE states, not `enabled`. So S12 does not document `list-unit-files --state=enabled`. The command works (local, systemd 259: 156 enabled files), and S6 shows it. Cite 12 does not support that part, and notes C81 quotes the `--state=` text as if it did. Fix: remove the second `<Cite n={12} />` from that sentence and say in notes C81 that S12 does not document `--state=` for `list-unit-files` (S6 and a local test only); or use `systemctl list-unit-files --no-pager \| grep enabled` in the text and the code, which S12 supports ("in combination with their enablement state"). |
+| 173 | Running Services (code) | `sudo ss -tulpn  # needs root; ports and their process` | 28 | FAIL | `ss -tulpn` does not need root. It runs as a normal user and lists the ports; only the process of other users is hidden (local test, round 1). S28 has no root rule. Fix: "# with root, shows the process of every socket". |
+| 174 | Running Services | The text "Use `sudo` to see the processes of other users" | none | PASS | Unchanged from round 2 (row 144); it matches the local test. The code comment of row 173 is the part that is wrong. |
+| 175 | Notes | C27, C35, C37, C69, C81 match the page | none | PASS | C27 has the rescue sentence; C35 has the S7 quote ("Services are started with initialization shell scripts, located under the /etc/init.d directory.", 14 words); C37 and C69 are marked removed. C81 is wrong in the S12 part (row 172). No notes quote is over 25 words. All 30 sources appear in notes rows. |
+| 176 | Page quality: word counts | Each section has 100 to 250 words (heading, callout titles and table cell text counted; no table pipes) | none | PASS | My count: Booting Linux 244, Boot Loaders 245, Service Management 220, Creating Services 244, Starting and Stopping Services 246, Checking Service Status 221, Checking Service Logs 212, Running Services 237. All are 250 or less. These numbers match the writer's. The fixes of rows 169, 172 and 173 add no words (a cite, a cite removal, a code comment). |
+| 177 | Page quality: structure | No sentence above 25 words; 8 headings = topic titles; one code block and one tip per topic, each starting "Tutorial's own advice:"; 11 callouts, closing tags at column 0 | none | PASS | Script: no sentence over 25 words, 8 headings, 8 code blocks, 8 tips, 11 `<Callout` and 11 `</Callout>` at column 0. |
+| 178 | Page quality: sources and notes | All 30 sources cited; notes rows and page cites name the same sources | none | PASS | 87 cites, no uncited source (S7 1 cite, S23 3 cites). Notes rows name all 30 sources. |
+| 179 | Page quality: overlap and privacy | No copied run; no home path, login name or host data in the page, notes, or this report | none | PASS | `linux_overlap.py` on the page body (without `page.sources`) prints nothing and exits 0 against my flat 30-file dir and the 243-file roadmap dir. A search for a home path, the user name, the cache directory and a scratch directory in the three files found nothing, so no text of earlier rounds needed a replacement. |
+
+Counts of round 4: 20 rows (160 to 179). PASS 13, FAIL 3, OPINION-OK 4.
+
+New FAILs (location and fix):
+
+- Row 169, Creating Services (danger callout): the `revert` sentence has no cite. Fix: add `<Cite n={12} />` after it.
+- Row 172, Running Services: cite 12 does not document `list-unit-files --state=enabled`. Fix: remove the second `<Cite n={12} />` there and correct notes C81 (S6 and a local test only), or use `list-unit-files --no-pager | grep enabled`.
+- Row 173, Running Services (code): the comment "needs root" is false. Fix: "# with root, shows the process of every socket".
+
+Open FAILs: 3
