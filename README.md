@@ -2,9 +2,9 @@
 
 A free tutorial that teaches QA engineers and SDETs how to use Claude Code for software testing.
 
-**Read it:** https://kawsar-95.github.io/learn-software-testing-with-ai/
+**Read it:** https://kawsar-95.github.io/ai-testing-guide/
 
-[![Deploy to GitHub Pages](https://github.com/kawsar-95/learn-software-testing-with-ai/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/kawsar-95/learn-software-testing-with-ai/actions/workflows/deploy-pages.yml)
+[![Deploy to GitHub Pages](https://github.com/kawsar-95/ai-testing-guide/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/kawsar-95/ai-testing-guide/actions/workflows/deploy-pages.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ![The home page in the dark theme](docs/assets/home.png)
@@ -15,12 +15,12 @@ The tutorial has 23 parts in 6 groups. Each part is one page.
 
 | Group | Parts |
 |---|---|
-| **Getting Started** | 01 [Install Claude Code](https://kawsar-95.github.io/learn-software-testing-with-ai/getting-started/setup/) · 02 [Claude Models](https://kawsar-95.github.io/learn-software-testing-with-ai/getting-started/models/) · 03 [Permission Modes](https://kawsar-95.github.io/learn-software-testing-with-ai/getting-started/permission-modes/) |
-| **Foundations** | 04 [How Claude Code Works](https://kawsar-95.github.io/learn-software-testing-with-ai/foundations/how-claude-code-works/) · 05 [Prompting for QA](https://kawsar-95.github.io/learn-software-testing-with-ai/foundations/prompting/) · 06 [Test Design with Claude](https://kawsar-95.github.io/learn-software-testing-with-ai/foundations/test-design/) · 07 [Key Principles](https://kawsar-95.github.io/learn-software-testing-with-ai/foundations/principles/) |
-| **Configure** | 08 [CLAUDE.md & Memory](https://kawsar-95.github.io/learn-software-testing-with-ai/configure/claude-md/) · 09 [Settings & the .claude Folder](https://kawsar-95.github.io/learn-software-testing-with-ai/configure/settings/) |
-| **Extend** | 10 [Skills & Commands](https://kawsar-95.github.io/learn-software-testing-with-ai/extend/skills/) · 11 [Subagents](https://kawsar-95.github.io/learn-software-testing-with-ai/extend/subagents/) · 12 [Hooks](https://kawsar-95.github.io/learn-software-testing-with-ai/extend/hooks/) · 13 [MCP Servers](https://kawsar-95.github.io/learn-software-testing-with-ai/extend/mcp/) · 14 [Plugins & Marketplaces](https://kawsar-95.github.io/learn-software-testing-with-ai/extend/plugins/) |
-| **Automate** | 15 [Headless & CI](https://kawsar-95.github.io/learn-software-testing-with-ai/automate/headless/) · 16 [GitHub Actions](https://kawsar-95.github.io/learn-software-testing-with-ai/automate/github-actions/) · 17 [Browser Testing with Playwright](https://kawsar-95.github.io/learn-software-testing-with-ai/automate/playwright/) |
-| **Case Study** | 18 [The Practice Project](https://kawsar-95.github.io/learn-software-testing-with-ai/case-study/overview/) · 19 [Bug Hunting with a Review Gate](https://kawsar-95.github.io/learn-software-testing-with-ai/case-study/bug-hunt/) · 20 [From Issue to Reviewed PR](https://kawsar-95.github.io/learn-software-testing-with-ai/case-study/pr-review/) · 21 [Design, Execute, Fix, Retest](https://kawsar-95.github.io/learn-software-testing-with-ai/case-study/test-and-retest/) · 22 [Load and Browser Automation](https://kawsar-95.github.io/learn-software-testing-with-ai/case-study/automation/) · 23 [What to Fix in the Setup](https://kawsar-95.github.io/learn-software-testing-with-ai/case-study/lessons/) |
+| **Getting Started** | 01 [Install Claude Code](https://kawsar-95.github.io/ai-testing-guide/getting-started/setup/) · 02 [Claude Models](https://kawsar-95.github.io/ai-testing-guide/getting-started/models/) · 03 [Permission Modes](https://kawsar-95.github.io/ai-testing-guide/getting-started/permission-modes/) |
+| **Foundations** | 04 [How Claude Code Works](https://kawsar-95.github.io/ai-testing-guide/foundations/how-claude-code-works/) · 05 [Prompting for QA](https://kawsar-95.github.io/ai-testing-guide/foundations/prompting/) · 06 [Test Design with Claude](https://kawsar-95.github.io/ai-testing-guide/foundations/test-design/) · 07 [Key Principles](https://kawsar-95.github.io/ai-testing-guide/foundations/principles/) |
+| **Configure** | 08 [CLAUDE.md & Memory](https://kawsar-95.github.io/ai-testing-guide/configure/claude-md/) · 09 [Settings & the .claude Folder](https://kawsar-95.github.io/ai-testing-guide/configure/settings/) |
+| **Extend** | 10 [Skills & Commands](https://kawsar-95.github.io/ai-testing-guide/extend/skills/) · 11 [Subagents](https://kawsar-95.github.io/ai-testing-guide/extend/subagents/) · 12 [Hooks](https://kawsar-95.github.io/ai-testing-guide/extend/hooks/) · 13 [MCP Servers](https://kawsar-95.github.io/ai-testing-guide/extend/mcp/) · 14 [Plugins & Marketplaces](https://kawsar-95.github.io/ai-testing-guide/extend/plugins/) |
+| **Automate** | 15 [Headless & CI](https://kawsar-95.github.io/ai-testing-guide/automate/headless/) · 16 [GitHub Actions](https://kawsar-95.github.io/ai-testing-guide/automate/github-actions/) · 17 [Browser Testing with Playwright](https://kawsar-95.github.io/ai-testing-guide/automate/playwright/) |
+| **Case Study** | 18 [The Practice Project](https://kawsar-95.github.io/ai-testing-guide/case-study/overview/) · 19 [Bug Hunting with a Review Gate](https://kawsar-95.github.io/ai-testing-guide/case-study/bug-hunt/) · 20 [From Issue to Reviewed PR](https://kawsar-95.github.io/ai-testing-guide/case-study/pr-review/) · 21 [Design, Execute, Fix, Retest](https://kawsar-95.github.io/ai-testing-guide/case-study/test-and-retest/) · 22 [Load and Browser Automation](https://kawsar-95.github.io/ai-testing-guide/case-study/automation/) · 23 [What to Fix in the Setup](https://kawsar-95.github.io/ai-testing-guide/case-study/lessons/) |
 
 New to Claude Code? Start with parts 01, 03, and 04. To see the features work together in one real QA project, read parts 18–23.
 
@@ -52,8 +52,8 @@ Claude Code changes often. If a page is out of date, open an issue or a pull req
 You need Node.js 22.18 or newer. The check scripts also need Python 3.
 
 ```bash
-git clone https://github.com/kawsar-95/learn-software-testing-with-ai.git
-cd learn-software-testing-with-ai
+git clone https://github.com/kawsar-95/ai-testing-guide.git
+cd ai-testing-guide
 npm install
 npm run dev
 ```
@@ -112,7 +112,7 @@ For how the parts fit together, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md
 
 Each push to `main` deploys the site to GitHub Pages through [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml). The workflow runs `npm ci`, `npm test`, and `npm run build`, then publishes `out/`.
 
-The site lives under `/learn-software-testing-with-ai/`. The workflow sets `PAGES_BASE_PATH` for that path and `NEXT_PUBLIC_SITE_URL` for canonical URLs and the sitemap. Local builds serve from `/`. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#base-path-github-pages) for the rules that keep links correct under the base path.
+The site lives under `/ai-testing-guide/`. The workflow sets `PAGES_BASE_PATH` for that path and `NEXT_PUBLIC_SITE_URL` for canonical URLs and the sitemap. Local builds serve from `/`. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#base-path-github-pages) for the rules that keep links correct under the base path.
 
 `NEXT_PUBLIC_GA_ID` is optional. If you set it, the build adds Google Analytics.
 

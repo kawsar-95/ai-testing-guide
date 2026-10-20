@@ -34,14 +34,14 @@ npm test         # node --test on tests/*.test.ts
 
 ## Deploy (GitHub Pages)
 
-`.github/workflows/deploy-pages.yml` deploys every push to `main` to https://kawsar-95.github.io/learn-software-testing-with-ai/. It runs `npm ci`, `npm test`, and `npm run build` with two env vars from `actions/configure-pages`:
+`.github/workflows/deploy-pages.yml` deploys every push to `main` to https://kawsar-95.github.io/ai-testing-guide/. It runs `npm ci`, `npm test`, and `npm run build` with two env vars from `actions/configure-pages`:
 
-- `PAGES_BASE_PATH` (`/learn-software-testing-with-ai`): `next.config.ts` uses it as `basePath` and exposes it as `NEXT_PUBLIC_BASE_PATH`. Local builds leave it empty and serve from `/`.
+- `PAGES_BASE_PATH` (`/ai-testing-guide`): `next.config.ts` uses it as `basePath` and exposes it as `NEXT_PUBLIC_BASE_PATH`. Local builds leave it empty and serve from `/`.
 - `NEXT_PUBLIC_SITE_URL`: canonical URLs, Open Graph URLs, sitemap, and robots.
 
 Base-path rule: `next/link`, `router.push`, and the metadata add the base path. Plain `fetch()` and plain `<a>` do not. So `SearchPalette` prefixes `NEXT_PUBLIC_BASE_PATH` to its fetch, `mdx-components.tsx` renders MDX links that start with `/` through `next/link`, and `MdxImage` prefixes the base path to the `src` of an image with `withBasePath` (`lib/base-path.ts`). Write internal links as `/group/page/`, never with the repo name.
 
-To preview the Pages build locally: `PAGES_BASE_PATH=/learn-software-testing-with-ai npm run build`, copy `out/` to `<dir>/learn-software-testing-with-ai/`, and run `python3 -m http.server 8000 -d <dir>`. The Python check scripts expect a root build (no base path).
+To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run build`, copy `out/` to `<dir>/ai-testing-guide/`, and run `python3 -m http.server 8000 -d <dir>`. The Python check scripts expect a root build (no base path).
 
 ## Structure
 

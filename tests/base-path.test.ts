@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { withBasePath } from "../lib/base-path.ts";
 
-const REPO = "/learn-software-testing-with-ai";
+const REPO = "/ai-testing-guide";
 
 test("a root path gets the base path", () => {
   assert.equal(withBasePath("/images/a.jpg", REPO), `${REPO}/images/a.jpg`);

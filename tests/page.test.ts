@@ -16,6 +16,6 @@ test("formatUpdated rejects a date that is not YYYY-MM-DD", () => {
 test("editUrl points to the MDX file on GitHub", () => {
   assert.equal(
     editUrl("extend", "hooks"),
-    "https://github.com/kawsar-95/learn-software-testing-with-ai/blob/main/content/extend/hooks.mdx",
+    "https://github.com/kawsar-95/ai-testing-guide/blob/main/content/extend/hooks.mdx",
   );
 });
