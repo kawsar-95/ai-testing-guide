@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { CHAPTERS } from "../lib/fundamentals/chapters.ts";
-import { headingsInsideVersions, topicVersionCounts } from "../lib/fundamentals/structure.ts";
+import { headingsInsideVersions, topicVersionCounts, voicePanelVersionCounts } from "../lib/fundamentals/structure.ts";
 import { outlineFromSource } from "../lib/outline.ts";
 
 const DIR = join("content", "fundamentals");
@@ -40,6 +40,54 @@ test("topicVersionCounts counts the blocks of each ## topic and ignores code fen
     { title: "First Topic", notes: 1, istqb: 1 },
     { title: "Second Topic", notes: 0, istqb: 1 },
   ]);
+});
+
+const VOICES_FIXTURE = [
+  "## Topic",
+  "",
+  "<Voices>",
+  "<Technical>",
+  "",
+  '<Version of="notes">',
+  "Owner text.",
+  "</Version>",
+  "",
+  '<Version of="istqb">',
+  "New text.",
+  "</Version>",
+  "",
+  "</Technical>",
+  "<Layman>",
+  "",
+  '<Version of="notes">',
+  "Plain owner text.",
+  "</Version>",
+  "",
+  '<Version of="istqb">',
+  "Plain new text.",
+  "</Version>",
+  "",
+  "</Layman>",
+  "<Bangla>",
+  "",
+  '<Version of="istqb">',
+  "বাংলা লেখা।",
+  "</Version>",
+  "",
+  "</Bangla>",
+  "</Voices>",
+].join("\n");
+
+test("topicVersionCounts counts only the blocks outside the voice panels", () => {
+  assert.deepEqual(topicVersionCounts(VOICES_FIXTURE), [{ title: "Topic", notes: 1, istqb: 1 }]);
+});
+
+test("voicePanelVersionCounts counts the blocks of each voice panel", () => {
+  assert.deepEqual(voicePanelVersionCounts(VOICES_FIXTURE), [
+    { title: "Topic", panel: "layman", notes: 1, istqb: 1 },
+    { title: "Topic", panel: "bangla", notes: 0, istqb: 1 },
+  ]);
+  assert.deepEqual(voicePanelVersionCounts(FIXTURE), []);
 });
 
 test("headingsInsideVersions finds a heading inside a block and ignores a heading outside", () => {
@@ -82,9 +130,19 @@ for (const chapter of CHAPTERS) {
         assert.equal(topic.notes, 1, `${chapter.slug}: "${topic.title}" needs one notes block`);
         assert.equal(topic.istqb, 1, `${chapter.slug}: "${topic.title}" needs one istqb block`);
       }
+      // A topic with voices has the same two blocks in each voice panel.
+      const panels = voicePanelVersionCounts(source);
+      for (const panel of panels) {
+        assert.equal(panel.notes, 1, `${chapter.slug}: "${panel.title}" needs one notes block in <${panel.panel}>`);
+        assert.equal(panel.istqb, 1, `${chapter.slug}: "${panel.title}" needs one istqb block in <${panel.panel}>`);
+      }
       // A block before the first ## or with an unknown `of` value is not in `counts`.
       const blocks = source.split("\n").filter((line) => line.startsWith("<Version")).length;
-      assert.equal(blocks, 2 * chapter.topics.length, `${chapter.slug} has a <Version> block outside the topic rule`);
+      assert.equal(
+        blocks,
+        2 * (chapter.topics.length + panels.length),
+        `${chapter.slug} has a <Version> block outside the topic rule`,
+      );
     } else {
       assert.ok(!source.includes("<Version"), `${chapter.slug} must have no <Version> block`);
     }
