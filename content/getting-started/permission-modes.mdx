@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-10',
+  updated: '2026-10-20',
   sources: [
     { title: 'Choose a permission mode', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permission-modes', accessed: '2026-10-10' },
     { title: 'CLI reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/cli-reference', accessed: '2026-10-10' },
@@ -23,6 +23,9 @@ Before Claude reads a test log, edits a test suite, or runs a query on a shared 
 
 ## What a permission mode is
 
+<Voices>
+<Technical>
+
 A permission mode sets which actions Claude can take in a session without asking you first. <Cite n={1} /> Claude Code has six modes: <Cite n={1} />
 
 | Mode | What runs without asking | Status bar |
@@ -40,7 +43,41 @@ This is the tutorial's suggestion. Use `plan` to read requirements or an unfamil
 
 </Callout>
 
+</Technical>
+<Layman>
+
+A permission mode controls what Claude can do in a session before it asks you. <Cite n={1} /> Claude Code has six modes: <Cite n={1} />
+
+- `default` (Manual): only reads run without a question.
+- `acceptEdits`: reads, file edits, and common file commands, such as `mkdir`, `touch`, `mv`, and `cp`, run without a question.
+- `plan`: reads and read-only shell commands run. When auto mode is available, the classifier approves other commands.
+- `auto`: everything runs, and safety checks run in the background.
+- `dontAsk`: reads and pre-approved tools run. Claude Code denies each action that would ask you.
+- `bypassPermissions`: everything runs.
+
+The tutorial suggests that you choose the mode by the risk of the task. Use `plan` to read requirements or an unknown test suite. Use `acceptEdits` to change test files, and check each change with `git diff`. Use `dontAsk` with an allowlist in CI. Use `bypassPermissions` only in throwaway containers.
+
+</Layman>
+<Bangla>
+
+Permission mode ঠিক করে, একটি session-এ Claude আপনাকে জিজ্ঞেস না করে কোন কোন কাজ করতে পারবে। <Cite n={1} /> Claude Code-এ ছয়টি mode আছে: <Cite n={1} />
+
+- `default` (Manual): শুধু read-এর কাজ জিজ্ঞেস ছাড়া চলে।
+- `acceptEdits`: read, file edit এবং সাধারণ filesystem command (`mkdir`, `touch`, `mv`, `cp` ইত্যাদি) জিজ্ঞেস ছাড়া চলে।
+- `plan`: read এবং read-only shell command চলে। auto mode available থাকলে অন্য command-গুলো classifier approve করে।
+- `auto`: সব কাজ জিজ্ঞেস ছাড়া চলে, আর background-এ safety check চলে।
+- `dontAsk`: read এবং আগে থেকে approve করা tool চলে। যে কাজে prompt আসত, Claude Code সেটি deny করে।
+- `bypassPermissions`: সব কাজ জিজ্ঞেস ছাড়া চলে।
+
+এই tutorial-এর পরামর্শ: task-এর risk দেখে mode বেছে নিন। requirement বা অচেনা test suite পড়তে `plan` ব্যবহার করুন। test file বদলানোর সময় `acceptEdits` ব্যবহার করুন এবং প্রতিটি পরিবর্তন `git diff` দিয়ে দেখুন। CI-তে allowlist সহ `dontAsk` ব্যবহার করুন। `bypassPermissions` শুধু throwaway container-এর জন্য রাখুন।
+
+</Bangla>
+</Voices>
+
 ## The six modes
+
+<Voices>
+<Technical>
 
 ### Manual (`default`)
 
@@ -145,7 +182,43 @@ Only use this mode in isolated environments like containers, VMs, or dev contain
 - On Linux and macOS, bypass mode refuses to run as root or under `sudo`, with the error `--dangerously-skip-permissions cannot be used with root/sudo privileges for security reasons`. Run Claude Code as a non-root user, for example in a dev container. <Cite n={1} />
 - Admins can block the mode with `permissions.disableBypassPermissionsMode: "disable"`. <Cite n={1} />
 
+</Technical>
+<Layman>
+
+Manual (`default`): Claude Code asks you before most actions that edit files, run shell commands, or use the network. <Cite n={1} /> The alias `manual` for `default` needs Claude Code v2.1.200 or later. <Cite n={2} />
+
+Accept edits (`acceptEdits`): Claude edits files and runs common file commands without a question, but only inside the working directory or `additionalDirectories`. Claude Code still asks before writes to protected paths, such as `.git` and `.claude`, and before Bash commands outside the built-in read-only set. <Cite n={1} />
+
+Plan (`plan`): Claude reads, explores, and writes a plan, but does not edit your source. Your approval of the plan stops plan mode. <Cite n={1} /> `/plan` starts plan mode from the prompt. <Cite n={3} />
+
+Auto (`auto`): a second model, the classifier, reviews actions in place of you. It needs a supported model. By default, it blocks risky actions such as force push and `git reset --hard`. Auto mode does not guarantee safety. <Cite n={1} />
+
+Don't ask (`dontAsk`): Claude Code denies each action that would ask you. Use it for locked-down CI. <Cite n={1} />
+
+Bypass permissions (`bypassPermissions`): permission prompts and safety checks are off. Use it only in an isolated container or VM. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+Manual (`default`): file edit, shell command চালানো বা network-এ যাওয়ার বেশিরভাগ কাজের আগে Claude Code আপনাকে জিজ্ঞেস করে। <Cite n={1} /> `default`-এর বদলে `manual` লিখতে পারেন; এর জন্য Claude Code v2.1.200 বা তার পরের version লাগে। <Cite n={2} />
+
+Accept edits (`acceptEdits`): working directory বা `additionalDirectories`-এর ভেতরে Claude জিজ্ঞেস ছাড়া file edit করে এবং সাধারণ filesystem command চালায়। `.git` বা `.claude`-এর মতো protected path-এ write করার আগে, আর built-in read-only set-এর বাইরের Bash command-এর আগে, এখনও prompt আসে। <Cite n={1} />
+
+Plan (`plan`): Claude file পড়ে, explore করে এবং একটি plan লেখে, কিন্তু আপনার source edit করে না। plan approve করলে plan mode শেষ হয়। <Cite n={1} /> `/plan` দিয়ে prompt থেকে plan mode-এ যাওয়া যায়। <Cite n={3} />
+
+Auto (`auto`): আপনার বদলে একটি দ্বিতীয় model, অর্থাৎ classifier, action-গুলো review করে। এর জন্য একটি supported model লাগে। ডিফল্ট হিসেবে এটি force push বা `git reset --hard`-এর মতো ঝুঁকিপূর্ণ কাজ block করে। Auto mode safety-র guarantee দেয় না। <Cite n={1} />
+
+Don't ask (`dontAsk`): যে কাজে prompt আসত, Claude Code সেটি deny করে। Docs এটি locked-down CI-র জন্য recommend করে। <Cite n={1} />
+
+Bypass permissions (`bypassPermissions`): permission prompt এবং safety check বন্ধ থাকে। এটি শুধু container বা VM-এর মতো isolated environment-এ ব্যবহার করুন। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
 ## Which mode you start in
+
+<Voices>
+<Technical>
 
 Claude Code picks the starting mode in this order: <Cite n={1} />
 
@@ -175,7 +248,35 @@ To set your own default, add `permissions.defaultMode` to `~/.claude/settings.js
 
 A project can set `plan` in `.claude/settings.json` to make plan mode the default for its terminal sessions. <Cite n={1} /> A value of `"auto"` or `"bypassPermissions"` in `.claude/settings.json` or `.claude/settings.local.json` does not take effect. To default to `auto`, set it in `~/.claude/settings.json`. <Cite n={1} />
 
+</Technical>
+<Layman>
+
+Claude Code chooses the start mode in this order: first the command-line flag, then `permissions.defaultMode` in a settings file, then the built-in default. <Cite n={1} />
+
+From Claude Code v2.1.283, the built-in start mode is `auto` for interactive terminal and VS Code sessions. If the start mode is `auto` but auto mode is not available to the session, Claude Code starts in Manual. <Cite n={1} />
+
+`claude -p` and the Agent SDK start in `default` in sessions that fetch feature flags. In sessions that do not, they start in `auto` on v2.1.285 or later. <Cite n={1} /> Thus, always set the mode in CI. <Cite n={4} />
+
+To set your own default, add `permissions.defaultMode` to `~/.claude/settings.json`. A project can set `plan` in `.claude/settings.json`. But the value `"auto"` or `"bypassPermissions"` in `.claude/settings.json` or `.claude/settings.local.json` has no effect. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+Claude Code শুরুর mode এই ক্রমে বেছে নেয়: প্রথমে command line-এর `--permission-mode` বা `--dangerously-skip-permissions`, তারপর settings file-এর `permissions.defaultMode`, তারপর built-in default। <Cite n={1} />
+
+Claude Code v2.1.283 বা তার পরের version-এ interactive terminal এবং VS Code session-এর built-in শুরুর mode হলো `auto`। শুরুর mode `auto` হলেও session-এ auto mode available না থাকলে Claude Code Manual mode-এ শুরু হয়। <Cite n={1} />
+
+যে session feature flag fetch করে, সেখানে `claude -p` এবং Agent SDK `default`-এ শুরু হয়। যে session তা করে না (যেমন third-party provider-এ বা telemetry বন্ধ থাকলে), সেখানে v2.1.285 বা তার পরের version-এ এরা `auto`-তে শুরু হয়। <Cite n={1} /> তাই CI-তে সবসময় নিজে mode দিন। <Cite n={4} />
+
+নিজের default ঠিক করতে `~/.claude/settings.json`-এ `permissions.defaultMode` যোগ করুন। কোনো project তার `.claude/settings.json`-এ `plan` দিতে পারে। কিন্তু `.claude/settings.json` বা `.claude/settings.local.json`-এ `"auto"` বা `"bypassPermissions"` দিলে তা কাজ করে না। `auto` default করতে এটি `~/.claude/settings.json`-এ দিন। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
 ## Switch modes
+
+<Voices>
+<Technical>
 
 ### In the CLI
 
@@ -220,7 +321,35 @@ In `acceptEdits` mode, Claude may be able to modify IDE configuration files that
 
 </Callout>
 
+</Technical>
+<Layman>
+
+In the CLI, press `Shift+Tab` to go through the modes: `default` → `acceptEdits` → `plan`. <Cite n={1} /> `auto` joins the cycle when it is available. `bypassPermissions` joins it only when you start with a bypass flag or setting, for example `--dangerously-skip-permissions`. `dontAsk` never joins it. <Cite n={1} />
+
+To start in a mode, use `--permission-mode`, for example `claude --permission-mode plan`. The flag also works with `-p`. <Cite n={1} />
+
+In VS Code, use the mode indicator at the bottom of the prompt box. To set the start mode, use `claudeCode.initialPermissionMode`. This setting does not accept `auto`. <Cite n={1} />
+
+In JetBrains IDEs, press `Shift+Tab`, or use `--permission-mode` when you start Claude Code. <Cite n={1} /> Be careful with `acceptEdits`: Claude may change IDE configuration files that your IDE can run automatically. The JetBrains docs suggest that you consider Manual mode for edits. <Cite n={5} />
+
+</Layman>
+<Bangla>
+
+CLI-তে `Shift+Tab` চাপলে mode-গুলো পালাক্রমে আসে: `default` → `acceptEdits` → `plan`। <Cite n={1} /> auto mode available থাকলে `auto` এই cycle-এ যোগ হয়। `bypassPermissions` যোগ হয় শুধু তখন, যখন আপনি bypass-এর কোনো flag বা setting দিয়ে শুরু করেন, যেমন `--dangerously-skip-permissions` দিয়ে। `dontAsk` কখনও cycle-এ আসে না; এটি `--permission-mode dontAsk` দিয়ে শুরু করুন। <Cite n={1} />
+
+কোনো mode-এ শুরু করতে `--permission-mode` দিন, যেমন `claude --permission-mode plan`। এই flag `-p`-এর সাথেও কাজ করে। <Cite n={1} />
+
+VS Code-এ prompt box-এর নিচের অংশে থাকা mode indicator দিয়ে mode বদলান। শুরুর mode ঠিক করতে `claudeCode.initialPermissionMode` ব্যবহার করুন; এই setting `auto` নেয় না। <Cite n={1} />
+
+JetBrains IDE-তে `Shift+Tab` চাপুন, অথবা Claude Code শুরু করার সময় `--permission-mode` দিন। <Cite n={1} /> সাবধান: `acceptEdits` mode-এ Claude হয়তো এমন IDE configuration file বদলাতে পারে, যা আপনার IDE নিজে থেকে চালাতে পারে। JetBrains docs edit-এর জন্য Manual mode বিবেচনা করার পরামর্শ দেয়। <Cite n={5} />
+
+</Bangla>
+</Voices>
+
 ## Allow, ask, and deny rules
+
+<Voices>
+<Technical>
 
 Permission rules work next to the mode. There are three types: <Cite n={6} />
 
@@ -258,7 +387,39 @@ Some commands run without a prompt in every mode: `ls`, `cat`, `echo`, `pwd`, `h
 - Claude Code enforces the rules, not the model. Instructions in your prompt or `CLAUDE.md` shape what Claude tries to do, but they do not change what Claude Code allows. <Cite n={6} />
 - A `PreToolUse` hook cannot bypass deny or ask rules. A hook that exits with code 2 stops the tool call before Claude Code checks the permission rules. <Cite n={6} /> See [Hooks](/extend/hooks/).
 
+</Technical>
+<Layman>
+
+Rules work together with the mode. There are three types. An allow rule lets a tool run without approval. An ask rule makes Claude Code ask you. A deny rule blocks the tool. <Cite n={6} />
+
+Claude Code checks deny rules first, then ask rules, then allow rules. The first rule that matches decides. Thus an allow rule cannot make an exception to a deny rule. <Cite n={6} />
+
+A rule looks like `Tool` or `Tool(specifier)`, for example `Read(./.env)` or `Bash(npm test)`. In `Bash(git diff *)`, keep the space before `*`. Without it, the rule also matches `git diff-index`. <Cite n={4} />
+
+Settings files keep rules under `permissions.allow`, `permissions.ask`, and `permissions.deny`. Use `/permissions` to see and edit them. <Cite n={6} />
+
+Deny rules block in every mode, also in `bypassPermissions`. <Cite n={1} /> Claude Code enforces the rules, not the model. Text in your prompt or in `CLAUDE.md` does not change what Claude Code allows. <Cite n={6} />
+
+</Layman>
+<Bangla>
+
+Permission rule mode-এর পাশাপাশি কাজ করে। rule তিন রকম। Allow rule থাকলে tool approval ছাড়া চলে। Ask rule থাকলে Claude Code আপনার confirm চায়। Deny rule tool-টি block করে। <Cite n={6} />
+
+Claude Code rule-গুলো এই ক্রমে দেখে: deny, ask, allow। প্রথম যে rule মেলে, সেটিই ফল ঠিক করে। তাই allow rule দিয়ে deny rule-এর ব্যতিক্রম করা যায় না। <Cite n={6} />
+
+Rule-এর format `Tool` বা `Tool(specifier)`, যেমন `Read(./.env)` বা `Bash(npm test)`। `Bash(git diff *)`-এ `*`-এর আগের space জরুরি; space না থাকলে rule-টি `git diff-index`-এর সাথেও মিলে যায়। <Cite n={4} />
+
+Settings file-এ rule থাকে `permissions.allow`, `permissions.ask` এবং `permissions.deny`-এর নিচে। `/permissions` দিয়ে rule দেখা ও বদলানো যায়। <Cite n={6} />
+
+Deny rule সব mode-এ block করে, `bypassPermissions`-এও। <Cite n={1} /> Rule enforce করে Claude Code, model নয়। prompt বা `CLAUDE.md`-এর instruction Claude Code কী allow করে, তা বদলায় না। <Cite n={6} />
+
+</Bangla>
+</Voices>
+
 ## Run unattended safely
+
+<Voices>
+<Technical>
 
 For CI and scripts, combine a strict mode with an exact allowlist. The docs call `dontAsk` useful for locked-down CI runs. <Cite n={4} />
 
@@ -278,7 +439,35 @@ Permission modes decide whether Claude asks before an action. The Bash sandbox a
 
 The full CI setup is on the [Headless & CI](/automate/headless/) page. For how subagents and plugins fit with permissions, see [Subagents](/extend/subagents/) and [Plugins & Marketplaces](/extend/plugins/).
 
+</Technical>
+<Layman>
+
+For CI and scripts, use a strict mode together with an exact allowlist. The docs say that `dontAsk` is useful for locked-down CI runs. <Cite n={4} />
+
+If nobody can answer a prompt in a `-p` run, add `--permission-prompts none`. Claude Code then denies each action that would ask, and tells Claude not to try again. The permission mode still decides all other actions. <Cite n={4} /> This flag needs Claude Code v2.1.259 or later. <Cite n={2} />
+
+If you must skip all checks, do it only inside isolation: a container, a VM, or the sandbox runtime. On Linux and macOS, use a non-root user. <Cite n={1} />
+
+The permission mode decides if Claude asks before an action. The Bash sandbox and outer isolation decide what the action can reach when it runs. <Cite n={1} /> Use `/sandbox` to turn sandbox mode on or off. <Cite n={3} />
+
+</Layman>
+<Bangla>
+
+CI এবং script-এর জন্য একটি strict mode এবং একটি exact allowlist একসাথে ব্যবহার করুন। Docs বলে, locked-down CI run-এর জন্য `dontAsk` উপযোগী। <Cite n={4} />
+
+`-p` run-এ prompt-এর উত্তর দেওয়ার কেউ না থাকলে `--permission-prompts none` দিন। তখন prompt আসার মতো সব কাজ Claude Code deny করে এবং Claude-কে আবার চেষ্টা না করতে বলে। বাকি সব কিছু permission mode-ই ঠিক করে। <Cite n={4} /> এই flag-এর জন্য Claude Code v2.1.259 বা তার পরের version লাগে। <Cite n={2} />
+
+সব check বাদ দিতেই হলে তা শুধু isolation-এর ভেতরে করুন। Docs অনুযায়ী একটি container, VM বা sandbox runtime লাগবে, আর Linux ও macOS-এ একটি non-root user লাগবে। <Cite n={1} />
+
+Permission mode ঠিক করে, কোনো action-এর আগে Claude জিজ্ঞেস করবে কি না। action চলার পর সেটি কী কী reach করতে পারবে, তা ঠিক করে Bash sandbox এবং বাইরের isolation। <Cite n={1} /> sandbox mode চালু বা বন্ধ করতে `/sandbox` ব্যবহার করুন। <Cite n={3} />
+
+</Bangla>
+</Voices>
+
 ## Safety checklist
+
+<Voices>
+<Technical>
 
 This checklist is the tutorial's summary of the rules above.
 
@@ -314,3 +503,40 @@ Set the mode in every CI run, and allow only the commands the job needs. <Cite n
 
   </InfoCard>
 </CardGrid>
+
+</Technical>
+<Layman>
+
+This list is the tutorial's own summary of the rules above.
+
+Do these things:
+
+- Start risky or unknown work in `plan`. Read the plan, then approve it to stop plan mode. <Cite n={1} />
+- Add deny rules such as `Read(./.env)`. Deny rules block in every mode. <Cite n={1} />
+- In CI, use `dontAsk` with an allowlist. Set the mode in every CI run, and allow only the commands that the job needs. <Cite n={1} />
+
+Do not do these things:
+
+- Do not use `CLAUDE.md` to block actions. Its instructions do not change what Claude Code allows. Use deny rules. <Cite n={6} />
+- Do not use auto mode as your review. It does not guarantee safety. Review sensitive operations yourself. <Cite n={1} />
+- Do not use `bypassPermissions` on a laptop with production credentials. It gives no protection against prompt injection or unintended actions. Use it only in an isolated container or VM. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+এটি উপরের rule-গুলোর tutorial-এর নিজের সারাংশ।
+
+যা করবেন:
+
+- ঝুঁকিপূর্ণ বা অচেনা কাজ `plan` mode-এ শুরু করুন। plan পড়ুন, তারপর approve করে plan mode থেকে বের হন। <Cite n={1} />
+- `Read(./.env)`-এর মতো deny rule যোগ করুন। Deny rule সব mode-এ block করে। <Cite n={1} />
+- CI-তে allowlist সহ `dontAsk` ব্যবহার করুন। প্রতিটি CI run-এ mode দিন, আর শুধু job-এর দরকারি command allow করুন। <Cite n={1} />
+
+যা করবেন না:
+
+- action block করতে `CLAUDE.md`-এর উপর ভরসা করবেন না। এর instruction Claude Code কী allow করে, তা বদলায় না। deny rule ব্যবহার করুন। <Cite n={6} />
+- auto mode-কে আপনার review হিসেবে ব্যবহার করবেন না। এটি prompt কমায়, কিন্তু safety-র guarantee দেয় না। sensitive কাজ নিজে review করুন। <Cite n={1} />
+- production credential থাকা laptop-এ `bypassPermissions` ব্যবহার করবেন না। এটি prompt injection বা অনিচ্ছাকৃত action থেকে কোনো সুরক্ষা দেয় না। এটি শুধু isolated container বা VM-এ ব্যবহার করুন। <Cite n={1} />
+
+</Bangla>
+</Voices>

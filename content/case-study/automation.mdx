@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-10',
+  updated: '2026-10-20',
   sources: [
     { title: 'k6 options reference', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/', accessed: '2026-10-10' },
     { title: 'k6 test lifecycle', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/using-k6/test-lifecycle/', accessed: '2026-10-10' },
@@ -33,6 +33,9 @@ The workspace is the author's private practice workspace, in its state of 2026-1
 
 ## The two suites
 
+<Voices>
+<Technical>
+
 The author added both suites on 2026-10-07, after the fixes of [Part 21](/case-study/test-and-retest/). The workspace README ends its QA chain with "re-test ──▶ k6 performance check".
 
 | Suite | Files | What it checks | Stored result |
@@ -46,7 +49,33 @@ The two session logs of the workspace end on 2026-10-04. They do not mention k6 
 
 </Callout>
 
+</Technical>
+<Layman>
+
+The author added two test suites on 2026-10-07, after the fixes of [Part 21](/case-study/test-and-retest/). The workspace README ends its QA chain with "re-test ──▶ k6 performance check".
+
+- **The k6 load test** is in `api/performance/`: one `.k6.js` script and its `README.md`. It checks Send Money under a staged load of one minute. The only result is one reference run in the workspace README. There is no k6 summary file.
+- **The Playwright suite** is in `web/playwright.config.ts` and `web/e2e/`. It checks the admin user list, the agent login with an email OTP, and the agent cash-in. It has no stored result, because git ignores the result folders.
+
+No prompt is recorded for this part. The two session logs of the workspace end on 2026-10-04, and they do not mention k6 or the Playwright suite. So this page shows the files that the author kept, not the conversation that made them.
+
+</Layman>
+<Bangla>
+
+লেখক 2026-10-07 তারিখে, [Part 21](/case-study/test-and-retest/)-এর fix-গুলোর পরে, দুটি test suite যোগ করেন। Workspace README তার QA chain শেষ করে "re-test ──▶ k6 performance check" দিয়ে।
+
+- **k6 load test** আছে `api/performance/`-এ: একটি `.k6.js` script এবং তার `README.md`। এটি এক মিনিটের staged load-এ Send Money check করে। এর একমাত্র result হলো workspace README-তে লেখা একটি reference run। কোনো k6 summary file নেই।
+- **Playwright suite** আছে `web/playwright.config.ts` এবং `web/e2e/`-এ। এটি admin user list, email OTP দিয়ে agent login, এবং agent cash-in check করে। এর কোনো result রাখা নেই, কারণ git result folder-গুলো ignore করে।
+
+এই অংশের কোনো prompt রেকর্ড করা নেই। Workspace-এর দুটি session log 2026-10-04 তারিখে শেষ হয়, এবং সেগুলোতে k6 বা Playwright suite-এর কোনো উল্লেখ নেই। তাই এই পাতা লেখকের রাখা file-গুলো দেখায়, সেগুলো তৈরির কথোপকথন নয়।
+
+</Bangla>
+</Voices>
+
 ## The k6 load test
+
+<Voices>
+<Technical>
 
 ### The load profile
 
@@ -142,7 +171,35 @@ The only k6 result is one sentence in the workspace README: on the local machine
 - **Other environments.** The k6 README says that the script is for local and dev use only, because it writes real ledger rows.
 - **Capacity.** The peak is 10 VUs. The tutorial reads the script as a correctness check of the limits under concurrent sends, not as a capacity test.
 
+</Technical>
+<Layman>
+
+The virtual users (VUs) go from 0 to 3 in 30 s, to 10 in the next 20 s, and to 0 in the last 10 s. Each user waits 3 s (the default `THINK_TIME`) between two sends. With this default, the k6 README estimates about 75 sends per run.
+
+Before the load starts, `setup` keeps the active customers with a balance of at least `MIN_BALANCE` (default 1000). It calculates how many sends each customer can make within the limits and the balance, and plans each send as a slot. If an iteration finds no slot, it sends nothing and adds 1 to `send_skipped`.
+
+Thresholds decide pass or fail <Cite n={4} />. Every send check must pass, no send request can fail, no send can take 60 s or longer, and `send_skipped` must stay at 0. A failed check alone does not fail the test <Cite n={5} />.
+
+The only result is one README sentence: 78 sends, 0 failures, a 95th percentile of 14.5 ms, and a maximum of 23 ms. It is a record of one run, not a baseline.
+
+</Layman>
+<Bangla>
+
+Script-টি k6 `stages` ব্যবহার করে, `scenarios` নয়। প্রথম 30 সেকেন্ডে virtual user (VU) 0 থেকে 3 হয়, পরের 20 সেকেন্ডে 10 হয়, আর শেষ 10 সেকেন্ডে আবার 0 হয়। প্রতিটি user দুটি send-এর মাঝে `THINK_TIME` সেকেন্ড অপেক্ষা করে; default হলো 3 সেকেন্ড। এই default-এ k6 README প্রতি run-এ প্রায় 75টি send ধরে।
+
+Script কোনো user তৈরি করে না। Load শুরুর আগে `setup` সেই active customer-দের রাখে, যাদের balance কমপক্ষে `MIN_BALANCE` (default 1000)। তারপর daily ও monthly limit এবং balance থেকে প্রতিটি customer-এর capacity হিসাব করে, আর প্রতিটি send-এর জন্য একটি round-robin slot তৈরি করে। 2 জনের কম customer থাকলে run fail করে। প্রতিটি iteration `exec.scenario.iterationInTest` দিয়ে নিজের slot বেছে নেয় <Cite n={3} />। কোনো slot না থাকলে iteration কিছু পাঠায় না এবং `send_skipped` counter-এ 1 যোগ করে।
+
+Threshold-গুলোই pass বা fail ঠিক করে <Cite n={4} />। প্রতিটি send check pass করতে হবে, কোনো send request fail করা যাবে না, কোনো send 60 সেকেন্ড বা তার বেশি নিতে পারবে না, এবং `send_skipped` 0 থাকতে হবে। একটি failed check নিজে থেকে test-কে fail করায় না <Cite n={5} />, তাই checks threshold দরকার। Requirement-এ কোনো latency target নেই, তাই duration threshold শুধু 60 সেকেন্ডের একটি ceiling।
+
+একমাত্র result হলো README-র একটি বাক্য: local machine-এ 78টি send, 0 failure, 95th percentile 14.5 ms, এবং maximum 23 ms। এটি একটি run-এর রেকর্ড, baseline নয়। একই UTC দিনে দ্বিতীয় run skipped send দেখায়, তাই fail করে। Script শুধু local ও dev ব্যবহারের জন্য, কারণ এটি আসল ledger row লেখে।
+
+</Bangla>
+</Voices>
+
 ## The Playwright suite
+
+<Voices>
+<Technical>
 
 ### Layout
 
@@ -230,7 +287,39 @@ The workspace has no Playwright report and no test result. Git ignores `/test-re
 
 </Callout>
 
+</Technical>
+<Layman>
+
+The suite has 7 tests. Each role has a setup project that logs in and a test project. The dependent tests start only after all tests of the setup project pass <Cite n={6} />.
+
+Each setup saves the session of its role to `e2e/<role>_auth.json`. It skips the login while the saved session is valid: the file exists, the role is correct, and the token has more than 10 min left. This matters most for the agent: each agent login sends a new OTP email. The file can contain sensitive cookies and headers <Cite n={7} />, so git ignores it.
+
+The OTP helper reads the newest OTP email through the Gmail REST API. It uses only an OTP from this login. It skips emails from before the login and expired OTPs. By default, it polls every 3 s for at most 60 s.
+
+The cash-in test checks the API response, the page, and the new balance. It asserts the exact status 201, because the backend returns HTTP 208 for a business rejection.
+
+No Playwright run is stored, so the page does not claim that the 7 tests pass.
+
+</Layman>
+<Bangla>
+
+Suite-টিতে 7টি test আছে: admin-এর 1টি এবং agent-এর 6টি। প্রতিটি role-এর একটি setup project আছে, যা login করে, এবং একটি test project আছে। Setup project-এর সব test pass করার পরেই কেবল dependent test-গুলো শুরু হয় <Cite n={6} />।
+
+প্রতিটি setup তার role-এর session `e2e/<role>_auth.json`-এ save করে। Saved session valid থাকলে setup login বাদ দেয়, অর্থাৎ যখন file-টি আছে, role ঠিক আছে, এবং token-এর মেয়াদ 10 মিনিটের বেশি বাকি। Agent-এর জন্য এটি সবচেয়ে জরুরি, কারণ প্রতিটি agent login একটি নতুন OTP email পাঠায়। এই file-এ sensitive cookie ও header থাকতে পারে <Cite n={7} />, তাই workspace git-এ `/e2e/*_auth.json` ignore করে।
+
+OTP helper Gmail REST API দিয়ে সবচেয়ে নতুন OTP email পড়ে। এর নিয়ম একটি: শুধু এই login-এর OTP ব্যবহার করে। এটি login-এর আগের email বাদ দেয়, এবং 2 মিনিট শেষ হওয়ার 10 সেকেন্ড আগেই OTP-কে expired ধরে। Default হিসেবে এটি প্রতি 3 সেকেন্ডে poll করে, সর্বোচ্চ 60 সেকেন্ড পর্যন্ত। Login spec-এর 5টি test-এর মধ্যে 1টি browser দিয়ে login করে; বাকি 4টি mailbox API stub করে।
+
+Cash-in test একসাথে তিনটি জিনিস দেখে: API response, page, এবং API থেকে পাওয়া নতুন balance। এটি exact status 201 assert করে, "যেকোনো 2xx" নয়, কারণ backend business rejection-এর জন্য HTTP 208 ফেরত দেয়।
+
+Config failure-এ trace ও screenshot রাখে, এবং CI-তে একটি failed test 2 বার retry করে। কোনো Playwright run রাখা নেই, তাই এই পাতা দাবি করে না যে 7টি test pass করে।
+
+</Bangla>
+</Voices>
+
 ## The /playwright command
+
+<Voices>
+<Technical>
 
 The author wrote the rules for this suite as a command in `.claude/commands/playwright.md`. Custom commands are merged into skills. A file in `.claude/commands/` and a skill in `.claude/skills/<name>/SKILL.md` both create `/<name>`, and existing command files keep working. <Cite n={10} /> The [Skills](/extend/skills/) page explains the skill format.
 
@@ -249,7 +338,35 @@ The cash-in test follows the second rule. The table of common failures in the co
 
 The workspace also registers the Playwright MCP server, but the command explores with agent-browser. No skill or command names a Playwright MCP tool. [Part 23](/case-study/lessons/) lists this and other setup issues. The [Browser Testing with Playwright](/automate/playwright/) page explains Playwright MCP and the Playwright Test Agents.
 
+</Technical>
+<Layman>
+
+The author wrote the rules for this suite as a command in `.claude/commands/playwright.md`. A file in `.claude/commands/` and a skill in `.claude/skills/<name>/SKILL.md` both create `/<name>` <Cite n={10} />.
+
+The command gives a workflow in 9 steps: read the project, explore with agent-browser, ask about ambiguity, write the test, run it, fix it, prove the assertion, run cold, and report. The work is done only when the test passes and the assertion is proved able to fail. To prove an assertion, change one expected value to a wrong value and run. The test must fail with a clear message. Then restore the value, run again, and check `git diff`.
+
+Two more rules protect the tests. A fix keeps the assertions as strong as before. A test checks the UI, the API response, and the result in the data. The command also says: assert the exact status, for example `201`, not `ok()`.
+
+The workspace also registers the Playwright MCP server, but the command explores with agent-browser.
+
+</Layman>
+<Bangla>
+
+লেখক এই suite-এর নিয়মগুলো `.claude/commands/playwright.md`-এ একটি command হিসেবে লিখেছেন। `.claude/commands/`-এর একটি file এবং `.claude/skills/<name>/SKILL.md`-এর একটি skill, দুটিই `/<name>` তৈরি করে, এবং পুরোনো command file-গুলো কাজ করতে থাকে <Cite n={10} />।
+
+Command-টি 9 ধাপের একটি workflow দেয়: project পড়া, agent-browser দিয়ে explore করা, অস্পষ্ট বিষয়ে প্রশ্ন করা, test লেখা, run করা, fix করা, assertion প্রমাণ করা, cold run করা, এবং report দেওয়া। কাজ শেষ হয় কেবল তখন, যখন test pass করে এবং প্রমাণ হয় যে assertion fail করতে পারে। Assertion প্রমাণ করতে একটি expected value ভুল value-তে বদলে run করুন। Test-কে একটি পরিষ্কার message দিয়ে fail করতে হবে। তারপর value ফিরিয়ে আনুন, আবার run করুন, এবং `git diff` দেখুন।
+
+আরও দুটি নিয়ম test-কে দুর্বল fix থেকে রক্ষা করে। Fix-এর পরেও assertion আগের মতোই শক্ত রাখতে হবে; expected value বদলানো যাবে কেবল তখন, যখন প্রমাণ দেখায় যে expectation ভুল ছিল। আর test-কে UI, API response, এবং data-র result, তিনটিই check করতে হবে। Cash-in test দ্বিতীয় নিয়মটি মেনে চলে। Command-এর common failure table-ও 208 সমস্যার কথা বলে: exact status assert করুন, যেমন `201`, `ok()` নয়।
+
+Workspace Playwright MCP server-ও register করে, কিন্তু command-টি agent-browser দিয়ে explore করে। কোনো skill বা command কোনো Playwright MCP tool-এর নাম নেয় না।
+
+</Bangla>
+</Voices>
+
 ## Take-aways
+
+<Voices>
+<Technical>
 
 These points are the tutorial's own advice, from this case study.
 
@@ -259,3 +376,30 @@ These points are the tutorial's own advice, from this case study.
 - Give each role its own saved session, check its expiry in code, and keep the file out of git.
 - Check the UI, the API response, and the data in one test. Assert the exact status code.
 - Store the run output, or say clearly that none is stored. One number in a README is not a baseline.
+
+</Technical>
+<Layman>
+
+This is the tutorial's own advice, from this case study.
+
+- Plan the load test data from the business limits in `setup`. Count a missing slot as a failure.
+- Put every pass criterion into a threshold. A failed k6 check alone does not fail the run.
+- If the requirements give no latency target, write this in the README. Do not invent a target.
+- Give each role its own saved session. Check its expiry in code, and keep the file out of git.
+- In one test, check the UI, the API response, and the data. Assert the exact status code.
+- Store the run output, or say clearly that you did not. One number in a README is not a baseline.
+
+</Layman>
+<Bangla>
+
+এগুলো এই case study থেকে পাওয়া tutorial-এর নিজস্ব পরামর্শ।
+
+- Business limit থেকে load test data তৈরি করুন। প্রতিটি request `setup`-এ plan করুন, এবং একটি missing slot-কে চুপচাপ skip নয়, failure হিসেবে গণ্য করুন।
+- প্রতিটি pass criterion একটি threshold-এ রাখুন। একটি failed k6 check নিজে থেকে run-কে fail করায় না।
+- Requirement-এ কোনো latency target না থাকলে README-তে তা লিখুন। Threshold-এ নিজে থেকে কোনো target বানাবেন না।
+- প্রতিটি role-কে তার নিজের saved session দিন, code-এ তার মেয়াদ check করুন, এবং file-টি git-এর বাইরে রাখুন।
+- একটি test-এ UI, API response, এবং data, তিনটিই check করুন। Exact status code assert করুন।
+- Run-এর output রাখুন, অথবা পরিষ্কারভাবে বলুন যে কিছু রাখা হয়নি। README-র একটি সংখ্যা baseline নয়।
+
+</Bangla>
+</Voices>

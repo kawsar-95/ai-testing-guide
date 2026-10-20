@@ -18,6 +18,9 @@ Think of a bank with many counters. Your account details are not in the memory o
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 "State" is data that must survive from one request to the next. The most common example is a session. A session is the data of one user that stays between requests while the user works in the app <Cite n={1} />. A stateless application does not need to know about earlier requests, and it does not keep session data itself <Cite n={1} />.
 
 The state does not disappear. A stateless service moves it out of the app server. Then no request depends on data on the local disk or in the local memory of one server. So you can replace a server at any time, and users do not notice <Cite n={1} />. Because any server can answer any request, you can [scale horizontally](/architecture/horizontal-scaling/) <Cite n={1} />.
@@ -37,20 +40,105 @@ A JWT (JSON Web Token) is a short, URL-safe string that carries claims, such as 
 
 <MdxImage src="/images/architecture/07-stateless-service.webp" alt="Sequence diagram with five parts: User, Load Balancer, App Server 1, App Server 2, and Redis Session Store. In the login flow, the user sends a login request to the load balancer, which forwards it to App Server 1. App Server 1 stores the session or token data in Redis. In the next request flow, the load balancer forwards the request to App Server 2. App Server 2 validates the session in Redis, and Success goes back to the user." />
 
+</Technical>
+<Layman>
+
+"State" is data that must stay from one request to the next. The most common example is a session: the data of one user that stays between requests <Cite n={1} />. A stateless app does not keep session data itself <Cite n={1} />.
+
+The state moves out of the app server. No request needs data on the disk or in the memory of one server. So you can replace a server at any time, and users do not notice <Cite n={1} />. Any server can answer any request, so you can [scale horizontally](/architecture/horizontal-scaling/) <Cite n={1} />.
+
+- Login sessions go to a shared cache or a database <Cite n={1} />. Redis can do this job <Cite n={3} />. The app uses the browser cookie as a key to find the session <Cite n={3} />.
+- Uploaded files go to [object storage](/architecture/object-storage/), such as Amazon S3 <Cite n={1} />.
+- Slow or heavy work goes to background jobs <Cite n={2} />.
+- A JWT is a token that carries claims, such as "this is user 42", and the claims can be signed. The server must reject a token that fails a check, or that is past its expiry time (`exp`) <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+"State" হলো এমন data, যা একটি request থেকে পরের request পর্যন্ত টিকে থাকতে হয়। সবচেয়ে পরিচিত উদাহরণ হলো session। Session হলো একজন user-এর data, যা user app-এ কাজ করার সময় request-গুলোর মাঝে থেকে যায় <Cite n={1} />। একটি stateless application-কে আগের request-এর কথা জানতে হয় না, এবং এটি নিজে session data রাখে না <Cite n={1} />।
+
+State হারিয়ে যায় না। Stateless service এটিকে app server-এর বাইরে সরিয়ে দেয়। তখন কোনো request একটি server-এর local disk বা local memory-র data-র উপর নির্ভর করে না। তাই আপনি যেকোনো সময় একটি server বদলে দিতে পারেন, আর user-রা টেরও পান না <Cite n={1} />। যেকোনো server যেকোনো request-এর উত্তর দিতে পারে বলে আপনি [horizontally scale](/architecture/horizontal-scaling/) করতে পারেন <Cite n={1} />।
+
+State সাধারণত এই জায়গাগুলোতে যায়:
+
+- Login session যায় একটি shared cache বা database-এ <Cite n={1} />। Redis session store হিসেবে কাজ করতে পারে <Cite n={3} />। Browser একটি cookie রাখে, আর app সেই cookie-কে key হিসেবে ব্যবহার করে shared store থেকে session data খুঁজে নেয় <Cite n={3} />।
+- Upload করা file যায় [object storage](/architecture/object-storage/)-এ, যেমন Amazon S3 <Cite n={1} />।
+- ধীর বা ভারী কাজ request-এর বাইরে background job-এ যায় <Cite n={2} />।
+
+JWT (JSON Web Token) হলো একটি ছোট, URL-safe string, যা claim বহন করে, যেমন "this is user 42" <Cite n={4} />। Claim-গুলো digitally signed হতে পারে <Cite n={4} />। যে server-এর কাছে key আছে, সেটি signature check করতে পারে। কোনো check ধাপ fail করলে server-কে token-টি reject করতে হবে <Cite n={4} />। তাই server নিজের memory-তে session না রেখেও একটি valid token-কে বিশ্বাস করতে পারে। JWT-তে একটি expiry time (`exp`) থাকতে পারে; সেই সময়ের পরে server token-টি গ্রহণ করবে না <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 - You want horizontal scaling, with many app servers behind a [load balancer](/architecture/load-balancer/).
 - You want rolling deployments, where servers restart one at a time.
 - User sessions must survive a server restart.
 - You use cloud or container platforms. AWS says that once an app is stateless, you can run it on serverless compute such as AWS Lambda or AWS Fargate <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+You need a stateless service in these cases:
+
+- You want horizontal scaling: many app servers behind a [load balancer](/architecture/load-balancer/).
+- You want rolling deployments. In a rolling deployment, the servers restart one at a time.
+- User sessions must survive when a server restarts.
+- You use cloud or container platforms. AWS says that when an app is stateless, you can run it on serverless compute, such as AWS Lambda or AWS Fargate <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+নিচের অবস্থাগুলোতে আপনার একটি stateless service দরকার:
+
+- আপনি horizontal scaling চান, অর্থাৎ একটি [load balancer](/architecture/load-balancer/)-এর পেছনে অনেকগুলো app server।
+- আপনি rolling deployment চান, যেখানে server-গুলো একটি একটি করে restart হয়।
+- একটি server restart হলেও user session-গুলো টিকে থাকতে হবে।
+- আপনি cloud বা container platform ব্যবহার করেন। AWS বলে, একটি app stateless হয়ে গেলে আপনি সেটিকে AWS Lambda বা AWS Fargate-এর মতো serverless compute-এ চালাতে পারেন <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 A student logs in to the LMS through App Server 1. The next request goes to App Server 2.
 
 If the session is only in the memory of App Server 1, App Server 2 does not know the student. The student seems logged out and must log in again. Now the team moves the sessions to Redis. App Server 1 writes the session to Redis at login. App Server 2 reads the same session from Redis and accepts the request. A JWT gives the same result: App Server 2 checks the token signature and accepts the request.
 
+</Technical>
+<Layman>
+
+A student logs in to the LMS through App Server 1. The next request goes to App Server 2.
+
+If the session is only in the memory of App Server 1, App Server 2 does not know the student. The student seems logged out and must log in again.
+
+Now the team moves the sessions to Redis. At login, App Server 1 writes the session to Redis. App Server 2 reads the same session from Redis and accepts the request.
+
+A JWT gives the same result. App Server 2 checks the token signature and accepts the request.
+
+</Layman>
+<Bangla>
+
+ধরুন, একজন শিক্ষার্থী App Server 1-এর মাধ্যমে LMS-এ log in করে। পরের request-টি যায় App Server 2-এ।
+
+Session যদি শুধু App Server 1-এর memory-তে থাকে, তাহলে App Server 2 শিক্ষার্থীকে চেনে না। শিক্ষার্থীকে logged out মনে হয়, এবং তাকে আবার log in করতে হয়।
+
+এখন team session-গুলো Redis-এ সরিয়ে নেয়। Login-এর সময় App Server 1 session-টি Redis-এ লেখে। App Server 2 Redis থেকে একই session পড়ে এবং request-টি গ্রহণ করে। JWT দিয়েও একই ফল পাওয়া যায়: App Server 2 token-এর signature check করে এবং request-টি গ্রহণ করে।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Sessions in local memory.** Users seem logged out when the next request goes to another server. Microsoft names session state in memory as a cause of "stickiness" <Cite n={2} />.
 - **Uploaded files on the local disk.** The file exists on one server only.
@@ -58,7 +146,35 @@ If the session is only in the memory of App Server 1, App Server 2 does not know
 - **The same cron job on every server.** A cron job is a task that runs on a schedule. With three servers, the nightly email can go out three times.
 - **Sticky sessions to hide a weak design.** A sticky session (session affinity) makes the load balancer send all requests of one user to the same server <Cite n={5} />. AWS says this is useful for servers that keep state <Cite n={5} />. But stickiness limits scale-out <Cite n={2} />, and the user still loses the session when that server dies.
 
+</Technical>
+<Layman>
+
+Look out for these common mistakes:
+
+- **Sessions in local memory.** When the next request goes to another server, users seem logged out. Microsoft names session state in memory as a cause of "stickiness" <Cite n={2} />.
+- **Uploaded files on the local disk.** The file is on one server only.
+- **Background jobs inside the app process.** A heavy task makes the user requests on that server slow. Move tasks with high CPU or high I/O use to background jobs <Cite n={2} />.
+- **The same cron job on every server.** A cron job is a task that runs on a schedule. With three servers, the nightly email can go out three times.
+- **Sticky sessions to hide a weak design.** With a sticky session (session affinity), the load balancer sends all requests of one user to the same server <Cite n={5} />. AWS says that this is useful for servers that keep state <Cite n={5} />. But stickiness limits scale-out <Cite n={2} />. Also, the user still loses the session when that server dies.
+
+</Layman>
+<Bangla>
+
+এই সাধারণ ভুলগুলোর দিকে খেয়াল রাখুন:
+
+- **Local memory-তে session।** পরের request অন্য server-এ গেলে user-দের logged out মনে হয়। Microsoft memory-তে থাকা session state-কে "stickiness"-এর একটি কারণ হিসেবে উল্লেখ করে <Cite n={2} />।
+- **Local disk-এ upload করা file।** File-টি শুধু একটি server-এ থাকে।
+- **App process-এর ভেতরে background job।** একটি ভারী কাজ সেই server-এর user request-গুলোকে ধীর করে দেয়। বেশি CPU বা বেশি I/O লাগে এমন কাজ background job-এ সরিয়ে দিন <Cite n={2} />।
+- **প্রতিটি server-এ একই cron job।** Cron job হলো এমন একটি কাজ, যা একটি schedule অনুযায়ী চলে। তিনটি server থাকলে রাতের email তিনবার চলে যেতে পারে।
+- **দুর্বল design আড়াল করতে sticky session।** Sticky session (session affinity) থাকলে load balancer একজন user-এর সব request একই server-এ পাঠায় <Cite n={5} />। AWS বলে, state রাখে এমন server-এর জন্য এটি কাজের <Cite n={5} />। কিন্তু stickiness scale-out সীমিত করে <Cite n={2} />, আর সেই server নষ্ট হয়ে গেলে user তবুও session হারান।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice.
@@ -70,6 +186,33 @@ These test ideas are the tutorial's own advice.
 - **Duplicate jobs.** Run three servers and wait for a scheduled job. Check that it runs only one time.
 - **Sticky sessions off.** In a test environment, turn off sticky sessions. Run the main user flows and look for lost data.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Server hop.** Log in. Then send requests that go to different servers. Make sure that the user stays logged in on each server.
+- **Restart during a session.** Restart one app server, or restart all of them one after the other. Make sure that logged-in users stay logged in.
+- **Token expiry.** Send a request with an expired JWT. Then send a request with a JWT that has one changed character. Both requests must fail with `401`.
+- **Logout everywhere.** Log out. Then send the old cookie or token again. Make sure that no server still accepts it.
+- **Duplicate jobs.** Run three servers and wait for a scheduled job. Make sure that the job runs only one time.
+- **Sticky sessions off.** In a test environment, turn off sticky sessions. Run the main user flows and look for lost data.
+
+</Layman>
+<Bangla>
+
+নিচের test ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- **Server বদল।** Log in করুন, তারপর এমন request পাঠান যা ভিন্ন ভিন্ন server-এ যায়। দেখুন, প্রতিটি server-এ user logged in থাকে কি না।
+- **Session চলার সময় restart।** একটি app server restart করুন, অথবা সবগুলো একটি একটি করে restart করুন। দেখুন, logged-in user-রা logged in থাকেন কি না।
+- **Token expiry।** একটি মেয়াদোত্তীর্ণ JWT দিয়ে একটি request পাঠান, আর একটি character বদলানো JWT দিয়ে আরেকটি request পাঠান। দুটিই `401` দিয়ে fail করতে হবে।
+- **সব জায়গা থেকে logout।** Log out করুন, তারপর পুরনো cookie বা token আবার পাঠান। দেখুন, কোনো server এখনও সেটি গ্রহণ করে কি না।
+- **Duplicate job।** তিনটি server চালান এবং একটি scheduled job-এর জন্য অপেক্ষা করুন। দেখুন, সেটি শুধু একবার চলে কি না।
+- **Sticky session বন্ধ।** একটি test environment-এ sticky session বন্ধ করুন। মূল user flow-গুলো চালান এবং হারানো data খুঁজুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

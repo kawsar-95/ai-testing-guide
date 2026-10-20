@@ -20,6 +20,9 @@ Think of a busy café. The menu board on the wall shows the prices, so the cashi
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 A **cache** is a fast storage layer that keeps a part of your data, so the next request for that data is faster than a trip to the main store <Cite n={1} />. The data is usually kept in fast memory (RAM) <Cite n={1} />. The main store is often a database, but a cache can also keep the results of API requests <Cite n={1} />.
 
 **Redis** is an in-memory data store. Many teams use it as a cache <Cite n={2} />.
@@ -50,7 +53,37 @@ Memory is limited. If you set an eviction policy, Redis removes keys by itself w
 
 <MdxImage src="/images/architecture/12-caching.webp" alt="Diagram: the application checks Redis first. On a cache hit, Redis returns the data fast. On a cache miss, the application reads the database, saves a copy in Redis with a TTL, and returns the data. When an admin updates the data, the application invalidates the old cache key." />
 
+</Technical>
+<Layman>
+
+A cache is a fast storage layer. It keeps a part of your data, so the next request for that data is faster than a trip to the main store <Cite n={1} />. Redis is an in-memory data store that many teams use as a cache <Cite n={2} />.
+
+A cache hit means that the data is in the cache. The app returns it at once. A cache miss means that the data is not in the cache <Cite n={1} />. Then the app gets it from the database or the source API.
+
+In the cache-aside pattern, the app loads data into the cache on demand. When the app changes data, it writes to the database first. Then it removes or updates the old copy in the cache <Cite n={6} />.
+
+TTL (time to live) is the expiry time of a cached item <Cite n={1} />. In Redis, `EXPIRE` sets a timeout on a key. When the timeout ends, Redis deletes the key <Cite n={3} />. `TTL` returns `-1` for a key with no expiry and `-2` for a key that does not exist <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+Cache হলো একটি দ্রুত storage layer। এটি আপনার data-র একটি অংশ রেখে দেয়, যাতে সেই data-র পরের request মূল store-এ যাওয়ার চেয়ে দ্রুত হয় <Cite n={1} />। Data সাধারণত দ্রুত memory-তে (RAM) রাখা হয় <Cite n={1} />। মূল store প্রায়ই একটি database, তবে cache API request-এর ফলাফলও রাখতে পারে <Cite n={1} />। Redis হলো একটি in-memory data store, আর অনেক team এটিকে cache হিসেবে ব্যবহার করে <Cite n={2} />।
+
+Data cache-এ থাকলে তাকে cache hit বলে, আর app সাথে সাথে data ফেরত দেয়। Data cache-এ না থাকলে তাকে cache miss বলে <Cite n={1} />। তখন app-কে database বা source API থেকে data আনতে হয়।
+
+Cache-aside pattern-এ কেউ data চাইলে তখনই app সেটি cache-এ load করে। App data বদলালে আগে database-এ লেখে। তারপর cache item-টি invalidate করে, অর্থাৎ পুরোনো copy মুছে ফেলে বা update করে। পরের read নতুন data load করে আবার cache করে <Cite n={6} />।
+
+TTL (time to live) হলো একটি cached item-এর মেয়াদ <Cite n={1} />। Redis-এ `EXPIRE` command একটি key-তে timeout ঠিক করে, আর timeout শেষ হলে Redis নিজে থেকেই key-টি মুছে দেয় <Cite n={3} />। `TTL` command দেখায় একটি key-র আর কত সময় বাকি। Key-র কোনো expiry না থাকলে এটি `-1` দেয়, আর key না থাকলে `-2` দেয় <Cite n={4} />।
+
+Memory সীমিত। আপনি একটি eviction policy ঠিক করলে, cache একটি memory limit পার হলে Redis নিজেই key সরিয়ে দেয় <Cite n={5} />। যেমন, `allkeys-lru` policy সবচেয়ে কম সাম্প্রতিক সময়ে ব্যবহৃত key-গুলো সরায় <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 - The same data is read often.
 - The database load is high.
@@ -58,7 +91,35 @@ Memory is limited. If you set an eviction policy, Redis removes keys by itself w
 - The data does not change very often. Caching works best for data that is read a lot, changes rarely, and can be a little old <Cite n={6} />.
 - External API calls are expensive or slow.
 
+</Technical>
+<Layman>
+
+A cache helps in these cases:
+
+- The app reads the same data often.
+- The database has a high load.
+- The response time must be better.
+- The data does not change very often. Caching works best for data that the app reads a lot, that changes rarely, and that can be a little old <Cite n={6} />.
+- Calls to external APIs are expensive or slow.
+
+</Layman>
+<Bangla>
+
+নিচের অবস্থাগুলোতে cache কাজে আসে:
+
+- একই data বারবার পড়া হয়।
+- Database-এর load বেশি।
+- Response time উন্নত করা দরকার।
+- Data খুব বেশি বদলায় না। যে data অনেক পড়া হয়, কদাচিৎ বদলায়, এবং একটু পুরোনো হলেও চলে, সেই data-র জন্য caching সবচেয়ে ভালো কাজ করে <Cite n={6} />।
+- External API call ব্যয়বহুল বা ধীর।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 In an LMS (learning management system), students open the course list thousands of times each day. But the course information changes only sometimes.
 
@@ -66,7 +127,31 @@ So the app caches the course list in Redis for 10 minutes. Most requests then ne
 
 Then an admin changes the price of a course. If the app does not invalidate the related cache key, students see the old price for up to 10 minutes. Worse, the checkout can show a price that is different from the list. So the update code must also delete the course list key and the key of that course.
 
+</Technical>
+<Layman>
+
+In an LMS (learning management system), students open the course list thousands of times each day. The course information changes only sometimes.
+
+So the app keeps the course list in Redis for 10 minutes. Most requests then do not go to the database.
+
+Then an admin changes the price of a course. If the app does not invalidate the related cache key, students see the old price for up to 10 minutes. Also, the checkout can show a price that is not the same as the price in the list. So the update code must also delete the course list key and the key of that course.
+
+</Layman>
+<Bangla>
+
+একটি LMS-এ (learning management system) শিক্ষার্থীরা প্রতিদিন হাজার হাজার বার course list খোলেন। কিন্তু course-এর তথ্য মাঝে মাঝে বদলায়।
+
+তাই app course list-টি 10 মিনিটের জন্য Redis-এ cache করে রাখে। এতে বেশিরভাগ request database পর্যন্ত যায়ই না।
+
+এরপর একজন admin একটি course-এর দাম বদলান। App যদি সংশ্লিষ্ট cache key invalidate না করে, তাহলে শিক্ষার্থীরা সর্বোচ্চ 10 মিনিট পর্যন্ত পুরোনো দাম দেখেন। আরও খারাপ হলো, checkout-এ list-এর চেয়ে আলাদা দাম দেখাতে পারে। তাই update code-কে course list key এবং সেই course-এর key-ও মুছে ফেলতে হবে।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Caching user data with the wrong key.** If the key is `dashboard` and not `dashboard:user:42`, user B can get user A's dashboard. Use clear, structured keys, such as `customer:100` <Cite n={7} />. Also protect the cache itself from unauthorized access <Cite n={7} />.
 - **Using a very long TTL.** If the expiry is too long, the cached data becomes stale. If it is too short, the app keeps going back to the database <Cite n={6} />.
@@ -74,7 +159,33 @@ Then an admin changes the price of a course. If the app does not invalidate the 
 - **Making the whole app fail when Redis is down.** The app should keep working if the cache is not available <Cite n={7} />. It should fall back to the database <Cite n={7} />. But plan for the extra load: while the cache recovers, the database can get too many requests and time out <Cite n={7} />.
 - **Confusing speed with correctness.** A fast answer is not always a correct answer. Right after a write, a reader can briefly see stale data <Cite n={6} />. Do not use the cache as the only store of critical data. Save every important change to a persistent store <Cite n={7} />.
 
+</Technical>
+<Layman>
+
+- **Caching user data with the wrong key.** If the key is `dashboard` and not `dashboard:user:42`, user B can get the dashboard of user A. Use clear, structured keys, such as `customer:100` <Cite n={7} />. Also protect the cache from unauthorized access <Cite n={7} />.
+- **Using a very long TTL.** If the expiry is too long, the cached data becomes old (stale). If it is too short, the app goes to the database too often <Cite n={6} />.
+- **No invalidation plan.** Cache-aside does not make sure that the cache and the database agree <Cite n={6} />. Decide which change deletes which keys.
+- **The whole app fails when Redis is down.** When the cache is not available, the app should continue to work and use the database <Cite n={7} />. But while the cache recovers, the database can get too many requests and time out <Cite n={7} />.
+- **Fast is not the same as correct.** Right after a write, a reader can see stale data for a short time <Cite n={6} />. Do not keep critical data only in the cache. Save each important change to a persistent store <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+এই সাধারণ ভুলগুলোর দিকে খেয়াল রাখুন:
+
+- **ভুল key দিয়ে user data cache করা।** Key যদি `dashboard:user:42` না হয়ে `dashboard` হয়, তাহলে user B, user A-র dashboard পেয়ে যেতে পারেন। `customer:100`-এর মতো স্পষ্ট, গোছানো key ব্যবহার করুন <Cite n={7} />। Cache-কেও unauthorized access থেকে রক্ষা করুন <Cite n={7} />।
+- **খুব লম্বা TTL ব্যবহার করা।** Expiry খুব লম্বা হলে cached data stale, অর্থাৎ পুরোনো, হয়ে যায়। খুব ছোট হলে app বারবার database-এ ফিরে যায় <Cite n={6} />।
+- **Invalidation-এর কোনো পরিকল্পনা না থাকা।** Cache-aside নিশ্চিত করে না যে cache আর database একই data রাখবে <Cite n={6} />। কোন পরিবর্তনে কোন key মুছবে, তা আগে ঠিক করুন।
+- **Redis down হলে পুরো app fail করা।** Cache না পাওয়া গেলেও app-কে কাজ চালিয়ে যেতে হবে এবং database-এ fall back করতে হবে <Cite n={7} />। তবে বাড়তি load-এর জন্য পরিকল্পনা রাখুন: cache recover করার সময় database-এ অনেক বেশি request এসে time out হতে পারে <Cite n={7} />।
+- **গতি আর সঠিকতাকে গুলিয়ে ফেলা।** দ্রুত উত্তর মানেই সবসময় সঠিক উত্তর নয়। একটি write-এর ঠিক পরে একজন reader অল্প সময়ের জন্য stale data দেখতে পারেন <Cite n={6} />। গুরুত্বপূর্ণ data শুধু cache-এ রাখবেন না। প্রতিটি গুরুত্বপূর্ণ পরিবর্তন একটি persistent store-এ save করুন <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice.
@@ -85,6 +196,31 @@ These test ideas are the tutorial's own advice.
 - **Redis down.** Stop Redis in a test environment. The app must still answer from the database, maybe slower, with no error page.
 - **Cold cache.** Clear the cache and send a burst of traffic. Watch the database load and the response times while the cache fills again.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Update, then read.** As an admin, change the price of a course. Open the course list and the checkout at the same time. Both must show the new price.
+- **Two users.** Log in as user A, then as user B, and open the same personal page. User B must never see the data of user A from the cache.
+- **Check the TTL.** In a test environment, run `TTL` on a cached key. A key with `-1` never expires. Ask if this is on purpose.
+- **Redis down.** Stop Redis in a test environment. The app must still answer from the database, maybe more slowly, and show no error page.
+- **Cold cache.** Clear the cache and send a burst of traffic. Watch the database load and the response times while the cache fills again.
+
+</Layman>
+<Bangla>
+
+নিচের test ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- **আগে update, তারপর read।** Admin হিসেবে একটি course-এর দাম বদলান। একই সময়ে course list আর checkout খুলুন। দুই জায়গাতেই নতুন দাম দেখাতে হবে।
+- **দুজন user।** প্রথমে user A, তারপর user B হিসেবে log in করুন এবং একই personal page খুলুন। User B যেন কখনোই cache থেকে user A-র data না দেখেন।
+- **TTL পরীক্ষা করুন।** একটি test environment-এ একটি cached key-তে `TTL` চালান। `-1` থাকা key কখনো expire হয় না। এটি ইচ্ছাকৃত কি না, জিজ্ঞেস করুন।
+- **Redis down।** একটি test environment-এ Redis বন্ধ করুন। App-কে তবুও database থেকে উত্তর দিতে হবে, হয়তো একটু ধীরে, কিন্তু কোনো error page ছাড়া।
+- **Cold cache।** Cache খালি করে একসাথে অনেক traffic পাঠান। Cache আবার ভরে ওঠার সময় database load আর response time খেয়াল করুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
