@@ -19,6 +19,9 @@ Press the call button of a lift five times. Only one lift comes. The extra press
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 An operation is idempotent when many identical requests have the same intended effect as one request <Cite n={1} />. You can retry it with no extra side effects <Cite n={5} />. A side effect is a change that the request causes, such as a new row, a sent email, or money that moves.
 
 In HTTP, `GET`, `PUT`, and `DELETE` are idempotent by definition <Cite n={1} />. `POST` and `PATCH` are not guaranteed to be idempotent <Cite n={2} />. "Create a payment" is usually a `POST`, so the server must make it safe. A client should not retry a non-idempotent request by itself unless it knows the retry is safe <Cite n={1} />.
@@ -43,7 +46,39 @@ A good server also returns the same answer for a retry. In its API v1, Stripe sa
 
 <MdxImage src="/images/architecture/16-idempotency.webp" alt="A sequence diagram with a payment gateway, a payment API, and a database. The gateway sends 'Callback TX123 Success'. The API checks transaction TX123 in the database. If it is not processed, the API marks it paid and unlocks the course. If it is already processed, the API returns OK without a duplicate action. A second, duplicate callback for TX123 gets 'Already processed, no duplicate enrollment'." />
 
+</Technical>
+<Layman>
+
+An operation is idempotent when many identical requests have the same intended effect as one request <Cite n={1} />. You can retry it, and it causes no extra side effects <Cite n={5} />. A side effect is a change that the request causes, such as a new row, a sent email, or money that moves.
+
+In HTTP, `GET`, `PUT`, and `DELETE` are idempotent by definition <Cite n={1} />. `POST` and `PATCH` are not guaranteed to be idempotent <Cite n={2} />. "Create a payment" is usually a `POST`, so the server must make it safe.
+
+In a distributed system, expect duplicate requests: a double-click on **Pay**, an app that sends again after a network loss, or a queue that gives a job again. Stripe says that a webhook endpoint can get the same event more than once <Cite n={4} />.
+
+Four tools stop duplicate side effects: an idempotency key from the client <Cite n={3} />, the gateway's transaction ID, a unique constraint in the database <Cite n={6} />, and a status check before the work.
+
+In its API v1, Stripe also returns the saved first answer for each retry with the same key <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+কোনো operation-কে idempotent বলা হয়, যখন একই রকম অনেকগুলো request-এর উদ্দিষ্ট ফল একটি request-এর ফলের সমান হয় <Cite n={1} />। এটি retry করলে বাড়তি কোনো side effect হয় না <Cite n={5} />। Side effect হলো request-এর কারণে হওয়া একটি পরিবর্তন, যেমন একটি নতুন row, একটি পাঠানো email, বা টাকা এক জায়গা থেকে আরেক জায়গায় যাওয়া।
+
+HTTP-তে `GET`, `PUT` আর `DELETE` সংজ্ঞা অনুযায়ী idempotent <Cite n={1} />। `POST` আর `PATCH` idempotent হবেই, এমন নিশ্চয়তা নেই <Cite n={2} />। "Create a payment" সাধারণত একটি `POST`, তাই server-কেই এটি নিরাপদ করতে হবে। Retry নিরাপদ কি না তা না জানলে, client-এর নিজে থেকে একটি non-idempotent request retry করা উচিত নয় <Cite n={1} />।
+
+Distributed system-এ duplicate request আসবে, এটি ধরে নিন। User **Pay** button-এ double-click করতে পারেন। Mobile app network হারিয়ে আবার request পাঠাতে পারে। Payment gateway একই callback দুবার পাঠাতে পারে; যেমন Stripe বলে, একটি webhook endpoint একই event একাধিকবার পেতে পারে <Cite n={4} />। Queue একই job আবার worker-কে দিতে পারে।
+
+চারটি উপায় duplicate side effect থামায়: client-এর তৈরি একটি unique idempotency key, যা দিয়ে server retry চিনতে পারে <Cite n={3} />; gateway-এর নিজস্ব transaction ID, যেমন `TX123`; database-এর unique constraint, যা একটি column-কে সব row-এর মধ্যে unique রাখে <Cite n={6} />; আর কাজের আগে status check, যাতে status আগে থেকেই `paid` হলে আর কিছু করা না হয়।
+
+একটি ভালো server retry-এর জন্যও একই উত্তর ফেরত দেয়। Stripe তার API v1-এ প্রথম request-এর status code ও body সংরক্ষণ করে, এবং একই key-এর প্রতিটি retry-তে সেই সংরক্ষিত উত্তরই ফেরত দেয় <Cite n={3} />। একই key ভিন্ন data নিয়ে এলে Stripe একটি error ফেরত দেয় <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 - You receive payment callbacks or webhooks.
 - Users place orders.
@@ -52,7 +87,37 @@ A good server also returns the same answer for a retry. In its API v1, Stripe sa
 - You calculate commissions.
 - You retry certificate generation or notifications.
 
+</Technical>
+<Layman>
+
+You need idempotency in these cases:
+
+- You get payment callbacks or webhooks.
+- Users place orders.
+- You have wallet transactions.
+- A course enrollment depends on a payment.
+- You calculate commissions.
+- You retry the generation of certificates, or you retry notifications.
+
+</Layman>
+<Bangla>
+
+নিচের যেকোনো একটি অবস্থায় আপনার idempotency দরকার:
+
+- আপনি payment callback বা webhook পান।
+- User-রা order দেন।
+- আপনার system-এ wallet transaction আছে।
+- Course enrollment একটি payment-এর ওপর নির্ভর করে।
+- আপনি commission হিসাব করেন।
+- আপনি certificate তৈরি বা notification পাঠানো retry করেন।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 A student pays for a course. The payment gateway sends the success callback for `TX123` two times.
 
@@ -66,7 +131,39 @@ A student pays for a course. The payment gateway sends the success callback for 
 
 The system must save the "processed" mark and the changes in one step. AWS says that recording the token and all the changes must be atomic: all or nothing <Cite n={5} />. If not, a crash between the two steps can leave a paid order with no course access.
 
+</Technical>
+<Layman>
+
+A student pays for a course. The payment gateway sends the success callback for `TX123` two times.
+
+**Without idempotency**, the system can unlock the course two times and give the trainer's commission two times. It can send the receipt email many times and make duplicate rows.
+
+**With idempotency**, the `transaction_id` column has a unique constraint. The first callback finds that `TX123` is not processed. The system marks it `paid`, unlocks the course, and returns `200 OK`. The second callback finds that `TX123` is already `paid`. The system returns `200 OK` and does nothing more.
+
+The system must save the "processed" mark and the changes in one step. AWS says that this step must be atomic: all or nothing <Cite n={5} />. If it is not, a crash between the two steps can leave a paid order with no course access.
+
+</Layman>
+<Bangla>
+
+ধরুন, একজন শিক্ষার্থী একটি course-এর জন্য payment করলেন। Payment gateway `TX123`-এর success callback দুবার পাঠাল।
+
+**Idempotency না থাকলে**, system course-টি দুবার unlock করতে পারে, trainer-এর commission দুবার দিতে পারে, receipt email অনেকবার পাঠাতে পারে, আর duplicate row তৈরি করতে পারে।
+
+**Idempotency থাকলে:**
+
+1. `transaction_id` column-এ একটি unique constraint থাকে।
+2. প্রথম callback দেখে, `TX123` এখনো process হয়নি। System এটিকে `paid` করে, course unlock করে, এবং `200 OK` ফেরত দেয়।
+3. দ্বিতীয় callback দেখে, `TX123` আগে থেকেই `paid`। System `200 OK` ফেরত দেয়, আর কিছুই করে না।
+
+System-কে "processed" চিহ্ন আর পরিবর্তনগুলো এক ধাপে সংরক্ষণ করতে হবে। AWS বলে, token record করা আর সব পরিবর্তন atomic হতে হবে, অর্থাৎ হয় সব হবে, নয়তো কিছুই হবে না <Cite n={5} />। তা না হলে দুই ধাপের মাঝে একটি crash হলে একটি paid order course access ছাড়াই থেকে যেতে পারে।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Only disabling the button on the frontend.** It stops some double-clicks. It does not stop network retries, gateway callbacks, or queue retries.
 - **Retries without idempotency.** Each retry runs the side effect again.
@@ -74,7 +171,35 @@ The system must save the "processed" mark and the changes in one step. AWS says 
 - **No database unique constraint.** Two copies of the same callback can arrive at the same moment. Both pass the status check, and both insert a row. The constraint stops the second insert <Cite n={6} />.
 - **An error for a duplicate webhook.** If your endpoint answers a duplicate with an error, the gateway thinks the delivery failed and tries again. Stripe retries a delivery after a non-2xx answer <Cite n={4} />, for up to three days in live mode <Cite n={4} />. Other gateways have their own rules. Answer a known duplicate with success.
 
+</Technical>
+<Layman>
+
+Look out for these common mistakes:
+
+- **You only disable the button on the frontend.** This stops some double-clicks. It does not stop network retries, gateway callbacks, or queue retries.
+- **You retry with no idempotency.** Each retry does the side effect again.
+- **There is no unique transaction ID.** Then the system cannot tell a retry from a new payment.
+- **There is no unique constraint in the database.** Two copies of one callback can arrive at the same moment. Both pass the status check, and both add a row. The constraint stops the second insert <Cite n={6} />.
+- **You answer a duplicate webhook with an error.** Then the gateway thinks that the delivery failed, and it tries again. Stripe retries a delivery after a non-2xx answer <Cite n={4} />, for up to three days in live mode <Cite n={4} />. Other gateways have their own rules. Answer a known duplicate with success.
+
+</Layman>
+<Bangla>
+
+এই সাধারণ ভুলগুলোর দিকে খেয়াল রাখুন:
+
+- **শুধু frontend-এ button disable করা।** এতে কিছু double-click থামে। কিন্তু network retry, gateway callback, বা queue retry থামে না।
+- **Idempotency ছাড়া retry।** প্রতিটি retry side effect-টি আবার ঘটায়।
+- **কোনো unique transaction ID নেই।** ID ছাড়া system একটি retry আর একটি নতুন payment-এর পার্থক্য বুঝতে পারে না।
+- **Database-এ কোনো unique constraint নেই।** একই callback-এর দুটি copy একই মুহূর্তে আসতে পারে। দুটিই status check pass করে, আর দুটিই একটি করে row insert করে। Constraint দ্বিতীয় insert-টি থামায় <Cite n={6} />।
+- **Duplicate webhook-এর উত্তরে error দেওয়া।** আপনার endpoint duplicate-এর উত্তরে error দিলে gateway ভাবে delivery fail করেছে, আর আবার চেষ্টা করে। Non-2xx উত্তর পেলে Stripe delivery retry করে <Cite n={4} />, live mode-এ সর্বোচ্চ তিন দিন পর্যন্ত <Cite n={4} />। অন্য gateway-গুলোর নিজস্ব নিয়ম আছে। যে duplicate আগেই process হয়েছে, তার উত্তরে success দিন।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 - **Replay the callback.** Send the same payment callback two or more times. Check one enrollment, one commission, and one receipt email.
@@ -84,6 +209,33 @@ The system must save the "processed" mark and the changes in one step. AWS says 
 - **Crash in the middle.** Stop the service after it marks the payment but before it unlocks the course. Check that a retry finishes the job without a double effect.
 - **Double-click.** Click **Pay** fast many times, also with the network slowed down. Check one charge.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Replay the callback.** Send the same payment callback two or more times. Make sure that there is one enrollment, one commission, and one receipt email.
+- **Parallel duplicates.** Send two copies of the callback at the same moment. Make sure that the database has one row.
+- **Duplicate answer.** Make sure that a duplicate callback gets a 2xx answer, not an error.
+- **Same key, other data.** Use an idempotency key again with a different amount. Make sure that the API rejects it.
+- **Crash in the middle.** Stop the service after it marks the payment but before it unlocks the course. Make sure that a retry finishes the job with no double effect.
+- **Double-click.** Click **Pay** fast many times, also with a slow network. Make sure that there is one charge.
+
+</Layman>
+<Bangla>
+
+নিচের test ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- **Callback আবার পাঠান।** একই payment callback দুই বা তার বেশিবার পাঠান। দেখুন, একটি enrollment, একটি commission, আর একটি receipt email হয় কি না।
+- **একসাথে duplicate।** Callback-এর দুটি copy একই মুহূর্তে পাঠান। দেখুন, database-এ একটি row আছে কি না।
+- **Duplicate-এর উত্তর।** দেখুন, একটি duplicate callback error নয়, একটি 2xx উত্তর পায় কি না।
+- **একই key, ভিন্ন data।** একটি idempotency key ভিন্ন amount দিয়ে আবার ব্যবহার করুন। দেখুন, API এটি reject করে কি না।
+- **মাঝপথে crash।** Payment mark করার পরে কিন্তু course unlock করার আগে service-টি থামিয়ে দিন। দেখুন, একটি retry দ্বিগুণ প্রভাব ছাড়াই কাজটি শেষ করে কি না।
+- **Double-click।** **Pay** দ্রুত অনেকবার click করুন, network ধীর করেও। দেখুন, charge একবারই হয় কি না।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

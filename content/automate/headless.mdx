@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-10',
+  updated: '2026-10-20',
   sources: [
     { title: 'Run Claude Code programmatically', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/headless', accessed: '2026-10-10' },
     { title: 'CLI reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/cli-reference', accessed: '2026-10-10' },
@@ -22,6 +22,9 @@ A CI job has no person at the keyboard to answer prompts. This page shows how to
 <PageMeta />
 
 ## What headless mode is
+
+<Voices>
+<Technical>
 
 Add the `-p` (or `--print`) flag to any `claude` command to run it non-interactively. <Cite n={1} /> An example from the docs: <Cite n={1} />
 
@@ -42,7 +45,39 @@ The CLI reference says that `claude --help` does not list every flag, so a flag 
 
 </Callout>
 
+</Technical>
+<Layman>
+
+A headless run has no person to answer questions. To start one, add the `-p` flag (or `--print`) to a `claude` command. <Cite n={1} /> `claude -p` uses the Agent SDK through the CLI. The SDK is also available as Python and TypeScript packages. <Cite n={1} />
+
+When the run is successful, Claude Code exits with code 0. When the run fails, the exit code is not 0. Thus, a CI step can make a decision from the exit code. <Cite n={1} />
+
+If a flag is not valid, Claude Code shows the error on stderr before the run starts. If the run fails after it starts, for example because authentication is missing, Claude Code shows the failure as the result on stdout. <Cite n={1} />
+
+Some options do not work with `-p`. For example, Claude Code does not accept `--bg` with `-p`. <Cite n={1} /> Also, `claude --help` does not show all flags. <Cite n={2} />
+
+The example in the docs allows the full `Bash` tool. In CI, use a smaller rule, such as `Bash(npm test)`.
+
+</Layman>
+<Bangla>
+
+Headless mode-এ prompt-এর উত্তর দেওয়ার জন্য কেউ থাকে না। যেকোনো `claude` command-এ `-p` (অথবা `--print`) flag যোগ করলে command-টি non-interactive mode-এ চলে। <Cite n={1} /> `claude -p` CLI-এর মাধ্যমে Agent SDK ব্যবহার করে। পুরো programmatic control-এর জন্য SDK-টি Python এবং TypeScript package হিসেবেও পাওয়া যায়। <Cite n={1} />
+
+Run সফল হলে Claude Code exit code 0 দেয়, আর run fail করলে একটি non-zero code দেয়। তাই একটি CI step exit status দেখে সিদ্ধান্ত নিতে পারে। <Cite n={1} />
+
+ভুল flag দিলে Claude Code run শুরু হওয়ার আগেই stderr-এ error দেখায়। Run-এর ভেতরের কোনো failure, যেমন authentication না থাকা, stdout-এ result হিসেবে দেখায়। <Cite n={1} />
+
+সব CLI option `-p`-এর সাথে চলে না। যেমন, Claude Code `-p`-এর সাথে `--bg` গ্রহণ করে না। <Cite n={1} /> আর `claude --help` সব flag দেখায় না, তাই `--help`-এ না থাকা একটি flag-ও থাকতে পারে। <Cite n={2} />
+
+Docs-এর উদাহরণে পুরো `Bash` tool-কে allow করা হয়েছে। CI-তে `Bash(npm test)`-এর মতো একটি scoped rule ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
 ## Pipe a test log into Claude
+
+<Voices>
+<Technical>
 
 Print mode reads stdin, so you can pipe data in and redirect the answer out. The docs pipe a build log like this: <Cite n={1} />
 
@@ -59,7 +94,31 @@ npm test > test-output.txt 2>&1
 cat test-output.txt | claude -p 'list each failing test, the root cause, and the file to fix' > triage.txt
 ```
 
+</Technical>
+<Layman>
+
+In print mode, Claude Code reads stdin. Thus, you can send data into Claude with a pipe and send the answer to a file. The docs send a build log this way. <Cite n={1} />
+
+The limit for piped stdin is 10MB. If your log is larger, write the log to a file. Then give the file name in your prompt. <Cite n={1} />
+
+In the example, `npm test` writes its output to `test-output.txt`. Then a pipe sends that file to Claude. Claude writes each failing test, the root cause, and the file to fix into `triage.txt`.
+
+</Layman>
+<Bangla>
+
+Print mode stdin থেকে পড়ে। তাই আপনি pipe দিয়ে data পাঠাতে পারেন এবং উত্তর একটি file-এ redirect করতে পারেন। Docs এভাবে একটি build log pipe করে। <Cite n={1} />
+
+Piped stdin-এর সীমা 10MB। এর চেয়ে বড় log হলে log-টি একটি file-এ লিখুন এবং prompt-এ সেই file-এর নাম দিন। <Cite n={1} />
+
+উদাহরণে `npm test` তার output `test-output.txt`-এ লেখে। তারপর file-টি pipe করে Claude-কে দেওয়া হয়, আর Claude প্রতিটি failing test, তার root cause এবং কোন file ঠিক করতে হবে তা `triage.txt`-এ লেখে।
+
+</Bangla>
+</Voices>
+
 ## Output formats
+
+<Voices>
+<Technical>
 
 `--output-format` works only in print mode. <Cite n={2} /> It has three values: <Cite n={1} />
 
@@ -108,7 +167,35 @@ jq -r '.structured_output.category' triage.json
 - Use the `category` value to route the failure, for example to post a comment only for `product-bug`.
 - Treat the classification as a first guess. A person confirms a product bug before anyone files it.
 
+</Technical>
+<Layman>
+
+The `--output-format` flag works only in print mode. <Cite n={2} /> It has three values: `text` (the default) gives plain text, `json` gives structured JSON, and `stream-json` gives JSON line by line, in real time. <Cite n={1} />
+
+With `json`, the answer is in the `result` field. The JSON also shows `total_cost_usd`. This cost is an estimate, and it can be different from your bill. <Cite n={1} />
+
+To make the answer agree with a JSON Schema, add `--json-schema` with `--output-format json`. Then the validated answer is in the `structured_output` field. If the schema is not valid, `claude` exits with an error. Claude Code does not enforce the `format` keyword. <Cite n={1} />
+
+The QA example sends a test log to Claude. Claude puts the first failing test into one category, such as `product-bug` or `flaky`. Later CI steps read this category. `--bare` needs `ANTHROPIC_API_KEY` or an `apiKeyHelper`. <Cite n={6} /> Keep `triage.json` as a CI artifact. The category is only a first guess. A person confirms a product bug before someone files it.
+
+</Layman>
+<Bangla>
+
+`--output-format` শুধু print mode-এ কাজ করে। <Cite n={2} /> এর তিনটি value আছে: `text` (default) plain text দেয়, `json` result, session ID এবং metadata সহ structured JSON দেয়, আর `stream-json` real-time streaming-এর জন্য newline-delimited JSON দেয়। <Cite n={1} />
+
+`json`-এ উত্তরটি `result` field-এ থাকে, আর `jq -r '.result'` দিয়ে তা বের করা যায়। Payload-এ `total_cost_usd`-ও থাকে। এটি client-side estimate, তাই আপনার bill-এর সাথে না-ও মিলতে পারে। <Cite n={1} />
+
+একটি schema মেনে output পেতে `--output-format json`-এর সাথে `--json-schema` দিন। Validated output `structured_output` field-এ থাকে। Schema valid না হলে `claude` একটি error দিয়ে exit করে। Claude Code `format` keyword গ্রহণ করে, কিন্তু enforce করে না। <Cite n={1} />
+
+QA উদাহরণে CI step test log-টি Claude-কে পাঠায় এবং একটি JSON object ফেরত পায়, যা পরের step-গুলো পড়তে পারে। Claude প্রথম failing test-কে `product-bug`, `test-bug`, `flaky` অথবা `environment` category-তে ভাগ করে। `--bare`-এর জন্য job-এ `ANTHROPIC_API_KEY` অথবা একটি `apiKeyHelper` লাগবে। <Cite n={6} /> `triage.json`-কে CI artifact হিসেবে রাখুন, আর `category` value দিয়ে failure-টি route করুন। এই classification শুধু একটি প্রথম অনুমান। কেউ product bug file করার আগে একজন মানুষ তা নিশ্চিত করবেন।
+
+</Bangla>
+</Voices>
+
 ## Make CI runs repeatable with --bare
+
+<Voices>
+<Technical>
 
 Add `--bare` to skip auto-discovery of hooks, skills, custom commands, subagents, installed plugins, MCP servers, auto memory, and CLAUDE.md. <Cite n={1} /> Without it, `claude -p` loads the same context as an interactive session. <Cite n={1} />
 
@@ -139,7 +226,35 @@ With `--bare`, Claude Code reads no hooks, skills, custom commands, subagents, p
 
 Bare mode does not use your subscription login. Set `ANTHROPIC_API_KEY`, or give an `apiKeyHelper` in the `--settings` JSON. <Cite n={1} /> See [Authenticate in CI](#authenticate-in-ci).
 
+</Technical>
+<Layman>
+
+Without `--bare`, `claude -p` loads the same context as an interactive session. With `--bare`, Claude Code does not look for hooks, skills, custom commands, subagents, plugins, MCP servers, auto memory, or CLAUDE.md. Thus, bare mode is useful when you need the same result on every machine. The run also starts faster. <Cite n={1} />
+
+In bare mode, Claude has Bash and can read and edit files. From v2.1.286, only the MCP servers that you give on the command line connect. <Cite n={1} /> Give the job its context with flags, such as `--settings` or `--append-system-prompt`. The append flag keeps the default prompt. `--system-prompt` replaces it. <Cite n={1} /> <Cite n={2} />
+
+Be careful with a repository that you did not write. Without `--bare`, a `-p` session runs the project's hooks and connects its MCP servers. It shows no trust dialog and no approval prompt. <Cite n={1} /> With `--bare`, the project's `env` block still applies. To stop Claude Code from reading the project's settings files and `.mcp.json`, use `--setting-sources user`. <Cite n={3} />
+
+Bare mode does not use your subscription login. Set `ANTHROPIC_API_KEY`, or give an `apiKeyHelper`. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+`--bare` ছাড়া `claude -p` একটি interactive session-এর মতোই একই context load করে। `--bare` দিলে Claude Code hooks, skills, custom commands, subagents, installed plugins, MCP servers, auto memory এবং CLAUDE.md auto-discover করে না। <Cite n={1} /> তাই যেখানে প্রতিটি মেশিনে একই result দরকার, সেখানে bare mode কাজে লাগে। এছাড়া run দ্রুত শুরু হয়। Docs scripted এবং SDK call-এর জন্য `--bare`-কে recommended mode বলে, এবং ভবিষ্যতের একটি release-এ এটি `-p`-এর default হবে। <Cite n={1} />
+
+Bare mode-এ Claude-এর কাছে Bash, file read এবং file edit tool থাকে। v2.1.286 থেকে শুধু command line-এ দেওয়া MCP server-গুলো connect হয়, যেমন `--mcp-config` দিয়ে। <Cite n={1} /> Job-এর দরকারি context flag দিয়ে দিন, যেমন `--settings`, `--agents` অথবা `--append-system-prompt`। <Cite n={1} /> `--append-system-prompt` default prompt রেখে নির্দেশ যোগ করে, আর `--system-prompt` default prompt-কে replace করে। <Cite n={1} /> <Cite n={2} />
+
+সাবধান: `--bare` ছাড়া একটি `-p` session project-এর `.claude/settings.json`-এর hooks চালায় এবং `.mcp.json`-এর server-গুলো connect করে, এমনকি যে folder-কে আপনি কখনো trust করেননি সেখানেও। কোনো workspace trust dialog বা per-server approval prompt আসে না। <Cite n={1} /> `--bare` দিলেও project-এর `env` block এবং `awsAuthRefresh`-এর মতো helper কাজ করে। তাই `--bare` একাই সব কিছু block করে না। `--setting-sources user` দিলে Claude Code project-এর settings file বা `.mcp.json` কোনোটিই পড়ে না। <Cite n={3} />
+
+Bare mode আপনার subscription login ব্যবহার করে না। `ANTHROPIC_API_KEY` set করুন, অথবা `--settings` JSON-এ একটি `apiKeyHelper` দিন। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
 ## Permissions in unattended runs
+
+<Voices>
+<Technical>
 
 Nobody answers a permission prompt in a CI job. Decide before the run what Claude may do. The [Permission Modes](/getting-started/permission-modes/) page explains each mode.
 
@@ -178,7 +293,39 @@ A run where nothing sets a permission mode takes the built-in starting mode, whi
 
 `--dangerously-skip-permissions` is the same as `--permission-mode bypassPermissions`. <Cite n={2} /> Use it only inside a container, a VM, or a sandbox runtime. On Linux and macOS, run Claude Code as a non-root user. <Cite n={4} />
 
+</Technical>
+<Layman>
+
+In a CI job, nobody can answer a permission prompt. Thus, decide before the run what Claude can do.
+
+`--allowedTools` gives the tools that run without a prompt. `--disallowedTools` gives the deny rules. `--tools` limits the built-in tools, but it does not change MCP tools. <Cite n={2} /> A rule such as `Bash(git diff *)` allows each command that starts with `git diff`. <Cite n={1} />
+
+In `dontAsk` mode, Claude Code denies each call that would show a prompt. File reads in your working directories, read-only commands, and calls that your allow rules cover still run. In `acceptEdits` mode, Claude writes files without a prompt, but other shell commands and network requests still need an allow rule. <Cite n={1} />
+
+Always give `--permission-mode` in CI. If nothing sets a mode, the mode can be `auto`. <Cite n={1} />
+
+`--permission-prompts none` denies prompts and tells Claude not to try again. <Cite n={1} /> It needs Claude Code v2.1.259 or later. <Cite n={2} /> `--dangerously-skip-permissions` is the same as `--permission-mode bypassPermissions`. <Cite n={2} /> Use it only in a container, a VM, or a sandbox runtime. On Linux and macOS, run Claude Code as a user that is not root. <Cite n={4} />
+
+</Layman>
+<Bangla>
+
+CI job-এ permission prompt-এর উত্তর দেওয়ার কেউ থাকে না। তাই run-এর আগেই ঠিক করুন Claude কী কী করতে পারবে।
+
+`--allowedTools` সেই tool-গুলো দেয় যেগুলো prompt ছাড়া চলে। `--disallowedTools` deny rule দেয়: `"Edit"`-এর মতো একটি bare tool name tool-টিকে Claude-এর context থেকে সরিয়ে দেয়, আর `Bash(rm *)`-এর মতো একটি scoped rule শুধু মিলে যাওয়া call-গুলো deny করে। `--tools` built-in tool-গুলো সীমিত করে, কিন্তু MCP tool-এ এর কোনো প্রভাব নেই। MCP tool deny করতে `--disallowedTools "mcp__*"` ব্যবহার করুন। <Cite n={2} /> `Bash(git diff *)`-এর মতো rule `git diff` দিয়ে শুরু হওয়া যেকোনো command allow করে। <Cite n={1} />
+
+`dontAsk` mode-এ যে call-এ prompt আসত, Claude Code তা deny করে। তবে working directory-র file read, read-only command set এবং `--allowedTools` বা `permissions.allow` rule-এ থাকা call-গুলো চলে। `acceptEdits` mode-এ Claude prompt ছাড়া file লেখে, আর `mkdir`, `touch`, `mv`, `cp`-এর মতো command approved থাকে। অন্য shell command এবং network request-এর জন্য এখনও allow rule লাগে। <Cite n={1} />
+
+CI-তে সবসময় `--permission-mode` দিন। কিছুই mode set না করলে built-in starting mode নেওয়া হয়, যা `auto` হতে পারে। <Cite n={1} />
+
+`--permission-prompts none` permission host-কে জিজ্ঞেস না করেই prompt deny করে এবং Claude-কে retry না করতে বলে। <Cite n={1} /> এর জন্য Claude Code v2.1.259 বা তার পরের version লাগে। <Cite n={2} /> `--dangerously-skip-permissions` আর `--permission-mode bypassPermissions` একই। <Cite n={2} /> এটি শুধু container, VM অথবা sandbox runtime-এর ভেতরে ব্যবহার করুন। Linux এবং macOS-এ Claude Code একটি non-root user হিসেবে চালান। <Cite n={4} />
+
+</Bangla>
+</Voices>
+
 ## Limits and budgets
+
+<Voices>
+<Technical>
 
 | Flag | What it does |
 |---|---|
@@ -196,7 +343,35 @@ Example: cap one triage run.
 claude --bare -p "Explain why the checkout tests failed" --permission-mode dontAsk --max-turns 5 --max-budget-usd 1.00
 ```
 
+</Technical>
+<Layman>
+
+`--max-turns` sets a limit on the number of agentic turns. When Claude Code gets to the limit, it exits with an error. By default, there is no limit. `--max-budget-usd` stops the run when the estimated spend on API calls gets to the amount. Both flags work only in print mode. <Cite n={2} />
+
+The budget uses a cost estimate, which can be different from your bill. Spend from subagents counts. The spend can go above the limit, so leave some space. <Cite n={2} />
+
+Your `claude --help` output may not show `--max-turns`, but the CLI reference documents it. The CLI reference gives no specific exit code for the turn limit. <Cite n={2} /> The GitLab CI/CD docs advise appropriate `--max-turns` and job `timeout` values. <Cite n={5} />
+
+If you stop a run with SIGTERM, Claude Code exits with code 143, and the current turn does not finish. To end the turn first, send SIGINT. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+`--max-turns <n>` agentic turn-এর সংখ্যা সীমিত করে। সীমায় পৌঁছালে Claude Code একটি error দিয়ে exit করে। Default-এ কোনো সীমা নেই। `--max-budget-usd <amount>` API call-এর estimated খরচ ওই amount-এ পৌঁছালে run থামিয়ে দেয়। দুটি flag-ই শুধু print mode-এ কাজ করে। <Cite n={2} />
+
+`--max-budget-usd` client-side cost estimate ব্যবহার করে, যা আপনার bill-এর সাথে না-ও মিলতে পারে। Subagent-এর খরচও গোনা হয়। খরচ cap ছাড়িয়ে যেতে পারে, তাই কিছুটা headroom রাখুন। <Cite n={2} />
+
+আপনার `claude --help` output-এ `--max-turns` না-ও থাকতে পারে, কিন্তু CLI reference এটি document করে। এই ক্ষেত্রের জন্য CLI reference কোনো নির্দিষ্ট exit code দেয় না। <Cite n={2} /> GitLab CI/CD docs উপযুক্ত `--max-turns` এবং job `timeout` value দেওয়ার পরামর্শ দেয়। <Cite n={5} />
+
+SIGTERM দিয়ে একটি `claude -p` run থামালে Claude Code code 143 দিয়ে exit করে এবং চলতি turn অসম্পূর্ণ থাকে। আগে turn শেষ করতে চাইলে SIGINT পাঠান। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
 ## Sessions in scripts
+
+<Voices>
+<Technical>
 
 - `--continue` (`-c`) continues the most recent conversation in the current directory. With `-p`, it includes `-p` and SDK sessions. <Cite n={1} /> <Cite n={2} />
 - `--resume` (`-r`) resumes a session by its ID or name. <Cite n={2} /> Since v2.1.223, Claude Code finds a session ID in any project on the machine. <Cite n={1} />
@@ -212,7 +387,31 @@ claude -p "Continue that review" --resume "$session_id"
 
 Example for QA: the first call triages the failures, and the second call asks for a fix plan in the same session, so Claude does not read the log again.
 
+</Technical>
+<Layman>
+
+`--continue` (`-c`) continues the most recent conversation in the current directory. With `-p`, this includes `-p` and SDK sessions. <Cite n={1} /> <Cite n={2} /> `--resume` (`-r`) resumes a session from its ID or name. <Cite n={2} /> Since v2.1.223, Claude Code finds a session ID in any project on the machine. <Cite n={1} />
+
+With `--resume` or `--continue`, `--fork-session` makes a new session ID. It does not use the original ID again. `--no-session-persistence` does not save the session, so you cannot resume it. It works only in print mode. <Cite n={2} />
+
+In a script, get the session ID from the JSON output. Then give the ID to `--resume`. <Cite n={1} /> For QA, the first call triages the failures. The second call asks for a fix plan in the same session, so Claude does not read the log again.
+
+</Layman>
+<Bangla>
+
+`--continue` (`-c`) current directory-র সবচেয়ে সাম্প্রতিক conversation চালিয়ে যায়। `-p`-এর সাথে এতে `-p` এবং SDK session-ও থাকে। <Cite n={1} /> <Cite n={2} /> `--resume` (`-r`) ID অথবা নাম দিয়ে একটি session resume করে। <Cite n={2} /> v2.1.223 থেকে Claude Code মেশিনের যেকোনো project-এ একটি session ID খুঁজে পায়। <Cite n={1} />
+
+`--resume` অথবা `--continue`-এর সাথে `--fork-session` দিলে আগের session ID আবার ব্যবহার না করে একটি নতুন session ID তৈরি হয়। `--no-session-persistence` session save করে না, তাই পরে resume করা যায় না। এটি শুধু print mode-এ কাজ করে। <Cite n={2} />
+
+Script-এ JSON output থেকে session ID নিন, তারপর `--resume` দিয়ে সেই session resume করুন। <Cite n={1} /> QA-র জন্য প্রথম call failure-গুলো triage করে, আর দ্বিতীয় call একই session-এ একটি fix plan চায়। তাই Claude-কে log আবার পড়তে হয় না।
+
+</Bangla>
+</Voices>
+
 ## Authenticate in CI
+
+<Voices>
+<Technical>
 
 | Method | How | Notes |
 |---|---|---|
@@ -232,9 +431,52 @@ claude auth status --text
 
 The [Install Claude Code](/getting-started/setup/) page covers sign-in on your own machine.
 
+</Technical>
+<Layman>
+
+You can sign in from CI in two ways: <Cite n={6} />
+
+- API key: set `ANTHROPIC_API_KEY` in the job environment. In `-p` mode, Claude Code always uses this key when it is there.
+- Subscription token: run `claude setup-token` on your computer. Keep the token as the `CLAUDE_CODE_OAUTH_TOKEN` secret. The token is valid for one year. The command shows the token, but it does not save it. You need a Pro, Max, Team, or Enterprise plan.
+
+The token can only make model requests. Bare mode does not read `CLAUDE_CODE_OAUTH_TOKEN`, so with `--bare`, use `ANTHROPIC_API_KEY` or an `apiKeyHelper`. `ANTHROPIC_API_KEY` comes before `CLAUDE_CODE_OAUTH_TOKEN` in the credential order. <Cite n={6} /> Set only one of the two in a job.
+
+Keep the value as a CI secret. Do not put it in the repository. Before the real step, run `claude auth status` to check the sign-in. It exits with code 0 if you are signed in, and 1 if you are not. <Cite n={2} />
+
+</Layman>
+<Bangla>
+
+CI-তে sign in করার দুটি উপায় আছে: <Cite n={6} />
+
+- API key: job environment-এ `ANTHROPIC_API_KEY` set করুন। `-p` mode-এ key থাকলে Claude Code সবসময় সেটিই ব্যবহার করে।
+- Subscription token: নিজের মেশিনে `claude setup-token` চালান, আর token-টি `CLAUDE_CODE_OAUTH_TOKEN` secret হিসেবে রাখুন। Token এক বছর valid থাকে। Command-টি token print করে, কিন্তু save করে না। এর জন্য Pro, Max, Team অথবা Enterprise plan লাগে।
+
+Setup-token-এর token শুধু model request করতে পারে। এটি Remote Control session শুরু করতে বা claude.ai connector আনতে পারে না, তবে locally configure করা MCP server কাজ করে। Bare mode `CLAUDE_CODE_OAUTH_TOKEN` পড়ে না, তাই `--bare` দিলে `ANTHROPIC_API_KEY` অথবা একটি `apiKeyHelper` ব্যবহার করুন। Credential order-এ `ANTHROPIC_API_KEY`-এর স্থান `CLAUDE_CODE_OAUTH_TOKEN`-এর উপরে। <Cite n={6} /> একটি job-এ এদের মধ্যে শুধু একটি set করুন।
+
+Value-টি CI secret হিসেবে রাখুন, কখনো repository-তে নয়। আসল step-এর আগে sign-in check করতে `claude auth status` চালান। Sign in করা থাকলে এটি code 0 দিয়ে exit করে, না থাকলে 1 দিয়ে। `--text` পড়ার মতো output দেয়। <Cite n={2} />
+
+</Bangla>
+</Voices>
+
 ## Where to go next
+
+<Voices>
+<Technical>
 
 - [GitHub Actions](/automate/github-actions/): run Claude Code in a GitHub workflow with `@claude` and automated PR review.
 - Claude Code for GitLab CI/CD is in beta and GitLab maintains it. <Cite n={5} />
 - For full programmatic control, the Agent SDK has Python and TypeScript packages. <Cite n={1} />
 - [Browser Testing with Playwright](/automate/playwright/): generate and heal browser tests that your CI job then runs.
+
+</Technical>
+<Layman>
+
+To run Claude Code in a GitHub workflow with `@claude` and automated PR review, read [GitHub Actions](/automate/github-actions/). Claude Code for GitLab CI/CD is in beta, and GitLab maintains it. <Cite n={5} /> For full programmatic control, use the Agent SDK. It has Python and TypeScript packages. <Cite n={1} /> To make and repair the browser tests that your CI job runs, read [Browser Testing with Playwright](/automate/playwright/).
+
+</Layman>
+<Bangla>
+
+GitHub workflow-এ `@claude` এবং automated PR review দিয়ে Claude Code চালাতে [GitHub Actions](/automate/github-actions/) পড়ুন। GitLab CI/CD-এর জন্য Claude Code এখন beta-তে আছে, আর GitLab এটি maintain করে। <Cite n={5} /> পুরো programmatic control-এর জন্য Agent SDK-এর Python এবং TypeScript package আছে। <Cite n={1} /> আপনার CI job যে browser test চালাবে, সেগুলো generate এবং heal করতে [Browser Testing with Playwright](/automate/playwright/) পড়ুন।
+
+</Bangla>
+</Voices>

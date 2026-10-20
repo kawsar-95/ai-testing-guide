@@ -22,6 +22,9 @@ YouTube lets anyone upload a video and lets anyone else watch it, on a phone, a 
 
 ## The problem in plain words
 
+<Voices>
+<Technical>
+
 The article says that people upload more than 500 hours of video to YouTube each minute. It also says that YouTube serves billions of video streams each day. <Cite n={1} /> A video site cannot send the same file to every viewer. It changes each upload into many versions, so that playback stays smooth on small phones, 4K TVs, and slow networks. <Cite n={1} />
 
 The article then sets the targets of its design, as in an interview:
@@ -45,7 +48,51 @@ The article describes one way to build a video site, as for a system design inte
 
 </Callout>
 
+</Technical>
+<Layman>
+
+The article says that people upload more than 500 hours of video to YouTube each minute. YouTube serves billions of video streams each day <Cite n={1} />. A video site cannot send the same file to every viewer. It changes each upload into many versions, so playback stays smooth on small phones, 4K TVs, and slow networks <Cite n={1} />.
+
+The article sets these targets for its design, as in an interview <Cite n={1} />:
+
+- 1 million uploads each day, and 100 million daily active users.
+- About 100 views for each upload.
+- The largest upload is 256 GB.
+- The input formats are MP4, AVI, and MOV, from 240p to 4K.
+- The first frame shows in less than 500 ms.
+- Processing an upload takes about 10 to 30 minutes.
+- Uptime is 99.9 %.
+
+The site has three main jobs: upload videos, stream videos, and search videos. Live streams are out of scope in the article <Cite n={1} />.
+
+Note: the article shows one possible design, as for an interview. It is not the exact system that YouTube runs.
+
+</Layman>
+<Bangla>
+
+Article-টি বলে, মানুষ প্রতি মিনিটে YouTube-এ 500 ঘণ্টার বেশি video upload করে। YouTube প্রতিদিন কয়েক billion video stream serve করে <Cite n={1} />। একটি video site প্রত্যেক viewer-কে একই file পাঠাতে পারে না। তাই এটি প্রতিটি upload-কে অনেকগুলো version-এ বদলে নেয়, যাতে ছোট phone, 4K TV আর ধীর network-এ playback মসৃণ থাকে <Cite n={1} />।
+
+Article-টি interview-এর মতো করে তার design-এর লক্ষ্যগুলো ঠিক করে <Cite n={1} />:
+
+- প্রতিদিন 1 million upload, আর 100 million daily active user।
+- প্রতিটি upload-এর জন্য প্রায় 100টি view।
+- সবচেয়ে বড় upload 256 GB।
+- Input format হলো MP4, AVI আর MOV, quality 240p থেকে 4K পর্যন্ত।
+- প্রথম frame আসতে 500 ms-এর কম সময় লাগবে।
+- একটি upload process করতে প্রায় 10 থেকে 30 মিনিট লাগবে।
+- Uptime হবে 99.9 %।
+
+Site-টির তিনটি প্রধান কাজ: video upload, video stream আর video search। Live stream এই article-এর আওতার বাইরে <Cite n={1} />।
+
+মনে রাখুন, article-টি system design interview-এর মতো করে video site বানানোর একটি উপায় দেখায়। এটি YouTube-এর আসল system হুবহু নয়। Article-এর শুধু প্রথম অংশ free। এই পাতা সেই অংশ, আর Amazon, IETF ও YouTube Help-এর official document ব্যবহার করে।
+
+</Bangla>
+</Voices>
+
 ## The big picture
+
+<Voices>
+<Technical>
 
 ```text
 UPLOAD
@@ -66,7 +113,31 @@ WATCH
 
 To upload, the app first asks the API server for a link. Then it sends the file straight to blob storage, a store for very large files. Workers then change the raw file into many versions. To watch, the viewer app gets a manifest, a list of the versions, and downloads small pieces of video from the nearest CDN server.
 
+</Technical>
+<Layman>
+
+The diagram shows two flows: upload and watch.
+
+To upload, the creator app first asks the API server for a link. The API server connects to a metadata database. The server sends back a signed upload link. Then the app sends the file in parts straight to blob storage. Blob storage is a store for very large files. Transcoding workers then change the raw file into many versions. The versions and a manifest go back into blob storage.
+
+To watch, the viewer app asks the API server for the video. The server returns the URL of the manifest. The manifest is a list of the versions. Then the app gets small pieces of video, called segments, from the nearest CDN server. Behind the CDN is the blob storage.
+
+</Layman>
+<Bangla>
+
+Diagram-টি দুটি flow দেখায়: upload আর watch।
+
+Upload করতে creator app প্রথমে API server-এর কাছে একটি link চায়। API server একটি metadata database-এর সাথে যুক্ত। Server একটি signed upload link ফেরত দেয়। তারপর app file-টি কয়েকটি অংশে সরাসরি blob storage-এ পাঠায়। Blob storage হলো খুব বড় file রাখার একটি store। এরপর transcoding worker-রা raw file-টিকে অনেকগুলো version-এ বদলায়। এই version-গুলো আর একটি manifest আবার blob storage-এ যায়।
+
+Video দেখতে viewer app API server-এর কাছে video-টি চায়, আর server manifest-এর URL ফেরত দেয়। Manifest হলো version-গুলোর একটি তালিকা। তারপর app সবচেয়ে কাছের CDN server থেকে video-র ছোট ছোট অংশ, অর্থাৎ segment, download করে। CDN-এর পেছনে থাকে blob storage।
+
+</Bangla>
+</Voices>
+
 ## Uploading a huge file: a signed link and many parts
+
+<Voices>
+<Technical>
 
 Think of a large furniture delivery to an office tower. The front desk does not carry the sofa. It gives the driver a pass to the goods lift, and the driver takes the sofa straight to the right floor.
 
@@ -74,7 +145,31 @@ In the article's design, the API servers do not carry the video bytes. The clien
 
 A very large file is hard to send in one piece over a home network. So the design uses a multipart upload: the client cuts the file into chunks and retries only a failed chunk. <Cite n={1} /> An interrupted upload can resume without loss of progress. <Cite n={1} /> Amazon S3 works the same way. You can send the parts in any order, and you can send a failed part again without the other parts. <Cite n={3} /> Amazon advises multipart upload for objects of 100 MB or more. <Cite n={3} />
 
+</Technical>
+<Layman>
+
+Think of a sofa delivery to an office tower. The front desk does not carry it. It gives the driver a pass to the goods lift.
+
+In the article's design, the API servers do not carry the video data. When the app asks for an upload, the server gives back a video ID and a pre-signed URL <Cite n={1} />. This short-lived link lets the app upload to Amazon S3 without the app server in the path <Cite n={1} />. The app servers handle only small metadata <Cite n={1} />. Amazon's guide agrees: with a pre-signed URL, a person can upload an object without their own AWS credentials <Cite n={2} />.
+
+A very large file is hard to send in one piece, so the app cuts it into chunks. If one chunk fails, the app sends only that chunk again <Cite n={1} />. A stopped upload can continue and keep its progress <Cite n={1} />. In Amazon S3, you can send the parts in any order. You can send a failed part again without the other parts <Cite n={3} />. Amazon advises multipart upload for objects of 100 MB or more <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+একটি office tower-এ বড় একটি sofa delivery-র কথা ভাবুন। Front desk নিজে sofa বহন করে না। এটি driver-কে goods lift-এর একটি pass দেয়, আর driver sofa-টি সরাসরি সঠিক তলায় নিয়ে যায়।
+
+Article-এর design-এ API server video-র bytes বহন করে না। Client upload চাইলে server একটি video ID আর একটি pre-signed URL ফেরত দেয় <Cite n={1} />। Pre-signed URL হলো অল্প সময়ের জন্য বৈধ একটি link। এটি দিয়ে app server-কে পথে না রেখেই Amazon S3-এ upload করা যায় <Cite n={1} />। ফলে app server শুধু ছোট metadata সামলায়, আর বড় video data সরাসরি storage-এ যায় <Cite n={1} />। Amazon-এর guide-ও একই কথা বলে: pre-signed URL থাকলে একজন ব্যক্তি নিজের AWS credentials ছাড়াই একটি object upload করতে পারেন <Cite n={2} />।
+
+বাসার network-এ খুব বড় একটি file এক টুকরোয় পাঠানো কঠিন। তাই design-টি multipart upload ব্যবহার করে: client file-টিকে কয়েকটি chunk-এ ভাগ করে, আর শুধু fail হওয়া chunk-টি আবার পাঠায় <Cite n={1} />। থেমে যাওয়া upload progress না হারিয়েই আবার চলতে পারে <Cite n={1} />। Amazon S3-ও এভাবে কাজ করে। আপনি part-গুলো যেকোনো ক্রমে পাঠাতে পারেন, আর অন্য part ছাড়াই একটি fail হওয়া part আবার পাঠাতে পারেন <Cite n={3} />। 100 MB বা তার বড় object-এর জন্য Amazon multipart upload-এর পরামর্শ দেয় <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## Transcoding: one upload, many versions
+
+<Voices>
+<Technical>
 
 Think of a book publisher. From one manuscript, it prints a hardcover, a paperback, a large-print edition, and an e-book. Each reader gets the version that suits them.
 
@@ -84,7 +179,35 @@ This work is slow, so the design does it in the background. The article accepts 
 
 YouTube Help shows what YouTube asks for on the input side. It recommends the MP4 container and the H.264 video codec for uploads. <Cite n={5} /> A codec is a method to compress video. YouTube Help also lists a suggested bitrate for each upload resolution. For SDR (standard dynamic range) video at a standard frame rate, it lists 8 Mbps for 1080p and 35 to 45 Mbps for 4K. <Cite n={5} /> To watch new 4K uploads in 4K, the browser or device must support the VP9 codec. <Cite n={5} /> So the video that you watch is not the file that the creator sent. <Cite n={1} />
 
+</Technical>
+<Layman>
+
+A book publisher makes a hardcover, a paperback, and an e-book from one manuscript.
+
+Transcoding changes a video into other formats, sizes, and quality levels. The article says that each upload becomes 6 or more resolutions. Each resolution has hundreds of segments <Cite n={1} />. A resolution is the picture size, such as 720p or 1080p. A segment is a short piece of video, a few seconds long.
+
+This slow work runs in the background. The design accepts 10 to 30 minutes for each upload <Cite n={1} />. A new video is not visible to everyone at once. With eventual consistency, all parts of the system show the same data after a short delay <Cite n={1} />.
+
+For uploads, YouTube Help recommends the MP4 container and the H.264 codec <Cite n={5} />. A codec is a method to compress video. For SDR (standard dynamic range) video at a standard frame rate, YouTube Help lists a suggested bitrate: 8 Mbps for 1080p and 35 to 45 Mbps for 4K <Cite n={5} />. To see new 4K uploads in 4K, your browser or device must support the VP9 codec <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+একটি বই প্রকাশকের কথা ভাবুন। একটি পাণ্ডুলিপি থেকে এটি hardcover, paperback, বড় অক্ষরের সংস্করণ আর e-book ছাপে। প্রত্যেক পাঠক নিজের উপযোগী version পান।
+
+Transcoding মানে একটি video-কে অন্য format, size আর quality level-এ রূপান্তর করা। Article বলে, প্রতিটি upload 6 বা তার বেশি resolution-এ পরিণত হয়, আর প্রতিটি resolution-এ শত শত segment থাকে <Cite n={1} />। Segment হলো কয়েক সেকেন্ড লম্বা একটি ছোট video অংশ। Resolution হলো ছবির size, যেমন 720p বা 1080p।
+
+এই কাজ ধীর, তাই design-টি এটি background-এ করে। Article প্রতিটি upload-এর জন্য 10 থেকে 30 মিনিট processing মেনে নেয় <Cite n={1} />। এটি এটাও মেনে নেয় যে একটি নতুন video একসাথে সবার কাছে দেখা যায় না। একে eventual consistency বলে: অল্প দেরির পর system-এর সব অংশ একই data দেখায় <Cite n={1} />।
+
+Upload-এর জন্য YouTube Help MP4 container আর H.264 video codec-এর পরামর্শ দেয় <Cite n={5} />। Codec হলো video compress করার একটি পদ্ধতি। Standard frame rate-এর SDR (standard dynamic range) video-র জন্য YouTube Help একটি প্রস্তাবিত bitrate দেখায়: 1080p-তে 8 Mbps আর 4K-তে 35 থেকে 45 Mbps <Cite n={5} />। নতুন 4K upload 4K-তে দেখতে browser বা device-কে VP9 codec support করতে হয় <Cite n={5} />। তাই আপনি যে video দেখেন, তা creator-এর পাঠানো file নয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Adaptive streaming: the quality follows your network
+
+<Voices>
+<Technical>
 
 Think of a car with an automatic gearbox. On a hill, it changes to a lower gear. On a flat road, it changes up again. The driver does not need to act.
 
@@ -92,17 +215,78 @@ When you press play, the server returns the video's metadata and the URL of a ma
 
 The free part of the article does not name the streaming format that YouTube uses. HTTP Live Streaming (HLS) is one public standard for this idea. In HLS, a playlist is a text file of segment links. A master playlist lists several variant streams of the same content. <Cite n={4} /> Each variant has its own bit rate, format, and resolution. Players should switch between the variants when the network changes. <Cite n={4} /> The article also uses smaller segments to keep playback stable on weak networks. <Cite n={1} />
 
+</Technical>
+<Layman>
+
+Think of a car with an automatic gearbox. On a hill, it changes to a lower gear. On a flat road, it changes up again. The driver does nothing.
+
+When you press play, the server sends the video's metadata and the URL of a manifest file. The player uses it to start adaptive bitrate streaming from a CDN <Cite n={1} />. The manifest tells the player which segments and resolutions exist <Cite n={1} />. With adaptive bitrate streaming, the quality changes by itself to match the network speed <Cite n={1} />.
+
+The free part of the article does not say which streaming format YouTube uses. HTTP Live Streaming (HLS) is one public standard for this idea. In HLS, a playlist is a text file of segment links. A master playlist lists several variant streams of the same content <Cite n={4} />. Each variant has its own bit rate, format, and resolution. Players should change to a different variant when the network changes <Cite n={4} />. The article also uses smaller segments to keep playback stable on weak networks <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+Automatic gearbox-ওয়ালা একটি গাড়ির কথা ভাবুন। চড়াইয়ে এটি নিচের gear-এ যায়, সমান রাস্তায় আবার উপরের gear-এ যায়। Driver-কে কিছু করতে হয় না।
+
+আপনি play চাপলে server video-র metadata আর একটি manifest file-এর URL ফেরত দেয়। Player এটি দিয়ে একটি CDN থেকে adaptive bitrate streaming শুরু করে <Cite n={1} />। Manifest player-কে জানায় কোন কোন segment আর resolution আছে <Cite n={1} />। Adaptive bitrate streaming মানে network-এর গতির সাথে মিল রেখে quality নিজে থেকেই বদলায় <Cite n={1} />।
+
+Article-এর free অংশে YouTube কোন streaming format ব্যবহার করে, তা বলা নেই। HTTP Live Streaming (HLS) এই ধারণার একটি public standard। HLS-এ playlist হলো segment link-এর একটি text file। একটি master playlist একই content-এর কয়েকটি variant stream-এর তালিকা দেয় <Cite n={4} />। প্রতিটি variant-এর নিজস্ব bit rate, format আর resolution থাকে। Network বদলালে player-এর উচিত variant বদলানো <Cite n={4} />। দুর্বল network-এ playback স্থির রাখতে article ছোট segment-ও ব্যবহার করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## The CDN: copies close to the viewer
+
+<Voices>
+<Technical>
 
 Think of a soft drink company. It does not ship each bottle from one factory. It keeps stock in local warehouses near the shops.
 
 A CDN (content delivery network) is a group of servers in many cities that keep copies of popular files near the users. YouTube is read-heavy: there are about 100 views for each upload in the article's numbers. <Cite n={1} /> So the design must use a lot of caching. <Cite n={1} /> A cache is a store of copies that is fast to reach. The aim of the first frame in less than 500 ms needs a CDN and adaptive streaming. <Cite n={1} /> The CDN does the real streaming, and the API servers only point the player to it. <Cite n={1} />
 
+</Technical>
+<Layman>
+
+Think of a soft drink company. It does not send each bottle from one factory. It keeps stock in local warehouses near the shops.
+
+A CDN (content delivery network) is a group of servers in many cities. These servers keep copies of popular files near the users. YouTube is read-heavy: people watch much more than they upload. In the article's numbers, there are about 100 views for each upload <Cite n={1} />. So the design must use a lot of caching <Cite n={1} />. A cache is a store of copies that is fast to reach. To show the first frame in less than 500 ms, the design needs a CDN and adaptive streaming <Cite n={1} />. The CDN does the real streaming. The API servers only point the player to it <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটি soft drink কোম্পানির কথা ভাবুন। এটি প্রতিটি বোতল একটি factory থেকে পাঠায় না। এটি দোকানের কাছের স্থানীয় warehouse-এ stock রাখে।
+
+CDN (content delivery network) হলো অনেক শহরে ছড়ানো server-এর একটি group, যা জনপ্রিয় file-এর copy user-দের কাছাকাছি রাখে। YouTube read-heavy: article-এর হিসাবে প্রতিটি upload-এর জন্য প্রায় 100টি view <Cite n={1} />। তাই design-কে অনেক caching ব্যবহার করতে হয় <Cite n={1} />। Cache হলো copy-র একটি store, যেখানে দ্রুত পৌঁছানো যায়। 500 ms-এর কম সময়ে প্রথম frame দেখানোর লক্ষ্য পূরণে CDN আর adaptive streaming দরকার <Cite n={1} />। আসল streaming করে CDN, আর API server শুধু player-কে CDN-এর দিকে দেখিয়ে দেয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Small but busy: watch progress and search
+
+<Voices>
+<Technical>
 
 Some data is small but very frequent. The player reports your playback position, so you can continue later. The article says this endpoint alone takes millions of writes each second. <Cite n={1} /> So the player sends the update and does not wait for an answer. The design stores it in a fast database such as DynamoDB. <Cite n={1} />
 
 Search uses a search index and returns results in pages. <Cite n={1} /> The design uses cursor-based pagination. Each page of results holds a token that points to the next page. <Cite n={1} /> The article says that this scales better than an offset, which would make the database skip millions of rows to reach a deep page. <Cite n={1} />
+
+</Technical>
+<Layman>
+
+Some data is small, but it comes very often. The player reports your playback position, so you can continue later. The article says that this one endpoint (one address of the API) gets millions of writes each second <Cite n={1} />. So the player sends the update and does not wait for an answer. The design keeps it in a fast database, such as DynamoDB <Cite n={1} />.
+
+Search uses a search index and gives the results in pages <Cite n={1} />. The design uses cursor-based pagination: each page of results holds a token that points to the next page <Cite n={1} />. The article says that this scales better than an offset. With an offset, the database must skip millions of rows to reach a deep page <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+কিছু data ছোট, কিন্তু খুব ঘন ঘন আসে। Player আপনার playback position জানায়, যাতে আপনি পরে সেখান থেকে আবার দেখতে পারেন। Article বলে, শুধু এই endpoint-ই প্রতি সেকেন্ডে কয়েক million write পায় <Cite n={1} />। তাই player update পাঠায়, কিন্তু উত্তরের জন্য অপেক্ষা করে না। Design-টি এটি DynamoDB-র মতো একটি দ্রুত database-এ রাখে <Cite n={1} />।
+
+Search একটি search index ব্যবহার করে এবং ফলাফল page আকারে দেয় <Cite n={1} />। Design-টি cursor-based pagination ব্যবহার করে: ফলাফলের প্রতিটি page-এ একটি token থাকে, যা পরের page-কে নির্দেশ করে <Cite n={1} />। Article বলে, এটি offset-এর চেয়ে ভালো scale করে। Offset-এ গভীর একটি page-এ পৌঁছাতে database-কে কয়েক million row skip করতে হয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
@@ -121,6 +305,9 @@ Search uses a search index and returns results in pages. <Cite n={1} /> The desi
 
 ## What a tester can learn
 
+<Voices>
+<Technical>
+
 <Callout type="tip" title="Tutorial advice">
 
 These ideas are the tutorial's own advice.
@@ -132,3 +319,30 @@ These ideas are the tutorial's own advice.
 - Upload a file in an unsupported format, a zero-byte file, and a file at the size limit.
 - Load deep pages of search results. Check that no result repeats or goes missing between pages.
 </Callout>
+
+</Technical>
+<Layman>
+
+These ideas are the tutorial's own advice.
+
+- Stop the network in the middle of a large upload. Make sure that the upload continues and does not start again from zero.
+- Use the pre-signed link after it expires. Make sure that the storage refuses it.
+- Slow down the network in the browser tools while a video plays. Make sure that the quality goes down and the video does not stop.
+- Watch a video right after its upload. Check the message that the app shows while the video is still processing.
+- Upload a file in a format that is not supported, a file with zero bytes, and a file at the size limit.
+- Load deep pages of search results. Make sure that no result shows two times or goes missing between pages.
+
+</Layman>
+<Bangla>
+
+নিচের ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- একটি বড় upload-এর মাঝখানে network কেটে দিন। দেখুন, upload শূন্য থেকে নতুন করে শুরু না হয়ে আগের জায়গা থেকে আবার চলে কি না।
+- Pre-signed link-এর মেয়াদ শেষ হওয়ার পর সেটি ব্যবহার করুন। দেখুন, storage সেটি প্রত্যাখ্যান করে কি না।
+- Video চলার সময় browser tools-এ network throttle করুন। দেখুন, video না থেমে quality কমে যায় কি না।
+- Upload-এর ঠিক পরেই একটি video দেখুন। Video process হওয়ার সময় app কোন message দেখায়, তা যাচাই করুন।
+- Support করে না এমন format-এর একটি file, একটি zero-byte file, আর size limit-এর সমান একটি file upload করুন।
+- Search result-এর গভীর page-গুলো load করুন। দেখুন, page-গুলোর মধ্যে কোনো result দুবার আসে কি না বা হারিয়ে যায় কি না।
+
+</Bangla>
+</Voices>
