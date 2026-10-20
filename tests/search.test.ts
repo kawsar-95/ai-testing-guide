@@ -59,7 +59,8 @@ test("doc ids are unique and every doc has its page fields", () => {
 
 test("no doc text has an import line, the metadata block, or a closing tag", () => {
   for (const doc of docs) {
-    assert.ok(!doc.text.includes("import "), `${doc.id} has "import "`);
+    // An import statement, not the English word "import" in prose.
+    assert.ok(!/\bimport\s+[\w{*][^"']*\bfrom\s+["']/.test(doc.text), `${doc.id} has an import line`);
     assert.ok(!doc.text.includes("</"), `${doc.id} has "</"`);
     assert.ok(!doc.text.includes("export const metadata"), `${doc.id} has the metadata block`);
   }

@@ -20,6 +20,9 @@ A cash machine lets you take out only a set amount of money each day. If you try
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 A rate limit has two numbers: a time window (the period) and the number of requests that the client can send in that period <Cite n={5} />. "3 requests in 5 minutes" is one rate limit.
 
 The system must decide who "the client" is. It can count by user, IP address, API key, or phone number. The HTTP standard does not fix this choice. A server can identify the user by login details or a cookie, for example <Cite n={1} />.
@@ -45,7 +48,39 @@ The counter must live in one shared place. If each server counts in its own memo
 
 <MdxImage src="/images/architecture/14-rate-limiting.webp" alt="A flow chart. An incoming request reaches the check 'Rate Limit OK?'. If yes, the API processes the request and updates a Redis counter with a TTL. If no, the API returns 429 Too Many Requests with a retryAfterSeconds value." />
 
+</Technical>
+<Layman>
+
+A rate limit has two numbers: a time window and the number of requests that a client can send in that window <Cite n={5} />. "3 requests in 5 minutes" is one rate limit.
+
+The system must decide who "the client" is: a user, an IP address, an API key, or a phone number. The HTTP standard does not fix this choice <Cite n={1} />.
+
+Rate limits protect a login page from brute-force attacks and cap the API calls of one client <Cite n={5} />. They stop one user from taking all the resources <Cite n={3} />. They save money too: each OTP SMS or AI call costs the company.
+
+A client over the limit usually gets **HTTP 429 Too Many Requests** <Cite n={3} />. A `Retry-After` header can tell the client how long to wait <Cite n={1} />. `Retry-After: 120` means "wait 2 minutes" <Cite n={2} />. A cache must not store a 429 response <Cite n={1} />.
+
+There are four common ways to count <Cite n={3} />. Keep the counter in one shared place, such as Redis. If each server counts alone, a client that reaches many servers gets more than the limit <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+Rate limit-এ দুটি সংখ্যা থাকে: একটি time window (সময়কাল), আর সেই সময়ে client কতগুলো request পাঠাতে পারে <Cite n={5} />। "5 মিনিটে 3টি request" হলো একটি rate limit।
+
+"Client" কে, তা system-কে ঠিক করতে হয়: user, IP address, API key, বা phone number। HTTP standard এই পছন্দ ঠিক করে দেয় না। যেমন, server login details বা cookie দিয়ে user-কে চিনতে পারে <Cite n={1} />।
+
+Rate limit login page-কে brute-force attack থেকে রক্ষা করে, আর একজন client কতগুলো API call করতে পারে তার সীমা ঠিক করে <Cite n={5} />। এটি একজন user-কে সব resource দখল করা থেকেও আটকায় <Cite n={3} />। এটি টাকাও বাঁচায়, কারণ প্রতিটি OTP SMS বা AI call-এ company-র খরচ হয়।
+
+Client limit পার হলে server সাধারণত **HTTP 429 Too Many Requests** দিয়ে উত্তর দেয় <Cite n={3} />। Cloudflare rate limiting rule কোনো request block করলে default response code হলো 429 <Cite n={7} />। Response-এ একটি `Retry-After` header থাকতে পারে, যা বলে কতক্ষণ অপেক্ষা করতে হবে <Cite n={1} />। এর value হয় সেকেন্ডের একটি সংখ্যা, অথবা একটি তারিখ। `Retry-After: 120` মানে "2 মিনিট অপেক্ষা করুন" <Cite n={2} />। কোনো cache একটি 429 response store করতে পারবে না <Cite n={1} />।
+
+গোনার চারটি সাধারণ উপায় হলো fixed window, sliding window, token bucket, আর leaky bucket <Cite n={3} />। Counter-টি একটি shared জায়গায় থাকতে হবে। প্রতিটি server নিজের memory-তে গুনলে, অনেক server-এ পৌঁছানো একজন client limit-এর চেয়ে বেশি request পাঠাতে পারে। Redis-এর shared counter প্রতিটি request দেখে, তবে প্রতিটি check-এ একটু সময় লাগে <Cite n={3} />। Redis docs-এর classic rate limiter প্রতিটি request-এ একটি counter বাড়ায় এবং counter-কে একটি expiry দেয়, যাতে window শেষে Redis সেটি মুছে দেয় <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 - You have login, OTP, or password reset endpoints.
 - You have payment start or payment callback endpoints.
@@ -53,7 +88,35 @@ The counter must live in one shared place. If each server counts in its own memo
 - You expose a public API.
 - You pay for each SMS or email.
 
+</Technical>
+<Layman>
+
+You need rate limiting in these cases:
+
+- You have login, OTP, or password reset endpoints.
+- You have endpoints that start a payment or receive a payment callback.
+- Search, file upload, AI calls, or report generation cost a lot.
+- You give the public access to an API.
+- You pay for each SMS or email.
+
+</Layman>
+<Bangla>
+
+নিচের যেকোনো একটি অবস্থা আপনার system-এর সাথে মিলে গেলে, আপনার rate limiting দরকার:
+
+- আপনার login, OTP, বা password reset endpoint আছে।
+- আপনার payment শুরু করার বা payment callback-এর endpoint আছে।
+- Search, file upload, AI call, বা report generation-এ অনেক খরচ হয়।
+- আপনি একটি public API দেন।
+- আপনি প্রতিটি SMS বা email-এর জন্য টাকা দেন।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 An LMS has OTP login. The team sets two rules:
 
@@ -72,7 +135,37 @@ Content-Type: application/json
 
 The two rules cut SMS cost, spam, and brute-force attempts.
 
+</Technical>
+<Layman>
+
+An LMS has OTP login. The team sets two rules:
+
+- At most 3 OTP requests from the same phone number in 5 minutes.
+- At most 10 OTP requests from the same IP address in 10 minutes.
+
+The fourth request from one phone gets `HTTP/1.1 429 Too Many Requests`. The response has the header `Retry-After: 180`. Its JSON body has the error `too_many_otp_requests` and `"retryAfterSeconds": 180`.
+
+The two rules cut SMS cost, spam, and brute-force attempts.
+
+</Layman>
+<Bangla>
+
+ধরুন, একটি LMS-এ OTP login আছে। Team দুটি নিয়ম ঠিক করে:
+
+- একই phone number থেকে 5 মিনিটে সর্বোচ্চ 3টি OTP request।
+- একই IP address থেকে 10 মিনিটে সর্বোচ্চ 10টি OTP request।
+
+একটি phone থেকে চতুর্থ request-টি `HTTP/1.1 429 Too Many Requests` উত্তর পায়। Response-এ `Retry-After: 180` header থাকে। এর JSON body-তে error `too_many_otp_requests` এবং `"retryAfterSeconds": 180` থাকে।
+
+এই দুটি নিয়ম SMS-এর খরচ, spam, আর brute-force চেষ্টা কমায়।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Only IP-based limits.** Many devices behind NAT can share one IP address <Cite n={7} />. A school or an office network often works this way, so one strict IP limit can block a whole class. Combine IP limits with user or phone limits.
 - **The same limit for every endpoint.** OTP and verify endpoints are frequent brute-force targets <Cite n={6} />. Give them stricter limits. One option is to count only failed attempts, so real users with valid codes are not blocked <Cite n={6} />.
@@ -80,7 +173,35 @@ The two rules cut SMS cost, spam, and brute-force attempts.
 - **Counters in local memory.** Each server counts on its own, so the servers undercount, and a client that reaches many servers can go over the limit <Cite n={3} />.
 - **Forgetting admin and internal endpoints.** An admin login or an internal report API can be abused too.
 
+</Technical>
+<Layman>
+
+Look out for these common mistakes:
+
+- **Only IP-based limits.** Many devices behind NAT can share one IP address <Cite n={7} />. A school or an office network often works this way, so one strict IP limit can block a whole class. Use IP limits together with user or phone limits.
+- **The same limit for every endpoint.** Attackers often try to guess codes on OTP and verify endpoints <Cite n={6} />. Give these endpoints stricter limits. You can count only failed attempts, so real users with valid codes are not blocked <Cite n={6} />.
+- **No wait time in the 429.** Without `Retry-After`, the client must guess when to try again <Cite n={3} />.
+- **Counters in local memory.** Each server counts on its own. So the total count is too low, and a client that reaches many servers can go over the limit <Cite n={3} />.
+- **Forgetting admin and internal endpoints.** People can abuse an admin login or an internal report API too.
+
+</Layman>
+<Bangla>
+
+এই সাধারণ ভুলগুলোর দিকে খেয়াল রাখুন:
+
+- **শুধু IP-ভিত্তিক limit।** NAT-এর পেছনে অনেক device একটি IP address share করতে পারে <Cite n={7} />। School বা office network প্রায়ই এভাবে কাজ করে, তাই একটি কড়া IP limit পুরো একটি class-কে block করতে পারে। IP limit-এর সাথে user বা phone limit মিলিয়ে ব্যবহার করুন।
+- **সব endpoint-এ একই limit।** OTP আর verify endpoint প্রায়ই brute-force attack-এর লক্ষ্য হয় <Cite n={6} />। এগুলোতে আরও কড়া limit দিন। একটি উপায় হলো শুধু failed attempt গোনা, যাতে valid code থাকা আসল user-রা block না হন <Cite n={6} />।
+- **429-এ অপেক্ষার সময় নেই।** `Retry-After` না থাকলে client retry-র পরিকল্পনা করতে পারে না, অনুমান করতে হয় <Cite n={3} />।
+- **Local memory-তে counter।** প্রতিটি server নিজে নিজে গোনে, তাই server-গুলো কম গোনে, আর অনেক server-এ পৌঁছানো একজন client limit পার হতে পারে <Cite n={3} />।
+- **Admin আর internal endpoint ভুলে যাওয়া।** একটি admin login বা internal report API-ও অপব্যবহার হতে পারে।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 - **The edge of the limit.** Send exactly the limit, then one more. Check that only the extra request gets 429.
@@ -90,6 +211,33 @@ The two rules cut SMS cost, spam, and brute-force attempts.
 - **Window edges.** For a fixed window, send a burst just before and just after the window resets.
 - **Sensitive endpoints.** Check that OTP, password reset, and payment endpoints have stricter limits than read-only pages.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **The edge of the limit.** Send exactly the limit, then one more request. Make sure that only the extra request gets 429.
+- **The wait time.** Look at the `Retry-After` header and any body field. Wait that long. Then make sure that the next request passes.
+- **Many servers.** Send requests through the load balancer, so that they reach different servers. Make sure that the total limit still holds.
+- **Different keys.** Use one phone from many IPs, and many phones from one IP. Make sure that each rule works on its own.
+- **Window edges.** For a fixed window, send a burst just before and just after the window resets.
+- **Sensitive endpoints.** Make sure that OTP, password reset, and payment endpoints have stricter limits than read-only pages.
+
+</Layman>
+<Bangla>
+
+নিচের test ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- **Limit-এর সীমানা।** ঠিক limit পরিমাণ request পাঠান, তারপর আরও একটি। দেখুন, শুধু বাড়তি request-টি 429 পায় কি না।
+- **অপেক্ষার সময়।** `Retry-After` header (আর body-র কোনো field থাকলে সেটিও) দেখুন। ততক্ষণ অপেক্ষা করুন, তারপর দেখুন পরের request pass করে কি না।
+- **অনেক server।** Load balancer-এর মাধ্যমে request পাঠান, যাতে সেগুলো আলাদা server-এ পৌঁছায়। দেখুন, মোট হিসেবে limit এখনও কাজ করে কি না।
+- **আলাদা key।** অনেক IP থেকে একটি phone, আর একটি IP থেকে অনেক phone ব্যবহার করুন। দেখুন, প্রতিটি নিয়ম আলাদাভাবে কাজ করে কি না।
+- **Window-এর কিনারা।** Fixed window-এর ক্ষেত্রে, window reset হওয়ার ঠিক আগে আর ঠিক পরে একঝাঁক request পাঠান।
+- **সংবেদনশীল endpoint।** দেখুন, OTP, password reset, আর payment endpoint-এ read-only page-এর চেয়ে কড়া limit আছে কি না।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

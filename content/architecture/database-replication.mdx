@@ -20,6 +20,9 @@ Think of a school with one head teacher who keeps the official mark book. Only t
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 **Database replication** means that one database copies its data to one or more other databases. Each copy is a **replica** <Cite n={5} />. The database that can change data is the **primary**. The copies that follow its changes are **standby** or **secondary** servers <Cite n={3} />. A **read replica** is a read-only copy of the database <Cite n={1} />.
 
 **Read/write splitting** means that the application sends each query to the right place. Writes go to the primary, such as registration, payment, enrollment, and updates. Reads that are heavy but not urgent go to replicas, such as course lists, reports, analytics, and dashboards. Clients can read and write on the primary, but they can only read on the replica <Cite n={1} />. When you send queries to the replica, the primary gets less load <Cite n={1} />.
@@ -35,7 +38,35 @@ Lag grows when the primary cannot send changes fast enough, the replica cannot r
 
 <MdxImage src="/images/architecture/11-database-replication.webp" alt="Diagram: the application sends writes such as registration and payment to the primary database. The primary copies its changes to two read replicas. The application sends reads such as course lists and reports to the replicas. A label shows replication lag between the primary and the replicas." />
 
+</Technical>
+<Layman>
+
+Database replication means that one database copies its data to one or more other databases. Each copy is a replica <Cite n={5} />. Only the primary database can change data. The other servers follow its changes <Cite n={3} />. A read replica is a copy that you can only read from <Cite n={1} />.
+
+With read/write splitting, the app sends writes, such as payments and enrollments, to the primary. It sends heavy reads that are not urgent, such as reports and dashboards, to replicas. This gives the primary less load <Cite n={1} />.
+
+With synchronous copying, a change is done only when all servers have it, so a failover loses no data <Cite n={3} />. With asynchronous copying, the replica gets the change later. A failover can lose some changes, and a replica can return old ("stale") data <Cite n={3} />.
+
+Amazon RDS copies changes to a read replica asynchronously <Cite n={1} />. The delay is called replication lag <Cite n={2} />. Lag grows when the primary cannot send changes fast enough, or the replica cannot receive or apply them fast enough <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+Database replication মানে হলো, একটি database তার data এক বা একাধিক অন্য database-এ copy করে। প্রতিটি copy-কে replica বলে <Cite n={5} />। যে database data পরিবর্তন করতে পারে, সেটি primary। যে copy-গুলো তার পরিবর্তন অনুসরণ করে, সেগুলো standby বা secondary server <Cite n={3} />। Read replica হলো database-এর একটি read-only copy <Cite n={1} />।
+
+Read/write splitting-এ application প্রতিটি query সঠিক জায়গায় পাঠায়। Registration, payment, enrollment আর update-এর মতো write যায় primary-তে। Course list, report, analytics আর dashboard-এর মতো ভারী কিন্তু জরুরি নয় এমন read যায় replica-তে। Client primary-তে read ও write দুটোই করতে পারে, কিন্তু replica-তে শুধু read করতে পারে <Cite n={1} />। Replica-তে query পাঠালে primary-এর load কমে <Cite n={1} />।
+
+Copy synchronous বা asynchronous হতে পারে। Synchronous-এ একটি পরিবর্তন তখনই শেষ হয়, যখন সব server সেটি পায়; তাই failover-এ কোনো data হারায় না <Cite n={3} />। Asynchronous-এ replica পরিবর্তনটি একটু পরে পায়। তখন failover-এ কিছু পরিবর্তন হারাতে পারে, আর replica কিছুটা পুরোনো ("stale") ফল দিতে পারে <Cite n={3} />। Synchronous copy খুব ধীর হলে system asynchronous ব্যবহার করে <Cite n={3} />।
+
+উদাহরণ হিসেবে, Amazon RDS read replica-তে পরিবর্তন asynchronously copy করে <Cite n={1} />। এই দেরিকে replication lag বলে <Cite n={2} />। PostgreSQL manual বলে, প্রায় একই সময়ে primary আর standby-তে একই query ভিন্ন ফল দিতে পারে, এবং standby-কে "eventually consistent" বলে <Cite n={4} />। Primary যথেষ্ট দ্রুত পরিবর্তন পাঠাতে না পারলে, অথবা replica যথেষ্ট দ্রুত সেগুলো গ্রহণ বা apply করতে না পারলে lag বাড়ে <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 - Read traffic is very high.
 - Reports or analytics slow down the primary database. AWS names business reporting as a use case for read replicas <Cite n={1} />.
@@ -43,7 +74,35 @@ Lag grows when the primary cannot send changes fast enough, the replica cannot r
 - You want to keep critical writes apart from reads that are not critical.
 - You need a failover plan for the future. A replica can become a standalone database if the primary fails <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+You need replication in these cases:
+
+- The app gets a very high number of reads.
+- Reports or analytics make the primary database slow. AWS names business reporting as a use case for read replicas <Cite n={1} />.
+- You must plan for high availability.
+- You want to keep the critical writes apart from the reads that are not critical.
+- You need a plan for a failover in the future. If the primary fails, a replica can become a standalone database <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+নিচের যেকোনো অবস্থায় আপনার database replication দরকার:
+
+- Read traffic অনেক বেশি।
+- Report বা analytics primary database-কে ধীর করে দেয়। AWS read replica-এর একটি use case হিসেবে business reporting-এর কথা বলে <Cite n={1} />।
+- আপনাকে high availability-এর পরিকল্পনা করতে হবে।
+- আপনি জরুরি write-গুলোকে কম জরুরি read থেকে আলাদা রাখতে চান।
+- ভবিষ্যতের জন্য আপনার একটি failover পরিকল্পনা দরকার। Primary fail করলে একটি replica একটি standalone database হয়ে যেতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 A student pays for a course in the LMS (learning management system). The payment success is written to the primary database.
 
@@ -51,7 +110,31 @@ Then the app opens the dashboard at once and reads the payment status from a rep
 
 A better design reads critical data, such as payment status, from the primary right after the payment. Another option is to show a "Processing" state until the status is confirmed. Course lists and reports can still come from replicas, where a few seconds of delay is safe.
 
+</Technical>
+<Layman>
+
+A student pays for a course in the LMS (learning management system). The app writes the payment success to the primary database.
+
+Then the app opens the dashboard at once. It reads the payment status from a replica. If there is replication lag, the replica does not have the payment yet. So the student sees "Unpaid" and may pay again.
+
+A better design reads critical data, such as the payment status, from the primary right after the payment. Another option is to show a "Processing" state until the status is confirmed. Course lists and reports can still come from replicas. There, a delay of a few seconds is safe.
+
+</Layman>
+<Bangla>
+
+ধরুন, একজন শিক্ষার্থী LMS (learning management system)-এ একটি course-এর জন্য payment করেন। Payment সফল হওয়ার তথ্য primary database-এ লেখা হয়।
+
+এরপর app সঙ্গে সঙ্গে dashboard খোলে এবং একটি replica থেকে payment status পড়ে। Replication lag থাকলে replica-তে তখনও payment-টি নেই। ফলে শিক্ষার্থী "Unpaid" দেখেন এবং আবার payment করতে পারেন।
+
+একটি ভালো design হলো, payment-এর ঠিক পরে payment status-এর মতো জরুরি data primary থেকে পড়া। আরেকটি উপায় হলো, status confirm না হওয়া পর্যন্ত একটি "Processing" অবস্থা দেখানো। Course list আর report তবুও replica থেকে আসতে পারে, কারণ সেখানে কয়েক সেকেন্ডের দেরি নিরাপদ।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Sending all reads to replicas.** This breaks "read after write" flows, where users must see their own change at once. Replicas can return stale results <Cite n={3} />.
 - **Thinking replication is the same as backup.** Replication copies every change and keeps no old copies <Cite n={5} />. If someone deletes data by mistake, the delete goes to every replica too <Cite n={5} />. A backup is a copy from a point in time that you can restore <Cite n={5} />.
@@ -59,7 +142,35 @@ A better design reads critical data, such as payment status, from the primary ri
 - **Not testing failover.** With asynchronous copying, some changes can be lost when the system switches to another server <Cite n={3} />. Also, not every copy is a read replica. An RDS Multi-AZ standby, for example, is a synchronous copy for high availability, and it cannot serve reads <Cite n={6} />. Know which copy does which job, and test the switch.
 - **Ignoring report load on the primary.** Heavy reports on the primary slow down payments and logins. Move them to a replica.
 
+</Technical>
+<Layman>
+
+Avoid these mistakes:
+
+- **All reads go to replicas.** This breaks "read after write" flows, where users must see their own change at once. A replica can return stale data <Cite n={3} />.
+- **Replication is taken as a backup.** Replication copies every change and keeps no old copies <Cite n={5} />. If someone deletes data by mistake, every replica gets the delete too <Cite n={5} />. A backup is a copy from a point in time that you can restore <Cite n={5} />.
+- **Nobody watches the lag.** Lag grows silently. On Amazon RDS, the `ReplicaLag` metric in CloudWatch shows it <Cite n={2} />. Set an alert on it.
+- **Nobody tests failover.** With asynchronous copying, some changes can be lost when the system switches to another server <Cite n={3} />. Not every copy is a read replica. An RDS Multi-AZ standby is a synchronous copy for high availability, and it cannot serve reads <Cite n={6} />. Know the job of each copy, and test the switch.
+- **Reports run on the primary.** Heavy reports on the primary make payments and logins slow. Move them to a replica.
+
+</Layman>
+<Bangla>
+
+এই সাধারণ ভুলগুলোর দিকে খেয়াল রাখুন:
+
+- **সব read replica-তে পাঠানো।** এতে "read after write" flow ভেঙে যায়, যেখানে user-কে নিজের পরিবর্তন সঙ্গে সঙ্গে দেখতে হয়। Replica stale ফল দিতে পারে <Cite n={3} />।
+- **Replication-কে backup ভাবা।** Replication প্রতিটি পরিবর্তন copy করে এবং কোনো পুরোনো copy রাখে না <Cite n={5} />। কেউ ভুল করে data delete করলে সেই delete প্রতিটি replica-তেও চলে যায় <Cite n={5} />। Backup হলো একটি নির্দিষ্ট সময়ের copy, যা আপনি restore করতে পারেন <Cite n={5} />।
+- **Replication lag monitor না করা।** Lag নিঃশব্দে বাড়ে। Amazon RDS-এ আপনি CloudWatch-এর `ReplicaLag` metric দিয়ে এটি দেখতে পারেন <Cite n={2} />। এর ওপর একটি alert সেট করুন।
+- **Failover test না করা।** Asynchronous copy-তে system অন্য server-এ switch করার সময় কিছু পরিবর্তন হারাতে পারে <Cite n={3} />। আবার, প্রতিটি copy read replica নয়। যেমন, RDS Multi-AZ standby হলো high availability-এর জন্য একটি synchronous copy, এবং এটি read serve করতে পারে না <Cite n={6} />। কোন copy কোন কাজ করে, তা জানুন এবং switch-টি test করুন।
+- **Primary-তে report load উপেক্ষা করা।** Primary-তে ভারী report চললে payment আর login ধীর হয়ে যায়। Report-গুলো একটি replica-তে সরিয়ে নিন।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice.
@@ -71,6 +182,33 @@ These test ideas are the tutorial's own advice.
 - **Failover drill.** Stop the primary in a test environment. Measure how long writes fail, and check that no confirmed payment is lost after the switch.
 - **Restore from backup.** Delete a test record, then restore it from a backup, not from a replica.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Read after write.** Make a payment, change a profile, or enroll in a course. Then open the page that shows it at once. The page must show the new value, or it must say "Processing".
+- **Lag on purpose.** In a test environment, add replication lag, or pause the replica. Find the pages that show old data. Check if any of them is critical.
+- **Double action.** While the status is stale, try to pay or enroll again. The system must not charge or enroll the student two times.
+- **Write to a replica.** Make sure that no write goes to a replica. A write there must fail with a clear error. It must not succeed silently in the wrong place.
+- **Failover drill.** Stop the primary in a test environment. Measure how long the writes fail. Make sure that no confirmed payment is lost after the switch.
+- **Restore from backup.** Delete a test record. Then restore it from a backup, not from a replica.
+
+</Layman>
+<Bangla>
+
+নিচের test ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- **Read after write।** একটি payment করুন, একটি profile পরিবর্তন করুন, অথবা একটি course-এ enroll করুন। তারপর সঙ্গে সঙ্গে সেই পাতাটি খুলুন, যেখানে এটি দেখায়। পাতায় নতুন value দেখাতে হবে, অথবা "Processing" লেখা থাকতে হবে।
+- **ইচ্ছা করে lag তৈরি।** একটি test environment-এ replication lag যোগ করুন, অথবা replica-টি pause করুন। দেখুন, কোন পাতাগুলো পুরোনো data দেখায়, এবং তার কোনোটি জরুরি কি না।
+- **দুবার একই কাজ।** Status stale থাকার সময় আবার payment বা enroll করার চেষ্টা করুন। System যেন শিক্ষার্থীর কাছ থেকে দুবার টাকা না নেয় বা দুবার enroll না করে।
+- **Replica-তে write।** দেখুন, কোনো write যেন replica-তে না যায়। সেখানে write হলে তা একটি স্পষ্ট error দিয়ে fail করতে হবে, ভুল জায়গায় নিঃশব্দে সফল হলে চলবে না।
+- **Failover drill।** একটি test environment-এ primary বন্ধ করুন। কতক্ষণ write fail করে, তা মাপুন। Switch-এর পরে কোনো confirmed payment হারিয়েছে কি না, তা দেখুন।
+- **Backup থেকে restore।** একটি test record delete করুন, তারপর সেটি replica থেকে নয়, একটি backup থেকে restore করুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

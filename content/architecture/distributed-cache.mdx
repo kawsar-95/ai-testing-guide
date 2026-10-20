@@ -21,6 +21,9 @@ Think of an office where each person keeps notes on their own sticky pads. When 
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 A cache keeps copies of data in fast memory, so the app does not ask the database every time. There are two kinds. A private cache, or local cache, keeps the data on the computer that runs the app <Cite n={1} />. A shared cache is one common store that many processes and machines can use <Cite n={1} />. A distributed cache is a shared cache.
 
 The problem with a local cache starts when you run more than one app server. Each server then has its own separate copy of the data <Cite n={1} />. If the data changes between two reads, two servers can hold two different answers <Cite n={1} />. With a shared cache, all servers see the same cached data <Cite n={1} />. The price is speed and effort: a shared cache is slower than local memory, and it is one more service to run <Cite n={1} />.
@@ -38,7 +41,35 @@ Common uses are:
 
 <MdxImage src="/images/architecture/13-distributed-cache.webp" alt="Users send requests to a load balancer. The load balancer sends them to App Server 1, 2, or 3. All three app servers read and write one shared Redis distributed cache. Redis sits in front of the database, which the servers use only when needed." />
 
+</Technical>
+<Layman>
+
+A cache keeps copies of data in fast memory, so the app does not ask the database every time. A private cache, or local cache, keeps the data on the computer that runs the app <Cite n={1} />. A shared cache is one common store that many processes and machines can use <Cite n={1} />. A distributed cache is a shared cache.
+
+With many app servers and a local cache, each server has its own copy of the data <Cite n={1} />. If the data changes, two servers can give two different answers <Cite n={1} />. With a shared cache, all servers see the same data <Cite n={1} />. A shared cache is slower than local memory, and it is one more service to run <Cite n={1} />.
+
+This page uses Redis. Redis Cluster splits the data across many Redis nodes automatically <Cite n={4} />. If the main Redis server fails, Redis Sentinel makes a copy (a replica) the new main server <Cite n={3} />.
+
+Common uses are session data such as a shopping cart <Cite n={2} />, OTP codes that Redis deletes after a timeout <Cite n={5} />, rate limit counters <Cite n={8} />, leaderboards <Cite n={2} />, locks <Cite n={6} />, and feature flags.
+
+</Layman>
+<Bangla>
+
+Cache দ্রুত memory-তে data-র copy রাখে, যাতে app-কে প্রতিবার database-এর কাছে যেতে না হয়। Cache দুই ধরনের। Private cache বা local cache সেই computer-এই data রাখে, যেখানে app চলে <Cite n={1} />। Shared cache হলো একটি সাধারণ store, যা অনেক process আর machine ব্যবহার করতে পারে <Cite n={1} />। Distributed cache হলো একটি shared cache।
+
+আপনি একাধিক app server চালালে local cache-এ সমস্যা শুরু হয়। তখন প্রতিটি server-এর কাছে data-র নিজস্ব আলাদা copy থাকে <Cite n={1} />। দুইবার পড়ার মাঝে data বদলালে দুটি server দুটি ভিন্ন উত্তর রাখতে পারে <Cite n={1} />। Shared cache থাকলে সব server একই cached data দেখে <Cite n={1} />। তবে এর একটি দাম আছে: shared cache local memory-র চেয়ে ধীর, আর এটি চালানোর জন্য আরও একটি service <Cite n={1} />।
+
+এই পাতায় উদাহরণ হিসেবে Redis ব্যবহার করা হয়েছে। Redis অনেক app instance-এর জন্য shared cache হিসেবে কাজ করতে পারে <Cite n={1} />। Redis Cluster নিজে থেকেই data অনেক Redis node-এ ভাগ করে দেয় <Cite n={4} />। Redis Sentinel একটি main Redis server-কে নজরে রাখে, আর সেটি fail করলে একটি replica (copy)-কে নতুন main server বানায় <Cite n={3} />। Azure Managed Redis-এর মতো managed Redis আপনার হয়ে cloud vendor চালায় <Cite n={2} />।
+
+সাধারণ ব্যবহারগুলো হলো: session store, যেমন shopping cart <Cite n={2} />; OTP-র মতো অল্প সময়ের data, যেখানে timeout শেষ হলে Redis নিজেই key মুছে দেয় <Cite n={5} />; rate limit counter <Cite n={8} />; sorted set দিয়ে leaderboard <Cite n={2} />; distributed lock, যাতে একসময়ে শুধু একটি server একটি কাজ করে <Cite n={6} />; আর feature flag ও temporary state, যা প্রতিটি server-কে একইভাবে পড়তে হয়।
+
+</Bangla>
+</Voices>
+
 ## Frontend-facing Redis and backend Redis
+
+<Voices>
+<Technical>
 
 One system can use Redis for two different jobs. "Frontend-facing" and "backend" are this tutorial's names for the two jobs. They are not product terms.
 
@@ -51,7 +82,33 @@ One system can use Redis for two different jobs. "Frontend-facing" and "backend"
 The two roles have different risks. If a frontend-facing cache loses data, the page is a little slower. If a backend Redis loses an OTP or a lock, a user cannot log in, or two servers do the same job. Think about separate Redis instances for the two roles, so that a big page cache cannot push out login data.
 </Callout>
 
+</Technical>
+<Layman>
+
+One system can use Redis for two different jobs. "Frontend-facing" and "backend" are this tutorial's names for the two jobs. They are not product terms.
+
+- **Frontend-facing Redis** makes the answers to users faster. Examples are course lists, public landing page data, dashboard summaries, menu and config data, and popular API responses. Azure calls this a data cache or a content cache <Cite n={2} />.
+- **Backend Redis** runs internal logic and background work. Examples are OTP, login and session data, rate limit counters, job queue state, distributed locks, payment state, and temporary workflow data. Session store and job queuing are common Redis patterns <Cite n={2} />.
+
+The next advice is the tutorial's own. The two jobs have different risks. If a frontend-facing cache loses data, the page is a little slower. If a backend Redis loses an OTP or a lock, a user cannot log in, or two servers do the same job. Think about separate Redis instances for the two jobs. Then a big page cache cannot push out login data.
+
+</Layman>
+<Bangla>
+
+একটি system দুটি আলাদা কাজে Redis ব্যবহার করতে পারে। "Frontend-facing" আর "backend" হলো এই দুই কাজের জন্য এই tutorial-এর নিজের দেওয়া নাম। এগুলো কোনো product term নয়।
+
+- **Frontend-facing Redis** user-দের কাছে উত্তর দ্রুত পৌঁছে দেয়। উদাহরণ: course list, public landing page data, dashboard summary, menu ও config data, আর জনপ্রিয় API response। Azure একে data cache বা content cache বলে <Cite n={2} />।
+- **Backend Redis** ভেতরের logic আর background-এর কাজ চালায়। উদাহরণ: OTP, login ও session data, rate limit counter, job queue state, distributed lock, payment state, আর temporary workflow data। Session store আর job queuing হলো Redis-এর সাধারণ pattern <Cite n={2} />।
+
+নিচের পরামর্শটি এই tutorial-এর নিজস্ব। দুই কাজের ঝুঁকি আলাদা। Frontend-facing cache data হারালে পাতাটি একটু ধীর হয়। কিন্তু backend Redis একটি OTP বা lock হারালে একজন user login করতে পারেন না, অথবা দুটি server একই কাজ করে ফেলে। তাই দুই কাজের জন্য আলাদা Redis instance রাখার কথা ভাবুন, যাতে একটি বড় page cache login data-কে সরিয়ে দিতে না পারে।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 - You run more than one app server.
 - A session, an OTP, or a rate limit counter must be the same on all servers.
@@ -59,7 +116,35 @@ The two roles have different risks. If a frontend-facing cache loses data, the p
 - You need fast, shared, temporary state.
 - You plan [horizontal scaling](/architecture/horizontal-scaling/).
 
+</Technical>
+<Layman>
+
+You need a distributed cache in these cases:
+
+- You run more than one app server.
+- A session, an OTP, or a rate limit counter must be the same on all servers.
+- A local memory cache gives different answers on different servers.
+- You need state that is fast, shared, and temporary.
+- You plan [horizontal scaling](/architecture/horizontal-scaling/).
+
+</Layman>
+<Bangla>
+
+নিচের যেকোনো একটি অবস্থা আপনার system-এর সাথে মিলে গেলে, আপনার একটি distributed cache দরকার:
+
+- আপনি একাধিক app server চালান।
+- একটি session, একটি OTP, বা একটি rate limit counter সব server-এ একই হতে হবে।
+- একটি local memory cache আলাদা server-এ আলাদা উত্তর দেয়।
+- আপনার দ্রুত, shared, আর temporary state দরকার।
+- আপনি [horizontal scaling](/architecture/horizontal-scaling/)-এর পরিকল্পনা করছেন।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 An LMS uses OTP login. When a student asks for a code, the app stores it in Redis with a key such as `otp:<phone>` and a time-to-live (TTL) of 2 minutes:
 
@@ -69,7 +154,27 @@ SET otp:8801700000000 482913 EX 120
 
 The load balancer can send the verify request to App Server 1, 2, or 3. All three read the same key from Redis, so the check works on any server. After 2 minutes, Redis deletes the key, and the old code stops working.
 
+</Technical>
+<Layman>
+
+An LMS uses OTP login. A student asks for a code. The app stores the code in Redis with a key such as `otp:<phone>`. The key has a time-to-live (TTL) of 2 minutes.
+
+The load balancer can send the verify request to App Server 1, 2, or 3. All three servers read the same key from Redis. So the check works on any server. After 2 minutes, Redis deletes the key, and the old code stops working.
+
+</Layman>
+<Bangla>
+
+ধরুন, একটি LMS OTP দিয়ে login করায়। একজন শিক্ষার্থী code চাইলে app সেটি Redis-এ `otp:<phone>`-এর মতো একটি key দিয়ে রাখে, যার time-to-live (TTL) 2 মিনিট।
+
+Load balancer verify request-টি App Server 1, 2, বা 3-এ পাঠাতে পারে। তিনটি server-ই Redis থেকে একই key পড়ে, তাই যেকোনো server-এ check কাজ করে। 2 মিনিট পরে Redis key-টি মুছে দেয়, আর পুরোনো code আর কাজ করে না।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **A local cache on many servers.** Each server keeps its own copy, so users see different data on each request.
 - **No plan for a cache failure.** The app should keep working when the shared cache is down <Cite n={1} />. For data that lives only in Redis, such as an OTP, the app must fail with a clear message, not a crash.
@@ -77,7 +182,35 @@ The load balancer can send the verify request to App Server 1, 2, or 3. All thre
 - **A lock that never ends.** If a server takes a lock and then crashes, other servers wait forever. A Redis lock should set the key only if it does not exist (`NX`) and with an expiry (`PX`) <Cite n={6} />. The holder must remove only its own lock <Cite n={6} />.
 - **No key naming rule.** Redis advises a schema such as `object-type:id`, for example `user:1000` <Cite n={7} />. Without a rule, two features can use the same key.
 
+</Technical>
+<Layman>
+
+Look out for these common mistakes:
+
+- **A local cache on many servers.** Each server keeps its own copy. So users see different data on each request.
+- **No plan for a cache failure.** The app should continue to work when the shared cache is down <Cite n={1} />. Some data lives only in Redis, such as an OTP. For that data, the app must fail with a clear message, not a crash.
+- **The cache as a permanent database.** A cache can lose its data at any time. Keep valuable data in the real data store too <Cite n={1} />.
+- **A lock that never ends.** A server takes a lock and then crashes. Now the other servers wait forever. A Redis lock should set the key only if it does not exist (`NX`), and with an expiry (`PX`) <Cite n={6} />. The holder must remove only its own lock <Cite n={6} />.
+- **No key naming rule.** Redis advises a schema such as `object-type:id`, for example `user:1000` <Cite n={7} />. Without a rule, two features can use the same key.
+
+</Layman>
+<Bangla>
+
+এই সাধারণ ভুলগুলোর দিকে খেয়াল রাখুন:
+
+- **অনেক server-এ local cache।** প্রতিটি server নিজের আলাদা copy রাখে, তাই user-রা প্রতিটি request-এ আলাদা data দেখেন।
+- **Cache fail করলে কী হবে, তার কোনো পরিকল্পনা নেই।** Shared cache বন্ধ থাকলেও app-এর কাজ চালিয়ে যাওয়া উচিত <Cite n={1} />। যে data শুধু Redis-এ থাকে, যেমন OTP, সেখানে app-কে crash না করে একটি পরিষ্কার message দিয়ে fail করতে হবে।
+- **Cache-কে স্থায়ী database হিসেবে ব্যবহার।** Cache যেকোনো সময় তার data হারাতে পারে। মূল্যবান data আসল data store-এও রাখুন <Cite n={1} />।
+- **এমন lock, যা কখনো শেষ হয় না।** কোনো server lock নিয়ে crash করলে অন্য server-গুলো চিরকাল অপেক্ষা করে। Redis lock-এর key শুধু তখনই set করা উচিত, যখন key-টি নেই (`NX`), আর সাথে একটি expiry (`PX`) দিতে হবে <Cite n={6} />। Lock-এর মালিক শুধু নিজের lock-টিই সরাবে <Cite n={6} />।
+- **Key-এর নামের কোনো নিয়ম নেই।** Redis `object-type:id`-এর মতো একটি schema-র পরামর্শ দেয়, যেমন `user:1000` <Cite n={7} />। নিয়ম না থাকলে দুটি feature একই key ব্যবহার করে ফেলতে পারে।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 - **Same answer on every server.** Send the same read to each app server (or repeat it many times through the load balancer). Change the data, then check that no server returns the old value.
@@ -86,6 +219,31 @@ The load balancer can send the verify request to App Server 1, 2, or 3. All thre
 - **Lock expiry.** Kill a worker while it holds a lock. Check that another worker can take the lock after the expiry.
 - **Key collisions.** Check that each key has a type prefix and an ID, so that `session:42` and `otp:42` never mix.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Same answer on every server.** Send the same read to each app server, or repeat it many times through the load balancer. Change the data. Then make sure that no server returns the old value.
+- **OTP across servers.** Request an OTP on one server and verify it on another. Then wait past the TTL and make sure that the code fails.
+- **Redis down.** Stop Redis in a test environment. Make sure that cached pages still load from the database, and that login fails with a clear error.
+- **Lock expiry.** Stop a worker by force while it holds a lock. Make sure that another worker can take the lock after the expiry.
+- **Key collisions.** Make sure that each key has a type prefix and an ID, so that `session:42` and `otp:42` never mix.
+
+</Layman>
+<Bangla>
+
+নিচের test ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- **প্রতিটি server-এ একই উত্তর।** প্রতিটি app server-এ একই read পাঠান, অথবা load balancer-এর মাধ্যমে অনেকবার পাঠান। Data বদলান, তারপর দেখুন কোনো server পুরোনো value ফেরত দেয় কি না।
+- **বিভিন্ন server-এ OTP।** একটি server-এ OTP চান আর অন্য server-এ verify করুন। তারপর TTL পার হওয়া পর্যন্ত অপেক্ষা করে দেখুন code-টি fail করে কি না।
+- **Redis down।** একটি test environment-এ Redis বন্ধ করুন। দেখুন, cached page-গুলো database থেকে এখনো load হয় কি না, আর login একটি পরিষ্কার error দিয়ে fail করে কি না।
+- **Lock expiry।** একটি worker lock ধরে রাখার সময় সেটিকে kill করুন। দেখুন, expiry-র পরে অন্য একটি worker lock নিতে পারে কি না।
+- **Key collision।** দেখুন, প্রতিটি key-তে একটি type prefix আর একটি ID আছে কি না, যাতে `session:42` আর `otp:42` কখনো মিশে না যায়।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
