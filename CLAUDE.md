@@ -218,7 +218,7 @@ To add a topic, add it to `lib/architecture/topics.ts` and to `ArchitectureSlug`
 
 ## Voices
 
-A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). Phase 1 is done in code. Only 2 pilot pages have voices: `content/getting-started/setup.mdx` and `content/architecture/load-balancer.mdx`. Phase 2 (all other pages, one module at a time) is pending. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
+A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 69 pages have voices: the 23 tutorial pages, the 12 Linux stages, the 15 System Design cases, and the 19 Architecture topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
 
 ### What the reader sees
 
