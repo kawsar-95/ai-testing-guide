@@ -3,11 +3,8 @@
  * entry is served at /architecture/<slug>/ and has its text in
  * content/architecture/<slug>.mdx. The last entry is the practice page.
  */
-
-export const ARCHITECTURE_HOME = "/architecture/";
-
-/** The localStorage key of the done topics and the done practice questions. */
-export const ARCHITECTURE_STORAGE_KEY = "architecture-progress";
+import { defineFlatModule, type FlatEntry, type FlatItem, type FlatModuleUI } from "../modules/flat.ts";
+import { ARCHITECTURE_UI } from "./ui.ts";
 
 /** The number of practice questions on the practice page. */
 export const PRACTICE_COUNT = 30;
@@ -34,16 +31,7 @@ export type ArchitectureSlug =
   | "observability"
   | "practice";
 
-export type ArchitectureTopic = {
-  slug: ArchitectureSlug;
-  title: string;
-  /** The one-line summary on the module home page. */
-  description: string;
-  /** "topic" for a lesson, "practice" for the practice page. */
-  kind: "topic" | "practice";
-  number: number;
-  href: string;
-};
+export type ArchitectureTopic = FlatItem<ArchitectureSlug>;
 
 type Entry = { slug: ArchitectureSlug; title: string; description: string };
 
@@ -150,23 +138,64 @@ const SOURCE: readonly Entry[] = [
   },
 ];
 
-export const TOPICS: readonly ArchitectureTopic[] = SOURCE.map((entry, i) => ({
+const entries: readonly FlatEntry<ArchitectureSlug>[] = SOURCE.map((entry) => ({
   ...entry,
   kind: entry.slug === "practice" ? "practice" : "topic",
-  number: i + 1,
-  href: `${ARCHITECTURE_HOME}${entry.slug}/`,
 }));
-
-export const ARCHITECTURE_ROUTES: readonly string[] = [ARCHITECTURE_HOME, ...TOPICS.map((t) => t.href)];
-
-/** The progress ids of the lessons: their slugs. The practice page has no id of its own. */
-export const LESSON_IDS: readonly string[] = TOPICS.filter((t) => t.kind === "topic").map((t) => t.slug);
 
 /** The progress id of practice question `n` (1-based): `practice-01` … `practice-30`. */
 export const practiceId = (n: number) => `practice-${String(n).padStart(2, "0")}`;
 
 export const PRACTICE_IDS: readonly string[] = Array.from({ length: PRACTICE_COUNT }, (_, i) => practiceId(i + 1));
 
-export function getTopic(slug: string): ArchitectureTopic | undefined {
-  return TOPICS.find((t) => t.slug === slug);
-}
+/** Maps the current UI keys to the keys of `FlatModuleUI`. Task 2 removes this. */
+const ui: FlatModuleUI = {
+  siteTitle: ARCHITECTURE_UI.siteTitle,
+  description: ARCHITECTURE_UI.description,
+  eyebrow: ARCHITECTURE_UI.eyebrow,
+  heading: ARCHITECTURE_UI.heading,
+  lede: ARCHITECTURE_UI.lede,
+  sourceNote: ARCHITECTURE_UI.sourceNote,
+  itemsHeading: ARCHITECTURE_UI.topicsHeading,
+  itemsHeadingId: "topics-heading",
+  itemEyebrow: ARCHITECTURE_UI.topicEyebrow,
+  itemNav: ARCHITECTURE_UI.topicNav,
+  allItems: ARCHITECTURE_UI.allTopics,
+  previousItem: ARCHITECTURE_UI.previousTopic,
+  nextItem: ARCHITECTURE_UI.nextTopic,
+  sidebarNav: ARCHITECTURE_UI.sidebarNav,
+  sidebarItemLabel: ARCHITECTURE_UI.sidebarTopicLabel,
+  headerLink: ARCHITECTURE_UI.headerLink,
+  crossTo: ARCHITECTURE_UI.crossToArchitecture,
+  overallLabel: ARCHITECTURE_UI.overallLabel,
+  summaryText: ARCHITECTURE_UI.summaryText,
+  percentText: ARCHITECTURE_UI.percentText,
+  markDone: ARCHITECTURE_UI.markDone,
+  markedDone: ARCHITECTURE_UI.markedDone,
+  sidebarDone: ARCHITECTURE_UI.sidebarDone,
+  practiceEyebrow: ARCHITECTURE_UI.practiceEyebrow,
+  sidebarPracticeLabel: ARCHITECTURE_UI.sidebarPracticeLabel,
+  practiceSummaryText: ARCHITECTURE_UI.practiceSummaryText,
+  practiceLabel: ARCHITECTURE_UI.practiceLabel,
+};
+
+export const ARCHITECTURE = defineFlatModule({
+  id: "architecture",
+  label: "Architecture",
+  searchGroup: "architecture",
+  entries,
+  progress: { storageKey: "architecture-progress", extraIds: PRACTICE_IDS },
+  ui,
+});
+
+export const TOPICS: readonly ArchitectureTopic[] = ARCHITECTURE.pages;
+export const ARCHITECTURE_HOME = ARCHITECTURE.home;
+export const ARCHITECTURE_ROUTES: readonly string[] = ARCHITECTURE.routes;
+
+/** The localStorage key of the done topics and the done practice questions. */
+export const ARCHITECTURE_STORAGE_KEY = "architecture-progress";
+
+/** The progress ids of the lessons: their slugs. The practice page has no id of its own. */
+export const LESSON_IDS: readonly string[] = ARCHITECTURE.lessonIds;
+
+export const getTopic = ARCHITECTURE.get;
