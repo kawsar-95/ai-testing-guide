@@ -5,6 +5,7 @@ import { PAGES, getNeighbors, getPage } from "@/lib/nav";
 import { getOutline } from "@/lib/outline";
 import { editUrl } from "@/lib/page";
 import type { PageInfo } from "@/lib/page";
+import { ContentsButton } from "@/components/layout/ContentsButton";
 import { BackToTop } from "@/components/content/BackToTop";
 import { MetaLine } from "@/components/content/MetaLine";
 import { PageHeader } from "@/components/content/PageHeader";
@@ -48,6 +49,7 @@ export default async function ContentPage({ params }: PageProps<"/[group]/[page]
       <ReadingProgress />
       <div className="mx-auto w-full max-w-[728px] px-4 py-7 sm:px-6 sm:py-10 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
         <div className="min-w-0">
+          <ContentsButton />
           <PageHeader page={page} />
           <article data-content className="mdx">
             <Content

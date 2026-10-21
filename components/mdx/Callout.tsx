@@ -13,22 +13,22 @@ const ALIAS: Record<CalloutInput, CalloutType> = {
   error: "danger",
 };
 
-// Each type sets a 3px left border, an 8% tint, and the color of the icon.
+// Each type sets a 3px left border, a 10% tint over --bg-raised, and the color of the icon.
 const TYPE_CLASS: Record<CalloutType, { box: string; icon: string }> = {
   note: {
-    box: "border-l-accent bg-[color-mix(in_srgb,var(--accent)_8%,transparent)]",
+    box: "border-l-accent bg-[color-mix(in_srgb,var(--accent)_10%,var(--bg-raised))]",
     icon: "text-accent",
   },
   tip: {
-    box: "border-l-good bg-[color-mix(in_srgb,var(--good)_8%,transparent)]",
+    box: "border-l-good bg-[color-mix(in_srgb,var(--good)_10%,var(--bg-raised))]",
     icon: "text-good",
   },
   warning: {
-    box: "border-l-warn bg-[color-mix(in_srgb,var(--warn)_8%,transparent)]",
+    box: "border-l-warn bg-[color-mix(in_srgb,var(--warn)_10%,var(--bg-raised))]",
     icon: "text-warn",
   },
   danger: {
-    box: "border-l-danger bg-[color-mix(in_srgb,var(--danger)_8%,transparent)]",
+    box: "border-l-danger bg-[color-mix(in_srgb,var(--danger)_10%,var(--bg-raised))]",
     icon: "text-danger",
   },
 };
@@ -74,7 +74,7 @@ export function Callout({
   const style = TYPE_CLASS[kind];
   return (
     <div
-      className={`my-[18px] flex gap-3 rounded-[10px] border-l-[3px] px-[18px] py-3.5 text-sm ${style.box}`}
+      className={`my-[18px] flex gap-3 rounded-[10px] border-l-[3px] px-[18px] py-3.5 text-sm shadow-sm ${style.box}`}
     >
       <svg
         aria-hidden="true"

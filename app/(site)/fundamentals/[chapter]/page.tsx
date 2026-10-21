@@ -8,6 +8,7 @@ import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
 import { getOutline } from "@/lib/outline";
 import { editUrl } from "@/lib/page";
 import type { PageInfo } from "@/lib/page";
+import { ContentsButton } from "@/components/layout/ContentsButton";
 import { BackToTop } from "@/components/content/BackToTop";
 import { MetaLine } from "@/components/content/MetaLine";
 import { ReadingProgress } from "@/components/content/ReadingProgress";
@@ -87,6 +88,7 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
       <ReadingProgress />
       <div className="mx-auto w-full max-w-[728px] px-4 py-7 sm:px-6 sm:py-10 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
         <div className="min-w-0">
+          <ContentsButton />
           <p className={`mb-3 ${LABEL} text-accent`}>{FUNDAMENTALS_UI.chapterEyebrow(chapter.number)}</p>
           <div className="mb-6">
             <FundamentalsProgressSummary ids={ids} label={FUNDAMENTALS_UI.chapterProgressLabel(chapter.title)} />

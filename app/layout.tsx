@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Fraunces, Inter, JetBrains_Mono, Noto_Sans_Bengali } from "next/font/google";
+import { Crimson_Pro, Inter, JetBrains_Mono, Noto_Sans_Bengali } from "next/font/google";
 import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { DEFAULT_VERSION, VERSION_INIT_SCRIPT } from "@/lib/fundamentals/version";
@@ -9,12 +9,11 @@ import { INSTALL_CAPTURE_SCRIPT } from "@/lib/pwa-install";
 import { RegisterServiceWorker } from "@/components/layout/RegisterServiceWorker";
 import { GA_ID, OWNER, SITE_DESCRIPTION, SITE_NAME, SITE_SHORT_NAME, SITE_URL } from "@/lib/site";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const crimson = Crimson_Pro({
+  variable: "--font-crimson",
   subsets: ["latin"],
   display: "swap",
   style: ["normal", "italic"],
-  axes: ["opsz"],
 });
 
 const inter = Inter({
@@ -70,8 +69,8 @@ export const metadata: Metadata = {
 // The browser colors its title bar to match the page background (globals.css).
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0f1013" },
-    { media: "(prefers-color-scheme: light)", color: "#fbfaf7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e1115" },
+    { media: "(prefers-color-scheme: light)", color: "#faf7f2" },
   ],
 };
 
@@ -87,7 +86,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-fundamentals-version={DEFAULT_VERSION}
       data-voice-default="technical"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} ${notoBengali.variable} h-full antialiased`}
+      className={`${crimson.variable} ${inter.variable} ${jetbrainsMono.variable} ${notoBengali.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

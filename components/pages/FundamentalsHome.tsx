@@ -11,12 +11,12 @@ const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 /** The home page of the Fundamentals module: the overall progress and one section for each chapter. */
 export function FundamentalsHome() {
   return (
-    <div className="mx-auto max-w-4xl px-5 pt-7 pb-6 sm:px-8 sm:pt-11">
+    <div className="mx-auto max-w-4xl px-4 pt-10 pb-6 sm:px-6 sm:pt-14">
       <header className="max-w-3xl">
         <p className={`${LABEL} text-accent`}>
           {FUNDAMENTALS_UI.eyebrow(CHAPTERS.length, ALL_FUNDAMENTALS_TOPIC_IDS.length)}
         </p>
-        <h1 className="mt-3 font-display text-[clamp(2rem,6vw,3.25rem)] font-medium leading-[1.05] tracking-[-0.03em] text-balance text-text">
+        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
           {FUNDAMENTALS_UI.heading}
         </h1>
         <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">

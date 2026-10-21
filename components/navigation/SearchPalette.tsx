@@ -178,18 +178,18 @@ export function SearchPalette() {
         aria-expanded={open}
         aria-keyshortcuts="Control+K Meta+K"
         onClick={openPalette}
-        className="flex h-9 items-center gap-2 rounded-md border border-border bg-bg-raised/60 px-2.5 text-sm text-text-dim transition-colors hover:border-border-strong hover:text-text md:min-w-52"
+        className="flex h-9 items-center gap-2 rounded-lg border border-border bg-bg-raised px-2.5 text-sm text-text-dim transition-colors hover:border-border-strong hover:bg-bg-raised-2 hover:text-text md:min-w-52 nav:min-w-0 wide:min-w-52"
       >
         <svg aria-hidden="true" viewBox="0 0 20 20" className="size-4 shrink-0" fill="none">
           <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.6" />
           <path d="M13.2 13.2L17 17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
-        <span aria-hidden="true" className="hidden flex-1 text-left sm:inline">
+        <span aria-hidden="true" className="hidden flex-1 text-left sm:inline nav:hidden wide:inline">
           {search}
         </span>
         <kbd
           aria-hidden="true"
-          className="hidden rounded border border-border-strong px-1.5 py-0.5 font-mono text-[11px] leading-none text-text-faint sm:inline"
+          className="hidden rounded border border-border-strong px-1.5 py-0.5 font-mono text-[11px] leading-none text-text-faint sm:inline nav:hidden wide:inline"
         >
           {apple ? "⌘ K" : "Ctrl K"}
         </kbd>

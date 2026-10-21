@@ -40,7 +40,7 @@ export function ReadingProgress() {
   }, [pathname]);
 
   return (
-    <div aria-hidden="true" data-reading-progress className="pointer-events-none fixed inset-x-0 top-14 z-30 h-0.5">
+    <div aria-hidden="true" data-reading-progress className="pointer-events-none fixed inset-x-0 top-16 z-30 h-0.5">
       <div ref={bar} className="reading-progress-bar h-full w-0 bg-accent" />
     </div>
   );

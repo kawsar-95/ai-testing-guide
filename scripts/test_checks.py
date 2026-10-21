@@ -88,14 +88,16 @@ class RouteMapTest(unittest.TestCase):
 class LoadRoutesTest(unittest.TestCase):
     HERE = Path(__file__).resolve().parent
 
-    def test_load_routes_returns_tutorial_then_linux_then_system_design_then_fundamentals_then_architecture_routes(self):
+    def test_load_routes_returns_tutorial_then_linux_then_system_design_then_fundamentals_then_architecture_then_contents_routes(self):
         tutorial = list(json.loads((self.HERE / "route-map.json").read_text()).values())
         linux = list(json.loads((self.HERE / "linux-route-map.json").read_text()).values())
         system_design = list(json.loads((self.HERE / "system-design-route-map.json").read_text()).values())
         fundamentals = list(json.loads((self.HERE / "fundamentals-route-map.json").read_text()).values())
         architecture = list(json.loads((self.HERE / "architecture-route-map.json").read_text()).values())
+        contents = list(json.loads((self.HERE / "contents-route-map.json").read_text()).values())
         routes = check_routes.load_routes()
-        self.assertEqual(routes, tutorial + linux + system_design + fundamentals + architecture)
+        self.assertEqual(routes, tutorial + linux + system_design + fundamentals + architecture + contents)
+        self.assertIn("/contents/", routes)
         self.assertIn("/architecture/idempotency/", routes)
         self.assertIn("/system-design/kafka/", routes)
         self.assertIn("/getting-started/setup/", routes)

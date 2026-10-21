@@ -19,7 +19,7 @@ export function InfoCard({
 }) {
   const marker = tone ? TONE[tone] : null;
   return (
-    <section className={`rounded-xl border border-border bg-bg-raised p-4 ${marker?.border ?? ""}`}>
+    <section className={`rounded-2xl border border-border bg-bg-raised p-5 shadow-sm ${marker?.border ?? ""}`}>
       <p className="mb-2 text-base font-semibold text-text">
         {marker ? (
           <>

@@ -6,15 +6,17 @@ import { NavList } from "./NavList";
 import { withTrailingSlash } from "./SidebarList";
 import { scrollActiveIntoView } from "./scroll-active";
 import { lockScroll } from "@/lib/scroll-lock";
-import { menuClose, menuOpen } from "@/lib/ui";
+import { OPEN_NAV_EVENT, menuClose, menuOpen } from "@/lib/ui";
 import { SITE_NAME } from "@/lib/site";
 
 const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
- * The menu button and the left drawer for screens narrower than `lg`.
- * The drawer closes on navigation, on Escape, and on a backdrop click.
- * While it is open, the page does not scroll and Tab stays in the drawer.
+ * The menu button (narrower than 1200 px) and the left drawer with the pages
+ * of the current module. The drawer opens on every width: ContentsButton
+ * fires OPEN_NAV_EVENT. It closes on navigation, on Escape, and on a
+ * backdrop click. While it is open, the page does not scroll and Tab stays
+ * in the drawer.
  */
 export function MobileNav() {
   const pathname = usePathname();
@@ -35,9 +37,16 @@ export function MobileNav() {
   }
 
   useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_NAV_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_NAV_EVENT, onOpen);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
 
-    const button = buttonRef.current;
+    // The menu button or ContentsButton. Focus goes back to it on close.
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : buttonRef.current;
     const unlock = lockScroll();
     closeRef.current?.focus();
     scrollActiveIntoView(listRef.current);
@@ -62,31 +71,23 @@ export function MobileNav() {
       }
     }
 
-    // The drawer is not shown at `lg` and wider. Close it if the window grows.
-    const wide = window.matchMedia("(min-width: 64rem)");
-    function onWide(event: MediaQueryListEvent) {
-      if (event.matches) setOpen(false);
-    }
-
     document.addEventListener("keydown", onKeyDown);
-    wide.addEventListener("change", onWide);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      wide.removeEventListener("change", onWide);
       unlock();
-      button?.focus();
+      opener?.focus();
     };
   }, [open]);
 
   return (
-    <div className="lg:hidden">
+    <div>
       <button
         ref={buttonRef}
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen(true)}
-        className="-ml-2 grid size-9 place-items-center rounded-md text-text-dim transition-colors hover:bg-bg-raised hover:text-text"
+        className="grid size-9 place-items-center rounded-lg border border-border text-text-dim transition-colors hover:bg-bg-raised-2 hover:text-text nav:hidden"
       >
         <span className="sr-only">{menuOpen}</span>
         <svg aria-hidden="true" viewBox="0 0 20 20" className="size-5" fill="none">
@@ -123,7 +124,7 @@ export function MobileNav() {
             (open ? "translate-x-0" : "-translate-x-full")
           }
         >
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
             <span id={titleId} className="font-display text-[17px] font-semibold tracking-tight text-text">
               {SITE_NAME}
             </span>

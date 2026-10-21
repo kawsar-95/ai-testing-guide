@@ -29,7 +29,7 @@ export const searchAll = "Search all parts";
 export const searchClose = "Close search";
 export const searchResults = "Search results";
 export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, and the Architecture topics.`;
-/** The text of the link to the tutorial in the sidebar of another section. */
+/** The text of the link to the tutorial: in the drawer of another section, and in the top nav. */
 export const crossToTutorial = "Tutorial";
 export const searchLoading = "Loading the search index…";
 export const searchNone = "No results.";
@@ -52,3 +52,33 @@ export const voiceToBangla = "বাংলা – Show the Bangla text in every 
 export const voiceToTechnical = "English – Show the Technical text in every section";
 export const voiceGroup = "Text version";
 export const installApp = "Install this site as an app";
+
+/** The strings of the home page. */
+export const HOME_UI = {
+  eyebrow: "SOFTWARE TESTING WITH AI · 2026",
+  titleLine1: "Software Testing",
+  titleLine2Before: "with",
+  titleMark: "Claude AI",
+  sub: "A hands-on tutorial for QA engineers and SDETs: install Claude Code, learn how it works, configure and extend it, and automate testing in CI and the browser. Then follow one real QA project from a bug hunt to a second fix PR.",
+  startReading: "Start reading",
+  seeAll: "See all parts",
+  startHere: "START HERE",
+  step: (n: number) => `STEP ${n}`,
+  whyEyebrow: "WHY THIS GUIDE",
+  whyTitle: "Learn by doing, with sources",
+  whySub: "Short parts, real commands, and a source for each fact.",
+  courseEyebrow: "COURSE STRUCTURE",
+  courseTitle: "Six tutorial groups and four modules",
+  courseSub: "Read the tutorial in order, then open a module for Linux, testing fundamentals, system design, or architecture.",
+  cardCount: (n: number) => `${n} ${n === 1 ? "page" : "pages"}`,
+};
+
+export const footerColumns = { tutorial: "Tutorial", modules: "Modules", project: "Project" };
+export const footerContents = "Contents";
+export const footerSource = "Source on GitHub";
+
+export const contentsButton = "Contents";
+export const navMain = "Main";
+export const navModuleHome = (label: string) => `${label} home`;
+/** The window event that opens the drawer. ContentsButton fires it, MobileNav listens. */
+export const OPEN_NAV_EVENT = "nav-drawer-open";

@@ -42,7 +42,7 @@ export function VoiceToggle() {
       onClick={() => setVoiceDefault(def === "bangla" ? "technical" : "bangla")}
       aria-label={label}
       title={label}
-      className="grid h-9 shrink-0 place-items-center rounded-md border border-border bg-bg-raised/60 px-2.5 text-[13px] font-medium text-text-dim transition-colors hover:border-border-strong hover:text-text"
+      className="grid h-9 shrink-0 place-items-center rounded-lg border border-border bg-bg-raised px-2.5 text-[13px] font-medium text-text-dim transition-colors hover:border-border-strong hover:bg-bg-raised-2 hover:text-text"
     >
       <span lang="bn" className="voice-toggle-to-bangla">
         {VOICE_TOGGLE_TEXT.technical}
