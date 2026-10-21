@@ -60,7 +60,7 @@ export function InstallButton() {
       onClick={install}
       aria-label={installApp}
       title={installApp}
-      className="grid size-9 shrink-0 place-items-center rounded-md border border-border bg-bg-raised/60 text-text-dim transition-colors hover:border-border-strong hover:text-text"
+      className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-bg-raised text-text-dim transition-colors hover:border-border-strong hover:bg-bg-raised-2 hover:text-text"
     >
       <svg viewBox="0 0 20 20" className="size-[18px]" fill="none" aria-hidden="true">
         <path

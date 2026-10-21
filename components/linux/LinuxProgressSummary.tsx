@@ -19,7 +19,7 @@ export function LinuxProgressSummary({
   const value = percent(count, total);
   const text = LINUX_UI.summaryText(count, total - count);
   return (
-    <div className="rounded-[10px] border border-border bg-bg-raised px-5 py-4">
+    <div className="rounded-2xl border border-border bg-bg-raised shadow-sm px-5 py-4">
       <div className="flex items-baseline justify-between gap-4">
         <p data-progress-text className="font-mono text-[13px] text-text-dim">
           {text}

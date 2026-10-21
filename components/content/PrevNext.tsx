@@ -3,7 +3,7 @@ import type { NavPage } from "@/lib/nav";
 import { partLabel, prevNextNav } from "@/lib/ui";
 
 const CARD =
-  "group block rounded-2xl border border-border bg-bg-raised px-4 py-3.5 no-underline transition-colors hover:border-border-strong hover:bg-bg-raised-2";
+  "group block rounded-2xl border border-border bg-bg-raised px-5 py-4 no-underline shadow-sm transition-shadow hover:border-border-strong hover:shadow-md";
 
 /** Cards that link to the previous and the next part. */
 export function PrevNext({ prev, next }: { prev?: NavPage; next?: NavPage }) {
