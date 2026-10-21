@@ -1,0 +1,107 @@
+# Voice fact-check: Load Balancer (round 1, 2026-10-20)
+
+Page: `content/architecture/load-balancer.mdx`. I did not write this page.
+
+Method: I read the 5 `<Voices>` blocks. For each claim in a `<Layman>` or `<Bangla>` panel, I found the `<Technical>` sentence of the same `##` section that it restates. A claim that is not in the Technical panel, or that changes a number, a condition, or a scope, is a FAIL. An omission is not a FAIL. For each `<Cite n>` in a voice panel, I checked that the same source supports the same claim in the Technical panel and in `architecture-load-balancer.factcheck.md` (round 1, `Open FAILs: 0`). I read the Bangla text for meaning and for natural use, and I checked that common technical terms stay in English. The "Key words" section has no voices.
+
+Flagged items from the writer:
+
+- "user" for "client" (500-level error, Common mistakes): the meaning does not change. The source (S4) says "client". The Technical bullet itself says "users get errors" one bullet before. PASS, see row 52.
+- "high availability" gloss: the Layman and Bangla glosses repeat the Technical definition ("the system must stay usable when one server fails"). The Key words table has no row for this term. PASS, rows 30 and 36.
+- "downtime" gloss (Bangla only): "service না থামিয়েই" (without stopping the service) agrees with "deploy without downtime" and "without a break in the flow of requests". The Key words table has no row for this term. PASS, row 39.
+- "What a tester can check": the Layman and Bangla panels start with "the tutorial's own advice" and repeat the 6 ideas with no cites. PASS, rows 58 to 71.
+
+| # | Section | Voice | Claim (English gloss for Bangla) | Technical sentence (quoted) | Verdict | Language |
+|---|---|---|---|---|---|---|
+| 1 | In plain words | Layman | An LB receives the incoming requests and spreads them across several servers | "receives the incoming requests and spreads them across several backend servers" | PASS | – |
+| 2 | In plain words | Layman | AWS calls each server a "target" | "AWS calls these servers \"targets\"" | PASS | – |
+| 3 | In plain words | Layman | A target can be a virtual server, a container, or an IP address [1] | "A target can be a virtual server, a container, or an IP address [1]" | PASS | – |
+| 4 | In plain words | Layman | It checks target health and sends traffic only to healthy ones [1] | "watches the health of each target and sends traffic only to the healthy ones [1]" | PASS | – |
+| 5 | In plain words | Layman | The app becomes more available and more tolerant of failures [1] | "makes an application more available and more tolerant of failures [1]" | PASS | – |
+| 6 | In plain words | Layman | A rule picks the next server [3] | "uses a rule, called an algorithm, to pick the next server. NGINX ... supports these methods [3]" | PASS (drops "NGINX supports these methods"; an omission, and row 7 still names NGINX) | – |
+| 7 | In plain words | Layman | Round Robin: the servers get the requests one after the other; NGINX default | "The requests go evenly across the servers, one after the other. This is the NGINX default [3]." | PASS ("evenly" omitted) | – |
+| 8 | In plain words | Layman | Least Connections: the server with the fewest active connections gets the request | "The request goes to the server with the fewest active connections [3]." | PASS | – |
+| 9 | In plain words | Layman | IP Hash: the sender's IP address picks the server; same address, same server, if that server is available | "The client's IP address picks the server. So requests from the same address go to the same server, unless that server is not available [3]." | PASS ("if available" = "unless not available") | – |
+| 10 | In plain words | Layman | "On the AWS Application Load Balancer, a health check is a test request to each server, about every 30 seconds by default." | "The AWS Application Load Balancer sends a test request to each server about every 30 seconds by default [2]." | FAIL→fixed: was "On AWS, ..." (the scope changed from the Application Load Balancer to all of AWS). Now "On the AWS Application Load Balancer, a health check is a test request to each server, about every 30 seconds by default." This matches the Technical scope and number. | – |
+| 11 | In plain words | Layman | By default, 2 failed checks in a row make a server unhealthy, 5 good checks make it healthy [2] | "By default, 2 failed checks in a row make a server \"unhealthy\", and 5 good checks in a row make it \"healthy\" again [2]." | PASS (same numbers) | – |
+| 12 | In plain words | Layman | If all servers in a group are unhealthy, AWS sends requests to all of them [2] | "If all the servers in a group are unhealthy, the AWS load balancer sends requests to all of them anyway [2]." | PASS | – |
+| 13 | In plain words | Bangla | An LB is a component that receives incoming requests and divides them among several backend servers | "a component that receives the incoming requests and spreads them across several backend servers" | PASS | OK (fixed: "request-গুলো", "server-গুলোকে") |
+| 14 | In plain words | Bangla | AWS calls these servers "target" | "AWS calls these servers \"targets\"" | PASS | OK |
+| 15 | In plain words | Bangla | A target can be a virtual server, a container, or an IP address [1] | "A target can be a virtual server, a container, or an IP address [1]" | PASS | OK |
+| 16 | In plain words | Bangla | The LB watches each target's health and sends traffic only to healthy targets [1] | "watches the health of each target and sends traffic only to the healthy ones [1]" | PASS | OK |
+| 17 | In plain words | Bangla | The application stays more available and handles failure better [1] | "makes an application more available and more tolerant of failures [1]" | PASS | OK |
+| 18 | In plain words | Bangla | The LB can decrypt `https` traffic (TLS termination), so the app server need not do it [1] | "the load balancer ends the encrypted connection and decrypts the requests, so the app servers do not have to [1]" | PASS | OK |
+| 19 | In plain words | Bangla | It can send requests to different server groups by content such as the URL path [5] | "Sends requests to different server groups based on the content, for example the URL path [5]" | PASS | OK |
+| 20 | In plain words | Bangla | It can give a leaving server's open requests time to finish (draining; on AWS up to 300 s by default) [4] | "gives its open requests time to finish (on AWS, up to 300 seconds by default) [4]" | PASS (same number and condition; "stops new requests" omitted) | OK |
+| 21 | In plain words | Bangla | The LB uses a rule, that is, an algorithm, to pick the next server [3] | "uses a rule, called an algorithm, to pick the next server ... [3]" | PASS | OK |
+| 22 | In plain words | Bangla | Round Robin: requests go evenly to the servers one after the other; NGINX default | "The requests go evenly across the servers, one after the other. This is the NGINX default [3]." | PASS | OK |
+| 23 | In plain words | Bangla | Least Connections: the request goes to the server with the fewest active connections | "The request goes to the server with the fewest active connections [3]." | PASS | OK |
+| 24 | In plain words | Bangla | IP Hash: the client's IP address sets the server; same address, same server, unless that server is unavailable | "The client's IP address picks the server. So requests from the same address go to the same server, unless that server is not available [3]." | PASS | OK |
+| 25 | In plain words | Bangla | The AWS Application Load Balancer sends a test request to each server about every 30 s by default | "The AWS Application Load Balancer sends a test request to each server about every 30 seconds by default [2]." | PASS (no cite on this sentence; the [2] on the next sentence covers the same source) | OK |
+| 26 | In plain words | Bangla | By default, 2 failed checks in a row → unhealthy; 5 good checks in a row → healthy again [2] | "By default, 2 failed checks in a row make a server \"unhealthy\", and 5 good checks in a row make it \"healthy\" again [2]." | PASS | OK |
+| 27 | In plain words | Bangla | So a broken server can get traffic until it fails 2 checks in a row | "So a server that breaks can still get traffic until it fails 2 checks in a row." | PASS | OK ("নষ্ট server" is natural) |
+| 28 | In plain words | Bangla | Special case: if all servers in a group are unhealthy, the AWS LB still sends requests to all of them [2] | "If all the servers in a group are unhealthy, the AWS load balancer sends requests to all of them anyway [2]." | PASS | OK |
+| 29 | When you need it | Layman | You run more than one app server (link) | "You run more than one app server. See [Horizontal Scaling]" | PASS | – |
+| 30 | When you need it | Layman | The system must stay usable when one server fails; this is called high availability | "You need high availability: the system must stay usable when one server fails." | PASS (gloss = Technical definition) | – |
+| 31 | When you need it | Layman | You want to stop the traffic to servers that are not healthy | "You want to stop sending traffic to unhealthy servers." | PASS | – |
+| 32 | When you need it | Layman | You want to spread the traffic evenly | "You want the traffic spread evenly across the servers." | PASS | – |
+| 33 | When you need it | Layman | Deploy a new version with no downtime; add and remove servers and requests flow with no break [1] | "You want to deploy without downtime. You can add and remove servers without a break in the flow of requests [1]." | PASS ("a new version" makes "deploy" explicit; no new fact. S1: "without disrupting the overall flow of requests") | – |
+| 34 | When you need it | Bangla | If any one of the cases below matches your system, you need an LB | Heading "When you need it" and the list of cases | PASS (restates the heading) | OK |
+| 35 | When you need it | Bangla | You run more than one app server; see the Horizontal Scaling page | "You run more than one app server. See [Horizontal Scaling]" | PASS | OK |
+| 36 | When you need it | Bangla | You need high availability, that is, the whole system must stay usable when one server fails | "You need high availability: the system must stay usable when one server fails." | PASS (gloss = Technical definition) | OK |
+| 37 | When you need it | Bangla | You want to stop sending traffic to unhealthy servers | "You want to stop sending traffic to unhealthy servers." | PASS | OK |
+| 38 | When you need it | Bangla | You want traffic divided evenly among all servers | "You want the traffic spread evenly across the servers." | PASS | OK |
+| 39 | When you need it | Bangla | Deploy a new version without downtime, that is, without stopping the service; with an LB you add or remove servers without stopping the flow of requests [1] | "You want to deploy without downtime. You can add and remove servers without a break in the flow of requests [1]." | PASS (downtime gloss agrees) | OK |
+| 40 | A real-life example | Layman | The LMS runs on 3 app servers; App Server 3 has a memory problem and stops answering | "The LMS runs on three app servers. App Server 3 has a memory problem, and it stops answering." | PASS | – |
+| 41 | A real-life example | Layman | The LB sends its regular health check; App Server 3 fails; the LB marks it unhealthy and stops traffic to it | "sends its regular health check, and App Server 3 fails it. The load balancer marks App Server 3 as unhealthy and stops sending traffic to it." | PASS | – |
+| 42 | A real-life example | Layman | Students continue through App Servers 1 and 2 | "Students continue to use the LMS through App Server 1 and App Server 2." | PASS | – |
+| 43 | A real-life example | Layman | The team restarts App Server 3; it passes the checks; the LB sends it traffic again | "After the team restarts App Server 3, it passes the health checks again, and the load balancer sends it traffic again." | PASS | – |
+| 44 | A real-life example | Bangla | Suppose the LMS runs on 3 app servers; App Server 3 has a memory problem, so it does not respond | "The LMS runs on three app servers. App Server 3 has a memory problem, and it stops answering." | PASS | OK |
+| 45 | A real-life example | Bangla | The LB sends its regular health check; App Server 3 fails; the LB marks it unhealthy and stops traffic to it | "sends its regular health check, and App Server 3 fails it. The load balancer marks App Server 3 as unhealthy and stops sending traffic to it." | PASS | OK |
+| 46 | A real-life example | Bangla | Students continue to use the LMS through App Servers 1 and 2 | "Students continue to use the LMS through App Server 1 and App Server 2." | PASS | OK |
+| 47 | A real-life example | Bangla | The team restarts App Server 3; it passes the health check; the LB starts sending traffic again | "After the team restarts App Server 3, it passes the health checks again, and the load balancer sends it traffic again." | PASS | OK |
+| 48 | Common mistakes | Layman | `/health` can always return `200 OK`, also when the server cannot reach the database; users get errors from a server that looks healthy | "A `/health` endpoint that always returns `200 OK` can pass while the server cannot reach the database. Then users get errors from a \"healthy\" server." | PASS | – |
+| 49 | Common mistakes | Layman | If the check calls every service the server needs, one slow service can make all servers unhealthy at the same time | "If the check calls every dependency, one slow service can mark all servers unhealthy at the same time." | PASS ("every service that the server needs" = "every dependency") | – |
+| 50 | Common mistakes | Layman | On AWS, draining gives open requests time to finish, up to 300 s by default [4] | "During draining, the AWS load balancer gives the open requests time to finish, up to 300 seconds by default [4]." | PASS | – |
+| 51 | Common mistakes | Layman | The deploy stops a server too early (heading) | "The deploy kills a server too early." | PASS | – |
+| 52 | Common mistakes | Layman | If the server closes the connection before the drain ends, the user gets a 500-level error [4] | "If the server closes the connection before the drain ends, the client gets a 500-level error [4]." | PASS ("user" for "client": the user sees the error through the client; no change in number or condition. S4 supports the claim.) | – |
+| 53 | Common mistakes | Layman | A sticky session ties a user's session to one server [4]; it hides the real problem | "A sticky session ties a user's session to one server [4]. This hides the real problem." | PASS | – |
+| 54 | Common mistakes | Layman | Your own single LB becomes a new single point of failure | "If you run your own single load balancer, it is a new single point of failure." | PASS | – |
+| 55 | Common mistakes | Bangla | `/health` can always give `200 OK`, even when the server cannot reach the database; users get errors from a "healthy" server | "A `/health` endpoint that always returns `200 OK` can pass while the server cannot reach the database. Then users get errors from a \"healthy\" server." | PASS | OK |
+| 56 | Common mistakes | Bangla | If the check calls every dependency, one slow service can make all servers unhealthy at the same time | "If the check calls every dependency, one slow service can mark all servers unhealthy at the same time." | PASS | OK |
+| 57 | Common mistakes | Bangla | During draining, the AWS LB gives open requests time to finish, up to 300 s by default [4]; if the server closes the connection first, the client gets a 500-level error [4] | "During draining, the AWS load balancer gives the open requests time to finish, up to 300 seconds by default [4]. If the server closes the connection before the drain ends, the client gets a 500-level error [4]." | PASS | OK |
+| 58 | Common mistakes | Bangla | A sticky session binds a user's session to one server [4]; the real problem is hidden; see Stateless Service | "A sticky session ties a user's session to one server [4]. This hides the real problem. See [Stateless Service]" | PASS | OK |
+| 59 | Common mistakes | Bangla | If you run only your own single LB, it becomes a new single point of failure | "If you run your own single load balancer, it is a new single point of failure." | PASS | OK |
+| 60 | What a tester can check | Layman | These test ideas are the tutorial's own advice | "These test ideas are the tutorial's own advice." | PASS | – |
+| 61 | What a tester can check | Layman | Server down: stop one server in a load test; measure the time until errors stop; compare with the interval and the number of failed checks | "Stop one app server during a load test. Measure how long until the errors stop, and compare it with the health check interval and the failure count." | PASS | – |
+| 62 | What a tester can check | Layman | Server back: it gets traffic only after it passes the health checks | "Check that it gets traffic again only after it passes the health checks." | PASS | – |
+| 63 | What a tester can check | Layman | Honest health check: break the DB connection; its check fails and the LB removes it | "Break the database connection of one server. Check that its health check fails and that the load balancer removes it." | PASS | – |
+| 64 | What a tester can check | Layman | Spread of traffic: count responses per server from logs or a header; compare with the algorithm | "Send many requests and count the responses per server, from logs or a response header. Compare the count with the algorithm." | PASS | – |
+| 65 | What a tester can check | Layman | Deploy under load: look for 5xx errors when each server is removed | "Deploy a new version while a load test runs. Look for 5xx errors at the moment each server is removed." | PASS | – |
+| 66 | What a tester can check | Layman | All servers sick: in a test environment, make every server fail; write down what users see | "In a test environment, make every server fail its health check. Write down what users see." | PASS | – |
+| 67 | What a tester can check | Bangla | These test ideas are the tutorial's own advice | "These test ideas are the tutorial's own advice." | PASS | OK |
+| 68 | What a tester can check | Bangla | Server down: stop one server in a load test; measure the time until errors stop; compare with the interval and the failure count | "Stop one app server during a load test. Measure how long until the errors stop, and compare it with the health check interval and the failure count." | PASS | OK |
+| 69 | What a tester can check | Bangla | Server back: check whether it gets traffic again only after it passes the health check | "Check that it gets traffic again only after it passes the health checks." | PASS | OK |
+| 70 | What a tester can check | Bangla | Honest health check: break one server's DB connection; check whether its check fails and the LB removes it | "Break the database connection of one server. Check that its health check fails and that the load balancer removes it." | PASS | OK (fixed: "সৎ health check" → "সঠিক health check"; the body is unchanged, so the meaning is the same) |
+| 71 | What a tester can check | Bangla | Spread of traffic, deploy under load, all servers sick: same steps as Technical | "Send many requests and count the responses per server ..." / "Deploy a new version while a load test runs. Look for 5xx errors ..." / "make every server fail its health check. Write down what users see." | PASS | OK |
+
+## FAIL (round 1, now fixed)
+
+- Row 10 (In plain words, Layman). Text: "On AWS, a health check is a test request to each server, about every 30 seconds by default." The Technical sentence and S2 are about the AWS Application Load Balancer only. "On AWS" widens the scope to all AWS load balancers, which can have other defaults. Suggested text: "On the AWS Application Load Balancer, a health check is a test request to each server, about every 30 seconds by default."
+
+## Language notes (not FAILs)
+
+- Bangla, all sections: the page writes "request গুলো", "server গুলোকে" with a space, but "server-এর", "target-এ" with a hyphen. For consistency, write "request-গুলো", "server-গুলোকে".
+- Row 70: "সৎ health check" → "সঠিক health check" reads more naturally.
+- The Bangla keeps the common technical terms in English (load balancer, target, health check, traffic, algorithm, draining, sticky session, single point of failure, high availability, downtime, TLS termination). Good.
+
+## Recheck 2026-10-20
+
+I read the diff of commit `ebe69f7` (`git diff HEAD~1`). It changes only 6 voice-panel lines: 67, 72, 74, 76, 178, and 220.
+
+- Row 10 (line 67): the Layman sentence now names the AWS Application Load Balancer. This is the same scope and the same 30 s default as the Technical sentence and S2. FAIL→fixed.
+- Lines 72, 74, 76, 178: only the space before "গুলো" changed to a hyphen ("request-গুলো", "server-গুলোকে"). The words and the meaning stay the same. No new problem.
+- Line 220: "সঠিক health check" (correct health check) is a heading label. The steps under it did not change. No new problem.
+- Bangla line 78 already named the AWS Application Load Balancer. It did not need a change.
+
+Open FAILs: 0

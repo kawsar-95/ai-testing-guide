@@ -32,6 +32,9 @@ These 30 questions are like the practice drills before a driving test. Reading a
 
 ## Basics
 
+<Voices>
+<Technical>
+
 <PracticeQuestion n={1} topic="single-server" question="Design a simple LMS for 500 students. Which components will you use?">
 
 For 500 students, keep it simple. One server (a VPS) can run:
@@ -86,7 +89,93 @@ Store uploaded files in object storage, not on the local disk.
 
 </PracticeQuestion>
 
+</Technical>
+<Layman>
+
+**1. Design a simple LMS for 500 students. Which components will you use?**
+
+One server (a VPS) runs a web server such as Nginx, the backend app (login, courses, enrollment, payment), and one database such as MySQL or PostgreSQL. Keep course files and certificates in object storage from day one, so a lost server does not lose them. Add logs, daily backups, and basic monitoring of CPU, RAM, and disk. Payment and email or SMS are external services. Add no microservices, many servers, or cache before you measure a real need.
+
+**2. What are the limitations of Single Server Architecture?**
+
+- If the one server stops, everything stops.
+- CPU, RAM, disk, and network have a fixed size. A spike, such as admission day, can fill them.
+- The app, database, and downloads share one CPU and disk, so one heavy report can slow login.
+- A deploy or restart stops the whole service.
+- Files and database on one disk with no backup can all be lost in one disk failure.
+
+**3. When should you use Vertical Scaling and when should you use Horizontal Scaling?**
+
+Use vertical scaling (a bigger server) first when the bottleneck is clear, such as CPU or RAM, and traffic growth is moderate. It is fast and needs no code change, but it has an upper limit and is still a single point of failure.
+
+Use horizontal scaling (more servers) when one server cannot handle the traffic, or the service must survive a server failure. It also allows zero-downtime deploys. It needs a load balancer and a stateless app (sessions in Redis or tokens, files in object storage). The database can still be the bottleneck.
+
+**4. What does a Load Balancer do? Why is health check important?**
+
+A load balancer spreads incoming requests across many servers. It can also do the HTTPS encryption and decryption work for them.
+
+A health check regularly tests each server (for example, a call to `/health`). The load balancer then sends requests only to healthy servers. Without it, users go to a crashed or stuck server and get errors. A good check tests what the app needs, such as the database connection, not only a running process.
+
+**5. What is a Stateless Service? Where should session data be stored?**
+
+It keeps no important user state in the memory or local disk of one app server, so any server can handle any request.
+
+Keep session data where all servers can reach it: Redis or another shared cache with an expiry time, the database for data that must last, or a signed token (JWT) that the client sends with each request. Keep uploaded files in object storage, not on a local disk.
+
+</Layman>
+<Bangla>
+
+**1. 500 জন student-এর জন্য একটি সহজ LMS design করুন। কোন কোন component ব্যবহার করবেন?**
+
+500 জন student-এর জন্য design সহজ রাখুন। একটি server (একটি VPS) এগুলো চালাতে পারে:
+
+- App-এর সামনে Nginx-এর মতো একটি web server।
+- Login, course, enrollment আর payment-এর জন্য backend application।
+- MySQL বা PostgreSQL-এর মতো একটি database।
+- Course file আর certificate-এর জন্য file storage। প্রথম দিন থেকেই object storage ভালো পছন্দ, যাতে server-এর সাথে file হারিয়ে না যায়।
+- Log, প্রতিদিনের backup, আর CPU, RAM ও disk-এর basic monitoring।
+
+Payment gateway আর email বা SMS provider external service হিসেবে যোগ করুন। আসল প্রয়োজন measure করার আগে microservices, অনেক server বা cache যোগ করবেন না।
+
+**2. Single Server Architecture-এর সীমাবদ্ধতা কী কী?**
+
+- **Single point of failure।** Server বন্ধ হলে পুরো system বন্ধ হয়ে যায়।
+- **সীমিত capacity।** CPU, RAM, disk আর network-এর size নির্দিষ্ট। Admission day-এর মতো traffic spike এগুলো ভরে ফেলতে পারে।
+- **ভাগ করা resource।** App, database আর file download একই CPU আর disk ব্যবহার করে। একটি ভারী report login ধীর করে দিতে পারে।
+- **ঝুঁকিপূর্ণ update।** একটি deploy বা restart পুরো service থামিয়ে দেয়।
+- **Data-র ঝুঁকি।** File আর database একই disk-এ থাকলে এবং backup না থাকলে, একটি disk failure-এ সব হারাতে পারে।
+
+**3. কখন Vertical Scaling আর কখন Horizontal Scaling ব্যবহার করবেন?**
+
+Bottleneck স্পষ্ট হলে (যেমন CPU বা RAM) এবং traffic মাঝারি হারে বাড়লে, আগে **vertical scaling** (বড় server) ব্যবহার করুন। এটি দ্রুত, আর code বদলাতে হয় না। কিন্তু এর একটি উপরের সীমা আছে, আর server তখনও single point of failure।
+
+একটি server traffic সামলাতে না পারলে, অথবা একটি server fail করলেও service চালু রাখতে হলে, **horizontal scaling** (বেশি server) ব্যবহার করুন। এতে downtime ছাড়া deploy করা যায়। এর জন্য একটি load balancer আর একটি stateless app লাগে: session থাকবে Redis-এ বা token-এ, আর file থাকবে object storage-এ। মনে রাখুন, database তখনও bottleneck হতে পারে।
+
+**4. Load Balancer কী করে? Health check কেন গুরুত্বপূর্ণ?**
+
+Load balancer আসা request-গুলো গ্রহণ করে এবং অনেক server-এর মধ্যে ভাগ করে দেয় <Cite n={1} />। এটি server-এর কাছ থেকে encryption আর decryption (HTTPS)-এর কাজও নিজে নিতে পারে <Cite n={1} />।
+
+Health check হলো প্রতিটি server-এর নিয়মিত test, যেমন `/health`-এ একটি call। Load balancer এটি দেখে শুধু healthy server-এ request পাঠায় <Cite n={1} />। Health check না থাকলে load balancer crash করা বা আটকে থাকা server-এ user পাঠাতে থাকে, আর সেই user-রা error পান। একটি ভালো health check app-এর আসল প্রয়োজন test করে, যেমন database connection; শুধু "process চলছে" দেখে না।
+
+**5. Stateless Service কী? Session data কোথায় রাখা উচিত?**
+
+Stateless service কোনো একটি app server-এর memory বা local disk-এ গুরুত্বপূর্ণ user state রাখে না। তাই যেকোনো request যেকোনো server-এ গেলেও কাজ করে।
+
+Session data এমন একটি shared জায়গায় রাখুন, যেখানে সব server পৌঁছাতে পারে:
+
+- **Redis** বা অন্য কোনো shared cache, expiry time সহ। Timeout শেষ হলে Redis নিজেই key মুছে দেয় <Cite n={2} />।
+- **Database**, যে data দীর্ঘদিন রাখতে হবে তার জন্য।
+- **একটি signed token (JWT)**, যা client প্রতিটি request-এর সাথে পাঠায়।
+
+Upload করা file local disk-এ নয়, object storage-এ রাখুন।
+
+</Bangla>
+</Voices>
+
 ## Caching, CDN, and databases
+
+<Voices>
+<Technical>
 
 <PracticeQuestion n={6} topic="caching" question="How would you optimize a course list page that gets thousands of hits?">
 
@@ -152,7 +241,115 @@ Replication lag is the delay before a change on the primary reaches a replica. F
 
 </PracticeQuestion>
 
+</Technical>
+<Layman>
+
+**6. How would you optimize a course list page that gets thousands of hits?**
+
+The list is read often and changes rarely, so cache it:
+
+- Keep it in Redis with a TTL (expiry time), such as 10 min.
+- Clear the key when an admin changes a course.
+- Serve images, CSS, and JavaScript from a CDN.
+- Add pagination, so one request does not load all courses.
+- Add the right index, and select only the fields the page needs.
+
+Measure p95 latency and database load before and after.
+
+**7. What is the cache invalidation problem? What will you do when course price is updated?**
+
+The cache does not know when the database changes. Users can see old cached data until it expires, unless you remove or update it.
+
+For a price change, write the new price to the database. Then delete (or update) every cache key with it, such as the course detail and list. Keep a TTL as a safety net. At checkout, read the price from the database: a wrong price at payment costs real money.
+
+**8. When should you use CDN? How can private video delivery be secured?**
+
+Use a CDN for static files that many users ask for: images, videos, CSS, JavaScript, fonts, and PDFs. It helps most when users are far away, or when static traffic overloads the backend.
+
+For private videos:
+
+- Keep the files in a private bucket.
+- Give each paying user a short-lived signed URL or signed cookie. Amazon CloudFront supports both.
+- Send users through the CDN, not to the origin, so they cannot skip the signed URL rules.
+- Make the signed URL only after the backend confirms enrollment.
+
+**9. What will you do if database read load becomes high?**
+
+First, find slow and frequent queries, add indexes, and fix the worst ones. Then cache popular data, such as the course list, in Redis. Send reads to read replicas (read-only copies of the database) to take load off the primary. Run reports and analytics on a replica, so payments and enrollments stay fast. Keep writes and reads that must be fresh on the primary.
+
+**10. How will you handle replication lag when using read replicas?**
+
+Replication lag is the delay before a change on the primary reaches a replica. Amazon RDS copies updates to replicas asynchronously, so a replica can give old data for a short time.
+
+- After a payment, read its status from the primary.
+- Show "Processing" while the change spreads, not a wrong "Unpaid".
+- Send only non-critical reads, such as reports and course lists, to replicas.
+- Alert on high lag. Stop reads to a replica that is far behind.
+
+</Layman>
+<Bangla>
+
+**6. হাজার হাজার hit পাওয়া একটি course list page কীভাবে optimize করবেন?**
+
+Course list খুব বেশি পড়া হয়, কিন্তু কম বদলায়, তাই এটি cache করার ভালো candidate।
+
+- List-টি Redis-এ একটি TTL (expiry time) দিয়ে cache করুন, যেমন 10 min। Timeout শেষ হলে Redis নিজেই key মুছে দেয় <Cite n={2} />।
+- Admin কোনো course বদলালে cache key মুছে দিন।
+- Course-এর image, CSS আর JavaScript CDN থেকে serve করুন।
+- Pagination যোগ করুন, যাতে একটি request সব course load না করে।
+- Database query দেখুন: ঠিক index যোগ করুন, আর page-এর যে field লাগে শুধু সেগুলো select করুন।
+
+তারপর আগে ও পরে p95 latency আর database load measure করুন।
+
+**7. Cache invalidation সমস্যা কী? Course-এর দাম update হলে কী করবেন?**
+
+Cache invalidation মানে আসল data বদলালে cache থেকে পুরোনো data মুছে ফেলা বা update করা। সমস্যা হলো, database বদলেছে কি না cache নিজে থেকে জানে না। তাই cache করা copy expire হওয়া পর্যন্ত user পুরোনো data দেখতে পারেন।
+
+Admin কোনো course-এর দাম update করলে:
+
+1. নতুন দাম database-এ লিখুন।
+2. যে cache key-গুলোতে এই দাম আছে, যেমন course detail আর course list, সেগুলো মুছুন (বা update করুন)।
+3. Safety net হিসেবে এই key-গুলোতে একটি TTL রাখুন। Expire হওয়া key Redis নিজেই মুছে দেয় <Cite n={2} />।
+
+Checkout-এর সময় দাম সবসময় database থেকে পড়ুন, cache থেকে নয়। Payment-এর সময় ভুল দাম মানে আসল টাকার সমস্যা।
+
+**8. কখন CDN ব্যবহার করবেন? Private video delivery কীভাবে secure করবেন?**
+
+অনেক user যে static file চান, সেগুলোর জন্য CDN ব্যবহার করুন: image, video, CSS, JavaScript, font আর PDF। User server থেকে দূরে থাকলে, অথবা static traffic backend-কে overload করলে, CDN সবচেয়ে কাজে আসে।
+
+Private video secure করতে:
+
+- File-গুলো একটি private bucket-এ রাখুন। Public করবেন না।
+- প্রতিটি paying user-কে অল্প সময়ের একটি signed URL বা signed cookie দিন। Amazon CloudFront private content-এর জন্য দুটিই support করে <Cite n={4} />।
+- User-দের CDN দিয়ে আসতে বাধ্য করুন, সরাসরি origin-এ নয়। AWS এটি recommend করে, যাতে user signed URL-এর নিয়ম এড়িয়ে যেতে না পারেন <Cite n={4} />।
+- Backend user enrolled কি না check করার পরেই signed URL তৈরি করুন।
+
+**9. Database-এর read load বেশি হয়ে গেলে কী করবেন?**
+
+প্রথমে ধীর আর ঘন ঘন চলা query-গুলো খুঁজুন। Index যোগ করুন এবং সবচেয়ে খারাপ query-গুলো ঠিক করুন। তারপর read কমান:
+
+- অনেক user যে data পড়েন, যেমন course list, সেটি Redis-এ **cache** করুন।
+- **Read replica যোগ করুন।** Read replica হলো database-এর একটি read-only copy। Primary database-এর load কমাতে read query-গুলো এতে পাঠান <Cite n={5} />।
+- **Report আর analytics** একটি replica-তে সরান, যাতে এগুলো payment আর enrollment ধীর না করে।
+
+Write, আর যে read-এ fresh data লাগে, সেগুলো primary database-এ রাখুন।
+
+**10. Read replica ব্যবহার করার সময় replication lag কীভাবে সামলাবেন?**
+
+Replication lag হলো primary-তে একটি পরিবর্তন replica-তে পৌঁছানোর আগের দেরি। যেমন, Amazon RDS read replica-তে update asynchronously copy করে <Cite n={5} />। তাই অল্প সময়ের জন্য একটি replica stale (পুরোনো) data দিতে পারে।
+
+- **নিজের write primary থেকে পড়ুন।** Payment-এর ঠিক পরে payment status primary database থেকে পড়ুন।
+- পরিবর্তন ছড়ানোর সময় ভুল "Unpaid" না দেখিয়ে **একটি "Processing" state দেখান**।
+- **শুধু non-critical read replica-তে পাঠান**, যেমন report আর course list।
+- **Lag monitor করুন** এবং বেশি হলে alert দিন। অনেক পিছিয়ে থাকা replica-তে read পাঠানো বন্ধ করুন।
+
+</Bangla>
+</Voices>
+
 ## Reliability and async work
+
+<Voices>
+<Technical>
 
 <PracticeQuestion n={11} topic="idempotency" question="How will you prevent duplicate payment gateway callbacks?">
 
@@ -219,7 +416,100 @@ Keep the counters in Redis, so all servers share them. When the limit is passed,
 
 </PracticeQuestion>
 
+</Technical>
+<Layman>
+
+**11. How will you prevent duplicate payment gateway callbacks?**
+
+Expect duplicates: Stripe says one event can arrive more than once. Make the gateway's `transaction_id` unique in the database, and skip processed event IDs. If the order is already "paid", stop. Return a quick `2xx` for duplicates too. After an error code, Stripe retries for up to three days in live mode. Do slow work in a queue job that is safe to repeat.
+
+**12. Certificate generation takes one minute. Should it be synchronous or asynchronous? Why?**
+
+Asynchronous. A one-minute request can time out, and a second click can start a second job. The API queues a job and at once returns "Processing" with a job ID. A worker makes and stores the PDF, then sends an email. A retry must not make two certificates.
+
+**13. What happens if a queue worker fails?**
+
+In Amazon SQS, a worker deletes a message after the job. If it crashes first, the message comes back after its visibility timeout for another worker. The job is not lost but can run again, and SQS can deliver a message more than once. Make jobs idempotent (safe to repeat), set a retry limit with a dead letter queue, run several workers, and alert when none runs or the queue keeps growing.
+
+**14. Why do we need a Dead Letter Queue?**
+
+Some messages always fail, for example from bad data. Endless retries waste work and can block other jobs. A dead letter queue (DLQ) keeps failed messages for the team to study. In Amazon SQS, `maxReceiveCount` sets how many receives come before the move to the DLQ. Monitor it: a new message there is often a bug.
+
+**15. How will you design login flow if the external SMS service is slow?**
+
+Login must not wait for SMS. The API makes the OTP, stores it in Redis with a short expiry, queues a "send SMS" job, and at once says "We are sending your code." A worker sends the SMS with a strict timeout and limited retries. If the provider fails often, use a second provider or offer email. Also rate limit OTPs, and alert on SMS send time and failures.
+
+**16. How will you rate limit an OTP login endpoint?**
+
+Use more than one key, because one is easy to get around:
+
+- Phone number: for example, at most 3 OTP requests in 5 min.
+- IP address: for example, at most 10 requests in 10 min. Not IP alone, because real users can share one IP.
+- Phone number for verify attempts: lock the OTP after a few wrong codes.
+
+Share the counters in Redis. Over the limit, return `429 Too Many Requests`, maybe with a `Retry-After` header.
+
+</Layman>
+<Bangla>
+
+**11. Payment gateway-এর duplicate callback কীভাবে আটকাবেন?**
+
+Duplicate আসবে, ধরে নিন। যেমন, Stripe বলে একটি webhook endpoint একই event একাধিকবার পেতে পারে <Cite n={6} />।
+
+- Database-এ gateway-এর `transaction_id` (বা event ID) একটি unique constraint দিয়ে unique করুন।
+- Process করা event ID-গুলো record করুন, আর আগে process করা event skip করুন <Cite n={6} />।
+- আগে status check করুন। Order আগেই "paid" হলে আর কিছু করবেন না।
+- Duplicate-এর জন্যও success code দিন। ধীর কাজের আগেই দ্রুত `2xx` দিন <Cite n={6} />। Error (non-`2xx`) দিলে Stripe event আবার পাঠায় <Cite n={6} />; live mode-এ তিন দিন পর্যন্ত retry করে <Cite n={6} />।
+- ধীর কাজ (email, certificate) এমন queue job-এ করুন, যা দুবার চললেও নিরাপদ।
+
+**12. Certificate তৈরিতে এক মিনিট লাগে। এটি synchronous হবে নাকি asynchronous? কেন?**
+
+Asynchronous। এক মিনিট একটি HTTP request খোলা রাখার জন্য অনেক বেশি সময়। Browser, load balancer বা gateway time out হতে পারে, আর user আবার click করে দ্বিতীয় job শুরু করতে পারেন।
+
+ভালো flow: API একটি queue-তে job রাখে এবং সাথে সাথে একটি job ID সহ "Processing" ফেরত দেয়। একটি worker PDF বানায়, object storage-এ রাখে, আর email পাঠায়। Page job status দেখায়, আর তৈরি হলে user certificate download করেন। Job-টি retry-র জন্য নিরাপদ হতে হবে, যাতে দুটি certificate তৈরি না হয়।
+
+**13. Queue worker fail করলে কী হয়?**
+
+এটি queue-এর delivery-র নিয়মের ওপর নির্ভর করে। Amazon SQS-এ worker job শেষ করার পর message delete করে। এর আগে worker crash করলে visibility timeout শেষে message আবার visible হয়, আর অন্য worker সেটি নিতে পারে <Cite n={7} />। তাই job হারায় না, কিন্তু আবার চলতে পারে। SQS একটি message একাধিকবারও deliver করতে পারে <Cite n={7} />। তাই:
+
+- প্রতিটি job idempotent করুন (দুবার চললেও নিরাপদ)।
+- একটি retry limit দিন, আর fail করা job dead letter queue-তে পাঠান।
+- একাধিক worker চালান। কোনো worker না চললে বা queue বাড়তেই থাকলে alert দিন।
+
+**14. Dead Letter Queue কেন দরকার?**
+
+কিছু message প্রতিবার fail করে, যেমন খারাপ data-র কারণে। কোনো limit না থাকলে worker সেগুলো চিরকাল retry করে। এতে কাজ নষ্ট হয়, আর অন্য job আটকে যেতে পারে।
+
+Dead letter queue (DLQ) হলো সফলভাবে process না হওয়া message-এর জন্য আলাদা একটি queue। এতে team সেই message-গুলো দেখে fail করার কারণ খুঁজতে পারে <Cite n={8} />। Amazon SQS-এ `maxReceiveCount` setting ঠিক করে, DLQ-তে যাওয়ার আগে একটি message কতবার receive করা যাবে <Cite n={8} />। DLQ monitor করুন: সেখানে একটি নতুন message প্রায়ই একটি bug।
+
+**15. External SMS service ধীর হলে login flow কীভাবে design করবেন?**
+
+Login request-কে SMS provider-এর জন্য অপেক্ষা করাবেন না।
+
+1. API OTP তৈরি করে, অল্প expiry দিয়ে Redis-এ রাখে, আর একটি "send SMS" job queue-তে দেয়।
+2. API সাথে সাথে উত্তর দেয়: "We are sending your code."
+3. একটি worker কড়া timeout আর সীমিত সংখ্যক retry দিয়ে SMS পাঠায়।
+4. Provider বারবার fail করলে দ্বিতীয় SMS provider-এ যান, অথবা backup হিসেবে email দিন।
+
+OTP request-এ rate limit দিন, যাতে ধীর provider-এর কারণে বারবার click আর SMS খরচ না বাড়ে। SMS পাঠানোর সময় আর failure rate-এ alert দিন।
+
+**16. OTP login endpoint-এ কীভাবে rate limit দেবেন?**
+
+একাধিক key ব্যবহার করুন, কারণ শুধু একটি key সহজে এড়ানো যায়:
+
+- **প্রতি phone number:** যেমন, 5 min-এ সর্বোচ্চ 3টি OTP request।
+- **প্রতি IP address:** যেমন, 10 min-এ সর্বোচ্চ 10টি request। শুধু IP ব্যবহার করবেন না, কারণ অনেক আসল user একটি IP share করতে পারেন।
+- **Verify attempt-এর জন্য প্রতি phone number:** কয়েকটি ভুল code-এর পর OTP lock করুন।
+
+Counter-গুলো Redis-এ রাখুন, যাতে সব server সেগুলো share করে। Limit পার হলে `429 Too Many Requests` দিন <Cite n={9} />। Response-এ একটি `Retry-After` header থাকতে পারে, যা বলে কতক্ষণ অপেক্ষা করতে হবে <Cite n={9} />।
+
+</Bangla>
+</Voices>
+
 ## Security and gateways
+
+<Voices>
+<Technical>
 
 <PracticeQuestion n={17} topic="object-storage" question="What is the difference between public file delivery and private file delivery?">
 
@@ -264,7 +554,89 @@ Make sure no backend service is reachable without going through the gateway.
 
 </PracticeQuestion>
 
+</Technical>
+<Layman>
+
+**17. What is the difference between public file delivery and private file delivery?**
+
+Public files are the same for everyone, such as course thumbnails, CSS, and JavaScript. Anyone with the link can download them, and a CDN can cache them for a long time.
+
+Private files belong to some users only, such as a paid video, a certificate, or an assignment. The system checks access first, then gives a short-lived link:
+
+- In Amazon S3, objects are private by default. A presigned URL gives time-limited permission to download one object.
+- With Amazon CloudFront, signed URLs or signed cookies protect private content.
+
+Never put private files in a public bucket and hope nobody guesses the link.
+
+**18. Why is it risky to keep a database accessible from the public internet?**
+
+A public database is one more door for attackers. Anyone on the internet can try to connect, with default passwords, stolen passwords, or known bugs. One weak password or one unpatched bug can leak all student and payment data.
+
+A safer setup puts the database in a private subnet, so only the web servers can reach it. A security group (a firewall rule) controls who can connect. Admins connect through a VPN or bastion host, not straight from the internet.
+
+**19. Where can an API Gateway handle auth and rate limiting?**
+
+At the front door, before a request reaches a backend service. An API gateway is a central entry point that can do authentication, SSL termination, and rate limiting for all services. Without it, each public service must do these jobs itself.
+
+- Auth: the gateway checks the token on every route and rejects bad tokens early. Services still check business permissions, such as "can this student see this course".
+- Rate limiting: the gateway counts requests per user, API key, or IP. AWS API Gateway uses a token bucket, and clients can get `429 Too Many Requests`.
+
+No backend service may be reachable around the gateway.
+
+**20. What concerns are important when caching sensitive data?**
+
+- Put the user ID in the cache key of user data. A wrong key shows one student's data to another.
+- Do not store personal content in a shared cache, such as a proxy or a CDN, because it reuses one response for many users.
+- Use the right headers: `Cache-Control: private` lets only the browser store the response, and `no-store` tells every cache not to store it.
+- Use a short TTL, and clear the cache at logout or when permissions change.
+- Never cache secrets, such as passwords, OTPs in plain text, or full card numbers.
+- Protect the cache server with a password, a private network, and encryption where needed.
+
+</Layman>
+<Bangla>
+
+**17. Public file delivery আর private file delivery-র পার্থক্য কী?**
+
+**Public file** সবার জন্য একই, যেমন course thumbnail, CSS আর JavaScript। Link থাকলে যে কেউ এগুলো download করতে পারেন, আর CDN এগুলো অনেকদিন cache করতে পারে।
+
+**Private file** শুধু কিছু user-এর, যেমন একটি paid video, একটি certificate বা একটি assignment। System-কে আগে access check করতে হয়। তারপর অল্প সময়ের একটি link দেয়:
+
+- Amazon S3-এ object default হিসেবে private <Cite n={10} />। একটি presigned URL একটি object download করার সময়-সীমিত permission দেয় <Cite n={10} />।
+- Amazon CloudFront-এর মাধ্যমে signed URL বা signed cookie private content রক্ষা করে <Cite n={4} />।
+
+Private file কখনো public bucket-এ রেখে আশা করবেন না যে কেউ link আন্দাজ করতে পারবে না।
+
+**18. Public internet থেকে database-এ পৌঁছানো গেলে ঝুঁকি কেন?**
+
+Public database হলো attacker-দের চেষ্টা করার আরও একটি দরজা। Internet-এর যে কেউ এতে connect করার চেষ্টা করতে পারে। Attacker-রা default password, চুরি করা password আর জানা bug দিয়ে চেষ্টা করতে পারে। একটি দুর্বল password বা patch না করা একটি bug সব student আর payment data leak করতে পারে।
+
+নিরাপদ setup-এ database একটি private subnet-এ থাকে, যাতে শুধু web server-গুলো সেখানে পৌঁছাতে পারে <Cite n={11} />। একটি security group (একটি firewall rule) ঠিক করে কে connect করতে পারবে <Cite n={11} />। Admin-রা সরাসরি internet থেকে নয়, VPN বা bastion host দিয়ে connect করেন।
+
+**19. API Gateway কোথায় auth আর rate limiting সামলাতে পারে?**
+
+সামনের দরজায়, কোনো request backend service-এ পৌঁছানোর আগে। API gateway হলো একটি central entry point। এটি সব service-এর জন্য authentication, SSL termination আর rate limiting করতে পারে <Cite n={12} />। এটি না থাকলে প্রতিটি public service-কে এই কাজগুলো নিজে করতে হয় <Cite n={12} />।
+
+- **Auth:** gateway প্রতিটি route-এ token check করে এবং খারাপ token আগেই বাতিল করে। Business rule-এর permission service-গুলো তবুও check করে, যেমন "এই student কি এই course দেখতে পারবে"।
+- **Rate limiting:** gateway প্রতি user, API key বা IP অনুযায়ী request গোনে। AWS API Gateway এর জন্য একটি token bucket ব্যবহার করে, আর client `429 Too Many Requests` পেতে পারে <Cite n={13} />।
+
+নিশ্চিত করুন, gateway ছাড়া কোনো backend service-এ পৌঁছানো যায় না।
+
+**20. Sensitive data cache করার সময় কোন বিষয়গুলো গুরুত্বপূর্ণ?**
+
+- **ঠিক cache key।** User data-র key-তে user ID রাখুন। ভুল key একজন student-এর data আরেকজনকে দেখায়।
+- **Shared cache-এ নয়।** Proxy বা CDN-এর মতো shared cache একটি stored response অনেক user-কে দেয়। তাই personal content সেখানে রাখবেন না <Cite n={3} />।
+- **ঠিক HTTP header।** `Cache-Control: private` শুধু browser-কে response store করতে দেয় <Cite n={3} />। `no-store` সব cache-কে store না করতে বলে <Cite n={3} />।
+- **ছোট TTL** দিন, আর logout-এ বা permission বদলালে cache মুছে দিন।
+- **Secret একদমই cache করবেন না**, যেমন password, plain text-এ OTP বা পুরো card number।
+- **Cache server রক্ষা করুন:** password, private network, আর দরকার হলে encryption দিয়ে।
+
+</Bangla>
+</Voices>
+
 ## Monitoring
+
+<Voices>
+<Technical>
 
 <PracticeQuestion n={21} topic="observability" question="What is the difference between logs, metrics, and traces?">
 
@@ -322,7 +694,111 @@ Logs become much more useful when they are linked to a trace <Cite n={14} />. Th
 
 </PracticeQuestion>
 
+</Technical>
+<Layman>
+
+**21. What is the difference between logs, metrics, and traces?**
+
+- Logs are timestamped messages about events. They tell what happened, such as "payment 123 failed: card declined".
+- Metrics are numbers collected over time, such as error rate, CPU use, or request rate. They tell how much or how often.
+- Traces record the path of one request through many services. They tell where the time went.
+
+Metrics show something is wrong. Traces show where. Logs show why.
+
+**22. Which logs should be kept for a payment flow?**
+
+Log each step with the same request ID and order ID:
+
+- Payment started: user ID, course, amount, currency.
+- The redirect or request to the gateway, and its response code.
+- Each callback or webhook: event ID, status, and if it was a duplicate (Stripe advises tracking event IDs to find duplicates).
+- Status changes: pending, paid, failed, or refunded.
+- Side effects: enrollment unlocked, receipt sent.
+- Every error and retry, with the reason.
+
+Never log card numbers, CVV codes, passwords, or full tokens.
+
+**23. Why is p95 latency more useful than average latency?**
+
+p95 latency is the time that 95 % of requests are faster than. It shows what the slowest 5 % of users feel.
+
+An average hides them. Google's SRE book says a service with a 100 ms average can still have 1 % of requests at 5 s. If a page calls many backends, the slow tail of one backend can become the page's normal speed. So use p95 and p99 for alerts and performance test reports.
+
+**24. What does high queue length indicate?**
+
+Jobs arrive faster than workers finish them. This saturation signal shows how full a part of the system is. It is one of the four golden signals of Google's SRE book.
+
+Causes:
+
+- Too few workers, or a worker crashed.
+- A slow dependency, such as an SMS provider or the database.
+- A bug that makes jobs fail and retry many times.
+- A real traffic spike, such as admission day.
+
+Users get late emails, certificates, or notifications. Alert on queue length and the age of the oldest message.
+
+**25. Why is request ID important for production incident debugging?**
+
+One user action can touch the gateway, many services, a queue, and a worker, and each writes its own logs. A request ID follows the request through all of them. Search one ID to see the whole story of one failed request.
+
+Logs linked to a trace are much more useful. The W3C Trace Context standard defines HTTP headers that carry this ID between services. Without it, the team guesses which log lines belong together, and debugging takes hours, not minutes.
+
+</Layman>
+<Bangla>
+
+**21. Log, metric আর trace-এর পার্থক্য কী?**
+
+- **Log** হলো event সম্পর্কে timestamp দেওয়া message <Cite n={14} />। এটি বলে কী ঘটেছে, যেমন "payment 123 failed: card declined"।
+- **Metric** হলো সময়ের সাথে সংগ্রহ করা সংখ্যা, যেমন error rate, CPU use বা request rate <Cite n={14} />। এটি বলে কতটা বা কতবার।
+- **Trace** অনেক service-এর মধ্য দিয়ে একটি request-এর পথ record করে <Cite n={14} />। এটি বলে request কোথায় সময় কাটিয়েছে।
+
+Metric দেখায় কিছু একটা ভুল হয়েছে। Trace দেখায় কোথায়। Log দেখায় কেন, তার details।
+
+**22. একটি payment flow-এর জন্য কোন log রাখা উচিত?**
+
+Payment-এর প্রতিটি step একই request ID আর order ID দিয়ে log করুন:
+
+- Payment শুরু: user ID, course, amount, currency।
+- Payment gateway-তে redirect বা request, আর gateway-এর response code।
+- প্রতিটি callback বা webhook: event ID, status, আর এটি duplicate ছিল কি না। Duplicate delivery খুঁজতে Stripe event ID track করার পরামর্শ দেয় <Cite n={6} />।
+- Status পরিবর্তন: pending, paid, failed বা refunded।
+- Side effect: enrollment unlock হওয়া, receipt পাঠানো।
+- প্রতিটি error আর retry, কারণসহ।
+
+Card number, CVV code, password বা পুরো token কখনো log করবেন না।
+
+**23. Average latency-র চেয়ে p95 latency কেন বেশি কাজের?**
+
+p95 latency হলো সেই সময়, যার চেয়ে 95 % request দ্রুত। এটি দেখায় সবচেয়ে ধীর 5 % user কী অনুভব করেন।
+
+Average এই ধীর request-গুলো লুকিয়ে রাখে। Google-এর SRE book একটি উদাহরণ দেয়: 100 ms average থাকা একটি service-এও 1 % request-এ 5 s লাগতে পারে <Cite n={15} />। এছাড়া একটি page অনেক backend call করলে, একটি backend-এর ধীর tail page-এর স্বাভাবিক speed হয়ে যেতে পারে <Cite n={15} />। তাই alert আর performance test report-এ p95 আর p99 ব্যবহার করুন।
+
+**24. বেশি queue length কী নির্দেশ করে?**
+
+বেশি queue length মানে worker-রা যত দ্রুত job শেষ করে, job তার চেয়ে দ্রুত আসছে। এটি একটি saturation signal: system-এর একটি অংশ কতটা ভরা, তা দেখায়। Saturation হলো Google-এর SRE book-এর চারটি golden signal-এর একটি <Cite n={15} />।
+
+সাধারণ কারণ:
+
+- খুব কম worker, অথবা একটি worker crash করেছে।
+- একটি ধীর dependency, যেমন SMS provider বা database।
+- একটি bug, যার কারণে job বারবার fail আর retry করে।
+- আসল traffic spike, যেমন admission day।
+
+User এটি টের পান দেরিতে আসা email, certificate বা notification হিসেবে। Queue length আর সবচেয়ে পুরোনো message-এর বয়সের ওপর alert দিন।
+
+**25. Production incident debugging-এ request ID কেন গুরুত্বপূর্ণ?**
+
+একটি user action gateway, অনেক service, একটি queue আর একটি worker ছুঁয়ে যেতে পারে। প্রতিটি অংশ নিজের log লেখে। Request ID হলো একটি ID, যা এই সবগুলোর মধ্য দিয়ে request-কে অনুসরণ করে। এটি দিয়ে একটি ID search করে একটি fail করা request-এর পুরো ঘটনা দেখা যায়।
+
+Log একটি trace-এর সাথে যুক্ত থাকলে অনেক বেশি কাজের হয় <Cite n={14} />। W3C Trace Context standard এমন HTTP header define করে, যা এই ID এক service থেকে আরেক service-এ নিয়ে যায় <Cite n={16} />। Request ID না থাকলে team-কে আন্দাজ করতে হয় কোন log line-গুলো একই request-এর, আর debugging-এ মিনিটের বদলে ঘণ্টা লাগে।
+
+</Bangla>
+</Voices>
+
 ## Trade-offs
+
+<Voices>
+<Technical>
 
 <PracticeQuestion n={26} topic="monolith-microservices" question="For an LMS, would you choose monolith or microservices? Why?">
 
@@ -370,3 +846,79 @@ The "why" helps in four ways:
 - New team members understand the system without guessing.
 
 </PracticeQuestion>
+
+</Technical>
+<Layman>
+
+**26. For an LMS, would you choose monolith or microservices? Why?**
+
+This tutorial's view: start with a modular monolith (user, course, payment, and notification modules). It is easy to start with little planning, and AWS says it suits simple apps and prototypes. AWS Well-Architected is stricter: avoid monoliths whenever possible, and make a starting monolith modular. A small team moves fast with one deploy and one database.
+
+Later, split out only what needs it: notification (async background work), payment (strict reliability and security), and video or certificate processing (heavy CPU work). Each can then be deployed on its own.
+
+**27. Give an example of consistency vs performance tradeoff.**
+
+Read replicas make the system faster and take load off the primary. But the copy can be asynchronous, so a replica can briefly show old data. For a course list, a few seconds of old data is fine, so performance wins. Payment status right after payment must be correct, so read it from the primary, despite more load. Cache TTLs have the same trade-off: long is fast, short is more correct.
+
+**28. Explain cost vs availability tradeoff.**
+
+Availability is the share of time the system works. More of it usually needs more servers, a load balancer, database replicas, and more than one data center, and each costs money monthly.
+
+Two or more app servers behind a load balancer increase availability and fault tolerance but cost more than one server. A small training institute may accept a few minutes of downtime. A large LMS on admission day may lose much more from one hour of downtime than the extra servers cost. Set the target from the business cost of downtime, not a wish for "100 %".
+
+**29. When should you not use microservices?**
+
+- A small team, or one new to distributed systems. Microservices need cloud, API, and container skills.
+- A new product with unclear business areas. Wrong service borders are expensive to fix.
+- Low traffic. A monolith suits a simple app or prototype better.
+- DevOps, monitoring, and tracing are not ready. Microservices need a mature DevOps culture.
+- You want less complexity: each service is simpler, but the system has more moving parts.
+
+**30. Why is it important to explain the “why” of an architecture decision?**
+
+Every architecture choice is a trade-off. "We use Redis" says nothing. "We cache the course list in Redis for 10 min because it gets thousands of reads and changes rarely, and we accept 10 min of old data" explains it.
+
+The "why" lets others find mistakes early, tells testers what to test (such as old data after a price change), shows if the reason still holds after changes, and helps newcomers understand without guessing.
+
+</Layman>
+<Bangla>
+
+**26. একটি LMS-এর জন্য monolith নাকি microservices বেছে নেবেন? কেন?**
+
+এই tutorial-এর মতে, monolith দিয়ে শুরু করুন, এবং user, course, payment আর notification-এর মতো স্পষ্ট module দিয়ে এটিকে একটি modular monolith বানান। Monolith শুরু করা সহজ, আগে থেকে কম planning লাগে <Cite n={17} />। AWS বলে এটি simple application আর prototype-এর জন্য উপযুক্ত <Cite n={17} />। AWS Well-Architected আরও কড়া। এটি বলে, যখনই সম্ভব monolithic architecture এড়িয়ে চলুন, আর যে monolith দিয়ে শুরু করবেন তা অবশ্যই modular হতে হবে <Cite n={19} />। তাহলে একটি ছোট team একটি deploy আর একটি database দিয়ে দ্রুত এগোতে পারে।
+
+পরে শুধু যে অংশগুলোর দরকার, সেগুলো আলাদা করুন। Notification মানায়, কারণ এটি async background কাজ। Payment মানায়, কারণ এতে কড়া reliability আর security লাগে। Video বা certificate processing মানায়, কারণ এটি ভারী CPU কাজ। তখন প্রতিটি microservice আলাদাভাবে deploy করা যায় <Cite n={18} />।
+
+**27. Consistency বনাম performance tradeoff-এর একটি উদাহরণ দিন।**
+
+Read replica একটি ভালো উদাহরণ। Replica-তে read পাঠালে system দ্রুত হয় এবং primary database-এর load কমে। কিন্তু replica-তে copy asynchronous হতে পারে <Cite n={5} />, তাই অল্প সময়ের জন্য replica পুরোনো data দেখাতে পারে।
+
+Course list-এর জন্য কয়েক সেকেন্ডের পুরোনো data চলে, তাই performance জেতে। Payment-এর ঠিক পরে payment status-এর data অবশ্যই সঠিক হতে হবে, তাই primary থেকে পড়ুন এবং একটু বেশি load মেনে নিন। Cache-এও একই trade-off: লম্বা TTL দ্রুত, আর ছোট TTL বেশি সঠিক।
+
+**28. Cost বনাম availability tradeoff ব্যাখ্যা করুন।**
+
+Availability মানে system যত সময় কাজ করে, তার অংশ। বেশি availability-র জন্য সাধারণত সবকিছুর বেশি copy লাগে: বেশি server, একটি load balancer, database replica, আর একাধিক data center-এ copy। প্রতিটি copy-র জন্য প্রতি মাসে টাকা লাগে।
+
+যেমন, দুই বা তার বেশি app server সহ একটি load balancer availability আর fault tolerance বাড়ায় <Cite n={1} />। কিন্তু এর খরচ একটি server-এর চেয়ে বেশি। একটি ছোট training institute একটি server আর কয়েক মিনিটের downtime মেনে নিতে পারে। Admission day-তে একটি বড় LMS এক ঘণ্টার downtime-এ extra server-এর খরচের চেয়ে অনেক বেশি টাকা হারাতে পারে। তাই availability target ঠিক করুন downtime-এর business cost দেখে, "100 %"-এর ইচ্ছা থেকে নয়।
+
+**29. কখন microservices ব্যবহার করা উচিত নয়?**
+
+- **Team ছোট**, অথবা distributed system-এ নতুন। Microservices-এ cloud, API আর container-এর skill লাগে <Cite n={17} />।
+- **Product নতুন**, আর business area এখনো স্পষ্ট নয়। ভুল service border ঠিক করা ব্যয়বহুল।
+- **Traffic কম।** Simple app বা prototype-এর জন্য monolith বেশি উপযুক্ত <Cite n={17} />।
+- **DevOps, monitoring আর tracing তৈরি নয়।** Microservices-এর জন্য একটি mature DevOps culture লাগে <Cite n={18} />।
+- **আপনি কম complexity চান।** প্রতিটি service সহজ, কিন্তু পুরো system-এ চলমান অংশ বেশি <Cite n={18} />।
+
+**30. একটি architecture decision-এর “why” ব্যাখ্যা করা কেন গুরুত্বপূর্ণ?**
+
+প্রতিটি architecture choice একটি trade-off। "We use Redis" কিছুই বলে না। "আমরা course list Redis-এ 10 min cache করি, কারণ এটি হাজার হাজার বার পড়া হয় আর কম বদলায়, এবং আমরা 10 min পুরোনো data মেনে নিই" — এটি trade-off ব্যাখ্যা করে।
+
+"Why" চারভাবে সাহায্য করে:
+
+- অন্যরা যুক্তি check করে আগেই ভুল খুঁজে পেতে পারেন।
+- Tester জানেন কী test করতে হবে, যেমন দাম বদলানোর পর stale data।
+- Traffic বা business বদলালে team দেখতে পারে কারণটি এখনো খাটে কি না।
+- নতুন team member আন্দাজ না করেই system বুঝতে পারেন।
+
+</Bangla>
+</Voices>

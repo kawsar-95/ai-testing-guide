@@ -4,7 +4,7 @@
 export type Source = { title: string; publisher: string; url: string; accessed: string };
 export type PageInfo = { updated: string; sources: Source[] };
 
-export const REPO_URL = "https://github.com/kawsar-95/learn-software-testing-with-ai";
+export const REPO_URL = "https://github.com/kawsar-95/ai-testing-guide";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 

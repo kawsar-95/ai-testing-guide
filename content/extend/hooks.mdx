@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-10',
+  updated: '2026-10-20',
   sources: [
     { title: 'Hooks reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks', accessed: '2026-10-10' },
     { title: 'Extend Claude with skills', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/skills', accessed: '2026-10-10' },
@@ -21,6 +21,9 @@ A hook runs your own code at a fixed point in a Claude Code session, whatever Cl
 <PageMeta />
 
 ## What hooks are
+
+<Voices>
+<Technical>
 
 Hooks are user-defined handlers that run automatically at specific points in the Claude Code lifecycle. A handler can be a shell command, an HTTP endpoint, an MCP tool call, an LLM prompt, or a subagent. <Cite n={1} />
 
@@ -40,7 +43,31 @@ A `PreToolUse` hook that returns `permissionDecision: "deny"` blocks the tool, e
   </InfoCard>
 </CardGrid>
 
+</Technical>
+<Layman>
+
+A hook is your own handler. Claude Code runs it automatically at a fixed point in a session. A handler can be a shell command, an HTTP endpoint, an MCP tool call, an LLM prompt, or a subagent. <Cite n={1} />
+
+Some points come one time per session (`SessionStart`, `SessionEnd`). Some come one time per turn (`UserPromptSubmit`, `Stop`). Some come on every tool call (`PreToolUse`, `PostToolUse`). <Cite n={1} />
+
+If Claude skips a rule that must hold every time, move the rule into a hook. <Cite n={2} /> The rule "Never edit `.env`" in `CLAUDE.md` is only text that Claude reads. It does not block anything. A `PreToolUse` hook that returns `permissionDecision: "deny"` blocks the tool, even in `bypassPermissions` mode. <Cite n={3} />
+
+</Layman>
+<Bangla>
+
+Hook হলো আপনার নিজের একটি handler। Claude Code একটি session-এর নির্দিষ্ট কিছু সময়ে এটি নিজে থেকেই চালায়। Handler হতে পারে একটি shell command, একটি HTTP endpoint, একটি MCP tool call, একটি LLM prompt অথবা একটি subagent। <Cite n={1} />
+
+কিছু event প্রতি session-এ একবার ঘটে (`SessionStart`, `SessionEnd`), কিছু প্রতি turn-এ একবার (`UserPromptSubmit`, `Stop`), আর কিছু প্রতিটি tool call-এ (`PreToolUse`, `PostToolUse`)। <Cite n={1} />
+
+যে নিয়ম প্রতিবার মানতেই হবে, Claude যদি সেটি বাদ দেয়, তাহলে নিয়মটি একটি hook-এ নিয়ে যান। <Cite n={2} /> `CLAUDE.md`-এ লেখা "Never edit `.env`" শুধু context, যা Claude পড়ে। এটি কিছু block করে না। কিন্তু যে `PreToolUse` hook `permissionDecision: "deny"` ফেরত দেয়, সেটি tool-টিকে block করে, এমনকি `bypassPermissions` mode-এও। <Cite n={3} />
+
+</Bangla>
+</Voices>
+
 ## How a hook is built
+
+<Voices>
+<Technical>
 
 A hook configuration has three levels: an event, a matcher group, and one or more handlers. <Cite n={1} /> This is the minimal structure: <Cite n={1} />
 
@@ -99,7 +126,31 @@ The old example on this page used the matcher `Write`. That misses every `Edit`.
 
 </Callout>
 
+</Technical>
+<Layman>
+
+A hook configuration has three levels: an event, a matcher group, and one or more handlers. <Cite n={1} />
+
+You can put hooks in many places. `~/.claude/settings.json` is for all your projects. `.claude/settings.json` is for one project, and you can commit it. `.claude/settings.local.json` is for one project and is not shared. Hooks can also come from managed policy settings, a plugin, a skill, or a subagent. <Cite n={1} /> Hooks from different settings levels merge. They do not replace each other. All matching hooks run in parallel. The same handler in two settings files runs one time. <Cite n={1} /> Claude Code normally applies hook edits automatically. If it does not, restart the session. <Cite n={1} /> <Cite n={3} />
+
+The `matcher` selects which tool calls start the hook. `"*"`, `""`, or no matcher matches everything. `Edit|Write` matches exactly `Edit` or `Write`. Other characters, as in `Edit.*`, make the matcher a regular expression. For an MCP server, use a form such as `mcp__atlassian__.*`. <Cite n={1} /> Matchers are case-sensitive. <Cite n={3} /> For file changes, use `Edit|Write`, not only `Write`. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+একটি hook configuration-এর তিনটি স্তর আছে: একটি event, একটি matcher group এবং এক বা একাধিক handler। <Cite n={1} />
+
+Hook অনেক জায়গায় রাখা যায়: `~/.claude/settings.json` (আপনার সব project), `.claude/settings.json` (একটি project, commit করা যায়) এবং `.claude/settings.local.json` (একটি project, share হয় না)। এছাড়া managed policy settings, plugin-এর `hooks/hooks.json`, skill frontmatter অথবা subagent frontmatter থেকেও hook আসতে পারে। <Cite n={1} /> বিভিন্ন settings level-এর hook একসাথে merge হয়, একটি অন্যটিকে replace করে না। মিলে যাওয়া সব hook parallel-এ চলে, আর একই handler একাধিক settings file-এ থাকলে একবারই চলে। <Cite n={1} /> Claude Code সাধারণত hook-এর পরিবর্তন নিজে থেকেই প্রয়োগ করে। না করলে session restart করুন। <Cite n={1} /> <Cite n={3} />
+
+`matcher` ঠিক করে কোন tool call hook-টি চালাবে। `"*"`, `""` অথবা কোনো matcher না থাকলে সবকিছু মেলে। `Edit|Write` ঠিক `Edit` বা `Write`-কে মেলায়। অন্য character থাকলে, যেমন `Edit.*`-এ, matcher-টি একটি regular expression হয়ে যায়। MCP server-এর জন্য `mcp__atlassian__.*`-এর মতো রূপ ব্যবহার করুন। <Cite n={1} /> Matcher case-sensitive। <Cite n={3} /> File পরিবর্তনের জন্য শুধু `Write` নয়, `Edit|Write` ব্যবহার করুন। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
 ## What your hook receives
+
+<Voices>
+<Technical>
 
 A command hook gets the event data as JSON on stdin. An HTTP hook gets it as the body of a POST request. <Cite n={1} /> Example input for a `PreToolUse` hook on `Bash`, with only some fields: <Cite n={1} />
 
@@ -132,7 +183,31 @@ Hook scripts do get some environment variables: `CLAUDE_PROJECT_DIR`, `CLAUDE_EF
 - Use it in script paths, in quotes: `"\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh"`. <Cite n={3} />
 - Make the script executable with `chmod +x`. <Cite n={3} />
 
+</Technical>
+<Layman>
+
+A command hook gets the event data as JSON on stdin. An HTTP hook gets the same data as the body of a POST request. <Cite n={1} /> The data has fields such as `session_id`, `cwd`, `hook_event_name`, and `tool_input`. For `Write` and `Edit`, `tool_input.file_path` is always an absolute path. A `PostToolUse` hook also gets `tool_response`. <Cite n={1} />
+
+Do not use variables such as `$CLAUDE_FILE_PATH`. The docs do not define them. <Cite n={1} /> <Cite n={3} /> <Cite n={4} /> Read the tool data from stdin, for example with `jq -r '.tool_input.file_path'`.
+
+Hook scripts do get some environment variables, for example `CLAUDE_PROJECT_DIR`. <Cite n={1} /> <Cite n={4} /> `CLAUDE_PROJECT_DIR` is the project root where the session started. It stays the same if Claude moves into a worktree. The `cwd` field follows Claude. <Cite n={1} /> Use the variable in quotes in script paths, and make the script executable with `chmod +x`. <Cite n={3} />
+
+</Layman>
+<Bangla>
+
+একটি command hook event-এর data stdin-এ JSON হিসেবে পায়। একটি HTTP hook একই data একটি POST request-এর body হিসেবে পায়। <Cite n={1} /> এতে `session_id`, `cwd`, `hook_event_name` এবং `tool_input`-এর মতো field থাকে। `Write` এবং `Edit`-এর জন্য `tool_input.file_path` সবসময় একটি absolute path। একটি `PostToolUse` hook `tool_response`-ও পায়। <Cite n={1} />
+
+`$CLAUDE_FILE_PATH`-এর মতো variable ব্যবহার করবেন না। Docs এগুলো define করে না। <Cite n={1} /> <Cite n={3} /> <Cite n={4} /> Tool-এর data stdin থেকে পড়ুন, যেমন `jq -r '.tool_input.file_path'` দিয়ে।
+
+তবে hook script কিছু environment variable পায়, যেমন `CLAUDE_PROJECT_DIR`। <Cite n={1} /> <Cite n={4} /> `CLAUDE_PROJECT_DIR` হলো সেই project root, যেখানে session শুরু হয়েছিল। Claude কোনো worktree-তে গেলেও এটি একই থাকে। JSON-এর `cwd` field Claude-কে অনুসরণ করে। <Cite n={1} /> Script path-এ variable-টি quote-এর মধ্যে ব্যবহার করুন, আর `chmod +x` দিয়ে script-টি executable করুন। <Cite n={3} />
+
+</Bangla>
+</Voices>
+
 ## What your hook can answer
+
+<Voices>
+<Technical>
 
 ### Exit codes
 
@@ -178,7 +253,35 @@ For finer control, exit 0 and print one JSON object on stdout. Do not mix the JS
 - A hook that returns `allow` does not bypass `deny` and `ask` rules from your settings. A blocking hook wins over `allow` rules. <Cite n={5} />
 - Files that you add with `@` in a prompt fire no `PreToolUse` hook, not even one that matches `Read`. Use a `Read` deny rule for them. <Cite n={1} />
 
+</Technical>
+<Layman>
+
+A hook answers with an exit code. Exit code `0` means success. Exit code `2` is a blocking error. On `PreToolUse`, it blocks the tool call, and Claude gets the stderr text as the reason. Any other code, including `1`, is a non-blocking error. For most events, the action continues. <Cite n={1} /> A hook that cannot start, for example because of a wrong path, also does not block. To make a failed hook block the action, set `"onFailure": "block"` on a `command` or `http` hook (Claude Code v2.1.295 or later). <Cite n={1} /> Test each blocking hook with sample input.
+
+Exit code 2 wins over JSON output. <Cite n={1} /> On `PostToolUse`, the tool already ran, so the hook cannot undo the action. <Cite n={1} /> <Cite n={3} />
+
+For finer control, exit `0` and print one JSON object on stdout. A `PreToolUse` hook puts `permissionDecision` inside `hookSpecificOutput`. The values are `allow`, `deny`, `ask`, or `defer`. If hooks disagree, `deny` wins. <Cite n={1} />
+
+A hook that returns `deny` blocks the tool even in `bypassPermissions` mode. <Cite n={3} /> A hook that returns `allow` does not bypass the `deny` and `ask` rules in your settings. <Cite n={5} />
+
+</Layman>
+<Bangla>
+
+Hook একটি exit code দিয়ে উত্তর দেয়। Exit code `0` মানে success। Exit code `2` হলো blocking error: `PreToolUse`-এ tool call block হয়, আর Claude stderr-এর লেখাটি কারণ হিসেবে পায়। `1`-সহ অন্য যেকোনো code হলো non-blocking error। বেশিরভাগ event-এ action চলতে থাকে। <Cite n={1} /> যে hook শুরুই হতে পারে না (যেমন ভুল path-এর কারণে), সেটিও block করে না। Failed hook দিয়ে action block করাতে একটি `command` বা `http` hook-এ `"onFailure": "block"` set করুন (Claude Code v2.1.295 বা পরের version)। <Cite n={1} /> প্রতিটি blocking hook sample input দিয়ে test করুন।
+
+Exit code 2 JSON output-এর চেয়ে অগ্রাধিকার পায়। <Cite n={1} /> `PostToolUse`-এ tool আগেই চালানো হয়ে গেছে, তাই hook action-টি undo করতে পারে না। <Cite n={1} /> <Cite n={3} />
+
+আরও সূক্ষ্ম নিয়ন্ত্রণের জন্য exit `0` দিন এবং stdout-এ একটি JSON object print করুন। একটি `PreToolUse` hook `permissionDecision` রাখে `hookSpecificOutput`-এর ভেতরে। এর মান হতে পারে `allow`, `deny`, `ask` অথবা `defer`। Hook-গুলো একমত না হলে `deny` জেতে। <Cite n={1} />
+
+যে hook `deny` ফেরত দেয়, সেটি `bypassPermissions` mode-এও tool block করে। <Cite n={3} /> যে hook `allow` ফেরত দেয়, সেটি আপনার settings-এর `deny` এবং `ask` rule bypass করে না। <Cite n={5} />
+
+</Bangla>
+</Voices>
+
 ## Events
+
+<Voices>
+<Technical>
 
 The hooks reference documents 33 events. <Cite n={1} /> These are the events that QA work uses most:
 
@@ -193,7 +296,41 @@ The hooks reference documents 33 events. <Cite n={1} /> These are the events tha
 
 The full list is in the [Reference](#reference).
 
+</Technical>
+<Layman>
+
+The hooks reference documents 33 events. <Cite n={1} /> QA work uses these events the most: <Cite n={1} />
+
+- `SessionStart`: a session begins or resumes.
+- `PreToolUse`: before a tool call runs. It can block the call.
+- `PostToolUse`: after a tool call succeeds.
+- `PostToolUseFailure`: after a tool call fails.
+- `Stop`: Claude finishes its response.
+- `FileChanged`: use it to catch a file that a Bash command or another process rewrote.
+
+The full list is in the [Reference](#reference).
+
+</Layman>
+<Bangla>
+
+Hooks reference-এ 33টি event-এর বর্ণনা আছে। <Cite n={1} /> QA কাজে এই event-গুলো সবচেয়ে বেশি লাগে: <Cite n={1} />
+
+- `SessionStart`: session শুরু বা resume হলে।
+- `PreToolUse`: tool call চলার আগে। এটি call-টি block করতে পারে।
+- `PostToolUse`: tool call সফল হওয়ার পরে।
+- `PostToolUseFailure`: tool call fail করার পরে।
+- `Stop`: Claude উত্তর দেওয়া শেষ করলে।
+- `FileChanged`: কোনো Bash command বা অন্য process যে file আবার লিখেছে, তা ধরতে।
+
+পুরো তালিকা [Reference](#reference)-এ আছে।
+
+</Bangla>
+</Voices>
+
 ## Hook types
+
+<Voices>
+<Technical>
 
 | `type` | What it does |
 |---|---|
@@ -207,7 +344,39 @@ The full list is in the [Reference](#reference).
 - Default timeouts: 600 s for `command`, `http`, and `mcp_tool`; 30 s for `prompt`; 60 s for `agent`. <Cite n={1} /> On `UserPromptSubmit`, `PreModelSwitch`, and `PostModelSwitch`, the default for `command`, `http`, and `mcp_tool` is 30 s. On `MessageDisplay`, it is 10 s. <Cite n={1} />
 - A `PreToolUse` hook of type `command`, `http`, or `mcp_tool` that times out does not block the tool call. <Cite n={1} />
 
+</Technical>
+<Layman>
+
+A hook has one of five types: <Cite n={1} />
+
+- `command` runs a shell command with the event JSON on stdin.
+- `http` sends the JSON as a POST to `url`. To block, it must return a 2xx response with decision JSON. A status code alone cannot block.
+- `mcp_tool` calls a tool on an MCP server.
+- `prompt` sends the input to a Claude model for one yes or no decision.
+- `agent` starts a subagent with tools. Agent hooks are experimental.
+
+Not all events support all five types. For example, `SessionStart` supports only `command` and `mcp_tool`. <Cite n={1} /> The default timeout is 600 s for `command`, `http`, and `mcp_tool`, 30 s for `prompt`, and 60 s for `agent`. Some events have shorter defaults. <Cite n={1} /> If a `PreToolUse` hook of type `command`, `http`, or `mcp_tool` times out, the tool call is not blocked. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+Hook-এর পাঁচটি type আছে: <Cite n={1} />
+
+- `command`: event JSON stdin-এ দিয়ে একটি shell command চালায়।
+- `http`: JSON-টি POST হিসেবে `url`-এ পাঠায়। Block করতে হলে এটিকে decision JSON-সহ একটি 2xx response ফেরত দিতে হয়। শুধু status code দিয়ে block হয় না।
+- `mcp_tool`: একটি MCP server-এর একটি tool call করে।
+- `prompt`: একবারের হ্যাঁ/না সিদ্ধান্তের জন্য input একটি Claude model-এ পাঠায়।
+- `agent`: tool-সহ একটি subagent চালু করে। Agent hook এখনো experimental।
+
+সব event পাঁচটি type-ই support করে না। যেমন, `SessionStart` শুধু `command` এবং `mcp_tool` support করে। <Cite n={1} /> Default timeout হলো `command`, `http` এবং `mcp_tool`-এর জন্য 600 s, `prompt`-এর জন্য 30 s, আর `agent`-এর জন্য 60 s। কিছু event-এ default আরও কম। <Cite n={1} /> `command`, `http` বা `mcp_tool` type-এর একটি `PreToolUse` hook timeout হলে tool call block হয় না। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
 ## QA examples
+
+<Voices>
+<Technical>
 
 ### Block edits to .env and migrations
 
@@ -357,7 +526,37 @@ Each line has the time, the session ID, and the command. Commands can contain se
 
 </Callout>
 
+</Technical>
+<Layman>
+
+The first example hook blocks edits to `.env` files, migrations, and `.git/`. It is a `PreToolUse` script for `Edit|Write`. It reads the file path from stdin and exits with code `2` if the path matches a protected pattern. It changes Windows backslashes to slashes, so the check also matches on Windows. <Cite n={3} /> <Cite n={1} /> Test it before you trust it. <Cite n={3} /> This hook does not see `Bash` commands. `Read` and `Edit` deny rules also cover the file commands that Claude Code recognizes in Bash, but they do not cover any script. <Cite n={5} /> Add rules such as `Read(./.env)` and `Edit(./.env)` to `permissions.deny`.
+
+The second hook runs Prettier on every file that Claude edits or writes. <Cite n={3} />
+
+The third hook runs the tests in the background (`"async": true`) after Claude edits a test file. An async hook cannot block. Its output reaches Claude on the next turn. <Cite n={1} /> It does not run when a `Bash` command or another process rewrites the file. Use `FileChanged` for that case. <Cite n={1} />
+
+The fourth hook is a tutorial example. It writes each shell command to `bash-audit.log`, with the time and the session ID. Commands can contain secrets, so keep this file out of git.
+
+</Layman>
+<Bangla>
+
+এই section-এ QA কাজের জন্য চারটি উদাহরণ hook আছে।
+
+প্রথম hook `.env` file, migrations এবং `.git/`-এ edit block করে। এটি `Edit|Write`-এর জন্য একটি `PreToolUse` script। এটি stdin থেকে file path পড়ে, আর path কোনো protected pattern-এর সাথে মিললে exit code `2` দেয়। এটি Windows-এর backslash-গুলোকে slash-এ বদলায়, তাই check-টি Windows-এও মেলে। <Cite n={3} /> <Cite n={1} /> বিশ্বাস করার আগে এটি test করুন। <Cite n={3} /> এই hook `Bash` command দেখে না। `Read` এবং `Edit` deny rule Claude Code-এর চেনা Bash file command-গুলোও cover করে, কিন্তু কোনো script cover করে না। <Cite n={5} /> তাই `permissions.deny`-তে `Read(./.env)` এবং `Edit(./.env)`-এর মতো rule যোগ করুন।
+
+দ্বিতীয় hook Claude যে file edit বা write করে, তার প্রতিটিতে Prettier চালায়। <Cite n={3} />
+
+তৃতীয় hook Claude একটি test file edit করার পরে background-এ (`"async": true`) test চালায়। Async hook block করতে পারে না। এর output Claude পরের turn-এ পায়। <Cite n={1} /> কোনো `Bash` command বা Claude Code-এর বাইরের কোনো process file আবার লিখলে এটি চলে না। সেজন্য `FileChanged` ব্যবহার করুন। <Cite n={1} />
+
+চতুর্থ hook এই tutorial-এর নিজের উদাহরণ। এটি প্রতিটি shell command সময় আর session ID-সহ `bash-audit.log`-এ লেখে। Command-এ secret থাকতে পারে, তাই এই file git-এর বাইরে রাখুন।
+
+</Bangla>
+</Voices>
+
 ## Debug and stay safe
+
+<Voices>
+<Technical>
 
 ### When a hook does not fire
 
@@ -385,7 +584,45 @@ The docs give these security practices for hook scripts: validate input, quote s
 The case study has a `PreToolUse` hook that adds context before a skill runs, in [Bug Hunting with a Review Gate](/case-study/bug-hunt/). [What to Fix in the Setup](/case-study/lessons/) shows hook mistakes and their fixes.
 </Callout>
 
+</Technical>
+<Layman>
+
+If a hook does not fire, do these steps:
+
+1. Run `/hooks`. It shows your hooks and where each one comes from. <Cite n={1} /> Make sure that the hook is under the correct event. <Cite n={3} />
+2. Check the matcher. Matchers are case-sensitive. <Cite n={3} />
+3. Pipe sample JSON into the script and check the exit code with `echo $?`. <Cite n={3} />
+4. Start Claude Code with `claude --debug-file /tmp/claude.log`, or run `/debug` during a session. <Cite n={3} />
+
+A `Stop` hook that blocks eight times in a row is overridden. Check the `stop_hook_active` field and exit 0 early. <Cite n={3} />
+
+Command hooks run with your full user permissions. <Cite n={1} /> In a `-p` or SDK session, Claude Code treats the folder as trusted, so committed hooks run. <Cite n={1} /> Before you run Claude Code in CI on a repository that you did not write, review its `.claude/settings.json`.
+
+`"disableAllHooks": true` in settings turns hooks off. From user or project settings, it cannot turn off managed hooks. <Cite n={1} /> On Windows without Git Bash, use the matcher `Bash|PowerShell` and `"shell": "powershell"`. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+Hook না চললে এই ধাপগুলো করুন:
+
+1. `/hooks` চালান। এটি আপনার hook-গুলো দেখায়, আর প্রতিটি কোথা থেকে এসেছে তা-ও দেখায়। <Cite n={1} /> Hook-টি সঠিক event-এর নিচে আছে কিনা দেখুন। <Cite n={3} />
+2. Matcher দেখুন। Matcher case-sensitive। <Cite n={3} />
+3. Sample JSON script-এ pipe করুন এবং `echo $?` দিয়ে exit code দেখুন। <Cite n={3} />
+4. `claude --debug-file /tmp/claude.log` দিয়ে Claude Code চালু করুন, অথবা session চলার সময় `/debug` চালান। <Cite n={3} />
+
+যে `Stop` hook পরপর আটবার block করে, সেটি override হয়ে যায়। `stop_hook_active` field দেখুন এবং আগেভাগেই exit 0 দিন। <Cite n={3} />
+
+Command hook আপনার পূর্ণ user permission নিয়ে shell command চালায়। <Cite n={1} /> `-p` বা SDK session-এ Claude Code folder-টিকে trusted ধরে, তাই commit করা hook চলে। <Cite n={1} /> যে repository আপনি লেখেননি, CI-তে তার ওপর Claude Code চালানোর আগে তার `.claude/settings.json` review করুন।
+
+Settings-এ `"disableAllHooks": true` hook বন্ধ করে। User বা project settings থেকে এটি managed hook বন্ধ করতে পারে না। <Cite n={1} /> Git Bash ছাড়া Windows-এ matcher `Bash|PowerShell` এবং `"shell": "powershell"` ব্যবহার করুন। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
 ## Reference
+
+<Voices>
+<Technical>
 
 ### All 33 events
 
@@ -401,3 +638,28 @@ The case study has a `PreToolUse` hook that adds context before a skill runs, in
 - `PreToolUse` top-level `decision` and `reason` are deprecated. Other events, such as `PostToolUse` and `Stop`, use a top-level `decision: "block"` with a `reason`. <Cite n={1} />
 - Hooks in subagent frontmatter run only while the subagent runs. Hooks in skill frontmatter run for the rest of the session after the skill is used. `once: true` works only in skill frontmatter. <Cite n={1} />
 - `SessionEnd` hooks share a time budget of 1.5 s. If your settings set a longer per-hook `timeout`, Claude Code raises the budget to match, up to 60 s. <Cite n={1} />
+
+</Technical>
+<Layman>
+
+The hooks reference lists 33 events in all. <Cite n={1} /> Some more options:
+
+- `if` filters a tool event with permission-rule syntax, for example `"Bash(git *)"`. <Cite n={1} />
+- `asyncRewake` runs the hook in the background and wakes Claude on exit code 2. <Cite n={1} />
+- `PostToolUse` can replace the tool output with `updatedToolOutput`. <Cite n={1} />
+- `once: true` works only in skill frontmatter. <Cite n={1} />
+- `SessionEnd` hooks share a time budget of 1.5 s. If your settings set a longer per-hook `timeout`, the budget goes up to match, up to 60 s. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+Hooks reference-এ মোট 33টি event আছে। <Cite n={1} /> আরও কিছু option:
+
+- `if` permission-rule syntax দিয়ে একটি tool event filter করে, যেমন `"Bash(git *)"`। <Cite n={1} />
+- `asyncRewake` hook-টি background-এ চালায় এবং exit code 2-এ Claude-কে জাগিয়ে তোলে। <Cite n={1} />
+- `PostToolUse` `updatedToolOutput` দিয়ে tool-এর output বদলে দিতে পারে। <Cite n={1} />
+- `once: true` শুধু skill frontmatter-এ কাজ করে। <Cite n={1} />
+- `SessionEnd` hook-গুলো 1.5 s-এর একটি time budget ভাগ করে নেয়। আপনার settings-এ per-hook `timeout` বেশি হলে budget-ও সেই অনুযায়ী বাড়ে, সর্বোচ্চ 60 s পর্যন্ত। <Cite n={1} />
+
+</Bangla>
+</Voices>

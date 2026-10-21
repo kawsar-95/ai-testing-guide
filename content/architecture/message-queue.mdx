@@ -20,6 +20,9 @@ In a busy restaurant, the waiter does not cook your meal while you wait at the c
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 A message queue lets two parts of a system talk without waiting for each other. This is called asynchronous (async) communication <Cite n={1} />. A message stays in the queue until a worker processes it and deletes it <Cite n={1} />.
 
 There are two roles. The **producer** adds a message to the queue. The **consumer**, often called a worker, takes the message and does the job <Cite n={1} />. In a simple queue, each message goes to one consumer <Cite n={1} />.
@@ -38,7 +41,43 @@ Some messages fail every time, for example a job with bad data. A **dead-letter 
 
 <MdxImage src="/images/architecture/15-message-queue.webp" alt="A user request goes to the backend API. The API returns 'Processing' to the user and puts a job in the message queue. A worker takes the job from the queue and then generates a PDF, uploads it to object storage, sends an email, and updates the status." />
 
+</Technical>
+<Layman>
+
+With a message queue, two parts of a system talk and do not wait for each other. This is asynchronous (async) communication <Cite n={1} />. A message stays in the queue until a worker processes it and deletes it <Cite n={1} />.
+
+The **producer** adds a message. The **consumer** (the worker) takes it and does the job <Cite n={1} />.
+
+A queue gives three benefits:
+
+- **Fast answers.** The API does not wait for slow work. For long work, it can answer `202 Accepted` at once and point to a status endpoint for the client <Cite n={3} />.
+- **Smooth peaks.** Workers handle messages at their own pace, even in a burst of requests <Cite n={2} />.
+- **Safe from a slow service.** The API can add jobs when the worker or the service behind it is down <Cite n={2} />.
+
+In Amazon SQS, if a worker does not delete a message before the visibility timeout ends, another worker can try again <Cite n={4} />. So a job can run more than once. Your app must be idempotent <Cite n={5} />. A **dead-letter queue** (DLQ) keeps apart the messages that a worker cannot process <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+Message queue একটি system-এর দুটি অংশকে একে অপরের জন্য অপেক্ষা না করেই কথা বলতে দেয়। একে asynchronous (async) communication বলে <Cite n={1} />। একটি message queue-তে থাকে, যতক্ষণ না একটি worker সেটি process করে delete করে <Cite n={1} />।
+
+এখানে দুটি ভূমিকা আছে। **Producer** queue-তে message যোগ করে। **Consumer**, যাকে প্রায়ই worker বলা হয়, message-টি নিয়ে কাজটি করে <Cite n={1} />। একটি সাধারণ queue-তে প্রতিটি message একটি consumer-এর কাছে যায় <Cite n={1} />। সাধারণ কাজের উদাহরণ: email, SMS, PDF তৈরি, image resize, payment post-processing, analytics update এবং notification।
+
+Queue-এর তিনটি সুবিধা আছে:
+
+- **দ্রুত উত্তর।** API ধীর কাজের জন্য অপেক্ষা করে না। দীর্ঘ কাজের জন্য API সঙ্গে সঙ্গে `202 Accepted` দিতে পারে। উত্তরটি একটি status endpoint দেখায়, যা client পরে আবার check করতে পারে <Cite n={3} />।
+- **Peak সামলানো।** Queue একটি buffer। অনেক request একসাথে এলেও worker-রা নিজের গতিতে message process করে <Cite n={2} />।
+- **ধীর service থেকে সুরক্ষা।** Worker বা তার পেছনের service down থাকলেও API job যোগ করতে পারে <Cite n={2} />।
+
+Amazon SQS-এ একটি worker message পেলে সেটি কিছু সময়ের জন্য অন্য worker-দের কাছে invisible থাকে; এই সময়ের নাম visibility timeout। Worker এই সময়ের মধ্যে message delete না করলে (যেমন crash করলে) message আবার visible হয়, আর অন্য worker চেষ্টা করতে পারে <Cite n={4} />। তাই একটি job একাধিকবার চলতে পারে। SQS standard queue-তে খুব কম ক্ষেত্রে একই message-এর copy আবার আসতে পারে, তাই আপনার app-কে idempotent হতে হবে <Cite n={5} />। যে message বারবার fail করে, সেগুলো একটি **dead-letter queue** (DLQ)-তে আলাদা থাকে <Cite n={6} />। SQS-এ `maxReceiveCount` ঠিক করে, DLQ-তে যাওয়ার আগে একটি message কতবার receive করা যায় <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 - A task is slow or long-running.
 - An external service is slow or unreliable.
@@ -47,7 +86,37 @@ Some messages fail every time, for example a job with bad data. A **dead-letter 
 - Heavy tasks should run in the background.
 - You want to smooth out peak traffic.
 
+</Technical>
+<Layman>
+
+Use a message queue in these cases:
+
+- A task is slow or takes a long time.
+- An external service is slow or not reliable.
+- The user should get a fast answer from the API.
+- The task needs retries.
+- Heavy tasks should run in the background.
+- You want to smooth out the peaks of traffic.
+
+</Layman>
+<Bangla>
+
+নিচের যেকোনো অবস্থায় message queue কাজে লাগে:
+
+- একটি task ধীর, অথবা দীর্ঘ সময় ধরে চলে।
+- একটি external service ধীর বা অনির্ভরযোগ্য।
+- User-এর দ্রুত API response পাওয়া উচিত।
+- Task-টির retry দরকার।
+- ভারী task-গুলো background-এ চলা উচিত।
+- আপনি peak traffic-কে সমান করে আনতে চান।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 A student clicks **Generate Certificate**.
 
@@ -63,7 +132,35 @@ GET  /certificates/c-981    -> 200 OK, { "status": "done", "url": "..." }
 
 A worker makes the PDF, uploads it to object storage, sends the email, and sets the status to `done`. The page shows "Processing" until then.
 
+</Technical>
+<Layman>
+
+A student clicks **Generate Certificate**.
+
+**Bad design.** The request waits 20 to 30 seconds. In that time, the server makes the PDF, uploads it, and sends the email. If the browser times out, the student clicks again and gets two certificates.
+
+**Better design.** The API puts a job in the queue and answers at once. The answer to `POST /certificates` is `202 Accepted`, with the job ID `c-981` and the status `processing`. The client then asks `GET /certificates/c-981`. The answer is `200 OK` with the status `processing`, and later with the status `done` and a URL.
+
+A worker makes the PDF, uploads it to object storage, sends the email, and sets the status to `done`. Until then, the page shows "Processing".
+
+</Layman>
+<Bangla>
+
+একজন শিক্ষার্থী **Generate Certificate**-এ click করেন।
+
+**খারাপ design।** Request-টি 20 থেকে 30 সেকেন্ড অপেক্ষা করে। এই সময়ে server PDF তৈরি করে, upload করে এবং email পাঠায়। Browser time out হলে শিক্ষার্থী আবার click করেন এবং দুটি certificate পান।
+
+**ভালো design।** API queue-তে একটি job রাখে এবং সঙ্গে সঙ্গে উত্তর দেয়। `POST /certificates`-এর উত্তর হলো `202 Accepted`, সাথে job ID `c-981` এবং status `processing`। এরপর client `GET /certificates/c-981` দিয়ে জানতে চায়। উত্তর আসে `200 OK`, status `processing`; পরে status `done` এবং একটি URL।
+
+একটি worker PDF তৈরি করে, object storage-এ upload করে, email পাঠায় এবং status `done` করে দেয়। ততক্ষণ পর্যন্ত page-টি "Processing" দেখায়।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **No job status for the user.** The user clicks, sees nothing, and clicks again. Give each job a status that the client can check <Cite n={3} />.
 - **Retries on a job that is not safe to repeat.** A message can arrive more than once <Cite n={5} />. Without idempotency, the student gets two emails or two certificates.
@@ -71,7 +168,35 @@ A worker makes the PDF, uploads it to object storage, sends the email, and sets 
 - **No plan for a worker crash.** If the visibility timeout is too short, a second worker starts the same job while the first one is still busy. If it is too long, retries come late <Cite n={4} />.
 - **No queue monitoring.** Watch the number of waiting messages and the age of the oldest message <Cite n={7} />. A growing queue means the workers cannot keep up.
 
+</Technical>
+<Layman>
+
+Look out for these common mistakes:
+
+- **No job status for the user.** The user clicks, sees nothing, and clicks again. Give each job a status that the client can check <Cite n={3} />.
+- **Retries on a job that is not safe to repeat.** A message can arrive more than once <Cite n={5} />. If the job is not idempotent, the student gets two emails or two certificates.
+- **No dead-letter queue.** A bad message fails, comes back, and fails again. This wastes worker time and hides the real error. A DLQ keeps the bad message apart <Cite n={6} />.
+- **No plan for a worker crash.** If the visibility timeout is too short, a second worker starts the same job while the first worker is still busy. If the timeout is too long, the retries come late <Cite n={4} />.
+- **No queue monitoring.** Watch the number of waiting messages and the age of the oldest message <Cite n={7} />. If the queue grows, the workers cannot keep up.
+
+</Layman>
+<Bangla>
+
+এই সাধারণ ভুলগুলোর দিকে খেয়াল রাখুন:
+
+- **User-এর জন্য কোনো job status নেই।** User click করেন, কিছু দেখেন না, তাই আবার click করেন। প্রতিটি job-কে একটি status দিন, যা client check করতে পারে <Cite n={3} />।
+- **যে job repeat করা নিরাপদ নয়, তাতে retry।** একটি message একাধিকবার আসতে পারে <Cite n={5} />। Idempotency না থাকলে শিক্ষার্থী দুটি email বা দুটি certificate পান।
+- **কোনো dead-letter queue নেই।** একটি খারাপ message fail করে, ফিরে আসে, আবার fail করে। এতে worker-এর সময় নষ্ট হয় এবং আসল error চাপা পড়ে। DLQ এই message-কে আলাদা করে রাখে <Cite n={6} />।
+- **Worker crash-এর কোনো পরিকল্পনা নেই।** Visibility timeout খুব ছোট হলে প্রথম worker ব্যস্ত থাকতেই দ্বিতীয় একটি worker একই job শুরু করে। Timeout খুব বড় হলে retry দেরিতে আসে <Cite n={4} />।
+- **Queue monitoring নেই।** অপেক্ষমাণ message-এর সংখ্যা এবং সবচেয়ে পুরোনো message-এর বয়স খেয়াল রাখুন <Cite n={7} />। Queue বাড়তে থাকলে বোঝা যায়, worker-রা তাল মেলাতে পারছে না।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 - **Fast answer.** Check that the API returns at once with a job ID and a "processing" status, not after the slow work.
@@ -81,6 +206,33 @@ A worker makes the PDF, uploads it to object storage, sends the email, and sets 
 - **Poison message.** Send a job with bad data. Check that it lands in the DLQ after the set number of tries and that an alert fires.
 - **Backlog.** Send a burst of jobs. Check the queue length and the age of the oldest message, and check that the queue drains.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Fast answer.** Make sure that the API answers at once with a job ID and the status "processing". It must not answer only after the slow work.
+- **Status flow.** Ask the status endpoint again and again. Check each state: processing, done, and failed.
+- **Duplicate message.** Send the same job two times. Make sure that the student gets one certificate and one email.
+- **Worker crash.** Stop a worker suddenly in the middle of a job. Make sure that another worker finishes the job and that no half-made result stays.
+- **Poison message.** Send a job with bad data. Make sure that it goes to the DLQ after the set number of tries and that an alert fires.
+- **Backlog.** Send many jobs at one time. Check the queue length and the age of the oldest message. Make sure that the queue drains.
+
+</Layman>
+<Bangla>
+
+নিচের test ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- **দ্রুত উত্তর।** দেখুন, API ধীর কাজ শেষ হওয়ার পরে নয়, সঙ্গে সঙ্গে একটি job ID এবং "processing" status দিয়ে উত্তর দেয় কি না।
+- **Status flow।** Status endpoint বারবার poll করুন। প্রতিটি state check করুন: processing, done এবং failed।
+- **Duplicate message।** একই job দুবার পাঠান। দেখুন, শিক্ষার্থী একটি certificate এবং একটি email পান কি না।
+- **Worker crash।** একটি job-এর মাঝখানে একটি worker kill করুন। দেখুন, অন্য একটি worker job-টি শেষ করে কি না, এবং কোনো অর্ধেক-তৈরি result থেকে যায় না কি না।
+- **Poison message।** খারাপ data দিয়ে একটি job পাঠান। দেখুন, নির্ধারিত সংখ্যক চেষ্টার পরে এটি DLQ-তে যায় কি না এবং একটি alert আসে কি না।
+- **Backlog।** একসাথে অনেক job পাঠান। Queue length এবং সবচেয়ে পুরোনো message-এর বয়স check করুন, আর দেখুন queue খালি হয়ে যায় কি না।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

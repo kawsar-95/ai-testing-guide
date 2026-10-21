@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-19',
+  updated: '2026-10-20',
   sources: [
     { title: 'Linux Roadmap', publisher: 'roadmap.sh', url: 'https://roadmap.sh/linux', accessed: '2026-10-19' },
     { title: 'Essential Linux Server Maintenance Checklist', publisher: 'TecAdmin', url: 'https://tecadmin.net/linux-server-maintenance-checklist/', accessed: '2026-10-19' },
@@ -65,6 +65,9 @@ This stage shows the first checks for a Linux server that misbehaves. <Cite n={1
 
 ## Server Review
 
+<Voices>
+<Technical>
+
 Read before you change anything. A read-only look keeps the evidence intact. A maintenance checklist covers the same ground: logs, disk use, load, and open ports. <Cite n={2} /> Answer five questions in this order.
 
 | Question | Command |
@@ -94,7 +97,43 @@ journalctl -p err -b --no-pager | tail -n 20   # last errors since boot (root or
 Tutorial's own advice: run this list on the test environment before a run and again after a failure. Save both outputs with the bug report. A developer then sees the OS version, the failed units, and the disk state without asking you. Also compare a failing environment with a working one of the same distribution. <Cite n={7} />
 </Callout>
 
+</Technical>
+<Layman>
+
+Read the server before you change anything. A read-only look keeps the evidence intact. A maintenance checklist covers logs, disk use, load, and open ports <Cite n={2} />. Answer 5 questions in this order:
+
+- What is this machine? Run `uname -a` <Cite n={39} /> and `cat /etc/os-release` <Cite n={40} />.
+- Who is on it? Run `w`. Its header also shows the uptime and the load.
+- How busy is it? Run `uptime`, `free -h`, and `df -h`.
+- What listens? Run `ss -tuln`. It shows the TCP and UDP ports that listen, as numbers <Cite n={37} />.
+- What is broken? Run `systemctl --failed` <Cite n={38} /> and `journalctl -p err -b` <Cite n={21} />.
+
+`w` shows each user, the terminal, the login time, and the current command <Cite n={41} />. If another person works on the host, ask before you test.
+
+Tutorial's own advice: a minimal container image can lack some of these tools. Install them before you start. Run the list before a test run and again after a failure. Keep both outputs with the bug report. Also compare a failing environment with a working one of the same distribution <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+কিছু পরিবর্তন করার আগে server-টি পড়ে দেখুন। শুধু read-only ভাবে দেখলে evidence অক্ষত থাকে। একটি maintenance checklist-ও একই বিষয়গুলো দেখে: log, disk-এর ব্যবহার, load, আর open port <Cite n={2} />। এই 5টি প্রশ্নের উত্তর এই ক্রমে খুঁজুন:
+
+- এটি কোন machine? `uname -a` <Cite n={39} /> আর `cat /etc/os-release` <Cite n={40} /> চালান।
+- এতে কে আছেন? `w` চালান। এর header-এ uptime আর load-ও দেখা যায়।
+- এটি কতটা ব্যস্ত? `uptime`, `free -h`, আর `df -h` চালান।
+- কী listen করছে? `ss -tuln` চালান। এটি শুধু listening TCP আর UDP port সংখ্যায় দেখায় <Cite n={37} />।
+- কী নষ্ট? `systemctl --failed` <Cite n={38} /> আর `journalctl -p err -b` <Cite n={21} /> চালান।
+
+`w` প্রতিটি user, terminal, login-এর সময়, আর চলমান command দেখায় <Cite n={41} />। অন্য কেউ host-এ কাজ করলে test করার আগে তাঁকে জিজ্ঞেস করুন।
+
+Tutorial-এর নিজের পরামর্শ: একটি minimal container image-এ কিছু tool না-ও থাকতে পারে। শুরু করার আগে যা নেই তা install করুন। Test run-এর আগে আর failure-এর পরে এই তালিকা চালান, এবং দুটি output-ই bug report-এর সাথে রাখুন। একই distribution-এর একটি working environment-এর সাথে failing environment-টি তুলনা করুন <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
 ## Uptime and Load
+
+<Voices>
+<Technical>
 
 `uptime` prints the time, the time since boot, the user count, and the load averages (1, 5, 15 minutes). <Cite n={8} /> A load average is the mean number of processes that are runnable or in uninterruptible sleep. A runnable process uses a CPU or waits for one. An uninterruptible process waits for I/O. <Cite n={8} /> `uptime -s` prints the boot time. <Cite n={3} />
 
@@ -116,7 +155,39 @@ cat /proc/pressure/io  # some avg10=... avg60=... avg300=... total=...
 Tutorial's own advice: before a load test, write down `nproc` and the load numbers. A load above the CPU count means tasks queue for a CPU or for I/O. High load with low CPU use can mean I/O waits: check `wa`, `b`, and `io` pressure. A high `st` can mean the host lent CPU time to others.
 </Callout>
 
+</Technical>
+<Layman>
+
+`uptime` shows the time, the time since boot, the number of users, and 3 load averages: for 1, 5, and 15 minutes <Cite n={8} />. The load average is the mean number of processes that use a CPU, wait for a CPU, or wait for I/O <Cite n={8} />. `uptime -s` shows the boot time <Cite n={3} />.
+
+The load is not divided by the number of CPUs. On 4 CPUs, a load of 1 means 75 % idle time <Cite n={8} />. So compare the load with `nproc` <Cite n={10} />.
+
+In `vmstat`, `r` counts the processes that can run, `b` counts the blocked ones, and `wa` is the I/O wait. `st` is the time that the VM host took from the virtual machine <Cite n={12} />.
+
+The files in `/proc/pressure/` show how much time tasks stall for CPU, memory, or I/O <Cite n={13} />. If the files are not there, PSI is off (tutorial's own note).
+
+Tutorial's own advice: before a load test, write down `nproc` and the load numbers. High load with low CPU use can mean I/O waits. Then check `wa`, `b`, and the `io` pressure.
+
+</Layman>
+<Bangla>
+
+`uptime` সময়, boot থেকে কত সময় গেছে, user-এর সংখ্যা, আর load average (1, 5, 15 মিনিট) দেখায় <Cite n={8} />। Load average হলো সেই process-গুলোর গড় সংখ্যা, যেগুলো runnable অথবা uninterruptible sleep-এ আছে। Runnable process CPU ব্যবহার করে বা CPU-র জন্য অপেক্ষা করে; uninterruptible process I/O-র জন্য অপেক্ষা করে <Cite n={8} />। `uptime -s` boot-এর সময় দেখায় <Cite n={3} />। `/proc/loadavg`-এ একই তিনটি সংখ্যা থাকে <Cite n={9} />।
+
+Load-কে CPU-র সংখ্যা দিয়ে ভাগ করা হয় না: 4টি CPU-তে load 1 মানে 75 % idle সময় <Cite n={8} />। তাই load-কে `nproc`-এর সাথে তুলনা করুন। cgroup v2 CPU quota থাকলে এটি `nproc --all`-এর চেয়ে কম হতে পারে <Cite n={10} />।
+
+`vmstat`-এ `r` runnable process গোনে, `b` blocked process গোনে, আর `wa` হলো I/O wait। `st` হলো সেই সময়, যা hypervisor virtual machine থেকে নিয়ে নিয়েছে <Cite n={12} />।
+
+PSI (pressure stall information) থাকে `/proc/pressure/cpu`, `memory`, আর `io`-তে। `some` হলো যে সময়ে কিছু task stall করে, তার অংশ; `full` হলো যে সময়ে সব non-idle task stall করে, তার অংশ <Cite n={13} />। File না থাকলে PSI বন্ধ আছে (tutorial-এর নিজের note)।
+
+Tutorial-এর নিজের পরামর্শ: load test-এর আগে `nproc` আর load-এর সংখ্যাগুলো লিখে রাখুন। CPU ব্যবহার কম অথচ load বেশি হলে তা I/O wait হতে পারে। তখন `wa`, `b`, আর `io` pressure দেখুন।
+
+</Bangla>
+</Voices>
+
 ## Available Memory and Disk
+
+<Voices>
+<Technical>
 
 `free -h` shows total, used, free, shared, buff/cache, and available memory. <Cite n={14} /> Page cache is file data that the kernel keeps in RAM to avoid disk reads. The kernel can reclaim it. <Cite n={20} /> So a small `free` value is normal. Read `available`, the estimate of memory for new programs without swapping. It comes from `MemAvailable`. <Cite n={15} /> Swap is disk space used when RAM runs short. In `vmstat`, `si` and `so` show memory moved from and to swap. <Cite n={12} />
 
@@ -140,7 +211,35 @@ Writing to `/proc/sys/vm/drop_caches` discards cached data and can cost much I/O
 Tutorial's own advice: a full disk or an OOM kill can look like a flaky test. Run `df -h`, `df -i`, and `free -h` at the start and end of a CI job. Keep the output.
 </Callout>
 
+</Technical>
+<Layman>
+
+`free -h` shows the memory: total, used, free, shared, buff/cache, and available <Cite n={14} />. The kernel keeps file data in RAM as page cache, and it can take this memory back <Cite n={20} />. So a small `free` value is normal. Read the `available` column. It is the estimate of memory for new programs without swapping <Cite n={15} />. Swap is disk space that the system uses when RAM runs short.
+
+`df -h` shows the space on each filesystem, and `df -i` shows the inode use. An inode is the record of one file. `du -sh <dir>` shows the total size of one directory <Cite n={16} /> <Cite n={17} />. If `df` says full but `du` finds less, a process can hold a deleted file open (tutorial's own explanation). `lsof +L1` lists these files <Cite n={18} />.
+
+When memory runs out and the kernel cannot get enough back, the OOM killer ends a task <Cite n={20} />. A process with a higher `/proc/<pid>/oom_score` is more likely to be chosen <Cite n={44} />.
+
+A write to `/proc/sys/vm/drop_caches` discards cached data. The kernel documentation advises it only for tests and debugging <Cite n={19} />.
+
+</Layman>
+<Bangla>
+
+`free -h` total, used, free, shared, buff/cache, আর available memory দেখায় <Cite n={14} />। Page cache হলো সেই file data, যা kernel disk read এড়াতে RAM-এ রাখে। Kernel এই memory আবার ফিরিয়ে নিতে পারে <Cite n={20} />। তাই `free`-এর মান ছোট হওয়া স্বাভাবিক। `available` column-টি পড়ুন। এটি swap ছাড়া নতুন program-এর জন্য কতটা memory আছে তার একটি অনুমান, যা `MemAvailable` থেকে আসে <Cite n={15} />। `vmstat`-এ `si` আর `so` দেখায়, কতটা memory swap থেকে আনা হলো আর swap-এ পাঠানো হলো <Cite n={12} />।
+
+`df -h` প্রতিটি filesystem-এর জায়গা দেখায়, `df -i` inode-এর ব্যবহার দেখায়, আর `du -sh <dir>` একটি directory-র মোট আকার দেয় <Cite n={16} /> <Cite n={17} />। Inode হলো একটি file-এর filesystem record। Tutorial-এর নিজের ব্যাখ্যা: `df` disk full বললেও `du` কম পেলে, কোনো process হয়তো একটি deleted file খোলা রেখেছে। `lsof +L1` এমন unlinked open file দেখায় <Cite n={18} />।
+
+Memory শেষ হলে আর kernel যথেষ্ট memory ফিরিয়ে নিতে না পারলে, OOM (out-of-memory) killer একটি task বন্ধ করে দেয় <Cite n={20} />। `/proc/<pid>/oom_score` যত বেশি, process-টি বাছাই হওয়ার সম্ভাবনা তত বেশি <Cite n={44} />।
+
+`/proc/sys/vm/drop_caches`-এ লিখলে cached data মুছে যায়, এবং এতে অনেক I/O আর CPU খরচ হতে পারে। Kernel documentation এটি শুধু test আর debugging-এর জন্য পরামর্শ দেয় <Cite n={19} />। Tutorial-এর নিজের পরামর্শ: diagnose করার সময় production-এ `sysctl -w` বা `swapoff` চালাবেন না। একটি CI job-এর শুরুতে আর শেষে `df -h`, `df -i`, আর `free -h` চালিয়ে output রেখে দিন।
+
+</Bangla>
+</Voices>
+
 ## System Logs
+
+<Voices>
+<Technical>
 
 Most plain-text logs live in `/var/log`. <Cite n={7} /> <Cite n={46} /> Many services log to the journal, the structured log store of `systemd-journald`. It collects kernel messages, `syslog(3)` calls, and service output. <Cite n={22} /> It writes to `/var/log/journal` if that directory exists, else to `/run/log/journal`, which is lost at reboot. <Cite n={22} /> `Storage=` in `journald.conf` changes this, and some distributions do not keep the journal. <Cite n={23} /> <Cite n={6} /> If `rsyslog` (the classic syslog service) runs, it writes text files <Cite n={43} />; RHEL uses `/var/log/messages` <Cite n={29} />, and Debian and Ubuntu use `/var/log/syslog`. <Cite n={26} /> <Cite n={45} />
 
@@ -164,7 +263,31 @@ Tutorial's own advice: on a production host, do not run `rm`, `truncate`, or `> 
 Tutorial's own advice: after a failed run, save the unit name, the time range with its time zone, and the priority filter.
 </Callout>
 
+</Technical>
+<Layman>
+
+Most text logs are in `/var/log` <Cite n={7} />. Many services write to the journal, the log store of `systemd-journald`. It collects kernel messages, `syslog(3)` calls, and service output <Cite n={22} />. It writes to `/var/log/journal` if that directory exists. Else it writes to `/run/log/journal`, and a reboot loses that data <Cite n={22} />. If `rsyslog` runs, it writes text files: `/var/log/messages` on RHEL <Cite n={29} />, and `/var/log/syslog` on Debian and Ubuntu <Cite n={26} /> <Cite n={45} />.
+
+`journalctl` can filter by unit (`-u`), boot (`-b`), priority (`-p`), time (`--since`, `--until`), and kernel (`-k`) <Cite n={21} />. `-p err` also shows the more severe levels <Cite n={21} />. Only root and members of `systemd-journal`, `adm`, or `wheel` can read the full journal <Cite n={21} />. `dmesg` shows the kernel message log <Cite n={27} />. `logrotate` keeps old logs for some time and removes the oldest <Cite n={24} />.
+
+Tutorial's own advice: never delete or truncate a log on a production host to free space. These commands destroy evidence. After a failed run, save the unit name, the time range with its time zone, and the priority filter.
+
+</Layman>
+<Bangla>
+
+বেশিরভাগ plain-text log থাকে `/var/log`-এ <Cite n={7} /> <Cite n={46} />। অনেক service journal-এ log লেখে। Journal হলো `systemd-journald`-এর structured log store। এটি kernel message, `syslog(3)` call, আর service output সংগ্রহ করে <Cite n={22} />। `/var/log/journal` directory থাকলে এটি সেখানে লেখে, না থাকলে `/run/log/journal`-এ লেখে, যা reboot-এ হারিয়ে যায় <Cite n={22} />। `journald.conf`-এর `Storage=` এই আচরণ বদলায় <Cite n={23} />। `rsyslog` চললে এটি text file লেখে <Cite n={43} />: RHEL-এ `/var/log/messages` <Cite n={29} />, আর Debian ও Ubuntu-তে `/var/log/syslog` <Cite n={26} /> <Cite n={45} />।
+
+`journalctl` unit (`-u`), boot (`-b`), priority (`-p`), সময় (`--since`, `--until`), আর kernel (`-k`) দিয়ে filter করতে পারে <Cite n={21} />। Priority `emerg` (0) থেকে `debug` (7) পর্যন্ত। `-p err` আরও গুরুতর level-গুলোও দেখায় <Cite n={21} /> <Cite n={25} />। শুধু root আর `systemd-journal`, `adm`, বা `wheel`-এর সদস্যরা পুরো journal পড়তে পারেন; অন্যরা শুধু নিজেদের অংশ দেখেন <Cite n={21} />। `dmesg` kernel ring buffer, অর্থাৎ kernel-এর message log, দেখায় <Cite n={27} />। `logrotate` পুরনো log কিছু সময় রাখে, compress করতে পারে, আর সবচেয়ে পুরনোগুলো মুছে দেয় <Cite n={24} />।
+
+Tutorial-এর নিজের পরামর্শ: production host-এ জায়গা খালি করতে কখনো log মুছবেন না বা truncate করবেন না। এই command-গুলো evidence নষ্ট করে। Failed run-এর পরে unit-এর নাম, time zone সহ সময়ের পরিসর, আর priority filter লিখে রাখুন।
+
+</Bangla>
+</Voices>
+
 ## Authentication Logs
+
+<Voices>
+<Technical>
 
 Authentication logs record logins and `sudo` use. With rsyslog, Debian and Ubuntu write them to `/var/log/auth.log`. <Cite n={4} /> <Cite n={45} /> RHEL and CentOS Stream write them to `/var/log/secure`. <Cite n={29} /> A facility is a syslog message category. The Debian file collects `auth` and `authpriv`; the CentOS file, only `authpriv`. Upstream `sshd` uses facility `AUTH`, but a distribution can change it. <Cite n={34} /> Check `SyslogFacility` in `/etc/ssh/sshd_config`; no active line means the default. Else read the journal: `journalctl -u ssh` on Ubuntu <Cite n={47} />, or `-u sshd` on RHEL (tutorial's own note; check `systemctl list-units '*ssh*'`).
 
@@ -190,7 +313,39 @@ They hold user names and IP addresses. Only authorized administrators may read t
 Tutorial's own advice: when a login test fails, find the cause in the log: wrong password, locked account, or rejected key. Never lock the shared test account with bad-password loops.
 </Callout>
 
+</Technical>
+<Layman>
+
+Authentication logs record logins and `sudo` use. With rsyslog, Debian and Ubuntu write them to `/var/log/auth.log` <Cite n={4} /> <Cite n={45} />. RHEL and CentOS Stream write them to `/var/log/secure` <Cite n={29} />. You can also read the journal: `journalctl -u ssh` on Ubuntu <Cite n={47} />, or `-u sshd` on RHEL (tutorial's own note).
+
+`last` reads `/var/log/wtmp`, the record of logins. `lastb` reads `/var/log/btmp`, the record of bad logins <Cite n={30} />. With `pam_faillock`, `faillock --user alice` shows the failed attempts <Cite n={31} />. This module locks an account after more than `deny` failures in a row <Cite n={32} />.
+
+Brute force means many password guesses. Look for many failures from one address, many tries for `root`, and many `invalid user` lines <Cite n={5} /> <Cite n={4} />.
+
+These logs hold user names and IP addresses. Only authorized administrators may read them. Never post them in a public ticket or chat. Replace the names and addresses first.
+
+Tutorial's own advice: when a login test fails, find the cause in the log. Never lock the shared test account with loops of bad passwords.
+
+</Layman>
+<Bangla>
+
+Authentication log login আর `sudo` ব্যবহারের রেকর্ড রাখে। rsyslog থাকলে Debian আর Ubuntu এগুলো `/var/log/auth.log`-এ লেখে <Cite n={4} /> <Cite n={45} />। RHEL আর CentOS Stream লেখে `/var/log/secure`-এ <Cite n={29} />। Upstream `sshd` facility `AUTH` ব্যবহার করে, তবে কোনো distribution এটি বদলাতে পারে <Cite n={34} />। আপনি journal-ও পড়তে পারেন: Ubuntu-তে `journalctl -u ssh` <Cite n={47} />, আর RHEL-এ `-u sshd` (tutorial-এর নিজের note)।
+
+`last` পড়ে `/var/log/wtmp`, অর্থাৎ login-এর রেকর্ড। `lastb` পড়ে `/var/log/btmp`, অর্থাৎ ব্যর্থ login-এর রেকর্ড <Cite n={30} />। `pam_faillock` থাকলে `faillock --user alice` ব্যর্থ চেষ্টাগুলো দেখায় <Cite n={31} />। এই module পরপর `deny`-এর চেয়ে বেশি ব্যর্থতার পরে account lock করে দেয় <Cite n={32} />। `faillog` একটি পুরনো database, `/var/log/faillog`, এবং এটি খালি থাকতে পারে <Cite n={33} />।
+
+Brute force মানে অনেকবার password অনুমান করা। এর লক্ষণ: একটি address থেকে অনেক failure, `root`-এর জন্য অনেক চেষ্টা, আর অনেক `invalid user` line <Cite n={5} /> <Cite n={4} />।
+
+এই log-গুলোতে user-এর নাম আর IP address থাকে। শুধু অনুমোদিত administrator-রা এগুলো পড়তে পারেন। কখনো public ticket বা chat-এ এগুলো post করবেন না। আগে নাম আর address বদলে `alice` আর `203.0.113.7` লিখুন।
+
+Tutorial-এর নিজের পরামর্শ: login test fail করলে log-এ কারণ খুঁজুন: ভুল password, locked account, নাকি rejected key। ভুল password-এর loop দিয়ে shared test account কখনো lock করবেন না।
+
+</Bangla>
+</Voices>
+
 ## Troubleshooting
+
+<Voices>
+<Technical>
 
 Reproduce the fault. Write down every symptom and error message. Check the logs. Compare with a working system. Write down the cause and the fix. <Cite n={7} /> Tutorial's own advice: change one thing at a time, and keep a rollback step for each change.
 
@@ -226,3 +381,28 @@ Tutorial's own advice: do not run `kill -9`, restart a service, or attach `strac
 <Callout type="tip" title="Why it matters for testing">
 Tutorial's own advice: attach a bug report bundle: OS and application versions, redacted configuration, the log window, and the steps. The script above collects the system part.
 </Callout>
+
+</Technical>
+<Layman>
+
+Reproduce the fault. Write down every symptom and error message. Check the logs. Compare with a working system. Write down the cause and the fix <Cite n={7} />. Tutorial's own advice: change one thing at a time, and keep a rollback step for each change.
+
+Check the layers in this order: network (does the port listen? `ss -tuln` <Cite n={37} />), process (does the unit run?), resource (CPU, memory, disk), configuration (what changed?), and logs (what was said?).
+
+`strace` records the system calls of a process. A system call is a request from a program to the kernel. `-f` follows child processes, `-e trace=` limits the calls, and `-c` shows a summary <Cite n={35} />. A traced process runs slower <Cite n={35} />. Where Yama is active, attaching with `-p` can need `CAP_SYS_PTRACE`, often root <Cite n={42} />. `ltrace` traces library calls <Cite n={36} />.
+
+Tutorial's own advice: do not run `kill -9`, restart a service, or attach `strace` on production without approval. A restart erases the state that you want to study. Attach a bug report bundle: the versions, the redacted configuration, the log window, and the steps.
+
+</Layman>
+<Bangla>
+
+Fault-টি আবার ঘটান। প্রতিটি লক্ষণ আর error message লিখে রাখুন। Log দেখুন। একটি working system-এর সাথে তুলনা করুন। কারণ আর সমাধান লিখে রাখুন <Cite n={7} />। Tutorial-এর নিজের পরামর্শ: একবারে একটি জিনিস বদলান, আর প্রতিটি পরিবর্তনের জন্য একটি rollback step রাখুন।
+
+Layer-গুলো এই ক্রমে দেখুন: network (port কি listen করছে? `ss -tuln` <Cite n={37} />), process (unit কি চলছে?), resource (CPU, memory, disk), config (কী বদলেছে?), আর log (কী বলা হয়েছে?)।
+
+`strace` একটি process-এর system call রেকর্ড করে। System call হলো kernel-এর কাছে একটি program-এর অনুরোধ। `-f` child process-গুলোকেও অনুসরণ করে, `-e trace=` call-গুলো সীমিত করে, আর `-c` একটি summary দেখায় <Cite n={35} />। Trace করা process ধীরে চলে <Cite n={35} />। যেখানে Yama active, সেখানে `-p` দিয়ে attach করতে `CAP_SYS_PTRACE` লাগতে পারে, যা প্রায়ই root <Cite n={42} />। `ltrace` library call trace করে <Cite n={36} />।
+
+Tutorial-এর নিজের পরামর্শ: approval ছাড়া production-এ `kill -9` চালাবেন না, service restart করবেন না, বা `strace` attach করবেন না। Restart সেই state মুছে দেয়, যা আপনি পরীক্ষা করতে চান। Root দরকার হলে, data loss দেখলে, বা attack-এর লক্ষণ দেখলে escalate করুন। Bug report-এর সাথে একটি bundle দিন: OS আর application-এর version, redacted configuration, log window, আর step-গুলো।
+
+</Bangla>
+</Voices>

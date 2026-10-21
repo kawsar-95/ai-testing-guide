@@ -177,7 +177,7 @@ The 404 page has no canonical URL and no Open Graph data.
 
 ## Base path (GitHub Pages)
 
-GitHub Pages serves the site at `/learn-software-testing-with-ai/`. The deploy workflow sets `PAGES_BASE_PATH` to that path. `next.config.ts` uses it as `basePath` and exposes it to the browser as `NEXT_PUBLIC_BASE_PATH` (`BASE_PATH` in `lib/site.ts`). Local builds leave it empty and serve from `/`.
+GitHub Pages serves the site at `/ai-testing-guide/`. The deploy workflow sets `PAGES_BASE_PATH` to that path. `next.config.ts` uses it as `basePath` and exposes it to the browser as `NEXT_PUBLIC_BASE_PATH` (`BASE_PATH` in `lib/site.ts`). Local builds leave it empty and serve from `/`.
 
 | Adds the base path by itself | Needs the base path added by hand |
 |---|---|

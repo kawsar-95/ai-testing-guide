@@ -14,6 +14,9 @@ When you open Twitter (now X), you see a long list of tweets that loads fast and
 
 ## The problem in plain words
 
+<Voices>
+<Technical>
+
 Most system design talks are about servers: databases, caches, and load balancers. Front-end system design looks at similar problems inside the browser. It asks how fast the page draws, how much data it sends, and how the screen stays in step with the server <Cite n={1} />. For a site like Twitter, the front end is a distributed system of its own. It holds state, fetches and caches data, and syncs with the backend in real time <Cite n={1} />.
 
 <Callout type="note" title="An interview-style design">
@@ -29,7 +32,45 @@ The author uses his RADIO framework: Requirements, Architecture, Data model, Int
 
 The free part of the article gives few hard numbers. It says the front end must scale to millions of users, and that a timeline fetch on Twitter takes less than 1 second <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+Most system design talks are about servers. Front-end system design looks at similar problems in the browser. It asks how fast the page draws, how much data it sends, and how the screen stays in step with the server <Cite n={1} />. For a site like Twitter, the front end is a distributed system of its own. It holds state, gets and caches data, and syncs with the backend in real time <Cite n={1} />.
+
+The article is a guest post by Yangshun Tay. It answers the interview question "Design the Twitter timeline" <Cite n={1} />. It shows one way to build this. It is not always the exact system that Twitter runs.
+
+The core requirements are these <Cite n={1} />:
+
+- Users scroll a timeline of tweets with text and images.
+- Users can like and retweet a tweet, and click it to see the replies.
+- More tweets load when users get to the bottom.
+- Users can write new tweets.
+
+The article says that the front end must scale to millions of users. It also says that a timeline fetch on Twitter takes less than 1 second <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+বেশিরভাগ system design আলোচনা server নিয়ে হয়: database, cache, আর load balancer। Front-end system design browser-এর ভেতরে একই ধরনের সমস্যা দেখে। এটি জানতে চায়, page কত দ্রুত আঁকা হয়, কতটা data পাঠানো হয়, আর screen কীভাবে server-এর সাথে মিল রেখে চলে <Cite n={1} />। Twitter-এর মতো site-এর front end নিজেই একটি distributed system। এটি state রাখে, data fetch ও cache করে, এবং real time-এ backend-এর সাথে sync করে <Cite n={1} />।
+
+Article-টি Yangshun Tay-এর একটি guest post, যা "Design the Twitter timeline" interview প্রশ্নের উত্তর হিসেবে লেখা <Cite n={1} />। এটি এই system তৈরির একটি উপায় দেখায়। Twitter সবসময় ঠিক এই system-টিই চালায়, এমন নয়।
+
+লেখক তাঁর RADIO framework ব্যবহার করেন: Requirements, Architecture, Data model, Interface, এবং Optimizations। মূল requirement-গুলো হলো <Cite n={1} />:
+
+- User-রা text ও image-সহ tweet-এর একটি timeline scroll করেন।
+- User-রা একটি tweet like ও retweet করতে পারেন, এবং click করে reply-গুলো দেখতে পারেন।
+- User-রা নিচে পৌঁছালে আরও tweet load হয়।
+- User-রা নতুন tweet লিখতে পারেন।
+
+Article-এর free অংশে নির্দিষ্ট সংখ্যা খুব কম। এটি বলে, front end-কে লক্ষ লক্ষ user পর্যন্ত scale করতে হবে, আর Twitter-এ একটি timeline fetch 1 সেকেন্ডের কম সময় নেয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## The big picture
+
+<Voices>
+<Technical>
 
 ```text
 [You] --> [View: timeline page, tweet page, composer]
@@ -47,7 +88,27 @@ The free part of the article gives few hard numbers. It says the front end must 
 
 The view draws what is in the store. When you act, the store changes first, and the data access layer sends the change to the server. Data that comes back goes through the data access layer into the store, and the view draws again <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+The diagram shows how the parts connect. You use the view: the timeline page, the tweet page, and the composer. Under the view is the store. It keeps the tweets, the users, and the timeline in memory. Under the store is the data access layer. It handles requests, retries, paging, and caching. It talks to the server over HTTP.
+
+The view draws what is in the store. When you do something, for example like or post, the store changes first. Then the data access layer sends the change to the server. Data that comes back goes through the data access layer into the store. Then the view draws again <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+Diagram-টি দেখায়, অংশগুলো কীভাবে যুক্ত। আপনি view ব্যবহার করেন: timeline page, tweet page, আর composer। View-এর নিচে আছে store, যা tweet, user, আর timeline memory-তে রাখে। Store-এর নিচে আছে data access layer। এটি request, retry, paging, আর caching সামলায় এবং HTTP দিয়ে server-এর সাথে কথা বলে।
+
+View সেটাই আঁকে, যা store-এ আছে। আপনি কোনো action নিলে (যেমন like বা post), প্রথমে store বদলায়, তারপর data access layer পরিবর্তনটি server-এ পাঠায়। Server থেকে যে data ফিরে আসে, তা data access layer হয়ে store-এ যায়, আর view আবার আঁকা হয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Where the page is built
+
+<Voices>
+<Technical>
 
 Think of a restaurant. It can serve a plated meal that is ready to eat, or a meal kit that you cook at home. A plated meal is faster to start, and a kit gives you more control.
 
@@ -61,7 +122,37 @@ The table follows the article, except the last cell <Cite n={1} />. With SSR, th
 
 The second choice is how you move between pages. A single-page application (SPA) loads one HTML page and then changes its content with JavaScript, with no full reload. A multi-page application (MPA) loads a new HTML page for each route <Cite n={1} />. For Twitter, an SPA is the better fit <Cite n={1} />. When you click a tweet in the timeline, its text and images are already in memory, so the tweet page opens at once. Only the replies must load <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+The article compares three ways to build the page <Cite n={1} />:
+
+- **Server-side rendering (SSR).** The server builds the full HTML page. The first paint is fast, and it is good for search engines. But it needs more server resources.
+- **Client-side rendering (CSR).** The server sends a small HTML shell and JavaScript. The browser gets the data and draws the page. It is very interactive after load. But the first load is slow, and it is weak for search engines.
+- **Hybrid.** The server draws the first page, and the browser handles the updates.
+
+The article thinks that Twitter likely uses CSR. Timelines are personal, so SSR helps speed more than search <Cite n={1} />.
+
+A single-page application (SPA) loads one HTML page and then changes its content with JavaScript, with no full reload. A multi-page application (MPA) loads a new HTML page for each route. For Twitter, an SPA is the better fit <Cite n={1} />. When you click a tweet in the timeline, its text and images are already in memory, so the tweet page opens at once <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটি restaurant-এর কথা ভাবুন। এটি খাওয়ার জন্য তৈরি plated meal দিতে পারে, অথবা একটি meal kit দিতে পারে, যা আপনি বাড়িতে রান্না করেন। Plated meal দ্রুত শুরু হয়, আর kit আপনাকে বেশি নিয়ন্ত্রণ দেয়।
+
+Page তৈরির তিনটি উপায় আছে <Cite n={1} />। Server-side rendering (SSR)-এ server পুরো HTML page তৈরি করে। এতে first paint দ্রুত হয় এবং search engine-এর জন্য ভালো, কিন্তু বেশি server resource লাগে। Client-side rendering (CSR)-এ server একটি ছোট HTML shell আর JavaScript পাঠায়; browser data fetch করে page আঁকে। Load-এর পরে এটি খুব interactive, কিন্তু প্রথম load ধীর এবং search engine-এর জন্য দুর্বল। Hybrid-এ server প্রথম page আঁকে, আর browser update-গুলো সামলায়। Article Hybrid-এর কোনো খারাপ দিক বলে না; tutorial-এর মতে, প্রথম page-এর জন্য তবুও server resource লাগে।
+
+SSR-এ browser পরে page-টি "hydrate" করে, অর্থাৎ button কাজ করানোর code যুক্ত করে <Cite n={1} />। Article-এর ধারণা, Twitter সম্ভবত CSR ব্যবহার করে। Timeline ব্যক্তিগত, তাই SSR search-এর চেয়ে speed-এ বেশি সাহায্য করে, আর timeline fetch এমনিতেই দ্রুত <Cite n={1} />।
+
+Single-page application (SPA) একটি HTML page load করে, তারপর পুরো reload ছাড়াই JavaScript দিয়ে content বদলায়। Multi-page application (MPA) প্রতিটি route-এর জন্য নতুন HTML page load করে <Cite n={1} />। Twitter-এর জন্য SPA বেশি উপযুক্ত। Timeline-এ একটি tweet click করলে তার text ও image আগে থেকেই memory-তে থাকে, তাই tweet page সাথে সাথে খোলে; শুধু reply-গুলো load করতে হয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## The store keeps one copy of everything
+
+<Voices>
+<Technical>
 
 Think of the contact list on your phone. Your chat apps show the name from your contacts. If you change a name one time, every chat shows the new name.
 
@@ -75,7 +166,37 @@ The store is the single source of truth in the browser. It keeps the timeline, t
 
 The table follows the article <Cite n={1} />. The work to normalize data can happen on the server or in the browser. The article says that, as of 2025, Twitter normalizes the timeline on its servers, so the browser gets a small, ready-made payload <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+Think of the contact list on your phone. Your chat apps show the name from your contacts. If you change a name one time, every chat shows the new name.
+
+The store is the single source of truth in the browser. It keeps the timeline, the tweets, the users, and the text that you type in memory <Cite n={1} />. It uses normalization: it stores each item exactly one time, and other items point to it by its ID <Cite n={1} />. A tweet does not hold a full copy of its author. It holds the ID of the author. So when a user changes an avatar, the store updates one entry, and every tweet by that user shows the new picture <Cite n={1} />.
+
+The server or the browser can do the normalization. The article says that, as of 2025, Twitter normalizes the timeline on its servers. So the browser gets a small set of data that is ready to use <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+আপনার phone-এর contact list-এর কথা ভাবুন। আপনার chat app-গুলো contact থেকে নাম দেখায়। একবার একটি নাম বদলালে প্রতিটি chat-এ নতুন নামটি দেখা যায়।
+
+Store হলো browser-এর single source of truth। এটি timeline, tweet, user, আর আপনি যে text লিখছেন, সব memory-তে রাখে <Cite n={1} />। এটি normalization ব্যবহার করে: প্রতিটি item ঠিক একবার রাখা হয়, আর অন্য item-গুলো তার ID দিয়ে তাকে নির্দেশ করে <Cite n={1} />। একটি tweet তার author-এর পুরো copy রাখে না, শুধু author-এর ID রাখে। তাই একজন user avatar বদলালে store একটি entry update করে, আর সেই user-এর প্রতিটি tweet-এ নতুন ছবি দেখা যায় <Cite n={1} />।
+
+Article অনুযায়ী তিনটি item-এ যা থাকে <Cite n={1} />:
+
+- Tweet: text, author ID, সময়, like ও retweet count, এবং media।
+- User: name, username, ছবি, verified status, এবং একটি "you follow them" flag।
+- Timeline: tweet ID-গুলোর একটি ক্রমানুসারী list এবং paging-এর তথ্য।
+
+Normalization-এর কাজ server-এ বা browser-এ হতে পারে। Article বলে, 2025 অনুযায়ী Twitter তার server-এ timeline normalize করে, তাই browser একটি ছোট, তৈরি payload পায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## The API between browser and server
+
+<Voices>
+<Technical>
 
 Think of an order form at a restaurant. Each form has fixed fields, so the kitchen always knows what you want. An API is that form for software.
 
@@ -90,7 +211,45 @@ POST /tweets/{id}/retweet            retweet a tweet
 
 The list follows the article <Cite n={1} />. A request must not carry the user ID as proof of who the user is, because an attacker can fake it. The server reads the identity from the session cookie <Cite n={1} />. To post an image, the app first uploads it to blob storage, a store for large files. It gets back an ID and puts that ID in the new tweet <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+Think of an order form at a restaurant. Each form has fixed fields, so the kitchen always knows what you want. An API is that form for software.
+
+The article lists these requests <Cite n={1} />:
+
+- `GET /timeline?count=10&cursor=abc` gets a page of tweets, with the paging details.
+- `GET /tweets/{id}` gets one tweet.
+- `POST /tweets` creates a tweet.
+- `POST /media/upload` uploads an image and gives back a media ID.
+- `POST /tweets/{id}/like` likes a tweet.
+- `POST /tweets/{id}/retweet` retweets a tweet.
+
+A request must not send the user ID as proof of who the user is, because an attacker can fake it. The server reads the identity from the session cookie <Cite n={1} />. To post an image, the app first uploads it to blob storage, a store for large files. The app gets back an ID and puts that ID in the new tweet <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটি restaurant-এর order form-এর কথা ভাবুন। প্রতিটি form-এ নির্দিষ্ট field থাকে, তাই kitchen সবসময় জানে আপনি কী চান। Software-এর জন্য API হলো সেই form।
+
+Article এই request-গুলোর list দেয় <Cite n={1} />:
+
+- `GET /timeline?count=10&cursor=abc`: paging-এর তথ্যসহ এক page tweet।
+- `GET /tweets/{id}`: একটি tweet।
+- `POST /tweets`: একটি tweet তৈরি করে।
+- `POST /media/upload`: একটি image upload করে এবং একটি media ID ফেরত দেয়।
+- `POST /tweets/{id}/like`: একটি tweet like করে।
+- `POST /tweets/{id}/retweet`: একটি tweet retweet করে।
+
+ব্যবহারকারী কে, তার প্রমাণ হিসেবে request-এ user ID পাঠানো চলবে না, কারণ attacker এটি নকল করতে পারে। Server session cookie থেকে identity পড়ে <Cite n={1} />। একটি image post করতে app প্রথমে সেটি blob storage-এ upload করে। Blob storage হলো বড় file রাখার একটি store। App একটি ID ফেরত পায় এবং সেই ID নতুন tweet-এ রাখে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Making a long timeline fast
+
+<Voices>
+<Technical>
 
 Think of a theatre stage. Only the actors in the current scene stand on it. The rest wait backstage until they are needed.
 
@@ -100,13 +259,65 @@ Think of a theatre stage. Only the actors in the current scene stand on it. The 
 
 The page must also say clearly when it is busy or broken. Twitter shows one loading spinner. The article suggests gray "skeleton" blocks in the shape of tweets, so the layout does not jump <Cite n={1} />. If the feed fails to load, Twitter shows a short message and a Retry button, not a blank page <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+Think of a theatre stage. Only the actors in the current scene stand on it. The others wait backstage.
+
+- **Code splitting.** The app downloads only the JavaScript for the current view. The code for each tweet type, the emoji picker, or the tweet detail page loads only when the app needs it <Cite n={1} />.
+- **List virtualization.** The app draws only the tweets that you can see. Empty blocks keep the scrollbar at the correct size. The app removes or reuses the tweets that leave the screen <Cite n={1} />.
+- **Lazy media.** Images load only when they come near the screen. The app asks for an image size that fits the device. It can show a blurred preview first <Cite n={1} />.
+
+The page must also show clearly when it is busy or broken. Twitter shows one loading spinner. The article suggests gray "skeleton" blocks in the shape of tweets, so that the layout does not jump <Cite n={1} />. If the feed does not load, Twitter shows a short message and a Retry button, not a blank page <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটি theatre stage-এর কথা ভাবুন। শুধু বর্তমান দৃশ্যের অভিনেতারাই stage-এ থাকেন। বাকিরা দরকার না হওয়া পর্যন্ত backstage-এ অপেক্ষা করেন।
+
+- **Code splitting।** App শুধু বর্তমান view-এর JavaScript download করে। প্রতিটি tweet type, emoji picker, বা tweet detail page-এর code শুধু তখনই load হয়, যখন app-এর দরকার হয় <Cite n={1} />।
+- **List virtualization।** App শুধু দেখা যাওয়া tweet-গুলো আঁকে। ফাঁকা block-গুলো scrollbar-এর size ঠিক রাখে, আর screen থেকে সরে যাওয়া tweet-গুলো সরিয়ে ফেলা হয় বা আবার ব্যবহার করা হয় <Cite n={1} />।
+- **Lazy media।** Image শুধু screen-এর কাছে এলে load হয়। App device-এর সাথে মানানসই image size চায়, এবং প্রথমে একটি ঝাপসা preview দেখাতে পারে <Cite n={1} />।
+
+Page busy বা broken হলে সেটিও পরিষ্কারভাবে দেখাতে হবে। Twitter একটি loading spinner দেখায়। Article tweet-এর আকারে ধূসর "skeleton" block-এর পরামর্শ দেয়, যাতে layout লাফিয়ে না সরে <Cite n={1} />। Feed load না হলে Twitter ফাঁকা page-এর বদলে একটি ছোট message আর একটি Retry button দেখায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Likes that feel instant
+
+<Voices>
+<Technical>
 
 Think of a waiter who says "coming right up" before the kitchen confirms. If the kitchen has run out, the waiter comes back and says so.
 
 An optimistic update changes the screen before the server confirms the action <Cite n={1} />. When you tap like, the heart fills and the count goes up at once. At the same time, the app sends the request. If the server says yes, nothing more happens. If the request fails, the app rolls the screen back to the old state <Cite n={1} />. The normalized store makes this easy. There is one copy of the tweet, so the app changes `likedCount` by 1 and sets `likedByUser` to true in one place <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+Think of a waiter who says "coming right up" before the kitchen confirms. If the kitchen has run out, the waiter comes back and tells you.
+
+An optimistic update changes the screen before the server confirms the action <Cite n={1} />. When you tap like, the heart fills and the count goes up immediately. At the same time, the app sends the request. If the server says yes, nothing more happens. If the request fails, the app changes the screen back to the old state <Cite n={1} />.
+
+The normalized store makes this easy. There is one copy of the tweet. So the app changes `likedCount` by 1 and sets `likedByUser` to true in one place <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+এমন একজন waiter-এর কথা ভাবুন, যিনি kitchen নিশ্চিত করার আগেই বলেন "এখনই আনছি"। Kitchen-এ খাবার শেষ হয়ে গেলে তিনি ফিরে এসে আপনাকে জানান।
+
+Optimistic update server নিশ্চিত করার আগেই screen বদলে দেয় <Cite n={1} />। আপনি like-এ tap করলে heart সাথে সাথে ভরে যায় এবং count বেড়ে যায়। একই সময়ে app request পাঠায়। Server হ্যাঁ বললে আর কিছু হয় না। Request fail করলে app screen-কে আগের অবস্থায় ফিরিয়ে নেয় (roll back) <Cite n={1} />।
+
+Normalized store এই কাজ সহজ করে। Tweet-এর copy মাত্র একটি, তাই app এক জায়গাতেই `likedCount` 1 বাড়ায় এবং `likedByUser` true করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Loading more tweets: offset or cursor
+
+<Voices>
+<Technical>
 
 Think of a long book. You can say "start at line 200", or you can put a bookmark after the last line you read. If someone adds lines at the top, "line 200" now points to a different line. The bookmark still works.
 
@@ -116,6 +327,29 @@ Think of a long book. You can say "start at line 200", or you can put a bookmark
 | Cursor | "the next 10 after tweet X" | Stable when data changes; works for newer and older tweets |
 
 The table follows the article <Cite n={1} />. A cursor is a unique value, often a tweet ID or a timestamp, that marks the edge of a page <Cite n={1} />. The article picks cursor paging for Twitter, because new tweets arrive all the time and old ones can be deleted or ranked again <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+Think of a long book. You can say "start at line 200", or you can put a bookmark after the last line that you read. If someone adds lines at the top, "line 200" now points to a different line. The bookmark still works.
+
+- **Offset** paging sends a request such as `?offset=20&limit=10`. New tweets move the positions, so items repeat or go missing. Big offsets are slow <Cite n={1} />.
+- **Cursor** paging asks for "the next 10 after tweet X". It stays stable when the data changes. It works for newer and older tweets <Cite n={1} />.
+
+A cursor is a unique value, often a tweet ID or a timestamp. It marks the edge of a page <Cite n={1} />. The article picks cursor paging for Twitter, because new tweets arrive all the time, and old tweets can be deleted or ranked again <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটি লম্বা বইয়ের কথা ভাবুন। আপনি বলতে পারেন "line 200 থেকে শুরু করুন", অথবা শেষ যে line পড়েছেন তার পরে একটি bookmark রাখতে পারেন। কেউ উপরে নতুন line যোগ করলে "line 200" এখন অন্য একটি line-কে দেখায়, কিন্তু bookmark তবুও ঠিক কাজ করে।
+
+- **Offset** paging `?offset=20&limit=10`-এর মতো request পাঠায়। নতুন tweet এলে position সরে যায়, তাই item repeat হয় বা হারিয়ে যায়; বড় offset ধীর <Cite n={1} />।
+- **Cursor** paging চায় "tweet X-এর পরের 10টি"। Data বদলালেও এটি stable থাকে, এবং নতুন ও পুরোনো দুই ধরনের tweet-এর জন্যই কাজ করে <Cite n={1} />।
+
+Cursor হলো একটি unique value, প্রায়ই একটি tweet ID বা একটি timestamp, যা একটি page-এর সীমা চিহ্নিত করে <Cite n={1} />। Article Twitter-এর জন্য cursor paging বেছে নেয়, কারণ সবসময় নতুন tweet আসে, আর পুরোনো tweet delete হতে পারে বা আবার rank হতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
@@ -134,6 +368,9 @@ The table follows the article <Cite n={1} />. A cursor is a unique value, often 
 
 ## What a tester can learn
 
+<Voices>
+<Technical>
+
 <Callout type="tip" title="Tutorial advice">
 These ideas are the tutorial's own advice.
 
@@ -144,3 +381,30 @@ These ideas are the tutorial's own advice.
 - Send a request with the user ID of another account in the body. The server must use the session cookie, not that ID.
 - Scroll through hundreds of tweets. Check that memory and the number of page elements stay stable.
 </Callout>
+
+</Technical>
+<Layman>
+
+These ideas are the tutorial's own advice.
+
+- Like a tweet while the network is offline, or while the server returns an error. Make sure that the heart and the count go back to the old state, and that the user sees a message.
+- Show the same tweet in two places, for example the timeline and the tweet page. Like it in one place, and then look at the other place.
+- Post new tweets from a different account while you scroll. Make sure that no tweet shows two times and that no tweet is missing.
+- Make the network slow. Look at the loading state and the error state. Make sure that Retry works.
+- Send a request with the user ID of a different account in the body. The server must use the session cookie, not that ID.
+- Scroll through hundreds of tweets. Make sure that the memory use and the number of page elements stay stable.
+
+</Layman>
+<Bangla>
+
+নিচের ধারণাগুলো এই tutorial-এর নিজস্ব পরামর্শ।
+
+- Network offline থাকা অবস্থায়, বা server error দেওয়ার সময়, একটি tweet like করুন। দেখুন, heart আর count আগের অবস্থায় ফিরে যায় কি না, এবং user একটি message দেখেন কি না।
+- একই tweet দুই জায়গায় দেখান, যেমন timeline আর tweet page। এক জায়গায় like করুন, তারপর অন্য জায়গাটি দেখুন।
+- Scroll করার সময় অন্য একটি account থেকে নতুন tweet post করুন। দেখুন, কোনো tweet দুইবার দেখা যায় না এবং কোনো tweet হারিয়ে যায় না।
+- Network throttle করুন। Loading state আর error state দেখুন, এবং Retry কাজ করে কি না যাচাই করুন।
+- Body-তে অন্য একটি account-এর user ID দিয়ে একটি request পাঠান। Server-কে সেই ID নয়, session cookie ব্যবহার করতে হবে।
+- শত শত tweet scroll করুন। দেখুন, memory আর page element-এর সংখ্যা stable থাকে কি না।
+
+</Bangla>
+</Voices>

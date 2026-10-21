@@ -13,6 +13,7 @@ import { SYSTEM_DESIGN_UI } from "@/lib/system-design/ui";
 import { BrandMark } from "./BrandMark";
 import { MobileNav } from "./MobileNav";
 import { ThemeToggle } from "./ThemeToggle";
+import { VoiceToggle } from "./VoiceToggle";
 
 /** The menu button without behavior, shown until MobileNav can render. */
 function MenuButtonPlaceholder() {
@@ -29,7 +30,8 @@ function MenuButtonPlaceholder() {
 
 /**
  * The sticky top bar: the menu button (below `lg`), the logo, and on the
- * right the search trigger slot and the theme switch.
+ * right the search trigger slot, the default-voice switch, the install
+ * button, and the theme switch.
  */
 export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
   return (
@@ -76,6 +78,8 @@ export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
             {ARCHITECTURE_UI.headerLink}
           </Link>
           {searchSlot}
+          <VoiceToggle />
+          <InstallButton />
           <ThemeToggle />
         </div>
       </div>

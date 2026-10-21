@@ -32,6 +32,11 @@ const components: MDXComponents = {
   TestingClassificationDiagram,
   // The two versions of a Fundamentals topic (notes and ISTQB).
   Version,
+  // One ## section in three voices. See components/voice/Voices.tsx.
+  Voices,
+  Technical,
+  Layman,
+  Bangla,
   // Images get the basePath and a full-size link (a plain <img> has no basePath).
   img: MdxImage,
   pre: CodeBlock,
