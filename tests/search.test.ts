@@ -6,7 +6,9 @@ import { PAGES } from "../lib/nav.ts";
 import { getOutline } from "../lib/outline.ts";
 import { CHAPTERS } from "../lib/fundamentals/chapters.ts";
 import { STAGES } from "../lib/linux/stages.ts";
+import { SYSTEM_DESIGN } from "../lib/modules/registry.ts";
 import {
+  buildFlatSearchDocs,
   buildFundamentalsSearchDocs,
   buildLinuxSearchDocs,
   buildSearchDocs,
@@ -241,4 +243,13 @@ test("buildFundamentalsSearchDocs gives an intro doc and one doc per topic, with
 test("fundamentals doc ids do not clash with tutorial or linux ids", () => {
   const all = [...docs, ...linuxDocs, ...fundamentalsDocs].map((doc) => doc.id);
   assert.equal(new Set(all).size, all.length);
+});
+
+test("buildFlatSearchDocs uses the searchGroup of the module", () => {
+  const docs = buildFlatSearchDocs(SYSTEM_DESIGN, [
+    { item: SYSTEM_DESIGN.pages[0], source: "# T\n\nIntro.\n\n## One\n\nText." },
+  ]);
+  assert.ok(docs.length > 0);
+  assert.ok(docs.every((d) => d.group === "system design"));
+  assert.ok(docs.every((d) => d.part === null));
 });

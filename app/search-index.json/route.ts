@@ -2,18 +2,28 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CHAPTERS } from "@/lib/fundamentals/chapters";
 import { STAGES } from "@/lib/linux/stages";
+import type { FlatModule } from "@/lib/modules/flat";
+import { ARCHITECTURE, SYSTEM_DESIGN } from "@/lib/modules/registry";
 import { PAGES } from "@/lib/nav";
-import { TOPICS } from "@/lib/architecture/topics";
 import {
-  buildArchitectureSearchDocs,
+  buildFlatSearchDocs,
   buildFundamentalsSearchDocs,
   buildLinuxSearchDocs,
   buildSearchDocs,
-  buildSystemDesignSearchDocs,
 } from "@/lib/search";
-import { CASES } from "@/lib/system-design/cases";
 
 export const dynamic = "force-static";
+
+/** The docs of a flat module: one file content/<id>/<slug>.mdx for each page. */
+function flatDocs(m: FlatModule) {
+  return buildFlatSearchDocs(
+    m,
+    m.pages.map((item) => ({
+      item,
+      source: readFileSync(join(process.cwd(), "content", m.id, `${item.slug}.mdx`), "utf8"),
+    })),
+  );
+}
 
 export function GET() {
   const pages = PAGES.map((page) => ({
@@ -24,23 +34,15 @@ export function GET() {
     stage,
     source: readFileSync(join(process.cwd(), "content", "linux", `${stage.slug}.mdx`), "utf8"),
   }));
-  const systemDesign = CASES.map((item) => ({
-    item,
-    source: readFileSync(join(process.cwd(), "content", "system-design", `${item.slug}.mdx`), "utf8"),
-  }));
   const fundamentals = CHAPTERS.map((chapter) => ({
     chapter,
     source: readFileSync(join(process.cwd(), "content", "fundamentals", `${chapter.slug}.mdx`), "utf8"),
   }));
-  const architecture = TOPICS.map((item) => ({
-    item,
-    source: readFileSync(join(process.cwd(), "content", "architecture", `${item.slug}.mdx`), "utf8"),
-  }));
   return Response.json([
     ...buildSearchDocs(pages),
     ...buildLinuxSearchDocs(linux),
-    ...buildSystemDesignSearchDocs(systemDesign),
+    ...flatDocs(SYSTEM_DESIGN),
     ...buildFundamentalsSearchDocs(fundamentals),
-    ...buildArchitectureSearchDocs(architecture),
+    ...flatDocs(ARCHITECTURE),
   ]);
 }

@@ -7,7 +7,10 @@ import { headingsFromSource, plainTitle, sourceLines } from "./headings.ts";
 import type { SourceLine } from "./headings.ts";
 import type { FundamentalsChapter } from "./fundamentals/chapters.ts";
 import type { LinuxStage } from "./linux/stages.ts";
+import type { FlatItem, FlatModule } from "./modules/flat.ts";
+import { SYSTEM_DESIGN } from "./system-design/cases.ts";
 import type { SystemDesignCase } from "./system-design/cases.ts";
+import { ARCHITECTURE } from "./architecture/topics.ts";
 import type { ArchitectureTopic } from "./architecture/topics.ts";
 
 export type SearchDoc = {
@@ -130,18 +133,20 @@ export function buildFundamentalsSearchDocs(
   );
 }
 
-/** The docs of the System Design case pages: the same sections as a tutorial page, with no part number. */
-export function buildSystemDesignSearchDocs(entries: { item: SystemDesignCase; source: string }[]): SearchDoc[] {
+/** The docs of the pages of a flat module: the same sections as a tutorial page, with no part number. The group is the `searchGroup` of the module. */
+export function buildFlatSearchDocs(module: FlatModule, entries: { item: FlatItem; source: string }[]): SearchDoc[] {
   return entries.flatMap(({ item, source }) =>
-    pageDocs({ href: item.href, title: item.title, part: null, group: "system design" }, source),
+    pageDocs({ href: item.href, title: item.title, part: null, group: module.searchGroup }, source),
   );
 }
 
-/** The docs of the Architecture topic pages: the same sections as a tutorial page, with no part number. */
+// One-line aliases until the module-specific names go away.
+export function buildSystemDesignSearchDocs(entries: { item: SystemDesignCase; source: string }[]): SearchDoc[] {
+  return buildFlatSearchDocs(SYSTEM_DESIGN, entries);
+}
+
 export function buildArchitectureSearchDocs(entries: { item: ArchitectureTopic; source: string }[]): SearchDoc[] {
-  return entries.flatMap(({ item, source }) =>
-    pageDocs({ href: item.href, title: item.title, part: null, group: "architecture" }, source),
-  );
+  return buildFlatSearchDocs(ARCHITECTURE, entries);
 }
 
 const SEARCH_OPTIONS = {

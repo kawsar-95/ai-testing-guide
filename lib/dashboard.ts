@@ -1,3 +1,4 @@
+import { FLAT_MODULES } from "./modules/registry.ts";
 import type { ContentPage } from "./reading-state.ts";
 
 /**
@@ -34,7 +35,6 @@ export const DASHBOARD_UI = {
     tutorial: "Tutorial",
     linux: "Linux",
     fundamentals: "Fundamentals",
-    "system-design": "System Design",
-    architecture: "Architecture",
+    ...Object.fromEntries(FLAT_MODULES.map((m) => [m.id, m.label])),
   } as Record<ContentPage["module"], string>,
 };

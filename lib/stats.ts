@@ -1,15 +1,12 @@
-import { ARCHITECTURE_HOME, TOPICS } from "./architecture/topics.ts";
-import { ARCHITECTURE_UI } from "./architecture/ui.ts";
 import { CHAPTERS, FUNDAMENTALS_HOME } from "./fundamentals/chapters.ts";
 import { FUNDAMENTALS_UI } from "./fundamentals/ui.ts";
 import { LINUX_HOME, STAGES } from "./linux/stages.ts";
 import { LINUX_UI } from "./linux/ui.ts";
+import { FLAT_MODULES, type FlatModuleId } from "./modules/registry.ts";
 import { PAGES } from "./nav.ts";
 import { sitemapPaths } from "./sitemap.ts";
-import { CASES, SYSTEM_DESIGN_HOME } from "./system-design/cases.ts";
-import { SYSTEM_DESIGN_UI } from "./system-design/ui.ts";
 
-export type ModuleId = "linux" | "fundamentals" | "system-design" | "architecture";
+export type ModuleId = "linux" | "fundamentals" | FlatModuleId;
 
 export type SiteModule = {
   id: ModuleId;
@@ -32,20 +29,13 @@ export const MODULES: readonly SiteModule[] = [
     tagline: FUNDAMENTALS_UI.description,
     pages: pagesOf(CHAPTERS),
   },
-  {
-    id: "system-design",
-    title: SYSTEM_DESIGN_UI.headerLink,
-    href: SYSTEM_DESIGN_HOME,
-    tagline: SYSTEM_DESIGN_UI.description,
-    pages: pagesOf(CASES),
-  },
-  {
-    id: "architecture",
-    title: ARCHITECTURE_UI.headerLink,
-    href: ARCHITECTURE_HOME,
-    tagline: ARCHITECTURE_UI.description,
-    pages: pagesOf(TOPICS),
-  },
+  ...FLAT_MODULES.map((m) => ({
+    id: m.id,
+    title: m.ui.headerLink,
+    href: m.home,
+    tagline: m.ui.description,
+    pages: pagesOf(m.pages),
+  })),
 ];
 
 /** The text voices of a section: Technical, plain English, and Bangla. */
