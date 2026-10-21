@@ -15,6 +15,8 @@ import { CardGrid } from "@/components/mdx/CardGrid";
 import { InfoCard } from "@/components/mdx/InfoCard";
 import { MdxImage } from "@/components/mdx/MdxImage";
 import { MdxTable } from "@/components/mdx/MdxTable";
+import { Bangla, Layman, Technical } from "@/components/voice/panels";
+import { Voices } from "@/components/voice/Voices";
 
 // The custom components the MDX files in content/ use without an import.
 const components: MDXComponents = {

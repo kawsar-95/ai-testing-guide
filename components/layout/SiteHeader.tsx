@@ -11,6 +11,7 @@ import { ARCHITECTURE_UI } from "@/lib/architecture/ui";
 import { SYSTEM_DESIGN_HOME } from "@/lib/system-design/cases";
 import { SYSTEM_DESIGN_UI } from "@/lib/system-design/ui";
 import { BrandMark } from "./BrandMark";
+import { InstallButton } from "./InstallButton";
 import { MobileNav } from "./MobileNav";
 import { ThemeToggle } from "./ThemeToggle";
 import { VoiceToggle } from "./VoiceToggle";
