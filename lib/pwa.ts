@@ -61,21 +61,26 @@ export function precacheUrls(basePath: string): string[] {
 }
 
 /**
- * Matches the hashed build files (JS, CSS, fonts) in a page's HTML. The
- * service worker caches them with the pages. The match stops at a quote, a
- * space, a parenthesis, or the backslash of an escaped string in a script.
+ * Matches the files that a page's HTML uses: the hashed build files (JS, CSS,
+ * fonts) and the images in /images/. The service worker caches them with the
+ * pages. The match starts after a quote, a parenthesis, a space, or a comma, so
+ * a link to another site does not match. It stops at a quote, a space, a
+ * parenthesis, or the backslash of an escaped string in a script.
  */
 export function assetPattern(basePath: string): string {
-  return `${basePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/_next/static/[^"'\\s()\\\\]+`;
+  return `(?<=["'(\\s,])${basePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/(?:_next/static|images)/[^"'\\s()\\\\]+`;
 }
 
 /**
- * The source of /sw.js.
- * - Install: cache the pages of precacheUrls and the build files that they use.
+ * The source of /sw.js. The site is offline first.
+ * - Install: cache the pages of precacheUrls and the files that they use.
  * - /_next/static/: cache first. The file names have a content hash.
- * - Other requests: network first, so an online reader always gets the newest page.
- *   The cache answers when the network fails.
- * - Activate: delete the caches of older versions.
+ * - Other requests: the cache answers first, and the worker updates the cache from the
+ *   network in the background (stale-while-revalidate). The query string is not part of
+ *   the cache key, because the files are static. A request that is not in the cache goes
+ *   to the network. Offline, a page that is not in the cache gets the 404 page.
+ * - Activate: delete the caches of older versions. A new build has a new /sw.js,
+ *   so its install caches every page again.
  */
 export function serviceWorkerSource(basePath: string, version: string): string {
   const constants = {
@@ -120,7 +125,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin || !url.pathname.startsWith(BASE + "/")) return;
   if (url.pathname.startsWith(BASE + "/_next/static/")) event.respondWith(cacheFirst(request));
-  else event.respondWith(networkFirst(request, request.mode === "navigate"));
+  else event.respondWith(staleWhileRevalidate(event, url));
 });
 
 async function cacheFirst(request) {
@@ -131,15 +136,22 @@ async function cacheFirst(request) {
   return response;
 }
 
-async function networkFirst(request, isPage) {
-  try {
-    const response = await fetch(request);
-    if (response.ok) await (await caches.open(CACHE)).put(request, response.clone());
+async function staleWhileRevalidate(event, url) {
+  const request = event.request;
+  const key = url.origin + url.pathname;
+  const network = fetch(request).then(async (response) => {
+    if (response.ok) await (await caches.open(CACHE)).put(key, response.clone());
     return response;
+  });
+  const cached = await caches.match(key, { ignoreSearch: true, ignoreVary: true });
+  if (cached) {
+    event.waitUntil(network.catch(() => {}));
+    return cached;
+  }
+  try {
+    return await network;
   } catch (error) {
-    const cached = await caches.match(request, { ignoreSearch: isPage });
-    if (cached) return cached;
-    const offline = isPage && (await caches.match(OFFLINE));
+    const offline = request.mode === "navigate" && (await caches.match(OFFLINE));
     if (offline) return offline;
     throw error;
   }

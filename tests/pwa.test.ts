@@ -79,3 +79,113 @@ test("the service worker source is valid JavaScript and has the cache version", 
   assert.ok(source.includes('const CACHE = "site-v1";'));
   assert.ok(source.includes('const BASE = "/repo";'));
 });
+
+test("the asset pattern finds the images of a page and skips an external URL", () => {
+  const html =
+    '<img src="/repo/images/linux/a.webp"/><a href="/repo/images/linux/a.webp">full</a>' +
+    '<a href="https://example.com/repo/images/b.png">other site</a>';
+  const found = [...html.matchAll(new RegExp(assetPattern("/repo"), "g"))].map((match) => match[0]);
+  assert.deepEqual(found, ["/repo/images/linux/a.webp", "/repo/images/linux/a.webp"]);
+});
+
+/**
+ * Runs the source of /sw.js with a fake `caches` and a fake `fetch`. `network`
+ * maps a URL to the body that the server sends. With `online: false`, every fetch fails.
+ */
+function fakeWorker(network: Record<string, string>) {
+  const store = new Map<string, Response>();
+  const handlers: Record<string, (event: unknown) => void> = {};
+  const state = { online: true, fetched: [] as string[] };
+  const keyOf = (request: Request | string, ignoreSearch = false) => {
+    const url = new URL(typeof request === "string" ? request : request.url, "https://site.test");
+    return ignoreSearch ? url.origin + url.pathname : url.href;
+  };
+  const cache = {
+    put: async (request: Request | string, response: Response) => void store.set(keyOf(request), response),
+    add: async (url: string) => void store.set(keyOf(url), await fakeFetch(url)),
+  };
+  const caches = {
+    open: async () => cache,
+    keys: async () => [],
+    delete: async () => true,
+    match: async (request: Request | string, options: { ignoreSearch?: boolean } = {}) => {
+      const wanted = keyOf(request, options.ignoreSearch);
+      for (const [key, response] of store) {
+        if (keyOf(key, options.ignoreSearch) === wanted) return response.clone();
+      }
+      return undefined;
+    },
+  };
+  async function fakeFetch(request: Request | string) {
+    const url = new URL(typeof request === "string" ? request : request.url, "https://site.test");
+    state.fetched.push(url.pathname);
+    if (!state.online) throw new TypeError("Failed to fetch");
+    const body = network[url.pathname];
+    return body === undefined
+      ? new Response("missing", { status: 404 })
+      : new Response(body, { headers: { "content-type": url.pathname.endsWith("/") ? "text/html" : "text/plain" } });
+  }
+  const self = {
+    location: { origin: "https://site.test" },
+    clients: { claim: async () => {} },
+    skipWaiting: async () => {},
+    addEventListener: (type: string, handler: (event: unknown) => void) => void (handlers[type] = handler),
+  };
+  new Function("self", "caches", "fetch", serviceWorkerSource("", "v1"))(self, caches, fakeFetch);
+
+  async function install() {
+    const waits: Promise<unknown>[] = [];
+    handlers.install({ waitUntil: (promise: Promise<unknown>) => waits.push(promise) });
+    await Promise.all(waits);
+  }
+  /** Sends a request and returns the body of the answer, and waits for the background work. */
+  async function get(path: string, mode: RequestMode = "navigate") {
+    let answer: Promise<Response> | undefined;
+    const waits: Promise<unknown>[] = [];
+    handlers.fetch({
+      request: { url: `https://site.test${path}`, method: "GET", mode },
+      respondWith: (promise: Promise<Response>) => (answer = promise),
+      waitUntil: (promise: Promise<unknown>) => waits.push(promise),
+    });
+    const body = answer ? await (await answer).text() : undefined;
+    await Promise.all(waits);
+    return body;
+  }
+  return { state, network, store, install, get, has: (path: string) => store.has(keyOf(path)) };
+}
+
+test("the service worker precaches the images that a page uses", async () => {
+  const worker = fakeWorker({ "/": '<img src="/images/linux/a.webp">', "/images/linux/a.webp": "image" });
+  await worker.install();
+  assert.ok(worker.has("/images/linux/a.webp"));
+});
+
+test("a cached page opens from the cache, and the cache gets the new version in the background", async () => {
+  const worker = fakeWorker({ "/": "old home" });
+  await worker.install();
+  worker.network["/"] = "new home";
+  assert.equal(await worker.get("/"), "old home");
+  assert.equal(await worker.get("/"), "new home");
+});
+
+test("a cached page opens offline, also with a query string", async () => {
+  const worker = fakeWorker({ "/": "home" });
+  await worker.install();
+  worker.state.online = false;
+  assert.equal(await worker.get("/?q=hooks"), "home");
+});
+
+test("an RSC payload comes from the cache, also with a new _rsc value", async () => {
+  const worker = fakeWorker({ "/": "home", "/linux/__next._tree.txt": "tree" });
+  await worker.install();
+  assert.equal(await worker.get("/linux/__next._tree.txt?_rsc=abc", "cors"), "tree");
+  worker.state.online = false;
+  assert.equal(await worker.get("/linux/__next._tree.txt?_rsc=xyz", "cors"), "tree");
+});
+
+test("offline, a page that is not in the cache gets the 404 page", async () => {
+  const worker = fakeWorker({ "/": "home", "/404.html": "not found" });
+  await worker.install();
+  worker.state.online = false;
+  assert.equal(await worker.get("/unknown/"), "not found");
+});
