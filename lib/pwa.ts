@@ -8,6 +8,7 @@ import { LINUX_ROUTES } from "./linux/stages.ts";
 import { PAGES } from "./nav.ts";
 import { SYSTEM_DESIGN_ROUTES } from "./system-design/cases.ts";
 import { ARCHITECTURE_ROUTES } from "./architecture/topics.ts";
+import { CONTENTS_ROUTES } from "./contents.ts";
 
 const ICONS = [
   { file: "icon-192.png", sizes: "192x192", purpose: "any" },
@@ -48,6 +49,7 @@ export const offlinePage = (basePath: string) => `${basePath}/404.html`;
 export function precacheUrls(basePath: string): string[] {
   return [
     `${basePath}/`,
+    ...CONTENTS_ROUTES.map((route) => `${basePath}${route}`),
     ...PAGES.map((page) => `${basePath}${page.href}`),
     ...LINUX_ROUTES.map((route) => `${basePath}${route}`),
     ...FUNDAMENTALS_ROUTES.map((route) => `${basePath}${route}`),

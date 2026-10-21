@@ -3,8 +3,9 @@ import { LINUX_ROUTES } from "./linux/stages.ts";
 import { PAGES } from "./nav.ts";
 import { SYSTEM_DESIGN_ROUTES } from "./system-design/cases.ts";
 import { ARCHITECTURE_ROUTES } from "./architecture/topics.ts";
+import { CONTENTS_ROUTES } from "./contents.ts";
 
-/** The paths of the sitemap: the home page, all the tutorial pages, the Linux pages, the Fundamentals pages, the System Design pages, and the Architecture pages. */
+/** The paths of the sitemap: the home page, the contents page, all the tutorial pages, the Linux pages, the Fundamentals pages, the System Design pages, and the Architecture pages. */
 export function sitemapPaths(): string[] {
-  return ["/", ...PAGES.map((page) => page.href), ...LINUX_ROUTES, ...FUNDAMENTALS_ROUTES, ...SYSTEM_DESIGN_ROUTES, ...ARCHITECTURE_ROUTES];
+  return ["/", ...CONTENTS_ROUTES, ...PAGES.map((page) => page.href), ...LINUX_ROUTES, ...FUNDAMENTALS_ROUTES, ...SYSTEM_DESIGN_ROUTES, ...ARCHITECTURE_ROUTES];
 }
