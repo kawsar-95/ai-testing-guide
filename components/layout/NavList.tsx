@@ -5,38 +5,31 @@ import { FUNDAMENTALS_HOME } from "@/lib/fundamentals/chapters";
 import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
 import { LINUX_HOME } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
-import { ArchitectureSidebarList } from "@/components/architecture/ArchitectureSidebarList";
-import { ARCHITECTURE_HOME } from "@/lib/architecture/topics";
-import { ARCHITECTURE_UI } from "@/lib/architecture/ui";
-import { SystemDesignSidebarList } from "@/components/system-design/SystemDesignSidebarList";
-import { SYSTEM_DESIGN_HOME } from "@/lib/system-design/cases";
-import { SYSTEM_DESIGN_UI } from "@/lib/system-design/ui";
+import { FlatSidebarList } from "@/components/modules/FlatSidebarList";
+import { FLAT_MODULES, type FlatModuleId } from "@/lib/modules/registry";
 import { crossToTutorial } from "@/lib/ui";
 import { SidebarList } from "./SidebarList";
 
-type Section = "tutorial" | "linux" | "fundamentals" | "system-design" | "architecture";
+type Section = "tutorial" | "linux" | "fundamentals" | FlatModuleId;
 
 /** For each section: its home, the text of the link to it, and the arrow of that link. */
 const SECTIONS: readonly { id: Section; href: string; label: string; arrow: string }[] = [
   { id: "tutorial", href: "/", label: crossToTutorial, arrow: "←" },
   { id: "linux", href: LINUX_HOME, label: LINUX_UI.crossToLinux, arrow: "→" },
   { id: "fundamentals", href: FUNDAMENTALS_HOME, label: FUNDAMENTALS_UI.crossToFundamentals, arrow: "→" },
-  { id: "system-design", href: SYSTEM_DESIGN_HOME, label: SYSTEM_DESIGN_UI.crossToSystemDesign, arrow: "→" },
-  { id: "architecture", href: ARCHITECTURE_HOME, label: ARCHITECTURE_UI.crossToArchitecture, arrow: "→" },
+  ...FLAT_MODULES.map((m) => ({ id: m.id, href: m.home, label: m.ui.crossTo, arrow: "→" })),
 ];
 
 function sectionOf(activePath: string | null): Section {
   if (activePath?.startsWith(LINUX_HOME)) return "linux";
   if (activePath?.startsWith(FUNDAMENTALS_HOME)) return "fundamentals";
-  if (activePath?.startsWith(SYSTEM_DESIGN_HOME)) return "system-design";
-  if (activePath?.startsWith(ARCHITECTURE_HOME)) return "architecture";
-  return "tutorial";
+  return FLAT_MODULES.find((m) => activePath?.startsWith(m.home))?.id ?? "tutorial";
 }
 
 /**
  * The list of the sidebar and the drawer. It shows the list of the current
  * section: the tutorial parts, the Linux stages, the Fundamentals chapters,
- * or the System Design case studies. Above the list, one link to each other section.
+ * or the pages of a flat module. Above the list, one link to each other section.
  */
 export function NavList({
   activePath,
@@ -46,6 +39,7 @@ export function NavList({
   onNavigate?: () => void;
 }) {
   const current = sectionOf(activePath);
+  const flat = FLAT_MODULES.find((m) => m.id === current);
   return (
     <>
       <div className="flex flex-wrap gap-1.5 px-3 pt-4">
@@ -65,10 +59,8 @@ export function NavList({
         <LinuxSidebarList activePath={activePath} onNavigate={onNavigate} />
       ) : current === "fundamentals" ? (
         <FundamentalsSidebarList activePath={activePath} onNavigate={onNavigate} />
-      ) : current === "system-design" ? (
-        <SystemDesignSidebarList activePath={activePath} onNavigate={onNavigate} />
-      ) : current === "architecture" ? (
-        <ArchitectureSidebarList activePath={activePath} onNavigate={onNavigate} />
+      ) : flat ? (
+        <FlatSidebarList module={flat} activePath={activePath} onNavigate={onNavigate} />
       ) : (
         <SidebarList activePath={activePath} onNavigate={onNavigate} />
       )}

@@ -8,8 +8,7 @@ const TEMPLATES = [
   "app/(site)/[group]/[page]/page.tsx",
   "app/(site)/linux/[stage]/page.tsx",
   "app/(site)/fundamentals/[chapter]/page.tsx",
-  "app/(site)/system-design/[topic]/page.tsx",
-  "app/(site)/architecture/[topic]/page.tsx",
+  "components/modules/FlatTopicPage.tsx",
 ];
 
 test("the chapter breakpoints are 820 px and 1280 px", () => {
@@ -49,5 +48,13 @@ test("the left list renders the list of the route, with no Suspense fallback", (
 for (const path of TEMPLATES) {
   test(`${path} passes its route to ChapterLayout`, () => {
     assert.match(source(path), /<ChapterLayout outline=\{outline\} route=\{[a-z]+\.href\}>/);
+  });
+}
+
+for (const path of ["app/(site)/architecture/[topic]/page.tsx", "app/(site)/system-design/[topic]/page.tsx"]) {
+  test(`${path} renders FlatTopicPage and loads its MDX with a literal folder`, () => {
+    const src = source(path);
+    assert.match(src, /<FlatTopicPage /);
+    assert.match(src, /import\(`@\/content\/(architecture|system-design)\/\$\{slug\}\.mdx`\)/);
   });
 }

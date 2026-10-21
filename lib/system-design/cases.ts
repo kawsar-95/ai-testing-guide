@@ -2,7 +2,7 @@
  * The one ordered list of System Design case studies. Each case is served at
  * /system-design/<slug>/ and has its text in content/system-design/<slug>.mdx.
  */
-import { defineFlatModule, type FlatEntry, type FlatItem, type FlatModuleUI } from "../modules/flat.ts";
+import { defineFlatModule, type FlatEntry, type FlatItem } from "../modules/flat.ts";
 import { SYSTEM_DESIGN_UI } from "./ui.ts";
 
 export type SystemDesignSlug =
@@ -106,33 +106,12 @@ const SOURCE: readonly CaseEntry[] = [
 
 const entries: readonly FlatEntry<SystemDesignSlug>[] = SOURCE.map((entry) => ({ ...entry, kind: "topic" }));
 
-/** Maps the current UI keys to the keys of `FlatModuleUI`. Task 2 removes this. */
-const ui: FlatModuleUI = {
-  siteTitle: SYSTEM_DESIGN_UI.siteTitle,
-  description: SYSTEM_DESIGN_UI.description,
-  eyebrow: SYSTEM_DESIGN_UI.eyebrow,
-  heading: SYSTEM_DESIGN_UI.heading,
-  lede: SYSTEM_DESIGN_UI.lede,
-  sourceNote: SYSTEM_DESIGN_UI.sourceNote,
-  itemsHeading: SYSTEM_DESIGN_UI.casesHeading,
-  itemsHeadingId: "cases-heading",
-  itemEyebrow: SYSTEM_DESIGN_UI.caseEyebrow,
-  itemNav: SYSTEM_DESIGN_UI.caseNav,
-  allItems: SYSTEM_DESIGN_UI.allCases,
-  previousItem: SYSTEM_DESIGN_UI.previousCase,
-  nextItem: SYSTEM_DESIGN_UI.nextCase,
-  sidebarNav: SYSTEM_DESIGN_UI.sidebarNav,
-  sidebarItemLabel: SYSTEM_DESIGN_UI.sidebarCaseLabel,
-  headerLink: SYSTEM_DESIGN_UI.headerLink,
-  crossTo: SYSTEM_DESIGN_UI.crossToSystemDesign,
-};
-
 export const SYSTEM_DESIGN = defineFlatModule({
   id: "system-design",
   label: "System Design",
   searchGroup: "system design",
   entries,
-  ui,
+  ui: SYSTEM_DESIGN_UI,
 });
 
 export const CASES: readonly SystemDesignCase[] = SYSTEM_DESIGN.pages;

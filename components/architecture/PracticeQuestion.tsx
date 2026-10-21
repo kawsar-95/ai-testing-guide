@@ -2,9 +2,11 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { getTopic, practiceId } from "@/lib/architecture/topics";
+import { ARCHITECTURE, getTopic, practiceId } from "@/lib/architecture/topics";
 import { ARCHITECTURE_UI } from "@/lib/architecture/ui";
-import { useArchitectureProgress } from "./useArchitectureProgress";
+import { progressHook } from "@/components/modules/useModuleProgress";
+
+const useArchitectureProgress = progressHook(ARCHITECTURE);
 
 /**
  * One practice question of content/architecture/practice.mdx: the number, the

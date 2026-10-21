@@ -3,7 +3,7 @@
  * entry is served at /architecture/<slug>/ and has its text in
  * content/architecture/<slug>.mdx. The last entry is the practice page.
  */
-import { defineFlatModule, type FlatEntry, type FlatItem, type FlatModuleUI } from "../modules/flat.ts";
+import { defineFlatModule, type FlatEntry, type FlatItem } from "../modules/flat.ts";
 import { ARCHITECTURE_UI } from "./ui.ts";
 
 /** The number of practice questions on the practice page. */
@@ -148,44 +148,15 @@ export const practiceId = (n: number) => `practice-${String(n).padStart(2, "0")}
 
 export const PRACTICE_IDS: readonly string[] = Array.from({ length: PRACTICE_COUNT }, (_, i) => practiceId(i + 1));
 
-/** Maps the current UI keys to the keys of `FlatModuleUI`. Task 2 removes this. */
-const ui: FlatModuleUI = {
-  siteTitle: ARCHITECTURE_UI.siteTitle,
-  description: ARCHITECTURE_UI.description,
-  eyebrow: ARCHITECTURE_UI.eyebrow,
-  heading: ARCHITECTURE_UI.heading,
-  lede: ARCHITECTURE_UI.lede,
-  sourceNote: ARCHITECTURE_UI.sourceNote,
-  itemsHeading: ARCHITECTURE_UI.topicsHeading,
-  itemsHeadingId: "topics-heading",
-  itemEyebrow: ARCHITECTURE_UI.topicEyebrow,
-  itemNav: ARCHITECTURE_UI.topicNav,
-  allItems: ARCHITECTURE_UI.allTopics,
-  previousItem: ARCHITECTURE_UI.previousTopic,
-  nextItem: ARCHITECTURE_UI.nextTopic,
-  sidebarNav: ARCHITECTURE_UI.sidebarNav,
-  sidebarItemLabel: ARCHITECTURE_UI.sidebarTopicLabel,
-  headerLink: ARCHITECTURE_UI.headerLink,
-  crossTo: ARCHITECTURE_UI.crossToArchitecture,
-  overallLabel: ARCHITECTURE_UI.overallLabel,
-  summaryText: ARCHITECTURE_UI.summaryText,
-  percentText: ARCHITECTURE_UI.percentText,
-  markDone: ARCHITECTURE_UI.markDone,
-  markedDone: ARCHITECTURE_UI.markedDone,
-  sidebarDone: ARCHITECTURE_UI.sidebarDone,
-  practiceEyebrow: ARCHITECTURE_UI.practiceEyebrow,
-  sidebarPracticeLabel: ARCHITECTURE_UI.sidebarPracticeLabel,
-  practiceSummaryText: ARCHITECTURE_UI.practiceSummaryText,
-  practiceLabel: ARCHITECTURE_UI.practiceLabel,
-};
+const progress = { storageKey: "architecture-progress", extraIds: PRACTICE_IDS };
 
 export const ARCHITECTURE = defineFlatModule({
   id: "architecture",
   label: "Architecture",
   searchGroup: "architecture",
   entries,
-  progress: { storageKey: "architecture-progress", extraIds: PRACTICE_IDS },
-  ui,
+  progress,
+  ui: ARCHITECTURE_UI,
 });
 
 export const TOPICS: readonly ArchitectureTopic[] = ARCHITECTURE.pages;
@@ -193,7 +164,7 @@ export const ARCHITECTURE_HOME = ARCHITECTURE.home;
 export const ARCHITECTURE_ROUTES: readonly string[] = ARCHITECTURE.routes;
 
 /** The localStorage key of the done topics and the done practice questions. */
-export const ARCHITECTURE_STORAGE_KEY = "architecture-progress";
+export const ARCHITECTURE_STORAGE_KEY = progress.storageKey;
 
 /** The progress ids of the lessons: their slugs. The practice page has no id of its own. */
 export const LESSON_IDS: readonly string[] = ARCHITECTURE.lessonIds;
