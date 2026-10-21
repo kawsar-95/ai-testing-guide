@@ -76,7 +76,7 @@ export type FlatModule<I extends string = string, S extends string = string> = F
   neighbours(slug: string): { previous?: FlatItem<S>; next?: FlatItem<S> };
 };
 
-/** The methods are closures, so a detached alias such as `getTopic = M.get` works. */
+/** The methods are closures, so a detached method such as `const get = M.get` works. */
 export function defineFlatModule<I extends string, S extends string>(def: FlatModuleDef<I, S>): FlatModule<I, S> {
   const home = `/${def.id}/`;
   const items: readonly FlatItem<S>[] = def.entries.map((entry, i) => {

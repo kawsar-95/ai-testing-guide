@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ARCHITECTURE_ROUTES } from "../lib/architecture/topics.ts";
+import { ARCHITECTURE } from "../lib/architecture/topics.ts";
 import { FUNDAMENTALS_ROUTES } from "../lib/fundamentals/chapters.ts";
 import { LINUX_ROUTES } from "../lib/linux/stages.ts";
 import { PAGES } from "../lib/nav.ts";
 import { sitemapPaths } from "../lib/sitemap.ts";
-import { SYSTEM_DESIGN_ROUTES } from "../lib/system-design/cases.ts";
+import { SYSTEM_DESIGN } from "../lib/system-design/cases.ts";
 
 test("sitemapPaths has the home page and every tutorial page", () => {
   const paths = sitemapPaths();
@@ -27,14 +27,14 @@ test("sitemapPaths has the 12 Fundamentals routes", () => {
 
 test("sitemapPaths has the 16 System Design routes", () => {
   const paths = sitemapPaths();
-  assert.equal(SYSTEM_DESIGN_ROUTES.length, 16);
-  for (const route of SYSTEM_DESIGN_ROUTES) assert.ok(paths.includes(route), route);
+  assert.equal(SYSTEM_DESIGN.routes.length, 16);
+  for (const route of SYSTEM_DESIGN.routes) assert.ok(paths.includes(route), route);
 });
 
 test("sitemapPaths has the 21 Architecture routes", () => {
   const paths = sitemapPaths();
-  assert.equal(ARCHITECTURE_ROUTES.length, 21);
-  for (const route of ARCHITECTURE_ROUTES) assert.ok(paths.includes(route), route);
+  assert.equal(ARCHITECTURE.routes.length, 21);
+  for (const route of ARCHITECTURE.routes) assert.ok(paths.includes(route), route);
 });
 
 test("sitemapPaths has no duplicate path", () => {

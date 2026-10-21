@@ -3,7 +3,7 @@
  * entry is served at /architecture/<slug>/ and has its text in
  * content/architecture/<slug>.mdx. The last entry is the practice page.
  */
-import { defineFlatModule, type FlatEntry, type FlatItem } from "../modules/flat.ts";
+import { defineFlatModule, type FlatEntry } from "../modules/flat.ts";
 import { ARCHITECTURE_UI } from "./ui.ts";
 
 /** The number of practice questions on the practice page. */
@@ -31,7 +31,6 @@ export type ArchitectureSlug =
   | "observability"
   | "practice";
 
-export type ArchitectureTopic = FlatItem<ArchitectureSlug>;
 
 type Entry = { slug: ArchitectureSlug; title: string; description: string };
 
@@ -158,15 +157,3 @@ export const ARCHITECTURE = defineFlatModule({
   progress,
   ui: ARCHITECTURE_UI,
 });
-
-export const TOPICS: readonly ArchitectureTopic[] = ARCHITECTURE.pages;
-export const ARCHITECTURE_HOME = ARCHITECTURE.home;
-export const ARCHITECTURE_ROUTES: readonly string[] = ARCHITECTURE.routes;
-
-/** The localStorage key of the done topics and the done practice questions. */
-export const ARCHITECTURE_STORAGE_KEY = progress.storageKey;
-
-/** The progress ids of the lessons: their slugs. The practice page has no id of its own. */
-export const LESSON_IDS: readonly string[] = ARCHITECTURE.lessonIds;
-
-export const getTopic = ARCHITECTURE.get;

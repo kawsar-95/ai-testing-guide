@@ -8,10 +8,6 @@ import type { SourceLine } from "./headings.ts";
 import type { FundamentalsChapter } from "./fundamentals/chapters.ts";
 import type { LinuxStage } from "./linux/stages.ts";
 import type { FlatItem, FlatModule } from "./modules/flat.ts";
-import { SYSTEM_DESIGN } from "./system-design/cases.ts";
-import type { SystemDesignCase } from "./system-design/cases.ts";
-import { ARCHITECTURE } from "./architecture/topics.ts";
-import type { ArchitectureTopic } from "./architecture/topics.ts";
 
 export type SearchDoc = {
   id: string;
@@ -138,15 +134,6 @@ export function buildFlatSearchDocs(module: FlatModule, entries: { item: FlatIte
   return entries.flatMap(({ item, source }) =>
     pageDocs({ href: item.href, title: item.title, part: null, group: module.searchGroup }, source),
   );
-}
-
-// One-line aliases until the module-specific names go away.
-export function buildSystemDesignSearchDocs(entries: { item: SystemDesignCase; source: string }[]): SearchDoc[] {
-  return buildFlatSearchDocs(SYSTEM_DESIGN, entries);
-}
-
-export function buildArchitectureSearchDocs(entries: { item: ArchitectureTopic; source: string }[]): SearchDoc[] {
-  return buildFlatSearchDocs(ARCHITECTURE, entries);
 }
 
 const SEARCH_OPTIONS = {

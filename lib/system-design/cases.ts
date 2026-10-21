@@ -2,7 +2,7 @@
  * The one ordered list of System Design case studies. Each case is served at
  * /system-design/<slug>/ and has its text in content/system-design/<slug>.mdx.
  */
-import { defineFlatModule, type FlatEntry, type FlatItem } from "../modules/flat.ts";
+import { defineFlatModule, type FlatEntry } from "../modules/flat.ts";
 import { SYSTEM_DESIGN_UI } from "./ui.ts";
 
 export type SystemDesignSlug =
@@ -22,7 +22,6 @@ export type SystemDesignSlug =
   | "stock-exchange"
   | "payment-system";
 
-export type SystemDesignCase = FlatItem<SystemDesignSlug>;
 
 type CaseEntry = { slug: SystemDesignSlug; title: string; description: string };
 
@@ -113,9 +112,3 @@ export const SYSTEM_DESIGN = defineFlatModule({
   entries,
   ui: SYSTEM_DESIGN_UI,
 });
-
-export const CASES: readonly SystemDesignCase[] = SYSTEM_DESIGN.pages;
-export const SYSTEM_DESIGN_HOME = SYSTEM_DESIGN.home;
-export const SYSTEM_DESIGN_ROUTES: readonly string[] = SYSTEM_DESIGN.routes;
-
-export const getCase = SYSTEM_DESIGN.get;

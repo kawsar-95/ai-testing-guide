@@ -63,16 +63,18 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `components/navigation/` | `SectionNav` ("On this page"), `SearchPalette` (Ctrl/Cmd+K) |
 | `components/content/` | `PageHeader` (the `PART 05 · CONFIGURE` eyebrow), `MetaLine` (the meta line), `Sources`, `ReadingProgress`, `BackToTop`, `PrevNext`, `CopyButton` |
 | `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper), `MdxImage` (an image with the base path), `MdxTable` (the `table` wrapper: it adds `role` and the `data-label` of each cell) |
-| `app/(site)/architecture/page.tsx`, `app/(site)/architecture/[topic]/page.tsx` | The Architecture module: the home (`components/pages/ArchitectureHome.tsx`) and one topic or the practice page. `[topic]` loads `content/architecture/<topic>.mdx`. Static params come from `lib/architecture/topics.ts`. |
-| `components/architecture/` | `useArchitectureProgress.ts`, `ArchitectureProgressSummary`, `MarkDoneButton`, `PracticeQuestion`, `TopicDoneMark`, `ArchitectureSidebarList` |
+| `app/(site)/architecture/page.tsx`, `app/(site)/architecture/[topic]/page.tsx` | The Architecture module: the home and one topic or the practice page. Both files are thin: they render `FlatModuleHome` and `FlatTopicPage` with `ARCHITECTURE`. `[topic]` loads `content/architecture/<topic>.mdx`. Static params come from `lib/architecture/topics.ts`. |
+| `components/architecture/` | `PracticeQuestion` (the only Architecture-specific component) |
 | `lib/architecture/topics.ts`, `lib/architecture/ui.ts` | The one ordered list of the 19 Architecture topics and the practice page, the progress ids, and the English strings. See "Architecture Module". |
 | `public/images/architecture/` | The owner's 19 diagrams (WebP), one for each topic |
-| `app/(site)/system-design/page.tsx`, `app/(site)/system-design/[topic]/page.tsx` | The System Design module: the home (`components/pages/SystemDesignHome.tsx`) and one case study. `[topic]` loads `content/system-design/<topic>.mdx`. Static params come from `lib/system-design/cases.ts`. |
+| `app/(site)/system-design/page.tsx`, `app/(site)/system-design/[topic]/page.tsx` | The System Design module: the home and one case study. Both files are thin, like the Architecture ones, with `SYSTEM_DESIGN`. `[topic]` loads `content/system-design/<topic>.mdx`. Static params come from `lib/system-design/cases.ts`. |
 | `components/linux/` | `useLinuxProgress.ts` (the progress store), `LinuxProgressSummary`, `StageProgress`, `TopicChecklist`, `LinuxSidebarList` |
 | `components/fundamentals/` | `useFundamentalsProgress.ts`, `FundamentalsProgressSummary`, `ChapterProgress`, `TopicChecklist`, `FundamentalsSidebarList`, `Version` (one version block), `VersionSwitch`, and `diagrams/` (the inline SVG diagrams of the ISTQB version, each in a `Figure` with a visible description) |
 | `lib/linux/stages.ts` | The one ordered list of the 12 stages and their 103 topics. See "Linux Module". |
 | `lib/linux/ui.ts` | The English strings of the Linux module |
-| `components/system-design/` | `SystemDesignSidebarList` |
+| `lib/modules/flat.ts` | `defineFlatModule` and the flat module types (`FlatEntry`, `FlatItem`, `FlatModule`). See "Flat modules". |
+| `lib/modules/registry.ts` | `FLAT_MODULES`, `PROGRESS_MODULES`, `FlatModuleId`, and `flatModule(id)`. Pwa, sitemap, stats, search, contents, and dashboard read the flat modules from here. |
+| `components/modules/` | `FlatModuleHome`, `FlatTopicPage`, `FlatSidebarList`, `ProgressSummary`, `MarkDoneButton`, `DoneMark`, and `useModuleProgress.ts` (`progressHook`, `doneHook`). They take a module, or a `moduleId` in client components. |
 | `lib/system-design/cases.ts` | The one ordered list of the 15 System Design case studies. See "System Design Module". |
 | `lib/system-design/ui.ts` | The English strings of the System Design module |
 | `lib/fundamentals/chapters.ts` | The one ordered list of the 11 chapters and their 117 topics. See "Fundamentals Module". |
@@ -185,11 +187,22 @@ The progress code is shared and lives under `prep` names, left from the Intervie
 
 To add or change a topic, edit `lib/linux/stages.ts` and the `##` heading of the MDX file together. The title of a topic is its heading. The `anchor` comes from the title with the `rehype-slug` rules. Six topics have an anchor that ends in `-1`, because the `#` title of the page takes the plain slug first.
 
+## Flat modules
+
+A flat module is a home page and a list of pages at `/<id>/<slug>/`. Architecture and System Design are flat modules. `defineFlatModule` (`lib/modules/flat.ts`) builds the routes, the numbers, the neighbours, and the progress ids from one entry list. An entry has a kind: `topic` (a page with a progress id when the module has progress), `practice` (a page with its own question ids), or `link` (a link to an `href`, with no page).
+
+To add a flat module:
+
+1. Create a data file with `defineFlatModule` and a `<Id>Slug` type, and add one line to `FLAT_MODULES` in `lib/modules/registry.ts`.
+2. Create `app/(site)/<id>/page.tsx` (`FlatModuleHome`) and `app/(site)/<id>/[topic]/page.tsx` (`FlatTopicPage`). Keep both thin.
+3. Create `content/<id>/<slug>.mdx` and `scripts/<id>-route-map.json`.
+4. Add the map name to the lists of `check_routes.py`, `check_outline.py`, and `check_sources.py`.
+
 ## System Design Module
 
 The System Design module is the home at `/system-design/` and 15 case pages at `/system-design/<slug>/`. Each case explains how one well-known system works (Kafka, Google Search, YouTube, WhatsApp, Uber ETA, payments, …), in plain words for testers. It has no progress checklist.
 
-`lib/system-design/cases.ts` is the one ordered list of the cases (slug, title, description). It drives the drawer, the header dropdown, the home page, prev/next, search (group `system design`), the sitemap, and the precache. The `#` heading of each MDX file is the case title.
+`lib/system-design/cases.ts` defines the module (`SYSTEM_DESIGN`) with its one ordered list of the cases (slug, title, description). It drives the drawer, the header dropdown, the home page, prev/next, search (group `system design`), the sitemap, and the precache. The `#` heading of each MDX file is the case title.
 
 | Rule | Detail |
 |---|---|
@@ -235,7 +248,7 @@ To add or change a topic, edit `lib/fundamentals/chapters.ts` and the `##` headi
 
 The System Architecture Foundations module is the home at `/architecture/`, 19 topic pages, and a practice page with 30 questions, all at `/architecture/<slug>/`. It teaches the building blocks of system architecture in plain words for testers. The base is the owner's notes (`docs/superpowers/research/architecture-owner-notes.md`) and the owner's diagrams. The design is `docs/superpowers/specs/2026-10-20-architecture-module-design.md`.
 
-`lib/architecture/topics.ts` is the one ordered list (slug, title, description). It drives the drawer, the header dropdown, the home page, prev/next, search (group `architecture`), the sitemap, the precache, and the progress store (`localStorage` key `architecture-progress`). The progress ids are the 19 topic slugs and `practice-01` … `practice-30`.
+`lib/architecture/topics.ts` defines the module (`ARCHITECTURE`) with its one ordered list (slug, title, description). It drives the drawer, the header dropdown, the home page, prev/next, search (group `architecture`), the sitemap, the precache, and the progress store (`localStorage` key `architecture-progress`). The progress ids are the 19 topic slugs and `practice-01` … `practice-30`.
 
 | Rule | Detail |
 |---|---|
