@@ -10,7 +10,7 @@ import { ARCHITECTURE_HOME } from "@/lib/architecture/topics";
 import { ARCHITECTURE_UI } from "@/lib/architecture/ui";
 import { SYSTEM_DESIGN_HOME } from "@/lib/system-design/cases";
 import { SYSTEM_DESIGN_UI } from "@/lib/system-design/ui";
-import { InstallButton } from "./InstallButton";
+import { BrandMark } from "./BrandMark";
 import { MobileNav } from "./MobileNav";
 import { ThemeToggle } from "./ThemeToggle";
 import { VoiceToggle } from "./VoiceToggle";
@@ -46,9 +46,9 @@ export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
         <Link href="/" className="flex min-w-0 items-center gap-2.5 text-text no-underline">
           <span
             aria-hidden="true"
-            className="grid size-7 shrink-0 place-items-center rounded-md border max-[420px]:hidden border-border-strong bg-bg-raised font-display text-[15px] font-semibold italic leading-none text-accent"
+            className="grid size-7 shrink-0 place-items-center rounded-md border max-[360px]:hidden border-border-strong bg-bg-raised"
           >
-            QA
+            <BrandMark className="size-[18px]" />
           </span>
           <span className="truncate font-display text-[15px] font-semibold sm:text-[16px] tracking-tight">{SITE_NAME}</span>
         </Link>

@@ -14,8 +14,7 @@ import { CodeBlock } from "@/components/mdx/CodeBlock";
 import { CardGrid } from "@/components/mdx/CardGrid";
 import { InfoCard } from "@/components/mdx/InfoCard";
 import { MdxImage } from "@/components/mdx/MdxImage";
-import { Bangla, Layman, Technical } from "@/components/voice/panels";
-import { Voices } from "@/components/voice/Voices";
+import { MdxTable } from "@/components/mdx/MdxTable";
 
 // The custom components the MDX files in content/ use without an import.
 const components: MDXComponents = {
@@ -45,12 +44,8 @@ const components: MDXComponents = {
   // basePath on GitHub Pages. In-page anchors and external links stay plain.
   a: ({ href = "", ...props }) =>
     href.startsWith("/") ? <Link href={href} {...props} /> : <a href={href} {...props} />,
-  // The wrapper scrolls the table sideways on narrow screens (see .mdx-table).
-  table: (props) => (
-    <div className="mdx-table">
-      <table {...props} />
-    </div>
-  ),
+  // On phones, each row shows as a card (see .mdx-table in globals.css).
+  table: MdxTable,
 };
 
 export function useMDXComponents(): MDXComponents {

@@ -58,11 +58,10 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `app/sitemap.ts`, `app/robots.ts`, `app/not-found.tsx` | Sitemap, robots, 404 page |
 | `app/manifest.ts`, `app/sw.js/route.ts` | The PWA: `/manifest.webmanifest` and the service worker `/sw.js`, both from `lib/pwa.ts` |
 | `app/icon.svg`, `app/apple-icon.png`, `public/icons/` | The favicon, the iOS home-screen icon, and the manifest icons (192 px, 512 px, maskable 512 px) |
-| `components/layout/` | `SiteShell`, `SiteHeader`, `Sidebar`, `SidebarList`, `MobileNav`, `ThemeToggle`, `VoiceToggle` (the `বাংলা` default-voice button), `InstallButton` (the install prompt), `RegisterServiceWorker` |
-| `components/voice/` | `Voices`, `VoiceSwitcher`, `panels.tsx` (`Technical`, `Layman`, `Bangla`), `useVoiceDefault.ts`. See "Voices". |
+| `components/layout/` | `SiteShell`, `SiteHeader`, `Sidebar`, `SidebarList`, `MobileNav`, `ThemeToggle`, `RegisterServiceWorker`, `BrandMark` (the site mark: a magnifier with a check mark, the same drawing as `app/icon.svg`) |
 | `components/navigation/` | `SectionNav` ("On this page"), `SearchPalette` (Ctrl/Cmd+K) |
 | `components/content/` | `PageHeader` (the `PART 05 · CONFIGURE` eyebrow), `MetaLine` (the meta line), `Sources`, `ReadingProgress`, `BackToTop`, `PrevNext`, `CopyButton` |
-| `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper), `MdxImage` (an image with the base path) |
+| `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper), `MdxImage` (an image with the base path), `MdxTable` (the `table` wrapper: it adds `role` and the `data-label` of each cell) |
 | `app/(site)/architecture/page.tsx`, `app/(site)/architecture/[topic]/page.tsx` | The Architecture module: the home (`components/pages/ArchitectureHome.tsx`) and one topic or the practice page. `[topic]` loads `content/architecture/<topic>.mdx`. Static params come from `lib/architecture/topics.ts`. |
 | `components/architecture/` | `useArchitectureProgress.ts`, `ArchitectureProgressSummary`, `MarkDoneButton`, `PracticeQuestion`, `TopicDoneMark`, `ArchitectureSidebarList` |
 | `lib/architecture/topics.ts`, `lib/architecture/ui.ts` | The one ordered list of the 19 Architecture topics and the practice page, the progress ids, and the English strings. See "Architecture Module". |
@@ -363,9 +362,7 @@ To add a group, add it to `SOURCE` in `lib/nav.ts` and to the `GroupSlug` type, 
 | `MdxImage` (`src`, `alt`), or a Markdown image | An image from `public/`, with the base path added. A text link below the image opens the file in full size. |
 | The Fundamentals diagrams | Inline SVG diagrams with a visible description. See "Fundamentals Module". |
 | Fenced code block | Shiki colors, a language label (hidden for `text`) and a Copy button |
-| `Voices` (wraps `Technical`, `Layman`, `Bangla`) | The body of one `##` section in 3 voices, with a switcher. Put it directly after the `##` heading. See "Voices". |
-| `Technical`, `Layman`, `Bangla` | The 3 panels of `Voices`, in this order. Each tag is alone on its line at column 0. `Layman` and `Bangla` show in a tinted box. |
-| GFM table | A raised box that scrolls sideways on narrow screens |
+| GFM table | A raised box that scrolls sideways. Below 640 px, each row is a card, and each cell shows its column name above its value. |
 | `MdxImage` (`src`, `alt`, optional `width` and `height`), also the mapping for Markdown images `![alt](/images/…)` | An `<img>` with lazy loading and a text link "Open the image in full size" below it. It adds the base path to `src` and to the link, because a plain `<img>` does not get it. Give `width` and `height` (use `<MdxImage … />`) so that the page does not jump while the image loads. Write `alt` as a short description and add a text description in a `<details>` block for a dense image. |
 
 Code blocks stay dark in both themes. Use fenced code blocks for code, prompts, diagrams and trees.
@@ -406,10 +403,13 @@ To change a page:
 
 ## PWA
 
-The site installs as an app and works offline.
+The site installs as an app and is offline first.
 
-- The service worker caches all 86 routes and their build files at install. It caches a file that a page loads later (for example the Bengali font) at its first use. Pages use network first, so an online reader gets the newest version. Files in `/_next/static/` use cache first, because their names have a content hash.
-- Each build writes a new cache version into `/sw.js`. The new worker deletes the old caches.
+- The service worker caches all 86 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
+- Pages, RSC payloads, and the search index use stale-while-revalidate: the cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. Files in `/_next/static/` use cache first, because their names have a content hash.
+- Offline, a page that is not in the cache gets the 404 page.
+- Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
+- `tests/pwa.test.ts` runs the worker source with a fake `caches` and `fetch`.
 - Only production builds register the service worker. `npm run dev` has none. To test it, run `npm run build` and serve `out/`.
 - A new page in `lib/nav.ts`, a new stage in `lib/linux/stages.ts`, or a new chapter in `lib/fundamentals/chapters.ts` goes into the precache list automatically.
 

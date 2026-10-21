@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { GROUPS } from "@/lib/nav";
 import { START_STEPS, groupLabel } from "@/lib/home";
+import { AiLogos } from "./AiLogos";
 
 const PART_COUNT = GROUPS.reduce((sum, group) => sum + group.pages.length, 0);
 
@@ -32,7 +33,8 @@ export function HomePage() {
           TUTORIAL · {PART_COUNT} PARTS · {GROUPS.length} GROUPS
         </p>
         <h1 className="mt-3 font-display text-[clamp(2rem,6vw,3.25rem)] font-medium leading-[1.05] tracking-[-0.03em] text-balance text-text">
-          ✴️ Software Testing with Claude AI
+          <AiLogos />
+          Software Testing with Claude AI
         </h1>
         <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
           A hands-on tutorial for QA engineers and SDETs: install Claude Code, learn how it
