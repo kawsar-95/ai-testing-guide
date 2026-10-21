@@ -152,7 +152,7 @@ The site has 88 routes:
 |---|---|
 | Header | Sticky, 64 px. The brand mark in a teal tile, then the top nav (from the `nav` breakpoint), then search, voice, install, theme, and the menu button (below `nav`). |
 | Top nav | `HEADER_NAV`: Tutorial, Linux, Fundamentals, System Design, Architecture (each a dropdown of its pages and a link to its home), then Contents and Dashboard (links). The current item has a teal underline (`activeNavId`). Escape closes a dropdown and moves the focus to its button. A click outside or focus that leaves it closes it. A route change closes it. |
-| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 81 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (68.75rem, 1100 px), "On this page" (`SectionNav`, 280 px) shows. The layout is at most 1400 px wide; the text column at most 720 px. |
+| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 81 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
 | Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. Below `chapter`, `ContentsButton` above the title of a content page opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. On close, the focus goes back to the button that opened it. |
 | `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, and Architecture. |
 
@@ -161,7 +161,7 @@ The site has 88 routes:
 | Part | Detail |
 |---|---|
 | `ChapterTools` | Under the meta line of each content page (in the `PageMeta` slot): the pill `📖 N min read` and the toggles Bookmark and Mark as read (`aria-pressed`). It saves the page to `last-page` on mount. |
-| Reading time | `lib/reading-time.ts`: the words of the Technical text (Fundamentals: the `istqb` blocks; no code, export lines, tags, or link URLs) / 200, rounded up, 1 at least. Computed at build time. |
+| Reading time | `lib/reading-time.ts`: the words of the Technical text (no code, export statements, tags, or link URLs). A Fundamentals chapter gets one value per version (`getReadingMinutesByVersion`), and the version CSS shows the one of the switch / 200, rounded up, 1 at least. Computed at build time. |
 | Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 81 content pages. |
 | `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 81`), bookmarks, the topic progress of Linux, Fundamentals, and Architecture, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 6 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 6 keys. |
 | Strings | `lib/dashboard.ts` (`DASHBOARD_UI`, the route). The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle. |

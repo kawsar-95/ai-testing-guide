@@ -84,7 +84,7 @@ export default async function CasePage({ params }: PageProps<"/system-design/[to
   return (
     <>
       <ReadingProgress />
-      <ChapterLayout outline={outline}>
+      <ChapterLayout outline={outline} route={item.href}>
         <ContentsButton />
         <p className={`mb-3 ${LABEL} text-accent`}>{SYSTEM_DESIGN_UI.caseEyebrow(item.number)}</p>
         <article data-content className="mdx">

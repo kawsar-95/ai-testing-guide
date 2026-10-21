@@ -88,7 +88,7 @@ export default async function TopicPage({ params }: PageProps<"/architecture/[to
   return (
     <>
       <ReadingProgress />
-      <ChapterLayout outline={outline}>
+      <ChapterLayout outline={outline} route={item.href}>
         <ContentsButton />
         <p className={`mb-3 ${LABEL} text-accent`}>
           {practice ? ARCHITECTURE_UI.practiceEyebrow : ARCHITECTURE_UI.topicEyebrow(item.number)}

@@ -40,3 +40,9 @@ test("the dashboard is in the sitemap, the precache, and its route map", () => {
   const map = JSON.parse(readFileSync(new URL("../scripts/dashboard-route-map.json", import.meta.url), "utf8"));
   assert.deepEqual(map, Object.fromEntries(DASHBOARD_ROUTES.map((r) => [r, r])));
 });
+
+test("Export revokes the file URL after the download starts, not at once (Safari)", () => {
+  const src = readFileSync(new URL("../components/pages/DashboardPage.tsx", import.meta.url), "utf8");
+  assert.match(src, /setTimeout\(\(\) => URL\.revokeObjectURL\(url\), \d+\)/);
+  assert.doesNotMatch(src, /^\s*URL\.revokeObjectURL\(url\);/m);
+});

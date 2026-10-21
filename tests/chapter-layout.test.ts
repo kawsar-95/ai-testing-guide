@@ -12,10 +12,10 @@ const TEMPLATES = [
   "app/(site)/architecture/[topic]/page.tsx",
 ];
 
-test("the chapter breakpoints are 820 px and 1100 px", () => {
+test("the chapter breakpoints are 820 px and 1280 px", () => {
   const css = source("app/globals.css");
   assert.match(css, /--breakpoint-chapter: 51\.25rem;/);
-  assert.match(css, /--breakpoint-toc: 68\.75rem;/);
+  assert.match(css, /--breakpoint-toc: 80rem;/);
 });
 
 test("ChapterLayout shows the left list from chapter and On this page from toc", () => {
@@ -36,5 +36,18 @@ for (const path of TEMPLATES) {
     assert.match(src, /<ChapterLayout /);
     assert.match(src, /<ChapterTools /);
     assert.doesNotMatch(src, /xl:grid-cols-\[minmax\(0,680px\)_220px\]/);
+  });
+}
+
+test("the left list renders the list of the route, with no Suspense fallback", () => {
+  const layout = source("components/content/ChapterLayout.tsx");
+  assert.doesNotMatch(layout, /Suspense|SidebarList/);
+  assert.match(layout, /<ChapterList activePath=\{route\} \/>/);
+  assert.doesNotMatch(source("components/content/ChapterList.tsx"), /usePathname/);
+});
+
+for (const path of TEMPLATES) {
+  test(`${path} passes its route to ChapterLayout`, () => {
+    assert.match(source(path), /<ChapterLayout outline=\{outline\} route=\{[a-z]+\.href\}>/);
   });
 }

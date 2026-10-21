@@ -87,7 +87,7 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
   return (
     <>
       <ReadingProgress />
-      <ChapterLayout outline={outline}>
+      <ChapterLayout outline={outline} route={stage.href}>
         <ContentsButton />
         <p className={`mb-3 ${LABEL} text-accent`}>{LINUX_UI.stageEyebrow(stage.number)}</p>
         <div className="mb-6">

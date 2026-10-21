@@ -9,11 +9,18 @@ const PILL =
 const TOGGLE = "btn btn-outline btn-sm aria-pressed:border-accent aria-pressed:text-accent";
 
 /**
- * The reading-time pill and the Bookmark and Mark as read toggles of a
+ * The reading-time pill (one value per version on a Fundamentals chapter) and the Bookmark and Mark as read toggles of a
  * content page. It saves the page as the last page when it mounts. The
  * server HTML renders both toggles off.
  */
-export function ChapterTools({ route, minutes }: { route: string; minutes: number }) {
+export function ChapterTools({
+  route,
+  minutes,
+}: {
+  route: string;
+  /** One value, or one value per Fundamentals version. The version CSS shows the one of the switch. */
+  minutes: number | { notes: number; istqb: number };
+}) {
   const read = usePageRead();
   const marks = useBookmarks();
   const { setLast } = useLastPage();
@@ -28,7 +35,14 @@ export function ChapterTools({ route, minutes }: { route: string; minutes: numbe
     <div data-chapter-tools className="not-prose mt-4 mb-8 flex flex-wrap items-center gap-2.5">
       <span className={PILL}>
         <span aria-hidden="true">📖</span>
-        {readingTime(minutes)}
+        {typeof minutes === "number" ? (
+          readingTime(minutes)
+        ) : (
+          <>
+            <span data-version="notes">{readingTime(minutes.notes)}</span>
+            <span data-version="istqb">{readingTime(minutes.istqb)}</span>
+          </>
+        )}
       </span>
       <span className="grow" />
       <button type="button" aria-pressed={isMarked} onClick={() => marks.toggle(route)} className={TOGGLE}>

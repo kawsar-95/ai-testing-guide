@@ -41,7 +41,8 @@ function downloadExport() {
   document.body.append(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  // Safari can cancel the download if the URL goes at once.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function SectionTitle({ id, children }: { id: string; children: string }) {

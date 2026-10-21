@@ -1,27 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
 import { NavList } from "@/components/layout/NavList";
-import { withTrailingSlash } from "@/components/layout/SidebarList";
 import { scrollActiveIntoView } from "@/components/layout/scroll-active";
 
 /**
- * The left list of a content page: the pages of the current module. It
- * scrolls the current page into view inside the list. usePathname can
- * suspend, so ChapterLayout wraps it in Suspense.
+ * The left list of a content page: the pages of the current module. The page
+ * passes its own route, so the static HTML already has the right list. It
+ * scrolls the current page into view inside the list.
  */
-export function ChapterList() {
-  const pathname = usePathname();
+export function ChapterList({ activePath }: { activePath: string }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollActiveIntoView(ref.current);
-  }, [pathname]);
+  }, [activePath]);
 
   return (
     <div ref={ref}>
-      <NavList activePath={withTrailingSlash(pathname)} />
+      <NavList activePath={activePath} />
     </div>
   );
 }

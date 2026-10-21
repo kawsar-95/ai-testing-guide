@@ -49,7 +49,7 @@ export default async function ContentPage({ params }: PageProps<"/[group]/[page]
   return (
     <>
       <ReadingProgress />
-      <ChapterLayout outline={outline}>
+      <ChapterLayout outline={outline} route={page.href}>
         <ContentsButton />
         <PageHeader page={page} />
         <article data-content className="mdx">

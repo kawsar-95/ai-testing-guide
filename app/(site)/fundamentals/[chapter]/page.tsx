@@ -6,7 +6,7 @@ import { CHAPTERS, FUNDAMENTALS_HOME, getChapter } from "@/lib/fundamentals/chap
 import type { FundamentalsChapter } from "@/lib/fundamentals/chapters";
 import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
 import { getOutline } from "@/lib/outline";
-import { getReadingMinutes } from "@/lib/reading-time";
+import { getReadingMinutesByVersion } from "@/lib/reading-time";
 import { editUrl } from "@/lib/page";
 import type { PageInfo } from "@/lib/page";
 import { ContentsButton } from "@/components/layout/ContentsButton";
@@ -88,7 +88,7 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
   return (
     <>
       <ReadingProgress />
-      <ChapterLayout outline={outline}>
+      <ChapterLayout outline={outline} route={chapter.href}>
         <ContentsButton />
         <p className={`mb-3 ${LABEL} text-accent`}>{FUNDAMENTALS_UI.chapterEyebrow(chapter.number)}</p>
         <div className="mb-6">
@@ -111,7 +111,7 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
                       updated={info.updated}
                       editHref={editUrl("fundamentals", slug)}
                     />
-                    <ChapterTools route={chapter.href} minutes={getReadingMinutes("fundamentals", slug)} />
+                    <ChapterTools route={chapter.href} minutes={getReadingMinutesByVersion("fundamentals", slug)} />
                   </>
                 ) : null,
             }}
