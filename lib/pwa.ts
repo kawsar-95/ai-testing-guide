@@ -16,7 +16,7 @@ const ICONS = [
 ] as const;
 
 /** The colors of the dark theme (globals.css): the splash screen and the title bar. */
-const BACKGROUND = "#0f1013";
+const BACKGROUND = "#0e1115";
 
 export function webManifest(
   basePath: string,
