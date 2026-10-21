@@ -40,7 +40,7 @@ export function NavItems({
   onEvent?: (event: DropdownEvent) => void;
 }) {
   return (
-    <nav aria-label={navMain} className="ml-auto hidden items-center gap-5 nav:flex">
+    <nav aria-label={navMain} className="ml-auto hidden items-center gap-4 nav:flex">
       {HEADER_NAV.map((item) =>
         item.pages && onEvent ? (
           <NavDropdown

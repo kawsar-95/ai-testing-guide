@@ -40,5 +40,5 @@ test("sitemapPaths has the 21 Architecture routes", () => {
 test("sitemapPaths has no duplicate path", () => {
   const paths = sitemapPaths();
   assert.equal(new Set(paths).size, paths.length);
-  assert.equal(paths.length, 87);
+  assert.equal(paths.length, 88);
 });
