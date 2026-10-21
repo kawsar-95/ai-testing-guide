@@ -31,7 +31,6 @@ export type ArchitectureSlug =
   | "observability"
   | "practice";
 
-
 type Entry = { slug: ArchitectureSlug; title: string; description: string };
 
 const SOURCE: readonly Entry[] = [

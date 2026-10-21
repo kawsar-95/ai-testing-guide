@@ -115,3 +115,11 @@ test("Architecture: the next page of observability is practice, and practice has
   assert.equal(ARCHITECTURE.neighbours("practice").next, undefined);
   assert.equal(ARCHITECTURE.neighbours("why-system-design").previous, undefined);
 });
+
+test("the search index route has a flatDocs call for each flat module", () => {
+  const constOf: Record<string, string> = { "system-design": "SYSTEM_DESIGN", architecture: "ARCHITECTURE" };
+  const ids = FLAT_MODULES.map((m) => m.id);
+  assert.deepEqual(Object.keys(constOf).sort(), [...ids].sort(), "add the new module to constOf");
+  const route = readFileSync("app/search-index.json/route.ts", "utf8");
+  for (const id of ids) assert.ok(route.includes(`flatDocs(${constOf[id]})`), `flatDocs(${constOf[id]})`);
+});
