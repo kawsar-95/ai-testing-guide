@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { HEADER_NAV, activeNavId, nextOpenState } from "../lib/header-nav.ts";
+import { HEADER_NAV, activeNavId, blurClosesDropdown, nextOpenState } from "../lib/header-nav.ts";
 import { PAGES } from "../lib/nav.ts";
 
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
@@ -49,4 +49,16 @@ test("the nav items and the menu button switch at the same width", () => {
 
 test("the shell has no sidebar column", () => {
   assert.doesNotMatch(source("components/layout/SiteShell.tsx"), /Sidebar\b|grid-cols-\[260px/);
+});
+
+test("blurClosesDropdown closes only when focus moves to an element outside", () => {
+  const outside = {};
+  assert.equal(blurClosesDropdown(outside, false), true);
+  assert.equal(blurClosesDropdown(outside, true), false);
+  // A click on the panel padding or its scrollbar moves focus to nothing.
+  assert.equal(blurClosesDropdown(null, false), false);
+});
+
+test("NavDropdown uses blurClosesDropdown", () => {
+  assert.match(source("components/layout/NavDropdown.tsx"), /blurClosesDropdown\(/);
 });

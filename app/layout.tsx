@@ -13,7 +13,6 @@ const crimson = Crimson_Pro({
   variable: "--font-crimson",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "600", "700"],
   style: ["normal", "italic"],
 });
 

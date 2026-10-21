@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef } from "react";
 import Link from "next/link";
-import type { DropdownEvent, HeaderNavItem } from "@/lib/header-nav";
+import { blurClosesDropdown, type DropdownEvent, type HeaderNavItem } from "@/lib/header-nav";
 import { navModuleHome } from "@/lib/ui";
 
 const ITEM =
@@ -60,7 +60,10 @@ export function NavDropdown({
       ref={rootRef}
       className="relative"
       onBlur={(event) => {
-        if (open && !rootRef.current?.contains(event.relatedTarget as Node | null)) onEvent({ type: "blur-out" });
+        const next = event.relatedTarget;
+        if (open && blurClosesDropdown(next, Boolean(next && rootRef.current?.contains(next)))) {
+          onEvent({ type: "blur-out" });
+        }
       }}
     >
       <button

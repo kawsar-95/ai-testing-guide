@@ -33,3 +33,13 @@ export function nextOpenState(open: string | null, event: DropdownEvent): string
   if (event.type === "toggle") return open === event.id ? null : event.id;
   return null;
 }
+
+/**
+ * Whether a blur closes the open dropdown. Only focus that moves to an
+ * element outside the dropdown closes it. A click on the panel padding or on
+ * its scrollbar moves focus to nothing (`relatedTarget` is null); the
+ * outside-click listener handles clicks outside.
+ */
+export function blurClosesDropdown(relatedTarget: object | null, inside: boolean): boolean {
+  return relatedTarget !== null && !inside;
+}

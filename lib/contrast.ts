@@ -26,3 +26,14 @@ export function parseTokens(css: string, theme: "light" | "dark"): Record<string
   for (const match of block.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)) tokens[match[1]] = match[2].trim();
   return tokens;
 }
+
+/** `color-mix(in srgb, a pct%, b)` for two `#rrggbb` colors. A glow of `a` over the ground `b` gives the same color. */
+export function mixColors(a: string, b: string, pct: number): string {
+  const channel = (hex: string, i: number) => parseInt(hex.slice(i, i + 2), 16);
+  return (
+    "#" +
+    [1, 3, 5]
+      .map((i) => Math.round((channel(a, i) * pct + channel(b, i) * (100 - pct)) / 100).toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
