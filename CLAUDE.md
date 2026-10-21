@@ -50,7 +50,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `app/layout.tsx` | Fonts, the theme init script, the version init script of the Fundamentals module, the metadata, optional Google Analytics |
 | `app/globals.css` | Design tokens (both themes), Tailwind, the MDX element styles (`.mdx`, `.code-block`, `.mdx-table`, `details`), the rule that hides the other `[data-version]` block |
 | `app/(site)/layout.tsx` | The site shell (`SiteShell`) and the search dialog |
-| `app/(site)/page.tsx` | The home page (`components/pages/HomePage.tsx`): the START HERE strip, then the contents by group with a part count per group and a tagline per page |
+| `app/(site)/page.tsx` | The home page (`components/pages/HomePage.tsx`): the hero (grid background, 2 buttons, `StatsRow`), the START HERE cards, the "Why this guide" cards (`WHY_ITEMS`), and the numbered course cards (`COURSE_CARDS`) |
+| `app/(site)/contents/page.tsx` | The contents page (`components/pages/ContentsPage.tsx`): the stats, one card for each tutorial group, and one card for each module with its progress bar |
 | `app/(site)/linux/page.tsx`, `app/(site)/linux/[stage]/page.tsx` | The Linux module: the roadmap home (`components/pages/LinuxHome.tsx`) and the notes of one stage. `[stage]` loads `content/linux/<stage>.mdx`. Static params come from `lib/linux/stages.ts`. |
 | `app/(site)/fundamentals/page.tsx`, `app/(site)/fundamentals/[chapter]/page.tsx` | The Fundamentals module: the home (`components/pages/FundamentalsHome.tsx`) and one chapter. `[chapter]` loads `content/fundamentals/<chapter>.mdx` and shows the version switch if the chapter has versions. Static params come from `lib/fundamentals/chapters.ts`. |
 | `app/(site)/[group]/[page]/page.tsx` | Loads `content/<group>/<page>.mdx`. Static params come from `lib/nav.ts`. It renders the meta line for `<PageMeta />`, the Sources list from `page.sources`, the reading progress bar, and the back-to-top button. |
@@ -58,7 +59,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `app/sitemap.ts`, `app/robots.ts`, `app/not-found.tsx` | Sitemap, robots, 404 page |
 | `app/manifest.ts`, `app/sw.js/route.ts` | The PWA: `/manifest.webmanifest` and the service worker `/sw.js`, both from `lib/pwa.ts` |
 | `app/icon.svg`, `app/apple-icon.png`, `public/icons/` | The favicon, the iOS home-screen icon, and the manifest icons (192 px, 512 px, maskable 512 px) |
-| `components/layout/` | `SiteShell`, `SiteHeader`, `Sidebar`, `SidebarList`, `MobileNav`, `ThemeToggle`, `RegisterServiceWorker`, `BrandMark` (the site mark: a magnifier with a check mark, the same drawing as `app/icon.svg`) |
+| `components/layout/` | `SiteShell`, `SiteHeader`, `HeaderNav` and `NavDropdown` (the top nav), `MobileNav` (the drawer), `ContentsButton`, `NavList` and `SidebarList` (the lists of the drawer), `SiteFooter`, `ThemeToggle`, `RegisterServiceWorker`, `BrandMark` (the site mark: a magnifier with a check mark, the same drawing as `app/icon.svg`) |
 | `components/navigation/` | `SectionNav` ("On this page"), `SearchPalette` (Ctrl/Cmd+K) |
 | `components/content/` | `PageHeader` (the `PART 05 · CONFIGURE` eyebrow), `MetaLine` (the meta line), `Sources`, `ReadingProgress`, `BackToTop`, `PrevNext`, `CopyButton` |
 | `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper), `MdxImage` (an image with the base path), `MdxTable` (the `table` wrapper: it adds `role` and the `data-label` of each cell) |
@@ -88,10 +89,14 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
 | `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 86 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (all 87 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
-| `lib/home.ts` | The home group labels and the three START HERE pages |
+| `lib/home.ts` | The home group labels, the three START HERE pages, `WHY_ITEMS`, and `COURSE_CARDS` |
+| `lib/contents.ts` | `CONTENTS_HOME`, `CONTENTS_ROUTES`, and `CONTENTS_UI` (the strings of the contents page and the stats row) |
+| `lib/stats.ts` | `MODULES` (the 4 modules with their pages) and `siteStats()` (the numbers of the stats row) |
+| `lib/header-nav.ts` | `HEADER_NAV`, `activeNavId`, and `nextOpenState` (one dropdown open at most). See "Navigation". |
+| `lib/contrast.ts` | `contrastRatio` and `parseTokens`. `tests/contrast.test.ts` uses them. |
 | `lib/reading.ts` | `articleProgress` and `showBackToTop` for the reading aids |
 | `lib/ui.ts` | The English strings of the shell |
 | `lib/scroll-lock.ts` | One page-scroll lock, shared by the drawer and the search dialog |
@@ -109,15 +114,17 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `scripts/system-design-route-map.json` | The 16 System Design routes: `/system-design/` and the 15 cases. Same identity map. |
 | `scripts/architecture-route-map.json` | The 21 Architecture routes: `/architecture/`, the 19 topics, and the practice page. Same identity map. |
 | `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
+| `scripts/contents-route-map.json` | The 1 contents route: `/contents/`. Same identity map. |
 | `scripts/fundamentals-route-map.json` | The 12 Fundamentals routes: `/fundamentals/` and the 11 chapters. Same identity map as `route-map.json`. |
 
-`lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the sidebar, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
+`lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the Tutorial dropdown, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 86 routes:
+The site has 87 routes:
 
 | Routes | Count |
 |---|---|
 | `/` | 1 |
+| `/contents/` | 1 |
 | `/<group>/<page>/` for the 23 tutorial pages | 23 |
 | `/linux/` and the 12 Linux stages | 13 |
 | `/system-design/` and the 15 case studies | 16 |
@@ -133,11 +140,22 @@ The site has 86 routes:
 | Automate | `content/automate/` | `headless`, `github-actions`, `playwright` |
 | Case Study | `content/case-study/` | `overview`, `bug-hunt`, `pr-review`, `test-and-retest`, `automation`, `lessons` |
 
+## Navigation
+
+| Part | Behavior |
+|---|---|
+| Header | Sticky, 64 px. The brand mark in a teal tile, then the top nav (from the `nav` breakpoint), then search, voice, install, theme, and the menu button (below `nav`). |
+| Top nav | `HEADER_NAV`: Tutorial, Linux, Fundamentals, System Design, Architecture (each a dropdown of its pages and a link to its home), and Contents (a link). The current item has a teal underline (`activeNavId`). Escape closes a dropdown and moves the focus to its button. A click outside or focus that leaves it closes it. A route change closes it. |
+| Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. On a content page, `ContentsButton` above the title opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. On close, the focus goes back to the button that opened it. |
+| `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, and Architecture. |
+
+There is no sidebar.
+
 ## Linux Module
 
 The Linux module is the roadmap at `/linux/` and 12 stage pages at `/linux/<stage>/`. The design is `docs/superpowers/specs/2026-10-16-linux-module-design.md`.
 
-`lib/linux/stages.ts` is the one ordered list of the stages and their topics. It drives the sidebar, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `linux-progress`).
+`lib/linux/stages.ts` is the one ordered list of the stages and their topics. It drives the drawer, the header dropdown, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `linux-progress`).
 
 The progress code is shared and lives under `prep` names, left from the Interview Prep module that was removed on 2026-10-20: `lib/prep/progress.ts`, `lib/prep/store.ts`, and `components/prep/{useProgress,ProgressBar,browser-store}`. `tests/progress.test.ts` tests it. The Linux and Fundamentals modules use it. Its default `localStorage` key is still `prep-progress`. The removed module (the `/prep/` pages, `content/prep/`, the quiz and tables) is in the git history. Its spec, plan, and research notes stay in `docs/superpowers/`.
 
@@ -156,7 +174,7 @@ To add or change a topic, edit `lib/linux/stages.ts` and the `##` heading of the
 
 The System Design module is the home at `/system-design/` and 15 case pages at `/system-design/<slug>/`. Each case explains how one well-known system works (Kafka, Google Search, YouTube, WhatsApp, Uber ETA, payments, …), in plain words for testers. It has no progress checklist.
 
-`lib/system-design/cases.ts` is the one ordered list of the cases (slug, title, description). It drives the sidebar, the home page, prev/next, search (group `system design`), the sitemap, and the precache. The `#` heading of each MDX file is the case title.
+`lib/system-design/cases.ts` is the one ordered list of the cases (slug, title, description). It drives the drawer, the header dropdown, the home page, prev/next, search (group `system design`), the sitemap, and the precache. The `#` heading of each MDX file is the case title.
 
 | Rule | Detail |
 |---|---|
@@ -172,7 +190,7 @@ To add a case, add it to `lib/system-design/cases.ts` and to `SystemDesignSlug`,
 
 The Fundamentals module teaches manual software testing in 11 chapters: the home at `/fundamentals/` and one page for each chapter at `/fundamentals/<chapter>/`. Chapters 1–10 have two versions of the text: the owner's notes and an ISTQB version. Chapter 11 is 50 interview questions with one text. The design is `docs/superpowers/specs/2026-10-20-fundamentals-module-design.md`. The plan is `docs/superpowers/plans/2026-10-20-fundamentals-module.md`.
 
-`lib/fundamentals/chapters.ts` is the one ordered list of the chapters and their topics. It drives the sidebar, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `fundamentals-progress`). A topic id is `<chapter-slug>-NNN` from `001`. The `anchor` comes from the title with the `rehype-slug` rules, with the chapter title slugged first (as in `lib/linux/stages.ts`).
+`lib/fundamentals/chapters.ts` is the one ordered list of the chapters and their topics. It drives the drawer, the header dropdown, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `fundamentals-progress`). A topic id is `<chapter-slug>-NNN` from `001`. The `anchor` comes from the title with the `rehype-slug` rules, with the chapter title slugged first (as in `lib/linux/stages.ts`).
 
 The version switch:
 
@@ -202,7 +220,7 @@ To add or change a topic, edit `lib/fundamentals/chapters.ts` and the `##` headi
 
 The System Architecture Foundations module is the home at `/architecture/`, 19 topic pages, and a practice page with 30 questions, all at `/architecture/<slug>/`. It teaches the building blocks of system architecture in plain words for testers. The base is the owner's notes (`docs/superpowers/research/architecture-owner-notes.md`) and the owner's diagrams. The design is `docs/superpowers/specs/2026-10-20-architecture-module-design.md`.
 
-`lib/architecture/topics.ts` is the one ordered list (slug, title, description). It drives the sidebar, the home page, prev/next, search (group `architecture`), the sitemap, the precache, and the progress store (`localStorage` key `architecture-progress`). The progress ids are the 19 topic slugs and `practice-01` … `practice-30`.
+`lib/architecture/topics.ts` is the one ordered list (slug, title, description). It drives the drawer, the header dropdown, the home page, prev/next, search (group `architecture`), the sitemap, the precache, and the progress store (`localStorage` key `architecture-progress`). The progress ids are the 19 topic slugs and `practice-01` … `practice-30`.
 
 | Rule | Detail |
 |---|---|
@@ -305,7 +323,7 @@ Case Study pages (parts 18–23): the voices restate the workspace facts of the 
 Do all three steps. Each step is required.
 
 1. Create `content/<group>/<slug>.mdx` from the page template below.
-2. Add the page to its group in `lib/nav.ts` (`slug`, `title` for the sidebar, `description` and `tagline` for the home page). The position in the list sets the part number. The part count in the footer and in the search dialog comes from this list.
+2. Add the page to its group in `lib/nav.ts` (`slug`, `title` for the drawer and the dropdown, `description` and `tagline` for the home page). The position in the list sets the part number. The part count in the footer and in the search dialog comes from this list.
 3. Add `"/<group>/<slug>/": "/<group>/<slug>/"` to `scripts/route-map.json`. The map is an identity map: each key is the same route as its value. `check_routes.py`, `check_outline.py`, and `check_sources.py` read only the values in this file. A page that is not in it gets no check.
 
 ### Page template
@@ -395,17 +413,20 @@ To change a page:
 
 ## Design
 
-- The tokens are CSS variables on `:root` in `app/globals.css`: dark (the default) and light. `@theme inline` maps them to Tailwind colors (`bg-bg-raised`, `text-text-dim`, `text-accent`, …). The values come from the reference repo's `globals.css`.
+- The look follows https://www.systemdesignbangla.com/ (a style reference only; no CSS, text, or art is copied). The design is `docs/superpowers/specs/2026-10-21-reference-redesign-design.md`.
+- The tokens are CSS variables on `:root` in `app/globals.css`: dark (the server default) and light. Light is warm paper (`#faf7f2`) with white cards; dark is blue-black (`#0e1115`). The accent is teal, `--accent-2` is amber. `@theme inline` maps them to Tailwind colors (`bg-bg-raised`, `text-text-dim`, `text-accent`, `text-accent-2`, `bg-accent-soft`, …) and the shadows `--raise-sm/md/lg` to `shadow-sm/md/lg`.
+- Breakpoints: `nav` (75rem) shows the top nav and hides the menu button; `wide` (90rem) shows the label of the search trigger.
+- `.btn`, `.btn-primary`, `.btn-outline`, `.btn-ghost`, `.btn-sm`, `.hero-grid-bg`, and `.hero-mark` are in `app/globals.css`.
 - The theme is on `<html data-theme>`. The server HTML has `data-theme="dark"`. The init script in `lib/theme.ts` runs in `<head>` before the first paint: a saved choice (`localStorage` key `theme`) wins, else it follows `prefers-color-scheme`. `tests/theme.test.ts` checks that the script and `resolveTheme` agree.
-- Fonts come from `next/font/google`: Fraunces (display), Inter (body), JetBrains Mono (labels).
+- Fonts come from `next/font/google`: Crimson Pro (display, `--font-crimson`), Inter (body), JetBrains Mono (labels).
 - Voices: the tokens `--voice-layman` and `--voice-bangla` (both themes, Tailwind `voice-layman` and `voice-bangla`) color the extra panels and the switcher. Noto Sans Bengali (`preload: false`, variable `--font-noto-bengali`) comes after each Latin font in the font stacks. The browser loads it when Bengali text first shows. The header button shows `বাংলা` on every page, so every reader downloads the font one time. `preload: false` prevents a preload warning and a high-priority fetch. The voice head script (`VOICE_INIT_SCRIPT`) runs after the theme script and sets `data-voice-default` on `<html>`. The server HTML has `data-voice-default="technical"`.
-- Every text color has 4.5:1 contrast or more on its background in both themes. If you change a token, measure it again.
+- Every text color has 4.5:1 contrast or more on `--bg`, `--bg-raised`, and `--bg-raised-2` in both themes. `tests/contrast.test.ts` checks this from `app/globals.css`.
 
 ## PWA
 
 The site installs as an app and is offline first.
 
-- The service worker caches all 86 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
+- The service worker caches all 87 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
 - Pages, RSC payloads, and the search index use stale-while-revalidate: the cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Offline, a page that is not in the cache gets the 404 page.
 - Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
@@ -426,10 +447,10 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), the voice helpers and head script (`tests/voice.test.ts`), the authoring rules of `<Voices>` in every MDX file (`tests/voice-source.test.ts`), and the page and route-map lists |
+| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), the voice helpers and head script (`tests/voice.test.ts`), the authoring rules of `<Voices>` in every MDX file (`tests/voice-source.test.ts`), the contents page and stats (`tests/contents.test.ts`), the top nav (`tests/header-nav.test.ts`), the token contrast (`tests/contrast.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
-| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, `fundamentals-route-map.json`, and `architecture-route-map.json` that has no page in `out/` |
+| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, `fundamentals-route-map.json`, `architecture-route-map.json`, and `contents-route-map.json` that has no page in `out/` |
 | `python3 scripts/check_links.py out` | Lists broken internal links and assets |
 | `python3 scripts/check_outline.py out` | Checks that each "On this page" link points to an element id |
 | `python3 scripts/check_sources.py out` | Checks each tutorial page, each Linux stage page, each System Design case page, each Fundamentals chapter page, and each Architecture page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |

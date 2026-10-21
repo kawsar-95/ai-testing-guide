@@ -1,5 +1,5 @@
 /**
- * The one ordered list of tutorial pages. It drives the sidebar, prev/next,
+ * The one ordered list of tutorial pages. It drives the drawer, the Tutorial dropdown, prev/next,
  * the home contents, the search index, the sitemap, and the static params.
  * Each page is content/<group>/<slug>.mdx and is served at /<group>/<slug>/.
  */
@@ -14,7 +14,7 @@ export type GroupSlug =
 export type NavPage = {
   group: GroupSlug;
   slug: string;
-  /** The sidebar label. */
+  /** The label in the drawer and the dropdown. */
   title: string;
   /** The one-line summary on the home page. */
   description: string;
