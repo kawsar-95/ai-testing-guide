@@ -58,3 +58,19 @@ for (const path of ["app/(site)/architecture/[topic]/page.tsx", "app/(site)/syst
     assert.match(src, /import\(`@\/content\/(architecture|system-design)\/\$\{slug\}\.mdx`\)/);
   });
 }
+
+test("NavList remounts FlatSidebarList when the flat module changes", () => {
+  assert.match(source("components/layout/NavList.tsx"), /<FlatSidebarList key=\{flat\.id\} module=\{flat\}/);
+});
+
+test("FlatSidebarList calls one hook whether or not the module has progress", () => {
+  const list = source("components/modules/FlatSidebarList.tsx");
+  assert.match(list, /const \{ done \} = doneHook\(m\)\(\);/);
+  assert.doesNotMatch(list, /progressHook|\? *use[A-Z]/);
+  const hooks = source("components/modules/useModuleProgress.ts");
+  assert.match(hooks, /return module\.progress \? progressHook\(module\) : useNoProgress;/);
+  const factory = source("components/prep/useProgress.ts");
+  assert.match(factory, /export function createUseProgress[\s\S]*return hookOf\(/);
+  assert.match(factory, /export const useNoProgress: UseProgress = hookOf\(/);
+  assert.equal(factory.match(/useSyncExternalStore\(/g)?.length, 1);
+});

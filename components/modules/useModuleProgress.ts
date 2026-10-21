@@ -1,6 +1,6 @@
 "use client";
 
-import { createUseProgress } from "@/components/prep/useProgress";
+import { createUseProgress, useNoProgress } from "@/components/prep/useProgress";
 import type { FlatModule } from "@/lib/modules/flat";
 import { FLAT_MODULES, type FlatModuleId } from "@/lib/modules/registry";
 
@@ -19,6 +19,15 @@ export function progressHook(module: FlatModule): UseProgress {
     HOOKS.set(key, hook);
   }
   return hook;
+}
+
+/**
+ * The progress hook of a module with progress, else a hook with an empty list.
+ * Both call the same hooks, so a component that changes its module keeps a
+ * valid hook order.
+ */
+export function doneHook(module: FlatModule): UseProgress {
+  return module.progress ? progressHook(module) : useNoProgress;
 }
 
 /**

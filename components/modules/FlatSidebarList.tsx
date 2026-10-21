@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import type { FlatModule } from "@/lib/modules/flat";
-import { progressHook } from "./useModuleProgress";
-
-const NO_DONE: { done: readonly string[] } = { done: [] };
-const useNoProgress = () => NO_DONE;
+import { doneHook } from "./useModuleProgress";
 
 /**
  * The pages of a flat module for the sidebar and the drawer. It uses the same
@@ -21,8 +18,7 @@ export function FlatSidebarList({
   activePath: string | null;
   onNavigate?: () => void;
 }) {
-  const useDone = m.progress ? progressHook(m) : useNoProgress;
-  const { done } = useDone();
+  const { done } = doneHook(m)();
   const ui = m.ui;
   return (
     <nav aria-label={ui.sidebarNav} className="px-3 py-4">

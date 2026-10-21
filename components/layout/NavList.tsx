@@ -60,7 +60,7 @@ export function NavList({
       ) : current === "fundamentals" ? (
         <FundamentalsSidebarList activePath={activePath} onNavigate={onNavigate} />
       ) : flat ? (
-        <FlatSidebarList module={flat} activePath={activePath} onNavigate={onNavigate} />
+        <FlatSidebarList key={flat.id} module={flat} activePath={activePath} onNavigate={onNavigate} />
       ) : (
         <SidebarList activePath={activePath} onNavigate={onNavigate} />
       )}
