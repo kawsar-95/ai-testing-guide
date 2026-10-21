@@ -16,6 +16,7 @@ export function createUseProgress(key: string): () => {
   done: readonly string[];
   toggle(id: string): void;
   markDone(id: string): void;
+  clear(): void;
 } {
   let store: ProgressStore | null = null;
 
@@ -33,6 +34,7 @@ export function createUseProgress(key: string): () => {
     const done = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     const toggle = useCallback((id: string) => getStore().toggle(id), []);
     const markDone = useCallback((id: string) => getStore().markDone(id), []);
-    return useMemo(() => ({ done, toggle, markDone }), [done, toggle, markDone]);
+    const clear = useCallback(() => getStore().clear(), []);
+    return useMemo(() => ({ done, toggle, markDone, clear }), [done, toggle, markDone, clear]);
   };
 }

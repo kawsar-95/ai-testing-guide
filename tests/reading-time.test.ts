@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentWords, readingMinutes } from "../lib/reading-time.ts";
+import { contentWords, getReadingMinutes, readingMinutes } from "../lib/reading-time.ts";
+import { CONTENT_PAGES } from "../lib/reading-state.ts";
 
 test("plain prose counts every word", () => {
   assert.equal(contentWords("# Title\n\nOne two three four."), 5);
@@ -31,4 +32,8 @@ test("readingMinutes is words / 200 rounded up, at least 1", () => {
   assert.equal(readingMinutes(""), 1);
   assert.equal(readingMinutes("w ".repeat(200)), 1);
   assert.equal(readingMinutes("w ".repeat(201)), 2);
+});
+
+test("every content page has a reading time", () => {
+  for (const page of CONTENT_PAGES) assert.ok(getReadingMinutes(page.dir, page.slug) >= 1, page.href);
 });
