@@ -52,3 +52,27 @@ export const voiceToBangla = "বাংলা – Show the Bangla text in every 
 export const voiceToTechnical = "English – Show the Technical text in every section";
 export const voiceGroup = "Text version";
 export const installApp = "Install this site as an app";
+
+/** The strings of the home page. */
+export const HOME_UI = {
+  eyebrow: "SOFTWARE TESTING WITH AI · 2026",
+  titleLine1: "Software Testing",
+  titleLine2Before: "with",
+  titleMark: "Claude AI",
+  sub: "A hands-on tutorial for QA engineers and SDETs: install Claude Code, learn how it works, configure and extend it, and automate testing in CI and the browser. Then follow one real QA project from a bug hunt to a second fix PR.",
+  startReading: "Start reading",
+  seeAll: "See all parts",
+  startHere: "START HERE",
+  step: (n: number) => `STEP ${n}`,
+  whyEyebrow: "WHY THIS GUIDE",
+  whyTitle: "Learn by doing, with sources",
+  whySub: "Short parts, real commands, and a source for each fact.",
+  courseEyebrow: "COURSE STRUCTURE",
+  courseTitle: "Six tutorial groups and four modules",
+  courseSub: "Read the tutorial in order, then open a module for Linux, testing fundamentals, system design, or architecture.",
+  cardCount: (n: number) => `${n} ${n === 1 ? "page" : "pages"}`,
+};
+
+export const footerColumns = { tutorial: "Tutorial", modules: "Modules", project: "Project" };
+export const footerContents = "Contents";
+export const footerSource = "Source on GitHub";

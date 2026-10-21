@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { ReactNode } from "react";
-import { OWNER } from "@/lib/site";
-import { footerSummary, skipLink } from "@/lib/ui";
+import { skipLink } from "@/lib/ui";
+import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import { Sidebar } from "./Sidebar";
 import { SidebarList } from "./SidebarList";
@@ -28,14 +28,7 @@ export function SiteShell({ children, searchSlot }: { children: ReactNode; searc
           <main id="content" tabIndex={-1} style={{ outline: "none" }} className="flex-1">
             {children}
           </main>
-          <footer className="mt-10 border-t border-border px-6 py-5 font-mono text-xs leading-relaxed text-text-faint">
-            <p className="mx-auto max-w-3xl">
-              {footerSummary} · © 2026{" "}
-              <a href={OWNER.url} className="underline underline-offset-2 hover:text-accent">
-                {OWNER.name}
-              </a>
-            </p>
-          </footer>
+          <SiteFooter />
         </div>
       </div>
     </div>
