@@ -6,9 +6,12 @@ import { CHAPTERS, FUNDAMENTALS_HOME, getChapter } from "@/lib/fundamentals/chap
 import type { FundamentalsChapter } from "@/lib/fundamentals/chapters";
 import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
 import { getOutline } from "@/lib/outline";
+import { getReadingMinutesByVersion } from "@/lib/reading-time";
 import { editUrl } from "@/lib/page";
 import type { PageInfo } from "@/lib/page";
 import { ContentsButton } from "@/components/layout/ContentsButton";
+import { ChapterLayout } from "@/components/content/ChapterLayout";
+import { ChapterTools } from "@/components/content/ChapterTools";
 import { BackToTop } from "@/components/content/BackToTop";
 import { MetaLine } from "@/components/content/MetaLine";
 import { ReadingProgress } from "@/components/content/ReadingProgress";
@@ -16,7 +19,6 @@ import { Sources } from "@/components/content/Sources";
 import { FundamentalsProgressSummary } from "@/components/fundamentals/FundamentalsProgressSummary";
 import { TopicChecklist } from "@/components/fundamentals/TopicChecklist";
 import { VersionSwitch } from "@/components/fundamentals/VersionSwitch";
-import { SectionNav } from "@/components/navigation/SectionNav";
 
 type MdxPage = { default: MDXContent; metadata: Metadata; page?: PageInfo };
 
@@ -86,51 +88,49 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
   return (
     <>
       <ReadingProgress />
-      <div className="mx-auto w-full max-w-[728px] px-4 py-7 sm:px-6 sm:py-10 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
-        <div className="min-w-0">
-          <ContentsButton />
-          <p className={`mb-3 ${LABEL} text-accent`}>{FUNDAMENTALS_UI.chapterEyebrow(chapter.number)}</p>
+      <ChapterLayout outline={outline} route={chapter.href}>
+        <ContentsButton />
+        <p className={`mb-3 ${LABEL} text-accent`}>{FUNDAMENTALS_UI.chapterEyebrow(chapter.number)}</p>
+        <div className="mb-6">
+          <FundamentalsProgressSummary ids={ids} label={FUNDAMENTALS_UI.chapterProgressLabel(chapter.title)} />
+        </div>
+        {chapter.hasVersions ? (
           <div className="mb-6">
-            <FundamentalsProgressSummary ids={ids} label={FUNDAMENTALS_UI.chapterProgressLabel(chapter.title)} />
+            <VersionSwitch />
           </div>
-          {chapter.hasVersions ? (
-            <div className="mb-6">
-              <VersionSwitch />
-            </div>
-          ) : null}
-          <article data-content className="mdx">
-            <Content
-              components={{
-                PageMeta: () =>
-                  info ? (
+        ) : null}
+        <article data-content className="mdx">
+          <Content
+            components={{
+              PageMeta: () =>
+                info ? (
+                  <>
                     <MetaLine
                       sections={sections}
                       sources={info.sources.length}
                       updated={info.updated}
                       editHref={editUrl("fundamentals", slug)}
                     />
-                  ) : null,
-              }}
-            />
-          </article>
-          {info ? <Sources sources={info.sources} /> : null}
-          <section aria-labelledby="checklist-heading" className="mt-10">
-            <h2
-              id="checklist-heading"
-              className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}
-            >
-              {FUNDAMENTALS_UI.checklistHeading}
-            </h2>
-            <div className="mt-4">
-              <TopicChecklist chapter={chapter} />
-            </div>
-          </section>
-          <ChapterNav chapter={chapter} />
-        </div>
-        <aside className="hidden xl:block">
-          <SectionNav items={outline} />
-        </aside>
-      </div>
+                    <ChapterTools route={chapter.href} minutes={getReadingMinutesByVersion("fundamentals", slug)} />
+                  </>
+                ) : null,
+            }}
+          />
+        </article>
+        {info ? <Sources sources={info.sources} /> : null}
+        <section aria-labelledby="checklist-heading" className="mt-10">
+          <h2
+            id="checklist-heading"
+            className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}
+          >
+            {FUNDAMENTALS_UI.checklistHeading}
+          </h2>
+          <div className="mt-4">
+            <TopicChecklist chapter={chapter} />
+          </div>
+        </section>
+        <ChapterNav chapter={chapter} />
+      </ChapterLayout>
       <BackToTop />
     </>
   );

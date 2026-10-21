@@ -1,9 +1,10 @@
 import { CONTENTS_HOME } from "./contents.ts";
+import { DASHBOARD_HOME, DASHBOARD_UI } from "./dashboard.ts";
 import { PAGES } from "./nav.ts";
 import { MODULES, type ModuleId } from "./stats.ts";
 import { contentsButton, crossToTutorial } from "./ui.ts";
 
-export type HeaderNavId = "tutorial" | ModuleId | "contents";
+export type HeaderNavId = "tutorial" | ModuleId | "contents" | "dashboard";
 
 export type HeaderNavItem = {
   id: HeaderNavId;
@@ -13,16 +14,18 @@ export type HeaderNavItem = {
   pages?: readonly { href: string; title: string }[];
 };
 
-/** The items of the top nav, in order: the tutorial, the four modules, and the contents page. */
+/** The items of the top nav, in order: the tutorial, the four modules, the contents page, and the dashboard. */
 export const HEADER_NAV: readonly HeaderNavItem[] = [
   { id: "tutorial", label: crossToTutorial, href: "/", pages: PAGES.map(({ href, title }) => ({ href, title })) },
   ...MODULES.map((module) => ({ id: module.id, label: module.title, href: module.href, pages: module.pages })),
   { id: "contents", label: contentsButton, href: CONTENTS_HOME },
+  { id: "dashboard", label: DASHBOARD_UI.navLabel, href: DASHBOARD_HOME },
 ];
 
-/** The nav item of a path: the contents page, a module by its prefix, else the tutorial. */
+/** The nav item of a path: the contents page, the dashboard, a module by its prefix, else the tutorial. */
 export function activeNavId(path: string): HeaderNavId {
   if (path.startsWith(CONTENTS_HOME)) return "contents";
+  if (path.startsWith(DASHBOARD_HOME)) return "dashboard";
   return MODULES.find((module) => path.startsWith(module.href))?.id ?? "tutorial";
 }
 

@@ -102,5 +102,8 @@ export function createProgressStore(storage: StorageLike | null, key: string = S
     markDone(id: string): void {
       if (!store.getSnapshot().includes(id)) store.write([...store.getSnapshot(), id]);
     },
+    clear(): void {
+      store.write([]);
+    },
   };
 }

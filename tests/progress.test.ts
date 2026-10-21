@@ -206,3 +206,13 @@ test("progress store: null storage falls back to memory (Review Focus 2)", () =>
   store.refresh();
   assert.deepEqual(store.getSnapshot(), ["x"]);
 });
+
+test("progress store: clear empties the list and writes []", () => {
+  const storage = fakeStorage();
+  const store = createProgressStore(storage, "page-read");
+  store.toggle("/a/");
+  store.toggle("/b/");
+  store.clear();
+  assert.deepEqual(store.getSnapshot(), []);
+  assert.equal(storage.data.get("page-read"), "[]");
+});

@@ -6,10 +6,10 @@ import { PAGES } from "../lib/nav.ts";
 
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("HEADER_NAV has the 6 items in header order", () => {
+test("HEADER_NAV has the 7 items in header order", () => {
   assert.deepEqual(
     HEADER_NAV.map((item) => item.id),
-    ["tutorial", "linux", "fundamentals", "system-design", "architecture", "contents"],
+    ["tutorial", "linux", "fundamentals", "system-design", "architecture", "contents", "dashboard"],
   );
   assert.equal(HEADER_NAV[0].pages?.length, PAGES.length);
   assert.deepEqual(
@@ -18,6 +18,8 @@ test("HEADER_NAV has the 6 items in header order", () => {
   );
   assert.equal(HEADER_NAV[5].href, "/contents/");
   assert.equal(HEADER_NAV[5].pages, undefined);
+  assert.equal(HEADER_NAV[6].href, "/dashboard/");
+  assert.equal(HEADER_NAV[6].pages, undefined);
 });
 
 test("activeNavId finds the item of a path", () => {
@@ -27,6 +29,7 @@ test("activeNavId finds the item of a path", () => {
   assert.equal(activeNavId("/system-design/kafka/"), "system-design");
   assert.equal(activeNavId("/architecture/idempotency/"), "architecture");
   assert.equal(activeNavId("/contents/"), "contents");
+  assert.equal(activeNavId("/dashboard/"), "dashboard");
   assert.equal(activeNavId("/extend/hooks/"), "tutorial");
   assert.equal(activeNavId("/"), "tutorial");
 });

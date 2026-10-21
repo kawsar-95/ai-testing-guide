@@ -6,14 +6,16 @@ import { CASES, SYSTEM_DESIGN_HOME, getCase } from "@/lib/system-design/cases";
 import type { SystemDesignCase } from "@/lib/system-design/cases";
 import { SYSTEM_DESIGN_UI } from "@/lib/system-design/ui";
 import { getOutline } from "@/lib/outline";
+import { getReadingMinutes } from "@/lib/reading-time";
 import { editUrl } from "@/lib/page";
 import type { PageInfo } from "@/lib/page";
 import { ContentsButton } from "@/components/layout/ContentsButton";
+import { ChapterLayout } from "@/components/content/ChapterLayout";
+import { ChapterTools } from "@/components/content/ChapterTools";
 import { BackToTop } from "@/components/content/BackToTop";
 import { MetaLine } from "@/components/content/MetaLine";
 import { ReadingProgress } from "@/components/content/ReadingProgress";
 import { Sources } from "@/components/content/Sources";
-import { SectionNav } from "@/components/navigation/SectionNav";
 
 type MdxPage = { default: MDXContent; metadata: Metadata; page?: PageInfo };
 
@@ -82,32 +84,30 @@ export default async function CasePage({ params }: PageProps<"/system-design/[to
   return (
     <>
       <ReadingProgress />
-      <div className="mx-auto w-full max-w-[728px] px-4 py-7 sm:px-6 sm:py-10 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
-        <div className="min-w-0">
-          <ContentsButton />
-          <p className={`mb-3 ${LABEL} text-accent`}>{SYSTEM_DESIGN_UI.caseEyebrow(item.number)}</p>
-          <article data-content className="mdx">
-            <Content
-              components={{
-                PageMeta: () =>
-                  info ? (
+      <ChapterLayout outline={outline} route={item.href}>
+        <ContentsButton />
+        <p className={`mb-3 ${LABEL} text-accent`}>{SYSTEM_DESIGN_UI.caseEyebrow(item.number)}</p>
+        <article data-content className="mdx">
+          <Content
+            components={{
+              PageMeta: () =>
+                info ? (
+                  <>
                     <MetaLine
                       sections={sections}
                       sources={info.sources.length}
                       updated={info.updated}
                       editHref={editUrl("system-design", topic)}
                     />
-                  ) : null,
-              }}
-            />
-          </article>
-          {info ? <Sources sources={info.sources} /> : null}
-          <CaseNav item={item} />
-        </div>
-        <aside className="hidden xl:block">
-          <SectionNav items={outline} />
-        </aside>
-      </div>
+                    <ChapterTools route={item.href} minutes={getReadingMinutes("system-design", topic)} />
+                  </>
+                ) : null,
+            }}
+          />
+        </article>
+        {info ? <Sources sources={info.sources} /> : null}
+        <CaseNav item={item} />
+      </ChapterLayout>
       <BackToTop />
     </>
   );
