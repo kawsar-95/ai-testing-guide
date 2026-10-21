@@ -76,3 +76,9 @@ export const HOME_UI = {
 export const footerColumns = { tutorial: "Tutorial", modules: "Modules", project: "Project" };
 export const footerContents = "Contents";
 export const footerSource = "Source on GitHub";
+
+export const contentsButton = "Contents";
+export const navMain = "Main";
+export const navModuleHome = (label: string) => `${label} home`;
+/** The window event that opens the drawer. ContentsButton fires it, MobileNav listens. */
+export const OPEN_NAV_EVENT = "nav-drawer-open";

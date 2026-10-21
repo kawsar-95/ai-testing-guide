@@ -8,6 +8,7 @@ import { ARCHITECTURE_UI } from "@/lib/architecture/ui";
 import { getOutline } from "@/lib/outline";
 import { editUrl } from "@/lib/page";
 import type { PageInfo } from "@/lib/page";
+import { ContentsButton } from "@/components/layout/ContentsButton";
 import { ArchitectureProgressSummary } from "@/components/architecture/ArchitectureProgressSummary";
 import { MarkDoneButton } from "@/components/architecture/MarkDoneButton";
 import { PracticeQuestion } from "@/components/architecture/PracticeQuestion";
@@ -87,6 +88,7 @@ export default async function TopicPage({ params }: PageProps<"/architecture/[to
       <ReadingProgress />
       <div className="mx-auto w-full max-w-[728px] px-4 py-7 sm:px-6 sm:py-10 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
         <div className="min-w-0">
+          <ContentsButton />
           <p className={`mb-3 ${LABEL} text-accent`}>
             {practice ? ARCHITECTURE_UI.practiceEyebrow : ARCHITECTURE_UI.topicEyebrow(item.number)}
           </p>
