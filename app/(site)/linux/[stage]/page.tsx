@@ -6,16 +6,18 @@ import { LINUX_HOME, STAGES, getStage } from "@/lib/linux/stages";
 import type { LinuxStage } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
 import { getOutline } from "@/lib/outline";
+import { getReadingMinutes } from "@/lib/reading-time";
 import { editUrl } from "@/lib/page";
 import type { PageInfo } from "@/lib/page";
 import { ContentsButton } from "@/components/layout/ContentsButton";
+import { ChapterLayout } from "@/components/content/ChapterLayout";
+import { ChapterTools } from "@/components/content/ChapterTools";
 import { BackToTop } from "@/components/content/BackToTop";
 import { MetaLine } from "@/components/content/MetaLine";
 import { ReadingProgress } from "@/components/content/ReadingProgress";
 import { Sources } from "@/components/content/Sources";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
 import { TopicChecklist } from "@/components/linux/TopicChecklist";
-import { SectionNav } from "@/components/navigation/SectionNav";
 
 type MdxPage = { default: MDXContent; metadata: Metadata; page?: PageInfo };
 
@@ -85,46 +87,44 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
   return (
     <>
       <ReadingProgress />
-      <div className="mx-auto w-full max-w-[728px] px-4 py-7 sm:px-6 sm:py-10 xl:grid xl:max-w-[1012px] xl:grid-cols-[minmax(0,680px)_220px] xl:gap-16">
-        <div className="min-w-0">
-          <ContentsButton />
-          <p className={`mb-3 ${LABEL} text-accent`}>{LINUX_UI.stageEyebrow(stage.number)}</p>
-          <div className="mb-6">
-            <LinuxProgressSummary ids={ids} label={LINUX_UI.stageProgressLabel(stage.title)} />
-          </div>
-          <article data-content className="mdx">
-            <Content
-              components={{
-                PageMeta: () =>
-                  info ? (
+      <ChapterLayout outline={outline}>
+        <ContentsButton />
+        <p className={`mb-3 ${LABEL} text-accent`}>{LINUX_UI.stageEyebrow(stage.number)}</p>
+        <div className="mb-6">
+          <LinuxProgressSummary ids={ids} label={LINUX_UI.stageProgressLabel(stage.title)} />
+        </div>
+        <article data-content className="mdx">
+          <Content
+            components={{
+              PageMeta: () =>
+                info ? (
+                  <>
                     <MetaLine
                       sections={sections}
                       sources={info.sources.length}
                       updated={info.updated}
                       editHref={editUrl("linux", slug)}
                     />
-                  ) : null,
-              }}
-            />
-          </article>
-          {info ? <Sources sources={info.sources} /> : null}
-          <section aria-labelledby="checklist-heading" className="mt-10">
-            <h2
-              id="checklist-heading"
-              className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}
-            >
-              {LINUX_UI.checklistHeading}
-            </h2>
-            <div className="mt-4">
-              <TopicChecklist stage={stage} />
-            </div>
-          </section>
-          <StageNav stage={stage} />
-        </div>
-        <aside className="hidden xl:block">
-          <SectionNav items={outline} />
-        </aside>
-      </div>
+                    <ChapterTools route={stage.href} minutes={getReadingMinutes("linux", slug)} />
+                  </>
+                ) : null,
+            }}
+          />
+        </article>
+        {info ? <Sources sources={info.sources} /> : null}
+        <section aria-labelledby="checklist-heading" className="mt-10">
+          <h2
+            id="checklist-heading"
+            className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}
+          >
+            {LINUX_UI.checklistHeading}
+          </h2>
+          <div className="mt-4">
+            <TopicChecklist stage={stage} />
+          </div>
+        </section>
+        <StageNav stage={stage} />
+      </ChapterLayout>
       <BackToTop />
     </>
   );

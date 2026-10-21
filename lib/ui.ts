@@ -82,3 +82,10 @@ export const navMain = "Main";
 export const navModuleHome = (label: string) => `${label} home`;
 /** The window event that opens the drawer. ContentsButton fires it, MobileNav listens. */
 export const OPEN_NAV_EVENT = "nav-drawer-open";
+
+export const readingTime = (minutes: number) => `${minutes} min read`;
+export const bookmark = "Bookmark";
+export const bookmarked = "Bookmarked";
+export const markRead = "Mark as read";
+export const markedRead = "Read";
+export const chapterNav = "Pages of this section";
