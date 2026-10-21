@@ -89,7 +89,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
 | `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 87 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (all 88 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels, the three START HERE pages, `WHY_ITEMS`, and `COURSE_CARDS` |
@@ -97,6 +97,10 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/stats.ts` | `MODULES` (the 4 modules with their pages) and `siteStats()` (the numbers of the stats row) |
 | `lib/header-nav.ts` | `HEADER_NAV`, `activeNavId`, and `nextOpenState` (one dropdown open at most). See "Navigation". |
 | `lib/contrast.ts` | `contrastRatio` and `parseTokens`. `tests/contrast.test.ts` uses them. |
+| `lib/reading-time.ts`, `lib/reading-state.ts`, `lib/dashboard.ts`, `lib/dashboard-data.ts` | Reading time, `CONTENT_PAGES` and the storage keys, and the Dashboard. See "Reading state and Dashboard". |
+| `components/content/ChapterLayout.tsx`, `ChapterList.tsx`, `ChapterTools.tsx` | The 3-column layout of a content page, its left list, and its pill and toggles |
+| `components/reading/useReadingState.ts` | `usePageRead`, `useBookmarks`, `useLastPage` |
+| `app/(site)/dashboard/page.tsx` | The Dashboard (`components/pages/DashboardPage.tsx`) |
 | `lib/reading.ts` | `articleProgress` and `showBackToTop` for the reading aids |
 | `lib/ui.ts` | The English strings of the shell |
 | `lib/scroll-lock.ts` | One page-scroll lock, shared by the drawer and the search dialog |
@@ -107,7 +111,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
 | `public/images/fundamentals/` | The images of the owner's notes |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install` |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `contents`, `header-nav`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
 | `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
@@ -115,16 +119,18 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `scripts/architecture-route-map.json` | The 21 Architecture routes: `/architecture/`, the 19 topics, and the practice page. Same identity map. |
 | `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
 | `scripts/contents-route-map.json` | The 1 contents route: `/contents/`. Same identity map. |
+| `scripts/dashboard-route-map.json` | The 1 dashboard route: `/dashboard/`. Same identity map. |
 | `scripts/fundamentals-route-map.json` | The 12 Fundamentals routes: `/fundamentals/` and the 11 chapters. Same identity map as `route-map.json`. |
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the Tutorial dropdown, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 87 routes:
+The site has 88 routes:
 
 | Routes | Count |
 |---|---|
 | `/` | 1 |
 | `/contents/` | 1 |
+| `/dashboard/` | 1 |
 | `/<group>/<page>/` for the 23 tutorial pages | 23 |
 | `/linux/` and the 12 Linux stages | 13 |
 | `/system-design/` and the 15 case studies | 16 |
@@ -145,11 +151,20 @@ The site has 87 routes:
 | Part | Behavior |
 |---|---|
 | Header | Sticky, 64 px. The brand mark in a teal tile, then the top nav (from the `nav` breakpoint), then search, voice, install, theme, and the menu button (below `nav`). |
-| Top nav | `HEADER_NAV`: Tutorial, Linux, Fundamentals, System Design, Architecture (each a dropdown of its pages and a link to its home), and Contents (a link). The current item has a teal underline (`activeNavId`). Escape closes a dropdown and moves the focus to its button. A click outside or focus that leaves it closes it. A route change closes it. |
-| Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. On a content page, `ContentsButton` above the title opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. On close, the focus goes back to the button that opened it. |
+| Top nav | `HEADER_NAV`: Tutorial, Linux, Fundamentals, System Design, Architecture (each a dropdown of its pages and a link to its home), then Contents and Dashboard (links). The current item has a teal underline (`activeNavId`). Escape closes a dropdown and moves the focus to its button. A click outside or focus that leaves it closes it. A route change closes it. |
+| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 81 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (68.75rem, 1100 px), "On this page" (`SectionNav`, 280 px) shows. The layout is at most 1400 px wide; the text column at most 720 px. |
+| Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. Below `chapter`, `ContentsButton` above the title of a content page opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. On close, the focus goes back to the button that opened it. |
 | `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, and Architecture. |
 
-There is no sidebar.
+## Reading state and Dashboard
+
+| Part | Detail |
+|---|---|
+| `ChapterTools` | Under the meta line of each content page (in the `PageMeta` slot): the pill `📖 N min read` and the toggles Bookmark and Mark as read (`aria-pressed`). It saves the page to `last-page` on mount. |
+| Reading time | `lib/reading-time.ts`: the words of the Technical text (Fundamentals: the `istqb` blocks; no code, export lines, tags, or link URLs) / 200, rounded up, 1 at least. Computed at build time. |
+| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 81 content pages. |
+| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 81`), bookmarks, the topic progress of Linux, Fundamentals, and Architecture, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 6 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 6 keys. |
+| Strings | `lib/dashboard.ts` (`DASHBOARD_UI`, the route). The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle. |
 
 ## Linux Module
 
@@ -426,7 +441,7 @@ To change a page:
 
 The site installs as an app and is offline first.
 
-- The service worker caches all 87 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
+- The service worker caches all 88 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
 - Pages, RSC payloads, and the search index use stale-while-revalidate: the cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Offline, a page that is not in the cache gets the 404 page.
 - Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
@@ -450,7 +465,7 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 | `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), the voice helpers and head script (`tests/voice.test.ts`), the authoring rules of `<Voices>` in every MDX file (`tests/voice-source.test.ts`), the contents page and stats (`tests/contents.test.ts`), the top nav (`tests/header-nav.test.ts`), the token contrast (`tests/contrast.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
-| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, `fundamentals-route-map.json`, `architecture-route-map.json`, and `contents-route-map.json` that has no page in `out/` |
+| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, `fundamentals-route-map.json`, `architecture-route-map.json`, `contents-route-map.json`, and `dashboard-route-map.json` that has no page in `out/` |
 | `python3 scripts/check_links.py out` | Lists broken internal links and assets |
 | `python3 scripts/check_outline.py out` | Checks that each "On this page" link points to an element id |
 | `python3 scripts/check_sources.py out` | Checks each tutorial page, each Linux stage page, each System Design case page, each Fundamentals chapter page, and each Architecture page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |

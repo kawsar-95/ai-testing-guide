@@ -10,8 +10,8 @@ export function withTrailingSlash(pathname: string | null): string | null {
 
 /**
  * All the parts in their groups. A plain component without hooks, so the
- * server layout can render it as the Suspense fallback and the client Sidebar
- * and MobileNav can render it with the active path.
+ * server ChapterLayout can render it as the Suspense fallback and the client
+ * ChapterList and MobileNav can render it with the active path.
  */
 export function SidebarList({
   activePath,
