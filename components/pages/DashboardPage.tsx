@@ -1,18 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ArchitectureProgressSummary } from "@/components/architecture/ArchitectureProgressSummary";
 import { FundamentalsProgressSummary } from "@/components/fundamentals/FundamentalsProgressSummary";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
-import { useArchitectureProgress } from "@/components/architecture/useArchitectureProgress";
 import { useFundamentalsProgress } from "@/components/fundamentals/useFundamentalsProgress";
 import { useLinuxProgress } from "@/components/linux/useLinuxProgress";
+import { ProgressSummary } from "@/components/modules/ProgressSummary";
+import { progressHook } from "@/components/modules/useModuleProgress";
 import { useBookmarks, useLastPage, usePageRead } from "@/components/reading/useReadingState";
-import { LESSON_IDS } from "@/lib/architecture/topics";
 import { DASHBOARD_UI } from "@/lib/dashboard";
 import { contentPage, continueTarget, exportFileName, readByModule } from "@/lib/dashboard-data";
 import { ALL_FUNDAMENTALS_TOPIC_IDS } from "@/lib/fundamentals/chapters";
 import { ALL_TOPIC_IDS } from "@/lib/linux/stages";
+import { PROGRESS_MODULES } from "@/lib/modules/registry";
 import { CONTENT_PAGES, exportProgress } from "@/lib/reading-state";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
@@ -60,7 +60,8 @@ export function DashboardPage() {
   const lastPage = useLastPage();
   const linux = useLinuxProgress();
   const fundamentals = useFundamentalsProgress();
-  const architecture = useArchitectureProgress();
+  // PROGRESS_MODULES is a fixed list, so this calls the same hooks in the same order on every render.
+  const flatStores = PROGRESS_MODULES.map((m) => progressHook(m)());
 
   const readPages = read.done.map(contentPage).filter((page) => page !== undefined);
   const bookmarks = [...marks.done].reverse().map(contentPage).filter((page) => page !== undefined);
@@ -70,7 +71,7 @@ export function DashboardPage() {
 
   function reset() {
     if (!window.confirm(DASHBOARD_UI.resetConfirm)) return;
-    for (const store of [read, marks, linux, fundamentals, architecture]) store.clear();
+    for (const store of [read, marks, linux, fundamentals, ...flatStores]) store.clear();
     lastPage.clear();
   }
 
@@ -118,10 +119,12 @@ export function DashboardPage() {
           <p className={`${LABEL} mb-2 text-text-faint`}>{DASHBOARD_UI.moduleLabels.fundamentals}</p>
           <FundamentalsProgressSummary ids={ALL_FUNDAMENTALS_TOPIC_IDS} />
         </div>
-        <div>
-          <p className={`${LABEL} mb-2 text-text-faint`}>{DASHBOARD_UI.moduleLabels.architecture}</p>
-          <ArchitectureProgressSummary ids={LESSON_IDS} />
-        </div>
+        {PROGRESS_MODULES.map((m) => (
+          <div key={m.id}>
+            <p className={`${LABEL} mb-2 text-text-faint`}>{m.label}</p>
+            <ProgressSummary moduleId={m.id} ids={m.lessonIds} />
+          </div>
+        ))}
       </section>
 
       <section aria-labelledby="continue-heading" className="mt-12">

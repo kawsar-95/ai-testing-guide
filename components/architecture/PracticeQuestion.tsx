@@ -2,9 +2,11 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { getTopic, practiceId } from "@/lib/architecture/topics";
+import { ARCHITECTURE, practiceId } from "@/lib/architecture/topics";
 import { ARCHITECTURE_UI } from "@/lib/architecture/ui";
-import { useArchitectureProgress } from "./useArchitectureProgress";
+import { progressHook } from "@/components/modules/useModuleProgress";
+
+const useArchitectureProgress = progressHook(ARCHITECTURE);
 
 /**
  * One practice question of content/architecture/practice.mdx: the number, the
@@ -24,7 +26,7 @@ export function PracticeQuestion({
 }) {
   const { done, toggle } = useArchitectureProgress();
   const id = practiceId(n);
-  const item = getTopic(topic);
+  const item = ARCHITECTURE.get(topic);
   return (
     <div id={`q-${String(n).padStart(2, "0")}`} className="practice-q my-5 scroll-mt-24 rounded-[10px] border border-border bg-bg-raised px-5 py-4">
       <div className="flex items-start gap-3">

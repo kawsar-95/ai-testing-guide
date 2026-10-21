@@ -11,7 +11,8 @@ export const ARCHITECTURE_UI = {
   lede: "Code builds a feature. Architecture keeps it alive when 10,000 users arrive, a server dies, or a payment callback comes two times. Each topic takes about 5 minutes: one idea, one diagram, one real example, the common mistakes, and what a tester can check.",
   sourceNote:
     "The topics follow the owner's notes and diagrams. Each fact on a page links to an official source, such as AWS, Google Cloud, Redis, MDN, or an IETF RFC.",
-  topicsHeading: "TOPICS",
+  itemsHeading: "TOPICS",
+  itemsHeadingId: "topics-heading",
   overallLabel: "Topics done",
   summaryText: (done: number, total: number) => `${done} of ${total} topics done`,
   practiceSummaryText: (done: number, total: number) => `${done} of ${total} questions done`,
@@ -19,12 +20,12 @@ export const ARCHITECTURE_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  topicEyebrow: (number: number) => `TOPIC ${pad(number)} · ARCHITECTURE`,
+  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · ARCHITECTURE`,
   practiceEyebrow: "PRACTICE · ARCHITECTURE",
-  topicNav: "Architecture topics",
-  allTopics: "All topics",
-  previousTopic: "Previous topic",
-  nextTopic: "Next topic",
+  itemNav: "Architecture topics",
+  allItems: "All topics",
+  previousItem: "Previous topic",
+  nextItem: "Next topic",
   markDone: "Mark this topic as done",
   markedDone: "Done. Click to undo",
 
@@ -36,9 +37,9 @@ export const ARCHITECTURE_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "Architecture topics",
-  sidebarTopicLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
   sidebarPracticeLabel: "PRACTICE",
   sidebarDone: "done",
   headerLink: "Architecture",
-  crossToArchitecture: "Architecture",
+  crossTo: "Architecture",
 } as const;

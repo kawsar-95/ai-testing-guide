@@ -2,8 +2,8 @@
  * The one ordered list of System Design case studies. Each case is served at
  * /system-design/<slug>/ and has its text in content/system-design/<slug>.mdx.
  */
-
-export const SYSTEM_DESIGN_HOME = "/system-design/";
+import { defineFlatModule, type FlatEntry } from "../modules/flat.ts";
+import { SYSTEM_DESIGN_UI } from "./ui.ts";
 
 export type SystemDesignSlug =
   | "kafka"
@@ -22,14 +22,6 @@ export type SystemDesignSlug =
   | "stock-exchange"
   | "payment-system";
 
-export type SystemDesignCase = {
-  slug: SystemDesignSlug;
-  title: string;
-  /** The one-line summary on the module home page. */
-  description: string;
-  number: number;
-  href: string;
-};
 
 type CaseEntry = { slug: SystemDesignSlug; title: string; description: string };
 
@@ -111,14 +103,12 @@ const SOURCE: readonly CaseEntry[] = [
   },
 ];
 
-export const CASES: readonly SystemDesignCase[] = SOURCE.map((entry, i) => ({
-  ...entry,
-  number: i + 1,
-  href: `${SYSTEM_DESIGN_HOME}${entry.slug}/`,
-}));
+const entries: readonly FlatEntry<SystemDesignSlug>[] = SOURCE.map((entry) => ({ ...entry, kind: "topic" }));
 
-export const SYSTEM_DESIGN_ROUTES: readonly string[] = [SYSTEM_DESIGN_HOME, ...CASES.map((c) => c.href)];
-
-export function getCase(slug: string): SystemDesignCase | undefined {
-  return CASES.find((c) => c.slug === slug);
-}
+export const SYSTEM_DESIGN = defineFlatModule({
+  id: "system-design",
+  label: "System Design",
+  searchGroup: "system design",
+  entries,
+  ui: SYSTEM_DESIGN_UI,
+});

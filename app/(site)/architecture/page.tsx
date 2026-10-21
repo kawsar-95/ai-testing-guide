@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { ArchitectureHome } from "@/components/pages/ArchitectureHome";
-import { ARCHITECTURE_UI } from "@/lib/architecture/ui";
+import { FlatModuleHome } from "@/components/modules/FlatModuleHome";
+import { ARCHITECTURE } from "@/lib/architecture/topics";
 
 export const metadata: Metadata = {
-  title: ARCHITECTURE_UI.siteTitle,
-  description: ARCHITECTURE_UI.description,
+  title: ARCHITECTURE.ui.siteTitle,
+  description: ARCHITECTURE.ui.description,
 };
 
 export default function Page() {
-  return <ArchitectureHome />;
+  return <FlatModuleHome module={ARCHITECTURE} />;
 }

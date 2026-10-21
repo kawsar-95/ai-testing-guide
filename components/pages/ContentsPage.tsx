@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArchitectureProgressSummary } from "@/components/architecture/ArchitectureProgressSummary";
 import { FundamentalsProgressSummary } from "@/components/fundamentals/FundamentalsProgressSummary";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
-import { LESSON_IDS } from "@/lib/architecture/topics";
+import { ProgressSummary } from "@/components/modules/ProgressSummary";
 import { CONTENTS_UI } from "@/lib/contents";
 import { ALL_FUNDAMENTALS_TOPIC_IDS } from "@/lib/fundamentals/chapters";
 import { ALL_TOPIC_IDS } from "@/lib/linux/stages";
+import { PROGRESS_MODULES } from "@/lib/modules/registry";
 import { GROUPS } from "@/lib/nav";
 import { MODULES, type ModuleId } from "@/lib/stats";
 import { StatsRow } from "./StatsRow";
@@ -18,7 +18,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const PROGRESS: Partial<Record<ModuleId, ReactNode>> = {
   linux: <LinuxProgressSummary ids={ALL_TOPIC_IDS} />,
   fundamentals: <FundamentalsProgressSummary ids={ALL_FUNDAMENTALS_TOPIC_IDS} />,
-  architecture: <ArchitectureProgressSummary ids={LESSON_IDS} />,
+  ...Object.fromEntries(PROGRESS_MODULES.map((m) => [m.id, <ProgressSummary key={m.id} moduleId={m.id} ids={m.lessonIds} />])),
 };
 
 function Card({ id, title, meta, children }: { id: string; title: ReactNode; meta: string; children: ReactNode }) {

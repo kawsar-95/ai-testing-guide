@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { SystemDesignHome } from "@/components/pages/SystemDesignHome";
-import { SYSTEM_DESIGN_UI } from "@/lib/system-design/ui";
+import { FlatModuleHome } from "@/components/modules/FlatModuleHome";
+import { SYSTEM_DESIGN } from "@/lib/system-design/cases";
 
 export const metadata: Metadata = {
-  title: SYSTEM_DESIGN_UI.siteTitle,
-  description: SYSTEM_DESIGN_UI.description,
+  title: SYSTEM_DESIGN.ui.siteTitle,
+  description: SYSTEM_DESIGN.ui.description,
 };
 
 export default function Page() {
-  return <SystemDesignHome />;
+  return <FlatModuleHome module={SYSTEM_DESIGN} />;
 }

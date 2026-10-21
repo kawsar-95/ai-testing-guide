@@ -49,7 +49,7 @@ type FlatModuleDef = {
 | `neighbours(slug)` | the previous and the next page. Prev/next skips `link` items. |
 | `lessonIds` | the slugs of the `topic` items (only with `progress`) |
 
-New file `lib/modules/registry.ts`: `FLAT_MODULES = [ARCHITECTURE, SYSTEM_DESIGN]` and the type `FlatModuleId`.
+New file `lib/modules/registry.ts`: `FLAT_MODULES = [SYSTEM_DESIGN, ARCHITECTURE]` and the type `FlatModuleId`. This is the current order of the routes in the sitemap, the precache, and `MODULES`.
 
 ### UI strings
 
@@ -128,7 +128,7 @@ The header nav (`lib/header-nav.ts`) already reads `MODULES` and needs no change
 
 ### Python checks
 
-`check_routes.py`, `check_outline.py`, and `check_sources.py` read every `scripts/*-route-map.json` file with a glob, in sorted order. The route map files keep their names. `test_checks.py` keeps its tests and adds one test: the glob finds the 7 route maps.
+No change. `check_routes.py`, `check_outline.py`, and `check_sources.py` keep their explicit lists of route maps, because each script treats the maps differently (home exclusions, no contents or dashboard map). A new flat module adds its map name to the 3 lists. The registry test of section 5 makes sure the map file exists.
 
 ## 5. Tests
 
@@ -148,16 +148,15 @@ The header nav (`lib/header-nav.ts`) already reads `MODULES` and needs no change
 
 ## 7. Order of work
 
-Each step is one commit. `npm test` passes after each step.
+Each step is one commit. The work is on the branch `refactor/flat-modules`. `npm test` passes after each step.
 
 1. `lib/modules/flat.ts`, `lib/modules/registry.ts`, `tests/flat-module.test.ts`, and the 2 module definitions, with the old exports as aliases.
 2. The shared components and the thin route files. Remove the old home and sidebar components.
 3. The consumers of section 4.
-4. The glob in the Python scripts and its test.
-5. Remove the aliases that nothing uses. Update the imports of the tests.
-6. Update the "Structure" table of `CLAUDE.md` and add a "Flat modules" section.
+4. Remove the aliases that nothing uses. Update the imports of the tests.
+5. Update the "Structure" table of `CLAUDE.md` and add a "Flat modules" section.
 
-Branch: `refactor/flat-modules` from `main`, after `feat/chapter-page-dashboard` is merged. Both branches change `DashboardPage` and `reading-state`.
+Branch: `refactor/flat-modules` from `main`. `feat/chapter-page-dashboard` is already merged (PR #28).
 
 ## 8. Risks
 

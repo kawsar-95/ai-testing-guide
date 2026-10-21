@@ -1,9 +1,11 @@
+import { FLAT_MODULES } from "./modules/registry.ts";
 import type { ContentPage } from "./reading-state.ts";
 
 /**
- * The dashboard route and its strings. No value imports, so lib/sitemap.ts
- * and lib/pwa.ts can import it with no cycle. The data helpers are in
- * lib/dashboard-data.ts.
+ * The dashboard route and its strings. It imports the module registry
+ * (`FLAT_MODULES`). The registry and the module files must not import this
+ * file, so lib/sitemap.ts and lib/pwa.ts can import it with no cycle. The data
+ * helpers are in lib/dashboard-data.ts.
  */
 
 /** The dashboard: the reader's progress, all in this browser. */
@@ -34,7 +36,6 @@ export const DASHBOARD_UI = {
     tutorial: "Tutorial",
     linux: "Linux",
     fundamentals: "Fundamentals",
-    "system-design": "System Design",
-    architecture: "Architecture",
+    ...Object.fromEntries(FLAT_MODULES.map((m) => [m.id, m.label])),
   } as Record<ContentPage["module"], string>,
 };

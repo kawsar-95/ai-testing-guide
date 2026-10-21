@@ -6,8 +6,7 @@ import type { MetadataRoute } from "next";
 import { FUNDAMENTALS_ROUTES } from "./fundamentals/chapters.ts";
 import { LINUX_ROUTES } from "./linux/stages.ts";
 import { PAGES } from "./nav.ts";
-import { SYSTEM_DESIGN_ROUTES } from "./system-design/cases.ts";
-import { ARCHITECTURE_ROUTES } from "./architecture/topics.ts";
+import { FLAT_MODULES } from "./modules/registry.ts";
 import { CONTENTS_ROUTES } from "./contents.ts";
 import { DASHBOARD_ROUTES } from "./dashboard.ts";
 
@@ -55,8 +54,7 @@ export function precacheUrls(basePath: string): string[] {
     ...PAGES.map((page) => `${basePath}${page.href}`),
     ...LINUX_ROUTES.map((route) => `${basePath}${route}`),
     ...FUNDAMENTALS_ROUTES.map((route) => `${basePath}${route}`),
-    ...SYSTEM_DESIGN_ROUTES.map((route) => `${basePath}${route}`),
-    ...ARCHITECTURE_ROUTES.map((route) => `${basePath}${route}`),
+    ...FLAT_MODULES.flatMap((m) => m.routes).map((route) => `${basePath}${route}`),
     offlinePage(basePath),
     `${basePath}/search-index.json`,
     `${basePath}/manifest.webmanifest`,

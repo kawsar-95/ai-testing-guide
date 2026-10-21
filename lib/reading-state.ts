@@ -1,3 +1,4 @@
+import { PROGRESS_MODULES } from "./modules/registry.ts";
 import { PAGES } from "./nav.ts";
 import { MODULES, type ModuleId } from "./stats.ts";
 
@@ -14,7 +15,7 @@ export const PROGRESS_KEYS: readonly string[] = [
   LAST_PAGE_KEY,
   "linux-progress",
   "fundamentals-progress",
-  "architecture-progress",
+  ...PROGRESS_MODULES.map((m) => m.progress!.storageKey),
 ];
 
 export type ContentPage = {

@@ -1,20 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import {
-  ARCHITECTURE_HOME,
-  ARCHITECTURE_ROUTES,
-  ARCHITECTURE_STORAGE_KEY,
-  LESSON_IDS,
-  PRACTICE_COUNT,
-  PRACTICE_IDS,
-  TOPICS,
-  getTopic,
-  practiceId,
-} from "../lib/architecture/topics.ts";
+import { ARCHITECTURE, PRACTICE_COUNT, PRACTICE_IDS, practiceId } from "../lib/architecture/topics.ts";
 import { getOutline } from "../lib/outline.ts";
 import { precacheUrls } from "../lib/pwa.ts";
-import { buildArchitectureSearchDocs, createIndex, runSearch } from "../lib/search.ts";
+import { buildFlatSearchDocs, createIndex, runSearch } from "../lib/search.ts";
 
 const SLUGS = [
   "why-system-design",
@@ -46,45 +36,45 @@ const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 test("there are 20 entries in order, numbered 1 to 20: 19 topics, then the practice page", () => {
   assert.deepEqual(
-    TOPICS.map((t) => t.slug),
+    ARCHITECTURE.pages.map((t) => t.slug),
     SLUGS,
   );
   assert.deepEqual(
-    TOPICS.map((t) => t.number),
+    ARCHITECTURE.pages.map((t) => t.number),
     SLUGS.map((_, i) => i + 1),
   );
-  assert.equal(new Set(TOPICS.map((t) => t.title)).size, TOPICS.length);
+  assert.equal(new Set(ARCHITECTURE.pages.map((t) => t.title)).size, ARCHITECTURE.pages.length);
   assert.deepEqual(
-    TOPICS.map((t) => t.kind),
+    ARCHITECTURE.pages.map((t) => t.kind),
     [...Array(19).fill("topic"), "practice"],
   );
 });
 
-test("each href is /architecture/<slug>/ and getTopic finds it", () => {
-  assert.equal(ARCHITECTURE_HOME, "/architecture/");
-  for (const t of TOPICS) {
+test("each href is /architecture/<slug>/ and ARCHITECTURE.get finds it", () => {
+  assert.equal(ARCHITECTURE.home, "/architecture/");
+  for (const t of ARCHITECTURE.pages) {
     assert.equal(t.href, `/architecture/${t.slug}/`);
-    assert.equal(getTopic(t.slug), t);
+    assert.equal(ARCHITECTURE.get(t.slug), t);
   }
-  assert.equal(getTopic("nope"), undefined);
+  assert.equal(ARCHITECTURE.get("nope"), undefined);
 });
 
-test("ARCHITECTURE_ROUTES is the home then the 20 hrefs, and the route map has the same routes", () => {
-  assert.deepEqual(ARCHITECTURE_ROUTES, [ARCHITECTURE_HOME, ...TOPICS.map((t) => t.href)]);
+test("ARCHITECTURE.routes is the home then the 20 hrefs, and the route map has the same routes", () => {
+  assert.deepEqual(ARCHITECTURE.routes, [ARCHITECTURE.home, ...ARCHITECTURE.pages.map((t) => t.href)]);
   const map: Record<string, string> = JSON.parse(
     readFileSync(new URL("../scripts/architecture-route-map.json", import.meta.url), "utf8"),
   );
-  assert.deepEqual(Object.values(map), [...ARCHITECTURE_ROUTES]);
+  assert.deepEqual(Object.values(map), [...ARCHITECTURE.routes]);
 });
 
 test("the progress ids are the 19 topic slugs and practice-01 to practice-30, under their own key", () => {
-  assert.equal(ARCHITECTURE_STORAGE_KEY, "architecture-progress");
-  assert.deepEqual(LESSON_IDS, SLUGS.slice(0, 19));
+  assert.equal(ARCHITECTURE.progress?.storageKey, "architecture-progress");
+  assert.deepEqual(ARCHITECTURE.lessonIds, SLUGS.slice(0, 19));
   assert.equal(PRACTICE_IDS.length, PRACTICE_COUNT);
   assert.equal(PRACTICE_IDS[0], "practice-01");
   assert.equal(PRACTICE_IDS[29], "practice-30");
   assert.equal(practiceId(7), "practice-07");
-  assert.equal(new Set([...LESSON_IDS, ...PRACTICE_IDS]).size, LESSON_IDS.length + PRACTICE_IDS.length);
+  assert.equal(new Set([...ARCHITECTURE.lessonIds, ...PRACTICE_IDS]).size, ARCHITECTURE.lessonIds.length + PRACTICE_IDS.length);
 });
 
 test("content/architecture has exactly one MDX file for each entry", () => {
@@ -93,7 +83,7 @@ test("content/architecture has exactly one MDX file for each entry", () => {
 });
 
 test("every MDX exports metadata and page, has the entry title as its # heading, and renders <PageMeta />", () => {
-  for (const t of TOPICS) {
+  for (const t of ARCHITECTURE.pages) {
     const source = read(t.slug);
     assert.match(source, /^export const metadata = \{/m, `${t.slug}.mdx has no metadata`);
     assert.match(source, /^export const page = \{/m, `${t.slug}.mdx has no page`);
@@ -103,7 +93,7 @@ test("every MDX exports metadata and page, has the entry title as its # heading,
 });
 
 test("every topic page shows its own image, and every image src is a file in public/", () => {
-  for (const t of TOPICS) {
+  for (const t of ARCHITECTURE.pages) {
     const source = read(t.slug);
     const srcs = [...source.matchAll(/<MdxImage[^>]*\ssrc="([^"]+)"/g)].map((m) => m[1]);
     if (t.kind === "topic") {
@@ -125,15 +115,15 @@ test("the practice page has questions 1 to 30, one time each, and each topic is 
     Array.from({ length: PRACTICE_COUNT }, (_, i) => i + 1),
   );
   for (const [, n, topic] of questions) {
-    assert.ok(LESSON_IDS.includes(topic), `question ${n}: "${topic}" is not a topic slug`);
+    assert.ok((ARCHITECTURE.lessonIds as readonly string[]).includes(topic), `question ${n}: "${topic}" is not a topic slug`);
   }
   const closes = source.match(/^<\/PracticeQuestion>$/gm) ?? [];
   assert.equal(closes.length, PRACTICE_COUNT, "each </PracticeQuestion> is at column 0, on its own line");
 });
 
-test("buildArchitectureSearchDocs gives an intro doc and one doc per ## section, with group 'architecture'", () => {
-  const docs = buildArchitectureSearchDocs(TOPICS.map((item) => ({ item, source: read(item.slug) })));
-  for (const t of TOPICS) {
+test("buildFlatSearchDocs gives an intro doc and one doc per ## section, with group 'architecture'", () => {
+  const docs = buildFlatSearchDocs(ARCHITECTURE, ARCHITECTURE.pages.map((item) => ({ item, source: read(item.slug) })));
+  for (const t of ARCHITECTURE.pages) {
     const own = docs.filter((doc) => doc.page === t.title);
     const sections = getOutline("architecture", t.slug).filter((item) => item.level === 2);
     assert.equal(own[0].href, t.href);
@@ -150,7 +140,7 @@ test("buildArchitectureSearchDocs gives an intro doc and one doc per ## section,
 test("precacheUrls includes /architecture/ and every topic route", () => {
   for (const basePath of ["", "/repo"]) {
     const urls = precacheUrls(basePath);
-    for (const route of ARCHITECTURE_ROUTES) assert.ok(urls.includes(`${basePath}${route}`), route);
+    for (const route of ARCHITECTURE.routes) assert.ok(urls.includes(`${basePath}${route}`), route);
     assert.equal(new Set(urls).size, urls.length, "no duplicates");
   }
 });

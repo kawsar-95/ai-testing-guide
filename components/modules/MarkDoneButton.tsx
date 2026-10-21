@@ -1,11 +1,12 @@
 "use client";
 
-import { ARCHITECTURE_UI } from "@/lib/architecture/ui";
-import { useArchitectureProgress } from "./useArchitectureProgress";
+import type { FlatModuleId } from "@/lib/modules/registry";
+import { flatModule, progressHook } from "./useModuleProgress";
 
 /** The "Mark this topic as done" toggle at the end of a topic page. */
-export function MarkDoneButton({ id }: { id: string }) {
-  const { done, toggle } = useArchitectureProgress();
+export function MarkDoneButton({ moduleId, id }: { moduleId: FlatModuleId; id: string }) {
+  const m = flatModule(moduleId);
+  const { done, toggle } = progressHook(m)();
   const isDone = done.includes(id);
   return (
     <button
@@ -20,7 +21,7 @@ export function MarkDoneButton({ id }: { id: string }) {
       }
     >
       <span aria-hidden="true">{isDone ? "✓" : "○"}</span>
-      {isDone ? ARCHITECTURE_UI.markedDone : ARCHITECTURE_UI.markDone}
+      {isDone ? m.ui.markedDone : m.ui.markDone}
     </button>
   );
 }

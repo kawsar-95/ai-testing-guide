@@ -3,11 +3,8 @@
  * entry is served at /architecture/<slug>/ and has its text in
  * content/architecture/<slug>.mdx. The last entry is the practice page.
  */
-
-export const ARCHITECTURE_HOME = "/architecture/";
-
-/** The localStorage key of the done topics and the done practice questions. */
-export const ARCHITECTURE_STORAGE_KEY = "architecture-progress";
+import { defineFlatModule, type FlatEntry } from "../modules/flat.ts";
+import { ARCHITECTURE_UI } from "./ui.ts";
 
 /** The number of practice questions on the practice page. */
 export const PRACTICE_COUNT = 30;
@@ -34,16 +31,6 @@ export type ArchitectureSlug =
   | "observability"
   | "practice";
 
-export type ArchitectureTopic = {
-  slug: ArchitectureSlug;
-  title: string;
-  /** The one-line summary on the module home page. */
-  description: string;
-  /** "topic" for a lesson, "practice" for the practice page. */
-  kind: "topic" | "practice";
-  number: number;
-  href: string;
-};
 
 type Entry = { slug: ArchitectureSlug; title: string; description: string };
 
@@ -150,23 +137,23 @@ const SOURCE: readonly Entry[] = [
   },
 ];
 
-export const TOPICS: readonly ArchitectureTopic[] = SOURCE.map((entry, i) => ({
+const entries: readonly FlatEntry<ArchitectureSlug>[] = SOURCE.map((entry) => ({
   ...entry,
   kind: entry.slug === "practice" ? "practice" : "topic",
-  number: i + 1,
-  href: `${ARCHITECTURE_HOME}${entry.slug}/`,
 }));
-
-export const ARCHITECTURE_ROUTES: readonly string[] = [ARCHITECTURE_HOME, ...TOPICS.map((t) => t.href)];
-
-/** The progress ids of the lessons: their slugs. The practice page has no id of its own. */
-export const LESSON_IDS: readonly string[] = TOPICS.filter((t) => t.kind === "topic").map((t) => t.slug);
 
 /** The progress id of practice question `n` (1-based): `practice-01` … `practice-30`. */
 export const practiceId = (n: number) => `practice-${String(n).padStart(2, "0")}`;
 
 export const PRACTICE_IDS: readonly string[] = Array.from({ length: PRACTICE_COUNT }, (_, i) => practiceId(i + 1));
 
-export function getTopic(slug: string): ArchitectureTopic | undefined {
-  return TOPICS.find((t) => t.slug === slug);
-}
+const progress = { storageKey: "architecture-progress", extraIds: PRACTICE_IDS };
+
+export const ARCHITECTURE = defineFlatModule({
+  id: "architecture",
+  label: "Architecture",
+  searchGroup: "architecture",
+  entries,
+  progress,
+  ui: ARCHITECTURE_UI,
+});
