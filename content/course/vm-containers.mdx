@@ -1,0 +1,103 @@
+export const metadata = { title: 'VMs and Containers', description: 'How virtual machines and containers share hardware in different ways: the hypervisor and the shared kernel, images, what each gives in isolation and weight, and why many systems use both.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Application Container Security Guide (NIST Special Publication 800-190)', publisher: 'NIST', url: 'https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-190.pdf', accessed: '2026-10-22' },
+    { title: 'What is a container?', publisher: 'Docker Docs', url: 'https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/', accessed: '2026-10-22' },
+    { title: 'Containers', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/containers/', accessed: '2026-10-22' },
+    { title: 'Images', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/containers/images/', accessed: '2026-10-22' },
+  ],
+}
+
+# VMs and Containers
+
+Your test passes on your laptop and fails on the test server. The server has another library version, another setting, or another app that uses the same port. A virtual machine and a container are two ways to give each app a clean, separate place to run on shared hardware.
+
+<PageMeta />
+
+## In plain words
+
+Virtual machines (VMs) and containers both let several apps share the same physical machine, but they keep the apps apart in different ways <Cite n={1} />.
+
+A VM uses a hypervisor. The hypervisor gives hardware-level isolation of resources across the VMs. To each VM the hardware looks like its own virtual hardware. Each VM also runs a complete guest operating system (OS) with the app on top. Different VMs can run different OSs, for example Linux and Windows <Cite n={1} />.
+
+Containers skip the guest OS. Many containers share one OS kernel, which is part of the host OS, and each one is kept apart from the others <Cite n={1} />. Docker describes a container as an isolated process, with the files it needs to run <Cite n={2} />. A container depends on the OS family of its host: a Linux host runs Linux containers, and a Windows host runs Windows containers <Cite n={1} />.
+
+## How it works
+
+**Container isolation.** The container runtime asks the host OS to give each container its own view of the system <Cite n={1} />. NIST names three tools <Cite n={1} />:
+
+- Namespace isolation limits what a container can see, such as files, network interfaces, and processes.
+- Resource limits cap how much of the host a container may use. On Linux this is mainly done with control groups (cgroups).
+- Filesystem virtualization lets containers share storage without access to each other's data.
+
+**Images.** A container image is a ready-to-run package with the code, the runtime, the libraries, and default settings <Cite n={3} />. NIST calls it an immutable snapshot of what the app needs in user space. So the developer, the build system, and production run the same artifact, which solves the "works on my machine" problem <Cite n={1} />. Kubernetes says containers are meant to be stateless and immutable. To change an app, you build a new image and recreate the container. You do not change a running one <Cite n={3} />. You usually push the image to a registry before a Pod uses it <Cite n={4} />.
+
+**Orchestration.** In Kubernetes, each node runs the containers of the Pods assigned to it, and containers of one Pod run together on one node <Cite n={3} />.
+
+## When you need it
+
+Docker says that starting a whole VM to isolate one app is a lot of overhead. Because containers share a kernel, you can run more apps on less infrastructure <Cite n={2} />. Docker also lists traits that help with development and test: a container holds what it needs, it has little effect on the host and on other containers, you can delete one without harm to the others, and it should behave the same on a laptop, in a data center, or in a cloud <Cite n={2} />. Kubernetes adds that containers are repeatable and decouple the app from the host <Cite n={3} />.
+
+VMs are still useful. NIST lists strong isolation, OS automation, and a wide ecosystem as VM benefits <Cite n={1} />. Containers share the host kernel, so a container cannot bring a different OS family. A VM can run another OS <Cite n={1} />.
+
+## Trade-offs
+
+The table compares the two. Each row states what the sources say. The last row is the tutorial's own judgment, and no source states it.
+
+| Topic | VM | Container |
+|---|---|---|
+| Separation | A hypervisor gives hardware-level isolation <Cite n={1} /> | The OS kernel is shared, and the runtime keeps the containers apart <Cite n={1} /> |
+| Isolation strength | NIST calls the VM boundary clearer and more concrete <Cite n={1} /> | Strong isolation, but not as clear a boundary as a VM. Segmentation is far less than between VMs, and a shared kernel gives a larger inter-object attack surface than hypervisors. A careless setup can let containers reach each other and the host more easily <Cite n={1} /> |
+| What each app carries | A full guest OS with its own kernel and drivers <Cite n={2} /> | An isolated process with its files <Cite n={2} /> |
+| Overhead | A lot, if used for one app <Cite n={2} /> | Less, because the kernel is shared <Cite n={2} /> |
+| Different OS | Linux and Windows VMs can share one machine <Cite n={1} /> | A Linux host runs only Linux containers <Cite n={1} /> |
+| Change process | Typically kept as stateful systems that teams set up, change, and upgrade across their life <Cite n={1} /> | Meant to be immutable: build a new image, then recreate the container <Cite n={1} /> <Cite n={3} /> |
+| Which to pick (tutorial's own) | Often a good fit when you need a hard boundary or another OS | Often a good fit for packaging and moving an app between environments |
+
+Note the hedge in NIST: it says runtimes give less isolation than hypervisors do, but it also says that most container platforms isolate containers well <Cite n={1} />.
+
+NIST does not ask you to choose one. VMs and containers often work together. A team can use VMs to deploy, split, and manage the hardware, and use containers to package apps and use each VM better <Cite n={1} />. Docker gives the same picture for clouds: the machines you get are typically VMs, and one VM with a container runtime can run many containerized apps <Cite n={2} />.
+
+## A real-life example
+
+This example is the tutorial's own. A test team runs a web app and a payment-sandbox service. Each service is built into an image. The CI job starts both as containers on a test host, runs the tests, and deletes them. Every run starts from the same image, so the result does not depend on what earlier runs left behind.
+
+The team also runs a nightly test on a Windows desktop client. This needs a Windows OS, so it runs in a VM and not in a Linux container.
+
+## Common mistakes
+
+- **Treating a container as a VM.** A container shares the host kernel. NIST says its boundary is less clear than a VM boundary <Cite n={1} />.
+- **Mixing sensitive and ordinary workloads on one host.** NIST advises that a host kernel runs containers of one sensitivity level only. It also says VMs can provide this separation <Cite n={1} />.
+- **Running apps next to containers on the same host.** NIST advises against mixing containerized and non-containerized workloads on one host instance <Cite n={1} />.
+- **Using the `latest` tag in production.** Kubernetes warns that it is harder to know which version runs and to roll back. A tag can also be moved to another image, but a digest is fixed <Cite n={4} />.
+- **Fixing a running container by hand.** Kubernetes says to build a new image and recreate the container <Cite n={3} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources.
+
+- **Which image runs.** Find the exact image tag or digest in the test environment. Check that it is the one you meant to test, and that it is not `latest`.
+- **Same image, same result.** Run the same image on a laptop and on the CI host. Compare the results.
+- **Restart from clean.** Delete a container and start it again. Check that no data or setting that you expect is lost, and no old state remains by accident.
+- **Resource limits.** Give a container a small memory limit and send a heavy load. Check that the app fails in a clear way, and that other containers on the host stay up.
+- **Privileges and mounts.** Ask the team which containers run with extra privileges or mount host folders. Report them as a risk to check, and do not test beyond your permission.
+- **Right host for the test.** If the test needs a different OS or kernel version, check that the environment is a VM or host that supplies it.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Virtual machine (VM) | A simulated computer with virtual hardware and a complete guest OS <Cite n={1} /> |
+| Hypervisor | The software that gives hardware-level isolation of resources across VMs <Cite n={1} /> |
+| Container | An isolated process with the files it needs to run <Cite n={2} /> |
+| Kernel | The part of the host OS that all containers on one host share <Cite n={1} /> |
+| Container image | A ready-to-run package with the code, runtime, libraries, and default settings <Cite n={3} /> |
+| Container runtime | The software on the host that sets up and runs each container, for example containerd or CRI-O <Cite n={1} /> <Cite n={3} /> |
+| Namespace isolation | A way to limit which resources a container can see <Cite n={1} /> |
+| cgroups | The Linux control groups that limit how much of the host a container may use <Cite n={1} /> |
+| Registry | A place where you store images before a Pod uses them <Cite n={4} /> |
+| Tag and digest | A tag names an image version and can move. A digest is a hash of the content and is fixed <Cite n={4} /> |
+| Immutable | Not changed after it starts. You build a new image instead <Cite n={3} /> |
