@@ -45,13 +45,24 @@ export type CourseSlug =
   | "cqrs"
   | "api-gateway"
   | "rest-graphql-grpc"
-  | "long-polling-ws-sse";
+  | "long-polling-ws-sse"
+  | "geohashing"
+  | "circuit-breaker"
+  | "rate-limiting"
+  | "service-discovery"
+  | "sla-slo-sli"
+  | "disaster-recovery"
+  | "vm-containers"
+  | "oauth-oidc"
+  | "sso"
+  | "ssl-tls-mtls";
 
 const parts = [
   { num: 0, title: "Getting started" },
   { num: 1, title: "Networking and basics" },
   { num: 2, title: "Databases and consistency" },
   { num: 3, title: "System architecture" },
+  { num: 4, title: "Reliability and security" },
 ] as const;
 
 const entries: readonly FlatEntry<CourseSlug>[] = [
@@ -337,6 +348,77 @@ const entries: readonly FlatEntry<CourseSlug>[] = [
     description: "Three ways for a server to push updates to a client.",
     kind: "topic",
     part: 3,
+  },
+  {
+    slug: "geohashing",
+    title: "Geohashing and Quadtrees",
+    description: "Turn a location into a short code, and split a map into tiles.",
+    kind: "topic",
+    part: 4,
+  },
+  {
+    slug: "circuit-breaker",
+    title: "Circuit Breaker",
+    description: "Stop calling a failing service, and try again later.",
+    kind: "topic",
+    part: 4,
+  },
+  {
+    slug: "rate-limiting",
+    title: "Rate Limiting",
+    description: "Cap how many requests a client can send.",
+    kind: "link",
+    href: "/architecture/rate-limiting/",
+    part: 4,
+  },
+  {
+    slug: "service-discovery",
+    title: "Service Discovery",
+    description: "Find where a service runs when its address changes.",
+    kind: "topic",
+    part: 4,
+  },
+  {
+    slug: "sla-slo-sli",
+    title: "SLA, SLO, and SLI",
+    description: "Measure reliability, set a target, and promise it to customers.",
+    kind: "topic",
+    part: 4,
+  },
+  {
+    slug: "disaster-recovery",
+    title: "Disaster Recovery",
+    description: "Get a system back after a big failure: RTO and RPO.",
+    kind: "topic",
+    part: 4,
+  },
+  {
+    slug: "vm-containers",
+    title: "VMs and Containers",
+    description: "Two ways to package and isolate software.",
+    kind: "topic",
+    part: 4,
+  },
+  {
+    slug: "oauth-oidc",
+    title: "OAuth 2.0 and OpenID Connect",
+    description: "Give an app limited access, and prove who the user is.",
+    kind: "topic",
+    part: 4,
+  },
+  {
+    slug: "sso",
+    title: "Single Sign-On",
+    description: "Log in one time and use many apps.",
+    kind: "topic",
+    part: 4,
+  },
+  {
+    slug: "ssl-tls-mtls",
+    title: "SSL, TLS, and mTLS",
+    description: "Encrypt traffic and prove who is on each end.",
+    kind: "topic",
+    part: 4,
   },
 ];
 
