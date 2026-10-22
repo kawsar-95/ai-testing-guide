@@ -63,6 +63,12 @@ test("NavList remounts FlatSidebarList when the flat module changes", () => {
   assert.match(source("components/layout/NavList.tsx"), /<FlatSidebarList key=\{flat\.id\} module=\{flat\}/);
 });
 
+test("both callers of LinkDoneToggle pass the item title", () => {
+  for (const file of ["FlatModuleHome", "FlatSidebarList"]) {
+    assert.match(source(`components/modules/${file}.tsx`), /<LinkDoneToggle [^>]*title=\{item\.title\}/);
+  }
+});
+
 test("FlatSidebarList calls one hook whether or not the module has progress", () => {
   const list = source("components/modules/FlatSidebarList.tsx");
   assert.match(list, /const \{ done \} = doneHook\(m\)\(\);/);

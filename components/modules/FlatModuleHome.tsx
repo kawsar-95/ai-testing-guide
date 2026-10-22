@@ -55,7 +55,7 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
                     {m.progress && item.kind === "link" ? (
                       // In the eyebrow, not in the heading, so the button text is not part of the heading name.
                       <span className="ml-2 inline-flex align-middle">
-                        <LinkDoneToggle moduleId={m.id} id={item.slug} />
+                        <LinkDoneToggle moduleId={m.id} id={item.slug} title={item.title} />
                       </span>
                     ) : null}
                   </p>
@@ -75,7 +75,7 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
           return (
             <div key={part.num}>
               <h3 className={`${LABEL} mt-8 text-text-dim`}>
-                {part.num} · {part.title}
+                PART {part.num} · {part.title}
               </h3>
               {list}
             </div>

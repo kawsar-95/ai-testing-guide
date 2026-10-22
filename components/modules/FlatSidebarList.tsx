@@ -27,15 +27,19 @@ export function FlatSidebarList({
     <nav aria-label={ui.sidebarNav} className="px-3 py-4">
       {m.groups().map(({ part, items }) => {
         const list = (
-          <ol key="all" className="m-0 list-none space-y-px p-0">
+          <ol
+            key="all"
+            aria-labelledby={part ? `${m.id}-part-${part.num}` : undefined}
+            className="m-0 list-none space-y-px p-0"
+          >
             {items.map(row)}
           </ol>
         );
         if (!part) return list;
         return (
           <div key={part.num} className="mt-4 first:mt-0">
-            <p className="px-3 pb-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-text-dim">
-              {part.num} · {part.title}
+            <p id={`${m.id}-part-${part.num}`} className="px-3 pb-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-text-dim">
+              PART {part.num} · {part.title}
             </p>
             {list}
           </div>
@@ -89,7 +93,7 @@ export function FlatSidebarList({
             {item.title}
           </span>
         </Link>
-        {toggle ? <LinkDoneToggle moduleId={m.id} id={item.slug} /> : null}
+        {toggle ? <LinkDoneToggle moduleId={m.id} id={item.slug} title={item.title} /> : null}
       </li>
     );
   }

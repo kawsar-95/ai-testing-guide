@@ -82,5 +82,6 @@ Re-run checks on the new page:
 - Every cite number is 1, 2, or 3. Counts: [1] 10, [2] 7, [3] 12. All three sources are https and cited.
 - Section order is unchanged: In plain words, When you need it, A real-life example, Common mistakes, What a tester can check, Key words (last).
 - No new factual claim without a cite besides the tutorial's own arithmetic (unchanged and right).
+- Final review edit: the gloss "not a guarantee" has no `<Cite n={3} />` now. The cite covers only the quoted "commercially reasonable efforts" (R3). The gloss is marked as the tutorial's own reading. This removes a cited claim and adds none.
 
 Open FAILs: 0

@@ -112,6 +112,12 @@ test("a module with parts rejects a missing, unknown, or decreasing part", () =>
   );
 });
 
+test("a module with parts rejects part nums that are not unique and ascending", () => {
+  const [p0, p1] = partsDef.parts;
+  assert.throws(() => defineFlatModule({ ...partsDef, parts: [p1, p0] }), /part/);
+  assert.throws(() => defineFlatModule({ ...partsDef, parts: [p0, { ...p1, num: p0.num }] }), /part/);
+});
+
 test("groups follow the parts, skip empty parts, and give one null group without parts", () => {
   assert.deepEqual(
     withParts.groups().map((g) => [g.part?.num, g.items.map((i) => i.slug)]),
@@ -130,12 +136,16 @@ test("groups follow the parts, skip empty parts, and give one null group without
   );
 });
 
-test("progressHook gives the same hook for the same storage key", () => {
+test("cachedBy gives the same hook for the same storage key", () => {
   let made = 0;
   const hookOf = cachedBy((key) => ({ key, n: ++made }));
   assert.equal(hookOf("k"), hookOf("k"));
   assert.notEqual(hookOf("k"), hookOf("other"));
   assert.equal(made, 2);
+});
+
+test("progressHook uses cachedBy", () => {
+  assert.match(readFileSync("components/modules/useModuleProgress.ts", "utf8"), /cachedBy\(createUseProgress\)/);
 });
 
 test("every module with progress has the progress strings", () => {

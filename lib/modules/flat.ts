@@ -97,6 +97,9 @@ export function defineFlatModule<I extends string, S extends string>(def: FlatMo
   const home = `/${def.id}/`;
   if (def.parts) {
     const nums = def.parts.map((p) => p.num);
+    if (nums.some((n, i) => i > 0 && n <= nums[i - 1])) {
+      throw new Error(`the num values of the parts of ${def.id} must be unique and ascending`);
+    }
     let last = -Infinity;
     for (const entry of def.entries) {
       if (entry.part === undefined || !nums.includes(entry.part) || entry.part < last) {
