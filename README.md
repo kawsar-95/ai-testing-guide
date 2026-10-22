@@ -97,6 +97,10 @@ The `বাংলা` button in the header sets the default voice for the whole 
 
 ![A Course page with Bangla as the default voice](docs/assets/bangla.png)
 
+The same button also translates the interface. In Bangla mode, the header links, the hero, the buttons, the progress labels, the left lists, the search dialog, the footer, and the 404 page show Bangla text. The titles and descriptions of pages, stages, chapters, and topics, and the names of the modules, stay in English. Each English text has a Bangla twin in `lib/bn/`, and a test checks that no key is missing.
+
+![The home page with the Bangla interface](docs/assets/bangla-home.png)
+
 The Bangla text of the Course follows the term style of [systemdesignbangla.com](https://www.systemdesignbangla.com/): common concept words are in Bangla letters, and acronyms, products, and commands stay in English. The plain English and Bangla texts add no fact that the Technical text does not have. A separate agent checked this for each page.
 
 A link or a search result that points into a hidden voice opens that voice and scrolls to the target.
@@ -237,7 +241,7 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
 content/<group>/     The MDX pages: 23 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course
-lib/                 nav.ts (tutorial page order), one data file for each module, search, voices, PWA, and other helpers
+lib/                 nav.ts (tutorial page order), one data file for each module, search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
 scripts/             Python check scripts and the route maps (one JSON file for each module)
 public/              Icons, images of the pages, and static files
