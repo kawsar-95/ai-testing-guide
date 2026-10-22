@@ -5,7 +5,7 @@ const pad = (number: number) => String(number).padStart(2, "0");
 export const COURSE_UI = {
   siteTitle: "System Design Course",
   description:
-    "System design from the ground up, in plain words for testers: networks, DNS, proxies, clustering, and availability.",
+    "System design from the ground up, in plain words for testers: networks, DNS, proxies, clustering, availability, databases, and consistency.",
   eyebrow: (topics: number) => `COURSE · ${topics} TOPICS`,
   heading: "System Design Course",
   lede: "Learn system design one topic at a time, in order. Each topic gives one idea in plain words, a real example, the common mistakes, and what a tester can check. Some topics link to a page of the Architecture module.",

@@ -1,0 +1,109 @@
+export const metadata = { title: 'Sharding', description: 'How sharding splits one big database across servers, how a shard key and a strategy choose the shard, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Sharding', publisher: 'MongoDB Manual', url: 'https://www.mongodb.com/docs/manual/sharding/', accessed: '2026-10-22' },
+    { title: 'Shard Keys', publisher: 'MongoDB Manual', url: 'https://www.mongodb.com/docs/manual/core/sharding-shard-key/', accessed: '2026-10-22' },
+    { title: 'Choose a Shard Key', publisher: 'MongoDB Manual', url: 'https://www.mongodb.com/docs/manual/core/sharding-choose-a-shard-key/', accessed: '2026-10-22' },
+    { title: 'Ranged Sharding', publisher: 'MongoDB Manual', url: 'https://www.mongodb.com/docs/manual/core/ranged-sharding/', accessed: '2026-10-22' },
+    { title: 'Hashed Sharding', publisher: 'MongoDB Manual', url: 'https://www.mongodb.com/docs/manual/core/hashed-sharding/', accessed: '2026-10-22' },
+    { title: 'Data Partitioning with Chunks', publisher: 'MongoDB Manual', url: 'https://www.mongodb.com/docs/manual/core/sharding-data-partitioning/', accessed: '2026-10-22' },
+    { title: 'Sharded Cluster Balancer', publisher: 'MongoDB Manual', url: 'https://www.mongodb.com/docs/manual/core/sharding-balancer-administration/', accessed: '2026-10-22' },
+    { title: 'Sharding pattern', publisher: 'Azure Architecture Center (Microsoft Learn)', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/sharding', accessed: '2026-10-22' },
+  ],
+}
+
+# Sharding
+
+Picture a library whose one room is full. The library opens more rooms, and each room keeps the books for one part of the alphabet. Sharding does the same for data: it splits one big database into smaller parts on different servers.
+
+<PageMeta />
+
+## In plain words
+
+**Sharding** divides a data store into horizontal partitions, called **shards** <Cite n={8} />. Every shard has the same schema, but each one holds its own different subset of the data <Cite n={8} />. A shard runs on a server that works as a storage node <Cite n={8} />. MongoDB uses the word for the same idea: spreading data across several machines <Cite n={1} />.
+
+## When you need it
+
+One server has limits: disk space, computing power, network bandwidth, and sometimes legal rules about where data must live <Cite n={8} />. A bigger server only postpones these limits <Cite n={8} />. Horizontal scaling splits the data and the load over more servers, and the trade-off is more complexity <Cite n={1} />.
+
+Azure warns that sharding adds complexity for the life of the system. It may not fit if the data fits in one instance, or if reads are the bottleneck, because read replicas and caches can help <Cite n={8} />.
+
+## How it works
+
+A **shard key** is one or more attributes of the data. It decides which shard holds an item <Cite n={8} />. The sharding logic sends each read and write to the right shard, in the application code or in the data store <Cite n={8} />. MongoDB adds a router, called `mongos`, in front of the shards <Cite n={1} />.
+
+Azure describes these strategies <Cite n={8} />:
+
+| Strategy | How it picks the shard | Strength | Weakness |
+|---|---|---|---|
+| Lookup | A map from key to shard | More control over the layout | Looking up the location costs time |
+| Range | Neighbouring key values stay together | Good for range queries | Load may not be even |
+| Hash | A hash of the key | Better chance of even data and load | Rebalancing is hard without consistent hashing |
+
+MongoDB offers the range and hash methods. Ranged sharding is the default <Cite n={4} />. Hashed sharding spreads data more evenly, but values that are close together are unlikely to share a shard, so a range query is more likely to go to every shard <Cite n={5} />.
+
+MongoDB cuts the span of shard key values into non-overlapping ranges, and each range belongs to a **chunk** <Cite n={2} />. A chunk has an inclusive lower limit and an exclusive upper limit <Cite n={6} />.
+
+## Choosing a shard key
+
+Azure calls the shard key the most critical design decision. To change it later, you usually must move all the data to a new layout, which is costly and risky <Cite n={8} />. An effective key does not change, has many different values, spreads data and load evenly, and fits the main queries <Cite n={8} />. MongoDB asks you to look at three things: how many different values the key has (cardinality), how often each value occurs (frequency), and whether the value grows in one direction (monotonic change) <Cite n={3} />.
+
+## Hot spots
+
+A **hot spot** is a shard that gets much more load than the others <Cite n={8} />. These keys cause them <Cite n={8} />:
+
+- **Values that only grow**, such as auto-increment numbers and sequential timestamps. In MongoDB, all new inserts go to the chunk at the top of the range, and its shard becomes the bottleneck for writes <Cite n={3} />.
+- **Few different values**, such as booleans. MongoDB shows a key with 7 values (continents): the cluster can have at most 7 chunks, so more than seven shards give no benefit <Cite n={3} />.
+- **A few very common values.** Their chunks can become bottlenecks <Cite n={3} />.
+
+Many different values alone do not guarantee an even spread <Cite n={3} />. For a key that grows in one direction, MongoDB suggests hashed sharding <Cite n={3} />.
+
+## Cross-shard queries
+
+If a query has the shard key, `mongos` sends it only to the shards that hold the data. If it has no shard key, `mongos` asks every shard. This is a scatter-gather query, and it does not scale in a straight line when you add shards <Cite n={3} />. MongoDB makes an exception for aggregation queries that work on a large amount of data, where running on all shards at once can help <Cite n={3} />. The slowest shard sets the total time <Cite n={8} />. Transactions across shards are harder still, so most sharded systems avoid them and accept eventual consistency <Cite n={8} />.
+
+## Rebalancing
+
+Over time, inserts and deletes make the shards uneven, so Azure advises a plan to rebalance periodically. Moving data between shards can cause downtime or lower throughput <Cite n={8} />. With the plain formula `hash(key) mod N`, a change in the number of shards moves most keys <Cite n={8} />.
+
+In MongoDB, the **balancer** runs in the background and moves ranges when the gap between the largest and smallest shard passes a threshold <Cite n={7} />. It can slow the cluster while it works <Cite n={7} />. A new shard starts empty, so it takes some time for the cluster to balance again <Cite n={7} />.
+
+## A real-life example
+
+A learning platform stores the results of test runs. This example is the tutorial's own.
+
+- **Key: the run date, ranged.** Every new run has the newest date, so every write goes to one shard. The other shards sit idle. Reading one month of runs is fast, because one shard has it.
+- **Key: a hash of the run ID.** New runs spread over all shards, and writes are even. A report of "all runs this week" now has to ask every shard.
+
+Neither key is free. The team picks the one that fits its main queries.
+
+## Common mistakes
+
+- **Sharding too early.** If the data and traffic fit one instance, sharding only adds work <Cite n={8} />.
+- **A growing number as the shard key.** It leads to hot spots <Cite n={8} />.
+- **A key with few values.** It limits how many shards help <Cite n={3} />.
+- **Forgetting the daily work.** You back up each shard on its own and change the schema on every shard <Cite n={8} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Ask for the shard key.** Find out which field it is and why the team chose it.
+- **Use realistic test data.** Include sequential IDs and one very large customer. Look at how many rows each shard gets.
+- **Compare two queries.** Run one with the shard key and one without. Compare the response times.
+- **Test during a rebalance.** Add a shard in a test environment while the suite runs. Watch for errors and slow calls.
+- **Check the operations.** Test backup, restore, and schema changes on every shard.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Shard | One horizontal partition of the data, on its own storage node <Cite n={8} /> |
+| Shard key | The attributes that decide which shard holds an item <Cite n={8} /> |
+| Chunk | In MongoDB, a range of shard key values that one shard owns <Cite n={6} /> |
+| Hot spot | A shard that gets much more load than the others <Cite n={8} /> |
+| Scatter-gather | A query with no shard key that goes to every shard <Cite n={3} /> |
+| Balancer | The MongoDB background process that moves ranges between shards <Cite n={7} /> |

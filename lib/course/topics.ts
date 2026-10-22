@@ -19,11 +19,27 @@ export type CourseSlug =
   | "proxy"
   | "availability"
   | "scalability"
-  | "storage";
+  | "storage"
+  | "database"
+  | "sql"
+  | "nosql"
+  | "sql-vs-nosql"
+  | "replication"
+  | "indexes"
+  | "normalization"
+  | "acid-base"
+  | "cap-theorem"
+  | "pacelc"
+  | "transactions"
+  | "distributed-transactions"
+  | "sharding"
+  | "consistent-hashing"
+  | "database-federation";
 
 const parts = [
   { num: 0, title: "Getting started" },
   { num: 1, title: "Networking and basics" },
+  { num: 2, title: "Databases and consistency" },
 ] as const;
 
 const entries: readonly FlatEntry<CourseSlug>[] = [
@@ -123,6 +139,112 @@ const entries: readonly FlatEntry<CourseSlug>[] = [
     kind: "link",
     href: "/architecture/object-storage/",
     part: 1,
+  },
+  {
+    slug: "database",
+    title: "Databases and DBMS",
+    description: "What a database and a DBMS are, and what they do for an app.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "sql",
+    title: "SQL Databases",
+    description: "Tables, rows, keys, and the SQL language.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "nosql",
+    title: "NoSQL Databases",
+    description: "Documents, key-value, wide-column, and graph stores.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "sql-vs-nosql",
+    title: "SQL vs NoSQL",
+    description: "How to choose: data shape, consistency, and scale.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "replication",
+    title: "Database Replication",
+    description: "Copies of the data on more than one server.",
+    kind: "link",
+    href: "/architecture/database-replication/",
+    part: 2,
+  },
+  {
+    slug: "indexes",
+    title: "Indexes",
+    description: "A lookup structure that makes reads fast and writes slower.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "normalization",
+    title: "Normalization and Denormalization",
+    description: "Split data to avoid copies, or copy it on purpose for speed.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "acid-base",
+    title: "ACID and BASE",
+    description: "Strict transactions, or availability with eventual consistency.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "cap-theorem",
+    title: "The CAP Theorem",
+    description: "During a network split, choose consistency or availability.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "pacelc",
+    title: "The PACELC Theorem",
+    description: "CAP, plus the latency trade-off when there is no split.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "transactions",
+    title: "Transactions",
+    description: "A group of changes that all happen or none happen.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "distributed-transactions",
+    title: "Distributed Transactions",
+    description: "One change across many databases: two-phase commit and sagas.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "sharding",
+    title: "Sharding",
+    description: "Split one big data set across many databases.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "consistent-hashing",
+    title: "Consistent Hashing",
+    description: "Spread keys over servers so few keys move when servers change.",
+    kind: "topic",
+    part: 2,
+  },
+  {
+    slug: "database-federation",
+    title: "Database Federation",
+    description: "Give each part of the app its own database.",
+    kind: "topic",
+    part: 2,
   },
 ];
 

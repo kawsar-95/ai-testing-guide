@@ -1,0 +1,95 @@
+export const metadata = { title: 'Databases and DBMS', description: 'What a database and a database management system are, what a DBMS does for an app, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: '1.2.1 What is MySQL?', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/what-is-mysql.html', accessed: '2026-10-22' },
+    { title: '2.2. Concepts', publisher: 'PostgreSQL 18 Documentation (Tutorial)', url: 'https://www.postgresql.org/docs/current/tutorial-concepts.html', accessed: '2026-10-22' },
+    { title: '1.2. Architectural Fundamentals', publisher: 'PostgreSQL 18 Documentation (Tutorial)', url: 'https://www.postgresql.org/docs/current/tutorial-arch.html', accessed: '2026-10-22' },
+    { title: '3.4. Transactions', publisher: 'PostgreSQL 18 Documentation (Tutorial)', url: 'https://www.postgresql.org/docs/current/tutorial-transactions.html', accessed: '2026-10-22' },
+    { title: '13.1. Introduction (Concurrency Control)', publisher: 'PostgreSQL 18 Documentation', url: 'https://www.postgresql.org/docs/current/mvcc-intro.html', accessed: '2026-10-22' },
+    { title: '28.3. Write-Ahead Logging (WAL)', publisher: 'PostgreSQL 18 Documentation', url: 'https://www.postgresql.org/docs/current/wal-intro.html', accessed: '2026-10-22' },
+    { title: '5.8. Privileges', publisher: 'PostgreSQL 18 Documentation', url: 'https://www.postgresql.org/docs/current/ddl-priv.html', accessed: '2026-10-22' },
+    { title: '1. What Is PostgreSQL?', publisher: 'PostgreSQL 18 Documentation', url: 'https://www.postgresql.org/docs/current/intro-whatis.html', accessed: '2026-10-22' },
+  ],
+}
+
+# Databases and DBMS
+
+A paper filing cabinet keeps your records, and a clerk finds, adds, and changes them for you. A database is the cabinet. The database management system (DBMS) is the clerk that every app must ask.
+
+<PageMeta />
+
+## In plain words
+
+A **database** is data that is kept in an organized way. It can be as small as a shopping list or as large as the information of a whole company network <Cite n={1} />.
+
+To add, read, and process that data, you need a **database management system** (DBMS), such as MySQL Server <Cite n={1} />. DBMSs are central in computing. They run as separate tools or as parts of other applications <Cite n={1} />.
+
+MySQL and PostgreSQL are both **relational** systems. They keep data in tables, not in one big pile <Cite n={1} /> <Cite n={2} />. A table has a name and holds rows. All rows of a table share the same named columns, and each column has one data type <Cite n={2} />. SQL does not promise any order of rows, unless you ask for a sort <Cite n={2} />. Tables are grouped into databases <Cite n={2} />.
+
+## When you need it
+
+Use a DBMS when an app must keep data after it closes and let many users share it. The sources show these jobs of a DBMS:
+
+| Job | What the sources say |
+|---|---|
+| Storage and access | The DBMS lets you add, access, and process the data <Cite n={1} /> |
+| Queries | SQL is the most common standard language to access databases <Cite n={1} /> |
+| Rules | The database enforces the rules that you set for the data <Cite n={1} /> |
+| Concurrency | The server handles many connections at the same time <Cite n={3} /> |
+| Durability | A transaction is logged to permanent storage before it is reported complete <Cite n={4} /> |
+| Access control | In PostgreSQL, for most kinds of objects, only the owner (or a superuser) can use a new object at first. Other roles need granted privileges <Cite n={7} /> |
+
+## How it works
+
+**Client and server.** PostgreSQL uses a client/server model. The server process manages the database files, accepts connections, and does the database actions for the clients <Cite n={3} />. A client can be a web server that reads the database to build web pages <Cite n={3} />. Client and server can run on different hosts and talk over a TCP/IP network <Cite n={3} />. MySQL is also a client/server system, and it can run as an embedded library inside an application <Cite n={1} />. PostgreSQL starts a new process for each connection <Cite n={3} />.
+
+**Queries.** An app can send SQL directly, put SQL statements in its code, or use an API that hides the SQL <Cite n={1} />. PostgreSQL follows much of the SQL standard <Cite n={8} />.
+
+**Rules.** You can set rules between data fields, such as one-to-many, unique, or required. The database enforces them. The manual says that, with a good design, the app is safe from bad data: data that is inconsistent, duplicated, orphaned, old, or missing <Cite n={1} />. PostgreSQL lists foreign keys and triggers among its features <Cite n={8} />.
+
+**Concurrency.** A transaction bundles several steps into one all-or-nothing operation. Other transactions do not see the middle states <Cite n={4} />. PostgreSQL uses MVCC (multiversion concurrency control): each statement sees a snapshot of the data, and reading never blocks writing <Cite n={5} />.
+
+**Durability.** A transactional database logs the updates of a transaction to permanent storage (disk) before it reports the transaction complete <Cite n={4} />. PostgreSQL does this with a write-ahead log (WAL). It logs a change before it writes the change to the data files. After a crash, it can replay the log <Cite n={6} />.
+
+**Access control.** In PostgreSQL, a new object has an owner. For most objects, only the owner (or a superuser) can use it at first. The owner must grant privileges, such as `SELECT` or `INSERT`, to other roles <Cite n={7} />.
+
+## A real-life example
+
+A learning platform keeps students and enrolments. This example is the tutorial's own. The web app is the client. The DBMS holds a `students` table and an `enrolments` table.
+
+A student clicks "Enrol". The app sends one transaction to the DBMS: add a row to `enrolments` and lower the free seats of the course. If the server fails between the two steps, a transaction should leave neither step done, because it is all-or-nothing <Cite n={4} />. If a student lists courses at the same moment, they should not see half of the change <Cite n={4} />. The app does not need its own code for this. The DBMS does it.
+
+## Common mistakes
+
+- **Mixing up the two words.** The database is the data. The DBMS is the software that manages it <Cite n={1} />.
+- **Counting on row order.** SQL gives no order unless you sort <Cite n={2} />.
+- **Testing only the app.** The app and the DBMS are two parts that can run on different hosts <Cite n={3} />. A failure can come from the link between them (this point is the tutorial's own).
+- **Giving every user full rights.** Privileges let you give each role only the rights it needs. This advice is the tutorial's own.
+- **Assuming all DBMSs behave the same.** This page cites PostgreSQL and MySQL only. Check the manual of your DBMS.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice. They are not claims of the sources.
+
+- **Know the DBMS.** Ask which DBMS and which version the app uses. Read its manual for the rules that you test.
+- **Rules.** Try to save a duplicate, an empty required field, or a row that points to a missing parent. The database should refuse it.
+- **All or nothing.** Stop a multi-step action half way, for example with a forced error. Check that no partial data stays.
+- **Two users.** Run two sessions at the same time on the same record. Check what each one sees.
+- **Restart.** Save data, restart the database server, and check that the data is still there.
+- **Roles.** Log in as a low-rights role. Check that it cannot read or change what it should not.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Database | Data kept in an organized way <Cite n={1} /> |
+| DBMS | The software you need to add, access, and process the data <Cite n={1} /> |
+| Relational | Data is kept in separate tables <Cite n={1} /> |
+| Table | A named set of rows with the same columns <Cite n={2} /> |
+| Transaction | Several steps that act as one all-or-nothing operation <Cite n={4} /> |
+| MVCC | Each statement sees a snapshot, so reading and writing do not block each other <Cite n={5} /> |
+| WAL | A log that is written before the data files, used to recover after a crash <Cite n={6} /> |
+| Privilege | A right, such as `SELECT`, that the owner grants to a role <Cite n={7} /> |

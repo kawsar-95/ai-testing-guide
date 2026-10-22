@@ -1,0 +1,92 @@
+export const metadata = { title: 'SQL vs NoSQL', description: 'How relational and NoSQL databases differ in structure, integrity, and scale, why the choice is a trade-off, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'What’s the Difference Between Relational and Non-relational Databases?', publisher: 'Amazon Web Services', url: 'https://aws.amazon.com/compare/the-difference-between-relational-and-non-relational-databases/', accessed: '2026-10-22' },
+    { title: 'PostgreSQL 18 Documentation, 5.5. Constraints', publisher: 'PostgreSQL Global Development Group', url: 'https://www.postgresql.org/docs/current/ddl-constraints.html', accessed: '2026-10-22' },
+    { title: 'PostgreSQL 18 Documentation, 3.4. Transactions', publisher: 'PostgreSQL Global Development Group', url: 'https://www.postgresql.org/docs/current/tutorial-transactions.html', accessed: '2026-10-22' },
+    { title: 'Data Modeling in MongoDB', publisher: 'MongoDB Database Manual', url: 'https://www.mongodb.com/docs/manual/data-modeling/', accessed: '2026-10-22' },
+    { title: 'Schema Validation', publisher: 'MongoDB Database Manual', url: 'https://www.mongodb.com/docs/manual/core/schema-validation/', accessed: '2026-10-22' },
+    { title: 'Transactions', publisher: 'MongoDB Database Manual', url: 'https://www.mongodb.com/docs/manual/core/transactions/', accessed: '2026-10-22' },
+  ],
+}
+
+# SQL vs NoSQL
+
+Two shops can sell the same goods and keep their records in different ways. One keeps strict ledgers with fixed columns. The other keeps a folder for each customer, and each folder can hold different papers. Neither way is better for every shop.
+
+<PageMeta />
+
+## In plain words
+
+A **relational** (SQL) database keeps data in tables with rows and columns. The columns hold attributes, and the rows hold values <Cite n={1} />. A key links rows of one table to rows of another table, and one SQL query can read both <Cite n={1} />.
+
+A **non-relational** (NoSQL) database uses other data models. The common ones are key-value, document, and graph <Cite n={1} />. A document database stores JSON-like objects that can have a nested shape <Cite n={1} />.
+
+The names are a simplification. "NoSQL" names a group of systems with many data models <Cite n={1} />, and they are not all alike. So the useful question is not "which one wins" but "what does my data look like, and how will the application read it".
+
+## When you need it
+
+You meet this choice when a team plans a new service, when a feature changes the shape of the data, or when a database starts to slow down. A tester needs it to know which promises the database keeps and which promises the application must keep.
+
+## A real-life example
+
+A learning platform stores students, courses, and enrollments.
+
+- **Enrollments and payments.** Each student row links to course rows, and a failed payment must not leave half an enrollment. This fits a relational design with keys and transactions.
+- **Course catalog pages.** Each course has different fields: a video course has a length, a lab course has a tool list. A document database can keep each course as one document with its own fields.
+
+The platform can use both. This example is the tutorial's own.
+
+## Trade-offs
+
+The choice depends on the data and on the access pattern. The table shows where the vendor docs say the two sides differ.
+
+| Question | Relational (SQL) | Non-relational (NoSQL) |
+|---|---|---|
+| Structure | Tables with strict rules for data and relations <Cite n={1} /> | More flexible, for data that changes <Cite n={1} /> |
+| Schema | Set before you insert data <Cite n={4} /> | Documents in one collection can have different fields <Cite n={4} /> |
+| Rules in the database | Constraints such as primary key, foreign key, unique, check, and not-null <Cite n={2} /> | In MongoDB, optional validation rules, added where you need them <Cite n={4} /><Cite n={5} /> |
+| Transactions | Several steps are all-or-nothing <Cite n={3} /> | In MongoDB, a single-document write is atomic. Multi-document transactions exist too, with a performance cost in most cases <Cite n={6} /> |
+| Consistency model | Strict ACID <Cite n={1} /> | Often BASE, with eventual consistency <Cite n={1} /> |
+| Scaling | Usually vertical. Horizontal scaling of writes needs partitioning or sharding <Cite n={1} /> | Spread the load across many nodes more easily <Cite n={1} /> |
+| Related data | Joins across tables <Cite n={4} /> | In MongoDB, embed related data, or reference it <Cite n={4} /> |
+
+Three points need care:
+
+- **No side is "all or nothing" on integrity.** Some NoSQL databases offer ACID, with trade-offs in performance or other areas <Cite n={1} />. MongoDB supports ACID transactions <Cite n={6} />.
+- **A flexible schema is not a missing schema.** MongoDB lets you add validation rules to a collection. By default it rejects an insert or update that breaks them <Cite n={5} />.
+- **The model follows the access pattern.** MongoDB advises to design the model from the access patterns of the application, and to keep together the data that is accessed together <Cite n={4} />.
+
+A rule of thumb, the tutorial's own: if your data is stable and its relations matter, start with relational. If the shape varies or one very large workload must spread over many nodes, look at NoSQL. Treat this as a first guess, not a rule.
+
+## Common mistakes
+
+- **Choosing by fashion.** Pick from the data and the queries, not from a trend.
+- **Thinking a flexible schema means no rules.** In MongoDB you can add validation rules <Cite n={5} />. Without them, the application must keep the data in shape. This second point is the tutorial's own advice.
+- **Thinking SQL cannot scale.** The vendor says it needs extra strategies for write scaling, not that it cannot <Cite n={1} />.
+- **Using one rule for every service.** One system can use a relational database for some data and a document database for other data.
+- **Assuming a transaction works the same everywhere.** Check what the chosen database guarantees <Cite n={6} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Ask which promises the database keeps.** Is a multi-step change all-or-nothing, or does the application handle it?
+- **Try bad data.** Insert a missing value, a wrong type, or a duplicate. See whether the database or the application rejects it.
+- **Test old data.** In a flexible schema, old records may lack new fields. Open one.
+- **Test stale reads.** With eventual consistency, read right after a write, from another connection. Check what the user sees.
+- **Test a failure halfway.** Stop a multi-step change in the middle. Look for half-saved data.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Relational database | Stores data in tables with rows and columns, linked by keys <Cite n={1} /> |
+| NoSQL | A group of non-relational models, such as key-value, document, and graph <Cite n={1} /> |
+| Schema | The structure of the data (the tutorial's own plain definition). A relational table sets it before inserts <Cite n={4} /> |
+| Constraint | A rule that the database enforces on a column or table <Cite n={2} /> |
+| Transaction | Several steps that act as one all-or-nothing operation <Cite n={3} /> |
+| Eventual consistency | The state changes over time and later becomes consistent <Cite n={1} /> |

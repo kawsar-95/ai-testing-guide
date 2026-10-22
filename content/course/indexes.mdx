@@ -1,0 +1,110 @@
+export const metadata = { title: 'Indexes', description: 'Why a database index makes reads faster, what it costs on writes and storage, and how EXPLAIN shows whether a query uses it.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: '11.1. Indexes: Introduction', publisher: 'PostgreSQL 18 Documentation', url: 'https://www.postgresql.org/docs/current/indexes-intro.html', accessed: '2026-10-22' },
+    { title: '11.2. Index Types', publisher: 'PostgreSQL 18 Documentation', url: 'https://www.postgresql.org/docs/current/indexes-types.html', accessed: '2026-10-22' },
+    { title: '11.3. Multicolumn Indexes', publisher: 'PostgreSQL 18 Documentation', url: 'https://www.postgresql.org/docs/current/indexes-multicolumn.html', accessed: '2026-10-22' },
+    { title: '14.1. Using EXPLAIN', publisher: 'PostgreSQL 18 Documentation', url: 'https://www.postgresql.org/docs/current/using-explain.html', accessed: '2026-10-22' },
+    { title: '10.3.1 How MySQL Uses Indexes', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/mysql-indexes.html', accessed: '2026-10-22' },
+    { title: '10.8.2 EXPLAIN Output Format', publisher: 'MySQL 8.4 Reference Manual', url: 'https://dev.mysql.com/doc/refman/8.4/en/explain-output.html', accessed: '2026-10-22' },
+    { title: 'EXPLAIN', publisher: 'PostgreSQL 18 Documentation (SQL Commands)', url: 'https://www.postgresql.org/docs/current/sql-explain.html', accessed: '2026-10-22' },
+  ],
+}
+
+# Indexes
+
+At the back of a textbook, an alphabetical list tells you which page to open for a topic. A database index does the same job for a table: it helps the database go straight to the rows you want.
+
+<PageMeta />
+
+## In plain words
+
+An **index** is an extra structure that a database keeps next to a table, so that it can find rows by the value of a column. Without it, the database has to read the table row by row <Cite n={1} />. MySQL says the same: it starts at the first row and reads the whole table, and a bigger table means more work <Cite n={5} />. With an index, the database can find the right place in the data without looking at all of it <Cite n={5} />.
+
+The PostgreSQL manual uses the same book comparison, and says that the database programmer must foresee which indexes will be useful <Cite n={1} />.
+
+You create an index with a command such as the one below. You can add or remove an index at any time <Cite n={1} />.
+
+```sql
+CREATE INDEX orders_customer_idx ON orders (customer_id);
+```
+
+## When you need it
+
+You need an index when many queries look for a few rows in a big table, for example "all orders of one customer". An index can also help `UPDATE` and `DELETE` commands that have a search condition, and joins <Cite n={1} />.
+
+Indexes matter less for small tables, and for reports that read most rows of a big table: reading in order is faster there <Cite n={5} />.
+
+## How it works
+
+Most MySQL indexes are stored in B-trees <Cite n={5} />. PostgreSQL also creates a B-tree by default <Cite n={2} />. With a search tree, the database may need to walk only a few levels <Cite n={1} />.
+
+This table shows what some PostgreSQL index types handle <Cite n={2} />:
+
+| Type | What it handles |
+|---|---|
+| B-tree | Equality and range queries on sortable data, such as `<`, `=`, `>`, `BETWEEN`, and `IN` |
+| Hash | Simple equality only |
+
+A B-tree can help with `LIKE 'foo%'` (a fixed start), but not with `LIKE '%bar'` <Cite n={2} />.
+
+An index can have more than one column. A multicolumn B-tree index works best when the query limits the first (leftmost) columns <Cite n={3} />. In MySQL, an index on `(col1, col2, col3)` serves a search on `col1`, on `col1, col2`, and on all three <Cite n={5} />. PostgreSQL says to use multicolumn indexes sparingly <Cite n={3} />.
+
+If a query needs only columns that are in an index, the database can take the values from the index tree. This is a **covering index** <Cite n={5} />.
+
+### What an index costs
+
+An index is not free:
+
+- **Writes.** The database must keep the index in step with the table, which adds work to every data change <Cite n={1} />.
+- **Space.** An index takes space of its own. The PostgreSQL manual notes that a single-column index "saves space and time" compared with a wider one <Cite n={3} />.
+- **Build time.** Building an index on a big table may be slow. During the build, PostgreSQL by default lets reads run but blocks writes <Cite n={1} />.
+
+For this reason, the manual says to remove an index that is seldom or never used <Cite n={1} />.
+
+## A real-life example
+
+A learning platform has an `enrollments` table with 5 million rows. The page "My courses" runs `SELECT * FROM enrollments WHERE student_id = 42`. This is the tutorial's own example, and the numbers are not from a source.
+
+Without an index on `student_id`, the database reads the table for each page view. With the index, it goes to the few rows of student 42, and the page gets faster. But every new enrollment now also updates the index, so a bulk import has more work to do. With ten more indexes added "just in case", every import pays for all of them.
+
+## Common mistakes
+
+- **Indexing every column.** Each index adds work on writes <Cite n={1} /> and takes space <Cite n={3} />.
+- **Expecting a multicolumn index to help every query.** A query that skips the leftmost column may get little help <Cite n={3} />.
+- **Comparing columns of different types.** In MySQL, a comparison between two string columns with different character sets (for example `utf8mb4` and `latin1`) rules out an index <Cite n={5} />.
+- **Using a leading wildcard.** `LIKE '%bar'` cannot use a B-tree <Cite n={2} />. The database uses an index when it thinks that is more efficient than a full scan <Cite n={1} />.
+
+## How to see if a query uses an index
+
+Put `EXPLAIN` before the query to see the plan that the database chose <Cite n={7} />.
+
+In PostgreSQL, the plan is a tree of nodes. The bottom nodes are scan nodes, and a table can be read by a sequential scan, an index scan, or a bitmap index scan <Cite n={4} />. A **Seq Scan** with a `Filter` checks the condition on each row it reads <Cite n={4} />. An **Index Scan** shows an `Index Cond` line <Cite n={4} />.
+
+The cost numbers are estimates <Cite n={4} />. With `EXPLAIN ANALYZE`, PostgreSQL executes the statement, not only plans it <Cite n={7} />, then shows the true row counts and times next to the estimates <Cite n={4} />. The manual says that a key check is whether the estimated row counts are near the real ones <Cite n={4} />.
+
+In MySQL, read two columns of the `EXPLAIN` result. `key` is the index that MySQL decided to use, and `NULL` means it found no index to use <Cite n={6} />. If `possible_keys` is `NULL`, no index is relevant <Cite n={6} />. The join type `ALL` is a full table scan, which is normally not good for the first table <Cite n={6} />. To list the indexes of a table, use `SHOW INDEX FROM tbl_name` <Cite n={6} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Test with a realistic amount of data.** With 50 rows, every query is fast and a missing index stays hidden. Use a data set as large as production.
+- **Run `EXPLAIN` on the slow query.** Look for a full scan on a big table, and for `key: NULL` in MySQL.
+- **Compare before and after.** Check the plan and the time before and after you add the index.
+- **Measure the write side too.** Time a bulk insert or update with and without the index.
+- **Be careful with `EXPLAIN ANALYZE` on `UPDATE` or `DELETE`.** It really runs the query, so use a copy of the data.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Index | An extra structure that helps the database find rows by column value without reading every row <Cite n={5} /> |
+| Full table scan | Reading the whole table, row by row <Cite n={1} /> |
+| B-tree | The default index type of PostgreSQL, and the type of most MySQL indexes <Cite n={2} /> <Cite n={5} /> |
+| Multicolumn index | One index on several columns, best when the query limits the leftmost ones <Cite n={3} /> |
+| Covering index | An index that holds all the columns a query needs <Cite n={5} /> |
+| EXPLAIN | A command that shows the plan of a query <Cite n={4} /> |

@@ -1,0 +1,98 @@
+export const metadata = { title: 'Database Federation', description: 'What it means to split a database by function, why joins and transactions across the parts are hard, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Data partitioning guidance', publisher: 'Azure Architecture Center (Microsoft Learn)', url: 'https://learn.microsoft.com/en-us/azure/architecture/best-practices/data-partitioning', accessed: '2026-10-22' },
+  ],
+}
+
+# Database Federation
+
+Think of a school that opens a separate office for fees, one for exams, and one for the library. Each office is faster, but a question that needs two offices takes more work. Database federation does the same for data.
+
+<PageMeta />
+
+## In plain words
+
+The term "database federation" has more than one meaning. Some people use it for a query over several data sources. This page uses a different meaning: **one database for each area of the app**. This choice of meaning is the tutorial's own.
+
+The Azure page does not use the word "federation". The Azure Architecture Center calls this idea **functional partitioning**. The data is grouped by the way each bounded context of the system uses it <Cite n={1} />. A **bounded context** is a distinct business area with clear limits for its data and its functions <Cite n={1} />. For example, an online shop can keep its invoices in one partition and its stock levels in another <Cite n={1} />.
+
+```text
+Before:  [ one big database: customers + orders + inventory + invoices ]
+
+After:   [ customers DB ]  [ orders DB ]  [ inventory DB ]  [ invoices DB ]
+```
+
+This is not the same as sharding. In sharding, every partition has the same schema and holds a subset of the data <Cite n={1} />. In functional partitioning, each database holds a different kind of data.
+
+## When you need it
+
+The source names two gains of functional partitioning:
+
+- If each business area has a clear bounded context, functional partitioning can give better isolation and faster data access <Cite n={1} />.
+- It can keep data that changes apart from data that is only read <Cite n={1} />.
+
+The source also names two gains of partitioning in general. They apply here too:
+
+- Each partition can use a different type of data store. For example, large binary data can go in blob storage and structured data in a document database <Cite n={1} />.
+- If one instance fails, only its partition is unavailable <Cite n={1} />. This matters less for managed platform-as-a-service stores, since the provider already builds in redundancy <Cite n={1} />.
+
+Partitioning does not replace good database design. You still need the right indexes <Cite n={1} />. A single strategy is usually enough. If it is not, you can add horizontal partitioning, and sometimes a mix of both is more efficient <Cite n={1} />.
+
+## Joins across databases
+
+A query that crosses partitions is slower than a query in one partition <Cite n={1} />. Tuning the partitions for one set of queries can also hurt another set <Cite n={1} />.
+
+With functional partitions, a query can name the partition it needs <Cite n={1} />. A join is harder. The application usually runs one query, takes a key, and then runs another query with a foreign key <Cite n={1} />. The source gives these options <Cite n={1} />:
+
+1. Keep the data for the most common operations together in one partition.
+2. Replicate or de-normalize the data that the join needs.
+3. If a join is needed, query the partitions in parallel and join the results inside the application. This does not work when the result of one query feeds the next query.
+
+The database no longer protects the links between the parts. The application is responsible for referential integrity across partitions, so the source advises you to need it as little as possible <Cite n={1} />.
+
+## Transactions across databases
+
+Some data stores give transaction guarantees only when the data is in one partition <Cite n={1} />. The source says to avoid transactions that touch more than one partition. If you need them, you build them in the application, because most partitioning systems do not support them natively <Cite n={1} />. The page [Distributed Transactions](/course/distributed-transactions/) explains the usual ways to do this.
+
+Another route is eventual consistency. Each partition is updated on its own. The application makes sure that all the updates finish, and it handles what a reader can see while they run <Cite n={1} />. The source asks you to check first whether you really need strong consistency <Cite n={1} />.
+
+Copies of data in several partitions bring the same problem: for a while, the partitions hold different values <Cite n={1} />.
+
+## A real-life example
+
+A learning platform has one database for students, courses, payments, and activity logs. The team splits it into a `students` database, a `courses` database, and a `payments` database. This example is the tutorial's own.
+
+The course page needs data from `courses` only, so it is fast. The "my invoices" page needs the course title (in `courses`) and the amount (in `payments`). Before the split, one SQL join did this. Now the app asks `payments` for the invoices, and then asks `courses` for each title. The team can store the title with each payment to avoid the second query. That choice is a copy of data, so a renamed course may leave old titles in some payments.
+
+## Common mistakes
+
+- **Splitting without a clear business boundary.** The source bases the split on a bounded context <Cite n={1} />. If the split is wrong, many common queries cross databases, and that is slower <Cite n={1} />.
+- **Expecting one transaction over two databases.** Many data stores do not give it <Cite n={1} />.
+- **Forgetting the links between databases.** Nothing in the database checks them for you, so the application must <Cite n={1} />.
+- **Forgetting backups.** It can be hard to keep logical consistency when you back up and restore partitioned data <Cite n={1} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Find the boundaries.** Ask which database holds each kind of data. List every feature that needs data from two or more databases.
+- **Test the joined pages.** Check that a page built from two databases shows correct data when one value changes.
+- **Break the middle of an action.** Stop one database during an action that writes to two. Check that the app does not leave half of the data.
+- **Orphan links.** Delete a record in one database. Check what happens to the records in other databases that point to it.
+- **Stale copies.** If data is copied, change the original and check how long the copy stays old.
+- **Backup and restore.** Restore two databases from different times. Check whether the records still match.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Database federation | In this page: one database for each area of the app. This use of the term is the tutorial's own. |
+| Functional partitioning | Data is grouped by the way each bounded context uses it <Cite n={1} /> |
+| Bounded context | A distinct business area with clear limits for its data and functions <Cite n={1} /> |
+| Cross-partition operation | A query or a transaction that touches more than one partition <Cite n={1} /> |
+| Referential integrity | The rule that a link from one record to another points to a record that exists. In this setup the application keeps it <Cite n={1} /> |
+| Eventual consistency | Each partition is updated on its own, and the application handles the data that is not yet equal <Cite n={1} /> |

@@ -21,6 +21,21 @@ const ENTRIES = [
   ["availability", 1, "topic"],
   ["scalability", 1, "link", "/architecture/horizontal-scaling/"],
   ["storage", 1, "link", "/architecture/object-storage/"],
+  ["database", 2, "topic"],
+  ["sql", 2, "topic"],
+  ["nosql", 2, "topic"],
+  ["sql-vs-nosql", 2, "topic"],
+  ["replication", 2, "link", "/architecture/database-replication/"],
+  ["indexes", 2, "topic"],
+  ["normalization", 2, "topic"],
+  ["acid-base", 2, "topic"],
+  ["cap-theorem", 2, "topic"],
+  ["pacelc", 2, "topic"],
+  ["transactions", 2, "topic"],
+  ["distributed-transactions", 2, "topic"],
+  ["sharding", 2, "topic"],
+  ["consistent-hashing", 2, "topic"],
+  ["database-federation", 2, "topic"],
 ] as const;
 
 const TOPICS = ENTRIES.filter((e) => e[2] === "topic").map((e) => e[0]);
@@ -37,7 +52,7 @@ const REQUIRED = [
 const dir = new URL("../content/course/", import.meta.url);
 const read = (slug: string) => readFileSync(new URL(`${slug}.mdx`, dir), "utf8");
 
-test("there are 13 entries in spec order, with their parts and kinds", () => {
+test("there are 28 entries in spec order, with their parts and kinds", () => {
   assert.deepEqual(
     COURSE.items.map((i) => [i.slug, i.part, i.kind]),
     ENTRIES.map((e) => [e[0], e[1], e[2]]),
@@ -51,6 +66,7 @@ test("there are 13 entries in spec order, with their parts and kinds", () => {
     [
       [0, 1],
       [1, 12],
+      [2, 15],
     ],
   );
 });
@@ -65,7 +81,7 @@ test("each link entry points to its target, and the target is a known route", ()
   }
 });
 
-test("content/course has exactly the 7 topic files, and the route map is COURSE.routes", () => {
+test("content/course has exactly the 21 topic files, and the route map is COURSE.routes", () => {
   assert.deepEqual(readdirSync(dir).sort(), TOPICS.map((s) => `${s}.mdx`).sort());
   assert.deepEqual(COURSE.routes, ["/course/", ...TOPICS.map((s) => `/course/${s}/`)]);
   const map: Record<string, string> = JSON.parse(
@@ -90,13 +106,13 @@ test("each course page has the entry title as # heading and the 6 required ## se
   }
 });
 
-test("the progress ids are the 13 entries, under course-progress", () => {
+test("the progress ids are the 28 entries, under course-progress", () => {
   assert.equal(COURSE.progress?.storageKey, "course-progress");
-  assert.equal(COURSE.lessonIds.length, 13);
+  assert.equal(COURSE.lessonIds.length, 28);
   assert.deepEqual(COURSE.lessonIds, ENTRIES.map((e) => e[0]));
 });
 
-test("precacheUrls includes /course/ and the 7 page routes", () => {
+test("precacheUrls includes /course/ and the 21 page routes", () => {
   const urls = precacheUrls("");
   assert.ok(urls.includes("/course/"));
   for (const slug of TOPICS) assert.ok(urls.includes(`/course/${slug}/`), slug);
