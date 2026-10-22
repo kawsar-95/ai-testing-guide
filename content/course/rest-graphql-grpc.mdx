@@ -1,0 +1,121 @@
+export const metadata = { title: 'REST, GraphQL, and gRPC', description: 'What REST, GraphQL, and gRPC are, why REST is a set of constraints and not "JSON over HTTP", and how the three compare for a tester.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Architectural Styles and the Design of Network-based Software Architectures, Chapter 5: Representational State Transfer (REST)', publisher: 'R. T. Fielding, doctoral dissertation, 2000 (author\'s own copy)', url: 'https://roy.gbiv.com/pubs/dissertation/rest_arch_style.htm', accessed: '2026-10-22' },
+    { title: 'Introduction to GraphQL', publisher: 'GraphQL Foundation (graphql.org)', url: 'https://graphql.org/learn/introduction/', accessed: '2026-10-22' },
+    { title: 'Queries', publisher: 'GraphQL Foundation (graphql.org)', url: 'https://graphql.org/learn/queries/', accessed: '2026-10-22' },
+    { title: 'Schemas and Types', publisher: 'GraphQL Foundation (graphql.org)', url: 'https://graphql.org/learn/schema/', accessed: '2026-10-22' },
+    { title: 'Serving over HTTP', publisher: 'GraphQL Foundation (graphql.org)', url: 'https://graphql.org/learn/serving-over-http/', accessed: '2026-10-22' },
+    { title: 'Caching', publisher: 'GraphQL Foundation (graphql.org)', url: 'https://graphql.org/learn/caching/', accessed: '2026-10-22' },
+    { title: 'Introduction to gRPC', publisher: 'gRPC Authors (grpc.io)', url: 'https://grpc.io/docs/what-is-grpc/introduction/', accessed: '2026-10-22' },
+    { title: 'Core concepts, architecture and lifecycle', publisher: 'gRPC Authors (grpc.io)', url: 'https://grpc.io/docs/what-is-grpc/core-concepts/', accessed: '2026-10-22' },
+  ],
+}
+
+# REST, GraphQL, and gRPC
+
+A shop app shows an order and the name of its customer. The app and the server must agree on how to ask for this data. REST, GraphQL, and gRPC are three common answers.
+
+<PageMeta />
+
+## In plain words
+
+An API is the way one program asks another for data or work. These names are not three versions of one thing. REST is a style of design. GraphQL is a query language. gRPC lets a program call a method on a remote server.
+
+**REST** is an architectural style: a set of constraints chosen for the properties they give a system <Cite n={1} />. Fielding starts from a style with no constraints and adds client-server, stateless communication, caching, a uniform interface, and a layered system <Cite n={1} />. Code-on-demand is an optional extra <Cite n={1} />. The uniform interface is the feature that sets REST apart from other network styles <Cite n={1} />. It has four constraints <Cite n={1} />:
+
+1. Identification of resources.
+2. Manipulation of resources through representations.
+3. Self-descriptive messages.
+4. Hypermedia as the engine of application state.
+
+REST does not limit communication to one protocol <Cite n={1} />. So "REST" does not mean "JSON over HTTP". A server can send JSON over HTTP and still not follow these constraints.
+
+**GraphQL** is a query language for an API, plus a server-side runtime that runs queries against a type system that you define <Cite n={2} />. It is not tied to one database <Cite n={2} />. The client writes a query in the shape of the data it wants <Cite n={2} />.
+
+**gRPC** lets a client call a method on a server on another machine as if the method were a local object <Cite n={7} />. By default it uses Protocol Buffers to describe and serialize the data <Cite n={7} />.
+
+## When you need it
+
+This advice is the tutorial's own. You meet these styles whenever two programs talk over a network, for example a mobile app and its server. A tester must know which style an API uses, because it decides what a request, a contract, and an error look like.
+
+## How it works
+
+**REST.** The key idea is the resource: any information that can be named <Cite n={1} />. A resource is a mapping to a set of values, not the value at one moment <Cite n={1} />. Components send a representation: bytes plus metadata that describes them <Cite n={1} />. Its format is its media type <Cite n={1} />.
+
+Each request must carry all the information needed to understand it, with no stored context on the server <Cite n={1} />. This helps visibility, reliability, and scalability, but repeats data in each request <Cite n={1} />. A response is labeled cacheable or not, and a cacheable one may be reused <Cite n={1} />. A response to a retrieval request is cacheable unless the message says otherwise <Cite n={1} />.
+
+**GraphQL.** A service defines types and fields, and a function for each field <Cite n={2} />. These capabilities form the schema <Cite n={4} />. There are three operation types: query, mutation, and subscription <Cite n={3} />. A query starts at a root type and selects fields down to the leaf values, and the result mirrors the shape of the query <Cite n={3} />. The server checks the query against the schema, then runs the functions <Cite n={2} />. One query can follow links between related objects, saving round trips that a classic REST design may need <Cite n={3} />.
+
+The specification does not require a protocol, but HTTP is the most common choice <Cite n={5} />. A server usually has one endpoint, often `/graphql`, and entities are not identified by URLs <Cite n={5} />. The server must handle POST for queries and mutations, and it may accept GET for queries <Cite n={5} />. The result is in a top-level `data` key, and errors are in a top-level `errors` key <Cite n={3} />.
+
+**gRPC.** You define a service, with its methods, parameters, and return types, in a `.proto` file <Cite n={7} />. The compiler `protoc` generates code from it, and the client calls the methods on a stub <Cite n={7} /><Cite n={8} />. gRPC has four kinds of method <Cite n={8} />:
+
+- **Unary:** one request, one response.
+- **Server streaming:** one request, a stream of responses.
+- **Client streaming:** a stream of requests, one response.
+- **Bidirectional streaming:** both sides send streams.
+
+A client can set a deadline. A call that takes longer ends with `DEADLINE_EXCEEDED` <Cite n={8} />. Each call ends with a status code and an optional message <Cite n={8} />.
+
+## Trade-offs
+
+Each cell has a cite, or starts with "Tutorial's view", which means it is the tutorial's own judgment.
+
+| | REST | GraphQL | gRPC |
+|---|---|---|---|
+| What it is | An architectural style with constraints <Cite n={1} /> | A query language and a server-side runtime <Cite n={2} /> | A way to call a method on a remote server as if it were local <Cite n={7} /> |
+| Where the contract lives | Tutorial's view: there is no one schema file. The agreement is the uniform interface, with its resources, representations, and media types | In the schema of types and fields <Cite n={4} /> | In a service definition, by default a `.proto` file <Cite n={8} /> |
+| Data on the wire | A representation in some media type <Cite n={1} /> | Clients and servers should support JSON <Cite n={5} /> | Protocol Buffers by default, other formats possible <Cite n={7} /> |
+| Related data | Data moves in a standard form, not one fitted to each application, which can cost efficiency <Cite n={1} /> | One query can fetch related data in one request <Cite n={3} /> | Tutorial's view: a method returns what its message type defines, so related data is a design choice of the service |
+| Caching | A cache constraint, and retrieval responses are cacheable by default <Cite n={1} /> | No URL-like unique id, so the API should expose ids for client caching <Cite n={6} />. GET for queries may help HTTP and CDN caching, but long queries can pass URL limits <Cite n={5} /> | Tutorial's view: the gRPC pages used here do not describe response caching, so check the team's design |
+| Streaming and push | Tutorial's view: outside this page. The next page covers long polling, WebSockets, and SSE | Subscriptions are one operation type <Cite n={3} /> | Server, client, and bidirectional streaming <Cite n={8} /> |
+| Errors | Tutorial's view: depends on the protocol in use, often HTTP status codes | A response can hold both `data` and `errors`, and the status can still be 2xx <Cite n={5} /> | A status code and an optional message <Cite n={8} /> |
+| Best fit | Tutorial's view: resource-style APIs where caching and many different clients matter | Tutorial's view: clients that need different shapes of the same data | Tutorial's view: calls between services, and calls that stream |
+
+The REST interface has costs. Fielding writes that it lowers efficiency, and that it is not optimal for kinds of interaction other than large-grain hypermedia transfer <Cite n={1} />. A cache can also lower reliability when its old data differs a lot from the server's data <Cite n={1} />.
+
+## A real-life example
+
+This example is the tutorial's own. An exam platform has an app that shows an exam, its teacher, and the score of a student.
+
+- With a REST design, the app may ask for the exam, then the teacher, then the score, each at its own address. A cache can keep the exam and the teacher.
+- With GraphQL, the app sends one query that names the fields it needs from all three. The answer has the same shape as the query.
+- With gRPC, a grading service calls a `GetScore` method on a scoring service, with typed messages. The app does not call it directly.
+
+None of the three is "best". Each has a different price for the same job.
+
+## Common mistakes
+
+- **Calling every JSON-over-HTTP API "REST".** REST is a set of constraints, including the uniform interface <Cite n={1} />, and it is not tied to one protocol <Cite n={1} />.
+- **Checking only the HTTP status of a GraphQL call.** A response with data and errors can still have status 2xx <Cite n={5} />. Read the `errors` key <Cite n={3} />.
+- **Thinking GraphQL replaces the database.** It is not tied to any database or storage engine <Cite n={2} />.
+- **Thinking both sides of a gRPC call agree.** The client and the server judge the call on their own, and the results may not match <Cite n={8} />. Changes made before a cancel are not rolled back <Cite n={8} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources.
+
+- **REST:** Send a request with no earlier session and check that the server understands it. Check which responses may be cached.
+- **GraphQL:** Read both `data` and `errors` in each response, not only the status code. Ask for a field that this user must not see, and check what comes back.
+- **gRPC:** Set a very short deadline and check for `DEADLINE_EXCEEDED`. Then check whether the server still did the work. Cancel a call in the middle and check for half-finished changes.
+- **Contract:** When the schema or the `.proto` file changes, run the old client against the new server.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Resource | Any information that can be named, as a mapping to a set of values <Cite n={1} /> |
+| Representation | Bytes plus metadata that describe them, sent to show or change a resource <Cite n={1} /> |
+| Uniform interface | The REST constraint that sets it apart from other styles, with four sub-constraints <Cite n={1} /> |
+| Stateless | Each request holds all the information needed to understand it <Cite n={1} /> |
+| Schema | The set of types and fields that a GraphQL service offers <Cite n={4} /> |
+| Query | A GraphQL operation that reads data, starting at a root type <Cite n={3} /> |
+| Mutation | A GraphQL operation type, listed with query and subscription <Cite n={3} /> |
+| Protocol Buffers | The default way for gRPC to define and serialize messages <Cite n={7} /> |
+| Stub | The client-side object that has the same methods as the service <Cite n={8} /> |
+| Unary RPC | A gRPC call with one request and one response <Cite n={8} /> |
+| Deadline | The time a gRPC client will wait before the call ends with `DEADLINE_EXCEEDED` <Cite n={8} /> |

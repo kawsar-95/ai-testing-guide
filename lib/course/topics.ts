@@ -34,12 +34,24 @@ export type CourseSlug =
   | "distributed-transactions"
   | "sharding"
   | "consistent-hashing"
-  | "database-federation";
+  | "database-federation"
+  | "n-tier"
+  | "message-brokers"
+  | "pub-sub"
+  | "esb"
+  | "monoliths-microservices"
+  | "event-driven-architecture"
+  | "event-sourcing"
+  | "cqrs"
+  | "api-gateway"
+  | "rest-graphql-grpc"
+  | "long-polling-ws-sse";
 
 const parts = [
   { num: 0, title: "Getting started" },
   { num: 1, title: "Networking and basics" },
   { num: 2, title: "Databases and consistency" },
+  { num: 3, title: "System architecture" },
 ] as const;
 
 const entries: readonly FlatEntry<CourseSlug>[] = [
@@ -245,6 +257,86 @@ const entries: readonly FlatEntry<CourseSlug>[] = [
     description: "Give each part of the app its own database.",
     kind: "topic",
     part: 2,
+  },
+  {
+    slug: "n-tier",
+    title: "N-tier Architecture",
+    description: "Split an app into layers, each on its own tier.",
+    kind: "topic",
+    part: 3,
+  },
+  {
+    slug: "message-brokers",
+    title: "Message Brokers and Queues",
+    description: "A middleman that holds messages until a consumer takes them.",
+    kind: "link",
+    href: "/architecture/message-queue/",
+    part: 3,
+  },
+  {
+    slug: "pub-sub",
+    title: "Publish-Subscribe",
+    description: "Send one event to every subscriber that wants it.",
+    kind: "topic",
+    part: 3,
+  },
+  {
+    slug: "esb",
+    title: "Enterprise Service Bus",
+    description: "A central bus that connects and translates between services.",
+    kind: "topic",
+    part: 3,
+  },
+  {
+    slug: "monoliths-microservices",
+    title: "Monoliths and Microservices",
+    description: "One deployable unit, or many small services.",
+    kind: "link",
+    href: "/architecture/monolith-microservices/",
+    part: 3,
+  },
+  {
+    slug: "event-driven-architecture",
+    title: "Event-Driven Architecture",
+    description: "Services that react to events instead of calling each other.",
+    kind: "topic",
+    part: 3,
+  },
+  {
+    slug: "event-sourcing",
+    title: "Event Sourcing",
+    description: "Store every change as an event, and rebuild state from them.",
+    kind: "topic",
+    part: 3,
+  },
+  {
+    slug: "cqrs",
+    title: "CQRS",
+    description: "Separate models for writes and for reads.",
+    kind: "topic",
+    part: 3,
+  },
+  {
+    slug: "api-gateway",
+    title: "API Gateway",
+    description: "One front door for many backend services.",
+    kind: "link",
+    href: "/architecture/api-gateway/",
+    part: 3,
+  },
+  {
+    slug: "rest-graphql-grpc",
+    title: "REST, GraphQL, and gRPC",
+    description: "Three ways for clients and services to talk.",
+    kind: "topic",
+    part: 3,
+  },
+  {
+    slug: "long-polling-ws-sse",
+    title: "Long Polling, WebSockets, and SSE",
+    description: "Three ways for a server to push updates to a client.",
+    kind: "topic",
+    part: 3,
   },
 ];
 

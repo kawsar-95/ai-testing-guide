@@ -1,0 +1,106 @@
+export const metadata = { title: 'CQRS', description: 'What the CQRS pattern is: separate models for commands and queries, one store or two, how they stay in sync, eventual consistency, the link to event sourcing, and when to skip it.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Command Query Responsibility Segregation (CQRS) pattern', publisher: 'Microsoft, Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs', accessed: '2026-10-22' },
+  ],
+}
+
+# CQRS
+
+A shop shows a product page to thousands of visitors each minute. Only a few people change the price or the stock. Both jobs use the same table, the same code, and the same rules. CQRS asks: why must reading and writing use one model?
+
+<PageMeta />
+
+## In plain words
+
+CQRS means Command Query Responsibility Segregation. The pattern splits the reads and the writes of a data store into separate data models, so you can tune each model on its own <Cite n={1} />. A command updates data. A query gets data <Cite n={1} />.
+
+A common design uses one model for both jobs. This fits simple create, read, update, and delete (CRUD) work <Cite n={1} />. As an application grows, it can cause lock contention, slow queries, and security problems. The fields that an update needs are often not the fields that a read needs <Cite n={1} />. Reads and writes also often have different speed and scaling needs <Cite n={1} />.
+
+## When you need it
+
+The source lists cases where the pattern may help <Cite n={1} />:
+
+- Many users change the same data at the same time. Small, clear commands can reduce conflicts.
+- The user interface guides people through a task in steps.
+- You must tune reads apart from writes. This helps most when the system has more reads than writes.
+- Different teams build the write side and the read side.
+
+The same source says the pattern might not suit a simple domain, or a case where a plain CRUD interface is enough <Cite n={1} />.
+
+## How it works
+
+**Commands.** A command should state a business task, not a low-level data change. The source gives this example: use "Book hotel room", not "Set ReservationStatus to Reserved" <Cite n={1} />. It also suggests that a queue can run commands asynchronously <Cite n={1} />.
+
+**Queries.** A query never changes data. It returns data transfer objects (DTOs), which hold the data in a convenient shape and carry no domain logic <Cite n={1} />.
+
+**The write model** handles commands. It has validation and domain logic, and it works to keep the data correct <Cite n={1} />. **The read model** serves queries and has no domain logic <Cite n={1} />.
+
+There are two levels of separation <Cite n={1} />:
+
+| Level | What it means |
+|---|---|
+| One data store | Both models use one database, but each has its own logic. |
+| Two data stores | The read and write models have their own stores. You can scale each one to its load. They may use different storage technology, for example a document database for reads and a relational database for writes. |
+
+With two stores, the stores must stay in sync <Cite n={1} />. A common way is that the write model publishes an event after it updates its database, and the read model uses the event to refresh its data <Cite n={1} />. The read store can have its own schema, for example a materialized view that avoids complex joins. It can also be a read-only copy (replica) of the write database <Cite n={1} />.
+
+Updating a database and publishing an event are two steps. Usually you cannot put a message broker and a database in one distributed transaction, so the two steps can disagree <Cite n={1} />. The source suggests the Transactional Outbox pattern, which saves the state change and the event together. It also suggests that the read-model consumer be idempotent, so a duplicate message does no harm <Cite n={1} />.
+
+## Eventual consistency
+
+When the stores are separate, the read data might not show the latest change at once. A reader can get stale data <Cite n={1} />. The source says the read side catches up with the write side after a delay, which is eventual consistency <Cite n={1} />. It adds that keeping the read store current can be hard, and that you must plan for a user who acts on stale data <Cite n={1} />.
+
+## Combining CQRS with event sourcing
+
+Some CQRS designs use the Event Sourcing pattern. It stores state as a chronological list of events, and the system replays them in order to find the current state <Cite n={1} />. (The page [Event Sourcing](/course/event-sourcing/) explains this pattern.) In this design the write side is the event store, and it is the one place that holds the true state. The read model builds materialized views from the events <Cite n={1} />.
+
+The source names these gains: you can rebuild a view, or make a new one, by replaying old events, and an event stream as the write store can reduce update conflicts <Cite n={1} />. It also names these costs: the read store can lag behind the events, the design can be harder, and building views can take much time and many resources. Snapshots at regular intervals can avoid a full replay each time <Cite n={1} />.
+
+## Trade-offs
+
+The source lists these benefits: independent scaling, schemas that suit each job, tighter security for writes, cleaner models, and simpler queries <Cite n={1} />. The price is as follows <Cite n={1} />:
+
+- **More complexity.** The core idea is simple, but the design can become much more complex, especially with Event Sourcing.
+- **Custom code.** Tools that map objects to database tables cannot make CQRS code from a schema for you.
+- **Messaging problems.** Messaging is not required, but it is often used. Then you must handle failed, duplicate, and retried messages.
+
+## A real-life example
+
+This example is the tutorial's own. A test-management tool has a screen that lists all test runs with their pass rate. Thousands of testers open it every day. A few CI jobs write results all the time.
+
+With CQRS, the write side accepts a command such as "Record test result". The write side checks the rules and saves the result. Then it publishes an event. The read side updates a ready-made summary table. The screen reads only this table, so it stays fast, and it does not block the writes. The cost is a short delay: a tester who just ran a test may see the old pass rate for a moment.
+
+## Common mistakes
+
+- **Using CQRS for a simple CRUD app.** The source says it may not suit a simple domain or a plain CRUD interface <Cite n={1} />.
+- **Forgetting the delay between the stores.** With separate databases, a read may show old data <Cite n={1} />.
+- **Writing commands as data updates.** The source prefers a command that names a business task <Cite n={1} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the source.
+
+- **Read right after write.** Send a command, then query at once. Check what the user sees, and how long it takes for the new data to show.
+- **Send the same event twice.** Check that the read side does not count the change two times.
+- **Stop the event flow.** Pause the link between the stores, make some changes, then restart it. Check that the read store catches up.
+- **Act on old data.** Open a screen, change the data in another session, and then act on the first screen. Check that the system handles it with a clear message.
+- **Rebuild the read store.** If the design allows it, rebuild a view from scratch and compare it with the old one.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Command | A request that changes data, best stated as a business task <Cite n={1} /> |
+| Query | A request that returns data and never changes it <Cite n={1} /> |
+| DTO | Data transfer object: the data that a query returns, with no domain logic <Cite n={1} /> |
+| Write model | The part that handles commands, with validation and domain logic <Cite n={1} /> |
+| Read model | The part that serves queries, with no domain logic <Cite n={1} /> |
+| Materialized view | A prepared view of data that avoids complex joins when you query <Cite n={1} /> |
+| Eventual consistency | The read data may lag behind the write data and catch up later <Cite n={1} /> |
+| Transactional Outbox | A way to save a state change and its event together <Cite n={1} /> |
+| Idempotent | Safe to run more than once, as for a duplicate message <Cite n={1} /> |
+| Snapshot | A saved state taken at intervals, so you need not replay all events <Cite n={1} /> |

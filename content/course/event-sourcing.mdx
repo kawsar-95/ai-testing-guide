@@ -1,0 +1,109 @@
+export const metadata = { title: 'Event Sourcing', description: 'How event sourcing stores every change as an event, rebuilds state by replay, uses snapshots, and where it costs more than it gives.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Event Sourcing pattern', publisher: 'Azure Architecture Center, Microsoft Learn', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing', accessed: '2026-10-22' },
+  ],
+}
+
+# Event Sourcing
+
+A bank statement lists every deposit and every withdrawal, not only the balance. You can work out the balance from the list. Event sourcing stores data in this way. This comparison is the tutorial's own.
+
+<PageMeta />
+
+## In plain words
+
+Most applications store only the latest state of the data. They read a row, change it, and write the new values back. This is the CRUD model. It keeps no history unless you add a separate audit log <Cite n={1} />.
+
+Event sourcing does the opposite. It keeps every action on an object, in order, in a store that only accepts new records. That store is the system of record <Cite n={1} />. Each event is one logical change, such as AddedItemToOrder or OrderCanceled <Cite n={1} />. Every entity gets a separate eventstream: its changes, in order <Cite n={1} />.
+
+The source calls it a complex pattern with significant trade-offs. It is costly to move to or from, and it limits later design choices <Cite n={1} />.
+
+## How it works
+
+**Rebuild the state.** An application works out the state of an entity by replaying every event in its stream. The source calls this rehydration, and it can happen on demand <Cite n={1} />. A command handler first loads the eventstream and replays it. Then it runs the business logic. Then it raises new events <Cite n={1} />.
+
+**Append, never change.** Events are immutable and are added with append-only operations <Cite n={1} />. You never update event data. To undo a change, you add a compensating event. For example, ReservationCanceled compensates for an earlier SeatsReserved. The old event stays in the stream <Cite n={1} />.
+
+**Pass events on.** In most designs the events go to a queue or topic, so the producers and the consumers do not depend on each other <Cite n={1} />. Event handlers then write the events to the store, update a read-only store, or call external systems <Cite n={1} />.
+
+**Use views for reading.** Reading and replaying events is costly. So applications usually build materialized views, which are read-only views built from the event store and shaped for queries <Cite n={1} />.
+
+**Use snapshots for long streams.** A long stream makes replay slow. A snapshot is a saved copy of the entity state at one point in the stream, for example after every N events. The application loads the newest snapshot and replays only the later events <Cite n={1} />. You choose how often to snapshot by balancing storage cost against time saved <Cite n={1} />. A snapshot is an optimization. The stream stays the source of truth, and you can make the snapshots again from it <Cite n={1} />.
+
+**Guard against clashes.** Two handlers can load the same entity at once. The event store can use optimistic concurrency control. It rejects an append if the stream changed after the handler read it. The handler then reloads, checks again, and retries <Cite n={1} />.
+
+## When you need it
+
+The source lists these reasons to use the pattern <Cite n={1} />:
+
+- You want to keep the intent or reason behind a change.
+- You must avoid conflicting updates.
+- You want a history, an audit log, or the ability to replay events and roll back.
+- You want to separate the input of data from the tasks that act on it.
+
+It is often combined with CQRS, which splits reads from writes <Cite n={1} />. See the page [CQRS](/course/cqrs/) for that pattern.
+
+**When not to use it.** The source says the pattern may not suit these cases <Cite n={1} />:
+
+- Simple CRUD work that needs no audit, replay, or history.
+- Prototypes, minimum viable products, or systems with a short life.
+- Systems that need consistent, real-time views of the data.
+- Data that is mostly static, such as lookup tables.
+- Teams with no experience of event-driven systems.
+
+For most systems, traditional data management is enough <Cite n={1} />. You can use event sourcing in one part only, such as a payment ledger <Cite n={1} />.
+
+## Trade-offs
+
+**Gains.** The store gives an audit trail, and you can rebuild views by replay at any time <Cite n={1} />. Adding events does not need the row locks that in-place updates need, and this avoids lock contention, so write throughput can improve <Cite n={1} />.
+
+**Eventual consistency.** Views built from events are only eventually consistent. A delay exists between a request, the publishing of its events, and the handling by consumers. Customers need to understand this <Cite n={1} />.
+
+**Event versioning.** If a bug writes wrong events, fixing the code does not fix the old events <Cite n={1} />. A schema change can make old and new events hard to combine <Cite n={1} />. The source lists four ways to cope, which you can mix <Cite n={1} />:
+
+| Way | Idea |
+|---|---|
+| Tolerant deserialization | Readers ignore unknown fields and use defaults for missing ones |
+| Event versioning | Each event carries a version identifier |
+| Upcasting | Old events are converted to the current schema when read, and the stored events stay as they are |
+| In-place migration | Old events are rewritten. This breaks immutability, so it is a last resort |
+
+**Other costs.** There is no standard query tool like SQL. You read a stream by its event identifier and replay it <Cite n={1} />. Delivery is usually at least once, so handlers must be idempotent, or duplicates can change the result <Cite n={1} />. The immutable store can conflict with laws that require deletion of personal data <Cite n={1} />. The source says a given-when-then test style suits these systems best, and you also need integration tests for views, duplicates, and schema changes <Cite n={1} />.
+
+## A real-life example
+
+This example is the tutorial's own and is simplified. A test management app records each test run as events: TestRunStarted, StepPassed, StepFailed, TestRunAborted. The app replays the events to show the status of a run. The same list answers "when did step 3 first fail?" A table with only a "status" column could not.
+
+## Common mistakes
+
+- **Storing only the new state in an event.** An event such as "remaining seats changed to 42" tells you the result but not what happened. An event such as "two seats reserved" records the intent <Cite n={1} />.
+- **Treating a message broker as the event store.** The source says a broker such as Apache Kafka usually cannot query one entity's stream or apply optimistic concurrency. It suits spreading events out, not storing them <Cite n={1} />.
+- **Forgetting duplicate events.** Without idempotent handlers, projections can drift, and payments or notices can happen twice <Cite n={1} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the source.
+
+- **Replay.** Rebuild an entity from its events. Compare the result with the view the app shows.
+- **Lag.** Add an event, then read the view at once and again after a wait. Check that the app handles the old value in between.
+- **Duplicates.** Send the same event twice. Check that the count, the payment, or the message does not repeat.
+- **Old events.** Keep a sample of events from an older version. Check that the new code still reads them.
+- **Clashes.** Send two commands to one entity at once. Check that one succeeds and the other retries or fails with a clear error.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Event | A record of one logical change to an object <Cite n={1} /> |
+| Event store | An append-only store that is the system of record <Cite n={1} /> |
+| Eventstream | The ordered events of one entity <Cite n={1} /> |
+| Rehydration | Rebuilding the current state by replaying the events <Cite n={1} /> |
+| Snapshot | A saved state at one point in a stream, so replay can start there <Cite n={1} /> |
+| Materialized view | A read-only projection of the event store, made for queries <Cite n={1} /> |
+| Compensating event | A new event that reverses or corrects an earlier one <Cite n={1} /> |
+| Upcasting | Converting old event schemas to the current one when reading <Cite n={1} /> |
+| Idempotent | Safe to run again with the same event, with no change in the result <Cite n={1} /> |

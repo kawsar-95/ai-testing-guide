@@ -68,7 +68,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/architecture/topics.ts`, `lib/architecture/ui.ts` | The one ordered list of the 19 Architecture topics and the practice page, the progress ids, and the English strings. See "Architecture Module". |
 | `public/images/architecture/` | The owner's 19 diagrams (WebP), one for each topic |
 | `app/(site)/course/page.tsx`, `app/(site)/course/[topic]/page.tsx` | The System Design Course module: the home (grouped by part) and one topic. Both files are thin, like the Architecture ones, with `COURSE`. `[topic]` loads `content/course/<topic>.mdx`. Static params come from `lib/course/topics.ts`. |
-| `lib/course/topics.ts`, `lib/course/ui.ts` | The one ordered list of the 28 Course entries (21 topics and 7 links to Architecture pages), its parts, and the English strings. See "System Design Course". |
+| `lib/course/topics.ts`, `lib/course/ui.ts` | The one ordered list of the 39 Course entries (29 topics and 10 links to Architecture pages), its parts, and the English strings. See "System Design Course". |
 | `app/(site)/system-design/page.tsx`, `app/(site)/system-design/[topic]/page.tsx` | The System Design module: the home and one case study. Both files are thin, like the Architecture ones, with `SYSTEM_DESIGN`. `[topic]` loads `content/system-design/<topic>.mdx`. Static params come from `lib/system-design/cases.ts`. |
 | `components/linux/` | `useLinuxProgress.ts` (the progress store), `LinuxProgressSummary`, `StageProgress`, `TopicChecklist`, `LinuxSidebarList` |
 | `components/fundamentals/` | `useFundamentalsProgress.ts`, `FundamentalsProgressSummary`, `ChapterProgress`, `TopicChecklist`, `FundamentalsSidebarList`, `Version` (one version block), `VersionSwitch`, and `diagrams/` (the inline SVG diagrams of the ISTQB version, each in a `Figure` with a visible description) |
@@ -93,7 +93,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
 | `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture, Course). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 110 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (all 118 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels, the three START HERE pages, `WHY_ITEMS`, and `COURSE_CARDS` |
@@ -114,7 +114,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `content/linux/<stage>.mdx` | The 12 Linux stage pages |
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
-| `content/course/<slug>.mdx` | The 21 Course topic pages |
+| `content/course/<slug>.mdx` | The 29 Course topic pages |
 | `public/images/fundamentals/` | The images of the owner's notes |
 | `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `contents`, `header-nav`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard`, `flat-module`, `course` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
@@ -122,7 +122,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
 | `scripts/system-design-route-map.json` | The 16 System Design routes: `/system-design/` and the 15 cases. Same identity map. |
 | `scripts/architecture-route-map.json` | The 21 Architecture routes: `/architecture/`, the 19 topics, and the practice page. Same identity map. |
-| `scripts/course-route-map.json` | The 22 Course routes: `/course/` and the 21 topic pages. Same identity map. |
+| `scripts/course-route-map.json` | The 30 Course routes: `/course/` and the 29 topic pages. Same identity map. |
 | `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
 | `scripts/contents-route-map.json` | The 1 contents route: `/contents/`. Same identity map. |
 | `scripts/dashboard-route-map.json` | The 1 dashboard route: `/dashboard/`. Same identity map. |
@@ -130,7 +130,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the Tutorial dropdown, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 110 routes:
+The site has 118 routes:
 
 | Routes | Count |
 |---|---|
@@ -142,7 +142,7 @@ The site has 110 routes:
 | `/system-design/` and the 15 case studies | 16 |
 | `/fundamentals/` and the 11 Fundamentals chapters | 12 |
 | `/architecture/`, the 19 topics, and the practice page | 21 |
-| `/course/` and the 21 Course topics | 22 |
+| `/course/` and the 29 Course topics | 30 |
 
 | Group | Folder | Pages |
 |---|---|---|
@@ -159,7 +159,7 @@ The site has 110 routes:
 |---|---|
 | Header | Sticky, 64 px. The brand mark in a teal tile, then the top nav (from the `nav` breakpoint), then search, voice, install, theme, and the menu button (below `nav`). |
 | Top nav | `HEADER_NAV`: Tutorial, Linux, Fundamentals, System Design, Architecture, Course (each a dropdown of its pages and a link to its home), then Contents and Dashboard (links). The current item has a teal underline (`activeNavId`). Escape closes a dropdown and moves the focus to its button. A click outside or focus that leaves it closes it. A route change closes it. |
-| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 102 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
+| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 110 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
 | Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. Below `chapter`, `ContentsButton` above the title of a content page opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. On close, the focus goes back to the button that opened it. |
 | `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, Architecture, and Course. |
 
@@ -169,8 +169,8 @@ The site has 110 routes:
 |---|---|
 | `ChapterTools` | Under the meta line of each content page (in the `PageMeta` slot): the pill `📖 N min read` and the toggles Bookmark and Mark as read (`aria-pressed`). It saves the page to `last-page` on mount. |
 | Reading time | `lib/reading-time.ts`: the words of the Technical text (no code, export statements, tags, or link URLs). A Fundamentals chapter gets one value per version (`getReadingMinutesByVersion`), and the version CSS shows the one of the switch / 200, rounded up, 1 at least. Computed at build time. |
-| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 102 content pages. |
-| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 102`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, and Course, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 7 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 7 keys. |
+| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 110 content pages. |
+| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 110`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, and Course, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 7 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 7 keys. |
 | Strings | `lib/dashboard.ts` (`DASHBOARD_UI`, the route). The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle. |
 
 ## Linux Module
@@ -252,9 +252,9 @@ To add or change a topic, edit `lib/fundamentals/chapters.ts` and the `##` headi
 
 ## System Design Course
 
-The System Design Course is the home at `/course/` and 21 topic pages at `/course/<slug>/`. It teaches system design from the ground up, in plain words for testers. The design is `docs/superpowers/specs/2026-10-22-course-module-design.md`.
+The System Design Course is the home at `/course/` and 29 topic pages at `/course/<slug>/`. It teaches system design from the ground up, in plain words for testers. The design is `docs/superpowers/specs/2026-10-22-course-module-design.md`.
 
-`lib/course/topics.ts` defines the module (`COURSE`) with its parts and its one ordered list of 28 entries. 21 are `topic` entries with a page. 7 are `link` entries to an Architecture page (`intro`, `load-balancing`, `caching`, `cdn`, `scalability`, `storage`, `replication`). The home groups the entries by part: Part 0 "Getting started", Part 1 "Networking and basics", and Part 2 "Databases and consistency". Progress (`localStorage` key `course-progress`) has the 28 entry slugs, links too. Search group `course`.
+`lib/course/topics.ts` defines the module (`COURSE`) with its parts and its one ordered list of 39 entries. 29 are `topic` entries with a page. 10 are `link` entries to an Architecture page (`intro`, `load-balancing`, `caching`, `cdn`, `scalability`, `storage`, `replication`, `message-brokers`, `monoliths-microservices`, `api-gateway`). The home groups the entries by part: Part 0 "Getting started", Part 1 "Networking and basics", Part 2 "Databases and consistency", and Part 3 "System architecture". Progress (`localStorage` key `course-progress`) has the 39 entry slugs, links too. Search group `course`.
 
 | Rule | Detail |
 |---|---|
@@ -283,7 +283,7 @@ To add a topic, add it to `lib/architecture/topics.ts` and to `ArchitectureSlug`
 
 ## Voices
 
-A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 69 pages have voices: the 23 tutorial pages, the 12 Linux stages, the 15 System Design cases, and the 19 Architecture topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, the 21 System Design Course pages (the course has no voices yet), every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
+A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 69 pages have voices: the 23 tutorial pages, the 12 Linux stages, the 15 System Design cases, and the 19 Architecture topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, the 29 System Design Course pages (the course has no voices yet), every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
 
 ### What the reader sees
 
@@ -474,7 +474,7 @@ To change a page:
 
 The site installs as an app and is offline first.
 
-- The service worker caches all 110 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
+- The service worker caches all 118 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
 - Pages, RSC payloads, and the search index use stale-while-revalidate: the cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Offline, a page that is not in the cache gets the 404 page.
 - Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
@@ -506,7 +506,7 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 102 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 110 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 
