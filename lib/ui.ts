@@ -29,7 +29,7 @@ export const searchAll = "Search all parts";
 export const searchClose = "Close search";
 export const searchResults = "Search results";
 export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, the Architecture topics, and the Course topics.`;
-/** The text of the link to the tutorial: in the drawer of another section, and in the top nav. */
+/** The text of the link to the tutorial in the drawer of another section. */
 export const crossToTutorial = "Tutorial";
 export const searchLoading = "Loading the search index…";
 export const searchNone = "No results.";
@@ -79,7 +79,7 @@ export const footerSource = "Source on GitHub";
 
 export const contentsButton = "Contents";
 export const navMain = "Main";
-export const navModuleHome = (label: string) => `${label} home`;
+export const navHome = "Home";
 /** The window event that opens the drawer. ContentsButton fires it, MobileNav listens. */
 export const OPEN_NAV_EVENT = "nav-drawer-open";
 

@@ -14,7 +14,7 @@ test("the sitemap and the precache have /contents/", () => {
 });
 
 test("siteStats counts from the data", () => {
-  assert.deepEqual(siteStats(), { parts: 23, modules: 5, pages: 129, voices: 3 });
+  assert.deepEqual(siteStats(), { parts: 23, modules: 5, pages: 130, voices: 3 });
 });
 
 test("MODULES lists every module page once", () => {

@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NavList } from "./NavList";
 import { withTrailingSlash } from "./SidebarList";
 import { scrollActiveIntoView } from "./scroll-active";
+import { HEADER_NAV, activeNavId } from "@/lib/header-nav";
 import { lockScroll } from "@/lib/scroll-lock";
-import { OPEN_NAV_EVENT, menuClose, menuOpen } from "@/lib/ui";
+import { OPEN_NAV_EVENT, menuClose, menuOpen, navMain } from "@/lib/ui";
 import { SITE_NAME } from "@/lib/site";
 
 const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
- * The menu button (narrower than 1200 px) and the left drawer with the pages
- * of the current module. The drawer opens on every width: ContentsButton
+ * The menu button (narrower than 1200 px) and the left drawer with the nav
+ * links (narrower than 1200 px) and the pages of the current module. The drawer opens on every width: ContentsButton
  * fires OPEN_NAV_EVENT. It closes on navigation, on Escape, and on a
  * backdrop click. While it is open, the page does not scroll and Tab stays
  * in the drawer.
@@ -141,6 +143,28 @@ export function MobileNav() {
             </button>
           </div>
           <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            {/* The top nav is hidden below 1200 px, so its links go in the drawer. */}
+            <nav aria-label={navMain} className="flex flex-wrap gap-1.5 border-b border-border px-3 py-3 nav:hidden">
+              {HEADER_NAV.map((item) => {
+                const active = item.id === activeNavId(withTrailingSlash(pathname) ?? "/");
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setOpen(false)}
+                    className={
+                      "rounded-full border px-3 py-1 text-[13px] no-underline transition-colors " +
+                      (active
+                        ? "border-accent text-accent"
+                        : "border-border text-text-dim hover:border-accent hover:text-accent")
+                    }
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
             <NavList activePath={withTrailingSlash(pathname)} onNavigate={() => setOpen(false)} />
           </div>
         </div>

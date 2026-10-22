@@ -31,6 +31,8 @@ export const DASHBOARD_UI = {
   bookmarksHeading: "Bookmarks",
   bookmarksEmpty: "No bookmarks yet. Use the Bookmark button at the top of a page.",
   readHeading: "Pages read",
+  authorHeading: "About the author",
+  authorPhotoAlt: "Photo of the author",
   readEmpty: "No pages read yet. Use the Mark as read button at the top of a page.",
   moduleLabels: {
     tutorial: "Tutorial",

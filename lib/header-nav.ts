@@ -1,48 +1,21 @@
 import { CONTENTS_HOME } from "./contents.ts";
 import { DASHBOARD_HOME, DASHBOARD_UI } from "./dashboard.ts";
-import { PAGES } from "./nav.ts";
-import { MODULES, type ModuleId } from "./stats.ts";
-import { contentsButton, crossToTutorial } from "./ui.ts";
+import { INTERVIEW_HOME, INTERVIEW_UI } from "./interview.ts";
+import { contentsButton, navHome } from "./ui.ts";
 
-export type HeaderNavId = "tutorial" | ModuleId | "contents" | "dashboard";
+export type HeaderNavId = "home" | "contents" | "dashboard" | "interview";
 
-export type HeaderNavItem = {
-  id: HeaderNavId;
-  label: string;
-  href: string;
-  /** The pages of the dropdown. The contents item has none: it is a plain link. */
-  pages?: readonly { href: string; title: string }[];
-};
+export type HeaderNavItem = { id: HeaderNavId; label: string; href: string };
 
-/** The items of the top nav, in order: the tutorial, the five modules, the contents page, and the dashboard. */
+/** The links of the top nav, in order. A module is reached from the home page and the contents page. */
 export const HEADER_NAV: readonly HeaderNavItem[] = [
-  { id: "tutorial", label: crossToTutorial, href: "/", pages: PAGES.map(({ href, title }) => ({ href, title })) },
-  ...MODULES.map((module) => ({ id: module.id, label: module.title, href: module.href, pages: module.pages })),
+  { id: "home", label: navHome, href: "/" },
   { id: "contents", label: contentsButton, href: CONTENTS_HOME },
   { id: "dashboard", label: DASHBOARD_UI.navLabel, href: DASHBOARD_HOME },
+  { id: "interview", label: INTERVIEW_UI.navLabel, href: INTERVIEW_HOME },
 ];
 
-/** The nav item of a path: the contents page, the dashboard, a module by its prefix, else the tutorial. */
-export function activeNavId(path: string): HeaderNavId {
-  if (path.startsWith(CONTENTS_HOME)) return "contents";
-  if (path.startsWith(DASHBOARD_HOME)) return "dashboard";
-  return MODULES.find((module) => path.startsWith(module.href))?.id ?? "tutorial";
-}
-
-export type DropdownEvent = { type: "toggle"; id: string } | { type: "escape" | "outside" | "blur-out" };
-
-/** The open dropdown after an event. One dropdown is open at most. */
-export function nextOpenState(open: string | null, event: DropdownEvent): string | null {
-  if (event.type === "toggle") return open === event.id ? null : event.id;
-  return null;
-}
-
-/**
- * Whether a blur closes the open dropdown. Only focus that moves to an
- * element outside the dropdown closes it. A click on the panel padding or on
- * its scrollbar moves focus to nothing (`relatedTarget` is null); the
- * outside-click listener handles clicks outside.
- */
-export function blurClosesDropdown(relatedTarget: object | null, inside: boolean): boolean {
-  return relatedTarget !== null && !inside;
+/** The nav item of a path, or null on a page that is not a nav item (a tutorial or module page). */
+export function activeNavId(path: string): HeaderNavId | null {
+  return HEADER_NAV.find((item) => (item.href === "/" ? path === "/" : path.startsWith(item.href)))?.id ?? null;
 }

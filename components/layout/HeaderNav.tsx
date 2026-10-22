@@ -1,67 +1,39 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HEADER_NAV, activeNavId, nextOpenState, type DropdownEvent } from "@/lib/header-nav";
+import { HEADER_NAV, activeNavId } from "@/lib/header-nav";
 import { navMain } from "@/lib/ui";
-import { NavDropdown, navItemClass } from "./NavDropdown";
 import { withTrailingSlash } from "./SidebarList";
 
-/**
- * The top nav at 1200 px and wider: a dropdown for the tutorial and each
- * module, and a plain link to the contents page. A route change closes the
- * open dropdown. usePathname can suspend, so the header wraps this in Suspense.
- */
-export function HeaderNav() {
-  const path = withTrailingSlash(usePathname()) ?? "/";
-  const [open, setOpen] = useState<string | null>(null);
-  const [lastPath, setLastPath] = useState(path);
-  if (path !== lastPath) {
-    setLastPath(path);
-    setOpen(null);
-  }
-  const onEvent = useCallback((event: DropdownEvent) => setOpen((current) => nextOpenState(current, event)), []);
-  const active = activeNavId(path);
+const ITEM =
+  "relative flex h-16 items-center whitespace-nowrap text-[15px] font-medium no-underline transition-colors " +
+  "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-accent after:transition-opacity";
 
-  return <NavItems activeId={active} activePath={path} open={open} onEvent={onEvent} />;
+/** The look of a top nav item: dim, and the teal underline when it is current or hovered. */
+function navItemClass(active: boolean): string {
+  return `${ITEM} ${active ? "text-text after:opacity-100" : "text-text-dim hover:text-text after:opacity-0 hover:after:opacity-100"}`;
 }
 
-/** The nav items. With no `onEvent` (the server fallback), every item is a plain link. */
-export function NavItems({
-  activeId,
-  activePath = "",
-  open = null,
-  onEvent,
-}: {
-  activeId: string | null;
-  activePath?: string;
-  open?: string | null;
-  onEvent?: (event: DropdownEvent) => void;
-}) {
+/** The top nav at 1200 px and wider. usePathname can suspend, so the header wraps this in Suspense. */
+export function HeaderNav() {
+  return <NavItems activeId={activeNavId(withTrailingSlash(usePathname()) ?? "/")} />;
+}
+
+/** The nav links. With no active item (the server fallback), no link is current. */
+export function NavItems({ activeId }: { activeId: string | null }) {
   return (
-    <nav aria-label={navMain} className="ml-auto hidden items-center gap-4 nav:flex">
-      {HEADER_NAV.map((item) =>
-        item.pages && onEvent ? (
-          <NavDropdown
-            key={item.id}
-            item={item}
-            active={item.id === activeId}
-            activePath={activePath}
-            open={open === item.id}
-            onEvent={onEvent}
-          />
-        ) : (
-          <Link
-            key={item.id}
-            href={item.href}
-            aria-current={item.id === activeId ? "page" : undefined}
-            className={navItemClass(item.id === activeId)}
-          >
-            {item.label}
-          </Link>
-        ),
-      )}
+    <nav aria-label={navMain} className="ml-auto hidden items-center gap-6 nav:flex">
+      {HEADER_NAV.map((item) => (
+        <Link
+          key={item.id}
+          href={item.href}
+          aria-current={item.id === activeId ? "page" : undefined}
+          className={navItemClass(item.id === activeId)}
+        >
+          {item.label}
+        </Link>
+      ))}
     </nav>
   );
 }

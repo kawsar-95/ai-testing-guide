@@ -12,8 +12,10 @@ import { DASHBOARD_UI } from "@/lib/dashboard";
 import { contentPage, continueTarget, exportFileName, readByModule } from "@/lib/dashboard-data";
 import { ALL_FUNDAMENTALS_TOPIC_IDS } from "@/lib/fundamentals/chapters";
 import { ALL_TOPIC_IDS } from "@/lib/linux/stages";
+import { withBasePath } from "@/lib/base-path";
 import { PROGRESS_MODULES } from "@/lib/modules/registry";
 import { CONTENT_PAGES, exportProgress } from "@/lib/reading-state";
+import { AUTHOR } from "@/lib/site";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 const CARD = "rounded-2xl border border-border bg-bg-raised p-5 shadow-sm sm:p-6";
@@ -192,6 +194,34 @@ export function DashboardPage() {
           })}
         </section>
       </div>
+
+      <section aria-labelledby="author-heading" className="mt-16">
+        <SectionTitle id="author-heading">{DASHBOARD_UI.authorHeading}</SectionTitle>
+        <div className={`${CARD} mt-5 flex flex-col gap-6 sm:flex-row sm:items-start`}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- static export: a plain img with the base path added */}
+          <img
+            src={withBasePath(AUTHOR.photo)}
+            alt={DASHBOARD_UI.authorPhotoAlt}
+            width={112}
+            height={112}
+            className="size-28 shrink-0 rounded-full border border-border object-cover"
+          />
+          <div className="min-w-0">
+            <p className="font-display text-2xl font-semibold text-text">{AUTHOR.name}</p>
+            <p className="mt-1 text-[15px] text-text-dim">{AUTHOR.role}</p>
+            <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-text-dim">{AUTHOR.bio}</p>
+            <ul className="m-0 mt-5 flex list-none flex-wrap gap-2 p-0">
+              {AUTHOR.links.map((link) => (
+                <li key={link.href}>
+                  <a href={link.href} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

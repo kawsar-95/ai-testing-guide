@@ -1,4 +1,4 @@
-"""Print each route (tutorial, Linux, System Design, Fundamentals, Architecture, Course, the contents page, and the dashboard) that has no page in the build directory."""
+"""Print each route (tutorial, Linux, System Design, Fundamentals, Architecture, Course, the contents page, the dashboard, and the interview page) that has no page in the build directory."""
 import json
 import sys
 from pathlib import Path
@@ -9,7 +9,7 @@ HERE = Path(__file__).resolve().parent
 
 
 def load_routes():
-    """The routes of the eight maps: tutorial, Linux, System Design, Fundamentals, Architecture, Course, the contents page, then the dashboard."""
+    """The routes of the nine maps: tutorial, Linux, System Design, Fundamentals, Architecture, Course, the contents page, the dashboard, then the interview page."""
     routes = []
     for name in (
         "route-map.json",
@@ -20,6 +20,7 @@ def load_routes():
         "course-route-map.json",
         "contents-route-map.json",
         "dashboard-route-map.json",
+        "interview-route-map.json",
     ):
         routes.extend(json.loads((HERE / name).read_text()).values())
     return routes

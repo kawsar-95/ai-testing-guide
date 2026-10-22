@@ -88,7 +88,7 @@ class RouteMapTest(unittest.TestCase):
 class LoadRoutesTest(unittest.TestCase):
     HERE = Path(__file__).resolve().parent
 
-    def test_load_routes_returns_tutorial_then_linux_then_system_design_then_fundamentals_then_architecture_then_course_then_contents_then_dashboard_routes(self):
+    def test_load_routes_returns_tutorial_then_linux_then_system_design_then_fundamentals_then_architecture_then_course_then_contents_then_dashboard_then_interview_routes(self):
         tutorial = list(json.loads((self.HERE / "route-map.json").read_text()).values())
         linux = list(json.loads((self.HERE / "linux-route-map.json").read_text()).values())
         system_design = list(json.loads((self.HERE / "system-design-route-map.json").read_text()).values())
@@ -97,8 +97,9 @@ class LoadRoutesTest(unittest.TestCase):
         course = list(json.loads((self.HERE / "course-route-map.json").read_text()).values())
         contents = list(json.loads((self.HERE / "contents-route-map.json").read_text()).values())
         dashboard = list(json.loads((self.HERE / "dashboard-route-map.json").read_text()).values())
+        interview = list(json.loads((self.HERE / "interview-route-map.json").read_text()).values())
         routes = check_routes.load_routes()
-        self.assertEqual(routes, tutorial + linux + system_design + fundamentals + architecture + course + contents + dashboard)
+        self.assertEqual(routes, tutorial + linux + system_design + fundamentals + architecture + course + contents + dashboard + interview)
         self.assertIn("/contents/", routes)
         self.assertIn("/architecture/idempotency/", routes)
         self.assertIn("/course/dns/", routes)

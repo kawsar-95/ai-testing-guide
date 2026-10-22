@@ -9,6 +9,7 @@ import { PAGES } from "./nav.ts";
 import { FLAT_MODULES } from "./modules/registry.ts";
 import { CONTENTS_ROUTES } from "./contents.ts";
 import { DASHBOARD_ROUTES } from "./dashboard.ts";
+import { INTERVIEW_ROUTES } from "./interview.ts";
 
 const ICONS = [
   { file: "icon-192.png", sizes: "192x192", purpose: "any" },
@@ -51,6 +52,7 @@ export function precacheUrls(basePath: string): string[] {
     `${basePath}/`,
     ...CONTENTS_ROUTES.map((route) => `${basePath}${route}`),
     ...DASHBOARD_ROUTES.map((route) => `${basePath}${route}`),
+    ...INTERVIEW_ROUTES.map((route) => `${basePath}${route}`),
     ...PAGES.map((page) => `${basePath}${page.href}`),
     ...LINUX_ROUTES.map((route) => `${basePath}${route}`),
     ...FUNDAMENTALS_ROUTES.map((route) => `${basePath}${route}`),

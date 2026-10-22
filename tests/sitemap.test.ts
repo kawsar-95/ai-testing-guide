@@ -47,5 +47,5 @@ test("sitemapPaths has the 41 Course routes", () => {
 test("sitemapPaths has no duplicate path", () => {
   const paths = sitemapPaths();
   assert.equal(new Set(paths).size, paths.length);
-  assert.equal(paths.length, 129);
+  assert.equal(paths.length, 130);
 });
