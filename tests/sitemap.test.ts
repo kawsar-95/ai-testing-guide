@@ -38,14 +38,14 @@ test("sitemapPaths has the 21 Architecture routes", () => {
   for (const route of ARCHITECTURE.routes) assert.ok(paths.includes(route), route);
 });
 
-test("sitemapPaths has the 8 Course routes", () => {
+test("sitemapPaths has the 22 Course routes", () => {
   const paths = sitemapPaths();
-  assert.equal(COURSE.routes.length, 8);
+  assert.equal(COURSE.routes.length, 22);
   for (const route of COURSE.routes) assert.ok(paths.includes(route), route);
 });
 
 test("sitemapPaths has no duplicate path", () => {
   const paths = sitemapPaths();
   assert.equal(new Set(paths).size, paths.length);
-  assert.equal(paths.length, 96);
+  assert.equal(paths.length, 110);
 });
