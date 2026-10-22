@@ -46,3 +46,11 @@ Page cite numbers: n=1 is S1, n=2 is S2.
 - The advice that formats differ between companies and roles, and to read the hiring page.
 - The arithmetic: 10 million users x 10 requests = 100 million a day; / 86,400 s = about 1,157, rounded to about 1,200 a second. 50,000 students / 30 s = about 1,667, rounded to about 1,700 saves a second.
 - The exam-service example, the "Common mistakes" framing (each bullet is backed by a cite), the tester questions, and the definitions of "trade-off" and "bottleneck" (marked on the page).
+
+## Changes after the fact-check (2026-10-22)
+
+- The lede now says the general description is the tutorial's own. It no longer states how interviewers judge as a fact.
+- The table says that Amazon can change its process.
+- Key words: "System design interview" is marked as the tutorial's definition (Amazon does not define it). "Estimate" no longer says "rough"; S2 says "number of machines" as a discrete result.
+- Common mistakes, first bullet: "first" removed. S1 gives no order between clarify and draw.
+- Step 3 sentence reworded to avoid a 7-word run from S1.
