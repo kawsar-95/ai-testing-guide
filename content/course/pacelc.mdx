@@ -1,0 +1,98 @@
+export const metadata = { title: 'The PACELC Theorem', description: 'PACELC extends CAP: what a distributed database trades during a network partition, and what it trades the rest of the time.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Consistency Tradeoffs in Modern Distributed Database System Design', publisher: 'D. J. Abadi, IEEE Computer, February 2012 (author-hosted copy)', url: 'https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf', accessed: '2026-10-22' },
+  ],
+}
+
+# The PACELC Theorem
+
+A shop with two stores can phone the other store before every sale, which is slow and safe. Or it can sell first and phone later, which is fast and sometimes wrong. PACELC names this choice for databases.
+
+<PageMeta />
+
+## In plain words
+
+**PACELC** (said "pass-elk") rewrites the CAP theorem as one question with two parts <Cite n={1} />:
+
+- If there is a network partition (**P**), does the system give up availability (**A**) or consistency (**C**)?
+- Else (**E**), when the system runs normally, does it give up latency (**L**) or consistency (**C**)?
+
+The paper that proposed it says CAP sets limits only when certain failures happen, and not during normal operation <Cite n={1} />. The paper adds a second trade-off that is present all the time: consistency against latency <Cite n={1} />.
+
+## When you need it
+
+You need PACELC when you read about a distributed database, or test an app on top of one. A partition is somewhat rare, and often rarer than other serious failures <Cite n={1} />. Most of the time the database runs normally, and PACELC also describes that time.
+
+## How it works
+
+Why does a trade-off exist when nothing is broken? The paper gives this chain <Cite n={1} />:
+
+1. A system that must stay available needs more than one copy of its data. If a component with the only copy fails, that data is lost to the service <Cite n={1} />.
+2. As soon as there are copies, the system must decide when a write counts as done.
+
+There are two main ways <Cite n={1} />:
+
+| Replication | What happens | Cost |
+|---|---|---|
+| Synchronous | The master waits until the replicas have the update | Replicas stay consistent, but each write waits for the slowest entity, and more so over a wide area network <Cite n={1} /> |
+| Asynchronous | The system treats the update as done before it has been copied | If reads can go to any node, reads are faster, but they can return old data while updates spread <Cite n={1} /> |
+
+A common middle way is a **quorum**. With N replicas, W nodes take part in a write, and R nodes take part in a read. If R + W is more than N, consistency can be kept. If R + W is N or less, inconsistent reads are possible <Cite n={1} />.
+
+Over a wide area network, a system cannot avoid the trade-off <Cite n={1} />. The paper treats availability and latency as nearly the same thing: a system that does not answer has extreme latency <Cite n={1} />.
+
+## A real-life example
+
+This example is the tutorial's own, and it is a simplification.
+
+A shop keeps its stock count in two data centers, one in Asia and one in Europe. A customer in Europe buys the last red shirt.
+
+- **Wait for the copy.** The system waits for Asia to confirm the sale. Both centers agree, but the customer waits longer. This is the "EC" side.
+- **Answer first.** The system confirms at once and copies later. It is fast, but for a moment a customer in Asia can still see the shirt. This is the "EL" side.
+- **The link breaks.** The system can refuse some updates until the link returns, which keeps the data consistent (the "PC" side). Or it can keep accepting sales in both centers and sort out conflicts later (the "PA" side).
+
+## Trade-offs
+
+This table is the tutorial's own summary of how the paper classifies some systems. The paper describes their original design, and some became adjustable later <Cite n={1} />. Treat the table as the paper's 2012 view, not as a statement about any product today.
+
+| Label | Meaning | Systems the paper puts here |
+|---|---|---|
+| PA/EL | In a partition, gives up consistency for availability. In normal running, gives up consistency for lower latency | Dynamo, Cassandra, and Riak, as first built <Cite n={1} /> |
+| PC/EC | Does not give up consistency, and pays in availability and latency | VoltDB/H-Store, Megastore, BigTable, and HBase <Cite n={1} /> |
+| PA/EC | Consistent in normal running. In a partition, a new master is elected and the system stays available, so old and new masters can differ until a repair | MongoDB <Cite n={1} /> |
+| PC/EL | Gives up consistency for latency in normal running. In a partition, gives up availability for consistency | PNUTS <Cite n={1} /> |
+
+Two details are easy to miss. **PC does not mean fully consistent.** It means the system does not lower consistency below its normal level in a partition, and lowers availability instead <Cite n={1} />. And **a PA/EL system can be tuned**: with a higher R + W, a user gets more consistency for more latency, but not the full consistency of the CAP proof <Cite n={1} />.
+
+A study of Cassandra that the paper cites found that the latency of reads that check several replicas can be four times higher or more than the latency of reads from any replica <Cite n={1} />. The paper also says that neither CAP nor PACELC explains every trade-off <Cite n={1} />.
+
+## Common mistakes
+
+- **Saying "weak consistency is because of CAP".** The paper says the trade between consistency and latency exists without any partition, and is a separate reason <Cite n={1} />.
+- **Reading PC/EL as "fully consistent".** The PC part only says what the system does in a partition. It does not say the system is fully consistent <Cite n={1} />.
+- **Using a 2012 label as a fact about today.** The labels describe the original designs <Cite n={1} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice. They are not from the paper.
+
+- **Read right after write.** Write a value, then read it at once from another replica. Note whether you see the old value, and for how long.
+- **Time both sides.** Compare the latency of a normal read and a consistent read, if the database offers both.
+- **Check the settings.** Test with the consistency settings that production uses.
+- **Break the link.** In a test environment, cut the link between two nodes. Check whether the app refuses writes, accepts them, or shows a clear error.
+- **Check the repair.** After the link returns, look for lost or doubled updates.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| PACELC | CAP rewritten as: if partition, availability or consistency; else, latency or consistency <Cite n={1} /> |
+| Partition | A network failure that splits the nodes into groups that cannot reach each other (tutorial's own short definition) |
+| Latency | The time a request takes to get its answer. The paper treats an unavailable system as one with extreme latency <Cite n={1} /> |
+| Replication | Keeping copies of the data on more than one node <Cite n={1} /> |
+| Quorum | A rule on how many nodes join a read (R) and a write (W), out of N replicas <Cite n={1} /> |
+| PA/EL, PC/EC | Labels for what a system gives up in a partition and in normal running <Cite n={1} /> |
