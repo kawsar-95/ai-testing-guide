@@ -16,15 +16,54 @@ Think of a library with four rooms, where each book goes to the room that its co
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 A **hash function** turns a key (such as a user id) into a number. A simple way to pick a server is to take that number modulo the number of servers. The weak point is a change in the server count. With a plain modulo hash, almost every item hashes to a new place when the range changes, and cached data becomes useless <Cite n={1} />. Cassandra's documentation says the same: adding one node can invalidate almost all mappings <Cite n={3} />.
 
 **Consistent hashing** is a hash scheme that changes minimally when the set of buckets (servers) changes <Cite n={1} />. Changing the bucket set a little does not remap all the items <Cite n={1} />. When the number of nodes changes, only a small fraction of the keys must move <Cite n={3} />.
 
+</Technical>
+<Layman>
+
+A **hash function** turns a key (such as a user id) into a number. A simple way to pick a server is to take that number modulo the number of servers. The weak point is a change in the server count. With a plain modulo hash, almost every item hashes to a new place when the range changes. Then cached data becomes useless <Cite n={1} />. The Cassandra documentation says the same: adding one node can invalidate almost all mappings <Cite n={3} />.
+
+**Consistent hashing** is a hash scheme that changes minimally when the set of buckets (servers) changes <Cite n={1} />. A small change to the set of buckets does not remap all the items <Cite n={1} />. When the number of nodes changes, only a small fraction of the keys must move <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+**হ্যাশ ফাংশন (hash function)** একটি কী (key), যেমন ইউজার আইডি, একটি সংখ্যায় বদলায়। সার্ভার বাছার একটি সহজ উপায় হলো সেই সংখ্যাকে সার্ভারের সংখ্যা দিয়ে মডুলো (modulo) করা। দুর্বলতা হলো সার্ভারের সংখ্যা বদলানো। সাধারণ মডুলো হ্যাশে রেঞ্জ বদলালে প্রায় প্রতিটি আইটেম নতুন জায়গায় যায়। তখন ক্যাশ করা ডেটা অকেজো হয়ে যায় <Cite n={1} />। Cassandra-র ডকুমেন্টেশনও একই কথা বলে: একটি নোড যোগ করলে প্রায় সব ম্যাপিং বাতিল হতে পারে <Cite n={3} />।
+
+**কনসিসটেন্ট হ্যাশিং (consistent hashing)** এমন একটি হ্যাশ স্কিম, যেখানে বাকেটের (সার্ভারের) সেট বদলালে পরিবর্তন সবচেয়ে কম হয় <Cite n={1} />। বাকেটের সেটে ছোট পরিবর্তন করলে সব আইটেম আবার ম্যাপ করতে হয় না <Cite n={1} />। নোডের সংখ্যা বদলালে কী-এর শুধু ছোট একটি অংশ সরাতে হয় <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 You need it when data or cache entries are spread over many servers, and servers join or leave from time to time. The original paper was about caches for the web <Cite n={1} />. Amazon's Dynamo key-value store uses it to spread data over its storage hosts <Cite n={2} />. Apache Cassandra uses it to split data over its nodes <Cite n={3} />.
 
+</Technical>
+<Layman>
+
+You need it when data or cache entries are spread over many servers, and servers join or leave from time to time. The original paper was about caches for the web <Cite n={1} />. The Dynamo key-value store of Amazon uses it to spread data over its storage hosts <Cite n={2} />. Apache Cassandra uses it to split data over its nodes <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+ডেটা বা ক্যাশ এন্ট্রি অনেক সার্ভারে ছড়িয়ে থাকলে এবং মাঝে মাঝে সার্ভার যোগ হলে বা চলে গেলে এটি দরকার। মূল পেপার ছিল ওয়েবের ক্যাশ নিয়ে <Cite n={1} />। Amazon-এর Dynamo কী-ভ্যালু স্টোর এটি দিয়ে তার স্টোরেজ হোস্টগুলোতে ডেটা ছড়ায় <Cite n={2} />। Apache Cassandra এটি দিয়ে তার নোডগুলোতে ডেটা ভাগ করে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## How it works
+
+<Voices>
+<Technical>
 
 Dynamo describes the idea this way. The values that the hash function can give are laid out as a fixed circle, a **ring**, where the largest value wraps around to the smallest <Cite n={2} />. Each node gets a random value in this space, which is its position on the ring <Cite n={2} />. To store a key, you hash the key to a position, then walk the ring clockwise to the first node with a larger position <Cite n={2} />. Each node is then responsible for the region between it and the node before it <Cite n={2} />.
 
@@ -61,20 +100,110 @@ Cassandra adds a view from the small cluster. With few nodes and evenly spaced t
 
 Many tokens have a cost. Each token adds up to 2 x (RF - 1) neighbors on the ring, so more combinations of node failures can make part of the ring unavailable, and cluster maintenance can be slower <Cite n={3} />.
 
+</Technical>
+<Layman>
+
+Dynamo describes the idea this way. The values that the hash function can give are laid out as a fixed circle, a **ring**. The largest value wraps around to the smallest <Cite n={2} />. Each node gets a random value in this space. This value is its position on the ring <Cite n={2} />. To store a key, you hash the key to a position. Then you walk the ring clockwise to the first node with a larger position <Cite n={2} />. Each node is then responsible for the region between it and the node before it <Cite n={2} />.
+
+Cassandra uses the same walk. It calls the ring positions **tokens** <Cite n={3} />. For replication, it keeps walking until it meets as many distinct nodes as the replication factor. With a factor of 3, it walks to three distinct nodes, and these hold the replicas <Cite n={3} />.
+
+**Why few keys move.** This example is the tutorial's own. The positions are 0 to 99, and 99 wraps to 0. Servers A, B, C, and D sit at 10, 40, 70, and 90. Keys 91 to 99 and 0 to 10 go to A. Keys 11 to 40 go to B. Keys 41 to 70 go to C. Keys 71 to 90 go to D. A new server E joins at position 55. Keys 41 to 55 move from C to E. All other keys stay where they were. So only the keys between the new server and the node before it change owner. Dynamo states this rule: the arrival or departure of a node affects only its immediate neighbors, and the other nodes stay unaffected <Cite n={2} />. The paper names a related rule, **monotonicity**. When new buckets are added, an item can move to a new bucket, but never between two old buckets <Cite n={1} />. The paper also describes a **smoothness** goal. When a machine joins or leaves, the expected share of objects that move is the minimum needed to keep the load balanced <Cite n={1} />.
+
+**Virtual nodes.** The basic ring has two weak points. Random positions give uneven data and load. The basic scheme also ignores the fact that nodes differ in performance <Cite n={2} />. The fix in Dynamo is **virtual nodes**. A node is not one point on the ring but several points, which Dynamo calls tokens <Cite n={2} />. A virtual node looks like one node to the rest of the system <Cite n={2} />.
+
+The Dynamo paper lists these benefits <Cite n={2} />:
+
+- When a node is unavailable, its load is spread over the other nodes.
+- A new or returning node takes about the same share of work from every other node.
+- The number of virtual nodes of a machine can follow its capacity.
+
+Cassandra adds a view from the small cluster. With few nodes and evenly spaced tokens, it is hard to add just one node and keep the ring balanced <Cite n={3} />. If a node owns many tokens, a new node takes many small pieces of data from many neighbors <Cite n={3} />. The Karger paper also gives each bucket more than one point on its unit interval <Cite n={1} />.
+
+Many tokens have a cost. Each token adds up to 2 x (RF - 1) neighbors on the ring. So more combinations of node failures can make part of the ring unavailable, and cluster maintenance can be slower <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+Dynamo ধারণাটি এভাবে বর্ণনা করে। হ্যাশ ফাংশন যে মান দিতে পারে সেগুলো একটি স্থির বৃত্তে সাজানো থাকে, যার নাম **রিং (ring)**। সবচেয়ে বড় মান ঘুরে সবচেয়ে ছোট মানে মিলে যায় <Cite n={2} />। প্রতিটি নোড এই জায়গায় একটি র‍্যান্ডম মান পায়। এই মান রিংয়ে তার অবস্থান <Cite n={2} />। একটি কী রাখতে হলে কী-কে হ্যাশ করে একটি অবস্থান পাওয়া যায়। তারপর রিংয়ে ঘড়ির কাঁটার দিকে হেঁটে বড় অবস্থানের প্রথম নোডে পৌঁছাতে হয় <Cite n={2} />। তখন প্রতিটি নোড দায়ী থাকে নিজের আর তার আগের নোডের মাঝের অংশের জন্য <Cite n={2} />।
+
+Cassandra একই পথে হাঁটে। সে রিংয়ের অবস্থানগুলোকে **টোকেন (token)** বলে <Cite n={3} />। রিপ্লিকেশনের জন্য সে হাঁটতে থাকে, যতক্ষণ না রিপ্লিকেশন ফ্যাক্টরের সমান আলাদা নোড পায়। ফ্যাক্টর 3 হলে সে তিনটি আলাদা নোড পর্যন্ত যায়, এবং এরা রেপ্লিকা (replica) রাখে <Cite n={3} />।
+
+**কেন কম কী সরে।** এই উদাহরণ টিউটোরিয়ালের নিজের। অবস্থান 0 থেকে 99, আর 99 ঘুরে 0-তে মেলে। A, B, C, D সার্ভার আছে 10, 40, 70, 90 অবস্থানে। 91 থেকে 99 আর 0 থেকে 10 কী A-তে যায়, 11 থেকে 40 কী B-তে, 41 থেকে 70 কী C-তে, এবং 71 থেকে 90 কী D-তে। নতুন সার্ভার E যোগ হয় 55 অবস্থানে। 41 থেকে 55 কী C থেকে E-তে সরে। বাকি সব কী আগের জায়গাতেই থাকে। তাই শুধু নতুন সার্ভার আর তার আগের নোডের মাঝের কী-গুলোর মালিক বদলায়। Dynamo এই নিয়ম বলে: একটি নোডের আসা বা যাওয়া শুধু তার সরাসরি প্রতিবেশীদের প্রভাবিত করে, বাকি নোডগুলো অপ্রভাবিত থাকে <Cite n={2} />। পেপারটি একটি সম্পর্কিত নিয়মের নাম দেয়, **মনোটনিসিটি (monotonicity)**। নতুন বাকেট যোগ হলে একটি আইটেম নতুন বাকেটে যেতে পারে, কিন্তু দুটি পুরোনো বাকেটের মধ্যে কখনো যায় না <Cite n={1} />। পেপারটি একটি **স্মুথনেস (smoothness)** লক্ষ্যও বর্ণনা করে। একটি মেশিন যোগ হলে বা চলে গেলে যে অবজেক্টগুলো সরে তার প্রত্যাশিত অংশ হয় লোড ব্যালেন্সড রাখার জন্য ন্যূনতম যতটা দরকার ততটা <Cite n={1} />।
+
+**ভার্চুয়াল নোড (virtual node)।** সাধারণ রিংয়ের দুটি দুর্বলতা আছে। র‍্যান্ডম অবস্থান অসম ডেটা আর লোড দেয়। আর সাধারণ স্কিম এই বিষয়টি উপেক্ষা করে যে নোডগুলোর পারফরম্যান্স আলাদা <Cite n={2} />। Dynamo-তে সমাধান হলো **ভার্চুয়াল নোড**। একটি নোড রিংয়ে একটি বিন্দু নয়, বরং কয়েকটি বিন্দু, যাদের Dynamo টোকেন বলে <Cite n={2} />। বাকি সিস্টেমের কাছে একটি ভার্চুয়াল নোড একটি নোডের মতোই দেখায় <Cite n={2} />।
+
+Dynamo পেপার এই সুবিধাগুলো বলে <Cite n={2} />:
+
+- একটি নোড পাওয়া না গেলে তার লোড বাকি নোডগুলোতে ছড়িয়ে যায়।
+- নতুন বা ফিরে আসা নোড প্রতিটি অন্য নোড থেকে প্রায় সমান অংশ কাজ নেয়।
+- একটি মেশিনের ভার্চুয়াল নোডের সংখ্যা তার ক্যাপাসিটি অনুসারে হতে পারে।
+
+Cassandra ছোট ক্লাস্টারের দিক থেকে আরেকটি কথা যোগ করে। কম নোড আর সমান দূরত্বের টোকেন থাকলে শুধু একটি নোড যোগ করে রিংকে ব্যালেন্সড রাখা কঠিন <Cite n={3} />। একটি নোডের অনেক টোকেন থাকলে নতুন নোড অনেক প্রতিবেশী থেকে অনেক ছোট ছোট ডেটার টুকরো নেয় <Cite n={3} />। Karger পেপারও প্রতিটি বাকেটকে তার ইউনিট ইন্টারভালে (unit interval) একাধিক বিন্দু দেয় <Cite n={1} />।
+
+অনেক টোকেনের একটি খরচ আছে। প্রতিটি টোকেন রিংয়ে সর্বোচ্চ 2 x (RF - 1) প্রতিবেশী যোগ করে। তাই নোড ফেইলিউরের আরও বেশি কম্বিনেশনে রিংয়ের একটি অংশ পাওয়া নাও যেতে পারে, এবং ক্লাস্টারের রক্ষণাবেক্ষণ ধীর হতে পারে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 A test team runs a cache with four servers. Tutorial example, with simple numbers: keys have the hash values 0 to 19. With the rule "hash modulo 4", a fifth server changes the rule to "hash modulo 5". Only 4 of these 20 keys (hash values 0 to 3) land on the same server as before. The other 16 keys, 80 %, move, and a cache looks empty for them.
 
 With a ring, as in the diagram, adding the fifth server moves only the keys that fall between its neighbor and its own position. The team sees a few misses and not a full cold cache.
 
+</Technical>
+<Layman>
+
+A test team runs a cache with four servers. This is the tutorial's own example, with simple numbers. The keys have the hash values 0 to 19. With the rule "hash modulo 4", a fifth server changes the rule to "hash modulo 5". Only 4 of these 20 keys (hash values 0 to 3) land on the same server as before. The other 16 keys (80 %) move, and a cache looks empty for them.
+
+With a ring, as in the example above, adding the fifth server moves only the keys that fall between its neighbor and its own position. The team sees a few misses and not a full cold cache.
+
+</Layman>
+<Bangla>
+
+একটি টেস্ট টিম চারটি সার্ভার সহ একটি ক্যাশ চালায়। এটি টিউটোরিয়ালের নিজের উদাহরণ, সহজ সংখ্যা সহ। কী-গুলোর হ্যাশ মান 0 থেকে 19। "hash modulo 4" নিয়মে পঞ্চম সার্ভার আসলে নিয়ম হয় "hash modulo 5"। এই 20টি কী-এর মধ্যে শুধু 4টি (হ্যাশ মান 0 থেকে 3) আগের সার্ভারেই থাকে। বাকি 16টি কী (80 %) সরে যায়, এবং তাদের জন্য ক্যাশ খালি দেখায়।
+
+উপরের রিংয়ের উদাহরণের মতো রিং থাকলে পঞ্চম সার্ভার যোগ করায় শুধু সেই কী-গুলো সরে যা তার প্রতিবেশী আর তার নিজের অবস্থানের মাঝে পড়ে। টিম কয়েকটি ক্যাশ মিস (cache miss) দেখে, পুরো কোল্ড ক্যাশ (cold cache) নয়।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Using hash modulo N and thinking the cache survives a resize.** A change of N moves almost all keys <Cite n={1} />.
 - **Expecting a perfect balance from one point per node.** Random positions give uneven load <Cite n={2} />.
 - **Adding many tokens without a limit.** More tokens raise the number of ring neighbors and the chance of an outage <Cite n={3} />.
 - **Treating the ring as a safety net.** The ring decides where a key lives. It does not copy data. Replication is a separate step <Cite n={3} />.
 
+</Technical>
+<Layman>
+
+- **Using hash modulo N and thinking the cache survives a resize.** A change of N moves almost all keys <Cite n={1} />.
+- **Expecting a perfect balance from one point per node.** Random positions give uneven load <Cite n={2} />.
+- **Adding many tokens without a limit.** More tokens raise the number of ring neighbors and the chance of an outage <Cite n={3} />.
+- **Treating the ring as a safety net.** The ring decides where a key lives. It does not copy data. Replication is a separate step <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+- **hash modulo N ব্যবহার করে ভাবা যে রিসাইজে ক্যাশ টিকে থাকবে।** N বদলালে প্রায় সব কী সরে যায় <Cite n={1} />।
+- **নোড প্রতি একটি বিন্দু থেকে নিখুঁত ব্যালেন্স আশা করা।** র‍্যান্ডম অবস্থান অসম লোড দেয় <Cite n={2} />।
+- **সীমা ছাড়া অনেক টোকেন যোগ করা।** বেশি টোকেন রিংয়ের প্রতিবেশীর সংখ্যা এবং আউটেজের সম্ভাবনা বাড়ায় <Cite n={3} />।
+- **রিংকে সেফটি নেট ভাবা।** রিং ঠিক করে কী কোথায় থাকবে। সে ডেটা কপি করে না। রিপ্লিকেশন আলাদা একটি ধাপ <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice.
@@ -84,6 +213,29 @@ These test ideas are the tutorial's own advice.
 - **Check the balance.** Count keys for each node. A big gap may point to a poor token setup.
 - **Test during the change.** Read and write while a node joins, and look for misses and errors.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Count the moved keys.** Store a known set of keys. Add one node. Check that most keys keep their owner. Check that only a small share moves.
+- **Remove a node.** Check that reads for its keys still work, from the node that now owns that range.
+- **Check the balance.** Count the keys for each node. A big gap may point to a poor token setup.
+- **Test during the change.** Read and write while a node joins. Look for misses and errors.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **সরে যাওয়া কী গুনুন।** পরিচিত একটি কী-এর সেট রাখুন। একটি নোড যোগ করুন। দেখুন বেশিরভাগ কী তাদের মালিক রাখে কি না। দেখুন শুধু ছোট একটি অংশ সরে কি না।
+- **একটি নোড সরান।** দেখুন তার কী-গুলোর রিড এখনো কাজ করে কি না, এখন যে নোড ওই রেঞ্জের মালিক তার কাছ থেকে।
+- **ব্যালেন্স দেখুন।** প্রতিটি নোডের কী গুনুন। বড় ফারাক খারাপ টোকেন সেটআপের ইঙ্গিত হতে পারে।
+- **পরিবর্তনের সময় টেস্ট করুন।** নোড যোগ হওয়ার সময় রিড আর রাইট করুন। মিস আর এরর খুঁজুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
