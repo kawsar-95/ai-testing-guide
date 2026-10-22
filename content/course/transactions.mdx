@@ -1,0 +1,111 @@
+export const metadata = { title: 'Transactions', description: 'How to group database steps into one all-or-nothing transaction, what isolation levels and savepoints do, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: '3.4. Transactions', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/tutorial-transactions.html', accessed: '2026-10-22' },
+    { title: 'BEGIN', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-begin.html', accessed: '2026-10-22' },
+    { title: 'COMMIT', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-commit.html', accessed: '2026-10-22' },
+    { title: 'ROLLBACK', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-rollback.html', accessed: '2026-10-22' },
+    { title: 'SAVEPOINT', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-savepoint.html', accessed: '2026-10-22' },
+    { title: 'ROLLBACK TO SAVEPOINT', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-rollback-to.html', accessed: '2026-10-22' },
+    { title: '13.2. Transaction Isolation', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/transaction-iso.html', accessed: '2026-10-22' },
+    { title: 'SET TRANSACTION', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-set-transaction.html', accessed: '2026-10-22' },
+  ],
+}
+
+# Transactions
+
+When you move a package to a new shelf, you take it off the old shelf and put it on the new one. If someone stops you halfway, the package must not vanish. A transaction gives a database the same safety for a group of steps.
+
+<PageMeta />
+
+## In plain words
+
+A **transaction** bundles several steps into one all-or-nothing operation. Other transactions that run at the same time do not see the steps in between, and if a failure stops the transaction, none of its steps change the database <Cite n={1} />. The changes of an open transaction stay invisible to others until it ends, and then they all become visible together <Cite n={1} />.
+
+The page "ACID and BASE" covers the four ACID promises. This page covers the practical side, with PostgreSQL: how to open and close a transaction, how much one transaction sees of the others, and how to undo part of the work.
+
+## When you need it
+
+Use a transaction when one business action needs more than one statement, such as a payment that moves money between two accounts. A failure must not leave it half done <Cite n={1} />.
+
+## How it works
+
+You surround the statements with `BEGIN` and `COMMIT`. If you decide not to keep the work, you send `ROLLBACK` instead of `COMMIT`, and all updates so far are cancelled <Cite n={1} />. `COMMIT` makes the changes visible to others and durable if a crash comes <Cite n={3} />.
+
+Without `BEGIN`, PostgreSQL runs each statement in its own transaction and commits it if it worked ("autocommit") <Cite n={2} />. Some client libraries send `BEGIN` and `COMMIT` for you <Cite n={1} />.
+
+A **savepoint** is a mark inside a transaction. You can undo only the commands after it <Cite n={5} />. The changes before the savepoint are kept <Cite n={1} />.
+
+```sql
+BEGIN;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+SAVEPOINT before_credit;
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+-- wrong account: undo only the credit
+ROLLBACK TO SAVEPOINT before_credit;
+UPDATE accounts SET balance = balance + 100 WHERE id = 3;
+COMMIT;
+```
+
+After a `ROLLBACK TO`, the savepoint is still defined, so you can go back to it again <Cite n={1} />. It also destroys the savepoints made after it <Cite n={6} />. `RELEASE SAVEPOINT` destroys a savepoint and keeps the effects of the later commands <Cite n={5} />. A savepoint works only inside a transaction block <Cite n={5} />. After an error puts the block in an aborted state, only `ROLLBACK TO` lets you continue, unless you roll back everything <Cite n={1} />.
+
+## Isolation levels
+
+Several transactions often run at the same time. The **isolation level** says what one transaction can see of the others <Cite n={8} />. The SQL standard defines four levels. The strictest, Serializable, must give the same result as some one-at-a-time order. The other three are defined by "phenomena" that must not happen <Cite n={7} />:
+
+- **Dirty read:** a transaction reads data from another transaction that is not committed <Cite n={7} />.
+- **Nonrepeatable read:** a transaction reads data again and finds that another transaction has changed it since <Cite n={7} />.
+- **Phantom read:** a transaction runs a query again and finds a different set of matching rows <Cite n={7} />.
+- **Serialization anomaly:** the committed result fits no one-at-a-time order <Cite n={7} />.
+
+This table shows what the PostgreSQL manual lists for each level <Cite n={7} />:
+
+| Level | Dirty read | Nonrepeatable read | Phantom read | Serialization anomaly |
+|---|---|---|---|---|
+| Read uncommitted | Allowed by the standard, but not in PostgreSQL | Possible | Possible | Possible |
+| Read committed | Not possible | Possible | Possible | Possible |
+| Repeatable read | Not possible | Not possible | Allowed by the standard, but not in PostgreSQL | Possible |
+| Serializable | Not possible | Not possible | Not possible | Not possible |
+
+PostgreSQL has only three distinct levels, because its Read Uncommitted behaves like Read Committed <Cite n={7} />. The manual says that Read Committed is the default level in PostgreSQL <Cite n={7} />.
+
+- **Read Committed:** a `SELECT` sees only data committed before that query began. Two `SELECT`s in one transaction can see different data if another transaction commits between them <Cite n={7} />.
+- **Repeatable Read:** the transaction sees one snapshot, taken at its first statement that is not a transaction-control command, so repeated reads match <Cite n={7} />. If it tries to change a row that another transaction changed and committed meanwhile, it fails with `could not serialize access due to concurrent update`, and the application should retry the whole transaction <Cite n={7} />.
+- **Serializable:** it works like Repeatable Read, plus monitoring that costs some overhead. It can end a transaction with a serialization failure, so the application must be ready to retry <Cite n={7} />.
+
+You choose a level with `BEGIN ISOLATION LEVEL …` or with `SET TRANSACTION`, before the first query or data change of the transaction <Cite n={2} /> <Cite n={8} />.
+
+## A real-life example
+
+This example is the tutorial's own. A learning site sells a course seat in two steps: it writes the payment row, then it writes the enrolment row. If the second step fails, a transaction rolls back the payment too, so nobody pays for a seat they do not get.
+
+The same site shows a report page. Session A counts the seats taken and the page shows 40. Session B then commits a new enrolment. At Read Committed, the next `SELECT` of session A in the same transaction can see 41 <Cite n={7} />. At Repeatable Read it still sees 40 <Cite n={7} />.
+
+## Common mistakes
+
+- **Not retrying.** Repeatable Read and Serializable can fail on purpose. The manual says the application must be ready to retry <Cite n={7} />.
+- **Trusting a result that did not commit.** In Serializable transactions, do not depend on data read in a transaction that later aborted <Cite n={7} />.
+- **Expecting a sequence to roll back.** Changes to a sequence, such as the counter of a `serial` column, are not rolled back when the transaction aborts <Cite n={7} />.
+- **Business rules at Repeatable Read.** The manual says such rules are not likely to work without careful use of explicit locks <Cite n={7} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Force a failure.** Make the second step of a multi-step action fail. Check that the first step left no trace.
+- **Two sessions.** Change data in one session. Read it in another before and after the commit, and repeat the read inside one transaction at each isolation level.
+- **Retry.** Create a conflict. Check that the app retries and does not show a raw error.
+- **Gaps in numbers.** After a rollback, do not expect the ids to have no gaps.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Transaction | A group of steps that works as one all-or-nothing operation <Cite n={1} /> |
+| Commit and rollback | Commit keeps the changes of a transaction <Cite n={3} />, and rollback discards them <Cite n={4} /> |
+| Savepoint | A mark in a transaction that lets you undo only the later part <Cite n={5} /> |
+| Isolation level | What one transaction can see of the others that run at the same time <Cite n={8} /> |
+| Serialization failure | An error that asks the application to run the transaction again <Cite n={7} /> |
