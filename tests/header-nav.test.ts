@@ -14,7 +14,7 @@ test("HEADER_NAV has the 8 items in header order", () => {
   assert.equal(HEADER_NAV[0].pages?.length, PAGES.length);
   assert.deepEqual(
     HEADER_NAV.slice(1, 6).map((item) => item.pages?.length),
-    [12, 11, 15, 20, 38],
+    [12, 11, 15, 20, 40],
   );
   assert.equal(HEADER_NAV[6].href, "/contents/");
   assert.equal(HEADER_NAV[6].pages, undefined);

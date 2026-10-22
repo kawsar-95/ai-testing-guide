@@ -57,6 +57,12 @@ const ENTRIES = [
   ["oauth-oidc", 4, "topic"],
   ["sso", 4, "topic"],
   ["ssl-tls-mtls", 4, "topic"],
+  ["interview-intro", 5, "topic"],
+  ["url-shortener", 5, "link", "/system-design/url-shortener/"],
+  ["whatsapp", 5, "link", "/system-design/whatsapp/"],
+  ["twitter", 5, "link", "/system-design/twitter/"],
+  ["netflix", 5, "topic"],
+  ["uber", 5, "link", "/system-design/uber-eta/"],
 ] as const;
 
 const TOPICS = ENTRIES.filter((e) => e[2] === "topic").map((e) => e[0]);
@@ -73,7 +79,7 @@ const REQUIRED = [
 const dir = new URL("../content/course/", import.meta.url);
 const read = (slug: string) => readFileSync(new URL(`${slug}.mdx`, dir), "utf8");
 
-test("there are 49 entries in spec order, with their parts and kinds", () => {
+test("there are 55 entries in spec order, with their parts and kinds", () => {
   assert.deepEqual(
     COURSE.items.map((i) => [i.slug, i.part, i.kind]),
     ENTRIES.map((e) => [e[0], e[1], e[2]]),
@@ -90,6 +96,7 @@ test("there are 49 entries in spec order, with their parts and kinds", () => {
       [2, 15],
       [3, 11],
       [4, 10],
+      [5, 6],
     ],
   );
 });
@@ -104,7 +111,7 @@ test("each link entry points to its target, and the target is a known route", ()
   }
 });
 
-test("content/course has exactly the 38 topic files, and the route map is COURSE.routes", () => {
+test("content/course has exactly the 40 topic files, and the route map is COURSE.routes", () => {
   assert.deepEqual(readdirSync(dir).sort(), TOPICS.map((s) => `${s}.mdx`).sort());
   assert.deepEqual(COURSE.routes, ["/course/", ...TOPICS.map((s) => `/course/${s}/`)]);
   const map: Record<string, string> = JSON.parse(
@@ -129,13 +136,13 @@ test("each course page has the entry title as # heading and the 6 required ## se
   }
 });
 
-test("the progress ids are the 49 entries, under course-progress", () => {
+test("the progress ids are the 55 entries, under course-progress", () => {
   assert.equal(COURSE.progress?.storageKey, "course-progress");
-  assert.equal(COURSE.lessonIds.length, 49);
+  assert.equal(COURSE.lessonIds.length, 55);
   assert.deepEqual(COURSE.lessonIds, ENTRIES.map((e) => e[0]));
 });
 
-test("precacheUrls includes /course/ and the 38 page routes", () => {
+test("precacheUrls includes /course/ and the 40 page routes", () => {
   const urls = precacheUrls("");
   assert.ok(urls.includes("/course/"));
   for (const slug of TOPICS) assert.ok(urls.includes(`/course/${slug}/`), slug);
