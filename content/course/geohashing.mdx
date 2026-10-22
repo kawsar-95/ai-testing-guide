@@ -1,0 +1,108 @@
+export const metadata = { title: 'Geohashing and Quadtrees', description: 'How a geohash and a quadkey turn a place on the map into a short key: precision and code length, the cell edge problem for nearby search, and how map tiles split in four at each level.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Geohash grid aggregation', publisher: 'Elastic, Elasticsearch Reference', url: 'https://www.elastic.co/docs/reference/aggregations/search-aggregations-bucket-geohashgrid-aggregation', accessed: '2026-10-22' },
+    { title: 'GEOADD', publisher: 'Redis, command reference', url: 'https://redis.io/docs/latest/commands/geoadd/', accessed: '2026-10-22' },
+    { title: 'Bing Maps Tile System', publisher: 'Microsoft Learn, Bing Maps', url: 'https://learn.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system', accessed: '2026-10-22' },
+  ],
+}
+
+# Geohashing and Quadtrees
+
+An app must show the cafes near you. A database cannot scan every cafe in the world for each request. Geohashes and quadkeys help: both turn a place into one short key.
+
+<PageMeta />
+
+## In plain words
+
+A geohash is a short code for a cell on a grid that covers the map. Elasticsearch labels each cell of its grid with a geohash, and you pick the precision <Cite n={1} />.
+
+Precision is the length of the code. A long code names a small cell. A short code names a large cell <Cite n={1} />. Elasticsearch accepts a precision from 1 to 12 <Cite n={1} />.
+
+A quadkey does the same job for map tiles. Bing Maps cuts its map into tiles, and a quadkey is a string that names one tile at one level of detail <Cite n={3} />.
+
+Both ideas mix the bits of two numbers into one key: latitude and longitude for the geohash of Redis <Cite n={2} />, and the X and Y tile numbers for the quadkey <Cite n={3} />. This comparison is the tutorial's own.
+
+## When you need it
+
+- You must find points near a place, such as shops, drivers, or bike stations. Redis keeps such points in a geospatial index and can search a box or a radius <Cite n={2} />.
+- You must count points in map cells. Elasticsearch does this with its geohash grid aggregation <Cite n={1} />.
+- You must serve a map in pieces. Bing Maps pre-renders the map at many levels of detail and cuts each one into tiles <Cite n={3} />.
+
+## How it works
+
+**Geohash in Redis.** `GEOADD` stores each item in a sorted set. The set is filled with a technique called Geohash: the bits of latitude and longitude are interleaved into one 52-bit integer, and the score of a sorted set can hold it without loss <Cite n={2} />. Redis refuses a latitude outside -85.05112878 to 85.05112878, and a longitude outside -180 to 180 <Cite n={2} />.
+
+**Search in a box or a radius.** Redis checks the 1+8 areas that are needed to cover the whole shape. It then drops the elements that lie outside the shape <Cite n={2} />. The tutorial's own reading: one cell is not enough, because a search shape can reach over the edge of a cell. That is why the neighbors are checked too.
+
+**Precision and cost.** A geohash of length 12 gives cells under one square metre. Elasticsearch warns that a high precision can cost much RAM and give large results, so you should filter to a small area first <Cite n={1} />.
+
+**Quadkeys.** At each level of detail, the width and height of the Bing map grow by a factor of 2 <Cite n={3} />. The map is cut into tiles of 256 by 256 pixels, so it is 2 to the power of the level tiles wide and high <Cite n={3} />. This is the tutorial's own arithmetic: each tile splits into 4 tiles at the next level.
+
+To make a quadkey, you interleave the bits of the tile Y and X numbers, read the result as a base-4 number, and write it as a string. The tile at (3, 5) on level 3 gets the quadkey "213" <Cite n={3} />.
+
+Three properties follow <Cite n={3} />:
+
+- The length of a quadkey equals the level of its tile.
+- The first digits of a quadkey are the whole key of its parent tile. For example, the tiles with keys 20, 21, 22, and 23 all have tile 2 as their parent.
+- Tiles that are near on the map usually have keys that are near in order. The source says this matters because neighbor tiles are usually asked for together, so it is good to keep them on the same disk blocks.
+
+A quadkey can be a key in a common B-tree index <Cite n={3} />.
+
+| Idea | Geohash | Quadkey |
+|---|---|---|
+| What the key names | A cell of a grid <Cite n={1} /> | A map tile at one level <Cite n={3} /> |
+| What a longer key means | A smaller cell <Cite n={1} /> | A deeper level, so a smaller tile <Cite n={3} /> |
+| How it is built | Latitude and longitude bits, interleaved <Cite n={2} /> | Tile X and Y bits, interleaved <Cite n={3} /> |
+
+## A real-life example
+
+This example is the tutorial's own. It uses the first point of the Elasticsearch example, 52.374081 N and 4.912350 E, and a short script that follows the rules of the sources.
+
+| Length or level | Geohash | Quadkey |
+|---|---|---|
+| 3 | `u17` | `120` |
+| 5 | `u173z` | `12020` |
+| 8 | `u173zy3j` | `12020211` |
+
+Each longer code starts with the shorter code, so a cell sits inside its parent cell.
+
+The Elasticsearch page shows the decoded box of `u17`: from 52.03125 to 53.4375 N, and from 4.21875 to 5.625 E <Cite n={1} />. It is about 1.4 degrees high and wide (the tutorial's own arithmetic).
+
+Now take two cafes at 52.5 N, one at 5.624 E and one at 5.626 E, about 135 m apart. At length 3, the first is in `u17` and the second is in `u1k`. The codes share only 2 characters. A search of one cell would miss the second cafe. Redis checks 1+8 areas to cover a search shape <Cite n={2} />. The tutorial's own reading: this is how it avoids such a miss.
+
+## Common mistakes
+
+- **Searching one cell only.** Two near points can have different codes, as the cafe example shows. Search the neighbor cells too (the tutorial's own advice; Redis checks 1+8 areas <Cite n={2} />).
+- **Choosing a precision that is too high.** Elasticsearch warns that a high precision can be costly in RAM and result size, and that a large area can give millions of buckets <Cite n={1} />.
+- **Treating a distance as exact.** Redis assumes a spherical Earth, and its worst-case error may reach 0.5%. Its documentation says to consider other systems when errors matter <Cite n={2} />.
+- **Sending a point near a pole.** Redis cannot index areas very near the poles <Cite n={2} />. The Bing map stops at about 85.05 degrees of latitude <Cite n={3} />.
+- **Relying on a retired service.** Bing Maps for Enterprise is deprecated and retired for free accounts. Enterprise accounts can use it until 30 June 2028 <Cite n={3} />. The tile rules here are a model of the idea.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources.
+
+- **Test the cell edge.** Put two points a few metres apart on both sides of a cell edge. Search from one of them, and check that the other one is in the result.
+- **Test the four corners.** Search near the corner where four cells meet. Check that all nearby points show up.
+- **Test the extremes.** Try a latitude of 85.06 and a longitude of 180. Check for a clear error or a clear rule.
+- **Test the date line.** Search near longitude 180 and -180. Check that points on the other side can be found.
+- **Test the precision.** Ask for a very high precision on a big area. Check the time, the memory, and the size of the answer.
+- **Move a point.** Update a point so that it changes its cell. Check that the old cell no longer returns it.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Geohash | A short code that names a cell of a map grid. A longer code names a smaller cell <Cite n={1} /> |
+| Precision | The length of a geohash. Elasticsearch accepts 1 to 12 <Cite n={1} /> |
+| Interleave | Mix the bits of two numbers one by one, to make one number <Cite n={2} /> <Cite n={3} /> |
+| Geospatial index | In Redis, a sorted set that holds items by their coordinates <Cite n={2} /> |
+| Tile | A square piece of the rendered map, 256 by 256 pixels in Bing Maps <Cite n={3} /> |
+| Level of detail | The zoom level of the map. Each level doubles the width and height <Cite n={3} /> |
+| Quadkey | A string that names one tile at one level. Its length is the level <Cite n={3} /> |
+| Parent tile | The tile at the previous level that holds a tile. Its quadkey is the start of the child key <Cite n={3} /> |
+| Bounding box | A rectangle that you give by two corners, used to limit a search or to zoom in <Cite n={1} /> |

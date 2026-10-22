@@ -123,7 +123,7 @@ class LinuxRouteMapTest(unittest.TestCase):
 
     def test_default_routes_has_the_tutorial_pages_and_the_stage_and_chapter_pages_without_the_homes(self):
         routes = check_outline.default_routes()
-        self.assertEqual(len(routes), 110)
+        self.assertEqual(len(routes), 119)
         self.assertNotIn("/architecture/", routes)
         self.assertIn("/architecture/practice/", routes)
         self.assertNotIn("/course/", routes)
@@ -184,7 +184,7 @@ class CourseRouteMapTest(unittest.TestCase):
 
     def test_course_route_map_is_an_identity_map_of_the_topic_routes(self):
         route_map = json.loads((self.HERE / "course-route-map.json").read_text())
-        self.assertEqual(len(route_map), 30)
+        self.assertEqual(len(route_map), 39)
         self.assertIn("/course/", route_map)
         for key, value in route_map.items():
             self.assertTrue(key.startswith("/course/"))

@@ -1,0 +1,104 @@
+export const metadata = { title: 'Disaster Recovery', description: 'What disaster recovery is: RTO and RPO, how it differs from high availability, the four AWS strategies from backup and restore to multi-site active/active, what each costs, and how to test it.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Disaster Recovery of Workloads on AWS: Business Continuity Plan (BCP)', publisher: 'Amazon Web Services', url: 'https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/business-continuity-plan-bcp.html', accessed: '2026-10-22' },
+    { title: 'Disaster Recovery of Workloads on AWS: Disaster recovery options in the cloud', publisher: 'Amazon Web Services', url: 'https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html', accessed: '2026-10-22' },
+    { title: 'Disaster Recovery of Workloads on AWS: Testing disaster recovery', publisher: 'Amazon Web Services', url: 'https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/testing-disaster-recovery.html', accessed: '2026-10-22' },
+    { title: 'Disaster Recovery of Workloads on AWS: High availability is not disaster recovery', publisher: 'Amazon Web Services', url: 'https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/high-availability-is-not-disaster-recovery.html', accessed: '2026-10-22' },
+    { title: 'What are business continuity, high availability, and disaster recovery?', publisher: 'Microsoft, Azure reliability documentation', url: 'https://learn.microsoft.com/en-us/azure/reliability/concept-business-continuity-high-availability-disaster-recovery', accessed: '2026-10-22' },
+  ],
+}
+
+# Disaster Recovery
+
+A data center floods. A bad script deletes the production database. Ransomware scrambles the data. The question is the same each time: how do we get the service back, and how much do we lose? Disaster recovery is the plan that answers it before the day comes.
+
+<PageMeta />
+
+## In plain words
+
+Azure describes a disaster as a rare, major event with a larger and longer impact than the high availability design of an application can absorb. Its examples are natural disasters, human errors with a major impact (such as deleting production data), and major security incidents such as ransomware <Cite n={5} />. Disaster recovery (DR) is the planning of how you respond <Cite n={5} />.
+
+Two numbers describe the goal <Cite n={1} />:
+
+- **RTO**, the Recovery Time Objective, is the longest delay that is acceptable between the stop of the service and its return.
+- **RPO**, the Recovery Point Objective, is the longest time that is acceptable since the last recovery point. It sets how much data you can lose.
+
+Azure gives units of time as examples: "30 minutes of data" for RPO and "eight hours of downtime" for RTO. Each component or flow can have its own values <Cite n={5} />. Azure says zero for both is difficult and costly, so people should agree on realistic values <Cite n={5} />.
+
+## When you need it
+
+AWS says recovery objectives should not be set alone. The chance of a disruption and the cost of recovery also matter <Cite n={1} />. If recovery would cost more than the failure or the loss, you should not put it in place, unless another reason such as regulation applies <Cite n={1} />. For a less critical workload, having no DR can be a valid choice <Cite n={1} />.
+
+DR should be a part of the wider business continuity plan, not a separate document <Cite n={1} />.
+
+## How it works
+
+High availability (HA) and DR are not the same. AWS says availability looks at the parts of a workload, while DR looks at separate copies of the whole workload <Cite n={4} />. If a storage system copies every change to a second site, it can copy a deletion or a corruption too. So DR needs point-in-time backups too <Cite n={4} />. The line between HA and DR can move. Azure notes that a region outage is a DR risk for a workload in one region, but an HA risk for a workload that runs active-active in several regions with automatic failover <Cite n={5} />.
+
+A DR plan often has these parts. Azure also advises infrastructure as code to cut recovery time and errors <Cite n={5} />.
+
+- **Failover and failback.** Failover sends traffic to a second deployment. It usually takes some time to detect the failure and to switch, so the RTO must allow for it. Failback returns to the first region later, and it can be complex: data may have been written after failover began <Cite n={5} />.
+- **Backups.** Azure says to store them apart from the main data. A restore usually loses some data, because backups are taken only now and then. So the RPO must match the backup interval, and the RTO must include the restore time <Cite n={5} />.
+- **A runbook, a communication plan, and an escalation path** <Cite n={5} />.
+
+## Trade-offs
+
+AWS groups DR strategies into four approaches. They run from cheap, simple backups to more complex strategies that use several active Regions <Cite n={2} />. In the active/passive strategies, the passive site serves no traffic until a failover <Cite n={2} />. The table follows the AWS text only.
+
+| Strategy | What is in the second Region | Cost and complexity | Recovery time |
+|---|---|---|---|
+| Backup and restore | Backed-up data. You redeploy infrastructure, configuration, and code at recovery <Cite n={2} />. | The lowest cost and complexity of the four <Cite n={2} />. | Without IaC, a restore can take longer and may miss the RTO <Cite n={2} />. |
+| Pilot light | Data replicated, core infrastructure in place, application servers switched off <Cite n={2} />. | Keeps ongoing cost low by keeping few resources active <Cite n={2} />. | You must switch on and scale out first, so it cannot take requests at once <Cite n={2} />. |
+| Warm standby | A scaled-down but fully working copy that is always on <Cite n={2} />. | More economical and less complex to run than active/active <Cite n={2} />. | Shorter than pilot light. It takes traffic at reduced capacity at once, and you then scale up <Cite n={2} />. |
+| Multi-site active/active | The workload runs in several Regions and serves traffic from all of them <Cite n={2} />. | The most complex and costly <Cite n={2} />. | Can be near zero for most disasters. Data corruption may still need backups, so the recovery point is usually not zero <Cite n={2} />. |
+
+AWS adds hot standby, a full-size copy that takes no traffic. It avoids a reliance on auto scaling, which lowers resilience, but it costs more <Cite n={2} />. For a well-architected, highly available workload, AWS says backup and restore may be enough if the disaster is the loss of one data center. For the loss of a whole Region, or when regulation requires it, it suggests the other three <Cite n={2} />.
+
+## Testing disaster recovery
+
+AWS says to test the DR setup and to run failover to the DR Region regularly, to check that the RTO and RPO are met <Cite n={3} />. It warns against recovery paths that run rarely. A secondary data store may later lack capacity, or the service quotas of the other Region may be too low <Cite n={3} />. It prefers few recovery paths, and for a critical path it says to run the failure in production regularly <Cite n={3} />. It also says to manage configuration drift <Cite n={3} />.
+
+Azure says to include the human processes in drills, not only the technical ones. Without a simulation, major problems are more likely in a real disaster, and a test can show whether the RTO is feasible <Cite n={5} />. Backups need tests, including a restore <Cite n={2} /><Cite n={5} />. In active/active, there is no failover, so a test checks what happens when a Region is lost: traffic must move away from it, and the other Regions must carry all of it <Cite n={2} />.
+
+## A real-life example
+
+This example is the tutorial's own. A test-management tool runs in one Region. The team sets an RPO of 15 minutes and an RTO of 1 hour. The tool saves a backup once every 4 hours. In the worst case, a disaster hits just before the next backup, and 4 hours of data are lost. That is more than the RPO, so the plan fails on paper before any test. The team adds continuous replication and a scaled-down copy of the app servers in a second Region. A drill then shows a failover time of 90 minutes, because one step is manual. The team automates it.
+
+## Common mistakes
+
+- **Treating HA as DR.** A copy that mirrors every change also mirrors a deletion <Cite n={4} />.
+- **Aiming at zero for RTO and RPO.** Azure calls this difficult and costly <Cite n={5} />.
+- **Never testing the recovery path.** AWS says to avoid paths that run rarely <Cite n={3} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources.
+
+- **Ask for the numbers.** Find the RTO and RPO of each flow. A test needs a target.
+- **Time a real failover.** Start the clock when the service stops, and stop it when users can work again. Compare the result with the RTO.
+- **Measure the data loss.** Write test records at known times, trigger the failover, and check which records survive. Compare the gap with the RPO.
+- **Restore from a backup.** Check that the data is complete. Time the restore.
+- **Run the drill with the people.** Check the runbook and the escalation path.
+- **Test failback.** Return to the first region and check that no data from the failover period is lost.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Disaster | A rare, major event with a bigger and longer impact than HA design can absorb <Cite n={5} /> |
+| RTO | The longest acceptable delay between the stop and the return of the service <Cite n={1} /> |
+| RPO | The longest acceptable time since the last recovery point, which sets the data loss <Cite n={1} /> |
+| Failover | Moving traffic to a second deployment <Cite n={5} /> |
+| Failback | Returning to the first region after it has recovered <Cite n={5} /> |
+| Backup and restore | The strategy that keeps backed-up data and redeploys everything else <Cite n={2} /> |
+| Pilot light | A strategy with replicated data and switched-off application servers <Cite n={2} /> |
+| Warm standby | A strategy with a scaled-down copy that is always on <Cite n={2} /> |
+| Multi-site active/active | A strategy that serves traffic from several Regions at once <Cite n={2} /> |
+| Hot standby | A full-size copy in a second Region that takes no traffic <Cite n={2} /> |
+| Point-in-time backup | A backup that you can restore to the moment it was taken <Cite n={2} /> |
+| Configuration drift | A difference between the DR Region and what it should be <Cite n={3} /> |
+| Business continuity plan | The wider plan of which the DR plan is a part <Cite n={1} /> |

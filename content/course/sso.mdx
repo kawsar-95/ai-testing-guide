@@ -1,0 +1,102 @@
+export const metadata = { title: 'Single Sign-On', description: 'How single sign-on works through federation: the identity provider, the relying party, the assertion or ID token, what the relying party checks, sessions, and what logout can and cannot do.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'SP 800-63C-4, Digital Identity Guidelines: Federation and Assertions', publisher: 'NIST', url: 'https://pages.nist.gov/800-63-4/sp800-63c.html', accessed: '2026-10-22' },
+    { title: 'Security Assertion Markup Language (SAML) V2.0 Technical Overview (Committee Draft 02)', publisher: 'OASIS', url: 'https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html', accessed: '2026-10-22' },
+    { title: 'OpenID Connect Core 1.0 incorporating errata set 2', publisher: 'OpenID Foundation', url: 'https://openid.net/specs/openid-connect-core-1_0.html', accessed: '2026-10-22' },
+  ],
+}
+
+# Single Sign-On
+
+You log in to the company mail. Then you open the chat tool and the ticket tool, and neither asks for a password. They do not check your password at all. Another system tells them who you are, and they decide whether to believe it.
+
+<PageMeta />
+
+## In plain words
+
+Single sign-on (SSO) is what the user sees: one login, many apps. The mechanism is called federation. NIST defines federation as a way to authenticate a user to an app without that app checking the user's login factors itself, and says it is "sometimes known as" single sign-on <Cite n={1} />.
+
+Three parties take part <Cite n={1} />:
+
+- The **user** (NIST says subscriber) logs in.
+- The **identity provider (IdP)** checks the login and sends a statement about the user. This statement is the **assertion**.
+- The **relying party (RP)** is the app. It verifies the assertion, starts its own session, and lets the user in.
+
+So the user does not need a separate login method for each app <Cite n={1} />. The names change between standards. SAML calls the app a service provider (SP) <Cite n={2} />. OpenID Connect (OIDC) calls the IdP an OpenID Provider (OP) <Cite n={3} />. The assertion is a SAML Assertion in SAML and an ID Token in OIDC <Cite n={1} />.
+
+## When you need it
+
+NIST says federation is generally the preferred choice when the app and the user account are not run together in one security domain, because the app need not issue one more login method <Cite n={1} />. It can also help inside one domain, for central account management <Cite n={1} />. In SAML, web sign-on across different domains is arguably the most important use case <Cite n={2} />.
+
+The parties work under a trust agreement: it says who plays which role, and sets the terms of their work <Cite n={1} />.
+
+## How it works
+
+**SAML, started by the app.** This is the more common SAML flow <Cite n={2} />. The steps follow the example of the overview, with a redirect to the IdP and a POST back <Cite n={2} />.
+
+1. The user asks for a protected page and has no session. The app saves the address of that page.
+2. The app sends the browser to the IdP with an authentication request.
+3. If the user has no suitable login at the IdP, the IdP asks for credentials.
+4. The IdP builds a signed assertion, and the browser posts it to the app.
+5. The app validates the signature, creates a local session, and sends the user to the saved page.
+
+An assertion usually has a subject, conditions that limit its use, and statements. One kind of statement says how and when the user logged in. Another carries details such as a group <Cite n={2} />.
+
+**OpenID Connect.** OIDC is an identity layer on top of OAuth 2.0 <Cite n={3} />. (The page [OAuth 2.0 and OpenID Connect](/course/oauth-oidc/) explains the base.) In the code flow, the OP logs the user in and sends the user back with a code. The app swaps the code for an ID Token <Cite n={3} />. NIST notes that the assertion then travels on the back channel, a direct link between app and provider <Cite n={1} />. The ID Token is a JSON Web Token (JWT). It has claims such as `iss` (issuer), `sub` (user), `aud` (audience), `exp` (end time), and `iat` (issue time) <Cite n={3} />.
+
+**What the app checks.** NIST lists these checks: the signature, the issuer, the time window, the audience, the nonce when one was sent, and replay <Cite n={1} />. OIDC asks for the same kind of checks <Cite n={3} />. The audience check stops an assertion made for one app from working at another <Cite n={1} />. A short validity window lowers the risk of theft or replay <Cite n={1} />. The `sub` value is unique only inside one issuer <Cite n={3} />.
+
+**Separate sessions.** The IdP and the app each keep their own session, and the assertion has its own validity time. This time is not the session length <Cite n={1} /> <Cite n={3} />.
+
+## Logout
+
+Logout is the hard part. NIST says that when the IdP ends its session, the app sessions do not necessarily end. IdP and app may send each other end-session events if the protocol supports it <Cite n={1} />. The app may also end its own session at any time <Cite n={1} />.
+
+SAML has a Single Logout protocol that aims to end all active sessions of a user at nearly the same time. In the example, the app ends its local session and asks the IdP to log the user out. The IdP ends its session and sends a logout request to the other apps <Cite n={2} />. The overview warns that the result cannot be guaranteed, because the user's browser can interrupt the visits to the apps <Cite n={2} />.
+
+OIDC Core has no logout flow. It lists separate specifications for logout <Cite n={3} />.
+
+## A real-life example
+
+This example is the tutorial's own. A company has one IdP. A tester opens the test-management tool. It sends the browser to the IdP, the tester signs in, and the tool shows the page that was asked for. Later the tester opens the bug tracker. The IdP still has the tester's session, so there is no password prompt.
+
+Now the tester logs out of the test tool. The bug tracker may stay usable. That depends on its own session and on how logout is set up.
+
+## Common mistakes
+
+- **Treating logout at one app as logout everywhere.** The sessions are separate <Cite n={1} />, and single logout has no guaranteed result <Cite n={2} />.
+- **Using the expiry of the assertion as the session length.** NIST forbids this <Cite n={1} />.
+- **Not checking the audience.** The app may then accept an assertion made for another app <Cite n={1} />.
+- **Identifying a user by `sub` alone.** It is unique only within its issuer <Cite n={3} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of a source. Use a test IdP and test apps that you own.
+
+- **First login.** Open a protected page with no session. Check that you land on that page after the IdP, not on a default page.
+- **Second app.** With a live IdP session, open another app. Check that it needs no password.
+- **Wrong audience.** Check that an app rejects an assertion or ID Token made for a different app.
+- **Expiry.** Check that an expired token is rejected.
+- **Logout.** Log out of one app, then check the other apps and the IdP. Note what happens.
+- **Disabled account.** Disable the user at the IdP. Check what an app with a live session does, and when.
+- **Two IdPs.** Check that equal `sub` values from two issuers do not become one account.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Federation | Passing identity and login results between separate systems, so an app need not check the login itself <Cite n={1} /> |
+| Single sign-on (SSO) | One login for several apps; NIST says federation is sometimes called this <Cite n={1} /> |
+| Identity provider (IdP) | The party that checks the login and sends the assertion; OIDC says OpenID Provider <Cite n={1} /> <Cite n={3} /> |
+| Relying party (RP) | The app that relies on the assertion; SAML says service provider (SP) <Cite n={1} /> <Cite n={2} /> |
+| Assertion | A verifiable statement from the IdP about the user and the login <Cite n={1} /> |
+| ID Token | The OIDC assertion: a JWT with claims about the login <Cite n={3} /> |
+| Audience | The app that an assertion or token is meant for <Cite n={1} /> <Cite n={3} /> |
+| Nonce | A value that ties a request to its ID Token and helps against replay <Cite n={3} /> |
+| Trust agreement | The conditions under which the parties may take part in a federation <Cite n={1} /> |
+| Back channel | A direct link between two systems, with no browser in the middle <Cite n={1} /> |
+| Single logout | The SAML way to end all sessions of a user at nearly the same time, with no guarantee <Cite n={2} /> |

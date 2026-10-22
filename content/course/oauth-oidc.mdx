@@ -1,0 +1,137 @@
+export const metadata = { title: 'OAuth 2.0 and OpenID Connect', description: 'What OAuth 2.0 and OpenID Connect are: OAuth for authorization and OpenID Connect for authentication, the four roles, the authorization code flow with PKCE, access tokens and ID tokens, and what the security best practice says.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'RFC 6749: The OAuth 2.0 Authorization Framework', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc6749', accessed: '2026-10-22' },
+    { title: 'RFC 7636: Proof Key for Code Exchange by OAuth Public Clients', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc7636', accessed: '2026-10-22' },
+    { title: 'RFC 9700: Best Current Practice for OAuth 2.0 Security', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9700', accessed: '2026-10-22' },
+    { title: 'OpenID Connect Core 1.0', publisher: 'OpenID Foundation', url: 'https://openid.net/specs/openid-connect-core-1_0.html', accessed: '2026-10-22' },
+  ],
+}
+
+# OAuth 2.0 and OpenID Connect
+
+You press "Sign in with your company account" in a new app. A page of the company asks if the app may read your name and your reports. You never type your password into the app. Two standards work behind this screen. They answer two different questions.
+
+<PageMeta />
+
+## In plain words
+
+OAuth 2.0 is about authorization: what an app may do. It lets a third-party app get limited access to a protected HTTP resource <Cite n={1} />. The app does not use your password. It gets an access token, a string for a specific scope, a lifetime, and other access attributes <Cite n={1} />.
+
+OpenID Connect (OIDC) is about authentication: who the user is. It is a thin identity layer that sits on OAuth 2.0. It lets a client check the identity of the user, based on the authentication that an authorization server did <Cite n={4} />. The layer exists because OAuth 2.0 defines no standard way to give identity information <Cite n={4} />.
+
+An access token answers "what may this app do?". An ID token answers "who signed in, and when?".
+
+## When you need it
+
+- **An app needs limited access to a user's data in another service.** The user approves it at the authorization server, and the app never sees the password <Cite n={1} />.
+- **An app needs to log a user in with an identity provider.** This is OpenID Connect. The app asks for it with the `openid` scope <Cite n={4} />.
+
+## The roles
+
+OAuth defines four roles <Cite n={1} />:
+
+| Role | Job |
+|---|---|
+| Resource owner | Can grant access to a protected resource. Often this is the user. |
+| Resource server | Hosts the protected resources and accepts access tokens. |
+| Client | The app that makes requests for the owner, with the owner's approval. It can run on a server, a desktop, or another device. |
+| Authorization server | Issues access tokens after it authenticates the owner and gets authorization. |
+
+In OpenID Connect, the authorization server is an OpenID Provider (OP), and the client is a Relying Party (RP) <Cite n={4} />.
+
+## How it works
+
+In the authorization code flow, the client sends the user to the authorization server through the browser. The server sends the user back with a code <Cite n={1} />. PKCE adds a secret that only the real client knows <Cite n={2} />.
+
+```text
+User/browser        Client app           Authorization server      API
+     |  1. press sign in|                         |                  |
+     |----------------->| make code_verifier,     |                  |
+     |                  | code_challenge, state   |                  |
+     |  2. redirect to the authorization endpoint |                  |
+     |<-----------------|                         |                  |
+     |  3. request: response_type=code, client_id, redirect_uri,    |
+     |     scope (openid ...), state, code_challenge, method        |
+     |------------------------------------------->|                  |
+     |  4. user signs in and approves             |                  |
+     |  5. redirect back with code and state      |                  |
+     |----------------->|                         |                  |
+     |                  | 6. token request:       |                  |
+     |                  |    code + code_verifier |                  |
+     |                  |------------------------>| compare verifier |
+     |                  | 7. access token         |  with challenge  |
+     |                  |    (+ ID token, OIDC)   |                  |
+     |                  |<------------------------|                  |
+     |                  | 8. call API with access token              |
+     |                  |------------------------------------------->|
+```
+
+**The request.** It has `response_type=code`, the `client_id`, and often a `redirect_uri` and a `scope`. The `state` value is recommended <Cite n={1} />. The server may ignore part of the scope. Then it must report the granted scope <Cite n={1} />.
+
+**The code.** It must expire shortly (10 minutes at most is recommended). If a code is used twice, the server must refuse the request. It should also revoke, when possible, the tokens that came from that code <Cite n={1} />. The `state` value comes back unchanged, so the client can block cross-site request forgery <Cite n={1} />.
+
+**PKCE.** Public clients, such as phone apps, can lose a code to a malicious app on the same device <Cite n={2} />. So the client makes a new secret, the `code_verifier`, for each request. It sends a transformed value, the `code_challenge`, in the authorization request, and the verifier itself in the token request. The server transforms the verifier and compares. It denies access if the values differ <Cite n={2} />. The S256 method hashes the verifier with SHA-256 and encodes it with base64url <Cite n={2} />. A thief who has only the code cannot redeem it <Cite n={2} />.
+
+**With OpenID Connect.** The request includes the `openid` scope <Cite n={4} />. The response also has an ID token: a JSON Web Token (JWT) with claims about the sign-in <Cite n={4} />. Required claims include `iss` (the issuer), `sub` (a user id, unique at that issuer and never reassigned), `aud` (the audience, which must contain the client's `client_id`), `exp` (the expiry), and `iat` (the issue time). The `nonce` claim must equal the value that the client sent <Cite n={4} />. The client must check the issuer, the audience, the expiry, the nonce, and the signature. The spec lets TLS to the token endpoint stand in for the signature check <Cite n={4} />.
+
+## What the best practice says
+
+RFC 9700 updates the advice of RFC 6749 <Cite n={3} />. It says:
+
+- Public clients must use PKCE. For confidential clients it is recommended <Cite n={3} />.
+- Clients should use S256, because it does not show the verifier in the request <Cite n={3} />.
+- Clients must prevent cross-site request forgery. They may rely on PKCE if the server supports it, or on the OpenID Connect `nonce`. Otherwise they must use a one-time `state` value <Cite n={3} />.
+- The server must compare redirect URIs by exact string matching. Only the port of a native app's localhost URI may differ <Cite n={3} />.
+- Clients should not use the implicit grant, which puts the access token in the authorization response. The spec calls it open to token leakage and replay. It makes an exception when injection is prevented and the leak paths are closed. Use the code response type instead <Cite n={3} />.
+- The password grant must not be used, because it shows the user's credentials to the client <Cite n={3} />.
+
+## A real-life example
+
+This example is the tutorial's own. A test-reporting web app lets testers sign in with the company account. It asks for the scopes `openid` and `reports:read`. The tester signs in on the company page and approves. The app gets a code. It sends the code and the PKCE verifier to the server and gets back two tokens: an ID token and an access token.
+
+The app reads the ID token to show who signed in, and sends the access token to the reports API.
+
+## Common mistakes
+
+- **Using OAuth alone as a login.** OAuth 2.0 gives no standard information about who authenticated <Cite n={4} />. Add OpenID Connect.
+- **Mixing the two tokens.** The ID token is for the client: its `aud` must contain the client's id <Cite n={4} />. The access token is for the resource server <Cite n={1} />. Use each for its own job (tutorial advice).
+- **Ignoring the best practice.** Public clients without PKCE, no CSRF defense, loose redirect URI matching, and the password grant break its must rules. The implicit grant goes against its advice <Cite n={3} />.
+- **Not checking the ID token.** The client must check it <Cite n={4} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice, not a claim of a source. Run them only on systems that you may test.
+
+- **Read the first request.** Look for a `code_challenge` with S256 and a new `state` at each login.
+- **Wrong verifier.** Send the code with no verifier or a wrong one. The token request should fail.
+- **Use a code twice.** The second use should fail.
+- **Change the redirect URI.** Even one character of difference should be refused.
+- **Scope.** Ask for less. Call an API that needs more. The API should refuse.
+- **Expiry.** Let both tokens expire. Check what the user sees.
+- **ID token checks.** In a test provider that you control, make tokens with a wrong audience, issuer, expiry, or nonce. The client should reject each one.
+- **User says no.** Deny the approval and read the message.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Authorization | Deciding what an app may do. OAuth 2.0 covers this <Cite n={1} /> |
+| Authentication | Proving who the user is. OpenID Connect adds this on top of OAuth 2.0 <Cite n={4} /> |
+| Resource owner | The one who can grant access to a protected resource <Cite n={1} /> |
+| Client | The app that asks for access on the owner's behalf <Cite n={1} /> |
+| Authorization server | The server that issues access tokens <Cite n={1} /> |
+| Access token | A string that stands for a scope and a lifetime of access, usually opaque to the client <Cite n={1} /> |
+| Scope | A list of strings, defined by the server, that say what access the app asks for <Cite n={1} /> |
+| Authorization code | A short-lived, single-use value that the client swaps for tokens <Cite n={1} /> |
+| PKCE | A per-request secret that ties the code to the client that asked for it <Cite n={2} /> |
+| `code_verifier` | The secret that the client makes and sends in the token request <Cite n={2} /> |
+| `code_challenge` | The transformed verifier that the client sends in the authorization request <Cite n={2} /> |
+| `state` | A value that comes back unchanged, used against cross-site request forgery <Cite n={1} /> |
+| ID token | A JWT with claims about the sign-in of the user <Cite n={4} /> |
+| Relying Party | The client of an OpenID Provider <Cite n={4} /> |
+| `nonce` | A value that links a client session to an ID token <Cite n={4} /> |
+| Implicit grant | A flow that gives the access token in the authorization response. The best practice recommends against it <Cite n={3} /> |
