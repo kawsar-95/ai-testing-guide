@@ -1,0 +1,93 @@
+export const metadata = { title: 'Availability', description: 'What availability means, how the nines turn into downtime, how SLI, SLO, and SLA differ, and what a tester can check.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Embracing Risk (Site Reliability Engineering, chapter 3)', publisher: 'Google', url: 'https://sre.google/sre-book/embracing-risk/', accessed: '2026-10-22' },
+    { title: 'Service Level Objectives (Site Reliability Engineering, chapter 4)', publisher: 'Google', url: 'https://sre.google/sre-book/service-level-objectives/', accessed: '2026-10-22' },
+    { title: 'Amazon Compute Service Level Agreement', publisher: 'Amazon Web Services', url: 'https://aws.amazon.com/ec2/sla/', accessed: '2026-10-22' },
+  ],
+}
+
+# Availability
+
+A shop has opening hours. If the door is locked during opening hours, customers leave, even when the goods inside are fine. A system is the same. Availability tells you how often the door is open when customers come.
+
+<PageMeta />
+
+## In plain words
+
+**Availability** is how much of the time a service works for its users. Teams often give it as a number of "nines": 99.9%, 99.99%, or 99.999% <Cite n={1} />. Each extra nine is a tenfold improvement toward 100% <Cite n={1} />.
+
+There are two common ways to measure it:
+
+- **Time-based:** the share of time the system is up. A 99.99% target allows up to 52.56 minutes of downtime in a year <Cite n={1} />.
+- **Request-based:** the share of requests that succeed. Google uses this for global services, because some part of the service is always up somewhere <Cite n={1} />. It is a fair approximation of the downtime that users feel, but not all requests matter equally: a failed sign-up is worse than a failed background poll <Cite n={1} />.
+
+The arithmetic below is the tutorial's own. One year has 525,600 minutes. The downtime that a target allows is 525,600 x (1 - target):
+
+```text
+Target     Allowed downtime in a year (our arithmetic)
+99.9%      525.6 minutes   (about 8.8 hours)
+99.99%      52.56 minutes
+99.999%      5.256 minutes  (about 5.3 minutes)
+```
+
+Three words are easy to mix up:
+
+- **SLI** (service level indicator): a measured number, such as request latency or error rate <Cite n={2} />.
+- **SLO** (service level objective): a target for that number <Cite n={2} />.
+- **SLA** (service level agreement): a contract that has consequences if the target is missed. The consequence is often a rebate or a penalty <Cite n={2} />.
+
+A quick test: ask "what happens if we miss it?" If nothing explicit happens, it is an SLO <Cite n={2} />.
+
+## When you need it
+
+You need an availability target when users depend on the service and you must decide how much risk is acceptable. It is a business decision, not only a technical one <Cite n={2} />.
+
+Do not aim for 100%. It is probably never the right target: it is impossible, and it is usually more than users notice <Cite n={1} />. Cost also grows fast. One more step of reliability can cost 100 times more than the step before <Cite n={1} />. Google sees a target as a floor and also as a ceiling. A service that is far more reliable than it needs to be wastes chances to add features and to clean up <Cite n={1} />.
+
+## A real-life example
+
+Take a learning platform where students watch lessons and submit quizzes. The team sets this SLO: 99.9% of quiz submissions succeed each month.
+
+- The SLI is the share of submissions that return success.
+- The SLO is 99.9%, so the error budget is 0.1% of submissions. The error budget is the gap between the SLO and 100% <Cite n={1} />.
+- While budget remains, the team can ship new releases. When the budget is gone, the team stops and fixes reliability <Cite n={1} />.
+
+Now look at a real SLA. Amazon promises that EC2 instances spread over two or more availability zones of a region will be up 99.99% of each month or more. The SLA calls this figure the "Monthly Uptime Percentage" <Cite n={3} />. AWS commits to "commercially reasonable efforts", not a guarantee <Cite n={3} />. A single instance has a lower promise, at least 99.5% <Cite n={3} />. The monthly figure is 100% minus the share of minutes that the service was unavailable <Cite n={3} />. For the region-level promise, "unavailable" means that all your running instances in two or more zones have no external connectivity at the same time <Cite n={3} />.
+
+If AWS misses the region-level promise, you get a service credit, not a refund. Below 99.99% but at least 99.0% gives 10%, below 99.0% but at least 95.0% gives 30%, and below 95.0% gives 100% <Cite n={3} />. These tiers are the region-level ones. The instance-level table is different: its top tier starts below 99.5% <Cite n={3} />. The credit is a share of the monthly bill <Cite n={3} />, you must claim it and send your logs <Cite n={3} />, and it is the only remedy <Cite n={3} />. The SLA also has exclusions, such as events outside the vendor's reasonable control <Cite n={3} />.
+
+## Common mistakes
+
+- **Choosing a target from today's numbers.** A target copied from current performance can lock you into heroic effort for a system that needs a redesign <Cite n={2} />.
+- **Trusting server metrics only.** Some problems hit users but never show on the server, so some systems need client-side measurement <Cite n={2} />.
+- **Mixing up SLO and SLA.** Your own target is not the vendor's promise. Read the SLA for what it defines as "unavailable" and for what it excludes <Cite n={3} />.
+- **Forgetting dependencies.** This one is the tutorial's own point. If a request needs two parts that fail on their own, the availability multiplies: 99.9% x 99.9% = 0.998001, about 99.8%. The chain is weaker than each part.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It is not a claim from a source.
+
+- Ask for the SLO in numbers and the way it is measured. Check that the SLI counts the requests that users care about, such as quiz submissions, and not only a health check.
+- Turn the nines into minutes before you accept a target. Ask if the business can live with that downtime.
+- In a test environment, stop one server of a pair and check that users still get answers. Then stop both, and check the error message and the recovery.
+- After an outage, check that the dashboard shows it. A real outage that the SLI does not see means the SLI is wrong.
+- Read the vendor SLA once. Note what it calls "unavailable", how to claim a credit, and what is excluded.
+
+</Callout>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Availability | The share of time, or of requests, in which a service works for its users |
+| Nines | A short way to say a target: 99.9% is "three nines" |
+| SLI | A measured number about the service, such as latency or error rate |
+| SLO | A target for an SLI |
+| SLA | A contract with consequences if the target is missed |
+| Error budget | The allowed amount of failure: the gap between the SLO and 100% |
+| Downtime | The time in which the service is not available to users |
+| Service credit | A discount on a future bill that a vendor gives when it misses its SLA |
