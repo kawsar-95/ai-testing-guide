@@ -21,15 +21,54 @@ When you move a package to a new shelf, you take it off the old shelf and put it
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 A **transaction** bundles several steps into one all-or-nothing operation. Other transactions that run at the same time do not see the steps in between, and if a failure stops the transaction, none of its steps change the database <Cite n={1} />. The changes of an open transaction stay invisible to others until it ends, and then they all become visible together <Cite n={1} />.
 
 The page "ACID and BASE" covers the four ACID promises. This page covers the practical side, with PostgreSQL: how to open and close a transaction, how much one transaction sees of the others, and how to undo part of the work.
 
+</Technical>
+<Layman>
+
+A **transaction** bundles several steps into one all-or-nothing operation. Other transactions that run at the same time do not see the steps in between. If a failure stops the transaction, none of its steps change the database <Cite n={1} />. The changes of an open transaction stay invisible to others until it ends. Then they all become visible together <Cite n={1} />.
+
+The page "ACID and BASE" covers the four ACID promises. This page covers the practical side, with PostgreSQL. It shows how to open and close a transaction. It shows how much one transaction sees of the others. It shows how to undo part of the work.
+
+</Layman>
+<Bangla>
+
+**Transaction** কয়েকটি ধাপকে একটি all-or-nothing operation-এ বেঁধে দেয়। একই সময়ে চলা অন্য transaction মাঝের ধাপগুলো দেখে না। কোনো ব্যর্থতা transaction থামিয়ে দিলে তার কোনো ধাপই database বদলায় না <Cite n={1} />। খোলা transaction-এর পরিবর্তন শেষ না হওয়া পর্যন্ত অন্যদের কাছে অদৃশ্য থাকে। তারপর সব পরিবর্তন একসঙ্গে দৃশ্যমান হয় <Cite n={1} />।
+
+"ACID and BASE" page চারটি ACID প্রতিশ্রুতি নিয়ে আলোচনা করে। এই page-এ PostgreSQL দিয়ে ব্যবহারিক দিক আছে। এতে দেখানো হয় কীভাবে transaction খুলতে ও বন্ধ করতে হয়। এক transaction অন্যদের কতটা দেখে, তাও দেখানো হয়। কাজের একটি অংশ কীভাবে undo করতে হয়, তাও দেখানো হয়।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 Use a transaction when one business action needs more than one statement, such as a payment that moves money between two accounts. A failure must not leave it half done <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+Use a transaction when one business action needs more than one statement. An example is a payment that moves money between two accounts. A failure must not leave it half done <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটি business action-এ একাধিক statement লাগলে transaction ব্যবহার করুন। উদাহরণ: দুটি account-এর মধ্যে টাকা সরানো payment। কোনো ব্যর্থতা একে অর্ধেক করা অবস্থায় রেখে যেতে পারবে না <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## How it works
+
+<Voices>
+<Technical>
 
 You surround the statements with `BEGIN` and `COMMIT`. If you decide not to keep the work, you send `ROLLBACK` instead of `COMMIT`, and all updates so far are cancelled <Cite n={1} />. `COMMIT` makes the changes visible to others and durable if a crash comes <Cite n={3} />.
 
@@ -50,7 +89,39 @@ COMMIT;
 
 After a `ROLLBACK TO`, the savepoint is still defined, so you can go back to it again <Cite n={1} />. It also destroys the savepoints made after it <Cite n={6} />. `RELEASE SAVEPOINT` destroys a savepoint and keeps the effects of the later commands <Cite n={5} />. A savepoint works only inside a transaction block <Cite n={5} />. After an error puts the block in an aborted state, only `ROLLBACK TO` lets you continue, unless you roll back everything <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+You surround the statements with `BEGIN` and `COMMIT`. If you decide not to keep the work, you send `ROLLBACK` instead of `COMMIT`. Then all updates so far are cancelled <Cite n={1} />. `COMMIT` makes the changes visible to others and durable if a crash comes <Cite n={3} />.
+
+Without `BEGIN`, PostgreSQL runs each statement in its own transaction. It commits the statement if it worked ("autocommit") <Cite n={2} />. Some client libraries send `BEGIN` and `COMMIT` for you <Cite n={1} />.
+
+A **savepoint** is a mark inside a transaction. You can undo only the commands after it <Cite n={5} />. The changes before the savepoint are kept <Cite n={1} />.
+
+For example, you debit account 1 and set a savepoint. Then you credit account 2 by mistake. You use `ROLLBACK TO SAVEPOINT` to undo only the credit. Then you credit account 3 and send `COMMIT`.
+
+After a `ROLLBACK TO`, the savepoint is still defined, so you can go back to it again <Cite n={1} />. It also destroys the savepoints made after it <Cite n={6} />. `RELEASE SAVEPOINT` destroys a savepoint and keeps the effects of the later commands <Cite n={5} />. A savepoint works only inside a transaction block <Cite n={5} />. After an error puts the block in an aborted state, only `ROLLBACK TO` lets you continue, unless you roll back everything <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+আপনি statement-গুলোকে `BEGIN` এবং `COMMIT` দিয়ে ঘিরে দেন। কাজ রাখতে না চাইলে `COMMIT`-এর বদলে `ROLLBACK` পাঠান। তখন এ পর্যন্ত সব update বাতিল হয় <Cite n={1} />। `COMMIT` পরিবর্তনগুলো অন্যদের কাছে দৃশ্যমান করে, এবং crash হলেও সেগুলো টিকে থাকে <Cite n={3} />।
+
+`BEGIN` ছাড়া PostgreSQL প্রতিটি statement নিজের transaction-এ চালায়। Statement সফল হলে সেটি commit করে ("autocommit") <Cite n={2} />। কিছু client library আপনার হয়ে `BEGIN` এবং `COMMIT` পাঠায় <Cite n={1} />।
+
+**Savepoint** হলো transaction-এর ভেতরের একটি চিহ্ন। এর পরের command-গুলোই শুধু undo করা যায় <Cite n={5} />। Savepoint-এর আগের পরিবর্তন থেকে যায় <Cite n={1} />।
+
+উদাহরণ: আপনি account 1 থেকে টাকা কাটেন এবং একটি savepoint বসান। তারপর ভুল করে account 2-এ টাকা জমা দেন। `ROLLBACK TO SAVEPOINT` দিয়ে শুধু সেই জমা undo করেন। তারপর account 3-এ জমা দেন এবং `COMMIT` পাঠান।
+
+`ROLLBACK TO`-এর পরেও savepoint সংজ্ঞায়িত থাকে, তাই আবার সেখানে ফিরে যাওয়া যায় <Cite n={1} />। এটি তার পরে তৈরি savepoint-গুলোকেও ধ্বংস করে <Cite n={6} />। `RELEASE SAVEPOINT` একটি savepoint ধ্বংস করে, কিন্তু পরের command-এর ফলাফল রেখে দেয় <Cite n={5} />। Savepoint শুধু transaction block-এর ভেতরে কাজ করে <Cite n={5} />। কোনো error block-কে aborted অবস্থায় ফেললে শুধু `ROLLBACK TO` দিয়ে এগোনো যায়, অথবা সবকিছু rollback করতে হয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Isolation levels
+
+<Voices>
+<Technical>
 
 Several transactions often run at the same time. The **isolation level** says what one transaction can see of the others <Cite n={8} />. The SQL standard defines four levels. The strictest, Serializable, must give the same result as some one-at-a-time order. The other three are defined by "phenomena" that must not happen <Cite n={7} />:
 
@@ -76,20 +147,118 @@ PostgreSQL has only three distinct levels, because its Read Uncommitted behaves 
 
 You choose a level with `BEGIN ISOLATION LEVEL …` or with `SET TRANSACTION`, before the first query or data change of the transaction <Cite n={2} /> <Cite n={8} />.
 
+</Technical>
+<Layman>
+
+Several transactions often run at the same time. The **isolation level** says what one transaction can see of the others <Cite n={8} />. The SQL standard defines four levels. The strictest, Serializable, must give the same result as some one-at-a-time order. The other three are defined by "phenomena" that must not happen <Cite n={7} />:
+
+- **Dirty read:** a transaction reads data from another transaction that is not committed <Cite n={7} />.
+- **Nonrepeatable read:** a transaction reads data again and finds that another transaction has changed it since <Cite n={7} />.
+- **Phantom read:** a transaction runs a query again and finds a different set of matching rows <Cite n={7} />.
+- **Serialization anomaly:** the committed result fits no one-at-a-time order <Cite n={7} />.
+
+This is what the PostgreSQL manual lists for each level <Cite n={7} />:
+
+- **Read uncommitted:** the standard allows a dirty read, but PostgreSQL does not. The other three are possible.
+- **Read committed:** a dirty read is not possible. The other three are possible.
+- **Repeatable read:** dirty read and nonrepeatable read are not possible. The standard allows a phantom read, but PostgreSQL does not. A serialization anomaly is possible.
+- **Serializable:** none of the four is possible.
+
+PostgreSQL has only three distinct levels, because its Read Uncommitted behaves like Read Committed <Cite n={7} />. The manual says that Read Committed is the default level in PostgreSQL <Cite n={7} />.
+
+- **Read Committed:** a `SELECT` sees only data committed before that query began. Two `SELECT`s in one transaction can see different data if another transaction commits between them <Cite n={7} />.
+- **Repeatable Read:** the transaction sees one snapshot. The snapshot is taken at its first statement that is not a transaction-control command. So repeated reads match <Cite n={7} />. Suppose it tries to change a row that another transaction changed and committed meanwhile. Then it fails with `could not serialize access due to concurrent update`. The application should retry the whole transaction <Cite n={7} />.
+- **Serializable:** it works like Repeatable Read, plus monitoring that costs some overhead. It can end a transaction with a serialization failure, so the application must be ready to retry <Cite n={7} />.
+
+You choose a level with `BEGIN ISOLATION LEVEL …` or with `SET TRANSACTION`. You do this before the first query or data change of the transaction <Cite n={2} /> <Cite n={8} />.
+
+</Layman>
+<Bangla>
+
+প্রায়ই কয়েকটি transaction একই সময়ে চলে। **Isolation level** বলে এক transaction অন্যদের কতটা দেখতে পারে <Cite n={8} />। SQL standard চারটি level সংজ্ঞায়িত করে। সবচেয়ে কড়া level Serializable-এর ফল অবশ্যই কোনো একটি one-at-a-time ক্রমের ফলের সমান হতে হবে। বাকি তিনটি সংজ্ঞায়িত হয় এমন "phenomena" দিয়ে, যা ঘটা চলবে না <Cite n={7} />:
+
+- **Dirty read:** একটি transaction অন্য transaction-এর commit-না-হওয়া data পড়ে <Cite n={7} />।
+- **Nonrepeatable read:** একটি transaction আবার data পড়ে এবং দেখে অন্য transaction ইতিমধ্যে তা বদলে দিয়েছে <Cite n={7} />।
+- **Phantom read:** একটি transaction আবার query চালায় এবং মিলে যাওয়া row-এর ভিন্ন একটি সেট পায় <Cite n={7} />।
+- **Serialization anomaly:** commit হওয়া ফল কোনো one-at-a-time ক্রমের সঙ্গে মেলে না <Cite n={7} />।
+
+PostgreSQL manual প্রতিটি level-এর জন্য এটি তালিকাভুক্ত করে <Cite n={7} />:
+
+- **Read uncommitted:** standard dirty read অনুমোদন করে, কিন্তু PostgreSQL করে না। বাকি তিনটি সম্ভব।
+- **Read committed:** dirty read সম্ভব নয়। বাকি তিনটি সম্ভব।
+- **Repeatable read:** dirty read এবং nonrepeatable read সম্ভব নয়। Standard phantom read অনুমোদন করে, কিন্তু PostgreSQL করে না। Serialization anomaly সম্ভব।
+- **Serializable:** চারটির কোনোটিই সম্ভব নয়।
+
+PostgreSQL-এ মাত্র তিনটি আলাদা level আছে, কারণ এর Read Uncommitted আচরণে Read Committed-এর মতো <Cite n={7} />। Manual বলে PostgreSQL-এ Read Committed হলো default level <Cite n={7} />।
+
+- **Read Committed:** একটি `SELECT` শুধু সেই query শুরুর আগে commit হওয়া data দেখে। মাঝখানে অন্য transaction commit করলে একই transaction-এর দুটি `SELECT` ভিন্ন data দেখতে পারে <Cite n={7} />।
+- **Repeatable Read:** transaction একটি snapshot দেখে। Snapshot নেওয়া হয় এর প্রথম এমন statement-এ, যা transaction-control command নয়। তাই বারবার পড়লে একই ফল মেলে <Cite n={7} />। ধরুন এটি এমন একটি row বদলাতে চায়, যা ইতিমধ্যে অন্য transaction বদলে commit করেছে। তখন এটি `could not serialize access due to concurrent update` দিয়ে ব্যর্থ হয়। Application-এর উচিত পুরো transaction আবার চেষ্টা করা <Cite n={7} />।
+- **Serializable:** এটি Repeatable Read-এর মতো কাজ করে, সঙ্গে আছে monitoring, যার কিছু overhead আছে। এটি serialization failure দিয়ে একটি transaction শেষ করে দিতে পারে, তাই application-কে retry করতে প্রস্তুত থাকতে হবে <Cite n={7} />।
+
+Level বেছে নেন `BEGIN ISOLATION LEVEL …` দিয়ে অথবা `SET TRANSACTION` দিয়ে। এটি করতে হয় transaction-এর প্রথম query বা data change-এর আগে <Cite n={2} /> <Cite n={8} />।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 This example is the tutorial's own. A learning site sells a course seat in two steps: it writes the payment row, then it writes the enrolment row. If the second step fails, a transaction rolls back the payment too, so nobody pays for a seat they do not get.
 
 The same site shows a report page. Session A counts the seats taken and the page shows 40. Session B then commits a new enrolment. At Read Committed, the next `SELECT` of session A in the same transaction can see 41 <Cite n={7} />. At Repeatable Read it still sees 40 <Cite n={7} />.
 
+</Technical>
+<Layman>
+
+This example is the tutorial's own. A learning site sells a course seat in two steps. It writes the payment row. Then it writes the enrolment row. If the second step fails, a transaction rolls back the payment too. So nobody pays for a seat they do not get.
+
+The same site shows a report page. Session A counts the seats taken, and the page shows 40. Session B then commits a new enrolment. At Read Committed, the next `SELECT` of session A in the same transaction can see 41 <Cite n={7} />. At Repeatable Read it still sees 40 <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটি tutorial-এর নিজস্ব। একটি learning site দুই ধাপে একটি course seat বিক্রি করে। প্রথমে সে payment row লেখে। তারপর enrolment row লেখে। দ্বিতীয় ধাপ ব্যর্থ হলে transaction payment-ও rollback করে। তাই যে seat পাওয়া যায়নি, তার জন্য কেউ টাকা দেয় না।
+
+একই site একটি report page দেখায়। Session A নেওয়া seat গুনে, এবং page 40 দেখায়। তারপর Session B একটি নতুন enrolment commit করে। Read Committed-এ session A-র একই transaction-এর পরের `SELECT` 41 দেখতে পারে <Cite n={7} />। Repeatable Read-এ সে তখনও 40 দেখে <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Not retrying.** Repeatable Read and Serializable can fail on purpose. The manual says the application must be ready to retry <Cite n={7} />.
 - **Trusting a result that did not commit.** In Serializable transactions, do not depend on data read in a transaction that later aborted <Cite n={7} />.
 - **Expecting a sequence to roll back.** Changes to a sequence, such as the counter of a `serial` column, are not rolled back when the transaction aborts <Cite n={7} />.
 - **Business rules at Repeatable Read.** The manual says such rules are not likely to work without careful use of explicit locks <Cite n={7} />.
 
+</Technical>
+<Layman>
+
+- **Not retrying.** Repeatable Read and Serializable can fail on purpose. The manual says the application must be ready to retry <Cite n={7} />.
+- **Trusting a result that did not commit.** In Serializable transactions, do not depend on data read in a transaction that later aborted <Cite n={7} />.
+- **Expecting a sequence to roll back.** Changes to a sequence, such as the counter of a `serial` column, are not rolled back when the transaction aborts <Cite n={7} />.
+- **Business rules at Repeatable Read.** The manual says such rules are not likely to work without careful use of explicit locks <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+- **Retry না করা।** Repeatable Read এবং Serializable ইচ্ছাকৃতভাবে ব্যর্থ হতে পারে। Manual বলে application-কে retry করতে প্রস্তুত থাকতে হবে <Cite n={7} />।
+- **Commit না হওয়া ফলের উপর ভরসা করা।** Serializable transaction-এ এমন transaction-এ পড়া data-র উপর নির্ভর করবেন না, যা পরে abort হয়েছে <Cite n={7} />।
+- **Sequence rollback হবে বলে আশা করা।** Sequence-এর পরিবর্তন, যেমন `serial` column-এর counter, transaction abort হলে rollback হয় না <Cite n={7} />।
+- **Repeatable Read-এ business rule।** Manual বলে, সতর্কভাবে explicit lock ব্যবহার না করলে এমন rule কাজ করার সম্ভাবনা কম <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice.
@@ -99,6 +268,29 @@ These test ideas are the tutorial's own advice.
 - **Retry.** Create a conflict. Check that the app retries and does not show a raw error.
 - **Gaps in numbers.** After a rollback, do not expect the ids to have no gaps.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Force a failure.** Make the second step of a multi-step action fail. Check that the first step left no trace.
+- **Two sessions.** Change data in one session. Read it in another before and after the commit. Repeat the read inside one transaction at each isolation level.
+- **Retry.** Create a conflict. Check that the app retries and does not show a raw error.
+- **Gaps in numbers.** After a rollback, do not expect the ids to have no gaps.
+
+</Layman>
+<Bangla>
+
+এই test ধারণাগুলো tutorial-এর নিজস্ব পরামর্শ।
+
+- **ব্যর্থতা ঘটান।** বহু-ধাপের একটি action-এর দ্বিতীয় ধাপ ব্যর্থ করান। দেখুন প্রথম ধাপ কোনো চিহ্ন রেখে যায়নি।
+- **দুটি session।** এক session-এ data বদলান। commit-এর আগে ও পরে অন্য session-এ তা পড়ুন। প্রতিটি isolation level-এ একই transaction-এর ভেতরে পড়া আবার করুন।
+- **Retry।** একটি conflict তৈরি করুন। দেখুন app retry করে এবং কাঁচা error দেখায় না।
+- **সংখ্যায় ফাঁক।** Rollback-এর পর id-তে কোনো ফাঁক থাকবে না, এমন আশা করবেন না।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

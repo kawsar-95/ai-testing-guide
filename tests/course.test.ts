@@ -132,7 +132,6 @@ test("each course page has the entry title as # heading and the 6 required ## se
       page.slug,
     );
     assert.equal(headings.at(-1), "Key words", page.slug);
-    assert.doesNotMatch(source, /<Voices>/, page.slug);
   }
 });
 

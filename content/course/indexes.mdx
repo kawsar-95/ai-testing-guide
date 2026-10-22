@@ -20,6 +20,9 @@ At the back of a textbook, an alphabetical list tells you which page to open for
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 An **index** is an extra structure that a database keeps next to a table, so that it can find rows by the value of a column. Without it, the database has to read the table row by row <Cite n={1} />. MySQL says the same: it starts at the first row and reads the whole table, and a bigger table means more work <Cite n={5} />. With an index, the database can find the right place in the data without looking at all of it <Cite n={5} />.
 
 The PostgreSQL manual uses the same book comparison, and says that the database programmer must foresee which indexes will be useful <Cite n={1} />.
@@ -30,13 +33,57 @@ You create an index with a command such as the one below. You can add or remove 
 CREATE INDEX orders_customer_idx ON orders (customer_id);
 ```
 
+</Technical>
+<Layman>
+
+An index is an extra structure that a database keeps next to a table. The database uses it to find rows by the value of a column. Without an index, the database reads the table row by row <Cite n={1} />. MySQL says the same. It starts at the first row and reads the whole table. A bigger table means more work <Cite n={5} />. With an index, the database can find the right place in the data without looking at all of it <Cite n={5} />.
+
+The PostgreSQL manual uses the same book comparison. It says that the database programmer must foresee which indexes will be useful <Cite n={1} />.
+
+You create an index with a command such as `CREATE INDEX orders_customer_idx ON orders (customer_id);`. You can add or remove an index at any time <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+Index হলো একটি অতিরিক্ত structure, যা database একটি table-এর পাশে রাখে। Database এটি ব্যবহার করে কোনো column-এর value দিয়ে row খুঁজে পায়। Index না থাকলে database-কে table-টি row by row পড়তে হয় <Cite n={1} />। MySQL-ও একই কথা বলে: এটি প্রথম row থেকে শুরু করে পুরো table পড়ে, আর table বড় হলে কাজ বেশি হয় <Cite n={5} />। Index থাকলে database সব data না দেখেই data-র সঠিক জায়গা খুঁজে পায় <Cite n={5} />।
+
+PostgreSQL manual একই বইয়ের তুলনা ব্যবহার করে। এটি বলে, কোন index কাজে লাগবে তা database programmer-কে আগে থেকে ভাবতে হবে <Cite n={1} />।
+
+আপনি `CREATE INDEX orders_customer_idx ON orders (customer_id);` এর মতো একটি command দিয়ে index তৈরি করেন। যেকোনো সময় index যোগ করা বা মুছে ফেলা যায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 You need an index when many queries look for a few rows in a big table, for example "all orders of one customer". An index can also help `UPDATE` and `DELETE` commands that have a search condition, and joins <Cite n={1} />.
 
 Indexes matter less for small tables, and for reports that read most rows of a big table: reading in order is faster there <Cite n={5} />.
 
+</Technical>
+<Layman>
+
+You need an index when many queries look for a few rows in a big table. An example is "all orders of one customer". An index can also help `UPDATE` and `DELETE` commands that have a search condition. It can help joins too <Cite n={1} />.
+
+Indexes matter less for small tables. They also matter less for reports that read most rows of a big table. Reading in order is faster there <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+বড় table-এ অনেক query যখন অল্প কিছু row খোঁজে, তখন index দরকার হয়। যেমন "একজন customer-এর সব order"। যেসব `UPDATE` ও `DELETE` command-এ search condition আছে, সেগুলোতে index সাহায্য করতে পারে। Join-এও সাহায্য করতে পারে <Cite n={1} />।
+
+ছোট table-এর জন্য index কম গুরুত্বপূর্ণ। বড় table-এর বেশিরভাগ row পড়ে এমন report-এর জন্যও তাই, কারণ সেখানে ক্রমানুসারে পড়া দ্রুত <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
 ## How it works
+
+<Voices>
+<Technical>
 
 Most MySQL indexes are stored in B-trees <Cite n={5} />. PostgreSQL also creates a B-tree by default <Cite n={2} />. With a search tree, the database may need to walk only a few levels <Cite n={1} />.
 
@@ -63,20 +110,116 @@ An index is not free:
 
 For this reason, the manual says to remove an index that is seldom or never used <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+Most MySQL indexes use B-trees <Cite n={5} />. PostgreSQL also creates a B-tree by default <Cite n={2} />. With a search tree, the database may need to walk only a few levels <Cite n={1} />.
+
+PostgreSQL index types handle different queries <Cite n={2} />:
+
+- A B-tree handles equality and range queries on sortable data. Examples are `<`, `=`, `>`, `BETWEEN`, and `IN`.
+- A hash index handles simple equality only.
+
+A B-tree can help with `LIKE 'foo%'` (a fixed start). It cannot help with `LIKE '%bar'` <Cite n={2} />.
+
+An index can have more than one column. A multicolumn B-tree index works best when the query limits the first (leftmost) columns <Cite n={3} />. In MySQL, an index on `(col1, col2, col3)` serves a search on `col1`, on `col1, col2`, and on all three <Cite n={5} />. PostgreSQL says to use multicolumn indexes sparingly <Cite n={3} />.
+
+Sometimes a query needs only columns that are in an index. Then the database can take the values from the index tree. This is a covering index <Cite n={5} />.
+
+An index is not free. It has three costs:
+
+- **Writes.** The database must keep the index in step with the table. This adds work to every data change <Cite n={1} />.
+- **Space.** An index takes space of its own. The PostgreSQL manual notes that a single-column index "saves space and time" compared with a wider one <Cite n={3} />.
+- **Build time.** Building an index on a big table may be slow. During the build, PostgreSQL by default lets reads run but blocks writes <Cite n={1} />.
+
+For this reason, the manual says to remove an index that is seldom or never used <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+MySQL-এর বেশিরভাগ index B-tree-তে রাখা হয় <Cite n={5} />। PostgreSQL-ও default হিসেবে B-tree তৈরি করে <Cite n={2} />। Search tree থাকলে database-কে হয়তো মাত্র কয়েকটি level পার হতে হয় <Cite n={1} />।
+
+PostgreSQL-এর বিভিন্ন index type বিভিন্ন query সামলায় <Cite n={2} />:
+
+- B-tree sort করা যায় এমন data-তে equality ও range query সামলায়। যেমন `<`, `=`, `>`, `BETWEEN` ও `IN`।
+- Hash index শুধু সাধারণ equality সামলায়।
+
+B-tree `LIKE 'foo%'` (শুরুর অংশ নির্দিষ্ট) এ সাহায্য করতে পারে, কিন্তু `LIKE '%bar'` এ পারে না <Cite n={2} />।
+
+একটি index-এ একাধিক column থাকতে পারে। Query প্রথম (leftmost) column-গুলোকে সীমিত করলে multicolumn B-tree index সবচেয়ে ভালো কাজ করে <Cite n={3} />। MySQL-এ `(col1, col2, col3)` এর index `col1` দিয়ে, `col1, col2` দিয়ে এবং তিনটি দিয়েই search সামলায় <Cite n={5} />। PostgreSQL বলে multicolumn index কম ব্যবহার করতে <Cite n={3} />।
+
+কখনো একটি query-র দরকারি সব column index-এই থাকে। তখন database index tree থেকেই value নিতে পারে। একে covering index বলে <Cite n={5} />।
+
+Index বিনামূল্যে পাওয়া যায় না। এর তিনটি খরচ আছে:
+
+- **Write।** Database-কে index আর table একসাথে ঠিক রাখতে হয়। এতে প্রতিটি data পরিবর্তনে কাজ বাড়ে <Cite n={1} />।
+- **Space।** Index নিজের জন্য জায়গা নেয়। PostgreSQL manual বলে, আরও চওড়া (wider) index-এর তুলনায় single-column index "saves space and time" <Cite n={3} />।
+- **Build time।** বড় table-এ index তৈরি ধীর হতে পারে। Build চলার সময় PostgreSQL by default read চলতে দেয়, কিন্তু write আটকে দেয় <Cite n={1} />।
+
+এই কারণে manual বলে, যে index কদাচিৎ বা কখনোই ব্যবহার হয় না, তা মুছে ফেলতে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 A learning platform has an `enrollments` table with 5 million rows. The page "My courses" runs `SELECT * FROM enrollments WHERE student_id = 42`. This is the tutorial's own example, and the numbers are not from a source.
 
 Without an index on `student_id`, the database reads the table for each page view. With the index, it goes to the few rows of student 42, and the page gets faster. But every new enrollment now also updates the index, so a bulk import has more work to do. With ten more indexes added "just in case", every import pays for all of them.
 
+</Technical>
+<Layman>
+
+A learning platform has an `enrollments` table with 5 million rows. The page "My courses" runs `SELECT * FROM enrollments WHERE student_id = 42`. This is the tutorial's own example. The numbers are not from a source.
+
+Without an index on `student_id`, the database reads the table for each page view. With the index, it goes to the few rows of student 42. The page gets faster. But now every new enrollment also updates the index. So a bulk import has more work to do. Suppose you add ten more indexes "just in case". Then every import pays for all of them.
+
+</Layman>
+<Bangla>
+
+একটি learning platform-এর `enrollments` table-এ 5 million row আছে। "My courses" page `SELECT * FROM enrollments WHERE student_id = 42` চালায়। এটি tutorial-এর নিজস্ব উদাহরণ, আর সংখ্যাগুলো কোনো source থেকে নেওয়া নয়।
+
+`student_id`-তে index না থাকলে database প্রতিটি page view-এর জন্য table পড়ে। Index থাকলে database student 42-এর অল্প কয়েকটি row-তে সোজা চলে যায়, আর page দ্রুত হয়। কিন্তু এখন প্রতিটি নতুন enrollment index-কেও update করে। তাই bulk import-এ কাজ বেশি হয়। ধরুন আপনি "যদি লাগে" ভেবে আরও দশটি index যোগ করলেন। তখন প্রতিটি import-কে সবগুলোর খরচ দিতে হয়।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Indexing every column.** Each index adds work on writes <Cite n={1} /> and takes space <Cite n={3} />.
 - **Expecting a multicolumn index to help every query.** A query that skips the leftmost column may get little help <Cite n={3} />.
 - **Comparing columns of different types.** In MySQL, a comparison between two string columns with different character sets (for example `utf8mb4` and `latin1`) rules out an index <Cite n={5} />.
 - **Using a leading wildcard.** `LIKE '%bar'` cannot use a B-tree <Cite n={2} />. The database uses an index when it thinks that is more efficient than a full scan <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+- **Indexing every column.** Each index adds work on writes <Cite n={1} />. Each index also takes space <Cite n={3} />.
+- **Expecting a multicolumn index to help every query.** A query that skips the leftmost column may get little help <Cite n={3} />.
+- **Comparing columns of different types.** In MySQL, a comparison between two string columns with different character sets rules out an index. An example is `utf8mb4` and `latin1` <Cite n={5} />.
+- **Using a leading wildcard.** `LIKE '%bar'` cannot use a B-tree <Cite n={2} />. The database uses an index when it thinks that is more efficient than a full scan <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **প্রতিটি column-এ index দেওয়া।** প্রতিটি index write-এ কাজ বাড়ায় <Cite n={1} />, আর জায়গাও নেয় <Cite n={3} />।
+- **ভাবা যে multicolumn index প্রতিটি query-তে সাহায্য করবে।** যে query leftmost column বাদ দেয়, সে হয়তো খুব কম সাহায্য পায় <Cite n={3} />।
+- **ভিন্ন type-এর column তুলনা করা।** MySQL-এ ভিন্ন character set-এর দুটি string column তুলনা করলে index ব্যবহার হয় না। যেমন `utf8mb4` আর `latin1` <Cite n={5} />।
+- **শুরুতে wildcard ব্যবহার করা।** `LIKE '%bar'` B-tree ব্যবহার করতে পারে না <Cite n={2} />। যখন database মনে করে index full scan-এর চেয়ে বেশি কার্যকর, তখন সে index ব্যবহার করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## How to see if a query uses an index
+
+<Voices>
+<Technical>
 
 Put `EXPLAIN` before the query to see the plan that the database chose <Cite n={7} />.
 
@@ -86,7 +229,35 @@ The cost numbers are estimates <Cite n={4} />. With `EXPLAIN ANALYZE`, PostgreSQ
 
 In MySQL, read two columns of the `EXPLAIN` result. `key` is the index that MySQL decided to use, and `NULL` means it found no index to use <Cite n={6} />. If `possible_keys` is `NULL`, no index is relevant <Cite n={6} />. The join type `ALL` is a full table scan, which is normally not good for the first table <Cite n={6} />. To list the indexes of a table, use `SHOW INDEX FROM tbl_name` <Cite n={6} />.
 
+</Technical>
+<Layman>
+
+Put `EXPLAIN` before the query. It shows the plan that the database chose <Cite n={7} />.
+
+In PostgreSQL, the plan is a tree of nodes. The bottom nodes are scan nodes. A table can be read by a sequential scan, an index scan, or a bitmap index scan <Cite n={4} />. A Seq Scan with a `Filter` checks the condition on each row it reads <Cite n={4} />. An Index Scan shows an `Index Cond` line <Cite n={4} />.
+
+The cost numbers are estimates <Cite n={4} />. With `EXPLAIN ANALYZE`, PostgreSQL executes the statement. It does not only plan it <Cite n={7} />. Then it shows the true row counts and times next to the estimates <Cite n={4} />. The manual says that a key check is whether the estimated row counts are near the real ones <Cite n={4} />.
+
+In MySQL, read two columns of the `EXPLAIN` result. The column `key` is the index that MySQL decided to use. `NULL` means it found no index to use <Cite n={6} />. If `possible_keys` is `NULL`, no index is relevant <Cite n={6} />. The join type `ALL` is a full table scan. This is normally not good for the first table <Cite n={6} />. To list the indexes of a table, use `SHOW INDEX FROM tbl_name` <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+Query-র আগে `EXPLAIN` লিখুন। এটি database যে plan বেছে নিয়েছে তা দেখায় <Cite n={7} />।
+
+PostgreSQL-এ plan হলো node-এর একটি tree। নিচের node-গুলো scan node। একটি table sequential scan, index scan বা bitmap index scan দিয়ে পড়া যায় <Cite n={4} />। `Filter` সহ একটি Seq Scan যে প্রতিটি row পড়ে, তাতে condition যাচাই করে <Cite n={4} />। একটি Index Scan-এ `Index Cond` লাইন দেখা যায় <Cite n={4} />।
+
+Cost-এর সংখ্যাগুলো আন্দাজ <Cite n={4} />। `EXPLAIN ANALYZE` দিলে PostgreSQL statement শুধু plan করে না, চালায়ও <Cite n={7} />। তারপর আন্দাজের পাশে সত্যিকারের row সংখ্যা ও সময় দেখায় <Cite n={4} />। Manual বলে, একটি মূল পরীক্ষা হলো আন্দাজ করা row সংখ্যা আসল সংখ্যার কাছাকাছি কি না <Cite n={4} />।
+
+MySQL-এ `EXPLAIN` ফলাফলের দুটি column পড়ুন। `key` হলো সেই index, যেটি MySQL ব্যবহার করবে বলে ঠিক করেছে। `NULL` মানে ব্যবহার করার মতো কোনো index সে পায়নি <Cite n={6} />। `possible_keys` `NULL` হলে কোনো index প্রাসঙ্গিক নয় <Cite n={6} />। Join type `ALL` মানে full table scan। প্রথম table-এর জন্য এটি সাধারণত ভালো নয় <Cite n={6} />। একটি table-এর index-গুলো দেখতে `SHOW INDEX FROM tbl_name` ব্যবহার করুন <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice.
@@ -97,6 +268,31 @@ These test ideas are the tutorial's own advice.
 - **Measure the write side too.** Time a bulk insert or update with and without the index.
 - **Be careful with `EXPLAIN ANALYZE` on `UPDATE` or `DELETE`.** It really runs the query, so use a copy of the data.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Test with a realistic amount of data.** With 50 rows, every query is fast and a missing index stays hidden. Use a data set as large as production.
+- **Run `EXPLAIN` on the slow query.** Look for a full scan on a big table. In MySQL, look for `key: NULL`.
+- **Compare before and after.** Check the plan and the time before and after you add the index.
+- **Measure the write side too.** Time a bulk insert or update with and without the index.
+- **Be careful with `EXPLAIN ANALYZE` on `UPDATE` or `DELETE`.** It really runs the query, so use a copy of the data.
+
+</Layman>
+<Bangla>
+
+এই test-এর ধারণাগুলো tutorial-এর নিজস্ব পরামর্শ।
+
+- **বাস্তবসম্মত পরিমাণ data দিয়ে test করুন।** 50টি row থাকলে প্রতিটি query দ্রুত হয়, আর না-থাকা index লুকিয়ে থাকে। Production-এর সমান বড় data set ব্যবহার করুন।
+- **ধীর query-তে `EXPLAIN` চালান।** বড় table-এ full scan খুঁজুন। MySQL-এ `key: NULL` খুঁজুন।
+- **আগে ও পরে তুলনা করুন।** Index যোগ করার আগে ও পরে plan আর সময় দেখুন।
+- **Write-এর দিকটাও মাপুন।** Index সহ ও index ছাড়া একটি bulk insert বা update-এর সময় মাপুন।
+- **`UPDATE` বা `DELETE`-এ `EXPLAIN ANALYZE` সাবধানে ব্যবহার করুন।** এটি query সত্যিই চালায়, তাই data-র একটি copy ব্যবহার করুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

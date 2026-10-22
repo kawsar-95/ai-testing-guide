@@ -14,13 +14,40 @@ A bank statement lists every deposit and every withdrawal, not only the balance.
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 Most applications store only the latest state of the data. They read a row, change it, and write the new values back. This is the CRUD model. It keeps no history unless you add a separate audit log <Cite n={1} />.
 
 Event sourcing does the opposite. It keeps every action on an object, in order, in a store that only accepts new records. That store is the system of record <Cite n={1} />. Each event is one logical change, such as AddedItemToOrder or OrderCanceled <Cite n={1} />. Every entity gets a separate eventstream: its changes, in order <Cite n={1} />.
 
 The source calls it a complex pattern with significant trade-offs. It is costly to move to or from, and it limits later design choices <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+Most applications store only the latest state of the data. They read a row, change it, and write the new values back. This is the CRUD model. It keeps no history unless you add a separate audit log <Cite n={1} />.
+
+Event sourcing does the opposite. It keeps every action on an object, in order, in a store that only accepts new records. That store is the system of record <Cite n={1} />. Each event is one logical change, such as AddedItemToOrder or OrderCanceled <Cite n={1} />. Every entity gets a separate eventstream. The eventstream holds the changes of the entity, in order <Cite n={1} />.
+
+The source calls it a complex pattern with significant trade-offs. It is costly to move to or from. It also limits later design choices <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+বেশিরভাগ application data-র শুধু সর্বশেষ state রাখে। তারা একটি row পড়ে, বদলায় এবং নতুন মান আবার লেখে। এটি CRUD model। আলাদা audit log যোগ না করলে এতে কোনো history থাকে না <Cite n={1} />।
+
+Event sourcing উল্টোটা করে। এটি একটি object-এর প্রতিটি action ক্রমানুযায়ী এমন একটি store-এ রাখে, যা শুধু নতুন record নেয়। সেই store-ই system of record <Cite n={1} />। প্রতিটি event একটি যৌক্তিক পরিবর্তন, যেমন AddedItemToOrder বা OrderCanceled <Cite n={1} />। প্রতিটি entity-র আলাদা একটি eventstream থাকে। Eventstream-এ entity-র পরিবর্তনগুলো ক্রমানুযায়ী থাকে <Cite n={1} />।
+
+Source একে significant trade-off-সহ একটি জটিল pattern বলে। এতে যাওয়া বা এখান থেকে সরে আসা ব্যয়বহুল। এটি পরের design-এর পছন্দও সীমিত করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## How it works
+
+<Voices>
+<Technical>
 
 **Rebuild the state.** An application works out the state of an entity by replaying every event in its stream. The source calls this rehydration, and it can happen on demand <Cite n={1} />. A command handler first loads the eventstream and replays it. Then it runs the business logic. Then it raises new events <Cite n={1} />.
 
@@ -34,7 +61,43 @@ The source calls it a complex pattern with significant trade-offs. It is costly 
 
 **Guard against clashes.** Two handlers can load the same entity at once. The event store can use optimistic concurrency control. It rejects an append if the stream changed after the handler read it. The handler then reloads, checks again, and retries <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+**Rebuild the state.** An application works out the state of an entity by replaying every event in its stream. The source calls this rehydration. It can happen on demand <Cite n={1} />. A command handler first loads the eventstream and replays it. Then it runs the business logic. Then it raises new events <Cite n={1} />.
+
+**Append, never change.** Events are immutable. They are added with append-only operations <Cite n={1} />. You never update event data. To undo a change, you add a compensating event. For example, ReservationCanceled compensates for an earlier SeatsReserved. The old event stays in the stream <Cite n={1} />.
+
+**Pass events on.** In most designs the events go to a queue or topic, so the producers and the consumers do not depend on each other <Cite n={1} />. Event handlers then write the events to the store, update a read-only store, or call external systems <Cite n={1} />.
+
+**Use views for reading.** Reading and replaying events is costly. So applications usually build materialized views. A materialized view is read-only. It is built from the event store and shaped for queries <Cite n={1} />.
+
+**Use snapshots for long streams.** A long stream makes replay slow. A snapshot is a saved copy of the entity state at one point in the stream, for example after every N events. The application loads the newest snapshot and replays only the later events <Cite n={1} />. You choose how often to snapshot by balancing storage cost against time saved <Cite n={1} />. A snapshot is an optimization. The stream stays the source of truth. You can make the snapshots again from it <Cite n={1} />.
+
+**Guard against clashes.** Two handlers can load the same entity at once. The event store can use optimistic concurrency control. It rejects an append if the stream changed after the handler read it. The handler then reloads, checks again, and retries <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**State আবার তৈরি করা।** একটি application একটি entity-র stream-এর প্রতিটি event replay করে তার state বের করে। Source এটিকে rehydration বলে। এটি চাহিদা অনুযায়ী ঘটতে পারে <Cite n={1} />। একটি command handler প্রথমে eventstream load করে এবং replay করে। তারপর business logic চালায়। তারপর নতুন event raise করে <Cite n={1} />।
+
+**শুধু যোগ করুন, কখনো বদলাবেন না।** Event immutable। এগুলো append-only operation দিয়ে যোগ করা হয় <Cite n={1} />। আপনি event data কখনো update করেন না। কোনো পরিবর্তন বাতিল করতে একটি compensating event যোগ করুন। যেমন, ReservationCanceled আগের SeatsReserved-কে compensate করে। পুরোনো event stream-এই থাকে <Cite n={1} />।
+
+**Event এগিয়ে দেওয়া।** বেশিরভাগ design-এ event একটি queue বা topic-এ যায়, তাই producer ও consumer একে অপরের ওপর নির্ভর করে না <Cite n={1} />। এরপর event handler event-গুলো store-এ লেখে, একটি read-only store update করে বা বাইরের system-কে call করে <Cite n={1} />।
+
+**পড়ার জন্য view ব্যবহার করুন।** Event পড়া ও replay করা ব্যয়বহুল। তাই application সাধারণত materialized view তৈরি করে। Materialized view read-only। এটি event store থেকে তৈরি এবং query-র জন্য সাজানো <Cite n={1} />।
+
+**লম্বা stream-এর জন্য snapshot ব্যবহার করুন।** লম্বা stream replay ধীর করে। Snapshot হলো stream-এর একটি বিন্দুতে entity state-এর সংরক্ষিত copy, যেমন প্রতি N event পরপর। Application সর্বশেষ snapshot load করে এবং শুধু পরের event-গুলো replay করে <Cite n={1} />। Storage খরচ ও বাঁচানো সময়ের মধ্যে ভারসাম্য রেখে আপনি ঠিক করেন কত ঘন ঘন snapshot নেবেন <Cite n={1} />। Snapshot একটি optimization। Stream-ই source of truth থাকে। আপনি তা থেকে snapshot আবার তৈরি করতে পারেন <Cite n={1} />।
+
+**সংঘর্ষ থেকে রক্ষা।** দুটি handler একই সময়ে একই entity load করতে পারে। Event store optimistic concurrency control ব্যবহার করতে পারে। Handler পড়ার পরে stream বদলে গেলে এটি append প্রত্যাখ্যান করে। তখন handler আবার load করে, আবার যাচাই করে এবং retry করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 The source lists these reasons to use the pattern <Cite n={1} />:
 
@@ -55,7 +118,57 @@ It is often combined with CQRS, which splits reads from writes <Cite n={1} />. S
 
 For most systems, traditional data management is enough <Cite n={1} />. You can use event sourcing in one part only, such as a payment ledger <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+The source lists these reasons to use the pattern <Cite n={1} />:
+
+- You want to keep the intent or reason behind a change.
+- You must avoid conflicting updates.
+- You want a history, an audit log, or the ability to replay events and roll back.
+- You want to separate the input of data from the tasks that act on it.
+
+Teams often combine it with CQRS, which splits reads from writes <Cite n={1} />. See the page [CQRS](/course/cqrs/) for that pattern.
+
+**When not to use it.** The source says the pattern may not suit these cases <Cite n={1} />:
+
+- Simple CRUD work that needs no audit, replay, or history.
+- Prototypes, minimum viable products, or systems with a short life.
+- Systems that need consistent, real-time views of the data.
+- Data that is mostly static, such as lookup tables.
+- Teams with no experience of event-driven systems.
+
+For most systems, traditional data management is enough <Cite n={1} />. You can use event sourcing in one part only, such as a payment ledger <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+Source এই pattern ব্যবহারের কারণগুলো তালিকাভুক্ত করে <Cite n={1} />:
+
+- আপনি একটি পরিবর্তনের পেছনের উদ্দেশ্য বা কারণ রাখতে চান।
+- আপনাকে সংঘাতপূর্ণ update এড়াতে হবে।
+- আপনি একটি history, একটি audit log, অথবা event replay ও roll back করার ক্ষমতা চান।
+- আপনি data-র input-কে তার ওপর কাজ করা task থেকে আলাদা করতে চান।
+
+Team-রা প্রায়ই এটিকে CQRS-এর সাথে মেলায়, যা read-কে write থেকে আলাদা করে <Cite n={1} />। সেই pattern-এর জন্য [CQRS](/course/cqrs/) পাতা দেখুন।
+
+**কখন ব্যবহার করবেন না।** Source বলে, এই ক্ষেত্রগুলোতে pattern-টি নাও মানাতে পারে <Cite n={1} />:
+
+- সহজ CRUD কাজ, যেখানে audit, replay বা history লাগে না।
+- Prototype, minimum viable product, বা স্বল্পায়ু system।
+- যে system-এ data-র সামঞ্জস্যপূর্ণ, real-time view দরকার।
+- প্রায় অপরিবর্তিত data, যেমন lookup table।
+- যে team-এর event-driven system-এর অভিজ্ঞতা নেই।
+
+বেশিরভাগ system-এর জন্য প্রচলিত data management-ই যথেষ্ট <Cite n={1} />। আপনি event sourcing শুধু একটি অংশে ব্যবহার করতে পারেন, যেমন একটি payment ledger <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Trade-offs
+
+<Voices>
+<Technical>
 
 **Gains.** The store gives an audit trail, and you can rebuild views by replay at any time <Cite n={1} />. Adding events does not need the row locks that in-place updates need, and this avoids lock contention, so write throughput can improve <Cite n={1} />.
 
@@ -72,17 +185,91 @@ For most systems, traditional data management is enough <Cite n={1} />. You can 
 
 **Other costs.** There is no standard query tool like SQL. You read a stream by its event identifier and replay it <Cite n={1} />. Delivery is usually at least once, so handlers must be idempotent, or duplicates can change the result <Cite n={1} />. The immutable store can conflict with laws that require deletion of personal data <Cite n={1} />. The source says a given-when-then test style suits these systems best, and you also need integration tests for views, duplicates, and schema changes <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+**Gains.** The store gives an audit trail. You can rebuild views by replay at any time <Cite n={1} />. Adding events does not need the row locks that in-place updates need. This avoids lock contention, so write throughput can improve <Cite n={1} />.
+
+**Eventual consistency.** Views built from events are only eventually consistent. A delay exists between a request, the publishing of its events, and the handling by consumers. Customers need to understand this <Cite n={1} />.
+
+**Event versioning.** If a bug writes wrong events, fixing the code does not fix the old events <Cite n={1} />. A schema change can make old and new events hard to combine <Cite n={1} />. The source lists four ways to cope. You can mix them <Cite n={1} />:
+
+- Tolerant deserialization: readers ignore unknown fields and use defaults for missing ones.
+- Event versioning: each event carries a version identifier.
+- Upcasting: the reader converts old events to the current schema when it reads them. The stored events stay as they are.
+- In-place migration: old events are rewritten. This breaks immutability, so it is a last resort.
+
+**Other costs.** There is no standard query tool like SQL. You read a stream by its event identifier and replay it <Cite n={1} />. Delivery is usually at least once, so handlers must be idempotent. If not, duplicates can change the result <Cite n={1} />. The immutable store can conflict with laws that require deletion of personal data <Cite n={1} />. The source says a given-when-then test style suits these systems best. You also need integration tests for views, duplicates, and schema changes <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**সুবিধা।** Store একটি audit trail দেয়। আপনি যেকোনো সময় replay করে view আবার তৈরি করতে পারেন <Cite n={1} />। Event যোগ করতে সেই row lock লাগে না, যা in-place update-এ লাগে। এতে lock contention এড়ানো যায়, তাই write throughput বাড়তে পারে <Cite n={1} />।
+
+**Eventual consistency।** Event থেকে তৈরি view কেবল eventually consistent। একটি request, তার event publish এবং consumer-এর handling-এর মধ্যে একটি delay থাকে। Customer-দের এটি বুঝতে হবে <Cite n={1} />।
+
+**Event versioning।** কোনো bug ভুল event লিখলে code ঠিক করলে পুরোনো event ঠিক হয় না <Cite n={1} />। Schema বদলালে পুরোনো ও নতুন event মেলানো কঠিন হতে পারে <Cite n={1} />। Source মোকাবিলার চারটি উপায় তালিকাভুক্ত করে। আপনি এগুলো মিশিয়ে ব্যবহার করতে পারেন <Cite n={1} />:
+
+- Tolerant deserialization: reader অজানা field উপেক্ষা করে এবং না থাকা field-এর জন্য default ব্যবহার করে।
+- Event versioning: প্রতিটি event একটি version identifier বহন করে।
+- Upcasting: reader পড়ার সময় পুরোনো event-কে বর্তমান schema-তে রূপান্তর করে। সংরক্ষিত event যেমন ছিল তেমনই থাকে।
+- In-place migration: পুরোনো event আবার লেখা হয়। এতে immutability ভাঙে, তাই এটি শেষ উপায়।
+
+**অন্যান্য খরচ।** SQL-এর মতো কোনো standard query tool নেই। আপনি event identifier দিয়ে একটি stream পড়েন এবং replay করেন <Cite n={1} />। Delivery সাধারণত at least once, তাই handler-কে idempotent হতে হবে। না হলে duplicate ফলাফল বদলে দিতে পারে <Cite n={1} />। Immutable store এমন আইনের সাথে সংঘাতে পড়তে পারে, যেগুলো ব্যক্তিগত data মুছে ফেলতে বলে <Cite n={1} />। Source বলে, given-when-then test style এই system-গুলোর জন্য সবচেয়ে মানানসই। এছাড়া view, duplicate ও schema পরিবর্তনের জন্য integration test-ও দরকার <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 This example is the tutorial's own and is simplified. A test management app records each test run as events: TestRunStarted, StepPassed, StepFailed, TestRunAborted. The app replays the events to show the status of a run. The same list answers "when did step 3 first fail?" A table with only a "status" column could not.
 
+</Technical>
+<Layman>
+
+This example is the tutorial's own and is simplified. A test management app records each test run as events: TestRunStarted, StepPassed, StepFailed, TestRunAborted. The app replays the events to show the status of a run. The same list answers "when did step 3 first fail?" A table with only a "status" column could not answer it.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটি tutorial-এর নিজের এবং সরলীকৃত। একটি test management app প্রতিটি test run event হিসেবে রাখে: TestRunStarted, StepPassed, StepFailed, TestRunAborted। App event replay করে একটি run-এর status দেখায়। একই তালিকা "step 3 প্রথম কখন fail করেছিল?" প্রশ্নের উত্তরও দেয়। শুধু একটি "status" column-ওয়ালা table তা দিতে পারত না।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Storing only the new state in an event.** An event such as "remaining seats changed to 42" tells you the result but not what happened. An event such as "two seats reserved" records the intent <Cite n={1} />.
 - **Treating a message broker as the event store.** The source says a broker such as Apache Kafka usually cannot query one entity's stream or apply optimistic concurrency. It suits spreading events out, not storing them <Cite n={1} />.
 - **Forgetting duplicate events.** Without idempotent handlers, projections can drift, and payments or notices can happen twice <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+- **Storing only the new state in an event.** An event such as "remaining seats changed to 42" tells you the result but not what happened. An event such as "two seats reserved" records the intent <Cite n={1} />.
+- **Treating a message broker as the event store.** The source says a broker such as Apache Kafka usually cannot query one entity's stream or apply optimistic concurrency. It suits spreading events out, not storing them <Cite n={1} />.
+- **Forgetting duplicate events.** Without idempotent handlers, projections can drift. Payments or notices can happen twice <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **Event-এ শুধু নতুন state রাখা।** "remaining seats changed to 42"-এর মতো event ফলাফল বলে, কিন্তু কী ঘটেছিল তা বলে না। "two seats reserved"-এর মতো event উদ্দেশ্য রেকর্ড করে <Cite n={1} />।
+- **Message broker-কে event store মনে করা।** Source বলে, Apache Kafka-র মতো broker সাধারণত একটি entity-র stream query করতে বা optimistic concurrency প্রয়োগ করতে পারে না। এটি event ছড়িয়ে দেওয়ার জন্য মানানসই, জমা রাখার জন্য নয় <Cite n={1} />।
+- **Duplicate event ভুলে যাওয়া।** Idempotent handler না থাকলে projection সরে যেতে পারে। Payment বা নোটিশ দুবার হতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice, not a claim of the source.
@@ -93,6 +280,31 @@ These test ideas are the tutorial's own advice, not a claim of the source.
 - **Old events.** Keep a sample of events from an older version. Check that the new code still reads them.
 - **Clashes.** Send two commands to one entity at once. Check that one succeeds and the other retries or fails with a clear error.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice. They are not a claim of the source.
+
+- **Replay.** Rebuild an entity from its events. Compare the result with the view the app shows.
+- **Lag.** Add an event, then read the view at once and again after a wait. Check that the app handles the old value in between.
+- **Duplicates.** Send the same event twice. Check that the count, the payment, or the message does not repeat.
+- **Old events.** Keep a sample of events from an older version. Check that the new code still reads them.
+- **Clashes.** Send two commands to one entity at once. Check that one succeeds and the other retries or fails with a clear error.
+
+</Layman>
+<Bangla>
+
+এই test ধারণাগুলো tutorial-এর নিজের পরামর্শ। এগুলো source-এর দাবি নয়।
+
+- **Replay।** একটি entity তার event থেকে আবার তৈরি করুন। ফলাফলকে app-এর দেখানো view-র সাথে তুলনা করুন।
+- **Lag।** একটি event যোগ করুন, তারপর সাথে সাথে view পড়ুন এবং কিছুক্ষণ অপেক্ষার পর আবার পড়ুন। দেখুন মাঝখানের পুরোনো মান app ঠিকভাবে সামলায় কি না।
+- **Duplicate।** একই event দুবার পাঠান। দেখুন count, payment বা message পুনরাবৃত্তি হয় না।
+- **পুরোনো event।** পুরোনো version-এর কিছু event-এর নমুনা রাখুন। দেখুন নতুন code এখনও সেগুলো পড়তে পারে।
+- **সংঘর্ষ।** একই সময়ে একটি entity-তে দুটি command পাঠান। দেখুন একটি সফল হয় এবং অন্যটি retry করে বা স্পষ্ট error-সহ ব্যর্থ হয়।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

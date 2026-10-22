@@ -19,15 +19,54 @@ When you pay for a trip, two things must change together: the shop must keep you
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 A **distributed transaction** is one business action that changes more than one database or service. Many systems give each microservice its own database, so the usual ACID guarantees do not directly apply across these separate stores <Cite n={5} />.
 
 Two main ways exist: **two-phase commit (2PC)**, where all databases get ready first and then commit or roll back together, and the **saga**, where each service commits a small step and later steps undo it if needed.
 
+</Technical>
+<Layman>
+
+A **distributed transaction** is one business action that changes more than one database or service. Many systems give each microservice its own database. So the usual ACID guarantees do not directly apply across these separate stores <Cite n={5} />.
+
+There are two main ways. One is **two-phase commit (2PC)**. All databases get ready first. Then they commit or roll back together. The other is the **saga**. Each service commits a small step. Later steps undo it if needed.
+
+</Layman>
+<Bangla>
+
+**Distributed transaction** হলো এমন একটা business action যা একাধিক database বা service বদলায়। অনেক system প্রতিটা microservice-কে তার নিজের database দেয়। তাই এই আলাদা store-গুলোর মধ্যে স্বাভাবিক ACID guarantee সরাসরি খাটে না <Cite n={5} />।
+
+প্রধান দুটো উপায় আছে। একটা **two-phase commit (2PC)**। এতে সব database আগে প্রস্তুত হয়, তারপর একসঙ্গে commit বা roll back করে। অন্যটা **saga**। এতে প্রতিটা service একটা ছোট ধাপ commit করে। দরকার হলে পরের ধাপগুলো সেটা undo করে।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 You need this topic when one user action touches more than one database or service, such as an order and a payment.
 
+</Technical>
+<Layman>
+
+You need this topic when one user action touches more than one database or service, such as an order and a payment.
+
+</Layman>
+<Bangla>
+
+যখন একটা user action একাধিক database বা service ছোঁয়, যেমন একটা order আর একটা payment, তখন এই বিষয়টা দরকার।
+
+</Bangla>
+</Voices>
+
 ## How it works
+
+<Voices>
+<Technical>
 
 ### Two-phase commit
 
@@ -71,20 +110,136 @@ There are two ways to run a saga <Cite n={5} />:
 | Choreography | Services exchange events. There is no central controller. | Fits simple workflows <Cite n={5} /> | Gets confusing when steps grow, and integration tests need all services running <Cite n={5} /> |
 | Orchestration | A central orchestrator tells each service what to do and handles failure recovery | Suits complex workflows <Cite n={5} /> | The orchestrator is a point of failure <Cite n={5} /> |
 
+</Technical>
+<Layman>
+
+**Two-phase commit**
+
+PostgreSQL gives the building blocks of 2PC, but not the whole protocol. The docs say these commands let an **external transaction manager** run atomic global transactions across several databases or other transactional resources <Cite n={1} />. The docs say that you probably should not use `PREPARE TRANSACTION`, unless you write a transaction manager <Cite n={1} />.
+
+For each database, the steps are:
+
+1. Inside a transaction block, the manager sends the work. Then it runs `PREPARE TRANSACTION 'some-id'`. This command needs a transaction id. The id is a string of fewer than 200 bytes <Cite n={1} />.
+2. After the prepare, the transaction is no longer tied to the session. Its state is fully stored on disk <Cite n={1} />.
+3. The manager checks that the other databases are also prepared to commit. Then it commits the transaction with `COMMIT PREPARED` <Cite n={1} />. If not, it uses `ROLLBACK PREPARED` <Cite n={1} />.
+
+`COMMIT PREPARED` and `ROLLBACK PREPARED` can run in a different session from the one that did the prepare <Cite n={1} />. Both commit or roll back at once <Cite n={2} /> <Cite n={3} />.
+
+**What 2PC gives you, as the docs state it.** After a prepare, there is a "very high probability" that the commit can succeed, even if the database crashes before the commit <Cite n={1} />. The docs say probability. Do not read it as a guarantee.
+
+**What 2PC costs, as the docs state it.** A prepared transaction keeps the locks that it held <Cite n={1} />. If it stays prepared for a long time, it interferes with `VACUUM`. In extreme cases, it can make the database shut down to prevent transaction ID wraparound <Cite n={1} />. The docs call it unwise to leave a transaction prepared for long <Cite n={1} />.
+
+The feature is off by default. `max_prepared_transactions` is 0, and you can set it only at server start <Cite n={4} />. Without a manager that closes prepared transactions promptly, the docs advise to keep it at 0 <Cite n={1} />. The view `pg_prepared_xacts` lists prepared transactions <Cite n={1} />.
+
+**Saga**
+
+A saga breaks the work into a sequence of **local transactions**. Each one completes in one service and updates the database of that service. It starts the next step with an event or a message <Cite n={5} />. If a step fails, the saga runs **compensating transactions**. They reverse the changes of the earlier steps <Cite n={5} />.
+
+A compensating transaction is not a simple rollback. A plain restore of the old state could overwrite changes from other users. So the compensation must be application specific <Cite n={6} />. The system records how to undo each step <Cite n={6} />.
+
+A saga has a **pivot transaction**. It is the point of no return. After it succeeds, all later steps must finish. These later steps can be retried, and they are idempotent <Cite n={5} />.
+
+There are two ways to run a saga <Cite n={5} />:
+
+- **Choreography.** Services exchange events. There is no central controller. It fits simple workflows <Cite n={5} />. It gets confusing when steps grow, and integration tests need all services running <Cite n={5} />.
+- **Orchestration.** A central orchestrator tells each service what to do and handles failure recovery. It suits complex workflows <Cite n={5} />. The orchestrator is a point of failure <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+**Two-phase commit**
+
+PostgreSQL 2PC-র building block দেয়, কিন্তু পুরো protocol দেয় না। Docs বলে এই command-গুলো একটা **external transaction manager**-কে একাধিক database বা অন্য transactional resource জুড়ে atomic global transaction চালাতে দেয় <Cite n={1} />। Docs বলে, নিজে transaction manager না লিখলে আপনার সম্ভবত `PREPARE TRANSACTION` ব্যবহার করা উচিত নয় <Cite n={1} />।
+
+প্রতিটা database-এর জন্য ধাপগুলো এই রকম:
+
+1. Transaction block-এর ভেতরে manager কাজ পাঠায়। তারপর সে `PREPARE TRANSACTION 'some-id'` চালায়। এই command-এ একটা transaction id লাগে। Id হলো 200 byte-এর কম দৈর্ঘ্যের একটা string <Cite n={1} />।
+2. Prepare-এর পর transaction আর session-এর সঙ্গে বাঁধা থাকে না। তার state পুরোপুরি disk-এ রাখা থাকে <Cite n={1} />।
+3. Manager যাচাই করে যে অন্য database-গুলোও commit করার জন্য প্রস্তুত। তখন সে `COMMIT PREPARED` দিয়ে transaction commit করে <Cite n={1} />। না হলে সে `ROLLBACK PREPARED` ব্যবহার করে <Cite n={1} />।
+
+`COMMIT PREPARED` ও `ROLLBACK PREPARED` prepare করা session-এর চেয়ে আলাদা session-এ চলতে পারে <Cite n={1} />। দুটোই সঙ্গে সঙ্গে commit বা roll back করে <Cite n={2} /> <Cite n={3} />।
+
+**2PC আপনাকে কী দেয়, docs যেভাবে বলে।** Prepare-এর পর commit সফল হওয়ার "very high probability" থাকে, commit-এর আগে database crash করলেও <Cite n={1} />। Docs বলে probability। একে guarantee হিসেবে পড়বেন না।
+
+**2PC-র খরচ কী, docs যেভাবে বলে।** একটা prepared transaction যে lock ধরে রেখেছিল তা ধরে রাখে <Cite n={1} />। এটা অনেকক্ষণ prepared থাকলে `VACUUM`-এর কাজে বাধা দেয়। চরম ক্ষেত্রে এটা transaction ID wraparound ঠেকাতে database shut down করিয়ে দিতে পারে <Cite n={1} />। Docs বলে একটা transaction অনেকক্ষণ prepared রাখা বুদ্ধিমানের কাজ নয় <Cite n={1} />।
+
+Feature-টা default-এ বন্ধ। `max_prepared_transactions` হলো 0, এবং এটা শুধু server start-এর সময় set করা যায় <Cite n={4} />। যে manager prepared transaction দ্রুত বন্ধ করে, এমন manager না থাকলে docs একে 0-তে রাখার পরামর্শ দেয় <Cite n={1} />। `pg_prepared_xacts` view prepared transaction-গুলোর তালিকা দেখায় <Cite n={1} />।
+
+**Saga**
+
+একটা saga কাজকে **local transaction**-এর একটা ক্রমে ভাঙে। প্রতিটা একটা service-এ সম্পূর্ণ হয় এবং সেই service-এর database update করে। এটা একটা event বা message দিয়ে পরের ধাপ শুরু করে <Cite n={5} />। কোনো ধাপ fail করলে saga **compensating transaction** চালায়। এগুলো আগের ধাপগুলোর পরিবর্তন উল্টে দেয় <Cite n={5} />।
+
+Compensating transaction সাধারণ rollback নয়। পুরোনো state সোজাসুজি restore করলে অন্য user-দের করা পরিবর্তন মুছে যেতে পারে। তাই compensation অবশ্যই application-নির্দিষ্ট হতে হবে <Cite n={6} />। System প্রতিটা ধাপ কীভাবে undo করতে হয় তা record করে রাখে <Cite n={6} />।
+
+একটা saga-তে থাকে একটা **pivot transaction**। এটা ফেরার পথ বন্ধ হওয়ার বিন্দু। এটা সফল হলে পরের সব ধাপ শেষ করতে হবে। এই পরের ধাপগুলো আবার চেষ্টা করা যায়, এবং সেগুলো idempotent <Cite n={5} />।
+
+Saga চালানোর দুটো উপায় আছে <Cite n={5} />:
+
+- **Choreography।** Service-গুলো event আদান-প্রদান করে। কোনো কেন্দ্রীয় controller নেই। এটা সহজ workflow-এর জন্য মানানসই <Cite n={5} />। ধাপ বাড়লে এটা গোলমেলে হয়ে যায়, এবং integration test-এর জন্য সব service চালু রাখতে হয় <Cite n={5} />।
+- **Orchestration।** একটা কেন্দ্রীয় orchestrator প্রতিটা service-কে কী করতে হবে বলে দেয় এবং failure recovery সামলায়। এটা জটিল workflow-এর জন্য উপযোগী <Cite n={5} />। Orchestrator একটা point of failure <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 A shop has an order service and a payment service, each with its own database. This example is the tutorial's own.
 
 With a saga: the order service saves the order as "pending". The payment service takes the payment. The order service then marks the order "confirmed". If the payment fails, the saga runs a compensating step: it cancels the pending order. Between the steps, the data can be inconsistent. It should become consistent when all steps finish <Cite n={6} />. Each service commits its own step, and a compensating step can also fail <Cite n={5} />.
 
+</Technical>
+<Layman>
+
+A shop has an order service and a payment service. Each has its own database. This example is the tutorial's own.
+
+With a saga, the steps are these. The order service saves the order as "pending". The payment service takes the payment. The order service then marks the order "confirmed". If the payment fails, the saga runs a compensating step. It cancels the pending order. Between the steps, the data can be inconsistent. It should become consistent when all steps finish <Cite n={6} />. Each service commits its own step. A compensating step can also fail <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+একটা shop-এর একটা order service ও একটা payment service আছে। প্রতিটার নিজের database। এই উদাহরণ tutorial-এর নিজের।
+
+Saga দিয়ে ধাপগুলো এই রকম। Order service order-টা "pending" হিসেবে save করে। Payment service payment নেয়। তারপর order service order-টা "confirmed" চিহ্নিত করে। Payment fail করলে saga একটা compensating ধাপ চালায়। সে pending order বাতিল করে। ধাপগুলোর মাঝখানে data inconsistent থাকতে পারে। সব ধাপ শেষ হলে এটা consistent হওয়ার কথা <Cite n={6} />। প্রতিটা service নিজের ধাপ commit করে। একটা compensating ধাপও fail করতে পারে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Treating a saga like one transaction.** There is no built-in isolation across services. Lost updates, dirty reads, and fuzzy (nonrepeatable) reads can happen <Cite n={5} />.
 - **Reading "prepared" as "certain to commit".** The docs say "very high probability" <Cite n={1} />.
 - **Forgetting a prepared transaction.** It keeps its locks, and it can get in the way of `VACUUM` freeing storage <Cite n={1} />.
 - **Putting irreversible steps early.** Do them only after the critical checks pass <Cite n={6} />.
 
+</Technical>
+<Layman>
+
+- **Treating a saga like one transaction.** There is no built-in isolation across services. Lost updates, dirty reads, and fuzzy (nonrepeatable) reads can happen <Cite n={5} />.
+- **Reading "prepared" as "certain to commit".** The docs say "very high probability" <Cite n={1} />.
+- **Forgetting a prepared transaction.** It keeps its locks. It can get in the way of `VACUUM` freeing storage <Cite n={1} />.
+- **Putting irreversible steps early.** Do them only after the critical checks pass <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+- **Saga-কে একটা transaction ভাবা।** Service-গুলোর মধ্যে কোনো built-in isolation নেই। Lost update, dirty read এবং fuzzy (nonrepeatable) read ঘটতে পারে <Cite n={5} />।
+- **"Prepared"-কে "commit হবেই" পড়া।** Docs বলে "very high probability" <Cite n={1} />।
+- **একটা prepared transaction ভুলে যাওয়া।** এটা তার lock ধরে রাখে। এটা `VACUUM`-কে storage খালি করতে বাধা দিতে পারে <Cite n={1} />।
+- **অপরিবর্তনীয় ধাপ আগে রাখা।** সেগুলো শুধু critical check পাশ করার পর করুন <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice. They are not from a source.
@@ -94,6 +249,29 @@ These test ideas are the tutorial's own advice. They are not from a source.
 - **Look for stuck work.** Look for orders that stay "pending". A step can be blocked and not failed.
 - **If PostgreSQL 2PC is on,** query `pg_prepared_xacts` after a failed test run, and look for old prepared transactions.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice. They are not from a source.
+
+- **Fail every step.** Make each step fail in turn. Check that the compensating steps leave the data in a valid state.
+- **Repeat a step.** Send the same message twice. Nothing should change.
+- **Look for stuck work.** Look for orders that stay "pending". A step can be blocked and not failed.
+- **If PostgreSQL 2PC is on,** query `pg_prepared_xacts` after a failed test run. Look for old prepared transactions.
+
+</Layman>
+<Bangla>
+
+এই test-এর ধারণাগুলো tutorial-এর নিজের পরামর্শ। এগুলো কোনো source থেকে নয়।
+
+- **প্রতিটা ধাপ fail করান।** পালা করে প্রতিটা ধাপ fail করান। দেখুন compensating ধাপগুলো data-কে একটা বৈধ অবস্থায় রাখে।
+- **একটা ধাপ আবার চালান।** একই message দুবার পাঠান। কিছুই বদলানো উচিত নয়।
+- **আটকে থাকা কাজ খুঁজুন।** যেসব order "pending" থেকে যায় সেগুলো খুঁজুন। একটা ধাপ fail না হয়ে blocked থাকতে পারে।
+- **PostgreSQL 2PC চালু থাকলে,** একটা ব্যর্থ test run-এর পর `pg_prepared_xacts` query করুন। পুরোনো prepared transaction খুঁজুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

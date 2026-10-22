@@ -16,15 +16,54 @@ Think of a library with four rooms, where each book goes to the room that its co
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 A **hash function** turns a key (such as a user id) into a number. A simple way to pick a server is to take that number modulo the number of servers. The weak point is a change in the server count. With a plain modulo hash, almost every item hashes to a new place when the range changes, and cached data becomes useless <Cite n={1} />. Cassandra's documentation says the same: adding one node can invalidate almost all mappings <Cite n={3} />.
 
 **Consistent hashing** is a hash scheme that changes minimally when the set of buckets (servers) changes <Cite n={1} />. Changing the bucket set a little does not remap all the items <Cite n={1} />. When the number of nodes changes, only a small fraction of the keys must move <Cite n={3} />.
 
+</Technical>
+<Layman>
+
+A **hash function** turns a key (such as a user id) into a number. A simple way to pick a server is to take that number modulo the number of servers. The weak point is a change in the server count. With a plain modulo hash, almost every item hashes to a new place when the range changes. Then cached data becomes useless <Cite n={1} />. The Cassandra documentation says the same: adding one node can invalidate almost all mappings <Cite n={3} />.
+
+**Consistent hashing** is a hash scheme that changes minimally when the set of buckets (servers) changes <Cite n={1} />. A small change to the set of buckets does not remap all the items <Cite n={1} />. When the number of nodes changes, only a small fraction of the keys must move <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+**Hash function** একটি key (যেমন user id)-কে একটি সংখ্যায় বদলায়। server বাছার একটি সহজ উপায় হলো সেই সংখ্যাকে server সংখ্যা দিয়ে modulo করা। দুর্বলতা হলো server-এর সংখ্যা বদলানো। সাধারণ modulo hash-এ range বদলালে প্রায় প্রতিটি item নতুন জায়গায় যায়। তখন cache করা data অকেজো হয়ে যায় <Cite n={1} />। Cassandra-এর documentation ও একই কথা বলে: একটি node যোগ করলে প্রায় সব mapping বাতিল হতে পারে <Cite n={3} />।
+
+**Consistent hashing** এমন একটি hash scheme, যেখানে bucket (server)-এর সেট বদলালে পরিবর্তন সবচেয়ে কম হয় <Cite n={1} />। bucket-এর সেটে ছোট পরিবর্তন করলে সব item আবার map করতে হয় না <Cite n={1} />। node-এর সংখ্যা বদলালে key-এর শুধু ছোট একটি অংশ সরাতে হয় <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 You need it when data or cache entries are spread over many servers, and servers join or leave from time to time. The original paper was about caches for the web <Cite n={1} />. Amazon's Dynamo key-value store uses it to spread data over its storage hosts <Cite n={2} />. Apache Cassandra uses it to split data over its nodes <Cite n={3} />.
 
+</Technical>
+<Layman>
+
+You need it when data or cache entries are spread over many servers, and servers join or leave from time to time. The original paper was about caches for the web <Cite n={1} />. The Dynamo key-value store of Amazon uses it to spread data over its storage hosts <Cite n={2} />. Apache Cassandra uses it to split data over its nodes <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+data বা cache entry অনেক server-এ ছড়িয়ে থাকলে এবং মাঝে মাঝে server যোগ হলে বা চলে গেলে এটি দরকার। মূল paper ছিল web-এর cache নিয়ে <Cite n={1} />। Amazon-এর Dynamo key-value store এটি দিয়ে তার storage host-গুলোতে data ছড়ায় <Cite n={2} />। Apache Cassandra এটি দিয়ে তার node-গুলোতে data ভাগ করে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## How it works
+
+<Voices>
+<Technical>
 
 Dynamo describes the idea this way. The values that the hash function can give are laid out as a fixed circle, a **ring**, where the largest value wraps around to the smallest <Cite n={2} />. Each node gets a random value in this space, which is its position on the ring <Cite n={2} />. To store a key, you hash the key to a position, then walk the ring clockwise to the first node with a larger position <Cite n={2} />. Each node is then responsible for the region between it and the node before it <Cite n={2} />.
 
@@ -61,20 +100,110 @@ Cassandra adds a view from the small cluster. With few nodes and evenly spaced t
 
 Many tokens have a cost. Each token adds up to 2 x (RF - 1) neighbors on the ring, so more combinations of node failures can make part of the ring unavailable, and cluster maintenance can be slower <Cite n={3} />.
 
+</Technical>
+<Layman>
+
+Dynamo describes the idea this way. The values that the hash function can give are laid out as a fixed circle, a **ring**. The largest value wraps around to the smallest <Cite n={2} />. Each node gets a random value in this space. This value is its position on the ring <Cite n={2} />. To store a key, you hash the key to a position. Then you walk the ring clockwise to the first node with a larger position <Cite n={2} />. Each node is then responsible for the region between it and the node before it <Cite n={2} />.
+
+Cassandra uses the same walk. It calls the ring positions **tokens** <Cite n={3} />. For replication, it keeps walking until it meets as many distinct nodes as the replication factor. With a factor of 3, it walks to three distinct nodes, and these hold the replicas <Cite n={3} />.
+
+**Why few keys move.** This example is the tutorial's own. The positions are 0 to 99, and 99 wraps to 0. Servers A, B, C, and D sit at 10, 40, 70, and 90. Keys 91 to 99 and 0 to 10 go to A. Keys 11 to 40 go to B. Keys 41 to 70 go to C. Keys 71 to 90 go to D. A new server E joins at position 55. Keys 41 to 55 move from C to E. All other keys stay where they were. So only the keys between the new server and the node before it change owner. Dynamo states this rule: the arrival or departure of a node affects only its immediate neighbors, and the other nodes stay unaffected <Cite n={2} />. The paper names a related rule, **monotonicity**. When new buckets are added, an item can move to a new bucket, but never between two old buckets <Cite n={1} />. The paper also describes a **smoothness** goal. When a machine joins or leaves, the expected share of objects that move is the minimum needed to keep the load balanced <Cite n={1} />.
+
+**Virtual nodes.** The basic ring has two weak points. Random positions give uneven data and load. The basic scheme also ignores the fact that nodes differ in performance <Cite n={2} />. The fix in Dynamo is **virtual nodes**. A node is not one point on the ring but several points, which Dynamo calls tokens <Cite n={2} />. A virtual node looks like one node to the rest of the system <Cite n={2} />.
+
+The Dynamo paper lists these benefits <Cite n={2} />:
+
+- When a node is unavailable, its load is spread over the other nodes.
+- A new or returning node takes about the same share of work from every other node.
+- The number of virtual nodes of a machine can follow its capacity.
+
+Cassandra adds a view from the small cluster. With few nodes and evenly spaced tokens, it is hard to add just one node and keep the ring balanced <Cite n={3} />. If a node owns many tokens, a new node takes many small pieces of data from many neighbors <Cite n={3} />. The Karger paper also gives each bucket more than one point on its unit interval <Cite n={1} />.
+
+Many tokens have a cost. Each token adds up to 2 x (RF - 1) neighbors on the ring. So more combinations of node failures can make part of the ring unavailable, and cluster maintenance can be slower <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+Dynamo ধারণাটি এভাবে বর্ণনা করে। hash function যে মান দিতে পারে সেগুলো একটি স্থির বৃত্তে সাজানো থাকে, যার নাম **ring**। সবচেয়ে বড় মান ঘুরে সবচেয়ে ছোট মানে মিলে যায় <Cite n={2} />। প্রতিটি node এই space-এ একটি random মান পায়। এই মান ring-এ তার অবস্থান <Cite n={2} />। একটি key রাখতে হলে key-কে hash করে একটি অবস্থান পাওয়া যায়। তারপর ring-এ ঘড়ির কাঁটার দিকে হেঁটে বড় অবস্থানের প্রথম node-এ পৌঁছাতে হয় <Cite n={2} />। তখন প্রতিটি node দায়ী থাকে নিজের আর তার আগের node-এর মাঝের অংশের জন্য <Cite n={2} />।
+
+Cassandra একই পথে হাঁটে। সে ring-এর অবস্থানগুলোকে **token** বলে <Cite n={3} />। replication-এর জন্য সে হাঁটতে থাকে, যতক্ষণ না replication factor-এর সমান আলাদা node পায়। factor 3 হলে সে তিনটি আলাদা node পর্যন্ত যায়, এবং এরা replica রাখে <Cite n={3} />।
+
+**কেন কম key সরে।** এই উদাহরণ tutorial-এর নিজের। অবস্থান 0 থেকে 99, আর 99 ঘুরে 0-তে মেলে। A, B, C, D server আছে 10, 40, 70, 90 অবস্থানে। 91 থেকে 99 আর 0 থেকে 10 key A-তে যায়, 11 থেকে 40 key B-তে, 41 থেকে 70 key C-তে, এবং 71 থেকে 90 key D-তে। নতুন server E যোগ হয় 55 অবস্থানে। 41 থেকে 55 key C থেকে E-তে সরে। বাকি সব key আগের জায়গাতেই থাকে। তাই শুধু নতুন server আর তার আগের node-এর মাঝের key-গুলোর মালিক বদলায়। Dynamo এই নিয়ম বলে: একটি node-এর আসা বা যাওয়া শুধু তার সরাসরি প্রতিবেশীদের প্রভাবিত করে, বাকি node-গুলো অপ্রভাবিত থাকে <Cite n={2} />। paper-টি একটি সম্পর্কিত নিয়মের নাম দেয়, **monotonicity**। নতুন bucket যোগ হলে একটি item নতুন bucket-এ যেতে পারে, কিন্তু দুটি পুরোনো bucket-এর মধ্যে কখনো যায় না <Cite n={1} />। paper-টি একটি **smoothness** লক্ষ্যও বর্ণনা করে। একটি machine যোগ হলে বা চলে গেলে যে object-গুলো সরে তার প্রত্যাশিত অংশ হয় load balanced রাখার জন্য ন্যূনতম যতটা দরকার ততটা <Cite n={1} />।
+
+**Virtual node।** সাধারণ ring-এর দুটি দুর্বলতা আছে। random অবস্থান অসম data আর load দেয়। আর সাধারণ scheme এই বিষয়টি উপেক্ষা করে যে node-গুলোর performance আলাদা <Cite n={2} />। Dynamo-তে সমাধান হলো **virtual node**। একটি node ring-এ একটি বিন্দু নয়, বরং কয়েকটি বিন্দু, যাদের Dynamo token বলে <Cite n={2} />। বাকি system-এর কাছে একটি virtual node একটি node-এর মতোই দেখায় <Cite n={2} />।
+
+Dynamo paper এই সুবিধাগুলো বলে <Cite n={2} />:
+
+- একটি node পাওয়া না গেলে তার load বাকি node-গুলোতে ছড়িয়ে যায়।
+- নতুন বা ফিরে আসা node প্রতিটি অন্য node থেকে প্রায় সমান অংশ কাজ নেয়।
+- একটি machine-এর virtual node-এর সংখ্যা তার capacity অনুসারে হতে পারে।
+
+Cassandra ছোট cluster-এর দিক থেকে আরেকটি কথা যোগ করে। কম node আর সমান দূরত্বের token থাকলে শুধু একটি node যোগ করে ring-কে balanced রাখা কঠিন <Cite n={3} />। একটি node-এর অনেক token থাকলে নতুন node অনেক প্রতিবেশী থেকে অনেক ছোট ছোট data টুকরো নেয় <Cite n={3} />। Karger paper ও প্রতিটি bucket-কে তার unit interval-এ একাধিক বিন্দু দেয় <Cite n={1} />।
+
+অনেক token-এর একটি খরচ আছে। প্রতিটি token ring-এ সর্বোচ্চ 2 x (RF - 1) প্রতিবেশী যোগ করে। তাই node failure-এর আরও বেশি সমন্বয়ে ring-এর একটি অংশ অপ্রাপ্য হতে পারে, এবং cluster-এর রক্ষণাবেক্ষণ ধীর হতে পারে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 A test team runs a cache with four servers. Tutorial example, with simple numbers: keys have the hash values 0 to 19. With the rule "hash modulo 4", a fifth server changes the rule to "hash modulo 5". Only 4 of these 20 keys (hash values 0 to 3) land on the same server as before. The other 16 keys, 80 %, move, and a cache looks empty for them.
 
 With a ring, as in the diagram, adding the fifth server moves only the keys that fall between its neighbor and its own position. The team sees a few misses and not a full cold cache.
 
+</Technical>
+<Layman>
+
+A test team runs a cache with four servers. This is the tutorial's own example, with simple numbers. The keys have the hash values 0 to 19. With the rule "hash modulo 4", a fifth server changes the rule to "hash modulo 5". Only 4 of these 20 keys (hash values 0 to 3) land on the same server as before. The other 16 keys (80 %) move, and a cache looks empty for them.
+
+With a ring, as in the example above, adding the fifth server moves only the keys that fall between its neighbor and its own position. The team sees a few misses and not a full cold cache.
+
+</Layman>
+<Bangla>
+
+একটি test team চারটি server সহ একটি cache চালায়। এটি tutorial-এর নিজের উদাহরণ, সহজ সংখ্যা সহ। key-গুলোর hash মান 0 থেকে 19। "hash modulo 4" নিয়মে পঞ্চম server আসলে নিয়ম হয় "hash modulo 5"। এই 20টি key-এর মধ্যে শুধু 4টি (hash মান 0 থেকে 3) আগের server এই থাকে। বাকি 16টি key (80 %) সরে যায়, এবং তাদের জন্য cache খালি দেখায়।
+
+উপরের ring-এর উদাহরণের মতো ring থাকলে পঞ্চম server যোগ করায় শুধু সেই key-গুলো সরে যা তার প্রতিবেশী আর তার নিজের অবস্থানের মাঝে পড়ে। team কয়েকটি miss দেখে, পুরো cold cache নয়।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Using hash modulo N and thinking the cache survives a resize.** A change of N moves almost all keys <Cite n={1} />.
 - **Expecting a perfect balance from one point per node.** Random positions give uneven load <Cite n={2} />.
 - **Adding many tokens without a limit.** More tokens raise the number of ring neighbors and the chance of an outage <Cite n={3} />.
 - **Treating the ring as a safety net.** The ring decides where a key lives. It does not copy data. Replication is a separate step <Cite n={3} />.
 
+</Technical>
+<Layman>
+
+- **Using hash modulo N and thinking the cache survives a resize.** A change of N moves almost all keys <Cite n={1} />.
+- **Expecting a perfect balance from one point per node.** Random positions give uneven load <Cite n={2} />.
+- **Adding many tokens without a limit.** More tokens raise the number of ring neighbors and the chance of an outage <Cite n={3} />.
+- **Treating the ring as a safety net.** The ring decides where a key lives. It does not copy data. Replication is a separate step <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+- **hash modulo N ব্যবহার করে ভাবা যে resize-এ cache-টিকে থাকবে।** N বদলালে প্রায় সব key সরে যায় <Cite n={1} />।
+- **node প্রতি একটি বিন্দু থেকে নিখুঁত balance আশা করা।** random অবস্থান অসম load দেয় <Cite n={2} />।
+- **সীমা ছাড়া অনেক token যোগ করা।** বেশি token ring-এর প্রতিবেশীর সংখ্যা এবং outage-এর সম্ভাবনা বাড়ায় <Cite n={3} />।
+- **ring-কে safety net ভাবা।** ring ঠিক করে key কোথায় থাকবে। সে data copy করে না। Replication আলাদা একটি ধাপ <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice.
@@ -84,6 +213,29 @@ These test ideas are the tutorial's own advice.
 - **Check the balance.** Count keys for each node. A big gap may point to a poor token setup.
 - **Test during the change.** Read and write while a node joins, and look for misses and errors.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Count the moved keys.** Store a known set of keys. Add one node. Check that most keys keep their owner. Check that only a small share moves.
+- **Remove a node.** Check that reads for its keys still work, from the node that now owns that range.
+- **Check the balance.** Count the keys for each node. A big gap may point to a poor token setup.
+- **Test during the change.** Read and write while a node joins. Look for misses and errors.
+
+</Layman>
+<Bangla>
+
+এই test-এর ধারণাগুলো tutorial-এর নিজের পরামর্শ।
+
+- **সরে যাওয়া key গুনুন।** পরিচিত একটি key-এর সেট রাখুন। একটি node যোগ করুন। দেখুন বেশিরভাগ key তাদের মালিক রাখে কিনা। দেখুন শুধু ছোট একটি অংশ সরে কিনা।
+- **একটি node সরান।** দেখুন তার key-গুলোর read এখনো কাজ করে কিনা, এখন যে node ওই range-এর মালিক তার কাছ থেকে।
+- **balance দেখুন।** প্রতিটি node-এর key গুনুন। বড় ফারাক খারাপ token setup-এর ইঙ্গিত হতে পারে।
+- **পরিবর্তনের সময় test করুন।** node যোগ হওয়ার সময় read আর write করুন। miss আর error খুঁজুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

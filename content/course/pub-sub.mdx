@@ -18,6 +18,9 @@ A radio station sends one signal. It does not know who listens. Anyone with a ra
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 In publish-subscribe (pub/sub) messaging, a sender publishes an event and does not need to know which consumers receive it <Cite n={1} />. A broker in the middle passes the event on.
 
 Without a broker, a sender must know every consumer, deliver to each one, and handle each failure. A new consumer then means a change in the sender <Cite n={1} />. A plain queue links a sender to one consumer, so many consumers need many queues <Cite n={1} />.
@@ -30,11 +33,63 @@ The pattern has three parts <Cite n={1} />:
 
 In this pattern a message is a unit of data. An event is one kind of message. It reports a change or an action to other parts of the system <Cite n={1} />. Google Pub/Sub uses two more names. A **topic** is a named feed of messages. A **subscription** is a named entity that shows interest in the messages of one topic <Cite n={3} />.
 
+</Technical>
+<Layman>
+
+In publish-subscribe (pub/sub), a sender publishes an event. The sender does not need to know which consumers get it. <Cite n={1} /> A broker in the middle passes the event on.
+
+Without a broker, the sender must know every consumer. It must send to each one and handle each failure. A new consumer means a change in the sender. <Cite n={1} /> A plain queue links a sender to one consumer. So many consumers need many queues. <Cite n={1} />
+
+The pattern has three parts: <Cite n={1} />
+
+- An input channel. The sender (the **publisher**) puts its messages here.
+- One output channel for each consumer (each **subscriber**).
+- A mechanism, usually a broker or event bus. It copies each message to the output channels of the subscribers that want it.
+
+A message is a unit of data. An event is one kind of message. It tells other parts of the system about a change or an action. <Cite n={1} /> Google Pub/Sub uses two more names. A **topic** is a named feed of messages. A **subscription** is a named entity that shows interest in the messages of one topic. <Cite n={3} />
+
+</Layman>
+<Bangla>
+
+publish-subscribe (pub/sub) messaging-এ একটি sender একটি event publish করে। কোন consumer সেটি পাবে, তা sender-কে জানতে হয় না। <Cite n={1} /> মাঝখানের একটি broker event-টি এগিয়ে দেয়।
+
+broker না থাকলে sender-কে প্রতিটি consumer চিনতে হয়। প্রতিটির কাছে আলাদা করে পাঠাতে হয় এবং প্রতিটি failure সামলাতে হয়। নতুন consumer এলে sender বদলাতে হয়। <Cite n={1} /> একটি সাধারণ queue একজন sender-কে একজন consumer-এর সাথে যুক্ত করে। তাই অনেক consumer থাকলে অনেক queue লাগে। <Cite n={1} />
+
+এই pattern-এর তিনটি অংশ আছে: <Cite n={1} />
+
+- একটি input channel। sender (**publisher**) এখানে তার message রাখে।
+- প্রতিটি consumer-এর (প্রতিটি **subscriber**-এর) জন্য একটি করে output channel।
+- একটি mechanism, সাধারণত একটি broker বা event bus। যে subscriber-রা message চায়, তাদের output channel-এ এটি প্রতিটি message-এর কপি পাঠায়।
+
+message হলো একটি data unit। event হলো এক ধরনের message। এটি system-এর অন্য অংশকে কোনো পরিবর্তন বা action জানায়। <Cite n={1} /> Google Pub/Sub আরও দুটি নাম ব্যবহার করে। **topic** হলো message-এর একটি নামযুক্ত feed। **subscription** হলো একটি নামযুক্ত entity, যা একটি topic-এর message-এ আগ্রহ দেখায়। <Cite n={3} />
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 Azure suggests the pattern when an application must broadcast to many consumers, when the consumers are built independently, and when the sender needs no real-time reply <Cite n={1} />. It also fits when the systems accept eventual consistency <Cite n={1} />. Google lists uses such as real-time event distribution and cache invalidation events <Cite n={2} />.
 
+</Technical>
+<Layman>
+
+Azure suggests this pattern in three cases. An application must send to many consumers. The consumers are built independently. The sender needs no real-time reply. <Cite n={1} /> It also fits when the systems accept eventual consistency. <Cite n={1} /> Google lists uses such as real-time event distribution and cache invalidation events. <Cite n={2} />
+
+</Layman>
+<Bangla>
+
+Azure তিনটি ক্ষেত্রে এই pattern-এর পরামর্শ দেয়। একটি application-কে অনেক consumer-এর কাছে পাঠাতে হয়। consumer-গুলো স্বাধীনভাবে তৈরি হয়। sender-এর real-time reply লাগে না। <Cite n={1} /> system-গুলো eventual consistency মেনে নিলেও এটি মানায়। <Cite n={1} /> Google এর ব্যবহার হিসেবে real-time event distribution এবং cache invalidation event-এর মতো উদাহরণ দেয়। <Cite n={2} />
+
+</Bangla>
+</Voices>
+
 ## How it works
+
+<Voices>
+<Technical>
 
 Google Pub/Sub shows the flow well. This is one product, but the steps explain the general idea <Cite n={3} />:
 
@@ -51,7 +106,49 @@ Google Pub/Sub shows the flow well. This is one product, but the steps explain t
 
 **Delivery style.** In Google Pub/Sub a subscription can be pull (the subscriber asks) or push (the server calls the subscriber) <Cite n={4} />.
 
+</Technical>
+<Layman>
+
+Google Pub/Sub shows the flow well. It is one product. But the steps explain the general idea. <Cite n={3} />
+
+1. A publisher sends a message to a topic.
+2. The message is written to storage.
+3. Pub/Sub sends the message to every subscription on the topic.
+4. A subscription gives the message to a subscriber application.
+5. The subscriber sends an acknowledgment (ack) after it processes the message.
+6. When at least one subscriber of each subscription has sent an ack, Pub/Sub deletes the message.
+
+**Fan-out.** Each subscription gets its own copy of every message. <Cite n={3} /> Subscribers in one subscription share the work. Each gets a part of the messages. A subscription with one subscriber sends that subscriber everything. <Cite n={3} /> A subscription must exist before it can get messages. It gets only the messages that were published after it was created. <Cite n={4} />
+
+**Choosing what you receive.** Subscribers usually need only some messages. A broker can use topics. Each topic has its own output channel. A broker can also use content filtering. Then the broker looks inside the message. <Cite n={1} /> Broad topics are simpler, but subscribers must filter more. <Cite n={1} />
+
+**Delivery style.** In Google Pub/Sub, a subscription can be pull or push. In pull, the subscriber asks. In push, the server calls the subscriber. <Cite n={4} />
+
+</Layman>
+<Bangla>
+
+Google Pub/Sub প্রবাহটি ভালোভাবে দেখায়। এটি একটি নির্দিষ্ট product, কিন্তু ধাপগুলো সাধারণ ধারণাটি বোঝায়। <Cite n={3} />
+
+1. একটি publisher একটি topic-এ message পাঠায়।
+2. message-টি storage-এ লেখা হয়।
+3. Pub/Sub message-টি topic-এর প্রতিটি subscription-এ পাঠায়।
+4. একটি subscription message-টি একটি subscriber application-কে দেয়।
+5. message process করার পর subscriber একটি acknowledgment (ack) পাঠায়।
+6. প্রতিটি subscription-এর অন্তত একজন subscriber ack পাঠালে Pub/Sub message-টি মুছে ফেলে।
+
+**Fan-out।** প্রতিটি subscription প্রতিটি message-এর নিজস্ব কপি পায়। <Cite n={3} /> একই subscription-এর subscriber-রা কাজ ভাগ করে নেয়। প্রত্যেকে message-এর একটি অংশ পায়। যে subscription-এ একজন subscriber, সে সবকিছু পায়। <Cite n={3} /> message পাওয়ার আগে subscription থাকতে হয়। subscription তৈরির পরে publish হওয়া message-ই শুধু সে পায়। <Cite n={4} />
+
+**কী পাবেন তা বাছাই।** subscriber-দের সাধারণত কিছু message-ই লাগে। broker topic ব্যবহার করতে পারে। প্রতিটি topic-এর নিজস্ব output channel থাকে। broker content filtering-ও ব্যবহার করতে পারে। তখন broker message-এর ভেতরে দেখে। <Cite n={1} /> ব্যাপক (broad) topic সহজ, কিন্তু subscriber-দের বেশি filter করতে হয়। <Cite n={1} />
+
+**Delivery style।** Google Pub/Sub-এ একটি subscription pull বা push হতে পারে। pull-এ subscriber চায়। push-এ server subscriber-কে call করে। <Cite n={4} />
+
+</Bangla>
+</Voices>
+
 ## Delivery, duplicates, and order
+
+<Voices>
+<Technical>
 
 **At-least-once delivery.** Azure names three guarantees. At-most-once can lose messages. At-least-once delivers every message but can create duplicates. Exactly-once removes duplicates but adds coordination cost and delay <Cite n={1} />. Google Pub/Sub gives at-least-once delivery by default, and it also supports exactly-once delivery as an option <Cite n={4} />.
 
@@ -59,7 +156,31 @@ Duplicates can happen when the ack step goes wrong. For example, the ack may arr
 
 **Ordering.** Azure says the order of receipt is not guaranteed and may differ from the order of creation <Cite n={1} />. Some brokers offer ordered delivery inside a partition or session, but this limits scalability <Cite n={1} />. Google Pub/Sub has no expected order by default <Cite n={4} />. To get order, you set the same ordering key on related messages, publish them in the same region, and turn on ordering in the subscription <Cite n={5} />. The order holds only inside one key. Messages with different keys can arrive in any order <Cite n={5} />. A redelivery of one message also triggers redelivery of the later messages for that key <Cite n={5} />.
 
+</Technical>
+<Layman>
+
+**At-least-once delivery.** Azure names three guarantees. At-most-once can lose messages. At-least-once delivers every message, but it can create duplicates. Exactly-once removes duplicates, but it adds coordination cost and delay. <Cite n={1} /> Google Pub/Sub gives at-least-once delivery by default. It also supports exactly-once delivery as an option. <Cite n={4} />
+
+Duplicates can happen when the ack step goes wrong. For example, the ack may arrive after the deadline, or a network problem may lose it. Then the message may arrive again. <Cite n={3} /> Google also says that Pub/Sub might send a message again after a successful ack, for example after a server restart. It calls this rare, but possible for any message. <Cite n={4} /> So Google says the subscriber must be idempotent. <Cite n={4} /> Idempotent means that handling a message twice causes no harm. This definition is the tutorial's own. Azure gives the same advice when the broker has no deduplication. <Cite n={1} />
+
+**Ordering.** Azure says the order of receipt is not guaranteed. It may differ from the order of creation. <Cite n={1} /> Some brokers offer ordered delivery inside a partition or session, but this limits scalability. <Cite n={1} /> Google Pub/Sub has no expected order by default. <Cite n={4} /> To get order, you do three things. You set the same ordering key on related messages. You publish them in the same region. You turn on ordering in the subscription. <Cite n={5} /> The order holds only inside one key. Messages with different keys can arrive in any order. <Cite n={5} /> If one message is sent again, the later messages for that key are sent again too. <Cite n={5} />
+
+</Layman>
+<Bangla>
+
+**At-least-once delivery।** Azure তিনটি guarantee-র নাম বলে। At-most-once-এ message হারাতে পারে। At-least-once প্রতিটি message পৌঁছে দেয়, কিন্তু duplicate হতে পারে। Exactly-once duplicate সরায়, কিন্তু coordination-এর খরচ ও delay যোগ করে। <Cite n={1} /> Google Pub/Sub ডিফল্টভাবে at-least-once delivery দেয়। এটি option হিসেবে exactly-once delivery-ও সমর্থন করে। <Cite n={4} />
+
+ack ধাপে গোলমাল হলে duplicate হতে পারে। যেমন ack deadline-এর পরে পৌঁছাতে পারে, অথবা network সমস্যায় হারিয়ে যেতে পারে। তখন message আবার আসতে পারে। <Cite n={3} /> Google আরও বলে, সফল ack-এর পরেও Pub/Sub একটি message আবার পাঠাতে পারে, যেমন server restart-এর পরে। Google একে বিরল বলে, কিন্তু যেকোনো message-এর জন্য সম্ভব বলে। <Cite n={4} /> তাই Google বলে subscriber-কে idempotent হতে হবে। <Cite n={4} /> Idempotent মানে একটি message দুইবার handle করলে কোনো ক্ষতি হয় না। এই সংজ্ঞাটি টিউটোরিয়ালের নিজের। broker-এ deduplication না থাকলে Azure একই পরামর্শ দেয়। <Cite n={1} />
+
+**Ordering।** Azure বলে, পাওয়ার ক্রমের কোনো guarantee নেই। এটি তৈরির ক্রম থেকে আলাদা হতে পারে। <Cite n={1} /> কিছু broker একটি partition বা session-এর ভেতরে ordered delivery দেয়, কিন্তু এতে scalability কমে। <Cite n={1} /> Google Pub/Sub-এ ডিফল্টভাবে কোনো প্রত্যাশিত ক্রম নেই। <Cite n={4} /> ক্রম পেতে তিনটি কাজ করতে হয়। সম্পর্কিত message-এ একই ordering key দিতে হয়। সেগুলো একই region-এ publish করতে হয়। subscription-এ ordering চালু করতে হয়। <Cite n={5} /> ক্রম শুধু একটি key-এর ভেতরে থাকে। আলাদা key-এর message যেকোনো ক্রমে আসতে পারে। <Cite n={5} /> একটি message আবার পাঠানো হলে ওই key-এর পরের message-গুলোও আবার পাঠানো হয়। <Cite n={5} />
+
+</Bangla>
+</Voices>
+
 ## When not to use it
+
+<Voices>
+<Technical>
 
 Azure says pub/sub may be a poor fit in these cases <Cite n={1} />:
 
@@ -70,20 +191,92 @@ Azure says pub/sub may be a poor fit in these cases <Cite n={1} />:
 
 Google adds that its Pub/Sub is for service-to-service communication, not for end-user or IoT clients <Cite n={2} />.
 
+</Technical>
+<Layman>
+
+Azure says pub/sub may be a poor fit in these cases: <Cite n={1} />
+
+- There are only a few consumers, and they need very different data. The broker adds complexity with no scaling benefit.
+- You need near real-time interaction. The broker adds latency, so request-reply may fit better.
+- Consumers must process messages in a strict, guaranteed order.
+- One atomic transaction must cover the publisher and its consumers. Pub/Sub is asynchronous and eventually consistent.
+
+Google adds that its Pub/Sub is for service-to-service communication. It is not for end-user or IoT clients. <Cite n={2} />
+
+</Layman>
+<Bangla>
+
+Azure বলে, এই ক্ষেত্রগুলোতে pub/sub ভালো না-ও মানাতে পারে: <Cite n={1} />
+
+- consumer মাত্র কয়েকজন, এবং তাদের একদম আলাদা data লাগে। broker জটিলতা বাড়ায়, কিন্তু scaling-এ কোনো সুবিধা দেয় না।
+- near real-time interaction দরকার। broker latency যোগ করে, তাই request-reply বেশি মানাতে পারে।
+- consumer-দের কঠোর, নিশ্চিত ক্রমে message process করতে হয়।
+- publisher ও তার consumer-দের সবাইকে একটি atomic transaction-এর আওতায় থাকতে হয়। Pub/Sub asynchronous এবং eventually consistent।
+
+Google আরও বলে, তাদের Pub/Sub service-to-service যোগাযোগের জন্য। এটি end-user বা IoT client-এর জন্য নয়। <Cite n={2} />
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 This example is the tutorial's own. An exam platform publishes an event "answer submitted" to a topic. Three subscriptions listen: grading, a confirmation email, and analytics. Each subscription gets its own copy. If the email service is down, grading still works. The analytics team can add a fourth subscription later without a change in the publisher.
 
 After a lost ack, the email subscriber gets the same event twice. It must not send two emails.
 
+</Technical>
+<Layman>
+
+This example is the tutorial's own. An exam platform publishes an event "answer submitted" to a topic. Three subscriptions listen: grading, a confirmation email, and analytics. Each subscription gets its own copy. If the email service is down, grading still works. The analytics team can add a fourth subscription later. The publisher needs no change.
+
+After a lost ack, the email subscriber gets the same event twice. It must not send two emails.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটি টিউটোরিয়ালের নিজের। একটি exam platform একটি topic-এ "answer submitted" event publish করে। তিনটি subscription শোনে: grading, একটি confirmation email এবং analytics। প্রতিটি subscription নিজস্ব কপি পায়। email service বন্ধ থাকলেও grading কাজ করে। analytics team পরে চতুর্থ একটি subscription যোগ করতে পারে। publisher-কে বদলাতে হয় না।
+
+ack হারিয়ে গেলে email subscriber একই event দুইবার পায়। তাকে দুটি email পাঠালে চলবে না।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Expecting order.** Without a special setting, messages can arrive in a different order than the sender created them <Cite n={1} /> <Cite n={4} />.
 - **Expecting exactly one delivery.** Google Cloud Pub/Sub gives at-least-once delivery by default, so duplicates can happen <Cite n={4} />.
 - **Expecting a reply.** The channels are one way <Cite n={1} />.
 - **Creating the subscription too late.** In Google Cloud Pub/Sub, a new subscription gets only messages published after it was created <Cite n={4} />. With topic retention on, a subscription can seek back in time and replay earlier messages <Cite n={4} />.
 
+</Technical>
+<Layman>
+
+- **Expecting order.** Without a special setting, messages can arrive in a different order than the sender created them. <Cite n={1} /> <Cite n={4} />
+- **Expecting exactly one delivery.** Google Cloud Pub/Sub gives at-least-once delivery by default. So duplicates can happen. <Cite n={4} />
+- **Expecting a reply.** The channels are one way. <Cite n={1} />
+- **Creating the subscription too late.** In Google Cloud Pub/Sub, a new subscription gets only messages that were published after it was created. <Cite n={4} /> With topic retention on, a subscription can seek back in time and replay earlier messages. <Cite n={4} />
+
+</Layman>
+<Bangla>
+
+- **ক্রম আশা করা।** বিশেষ setting ছাড়া message sender-এর তৈরির ক্রম থেকে আলাদা ক্রমে আসতে পারে। <Cite n={1} /> <Cite n={4} />
+- **ঠিক একবার delivery আশা করা।** Google Cloud Pub/Sub ডিফল্টভাবে at-least-once delivery দেয়। তাই duplicate হতে পারে। <Cite n={4} />
+- **reply আশা করা।** channel-গুলো একমুখী। <Cite n={1} />
+- **subscription খুব দেরিতে তৈরি করা।** Google Cloud Pub/Sub-এ নতুন subscription শুধু তৈরির পরে publish হওয়া message পায়। <Cite n={4} /> topic retention চালু থাকলে একটি subscription সময়ে পিছিয়ে গিয়ে আগের message replay করতে পারে। <Cite n={4} />
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice, not a claim of the sources.
@@ -93,6 +286,33 @@ These test ideas are the tutorial's own advice, not a claim of the sources.
 - **Stop one subscriber.** Check that the others keep working. Start it again and check that it catches up.
 - **Add a bad message.** Send a malformed event. Check that it does not block the others.
 </Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice. They are not a claim of the sources.
+
+- **Send the same event twice.** Check that the subscriber gives the same end result as for one event.
+- **Change the order.** Send "updated" before "created". Check that the subscriber copes, or that the design keeps order.
+- **Stop one subscriber.** Check that the others keep working. Start it again and check that it catches up.
+- **Add a bad message.** Send a malformed event. Check that it does not block the others.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই test ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ। এগুলো source-গুলোর দাবি নয়।
+
+- **একই event দুইবার পাঠান।** দেখুন, subscriber একটি event-এর মতোই একই শেষ ফল দেয় কি না।
+- **ক্রম বদলান।** "created"-এর আগে "updated" পাঠান। দেখুন, subscriber সামলাতে পারে কি না, অথবা design ক্রম রাখে কি না।
+- **একজন subscriber বন্ধ করুন।** দেখুন, অন্যরা কাজ চালিয়ে যায় কি না। তাকে আবার চালু করে দেখুন, সে পিছিয়ে থাকা message ধরতে পারে কি না।
+- **একটি খারাপ message দিন।** একটি ভুল আকারের event পাঠান। দেখুন, এটি অন্যদের আটকায় কি না।
+</Callout>
+
+</Bangla>
+</Voices>
 
 ## Key words
 

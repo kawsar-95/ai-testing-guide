@@ -14,11 +14,34 @@ A shop shows a product page to thousands of visitors each minute. Only a few peo
 
 ## In plain words
 
+<Voices>
+<Technical>
+
 CQRS means Command Query Responsibility Segregation. The pattern splits the reads and the writes of a data store into separate data models, so you can tune each model on its own <Cite n={1} />. A command updates data. A query gets data <Cite n={1} />.
 
 A common design uses one model for both jobs. This fits simple create, read, update, and delete (CRUD) work <Cite n={1} />. As an application grows, it can cause lock contention, slow queries, and security problems. The fields that an update needs are often not the fields that a read needs <Cite n={1} />. Reads and writes also often have different speed and scaling needs <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+CQRS means Command Query Responsibility Segregation. The pattern splits the reads and the writes of a data store into separate data models. Then you can tune each model on its own <Cite n={1} />. A command updates data. A query gets data <Cite n={1} />.
+
+A common design uses one model for both jobs. This fits simple create, read, update, and delete (CRUD) work <Cite n={1} />. As an application grows, one model can cause lock contention, slow queries, and security problems. The fields that an update needs are often not the fields that a read needs <Cite n={1} />. Reads and writes also often have different speed and scaling needs <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+CQRS মানে Command Query Responsibility Segregation। এই pattern একটি data store-এর read আর write-কে আলাদা data model-এ ভাগ করে। তখন প্রতিটি model-কে আলাদাভাবে tune করা যায় <Cite n={1} />। Command data update করে। Query data আনে <Cite n={1} />।
+
+একটি সাধারণ design দুই কাজেই একটি model ব্যবহার করে। এটি সহজ create, read, update, delete (CRUD) কাজের জন্য ঠিক <Cite n={1} />। application বড় হলে একটি model থেকে lock contention, ধীর query এবং security সমস্যা হতে পারে। update-এর জন্য যে field লাগে তা প্রায়ই read-এর জন্য লাগা field নয় <Cite n={1} />। read আর write-এর speed ও scaling-এর চাহিদাও প্রায়ই আলাদা <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## When you need it
+
+<Voices>
+<Technical>
 
 The source lists cases where the pattern may help <Cite n={1} />:
 
@@ -29,7 +52,37 @@ The source lists cases where the pattern may help <Cite n={1} />:
 
 The same source says the pattern might not suit a simple domain, or a case where a plain CRUD interface is enough <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+The source lists cases where the pattern may help <Cite n={1} />:
+
+- Many users change the same data at the same time. Small, clear commands can reduce conflicts.
+- The user interface guides people through a task in steps.
+- You must tune reads apart from writes. This helps most when the system has more reads than writes.
+- Different teams build the write side and the read side.
+
+The same source says the pattern might not suit a simple domain, or a case where a plain CRUD interface is enough <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+source কিছু ক্ষেত্রের কথা বলে যেখানে এই pattern সাহায্য করতে পারে <Cite n={1} />:
+
+- অনেক user একই সময়ে একই data বদলায়। ছোট, পরিষ্কার command conflict কমাতে পারে।
+- user interface ধাপে ধাপে মানুষকে একটি কাজের মধ্য দিয়ে নিয়ে যায়।
+- read-কে write থেকে আলাদা করে tune করতে হয়। system-এ write-এর চেয়ে read বেশি হলে এটি সবচেয়ে বেশি কাজে লাগে।
+- write দিক আর read দিক আলাদা team বানায়।
+
+একই source বলে, সহজ domain-এর জন্য, অথবা সাধারণ CRUD interface যথেষ্ট হলে, এই pattern হয়তো মানায় না <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## How it works
+
+<Voices>
+<Technical>
 
 **Commands.** A command should state a business task, not a low-level data change. The source gives this example: use "Book hotel room", not "Set ReservationStatus to Reserved" <Cite n={1} />. It also suggests that a queue can run commands asynchronously <Cite n={1} />.
 
@@ -48,17 +101,95 @@ With two stores, the stores must stay in sync <Cite n={1} />. A common way is th
 
 Updating a database and publishing an event are two steps. Usually you cannot put a message broker and a database in one distributed transaction, so the two steps can disagree <Cite n={1} />. The source suggests the Transactional Outbox pattern, which saves the state change and the event together. It also suggests that the read-model consumer be idempotent, so a duplicate message does no harm <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+**Commands.** A command should state a business task, not a low-level data change. The source gives this example: use "Book hotel room", not "Set ReservationStatus to Reserved" <Cite n={1} />. It also suggests that a queue can run commands asynchronously <Cite n={1} />.
+
+**Queries.** A query never changes data. It returns data transfer objects (DTOs). They hold the data in a convenient shape and carry no domain logic <Cite n={1} />.
+
+**The write model** handles commands. It has validation and domain logic, and it works to keep the data correct <Cite n={1} />. **The read model** serves queries and has no domain logic <Cite n={1} />.
+
+There are two levels of separation <Cite n={1} />:
+
+- **One data store:** both models use one database, but each has its own logic.
+- **Two data stores:** the read model and the write model have their own stores. You can scale each one to its load. They may use different storage technology. For example, a document database can serve reads and a relational database can serve writes.
+
+With two stores, the stores must stay in sync <Cite n={1} />. A common way is this. The write model publishes an event after it updates its database. The read model uses the event to refresh its data <Cite n={1} />. The read store can have its own schema, for example a materialized view that avoids complex joins. It can also be a read-only copy (replica) of the write database <Cite n={1} />.
+
+Updating a database and publishing an event are two steps. Usually you cannot put a message broker and a database in one distributed transaction, so the two steps can disagree <Cite n={1} />. The source suggests the Transactional Outbox pattern, which saves the state change and the event together. It also suggests that the read-model consumer be idempotent, so a duplicate message does no harm <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**Command।** একটি command-এ একটি business কাজ বলা উচিত, নিচু স্তরের data বদল নয়। source এই উদাহরণ দেয়: "Book hotel room" ব্যবহার করুন, "Set ReservationStatus to Reserved" নয় <Cite n={1} />। source এটিও বলে যে একটি queue command-গুলো asynchronously চালাতে পারে <Cite n={1} />।
+
+**Query।** একটি query কখনো data বদলায় না। সে data transfer object (DTO) ফেরত দেয়। DTO সুবিধাজনক আকারে data রাখে এবং এতে domain logic থাকে না <Cite n={1} />।
+
+**Write model** command সামলায়। এতে validation আর domain logic থাকে, এবং সে data ঠিক রাখতে কাজ করে <Cite n={1} />। **Read model** query-এর উত্তর দেয় এবং এতে domain logic নেই <Cite n={1} />।
+
+আলাদা করার দুটি স্তর আছে <Cite n={1} />:
+
+- **একটি data store:** দুটি model-ই একটি database ব্যবহার করে, কিন্তু প্রতিটির নিজের logic আছে।
+- **দুটি data store:** read model আর write model-এর নিজের নিজের store আছে। প্রতিটিকে তার load অনুযায়ী scale করা যায়। তারা আলাদা storage technology ব্যবহার করতে পারে। উদাহরণ: read-এর জন্য একটি document database এবং write-এর জন্য একটি relational database।
+
+দুটি store থাকলে store দুটিকে sync-এ রাখতে হয় <Cite n={1} />। একটি সাধারণ উপায় এরকম। write model তার database update করার পর একটি event publish করে। read model সেই event দিয়ে তার data refresh করে <Cite n={1} />। read store-এর নিজের schema থাকতে পারে, যেমন একটি materialized view, যা জটিল join এড়ায়। এটি write database-এর একটি read-only copy (replica) ও হতে পারে <Cite n={1} />।
+
+একটি database update করা আর একটি event publish করা দুটি আলাদা ধাপ। সাধারণত একটি message broker আর একটি database-কে একটি distributed transaction-এ রাখা যায় না, তাই দুই ধাপ একমত নাও হতে পারে <Cite n={1} />। source Transactional Outbox pattern-এর পরামর্শ দেয়, যা state-এর পরিবর্তন আর event একসাথে সংরক্ষণ করে। source আরও বলে, read-model-এর consumer idempotent হোক, যাতে একই message দুইবার এলে ক্ষতি না হয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Eventual consistency
+
+<Voices>
+<Technical>
 
 When the stores are separate, the read data might not show the latest change at once. A reader can get stale data <Cite n={1} />. The source says the read side catches up with the write side after a delay, which is eventual consistency <Cite n={1} />. It adds that keeping the read store current can be hard, and that you must plan for a user who acts on stale data <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+When the stores are separate, the read data might not show the latest change at once. A reader can get stale data <Cite n={1} />. The source says the read side catches up with the write side after a delay. This is eventual consistency <Cite n={1} />. The source adds that keeping the read store current can be hard. It also says you must plan for a user who acts on stale data <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+store আলাদা হলে read data হয়তো সাথে সাথে সর্বশেষ পরিবর্তন দেখায় না। একজন reader পুরোনো data পেতে পারে <Cite n={1} />। source বলে read দিক কিছুক্ষণ পরে write দিকের সমান হয়ে যায়। একেই বলে eventual consistency <Cite n={1} />। source আরও বলে, read store-কে হালনাগাদ রাখা কঠিন হতে পারে। আর যে user পুরোনো data দেখে কাজ করে তার জন্যও আগে থেকে পরিকল্পনা করতে হবে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Combining CQRS with event sourcing
+
+<Voices>
+<Technical>
 
 Some CQRS designs use the Event Sourcing pattern. It stores state as a chronological list of events, and the system replays them in order to find the current state <Cite n={1} />. (The page [Event Sourcing](/course/event-sourcing/) explains this pattern.) In this design the write side is the event store, and it is the one place that holds the true state. The read model builds materialized views from the events <Cite n={1} />.
 
 The source names these gains: you can rebuild a view, or make a new one, by replaying old events, and an event stream as the write store can reduce update conflicts <Cite n={1} />. It also names these costs: the read store can lag behind the events, the design can be harder, and building views can take much time and many resources. Snapshots at regular intervals can avoid a full replay each time <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+Some CQRS designs use the Event Sourcing pattern. It stores state as a chronological list of events. The system replays them in order to find the current state <Cite n={1} />. (The page [Event Sourcing](/course/event-sourcing/) explains this pattern.) In this design the write side is the event store. It is the one place that holds the true state. The read model builds materialized views from the events <Cite n={1} />.
+
+The source names these gains. You can rebuild a view, or make a new one, by replaying old events. An event stream as the write store can reduce update conflicts <Cite n={1} />. It also names these costs. The read store can lag behind the events. The design can be harder. Building views can take much time and many resources. Snapshots at regular intervals can avoid a full replay each time <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+কিছু CQRS design Event Sourcing pattern ব্যবহার করে। এটি state-কে সময়ক্রমে সাজানো event-এর তালিকা হিসেবে রাখে। system বর্তমান state জানতে সেগুলো ক্রমানুসারে replay করে <Cite n={1} />। ([Event Sourcing](/course/event-sourcing/) পাতা এই pattern ব্যাখ্যা করে।) এই design-এ write দিক হলো event store। এটিই একমাত্র জায়গা যেখানে সত্যিকারের state থাকে। read model event থেকে materialized view বানায় <Cite n={1} />।
+
+source এই সুবিধাগুলো বলে। পুরোনো event replay করে একটি view আবার বানানো যায়, বা নতুন view বানানো যায়। write store হিসেবে event stream update conflict কমাতে পারে <Cite n={1} />। source এই খরচগুলোও বলে। read store event থেকে পিছিয়ে থাকতে পারে। design কঠিন হতে পারে। view বানাতে অনেক সময় আর অনেক resource লাগতে পারে। নিয়মিত বিরতিতে snapshot নিলে প্রতিবার পুরো replay এড়ানো যায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## Trade-offs
+
+<Voices>
+<Technical>
 
 The source lists these benefits: independent scaling, schemas that suit each job, tighter security for writes, cleaner models, and simpler queries <Cite n={1} />. The price is as follows <Cite n={1} />:
 
@@ -66,19 +197,83 @@ The source lists these benefits: independent scaling, schemas that suit each job
 - **Custom code.** Tools that map objects to database tables cannot make CQRS code from a schema for you.
 - **Messaging problems.** Messaging is not required, but it is often used. Then you must handle failed, duplicate, and retried messages.
 
+</Technical>
+<Layman>
+
+The source lists these benefits: independent scaling, schemas that suit each job, tighter security for writes, cleaner models, and simpler queries <Cite n={1} />. The price is as follows <Cite n={1} />:
+
+- **More complexity.** The core idea is simple, but the design can become much more complex, especially with Event Sourcing.
+- **Custom code.** Tools that map objects to database tables cannot make CQRS code from a schema for you.
+- **Messaging problems.** Messaging is not required, but it is often used. Then you must handle failed, duplicate, and retried messages.
+
+</Layman>
+<Bangla>
+
+source এই সুবিধাগুলো বলে: আলাদা scaling, প্রতিটি কাজের উপযুক্ত schema, write-এর জন্য কঠোর security, পরিষ্কার model এবং সহজ query <Cite n={1} />। দাম হলো এরকম <Cite n={1} />:
+
+- **বেশি জটিলতা।** মূল ধারণা সহজ, কিন্তু design অনেক জটিল হয়ে যেতে পারে, বিশেষ করে Event Sourcing-এর সাথে।
+- **নিজের লেখা code।** যে tool object-কে database table-এ map করে, সেগুলো schema থেকে CQRS code বানিয়ে দিতে পারে না।
+- **Messaging-এর সমস্যা।** Messaging জরুরি নয়, কিন্তু প্রায়ই ব্যবহার হয়। তখন failed, duplicate এবং আবার পাঠানো message সামলাতে হয়।
+
+</Bangla>
+</Voices>
+
 ## A real-life example
+
+<Voices>
+<Technical>
 
 This example is the tutorial's own. A test-management tool has a screen that lists all test runs with their pass rate. Thousands of testers open it every day. A few CI jobs write results all the time.
 
 With CQRS, the write side accepts a command such as "Record test result". The write side checks the rules and saves the result. Then it publishes an event. The read side updates a ready-made summary table. The screen reads only this table, so it stays fast, and it does not block the writes. The cost is a short delay: a tester who just ran a test may see the old pass rate for a moment.
 
+</Technical>
+<Layman>
+
+This example is the tutorial's own. A test-management tool has a screen that lists all test runs with their pass rate. Thousands of testers open it every day. A few CI jobs write results all the time.
+
+With CQRS, the write side accepts a command such as "Record test result". The write side checks the rules and saves the result. Then it publishes an event. The read side updates a ready-made summary table. The screen reads only this table. So the screen stays fast, and it does not block the writes. The cost is a short delay. A tester who just ran a test may see the old pass rate for a moment.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণ tutorial-এর নিজের। একটি test-management tool-এ একটি screen আছে, যা সব test run তাদের pass rate সহ দেখায়। হাজার হাজার tester প্রতিদিন এটি খোলে। কয়েকটি CI job সব সময় result লেখে।
+
+CQRS-এ write দিক "Record test result" এর মতো একটি command নেয়। write দিক নিয়ম পরীক্ষা করে এবং result সংরক্ষণ করে। তারপর একটি event publish করে। read দিক একটি তৈরি summary table update করে। screen শুধু এই table পড়ে। তাই screen দ্রুত থাকে, এবং write-কে আটকায় না। খরচ হলো অল্প দেরি। যে tester এইমাত্র একটি test চালিয়েছে সে কিছুক্ষণ পুরোনো pass rate দেখতে পারে।
+
+</Bangla>
+</Voices>
+
 ## Common mistakes
+
+<Voices>
+<Technical>
 
 - **Using CQRS for a simple CRUD app.** The source says it may not suit a simple domain or a plain CRUD interface <Cite n={1} />.
 - **Forgetting the delay between the stores.** With separate databases, a read may show old data <Cite n={1} />.
 - **Writing commands as data updates.** The source prefers a command that names a business task <Cite n={1} />.
 
+</Technical>
+<Layman>
+
+- **Using CQRS for a simple CRUD app.** The source says it may not suit a simple domain or a plain CRUD interface <Cite n={1} />.
+- **Forgetting the delay between the stores.** With separate databases, a read may show old data <Cite n={1} />.
+- **Writing commands as data updates.** The source prefers a command that names a business task <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **সহজ CRUD app-এ CQRS ব্যবহার করা।** source বলে এটি সহজ domain বা সাধারণ CRUD interface-এর জন্য হয়তো মানায় না <Cite n={1} />।
+- **store দুটির মাঝের দেরি ভুলে যাওয়া।** আলাদা database থাকলে একটি read পুরোনো data দেখাতে পারে <Cite n={1} />।
+- **command-কে data update হিসেবে লেখা।** source এমন command পছন্দ করে যা একটি business কাজের নাম বলে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
 ## What a tester can check
+
+<Voices>
+<Technical>
 
 <Callout type="tip" title="Tutorial advice">
 These test ideas are the tutorial's own advice, not a claim of the source.
@@ -89,6 +284,31 @@ These test ideas are the tutorial's own advice, not a claim of the source.
 - **Act on old data.** Open a screen, change the data in another session, and then act on the first screen. Check that the system handles it with a clear message.
 - **Rebuild the read store.** If the design allows it, rebuild a view from scratch and compare it with the old one.
 </Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice, not a claim of the source.
+
+- **Read right after write.** Send a command, then query at once. Check what the user sees. Check how long it takes for the new data to show.
+- **Send the same event twice.** Check that the read side does not count the change two times.
+- **Stop the event flow.** Pause the link between the stores and make some changes. Then restart it. Check that the read store catches up.
+- **Act on old data.** Open a screen. Change the data in another session. Then act on the first screen. Check that the system handles it with a clear message.
+- **Rebuild the read store.** If the design allows it, rebuild a view from scratch. Compare it with the old one.
+
+</Layman>
+<Bangla>
+
+এই test-এর ধারণাগুলো tutorial-এর নিজের পরামর্শ, source-এর দাবি নয়।
+
+- **write-এর ঠিক পরে read।** একটি command পাঠান, তারপর সাথে সাথে query করুন। user কী দেখে তা দেখুন। নতুন data দেখাতে কত সময় লাগে তা দেখুন।
+- **একই event দুইবার পাঠান।** দেখুন read দিক পরিবর্তনটি দুইবার গোনে কিনা।
+- **event-এর প্রবাহ থামান।** store দুটির মাঝের যোগ থামিয়ে কিছু পরিবর্তন করুন। তারপর আবার চালু করুন। দেখুন read store ধরে ফেলে কিনা।
+- **পুরোনো data দিয়ে কাজ করুন।** একটি screen খুলুন। অন্য session-এ data বদলান। তারপর প্রথম screen-এ কাজ করুন। দেখুন system পরিষ্কার message দিয়ে তা সামলায় কিনা।
+- **read store আবার বানান।** design অনুমতি দিলে একটি view শুরু থেকে আবার বানান। পুরোনোটির সাথে তুলনা করুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 

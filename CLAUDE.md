@@ -258,7 +258,7 @@ The System Design Course is the home at `/course/` and 40 topic pages at `/cours
 
 | Rule | Detail |
 |---|---|
-| Page shape | `## In plain words`, `## When you need it`, `## A real-life example`, `## Common mistakes`, `## What a tester can check` (a "Tutorial advice" tip with no cites), `## Key words` (a table, always last). Optional: `## How it works`, `## Trade-offs`, `## In an interview`. `npm test` checks the order. No `<Voices>` yet. |
+| Page shape | `## In plain words`, `## When you need it`, `## A real-life example`, `## Common mistakes`, `## What a tester can check` (a "Tutorial advice" tip with no cites), `## Key words` (a table, always last). Optional: `## How it works`, `## Trade-offs`, `## In an interview`. `npm test` checks the order. Each `##` section except `## Key words` has `<Voices>` (see "Voices"). |
 | Sources | The topic order follows systemdesignbangla.com. Nothing else comes from it: the text is the tutorial's own, and each fact has a `<Cite>` to an official source (RFCs, vendor docs, the Google SRE books). No blogs or AI summaries. |
 | Research notes | `docs/superpowers/research/course-<slug>.md` and `course-<slug>.factcheck.md`. A page is done only when its report ends with `Open FAILs: 0`, written by an agent that did not write the page. |
 
@@ -283,7 +283,7 @@ To add a topic, add it to `lib/architecture/topics.ts` and to `ArchitectureSlug`
 
 ## Voices
 
-A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 69 pages have voices: the 23 tutorial pages, the 12 Linux stages, the 15 System Design cases, and the 19 Architecture topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, the 40 System Design Course pages (the course has no voices yet), every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
+A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 109 pages have voices: the 23 tutorial pages, the 12 Linux stages, the 15 System Design cases, the 19 Architecture topics, and the 40 Course topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
 
 ### What the reader sees
 
@@ -335,6 +335,7 @@ Plain English text.
 | A `<Cite n>` in `<Layman>` or `<Bangla>` uses only an `n` that `<Technical>` of the same block cites. | yes |
 | `<Layman>` and `<Bangla>` give no fact that `<Technical>` does not give. | no (fact check) |
 | Commands, flags, paths, product names, and common technical terms stay in English in the Bangla text. | no (fact check) |
+| Course pages only: the Bangla text follows the term style of systemdesignbangla.com. Common concept words are in Bangla letters (for example ক্যাশ, ডেটাবেস, লোড ব্যালেন্সার, মাইক্রোসার্ভিস). Acronyms, protocol, product, command, flag, path, and code names stay in English (DNS, TCP, SQL, Redis, `EXPIRE`). The reader is addressed with আপনি. This is a style rule only: no text of that site is copied. | no (fact check) |
 
 `tests/voice-source.test.ts` checks every `content/**/*.mdx` file with `lib/voice-source.ts`. It is a line scan, not an MDX parser. It ignores tags in fenced code blocks and in inline code. The rules about text outside a panel and after `</Voices>` also ignore the lines of fenced code blocks. A section without `<Voices>` renders as before.
 
