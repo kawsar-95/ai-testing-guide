@@ -1,0 +1,106 @@
+export const metadata = { title: 'SLA, SLO, and SLI', description: 'What SLIs, SLOs, and SLAs mean as the Google SRE books define them: how to choose indicators, why percentiles beat averages, what an error budget is, and why an SLO should not be 100%.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Service Level Objectives (chapter 4 of Site Reliability Engineering)', publisher: 'Google', url: 'https://sre.google/sre-book/service-level-objectives/', accessed: '2026-10-22' },
+    { title: 'Implementing SLOs (chapter 2 of The Site Reliability Workbook)', publisher: 'Google', url: 'https://sre.google/workbook/implementing-slos/', accessed: '2026-10-22' },
+  ],
+}
+
+# SLA, SLO, and SLI
+
+A manager asks, "Is the service reliable?" One engineer says yes, because the servers are up. A user says no, because the page is slow. Three short terms give them shared words and numbers.
+
+<PageMeta />
+
+## In plain words
+
+The SRE book defines three terms <Cite n={1} />.
+
+- **SLI (service level indicator)** is a carefully defined number that measures one aspect of the service. Request latency, error rate, and throughput are common examples <Cite n={1} />.
+- **SLO (service level objective)** is a target value, or a range of values, for an SLI <Cite n={1} />. For example: the SLI must stay under a limit, or between a lower and an upper bound.
+- **SLA (service level agreement)** is a contract with users. It includes consequences for meeting or missing the SLOs inside it. The consequence is easiest to see when it is money, such as a rebate or a penalty <Cite n={1} />.
+
+The book gives a quick test. Ask what happens if the objective is missed. If nothing explicit happens, you almost certainly have an SLO <Cite n={1} />. It also notes that people often say "SLA" when they mean SLO. An "SLA violation" is nearly always a missed SLO <Cite n={1} />.
+
+Availability is one kind of SLI. It is the fraction of time that a service is usable, and it is often measured as the share of valid requests that succeed <Cite n={1} />. The page [Availability](/course/availability/) explains this topic.
+
+## When you need it
+
+Without an explicit SLO, users form their own beliefs about how the service performs. This can cause over-reliance, when users think the service is more available than it is. It can also cause under-reliance, when they think it is flakier than it is <Cite n={1} />. A published SLO sets expectations <Cite n={1} />.
+
+SLOs also help a team decide what to work on. Engineering time is limited, and an SLO helps the team weigh new features against reliability work <Cite n={2} />. The books describe a loop: measure the SLIs, compare them with the SLOs, decide whether to act, and act. Without an SLO you would not know whether or when to act <Cite n={1} />.
+
+The book says SLIs and SLOs are worth defining even when a service has no SLA <Cite n={1} />.
+
+## How it works
+
+**Choose the indicators.** Start from what users care about, not from what is easy to measure <Cite n={1} />. Do not turn every metric into an SLI. Too many hides the important ones, and a handful is typically enough <Cite n={1} />. The workbook suggests five or fewer types of SLI <Cite n={2} />. The book lists typical choices by kind of system <Cite n={1} />:
+
+| System | Typical SLIs |
+|---|---|
+| User-facing serving system | Availability, latency, throughput |
+| Storage system | Latency, availability, durability |
+| Data pipeline | Throughput, end-to-end latency |
+| Any system | Correctness |
+
+The workbook generally recommends this SLI shape: good events divided by all events, from 0% to 100% <Cite n={2} />. Server-side data is easy to collect, but it can miss problems that only the client sees, such as slow page scripts <Cite n={1} />. For a first SLI, the workbook suggests data you already have, such as web server logs <Cite n={2} />.
+
+**Use percentiles, not averages.** An average hides the slow tail. The book shows a system where a typical request takes about 50 ms, yet 5% of requests are 20 times slower. Alerts on the average would show no change <Cite n={1} />. A high percentile, such as the 99th, shows a plausible worst case. The median, which is the 50th percentile, shows the typical case <Cite n={1} />. The workbook suggests several grades of one SLO, for example 90% of requests under 100 ms and 99% under 400 ms <Cite n={2} />.
+
+**Track the error budget.** The workbook defines the budget as 100% minus the SLO. Its example: with a 99.9% success SLO and 3 million requests in four weeks, the budget is 3,000 errors. An outage with 1,500 errors uses half of it <Cite n={2} />. The book uses the gap between the miss rate and the budget as input for release decisions <Cite n={1} />.
+
+A written policy says what happens when the budget is gone. Common actions are to stop feature launches until the service is back within its SLO, or to move some or all engineering time to reliability work <Cite n={2} />.
+
+## Why an SLO should not be 100%
+
+The book calls a 100% target unrealistic and undesirable. It can slow down new releases, or it can need expensive and overly cautious designs <Cite n={1} />. The workbook gives these reasons <Cite n={2} />:
+
+- Components can fail at the same time, even with redundancy.
+- Users reach you through a long chain of systems, and any of them can fail.
+- Each extra nine costs more, while the gain for users shrinks toward zero.
+- Change is the top source of outages, so a 100% target means you can never update the service.
+
+The book adds a related lesson. If a service is far better than its SLO, users start to depend on that level. Google's lock service Chubby had planned outages to avoid this <Cite n={1} />. A team can also keep an internal SLO tighter than the published one, to fix chronic problems before users see them <Cite n={1} />.
+
+## A real-life example
+
+This example is the tutorial's own, and so is its arithmetic. A test-management tool has an API that CI jobs call. The team picks:
+
+- **SLI:** successful API requests divided by all API requests.
+- **SLO:** 99.5% over a rolling window of four weeks.
+- **SLA:** the contract with customers promises 99%, with a service credit if the team misses it.
+
+The window holds 2 million requests, so the budget is 0.5%, or 10,000 failed requests. A bad release fails 4,000 requests before a rollback. That uses 40% of the budget.
+
+## Common mistakes
+
+- **Mixing up SLA and SLO.** An SLA has consequences. An SLO is a target <Cite n={1} />.
+- **Using the average latency.** It hides the slow tail <Cite n={1} />.
+- **Aiming at 100%.** The books call it the wrong target <Cite n={2} />.
+- **Setting a target only from current performance.** The book warns against this <Cite n={1} />. The workbook allows it as a first step if you keep refining the target <Cite n={2} />.
+- **Having too many SLOs.** The book advises as few as possible <Cite n={1} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These ideas are the tutorial's own advice, not a claim of the sources.
+
+- **Ask for the definition.** Find out exactly what counts as a good event and a bad event. Check that a malformed request does not count against the service.
+- **Fail on purpose.** Send a known number of failing requests. Check that the SLI and the error budget change by the expected amount.
+- **Make a slow tail.** Delay a small share of requests. Check that the percentile SLI shows it and the average does not.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| SLI | A defined number that measures one aspect of the service, such as latency or error rate <Cite n={1} /> |
+| SLO | A target value or range for an SLI <Cite n={1} /> |
+| SLA | A contract with users that includes consequences for meeting or missing the SLOs in it <Cite n={1} /> |
+| Percentile | A value below which a given share of measurements fall. The 99th percentile shows a plausible worst case <Cite n={1} /> |
+| Median | The 50th percentile, which shows the typical case <Cite n={1} /> |
+| Error budget | The rate at which an SLO may be missed. The workbook defines it as 100% minus the SLO <Cite n={1} /> <Cite n={2} /> |
+| Error budget policy | A written plan for what to do when the budget is used up <Cite n={2} /> |
+| Rolling window | A period that moves with time, such as the last four weeks <Cite n={2} /> |
+| Durability | The likelihood that stored data is kept over a long time <Cite n={1} /> |
