@@ -1,45 +1,53 @@
-# Voice fact-check: Disaster Recovery (round 1, 2026-10-22)
+# Voice fact-check: Disaster Recovery (round 2, Bangla term style, 2026-10-22)
 
-Page: `content/course/disaster-recovery.mdx`. I did not write the Layman and Bangla panels.
+Page: `content/course/disaster-recovery.mdx`. I did not write this page or its voices. This report replaces the earlier one.
 
-Method: I read the 8 `<Voices>` blocks (the `## Key words` section has no voices). For each block, I compared `<Layman>` and `<Bangla>` with the `<Technical>` panel of the same block. A fact, number, name, example, or cite that Technical does not give is a FAIL. So is a dropped hedge or a changed condition, a wrong or confusing Bangla meaning, and a Layman sentence that is long or not plain. An omission is not a FAIL. I checked each `<Cite n>` against the cites of the Technical panel of the same block. I did not re-check the sources.
+Method: I read the 8 `<Voices>` blocks (the "Key words" section has no voices). For each `<Layman>` and `<Bangla>` panel I compared every sentence with the `<Technical>` panel of the same block. FAIL rules: a fact, number, name, example or cite that Technical does not give; a dropped hedge; a wrong or misleading statement; a wrong, ungrammatical or unfinished Bangla sentence; a Bangla panel that breaks the course term style; a Layman sentence over 25 words. An omission is not a FAIL.
 
-Structure checks:
+Automated checks (script, all blocks):
 
-- No `TODO-LAYMAN` or `TODO-BANGLA` is left.
-- No Markdown heading in any Layman or Bangla panel.
-- Technical text is unchanged: `git diff -U0 content/course/disaster-recovery.mdx | grep '^-' | grep -v '^---'` shows no removed line.
-- Cites: each Layman and Bangla cite is in the Technical panel of its block (1, 2, 3, 4, 5 as in Technical).
+- Each `<Technical>` body equals the `<Technical>` body of the same section in `git show HEAD:content/course/disaster-recovery.mdx` (non-blank lines): PASS for 8 of 8.
+- Every `<Cite n>` in Layman and Bangla is cited in Technical of the same block: PASS.
+- No heading in any Layman or Bangla panel, no TODO, no তুমি: PASS.
+- No Layman sentence over 25 words: PASS.
+- No acronym, product, or company name in Bangla letters (RTO, RPO, DR, HA, IaC, AWS, Azure stay Latin): PASS.
 
 Notes:
 
-- In "Trade-offs", Technical has a 4-row table. Layman and Bangla use 4 bullets with the same cells and the same cites. The lead-in says "This list follows the AWS text only", which matches "The table follows the AWS text only". PASS.
-- In "When you need it", "you should not put it in place" became the imperative "do not put it in place" in Layman and Bangla. The exception for regulation follows at once, so the meaning is the same. PASS.
-- The longest Layman sentence in "Trade-offs" has 24 words. PASS.
+- In "Trade-offs" the Technical panel has a table; Layman and Bangla use a list with the same four strategies and the same cites. No cell is lost. The sentence "The table follows the AWS text only" becomes "this list follows the AWS text only", which is correct for the new shape.
+- The AWS strategy names (Backup and restore, Pilot light, Warm standby, Multi-site active/active, hot standby) stay in English in Bangla as names, as the page's Key words table does.
+- The exact quotes "30 minutes of data" and "eight hours of downtime" stay in English in Bangla. Correct for a quote.
 
-| # | Section | Voice | Verdict | Reason |
-|---|---|---|---|---|
-| 1 | In plain words | Layman | PASS | Disaster, DR, RTO, RPO, the Azure examples ("30 minutes of data", "eight hours of downtime"), and the zero-values warning all match. |
-| 2 | In plain words | Bangla | FAIL (fixed) | "বড় প্রভাবের মানবিক ভুল" for "human errors with a major impact". In Bangla, "মানবিক" usually means "humane", so "মানবিক ভুল" is confusing. Fixed to "মানুষের করা বড় প্রভাবের ভুল". The rest is PASS. |
-| 3 | When you need it | Layman | PASS | Same 3 points and cite 1. |
-| 4 | When you need it | Bangla | PASS | Same 3 points and cite 1. |
-| 5 | How it works | Layman | PASS | HA versus DR, point-in-time backups, the region-outage note, failover and failback, backups, and the runbook all match. |
-| 6 | How it works | Bangla | PASS | Same facts. "RTO-তে তা ধরতে হবে" means "RTO must allow for it". |
-| 7 | Trade-offs | Layman | PASS | 4 strategies, hot standby, and the last advice match Technical. No new cell or number. |
-| 8 | Trade-offs | Bangla | PASS | Same. "বাকি তিনটা" means the other three. |
-| 9 | Testing disaster recovery | Layman | PASS | AWS points (test regularly, rare paths, quotas, drift) and Azure points (human processes, restore, active/active) match. |
-| 10 | Testing disaster recovery | Bangla | PASS | Same. |
-| 11 | A real-life example | Layman | PASS | Same numbers: RPO 15 minutes, RTO 1 hour, backup every 4 hours, failover 90 minutes. |
-| 12 | A real-life example | Bangla | PASS | Same numbers. |
-| 13 | Common mistakes | Layman | PASS | 3 bullets match. |
-| 14 | Common mistakes | Bangla | PASS | 3 bullets match. |
-| 15 | What a tester can check | Layman | PASS | 6 ideas match. |
-| 16 | What a tester can check | Bangla | PASS | 6 ideas match. |
-
-Language: polite (আপনি), terms in English, hyphen before Bangla suffixes. The only item to fix was row 2.
+| # | Section | Voice | What the panel says (checked against Technical) | Verdict | Reason |
+|---|---|---|---|---|---|
+| 1 | In plain words | Layman | Disaster is rare and major, larger than HA can absorb; examples; DR is the planning [5]; RTO and RPO [1]; units examples, zero is difficult and costly [5] | PASS | Same facts and cites. |
+| 2 | In plain words | Bangla | Same facts; "ডিজাস্টার (disaster)", "হাই অ্যাভেইলেবিলিটি (high availability)", "বাস্তবসম্মত মান" | PASS | Meaning matches. "ransomware" stays Latin as a threat name. |
+| 3 | When you need it | Layman | Objectives not set alone; cost vs loss, regulation exception; no DR can be valid for a less critical workload; DR part of the BCP [1] | PASS | Hedges kept. |
+| 4 | When you need it | Bangla | Same | PASS | "চালু করবেন না" for "should not put it in place" is the same advice. |
+| 5 | How it works | Layman | HA is not DR [4]; deletion copied [4]; line can move [5]; plan parts; failover/failback, backups, runbook [5] | PASS | Same facts and cites. |
+| 6 | How it works | Bangla | Same | FAIL | "একটা runbook" and "infrastructure as code" are plain concept phrases left in English with no Bangla form, while the same list writes "কমিউনিকেশন প্ল্যান (communication plan)" in the new style. Term style. |
+| 7 | Trade-offs | Layman | Four strategies, active/passive rule, hot standby, when backup and restore may be enough [2] | PASS | All numbers (four, three others) and cites match. |
+| 8 | Trade-offs | Bangla | Same | FAIL | "ভালোভাবে আর্কিটেক্ট করা, highly available ওয়ার্কলোডের জন্য, ডিজাস্টার যদি একটা ডেটা সেন্টার হারানো হয়" is an awkward, near-ungrammatical clause, and "highly available" is left in English while the rest of the page writes অ্যাভেইলেবিলিটি in Bangla letters. Grammar and term style. |
+| 9 | Testing disaster recovery | Layman | Test the DR setup, run failover regularly [3]; rare paths, quotas, few paths, drift [3]; human processes, simulation, RTO feasibility [5]; backup tests [2][5]; active/active loses a Region [2] | PASS | Same facts and cites. |
+| 10 | Testing disaster recovery | Bangla | Same | PASS | "ড্রিল (drill)", "সিমুলেশন (simulation)", "কনফিগারেশন ড্রিফট (configuration drift)" correct. |
+| 11 | A real-life example | Layman | Test-management tool; RPO 15 min, RTO 1 h; backup every 4 h; 4 h lost; replication and scaled-down copy; drill 90 min; automate | PASS | All numbers match and the example is marked "the tutorial's own". |
+| 12 | A real-life example | Bangla | Same numbers | FAIL | "test-management টুল": "test" is a listed concept word and "management" a plain one, both left in English. Term style. |
+| 13 | Common mistakes | Layman | Three mistakes, cites [4][5][3] | PASS | Same. |
+| 14 | Common mistakes | Bangla | Same | PASS | Meaning matches. |
+| 15 | What a tester can check | Layman | "Tutorial's own advice" line and six ideas | PASS | Same ideas, no cites, as in Technical. |
+| 16 | What a tester can check | Bangla | Same six ideas | FAIL | "Runbook ও এসকেলেশন পাথ": "Runbook" is bare English in an otherwise Bangla-letter sentence. Term style. |
 
 ## Re-check
 
-Row 2: the sentence now reads "উদাহরণ হলো প্রাকৃতিক দুর্যোগ, মানুষের করা বড় প্রভাবের ভুল (যেমন production data মুছে ফেলা), এবং ransomware-এর মতো বড় security incident". It matches "human errors with a major impact (such as deleting production data)". PASS.
+I fixed the 4 FAIL rows by editing only the Bangla panels:
+
+- Row 6: "একটা runbook" is now "একটা রানবুক (runbook)"; "infrastructure as code" is now "ইনফ্রাস্ট্রাকচার অ্যাজ কোড (infrastructure as code)". PASS.
+- Row 8: the clause is now "যে ওয়ার্কলোড ভালোভাবে আর্কিটেক্ট করা এবং হাইলি অ্যাভেইলেবল (highly available), তার ক্ষেত্রে ডিজাস্টার বলতে যদি একটা ডেটা সেন্টার হারানো বোঝায়, তবে AWS বলে ব্যাকআপ ও রিস্টোর (backup and restore) যথেষ্ট হতে পারে।" It reads as one complete sentence and matches Technical ("if the disaster is the loss of one data center ... may be enough"). PASS.
+- Row 12: now "টেস্ট-ম্যানেজমেন্ট (test-management) টুল". PASS.
+- Row 16: now "রানবুক (runbook) ও এসকেলেশন পাথ দেখুন।". PASS.
+
+After the edits I ran the script again: Technical still equals HEAD in 8 of 8 sections, the cites are unchanged, no new heading, no TODO.
+
+FAILs found: 4. Fixed: 4.
 
 Open FAILs: 0

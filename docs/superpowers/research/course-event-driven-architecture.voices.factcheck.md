@@ -1,44 +1,39 @@
 # Voice fact-check: Event-Driven Architecture (round 1, 2026-10-22)
 
-Page: `content/course/event-driven-architecture.mdx`. I did not write the voices of this page.
+Page: `content/course/event-driven-architecture.mdx`. I did not write the Layman or Bangla panels.
 
-Method: I read the 7 `<Voices>` blocks. I compared each `<Layman>` and `<Bangla>` panel with the `<Technical>` panel of the same block. A FAIL is a fact, number, name, example, or cite that Technical does not give; a dropped hedge that changes the meaning; a wrong or misleading statement; a `<Cite n>` that Technical does not cite; a term that is translated in a confusing way; a wrong Bangla meaning; or a Layman sentence that is long or not plain. An omission is not a FAIL. I did not re-check the sources: the Technical claims are in the report of the page text.
+Method: I compared each `<Layman>` and `<Bangla>` panel with the `<Technical>` panel of the same `##` section (7 blocks; `## Key words` has no voices). A fact, number, name, example, hedge, or `<Cite n>` that Technical does not give is a FAIL. A wrong or unfinished Bangla sentence is a FAIL. A Bangla panel that breaks the course term style is a FAIL (তুমি, a common concept word left in English without a reason, or an acronym, product name, or command in Bangla letters). A Layman sentence over 25 words is a FAIL. An omission is not a FAIL. I read the Bangla text for meaning, grammar, and the আপনি form.
 
-Checks run:
+Mechanical checks (script): each `<Technical>` panel is identical to the `<Technical>` panel of the same section in `git show HEAD:content/course/event-driven-architecture.mdx`, and the text outside the `<Voices>` blocks is identical to HEAD. Each Layman and Bangla panel cites only `n` values that Technical of the same block cites, and has the same number of `<Cite>` tags as Technical. No heading in a Layman or Bangla panel. No TODO. No তুমি. A scan of the Bangla panels for acronyms and product names written in Bangla letters found none. The Layman panels are identical to HEAD before my edits (only the Bangla panels were rewritten).
 
-- No `TODO` placeholder is left (`grep -c TODO` gives 0).
-- No Markdown heading in any Layman or Bangla panel (script check).
-- The cite set of each Layman and Bangla panel equals the cite set of its Technical panel (script check). No extra `n`.
-- No number in Layman or Bangla is missing from Technical (script check).
-- `git diff -U0 content/course/event-driven-architecture.mdx | grep '^-' | grep -v '^---'` shows no removed line. Technical text is unchanged.
+Notes:
+
+- Block 3: Layman and Bangla keep the link to the sibling page `/course/pub-sub/`. Same as Technical. PASS.
+- Layman keeps terms such as "idempotent" and "exactly-once semantics" from Technical. The Key words table defines idempotent. I did not count this as a FAIL.
+- Block 7: no callout in Layman or Bangla. They restate the "tutorial's own advice" line and the 5 ideas with no cites. PASS.
+- Bangla: DLQ, IoT, ID, AWS, Azure stay in English. The names of the patterns (Competing Consumers) stay in English.
 
 | # | Section | Voice | Verdict | Reason |
 |---|---|---|---|---|
-| 1 | In plain words | Layman | PASS | Same event definition, three parts, and AWS router claim. The table is a list. Cites 1, 2 match. |
-| 2 | In plain words | Bangla | PASS | Same facts. "shipped" as "পাঠানো হয়েছে" is correct. |
-| 3 | When you need it | Layman | PASS | Same 5 Azure cases, same AWS uses. The "may not fit" sentence became a list of the same 3 cases. One list sentence has 30 words, but it is a flat list of 4 uses. |
-| 4 | When you need it | Bangla | PASS | Same. |
-| 5 | How it works | Layman | PASS | Two models, Competing Consumers, router types, and both topologies match Technical. The `/course/pub-sub/` link is kept. |
-| 6 | How it works | Bangla | PASS | Same. "কঠোরভাবে ক্রমানুযায়ী" is correct for "strictly ordered". |
-| 7 | Challenges | Layman | PASS | Same 6 challenges. The AWS and Azure attributions match Technical. |
-| 8 | Challenges | Bangla | FAIL (fixed) | "AWS বলে, ... event source-কে delivery guarantee করতে হবে" says "must". AWS (Technical) says the source "should guarantee delivery". The strength changed. |
-| 9 | A real-life example | Layman | PASS | Same exam example and the same "few seconds" cost. |
-| 10 | A real-life example | Bangla | PASS | Same. |
-| 11 | Common mistakes | Layman | PASS | Same four items and cites (Technical is already plain). |
-| 12 | Common mistakes | Bangla | PASS | Same four items. |
-| 13 | What a tester can check | Layman | PASS | Same five ideas. No cites. |
-| 14 | What a tester can check | Bangla | PASS | Same five ideas. |
+| 1 | In plain words | Layman | PASS | Same facts, numbers, hedges, and cites as Technical. |
+| 2 | In plain words | Bangla | PASS | Same facts, numbers, hedges, and cites as Technical. Natural Bangla, আপনি form, term style kept. |
+| 3 | When you need it | Layman | FAIL -> fixed | One sentence of 30 words: "AWS names these uses: copying data between accounts and regions, ... fanout), and joining systems ...". Split into a lead-in line and 4 short bullets. Same 4 uses, same cite. |
+| 4 | When you need it | Bangla | FAIL -> fixed | "সময়ের জানালার (time window)" is a word-for-word translation of "time window" and reads unnaturally. Changed to "টাইম উইন্ডোর (time window)". |
+| 5 | How it works | Layman | PASS | Same facts, numbers, hedges, and cites as Technical. |
+| 6 | How it works | Bangla | PASS | Same facts, numbers, hedges, and cites as Technical. Natural Bangla, আপনি form, term style kept. |
+| 7 | Challenges | Layman | PASS | Same facts, numbers, hedges, and cites as Technical. |
+| 8 | Challenges | Bangla | FAIL -> fixed | "exactly-once সেম্যান্টিক্স" left the term in English with no gloss. Changed to "এক্সাক্টলি-ওয়ান্স (exactly-once) সেম্যান্টিক্স". |
+| 9 | A real-life example | Layman | PASS | Same facts, numbers, hedges, and cites as Technical. |
+| 10 | A real-life example | Bangla | PASS | Same facts, numbers, hedges, and cites as Technical. Natural Bangla, আপনি form, term style kept. |
+| 11 | Common mistakes | Layman | PASS | Same facts, numbers, hedges, and cites as Technical. |
+| 12 | Common mistakes | Bangla | PASS | Same facts, numbers, hedges, and cites as Technical. Natural Bangla, আপনি form, term style kept. |
+| 13 | What a tester can check | Layman | PASS | Same facts, numbers, hedges, and cites as Technical. |
+| 14 | What a tester can check | Bangla | PASS | Same facts, numbers, hedges, and cites as Technical. Natural Bangla, আপনি form, term style kept. |
 
-Notes (not FAILs):
+## Re-check (after fixes)
 
-- Layman keeps jargon from Technical (idempotent, eventual consistency, DLQ). It adds no new fact. The Key words table defines the terms.
+Re-read blocks 2 (Layman and Bangla) and 4 (Bangla) after the edit. Block 2 Layman: no sentence is over 25 words (script), the cite `[2]` is on the lead-in line, and the 4 uses match Technical. Block 2 Bangla and block 4 Bangla: the new words are grammatical, the facts and cites are unchanged. `node --test` passes (see the end of the run).
 
-## Re-check
-
-| # | Fix | Re-check |
-|---|---|---|
-| 8 | Bangla: "event source-এর delivery guarantee করা উচিত" ("should") | PASS |
-
-Found: 1. Fixed: 1.
+FAIL rows found: 3. Fixed: 3.
 
 Open FAILs: 0

@@ -36,9 +36,9 @@ There are two main ways. One is **two-phase commit (2PC)**. All databases get re
 </Layman>
 <Bangla>
 
-**Distributed transaction** হলো এমন একটা business action যা একাধিক database বা service বদলায়। অনেক system প্রতিটা microservice-কে তার নিজের database দেয়। তাই এই আলাদা store-গুলোর মধ্যে স্বাভাবিক ACID guarantee সরাসরি খাটে না <Cite n={5} />।
+**ডিস্ট্রিবিউটেড ট্রানজেকশন** (distributed transaction) হলো এমন একটা বিজনেস অ্যাকশন যা একাধিক ডেটাবেস বা সার্ভিস বদলায়। অনেক সিস্টেম প্রতিটা মাইক্রোসার্ভিসকে তার নিজের ডেটাবেস দেয়। তাই এই আলাদা স্টোরগুলোর মধ্যে স্বাভাবিক ACID গ্যারান্টি সরাসরি খাটে না <Cite n={5} />।
 
-প্রধান দুটো উপায় আছে। একটা **two-phase commit (2PC)**। এতে সব database আগে প্রস্তুত হয়, তারপর একসঙ্গে commit বা roll back করে। অন্যটা **saga**। এতে প্রতিটা service একটা ছোট ধাপ commit করে। দরকার হলে পরের ধাপগুলো সেটা undo করে।
+প্রধান দুটো উপায় আছে। একটা **two-phase commit (2PC)**। এতে সব ডেটাবেস আগে প্রস্তুত হয়, তারপর একসঙ্গে কমিট (commit) বা রোলব্যাক করে। অন্যটা **saga**। এতে প্রতিটা সার্ভিস একটা ছোট ধাপ কমিট করে। দরকার হলে পরের ধাপগুলো সেটা আন্ডু (undo) করে।
 
 </Bangla>
 </Voices>
@@ -58,7 +58,7 @@ You need this topic when one user action touches more than one database or servi
 </Layman>
 <Bangla>
 
-যখন একটা user action একাধিক database বা service ছোঁয়, যেমন একটা order আর একটা payment, তখন এই বিষয়টা দরকার।
+যখন একটা ইউজার অ্যাকশন একাধিক ডেটাবেস বা সার্ভিস ছোঁয়, যেমন একটা অর্ডার আর একটা পেমেন্ট, তখন এই বিষয়টা দরকার।
 
 </Bangla>
 </Voices>
@@ -149,34 +149,34 @@ There are two ways to run a saga <Cite n={5} />:
 
 **Two-phase commit**
 
-PostgreSQL 2PC-র building block দেয়, কিন্তু পুরো protocol দেয় না। Docs বলে এই command-গুলো একটা **external transaction manager**-কে একাধিক database বা অন্য transactional resource জুড়ে atomic global transaction চালাতে দেয় <Cite n={1} />। Docs বলে, নিজে transaction manager না লিখলে আপনার সম্ভবত `PREPARE TRANSACTION` ব্যবহার করা উচিত নয় <Cite n={1} />।
+PostgreSQL 2PC-র বিল্ডিং ব্লক দেয়, কিন্তু পুরো প্রোটোকল দেয় না। ডকুমেন্টেশন বলে এই কমান্ডগুলোর উদ্দেশ্য হলো একটা **এক্সটারনাল ট্রানজেকশন ম্যানেজার**-কে (external transaction manager) একাধিক ডেটাবেস বা অন্য ট্রানজেকশনাল রিসোর্স জুড়ে অ্যাটমিক (atomic) গ্লোবাল ট্রানজেকশন চালাতে দেওয়া <Cite n={1} />। ডকুমেন্টেশন বলে, নিজে ট্রানজেকশন ম্যানেজার না লিখলে আপনার সম্ভবত `PREPARE TRANSACTION` ব্যবহার করা উচিত নয় <Cite n={1} />।
 
-প্রতিটা database-এর জন্য ধাপগুলো এই রকম:
+প্রতিটা ডেটাবেসের জন্য ধাপগুলো এই রকম:
 
-1. Transaction block-এর ভেতরে manager কাজ পাঠায়। তারপর সে `PREPARE TRANSACTION 'some-id'` চালায়। এই command-এ একটা transaction id লাগে। Id হলো 200 byte-এর কম দৈর্ঘ্যের একটা string <Cite n={1} />।
-2. Prepare-এর পর transaction আর session-এর সঙ্গে বাঁধা থাকে না। তার state পুরোপুরি disk-এ রাখা থাকে <Cite n={1} />।
-3. Manager যাচাই করে যে অন্য database-গুলোও commit করার জন্য প্রস্তুত। তখন সে `COMMIT PREPARED` দিয়ে transaction commit করে <Cite n={1} />। না হলে সে `ROLLBACK PREPARED` ব্যবহার করে <Cite n={1} />।
+1. ট্রানজেকশন ব্লকের ভেতরে ম্যানেজার কাজ পাঠায়। তারপর সে `PREPARE TRANSACTION 'some-id'` চালায়। এই কমান্ডে একটা ট্রানজেকশন আইডি লাগে। আইডি হলো 200 বাইটের কম দৈর্ঘ্যের একটা স্ট্রিং <Cite n={1} />।
+2. প্রিপেয়ারের (prepare) পর ট্রানজেকশন আর সেশনের সঙ্গে বাঁধা থাকে না। তার অবস্থা (state) পুরোপুরি ডিস্কে রাখা থাকে <Cite n={1} />।
+3. ম্যানেজার যাচাই করে যে অন্য ডেটাবেসগুলোও কমিট করার জন্য প্রস্তুত। তখন সে `COMMIT PREPARED` দিয়ে ট্রানজেকশন কমিট করে <Cite n={1} />। না হলে সে `ROLLBACK PREPARED` ব্যবহার করে <Cite n={1} />।
 
-`COMMIT PREPARED` ও `ROLLBACK PREPARED` prepare করা session-এর চেয়ে আলাদা session-এ চলতে পারে <Cite n={1} />। দুটোই সঙ্গে সঙ্গে commit বা roll back করে <Cite n={2} /> <Cite n={3} />।
+`COMMIT PREPARED` ও `ROLLBACK PREPARED` প্রিপেয়ার করা সেশনের চেয়ে আলাদা সেশনে চলতে পারে <Cite n={1} />। দুটোই সঙ্গে সঙ্গে কমিট বা রোলব্যাক করে <Cite n={2} /> <Cite n={3} />।
 
-**2PC আপনাকে কী দেয়, docs যেভাবে বলে।** Prepare-এর পর commit সফল হওয়ার "very high probability" থাকে, commit-এর আগে database crash করলেও <Cite n={1} />। Docs বলে probability। একে guarantee হিসেবে পড়বেন না।
+**2PC আপনাকে কী দেয়, ডকুমেন্টেশন যেভাবে বলে।** প্রিপেয়ারের পর কমিট সফল হওয়ার "very high probability" থাকে, কমিটের আগে ডেটাবেস ক্র্যাশ করলেও <Cite n={1} />। ডকুমেন্টেশন বলে probability (সম্ভাবনা)। একে গ্যারান্টি হিসেবে পড়বেন না।
 
-**2PC-র খরচ কী, docs যেভাবে বলে।** একটা prepared transaction যে lock ধরে রেখেছিল তা ধরে রাখে <Cite n={1} />। এটা অনেকক্ষণ prepared থাকলে `VACUUM`-এর কাজে বাধা দেয়। চরম ক্ষেত্রে এটা transaction ID wraparound ঠেকাতে database shut down করিয়ে দিতে পারে <Cite n={1} />। Docs বলে একটা transaction অনেকক্ষণ prepared রাখা বুদ্ধিমানের কাজ নয় <Cite n={1} />।
+**2PC-র খরচ কী, ডকুমেন্টেশন যেভাবে বলে।** একটা প্রিপেয়ার করা ট্রানজেকশন যে লক (lock) ধরে রেখেছিল তা ধরে রাখে <Cite n={1} />। এটা অনেকক্ষণ প্রিপেয়ার করা থাকলে `VACUUM`-এর কাজে বাধা দেয়। চরম ক্ষেত্রে এটা transaction ID wraparound ঠেকাতে ডেটাবেস শাটডাউন করিয়ে দিতে পারে <Cite n={1} />। ডকুমেন্টেশন বলে একটা ট্রানজেকশন অনেকক্ষণ প্রিপেয়ার করা রাখা বুদ্ধিমানের কাজ নয় <Cite n={1} />।
 
-Feature-টা default-এ বন্ধ। `max_prepared_transactions` হলো 0, এবং এটা শুধু server start-এর সময় set করা যায় <Cite n={4} />। যে manager prepared transaction দ্রুত বন্ধ করে, এমন manager না থাকলে docs একে 0-তে রাখার পরামর্শ দেয় <Cite n={1} />। `pg_prepared_xacts` view prepared transaction-গুলোর তালিকা দেখায় <Cite n={1} />।
+ফিচারটা ডিফল্টে বন্ধ। `max_prepared_transactions` হলো 0, এবং এটা শুধু সার্ভার স্টার্টের সময় সেট করা যায় <Cite n={4} />। যে ম্যানেজার প্রিপেয়ার করা ট্রানজেকশন দ্রুত বন্ধ করে, এমন ম্যানেজার না থাকলে ডকুমেন্টেশন একে 0-তে রাখার পরামর্শ দেয় <Cite n={1} />। `pg_prepared_xacts` ভিউ (view) প্রিপেয়ার করা ট্রানজেকশনগুলোর তালিকা দেখায় <Cite n={1} />।
 
 **Saga**
 
-একটা saga কাজকে **local transaction**-এর একটা ক্রমে ভাঙে। প্রতিটা একটা service-এ সম্পূর্ণ হয় এবং সেই service-এর database update করে। এটা একটা event বা message দিয়ে পরের ধাপ শুরু করে <Cite n={5} />। কোনো ধাপ fail করলে saga **compensating transaction** চালায়। এগুলো আগের ধাপগুলোর পরিবর্তন উল্টে দেয় <Cite n={5} />।
+একটা saga কাজকে **local transaction**-এর একটা ক্রমে ভাঙে। প্রতিটা একটা সার্ভিসে সম্পূর্ণ হয় এবং সেই সার্ভিসের ডেটাবেস আপডেট করে। এটা একটা ইভেন্ট বা মেসেজ দিয়ে পরের ধাপ শুরু করে <Cite n={5} />। কোনো ধাপ ফেইল করলে saga **compensating transaction** চালায়। এগুলো আগের ধাপগুলোর পরিবর্তন উল্টে দেয় <Cite n={5} />।
 
-Compensating transaction সাধারণ rollback নয়। পুরোনো state সোজাসুজি restore করলে অন্য user-দের করা পরিবর্তন মুছে যেতে পারে। তাই compensation অবশ্যই application-নির্দিষ্ট হতে হবে <Cite n={6} />। System প্রতিটা ধাপ কীভাবে undo করতে হয় তা record করে রাখে <Cite n={6} />।
+Compensating ট্রানজেকশন সাধারণ রোলব্যাক নয়। পুরোনো অবস্থা সোজাসুজি রিস্টোর করলে অন্য ইউজারদের করা পরিবর্তন মুছে যেতে পারে। তাই compensation অবশ্যই অ্যাপ্লিকেশন-নির্দিষ্ট হতে হবে <Cite n={6} />। সিস্টেম প্রতিটা ধাপ কীভাবে আন্ডু করতে হয় তা রেকর্ড করে রাখে <Cite n={6} />।
 
-একটা saga-তে থাকে একটা **pivot transaction**। এটা ফেরার পথ বন্ধ হওয়ার বিন্দু। এটা সফল হলে পরের সব ধাপ শেষ করতে হবে। এই পরের ধাপগুলো আবার চেষ্টা করা যায়, এবং সেগুলো idempotent <Cite n={5} />।
+একটা saga-তে থাকে একটা **pivot transaction**। এটা ফেরার পথ বন্ধ হওয়ার বিন্দু (point of no return)। এটা সফল হলে পরের সব ধাপ শেষ করতে হবে। এই পরের ধাপগুলো আবার চেষ্টা (retry) করা যায়, এবং সেগুলো idempotent <Cite n={5} />।
 
 Saga চালানোর দুটো উপায় আছে <Cite n={5} />:
 
-- **Choreography।** Service-গুলো event আদান-প্রদান করে। কোনো কেন্দ্রীয় controller নেই। এটা সহজ workflow-এর জন্য মানানসই <Cite n={5} />। ধাপ বাড়লে এটা গোলমেলে হয়ে যায়, এবং integration test-এর জন্য সব service চালু রাখতে হয় <Cite n={5} />।
-- **Orchestration।** একটা কেন্দ্রীয় orchestrator প্রতিটা service-কে কী করতে হবে বলে দেয় এবং failure recovery সামলায়। এটা জটিল workflow-এর জন্য উপযোগী <Cite n={5} />। Orchestrator একটা point of failure <Cite n={5} />।
+- **Choreography।** সার্ভিসগুলো ইভেন্ট আদান-প্রদান করে। কোনো কেন্দ্রীয় কন্ট্রোলার নেই। এটা সহজ ওয়ার্কফ্লোর জন্য মানানসই <Cite n={5} />। ধাপ বাড়লে এটা গোলমেলে হয়ে যায়, এবং ইন্টিগ্রেশন টেস্টের জন্য সব সার্ভিস চালু রাখতে হয় <Cite n={5} />।
+- **Orchestration।** একটা কেন্দ্রীয় orchestrator প্রতিটা সার্ভিসকে কী করতে হবে বলে দেয় এবং ফেইলিউর রিকভারি সামলায়। এটা জটিল ওয়ার্কফ্লোর জন্য উপযোগী <Cite n={5} />। Orchestrator হলো ফেইলিউরের একটা বিন্দু (point of failure) <Cite n={5} />।
 
 </Bangla>
 </Voices>
@@ -200,9 +200,9 @@ With a saga, the steps are these. The order service saves the order as "pending"
 </Layman>
 <Bangla>
 
-একটা shop-এর একটা order service ও একটা payment service আছে। প্রতিটার নিজের database। এই উদাহরণ tutorial-এর নিজের।
+একটা শপের একটা অর্ডার সার্ভিস ও একটা পেমেন্ট সার্ভিস আছে। প্রতিটার নিজের ডেটাবেস। এই উদাহরণ টিউটোরিয়ালের নিজের।
 
-Saga দিয়ে ধাপগুলো এই রকম। Order service order-টা "pending" হিসেবে save করে। Payment service payment নেয়। তারপর order service order-টা "confirmed" চিহ্নিত করে। Payment fail করলে saga একটা compensating ধাপ চালায়। সে pending order বাতিল করে। ধাপগুলোর মাঝখানে data inconsistent থাকতে পারে। সব ধাপ শেষ হলে এটা consistent হওয়ার কথা <Cite n={6} />। প্রতিটা service নিজের ধাপ commit করে। একটা compensating ধাপও fail করতে পারে <Cite n={5} />।
+Saga দিয়ে ধাপগুলো এই রকম। অর্ডার সার্ভিস অর্ডারটা "pending" হিসেবে সেভ করে। পেমেন্ট সার্ভিস পেমেন্ট নেয়। তারপর অর্ডার সার্ভিস অর্ডারটা "confirmed" চিহ্নিত করে। পেমেন্ট ফেইল করলে saga একটা compensating ধাপ চালায়। সে pending অর্ডার বাতিল করে। ধাপগুলোর মাঝখানে ডেটা অসঙ্গত (inconsistent) থাকতে পারে। সব ধাপ শেষ হলে এটা কনসিসটেন্ট হওয়ার কথা <Cite n={6} />। প্রতিটা সার্ভিস নিজের ধাপ কমিট করে। একটা compensating ধাপও ফেইল করতে পারে <Cite n={5} />।
 
 </Bangla>
 </Voices>
@@ -228,10 +228,10 @@ Saga দিয়ে ধাপগুলো এই রকম। Order service ord
 </Layman>
 <Bangla>
 
-- **Saga-কে একটা transaction ভাবা।** Service-গুলোর মধ্যে কোনো built-in isolation নেই। Lost update, dirty read এবং fuzzy (nonrepeatable) read ঘটতে পারে <Cite n={5} />।
-- **"Prepared"-কে "commit হবেই" পড়া।** Docs বলে "very high probability" <Cite n={1} />।
-- **একটা prepared transaction ভুলে যাওয়া।** এটা তার lock ধরে রাখে। এটা `VACUUM`-কে storage খালি করতে বাধা দিতে পারে <Cite n={1} />।
-- **অপরিবর্তনীয় ধাপ আগে রাখা।** সেগুলো শুধু critical check পাশ করার পর করুন <Cite n={6} />।
+- **Saga-কে একটা ট্রানজেকশন ভাবা।** সার্ভিসগুলোর মধ্যে কোনো বিল্ট-ইন (built-in) আইসোলেশন নেই। Lost update, dirty read এবং fuzzy (nonrepeatable) read ঘটতে পারে <Cite n={5} />।
+- **"Prepared"-কে "কমিট হবেই" পড়া।** ডকুমেন্টেশন বলে "very high probability" <Cite n={1} />।
+- **একটা প্রিপেয়ার করা ট্রানজেকশন ভুলে যাওয়া।** এটা তার লক ধরে রাখে। এটা `VACUUM`-কে স্টোরেজ খালি করতে বাধা দিতে পারে <Cite n={1} />।
+- **যে ধাপ ফেরানো যায় না তা আগে রাখা।** সেগুলো শুধু ক্রিটিক্যাল চেক পাশ করার পর করুন <Cite n={6} />।
 
 </Bangla>
 </Voices>
@@ -263,12 +263,12 @@ These test ideas are the tutorial's own advice. They are not from a source.
 </Layman>
 <Bangla>
 
-এই test-এর ধারণাগুলো tutorial-এর নিজের পরামর্শ। এগুলো কোনো source থেকে নয়।
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ। এগুলো কোনো সোর্স থেকে নয়।
 
-- **প্রতিটা ধাপ fail করান।** পালা করে প্রতিটা ধাপ fail করান। দেখুন compensating ধাপগুলো data-কে একটা বৈধ অবস্থায় রাখে।
-- **একটা ধাপ আবার চালান।** একই message দুবার পাঠান। কিছুই বদলানো উচিত নয়।
-- **আটকে থাকা কাজ খুঁজুন।** যেসব order "pending" থেকে যায় সেগুলো খুঁজুন। একটা ধাপ fail না হয়ে blocked থাকতে পারে।
-- **PostgreSQL 2PC চালু থাকলে,** একটা ব্যর্থ test run-এর পর `pg_prepared_xacts` query করুন। পুরোনো prepared transaction খুঁজুন।
+- **প্রতিটা ধাপ ফেইল করান।** পালা করে প্রতিটা ধাপ ফেইল করান। দেখুন compensating ধাপগুলো ডেটাকে একটা বৈধ অবস্থায় রাখে।
+- **একটা ধাপ আবার চালান।** একই মেসেজ দুবার পাঠান। কিছুই বদলানো উচিত নয়।
+- **আটকে থাকা কাজ খুঁজুন।** যেসব অর্ডার "pending" থেকে যায় সেগুলো খুঁজুন। একটা ধাপ ফেইল না হয়ে ব্লকড (blocked) থাকতে পারে।
+- **PostgreSQL 2PC চালু থাকলে,** একটা ব্যর্থ টেস্ট রানের পর `pg_prepared_xacts` কুয়েরি করুন। পুরোনো প্রিপেয়ার করা ট্রানজেকশন খুঁজুন।
 
 </Bangla>
 </Voices>

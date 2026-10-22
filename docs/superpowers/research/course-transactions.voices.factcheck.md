@@ -1,47 +1,32 @@
-# Voice fact-check: Transactions (round 1, 2026-10-22)
+# Voice fact-check: Transactions (round 2, Bangla term style, 2026-10-22)
 
-Page: `content/course/transactions.mdx`. I did not write the Layman and Bangla panels.
+Page: `content/course/transactions.mdx`. I did not write this page or its voices.
 
-Method: I read each `<Voices>` block. For each claim in a `<Layman>` or `<Bangla>` panel, I found the `<Technical>` sentence of the same `##` section that it restates. A claim that is not in the Technical panel, or that changes a number, a name, a condition, a hedge, or a scope, is a FAIL. An omission is not a FAIL. For each `<Cite n>` in a voice panel, I checked that the Technical panel of the same section cites the same `n`. I did not re-check the sources: the Technical claims are not part of this report. I read the Bangla text for meaning and natural use: polite (আপনি), technical terms in English, hyphen between an English word and a Bangla suffix. The "Key words" section has no voices.
+Method: I read each `<Layman>` and `<Bangla>` panel next to the `<Technical>` panel of the same `##` section. A FAIL is a fact, number, name, example, hedge, or cite that Technical does not give; a wrong or unfinished Bangla sentence; a style break (তুমি, a common concept word left in English, an acronym or product name in Bangla letters); or a Layman sentence over 25 words. An omission is not a FAIL. A script checked: (1) each Technical body is identical to the Technical body of the same section in `git show HEAD:content/course/transactions.mdx` (all sections: identical); (2) the cite numbers of each voice panel are a subset of the Technical cites of the same block (all: equal sets); (3) no heading, no TODO, no তুমি in a voice panel; (4) the Latin words in each Bangla panel are only acronyms, protocol, product and OS names, code, or key terms in parentheses at first use. "Key words" has no voices and is unchanged.
 
-Mechanical checks (script and `git diff`):
-
-| Check | Result |
-|---|---|
-| No `TODO-LAYMAN` or `TODO-BANGLA` left | PASS |
-| No heading in `<Layman>` or `<Bangla>` | PASS |
-| Each `<Cite n>` of a voice panel is cited by `<Technical>` of the same block | PASS |
-| `<Technical>` text unchanged: `git diff -U0 content/course/transactions.mdx \| grep '^-' \| grep -v '^---'` shows no removed line | PASS |
-| `node --test tests/voice-source.test.ts tests/course.test.ts` | PASS (29 tests) |
-
-Notes:
-
-- Section 3 Layman and Bangla replace the SQL block with 4 sentences. They match the code: debit account 1, savepoint, credit account 2 by mistake, `ROLLBACK TO SAVEPOINT`, credit account 3, `COMMIT`. No new fact. PASS.
-- Section 4 Layman and Bangla replace the isolation table with 4 bullets. I checked each cell of the table. All 16 cells match. PASS.
-- In the Layman text of the Repeatable Read bullet, "Suppose it tries to change a row ..." replaces "If it tries ...". The meaning is the same.
-- The space before "গুলো" in 3 places became a hyphen (language style, not a FAIL).
-
-| # | Section | Voice | What I compared | Verdict | Reason |
+| # | Section | Voice | Check | Verdict | Note |
 |---|---|---|---|---|---|
-| 1 | In plain words | Layman | All-or-nothing; others do not see the steps; failure leaves no change [1]; visible together at the end [1]; the ACID page | PASS | Same facts and cites. |
-| 2 | In plain words | Bangla | Same | PASS | Natural. |
-| 3 | When you need it | Layman | One action with more than one statement; payment example; no half done [1] | PASS | Same. |
-| 4 | When you need it | Bangla | Same | PASS | Same. |
-| 5 | How it works | Layman | `BEGIN`, `COMMIT`, `ROLLBACK` [1] [3]; autocommit [2]; savepoint [5] [1]; `ROLLBACK TO` [1] [6]; `RELEASE SAVEPOINT` [5]; aborted state [1] | PASS | All cites match Technical. The savepoint example matches the SQL. |
-| 6 | How it works | Bangla | Same | PASS | Terms stay in English. "টিকে থাকে" = durable. |
-| 7 | Isolation levels | Layman | 4 phenomena [7]; 16 table cells; 3 distinct levels; Read Committed default; 3 level bullets; `BEGIN ISOLATION LEVEL` and `SET TRANSACTION` [2] [8] | PASS | Table cells, error text, and cites match. |
-| 8 | Isolation levels | Bangla | Same | PASS | Table cells and conditions match. "ঘটা চলবে না" = must not happen. |
-| 9 | A real-life example | Layman | Payment and enrolment; 40 and 41 at Read Committed; 40 at Repeatable Read [7] | PASS | Same numbers. |
-| 10 | A real-life example | Bangla | Same | PASS | Same numbers. |
-| 11 | Common mistakes | Layman | 4 mistakes with cite 7 | PASS | Same. The hedge "not likely to work" is kept. |
-| 12 | Common mistakes | Bangla | Same | PASS | "সম্ভাবনা কম" = not likely. |
-| 13 | What a tester can check | Layman | "Tutorial's own" and 4 ideas | PASS | Same 4 ideas. |
-| 14 | What a tester can check | Bangla | Same | PASS | Same 4 ideas. |
+| 1 | In plain words | Layman | All-or-nothing, invisible until end, ACID page, PostgreSQL scope [1] | PASS | |
+| 2 | In plain words | Bangla | Same | PASS | "আনডু (undo)" at first use. |
+| 3 | When you need it | Layman | Multi-statement action, payment example, no half done [1] | PASS | |
+| 4 | When you need it | Bangla | Same | PASS | |
+| 5 | How it works | Layman | BEGIN/COMMIT/ROLLBACK, autocommit, savepoint, ROLLBACK TO, RELEASE, aborted state [1][2][3][5][6] | PASS | The 3-account example restates the SQL block of Technical (debit 1, savepoint, credit 2, rollback to savepoint, credit 3, commit). |
+| 6 | How it works | Bangla | Same | PASS | Commands stay in code. "ধ্বংস" for "destroys" is literal but clear. |
+| 7 | Isolation levels | Layman | 4 phenomena, table as 4 points, 3 distinct levels, Read Committed default, per-level behavior, how to choose [2][7][8] | PASS | Each table cell matches (checked all 16). |
+| 8 | Isolation levels | Bangla | Same | PASS | Level and phenomenon names with Bangla letters plus English at first use; level names stay English as in the manual. |
+| 9 | A real-life example | Layman | Payment and enrolment rows; 40 vs 41 vs 40 [7] | PASS | |
+| 10 | A real-life example | Bangla | Same | FAIL, fixed | "সিট গুনে, এবং" used the conjunctive form "গুনে" (after counting) where the present tense "গোনে" is needed, so the sentence was ungrammatical. |
+| 11 | Common mistakes | Layman | 4 mistakes [7] | PASS | The script flagged 28 words on the bullet line; the real sentences are short. |
+| 12 | Common mistakes | Bangla | Same | PASS | "not likely to work" kept as "সম্ভাবনা কম". |
+| 13 | What a tester can check | Layman | 4 test ideas, no cites | PASS | |
+| 14 | What a tester can check | Bangla | Same | PASS | |
 
-No FAIL found, so there is no fix and no Re-check row.
+Found FAILs: 1 (row 10). Fixed: 1.
 
 ## Re-check
 
-I ran the mechanical checks again after the hyphen change. They pass.
+| Row | Fixed text | Verdict |
+|---|---|---|
+| 10 | "সেশন A নেওয়া সিট গোনে, এবং পেজ 40 দেখায়।" | PASS |
 
 Open FAILs: 0

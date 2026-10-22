@@ -1,53 +1,35 @@
-# Voice fact-check: TCP and UDP (round 1, 2026-10-22)
+# Voice fact-check: TCP and UDP (round 2, Bangla term style, 2026-10-22)
 
-Page: `content/course/tcp-udp.mdx`. I did not write the Layman and Bangla panels.
+Page: `content/course/tcp-udp.mdx`. I did not write this page or its voices.
 
-Method: I read each `<Voices>` block. For each claim in a `<Layman>` or `<Bangla>` panel, I found the `<Technical>` sentence of the same `##` section that it restates. A claim that is not in the Technical panel, or that changes a number, a name, a condition, a hedge, or a scope, is a FAIL. An omission is not a FAIL. For each `<Cite n>` in a voice panel, I checked that the Technical panel of the same section cites the same `n`. I did not re-check the sources: the Technical claims are not part of this report. I read the Bangla text for meaning and natural use: polite (আপনি), technical terms in English, hyphen between an English word and a Bangla suffix. The "Key words" section has no voices.
+Method: I read each `<Layman>` and `<Bangla>` panel next to the `<Technical>` panel of the same `##` section. A FAIL is a fact, number, name, example, hedge, or cite that Technical does not give; a wrong or unfinished Bangla sentence; a style break (তুমি, a common concept word left in English, an acronym or product name in Bangla letters); or a Layman sentence over 25 words. An omission is not a FAIL. A script checked: (1) each Technical body is identical to the Technical body of the same section in `git show HEAD:content/course/tcp-udp.mdx` (all sections: identical); (2) the cite numbers of each voice panel are a subset of the Technical cites of the same block (all: equal sets); (3) no heading, no TODO, no তুমি in a voice panel; (4) the Latin words in each Bangla panel are only acronyms, protocol, product and OS names, code, or key terms in parentheses at first use. "Key words" has no voices and is unchanged.
 
-Mechanical checks (script and `git diff`):
-
-| Check | Result |
-|---|---|
-| No `TODO-LAYMAN` or `TODO-BANGLA` left | PASS |
-| No heading in `<Layman>` or `<Bangla>` | PASS |
-| Each `<Cite n>` of a voice panel is cited by `<Technical>` of the same block | PASS |
-| `<Technical>` text unchanged: `git diff -U0 content/course/tcp-udp.mdx \| grep '^-' \| grep -v '^---'` shows no removed line | PASS |
-| `node --test tests/voice-source.test.ts tests/course.test.ts` | PASS (29 tests) |
-
-Notes:
-
-- Section 2 Layman and Bangla replace the text diagram with a numbered list of the 3 handshake steps. The list matches the diagram (SYN with X; SYN+ACK with Y and "got X"; ACK "got Y"). No new fact. PASS.
-- Section 5 (Trade-offs) Layman and Bangla replace the table with a list. All 4 rows and the note about the tutorial's own cells are kept. PASS.
-
-| # | Section | Voice | What I compared | Verdict | Reason |
+| # | Section | Voice | Check | Verdict | Note |
 |---|---|---|---|---|---|
-| 1 | In plain words | Layman | IP, TCP and UDP roles; TCP reliability [1]; UDP minimum mechanism [2]; ports 16 bits [1]; UDP header fields [2] | PASS | Same facts and cites. |
-| 2 | In plain words | Bangla | Same | PASS | Terms stay in English. Natural. |
-| 3 | How it works | Layman | Handshake; window; congestion; FIN; TIME-WAIT; RST; UDP length 8 octets, source port, zero checksum | PASS | All cites (1 and 2) match Technical. |
-| 4 | How it works | Bangla | Same | PASS | "বিভ্রান্তি" = confusion. The "নিজের FIN ... তখনই" condition is kept. |
-| 5 | When you need it | Layman | Pick TCP when every byte must arrive in order; pick UDP for speed, and the application "can live with a gap or can repair it" | FAIL | Technical says the application "can" live with a gap. Layman says it "must". The modal changes from a condition to a rule. |
-| 6 | When you need it | Bangla | Same | FAIL | "ফাঁক মেনে নিতে হবে" has the same "must". |
-| 7 | A real-life example | Layman | Quiz answer over TCP; video call over UDP; "tutorial's own text" | PASS | Same example and the same hedge ("usually"). |
-| 8 | A real-life example | Bangla | Same | PASS | "সাধারণত" = usually. |
-| 9 | Trade-offs | Layman | 4 rows; cites 1 and 2; own-summary note | PASS | Cites match the Technical table cells. |
-| 10 | Trade-offs | Bangla | Same | PASS | Natural. |
-| 11 | Common mistakes | Layman | 4 mistakes; cite 2; port advice is the tutorial's own | PASS | Same claims. |
-| 12 | Common mistakes | Bangla | Same | PASS | Same claims. |
-| 13 | What a tester can check | Layman | "Tutorial's own" and 5 test ideas | PASS | Same 5 ideas. No cites. |
-| 14 | What a tester can check | Bangla | Same | PASS | Same 5 ideas. |
+| 1 | In plain words | Layman | IP, TCP, UDP, port numbers, header fields [1][2] | PASS | Same facts and cites. |
+| 2 | In plain words | Bangla | Same claims | FAIL, fixed | (a) "তারা কতটা প্রতিশ্রুতি দেয়, তাতে দুটির পার্থক্য।" had no verb (unfinished sentence). (b) "ক্ষতি মেরামত করে" for "repairs a loss" read as "repairs damage" and clashed with the checksum sentence on damaged data. |
+| 3 | How it works | Layman | 3-way handshake (list instead of the diagram), window, congestion, timeout, FIN, TIME-WAIT, RST, UDP header [1][2] | PASS | The list gives the same X, Y, SYN, SYN+ACK, ACK as the diagram. |
+| 4 | How it works | Bangla | Same claims | FAIL, fixed | "হলো কঠোর থামানো" for "the hard stop" is not natural Bangla ("কঠোর" means strict). |
+| 5 | When you need it | Layman | TCP vs UDP use, name server, trivial file transfer, protocol number 17 [2] | PASS | |
+| 6 | When you need it | Bangla | Same claims | PASS | |
+| 7 | A real-life example | Layman | Quiz over TCP, video over UDP, "tutorial's own text" | PASS | |
+| 8 | A real-life example | Bangla | Same | PASS | |
+| 9 | Trade-offs | Layman | Table as 4 points; Overhead of TCP and last row are the tutorial's own [1][2] | PASS | Cites on the same cells as Technical. |
+| 10 | Trade-offs | Bangla | Same | FAIL, fixed | "ওভারহেড বিন্দু" and "শেষ বিন্দু" use "বিন্দু" (a dot, or end point) for a list point. |
+| 11 | Common mistakes | Layman | 4 mistakes [2], port and firewall bullet marked as the tutorial's own advice | PASS | The script flagged one line as 27 words; it is 3 sentences of at most 16 words. |
+| 12 | Common mistakes | Bangla | Same | PASS | |
+| 13 | What a tester can check | Layman | 5 test ideas, no cites | PASS | |
+| 14 | What a tester can check | Bangla | Same, "আপনি" form | PASS | |
 
-## Fixes
-
-- Row 5: Layman now says "The application also needs to be able to live with a gap, or to repair it by itself."
-- Row 6: Bangla now says "এর সঙ্গে application-কে ফাঁক মেনে নিতে পারতে হবে, অথবা নিজে সেটি মেরামত করতে পারতে হবে।"
+Found FAILs: 4 (row 2 has two, rows 4 and 10 one each). Fixed: 4.
 
 ## Re-check
 
-| Row | Voice | Result |
+| Row | Fixed text | Verdict |
 |---|---|---|
-| 5 | Layman | PASS. The "can" condition is back. |
-| 6 | Bangla | PASS. "পারতে হবে" = "must be able to". |
-
-`node --test tests/voice-source.test.ts tests/course.test.ts` passes after the fixes.
+| 2a | "দুটির পার্থক্য হলো তারা কতটা প্রতিশ্রুতি দেয়।" | PASS, full sentence, same meaning as "they differ in how much they promise" |
+| 2b | "ডেটা আবার পাঠিয়ে হারানো অংশ ঠিক করে" | PASS, "sending the data again" repairs "a loss" |
+| 4 | "হলো জোর করে থামিয়ে দেওয়া" | PASS, "the hard stop" |
+| 10 | "TCP-র ওভারহেডের পয়েন্ট এবং শেষ পয়েন্টটি" | PASS |
 
 Open FAILs: 0

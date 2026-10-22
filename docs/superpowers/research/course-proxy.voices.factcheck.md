@@ -1,51 +1,48 @@
-# Voice fact-check: Forward and Reverse Proxies (round 1, 2026-10-22)
+# Voice fact-check: Forward and Reverse Proxies (round 2, 2026-10-22)
 
 Page: `content/course/proxy.mdx`. I did not write the Layman and Bangla panels.
 
-Method: I read the 6 `<Voices>` blocks. For each block and voice, I compared the panel with the `<Technical>` panel of the same `##` section. A fact, number, name, example or cite that Technical does not give is a FAIL. A dropped hedge, a wrong meaning, a confusing translation, and a long or not plain Layman sentence are also FAILs. An omission is not a FAIL. I did not re-check the sources. The Technical claims are for the fact-check of the page.
+Method: I read the 6 `<Voices>` blocks. For each block and voice, I compared the panel with the `<Technical>` panel of the same `##` section. A fact, number, name, example or cite that Technical does not give is a FAIL. A dropped hedge that changes the meaning, a wrong or misleading statement, a wrong or unfinished Bangla sentence, a mistranslated term, a break of the Bangla style (আপনি, concept words in Bangla letters, acronyms and names in English, digits as in Technical), and a long or not plain Layman sentence are also FAILs. An omission is not a FAIL. I did not re-check the sources. The Technical claims are checked in `course-proxy.factcheck.md`. The "Key words" section has no voices.
 
 Mechanical checks (script and `git diff`):
 
 - No `TODO` placeholder is left.
 - No heading in a Layman or Bangla panel.
-- Each `<Cite n>` in Layman and Bangla is cited by Technical of the same block (6 of 6 blocks).
-- `git diff -U0 content/course/proxy.mdx | grep '^-' | grep -v '^---'` prints nothing. Technical is unchanged.
-- No Layman sentence is longer than 28 words.
+- Each `<Cite n>` of a Layman and of a Bangla panel is cited by Technical of the same block, and the cites match one to one (6 of 6 blocks).
+- Each `<Technical>` body is equal to the `<Technical>` body of the same section in `git show HEAD:content/course/proxy.mdx`, and all text outside the `<Voices>` blocks is equal to HEAD. Technical is unchanged.
+- Only Bangla panels differ from HEAD. Layman panels are the same as HEAD.
+- Layman: no sentence over 25 words.
+- Bangla: no `তুমি`. Digits are ASCII, as in Technical (checked again after the fixes). Latin words that remain are acronyms, protocol, product, place, command and identifier names, or the English key term in parentheses at first use.
 
 Notes:
 
-- Section 1: Layman and Bangla replace the text diagram with two bullets. These bullets came right after the list of the two kinds, with only a blank line between. Markdown joins them into one list, so the diagram bullets looked like a third and a fourth kind of proxy. See rows 1 and 2.
-- Section 2: Layman and Bangla replace the `X-Forwarded-For` code block with one sentence ("For example, ..."). The same example value, the same meaning of left and right. PASS.
-- Section 6: no callout in Layman and Bangla. They keep the line "not from a source". PASS.
+- Block 1 Layman and Bangla replace the text diagram with a two-line list. The path is the same, so there is no new fact.
 
-| # | Section | Voice | Claim | Verdict | Reason |
-|---|---|---|---|---|---|
-| 1 | In plain words | Layman | Proxy is a program between two sides; forward proxy; reverse proxy is a gateway [2][1]; tunnel [1]; diagram as 2 bullets | FAIL (first check) | The facts are right. But the 2 diagram bullets join the list of the two kinds and read as 2 more kinds. This is a misleading structure. |
-| 2 | In plain words | Bangla | Same | FAIL (first check) | Same list-merge problem as row 1. The Bangla text is right. |
-| 3 | When you need it | Layman | Reverse proxy jobs (load, pass requests, hide services, cache) [5][1]; forward proxy for client-side control | PASS | Same 4 jobs and the same example. |
-| 4 | When you need it | Bangla | Same | PASS | Meaning is right. |
-| 5 | How it works | Layman | NGINX flow, `proxy_pass`, default header change, buffering [5]; the last proxy address problem, `X-Forwarded-For` as de-facto standard [4]; `Forwarded` parts [3]; leftmost and rightmost address if all parties behave [4]; `Via` [1] | PASS | Same text. The condition "if every party is well behaved" is kept. |
-| 6 | How it works | Bangla | Same | PASS | Header and directive names stay in English. "সাম্প্রতিকতম proxy" = most recent proxy. |
-| 7 | A real-life example | Layman | Two app servers behind a reverse proxy; 504 means no timely answer; 502 means an invalid response [1] | PASS | Same example and codes. |
-| 8 | A real-life example | Bangla | Same | PASS | "অবৈধ response" = invalid response. |
-| 9 | Common mistakes | Layman | 4 mistakes about `X-Forwarded-For` [4] | PASS | Same claims. "may be spoofed" is kept. |
-| 10 | Common mistakes | Bangla | Same | PASS | "spoof করা হতে পারে" keeps the hedge. |
-| 11 | What a tester can check | Layman | 6 test ideas, "tutorial's own, not from a source" | PASS | Same 6 ideas. |
-| 12 | What a tester can check | Bangla | Same | FAIL (first check) | Two bullets have a grammar slip in the "should" form. "সে refuse করা উচিত" has an unclear subject ("সে" for the app server). "proxy user-দের অন্যটিতে পাঠানো উচিত" has no "-র" after proxy, so it reads "users should send". The meaning is clear, but the sentences are not correct Bangla. |
+| # | Section | Voice | Round 1 | Reason |
+|---|---|---|---|---|
+| 1 | In plain words | Layman | PASS | Same definition, the two kinds, the gateway name, the tunnel, and the path of a request as a list in place of the text diagram. Cites [2][1] match. |
+| 2 | In plain words | Bangla | PASS | Same claims and cites. The English term is in parentheses at first use (proxy, forward proxy, reverse proxy, gateway, tunnel). Bangla letters for client, server, request, response, cache. HTTP and TLS stay English. |
+| 3 | When you need it | Layman | PASS | Same four jobs of a reverse proxy and the forward proxy use. Cites [5][1] match. |
+| 4 | When you need it | Bangla | PASS | Same jobs and cites. "সদর দরজা" is "front door". Natural Bangla. |
+| 5 | How it works | Layman | PASS | Same NGINX facts (proxy_pass, Host and Connection, proxy_set_header, buffering), X-Forwarded-For (de-facto, not formal), Forwarded and its parts, Via. The code block becomes one sentence with the same example. "If every party is well behaved" is kept. |
+| 6 | How it works | Bangla | PASS | Same facts. Commands, headers and directives stay in code style. "সবচেয়ে বাঁয়ের" is leftmost and "সাম্প্রতিকতম" is most recent. The hedge "if every party is well behaved" is kept (যদি প্রতিটি পক্ষ নিয়ম মেনে চলে). |
+| 7 | A real-life example | Layman | PASS | Same example: two app servers, 504 Gateway Timeout and 502 Bad Gateway, with the meanings [1]. |
+| 8 | A real-life example | Bangla | PASS | Same example, same status codes and meanings. Cite [1]. |
+| 9 | Common mistakes | Layman | PASS | Four bullets restate Technical. The cite is [4] and the hedge "may be spoofed" is kept. |
+| 10 | Common mistakes | Bangla | PASS | Same four mistakes. "স্পুফ করা হতে পারে" keeps "may be spoofed". Cite [4]. |
+| 11 | What a tester can check | Layman | PASS | Same six ideas and the "not from a source" note. "usually means" is kept. |
+| 12 | What a tester can check | Bangla | FAIL | "প্রক্সির ইউজারদের অন্যটিতে পাঠানো উচিত" reads as "the proxy's users should send to the other". The subject is wrong: Technical says the proxy should send users to the other app server. Also "অ্যাপ সার্ভারের প্রত্যাখ্যান করা উচিত" is the same unclear pattern for "It should refuse". The other five bullets PASS. |
 
 ## Re-check
 
-I fixed 4 FAILs (rows 1, 2, and the two bullets of row 12). I edited only Layman and Bangla panels.
+I fixed each FAIL by editing the Bangla panel only, and read the fixed rows again.
 
-| # | Fix | Re-check |
-|---|---|---|
-| 1 | Layman: the line "The path of a request:" is added before the 2 diagram bullets. | PASS. The bullets are a separate list now. The line has no fact. |
-| 2 | Bangla: the line "একটি request-এর পথ:" is added before the 2 diagram bullets. | PASS. Same as row 1. |
-| 12a | Bangla: "app server-এর refuse করা উচিত, বা একই security ফল দেওয়া উচিত।" | PASS. Matches "It should refuse, or give the same security result." |
-| 12b | Bangla: "proxy-র user-দের অন্যটিতে পাঠানো উচিত" | PASS. Matches "The proxy should send users to the other one". |
+| Block | Section | Voice | Result | After the fix |
+|---|---|---|---|---|
+| 6 | What a tester can check | Bangla | PASS | "প্রক্সির উচিত ইউজারদের অন্যটিতে পাঠানো" and "অ্যাপ সার্ভারের উচিত প্রত্যাখ্যান করা". |
 
-After the edits: no heading in Layman or Bangla, no `TODO`, and every `<Cite n>` still matches Technical. Technical is unchanged (the `git diff` check prints nothing).
+After the fixes I ran the mechanical checks again (Technical equals HEAD, cites, headings, digits) and `node --test tests/voice-source.test.ts tests/course.test.ts` (29 tests, 0 fail).
 
-FAILs found: 4. Fixed: 4.
+Round 1 FAILs: 1. Fixed: 1.
 
 Open FAILs: 0

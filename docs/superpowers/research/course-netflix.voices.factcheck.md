@@ -1,42 +1,28 @@
-# Voice fact-check: Netflix (round 1, 2026-10-22)
+# Voice fact-check: Netflix (round 2, 2026-10-22)
 
-Page: `content/course/netflix.mdx`. I did not write the Layman and Bangla panels.
+Page: `content/course/netflix.mdx`. I did not write this page or its voices.
 
-Method: I read the 6 `<Voices>` blocks. For each `<Layman>` and `<Bangla>` panel, I compared each claim with the `<Technical>` panel of the same `##` section. A fact, number, name, example, or cite that Technical does not give is a FAIL. A dropped hedge that changes the meaning is a FAIL. A wrong or confusing Bangla meaning is a FAIL. A Layman sentence of more than 25 words is a FAIL. An omission is not a FAIL. Every `<Cite n>` in a voice panel is a number that Technical of the same section cites. I did not re-check the sources: the Technical claims are not changed.
+Method: I read the 6 `<Voices>` blocks. For each `<Layman>` and `<Bangla>` panel I compared every claim, number, hedge and cite with `<Technical>` of the same `##` section. Checks run on every block: the `<Technical>` body matches the same section of `git show HEAD:content/course/netflix.mdx` (no change); every `<Cite n>` in a voice panel is also cited in `<Technical>` of the same block; no heading and no TODO in `<Layman>` or `<Bangla>`; no তুমি form; no Layman sentence over 25 words (script); Bangla style (আপনি, concept words in Bangla letters, acronyms, products, commands and code in English). The `## Key words` section has no voices. `<Layman>` panels are unchanged from the committed version. An omission is not a FAIL.
 
-Mechanical checks:
-
-- No `TODO` placeholder is left.
-- No Markdown heading in any `<Layman>` or `<Bangla>` panel.
-- `git diff -U0 content/course/netflix.mdx | grep '^-' | grep -v '^---'` shows no removed non-blank line. The Technical text is unchanged.
-- No Layman sentence is over 25 words (script check; the longest is 23).
-- The hedges "At the time of access", "the tutorial's own inference/reading", "not a statement of the docs", and "The Netflix document does not name the stream format" are kept in both voices.
-- The numbers match Technical: 2011, more than a thousand ISPs, 1.5.18, 9AM to 3PM (Bangla: সকাল ৯টা থেকে বিকাল ৩টা), 2016, 2019, and 2026.
-
-| # | Section | Voice | Result | Reason |
+| # | Section | Voice | Verdict | Reason |
 |---|---|---|---|---|
-| 1 | In plain words | Layman | PASS | The AWS and Open Connect split, the OCA description, "OCAs do not keep member data", 2011, and the two reasons match Technical. |
-| 2 | In plain words | Bangla | PASS | Same. "চাহিদার আগেই content পাঠিয়ে রাখে" = "pushes content ahead of demand". |
-| 3 | When you need it | Layman | PASS | Same two places, the free-of-charge sentence, "more than a thousand ISPs", and the tutorial's own lesson. |
-| 4 | When you need it | Bangla | PASS | Same. "অনুমানযোগ্য" = predictable. "embedded OCA সবসময় উত্তর নয়" = "is not always the answer". |
-| 5 | How it works | Layman | PASS | The 5 steps (a list, with the "tutorial's own summary" line), steering, fill, adaptive bitrate (DASH, HLS, RFC does not define the choice), Hystrix (maintenance mode, 1.5.18, resilience4j), and Chaos Monkey (Spinnaker, weighted coin flip, 9AM to 3PM) all match Technical. |
-| 6 | How it works | Bangla | FAIL | "এই তালিকা Netflix-এর বর্ণনার tutorial-এর নিজস্ব সারসংক্ষেপ" is a garbled chain of possessives. The reader can mistake who wrote the summary. The rest of the block is correct. |
-| 7 | A real-life example | Layman | PASS | Same story. Technical sentences are split in two. No new fact. |
-| 8 | A real-life example | Bangla | PASS | Same story. "নিচের একটি quality level" = "a lower quality level". |
-| 9 | Common mistakes | Layman | PASS | The 4 points and the hedges match. |
-| 10 | Common mistakes | Bangla | FAIL | "এই বিষয়গুলো source-গুলোর tutorial-এর নিজস্ব পাঠ" has the same garbled chain of possessives. The 4 points are correct, with the hedges kept. |
-| 11 | What a tester can check | Layman | PASS | The 5 test ideas and the "Expected" results match. No cite. |
-| 12 | What a tester can check | Bangla | PASS | Same. "বড়জোর অল্প একটু বিরতি" = "at most a short pause". |
-
-Round 1: 2 FAILs (rows 6 and 10).
+| 1 | In plain words | Layman | PASS | Same facts, numbers, hedges, and cites as Technical; plain short sentences. |
+| 2 | In plain words | Bangla | PASS | AWS and Open Connect split, the OCA description, no member data on OCAs, the 2011 start and the two reasons, and the efficiency claim all match, with cite 1 and the same hedge ("Netflix says"). Product names stay in English. |
+| 3 | When you need it | Layman | PASS | Same facts, numbers, hedges, and cites as Technical; plain short sentences. |
+| 4 | When you need it | Bangla | PASS | Two OCA place types, free servers to qualifying ISPs, "more than a thousand ISPs" with cite 2, the embedded-OCA hedge, and the tutorial-own lesson match. The block says at the start that the site statements are the vendor's. |
+| 5 | How it works | Layman | PASS | Same facts, numbers, hedges, and cites as Technical; plain short sentences. |
+| 6 | How it works | Bangla | PASS | The five steps (marked as the tutorial's summary), steering by availability, health and distance, off-peak fill, adaptive bitrate (chunks, DASH and HLS, no stream format named, RFC does not define choice), Hystrix (maintenance mode, 1.5.18, resilience4j) and Chaos Monkey (Spinnaker, weekday weighted coin flip, 9AM to 3PM) all match with the same cites 1, 4 to 8. `অ্যাক্সেসের সময়ে` is a literal rendering of "at the time of access"; it has the same meaning as Technical, so it is not a FAIL. |
+| 7 | A real-life example | Layman | PASS | Same facts, numbers, hedges, and cites as Technical; plain short sentences. |
+| 8 | A real-life example | Bangla | FAIL (style) | Dhaka viewer flow matches Technical. FAIL (style): `embedded OCA` is bare English at its first use in this block, with no Bangla-letter word and no parentheses. |
+| 9 | Common mistakes | Layman | PASS | Same facts, numbers, hedges, and cites as Technical; plain short sentences. |
+| 10 | Common mistakes | Bangla | FAIL (style) | Four mistakes, the copyright years 2016, 2019, 2026, the inference label and the reading label match, with cites 1, 2, 6, 8. FAIL (style): `embedded OCA` is bare English at its first use in this block. |
+| 11 | What a tester can check | Layman | PASS | Same facts, numbers, hedges, and cites as Technical; plain short sentences. |
+| 12 | What a tester can check | Bangla | PASS | Five test ideas match, the advice label and "any streaming service" are kept. No cites, as in Technical. |
 
 ## Re-check
 
-| Row | Fix | Result |
-|---|---|---|
-| 6 | The sentence now reads "এই তালিকা Netflix-এর বর্ণনার একটি সারসংক্ষেপ, যা tutorial নিজে লিখেছে।" It says clearly that the tutorial wrote the summary. | PASS |
-| 10 | The sentence now reads "এই বিষয়গুলো source-গুলোর ব্যাখ্যা, যা tutorial নিজে করেছে।" It says clearly that the reading is the tutorial's own. | PASS |
+Fixed rows 8 and 10. Both now write `ISP-র ভেতরে বসানো OCA (embedded OCA)` at the first use. The facts, cites, and hedges did not change. I re-read both panels and they match Technical. `node --test tests/voice-source.test.ts tests/course.test.ts` passes.
 
-`node --test tests/voice-source.test.ts tests/course.test.ts` passes.
+FAILs found: 2. Fixed: 2.
 
 Open FAILs: 0

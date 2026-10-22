@@ -1,48 +1,41 @@
-# Voice fact-check: Circuit Breaker (round 1, 2026-10-22)
+# Voice fact-check: Circuit breaker (round 2, 2026-10-22)
 
-Page: `content/course/circuit-breaker.mdx`. I did not write the Layman and Bangla panels.
+Page: `content/course/circuit-breaker.mdx`. I did not write the Layman or Bangla text.
 
-Method: I read each `<Voices>` block. For each claim in a `<Layman>` or `<Bangla>` panel, I found the `<Technical>` sentence of the same `##` section that it restates. A claim that is not in the Technical panel, or that changes a number, a condition, a name, a hedge, or a scope, is a FAIL. An omission is not a FAIL. For each `<Cite n>`, I checked that the Technical panel of the same section cites it. I did not re-check the sources: the Technical claims are in the report of the page. I read the Bangla for meaning and natural use (polite আপনি, technical terms in English). A Layman sentence is a FAIL if it is longer than 25 words. I measured the length with a script (cites and markup removed): no Layman sentence passes 25 words.
+Method: For each `##` block, I compared the `<Layman>` and `<Bangla>` panels with the `<Technical>` panel of the same block. A FAIL is a fact, number, name, example, hedge or cite that Technical does not give, a wrong or unnatural Bangla meaning, a break of the Bangla term style (আপনি, concept words in Bangla letters, acronyms/products/commands in English), or a Layman sentence over 25 words. An omission is not a FAIL.
 
-Checks:
+Mechanical checks (script, all blocks):
 
-- No TODO placeholder is left (`grep TODO`: 0).
-- No heading in a Layman or Bangla panel (`npm test`, `tests/voice-source.test.ts`).
-- The Technical text is unchanged: `git diff -U0 content/course/circuit-breaker.mdx | grep '^-' | grep -v '^---'` shows no removed non-blank line.
-- The "Key words" section has no voices.
+- The `<Technical>` body of each block equals the `<Technical>` body of the same section in `git show HEAD:content/course/circuit-breaker.mdx`. The Key words section is unchanged. No removed Technical line.
+- Every `<Cite n>` in a Layman or Bangla panel is also cited in Technical of the same block.
+- No heading in a Layman or Bangla panel. No TODO. No তুমি, তোমা, or তুই-form verb.
+- No Layman sentence over 25 words (one false alarm in a bullet label was counted by hand: the sentence has 19 words).
 
-Notes:
+| # | Block | Voice | Check | Verdict | Reason |
+|---|---|---|---|---|---|
+| 1 | In plain words | Layman | Pattern, threshold, retry, transient fault, time-out, cites 1, 2 | PASS | Same. |
+| 2 | In plain words | Bangla | Same | PASS | Concept words in Bangla letters; AWS, Circuit Breaker in English. |
+| 3 | When you need it | Layman | Azure 3 cases, AWS signs, cites 1, 2 | PASS | Same. |
+| 4 | When you need it | Bangla | Same | PASS | Same. |
+| 5 | How it works | Layman | Three states, 4 transitions (from the drawing), table, AWS words, cites 1, 2 | PASS | The drawing became a list of transitions. Same content. |
+| 6 | How it works | Bangla | Same | PASS | State names Closed, Open, Half-Open stay English. |
+| 7 | Thresholds and time-outs | Layman | Failure threshold, success count, time-out, default value, administrator, expiration time, cites 1, 2 | PASS | Same. |
+| 8 | Thresholds and time-outs | Bangla | Same | FAIL | "হাতে হাত দিয়ে" is a wrong idiom for "by hand" (it means "hand in hand"). Fixed to "ম্যানুয়ালি". |
+| 9 | Circuit breaker and retry | Layman | Retry vs breaker, backoff, expiry time, cites 1, 2 | PASS | Same. |
+| 10 | Circuit breaker and retry | Bangla | Same | PASS | Same. |
+| 11 | When not to use it | Layman | 6 cases, cite 1 | PASS | Same. |
+| 12 | When not to use it | Bangla | Same | PASS | Same. |
+| 13 | A real-life example | Layman | Order and payment service, "Payments are busy. Try again soon." | PASS | Same. |
+| 14 | A real-life example | Bangla | Same | PASS | The message is quoted UI text, so it stays English. |
+| 15 | Common mistakes | Layman | 4 mistakes, cite 1 | PASS | Same. |
+| 16 | Common mistakes | Bangla | Same | PASS | Same. |
+| 17 | What a tester can check | Layman | 5 test ideas | PASS | Same. |
+| 18 | What a tester can check | Bangla | Same | PASS | Same. |
 
-- Section 3 ("How it works"): the Technical text has a text drawing of the three states. Layman and Bangla give its four transitions as a list: Closed to Open (failures pass the threshold in the time period), Open to Half-Open (timer ends), Half-Open to Closed (enough trial calls succeed), Half-Open to Open (a trial call fails, timer restarts). These match the drawing and the table. Both voices keep "the tutorial's own picture of the Azure description". PASS.
-- Section 4: the Technical text says the source gives no default numbers. Both voices keep this hedge.
+Readability edits (not counted as FAIL, the old text was grammatical but clumsy): in block 7, "পরের কলগুলোর তা সরাতে থাকা উচিত নয়" became "পরের কলগুলোর সেটি বারবার সরানো উচিত নয়". In block 10, "রিট্রাইয়ের লজিকের থামা উচিত" became "রিট্রাইয়ের লজিক থেমে যাওয়া উচিত".
 
-| # | Section | Voice | Claim (English gloss for Bangla) | Technical sentence (quoted) | Verdict | Language |
-|---|---|---|---|---|---|---|
-| 1 | In plain words | Layman | Blocks access after a threshold, avoids retries, gives room to recover [1]; AWS: detects recovery, like electrical breakers, sits between caller and callee [2]; transient and long faults [1]; time-out alone does not solve it [1]; retries add load [2] | The section | PASS | - |
-| 2 | In plain words | Bangla | Same claims and cites [1][2] | Same | PASS | OK |
-| 3 | When you need it | Layman | 3 Azure cases [1]; AWS signs [2] | The section | PASS | - |
-| 4 | When you need it | Bangla | Same | Same | PASS | OK |
-| 5 | How it works | Layman | Proxy, three states [1]; transitions; Closed, Open, Half-Open rows [1]; Half-Open avoids a flood [1]; AWS does not name the state [2] | The section | PASS | - |
-| 6 | How it works | Bangla | Same | Same | PASS | OK |
-| 7 | Thresholds and time-outs | Layman | Failure threshold, success count, time-out [1]; no default numbers [1]; Open period too long, Half-Open too fast [1]; default value, manual open or close [1][2]; AWS expiration time [2] | The section | PASS | - |
-| 8 | Thresholds and time-outs | Bangla | Same claims and cites | Same | FAIL | "সে বলে, setting-গুলো সুরক্ষিত operation-এর সম্ভাব্য recovery-র সঙ্গে মেলাতে" has no final verb. The sentence is not complete. The Technical text says "It says to match the settings". |
-| 9 | Circuit breaker and retry | Layman | Different goals [1]; backoff for transient errors [2]; retry through a breaker [1]; AWS sample and expiry time [2] | The section | PASS | - |
-| 10 | Circuit breaker and retry | Bangla | Same | Same | PASS | OK |
-| 11 | When not to use it | Layman | 6 cases of Azure [1] | The 6 bullets | PASS | - |
-| 12 | When not to use it | Bangla | Same 6 cases | Same | PASS | OK |
-| 13 | A real-life example | Layman | Own example: order service, payment service, threshold, error at once, message "Payments are busy. Try again soon.", trial calls close the breaker | The section | PASS | - |
-| 14 | A real-life example | Bangla | Same | Same | PASS | OK |
-| 15 | Common mistakes | Layman | 4 mistakes, cite [1] | The 4 bullets | PASS | - |
-| 16 | Common mistakes | Bangla | Same 4 mistakes | Same | PASS | OK |
-| 17 | What a tester can check | Layman | Own advice, 5 ideas, no cites | The Tutorial advice callout | PASS | - |
-| 18 | What a tester can check | Bangla | Same 5 ideas | Same | PASS | OK |
+Re-check (row 8): the Bangla bullet now reads "অ্যাডমিনিস্ট্রেটরের ম্যানুয়ালি সার্কিট খুলতে বা বন্ধ করতে পারা উচিত", the same as "An administrator should be able to open or close a circuit by hand". PASS.
 
-Fix applied (Bangla, row 8): "...সম্ভাব্য recovery-র সঙ্গে মেলাতে <Cite n={1} />" is now "...সম্ভাব্য recovery-র সঙ্গে মেলাতে হবে <Cite n={1} />".
-
-## Re-check
-
-| Row | Result |
-|---|---|
-| 8 | The sentence is complete now and has the Technical meaning ("match the settings to the likely recovery"). The cite [1] is in the Technical text. PASS. |
+FAILs found: 1. FAILs fixed: 1.
 
 Open FAILs: 0

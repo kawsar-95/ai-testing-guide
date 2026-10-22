@@ -35,11 +35,11 @@ The source calls it a complex pattern with significant trade-offs. It is costly 
 </Layman>
 <Bangla>
 
-বেশিরভাগ application data-র শুধু সর্বশেষ state রাখে। তারা একটি row পড়ে, বদলায় এবং নতুন মান আবার লেখে। এটি CRUD model। আলাদা audit log যোগ না করলে এতে কোনো history থাকে না <Cite n={1} />।
+বেশিরভাগ অ্যাপ্লিকেশন ডেটার শুধু সর্বশেষ স্টেট রাখে। তারা একটি রো (row) পড়ে, বদলায় এবং নতুন মান আবার লেখে। এটি CRUD মডেল। আলাদা অডিট লগ যোগ না করলে এতে কোনো হিস্ট্রি থাকে না <Cite n={1} />।
 
-Event sourcing উল্টোটা করে। এটি একটি object-এর প্রতিটি action ক্রমানুযায়ী এমন একটি store-এ রাখে, যা শুধু নতুন record নেয়। সেই store-ই system of record <Cite n={1} />। প্রতিটি event একটি যৌক্তিক পরিবর্তন, যেমন AddedItemToOrder বা OrderCanceled <Cite n={1} />। প্রতিটি entity-র আলাদা একটি eventstream থাকে। Eventstream-এ entity-র পরিবর্তনগুলো ক্রমানুযায়ী থাকে <Cite n={1} />।
+ইভেন্ট সোর্সিং (event sourcing) উল্টোটা করে। এটি একটি অবজেক্টের প্রতিটি অ্যাকশন ক্রমানুযায়ী এমন একটি স্টোরে রাখে, যা শুধু নতুন রেকর্ড নেয়। সেই স্টোরই সিস্টেম অব রেকর্ড (system of record) <Cite n={1} />। প্রতিটি ইভেন্ট একটি যৌক্তিক পরিবর্তন, যেমন AddedItemToOrder বা OrderCanceled <Cite n={1} />। প্রতিটি এন্টিটির (entity) আলাদা একটি ইভেন্টস্ট্রিম (eventstream) থাকে। ইভেন্টস্ট্রিমে এন্টিটির পরিবর্তনগুলো ক্রমানুযায়ী থাকে <Cite n={1} />।
 
-Source একে significant trade-off-সহ একটি জটিল pattern বলে। এতে যাওয়া বা এখান থেকে সরে আসা ব্যয়বহুল। এটি পরের design-এর পছন্দও সীমিত করে <Cite n={1} />।
+সোর্স একে উল্লেখযোগ্য ট্রেড-অফসহ একটি জটিল প্যাটার্ন বলে। এতে যাওয়া বা এখান থেকে সরে আসা ব্যয়বহুল। এটি পরের ডিজাইনের পছন্দও সীমিত করে <Cite n={1} />।
 
 </Bangla>
 </Voices>
@@ -79,17 +79,17 @@ Source একে significant trade-off-সহ একটি জটিল pattern 
 </Layman>
 <Bangla>
 
-**State আবার তৈরি করা।** একটি application একটি entity-র stream-এর প্রতিটি event replay করে তার state বের করে। Source এটিকে rehydration বলে। এটি চাহিদা অনুযায়ী ঘটতে পারে <Cite n={1} />। একটি command handler প্রথমে eventstream load করে এবং replay করে। তারপর business logic চালায়। তারপর নতুন event raise করে <Cite n={1} />।
+**স্টেট আবার তৈরি করা।** একটি অ্যাপ্লিকেশন একটি এন্টিটির স্ট্রিমের প্রতিটি ইভেন্ট রিপ্লে করে তার স্টেট বের করে। সোর্স এটিকে রিহাইড্রেশন (rehydration) বলে। এটি চাহিদা অনুযায়ী ঘটতে পারে <Cite n={1} />। একটি কমান্ড হ্যান্ডলার (command handler) প্রথমে ইভেন্টস্ট্রিম লোড করে এবং রিপ্লে করে। তারপর বিজনেস লজিক চালায়। তারপর নতুন ইভেন্ট তৈরি করে <Cite n={1} />।
 
-**শুধু যোগ করুন, কখনো বদলাবেন না।** Event immutable। এগুলো append-only operation দিয়ে যোগ করা হয় <Cite n={1} />। আপনি event data কখনো update করেন না। কোনো পরিবর্তন বাতিল করতে একটি compensating event যোগ করুন। যেমন, ReservationCanceled আগের SeatsReserved-কে compensate করে। পুরোনো event stream-এই থাকে <Cite n={1} />।
+**শুধু যোগ করুন, কখনো বদলাবেন না।** ইভেন্ট অপরিবর্তনীয় (immutable)। এগুলো শুধু যোগ করার (append-only) অপারেশন দিয়ে যোগ করা হয় <Cite n={1} />। আপনি ইভেন্টের ডেটা কখনো আপডেট করেন না। কোনো পরিবর্তন বাতিল করতে একটি ক্ষতিপূরণমূলক ইভেন্ট (compensating event) যোগ করুন। যেমন, ReservationCanceled আগের SeatsReserved-কে ক্ষতিপূরণ দেয়। পুরোনো ইভেন্ট স্ট্রিমেই থাকে <Cite n={1} />।
 
-**Event এগিয়ে দেওয়া।** বেশিরভাগ design-এ event একটি queue বা topic-এ যায়, তাই producer ও consumer একে অপরের ওপর নির্ভর করে না <Cite n={1} />। এরপর event handler event-গুলো store-এ লেখে, একটি read-only store update করে বা বাইরের system-কে call করে <Cite n={1} />।
+**ইভেন্ট এগিয়ে দেওয়া।** বেশিরভাগ ডিজাইনে ইভেন্ট একটি কিউ বা টপিকে যায়, তাই প্রোডিউসার ও কনজিউমার একে অপরের ওপর নির্ভর করে না <Cite n={1} />। এরপর ইভেন্ট হ্যান্ডলার ইভেন্টগুলো স্টোরে লেখে, একটি রিড-অনলি স্টোর আপডেট করে বা বাইরের সিস্টেমকে কল করে <Cite n={1} />।
 
-**পড়ার জন্য view ব্যবহার করুন।** Event পড়া ও replay করা ব্যয়বহুল। তাই application সাধারণত materialized view তৈরি করে। Materialized view read-only। এটি event store থেকে তৈরি এবং query-র জন্য সাজানো <Cite n={1} />।
+**পড়ার জন্য ভিউ ব্যবহার করুন।** ইভেন্ট পড়া ও রিপ্লে করা ব্যয়বহুল। তাই অ্যাপ্লিকেশন সাধারণত ম্যাটেরিয়ালাইজড ভিউ (materialized view) তৈরি করে। ম্যাটেরিয়ালাইজড ভিউ রিড-অনলি। এটি ইভেন্ট স্টোর থেকে তৈরি এবং কোয়েরির জন্য সাজানো <Cite n={1} />।
 
-**লম্বা stream-এর জন্য snapshot ব্যবহার করুন।** লম্বা stream replay ধীর করে। Snapshot হলো stream-এর একটি বিন্দুতে entity state-এর সংরক্ষিত copy, যেমন প্রতি N event পরপর। Application সর্বশেষ snapshot load করে এবং শুধু পরের event-গুলো replay করে <Cite n={1} />। Storage খরচ ও বাঁচানো সময়ের মধ্যে ভারসাম্য রেখে আপনি ঠিক করেন কত ঘন ঘন snapshot নেবেন <Cite n={1} />। Snapshot একটি optimization। Stream-ই source of truth থাকে। আপনি তা থেকে snapshot আবার তৈরি করতে পারেন <Cite n={1} />।
+**লম্বা স্ট্রিমের জন্য স্ন্যাপশট ব্যবহার করুন।** লম্বা স্ট্রিম রিপ্লে ধীর করে। স্ন্যাপশট (snapshot) হলো স্ট্রিমের একটি বিন্দুতে এন্টিটির স্টেটের সংরক্ষিত কপি, যেমন প্রতি N ইভেন্ট পরপর। অ্যাপ্লিকেশন সর্বশেষ স্ন্যাপশট লোড করে এবং শুধু পরের ইভেন্টগুলো রিপ্লে করে <Cite n={1} />। স্টোরেজ খরচ ও বাঁচানো সময়ের মধ্যে ভারসাম্য রেখে আপনি ঠিক করেন কত ঘন ঘন স্ন্যাপশট নেবেন <Cite n={1} />। স্ন্যাপশট একটি অপটিমাইজেশন। স্ট্রিমই সত্যের উৎস (source of truth) থাকে। আপনি তা থেকে স্ন্যাপশট আবার তৈরি করতে পারেন <Cite n={1} />।
 
-**সংঘর্ষ থেকে রক্ষা।** দুটি handler একই সময়ে একই entity load করতে পারে। Event store optimistic concurrency control ব্যবহার করতে পারে। Handler পড়ার পরে stream বদলে গেলে এটি append প্রত্যাখ্যান করে। তখন handler আবার load করে, আবার যাচাই করে এবং retry করে <Cite n={1} />।
+**সংঘর্ষ থেকে রক্ষা।** দুটি হ্যান্ডলার একই সময়ে একই এন্টিটি লোড করতে পারে। ইভেন্ট স্টোর অপটিমিস্টিক কনকারেন্সি কন্ট্রোল (optimistic concurrency control) ব্যবহার করতে পারে। হ্যান্ডলার পড়ার পরে স্ট্রিম বদলে গেলে এটি অ্যাপেন্ড প্রত্যাখ্যান করে। তখন হ্যান্ডলার আবার লোড করে, আবার যাচাই করে এবং রিট্রাই করে <Cite n={1} />।
 
 </Bangla>
 </Voices>
@@ -143,24 +143,24 @@ For most systems, traditional data management is enough <Cite n={1} />. You can 
 </Layman>
 <Bangla>
 
-Source এই pattern ব্যবহারের কারণগুলো তালিকাভুক্ত করে <Cite n={1} />:
+সোর্স এই প্যাটার্ন ব্যবহারের কারণগুলো তালিকাভুক্ত করে <Cite n={1} />:
 
 - আপনি একটি পরিবর্তনের পেছনের উদ্দেশ্য বা কারণ রাখতে চান।
-- আপনাকে সংঘাতপূর্ণ update এড়াতে হবে।
-- আপনি একটি history, একটি audit log, অথবা event replay ও roll back করার ক্ষমতা চান।
-- আপনি data-র input-কে তার ওপর কাজ করা task থেকে আলাদা করতে চান।
+- আপনাকে সংঘাতপূর্ণ আপডেট এড়াতে হবে।
+- আপনি একটি হিস্ট্রি, একটি অডিট লগ, অথবা ইভেন্ট রিপ্লে ও রোল ব্যাক করার ক্ষমতা চান।
+- আপনি ডেটার ইনপুটকে তার ওপর কাজ করা টাস্ক থেকে আলাদা করতে চান।
 
-Team-রা প্রায়ই এটিকে CQRS-এর সাথে মেলায়, যা read-কে write থেকে আলাদা করে <Cite n={1} />। সেই pattern-এর জন্য [CQRS](/course/cqrs/) পাতা দেখুন।
+টিমগুলো প্রায়ই এটিকে CQRS-এর সাথে মেলায়, যা রিডকে রাইট থেকে আলাদা করে <Cite n={1} />। সেই প্যাটার্নের জন্য [CQRS](/course/cqrs/) পাতা দেখুন।
 
-**কখন ব্যবহার করবেন না।** Source বলে, এই ক্ষেত্রগুলোতে pattern-টি নাও মানাতে পারে <Cite n={1} />:
+**কখন ব্যবহার করবেন না।** সোর্স বলে, এই ক্ষেত্রগুলোতে প্যাটার্নটি নাও মানাতে পারে <Cite n={1} />:
 
-- সহজ CRUD কাজ, যেখানে audit, replay বা history লাগে না।
-- Prototype, minimum viable product, বা স্বল্পায়ু system।
-- যে system-এ data-র সামঞ্জস্যপূর্ণ, real-time view দরকার।
-- প্রায় অপরিবর্তিত data, যেমন lookup table।
-- যে team-এর event-driven system-এর অভিজ্ঞতা নেই।
+- সহজ CRUD কাজ, যেখানে অডিট, রিপ্লে বা হিস্ট্রি লাগে না।
+- প্রোটোটাইপ, মিনিমাম ভায়েবল প্রোডাক্ট (minimum viable product), বা স্বল্পায়ু সিস্টেম।
+- যে সিস্টেমে ডেটার সামঞ্জস্যপূর্ণ, রিয়েল টাইম ভিউ দরকার।
+- প্রায় অপরিবর্তিত ডেটা, যেমন লুকআপ টেবিল।
+- যে টিমের ইভেন্ট-ড্রিভেন সিস্টেমের অভিজ্ঞতা নেই।
 
-বেশিরভাগ system-এর জন্য প্রচলিত data management-ই যথেষ্ট <Cite n={1} />। আপনি event sourcing শুধু একটি অংশে ব্যবহার করতে পারেন, যেমন একটি payment ledger <Cite n={1} />।
+বেশিরভাগ সিস্টেমের জন্য প্রচলিত ডেটা ম্যানেজমেন্টই যথেষ্ট <Cite n={1} />। আপনি ইভেন্ট সোর্সিং শুধু একটি অংশে ব্যবহার করতে পারেন, যেমন একটি পেমেন্ট লেজার <Cite n={1} />।
 
 </Bangla>
 </Voices>
@@ -196,7 +196,7 @@ Team-রা প্রায়ই এটিকে CQRS-এর সাথে ম�
 
 - Tolerant deserialization: readers ignore unknown fields and use defaults for missing ones.
 - Event versioning: each event carries a version identifier.
-- Upcasting: the reader converts old events to the current schema when it reads them. The stored events stay as they are.
+- Upcasting: old events are converted to the current schema when they are read. The stored events stay as they are.
 - In-place migration: old events are rewritten. This breaks immutability, so it is a last resort.
 
 **Other costs.** There is no standard query tool like SQL. You read a stream by its event identifier and replay it <Cite n={1} />. Delivery is usually at least once, so handlers must be idempotent. If not, duplicates can change the result <Cite n={1} />. The immutable store can conflict with laws that require deletion of personal data <Cite n={1} />. The source says a given-when-then test style suits these systems best. You also need integration tests for views, duplicates, and schema changes <Cite n={1} />.
@@ -204,18 +204,18 @@ Team-রা প্রায়ই এটিকে CQRS-এর সাথে ম�
 </Layman>
 <Bangla>
 
-**সুবিধা।** Store একটি audit trail দেয়। আপনি যেকোনো সময় replay করে view আবার তৈরি করতে পারেন <Cite n={1} />। Event যোগ করতে সেই row lock লাগে না, যা in-place update-এ লাগে। এতে lock contention এড়ানো যায়, তাই write throughput বাড়তে পারে <Cite n={1} />।
+**সুবিধা।** স্টোর একটি অডিট ট্রেইল দেয়। আপনি যেকোনো সময় রিপ্লে করে ভিউ আবার তৈরি করতে পারেন <Cite n={1} />। ইভেন্ট যোগ করতে সেই রো লক লাগে না, যা জায়গায়-আপডেটে (in-place update) লাগে। এতে লক কনটেনশন (lock contention) এড়ানো যায়, তাই রাইট থ্রুপুট বাড়তে পারে <Cite n={1} />।
 
-**Eventual consistency।** Event থেকে তৈরি view কেবল eventually consistent। একটি request, তার event publish এবং consumer-এর handling-এর মধ্যে একটি delay থাকে। Customer-দের এটি বুঝতে হবে <Cite n={1} />।
+**ইভেন্চুয়াল কনসিসটেন্সি।** ইভেন্ট থেকে তৈরি ভিউ কেবল ইভেন্চুয়ালি কনসিসটেন্ট। একটি রিকুয়েস্ট, তার ইভেন্ট পাবলিশ এবং কনজিউমারের হ্যান্ডলিংয়ের মধ্যে একটি দেরি থাকে। কাস্টমারদের এটি বুঝতে হবে <Cite n={1} />।
 
-**Event versioning।** কোনো bug ভুল event লিখলে code ঠিক করলে পুরোনো event ঠিক হয় না <Cite n={1} />। Schema বদলালে পুরোনো ও নতুন event মেলানো কঠিন হতে পারে <Cite n={1} />। Source মোকাবিলার চারটি উপায় তালিকাভুক্ত করে। আপনি এগুলো মিশিয়ে ব্যবহার করতে পারেন <Cite n={1} />:
+**ইভেন্ট ভার্সনিং।** কোনো বাগ ভুল ইভেন্ট লিখলে কোড ঠিক করলে পুরোনো ইভেন্ট ঠিক হয় না <Cite n={1} />। স্কিমা বদলালে পুরোনো ও নতুন ইভেন্ট মেলানো কঠিন হতে পারে <Cite n={1} />। সোর্স মোকাবিলার চারটি উপায় তালিকাভুক্ত করে। আপনি এগুলো মিশিয়ে ব্যবহার করতে পারেন <Cite n={1} />:
 
-- Tolerant deserialization: reader অজানা field উপেক্ষা করে এবং না থাকা field-এর জন্য default ব্যবহার করে।
-- Event versioning: প্রতিটি event একটি version identifier বহন করে।
-- Upcasting: reader পড়ার সময় পুরোনো event-কে বর্তমান schema-তে রূপান্তর করে। সংরক্ষিত event যেমন ছিল তেমনই থাকে।
-- In-place migration: পুরোনো event আবার লেখা হয়। এতে immutability ভাঙে, তাই এটি শেষ উপায়।
+- টলারেন্ট ডিসিরিয়ালাইজেশন (tolerant deserialization): রিডার অজানা ফিল্ড উপেক্ষা করে এবং না থাকা ফিল্ডের জন্য ডিফল্ট ব্যবহার করে।
+- ইভেন্ট ভার্সনিং (event versioning): প্রতিটি ইভেন্ট একটি ভার্সন আইডেন্টিফায়ার বহন করে।
+- আপকাস্টিং (upcasting): পড়ার সময় পুরোনো ইভেন্টকে বর্তমান স্কিমায় রূপান্তর করা হয়। সংরক্ষিত ইভেন্ট যেমন ছিল তেমনই থাকে।
+- ইন-প্লেস মাইগ্রেশন (in-place migration): পুরোনো ইভেন্ট আবার লেখা হয়। এতে অপরিবর্তনীয়তা ভাঙে, তাই এটি শেষ উপায়।
 
-**অন্যান্য খরচ।** SQL-এর মতো কোনো standard query tool নেই। আপনি event identifier দিয়ে একটি stream পড়েন এবং replay করেন <Cite n={1} />। Delivery সাধারণত at least once, তাই handler-কে idempotent হতে হবে। না হলে duplicate ফলাফল বদলে দিতে পারে <Cite n={1} />। Immutable store এমন আইনের সাথে সংঘাতে পড়তে পারে, যেগুলো ব্যক্তিগত data মুছে ফেলতে বলে <Cite n={1} />। Source বলে, given-when-then test style এই system-গুলোর জন্য সবচেয়ে মানানসই। এছাড়া view, duplicate ও schema পরিবর্তনের জন্য integration test-ও দরকার <Cite n={1} />।
+**অন্যান্য খরচ।** SQL-এর মতো কোনো স্ট্যান্ডার্ড কোয়েরি টুল নেই। আপনি ইভেন্ট আইডেন্টিফায়ার দিয়ে একটি স্ট্রিম পড়েন এবং রিপ্লে করেন <Cite n={1} />। ডেলিভারি সাধারণত অ্যাট লিস্ট ওয়ান্স (at least once) হয়, তাই হ্যান্ডলারকে আইডেমপটেন্ট (idempotent) হতে হবে। না হলে ডুপ্লিকেট ফলাফল বদলে দিতে পারে <Cite n={1} />। অপরিবর্তনীয় স্টোর এমন আইনের সাথে সংঘাতে পড়তে পারে, যেগুলো ব্যক্তিগত ডেটা মুছে ফেলতে বলে <Cite n={1} />। সোর্স বলে, গিভেন-হোয়েন-দেন (given-when-then) টেস্ট স্টাইল এই সিস্টেমগুলোর জন্য সবচেয়ে মানানসই। এছাড়া ভিউ, ডুপ্লিকেট ও স্কিমা পরিবর্তনের জন্য ইন্টিগ্রেশন টেস্টও দরকার <Cite n={1} />।
 
 </Bangla>
 </Voices>
@@ -235,7 +235,7 @@ This example is the tutorial's own and is simplified. A test management app reco
 </Layman>
 <Bangla>
 
-এই উদাহরণটি tutorial-এর নিজের এবং সরলীকৃত। একটি test management app প্রতিটি test run event হিসেবে রাখে: TestRunStarted, StepPassed, StepFailed, TestRunAborted। App event replay করে একটি run-এর status দেখায়। একই তালিকা "step 3 প্রথম কখন fail করেছিল?" প্রশ্নের উত্তরও দেয়। শুধু একটি "status" column-ওয়ালা table তা দিতে পারত না।
+এই উদাহরণটি টিউটোরিয়ালের নিজের এবং সরলীকৃত। একটি টেস্ট ম্যানেজমেন্ট অ্যাপ প্রতিটি টেস্ট রান ইভেন্ট হিসেবে রাখে: TestRunStarted, StepPassed, StepFailed, TestRunAborted। অ্যাপ ইভেন্ট রিপ্লে করে একটি রানের স্ট্যাটাস দেখায়। একই তালিকা "step 3 প্রথম কখন ফেইল করেছিল?" প্রশ্নের উত্তরও দেয়। শুধু একটি "status" কলামওয়ালা টেবিল তা দিতে পারত না।
 
 </Bangla>
 </Voices>
@@ -259,9 +259,9 @@ This example is the tutorial's own and is simplified. A test management app reco
 </Layman>
 <Bangla>
 
-- **Event-এ শুধু নতুন state রাখা।** "remaining seats changed to 42"-এর মতো event ফলাফল বলে, কিন্তু কী ঘটেছিল তা বলে না। "two seats reserved"-এর মতো event উদ্দেশ্য রেকর্ড করে <Cite n={1} />।
-- **Message broker-কে event store মনে করা।** Source বলে, Apache Kafka-র মতো broker সাধারণত একটি entity-র stream query করতে বা optimistic concurrency প্রয়োগ করতে পারে না। এটি event ছড়িয়ে দেওয়ার জন্য মানানসই, জমা রাখার জন্য নয় <Cite n={1} />।
-- **Duplicate event ভুলে যাওয়া।** Idempotent handler না থাকলে projection সরে যেতে পারে। Payment বা নোটিশ দুবার হতে পারে <Cite n={1} />।
+- **ইভেন্টে শুধু নতুন স্টেট রাখা।** "remaining seats changed to 42"-এর মতো ইভেন্ট ফলাফল বলে, কিন্তু কী ঘটেছিল তা বলে না। "two seats reserved"-এর মতো ইভেন্ট উদ্দেশ্য রেকর্ড করে <Cite n={1} />।
+- **মেসেজ ব্রোকারকে ইভেন্ট স্টোর মনে করা।** সোর্স বলে, Apache Kafka-র মতো ব্রোকার সাধারণত একটি এন্টিটির স্ট্রিম কোয়েরি করতে বা অপটিমিস্টিক কনকারেন্সি প্রয়োগ করতে পারে না। এটি ইভেন্ট ছড়িয়ে দেওয়ার জন্য মানানসই, জমা রাখার জন্য নয় <Cite n={1} />।
+- **ডুপ্লিকেট ইভেন্ট ভুলে যাওয়া।** আইডেমপটেন্ট হ্যান্ডলার না থাকলে প্রজেকশন সরে যেতে পারে। পেমেন্ট বা নোটিশ দুবার হতে পারে <Cite n={1} />।
 
 </Bangla>
 </Voices>
@@ -295,13 +295,13 @@ These test ideas are the tutorial's own advice. They are not a claim of the sour
 </Layman>
 <Bangla>
 
-এই test ধারণাগুলো tutorial-এর নিজের পরামর্শ। এগুলো source-এর দাবি নয়।
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ। এগুলো সোর্সের দাবি নয়।
 
-- **Replay।** একটি entity তার event থেকে আবার তৈরি করুন। ফলাফলকে app-এর দেখানো view-র সাথে তুলনা করুন।
-- **Lag।** একটি event যোগ করুন, তারপর সাথে সাথে view পড়ুন এবং কিছুক্ষণ অপেক্ষার পর আবার পড়ুন। দেখুন মাঝখানের পুরোনো মান app ঠিকভাবে সামলায় কি না।
-- **Duplicate।** একই event দুবার পাঠান। দেখুন count, payment বা message পুনরাবৃত্তি হয় না।
-- **পুরোনো event।** পুরোনো version-এর কিছু event-এর নমুনা রাখুন। দেখুন নতুন code এখনও সেগুলো পড়তে পারে।
-- **সংঘর্ষ।** একই সময়ে একটি entity-তে দুটি command পাঠান। দেখুন একটি সফল হয় এবং অন্যটি retry করে বা স্পষ্ট error-সহ ব্যর্থ হয়।
+- **রিপ্লে।** একটি এন্টিটি তার ইভেন্ট থেকে আবার তৈরি করুন। ফলাফলকে অ্যাপের দেখানো ভিউর সাথে তুলনা করুন।
+- **ল্যাগ (lag)।** একটি ইভেন্ট যোগ করুন, তারপর সাথে সাথে ভিউ পড়ুন এবং কিছুক্ষণ অপেক্ষার পর আবার পড়ুন। দেখুন মাঝখানের পুরোনো মান অ্যাপ ঠিকভাবে সামলায় কি না।
+- **ডুপ্লিকেট।** একই ইভেন্ট দুবার পাঠান। দেখুন কাউন্ট, পেমেন্ট বা মেসেজ পুনরাবৃত্তি হয় না।
+- **পুরোনো ইভেন্ট।** পুরোনো ভার্সনের কিছু ইভেন্টের নমুনা রাখুন। দেখুন নতুন কোড এখনও সেগুলো পড়তে পারে।
+- **সংঘর্ষ।** একই সময়ে একটি এন্টিটিতে দুটি কমান্ড পাঠান। দেখুন একটি সফল হয় এবং অন্যটি রিট্রাই করে বা স্পষ্ট এরর-সহ ব্যর্থ হয়।
 
 </Bangla>
 </Voices>
