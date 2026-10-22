@@ -1,0 +1,117 @@
+export const metadata = { title: 'Long Polling, WebSockets, and SSE', description: 'How long polling, WebSockets, and server-sent events let a server push data to a client, which way data flows, how each one reconnects, and the issues that RFC 6202 lists.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'RFC 6202: Known Issues and Best Practices for the Use of Long Polling and Streaming in Bidirectional HTTP', publisher: 'IETF, 2011', url: 'https://www.rfc-editor.org/rfc/rfc6202', accessed: '2026-10-22' },
+    { title: 'RFC 6455: The WebSocket Protocol', publisher: 'IETF, 2011', url: 'https://www.rfc-editor.org/rfc/rfc6455', accessed: '2026-10-22' },
+    { title: 'HTML Living Standard, section 9.2: Server-sent events', publisher: 'WHATWG', url: 'https://html.spec.whatwg.org/multipage/server-sent-events.html', accessed: '2026-10-22' },
+    { title: 'WebSocket API (WebSockets)', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API', accessed: '2026-10-22' },
+    { title: 'Using server-sent events', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events', accessed: '2026-10-22' },
+  ],
+}
+
+# Long Polling, WebSockets, and SSE
+
+A chat page must show a new message the moment it arrives. But a browser normally asks, and the server answers. So how can the server speak first? This page compares three answers: long polling, WebSockets, and server-sent events (SSE).
+
+<PageMeta />
+
+## In plain words
+
+In plain HTTP, a client sends a request and the server sends one response. A server cannot open a connection to the client, and it cannot send a response that nobody asked for <Cite n={1} />. A client can ask again and again (polling). This wastes bandwidth when nothing is new, and data waits until the next poll <Cite n={1} />.
+
+The three techniques below let the server send data sooner. They differ in the direction of data and in how they recover from a broken connection.
+
+## How it works
+
+### Long polling
+
+The server holds a request open. It answers only when there is an event, a status change, or a timeout <Cite n={1} />. Then the client usually sends a new request at once, or after a short pause <Cite n={1} />. Data pushes from server to client. For data in the other direction, the client sends ordinary HTTP requests <Cite n={2} />. Each request and each response is a complete HTTP message with its own headers <Cite n={1} />.
+
+### WebSockets
+
+A WebSocket starts as an HTTP request with an `Upgrade: websocket` header. If the server agrees, it answers with status `101 Switching Protocols` <Cite n={2} />. After that, both sides can send data at any time, on the same connection <Cite n={2} />. Data travels in messages, and a message is made of one or more frames. A frame can hold text (UTF-8), binary data, or a control signal such as Close, Ping, or Pong <Cite n={2} />. A Ping can serve as a keepalive <Cite n={2} />. The RFC says implementations must support TLS (`wss` URLs) and should use it <Cite n={2} />.
+
+MDN warns that the `WebSocket` interface has no backpressure. If messages arrive faster than the app can handle them, the memory may fill, the CPU may reach 100%, or both <Cite n={4} />.
+
+**Reconnection.** After an abnormal closure, a client should wait before it reconnects. The RFC says the first attempt should follow a random delay (0 to 5 seconds is given as a reasonable start). Later attempts should wait longer each time, for example with truncated binary exponential backoff <Cite n={2} />. Many clients that reconnect at once may act like a denial-of-service attack <Cite n={2} />. The sources on this page describe no built-in way to get messages sent while the client was offline. This is the tutorial's own note: the app must design that part.
+
+### Server-sent events (SSE)
+
+The page creates an `EventSource` with a URL. The server answers with the MIME type `text/event-stream` <Cite n={5} />. The stream is UTF-8 text <Cite n={3} />. Each message is a block of lines such as `data: hello`, and a blank line ends the block <Cite n={5} />. The fields are `event`, `data`, `id`, and `retry` <Cite n={3} />. SSE is a one-way connection: the client cannot send events to the server <Cite n={5} />.
+
+**Reconnection.** By default, the browser restarts the connection when it closes <Cite n={5} />. Before it retries, it waits for the reconnection time. The first value depends on the browser, and the standard says it is probably a few seconds <Cite n={3} />. The `retry` field sets this time in milliseconds <Cite n={5} />. The `id` field sets the last event ID. On reconnection, the browser sends that ID in the `Last-Event-ID` request header <Cite n={3} />. What the server then sends is up to the server. This is the tutorial's own note.
+
+Two ways to stop the reconnection: the server answers with `204 No Content` <Cite n={3} />, or the client calls `close()` <Cite n={5} />. If the response status is not 200, or the content type is not `text/event-stream`, the browser fails the connection and does not reconnect <Cite n={3} />.
+
+## When you need it
+
+This is the tutorial's own advice. Use one of these when the server must tell the client about a change at once: a chat, a live score, or a progress bar. Ask first which way data must flow. If only the server sends, SSE or long polling may be enough. If both sides send often, a WebSocket fits.
+
+## Issues that RFC 6202 lists
+
+RFC 6202 says that HTTP was not designed for two-way communication. It neither encourages nor discourages these techniques, and it lists their issues <Cite n={1} />. It dates from 2011, so check newer browser details. The main points:
+
+**Long polling**
+
+- **Header overhead.** Every message carries full HTTP headers. For small messages, the headers can be a large part of the data <Cite n={1} />.
+- **Latency.** The average latency is close to one network transit. The worst case is over three, because the server must wait for the next request <Cite n={1} />.
+- **Held resources.** Each client holds a TCP connection and an HTTP request. Some gateways, proxies, and servers can hold only a limited number of requests <Cite n={1} />.
+- **Timeouts.** A high timeout cuts the work, but a value that is too high can bring a `408 Request Timeout` or a `504 Gateway Timeout`. The RFC says 30 seconds is generally safer <Cite n={1} />.
+- **Caching.** A long poll should suppress caching, with `Cache-Control: no-cache` <Cite n={1} />.
+
+**HTTP streaming** (SSE sends its events with this technique <Cite n={1} />)
+
+- **Intermediaries.** A proxy may buffer a whole response before it forwards it. Streaming does not work through such a proxy <Cite n={1} />.
+- **Framing.** HTTP chunks cannot mark the end of a message, because a proxy might merge them <Cite n={1} />.
+
+**Security.** Many open connections can make a denial-of-service attack easier <Cite n={1} />.
+
+## Trade-offs
+
+Cells with "(tutorial's view)" are the tutorial's own judgment. All other cells follow the sources.
+
+| | Long polling | WebSocket | SSE |
+|---|---|---|---|
+| Direction | Server pushes through a held request. The client uses ordinary requests to send <Cite n={1} /> <Cite n={2} /> | Both ways, on one connection <Cite n={2} /> | Server to client only <Cite n={5} /> |
+| How it starts | An HTTP request <Cite n={1} /> | An HTTP Upgrade request, then `101` <Cite n={2} /> | An HTTP request, answered with `text/event-stream` <Cite n={5} /> |
+| Message format | A complete HTTP message each time <Cite n={1} /> | Frames of text or binary <Cite n={2} /> | UTF-8 text lines <Cite n={3} /> |
+| Reconnection | The client sends the next poll <Cite n={1} /> | Client's job. Use backoff <Cite n={2} /> | The browser reconnects. `retry` and `Last-Event-ID` help <Cite n={3} /> |
+| Connection limit | Browser limit on connections applies <Cite n={1} /> | (tutorial's view) The sources on this page give no figure | About 6 per browser and domain when not on HTTP/2. On HTTP/2 it is negotiated, with a default of 100 <Cite n={5} /> |
+| Proxies | Most work well <Cite n={1} /> | The handshake is made to work with HTTP proxies <Cite n={2} /> | Some old proxies drop quiet connections. A comment line about every 15 seconds helps <Cite n={3} /> |
+| Fits best (tutorial's view) | Fallback, or rare updates | Chat, games, two-way flow | Feeds, notices, progress |
+
+## A real-life example
+
+This example is the tutorial's own. An exam platform shows a banner "your answers are saved", a progress page for the marking of a big test, and a chat with a proctor. The banner and the progress page need only server-to-client messages, so SSE can do them. The chat needs both directions, so a WebSocket fits.
+
+## Common mistakes
+
+- **Expecting a WebSocket to stay open for ever.** An abnormal closure can happen, so the client needs a reconnect plan <Cite n={2} />.
+- **Using SSE to send data from the client.** SSE is one-way <Cite n={5} />.
+- **Setting a poll timeout above what proxies allow.** The client may get a `408` or a `504` <Cite n={1} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources.
+
+- **Cut the link.** Drop the network for a moment. Check that the client reconnects, waits longer after each failure, and does not flood the server.
+- **Look for lost messages.** Send events while the client is offline. After it returns, check which events it misses.
+- **Test the stop signals.** For SSE, check what the page does after a `204` and after an error status.
+- **Test behind a proxy.** Use the same proxies as production, and watch for dropped idle connections.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Long polling | The server holds a request open and answers when it has something to send <Cite n={1} /> |
+| HTTP streaming | The server keeps a response open and sends data in pieces without ending it <Cite n={1} /> |
+| WebSocket | A two-way channel that starts with an HTTP Upgrade request <Cite n={2} /> |
+| Frame | A unit of a WebSocket message. It holds text, binary data, or a control signal <Cite n={2} /> |
+| Ping and Pong | WebSocket control frames. A Ping can serve as a keepalive <Cite n={2} /> |
+| Server-sent events (SSE) | A one-way stream of events from server to browser, read through `EventSource` <Cite n={5} /> |
+| `retry` | An SSE field that sets the reconnection time in milliseconds <Cite n={5} /> |
+| `Last-Event-ID` | The request header that tells the server the last event ID, sent on reconnection <Cite n={3} /> |
+| Backpressure | A way to slow the sender when the receiver is too slow. The `WebSocket` interface has none <Cite n={4} /> |
