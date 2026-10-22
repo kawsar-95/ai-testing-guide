@@ -1,0 +1,109 @@
+export const metadata = { title: 'Publish-Subscribe', description: 'How the publish-subscribe pattern sends one message to many subscribers, what topics and subscriptions are, why duplicates and odd ordering happen, and when not to use it.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Publisher-Subscriber pattern', publisher: 'Microsoft, Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/publisher-subscriber', accessed: '2026-10-22' },
+    { title: 'What is Pub/Sub?', publisher: 'Google Cloud documentation', url: 'https://cloud.google.com/pubsub/docs/overview', accessed: '2026-10-22' },
+    { title: 'Overview of the Pub/Sub service', publisher: 'Google Cloud documentation', url: 'https://cloud.google.com/pubsub/docs/pubsub-basics', accessed: '2026-10-22' },
+    { title: 'Subscription overview', publisher: 'Google Cloud documentation', url: 'https://cloud.google.com/pubsub/docs/subscription-overview', accessed: '2026-10-22' },
+    { title: 'Order messages', publisher: 'Google Cloud documentation', url: 'https://cloud.google.com/pubsub/docs/ordering', accessed: '2026-10-22' },
+  ],
+}
+
+# Publish-Subscribe
+
+A radio station sends one signal. It does not know who listens. Anyone with a radio can tune in, and a radio that is off simply misses the show. Publish-subscribe works in a similar way for software. This comparison is the tutorial's own.
+
+<PageMeta />
+
+## In plain words
+
+In publish-subscribe (pub/sub) messaging, a sender publishes an event and does not need to know which consumers receive it <Cite n={1} />. A broker in the middle passes the event on.
+
+Without a broker, a sender must know every consumer, deliver to each one, and handle each failure. A new consumer then means a change in the sender <Cite n={1} />. A plain queue links a sender to one consumer, so many consumers need many queues <Cite n={1} />.
+
+The pattern has three parts <Cite n={1} />:
+
+- An input channel, where the sender (the **publisher**) puts its messages.
+- One output channel for each consumer (each **subscriber**).
+- A mechanism, usually a message broker or event bus, that copies each message to the output channels of the interested subscribers.
+
+In this pattern a message is a unit of data. An event is one kind of message. It reports a change or an action to other parts of the system <Cite n={1} />. Google Pub/Sub uses two more names. A **topic** is a named feed of messages. A **subscription** is a named entity that shows interest in the messages of one topic <Cite n={3} />.
+
+## When you need it
+
+Azure suggests the pattern when an application must broadcast to many consumers, when the consumers are built independently, and when the sender needs no real-time reply <Cite n={1} />. It also fits when the systems accept eventual consistency <Cite n={1} />. Google lists uses such as real-time event distribution and cache invalidation events <Cite n={2} />.
+
+## How it works
+
+Google Pub/Sub shows the flow well. This is one product, but the steps explain the general idea <Cite n={3} />:
+
+1. A publisher sends a message to a topic.
+2. The message is written to storage.
+3. Pub/Sub sends the message on to every subscription attached to the topic.
+4. A subscription hands the message to a subscriber application.
+5. The subscriber sends an acknowledgment (ack) after it processes the message.
+6. When at least one subscriber of each subscription has acked, Pub/Sub deletes the message.
+
+**Fan-out.** Each subscription gets its own copy of every message <Cite n={3} />. Subscribers inside one subscription share the work, and each gets a subset. A subscription with one subscriber sends that subscriber everything <Cite n={3} />. A subscription must exist before it can receive messages. It only gets messages that were published after it was created <Cite n={4} />.
+
+**Choosing what you receive.** Subscribers usually need only some messages. A broker can use topics, where each topic has its own output channel. It can also use content filtering, where the broker looks inside the message <Cite n={1} />. Broad topics are simpler, but subscribers filter more <Cite n={1} />.
+
+**Delivery style.** In Google Pub/Sub a subscription can be pull (the subscriber asks) or push (the server calls the subscriber) <Cite n={4} />.
+
+## Delivery, duplicates, and order
+
+**At-least-once delivery.** Azure names three guarantees. At-most-once can lose messages. At-least-once delivers every message but can create duplicates. Exactly-once removes duplicates but adds coordination cost and delay <Cite n={1} />. Google Pub/Sub gives at-least-once delivery by default, and it also supports exactly-once delivery as an option <Cite n={4} />.
+
+Duplicates can happen when the ack step goes wrong. For example, the ack may arrive after the deadline, or a network problem may lose it. Then the message may arrive again <Cite n={3} />. Google also says that Pub/Sub might redeliver a message after a successful ack, for example after a server restart. It calls this rare, but possible for any message <Cite n={4} />. So Google says the subscriber must be idempotent <Cite n={4} />. Idempotent means that handling a message twice causes no harm. This definition is the tutorial's own. Azure gives the same advice when the broker has no deduplication <Cite n={1} />.
+
+**Ordering.** Azure says the order of receipt is not guaranteed and may differ from the order of creation <Cite n={1} />. Some brokers offer ordered delivery inside a partition or session, but this limits scalability <Cite n={1} />. Google Pub/Sub has no expected order by default <Cite n={4} />. To get order, you set the same ordering key on related messages, publish them in the same region, and turn on ordering in the subscription <Cite n={5} />. The order holds only inside one key. Messages with different keys can arrive in any order <Cite n={5} />. A redelivery of one message also triggers redelivery of the later messages for that key <Cite n={5} />.
+
+## When not to use it
+
+Azure says pub/sub may be a poor fit in these cases <Cite n={1} />:
+
+- There are only a few consumers that need very different data. The broker adds complexity with no scaling benefit.
+- You need near real-time interaction. The broker adds latency, so request-reply may fit better.
+- Consumers must process messages in a strict, guaranteed order.
+- One atomic transaction must cover the publisher and its consumers. Pub/Sub is asynchronous and eventually consistent.
+
+Google adds that its Pub/Sub is for service-to-service communication, not for end-user or IoT clients <Cite n={2} />.
+
+## A real-life example
+
+This example is the tutorial's own. An exam platform publishes an event "answer submitted" to a topic. Three subscriptions listen: grading, a confirmation email, and analytics. Each subscription gets its own copy. If the email service is down, grading still works. The analytics team can add a fourth subscription later without a change in the publisher.
+
+After a lost ack, the email subscriber gets the same event twice. It must not send two emails.
+
+## Common mistakes
+
+- **Expecting order.** Without a special setting, messages can arrive in a different order than the sender created them <Cite n={1} /> <Cite n={4} />.
+- **Expecting exactly one delivery.** Google Cloud Pub/Sub gives at-least-once delivery by default, so duplicates can happen <Cite n={4} />.
+- **Expecting a reply.** The channels are one way <Cite n={1} />.
+- **Creating the subscription too late.** In Google Cloud Pub/Sub, a new subscription gets only messages published after it was created <Cite n={4} />. With topic retention on, a subscription can seek back in time and replay earlier messages <Cite n={4} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources.
+
+- **Send the same event twice.** Check that the subscriber gives the same end result as for one event.
+- **Change the order.** Send "updated" before "created". Check that the subscriber copes, or that the design keeps order.
+- **Stop one subscriber.** Check that the others keep working. Start it again and check that it catches up.
+- **Add a bad message.** Send a malformed event. Check that it does not block the others.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Publisher | The sender. It publishes events and does not know the consumers <Cite n={1} /> |
+| Subscriber | A consumer that receives messages through its own output channel <Cite n={1} /> |
+| Broker | The intermediary that copies each message to interested subscribers <Cite n={1} /> |
+| Topic | In Google Pub/Sub, a named feed of messages <Cite n={3} /> |
+| Subscription | In Google Pub/Sub, a named entity that shows interest in one topic <Cite n={3} /> |
+| Acknowledgment (ack) | The subscriber tells Pub/Sub that it processed a message <Cite n={3} /> |
+| At-least-once delivery | Every message arrives, but some may arrive more than once <Cite n={1} /> |
+| Idempotent | The tutorial's own definition: handling a message again causes no extra effect |
+| Ordering key | In Google Pub/Sub, a string that groups messages that must stay in order <Cite n={5} /> |
