@@ -1,0 +1,108 @@
+export const metadata = { title: 'Distributed Transactions', description: 'How one business action can change several databases, how two-phase commit and sagas work, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'PREPARE TRANSACTION', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-prepare-transaction.html', accessed: '2026-10-22' },
+    { title: 'COMMIT PREPARED', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-commit-prepared.html', accessed: '2026-10-22' },
+    { title: 'ROLLBACK PREPARED', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-rollback-prepared.html', accessed: '2026-10-22' },
+    { title: 'Resource Consumption (max_prepared_transactions)', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/runtime-config-resource.html', accessed: '2026-10-22' },
+    { title: 'Saga distributed transactions pattern', publisher: 'Azure Architecture Center (Microsoft Learn)', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/saga', accessed: '2026-10-22' },
+    { title: 'Compensating Transaction pattern', publisher: 'Azure Architecture Center (Microsoft Learn)', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction', accessed: '2026-10-22' },
+  ],
+}
+
+# Distributed Transactions
+
+When you pay for a trip, two things must change together: the shop must keep your order, and the bank must take the money. If only one change happens, someone loses. A distributed transaction is a way to keep such changes together when they live in different places.
+
+<PageMeta />
+
+## In plain words
+
+A **distributed transaction** is one business action that changes more than one database or service. Many systems give each microservice its own database, so the usual ACID guarantees do not directly apply across these separate stores <Cite n={5} />.
+
+Two main ways exist: **two-phase commit (2PC)**, where all databases get ready first and then commit or roll back together, and the **saga**, where each service commits a small step and later steps undo it if needed.
+
+## When you need it
+
+You need this topic when one user action touches more than one database or service, such as an order and a payment.
+
+## How it works
+
+### Two-phase commit
+
+PostgreSQL gives the building blocks of 2PC, but not the whole protocol. The docs say the purpose of these commands is to let an **external transaction manager** run atomic global transactions across several databases or other transactional resources <Cite n={1} />. The docs say that, unless you write a transaction manager, you probably should not use `PREPARE TRANSACTION` <Cite n={1} />.
+
+For each database, the steps look like this:
+
+1. Inside a transaction block, the manager sends the work. Then it runs `PREPARE TRANSACTION 'some-id'`. This command needs a transaction id, which is a string of fewer than 200 bytes <Cite n={1} />.
+2. After the prepare, the transaction is no longer tied to the session. Its state is fully stored on disk <Cite n={1} />.
+3. When the manager has checked that the other databases are also prepared to commit, it commits the transaction with `COMMIT PREPARED` <Cite n={1} />. If not, it uses `ROLLBACK PREPARED` <Cite n={1} />.
+
+```text
+manager --> database A: PREPARE TRANSACTION 'tx1'
+manager --> database B: PREPARE TRANSACTION 'tx1'
+   both prepared?
+     yes --> COMMIT PREPARED 'tx1' on A and on B
+     no  --> ROLLBACK PREPARED 'tx1' on each database that prepared
+             (a failed PREPARE is already a rollback)
+```
+
+`COMMIT PREPARED` and `ROLLBACK PREPARED` can run in a different session from the one that did the prepare <Cite n={1} />. Both commit or roll back at once <Cite n={2} /> <Cite n={3} />.
+
+**What 2PC gives you, as the docs state it.** After a prepare, there is a "very high probability" that the commit can succeed, even if the database crashes before the commit <Cite n={1} />. The docs say probability, so do not read it as a guarantee.
+
+**What 2PC costs, as the docs state it.** A prepared transaction keeps the locks that it held <Cite n={1} />. If it stays prepared for a long time, it interferes with `VACUUM` and, in extreme cases, can make the database shut down to prevent transaction ID wraparound <Cite n={1} />. The docs call it unwise to leave a transaction prepared for long <Cite n={1} />.
+
+The feature is off by default: `max_prepared_transactions` is 0, and it can only be set at server start <Cite n={4} />. Without a manager that closes prepared transactions promptly, the docs advise to keep it at 0 <Cite n={1} />. The view `pg_prepared_xacts` lists them <Cite n={1} />.
+
+### Saga
+
+A saga breaks the work into a sequence of **local transactions**. Each one completes in one service, updates that service's database, and starts the next step with an event or a message <Cite n={5} />. If a step fails, the saga runs **compensating transactions** to reverse the changes of the earlier steps <Cite n={5} />.
+
+A compensating transaction is not a simple rollback. A plain restore of the old state could overwrite changes from other users, so the compensation must be application specific <Cite n={6} />. The system records how to undo each step <Cite n={6} />.
+
+A saga has a **pivot transaction**: the point of no return. After it succeeds, all later steps must finish. These later steps can be retried, and they are idempotent <Cite n={5} />.
+
+There are two ways to run a saga <Cite n={5} />:
+
+| Way | How | Good | Bad |
+|---|---|---|---|
+| Choreography | Services exchange events. There is no central controller. | Fits simple workflows <Cite n={5} /> | Gets confusing when steps grow, and integration tests need all services running <Cite n={5} /> |
+| Orchestration | A central orchestrator tells each service what to do and handles failure recovery | Suits complex workflows <Cite n={5} /> | The orchestrator is a point of failure <Cite n={5} /> |
+
+## A real-life example
+
+A shop has an order service and a payment service, each with its own database. This example is the tutorial's own.
+
+With a saga: the order service saves the order as "pending". The payment service takes the payment. The order service then marks the order "confirmed". If the payment fails, the saga runs a compensating step: it cancels the pending order. Between the steps, the data can be inconsistent. It should become consistent when all steps finish <Cite n={6} />. Each service commits its own step, and a compensating step can also fail <Cite n={5} />.
+
+## Common mistakes
+
+- **Treating a saga like one transaction.** There is no built-in isolation across services. Lost updates, dirty reads, and fuzzy (nonrepeatable) reads can happen <Cite n={5} />.
+- **Reading "prepared" as "certain to commit".** The docs say "very high probability" <Cite n={1} />.
+- **Forgetting a prepared transaction.** It keeps its locks, and it can get in the way of `VACUUM` freeing storage <Cite n={1} />.
+- **Putting irreversible steps early.** Do them only after the critical checks pass <Cite n={6} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice. They are not from a source.
+
+- **Fail every step.** Make each step fail in turn, and check that the compensating steps leave the data in a valid state.
+- **Repeat a step.** Send the same message twice. Nothing should change.
+- **Look for stuck work.** Look for orders that stay "pending". A step can be blocked and not failed.
+- **If PostgreSQL 2PC is on,** query `pg_prepared_xacts` after a failed test run, and look for old prepared transactions.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Distributed transaction | One business action that changes more than one database or service |
+| Two-phase commit | A way to prepare all databases first, and then commit or roll back all <Cite n={1} /> |
+| Prepared transaction | A transaction with its state stored on disk, which waits for a commit or a rollback <Cite n={1} /> |
+| Saga | A sequence of local transactions with compensating steps <Cite n={5} /> |
+| Compensating transaction | A step that undoes the effect of a finished step <Cite n={6} /> |
+| Pivot transaction | The point of no return of a saga <Cite n={5} /> |
+| Idempotent | Repeating the same operation does not change the outcome <Cite n={5} /> |
