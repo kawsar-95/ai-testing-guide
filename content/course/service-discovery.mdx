@@ -1,0 +1,108 @@
+export const metadata = { title: 'Service Discovery', description: 'How services find each other when addresses keep changing: a registry, health checks, DNS-based discovery in Kubernetes and Consul, and client-side versus server-side discovery.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Service', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/service/', accessed: '2026-10-22' },
+    { title: 'DNS for Services and Pods', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/', accessed: '2026-10-22' },
+    { title: 'What is service discovery?', publisher: 'HashiCorp, Consul documentation', url: 'https://developer.hashicorp.com/consul/docs/concepts/service-discovery', accessed: '2026-10-22' },
+    { title: 'Define health checks', publisher: 'HashiCorp, Consul documentation', url: 'https://developer.hashicorp.com/consul/docs/services/usage/checks', accessed: '2026-10-22' },
+    { title: 'Consul DNS overview', publisher: 'HashiCorp, Consul documentation', url: 'https://developer.hashicorp.com/consul/docs/discover/dns', accessed: '2026-10-22' },
+  ],
+}
+
+# Service Discovery
+
+You call the payment service from the order service. Yesterday it ran on one address. Today a new copy started, an old copy stopped, and the address list is different. How does the order service know where to send the request?
+
+<PageMeta />
+
+## In plain words
+
+Service discovery is the way a service finds the network address of another service. Consul, a tool from HashiCorp, says it helps you find services, follow them, and watch their health inside a network <Cite n={3} />. It keeps a record of the services in a service catalog, which is one source of truth that services can query <Cite n={3} />.
+
+The examples are Kubernetes and Consul. Each behavior below belongs to that product, not to every system.
+
+## When you need it
+
+Addresses change because the set of running copies (instances) changes. Kubernetes says a Deployment can create and destroy Pods at any time, so the Pods that run now may differ from the Pods that run a moment later <Cite n={1} />. Pods are short-lived, and each Pod gets its own IP address <Cite n={1} />. This leads to a question that the Kubernetes docs ask: how does a frontend find and track the address of a backend <Cite n={1} />?
+
+Consul says the same about microservices: the set of active instances changes often, so instances rely on a catalog to get current access information <Cite n={3} />.
+
+## How it works
+
+**A registry.** A new instance registers itself in the catalog with its IP address and port <Cite n={3} />. Consul says the catalog changes as instances are added, and as old or unhealthy instances are removed. A removed instance no longer receives requests <Cite n={3} />. Consumers then ask for a service by its identity, and not by an address <Cite n={3} />.
+
+**Health checks.** A registry is only useful if it does not list dead instances. In Consul, a health check tests whether a service or a node is healthy, and you write it inside the service definition <Cite n={4} />. Consul offers several kinds of check, for example script, HTTP, TCP, gRPC, and TTL checks <Cite n={4} />. Some examples of Consul behavior:
+
+| Check | What Consul does |
+|---|---|
+| HTTP | A response code from 200 to 299 is healthy, 429 is a warning, and any other code is a failure <Cite n={4} />. |
+| TCP | A connection that opens is a success. A host that refuses the connection is critical <Cite n={4} />. |
+| Script | Exit code 0 is passing, 1 is a warning, and any other code is a failure <Cite n={4} />. |
+| TTL | The service must send updates. If none comes in time, the check becomes critical <Cite n={4} />. |
+
+A new Consul check starts as critical by default. This keeps a service out of the pool until its health is verified <Cite n={4} />. Kubernetes has its own idea of "ready": its docs say that traffic can go to healthy ("ready") backends <Cite n={1} />, and that DNS for some headless Services lists the ready endpoints <Cite n={1} />.
+
+**DNS in Kubernetes.** A cluster DNS add-on, for example CoreDNS, follows new Services in the Kubernetes API and makes DNS records for each <Cite n={1} />. Pods can then use a name and not an IP address <Cite n={2} />. A normal Service gets a name of the form `my-svc.my-namespace.svc.cluster-domain.example`, and the name points to the cluster IP of that Service <Cite n={2} />. Kubernetes reserves that IP from a pool set aside for this <Cite n={1} />.
+
+A name without a namespace stays inside the namespace of the asking Pod. A Pod in `test` that asks for `data` gets no answer if the Service lives in `prod`, but `data.prod` works <Cite n={2} />. The kubelet writes a search list into each Pod's `/etc/resolv.conf`, which expands short names <Cite n={2} />. Kubernetes supports only the documented name layout. Other names that happen to work may change without warning <Cite n={2} />.
+
+A named port also gets an SRV record, so a client can ask for the port number as well as the address <Cite n={1} /> <Cite n={2} />.
+
+A headless Service has no cluster IP. Its name resolves to the IPs of all the selected Pods, and the client uses the set or picks one by round-robin <Cite n={2} />. For a headless Service, the platform does no load balancing or proxying <Cite n={1} />.
+
+Kubernetes has a second way too: the kubelet adds environment variables for each active Service. The Service must exist before the client Pod starts, or the Pod does not get them. DNS has no such order rule <Cite n={1} />.
+
+**DNS in Consul.** Consul DNS lets a client look up services without HTTP API calls. Consul recommends it for virtual machines, because the application does not need to change <Cite n={5} />. Lookups are case-sensitive <Cite n={5} />. Prepared queries can filter by several tags, and can ask a remote datacenter when the local one has no healthy node <Cite n={5} />.
+
+## Client-side and server-side discovery
+
+Consul names two patterns <Cite n={3} />:
+
+| Pattern | Who does the work |
+|---|---|
+| Client-side | The caller asks the catalog, gets the access information, chooses a healthy instance, and calls it directly. |
+| Server-side | The caller asks an intermediary. The intermediary asks the catalog and sends the request to an available instance. |
+
+Consul says the second way lets developers make applications lighter, because the discovery logic is central <Cite n={3} />. It also says that traditional load balancers are not built for fast registration and removal of services <Cite n={3} />.
+
+## A real-life example
+
+This example is the tutorial's own. A test platform has a `results-api` with three instances. A CI job posts results to the name `results-api`, never to an address.
+
+During a release, one instance stops and a new one starts. The registry removes the old entry and adds the new one. If the new instance fails its health check, it stays out of the pool, and the CI job keeps using the other two. The CI job needs no change and no restart.
+
+## Common mistakes
+
+- **Hard-coding an address.** The address of an instance can change at any time <Cite n={1} />.
+- **Using a short name from the wrong namespace.** In Kubernetes a name without a namespace stays in the Pod's namespace <Cite n={2} />.
+- **Reading discovery variables too early.** In Kubernetes the Service must exist before the Pod that reads its environment variables <Cite n={1} />.
+- **Trusting an unverified instance.** Consul starts a check as critical so that an unverified service stays out of the pool <Cite n={4} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of a source.
+
+- **Stop one instance.** Check that callers stop getting that instance, and that the failed requests are few and handled.
+- **Start a new instance.** Check that it gets traffic only after it is healthy.
+- **Break the health check.** Make the check fail while the process still runs, and check that the instance leaves the pool. Then make the process fail while the check still passes, and see what happens.
+- **Look up the name.** From inside the system, resolve the service name in the same namespace and in another one. Check the answers.
+- **Remove the registry.** Make it unreachable for a short time. Check whether callers keep working with what they know, and whether they recover.
+- **Watch for old answers.** After a change, check how long a cache keeps the old address.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Service discovery | A way for services to find the access information of other services <Cite n={3} /> |
+| Service catalog | The record of services that Consul keeps, one source of truth <Cite n={3} /> |
+| Instance | One running copy of a service |
+| Health check | A test of whether a service or node is healthy <Cite n={4} /> |
+| TTL check | A passive Consul check that needs regular updates from the service <Cite n={4} /> |
+| Service (Kubernetes) | An object that exposes a group of Pods on the network <Cite n={1} /> |
+| Headless Service | A Kubernetes Service with no cluster IP, whose name lists the Pod IPs <Cite n={2} /> |
+| SRV record | A DNS record that gives a port number and a name for a named port <Cite n={2} /> |
+| Client-side discovery | The caller finds and picks an instance <Cite n={3} /> |
+| Server-side discovery | An intermediary finds an instance and sends the request <Cite n={3} /> |
