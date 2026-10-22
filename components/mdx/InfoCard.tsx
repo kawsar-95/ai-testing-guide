@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { T } from "@/components/i18n/T";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { doLabel, dontLabel } from "@/lib/ui";
 
 const TONE = {
-  good: { border: "border-t-2 border-t-good", mark: "✓", color: "text-good", label: doLabel },
-  bad: { border: "border-t-2 border-t-danger", mark: "✗", color: "text-danger", label: dontLabel },
+  good: { border: "border-t-2 border-t-good", mark: "✓", color: "text-good", label: doLabel, bn: SHELL_BN.doLabel },
+  bad: { border: "border-t-2 border-t-danger", mark: "✗", color: "text-danger", label: dontLabel, bn: SHELL_BN.dontLabel },
 } as const;
 
 export function InfoCard({
@@ -26,7 +28,9 @@ export function InfoCard({
             <span aria-hidden="true" className={`mr-2 font-bold ${marker.color}`}>
               {marker.mark}
             </span>
-            <span className="sr-only">{marker.label}: </span>
+            <span className="sr-only">
+              <T en={marker.label} bn={marker.bn} />:{" "}
+            </span>
           </>
         ) : null}
         {title}

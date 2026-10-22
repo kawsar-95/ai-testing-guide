@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { BeforeInstallPromptEvent } from "@/lib/pwa-install";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { installApp } from "@/lib/ui";
 
 /**
@@ -14,6 +16,7 @@ import { installApp } from "@/lib/ui";
  * window.__installPrompt, and this button reads it on mount.
  */
 export function InstallButton() {
+  const label = useBn(installApp, SHELL_BN.installApp);
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
@@ -58,8 +61,8 @@ export function InstallButton() {
     <button
       type="button"
       onClick={install}
-      aria-label={installApp}
-      title={installApp}
+      aria-label={label}
+      title={label}
       className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-bg-raised text-text-dim transition-colors hover:border-border-strong hover:bg-bg-raised-2 hover:text-text"
     >
       <svg viewBox="0 0 20 20" className="size-[18px]" fill="none" aria-hidden="true">

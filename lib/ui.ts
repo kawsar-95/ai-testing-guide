@@ -89,3 +89,11 @@ export const bookmarked = "Bookmarked";
 export const markRead = "Mark as read";
 export const markedRead = "Read";
 export const chapterNav = "Pages of this section";
+
+export const backToTop = "Back to top";
+export const backToTopLabel = "↑ Top";
+export const copyCode = "Copy code";
+export const copyWords = { idle: "Copy", copied: "Copied", selected: "Selected" };
+export const notFoundTitle = "Page not found";
+export const notFoundText = "This page does not exist. It may have moved, or the address may have a typing error.";
+export const notFoundBack = "Back to the contents";

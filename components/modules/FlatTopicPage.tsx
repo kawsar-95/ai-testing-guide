@@ -16,6 +16,8 @@ import { MetaLine } from "@/components/content/MetaLine";
 import { ReadingProgress } from "@/components/content/ReadingProgress";
 import { Sources } from "@/components/content/Sources";
 import { MarkDoneButton } from "./MarkDoneButton";
+import { T } from "@/components/i18n/T";
+import { FLAT_UI_BN } from "@/lib/bn/flat";
 import { ProgressSummary } from "./ProgressSummary";
 
 export type MdxPage = { default: MDXContent; metadata: Metadata; page?: PageInfo };
@@ -45,28 +47,36 @@ export function metadataFor(m: FlatModule, load: Load) {
   };
 }
 
-function ItemNav({ module: m, item }: { module: FlatModule; item: FlatItem }) {
+function ItemNav({ module: m, item }: { module: FlatModule<FlatModuleId>; item: FlatItem }) {
+  const bn = FLAT_UI_BN[m.id];
   const { previous, next } = m.neighbours(item.slug);
   return (
     <nav
-      aria-label={m.ui.itemNav}
+      aria-labelledby="item-nav-label"
       className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-6 text-[15px]"
     >
+      <span id="item-nav-label" className="sr-only">
+        <T en={m.ui.itemNav} bn={bn.itemNav} />
+      </span>
       {previous ? (
         <Link href={previous.href} className={NAV_LINK}>
           <span aria-hidden="true">← </span>
-          <span className="sr-only">{m.ui.previousItem}: </span>
+          <span className="sr-only">
+            <T en={m.ui.previousItem} bn={bn.previousItem} />:{" "}
+          </span>
           {previous.title}
         </Link>
       ) : (
         <span />
       )}
       <Link href={m.home} className={NAV_LINK}>
-        {m.ui.allItems}
+        <T en={m.ui.allItems} bn={bn.allItems} />
       </Link>
       {next ? (
         <Link href={next.href} className={NAV_LINK}>
-          <span className="sr-only">{m.ui.nextItem}: </span>
+          <span className="sr-only">
+            <T en={m.ui.nextItem} bn={bn.nextItem} />:{" "}
+          </span>
           {next.title}
           <span aria-hidden="true"> →</span>
         </Link>
@@ -103,7 +113,11 @@ export async function FlatTopicPage({
       <ChapterLayout outline={outline} route={item.href}>
         <ContentsButton />
         <p className={`mb-3 ${LABEL} text-accent`}>
-          {practice ? m.ui.practiceEyebrow : m.ui.itemEyebrow(item.number)}
+          {practice ? (
+            <T en={m.ui.practiceEyebrow ?? ""} bn={FLAT_UI_BN[m.id].practiceEyebrow ?? ""} />
+          ) : (
+            <T en={m.ui.itemEyebrow(item.number)} bn={FLAT_UI_BN[m.id].itemEyebrow(item.number)} />
+          )}
         </p>
         <article data-content className="mdx">
           <Content

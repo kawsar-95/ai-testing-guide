@@ -301,7 +301,16 @@ A `##` section can have 3 voices of its text: Technical (the current text), `স
 | Bangla default | `বাংলা` moves to the first position of each switcher. |
 | Install button | `InstallButton` shows only after the browser fires `beforeinstallprompt` (Chromium). If the event comes before hydration, the head script `INSTALL_CAPTURE_SCRIPT` (`lib/pwa-install.ts`) keeps it, and the button reads it on mount. A click shows the install prompt. Other browsers use their own menu. |
 
-The menus and the other UI text stay in English. There is one URL for each page. There is no `/bn/` copy.
+The `বাংলা` header button also changes the fixed UI text (see "UI text in Bangla"). Titles of pages, stages, chapters, and topics, their descriptions, and the module names stay in English. There is one URL for each page. There is no `/bn/` copy.
+
+### UI text in Bangla
+
+| Part | Detail |
+|---|---|
+| Twin files | Each English UI object has a Bangla twin in `lib/bn/` (`SHELL_BN` for `lib/ui.ts`, `HOME_UI_BN`, `DASHBOARD_UI_BN`, `LINUX_UI_BN`, …). `Bn<T>` (`lib/bn.ts`) gives the twin the same keys, so a missing key is a compile error. `tests/i18n.test.ts` checks the shape at run time. |
+| Text nodes | `<T en={…} bn={…} />` (`components/i18n/T.tsx`) renders both spans. CSS shows one from `html[data-voice-default]`, so there is no flash and it works in server components. |
+| Attributes | `useBn(en, bn)` (`components/i18n/useBn.ts`) for `aria-label`, `title`, `alt`, and `confirm()`. Client components only. A server component uses `aria-labelledby` that points to an `sr-only` `<T>`. |
+| To add UI text | Add the English string to its `*_UI` object, add the Bangla string to the twin in `lib/bn/`, and render it with `<T>`. |
 
 ### How to write voices
 

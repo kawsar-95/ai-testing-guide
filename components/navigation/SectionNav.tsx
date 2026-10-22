@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { onThisPage } from "@/lib/ui";
 import type { OutlineItem } from "@/lib/outline";
 
@@ -14,6 +17,7 @@ const LINE = 0.3;
  */
 export function SectionNav({ items }: { items: OutlineItem[] }) {
   const [active, setActive] = useState<string | null>(null);
+  const navLabel = useBn(onThisPage, SHELL_BN.onThisPage);
 
   useEffect(() => {
     const update = () => {
@@ -56,10 +60,12 @@ export function SectionNav({ items }: { items: OutlineItem[] }) {
   return (
     <nav
       data-toc
-      aria-label={onThisPage}
+      aria-label={navLabel}
       className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pb-6"
     >
-      <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.16em] text-text-faint">{onThisPage}</p>
+      <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.16em] text-text-faint">
+        <T en={onThisPage} bn={SHELL_BN.onThisPage} />
+      </p>
       <ol className="m-0 list-none border-l border-border p-0">
         {items.map((item) => {
           const isActive = item.id === active;

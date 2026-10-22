@@ -170,6 +170,7 @@ A `##` section can have three voices of its text: Technical, plain English (`Lay
 | Header | `components/layout/VoiceToggle.tsx` | Sets the site-wide default voice. Every section follows it. |
 | CSS | `app/globals.css` | Before hydration, the panel of `html[data-voice-default]` shows. After hydration, the `data-voice` of the wrapper decides. |
 | Reveal | `Voices.tsx` | A URL hash, or a click on an in-page link, that targets an element in a hidden panel shows that panel and scrolls to the element. |
+| UI text | `components/i18n/T.tsx`, `useBn.ts`, `lib/bn/`, `lib/bn.ts` | The fixed UI text has a Bangla twin for each English `*_UI` object. `<T>` renders both languages and CSS (`.i18n-en`, `.i18n-bn`) shows one from `data-voice-default`. `useBn` serves attributes. `tests/i18n.test.ts` checks that each twin has the same keys. |
 
 `lib/voice-source.ts` is the authoring check for `<Voices>` blocks. `tests/voice-source.test.ts` runs it on every MDX file. Each page with voices has a voice fact-check report in `docs/superpowers/research/`. The authoring rules are in CLAUDE.md.
 

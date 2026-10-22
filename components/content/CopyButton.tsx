@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
+import { copyWords } from "@/lib/ui";
 
 const DEFAULT_CLASS =
   "rounded-md border border-border-strong px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-text-dim transition-colors hover:border-accent hover:text-accent";
-
-const DEFAULT_WORDS = { idle: "Copy", copied: "Copied", selected: "Selected" };
 
 /**
  * Copies text to the clipboard. `getText` runs at click time. If the
@@ -15,19 +17,26 @@ const DEFAULT_WORDS = { idle: "Copy", copied: "Copied", selected: "Selected" };
 export function CopyButton({
   getText,
   label,
-  words = DEFAULT_WORDS,
+  labelBn = label,
+  words = copyWords,
+  wordsBn = SHELL_BN.copyWords,
   fallbackTarget,
   className = DEFAULT_CLASS,
 }: {
   getText: () => string;
   /** The accessible name of the button, for example "Copy code". */
   label: string;
+  /** The Bangla accessible name. */
+  labelBn?: string;
   /** The visible words for each state. */
   words?: { idle: string; copied: string; selected: string };
+  /** The Bangla words for each state. */
+  wordsBn?: { idle: string; copied: string; selected: string };
   fallbackTarget: () => HTMLElement | null;
   className?: string;
 }) {
   const [status, setStatus] = useState<"idle" | "copied" | "selected">("idle");
+  const accessibleName = useBn(label, labelBn);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
@@ -64,11 +73,11 @@ export function CopyButton({
   // change inside the button.
   return (
     <>
-      <button type="button" onClick={copy} aria-label={label} className={className}>
-        {words[status]}
+      <button type="button" onClick={copy} aria-label={accessibleName} className={className}>
+        <T en={words[status]} bn={wordsBn[status]} />
       </button>
       <span className="sr-only" aria-live="polite">
-        {status === "idle" ? "" : words[status]}
+        {status === "idle" ? "" : <T en={words[status]} bn={wordsBn[status]} />}
       </span>
     </>
   );

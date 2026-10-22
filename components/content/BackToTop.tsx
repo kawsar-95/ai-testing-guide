@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { showBackToTop } from "@/lib/reading";
+import { backToTop, backToTopLabel } from "@/lib/ui";
 
 /**
  * A "↑ Top" button. It is in the DOM only after the reader scrolls more
@@ -10,6 +14,7 @@ import { showBackToTop } from "@/lib/reading";
  */
 export function BackToTop() {
   const [visible, setVisible] = useState(false);
+  const label = useBn(backToTop, SHELL_BN.backToTop);
 
   useEffect(() => {
     let frame = 0;
@@ -44,10 +49,10 @@ export function BackToTop() {
       type="button"
       onClick={onClick}
       data-back-to-top
-      aria-label="Back to top"
+      aria-label={label}
       className="fixed right-4 bottom-4 z-30 rounded-md border border-border-strong bg-bg-raised px-3 py-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-text transition-colors hover:border-accent hover:text-accent sm:right-6 sm:bottom-6"
     >
-      ↑ Top
+      <T en={backToTopLabel} bn={SHELL_BN.backToTopLabel} />
     </button>
   );
 }

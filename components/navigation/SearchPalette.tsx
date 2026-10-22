@@ -4,6 +4,9 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExtern
 import type { KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import type MiniSearch from "minisearch";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { createIndex, runSearch } from "@/lib/search";
 import { lockScroll } from "@/lib/scroll-lock";
 import type { SearchDoc } from "@/lib/search";
@@ -46,6 +49,9 @@ export function SearchPalette() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchLabel = useBn(search, SHELL_BN.search);
+  const searchAllLabel = useBn(searchAll, SHELL_BN.searchAll);
+  const resultsLabel = useBn(searchResults, SHELL_BN.searchResults);
   const listId = useId();
   const titleId = useId();
 
@@ -162,18 +168,18 @@ export function SearchPalette() {
     }
   }
 
-  let message: string | null = null;
-  if (status === "error") message = searchUnavailable;
-  else if (query.trim() === "") message = searchType;
-  else if (status !== "ready") message = searchLoading;
-  else if (hits.length === 0) message = searchNone;
+  let message: { en: string; bn: string } | null = null;
+  if (status === "error") message = { en: searchUnavailable, bn: SHELL_BN.searchUnavailable };
+  else if (query.trim() === "") message = { en: searchType, bn: SHELL_BN.searchType };
+  else if (status !== "ready") message = { en: searchLoading, bn: SHELL_BN.searchLoading };
+  else if (hits.length === 0) message = { en: searchNone, bn: SHELL_BN.searchNone };
 
   return (
     <>
       <button
         ref={buttonRef}
         type="button"
-        aria-label={search}
+        aria-label={searchLabel}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-keyshortcuts="Control+K Meta+K"
@@ -185,7 +191,7 @@ export function SearchPalette() {
           <path d="M13.2 13.2L17 17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
         <span aria-hidden="true" className="hidden flex-1 text-left sm:inline nav:hidden wide:inline">
-          {search}
+          <T en={search} bn={SHELL_BN.search} />
         </span>
         <kbd
           aria-hidden="true"
@@ -211,7 +217,7 @@ export function SearchPalette() {
             className="relative flex max-h-[min(34rem,80vh)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-border-strong bg-bg-raised shadow-2xl shadow-black/60"
           >
             <h2 id={titleId} className="sr-only">
-              {searchAll}
+              <T en={searchAll} bn={SHELL_BN.searchAll} />
             </h2>
             <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 focus-within:border-accent focus-within:shadow-[inset_0_-2px_0_var(--accent)]">
               <svg aria-hidden="true" viewBox="0 0 20 20" className="size-4 shrink-0 text-text-faint" fill="none">
@@ -222,7 +228,7 @@ export function SearchPalette() {
                 ref={inputRef}
                 type="text"
                 role="combobox"
-                aria-label={searchAll}
+                aria-label={searchAllLabel}
                 aria-expanded={hits.length > 0}
                 aria-controls={listId}
                 aria-activedescendant={hits.length > 0 ? optionId(active) : undefined}
@@ -231,7 +237,7 @@ export function SearchPalette() {
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck={false}
-                placeholder={searchAll}
+                placeholder={searchAllLabel}
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
@@ -248,14 +254,16 @@ export function SearchPalette() {
                 className="rounded border border-border-strong px-1.5 py-1 font-mono text-[11px] leading-none text-text-faint transition-colors hover:text-text"
               >
                 <span aria-hidden="true">Esc</span>
-                <span className="sr-only">{searchClose}</span>
+                <span className="sr-only">
+                  <T en={searchClose} bn={SHELL_BN.searchClose} />
+                </span>
               </button>
             </div>
 
             <div
               id={listId}
               role="listbox"
-              aria-label={searchResults}
+              aria-label={resultsLabel}
               hidden={hits.length === 0}
               className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2"
             >
@@ -283,7 +291,7 @@ export function SearchPalette() {
                       `${hit.group.toUpperCase()} · ${hit.page}`
                     ) : (
                       <>
-                        {partLabel(hit.part)}
+                        <T en={partLabel(hit.part)} bn={SHELL_BN.partLabel(hit.part)} />
                         {hit.title !== hit.page && ` · ${hit.page}`}
                       </>
                     )}
@@ -300,7 +308,7 @@ export function SearchPalette() {
               hidden={message === null}
               className="px-4 py-6 text-center text-sm text-text-dim"
             >
-              {message}
+              {message && <T en={message.en} bn={message.bn} />}
             </p>
           </div>
         </div>

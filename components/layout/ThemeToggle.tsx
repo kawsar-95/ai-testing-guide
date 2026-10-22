@@ -3,6 +3,8 @@
 import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
 import { THEME_STORAGE_KEY, nextTheme, resolveTheme } from "@/lib/theme";
 import type { Theme } from "@/lib/theme";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { themeGeneric, themeToDark, themeToLight } from "@/lib/ui";
 
 const LIGHT_QUERY = "(prefers-color-scheme: light)";
@@ -65,7 +67,10 @@ export function ThemeToggle() {
     }
   };
 
-  const label = theme === null ? themeGeneric : nextTheme(theme) === "light" ? themeToLight : themeToDark;
+  const toLight = useBn(themeToLight, SHELL_BN.themeToLight);
+  const toDark = useBn(themeToDark, SHELL_BN.themeToDark);
+  const generic = useBn(themeGeneric, SHELL_BN.themeGeneric);
+  const label = theme === null ? generic : nextTheme(theme) === "light" ? toLight : toDark;
 
   return (
     <button

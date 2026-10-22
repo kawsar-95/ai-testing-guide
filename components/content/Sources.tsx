@@ -1,3 +1,5 @@
+import { T } from "@/components/i18n/T";
+import { SHELL_BN } from "@/lib/bn/shell";
 import type { Source } from "@/lib/page";
 import { sourceAccessed, sourcesHeading } from "@/lib/ui";
 
@@ -14,7 +16,7 @@ export function Sources({ sources }: { sources: Source[] }) {
         id="sources"
         className="scroll-mt-20 font-display text-2xl font-medium tracking-[-0.01em] text-text"
       >
-        {sourcesHeading}
+        <T en={sourcesHeading} bn={SHELL_BN.sourcesHeading} />
       </h2>
       <ol role="list" className="mt-4 list-none divide-y divide-border p-0">
         {sources.map((source, index) => (
@@ -34,7 +36,7 @@ export function Sources({ sources }: { sources: Source[] }) {
                 {source.title}
               </a>
               <p className="mt-0.5 font-mono text-xs text-text-dim">
-                {source.publisher} · {sourceAccessed(source.accessed)}
+                {source.publisher} · <T en={sourceAccessed(source.accessed)} bn={SHELL_BN.sourceAccessed(source.accessed)} />
               </p>
             </div>
           </li>

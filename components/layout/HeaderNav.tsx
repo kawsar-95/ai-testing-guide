@@ -2,9 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HEADER_NAV, activeNavId } from "@/lib/header-nav";
+import { HEADER_NAV, activeNavId, type HeaderNavId } from "@/lib/header-nav";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
+import { DASHBOARD_UI_BN } from "@/lib/bn/dashboard";
+import { INTERVIEW_UI_BN } from "@/lib/bn/interview";
 import { navMain } from "@/lib/ui";
 import { withTrailingSlash } from "./SidebarList";
+
+/** The Bangla label of each top nav item, by id. */
+export const NAV_LABEL_BN: Record<HeaderNavId, string> = {
+  home: SHELL_BN.navHome,
+  contents: SHELL_BN.contentsButton,
+  dashboard: DASHBOARD_UI_BN.navLabel,
+  interview: INTERVIEW_UI_BN.navLabel,
+};
 
 const ITEM =
   "relative flex h-16 items-center whitespace-nowrap text-[15px] font-medium no-underline transition-colors " +
@@ -23,7 +36,7 @@ export function HeaderNav() {
 /** The nav links. With no active item (the server fallback), no link is current. */
 export function NavItems({ activeId }: { activeId: string | null }) {
   return (
-    <nav aria-label={navMain} className="ml-auto hidden items-center gap-6 nav:flex">
+    <nav aria-label={useBn(navMain, SHELL_BN.navMain)} className="ml-auto hidden items-center gap-6 nav:flex">
       {HEADER_NAV.map((item) => (
         <Link
           key={item.id}
@@ -31,7 +44,7 @@ export function NavItems({ activeId }: { activeId: string | null }) {
           aria-current={item.id === activeId ? "page" : undefined}
           className={navItemClass(item.id === activeId)}
         >
-          {item.label}
+          <T en={item.label} bn={NAV_LABEL_BN[item.id]} />
         </Link>
       ))}
     </nav>

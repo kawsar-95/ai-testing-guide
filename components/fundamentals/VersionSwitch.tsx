@@ -2,6 +2,9 @@
 
 import { useSyncExternalStore } from "react";
 import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
+import { FUNDAMENTALS_UI_BN } from "@/lib/bn/fundamentals";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
 import {
   DEFAULT_VERSION,
   VERSION_ATTRIBUTE,
@@ -11,9 +14,9 @@ import {
 } from "@/lib/fundamentals/version";
 import type { Version } from "@/lib/fundamentals/version";
 
-const OPTIONS: readonly { value: Version; label: string }[] = [
-  { value: "notes", label: FUNDAMENTALS_UI.versionNotes },
-  { value: "istqb", label: FUNDAMENTALS_UI.versionIstqb },
+const OPTIONS: readonly { value: Version; en: string; bn: string }[] = [
+  { value: "notes", en: FUNDAMENTALS_UI.versionNotes, bn: FUNDAMENTALS_UI_BN.versionNotes },
+  { value: "istqb", en: FUNDAMENTALS_UI.versionIstqb, bn: FUNDAMENTALS_UI_BN.versionIstqb },
 ];
 
 function subscribe(listener: () => void): () => void {
@@ -54,10 +57,11 @@ function setVersion(version: Version) {
 /** Two buttons that select the version of the text: the owner's notes or the ISTQB text. */
 export function VersionSwitch() {
   const current = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const groupLabel = useBn(FUNDAMENTALS_UI.versionSwitchLabel, FUNDAMENTALS_UI_BN.versionSwitchLabel);
   return (
     <div
       role="group"
-      aria-label={FUNDAMENTALS_UI.versionSwitchLabel}
+      aria-label={groupLabel}
       className="inline-flex rounded-md border border-border bg-bg-raised p-0.5"
     >
       {OPTIONS.map((option) => (
@@ -73,7 +77,7 @@ export function VersionSwitch() {
               : "text-text-dim hover:text-accent")
           }
         >
-          {option.label}
+          <T en={option.en} bn={option.bn} />
         </button>
       ))}
     </div>

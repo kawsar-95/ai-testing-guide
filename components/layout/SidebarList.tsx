@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { GROUPS } from "@/lib/nav";
 import { partLabel, partNumber, partsNav } from "@/lib/ui";
 
@@ -21,7 +26,7 @@ export function SidebarList({
   onNavigate?: () => void;
 }) {
   return (
-    <nav aria-label={partsNav} className="px-3 py-4">
+    <nav aria-label={useBn(partsNav, SHELL_BN.partsNav)} className="px-3 py-4">
       {GROUPS.map((group) => (
         <div key={group.slug} className="mb-4 last:mb-0">
           <p className="mb-1 px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-text-faint">
@@ -49,7 +54,7 @@ export function SidebarList({
                         (active ? "text-accent" : "text-text-faint")
                       }
                     >
-                      <span className="sr-only">{partLabel(page.part)}</span>
+                      <span className="sr-only"><T en={partLabel(page.part)} bn={SHELL_BN.partLabel(page.part)} /></span>
                       <span aria-hidden="true">{partNumber(page.part)}</span>
                     </span>
                     <span

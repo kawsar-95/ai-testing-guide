@@ -3,7 +3,11 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { NavList } from "./NavList";
+import { NAV_LABEL_BN } from "./HeaderNav";
 import { withTrailingSlash } from "./SidebarList";
 import { scrollActiveIntoView } from "./scroll-active";
 import { HEADER_NAV, activeNavId } from "@/lib/header-nav";
@@ -24,6 +28,7 @@ export function MobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [lastPathname, setLastPathname] = useState(pathname);
+  const navMainLabel = useBn(navMain, SHELL_BN.navMain);
   const panelId = useId();
   const titleId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -91,7 +96,9 @@ export function MobileNav() {
         onClick={() => setOpen(true)}
         className="grid size-9 place-items-center rounded-lg border border-border text-text-dim transition-colors hover:bg-bg-raised-2 hover:text-text nav:hidden"
       >
-        <span className="sr-only">{menuOpen}</span>
+        <span className="sr-only">
+          <T en={menuOpen} bn={SHELL_BN.menuOpen} />
+        </span>
         <svg aria-hidden="true" viewBox="0 0 20 20" className="size-5" fill="none">
           <path d="M3 5.5h14M3 10h14M3 14.5h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
@@ -136,7 +143,9 @@ export function MobileNav() {
               onClick={() => setOpen(false)}
               className="-mr-2 grid size-9 place-items-center rounded-md text-text-dim transition-colors hover:bg-bg-raised hover:text-text"
             >
-              <span className="sr-only">{menuClose}</span>
+              <span className="sr-only">
+                <T en={menuClose} bn={SHELL_BN.menuClose} />
+              </span>
               <svg aria-hidden="true" viewBox="0 0 20 20" className="size-5" fill="none">
                 <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
@@ -144,7 +153,7 @@ export function MobileNav() {
           </div>
           <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {/* The top nav is hidden below 1200 px, so its links go in the drawer. */}
-            <nav aria-label={navMain} className="flex flex-wrap gap-1.5 border-b border-border px-3 py-3 nav:hidden">
+            <nav aria-label={navMainLabel} className="flex flex-wrap gap-1.5 border-b border-border px-3 py-3 nav:hidden">
               {HEADER_NAV.map((item) => {
                 const active = item.id === activeNavId(withTrailingSlash(pathname) ?? "/");
                 return (
@@ -160,7 +169,7 @@ export function MobileNav() {
                         : "border-border text-text-dim hover:border-accent hover:text-accent")
                     }
                   >
-                    {item.label}
+                    <T en={item.label} bn={NAV_LABEL_BN[item.id]} />
                   </Link>
                 );
               })}

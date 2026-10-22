@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { LINUX_HOME, STAGES, getStage } from "@/lib/linux/stages";
 import type { LinuxStage } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
+import { LINUX_UI_BN as BN } from "@/lib/bn/linux";
+import { T } from "@/components/i18n/T";
 import { getOutline } from "@/lib/outline";
 import { getReadingMinutes } from "@/lib/reading-time";
 import { editUrl } from "@/lib/page";
@@ -47,24 +49,31 @@ function StageNav({ stage }: { stage: LinuxStage }) {
   const next = STAGES[stage.number];
   return (
     <nav
-      aria-label={LINUX_UI.stageNav}
+      aria-labelledby="stage-nav-label"
       className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-6 text-[15px]"
     >
+      <span id="stage-nav-label" className="sr-only">
+        <T en={LINUX_UI.stageNav} bn={BN.stageNav} />
+      </span>
       {previous ? (
         <Link href={previous.href} className={NAV_LINK}>
           <span aria-hidden="true">← </span>
-          <span className="sr-only">{LINUX_UI.previousStage}: </span>
+          <span className="sr-only">
+            <T en={LINUX_UI.previousStage} bn={BN.previousStage} />:{" "}
+          </span>
           {previous.title}
         </Link>
       ) : (
         <span />
       )}
       <Link href={LINUX_HOME} className={NAV_LINK}>
-        {LINUX_UI.allStages}
+        <T en={LINUX_UI.allStages} bn={BN.allStages} />
       </Link>
       {next ? (
         <Link href={next.href} className={NAV_LINK}>
-          <span className="sr-only">{LINUX_UI.nextStage}: </span>
+          <span className="sr-only">
+            <T en={LINUX_UI.nextStage} bn={BN.nextStage} />:{" "}
+          </span>
           {next.title}
           <span aria-hidden="true"> →</span>
         </Link>
@@ -89,9 +98,11 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
       <ReadingProgress />
       <ChapterLayout outline={outline} route={stage.href}>
         <ContentsButton />
-        <p className={`mb-3 ${LABEL} text-accent`}>{LINUX_UI.stageEyebrow(stage.number)}</p>
+        <p className={`mb-3 ${LABEL} text-accent`}>
+          <T en={LINUX_UI.stageEyebrow(stage.number)} bn={BN.stageEyebrow(stage.number)} />
+        </p>
         <div className="mb-6">
-          <LinuxProgressSummary ids={ids} label={LINUX_UI.stageProgressLabel(stage.title)} />
+          <LinuxProgressSummary ids={ids} title={stage.title} />
         </div>
         <article data-content className="mdx">
           <Content
@@ -117,7 +128,7 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
             id="checklist-heading"
             className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}
           >
-            {LINUX_UI.checklistHeading}
+            <T en={LINUX_UI.checklistHeading} bn={BN.checklistHeading} />
           </h2>
           <div className="mt-4">
             <TopicChecklist stage={stage} />

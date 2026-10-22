@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { STAGES } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
+import { LINUX_UI_BN } from "@/lib/bn/linux";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
 import { countDone } from "@/lib/prep/progress";
 import { useLinuxProgress } from "./useLinuxProgress";
 
@@ -19,8 +22,9 @@ export function LinuxSidebarList({
   onNavigate?: () => void;
 }) {
   const { done } = useLinuxProgress();
+  const navLabel = useBn(LINUX_UI.sidebarNav, LINUX_UI_BN.sidebarNav);
   return (
-    <nav aria-label={LINUX_UI.sidebarNav} className="px-3 py-4">
+    <nav aria-label={navLabel} className="px-3 py-4">
       <ol className="m-0 list-none space-y-px p-0">
         {STAGES.map((stage) => {
           const active = stage.href === activePath;
@@ -46,9 +50,13 @@ export function LinuxSidebarList({
                     (active ? "text-accent" : "text-text-faint")
                   }
                 >
-                  <span>{LINUX_UI.sidebarStageLabel(stage.number)}</span>
+                  <span>
+                    <T en={LINUX_UI.sidebarStageLabel(stage.number)} bn={LINUX_UI_BN.sidebarStageLabel(stage.number)} />
+                  </span>
                   <span aria-hidden="true">{LINUX_UI.sidebarCount(count, total)}</span>
-                  <span className="sr-only">{LINUX_UI.sidebarCountSr(count, total)}</span>
+                  <span className="sr-only">
+                    <T en={LINUX_UI.sidebarCountSr(count, total)} bn={LINUX_UI_BN.sidebarCountSr(count, total)} />
+                  </span>
                 </span>
                 <span
                   className={

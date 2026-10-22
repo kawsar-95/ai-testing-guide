@@ -2,6 +2,8 @@
 
 import type { FlatModuleId } from "@/lib/modules/registry";
 import { flatModule, progressHook } from "./useModuleProgress";
+import { T } from "@/components/i18n/T";
+import { FLAT_UI_BN } from "@/lib/bn/flat";
 
 /** The "Mark this topic as done" toggle at the end of a topic page. */
 export function MarkDoneButton({ moduleId, id }: { moduleId: FlatModuleId; id: string }) {
@@ -21,7 +23,11 @@ export function MarkDoneButton({ moduleId, id }: { moduleId: FlatModuleId; id: s
       }
     >
       <span aria-hidden="true">{isDone ? "✓" : "○"}</span>
-      {isDone ? m.ui.markedDone : m.ui.markDone}
+      {isDone ? (
+        <T en={m.ui.markedDone ?? ""} bn={FLAT_UI_BN[moduleId].markedDone ?? ""} />
+      ) : (
+        <T en={m.ui.markDone ?? ""} bn={FLAT_UI_BN[moduleId].markDone ?? ""} />
+      )}
     </button>
   );
 }

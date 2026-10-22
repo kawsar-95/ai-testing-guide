@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { T } from "@/components/i18n/T";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { useBookmarks, useLastPage, usePageRead } from "@/components/reading/useReadingState";
 import { bookmark, bookmarked, markRead, markedRead, readingTime } from "@/lib/ui";
 
@@ -36,22 +38,26 @@ export function ChapterTools({
       <span className={PILL}>
         <span aria-hidden="true">📖</span>
         {typeof minutes === "number" ? (
-          readingTime(minutes)
+          <T en={readingTime(minutes)} bn={SHELL_BN.readingTime(minutes)} />
         ) : (
           <>
-            <span data-version="notes">{readingTime(minutes.notes)}</span>
-            <span data-version="istqb">{readingTime(minutes.istqb)}</span>
+            <span data-version="notes">
+              <T en={readingTime(minutes.notes)} bn={SHELL_BN.readingTime(minutes.notes)} />
+            </span>
+            <span data-version="istqb">
+              <T en={readingTime(minutes.istqb)} bn={SHELL_BN.readingTime(minutes.istqb)} />
+            </span>
           </>
         )}
       </span>
       <span className="grow" />
       <button type="button" aria-pressed={isMarked} onClick={() => marks.toggle(route)} className={TOGGLE}>
         <span aria-hidden="true">🔖</span>
-        {isMarked ? bookmarked : bookmark}
+        {isMarked ? <T en={bookmarked} bn={SHELL_BN.bookmarked} /> : <T en={bookmark} bn={SHELL_BN.bookmark} />}
       </button>
       <button type="button" aria-pressed={isRead} onClick={() => read.toggle(route)} className={TOGGLE}>
         <span aria-hidden="true">✓</span>
-        {isRead ? markedRead : markRead}
+        {isRead ? <T en={markedRead} bn={SHELL_BN.markedRead} /> : <T en={markRead} bn={SHELL_BN.markRead} />}
       </button>
     </div>
   );

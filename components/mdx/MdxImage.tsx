@@ -1,4 +1,6 @@
 import type { ImgHTMLAttributes } from "react";
+import { T } from "@/components/i18n/T";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { withBasePath } from "@/lib/base-path";
 import { BASE_PATH } from "@/lib/site";
 import { openImageFullSize } from "@/lib/ui";
@@ -27,7 +29,7 @@ export function MdxImage({ src, alt = "", width, height }: MdxImageProps) {
       />
       <span className="mt-2 block text-sm">
         <a href={url} target="_blank" rel="noopener noreferrer">
-          {openImageFullSize}
+          <T en={openImageFullSize} bn={SHELL_BN.openImageFullSize} />
         </a>
       </span>
     </span>

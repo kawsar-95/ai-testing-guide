@@ -5,6 +5,9 @@ import { useId } from "react";
 import type { FlatItem, FlatModule } from "@/lib/modules/flat";
 import type { FlatModuleId } from "@/lib/modules/registry";
 import { LinkDoneToggle } from "./LinkDoneToggle";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
+import { FLAT_UI_BN } from "@/lib/bn/flat";
 import { doneHook } from "./useModuleProgress";
 
 /**
@@ -25,8 +28,10 @@ export function FlatSidebarList({
   const uid = useId(); // two lists render on a course page, so a module id alone would repeat
   const { done } = doneHook(m)();
   const ui = m.ui;
+  const bn = FLAT_UI_BN[m.id];
+  const navLabel = useBn(ui.sidebarNav, bn.sidebarNav);
   return (
-    <nav aria-label={ui.sidebarNav} className="px-3 py-4">
+    <nav aria-label={navLabel} className="px-3 py-4">
       {m.groups().map(({ part, items }) => {
         const list = (
           <ol
@@ -41,7 +46,7 @@ export function FlatSidebarList({
         return (
           <div key={part.num} className="mt-4 first:mt-0">
             <p id={`${uid}-part-${part.num}`} className="px-3 pb-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-text-dim">
-              PART {part.num} · {part.title}
+              <T en={`PART ${part.num}`} bn={`পার্ট ${part.num}`} /> · {part.title}
             </p>
             {list}
           </div>
@@ -53,7 +58,12 @@ export function FlatSidebarList({
   function row(item: FlatItem) {
     const active = item.href === activePath;
     const isDone = item.kind === "topic" && done.includes(item.slug);
-    const label = item.kind === "practice" ? ui.sidebarPracticeLabel : ui.sidebarItemLabel(item.number);
+    const label =
+      item.kind === "practice" ? (
+        <T en={ui.sidebarPracticeLabel ?? ""} bn={bn.sidebarPracticeLabel ?? ""} />
+      ) : (
+        <T en={ui.sidebarItemLabel(item.number)} bn={bn.sidebarItemLabel(item.number)} />
+      );
     const tone = active ? "text-accent" : "text-text-faint";
     const toggle = m.progress && item.kind === "link";
     return (
@@ -80,7 +90,9 @@ export function FlatSidebarList({
                   <span aria-hidden="true" className="text-accent">
                     ✓
                   </span>
-                  <span className="sr-only">{ui.sidebarDone}</span>
+                  <span className="sr-only">
+                    <T en={ui.sidebarDone ?? ""} bn={bn.sidebarDone ?? ""} />
+                  </span>
                 </>
               ) : null}
             </span>

@@ -3,6 +3,8 @@
 import { useLayoutEffect } from "react";
 import { setVoiceDefault, useVoiceDefault } from "@/components/voice/useVoiceDefault";
 import { VOICE_DEFAULT_ATTR, VOICE_STORAGE_KEY, VOICE_TOGGLE_TEXT, resolveVoiceDefault } from "@/lib/voice";
+import { useBn } from "@/components/i18n/useBn";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { voiceToBangla, voiceToTechnical } from "@/lib/ui";
 
 function readStored(): string | null {
@@ -34,7 +36,10 @@ export function VoiceToggle() {
     document.documentElement.setAttribute(VOICE_DEFAULT_ATTR, resolveVoiceDefault(readStored()));
   }, []);
 
-  const label = def === "bangla" ? voiceToTechnical : voiceToBangla;
+  const label = useBn(
+    def === "bangla" ? voiceToTechnical : voiceToBangla,
+    def === "bangla" ? SHELL_BN.voiceToTechnical : SHELL_BN.voiceToBangla,
+  );
 
   return (
     <button

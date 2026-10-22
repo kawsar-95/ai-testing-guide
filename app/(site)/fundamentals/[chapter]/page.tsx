@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { CHAPTERS, FUNDAMENTALS_HOME, getChapter } from "@/lib/fundamentals/chapters";
 import type { FundamentalsChapter } from "@/lib/fundamentals/chapters";
 import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
+import { FUNDAMENTALS_UI_BN as BN } from "@/lib/bn/fundamentals";
+import { T } from "@/components/i18n/T";
 import { getOutline } from "@/lib/outline";
 import { getReadingMinutesByVersion } from "@/lib/reading-time";
 import { editUrl } from "@/lib/page";
@@ -48,24 +50,31 @@ function ChapterNav({ chapter }: { chapter: FundamentalsChapter }) {
   const next = CHAPTERS[chapter.number];
   return (
     <nav
-      aria-label={FUNDAMENTALS_UI.chapterNav}
+      aria-labelledby="chapter-nav-label"
       className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-6 text-[15px]"
     >
+      <span id="chapter-nav-label" className="sr-only">
+        <T en={FUNDAMENTALS_UI.chapterNav} bn={BN.chapterNav} />
+      </span>
       {previous ? (
         <Link href={previous.href} className={NAV_LINK}>
           <span aria-hidden="true">← </span>
-          <span className="sr-only">{FUNDAMENTALS_UI.previousChapter}: </span>
+          <span className="sr-only">
+            <T en={FUNDAMENTALS_UI.previousChapter} bn={BN.previousChapter} />:{" "}
+          </span>
           {previous.title}
         </Link>
       ) : (
         <span />
       )}
       <Link href={FUNDAMENTALS_HOME} className={NAV_LINK}>
-        {FUNDAMENTALS_UI.allChapters}
+        <T en={FUNDAMENTALS_UI.allChapters} bn={BN.allChapters} />
       </Link>
       {next ? (
         <Link href={next.href} className={NAV_LINK}>
-          <span className="sr-only">{FUNDAMENTALS_UI.nextChapter}: </span>
+          <span className="sr-only">
+            <T en={FUNDAMENTALS_UI.nextChapter} bn={BN.nextChapter} />:{" "}
+          </span>
           {next.title}
           <span aria-hidden="true"> →</span>
         </Link>
@@ -90,9 +99,11 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
       <ReadingProgress />
       <ChapterLayout outline={outline} route={chapter.href}>
         <ContentsButton />
-        <p className={`mb-3 ${LABEL} text-accent`}>{FUNDAMENTALS_UI.chapterEyebrow(chapter.number)}</p>
+        <p className={`mb-3 ${LABEL} text-accent`}>
+          <T en={FUNDAMENTALS_UI.chapterEyebrow(chapter.number)} bn={BN.chapterEyebrow(chapter.number)} />
+        </p>
         <div className="mb-6">
-          <FundamentalsProgressSummary ids={ids} label={FUNDAMENTALS_UI.chapterProgressLabel(chapter.title)} />
+          <FundamentalsProgressSummary ids={ids} title={chapter.title} />
         </div>
         {chapter.hasVersions ? (
           <div className="mb-6">
@@ -123,7 +134,7 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
             id="checklist-heading"
             className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}
           >
-            {FUNDAMENTALS_UI.checklistHeading}
+            <T en={FUNDAMENTALS_UI.checklistHeading} bn={BN.checklistHeading} />
           </h2>
           <div className="mt-4">
             <TopicChecklist chapter={chapter} />

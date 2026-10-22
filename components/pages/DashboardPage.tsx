@@ -1,6 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
+import { DASHBOARD_UI_BN } from "@/lib/bn/dashboard";
 import { FundamentalsProgressSummary } from "@/components/fundamentals/FundamentalsProgressSummary";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
 import { useFundamentalsProgress } from "@/components/fundamentals/useFundamentalsProgress";
@@ -47,7 +51,7 @@ function downloadExport() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function SectionTitle({ id, children }: { id: string; children: string }) {
+function SectionTitle({ id, children }: { id: string; children: ReactNode }) {
   return (
     <h2 id={id} className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}>
       {children}
@@ -70,9 +74,12 @@ export function DashboardPage() {
   const next = continueTarget(lastPage.last);
   const hasLast = contentPage(lastPage.last ?? "") !== undefined;
   const rows = readByModule(read.done);
+  const siteTitle = useBn(DASHBOARD_UI.siteTitle, DASHBOARD_UI_BN.siteTitle);
+  const authorPhotoAlt = useBn(DASHBOARD_UI.authorPhotoAlt, DASHBOARD_UI_BN.authorPhotoAlt);
+  const resetConfirm = useBn(DASHBOARD_UI.resetConfirm, DASHBOARD_UI_BN.resetConfirm);
 
   function reset() {
-    if (!window.confirm(DASHBOARD_UI.resetConfirm)) return;
+    if (!window.confirm(resetConfirm)) return;
     for (const store of [read, marks, linux, fundamentals, ...flatStores]) store.clear();
     lastPage.clear();
   }
@@ -81,37 +88,37 @@ export function DashboardPage() {
     <div className="mx-auto max-w-[1200px] px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
       <header className="flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-2xl">
-          <p className={`${LABEL} text-accent`}>{DASHBOARD_UI.eyebrow}</p>
+          <p className={`${LABEL} text-accent`}><T en={DASHBOARD_UI.eyebrow} bn={DASHBOARD_UI_BN.eyebrow} /></p>
           <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-text">
-            {DASHBOARD_UI.heading}
+            <T en={DASHBOARD_UI.heading} bn={DASHBOARD_UI_BN.heading} />
           </h1>
-          <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim">{DASHBOARD_UI.lede}</p>
+          <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim"><T en={DASHBOARD_UI.lede} bn={DASHBOARD_UI_BN.lede} /></p>
         </div>
         <div className="flex gap-3">
           <button type="button" onClick={downloadExport} className="btn btn-outline btn-sm">
             <span aria-hidden="true">📥</span>
-            {DASHBOARD_UI.export}
+            <T en={DASHBOARD_UI.export} bn={DASHBOARD_UI_BN.export} />
           </button>
           <button type="button" onClick={reset} className="btn btn-ghost btn-sm">
             <span aria-hidden="true">🗑️</span>
-            {DASHBOARD_UI.reset}
+            <T en={DASHBOARD_UI.reset} bn={DASHBOARD_UI_BN.reset} />
           </button>
         </div>
       </header>
 
-      <section aria-label={DASHBOARD_UI.siteTitle} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,0.6fr))_repeat(4,minmax(0,1fr))]">
+      <section aria-label={siteTitle} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,0.6fr))_repeat(4,minmax(0,1fr))]">
         <div className={`${CARD} self-end`}>
           <p data-stat="read" className="font-display text-[34px] font-bold leading-none text-text tabular-nums">
             {readPages.length}
             <span className="text-xl text-text-faint"> / {CONTENT_PAGES.length}</span>
           </p>
-          <p className="mt-2 text-[14px] text-text-dim">{DASHBOARD_UI.statRead}</p>
+          <p className="mt-2 text-[14px] text-text-dim"><T en={DASHBOARD_UI.statRead} bn={DASHBOARD_UI_BN.statRead} /></p>
         </div>
         <div className={`${CARD} self-end`}>
           <p data-stat="bookmarks" className="font-display text-[34px] font-bold leading-none text-text tabular-nums">
             {bookmarks.length}
           </p>
-          <p className="mt-2 text-[14px] text-text-dim">{DASHBOARD_UI.statBookmarks}</p>
+          <p className="mt-2 text-[14px] text-text-dim"><T en={DASHBOARD_UI.statBookmarks} bn={DASHBOARD_UI_BN.statBookmarks} /></p>
         </div>
         <div>
           <p className={`${LABEL} mb-2 text-text-faint`}>{DASHBOARD_UI.moduleLabels.linux}</p>
@@ -130,7 +137,7 @@ export function DashboardPage() {
       </section>
 
       <section aria-labelledby="continue-heading" className="mt-12">
-        <SectionTitle id="continue-heading">{hasLast ? DASHBOARD_UI.continueHeading : DASHBOARD_UI.startHeading}</SectionTitle>
+        <SectionTitle id="continue-heading">{hasLast ? <T en={DASHBOARD_UI.continueHeading} bn={DASHBOARD_UI_BN.continueHeading} /> : <T en={DASHBOARD_UI.startHeading} bn={DASHBOARD_UI_BN.startHeading} />}</SectionTitle>
         <Link
           href={next.href}
           data-continue
@@ -148,9 +155,9 @@ export function DashboardPage() {
 
       <div className="mt-12 grid gap-10 md:grid-cols-2">
         <section aria-labelledby="bookmarks-heading">
-          <SectionTitle id="bookmarks-heading">{DASHBOARD_UI.bookmarksHeading}</SectionTitle>
+          <SectionTitle id="bookmarks-heading"><T en={DASHBOARD_UI.bookmarksHeading} bn={DASHBOARD_UI_BN.bookmarksHeading} /></SectionTitle>
           {bookmarks.length === 0 ? (
-            <p className="mt-4 text-[15px] text-text-dim">{DASHBOARD_UI.bookmarksEmpty}</p>
+            <p className="mt-4 text-[15px] text-text-dim"><T en={DASHBOARD_UI.bookmarksEmpty} bn={DASHBOARD_UI_BN.bookmarksEmpty} /></p>
           ) : (
             <ul className="m-0 mt-2 list-none p-0">
               {bookmarks.map((page) => (
@@ -166,8 +173,8 @@ export function DashboardPage() {
         </section>
 
         <section aria-labelledby="read-heading">
-          <SectionTitle id="read-heading">{DASHBOARD_UI.readHeading}</SectionTitle>
-          {readPages.length === 0 ? <p className="mt-4 text-[15px] text-text-dim">{DASHBOARD_UI.readEmpty}</p> : null}
+          <SectionTitle id="read-heading"><T en={DASHBOARD_UI.readHeading} bn={DASHBOARD_UI_BN.readHeading} /></SectionTitle>
+          {readPages.length === 0 ? <p className="mt-4 text-[15px] text-text-dim"><T en={DASHBOARD_UI.readEmpty} bn={DASHBOARD_UI_BN.readEmpty} /></p> : null}
           {rows.map((row) => {
             const pages = readPages.filter((page) => page.module === row.module);
             return (
@@ -196,12 +203,12 @@ export function DashboardPage() {
       </div>
 
       <section aria-labelledby="author-heading" className="mt-16">
-        <SectionTitle id="author-heading">{DASHBOARD_UI.authorHeading}</SectionTitle>
+        <SectionTitle id="author-heading"><T en={DASHBOARD_UI.authorHeading} bn={DASHBOARD_UI_BN.authorHeading} /></SectionTitle>
         <div className={`${CARD} mt-5 flex flex-col gap-6 sm:flex-row sm:items-start`}>
           {/* eslint-disable-next-line @next/next/no-img-element -- static export: a plain img with the base path added */}
           <img
             src={withBasePath(AUTHOR.photo)}
-            alt={DASHBOARD_UI.authorPhotoAlt}
+            alt={authorPhotoAlt}
             width={112}
             height={112}
             className="size-28 shrink-0 rounded-full border border-border object-cover"

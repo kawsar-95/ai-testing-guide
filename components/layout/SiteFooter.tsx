@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { T } from "@/components/i18n/T";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { CONTENTS_HOME } from "@/lib/contents";
 import { GROUPS } from "@/lib/nav";
 import { REPO_URL } from "@/lib/page";
@@ -13,9 +15,9 @@ const HEADING = "font-mono text-[11px] font-medium uppercase tracking-[0.2em] te
 /** The site footer: the brand, three link columns, and the copyright line. */
 export function SiteFooter() {
   const columns = [
-    { title: footerColumns.tutorial, links: GROUPS.map((group) => ({ href: group.pages[0].href, label: group.title })) },
-    { title: footerColumns.modules, links: MODULES.map((module) => ({ href: module.href, label: module.title })) },
-    { title: footerColumns.project, links: [{ href: CONTENTS_HOME, label: footerContents }] },
+    { key: "tutorial", title: footerColumns.tutorial, bn: SHELL_BN.footerColumns.tutorial, links: GROUPS.map((group) => ({ href: group.pages[0].href, label: group.title })) },
+    { key: "modules", title: footerColumns.modules, bn: SHELL_BN.footerColumns.modules, links: MODULES.map((module) => ({ href: module.href, label: module.title })) },
+    { key: "project", title: footerColumns.project, bn: SHELL_BN.footerColumns.project, links: [{ href: CONTENTS_HOME, label: footerContents, bn: SHELL_BN.footerContents }] },
   ];
   return (
     <footer className="mt-16 border-t border-border bg-bg-raised-2">
@@ -27,23 +29,26 @@ export function SiteFooter() {
             </span>
             <span className="font-display text-lg font-bold tracking-tight">{SITE_NAME}</span>
           </Link>
-          <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-text-dim">{footerSummary}</p>
+          <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-text-dim"><T en={footerSummary} bn={SHELL_BN.footerSummary} />
+          </p>
         </div>
         {columns.map((column) => (
-          <nav key={column.title} aria-label={column.title}>
-            <h2 className={HEADING}>{column.title}</h2>
+          <nav key={column.key} aria-labelledby={`footer-${column.key}`}>
+            <h2 id={`footer-${column.key}`} className={HEADING}>
+              <T en={column.title} bn={column.bn} />
+            </h2>
             <ul className="m-0 mt-4 grid list-none gap-2.5 p-0">
               {column.links.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={LINK}>
-                    {link.label}
+                    {"bn" in link ? <T en={link.label} bn={link.bn} /> : link.label}
                   </Link>
                 </li>
               ))}
-              {column.title === footerColumns.project ? (
+              {column.key === "project" ? (
                 <li>
                   <a href={REPO_URL} className={LINK}>
-                    {footerSource}
+                    <T en={footerSource} bn={SHELL_BN.footerSource} />
                   </a>
                 </li>
               ) : null}

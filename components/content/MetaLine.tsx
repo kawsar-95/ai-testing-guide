@@ -1,3 +1,5 @@
+import { T } from "@/components/i18n/T";
+import { SHELL_BN } from "@/lib/bn/shell";
 import { formatUpdated } from "@/lib/page";
 import { metaSections, metaSources, metaUpdated, suggestEdit } from "@/lib/ui";
 
@@ -18,12 +20,14 @@ export function MetaLine({
       data-page-meta
       className="mt-0 border-t border-border pt-4 font-mono text-xs leading-relaxed text-text-faint"
     >
-      {metaSections(sections)} · {metaSources(sources)} · {metaUpdated(formatUpdated(updated))} ·{" "}
+      <T en={metaSections(sections)} bn={SHELL_BN.metaSections(sections)} /> ·{" "}
+      <T en={metaSources(sources)} bn={SHELL_BN.metaSources(sources)} /> ·{" "}
+      <T en={metaUpdated(formatUpdated(updated))} bn={SHELL_BN.metaUpdated(formatUpdated(updated))} /> ·{" "}
       <a
         href={editHref}
         className="text-text-dim underline decoration-border-strong underline-offset-4 hover:text-accent"
       >
-        {suggestEdit}
+        <T en={suggestEdit} bn={SHELL_BN.suggestEdit} />
       </a>
     </div>
   );

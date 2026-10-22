@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { CHAPTERS } from "@/lib/fundamentals/chapters";
 import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
+import { FUNDAMENTALS_UI_BN } from "@/lib/bn/fundamentals";
+import { T } from "@/components/i18n/T";
+import { useBn } from "@/components/i18n/useBn";
 import { countDone } from "@/lib/prep/progress";
 import { useFundamentalsProgress } from "./useFundamentalsProgress";
 
@@ -19,8 +22,9 @@ export function FundamentalsSidebarList({
   onNavigate?: () => void;
 }) {
   const { done } = useFundamentalsProgress();
+  const navLabel = useBn(FUNDAMENTALS_UI.sidebarNav, FUNDAMENTALS_UI_BN.sidebarNav);
   return (
-    <nav aria-label={FUNDAMENTALS_UI.sidebarNav} className="px-3 py-4">
+    <nav aria-label={navLabel} className="px-3 py-4">
       <ol className="m-0 list-none space-y-px p-0">
         {CHAPTERS.map((chapter) => {
           const active = chapter.href === activePath;
@@ -46,9 +50,19 @@ export function FundamentalsSidebarList({
                     (active ? "text-accent" : "text-text-faint")
                   }
                 >
-                  <span>{FUNDAMENTALS_UI.sidebarChapterLabel(chapter.number)}</span>
+                  <span>
+                    <T
+                      en={FUNDAMENTALS_UI.sidebarChapterLabel(chapter.number)}
+                      bn={FUNDAMENTALS_UI_BN.sidebarChapterLabel(chapter.number)}
+                    />
+                  </span>
                   <span aria-hidden="true">{FUNDAMENTALS_UI.sidebarCount(count, total)}</span>
-                  <span className="sr-only">{FUNDAMENTALS_UI.sidebarCountSr(count, total)}</span>
+                  <span className="sr-only">
+                    <T
+                      en={FUNDAMENTALS_UI.sidebarCountSr(count, total)}
+                      bn={FUNDAMENTALS_UI_BN.sidebarCountSr(count, total)}
+                    />
+                  </span>
                 </span>
                 <span
                   className={

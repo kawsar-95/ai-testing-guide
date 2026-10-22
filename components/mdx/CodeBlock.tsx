@@ -3,6 +3,8 @@
 import { Children, isValidElement, useRef } from "react";
 import type { ComponentProps } from "react";
 import { CopyButton } from "@/components/content/CopyButton";
+import { SHELL_BN } from "@/lib/bn/shell";
+import { copyCode } from "@/lib/ui";
 
 // Code blocks stay dark in both themes, so the button colors are fixed.
 const BUTTON_CLASS =
@@ -35,7 +37,8 @@ export function CodeBlock({ children, className, style, tabIndex }: ComponentPro
         <span className="code-copy">
           <CopyButton
             getText={() => pre.current?.textContent ?? ""}
-            label="Copy code"
+            label={copyCode}
+            labelBn={SHELL_BN.copyCode}
             fallbackTarget={() => pre.current}
             className={BUTTON_CLASS}
           />
