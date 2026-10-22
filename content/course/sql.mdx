@@ -1,0 +1,123 @@
+export const metadata = { title: 'SQL Databases', description: 'How a SQL database stores data in tables, how keys and constraints protect it, and the four basic statements a tester uses.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: '2.2. Concepts', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/tutorial-concepts.html', accessed: '2026-10-22' },
+    { title: '5.1. Table Basics', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/ddl-basics.html', accessed: '2026-10-22' },
+    { title: '5.5. Constraints', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/ddl-constraints.html', accessed: '2026-10-22' },
+    { title: '2.5. Querying a Table', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/tutorial-select.html', accessed: '2026-10-22' },
+    { title: 'INSERT', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-insert.html', accessed: '2026-10-22' },
+    { title: 'UPDATE', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-update.html', accessed: '2026-10-22' },
+    { title: 'DELETE', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-delete.html', accessed: '2026-10-22' },
+  ],
+}
+
+# SQL Databases
+
+Think of a school register. Each student has one line, and every line has the same columns: name, class, email. A SQL database is a very strict register, and it refuses a line that breaks its rules.
+
+<PageMeta />
+
+## In plain words
+
+A SQL database is a **relational** database: it stores data in relations, and "relation" is the math word for **table** <Cite n={1} />. A table is a named collection of **rows**. Every row has the same named **columns**, and each column has a data type <Cite n={1} />. The set of columns is fixed, but the number of rows grows and shrinks with the data <Cite n={2} />.
+
+The data type limits what a column accepts. A number column refuses arbitrary text <Cite n={2} />. To make a table, you give `CREATE TABLE` a name, the column names, and a type for each column. `DROP TABLE` removes it <Cite n={2} />.
+
+Two facts surprise new testers:
+
+- SQL does not promise any row order. Rows come back in an unspecified order unless you ask for sorting <Cite n={2} />.
+- SQL does not give rows an identity by itself, so two rows can be fully identical <Cite n={2} />. Keys fix this.
+
+## Keys and constraints
+
+A data type is often too coarse a rule. A **constraint** is a stronger rule. If a value would break a constraint, the database raises an error, even when the value comes from a default <Cite n={3} />.
+
+| Constraint | What it does |
+|---|---|
+| `NOT NULL` | The column must not hold the null value <Cite n={3} /> |
+| `UNIQUE` | The values of a column, or of a group of columns, are unique among all rows <Cite n={3} /> |
+| `PRIMARY KEY` | The unique identifier of a row: values are unique and not null <Cite n={3} /> |
+| `FOREIGN KEY` | The values must match a row in another table <Cite n={3} /> |
+| `CHECK` | A true-or-false expression that the value must satisfy <Cite n={3} /> |
+
+A table has at most one primary key. PostgreSQL does not force you to declare one, but the manual says it is usually best <Cite n={3} />. A primary key can use more than one column <Cite n={3} />.
+
+A **foreign key** keeps the link between two tables correct. This is called referential integrity <Cite n={3} />. With a foreign key, an order cannot name a product that is missing from the products table, unless the column is null <Cite n={3} />. The table with the foreign key is the referencing table, and the other one is the referenced table <Cite n={3} />.
+
+You choose what happens when someone deletes a referenced row. The default, `NO ACTION`, usually gives an error. `RESTRICT` blocks the delete. `CASCADE` also deletes the rows that point to it. `SET NULL` and `SET DEFAULT` change the pointing column instead <Cite n={3} />.
+
+## The four basic statements
+
+```sql
+CREATE TABLE students (
+    student_id integer PRIMARY KEY,
+    email      text NOT NULL UNIQUE,
+    name       text NOT NULL
+);
+
+CREATE TABLE enrollments (
+    enrollment_id integer PRIMARY KEY,
+    student_id    integer NOT NULL REFERENCES students,
+    course        text NOT NULL,
+    score         integer CHECK (score BETWEEN 0 AND 100)
+);
+
+INSERT INTO students (student_id, email, name)
+VALUES (1, 'ada@example.com', 'Ada');
+
+SELECT name, email FROM students WHERE student_id = 1;
+
+UPDATE students SET name = 'Ada L.' WHERE student_id = 1;
+
+DELETE FROM enrollments WHERE enrollment_id = 7;
+```
+
+The tables above are the tutorial's own example.
+
+- **SELECT** reads data. It has a select list, a table list, and an optional `WHERE` <Cite n={4} />. `*` means all columns <Cite n={4} />. `WHERE` keeps only the rows where its expression is true, and you can combine tests with `AND`, `OR`, and `NOT` <Cite n={4} />. `ORDER BY` sorts the result. If the sort is not fully given, rows with equal values can come in either order <Cite n={4} />.
+- **INSERT** adds rows. A column that you leave out gets its default value, or null if it has none <Cite n={5} />. You can list the columns in any order, and the values match them left to right <Cite n={5} />.
+- **UPDATE** changes the listed columns in every row that meets the condition. The other columns keep their values <Cite n={6} />. Only rows for which the condition is true change <Cite n={6} />.
+- **DELETE** removes the rows that meet the condition <Cite n={7} />. Without a `WHERE`, it removes all rows and leaves an empty table <Cite n={7} />.
+
+## When you need it
+
+Most apps keep their important records in a SQL database: users, orders, payments, bookings. A tester uses SQL to prepare test data and to check that an action in the app wrote the right rows.
+
+## A real-life example
+
+A learning platform uses the two tables above. Ada enrolls in a course and gets score 85.
+
+The tester tries three bad actions. A second student with `ada@example.com` fails, because of `UNIQUE`. A score of 120 fails, because of `CHECK`. An enrollment for `student_id` 99, who does not exist, fails, because of the foreign key. Each time the database raises an error, and the app must show a clear message.
+
+A score of `NULL` is a different case. A `CHECK` passes when the expression is true or null, so the check alone does not stop nulls <Cite n={3} />. The tester must know which columns carry `NOT NULL`.
+
+## Common mistakes
+
+- **Trusting row order.** Without `ORDER BY` the order is not defined <Cite n={2} />.
+- **Thinking `CHECK` blocks nulls.** It does not. Use `NOT NULL` for that <Cite n={3} />.
+- **Expecting `UNIQUE` to stop two nulls.** By default two nulls are not equal, so rows with a null can repeat. The standard leaves this default to each database, so other systems can differ <Cite n={3} />.
+- **Forgetting `WHERE` on a `DELETE`.** All rows go <Cite n={7} />. For clearing a whole table, `TRUNCATE` is the faster way <Cite n={7} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Break each rule once.** For each `NOT NULL`, `UNIQUE`, `CHECK`, and foreign key, send data that breaks it. Check the error in the app and that no row was written.
+- **Check the row, not only the screen.** After a form submit, run a `SELECT` for that row and compare each column.
+- **Test the delete rules.** Delete a parent record that has children. Check that the app does what the foreign key says: block, cascade, or set null.
+- **Write `WHERE` first.** In a test script, write the `WHERE` of an `UPDATE` or `DELETE` before the rest, and run it as a `SELECT` first.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Table | A named collection of rows <Cite n={1} /> |
+| Row | One record of a table, with the same columns as the other rows <Cite n={1} /> |
+| Column | A named field with a data type <Cite n={1} /> |
+| Primary key | The unique, not-null identifier of the rows of a table <Cite n={3} /> |
+| Foreign key | A column whose values must match a row of another table <Cite n={3} /> |
+| Constraint | A rule on the data. A value that breaks it raises an error <Cite n={3} /> |
+| Referential integrity | The link between two tables stays correct <Cite n={3} /> |
