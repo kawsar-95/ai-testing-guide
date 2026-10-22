@@ -15,8 +15,8 @@ export type SearchDoc = {
   /**
    * The part number of a tutorial page. `null` for a Linux stage page (group
    * "linux"), a Fundamentals chapter (group "fundamentals"), a System Design
-   * case (group "system design"), and an Architecture topic (group
-   * "architecture").
+   * case (group "system design"), an Architecture topic (group
+   * "architecture"), and a Course topic (group "course").
    */
   part: number | null;
   group: string;
