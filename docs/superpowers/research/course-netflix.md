@@ -53,3 +53,11 @@ Page cite numbers: n=k is Sk. S4 and S5 are the neutral sources for the general 
 | C27 | Spinnaker is the continuous delivery platform that Netflix uses. | S7 | "Spinnaker, the continuous delivery platform that we use at Netflix" |
 | C28 | A Variant Stream is a different version of the same content, with media at a particular bit rate, format, and resolution. | S4 §2 | "a set of Variant Streams, each of which describes a different version of the same content." / "specifies media encoded at a particular bit rate, in a particular format, and at a particular resolution" |
 | C26 | Chaos Monkey schedules a termination on weekdays, at a random time between 9AM and 3PM. | S8 | "Every weekday, for each instance group, Chaos Monkey flips a weighted coin" / "schedules a termination at a random time between 9AM and 3PM that day" |
+
+## Changes after the fact-check
+
+- C5 quote includes "temporarily store": the page now says an OCA keeps files "for a time".
+- C12: the playback application services pick the files, not the control plane. The page now says so.
+- C26 (S8): the page now says that Chaos Monkey flips a weighted coin each weekday, and a termination runs from 9AM to 3PM. It no longer says "only".
+- The adaptive bitrate paragraph now says that the Netflix document does not name the stream format.
+- "Resilience tools" is now a `###` heading under "How it works".
