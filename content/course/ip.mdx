@@ -1,0 +1,91 @@
+export const metadata = { title: 'IP Addresses', description: 'What an IP address is, how IPv4 and IPv6 differ, which ranges are private, and what a tester can check.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'RFC 791: Internet Protocol', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc791', accessed: '2026-10-22' },
+    { title: 'RFC 8200: Internet Protocol, Version 6 (IPv6) Specification', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc8200', accessed: '2026-10-22' },
+    { title: 'RFC 1918: Address Allocation for Private Internets', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc1918', accessed: '2026-10-22' },
+    { title: 'RFC 4291: IP Version 6 Addressing Architecture', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc4291', accessed: '2026-10-22' },
+  ],
+}
+
+# IP Addresses
+
+Every letter needs an address on the envelope, or the post office cannot deliver it. On a network, the IP address is that address. Each message is split into small packets, and each packet carries the address of the sender and the address of the receiver.
+
+<PageMeta />
+
+## In plain words
+
+An **IP address** is a number that names a device on a network, so that other devices can send packets to it. The Internet Protocol puts a source address and a destination address in the header of each packet <Cite n={1} />.
+
+There are two versions in use:
+
+- **IPv4** uses 32 bits (four octets) for an address <Cite n={1} />. In this tutorial's own words, people usually write the four octets as decimal numbers with dots, for example `192.168.1.10`. RFC 1918 writes its ranges in this form <Cite n={3} />.
+- **IPv6** uses 128 bits <Cite n={2} />. People write it as eight groups of one to four hexadecimal digits with colons, for example `2001:db8:0:0:8:800:200c:417a` <Cite n={4} />.
+
+An IPv6 address is long, so the notation has two short forms. You can drop the leading zeros in a group <Cite n={4} />. You can also write `::` for one or more groups of zeros, but only once in an address <Cite n={4} />. So `2001:db8:0:0:8:800:200c:417a` can become `2001:db8::8:800:200c:417a`.
+
+One device can have more than one address. A host can use several addresses, and it can have several network interfaces <Cite n={1} />.
+
+## When you need it
+
+You meet IP addresses every time one machine must find another one: a browser that calls a web server, a test runner that calls an API, or a service that calls a database. People usually type a name, and the system turns the name into an address before it sends the first packet.
+
+## How it works
+
+An address has two jobs. It says who the device is on the network, and it gives routers a way to decide where to send the packet next.
+
+Each router that forwards a packet lowers a counter in the header. In IPv4 this field is the Time to Live (TTL). A packet is destroyed when the TTL reaches zero <Cite n={1} />. In IPv6 the same field is the Hop Limit. Each forwarding node lowers it by one, and the packet is discarded when it reaches zero <Cite n={2} />. IPv6 renamed the field, because it does not need to count time <Cite n={2} />. The counter stops a lost packet from travelling forever.
+
+```text
+Test runner                                       Web server
+10.0.1.15  --> router --> router --> router -->   203.0.113.20
+              TTL 63     TTL 62     TTL 61
+```
+
+The numbers in the diagram are examples. The sender sets the TTL <Cite n={1} />.
+
+IPv6 has three kinds of address. A **unicast** address names one interface <Cite n={4} />. A **multicast** address names a group of interfaces <Cite n={4} />. An **anycast** address names a group too, but a packet goes to only one of them, the nearest one <Cite n={4} />. IPv6 has no broadcast address, because multicast does that job <Cite n={4} />.
+
+## A real-life example
+
+A learning platform runs a web server and a database in a company network. The database server has the address `10.0.2.30`. The whole `10.0.0.0` to `10.255.255.255` range is reserved for private networks, and so are `172.16.0.0` to `172.31.255.255` and `192.168.0.0` to `192.168.255.255` <Cite n={3} />. An organization can use these ranges without asking anybody <Cite n={3} />. The same private address can exist in many different companies, because it must be unique only inside one organization <Cite n={3} />.
+
+This suits the database, because a host that does not need access to the Internet at large can use a private address <Cite n={3} />. A host that must talk to the outside needs a globally unique address <Cite n={3} />. So the web server gets a public address, and the database keeps its private one.
+
+## Common mistakes
+
+- **Treating an address as a name.** An address can change when a server moves. Use the name in configuration, and let the system find the address.
+- **Mixing up the two versions.** A test that checks an address with a pattern for four dotted numbers fails on IPv6, which has colons and up to 128 bits <Cite n={2} />.
+- **Writing an IPv6 address in one way only.** `2001:db8::1` and `2001:db8:0:0:0:0:0:1` are the same address. Compare addresses after you convert them to one form, not as plain text <Cite n={4} />.
+- **Using `::` twice.** The short form is allowed only once in an address, so `2001::db8::1` is not valid <Cite n={4} />.
+- **Sending a private address to the outside.** A private range is unique only inside one organization, so a public service cannot use it to find your machine <Cite n={3} />.
+- **Thinking that localhost can reach other machines.** The IPv6 loopback address `::1` is for a node that talks to itself. A packet to it never leaves the node <Cite n={4} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Test an input field for an address with valid and invalid values: a short IPv4 value, a number above 255, an IPv6 value with `::` and one with two `::`.
+- Run the same test on IPv4 and on IPv6, if the system supports both.
+- Check that logs, reports, and database columns can store a long IPv6 address.
+- Never use a private address as a public link in an email or a report.
+- If a request fails, check the address first: is it the right one, and is the network path open?
+
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| IP address | A number that names a device on a network |
+| IPv4 | The version with 32-bit addresses <Cite n={1} /> |
+| IPv6 | The version with 128-bit addresses <Cite n={2} /> |
+| Private address | An address from a reserved range that is unique only inside one organization <Cite n={3} /> |
+| TTL / Hop Limit | A counter in the packet header. Each router lowers it, and the packet is dropped at zero <Cite n={1} /> <Cite n={2} /> |
+| Loopback | An address that a node uses to send a packet to itself, `::1` in IPv6 <Cite n={4} /> |
+| Link-local | An IPv6 address, from `FE80::/10`, that is valid on one link only. Routers do not forward its packets <Cite n={4} /> |
+| Unicast, anycast, multicast | IPv6 kinds of address for one interface, the nearest of a group, and a whole group <Cite n={4} /> |
