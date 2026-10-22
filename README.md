@@ -25,7 +25,7 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 129 pages in 6 sections:
+The site has 130 pages: 6 sections and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
@@ -36,7 +36,7 @@ The site has 129 pages in 6 sections:
 | [Architecture](https://kawsar-95.github.io/ai-testing-guide/architecture/) | 19 topics and 30 practice questions | The building blocks of system architecture |
 | [Course](https://kawsar-95.github.io/ai-testing-guide/course/) | 40 topics (55 entries with links) | System design from the ground up, in 6 parts |
 
-Two more pages help you find and track your work: [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) lists everything, and [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows your progress.
+Three helper pages sit beside the sections: [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) lists everything, [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows your progress, and [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) links to the interview material.
 
 ### The Claude Code tutorial
 
@@ -57,13 +57,27 @@ New to Claude Code? Start with parts 01, 03, and 04. To see the features work to
 
 ### Six sections and one place to find them
 
-The top navigation has a dropdown for each section: Tutorial, Linux, Fundamentals, System Design, Architecture, and Course. Each dropdown lists the pages of the section and a link to its home page. The current section has a teal underline. Escape closes a dropdown, and a click outside closes it too.
+The top navigation has four plain links: **Home**, **Contents**, **Dashboard**, and **Interview**. The current link has a teal underline. A tutorial page or a module page has no current link. You reach a module from the home page or the Contents page. Next to the links are the search button, the voice button, and the theme button.
+
+The home page has a hero with a stats row (tutorial parts, modules, pages, and text voices), three START HERE cards for new readers, a "Why this guide" block, and numbered course cards.
 
 The [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) page shows every group and module as a card. The cards of Linux, Fundamentals, Architecture, and Course have a progress bar.
 
 ![The Contents page with a progress bar on each module](docs/assets/contents.png)
 
-The home page has a hero with a stats row (tutorial parts, modules, pages, and text voices), three START HERE cards for new readers, a "Why this guide" block, and numbered course cards.
+Inside a section, the left list shows the pages of that section. The drawer also has a link to each of the other sections.
+
+### Interview preparation
+
+The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page has three cards. Each card links to material that is already on the site:
+
+| Card | Goes to |
+|---|---|
+| Testing interview questions | Fundamentals chapter 11: 50 manual testing questions with answers |
+| System design practice | The Architecture practice page: 30 questions, each with a model answer |
+| How to answer a design interview | The Course page about the steps of a design interview |
+
+![The Interview page with three cards](docs/assets/interview.png)
 
 ### Three voices for every section
 
@@ -109,6 +123,10 @@ The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows t
 
 ![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
 
+The Dashboard ends with an "About the author" block: a photo, the role, a short bio, and links to the portfolio, LinkedIn, GitHub, X, and the resume.
+
+![The author block at the end of the Dashboard](docs/assets/author.png)
+
 ### Search
 
 Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>K</kbd>, or click the search button, to search all pages and all sections of every module. The search runs in your browser, so it also works offline. It finds prefixes and small typing mistakes, and it ranks titles first. The Up and Down keys move through the results, Enter opens one, and Escape closes the dialog. The plain English and Bangla texts are searchable too.
@@ -144,7 +162,7 @@ The site follows the theme of your system and remembers your choice. The theme b
 
 ### Phones and small screens
 
-The layout adapts to phone widths. Below 1200 px the top navigation moves into a drawer, and the drawer has a link to each section. The drawer traps the focus, closes with Escape, and gives the focus back to the button that opened it. On phones, tables and code scroll inside their own box.
+The layout adapts to phone widths. Below 1200 px the top navigation moves into the drawer: the drawer shows the four links (Home, Contents, Dashboard, Interview) above the list of the current section. The drawer traps the focus, closes with Escape, and gives the focus back to the button that opened it. On phones, tables and code scroll inside their own box.
 
 | A content page | The drawer |
 |---|---|
@@ -152,11 +170,11 @@ The layout adapts to phone widths. Below 1200 px the top navigation moves into a
 
 ### Install it and read offline
 
-The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 129 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
+The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 130 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
 
 ### Accessibility
 
-The site has a skip link, visible focus rings, `aria-pressed` on every toggle, and labels that start with the visible word of the button. Motion is off if your system asks for reduced motion. The switchers, the drawer, the dropdowns, and the search dialog work with the keyboard only.
+The site has a skip link, visible focus rings, `aria-pressed` on every toggle, and labels that start with the visible word of the button. Motion is off if your system asks for reduced motion. The switchers, the drawer, and the search dialog work with the keyboard only.
 
 ### Privacy
 

@@ -12,7 +12,7 @@ flowchart LR
   mods["lib/linux, lib/fundamentals,<br/>lib/system-design, lib/architecture,<br/>lib/course<br/>(one ordered list for each module)"]
   mdx["content/&lt;group&gt;/&lt;slug&gt;.mdx<br/>(121 pages)"]
   build["next build<br/>(output: export)"]
-  out["out/<br/>129 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
+  out["out/<br/>130 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
   pages["GitHub Pages"]
 
   nav --> build
@@ -26,13 +26,14 @@ The ordered lists and the MDX files are the inputs. Everything else is code that
 
 ## Routes
 
-The site has 129 routes.
+The site has 130 routes.
 
 | Route | Source | Output |
 |---|---|---|
 | `/` | `app/(site)/page.tsx` → `components/pages/HomePage.tsx` | The home page: the hero with the stats row, START HERE, "Why this guide", and the numbered course cards |
 | `/contents/` | `app/(site)/contents/page.tsx` → `ContentsPage` | All groups and modules as cards, with progress bars |
-| `/dashboard/` | `app/(site)/dashboard/page.tsx` → `DashboardPage` | The progress of the reader |
+| `/dashboard/` | `app/(site)/dashboard/page.tsx` → `DashboardPage` | The progress of the reader, and the author block |
+| `/interview/` | `app/(site)/interview/page.tsx` → `InterviewPage` | Three cards that link to the interview material. It has no MDX file. |
 | `/<group>/<slug>/` | `app/(site)/[group]/[page]/page.tsx` | The 23 tutorial pages |
 | `/linux/`, `/linux/<stage>/` | `app/(site)/linux/` | The roadmap and the 12 stages (13 routes) |
 | `/fundamentals/`, `/fundamentals/<chapter>/` | `app/(site)/fundamentals/` | The home and the 11 chapters (12 routes) |
@@ -50,7 +51,7 @@ All route handlers use `export const dynamic = "force-static"`, so the build wri
 
 ## Navigation: ordered lists
 
-Each part of the site has one ordered list. The lists drive the drawer, the header dropdowns, the home pages, prev/next, search, the sitemap, the precache list, and the static params.
+Each part of the site has one ordered list. The lists drive the drawer, the home pages, prev/next, search, the sitemap, the precache list, and the static params.
 
 | Part | List | Notes |
 |---|---|---|
@@ -61,7 +62,7 @@ Each part of the site has one ordered list. The lists drive the drawer, the head
 | Architecture | `lib/architecture/topics.ts` | 19 topics and a practice page with 30 questions. A flat module. |
 | Course | `lib/course/topics.ts` | 55 entries in 6 parts: 40 topics with a page and 15 links to Architecture and System Design pages. A flat module. |
 
-The top nav comes from `lib/header-nav.ts` (`HEADER_NAV`): Tutorial, Linux, Fundamentals, System Design, Architecture, and Course are dropdowns, and Contents and Dashboard are links. `activeNavId` marks the current item. `nextOpenState` keeps one dropdown open at most.
+The top nav comes from `lib/header-nav.ts` (`HEADER_NAV`). It has four plain links: Home, Contents, Dashboard, and Interview. `activeNavId` marks the current item, and a tutorial or module page has none. A reader reaches a module from the home page or the contents page. `lib/interview.ts` holds the strings and the three cards of the interview page.
 
 ### Flat modules
 
@@ -149,8 +150,8 @@ The whole layout is 1400 px wide at most. The page passes its route to `ChapterL
 | Component | Job |
 |---|---|
 | `SiteShell` | Skip link, header, main area, footer |
-| `SiteHeader`, `HeaderNav`, `NavDropdown` | The sticky 64 px header: the brand mark, the top nav (from the `nav` breakpoint, 75 rem), search, voice toggle, install button, theme toggle, and the menu button (below `nav`) |
-| `MobileNav`, `ContentsButton` | The drawer: focus trap, Escape to close, page scroll lock, and the focus returns to the opening button. Below `chapter`, `ContentsButton` on a content page opens it through the `OPEN_NAV_EVENT` window event. |
+| `SiteHeader`, `HeaderNav` | The sticky 64 px header: the brand mark, the top nav of four links (from the `nav` breakpoint, 75 rem), search, voice toggle, install button, theme toggle, and the menu button (below `nav`) |
+| `MobileNav`, `ContentsButton` | The drawer: the four nav links (below `nav` only) above the list of the current module, focus trap, Escape to close, page scroll lock, and the focus returns to the opening button. Below `chapter`, `ContentsButton` on a content page opens it through the `OPEN_NAV_EVENT` window event. |
 | `NavList`, `SidebarList`, and the module lists | The lists of the drawer and the left column |
 | `SearchPalette` | The search dialog (see Search) |
 | `RegisterServiceWorker` | Registers `/sw.js` in production builds |
@@ -185,7 +186,7 @@ All progress is client-side. The shared code keeps its old `prep` names (`lib/pr
 
 `ChapterTools` (the reading pill, Bookmark, and Mark as read) sits under the meta line of each content page. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
 
-The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 121`), the bookmarks, the topic progress of the four modules, and a Continue reading card. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
+The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 121`), the bookmarks, the topic progress of the four modules, and a Continue reading card. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
 
 ## Fundamentals version switch
 
@@ -224,7 +225,7 @@ The look follows the reference site [systemdesignbangla.com](https://www.systemd
 
 | Part | Behavior |
 |---|---|
-| Install | Caches all 129 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
+| Install | Caches all 130 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
 | Pages, RSC payloads, and the search index | Stale-while-revalidate. The cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. |
 | `/_next/static/` files | Cache first. Their file names have a content hash. |
 | Offline, page not cached | Shows the cached 404 page |
@@ -283,7 +284,7 @@ The Python checks are not part of the workflow, because they expect a build with
 | `check_outline.py out` | Build check | Every "On this page" link has a target id |
 | `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 121 pages checked, 0 skipped`. |
 
-The route maps in `scripts/` list the routes that the build checks read: `route-map.json` (tutorial) and one file each for Linux, System Design, Fundamentals, Architecture, Course, contents, and dashboard. `npm test` checks that each page is in its map.
+The route maps in `scripts/` list the routes that the build checks read: `route-map.json` (tutorial) and one file each for Linux, System Design, Fundamentals, Architecture, Course, contents, dashboard, and interview. `npm test` checks that each page is in its map.
 
 `scripts/compare_text.py` is a record of an earlier migration. It cannot run now. `scripts/linux_fetch.py` and `scripts/linux_overlap.py` are research tools for the Linux and System Design modules. The raw text that they download is third-party text and is never committed.
 
@@ -307,7 +308,7 @@ The design documents in `docs/superpowers/` record how the site got here. The sp
 | Editorial redesign (custom shell) | [spec](superpowers/specs/2026-10-09-editorial-redesign-design.md) | [plan](superpowers/plans/2026-10-09-editorial-redesign.md) |
 | Content refresh (17 cited pages) | [spec](superpowers/specs/2026-10-10-content-refresh-design.md) | [plan](superpowers/plans/2026-10-10-content-refresh.md) |
 | Case Study group (parts 18–23) | [spec](superpowers/specs/2026-10-10-case-study-design.md) | [plan](superpowers/plans/2026-10-10-case-study.md) |
-| Interview Prep module (removed on 2026-10-20) | [spec](superpowers/specs/2026-10-13-prep-module-design.md) | [plan](superpowers/plans/2026-10-13-prep-module.md) |
+| Interview Prep module (removed on 2026-10-20; the current `/interview/` page is a small new page, not this module) | [spec](superpowers/specs/2026-10-13-prep-module-design.md) | [plan](superpowers/plans/2026-10-13-prep-module.md) |
 | Linux module | [spec](superpowers/specs/2026-10-16-linux-module-design.md) | [plan](superpowers/plans/2026-10-16-linux-module.md) |
 | Fundamentals module | [spec](superpowers/specs/2026-10-20-fundamentals-module-design.md) | [plan](superpowers/plans/2026-10-20-fundamentals-module.md) |
 | Architecture module | [spec](superpowers/specs/2026-10-20-architecture-module-design.md) | none |

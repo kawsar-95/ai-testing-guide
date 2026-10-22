@@ -133,7 +133,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `scripts/interview-route-map.json` | The 1 interview route: `/interview/`. Same identity map. |
 | `scripts/fundamentals-route-map.json` | The 12 Fundamentals routes: `/fundamentals/` and the 11 chapters. Same identity map as `route-map.json`. |
 
-`lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the Tutorial dropdown, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
+`lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
 The site has 130 routes:
 
@@ -183,7 +183,7 @@ The site has 130 routes:
 
 The Linux module is the roadmap at `/linux/` and 12 stage pages at `/linux/<stage>/`. The design is `docs/superpowers/specs/2026-10-16-linux-module-design.md`.
 
-`lib/linux/stages.ts` is the one ordered list of the stages and their topics. It drives the drawer, the header dropdown, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `linux-progress`).
+`lib/linux/stages.ts` is the one ordered list of the stages and their topics. It drives the drawer, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `linux-progress`).
 
 The progress code is shared and lives under `prep` names, left from the Interview Prep module that was removed on 2026-10-20: `lib/prep/progress.ts`, `lib/prep/store.ts`, and `components/prep/{useProgress,ProgressBar,browser-store}`. `tests/progress.test.ts` tests it. The Linux and Fundamentals modules use it. Its default `localStorage` key is still `prep-progress`. The removed module (the `/prep/` pages, `content/prep/`, the quiz and tables) is in the git history. Its spec, plan, and research notes stay in `docs/superpowers/`.
 
@@ -214,7 +214,7 @@ To add a flat module:
 
 The System Design module is the home at `/system-design/` and 15 case pages at `/system-design/<slug>/`. Each case explains how one well-known system works (Kafka, Google Search, YouTube, WhatsApp, Uber ETA, payments, …), in plain words for testers. It has no progress checklist.
 
-`lib/system-design/cases.ts` defines the module (`SYSTEM_DESIGN`) with its one ordered list of the cases (slug, title, description). It drives the drawer, the header dropdown, the home page, prev/next, search (group `system design`), the sitemap, and the precache. The `#` heading of each MDX file is the case title.
+`lib/system-design/cases.ts` defines the module (`SYSTEM_DESIGN`) with its one ordered list of the cases (slug, title, description). It drives the drawer, the home page, prev/next, search (group `system design`), the sitemap, and the precache. The `#` heading of each MDX file is the case title.
 
 | Rule | Detail |
 |---|---|
@@ -230,7 +230,7 @@ To add a case, add it to `lib/system-design/cases.ts` and to `SystemDesignSlug`,
 
 The Fundamentals module teaches manual software testing in 11 chapters: the home at `/fundamentals/` and one page for each chapter at `/fundamentals/<chapter>/`. Chapters 1–10 have two versions of the text: the owner's notes and an ISTQB version. Chapter 11 is 50 interview questions with one text. The design is `docs/superpowers/specs/2026-10-20-fundamentals-module-design.md`. The plan is `docs/superpowers/plans/2026-10-20-fundamentals-module.md`.
 
-`lib/fundamentals/chapters.ts` is the one ordered list of the chapters and their topics. It drives the drawer, the header dropdown, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `fundamentals-progress`). A topic id is `<chapter-slug>-NNN` from `001`. The `anchor` comes from the title with the `rehype-slug` rules, with the chapter title slugged first (as in `lib/linux/stages.ts`).
+`lib/fundamentals/chapters.ts` is the one ordered list of the chapters and their topics. It drives the drawer, the home page, search, the sitemap, the precache, and the progress store (`localStorage` key `fundamentals-progress`). A topic id is `<chapter-slug>-NNN` from `001`. The `anchor` comes from the title with the `rehype-slug` rules, with the chapter title slugged first (as in `lib/linux/stages.ts`).
 
 The version switch:
 
@@ -274,7 +274,7 @@ To add a topic, add it to `lib/course/topics.ts` and to `CourseSlug`, create `co
 
 The System Architecture Foundations module is the home at `/architecture/`, 19 topic pages, and a practice page with 30 questions, all at `/architecture/<slug>/`. It teaches the building blocks of system architecture in plain words for testers. The base is the owner's notes (`docs/superpowers/research/architecture-owner-notes.md`) and the owner's diagrams. The design is `docs/superpowers/specs/2026-10-20-architecture-module-design.md`.
 
-`lib/architecture/topics.ts` defines the module (`ARCHITECTURE`) with its one ordered list (slug, title, description). It drives the drawer, the header dropdown, the home page, prev/next, search (group `architecture`), the sitemap, the precache, and the progress store (`localStorage` key `architecture-progress`). The progress ids are the 19 topic slugs and `practice-01` … `practice-30`.
+`lib/architecture/topics.ts` defines the module (`ARCHITECTURE`) with its one ordered list (slug, title, description). It drives the drawer, the home page, prev/next, search (group `architecture`), the sitemap, the precache, and the progress store (`localStorage` key `architecture-progress`). The progress ids are the 19 topic slugs and `practice-01` … `practice-30`.
 
 | Rule | Detail |
 |---|---|
@@ -378,7 +378,7 @@ Case Study pages (parts 18–23): the voices restate the workspace facts of the 
 Do all three steps. Each step is required.
 
 1. Create `content/<group>/<slug>.mdx` from the page template below.
-2. Add the page to its group in `lib/nav.ts` (`slug`, `title` for the drawer and the dropdown, `description` and `tagline` for the home page). The position in the list sets the part number. The part count in the footer and in the search dialog comes from this list.
+2. Add the page to its group in `lib/nav.ts` (`slug`, `title` for the drawer, `description` and `tagline` for the home page). The position in the list sets the part number. The part count in the footer and in the search dialog comes from this list.
 3. Add `"/<group>/<slug>/": "/<group>/<slug>/"` to `scripts/route-map.json`. The map is an identity map: each key is the same route as its value. `check_routes.py`, `check_outline.py`, and `check_sources.py` read only the values in this file. A page that is not in it gets no check.
 
 ### Page template
