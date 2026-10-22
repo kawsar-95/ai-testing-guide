@@ -97,7 +97,7 @@ The page template of CLAUDE.md applies: `metadata`, `page.updated`, `page.source
 - `tests/course.test.ts`: the 13 entries in order with their parts and kinds; the 6 link targets are existing routes; one MDX file for each `topic`; the route map; the page shape of section 6; `lessonIds` has 13 ids; the precache and the search docs include the course.
 - `tests/flat-module.test.ts`: the `part` validation (missing part, unknown part, a part that goes down), grouping does not change modules without `parts`, the required progress strings, and the `progressHook` cache.
 - Updated: `header-nav`, `contents`, `dashboard`, `reading-state`, and `sitemap` tests for the new module and counts.
-- The HTML compare of Project 1 (`.baseline/compare.py`) runs against a new baseline from `main` before the change. All pages other than `/course/`, the header, the drawer, the contents page, the dashboard, and the home stats must be the same.
+- The HTML compare of Project 1 is not a gate here, because the header of every page gets the Course item. Instead, the framework changes (section 4) are a separate commit. Before the course is added to the registry, that commit must give 0 differences against a new baseline from `main`.
 
 ## 9. Out of scope
 
