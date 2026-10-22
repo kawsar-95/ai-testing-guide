@@ -11,9 +11,9 @@ import {
 } from "../lib/reading-state.ts";
 import { sitemapPaths } from "../lib/sitemap.ts";
 
-test("CONTENT_PAGES has the 81 content pages, each once and each a known route", () => {
-  assert.equal(CONTENT_PAGES.length, 81);
-  assert.equal(new Set(CONTENT_PAGES.map((p) => p.href)).size, 81);
+test("CONTENT_PAGES has the 88 content pages, each once and each a known route", () => {
+  assert.equal(CONTENT_PAGES.length, 88);
+  assert.equal(new Set(CONTENT_PAGES.map((p) => p.href)).size, 88);
   const paths = new Set(sitemapPaths());
   for (const page of CONTENT_PAGES) assert.ok(paths.has(page.href), page.href);
 });
@@ -21,7 +21,7 @@ test("CONTENT_PAGES has the 81 content pages, each once and each a known route",
 test("CONTENT_PAGES counts per module", () => {
   const counts: Record<string, number> = {};
   for (const page of CONTENT_PAGES) counts[page.module] = (counts[page.module] ?? 0) + 1;
-  assert.deepEqual(counts, { tutorial: 23, linux: 12, fundamentals: 11, "system-design": 15, architecture: 20 });
+  assert.deepEqual(counts, { tutorial: 23, linux: 12, fundamentals: 11, "system-design": 15, architecture: 20, course: 7 });
 });
 
 test("every content page points to its MDX file", () => {
@@ -41,10 +41,11 @@ test("the storage keys", () => {
     "linux-progress",
     "fundamentals-progress",
     "architecture-progress",
+    "course-progress",
   ]);
 });
 
-test("exportProgress has version 1, the time, and all 6 keys", () => {
+test("exportProgress has version 1, the time, and all 7 keys", () => {
   const now = new Date("2026-10-22T08:00:00Z");
   const storage = { getItem: (key: string) => (key === "page-read" ? '["/extend/hooks/"]' : null) };
   const file = exportProgress(storage, now);

@@ -1,0 +1,101 @@
+export const metadata = { title: 'Clustering', description: 'How a cluster of machines keeps a service running when one machine fails: failover, quorum, split brain, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: '1. Introduction (Clusters from Scratch)', publisher: 'ClusterLabs, Pacemaker documentation', url: 'https://clusterlabs.org/projects/pacemaker/doc/3.0/Clusters_from_Scratch/html/intro.html', accessed: '2026-10-22' },
+    { title: '5. Configure Fencing (Clusters from Scratch)', publisher: 'ClusterLabs, Pacemaker documentation', url: 'https://clusterlabs.org/projects/pacemaker/doc/3.0/Clusters_from_Scratch/html/fencing.html', accessed: '2026-10-22' },
+    { title: '6. Create an Active/Passive Cluster (Clusters from Scratch)', publisher: 'ClusterLabs, Pacemaker documentation', url: 'https://clusterlabs.org/projects/pacemaker/doc/3.0/Clusters_from_Scratch/html/active-passive.html', accessed: '2026-10-22' },
+    { title: '9. Convert Storage to Active/Active (Clusters from Scratch)', publisher: 'ClusterLabs, Pacemaker documentation', url: 'https://clusterlabs.org/projects/pacemaker/doc/3.0/Clusters_from_Scratch/html/active-active.html', accessed: '2026-10-22' },
+    { title: '8. Fencing (Pacemaker Explained)', publisher: 'ClusterLabs, Pacemaker documentation', url: 'https://clusterlabs.org/projects/pacemaker/doc/3.0/Pacemaker_Explained/html/fencing.html', accessed: '2026-10-22' },
+    { title: 'Cluster Architecture', publisher: 'Kubernetes Documentation', url: 'https://kubernetes.io/docs/concepts/architecture/', accessed: '2026-10-22' },
+    { title: 'Nodes', publisher: 'Kubernetes Documentation', url: 'https://kubernetes.io/docs/concepts/architecture/nodes/', accessed: '2026-10-22' },
+    { title: 'Options for Highly Available Topology', publisher: 'Kubernetes Documentation', url: 'https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/', accessed: '2026-10-22' },
+  ],
+}
+
+# Clustering
+
+One cashier in a shop is a risk. If that cashier is ill, the shop stops selling. A shop with a team of cashiers can keep going when one is away, if the team knows who is working and who takes the next customer. A cluster is that team, made of computers.
+
+<PageMeta />
+
+## In plain words
+
+A **cluster** is a group of machines that work together to give one service. The extra machines guard against failures <Cite n={1} />. Each machine in the group is a **node**.
+
+Two designs are common <Cite n={1} />:
+
+- **Active-passive:** one node gives the service. When the working node fails, the second node takes its job <Cite n={1} />.
+- **Active-active:** the nodes work at the same time, and the data must be available on all of them at once <Cite n={4} />. The cluster can run many copies of a service to spread the work <Cite n={1} />.
+
+The move from a failed node to a working node is **failover**. In a Pacemaker test, the engineers stop the cluster software on the node that runs a service. The service then starts on the other node, and the failover is automatic <Cite n={3} />.
+
+Kubernetes is also a cluster. It has a control plane and a set of worker nodes. In production, the control plane usually runs on many computers, to give fault tolerance and high availability <Cite n={6} />.
+
+## When you need it
+
+You need a cluster when one machine is a single point of failure, and downtime costs too much. The redundancy of many machines keeps the service available when a machine fails <Cite n={1} />. It costs more machines, more settings, and more things to test.
+
+## How it works
+
+The cluster must know which nodes are alive. In Kubernetes, each node sends **heartbeats**. They help the cluster know if a node is available, and act when a node fails <Cite n={7} />. If a node cannot be reached, its Ready condition becomes `Unknown`. By default, Kubernetes waits 5 minutes before it asks for the first Pod eviction <Cite n={7} />. So recovery is not always instant.
+
+A harder case is a broken network between the nodes. Each side can still run the service, but cannot talk to the other side. This is **split brain** <Cite n={5} />. If the cluster only assumed that silent nodes were down, many copies of one resource could start on different nodes <Cite n={5} />. Two hosts with the same IP address send packets at random to one host or the other. For a database or a cluster file system, the damage can be data corruption <Cite n={5} />.
+
+Two tools stop split brain:
+
+- **Quorum:** a group of nodes has quorum when it holds a majority: most of the cluster's nodes are online and in contact in that group. Quorum stops a service from starting on more nodes than wanted <Cite n={3} />.
+- **Fencing** (also STONITH): the cluster makes sure a node is really offline before another node uses the data. A node that does not answer may still use the data <Cite n={2} />. A common form is to cut the power of the host <Cite n={2} />.
+
+```text
+5 nodes, the network splits:
+
+  [ A  B  C ]   X   [ D  E ]
+   3 of 5 nodes      2 of 5 nodes
+   has quorum        no quorum
+   keeps working     does not start the service
+```
+
+The picture follows the example of the Pacemaker docs: a 5-node cluster that splits into 3 and 2 nodes. The 3 nodes keep quorum <Cite n={3} />. In a 6-node cluster that splits into 3 and 3, neither side has quorum, and by default Pacemaker stops all resources <Cite n={3} />.
+
+## A real-life example
+
+This example is the tutorial's own. A learning platform keeps its student data on a database. The team runs two database nodes in active-passive mode. At night, the network switch between them fails. Both nodes are alive but cannot see each other. Without quorum and fencing, the passive node may decide that the first node is dead and start to accept writes. Now two databases take different student results, and nobody can say which one is right. With fencing, the cluster first turns off the other node, and only then starts the service.
+
+Two-node clusters are a special case. One node alone is not more than half of two nodes. Corosync can accept one node as enough for quorum in a two-node cluster. This is safe if fencing is configured <Cite n={3} />.
+
+## Common mistakes
+
+- **Turning fencing off.** Fencing is on by default. If you turn it off, the cluster pretends that failed nodes are safely off <Cite n={2} />.
+- **Testing only the happy path.** A test cluster without fencing cannot test real failure scenarios <Cite n={2} />.
+- **Too few control plane nodes.** In a stacked Kubernetes control plane, one failed node takes down both its etcd member and its control plane instance. The docs advise at least three control plane nodes <Cite n={8} />.
+- **Expecting failover to be instant.** Kubernetes first marks an unreachable node as `Unknown`. After that, by default it waits 5 minutes before it sends the first Pod eviction request <Cite n={7} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It is not a fact from a source.
+
+- Stop the active node on purpose. Check that the service comes back on another node, and measure how long it takes.
+- During failover, send requests all the time. Count the errors and the lost requests.
+- Cut the network between two nodes, but keep both nodes running. Check that only one side serves writes, and that no data is lost or doubled.
+- Bring the failed node back. Check that it joins again and that the data is the same on all nodes.
+- Ask how many nodes the cluster needs for quorum, and test the case where less than half is left.
+- Do not test with fencing turned off, because this hides the failures that matter.
+
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Cluster | A group of machines that give one service together |
+| Node | One machine in a cluster |
+| Active-passive | One node works, the other waits to take over |
+| Active-active | Many nodes work at the same time |
+| Failover | The move of a service from a failed node to a working node |
+| Heartbeat | A signal that a node sends so the cluster knows it is available |
+| Quorum | A majority of the cluster's nodes are online together in one group |
+| Split brain | Nodes lose contact but each side still runs the service |
+| Fencing (STONITH) | Making sure a node is really offline before another node uses the data |

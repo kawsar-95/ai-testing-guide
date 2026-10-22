@@ -29,7 +29,7 @@ export type ContentPage = {
 
 const lastSegment = (href: string) => href.split("/").filter(Boolean).at(-1) ?? "";
 
-/** The 81 content pages: the tutorial parts, then the pages of each module. Module homes are not content pages. */
+/** The 88 content pages: the tutorial parts, then the pages of each module. Module homes are not content pages. */
 export const CONTENT_PAGES: readonly ContentPage[] = [
   ...PAGES.map((page) => ({ href: page.href, title: page.title, module: "tutorial" as const, dir: page.group, slug: page.slug })),
   ...MODULES.flatMap((module) =>

@@ -97,7 +97,7 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <section aria-label={DASHBOARD_UI.siteTitle} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,0.6fr))_repeat(3,minmax(0,1fr))]">
+      <section aria-label={DASHBOARD_UI.siteTitle} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,0.6fr))_repeat(4,minmax(0,1fr))]">
         <div className={`${CARD} self-end`}>
           <p data-stat="read" className="font-display text-[34px] font-bold leading-none text-text tabular-nums">
             {readPages.length}

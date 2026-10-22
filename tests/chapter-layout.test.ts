@@ -51,16 +51,22 @@ for (const path of TEMPLATES) {
   });
 }
 
-for (const path of ["app/(site)/architecture/[topic]/page.tsx", "app/(site)/system-design/[topic]/page.tsx"]) {
+for (const path of ["app/(site)/architecture/[topic]/page.tsx", "app/(site)/system-design/[topic]/page.tsx", "app/(site)/course/[topic]/page.tsx"]) {
   test(`${path} renders FlatTopicPage and loads its MDX with a literal folder`, () => {
     const src = source(path);
     assert.match(src, /<FlatTopicPage /);
-    assert.match(src, /import\(`@\/content\/(architecture|system-design)\/\$\{slug\}\.mdx`\)/);
+    assert.match(src, /import\(`@\/content\/(architecture|system-design|course)\/\$\{slug\}\.mdx`\)/);
   });
 }
 
 test("NavList remounts FlatSidebarList when the flat module changes", () => {
   assert.match(source("components/layout/NavList.tsx"), /<FlatSidebarList key=\{flat\.id\} module=\{flat\}/);
+});
+
+test("both callers of LinkDoneToggle pass the item title", () => {
+  for (const file of ["FlatModuleHome", "FlatSidebarList"]) {
+    assert.match(source(`components/modules/${file}.tsx`), /<LinkDoneToggle [^>]*title=\{item\.title\}/);
+  }
 });
 
 test("FlatSidebarList calls one hook whether or not the module has progress", () => {

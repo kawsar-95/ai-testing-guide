@@ -14,7 +14,7 @@ export type HeaderNavItem = {
   pages?: readonly { href: string; title: string }[];
 };
 
-/** The items of the top nav, in order: the tutorial, the four modules, the contents page, and the dashboard. */
+/** The items of the top nav, in order: the tutorial, the five modules, the contents page, and the dashboard. */
 export const HEADER_NAV: readonly HeaderNavItem[] = [
   { id: "tutorial", label: crossToTutorial, href: "/", pages: PAGES.map(({ href, title }) => ({ href, title })) },
   ...MODULES.map((module) => ({ id: module.id, label: module.title, href: module.href, pages: module.pages })),

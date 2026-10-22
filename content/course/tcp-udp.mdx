@@ -1,0 +1,101 @@
+export const metadata = { title: 'TCP and UDP', description: 'How TCP and UDP carry data between two programs, why TCP is reliable and UDP is fast, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'RFC 9293: Transmission Control Protocol (TCP)', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9293.html', accessed: '2026-10-22' },
+    { title: 'RFC 768: User Datagram Protocol', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc768.html', accessed: '2026-10-22' },
+  ],
+}
+
+# TCP and UDP
+
+Two ways to send a message to a friend: a registered letter and a postcard. For the registered letter, the post office checks that it arrives, in the right order, and tells you if it got lost. The postcard is cheap and quick, but nobody promises anything. TCP is the registered letter. UDP is the postcard.
+
+<PageMeta />
+
+## In plain words
+
+IP moves packets from one computer to another. TCP and UDP sit on top of IP. They get the data to the right program on that computer, and they differ in how much they promise.
+
+**TCP** gives a reliable, in-order byte stream to applications <Cite n={1} />. It detects lost packets with sequence numbers and damaged data with checksums, and it repairs a loss by sending the data again <Cite n={1} />. Each TCP segment travels inside an IP datagram <Cite n={1} />.
+
+**UDP** gives a way to send messages with a minimum of protocol mechanism <Cite n={2} />. Delivery and duplicate protection are not guaranteed <Cite n={2} />. If an application needs ordered, reliable delivery of a stream, the UDP standard says to use TCP <Cite n={2} />.
+
+Both protocols use **port numbers** to pick the program. In TCP the source port and the destination port are each 16 bits <Cite n={1} />. A UDP header has a source port, a destination port, a length, and a checksum <Cite n={2} />.
+
+## How it works
+
+TCP first builds a connection. This is the **three-way handshake**:
+
+```text
+Client                      Server
+  | ---- SYN (my number X) --->  |
+  | <--- SYN+ACK (Y, got X) ---  |
+  | ---- ACK (got Y) -------->   |
+  |   connection is open         |
+```
+
+Each side picks a starting sequence number, and the other side confirms it. Four steps become three messages, because the middle two combine in one message <Cite n={1} />. The main reason for the handshake is to stop old duplicate connection requests from causing confusion <Cite n={1} />.
+
+While data flows, the receiver tells the sender a **window**: the range of sequence numbers it can accept now. This is related to its free buffer space <Cite n={1} />. A TCP endpoint must also slow down when the network is crowded: it starts slowly, grows its speed with care, and waits longer after each repeated timeout. The goal is to avoid a congestion collapse <Cite n={1} />. The timeout is not fixed. It is computed while the connection runs <Cite n={1} />.
+
+To close, one side sends a FIN segment. The other side acknowledges it, but it sends its own FIN only when its own user has closed the connection too <Cite n={1} />. The side that closes waits for a while in the **TIME-WAIT** state. This makes sure the peer got the acknowledgment, and it keeps delayed segments of the old connection away from a new one <Cite n={1} />. A **reset** (RST) is the hard stop: it aborts a connection that is open and informs the user <Cite n={1} />.
+
+UDP has none of this. There is no handshake and no window. A sender just sends a datagram. The header has a length field, and the minimum length is 8 octets (the header alone) <Cite n={2} />. The source port is optional; if it is not used, it is zero <Cite n={2} />. An all-zero checksum means that the sender did not compute one <Cite n={2} />.
+
+## When you need it
+
+Pick TCP when every byte must arrive, in order: a web page, a file, a database call, a login. Pick UDP when speed matters more than perfect delivery, and the application can live with a gap or can repair it by itself.
+
+The early UDP standard names two major uses: the name server and trivial file transfer <Cite n={2} />. UDP is IP protocol number 17 <Cite n={2} />.
+
+## A real-life example
+
+A learning platform has two parts. A student submits a quiz answer. This goes over TCP, because one lost or reordered byte could damage the answer. The same platform has a live video lesson. A video call usually prefers to skip a late frame and show the next one, because a frame that arrives too late is useless. That style of traffic is a good fit for UDP. This example is the tutorial's own text.
+
+## Trade-offs
+
+| | TCP | UDP |
+|---|---|---|
+| Connection | Handshake first | None |
+| Delivery | Reliable, in order <Cite n={1} /> | Not guaranteed <Cite n={2} /> |
+| Overhead | More messages and state | Very little <Cite n={2} /> |
+| Typical fit | Pages, files, transactions | Live media, quick lookups |
+
+The Overhead cell of TCP and the last row are the tutorial's own summary.
+
+## Common mistakes
+
+- **"UDP is broken."** UDP does what it says. The missing promises are the design <Cite n={2} />.
+- **"TCP means the message was processed."** TCP only delivers bytes to the other program. The program can still fail to handle them.
+- **Mixing up a slow network with a lost connection.** A slow reply is not always a failed one. Test both, and check what the user sees.
+- **Forgetting that the server needs the port to be open.** A closed port or a firewall rule can stop a connection even when the server runs. This is the tutorial's own advice, not a statement of the RFCs.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It is not from a standard.
+
+- Test with a bad network: add delay, packet loss, and a dropped connection. Check that the app shows a clear message and does not hang.
+- For a TCP-based feature, cut the connection in the middle of a request. Check that nothing is saved twice and nothing is half saved.
+- For a UDP-based feature, check that the app copes with a lost, late, or duplicate message.
+- Use a packet tool to look at the handshake, and see when connections open and close.
+- Check timeouts: what does the user see when the server is slow, and when the port is closed?
+
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| TCP | A reliable, in-order byte stream between two programs |
+| UDP | A simple message service with no delivery guarantee |
+| Segment | One piece of a TCP stream, sent inside an IP datagram |
+| Datagram | One UDP message |
+| Port | A 16-bit number that picks the program on a computer |
+| Three-way handshake | The set-up of a TCP connection |
+| SYN, ACK, FIN, RST | TCP flags: start, confirm, finish, reset |
+| Window | How much data the receiver can accept now |
+| Retransmission | Sending lost data again |
+| TIME-WAIT | A short wait after close, to avoid mixing old and new connections |

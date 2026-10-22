@@ -1,0 +1,113 @@
+export const metadata = { title: 'DNS', description: 'How DNS turns a domain name into an address, what the main record types and TTL mean, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'DNS', publisher: 'MDN Web Docs (Glossary)', url: 'https://developer.mozilla.org/en-US/docs/Glossary/DNS', accessed: '2026-10-22' },
+    { title: 'RFC 1034: Domain Names - Concepts and Facilities', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc1034', accessed: '2026-10-22' },
+    { title: 'RFC 1035: Domain Names - Implementation and Specification', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc1035', accessed: '2026-10-22' },
+    { title: 'RFC 2181: Clarifications to the DNS Specification', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc2181', accessed: '2026-10-22' },
+    { title: 'TTL', publisher: 'MDN Web Docs (Glossary)', url: 'https://developer.mozilla.org/en-US/docs/Glossary/TTL', accessed: '2026-10-22' },
+  ],
+}
+
+# DNS
+
+A phone keeps names in a contact list, so you tap a name and the phone finds the number. DNS is the contact list of the internet: you type a name, and DNS finds the address of the computer behind it.
+
+<PageMeta />
+
+## In plain words
+
+**DNS** (the Domain Name System) is a naming system with a tree shape and no single owner. Its best-known job is to turn a human-friendly name, such as `learn.example.com`, into a numeric IP address <Cite n={1} />. This step is called a DNS lookup. A reverse lookup goes the other way: it finds the name for an IP address <Cite n={1} />.
+
+Nobody owns one big list. The names form a tree. The top of the tree is the root, and the root has an empty label <Cite n={2} />. You read a name from the most specific part on the left to the least specific part on the right <Cite n={2} />:
+
+```text
+learn . example . com . (root)
+  |        |       |
+  |        |       +-- top level
+  |        +---------- the company's zone
+  +------------------- one host name
+```
+
+Each organization looks after its own part of the tree and runs more than one name server for it <Cite n={2} />.
+
+## When you need it
+
+You use DNS in nearly every test, even when you do not see it: a browser opens a page, an app calls an API by host name, a mail server finds where to send an email, or a test environment moves to a new server.
+
+## How it works
+
+Your computer has a small program called a **stub resolver**. It does not do the hard work. It asks a **recursive name server** (often from your network or provider), and that server does the work and keeps a shared cache <Cite n={2} />. In a **recursive** query the first server chases the answer for you. In an **iterative** query a server only points you to the next server <Cite n={2} />.
+
+The resolver follows four steps <Cite n={2} />:
+
+1. Check local data, such as the cache. If the answer is there, return it.
+2. Find the best servers to ask. The search starts at the full name, then goes up to the parent name, and so on to the root <Cite n={2} />.
+3. Send them a query until one answers.
+4. Read the answer. If it answers the question, or says the name does not exist, cache it and return it. If it points to better servers, ask them. If it is an alias, restart with the real name.
+
+```text
+browser --> stub resolver --> recursive server --> root server
+                                   |           --> "com" server
+                                   |           --> "example.com" server
+                                   v
+                          answer 203.0.113.10 (cached for the TTL)
+```
+
+The resolver answers most requests from its cache, so the network and the servers have less work <Cite n={2} />.
+
+## Record types and TTL
+
+A DNS answer is made of **resource records**. These are the types that testers meet most <Cite n={3} />:
+
+| Type | What it holds |
+|---|---|
+| A | A host address |
+| NS | An authoritative name server for the zone |
+| CNAME | The canonical (real) name for an alias |
+| MX | A mail exchange: the host that takes mail for the name |
+| TXT | Text strings |
+| PTR | A domain name pointer, used for reverse lookups |
+
+An MX record has a preference number, and a lower number is preferred <Cite n={3} />. What a TXT text means is set by the domain that holds it <Cite n={3} />. A name with a CNAME record has no other record types, except some DNSSEC records <Cite n={4} />. The value of an NS record, and the host of an MX record, must not be an alias <Cite n={4} />.
+
+Each record has a **TTL** (time to live). It is a time limit on how long a cache may keep the record <Cite n={2} />. It is a number of seconds <Cite n={5} />, from 0 to 2147483647 <Cite n={4} />. A TTL of 0 forbids caching <Cite n={2} />. The TTL is a maximum, not a promise, because a cache may use a lower limit <Cite n={4} />. Before a planned change, the zone administrator can lower the TTL, and raise it again after the change <Cite n={2} />.
+
+A server can also say that a name does not exist. This is response code 3, "Name Error", and only an authoritative server gives it <Cite n={3} />. A resolver may cache this answer for a TTL too <Cite n={2} />.
+
+## A real-life example
+
+A learning platform moves its site to a new server. The old address is `203.0.113.10` and the new one is `203.0.113.20`. The A record for `learn.example.com` has a TTL of 86400 seconds (one day).
+
+The team changes the A record to the new address. Some students still reach the old server for hours, because their resolvers keep the old answer until the TTL ends. Nothing is broken. The design of DNS (RFC 1034, section 2.3) says that access to information is more critical than instant updates, and that updates spread out slowly <Cite n={2} />. A careful team lowers the TTL days before the move and raises it again after <Cite n={2} />.
+
+## Common mistakes
+
+- **Waiting for the change to be visible at once.** A changed record reaches users only after the old copies expire <Cite n={2} />.
+- **Using a CNAME next to other records.** It is not allowed <Cite n={4} />.
+- **Pointing an MX or NS record at an alias.** The specification says this must not be done <Cite n={4} />.
+- **Testing on a cached answer.** You may see the old address and think the new one is wrong.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Look up the record.** Use a tool such as `dig` or `nslookup` on the test host name. Check the address, the record type, and the TTL.
+- **Watch the TTL.** Ask twice, a few seconds apart. The TTL in the answer should count down.
+- **Plan a switch.** Before a release that changes an address, ask when the TTL was lowered.
+- **Bad names.** Open a host name that does not exist. The app should show a clear error.
+- **Different networks.** Test from two networks. Their resolvers may hold different cached answers.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| DNS | The system that maps domain names to IP addresses <Cite n={1} /> |
+| Resolver | A program that finds the answer for a name, and keeps a cache <Cite n={2} /> |
+| Recursive query | The first server chases the answer for the client <Cite n={2} /> |
+| Resource record | One entry of data, with a type, a TTL, and a value <Cite n={3} /> |
+| CNAME | A record that says a name is an alias of another name <Cite n={3} /> |
+| TTL | The time limit, in seconds, for keeping a cached record <Cite n={5} /> |
