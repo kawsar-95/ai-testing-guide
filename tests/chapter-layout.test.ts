@@ -80,3 +80,10 @@ test("FlatSidebarList calls one hook whether or not the module has progress", ()
   assert.match(factory, /export const useNoProgress: UseProgress = hookOf\(/);
   assert.equal(factory.match(/useSyncExternalStore\(/g)?.length, 1);
 });
+
+test("FlatSidebarList builds the part ids from useId, so two instances do not share ids", () => {
+  const list = source("components/modules/FlatSidebarList.tsx");
+  assert.match(list, /const uid = useId\(\);/);
+  assert.equal(list.match(/\$\{uid\}-part-\$\{part\.num\}/g)?.length, 2);
+  assert.doesNotMatch(list, /\$\{m\.id\}-part-/);
+});

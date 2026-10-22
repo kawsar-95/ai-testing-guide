@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useId } from "react";
 import type { FlatItem, FlatModule } from "@/lib/modules/flat";
 import type { FlatModuleId } from "@/lib/modules/registry";
 import { LinkDoneToggle } from "./LinkDoneToggle";
@@ -21,6 +22,7 @@ export function FlatSidebarList({
   activePath: string | null;
   onNavigate?: () => void;
 }) {
+  const uid = useId(); // two lists render on a course page, so a module id alone would repeat
   const { done } = doneHook(m)();
   const ui = m.ui;
   return (
@@ -29,7 +31,7 @@ export function FlatSidebarList({
         const list = (
           <ol
             key="all"
-            aria-labelledby={part ? `${m.id}-part-${part.num}` : undefined}
+            aria-labelledby={part ? `${uid}-part-${part.num}` : undefined}
             className="m-0 list-none space-y-px p-0"
           >
             {items.map(row)}
@@ -38,7 +40,7 @@ export function FlatSidebarList({
         if (!part) return list;
         return (
           <div key={part.num} className="mt-4 first:mt-0">
-            <p id={`${m.id}-part-${part.num}`} className="px-3 pb-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-text-dim">
+            <p id={`${uid}-part-${part.num}`} className="px-3 pb-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-text-dim">
               PART {part.num} · {part.title}
             </p>
             {list}
