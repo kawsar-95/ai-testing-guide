@@ -1,0 +1,106 @@
+export const metadata = { title: 'Forward and Reverse Proxies', description: 'What a proxy is, how a forward proxy differs from a reverse proxy, and what a tester checks: client IP headers, error codes, and trust.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'RFC 9110: HTTP Semantics', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html', accessed: '2026-10-22' },
+    { title: 'Proxy server', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Glossary/Proxy_server', accessed: '2026-10-22' },
+    { title: 'Forwarded header', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded', accessed: '2026-10-22' },
+    { title: 'X-Forwarded-For header', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For', accessed: '2026-10-22' },
+    { title: 'NGINX Reverse Proxy', publisher: 'NGINX Documentation', url: 'https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/', accessed: '2026-10-22' },
+  ],
+}
+
+# Forward and Reverse Proxies
+
+Think of a hotel front desk. A guest who wants a taxi asks the desk, and the desk calls the taxi. A caller who wants a guest also goes through the desk. Both times, someone stands in the middle. A proxy is that person for network traffic. The difference is who the desk works for.
+
+<PageMeta />
+
+## In plain words
+
+A **proxy** is a program that sits between two sides of a request and passes the request on. It can be on the user's own computer, or anywhere between the user and the destination server <Cite n={2} />. A proxy intercepts requests and gives back responses. It may forward a request, or not (a cache can answer by itself). It may also change the request, for example its headers <Cite n={2} />.
+
+There are two main kinds <Cite n={2} />:
+
+- A **forward proxy** handles requests from clients to servers anywhere on the Internet. The client chooses it, usually through local settings <Cite n={1} />. An organization can use one to apply security checks, add notes to requests, or share a cache <Cite n={1} />.
+- A **reverse proxy** takes requests from the Internet and forwards them to servers in an internal network <Cite n={2} />. The HTTP standard calls it a **gateway**. To the client it looks like the real server, but it passes each request to other servers behind it <Cite n={1} />.
+
+```text
+Forward proxy (works for the client):
+
+  [Client] --> [Forward proxy] --> [Any website]
+
+Reverse proxy (works for the server side):
+
+  [Client] --> [Reverse proxy] --> [App server 1]
+                              \--> [App server 2]
+```
+
+A **tunnel** is a different thing. It is a blind relay that does not change the messages. For example, it can carry encrypted TLS traffic through a firewall proxy <Cite n={1} />.
+
+## When you need it
+
+You use a reverse proxy in front of a web app for these jobs:
+
+- **Spread the load** across several servers <Cite n={5} /> <Cite n={1} />.
+- **Pass requests to application servers**, or show content from different sites under one address <Cite n={5} />.
+- **Hide old or untrusted services** behind one safe front door <Cite n={1} />.
+- **Cache** answers so the app servers do less work <Cite n={1} />.
+
+You use a forward proxy when the client side needs control, for example when a company sends all staff web traffic through one checkpoint <Cite n={1} />.
+
+## How it works
+
+NGINX sends the request to the proxied server, fetches the response, and sends the response back to the client <Cite n={5} />. In its configuration, the `proxy_pass` directive inside a `location` block names the server that gets the request <Cite n={5} />.
+
+By default, NGINX changes two headers of the proxied request, `Host` and `Connection`. The `proxy_set_header` directive changes this <Cite n={5} />. By default NGINX also buffers the response: it keeps the whole response and sends it to the client only after it has received all of it <Cite n={5} />.
+
+The server behind the proxy has a problem: it sees only the address of the last proxy, not the address of the user <Cite n={4} />. To fix this, the proxy adds the client address in a header. The common header is `X-Forwarded-For`. It is a de-facto standard, not a formal one <Cite n={4} />. The standard version is `Forwarded`, with the parts `by`, `for`, `host`, and `proto` <Cite n={3} />. `Forwarded` also keeps the original `Host` header and the protocol the client used <Cite n={3} />.
+
+```text
+X-Forwarded-For: 203.0.113.195, 198.51.100.17
+                 ^ client       ^ most recent proxy
+```
+
+The leftmost address is the client and the rightmost is the most recent proxy, if every party is well behaved <Cite n={4} />. The `Via` header is another trace: it shows which proxies a message passed, and it helps to avoid request loops <Cite n={1} />.
+
+## A real-life example
+
+An online learning platform has two app servers behind one reverse proxy. A student opens the course page. The proxy receives the request, picks an app server, and returns the answer. The student never sees the two servers. One day the first app server hangs. The proxy waits and then returns a **504 Gateway Timeout**, which means it got no timely answer from the server behind it <Cite n={1} />. Another day the app server sends a broken answer, and the proxy returns **502 Bad Gateway**, which means it got an invalid response <Cite n={1} />.
+
+## Common mistakes
+
+- **Trusting `X-Forwarded-For` for security.** Anyone can send this header. Only addresses added by a trusted proxy are safe for rate limiting or IP-based access control. Other parts of the header may be spoofed <Cite n={4} />.
+- **Leaving the app server open to the Internet.** If the server can be reached directly, no part of the list is trustworthy, even when a trusted reverse proxy is also in front of it <Cite n={4} />.
+- **Reading only one of several headers.** Using only one `X-Forwarded-For` header is not enough <Cite n={4} />.
+- **Forgetting the privacy side.** The header exposes the client IP address by design, so it is privacy-sensitive <Cite n={4} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+
+These test ideas are the tutorial's own advice. They are not from a source.
+
+- **Read the status code.** A 502 or 504 usually means the proxy is fine and the server behind it has a problem. Report it that way.
+- **Check the client IP.** Send a request through the proxy and look at the IP in the app log. It must be the client address, not the proxy address.
+- **Send a fake header.** Add your own `X-Forwarded-For` to a request. The app must not trust it for rate limits or access rules.
+- **Try the server directly.** In a test environment, call the app server without the proxy. It should refuse, or give the same security result.
+- **Compare headers.** Check `Host`, the protocol, and `Via` before and after the proxy.
+- **Stop one app server.** The proxy should send users to the other one, with no error page.
+
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Proxy | A program between two sides of a request that passes it on |
+| Forward proxy | A proxy that a client uses to reach servers on the Internet |
+| Reverse proxy | A proxy in front of servers; also called a gateway |
+| Gateway | The HTTP standard name for a reverse proxy |
+| Tunnel | A blind relay that passes messages without changing them |
+| Upstream | The server behind the proxy that does the real work |
+| X-Forwarded-For | A header that lists the client IP and the proxies on the way |
+| Forwarded | The standard header for the same information |
+| Via | A header that shows which proxies a message passed |
+| 502 / 504 | Bad Gateway / Gateway Timeout: a problem between the proxy and the upstream server |
