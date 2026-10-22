@@ -1,0 +1,93 @@
+export const metadata = { title: 'The CAP Theorem', description: 'What consistency, availability, and partition tolerance mean in the CAP theorem, why the choice arises during a partition, and why "2 of 3" misleads.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Brewer\'s Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services', publisher: 'S. Gilbert and N. Lynch, ACM SIGACT News, 2002 (author copy, MIT CSAIL)', url: 'https://groups.csail.mit.edu/tds/papers/Gilbert/Brewer6.pdf', accessed: '2026-10-22' },
+    { title: 'CAP Twelve Years Later: How the "Rules" Have Changed', publisher: 'E. Brewer, IEEE Computer, 2012 (copy republished by InfoQ)', url: 'https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/', accessed: '2026-10-22' },
+  ],
+}
+
+# The CAP Theorem
+
+Two clerks in two offices keep the same ledger. The phone line between them goes dead. A customer walks in and asks for a balance. The clerk must either answer from a ledger that may be old, or refuse to answer. This is the problem that the CAP theorem describes.
+
+<PageMeta />
+
+## In plain words
+
+The CAP theorem says that a system with data on more than one server cannot give you all of three things: **C**onsistency, **A**vailability, and **P**artition tolerance. Eric Brewer made this conjecture in a talk at the PODC conference in 2000 <Cite n={1} />. Two researchers later proved it for a precise model <Cite n={1} />.
+
+The proof paper defines each letter in a strict way <Cite n={1} />:
+
+| Letter | Meaning in the paper |
+|---|---|
+| C, consistency | Atomic (also called linearizable) consistency. All operations fit in one order, and each looks as if it finished at a single instant. The service acts like one node that handles one operation at a time. |
+| A, availability | Every request that reaches a node that has not failed gets a response. The algorithm must eventually end. The paper sets no limit on how long it may take. |
+| P, partition tolerance | The network may lose any number of messages between nodes. In a partition, all messages between the two groups are lost. |
+
+## When you need it
+
+This advice is the tutorial's own. Use CAP when a system keeps copies of data on several servers, for example in two data centers, and the network between them can fail. Testers meet it in tests of replication, failover, and broken links.
+
+## Why you must choose during a partition
+
+The proof is simple. Split the servers into two groups that lose all messages between them. A client writes a new value in group 1. Then a client reads in group 2. The read cannot return the new value, because no message arrived <Cite n={1} />. The service must either answer with an old value (and lose consistency) or not answer (and lose availability). The paper proves that no algorithm can guarantee both availability and atomic consistency when messages can be lost <Cite n={1} />.
+
+Brewer gives the same view with two nodes on two sides of a partition. If a node can still update data, the two sides become inconsistent. If you keep consistency, one side must act as if it is down <Cite n={2} />. Brewer says the general belief is that wide-area systems cannot give up partition tolerance, so the hard choice is between C and A <Cite n={2} />.
+
+The paper also shows that any two of the three can work together <Cite n={1} />. A system with C and P can refuse requests, as many locking or quorum databases do when some failures occur <Cite n={1} />. A system with C and A works when there are no partitions, for example on a LAN <Cite n={1} />. A system with A and P can return old data, as a web cache does <Cite n={1} />.
+
+## Why "2 of 3" misleads
+
+Brewer wrote that the "2 of 3" form was always misleading, because it oversimplified the tensions between the properties <Cite n={2} />. CAP rules out only a narrow case: perfect availability and perfect consistency together during a partition, and partitions are rare <Cite n={2} />. He gives three reasons <Cite n={2} />:
+
+1. Partitions are rare, so there is little reason to give up C or A when the network is healthy.
+2. The choice between C and A can be made many times in one system, and it can change by operation, by data, or by user.
+3. The three properties are more like scales than switches. Availability runs from 0 to 100 percent, and there are many levels of consistency.
+
+## Trade-offs
+
+When a partition happens, each choice has a price.
+
+- **Choose consistency.** Some requests wait or fail. Retrying forever only delays the choice, and Brewer says it is in effect a choice for C over A <Cite n={2} />.
+- **Choose availability.** Both sides keep working, so the data can differ. After the partition the system must restore consistency and repair mistakes <Cite n={2} />. The designer must list the rules (invariants) of the data, which is hard to do well <Cite n={2} />.
+
+Brewer suggests three steps: detect the partition, switch to a clear partition mode in which some operations may be restricted, and recover when the network returns <Cite n={2} />. For example, a system can record an order and charge the card after recovery <Cite n={2} />.
+
+Time matters too. In practice a partition is a limit on how long you wait for a reply, so a timeout forces the decision: cancel the operation, or go on and risk inconsistency <Cite n={2} />. A tight bound means partition mode starts more often, also when the network is only slow <Cite n={2} />.
+
+## A real-life example
+
+This example is the tutorial's own. A test platform stores exam answers on a server in city A and a copy on a server in city B. The link between the cities breaks. A student saves an answer on server A. A teacher opens the answer on server B.
+
+- If server B shows the old answer, the platform kept availability and lost consistency.
+- If server B says "try again later", the platform kept consistency and lost availability.
+
+Both are valid under the theorem. The team must decide which choice suits each operation. An old exam answer may be fine for a few minutes. A payment taken twice is not.
+
+## Common mistakes
+
+- **Reading CAP as "pick any 2".** The choice arises during a partition, and a healthy network gives both C and A <Cite n={2} />.
+- **Mixing the two meanings of C.** In CAP, consistency is about one request at a time <Cite n={1} />, or one up-to-date copy of the data <Cite n={2} />. In ACID it is about rules of a transaction. Brewer says the CAP meaning is a strict subset <Cite n={2} />.
+- **Labelling a whole product "CP" or "AP" forever.** The choice can differ by operation, data, or user <Cite n={2} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources.
+
+- **Break the link.** In a test environment, cut the network between two nodes. Check what the app does for a read and for a write.
+- **Know the choice.** For each important operation, ask the team: does it refuse, or does it answer with old data? Write the answer in the test plan.
+- **Check the repair.** After you restore the link, check that the two sides agree, and that no order or payment ran twice.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Consistency (C) | In the paper: atomic consistency, as if one node handled all operations in one order <Cite n={1} /> |
+| Availability (A) | Every request to a working node eventually gets a response <Cite n={1} /> |
+| Partition | A network failure that loses all messages between two groups of nodes <Cite n={1} /> |
+| Partition tolerance (P) | The service keeps its promises although the network may lose messages <Cite n={1} /> |
+| Partition mode | A state where a system detects a partition and may limit some operations <Cite n={2} /> |
+| Invariant | A rule about the data that should always be true <Cite n={2} /> |
