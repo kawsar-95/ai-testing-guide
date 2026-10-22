@@ -1,0 +1,104 @@
+export const metadata = { title: 'Event-Driven Architecture', description: 'How producers, an event router or broker, and consumers work together in an event-driven architecture, the pub/sub and event streaming models, and the main challenges.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Event-driven architecture style', publisher: 'Microsoft, Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven', accessed: '2026-10-22' },
+    { title: 'What is an Event-Driven Architecture?', publisher: 'Amazon Web Services', url: 'https://aws.amazon.com/event-driven-architecture/', accessed: '2026-10-22' },
+  ],
+}
+
+# Event-Driven Architecture
+
+A shop takes an order. Payment, stock, email, and delivery must all react. The order service could call each of them one by one, or it could shout "order placed" once and let each of them listen. The second way is an event-driven architecture.
+
+<PageMeta />
+
+## In plain words
+
+An event is a change in state, such as an item put in a shopping cart <Cite n={2} />. An event can carry the data (the item, its price, the address), or it can be only an identifier, such as a notice that an order shipped <Cite n={2} />.
+
+An event-driven architecture has three parts <Cite n={1} /> <Cite n={2} />:
+
+| Part | Job |
+|---|---|
+| Event producer | Creates the events |
+| Event router, broker, or channel | Moves events from producers to consumers. AWS says the router filters events and pushes them to consumers <Cite n={2} />. |
+| Event consumer | Listens for events and acts on them |
+
+Events arrive in near real time, so consumers can react at once <Cite n={1} />. A producer does not know which consumers listen, and consumers are decoupled from each other <Cite n={1} />. Because services know only the router and not each other, one service can fail while the others keep running <Cite n={2} />. Producers and consumers can be scaled, updated, and deployed on their own <Cite n={2} />.
+
+## When you need it
+
+Azure lists these cases <Cite n={1} />:
+
+- Several subsystems must process the same events.
+- You need real-time processing with little delay.
+- You need to find patterns in events, for example over a time window.
+- Data comes in high volume and speed, as with IoT.
+- You want to decouple producers and consumers so each can scale and stay reliable on its own.
+
+AWS names these uses: copying data between accounts and regions, watching resource state and sending alerts, sending one event to many systems at once (fanout), and joining systems that run on different stacks <Cite n={2} />.
+
+The style may not fit when simple synchronous calls already meet your needs, when a business transaction needs strong consistency across services, or when the team has no experience with distributed asynchronous systems <Cite n={1} />.
+
+## How it works
+
+**Two models.** Azure describes two models for this style: publish-subscribe and event streaming <Cite n={1} />. A sibling page covers [publish-subscribe](/course/pub-sub/) in more detail.
+
+- In publish-subscribe, the infrastructure tracks subscriptions and sends each published event to every subscriber. The event is not kept in a durable log, so a new subscriber does not see past events <Cite n={1} />.
+- In event streaming, events go into a log. They are strictly ordered within a partition and they are durable. Clients do not subscribe. A client reads from any part of the stream and moves its own position, so it can join late and replay events <Cite n={1} />. Replay helps with recovery, late consumers, and reprocessing after a bug fix <Cite n={1} />.
+
+Azure also contrasts this with the Competing Consumers pattern. There, consumers pull messages from a queue, and each message is processed one time if there are no errors <Cite n={1} />.
+
+**Router types.** AWS says there are two main kinds of router: event buses and event topics <Cite n={2} />. A router is also a central place to audit the system and to set policies about who may publish and subscribe. Events can be encrypted in transit and at rest <Cite n={2} />.
+
+**Two topologies.** In a broker topology, components broadcast events, and others act on them or ignore them. This suits simple flows and has no central control. No component owns the state of a multistep transaction, and there is no built-in way to restart or replay one <Cite n={1} />. In a mediator topology, an event mediator manages the flow, keeps state, and handles errors and restarts. It gives more control, but it adds coupling and can become a bottleneck <Cite n={1} />.
+
+## Challenges
+
+These are the challenges that Azure and AWS state.
+
+- **Guaranteed delivery.** In some systems, especially IoT, you must be sure that events are delivered <Cite n={1} />. AWS says the event source should guarantee delivery if you must process every event <Cite n={2} />.
+- **Order and one-time processing.** Consumers usually run as many instances. This can cause trouble if events need processing in order, or the processing logic is not idempotent <Cite n={1} />. Azure adds that exactly-once semantics can be a challenge too <Cite n={1} />. To rebuild state, AWS says the event source should be deduplicated and ordered <Cite n={2} />.
+- **Data loss.** If a component crashes before it hands the event on, the event is dropped. Azure advises you to keep in-transit events and remove them only after the next component confirms receipt <Cite n={1} />.
+- **Eventual consistency.** Data is not at once the same everywhere after an event. For a time, parts of the system see different state, so consumers must tolerate stale data <Cite n={1} />.
+- **Error handling.** One option is an error-handler processor. It tries to fix a bad event and resend it, or it sends the event on to a dead-letter queue (DLQ), where an administrator can inspect it. Resent events are processed out of sequence <Cite n={1} />.
+- **Seeing the flow.** There is no shared call context, so Azure advises a correlation ID in every event. It also says that end-to-end testing needs more deliberate strategies <Cite n={1} />. AWS adds that you can track the flow by monitoring, not by static code analysis <Cite n={2} />.
+
+## A real-life example
+
+This example is the tutorial's own. An online exam platform publishes an event "exam submitted". The grading service, the email service, and the report service each listen for it. If the email service is down, grading still runs. A new "certificate" service can start listening later, and the exam service does not change.
+
+The cost is that the certificate may appear a few seconds after the grade. Each part sees the event at its own time.
+
+## Common mistakes
+
+- **Assuming one global order.** Several consumer instances may process events in a different order <Cite n={1} />.
+- **Treating "delivered" as "processed".** A crash between receive and hand-over can drop an event <Cite n={1} />.
+- **Using it for every call.** Simple request-response flows may not justify the extra operating work <Cite n={1} />.
+- **Putting private data in events.** Many components can see an event, even those that should not use it <Cite n={1} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources.
+
+- **Send the same event twice.** Check that the result does not change, for example no second payment.
+- **Send events out of order.** Check that a late "updated" event does not hide a newer one.
+- **Stop a consumer, then start it.** Check that no event is lost and that a failed event reaches the dead-letter queue.
+- **Check the delay.** Read the data right after an event and again later. Know how long the system may show old data.
+- **Follow the correlation ID.** Check that one ID links the logs of all the parts.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Event | A change in state or an update <Cite n={2} /> |
+| Producer | A component that creates and publishes events <Cite n={1} /> <Cite n={2} /> |
+| Consumer | A component that listens for events and acts on them <Cite n={1} /> |
+| Event router or broker | The part that moves events from producers to consumers <Cite n={1} /> <Cite n={2} /> |
+| Event streaming | A model where events go to a durable log that clients read at their own position <Cite n={1} /> |
+| Idempotent | Safe to run more than once with the same result (the tutorial's own definition; Azure uses the word without defining it) <Cite n={1} /> |
+| Dead-letter queue (DLQ) | A queue where a failed event goes for an administrator to inspect <Cite n={1} /> |
+| Correlation ID | An identifier in every event that links related operations <Cite n={1} /> |
