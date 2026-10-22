@@ -14,7 +14,11 @@ export type FlatEntry<S extends string = string> = {
   kind: FlatKind;
   /** Required for "link", ignored otherwise. */
   href?: string;
+  /** The `num` of a part. Required when the module has `parts`. */
+  part?: number;
 };
+
+export type FlatPart = { num: number; title: string };
 
 export type FlatItem<S extends string = string> = FlatEntry<S> & { number: number; href: string };
 
@@ -36,13 +40,6 @@ export type FlatModuleUI = {
   sidebarItemLabel: (n: number) => string;
   headerLink: string;
   crossTo: string;
-  // Only with progress:
-  overallLabel?: string;
-  summaryText?: (done: number, total: number) => string;
-  percentText?: (v: number) => string;
-  markDone?: string;
-  markedDone?: string;
-  sidebarDone?: string;
   // Only with a practice entry:
   practiceEyebrow?: string;
   sidebarPracticeLabel?: string;
@@ -50,14 +47,31 @@ export type FlatModuleUI = {
   practiceLabel?: string;
 };
 
-export type FlatModuleDef<I extends string = string, S extends string = string> = {
+/** The strings that a module with progress must have. */
+export type FlatProgressUI = {
+  overallLabel: string;
+  summaryText: (done: number, total: number) => string;
+  percentText: (v: number) => string;
+  markDone: string;
+  markedDone: string;
+  sidebarDone: string;
+};
+
+type FlatModuleBase<I extends string, S extends string> = {
   id: I;
   label: string;
   searchGroup: string;
   entries: readonly FlatEntry<S>[];
-  progress?: { storageKey: string; extraIds?: readonly string[] };
-  ui: FlatModuleUI;
+  /** With parts, every entry has a part, and the parts of the entries do not go down. */
+  parts?: readonly FlatPart[];
 };
+
+/** A module with `progress` must have the progress strings in `ui`. */
+export type FlatModuleDef<I extends string = string, S extends string = string> = FlatModuleBase<I, S> &
+  (
+    | { progress?: undefined; ui: FlatModuleUI & Partial<FlatProgressUI> }
+    | { progress: { storageKey: string; extraIds?: readonly string[] }; ui: FlatModuleUI & FlatProgressUI }
+  );
 
 export type FlatModule<I extends string = string, S extends string = string> = FlatModuleDef<I, S> & {
   /** `/${id}/` */
@@ -68,8 +82,10 @@ export type FlatModule<I extends string = string, S extends string = string> = F
   pages: readonly FlatItem<S>[];
   /** The home, then the href of each page. */
   routes: readonly string[];
-  /** The slugs of the "topic" items. Empty without progress. */
+  /** The slugs of the "topic" and "link" items. Empty without progress. */
   lessonIds: readonly S[];
+  /** One group for each part with items, in order. Without parts, one group with `part: null` and all items. */
+  groups(): { part: FlatPart | null; items: readonly FlatItem<S>[] }[];
   /** Finds a page. A link item or an unknown slug gives undefined. */
   get(slug: string): FlatItem<S> | undefined;
   /** The previous and the next page. Link items do not count. */
@@ -79,6 +95,16 @@ export type FlatModule<I extends string = string, S extends string = string> = F
 /** The methods are closures, so a detached method such as `const get = M.get` works. */
 export function defineFlatModule<I extends string, S extends string>(def: FlatModuleDef<I, S>): FlatModule<I, S> {
   const home = `/${def.id}/`;
+  if (def.parts) {
+    const nums = def.parts.map((p) => p.num);
+    let last = -Infinity;
+    for (const entry of def.entries) {
+      if (entry.part === undefined || !nums.includes(entry.part) || entry.part < last) {
+        throw new Error(`entry ${entry.slug} has a missing, unknown, or decreasing part`);
+      }
+      last = entry.part;
+    }
+  }
   const items: readonly FlatItem<S>[] = def.entries.map((entry, i) => {
     if (entry.kind === "link" && !entry.href) throw new Error(`link entry ${entry.slug} needs an href`);
     return {
@@ -89,7 +115,15 @@ export function defineFlatModule<I extends string, S extends string>(def: FlatMo
   });
   const pages = items.filter((item) => item.kind !== "link");
   const routes = [home, ...pages.map((page) => page.href)];
-  const lessonIds = def.progress ? pages.filter((page) => page.kind === "topic").map((page) => page.slug) : [];
+  const lessonIds = def.progress
+    ? items.filter((item) => item.kind === "topic" || item.kind === "link").map((item) => item.slug)
+    : [];
+  const groups = () =>
+    def.parts
+      ? def.parts
+          .map((part) => ({ part, items: items.filter((item) => item.part === part.num) }))
+          .filter((group) => group.items.length > 0)
+      : [{ part: null, items }];
 
   const get = (slug: string) => pages.find((page) => page.slug === slug);
   const neighbours = (slug: string) => {
@@ -98,5 +132,5 @@ export function defineFlatModule<I extends string, S extends string>(def: FlatMo
     return { previous: pages[i - 1], next: pages[i + 1] };
   };
 
-  return { ...def, home, items, pages, routes, lessonIds, get, neighbours };
+  return { ...def, home, items, pages, routes, lessonIds, groups, get, neighbours };
 }

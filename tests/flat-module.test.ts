@@ -1,10 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { defineFlatModule, type FlatModuleDef } from "../lib/modules/flat.ts";
+import { defineFlatModule, type FlatModuleDef, type FlatModuleUI, type FlatProgressUI } from "../lib/modules/flat.ts";
+import { cachedBy } from "../lib/modules/hook-cache.ts";
 import { ARCHITECTURE, FLAT_MODULES, PROGRESS_MODULES } from "../lib/modules/registry.ts";
 
-const ui: FlatModuleDef["ui"] = {
+const ui: FlatModuleUI & FlatProgressUI = {
   siteTitle: "Fake",
   description: "",
   eyebrow: (count) => `FAKE ${count}`,
@@ -22,6 +23,12 @@ const ui: FlatModuleDef["ui"] = {
   sidebarItemLabel: (n) => `ITEM ${n}`,
   headerLink: "Fake",
   crossTo: "Fake",
+  overallLabel: "Done",
+  summaryText: (done, total) => `${done} of ${total}`,
+  percentText: (v) => `${v}%`,
+  markDone: "Mark as done",
+  markedDone: "Done",
+  sidebarDone: "done",
 };
 
 const fakeDef = {
@@ -40,6 +47,21 @@ const fakeDef = {
 
 const fake = defineFlatModule(fakeDef);
 const noProgress = defineFlatModule({ ...fakeDef, progress: undefined });
+const e = (slug: string) => ({ slug, title: slug, description: "", kind: "topic" as const });
+const partsDef = {
+  ...fakeDef,
+  parts: [
+    { num: 0, title: "Zero" },
+    { num: 1, title: "One" },
+    { num: 2, title: "Two" },
+  ],
+  entries: [
+    { ...e("a"), part: 0 },
+    { slug: "b", title: "B", description: "", kind: "link", href: "/other/b/", part: 1 },
+    { ...e("c"), part: 1 },
+  ],
+} satisfies FlatModuleDef;
+const withParts = defineFlatModule(partsDef);
 const slugs = (n: { previous?: { slug: string }; next?: { slug: string } }) => [n.previous?.slug, n.next?.slug];
 
 test("items are numbered from 1 and a link item keeps its own href", () => {
@@ -74,9 +96,54 @@ test("neighbours skip link items and stop at the edges", () => {
   assert.deepEqual(slugs(fake.neighbours("d")), ["c", undefined]);
 });
 
-test("lessonIds are the topic slugs, and empty without progress", () => {
-  assert.deepEqual(fake.lessonIds, ["a", "c"]);
+test("lessonIds are the topic and link slugs, and empty without progress", () => {
+  assert.deepEqual(fake.lessonIds, ["a", "b", "c"]);
   assert.deepEqual(noProgress.lessonIds, []);
+  assert.deepEqual(ARCHITECTURE.lessonIds, ARCHITECTURE.pages.filter((p) => p.kind === "topic").map((p) => p.slug));
+  assert.equal(ARCHITECTURE.lessonIds.length, 19);
+});
+
+test("a module with parts rejects a missing, unknown, or decreasing part", () => {
+  assert.throws(() => defineFlatModule({ ...partsDef, entries: [{ ...e("a"), part: undefined }] }), /part/);
+  assert.throws(() => defineFlatModule({ ...partsDef, entries: [{ ...e("a"), part: 9 }] }), /part/);
+  assert.throws(
+    () => defineFlatModule({ ...partsDef, entries: [{ ...e("a"), part: 1 }, { ...e("b"), part: 0 }] }),
+    /part/,
+  );
+});
+
+test("groups follow the parts, skip empty parts, and give one null group without parts", () => {
+  assert.deepEqual(
+    withParts.groups().map((g) => [g.part?.num, g.items.map((i) => i.slug)]),
+    [
+      [0, ["a"]],
+      [1, ["b", "c"]],
+    ],
+  );
+  assert.deepEqual(
+    fake.groups().map((g) => g.part),
+    [null],
+  );
+  assert.deepEqual(
+    fake.groups()[0].items.map((i) => i.slug),
+    ["a", "b", "c", "d"],
+  );
+});
+
+test("progressHook gives the same hook for the same storage key", () => {
+  let made = 0;
+  const hookOf = cachedBy((key) => ({ key, n: ++made }));
+  assert.equal(hookOf("k"), hookOf("k"));
+  assert.notEqual(hookOf("k"), hookOf("other"));
+  assert.equal(made, 2);
+});
+
+test("every module with progress has the progress strings", () => {
+  for (const m of PROGRESS_MODULES) {
+    for (const key of ["overallLabel", "summaryText", "percentText", "markDone", "markedDone", "sidebarDone"] as const) {
+      assert.ok(m.ui[key], `${m.id}: ui.${key}`);
+    }
+  }
 });
 
 test("a link entry without href throws", () => {
