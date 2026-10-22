@@ -1,0 +1,104 @@
+export const metadata = { title: 'Netflix', description: 'A case study of how Netflix streams video: Open Connect caches near the viewer, the control plane on AWS, adaptive bitrate streaming, and the resilience tools Hystrix and Chaos Monkey.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'Open Connect Overview (PDF)', publisher: 'Netflix', url: 'https://openconnect.netflix.com/Open-Connect-Overview.pdf', accessed: '2026-10-22' },
+    { title: 'Open Connect', publisher: 'Netflix', url: 'https://openconnect.netflix.com/en/', accessed: '2026-10-22' },
+    { title: 'About Netflix', publisher: 'Netflix', url: 'https://about.netflix.com/en', accessed: '2026-10-22' },
+    { title: 'RFC 8216: HTTP Live Streaming', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc8216', accessed: '2026-10-22' },
+    { title: 'Setting up adaptive streaming media sources', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Audio_and_video_delivery/Setting_up_adaptive_streaming_media_sources', accessed: '2026-10-22' },
+    { title: 'Hystrix README', publisher: 'Netflix, GitHub', url: 'https://github.com/Netflix/Hystrix', accessed: '2026-10-22' },
+    { title: 'Chaos Monkey README', publisher: 'Netflix, GitHub', url: 'https://github.com/Netflix/chaosmonkey', accessed: '2026-10-22' },
+    { title: 'Chaos Monkey: Termination behavior', publisher: 'Netflix', url: 'https://netflix.github.io/chaosmonkey/Termination-behavior/', accessed: '2026-10-22' },
+  ],
+}
+
+# Netflix
+
+At the time of access (October 2026), Netflix says that it entertains more than half a billion people in over 190 countries <Cite n={3} />. This page explains, in plain words, how Netflix describes its video delivery. The facts come from Netflix's own documents. Each one is true for the date of its source, and the design may have changed since. Netflix's choices fit Netflix. They are not general rules.
+
+<PageMeta />
+
+## In plain words
+
+Netflix splits its work in two. The services that start playback (the check of your account and licences, and the choice of files) run in Amazon Web Services (AWS). The video itself comes from Open Connect, Netflix's own content delivery network (CDN) <Cite n={1} />. For the general idea of a CDN, see [CDN](/architecture/cdn/).
+
+Open Connect brings the video close to where people watch it <Cite n={1} />. Its building blocks are cache servers that Netflix designed for this job, called Open Connect Appliances (OCAs). An OCA keeps encoded video files and sends them to devices over HTTP or HTTPS <Cite n={1} />. OCAs do not keep member data such as viewing history <Cite n={1} />.
+
+Netflix started Open Connect in 2011, because its streaming traffic kept growing <Cite n={1} />. Netflix gives two reasons: to work directly with internet service providers (ISPs), and to build a caching design that pushes content ahead of demand. Netflix says this design is much more efficient than a CDN that fills its caches only when a viewer asks <Cite n={1} />.
+
+## When you need it
+
+Netflix places OCAs in two kinds of places <Cite n={1} />:
+
+- **Internet exchange points.** ISPs connect to these OCAs through peering.
+- **Inside ISP networks.** Netflix gives the servers free of charge to ISPs that qualify, and the ISP gives power, space, and connectivity.
+
+At the time of access, the Open Connect site says that Netflix works with more than a thousand ISPs <Cite n={2} />. The site also says that an embedded OCA is not always the answer. It depends on the traffic level and other limits <Cite n={2} />. The general lesson (the tutorial's own) is this: a private CDN makes sense when the traffic is very large and predictable. A smaller service usually rents a CDN.
+
+## How it works
+
+The Open Connect Overview describes playback in these steps <Cite n={1} />:
+
+```text
+1. OCAs report health, routes, and stored files ----> control plane (AWS)
+2. Device: "play this title" -----------------------> playback services (AWS)
+3. Playback services check rights and licences, and pick the files
+4. Steering service picks OCAs and makes their URLs
+5. Device gets the URLs ----> OCA sends the video files
+```
+
+This drawing is the tutorial's own summary of the Netflix description.
+
+The control plane steers each device to OCAs by file availability, health, and network distance <Cite n={1} />. When it picks files, it takes the device and the current network conditions into account. Each device also adapts what it gets to its needs and its network <Cite n={1} />.
+
+Netflix fills the OCAs mostly in off-peak hours. It says that it can predict well what members will watch and when. OCAs can also copy updates from each other <Cite n={1} />.
+
+**Adaptive bitrate streaming** is the general technique behind this kind of playback. The video is cut into short chunks, and each chunk exists in several quality levels <Cite n={5} />. MPEG-DASH and HLS are two common formats <Cite n={5} />. HLS lets the player change the bit rate to match the network, so that playback continues at the best quality it can <Cite n={4} />. The player should switch between versions of the stream when the network changes. The RFC does not define how the player chooses <Cite n={4} />. HLS also works with large HTTP caches <Cite n={4} />.
+
+## Resilience tools
+
+Netflix published two well-known tools for failure.
+
+**Hystrix** is a library for latency and fault tolerance. It isolates calls to remote services and helps stop cascading failure <Cite n={6} />. It offers fallbacks, fail fast, and circuit breakers <Cite n={6} />. See [Circuit Breaker](/course/circuit-breaker/). At the time of access, the README says that Hystrix is in maintenance mode, with 1.5.18 as the final release. Netflix moved its focus to adaptive methods, and it points new projects to resilience4j <Cite n={6} />.
+
+**Chaos Monkey** terminates virtual machines and containers at random in production. The idea is that frequent failures push engineers to build services that survive them <Cite n={7} />. The current version needs Spinnaker, a delivery platform <Cite n={7} />. It schedules a termination only on weekdays, between 9AM and 3PM <Cite n={8} />. For the general ideas, see [Availability](/course/availability/).
+
+## A real-life example
+
+This example is the tutorial's own simplification. A viewer in Dhaka presses Play. The app asks the playback services in AWS. They check the account and pick files for a phone on a mobile network. The steering service returns the URLs of OCAs inside the viewer's ISP. The phone downloads the video chunks from there. The network slows, so the player moves to a lower quality level, and playback continues.
+
+## Common mistakes
+
+These points are the tutorial's own reading of the sources.
+
+- **Stating old facts as current.** The overview carries the copyright years 2016, 2019, and 2026, and Hystrix is in maintenance mode <Cite n={1} /> <Cite n={6} />. Say the year.
+- **Copying Netflix as a rule.** Even for Netflix, an embedded OCA depends on the ISP's traffic level <Cite n={2} />. Most teams do not have Netflix's traffic or ISP partners.
+- **Forgetting the control plane.** Video comes from OCAs, but playback starts in AWS <Cite n={1} />. If the control plane fails, the cache servers alone cannot start playback (the tutorial's own inference).
+- **Chaos without a safety net.** Chaos Monkey runs only in work hours <Cite n={8} />, so that people are there to react (the tutorial's own reading).
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources. They apply to any streaming service, not only Netflix.
+
+- **Throttle the network.** Slow the connection during playback. Expected: the player drops to a lower quality and does not stop.
+- **Recover the quality.** Restore the speed. Expected: the quality goes up again after a short time.
+- **Cache server down.** Block one cache host. Expected: the player gets the chunks from another host, and the user sees at most a short pause.
+- **Rights check.** Try to play with an expired account or a blocked region. Expected: a clear message and no video URL.
+- **Kill an instance.** In a test environment, stop one service instance. Expected: the service keeps working, and the fallback shows if a dependency fails.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Open Connect | Netflix's own global CDN for its shows and movies <Cite n={1} /> |
+| OCA (Open Connect Appliance) | A cache server built by Netflix that keeps video files and serves them over HTTP or HTTPS <Cite n={1} /> |
+| Control plane | The Netflix services in AWS that steer devices to OCAs and control the fill <Cite n={1} /> |
+| Fill | The copy of new files to OCAs, mostly in off-peak hours <Cite n={1} /> |
+| Embedded OCA | An OCA inside an ISP network <Cite n={1} /> <Cite n={2} /> |
+| Adaptive bitrate streaming | Playback that changes the bit rate to match the network <Cite n={4} /> |
+| Variant Stream | In HLS, one version of the content, encoded at its own bit rate and resolution <Cite n={4} /> |
+| Hystrix | A Netflix fault tolerance library, now in maintenance mode <Cite n={6} /> |
+| Chaos Monkey | A Netflix tool that terminates instances at random in production <Cite n={7} /> |
