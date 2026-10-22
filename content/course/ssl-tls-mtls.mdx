@@ -1,0 +1,107 @@
+export const metadata = { title: 'SSL, TLS, and mTLS', description: 'What TLS gives a connection, why people still say SSL, the version facts with the RFC for each, server certificates, client certificates in mutual TLS, and what a tester can check.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: 'RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc8446', accessed: '2026-10-22' },
+    { title: 'RFC 7568: Deprecating Secure Sockets Layer Version 3.0', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc7568', accessed: '2026-10-22' },
+    { title: 'RFC 8996: Deprecating TLS 1.0 and TLS 1.1', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc8996', accessed: '2026-10-22' },
+    { title: 'RFC 8705: OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc8705', accessed: '2026-10-22' },
+    { title: 'Transport Layer Security (TLS)', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/Security/Transport_Layer_Security', accessed: '2026-10-22' },
+  ],
+}
+
+# SSL, TLS, and mTLS
+
+You open a bank site and see a padlock. A teammate says "the site has an SSL certificate". Another says "we need mTLS between the services". The words sound alike, but they name different things. This page sorts them out.
+
+<PageMeta />
+
+## In plain words
+
+TLS (Transport Layer Security) is a protocol that lets a client and a server talk over an untrusted network. When it protects HTTP, the result is HTTPS <Cite n={5} />. The main goal of TLS is a secure channel between two peers. It needs only a reliable, in-order stream of data from the layer below <Cite n={1} />.
+
+The channel should give three properties <Cite n={1} />:
+
+| Property | What it means |
+|---|---|
+| Authentication | The server is always authenticated. The client is optionally authenticated. |
+| Confidentiality | Data sent after the setup is visible only to the two endpoints. The size of the data is not hidden, unless the endpoints pad it. |
+| Integrity | An attacker cannot change the data without detection. |
+
+The RFC says these properties should hold even when an attacker has complete control of the network <Cite n={1} />.
+
+**Why people still say "SSL".** SSL (Secure Sockets Layer) is the older family of protocols. SSL 3.0 came out in 1996, and TLS 1.0 replaced it in 1999 <Cite n={2} />. RFC 7568 says SSL 3.0 must not be used <Cite n={2} />. RFC 8446 says the same for SSL 3.0 and SSL 2.0: an implementation must not negotiate them <Cite n={1} />. So the safe protocol today is TLS. The word "SSL" lives on in everyday speech, such as "SSL certificate". This habit is the tutorial's own remark, not a claim of the sources. When you read "SSL" in a ticket, it nearly always means TLS.
+
+## When you need it
+
+MDN advises every website to use HTTPS for its pages and for the resources they load <Cite n={5} />. TLS also fits any other link where two programs talk over a network you do not control, such as an API call between two services. The RFC says TLS is independent of the application protocol, so higher protocols can run on top of it <Cite n={1} />.
+
+mTLS (mutual TLS) is the case where the client also proves who it is. MDN says that on the web it appears mostly in specialized applications <Cite n={5} />. Teams often think of it for calls between internal services. That remark is the tutorial's own.
+
+## How it works
+
+A TLS connection starts with a handshake, then uses a record protocol. The handshake authenticates the parties, agrees on the parameters, and sets up shared keys. The record protocol then protects the traffic with those keys <Cite n={1} />. MDN lists what the two sides agree on: the TLS version, the cipher suite (the set of algorithms), the secret key, and, as an option, mutual authentication <Cite n={5} />. After that, HTTP headers and bodies are encrypted <Cite n={5} />.
+
+**The server certificate.** A site needs a digital certificate. It holds a signed copy of the public key that matches the private key of the site. This ties the keys to the domain name <Cite n={5} />. A Certification Authority (CA) issues the certificate. Let's Encrypt is one example <Cite n={5} />. In the handshake, the server sends the Certificate message and a CertificateVerify message. CertificateVerify is a signature over the whole handshake, made with the private key that goes with the certificate <Cite n={1} />.
+
+**The client certificate in mTLS.** If the server wants a client certificate, it sends a CertificateRequest. If it does not want one, it leaves that message out <Cite n={1} />. The client then sends its own Certificate and CertificateVerify <Cite n={1} />. The server can now check who the client is, as well as the client checking the server.
+
+TLS does not decide what a valid client is. The RFC says it leaves to the higher protocol how to read the certificates that were exchanged <Cite n={1} />. RFC 8705 shows one such design for OAuth 2.0. The authorization server decides by policy whether a client must use mTLS. The client sends its `client_id`, and the server checks the certificate against what it expects for that client. A missing or wrong certificate gives an `invalid_client` error <Cite n={4} />. RFC 8705 has two methods <Cite n={4} />:
+
+| Method | How the server decides |
+|---|---|
+| PKI | It validates the certificate chain and matches one subject name. Whether to check revocation is a deployment decision. |
+| Self-signed | The client registers its certificates. The server does not validate a chain. It accepts a certificate that matches a registered one. |
+
+The same RFC can also bind an access token to the client certificate. The resource server must check that the certificate matches the token. If it does not, the server rejects the request with HTTP 401 and `invalid_token` <Cite n={4} />.
+
+**The versions.** Each fact has the RFC that states it:
+
+| Version | Status | RFC |
+|---|---|---|
+| SSL 3.0 | Must not be used. Must not be negotiated from any TLS version. | RFC 7568 <Cite n={2} /> |
+| TLS 1.0 and 1.1 | Deprecated. They lack current algorithms. They must not be used. | RFC 8996 <Cite n={3} /> |
+| TLS 1.2 | Obsoleted by TLS 1.3. MDN says some sites still use it. | RFC 8446 <Cite n={1} /> <Cite n={5} /> |
+| TLS 1.3 | The current version (August 2018) and the most widely used. | RFC 8446 <Cite n={1} /> <Cite n={5} /> |
+
+RFC 8996 gives a reason for TLS 1.0 and 1.1: their integrity and signatures depend on SHA-1, and the only upgrade path is a newer version <Cite n={3} />. It adds that removing old versions reduces the attack surface and the chance of misconfiguration <Cite n={3} />.
+
+## A real-life example
+
+This example is the tutorial's own. A test team runs a payments API. Browsers call the public site over HTTPS, and the server shows a certificate for its domain. Two internal services, "orders" and "ledger", also call each other. The ledger service accepts a call only if the caller shows a client certificate that the company's CA issued. A test that calls the ledger without a certificate fails in the handshake, before any request reaches the application.
+
+## Common mistakes
+
+- **Saying "TLS makes the app secure".** TLS protects the data in transit between two endpoints <Cite n={1} />. The RFC leaves it to the protocol above TLS to decide how to read the certificates that were exchanged <Cite n={1} />. The rest of this point is the tutorial's own advice: TLS does not test how the application treats the data, so a site can use TLS and still have login bugs.
+- **Leaving old versions on.** RFC 8996 says TLS 1.0 and 1.1 must not be used <Cite n={3} />.
+- **Mixed content.** An HTTPS page that loads a script over HTTP gives that script no protection. Browsers upgrade or block such loads <Cite n={5} />.
+- **Treating a self-signed certificate as the same case everywhere.** In RFC 8705 the server accepts it only when it matches a registered one <Cite n={4} />. A browser has its own rules for certificates, and this page does not cover them.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice, not a claim of the sources.
+
+- **Versions.** Check which TLS versions the test server accepts. Confirm that SSL 3.0, TLS 1.0, and TLS 1.1 are refused.
+- **Certificate.** Check that the certificate matches the domain, has not expired, and comes from a CA that the client trusts.
+- **No client certificate.** On an mTLS endpoint, call without a client certificate. Expect a refusal, and check how the client shows the error.
+- **Wrong client certificate.** Use a certificate that the server does not expect. Expect a refusal.
+- **Expiry.** Plan a test for a client certificate that expires, and for its rotation.
+- **Mixed content.** Open pages in a browser and look for HTTP resources on HTTPS pages.
+- **Scope.** Do not call a feature "secure" because TLS works. Test login, access rules, and data handling on their own.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| TLS | A protocol for a secure channel between a client and a server <Cite n={1} /> |
+| SSL | The older protocol family that TLS replaced. SSL 3.0 must not be used <Cite n={2} /> |
+| HTTPS | HTTP carried over TLS <Cite n={5} /> |
+| Handshake | The first step of TLS: it agrees on the parameters, authenticates, and sets up keys <Cite n={1} /> |
+| Cipher suite | The set of algorithms the two sides agree to use <Cite n={5} /> |
+| Digital certificate | A document with a signed public key that ties the key to a domain name <Cite n={5} /> |
+| CA | Certification Authority: an entity that issues certificates <Cite n={5} /> |
+| mTLS | Mutual TLS: the client also authenticates with a certificate, in addition to the server <Cite n={1} />. RFC 8705 uses it for OAuth 2.0 client authentication <Cite n={4} /> |
+| CertificateRequest | The handshake message in which the server asks for a client certificate <Cite n={1} /> |
+| Certificate-bound token | An access token tied to the client certificate <Cite n={4} /> |
