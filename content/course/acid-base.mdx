@@ -1,0 +1,99 @@
+export const metadata = { title: 'ACID and BASE', description: 'What the four ACID guarantees mean, what BASE means, why some systems trade strict guarantees for availability, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-22',
+  sources: [
+    { title: '3.4. Transactions', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/tutorial-transactions.html', accessed: '2026-10-22' },
+    { title: '13.2. Transaction Isolation', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/transaction-iso.html', accessed: '2026-10-22' },
+    { title: '28.3. Write-Ahead Logging (WAL)', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/wal-intro.html', accessed: '2026-10-22' },
+    { title: '28.1. Reliability', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/wal-reliability.html', accessed: '2026-10-22' },
+    { title: '5.5. Constraints', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/ddl-constraints.html', accessed: '2026-10-22' },
+    { title: '19.5. Write Ahead Log (synchronous_commit)', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/runtime-config-wal.html', accessed: '2026-10-22' },
+    { title: 'Dynamo: Amazon\'s Highly Available Key-value Store', publisher: 'DeCandia et al., SOSP 2007', url: 'https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf', accessed: '2026-10-22' },
+    { title: 'Towards Robust Distributed Systems (PODC 2000 keynote slides)', publisher: 'Eric Brewer, UC Berkeley', url: 'https://people.eecs.berkeley.edu/~brewer/cs262b-2004/PODC-keynote.pdf', accessed: '2026-10-22' },
+  ],
+}
+
+# ACID and BASE
+
+When you pay a bill, you expect the money to leave one account and arrive in the other, or to stay where it was. When you "like" a post, you accept that a friend may see the old count for a few seconds. ACID and BASE name these two attitudes to data.
+
+<PageMeta />
+
+## In plain words
+
+**ACID** is a set of four properties that make database transactions reliable: Atomicity, Consistency, Isolation, Durability <Cite n={7} />. A **transaction** is a group of steps that the database treats as one operation <Cite n={1} />.
+
+| Letter | Plain meaning |
+|---|---|
+| **A**tomicity | All the steps happen, or none do. Other transactions never see a half-done result <Cite n={1} />. |
+| **C**onsistency | *The tutorial's own simplification:* the data follows the rules you define. A constraint is one such rule: if a statement would break it, the database raises an error <Cite n={5} />. |
+| **I**solation | Open transactions do not show their unfinished changes to each other <Cite n={1} />. The level of isolation can be chosen <Cite n={2} />. |
+| **D**urability | After the database reports "done", the change is logged on permanent storage <Cite n={1} />. |
+
+**BASE** is the other side. In Brewer's 2000 keynote, BASE means "Basically Available, Soft-state, Eventual consistency" <Cite n={8} />. His slides contrast it with ACID: BASE accepts weaker consistency (stale data is acceptable) and puts availability first <Cite n={8} />.
+
+## When you need it
+
+You need the difference whenever you test stored data: a payment, an order, a stock count, a feed. Ask one question: if two copies of the data disagree for a short time, is that a bug or an accepted design?
+
+## How it works
+
+**Atomicity.** A payment needs several separate updates. A transaction groups them, and `ROLLBACK` cancels the updates so far <Cite n={1} />.
+
+**Isolation levels.** The SQL standard defines four levels. The strictest, Serializable, gives the same effect as running the transactions one at a time in some order <Cite n={2} />. A **dirty read** is when a transaction reads data from another transaction that is not yet committed <Cite n={2} />. PostgreSQL uses Read Committed by default. In it, two reads in one transaction can see different data if another transaction commits in between <Cite n={2} />. The PostgreSQL docs call this level adequate for many applications, but not for all cases <Cite n={2} />. At Serializable, an application must be ready to retry a transaction that fails <Cite n={2} />.
+
+**Durability and the log.** PostgreSQL writes a change to its log (the write-ahead log) and flushes the log to permanent storage before the change goes to the data files. After a crash, it recovers from the log <Cite n={3} />.
+
+**An eventually consistent design.** The Dynamo paper describes a store that accepts weaker consistency for high availability. It gives no isolation guarantees and allows only single-key updates <Cite n={7} />. Its design is eventually consistent: all updates reach all replicas eventually <Cite n={7} />. Updates can travel to replicas in the background <Cite n={7} />. The paper does not use the word BASE. Linking Dynamo to BASE is the tutorial's own framing.
+
+## A real-life example
+
+*The numbers here are the tutorial's own.* A learning platform sells course credits. Ana has 100 credits and sends 40 to Ben, who has 20.
+
+**With ACID.** The platform removes 40 from Ana and adds 40 to Ben in one transaction. If the server fails after the first step, the database cancels the transaction, and Ana still has 100. Nobody sees Ana at 60 and Ben at 20.
+
+**With BASE.** The platform also shows a "learners online" counter on many replicas. One replica shows 118 and another shows 120 for a moment. Nothing is broken, because BASE accepts stale data <Cite n={8} />.
+
+A real case from the Dynamo paper is the shopping cart. It must accept "add" and "remove" even during network and server failures <Cite n={7} />. If the latest cart is not reachable, the change goes to an older version, and the versions are reconciled later <Cite n={7} />. Brewer notes that real systems mix both: he used ACID for user profiles and logging <Cite n={8} />.
+
+## Trade-offs
+
+Brewer says the trade-off between consistency and availability is fundamental <Cite n={8} />. The Dynamo authors report that, in their experience at Amazon, stores with ACID guarantees tend to have poor availability <Cite n={7} />. That is their result, not a law for every system.
+
+With eventual consistency, two copies can change at the same time, and the conflict must be found and resolved <Cite n={7} />. In Dynamo, the application can merge the versions, or the store can use a simple rule such as "last write wins" <Cite n={7} />. Dynamo also keeps writes from being rejected, so the work of conflict handling moves to the reads <Cite n={7} />.
+
+ACID does not mean "nothing can ever go wrong".
+
+- PostgreSQL stores committed data safely only if the storage does what it should. Disk and controller caches can lose data in a power failure, and the administrator must check the hardware <Cite n={4} />.
+- A setting can trade durability for speed. With `synchronous_commit` off, the database reports success before the change is safe. A crash can lose recent transactions, but the data is left as if they had been cancelled <Cite n={6} />. The default is on <Cite n={6} />.
+
+## Common mistakes
+
+- **Treating ACID as a guarantee against all loss.** Durability depends on storage and settings <Cite n={4} /> <Cite n={6} />.
+- **Mixing up two meanings of "consistent".** In this tutorial, the "C" of ACID means data rules (see the table above). Eventual consistency is about copies that agree later <Cite n={7} />.
+- **Assuming the strictest isolation is the default.** PostgreSQL uses Read Committed unless you change it <Cite n={2} />.
+- **Forgetting retries.** At the Serializable level, the application must be prepared to retry a transaction that fails <Cite n={2} />.
+
+## What a tester can check
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Cut the transaction in half.** Make the second step fail on purpose. Check that the first step is not saved.
+- **Break a rule.** Try a value that a constraint should refuse. Check for a clear error and no partial data.
+- **Open two sessions.** Change data in one and read it in the other, before and after the commit. Write down what you expect to see.
+- **Kill the service.** Stop the server right after a "success" message. Restart it and check that the saved data is still there.
+- **Wait and read again.** On an eventually consistent feature, read from two places, then again after a pause. Ask the team how long "eventually" may take.
+</Callout>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| ACID | Atomicity, Consistency, Isolation, Durability: four properties of reliable transactions <Cite n={7} /> |
+| BASE | Basically Available, Soft-state, Eventual consistency, as named in a 2000 keynote <Cite n={8} /> |
+| Transaction | A group of steps that the database treats as one operation <Cite n={1} /> |
+| Atomic | All steps happen, or none do <Cite n={1} /> |
+| Dirty read | Reading data of another transaction that is not yet committed <Cite n={2} /> |
+| Write-ahead log | A log that is flushed to permanent storage before the data files change <Cite n={3} /> |
+| Eventual consistency | All updates reach all replicas eventually <Cite n={7} /> |
