@@ -43,7 +43,7 @@ test("the course cards are the 6 groups, then the 5 modules", () => {
   );
   assert.deepEqual(
     COURSE_CARDS.slice(6).map((c) => c.count),
-    [12, 11, 15, 20, 38],
+    [12, 11, 15, 20, 40],
   );
   assert.equal(COURSE_CARDS[0].href, "/getting-started/setup/");
   assert.equal(COURSE_CARDS[6].href, "/linux/");

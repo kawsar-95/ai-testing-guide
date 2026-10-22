@@ -1,7 +1,7 @@
 /**
  * The one ordered list of the System Design Course. A topic entry is served at
  * /course/<slug>/ and has its text in content/course/<slug>.mdx. A link entry
- * points to an Architecture page and has no page of its own.
+ * points to an Architecture or System Design page and has no page of its own.
  */
 import { defineFlatModule, type FlatEntry } from "../modules/flat.ts";
 import { COURSE_UI } from "./ui.ts";
@@ -55,7 +55,13 @@ export type CourseSlug =
   | "vm-containers"
   | "oauth-oidc"
   | "sso"
-  | "ssl-tls-mtls";
+  | "ssl-tls-mtls"
+  | "interview-intro"
+  | "url-shortener"
+  | "whatsapp"
+  | "twitter"
+  | "netflix"
+  | "uber";
 
 const parts = [
   { num: 0, title: "Getting started" },
@@ -63,6 +69,7 @@ const parts = [
   { num: 2, title: "Databases and consistency" },
   { num: 3, title: "System architecture" },
   { num: 4, title: "Reliability and security" },
+  { num: 5, title: "Case studies and interview" },
 ] as const;
 
 const entries: readonly FlatEntry<CourseSlug>[] = [
@@ -419,6 +426,52 @@ const entries: readonly FlatEntry<CourseSlug>[] = [
     description: "Encrypt traffic and prove who is on each end.",
     kind: "topic",
     part: 4,
+  },
+  {
+    slug: "interview-intro",
+    title: "System Design Interviews",
+    description: "What a system design interview asks, and how to work through one.",
+    kind: "topic",
+    part: 5,
+  },
+  {
+    slug: "url-shortener",
+    title: "URL Shortener",
+    description: "Turn a long link into a short one, at scale.",
+    kind: "link",
+    href: "/system-design/url-shortener/",
+    part: 5,
+  },
+  {
+    slug: "whatsapp",
+    title: "WhatsApp",
+    description: "Deliver chat messages to billions of phones.",
+    kind: "link",
+    href: "/system-design/whatsapp/",
+    part: 5,
+  },
+  {
+    slug: "twitter",
+    title: "Twitter",
+    description: "Build a home timeline from the accounts a user follows.",
+    kind: "link",
+    href: "/system-design/twitter/",
+    part: 5,
+  },
+  {
+    slug: "netflix",
+    title: "Netflix",
+    description: "Stream video worldwide from caches near the viewer.",
+    kind: "topic",
+    part: 5,
+  },
+  {
+    slug: "uber",
+    title: "Uber",
+    description: "Estimate when a ride will arrive.",
+    kind: "link",
+    href: "/system-design/uber-eta/",
+    part: 5,
   },
 ];
 
