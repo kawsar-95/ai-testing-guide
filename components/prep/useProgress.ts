@@ -28,9 +28,9 @@ function hookOf(source: Source): UseProgress {
   const getServerSnapshot = () => EMPTY;
   return function useProgress() {
     const done = useSyncExternalStore(source.subscribe, source.getSnapshot, getServerSnapshot);
-    const toggle = useCallback((id: string) => source.toggle(id), []);
-    const markDone = useCallback((id: string) => source.markDone(id), []);
-    const clear = useCallback(() => source.clear(), []);
+    const toggle = useCallback((id: string) => source.toggle(id), [source]);
+    const markDone = useCallback((id: string) => source.markDone(id), [source]);
+    const clear = useCallback(() => source.clear(), [source]);
     return useMemo(() => ({ done, toggle, markDone, clear }), [done, toggle, markDone, clear]);
   };
 }

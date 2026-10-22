@@ -29,7 +29,7 @@ export function FlatSidebarList({
           const label = item.kind === "practice" ? ui.sidebarPracticeLabel : ui.sidebarItemLabel(item.number);
           const tone = active ? "text-accent" : "text-text-faint";
           return (
-            <li key={item.href}>
+            <li key={item.slug}>
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}

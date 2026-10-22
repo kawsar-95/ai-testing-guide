@@ -22,7 +22,6 @@ export type SystemDesignSlug =
   | "stock-exchange"
   | "payment-system";
 
-
 type CaseEntry = { slug: SystemDesignSlug; title: string; description: string };
 
 const SOURCE: readonly CaseEntry[] = [

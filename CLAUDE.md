@@ -73,8 +73,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/linux/stages.ts` | The one ordered list of the 12 stages and their 103 topics. See "Linux Module". |
 | `lib/linux/ui.ts` | The English strings of the Linux module |
 | `lib/modules/flat.ts` | `defineFlatModule` and the flat module types (`FlatEntry`, `FlatItem`, `FlatModule`). See "Flat modules". |
-| `lib/modules/registry.ts` | `FLAT_MODULES`, `PROGRESS_MODULES`, `FlatModuleId`, and `flatModule(id)`. Pwa, sitemap, stats, search, contents, and dashboard read the flat modules from here. |
-| `components/modules/` | `FlatModuleHome`, `FlatTopicPage`, `FlatSidebarList`, `ProgressSummary`, `MarkDoneButton`, `DoneMark`, and `useModuleProgress.ts` (`progressHook`, `doneHook`). They take a module, or a `moduleId` in client components. |
+| `lib/modules/registry.ts` | `FLAT_MODULES`, `PROGRESS_MODULES`, and `FlatModuleId`. Pwa, sitemap, stats, search, contents, and dashboard read the flat modules from here. |
+| `components/modules/` | `FlatModuleHome`, `FlatTopicPage`, `FlatSidebarList`, `ProgressSummary`, `MarkDoneButton`, `DoneMark`, and `useModuleProgress.ts` (`progressHook`, `doneHook`, `flatModule(id)`). They take a module, or a `moduleId` in client components. |
 | `lib/system-design/cases.ts` | The one ordered list of the 15 System Design case studies. See "System Design Module". |
 | `lib/system-design/ui.ts` | The English strings of the System Design module |
 | `lib/fundamentals/chapters.ts` | The one ordered list of the 11 chapters and their 117 topics. See "Fundamentals Module". |
@@ -113,7 +113,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
 | `public/images/fundamentals/` | The images of the owner's notes |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `contents`, `header-nav`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard` |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `contents`, `header-nav`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard`, `flat-module` |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
 | `scripts/linux-route-map.json` | The 13 Linux routes: `/linux/` and the 12 stages. Same identity map as `route-map.json`. |
@@ -193,10 +193,11 @@ A flat module is a home page and a list of pages at `/<id>/<slug>/`. Architectur
 
 To add a flat module:
 
-1. Create a data file with `defineFlatModule` and a `<Id>Slug` type, and add one line to `FLAT_MODULES` in `lib/modules/registry.ts`.
+1. Create a data file with `defineFlatModule` and a `<Id>Slug` type, and add one line to `FLAT_MODULES` in `lib/modules/registry.ts`. Import and re-export the module there too.
 2. Create `app/(site)/<id>/page.tsx` (`FlatModuleHome`) and `app/(site)/<id>/[topic]/page.tsx` (`FlatTopicPage`). Keep both thin.
 3. Create `content/<id>/<slug>.mdx` and `scripts/<id>-route-map.json`.
-4. Add the map name to the lists of `check_routes.py`, `check_outline.py`, and `check_sources.py`.
+4. Add `...flatDocs(<MODULE>)` to `app/search-index.json/route.ts`, at its place in the order. `npm test` checks that each module has one.
+5. Add the map name to the lists of `check_routes.py`, `check_outline.py`, and `check_sources.py`.
 
 ## System Design Module
 
