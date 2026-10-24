@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },
   images: { unoptimized: true },
+  experimental: { agentUpgrade: "security" },
   pageExtensions: ["ts", "tsx", "js", "jsx", "md", "mdx"],
   turbopack: {
     rules: {
