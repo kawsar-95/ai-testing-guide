@@ -1,8 +1,7 @@
-/** One text version of a section, or all of them. */
-export type Voice = "technical" | "layman" | "bangla" | "all";
+/** One text version of a section. Each voice has its own panel. */
+export type Voice = "technical" | "layman" | "bangla";
 
-/** A voice that has its own panel in a section. */
-export type PanelVoice = "technical" | "layman" | "bangla";
+export type PanelVoice = Voice;
 
 /** The site-wide default voice. The reader sets it with the header button. */
 export type VoiceDefault = "technical" | "bangla";
@@ -18,7 +17,6 @@ export const VOICE_LABELS: Record<Voice, string> = {
   technical: "Technical",
   layman: "সহজ English",
   bangla: "বাংলা",
-  all: "সবগুলো",
 };
 
 /** The title of the box of each extra panel. */
@@ -40,7 +38,7 @@ export function resolveVoiceDefault(stored: string | null): VoiceDefault {
 
 /** The buttons of the voice switch, in order. The default voice is first. */
 export function voiceOrder(def: VoiceDefault): Voice[] {
-  return def === "bangla" ? ["bangla", "technical", "layman", "all"] : ["technical", "layman", "bangla", "all"];
+  return def === "bangla" ? ["bangla", "technical", "layman"] : ["technical", "layman", "bangla"];
 }
 
 /** The color of the selected switcher button of each voice. */
@@ -48,7 +46,6 @@ export const VOICE_COLOR: Record<Voice, string> = {
   technical: "var(--accent)",
   layman: "var(--voice-layman)",
   bangla: "var(--voice-bangla)",
-  all: "var(--text)",
 };
 
 /**
@@ -68,11 +65,11 @@ export function switchStyle(voice: Voice): { color: string; borderColor: string;
 }
 
 /**
- * A panel shows if the voice is its own voice or "all".
+ * A panel shows if the voice is its own voice.
  * The CSS in app/globals.css applies the same rule. The test documents it.
  */
 export function isPanelVisible(panel: PanelVoice, voice: Voice): boolean {
-  return voice === "all" || voice === panel;
+  return voice === panel;
 }
 
 /**

@@ -116,14 +116,14 @@ export function HomePage() {
           <SectionHeading id="why-heading" eyebrow={[HOME_UI.whyEyebrow, HOME_UI_BN.whyEyebrow]} title={[HOME_UI.whyTitle, HOME_UI_BN.whyTitle]} sub={[HOME_UI.whySub, HOME_UI_BN.whySub]} />
           <ul className="m-0 mt-10 grid list-none grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-6 p-0">
             {WHY_ITEMS.map((item, i) => (
-              <li key={item.title} className={`${CARD} p-6 transition-shadow hover:shadow-md`}>
+              <li key={item.title} className={`${CARD} p-4 transition-shadow hover:shadow-md sm:p-6`}>
                 <span
                   aria-hidden="true"
-                  className="grid size-12 place-items-center rounded-xl bg-accent-soft text-2xl"
+                  className="hidden size-12 sm:grid place-items-center rounded-xl bg-accent-soft text-2xl"
                 >
                   {item.icon}
                 </span>
-                <h3 className="mt-4 font-display text-[22px] font-semibold leading-snug text-text">
+                <h3 className="font-display text-[22px] font-semibold leading-snug text-text sm:mt-4">
                   <T en={item.title} bn={WHY_ITEMS_BN[i].title} />
                 </h3>
                 <p className="mt-2 text-[15px] leading-relaxed text-pretty text-text-dim">

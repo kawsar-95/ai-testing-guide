@@ -36,7 +36,7 @@ export function ChapterTools({
   return (
     <div data-chapter-tools className="not-prose mt-4 mb-8 flex flex-wrap items-center gap-2.5">
       <span className={PILL}>
-        <span aria-hidden="true">📖</span>
+        <span aria-hidden="true" className="hidden sm:inline">📖</span>
         {typeof minutes === "number" ? (
           <T en={readingTime(minutes)} bn={SHELL_BN.readingTime(minutes)} />
         ) : (
@@ -52,11 +52,11 @@ export function ChapterTools({
       </span>
       <span className="grow" />
       <button type="button" aria-pressed={isMarked} onClick={() => marks.toggle(route)} className={TOGGLE}>
-        <span aria-hidden="true">🔖</span>
+        <span aria-hidden="true" className="hidden sm:inline">🔖</span>
         {isMarked ? <T en={bookmarked} bn={SHELL_BN.bookmarked} /> : <T en={bookmark} bn={SHELL_BN.bookmark} />}
       </button>
       <button type="button" aria-pressed={isRead} onClick={() => read.toggle(route)} className={TOGGLE}>
-        <span aria-hidden="true">✓</span>
+        <span aria-hidden="true" className="hidden sm:inline">✓</span>
         {isRead ? <T en={markedRead} bn={SHELL_BN.markedRead} /> : <T en={markRead} bn={SHELL_BN.markRead} />}
       </button>
     </div>

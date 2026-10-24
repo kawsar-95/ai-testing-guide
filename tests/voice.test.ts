@@ -17,23 +17,22 @@ import {
 
 test("resolveVoiceDefault: only 'bangla' selects Bangla", () => {
   assert.equal(resolveVoiceDefault("bangla"), "bangla");
-  for (const s of ["technical", null, "", "layman", "all", "BANGLA"]) assert.equal(resolveVoiceDefault(s), "technical");
+  for (const s of ["technical", null, "", "layman", "BANGLA"]) assert.equal(resolveVoiceDefault(s), "technical");
 });
 
 test("voiceOrder: Technical first, or বাংলা first for a Bangla reader", () => {
-  assert.deepEqual(voiceOrder("technical"), ["technical", "layman", "bangla", "all"]);
-  assert.deepEqual(voiceOrder("bangla"), ["bangla", "technical", "layman", "all"]);
+  assert.deepEqual(voiceOrder("technical"), ["technical", "layman", "bangla"]);
+  assert.deepEqual(voiceOrder("bangla"), ["bangla", "technical", "layman"]);
 });
 
-test("isPanelVisible: one panel per voice, all panels for 'all'", () => {
+test("isPanelVisible: one panel per voice", () => {
   for (const panel of ["technical", "layman", "bangla"] as const) {
-    assert.equal(isPanelVisible(panel, "all"), true);
     for (const voice of ["technical", "layman", "bangla"] as const) assert.equal(isPanelVisible(panel, voice), panel === voice);
   }
 });
 
 test("labels match the reference site", () => {
-  assert.deepEqual(VOICE_LABELS, { technical: "Technical", layman: "সহজ English", bangla: "বাংলা", all: "সবগুলো" });
+  assert.deepEqual(VOICE_LABELS, { technical: "Technical", layman: "সহজ English", bangla: "বাংলা" });
   assert.deepEqual(PANEL_TITLES, { layman: "সহজ English", bangla: "বাংলা ব্যাখ্যা" });
   assert.deepEqual(VOICE_TOGGLE_TEXT, { technical: "বাংলা", bangla: "English" });
 });

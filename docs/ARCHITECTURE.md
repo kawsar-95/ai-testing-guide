@@ -166,7 +166,7 @@ A `##` section can have three voices of its text: Technical, plain English (`Lay
 |---|---|---|
 | Head script | `VOICE_INIT_SCRIPT` in `lib/voice.ts` | Runs after the theme script and sets `data-voice-default` on `<html>` before the first paint. Only the stored value `bangla` gives Bangla. |
 | Store | `components/voice/useVoiceDefault.ts` | A `useSyncExternalStore` hook on `data-voice-default`. `setVoiceDefault` saves `voice` to `localStorage`. A `storage` event of another tab updates it. |
-| Section | `Voices.tsx`, `VoiceSwitcher.tsx`, `panels.tsx` | `Voices` holds the state of one section. The switcher has 4 buttons (Technical, `সহজ English`, `বাংলা`, `সবগুলো`) with arrow-key navigation. Panels render `<div data-panel="…">`. |
+| Section | `Voices.tsx`, `VoiceSwitcher.tsx`, `panels.tsx` | `Voices` holds the state of one section. The switcher has 3 buttons (Technical, `সহজ English`, `বাংলা`) with arrow-key navigation. Panels render `<div data-panel="…">`. |
 | Header | `components/layout/VoiceToggle.tsx` | Sets the site-wide default voice. Every section follows it. |
 | CSS | `app/globals.css` | Before hydration, the panel of `html[data-voice-default]` shows. After hydration, the `data-voice` of the wrapper decides. |
 | Reveal | `Voices.tsx` | A URL hash, or a click on an in-page link, that targets an element in a hidden panel shows that panel and scrolls to the element. |

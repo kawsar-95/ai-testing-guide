@@ -77,9 +77,15 @@ export function LinuxHome() {
             <div className="mt-3 max-w-sm">
               <StageProgress ids={stage.topics.map((topic) => topic.id)} title={stage.title} />
             </div>
-            <div className="mt-4">
-              <TopicChecklist stage={stage} />
-            </div>
+            {/* Closed: 103 checkboxes on one page are too much to read at once. */}
+            <details className="mt-4">
+              <summary className="cursor-pointer font-mono text-[12px] text-accent">
+                <T en={LINUX_UI.checklistHeading} bn={BN.checklistHeading} />
+              </summary>
+              <div className="mt-2">
+                <TopicChecklist stage={stage} />
+              </div>
+            </details>
           </section>
         ))}
       </section>

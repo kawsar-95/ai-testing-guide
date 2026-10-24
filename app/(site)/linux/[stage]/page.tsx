@@ -101,7 +101,8 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
         <p className={`mb-3 ${LABEL} text-accent`}>
           <T en={LINUX_UI.stageEyebrow(stage.number)} bn={BN.stageEyebrow(stage.number)} />
         </p>
-        <div className="mb-6">
+        {/* On a phone the checklist at the end of the page shows the same progress. */}
+        <div className="mb-6 hidden chapter:block">
           <LinuxProgressSummary ids={ids} title={stage.title} />
         </div>
         <article data-content className="mdx">

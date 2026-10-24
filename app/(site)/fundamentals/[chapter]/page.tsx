@@ -102,7 +102,8 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
         <p className={`mb-3 ${LABEL} text-accent`}>
           <T en={FUNDAMENTALS_UI.chapterEyebrow(chapter.number)} bn={BN.chapterEyebrow(chapter.number)} />
         </p>
-        <div className="mb-6">
+        {/* On a phone the checklist at the end of the page shows the same progress. */}
+        <div className="mb-6 hidden chapter:block">
           <FundamentalsProgressSummary ids={ids} title={chapter.title} />
         </div>
         {chapter.hasVersions ? (

@@ -57,6 +57,15 @@ export function SectionNav({ items }: { items: OutlineItem[] }) {
 
   if (items.length === 0) return null;
 
+  // Show the ### items of the current ## section only, so the list stays short.
+  const parentOf = new Map<string, string>();
+  let h2 = "";
+  for (const item of items) {
+    if (item.level === 2) h2 = item.id;
+    parentOf.set(item.id, h2);
+  }
+  const openSection = active ? parentOf.get(active) : undefined;
+
   return (
     <nav
       data-toc
@@ -69,6 +78,7 @@ export function SectionNav({ items }: { items: OutlineItem[] }) {
       <ol className="m-0 list-none border-l border-border p-0">
         {items.map((item) => {
           const isActive = item.id === active;
+          if (item.level === 3 && parentOf.get(item.id) !== openSection) return null;
           return (
             <li key={item.id}>
               <a

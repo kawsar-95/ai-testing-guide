@@ -89,7 +89,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 | **সহজ English** | The same facts in plain English |
 | **বাংলা** | The same facts in Bangla. Commands, flags, paths, product names, and acronyms stay in English. |
 
-A switcher with four buttons sits under each section heading: `Technical`, `সহজ English`, `বাংলা`, and `সবগুলো` (all three at once). The Left, Right, Home, and End keys move the selection. A click changes one section only.
+A switcher with three buttons sits under each section heading: `Technical`, `সহজ English`, and `বাংলা`. The Left, Right, Home, and End keys move the selection. A click changes one section only.
 
 ![One section with all three voices open](docs/assets/voices.png)
 

@@ -57,7 +57,7 @@ export function VoiceSwitcher({
             aria-pressed={active}
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(v)}
-            lang={v === "bangla" || v === "all" ? "bn" : undefined}
+            lang={v === "bangla" ? "bn" : undefined}
             style={style}
             className={
               "rounded-lg border px-3 py-1.5 text-[13px] leading-5 font-medium transition-colors " +

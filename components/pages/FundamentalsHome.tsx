@@ -71,9 +71,15 @@ export function FundamentalsHome() {
             <div className="mt-3 max-w-sm">
               <ChapterProgress ids={chapter.topics.map((topic) => topic.id)} title={chapter.title} />
             </div>
-            <div className="mt-4">
-              <TopicChecklist chapter={chapter} />
-            </div>
+            {/* Closed: 117 checkboxes on one page are too much to read at once. */}
+            <details className="mt-4">
+              <summary className="cursor-pointer font-mono text-[12px] text-accent">
+                <T en={FUNDAMENTALS_UI.checklistHeading} bn={BN.checklistHeading} />
+              </summary>
+              <div className="mt-2">
+                <TopicChecklist chapter={chapter} />
+              </div>
+            </details>
           </section>
         ))}
       </section>

@@ -295,7 +295,7 @@ A `##` section can have 3 voices of its text: Technical (the current text), `স
 
 | Part | Behavior |
 |---|---|
-| Switcher | A group of 4 buttons under the `##` heading: `Technical`, `সহজ English`, `বাংলা`, `সবগুলো`. `সবগুলো` shows all 3 texts, each extra text in a tinted box with a 3 px left border and a title. The Left, Right, Home, and End keys move the selection. Only the selected button is in the tab order. |
+| Switcher | A group of 3 buttons under the `##` heading: `Technical`, `সহজ English`, `বাংলা`. Each extra text shows alone, in a tinted box with a 3 px left border and a title. The Left, Right, Home, and End keys move the selection. Only the selected button is in the tab order. |
 | `বাংলা` header button | `VoiceToggle` sets the site-wide default voice. The text is `বাংলা` if the default is Technical, and `English` if the default is Bangla. A click saves `bangla` or `technical` in `localStorage` key `voice` and sets `data-voice-default` on `<html>`. Every section follows the new default. The button has no `aria-pressed`. Its accessible name starts with the visible word (WCAG 2.5.3 Label in Name): `voiceToBangla` and `voiceToTechnical` in `lib/ui.ts`. |
 | Section choice | A click on the switcher changes one section only. If the site-wide default changes, every section goes back to the default. |
 | Bangla default | `বাংলা` moves to the first position of each switcher. |
