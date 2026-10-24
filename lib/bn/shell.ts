@@ -61,6 +61,12 @@ export const SHELL_BN: Omit<Bn<typeof ui>, "HOME_UI"> = {
   markRead: "পড়া হয়েছে চিহ্নিত করুন",
   markedRead: "পড়া হয়েছে",
   chapterNav: "এই সেকশনের পেজসমূহ",
+  sectionOf: (n, total) => `সেকশন ${n} / ${total}`,
+  sectionsGroup: "এই পেজের সেকশনসমূহ",
+  sectionPrevious: "আগের",
+  sectionNext: "পরের",
+  showAllSections: "সব সেকশন দেখান",
+  oneSectionAtATime: "একবারে একটি সেকশন পড়ুন",
 
   backToTop: "উপরে যান",
   backToTopLabel: "↑ উপরে",

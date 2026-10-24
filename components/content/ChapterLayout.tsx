@@ -5,6 +5,7 @@ import { SectionNav } from "@/components/navigation/SectionNav";
 import type { OutlineItem } from "@/lib/outline";
 import { chapterNav } from "@/lib/ui";
 import { ChapterList } from "./ChapterList";
+import { SectionFocus } from "./SectionFocus";
 
 /**
  * The three columns of a content page: the left list (from the `chapter`
@@ -31,7 +32,10 @@ export function ChapterLayout({
         </span>
         <ChapterList activePath={route} />
       </aside>
-      <div className="mx-auto w-full min-w-0 max-w-[720px] py-7 sm:py-10">{children}</div>
+      <div className="mx-auto w-full min-w-0 max-w-[720px] py-7 sm:py-10">
+        {children}
+        <SectionFocus key={route} />
+      </div>
       <aside className="hidden pt-10 toc:block">
         <SectionNav items={outline} />
       </aside>

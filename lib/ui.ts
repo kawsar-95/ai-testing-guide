@@ -90,6 +90,14 @@ export const markRead = "Mark as read";
 export const markedRead = "Read";
 export const chapterNav = "Pages of this section";
 
+// One section at a time (components/content/SectionFocus.tsx).
+export const sectionOf = (n: number, total: number) => `Section ${n} of ${total}`;
+export const sectionsGroup = "Sections of this page";
+export const sectionPrevious = "Previous";
+export const sectionNext = "Next";
+export const showAllSections = "Show all sections";
+export const oneSectionAtATime = "Read one section at a time";
+
 export const backToTop = "Back to top";
 export const backToTopLabel = "↑ Top";
 export const copyCode = "Copy code";

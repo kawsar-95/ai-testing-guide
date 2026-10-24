@@ -147,6 +147,8 @@ The "On this page" list and the search results link to heading ids. Those ids mu
 
 The whole layout is 1400 px wide at most. The page passes its route to `ChapterLayout`, so the static HTML already has the right list.
 
+`ChapterLayout` also mounts `SectionFocus`. After hydration it shows one `##` section of the article at a time (the other children of `article[data-content]` get `data-sec-hidden`), with a step bar above and Previous and Next buttons below. "Show all sections" turns it off and saves the choice in `localStorage` key `section-focus`. A hash or in-page link into a hidden section shows that section. The static HTML shows all sections.
+
 | Component | Job |
 |---|---|
 | `SiteShell` | Skip link, header, main area, footer |
