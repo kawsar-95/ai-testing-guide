@@ -1,11 +1,703 @@
 export const metadata = { title: 'POST Requests and API Flows', description: 'Log in, then pass the token to the next request.' }
-export const page = { updated: '2026-10-27', sources: [] }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'k6/http: post( url, [body], [params] )', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-http/post', accessed: '2026-10-27' },
+    { title: 'k6/http: Params', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-http/params/', accessed: '2026-10-27' },
+    { title: 'k6/http: Response', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-http/response/', accessed: '2026-10-27' },
+    { title: 'Test lifecycle', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/test-lifecycle/', accessed: '2026-10-27' },
+    { title: 'API CRUD operations', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/examples/api-crud-operations/', accessed: '2026-10-27' },
+    { title: 'Correlation and dynamic data', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/examples/correlation-and-dynamic-data/', accessed: '2026-10-27' },
+    { title: 'Checks', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/checks/', accessed: '2026-10-27' },
+  ],
+}
 
 # POST Requests and API Flows
 
-Log in, then pass the token to the next request.
+Most real APIs need a login first. You send a POST request to log in, take the token from the answer, and send that token with the next request.
+
+<PageMeta />
+
+## The login flow in plain words
+
+<Voices>
+<Technical>
+
+A real user journey often has two steps. First, the user logs in with a POST request. Second, the user calls another API and shows the token that the login gave. In k6 this is called correlation: you take a value from one response and reuse it in later requests <Cite n={6} />.
+
+```text
+POST /user/login  ->  response has a token
+                          |
+GET /user/search/...  <-  header: Authorization: Bearer <token>
+```
+
+The tutorial's own example: an admin must be logged in before the admin can search a user by ID. The test must do the same two steps.
+
+</Technical>
+<Layman>
+
+A real user journey often has two steps. First, the user logs in with a POST request. Second, the user calls another API and shows the token that the login gave. In k6 this is called correlation. You take a value from one response and reuse it in later requests <Cite n={6} />.
+
+The tutorial's own example: an admin must log in before the admin can search a user by ID. The test must do the same two steps.
+
+</Layman>
+<Bangla>
+
+একটা বাস্তব ইউজার জার্নিতে প্রায়ই দুটো ধাপ থাকে। প্রথমে ইউজার POST request দিয়ে লগইন করে। তারপর ইউজার আরেকটা API কল করে এবং লগইনের দেওয়া token দেখায়। k6-এ একে বলে কোরিলেশন (correlation): আপনি একটা response থেকে একটা value নেন এবং পরের request-গুলোতে সেটা আবার ব্যবহার করেন <Cite n={6} />।
+
+টিউটোরিয়ালের নিজের উদাহরণ: একজন অ্যাডমিন ইউজার ID দিয়ে সার্চ করার আগে লগইন করতে হয়। টেস্টকেও একই দুটো ধাপ করতে হবে।
+
+</Bangla>
+</Voices>
+
+## Send a POST body: JSON or form
+
+<Voices>
+<Technical>
+
+`http.post(url, body, params)` takes a URL, an optional body, and optional params <Cite n={1} />. The body can be a string, an object, or an ArrayBuffer <Cite n={1} />. You choose how the body goes on the wire:
+
+| Body you pass | What k6 sends | Header |
+| --- | --- | --- |
+| `JSON.stringify(data)` (a string) | JSON text | You must set `Content-Type: application/json` in `params.headers` <Cite n={1} /> |
+| `data` (an object) | Form data, `x-www-form-urlencoded` | k6 adds `Content-Type: application/x-www-form-urlencoded` <Cite n={1} /> |
+
+The `params` object can carry custom headers in `params.headers` <Cite n={2} />. Most login APIs expect JSON, so the usual call is `http.post(url, JSON.stringify(payload), { headers: { 'Content-Type': 'application/json' } })`.
+
+To read the answer, use `res.status` for the HTTP status code <Cite n={3} />. Use `res.json()` to parse the body as JSON <Cite n={3} />. `res.json('token')` takes an optional selector and returns only that part <Cite n={3} />. k6 caches the parsed data, so more calls to `res.json()` on the same response are cheap <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+`http.post(url, body, params)` takes a URL, an optional body, and optional params <Cite n={1} />. The body can be a string, an object, or an ArrayBuffer <Cite n={1} />. You choose how the body goes on the wire:
+
+| Body you pass | What k6 sends | Header |
+| --- | --- | --- |
+| `JSON.stringify(data)` (a string) | JSON text | You must set `Content-Type: application/json` in `params.headers` <Cite n={1} /> |
+| `data` (an object) | Form data, `x-www-form-urlencoded` | k6 adds `Content-Type: application/x-www-form-urlencoded` <Cite n={1} /> |
+
+The `params` object can carry custom headers in `params.headers` <Cite n={2} />. Most login APIs expect JSON. So the usual call sends a JSON string and sets the JSON header.
+
+To read the answer, use `res.status` for the HTTP status code <Cite n={3} />. Use `res.json()` to parse the body as JSON <Cite n={3} />. `res.json('token')` returns only the part that you name <Cite n={3} />. k6 keeps the parsed data, so more calls on the same response are cheap <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+`http.post(url, body, params)` একটা URL, ঐচ্ছিক body এবং ঐচ্ছিক params নেয় <Cite n={1} />। body একটা string, একটা object বা একটা ArrayBuffer হতে পারে <Cite n={1} />। body কীভাবে নেটওয়ার্কে যাবে, সেটা আপনি ঠিক করেন:
+
+| আপনি যে body দেন | k6 যা পাঠায় | Header |
+| --- | --- | --- |
+| `JSON.stringify(data)` (একটা string) | JSON text | `params.headers`-এ আপনাকে `Content-Type: application/json` সেট করতে হবে <Cite n={1} /> |
+| `data` (একটা object) | ফর্ম ডেটা, `x-www-form-urlencoded` | k6 নিজে `Content-Type: application/x-www-form-urlencoded` যোগ করে <Cite n={1} /> |
+
+`params` object-এর `params.headers`-এ কাস্টম header দেওয়া যায় <Cite n={2} />। বেশিরভাগ লগইন API JSON চায়। তাই সাধারণ কল একটা JSON string পাঠায় এবং JSON header সেট করে।
+
+উত্তর পড়তে `res.status` দিয়ে HTTP status code পান <Cite n={3} />। body JSON হিসেবে parse করতে `res.json()` ব্যবহার করুন <Cite n={3} />। `res.json('token')` শুধু যে অংশের নাম দেন সেটুকু ফেরত দেয় <Cite n={3} />। k6 parse করা ডেটা জমা রাখে, তাই একই response-এ আবার কল করা সস্তা <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Log in, then call the next API
+
+<Voices>
+<Technical>
+
+This script follows the owner's flow. It logs in with a POST, then sends the token to a search API with a GET. The host is a placeholder, and the login values come from `__ENV` (see the page about environment variables), so no secret is in the file.
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'https://api.example.com';
+
+export const options = {
+  vus: 1,
+  duration: '1s',
+};
+
+export default function () {
+  const loginPayload = JSON.stringify({
+    email: __ENV.LOGIN_EMAIL,
+    password: __ENV.LOGIN_PASSWORD,
+  });
+
+  const loginRes = http.post(`${BASE_URL}/user/login`, loginPayload, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  const loggedIn = check(loginRes, {
+    'login status is 200': (r) => r.status === 200,
+    'login token is present': (r) => r.json('token') !== undefined,
+  });
+  if (!loggedIn) {
+    return; // do not call the next API with a bad token
+  }
+
+  const token = loginRes.json('token');
+
+  const searchRes = http.get(`${BASE_URL}/user/search/id/1001`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  check(searchRes, {
+    'search status is 200': (r) => r.status === 200,
+    'user found': (r) => r.body.includes('1001'),
+  });
+
+  sleep(1);
+}
+```
+
+Run it with the values on the command line:
+
+```bash
+k6 run -e BASE_URL=https://api.example.com -e LOGIN_EMAIL=<email> -e LOGIN_PASSWORD=<password> script.js
+```
+
+Step 1 is the login POST. Its answer goes into `loginRes`. Step 2 is the search GET. It puts the token in the `Authorization` header.
+
+</Technical>
+<Layman>
+
+This script follows the owner's flow. It logs in with a POST. Then it sends the token to a search API with a GET. The host is a placeholder. The login values come from `__ENV`, so no secret is in the file.
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'https://api.example.com';
+
+export const options = {
+  vus: 1,
+  duration: '1s',
+};
+
+export default function () {
+  const loginPayload = JSON.stringify({
+    email: __ENV.LOGIN_EMAIL,
+    password: __ENV.LOGIN_PASSWORD,
+  });
+
+  const loginRes = http.post(`${BASE_URL}/user/login`, loginPayload, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  const loggedIn = check(loginRes, {
+    'login status is 200': (r) => r.status === 200,
+    'login token is present': (r) => r.json('token') !== undefined,
+  });
+  if (!loggedIn) {
+    return; // do not call the next API with a bad token
+  }
+
+  const token = loginRes.json('token');
+
+  const searchRes = http.get(`${BASE_URL}/user/search/id/1001`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  check(searchRes, {
+    'search status is 200': (r) => r.status === 200,
+    'user found': (r) => r.body.includes('1001'),
+  });
+
+  sleep(1);
+}
+```
+
+Run it with the values on the command line:
+
+```bash
+k6 run -e BASE_URL=https://api.example.com -e LOGIN_EMAIL=<email> -e LOGIN_PASSWORD=<password> script.js
+```
+
+Step 1 is the login POST. Its answer goes into `loginRes`. Step 2 is the search GET. It puts the token in the `Authorization` header.
+
+</Layman>
+<Bangla>
+
+এই স্ক্রিপ্ট owner-এর flow অনুসরণ করে। এটা POST দিয়ে লগইন করে। তারপর GET দিয়ে একটা search API-তে token পাঠায়। host একটা placeholder। লগইনের value আসে `__ENV` থেকে, তাই ফাইলে কোনো secret নেই।
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+const BASE_URL = __ENV.BASE_URL || 'https://api.example.com';
+
+export const options = {
+  vus: 1,
+  duration: '1s',
+};
+
+export default function () {
+  const loginPayload = JSON.stringify({
+    email: __ENV.LOGIN_EMAIL,
+    password: __ENV.LOGIN_PASSWORD,
+  });
+
+  const loginRes = http.post(`${BASE_URL}/user/login`, loginPayload, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  const loggedIn = check(loginRes, {
+    'login status is 200': (r) => r.status === 200,
+    'login token is present': (r) => r.json('token') !== undefined,
+  });
+  if (!loggedIn) {
+    return; // do not call the next API with a bad token
+  }
+
+  const token = loginRes.json('token');
+
+  const searchRes = http.get(`${BASE_URL}/user/search/id/1001`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  check(searchRes, {
+    'search status is 200': (r) => r.status === 200,
+    'user found': (r) => r.body.includes('1001'),
+  });
+
+  sleep(1);
+}
+```
+
+কমান্ড লাইনে value দিয়ে চালান:
+
+```bash
+k6 run -e BASE_URL=https://api.example.com -e LOGIN_EMAIL=<email> -e LOGIN_PASSWORD=<password> script.js
+```
+
+ধাপ ১ হলো লগইনের POST। এর উত্তর `loginRes`-এ যায়। ধাপ ২ হলো search GET। এটা `Authorization` header-এ token বসায়।
+
+</Bangla>
+</Voices>
+
+## Check the response before you use it
+
+<Voices>
+<Technical>
+
+A failed check does not stop the test <Cite n={7} />. The script goes on, and the next request gets `Bearer undefined`. Then every later request fails, and the error figures show a wrong picture: the real fault is the login, not the search API.
+
+`check()` returns a boolean. The k6 docs use that value in an `if` <Cite n={5} />. The script above does the same: if the login check fails, the iteration returns early. In `setup()`, a stronger choice is to throw an error, because there is no point to run the test without a token.
+
+Check the status first, and then check the token. A login can return status 200 and still have no token in the body.
+
+</Technical>
+<Layman>
+
+A failed check does not stop the test <Cite n={7} />. The script goes on. The next request gets `Bearer undefined`. Then every later request fails. The error figures show a wrong picture. The real fault is the login, not the search API.
+
+`check()` returns true or false. The k6 docs use that value in an `if` <Cite n={5} />. The script above does the same. If the login check fails, the iteration returns early. In `setup()`, a stronger choice is to throw an error. There is no point to run the test without a token.
+
+Check the status first. Then check the token. A login can return status 200 and still have no token in the body.
+
+</Layman>
+<Bangla>
+
+একটা failed check টেস্ট থামায় না <Cite n={7} />। স্ক্রিপ্ট চলতেই থাকে। পরের request পায় `Bearer undefined`। তারপর পরের সব request fail করে। error-এর সংখ্যা ভুল ছবি দেখায়। আসল সমস্যা লগইনে, search API-তে নয়।
+
+`check()` true বা false ফেরত দেয়। k6 docs সেই value `if`-এ ব্যবহার করে <Cite n={5} />। উপরের স্ক্রিপ্টও তাই করে। লগইন check fail করলে iteration আগেই return করে। `setup()`-এ আরও শক্ত পথ হলো error throw করা। token ছাড়া টেস্ট চালানোর মানে নেই।
+
+আগে status check করুন। তারপর token check করুন। একটা লগইন status 200 দিয়েও body-তে token না-ও দিতে পারে।
+
+</Bangla>
+</Voices>
+
+## Log in once in setup()
+
+<Voices>
+<Technical>
+
+The script above logs in on every iteration. That is 1 login for each search. A real user logs in once and then does many things. A load test with 100 VUs would send a very large number of login calls, and the test would load the login API more than the API that you want to test.
+
+The `setup()` function runs once for the whole test, after the init stage and before the VU stage <Cite n={4} />. It can use the full k6 API, so it can make HTTP requests <Cite n={4} />. The k6 docs use this for the QuickPizza demo: `setup()` makes a user, logs in, and returns the bearer token <Cite n={5} />. The VU code gets the returned value as its argument <Cite n={4} />.
+
+```js
+import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = 'https://quickpizza.grafana.com';
+
+export const options = {
+  vus: 2,
+  iterations: 4,
+};
+
+export function setup() {
+  const username = `user${Date.now()}@example.com`;
+  const body = JSON.stringify({ username, password: 'secret' });
+
+  const created = http.post(`${BASE_URL}/api/users`, body);
+  check(created, { 'user created': (r) => r.status === 201 });
+
+  const loginRes = http.post(`${BASE_URL}/api/users/token/login`, body);
+  const ok = check(loginRes, { 'login status is 200': (r) => r.status === 200 });
+  if (!ok) {
+    throw new Error(`login failed with status ${loginRes.status}`);
+  }
+
+  return { token: loginRes.json('token') };
+}
+
+export default function (data) {
+  const res = http.get(`${BASE_URL}/api/ratings`, {
+    headers: { Authorization: `Bearer ${data.token}` },
+  });
+  check(res, { 'ratings status is 200': (r) => r.status === 200 });
+}
+```
+
+This script runs against the public QuickPizza demo. The user name is random, so each run makes a new user. In a short local run, all 6 checks passed.
+
+There are limits <Cite n={4} />:
+
+- You can pass only JSON data from `setup()`. You cannot pass functions.
+- Big data uses more memory.
+- Each VU gets its own copy of the data. A change that VU code makes does not reach other VUs or `teardown()`.
+- `setup()` must end within `setupTimeout`. The default is 60 seconds.
+- If `setup()` throws an error, k6 does not call `teardown()`.
+
+One more limit is the tutorial's own note: all VUs share one token from `setup()`. If the token expires during a long test, every VU starts to fail. Also, if the system limits the number of sessions for one user, one shared login does not show real behavior.
+
+</Technical>
+<Layman>
+
+The script above logs in on every iteration. That is 1 login for each search. A real user logs in once and then does many things. A load test with 100 VUs would send a very large number of login calls. The test would load the login API more than the API that you want to test.
+
+The `setup()` function runs once for the whole test. It runs after the init stage and before the VU stage <Cite n={4} />. It can make HTTP requests <Cite n={4} />. The k6 docs use this for the QuickPizza demo. `setup()` makes a user, logs in, and returns the bearer token <Cite n={5} />. The VU code gets the returned value as its argument <Cite n={4} />.
+
+```js
+import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = 'https://quickpizza.grafana.com';
+
+export const options = {
+  vus: 2,
+  iterations: 4,
+};
+
+export function setup() {
+  const username = `user${Date.now()}@example.com`;
+  const body = JSON.stringify({ username, password: 'secret' });
+
+  const created = http.post(`${BASE_URL}/api/users`, body);
+  check(created, { 'user created': (r) => r.status === 201 });
+
+  const loginRes = http.post(`${BASE_URL}/api/users/token/login`, body);
+  const ok = check(loginRes, { 'login status is 200': (r) => r.status === 200 });
+  if (!ok) {
+    throw new Error(`login failed with status ${loginRes.status}`);
+  }
+
+  return { token: loginRes.json('token') };
+}
+
+export default function (data) {
+  const res = http.get(`${BASE_URL}/api/ratings`, {
+    headers: { Authorization: `Bearer ${data.token}` },
+  });
+  check(res, { 'ratings status is 200': (r) => r.status === 200 });
+}
+```
+
+This script runs against the public QuickPizza demo. The user name is random, so each run makes a new user. In a short local run, all 6 checks passed.
+
+There are limits <Cite n={4} />:
+
+- You can pass only JSON data from `setup()`. You cannot pass functions.
+- Big data uses more memory.
+- Each VU gets its own copy of the data. A change that VU code makes does not reach other VUs or `teardown()`.
+- `setup()` must end within `setupTimeout`. The default is 60 seconds.
+- If `setup()` throws an error, k6 does not call `teardown()`.
+
+One more limit is the tutorial's own note. All VUs share one token from `setup()`. If the token expires during a long test, every VU starts to fail. Also, if the system limits the number of sessions for one user, one shared login does not show real behavior.
+
+</Layman>
+<Bangla>
+
+উপরের স্ক্রিপ্ট প্রতিটা iteration-এ লগইন করে। মানে প্রতিটা search-এর জন্য ১টা লগইন। একজন বাস্তব ইউজার একবার লগইন করে, তারপর অনেক কিছু করে। ১০০ VU-র একটা লোড টেস্ট অনেক বেশি লগইন কল পাঠাবে। তখন আপনি যে API টেস্ট করতে চান, তার চেয়ে লগইন API বেশি লোড পাবে।
+
+`setup()` ফাংশন পুরো টেস্টে একবার চলে। এটা init stage-এর পরে এবং VU stage-এর আগে চলে <Cite n={4} />। এটা HTTP request করতে পারে <Cite n={4} />। k6 docs QuickPizza ডেমোতে এটাই করে। `setup()` একজন ইউজার বানায়, লগইন করে এবং bearer token ফেরত দেয় <Cite n={5} />। VU code ফেরত আসা value-টা argument হিসেবে পায় <Cite n={4} />।
+
+```js
+import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = 'https://quickpizza.grafana.com';
+
+export const options = {
+  vus: 2,
+  iterations: 4,
+};
+
+export function setup() {
+  const username = `user${Date.now()}@example.com`;
+  const body = JSON.stringify({ username, password: 'secret' });
+
+  const created = http.post(`${BASE_URL}/api/users`, body);
+  check(created, { 'user created': (r) => r.status === 201 });
+
+  const loginRes = http.post(`${BASE_URL}/api/users/token/login`, body);
+  const ok = check(loginRes, { 'login status is 200': (r) => r.status === 200 });
+  if (!ok) {
+    throw new Error(`login failed with status ${loginRes.status}`);
+  }
+
+  return { token: loginRes.json('token') };
+}
+
+export default function (data) {
+  const res = http.get(`${BASE_URL}/api/ratings`, {
+    headers: { Authorization: `Bearer ${data.token}` },
+  });
+  check(res, { 'ratings status is 200': (r) => r.status === 200 });
+}
+```
+
+এই স্ক্রিপ্ট পাবলিক QuickPizza ডেমোতে চলে। user name র‍্যান্ডম, তাই প্রতিবার নতুন ইউজার তৈরি হয়। একটা ছোট লোকাল রানে ৬টা check-ই pass করেছে।
+
+কিছু সীমা আছে <Cite n={4} />:
+
+- `setup()` থেকে শুধু JSON ডেটা পাঠানো যায়। ফাংশন পাঠানো যায় না।
+- বড় ডেটা বেশি memory নেয়।
+- প্রতিটা VU নিজের কপি পায়। VU code যে পরিবর্তন করে, তা অন্য VU বা `teardown()`-এ পৌঁছায় না।
+- `setup()`-কে `setupTimeout`-এর মধ্যে শেষ হতে হবে। ডিফল্ট ৬০ সেকেন্ড।
+- `setup()` error throw করলে k6 `teardown()` চালায় না।
+
+আরেকটা সীমা টিউটোরিয়ালের নিজের নোট। সব VU `setup()`-এর একটাই token ভাগ করে। লম্বা টেস্টে token-এর মেয়াদ শেষ হলে সব VU fail করা শুরু করে। আর সিস্টেম এক ইউজারের session-এর সংখ্যা সীমিত করলে একটা shared লগইন বাস্তব আচরণ দেখায় না।
+
+</Bangla>
+</Voices>
+
+## Log in once for each VU
+
+<Voices>
+<Technical>
+
+Sometimes each VU needs its own user and its own token. You cannot do HTTP calls in the init stage <Cite n={4} />. But init code runs once for each VU <Cite n={4} />, so a variable at the top of the file is a place where a VU can keep its token. The VU code logs in on the first iteration only.
+
+```js
+import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = 'https://quickpizza.grafana.com';
+
+export const options = {
+  vus: 2,
+  iterations: 6,
+};
+
+let token; // init code runs once for each VU, so each VU keeps its own token
+
+function login() {
+  const username = `user${Date.now()}${__VU}@example.com`;
+  const body = JSON.stringify({ username, password: 'secret' });
+  http.post(`${BASE_URL}/api/users`, body);
+  const res = http.post(`${BASE_URL}/api/users/token/login`, body);
+  if (res.status !== 200) {
+    return undefined;
+  }
+  return res.json('token');
+}
+
+export default function () {
+  if (!token) {
+    token = login();
+  }
+  if (!token) {
+    return;
+  }
+  const res = http.get(`${BASE_URL}/api/ratings`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  check(res, { 'ratings status is 200': (r) => r.status === 200 });
+}
+```
+
+In a short local run with 2 VUs and 6 iterations, k6 sent 10 requests: 6 GET calls and 2 login calls for each of the 2 VUs. This pattern is the tutorial's own, not a pattern from the k6 docs.
+
+Compare the three ways:
+
+| Way | Logins | Use it when |
+| --- | --- | --- |
+| In `default`, every iteration | One for each iteration | You test the login API itself |
+| In `setup()` | One for the whole test | One shared user is fine and the token lives long enough |
+| In an init variable, first iteration | One for each VU | Each VU needs its own user or token |
+
+</Technical>
+<Layman>
+
+Sometimes each VU needs its own user and its own token. You cannot do HTTP calls in the init stage <Cite n={4} />. But init code runs once for each VU <Cite n={4} />. So a variable at the top of the file is a place where a VU can keep its token. The VU code logs in on the first iteration only.
+
+```js
+import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = 'https://quickpizza.grafana.com';
+
+export const options = {
+  vus: 2,
+  iterations: 6,
+};
+
+let token; // init code runs once for each VU, so each VU keeps its own token
+
+function login() {
+  const username = `user${Date.now()}${__VU}@example.com`;
+  const body = JSON.stringify({ username, password: 'secret' });
+  http.post(`${BASE_URL}/api/users`, body);
+  const res = http.post(`${BASE_URL}/api/users/token/login`, body);
+  if (res.status !== 200) {
+    return undefined;
+  }
+  return res.json('token');
+}
+
+export default function () {
+  if (!token) {
+    token = login();
+  }
+  if (!token) {
+    return;
+  }
+  const res = http.get(`${BASE_URL}/api/ratings`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  check(res, { 'ratings status is 200': (r) => r.status === 200 });
+}
+```
+
+In a short local run with 2 VUs and 6 iterations, k6 sent 10 requests. That is 6 GET calls and 2 login calls for each of the 2 VUs. This pattern is the tutorial's own, not a pattern from the k6 docs.
+
+Compare the three ways:
+
+| Way | Logins | Use it when |
+| --- | --- | --- |
+| In `default`, every iteration | One for each iteration | You test the login API itself |
+| In `setup()` | One for the whole test | One shared user is fine and the token lives long enough |
+| In an init variable, first iteration | One for each VU | Each VU needs its own user or token |
+
+</Layman>
+<Bangla>
+
+কখনো প্রতিটা VU-র নিজের ইউজার এবং নিজের token দরকার হয়। init stage-এ HTTP কল করা যায় না <Cite n={4} />। কিন্তু init code প্রতিটা VU-র জন্য একবার চলে <Cite n={4} />। তাই ফাইলের উপরের একটা variable হলো সেই জায়গা, যেখানে একটা VU নিজের token রাখতে পারে। VU code শুধু প্রথম iteration-এ লগইন করে।
+
+```js
+import http from 'k6/http';
+import { check } from 'k6';
+
+const BASE_URL = 'https://quickpizza.grafana.com';
+
+export const options = {
+  vus: 2,
+  iterations: 6,
+};
+
+let token; // init code runs once for each VU, so each VU keeps its own token
+
+function login() {
+  const username = `user${Date.now()}${__VU}@example.com`;
+  const body = JSON.stringify({ username, password: 'secret' });
+  http.post(`${BASE_URL}/api/users`, body);
+  const res = http.post(`${BASE_URL}/api/users/token/login`, body);
+  if (res.status !== 200) {
+    return undefined;
+  }
+  return res.json('token');
+}
+
+export default function () {
+  if (!token) {
+    token = login();
+  }
+  if (!token) {
+    return;
+  }
+  const res = http.get(`${BASE_URL}/api/ratings`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  check(res, { 'ratings status is 200': (r) => r.status === 200 });
+}
+```
+
+২টা VU আর ৬টা iteration দিয়ে একটা ছোট লোকাল রানে k6 ১০টা request পাঠিয়েছে। মানে ৬টা GET কল, আর ২টা VU-র প্রতিটার জন্য ২টা করে লগইন কল। এই pattern টিউটোরিয়ালের নিজের, k6 docs-এর নয়।
+
+তিনটা উপায় তুলনা করুন:
+
+| উপায় | লগইন | কখন ব্যবহার করবেন |
+| --- | --- | --- |
+| `default`-এ, প্রতিটা iteration-এ | প্রতিটা iteration-এ একটা | আপনি লগইন API-টাকেই টেস্ট করছেন |
+| `setup()`-এ | পুরো টেস্টে একটা | একটা shared ইউজার চলে এবং token যথেষ্ট সময় টেকে |
+| init variable-এ, প্রথম iteration-এ | প্রতিটা VU-র জন্য একটা | প্রতিটা VU-র নিজের ইউজার বা token দরকার |
+
+</Bangla>
+</Voices>
+
+## Do not print the token
+
+<Voices>
+<Technical>
+
+The owner's first script printed the token with `console.log('Login Token:', token)`. That is fine for one test run on a laptop, but the final script must not do it.
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice, not a rule of the k6 docs.
+
+- **Logs are shared.** A token is a key. A CI log, a screen share, or a saved terminal output can show it to people who must not have it.
+- **It is noise at load.** With 100 VUs, one line for each iteration fills the output and hides the real results.
+- **Print the status, not the secret.** To debug, print `loginRes.status` or `loginRes.json('token') !== undefined`.
+- **Do the same in `teardown()`.** Do not print the token there. If the API has a logout call, use it to end the session.
+</Callout>
+
+</Technical>
+<Layman>
+
+The owner's first script printed the token with `console.log('Login Token:', token)`. That is fine for one test run on a laptop. The final script must not do it.
+
+These points are the tutorial's own advice, not a rule of the k6 docs.
+
+- **Logs are shared.** A token is a key. A CI log, a screen share, or a saved terminal output can show it to people who must not have it.
+- **It is noise at load.** With 100 VUs, one line for each iteration fills the output and hides the real results.
+- **Print the status, not the secret.** To debug, print `loginRes.status` or `loginRes.json('token') !== undefined`.
+- **Do the same in `teardown()`.** Do not print the token there. If the API has a logout call, use it to end the session.
+
+</Layman>
+<Bangla>
+
+owner-এর প্রথম স্ক্রিপ্ট `console.log('Login Token:', token)` দিয়ে token প্রিন্ট করেছিল। একটা ল্যাপটপে একবার টেস্ট চালানোর জন্য এটা ঠিক আছে। কিন্তু চূড়ান্ত স্ক্রিপ্টে এটা রাখবেন না।
+
+এই পয়েন্টগুলো টিউটোরিয়ালের নিজের পরামর্শ, k6 docs-এর নিয়ম নয়।
+
+- **Log অন্যদের সঙ্গে ভাগ হয়।** একটা token হলো একটা চাবি। CI log, screen share বা সেভ করা terminal output এমন মানুষকে তা দেখাতে পারে, যাদের তা পাওয়ার কথা নয়।
+- **লোডে এটা শুধু noise।** ১০০ VU থাকলে প্রতিটা iteration-এর একটা লাইন output ভরে দেয় এবং আসল ফলাফল লুকিয়ে ফেলে।
+- **Secret নয়, status প্রিন্ট করুন।** debug করতে `loginRes.status` বা `loginRes.json('token') !== undefined` প্রিন্ট করুন।
+- **`teardown()`-এও একই করুন।** সেখানে token প্রিন্ট করবেন না। API-তে logout কল থাকলে session শেষ করতে সেটা ব্যবহার করুন।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
 | Term | Meaning |
 | --- | --- |
+| `http.post(url, body, params)` | Sends a POST request. The body is a string, an object, or an ArrayBuffer <Cite n={1} /> |
+| `Content-Type` | A header that names the body format. A JSON string needs `application/json` <Cite n={1} /> |
+| Form body | An object body. k6 sends it as `x-www-form-urlencoded` <Cite n={1} /> |
+| `params.headers` | Custom headers for one request <Cite n={2} /> |
+| `res.json([selector])` | Parses the body as JSON, or returns only the selected part <Cite n={3} /> |
+| Correlation | Take a value from one response and reuse it in later requests <Cite n={6} /> |
+| Bearer token | A token that goes in the `Authorization: Bearer <token>` header. The k6 docs use it in the QuickPizza example <Cite n={5} /> |
+| `setup()` | Runs once for the whole test, before the VU stage, and can return JSON data <Cite n={4} /> |
+| `check()` | Tests a condition. A failed check does not stop the test <Cite n={7} /> |
