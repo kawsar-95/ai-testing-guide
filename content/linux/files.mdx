@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-10-27',
   sources: [
     { title: 'inode(7) - index node', publisher: 'man7.org (Linux man-pages)', url: 'https://man7.org/linux/man-pages/man7/inode.7.html', accessed: '2026-10-19' },
     { title: 'symlink(7) - symbolic link handling', publisher: 'man7.org (Linux man-pages)', url: 'https://man7.org/linux/man-pages/man7/symlink.7.html', accessed: '2026-10-19' },
@@ -48,45 +48,119 @@ This stage covers the commands that create, copy, move, edit, link, and archive 
 <Voices>
 <Technical>
 
-Every file on a Linux filesystem (the structure that stores files on a disk) has an inode. An inode is a record of the metadata of the file, such as its owner, size, and timestamps. <Cite n={1} /> The name of a file is a hard link: a reference to that inode number. <Cite n={2} />
+**Goal:** Read the size and the link count of a file with `stat`.
 
-Two commands show this data. `ls -l` lists files in the long format. <Cite n={3} /> `stat` prints the full status, and `-c` chooses the fields. <Cite n={4} />
+Every file on a Linux filesystem (the structure that stores files on a disk) has an inode. An inode is a record of the metadata of the file, such as its owner, size, and timestamps. <Cite n={1} /> The name of a file is a hard link: a reference to that inode number. <Cite n={2} /> `stat` prints this data, and `-c` chooses the fields. <Cite n={4} /> `rm` has no recycle bin, so treat each removal as final. <Cite n={5} />
 
 ```bash
-ls -li report.txt      # -i adds the inode number
 stat report.txt
-stat -c '%n: %s bytes, %h hard links, inode %i' report.txt
 ```
 
-The code `%s` is the size in bytes, `%h` is the number of hard links, and `%i` is the inode number. <Cite n={4} /> `rm` has no recycle bin, so treat each removal as final. <Cite n={5} />
+**Try it:** print the size and the link count of a small file and an empty file. `%n` is the name, `%s` is the size in bytes, and `%h` is the number of hard links. <Cite n={4} />
+
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "pass" > report.txt
+  touch empty.txt
+  stat -c '%n: %s bytes, %h hard links' report.txt empty.txt
+  # report.txt: 5 bytes, 1 hard links
+  # empty.txt: 0 bytes, 1 hard links
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: after a test run, use `stat` to check the size and the modification time of each output file. A report of 0 bytes often means that the step crashed before it wrote any data. In a CI log (the log of an automated test job), one `ls -l` of the artifact folder is a cheap check.
+Tutorial's own advice: check the size of each test output file. A 0-byte report often means that the step crashed before it wrote data.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `ls -l` lists files in the long format. <Cite n={3} /> `ls -li` adds the inode number. <Cite n={3} />
+- In a `stat -c` format, `%i` is the inode number. <Cite n={4} />
+- Tutorial's own advice: also check the modification time of each output file. In a CI log (the log of an automated test job), one `ls -l` of the artifact folder is a cheap check.
+
+```bash
+ls -li report.txt
+stat -c '%n: %s bytes, %h hard links, inode %i' report.txt
+```
+
+</details>
 
 </Technical>
 <Layman>
 
-Linux keeps files on a filesystem, the structure that stores files on a disk. Each file has an inode. The inode is a record of the metadata of the file, such as its owner, size, and timestamps <Cite n={1} />. The name of a file is a hard link: a reference to that inode number <Cite n={2} />.
+**Goal:** Read the size and the link count of a file with `stat`.
 
-Two commands show this data. `ls -l` lists files in the long format <Cite n={3} />. `stat` shows the full status, and `-c` selects the fields. In the format, `%s` is the size in bytes, `%h` is the number of hard links, and `%i` is the inode number <Cite n={4} />.
+Linux keeps files on a filesystem, the structure that stores files on a disk. Each file has an inode. The inode is a record of the metadata of the file, such as its owner, size, and timestamps. <Cite n={1} /> The name of a file is a hard link: a reference to that inode number. <Cite n={2} /> `stat` shows this data, and `-c` selects the fields. <Cite n={4} /> `rm` has no recycle bin. Think of each removal as final. <Cite n={5} />
 
-`rm` has no recycle bin. Think of each removal as final <Cite n={5} />.
+**Try it:** print the size and the link count of a small file and an empty file. `%n` is the name, `%s` is the size in bytes, and `%h` is the number of hard links. <Cite n={4} />
 
-Tutorial's own advice: after a test run, use `stat` to check the size and the modification time of each output file. A report of 0 bytes often means that the step crashed before it wrote data.
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "pass" > report.txt
+  touch empty.txt
+  stat -c '%n: %s bytes, %h hard links' report.txt empty.txt
+  # report.txt: 5 bytes, 1 hard links
+  # empty.txt: 0 bytes, 1 hard links
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: check the size of each test output file. A 0-byte report often means that the step crashed before it wrote data.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `ls -l` lists files in the long format, and `ls -li` adds the inode number. <Cite n={3} />
+- In a `stat -c` format, `%i` is the inode number. <Cite n={4} />
+- Tutorial's own advice: also check the modification time of each output file.
+
+</details>
 
 </Layman>
 <Bangla>
 
-Linux filesystem-এ (যে কাঠামো disk-এ file রাখে) প্রতিটি file-এর একটি inode থাকে। Inode হলো file-এর metadata-র একটি record, যেমন owner, size, আর timestamp <Cite n={1} />। File-এর নাম আসলে একটি hard link, অর্থাৎ সেই inode number-এর একটি reference <Cite n={2} />।
+**লক্ষ্য:** `stat` দিয়ে একটি file-এর size আর link count পড়ুন।
 
-দুটি command এই তথ্য দেখায়। `ls -l` long format-এ file-এর তালিকা দেখায় <Cite n={3} />। `stat` পুরো status দেখায়, আর `-c` দিয়ে আপনি field বেছে নেন। এখানে `%s` হলো byte-এ size, `%h` হলো hard link-এর সংখ্যা, আর `%i` হলো inode number <Cite n={4} />।
+Linux filesystem-এ (যে কাঠামো disk-এ file রাখে) প্রতিটি file-এর একটি inode থাকে। Inode হলো file-এর metadata-র একটি record, যেমন owner, size, আর timestamp। <Cite n={1} /> File-এর নাম আসলে একটি hard link, অর্থাৎ সেই inode number-এর একটি reference। <Cite n={2} /> `stat` এই তথ্য দেখায়, আর `-c` দিয়ে আপনি field বেছে নেন। <Cite n={4} /> `rm`-এর কোনো recycle bin নেই, তাই প্রতিটি মুছে ফেলাকে চূড়ান্ত ধরে নিন। <Cite n={5} />
 
-`rm`-এর কোনো recycle bin নেই, তাই প্রতিটি মুছে ফেলাকে চূড়ান্ত ধরে নিন <Cite n={5} />।
+**চেষ্টা করুন:** একটি ছোট file আর একটি খালি file-এর size ও link count print করুন। `%n` হলো নাম, `%s` হলো byte-এ size, আর `%h` হলো hard link-এর সংখ্যা। <Cite n={4} />
 
-Tutorial-এর নিজস্ব পরামর্শ: test run-এর পরে `stat` দিয়ে প্রতিটি output file-এর size আর modification time দেখুন। 0 byte-এর একটি report প্রায়ই বোঝায় যে step-টি কোনো data লেখার আগেই crash করেছে। CI log-এ artifact folder-এর একটি `ls -l` একটি সস্তা check।
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "pass" > report.txt
+  touch empty.txt
+  stat -c '%n: %s bytes, %h hard links' report.txt empty.txt
+  # report.txt: 5 bytes, 1 hard links
+  # empty.txt: 0 bytes, 1 hard links
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: test run-এর পরে প্রতিটি output file-এর size দেখুন। 0 byte-এর report প্রায়ই বোঝায় যে step-টি data লেখার আগেই crash করেছে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `ls -l` long format-এ file-এর তালিকা দেখায়, আর `ls -li` inode number যোগ করে। <Cite n={3} />
+- `stat -c` format-এ `%i` হলো inode number। <Cite n={4} />
+- Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি output file-এর modification time-ও দেখুন। CI log-এ artifact folder-এর একটি `ls -l` একটি সস্তা check।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -96,57 +170,139 @@ Tutorial-এর নিজস্ব পরামর্শ: test run-এর পর
 <Voices>
 <Technical>
 
-`touch` creates an empty file when the name does not exist. If the file exists, `touch` only updates its access and modification times. <Cite n={6} /> The option `-c` stops `touch` from creating a file, and `-d` sets a chosen time. <Cite n={6} />
+**Goal:** Make files and directories in a setup step that you can run two times.
 
-`mkdir` makes a directory and reports an error if the directory exists, unless you add `-p`. <Cite n={7} /> With `-p`, `mkdir` also makes the missing parent directories. <Cite n={7} />
+`touch` creates an empty file when the name does not exist. If the file exists, `touch` only updates its times. <Cite n={6} /> `mkdir` reports an error if the directory exists, unless you add `-p`. With `-p`, it also makes the missing parent directories. <Cite n={7} /> A redirection with `>` also makes a file. <Cite n={8} />
+
+Deletion and redirection lose data. `rm -r` deletes a directory and all of its contents, and `-f` never prompts. <Cite n={10} /> `>` cuts an existing file to zero size. <Cite n={8} /> Run `ls` on the path first.
 
 ```bash
-touch notes.txt
-touch -d '2026-01-15T10:00:00' old.log   # set a chosen time
 mkdir -p results/2026/run1
-echo "first line" > hello.txt
-cat > draft.txt                          # type text, then press Ctrl+D
 ```
 
-A redirection (a shell feature that sends output to a file) with `>` also makes a file. <Cite n={8} /> The command `cat > file` reads your text until you press Ctrl+D. <Cite n={9} /> To remove things, `rm` deletes files, and it needs `-r` for a directory. <Cite n={10} /> `rmdir` removes only empty directories. <Cite n={9} />
+**Try it:** run `mkdir -p` two times, overwrite a file with `>`, and delete a directory.
 
-<Callout type="danger" title="Deletion and redirection lose data">
-
-`rm -r` deletes a directory and all of its contents. `-f` never prompts. <Cite n={10} /> The `>` operator cuts an existing file to zero size. <Cite n={8} /> Run `ls` on the path first. Use `rm -I` to get one prompt before a recursive removal. <Cite n={10} />
-
-</Callout>
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  mkdir -p results/run1
+  mkdir -p results/run1 && echo "second run: OK"   # second run: OK
+  echo "first line" > hello.txt
+  echo "new" > hello.txt
+  cat hello.txt               # new  (> replaced the old text)
+  rm -r results
+  ls                          # hello.txt
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: start each test setup with `mkdir -p`. It succeeds when the folder exists, so a second run of the job does not fail. Use `touch -d` to build files with an old time when you test code that depends on the age of a file.
+Tutorial's own advice: start each test setup with `mkdir -p`. It succeeds when the folder exists, so a second run of the job does not fail.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+| Command | Effect |
+|---|---|
+| `touch -c FILE` | Does not create a file. <Cite n={6} /> |
+| `touch -d TIME FILE` | Sets a chosen time. <Cite n={6} /> |
+| `cat > FILE` | Reads your text until you press Ctrl+D. <Cite n={9} /> |
+| `rmdir DIR` | Removes only an empty directory. <Cite n={9} /> |
+| `rm -I` | Asks one time before a recursive removal. <Cite n={10} /> |
+
+`rm` deletes files, and it needs `-r` for a directory. <Cite n={10} />
+
+```bash
+touch -d '2026-01-15T10:00:00' old.log   # set a chosen time
+cat > draft.txt                          # type text, then press Ctrl+D
+```
+
+Tutorial's own advice: use `touch -d` to build files with an old time when you test code that depends on the age of a file.
+
+</details>
 
 </Technical>
 <Layman>
 
-`touch` makes an empty file when the name does not exist. If the file exists, `touch` only updates its access and modification times. `-c` stops `touch` from making a file, and `-d` sets a time that you choose <Cite n={6} />.
+**Goal:** Make files and directories in a setup step that you can run two times.
 
-`mkdir` makes a directory. If the directory exists, `mkdir` gives an error, unless you add `-p`. With `-p`, `mkdir` also makes the missing parent directories <Cite n={7} />.
+`touch` makes an empty file when the name does not exist. If the file exists, `touch` only updates its times. <Cite n={6} /> `mkdir` gives an error if the directory exists, unless you add `-p`. With `-p`, `mkdir` also makes the missing parent directories. <Cite n={7} /> The `>` redirection also makes a file. <Cite n={8} />
 
-The `>` redirection sends output to a file, so it also makes a file <Cite n={8} />. `cat > file` reads your text until you press Ctrl+D <Cite n={9} />. `rm` deletes files, and it needs `-r` for a directory <Cite n={10} />. `rmdir` removes only empty directories <Cite n={9} />.
+Be careful. `rm -r` deletes a directory and all of its contents, and `-f` never asks first. <Cite n={10} /> `>` cuts an existing file to zero size. <Cite n={8} /> Run `ls` on the path first.
 
-Be careful. `rm -r` deletes a directory and all of its contents, and `-f` never asks first <Cite n={10} />. `>` cuts an existing file to zero size <Cite n={8} />. Run `ls` on the path first. Use `rm -I` to get one prompt before a recursive removal <Cite n={10} />.
+**Try it:** run `mkdir -p` two times, overwrite a file with `>`, and delete a directory.
+
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  mkdir -p results/run1
+  mkdir -p results/run1 && echo "second run: OK"   # second run: OK
+  echo "first line" > hello.txt
+  echo "new" > hello.txt
+  cat hello.txt               # new  (> replaced the old text)
+  rm -r results
+  ls                          # hello.txt
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
 
 Tutorial's own advice: start each test setup with `mkdir -p`. Then a second run of the job does not fail.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `touch -c` does not make a file, and `-d` sets a time that you choose. <Cite n={6} />
+- `cat > file` reads your text until you press Ctrl+D. `rmdir` removes only empty directories. <Cite n={9} />
+- `rm` needs `-r` for a directory. `rm -I` asks one time before a recursive removal. <Cite n={10} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-`touch` একটি খালি file তৈরি করে, যদি ওই নামে কোনো file না থাকে। File আগে থেকে থাকলে `touch` শুধু তার access আর modification time update করে। `-c` option `touch`-কে নতুন file তৈরি করতে দেয় না, আর `-d` দিয়ে আপনি নিজের বেছে নেওয়া time বসাতে পারেন <Cite n={6} />।
+**লক্ষ্য:** এমন একটি setup step-এ file আর directory তৈরি করুন, যা দুইবার চালানো যায়।
 
-`mkdir` একটি directory তৈরি করে। Directory আগে থেকে থাকলে এটি error দেয়, যদি না আপনি `-p` যোগ করেন। `-p` দিলে `mkdir` না-থাকা parent directory-গুলোও তৈরি করে <Cite n={7} />।
+`touch` একটি খালি file তৈরি করে, যদি ওই নামে কোনো file না থাকে। File আগে থেকে থাকলে `touch` শুধু তার time update করে। <Cite n={6} /> Directory আগে থেকে থাকলে `mkdir` error দেয়, যদি না আপনি `-p` যোগ করেন। `-p` দিলে `mkdir` না-থাকা parent directory-গুলোও তৈরি করে। <Cite n={7} /> `>` redirection দিয়েও file তৈরি হয়। <Cite n={8} />
 
-`>` redirection (shell-এর যে feature output-কে file-এ পাঠায়) দিয়েও file তৈরি হয় <Cite n={8} />। `cat > file` আপনার লেখা text পড়ে, যতক্ষণ না আপনি Ctrl+D চাপেন <Cite n={9} />। `rm` file মুছে দেয়, আর directory মুছতে `-r` লাগে <Cite n={10} />। `rmdir` শুধু খালি directory সরায় <Cite n={9} />।
+সাবধান থাকুন। `rm -r` একটি directory আর তার ভেতরের সবকিছু মুছে দেয়, আর `-f` কখনো আগে জিজ্ঞেস করে না। <Cite n={10} /> `>` একটি existing file-কে শূন্য size-এ কেটে দেয়। <Cite n={8} /> আগে path-এর উপর `ls` চালান।
 
-সাবধান থাকুন। `rm -r` একটি directory আর তার ভেতরের সবকিছু মুছে দেয়, আর `-f` কখনো আগে জিজ্ঞেস করে না <Cite n={10} />। `>` একটি existing file-কে শূন্য size-এ কেটে দেয় <Cite n={8} />। আগে path-এর উপর `ls` চালান। Recursive removal-এর আগে একবার prompt পেতে `rm -I` ব্যবহার করুন <Cite n={10} />।
+**চেষ্টা করুন:** `mkdir -p` দুইবার চালান, `>` দিয়ে একটি file overwrite করুন, আর একটি directory মুছুন।
 
-Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি test setup `mkdir -p` দিয়ে শুরু করুন। Folder থাকলেও এটি সফল হয়, তাই job দ্বিতীয়বার চালালে fail করে না।
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  mkdir -p results/run1
+  mkdir -p results/run1 && echo "second run: OK"   # second run: OK
+  echo "first line" > hello.txt
+  echo "new" > hello.txt
+  cat hello.txt               # new  (> replaced the old text)
+  rm -r results
+  ls                          # hello.txt
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি test setup `mkdir -p` দিয়ে শুরু করুন। Folder থাকলেও এটি সফল হয়, তাই দ্বিতীয় run fail করে না।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `touch -c` নতুন file তৈরি করে না, আর `-d` দিয়ে আপনি নিজের বেছে নেওয়া time বসাতে পারেন। <Cite n={6} />
+- `cat > file` আপনার লেখা text পড়ে, যতক্ষণ না আপনি Ctrl+D চাপেন। `rmdir` শুধু খালি directory সরায়। <Cite n={9} />
+- Directory মুছতে `rm`-এর `-r` লাগে। Recursive removal-এর আগে একবার prompt পেতে `rm -I` ব্যবহার করুন। <Cite n={10} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -156,9 +312,42 @@ Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি 
 <Voices>
 <Technical>
 
-`cp` makes a copy that is independent of the original. <Cite n={11} /> It copies a directory only with `-r`, `-R`, or `-a`. <Cite n={11} /> If the last argument is a directory, `cp` puts each source inside it. <Cite n={11} /> To rename a file, use `mv` with a new name. <Cite n={12} />
+**Goal:** Copy and rename a file, and see that `cp` overwrites with no prompt.
 
-By default, `cp` replaces an existing destination file without a prompt. <Cite n={11} /> `mv` does the same. <Cite n={13} /> These options change that:
+`cp` makes a copy that is independent of the original. <Cite n={11} /> If the last argument is a directory, `cp` puts each source inside it. <Cite n={11} /> To rename a file, use `mv` with a new name. <Cite n={12} />
+
+By default, `cp` replaces an existing destination file without a prompt. <Cite n={11} /> `mv` does the same. <Cite n={13} /> The old content is lost at once. Run `ls` on the destination first, or add `-i` to get a prompt. <Cite n={11} />
+
+```bash
+cp config.yml config.yml.bak
+```
+
+**Try it:** back up a file, change the file, copy it onto the backup again, and rename it. `-p` keeps the mode, owner, and times. <Cite n={11} />
+
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "v1" > config.yml
+  cp -p config.yml config.yml.bak
+  echo "v2" > config.yml
+  cp config.yml config.yml.bak   # no prompt
+  cat config.yml.bak             # v2  (the v1 backup is gone)
+  mv config.yml app.yml          # rename
+  ls                             # app.yml  config.yml.bak
+  rm -r "$PWD"                   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: copy a fixture before a test changes it, and compare the two files afterwards. Use `cp -p` or `cp -a`.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+`cp` copies a directory only with `-r`, `-R`, or `-a`. <Cite n={11} />
 
 | Option | Effect |
 |---|---|
@@ -171,31 +360,48 @@ By default, `cp` replaces an existing destination file without a prompt. <Cite n
 The manual marks `-n` as deprecated, because its exit status (the number that a command returns to the shell) differs from other platforms. In newer versions, `--update=none` also skips existing files. <Cite n={11} />
 
 ```bash
-cp config.yml config.yml.bak
 mkdir -p /tmp/archive
 cp -i report.txt /tmp/archive/
 cp -a fixtures /tmp/fixtures-copy   # copy a tree, keep modes and times
-mv draft.txt final.txt              # rename
 ```
 
-<Callout type="danger" title="Overwriting is silent">
-
-`cp` and `mv` destroy the old content of a destination file at once. Add `-i` to get a prompt, or `-n` to keep the old file. Run `ls` on the destination first. <Cite n={11} />
-
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: copy a fixture before a test changes it, and compare the two files afterwards. Use `cp -p` or `cp -a`, so that the copy keeps the mode and times of the original.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-`cp` makes a copy that does not depend on the original. It copies a directory only with `-r`, `-R`, or `-a`. If the last argument is a directory, `cp` puts each source in it <Cite n={11} />. To rename a file, use `mv` with a new name <Cite n={12} />.
+**Goal:** Copy and rename a file, and see that `cp` overwrites with no prompt.
 
-By default, `cp` replaces an existing destination file and does not ask <Cite n={11} />. `mv` does the same <Cite n={13} />. These options change that <Cite n={11} />:
+`cp` makes a copy that does not depend on the original. If the last argument is a directory, `cp` puts each source in it. <Cite n={11} /> To rename a file, use `mv` with a new name. <Cite n={12} />
+
+By default, `cp` replaces an existing destination file and does not ask. <Cite n={11} /> `mv` does the same. <Cite n={13} /> The old content is lost at once. Run `ls` on the destination first, or add `-i` to get a question first. <Cite n={11} />
+
+**Try it:** back up a file, change the file, copy it onto the backup again, and rename it. `-p` keeps the mode, owner, and times. <Cite n={11} />
+
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "v1" > config.yml
+  cp -p config.yml config.yml.bak
+  echo "v2" > config.yml
+  cp config.yml config.yml.bak   # no prompt
+  cat config.yml.bak             # v2  (the v1 backup is gone)
+  mv config.yml app.yml          # rename
+  ls                             # app.yml  config.yml.bak
+  rm -r "$PWD"                   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: copy a fixture before a test changes it, and compare the two files after the test.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+`cp` copies a directory only with `-r`, `-R`, or `-a`. These options also help <Cite n={11} />:
 
 - `-i` asks before each overwrite.
 - `-n` skips a file that exists. The manual marks `-n` as deprecated. In newer versions, `--update=none` also skips existing files.
@@ -203,16 +409,43 @@ By default, `cp` replaces an existing destination file and does not ask <Cite n=
 - `-a` copies a tree and keeps as much as possible.
 - `-v` shows what happens.
 
-Run `ls` on the destination first, because the old content is lost at once.
-
-Tutorial's own advice: copy a fixture before a test changes it, and compare the two files after the test. Use `cp -p` or `cp -a`, so that the copy keeps the mode and times.
+</details>
 
 </Layman>
 <Bangla>
 
-`cp` এমন একটি copy তৈরি করে, যা original-এর উপর নির্ভর করে না। Directory copy করতে `-r`, `-R`, অথবা `-a` লাগে। শেষ argument যদি একটি directory হয়, তাহলে `cp` প্রতিটি source সেই directory-র ভেতরে রাখে <Cite n={11} />। File-এর নাম বদলাতে নতুন নাম দিয়ে `mv` ব্যবহার করুন <Cite n={12} />।
+**লক্ষ্য:** একটি file copy করুন ও নাম বদলান, আর দেখুন যে `cp` কোনো prompt ছাড়াই overwrite করে।
 
-Default হিসেবে `cp` কোনো prompt ছাড়াই existing destination file replace করে <Cite n={11} />। `mv`-ও একই কাজ করে <Cite n={13} />। এই option-গুলো সেই আচরণ বদলায় <Cite n={11} />:
+`cp` এমন একটি copy তৈরি করে, যা original-এর উপর নির্ভর করে না। শেষ argument যদি একটি directory হয়, তাহলে `cp` প্রতিটি source সেই directory-র ভেতরে রাখে। <Cite n={11} /> File-এর নাম বদলাতে নতুন নাম দিয়ে `mv` ব্যবহার করুন। <Cite n={12} />
+
+Default হিসেবে `cp` কোনো prompt ছাড়াই existing destination file replace করে। <Cite n={11} /> `mv`-ও একই কাজ করে। <Cite n={13} /> পুরোনো content সাথে সাথে হারিয়ে যায়। আগে destination-এর উপর `ls` চালান, অথবা prompt পেতে `-i` যোগ করুন। <Cite n={11} />
+
+**চেষ্টা করুন:** একটি file-এর backup নিন, file-টি বদলান, আবার backup-এর উপর copy করুন, আর নাম বদলান। `-p` mode, owner, আর time রেখে দেয়। <Cite n={11} />
+
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "v1" > config.yml
+  cp -p config.yml config.yml.bak
+  echo "v2" > config.yml
+  cp config.yml config.yml.bak   # no prompt
+  cat config.yml.bak             # v2  (the v1 backup is gone)
+  mv config.yml app.yml          # rename
+  ls                             # app.yml  config.yml.bak
+  rm -r "$PWD"                   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: test একটি fixture বদলানোর আগে সেটির copy রাখুন, পরে দুটি file তুলনা করুন। `cp -p` বা `cp -a` ব্যবহার করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+Directory copy করতে `-r`, `-R`, অথবা `-a` লাগে। এই option-গুলোও কাজে আসে <Cite n={11} />:
 
 - `-i`: প্রতিটি overwrite-এর আগে জিজ্ঞেস করে।
 - `-n`: existing file বাদ দেয়। Manual `-n`-কে deprecated বলে, কারণ এর exit status অন্য platform থেকে আলাদা। নতুন version-এ `--update=none`-ও existing file বাদ দেয়।
@@ -220,9 +453,7 @@ Default হিসেবে `cp` কোনো prompt ছাড়াই existing 
 - `-a`: archive mode; একটি পুরো tree copy করে এবং যতটা সম্ভব রেখে দেয়।
 - `-v`: কী হচ্ছে তা দেখায়।
 
-`cp` আর `mv` destination file-এর পুরোনো content সাথে সাথে নষ্ট করে। তাই আগে destination-এর উপর `ls` চালান।
-
-Tutorial-এর নিজস্ব পরামর্শ: test একটি fixture বদলানোর আগে সেটির copy রাখুন, পরে দুটি file তুলনা করুন। `cp -p` বা `cp -a` ব্যবহার করুন, যাতে copy-টি original-এর mode আর time রাখে।
+</details>
 
 </Bangla>
 </Voices>
@@ -232,51 +463,123 @@ Tutorial-এর নিজস্ব পরামর্শ: test একটি fixt
 <Voices>
 <Technical>
 
-`mv` moves a file or directory. If the last argument is a directory, `mv` moves each source into it. <Cite n={12} /> A shell pattern such as `*.log` moves many files in one command. <Cite n={13} /> To rename a directory, use a new name. If that name exists, the directory moves inside it. <Cite n={13} />
+**Goal:** Move many files into a directory with one command.
 
-On one filesystem, `mv` usually only renames the entry. <Cite n={12} /> Between two filesystems (separate storage areas that are mounted at different paths), `mv` copies like `cp -a` and then removes the original. <Cite n={12} /> If a copy fails, `mv` removes the partial copy. A move of many directories can stop halfway. <Cite n={12} />
+`mv` moves a file or directory. If the last argument is a directory, `mv` moves each source into it. <Cite n={12} /> A shell pattern such as `*.log` moves many files in one command. <Cite n={13} /> Without `-i` or `-n`, `mv` replaces a writable destination file and gives no warning. <Cite n={13} /> The old content is lost, so check the destination with `ls` first.
 
 ```bash
-mkdir -p logs archive
 mv build/app.log logs/
-mv *.log logs/                       # the shell expands the pattern
-mv -t archive/ run1.log run2.log     # target directory first
-mv -i old-name.txt new-name.txt
 ```
 
-<Callout type="danger" title="A move can overwrite">
+**Try it:** make two logs and a note, and move only the logs. The shell expands `*.log` to the matching names.
 
-Without `-i` or `-n`, `mv` replaces a writable destination file and gives no warning. <Cite n={13} /> The old content is lost. Check the destination with `ls` first.
-
-</Callout>
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  mkdir logs
+  touch run1.log run2.log notes.txt
+  mv *.log logs/
+  ls        # logs  notes.txt
+  ls logs   # run1.log  run2.log
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: a CI workspace and `/tmp` can be on different filesystems. A `mv` between them is a slow copy that can stop halfway. Build your output on the same filesystem as its final place, so that the move is a fast rename.
+Tutorial's own advice: build your output on the same filesystem as its final place. Then `mv` is a fast rename, not a slow copy that can stop halfway.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- To rename a directory, use a new name. If that name exists, the directory moves inside it. <Cite n={13} />
+- On one filesystem, `mv` usually only renames the entry. <Cite n={12} />
+- Between two filesystems (separate storage areas that are mounted at different paths), `mv` copies like `cp -a` and then removes the original. <Cite n={12} />
+- If a copy fails, `mv` removes the partial copy. A move of many directories can stop halfway. <Cite n={12} />
+- Tutorial's own advice: a CI workspace and `/tmp` can be on different filesystems.
+
+```bash
+mv -t archive/ run1.log run2.log     # target directory first
+mv -i old-name.txt new-name.txt      # ask before an overwrite
+```
+
+</details>
 
 </Technical>
 <Layman>
 
-`mv` moves a file or a directory. If the last argument is a directory, `mv` moves each source into it <Cite n={12} />. A shell pattern such as `*.log` moves many files with one command <Cite n={13} />. To rename a directory, give it a new name. If that name exists, the directory moves inside it <Cite n={13} />.
+**Goal:** Move many files into a directory with one command.
 
-A filesystem is a separate storage area, mounted at its own path. On one filesystem, `mv` usually only renames the entry. Between two filesystems, `mv` copies like `cp -a` and then removes the original. If a copy fails, `mv` removes the partial copy. A move of many directories can stop halfway <Cite n={12} />.
+`mv` moves a file or a directory. If the last argument is a directory, `mv` moves each source into it. <Cite n={12} /> A shell pattern such as `*.log` moves many files with one command. <Cite n={13} /> Without `-i` or `-n`, `mv` replaces a writable destination file and gives no warning. <Cite n={13} /> The old content is lost. Check the destination with `ls` first.
 
-Without `-i` or `-n`, `mv` replaces a writable destination file and gives no warning <Cite n={13} />. The old content is lost. Check the destination with `ls` first.
+**Try it:** make two logs and a note, and move only the logs. The shell expands `*.log` to the matching names.
 
-Tutorial's own advice: a CI workspace and `/tmp` can be on different filesystems. Build your output on the same filesystem as its final place, so that the move is a fast rename.
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  mkdir logs
+  touch run1.log run2.log notes.txt
+  mv *.log logs/
+  ls        # logs  notes.txt
+  ls logs   # run1.log  run2.log
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: build your output on the same filesystem as its final place, so that the move is a fast rename.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- To rename a directory, give it a new name. If that name exists, the directory moves inside it. <Cite n={13} />
+- A filesystem is a separate storage area, mounted at its own path. On one filesystem, `mv` usually only renames the entry. Between two filesystems, `mv` copies like `cp -a` and then removes the original. <Cite n={12} />
+- If a copy fails, `mv` removes the partial copy. A move of many directories can stop halfway. <Cite n={12} />
+- Tutorial's own advice: a CI workspace and `/tmp` can be on different filesystems.
+
+</details>
 
 </Layman>
 <Bangla>
 
-`mv` একটি file বা directory সরায়। শেষ argument যদি directory হয়, তাহলে `mv` প্রতিটি source সেই directory-তে সরায় <Cite n={12} />। `*.log`-এর মতো একটি shell pattern দিয়ে এক command-এ অনেক file সরানো যায় <Cite n={13} />। Directory-র নাম বদলাতে নতুন নাম দিন। সেই নাম আগে থেকে থাকলে directory-টি তার ভেতরে চলে যায় <Cite n={13} />।
+**লক্ষ্য:** এক command-এ অনেক file একটি directory-তে সরান।
 
-একই filesystem-এ `mv` সাধারণত শুধু entry-র নাম বদলায়। দুটি আলাদা filesystem-এর মধ্যে (আলাদা path-এ mount করা আলাদা storage area) `mv` প্রথমে `cp -a`-এর মতো copy করে, তারপর original মুছে দেয়। Copy fail করলে `mv` আংশিক copy-টি সরিয়ে দেয়। অনেক directory-র move মাঝপথে থেমে যেতে পারে <Cite n={12} />।
+`mv` একটি file বা directory সরায়। শেষ argument যদি directory হয়, তাহলে `mv` প্রতিটি source সেই directory-তে সরায়। <Cite n={12} /> `*.log`-এর মতো একটি shell pattern দিয়ে এক command-এ অনেক file সরানো যায়। <Cite n={13} /> `-i` বা `-n` ছাড়া `mv` কোনো warning ছাড়াই একটি writable destination file replace করে। <Cite n={13} /> পুরোনো content হারিয়ে যায়, তাই আগে `ls` দিয়ে destination দেখে নিন।
 
-`-i` বা `-n` ছাড়া `mv` কোনো warning ছাড়াই একটি writable destination file replace করে <Cite n={13} />। পুরোনো content হারিয়ে যায়, তাই আগে `ls` দিয়ে destination দেখে নিন।
+**চেষ্টা করুন:** দুটি log আর একটি note তৈরি করুন, আর শুধু log-গুলো সরান। Shell `*.log`-কে মিলে যাওয়া নামগুলোতে বদলে দেয়।
 
-Tutorial-এর নিজস্ব পরামর্শ: CI workspace আর `/tmp` আলাদা filesystem-এ থাকতে পারে। তাদের মধ্যে `mv` একটি ধীর copy, যা মাঝপথে থেমে যেতে পারে। আপনার output তার চূড়ান্ত জায়গার একই filesystem-এ তৈরি করুন, যাতে move একটি দ্রুত rename হয়।
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  mkdir logs
+  touch run1.log run2.log notes.txt
+  mv *.log logs/
+  ls        # logs  notes.txt
+  ls logs   # run1.log  run2.log
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: output তার চূড়ান্ত জায়গার একই filesystem-এ তৈরি করুন। তখন `mv` একটি দ্রুত rename, ধীর copy নয়।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Directory-র নাম বদলাতে নতুন নাম দিন। সেই নাম আগে থেকে থাকলে directory-টি তার ভেতরে চলে যায়। <Cite n={13} />
+- একই filesystem-এ `mv` সাধারণত শুধু entry-র নাম বদলায়। দুটি আলাদা filesystem-এর মধ্যে (আলাদা path-এ mount করা আলাদা storage area) `mv` প্রথমে `cp -a`-এর মতো copy করে, তারপর original মুছে দেয়। <Cite n={12} />
+- Copy fail করলে `mv` আংশিক copy-টি সরিয়ে দেয়। অনেক directory-র move মাঝপথে থেমে যেতে পারে। <Cite n={12} />
+- Tutorial-এর নিজস্ব পরামর্শ: CI workspace আর `/tmp` আলাদা filesystem-এ থাকতে পারে।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -286,52 +589,135 @@ Tutorial-এর নিজস্ব পরামর্শ: CI workspace আর `/
 <Voices>
 <Technical>
 
-You edit a text file in a terminal with a text editor. Vi, Vim, Nano, and Emacs are the common ones. <Cite n={14} /> A terminal editor such as Vim needs no X session (a graphical desktop) and works over SSH (a remote login to another machine). <Cite n={15} /> You need it for files such as the config files in `/etc`. <Cite n={14} />
+**Goal:** Add lines to a file without an editor, with `>>` and a here document.
 
-For a small change, you may need no editor. The `>>` operator adds text to the end of a file and makes the file if it does not exist. <Cite n={8} /> A here document (text that follows the command, up to a delimiter line) feeds many lines to a command. <Cite n={8} />
+You edit a text file in a terminal with a text editor. Vi, Vim, Nano, and Emacs are the common ones. <Cite n={14} /> For a small change, you may need no editor. The `>>` operator adds text to the end of a file. <Cite n={8} /> The `>` operator replaces the whole content. <Cite n={8} /> A typo of `>` for `>>` erases your config, so make a backup with `cp -p` first.
 
 ```bash
-cp -p app.conf app.conf.bak            # back up first (app.conf must exist)
-echo "retries=3" >> app.conf           # append one line
-cat > new.conf <<'EOF'
-retries=3
-timeout=30
-EOF
+echo "retries=3" >> app.conf
 ```
 
-<Callout type="danger" title="One character separates append from erase">
+**Try it:** back up a file, append a line, and write two lines with a here document: the text up to the `EOF` line goes to the command. <Cite n={8} />
 
-`>` replaces the whole content of a file. `>>` adds to the end. <Cite n={8} /> A typo of `>` for `>>` erases your config. Make a backup with `cp -p` first.
-
-</Callout>
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "retries=3" > app.conf
+  cp -p app.conf app.conf.bak   # back up first
+  echo "timeout=30" >> app.conf
+  cat app.conf                  # retries=3
+                                # timeout=30
+  cat > extra.conf <<'EOF'
+debug=false
+port=8080
+EOF
+  cat extra.conf                # debug=false
+                                # port=8080
+  rm -r "$PWD"                  # delete the throw-away directory
+)
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: a script cannot drive a full-screen editor, so a CI step must write files with redirection. Keep editors for work on a live host. A minimal container may have no nano or Vim, so install one or use redirection.
+Tutorial's own advice: a script cannot drive a full-screen editor, so a CI step must write files with redirection.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A terminal editor such as Vim needs no X session (a graphical desktop) and works over SSH (a remote login to another machine). <Cite n={15} />
+- You need an editor for files such as the config files in `/etc`. <Cite n={14} />
+- `>>` makes the file if it does not exist. <Cite n={8} />
+- Tutorial's own advice: keep editors for work on a live host. A minimal container may have no nano or Vim, so install one or use redirection.
+
+</details>
 
 </Technical>
 <Layman>
 
-To edit a text file in a terminal, you use a text editor. Vi, Vim, Nano, and Emacs are the common ones <Cite n={14} />. A terminal editor such as Vim needs no graphical desktop, and it works over SSH, a remote login to another machine <Cite n={15} />. You need one for files such as the config files in `/etc` <Cite n={14} />.
+**Goal:** Add lines to a file without an editor, with `>>` and a here document.
 
-For a small change, you may need no editor. `>>` adds text to the end of a file. If the file does not exist, `>>` makes it. A here document sends many lines of text to a command, up to a delimiter line <Cite n={8} />.
+To edit a text file in a terminal, you use a text editor. Vi, Vim, Nano, and Emacs are the common ones. <Cite n={14} /> For a small change, you may need no editor. `>>` adds text to the end of a file, but `>` replaces all of the file. <Cite n={8} /> If you type `>` in place of `>>`, you erase your config. Make a backup with `cp -p` first.
 
-Be careful: `>` replaces all of the file, but `>>` adds to the end <Cite n={8} />. If you type `>` in place of `>>`, you erase your config. Make a backup with `cp -p` first.
+**Try it:** back up a file, append a line, and write two lines with a here document: the text up to the `EOF` line goes to the command. <Cite n={8} />
 
-Tutorial's own advice: a script cannot control a full-screen editor, so a CI step must write files with redirection. A minimal container may have no nano or Vim. Install one, or use redirection.
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "retries=3" > app.conf
+  cp -p app.conf app.conf.bak   # back up first
+  echo "timeout=30" >> app.conf
+  cat app.conf                  # retries=3
+                                # timeout=30
+  cat > extra.conf <<'EOF'
+debug=false
+port=8080
+EOF
+  cat extra.conf                # debug=false
+                                # port=8080
+  rm -r "$PWD"                  # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: a script cannot control a full-screen editor, so a CI step must write files with redirection.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A terminal editor such as Vim needs no graphical desktop, and it works over SSH, a remote login to another machine. <Cite n={15} />
+- You need one for files such as the config files in `/etc`. <Cite n={14} />
+- If the file does not exist, `>>` makes it. <Cite n={8} />
+- Tutorial's own advice: a minimal container may have no nano or Vim. Install one, or use redirection.
+
+</details>
 
 </Layman>
 <Bangla>
 
-Terminal-এ একটি text file edit করতে আপনি একটি text editor ব্যবহার করেন। Vi, Vim, Nano, আর Emacs হলো প্রচলিত editor <Cite n={14} />। Vim-এর মতো terminal editor-এর জন্য X session (graphical desktop) লাগে না, আর এটি SSH-এর (অন্য machine-এ remote login) মাধ্যমেও কাজ করে <Cite n={15} />। `/etc`-এর config file-এর মতো file-এর জন্য এটি দরকার হয় <Cite n={14} />।
+**লক্ষ্য:** Editor ছাড়াই `>>` আর একটি here document দিয়ে একটি file-এ line যোগ করুন।
 
-ছোট পরিবর্তনের জন্য হয়তো editor-ই লাগবে না। `>>` operator file-এর শেষে text যোগ করে, আর file না থাকলে সেটি তৈরি করে। একটি here document (command-এর পরে একটি delimiter line পর্যন্ত লেখা text) একটি command-কে অনেকগুলো line দেয় <Cite n={8} />।
+Terminal-এ একটি text file edit করতে আপনি একটি text editor ব্যবহার করেন। Vi, Vim, Nano, আর Emacs হলো প্রচলিত editor। <Cite n={14} /> ছোট পরিবর্তনের জন্য হয়তো editor-ই লাগবে না। `>>` file-এর শেষে text যোগ করে, আর `>` file-এর পুরো content replace করে। <Cite n={8} /> `>>`-এর জায়গায় ভুল করে `>` লিখলে আপনার config মুছে যায়। তাই আগে `cp -p` দিয়ে backup নিন।
 
-সাবধান: `>` file-এর পুরো content replace করে, আর `>>` শেষে যোগ করে <Cite n={8} />। `>>`-এর জায়গায় ভুল করে `>` লিখলে আপনার config মুছে যায়। তাই আগে `cp -p` দিয়ে backup নিন।
+**চেষ্টা করুন:** একটি file-এর backup নিন, একটি line যোগ করুন, আর একটি here document দিয়ে দুটি line লিখুন: `EOF` line পর্যন্ত text-টি command-এ যায়। <Cite n={8} />
 
-Tutorial-এর নিজস্ব পরামর্শ: একটি script full-screen editor চালাতে পারে না, তাই CI step-কে redirection দিয়ে file লিখতে হয়। Editor রাখুন live host-এর কাজের জন্য। একটি minimal container-এ nano বা Vim না-ও থাকতে পারে; তখন একটি install করুন, অথবা redirection ব্যবহার করুন।
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "retries=3" > app.conf
+  cp -p app.conf app.conf.bak   # back up first
+  echo "timeout=30" >> app.conf
+  cat app.conf                  # retries=3
+                                # timeout=30
+  cat > extra.conf <<'EOF'
+debug=false
+port=8080
+EOF
+  cat extra.conf                # debug=false
+                                # port=8080
+  rm -r "$PWD"                  # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: একটি script full-screen editor চালাতে পারে না, তাই CI step-কে redirection দিয়ে file লিখতে হয়।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Vim-এর মতো terminal editor-এর জন্য X session (graphical desktop) লাগে না, আর এটি SSH-এর (অন্য machine-এ remote login) মাধ্যমেও কাজ করে। <Cite n={15} />
+- `/etc`-এর config file-এর মতো file-এর জন্য editor দরকার হয়। <Cite n={14} />
+- File না থাকলে `>>` সেটি তৈরি করে। <Cite n={8} />
+- Tutorial-এর নিজস্ব পরামর্শ: Editor রাখুন live host-এর কাজের জন্য। একটি minimal container-এ nano বা Vim না-ও থাকতে পারে; তখন একটি install করুন, অথবা redirection ব্যবহার করুন।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -341,57 +727,114 @@ Tutorial-এর নিজস্ব পরামর্শ: একটি script fu
 <Voices>
 <Technical>
 
-Nano is a small editor with no modes: every key types text, except the Control and Meta keys. <Cite n={16} /> The caret `^` stands for Ctrl, and `M-` stands for Alt. <Cite n={14} /> Nano shows the main shortcuts on two lines at the bottom. <Cite n={16} /> It is the default editor in Ubuntu and many other distributions. <Cite n={14} />
+**Goal:** Save and exit in nano, and check that nano is installed.
 
-| Keys | Action |
-|---|---|
-| `^O` | Open the Write-Out menu, to save the file. <Cite n={16} /> |
-| `^X` | Exit. Nano asks whether to save changed text. <Cite n={17} /> |
-| `^K` and `^U` | Cut a line, and paste it. <Cite n={16} /> |
-| `^W` | Search. <Cite n={16} /> |
-| `^G` | Open the built-in help. <Cite n={16} /> |
-
-At the save prompt, `Y` saves and `N` discards. <Cite n={14} /> The prompt lists its keys on screen. In nano 8.7.1 it shows `^C Cancel`, so Ctrl+C cancels it. The manual does not name this key. The title bar shows "Modified" when the buffer (the text in memory) has unsaved changes. <Cite n={16} /> With the option `-%` (`--stateflags`), a star `*` after the file name shows this state instead. <Cite n={16} /> Your nanorc file may set that option.
+Nano is a small editor with no modes: every key types text, except the Control and Meta keys. <Cite n={16} /> The caret `^` stands for Ctrl. <Cite n={14} /> Nano shows the main shortcuts on two lines at the bottom. <Cite n={16} /> `^O` opens the Write-Out menu, to save the file. <Cite n={16} /> `^X` exits, and nano asks whether to save changed text. <Cite n={17} /> At that prompt, `Y` saves and `N` discards. <Cite n={14} />
 
 ```bash
 nano report.txt
+```
+
+**Try it:** print the version line of nano. `--version` prints the version and exits, so no editor opens. <Cite n={16} />
+
+```bash
+nano --version | head -n 1   # GNU nano, version 8.7.1
+# Your version can differ. "command not found" means that nano is not installed.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: when an error names line 42, open the file with `nano +42 file`. Use `-v` to read a shared config with no risk of a change.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+| Keys or option | Action |
+|---|---|
+| `M-` | Stands for Alt. <Cite n={14} /> |
+| `^K` and `^U` | Cut a line, and paste it. <Cite n={16} /> |
+| `^W` | Search. <Cite n={16} /> |
+| `^G` | Open the built-in help. <Cite n={16} /> |
+| `+LINE` before the name | Open the file at that line. <Cite n={16} /> |
+| `-v` | Read-only mode. <Cite n={16} /> |
+
+- Nano is the default editor in Ubuntu and many other distributions. <Cite n={14} />
+- The save prompt lists its keys on screen. In nano 8.7.1 it shows `^C Cancel`, so Ctrl+C cancels it. The manual does not name this key.
+- The title bar shows "Modified" when the buffer (the text in memory) has unsaved changes. <Cite n={16} /> With `-%` (`--stateflags`), a star `*` after the file name shows this state instead. <Cite n={16} /> Your nanorc file may set that option.
+- The manual says that `-v` does not replace correct file permissions. <Cite n={16} />
+
+```bash
 nano +42 app.log        # open at line 42
 nano -v config.yml      # view only
 ```
 
-Nano can open a file at a line, with `+LINE` before the name. <Cite n={16} /> The option `-v` is read-only mode. <Cite n={16} />
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: when an error names line 42, open the file with `nano +42 file`. Use `-v` to read a shared config without a risk of a change. The manual says that `-v` does not replace correct file permissions. <Cite n={16} />
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-Nano is a small editor with no modes. Every key types text, except the Control and Meta keys <Cite n={16} />. `^` means Ctrl, and `M-` means Alt <Cite n={14} />. Nano shows the main shortcuts on two lines at the bottom <Cite n={16} />. It is the default editor in Ubuntu and many other distributions <Cite n={14} />.
+**Goal:** Save and exit in nano, and check that nano is installed.
 
-- `^O` opens the Write-Out menu, to save the file <Cite n={16} />.
-- `^X` exits. Nano asks if you want to save changed text <Cite n={17} />.
-- `^K` cuts a line, and `^U` pastes it. `^W` searches, and `^G` opens the built-in help <Cite n={16} />.
+Nano is a small editor with no modes. Every key types text, except the Control and Meta keys. <Cite n={16} /> `^` means Ctrl. <Cite n={14} /> Nano shows the main shortcuts on two lines at the bottom. <Cite n={16} /> `^O` opens the Write-Out menu, to save the file. <Cite n={16} /> `^X` exits. Nano asks if you want to save changed text. <Cite n={17} /> At that prompt, `Y` saves and `N` discards. <Cite n={14} />
 
-At the save prompt, `Y` saves and `N` discards <Cite n={14} />. In nano 8.7.1, the prompt shows `^C Cancel`, so Ctrl+C cancels it. The title bar shows "Modified" when the text in memory has changes that you did not save <Cite n={16} />.
+**Try it:** print the version line of nano. `--version` prints the version and exits, so no editor opens. <Cite n={16} />
 
-`nano +42 file` opens the file at line 42, and `-v` is read-only mode <Cite n={16} />. The manual says that `-v` does not replace correct file permissions <Cite n={16} />.
+```bash
+nano --version | head -n 1   # GNU nano, version 8.7.1
+# Your version can differ. "command not found" means that nano is not installed.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: when an error names line 42, open the file with `nano +42 file`. Use `-v` to only read a shared config.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `M-` means Alt. <Cite n={14} />
+- `^K` cuts a line, and `^U` pastes it. `^W` searches, and `^G` opens the built-in help. <Cite n={16} />
+- In nano 8.7.1, the save prompt shows `^C Cancel`, so Ctrl+C cancels it.
+- The title bar shows "Modified" when the text in memory has changes that you did not save. <Cite n={16} />
+- `nano +42 file` opens the file at line 42, and `-v` is read-only mode. The manual says that `-v` does not replace correct file permissions. <Cite n={16} />
+- Nano is the default editor in Ubuntu and many other distributions. <Cite n={14} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Nano একটি ছোট editor, যার কোনো mode নেই: Control আর Meta key ছাড়া প্রতিটি key text লেখে <Cite n={16} />। Caret `^` মানে Ctrl, আর `M-` মানে Alt <Cite n={14} />। Nano নিচের দুই line-এ প্রধান shortcut-গুলো দেখায় <Cite n={16} />। Ubuntu আর আরও অনেক distribution-এ এটি default editor <Cite n={14} />।
+**লক্ষ্য:** nano-তে save করে বের হন, আর দেখুন nano install করা আছে কিনা।
 
-- `^O`: file save করতে Write-Out menu খোলে <Cite n={16} />।
-- `^X`: বের হয়। পরিবর্তিত text save করবেন কিনা, nano তা জিজ্ঞেস করে <Cite n={17} />।
-- `^K` একটি line cut করে, আর `^U` সেটি paste করে। `^W` search করে, আর `^G` built-in help খোলে <Cite n={16} />।
+Nano একটি ছোট editor, যার কোনো mode নেই: Control আর Meta key ছাড়া প্রতিটি key text লেখে। <Cite n={16} /> Caret `^` মানে Ctrl। <Cite n={14} /> Nano নিচের দুই line-এ প্রধান shortcut-গুলো দেখায়। <Cite n={16} /> `^O` file save করতে Write-Out menu খোলে। <Cite n={16} /> `^X` বের হয়, আর পরিবর্তিত text save করবেন কিনা, nano তা জিজ্ঞেস করে। <Cite n={17} /> সেই prompt-এ `Y` save করে আর `N` বাতিল করে। <Cite n={14} />
 
-Save prompt-এ `Y` save করে আর `N` বাতিল করে <Cite n={14} />। nano 8.7.1-এ prompt-টি `^C Cancel` দেখায়, তাই Ctrl+C prompt বাতিল করে। Buffer-এ (memory-তে থাকা text) unsaved পরিবর্তন থাকলে title bar-এ "Modified" দেখায় <Cite n={16} />।
+**চেষ্টা করুন:** nano-র version line print করুন। `--version` version print করে বের হয়ে যায়, তাই কোনো editor খোলে না। <Cite n={16} />
 
-`nano +42 file` file-টি line 42-এ খোলে, আর `-v` হলো read-only mode <Cite n={16} />। Tutorial-এর নিজস্ব পরামর্শ: কোনো error line 42-এর কথা বললে file-টি `nano +42 file` দিয়ে খুলুন, আর shared config শুধু পড়তে `-v` ব্যবহার করুন। Manual বলে, `-v` সঠিক file permission-এর বিকল্প নয় <Cite n={16} />।
+```bash
+nano --version | head -n 1   # GNU nano, version 8.7.1
+# Your version can differ. "command not found" means that nano is not installed.
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: error line 42-এর কথা বললে `nano +42 file` দিয়ে খুলুন। Shared config শুধু পড়তে `-v` ব্যবহার করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `M-` মানে Alt। <Cite n={14} />
+- `^K` একটি line cut করে, আর `^U` সেটি paste করে। `^W` search করে, আর `^G` built-in help খোলে। <Cite n={16} />
+- nano 8.7.1-এ save prompt-টি `^C Cancel` দেখায়, তাই Ctrl+C prompt বাতিল করে।
+- Buffer-এ (memory-তে থাকা text) unsaved পরিবর্তন থাকলে title bar-এ "Modified" দেখায়। <Cite n={16} />
+- `nano +42 file` file-টি line 42-এ খোলে, আর `-v` হলো read-only mode। Manual বলে, `-v` সঠিক file permission-এর বিকল্প নয়। <Cite n={16} />
+- Ubuntu আর আরও অনেক distribution-এ nano default editor। <Cite n={14} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -401,9 +844,9 @@ Save prompt-এ `Y` save করে আর `N` বাতিল করে <Cite n=
 <Voices>
 <Technical>
 
-Vim is a modal editor: the same key does a different job in each mode. <Cite n={18} /> In Normal mode, the keys you type are commands. In Insert mode, they are text. <Cite n={18} /> Vim starts in Normal mode. Press `i` to enter Insert mode and `Esc` to return. <Cite n={18} /> If you lose track of the mode, press `Esc`, sometimes twice. <Cite n={18} /> A `:` key opens Command-line mode for one-line commands. <Cite n={19} />
+**Goal:** Save a change in Vim with `:wq`, or drop it with `:q!`.
 
-Vim reads the file into a buffer, changes the buffer, and writes it back. <Cite n={20} /> The buffer is the copy in memory. The file changes only when you write.
+Vim is a modal editor: the same key does a different job in each mode. <Cite n={18} /> Vim starts in Normal mode, where keys are commands. Press `i` for Insert mode, where keys are text, and `Esc` to return. <Cite n={18} /> A `:` key opens Command-line mode. <Cite n={19} /> Vim changes a buffer, the copy of the file in memory, and writes it back. <Cite n={20} /> The file changes only when you write. `:q!` drops all changes, and Vim makes no backup file unless you set it up. <Cite n={18} />
 
 ```bash
 vim notes.txt
@@ -413,57 +856,125 @@ vim notes.txt
 # :q!   quit and drop all changes
 ```
 
+**Try it:** delete line 1 with no screen, then quit with `:q!` and with `:wq`. Your `vi` must be Vim.
+
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  printf 'one\ntwo\n' > notes.txt
+  # -es: no screen; each -c runs one : command; 1d deletes line 1
+  vi -es -c '1d' -c 'q!' notes.txt
+  cat notes.txt               # one
+                              # two  (q! dropped the change)
+  vi -es -c '1d' -c 'wq' notes.txt
+  cat notes.txt               # two  (wq wrote the change)
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: a remote host may offer only `vi`. Learn `i`, `Esc`, `:wq`, `:q!`, `dd`, and `u`, so that you can fix one file there.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
 | Keys | Action |
 |---|---|
-| `i`, `Esc` | Start Insert mode, and leave it. <Cite n={18} /> |
 | `:w` | Write the buffer to the file. <Cite n={20} /> |
 | `:wq`, `ZZ` | Write and quit. <Cite n={20} /> |
-| `:q!` | Quit and drop all changes. <Cite n={18} /> |
 | `dd`, `u`, `Ctrl-R` | Delete a line, undo, redo. <Cite n={18} /> |
 | `/text` | Search for text. <Cite n={21} /> |
 | `:help` | Open the help. <Cite n={21} /> |
 
-`:q` alone fails with error E37 when you have unsaved changes. <Cite n={18} /> The `vimtutor` command is a lesson that teaches by doing. <Cite n={18} /> VIM Adventures is a browser game that teaches Vim commands. <Cite n={22} />
+- If you lose track of the mode, press `Esc`, sometimes twice. <Cite n={18} />
+- `:q` alone fails with error E37 when you have unsaved changes. <Cite n={18} />
+- After `ZZ`, there is no turning back. <Cite n={18} />
+- The `vimtutor` command is a lesson that teaches by doing. <Cite n={18} /> VIM Adventures is a browser game that teaches Vim commands. <Cite n={22} />
 
-<Callout type="danger" title="No backup and no way back">
-
-Vim makes no backup file unless you set it up. After `ZZ`, there is no turning back. <Cite n={18} /> `:q!` drops every change since the last write.
-
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: a remote host or a container may offer only `vi`, which takes most of the keys above. Learn a small survival set (`i`, `Esc`, `:wq`, `:q!`, `dd`, `u`), so that you can fix one file there.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-Vim is a modal editor: the same key does a different job in each mode <Cite n={18} />. In Normal mode, the keys are commands. In Insert mode, the keys are text. Vim starts in Normal mode. Press `i` to go to Insert mode, and `Esc` to go back. If you do not know the mode, press `Esc`, sometimes two times <Cite n={18} />. The `:` key opens Command-line mode for one-line commands <Cite n={19} />.
+**Goal:** Save a change in Vim with `:wq`, or drop it with `:q!`.
 
-Vim reads the file into a buffer, which is a copy in memory. You change the buffer, and Vim writes it back <Cite n={20} />. The file changes only when you write.
+Vim is a modal editor: the same key does a different job in each mode. <Cite n={18} /> Vim starts in Normal mode, where the keys are commands. Press `i` to go to Insert mode, where the keys are text, and `Esc` to go back. <Cite n={18} /> The `:` key opens Command-line mode. <Cite n={19} /> Vim reads the file into a buffer, which is a copy in memory, and writes it back. <Cite n={20} /> The file changes only when you write. `:q!` drops all changes. Vim makes no backup file unless you set it up. <Cite n={18} />
 
-- `:w` writes the file. `:wq` or `ZZ` writes and quits <Cite n={20} />.
-- `:q!` quits and drops all changes. `dd` deletes a line, `u` undoes, and `Ctrl-R` redoes <Cite n={18} />.
-- `/text` searches, and `:help` opens the help <Cite n={21} />.
+**Try it:** delete line 1 with no screen, then quit with `:q!` and with `:wq`. Your `vi` must be Vim.
 
-`:q` alone fails with error E37 when you have changes that you did not save. Vim makes no backup file unless you set it up <Cite n={18} />. The `vimtutor` command is a lesson that teaches by doing <Cite n={18} />.
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  printf 'one\ntwo\n' > notes.txt
+  # -es: no screen; each -c runs one : command; 1d deletes line 1
+  vi -es -c '1d' -c 'q!' notes.txt
+  cat notes.txt               # one
+                              # two  (q! dropped the change)
+  vi -es -c '1d' -c 'wq' notes.txt
+  cat notes.txt               # two  (wq wrote the change)
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: a remote host may have only `vi`. Learn `i`, `Esc`, `:wq`, `:q!`, `dd`, and `u` to fix one file there.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `:w` writes the file. `:wq` or `ZZ` writes and quits. <Cite n={20} />
+- `dd` deletes a line, `u` undoes, and `Ctrl-R` redoes. <Cite n={18} />
+- `/text` searches, and `:help` opens the help. <Cite n={21} />
+- If you do not know the mode, press `Esc`, sometimes two times. `:q` alone fails with error E37 when you have changes that you did not save. <Cite n={18} />
+- The `vimtutor` command is a lesson that teaches by doing. <Cite n={18} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Vim একটি modal editor: একই key প্রতিটি mode-এ আলাদা কাজ করে <Cite n={18} />। Normal mode-এ আপনার টাইপ করা key-গুলো command, আর Insert mode-এ সেগুলো text। Vim Normal mode-এ শুরু হয়। Insert mode-এ যেতে `i` চাপুন, ফিরে আসতে `Esc` চাপুন। কোন mode-এ আছেন বুঝতে না পারলে `Esc` চাপুন, কখনো কখনো দুইবার <Cite n={18} />। `:` key এক-line-এর command-এর জন্য Command-line mode খোলে <Cite n={19} />।
+**লক্ষ্য:** Vim-এ `:wq` দিয়ে একটি পরিবর্তন save করুন, অথবা `:q!` দিয়ে সেটি বাদ দিন।
 
-Vim file-টি একটি buffer-এ পড়ে, buffer বদলায়, তারপর আবার file-এ লেখে <Cite n={20} />। Buffer হলো memory-তে থাকা copy। আপনি write না করা পর্যন্ত file বদলায় না।
+Vim একটি modal editor: একই key প্রতিটি mode-এ আলাদা কাজ করে। <Cite n={18} /> Vim Normal mode-এ শুরু হয়, যেখানে key-গুলো command। Insert mode-এ যেতে `i` চাপুন, যেখানে key-গুলো text, আর ফিরে আসতে `Esc` চাপুন। <Cite n={18} /> `:` key Command-line mode খোলে। <Cite n={19} /> Vim file-টি একটি buffer-এ (memory-তে থাকা copy) পড়ে, বদলায়, তারপর আবার file-এ লেখে। <Cite n={20} /> আপনি write না করা পর্যন্ত file বদলায় না। `:q!` সব পরিবর্তন বাদ দেয়, আর আপনি set up না করলে Vim কোনো backup file তৈরি করে না। <Cite n={18} />
 
-- `:w` buffer-কে file-এ লেখে। `:wq` বা `ZZ` লিখে বের হয় <Cite n={20} />।
-- `:q!` সব পরিবর্তন বাদ দিয়ে বের হয়। `dd` একটি line মুছে দেয়, `u` undo করে, আর `Ctrl-R` redo করে <Cite n={18} />।
-- `/text` text খোঁজে, আর `:help` help খোলে <Cite n={21} />।
+**চেষ্টা করুন:** কোনো screen ছাড়াই line 1 মুছুন, তারপর `:q!` আর `:wq` দিয়ে বের হন। আপনার `vi` অবশ্যই Vim হতে হবে।
 
-Unsaved পরিবর্তন থাকলে শুধু `:q` error E37 দিয়ে fail করে। আপনি set up না করলে Vim কোনো backup file তৈরি করে না, আর `ZZ`-এর পরে ফেরার পথ নেই <Cite n={18} />। `vimtutor` command হাতে-কলমে শেখানো একটি lesson <Cite n={18} />। VIM Adventures একটি browser game, যা Vim command শেখায় <Cite n={22} />।
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  printf 'one\ntwo\n' > notes.txt
+  # -es: no screen; each -c runs one : command; 1d deletes line 1
+  vi -es -c '1d' -c 'q!' notes.txt
+  cat notes.txt               # one
+                              # two  (q! dropped the change)
+  vi -es -c '1d' -c 'wq' notes.txt
+  cat notes.txt               # two  (wq wrote the change)
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
 
-Tutorial-এর নিজস্ব পরামর্শ: remote host বা container-এ হয়তো শুধু `vi` থাকে। তাই `i`, `Esc`, `:wq`, `:q!`, `dd`, `u`-এর মতো ছোট একটি survival set শিখে রাখুন।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: remote host-এ হয়তো শুধু `vi` থাকে। একটি file ঠিক করতে `i`, `Esc`, `:wq`, `:q!`, `dd`, `u` শিখে রাখুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `:w` buffer-কে file-এ লেখে। `:wq` বা `ZZ` লিখে বের হয়। <Cite n={20} />
+- `dd` একটি line মুছে দেয়, `u` undo করে, আর `Ctrl-R` redo করে। <Cite n={18} />
+- `/text` text খোঁজে, আর `:help` help খোলে। <Cite n={21} />
+- কোন mode-এ আছেন বুঝতে না পারলে `Esc` চাপুন, কখনো কখনো দুইবার। Unsaved পরিবর্তন থাকলে শুধু `:q` error E37 দিয়ে fail করে। `ZZ`-এর পরে ফেরার পথ নেই। <Cite n={18} />
+- `vimtutor` command হাতে-কলমে শেখানো একটি lesson। <Cite n={18} /> VIM Adventures একটি browser game, যা Vim command শেখায়। <Cite n={22} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -473,58 +984,140 @@ Tutorial-এর নিজস্ব পরামর্শ: remote host বা con
 <Voices>
 <Technical>
 
-A hard link is another name for a file. The link and the original share one inode, so they are the same file. <Cite n={23} /> A hard link cannot point to a directory. It cannot cross a filesystem either, because inode numbers are unique only inside one filesystem. <Cite n={2} /> The inode keeps a link count. <Cite n={1} /> The data stays while at least one name remains. <Cite n={24} />
+**Goal:** Make a hard link and a symlink, and see which one still works after you delete the original.
 
-A symbolic link (symlink) is a special file that holds the path of another file. <Cite n={2} /> It can point to a directory and cross filesystems. <Cite n={2} /> Its target may be missing. Then the link is dangling. <Cite n={2} /> A relative symlink resolves from the directory that holds the link, not from your current directory. <Cite n={23} />
+A hard link is another name for a file. The link and the original share one inode, so they are the same file. <Cite n={23} /> The data stays while at least one name remains. <Cite n={24} /> A symbolic link (symlink) is a special file that holds the path of another file. <Cite n={2} /> If its target is missing, the link is dangling. <Cite n={2} /> `ln -f` removes an existing destination file first, so a wrong link name can destroy a real file. <Cite n={23} />
 
 ```bash
-touch data.txt
-ln data.txt data-hard.txt            # hard link: ln TARGET LINK_NAME
-mkdir -p releases/v2
-ln -s releases/v2 current            # symlink named current
-mkdir -p releases/v3
-ln -sfn releases/v3 current          # switch current to v3; -n replaces the link itself
-ls -li data.txt data-hard.txt        # same inode number in column 1
-stat -c '%h' data.txt                # link count
+ln -s releases/v2 current
 ```
 
-`-s` makes a symlink, and `-r` with `-s` makes the path relative to the link. <Cite n={23} /> `ls -i` prints the inode number, and two names with one number are hard links. <Cite n={3} /> <Cite n={24} /> `stat` with `%h` prints the link count. <Cite n={4} />
+**Try it:** make both links, compare the inode numbers, delete the original, and read both links. `%i` is the inode number, and `%h` is the link count. <Cite n={4} />
 
-<Callout type="danger" title="ln -f removes the destination">
-
-`-f` removes an existing destination file before `ln` makes the link. <Cite n={23} /> A wrong link name can destroy a real file. Run `ls -l` on the name first.
-
-</Callout>
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "data" > data.txt
+  ln data.txt hard.txt        # hard link
+  ln -s data.txt soft.txt     # symlink
+  stat -c '%i %h %n' data.txt hard.txt
+  # 2230 2 data.txt
+  # 2230 2 hard.txt           (your inode number differs)
+  rm data.txt
+  cat hard.txt                # data
+  cat soft.txt                # cat: soft.txt: No such file or directory
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: use a symlink such as `current` to switch builds without changing test paths. Switch it with `ln -sfn releases/v3 current`. Without `-n`, `ln` makes the new link inside the old target directory. <Cite n={23} /> If a test reports a missing file, run `ls -l` and look for a link whose target is gone.
+Tutorial's own advice: if a test reports a missing file, run `ls -l` and look for a link whose target is gone.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A hard link cannot point to a directory. It cannot cross a filesystem either, because inode numbers are unique only inside one filesystem. <Cite n={2} />
+- The inode keeps a link count. <Cite n={1} />
+- A symlink can point to a directory and cross filesystems. <Cite n={2} />
+- A relative symlink resolves from the directory that holds the link, not from your current directory. <Cite n={23} />
+- `-s` makes a symlink, and `-r` with `-s` makes the path relative to the link. <Cite n={23} />
+- `ls -i` prints the inode number, and two names with one number are hard links. <Cite n={3} /> <Cite n={24} />
+- Tutorial's own advice: use a symlink such as `current` to switch builds without changing test paths. Without `-n`, `ln` makes the new link inside the old target directory. <Cite n={23} />
+
+```bash
+ln data.txt data-hard.txt            # hard link: ln TARGET LINK_NAME
+mkdir -p releases/v3
+ln -sfn releases/v3 current          # switch current to v3; -n replaces the link itself
+```
+
+</details>
 
 </Technical>
 <Layman>
 
-A hard link is another name for a file. The link and the original share one inode, so they are the same file <Cite n={23} />. A hard link cannot point to a directory. It also cannot cross to another filesystem, because inode numbers are unique only inside one filesystem <Cite n={2} />. The inode keeps a link count <Cite n={1} />. The data stays while at least one name remains <Cite n={24} />.
+**Goal:** Make a hard link and a symlink, and see which one still works after you delete the original.
 
-A symbolic link (symlink) is a special file that holds the path of another file. It can point to a directory and cross filesystems. Its target can be missing. Then the link is "dangling" <Cite n={2} />. A relative symlink resolves from the directory that holds the link, not from your current directory <Cite n={23} />.
+A hard link is another name for a file. The link and the original share one inode, so they are the same file. <Cite n={23} /> The data stays while at least one name remains. <Cite n={24} /> A symbolic link (symlink) is a special file that holds the path of another file. Its target can be missing. Then the link is "dangling". <Cite n={2} /> `ln -f` removes an existing destination file first, so a wrong link name can destroy a real file. <Cite n={23} />
 
-`ln -s` makes a symlink. `-f` removes an existing destination file before `ln` makes the link, so a wrong link name can destroy a real file <Cite n={23} />. `ls -i` shows the inode number. Two names with one number are hard links <Cite n={3} /> <Cite n={24} />.
+**Try it:** make both links, compare the inode numbers, delete the original, and read both links. `%i` is the inode number, and `%h` is the link count. <Cite n={4} />
 
-Tutorial's own advice: use a symlink such as `current` to switch builds, with `ln -sfn releases/v3 current`.
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "data" > data.txt
+  ln data.txt hard.txt        # hard link
+  ln -s data.txt soft.txt     # symlink
+  stat -c '%i %h %n' data.txt hard.txt
+  # 2230 2 data.txt
+  # 2230 2 hard.txt           (your inode number differs)
+  rm data.txt
+  cat hard.txt                # data
+  cat soft.txt                # cat: soft.txt: No such file or directory
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: if a test cannot find a file, run `ls -l` and look for a link whose target is gone.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A hard link cannot point to a directory. It also cannot cross to another filesystem, because inode numbers are unique only inside one filesystem. <Cite n={2} />
+- The inode keeps a link count. <Cite n={1} />
+- A symlink can point to a directory and cross filesystems. <Cite n={2} /> A relative symlink resolves from the directory that holds the link, not from your current directory. <Cite n={23} />
+- `ls -i` shows the inode number. Two names with one number are hard links. <Cite n={3} /> <Cite n={24} />
+- Tutorial's own advice: use a symlink such as `current` to switch builds, with `ln -sfn releases/v3 current`.
+
+</details>
 
 </Layman>
 <Bangla>
 
-Hard link হলো একটি file-এর আরেকটি নাম। Link আর original একই inode share করে, তাই এরা একই file <Cite n={23} />। Hard link কোনো directory-কে point করতে পারে না। এটি অন্য filesystem-এও যেতে পারে না, কারণ inode number শুধু একটি filesystem-এর ভেতরে unique <Cite n={2} />। Inode একটি link count রাখে <Cite n={1} />। অন্তত একটি নাম থাকা পর্যন্ত data থেকে যায় <Cite n={24} />।
+**লক্ষ্য:** একটি hard link আর একটি symlink তৈরি করুন, আর দেখুন original মুছলে কোনটি কাজ করে।
 
-Symbolic link (symlink) একটি বিশেষ file, যা অন্য একটি file-এর path ধরে রাখে। এটি directory-কে point করতে পারে এবং filesystem পার হতে পারে। এর target না-ও থাকতে পারে; তখন link-টি dangling <Cite n={2} />। একটি relative symlink আপনার current directory থেকে নয়, বরং link-টি যে directory-তে আছে সেখান থেকে resolve হয় <Cite n={23} />।
+Hard link হলো একটি file-এর আরেকটি নাম। Link আর original একই inode share করে, তাই এরা একই file। <Cite n={23} /> অন্তত একটি নাম থাকা পর্যন্ত data থেকে যায়। <Cite n={24} /> Symbolic link (symlink) একটি বিশেষ file, যা অন্য একটি file-এর path ধরে রাখে। এর target না থাকলে link-টি dangling। <Cite n={2} /> `ln -f` আগে existing destination file মুছে দেয়, তাই ভুল link name একটি আসল file নষ্ট করতে পারে। <Cite n={23} />
 
-`ln -s` একটি symlink তৈরি করে <Cite n={23} />। `ls -i` inode number দেখায়, আর একই number-এর দুটি নাম হলো hard link <Cite n={3} /> <Cite n={24} />। `stat`-এ `%h` link count দেখায় <Cite n={4} />।
+**চেষ্টা করুন:** দুটি link তৈরি করুন, inode number মিলিয়ে দেখুন, original মুছুন, আর দুটি link পড়ুন। `%i` হলো inode number, আর `%h` হলো link count। <Cite n={4} />
 
-সাবধান: `-f` link তৈরির আগে existing destination file মুছে দেয় <Cite n={23} />, তাই ভুল link name একটি আসল file নষ্ট করতে পারে। আগে নামটির উপর `ls -l` চালান।
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  echo "data" > data.txt
+  ln data.txt hard.txt        # hard link
+  ln -s data.txt soft.txt     # symlink
+  stat -c '%i %h %n' data.txt hard.txt
+  # 2230 2 data.txt
+  # 2230 2 hard.txt           (your inode number differs)
+  rm data.txt
+  cat hard.txt                # data
+  cat soft.txt                # cat: soft.txt: No such file or directory
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
 
-Tutorial-এর নিজস্ব পরামর্শ: test path না বদলে build বদলাতে `current`-এর মতো একটি symlink ব্যবহার করুন, আর `ln -sfn releases/v3 current` দিয়ে সেটি বদলান। `-n` ছাড়া `ln` পুরোনো target directory-র ভেতরে নতুন link তৈরি করে <Cite n={23} />।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: test কোনো file খুঁজে না পেলে `ls -l` চালান, আর এমন link খুঁজুন যার target নেই।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Hard link কোনো directory-কে point করতে পারে না। এটি অন্য filesystem-এও যেতে পারে না, কারণ inode number শুধু একটি filesystem-এর ভেতরে unique। <Cite n={2} />
+- Inode একটি link count রাখে। <Cite n={1} />
+- Symlink directory-কে point করতে পারে এবং filesystem পার হতে পারে। <Cite n={2} /> একটি relative symlink আপনার current directory থেকে নয়, বরং link-টি যে directory-তে আছে সেখান থেকে resolve হয়। <Cite n={23} />
+- `ls -i` inode number দেখায়, আর একই number-এর দুটি নাম হলো hard link। <Cite n={3} /> <Cite n={24} />
+- Tutorial-এর নিজস্ব পরামর্শ: test path না বদলে build বদলাতে `current`-এর মতো একটি symlink ব্যবহার করুন, আর `ln -sfn releases/v3 current` দিয়ে সেটি বদলান। `-n` ছাড়া `ln` পুরোনো target directory-র ভেতরে নতুন link তৈরি করে। <Cite n={23} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -534,62 +1127,126 @@ Tutorial-এর নিজস্ব পরামর্শ: test path না ব�
 <Voices>
 <Technical>
 
-An archive is one file that holds many files. Compression makes data smaller. `tar` makes archives, and `gzip` compresses. <Cite n={25} /> <Cite n={26} /> With `-z`, `tar` passes the archive through `gzip`. <Cite n={25} />
+**Goal:** Pack a directory into a `.tar.gz` file, list it, and extract it into a new directory.
 
-| Option | Meaning |
-|---|---|
-| `-c`, `-x`, `-t` | Create, extract, or list an archive. <Cite n={25} /> |
-| `-f FILE` | The name of the archive. <Cite n={25} /> |
-| `-C DIR` | Change to `DIR` before the work. <Cite n={25} /> |
+An archive is one file that holds many files. Compression makes data smaller. `tar` makes archives, and `gzip` compresses. <Cite n={25} /> <Cite n={26} /> With `-z`, `tar` passes the archive through `gzip`. <Cite n={25} /> `-c` creates an archive, `-t` lists it, `-x` extracts it, and `-f` names it. <Cite n={25} /> Extraction can overwrite files that exist, so extract an unknown archive into a new empty directory. <Cite n={28} />
 
 ```bash
-tar -czf results.tar.gz results/         # create
-tar -tzf results.tar.gz                  # list only
-mkdir -p /tmp/unpack
-tar -xzf results.tar.gz -C /tmp/unpack   # extract into a chosen directory
+tar -czf results.tar.gz results/
+```
+
+**Try it:** pack a directory, list the archive, and extract it into a new directory. `-C DIR` changes to `DIR` before the work. <Cite n={25} />
+
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  mkdir results && echo "ok" > results/run.log
+  tar -czf results.tar.gz results/
+  tar -tzf results.tar.gz     # results/
+                              # results/run.log
+  mkdir unpack
+  tar -xzf results.tar.gz -C unpack
+  ls unpack/results           # run.log
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: pack the logs of a CI run into one `.tar.gz` for upload. In a later step, run `tar -tzf` on it to check its files.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `gzip` replaces each file with a `.gz` file, and `-k` keeps the original. <Cite n={26} />
+- ZIP is another format: it packs and compresses in one step. <Cite n={27} /> Use `unzip` for a ZIP file with many members. <Cite n={26} />
+- It is often unsafe to extract names that are absolute or start with `../`. List with `-t` first. <Cite n={28} />
+- `tar -c` erases an existing archive of the same name. <Cite n={28} />
+
+```bash
 gzip -k app.log                          # compress; without -k, gzip deletes app.log
 gzip -d old-run.log.gz                   # decompress; deletes the .gz file (-k keeps it)
 ```
 
-`gzip` replaces each file with a `.gz` file, and `-k` keeps the original. <Cite n={26} /> ZIP is another format: it packs and compresses in one step. <Cite n={27} /> Use `unzip` for a ZIP file with many members. <Cite n={26} />
-
-<Callout type="danger" title="Check the paths before you extract">
-
-Extraction can overwrite files that exist. Extract an unknown archive into a new empty directory. <Cite n={28} /> It is often unsafe to extract names that are absolute or start with `../`. <Cite n={28} /> List with `-t` first. `tar -c` also erases an existing archive of the same name. <Cite n={28} />
-
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: pack the logs and reports of a CI run into one `.tar.gz` for upload. In a later step, run `tar -tzf` on it to prove that it holds the files you expect.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-An archive is one file that holds many files. Compression makes data smaller. `tar` makes archives, and `gzip` compresses <Cite n={25} /> <Cite n={26} />. With `-z`, `tar` sends the archive through `gzip` <Cite n={25} />.
+**Goal:** Pack a directory into a `.tar.gz` file, list it, and extract it into a new directory.
 
-For `tar`, `-c` creates, `-x` extracts, and `-t` lists an archive. `-f FILE` gives the name of the archive. `-C DIR` changes to `DIR` before the work <Cite n={25} />.
+An archive is one file that holds many files. Compression makes data smaller. `tar` makes archives, and `gzip` compresses. <Cite n={25} /> <Cite n={26} /> With `-z`, `tar` sends the archive through `gzip`. For `tar`, `-c` creates, `-t` lists, and `-x` extracts an archive. `-f` gives the name of the archive. <Cite n={25} /> Extraction can overwrite files that exist, so extract an unknown archive into a new empty directory. <Cite n={28} />
 
-`gzip` replaces each file with a `.gz` file, and `-k` keeps the original <Cite n={26} />. ZIP is another format: it packs and compresses in one step <Cite n={27} />. Use `unzip` for a ZIP file with many members <Cite n={26} />.
+**Try it:** pack a directory, list the archive, and extract it into a new directory. `-C DIR` changes to `DIR` before the work. <Cite n={25} />
 
-Be careful when you extract. Extraction can overwrite files that exist, so extract an unknown archive into a new empty directory. Names that are absolute or start with `../` are often unsafe to extract. `tar -c` also erases an existing archive with the same name <Cite n={28} />. List with `-t` first.
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  mkdir results && echo "ok" > results/run.log
+  tar -czf results.tar.gz results/
+  tar -tzf results.tar.gz     # results/
+                              # results/run.log
+  mkdir unpack
+  tar -xzf results.tar.gz -C unpack
+  ls unpack/results           # run.log
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
 
-Tutorial's own advice: pack the logs and reports of a CI run into one `.tar.gz` for upload. In a later step, use `tar -tzf` to prove that it holds the files you expect.
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: pack the logs of a CI run into one `.tar.gz`. Later, use `tar -tzf` to check its files.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `gzip` replaces each file with a `.gz` file, and `-k` keeps the original. <Cite n={26} />
+- ZIP is another format: it packs and compresses in one step. <Cite n={27} /> Use `unzip` for a ZIP file with many members. <Cite n={26} />
+- Names that are absolute or start with `../` are often unsafe to extract. `tar -c` also erases an existing archive with the same name. List with `-t` first. <Cite n={28} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Archive হলো এমন একটি file, যা অনেক file ধরে রাখে। Compression data-কে ছোট করে। `tar` archive তৈরি করে, আর `gzip` compress করে <Cite n={25} /> <Cite n={26} />। `-z` দিলে `tar` archive-টি `gzip`-এর মধ্য দিয়ে পাঠায় <Cite n={25} />।
+**লক্ষ্য:** একটি directory-কে `.tar.gz` file-এ pack করুন, তার তালিকা দেখুন, আর একটি নতুন directory-তে extract করুন।
 
-`tar`-এ `-c` archive তৈরি করে, `-x` extract করে, আর `-t` তালিকা দেখায়। `-f FILE` archive-এর নাম দেয়, আর `-C DIR` কাজের আগে `DIR`-এ যায় <Cite n={25} />।
+Archive হলো এমন একটি file, যা অনেক file ধরে রাখে। Compression data-কে ছোট করে। `tar` archive তৈরি করে, আর `gzip` compress করে। <Cite n={25} /> <Cite n={26} /> `-z` দিলে `tar` archive-টি `gzip`-এর মধ্য দিয়ে পাঠায়। `tar`-এ `-c` archive তৈরি করে, `-t` তালিকা দেখায়, `-x` extract করে, আর `-f` archive-এর নাম দেয়। <Cite n={25} /> Extraction existing file overwrite করতে পারে, তাই অচেনা archive একটি নতুন খালি directory-তে extract করুন। <Cite n={28} />
 
-`gzip` প্রতিটি file-কে একটি `.gz` file দিয়ে replace করে, আর `-k` original রেখে দেয় <Cite n={26} />। ZIP আরেকটি format, যা এক ধাপে pack আর compress করে <Cite n={27} />। অনেক member-ওয়ালা ZIP file-এর জন্য `unzip` ব্যবহার করুন <Cite n={26} />।
+**চেষ্টা করুন:** একটি directory pack করুন, archive-এর তালিকা দেখুন, আর একটি নতুন directory-তে extract করুন। `-C DIR` কাজের আগে `DIR`-এ যায়। <Cite n={25} />
 
-Extract করার আগে path দেখে নিন। Extraction existing file overwrite করতে পারে, তাই অচেনা archive একটি নতুন খালি directory-তে extract করুন। Absolute নাম বা `../` দিয়ে শুরু হওয়া নাম extract করা প্রায়ই unsafe। `tar -c` একই নামের existing archive-ও মুছে দেয় <Cite n={28} />। আগে `-t` দিয়ে তালিকা দেখুন।
+```bash
+(
+  cd "$(mktemp -d)" || exit   # make and enter a new, empty directory
+  mkdir results && echo "ok" > results/run.log
+  tar -czf results.tar.gz results/
+  tar -tzf results.tar.gz     # results/
+                              # results/run.log
+  mkdir unpack
+  tar -xzf results.tar.gz -C unpack
+  ls unpack/results           # run.log
+  rm -r "$PWD"                # delete the throw-away directory
+)
+```
 
-Tutorial-এর নিজস্ব পরামর্শ: একটি CI run-এর log আর report একটি `.tar.gz`-এ pack করে upload করুন। পরের step-এ `tar -tzf` চালিয়ে প্রমাণ করুন যে এতে প্রত্যাশিত file-গুলো আছে।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: CI run-এর log একটি `.tar.gz`-এ pack করুন। পরের step-এ `tar -tzf` দিয়ে এর file-গুলো check করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `gzip` প্রতিটি file-কে একটি `.gz` file দিয়ে replace করে, আর `-k` original রেখে দেয়। <Cite n={26} />
+- ZIP আরেকটি format, যা এক ধাপে pack আর compress করে। <Cite n={27} /> অনেক member-ওয়ালা ZIP file-এর জন্য `unzip` ব্যবহার করুন। <Cite n={26} />
+- Absolute নাম বা `../` দিয়ে শুরু হওয়া নাম extract করা প্রায়ই unsafe। `tar -c` একই নামের existing archive-ও মুছে দেয়। আগে `-t` দিয়ে তালিকা দেখুন। <Cite n={28} />
+
+</details>
 
 </Bangla>
 </Voices>
