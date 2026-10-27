@@ -168,3 +168,68 @@ Method: I read all 7 sections again. I compared each voice sentence with the Tec
 - Observation, not a voice FAIL: the Technical sentence "A login shell runs `~/.bash_profile` at each login. [20]" (Environment Variables) is simpler than the "first of three files" rule in Shell Basics. The Bangla voice restates it as written (the Layman voice leaves it out), so the voices add nothing.
 
 Open FAILs: 0
+
+## Round 4 (2026-10-27): the lesson rewrite
+
+Checker: independent voices checker (Sonnet 5.5). I did not write these voices. Page: `content/linux/shell-basics.mdx` at commit 0faa44c, compared with 26cb2d0.
+
+Method: I read all 7 sections (Goal, Core, Try it, tip, Go deeper) in Technical, Layman, and Bangla. I compared each voice sentence, number, command, flag, and path with the Technical panel of the same section, code blocks and Go deeper parts included. I ran a script that lists the `<Cite n>` set of each panel. `node --test tests/voice-source.test.ts` passes (22 of 22). I read the old Layman and Bangla panels (26cb2d0) and checked each old fact against the new voice and the new Technical.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 1 | Shell Basics | Layman | PASS | Same parts and order as Technical, no heading. Cites {11,12,7,1} equal the Technical set. No new fact. Omits the Technical "other letters can differ" code comment and the container tip (see observations). |
+| 2 | Shell Basics | Bangla | PASS | Same facts, same cites {11,12,7,1}. Commands, paths, and `$-` stay in English. "ssh ছাড়া এটি `~/.bashrc` পড়ে না" correctly means "except over ssh". The container tip is kept. |
+| 3 | Basic Commands | Layman | PASS | Same facts: `pwd`, `cd`, `ls`, `-a`, the five options with the same sizes, `cd` with no argument, the tip. Cites {1,2}. No new fact. |
+| 4 | Basic Commands | Bangla | PASS | Same facts and cites. Correct Bangla. `ls -ltr` tip and the flaky-test tip are kept. Code is not translated. |
+| 5 | Navigation Basics | Layman | PASS | Same facts: absolute and relative, `.` and `..`, `cd -` and `OLDPWD`, `~`, `-L` and `-P`, `pwd -P`, the `dirname` tip. Cites {13,1,14}. Omits the clause "a relative path works only from the directory where you started the test" (see observations). |
+| 6 | Navigation Basics | Bangla | PASS | Same facts and cites. "`~` হয়ে যায় `HOME`-এর value" keeps "expands to". The `source` warning is kept. |
+| 7 | Command Help | Layman | PASS | Same facts: `man`, `help`, `--help`, `type -t`, `help -s`, `tldr`, sections 1, 5, 7, 8, `-k`, `-f`, `-d`. Cites {1,2,3,4,15,16,17}. Omits the Technical tip "copy the exact flag from the help into your script" (see observations). |
+| 8 | Command Help | Bangla | PASS | Same facts and cites. All commands and flags in English. Correct Bangla. The "copy the exact flag" tip is kept. |
+| 9 | Command Path | Layman | PASS | Same facts: lookup order, `PATH`, status 127, `hash -r`, `whereis`, `~/.bashrc`, the empty `PATH` entry and "Do not write `PATH="$PATH:"`". Cites {1,7,5,18}. The warning callout is not kept as a box, and the POSIX "deprecated" sentence and the CI `command -v` tip are left out. The safety fact (an empty entry is the current directory, and the "Do not write" rule) stays (see observations). |
+| 10 | Command Path | Bangla | PASS | Same facts and cites, including the POSIX sentence and the "Do not write" rule. Correct Bangla. The CI tip loses only the clause "A missing directory ... status 127". |
+| 11 | Directory Hierarchy | Layman | PASS | Same facts: root, FHS, `/etc`, `/var`, `/tmp`, `ls -d`, exit 2, the 10 paths, `journalctl -u name`. Cites {19,10,6,2,22}. "cannot open" for Technical "cannot access" is a small wording change, same meaning. The tip drops "copy reports and logs to a folder that your CI job saves" (see observations). |
+| 12 | Directory Hierarchy | Bangla | PASS | Same facts and cites. Correct Bangla ("প্রমাণ" for evidence). Paths, `ls -d`, and the output lines stay in English. The tip keeps the copy advice. |
+| 13 | Environment Variables | Layman | PASS | Same facts: `name=value`, child process, shell variable, `export`, `unset`, `printenv`, `NAME=value command`, `env -i` with `PATH` and `HOME`, the rc files, the `printenv` secrets warning. Cites {7,1,21,9,8} are a subset of the Technical set. Omits [20] (login shell runs `~/.bash_profile`), the common-names list, and the test-reads-URL advice (see observations). |
+| 14 | Environment Variables | Bangla | PASS | Same facts and cites {1,7,8,9,20,21}, the same as Technical. Correct Bangla. `export`, `unset`, `env -i`, names, and paths stay in English. Both warnings are kept. |
+
+Observations (not FAILs):
+- Old to new: every fact of the old Layman and Bangla text is in the new voice, or it is not in the new Technical. I found no lost fact. The new text adds the "Try it" parts. Each of them has the same command and output as the Technical "Try it".
+- Cites: every `<Cite n>` of a voice is in the Technical set of the same section. The only gap is [20] in the Layman text of Environment Variables. It is an omission, as in earlier rounds.
+- The Layman text omits some Technical sentences. None is a warning, except the shortening in row 9. It leaves out: the "other letters can differ" and "your directory name differs" code comments (topics 1 and 3, also in Bangla), the container tip (topic 1), the relative-path clause (topic 3), the copy-the-flag tip (topic 4), the POSIX sentence and the CI `command -v` tip (topic 5), the "copy to a folder that your CI job saves" clause (topic 6), and the common-names list and the `env -i` test tip (topic 7). Optional: add the "other letters can differ" comment back to the code blocks of topics 1 and 3 in the voices, so a reader is not surprised by a different `$-` string.
+- Layman jargon: "login shell", "interactive", "source", and the `#!` line stay without an explanation. The Technical panel explains "login shell" only in the topic 1 Go deeper bullet. The old Layman text had the same gap, so this is not a regression.
+- Topic 3 Layman: the Goal says "full" path and the body says "absolute path". It is understandable. No change needed.
+- Topic 1 Bangla: the code comments are translated ("i আছে", "i নেই"). The commands are not. No change needed.
+- Bangla Command Path: the warning is one inline paragraph, not a "Common mistake" callout. The words match the Technical callout.
+
+Open FAILs: 0
+
+## Round 5 (2026-10-27): the fix round of the lesson rewrite
+
+Checker: independent voices checker (Sonnet 5.5). I did not write these voices. Page: `content/linux/shell-basics.mdx` at commit 70a5a2a, compared with 0faa44c (`git diff -U0 0faa44c 70a5a2a`).
+
+Method: I read the diff and the changed places of the Layman and Bangla panels of 6 sections (Shell Basics, Basic Commands, Navigation Basics, Command Path, Directory Hierarchy, Environment Variables) against the Technical panel of the same section as it is now. Command Help did not change. A script listed the `<Cite n>` set and the tip length of each panel. `node --test tests/voice-source.test.ts` passes (22 of 22). All tips are 160 characters or less in all 3 voices (largest: Bangla Basic Commands, 158). Each Try-it code block of a voice equals the Technical one, except that the voices leave out the Technical trailing code comments ("other letters can differ", "Your directory name differs").
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 1 | Shell Basics | Layman | PASS | Try-it block uses `bash --norc -ic` and `bash -c` with the same output as Technical. The voice does not explain `--norc` (Technical does, in the Try-it text). No new fact. Cites {1,7,11,12} equal Technical. The tip is the same as Technical. |
+| 2 | Shell Basics | Bangla | PASS | Same code and output as Technical. Cites {1,7,11,12}. The tip is the same in meaning. The container tip is in Go deeper, as in Technical now. |
+| 3 | Basic Commands | Layman | PASS | Goal, the subshell sentence with `<Cite n={1} />`, the code (subshell, `mktemp -d` comment), and the tip are the same as Technical. Cites {1,2}. No new fact. |
+| 4 | Basic Commands | Bangla | PASS | New Goal is correct Bangla and matches Technical. "বন্ধনী block-টিকে একটি subshell-এ চালায়, তাই আপনার shell বদলায় না" matches Technical. The code is the same. The shortened tip keeps the point (`pwd`, `ls -la`, flaky test, working directory). 158 characters. |
+| 5 | Navigation Basics | Layman | PASS | The subshell sentence and cite match Technical. The code is the same. The tip is shorter than Technical: it drops "A relative path works only from the start directory" and keeps "use absolute paths" and "a CI runner often starts in a different directory". The point is intact. |
+| 6 | Navigation Basics | Bangla | PASS | The subshell sentence and cite match Technical. The tip keeps the point. The clause "relative path works only from where you started the test" moved to the Go deeper tip. Technical gives the same fact in its main tip, so it is not a new fact. The Go deeper tip stays natural. |
+| 7 | Command Path | Layman | PASS | The `$?` gloss with `<Cite n={1} />` matches Technical. The code and output are the same. The tip is the same as Technical. Cites {1,5,7,18}. (The `tr` code block is only in Technical, as before.) |
+| 8 | Command Path | Bangla | PASS | `$?`-এ শেষ command-এর exit status থাকে, with the same cite. Correct Bangla. The tip is the same in meaning ("first match wins", "old tool hides the new one"). `$?`, 127, `PATH` stay in English. |
+| 9 | Directory Hierarchy | Layman | PASS | The Try-it text and the one-line code `ls -d /etc /var/log /tmp` with the output comment equal Technical. "settings" for "configuration" is a plain-English word choice. The exit-2 sentence moved to Go deeper with cite {2}. The `/no-such-dir` code and the `$?` gloss are only in Technical (omission). The tip keeps "do not keep test evidence in /tmp" and "The system may delete it". |
+| 10 | Directory Hierarchy | Bangla | PASS | New Try-it, code, and Go deeper line "আপনার দেওয়া কোনো path access করতে না পারলে `ls` 2 return করে" match Technical, with cite {2}. The tip keeps "may be deleted" and the CI folder advice. 145 characters. |
+| 11 | Environment Variables | Layman | PASS | The Try-it text (no "Type exit"), the subshell sentence with `<Cite n={1} />`, and the code equal Technical. The tip is the same as Technical. The Go deeper part has no new fact. Cites {1,7,8,9,21} are a subset of Technical. |
+| 12 | Environment Variables | Bangla | PASS | The Try-it, the code, and the tip match Technical. The test-reads-URL/token/LANG sentence moved to the Go deeper tip, where Technical has it too. Cites {1,7,8,9,20,21} equal Technical. `export`, `printenv`, and `LANG` stay in English. |
+
+Observations (not FAILs):
+- Directory Hierarchy Layman Go deeper says `ls` "cannot open" a path. Technical says "cannot access". It is the same wording change as in Round 4 and the meaning is close. Optional: use "cannot access", the same words as the `ls` error message.
+- Directory Hierarchy Bangla tip says "রাখুন" (keep) where Technical says "copy". Same advice. No change needed.
+- The Layman text of Environment Variables has no Go deeper tip. It leaves out the moved "test can read a URL, a token, or LANG" advice, the `env -i` test advice, and "set variables in the job, not in these files". No warning is lost. Optional to add.
+- The word "subshell" is not explained in the Layman text. Technical does not explain it either. The sentence says what it does ("so your shell does not change").
+- The Layman and Bangla Shell Basics Try-it do not say why `--norc` is there. It only keeps the `$-` output stable. Technical explains it.
+- Round 4 observations about omitted Technical sentences still hold, except that the Command Path, Basic Commands, and Environment Variables tips are now equal to Technical.
+
+Open FAILs: 0
