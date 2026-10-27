@@ -102,7 +102,7 @@ Checked 2026-10-27 against commit f1ff844 (uncommitted tree equals it for the pa
 | 72 | `--network k6net` on both `docker run` lines; the network is the tutorial's own addition | none | PASS | Marked as the tutorial's own. Both lines (InfluxDB and Grafana) have the flag. |
 | 73 | Grafana reaches InfluxDB at `http://influxdb:8086` (container name and port); the data source URL row says the same | 17, 14 | PASS | Follows from claim 71 and the container name `--name influxdb`; port 8086 from source 14. |
 | 74 | The k6 command runs on the host and keeps `http://localhost:8086/k6` | 6 | PASS | The InfluxDB container publishes `-p 8086:8086` (source 6 guide). |
-| 75 | Inside the Grafana container, `localhost` means the Grafana container, not your machine | none | **FAIL** | A Docker networking fact with no cite and no "tutorial's own" marker on that sentence (round 1 had the marker). Source 18 only says to use a special DNS name for the host. Add a cite or mark the sentence as the tutorial's own explanation. |
+| 75 | Inside the Grafana container, `localhost` means the Grafana container, not your machine | none | PASS (round 5) | Now marked in all panels: "This is the tutorial's own explanation, not a point from the Docker docs." Earlier: a Docker networking fact with no cite and no "tutorial's own" marker on that sentence (round 1 had the marker). Source 18 only says to use a special DNS name for the host. Add a cite or mark the sentence as the tutorial's own explanation. |
 | 76 | On Docker Desktop a container reaches the host with `host.docker.internal`; the name is for Docker Desktop | 18 | PASS | Docker Desktop how-tos: "To connect to services running on your host, use the special DNS name: host.docker.internal Resolves to the internal IP address of your host". |
 | 77 | The owner's screenshots show Grafana on the host, so they show `http://localhost:8086` | none | PASS | The first screenshot shows URL `http://localhost:8086`. The page text says it is the owner's. |
 | 78 | Leave User and Password empty; InfluxDB 1.x has authentication off by default | 19 | PASS | "By default, authentication is disabled, all credentials are silently ignored, and all users have all privileges." Note (not a FAIL): the second screenshot (`grafana-influxdb-settings.webp`) shows User `admin` and Password "configured", and the URL `localhost`. The page says "leave empty" and the note about the owner's screenshot sits only under the first image. Suggest the same one-line note under the second image. |
@@ -115,4 +115,15 @@ Other round 4 checks:
 - No new `k6` script. The two `docker run` lines were not run (no Docker).
 - All sources 1 to 19 are cited at least once (17 in blocks 3 and 5, 18 in block 5, 19 in block 6).
 
-Open FAILs: 1
+## Round 5
+
+Checked 2026-10-27 against the last commit.
+
+| # | Claim (short) | Cite | Verdict | Quote or reason |
+|---|---|---|---|---|
+| 75 | `localhost` inside the Grafana container means that container | none | PASS (round 5) | Marked as the tutorial's own explanation in Technical. |
+| 81 | New note under the second screenshot: it is the owner's run with Grafana on the host; it shows `http://localhost:8086` and a user and password; the steps use `http://influxdb:8086` and empty User and Password | none | PASS | Opened `grafana-influxdb-settings.webp`: URL `http://localhost:8086`, Database `k6`, User `admin`, Password "configured", HTTP Method POST. The note is accurate. The `admin` user is a local default, not a secret. |
+
+Overlap check: 2 runs, both source URLs. `node --test tests/voice-source.test.ts tests/k6.test.ts`: pass 30, fail 0.
+
+Open FAILs: 0

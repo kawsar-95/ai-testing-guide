@@ -24,7 +24,7 @@ Compared every changed Layman and Bangla panel with Technical of the same block.
 
 | Block | Layman | Bangla | Notes |
 |---|---|---|---|
-| 1. Why use | **FAIL** | PASS | Layman starts with a new example: "Think of a car trip. A summary after the trip tells you the average speed. A speedometer tells you the speed while you drive." Technical has no such example. Remove it or move it into Technical. The rest of the panel matches Technical. |
+| 1. Why use | PASS (round 5) | PASS | The car-trip example is removed. Earlier: Layman started with a new example: "Think of a car trip. A summary after the trip tells you the average speed. A speedometer tells you the speed while you drive." Technical has no such example. Remove it or move it into Technical. The rest of the panel matches Technical. |
 | 2. Versions | PASS | PASS | Rewording only ("major versions", "pin a tag", "special k6 program"). No new fact; `influxdb:1.13` is in Technical. |
 | 3. Docker | PASS | PASS | The network sentences (`docker network create k6net`, reach by name, tutorial's own idea, cite 17) are in Technical. Bangla has the same. |
 | 4. Send data | PASS | PASS | Rewording only. |
@@ -32,4 +32,11 @@ Compared every changed Layman and Bangla panel with Technical of the same block.
 | 6. Connect | PASS | PASS | Screenshot note, URL row, "leave User and Password empty", and cite 19 are in Technical. Bangla keeps `User` and `Password` in English. |
 | 7. Dashboard | PASS | PASS | Rewording only; the ID 2587 text is the same. |
 
-Open FAILs: 1
+## Round 5
+
+- Block 1 Layman: the car-trip example is gone (PASS round 5). The panel matches Technical.
+- Block 5 (all panels): the "tutorial's own explanation, not a point from the Docker docs" marker is in Technical, Layman, and Bangla (PASS).
+- Block 6 (all panels): the new note under the second screenshot is the same in Technical, Layman, and Bangla (owner's run, Grafana on the host, `localhost` and a user and password, versus `http://influxdb:8086` and empty User and Password). No new fact; it matches the screenshot.
+- Script checks repeat clean: no extra cites, no Layman sentence over 25 words, no তুমি.
+
+Open FAILs: 0
