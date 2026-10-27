@@ -321,3 +321,9 @@ Facts moved (none deleted; every old `<Cite n>` number stays on the page):
 - Priorities: `nice` with no command, the user limits, the old danger callout (now a "Warning" bullet), the `renice -n` note, and `ionice` went to "Go deeper".
 - Forking: the `<FlowDiagram>` stays in the Core. "The classic way", `wait`, zombie, orphan, subreaper, and `EAGAIN` went to "Go deeper". The fork-bomb warning stays in the Core text.
 - Ulimits: the `ulimit -u` warning stays in the Core text. Inheritance, soft and hard rules, `-a`, `-S`, `-H`, `/proc/PID/limits`, `limits.conf`, and systemd went to "Go deeper".
+
+## Fix round 1 of the lesson rewrite (2026-10-27)
+
+- Priorities, Go deeper code: added `sleep 1` before `ionice -p $!`. Without the delay, `ionice -p` can print `none: prio 0`, because `nice` and `ionice` have not yet exec'd `sleep`. With the delay, it printed `idle` in 3 of 3 runs (util-linux 2.41.3).
+- The Priorities Try-it did not change. It ran again with the same output (`NI 10`, `old priority 10, new priority 15`, `NI 15`).
+- Priorities: the negative-niceness warning is now a Core sentence (S21). "A higher number means a nicer process" (S12) moved to Go deeper to stay under 150 words. The `NI` column claim cites S16.
