@@ -1,11 +1,470 @@
-export const metadata = { title: 'Thresholds', description: 'Pass or fail a test with limits on the metrics.' }
-export const page = { updated: '2026-10-27', sources: [] }
+export const metadata = { title: 'Thresholds', description: 'Pass or fail a test with limits on the metrics: the syntax, thresholds on checks and tags, abort on fail, and the exit code.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Thresholds', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/thresholds/', accessed: '2026-10-27' },
+    { title: 'errext/exitcodes/codes.go', publisher: 'grafana/k6 (GitHub)', url: 'https://github.com/grafana/k6/blob/master/errext/exitcodes/codes.go', accessed: '2026-10-27' },
+    { title: 'k6 options reference: Stages', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/', accessed: '2026-10-27' },
+  ],
+}
 
 # Thresholds
 
-Pass or fail a test with limits on the metrics.
+A check marks one response as good or bad, but it does not decide if the test passed. A threshold does. It is a limit on a metric, and k6 fails the whole test when the limit is broken.
+
+<PageMeta />
+
+## What a threshold is
+
+<Voices>
+<Technical>
+
+A threshold is a pass/fail rule for a metric. If the system under test breaks a rule, the test ends with a failed status <Cite n={1} />. Testers often use thresholds to codify their SLOs <Cite n={1} />. For example: "99% of requests finish in under 500 ms" or "less than 1% of requests fail".
+
+You set a threshold in the `thresholds` property of `options`. The key is the name of a metric. The value is a list of expressions <Cite n={1} />. An expression gives true or false. If it is false when the test ends, k6 marks the whole test as failed <Cite n={1} />.
+
+When all thresholds pass, k6 exits with code 0. When one fails, the exit code is not 0 <Cite n={1} />. The code is 99 <Cite n={2} />. Tutorial's own view: a CI job reads this exit code, so a failed threshold fails the job.
+
+</Technical>
+<Layman>
+
+A threshold is a pass/fail limit on a metric. If the system breaks the limit, the test fails <Cite n={1} />. Testers often use thresholds to write down their SLOs <Cite n={1} />. One example is "99% of requests finish in under 500 ms". Another is "less than 1% of requests fail".
+
+You write a threshold in `options`, under `thresholds`. The key is a metric name. The value is a list of expressions <Cite n={1} />. An expression is true or false. If it is false when the test ends, the whole test fails <Cite n={1} />.
+
+If all thresholds pass, k6 exits with code 0. If one fails, the exit code is not 0 <Cite n={1} />. The code is 99 <Cite n={2} />. Tutorial's own view: a CI job reads this code, so a failed threshold fails the job.
+
+</Layman>
+<Bangla>
+
+Threshold হলো আপনার টেস্টের metric-এর জন্য pass/fail-এর শর্ত। system এই শর্ত পূরণ না করলে টেস্ট failed status-এ শেষ হয় <Cite n={1} />। অনেক টেস্টার SLO লিখে রাখতে threshold ব্যবহার করেন <Cite n={1} />। যেমন "৯৯% request ৫০০ ms-এর নিচে শেষ হবে" অথবা "১%-এর কম request ফেইল করবে"।
+
+আপনি `options`-এর `thresholds`-এ threshold লেখেন। key হলো একটা metric-এর নাম। value হলো expression-এর তালিকা <Cite n={1} />। expression true অথবা false হয়। টেস্ট শেষে false হলে k6 পুরো টেস্ট fail ধরে <Cite n={1} />।
+
+সব threshold pass করলে k6 exit code 0 দিয়ে বের হয়। একটা fail করলে exit code 0 হয় না <Cite n={1} />। কোডটা হলো 99 <Cite n={2} />। Tutorial-এর নিজের মত: CI job এই exit code পড়ে, তাই threshold fail করলে job-ও fail করে।
+
+</Bangla>
+</Voices>
+
+## The owner's example
+
+<Voices>
+<Technical>
+
+This script is from the tutorial owner's practice project. It ramps the load with `stages` and sets two thresholds <Cite n={3} />. The target was a local app at `http://localhost:3000`.
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '10s', target: 50 }, // ramp up from 0 to 50 VUs in 10 seconds
+    { duration: '30s', target: 200 }, // ramp up from 50 to 200 VUs in 30 seconds
+    { duration: '20s', target: 0 }, // ramp down to 0 VUs in 20 seconds
+  ],
+  thresholds: {
+    // 99% of requests must finish in under 500 ms
+    http_req_duration: ['p(99)<500'],
+    // fewer than 1% of requests may fail
+    http_req_failed: ['rate<0.01'],
+  },
+};
+
+export default function () {
+  const res = http.get('http://localhost:3000');
+
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 500ms': (r) => r.timings.duration < 500,
+  });
+
+  sleep(1);
+}
+```
+
+The first threshold is `http_req_duration: ['p(99)<500']`. It means that 99% of requests must finish in under 500 ms. The second is `http_req_failed: ['rate<0.01']`. It means that fewer than 1% of requests may fail <Cite n={1} />.
+
+The stages need a careful reading. The first stage ramps from 0 to 50 VUs in 10 seconds. The second stage ramps from 50 to 200 VUs in 30 seconds. It does not hold 200 VUs for 30 seconds. The third stage ramps from 200 to 0 in 20 seconds. Each stage names a VU target and a time to reach it <Cite n={3} />. The whole run is 1 minute.
+
+The output below is one run on the owner's own machine, against a local app. Your numbers will differ.
+
+```text
+$ k6 run index.js
+
+  █ THRESHOLDS
+
+    http_req_duration
+    ✓ 'p(99)<500' p(99)=2.09ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+  █ TOTAL RESULTS
+
+    checks_total.......: 12166   201.056727/s
+    checks_succeeded...: 100.00% 12166 out of 12166
+    checks_failed......: 0.00%   0 out of 12166
+
+    ✓ status is 200
+    ✓ response time < 500ms
+
+    HTTP
+    http_req_duration..............: avg=920.42µs min=0s med=888.2µs max=4.8ms p(90)=1.47ms p(95)=1.62ms
+    http_req_failed................: 0.00%  0 out of 6083
+    http_reqs......................: 6083   100.528364/s
+
+    EXECUTION
+    vus............................: 5      min=5         max=199
+    vus_max........................: 200    min=200       max=200
+```
+
+k6 prints the `THRESHOLDS` block first. Each metric that has a threshold shows a check mark when it passes. A failed one would show a cross <Cite n={1} />. In this run, both thresholds passed because the local app answered in a few milliseconds. A real remote system gives larger numbers.
+
+</Technical>
+<Layman>
+
+This script is from the tutorial owner's practice project. It changes the load with `stages` and sets two thresholds <Cite n={3} />. The target was a local app at `http://localhost:3000`.
+
+The first threshold says that 99% of requests must finish in under 500 ms. The second says that fewer than 1% of requests may fail <Cite n={1} />.
+
+Read the stages with care. The first stage goes from 0 to 50 VUs in 10 seconds. The second goes from 50 to 200 VUs in 30 seconds. It does not hold 200 VUs for 30 seconds. The third goes from 200 to 0 in 20 seconds. Each stage names a VU target and a time to reach it <Cite n={3} />. The whole run is 1 minute.
+
+The output in the Technical text is one run on the owner's machine, against a local app. Your numbers will differ.
+
+k6 prints the `THRESHOLDS` block first. A metric with a passed threshold shows a check mark. A failed one shows a cross <Cite n={1} />. Here both thresholds passed. The local app answered in a few milliseconds. A real remote system gives larger numbers.
+
+</Layman>
+<Bangla>
+
+এই script টিউটোরিয়াল-মালিকের practice project থেকে নেওয়া। এটা `stages` দিয়ে load বদলায় এবং দুটো threshold সেট করে <Cite n={3} />। টার্গেট ছিল `http://localhost:3000`-এর একটা local app।
+
+প্রথম threshold বলে, ৯৯% request ৫০০ ms-এর নিচে শেষ হতে হবে। দ্বিতীয়টা বলে, ১%-এর কম request ফেইল করতে পারবে <Cite n={1} />।
+
+stage-গুলো মনোযোগ দিয়ে পড়ুন। প্রথম stage ১০ সেকেন্ডে 0 থেকে 50 VUs-এ যায়। দ্বিতীয় stage ৩০ সেকেন্ডে 50 থেকে 200 VUs-এ যায়। এটা ৩০ সেকেন্ড ধরে 200 VUs ধরে রাখে না। তৃতীয় stage ২০ সেকেন্ডে 200 থেকে 0-তে নামে। প্রতিটা stage-এ একটা VU target আর সেখানে পৌঁছানোর সময় থাকে <Cite n={3} />। পুরো run ১ মিনিটের।
+
+Technical লেখার output মালিকের নিজের মেশিনে, একটা local app-এর বিরুদ্ধে, একটা run-এর ফল। আপনার সংখ্যা আলাদা হবে।
+
+k6 আগে `THRESHOLDS` block ছাপে। threshold pass করলে metric-এর পাশে check mark দেখায়। fail করলে cross দেখায় <Cite n={1} />। এখানে দুটোই pass করেছে। local app কয়েক millisecond-এ উত্তর দিয়েছে। বাস্তব remote system-এ সংখ্যা বড় হয়।
+
+</Bangla>
+</Voices>
+
+## Threshold syntax by metric type
+
+<Voices>
+<Technical>
+
+An expression has this format: `<aggregation_method> <operator> <value>` <Cite n={1} />. Examples are `avg < 200`, `count >= 500`, and `p(90) < 300`. The aggregation method depends on the type of the metric <Cite n={1} />:
+
+| Metric type | Aggregation methods |
+| --- | --- |
+| Trend | `p(N)`, `avg`, `med`, `min`, `max` |
+| Rate | `rate` |
+| Gauge | `value` |
+| Counter | `rate`, `count` |
+
+In `p(N)`, N is a percentile between 0.0 and 100, for example `p(99.99)`. Trend values are in milliseconds. A percentile outside 0 to 100 fails parsing, and the test stops before it runs <Cite n={1} />.
+
+This script has one threshold for each type. The names `errors`, `content_size`, `content_ok`, and `rtt` are custom metrics. The page on custom metrics explains how to create them.
+
+```javascript
+import http from 'k6/http';
+import { Counter, Gauge, Rate, Trend } from 'k6/metrics';
+import { sleep } from 'k6';
+
+const errors = new Counter('errors');
+const contentSize = new Gauge('content_size');
+const contentOk = new Rate('content_ok');
+const rtt = new Trend('rtt');
+
+export const options = {
+  thresholds: {
+    errors: ['count<100'], // Counter
+    content_size: ['value<4000'], // Gauge
+    content_ok: ['rate>0.95'], // Rate
+    rtt: ['p(99)<300', 'avg<200', 'med<150', 'min<100'], // Trend
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com/api/json?name=Bert');
+  const ok = res.json('name') === 'Bert';
+  rtt.add(res.timings.duration);
+  contentOk.add(ok);
+  contentSize.add(res.body.length);
+  errors.add(!ok);
+  sleep(1);
+}
+```
+
+You can give one metric more than one threshold. Put all expressions in one array: `http_req_duration: ['p(50) < 300', 'p(95) < 900']` <Cite n={1} />. Do not repeat the same key in the `thresholds` object. k6 silently ignores the extra keys <Cite n={1} />.
+
+<Callout type="warning" title="Check the key">
+
+If you repeat a key, only one threshold counts, and k6 does not warn you. A test that looks strict can then pass with a weaker limit. Use one key and an array.
+
+</Callout>
+
+The long format puts a threshold in an object. It has the extra properties of the next sections <Cite n={1} />. The short format is a plain string.
+
+</Technical>
+<Layman>
+
+An expression has three parts: `<aggregation_method> <operator> <value>` <Cite n={1} />. Examples are `avg < 200`, `count >= 500`, and `p(90) < 300`. The aggregation method depends on the type of the metric <Cite n={1} />:
+
+| Metric type | Aggregation methods |
+| --- | --- |
+| Trend | `p(N)`, `avg`, `med`, `min`, `max` |
+| Rate | `rate` |
+| Gauge | `value` |
+| Counter | `rate`, `count` |
+
+In `p(N)`, N is a percentile from 0.0 to 100, for example `p(99.99)`. Trend values are in milliseconds. A percentile outside 0 to 100 is an error, and the test stops before it runs <Cite n={1} />.
+
+The script in the Technical text has one threshold for each type. The names `errors`, `content_size`, `content_ok`, and `rtt` are custom metrics.
+
+You can give one metric more than one threshold. Put all expressions in one array, as in `['p(50) < 300', 'p(95) < 900']` <Cite n={1} />. Do not repeat the same key. k6 silently ignores the extra keys <Cite n={1} />.
+
+If you repeat a key, only one threshold counts, and k6 does not warn you. Use one key and an array.
+
+The long format puts a threshold in an object. It has the extra properties of the next sections <Cite n={1} />. The short format is a plain string.
+
+</Layman>
+<Bangla>
+
+একটা expression-এর তিনটা অংশ: `<aggregation_method> <operator> <value>` <Cite n={1} />। উদাহরণ: `avg < 200`, `count >= 500`, `p(90) < 300`। aggregation method নির্ভর করে metric-এর type-এর ওপর <Cite n={1} />:
+
+| Metric type | Aggregation methods |
+| --- | --- |
+| Trend | `p(N)`, `avg`, `med`, `min`, `max` |
+| Rate | `rate` |
+| Gauge | `value` |
+| Counter | `rate`, `count` |
+
+`p(N)`-এ N হলো 0.0 থেকে 100-এর মধ্যে একটা percentile, যেমন `p(99.99)`। Trend-এর মান millisecond-এ। 0 থেকে 100-এর বাইরের percentile হলে parsing error হয়, আর টেস্ট চলার আগেই থেমে যায় <Cite n={1} />।
+
+Technical লেখার script-এ প্রতিটা type-এর জন্য একটা করে threshold আছে। `errors`, `content_size`, `content_ok`, `rtt` নামগুলো custom metric।
+
+একটা metric-এ একাধিক threshold দেওয়া যায়। সব expression একটা array-তে রাখুন, যেমন `['p(50) < 300', 'p(95) < 900']` <Cite n={1} />। একই key দুইবার লিখবেন না। k6 বাড়তি key চুপচাপ বাদ দেয় <Cite n={1} />।
+
+key দুইবার লিখলে শুধু একটা threshold কাজ করে, আর k6 কোনো warning দেয় না। একটা key আর একটা array ব্যবহার করুন।
+
+long format-এ threshold একটা object-এর ভেতরে থাকে। এতে পরের section-গুলোর বাড়তি property থাকে <Cite n={1} />। short format হলো সাধারণ string।
+
+</Bangla>
+</Voices>
+
+## Fail a test with checks
+
+<Voices>
+<Technical>
+
+A failed check never changes the exit status of k6 <Cite n={1} />. If you use only checks, a test with failed checks still exits with code 0. To fail the run, put a threshold on the built-in `checks` metric <Cite n={1} />.
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  vus: 3,
+  duration: '5s',
+  thresholds: {
+    // the rate of passed checks must be above 90%
+    checks: ['rate>0.9'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com/api/status/500');
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+  });
+  sleep(1);
+}
+```
+
+Here `checks: ['rate>0.9']` means that more than 90% of the checks must pass <Cite n={1} />. The endpoint returns status 500, so every check fails. The rate is 0%, the threshold fails, and k6 exits with code 99 <Cite n={2} />.
+
+To limit one check or one group of checks, add a tag to the check and use it in the key: `'checks{myTag:hola}': ['rate>0.9']` <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+A failed check never changes the exit status of k6 <Cite n={1} />. If you use only checks, a test with failed checks still exits with code 0. To fail the run, put a threshold on the built-in `checks` metric <Cite n={1} />.
+
+In the script above, `checks: ['rate>0.9']` means that more than 90% of the checks must pass <Cite n={1} />. The endpoint returns status 500, so every check fails. The rate is 0%, the threshold fails, and k6 exits with code 99 <Cite n={2} />.
+
+To limit one check or one group of checks, add a tag to the check. Then use the tag in the key, as in `'checks{myTag:hola}': ['rate>0.9']` <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+fail হওয়া check k6-এর exit status বদলায় না <Cite n={1} />। শুধু check ব্যবহার করলে check fail হওয়া টেস্টও exit code 0 দিয়ে বের হয়। run fail করাতে হলে built-in `checks` metric-এ একটা threshold দিন <Cite n={1} />।
+
+ওপরের script-এ `checks: ['rate>0.9']` মানে ৯০%-এর বেশি check pass করতে হবে <Cite n={1} />। endpoint status 500 ফেরত দেয়, তাই প্রতিটা check fail করে। rate হয় 0%, threshold fail করে, আর k6 exit code 99 দিয়ে বের হয় <Cite n={2} />।
+
+একটা check বা একদল check-এর ওপর limit দিতে check-এ একটা tag যোগ করুন। তারপর key-তে সেই tag ব্যবহার করুন, যেমন `'checks{myTag:hola}': ['rate>0.9']` <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Thresholds on tags and groups
+
+<Voices>
+<Technical>
+
+A tagged request creates a sub-metric. You can set a threshold on it with the key `metric_name{tag_name:tag_value}` <Cite n={1} />. This is useful when one test calls different kinds of endpoints and each kind has its own limit. The next page, [Tags and Groups](/k6/tags-and-groups/), explains tags in detail.
+
+```javascript
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  vus: 2,
+  duration: '5s',
+  thresholds: {
+    'http_req_duration{type:API}': ['p(95)<500'],
+    'http_req_duration{type:static}': ['p(95)<200'],
+  },
+};
+
+export default function () {
+  http.get('https://quickpizza.grafana.com/api/json', { tags: { type: 'API' } });
+  http.get('https://quickpizza.grafana.com/favicon.ico', { tags: { type: 'static' } });
+  sleep(1);
+}
+```
+
+The first threshold applies only to requests with the tag `type:API`. The second applies only to requests with the tag `type:static` <Cite n={1} />.
+
+For a group, use the metric `group_duration` and the tag `group` with three colons: `'group_duration{group:::individualRequests}': ['avg < 400']` <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+A tagged request creates a sub-metric. You can set a threshold on it with the key `metric_name{tag_name:tag_value}` <Cite n={1} />. This helps when one test calls different kinds of endpoints. Each kind can have its own limit. The next page, [Tags and Groups](/k6/tags-and-groups/), explains tags in detail.
+
+In the script above, the first threshold applies only to requests with the tag `type:API`. The second applies only to requests with the tag `type:static` <Cite n={1} />.
+
+For a group, use the metric `group_duration` and the tag `group` with three colons, as in `'group_duration{group:::individualRequests}': ['avg < 400']` <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+tag করা একটা request একটা sub-metric তৈরি করে। `metric_name{tag_name:tag_value}` key দিয়ে তার ওপর threshold দেওয়া যায় <Cite n={1} />। একই টেস্ট যখন আলাদা ধরনের endpoint কল করে, তখন এটা কাজে লাগে। প্রতিটা ধরনের নিজের limit থাকতে পারে। পরের পেজ [Tags and Groups](/k6/tags-and-groups/)-এ tag বিস্তারিত আছে।
+
+ওপরের script-এ প্রথম threshold শুধু `type:API` tag-এর request-এর জন্য। দ্বিতীয়টা শুধু `type:static` tag-এর request-এর জন্য <Cite n={1} />।
+
+group-এর জন্য `group_duration` metric আর তিন কোলন দিয়ে `group` tag ব্যবহার করুন, যেমন `'group_duration{group:::individualRequests}': ['avg < 400']` <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Abort a test when a threshold fails
+
+<Voices>
+<Technical>
+
+By default, k6 judges thresholds at the end of the test. To stop the test as soon as a threshold fails, use the long format and set `abortOnFail` to `true` <Cite n={1} />.
+
+A test can fail a threshold in the first seconds, before it has enough data. To avoid this, add `delayAbortEval`. It delays the evaluation, so k6 can collect samples first. The value is a relative time string, such as `10s` or `1m` <Cite n={1} />.
+
+```javascript
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  vus: 3,
+  duration: '30s',
+  thresholds: {
+    http_req_duration: [
+      {
+        threshold: 'p(99)<1', // impossible on purpose
+        abortOnFail: true,
+        delayAbortEval: '5s', // wait 5 seconds before the first check of the limit
+      },
+    ],
+  },
+};
+
+export default function () {
+  http.get('https://quickpizza.grafana.com');
+  sleep(1);
+}
+```
+
+This script has an impossible limit on purpose. After 5 seconds, k6 evaluates the threshold, sees that it fails, and stops the test. The run does not last 30 seconds. k6 still exits with code 99 <Cite n={2} />.
+
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `threshold` | string | The expression to evaluate. |
+| `abortOnFail` | boolean | Abort the test if the threshold fails before the test ends. |
+| `delayAbortEval` | string | How long to wait before the first evaluation. |
+
+<Callout type="note">
+
+When k6 runs in the cloud, it evaluates thresholds every 60 seconds. So `abortOnFail` can be late by up to 60 seconds <Cite n={1} />.
+
+</Callout>
+
+Tutorial advice: use `abortOnFail` for a limit that, once broken, makes the rest of the run useless, such as a very high error rate. It saves time and load on a shared environment.
+
+</Technical>
+<Layman>
+
+By default, k6 judges thresholds at the end of the test. To stop the test as soon as a threshold fails, use the long format and set `abortOnFail` to `true` <Cite n={1} />.
+
+A test can fail a threshold in the first seconds, before it has enough data. To avoid this, add `delayAbortEval`. It makes k6 wait and collect samples first. The value is a relative time string, such as `10s` or `1m` <Cite n={1} />.
+
+The script in the Technical text has an impossible limit on purpose. After 5 seconds, k6 evaluates the threshold, sees that it fails, and stops the test. The run does not last 30 seconds. k6 still exits with code 99 <Cite n={2} />.
+
+The three properties are:
+
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `threshold` | string | The expression to evaluate. |
+| `abortOnFail` | boolean | Abort the test if the threshold fails before the test ends. |
+| `delayAbortEval` | string | How long to wait before the first evaluation. |
+
+When k6 runs in the cloud, it evaluates thresholds every 60 seconds. So `abortOnFail` can be late by up to 60 seconds <Cite n={1} />.
+
+Tutorial advice: use `abortOnFail` for a limit that, once broken, makes the rest of the run useless. An example is a very high error rate. It saves time and load on a shared environment.
+
+</Layman>
+<Bangla>
+
+ডিফল্টভাবে k6 টেস্টের শেষে threshold বিচার করে। threshold fail করামাত্র টেস্ট থামাতে long format ব্যবহার করুন এবং `abortOnFail` `true` করুন <Cite n={1} />।
+
+একটা টেস্ট প্রথম কয়েক সেকেন্ডেই threshold fail করতে পারে, যখন যথেষ্ট data নেই। এটা এড়াতে `delayAbortEval` যোগ করুন। এটা k6-কে আগে অপেক্ষা করিয়ে sample জমাতে দেয়। value একটা relative time string, যেমন `10s` বা `1m` <Cite n={1} />।
+
+Technical লেখার script-এ ইচ্ছা করেই একটা অসম্ভব limit আছে। ৫ সেকেন্ড পর k6 threshold evaluate করে, দেখে সেটা fail করছে, আর টেস্ট থামায়। run ৩০ সেকেন্ড চলে না। k6 তবুও exit code 99 দিয়ে বের হয় <Cite n={2} />।
+
+তিনটা property:
+
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `threshold` | string | যে expression evaluate হবে। |
+| `abortOnFail` | boolean | টেস্ট শেষ হওয়ার আগে threshold fail করলে টেস্ট abort করা। |
+| `delayAbortEval` | string | প্রথম evaluation-এর আগে কতক্ষণ অপেক্ষা করবে। |
+
+k6 cloud-এ চললে প্রতি ৬০ সেকেন্ডে threshold evaluate করে। তাই `abortOnFail` ৬০ সেকেন্ড পর্যন্ত দেরি করতে পারে <Cite n={1} />।
+
+Tutorial advice: যে limit ভাঙলে run-এর বাকি অংশ অর্থহীন হয়ে যায়, সেখানে `abortOnFail` ব্যবহার করুন। যেমন খুব বেশি error rate। এতে shared environment-এ সময় ও load বাঁচে।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
 | Term | Meaning |
 | --- | --- |
+| Threshold | A pass/fail limit on a metric. A failed threshold fails the test. |
+| Expression | The limit as text, in the format `<aggregation_method> <operator> <value>`, such as `p(95)<200`. |
+| Aggregation method | How k6 sums up the samples of a metric: `count`, `rate`, `value`, `avg`, `min`, `max`, `med`, or `p(N)`. |
+| Percentile (`p(N)`) | The value below which N% of the samples fall. `p(99)<500` means 99% are under 500. |
+| Sub-metric | A metric filtered by a tag, written `metric{tag:value}`. A threshold can use it. |
+| `abortOnFail` | A long-format property that stops the test as soon as the threshold fails. |
+| `delayAbortEval` | A long-format property that delays the evaluation of `abortOnFail`. |
+| Exit code 99 | The code that k6 returns when one or more thresholds fail. |
+| SLO | A service level objective: a target for the quality of a service, such as "99% of requests under 500 ms". |
