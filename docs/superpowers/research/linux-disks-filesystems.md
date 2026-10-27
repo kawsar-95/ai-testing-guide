@@ -233,3 +233,9 @@ Facts moved (no fact deleted; all 56 sources stay cited):
 - Every topic: the core keeps the one idea; flags, tables, edge cases and the old `<Callout type="danger">` details go to "Go deeper". The data-loss warnings stay before `<details>`: Filesystems (mkfs erases the start, S30), Adding Disks (fdisk/mkfs on a wrong name destroys data, S15, S30), Swap (mkswap erases the start, S30), LVM (lvreduce destroys data, S44), Mounts (a mount hides the old contents, check with `ls -A`, S20, S27).
 - Removed text that was the tutorial's own advice, not a fact: the `echo $?` part of the old `/dev/full` tip ("Try `echo x > /dev/full`" stays).
 - Disks and Filesystems: the `lsof +L1` advice moved from the tip into Go deeper.
+
+### Fix round 1 (2026-10-27)
+
+- All 5 file Try-its (15 copies in 3 voices) now start with `tmp=$(mktemp -d) && cd "$tmp" || exit 1` and end with `rm -r -- "${tmp:?}"`. A re-run gave the same output shape (machine values differ only in stand-in fields: inode number, UUIDs, memory, used space). A negative test with `TMPDIR=/nonexistent_xyz` stopped after the `mktemp` error: no later line ran, and the file in the current directory stayed.
+- Swap Try-it: the sentence about the `chmod 600` warning is deleted (no source). The code is unchanged.
+- LVM Try-it: the prose now quotes only lsblk(8) "all block devices (except RAM disks) in a tree-like format" (S14), and the comment says "each LV is one more row of this tree".
