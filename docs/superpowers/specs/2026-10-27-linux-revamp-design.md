@@ -90,6 +90,7 @@ None at this time.
 The build follows the design, with these changes:
 
 - The page voice has its own key, `linux-voice`, as the design says (`PAGE_VOICE_STORAGE_KEY` in `lib/voice.ts`).
+- `resolvePageVoice` was removed, because no code used it. `PageVoiceSwitcher` uses `isVoice`, and `setVoiceDefault` removes `linux-voice`.
 - The limits of 150 words and 160 characters for the tip apply to all 3 voices (Technical, Layman, and Bangla), not only to Technical. `FlowDiagram` blocks do not count as words, like code blocks and `<Cite />` tags.
 - The fact-checks found an unsafe `rm -r "$PWD"` in a Try-it block. After that, the standard cleanup pattern (`tmp=$(mktemp -d) && cd "$tmp" || exit 1` and `rm -r -- "${tmp:?}"`) and the `unsafeCleanups` test were added.
 - The topic checks found warnings that were only in "Go deeper". Now a warning about data loss or a security risk stays in the visible part of the lesson. This is a rule in CLAUDE.md.

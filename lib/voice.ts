@@ -47,11 +47,6 @@ export function isVoice(value: string | null): value is Voice {
   return value === "technical" || value === "layman" || value === "bangla";
 }
 
-/** The stored page voice if it is a voice, else the site default. */
-export function resolvePageVoice(stored: string | null, def: VoiceDefault): Voice {
-  return isVoice(stored) ? stored : def;
-}
-
 /** The buttons of the voice switch, in order. The default voice is first. */
 export function voiceOrder(def: VoiceDefault): Voice[] {
   return def === "bangla" ? ["bangla", "technical", "layman"] : ["technical", "layman", "bangla"];
