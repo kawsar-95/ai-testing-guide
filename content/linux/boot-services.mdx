@@ -275,7 +275,8 @@ Boot loader হলো সেই program, যা firmware চালু করে 
 
 <Callout type="danger" title="ভুল boot configuration একটি machine-কে unbootable করে দিতে পারে">
 
-Console-এ পৌঁছানো যায় না এমন machine-এ `grub-install` বা `grub-mkconfig -o` চালাবেন না, আর `/etc/default/grub` edit করবেন না। ভাঙা boot loader বা rescue boot একটি remote machine-কে নাগালের বাইরে নিয়ে যেতে পারে। 
+Console-এ পৌঁছানো যায় না এমন machine-এ `grub-install` বা `grub-mkconfig -o` চালাবেন না, আর `/etc/default/grub` edit করবেন না। ভাঙা boot loader বা rescue boot একটি remote machine-কে নাগালের বাইরে নিয়ে যেতে পারে।
+
 </Callout>
 
 **চেষ্টা করুন:** এই boot-এর kernel command line print করুন, আর boot file-গুলোর list দেখুন। দুটি command-ই শুধু পড়ে।
@@ -366,7 +367,7 @@ ls /etc/systemd/system                             # units of the administrator
 
 **Goal:** Read the real unit file of a service, with its drop-ins.
 
-Systemd manages the system with units. A unit is an object, such as a service, a socket, a timer, or a target. Most units come from a configuration file. <Cite n={11} /> A service unit starts and controls a daemon, which is a program that runs in the background. <Cite n={11} /> A drop-in is a small `.conf` file in a `UNIT.d/` directory. It changes only some settings of a unit. <Cite n={13} /> `systemctl cat UNIT` shows the unit file and its drop-ins, so you see the real configuration. <Cite n={12} />
+Systemd manages the system with units. A unit is an object, such as a service, a socket, a timer, or a target. Most units come from a configuration file. <Cite n={11} /> A service unit starts and controls a daemon, a program that runs in the background. <Cite n={11} /> A drop-in is a small `.conf` file in a `UNIT.d/` directory. It changes only some settings of a unit. <Cite n={13} /> `systemctl cat UNIT` shows the unit file and its drop-ins, so you see the real configuration. <Cite n={12} />
 
 **Try it:** list the files that make up the journal service. `--no-pager` prints all at once, and `grep -E` keeps only the lines that name a file.
 
@@ -509,7 +510,7 @@ WantedBy=multi-user.target
 
 **Goal:** Write a service unit file, and check it with `systemd-analyze verify`.
 
-A service is a unit file whose name ends in `.service`. `[Unit]` describes the unit. `[Service]` says what to run. `[Install]` says which target pulls the unit in when you enable it. <Cite n={13} /> <Cite n={14} /> The first word of `ExecStart=` must be an absolute path or a plain file name. <Cite n={14} /> `systemd-analyze verify` checks a unit file. It warns about unknown keys and programs that it cannot find. <Cite n={17} />
+A service is a unit file that ends in `.service`. `[Unit]` describes the unit. `[Service]` says what to run. `[Install]` says which target pulls the unit in when you enable it. <Cite n={13} /> <Cite n={14} /> The first word of `ExecStart=` must be an absolute path or a plain file name. <Cite n={14} /> `systemd-analyze verify` checks a unit file. It warns about unknown keys and programs that it cannot find. <Cite n={17} />
 
 <Callout type="danger" title="Test new units on a lab machine, not a remote one">
 
@@ -549,7 +550,7 @@ Tutorial's own advice: for a test run, change one setting with a drop-in, such a
 - `User=` sets the user. A system service runs as root by default, and the user must exist when the service starts. <Cite n={15} /> The tutorial's own advice: do not use root unless the program needs it.
 - A system service does not get the environment variables of your shell. It gets only a few. Add more with `Environment=`. <Cite n={15} />
 - With the default `Type=simple`, `systemctl start` reports success even when the program is missing. `Type=exec` reports the failure. <Cite n={14} />
-- `systemctl daemon-reload` makes systemd read the unit files again. To change a unit from a package, use `systemctl edit UNIT`. It writes a drop-in and reloads. `systemctl revert UNIT` (needs root) removes your drop-ins. <Cite n={12} />
+- `systemctl daemon-reload` makes systemd read the unit files again. To change a unit from a package, use `systemctl edit UNIT`. It writes a drop-in and reloads. `systemctl revert UNIT` (needs root) removes your drop-ins. It also deletes a copy of a vendor unit in `/etc`. <Cite n={12} />
 
 </details>
 
@@ -598,7 +599,7 @@ Tutorial-এর নিজস্ব পরামর্শ: Test run-এর জন
 - `User=` user ঠিক করে। Default হিসেবে system service root হিসেবে চলে, আর start-এর সময় user-টির অস্তিত্ব থাকতে হবে। <Cite n={15} /> Tutorial-এর নিজস্ব পরামর্শ: program-এর দরকার না হলে root এড়িয়ে চলুন।
 - System service আপনার shell-এর environment variable পায় না, শুধু অল্প কয়েকটি পায়। আরও যোগ করতে `Environment=` ব্যবহার করুন। <Cite n={15} />
 - Default `Type=simple`-এ program না থাকলেও `systemctl start` সফলতা জানায়; `Type=exec` failure জানায়। <Cite n={14} />
-- `systemctl daemon-reload` চালালে systemd আবার unit file-গুলো পড়ে। Vendor unit (package থেকে আসা file) বদলাতে `systemctl edit UNIT` ব্যবহার করুন; এটি একটি drop-in লেখে এবং reload করে। `systemctl revert UNIT` (root লাগে) আপনার drop-in-গুলো সরায়। <Cite n={12} />
+- `systemctl daemon-reload` চালালে systemd আবার unit file-গুলো পড়ে। Vendor unit (package থেকে আসা file) বদলাতে `systemctl edit UNIT` ব্যবহার করুন; এটি একটি drop-in লেখে এবং reload করে। `systemctl revert UNIT` (root লাগে) আপনার drop-in-গুলো সরায় এবং `/etc`-এ থাকা একটি vendor unit-এর copy-ও মুছে দেয়। <Cite n={12} />
 
 </details>
 
@@ -697,6 +698,7 @@ Tutorial's own advice: `systemctl start` can return before the program is ready.
 
 - `stop` stops the unit now. `restart` stops it, then starts it. `disable` removes the links but does not stop the unit. `mask` links the unit to `/dev/null`, so nothing can start it. <Cite n={12} />
 - With `enable`, `disable`, and `mask`, the option `--now` also starts or stops the unit. <Cite n={12} />
+- `mask` blocks every start, also by dependencies. `systemctl isolate` stops all units outside the target. <Cite n={12} />
 - The option `--user` talks to your own user manager. <Cite n={12} /> It reads units from `~/.config/systemd/user` and other user directories, not from `/etc/systemd/system`. <Cite n={13} />
 - For `simple` and `exec` units, systemd waits only until the process has started. <Cite n={14} />
 
@@ -734,6 +736,7 @@ Tutorial-এর নিজস্ব পরামর্শ: `systemctl start` prog
 - `stop` unit-টি এখনই বন্ধ করে। `restart` বন্ধ করে আবার চালু করে, আর stopped unit-কে চালু করে। `reload-or-restart` unit সমর্থন করলে reload করে, নইলে restart করে। `disable` symlink-গুলো সরায়, কিন্তু unit বন্ধ করে না। `mask` unit-টিকে `/dev/null`-এর সাথে link করে, ফলে কেউ আর এটি চালু করতে পারে না। <Cite n={12} />
 - `enable`, `disable`, এবং `mask`-এর সাথে `--now` option দিলে unit-টি start বা stop-ও হয়। <Cite n={12} />
 - কোনো socket-এর মতো অন্য unit এখনও একটি stopped service-কে trigger করতে পারলে `stop` একটি warning দেখায়। <Cite n={12} />
+- `mask` dependency থেকে আসা start-সহ সব start আটকে দেয়। `systemctl isolate` target-এর বাইরের সব unit বন্ধ করে। <Cite n={12} />
 - `--user` option আপনার নিজের user manager-এর সাথে কাজ করে। <Cite n={12} /> এটি `/etc/systemd/system` নয়, `~/.config/systemd/user` ও অন্য user directory থেকে unit পড়ে। <Cite n={13} />
 - `simple` ও `exec` unit-এর ক্ষেত্রে systemd শুধু process চালু হওয়া পর্যন্ত অপেক্ষা করে। <Cite n={14} />
 
