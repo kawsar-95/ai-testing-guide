@@ -211,3 +211,31 @@ Fetched and read but not cited: `sfdisk(8)` (`035.txt`), `xfs(5)` (`B010`), `tmp
 | L12 | A snapshot LV holds space (the `-L` size is allocated). | S42 | "Extending a copy-on-write snapshot LV adds space for COW blocks." (S43) / `lvcreate -s -L Size` (S42) |
 | L13 | `lvcreate` and `lvextend` take free extents from the VG; `lvextend -r` resizes a filesystem. First check `vgs` and `lvs` (the tutorial's own advice, not a quote). | S42, S43 | S42: "requires allocating logical extents from the VG's free physical extents." S43: "-r\|--resizefs Resize the fs using the fs-specific resize command." |
 | L14 | The LVM example names are now fake (`vgX`, `lvX`, `snapX`) so that they cannot match a real VG or LV. | none | (no fact; safety wording) |
+
+## Round 2 (2026-10-27): Try it commands
+
+Tools used for the runs: GNU bash 5.3.9, GNU coreutils 9.7 (`gnustat`, `gnudu`, `gnudf`, `gnudd`, `gnuls`, `gnuln`, `gnumktemp`, `gnurm` put first in `PATH`, because the default coreutils of the test machine is uutils 0.10.0), util-linux 2.41.3 (`lsblk`, `findmnt`, `blkid`, `swapon`, `mkswap`), e2fsprogs 1.47.2 (`mke2fs`/`mkfs.ext4`), procps-ng 4.0.4 (`free`). Each block ran in a throw-away directory under the scratchpad. No root, no `mount`, no device write. Machine-specific values on the page are stand-ins: device names (`sda`, `sda2`), sizes, memory numbers, UUIDs, inode numbers, temp directory names.
+
+| Topic | Try it | Real output (stand-ins marked) | New flags and their source |
+|---|---|---|---|
+| Disks and Filesystems | `lsblk -e7 -o NAME,TYPE,SIZE,MOUNTPOINTS`; `dd if=/dev/zero of=big.bin bs=1M count=1 status=none`; `du -sh .`; `df -h .` | tree of 2 disks with partitions (names and sizes replaced by `sda`, 100G, ...); `1.0M .`; `tmpfs 7.3G 64M 7.2G 1% /tmp` | `-e` excludes major numbers (S14 lsblk(8)); major 7 = loop devices (S52 devices.txt); `status=none` prints only errors (S56 dd(1)) |
+| Filesystems | `findmnt -no FSTYPE --target .`; `dd ... count=8`; `mkfs.ext4 -q -F disk.img`; `blkid -o value -s TYPE disk.img` | `tmpfs`; (no output); `ext4` | `-F` forces mke2fs on a non-partition, `-q` quiet (S33 mke2fs(8)); `-o value`, `-s` tag (S16 blkid(8)) |
+| Inodes | `echo data > a.txt; ln a.txt b.txt; ls -i a.txt b.txt; stat -c '%i inode, %h links' a.txt` | `2166 a.txt` / `2166 b.txt` / `2166 inode, 2 links` (the number is machine-specific) | as round 1 (S27, S25, S28) |
+| Mounts | `findmnt --target /tmp -o TARGET,SOURCE,FSTYPE,OPTIONS`; same for `/` | `/tmp tmpfs tmpfs rw,nosuid,nodev,nr_inodes=1048576,inode64,usrquota`; `/ /dev/sda2 ext4 rw,relatime` (device name replaced) | `-o` columns (S19) |
+| Adding Disks | `dd` 8 MiB; `mkfs.ext4 -q -F`; `mkdir mnt`; write `UUID=<uuid> $PWD/mnt ext4 defaults,nofail 0 2` to `fstab.test`; `findmnt --verify --tab-file fstab.test` | `<dir>/mnt` / `[E] unreachable on boot required source: UUID=...` / `0 parse errors, 1 error, 0 warnings` (exit 1; stdout first on a terminal, the summary is on stderr) | `--tab-file` = alternative file, `--verify` can use it (S19 findmnt(8)) |
+| Swap | `free -h`; `dd` 1 MiB; `chmod 600 swap.img`; `mkswap swap.img`; `blkid -o value -s TYPE swap.img` | memory table (numbers replaced); `Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)` / `no label, UUID=...`; `swap` | Without `chmod 600`, mkswap 2.41.3 printed `insecure permissions 0664, fix with: chmod 0600 swap.img` (observed output; the page says only that `chmod 600` stops a permission warning). `swapon` is NOT run. |
+| LVM | `lsblk -e7 -o NAME,TYPE,SIZE` | tree with no LVM rows on the test machine (names replaced) | lsblk(8) S14: tree output, "holder devices"; LV is a virtual block device (S41). `pvs`, `vgs`, `lvs` need root and lvm2 (not installed on the test machine); they stay in a commented block in Go deeper. |
+
+Also checked: `bash -c 'echo x > /dev/full'` prints `echo: write error: No space left on device`, exit 1 (Filesystems tip).
+
+Facts moved (no fact deleted; all 56 sources stay cited):
+
+- Every topic: the core keeps the one idea; flags, tables, edge cases and the old `<Callout type="danger">` details go to "Go deeper". The data-loss warnings stay before `<details>`: Filesystems (mkfs erases the start, S30), Adding Disks (fdisk/mkfs on a wrong name destroys data, S15, S30), Swap (mkswap erases the start, S30), LVM (lvreduce destroys data, S44), Mounts (a mount hides the old contents, check with `ls -A`, S20, S27).
+- Removed text that was the tutorial's own advice, not a fact: the `echo $?` part of the old `/dev/full` tip ("Try `echo x > /dev/full`" stays).
+- Disks and Filesystems: the `lsof +L1` advice moved from the tip into Go deeper.
+
+### Fix round 1 (2026-10-27)
+
+- All 5 file Try-its (15 copies in 3 voices) now start with `tmp=$(mktemp -d) && cd "$tmp" || exit 1` and end with `rm -r -- "${tmp:?}"`. A re-run gave the same output shape (machine values differ only in stand-in fields: inode number, UUIDs, memory, used space). A negative test with `TMPDIR=/nonexistent_xyz` stopped after the `mktemp` error: no later line ran, and the file in the current directory stayed.
+- Swap Try-it: the sentence about the `chmod 600` warning is deleted (no source). The code is unchanged.
+- LVM Try-it: the prose now quotes only lsblk(8) "all block devices (except RAM disks) in a tree-like format" (S14), and the comment says "each LV is one more row of this tree".

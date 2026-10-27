@@ -153,3 +153,43 @@ Each Callout starts with "Tutorial's own advice:". It gives a suggestion, not a 
 | 80 | A bash feature list: `BASH_ENV`, `~/.bashrc`, `help`, `type -t`, `hash` are described in bash(1). The page does not claim that dash or ash lack them; it says only "a minimal container may have no bash". | S1 | Section SHELL BUILTIN COMMANDS of bash(1). |
 
 Not sourced on purpose (tutorial advice, marked "Tutorial's own advice"): `cd "$(dirname "$0")" || exit 1` and "do not `source` the script" (the fact-checker ran it in round 1); a minimal container may have no `man` or `tldr`; a CI job must set its variables in the job or script.
+
+## Round 2 (2026-10-27): Try it commands
+
+The page is now in the lesson shape (Goal, Core, Try it, tip, Go deeper). Text moved into "Go deeper"; no fact was removed and every cite number 1-22 is still on the page.
+
+Machine: Ubuntu 26.04.1 LTS. Shell: `GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)`. Coreutils: `ls (uutils coreutils) 0.10.0` (the Rust coreutils of Ubuntu, package `rust-coreutils`; GNU coreutils prints the same `ls` text below). Each command ran in a new `mktemp -d` directory under the session scratch directory. Commands that need terminal output (`ls` columns, `bash -i`) ran under `script -qc … /dev/null` to get a pseudo-terminal.
+
+| Topic | Command | Real output | Source of the claim |
+|---|---|---|---|
+| Shell Basics | `bash -ic 'echo "$-"'` | `himBHc` | S1: "i ... if the shell is interactive" (`$-` holds the option flags). Without a terminal, bash also prints "no job control in this shell" on stderr; the page shows the terminal case. |
+| Shell Basics | `bash -c 'echo "$-"'` | `hBc` | S1 |
+| Basic Commands | `touch .hidden notes.txt; ls` | `notes.txt` | S2: "-a ... do not ignore entries starting with ." |
+| Basic Commands | `ls -a` | `.  ..  .hidden  notes.txt` | S2 |
+| Navigation Basics | `mkdir -p a/b && cd a/b; cd ..; pwd` | `<tmpdir>/a` (page shows `/tmp/tmp.XXXXXXXXXX/a`, a stand-in) | S13 (`..` is the parent) |
+| Navigation Basics | `cd -` | `<tmpdir>/a/b` (page shows `/tmp/tmp.XXXXXXXXXX/a/b`) | S1 (local bash 5.3 man page wording): "if - is the first argument, and the directory change is successful, cd writes the absolute pathname of the new working directory to the standard output" |
+| Command Help | `type -t cd` | `builtin` | S1: `type -t` prints "alias, keyword, function, builtin, or file" |
+| Command Help | `help -s cd` | `cd: cd [-L|[-P [-e]]] [-@] [dir]` | S1: "-s Display only a short usage synopsis for each pattern" |
+| Command Path | `bash -c 'no-such-tool'; echo "$?"` | `bash: line 1: no-such-tool: command not found` then `127` | S1: "If the name is neither a shell function nor a builtin, and contains no slashes ... If that function is not defined, the shell prints an error message and returns an exit status of 127." |
+| Directory Hierarchy | `ls -d /etc /var/log /no-such-dir; echo "$?"` | `ls: cannot access '/no-such-dir': No such file or directory`, `/etc  /var/log`, `2` | S2: "-d, --directory list directories themselves, not their contents" and "2 if serious trouble (e.g., cannot access command-line argument)" (Exit status section) |
+| Environment Variables | `API_URL=http://localhost:8080; bash -c 'echo "[$API_URL]"'; export API_URL; bash -c 'echo "[$API_URL]"'` (in a child `bash`) | `[]` then `[http://localhost:8080]` | S1 (`export`), S21 |
+
+`mktemp -d` and `touch` only make the throw-away directory and files. The page makes no claim about them.
+
+## Round 2 fix 1 (2026-10-27): changed Try it commands
+
+Same machine and versions as above. Each block ran under `script -qc 'bash --norc try.sh' /dev/null` (a pseudo-terminal), with `TMPDIR` set to the session scratch directory. Machine paths are replaced with `<tmpdir>`.
+
+| Topic | Command | Real output | Source of the claim |
+|---|---|---|---|
+| Shell Basics | `bash --norc -ic 'echo "$-"'` | `himBHc` | S1 (local bash 5.3 wording): "--norc Do not read and execute the system wide initialization file /etc/bash.bashrc and the personal initialization file ~/.bashrc if the shell is interactive." |
+| Shell Basics | `bash -c 'echo "$-"'` | `hBc` | S1 |
+| Basic Commands | `( cd "$(mktemp -d)"; touch .hidden notes.txt; ls; ls -a )` | `notes.txt`, then `.  ..  .hidden  notes.txt` | S2; S1: "(list) list is executed in a subshell ... Variable assignments and builtin commands that affect the shell's environment do not remain in effect after the command completes." |
+| Navigation Basics | `( cd "$(mktemp -d)"; mkdir -p a/b && cd a/b; cd ..; pwd; cd - )` | `<tmpdir>/a`, then `<tmpdir>/a/b` | S1, S13 |
+| Directory Hierarchy | `ls -d /etc /var/log /tmp` | `/etc  /tmp  /var/log` | S2: "-d, --directory list directories themselves, not their contents" |
+| Directory Hierarchy (Go deeper) | `ls -d /etc /no-such-dir; echo "$?"` | `ls: cannot access '/no-such-dir': No such file or directory`, `/etc`, `2` | S2 (exit status 2); S1 (local bash 5.3 wording): "? ($?) Expands to the exit status of the most recently executed command." |
+| Environment Variables | `( API_URL=http://localhost:8080; bash -c 'echo "[$API_URL]"'; export API_URL; bash -c 'echo "[$API_URL]"' )` | `[]`, then `[http://localhost:8080]` | S1, S21 |
+
+After the subshell blocks, the calling shell had no `API_URL` and the same working directory (checked with `echo "[${API_URL-unset}] $PWD"`).
+
+`mktemp -d` has the comment "make and enter a new, empty directory" and `tr ':' '\n'` has "one directory per line". Neither tool is in `page.sources`; the comments describe what the reader sees, not a sourced claim.

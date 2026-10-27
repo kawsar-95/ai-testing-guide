@@ -225,3 +225,66 @@ None. All 198 rows are PASS.
 - The Bangla keeps the common technical terms in English (process, signal, niceness, scheduler, zombie, orphan, namespace, daemon, session, handler, builtin, descriptor). English words with a Bangla suffix have a hyphen. Where a code span takes a suffix, the text uses a space after the span or a hyphen (for example "`/proc`-এর"). Both read well.
 
 Open FAILs: 0
+
+## Round 4 (2026-10-27): the lesson rewrite
+
+Checker: an independent voices checker (Sonnet 5.5), 2026-10-27. I did not write these voices. Page: `content/linux/processes.mdx` at commit 59767e6, compared with its parent (`git diff 59767e6^ 59767e6`). I read the Layman and Bangla panels of all 8 topics against the Technical panel of the same topic as it is now.
+
+Method: a script listed the `<Cite n>` set, the tip length (without `<Cite />`), and the Try-it code block of each panel. `node --test tests/voice-source.test.ts` passes (22 of 22). All tips are 160 characters or fewer in all 3 voices (largest: Technical Ulimits 152, Bangla Signals 147). Every voice has only cites that its Technical panel has (Signals voices lack [8], [9], and Ulimits Layman lacks [14]: omissions only). The Try-it code block and its output of each voice are byte-equal to the Technical one (Forking too, where Technical has the `<FlowDiagram>` first). No voice has a Markdown heading. All voices use the bold labels. The four warnings that the writer named: `kill -9 -1` (Killing Core), "a frozen process still holds its files and locks" (Signals Try-it), the fork bomb (Forking Core), and "never lower limits in your login shell" (Ulimits Core) are visible in all 3 voices.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 1 | Process Management | Layman | PASS | Goal, Core, code, tip (143), and Go deeper have no new fact. Cites {2,3,4,5,25,26,31,46} equal Technical. The tool-groups line, the "Tutorial's own advice" `ps -eo` paragraph, and the `D` gloss "waits on the disk" are kept or omitted only. |
+| 2 | Process Management | Bangla | PASS | Same facts, order, code, and tip (121). The tool-groups line and the `ps -eo` advice are kept. Commands, `/proc/PID`, and `execve` stay in English. |
+| 3 | Listing and Finding Processes | Layman | PASS | No new fact. Cites equal Technical. Omits "(an extended regular expression)", the `ps aux`/`pidof`/`pstree`/`top` code block, and the Tutorial advice list (omissions). Tip 128, same point. |
+| 4 | Listing and Finding Processes | Bangla | PASS | Matches Technical, including "may differ on macOS or BusyBox", "extended regular expression", and the first-15-characters rule. Tip 139. The container, `psmisc`, and `-x` advice is kept; the "poll a fixed number of times" and "process can exist before it listens" lines are omitted. |
+| 5 | Background and Foreground Processes | Layman | PASS | No new fact. The table became bullets with the same content (`nohup`, `disown -h`, `setsid`). Cites equal Technical. Tip 140. Omits the code demo and the CI-step advice (omissions). |
+| 6 | Background and Foreground Processes | Bangla | PASS | Matches Technical, including the `setsid` session gloss. Tip 129. `SIGHUP`, `nohup.out`, `sh` stay in English. |
+| 7 | Killing Processes | Layman | FAIL | Technical Go deeper says "a wrong PID or pattern can stop the CI agent". The Layman text omits it. The Layman bullet also says `pkill` and `killall` "can stop" many processes where Technical says "signal". Fix: in the last Go deeper bullet, replace "`pkill` and `killall` can stop many processes at once, with no undo." with "`pkill` and `killall` signal many processes at once, with no undo, and a wrong PID or pattern can stop the CI agent." The rest passes: the `kill -9 -1` warning, the code, and the tip (126) are the same. |
+| 8 | Killing Processes | Bangla | FAIL | Fact lost from the old Bangla text, while the Technical text still has it: "ভুল PID বা pattern CI agent-কেও থামিয়ে দিতে পারে।" (the old Bangla paragraph had it). Fix: in the last Go deeper bullet, after "আর এটি undo করা যায় না।" add "ভুল PID বা pattern CI agent-কেও থামিয়ে দিতে পারে।" The rest passes: `kill -9 -1` is in the Core, the code is the same, the tip is 117. |
+| 9 | Process Signals | Layman | FAIL | The tip says "a stopped CI job can leave helpers alive". Technical says "a cancelled CI job". In this topic, "stopped" also means the SIGSTOP state, so the meaning drifts. Fix: in the tip, replace "a stopped CI job" with "a cancelled CI job". The rest passes: the frozen-process warning is in the Try-it, the exit status 143 sentence, the signal numbers (1, 2, 9, 15, 18, 19, 20) and the `trap` sentence are correct. |
+| 10 | Process Signals | Bangla | PASS | Matches Technical: handler gloss, numbers, `trap`/`EXIT`/POSIX `sh`, and the frozen-process warning. The tip says "বাতিল হওয়া CI job", the same as "cancelled". 147 characters. See the language note about "পরিচিত". |
+| 11 | Process Priorities | Layman | FAIL | The Technical Go deeper has a "Warning" bullet: do not use negative niceness for tests, it can starve the rest of the system, `renice -u USER` changes every process of a user, and practice only on a `sleep` that you started. The Layman text has none of it (only "Negative values usually need root"). Fix: add this bullet to Go deeper after the "A normal user" bullet: "- **Warning:** do not use negative niceness for tests. `nice -n -5` and `renice -5` usually need root and can starve the rest of the system. `renice -u USER` changes every process of a user. Practice only on a `sleep` that you started yourself. <Cite n={21} />" The rest passes: Core, code, and tip (128). |
+| 12 | Process Priorities | Bangla | PASS | The warning is visible: "সাবধান: test-এ negative niceness ব্যবহার করবেন না। শুধু নিজের চালু করা `sleep` দিয়ে অনুশীলন করুন।" It keeps no reason ("can starve the system") and no `renice -u USER`, as in the old Bangla text. See observations. The `renice -n 5` and `ionice` bullets match. Tip 117. |
+| 13 | Process Forking | Layman | PASS | The fork bomb warning is in the Core, with the same words as Technical. Try-it prose, code, and tip (129) are the same. Go deeper has the same 6 facts. The first bullet says "This is the classic way", where Technical says "Fork then `execve` is the classic way". The reference is clear from the Core, so not a FAIL. |
+| 14 | Process Forking | Bangla | PASS | The fork bomb warning ("সাবধান: ...") is in the Core. Go deeper has all 6 facts, the subreaper gloss, and the init advice. Tip 131. `EAGAIN`, `RLIMIT_NPROC`, `init`, `zombie`, `orphan` stay in English. |
+| 15 | Ulimits | Layman | PASS | The login-shell warning is in the Core (`ulimit -u` makes `fork` fail). Soft and hard values, `EMFILE`, code, and output are the same. Tip 146. Go deeper has no new fact. The "file descriptor is a number for an open file, socket, or pipe" gloss of Technical Go deeper is not in this voice. The old Layman text did not have it either. |
+| 16 | Ulimits | Bangla | PASS | The login-shell warning is in the Core. All Go deeper facts are in, including the descriptor gloss, `limits.conf` line format, and `[Service]`. Tip 142. See the note about "তবেই". |
+
+Observations (not FAILs):
+- Ulimits, Technical Go deeper: "Keep a second root session open while you edit it" (the `limits.conf` file). Neither voice has it, and the old voices did not have it. It is a lock-out warning. Optional: add "Keep a second root session open while you edit it." to the `limits.conf` bullet of both voices.
+- Process Priorities, Bangla: the warning has no cite and no reason. Optional: add "এটি বাকি system-কে starve করতে পারে" and "`renice -u USER` একজন user-এর সব process বদলায়" with `<Cite n={21} />`.
+- Killing Processes, Layman and Bangla also omit "`-f` also matches the command line of a wrapper" and "Take the PID from `$!` or `pgrep -a`". The tip covers the same advice. Omissions only.
+- Process Forking: the `<FlowDiagram>` is only in Technical. Both voices give its facts in the Core and in Go deeper (the `wait` fact). No voice shows a diagram. Technical advice "Test the process limit only in a disposable VM or container, and set a low limit in a subshell first" is not in Layman or Bangla. The fork bomb warning itself is there.
+- Process Priorities, Layman: "Check that your kernel honors it" gives no reason (the CFQ I/O scheduler). The Bangla text gives it. Same observation as earlier rounds.
+- Background, Layman: "Ctrl+Z to stop a running command" where Technical says "a foreground command". Close enough, since the sentence before names the foreground. Optional: write "a foreground command".
+- Ulimits, Layman tip: "count the files in `/proc/PID/fd`" where Technical says "descriptors". Close enough.
+- Process Signals, Bangla: "পরিচিত" in "x86 আর ARM-এ পরিচিত signal-গুলোর নম্বর" is an extra word (as in the earlier round). The numbers are right.
+- Ulimits, Bangla tip: "Leak ঠিক করে তবেই limit বাড়ান" reads as "only then". Technical says "then". Optional: "Leak ঠিক করে limit বাড়ান" (shorter).
+- Listing, Layman: "read their man page" drops "may differ" (as in the earlier round).
+- The Bangla text keeps technical terms, commands, flags, and paths in English, with a hyphen before a Bangla suffix. Comments of the code blocks are not translated. All Bangla sentences read naturally.
+- Old to new: every fact of the old Layman and Bangla text is in the new voice, except the two Killing facts in rows 7 and 8 (the CI agent) and the Priorities fact of row 11 (never in the old Layman text).
+
+Open FAILs: 4
+
+## Round 5 (2026-10-27): the fix rounds
+
+Checker: an independent agent that did not write or fix the voices, 2026-10-27, HEAD c8cd682. Scope: `git diff -U2 59767e6 HEAD -- content/linux/processes.mdx` (fix commit 5157812), Layman and Bangla panels compared with the Technical panel of the same topic as it is now. `node --test tests/voice-source.test.ts` passes (22 of 22); `lessoncheck` 0 problems. All 16 Layman/Bangla panels have 150 words or fewer before `<details>`, all tips are 160 characters or fewer, and every voice cites only numbers that its Technical panel cites.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| R5-1 | Killing (R4 row 7) | Layman | FIXED | Last Go deeper bullet: "`pkill` and `killall` signal many processes at once, with no undo, and a wrong PID or pattern can stop the CI agent." Same as Technical. |
+| R5-2 | Killing (R4 row 8) | Bangla | FIXED | Last Go deeper bullet now has "ভুল PID বা pattern CI agent-কেও থামিয়ে দিতে পারে।" Natural Bangla, terms in English, same fact as Technical. |
+| R5-3 | Signals (R4 row 9) | Layman | FIXED | Tip says "a cancelled CI job" (line 736), same as Technical. |
+| R5-4 | Priorities (R4 row 11) | Layman | FIXED | Go deeper has the full **Warning** bullet (`nice -n -5`, `renice -5`, root, starve, `renice -u USER`, practice on your own `sleep`, cite 21). The Core also has the visible sentence. Same facts as Technical. |
+| R5-5 | Priorities (R4 optional) | Bangla | PASS | Warning bullet now has the reason (CPU থেকে বঞ্চিত), `renice -u USER`, and cite 21; Core has the visible sentence "Test-এ কখনো negative niceness ব্যবহার করবেন না ..." with cite 21. Matches Technical. Reads naturally; `nice -n -5`, `renice`, `root`, `CPU` stay in English. |
+| R5-6 | Priorities | Layman, Bangla | PASS | "A higher number means a nicer process" moved to the first Go deeper bullet, same as Technical, cite 12. Goal "change it later" / "পরে সেটি বদলান". Try-it prose has cite 16 as Technical does. Core words 149 (Layman), 136 (Bangla). |
+| R5-7 | Listing | Layman, Bangla | PASS | First Go deeper bullet now says `ps aux` also shows all processes ("`ps aux`-ও সব process দেখায়"), cite 16. Matches Technical. |
+| R5-8 | Killing | Layman | PASS | Core cut to 150 words: "`kill` sends a signal. It does not always kill.", "Signal 0 sends nothing; it only checks ...", "and then SIGKILL". No fact lost against Technical or the older Layman text. |
+| R5-9 | Ulimits | Layman | PASS | Core cut (soft/hard in one sentence, "caps"): no fact lost. Tip: cite 28 after the `/proc/PID/fd` sentence, as Technical. Go deeper: the `limits.conf` and systemd bullets are separate, with cites 30 and 37; "Keep a second root session open while you edit it." matches Technical. |
+| R5-10 | Ulimits | Bangla | PASS | Tip cite 28 moved as in Technical. Go deeper adds "এটি edit করার সময় দ্বিতীয় একটি root session খোলা রাখুন।" (same as Technical). Bangla reads naturally. |
+| R5-11 | All others | Layman, Bangla | PASS | No other hunk. Unchanged text keeps its Round 4 verdict. |
+
+Observation (not a FAIL): the Round 4 note "Bangla Ulimits tip: তবেই reads as only then" was not changed. Optional only.
+
+Open FAILs: 0

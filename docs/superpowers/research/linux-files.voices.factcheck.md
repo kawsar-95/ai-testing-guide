@@ -254,3 +254,76 @@ Flagged items:
 | 239 | Archiving and Compressing | Bangla | Tutorial advice: pack the logs and reports of a CI run into one `.tar.gz` for upload; later run `tar -tzf` to prove it holds the files you expect | "Tutorial's own advice: pack the logs and reports of a CI run into one `.tar.gz` for upload. In a later step, run `tar -tzf` on it to prove that it holds the files you expect." | PASS | OK |
 
 Open FAILs: 0
+
+## Round 4 (2026-10-27): the lesson rewrite
+
+Checker: independent voices checker (Sonnet 5.5, 2026-10-27). I did not write these voices. Page: `content/linux/files.mdx` at commit dccf5be, compared with its parent (`git diff dccf5be^ dccf5be -- content/linux/files.mdx`).
+
+Method: I read all 9 sections (Goal, Core, Try it, tip, Go deeper) in Technical, Layman, and Bangla, and compared each sentence, number, command, flag, and path of a voice with the Technical panel of the same section as it is now (Try-it and Go deeper included). A script listed the `<Cite n>` set, the tip length (without `<Cite />`), and the Try-it code block equality of each panel. I read the old Layman and Bangla panels and checked each old fact against the new voice and the new Technical. `node --test tests/voice-source.test.ts` passes (22 of 22).
+
+Script result: no voice cites an `n` that the Technical panel of the same section does not cite. Each voice Try-it code block (commands, comments, and output) equals the Technical one in all 9 sections, including Nano (`nano --version | head -n 1`) and Vim (`vi -es -c '1d' -c 'q!'`, then `-c 'wq'`). The largest tip is 150 characters (Technical Moving, Bangla Working with Files). No voice has a Markdown heading. Each voice has the same parts and order as Technical, with bold labels `**Goal:**` / `**লক্ষ্য:**` and `**Try it:**` / `**চেষ্টা করুন:**`.
+
+Data-loss warnings (the old danger callouts, now Core sentences): all are present in Layman and Bangla.
+- Working with Files: `rm` has no recycle bin ([5]).
+- Creating: `rm -r` deletes everything inside, `-f` never asks, `>` cuts a file to zero ("Be careful." / "সাবধান থাকুন।").
+- Copying and Moving: `cp` and `mv` replace the destination with no prompt, check with `ls` or use `-i`.
+- Editing: `>` in place of `>>` erases the config, make a backup with `cp -p`.
+- Vim: `:q!` drops all changes, and no backup file unless you set it up.
+- Links: `ln -f` removes the destination file.
+- Archiving: extraction can overwrite files, use a new empty directory. The `tar -c` erase is in Go deeper in all 3 voices, as in Technical.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 1 | Working with Files | Layman | PASS | Same Goal, Core (inode, hard link, `stat -c`, no recycle bin), Try-it, and tip. Cites {1,2,3,4,5} equal Technical. Go deeper has `ls -l`/`ls -li` and `%i`. It omits the CI `ls -l` clause (observation). |
+| 2 | Working with Files | Bangla | PASS | Same facts and cites. Correct Bangla. Keeps the CI `ls -l` clause ("একটি সস্তা check"). Tip 150 characters. |
+| 3 | Creating Files and Directories | Layman | PASS | Same facts: `touch`, `mkdir -p`, `>`. The warning "Be careful." keeps `rm -r`, `-f`, `>` to zero size, and the `ls` advice. Cites {6,7,8,9,10}. Go deeper restates the Technical table as 3 bullets with the same cites. |
+| 4 | Creating Files and Directories | Bangla | PASS | Same facts and cites. Warning kept. "`-p` দিলে ... parent directory-গুলোও তৈরি করে" is correct. Omits the `touch -d` tip, as Layman does (observation). |
+| 5 | Copying and Renaming | Layman | PASS | Same facts: independent copy, last argument a directory, silent overwrite for `cp` and `mv`, `-i`. Cites {11,12,13}. Go deeper lists `-i`, `-n` (deprecated, `--update=none`), `-p`, `-a`, `-v` with cite [11]. The tip omits "Use `cp -p` or `cp -a`" (observation). |
+| 6 | Copying and Renaming | Bangla | PASS | Same facts, cites, and tip (with `cp -p` / `cp -a`). Correct Bangla: "পুরোনো content সাথে সাথে হারিয়ে যায়". `-n` exit-status reason kept. |
+| 7 | Moving Files and Directories | Layman | PASS | Same facts: `mv` into a directory, `*.log`, no warning on overwrite, check with `ls`. The filesystem gloss restates the Technical gloss. Cites {12,13}. The tip keeps the point (same filesystem, fast rename). Omits `mv -t` and `mv -i` (observation). |
+| 8 | Moving Files and Directories | Bangla | PASS | Same facts and cites. Correct Bangla. Go deeper keeps the cross-filesystem copy, the partial-copy removal, and the `/tmp` note. |
+| 9 | Editing Files | Layman | PASS | Same facts: editors, `>>` vs `>`, the typo warning and `cp -p` backup, here document. Cites {8,14,15}. Go deeper has no new fact. The tip keeps "a CI step must write files with redirection". |
+| 10 | Editing Files | Bangla | PASS | Same facts and cites. "`>>`-এর জায়গায় ভুল করে `>` লিখলে আপনার config মুছে যায়" keeps the warning. Correct Bangla. The "live host" tip is kept. |
+| 11 | Nano | Layman | PASS | Same Goal, keys (`^`, `^O`, `^X`, `Y`/`N`), and Try-it (`nano --version`, with the "command not found" comment). Cites {14,16,17}. Go deeper has `M-`, `^K`/`^U`/`^W`/`^G`, `^C Cancel`, "Modified", `+42`, `-v`. Omits `-%` and the nanorc remark (observation). Tip 126. |
+| 12 | Nano | Bangla | PASS | Same facts and cites. Correct Bangla ("Caret `^` মানে Ctrl", "Buffer-এ (memory-তে থাকা text)"). Keys and `-v` stay in English. The `^C Cancel` sentence is kept. |
+| 13 | Vim | Layman | PASS | Same facts: modes, `i`/`Esc`, `:`, buffer, "no backup file unless you set it up", `:q!` drops all changes. The Try-it block equals Technical (`vi -es -c '1d' -c 'q!'`, then `-c 'wq'`), and "Your `vi` must be Vim." is kept. Cites {18,19,20,21} are a subset of Technical ({22} is the VIM Adventures sentence, left out). Omits "After `ZZ`, there is no turning back" (Go deeper in Technical). The old Layman also did not have it. Observation. |
+| 14 | Vim | Bangla | PASS | Same facts and cites {18,19,20,21,22}. "`:q!` সব পরিবর্তন বাদ দেয়, আর আপনি set up না করলে Vim কোনো backup file তৈরি করে না" keeps both warnings. "`ZZ`-এর পরে ফেরার পথ নেই" is kept. Correct Bangla. |
+| 15 | Soft and Hard Links | Layman | PASS | Same facts: hard link shares the inode, data stays while one name remains, symlink holds a path, dangling, `ln -f` warning. Cites {1,2,3,4,23,24} equal Technical. `ln -sfn releases/v3 current` is in the Technical code block. The Try-it text keeps `%i` and `%h`. |
+| 16 | Soft and Hard Links | Bangla | PASS | Same facts and cites. `ln -f` warning kept. Correct Bangla. Go deeper keeps the "without `-n`" sentence with [23]. |
+| 17 | Archiving and Compressing | Layman | PASS | Same facts: `tar`, `gzip`, `-z`, `-c`/`-t`/`-x`/`-f`, `-C DIR`, the extraction overwrite warning with [28], `gzip -k`, ZIP, `unzip`, unsafe names, `tar -c` erase. Cites {25,26,27,28}. The tip drops "for upload" (observation). |
+| 18 | Archiving and Compressing | Bangla | PASS | Same facts and cites. Warning kept in Core. Correct Bangla ("Absolute নাম বা `../` দিয়ে শুরু হওয়া নাম extract করা প্রায়ই unsafe"). Commands and flags stay in English. |
+
+Observations (not FAILs):
+- Omissions in Layman and Bangla, all of them not warnings: the `touch -d` tip (both), the CI `ls -l` clause (Layman), "Use `cp -p` or `cp -a`" in the tip (Layman), `mv -t` and `mv -i` and the code blocks of Go deeper (both), `-%` and the nanorc remark (both), "for upload" in the Archiving tip (both), `gzip -d` (both; Technical gives it only in a code comment), and VIM Adventures [22] (Layman).
+- Vim, both voices: "Vim reads the file into a buffer" uses the word "reads". Technical says "changes a buffer, the copy of the file in memory". The meaning is the same, and the old Technical text had "reads". Optional: no change.
+- Vim Try-it comments (`-es`, `-c`, `1d`) are the same in all 3 voices and have no cite. This is the writer's note in the report. A source for `-es`/`-c` is not in `page.sources`; this concerns the Technical fact-check, not the voices.
+- The Bangla Try-it comments stay in English (the same as Technical). Allowed.
+- Layman jargon: "inode", "hard link", "buffer", "here document", and "filesystem" are explained in the text. "fixture" is explained in the page lede only.
+- All tips are at most 150 characters in all 3 voices. A flag that a Try-it explains (`%n %s %h`, `-p`, `-C DIR`, `--version`, `-es`, `%i`) is explained in the Try-it text or comment of each voice.
+
+Open FAILs: 0
+
+## Round 5 (2026-10-27): the fix rounds
+
+Checker: an independent agent (Sonnet 5.5, 2026-10-27), commit c8cd682, amended at commit 251997e (HEAD) for R5-8 and R5-9. I did not write or fix these voices. Diff base: dccf5be (`git diff -U2 dccf5be HEAD -- content/linux/files.mdx`). `node --test tests/voice-source.test.ts` passes (22 of 22). `lessoncheck.mjs files`: 0 problems. A script counted the words before `<details>` and the tip characters (without `<Cite />`) of every panel, and the `<Cite n>` sets.
+
+Changed hunks: the 24 Try-it cleanup blocks (code equal in the 3 voices of each topic), the Nano Goal, the Vim Try-it sentence (and the deleted comment line), and the Archiving Core and Go deeper. Round 4 had 0 open voices FAILs, so there is no voices FAIL to re-check. The Round 4 Technical FAILs that touch the voices (R4-50, R4-60 to R4-62, R4-84, R4-85, R4-86) were applied in the same way to Layman and Bangla (rows below).
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| R5-1 | Nano | Layman | PASS | Goal "Check that nano is installed, and learn the keys that save and exit." The Core gives `^O`, `^X`, `Y`, `N` with cites 16, 17, 14 (all cited by Technical). 124 words. |
+| R5-2 | Nano | Bangla | PASS | Goal "দেখুন nano install করা আছে কিনা, আর save করে বের হওয়ার key-গুলো শিখুন।" Correct and natural. Cites {14,16,17}. 116 words. |
+| R5-3 | Vim | Layman | PASS | The Try-it sentence "delete line 1 with batch commands, then quit with `:q!` or with `:wq`" equals Technical. The comment line with `-es` is deleted. The code equals Technical. Cites {18,19,20,21} are a subset of Technical. 150 words (the limit). |
+| R5-4 | Vim | Bangla | PASS | "batch command দিয়ে line 1 মুছুন, তারপর `:q!` অথবা `:wq` দিয়ে বের হন।" Correct. Commands stay in English. 138 words. |
+| R5-5 | Archiving and Compressing | Layman | PASS | Core has the unsafe names (`../`, absolute) and "`tar -c` erases an existing archive with the same name", cite 28 (in Technical). The `-z` and compression sentence is in Go deeper with cite 25 (Technical cites 25). No new fact. 139 words, tip 110. |
+| R5-6 | Archiving and Compressing | Bangla | PASS | "Absolute নাম বা `../` দিয়ে শুরু হওয়া নাম extract করা প্রায়ই unsafe" and "`tar -c` একই নামের existing archive মুছে দেয়।" are correct. Go deeper has the `-z` sentence with cite 25. 132 words. |
+| R5-7 | All changed topics | Layman and Bangla | PASS | 16 Try-it blocks (8 topics x 2 voices): standard pattern, equal to Technical. I ran the 8 different blocks: all as the page shows (see the Technical report). Tips: Layman 105 to 135 characters; the Bangla tips (titled "টেস্টিং-এ কেন দরকার") are 223 to 288 bytes, which is at most about 96 characters, and the tips did not change. |
+| R5-8 | Working with Files | Layman | FIXED | Commit 251997e (HEAD): "`rm` has no recycle bin, so a removal is final." (cite 5 kept) and "Each file has an inode. It is a record of the metadata of the file, such as its owner, size, and timestamps." (cite 1). "It" points to the inode, so the sentence is correct and no fact is lost. The count is now 150 words (was 152). |
+| R5-9 | Soft and Hard Links | Layman | FIXED | Commit 251997e: "If its target is missing, the link is "dangling"." (cite 2 kept). Same meaning as before. The count is now 150 words (was 151). |
+| R5-10 | All changed topics | Bangla | PASS | No new Cite number; no Bangla block cites an `n` that Technical does not cite. The Bangla Vim set {18..22} equals Technical. |
+
+Observation (not a FAIL): the Archiving Core and Go deeper both give the two warnings in all 3 voices. Optional: delete the two repeated Go deeper bullets.
+
+Re-count at 251997e with the same counter: every Layman and Bangla panel of the stage is 150 words or fewer (Layman 118 to 150, Bangla 108 to 140). `lessoncheck.mjs files`: 9 topics, 0 problems. `node --test tests/voice-source.test.ts`: 22 of 22 pass.
+
+Open FAILs: 0

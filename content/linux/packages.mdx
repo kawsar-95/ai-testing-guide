@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-10-27',
   sources: [
     { title: 'Linux Roadmap', publisher: 'roadmap.sh', url: 'https://roadmap.sh/linux', accessed: '2026-10-19' },
     { title: 'Linux Package Manager Explained', publisher: 'Geekflare', url: 'https://geekflare.com/dev/linux-package-manager-explained/', accessed: '2026-10-19' },
@@ -57,50 +57,142 @@ A package manager installs, upgrades, and removes software for you. This stage e
 <Voices>
 <Technical>
 
-A package is an archive with programs, configuration files, and metadata such as the version and the dependencies. <Cite n={2} /> A dependency is another package that must be installed with it. A conflicting dependency is a package that must not be installed with it. <Cite n={6} /> A package manager installs, upgrades, and removes packages and solves the dependencies. <Cite n={2} />
+**Goal:** Read the name, the version, and the dependencies of a package file.
 
-Each family has a low-level tool and a high-level tool. The low-level tool works on single package files. The high-level tool also downloads packages from repositories, with their dependencies. <Cite n={18} /> <Cite n={4} /> APT adds features on top of `dpkg`. <Cite n={18} />
+A package is an archive with programs, configuration files, and metadata such as the version and the dependencies. <Cite n={2} /> A dependency is another package that must be installed with it. <Cite n={6} /> A package manager installs, upgrades, and removes packages and solves the dependencies. <Cite n={2} /> `dpkg-query -W` shows the installed version of a package. <Cite n={8} />
+
+```bash
+dpkg-query -W bash    # Debian, Ubuntu: the installed version of bash
+```
+
+**Try it:** on Debian or Ubuntu, build a tiny `.deb` file in a throw-away directory and read its metadata. `dpkg -b` builds a package from a directory, and `dpkg -f` prints fields of its metadata. <Cite n={7} /> `> /dev/null 2>&1` hides the build messages. The parentheses keep your shell unchanged.
+
+```bash
+(
+  d="$(mktemp -d)" && cd "$d" || exit 1   # make and enter a new, empty directory
+  mkdir -p demo/DEBIAN demo/usr/bin
+  printf '#!/bin/sh\necho hello\n' > demo/usr/bin/demo-hello
+  printf 'Package: demo-hello\nVersion: 1.0\nArchitecture: all\nMaintainer: Example <user@example.com>\nDepends: bash\nDescription: a demo package\n' > demo/DEBIAN/control
+  dpkg -b demo demo.deb > /dev/null 2>&1
+  dpkg -f demo.deb Package Version Depends
+  # Package: demo-hello
+  # Version: 1.0
+  # Depends: bash
+  rm -r -- "${d:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: put the package manager and package versions in each test report. A failure on one runner often comes from another dependency version.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A conflicting dependency is a package that must not be installed with it. <Cite n={6} />
+- Each family has a low-level tool for single package files and a high-level tool that also downloads packages and their dependencies from repositories. <Cite n={18} /> <Cite n={4} /> APT adds features on top of `dpkg`. <Cite n={18} />
+- `dpkg` cannot fetch a package or its dependencies. <Cite n={18} /> `rpm` can install, query, verify, and erase single packages. <Cite n={26} /> `dnf install` also installs the dependencies. <Cite n={21} />
+- `apt-cache depends` shows what a package needs. <Cite n={11} />
 
 | Family | Low-level | High-level | File |
 |---|---|---|---|
 | Debian, Ubuntu | `dpkg` <Cite n={7} /> | `apt` <Cite n={9} /> | `.deb` <Cite n={18} /> |
 | RHEL, Fedora | `rpm` <Cite n={26} /> | `dnf` <Cite n={25} /> | `.rpm` <Cite n={26} /> |
 
-`dpkg` cannot fetch a package or its dependencies. <Cite n={18} /> Do daily work with the high-level tool, so that you do not list the dependencies yourself. `rpm` can install, query, verify, and erase single packages. <Cite n={26} /> `dnf install` also installs the dependencies. <Cite n={21} /> `apt-cache depends` shows what a package needs. <Cite n={11} /> `dpkg-query -W` shows the installed version. <Cite n={8} />
-
 ```bash
-dpkg-query -W bash        # Debian, Ubuntu: the installed version of one package
 apt-cache depends bash    # Debian, Ubuntu: what that package needs
-rpm -q bash               # RHEL, Fedora: is it installed? Run the lines of your family.
+rpm -q bash               # RHEL, Fedora: is it installed?
 ```
 
-<Callout type="tip" title="Why it matters for testing">
+Tutorial's own advice: do daily work with the high-level tool, so that you do not list the dependencies yourself. Name the family of each test image, so that setup scripts call the right tool.
 
-Tutorial's own advice: put the package manager and the package versions in each test report. A failure on one runner often comes from another version of a dependency. Name the family of each test image, so that setup scripts call the right tool.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-A package is an archive. It holds programs, configuration files, and metadata, for example the version and the dependencies <Cite n={2} />. A dependency is another package that must be installed with it. A conflicting dependency is a package that must not be installed with it <Cite n={6} />. A package manager installs, upgrades, and removes packages, and it solves the dependencies <Cite n={2} />.
+**Goal:** Read the name, the version, and the dependencies of a package file.
 
-Each family has a low-level tool and a high-level tool. The low-level tool works on single package files. The high-level tool also downloads packages and their dependencies from repositories <Cite n={18} />. Debian and Ubuntu use `dpkg`, `apt`, and `.deb` files <Cite n={7} /> <Cite n={9} /> <Cite n={18} />. RHEL and Fedora use `rpm`, `dnf`, and `.rpm` files <Cite n={26} /> <Cite n={25} />.
+A package is an archive. It holds programs, configuration files, and metadata, for example the version and the dependencies. <Cite n={2} /> A dependency is another package that must be installed with it. <Cite n={6} /> A package manager installs, upgrades, and removes packages, and it solves the dependencies. <Cite n={2} /> `dpkg-query -W` shows the installed version of a package. <Cite n={8} />
 
-`dpkg` cannot fetch a package or its dependencies <Cite n={18} />. Use the high-level tool for daily work, so that you do not list the dependencies yourself. `apt-cache depends` shows what a package needs <Cite n={11} />. `dpkg-query -W` shows the installed version <Cite n={8} />.
+**Try it:** on Debian or Ubuntu, build a tiny `.deb` file in a throw-away directory and read its metadata. `dpkg -b` builds a package from a directory, and `dpkg -f` prints fields of its metadata. <Cite n={7} /> `> /dev/null 2>&1` hides the build messages. The parentheses keep your shell unchanged.
 
-Tutorial's own advice: put the package manager and the package versions in each test report. A failure on one runner often comes from another version of a dependency.
+```bash
+(
+  d="$(mktemp -d)" && cd "$d" || exit 1   # make and enter a new, empty directory
+  mkdir -p demo/DEBIAN demo/usr/bin
+  printf '#!/bin/sh\necho hello\n' > demo/usr/bin/demo-hello
+  printf 'Package: demo-hello\nVersion: 1.0\nArchitecture: all\nMaintainer: Example <user@example.com>\nDepends: bash\nDescription: a demo package\n' > demo/DEBIAN/control
+  dpkg -b demo demo.deb > /dev/null 2>&1
+  dpkg -f demo.deb Package Version Depends
+  # Package: demo-hello
+  # Version: 1.0
+  # Depends: bash
+  rm -r -- "${d:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: put the package manager and package versions in each test report. A failure on one runner often comes from another dependency version.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A conflicting dependency is a package that must not be installed with it. <Cite n={6} />
+- Each family has a low-level tool and a high-level tool. The low-level tool works on single package files. The high-level tool also downloads packages and their dependencies from repositories. <Cite n={18} />
+- Debian and Ubuntu use `dpkg`, `apt`, and `.deb` files. <Cite n={7} /> <Cite n={9} /> <Cite n={18} /> RHEL and Fedora use `rpm`, `dnf`, and `.rpm` files. <Cite n={26} /> <Cite n={25} />
+- `dpkg` cannot fetch a package or its dependencies. <Cite n={18} /> `apt-cache depends` shows what a package needs. <Cite n={11} />
+
+Tutorial's own advice: use the high-level tool for daily work, so that you do not list the dependencies yourself.
+
+</details>
 
 </Layman>
 <Bangla>
 
-Package হলো একটি archive, যার মধ্যে program, configuration file এবং metadata থাকে, যেমন version ও dependency <Cite n={2} />। Dependency হলো আরেকটি package, যা এর সাথে install করতেই হবে। Conflicting dependency হলো এমন package, যা এর সাথে install করা যাবে না <Cite n={6} />। Package manager package install, upgrade ও remove করে, এবং dependency-গুলোর সমাধান করে <Cite n={2} />।
+**লক্ষ্য:** একটি package file-এর নাম, version আর dependency পড়ুন।
 
-প্রতিটি family-তে একটি low-level tool এবং একটি high-level tool থাকে। Low-level tool একটি একটি package file নিয়ে কাজ করে। High-level tool repository থেকে package এবং তার dependency-গুলোও download করে <Cite n={18} />। Debian ও Ubuntu ব্যবহার করে `dpkg`, `apt` এবং `.deb` file <Cite n={7} /> <Cite n={9} /> <Cite n={18} />। RHEL ও Fedora ব্যবহার করে `rpm`, `dnf` এবং `.rpm` file <Cite n={26} /> <Cite n={25} />।
+Package হলো একটি archive, যার মধ্যে program, configuration file এবং metadata থাকে, যেমন version ও dependency। <Cite n={2} /> Dependency হলো আরেকটি package, যা এর সাথে install করতেই হবে। <Cite n={6} /> Package manager package install, upgrade ও remove করে, এবং dependency-গুলোর সমাধান করে। <Cite n={2} /> `dpkg-query -W` একটি package-এর installed version দেখায়। <Cite n={8} />
 
-`dpkg` কোনো package বা তার dependency আনতে পারে না <Cite n={18} />। তাই প্রতিদিনের কাজে high-level tool ব্যবহার করুন, যাতে dependency-গুলোর তালিকা আপনাকে নিজে দিতে না হয়। `apt-cache depends` দেখায় একটি package-এর কী কী দরকার <Cite n={11} />। `dpkg-query -W` installed version দেখায় <Cite n={8} />।
+**চেষ্টা করুন:** Debian বা Ubuntu-তে একটি throw-away directory-তে ছোট একটি `.deb` file build করুন, আর তার metadata পড়ুন। `dpkg -b` একটি directory থেকে package build করে, আর `dpkg -f` তার metadata-র field print করে। <Cite n={7} /> `> /dev/null 2>&1` build-এর message লুকিয়ে রাখে। বন্ধনী আপনার shell-কে অপরিবর্তিত রাখে।
 
-Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি test report-এ package manager এবং package-এর version লিখে রাখুন। একটি runner-এ failure প্রায়ই কোনো dependency-এর অন্য version থেকে আসে।
+```bash
+(
+  d="$(mktemp -d)" && cd "$d" || exit 1   # make and enter a new, empty directory
+  mkdir -p demo/DEBIAN demo/usr/bin
+  printf '#!/bin/sh\necho hello\n' > demo/usr/bin/demo-hello
+  printf 'Package: demo-hello\nVersion: 1.0\nArchitecture: all\nMaintainer: Example <user@example.com>\nDepends: bash\nDescription: a demo package\n' > demo/DEBIAN/control
+  dpkg -b demo demo.deb > /dev/null 2>&1
+  dpkg -f demo.deb Package Version Depends
+  # Package: demo-hello
+  # Version: 1.0
+  # Depends: bash
+  rm -r -- "${d:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: প্রতি test report-এ package manager ও package version লিখুন। Runner-এ failure প্রায়ই অন্য dependency version থেকে আসে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Conflicting dependency হলো এমন package, যা এর সাথে install করা যাবে না। <Cite n={6} />
+- প্রতিটি family-তে একটি low-level tool এবং একটি high-level tool থাকে। Low-level tool একটি একটি package file নিয়ে কাজ করে। High-level tool repository থেকে package এবং তার dependency-গুলোও download করে। <Cite n={18} />
+- Debian ও Ubuntu ব্যবহার করে `dpkg`, `apt` এবং `.deb` file। <Cite n={7} /> <Cite n={9} /> <Cite n={18} /> RHEL ও Fedora ব্যবহার করে `rpm`, `dnf` এবং `.rpm` file। <Cite n={26} /> <Cite n={25} />
+- `dpkg` কোনো package বা তার dependency আনতে পারে না। <Cite n={18} /> `apt-cache depends` দেখায় একটি package-এর কী কী দরকার। <Cite n={11} />
+
+Tutorial-এর নিজস্ব পরামর্শ: প্রতিদিনের কাজে high-level tool ব্যবহার করুন, যাতে dependency-গুলোর তালিকা আপনাকে নিজে দিতে না হয়।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -110,26 +202,23 @@ Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি 
 <Voices>
 <Technical>
 
-A repository is a server that holds packages and their metadata. <Cite n={3} /> A mirror is a copy of a repository on another server.
+**Goal:** Find the repositories that APT uses and the key that signs each one.
 
-Debian and Ubuntu read `/etc/apt/sources.list` and the files in `/etc/apt/sources.list.d/`. In current APT, the one-line `.list` format is deprecated. The deb822 `.sources` format uses `Field: value` stanzas, with fields such as `Types` and `URIs`. <Cite n={14} /> Ubuntu releases before 24.04 LTS use `sources.list`. <Cite n={18} /> Debian has the components `main`, `contrib`, and `non-free`. <Cite n={14} /> Ubuntu adds `universe`, without official support. <Cite n={18} />
-
-RHEL and Fedora use `*.repo` files in `/etc/yum.repos.d`. A repository has a `baseurl`, `mirrorlist`, or `metalink`, plus `gpgcheck` and `gpgkey`. <Cite n={22} /> The DNF default of `gpgcheck` is off, so set it. <Cite n={22} />
-
-A GPG signature proves who published a file. A keyring is a file of the public keys that check it. APT checks the signature of the `Release` file, which lists the checksums of the repository files. <Cite n={13} /> `Signed-By` limits a repository to the keys that you name. <Cite n={14} /> A PPA is an apt repository of one user or team, hosted by Launchpad. <Cite n={20} />
+A repository is a server that holds packages and their metadata. <Cite n={3} /> Debian and Ubuntu read `/etc/apt/sources.list` and the files in `/etc/apt/sources.list.d/`. The deb822 `.sources` format uses `Field: value` stanzas, such as `URIs`. `Signed-By` limits a repository to the keys that you name. <Cite n={14} /> A third-party package runs its install-time scripts as root, so add only a repository that you trust. <Cite n={17} /> Tutorial's own advice: never pipe `curl` into `sudo sh`.
 
 ```bash
-ls /etc/apt/sources.list.d/    # Debian, Ubuntu: one file per source
-apt-cache policy | head -n 12  # the sources that apt uses
-ls /etc/yum.repos.d/           # RHEL, Fedora
-dnf repolist                   # RHEL, Fedora: the enabled repositories
+apt-cache policy | head -n 12   # Debian, Ubuntu: the sources that apt uses
 ```
 
-<Callout type="danger" title="A new repository or key can run code as root">
+**Try it:** print the address and the key file of each repository. This run is on Ubuntu 26.04, which has the file `ubuntu.sources`. On another system, pick a `.sources` file in `/etc/apt/sources.list.d/`. `grep -E` prints the lines that start with these field names.
 
-A third-party package runs maintainer scripts, its install-time scripts, as root. <Cite n={17} /> A trusted archive means a trusted maintainer, not safe code. <Cite n={13} /> Check the key fingerprint with the publisher. Keep the key in `/etc/apt/keyrings` and use `Signed-By`, not the deprecated `apt-key add`. <Cite n={14} /> <Cite n={15} /> Never pipe `curl` into `sudo sh`.
-
-</Callout>
+```bash
+grep -E '^(URIs|Signed-By):' /etc/apt/sources.list.d/ubuntu.sources
+# URIs: http://archive.ubuntu.com/ubuntu/
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+# URIs: http://security.ubuntu.com/ubuntu/
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
@@ -137,29 +226,100 @@ Tutorial's own advice: log `sources.list` and `sources.list.d` in each test run.
 
 </Callout>
 
+<details>
+<summary>Go deeper</summary>
+
+- A mirror is a copy of a repository on another server.
+- In current APT, the one-line `.list` format is deprecated. Other deb822 fields are `Types` and `Suites`. <Cite n={14} /> Ubuntu releases before 24.04 LTS use `sources.list`. <Cite n={18} />
+- Debian has the components `main`, `contrib`, and `non-free`. <Cite n={14} /> Ubuntu adds `universe`, without official support. <Cite n={18} />
+- RHEL and Fedora use `*.repo` files in `/etc/yum.repos.d`. A `.repo` repository has a `baseurl`, `mirrorlist`, or `metalink`, plus `gpgcheck` and `gpgkey`. The DNF default of `gpgcheck` is off, so set it. <Cite n={22} />
+- A GPG signature proves who published a file. A keyring is a file of the public keys that check it. APT checks the signature of the `Release` file, which lists the checksums of the repository files. <Cite n={13} />
+- A PPA is an apt repository of one user or team, hosted by Launchpad. <Cite n={20} />
+
+```bash
+ls /etc/apt/sources.list.d/    # Debian, Ubuntu: one file per source
+ls /etc/yum.repos.d/           # RHEL, Fedora
+dnf repolist                   # RHEL, Fedora: the enabled repositories
+```
+
+Before you add a repository or a key:
+
+- A trusted archive means a trusted maintainer, not safe code. <Cite n={13} />
+- Check the key fingerprint with the publisher. Keep the key in `/etc/apt/keyrings` and use `Signed-By`, not the deprecated `apt-key add`. <Cite n={14} /> <Cite n={15} />
+
+</details>
+
 </Technical>
 <Layman>
 
-A repository is a server that holds packages and their metadata <Cite n={3} />. A mirror is a copy of a repository on another server.
+**Goal:** Find the repositories that APT uses and the key that signs each one.
 
-Debian and Ubuntu read `/etc/apt/sources.list` and the files in `/etc/apt/sources.list.d/`. In current APT, the one-line `.list` format is deprecated. The deb822 `.sources` format uses `Field: value` stanzas <Cite n={14} />. RHEL and Fedora use `*.repo` files in `/etc/yum.repos.d`. The DNF default of `gpgcheck` is off, so set it <Cite n={22} />.
+A repository is a server that holds packages and their metadata. <Cite n={3} /> Debian and Ubuntu read `/etc/apt/sources.list` and the files in `/etc/apt/sources.list.d/`. The deb822 `.sources` format uses `Field: value` stanzas, such as `URIs`. `Signed-By` limits a repository to the keys that you name. <Cite n={14} /> A third-party package runs its install-time scripts as root. So add only a repository that you trust. <Cite n={17} /> Tutorial's own advice: never pipe `curl` into `sudo sh`.
 
-A GPG signature proves who published a file. APT checks the signature of the `Release` file, which lists the checksums of the repository files <Cite n={13} />. `Signed-By` limits a repository to the keys that you name <Cite n={14} />. A PPA is an apt repository of one user or team, hosted by Launchpad <Cite n={20} />.
+**Try it:** print the address and the key file of each repository. This run is on Ubuntu 26.04, which has the file `ubuntu.sources`. On another system, pick a `.sources` file in `/etc/apt/sources.list.d/`. `grep -E` prints the lines that start with these field names.
 
-Be careful with a new repository or key. A third-party package runs its install-time scripts as root <Cite n={17} />. Check the key fingerprint with the publisher. Keep the key in `/etc/apt/keyrings` and use `Signed-By`, not the deprecated `apt-key add` <Cite n={14} /> <Cite n={15} />. Never pipe `curl` into `sudo sh`.
+```bash
+grep -E '^(URIs|Signed-By):' /etc/apt/sources.list.d/ubuntu.sources
+# URIs: http://archive.ubuntu.com/ubuntu/
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+# URIs: http://security.ubuntu.com/ubuntu/
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: log `sources.list` and `sources.list.d` in each test run. Extra repositories explain package differences.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A mirror is a copy of a repository on another server.
+- In current APT, the one-line `.list` format is deprecated. <Cite n={14} />
+- RHEL and Fedora use `*.repo` files in `/etc/yum.repos.d`. The DNF default of `gpgcheck` is off, so set it. <Cite n={22} />
+- A GPG signature proves who published a file. APT checks the signature of the `Release` file, which lists the checksums of the repository files. <Cite n={13} />
+- A PPA is an apt repository of one user or team, hosted by Launchpad. <Cite n={20} />
+- A trusted archive means a trusted maintainer, not safe code. <Cite n={13} />
+- Check the key fingerprint with the publisher. Keep the key in `/etc/apt/keyrings` and use `Signed-By`, not the deprecated `apt-key add`. <Cite n={14} /> <Cite n={15} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Repository হলো একটি server, যা package এবং তাদের metadata রাখে <Cite n={3} />। Mirror হলো অন্য একটি server-এ রাখা repository-এর একটি copy।
+**লক্ষ্য:** APT কোন কোন repository ব্যবহার করে, আর প্রতিটিকে কোন key sign করে, তা খুঁজে বের করুন।
 
-Debian ও Ubuntu `/etc/apt/sources.list` এবং `/etc/apt/sources.list.d/`-এর file-গুলো পড়ে। বর্তমান APT-এ এক লাইনের `.list` format deprecated। deb822 `.sources` format `Field: value` stanza ব্যবহার করে <Cite n={14} />। RHEL ও Fedora `/etc/yum.repos.d`-এর `*.repo` file ব্যবহার করে। DNF-এ `gpgcheck`-এর default হলো off, তাই এটি set করুন <Cite n={22} />।
+Repository হলো একটি server, যা package এবং তাদের metadata রাখে। <Cite n={3} /> Debian ও Ubuntu `/etc/apt/sources.list` এবং `/etc/apt/sources.list.d/`-এর file-গুলো পড়ে। deb822 `.sources` format `Field: value` stanza ব্যবহার করে, যেমন `URIs`। `Signed-By` একটি repository-কে শুধু আপনার বলা key-গুলোর মধ্যে সীমাবদ্ধ রাখে। <Cite n={14} /> Third-party package তার install-time script root হিসেবে চালায়, তাই শুধু বিশ্বস্ত repository যোগ করুন। <Cite n={17} /> Tutorial-এর নিজস্ব পরামর্শ: কখনো `curl`-কে `sudo sh`-এ pipe করবেন না।
 
-GPG signature প্রমাণ করে কে একটি file publish করেছে। APT `Release` file-এর signature check করে; এই file-এ repository file-গুলোর checksum থাকে <Cite n={13} />। `Signed-By` একটি repository-কে শুধু আপনার বলা key-গুলোর মধ্যে সীমাবদ্ধ রাখে <Cite n={14} />। PPA হলো একজন user বা একটি team-এর apt repository, যা Launchpad host করে <Cite n={20} />।
+**চেষ্টা করুন:** প্রতিটি repository-এর address আর key file print করুন। এই run Ubuntu 26.04-এ, যেখানে `ubuntu.sources` file আছে। অন্য system-এ `/etc/apt/sources.list.d/` থেকে একটি `.sources` file বেছে নিন। `grep -E` শুধু এই field-এর নাম দিয়ে শুরু হওয়া line-গুলো print করে।
 
-নতুন repository বা key যোগ করার সময় সাবধান থাকুন। Third-party package তার install-time script root হিসেবে চালায় <Cite n={17} />। Publisher-এর সাথে key fingerprint মিলিয়ে নিন। Key রাখুন `/etc/apt/keyrings`-এ এবং `Signed-By` ব্যবহার করুন, deprecated `apt-key add` নয় <Cite n={14} /> <Cite n={15} />। কখনো `curl`-কে `sudo sh`-এ pipe করবেন না।
+```bash
+grep -E '^(URIs|Signed-By):' /etc/apt/sources.list.d/ubuntu.sources
+# URIs: http://archive.ubuntu.com/ubuntu/
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+# URIs: http://security.ubuntu.com/ubuntu/
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+```
 
-Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি test run-এ `sources.list` ও `sources.list.d` log করুন। বাড়তি repository package-এর পার্থক্যের কারণ ব্যাখ্যা করে।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি test run-এ `sources.list` ও `sources.list.d` log করুন। বাড়তি repository package-এর পার্থক্য ব্যাখ্যা করে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Mirror হলো অন্য একটি server-এ রাখা repository-এর একটি copy।
+- বর্তমান APT-এ এক লাইনের `.list` format deprecated। <Cite n={14} />
+- RHEL ও Fedora `/etc/yum.repos.d`-এর `*.repo` file ব্যবহার করে। DNF-এ `gpgcheck`-এর default হলো off, তাই এটি set করুন। <Cite n={22} />
+- GPG signature প্রমাণ করে কে একটি file publish করেছে। APT `Release` file-এর signature check করে; এই file-এ repository file-গুলোর checksum থাকে। <Cite n={13} />
+- PPA হলো একজন user বা একটি team-এর apt repository, যা Launchpad host করে। <Cite n={20} />
+- বিশ্বস্ত archive মানে বিশ্বস্ত maintainer, নিরাপদ code নয়। <Cite n={13} />
+- Publisher-এর সাথে key fingerprint মিলিয়ে নিন। Key রাখুন `/etc/apt/keyrings`-এ এবং `Signed-By` ব্যবহার করুন, deprecated `apt-key add` নয়। <Cite n={14} /> <Cite n={15} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -169,60 +329,125 @@ Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি 
 <Voices>
 <Technical>
 
-APT searches a local index, which `apt update` refreshes. <Cite n={10} /> `apt search` looks in package names and descriptions. <Cite n={11} /> `apt show` prints dependencies, sizes, and sources. <Cite n={9} /> `apt-cache policy` without a name lists the sources and their priorities. With a name, it shows how apt picks that package. <Cite n={11} /> `apt install` also installs the dependencies. <Cite n={10} /> `apt-file search` finds the package that contains a file. It is a separate package, and `apt-file update` must run first. <Cite n={16} />
+**Goal:** Find a package and preview its install, with no change to the system.
 
-DNF has `dnf search`, `dnf info`, and `dnf install`. <Cite n={21} /> `dnf search` matches names and summaries, and ignores case. <Cite n={21} /> `dnf provides /path/to/file` finds the package that holds a file, installed or not. <Cite n={21} /> It also accepts a command name, such as `zless`. <Cite n={21} /> DNF 5 keeps these commands. <Cite n={25} />
+APT searches a local index, which `apt update` refreshes. <Cite n={10} /> `apt search` looks in package names and descriptions. <Cite n={11} /> With a name, `apt-cache policy` shows how apt picks that package. <Cite n={11} /> `apt install` also installs the dependencies. <Cite n={10} /> An install changes the system, and a package script runs as root. <Cite n={17} /> So simulate first: `apt-get -s` shows what would happen and changes nothing. <Cite n={10} />
 
-To pin a version, write `apt install pkg=version`, or `pkg/release` for a release. <Cite n={9} /> With DNF, add it to the name, as in `dnf install tito-0.5.6-1.fc22`. <Cite n={21} />
+```bash
+apt show jq    # Debian, Ubuntu: details, with dependencies
+```
 
-`apt` is made for people, and its behavior may change between versions. Scripts should call `apt-get`. <Cite n={9} /> <Cite n={18} />
+**Try it:** on Debian or Ubuntu, check a package that is not installed, then simulate its install. This run uses `cowsay`. `grep '^Inst'` keeps only the lines that start with `Inst`.
+
+```bash
+apt-cache policy cowsay | head -n 3
+# cowsay:
+#   Installed: (none)
+#   Candidate: 3.03+dfsg2-8build1
+apt-get -s install cowsay | grep '^Inst'
+# Inst cowsay (3.03+dfsg2-8build1 Ubuntu:26.04/resolute [all])
+# Your versions differ.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: pin the version of a tool in a test image, for example `jq=<version>`. This does not pin its dependencies.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `apt show` prints dependencies, sizes, and sources. <Cite n={9} /> `apt-cache policy` without a name lists the sources and their priorities. <Cite n={11} />
+- `apt-file search` finds the package that contains a file. It is a separate package, and `apt-file update` must run first. <Cite n={16} />
+- DNF has `dnf search`, `dnf info`, and `dnf install`. `dnf search` matches names and summaries, and ignores case. <Cite n={21} />
+- `dnf provides /path/to/file` finds the package that holds a file, installed or not. It also accepts a command name, such as `zless`. <Cite n={21} /> DNF 5 keeps these commands. <Cite n={25} />
+- To pin a version, write `apt install pkg=version`, or `pkg/release` for a release. <Cite n={9} /> With DNF, add it to the name, as in `dnf install tito-0.5.6-1.fc22`. <Cite n={21} />
+- `apt` is made for people, and its behavior may change between versions. Scripts should call `apt-get`. <Cite n={9} /> <Cite n={18} />
 
 ```bash
 apt-cache search --names-only '^jq$'   # search the local index
-apt show jq                            # details, with dependencies
-apt-cache policy jq                    # which source supplies it
-apt-get -s install jq                  # -s: simulate only, nothing changes
 dnf provides /usr/bin/jq               # RHEL, Fedora: which package has this file
 sudo dnf install --assumeno jq         # needs root; RHEL, Fedora: show the plan, answer no
 ```
 
-<Callout type="danger" title="Install runs code as root">
+Tutorial's own advice: install only from repositories that you trust. An old version may leave the repository, so keep a local copy or a package snapshot for long-lived images.
 
-`sudo apt install jq` and `sudo dnf install jq` change the system. A package script runs as root. <Cite n={17} /> Simulate first, as above. <Cite n={10} /> Install only from repositories that you trust.
-
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: pin the version of a tool in a test image, for example `jq=<version>`. This does not pin its dependencies. An old version may leave the repository, so keep a local copy or a package snapshot for long-lived images.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-APT searches a local index. `apt update` refreshes that index <Cite n={10} />. `apt search` looks in package names and descriptions <Cite n={11} />. `apt show` prints the dependencies, the sizes, and the sources <Cite n={9} />. `apt install` also installs the dependencies <Cite n={10} />. To find the package that contains a file, use `apt-file search`. It is a separate package, and you must run `apt-file update` first <Cite n={16} />.
+**Goal:** Find a package and preview its install, with no change to the system.
 
-DNF has `dnf search`, `dnf info`, and `dnf install`. `dnf provides /path/to/file` finds the package that holds a file, installed or not <Cite n={21} />.
+APT searches a local index. `apt update` refreshes that index. <Cite n={10} /> `apt search` looks in package names and descriptions. <Cite n={11} /> With a name, `apt-cache policy` shows how apt picks that package. <Cite n={11} /> `apt install` also installs the dependencies. <Cite n={10} /> An install changes the system, and a package script runs as root. <Cite n={17} /> So simulate first: `apt-get -s` shows what would happen and changes nothing. <Cite n={10} />
 
-To pin a version, write `apt install pkg=version` <Cite n={9} />. With DNF, add the version to the name, as in `dnf install tito-0.5.6-1.fc22` <Cite n={21} />.
+**Try it:** on Debian or Ubuntu, check a package that is not installed, then simulate its install. This run uses `cowsay`. `grep '^Inst'` keeps only the lines that start with `Inst`.
 
-`apt` is made for people, and its behavior can change between versions. Scripts should call `apt-get` <Cite n={9} />.
+```bash
+apt-cache policy cowsay | head -n 3
+# cowsay:
+#   Installed: (none)
+#   Candidate: 3.03+dfsg2-8build1
+apt-get -s install cowsay | grep '^Inst'
+# Inst cowsay (3.03+dfsg2-8build1 Ubuntu:26.04/resolute [all])
+```
 
-An install changes the system, and a package script runs as root <Cite n={17} />. Simulate first, for example with `apt-get -s install jq` <Cite n={10} />. Install only from repositories that you trust.
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: pin the version of a tool in a test image. This does not pin its dependencies.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `apt show` prints the dependencies, the sizes, and the sources. <Cite n={9} />
+- To find the package that contains a file, use `apt-file search`. It is a separate package, and you must run `apt-file update` first. <Cite n={16} />
+- DNF has `dnf search`, `dnf info`, and `dnf install`. `dnf provides /path/to/file` finds the package that holds a file, installed or not. <Cite n={21} />
+- To pin a version, write `apt install pkg=version`. <Cite n={9} /> With DNF, add the version to the name, as in `dnf install tito-0.5.6-1.fc22`. <Cite n={21} />
+- `apt` is made for people, and its behavior can change between versions. Scripts should call `apt-get`. <Cite n={9} />
+
+Tutorial's own advice: install only from repositories that you trust.
+
+</details>
 
 </Layman>
 <Bangla>
 
-APT একটি local index-এ search করে, আর `apt update` সেই index refresh করে <Cite n={10} />। `apt search` package-এর নাম ও description-এ খোঁজে <Cite n={11} />। `apt show` dependency, size ও source দেখায় <Cite n={9} />। `apt install` dependency-গুলোও install করে <Cite n={10} />। কোন package-এ একটি file আছে, তা খুঁজতে `apt-file search` ব্যবহার করুন। এটি একটি আলাদা package, এবং আগে `apt-file update` চালাতে হবে <Cite n={16} />।
+**লক্ষ্য:** একটি package খুঁজুন, আর system না বদলে তার install-এর preview দেখুন।
 
-DNF-এ আছে `dnf search`, `dnf info` ও `dnf install`। `dnf search` নাম ও summary-তে খোঁজে এবং বড় হাতের ও ছোট হাতের অক্ষরের পার্থক্য মানে না। `dnf provides /path/to/file` খুঁজে বের করে কোন package-এ file-টি আছে, package-টি installed হোক বা না হোক <Cite n={21} />।
+APT একটি local index-এ search করে, আর `apt update` সেই index refresh করে। <Cite n={10} /> `apt search` package-এর নাম ও description-এ খোঁজে। <Cite n={11} /> নাম দিলে `apt-cache policy` দেখায় apt সেই package কীভাবে বেছে নেয়। <Cite n={11} /> `apt install` dependency-গুলোও install করে। <Cite n={10} /> Install system বদলে দেয়, আর package script root হিসেবে চলে। <Cite n={17} /> তাই আগে simulate করুন: `apt-get -s` দেখায় কী হতো, কিন্তু কিছুই বদলায় না। <Cite n={10} />
 
-একটি version pin করতে লিখুন `apt install pkg=version` <Cite n={9} />। DNF-এ version-টি নামের সাথে যোগ করুন, যেমন `dnf install tito-0.5.6-1.fc22` <Cite n={21} />।
+**চেষ্টা করুন:** Debian বা Ubuntu-তে এমন একটি package check করুন যা installed নয়, তারপর তার install simulate করুন। এই run `cowsay` ব্যবহার করে। `grep '^Inst'` শুধু `Inst` দিয়ে শুরু হওয়া line-গুলো রাখে।
 
-`apt` মানুষের ব্যবহারের জন্য তৈরি, এবং version বদলালে এর আচরণ বদলাতে পারে। তাই script-এ `apt-get` ব্যবহার করা উচিত <Cite n={9} /> <Cite n={18} />।
+```bash
+apt-cache policy cowsay | head -n 3
+# cowsay:
+#   Installed: (none)
+#   Candidate: 3.03+dfsg2-8build1
+apt-get -s install cowsay | grep '^Inst'
+# Inst cowsay (3.03+dfsg2-8build1 Ubuntu:26.04/resolute [all])
+```
 
-Install system বদলে দেয়, আর package script root হিসেবে চলে <Cite n={17} />। আগে simulate করুন, যেমন `apt-get -s install jq` দিয়ে <Cite n={10} />। শুধু আপনার বিশ্বস্ত repository থেকে install করুন।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: Test image-এ একটি tool-এর version pin করুন। এটি তার dependency-গুলো pin করে না।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `apt show` dependency, size ও source দেখায়। <Cite n={9} />
+- কোন package-এ একটি file আছে, তা খুঁজতে `apt-file search` ব্যবহার করুন। এটি একটি আলাদা package, এবং আগে `apt-file update` চালাতে হবে। <Cite n={16} />
+- DNF-এ আছে `dnf search`, `dnf info` ও `dnf install`। `dnf search` নাম ও summary-তে খোঁজে এবং বড় হাতের ও ছোট হাতের অক্ষরের পার্থক্য মানে না। `dnf provides /path/to/file` খুঁজে বের করে কোন package-এ file-টি আছে, package-টি installed হোক বা না হোক। <Cite n={21} />
+- একটি version pin করতে লিখুন `apt install pkg=version`। <Cite n={9} /> DNF-এ version-টি নামের সাথে যোগ করুন, যেমন `dnf install tito-0.5.6-1.fc22`। <Cite n={21} />
+- `apt` মানুষের ব্যবহারের জন্য তৈরি, এবং version বদলালে এর আচরণ বদলাতে পারে। তাই script-এ `apt-get` ব্যবহার করা উচিত। <Cite n={9} /> <Cite n={18} />
+
+Tutorial-এর নিজস্ব পরামর্শ: শুধু আপনার বিশ্বস্ত repository থেকে install করুন।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -232,59 +457,114 @@ Install system বদলে দেয়, আর package script root হিস�
 <Voices>
 <Technical>
 
-Update and upgrade are two steps. `apt update` only refreshes the package index. <Cite n={10} /> `apt upgrade` installs newer versions but never removes a package. <Cite n={9} /> `apt full-upgrade` may remove packages. <Cite n={9} /> `dnf upgrade` updates each package to its latest version. <Cite n={21} /> In DNF 4, `dnf check-update` returns exit status 100 if upgrades exist. <Cite n={21} /> An exit status is the number that a command returns. DNF 5 names the check `dnf check-upgrade`. <Cite n={37} />
+**Goal:** Preview an upgrade and a cleanup before you run them.
 
-`remove` keeps the configuration files. `purge` deletes them but not your home data. <Cite n={9} /> `autoremove` deletes dependencies that nobody needs now. List them first with `apt-get -s autoremove`. <Cite n={17} /> `dnf remove` also removes the packages that depend on the target. <Cite n={21} />
-
-`apt-mark hold` stops the automatic install, upgrade, and removal of one package. <Cite n={12} /> DNF has the versionlock plugin. <Cite n={23} />
-
-On Ubuntu Server, the default `unattended-upgrades` package installs security updates. Reboot is off by default. <Cite n={19} /> `unattended-upgrade --dry-run` only simulates a run. <Cite n={27} /> `dnf-automatic.timer` follows `/etc/dnf/automatic.conf`, whose defaults download and apply nothing. The install timer unit applies updates. <Cite n={24} />
+Update and upgrade are two steps. `apt update` only refreshes the package index. <Cite n={10} /> `apt upgrade` installs newer versions but never removes a package. `remove` deletes a package and keeps its configuration files. `purge` deletes them too. <Cite n={9} /> These commands change or delete software. `-y` answers every prompt with yes. On a shared machine, do not use `-y` or `apt upgrade`. Preview a change with `-s` first. <Cite n={10} />
 
 ```bash
-apt-get -s upgrade       # preview: what an upgrade would change
-apt-get -s autoremove    # preview: what autoremove would delete
+apt-get -s upgrade    # Debian, Ubuntu: preview what an upgrade would change
+```
+
+**Try it:** on Debian or Ubuntu, print the summary line of a simulated upgrade and of a simulated `autoremove`, which deletes dependencies that nobody needs now. <Cite n={17} /> `grep` keeps only the summary line. Nothing changes.
+
+```bash
+apt-get -s upgrade | grep 'not upgraded'
+# 5 upgraded, 0 newly installed, 0 to remove and 18 not upgraded.
+apt-get -s autoremove | grep 'not upgraded'
+# 0 upgraded, 0 newly installed, 7 to remove and 23 not upgraded.
+# Your numbers differ.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: on a CI runner, install named packages with fixed versions. Turn off automatic upgrades during a test run, or log them.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `apt full-upgrade` may remove packages. <Cite n={9} /> `dnf upgrade` updates each package to its latest version. <Cite n={21} />
+- An exit status is the number that a command returns. In DNF 4, `dnf check-update` returns exit status 100 if upgrades exist. <Cite n={21} /> DNF 5 names the check `dnf check-upgrade`. <Cite n={37} />
+- `purge` does not delete your home data. <Cite n={9} /> `dnf remove` also removes the packages that depend on the target. <Cite n={21} />
+- `apt-mark hold` stops the automatic install, upgrade, and removal of one package. <Cite n={12} /> DNF has the versionlock plugin. <Cite n={23} />
+- On Ubuntu Server, the default `unattended-upgrades` package installs security updates. Reboot is off by default. <Cite n={19} /> `unattended-upgrade --dry-run` only simulates a run. <Cite n={27} />
+- `dnf-automatic.timer` follows `/etc/dnf/automatic.conf`, whose defaults download and apply nothing. The install timer unit applies updates. <Cite n={24} />
+- `-y` runs a command without prompts, so a script on a disposable container or CI runner needs it. <Cite n={10} />
+
+```bash
 apt-mark showhold        # which packages are held
 dnf check-update         # DNF 4: list upgrades; exit status 100 means some exist (DNF 5: check-upgrade)
 sudo unattended-upgrade --dry-run   # needs root and the unattended-upgrades package: simulate a run
 ```
 
-<Callout type="danger" title="These commands change or delete software">
+Tutorial's own advice: on a CI runner, run `apt-get update`, then `apt-get install -y` with named packages and fixed versions. Automatic upgrades can change a package during a test run. <Cite n={19} />
 
-`apt remove`, `apt purge`, `apt autoremove`, and `dnf remove` delete packages. `-y` answers every prompt with yes. <Cite n={10} /> `-y` runs a command without prompts, so a script on a disposable container or CI runner needs it. On a shared machine, do not use `-y` or `apt upgrade`. <Cite n={10} />
-
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: on a CI runner, run `apt-get update`, then `apt-get install -y` with named packages and fixed versions. Automatic upgrades can change a package during a test run. Turn them off or log them. <Cite n={19} />
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-Update and upgrade are two steps. `apt update` only refreshes the package index <Cite n={10} />. `apt upgrade` installs newer versions but never removes a package. `apt full-upgrade` can remove packages <Cite n={9} />. `dnf upgrade` updates each package to its latest version. In DNF 4, `dnf check-update` returns exit status 100 if upgrades exist <Cite n={21} />. DNF 5 names this check `dnf check-upgrade` <Cite n={37} />.
+**Goal:** Preview an upgrade and a cleanup before you run them.
 
-`remove` keeps the configuration files. `purge` deletes them, but not your home data <Cite n={9} />. `autoremove` deletes dependencies that nobody needs now. Run `apt-get -s autoremove` first to see the list <Cite n={17} />. `dnf remove` also removes the packages that depend on the target <Cite n={21} />.
+Update and upgrade are two steps. `apt update` only refreshes the package index. <Cite n={10} /> `apt upgrade` installs newer versions but never removes a package. `remove` deletes a package and keeps its configuration files. `purge` deletes them too. <Cite n={9} /> These commands change or delete software. `-y` answers every prompt with yes. On a shared machine, do not use `-y` or `apt upgrade`. Preview a change with `-s` first. <Cite n={10} />
 
-`apt-mark hold` stops the automatic install, upgrade, and removal of one package <Cite n={12} />. DNF has the versionlock plugin <Cite n={23} />.
+**Try it:** on Debian or Ubuntu, print the summary line of a simulated upgrade and of a simulated `autoremove`. `autoremove` deletes dependencies that nobody needs now. <Cite n={17} /> `grep` keeps only the summary line. Nothing changes.
 
-On Ubuntu Server, `unattended-upgrades` installs security updates by default. Reboot is off by default <Cite n={19} />.
+```bash
+apt-get -s upgrade | grep 'not upgraded'
+# 5 upgraded, 0 newly installed, 0 to remove and 18 not upgraded.
+apt-get -s autoremove | grep 'not upgraded'
+# 0 upgraded, 0 newly installed, 7 to remove and 23 not upgraded.
+```
 
-Tutorial's own advice: on a CI runner, run `apt-get update`, then `apt-get install -y` with named packages and fixed versions. Turn off automatic upgrades during a test, or log them <Cite n={19} />.
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: on a CI runner, install named packages with fixed versions. Turn off automatic upgrades during a test, or log them.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `apt full-upgrade` can remove packages. <Cite n={9} /> `dnf upgrade` updates each package to its latest version. In DNF 4, `dnf check-update` returns exit status 100 if upgrades exist. <Cite n={21} /> DNF 5 names this check `dnf check-upgrade`. <Cite n={37} />
+- `purge` does not delete your home data. <Cite n={9} /> `dnf remove` also removes the packages that depend on the target. <Cite n={21} />
+- `apt-mark hold` stops the automatic install, upgrade, and removal of one package. <Cite n={12} /> DNF has the versionlock plugin. <Cite n={23} />
+- On Ubuntu Server, `unattended-upgrades` installs security updates by default. Reboot is off by default. <Cite n={19} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Update ও upgrade দুটি আলাদা ধাপ। `apt update` শুধু package index refresh করে <Cite n={10} />। `apt upgrade` নতুন version install করে, কিন্তু কখনো কোনো package remove করে না। `apt full-upgrade` package remove করতে পারে <Cite n={9} />। `dnf upgrade` প্রতিটি package-কে তার সর্বশেষ version-এ update করে। DNF 4-এ upgrade থাকলে `dnf check-update` exit status 100 ফেরত দেয় <Cite n={21} />। Exit status হলো সেই সংখ্যা, যা একটি command ফেরত দেয়। DNF 5-এ এই check-এর নাম `dnf check-upgrade` <Cite n={37} />।
+**লক্ষ্য:** একটি upgrade আর একটি cleanup চালানোর আগে তার preview দেখুন।
 
-`remove` configuration file রেখে দেয়। `purge` সেগুলো মুছে ফেলে, কিন্তু আপনার home data নয় <Cite n={9} />। `autoremove` এমন dependency মুছে দেয়, যা এখন কারও দরকার নেই। আগে `apt-get -s autoremove` দিয়ে তালিকা দেখুন <Cite n={17} />। `dnf remove` target-এর উপর নির্ভরশীল package-গুলোও remove করে <Cite n={21} />।
+Update ও upgrade দুটি আলাদা ধাপ। `apt update` শুধু package index refresh করে। <Cite n={10} /> `apt upgrade` নতুন version install করে, কিন্তু কখনো কোনো package remove করে না। `remove` একটি package মুছে দেয়, কিন্তু তার configuration file রেখে দেয়। `purge` সেগুলোও মুছে ফেলে। <Cite n={9} /> এই command-গুলো software বদলায় বা মুছে দেয়। `-y` প্রতিটি প্রশ্নের উত্তর yes দেয়। Shared machine-এ `-y` বা `apt upgrade` ব্যবহার করবেন না। আগে `-s` দিয়ে preview দেখুন। <Cite n={10} />
 
-`apt-mark hold` একটি package-এর automatic install, upgrade ও removal থামায় <Cite n={12} />। DNF-এ আছে versionlock plugin <Cite n={23} />।
+**চেষ্টা করুন:** Debian বা Ubuntu-তে একটি simulated upgrade আর একটি simulated `autoremove`-এর summary line print করুন। `autoremove` এমন dependency মুছে দেয়, যা এখন কারও দরকার নেই। <Cite n={17} /> `grep` শুধু summary line রাখে। কিছুই বদলায় না।
 
-Ubuntu Server-এ default `unattended-upgrades` package security update install করে, আর reboot default হিসেবে off থাকে <Cite n={19} />। `unattended-upgrade --dry-run` শুধু একটি run simulate করে <Cite n={27} />।
+```bash
+apt-get -s upgrade | grep 'not upgraded'
+# 5 upgraded, 0 newly installed, 0 to remove and 18 not upgraded.
+apt-get -s autoremove | grep 'not upgraded'
+# 0 upgraded, 0 newly installed, 7 to remove and 23 not upgraded.
+```
 
-Tutorial-এর নিজস্ব পরামর্শ: CI runner-এ প্রথমে `apt-get update`, তারপর নির্দিষ্ট package-এর নাম ও fixed version দিয়ে `apt-get install -y` চালান। Automatic upgrade test run-এর মাঝে package বদলে দিতে পারে, তাই এটি বন্ধ রাখুন বা log করুন <Cite n={19} />।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: CI runner-এ নির্দিষ্ট package fixed version দিয়ে install করুন। Test run-এর সময় automatic upgrade বন্ধ রাখুন বা log করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `apt full-upgrade` package remove করতে পারে। <Cite n={9} /> `dnf upgrade` প্রতিটি package-কে তার সর্বশেষ version-এ update করে। DNF 4-এ upgrade থাকলে `dnf check-update` exit status 100 ফেরত দেয়। <Cite n={21} /> Exit status হলো সেই সংখ্যা, যা একটি command ফেরত দেয়। DNF 5-এ এই check-এর নাম `dnf check-upgrade`। <Cite n={37} />
+- `purge` আপনার home data মোছে না। <Cite n={9} /> `dnf remove` target-এর উপর নির্ভরশীল package-গুলোও remove করে। <Cite n={21} />
+- `apt-mark hold` একটি package-এর automatic install, upgrade ও removal থামায়। <Cite n={12} /> DNF-এ আছে versionlock plugin। <Cite n={23} />
+- Ubuntu Server-এ default `unattended-upgrades` package security update install করে, আর reboot default হিসেবে off থাকে। <Cite n={19} /> `unattended-upgrade --dry-run` শুধু একটি run simulate করে। <Cite n={27} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -294,54 +574,124 @@ Tutorial-এর নিজস্ব পরামর্শ: CI runner-এ প্�
 <Voices>
 <Technical>
 
-`dpkg -l` lists packages. The first two letters, `ii`, mean wanted (install) and installed. Quote a pattern, as in `'libc6*'`. <Cite n={8} /> `apt list --installed` lists them too. <Cite n={9} /> On RHEL and Fedora, use `rpm -qa` or `dnf list --installed`. <Cite n={26} /> <Cite n={21} />
+**Goal:** Save the list of installed packages, so that you can compare two machines.
 
-To find the owner of a file, use `dpkg -S` or `rpm -qf`. <Cite n={8} /> <Cite n={26} /> `dpkg -S` cannot see files that maintainer scripts (install-time scripts) create. <Cite n={8} /> `dpkg -L` lists the files of a package. <Cite n={7} />
-
-APT marks a package as manual if you asked for it and as automatic if it came as a dependency. `apt-mark showmanual` lists the manual ones. <Cite n={12} />
-
-For scripts, use `dpkg-query -W -f`, which sets the output format. The `dpkg -l` layout is for people. The default output of `dpkg-query -W` is the package name and the version, separated by a tab. <Cite n={8} /> `rpm -qi` shows the details of a package, and `rpm -ql` lists its files. <Cite n={26} /> `dpkg -s` shows the status of a package. <Cite n={7} />
+`dpkg -l` lists packages. The first two letters, `ii`, mean wanted (install) and installed. <Cite n={8} /> On RHEL and Fedora, use `rpm -qa`. <Cite n={26} /> For scripts, use `dpkg-query -W -f`, which sets the output format. The `dpkg -l` layout is for people. `dpkg -S` finds the package that owns a file. <Cite n={8} />
 
 ```bash
-dpkg-query -W -f='${binary:Package}=${Version}\n' | sort > packages.txt   # creates packages.txt here
-wc -l < packages.txt                # how many packages
-dpkg -S /etc/host.conf              # which package owns this file
+dpkg -l bash    # Debian, Ubuntu: the package line starts with ii (after 5 header lines)
+```
+
+**Try it:** on Debian or Ubuntu, save the list in a throw-away directory, count it, and find two entries. `${binary:Package}=${Version}` writes the name, `=`, and the version. <Cite n={8} />
+
+```bash
+(
+  d="$(mktemp -d)" && cd "$d" || exit 1   # make and enter a new, empty directory
+  dpkg-query -W -f='${binary:Package}=${Version}\n' | sort > packages.txt
+  wc -l < packages.txt          # 2051 (your count differs)
+  grep '^bash=' packages.txt    # bash=5.3-2ubuntu1
+  dpkg -S /etc/host.conf        # base-files: /etc/host.conf
+  rm -r -- "${d:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: save the package list with each test run. Compare two lists with `diff` to see why a test fails on only one machine.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Quote a pattern, as in `'libc6*'`. <Cite n={8} /> `apt list --installed` lists packages too. <Cite n={9} /> `dnf list --installed` works on RHEL and Fedora. <Cite n={21} />
+- `rpm -qf` finds the owner of a file. <Cite n={26} /> `dpkg -S` cannot see files that maintainer scripts (install-time scripts) create. <Cite n={8} />
+- `dpkg -L` lists the files of a package. `dpkg -s` shows the status of a package. <Cite n={7} />
+- APT marks a package as manual if you asked for it and as automatic if it came as a dependency. `apt-mark showmanual` lists the manual ones. <Cite n={12} />
+- The default output of `dpkg-query -W` is the package name and the version, separated by a tab. <Cite n={8} />
+- `rpm -qi` shows the details of a package, and `rpm -ql` lists its files. <Cite n={26} />
+
+```bash
 apt-mark showmanual | head -n 3     # packages that someone asked for
 rpm -qa | sort | head -n 3          # RHEL, Fedora
 rpm -qf "$(command -v bash)"        # RHEL, Fedora: owner of bash
 ```
 
-<Callout type="tip" title="Why it matters for testing">
+Tutorial's own advice: save the list as an artifact of every image build too. The list also records the dependencies. An old version may leave the repository, so for long-lived images keep a local copy or a package snapshot.
 
-Tutorial's own advice: save the package list as an artifact of every test run or image build. Compare two lists with `diff` to explain why a test passes on one machine and fails on another. The list also records the dependencies. An old version may leave the repository, so for long-lived images keep a local copy or a package snapshot.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-`dpkg -l` lists the packages. The first two letters, `ii`, mean wanted (install) and installed <Cite n={8} />. `apt list --installed` also lists them <Cite n={9} />. On RHEL and Fedora, use `rpm -qa` or `dnf list --installed` <Cite n={26} /> <Cite n={21} />.
+**Goal:** Save the list of installed packages, so that you can compare two machines.
 
-To find the package that owns a file, use `dpkg -S` or `rpm -qf` <Cite n={8} /> <Cite n={26} />. `dpkg -S` cannot see files that install-time scripts create <Cite n={8} />. `dpkg -L` lists the files of a package <Cite n={7} />.
+`dpkg -l` lists the packages. The first two letters, `ii`, mean wanted (install) and installed. <Cite n={8} /> On RHEL and Fedora, use `rpm -qa`. <Cite n={26} /> In scripts, use `dpkg-query -W -f`, which sets the output format. The `dpkg -l` layout is for people. `dpkg -S` finds the package that owns a file. <Cite n={8} />
 
-APT marks a package as manual if you asked for it, and as automatic if it came as a dependency. `apt-mark showmanual` lists the manual packages <Cite n={12} />.
+**Try it:** on Debian or Ubuntu, save the list in a throw-away directory, count it, and find two entries. `${binary:Package}=${Version}` writes the name, `=`, and the version. <Cite n={8} />
 
-In scripts, use `dpkg-query -W -f`, which sets the output format. The `dpkg -l` layout is for people <Cite n={8} />.
+```bash
+(
+  d="$(mktemp -d)" && cd "$d" || exit 1   # make and enter a new, empty directory
+  dpkg-query -W -f='${binary:Package}=${Version}\n' | sort > packages.txt
+  wc -l < packages.txt          # 2051 (your count differs)
+  grep '^bash=' packages.txt    # bash=5.3-2ubuntu1
+  dpkg -S /etc/host.conf        # base-files: /etc/host.conf
+  rm -r -- "${d:?}"   # delete the throw-away directory
+)
+```
 
-Tutorial's own advice: save the package list with each test run or image build. Compare two lists with `diff` to see why a test passes on one machine and fails on another.
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: save the package list with each test run. Compare two lists with `diff` to see why a test fails on only one machine.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `apt list --installed` also lists the packages. <Cite n={9} /> On RHEL and Fedora, `dnf list --installed` works too. <Cite n={21} />
+- `rpm -qf` finds the package that owns a file. <Cite n={26} /> `dpkg -S` cannot see files that install-time scripts create. <Cite n={8} />
+- `dpkg -L` lists the files of a package. <Cite n={7} />
+- APT marks a package as manual if you asked for it, and as automatic if it came as a dependency. `apt-mark showmanual` lists the manual packages. <Cite n={12} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-`dpkg -l` package-গুলোর তালিকা দেখায়। প্রথম দুটি অক্ষর `ii` মানে package-টি wanted (install) এবং installed <Cite n={8} />। `apt list --installed`-ও তালিকা দেখায় <Cite n={9} />। RHEL ও Fedora-তে `rpm -qa` বা `dnf list --installed` ব্যবহার করুন <Cite n={26} /> <Cite n={21} />।
+**লক্ষ্য:** Installed package-গুলোর তালিকা save করুন, যাতে দুটি machine তুলনা করতে পারেন।
 
-একটি file কোন package-এর, তা জানতে `dpkg -S` বা `rpm -qf` ব্যবহার করুন <Cite n={8} /> <Cite n={26} />। Maintainer script (install-time script) যে file তৈরি করে, `dpkg -S` তা দেখতে পায় না <Cite n={8} />। `dpkg -L` একটি package-এর file-গুলোর তালিকা দেয় <Cite n={7} />।
+`dpkg -l` package-গুলোর তালিকা দেখায়। প্রথম দুটি অক্ষর `ii` মানে package-টি wanted (install) এবং installed। <Cite n={8} /> RHEL ও Fedora-তে `rpm -qa` ব্যবহার করুন। <Cite n={26} /> Script-এর জন্য `dpkg-query -W -f` ব্যবহার করুন, যা output format ঠিক করে দেয়। `dpkg -l`-এর layout মানুষের পড়ার জন্য। `dpkg -S` খুঁজে বের করে একটি file কোন package-এর। <Cite n={8} />
 
-আপনি নিজে চাইলে APT একটি package-কে manual হিসেবে mark করে, আর dependency হিসেবে এলে automatic হিসেবে। `apt-mark showmanual` manual package-গুলোর তালিকা দেয় <Cite n={12} />।
+**চেষ্টা করুন:** Debian বা Ubuntu-তে একটি throw-away directory-তে তালিকাটি save করুন, গুনুন, আর দুটি entry খুঁজুন। `${binary:Package}=${Version}` নাম, `=`, আর version লেখে। <Cite n={8} />
 
-Script-এর জন্য `dpkg-query -W -f` ব্যবহার করুন, যা output format ঠিক করে দেয়। `dpkg -l`-এর layout মানুষের পড়ার জন্য <Cite n={8} />।
+```bash
+(
+  d="$(mktemp -d)" && cd "$d" || exit 1   # make and enter a new, empty directory
+  dpkg-query -W -f='${binary:Package}=${Version}\n' | sort > packages.txt
+  wc -l < packages.txt          # 2051 (your count differs)
+  grep '^bash=' packages.txt    # bash=5.3-2ubuntu1
+  dpkg -S /etc/host.conf        # base-files: /etc/host.conf
+  rm -r -- "${d:?}"   # delete the throw-away directory
+)
+```
 
-Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি test run বা image build-এর artifact হিসেবে package list save করুন। একটি test কেন এক machine-এ pass করে আর অন্যটিতে fail করে, তা বুঝতে দুটি list `diff` দিয়ে তুলনা করুন।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি test run-এ package list save করুন। Test শুধু এক machine-এ fail করলে দুটি list `diff` দিয়ে মিলিয়ে দেখুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `apt list --installed`-ও তালিকা দেখায়। <Cite n={9} /> RHEL ও Fedora-তে `dnf list --installed`-ও কাজ করে। <Cite n={21} />
+- একটি file কোন package-এর, তা জানতে `rpm -qf`-ও ব্যবহার করা যায়। <Cite n={26} /> Maintainer script (install-time script) যে file তৈরি করে, `dpkg -S` তা দেখতে পায় না। <Cite n={8} />
+- `dpkg -L` একটি package-এর file-গুলোর তালিকা দেয়। <Cite n={7} />
+- আপনি নিজে চাইলে APT একটি package-কে manual হিসেবে mark করে, আর dependency হিসেবে এলে automatic হিসেবে। `apt-mark showmanual` manual package-গুলোর তালিকা দেয়। <Cite n={12} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -351,57 +701,126 @@ Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি 
 <Voices>
 <Technical>
 
-A snap is a self-contained app package. It bundles the app with its libraries. <Cite n={5} /> The `snapd` daemon, a background service, installs, confines, and updates snaps. <Cite n={34} /> It must run before you can install a snap, and some distributions need you to install it. <Cite n={36} />
+**Goal:** See which channel a snap follows and when snaps refresh.
+
+A snap is a self-contained app package. It bundles the app with its libraries. <Cite n={5} /> The `snapd` daemon, a background service, installs, confines, and updates snaps. <Cite n={34} /> A channel is `track/risk/branch`. The default risk is `stable`. <Cite n={29} /> By default, snaps refresh four times a day. <Cite n={30} /> Be careful: `snap remove --purge` removes a snap without a snapshot of its data. <Cite n={35} />
 
 ```bash
-snap list                 # installed snaps, with channel and notes
-snap find "media player"  # search the Snap Store
-snap info vlc             # details and channels
-snap refresh --time       # when snaps refresh
-ls /snap/bin | head -n 3  # the commands of snaps (on your PATH)
+snap list    # installed snaps, with channel and notes
 ```
 
-`sudo snap install` and `sudo snap remove` add and delete snaps. <Cite n={35} /> A channel is `track/risk/branch`, and the branch is optional. The risk levels are `stable`, `candidate`, `beta`, and `edge`. The default is `stable`. <Cite n={29} /> Confinement is the isolation of an app from the system. A `strict` snap cannot reach files, network, or other resources without an interface. A `classic` snap has full access, like a normal package, and needs `--classic`. <Cite n={28} /> <Cite n={31} />
+**Try it:** list the `snapd` snap and print the refresh timer. You need a system with `snapd`, such as Ubuntu. <Cite n={36} /> The `Tracking` column shows the channel. `/4` in the timer means four refreshes over the day. <Cite n={30} />
 
-By default, snaps refresh four times a day. `snap refresh --hold=24h firefox` pauses one snap. <Cite n={30} /> The commands are links in `/snap/bin`. <Cite n={33} /> Data is under `/var/snap` and `~/snap`. <Cite n={32} />
-
-<Callout type="danger" title="Remove can delete data">
-
-`snap remove --purge` removes a snap without a snapshot of its data. <Cite n={35} /> A `classic` snap has no sandbox. <Cite n={31} /> Install it only from a publisher that you trust.
-
-</Callout>
+```bash
+snap list snapd
+# Name   Version  Rev    Tracking       Publisher    Notes
+# snapd  2.77.1   28254  latest/stable  canonical**  snapd
+snap refresh --time
+# timer: 00:00~24:00/4
+# last: today at <time>
+# next: today at <time>
+# Your version, Rev, and times differ.
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: pin the channel with `--channel=` and hold the refresh during a test run. An auto-refresh can change the app version in the middle of a test. If a snapped tool cannot read a test file, check the confinement first. <Cite n={28} />
+Tutorial's own advice: pin the channel with `--channel=` and hold the refresh during a test run. A refresh can change the app in a test.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `snapd` must run before you can install a snap, and some distributions need you to install it. <Cite n={36} />
+- `snap find` searches the Snap Store, and `snap info` shows details and channels. `sudo snap install` and `sudo snap remove` add and delete snaps. <Cite n={35} />
+- The branch of a channel is optional. The risk levels are `stable`, `candidate`, `beta`, and `edge`. <Cite n={29} />
+- Confinement is the isolation of an app from the system. A `strict` snap cannot reach files, network, or other resources without an interface. A `classic` snap has full access, like a normal package, and needs `--classic`. <Cite n={28} /> <Cite n={31} />
+- A `classic` snap has no sandbox. <Cite n={31} /> Install it only from a publisher that you trust.
+- `snap refresh --hold=24h firefox` pauses one snap. <Cite n={30} /> The commands are links in `/snap/bin`. <Cite n={33} /> Data is under `/var/snap` and `~/snap`. <Cite n={32} />
+
+```bash
+snap find "media player"  # search the Snap Store
+snap info vlc             # details and channels
+ls /snap/bin | head -n 3  # the commands of snaps (on your PATH)
+```
+
+Tutorial's own advice: if a snapped tool cannot read a test file, check the confinement first. <Cite n={28} />
+
+</details>
 
 </Technical>
 <Layman>
 
-A snap is a self-contained app package. It bundles the app with its libraries <Cite n={5} />. The `snapd` daemon is a background service. It installs, confines, and updates snaps <Cite n={34} />. It must run before you can install a snap. On some distributions, you must install it first <Cite n={36} />.
+**Goal:** See which channel a snap follows and when snaps refresh.
 
-`sudo snap install` adds a snap, and `sudo snap remove` deletes one <Cite n={35} />. A channel is `track/risk/branch`. The risk levels are `stable`, `candidate`, `beta`, and `edge`. The default is `stable` <Cite n={29} />.
+A snap is a self-contained app package. It bundles the app with its libraries. <Cite n={5} /> The `snapd` daemon is a background service. It installs, confines, and updates snaps. <Cite n={34} /> A channel is `track/risk/branch`. The default risk is `stable`. <Cite n={29} /> By default, snaps refresh four times a day. <Cite n={30} /> Be careful: `snap remove --purge` removes a snap without a snapshot of its data. <Cite n={35} />
 
-Confinement keeps an app apart from the system. A `strict` snap cannot reach files, the network, or other resources without an interface. A `classic` snap has full access, like a normal package, and needs `--classic` <Cite n={28} /> <Cite n={31} />.
+**Try it:** list the `snapd` snap and print the refresh timer. You need a system with `snapd`, such as Ubuntu. <Cite n={36} /> The `Tracking` column shows the channel. `/4` in the timer means four refreshes over the day. <Cite n={30} />
 
-By default, snaps refresh four times a day. `snap refresh --hold=24h firefox` pauses one snap <Cite n={30} />. `snap remove --purge` removes a snap without a snapshot of its data <Cite n={35} />.
+```bash
+snap list snapd
+# Name   Version  Rev    Tracking       Publisher    Notes
+# snapd  2.77.1   28254  latest/stable  canonical**  snapd
+snap refresh --time
+# timer: 00:00~24:00/4
+# last: today at <time>
+# next: today at <time>
+```
+
+<Callout type="tip" title="Why it matters for testing">
 
 Tutorial's own advice: pin the channel with `--channel=` and hold the refresh during a test run.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `snapd` must run before you can install a snap. On some distributions, you must install it first. <Cite n={36} />
+- `sudo snap install` adds a snap, and `sudo snap remove` deletes one. <Cite n={35} />
+- The risk levels are `stable`, `candidate`, `beta`, and `edge`. <Cite n={29} />
+- Confinement keeps an app apart from the system. A `strict` snap cannot reach files, the network, or other resources without an interface. A `classic` snap has full access, like a normal package, and needs `--classic`. <Cite n={28} /> <Cite n={31} />
+- A `classic` snap has no sandbox. <Cite n={31} /> Install it only from a publisher that you trust.
+- `snap refresh --hold=24h firefox` pauses one snap. <Cite n={30} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Snap হলো একটি self-contained app package। এটি app-এর সাথে তার library-গুলোও bundle করে <Cite n={5} />। `snapd` daemon একটি background service, যা snap install, confine ও update করে <Cite n={34} />। Snap install করার আগে এটি চালু থাকতে হবে, আর কিছু distribution-এ এটি আপনাকে install করে নিতে হয় <Cite n={36} />।
+**লক্ষ্য:** একটি snap কোন channel follow করে, আর snap কখন refresh হয়, তা দেখুন।
 
-`sudo snap install` snap যোগ করে, আর `sudo snap remove` snap মুছে ফেলে <Cite n={35} />। একটি channel-এর রূপ হলো `track/risk/branch`, যেখানে branch ঐচ্ছিক। Risk level হলো `stable`, `candidate`, `beta` ও `edge`; default হলো `stable` <Cite n={29} />।
+Snap হলো একটি self-contained app package। এটি app-এর সাথে তার library-গুলোও bundle করে। <Cite n={5} /> `snapd` daemon একটি background service, যা snap install, confine ও update করে। <Cite n={34} /> একটি channel-এর রূপ হলো `track/risk/branch`। Default risk হলো `stable`। <Cite n={29} /> Default হিসেবে snap দিনে চারবার refresh হয়। <Cite n={30} /> সাবধান: `snap remove --purge` data-র snapshot না রেখেই snap remove করে। <Cite n={35} />
 
-Confinement মানে system থেকে একটি app-কে আলাদা রাখা। একটি `strict` snap কোনো interface ছাড়া file, network বা অন্য resource-এ পৌঁছাতে পারে না। একটি `classic` snap সাধারণ package-এর মতো পুরো access পায়, এবং এর জন্য `--classic` লাগে <Cite n={28} /> <Cite n={31} />।
+**চেষ্টা করুন:** `snapd` snap-টির তালিকা দেখুন, আর refresh timer print করুন। এর জন্য `snapd` আছে এমন system লাগবে, যেমন Ubuntu। <Cite n={36} /> `Tracking` column channel দেখায়। Timer-এ `/4` মানে দিনে চারবার refresh। <Cite n={30} />
 
-Default হিসেবে snap দিনে চারবার refresh হয়। `snap refresh --hold=24h firefox` একটি snap-এর refresh থামিয়ে রাখে <Cite n={30} />। Command-গুলো `/snap/bin`-এ link হিসেবে থাকে <Cite n={33} />, আর data থাকে `/var/snap` ও `~/snap`-এ <Cite n={32} />। `snap remove --purge` data-র snapshot না রেখেই snap remove করে <Cite n={35} />।
+```bash
+snap list snapd
+# Name   Version  Rev    Tracking       Publisher    Notes
+# snapd  2.77.1   28254  latest/stable  canonical**  snapd
+snap refresh --time
+# timer: 00:00~24:00/4
+# last: today at <time>
+# next: today at <time>
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
 
 Tutorial-এর নিজস্ব পরামর্শ: `--channel=` দিয়ে channel pin করুন এবং test run চলার সময় refresh hold করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Snap install করার আগে `snapd` চালু থাকতে হবে, আর কিছু distribution-এ এটি আপনাকে install করে নিতে হয়। <Cite n={36} />
+- `sudo snap install` snap যোগ করে, আর `sudo snap remove` snap মুছে ফেলে। <Cite n={35} />
+- Channel-এর branch ঐচ্ছিক। Risk level হলো `stable`, `candidate`, `beta` ও `edge`। <Cite n={29} />
+- Confinement মানে system থেকে একটি app-কে আলাদা রাখা। একটি `strict` snap কোনো interface ছাড়া file, network বা অন্য resource-এ পৌঁছাতে পারে না। একটি `classic` snap সাধারণ package-এর মতো পুরো access পায়, এবং এর জন্য `--classic` লাগে। <Cite n={28} /> <Cite n={31} />
+- একটি `classic` snap-এর কোনো sandbox নেই। <Cite n={31} /> শুধু আপনার বিশ্বস্ত publisher-এর snap install করুন।
+- `snap refresh --hold=24h firefox` একটি snap-এর refresh থামিয়ে রাখে। <Cite n={30} /> Command-গুলো `/snap/bin`-এ link হিসেবে থাকে <Cite n={33} />, আর data থাকে `/var/snap` ও `~/snap`-এ। <Cite n={32} />
+
+</details>
 
 </Bangla>
 </Voices>

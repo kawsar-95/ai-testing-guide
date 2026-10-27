@@ -285,3 +285,45 @@ Further reading (title only, not cited): none in this stage.
 ## Fix round 1 (2026-10-19)
 Changes after the fact-check (17 FAILs): added S48 (termios(3)) and S49 (Bash Exit Status) at the end of the source list; cited S25 for the zombie meaning; cited S16 for "ps accepts both styles"; reworded the macOS/BusyBox sentence and the CI sentences as hedges; dropped the false "when no file is given" for `nohup.out`; changed the SIGHUP sentence to the terminal-close case (S44: "The shell exits by default upon receipt of a SIGHUP."); changed the script sentence to "job numbers may fail in `sh`" (a Bash 5.3 script accepts `kill %1`; local test of the checker); split the danger claim (`kill -9` gives no clean-up; `killall` and `pkill` send SIGTERM by default); cited S48 for Ctrl+Z and S49 for 143; changed "need root" to "usually need root"; renamed the `renice` note; cited S21 in the Priorities danger callout; cut the signals table and prose to 241 words; added one-line glosses for builtin, exit status and session.
 Tutorial's own advice, no source: a minimal container may lack `ps`, `pstree` and `top`; the packages are `procps` (Debian, Ubuntu; ps, pgrep, top, pidof), `procps-ng` (RHEL, Fedora) and `psmisc` (pstree, killall). The page marks it as the tutorial's own advice (the checker's note; I did not fetch a package page).
+
+## Round 2 (2026-10-27): Try it commands
+
+The stage is now short lessons: Goal, Core, Try it, tip, and "Go deeper". Each Try-it runs in a subshell `( ... )`, starts only a `sleep` of its own, and ends with `kill` and `wait`. The PIDs on the page are stand-ins.
+
+Tool versions: GNU bash 5.3.9, procps-ng 4.0.4 (`ps`, `pgrep`), util-linux 2.41.3 (`renice`, `ionice`), `nice` from uutils coreutils 0.10.0 (the page cites the GNU coreutils man page; I did not run GNU `nice`), kernel 7.0.
+
+| Topic | Try-it | Real output (PIDs are stand-ins) |
+|---|---|---|
+| Process Management | `sleep 30 &`, then `grep -E '^(Name\|State\|Pid\|PPid):' /proc/"$child"/status`, then `kill`, `wait` | `Name: sleep`, `State: S (sleeping)`, `Pid: 34628`, `PPid: 34627` |
+| Listing and Finding Processes | `pgrep -a -f '^sleep 301$'`; `pgrep -x no-such-program; echo "exit status: $?"` | `34705 sleep 301`; `exit status: 1` |
+| Background and Foreground Processes | `sleep 60 &`; `jobs -l`; `kill`; `wait`; `jobs -l` | `[1]+ 34718 Running    sleep 60 &`, then nothing |
+| Killing Processes | `kill "$pid"`; `kill -0 "$pid" 2>/dev/null && kill -KILL "$pid"`; `wait`; `kill -0 ... \|\| echo "process $pid is gone"` | `process 33402 is gone` |
+| Process Signals | `kill -STOP`, `ps -o pid,stat,args`; `kill -CONT`, `ps`; `kill`; `wait`; `echo $?` | `T`, then `S`, then `exit status: 143` |
+| Process Priorities | `nice -n 10 sleep 60 &`; `ps -o pid,ni,args`; `renice 15 -p "$pid"`; `ps` | `NI 10`; `33506 (process ID) old priority 10, new priority 15`; `NI 15` |
+| Process Forking | `sh -c 'echo "child: PID $$, PPID $PPID"; exec sh -c "echo after exec: PID \$\$"'`; `echo "subshell: PID $BASHPID"` | `child: PID 33631, PPID 33630`; `after exec: PID 33631`; `subshell: PID 33630` |
+| Ulimits | `( ulimit -n 20; for i in $(seq 1 30); do exec {fd}</etc/passwd \|\| { echo "open number $i failed"; break; }; done )`; `ulimit -n` | `bash: redirection error: cannot duplicate fd: Too many open files`; `bash: /etc/passwd: Too many open files`; `open number 11 failed`; `524288` (the limit of the test machine) |
+
+Notes on the runs:
+
+- Process Management: without `sleep 1`, the state was `R (running)`, because `grep` ran before `sleep` went to sleep. The Try-it waits 1 s.
+- Listing: `pgrep -a -f 'sleep 301'` also matched the `bash -c` wrapper of the test run (the `-f` wrapper warning of "Killing Processes"). The anchored pattern `'^sleep 301$'` matches only the `sleep`.
+- Ulimits: bash allocates `{fd}` descriptors from 10, so with a limit of 20 the 11th open fails.
+- Forking: `sh -c` is not the last command of the subshell, so bash forks it and does not exec it in place. The `exec` gloss cites S43 (Bourne Shell Builtins: `exec` "replaces the shell without creating a new process").
+- The Go-deeper demos (trap script in a `mktemp -d` directory, zombie and orphan, `ionice -c 3`) were run too and clean up after themselves. The zombie demo now ends with `kill "$parent" "$orphan"`.
+
+Facts moved (none deleted; every old `<Cite n>` number stays on the page):
+
+- Process Management: daemon, `execve` keeps the PID, `/proc` size 0, the tool groups, and the state letters (now a table) went to "Go deeper".
+- Listing: `ps aux`, both styles, `-o`, `--sort`, the 15-character rule, `pidof`, `pstree`, `top`, and the container packages went to "Go deeper".
+- Background: `%1`, PIDs in scripts, SIGHUP, `nohup`, `disown -h`, `setsid` (now a table) went to "Go deeper".
+- Killing: the old danger callout is split. `kill -9 -1` stays in the Core text. The other rules (PID reuse, `pgrep -a` before `pkill`, the `-f` wrapper) are in "Go deeper".
+- Signals: the handler sentence, the signal table, `kill -l`, and `trap` went to "Go deeper". The old danger callout about `kill -STOP` is now one sentence in the Try-it prose.
+- Priorities: `nice` with no command, the user limits, the old danger callout (now a "Warning" bullet), the `renice -n` note, and `ionice` went to "Go deeper".
+- Forking: the `<FlowDiagram>` stays in the Core. "The classic way", `wait`, zombie, orphan, subreaper, and `EAGAIN` went to "Go deeper". The fork-bomb warning stays in the Core text.
+- Ulimits: the `ulimit -u` warning stays in the Core text. Inheritance, soft and hard rules, `-a`, `-S`, `-H`, `/proc/PID/limits`, `limits.conf`, and systemd went to "Go deeper".
+
+## Fix round 1 of the lesson rewrite (2026-10-27)
+
+- Priorities, Go deeper code: added `sleep 1` before `ionice -p $!`. Without the delay, `ionice -p` can print `none: prio 0`, because `nice` and `ionice` have not yet exec'd `sleep`. With the delay, it printed `idle` in 3 of 3 runs (util-linux 2.41.3).
+- The Priorities Try-it did not change. It ran again with the same output (`NI 10`, `old priority 10, new priority 15`, `NI 15`).
+- Priorities: the negative-niceness warning is now a Core sentence (S21). "A higher number means a nicer process" (S12) moved to Go deeper to stay under 150 words. The `NI` column claim cites S16.

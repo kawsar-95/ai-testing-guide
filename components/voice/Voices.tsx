@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { voiceOrder } from "@/lib/voice";
-import type { PanelVoice, Voice } from "@/lib/voice";
+import type { Voice } from "@/lib/voice";
 import { useVoiceDefault } from "./useVoiceDefault";
+import { useRevealTarget } from "./useRevealTarget";
 import { VoiceSwitcher } from "./VoiceSwitcher";
-
-/** The element that a hash or an in-page href points to, or null. A bad hash gives null. */
-function targetOf(hash: string): HTMLElement | null {
-  if (!hash.startsWith("#") || hash.length < 2) return null;
-  try {
-    return document.getElementById(decodeURIComponent(hash.slice(1)));
-  } catch {
-    return null;
-  }
-}
 
 /**
  * The body of one ## section in three voices: <Technical>, <Layman>, and
@@ -44,54 +35,7 @@ export function Voices({ children }: { children?: ReactNode }) {
 
   const effective: Voice = local ?? def ?? "technical";
   const wrapper = useRef<HTMLDivElement>(null);
-  const pending = useRef<HTMLElement | null>(null);
-  const frame = useRef(0);
-
-  useEffect(() => {
-    const reveal = (hash: string) => {
-      const root = wrapper.current;
-      const el = targetOf(hash);
-      if (!root || !el || !root.contains(el) || el.getClientRects().length > 0) return;
-      // Act only if the panel of the target is hidden. A target in a closed
-      // <details> of a visible panel stays as it is.
-      const panel = el.closest("[data-panel]");
-      if (!panel || !root.contains(panel) || panel.getClientRects().length > 0) return;
-      pending.current = el;
-      setLocal(panel.getAttribute("data-panel") as PanelVoice);
-    };
-
-    // A click covers a second click on the current hash. The hash does not
-    // change, so no hashchange event fires. The capture phase runs before
-    // the browser follows the link. A click with a modifier key opens a new
-    // tab or window, so this tab stays as it is.
-    const onClick = (event: MouseEvent) => {
-      if (event.button !== 0 || !(event.target instanceof Element)) return;
-      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-      const link = event.target.closest('a[href^="#"]');
-      if (link) reveal(link.getAttribute("href") ?? "");
-    };
-    const onHashChange = () => reveal(window.location.hash);
-
-    reveal(window.location.hash);
-    document.addEventListener("click", onClick, true);
-    window.addEventListener("hashchange", onHashChange);
-    return () => {
-      document.removeEventListener("click", onClick, true);
-      window.removeEventListener("hashchange", onHashChange);
-      cancelAnimationFrame(frame.current);
-    };
-  }, []);
-
-  // Scroll to a revealed target after the render that shows its panel.
-  // While def is null, the wrapper has no data-voice yet, so wait.
-  useEffect(() => {
-    const el = pending.current;
-    if (!el || def === null) return;
-    pending.current = null;
-    if (el.getClientRects().length === 0) return;
-    cancelAnimationFrame(frame.current);
-    frame.current = requestAnimationFrame(() => el.scrollIntoView());
-  }, [local, def]);
+  useRevealTarget(() => wrapper.current, setLocal, local, def !== null);
 
   return (
     <div

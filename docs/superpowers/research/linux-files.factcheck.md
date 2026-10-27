@@ -248,3 +248,220 @@ Fetched again to `<scratch dir>` with `scripts/linux_fetch.py`: S23 (GNU ln manu
 | R4 | Whole page | Tests, build, checks, overlap | none | PASS | `npm test` 145 of 145 pass. `npm run build` passes. `check_sources.py` prints `OK 2 pages checked, 0 skipped`. `check_outline.py` prints `OK 16 TOC links`. `linux_overlap.py` exits 0 with no output against the raw dir (243 files read) and the official dir (26 files read). |
 
 Open FAILs: 0
+
+## Round 4 (2026-10-27): the lesson rewrite
+
+Checker: an independent agent that did not write the page. Checked commit dccf5be against its parent (`git diff dccf5be^ dccf5be -- content/linux/files.mdx`), only the `<Technical>` panels. Layman and Bangla panels are not part of this check. The writer's report (`.superpowers/sdd/2026-10-27-linux-revamp/stage-files-report.md`) and the notes section "Round 2 (2026-10-27): Try it commands" were read first.
+
+Sources (fetched with `scripts/linux_fetch.py`, list file and output outside the repo, nothing fetched is committed): all 28 sources of `page.sources` plus Vim `starting.txt` and `change.txt` (vimhelp.org, extra, for the Vim glosses). Status `ok` for 27 of the 28 and for both extras. S24 (Red Hat blog) status `robots` (the script respects robots.txt), and WebFetch of it also failed. Rows that rest on S24 are marked "carried" (same wording that passed rounds 1 to 3). `vimhelp.org/ex_cmds.txt.html` gave 404 (not needed).
+
+Environment: Ubuntu 26.04, GNU bash 5.3.9; `cp` GNU coreutils 9.7; `ls`, `ln`, `stat`, `mktemp` uutils coreutils 0.10.0; GNU tar 1.35; GNU nano 8.7.1; `vi` is Vim 9.1 `vim.tiny` (no full Vim installed). Each Try-it ran in a scratch directory (`TMPDIR` set to a folder in the scratchpad). No sudo, no system change, nothing in the repository. The `rm -r "$PWD"` safety tests used `echo` in place of `rm` (see section "Safety of `rm -r "$PWD"`").
+
+| # | Location (heading) | Claim (short) | Cite | Verdict | Evidence (quote) / Fix |
+|---|---|---|---|---|---|
+| R4-1 | Working with Files (Core) | Every file has an inode that holds its metadata | 1 | PASS | S1: "Each file has an inode containing metadata about the file." |
+| R4-2 | Working with Files (Core) | A file name is a hard link: a reference to the inode number | 2 | PASS | S2: "reference to the same inode number" |
+| R4-3 | Working with Files (Core, reworded) | `stat` prints this data, `-c` chooses the fields | 4 | PASS | S4: "use the specified FORMAT instead of the default". Old wording "prints the full status" is now "prints this data"; same meaning. |
+| R4-4 | Working with Files (Core) | `rm` has no recycle bin; treat each removal as final | 5 | PASS | S5: "Be careful—there’s no “Recycle Bin” here!" ("treat as final" is advice.) |
+| R4-5 | Working with Files (Try it) | `%n` name, `%s` size in bytes, `%h` number of hard links | 4 | PASS | S4: "%h     number of hard links", "%n     file name", "%s     total size, in bytes" |
+| R4-6 | Working with Files (Try it code) | Output `report.txt: 5 bytes, 1 hard links` and `empty.txt: 0 bytes, 1 hard links` | 4 | EXAMPLE-OK | Ran: same two lines. |
+| R4-7 | Working with Files (Go deeper, moved) | `ls -l` long format; `ls -li` adds the inode number | 3 | PASS | S3: "-l     use a long listing format"; "print the index number of each file" |
+| R4-8 | Working with Files (Go deeper, moved) | In a `stat -c` format `%i` is the inode number | 4 | PASS | S4: "%i     inode number" |
+| R4-9 | Working with Files (tip, Go deeper) | Check the size of each output file; a 0-byte report often means a crash; check mtime; one `ls -l` in CI | none | OPINION-OK | "Tutorial's own advice". No fact lost: size in the tip, mtime and `ls -l` in Go deeper. |
+| R4-10 | Creating (Core, reworded) | `touch` creates an empty file when the name does not exist; if it exists, only its times change | 6 | PASS | S6: "Any file argument that does not exist is created empty"; "touch changes the access and/or modification timestamps of the specified files." Note: the old text said "access and modification times"; "its times" is shorter and not wrong. |
+| R4-11 | Creating (Core) | `mkdir` errors if the directory exists unless `-p`; `-p` makes missing parents | 7 | PASS | S7: "It reports an error if name already exists, unless the -p option is given and name is a directory."; "Make any missing parent directories for each argument" |
+| R4-12 | Creating (Core) | A redirection with `>` also makes a file | 8 | PASS | S8: "If the file does not exist it is created; if it does exist it is truncated to zero size." The one-line gloss of "redirection" is gone: see R4-O1. |
+| R4-13 | Creating (Core, old danger callout) | `rm -r` deletes a directory and all of its contents; `-f` never prompts | 10 | PASS | S10: "Remove the listed directories and their contents recursively."; "Ignore nonexistent files and missing operands, and never prompt the user." |
+| R4-14 | Creating (Core, old danger callout) | `>` cuts an existing file to zero size; run `ls` on the path first | 8 | PASS | S8: "if it does exist it is truncated to zero size" |
+| R4-15 | Creating (Go deeper table) | `touch -c` does not create a file; `touch -d` sets a chosen time | 6 | PASS | S6: "Do not warn about or create files that do not exist."; "Use time instead of the current time." |
+| R4-16 | Creating (Go deeper table) | `cat > FILE` reads your text until Ctrl+D | 9 | PASS | S9: "After executing the command, you can type your content. To save and exit, press Ctrl + D." |
+| R4-17 | Creating (Go deeper table) | `rmdir` removes only an empty directory | 9 | PASS | S9: "This command is specifically designed for removing empty directories." |
+| R4-18 | Creating (Go deeper table) | `rm -I` asks one time before a recursive removal | 10 | PASS | S10: "Prompt once whether to proceed with the command, if more than three files are named or if a recursive removal is requested." |
+| R4-19 | Creating (Go deeper) | `rm` deletes files and needs `-r` for a directory | 10 | PASS | S10: "By default, it does not remove directories." |
+| R4-20 | Creating (Try it code) | Second `mkdir -p` succeeds; `>` replaces the text (`new`); `ls` after `rm -r results` gives `hello.txt` | none | EXAMPLE-OK | Ran: `second run: OK`, `new`, `hello.txt`. The facts are R4-11, R4-14, R4-13. |
+| R4-21 | Copying (Core) | `cp` makes an independent copy; with a directory last, each source goes inside; rename with `mv` | 11, 12 | PASS | S11: "The copy is completely independent of the original."; "if the last file is a directory ... cp copies each source file to the specified directory". S12 line 10: "To move a file, mv ordinarily simply renames it." |
+| R4-22 | Copying (Core, old danger callout) | By default `cp` replaces an existing destination without a prompt; `mv` does the same; `-i` prompts | 11, 13 | PASS | S11 `--update=all`: "This is the default operation when an --update option is not specified, and results in all existing files in the destination being replaced."; `-i`: "prompt whether to overwrite an existing destination file". S13: "By default, mv command overwrites if the target file already exists." |
+| R4-23 | Copying (Try it) | `-p` keeps the mode, owner, and times | 11 | PASS | S11: "Using --preserve with no attribute_list is equivalent to --preserve=mode,ownership,timestamps." (`-p` is the short form, carried from round 1.) |
+| R4-24 | Copying (Try it code) | `cp` onto the backup gives no prompt; backup holds `v2`; `ls` shows `app.yml  config.yml.bak` | 11 | EXAMPLE-OK | Ran: `v2`, then `app.yml`, `config.yml.bak` (one per line without a terminal). |
+| R4-25 | Copying (Go deeper) | `cp` copies a directory only with `-r`, `-R`, or `-a` | 11 | PASS | S11: "the -R, -a, and -r options cause cp to copy recursively" |
+| R4-26 | Copying (Go deeper table) | `-i`, `-n`, `-p`, `-a`, `-v` meanings | 11 | PASS (carried) | Same wording as round 1 rows 27 to 31. S11: "Do not overwrite an existing file; silently skip instead."; "Preserve as much as possible of the structure and attributes of the original files in the copy". |
+| R4-27 | Copying (Go deeper) | The manual marks `-n` deprecated (different exit status); newer versions have `--update=none` | 11 | PASS | S11: "This option is deprecated due to having a different exit status from other platforms."; "This is like the deprecated --no-clobber option, where no files in the destination are replaced". |
+| R4-28 | Copying (Try it text) | Word "mode" is used in the Try-it line; its gloss "(permission bits)" is now in Go deeper, after the first use | none | OBSERVATION | Not a fact error. See R4-O1. |
+| R4-29 | Moving (Core) | `mv` moves each source into a last-argument directory; a pattern such as `*.log` moves many files | 12, 13 | PASS | S12: "if the last file is a directory ... mv moves each source file to the specified directory". S13: "You can also use glob to move multiple files matching a pattern." |
+| R4-30 | Moving (Core, old danger callout) | Without `-i` or `-n`, `mv` replaces a writable destination and gives no warning; check with `ls` first | 13 | PASS | S13: "By default, mv command overwrites if the target file already exists." (writable: carried from round 1 row 46, S12.) |
+| R4-31 | Moving (Try it code) | `mv *.log logs/` moves only the logs; `ls` gives `logs  notes.txt`; `ls logs` gives `run1.log  run2.log` | 13 | EXAMPLE-OK | Ran: `logs`, `notes.txt`, then `run1.log`, `run2.log`. The sentence "The shell expands `*.log` to the matching names" restates the glob fact of R4-29. |
+| R4-32 | Moving (Go deeper) | To rename a directory use a new name; if the name exists, the directory moves inside it | 13 | PASS | S13: "if the target_directory exists, the entire source_directory will be moved inside the target_directory" |
+| R4-33 | Moving (Go deeper) | On one filesystem `mv` renames; between two it copies like `cp -a`, then removes the original; a failed copy is removed; many directories can stop halfway | 12 | PASS | S12: "To move a file, mv ordinarily simply renames it. However, if renaming does not work because the destination’s file system differs, mv falls back on copying as if by cp -a, then ... removes the original. If the copy fails, then mv removes any partially created copy" |
+| R4-34 | Moving (Go deeper code) | `mv -t archive/ ...` and `mv -i old new` are valid | 12 | PASS | S12 synopsis: "mv [option]... -t directory source..." |
+| R4-35 | Moving (tip, Go deeper) | Build output on the same filesystem; a move across filesystems is a slow copy that can stop halfway; CI workspace and `/tmp` can differ | none | OPINION-OK | "Tutorial's own advice". Facts: R4-33. |
+| R4-36 | Editing (Core) | Vi, Vim, Nano, Emacs are common terminal editors | 14 | PASS | S14: "Vi, Vim, Nano, Emacs are just a few of the most popular ones out there." |
+| R4-37 | Editing (Core, old danger callout) | `>>` adds to the end; `>` replaces the whole content; a typo erases the config | 8 | PASS | S8: "for appending"; "truncated to zero size". |
+| R4-38 | Editing (Try it) | Here document: the text up to the `EOF` line goes to the command | 8 | PASS | S8: "read input from the current source until it reads a line containing only delimiter" |
+| R4-39 | Editing (Try it code) | `app.conf` shows `retries=3`, `timeout=30`; `extra.conf` shows `debug=false`, `port=8080` | 8 | EXAMPLE-OK | Ran: same four lines. |
+| R4-40 | Editing (Go deeper) | Vim needs no X session and works over SSH; glosses kept | 15 | PASS | S15: "Doesn‘t require an active X session – Works over SSH or the console" |
+| R4-41 | Editing (Go deeper) | You need an editor for config files in `/etc`; `>>` makes the file if missing | 14, 8 | PASS | S14: "modifying config files located in the /etc directory". S8: "If the file does not exist it is created." |
+| R4-42 | Nano (Core) | Nano is modeless: every key types text except Control and Meta keys | 16 | PASS | S16: "nano is a "modeless" editor. This means that all keystrokes, with the exception of Control and Meta sequences, enter text into the file being edited." |
+| R4-43 | Nano (Core) | The caret `^` stands for Ctrl | 14 | PASS | S14: "The caret symbol (^) means Ctrl key" |
+| R4-44 | Nano (Core) | Two lines at the bottom show the main shortcuts | 16 | PASS | S16: "The two help lines at the bottom of the screen show some of the most essential functions of the editor." |
+| R4-45 | Nano (Core) | `^O` opens the Write-Out menu, to save the file | 16 | PASS | S16: "When using the Read-File (^R) or Write-Out menu (^O)". Local run (round 1 row 60) showed the save prompt. Carried. |
+| R4-46 | Nano (Core) | `^X` exits; nano asks whether to save changed text | 17 | PASS | S17: "When you exit the editor using Ctrl+X keyboard shortcut, you’ll be asked whether you want to save your modified text" |
+| R4-47 | Nano (Core) | At the save prompt `Y` saves and `N` discards | 14 | PASS | S14: "Y to save the file and exit the editor"; "N to discard changes" |
+| R4-48 | Nano (Try it) | `--version` prints the version and exits, so no editor opens | 16 | PASS | S16: "-V --version  Show the current version number and exit." |
+| R4-49 | Nano (Try it code) | `nano --version \| head -n 1` gives `GNU nano, version 8.7.1`; "command not found" means nano is not installed | none | EXAMPLE-OK | Ran: ` GNU nano, version 8.7.1` (the real line has one leading space; cosmetic). The page says the version can differ. "command not found" is the shell message for a missing command (not about nano). |
+| R4-50 | Nano (Goal vs Try it) | Goal "Save and exit in nano, and check that nano is installed"; the Try-it runs only `nano --version` | none | FAIL | The Try-it proves only "nano is installed". Nothing in it saves or exits, so the first half of the Goal has no check. Nano has no batch mode, so a real Try-it for it is not possible in a code block. Fix: change the Goal to what the Try-it proves: "**Goal:** Check that nano is installed, and learn the keys that save and exit." (Same change in the Layman and Bangla Goal lines.) |
+| R4-51 | Nano (Go deeper table) | `M-` is Alt; `^K`/`^U` cut and paste a line; `^W` search; `^G` help; `+LINE`; `-v` read-only | 14, 16 | PASS (carried) | Same wording as round 1 rows 57, 62 to 64, 68, 69. S14: "The M character mean the Alt key". S16: "Text can be cut from a file a whole line at a time with ^K."; "The built-in help in nano is available by pressing ^G."; "adding the line number with a plus sign before the filename"; "read-only mode". |
+| R4-52 | Nano (Go deeper) | Nano is the default editor in Ubuntu and many distributions | 14 | PASS | S14: "It is the default text editor in Ubuntu and many other Linux distributions." |
+| R4-53 | Nano (Go deeper) | In nano 8.7.1 the save prompt shows `^C Cancel`; the manual does not name this key | none | PASS (carried) | Same sentence as round 3 (S1, S2 there). The manual text of S16 still has no cancel key for the prompt. Not re-run in a terminal: nano has no batch mode. |
+| R4-54 | Nano (Go deeper) | Title bar shows "Modified"; with `-%` a star `*` shows it instead | 16 | PASS | S16: "The section on the right displays "Modified" if the file has been modified since it was last saved or opened." Stateflags text carried (round 2 R5). |
+| R4-55 | Nano (Go deeper) | The manual says `-v` does not replace correct file permissions | 16 | PASS | S16: "this option should NOT be used in place of correct file permissions to implement a read-only file" |
+| R4-56 | Vim (Core) | Vim is modal; starts in Normal mode (keys are commands); `i` enters Insert mode (keys are text); `Esc` returns | 18 | PASS | S18: "The Vim editor is a modal editor."; "In Normal mode the characters you type are commands. In Insert mode the characters are inserted as text." |
+| R4-57 | Vim (Core, reworded) | A `:` key opens Command-line mode | 19 | PASS | S19: "In Command-line mode (also called Cmdline mode) you ... can enter one line of text at the bottom of the window." The old phrase "for one-line commands" is gone: see R4-O2. |
+| R4-58 | Vim (Core) | Vim changes a buffer (the copy in memory) and writes it back; the file changes only when you write | 20 | PASS | S20: "1. reading the file into a buffer" (the list of the editing steps). Carried. |
+| R4-59 | Vim (Core, old danger callout) | `:q!` drops all changes; Vim makes no backup file unless you set it up | 18 | PASS | S18: "Unlike many other editors, Vim does not automatically make a backup file."; ":q!" is "a quit-and-throw-things-away command" (round 1 row 79). |
+| R4-60 | Vim (Try it, code comment) | `-es` means "no screen" | none | FAIL | A statement of what an option does (a flag), not only a symbol label. No source in `page.sources` has it (checked S18, S19, S20, S21, S22). Vim `starting.txt` has it: "Silent or batch mode. Only when Vim was started as "ex" or when preceded with the "-e" argument." and "Switches off most prompts and informative messages." The reader cannot check it on the page. Fix: add `{ title: 'starting.txt - Starting Vim', publisher: 'Vim help (vimhelp.org)', url: 'https://vimhelp.org/starting.txt.html', accessed: '2026-10-27' }` as source 29, and say it in the Try-it prose with `<Cite n={29} />`, for example: "`-es` runs Vim in silent batch mode (no screen). <Cite n={29} />" The Layman and Bangla blocks may cite 29 only if the Technical block does. |
+| R4-61 | Vim (Try it, code comment) | Each `-c` runs one `:` command | none | FAIL | Same reason as R4-60. `starting.txt`: "-c {command}   {command} will be executed after the first file has been read ... "command" is interpreted as an Ex command." (the same page shows `vim -c "set ff=dos" -c wq mine.mak`). Fix: cite source 29 in the same sentence: "Each `-c` runs one Ex command (a `:` command) after the file is read. <Cite n={29} />" |
+| R4-62 | Vim (Try it, code comment) | `1d` deletes line 1 | none | FAIL | Same reason. Vim `change.txt`: ":[range]d[elete] [x]   Delete [range] lines (default: current line)". Not in `page.sources`. Fix: add `{ title: 'change.txt - Deleting and replacing text', publisher: 'Vim help (vimhelp.org)', url: 'https://vimhelp.org/change.txt.html', accessed: '2026-10-27' }` as source 30 and write "`1d` deletes line 1. <Cite n={30} />". Alternative with no new source: remove the three glosses from the comment and the prose, and describe only the effect of the example ("deletes line 1 of the file, then quits"), and the output comments (`one two`, `two`) already show it. The word limit is 150 and the Technical text has 147 words, so the writer must count again. |
+| R4-63 | Vim (Try it text) | "Your `vi` must be Vim" | none | PASS | True for the command line used: `-es` and `-c` are Vim options. Ran with `vi` = Vim 9.1 `vim.tiny`. Not run with a non-Vim `vi` (for example a BusyBox `vi`, where `-es` may start a full-screen editor); the sentence warns against it. |
+| R4-64 | Vim (Try it code) | `vi -es -c '1d' -c 'q!' notes.txt` leaves `one` and `two`; `-c '1d' -c 'wq'` leaves `two` | 18, 20 | EXAMPLE-OK | Ran: `one`, `two`, then `two`. `HOME` set to an empty scratch folder: no `.viminfo`, swap, or backup file appeared (`vim.tiny` has `-viminfo`). A full Vim may write `~/.viminfo`; not tested (not installed). |
+| R4-65 | Vim (Go deeper table) | `:w`, `:wq`/`ZZ`, `dd`/`u`/`Ctrl-R`, `/text`, `:help` | 18, 20, 21 | PASS (carried) | Same wording as round 1 rows 77 to 82. S18: "To delete a whole line use the "dd" command."; "press CTRL-R (redo)". |
+| R4-66 | Vim (Go deeper) | `Esc`, sometimes twice; `:q` alone gives E37; after `ZZ` no turning back | 18 | PASS | S18: "press the <Esc> key.  Sometimes you have to press it twice."; "E37: No write since last change (use ! to override)"; "If you type "ZZ", your changes are committed and there's no turning back." |
+| R4-67 | Vim (Go deeper) | `vimtutor` is a lesson that teaches by doing; VIM Adventures is a browser game | 18, 22 | PASS | S18: "The vimtutor is also a nice way to learn by doing."; S22: "VIM Adventures is an online game based on VIM's keyboard shortcuts" |
+| R4-68 | Soft and Hard Links (Core) | A hard link is another name; the link and the original share one inode | 23 | PASS | S23: "A hard link is another name for an existing file; the link and the original are indistinguishable. Technically speaking, they share the same inode" |
+| R4-69 | Soft and Hard Links (Core) | The data stays while at least one name remains | 24 | PASS (carried) | S24 not fetchable (robots; WebFetch failed). Same sentence and cite as round 1 row 93. It follows from S1 ("number of hard links to the file"). |
+| R4-70 | Soft and Hard Links (Core) | A symlink is a special file that holds the path of another file; a missing target makes it dangling | 2 | PASS | S2: "A symbolic link is a special type of file whose contents are a string that is the pathname of another file"; "dangling link" |
+| R4-71 | Soft and Hard Links (Core, old danger callout) | `ln -f` removes an existing destination file first; a wrong link name can destroy a real file | 23 | PASS | S23: "Remove existing destination files." (The old advice "Run `ls -l` on the name first" is gone: see R4-O3.) |
+| R4-72 | Soft and Hard Links (Try it code) | `stat -c '%i %h %n'` shows one inode and link count 2 for both names; `hard.txt` still reads `data`; `soft.txt` fails with "No such file or directory" | 4, 23 | EXAMPLE-OK | Ran: `3343 2 data.txt`, `3343 2 hard.txt`, `data`, `cat: soft.txt: No such file or directory`. The page shows `2230` and says "your inode number differs". |
+| R4-73 | Soft and Hard Links (Go deeper) | A hard link cannot point to a directory or cross a filesystem; inode numbers are unique only inside one filesystem | 2 | PASS | S2: "may not refer to directories"; "may not refer to files on different filesystems (because inode numbers are not unique across filesystems)" |
+| R4-74 | Soft and Hard Links (Go deeper) | The inode keeps a link count; a symlink can point to a directory and cross filesystems | 1, 2 | PASS | S1: "This field contains the number of hard links to the file." S2: "symbolic links may refer to directories and may cross filesystem" |
+| R4-75 | Soft and Hard Links (Go deeper) | A relative symlink resolves from the directory that holds the link; `-s`, `-r` | 23 | PASS (carried) | Same wording as round 1 rows 97, 99. S23: "Make symbolic links relative to the link location." |
+| R4-76 | Soft and Hard Links (Go deeper) | `ls -i` prints the inode number; two names with one number are hard links | 3, 24 | PASS | S3: "print the index number of each file". S24 carried. |
+| R4-77 | Soft and Hard Links (Go deeper, tip) | Without `-n`, `ln` makes the new link inside the old target directory; `ln -sfn` switches `current` | 23 | PASS (carried) | Same sentence as the final accuracy pass (F1 to F3). |
+| R4-78 | Archiving (Core) | `tar` makes archives, `gzip` compresses; `-z` passes the archive through `gzip` | 25, 26 | PASS | S25: "GNU tar is an archiving program designed to store multiple files in a single file (an archive)"; "Filter the archive through gzip(1)." S26: "gzip reduces the size of the named files using Lempel–Ziv coding (LZ77)." |
+| R4-79 | Archiving (Core, table moved into a sentence) | `-c` creates, `-t` lists, `-x` extracts, `-f` names the archive | 25 | PASS | S25: "Create a new archive."; "List the contents of an archive."; "Extract files from an archive."; "Use archive file or device ARCHIVE." |
+| R4-80 | Archiving (Core, old danger callout) | Extraction can overwrite existing files; extract an unknown archive into a new empty directory | 28 | PASS | S28: "Extracting files from archives can overwrite files that already exist."; "you should make a new directory and extract into that directory" |
+| R4-81 | Archiving (Try it) | `-C DIR` changes to DIR before the work | 25 | PASS | S25: "Change to DIR before performing any operations." (carried, round 1 row 107) |
+| R4-82 | Archiving (Try it code) | Listing gives `results/`, `results/run.log`; the extracted `ls unpack/results` gives `run.log` | 25 | EXAMPLE-OK | Ran: `results/`, `results/run.log`, `run.log`. One file keeps the listing order stable. |
+| R4-83 | Archiving (Go deeper) | `gzip` replaces each file with a `.gz` file; `-k` keeps the original; ZIP packs and compresses in one step; use `unzip` for many members | 26, 27 | PASS | S26: "each file is replaced by one with the extension ‘.gz’"; "Keep (don’t delete) input files during compression or decompression."; "To extract zip files with several members, use unzip instead". S27: "Zip puts one or more compressed files into a single ZIP archive" |
+| R4-84 | Archiving (Go deeper) | Names that are absolute or start with `../` are often unsafe to extract; list with `-t` first | 28 | PASS (fact), FAIL (placement) | Fact: S28: "it is often unsafe to extract archive members with absolute file names or those that begin with a ../." Placement: this is a security warning. It was in a `danger` callout. Now it is only in the closed "Go deeper" block, so it is not visible by default. The writer's report says no warning is hidden in Go deeper; this one is. Fix: put it into the Core overwrite sentence: "Extraction can overwrite files, and names that are absolute or start with `../` are often unsafe, so extract an unknown archive into a new empty directory. <Cite n={28} />" Keep the Go deeper line. The Technical text must stay at 150 words or fewer, so recount (the Core text has 133 now). |
+| R4-85 | Archiving (Go deeper) | `tar -c` erases an existing archive of the same name | 28 | PASS (fact), FAIL (placement) | Fact: S28: "Whenever you use ‘create’, tar will erase the current contents of the file named by --file=archive-name (-f archive-name) if it exists." Placement: a data-loss warning that was in the `danger` callout is only in the closed "Go deeper" block now. Fix: one Core sentence, for example "`tar -c` erases an existing archive of the same name. <Cite n={28} />" (9 words). |
+| R4-86 | All Try-it blocks | Every block ends with `rm -r "$PWD"` after `cd "$(mktemp -d)" \|\| exit` | none | FAIL | See the section "Safety of `rm -r "$PWD"`" below. A partial paste, and a shell where `cd ""` succeeds, make `rm -r "$PWD"` delete the reader's own directory. Fix in all 9 blocks: `tmp=$(mktemp -d) && cd "$tmp" \|\| exit` as the first line and `rm -r -- "${tmp:?}"` as the last line. |
+| R4-87 | Whole page | A data-loss warning of each old `danger` callout still exists | none | PASS (with the two FAILs above) | Present in Core: `rm -r`/`-f`/`>` (Creating), silent `cp`/`mv` overwrite (Copying, Moving), `>` vs `>>` (Editing), no backup and `:q!` (Vim), `ln -f` (Links), extraction overwrite (Archiving). Hidden in Go deeper: R4-84, R4-85. In Vim only "After `ZZ`, there is no turning back" is in Go deeper; the Core sentence "Vim makes no backup file" and "`:q!` drops all changes" keep the warning. |
+| R4-88 | Whole page | Privacy | none | PASS | `grep -i -E '/home/\|@[a-z]\|kawsar\|nuruddin'` on the page: no match. Only `/tmp`, `/etc`, and sample names. |
+
+## Safety of `rm -r "$PWD"` (judged as shown to learners)
+
+Pattern in all 9 Try-it blocks: `( cd "$(mktemp -d)" || exit ; ... ; rm -r "$PWD" )`. Tests used `echo` in place of `rm`; no real removal of a non-temporary directory was run.
+
+| Case | Result | Verdict |
+|---|---|---|
+| `mktemp` fails (`TMPDIR=/nonexistent`), bash 5.3.9 | `mktemp: failed to create directory ...`, then `bash: cd: null directory`, rc 1, `\|\| exit` stops the subshell. `rm` is not reached. | Safe in bash 5.3.9. |
+| `mktemp` fails, `dash` and `busybox sh` | `cd ""` returns 0 and stays in the current directory (checked: `cd /tmp; cd ""` gives rc 0, `pwd` is `/tmp`). The block then runs in the reader's current directory and `rm -r "$PWD"` targets that directory (checked with `echo`: it printed the current directory). | UNSAFE in shells where `cd ""` succeeds. A reader on bash older than 5.3 or zsh was not tested (not installed). |
+| Partial paste: the reader copies only the middle and last lines (no `cd` line, or no `(`) | `$PWD` is the reader's current directory. `rm -r "$PWD"` targets it (checked with `echo`). The files `report.txt` and others were also written there. | UNSAFE. This is the likely mistake: the last line looks like cleanup. |
+| Paste without the parentheses | `\|\| exit` runs in the reader's own shell: if `mktemp` fails, the terminal session closes. | Annoying, not data loss. |
+| Proposed fix, `mktemp` fails (bash and dash) | `tmp=$(mktemp -d) && cd "$tmp" \|\| exit`: the subshell exits, rc 1. `rm` is not reached. | Safe. |
+| Proposed fix, partial paste (the `tmp=` line is missing) | `${tmp:?}` stops with `tmp: parameter null or not set` (rc non-zero) before `rm` runs. `tmp` is set inside the subshell, so it never leaks into the reader's shell. | Safe. |
+| Proposed fix, normal run | The folder is made, entered, used, and `tmp` still names it for `rm`. | Works (ran with `TMPDIR` in the scratchpad; 0 folders left). |
+
+Exact fix for every Try-it block (first and last line of the subshell, the rest unchanged):
+
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit   # make and enter a new, empty directory
+  ...
+  rm -r -- "${tmp:?}"                     # delete the throw-away directory
+)
+```
+
+The other stages that use the same `cd "$(mktemp -d)" || exit` and `rm -r "$PWD"` pattern have the same risk.
+
+## Try-it results (GNU bash 5.3.9; `ls`, `ln`, `stat`, `mktemp`: uutils 0.10.0; `cp`, `mv`: GNU 9.7; GNU tar 1.35; nano 8.7.1; Vim 9.1 `vim.tiny` as `vi`)
+
+| Page | Command (short) | Real output | Same as page |
+|---|---|---|---|
+| Working with Files | `stat -c '%n: %s bytes, %h hard links' report.txt empty.txt` | `report.txt: 5 bytes, 1 hard links`; `empty.txt: 0 bytes, 1 hard links` | yes |
+| Creating | `mkdir -p` twice; `>` twice; `cat`; `rm -r results`; `ls` | `second run: OK`; `new`; `hello.txt` | yes |
+| Copying | `cp -p`, change, `cp`, `cat`, `mv`, `ls` | `v2`; `app.yml`, `config.yml.bak` | yes (one name per line without a terminal) |
+| Moving | `mv *.log logs/`; `ls`; `ls logs` | `logs`, `notes.txt`; `run1.log`, `run2.log` | yes |
+| Editing | `cp -p`, `>>`, `cat`; here document, `cat` | `retries=3`, `timeout=30`; `debug=false`, `port=8080` | yes |
+| Nano | `nano --version \| head -n 1` | ` GNU nano, version 8.7.1` | yes (one leading space) |
+| Vim | `vi -es -c '1d' -c 'q!'`, `cat`; `-c 'wq'`, `cat` | `one`, `two`; `two` | yes |
+| Soft and Hard Links | `ln`, `ln -s`, `stat -c '%i %h %n'`, `rm`, `cat` x2 | `3343 2 data.txt`, `3343 2 hard.txt`, `data`, `cat: soft.txt: No such file or directory` | yes (inode number differs, as the page says) |
+| Archiving | `tar -czf`, `tar -tzf`, `tar -xzf -C unpack`, `ls` | `results/`, `results/run.log`; `run.log` | yes |
+
+All 9 blocks exit 0, leave no folder in `TMPDIR`, and need no root, network, or systemd. None changes the reader's shell (each runs in a subshell). The Vim block can start a non-Vim `vi` in a way that holds the terminal (not tested; the page warns). A full Vim may write `~/.viminfo` (not tested).
+
+## Cite counts (Technical panels, computed with a script from the two commits)
+
+Old 101 cites, new 104. Every number 1 to 28 is still cited. Count by source in the new text: S1 2, S2 5, S3 3, S4 4, S5 1, S6 3, S7 1, S8 6, S9 2, S10 3, S11 12, S12 5, S13 4, S14 6, S15 1, S16 12, S17 1, S18 8, S19 1, S20 3, S21 2, S22 1, S23 5, S24 2, S25 4, S26 3, S27 1, S28 3. Lost cite occurrences (all merged into one sentence, no source lost): S7 -1 (Creating), S18 -2 (Vim), S25 -1 (Archiving). New occurrences: S3 +1, S4 +1, S6 +1, S11 +1, S8 +1, S14 +1, S16 +1 (Nano `--version`).
+
+## Fact lost? (old Technical text against the new one)
+
+No source and no cite number is lost. Facts that moved to "Go deeper" are listed in R4-15 to R4-19, R4-25 to R4-27, R4-32 to R4-35, R4-51 to R4-55, R4-65 to R4-67, R4-73 to R4-77, R4-83 to R4-85. Small losses, not counted as FAIL:
+
+- R4-O1 (glosses): "redirection (a shell feature that sends output to a file)" is gone (round 2 row R11 added it). The word "redirection" is in the Creating Core text with no gloss. "mode (permission bits)" is now glossed only in Go deeper (the Try-it line uses "mode" first). Optional fix: "A redirection (a shell feature that sends output to a file) with `>` also makes a file." (the Creating Core text has 147 words, so trim another sentence).
+- R4-O2: Vim "A `:` key opens Command-line mode for one-line commands" is now "A `:` key opens Command-line mode". The mode name (the fact with the cite) stays.
+- R4-O3: Links "Run `ls -l` on the name first" (advice before `ln -f`) is gone; the warning itself stays.
+- R4-O4: The `danger` callouts are now plain Core sentences. CLAUDE.md says that `danger` is for a risk of data loss. This is the writer's design choice for the lesson shape; it does not affect any fact. Mentioned so that the controller can decide.
+- `touch` "access and modification times" is now "times" (R4-10).
+
+Writer's other special items: the links Try-it example inode `2230` is labelled "your inode number differs" (PASS, R4-72); the `tar -tzf` order is stable with one file (PASS, R4-82); "Your `vi` must be Vim" (PASS, R4-63). Word counts (150 limit) were not re-counted by me; the writer's report gives 124 to 150.
+
+Open FAILs: 7
+
+## Round 5 (2026-10-27): the fix rounds
+
+Checker: an independent agent (Sonnet 5.5, 2026-10-27), commit c8cd682 (HEAD). I did not write or fix this page. Diff base: dccf5be. The page changed in one commit since then (f4ee631) and the safety normalization (`git diff -U2 dccf5be HEAD -- content/linux/files.mdx`, 60 lines added, 60 removed). I checked each Round 4 FAIL and each changed hunk in the 3 voices. I fetched the GNU tar manual (S28), the tar(1) man page (S25), and the nano manual (S16) again with `curl`, and the It's FOSS nano guide (S17).
+
+| # | Location | Claim / FAIL | Cite | Verdict | Evidence / Fix |
+|---|---|---|---|---|---|
+| R5-1 | Nano (Goal) | R4-50: the Goal promised "save and exit", the Try-it proves only the install | 14, 16, 17 | FIXED | The Goal is now "Check that nano is installed, and learn the keys that save and exit." (Technical, Layman, Bangla). The Core cites the keys: `^O` opens the Write-Out menu (S16: "Write-Out menu (^O)"), `^X` exits and nano asks to save (S17: "When it says "^X Exit", it means to use Ctrl+X keys to exit the editor"; "When you exit the editor using Ctrl+X keyboard shortcut, you'll be asked whether you want to save your modified text"), `Y` and `N` (S14, carried from R4). The Try-it (`nano --version`) proves the install. |
+| R5-2 | Vim (Try it, code comment) | R4-60: `-es` means "no screen", no source | none | FIXED | The comment `# -es: ...` is deleted in the Technical code block. `grep -n -E -- "-es\b|batch"` finds only the 2 commands and the Try-it sentence. No sentence explains `-es`. |
+| R5-3 | Vim (Try it) | R4-61: each `-c` runs one `:` command, no source | none | FIXED | Same deletion. The sentence says only "delete line 1 with batch commands". No claim about `-c` remains. |
+| R5-4 | Vim (Try it) | R4-62: `1d` deletes line 1, no source | none | FIXED | R4-62 allowed the alternative: describe only the effect of the example. The sentence now describes the effect ("delete line 1 ... then quit with `:q!` or with `:wq`"), and the output comments show it (`one`/`two`, `two`). I ran it: `one`, `two`, then `two`. No flag claim and no new source. The Technical text is 147 words. |
+| R5-5 | Vim (Try it, prose) | "batch commands" and "Your `vi` must be Vim" | none | PASS (observation) | "batch commands" names the kind of command and does not say what a flag does. "Your `vi` must be Vim" is a precondition (R4-63 PASS). |
+| R5-6 | Archiving (Core) | R4-84: the unsafe-name warning was only in Go deeper | 28 | FIXED | Core: "Extraction can overwrite files, and names that are absolute or start with `../` are often unsafe, so extract an unknown archive into a new empty directory." Cite 28. S28 (fetched): "can overwrite files that already exist"; "unsafe to extract archive members with absolute file names or those that begin with a ../." |
+| R5-7 | Archiving (Core) | R4-85: the `tar -c` erase warning was only in Go deeper | 28 | FIXED | Core: "`tar -c` erases an existing archive of the same name." Cite 28. S28 (fetched): "tar will erase the current contents of the file named by --file=archive-name (-f archive-name) if it exists." |
+| R5-8 | Archiving (Core to Go deeper) | The compression sentences moved to Go deeper: "Compression makes data smaller. With `-z`, `tar` passes the archive through `gzip`." | 25 | PASS | S25 (fetched): "Filter the archive through gzip(1)." The first sentence is general and had no cite before (as in R4-78). `tar makes archives, gzip compresses` stays in Core with cites 25 and 26. |
+| R5-9 | Archiving (Go deeper) | Both warnings are repeated in Go deeper (the unsafe names, `tar -c` erases) | 28 | PASS (observation) | Same facts, same cite as Core. It is a repeat, not an error. Optional: delete the two repeated bullets to save words. |
+| R5-10 | All 24 Try-it blocks | R4-86: the `rm -r "$PWD"` pattern | none | FIXED | All 24 blocks (8 topics x 3 voices) start with `tmp=$(mktemp -d) && cd "$tmp" \|\| exit 1` and end with `rm -r -- "${tmp:?}"`. A script found 24 blocks, 8 different blocks, so the 3 voices of a topic have the same code. `grep` finds no `rm -r "$PWD"` and no `cd "$(mktemp`. `exit 1` runs inside the `( ... )` subshell. |
+| R5-11 | Cleanup safety | `mktemp` fails; partial paste | none | PASS | `TMPDIR=/nonexistent`, with `rm` replaced by `echo`: bash and dash print the `mktemp` error, exit with rc 1, and do not reach `rm`. A paste without the `tmp=` line: `tmp: parameter null or not set`, rc 1, no removal. |
+| R5-12 | Whole page | A data-loss or security warning that Round 4 asked to keep visible | 28, others | PASS | Both Archiving warnings are in the visible Core now (Technical, Layman, Bangla). The other warnings of R4-87 are unchanged. |
+| R5-13 | Whole page | Word limit of the Technical text | none | PASS | `node scripts` lesson check (`lessoncheck.mjs files`): 9 topics, 0 problems. My own count of the Technical panels: Working with Files 150, Soft and Hard Links 150, Vim 147, Creating 147, Archiving 141, others 124 to 138. Tips: 150 characters at most. |
+| R5-14 | Whole page | No fact lost, no cite lost; every source cited; privacy | all | PASS | Cite counts (all 3 voices), old to new: 25 goes from 10 to 12, 28 goes from 7 to 8, the other 26 numbers are equal. `page.sources` is unchanged (28 entries); each of 1 to 28 is cited. `grep -i -E '/home/\|@[a-z]\|kawsar\|nuruddin'` finds nothing. |
+
+### Try-it results (Round 5)
+
+I ran the 8 different blocks (every topic that has a Try-it) with `TMPDIR` in the scratchpad (GNU bash 5.3.9, Vim 9.1 as `vi`, GNU tar). All 8 exit 0 and leave no folder. The real `rm` was allowed. No sudo and no system change.
+
+| Topic | Output | Same as page |
+|---|---|---|
+| Working with Files | `report.txt: 5 bytes, 1 hard links`, `empty.txt: 0 bytes, 1 hard links` | yes |
+| Creating | `second run: OK`, `new`, `hello.txt` | yes |
+| Copying and Renaming | `v2`, `app.yml`, `config.yml.bak` | yes |
+| Moving | `logs`, `notes.txt`; `run1.log`, `run2.log` | yes |
+| Editing | `retries=3`, `timeout=30`; `debug=false`, `port=8080` | yes |
+| Vim | `one`, `two`; `two` | yes |
+| Soft and Hard Links | `8409 2 data.txt`, `8409 2 hard.txt`, `data`, `cat: soft.txt: No such file or directory` | yes (the inode number differs, as the page says) |
+| Archiving | `results/`, `results/run.log`; `run.log` | yes |
+
+Nano has no code block to run besides `nano --version | head -n 1` (it prints the version line; unchanged, R4 PASS).
+
+Open FAILs: 0
+
+## Round 6 (2026-10-27): mechanical edits of commit 151fe3b
+
+| # | Location | Check | Verdict | Evidence |
+|---|---|---|---|---|
+| R6-1 | 30 changed lines, 3 voices | Each line differs from the 251997e line only by `results` to `demo-results` or `data.txt` to `demo-data.txt` (and spaces of the comment alignment) | PASS | `git diff 251997e 151fe3b`: 30 and 30 lines; a script applied the rename to the old lines; the only other difference is the extra spaces before `(your inode number differs)` in 3 lines |
+| R6-2 | whole file | No fact with a `<Cite>` changed name | PASS | the names are the tutorial's own demo names (`mkdir -p`, `rm -r`, hard link examples); no path or flag argument changed |
+| R6-3 | whole file | No mismatch between a code block and its printed output, comment, or prose | PASS | the 3 `mkdir -p`/`rm -r` blocks and the 3 hard-link blocks use `demo-` names in code, output comments and the `stat` output; `grep` shows no prose with the old names |
+| R6-4 | remaining `results` / `data.txt` | They do not mismatch | PASS | line 180 (`mkdir -p results/2026/run1`) and line 1028 (`ln data.txt data-hard.txt`) are separate non-Try-it examples; the `tar` Try-it blocks (3 voices) use their own `results` and `results.tar.gz` consistently and clean up with `rm -r -- "${tmp:?}"` |
+| R6-5 | Layman and Bangla vs Technical | The code of each Try-it equals the Technical code (comments aside) | PASS | script compare of all mktemp blocks per `##` section: 0 difference |
+| R6-6 | `mkdir -p demo-results/run1` block | Output equals the page | PASS | run: `second run: OK`, `new`, `hello.txt` |
+| R6-7 | hard-link block | Output equals the page | PASS | run: `10749 2 demo-data.txt`, `10749 2 hard.txt`, `data`, `cat: soft.txt: No such file or directory` (inode number differs, as the page says) |
+| R6-8 | `stat` block, `cp -p` block | Output equals the page | PASS | `report.txt: 5 bytes, 1 hard links`, `empty.txt: 0 bytes, 1 hard links`; `retries=3`, `timeout=30`, `debug=false`, `port=8080` |
+| R6-9 | all 24 blocks | Run without error | PASS | exit status 0 for all 24 |
+| R6-10 | `TMPDIR=/nonexistent` on `files-3` | The block exits 1 and writes nothing | PASS | `mktemp` failed, exit 1, run directory empty |
+| R6-11 | words before `<details>` | At most 150 in every panel | PASS | `node --test tests/linux-lesson.test.ts` 28 of 28; `tests/voice-source.test.ts` 22 of 22 |
+
+Open FAILs: 0

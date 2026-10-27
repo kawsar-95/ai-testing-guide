@@ -275,3 +275,29 @@ What the image shows (a transcription for the text description on the page):
 | I0 | Attribution line: the image is by abrahimcse and comes from the repository of S40. The page cites S40. | S40 | the paste of S40 linked `Images/Linux File Permission.jpg` of that repo (see `cheatsheet-paste.md` of the task folder); not a quote |
 
 Not added (checked, dropped): the brief proposed "S or T: then setuid and setgid have no effect". The text of S41 says that a regular file without the group execute bit and with the set-group-ID bit set means mandatory file locking (an old Linux feature): "For a file that does not have the group execution bit (S_IXGRP) set, the set-group-ID bit indicates mandatory file/record locking." The statement is therefore not true for every case, and the page says only what the `ls` manual (S27) says about the letters. Not corrected: the table of the image and the three-digit mode examples are right; the image calls the owner `s` "Executable" only in the `rws` box, which is covered by I4.
+
+## Round 2 (2026-10-27): Try it commands
+
+Tool versions: GNU bash 5.3.9; uutils coreutils 0.10.0 (`ls`, `id`, `groups`, `stat`, `chmod`, `touch`; Ubuntu 26.04.1 LTS ships uutils as coreutils, and the output format matched GNU for every command below); `getent` from Ubuntu GLIBC 2.43. Each block ran for real in a throw-away directory under the session scratchpad. No command needed root, and none changed an account. Stand-ins on the page: `user` (login name), `staff` (primary group), `User` (comment field); the real names are not recorded.
+
+| Topic | Try it command | Real output (stand-ins applied) |
+|---|---|---|
+| User Management | `id`; `getent passwd "$(id -un)"`; `ls -l /etc/passwd /etc/shadow` | `uid=1000(user) gid=1000(staff) groups=1000(staff),27(sudo),...`; `user:x:1000:1000:User:/home/user:/bin/bash`; `-rw-r--r-- 1 root root 2978 ... /etc/passwd`, `-rw-r----- 1 root shadow 1405 ... /etc/shadow` |
+| Users and Groups | `id -Gn`; `groups`; `getent group "$(id -gn)"` | the same name list twice (page shows `staff adm sudo users`); `staff:x:1000:` |
+| Create, Update, and Delete Users | `ls -A /etc/skel`; `grep '^CREATE_HOME' /etc/login.defs` | `.bash_logout .bashrc .profile`; no output (exit 1): Ubuntu 26.04 does not set `CREATE_HOME` |
+| Super User | `id -u`; `getent group sudo` | `1000`; `sudo:x:27:user`. A run of `getent group sudo wheel` printed only the sudo line (exit 2): this machine has no `wheel` group. |
+| File Permissions | `( cd "$(mktemp -d)"; touch report.txt; chmod 640 report.txt; ls -l report.txt; stat -c '%A %a %U:%G %n' report.txt; rm -r "$PWD" )` | `-rw-r----- 1 user staff 0 Oct 27 15:32 report.txt`; `-rw-r----- 640 user:staff report.txt` |
+| Managing Permissions | `( cd "$(mktemp -d)"; touch run.sh; chmod 640 run.sh; chmod u+x,g-w run.sh; umask 077; touch private.txt; stat -c '%A %a %n' run.sh private.txt; rm -r "$PWD" )` | `-rwxr----- 740 run.sh`; `-rw------- 600 private.txt`; the umask of the parent shell stayed `0002` |
+
+Facts moved (no fact deleted; every old `<Cite n>` is still on the page):
+- User Management: the `x` marker, `/etc/shadow`, and the locked `!` hash moved to "Go deeper". The container UID mismatch advice is split: the short part is the tip, the rest is in "Go deeper".
+- Users and Groups: S18 (admins use groups for access), the session groups, `newgrp`, `gpasswd -d`, `groupdel`, and the `sudo -iu` advice moved to "Go deeper".
+- Create, Update, and Delete Users: the flag details moved to a table in "Go deeper". The danger callout (`usermod -G` without `-a`, `userdel -r`) stays before "Go deeper"; `userdel -f` moved into the table. The `-p` warning moved from the tip to "Go deeper".
+- Super User: S20 (`wheel`, lock root), the sudo timestamp options, and the sudoers file rules moved to "Go deeper". A shorter danger callout (visudo, syntax error, `NOPASSWD: ALL`) stays visible. New gloss in "Go deeper": `getent` prints no line for a key that it cannot find (S15: exit status 2, "One or more supplied key could not be found").
+- File Permissions: the file type letters, the directory bits, and the special bits (now a table) moved to "Go deeper". The FlowDiagram of mode 640 stays in the Core part.
+- Managing Permissions: the owner rule (S30), `X`, `chown`, `chgrp`, `-R` with `-L`, and the `2770` advice moved to "Go deeper". The danger callout (`chmod -R 777`, `chown -R` on a wrong path) stays visible; it now cites S32 for the 777 claim (row D2).
+
+### Round 2, fix round 1 (2026-10-27)
+- The Try-it blocks of File Permissions and Managing Permissions now start with `cd "$(mktemp -d)" || exit`. Run again (bash 5.3.9, uutils coreutils 0.10.0): the output is unchanged. With `TMPDIR=/nonexistent_zz`, each block printed `mktemp: failed to create directory ...` and `cd: null directory`, exited with status 1, and the current directory and its file stayed.
+- Moved back to the visible danger callouts: `userdel -f` (S7) and `useradd -p` (S5) in Create, Update, and Delete Users; `-R` with `-L` (S30) in Managing Permissions. To stay in 150 words, "These programs need root" moved to Go deeper of Create, and "check the path with `ls -ld`" moved to the tutorial advice in Go deeper of Managing Permissions.
+- Super User gloss: `getent group wheel` prints no line and exits with status 2 if the group does not exist (S15; local run: exit 2).

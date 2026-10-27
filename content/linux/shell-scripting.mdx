@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-10-27',
   sources: [
     { title: 'Linux Roadmap', publisher: 'roadmap.sh', url: 'https://roadmap.sh/linux', accessed: '2026-10-19' },
     { title: 'Learning the Shell: What is the shell?', publisher: 'LinuxCommand.org', url: 'https://www.linuxcommand.org/lc3_lts0010.php', accessed: '2026-10-19' },
@@ -70,66 +70,120 @@ A shell script is a text file of commands that the shell runs for you. This stag
 <Voices>
 <Technical>
 
-A shell is a program that passes your commands to the operating system. <Cite n={2} /> A shell script is a text file of such commands. Bash runs it in a non-interactive shell, with no person at the prompt. <Cite n={11} />
+**Goal:** Write a small script, run it, and read its exit status.
 
-The first line is the shebang, `#!` plus the path of an interpreter. The kernel reads it when it runs the file. The file needs the execute permission. <Cite n={41} /> `chmod +x` adds that permission. <Cite n={42} /> `#!/usr/bin/env bash` finds the first `bash` in `PATH`. <Cite n={11} />
-
-`./setup.sh` runs the file in a child shell, so its variables vanish at the end. <Cite n={11} /> `. ./setup.sh` (or `source`) runs it in the current shell. <Cite n={35} /> <Cite n={36} /> Every command ends with an exit status from 0 to 255. Zero means success. `$?` holds the last status. <Cite n={12} /> <Cite n={15} /> A script returns the status of its last command. <Cite n={38} />
+A shell script is a text file of commands. Bash runs it in a non-interactive shell. <Cite n={11} /> The first line is the shebang: `#!` and the path of an interpreter. The kernel reads it when it runs the file. The file needs the execute permission. <Cite n={41} /> `chmod +x` adds that permission. <Cite n={42} /> Every command ends with an exit status from 0 to 255. Zero means success. `$?` holds the last status. <Cite n={12} /> <Cite n={15} /> A script returns the status of its last command. <Cite n={38} />
 
 ```bash
-cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
-cat > setup.sh <<'EOF'
-#!/usr/bin/env bash
-GREETING="hello from setup.sh"
-echo "args: $#"
-[ "$1" = "ok" ]               # the last command sets the exit status
-EOF
-chmod +x setup.sh             # the execute permission lets the kernel run it
-
-./setup.sh ok;  echo "status: $?"
-./setup.sh bad; echo "status: $?"
-echo "after run: ${GREETING:-unset}"
-. ./setup.sh                  # source it: it runs in the current shell
-echo "after source: ${GREETING:-unset}"
-if command -v shellcheck >/dev/null; then shellcheck setup.sh; fi
-
-# Output:
-#   args: 1
-#   status: 0
-#   args: 1
-#   status: 1
-#   after run: unset
-#   args: 0
-#   after source: hello from setup.sh
+chmod +x setup.sh
 ```
 
-POSIX defines the portable shell language. <Cite n={39} /> Debian policy lets a `sh` script in a Debian package assume POSIX plus a few extras. A package script that needs more must name its shell. <Cite n={40} /> In a test with dash, `[[` and arrays gave errors. ShellCheck finds mistakes before a run and reports through its exit status, so CI can run it. <Cite n={45} /> <Cite n={49} />
+**Try it:** write a two-line script in a throw-away directory, run it twice, and print `$?` (the last exit status) after each run. <Cite n={15} /> The parentheses keep your shell unchanged.
+
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  printf '%s\n' '#!/usr/bin/env bash' '[ "$1" = "ok" ]' > setup.sh
+  chmod +x setup.sh
+  ./setup.sh ok;  echo "status: $?"    # status: 0
+  ./setup.sh bad; echo "status: $?"    # status: 1
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: start each CI script with a shebang and run `shellcheck` on it in the pipeline. Check the exit status, not the printed text. To find non-POSIX code, run the script under `dash` if installed, or give it a `#!/bin/sh` shebang so ShellCheck warns. <Cite n={45} />
+
+Tutorial's own advice: in CI, check the exit status of a script, not its printed text. A status other than 0 is a fail.
+
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A shell is a program that passes your commands to the operating system. <Cite n={2} />
+- A non-interactive shell has no person at the prompt. <Cite n={11} />
+- `#!/usr/bin/env bash` finds the first `bash` in `PATH`. <Cite n={11} />
+- `./setup.sh` runs the file in a child shell, so its variables vanish at the end. <Cite n={11} />
+- `. ./setup.sh` (or `source`) runs the file in the current shell. Its variables stay in your shell. <Cite n={35} /> <Cite n={36} />
+- POSIX defines the portable shell language. <Cite n={39} /> Debian policy lets a `sh` script in a Debian package assume POSIX plus a few extras. A package script that needs more must name its shell. <Cite n={40} />
+- In a test with dash, `[[` and arrays gave errors.
+- ShellCheck finds mistakes before a run. It reports through its exit status, so CI can run it. <Cite n={45} /> <Cite n={49} />
+
+Tutorial's own advice: start each CI script with a shebang and run `shellcheck` on it in the pipeline. To find non-POSIX code, run the script under `dash` if installed, or give it a `#!/bin/sh` shebang so ShellCheck warns. <Cite n={45} />
+
+</details>
 
 </Technical>
 <Layman>
 
-A shell is a program that passes your commands to the operating system <Cite n={2} />. A shell script is a text file of such commands. Bash runs it with no person at the prompt <Cite n={11} />.
+**Goal:** Write a small script, run it, and read its exit status.
 
-The first line is the shebang: `#!` and the path of an interpreter. The kernel reads this line when it runs the file. The file must have the execute permission <Cite n={41} />. Use `chmod +x` to add it <Cite n={42} />.
+A shell script is a text file of commands. Bash runs it with no person at the prompt. <Cite n={11} /> The first line is the shebang: `#!` and the path of an interpreter. The kernel reads it when it runs the file. The file needs the execute permission. <Cite n={41} /> `chmod +x` adds it. <Cite n={42} /> Each command ends with an exit status from 0 to 255. Zero means success. `$?` holds the last status. <Cite n={12} /> <Cite n={15} /> A script returns the status of its last command. <Cite n={38} />
 
-`./setup.sh` runs the script in a child shell, so its variables are lost at the end <Cite n={11} />. `. ./setup.sh` (or `source`) runs it in your current shell <Cite n={35} />. Each command ends with an exit status from 0 to 255. Zero means success. `$?` holds the last status <Cite n={12} /> <Cite n={15} />. A script returns the status of its last command <Cite n={38} />.
+**Try it:** write a two-line script in a throw-away directory, run it twice, and print `$?` (the last exit status) after each run. <Cite n={15} /> The parentheses keep your shell unchanged.
 
-POSIX defines the portable shell language <Cite n={39} />. ShellCheck finds mistakes before a run. It reports through its exit status, so CI can run it <Cite n={45} /> <Cite n={49} />. The tutorial's own advice: in CI, check the exit status, not the printed text.
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  printf '%s\n' '#!/usr/bin/env bash' '[ "$1" = "ok" ]' > setup.sh
+  chmod +x setup.sh
+  ./setup.sh ok;  echo "status: $?"    # status: 0
+  ./setup.sh bad; echo "status: $?"    # status: 1
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: in CI, check the exit status, not the printed text. A status other than 0 is a fail.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+A shell is a program that passes your commands to the operating system. <Cite n={2} /> `./setup.sh` runs the script in a child shell, so its variables are lost at the end. <Cite n={11} /> `. ./setup.sh` (or `source`) runs it in your current shell. <Cite n={35} />
+
+POSIX defines the portable shell language. <Cite n={39} /> ShellCheck finds mistakes before a run. It reports through its exit status, so CI can run it. <Cite n={45} /> <Cite n={49} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Shell হলো একটি program, যা আপনার command-গুলো operating system-এর কাছে পৌঁছে দেয় <Cite n={2} />। Shell script হলো এমন command-এর একটি text file। Bash এটি একটি non-interactive shell-এ চালায়, অর্থাৎ prompt-এ কোনো মানুষ থাকে না <Cite n={11} />।
+**লক্ষ্য:** একটি ছোট script লিখুন, চালান, আর তার exit status পড়ুন।
 
-প্রথম লাইনটি হলো shebang: `#!` এবং একটি interpreter-এর path। File চালানোর সময় kernel এই লাইনটি পড়ে। File-টির execute permission থাকতে হবে <Cite n={41} />। `chmod +x` এই permission যোগ করে <Cite n={42} />। `#!/usr/bin/env bash` `PATH`-এ প্রথম যে `bash` পাওয়া যায়, সেটি খুঁজে নেয় <Cite n={11} />।
+Shell script হলো command-এর একটি text file। Bash এটি একটি non-interactive shell-এ চালায়, অর্থাৎ prompt-এ কোনো মানুষ থাকে না। <Cite n={11} /> প্রথম লাইনটি হলো shebang: `#!` এবং একটি interpreter-এর path। File চালানোর সময় kernel এই লাইনটি পড়ে। File-টির execute permission থাকতে হবে। <Cite n={41} /> `chmod +x` এই permission যোগ করে। <Cite n={42} /> প্রতিটি command 0 থেকে 255-এর মধ্যে একটি exit status দিয়ে শেষ হয়। 0 মানে success। `$?`-এ শেষ status থাকে। <Cite n={12} /> <Cite n={15} /> একটি script তার শেষ command-এর status ফেরত দেয়। <Cite n={38} />
 
-`./setup.sh` file-টিকে একটি child shell-এ চালায়, তাই শেষে এর variable-গুলো হারিয়ে যায় <Cite n={11} />। `. ./setup.sh` (অথবা `source`) এটিকে বর্তমান shell-এ চালায় <Cite n={35} /> <Cite n={36} />। প্রতিটি command 0 থেকে 255-এর মধ্যে একটি exit status দিয়ে শেষ হয়। 0 মানে success। `$?`-এ শেষ status থাকে <Cite n={12} /> <Cite n={15} />। একটি script তার শেষ command-এর status ফেরত দেয় <Cite n={38} />।
+**চেষ্টা করুন:** একটি throw-away directory-তে দুই লাইনের একটি script লিখুন, দুইবার চালান, আর প্রতিবার চালানোর পর `$?` (শেষ exit status) print করুন। <Cite n={15} /> বন্ধনী আপনার shell-কে অপরিবর্তিত রাখে।
 
-POSIX portable shell language define করে <Cite n={39} />। ShellCheck script চালানোর আগেই ভুল খুঁজে পায় এবং exit status দিয়ে ফল জানায়, তাই CI এটি চালাতে পারে <Cite n={45} /> <Cite n={49} />। এই tutorial-এর নিজের পরামর্শ: CI-তে printed text নয়, exit status check করুন।
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  printf '%s\n' '#!/usr/bin/env bash' '[ "$1" = "ok" ]' > setup.sh
+  chmod +x setup.sh
+  ./setup.sh ok;  echo "status: $?"    # status: 0
+  ./setup.sh bad; echo "status: $?"    # status: 1
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: CI-তে script-এর printed text নয়, exit status check করুন। 0 ছাড়া অন্য যেকোনো status মানে fail।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+Shell হলো একটি program, যা আপনার command-গুলো operating system-এর কাছে পৌঁছে দেয়। <Cite n={2} /> `#!/usr/bin/env bash` `PATH`-এ প্রথম যে `bash` পাওয়া যায়, সেটি খুঁজে নেয়। <Cite n={11} />
+
+`./setup.sh` file-টিকে একটি child shell-এ চালায়, তাই শেষে এর variable-গুলো হারিয়ে যায়। <Cite n={11} /> `. ./setup.sh` (অথবা `source`) এটিকে বর্তমান shell-এ চালায়। <Cite n={35} /> <Cite n={36} />
+
+POSIX portable shell language define করে। <Cite n={39} /> ShellCheck script চালানোর আগেই ভুল খুঁজে পায় এবং exit status দিয়ে ফল জানায়, তাই CI এটি চালাতে পারে। <Cite n={45} /> <Cite n={49} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -139,63 +193,130 @@ POSIX portable shell language define করে <Cite n={39} />। ShellCheck scr
 <Voices>
 <Technical>
 
-A variable holds a value under a name. Assign it as `name=value`, with no spaces around `=`. <Cite n={13} /> Read it with `$name`, and quote the read: `"$name"`. An unquoted value is split at spaces and then treated as a glob, a filename pattern such as `*.txt`. <Cite n={46} /> <Cite n={32} />
+**Goal:** Store a value in a variable, read it safely, and give it a default.
 
-Parameter expansion changes a value as the shell reads it. `${name:-default}` gives a default when the variable is unset or empty. `${name:?message}` stops a script with an error in that case. `${#name}` gives the length. <Cite n={16} />
-
-Script arguments arrive as positional parameters `$1`, `$2`, and so on. <Cite n={14} /> `$#` is their count, and `$0` is the name of the script. `"$@"` gives each argument as one separate word. <Cite n={15} />
-
-A shell variable lives in the current shell only. `export` adds it to the environment, the list of name-value pairs that child processes inherit. <Cite n={35} /> <Cite n={19} /> `readonly` blocks later changes with an error. <Cite n={4} /> <Cite n={35} /> `$(command)` is command substitution: it is replaced by the output of the command. <Cite n={17} /> An array is a list of values. It works in bash, ksh, and zsh, but dash rejected it in a test. <Cite n={18} /> <Cite n={46} />
+A variable holds a value under a name. Assign it as `name=value`, with no spaces around `=`. <Cite n={13} /> Read it with `$name`, and quote the read: `"$name"`. An unquoted value is split at spaces and then treated as a glob, a filename pattern such as `*.txt`. <Cite n={46} /> <Cite n={32} /> `${name:-default}` gives a default when the variable is unset or empty. <Cite n={16} />
 
 ```bash
-suite="smoke tests"                    # no spaces around =
-echo "suite: $suite"
-echo "env: ${TARGET_ENV:-staging}"     # a default if unset or empty
+suite="smoke tests"
+```
 
-set -- alpha "beta gamma"              # fake two script arguments
-echo "count: $#, first: $1"
-for arg in "$@"; do echo "arg: $arg"; done
+**Try it:** print a value with and without quotes, then read a variable with a default before and after you set it. `printf '[%s]\n'` prints each argument in brackets on its own line.
 
-export TARGET_ENV=qa                   # child processes see it
-bash -c 'echo "child sees: $TARGET_ENV"'
-readonly BASE_URL="https://example.test"
-( BASE_URL=other ) 2>&1 || echo "BASE_URL is read-only"
-
-stamp=$(date +%F)                      # command substitution
-echo "the date has ${#stamp} characters"
-urls=("$BASE_URL/login" "$BASE_URL/cart")   # array: dash rejected this in our test
-echo "${#urls[@]} urls, last: ${urls[1]}"
+```bash
+(
+  suite="smoke tests"
+  printf '[%s]\n' "$suite"              # [smoke tests]
+  printf '[%s]\n' $suite                # [smoke]
+                                        # [tests]
+  unset TARGET_ENV
+  echo "env: ${TARGET_ENV:-staging}"    # env: staging
+  TARGET_ENV=qa
+  echo "env: ${TARGET_ENV:-staging}"    # env: qa
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: keep the base URL, browser, and environment name in variables with defaults, such as `${TARGET_ENV:-staging}`. A CI job then overrides them without a script edit. Never print variables that hold tokens or passwords into the job log.
+
+Tutorial's own advice: give settings a default, such as `${TARGET_ENV:-staging}`. Never print a variable that holds a token or a password into a CI log.
+
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+| Form | What it does |
+|---|---|
+| `${name:?message}` | Stops a script with an error if the variable is unset or empty. <Cite n={16} /> |
+| `${#name}` | Gives the length of the value. <Cite n={16} /> |
+| `$1`, `$2`, … | The arguments of a script (positional parameters). <Cite n={14} /> |
+| `$#`, `$0`, `"$@"` | The count of the arguments, the name of the script, and each argument as one separate word. <Cite n={15} /> |
+| `export name` | Adds the variable to the environment, the list of name-value pairs that child processes inherit. A plain variable lives in the current shell only. <Cite n={35} /> <Cite n={19} /> |
+| `readonly name` | Blocks later changes with an error. <Cite n={4} /> <Cite n={35} /> |
+| `$(command)` | Command substitution: the shell puts the output of the command in its place. <Cite n={17} /> |
+| `urls=(a b)` | An array, a list of values. It works in bash, ksh, and zsh, but dash rejected it in a test. <Cite n={18} /> <Cite n={46} /> |
+
+Tutorial's own advice: keep the base URL, browser, and environment name in variables with defaults. A CI job then overrides them without a script edit.
+
+</details>
 
 </Technical>
 <Layman>
 
-A variable keeps a value under a name. Write `name=value`, with no spaces around `=` <Cite n={13} />. Read it with `$name`, and put quotes around it: `"$name"`. Without quotes, the shell splits the value at spaces and then treats it as a filename pattern, such as `*.txt` <Cite n={46} /> <Cite n={32} />.
+**Goal:** Store a value in a variable, read it safely, and give it a default.
 
-If the variable is unset or empty, `${name:-default}` gives a default and `${name:?message}` stops the script with an error. `${#name}` gives the length <Cite n={16} />.
+A variable keeps a value under a name. Write `name=value`, with no spaces around `=`. <Cite n={13} /> Read it with `$name`, and put quotes around it: `"$name"`. Without quotes, the shell splits the value at spaces and then treats it as a filename pattern, such as `*.txt`. <Cite n={46} /> <Cite n={32} /> If the variable is unset or empty, `${name:-default}` gives a default. <Cite n={16} />
 
-The arguments of a script are `$1`, `$2`, and so on <Cite n={14} />. `$#` is their count, and `$0` is the script name. `"$@"` gives each argument as a separate word <Cite n={15} />.
+**Try it:** print a value with and without quotes, then read a variable with a default before and after you set it. `printf '[%s]\n'` prints each argument in brackets on its own line.
 
-A variable stays in the current shell. `export` gives it to child processes <Cite n={35} /> <Cite n={19} />. `readonly` stops later changes <Cite n={4} /> <Cite n={35} />. The shell replaces `$(command)` with the output of the command <Cite n={17} />. An array is a list of values. Bash, ksh, and zsh support arrays, but dash rejected one in a test <Cite n={18} /> <Cite n={46} />.
+```bash
+(
+  suite="smoke tests"
+  printf '[%s]\n' "$suite"              # [smoke tests]
+  printf '[%s]\n' $suite                # [smoke]
+                                        # [tests]
+  unset TARGET_ENV
+  echo "env: ${TARGET_ENV:-staging}"    # env: staging
+  TARGET_ENV=qa
+  echo "env: ${TARGET_ENV:-staging}"    # env: qa
+)
+```
 
-The tutorial's own advice: never print variables that hold tokens or passwords into the job log.
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: give settings a default, such as `${TARGET_ENV:-staging}`. Never print a variable that holds a token or a password into a CI log.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `${name:?message}` stops the script with an error if the variable is unset or empty. `${#name}` gives the length. <Cite n={16} />
+- The arguments of a script are `$1`, `$2`, and so on. <Cite n={14} /> `$#` is their count, and `$0` is the script name. `"$@"` gives each argument as a separate word. <Cite n={15} />
+- A variable stays in the current shell. `export` gives it to child processes. <Cite n={35} /> <Cite n={19} /> `readonly` stops later changes. <Cite n={4} /> <Cite n={35} />
+- The shell replaces `$(command)` with the output of the command. <Cite n={17} />
+- An array is a list of values. Bash, ksh, and zsh support arrays, but dash rejected one in a test. <Cite n={18} /> <Cite n={46} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Variable একটি নামের অধীনে একটি value রাখে। `name=value` লিখে value দিন, `=`-এর দুই পাশে কোনো space ছাড়া <Cite n={13} />। `$name` দিয়ে value পড়ুন, এবং পড়ার সময় quote দিন: `"$name"`। Quote না দিলে value space-এ ভাগ হয়ে যায়, তারপর shell এটিকে glob হিসেবে ধরে, অর্থাৎ `*.txt`-এর মতো একটি filename pattern <Cite n={46} /> <Cite n={32} />।
+**লক্ষ্য:** একটি variable-এ value রাখুন, নিরাপদে পড়ুন, আর একটি default দিন।
 
-Parameter expansion shell-এর পড়ার সময় value বদলায়। Variable unset বা empty হলে `${name:-default}` একটি default value দেয়, আর `${name:?message}` একটি error দিয়ে script থামায়। `${#name}` length দেয় <Cite n={16} />।
+Variable একটি নামের অধীনে একটি value রাখে। `name=value` লিখে value দিন, `=`-এর দুই পাশে কোনো space ছাড়া। <Cite n={13} /> `$name` দিয়ে value পড়ুন, এবং পড়ার সময় quote দিন: `"$name"`। Quote না দিলে value space-এ ভাগ হয়ে যায়, তারপর shell এটিকে glob হিসেবে ধরে, অর্থাৎ `*.txt`-এর মতো একটি filename pattern। <Cite n={46} /> <Cite n={32} /> Variable unset বা empty হলে `${name:-default}` একটি default value দেয়। <Cite n={16} />
 
-Script-এর argument-গুলো positional parameter `$1`, `$2` ইত্যাদি হিসেবে আসে <Cite n={14} />। `$#` হলো এদের সংখ্যা, আর `$0` হলো script-এর নাম। `"$@"` প্রতিটি argument-কে আলাদা একটি word হিসেবে দেয় <Cite n={15} />।
+**চেষ্টা করুন:** একটি value quote-সহ আর quote ছাড়া print করুন, তারপর একটি variable set করার আগে ও পরে default-সহ পড়ুন। `printf '[%s]\n'` প্রতিটি argument bracket-এর ভেতরে, আলাদা লাইনে print করে।
 
-একটি shell variable শুধু বর্তমান shell-এ থাকে। `export` এটিকে environment-এ যোগ করে, যা child process-গুলো inherit করে <Cite n={35} /> <Cite n={19} />। `readonly` পরের পরিবর্তন error দিয়ে আটকায় <Cite n={4} /> <Cite n={35} />। `$(command)` হলো command substitution: এর জায়গায় command-এর output বসে <Cite n={17} />। Array হলো value-এর একটি list। এটি bash, ksh এবং zsh-এ কাজ করে, কিন্তু একটি test-এ dash এটি reject করেছে <Cite n={18} /> <Cite n={46} />।
+```bash
+(
+  suite="smoke tests"
+  printf '[%s]\n' "$suite"              # [smoke tests]
+  printf '[%s]\n' $suite                # [smoke]
+                                        # [tests]
+  unset TARGET_ENV
+  echo "env: ${TARGET_ENV:-staging}"    # env: staging
+  TARGET_ENV=qa
+  echo "env: ${TARGET_ENV:-staging}"    # env: qa
+)
+```
 
-এই tutorial-এর নিজের পরামর্শ: base URL এবং environment-এর নাম default-সহ variable-এ রাখুন, যেমন `${TARGET_ENV:-staging}`। Token বা password আছে এমন variable কখনো job log-এ print করবেন না।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: setting-এ default দিন, যেমন `${TARGET_ENV:-staging}`। Token বা password আছে এমন variable কখনো CI log-এ print করবেন না।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Variable unset বা empty হলে `${name:?message}` একটি error দিয়ে script থামায়। `${#name}` length দেয়। <Cite n={16} />
+- Script-এর argument-গুলো positional parameter `$1`, `$2` ইত্যাদি হিসেবে আসে। <Cite n={14} /> `$#` হলো এদের সংখ্যা, আর `$0` হলো script-এর নাম। `"$@"` প্রতিটি argument-কে আলাদা একটি word হিসেবে দেয়। <Cite n={15} />
+- একটি shell variable শুধু বর্তমান shell-এ থাকে। `export` এটিকে environment-এ যোগ করে, যা child process-গুলো inherit করে। <Cite n={35} /> <Cite n={19} /> `readonly` পরের পরিবর্তন error দিয়ে আটকায়। <Cite n={4} /> <Cite n={35} />
+- `$(command)` হলো command substitution: এর জায়গায় command-এর output বসে। <Cite n={17} />
+- Array হলো value-এর একটি list। এটি bash, ksh এবং zsh-এ কাজ করে, কিন্তু একটি test-এ dash এটি reject করেছে। <Cite n={18} /> <Cite n={46} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -205,61 +326,123 @@ Script-এর argument-গুলো positional parameter `$1`, `$2` ইত্য
 <Voices>
 <Technical>
 
-A literal is text that the shell takes as written. Quoting switches off the special meaning of characters. Single quotes keep every character literal, and a single quote cannot appear inside them. <Cite n={21} /> To place one, close the string, add `\'`, and open it again. <Cite n={5} /> Double quotes keep most characters literal, but `$`, the backtick, and `\` stay active. <Cite n={22} /> A backslash outside quotes makes the next character literal. <Cite n={20} />
+**Goal:** Use quotes to keep text exactly as you typed it.
 
-`$'...'` decodes escapes such as `\n` and `\t`. <Cite n={23} /> The 2024 POSIX standard defines it, but dash did not decode it in a test. <Cite n={39} />
-
-A here-document gives several lines to a command as input. The word after `<<` is the end marker. If you quote the marker, nothing inside expands. Otherwise variables and `$(...)` expand. With `<<-`, the shell strips leading tabs, so you can indent the text. <Cite n={24} />
-
-Number literals are plain digits. `$((expression))` does arithmetic on whole numbers with C operators. <Cite n={26} /> <Cite n={25} /> A leading `0` means octal, and `0x` means hexadecimal. <Cite n={25} /> The form `base#n` writes a number in another base. POSIX requires only decimal, octal, and hexadecimal constants, so other shells may reject `base#n`. Dash did in a test. <Cite n={25} /> <Cite n={39} />
+A literal is text that the shell takes as written. Quoting switches off the special meaning of characters. Single quotes keep every character literal. <Cite n={21} /> Double quotes keep most characters literal, but `$`, the backtick, and `\` stay active. <Cite n={22} /> A backslash outside quotes makes the next character literal. <Cite n={20} />
 
 ```bash
-cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
-user="qa"
-echo 'single: $user stays $(whoami)'    # nothing expands
-echo "double: $user and \$5 and \"quoted\""
-echo "it's" 'say "hi"' it\'s            # three ways to place a quote
-printf '%s\n' $'tab:\there\nnew line'    # decodes escapes
+echo 'cost: $5'
+```
 
-cat <<EOF > report.txt                   # > replaces report.txt: a file this demo owns
-user is $user
-EOF
-cat <<'EOF' >> report.txt
-literal: $HOME and \n stay as typed
-EOF
-cat report.txt
+**Try it:** print the same variable in single quotes and in double quotes. Inside double quotes, `\$` keeps the `$` literal. <Cite n={22} />
 
-echo $((7 * 6 + 1)) $((10 / 3)) $((10 % 3))   # whole numbers only
-echo $((0x1F)) $((2#101)) $((010))            # hex, base 2 (not required by POSIX), octal
+```bash
+(
+  user=qa
+  echo 'single: $user'    # single: $user
+  echo "double: $user"    # double: qa
+  echo "price: \$5"       # price: $5
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: write test data such as JSON bodies with a quoted here-document, so the file holds exactly what you typed. Put `grep` patterns in single quotes. Beware of leading zeros: `$((08))` is an error, because `08` is not a valid octal number.
+
+Tutorial's own advice: put `grep` patterns in single quotes, and write JSON test data with a quoted here-document, so the shell does not change them.
+
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A single quote cannot appear inside single quotes. <Cite n={21} /> To place one, close the string, add `\'`, and open it again: `'it'\''s'`. <Cite n={5} />
+- `$'...'` decodes escapes such as `\n` and `\t`. <Cite n={23} /> The 2024 POSIX standard defines it, but dash did not decode it in a test. <Cite n={39} />
+- A here-document gives several lines to a command as input. The word after `<<` is the end marker. If you quote the marker, nothing inside expands. Otherwise variables and `$(...)` expand. With `<<-`, the shell strips leading tabs. <Cite n={24} />
+- `$((expression))` does arithmetic on whole numbers with C operators. <Cite n={26} /> <Cite n={25} /> A leading `0` means octal, and `0x` means hexadecimal. <Cite n={25} />
+- The form `base#n` writes a number in another base. POSIX requires only decimal, octal, and hexadecimal constants, so other shells may reject `base#n`. Dash did in a test. <Cite n={25} /> <Cite n={39} />
+
+```bash
+cat <<'EOF'                          # quoted marker: prints the line as typed
+{"user": "$USER"}
+EOF
+echo $((7 * 6 + 1)) $((10 / 3))      # 43 3
+echo $((0x1F)) $((2#101)) $((010))   # 31 5 8
+```
+
+Tutorial's own advice: beware of leading zeros. `$((08))` is an error, because `08` is not a valid octal number.
+
+</details>
 
 </Technical>
 <Layman>
 
-A literal is text that the shell takes exactly as you write it. Quotes switch off the special meaning of characters. Single quotes keep every character literal, and a single quote cannot go inside them <Cite n={21} />. To add one, close the string, write `\'`, and open the string again <Cite n={5} />. Double quotes keep most characters literal, but `$`, the backtick, and `\` stay active <Cite n={22} />. Outside quotes, a backslash makes the next character literal <Cite n={20} />.
+**Goal:** Use quotes to keep text exactly as you typed it.
 
-`$'...'` decodes escapes such as `\n` and `\t` <Cite n={23} />.
+A literal is text that the shell takes exactly as you write it. Quotes switch off the special meaning of characters. Single quotes keep every character literal. <Cite n={21} /> Double quotes keep most characters literal, but `$`, the backtick, and `\` stay active. <Cite n={22} /> Outside quotes, a backslash makes the next character literal. <Cite n={20} />
 
-A here-document gives several lines of input to a command. The word after `<<` marks the end. If you quote that word, nothing inside expands. If not, variables and `$(...)` expand. With `<<-`, the shell removes leading tabs, so you can indent the text <Cite n={24} />.
+**Try it:** print the same variable in single quotes and in double quotes. Inside double quotes, `\$` keeps the `$` literal. <Cite n={22} />
 
-`$((expression))` does arithmetic on whole numbers <Cite n={26} /> <Cite n={25} />. A leading `0` means octal, and `0x` means hexadecimal <Cite n={25} />. POSIX requires only decimal, octal, and hexadecimal constants, so other shells may reject the `base#n` form <Cite n={25} /> <Cite n={39} />. The tutorial's own advice: `$((08))` is an error, because `08` is not a valid octal number.
+```bash
+(
+  user=qa
+  echo 'single: $user'    # single: $user
+  echo "double: $user"    # double: qa
+  echo "price: \$5"       # price: $5
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: put `grep` patterns in single quotes, and write JSON test data with a quoted here-document. Then the shell does not change them.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A single quote cannot go inside single quotes. <Cite n={21} /> To add one, close the string, write `\'`, and open the string again. <Cite n={5} />
+- `$'...'` decodes escapes such as `\n` and `\t`. <Cite n={23} />
+- A here-document gives several lines of input to a command. The word after `<<` marks the end. If you quote that word, nothing inside expands. <Cite n={24} />
+- `$((expression))` does arithmetic on whole numbers. <Cite n={26} /> <Cite n={25} /> A leading `0` means octal, and `0x` means hexadecimal. <Cite n={25} /> The form `base#n` writes a number in another base. POSIX requires only decimal, octal, and hexadecimal constants, so other shells may reject the `base#n` form. <Cite n={25} /> <Cite n={39} />
+
+Tutorial's own advice: `$((08))` is an error, because `08` is not a valid octal number.
+
+</details>
 
 </Layman>
 <Bangla>
 
-Literal হলো এমন text, যা shell ঠিক লেখা অনুযায়ী নেয়। Quoting character-এর বিশেষ অর্থ বন্ধ করে। Single quote-এর ভেতরে প্রতিটি character literal থাকে, এবং এর ভেতরে single quote রাখা যায় না <Cite n={21} />। একটি রাখতে string বন্ধ করুন, `\'` যোগ করুন, তারপর আবার খুলুন <Cite n={5} />। Double quote বেশিরভাগ character literal রাখে, কিন্তু `$`, backtick এবং `\` active থাকে <Cite n={22} />। Quote-এর বাইরে একটি backslash পরের character-টিকে literal করে <Cite n={20} />।
+**লক্ষ্য:** Quote দিয়ে text ঠিক যেমন লিখেছেন তেমন রাখুন।
 
-`$'...'` `\n` এবং `\t`-এর মতো escape decode করে <Cite n={23} />। 2024 সালের POSIX standard এটি define করে <Cite n={39} />, কিন্তু একটি test-এ dash এটি decode করেনি।
+Literal হলো এমন text, যা shell ঠিক লেখা অনুযায়ী নেয়। Quoting character-এর বিশেষ অর্থ বন্ধ করে। Single quote-এর ভেতরে প্রতিটি character literal থাকে। <Cite n={21} /> Double quote বেশিরভাগ character literal রাখে, কিন্তু `$`, backtick এবং `\` active থাকে। <Cite n={22} /> Quote-এর বাইরে একটি backslash পরের character-টিকে literal করে। <Cite n={20} />
 
-Here-document একটি command-কে input হিসেবে কয়েকটি লাইন দেয়। `<<`-এর পরের word-টি শেষের marker। Marker quote করলে ভেতরের কিছুই expand হয় না; না করলে variable এবং `$(...)` expand হয়। `<<-` দিলে shell শুরুর tab-গুলো সরিয়ে দেয়, তাই আপনি text indent করতে পারেন <Cite n={24} />।
+**চেষ্টা করুন:** একই variable single quote-এ আর double quote-এ print করুন। Double quote-এর ভেতরে `\$` `$`-কে literal রাখে। <Cite n={22} />
 
-`$((expression))` C operator দিয়ে পূর্ণসংখ্যার হিসাব করে <Cite n={26} /> <Cite n={25} />। শুরুতে `0` মানে octal, আর `0x` মানে hexadecimal <Cite n={25} />। `base#n` form অন্য base-এ একটি সংখ্যা লেখে। POSIX শুধু decimal, octal এবং hexadecimal constant চায়, তাই অন্য shell `base#n` reject করতে পারে <Cite n={25} /> <Cite n={39} />। একটি test-এ dash তা-ই করেছে।
+```bash
+(
+  user=qa
+  echo 'single: $user'    # single: $user
+  echo "double: $user"    # double: qa
+  echo "price: \$5"       # price: $5
+)
+```
 
-এই tutorial-এর নিজের পরামর্শ: `$((08))` একটি error, কারণ `08` একটি valid octal সংখ্যা নয়।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: `grep` pattern single quote-এ রাখুন, আর JSON test data quoted here-document দিয়ে লিখুন, যাতে shell এগুলো না বদলায়।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Single quote-এর ভেতরে single quote রাখা যায় না। <Cite n={21} /> একটি রাখতে string বন্ধ করুন, `\'` যোগ করুন, তারপর আবার খুলুন। <Cite n={5} />
+- `$'...'` `\n` এবং `\t`-এর মতো escape decode করে। <Cite n={23} /> 2024 সালের POSIX standard এটি define করে <Cite n={39} />, কিন্তু একটি test-এ dash এটি decode করেনি।
+- Here-document একটি command-কে input হিসেবে কয়েকটি লাইন দেয়। `<<`-এর পরের word-টি শেষের marker। Marker quote করলে ভেতরের কিছুই expand হয় না; না করলে variable এবং `$(...)` expand হয়। `<<-` দিলে shell শুরুর tab-গুলো সরিয়ে দেয়। <Cite n={24} />
+- `$((expression))` C operator দিয়ে পূর্ণসংখ্যার হিসাব করে। <Cite n={26} /> <Cite n={25} /> শুরুতে `0` মানে octal, আর `0x` মানে hexadecimal। <Cite n={25} /> `base#n` form অন্য base-এ একটি সংখ্যা লেখে। POSIX শুধু decimal, octal এবং hexadecimal constant চায়, তাই অন্য shell `base#n` reject করতে পারে। <Cite n={25} /> <Cite n={39} />
+
+Tutorial-এর নিজস্ব পরামর্শ: `$((08))` একটি error, কারণ `08` একটি valid octal সংখ্যা নয়।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -269,65 +452,128 @@ Here-document একটি command-কে input হিসেবে কয়ে�
 <Voices>
 <Technical>
 
-`if` runs a command and reads its exit status. Zero means true. Any other value means false. <Cite n={12} /> The command can be any program, such as `grep -q`. `elif` and `else` add more branches. <Cite n={27} />
+**Goal:** Run a command only when a test passes, with `if` and `[ ]`.
 
-Two forms compare values. `[ ... ]` is the `test` command, so it needs spaces around the brackets and around each operator. <Cite n={35} /> <Cite n={43} /> `[[ ... ]]` is a Bash keyword that POSIX leaves unspecified. <Cite n={27} /> <Cite n={39} /> It does not split words, it matches patterns with `==`, and `=~` matches a regular expression. <Cite n={27} /> In `[[ =~ ]]`, keep the pattern unquoted or in a variable: quotes make the match literal. <Cite n={27} /> Use a single `=` inside `[ ]` for portability. <Cite n={28} />
-
-File tests: `-f` regular file, `-d` directory, `-e` exists, `-r` readable. <Cite n={28} /> Numbers use `-eq -ne -lt -le -gt -ge`. Strings use `= !=`. <Cite n={7} /> <Cite n={28} /> In `[ ]`, quote each variable. An empty unquoted variable vanishes and leaves a broken test. <Cite n={32} />
-
-`&&` runs the next command only after success. `||` runs it only after failure. <Cite n={29} /> `a && b || c` is not if/else: `c` also runs when `b` fails. `cd "$dir" || exit 1` stops a script when `cd` fails. <Cite n={48} /> `case` compares one word with patterns and ends each branch with `;;`. <Cite n={27} />
+`if` runs a command and reads its exit status. Zero means true. Any other value means false. <Cite n={12} /> `elif` and `else` add more branches. <Cite n={27} /> `[ ... ]` is the `test` command, so it needs spaces around the brackets and around each operator. <Cite n={35} /> <Cite n={43} /> `-f` tests for a regular file, and `-d` tests for a directory. <Cite n={28} /> In `[ ]`, quote each variable. <Cite n={32} />
 
 ```bash
-cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
-path=notes.txt count=12 name="smoke test"
-printf 'ok\n' > "$path"               # the demo creates its own file
+if [ -f "$path" ]; then echo "a file"; fi
+```
 
-if [ -d "$path" ]; then
-  echo "directory"
-elif [ -f "$path" ] && [ -r "$path" ]; then
-  echo "readable file"
-else
-  echo "missing or not a file"
-fi
+**Try it:** make a file in a throw-away directory, print the exit status of two tests, and use one test in `if`.
 
-[ "$count" -ge 10 ] && echo "count: 10 or more"
-[ "$name" = "smoke test" ] && echo "same name"
-[[ $name == smoke* ]] && echo "pattern match"   # POSIX leaves [[ unspecified
-if grep -q '^root:' /etc/passwd; then echo "if tests any command"; fi
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  touch notes.txt
+  [ -f notes.txt ]; echo "status: $?"   # status: 0  (a regular file)
+  [ -d notes.txt ]; echo "status: $?"   # status: 1  (not a directory)
+  if [ -f notes.txt ]; then echo "a file"; else echo "no file"; fi   # a file
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
 
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: check preconditions at the top of a script, such as `[ -d "$REPORT_DIR" ] || exit 1`, and print which check failed.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- The command after `if` can be any program, such as `grep -q`. <Cite n={27} />
+- `-e` tests that a path exists, and `-r` that it is readable. <Cite n={28} /> Numbers use `-eq -ne -lt -le -gt -ge`. Strings use `= !=`. <Cite n={7} /> <Cite n={28} /> Use a single `=` inside `[ ]` for portability. <Cite n={28} />
+- An empty unquoted variable vanishes and leaves a broken test. <Cite n={32} />
+- `[[ ... ]]` is a Bash keyword that POSIX leaves unspecified. <Cite n={27} /> <Cite n={39} /> It does not split words, it matches patterns with `==`, and `=~` matches a regular expression. In `[[ =~ ]]`, keep the pattern unquoted or in a variable: quotes make the match literal. <Cite n={27} />
+- `&&` runs the next command only after success. `||` runs it only after failure. <Cite n={29} /> `a && b || c` is not if/else: `c` also runs when `b` fails.
+- `cd "$dir" || exit 1` stops a script when `cd` fails. <Cite n={48} />
+- `case` compares one word with patterns and ends each branch with `;;`. <Cite n={27} />
+
+```bash
 case "$name" in
   smoke*|sanity*) echo "short suite" ;;
   *)              echo "unknown suite" ;;
 esac
-
-true && false || echo "runs although the middle command failed"
 ```
 
-<Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: check preconditions at the top of a script, for example `[ -d "$REPORT_DIR" ] || exit 1`, and print which check failed. A fast, clear failure is better in CI than a wrong result ten minutes later.
-</Callout>
+Tutorial's own advice: a fast, clear failure is better in CI than a wrong result ten minutes later.
+
+</details>
 
 </Technical>
 <Layman>
 
-`if` runs a command and reads its exit status. Zero means true, and any other value means false <Cite n={12} />. `elif` and `else` add more branches <Cite n={27} />.
+**Goal:** Run a command only when a test passes, with `if` and `[ ]`.
 
-`[ ... ]` is the `test` command. It needs spaces around the brackets and around each operator <Cite n={35} /> <Cite n={43} />. `[[ ... ]]` is a Bash keyword that POSIX leaves unspecified <Cite n={27} /> <Cite n={39} />. It does not split words. It matches patterns with `==` and regular expressions with `=~` <Cite n={27} />. Inside `[ ]`, use a single `=` for portability <Cite n={28} />.
+`if` runs a command and reads its exit status. Zero means true, and any other value means false. <Cite n={12} /> `elif` and `else` add more branches. <Cite n={27} /> `[ ... ]` is the `test` command. It needs spaces around the brackets and around each operator. <Cite n={35} /> <Cite n={43} /> `-f` tests for a regular file, and `-d` for a directory. <Cite n={28} /> In `[ ]`, quote each variable. <Cite n={32} />
 
-`-f` tests for a regular file, `-d` for a directory, `-e` for a path that exists, and `-r` for a readable file <Cite n={28} />. Numbers use `-eq -ne -lt -le -gt -ge`, and strings use `= !=` <Cite n={7} /> <Cite n={28} />. In `[ ]`, quote each variable <Cite n={32} />.
+**Try it:** make a file in a throw-away directory, print the exit status of two tests, and use one test in `if`.
 
-`&&` runs the next command only after success, and `||` only after failure <Cite n={29} />. `a && b || c` is not if/else, because `c` also runs when `b` fails. `cd "$dir" || exit 1` stops the script when `cd` fails <Cite n={48} />. `case` compares one word with patterns <Cite n={27} />.
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  touch notes.txt
+  [ -f notes.txt ]; echo "status: $?"   # status: 0  (a regular file)
+  [ -d notes.txt ]; echo "status: $?"   # status: 1  (not a directory)
+  if [ -f notes.txt ]; then echo "a file"; else echo "no file"; fi   # a file
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: check preconditions at the top of a script, such as `[ -d "$REPORT_DIR" ] || exit 1`, and print which check failed.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `-e` tests for a path that exists, and `-r` for a readable file. <Cite n={28} /> Numbers use `-eq -ne -lt -le -gt -ge`, and strings use `= !=`. <Cite n={7} /> <Cite n={28} />
+- `[[ ... ]]` is a Bash keyword that POSIX leaves unspecified. <Cite n={27} /> <Cite n={39} /> It matches patterns with `==` and regular expressions with `=~`. <Cite n={27} />
+- `&&` runs the next command only after success, and `||` only after failure. <Cite n={29} /> `a && b || c` is not if/else, because `c` also runs when `b` fails.
+- `cd "$dir" || exit 1` stops the script when `cd` fails. <Cite n={48} /> `case` compares one word with patterns. <Cite n={27} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-`if` একটি command চালায় এবং তার exit status পড়ে। 0 মানে true, অন্য যেকোনো value মানে false <Cite n={12} />। Command-টি যেকোনো program হতে পারে, যেমন `grep -q`। `elif` এবং `else` আরও branch যোগ করে <Cite n={27} />।
+**লক্ষ্য:** `if` আর `[ ]` দিয়ে একটি command শুধু তখনই চালান, যখন একটি test pass করে।
 
-দুটি form value তুলনা করে। `[ ... ]` হলো `test` command, তাই bracket-এর চারপাশে এবং প্রতিটি operator-এর চারপাশে space লাগে <Cite n={35} /> <Cite n={43} />। `[[ ... ]]` একটি Bash keyword, যা POSIX unspecified রাখে <Cite n={27} /> <Cite n={39} />। এটি word split করে না, `==` দিয়ে pattern match করে, আর `=~` দিয়ে regular expression match করে <Cite n={27} />। Portability-র জন্য `[ ]`-এর ভেতরে একটি `=` ব্যবহার করুন <Cite n={28} />।
+`if` একটি command চালায় এবং তার exit status পড়ে। 0 মানে true, অন্য যেকোনো value মানে false। <Cite n={12} /> `elif` এবং `else` আরও branch যোগ করে। <Cite n={27} /> `[ ... ]` হলো `test` command, তাই bracket-এর চারপাশে এবং প্রতিটি operator-এর চারপাশে space লাগে। <Cite n={35} /> <Cite n={43} /> `-f` regular file test করে, আর `-d` directory test করে। <Cite n={28} /> `[ ]`-এ প্রতিটি variable quote করুন। <Cite n={32} />
 
-File test: `-f` regular file, `-d` directory, `-e` exists, `-r` readable <Cite n={28} />। সংখ্যার জন্য `-eq -ne -lt -le -gt -ge`, আর string-এর জন্য `= !=` <Cite n={7} /> <Cite n={28} />। `[ ]`-এ প্রতিটি variable quote করুন; quote ছাড়া একটি empty variable হারিয়ে যায় এবং test ভেঙে যায় <Cite n={32} />।
+**চেষ্টা করুন:** একটি throw-away directory-তে একটি file বানান, দুটি test-এর exit status print করুন, আর একটি test `if`-এ ব্যবহার করুন।
 
-`&&` শুধু success-এর পর পরের command চালায়, আর `||` শুধু failure-এর পর চালায় <Cite n={29} />। `a && b || c` if/else নয়: `b` fail করলেও `c` চলে। `cd "$dir" || exit 1` `cd` fail করলে script থামায় <Cite n={48} />। `case` একটি word-কে কয়েকটি pattern-এর সাথে তুলনা করে, এবং প্রতিটি branch `;;` দিয়ে শেষ হয় <Cite n={27} />।
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  touch notes.txt
+  [ -f notes.txt ]; echo "status: $?"   # status: 0  (a regular file)
+  [ -d notes.txt ]; echo "status: $?"   # status: 1  (not a directory)
+  if [ -f notes.txt ]; then echo "a file"; else echo "no file"; fi   # a file
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: script-এর শুরুতে precondition check করুন, যেমন `[ -d "$REPORT_DIR" ] || exit 1`, আর কোন check fail করেছে তা print করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `if`-এর পরের command যেকোনো program হতে পারে, যেমন `grep -q`। <Cite n={27} />
+- `-e` path আছে কি না, আর `-r` readable কি না test করে। <Cite n={28} /> সংখ্যার জন্য `-eq -ne -lt -le -gt -ge`, আর string-এর জন্য `= !=`। <Cite n={7} /> <Cite n={28} /> Portability-র জন্য `[ ]`-এর ভেতরে একটি `=` ব্যবহার করুন। <Cite n={28} />
+- Quote ছাড়া একটি empty variable হারিয়ে যায় এবং test ভেঙে যায়। <Cite n={32} />
+- `[[ ... ]]` একটি Bash keyword, যা POSIX unspecified রাখে। <Cite n={27} /> <Cite n={39} /> এটি word split করে না, `==` দিয়ে pattern match করে, আর `=~` দিয়ে regular expression match করে। <Cite n={27} />
+- `&&` শুধু success-এর পর পরের command চালায়, আর `||` শুধু failure-এর পর চালায়। <Cite n={29} /> `a && b || c` if/else নয়: `b` fail করলেও `c` চলে।
+- `cd "$dir" || exit 1` `cd` fail করলে script থামায়। <Cite n={48} /> `case` একটি word-কে কয়েকটি pattern-এর সাথে তুলনা করে, এবং প্রতিটি branch `;;` দিয়ে শেষ হয়। <Cite n={27} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -337,63 +583,135 @@ File test: `-f` regular file, `-d` directory, `-e` exists, `-r` readable <Cite n
 <Voices>
 <Technical>
 
-A loop repeats commands. `for name in words; do ...; done` runs once for each word. `while` repeats as long as its test succeeds. `until` repeats as long as it fails, so it is a `while` with the test reversed. <Cite n={30} /> <Cite n={8} /> Put `;` or a newline before `do`. <Cite n={9} /> <Cite n={30} /> `break` leaves the loop, and `continue` starts the next round. <Cite n={35} /> The C-style `for ((i=0; i<3; i++))` is a Bash form; dash rejected it in a test. <Cite n={30} />
+**Goal:** Repeat a command for each file, also when a file name has a space.
 
-To loop over files, use a glob, not `$(ls)`. The output of `ls` is split at spaces, so `my report.txt` becomes two words. <Cite n={47} /> If nothing matches, the glob stays as typed, so test with `[ -e "$f" ] || continue`. <Cite n={31} /> Use `--` before names that may start with a dash. <Cite n={6} />
-
-To read a file line by line, use `while IFS= read -r line`. `-r` keeps backslashes. <Cite n={36} /> An empty `IFS` keeps leading spaces. <Cite n={32} /> <Cite n={6} /> Do not pipe into `while`. Each part of a pipeline runs in its own subshell, a child copy of the shell, so variables set in the loop are lost. <Cite n={33} /> Write `done < file` instead.
+A loop repeats commands. `for name in words; do ...; done` runs once for each word. `while` repeats as long as its test succeeds. `until` repeats as long as its test fails. <Cite n={30} /> <Cite n={8} /> Put `;` or a newline before `do`. <Cite n={9} /> <Cite n={30} /> To loop over files, use a glob, not `$(ls)`. The output of `ls` is split at spaces, so `my report.txt` becomes two words. <Cite n={47} />
 
 ```bash
-cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
-touch -- "my report.txt" "-odd.txt"     # a space in one name, a dash in the other
-for f in ./*.txt; do                    # a glob: safe for odd names
-  [ -e "$f" ] || continue               # no match: the glob stays as typed
-  echo "file: $f"
-done
+for f in ./*.txt; do echo "file: $f"; done
+```
 
-printf '%s\n' "first" "  indented \\ line" "last" > lines.dat
-while IFS= read -r line; do             # keeps spaces and backslashes
-  printf '[%s]\n' "$line"
-done < lines.dat
+**Try it:** make two files, one with a space in its name. Loop over them with a glob, then with `$(ls)` (the output of `ls` in its place). <Cite n={17} />
 
-total=0
-for n in 1 2 3 4 5; do
-  [ "$n" -eq 2 ] && continue            # skip this round
-  [ "$n" -eq 5 ] && break               # leave the loop
-  total=$((total + n))
-done
-echo "total: $total"
-
-tries=0                                 # poll, but never forever
-until [ -e ready.flag ] || [ "$tries" -ge 3 ]; do tries=$((tries + 1)); sleep 1; done
-echo "tries: $tries"
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  touch "my report.txt" b.txt
+  for f in ./*.txt; do echo "file: $f"; done
+  # file: ./b.txt
+  # file: ./my report.txt
+  for f in $(ls); do echo "word: $f"; done
+  # word: b.txt
+  # word: my
+  # word: report.txt
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: use `until` to wait for a service, and always add a counter or a time limit. A dead service then fails the CI job fast instead of hanging it.
+
+Tutorial's own advice: when `until` waits for a service, add a counter or a time limit. A dead service then fails the CI job fast.
+
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `until` is a `while` with the test reversed. <Cite n={30} /> <Cite n={8} />
+- `break` leaves the loop, and `continue` starts the next round. <Cite n={35} />
+- The C-style `for ((i=0; i<3; i++))` is a Bash form. Dash rejected it in a test. <Cite n={30} />
+- If nothing matches, the glob stays as typed, so test with `[ -e "$f" ] || continue`. <Cite n={31} /> Use `--` before names that may start with a dash. <Cite n={6} />
+- To read a file line by line, use `while IFS= read -r line; do ...; done < file`. `-r` keeps backslashes. <Cite n={36} /> An empty `IFS` keeps leading spaces. <Cite n={32} /> <Cite n={6} />
+- Do not pipe into `while`. Each part of a pipeline runs in its own subshell, a child copy of the shell, so variables set in the loop are lost. <Cite n={33} /> Write `done < file` instead.
+
+```bash
+tries=0                                 # poll, but never forever
+until [ -e ready.flag ] || [ "$tries" -ge 3 ]; do tries=$((tries + 1)); sleep 1; done
+echo "tries: $tries"                    # tries: 3, if ready.flag never appears
+```
+
+</details>
 
 </Technical>
 <Layman>
 
-A loop repeats commands. `for name in words; do ...; done` runs one time for each word. `while` repeats while its test succeeds. `until` repeats while its test fails <Cite n={30} /> <Cite n={8} />. Put `;` or a new line before `do` <Cite n={9} /> <Cite n={30} />. `break` stops the loop, and `continue` starts the next round <Cite n={35} />.
+**Goal:** Repeat a command for each file, also when a file name has a space.
 
-To loop over files, use a glob, not `$(ls)`. The shell splits the output of `ls` at spaces, so `my report.txt` becomes two words <Cite n={47} />. If no file matches, the glob stays as you typed it. So test each name with `[ -e "$f" ] || continue` <Cite n={31} />. Put `--` before names that can start with a dash <Cite n={6} />.
+A loop repeats commands. `for name in words; do ...; done` runs one time for each word. `while` repeats while its test succeeds. `until` repeats while its test fails. <Cite n={30} /> <Cite n={8} /> Put `;` or a new line before `do`. <Cite n={9} /> <Cite n={30} /> To loop over files, use a glob, not `$(ls)`. The shell splits the output of `ls` at spaces, so `my report.txt` becomes two words. <Cite n={47} />
 
-To read a file one line at a time, use `while IFS= read -r line`. `-r` keeps backslashes <Cite n={36} />. An empty `IFS` keeps leading spaces <Cite n={32} /> <Cite n={6} />. Do not pipe into `while`. Each part of a pipeline runs in its own subshell, so the loop loses its variables <Cite n={33} />. Write `done < file` instead.
+**Try it:** make two files, one with a space in its name. Loop over them with a glob, then with `$(ls)` (the output of `ls` in its place). <Cite n={17} />
 
-The tutorial's own advice: when `until` waits for a service, always add a counter or a time limit.
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  touch "my report.txt" b.txt
+  for f in ./*.txt; do echo "file: $f"; done
+  # file: ./b.txt
+  # file: ./my report.txt
+  for f in $(ls); do echo "word: $f"; done
+  # word: b.txt
+  # word: my
+  # word: report.txt
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: when `until` waits for a service, always add a counter or a time limit. A dead service then fails the CI job fast.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `break` stops the loop, and `continue` starts the next round. <Cite n={35} />
+- If no file matches, the glob stays as you typed it. So test each name with `[ -e "$f" ] || continue`. <Cite n={31} /> Put `--` before names that can start with a dash. <Cite n={6} />
+- To read a file one line at a time, use `while IFS= read -r line`. `-r` keeps backslashes. <Cite n={36} /> An empty `IFS` keeps leading spaces. <Cite n={32} /> <Cite n={6} />
+- Do not pipe into `while`. Each part of a pipeline runs in its own subshell, a child copy of the shell, so the loop loses its variables. <Cite n={33} /> Write `done < file` instead.
+
+</details>
 
 </Layman>
 <Bangla>
 
-Loop command-গুলো বারবার চালায়। `for name in words; do ...; done` প্রতিটি word-এর জন্য একবার চলে। `while` তার test সফল থাকা পর্যন্ত চলে। `until` test ব্যর্থ থাকা পর্যন্ত চলে, তাই এটি উল্টো test-সহ একটি `while` <Cite n={30} /> <Cite n={8} />। `do`-এর আগে `;` বা একটি নতুন লাইন দিন <Cite n={9} /> <Cite n={30} />। `break` loop থেকে বের হয়, আর `continue` পরের round শুরু করে <Cite n={35} />। C-style `for ((i=0; i<3; i++))` একটি Bash form; একটি test-এ dash এটি reject করেছে <Cite n={30} />।
+**লক্ষ্য:** প্রতিটি file-এর জন্য একটি command বারবার চালান, file-এর নামে space থাকলেও।
 
-File-এর উপর loop চালাতে `$(ls)` নয়, glob ব্যবহার করুন। `ls`-এর output space-এ ভাগ হয়, তাই `my report.txt` দুটি word হয়ে যায় <Cite n={47} />। কিছু match না করলে glob যেমন লেখা তেমনই থাকে, তাই `[ -e "$f" ] || continue` দিয়ে test করুন <Cite n={31} />। যে নাম dash দিয়ে শুরু হতে পারে, তার আগে `--` দিন <Cite n={6} />।
+Loop command-গুলো বারবার চালায়। `for name in words; do ...; done` প্রতিটি word-এর জন্য একবার চলে। `while` তার test সফল থাকা পর্যন্ত চলে। `until` test ব্যর্থ থাকা পর্যন্ত চলে। <Cite n={30} /> <Cite n={8} /> `do`-এর আগে `;` বা একটি নতুন লাইন দিন। <Cite n={9} /> <Cite n={30} /> File-এর উপর loop চালাতে `$(ls)` নয়, glob ব্যবহার করুন। `ls`-এর output space-এ ভাগ হয়, তাই `my report.txt` দুটি word হয়ে যায়। <Cite n={47} />
 
-একটি file লাইন ধরে ধরে পড়তে `while IFS= read -r line` ব্যবহার করুন। `-r` backslash রেখে দেয় <Cite n={36} />। Empty `IFS` শুরুর space রেখে দেয় <Cite n={32} /> <Cite n={6} />। `while`-এর ভেতরে pipe করবেন না। Pipeline-এর প্রতিটি অংশ নিজের subshell-এ চলে, তাই loop-এ set করা variable হারিয়ে যায় <Cite n={33} />। এর বদলে `done < file` লিখুন।
+**চেষ্টা করুন:** দুটি file বানান, যার একটির নামে space আছে। প্রথমে glob দিয়ে, তারপর `$(ls)` (এর জায়গায় `ls`-এর output বসে) দিয়ে এগুলোর উপর loop চালান। <Cite n={17} />
 
-এই tutorial-এর নিজের পরামর্শ: service-এর জন্য অপেক্ষা করতে `until` ব্যবহার করলে সবসময় একটি counter বা time limit যোগ করুন।
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  touch "my report.txt" b.txt
+  for f in ./*.txt; do echo "file: $f"; done
+  # file: ./b.txt
+  # file: ./my report.txt
+  for f in $(ls); do echo "word: $f"; done
+  # word: b.txt
+  # word: my
+  # word: report.txt
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: service-এর জন্য `until` দিয়ে অপেক্ষা করলে একটি counter বা time limit দিন। তাহলে বন্ধ service-এ CI job দ্রুত fail করে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `until` হলো উল্টো test-সহ একটি `while`। <Cite n={30} /> <Cite n={8} /> `break` loop থেকে বের হয়, আর `continue` পরের round শুরু করে। <Cite n={35} />
+- C-style `for ((i=0; i<3; i++))` একটি Bash form; একটি test-এ dash এটি reject করেছে। <Cite n={30} />
+- কিছু match না করলে glob যেমন লেখা তেমনই থাকে, তাই `[ -e "$f" ] || continue` দিয়ে test করুন। <Cite n={31} /> যে নাম dash দিয়ে শুরু হতে পারে, তার আগে `--` দিন। <Cite n={6} />
+- একটি file লাইন ধরে ধরে পড়তে `while IFS= read -r line` ব্যবহার করুন। `-r` backslash রেখে দেয়। <Cite n={36} /> Empty `IFS` শুরুর space রেখে দেয়। <Cite n={32} /> <Cite n={6} />
+- `while`-এ pipe করে input দেবেন না। Pipeline-এর প্রতিটি অংশ নিজের subshell-এ চলে, তাই loop-এ set করা variable হারিয়ে যায়। <Cite n={33} /> এর বদলে `done < file` লিখুন।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -403,69 +721,135 @@ File-এর উপর loop চালাতে `$(ls)` নয়, glob ব্য�
 <Voices>
 <Technical>
 
-`bash -n script.sh` reads a script, reports syntax errors, and runs nothing. <Cite n={34} /> <Cite n={10} /> `bash -x script.sh` prints each command after expansion. <Cite n={34} /> The `PS4` variable sets the prefix of each trace line, and `BASH_SOURCE` and `LINENO` add file and line. Use single quotes, so `PS4` expands at each trace. <Cite n={37} />
+**Goal:** Trace a script and stop it at the first failed command.
 
-`set -e` stops a script after a failed command. It ignores a failure in an `if` test. It also ignores failures before the last command of a `&&` or `||` list, and of a pipeline without `pipefail`. `set -o pipefail` makes a pipeline fail when any part fails. `set -u` makes an unset variable an error. <Cite n={34} /> These are aids, not guarantees.
-
-A trap runs a command on an event. `trap 'cmd' ERR` fires when a command fails, with the same exceptions as `set -e`. `trap 'cmd' EXIT` fires when the shell exits, which suits clean-up, but not after SIGKILL, which no trap can catch. <Cite n={35} /> <Cite n={50} /> `ERR` is not a POSIX condition: POSIX lists `EXIT` and signals. <Cite n={39} /> Print to the error stream with `echo "x=$x" >&2`. <Cite n={24} /> ShellCheck finds quoting, `$(ls)`, and `cd` mistakes. <Cite n={45} /> <Cite n={46} /> <Cite n={47} /> <Cite n={48} />
+`bash -n script.sh` reports syntax errors and runs nothing. <Cite n={34} /> <Cite n={10} /> `bash -x script.sh` prints each command after expansion. `set -e` stops a script after a failed command. `set -u` makes an unset variable an error. `set -o pipefail` makes a pipeline fail when any part fails. <Cite n={34} /> Never run `rm -rf "$dir/"` with a variable that may be empty: the path can become `/`. Use `${dir:?}`, which stops the script if the variable is unset or empty. <Cite n={16} />
 
 ```bash
-cd "$(mktemp -d)" || exit 1          # a scratch directory: the examples create files here
-cat > flaky.sh <<'EOF'                  # creates flaky.sh in the scratch directory
-#!/usr/bin/env bash
-set -euo pipefail
+bash -x script.sh
+```
+
+**Try it:** write a script that fails in the middle, check its syntax, and trace it. `bash -x` writes each command with a `+` in front. <Cite n={37} />
+
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  printf '%s\n' 'set -euo pipefail' 'echo "start"' 'false' 'echo "never reached"' > flaky.sh
+  bash -n flaky.sh && echo "syntax ok"   # syntax ok
+  bash -x flaky.sh; echo "status: $?"
+  # + set -euo pipefail
+  # + echo start
+  # start
+  # + false
+  # status: 1
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: in CI, trace with `set -x` only around the failing step. A trace shows expanded values, so it can put tokens into the log.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- The `PS4` variable sets the prefix of each trace line. `BASH_SOURCE` and `LINENO` add the file and the line. Use single quotes, so `PS4` expands at each trace. <Cite n={37} />
+- `set -e` ignores a failure in an `if` test. It also ignores failures before the last command of a `&&` or `||` list, and of a pipeline without `pipefail`. <Cite n={34} /> These options are aids, not guarantees.
+- `trap 'cmd' ERR` runs a command when a command fails, with the same exceptions as `set -e`. `trap 'cmd' EXIT` runs when the shell exits, which suits clean-up. It does not run after SIGKILL, which no trap can catch. <Cite n={35} /> <Cite n={50} />
+- `ERR` is not a POSIX condition: POSIX lists `EXIT` and signals. <Cite n={39} />
+- `echo "x=$x" >&2` prints to the error stream. <Cite n={24} />
+- `mktemp -d` makes a temporary directory. <Cite n={44} />
+- ShellCheck finds quoting, `$(ls)`, and `cd` mistakes. <Cite n={45} /> <Cite n={46} /> <Cite n={47} /> <Cite n={48} />
+
+```bash
+# the top of a script: a temporary directory that the EXIT trap deletes
 tmp=$(mktemp -d)
 trap 'rm -rf -- "${tmp:?}"' EXIT
 trap 'echo "failed at line $LINENO, status $?" >&2' ERR   # ERR: not a POSIX condition
-echo "start" > "$tmp/log.txt"
-grep -c "missing" "$tmp/log.txt"        # exits 1: no match
-echo "never reached"
-EOF
-bash -n flaky.sh && echo "syntax ok"
-bash flaky.sh; echo "status: $?"
-PS4='+ ${BASH_SOURCE##*/}:${LINENO}: ' bash -x flaky.sh 2>&1 | tail -5
-
-# Output (the temporary path differs on each run):
-#   syntax ok
-#   0
-#   failed at line 7, status 1
-#   status: 1
-#   + flaky.sh:7: grep -c missing /tmp/tmp.XXXXXXXXXX/log.txt
-#   0
-#   ++ flaky.sh:7: echo 'failed at line 7, status 1'
-#   failed at line 7, status 1
-#   + flaky.sh:1: rm -rf -- /tmp/tmp.XXXXXXXXXX
+PS4='+ ${BASH_SOURCE##*/}:${LINENO}: '                    # with bash -x: + file:line: command
 ```
 
-<Callout type="danger">
-Never run `rm -rf "$dir/"` with a variable that may be empty: the path can become `/`. Use `${dir:?}`, which stops the script if it is unset or empty. <Cite n={16} /> `mktemp -d` makes the directory. <Cite n={44} />
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-Tutorial's own advice: in CI, trace with `set -x` only around the failing step. A trace shows expanded values, so it can put tokens into the job log.
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-`bash -n script.sh` reports syntax errors and runs nothing <Cite n={34} /> <Cite n={10} />. `bash -x script.sh` prints each command after expansion <Cite n={34} />. The `PS4` variable sets the start of each trace line. `BASH_SOURCE` and `LINENO` add the file and the line. Put `PS4` in single quotes, so it expands at each trace <Cite n={37} />.
+**Goal:** Trace a script and stop it at the first failed command.
 
-`set -e` stops a script after a command fails. It ignores a failure in an `if` test. It also ignores failures before the last command of a `&&` or `||` list, and of a pipeline without `pipefail`. `set -o pipefail` makes a pipeline fail when any part fails. `set -u` makes an unset variable an error <Cite n={34} />.
+`bash -n script.sh` reports syntax errors and runs nothing. <Cite n={34} /> <Cite n={10} /> `bash -x script.sh` prints each command after expansion. `set -e` stops a script after a command fails. `set -u` makes an unset variable an error. `set -o pipefail` makes a pipeline fail when any part fails. <Cite n={34} /> If a variable can be empty, never run `rm -rf "$dir/"`, because the path can become `/`. Use `${dir:?}`, which stops the script if the variable is unset or empty. <Cite n={16} />
 
-`trap 'cmd' ERR` runs a command when a command fails, with the same exceptions as `set -e`. `trap 'cmd' EXIT` runs it when the shell exits, so it is good for clean-up. It does not run after SIGKILL, because no trap can catch SIGKILL <Cite n={35} /> <Cite n={50} />. `ERR` is not a POSIX condition <Cite n={39} />.
+**Try it:** write a script that fails in the middle, check its syntax, and trace it. `bash -x` writes each command with a `+` in front. <Cite n={37} />
 
-If a variable can be empty, never run `rm -rf "$dir/"`, because the path can become `/`. Use `${dir:?}` <Cite n={16} />.
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  printf '%s\n' 'set -euo pipefail' 'echo "start"' 'false' 'echo "never reached"' > flaky.sh
+  bash -n flaky.sh && echo "syntax ok"   # syntax ok
+  bash -x flaky.sh; echo "status: $?"
+  # + set -euo pipefail
+  # + echo start
+  # start
+  # + false
+  # status: 1
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: in CI, trace with `set -x` only around the failing step. A trace shows the values, so it can put tokens into the log.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- The `PS4` variable sets the start of each trace line. `BASH_SOURCE` and `LINENO` add the file and the line. Put `PS4` in single quotes, so it expands at each trace. <Cite n={37} />
+- `set -e` ignores a failure in an `if` test. It also ignores failures before the last command of a `&&` or `||` list, and of a pipeline without `pipefail`. <Cite n={34} />
+- `trap 'cmd' ERR` runs a command when a command fails. `trap 'cmd' EXIT` runs it when the shell exits, so it is good for clean-up. It does not run after SIGKILL, because no trap can catch SIGKILL. <Cite n={35} /> <Cite n={50} /> `ERR` is not a POSIX condition. <Cite n={39} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-`bash -n script.sh` একটি script পড়ে, syntax error জানায় এবং কিছুই চালায় না <Cite n={34} /> <Cite n={10} />। `bash -x script.sh` expansion-এর পর প্রতিটি command print করে <Cite n={34} />। `PS4` variable প্রতিটি trace লাইনের prefix ঠিক করে, আর `BASH_SOURCE` ও `LINENO` file এবং লাইন যোগ করে। Single quote ব্যবহার করুন, যাতে প্রতিটি trace-এ `PS4` expand হয় <Cite n={37} />।
+**লক্ষ্য:** একটি script trace করুন, আর প্রথম fail করা command-এ সেটি থামান।
 
-`set -e` একটি command fail করলে script থামায়। তবে এটি `if` test-এর failure উপেক্ষা করে। `&&` বা `||` list-এর শেষ command-এর আগের failure, এবং `pipefail` ছাড়া pipeline-এর শেষ command-এর আগের failure-ও এটি উপেক্ষা করে। `set -o pipefail` দিলে pipeline-এর যেকোনো অংশ fail করলে pipeline fail করে। `set -u` একটি unset variable-কে error বানায় <Cite n={34} />। এগুলো সহায়ক, guarantee নয়।
+`bash -n script.sh` syntax error জানায় এবং কিছুই চালায় না। <Cite n={34} /> <Cite n={10} /> `bash -x script.sh` expansion-এর পর প্রতিটি command print করে। `set -e` একটি command fail করলে script থামায়। `set -u` একটি unset variable-কে error বানায়। `set -o pipefail` দিলে pipeline-এর যেকোনো অংশ fail করলে pipeline fail করে। <Cite n={34} /> যে variable empty হতে পারে, তা দিয়ে কখনো `rm -rf "$dir/"` চালাবেন না: path-টি `/` হয়ে যেতে পারে। `${dir:?}` ব্যবহার করুন, যা variable unset বা empty হলে script থামায়। <Cite n={16} />
 
-Trap একটি event-এ একটি command চালায়। `trap 'cmd' ERR` একটি command fail করলে চলে, `set -e`-এর মতো একই ব্যতিক্রমসহ। `trap 'cmd' EXIT` shell exit করলে চলে, যা clean-up-এর জন্য উপযুক্ত। কিন্তু SIGKILL-এর পর এটি চলে না, কারণ কোনো trap SIGKILL ধরতে পারে না <Cite n={35} /> <Cite n={50} />। `ERR` একটি POSIX condition নয় <Cite n={39} />।
+**চেষ্টা করুন:** মাঝপথে fail করে এমন একটি script লিখুন, তার syntax check করুন, আর সেটি trace করুন। `bash -x` প্রতিটি command-এর সামনে একটি `+` দিয়ে লেখে। <Cite n={37} />
 
-যে variable empty হতে পারে, তা দিয়ে কখনো `rm -rf "$dir/"` চালাবেন না: path-টি `/` হয়ে যেতে পারে। `${dir:?}` ব্যবহার করুন, যা variable unset বা empty হলে script থামায় <Cite n={16} />।
+```bash
+(
+  tmp=$(mktemp -d) && cd "$tmp" || exit 1   # make and enter a new, empty directory
+  printf '%s\n' 'set -euo pipefail' 'echo "start"' 'false' 'echo "never reached"' > flaky.sh
+  bash -n flaky.sh && echo "syntax ok"   # syntax ok
+  bash -x flaky.sh; echo "status: $?"
+  # + set -euo pipefail
+  # + echo start
+  # start
+  # + false
+  # status: 1
+  rm -r -- "${tmp:?}"   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: CI-তে শুধু fail করা ধাপের চারপাশে `set -x` দিন। Trace value দেখায়, তাই log-এ token চলে আসতে পারে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `PS4` variable প্রতিটি trace লাইনের prefix ঠিক করে, আর `BASH_SOURCE` ও `LINENO` file এবং লাইন যোগ করে। Single quote ব্যবহার করুন, যাতে প্রতিটি trace-এ `PS4` expand হয়। <Cite n={37} />
+- `set -e` `if` test-এর failure উপেক্ষা করে। `&&` বা `||` list-এর শেষ command-এর আগের failure, এবং `pipefail` ছাড়া pipeline-এর শেষ command-এর আগের failure-ও এটি উপেক্ষা করে। <Cite n={34} /> এগুলো সহায়ক, guarantee নয়।
+- `trap 'cmd' ERR` একটি command fail করলে চলে, `set -e`-এর মতো একই ব্যতিক্রমসহ। `trap 'cmd' EXIT` shell exit করলে চলে, যা clean-up-এর জন্য উপযুক্ত। কিন্তু SIGKILL-এর পর এটি চলে না, কারণ কোনো trap SIGKILL ধরতে পারে না। <Cite n={35} /> <Cite n={50} /> `ERR` একটি POSIX condition নয়। <Cite n={39} />
+
+</details>
 
 </Bangla>
 </Voices>

@@ -182,3 +182,35 @@ Source disagreements: the Linux.org thread (#041) and the kerneltalks page (#211
 | C96 | Extraction can overwrite files; extract an untrusted archive in a new directory. | S28 | "Extracting files from archives can overwrite files that already exist." / "you should make a new directory and extract into that directory" |
 | C97 | Absolute names and `../` names are often unsafe to extract. | S28 | "it is often unsafe to extract archive members with absolute file names or those that begin with a ../." |
 | C98 | `tar -c` erases an existing archive of the same name. | S28 | "tar will erase the current contents of the file named by --file=archive-name" |
+
+## Round 2 (2026-10-27): Try it commands
+
+Each topic now has the lesson shape (Goal, Core, Try it, tip, Go deeper). Each Try-it ran for real in a `mktemp -d` directory under a scratch directory, inside a subshell, and ends with `rm -r "$PWD"` (after `cd ... || exit`, so `$PWD` is always the throw-away directory).
+
+Tool versions: Ubuntu 26.04.1, bash 5.3.9, GNU coreutils 9.7 for `cp`, `mv`, `rm`; uutils coreutils 0.10.0 for `ls`, `ln`, `stat`, `touch`, `mkdir`, `cat`, `mktemp`; GNU tar 1.35; gzip 1.14; GNU nano 8.7.1; Vim 9.1 (`vim.tiny`, run as `vi`).
+
+| Topic | Try-it | Real output |
+|---|---|---|
+| Working with Files | `echo "pass" > report.txt; touch empty.txt; stat -c '%n: %s bytes, %h hard links' report.txt empty.txt` | `report.txt: 5 bytes, 1 hard links` / `empty.txt: 0 bytes, 1 hard links` |
+| Creating Files and Directories | `mkdir -p results/run1` two times; `>` two times; `rm -r results; ls` | `second run: OK`, `new`, `hello.txt` |
+| Copying and Renaming | `cp -p config.yml config.yml.bak`; change; `cp config.yml config.yml.bak`; `cat`; `mv config.yml app.yml; ls` | `v2`, `app.yml  config.yml.bak` |
+| Moving Files and Directories | `touch run1.log run2.log notes.txt; mv *.log logs/; ls; ls logs` | `logs  notes.txt`, `run1.log  run2.log` |
+| Editing Files | backup with `cp -p`; `>>` one line; here document with `<<'EOF'` | `retries=3` `timeout=30`; `debug=false` `port=8080` |
+| Nano | `nano --version \| head -n 1` (no editor opens) | `GNU nano, version 8.7.1` |
+| Vim | `vi -es -c '1d' -c 'q!' notes.txt`, then `-c '1d' -c 'wq'` | `one` `two` after `q!`; `two` after `wq` |
+| Soft and Hard Links | `ln`, `ln -s`, `stat -c '%i %h %n'`, `rm data.txt`, `cat` both | same inode, `2`; `data`; `cat: soft.txt: No such file or directory` (inode number shown as an example) |
+| Archiving and Compressing | `tar -czf`, `tar -tzf`, `tar -xzf ... -C unpack`, `ls` | `results/` `results/run.log`; `run.log` |
+
+Moved facts (no fact deleted; every `<Cite n>` 1-28 is still on the page):
+
+- The danger callouts of Creating, Copying, Moving, Editing, Vim, Links, and Archiving are now sentences in the Core text, so the data-loss warnings stay visible before "Go deeper".
+- Option tables, `touch -c`/`-d`, `cat > file`, `rmdir`, `rm -I`, `cp` options, cross-filesystem `mv`, the nano key table, `-%`, the Vim key table, E37, `vimtutor`, VIM Adventures, the hard link limits, `ln -sfn`, `gzip -k`/`-d`, ZIP, and the unsafe names of `tar` moved to "Go deeper".
+- The nano `--version` option: the nano manual (S16) lists `-V, --version`, and `nano --help` shows "Print version information and exit".
+- Glosses with no cite (Try-it mechanics only): `mktemp -d`, the shell expands `*.log`, `vi -es` (no screen), `-c` (one `:` command), `1d` (delete line 1). The Vim glosses come from Vim `starting.txt` and `change.txt`, which are not in `page.sources`; they were checked by the local run.
+
+### Fix round 1 (2026-10-27)
+
+- All 24 Try-it blocks now start with `tmp=$(mktemp -d) && cd "$tmp" || exit 1` and end with `rm -r -- "${tmp:?}"` (R4-86). Run again with bash 5.3.9: the output did not change, and no temp directory was left.
+- Vim: the glosses of `-es`, `-c`, and `1d` are removed (R4-60 to R4-62). The Try-it prose states only the effect of the example: delete line 1, then quit with `:q!` or with `:wq`.
+- Nano Goal: "Check that nano is installed, and learn the keys that save and exit." (R4-50).
+- Archiving: the unsafe names (`../`, absolute) and the `tar -c` erase warning are Core sentences with Cite 28 (R4-84, R4-85). "Compression makes data smaller" and `-z` moved to Go deeper.

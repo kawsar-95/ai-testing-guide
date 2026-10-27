@@ -240,6 +240,18 @@ export function getStage(slug: string): LinuxStage | undefined {
   return STAGES.find((stage) => stage.slug === slug);
 }
 
+/** The first topic, in stage order, that is not done. `null` if all are done. */
+export function nextTopic(
+  done: readonly string[],
+): { stage: LinuxStage; topic: LinuxTopic; href: string } | null {
+  const finished = new Set(done);
+  for (const stage of STAGES) {
+    const topic = stage.topics.find((t) => !finished.has(t.id));
+    if (topic) return { stage, topic, href: `${stage.href}#${topic.anchor}` };
+  }
+  return null;
+}
+
 const MINUTES_PER_TOPIC = 20;
 
 /** The study time of a stage: 20 minutes for each topic. */

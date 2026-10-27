@@ -185,3 +185,73 @@ Flagged items:
 Cite check: every `<Cite n>` in a Layman or Bangla panel is also cited by the Technical panel of the same section. Section 1: 2, 11, 12, 15, 35, 36, 38, 39, 41, 42, 45, 49. Section 2: 4, 13, 14, 15, 16, 17, 18, 19, 32, 35, 46. Section 3: 5, 20, 21, 22, 23, 24, 25, 26, 39. Section 4: 7, 12, 27, 28, 29, 32, 35, 39, 43, 48. Section 5: 6, 8, 9, 30, 31, 32, 33, 35, 36, 47. Section 6: 10, 16, 34, 35, 37, 39, 50. Each cite follows the same claim as in the Technical panel.
 
 Open FAILs: 0
+
+## Round 4 (2026-10-27): the lesson rewrite
+
+Checker: independent voices checker (Sonnet 5.5). I did not write these voices. Page: `content/linux/shell-scripting.mdx` at commit 0108141, compared with its parent (`git diff 0108141^ 0108141`).
+
+Method: I read the Layman and Bangla panels of the 6 topics against the Technical panel of the same topic as it is now. I compared them with the old voices (parent commit) to find lost facts. A script listed the `<Cite n>` set and the tip length of each panel, compared each Try-it block with the Technical one, and looked for Markdown headings. `node --test tests/voice-source.test.ts` passes (22 of 22). Results of the script: every cite set is a subset of the Technical set of the same topic; each Try-it code block (commands and output) is equal to the Technical one in both voices; no voice has a Markdown heading; the longest tip is 152 characters (Technical and Layman Variables), and the longest Bangla tip is 147 (Conditionals). Danger text: the `rm -rf "$dir/"` warning is in the Core text of Debugging in all 3 voices, with cite 16, and it keeps the cause (the path can become `/`).
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 1 | Shell Programming | Layman | PASS | Goal, Core, Try-it (`./setup.sh ok` / `bad`, status 0 / 1), tip, and Go deeper give no fact that Technical lacks. "with no person at the prompt" is a gloss of "non-interactive" and states no new fact (the writer keeps it in the voices only). Cites {2,11,12,15,35,38,39,41,42,45,49} are a subset. Tip is the same as Technical (119). |
+| 2 | Shell Programming | Bangla | PASS | Same parts and the same code. "non-interactive shell-এ চালায়, অর্থাৎ prompt-এ কোনো মানুষ থাকে না" is correct. Go deeper has `env bash`, child shell, `source`, POSIX, ShellCheck, all in Technical. Cites {2,11,12,15,35,36,38,39,41,42,45,49} are a subset. Tip (123) keeps the point. |
+| 3 | Variables | Layman | PASS | Core, Try-it (quotes, `${TARGET_ENV:-staging}`), tip, and the 5 Go deeper bullets agree with Technical. `printf '[%s]\n'` is explained as in Technical. Cites equal Technical. Tip is the same as Technical (152). |
+| 4 | Variables | Bangla | PASS | Correct, natural Bangla. `export`, `readonly`, `$(command)`, arrays, `"$@"`, `$#`, `$0` are the same as in the Technical table. Commands stay in English. Cites equal Technical. Tip keeps both points (default, no token in the log). |
+| 5 | Literals | Layman | PASS | Quotes, `\$`, `$'...'`, here-document, arithmetic, and `$((08))` agree with Technical. The `'it'\''s'` example, the 2024 POSIX and dash result, `<<-`, and the `base#n` definition are left out (omissions). Cites {5,20-26,39}. Tip 151. See observation 1 about `base#n`. |
+| 6 | Literals | Bangla | PASS | Same as Technical, including "2024 সালের POSIX standard ... dash এটি decode করেনি" with cite 39, `<<-`, and `C operator`. Correct Bangla. `base#n` is named but not defined (the old Bangla defined it; the Technical text still does, so no fact is lost). Tip 144. |
+| 7 | Conditionals | Layman | PASS | `if` status, `[ ]` spaces, `-f`/`-d`, quote in `[ ]`, Try-it with status 0 and 1, `[[ ]]`, `=~`, `&&`/`||`, `cd || exit 1`, `case` agree with Technical. Left out (omissions): `grep -q`, single `=`, the empty-variable break, "keep the `=~` pattern unquoted", the `case` code. Tip is the same as Technical (138). |
+| 8 | Conditionals | Bangla | FAIL | First Go deeper bullet: "Command-টি যেকোনো program হতে পারে, যেমন `grep -q`।" has no antecedent now. In the old text it followed the `if` sentence, but the rewrite moved it to the top of Go deeper. Fix: "`if`-এর পরের command যেকোনো program হতে পারে, যেমন `grep -q`।" The rest (`[[ ]]`, `=~`, `&&`/`||`, `a && b \|\| c`, `case` with `;;`, tip 147) agrees with Technical. |
+| 9 | Loops | Layman | PASS | Core, the glob vs `$(ls)` Try-it (same output), tip, `break`/`continue`, `-e`/`--`, `read -r`, and the pipe warning agree with Technical. Left out (omissions): C-style `for`, the `until` poll code, the "child copy of the shell" definition. Cites equal Technical. Tip 137. See observation 2. |
+| 10 | Loops | Bangla | FAIL | "`while`-এর ভেতরে pipe করবেন না।" means "do not pipe inside `while`". Technical says "Do not pipe into `while`" (the `cmd \| while read` form). Fix: "`while`-এ pipe করে input দেবেন না।" (the same note was in Round 3 and is not fixed). The rest (C-style `for` with dash, `-e` / `--`, `read -r`, `done < file`, tip 146) agrees with Technical. |
+| 11 | Debugging | Layman | PASS | `bash -n`, `bash -x`, `set -e` / `-u` / `pipefail`, the `rm -rf "$dir/"` warning (cite 16), Try-it with `+` trace lines and status 1, `PS4`, `set -e` exceptions, `trap` ERR / EXIT / SIGKILL, and "ERR is not POSIX" agree with Technical. Cites {10,16,34,35,37,39,50} are a subset. Tip 140. See observations 3 and 4. |
+| 12 | Debugging | Bangla | PASS | Same facts. The `rm -rf "$dir/"` warning is in the Core text, with the cause and with "`${dir:?}` ... variable unset বা empty হলে script থামায়" (cite 16). "এগুলো সহায়ক, guarantee নয়" keeps "aids, not guarantees". Tip 126 keeps "only around the failing step" and "token in the log". |
+
+Observations (not FAILs):
+1. `base#n` (Literals): Layman and Bangla say "other shells may reject `base#n`" but never say what it is. Technical says "The form `base#n` writes a number in another base." Optional fix: add "`base#n` writes a number in another base." (Layman) and "`base#n` form অন্য base-এ একটি সংখ্যা লেখে।" (Bangla; the old Bangla had this).
+2. "subshell" (Loops, Layman): the word is not explained. Technical says "a child copy of the shell". The old Layman and the old Bangla also left it out. Optional fix: "...runs in its own subshell, a child copy of the shell, so...".
+3. `${dir:?}` (Debugging, Layman): "Use `${dir:?}`." gives no reason. Technical, and the Bangla text, say "which stops the script if the variable is unset or empty". The old Layman text was the same. Optional fix: add that clause.
+4. `PS4` (Debugging, Layman): "Put `PS4` in single quotes" is loose. Technical says "Use single quotes, so `PS4` expands at each trace", and the Bangla text matches it. Meaning is close enough.
+5. Loops, Bangla: "যে নাম dash দিয়ে শুরু হতে পারে" uses "dash" for the hyphen, in the same list as the shell `dash`. Technical has the same double use. Optional: "`-` দিয়ে শুরু হতে পারে".
+6. Each voice leaves out the one-line Core code block of the Technical text (for example `chmod +x setup.sh`, `suite="smoke tests"`) and the Go deeper code blocks (`case`, here-document, `tries` poll, the `trap` set-up). The Try-it blocks are the same. These are omissions, not new facts, and they are as in the other stages.
+7. The voices leave out the Technical sentences "In a test with dash, `[[` and arrays gave errors", the Debian policy sentence, the `shellcheck` and `dash` tip of Shell Programming, `>&2`, `mktemp -d`, and the ShellCheck list in Debugging. No warning is lost: the only danger text, the `rm -rf` warning, is kept in all 3 voices.
+8. Old to new: I found no fact of the old Layman or Bangla text that is lost and also missing from the new Technical text, except the old Bangla `base#n` definition and "dash did it" sentence, which the new Technical text still has.
+
+Open FAILs: 2
+
+## Round 5 (2026-10-27): the fix rounds
+
+Checker: an independent agent that did not write or fix the page or its voices. Checked HEAD c8cd682 against the rewrite commit 0108141 (`git diff -U2 0108141 HEAD -- content/linux/shell-scripting.mdx`), the Layman and Bangla panels, against the Technical panel of the same topic as it is now. The Technical part is in `linux-shell-scripting.factcheck.md`. The sources of the changed text (S11, S16, S25, S27, S33, S38, S39) were fetched with `scripts/linux_fetch.py` into the scratchpad.
+
+Results of the scripts: `node scratchpad/lessoncheck.mjs shell-scripting` gives 0 problems; `node --test tests/voice-source.test.ts` passes (22 of 22). Layman and Bangla words before `<details>`: Shell Programming 145 / 130, Variables 129 / 118, Literals 107 / 92, Conditionals 119 / 115, Loops 130 / 118, Debugging 140 / 134 (all 150 or fewer). Tips (without `<Cite />`): Layman 96, 129, 128, 64, 115, 114, 117 characters; Bangla 95, 118, 116, 60, 119, 118, 98 (all 160 or fewer). Every cite set of a Layman or Bangla panel is a subset of the Technical set of the same topic (script). No voice has a new Markdown heading. Privacy: no real name, e-mail, home path, or login name.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| R5-1 | Conditionals | Bangla | FIXED | Round 4 FAIL 8. First Go deeper bullet now reads "`if`-এর পরের command যেকোনো program হতে পারে, যেমন `grep -q`।" (cite 27). It has an antecedent and matches the Technical "The command after `if` can be any program" (S27: the test-commands list is executed). Correct, natural Bangla; commands stay in English. |
+| R5-2 | Loops | Bangla | FIXED | Round 4 FAIL 10. Now "`while`-এ pipe করে input দেবেন না।" This means "do not pipe input into `while`" and matches Technical "Do not pipe into `while`" (cite 33, then `done < file`). |
+| R5-3 | Literals | Layman | PASS | Optional item (`base#n`): "The form `base#n` writes a number in another base." Same words as the Technical text. S25: "numbers take the form [base#]n, where the optional base is a decimal number between 2 and 64 representing the arithmetic base, and n is a number in that base." The cites 25 and 39 are cited by Technical. 107 words. |
+| R5-4 | Literals | Bangla | PASS | Optional item (`base#n`): "`base#n` form অন্য base-এ একটি সংখ্যা লেখে।" Correct, and the same fact as Technical and S25. The old Bangla text had it too. Natural; `base#n` stays in English. 92 words. |
+| R5-5 | Loops | Layman | PASS | Optional item (subshell): "its own subshell, a child copy of the shell, so the loop loses its variables." Same words as the Technical text (R4-70). S33: "executed in its own subshell, which is a separate process". No new fact. 130 words. |
+| R5-6 | Debugging | Layman | PASS | Optional item (`${dir:?}`): "Use `${dir:?}`, which stops the script if the variable is unset or empty." (cite 16). Same as Technical and as the Bangla text. S16: "If parameter is null or unset, the shell writes the expansion of word ... to the standard error and, if it is not interactive, exits with a non-zero status." The `rm -rf "$dir/"` warning and its cause (the path can become `/`) are still in the Core text of all 3 voices. 140 words. |
+| R5-7 | Shell Programming | Layman, Bangla | PASS | Try-it block: new first line `tmp=$(mktemp -d) && cd "$tmp" \|\| exit 1` and cleanup `rm -r -- "${tmp:?}"`. Byte-equal to the Technical block (`cmp`). Ran (throw-away `TMPDIR` and cwd): `status: 0`, `status: 1`. With `TMPDIR=/nonexistent` the subshell stops with status 1, writes nothing, and runs no `rm`. |
+| R5-8 | Conditionals | Layman, Bangla | PASS | Try-it block with the standard pattern, byte-equal to Technical. Ran: `status: 0`, `status: 1`, `a file`. |
+| R5-9 | Loops | Layman, Bangla | PASS | Try-it block with the standard pattern, byte-equal to Technical. Ran: `file: ./b.txt`, `file: ./my report.txt`, `word: b.txt`, `word: my`, `word: report.txt`. |
+| R5-10 | Debugging | Layman, Bangla | PASS | Try-it block with the standard pattern, byte-equal to Technical. Ran: `syntax ok`, `+ set -euo pipefail`, `+ echo start`, `start`, `+ false`, `status: 1`. |
+| R5-11 | All | Layman, Bangla | PASS | The 12 changed Try-it blocks (4 topics x 3 voices) all use the standard pattern (grep: 12 of 12). No `$PWD` or `cd "$(mktemp` is left on the page. The only other changed lines are R5-1 to R5-6 and the Technical bullets (Technical report). No fact, cite, or warning was lost since the rewrite commit. |
+
+Observations (not FAILs): the Layman and Bangla panels still leave out the new Technical bullet "A non-interactive shell has no person at the prompt" (Shell Programming Go deeper); the Core text of both voices already says "no person at the prompt" (Round 4 row 1 and 2). Round 4 observations 4 (`PS4` wording) and 5 (`dash` for the hyphen in Bangla Loops) are not changed and stay optional.
+
+Open FAILs: 0
+
+## Round 5 addendum (2026-10-27)
+
+Checker: the same independent agent as Round 5. Checked commit eb649b6 against c8cd682 (`git diff c8cd682 eb649b6 -- content/linux/shell-scripting.mdx`): 2 changed lines, both in the Layman panel of Shell Programming.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| A5-1 | Shell Programming (Core) | Layman | PASS | "The kernel reads it when it runs the file. The file needs the execute permission." is now the Technical wording (S41, cite 41, same as the Technical panel). No fact lost: shebang, `chmod +x`, exit status 0 to 255, `$?`, and the status of the last command are all still there. No fact that Technical lacks. "Bash runs it with no person at the prompt" is unchanged (Round 4 row 1). |
+| A5-2 | Shell Programming (tip) | Layman | PASS | "in CI, check the exit status, not the printed text. A status other than 0 is a fail." keeps the point of the Technical tip ("check the exit status of a script, not its printed text"). 84 characters without `<Cite />` (limit 160). |
+| A5-3 | Shell Programming | Layman | PASS | Cites unchanged: {11, 12, 15, 38, 41, 42}, equal to the Technical set. Words before `<details>` (no code, cites, tags): 140 (was 145; limit 150). Technical 142, Bangla 130. |
+| A5-4 | Whole page | all | PASS | `node scratchpad/lessoncheck.mjs shell-scripting`: 6 topics, 0 with problems. `node --test tests/voice-source.test.ts`: 22 of 22 pass. |
+
+Open FAILs: 0

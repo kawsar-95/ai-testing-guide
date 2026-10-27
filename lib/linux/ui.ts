@@ -7,6 +7,10 @@ export const LINUX_UI = {
   eyebrow: (stages: number, topics: number) => `LINUX · ${stages} STAGES · ${topics} TOPICS`,
   heading: "Linux",
   lede: "Work through the stages in order, or jump to the one you need. Each stage has a list of topics. Mark a topic as done when you can use it without notes.",
+  continueStart: "Start with Shell Basics",
+  continueNext: (title: string) => `Continue: ${title}`,
+  continueDone: "All topics are done.",
+  startHere: "START HERE",
   privacyNote: "Your progress stays in this browser only. It is not sent to a server.",
   overallLabel: "Overall progress",
   stagesHeading: "STAGES",
@@ -17,6 +21,8 @@ export const LINUX_UI = {
 
   // The stage page.
   stageEyebrow: (number: number) => `STAGE ${String(number).padStart(2, "0")} · LINUX`,
+  inThisStage: "In this stage",
+  inThisStageMeta: (topics: number, minutesText: string) => `${topics} topics · about ${minutesText}`,
   stageNav: "Linux stages",
   allStages: "All stages",
   previousStage: "Previous stage",
