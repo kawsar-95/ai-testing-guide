@@ -1,11 +1,385 @@
 export const metadata = { title: 'Stages and Checks', description: 'Change the load over time with stages, and verify each response with checks.' }
-export const page = { updated: '2026-10-27', sources: [] }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Checks', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/checks/', accessed: '2026-10-27' },
+    { title: 'Options reference: Stages', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/#stages', accessed: '2026-10-27' },
+    { title: 'Ramping VUs executor', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/ramping-vus/', accessed: '2026-10-27' },
+    { title: 'Thresholds', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/thresholds/', accessed: '2026-10-27' },
+  ],
+}
 
 # Stages and Checks
 
-Change the load over time with stages, and verify each response with checks.
+Real users do not arrive all at once. Stages let a test grow and shrink the load over time, and checks test each response while it runs.
+
+<PageMeta />
+
+## The e-commerce story
+
+<Voices>
+<Technical>
+
+Think about an e-commerce site. In the first minute, 50 people visit. After that, more people arrive until 200 are on the site. They browse and buy for 3 minutes. In the last 2 minutes, everyone leaves. This is the tutorial's own example. It is a story about a real day, and you can copy its shape with the `stages` option <Cite n={2} />.
+
+`stages` is a list of objects. Each object has a `duration` and a `target`. The `target` is the number of virtual users (VUs) that k6 ramps up or down to during that duration <Cite n={2} />. The option is a shortcut for one scenario that uses the ramping VUs executor <Cite n={2} />.
+
+This is the script of the story. Run it against a site that you own, or against the public demo site that Grafana provides:
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '1m', target: 50 }, // ramp from 1 VU up to 50 VUs over 1 minute
+    { duration: '3m', target: 200 }, // ramp from 50 VUs up to 200 VUs over 3 minutes
+    { duration: '2m', target: 0 }, // ramp from 200 VUs down to 0 over 2 minutes
+  ],
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 500ms': (r) => r.timings.duration < 500,
+  });
+
+  sleep(1);
+}
+```
+
+Each stage has a comment that says what it really does. The next section explains why.
+
+</Technical>
+<Layman>
+
+Think about an e-commerce site. In the first minute, 50 people visit. After that, more people arrive until 200 are on the site. They browse and buy for 3 minutes. In the last 2 minutes, everyone leaves. This is the tutorial's own example. You can copy the shape of this story with the `stages` option <Cite n={2} />.
+
+`stages` is a list. Each item has a `duration` and a `target`. The `target` is the number of virtual users (VUs) that k6 ramps up or down to during that time <Cite n={2} />.
+
+Below is the script of the story. Use a site that you own, or the public demo site of Grafana.
+
+</Layman>
+<Bangla>
+
+একটা e-commerce সাইটের কথা ভাবুন। প্রথম মিনিটে ৫০ জন ভিজিট করল। এরপর আরও মানুষ এল, যতক্ষণ না সাইটে ২০০ জন হলো। তারা ৩ মিনিট ধরে ব্রাউজ করল আর কিনল। শেষ ২ মিনিটে সবাই বের হয়ে গেল। এটা tutorial-এর নিজের উদাহরণ। `stages` option দিয়ে আপনি এই গল্পের আকার k6-তে বানাতে পারেন <Cite n={2} />।
+
+`stages` হলো একটা list। প্রতিটা item-এ একটা `duration` আর একটা `target` থাকে। `target` হলো virtual user (VU)-এর সংখ্যা, যে সংখ্যায় k6 ওই সময়ের মধ্যে ramp up বা ramp down করে <Cite n={2} />।
+
+নিচে গল্পটার script দেওয়া হলো। আপনার নিজের সাইটে চালান, অথবা Grafana-র public demo সাইটে চালান।
+
+</Bangla>
+</Voices>
+
+## What each stage does
+
+<Voices>
+<Technical>
+
+A stage does not jump to its target. k6 ramps the VU count linearly from the value at the start of the stage to the target of the stage <Cite n={3} />. The first stage starts from `startVUs`. If you use the `vus` option together with `stages`, k6 uses the `vus` value as `startVUs` <Cite n={2} />. The default of `startVUs` is 1 <Cite n={3} />.
+
+| Stage | Duration | Target | What happens |
+|---|---|---|---|
+| 1 | `1m` | 50 | The VU count rises from 1 to 50 over 1 minute. |
+| 2 | `3m` | 200 | The VU count rises from 50 to 200 over 3 minutes. |
+| 3 | `2m` | 0 | The VU count falls from 200 to 0 over 2 minutes. |
+
+Warning about the owner's first script: the comment of stage 2 said "stay at 200 users". That is not what this stage does. The stage ramps from 50 to 200 over 3 minutes, and the test reaches 200 VUs only at the end of the stage. The script above has the corrected comments.
+
+A ramp down can stop an iteration that is still running. The option `gracefulRampDown` sets how long k6 waits for a started iteration to finish before it stops it. Its default is `30s` <Cite n={3} />.
+
+The tutorial's own estimate: each VU runs `sleep(1)`, so each VU finishes about one iteration each second. The average VU count of a linear ramp is the middle of its start and end. This gives about 1,500 iterations in stage 1 (average 25 VUs for 60 s), 22,500 in stage 2 (125 VUs for 180 s), and 12,000 in stage 3 (100 VUs for 120 s). The sum is about 36,000. This estimate works only because the local server of the owner answered in about 1 ms.
+
+</Technical>
+<Layman>
+
+A stage does not jump to its target. k6 changes the number of VUs in a straight line. It starts from the number at the start of the stage and ends at the target <Cite n={3} />. The first stage starts from `startVUs`. The default is 1 <Cite n={3} />.
+
+| Stage | Duration | Target | What happens |
+|---|---|---|---|
+| 1 | `1m` | 50 | The VU count rises from 1 to 50 over 1 minute. |
+| 2 | `3m` | 200 | The VU count rises from 50 to 200 over 3 minutes. |
+| 3 | `2m` | 0 | The VU count falls from 200 to 0 over 2 minutes. |
+
+Warning about the owner's first script: its comment for stage 2 said "stay at 200 users". That is wrong. The stage ramps from 50 to 200 over 3 minutes. The test reaches 200 VUs only at the end of the stage.
+
+When the load goes down, a running iteration can stop early. The option `gracefulRampDown` sets how long k6 waits for it to finish. The default is `30s` <Cite n={3} />.
+
+Here is the tutorial's own estimate. Each VU sleeps 1 s, so it finishes about 1 iteration each second. The average VU count of a straight ramp is the middle of its start and end. Stage 1 gives about 1,500 iterations. Stage 2 gives about 22,500. Stage 3 gives about 12,000. The sum is about 36,000. This works only because the local server of the owner answered in about 1 ms.
+
+</Layman>
+<Bangla>
+
+একটা stage সরাসরি target-এ লাফ দেয় না। k6 VU-এর সংখ্যা সরলরেখায় (linearly) বদলায়। stage-এর শুরুর সংখ্যা থেকে stage-এর target পর্যন্ত যায় <Cite n={3} />। প্রথম stage শুরু হয় `startVUs` থেকে। এর default হলো 1 <Cite n={3} />।
+
+| Stage | Duration | Target | কী ঘটে |
+|---|---|---|---|
+| 1 | `1m` | 50 | VU সংখ্যা ১ মিনিটে ১ থেকে ৫০ হয়। |
+| 2 | `3m` | 200 | VU সংখ্যা ৩ মিনিটে ৫০ থেকে ২০০ হয়। |
+| 3 | `2m` | 0 | VU সংখ্যা ২ মিনিটে ২০০ থেকে ০ হয়। |
+
+owner-এর প্রথম script নিয়ে সতর্কতা: stage 2-এর comment-এ লেখা ছিল "stay at 200 users"। এটা ভুল। stage-টা ৩ মিনিটে ৫০ থেকে ২০০ পর্যন্ত ramp করে। test ২০০ VU-তে পৌঁছায় শুধু stage-এর শেষে।
+
+load কমার সময় চলমান একটা iteration আগে থেমে যেতে পারে। `gracefulRampDown` option ঠিক করে, k6 সেটা শেষ হওয়ার জন্য কতক্ষণ অপেক্ষা করবে। default হলো `30s` <Cite n={3} />।
+
+এটা tutorial-এর নিজের হিসাব। প্রতিটা VU ১ সেকেন্ড sleep করে, তাই প্রায় প্রতি সেকেন্ডে ১টা iteration শেষ করে। একটা সরল ramp-এর গড় VU সংখ্যা হলো তার শুরু আর শেষের মাঝামাঝি। stage 1-এ প্রায় ১,৫০০ iteration হয়। stage 2-এ প্রায় ২২,৫০০। stage 3-এ প্রায় ১২,০০০। মোট প্রায় ৩৬,০০০। এই হিসাব মেলে শুধু কারণ owner-এর local server প্রায় 1 ms-এ উত্তর দিয়েছিল।
+
+</Bangla>
+</Voices>
+
+## Hold the load at a level
+
+<Voices>
+<Technical>
+
+To hold the load steady, add a stage with the same target as the stage before it. The VU count does not change during that stage, so the load stays flat <Cite n={2} />. The k6 docs show this in their own example: a ramp to 10 VUs for 3 minutes, then a flat stage at 10 VUs for 5 minutes <Cite n={2} />.
+
+This script now does what the first script only claimed. It ramps to 200 VUs in 1 minute, holds at 200 VUs for 3 minutes, and ramps down:
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '1m', target: 50 }, // ramp up to 50 VUs
+    { duration: '1m', target: 200 }, // ramp up to 200 VUs
+    { duration: '3m', target: 200 }, // hold at 200 VUs: same target as before
+    { duration: '2m', target: 0 }, // ramp down to 0 VUs
+  ],
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 500ms': (r) => r.timings.duration < 500,
+  });
+
+  sleep(1);
+}
+```
+
+The tutorial's own advice: use a ramp, then a flat stage, then a ramp down. The ramp up gives the server time to warm up. The flat stage gives stable numbers to read. The ramp down shows how the server recovers.
+
+</Technical>
+<Layman>
+
+To hold the load steady, add a stage with the same target as the stage before it. The number of VUs does not change in that stage, so the load stays flat <Cite n={2} />. The k6 docs show this too. They ramp to 10 VUs for 3 minutes. Then they hold 10 VUs for 5 minutes <Cite n={2} />.
+
+This script does what the first script only claimed. It ramps to 200 VUs in 1 minute. It holds 200 VUs for 3 minutes. Then it ramps down.
+
+The tutorial's own advice: use a ramp, then a flat stage, then a ramp down. The ramp up gives the server time to warm up. The flat stage gives stable numbers to read. The ramp down shows how the server recovers.
+
+</Layman>
+<Bangla>
+
+load স্থির রাখতে আগের stage-এর target-এর সমান target দিয়ে একটা stage যোগ করুন। ওই stage-এ VU সংখ্যা বদলায় না, তাই load সমান থাকে <Cite n={2} />। k6 docs-ও এটা দেখায়। সেখানে ৩ মিনিট ধরে ১০ VU পর্যন্ত ramp করা হয়। তারপর ৫ মিনিট ১০ VU ধরে রাখা হয় <Cite n={2} />।
+
+এই script সেটাই করে, যা প্রথম script শুধু দাবি করেছিল। এটা ১ মিনিটে ২০০ VU পর্যন্ত ramp করে। ৩ মিনিট ২০০ VU ধরে রাখে। তারপর ramp down করে।
+
+tutorial-এর নিজের পরামর্শ: আগে ramp, তারপর একটা flat stage, তারপর ramp down। ramp up server-কে warm up হওয়ার সময় দেয়। flat stage পড়ার মতো স্থির সংখ্যা দেয়। ramp down দেখায় server কীভাবে সামলে ওঠে।
+
+</Bangla>
+</Voices>
+
+## Checks
+
+<Voices>
+<Technical>
+
+A check tests a true or false condition. Testers use checks to confirm that the system answers with the expected content, for example a status of 201 or a body of a given size <Cite n={1} />. A check is like an `assert` in a test framework <Cite n={1} />.
+
+In the script above, `check(res, { ... })` tests each response. It has two checks: the status is 200, and the response time is below 500 ms. Each check is a name and a function that returns true or false.
+
+A status of 200 can still carry an error message. In that case, add a check on the body <Cite n={1} />.
+
+Each check creates a rate metric. The end-of-test summary shows the result as `checks_total`, `checks_succeeded`, and `checks_failed` <Cite n={1} />. In the owner's run, each iteration made 2 checks, so 36,018 iterations gave 72,036 checks.
+
+</Technical>
+<Layman>
+
+A check tests a true or false condition. Testers use checks to confirm that the system answers with the expected content. An example is a status of 201 or a body of a given size <Cite n={1} />. A check is like an `assert` in a test framework <Cite n={1} />.
+
+In the script above, `check(res, { ... })` tests each response. It has two checks. The status must be 200. The response time must be below 500 ms. Each check is a name and a function that returns true or false.
+
+A status of 200 can still carry an error message. Then add a check on the body <Cite n={1} />.
+
+The summary at the end shows the results as `checks_total`, `checks_succeeded`, and `checks_failed` <Cite n={1} />. In the owner's run, each iteration made 2 checks. So 36,018 iterations gave 72,036 checks.
+
+</Layman>
+<Bangla>
+
+একটা check আপনার test-এর একটা সত্য-মিথ্যা শর্ত পরীক্ষা করে। tester-রা check ব্যবহার করে নিশ্চিত হয় যে system প্রত্যাশিত content দিয়ে উত্তর দিচ্ছে। যেমন status 201, বা একটা নির্দিষ্ট আকারের body <Cite n={1} />। check অনেকটা test framework-এর `assert`-এর মতো <Cite n={1} />।
+
+উপরের script-এ `check(res, { ... })` প্রতিটা response পরীক্ষা করে। এতে দুটো check আছে। status অবশ্যই 200 হতে হবে। response time অবশ্যই 500 ms-এর কম হতে হবে। প্রতিটা check হলো একটা নাম আর একটা function, যেটা true বা false দেয়।
+
+200 status-এর সঙ্গেও error message থাকতে পারে। তখন body-র উপর একটা check যোগ করুন <Cite n={1} />।
+
+শেষের summary ফলাফল দেখায় `checks_total`, `checks_succeeded` আর `checks_failed` হিসেবে <Cite n={1} />। owner-এর run-এ প্রতিটা iteration ২টা check করেছিল। তাই ৩৬,০১৮ iteration-এ ৭২,০৩৬ check হয়েছিল।
+
+</Bangla>
+</Voices>
+
+## A failed check does not fail the test
+
+<Voices>
+<Technical>
+
+When a check fails, the script keeps running, and k6 does not return a failed exit status <Cite n={1} />. Instead, k6 tracks how many checks fail during the run <Cite n={1} />. A test with many failed checks can still finish as a pass.
+
+To fail the test, combine the check with a threshold. The `checks` metric is a rate. A threshold such as `checks: ['rate>0.99']` fails the test when fewer than 99 % of the checks pass <Cite n={1} /> <Cite n={4} />. This matters in CI, where the exit code of k6 decides if the job passes. Read [Thresholds](/k6/thresholds/) for the full rules.
+
+This script uses short stages and the threshold. It ran against the demo site with 3 VUs:
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '3s', target: 3 },
+    { duration: '4s', target: 3 },
+    { duration: '3s', target: 0 },
+  ],
+  thresholds: {
+    // A failed check does not fail the test. This threshold does.
+    checks: ['rate>0.99'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 500ms': (r) => r.timings.duration < 500,
+  });
+
+  sleep(1);
+}
+```
+
+</Technical>
+<Layman>
+
+When a check fails, the script keeps running. k6 does not return a failed exit status <Cite n={1} />. It only tracks how many checks fail <Cite n={1} />. A test with many failed checks can still finish as a pass.
+
+To fail the test, combine the check with a threshold. The `checks` metric is a rate. A threshold such as `checks: ['rate>0.99']` fails the test when fewer than 99 % of the checks pass <Cite n={1} /> <Cite n={4} />. This matters in CI, because the exit code of k6 decides if the job passes. Read [Thresholds](/k6/thresholds/) for the full rules.
+
+The script below uses short stages and this threshold. It ran against the demo site with 3 VUs.
+
+</Layman>
+<Bangla>
+
+একটা check fail করলে script চলতে থাকে। k6 failed exit status ফেরত দেয় না <Cite n={1} />। k6 শুধু failed check-এর rate গুনে যায় <Cite n={1} />। অনেক check fail করলেও একটা test pass হিসেবে শেষ হতে পারে।
+
+test fail করাতে check-এর সঙ্গে একটা threshold যোগ করুন। `checks` metric একটা rate। `checks: ['rate>0.99']`-এর মতো একটা threshold test-কে fail করায়, যখন ৯৯ %-এর কম check pass করে <Cite n={1} /> <Cite n={4} />। CI-তে এটা জরুরি, কারণ k6-এর exit code ঠিক করে job pass করবে কি না। পুরো নিয়মের জন্য [Thresholds](/k6/thresholds/) পড়ুন।
+
+নিচের script ছোট stage আর এই threshold ব্যবহার করে। এটা ৩ VU দিয়ে demo সাইটে চলেছিল।
+
+</Bangla>
+</Voices>
+
+## The owner's local run
+
+<Voices>
+<Technical>
+
+This is the output of the first script in the owner's notes, as one local run on the owner's machine. It ran against a server at `localhost:3000`, not against the demo site. The numbers (such as the 1 ms average) come from that one run and are not a general k6 result.
+
+```text
+k6 run script.js
+
+         /\      Grafana   /‾‾/
+    /\  /  \     |\  __   /  /
+   /  \/    \    | |/ /  /   ‾‾\
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/
+
+     execution: local
+        script: script.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 200 max VUs, 6m30s max duration (incl. graceful stop):
+              * default: Up to 200 looping VUs for 6m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+  █ TOTAL RESULTS
+
+    checks_total.......: 72036   199.791594/s
+    checks_succeeded...: 100.00% 72036 out of 72036
+    checks_failed......: 0.00%   0 out of 72036
+
+    ✓ status is 200
+    ✓ response time < 500ms
+
+    HTTP
+    http_req_duration..............: avg=1ms min=0s med=1.03ms max=10.26ms p(90)=1.6ms p(95)=1.76ms
+      { expected_response:true }...: avg=1ms min=0s med=1.03ms max=10.26ms p(90)=1.6ms p(95)=1.76ms
+    http_req_failed................: 0.00%  0 out of 36018
+    http_reqs......................: 36018  99.895797/s
+
+    EXECUTION
+    iteration_duration.............: avg=1s  min=1s med=1s     max=1.01s   p(90)=1s    p(95)=1s
+    iterations.....................: 36018  99.895797/s
+    vus............................: 1      min=1          max=200
+    vus_max........................: 200    min=200        max=200
+
+    NETWORK
+    data_received..................: 315 MB 875 kB/s
+    data_sent......................: 2.5 MB 7.0 kB/s
+
+running (6m00.6s), 000/200 VUs, 36018 complete and 0 interrupted iterations
+default ✓ [======================================] 000/200 VUs  6m0s
+```
+
+How to read it:
+
+- `1 scenario, 200 max VUs` and `Up to 200 looping VUs for 6m0s over 3 stages`: the three stages add up to 6 minutes, and the peak is 200 VUs.
+- `checks_failed: 0.00%`: every check passed, so both lines show a green tick.
+- `iterations` and `http_reqs` are equal (36,018), because each iteration sends one request.
+- `vus_max: 200` is the most VUs that k6 allocated. `vus` shows `min=1 max=200`, which matches the ramp from 1 VU to 200 VUs.
+
+</Technical>
+<Layman>
+
+This is the output of the first script in the owner's notes. It is one local run on the owner's machine. It ran against a server at `localhost:3000`, not the demo site. The numbers, such as the 1 ms average, come from that one run. They are not a general k6 result.
+
+How to read it:
+
+- `1 scenario, 200 max VUs`: the test has one scenario and peaks at 200 VUs.
+- `Up to 200 looping VUs for 6m0s over 3 stages`: the three stages add up to 6 minutes.
+- `checks_failed: 0.00%`: every check passed.
+- `iterations` and `http_reqs` are equal, because each iteration sends one request.
+- `vus` shows `min=1 max=200`. This matches the ramp from 1 VU to 200 VUs.
+
+</Layman>
+<Bangla>
+
+এটা owner-এর notes-এর প্রথম script-এর output। এটা owner-এর machine-এ একটা local run। এটা `localhost:3000`-এ একটা server-এর বিরুদ্ধে চলেছিল, demo সাইটে নয়। 1 ms গড়ের মতো সংখ্যাগুলো ওই একটা run থেকে এসেছে। এগুলো k6-এর সাধারণ ফলাফল নয়।
+
+কীভাবে পড়বেন:
+
+- `1 scenario, 200 max VUs` আর `Up to 200 looping VUs for 6m0s over 3 stages`: তিনটা stage মিলে ৬ মিনিট হয়, আর সর্বোচ্চ ২০০ VU।
+- `checks_failed: 0.00%`: সব check pass করেছে।
+- `iterations` আর `http_reqs` সমান, কারণ প্রতিটা iteration একটা request পাঠায়।
+- `vus` দেখায় `min=1 max=200`। এটা ১ VU থেকে ২০০ VU পর্যন্ত ramp-এর সঙ্গে মেলে।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
 | Term | Meaning |
 | --- | --- |
+| `stages` | A list of `{ duration, target }` objects. k6 ramps the VU count linearly to each target <Cite n={2} /> <Cite n={3} />. |
+| `target` | The number of VUs at the end of a stage <Cite n={2} />. |
+| `startVUs` | The number of VUs at the start of the test. The default is 1 <Cite n={3} />. |
+| `gracefulRampDown` | How long k6 waits for a running iteration to finish during a ramp down. The default is `30s` <Cite n={3} />. |
+| Ramp up / ramp down | A stage that raises or lowers the VU count. |
+| Flat stage | A stage with the same target as the stage before it. The load stays steady. |
+| `check()` | Tests a true or false condition on a value, such as a response <Cite n={1} />. |
+| `checks` | The rate metric of passed checks. A threshold on it can fail the test <Cite n={1} /> <Cite n={4} />. |
