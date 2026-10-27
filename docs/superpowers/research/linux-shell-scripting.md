@@ -248,3 +248,27 @@ F1 "bash-only" removed from the page (words "not defined by POSIX", "a Bash form
 - Claim C63 (`a && b || c`) is derived from the left-associativity sentence; LC10 shows the behavior.
 - The page says "In a test with dash" for `[[`, arrays, `$'...'`, and `base#n` (LC3, LC5, LC6). These are local observations of one dash version, not statements of a source.
 - ShellCheck output was not run. The page states what ShellCheck flags only from its wiki pages.
+
+## Round 2 (2026-10-27): Try it commands
+
+Tools: GNU bash 5.3.9(1)-release; uutils coreutils 0.10.0 (`touch`, `mktemp`, `ls`, `rm`); dash 0.5.12 (Ubuntu package). ShellCheck is not installed, so no ShellCheck output was run. Each block ran in a subshell with `TMPDIR` set to a sandbox directory. The sandbox was empty after each run.
+
+| Topic | Try it command (short) | Real output |
+|---|---|---|
+| Shell Programming | `printf` a two-line script (`#!/usr/bin/env bash`, `[ "$1" = "ok" ]`) to `setup.sh`, `chmod +x`, `./setup.sh ok; echo "status: $?"`, then `bad` | `status: 0`, `status: 1` |
+| Variables | `printf '[%s]\n' "$suite"` and `$suite` with `suite="smoke tests"`; `${TARGET_ENV:-staging}` before and after `TARGET_ENV=qa` | `[smoke tests]`; `[smoke]` `[tests]`; `env: staging`; `env: qa` |
+| Literals | `echo 'single: $user'`, `echo "double: $user"`, `echo "price: \$5"` with `user=qa` | `single: $user`, `double: qa`, `price: $5` |
+| Conditionals | `touch notes.txt`; `[ -f notes.txt ]; echo $?`; `[ -d notes.txt ]; echo $?`; `if [ -f ... ]` | `status: 0`, `status: 1`, `a file` |
+| Loops | `touch "my report.txt" b.txt`; `for f in ./*.txt`; `for f in $(ls)` | `file: ./b.txt`, `file: ./my report.txt`; `word: b.txt`, `word: my`, `word: report.txt` |
+| Debugging | `flaky.sh` = `set -euo pipefail`, `echo "start"`, `false`, `echo "never reached"`; `bash -n`; `bash -x flaky.sh; echo "status: $?"` | `syntax ok`; `+ set -euo pipefail`, `+ echo start`, `start`, `+ false`, `status: 1` |
+
+Go deeper snippets checked again: `echo 'it'\''s'` gives `it's`; a quoted here-document prints `{"user": "$USER"}` as typed; `$((7 * 6 + 1)) $((10 / 3))` gives `43 3`; `$((0x1F)) $((2#101)) $((010))` gives `31 5 8`; the `case` example gives `short suite` for `smoke test`.
+
+Moved facts (no fact deleted, every old cite number stays on the page):
+
+- Shell Programming: `#!/usr/bin/env bash` (S11), run versus `source` (S11, S35, S36), POSIX and Debian policy (S39, S40), the dash test, and ShellCheck (S45, S49) moved to Go deeper. "with no person at the prompt" stays in the Layman and Bangla text only. The old long demo (run versus source) is now a bullet, not a code block, so the page does not ask the reader to `source` a file.
+- Variables: `${name:?}`, `${#name}`, positional and special parameters, `export`, `readonly`, command substitution, arrays moved to a Go deeper table.
+- Literals: `\'`, `$'...'`, here-documents, arithmetic, and `base#n` moved to Go deeper.
+- Conditionals: `[[ ]]`, `=~`, `-e`/`-r`, number and string operators, `&&`/`||`, `cd || exit`, `case` moved to Go deeper.
+- Loops: `until` as reversed `while`, `break`/`continue`, C-style `for`, the no-match glob, `--`, `while IFS= read -r`, the pipe subshell, and the `until` poll moved to Go deeper. The Try-it cites S17 for `$(ls)`.
+- Debugging: the `rm -rf "$dir/"` warning (S16) moved from a danger callout into the Core text. `PS4` (S37), `set -e` exceptions (S34), traps (S35, S50, S39), `>&2` (S24), `mktemp -d` (S44), ShellCheck (S45 to S48) moved to Go deeper. The Try-it cites S37 for the `+ ` trace prefix (the default value of `PS4`).
