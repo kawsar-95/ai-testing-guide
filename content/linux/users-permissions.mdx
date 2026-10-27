@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-10-27',
   sources: [
     { title: 'Linux Roadmap', publisher: 'roadmap.sh', url: 'https://roadmap.sh/linux', accessed: '2026-10-19' },
     { title: 'passwd(5) - password file', publisher: 'man7.org (Linux man-pages)', url: 'https://man7.org/linux/man-pages/man5/passwd.5.html', accessed: '2026-10-19' },
@@ -64,39 +64,108 @@ This stage covers user accounts, groups, the root account, and file permissions.
 <Voices>
 <Technical>
 
-A Linux account is a line of data, not a folder. The file `/etc/passwd` holds one line for each account. It has seven colon-separated fields: name, password marker, UID, GID, comment, home directory, and login shell (the program that starts when the user logs in). <Cite n={2} /> The UID is the user ID, the number that the system uses to identify the account. The GID is the number of the primary group. UID 0 is the superuser, `root`. <Cite n={2} />
+**Goal:** Find your UID, GID, and login shell in the account database.
 
-The name `passwd` misleads. On most systems it holds only an `x` in the password field. The password hash (the stored, one-way scramble of the password) lives in `/etc/shadow`. <Cite n={2} /> Regular users must not read that file. <Cite n={3} /> A hash that starts with `!` means that the password is locked. <Cite n={3} /> `getent` reads the account databases through the Name Service Switch libraries (the lookup layer of the system). <Cite n={15} />
+A Linux account is a line of data, not a folder. The file `/etc/passwd` has one line for each account, with seven colon-separated fields: name, password marker, UID, GID, comment, home directory, and login shell (the program that starts at login). <Cite n={2} /> The UID is the user ID. The GID is the number of the primary group. UID 0 is the superuser, `root`. <Cite n={2} /> `getent` reads the account databases through the Name Service Switch libraries (the lookup layer of the system). <Cite n={15} />
 
 ```bash
-id                              # your UID, primary GID, and groups
-getent passwd "$USER"           # your line of the passwd database
-ls -l /etc/passwd /etc/shadow   # the shadow file is not world-readable
+getent passwd root
+```
+
+**Try it:** print your IDs and your own account line. These commands only read. `id -un` prints your user name. <Cite n={13} />
+
+```bash
+id                          # uid=1000(user) gid=1000(staff) groups=1000(staff),27(sudo)
+getent passwd "$(id -un)"   # user:x:1000:1000:User:/home/user:/bin/bash
+ls -l /etc/passwd /etc/shadow
+# -rw-r--r-- 1 root root   2978 Aug 30 13:21 /etc/passwd
+# -rw-r----- 1 root shadow 1405 Aug 30 13:21 /etc/shadow
+# Stand-ins: user, staff, and User replace your own names. Your groups differ.
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: print `id` and `ls -ld .` at the start of a CI job. In a container, the UID of the runner often has no name. Files from the host can belong to a number that no account in the container uses. This mismatch causes many `Permission denied` errors.
+Tutorial's own advice: print `id` and `ls -ld .` at the start of a CI job. In a container, the UID of the runner often has no name.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- The name `passwd` misleads. On most systems, its password field holds only an `x`. <Cite n={2} />
+- The password hash (the stored, one-way scramble of the password) lives in `/etc/shadow`. <Cite n={2} /> Regular users must not read that file. <Cite n={3} />
+- A hash that starts with `!` means that the password is locked. <Cite n={3} />
+
+Tutorial's own advice: in a container, files from the host can belong to a number that no account in the container uses. This mismatch causes many `Permission denied` errors.
+
+</details>
 
 </Technical>
 <Layman>
 
-A Linux account is a line of data, not a folder. The file `/etc/passwd` has one line for each account. Each line has seven colon-separated fields: name, password marker, UID, GID, comment, home directory, and login shell. The login shell is the program that starts when the user logs in <Cite n={2} />. The UID is the number that identifies the account. The GID is the number of the primary group. UID 0 is the superuser, `root` <Cite n={2} />.
+**Goal:** Find your UID, GID, and login shell in the account database.
 
-On most systems, the password field of `/etc/passwd` holds only an `x`. The password hash is in `/etc/shadow` <Cite n={2} />. A hash is a stored, one-way scramble of the password. Regular users must not read that file. If a hash starts with `!`, the password is locked <Cite n={3} />.
+A Linux account is a line of data, not a folder. The file `/etc/passwd` has one line for each account. Each line has seven colon-separated fields: name, password marker, UID, GID, comment, home directory, and login shell. The login shell is the program that starts when the user logs in. <Cite n={2} /> The UID is the number that identifies the account. The GID is the number of the primary group. UID 0 is the superuser, `root`. <Cite n={2} /> `getent` reads the account data through the lookup layer of the system. <Cite n={15} />
 
-Tutorial's own advice: print `id` and `ls -ld .` at the start of a CI job. In a container, the UID of the runner often has no name. Files from the host can belong to a number that no account in the container uses. This mismatch causes many `Permission denied` errors.
+**Try it:** print your IDs and your own account line. These commands only read. `id -un` prints your user name. <Cite n={13} />
+
+```bash
+id                          # uid=1000(user) gid=1000(staff) groups=1000(staff),27(sudo)
+getent passwd "$(id -un)"   # user:x:1000:1000:User:/home/user:/bin/bash
+ls -l /etc/passwd /etc/shadow
+# -rw-r--r-- 1 root root   2978 Aug 30 13:21 /etc/passwd
+# -rw-r----- 1 root shadow 1405 Aug 30 13:21 /etc/shadow
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: print `id` and `ls -ld .` at the start of a CI job. In a container, the UID of the runner often has no name.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- On most systems, the password field of `/etc/passwd` holds only an `x`. The password hash is in `/etc/shadow`. <Cite n={2} /> A hash is a stored, one-way scramble of the password.
+- Regular users must not read `/etc/shadow`. If a hash starts with `!`, the password is locked. <Cite n={3} />
+
+Tutorial's own advice: files from the host can belong to a number that no account in the container uses. This mismatch causes many `Permission denied` errors.
+
+</details>
 
 </Layman>
 <Bangla>
 
-Linux-এ একটি account হলো এক লাইন data, কোনো folder নয়। `/etc/passwd` file-এ প্রতিটি account-এর জন্য একটি করে লাইন থাকে। প্রতিটি লাইনে colon দিয়ে আলাদা করা সাতটি field থাকে: name, password marker, UID, GID, comment, home directory, এবং login shell (user login করলে যে program চালু হয়) <Cite n={2} />। UID হলো user ID, অর্থাৎ যে সংখ্যা দিয়ে system account-টিকে চেনে। GID হলো primary group-এর সংখ্যা। UID 0 হলো superuser, `root` <Cite n={2} />।
+**লক্ষ্য:** Account database-এ আপনার UID, GID, আর login shell খুঁজে বের করুন।
 
-`passwd` নামটি বিভ্রান্তিকর। বেশিরভাগ system-এ এর password field-এ শুধু একটি `x` থাকে। Password hash (password-এর সংরক্ষিত, একমুখী রূপ) থাকে `/etc/shadow` file-এ <Cite n={2} />। সাধারণ user-দের এই file পড়তে পারা উচিত নয় <Cite n={3} />। কোনো hash `!` দিয়ে শুরু হলে বুঝবেন, password-টি locked <Cite n={3} />। `getent` command-টি Name Service Switch library-গুলোর (system-এর lookup layer) মাধ্যমে account database পড়ে <Cite n={15} />।
+Linux-এ একটি account হলো এক লাইন data, কোনো folder নয়। `/etc/passwd` file-এ প্রতিটি account-এর জন্য একটি করে লাইন থাকে, যাতে colon দিয়ে আলাদা করা সাতটি field থাকে: name, password marker, UID, GID, comment, home directory, এবং login shell (user login করলে যে program চালু হয়)। <Cite n={2} /> UID হলো user ID। GID হলো primary group-এর সংখ্যা। UID 0 হলো superuser, `root`। <Cite n={2} /> `getent` command-টি Name Service Switch library-গুলোর (system-এর lookup layer) মাধ্যমে account database পড়ে। <Cite n={15} />
 
-Tutorial-এর নিজস্ব পরামর্শ: CI job-এর শুরুতে `id` এবং `ls -ld .` print করুন। Container-এর ভেতরে runner-এর UID-এর প্রায়ই কোনো নাম থাকে না। Host থেকে আসা file-গুলো এমন একটি সংখ্যার মালিকানায় থাকতে পারে, যা container-এর কোনো account ব্যবহার করে না। এই অমিল থেকেই অনেক `Permission denied` error হয়।
+**চেষ্টা করুন:** আপনার ID-গুলো আর আপনার নিজের account লাইন print করুন। এই command-গুলো শুধু পড়ে। `id -un` আপনার user name print করে। <Cite n={13} />
+
+```bash
+id                          # uid=1000(user) gid=1000(staff) groups=1000(staff),27(sudo)
+getent passwd "$(id -un)"   # user:x:1000:1000:User:/home/user:/bin/bash
+ls -l /etc/passwd /etc/shadow
+# -rw-r--r-- 1 root root   2978 Aug 30 13:21 /etc/passwd
+# -rw-r----- 1 root shadow 1405 Aug 30 13:21 /etc/shadow
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: CI job-এর শুরুতে `id` এবং `ls -ld .` print করুন। Container-এ runner-এর UID-এর প্রায়ই কোনো নাম থাকে না।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `passwd` নামটি বিভ্রান্তিকর। বেশিরভাগ system-এ এর password field-এ শুধু একটি `x` থাকে। <Cite n={2} />
+- Password hash (password-এর সংরক্ষিত, একমুখী রূপ) থাকে `/etc/shadow` file-এ। <Cite n={2} /> সাধারণ user-দের এই file পড়তে পারা উচিত নয়। <Cite n={3} />
+- কোনো hash `!` দিয়ে শুরু হলে বুঝবেন, password-টি locked। <Cite n={3} />
+
+Tutorial-এর নিজস্ব পরামর্শ: Host থেকে আসা file-গুলো এমন একটি সংখ্যার মালিকানায় থাকতে পারে, যা container-এর কোনো account ব্যবহার করে না। এই অমিল থেকেই অনেক `Permission denied` error হয়।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -106,41 +175,111 @@ Tutorial-এর নিজস্ব পরামর্শ: CI job-এর শু�
 <Voices>
 <Technical>
 
-A group is a named set of users. Admins use groups to give access to files and other resources. <Cite n={18} /> The file `/etc/group` has one line for each group: name, password field, GID, and a comma-separated list of members. <Cite n={4} /> Each account has one primary group, which is the GID in `/etc/passwd`. It can also join many supplementary groups (extra groups besides the primary one), which the member lists name. <Cite n={2} />
+**Goal:** List your groups and read the line of your primary group in `/etc/group`.
 
-`id` prints the user, the primary group, and the supplementary groups. <Cite n={13} /> `groups` prints the same names as `id -Gn`. <Cite n={14} /> A session gets its groups at login. If an admin changes your groups later, `id` and `groups` still show the old list in that session. <Cite n={13} /> `id USER` reads the database again. <Cite n={13} /> `newgrp GROUP` changes the current group ID inside the session. It starts a new shell, and `exit` leaves it. <Cite n={12} /> <Cite n={39} /> `gpasswd -d USER GROUP` removes a member. <Cite n={11} /> `groupdel` cannot remove the primary group of an existing user. <Cite n={10} />
+A group is a named set of users. The file `/etc/group` has one line for each group: name, password field, GID, and a comma-separated list of members. <Cite n={4} /> Each account has one primary group, which is the GID in `/etc/passwd`. It can also join many supplementary groups (extra groups). <Cite n={2} /> `id` prints the user, the primary group, and the supplementary groups. <Cite n={13} />
 
 ```bash
-id                           # groups of this login session
-id "$USER"                   # reads the group database again
-groups                       # group names only, same as id -Gn
-getent group "$(id -gn)"     # the /etc/group line of your primary group
-newgrp qa                    # needs a group qa that lists you; starts a new shell
+id
+```
+
+**Try it:** list your group names, and read the line of your primary group. These commands only read. `id -Gn` prints the group names only, and `groups` prints the same names. <Cite n={14} /> `id -gn` prints the name of the primary group. <Cite n={13} />
+
+```bash
+id -Gn                     # staff adm sudo users
+groups                     # staff adm sudo users
+getent group "$(id -gn)"   # staff:x:1000:
+# Stand-in: staff replaces the name of your primary group. Your list differs.
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: test access control with two accounts, one inside the group and one outside it. The first must succeed. The second must get `Permission denied`. After a script changes a membership, start a new login, for example `sudo -iu USER`, before you test. <Cite n={21} /> An old session checks the old groups. A minimal container may lack `sudo`.
+Tutorial's own advice: test access with two accounts, one in the group and one outside it. The first must succeed. The second must get `Permission denied`.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Admins use groups to give access to files and other resources. <Cite n={18} />
+- A session gets its groups at login. If an admin changes your groups later, `id` and `groups` still show the old list in that session. `id USER` reads the database again. <Cite n={13} />
+- `newgrp GROUP` changes the current group ID inside the session. It starts a new shell, and `exit` leaves it. <Cite n={12} /> <Cite n={39} />
+- `gpasswd -d USER GROUP` removes a member. <Cite n={11} /> `groupdel` cannot remove the primary group of an existing user. <Cite n={10} />
+
+```bash
+id "$USER"     # reads the group database again
+newgrp qa      # needs a group qa that lists you; starts a new shell
+```
+
+Tutorial's own advice: after a script changes a membership, start a new login, for example `sudo -iu USER`, before you test. <Cite n={21} /> An old session checks the old groups. A minimal container may lack `sudo`.
+
+</details>
 
 </Technical>
 <Layman>
 
-A group is a named set of users. The file `/etc/group` has one line for each group: name, password field, GID, and a list of members with commas between them <Cite n={4} />. Each account has one primary group, the GID in `/etc/passwd`. It can also join many supplementary groups (extra groups) <Cite n={2} />.
+**Goal:** List your groups and read the line of your primary group in `/etc/group`.
 
-`id` shows the user, the primary group, and the supplementary groups. A session gets its groups at login. If an admin changes your groups later, `id` and `groups` still show the old list in that session. `id USER` reads the data again <Cite n={13} />. `newgrp GROUP` changes the current group ID. It starts a new shell, and `exit` leaves it <Cite n={12} />. `gpasswd -d USER GROUP` removes a member <Cite n={11} />. `groupdel` cannot remove the primary group of a user that exists <Cite n={10} />.
+A group is a named set of users. The file `/etc/group` has one line for each group: name, password field, GID, and a list of members with commas between them. <Cite n={4} /> Each account has one primary group, the GID in `/etc/passwd`. It can also join many supplementary groups (extra groups). <Cite n={2} /> `id` shows the user, the primary group, and the supplementary groups. <Cite n={13} />
 
-Tutorial's own advice: test access with two accounts, one in the group and one outside it. The first must succeed. The second must get `Permission denied`. After a script changes a membership, start a new login, for example `sudo -iu USER`, before you test <Cite n={21} />.
+**Try it:** list your group names, and read the line of your primary group. These commands only read. `id -Gn` prints the group names only, and `groups` prints the same names. <Cite n={14} /> `id -gn` prints the name of the primary group. <Cite n={13} />
+
+```bash
+id -Gn                     # staff adm sudo users
+groups                     # staff adm sudo users
+getent group "$(id -gn)"   # staff:x:1000:
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: test access with two accounts, one in the group and one outside it. The first must succeed. The second must get `Permission denied`.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Admins use groups to give access to files and other resources. <Cite n={18} />
+- A session gets its groups at login. If an admin changes your groups later, `id` and `groups` still show the old list in that session. `id USER` reads the data again. <Cite n={13} />
+- `newgrp GROUP` changes the current group ID. It starts a new shell, and `exit` leaves it. <Cite n={12} />
+- `gpasswd -d USER GROUP` removes a member. <Cite n={11} /> `groupdel` cannot remove the primary group of a user that exists. <Cite n={10} />
+
+Tutorial's own advice: after a script changes a membership, start a new login, for example `sudo -iu USER`, before you test. <Cite n={21} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Group হলো নাম দেওয়া একদল user। Admin-রা file এবং অন্যান্য resource-এ access দিতে group ব্যবহার করেন <Cite n={18} />। `/etc/group` file-এ প্রতিটি group-এর জন্য একটি লাইন থাকে: name, password field, GID, এবং comma দিয়ে আলাদা করা member-দের তালিকা <Cite n={4} />। প্রতিটি account-এর একটি primary group থাকে, যা `/etc/passwd`-এর GID। Account-টি আরও অনেক supplementary group-এ (primary group-এর বাইরে অতিরিক্ত group) যোগ দিতে পারে; member তালিকাগুলোতে এদের নাম থাকে <Cite n={2} />।
+**লক্ষ্য:** আপনার group-গুলোর তালিকা দেখুন, আর `/etc/group`-এ আপনার primary group-এর লাইনটি পড়ুন।
 
-`id` user, primary group, এবং supplementary group-গুলো দেখায় <Cite n={13} />। `groups` ঠিক `id -Gn`-এর মতো একই নামগুলো দেখায় <Cite n={14} />। একটি session login-এর সময় তার group-গুলো পায়। পরে admin আপনার group বদলালেও সেই session-এ `id` এবং `groups` পুরনো তালিকাই দেখায়। `id USER` database আবার পড়ে <Cite n={13} />। `newgrp GROUP` session-এর ভেতরে current group ID বদলায়; এটি একটি নতুন shell চালু করে, আর `exit` দিয়ে সেখান থেকে বের হওয়া যায় <Cite n={12} />। `gpasswd -d USER GROUP` একজন member-কে সরায় <Cite n={11} />। `groupdel` কোনো বিদ্যমান user-এর primary group মুছতে পারে না <Cite n={10} />।
+Group হলো নাম দেওয়া একদল user। `/etc/group` file-এ প্রতিটি group-এর জন্য একটি লাইন থাকে: name, password field, GID, এবং comma দিয়ে আলাদা করা member-দের তালিকা। <Cite n={4} /> প্রতিটি account-এর একটি primary group থাকে, যা `/etc/passwd`-এর GID। Account-টি আরও অনেক supplementary group-এ (primary group-এর বাইরে অতিরিক্ত group) যোগ দিতে পারে। <Cite n={2} /> `id` user, primary group, এবং supplementary group-গুলো দেখায়। <Cite n={13} />
 
-Tutorial-এর নিজস্ব পরামর্শ: দুটি account দিয়ে access control test করুন, একটি group-এর ভেতরে, একটি বাইরে। প্রথমটিকে সফল হতে হবে, আর দ্বিতীয়টিকে `Permission denied` পেতে হবে। কোনো script membership বদলালে test করার আগে একটি নতুন login শুরু করুন, যেমন `sudo -iu USER` <Cite n={21} />। পুরনো session পুরনো group-গুলোই check করে।
+**চেষ্টা করুন:** আপনার group-এর নামগুলো দেখুন, আর আপনার primary group-এর লাইনটি পড়ুন। এই command-গুলো শুধু পড়ে। `id -Gn` শুধু group-এর নামগুলো print করে, আর `groups` একই নামগুলো print করে। <Cite n={14} /> `id -gn` primary group-এর নাম print করে। <Cite n={13} />
+
+```bash
+id -Gn                     # staff adm sudo users
+groups                     # staff adm sudo users
+getent group "$(id -gn)"   # staff:x:1000:
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: দুটি account দিয়ে access test করুন, একটি group-এর ভেতরে, একটি বাইরে। প্রথমটি সফল হবে, দ্বিতীয়টি `Permission denied` পাবে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Admin-রা file এবং অন্যান্য resource-এ access দিতে group ব্যবহার করেন। <Cite n={18} />
+- একটি session login-এর সময় তার group-গুলো পায়। পরে admin আপনার group বদলালেও সেই session-এ `id` এবং `groups` পুরনো তালিকাই দেখায়। `id USER` database আবার পড়ে। <Cite n={13} />
+- `newgrp GROUP` session-এর ভেতরে current group ID বদলায়। এটি একটি নতুন shell চালু করে, আর `exit` দিয়ে সেখান থেকে বের হওয়া যায়। <Cite n={12} />
+- `gpasswd -d USER GROUP` একজন member-কে সরায়। <Cite n={11} /> `groupdel` কোনো বিদ্যমান user-এর primary group মুছতে পারে না। <Cite n={10} />
+
+Tutorial-এর নিজস্ব পরামর্শ: কোনো script membership বদলালে test করার আগে একটি নতুন login শুরু করুন, যেমন `sudo -iu USER`। <Cite n={21} /> পুরনো session পুরনো group-গুলোই check করে।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -150,48 +289,133 @@ Tutorial-এর নিজস্ব পরামর্শ: দুটি account �
 <Voices>
 <Technical>
 
-Three standard programs manage the life of an account. They need root, so run them as root or add `sudo`. `useradd` creates an account. `-m` makes the home directory and copies the files of `/etc/skel` into it. <Cite n={5} /> Without `-m`, the result depends on `CREATE_HOME` in `/etc/login.defs`. <Cite n={5} /> So pass `-m` or `-M` every time. A new account has a locked password until `passwd NAME` sets one. <Cite n={5} /> `groupadd NAME` makes a group. <Cite n={8} />
+**Goal:** Name the commands that create, change, and remove an account, and see what a new home directory gets.
 
-`usermod` changes an account. `-aG` adds supplementary groups, `-L` locks the password, and `-l` renames the login only. <Cite n={6} /> A locked password does not stop an SSH key login (a remote login with a key, not a password). To block the account, run `usermod --expiredate 1`. <Cite n={9} /> `userdel NAME` removes the account. `userdel -r` also removes the home directory and the mail spool (the file that holds the mail of the user). <Cite n={7} /> Debian and Ubuntu add `adduser`, a Debian front end for `useradd`. <Cite n={16} /> Use `useradd` in scripts that must run on every distribution.
+These programs need root, so run them as root or add `sudo`. `useradd` creates an account. `-m` makes the home directory and copies the files of `/etc/skel` into it. <Cite n={5} /> `usermod` changes an account. <Cite n={6} /> `userdel NAME` removes the account. <Cite n={7} />
 
 ```bash
-sudo groupadd qa                                       # create a group first
-sudo useradd -m -s /bin/bash -c "QA runner" qa-runner  # account with a home directory
-sudo passwd qa-runner                                  # set a password (asks twice)
-sudo usermod -aG qa qa-runner                          # -a keeps the old groups
-sudo usermod -L qa-runner                              # lock the password
-sudo userdel qa-runner                                 # remove the account, keep the home
+sudo useradd -m -s /bin/bash -c "QA runner" qa-runner   # account with a home directory
 ```
 
 <Callout type="danger">
 
-`usermod -G` without `-a` replaces the whole list of supplementary groups. A user can lose `sudo` rights this way. <Cite n={6} /> <Cite n={17} /> `userdel -r` deletes the home directory with no undo. `userdel -f` skips safety checks and can leave the system in an inconsistent state. <Cite n={7} /> Use a disposable VM or container.
+`usermod -G` without `-a` replaces the whole list of supplementary groups. A user can lose `sudo` rights this way. <Cite n={6} /> <Cite n={17} /> `userdel -r` deletes the home directory with no undo. <Cite n={7} /> Use a disposable VM or container.
 
 </Callout>
+
+**Try it:** see what a new home directory gets, with no new account. These commands only read. `-A` also lists the hidden names that start with `.`.
+
+```bash
+ls -A /etc/skel                       # .bash_logout  .bashrc  .profile
+grep '^CREATE_HOME' /etc/login.defs   # no output: Ubuntu 26.04 does not set it
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: create test users in a setup script and delete only the names that the script made. Do not pass `-p`: other users can see the password in the process list. <Cite n={5} />
+Tutorial's own advice: create test users in a setup script, and delete only the names that the script made.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+| Command or flag | What it does |
+|---|---|
+| `useradd` without `-m` | The result depends on `CREATE_HOME` in `/etc/login.defs`, so pass `-m` or `-M` every time. <Cite n={5} /> |
+| `passwd NAME` | Sets a password. A new account has a locked password until then. <Cite n={5} /> |
+| `groupadd NAME` | Makes a group. <Cite n={8} /> |
+| `usermod -aG`, `-L`, `-l` | Adds supplementary groups, locks the password, renames the login only. <Cite n={6} /> |
+| `usermod --expiredate 1` | Blocks the account. A locked password does not stop an SSH key login (a remote login with a key, not a password). <Cite n={9} /> |
+| `userdel -r` | Also removes the home directory and the mail spool (the file that holds the mail of the user). <Cite n={7} /> |
+| `userdel -f` | Skips safety checks and can leave the system in an inconsistent state. <Cite n={7} /> |
+| `adduser` | A Debian front end for `useradd` on Debian and Ubuntu. <Cite n={16} /> Use `useradd` in scripts that must run on every distribution. |
+
+```bash
+sudo groupadd qa                 # create a group first
+sudo passwd qa-runner            # set a password (asks twice)
+sudo usermod -aG qa qa-runner    # -a keeps the old groups
+sudo usermod -L qa-runner        # lock the password
+sudo userdel qa-runner           # remove the account, keep the home
+```
+
+Do not pass `-p` to `useradd`: other users can see the password in the process list. <Cite n={5} />
+
+</details>
 
 </Technical>
 <Layman>
 
-The programs below need root, so run them as root or add `sudo`. `useradd` creates an account. With `-m`, it makes the home directory and copies the files of `/etc/skel` into it. Without `-m`, the result depends on `CREATE_HOME` in `/etc/login.defs` <Cite n={5} />. A new account has a locked password until `passwd NAME` sets one <Cite n={5} />. `groupadd NAME` makes a group <Cite n={8} />.
+**Goal:** Name the commands that create, change, and remove an account, and see what a new home directory gets.
 
-`usermod` changes an account. `-aG` adds supplementary groups, `-L` locks the password, and `-l` changes only the login name <Cite n={6} />. A locked password does not stop a login with an SSH key. To block the account, run `usermod --expiredate 1` <Cite n={9} />. `userdel NAME` removes the account. `userdel -r` also removes the home directory and the mail spool, the file that holds the mail of the user <Cite n={7} />.
+These programs need root, so run them as root or add `sudo`. `useradd` creates an account. With `-m`, it makes the home directory and copies the files of `/etc/skel` into it. <Cite n={5} /> `usermod` changes an account. <Cite n={6} /> `userdel NAME` removes the account. <Cite n={7} />
 
-Be careful: `usermod -G` without `-a` replaces the whole list of supplementary groups. A user can lose `sudo` rights this way <Cite n={6} />. `userdel -r` deletes the home directory with no undo <Cite n={7} />. Do not pass `-p`: other users can see the password in the process list <Cite n={5} />.
+<Callout type="danger">
+
+`usermod -G` without `-a` replaces the whole list of supplementary groups. A user can lose `sudo` rights this way. <Cite n={6} /> `userdel -r` deletes the home directory with no undo. <Cite n={7} /> Use a test machine or a container.
+
+</Callout>
+
+**Try it:** see what a new home directory gets, with no new account. These commands only read. `-A` also lists the hidden names that start with `.`.
+
+```bash
+ls -A /etc/skel                       # .bash_logout  .bashrc  .profile
+grep '^CREATE_HOME' /etc/login.defs   # no output: Ubuntu 26.04 does not set it
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: create test users in a setup script, and delete only the names that the script made.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Without `-m`, the result depends on `CREATE_HOME` in `/etc/login.defs`. A new account has a locked password until `passwd NAME` sets one. <Cite n={5} /> `groupadd NAME` makes a group. <Cite n={8} />
+- `usermod -aG` adds supplementary groups, `-L` locks the password, and `-l` changes only the login name. <Cite n={6} />
+- A locked password does not stop a login with an SSH key. To block the account, run `usermod --expiredate 1`. <Cite n={9} />
+- `userdel -r` also removes the mail spool, the file that holds the mail of the user. <Cite n={7} />
+- Do not pass `-p`: other users can see the password in the process list. <Cite n={5} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-তিনটি standard program একটি account-এর পুরো জীবনচক্র সামলায়। এগুলোর root দরকার, তাই root হিসেবে চালান অথবা `sudo` যোগ করুন। `useradd` একটি account তৈরি করে। `-m` দিলে এটি home directory বানায় এবং `/etc/skel`-এর file-গুলো সেখানে copy করে <Cite n={5} />। `-m` না দিলে ফলাফল নির্ভর করে `/etc/login.defs`-এর `CREATE_HOME`-এর ওপর <Cite n={5} />। তাই প্রতিবার `-m` অথবা `-M` দিন। `passwd NAME` password set না করা পর্যন্ত নতুন account-এর password locked থাকে <Cite n={5} />। `groupadd NAME` একটি group বানায় <Cite n={8} />।
+**লক্ষ্য:** যে command-গুলো account তৈরি করে, বদলায় আর মোছে সেগুলো চিনুন, আর দেখুন একটি নতুন home directory কী পায়।
 
-`usermod` একটি account বদলায়। `-aG` supplementary group যোগ করে, `-L` password lock করে, আর `-l` শুধু login name বদলায় <Cite n={6} />। Password locked থাকলেও SSH key দিয়ে login বন্ধ হয় না। Account পুরোপুরি আটকাতে `usermod --expiredate 1` চালান <Cite n={9} />। `userdel NAME` account মুছে দেয়। `userdel -r` এর সাথে home directory এবং mail spool-ও (user-এর mail রাখার file) মুছে দেয় <Cite n={7} />। Debian এবং Ubuntu-তে `adduser` আছে, যা `useradd`-এর একটি Debian front end <Cite n={16} />। যে script সব distribution-এ চলতে হবে, সেখানে `useradd` ব্যবহার করুন।
+এই program-গুলোর root দরকার, তাই root হিসেবে চালান অথবা `sudo` যোগ করুন। `useradd` একটি account তৈরি করে। `-m` দিলে এটি home directory বানায় এবং `/etc/skel`-এর file-গুলো সেখানে copy করে। <Cite n={5} /> `usermod` একটি account বদলায়। <Cite n={6} /> `userdel NAME` account মুছে দেয়। <Cite n={7} />
 
-সাবধান: `-a` ছাড়া `usermod -G` supplementary group-এর পুরো তালিকা বদলে দেয়, ফলে একজন user `sudo` অধিকার হারাতে পারেন <Cite n={6} />। `userdel -r` home directory মুছে দেয়, যা আর ফেরানো যায় না <Cite n={7} />। `-p` ব্যবহার করবেন না: process list-এ অন্য user-রা password দেখতে পারেন <Cite n={5} />।
+<Callout type="danger">
+
+`-a` ছাড়া `usermod -G` supplementary group-এর পুরো তালিকা বদলে দেয়, ফলে একজন user `sudo` অধিকার হারাতে পারেন। <Cite n={6} /> `userdel -r` home directory মুছে দেয়, যা আর ফেরানো যায় না। <Cite n={7} /> একটি disposable VM বা container ব্যবহার করুন।
+
+</Callout>
+
+**চেষ্টা করুন:** কোনো নতুন account ছাড়াই দেখুন, একটি নতুন home directory কী পায়। এই command-গুলো শুধু পড়ে। `-A` `.` দিয়ে শুরু হওয়া hidden নামগুলোও দেখায়।
+
+```bash
+ls -A /etc/skel                       # .bash_logout  .bashrc  .profile
+grep '^CREATE_HOME' /etc/login.defs   # no output: Ubuntu 26.04 does not set it
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: Setup script-এ test user তৈরি করুন, আর শুধু সেই নামগুলো মুছুন, যেগুলো script-টি বানিয়েছে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `-m` না দিলে ফলাফল নির্ভর করে `/etc/login.defs`-এর `CREATE_HOME`-এর ওপর, তাই প্রতিবার `-m` অথবা `-M` দিন। `passwd NAME` password set না করা পর্যন্ত নতুন account-এর password locked থাকে। <Cite n={5} /> `groupadd NAME` একটি group বানায়। <Cite n={8} />
+- `-aG` supplementary group যোগ করে, `-L` password lock করে, আর `-l` শুধু login name বদলায়। <Cite n={6} />
+- Password locked থাকলেও SSH key দিয়ে login বন্ধ হয় না। Account পুরোপুরি আটকাতে `usermod --expiredate 1` চালান। <Cite n={9} />
+- `userdel -r` mail spool-ও (user-এর mail রাখার file) মুছে দেয়। <Cite n={7} />
+- Debian এবং Ubuntu-তে `adduser` আছে, যা `useradd`-এর একটি Debian front end। <Cite n={16} /> যে script সব distribution-এ চলতে হবে, সেখানে `useradd` ব্যবহার করুন।
+- `-p` ব্যবহার করবেন না: process list-এ অন্য user-রা password দেখতে পারেন। <Cite n={5} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -201,55 +425,121 @@ Be careful: `usermod -G` without `-a` replaces the whole list of supplementary g
 <Voices>
 <Technical>
 
-The superuser is the account with UID 0, named `root`. <Cite n={2} /> Ubuntu disables the direct root login: it gives root a hash that matches no password. <Cite n={19} /> A Red Hat blog advises to lock root at install and to put admins in the `wheel` group. <Cite n={20} /> Ubuntu uses the `sudo` group for the same job. <Cite n={19} />
+**Goal:** Check whether you are root, and find the admin group of your system.
 
-`sudo COMMAND` runs one command as root, or as another user with `-u`, if the sudoers policy allows it. <Cite n={21} /> `sudo -l` lists your rights. By default, sudo remembers your password for a few minutes in each terminal. The `timestamp_timeout` option of sudoers(5) sets the time. `-k` ends it, and `-n` fails instead of asking for input. <Cite n={21} /> Policies can log each attempt. <Cite n={21} />
-
-Rules live in `/etc/sudoers` and in the files that its `@includedir` line reads, usually `/etc/sudoers.d`. The last matching rule wins. <Cite n={22} /> sudo skips file names that contain a `.` or end in `~`. <Cite n={22} /> `visudo` checks the syntax before it saves. <Cite n={23} />
+The superuser is the account with UID 0, named `root`. <Cite n={2} /> Ubuntu disables the direct root login and uses the `sudo` group for admins. <Cite n={19} /> `sudo COMMAND` runs one command as root, if the sudoers policy allows it. `sudo -l` lists your rights. <Cite n={21} />
 
 ```bash
-id -u                                      # prints 0 only for root
-sudo -l                                    # what may this account run through sudo?
-sudo -n true && echo "sudo works without a password"
+sudo -l
+```
+
+<Callout type="danger">
+
+Edit sudoers only with `visudo`, which checks the syntax before it saves. <Cite n={23} /> A syntax error can stop sudo, and you can lose root access. A rule with `NOPASSWD: ALL` gives full root to the user. <Cite n={22} />
+
+</Callout>
+
+**Try it:** print your UID and the members of the `sudo` group. These commands only read.
+
+```bash
+id -u               # 1000 (only root gets 0)
+getent group sudo   # sudo:x:27:user
+# Stand-in: user replaces your login name.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: run the tests as a normal user. Use `sudo -n` in CI, so a missing rule fails at once.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Ubuntu gives root a hash that matches no password. <Cite n={19} /> A Red Hat blog advises to lock root at install and to put admins in the `wheel` group. <Cite n={20} /> `getent group wheel` prints no line if the group does not exist. <Cite n={15} />
+- `sudo -u USER` runs the command as another user. By default, sudo remembers your password for a few minutes in each terminal. The `timestamp_timeout` option of sudoers(5) sets the time. `-k` ends it, and `-n` fails instead of asking for input. Policies can log each attempt. <Cite n={21} />
+- Rules live in `/etc/sudoers` and in the files that its `@includedir` line reads, usually `/etc/sudoers.d`. The last matching rule wins. sudo skips file names that contain a `.` or end in `~`. <Cite n={22} />
+
+```bash
 sudo visudo -f /etc/sudoers.d/qa-restart   # new drop-in file, syntax checked on save
 # One narrow rule for that file (change the user, command, and path):
 #   qa-runner ALL = (root) NOPASSWD: /usr/bin/systemctl restart myapp
 sudo visudo -c                             # check /etc/sudoers and its includes
 ```
 
-<Callout type="danger">
+Tutorial's own advice: never edit `/etc/sudoers` with a plain editor. Name exact commands with full paths. Give a narrow rule only to the one setup step that needs root.
 
-A syntax error in `/etc/sudoers` can stop sudo from working. You may then lose root access. <Cite n={22} /> Never edit the file with a plain editor. Use `visudo`. A rule with `NOPASSWD: ALL` gives full root to the user. <Cite n={22} /> Name exact commands with full paths.
-
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: run the test suite as a normal user. Give a narrow rule only to the one setup step that needs root. Use `sudo -n` in CI, so a missing rule fails at once and does not wait for a password.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-The superuser is the account with UID 0, named `root` <Cite n={2} />. Ubuntu disables the direct root login. It gives root a hash that matches no password <Cite n={19} />. A Red Hat blog advises to lock root at install and to put admins in the `wheel` group <Cite n={20} />.
+**Goal:** Check whether you are root, and find the admin group of your system.
 
-`sudo COMMAND` runs one command as root, or as another user with `-u`, if the sudoers policy allows it. `sudo -l` lists your rights. By default, sudo remembers your password for a few minutes in each terminal. `-k` ends this time, and `-n` fails instead of asking for input <Cite n={21} />.
+The superuser is the account with UID 0, named `root`. <Cite n={2} /> Ubuntu disables the direct root login and uses the `sudo` group for admins. <Cite n={19} /> `sudo COMMAND` runs one command as root, if the sudoers policy allows it. `sudo -l` lists your rights. <Cite n={21} />
 
-The rules are in `/etc/sudoers` and in the files that its `@includedir` line reads, usually `/etc/sudoers.d`. The last rule that matches wins <Cite n={22} />. `visudo` checks the syntax before it saves <Cite n={23} />. A syntax error in `/etc/sudoers` can stop sudo from working, and you can lose root access. A rule with `NOPASSWD: ALL` gives full root to the user <Cite n={22} />.
+<Callout type="danger">
+
+Edit sudoers only with `visudo`. It checks the syntax before it saves. <Cite n={23} /> A syntax error can stop sudo, and you can lose root access. A rule with `NOPASSWD: ALL` gives full root to the user. <Cite n={22} />
+
+</Callout>
+
+**Try it:** print your UID and the members of the `sudo` group. These commands only read.
+
+```bash
+id -u               # 1000 (only root gets 0)
+getent group sudo   # sudo:x:27:user
+```
+
+<Callout type="tip" title="Why it matters for testing">
 
 Tutorial's own advice: run the tests as a normal user. Use `sudo -n` in CI, so a missing rule fails at once.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Ubuntu gives root a hash that matches no password. <Cite n={19} /> A Red Hat blog advises to lock root at install and to put admins in the `wheel` group. <Cite n={20} />
+- With `-u`, sudo runs the command as another user. By default, sudo remembers your password for a few minutes in each terminal. `-k` ends this time, and `-n` fails instead of asking for input. <Cite n={21} />
+- The rules are in `/etc/sudoers` and in the files that its `@includedir` line reads, usually `/etc/sudoers.d`. The last rule that matches wins. <Cite n={22} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Superuser হলো UID 0-এর account, যার নাম `root` <Cite n={2} />। Ubuntu সরাসরি root login বন্ধ রাখে: এটি root-কে এমন একটি hash দেয়, যা কোনো password-এর সাথে মেলে না <Cite n={19} />। Red Hat-এর একটি blog install-এর সময় root lock করার এবং admin-দের `wheel` group-এ রাখার পরামর্শ দেয় <Cite n={20} />। Ubuntu একই কাজে `sudo` group ব্যবহার করে <Cite n={19} />।
+**লক্ষ্য:** আপনি root কি না check করুন, আর আপনার system-এর admin group খুঁজে বের করুন।
 
-sudoers policy অনুমতি দিলে `sudo COMMAND` একটি command root হিসেবে চালায়, অথবা `-u` দিয়ে অন্য user হিসেবে চালায় <Cite n={21} />। `sudo -l` আপনার অধিকারগুলোর তালিকা দেখায়। Default হিসেবে sudo প্রতিটি terminal-এ কয়েক মিনিট আপনার password মনে রাখে; sudoers(5)-এর `timestamp_timeout` option এই সময় ঠিক করে। `-k` এই সময় শেষ করে, আর `-n` input চাওয়ার বদলে fail করে <Cite n={21} />।
+Superuser হলো UID 0-এর account, যার নাম `root`। <Cite n={2} /> Ubuntu সরাসরি root login বন্ধ রাখে, আর admin-দের জন্য `sudo` group ব্যবহার করে। <Cite n={19} /> sudoers policy অনুমতি দিলে `sudo COMMAND` একটি command root হিসেবে চালায়। `sudo -l` আপনার অধিকারগুলোর তালিকা দেখায়। <Cite n={21} />
 
-নিয়মগুলো থাকে `/etc/sudoers`-এ এবং এর `@includedir` লাইন যে file-গুলো পড়ে সেগুলোতে, সাধারণত `/etc/sudoers.d`-তে। সবশেষে যে নিয়ম মেলে, সেটিই কার্যকর হয় <Cite n={22} />। `visudo` save করার আগে syntax check করে <Cite n={23} />। `/etc/sudoers`-এ একটি syntax error sudo-কে অচল করে দিতে পারে, তখন আপনি root access হারাতে পারেন। `NOPASSWD: ALL` থাকা একটি নিয়ম user-কে পুরো root অধিকার দেয় <Cite n={22} />।
+<Callout type="danger">
 
-Tutorial-এর নিজস্ব পরামর্শ: test suite একজন সাধারণ user হিসেবে চালান। CI-তে `sudo -n` ব্যবহার করুন, যাতে কোনো নিয়ম না থাকলে সাথে সাথে fail করে, password-এর জন্য অপেক্ষা না করে।
+শুধু `visudo` দিয়ে sudoers edit করুন, কারণ এটি save করার আগে syntax check করে। <Cite n={23} /> একটি syntax error sudo-কে অচল করে দিতে পারে, তখন আপনি root access হারাতে পারেন। `NOPASSWD: ALL` থাকা একটি নিয়ম user-কে পুরো root অধিকার দেয়। <Cite n={22} />
+
+</Callout>
+
+**চেষ্টা করুন:** আপনার UID আর `sudo` group-এর member-দের print করুন। এই command-গুলো শুধু পড়ে।
+
+```bash
+id -u               # 1000 (only root gets 0)
+getent group sudo   # sudo:x:27:user
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: Test একজন সাধারণ user হিসেবে চালান। CI-তে `sudo -n` ব্যবহার করুন, যাতে কোনো নিয়ম না থাকলে সাথে সাথে fail করে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Ubuntu root-কে এমন একটি hash দেয়, যা কোনো password-এর সাথে মেলে না। <Cite n={19} /> Red Hat-এর একটি blog install-এর সময় root lock করার এবং admin-দের `wheel` group-এ রাখার পরামর্শ দেয়। <Cite n={20} />
+- `-u` দিলে sudo অন্য user হিসেবে command চালায়। Default হিসেবে sudo প্রতিটি terminal-এ কয়েক মিনিট আপনার password মনে রাখে; sudoers(5)-এর `timestamp_timeout` option এই সময় ঠিক করে। `-k` এই সময় শেষ করে, আর `-n` input চাওয়ার বদলে fail করে। <Cite n={21} />
+- নিয়মগুলো থাকে `/etc/sudoers`-এ এবং এর `@includedir` লাইন যে file-গুলো পড়ে সেগুলোতে, সাধারণত `/etc/sudoers.d`-তে। সবশেষে যে নিয়ম মেলে, সেটিই কার্যকর হয়। <Cite n={22} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -259,9 +549,13 @@ Tutorial-এর নিজস্ব পরামর্শ: test suite একজ�
 <Voices>
 <Technical>
 
-Every file has an owner, a group, and mode bits (flags for access). Three classes use them: the owner (`u`), other members of the file's group (`g`), and everyone else (`o`). <Cite n={25} /> <Cite n={32} /> Each class can read (`r`), write (`w`), and execute (`x`). `ls -l` shows the file type first, then three `rwx` triplets. The type is `-` for a file, `d` for a directory, and `l` for a symbolic link (a file that points to another path). <Cite n={27} />
+**Goal:** Read a file mode in `rwx` form and in octal form.
 
-On a directory, `r` lists the names, `w` creates and removes entries, and `x` lets you reach the files inside. <Cite n={25} /> Write alone is not enough: removing a file also needs `x` on the directory. <Cite n={37} /> <Cite n={29} /> Octal mode (base 8 numbers) adds r=4, w=2, and x=1 for each class. So 640 means `rw-r-----`. <Cite n={26} />
+Every file has an owner, a group, and mode bits (flags for access). Three classes use them: the owner (`u`), other members of the file's group (`g`), and everyone else (`o`). <Cite n={25} /> <Cite n={32} /> Each class can read (`r`), write (`w`), and execute (`x`). `ls -l` shows the file type first, then three `rwx` triplets. <Cite n={27} /> Octal mode (base 8 numbers) adds r=4, w=2, and x=1 for each class. So 640 means `rw-r-----`. <Cite n={26} />
+
+```bash
+ls -l report.txt
+```
 
 <FlowDiagram
   title="Mode 640 as rw-r-----"
@@ -274,17 +568,19 @@ On a directory, `r` lists the names, `w` creates and removes entries, and `x` le
   ]}
 />
 
-Three special bits exist. Setuid (4000) runs a program with the effective user ID (the ID for permission checks) of the file owner. <Cite n={25} /> <Cite n={24} /> Setgid (2000) does the same for the group. On a directory, new files get the group of the directory. <Cite n={31} /> On a directory, the sticky bit (1000) lets unprivileged users remove or rename only their own files, or any file if they own the directory. <Cite n={25} /> `ls` shows these bits as `s` and `t`, or `S` and `T` when `x` is missing. <Cite n={27} />
+**Try it:** in a throw-away directory, give a file mode 640 and read the mode back. `stat -c` prints a chosen format, and `%a` is the octal mode. <Cite n={28} /> `stat -c` is a GNU option.
 
 ```bash
-touch report.txt                      # creates the file, or only updates its time
-ls -l report.txt                      # -rw-rw-r-- (umask 002) or -rw-r--r-- (umask 022)
-stat -c '%A %a %U:%G %n' report.txt   # GNU option (macOS and BusyBox may differ)
-ls -ld /tmp                           # drwxrwxrwt: the t is the sticky bit
-ls -l /usr/bin/passwd                 # -rwsr-xr-x: the s is the setuid bit
+(
+  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  touch report.txt
+  chmod 640 report.txt
+  ls -l report.txt                      # -rw-r----- 1 user staff 0 Oct 27 15:32 report.txt
+  stat -c '%A %a %U:%G %n' report.txt   # -rw-r----- 640 user:staff report.txt
+  rm -r "$PWD"        # delete the throw-away directory
+)
+# Stand-ins: user and staff replace your user and group names.
 ```
-
-`stat -c` prints a chosen format. <Cite n={28} />
 
 <Callout type="tip" title="Why it matters for testing">
 
@@ -292,25 +588,100 @@ Tutorial's own advice: assert on modes in tests that write files. After a test w
 
 </Callout>
 
+<details>
+<summary>Go deeper</summary>
+
+- The file type is `-` for a file, `d` for a directory, and `l` for a symbolic link (a file that points to another path). <Cite n={27} />
+- On a directory, `r` lists the names, `w` creates and removes entries, and `x` lets you reach the files inside. <Cite n={25} /> Write alone is not enough: removing a file also needs `x` on the directory. <Cite n={37} /> <Cite n={29} />
+
+| Special bit | Effect |
+|---|---|
+| Setuid (4000) | Runs a program with the effective user ID (the ID for permission checks) of the file owner. <Cite n={25} /> <Cite n={24} /> |
+| Setgid (2000) | Does the same for the group. On a directory, new files get the group of the directory. <Cite n={31} /> |
+| Sticky (1000) | On a directory, unprivileged users can remove or rename only their own files, or any file if they own the directory. <Cite n={25} /> |
+
+`ls` shows these bits as `s` and `t`, or `S` and `T` when `x` is missing. <Cite n={27} />
+
+```bash
+ls -ld /tmp             # drwxrwxrwt: the t is the sticky bit
+ls -l /usr/bin/passwd   # -rwsr-xr-x: the s is the setuid bit
+```
+
+</details>
+
 </Technical>
 <Layman>
 
-Every file has an owner, a group, and mode bits. Mode bits are flags that control access. Three classes use them: the owner (`u`), other members of the file's group (`g`), and everyone else (`o`) <Cite n={25} />. Each class can read (`r`), write (`w`), and execute (`x`).
+**Goal:** Read a file mode in `rwx` form and in octal form.
 
-On a directory, `r` lists the names, `w` creates and removes entries, and `x` lets you reach the files inside <Cite n={25} />. To remove a file, you also need `x` on the directory, not only write <Cite n={37} />. In octal mode, each class adds r=4, w=2, and x=1. So 640 means `rw-r-----` <Cite n={26} />.
+Every file has an owner, a group, and mode bits. Mode bits are flags that control access. Three classes use them: the owner (`u`), other members of the file's group (`g`), and everyone else (`o`). <Cite n={25} /> Each class can read (`r`), write (`w`), and execute (`x`). `ls -l` shows the file type first, then three `rwx` groups. <Cite n={27} /> In octal mode, each class adds r=4, w=2, and x=1. So 640 means `rw-r-----`. <Cite n={26} />
 
-There are three special bits. Setuid (4000) runs a program with the user ID of the file owner for permission checks <Cite n={25} />. Setgid (2000) does the same for the group. On a directory, new files get the group of the directory <Cite n={31} />. The sticky bit (1000) on a directory lets normal users remove or rename only their own files, or any file if they own the directory <Cite n={25} />.
+**Try it:** in a throw-away directory, give a file mode 640 and read the mode back. `stat -c` prints a chosen format, and `%a` is the octal mode. <Cite n={28} /> `stat -c` is a GNU option.
+
+```bash
+(
+  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  touch report.txt
+  chmod 640 report.txt
+  ls -l report.txt                      # -rw-r----- 1 user staff 0 Oct 27 15:32 report.txt
+  stat -c '%A %a %U:%G %n' report.txt   # -rw-r----- 640 user:staff report.txt
+  rm -r "$PWD"        # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: in tests that write files, check the mode. After a test writes a key file, `stat -c %a` must print `600` or `640`.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- On a directory, `r` lists the names, `w` creates and removes entries, and `x` lets you reach the files inside. <Cite n={25} /> To remove a file, you also need `x` on the directory, not only write. <Cite n={37} />
+- Setuid (4000) runs a program with the user ID of the file owner for permission checks. <Cite n={25} />
+- Setgid (2000) does the same for the group. On a directory, new files get the group of the directory. <Cite n={31} />
+- The sticky bit (1000) on a directory lets normal users remove or rename only their own files, or any file if they own the directory. <Cite n={25} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-প্রতিটি file-এর একজন owner, একটি group, এবং কিছু mode bit (access নিয়ন্ত্রণের flag) থাকে। তিনটি class এগুলো ব্যবহার করে: owner (`u`), file-এর group-এর অন্য member-রা (`g`), এবং বাকি সবাই (`o`) <Cite n={25} />। প্রতিটি class read (`r`), write (`w`), এবং execute (`x`) করতে পারে। `ls -l` প্রথমে file-এর type দেখায়, তারপর তিনটি `rwx` সেট। Type হলো সাধারণ file-এর জন্য `-`, directory-র জন্য `d`, আর symbolic link-এর (যে file অন্য একটি path দেখায়) জন্য `l` <Cite n={27} />।
+**লক্ষ্য:** একটি file mode `rwx` রূপে আর octal রূপে পড়ুন।
 
-Directory-তে `r` নামগুলোর তালিকা দেখায়, `w` entry তৈরি ও মুছতে দেয়, আর `x` ভেতরের file-গুলোতে পৌঁছাতে দেয় <Cite n={25} />। শুধু write যথেষ্ট নয়: একটি file মুছতে directory-তে `x`-ও লাগে <Cite n={37} />। Octal mode-এ (base 8 সংখ্যা) প্রতিটি class-এর জন্য r=4, w=2, এবং x=1 যোগ হয়। তাই 640 মানে `rw-r-----` <Cite n={26} />।
+প্রতিটি file-এর একজন owner, একটি group, এবং কিছু mode bit (access নিয়ন্ত্রণের flag) থাকে। তিনটি class এগুলো ব্যবহার করে: owner (`u`), file-এর group-এর অন্য member-রা (`g`), এবং বাকি সবাই (`o`)। <Cite n={25} /> প্রতিটি class read (`r`), write (`w`), এবং execute (`x`) করতে পারে। `ls -l` প্রথমে file-এর type দেখায়, তারপর তিনটি `rwx` সেট। <Cite n={27} /> Octal mode-এ (base 8 সংখ্যা) প্রতিটি class-এর জন্য r=4, w=2, এবং x=1 যোগ হয়। তাই 640 মানে `rw-r-----`। <Cite n={26} />
 
-তিনটি বিশেষ bit আছে। Setuid (4000) একটি program-কে file owner-এর effective user ID (permission check-এর ID) দিয়ে চালায় <Cite n={24} />। Setgid (2000) group-এর জন্য একই কাজ করে; directory-তে এটি থাকলে নতুন file-গুলো সেই directory-র group পায় <Cite n={31} />। Directory-তে sticky bit (1000) সাধারণ user-দের শুধু নিজেদের file মুছতে বা নাম বদলাতে দেয়, অথবা directory-র owner হলে যেকোনো file <Cite n={25} />। `ls` এই bit-গুলো `s` ও `t` হিসেবে দেখায়, আর `x` না থাকলে `S` ও `T` <Cite n={27} />।
+**চেষ্টা করুন:** একটি throw-away directory-তে একটি file-কে mode 640 দিন, আর mode-টি আবার পড়ুন। `stat -c` আপনার বেছে নেওয়া format-এ print করে, আর `%a` হলো octal mode। <Cite n={28} /> `stat -c` একটি GNU option।
 
-Tutorial-এর নিজস্ব পরামর্শ: যে test file লেখে, সেখানে mode assert করুন। একটি key file লেখার পর check করুন যে `stat -c %a` `600` অথবা `640` print করছে।
+```bash
+(
+  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  touch report.txt
+  chmod 640 report.txt
+  ls -l report.txt                      # -rw-r----- 1 user staff 0 Oct 27 15:32 report.txt
+  stat -c '%A %a %U:%G %n' report.txt   # -rw-r----- 640 user:staff report.txt
+  rm -r "$PWD"        # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: যে test file লেখে, সেখানে mode assert করুন। Key file লেখার পর `stat -c %a`-কে `600` বা `640` print করতে হবে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Type হলো সাধারণ file-এর জন্য `-`, directory-র জন্য `d`, আর symbolic link-এর (যে file অন্য একটি path দেখায়) জন্য `l`। <Cite n={27} />
+- Directory-তে `r` নামগুলোর তালিকা দেখায়, `w` entry তৈরি ও মুছতে দেয়, আর `x` ভেতরের file-গুলোতে পৌঁছাতে দেয়। <Cite n={25} /> শুধু write যথেষ্ট নয়: একটি file মুছতে directory-তে `x`-ও লাগে। <Cite n={37} />
+- Setuid (4000) একটি program-কে file owner-এর effective user ID (permission check-এর ID) দিয়ে চালায়। <Cite n={24} />
+- Setgid (2000) group-এর জন্য একই কাজ করে; directory-তে এটি থাকলে নতুন file-গুলো সেই directory-র group পায়। <Cite n={31} />
+- Directory-তে sticky bit (1000) সাধারণ user-দের শুধু নিজেদের file মুছতে বা নাম বদলাতে দেয়, অথবা directory-র owner হলে যেকোনো file। <Cite n={25} />
+- `ls` এই bit-গুলো `s` ও `t` হিসেবে দেখায়, আর `x` না থাকলে `S` ও `T`। <Cite n={27} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -320,52 +691,155 @@ Tutorial-এর নিজস্ব পরামর্শ: যে test file ল�
 <Voices>
 <Technical>
 
-`chmod` changes the mode. Use octal to set everything at once (`chmod 640 FILE`). Use symbolic form for one change (`chmod g-w FILE`). <Cite n={32} /> Only the owner of the file, or a privileged process, can change the mode. <Cite n={30} /> In `-R` runs, `X` gives execute permission only to directories and to files that are already executable. <Cite n={32} />
+**Goal:** Change a mode with `chmod`, and set the mode of new files with `umask`.
 
-`chown OWNER:GROUP FILE` changes the owner and the group. `chgrp GROUP FILE` changes only the group. <Cite n={33} /> <Cite n={34} /> The umask (a mask that removes bits from the mode of new files) sets the default. A new file usually starts at 666, and the umask turns off its bits. So umask 022 gives 644. <Cite n={35} /> `umask` is a shell builtin (a command inside the shell). <Cite n={36} /> A subshell (a child copy of the shell) keeps the change local. <Cite n={38} />
+`chmod` changes the mode. Use octal to set everything at once (`chmod 640 FILE`). Use the symbolic form for one change (`chmod g-w FILE`). <Cite n={32} /> The umask removes bits from the mode of new files. A new file usually starts at 666, so umask 022 gives 644. <Cite n={35} />
 
 ```bash
-mkdir -p shared-demo && touch shared-demo/run.sh
-chmod 640 shared-demo/run.sh           # octal: owner rw-, group r--, others none
-chmod u+x,g-w shared-demo/run.sh       # symbolic: add x for owner, remove w for group
-chgrp "$(id -gn)" shared-demo/run.sh   # use a group that you belong to
-chmod 2750 shared-demo                 # setgid directory: new files get its group
-chmod -R g+rX,o-rwx shared-demo        # recursive, on a path that you made
-(umask 077; touch private.txt)         # in a subshell: the file gets mode 600
-ls -l shared-demo private.txt
+chmod g-w report.txt
 ```
 
 <Callout type="danger">
 
-`chmod -R 777` lets every user write every file in the tree. `chown -R` on a wrong path, such as `/etc`, can break the system. Check the path with `ls -ld` first. Do not combine `-R` with `-L`: it follows symbolic links and can change files outside the tree. <Cite n={30} /> Use `750` and `640` instead.
+`chmod -R 777` lets every user write every file in the tree. <Cite n={32} /> `chown -R` on a wrong path, such as `/etc`, can break the system. Check the path with `ls -ld` first.
 
 </Callout>
+
+**Try it:** change a mode two ways, and make a private file. `umask` is a shell builtin. <Cite n={36} /> The parentheses run a subshell, so the change stays local. <Cite n={38} />
+
+```bash
+(
+  cd "$(mktemp -d)"              # make and enter a new, empty directory
+  touch run.sh
+  chmod 640 run.sh               # octal: owner rw-, group r--, others none
+  chmod u+x,g-w run.sh           # symbolic: add x for the owner, remove w for the group
+  umask 077; touch private.txt   # 077: new files get no bits for group and others
+  stat -c '%A %a %n' run.sh private.txt
+  # -rwxr----- 740 run.sh
+  # -rw------- 600 private.txt
+  rm -r "$PWD"                   # delete the throw-away directory
+)
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: give a shared artifact directory the mode `2770` and a group such as `qa`. Then all test users can write, and new files keep the group. Set `umask 077` in a script that writes secrets.
+Tutorial's own advice: set `umask 077` in a script that writes secrets.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+| Command | What it does |
+|---|---|
+| `chmod` | Only the owner of the file, or a privileged process, can change the mode. <Cite n={30} /> |
+| `chmod -R ... X` | In a `-R` run, `X` gives execute permission only to directories and to files that are already executable. <Cite n={32} /> |
+| `chown OWNER:GROUP FILE` | Changes the owner and the group. <Cite n={33} /> |
+| `chgrp GROUP FILE` | Changes only the group. <Cite n={34} /> |
+| `-R` with `-L` | Follows symbolic links and can change files outside the tree. Do not combine them. <Cite n={30} /> |
+
+```bash
+mkdir -p shared-demo && touch shared-demo/run.sh
+chgrp "$(id -gn)" shared-demo/run.sh   # use a group that you belong to
+chmod 2750 shared-demo                 # setgid directory: new files get its group
+chmod -R g+rX,o-rwx shared-demo        # recursive, on a path that you made
+```
+
+Tutorial's own advice: use `750` and `640` instead of `777`. Give a shared artifact directory mode `2770` and a group such as `qa`. Then all test users of the group can write, and new files keep the group.
+
+</details>
 
 </Technical>
 <Layman>
 
-`chmod` changes the mode. Use octal numbers to set all bits at once (`chmod 640 FILE`). Use the symbolic form for one change (`chmod g-w FILE`) <Cite n={32} />. Only the owner of the file, or a privileged process, can change the mode <Cite n={30} />. In a `-R` run, `X` gives execute permission only to directories and to files that are already executable <Cite n={32} />.
+**Goal:** Change a mode with `chmod`, and set the mode of new files with `umask`.
 
-`chown OWNER:GROUP FILE` changes the owner and the group. `chgrp GROUP FILE` changes only the group <Cite n={33} /> <Cite n={34} />. The umask is a mask that removes bits from the mode of new files. A new file usually starts at 666, and the umask turns off some of its bits. So umask 022 gives 644 <Cite n={35} />. `umask` is a command inside the shell <Cite n={36} />. If you set it in a subshell (a child copy of the shell), the change stays local <Cite n={38} />.
+`chmod` changes the mode. Use octal numbers to set all bits at once (`chmod 640 FILE`). Use the symbolic form for one change (`chmod g-w FILE`). <Cite n={32} /> The umask removes bits from the mode of new files. A new file usually starts at 666, so umask 022 gives 644. <Cite n={35} />
 
-Be careful: `chmod -R 777` lets every user write every file in the tree. `chown -R` on a wrong path, such as `/etc`, can break the system. Do not combine `-R` with `-L` <Cite n={30} />.
+<Callout type="danger">
+
+`chmod -R 777` lets every user write every file in the tree. <Cite n={32} /> `chown -R` on a wrong path, such as `/etc`, can break the system. Check the path with `ls -ld` first.
+
+</Callout>
+
+**Try it:** change a mode two ways, and make a private file. `umask` is a command inside the shell. <Cite n={36} /> The parentheses run a subshell (a child copy of the shell), so the change stays local. <Cite n={38} />
+
+```bash
+(
+  cd "$(mktemp -d)"              # make and enter a new, empty directory
+  touch run.sh
+  chmod 640 run.sh               # octal: owner rw-, group r--, others none
+  chmod u+x,g-w run.sh           # symbolic: add x for the owner, remove w for the group
+  umask 077; touch private.txt   # 077: new files get no bits for group and others
+  stat -c '%A %a %n' run.sh private.txt
+  # -rwxr----- 740 run.sh
+  # -rw------- 600 private.txt
+  rm -r "$PWD"                   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: set `umask 077` in a script that writes secrets.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Only the owner of the file, or a privileged process, can change the mode. <Cite n={30} />
+- In a `-R` run, `X` gives execute permission only to directories and to files that are already executable. <Cite n={32} />
+- `chown OWNER:GROUP FILE` changes the owner and the group. `chgrp GROUP FILE` changes only the group. <Cite n={33} /> <Cite n={34} />
+- Do not combine `-R` with `-L`. <Cite n={30} />
+- Tutorial's own advice: give a shared artifact directory mode `2770` and a group such as `qa`. Then all test users of the group can write, and new files keep the group.
+
+</details>
 
 </Layman>
 <Bangla>
 
-`chmod` mode বদলায়। সব bit একবারে set করতে octal ব্যবহার করুন (`chmod 640 FILE`), আর একটি পরিবর্তনের জন্য symbolic রূপ ব্যবহার করুন (`chmod g-w FILE`) <Cite n={32} />। শুধু file-এর owner অথবা একটি privileged process mode বদলাতে পারে <Cite n={30} />। `-R` দিয়ে চালালে `X` শুধু directory-গুলোকে এবং আগে থেকেই executable file-গুলোকে execute permission দেয় <Cite n={32} />।
+**লক্ষ্য:** `chmod` দিয়ে mode বদলান, আর `umask` দিয়ে নতুন file-এর mode ঠিক করুন।
 
-`chown OWNER:GROUP FILE` owner এবং group বদলায়। `chgrp GROUP FILE` শুধু group বদলায় <Cite n={33} /> <Cite n={34} />। umask (একটি mask, যা নতুন file-এর mode থেকে bit সরিয়ে দেয়) default mode ঠিক করে। একটি নতুন file সাধারণত 666 দিয়ে শুরু হয়, আর umask এর কিছু bit বন্ধ করে দেয়। তাই umask 022 দিলে 644 হয় <Cite n={35} />। `umask` একটি shell builtin, অর্থাৎ shell-এর ভেতরের command <Cite n={36} />। Subshell-এ (shell-এর একটি child copy) set করলে পরিবর্তনটি সেখানেই সীমাবদ্ধ থাকে <Cite n={38} />।
+`chmod` mode বদলায়। সব bit একবারে set করতে octal ব্যবহার করুন (`chmod 640 FILE`), আর একটি পরিবর্তনের জন্য symbolic রূপ ব্যবহার করুন (`chmod g-w FILE`)। <Cite n={32} /> umask নতুন file-এর mode থেকে bit সরিয়ে দেয়। একটি নতুন file সাধারণত 666 দিয়ে শুরু হয়, তাই umask 022 দিলে 644 হয়। <Cite n={35} />
 
-সাবধান: `chmod -R 777` tree-এর প্রতিটি file-এ প্রতিটি user-কে লিখতে দেয়। ভুল path-এ, যেমন `/etc`-এ, `chown -R` চালালে system ভেঙে যেতে পারে। আগে `ls -ld` দিয়ে path check করুন। `-R`-এর সাথে `-L` দেবেন না: এটি symbolic link অনুসরণ করে এবং tree-এর বাইরের file বদলে দিতে পারে <Cite n={30} />। এর বদলে `750` এবং `640` ব্যবহার করুন।
+<Callout type="danger">
 
-Tutorial-এর নিজস্ব পরামর্শ: একটি shared artifact directory-কে mode `2770` এবং `qa`-এর মতো একটি group দিন। তখন সব test user লিখতে পারবেন, আর নতুন file-গুলো group ধরে রাখবে। যে script secret লেখে, সেখানে `umask 077` set করুন।
+`chmod -R 777` tree-এর প্রতিটি file-এ প্রতিটি user-কে লিখতে দেয়। <Cite n={32} /> ভুল path-এ, যেমন `/etc`-এ, `chown -R` চালালে system ভেঙে যেতে পারে। আগে `ls -ld` দিয়ে path check করুন।
+
+</Callout>
+
+**চেষ্টা করুন:** দুইভাবে একটি mode বদলান, আর একটি private file বানান। `umask` একটি shell builtin, অর্থাৎ shell-এর ভেতরের command। <Cite n={36} /> বন্ধনী একটি subshell (shell-এর একটি child copy) চালায়, তাই পরিবর্তনটি সেখানেই সীমাবদ্ধ থাকে। <Cite n={38} />
+
+```bash
+(
+  cd "$(mktemp -d)"              # make and enter a new, empty directory
+  touch run.sh
+  chmod 640 run.sh               # octal: owner rw-, group r--, others none
+  chmod u+x,g-w run.sh           # symbolic: add x for the owner, remove w for the group
+  umask 077; touch private.txt   # 077: new files get no bits for group and others
+  stat -c '%A %a %n' run.sh private.txt
+  # -rwxr----- 740 run.sh
+  # -rw------- 600 private.txt
+  rm -r "$PWD"                   # delete the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: যে script secret লেখে, সেখানে `umask 077` set করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- শুধু file-এর owner অথবা একটি privileged process mode বদলাতে পারে। <Cite n={30} />
+- `-R` দিয়ে চালালে `X` শুধু directory-গুলোকে এবং আগে থেকেই executable file-গুলোকে execute permission দেয়। <Cite n={32} />
+- `chown OWNER:GROUP FILE` owner এবং group বদলায়। `chgrp GROUP FILE` শুধু group বদলায়। <Cite n={33} /> <Cite n={34} />
+- `-R`-এর সাথে `-L` দেবেন না: এটি symbolic link অনুসরণ করে এবং tree-এর বাইরের file বদলে দিতে পারে। <Cite n={30} /> এর বদলে `750` এবং `640` ব্যবহার করুন।
+- Tutorial-এর নিজস্ব পরামর্শ: Shared artifact directory-কে mode `2770` আর `qa`-এর মতো একটি group দিন। তখন group-এর সব test user লিখতে পারবেন, আর নতুন file-গুলো group ধরে রাখবে।
+
+</details>
 
 </Bangla>
 </Voices>
