@@ -4,6 +4,7 @@ import { LINUX_UI } from "@/lib/linux/ui";
 import { LINUX_UI_BN as BN } from "@/lib/bn/linux";
 import { T } from "@/components/i18n/T";
 import { Callout } from "@/components/mdx/Callout";
+import { ContinueButton } from "@/components/linux/ContinueButton";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
 import { StageProgress } from "@/components/linux/StageProgress";
 import { TopicChecklist } from "@/components/linux/TopicChecklist";
@@ -30,6 +31,9 @@ export function LinuxHome() {
         <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
           <T en={LINUX_UI.lede} bn={BN.lede} />
         </p>
+        <div className="mt-6">
+          <ContinueButton />
+        </div>
       </header>
 
       <div className="mt-6 max-w-3xl">
@@ -70,6 +74,11 @@ export function LinuxHome() {
               <Link href={stage.href} className="text-text no-underline hover:text-accent">
                 {stage.title}
               </Link>
+              {stage.number === 1 && (
+                <span className={`${LABEL} ml-3 align-middle text-accent-2`}>
+                  <T en={LINUX_UI.startHere} bn={BN.startHere} />
+                </span>
+              )}
             </h3>
             <p className="mt-1 max-w-3xl text-[15px] leading-relaxed text-pretty text-text-dim">
               {stage.description}

@@ -9,6 +9,7 @@ import {
   STAGES,
   formatMinutes,
   getStage,
+  nextTopic,
   studyMinutes,
 } from "../lib/linux/stages.ts";
 import { outlineFromSource } from "../lib/outline.ts";
@@ -221,4 +222,36 @@ test("every ## heading of a stage MDX is a topic of that stage", () => {
       assert.ok(titles.has(item.title), `${stage.slug}: "${item.title}" is not a topic`);
     }
   }
+});
+
+const hrefOf = (stage: (typeof STAGES)[number], i: number) =>
+  `${stage.href}#${stage.topics[i].anchor}`;
+
+test("nextTopic with no progress gives the first topic of stage 1", () => {
+  const next = nextTopic([]);
+  assert.equal(next?.href, hrefOf(STAGES[0], 0));
+  assert.equal(next?.topic.id, STAGES[0].topics[0].id);
+});
+
+test("nextTopic skips done topics in order", () => {
+  const done = STAGES[0].topics.slice(0, 3).map((t) => t.id);
+  assert.equal(nextTopic(done)?.href, hrefOf(STAGES[0], 3));
+});
+
+test("nextTopic gives the first topic that is not done, not the one after the last done", () => {
+  assert.equal(nextTopic([STAGES[0].topics[1].id])?.href, hrefOf(STAGES[0], 0));
+});
+
+test("nextTopic crosses a stage border", () => {
+  const next = nextTopic(STAGES[0].topics.map((t) => t.id));
+  assert.equal(next?.stage.slug, STAGES[1].slug);
+  assert.equal(next?.href, hrefOf(STAGES[1], 0));
+});
+
+test("nextTopic ignores ids that are not topic ids", () => {
+  assert.equal(nextTopic(["k6-001", "x"])?.href, hrefOf(STAGES[0], 0));
+});
+
+test("nextTopic gives null when every topic is done", () => {
+  assert.equal(nextTopic(ALL_TOPIC_IDS), null);
 });
