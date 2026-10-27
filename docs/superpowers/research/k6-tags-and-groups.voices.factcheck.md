@@ -19,4 +19,14 @@ Checked 2026-10-27 by an agent that did not write the voices. Each `<Layman>` an
 - Layman and Bangla cite only numbers that Technical cites in the same block.
 - Meaning: the Layman and Bangla text copies the Technical text on claim 11 (`systemTags` "on or off"). If the Technical text changes (fact-check claim 11), change both panels too.
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Check | Verdict | Note |
+|---|---|---|
+| Layman: same 3 facts, no new fact, sentences 25 words or fewer | PASS | longest 24 words |
+| Bangla: same facts; `api`, `window`, `handleSummary()`, response time, failure rate, tag stay English | PASS | matches Technical |
+
 Open FAILs: 0

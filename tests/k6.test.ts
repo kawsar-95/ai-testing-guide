@@ -86,3 +86,10 @@ test("buildFlatSearchDocs gives docs with group 'k6' for every page", () => {
   for (const doc of docs) assert.equal(doc.group, "k6");
   for (const page of K6.pages) assert.ok(docs.some((d) => d.href === page.href), page.href);
 });
+
+test("the k6 home links the owner's example project in both languages", async () => {
+  const { K6_UI_BN } = await import("../lib/bn/k6.ts");
+  const href = "https://github.com/kawsar-95/k6-performance-testing";
+  assert.equal(K6.ui.projectLink?.href, href);
+  assert.equal(K6_UI_BN.projectLink?.href, href);
+});

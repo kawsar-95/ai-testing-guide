@@ -21,4 +21,14 @@ Note: rows 5 and 6 repeat the Technical claim that a failed login stops the test
 
 "main function" is gone from block 1 Bangla (grep: 0). Changed panels checked against the new Technical text: the QuickPizza "own test" note, the `__ENV` and `-e` text with [2], the `check` import with [3], "setup ends abnormally" and "default or scenario function" with [1] (Layman and Bangla). All match Technical, cites are cited in Technical, no new fact, no তুমি. All PASS.
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Check | Verdict | Note |
+|---|---|---|
+| Layman: same facts, no new fact, sentences 25 words or fewer | PASS | longest 21 words |
+| Bangla: same facts incl. 6, `setup()`, `fail()`, token, sender, balance, login stay English | PASS | matches Technical |
+
 Open FAILs: 0

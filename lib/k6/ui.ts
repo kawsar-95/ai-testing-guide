@@ -32,4 +32,8 @@ export const K6_UI = {
   sidebarDone: "done",
   headerLink: "k6",
   crossTo: "k6",
+  projectLink: {
+    href: "https://github.com/kawsar-95/k6-performance-testing",
+    label: "See it in a real project: the owner's k6-performance-testing repository on GitHub",
+  },
 } as const;

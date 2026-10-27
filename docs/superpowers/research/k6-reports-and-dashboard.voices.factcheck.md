@@ -14,4 +14,16 @@ Each Layman and Bangla panel compared with the Technical panel of the same block
 
 Other checks: no added fact, number, name, or cite; no meaning change; Layman text has no sentence over 25 words; commands, flags, env vars, and metric names stay in English in all Bangla panels.
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Check | Verdict | Note |
+|---|---|---|
+| Layman: same facts as Technical, no new fact, sentences 25 words or fewer | PASS | longest 22 words. Round 3: Layman now says tables go to `.md` and the summary data to `.json`, as Technical does. Longest sentence still 22 words. |
+| Bangla: same facts; `handleSummary()`, `.md`, `.json`, `setup_data`, API, token, HTML reporter stay English | PASS | matches Technical (tables to `.md`, summary data to `.json`; `.md`, `.json`, `setup_data` stay English). |
+
+Round 3 re-check (2026-10-27): all 3 panels (lines 108, 133, 158 of the MDX) match Technical and lines 255 and 257 of dmoney-transactions.k6.js.
+
 Open FAILs: 0

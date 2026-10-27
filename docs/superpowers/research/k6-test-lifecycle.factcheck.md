@@ -63,4 +63,17 @@ Automated checks:
 - 30: now "setup ends abnormally, and k6 does not call teardown" [1]. Matches S1. PASS.
 - 31: "default function holds the VU code; a scenario function can hold it too" [1]. Matches S1. PASS.
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Fact | Verdict | Quote |
+|---|---|---|
+| `setup()` logs in each of 6 test users one time | PASS | data/dmoney-users.json has 6 "role" entries; lines 125-127 `for (const [key, u] of Object.entries(USERS)) { users[key] = { phone: ..., token: otpLogin(u, key) };` |
+| `setup()` returns their tokens | PASS | line 150 `return { users };` |
+| Each transaction sends the token of its sender | PASS | lines 159, 163 `const from = data.users[FROM];` ... `headers: auth(from.token)` |
+| `setup()` checks the balances before load starts | PASS | line 138 `getBalance(users[key].token, ...)`; line 140 |
+| Stops the test with `fail()` if a sender lacks money | PASS | line 140 `if (out[key] && balance < out[key]) problems.push(...)`; line 145 `fail(`balance pre-check failed ...`)` |
+
 Open FAILs: 0

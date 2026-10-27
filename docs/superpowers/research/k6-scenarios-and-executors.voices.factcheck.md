@@ -23,4 +23,14 @@ Other checks:
 
 Changed text re-compared: the "Every executor accepts `gracefulStop`" line, the summary/tags sentences, and the `dropped_iterations` / `maxVUs` sentences in Layman and Bangla match the new Technical text and cite the same n (1, 12, 13, 4). Cite 13 is used in Technical. No new fact; Bangla keeps `dropped_iterations`, `maxVUs`, `gracefulStop` in Latin. PASS.
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Check | Verdict | Note |
+|---|---|---|
+| Layman callout: same 4 facts as Technical, no new fact, sentences 25 words or fewer | PASS | longest: "A loop over a list of 13 flows makes one constant-arrival-rate scenario for each flow." (17 words) |
+| Bangla callout: same facts, আপনি style n/a (no address), `dmoney-transactions.k6.js`, `constant-arrival-rate`, `startTime`, flow, scenario, loop stay English | PASS | 13, same file and executor name |
+
 Open FAILs: 0

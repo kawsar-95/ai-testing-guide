@@ -20,4 +20,14 @@ Checks done:
 
 Round 2: changed text (CI sentence, stage sentence, Bangla checks sentence) re-read; panels match Technical.
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Check | Verdict | Note |
+|---|---|---|
+| Layman: same facts; "3 thresholds" is the count of the 3 listed in Technical (p(95), failure rate, check rate); sentences 25 words or fewer | PASS | longest 18 words |
+| Bangla: same facts, `api`, `p(95)`, `http_req_duration{api:deposit}`, threshold, tag stay English | PASS | matches Technical |
+
 Open FAILs: 0

@@ -68,4 +68,21 @@ Checker: not the writer. Sources fetched fresh on 2026-10-27 (curl, saved outsid
 | Copy check (`linux_overlap.py`) | PASS (round 2) | 6 runs, all source URLs in `page.sources` |
 | `node --test tests/voice-source.test.ts tests/k6.test.ts` | PASS | 29 pass, 0 fail |
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Fact | Verdict | Quote |
+|---|---|---|
+| `handleSummary()` builds Markdown tables for each API and each time window | PASS | lines 205, 217 `## Per API (whole run)`, `## Per window`; table() lines 183-187 |
+| It saves them as a `.md` file | PASS | line 255 `[`${RESULTS_DIR}/dmoney-transactions-summary.md`]: report` |
+| Round 3: it saves the Markdown tables as a `.md` file and the summary data as a `.json` file | PASS | line 255 `summary.md`: report (the tables); line 257 `JSON.stringify({ ...data, setup_data: undefined }, null, 2)` (summary data). Earlier FAIL fixed in all 3 panels. |
+| It removes `setup_data` from the JSON file | PASS | line 257 `setup_data: undefined` |
+| ... because that data holds the login tokens | PASS | line 256 `// setup_data holds the login tokens, so it is left out of the saved file.` |
+| The repository uses a third-party HTML reporter | PASS | line 28 `import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/3.0.4/dist/bundle.js'` |
+
+
+Round 3 re-check (2026-10-27): the FAIL row is fixed. All 3 panels (lines 108, 133, 158 of the MDX) match lines 255 and 257 of dmoney-transactions.k6.js.
+
 Open FAILs: 0

@@ -49,4 +49,17 @@ Sources fetched fresh on 2026-10-27 into /tmp/claude-1000/k6-check-thresholds/sr
 
 Round 2: rows 7 and 9 re-checked and changed text read; overlap re-run clean.
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Fact | Verdict | Quote |
+|---|---|---|
+| Each transaction request is tagged `api` | PASS | line 163 `tags: { api: API, name: API }` |
+| One loop in `dmoney-transactions.k6.js` adds a `p(95)` threshold per API | PASS | lines 95-96 `for (const [api, cfg] of Object.entries(APIS)) { thresholds[`http_req_duration{api:${api}}`] = [`p(95)<${cfg.p95}`];` |
+| ... a failure-rate threshold per API | PASS | line 97 `http_req_failed{api:${api}}` ['rate<0.01'] |
+| ... a check-rate threshold per API | PASS | line 98 `checks{api:${api}}` ['rate>=0.99'] |
+| Example `http_req_duration{api:deposit}` | PASS | APIS has key `deposit` (line 42), so the loop makes this key |
+
 Open FAILs: 0

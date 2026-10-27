@@ -74,4 +74,16 @@ C1 (PASS, round 2): now "Every executor accepts `gracefulStop`"; overlap re-run 
 
 Re-checked the 4 FAIL rows, new source 13 (fetched fresh), and the changed text in all 3 panels. All 4 PASS. Overlap re-run: no new prose run. `node --test tests/voice-source.test.ts tests/k6.test.ts` was run (see coordinator).
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Fact | Verdict | Quote |
+|---|---|---|
+| Pattern is in `dmoney-transactions.k6.js` | PASS | file exists |
+| A loop over a list of 13 flows | PASS | lines 47-64 (`const FLOWS = [` 13 rows: 2+3+4+4); line 73 `for (const f of FLOWS) {` |
+| One `constant-arrival-rate` scenario for each flow | PASS | line 74-75 `scenarios[...] = { executor: 'constant-arrival-rate',` |
+| `startTime` puts each flow in its time window | PASS | line 77 `startTime: `${(f.window - 1) * WINDOW_S}s`` |
+
 Open FAILs: 0

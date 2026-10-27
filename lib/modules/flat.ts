@@ -40,6 +40,8 @@ export type FlatModuleUI = {
   sidebarItemLabel: (n: number) => string;
   headerLink: string;
   crossTo: string;
+  /** An optional link under the source note of the home page, for example an example project. */
+  projectLink?: { href: string; label: string };
   // Only with a practice entry:
   practiceEyebrow?: string;
   sidebarPracticeLabel?: string;

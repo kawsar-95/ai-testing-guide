@@ -65,4 +65,15 @@ Scripts 1, 3, 5, 6 also ran with `k6 run` against quickpizza.grafana.com: all ch
 - Copy check (`linux_overlap.py`): 1 run, "grafana com docs k6 latest javascript-api k6 group". It is the S4 source URL in `page.sources`, not prose. PASS.
 - `node --test tests/voice-source.test.ts tests/k6.test.ts`: pass.
 
+
+## Round 2: example-project callout (2026-10-27)
+
+Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone read only, nothing run). Facts about the owner project have no Cite.
+
+| Fact | Verdict | Quote |
+|---|---|---|
+| `api` tag on each transaction request | PASS | line 163 `tags: { api: API, name: API }` |
+| `window` tag on each scenario | PASS | line 85 `tags: { window: `w${f.window}` },` |
+| `handleSummary()` report shows response time and failure rate of each API in each time window | PASS | lines 224-230 `const sel = {window:w${w},api:${api}}`; columns Avg ms, p95 ms, Max ms, Failed (lines 228-230, 233) |
+
 Open FAILs: 0

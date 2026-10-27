@@ -31,4 +31,8 @@ export const K6_UI_BN: Bn<typeof K6_UI> = {
   sidebarDone: "সম্পন্ন",
   headerLink: "k6",
   crossTo: "k6",
+  projectLink: {
+    href: "https://github.com/kawsar-95/k6-performance-testing",
+    label: "বাস্তব প্রজেক্টে দেখুন: GitHub-এ মালিকের k6-performance-testing repository",
+  },
 };
