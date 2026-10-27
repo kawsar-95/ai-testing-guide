@@ -31,6 +31,8 @@ export const searchResults = "Search results";
 export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, the Architecture topics, the Course topics, and the k6 topics.`;
 /** The text of the link to the tutorial in the drawer of another section. */
 export const crossToTutorial = "Tutorial";
+/** The link to the home of a module in the sidebar. */
+export const sidebarHome = "Module home";
 export const searchLoading = "Loading the search index…";
 export const searchNone = "No results.";
 export const searchUnavailable = "Search is not available now. Try again later.";

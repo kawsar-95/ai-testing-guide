@@ -25,6 +25,7 @@ export const SHELL_BN: Omit<Bn<typeof ui>, "HOME_UI"> = {
   searchResults: "সার্চের ফলাফল",
   searchType: `${PAGES.length}টি পর্ব, Linux stage, Fundamentals chapter, System Design কেস স্টাডি, Architecture টপিক, Course টপিক এবং k6 টপিকে সার্চ করতে লিখুন।`,
   crossToTutorial: "টিউটোরিয়াল",
+  sidebarHome: "মডিউল হোম",
   searchLoading: "সার্চ ইনডেক্স লোড হচ্ছে…",
   searchNone: "কোনো ফলাফল নেই।",
   searchUnavailable: "এখন সার্চ পাওয়া যাচ্ছে না। পরে আবার চেষ্টা করুন।",

@@ -15,24 +15,24 @@ import { LINUX_HOME } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
 import { FlatSidebarList } from "@/components/modules/FlatSidebarList";
 import { FLAT_MODULES, type FlatModuleId } from "@/lib/modules/registry";
-import { crossToTutorial } from "@/lib/ui";
+import { crossToTutorial, sidebarHome } from "@/lib/ui";
 import { SidebarList } from "./SidebarList";
 
 type Section = "tutorial" | "linux" | "fundamentals" | FlatModuleId;
 
-/** For each section: its home, the text of the link to it, and the arrow of that link. */
-const FLAT_CROSS_BN: Record<FlatModuleId, string> = {
+/** The Bangla module names of the flat modules. */
+const FLAT_NAME_BN: Record<FlatModuleId, string> = {
   "system-design": SYSTEM_DESIGN_UI_BN.crossTo,
   architecture: ARCHITECTURE_UI_BN.crossTo,
   course: COURSE_UI_BN.crossTo,
   k6: K6_UI_BN.crossTo,
 };
 
-const SECTIONS: readonly { id: Section; href: string; label: string; bn: string; arrow: string }[] = [
-  { id: "tutorial", href: "/", label: crossToTutorial, bn: SHELL_BN.crossToTutorial, arrow: "←" },
-  { id: "linux", href: LINUX_HOME, label: LINUX_UI.crossToLinux, bn: LINUX_UI_BN.crossToLinux, arrow: "→" },
-  { id: "fundamentals", href: FUNDAMENTALS_HOME, label: FUNDAMENTALS_UI.crossToFundamentals, bn: FUNDAMENTALS_UI_BN.crossToFundamentals, arrow: "→" },
-  ...FLAT_MODULES.map((m) => ({ id: m.id, href: m.home, label: m.ui.crossTo, bn: FLAT_CROSS_BN[m.id], arrow: "→" })),
+const SECTIONS: readonly { id: Section; href: string; label: string; bn: string }[] = [
+  { id: "tutorial", href: "/", label: crossToTutorial, bn: SHELL_BN.crossToTutorial },
+  { id: "linux", href: LINUX_HOME, label: LINUX_UI.crossToLinux, bn: LINUX_UI_BN.crossToLinux },
+  { id: "fundamentals", href: FUNDAMENTALS_HOME, label: FUNDAMENTALS_UI.crossToFundamentals, bn: FUNDAMENTALS_UI_BN.crossToFundamentals },
+  ...FLAT_MODULES.map((m) => ({ id: m.id, href: m.home, label: m.ui.crossTo, bn: FLAT_NAME_BN[m.id] })),
 ];
 
 function sectionOf(activePath: string | null): Section {
@@ -42,9 +42,8 @@ function sectionOf(activePath: string | null): Section {
 }
 
 /**
- * The list of the sidebar and the drawer. It shows the list of the current
- * section: the tutorial parts, the Linux stages, the Fundamentals chapters,
- * or the pages of a flat module. Above the list, one link to each other section.
+ * The list of the sidebar and the drawer: every module (the tutorial too) as
+ * one collapsible section with its pages. The current module is open.
  */
 export function NavList({
   activePath,
@@ -54,33 +53,35 @@ export function NavList({
   onNavigate?: () => void;
 }) {
   const current = sectionOf(activePath);
-  const flat = FLAT_MODULES.find((m) => m.id === current);
   return (
-    <>
-      <div className="flex flex-wrap gap-1.5 px-3 pt-4">
-        {SECTIONS.filter((section) => section.id !== current).map((section) => (
+    <div className="px-3 pt-4">
+      {SECTIONS.map((section) => (
+        // key on current: a new module opens its section and closes the others
+        <details key={`${section.id}-${current}`} open={section.id === current} className="group mb-1 border-b border-border pb-1 last:border-b-0">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md px-3 py-2 text-[14px] font-medium text-text hover:bg-bg-raised/60 [&::-webkit-details-marker]:hidden">
+            <T en={section.label} bn={section.bn} />
+            <span aria-hidden="true" className="text-text-faint transition-transform group-open:rotate-90">
+              ▸
+            </span>
+          </summary>
           <Link
-            key={section.id}
             href={section.href}
             onClick={onNavigate}
-            className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[12.5px] text-text-dim no-underline transition-colors hover:border-accent hover:text-accent"
+            className="mx-3 mt-1 inline-block font-mono text-[11px] uppercase tracking-[0.12em] text-text-dim no-underline hover:text-accent"
           >
-            <span>
-              <T en={section.label} bn={section.bn} />
-            </span>
-            <span aria-hidden="true">{section.arrow}</span>
+            <T en={sidebarHome} bn={SHELL_BN.sidebarHome} /> <span aria-hidden="true">→</span>
           </Link>
-        ))}
-      </div>
-      {current === "linux" ? (
-        <LinuxSidebarList activePath={activePath} onNavigate={onNavigate} />
-      ) : current === "fundamentals" ? (
-        <FundamentalsSidebarList activePath={activePath} onNavigate={onNavigate} />
-      ) : flat ? (
-        <FlatSidebarList key={flat.id} module={flat} activePath={activePath} onNavigate={onNavigate} />
-      ) : (
-        <SidebarList activePath={activePath} onNavigate={onNavigate} />
-      )}
-    </>
+          {list(section.id)}
+        </details>
+      ))}
+    </div>
   );
+
+  function list(id: Section) {
+    if (id === "tutorial") return <SidebarList activePath={activePath} onNavigate={onNavigate} />;
+    if (id === "linux") return <LinuxSidebarList activePath={activePath} onNavigate={onNavigate} />;
+    if (id === "fundamentals") return <FundamentalsSidebarList activePath={activePath} onNavigate={onNavigate} />;
+    const m = FLAT_MODULES.find((f) => f.id === id)!;
+    return <FlatSidebarList key={m.id} module={m} activePath={activePath} onNavigate={onNavigate} />;
+  }
 }
