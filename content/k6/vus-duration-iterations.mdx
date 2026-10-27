@@ -1,11 +1,353 @@
 export const metadata = { title: 'VUs, Duration, and Iterations', description: 'How virtual users, test time, and iteration count set the load.' }
-export const page = { updated: '2026-10-27', sources: [] }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'k6 options reference (VUs, Duration, Iterations)', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/', accessed: '2026-10-27' },
+    { title: 'Shared iterations executor', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/shared-iterations/', accessed: '2026-10-27' },
+    { title: 'Constant VUs executor', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/constant-vus/', accessed: '2026-10-27' },
+    { title: 'Open and closed models', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/concepts/open-vs-closed/', accessed: '2026-10-27' },
+    { title: 'sleep(t)', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6/sleep/', accessed: '2026-10-27' },
+  ],
+}
 
 # VUs, Duration, and Iterations
 
-How virtual users, test time, and iteration count set the load.
+Three options set how much load k6 makes: how many virtual users run, how long they run, and how many times the script runs. This page shows two ways to set the load and why the `sleep()` call changes the result.
+
+<PageMeta />
+
+## What a VU and an iteration are
+
+<Voices>
+<Technical>
+
+A **VU** (virtual user) is one copy of your script that runs at the same time as the other copies. The `vus` option sets how many run at once <Cite n={1} />. The default is 1 <Cite n={1} />.
+
+One **iteration** is one run of the `default` function <Cite n={1} />. If the function has one `http.get()` call, one iteration is one request.
+
+k6 has two common ways to stop a test. You can set a time with `duration`, or a total count with `iterations`. The next two sections show each way with the tutorial author's own local run.
+
+</Technical>
+<Layman>
+
+A **VU** (virtual user) is one copy of your script. Many copies run at the same time. The `vus` option sets how many <Cite n={1} />. The default is 1 <Cite n={1} />.
+
+One **iteration** is one run of the `default` function <Cite n={1} />. If the function has one `http.get()` call, one iteration is one request.
+
+You can stop a test in two ways. You can set a time with `duration`. Or you can set a total count with `iterations`.
+
+</Layman>
+<Bangla>
+
+**VU** (virtual user) হলো আপনার script-এর একটা কপি। অনেক কপি একসাথে চলে। `vus` option ঠিক করে কতগুলো চলবে <Cite n={1} />। default হলো 1 <Cite n={1} />।
+
+একটা **iteration** মানে `default` function-এর একবার চলা <Cite n={1} />। function-এ একটা `http.get()` call থাকলে একটা iteration মানে একটা request।
+
+Test থামানোর দুটো উপায় আছে। `duration` দিয়ে সময় ঠিক করা যায়। অথবা `iterations` দিয়ে মোট সংখ্যা ঠিক করা যায়।
+
+</Bangla>
+</Voices>
+
+## VUs and duration
+
+<Voices>
+<Technical>
+
+`duration` is the total run time of the test. During this time, each VU runs the script in a loop <Cite n={1} />. With `vus`, it is a shortcut for one scenario that uses the `constant-vus` executor <Cite n={1} /><Cite n={3} />. That executor keeps a fixed number of VUs busy and lets them run as many iterations as possible in the set time <Cite n={3} />.
+
+```js
+import http from 'k6/http';
+
+export const options = {
+  vus: 10, // 10 virtual users
+  duration: '10s', // each one loops for 10 seconds
+};
+
+export default function () {
+  http.get('http://localhost:3000');
+}
+```
+
+This example sends requests to a local server on `http://localhost:3000`. Run it only against a server that you own.
+
+<MdxImage src="/images/k6/vus-duration-output.webp" alt="Terminal output of k6 run with 10 looping VUs for 10s: 17945 http_reqs, 17945 iterations, vus and vus_max both 10, and 0.00% http_req_failed." width={1050} height={954} />
+
+The tutorial author ran this script once on a local machine. The numbers below are from that one run. They are not a k6 rule, and your machine and server will give other numbers. The picture above shows another run of the same script.
+
+In the author's run that is described in the text, the load was 10 VUs for 10 seconds, but the server got 30451 requests. The reason is the loop. Each VU sends a request, gets the response, and sends the next one right away, until the 10 seconds end.
+
+The author checked the count with simple math:
+
+```text
+iteration_duration avg  = 3.26 ms = 0.00326 s
+One VU in 10 s          = 10 / 0.00326 = 3067.48 iterations
+Ten VUs in 10 s         = 3067.48 x 10 = 30674.8 iterations
+Actual (from the run)   = 30451 iterations and 30451 http_reqs
+```
+
+The math is close to the real count. The small gap comes from the cost of scheduling, the network, and connection handling. The script has one request in each iteration, so `iterations` and `http_reqs` are equal. The same math works for the picture: 10 / 0.00555 x 10 = 18018, and the run shows 17945.
+
+</Technical>
+<Layman>
+
+`duration` is the total run time of the test. During this time, each VU runs the script in a loop <Cite n={1} />. With `vus`, it is a shortcut for one scenario that uses the `constant-vus` executor <Cite n={1} /><Cite n={3} />. That executor keeps a fixed number of VUs busy. They run as many iterations as they can in the set time <Cite n={3} />.
+
+In this script, 10 VUs loop for 10 seconds. Each VU sends one request to `http://localhost:3000` in each iteration. Run it only against a server that you own.
+
+The tutorial author ran this script once on a local machine. These numbers are from that one run. They are not a k6 rule. Your machine will give other numbers.
+
+The load was 10 VUs for 10 seconds, but the server got 30451 requests. The reason is the loop. Each VU sends a request, gets the response, and sends the next one right away. This repeats until the 10 seconds end.
+
+The author checked the count with math. One iteration took 3.26 ms on average, which is 0.00326 s. One VU can do 10 / 0.00326 = 3067.48 iterations in 10 s. Ten VUs can do 3067.48 x 10 = 30674.8. The real count was 30451. That is close. The small gap comes from scheduling, the network, and connection handling.
+
+The script has one request in each iteration. So `iterations` and `http_reqs` are equal.
+
+</Layman>
+<Bangla>
+
+`duration` হলো test-এর মোট চলার সময়। এই সময়ে প্রতিটা VU script-টাকে loop-এ চালায় <Cite n={1} />। `vus`-এর সাথে এটা একটা scenario-র shortcut, যেটা `constant-vus` executor ব্যবহার করে <Cite n={1} /><Cite n={3} />। এই executor নির্দিষ্ট সংখ্যক VU-কে ব্যস্ত রাখে, আর তারা নির্দিষ্ট সময়ে যত বেশি পারে iteration চালায় <Cite n={3} />।
+
+এই script-এ ১০টা VU ১০ সেকেন্ড ধরে loop-এ চলে। প্রতিটা iteration-এ প্রতিটা VU `http://localhost:3000`-এ একটা request পাঠায়। শুধু নিজের server-এর বিরুদ্ধে চালান।
+
+লেখক script-টা একটা local machine-এ একবার চালিয়েছেন। নিচের সংখ্যাগুলো সেই এক run-এর। এগুলো k6-এর নিয়ম নয়। আপনার machine-এ অন্য সংখ্যা আসবে।
+
+Load ছিল ১০ VU, ১০ সেকেন্ড, কিন্তু server পেয়েছে ৩০৪৫১টা request। কারণ loop। প্রতিটা VU একটা request পাঠায়, response পায়, আর সাথে সাথে পরের request পাঠায়। ১০ সেকেন্ড শেষ না হওয়া পর্যন্ত এটা চলে।
+
+লেখক হিসাব করে মিলিয়েছেন। একটা iteration-এ গড়ে 3.26 ms, মানে 0.00326 s লেগেছে। একটা VU ১০ সেকেন্ডে 10 / 0.00326 = 3067.48টা iteration করতে পারে। ১০টা VU-তে 3067.48 x 10 = 30674.8। আসল সংখ্যা ছিল ৩০৪৫১। দুটো কাছাকাছি। ছোট ফারাকের কারণ scheduling, network আর connection handling।
+
+Script-এর প্রতিটা iteration-এ একটাই request। তাই `iterations` আর `http_reqs` সমান।
+
+</Bangla>
+</Voices>
+
+## VUs and iterations
+
+<Voices>
+<Technical>
+
+`iterations` is a fixed total number of runs of the `default` function. It replaces a run time <Cite n={1} />. With `vus`, it is a shortcut for one scenario that uses the `shared-iterations` executor <Cite n={1} /><Cite n={2} />. That executor shares the iterations between the VUs, and the test ends when k6 has run all of them <Cite n={2} />.
+
+```js
+import http from 'k6/http';
+
+export const options = {
+  vus: 10,
+  iterations: 1000, // 1000 runs in total, shared by the 10 VUs
+};
+
+export default function () {
+  http.get('http://localhost:3000');
+}
+```
+
+The `k6 run` header of the author's local run shows the scenario that k6 made from these two options:
+
+```text
+scenarios: (100.00%) 1 scenario, 10 max VUs, 10m30s max duration (incl. graceful stop):
+         * default: 1000 iterations shared among 10 VUs (maxDuration: 10m0s, gracefulStop: 30s)
+```
+
+Here the test time is not fixed. The fixed part is the work: 1000 iterations. The question is how long 10 VUs need for them. The default `maxDuration` of a `shared-iterations` scenario is 10 minutes <Cite n={1} /><Cite n={2} />, so k6 stops a very slow test at that limit.
+
+The numbers below are from one local run of the author. They are not a k6 rule.
+
+```text
+iterations.....................: 1000   2407.646879/s
+http_reqs......................: 1000   2407.646879/s
+iteration_duration.............: avg=4.12ms
+running (00m00.4s), 00/10 VUs, 1000 complete and 0 interrupted iterations
+```
+
+The author checked the time with math:
+
+```text
+iteration_duration avg = 4.12 ms = 0.00412 s
+One VU per second      = 1 / 0.00412 = 242.71 iterations
+Ten VUs per second     = 242.71 x 10 = 2427.1 iterations
+Time for 1000          = 1000 / 2427.1 = 0.412 s (about 0.4 s)
+```
+
+The math and the run agree: the run took 00m00.4s. Each iteration has one request, so `iterations` and `http_reqs` are both 1000.
+
+The iterations are not shared out evenly. A VU that runs faster completes more iterations than a slower one, because each VU takes the next iteration when it is free <Cite n={1} /><Cite n={2} />. If you need every VU to complete the same fixed number, use the `per-vu-iterations` executor <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+`iterations` is a fixed total number of runs of the `default` function. It replaces a run time <Cite n={1} />. With `vus`, it is a shortcut for one scenario that uses the `shared-iterations` executor <Cite n={1} /><Cite n={2} />. That executor shares the iterations between the VUs. The test ends when k6 has run all of them <Cite n={2} />.
+
+In this script, 10 VUs share 1000 iterations. The test time is not fixed. The work is fixed. The question is how long 10 VUs need to finish it.
+
+The header of the author's local run says: "1000 iterations shared among 10 VUs (maxDuration: 10m0s, gracefulStop: 30s)". The default `maxDuration` of this kind of scenario is 10 minutes <Cite n={1} /><Cite n={2} />. So k6 stops a very slow test at that limit.
+
+These numbers are from one local run of the author. They are not a k6 rule.
+
+One iteration took 4.12 ms on average, which is 0.00412 s. One VU can do 1 / 0.00412 = 242.71 iterations in one second. Ten VUs can do 242.71 x 10 = 2427.1 per second. So 1000 iterations need 1000 / 2427.1 = 0.412 s. The run took about 0.4 s.
+
+Each iteration has one request. So `iterations` and `http_reqs` are both 1000.
+
+The work is not shared out evenly. A faster VU completes more iterations than a slower one <Cite n={1} /><Cite n={2} />. For the same fixed number in every VU, use the `per-vu-iterations` executor <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+`iterations` হলো `default` function-এর মোট চলার একটা নির্দিষ্ট সংখ্যা। এটা run-এর সময়ের জায়গা নেয় <Cite n={1} />। `vus`-এর সাথে এটা একটা scenario-র shortcut, যেটা `shared-iterations` executor ব্যবহার করে <Cite n={1} /><Cite n={2} />। এই executor VU-গুলোর মধ্যে iteration ভাগ করে দেয়। k6 সবগুলো iteration চালানো শেষ করলে test শেষ হয় <Cite n={2} />।
+
+এই script-এ ১০টা VU মিলে ১০০০টা iteration চালায়। Test-এর সময় নির্দিষ্ট নয়। নির্দিষ্ট হলো কাজ। প্রশ্ন হলো ১০টা VU-র সেটা শেষ করতে কত সময় লাগে।
+
+লেখকের local run-এর header বলছে: "1000 iterations shared among 10 VUs (maxDuration: 10m0s, gracefulStop: 30s)"। এই ধরনের scenario-র default `maxDuration` হলো ১০ মিনিট <Cite n={1} /><Cite n={2} />। তাই খুব ধীর test হলে k6 ওই সীমায় থামিয়ে দেয়।
+
+এই সংখ্যাগুলো লেখকের এক local run-এর। এগুলো k6-এর নিয়ম নয়।
+
+একটা iteration-এ গড়ে 4.12 ms, মানে 0.00412 s লেগেছে। একটা VU এক সেকেন্ডে 1 / 0.00412 = 242.71টা iteration করতে পারে। ১০টা VU-তে সেকেন্ডে 242.71 x 10 = 2427.1। তাই ১০০০টা iteration-এ 1000 / 2427.1 = 0.412 s লাগে। Run-এ প্রায় ০.৪ s লেগেছে।
+
+প্রতিটা iteration-এ একটা request। তাই `iterations` আর `http_reqs` দুটোই ১০০০।
+
+কাজ সমানভাবে ভাগ হয় না। দ্রুত VU ধীর VU-র চেয়ে বেশি iteration শেষ করে <Cite n={1} /><Cite n={2} />। প্রতিটা VU-তে একই নির্দিষ্ট সংখ্যা চাইলে `per-vu-iterations` executor ব্যবহার করুন <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## How the options work together
+
+<Voices>
+<Technical>
+
+The tutorial author wrote that `vus` and `duration` must be used together, or only one user is counted. The k6 docs say it in a more exact way:
+
+- `vus` has a default of 1 <Cite n={1} />. It works together with `iterations` or `duration` <Cite n={1} />.
+- `vus` and `duration` make a `constant-vus` scenario <Cite n={1} /><Cite n={3} />.
+- `vus` and `iterations` make a `shared-iterations` scenario <Cite n={1} /><Cite n={2} />.
+- If you pass `--vus N` alone, with no `--duration`, `--iterations`, or `--stage`, k6 makes a single `shared-iterations` scenario. It uses N VUs and runs N iterations. It replaces any scenario in the script and prints a warning <Cite n={1} />.
+
+So the safe rule is this: write `vus` with the option that you want, `duration` or `iterations`. If you leave `vus` out, k6 uses 1.
+
+| Option pair | Executor | The test ends when | Use it when |
+|---|---|---|---|
+| `vus` + `duration` | `constant-vus` | The set time is over <Cite n={3} /> | You need a fixed number of VUs for a certain time <Cite n={3} /> |
+| `vus` + `iterations` | `shared-iterations` | k6 has run all iterations <Cite n={2} /> | The time to finish a fixed number of iterations is your concern <Cite n={2} /> |
+
+Both pairs are shortcuts. For more control, such as several workloads in one test, use `scenarios` directly <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+The tutorial author wrote that `vus` and `duration` must be used together, or only one user is counted. The k6 docs say it in a more exact way:
+
+- `vus` has a default of 1 <Cite n={1} />. It works together with `iterations` or `duration` <Cite n={1} />.
+- `vus` and `duration` make a `constant-vus` scenario <Cite n={1} /><Cite n={3} />.
+- `vus` and `iterations` make a `shared-iterations` scenario <Cite n={1} /><Cite n={2} />.
+- Say you pass `--vus N` alone, with no `--duration`, `--iterations`, or `--stage`. Then k6 makes a single `shared-iterations` scenario. It uses N VUs and runs N iterations. It replaces any scenario in the script and prints a warning <Cite n={1} />.
+
+So the safe rule is this. Write `vus` with the option that you want, `duration` or `iterations`. If you leave `vus` out, k6 uses 1.
+
+Use `vus` and `duration` when you need a fixed number of VUs for a certain time <Cite n={3} />. Use `vus` and `iterations` when the time to finish a fixed number of iterations is your concern <Cite n={2} />.
+
+Both pairs are shortcuts. For more control, use `scenarios` directly <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+লেখক লিখেছিলেন যে `vus` আর `duration` একসাথে দিতে হবে, নইলে শুধু একজন user গোনা হয়। k6 docs এটা আরও সঠিকভাবে বলে:
+
+- `vus`-এর default হলো 1 <Cite n={1} />। এটা `iterations` বা `duration`-এর সাথে কাজ করে <Cite n={1} />।
+- `vus` আর `duration` মিলে একটা `constant-vus` scenario বানায় <Cite n={1} /><Cite n={3} />।
+- `vus` আর `iterations` মিলে একটা `shared-iterations` scenario বানায় <Cite n={1} /><Cite n={2} />।
+- আপনি শুধু `--vus N` দিলে, `--duration`, `--iterations` বা `--stage` ছাড়া, k6 N VU আর N iteration-এর একটা `shared-iterations` scenario বানায়। এটা script-এর যেকোনো scenario বদলে দেয় এবং একটা warning ছাপে <Cite n={1} />।
+
+তাই নিরাপদ নিয়ম হলো: `vus` লিখুন আপনার পছন্দের option-এর সাথে, `duration` বা `iterations`। `vus` না দিলে k6 1 ব্যবহার করে।
+
+নির্দিষ্ট সংখ্যক VU নির্দিষ্ট সময় চালাতে হলে `vus` আর `duration` ব্যবহার করুন <Cite n={3} />। নির্দিষ্ট সংখ্যক iteration শেষ করার সময়টাই আপনার চিন্তা হলে `vus` আর `iterations` ব্যবহার করুন <Cite n={2} />।
+
+দুটো জোড়াই shortcut। বেশি নিয়ন্ত্রণ চাইলে সরাসরি `scenarios` ব্যবহার করুন <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Why sleep() matters
+
+<Voices>
+<Technical>
+
+The two scripts above have no pause. When a VU gets a response, it starts the next iteration at once. This follows the closed model: the next iteration of a VU starts only when the last one ends, so the speed of the server sets how many iterations you get <Cite n={4} />.
+
+A real person does not click without a pause. A person reads a page, thinks, and then clicks. The `sleep(t)` function suspends the VU for `t` seconds <Cite n={5} />. In a script with `sleep()`, the time of one iteration is the sleep time plus the time of the request <Cite n={3} />.
+
+```js
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  vus: 10,
+  duration: '10s',
+};
+
+export default function () {
+  http.get('http://localhost:3000');
+  sleep(1); // think time: wait 1 second before the next iteration
+}
+```
+
+This is the tutorial's own estimate, not a measured result. With `sleep(1)`, each iteration takes a little more than 1 second. So 10 VUs in 10 seconds make a little less than 100 iterations. Without `sleep()`, the first script made thousands of iterations in the author's run.
+
+This is why the choice matters:
+
+- Without `sleep()`, a few VUs can send as many requests as a machine and a server can handle. That is closer to a stress test of the server than to the traffic of real users. This is the tutorial's own view.
+- With `sleep()`, the number of VUs is closer to the number of people who use the system at the same time. The tutorial's own advice: choose the sleep time from how long your real users wait between actions.
+- In a closed model, a slow server gives longer iterations and fewer new iterations. k6 calls this problem coordinated omission <Cite n={4} />. If you need a fixed request rate that does not depend on response time, use an arrival-rate executor, which uses the open model <Cite n={4} />.
+
+Do not use `sleep()` in async code. It blocks the VU and stops promises from resolving <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+The two scripts above have no pause. When a VU gets a response, it starts the next iteration at once. The next iteration of a VU starts only when the last one ends. So the speed of the server sets how many iterations you get <Cite n={4} />.
+
+A real person does not click without a pause. A person reads a page, thinks, and then clicks. The `sleep(t)` function makes the VU wait `t` seconds <Cite n={5} />. With `sleep()`, the time of one iteration is the sleep time plus the time of the request <Cite n={3} />.
+
+In the script above, each iteration takes a little more than 1 second. So 10 VUs in 10 seconds make a little less than 100 iterations. This is the tutorial's own estimate, not a measured result. Without `sleep()`, the first script made thousands of iterations in the author's run.
+
+This is why the choice matters:
+
+- Without `sleep()`, a few VUs can send as many requests as the machine and server can handle. That is closer to a stress test than to real user traffic. This is the tutorial's own view.
+- With `sleep()`, the number of VUs is closer to the number of people who use the system at the same time. The tutorial's own advice: choose the sleep time from how long your real users wait between actions.
+- A slow server gives longer iterations and fewer new iterations. k6 calls this problem coordinated omission <Cite n={4} />. For a fixed request rate that does not depend on response time, use an arrival-rate executor <Cite n={4} />.
+
+Do not use `sleep()` in async code. It blocks the VU and stops promises from resolving <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+উপরের দুটো script-এ কোনো বিরতি নেই। VU response পেলেই সাথে সাথে পরের iteration শুরু করে। একটা VU-র পরের iteration শুরু হয় শুধু আগেরটা শেষ হলে। তাই server কত দ্রুত, তার ওপর নির্ভর করে আপনি কয়টা iteration পাবেন <Cite n={4} />।
+
+আসল মানুষ বিরতি ছাড়া click করে না। মানুষ পেজ পড়ে, ভাবে, তারপর click করে। `sleep(t)` function VU-কে `t` সেকেন্ড অপেক্ষা করায় <Cite n={5} />। `sleep()` থাকলে একটা iteration-এর সময় হলো sleep-এর সময় আর request-এর সময়ের যোগফল <Cite n={3} />।
+
+উপরের script-এ প্রতিটা iteration-এ ১ সেকেন্ডের একটু বেশি লাগে। তাই ১০টা VU ১০ সেকেন্ডে ১০০-র একটু কম iteration করে। এটা এই tutorial-এর নিজের অনুমান, মাপা ফলাফল নয়। `sleep()` ছাড়া প্রথম script লেখকের run-এ হাজার হাজার iteration করেছে।
+
+এই কারণেই পছন্দটা গুরুত্বপূর্ণ:
+
+- `sleep()` ছাড়া অল্প কয়েকটা VU machine আর server যত পারে তত request পাঠাতে পারে। এটা আসল user-এর traffic-এর চেয়ে stress test-এর কাছাকাছি। এটা tutorial-এর নিজের মত।
+- `sleep()` থাকলে VU-র সংখ্যা একসাথে system ব্যবহার করা মানুষের সংখ্যার কাছাকাছি হয়। Tutorial-এর নিজের পরামর্শ: আপনার আসল user দুই action-এর মাঝে কতক্ষণ অপেক্ষা করে, সেখান থেকে sleep-এর সময় ঠিক করুন।
+- ধীর server-এ iteration লম্বা হয় আর নতুন iteration কমে। k6 এই সমস্যাকে coordinated omission বলে <Cite n={4} />। Response time-এর ওপর নির্ভর করে না এমন নির্দিষ্ট request rate চাইলে arrival-rate executor ব্যবহার করুন <Cite n={4} />।
+
+Async code-এ `sleep()` ব্যবহার করবেন না। এটা VU-কে block করে এবং promise resolve হতে দেয় না <Cite n={5} />।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
 | Term | Meaning |
 | --- | --- |
+| VU (virtual user) | One copy of the script. Many VUs run at the same time. |
+| Iteration | One run of the `default` function. |
+| `vus` | The number of VUs that run at the same time. The default is 1 <Cite n={1} />. |
+| `duration` | The total run time of the test. Each VU loops the script in this time <Cite n={1} />. |
+| `iterations` | The fixed total number of runs of the `default` function <Cite n={1} />. |
+| `constant-vus` | The executor behind `vus` + `duration` <Cite n={3} />. |
+| `shared-iterations` | The executor behind `vus` + `iterations`. It shares the iterations between VUs <Cite n={2} />. |
+| `per-vu-iterations` | An executor that gives each VU its own fixed number of iterations <Cite n={2} />. |
+| `maxDuration` | The time limit of a `shared-iterations` scenario. The default is 10 minutes <Cite n={2} />. |
+| Closed model | A model where a VU starts its next iteration only when the last one ends <Cite n={4} />. |
+| `sleep(t)` | A function that makes the VU wait `t` seconds <Cite n={5} />. |
+| Think time | The pause of a real user between two actions. `sleep()` models it. |
