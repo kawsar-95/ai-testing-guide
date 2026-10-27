@@ -321,7 +321,7 @@ The design documents in `docs/superpowers/` record how the site got here. The sp
 | Chapter page and Dashboard | [spec](superpowers/specs/2026-10-21-chapter-page-dashboard-design.md) | [plan](superpowers/plans/2026-10-21-chapter-page-dashboard.md) |
 | Reference redesign (current look) | [spec](superpowers/specs/2026-10-21-reference-redesign-design.md) | [plan](superpowers/plans/2026-10-21-reference-redesign.md) |
 | Flat modules | [spec](superpowers/specs/2026-10-22-flat-modules-design.md) | [plan](superpowers/plans/2026-10-22-flat-modules.md) |
-| k6 module | [spec](superpowers/specs/2026-10-27-k6-module-design.md) | none |
+| k6 module | [spec](superpowers/specs/2026-10-27-k6-module-design.md) | [plan](superpowers/plans/2026-10-27-k6-module.md) |
 | System Design Course | [spec](superpowers/specs/2026-10-22-course-module-design.md) | Deliveries [1](superpowers/plans/2026-10-22-course-delivery-1.md), [2](superpowers/plans/2026-10-22-course-delivery-2.md), [3](superpowers/plans/2026-10-22-course-delivery-3.md), [4](superpowers/plans/2026-10-22-course-delivery-4.md), [5](superpowers/plans/2026-10-22-course-delivery-5.md) |
 
 An earlier redesign ([spec](superpowers/specs/2026-04-18-w3schools-redesign.md), [plan](superpowers/plans/2026-04-18-w3schools-redesign.md)) is replaced by the editorial redesign. The [content audit](superpowers/audits/2026-10-09-content-audit.md) lists the outdated claims of the old tutorial and, in its resolution section, the page that fixes each one.

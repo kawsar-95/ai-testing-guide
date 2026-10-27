@@ -32,7 +32,7 @@ test("the why grid has 6 items with an icon, a title, and a text", () => {
   }
 });
 
-test("the course cards are the 6 groups, then the 5 modules", () => {
+test("the course cards are the 6 groups, then the 6 modules", () => {
   assert.deepEqual(
     COURSE_CARDS.map((c) => c.n),
     ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"],

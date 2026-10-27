@@ -22,6 +22,9 @@ Writer notes for `content/k6/influxdb-and-grafana.mdx`. Fetched 2026-10-27 with 
 | S14 | 14 | Configure the InfluxDB data source | https://grafana.com/docs/grafana/latest/datasources/influxdb/configure-influxdb-data-source/ |
 | S15 | 15 | Import dashboards | https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/import-dashboards/ |
 | S16 | 16 | k6 Load Testing Results (dashboard 2587) | https://grafana.com/grafana/dashboards/2587-k6-load-testing-results/ |
+| S17 | 17 | Bridge network driver | https://docs.docker.com/engine/network/drivers/bridge/ |
+| S18 | 18 | Networking how-tos (Docker Desktop) | https://docs.docker.com/desktop/features/networking/networking-how-tos/ |
+| S19 | 19 | Authentication and authorization in InfluxDB (v1) | https://docs.influxdata.com/influxdb/v1/administration/authentication_and_authorization/ |
 
 ## Claims
 
@@ -52,6 +55,10 @@ Writer notes for `content/k6/influxdb-and-grafana.mdx`. Fetched 2026-10-27 with 
 | C23 | A Grafana.com dashboard can be imported by ID or URL. Import maps the queries to a data source. | S15 | "copy a dashboard's URL or ID, and import it directly" / "Grafana lets you map those references to data sources" |
 | C24 | Dashboard 2587, "k6 Load Testing Results": uses the InfluxDB exporter, requires InfluxDB, has a drop-down for any `http_req_*` metric, version history 2017. | S16 | "A dashboard for visualizing results from the k6.io load testing tool, using the InfluxDB exporter" / "Currently requires InfluxDB." / "Added drop-down for selecting any http_req_* metric" |
 | C25 | The k6 docs name no dashboard ID. They say Grafana can query InfluxDB, point to "a custom Grafana dashboard", and say the extension repository has a docker-compose setup with two basic dashboards. | S1, S2 | S1: "You can also build a custom Grafana dashboard"; "docker-compose setup with two basic dashboards." |
+| C26 | On a user-defined bridge network, containers resolve each other by name. `docker network create` makes one. `--network` on `docker run` joins it. | S17 | "On a user-defined bridge network, containers can resolve each other by name or alias." / "Use the `docker network create` command to create a user-defined bridge network." |
+| C27 | Docker Desktop: a container reaches a host service with `host.docker.internal`. | S18 | "To connect to services running on your host, use the special DNS name:" / "Resolves to the internal IP address of your host" |
+| C28 | InfluxDB 1.x has authentication off by default. | S19 | "By default, authentication is disabled, all credentials are silently ignored, and all users have all privileges." |
+| C29 | Tutorial's own (no cite): in the Grafana container `localhost` is the container; the page uses network `k6net` and URL `http://influxdb:8086`. Not run (Docker not run). | none | |
 
 ## Not claimed (no official source)
 - The owner's list of measurements after a run is shown as the owner's own output. It is not cited.
