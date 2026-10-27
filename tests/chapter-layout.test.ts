@@ -59,8 +59,8 @@ for (const path of ["app/(site)/architecture/[topic]/page.tsx", "app/(site)/syst
   });
 }
 
-test("NavList remounts FlatSidebarList when the flat module changes", () => {
-  assert.match(source("components/layout/NavList.tsx"), /<FlatSidebarList key=\{flat\.id\} module=\{flat\}/);
+test("NavList gives each FlatSidebarList its own key", () => {
+  assert.match(source("components/layout/NavList.tsx"), /<FlatSidebarList key=\{m\.id\} module=\{m\}/);
 });
 
 test("both callers of LinkDoneToggle pass the item title", () => {
