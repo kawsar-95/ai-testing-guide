@@ -177,3 +177,23 @@ Known gaps and notes:
 | G19 | `docker stop` sends SIGTERM first, so the page tells the reader to use it instead of `kill -9`. | S28 | See D17. |
 | G20 | Danger (tutorial's own advice): do not write into `/sys/fs/cgroup` on a shared host. A wrong limit can invoke the OOM killer (G8). | S12 | Advice. It rests on G8 and G9. |
 | G21 | Tip (tutorial's own advice): test with the limits of CI. A low memory limit shows as an OOM kill in `memory.events` (G16), a CPU limit as `nr_throttled` (G17), a pids limit as `EAGAIN` (G18). | S12 | Advice. |
+
+## Round 2 (2026-10-27): Try it commands
+
+Tool versions of the runs: kernel 7.0.0 (Ubuntu), GNU bash 5.3.9, `/bin/sh` = dash, uutils coreutils 0.10.0 (`cut`), util-linux 2.41.3 (`unshare`), Docker 29.9.2, runc 1.5.2, containerd v2.4.2, cgroup v2 (`cgroup2fs`). No container was started, no image was pulled, and no cgroup file was written. No `sudo`.
+
+| Topic | Try-it command | Real output (stand-ins in brackets) |
+|---|---|---|
+| Containerization | `readlink /proc/self/ns/uts`; `unshare --user --map-root-user --uts sh -c 'hostname box1; readlink /proc/self/ns/uts; hostname'`; `hostname` | `uts:[4026531838]`, `uts:[4026533177]`, `box1`; the host name outside stays unchanged (not shown on the page: the reader's own name) |
+| Container Runtime | `command -v docker podman runc containerd`; `runc --version \| head -n 1` | `/usr/local/bin/docker`, `/usr/bin/runc`, `/usr/bin/containerd` (no podman line: not installed); `runc version 1.5.2` |
+| Docker | `docker --version`; `docker ps` | `Docker version 29.9.2, build a82e528`; only the header line (no container ran) |
+| Cgroups | `cat /proc/self/cgroup`; `cat "/sys/fs/cgroup$cg/memory.max"`; `cat "/sys/fs/cgroup$cg/pids.max"` | `0::/user.slice/user-1000.slice/user@1000.service/app.slice/[<app>].scope`, `max`, `14581` |
+
+Sources of the Try-it glosses: `--user`, `--map-root-user`, `--uts` (S10 unshare(1)); UTS isolates the hostname (S7 namespaces(7)); `0::path` (S6 cgroups(7)); `memory.max`, `pids.max`, the value `max` (S12 cgroup-v2). `command -v` and `cut -d: -f3` are glosses only.
+
+Moved facts (none deleted; every old cite number stays on the page):
+
+- Containerization: the namespace types, `uname -r` (S45), the host kernel and limits (S41), `free` swap (S41), the time namespace (S7), and the busy-neighbour advice moved to "Go deeper".
+- Container Runtime: the intermediary role (S2), the OCI specs (S11, S13, S14, S15), CRI-O (S4, S18), the Docker/Podman table (S19, S22, S39), rootless (S20, S40), and the `runc spec`/`runc run` flow moved to "Go deeper".
+- Docker: layers (S21, S23), `docker run` (S24), volumes, bind mounts, `-p`, networks, digest, `.dockerignore`, Compose, Desktop (S24, S30-S37), the manage commands and `stop` signals (S25-S29), `--rm` (S24), and trusted images and `USER` (S5) moved to "Go deeper". The danger callout stays visible before "Go deeper". The port tip keeps S33.
+- Cgroups: the v1/v2 table (S6, S12), the OOM killer, `cpu.max`, `nr_throttled`, `EAGAIN`, "processes and threads" (S12), the Docker flags (S24, S41), systemd (S42, S43, S44), the cgroup namespace (S9), and the `kill -9` / `docker stop` note (S8, S28) moved to "Go deeper". The warning "do not write into `/sys/fs/cgroup`" moved from the danger callout into the Core text.
