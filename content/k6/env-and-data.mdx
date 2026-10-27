@@ -1,11 +1,832 @@
 export const metadata = { title: 'Environment Variables and Test Data', description: 'Pass settings with __ENV and load test data from a CSV file.' }
-export const page = { updated: '2026-10-27', sources: [] }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Environment variables', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/environment-variables/', accessed: '2026-10-27' },
+    { title: 'Options reference', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/', accessed: '2026-10-27' },
+    { title: 'open( filePath, [mode] )', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/javascript-api/init-context/open/', accessed: '2026-10-27' },
+    { title: 'SharedArray', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-data/sharedarray/', accessed: '2026-10-27' },
+    { title: 'Data parameterization', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/examples/data-parameterization/', accessed: '2026-10-27' },
+    { title: 'Secret source', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/secret-source/', accessed: '2026-10-27' },
+    { title: 'Execution context variables', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/execution-context-variables/', accessed: '2026-10-27' },
+    { title: 'k6/execution', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-execution/', accessed: '2026-10-27' },
+    { title: 'Papa Parse documentation', publisher: 'Papa Parse', url: 'https://www.papaparse.com/docs', accessed: '2026-10-27' },
+  ],
+}
 
 # Environment Variables and Test Data
 
 Pass settings with __ENV and load test data from a CSV file.
 
+<PageMeta />
+
+## Why pass values from outside the script
+
+<Voices>
+<Technical>
+
+A script often needs only small changes to run in another place. The base URL, the user name, and the number of VUs are examples. You can write one script and use environment variables to change these parts <Cite n={1} />. This gives two benefits.
+
+1. **No hardcoded values.** You do not edit the code each time. One script runs on Dev, QA, and Prod with different values.
+2. **Secrets stay out of the script file.** A password or a token is not in the code or in a file in the repository. You pass it when you start the run.
+
+The second benefit needs care. This is the tutorial's own view, not a claim of the k6 docs. A value that you pass with `-e` is out of your code, but k6 does not hide it. The k6 docs say that values from secret sources are redacted from logs, unlike values from environment variables or files <Cite n={6} />. So a script that prints the value shows it in the log. The section "Keep secrets out of the logs" shows the safer way.
+
+</Technical>
+<Layman>
+
+A script often needs small changes to run in another place. The base URL, the user name, and the number of VUs are examples. You can write one script and use environment variables to change these parts <Cite n={1} />. This gives two benefits.
+
+1. **No hardcoded values.** You do not edit the code each time. One script runs on Dev, QA, and Prod with different values.
+2. **Secrets stay out of the script file.** A password or a token is not in the code or in a file in the repository. You pass it when you start the run.
+
+The second benefit needs care. This is the tutorial's own view, not a claim of the k6 docs. A value that you pass with `-e` is out of your code, but k6 does not hide it. The k6 docs say that k6 hides values from secret sources in the logs. It does not hide values from environment variables or files <Cite n={6} />. So a script that prints the value shows it in the log. The section "Keep secrets out of the logs" shows the safer way.
+
+</Layman>
+<Bangla>
+
+একটা স্ক্রিপ্ট অন্য জায়গায় চালাতে প্রায়ই ছোট কিছু পরিবর্তন লাগে। base URL, user name আর VU-র সংখ্যা এর উদাহরণ। আপনি একটা স্ক্রিপ্ট লিখে environment variable দিয়ে এই অংশগুলো বদলাতে পারেন <Cite n={1} />। এতে দুটো সুবিধা পাওয়া যায়।
+
+1. **Hardcoded value নেই।** প্রতিবার কোড এডিট করতে হয় না। একই স্ক্রিপ্ট Dev, QA আর Prod-এ আলাদা value দিয়ে চলে।
+2. **স্ক্রিপ্ট ফাইলে secret থাকে না।** পাসওয়ার্ড বা টোকেন কোডে বা রিপোজিটরির কোনো ফাইলে থাকে না। রান শুরু করার সময় আপনি সেটা পাস করেন।
+
+দ্বিতীয় সুবিধায় সতর্ক থাকতে হবে। এটা টিউটোরিয়ালের নিজস্ব মত, k6 docs-এর দাবি নয়। `-e` দিয়ে পাস করা value আপনার কোডের বাইরে থাকে, কিন্তু k6 সেটা লুকায় না। k6 docs বলে, secret source-এর value লগে redact করা হয়। environment variable বা ফাইলের value redact করা হয় না <Cite n={6} />। তাই স্ক্রিপ্ট value প্রিন্ট করলে সেটা লগে দেখা যায়। নিরাপদ উপায়টা "Keep secrets out of the logs" সেকশনে আছে।
+
+</Bangla>
+</Voices>
+
+## Pass values with __ENV and -e
+
+<Voices>
+<Technical>
+
+k6 gives the environment variables to the script in a global JavaScript object named `__ENV` <Cite n={1} />. The recommended way to set them is one or more `-e` (or `--env`) flags on the command line <Cite n={1} />.
+
+This script is the tutorial's login and search flow. It reads every setting from `__ENV`. It uses `||` to give a default when a variable is not set. The host `https://api.example.com` and all values are placeholders.
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+const baseUrl = __ENV.BASE_URL;
+
+export const options = {
+  vus: __ENV.VUS ? parseInt(__ENV.VUS) : 1,
+  duration: __ENV.DURATION || '1s',
+};
+
+export default function () {
+  const payload = JSON.stringify({
+    email: __ENV.LOGIN_EMAIL,
+    password: __ENV.LOGIN_PASSWORD,
+  });
+  const headers = { 'Content-Type': 'application/json' };
+
+  const loginRes = http.post(`${baseUrl}/user/login`, payload, { headers });
+  check(loginRes, {
+    'login status is 200': (r) => r.status === 200,
+    'login token is present': (r) => r.json('token') !== undefined,
+  });
+
+  const token = loginRes.json('token');
+  const searchRes = http.get(`${baseUrl}/user/search/id/${__ENV.SEARCH_USER_ID}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  });
+  check(searchRes, {
+    'search status is 200': (r) => r.status === 200,
+  });
+
+  sleep(1);
+}
+```
+
+Run it with one `-e` flag for each variable:
+
+```bash
+k6 run \
+  -e BASE_URL=https://api.example.com \
+  -e LOGIN_EMAIL=tester@example.com \
+  -e LOGIN_PASSWORD=change-me \
+  -e SEARCH_USER_ID=1001 \
+  -e VUS=1 -e DURATION=1s \
+  index.js
+```
+
+The script does not print the token. The tutorial's own advice is to keep it that way, because a printed token goes into the log.
+
+The `-e` flag only gives variables to the script. It does not set k6 options. For example, `-e K6_ITERATIONS=120` does not set the number of iterations <Cite n={1} /><Cite n={2} />. This is why the script reads `__ENV.VUS` and puts it into `options` itself.
+
+By default, `__ENV` is a plain object that the script can change. The `freeze-env` feature flag makes it read-only <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+k6 gives the environment variables to the script in a global JavaScript object named `__ENV` <Cite n={1} />. The recommended way to set them is one or more `-e` (or `--env`) flags on the command line <Cite n={1} />.
+
+This script is the tutorial's login and search flow. It reads every setting from `__ENV`. It uses `||` to give a default when a variable is not set. The host `https://api.example.com` and all values are placeholders.
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+const baseUrl = __ENV.BASE_URL;
+
+export const options = {
+  vus: __ENV.VUS ? parseInt(__ENV.VUS) : 1,
+  duration: __ENV.DURATION || '1s',
+};
+
+export default function () {
+  const payload = JSON.stringify({
+    email: __ENV.LOGIN_EMAIL,
+    password: __ENV.LOGIN_PASSWORD,
+  });
+  const headers = { 'Content-Type': 'application/json' };
+
+  const loginRes = http.post(`${baseUrl}/user/login`, payload, { headers });
+  check(loginRes, {
+    'login status is 200': (r) => r.status === 200,
+    'login token is present': (r) => r.json('token') !== undefined,
+  });
+
+  const token = loginRes.json('token');
+  const searchRes = http.get(`${baseUrl}/user/search/id/${__ENV.SEARCH_USER_ID}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  });
+  check(searchRes, {
+    'search status is 200': (r) => r.status === 200,
+  });
+
+  sleep(1);
+}
+```
+
+Run it with one `-e` flag for each variable:
+
+```bash
+k6 run \
+  -e BASE_URL=https://api.example.com \
+  -e LOGIN_EMAIL=tester@example.com \
+  -e LOGIN_PASSWORD=change-me \
+  -e SEARCH_USER_ID=1001 \
+  -e VUS=1 -e DURATION=1s \
+  index.js
+```
+
+The script does not print the token. The tutorial's own advice is to keep it that way, because a printed token goes into the log.
+
+The `-e` flag only gives variables to the script. It does not set k6 options. For example, `-e K6_ITERATIONS=120` does not set the number of iterations <Cite n={1} /><Cite n={2} />. This is why the script reads `__ENV.VUS` and puts it into `options` itself.
+
+By default, `__ENV` is a plain object that the script can change. The `freeze-env` feature flag makes it read-only <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+k6 environment variable-গুলো স্ক্রিপ্টে দেয় `__ENV` নামের একটা global JavaScript object-এ <Cite n={1} />। সেট করার সুপারিশ করা উপায় হলো কমান্ড লাইনে এক বা একাধিক `-e` (বা `--env`) flag <Cite n={1} />।
+
+এই স্ক্রিপ্ট টিউটোরিয়ালের login আর search flow। এটা প্রতিটা setting `__ENV` থেকে পড়ে। কোনো variable সেট না থাকলে `||` দিয়ে default দেওয়া হয়। `https://api.example.com` host আর সব value placeholder।
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+const baseUrl = __ENV.BASE_URL;
+
+export const options = {
+  vus: __ENV.VUS ? parseInt(__ENV.VUS) : 1,
+  duration: __ENV.DURATION || '1s',
+};
+
+export default function () {
+  const payload = JSON.stringify({
+    email: __ENV.LOGIN_EMAIL,
+    password: __ENV.LOGIN_PASSWORD,
+  });
+  const headers = { 'Content-Type': 'application/json' };
+
+  const loginRes = http.post(`${baseUrl}/user/login`, payload, { headers });
+  check(loginRes, {
+    'login status is 200': (r) => r.status === 200,
+    'login token is present': (r) => r.json('token') !== undefined,
+  });
+
+  const token = loginRes.json('token');
+  const searchRes = http.get(`${baseUrl}/user/search/id/${__ENV.SEARCH_USER_ID}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  });
+  check(searchRes, {
+    'search status is 200': (r) => r.status === 200,
+  });
+
+  sleep(1);
+}
+```
+
+প্রতিটা variable-এর জন্য একটা `-e` flag দিয়ে রান করুন:
+
+```bash
+k6 run \
+  -e BASE_URL=https://api.example.com \
+  -e LOGIN_EMAIL=tester@example.com \
+  -e LOGIN_PASSWORD=change-me \
+  -e SEARCH_USER_ID=1001 \
+  -e VUS=1 -e DURATION=1s \
+  index.js
+```
+
+স্ক্রিপ্ট টোকেন প্রিন্ট করে না। টিউটোরিয়ালের নিজস্ব পরামর্শ হলো এটা এভাবেই রাখুন, কারণ প্রিন্ট করা টোকেন লগে চলে যায়।
+
+`-e` flag শুধু স্ক্রিপ্টকে variable দেয়। এটা k6 option সেট করে না। যেমন `-e K6_ITERATIONS=120` iteration-এর সংখ্যা সেট করে না <Cite n={1} /><Cite n={2} />। এ কারণেই স্ক্রিপ্ট `__ENV.VUS` পড়ে নিজেই `options`-এ বসায়।
+
+ডিফল্টে `__ENV` একটা সাধারণ object, স্ক্রিপ্ট এটা বদলাতে পারে। `freeze-env` feature flag এটাকে read-only করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## System environment variables
+
+<Voices>
+<Technical>
+
+You can also set a variable in the shell before `k6 run`. k6 then reads it from the system <Cite n={1} />:
+
+```bash
+MY_HOSTNAME=test.example.com k6 run script.js
+```
+
+For `k6 run`, the `--include-system-env-vars` option is `true` by default. So `__ENV` has your system variables. For all other commands the default is `false`, to prevent inadvertent leaks of sensitive data <Cite n={2} />. For example, `k6 inspect`, `k6 archive`, and `k6 cloud run` get no system variables by default. The docs give a reason: k6 Cloud must not get sensitive data by mistake. To change it, give the `--include-system-env-vars` option <Cite n={1} />.
+
+A variable with the `K6_` prefix is different. k6 reads it as an option. `K6_VUS=5 K6_DURATION=20s k6 run script.js` runs 5 VUs for 20 seconds. Not every option has such a variable <Cite n={1} />.
+
+When you set an option in more than one place, an order of precedence decides which value k6 uses. Command-line flags have the highest precedence <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+You can also set a variable in the shell before `k6 run`. k6 then reads it from the system <Cite n={1} />:
+
+```bash
+MY_HOSTNAME=test.example.com k6 run script.js
+```
+
+For `k6 run`, the `--include-system-env-vars` option is `true` by default. So `__ENV` has your system variables. For all other commands the default is `false`. This prevents leaks of sensitive data by accident <Cite n={2} />. For example, `k6 inspect`, `k6 archive`, and `k6 cloud run` get no system variables by default. The docs give a reason: k6 Cloud must not get sensitive data by mistake. To change it, give the `--include-system-env-vars` option <Cite n={1} />.
+
+A variable with the `K6_` prefix is different. k6 reads it as an option. `K6_VUS=5 K6_DURATION=20s k6 run script.js` runs 5 VUs for 20 seconds. Not every option has such a variable <Cite n={1} />.
+
+You can set an option in more than one place. An order of precedence then decides which value k6 uses. Command-line flags have the highest precedence <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+`k6 run`-এর আগে শেলেও আপনি variable সেট করতে পারেন। তখন k6 সেটা system থেকে পড়ে <Cite n={1} />:
+
+```bash
+MY_HOSTNAME=test.example.com k6 run script.js
+```
+
+`k6 run`-এর জন্য `--include-system-env-vars` option ডিফল্টে `true`। তাই `__ENV`-এ আপনার system variable থাকে। অন্য সব কমান্ডের ডিফল্ট `false`, যাতে ভুলে sensitive data leak না হয় <Cite n={2} />। যেমন `k6 archive`, `k6 cloud run` আর `k6 inspect`-এ system variable ডিফল্টে কাজ করে না। docs-এর কারণ হলো, k6 Cloud যেন ভুলে sensitive data না পায়। এটা বদলাতে `--include-system-env-vars` option দিন <Cite n={1} />।
+
+`K6_` prefix-ওয়ালা variable আলাদা। k6 সেটাকে option হিসেবে পড়ে। `K6_VUS=5 K6_DURATION=20s k6 run script.js` ৫টা VU দিয়ে ২০ সেকেন্ড চলে। সব option-এর এমন variable নেই <Cite n={1} />।
+
+একটা option একাধিক জায়গায় সেট করলে precedence-এর ক্রম ঠিক করে k6 কোন value নেবে। কমান্ড-লাইন flag-এর precedence সবচেয়ে বেশি <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Keep secrets out of the logs
+
+<Voices>
+<Technical>
+
+A secret source is a way to give secrets to k6. The k6 docs say that values from secret sources are redacted from the logs. Values from environment variables or files are not <Cite n={6} />.
+
+You set a source with the `--secret-source` flag. The built-in sources for local tests are `file` (a `key=value` file), `mock` (values from CLI arguments), and `url` (values from an HTTP endpoint) <Cite n={6} />. The script reads a secret with the `k6/secrets` API <Cite n={6} />. This script reads the password from a secret source and the e-mail from `__ENV`:
+
+```javascript
+import http from 'k6/http';
+import secrets from 'k6/secrets';
+
+export default async function () {
+  const password = await secrets.get('login_password');
+  http.post('https://api.example.com/user/login', JSON.stringify({
+    email: __ENV.LOGIN_EMAIL,
+    password,
+  }), { headers: { 'Content-Type': 'application/json' } });
+}
+```
+
+The `secrets.txt` file has one `key=value` line:
+
+```text
+login_password=placeholder
+```
+
+Run it with the `file` source:
+
+```bash
+k6 run --secret-source=file=secrets.txt -e LOGIN_EMAIL=tester@example.com index.js
+```
+
+If the script prints a secret, the log shows `***SECRET_REDACTED***`. The script can still use the real value <Cite n={6} />. This output is from a k6 v2.3.0 check with a script that logs a secret and a normal `-e` value:
+
+```text
+level=info msg="password is ***SECRET_REDACTED***" source=console
+level=info msg="env is visible" source=console
+```
+
+Keep the secret file out of the repository. This is the tutorial's own advice.
+
+</Technical>
+<Layman>
+
+A secret source is a way to give secrets to k6. The k6 docs say that k6 hides values from secret sources in the logs. It does not hide values from environment variables or files <Cite n={6} />.
+
+You set a source with the `--secret-source` flag. The built-in sources for local tests are `file` (a `key=value` file), `mock` (values from CLI arguments), and `url` (values from an HTTP endpoint) <Cite n={6} />. The script reads a secret with the `k6/secrets` API <Cite n={6} />. This script reads the password from a secret source and the e-mail from `__ENV`:
+
+```javascript
+import http from 'k6/http';
+import secrets from 'k6/secrets';
+
+export default async function () {
+  const password = await secrets.get('login_password');
+  http.post('https://api.example.com/user/login', JSON.stringify({
+    email: __ENV.LOGIN_EMAIL,
+    password,
+  }), { headers: { 'Content-Type': 'application/json' } });
+}
+```
+
+The `secrets.txt` file has one `key=value` line:
+
+```text
+login_password=placeholder
+```
+
+Run it with the `file` source:
+
+```bash
+k6 run --secret-source=file=secrets.txt -e LOGIN_EMAIL=tester@example.com index.js
+```
+
+If the script prints a secret, the log shows `***SECRET_REDACTED***`. The script can still use the real value <Cite n={6} />. This output is from a k6 v2.3.0 check with a script that logs a secret and a normal `-e` value:
+
+```text
+level=info msg="password is ***SECRET_REDACTED***" source=console
+level=info msg="env is visible" source=console
+```
+
+Keep the secret file out of the repository. This is the tutorial's own advice.
+
+</Layman>
+<Bangla>
+
+Secret source হলো k6-কে secret দেওয়ার একটা উপায়। k6 docs বলে, secret source-এর value লগে redact করা হয়। environment variable বা ফাইলের value redact করা হয় না <Cite n={6} />।
+
+আপনি `--secret-source` flag দিয়ে source সেট করেন। লোকাল টেস্টের built-in source হলো `file` (একটা `key=value` ফাইল), `mock` (CLI argument থেকে value) আর `url` (HTTP endpoint থেকে value) <Cite n={6} />। স্ক্রিপ্ট `k6/secrets` API দিয়ে secret পড়ে <Cite n={6} />। এই স্ক্রিপ্ট পাসওয়ার্ড পড়ে secret source থেকে, আর e-mail পড়ে `__ENV` থেকে:
+
+```javascript
+import http from 'k6/http';
+import secrets from 'k6/secrets';
+
+export default async function () {
+  const password = await secrets.get('login_password');
+  http.post('https://api.example.com/user/login', JSON.stringify({
+    email: __ENV.LOGIN_EMAIL,
+    password,
+  }), { headers: { 'Content-Type': 'application/json' } });
+}
+```
+
+`secrets.txt` ফাইলে একটা `key=value` লাইন আছে:
+
+```text
+login_password=placeholder
+```
+
+`file` source দিয়ে রান করুন:
+
+```bash
+k6 run --secret-source=file=secrets.txt -e LOGIN_EMAIL=tester@example.com index.js
+```
+
+স্ক্রিপ্ট কোনো secret প্রিন্ট করলে লগে `***SECRET_REDACTED***` দেখা যায়। স্ক্রিপ্ট তবুও আসল value ব্যবহার করতে পারে <Cite n={6} />। এই output k6 v2.3.0-এর একটা পরীক্ষার, যেখানে স্ক্রিপ্ট একটা secret আর একটা সাধারণ `-e` value লগ করেছে:
+
+```text
+level=info msg="password is ***SECRET_REDACTED***" source=console
+level=info msg="env is visible" source=console
+```
+
+secret ফাইল রিপোজিটরির বাইরে রাখুন। এটা টিউটোরিয়ালের নিজস্ব পরামর্শ।
+
+</Bangla>
+</Voices>
+
+## Read data from a CSV file
+
+<Voices>
+<Technical>
+
+A load test with one fixed value is not realistic. Parameterization turns test values into inputs, so each request can use other data. The k6 docs say it also helps to stop server-side caching from affecting the test <Cite n={5} />.
+
+The function `open()` reads a whole file into memory. You can call it only in the init context, which is the code outside the default function <Cite n={3} />. Every VU keeps its own copy of the file <Cite n={3} />. Each VU is a separate JavaScript VM <Cite n={5} />. So a big file can use too much memory <Cite n={5} />.
+
+`SharedArray` from `k6/data` fixes this. It shares the memory between VUs. Its function runs only once, and k6 keeps the result in memory once. When the script asks for an element, k6 gives a copy of it <Cite n={4} />. A `SharedArray` has a small CPU cost to read elements, but the docs say it is negligible next to the time of the requests <Cite n={5} />. You must build it in the init context. It is read-only, so VUs cannot use it to send data to each other <Cite n={4} />.
+
+Here the file `users.csv` has one user id on each line. The owner's script reads it this way:
+
+```text
+1001
+1002
+1003
+```
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+
+const userIds = new SharedArray('userIds', function () {
+  return open('./users.csv')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+});
+
+export const options = { vus: 2, duration: '1s' };
+
+export default function () {
+  const userId = userIds[__ITER % userIds.length];
+  const res = http.get(`https://api.example.com/user/search/id/${userId}`);
+  check(res, { 'search status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+How the constructor works:
+
+- `open('./users.csv')` reads the whole file as one string <Cite n={3} />.
+- `.split('\n')` makes one array item for each line.
+- `.map((line) => line.trim())` removes spaces at the start and the end of each id.
+- `.filter(Boolean)` removes the empty lines.
+
+The `.map()` and `.filter()` calls are inside the constructor, so they run once. This is important. When you call `.map()` or `.filter()` on a `SharedArray` outside the constructor, you get a regular array and lose the memory benefit <Cite n={4} />.
+
+`__ITER % userIds.length` picks a row. `__ITER` is the zero-based iteration number of one VU <Cite n={7} />. The `%` operator goes back to the first row after the last one.
+
+</Technical>
+<Layman>
+
+A load test with one fixed value is not realistic. Parameterization turns test values into inputs, so each request can use other data. The k6 docs say it also helps to stop server-side caching from affecting the test <Cite n={5} />.
+
+The function `open()` reads a whole file into memory. You can call it only in the init context. This is the code outside the default function <Cite n={3} />. Every VU keeps its own copy of the file <Cite n={3} />. Each VU is a separate JavaScript VM <Cite n={5} />. So a big file can use too much memory <Cite n={5} />.
+
+`SharedArray` from `k6/data` fixes this. It shares the memory between VUs. Its function runs only once, and k6 keeps the result in memory once. When the script asks for an element, k6 gives a copy of it <Cite n={4} />. A `SharedArray` has a small CPU cost to read elements. The docs say this cost is negligible next to the time of the requests <Cite n={5} />. You must build it in the init context. It is read-only, so VUs cannot use it to send data to each other <Cite n={4} />.
+
+Here the file `users.csv` has one user id on each line. The owner's script reads it this way:
+
+```text
+1001
+1002
+1003
+```
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+
+const userIds = new SharedArray('userIds', function () {
+  return open('./users.csv')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+});
+
+export const options = { vus: 2, duration: '1s' };
+
+export default function () {
+  const userId = userIds[__ITER % userIds.length];
+  const res = http.get(`https://api.example.com/user/search/id/${userId}`);
+  check(res, { 'search status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+How the constructor works:
+
+- `open('./users.csv')` reads the whole file as one string <Cite n={3} />.
+- `.split('\n')` makes one array item for each line.
+- `.map((line) => line.trim())` removes spaces at the start and the end of each id.
+- `.filter(Boolean)` removes the empty lines.
+
+The `.map()` and `.filter()` calls are inside the constructor, so they run once. This is important. Suppose you call `.map()` or `.filter()` on a `SharedArray` outside the constructor. You get a regular array and lose the memory benefit <Cite n={4} />.
+
+`__ITER % userIds.length` picks a row. `__ITER` is the zero-based iteration number of one VU <Cite n={7} />. The `%` operator goes back to the first row after the last one.
+
+</Layman>
+<Bangla>
+
+একটা fixed value দিয়ে load test বাস্তবসম্মত হয় না। Parameterization টেস্টের value-কে input বানায়, ফলে প্রতিটা request অন্য data ব্যবহার করতে পারে। k6 docs বলে, এটা server-side caching-কে টেস্টে প্রভাব ফেলা থেকে আটকাতেও সাহায্য করে <Cite n={5} />।
+
+`open()` ফাংশন পুরো ফাইল মেমরিতে পড়ে। আপনি এটা শুধু init context-এ কল করতে পারেন। এটা default function-এর বাইরের কোড <Cite n={3} />। প্রতিটা VU ফাইলের নিজস্ব কপি রাখে <Cite n={3} />। প্রতিটা VU আলাদা JavaScript VM <Cite n={5} />। তাই বড় ফাইল অনেক বেশি মেমরি নিতে পারে <Cite n={5} />।
+
+`k6/data`-র `SharedArray` এর সমাধান। এটা VU-দের মধ্যে মেমরি শেয়ার করে। এর ফাংশন শুধু একবার চলে, আর k6 ফলাফল মেমরিতে একবারই রাখে। স্ক্রিপ্ট কোনো element চাইলে k6 তার একটা কপি দেয় <Cite n={4} />। element পড়তে `SharedArray`-র সামান্য CPU খরচ আছে, কিন্তু docs বলে request-এর সময়ের তুলনায় সেটা নগণ্য <Cite n={5} />। একে init context-এ বানাতে হয়। এটা read-only, তাই VU-রা একে দিয়ে একে অপরকে data পাঠাতে পারে না <Cite n={4} />।
+
+এখানে `users.csv` ফাইলের প্রতি লাইনে একটা user id আছে। owner-এর স্ক্রিপ্ট এভাবে পড়ে:
+
+```text
+1001
+1002
+1003
+```
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+
+const userIds = new SharedArray('userIds', function () {
+  return open('./users.csv')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+});
+
+export const options = { vus: 2, duration: '1s' };
+
+export default function () {
+  const userId = userIds[__ITER % userIds.length];
+  const res = http.get(`https://api.example.com/user/search/id/${userId}`);
+  check(res, { 'search status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+constructor যেভাবে কাজ করে:
+
+- `open('./users.csv')` পুরো ফাইলটা একটা string হিসেবে পড়ে <Cite n={3} />।
+- `.split('\n')` প্রতিটা লাইনের জন্য একটা array item বানায়।
+- `.map((line) => line.trim())` প্রতিটা id-র আগে-পিছের space সরায়।
+- `.filter(Boolean)` ফাঁকা লাইন বাদ দেয়।
+
+`.map()` আর `.filter()` constructor-এর ভেতরে, তাই এগুলো একবার চলে। এটা গুরুত্বপূর্ণ। constructor-এর বাইরে `SharedArray`-তে `.map()` বা `.filter()` কল করলে আপনি একটা সাধারণ array পান আর মেমরির সুবিধা হারান <Cite n={4} />।
+
+`__ITER % userIds.length` একটা row বেছে নেয়। `__ITER` হলো একটা VU-র zero-based iteration নম্বর <Cite n={7} />। `%` operator শেষ row-এর পর আবার প্রথম row-তে ফেরে।
+
+</Bangla>
+</Voices>
+
+## Parse a CSV file with Papa Parse
+
+<Voices>
+<Technical>
+
+k6 does not parse CSV files by itself. The docs use an outside library, Papa Parse. You can download it and import it from a local file. You can also import it from `jslib.k6.io` <Cite n={5} />. With `header: true`, each row becomes an object, and the first line gives the keys <Cite n={9} />.
+
+The file `data.csv` has a header line:
+
+```text
+username,password
+user1,pass1
+user2,pass2
+```
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+import papaparse from 'https://jslib.k6.io/papaparse/5.1.1/index.js';
+
+const users = new SharedArray('users', function () {
+  return papaparse.parse(open('./data.csv'), { header: true, skipEmptyLines: true }).data;
+});
+
+export default function () {
+  const user = users[Math.floor(Math.random() * users.length)];
+  const res = http.post('https://api.example.com/user/login', JSON.stringify({
+    email: user.username,
+    password: user.password,
+  }), { headers: { 'Content-Type': 'application/json' } });
+  check(res, { 'login status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The parse is inside the `SharedArray` function, so it runs once and every VU shares the result <Cite n={5} />. This script picks a random row. The values are placeholders. Do not put real passwords in a CSV file in the repository.
+
+</Technical>
+<Layman>
+
+k6 does not parse CSV files by itself. The docs use an outside library, Papa Parse. You can download it and import it from a local file. You can also import it from `jslib.k6.io` <Cite n={5} />. With `header: true`, each row becomes an object, and the first line gives the keys <Cite n={9} />.
+
+The file `data.csv` has a header line:
+
+```text
+username,password
+user1,pass1
+user2,pass2
+```
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+import papaparse from 'https://jslib.k6.io/papaparse/5.1.1/index.js';
+
+const users = new SharedArray('users', function () {
+  return papaparse.parse(open('./data.csv'), { header: true, skipEmptyLines: true }).data;
+});
+
+export default function () {
+  const user = users[Math.floor(Math.random() * users.length)];
+  const res = http.post('https://api.example.com/user/login', JSON.stringify({
+    email: user.username,
+    password: user.password,
+  }), { headers: { 'Content-Type': 'application/json' } });
+  check(res, { 'login status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The parse is inside the `SharedArray` function. So it runs once, and every VU shares the result <Cite n={5} />. This script picks a random row. The values are placeholders. Do not put real passwords in a CSV file in the repository.
+
+</Layman>
+<Bangla>
+
+k6 নিজে CSV ফাইল parse করে না। docs একটা বাইরের লাইব্রেরি, Papa Parse, ব্যবহার করে। আপনি এটা ডাউনলোড করে লোকাল ফাইল থেকে import করতে পারেন। `jslib.k6.io` থেকেও import করা যায় <Cite n={5} />। `header: true` দিলে প্রতিটা row একটা object হয়, আর প্রথম লাইন key দেয় <Cite n={9} />।
+
+`data.csv` ফাইলে একটা header লাইন আছে:
+
+```text
+username,password
+user1,pass1
+user2,pass2
+```
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+import papaparse from 'https://jslib.k6.io/papaparse/5.1.1/index.js';
+
+const users = new SharedArray('users', function () {
+  return papaparse.parse(open('./data.csv'), { header: true, skipEmptyLines: true }).data;
+});
+
+export default function () {
+  const user = users[Math.floor(Math.random() * users.length)];
+  const res = http.post('https://api.example.com/user/login', JSON.stringify({
+    email: user.username,
+    password: user.password,
+  }), { headers: { 'Content-Type': 'application/json' } });
+  check(res, { 'login status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+parse `SharedArray`-র ফাংশনের ভেতরে, তাই এটা একবার চলে আর সব VU ফলাফল শেয়ার করে <Cite n={5} />। এই স্ক্রিপ্ট একটা random row বেছে নেয়। value-গুলো placeholder। রিপোজিটরির CSV ফাইলে আসল পাসওয়ার্ড রাখবেন না।
+
+</Bangla>
+</Voices>
+
+## Use unique data for each VU and iteration
+
+<Voices>
+<Technical>
+
+Sometimes a test must not use the same row two times. The `k6/execution` module gives the numbers for this <Cite n={5} />. The property `scenario.iterationInTest` is a zero-based number that is unique for the scenario <Cite n={8} />. The note in the docs says it is unique for each scenario, not for the whole test. With more than one scenario, you may need to split the data for each scenario <Cite n={5} />.
+
+This script uses the `shared-iterations` executor with `iterations: userIds.length`, so each row is used one time <Cite n={5} />:
+
+```javascript
+import http from 'k6/http';
+import { SharedArray } from 'k6/data';
+import exec from 'k6/execution';
+
+const userIds = new SharedArray('userIds', function () {
+  return open('./users.csv')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+});
+
+export const options = {
+  scenarios: {
+    use_all_rows: {
+      executor: 'shared-iterations',
+      vus: 2,
+      iterations: userIds.length,
+      maxDuration: '1m',
+    },
+  },
+};
+
+export default function () {
+  const userId = userIds[exec.scenario.iterationInTest];
+  http.get(`https://api.example.com/user/search/id/${userId}`);
+}
+```
+
+To give each VU its own row, use `exec.vu.idInTest`. It is the VU identifier, and it is unique in the whole test run <Cite n={8} />. VU identifiers start at one and arrays start at zero, so subtract 1 <Cite n={5} />.
+
+Older k6 versions have no `k6/execution` module. They use the globals `__VU` and `__ITER` <Cite n={7} />. `__VU` is the VU number, counted from 1. It is 0 in setup and teardown. `__ITER` is the zero-based iteration counter of one VU <Cite n={7} />. Two VUs both have `__ITER` 0 for their first iteration. So `__ITER` alone does not give unique rows across VUs. The tutorial's own check ran k6 v2.3.0 with 2 VUs and 4 iterations. It printed `VU 1 ITER 0`, `VU 1 ITER 1`, `VU 1 ITER 2`, and `VU 2 ITER 0`. The split of iterations between VUs can differ from run to run.
+
+</Technical>
+<Layman>
+
+Sometimes a test must not use the same row two times. The `k6/execution` module gives the numbers for this <Cite n={5} />. The property `scenario.iterationInTest` is a zero-based number that is unique for the scenario <Cite n={8} />. The note in the docs says it is unique for each scenario, not for the whole test. With more than one scenario, you may need to split the data for each scenario <Cite n={5} />.
+
+This script uses the `shared-iterations` executor with `iterations: userIds.length`. So each row is used one time <Cite n={5} />:
+
+```javascript
+import http from 'k6/http';
+import { SharedArray } from 'k6/data';
+import exec from 'k6/execution';
+
+const userIds = new SharedArray('userIds', function () {
+  return open('./users.csv')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+});
+
+export const options = {
+  scenarios: {
+    use_all_rows: {
+      executor: 'shared-iterations',
+      vus: 2,
+      iterations: userIds.length,
+      maxDuration: '1m',
+    },
+  },
+};
+
+export default function () {
+  const userId = userIds[exec.scenario.iterationInTest];
+  http.get(`https://api.example.com/user/search/id/${userId}`);
+}
+```
+
+To give each VU its own row, use `exec.vu.idInTest`. It is the VU identifier, and it is unique in the whole test run <Cite n={8} />. VU identifiers start at one and arrays start at zero. So subtract 1 <Cite n={5} />.
+
+Older k6 versions have no `k6/execution` module. They use the globals `__VU` and `__ITER` <Cite n={7} />. `__VU` is the VU number, counted from 1. It is 0 in setup and teardown. `__ITER` is the zero-based iteration counter of one VU <Cite n={7} />. Two VUs both have `__ITER` 0 for their first iteration. So `__ITER` alone does not give unique rows across VUs. The tutorial's own check ran k6 v2.3.0 with 2 VUs and 4 iterations. It printed `VU 1 ITER 0`, `VU 1 ITER 1`, `VU 1 ITER 2`, and `VU 2 ITER 0`. The split of iterations between VUs can differ from run to run.
+
+</Layman>
+<Bangla>
+
+কখনো কখনো একটা টেস্ট একই row দুইবার ব্যবহার করতে পারবে না। এর জন্য `k6/execution` module সংখ্যা দেয় <Cite n={5} />। `scenario.iterationInTest` property একটা zero-based সংখ্যা, যেটা scenario-র মধ্যে unique <Cite n={8} />। docs-এর note বলে, এটা প্রতি scenario-তে unique, পুরো টেস্টে নয়। একাধিক scenario থাকলে প্রতিটার জন্য data ভাগ করতে হতে পারে <Cite n={5} />।
+
+এই স্ক্রিপ্ট `shared-iterations` executor আর `iterations: userIds.length` ব্যবহার করে। তাই প্রতিটা row একবার ব্যবহার হয় <Cite n={5} />:
+
+```javascript
+import http from 'k6/http';
+import { SharedArray } from 'k6/data';
+import exec from 'k6/execution';
+
+const userIds = new SharedArray('userIds', function () {
+  return open('./users.csv')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+});
+
+export const options = {
+  scenarios: {
+    use_all_rows: {
+      executor: 'shared-iterations',
+      vus: 2,
+      iterations: userIds.length,
+      maxDuration: '1m',
+    },
+  },
+};
+
+export default function () {
+  const userId = userIds[exec.scenario.iterationInTest];
+  http.get(`https://api.example.com/user/search/id/${userId}`);
+}
+```
+
+প্রতিটা VU-কে নিজের row দিতে `exec.vu.idInTest` ব্যবহার করুন। এটা VU-র identifier, আর পুরো টেস্ট রানে unique <Cite n={8} />। VU identifier এক থেকে শুরু হয়, আর array শূন্য থেকে। তাই 1 বিয়োগ করুন <Cite n={5} />।
+
+পুরনো k6 ভার্সনে `k6/execution` module নেই। সেখানে `__VU` আর `__ITER` global ব্যবহার হয় <Cite n={7} />। `__VU` হলো VU নম্বর, 1 থেকে গোনা। setup আর teardown-এ এটা 0। `__ITER` হলো একটা VU-র zero-based iteration counter <Cite n={7} />। দুটো VU-র প্রথম iteration-এই `__ITER` 0। তাই শুধু `__ITER` দিয়ে VU-দের মধ্যে unique row পাওয়া যায় না। টিউটোরিয়ালের নিজস্ব পরীক্ষায় k6 v2.3.0 চলেছে ২টা VU আর ৪টা iteration নিয়ে। এতে `VU 1 ITER 0`, `VU 1 ITER 1`, `VU 1 ITER 2` আর `VU 2 ITER 0` প্রিন্ট হয়েছে। VU-দের মধ্যে iteration-এর ভাগ প্রতি রানে আলাদা হতে পারে।
+
+</Bangla>
+</Voices>
+
 ## Key words
 
 | Term | Meaning |
 | --- | --- |
+| `__ENV` | A global object in the script. It holds the environment variables that k6 gives to the script <Cite n={1} />. |
+| `-e` / `--env` | A flag of `k6 run`. It gives a variable to the script. It does not set an option <Cite n={1} />. |
+| `--include-system-env-vars` | An option that puts the system variables in `__ENV`. It is `true` for `k6 run` and `false` for other commands <Cite n={2} />. |
+| `K6_` prefix | A system variable with this prefix sets a k6 option, for example `K6_VUS` <Cite n={1} />. |
+| Secret source | A way to give secrets to k6. k6 redacts these values in the logs <Cite n={6} />. |
+| `open()` | A function that reads a file into memory. It works only in the init context <Cite n={3} />. |
+| `SharedArray` | An array-like, read-only object that shares memory between VUs <Cite n={4} />. |
+| Parameterization | Turning test values into inputs, so requests use different data <Cite n={5} />. |
+| Papa Parse | An outside library that parses CSV files in k6 <Cite n={5} />. |
+| `scenario.iterationInTest` | A zero-based iteration number that is unique in a scenario <Cite n={8} />. |
+| `vu.idInTest` | The VU identifier, unique in the whole test run. It starts at 1 <Cite n={8} /><Cite n={5} />. |
+| `__VU` / `__ITER` | Older globals: the VU number and the iteration counter of one VU <Cite n={7} />. |
