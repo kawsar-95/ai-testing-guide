@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-10-27',
   sources: [
     { title: 'Linux Roadmap', publisher: 'roadmap.sh', url: 'https://roadmap.sh/linux', accessed: '2026-10-19' },
     { title: 'RFC 1122: Requirements for Internet Hosts - Communication Layers', publisher: 'IETF (RFC Editor)', url: 'https://www.rfc-editor.org/rfc/rfc1122.txt', accessed: '2026-10-19' },
@@ -87,52 +87,110 @@ This stage shows how a Linux machine talks to a network and how to test that. <C
 <Voices>
 <Technical>
 
-A network stack is the part of the kernel that sends and receives data. RFC 1122 lists four layers: link, IP, transport, and application. It specifies the first three. <Cite n={2} /> A protocol is a set of rules that two computers follow. A packet is a small block of data on the network.
+**Goal:** List the network interfaces of your host and find the loopback interface.
 
-A computer joins a network through an interface, which is a network card or a virtual device. The loopback interface `lo` is virtual. Address 127.0.0.1 always means the local host through it, so traffic never leaves the machine. <Cite n={22} />
-
-The `ip` command of iproute2 shows and changes routes, devices, and addresses. <Cite n={16} /> The `ss` command shows sockets, like `netstat`. <Cite n={30} /> A socket is one end of a network connection. TCP names it by an IP address and a port. <Cite n={4} /> One guide calls `ss` a modern replacement for `netstat`. <Cite n={38} /> A minimal image can lack many tools of this page, such as `ip`, `ss`, `ping`, `dig`, `tcpdump`, `ssh`, `rsync`, and `curl`. Tutorial's own advice: install them with the package manager. The package `iproute2` (Debian, Ubuntu) or `iproute` (RHEL) has `ip` and `ss`.
-
-A network namespace isolates the networking of the processes inside it. Each namespace has separate devices, routing tables, and firewall rules. <Cite n={36} /> The command `ip netns` manages namespaces. <Cite n={35} />
+A network stack is the part of the kernel that sends and receives data. RFC 1122 lists four layers: link, IP, transport, and application. <Cite n={2} /> A computer joins a network through an interface, which is a network card or a virtual device. The loopback interface `lo` is virtual. Address 127.0.0.1 always means the local host through it, so the traffic never leaves the machine. <Cite n={22} /> The `ip` command of iproute2 shows and changes routes, devices, and addresses. <Cite n={16} />
 
 ```bash
-ip -br link              # interfaces and their state
-ip -br addr              # the addresses of each interface
-ip -4 addr show lo       # the loopback interface: 127.0.0.1/8
-ss -tuln                 # listening TCP and UDP sockets, as numbers
+ip -br addr
+```
+
+**Try it:** show the loopback interface. `-br` prints one short line for each interface. <Cite n={16} /> The command only reads.
+
+```bash
+(
+  ip -br addr show lo
+)
+# lo               UNKNOWN        127.0.0.1/8 ::1/128
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: at the start of each CI job, save the output of `ip -br addr`, `ip route`, and `ss -tuln`. Compare it with a job that passed. To test without an external network, use `127.0.0.1`.
+Tutorial's own advice: at the start of each CI job, save `ip -br addr`, `ip route`, and `ss -tuln`. Compare the output with a job that passed.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- RFC 1122 specifies the first three layers. <Cite n={2} />
+- A protocol is a set of rules that two computers follow. A packet is a small block of data on the network.
+- The `ss` command shows sockets, like `netstat`. <Cite n={30} /> One guide calls `ss` a modern replacement for `netstat`. <Cite n={38} />
+- A socket is one end of a network connection. TCP names it by an IP address and a port. <Cite n={4} />
+- A network namespace isolates the networking of the processes inside it. Each namespace has separate devices, routing tables, and firewall rules. <Cite n={36} /> The command `ip netns` manages namespaces. <Cite n={35} />
+
+```bash
+ip -br link              # interfaces and their state
+ss -tuln                 # listening TCP and UDP sockets, as numbers
+```
+
+A minimal image can lack many tools of this page, such as `ip`, `ss`, `ping`, `dig`, `tcpdump`, `ssh`, `rsync`, and `curl`. Tutorial's own advice: install them with the package manager. The package `iproute2` (Debian, Ubuntu) or `iproute` (RHEL) has `ip` and `ss`. To test without an external network, use `127.0.0.1`.
+
+</details>
 
 </Technical>
 <Layman>
 
-The network stack is the part of the kernel that sends and receives data. RFC 1122 lists four layers: link, IP, transport, and application. <Cite n={2} /> A protocol is a set of rules that two computers follow.
+**Goal:** List the network interfaces of your computer and find the loopback interface.
 
-A computer connects to a network through an interface. An interface is a network card or a virtual device. The loopback interface `lo` is virtual. The address 127.0.0.1 always means your own computer, so the traffic does not leave the machine. <Cite n={22} />
+The network stack is the part of the kernel that sends and receives data. RFC 1122 lists four layers: link, IP, transport, and application. <Cite n={2} /> A computer connects to a network through an interface. An interface is a network card or a virtual device. The loopback interface `lo` is virtual. The address 127.0.0.1 always means your own computer, so the traffic does not leave the machine. <Cite n={22} /> Use `ip` to show and change routes, devices, and addresses. <Cite n={16} />
 
-Use `ip` to show and change routes, devices, and addresses. <Cite n={16} /> Use `ss` to show sockets. <Cite n={30} /> A socket is one end of a network connection. TCP identifies it by an IP address and a port. <Cite n={4} />
+**Try it:** show the loopback interface. `-br` prints one short line for each interface. <Cite n={16} /> The command only reads.
 
-A network namespace keeps the networking of its processes separate. Each namespace has its own devices, routing tables, and firewall rules. <Cite n={36} />
+```bash
+(
+  ip -br addr show lo
+)
+# lo               UNKNOWN        127.0.0.1/8 ::1/128
+```
 
-Tutorial's own advice: at the start of each CI job, save the output of `ip -br addr`, `ip route`, and `ss -tuln`. Compare it with a job that passed. To test without an external network, use `127.0.0.1`.
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: at the start of each CI job, save `ip -br addr`, `ip route`, and `ss -tuln`. Compare the output with a job that passed.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A protocol is a set of rules that two computers follow.
+- Use `ss` to show sockets. <Cite n={30} /> A socket is one end of a network connection. TCP identifies it by an IP address and a port. <Cite n={4} />
+- A network namespace keeps the networking of its processes separate. Each namespace has its own devices, routing tables, and firewall rules. <Cite n={36} />
+- Tutorial's own advice: to test without an external network, use `127.0.0.1`.
+
+</details>
 
 </Layman>
 <Bangla>
 
-Network stack হলো kernel-এর সেই অংশ, যা data পাঠায় ও গ্রহণ করে। RFC 1122 চারটি layer-এর কথা বলে: link, IP, transport এবং application। <Cite n={2} /> Protocol হলো কিছু নিয়ম, যা দুটি কম্পিউটার মেনে চলে। Packet হলো network-এ data-র একটি ছোট খণ্ড।
+**লক্ষ্য:** আপনার host-এর network interface-গুলোর list দেখুন, আর loopback interface খুঁজে বের করুন।
 
-একটি কম্পিউটার একটি interface-এর মাধ্যমে network-এ যুক্ত হয়। Interface হতে পারে একটি network card অথবা একটি virtual device। Loopback interface `lo` virtual। 127.0.0.1 address সবসময় এর মাধ্যমে নিজের host-কেই বোঝায়, তাই traffic মেশিনের বাইরে যায় না। <Cite n={22} />
+Network stack হলো kernel-এর সেই অংশ, যা data পাঠায় ও গ্রহণ করে। RFC 1122 চারটি layer-এর কথা বলে: link, IP, transport এবং application। <Cite n={2} /> একটি কম্পিউটার একটি interface-এর মাধ্যমে network-এ যুক্ত হয়। Interface হতে পারে একটি network card অথবা একটি virtual device। Loopback interface `lo` virtual। 127.0.0.1 address সবসময় এর মাধ্যমে নিজের host-কেই বোঝায়, তাই traffic মেশিনের বাইরে যায় না। <Cite n={22} /> `ip` command দিয়ে route, device আর address দেখা ও বদলানো যায়। <Cite n={16} />
 
-`ip` command দিয়ে route, device আর address দেখা ও বদলানো যায়। <Cite n={16} /> `ss` command socket দেখায়। <Cite n={30} /> Socket হলো একটি network connection-এর এক প্রান্ত; TCP একে একটি IP address ও একটি port দিয়ে চেনে। <Cite n={4} /> একটি minimal image-এ `ip`, `ss`, `ping`, `curl`-এর মতো অনেক tool না-ও থাকতে পারে। Tutorial-এর নিজের পরামর্শ: package manager দিয়ে এগুলো install করুন।
+**চেষ্টা করুন:** Loopback interface-টি দেখুন। `-br` প্রতিটি interface-এর জন্য একটি ছোট line print করে। <Cite n={16} /> Command-টি শুধু পড়ে।
 
-Network namespace তার ভেতরের process-গুলোর networking আলাদা রাখে। প্রতিটি namespace-এর device, routing table ও firewall rule আলাদা। <Cite n={36} /> `ip netns` command namespace পরিচালনা করে। <Cite n={35} />
+```bash
+(
+  ip -br addr show lo
+)
+# lo               UNKNOWN        127.0.0.1/8 ::1/128
+```
 
-Tutorial-এর নিজের পরামর্শ: প্রতিটি CI job-এর শুরুতে `ip -br addr`, `ip route` এবং `ss -tuln`-এর output save করুন, তারপর pass করা একটি job-এর সাথে মিলিয়ে দেখুন। External network ছাড়া test করতে `127.0.0.1` ব্যবহার করুন।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি CI job-এর শুরুতে `ip -br addr`, `ip route` ও `ss -tuln` save করুন, আর pass করা job-এর সাথে মিলিয়ে দেখুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Protocol হলো কিছু নিয়ম, যা দুটি কম্পিউটার মেনে চলে। Packet হলো network-এ data-র একটি ছোট খণ্ড।
+- `ss` command socket দেখায়। <Cite n={30} /> Socket হলো একটি network connection-এর এক প্রান্ত; TCP একে একটি IP address ও একটি port দিয়ে চেনে। <Cite n={4} />
+- Network namespace তার ভেতরের process-গুলোর networking আলাদা রাখে। প্রতিটি namespace-এর device, routing table ও firewall rule আলাদা। <Cite n={36} /> `ip netns` command namespace পরিচালনা করে। <Cite n={35} />
+- একটি minimal image-এ `ip`, `ss`, `ping`, `curl`-এর মতো অনেক tool না-ও থাকতে পারে। Tutorial-এর নিজস্ব পরামর্শ: package manager দিয়ে এগুলো install করুন। External network ছাড়া test করতে `127.0.0.1` ব্যবহার করুন।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -142,43 +200,108 @@ Tutorial-এর নিজের পরামর্শ: প্রতিটি CI 
 <Voices>
 <Technical>
 
-TCP/IP is the family of protocols of the Internet. IP carries datagrams, which are packets, from a source host to a destination host. <Cite n={3} /> IP sends no acknowledgments, no retransmissions, and no flow control. <Cite n={3} /> TCP adds a reliable, in-order byte stream on top of IP. <Cite n={4} /> UDP is the other common transport protocol. It uses datagram sockets, and TCP uses stream sockets. <Cite n={22} />
+**Goal:** Read the port limits that the kernel uses for servers and for clients.
 
-A port is a number that selects one program on a host. A TCP connection is a pair of sockets. <Cite n={4} /> By default, ports below 1024 are privileged. Only a process with `CAP_NET_BIND_SERVICE`, a capability (one privilege of root), may bind to them. To bind is to attach a program to a port. <Cite n={22} /> The sysctl `net.ipv4.ip_unprivileged_port_start` sets the limit. A sysctl is a kernel setting that you read in `/proc/sys`. <Cite n={34} /> A client that does not choose a source port gets one from a local range. The default range is 32768 to 60999. <Cite n={34} />
-
-`ss` lists sockets. Option `-t` selects TCP, `-u` selects UDP, `-l` shows listening sockets, and `-n` keeps numbers. <Cite n={30} /> A filter such as `state established` selects connections in one TCP state. <Cite n={30} />
+TCP/IP is the family of protocols of the Internet. IP carries packets (datagrams) from a source host to a destination host. It sends no acknowledgments and no retransmissions. <Cite n={3} /> TCP adds a reliable, in-order byte stream on top of IP. <Cite n={4} /> A port is a number that selects one program on a host. <Cite n={4} /> To bind is to attach a program to a port. By default, only a process with `CAP_NET_BIND_SERVICE` may bind to a port below 1024. <Cite n={22} /> A client with no chosen source port gets one from a local range. <Cite n={34} />
 
 ```bash
-ss -tln                                      # TCP sockets that listen
-ss -tn state established                     # open TCP connections
-cat /proc/sys/net/ipv4/ip_local_port_range   # first and last local port
+ss -tln
+```
+
+**Try it:** read two sysctls. A sysctl is a kernel setting that you read in `/proc/sys`. <Cite n={34} />
+
+```bash
+(
+  cat /proc/sys/net/ipv4/ip_unprivileged_port_start   # 1024: the first port that any user may bind
+  cat /proc/sys/net/ipv4/ip_local_port_range          # 32768	60999: the range for client ports
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: when a service test fails, read the listener first with `ss -tln`. A service that listens only on 127.0.0.1 is not reachable from another host. A load test with many short connections can run short of local ports, so read the range before you start.
+Tutorial's own advice: a load test with many short connections can run short of local ports. Read the range before you start.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- IP has no flow control. <Cite n={3} /> A TCP connection is a pair of sockets. <Cite n={4} />
+- UDP is the other common transport protocol. It uses datagram sockets, and TCP uses stream sockets. <Cite n={22} />
+- `CAP_NET_BIND_SERVICE` is a capability, one privilege of root. <Cite n={22} />
+- The sysctl `net.ipv4.ip_unprivileged_port_start` sets the limit of privileged ports. The default local port range is 32768 to 60999. <Cite n={34} />
+- In `ss`, `-t` selects TCP, `-u` selects UDP, `-l` shows listening sockets, and `-n` keeps numbers. A filter such as `state established` selects connections in one TCP state. <Cite n={30} />
+
+```bash
+ss -tn state established     # open TCP connections
+```
+
+Tutorial's own advice: when a service test fails, read the listener first with `ss -tln`. A service that listens only on 127.0.0.1 is not reachable from another host.
+
+</details>
 
 </Technical>
 <Layman>
 
-TCP/IP is the family of protocols of the Internet. IP carries packets (datagrams) from a source host to a destination host. <Cite n={3} /> IP does not confirm delivery, does not send data again, and does not control the flow. <Cite n={3} /> TCP adds a reliable byte stream on top of IP. The bytes arrive in order. <Cite n={4} /> UDP is the other common transport protocol. <Cite n={22} />
+**Goal:** Read the port limits that the kernel uses for servers and for clients.
 
-A port is a number that selects one program on a host. <Cite n={4} /> To bind means to attach a program to a port. By default, only a process with `CAP_NET_BIND_SERVICE` can bind to a port below 1024. <Cite n={22} /> The sysctl `net.ipv4.ip_unprivileged_port_start` sets this limit. <Cite n={34} /> If a client does not choose a source port, it gets one from a local range. The default range is 32768 to 60999. <Cite n={34} />
+TCP/IP is the family of protocols of the Internet. IP carries packets (datagrams) from a source host to a destination host. IP does not confirm delivery and does not send data again. <Cite n={3} /> TCP adds a reliable byte stream on top of IP. The bytes arrive in order. <Cite n={4} /> A port is a number that selects one program on a host. <Cite n={4} /> To bind means to attach a program to a port. By default, only a process with `CAP_NET_BIND_SERVICE` can bind to a port below 1024. <Cite n={22} /> If a client does not choose a source port, it gets one from a local range. <Cite n={34} />
 
-Tutorial's own advice: when a service test fails, first read the listener with `ss -tln`. A service that listens only on 127.0.0.1 cannot be reached from another host. A load test with many short connections can use up the local ports, so read the range before you start.
+**Try it:** read two sysctls. A sysctl is a kernel setting that you read in `/proc/sys`. <Cite n={34} />
+
+```bash
+(
+  cat /proc/sys/net/ipv4/ip_unprivileged_port_start   # 1024: the first port that any user may bind
+  cat /proc/sys/net/ipv4/ip_local_port_range          # 32768	60999: the range for client ports
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: a load test with many short connections can use up the local ports. Read the range before you start.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- IP does not control the flow. <Cite n={3} /> UDP is the other common transport protocol. <Cite n={22} />
+- The sysctl `net.ipv4.ip_unprivileged_port_start` sets the limit of privileged ports. The default local range is 32768 to 60999. <Cite n={34} />
+- Tutorial's own advice: when a service test fails, first read the listener with `ss -tln`. A service that listens only on 127.0.0.1 cannot be reached from another host.
+
+</details>
 
 </Layman>
 <Bangla>
 
-TCP/IP হলো Internet-এর protocol-গুলোর পরিবার। IP একটি source host থেকে একটি destination host-এ datagram, অর্থাৎ packet, বহন করে। <Cite n={3} /> IP কোনো acknowledgment পাঠায় না, retransmission করে না এবং flow control-ও করে না। <Cite n={3} /> TCP, IP-এর ওপর একটি নির্ভরযোগ্য byte stream যোগ করে, যেখানে byte-গুলো ক্রম অনুযায়ী আসে। <Cite n={4} /> UDP হলো আরেকটি প্রচলিত transport protocol; এটি datagram socket ব্যবহার করে, আর TCP ব্যবহার করে stream socket। <Cite n={22} />
+**লক্ষ্য:** Kernel server আর client-এর জন্য যে port সীমা ব্যবহার করে, তা পড়ুন।
 
-Port হলো একটি সংখ্যা, যা একটি host-এর একটি program বেছে নেয়। <Cite n={4} /> Bind মানে একটি program-কে একটি port-এর সাথে যুক্ত করা। Default-ভাবে 1024-এর নিচের port-গুলো privileged; শুধু `CAP_NET_BIND_SERVICE` থাকা process সেগুলোতে bind করতে পারে। <Cite n={22} /> Sysctl `net.ipv4.ip_unprivileged_port_start` এই সীমা ঠিক করে। <Cite n={34} /> Client নিজে source port না বাছলে একটি local range থেকে একটি port পায়। Default range হলো 32768 থেকে 60999। <Cite n={34} />
+TCP/IP হলো Internet-এর protocol-গুলোর পরিবার। IP একটি source host থেকে একটি destination host-এ datagram, অর্থাৎ packet, বহন করে। IP কোনো acknowledgment পাঠায় না এবং retransmission করে না। <Cite n={3} /> TCP, IP-এর ওপর একটি নির্ভরযোগ্য byte stream যোগ করে, যেখানে byte-গুলো ক্রম অনুযায়ী আসে। <Cite n={4} /> Port হলো একটি সংখ্যা, যা একটি host-এর একটি program বেছে নেয়। <Cite n={4} /> Bind মানে একটি program-কে একটি port-এর সাথে যুক্ত করা। Default-ভাবে শুধু `CAP_NET_BIND_SERVICE` থাকা process 1024-এর নিচের port-এ bind করতে পারে। <Cite n={22} /> Client নিজে source port না বাছলে একটি local range থেকে একটি port পায়। <Cite n={34} />
 
-`ss`-এ `-t` মানে TCP, `-u` মানে UDP, `-l` দেখায় listening socket, আর `-n` সংখ্যাগুলো সংখ্যা হিসেবেই রাখে। <Cite n={30} />
+**চেষ্টা করুন:** দুটি sysctl পড়ুন। Sysctl হলো একটি kernel setting, যা আপনি `/proc/sys`-এ পড়েন। <Cite n={34} />
 
-Tutorial-এর নিজের পরামর্শ: কোনো service test fail করলে আগে `ss -tln` দিয়ে listener দেখুন। যে service শুধু 127.0.0.1-এ listen করে, তাকে অন্য host থেকে পাওয়া যায় না। অনেক ছোট connection-ওয়ালা load test-এ local port কম পড়তে পারে, তাই শুরুর আগে range-টি পড়ে নিন।
+```bash
+(
+  cat /proc/sys/net/ipv4/ip_unprivileged_port_start   # 1024: the first port that any user may bind
+  cat /proc/sys/net/ipv4/ip_local_port_range          # 32768	60999: the range for client ports
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: অনেক ছোট connection-ওয়ালা load test-এ local port কম পড়তে পারে। শুরুর আগে range-টি পড়ে নিন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- IP flow control করে না। <Cite n={3} /> UDP হলো আরেকটি প্রচলিত transport protocol; এটি datagram socket ব্যবহার করে, আর TCP ব্যবহার করে stream socket। <Cite n={22} />
+- Sysctl `net.ipv4.ip_unprivileged_port_start` privileged port-এর সীমা ঠিক করে। Default local range হলো 32768 থেকে 60999। <Cite n={34} />
+- `ss`-এ `-t` মানে TCP, `-u` মানে UDP, `-l` দেখায় listening socket, আর `-n` সংখ্যাগুলো সংখ্যা হিসেবেই রাখে। <Cite n={30} />
+- Tutorial-এর নিজস্ব পরামর্শ: কোনো service test fail করলে আগে `ss -tln` দিয়ে listener দেখুন। যে service শুধু 127.0.0.1-এ listen করে, তাকে অন্য host থেকে পাওয়া যায় না।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -188,44 +311,112 @@ Tutorial-এর নিজের পরামর্শ: কোনো service test
 <Voices>
 <Technical>
 
-Ethernet is the usual link layer. It moves frames between devices on one local network. A frame is the link-layer unit: a header plus data. Each interface has a MAC address, a hardware address of 48 bits. <Cite n={5} /> A frame carries an IP datagram when its type field is hex 0800. On standard Ethernet, a datagram can be 1500 octets (bytes) long at most. <Cite n={7} />
+**Goal:** Read the MAC address of an interface and the kernel neighbour table.
 
-An IP packet needs the MAC address of the next device on the same network. ARP (Address Resolution Protocol) finds it. <Cite n={20} /> The sender broadcasts a request to all stations, and the owner of the IP address answers. <Cite n={5} /> Linux keeps the answers in a neighbour cache. Its IPv4 table is also called the ARP table. <Cite n={19} /> An entry becomes stale when nothing confirms it for some time. <Cite n={20} /> IPv6 has no ARP. It multicasts (sends to a group) Neighbor Solicitation messages instead. <Cite n={8} />
-
-RARP (Reverse ARP) works the other way. A host that knows only its MAC address asks for its IP address. <Cite n={6} /> DHCP covers the same need and gives a client all its IP settings. <Cite n={12} />
+Ethernet is the usual link layer. It moves frames between devices on one local network. A frame is a header plus data. Each interface has a MAC address, a hardware address of 48 bits. <Cite n={5} /> A host needs the MAC address of the next device on its network. ARP (Address Resolution Protocol) finds it. <Cite n={20} /> The sender broadcasts a request to all stations, and the owner of the IP address answers. <Cite n={5} /> Linux keeps the answers in a neighbour cache. Its IPv4 table is also called the ARP table. <Cite n={19} />
 
 ```bash
-ip -br link show     # name, state, and MAC address of each interface
 ip neigh show        # IP address, interface, MAC address, and state
+```
+
+**Try it:** show the MAC address of `lo`, and count its neighbour entries. `wc -l` counts lines.
+
+```bash
+(
+  ip -br link show lo           # name, state, MAC address, flags
+  ip neigh show dev lo | wc -l  # 0: lo has no neighbour entries
+)
+# lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+# 0
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: if a host on the same network is unreachable, read `ip neigh`. `INCOMPLETE` means that no answer has come yet. `FAILED` means that the probes ran out without an answer. <Cite n={19} /> Two test hosts with the same IP address can make one IP show different MAC addresses over time.
+Tutorial's own advice: if a host on your network is unreachable, read `ip neigh`. `FAILED` means that the probes ran out with no answer. <Cite n={19} />
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A frame carries an IP datagram when its type field is hex 0800. On standard Ethernet, a datagram can be 1500 octets (bytes) long at most. <Cite n={7} />
+- An entry becomes stale when nothing confirms it for some time. <Cite n={20} /> `INCOMPLETE` means that no answer has come yet. <Cite n={19} />
+- IPv6 has no ARP. It multicasts (sends to a group) Neighbor Solicitation messages instead. <Cite n={8} />
+- RARP (Reverse ARP) works the other way. A host that knows only its MAC address asks for its IP address. <Cite n={6} /> DHCP covers the same need and gives a client all its IP settings. <Cite n={12} />
+
+Tutorial's own advice: two test hosts with the same IP address can make one IP show different MAC addresses over time.
+
+</details>
 
 </Technical>
 <Layman>
 
-Ethernet is the usual link layer. It moves frames between devices on one local network. A frame is a header plus data. Each interface has a MAC address, which is a hardware address of 48 bits. <Cite n={5} /> On standard Ethernet, an IP datagram can be 1500 bytes long at most. <Cite n={7} />
+**Goal:** Read the MAC address of an interface and the kernel neighbour table.
 
-To send an IP packet, the computer needs the MAC address of the next device on the same network. ARP finds this address. <Cite n={20} /> The sender sends a request to all stations, and the owner of the IP address answers. <Cite n={5} /> Linux keeps the answers in a neighbour cache. For IPv4, this is also called the ARP table. <Cite n={19} /> IPv6 does not use ARP. It sends Neighbor Solicitation messages to a group instead. <Cite n={8} />
+Ethernet is the usual link layer. It moves frames between devices on one local network. A frame is a header plus data. Each interface has a MAC address, which is a hardware address of 48 bits. <Cite n={5} /> To send an IP packet, the computer needs the MAC address of the next device on the same network. ARP finds this address. <Cite n={20} /> The sender sends a request to all stations, and the owner of the IP address answers. <Cite n={5} /> Linux keeps the answers in a neighbour cache. For IPv4, this is also called the ARP table. <Cite n={19} />
 
-RARP does the opposite. A host that knows only its MAC address asks for its IP address. <Cite n={6} /> DHCP covers the same need. <Cite n={12} />
+**Try it:** show the MAC address of `lo`, and count its neighbour entries. `wc -l` counts lines.
 
-Tutorial's own advice: if you cannot reach a host on the same network, read `ip neigh`. `INCOMPLETE` means that no answer came yet. `FAILED` means that the probes ran out without an answer. <Cite n={19} />
+```bash
+(
+  ip -br link show lo           # name, state, MAC address, flags
+  ip neigh show dev lo | wc -l  # 0: lo has no neighbour entries
+)
+# lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+# 0
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: if you cannot reach a host on your network, read `ip neigh`. `FAILED` means that the probes ran out with no answer. <Cite n={19} />
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- On standard Ethernet, an IP datagram can be 1500 bytes long at most. <Cite n={7} />
+- `INCOMPLETE` means that no answer came yet. <Cite n={19} />
+- IPv6 does not use ARP. It sends Neighbor Solicitation messages to a group instead. <Cite n={8} />
+- RARP does the opposite. A host that knows only its MAC address asks for its IP address. <Cite n={6} /> DHCP covers the same need. <Cite n={12} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Ethernet হলো প্রচলিত link layer। এটি একটি local network-এর device-গুলোর মধ্যে frame আনা-নেওয়া করে। Frame হলো link layer-এর একক: একটি header আর data। প্রতিটি interface-এর একটি MAC address থাকে, যা 48 bit-এর একটি hardware address। <Cite n={5} /> কোনো frame-এর type field hex 0800 হলে সেটি একটি IP datagram বহন করে। Standard Ethernet-এ একটি datagram সর্বোচ্চ 1500 octet (byte) লম্বা হতে পারে। <Cite n={7} />
+**লক্ষ্য:** একটি interface-এর MAC address আর kernel-এর neighbour table পড়ুন।
 
-IP packet পাঠাতে একই network-এর পরের device-টির MAC address দরকার। ARP (Address Resolution Protocol) সেটি খুঁজে দেয়। <Cite n={20} /> Sender সব station-এ একটি request broadcast করে, আর যে IP address-এর মালিক, সে উত্তর দেয়। <Cite n={5} /> Linux উত্তরগুলো একটি neighbour cache-এ রাখে; এর IPv4 table-কে ARP table-ও বলা হয়। <Cite n={19} /> কিছু সময় কেউ নিশ্চিত না করলে একটি entry stale হয়ে যায়। <Cite n={20} /> IPv6-এ ARP নেই; তার বদলে এটি একটি group-এ Neighbor Solicitation message পাঠায়। <Cite n={8} />
+Ethernet হলো প্রচলিত link layer। এটি একটি local network-এর device-গুলোর মধ্যে frame আনা-নেওয়া করে। Frame হলো link layer-এর একক: একটি header আর data। প্রতিটি interface-এর একটি MAC address থাকে, যা 48 bit-এর একটি hardware address। <Cite n={5} /> IP packet পাঠাতে একই network-এর পরের device-টির MAC address দরকার। ARP (Address Resolution Protocol) সেটি খুঁজে দেয়। <Cite n={20} /> Sender সব station-এ একটি request broadcast করে, আর যে IP address-এর মালিক, সে উত্তর দেয়। <Cite n={5} /> Linux উত্তরগুলো একটি neighbour cache-এ রাখে; এর IPv4 table-কে ARP table-ও বলা হয়। <Cite n={19} />
 
-RARP (Reverse ARP) উল্টো কাজ করে: যে host শুধু নিজের MAC address জানে, সে তার IP address চায়। <Cite n={6} /> DHCP-ও একই প্রয়োজন মেটায় এবং client-কে তার সব IP setting দেয়। <Cite n={12} />
+**চেষ্টা করুন:** `lo`-এর MAC address দেখুন, আর এর neighbour entry গুনুন। `wc -l` line গোনে।
 
-Tutorial-এর নিজের পরামর্শ: একই network-এর কোনো host-এ পৌঁছানো না গেলে `ip neigh` পড়ুন। `INCOMPLETE` মানে এখনো কোনো উত্তর আসেনি। `FAILED` মানে কোনো উত্তর ছাড়াই probe শেষ হয়ে গেছে। <Cite n={19} /> একই IP address-ওয়ালা দুটি test host থাকলে সময়ের সাথে একটি IP-তে ভিন্ন ভিন্ন MAC address দেখা যেতে পারে।
+```bash
+(
+  ip -br link show lo           # name, state, MAC address, flags
+  ip neigh show dev lo | wc -l  # 0: lo has no neighbour entries
+)
+# lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+# 0
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: নিজের network-এর কোনো host-এ পৌঁছানো না গেলে `ip neigh` পড়ুন। `FAILED` মানে উত্তর ছাড়াই probe শেষ। <Cite n={19} />
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- কোনো frame-এর type field hex 0800 হলে সেটি একটি IP datagram বহন করে। Standard Ethernet-এ একটি datagram সর্বোচ্চ 1500 octet (byte) লম্বা হতে পারে। <Cite n={7} />
+- কিছু সময় কেউ নিশ্চিত না করলে একটি entry stale হয়ে যায়। <Cite n={20} /> `INCOMPLETE` মানে এখনো কোনো উত্তর আসেনি। <Cite n={19} />
+- IPv6-এ ARP নেই; তার বদলে এটি একটি group-এ Neighbor Solicitation message পাঠায়। <Cite n={8} />
+- RARP (Reverse ARP) উল্টো কাজ করে: যে host শুধু নিজের MAC address জানে, সে তার IP address চায়। <Cite n={6} /> DHCP-ও একই প্রয়োজন মেটায় এবং client-কে তার সব IP setting দেয়। <Cite n={12} />
+
+Tutorial-এর নিজস্ব পরামর্শ: একই IP address-ওয়ালা দুটি test host থাকলে সময়ের সাথে একটি IP-তে ভিন্ন ভিন্ন MAC address দেখা যেতে পারে।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -235,49 +426,117 @@ Tutorial-এর নিজের পরামর্শ: একই network-এর 
 <Voices>
 <Technical>
 
-An IPv4 address has 32 bits. A subnet is a block of addresses with the same prefix, which is the first bits of the address. The host bits are the other bits. CIDR (Classless Inter-Domain Routing) notation writes a subnet as an address, a slash, and a prefix length. The length is the number of prefix bits, from 0 to 32. <Cite n={9} /> The subnet mask is the same prefix in dotted form. An AND of an address and the mask gives the network address. <Cite n={39} />
+**Goal:** Calculate the size, the mask, and the broadcast address of a subnet.
 
-The subnet 192.0.2.0/26 has 6 host bits, so it has 64 addresses. The first is the network address. The last, 192.0.2.63, is the directed broadcast address. It reaches every host of the subnet, because all its host bits are 1. <Cite n={2} /> <Cite n={39} /> That leaves 62 addresses for hosts. The mask is 255.255.255.192.
-
-RFC 1918 reserves 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16 for private networks. <Cite n={10} /> RFC 5737 reserves three blocks for documentation: TEST-NET-1 (192.0.2.0/24), TEST-NET-2 (198.51.100.0/24), and TEST-NET-3 (203.0.113.0/24). <Cite n={11} /> This page uses the documentation blocks.
-
-`ip addr` writes an address as address/length. <Cite n={17} /> The Python module `ipaddress` does the subnet maths. <Cite n={37} />
+An IPv4 address has 32 bits. A subnet is a block of addresses with the same prefix, which is the first bits of the address. CIDR (Classless Inter-Domain Routing) notation writes a subnet as an address, a slash, and a prefix length from 0 to 32. <Cite n={9} /> The subnet mask is the same prefix in dotted form. <Cite n={39} /> The subnet 192.0.2.0/26 has 6 host bits, so it has 64 addresses. The first is the network address. The last, 192.0.2.63, is the directed broadcast address. <Cite n={2} /> <Cite n={39} /> That leaves 62 addresses for hosts.
 
 ```bash
-ip -4 -br addr show lo
-python3 -c "import ipaddress as i; n=i.ip_network('192.0.2.0/26'); print(n.netmask, n.broadcast_address, n.num_addresses)"
-# 255.255.255.192 192.0.2.63 64
-python3 -c "import ipaddress as i; print(i.ip_address('192.0.2.70') in i.ip_network('192.0.2.0/26'))"
-# False: 192.0.2.70 belongs to 192.0.2.64/26
+ip -4 -br addr     # each address as address/length
+```
+
+**Try it:** count the addresses with shell arithmetic, `$(( ))`. Then let the Python module `ipaddress` do the rest. <Cite n={37} />
+
+```bash
+(
+  echo $(( 2 ** (32 - 26) ))   # 64: 2 to the power of the host bits
+  python3 -c "import ipaddress as i; n=i.ip_network('192.0.2.0/26'); print(n.netmask, n.broadcast_address)"
+  # 255.255.255.192 192.0.2.63
+  python3 -c "import ipaddress as i; print(i.ip_address('192.0.2.70') in i.ip_network('192.0.2.0/26'))"
+  # False: 192.0.2.70 is in the next block, 192.0.2.64/26
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: calculate the subnet before you write test data. Hosts in one subnet talk directly. For other hosts, the traffic goes to a gateway, which is the router that leads out of the subnet. Give each test network its own block, because overlapping ranges send traffic to the wrong place.
+Tutorial's own advice: give each test network its own block. Overlapping ranges send traffic to the wrong place.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- The host bits are the bits after the prefix. An AND of an address and the mask gives the network address. <Cite n={39} />
+- The broadcast address reaches every host of the subnet, because all its host bits are 1. <Cite n={2} /> <Cite n={39} />
+- RFC 1918 reserves 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16 for private networks. <Cite n={10} />
+- RFC 5737 reserves three blocks for documentation: TEST-NET-1 (192.0.2.0/24), TEST-NET-2 (198.51.100.0/24), and TEST-NET-3 (203.0.113.0/24). <Cite n={11} /> This page uses them.
+- `ip addr` writes an address as address/length. <Cite n={17} />
+
+Tutorial's own advice: calculate the subnet before you write test data. Hosts in one subnet talk directly. For other hosts, the traffic goes to a gateway, which is the router that leads out of the subnet.
+
+</details>
 
 </Technical>
 <Layman>
 
-An IPv4 address has 32 bits. A subnet is a block of addresses that start with the same bits. These first bits are the prefix. CIDR notation writes a subnet as an address, a slash, and the number of prefix bits, from 0 to 32. <Cite n={9} /> The subnet mask shows the same prefix in dotted form. <Cite n={39} />
+**Goal:** Calculate the size, the mask, and the broadcast address of a subnet.
 
-An example: the subnet 192.0.2.0/26 has 6 host bits, so it has 64 addresses. The first is the network address. The last, 192.0.2.63, is the broadcast address. It reaches every host of the subnet. <Cite n={2} /> <Cite n={39} /> This leaves 62 addresses for hosts. The mask is 255.255.255.192.
+An IPv4 address has 32 bits. A subnet is a block of addresses that start with the same bits. These first bits are the prefix. CIDR notation writes a subnet as an address, a slash, and the number of prefix bits, from 0 to 32. <Cite n={9} /> The subnet mask shows the same prefix in dotted form. <Cite n={39} /> An example: the subnet 192.0.2.0/26 has 6 host bits, so it has 64 addresses. The first is the network address. The last, 192.0.2.63, is the broadcast address. <Cite n={2} /> <Cite n={39} /> This leaves 62 addresses for hosts.
 
-Some blocks are reserved. 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16 are for private networks. <Cite n={10} /> 192.0.2.0/24, 198.51.100.0/24, and 203.0.113.0/24 are for documentation. <Cite n={11} /> The Python module `ipaddress` can do the subnet calculation. <Cite n={37} />
+**Try it:** count the addresses with shell arithmetic, `$(( ))`. Then let the Python module `ipaddress` do the rest. <Cite n={37} />
 
-Tutorial's own advice: calculate the subnet before you write test data. Hosts in one subnet talk directly. Traffic to other hosts goes through a gateway, which is the router that leads out of the subnet. Give each test network its own block, because overlapping ranges send traffic to the wrong place.
+```bash
+(
+  echo $(( 2 ** (32 - 26) ))   # 64: 2 to the power of the host bits
+  python3 -c "import ipaddress as i; n=i.ip_network('192.0.2.0/26'); print(n.netmask, n.broadcast_address)"
+  # 255.255.255.192 192.0.2.63
+  python3 -c "import ipaddress as i; print(i.ip_address('192.0.2.70') in i.ip_network('192.0.2.0/26'))"
+  # False: 192.0.2.70 is in the next block, 192.0.2.64/26
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: give each test network its own block. Overlapping ranges send traffic to the wrong place.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- The broadcast address reaches every host of the subnet. <Cite n={2} /> <Cite n={39} />
+- 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16 are for private networks. <Cite n={10} />
+- 192.0.2.0/24, 198.51.100.0/24, and 203.0.113.0/24 are for documentation. <Cite n={11} />
+
+Tutorial's own advice: calculate the subnet before you write test data. Hosts in one subnet talk directly. Traffic to other hosts goes through a gateway, which is the router that leads out of the subnet.
+
+</details>
 
 </Layman>
 <Bangla>
 
-একটি IPv4 address-এ 32 bit থাকে। Subnet হলো একই prefix-ওয়ালা address-এর একটি block; prefix মানে address-এর প্রথম দিকের bit-গুলো, আর বাকি bit-গুলো host bit। CIDR notation-এ subnet লেখা হয় একটি address, একটি slash আর prefix length দিয়ে; length হলো prefix bit-এর সংখ্যা, 0 থেকে 32। <Cite n={9} /> Subnet mask একই prefix-কে dotted রূপে দেখায়। Address আর mask-এর AND করলে network address পাওয়া যায়। <Cite n={39} />
+**লক্ষ্য:** একটি subnet-এর size, mask আর broadcast address হিসাব করুন।
 
-উদাহরণ: 192.0.2.0/26 subnet-এ 6টি host bit আছে, তাই এতে 64টি address। প্রথমটি network address। শেষটি, 192.0.2.63, হলো directed broadcast address; এর সব host bit 1, তাই এটি subnet-এর প্রতিটি host-এ পৌঁছায়। <Cite n={2} /> <Cite n={39} /> ফলে host-এর জন্য থাকে 62টি address। Mask হলো 255.255.255.192।
+একটি IPv4 address-এ 32 bit থাকে। Subnet হলো একই prefix-ওয়ালা address-এর একটি block; prefix মানে address-এর প্রথম দিকের bit-গুলো। CIDR notation-এ subnet লেখা হয় একটি address, একটি slash আর 0 থেকে 32-এর একটি prefix length দিয়ে। <Cite n={9} /> Subnet mask একই prefix-কে dotted রূপে দেখায়। <Cite n={39} /> উদাহরণ: 192.0.2.0/26 subnet-এ 6টি host bit আছে, তাই এতে 64টি address। প্রথমটি network address। শেষটি, 192.0.2.63, হলো directed broadcast address। <Cite n={2} /> <Cite n={39} /> ফলে host-এর জন্য থাকে 62টি address।
 
-RFC 1918 private network-এর জন্য 10.0.0.0/8, 172.16.0.0/12 এবং 192.168.0.0/16 সংরক্ষণ করে। <Cite n={10} /> RFC 5737 documentation-এর জন্য তিনটি block সংরক্ষণ করে: 192.0.2.0/24, 198.51.100.0/24 এবং 203.0.113.0/24। <Cite n={11} /> Python-এর `ipaddress` module subnet-এর হিসাব করে দেয়। <Cite n={37} />
+**চেষ্টা করুন:** Shell arithmetic, `$(( ))`, দিয়ে address গুনুন। তারপর বাকিটা Python-এর `ipaddress` module-কে করতে দিন। <Cite n={37} />
 
-Tutorial-এর নিজের পরামর্শ: test data লেখার আগে subnet হিসাব করে নিন। একই subnet-এর host-গুলো সরাসরি কথা বলে; অন্য host-এর traffic যায় একটি gateway দিয়ে, অর্থাৎ যে router subnet-এর বাইরে নিয়ে যায়। প্রতিটি test network-কে নিজস্ব block দিন, কারণ overlap করা range traffic-কে ভুল জায়গায় পাঠায়।
+```bash
+(
+  echo $(( 2 ** (32 - 26) ))   # 64: 2 to the power of the host bits
+  python3 -c "import ipaddress as i; n=i.ip_network('192.0.2.0/26'); print(n.netmask, n.broadcast_address)"
+  # 255.255.255.192 192.0.2.63
+  python3 -c "import ipaddress as i; print(i.ip_address('192.0.2.70') in i.ip_network('192.0.2.0/26'))"
+  # False: 192.0.2.70 is in the next block, 192.0.2.64/26
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি test network-কে নিজস্ব block দিন। Overlap করা range traffic-কে ভুল জায়গায় পাঠায়।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Prefix-এর পরের bit-গুলো host bit। Address আর mask-এর AND করলে network address পাওয়া যায়। <Cite n={39} />
+- Broadcast address-এর সব host bit 1, তাই এটি subnet-এর প্রতিটি host-এ পৌঁছায়। <Cite n={2} /> <Cite n={39} />
+- RFC 1918 private network-এর জন্য 10.0.0.0/8, 172.16.0.0/12 এবং 192.168.0.0/16 সংরক্ষণ করে। <Cite n={10} />
+- RFC 5737 documentation-এর জন্য তিনটি block সংরক্ষণ করে: 192.0.2.0/24, 198.51.100.0/24 এবং 203.0.113.0/24। <Cite n={11} />
+
+Tutorial-এর নিজস্ব পরামর্শ: test data লেখার আগে subnet হিসাব করে নিন। একই subnet-এর host-গুলো সরাসরি কথা বলে; অন্য host-এর traffic যায় একটি gateway দিয়ে, অর্থাৎ যে router subnet-এর বাইরে নিয়ে যায়।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -287,24 +546,28 @@ Tutorial-এর নিজের পরামর্শ: test data লেখার
 <Voices>
 <Technical>
 
-Routing is the choice of the next hop, which is the next router, for each packet. The kernel compares the destination address with its routing table. Forwarding uses the longest match, so the most specific prefix wins. <Cite n={9} /> The prefix 0.0.0.0/0 is the default route, and `ip` writes it as `default`. <Cite n={9} /> <Cite n={18} /> The gateway of a route is that router, and `via` names it.
+**Goal:** Find the route that the kernel picks for an address, without sending a packet.
 
-`ip route show` lists the main table. <Cite n={18} /> The `proto` field says who installed a route. The value `kernel` means that the kernel added it automatically. <Cite n={18} /> In the example, `dev` names the interface and `src` the preferred source address. `scope link` marks a direct route. A lower `metric` is preferred. <Cite n={18} /> `ip route get ADDRESS` shows the route that the kernel would use. It sends no packet. <Cite n={18} />
-
-Route types change how a failure looks. A `blackhole` route drops packets silently. An `unreachable` route drops them and sends an ICMP host unreachable message. <Cite n={18} /> By default, Linux does not forward packets between interfaces, because `net.ipv4.ip_forward` is 0. <Cite n={34} />
+Routing picks the next hop, the next router, for each packet. The kernel compares the destination address with its routing table. The most specific prefix (the longest match) wins. <Cite n={9} /> The prefix 0.0.0.0/0 is the default route, and `ip` writes it as `default`. <Cite n={9} /> <Cite n={18} /> `ip route get ADDRESS` shows the route that the kernel would use. It sends no packet. <Cite n={18} />
 
 ```bash
-ip route show                       # the main routing table
-ip route get 192.0.2.1              # the route that would carry a packet; sends nothing
-cat /proc/sys/net/ipv4/ip_forward   # 0 means no forwarding
-# Example output of ip route show:
-# default via 198.51.100.1 dev eth0 proto dhcp src 198.51.100.20 metric 100
-# 198.51.100.0/24 dev eth0 proto kernel scope link src 198.51.100.20 metric 100
+ip route show       # the main routing table
+```
+
+**Try it:** ask for the route to 127.0.0.1. The type `local` means that the destination is on this host. <Cite n={18} />
+
+```bash
+(
+  ip route get 127.0.0.1
+)
+# local 127.0.0.1 dev lo src 127.0.0.1 uid 1000
+#     cache <local>
+# Your uid (user ID) can differ.
 ```
 
 <Callout type="danger" title="Route changes can cut your connection">
 
-The commands `ip route add`, `del`, `replace`, and `flush` change the kernel routing table. <Cite n={18} /> Tutorial's own advice: if you delete the default route in an SSH session from another network, the session can stop and you lose remote access. Change routes only on a console, or in a network namespace that you made for the test. <Cite n={36} />
+`ip route add`, `del`, `replace`, and `flush` change the routing table. <Cite n={18} /> Tutorial's own warning: over SSH, a deleted default route can end your remote access.
 
 </Callout>
 
@@ -314,29 +577,112 @@ Tutorial's own advice: before you blame the application, run `ip route get` with
 
 </Callout>
 
+<details>
+<summary>Go deeper</summary>
+
+| Field of `ip route show` | Meaning |
+|---|---|
+| `via` | The gateway: the next router |
+| `dev` | The interface |
+| `src` | The preferred source address |
+| `proto` | Who installed the route. `kernel` means that the kernel added it automatically. |
+| `scope link` | A direct route |
+| `metric` | A lower value is preferred |
+
+<Cite n={18} />
+
+```bash
+ip route show
+# default via 198.51.100.1 dev eth0 proto dhcp src 198.51.100.20 metric 600
+# Stand-ins: your addresses and interface name differ.
+cat /proc/sys/net/ipv4/ip_forward   # 0 means no forwarding
+```
+
+- A `blackhole` route drops packets silently. An `unreachable` route drops them and sends an ICMP host unreachable message. <Cite n={18} />
+- By default, Linux does not forward packets between interfaces, because `net.ipv4.ip_forward` is 0. <Cite n={34} />
+- Tutorial's own advice: change routes only on a console, or in a network namespace that you made for the test. <Cite n={36} />
+
+</details>
+
 </Technical>
 <Layman>
 
-Routing means choosing the next router (the next hop) for each packet. The kernel compares the destination address with its routing table. The most specific match wins. <Cite n={9} /> The prefix 0.0.0.0/0 is the default route, and `ip` shows it as `default`. <Cite n={9} /> <Cite n={18} />
+**Goal:** Find the route that the kernel picks for an address, without sending a packet.
 
-`ip route show` lists the main routing table. <Cite n={18} /> `ip route get ADDRESS` shows the route that the kernel would use. It does not send a packet. <Cite n={18} />
+Routing means choosing the next router (the next hop) for each packet. The kernel compares the destination address with its routing table. The most specific match wins. <Cite n={9} /> The prefix 0.0.0.0/0 is the default route, and `ip` shows it as `default`. <Cite n={9} /> <Cite n={18} /> `ip route get ADDRESS` shows the route that the kernel would use. It does not send a packet. <Cite n={18} />
 
-Some route types drop packets. A `blackhole` route drops them and sends no message. An `unreachable` route drops them and sends an ICMP host unreachable message. <Cite n={18} /> By default, Linux does not forward packets between interfaces, because `net.ipv4.ip_forward` is 0. <Cite n={34} />
+**Try it:** ask for the route to 127.0.0.1. The type `local` means that the destination is on this host. <Cite n={18} />
 
-Be careful: `ip route add`, `del`, `replace`, and `flush` change the routing table. <Cite n={18} /> Tutorial's own advice: if you delete the default route in an SSH session from another network, you can lose remote access. Change routes only on a console, or in a network namespace that you made for the test. <Cite n={36} />
+```bash
+(
+  ip route get 127.0.0.1
+)
+# local 127.0.0.1 dev lo src 127.0.0.1 uid 1000
+#     cache <local>
+# Your uid (user ID) can differ.
+```
+
+<Callout type="danger" title="Route changes can cut your connection">
+
+`ip route add`, `del`, `replace`, and `flush` change the routing table. <Cite n={18} /> Tutorial's own warning: over SSH, if you delete the default route, you can lose remote access.
+
+</Callout>
+
+<Callout type="tip" title="Why it matters for testing">
 
 Tutorial's own advice: before you blame the application, run `ip route get` with the server address.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `ip route show` lists the main routing table. <Cite n={18} />
+- A `blackhole` route drops packets and sends no message. An `unreachable` route drops them and sends an ICMP host unreachable message. <Cite n={18} />
+- By default, Linux does not forward packets between interfaces, because `net.ipv4.ip_forward` is 0. <Cite n={34} />
+- Tutorial's own advice: change routes only on a console, or in a network namespace that you made for the test. <Cite n={36} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Routing মানে প্রতিটি packet-এর জন্য next hop, অর্থাৎ পরের router, বেছে নেওয়া। Kernel destination address-কে তার routing table-এর সাথে মেলায়। Forwarding-এ longest match ব্যবহার হয়, তাই সবচেয়ে নির্দিষ্ট prefix জেতে। <Cite n={9} /> Prefix 0.0.0.0/0 হলো default route, আর `ip` এটিকে `default` হিসেবে লেখে। <Cite n={9} /> <Cite n={18} /> Route-এর gateway হলো সেই router, আর `via` তার নাম বলে।
+**লক্ষ্য:** কোনো packet না পাঠিয়ে দেখুন, একটি address-এর জন্য kernel কোন route বেছে নেয়।
 
-`ip route show` main table দেখায়। `proto` field বলে route-টি কে বসিয়েছে; `kernel` মানে kernel নিজে থেকে যোগ করেছে। কম `metric`-এর route বেশি পছন্দের। <Cite n={18} /> `ip route get ADDRESS` দেখায় kernel কোন route ব্যবহার করবে; এটি কোনো packet পাঠায় না। <Cite n={18} />
+Routing মানে প্রতিটি packet-এর জন্য next hop, অর্থাৎ পরের router, বেছে নেওয়া। Kernel destination address-কে তার routing table-এর সাথে মেলায়। Forwarding-এ longest match ব্যবহার হয়, তাই সবচেয়ে নির্দিষ্ট prefix জেতে। <Cite n={9} /> Prefix 0.0.0.0/0 হলো default route, আর `ip` এটিকে `default` হিসেবে লেখে। <Cite n={9} /> <Cite n={18} /> `ip route get ADDRESS` দেখায় kernel কোন route ব্যবহার করবে; এটি কোনো packet পাঠায় না। <Cite n={18} />
 
-Route type অনুযায়ী failure-এর চেহারা বদলায়। `blackhole` route নিঃশব্দে packet ফেলে দেয়। `unreachable` route packet ফেলে দেয় এবং একটি ICMP host unreachable message পাঠায়। <Cite n={18} /> Default-ভাবে Linux interface-গুলোর মধ্যে packet forward করে না, কারণ `net.ipv4.ip_forward`-এর মান 0। <Cite n={34} />
+**চেষ্টা করুন:** 127.0.0.1-এর route জিজ্ঞেস করুন। `local` type মানে destination এই host-এই আছে। <Cite n={18} />
 
-সাবধান: `ip route add`, `del`, `replace` এবং `flush` kernel-এর routing table বদলে দেয়। <Cite n={18} /> Tutorial-এর নিজের পরামর্শ: অন্য network থেকে SSH session-এ default route মুছে ফেললে session বন্ধ হয়ে remote access হারাতে পারেন। Route শুধু console-এ বদলান, অথবা test-এর জন্য বানানো একটি network namespace-এ। <Cite n={36} /> Application-কে দোষ দেওয়ার আগে server address দিয়ে `ip route get` চালান।
+```bash
+(
+  ip route get 127.0.0.1
+)
+# local 127.0.0.1 dev lo src 127.0.0.1 uid 1000
+#     cache <local>
+# Your uid (user ID) can differ.
+```
+
+<Callout type="danger" title="Route changes can cut your connection">
+
+`ip route add`, `del`, `replace` এবং `flush` kernel-এর routing table বদলে দেয়। <Cite n={18} /> Tutorial-এর নিজস্ব সতর্কতা: SSH-এ default route মুছে ফেললে remote access হারাতে পারেন।
+
+</Callout>
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: Application-কে দোষ দেওয়ার আগে server address দিয়ে `ip route get` চালান।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Route-এর gateway হলো পরের router, আর `via` তার নাম বলে। `proto` field বলে route-টি কে বসিয়েছে; `kernel` মানে kernel নিজে থেকে যোগ করেছে। কম `metric`-এর route বেশি পছন্দের। <Cite n={18} />
+- `blackhole` route নিঃশব্দে packet ফেলে দেয়। `unreachable` route packet ফেলে দেয় এবং একটি ICMP host unreachable message পাঠায়। <Cite n={18} />
+- Default-ভাবে Linux interface-গুলোর মধ্যে packet forward করে না, কারণ `net.ipv4.ip_forward`-এর মান 0। <Cite n={34} />
+- Tutorial-এর নিজস্ব পরামর্শ: Route শুধু console-এ বদলান, অথবা test-এর জন্য বানানো একটি network namespace-এ। <Cite n={36} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -346,60 +692,158 @@ Route type অনুযায়ী failure-এর চেহারা বদল�
 <Voices>
 <Technical>
 
-DHCP (Dynamic Host Configuration Protocol) gives a client an IP address and other settings. <Cite n={12} /> It lends the address for a lease, which is a limited time that the client can extend. <Cite n={12} /> The exchange has four steps. The client broadcasts DHCPDISCOVER on its local subnet. A server answers with DHCPOFFER. The client sends DHCPREQUEST for one offer. The server confirms with DHCPACK. <Cite n={12} />
+**Goal:** Find the routes that DHCP gave your host.
 
-The client renews the lease at time T1, which is half of the lease time by default. At T2, which is 0.875 of the lease time by default, it asks any server. <Cite n={12} />
-
-Linux has more than one DHCP client. `nmcli -f DHCP4 connection show NAME` prints the DHCP4 options of an active NetworkManager connection. <Cite n={31} /> `systemd-networkd` starts a client for a `.network` file with `DHCP=yes`. The default is `no`. <Cite n={32} /> Read their logs with `journalctl -u UNIT`. <Cite n={41} />
+DHCP (Dynamic Host Configuration Protocol) gives a client an IP address and other settings. <Cite n={12} /> It lends the address for a lease, a limited time that the client can extend. <Cite n={12} /> The `proto` field of a route says who installed it. `ip route show proto dhcp` lists only the routes with the tag `dhcp`. <Cite n={18} />
 
 ```bash
-nmcli -f DHCP4 connection show NAME       # NetworkManager hosts only; NAME from: nmcli connection show --active
-ip route show proto dhcp                  # routes with the tag proto dhcp
-ip -4 -br addr                            # addresses now in use
+ip -4 -br addr      # the addresses now in use
+```
+
+**Try it:** list the routes with the tag `proto dhcp`. The command only reads. No output means no DHCP routes.
+
+```bash
+(
+  ip route show proto dhcp
+)
+# default via 198.51.100.1 dev eth0 src 198.51.100.20 metric 600
+# Stand-ins: your addresses and interface name (eth0) differ.
 ```
 
 <Callout type="danger" title="A new lease can change your address">
 
-A command that activates a connection, such as `nmcli connection up`, can start a DHCP exchange. <Cite n={31} /> Tutorial's own warning: a restart of the network service can do the same. If the address changes, an SSH session to the old address drops. Do not run these commands over SSH without a second way to reach the host.
+`nmcli connection up` can start a DHCP exchange. <Cite n={31} /> Tutorial's own warning: if the address changes, an SSH session to the old address drops.
 
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: never hard-code a DHCP address in a test. Read the address at run time, or use a name. Short leases and changes on the DHCP server can alter addresses between runs.
+Tutorial's own advice: never hard-code a DHCP address in a test. Read the address at run time, or use a name.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+The exchange has four steps:
+
+| Step | Sender | What it does |
+|---|---|---|
+| DHCPDISCOVER | Client | Broadcasts on its local subnet |
+| DHCPOFFER | Server | Offers an address |
+| DHCPREQUEST | Client | Asks for one offer |
+| DHCPACK | Server | Confirms |
+
+<Cite n={12} />
+
+- The client renews the lease at time T1, which is half of the lease time by default. At T2, which is 0.875 of the lease time by default, it asks any server. <Cite n={12} />
+- `nmcli -f DHCP4 connection show NAME` prints the DHCP4 options of an active NetworkManager connection. <Cite n={31} />
+- `systemd-networkd` starts a client for a `.network` file with `DHCP=yes`. The default is `no`. <Cite n={32} />
+- Read the logs of a client with `journalctl -u UNIT`. <Cite n={41} />
+
+```bash
+nmcli -f DHCP4 connection show NAME   # NetworkManager hosts only; NAME from: nmcli connection show --active
+```
+
+Tutorial's own warning: a restart of the network service can also start a DHCP exchange. Do not run these commands over SSH without a second way to reach the host. Short leases and changes on the DHCP server can alter addresses between runs.
+
+</details>
 
 </Technical>
 <Layman>
 
-DHCP gives a client an IP address and other settings. <Cite n={12} /> It lends the address for a limited time, called a lease. The client can extend the lease. <Cite n={12} /> The exchange has four steps: <Cite n={12} />
+**Goal:** Find the routes that DHCP gave your computer.
+
+DHCP gives a client an IP address and other settings. <Cite n={12} /> It lends the address for a limited time, called a lease. The client can extend the lease. <Cite n={12} /> The `proto` field of a route says who installed it. `ip route show proto dhcp` lists only the routes with the tag `dhcp`. <Cite n={18} />
+
+**Try it:** list the routes with the tag `proto dhcp`. The command only reads. No output means no DHCP routes.
+
+```bash
+(
+  ip route show proto dhcp
+)
+# default via 198.51.100.1 dev eth0 src 198.51.100.20 metric 600
+# Stand-ins: your addresses and interface name (eth0) differ.
+```
+
+<Callout type="danger" title="A new lease can change your address">
+
+A command such as `nmcli connection up` can start a DHCP exchange. <Cite n={31} /> Tutorial's own warning: if the address changes, an SSH session to the old address stops.
+
+</Callout>
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: never hard-code a DHCP address in a test. Read the address when the test runs, or use a name.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+The exchange has four steps:
 
 1. The client broadcasts DHCPDISCOVER on its local subnet.
 2. A server answers with DHCPOFFER.
 3. The client sends DHCPREQUEST for one offer.
 4. The server confirms with DHCPACK.
 
-By default, the client renews the lease at half of the lease time (T1). At 0.875 of the lease time (T2), it asks any server. <Cite n={12} />
+<Cite n={12} />
 
-Linux has more than one DHCP client. `nmcli -f DHCP4 connection show NAME` shows the DHCP4 options of an active NetworkManager connection. <Cite n={31} /> `systemd-networkd` starts a client for a `.network` file with `DHCP=yes`. <Cite n={32} /> Read the logs with `journalctl -u UNIT`. <Cite n={41} />
+- By default, the client renews the lease at half of the lease time (T1). At 0.875 of the lease time (T2), it asks any server. <Cite n={12} />
+- `nmcli -f DHCP4 connection show NAME` shows the DHCP4 options of an active NetworkManager connection. <Cite n={31} />
+- `systemd-networkd` starts a client for a `.network` file with `DHCP=yes`. <Cite n={32} /> Read the logs with `journalctl -u UNIT`. <Cite n={41} />
 
-Be careful: a command such as `nmcli connection up` can start a DHCP exchange. <Cite n={31} /> Tutorial's own warning: if the address changes, an SSH session to the old address stops.
-
-Tutorial's own advice: never hard-code a DHCP address in a test. Read the address when the test runs, or use a name.
+</details>
 
 </Layman>
 <Bangla>
 
-DHCP (Dynamic Host Configuration Protocol) একটি client-কে একটি IP address ও অন্যান্য setting দেয়। <Cite n={12} /> এটি address-টি একটি lease-এ ধার দেয়; lease হলো একটি সীমিত সময়, যা client বাড়াতে পারে। <Cite n={12} /> আদান-প্রদানে চারটি ধাপ আছে: client তার local subnet-এ DHCPDISCOVER broadcast করে; একটি server DHCPOFFER দিয়ে উত্তর দেয়; client একটি offer-এর জন্য DHCPREQUEST পাঠায়; server DHCPACK দিয়ে নিশ্চিত করে। <Cite n={12} />
+**লক্ষ্য:** DHCP আপনার host-কে কোন route দিয়েছে, তা খুঁজে বের করুন।
 
-Default-ভাবে client lease time-এর অর্ধেক সময়ে (T1) lease renew করে। Lease time-এর 0.875 অংশে (T2) এটি যেকোনো server-কে জিজ্ঞেস করে। <Cite n={12} />
+DHCP (Dynamic Host Configuration Protocol) একটি client-কে একটি IP address ও অন্যান্য setting দেয়। <Cite n={12} /> এটি address-টি একটি lease-এ ধার দেয়; lease হলো একটি সীমিত সময়, যা client বাড়াতে পারে। <Cite n={12} /> Route-এর `proto` field বলে route-টি কে বসিয়েছে। `ip route show proto dhcp` শুধু `dhcp` tag-ওয়ালা route-গুলো দেখায়। <Cite n={18} />
 
-Linux-এ একাধিক DHCP client আছে। `nmcli -f DHCP4 connection show NAME` একটি active NetworkManager connection-এর DHCP4 option দেখায়। <Cite n={31} /> `systemd-networkd` এমন `.network` file-এর জন্য client চালু করে, যেখানে `DHCP=yes` আছে; default হলো `no`। <Cite n={32} /> এদের log পড়ুন `journalctl -u UNIT` দিয়ে। <Cite n={41} />
+**চেষ্টা করুন:** `proto dhcp` tag-ওয়ালা route-গুলোর list দেখুন। Command-টি শুধু পড়ে। কোনো output না এলে কোনো DHCP route নেই।
 
-সাবধান: `nmcli connection up`-এর মতো command একটি DHCP exchange শুরু করতে পারে। <Cite n={31} /> Tutorial-এর নিজের সতর্কতা: network service restart করলেও একই হতে পারে। Address বদলে গেলে পুরনো address-এর SSH session কেটে যায়, তাই host-এ পৌঁছানোর দ্বিতীয় কোনো উপায় ছাড়া SSH-এ এসব command চালাবেন না।
+```bash
+(
+  ip route show proto dhcp
+)
+# default via 198.51.100.1 dev eth0 src 198.51.100.20 metric 600
+# Stand-ins: your addresses and interface name (eth0) differ.
+```
 
-Tutorial-এর নিজের পরামর্শ: test-এ কখনো DHCP address hard-code করবেন না। Run time-এ address পড়ুন, অথবা একটি name ব্যবহার করুন।
+<Callout type="danger" title="A new lease can change your address">
+
+`nmcli connection up`-এর মতো command একটি DHCP exchange শুরু করতে পারে। <Cite n={31} /> Tutorial-এর নিজস্ব সতর্কতা: Address বদলে গেলে পুরনো address-এর SSH session কেটে যায়।
+
+</Callout>
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: Test-এ কখনো DHCP address hard-code করবেন না। Run time-এ address পড়ুন, অথবা একটি name ব্যবহার করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+আদান-প্রদানে চারটি ধাপ আছে:
+
+1. Client তার local subnet-এ DHCPDISCOVER broadcast করে।
+2. একটি server DHCPOFFER দিয়ে উত্তর দেয়।
+3. Client একটি offer-এর জন্য DHCPREQUEST পাঠায়।
+4. Server DHCPACK দিয়ে নিশ্চিত করে।
+
+<Cite n={12} />
+
+- Default-ভাবে client lease time-এর অর্ধেক সময়ে (T1) lease renew করে। Lease time-এর 0.875 অংশে (T2) এটি যেকোনো server-কে জিজ্ঞেস করে। <Cite n={12} />
+- `nmcli -f DHCP4 connection show NAME` একটি active NetworkManager connection-এর DHCP4 option দেখায়। <Cite n={31} />
+- `systemd-networkd` এমন `.network` file-এর জন্য client চালু করে, যেখানে `DHCP=yes` আছে; default হলো `no`। <Cite n={32} /> এদের log পড়ুন `journalctl -u UNIT` দিয়ে। <Cite n={41} />
+
+Tutorial-এর নিজস্ব সতর্কতা: network service restart করলেও একই হতে পারে, তাই host-এ পৌঁছানোর দ্বিতীয় কোনো উপায় ছাড়া SSH-এ এসব command চালাবেন না।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -409,52 +853,115 @@ Tutorial-এর নিজের পরামর্শ: test-এ কখনো DHC
 <Voices>
 <Technical>
 
-DNS (Domain Name System) maps names to addresses. Name servers hold the data. A resolver is the library code that a program uses to ask them. <Cite n={13} /> <Cite n={26} /> Each record has a TTL, the time that a cache may keep it. <Cite n={13} /> <Cite n={14} />
+**Goal:** See the answer that a normal program gets for a name, and the DNS server that it asks.
 
-Programs that call C library functions such as `gethostbyname(3)` use the Name Service Switch. The `hosts:` line of `/etc/nsswitch.conf` lists the sources in the order of use, for example `files` and then `dns`. <Cite n={25} /> `files` means `/etc/hosts`, which holds an IP address, a name, and aliases on each line. <Cite n={24} /> `getent hosts NAME` shows what a normal program gets. <Cite n={29} />
-
-`/etc/resolv.conf` tells the resolver which servers to ask. It allows up to three `nameserver` lines, a `search` list of domain suffixes, and `options`, for example `timeout:n`, which defaults to 5 s. <Cite n={26} /> On a systemd-resolved host, the file can point at the local stub 127.0.0.53. A stub is a small local DNS service that forwards queries. `resolvectl status` shows the real servers. <Cite n={27} /> <Cite n={28} /> A network manager may rewrite the file, so do not edit it by hand. <Cite n={40} />
-
-`dig` asks DNS servers directly. It uses the servers of `resolv.conf` unless you name one, and it uses no search list unless you add `+search`. <Cite n={33} />
+DNS (Domain Name System) maps names to addresses. Name servers hold the data. A resolver is the library code that a program uses to ask them. <Cite n={13} /> <Cite n={26} /> Programs that call C library functions such as `gethostbyname(3)` use the Name Service Switch. The `hosts:` line of `/etc/nsswitch.conf` lists the sources in the order of use, for example `files` and then `dns`. <Cite n={25} /> `files` means `/etc/hosts`. <Cite n={24} /> `getent hosts NAME` shows what a normal program gets. <Cite n={29} /> `/etc/resolv.conf` tells the resolver which servers to ask. <Cite n={26} />
 
 ```bash
-getent hosts localhost            # the answer that a normal program gets
 grep '^hosts:' /etc/nsswitch.conf
-grep -v '^#' /etc/resolv.conf     # nameserver, search, options
-resolvectl status                 # systemd-resolved hosts only
-resolvectl query localhost
-dig +short example.com A          # asks your resolver; needs network; A = the IPv4 address record
+```
+
+**Try it:** look up `localhost` like a normal program, then read the DNS server line. Both commands only read.
+
+```bash
+(
+  getent hosts localhost                # 127.0.0.1       localhost
+  grep '^nameserver' /etc/resolv.conf   # nameserver 127.0.0.53
+)
+# Your output can differ. 127.0.0.53 is the local stub of systemd-resolved.
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: when a name fails in a test, compare `getent hosts NAME` with `dig NAME`. If only `getent` works, read `/etc/hosts` and `nsswitch.conf`. Before a planned address change, lower the TTL of the record. Then caches drop the old address sooner. <Cite n={13} />
+Tutorial's own advice: when a name fails in a test, compare `getent hosts NAME` with `dig NAME`. If only `getent` works, read `/etc/hosts`.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Each record has a TTL, the time that a cache may keep it. <Cite n={13} /> <Cite n={14} /> Tutorial's own advice: before a planned address change, lower the TTL of the record. Then caches drop the old address sooner. <Cite n={13} />
+- `/etc/hosts` holds an IP address, a name, and aliases on each line. <Cite n={24} />
+- `/etc/resolv.conf` allows up to three `nameserver` lines, a `search` list of domain suffixes, and `options`, for example `timeout:n`, which defaults to 5 s. <Cite n={26} />
+- On a systemd-resolved host, the file can point at the local stub 127.0.0.53. A stub is a small local DNS service that forwards queries. `resolvectl status` shows the real servers. <Cite n={27} /> <Cite n={28} />
+- A network manager may rewrite the file, so do not edit it by hand. <Cite n={40} />
+- `dig` asks DNS servers directly. It uses the servers of `resolv.conf` unless you name one, and it uses no search list unless you add `+search`. <Cite n={33} />
+
+```bash
+resolvectl status                 # systemd-resolved hosts only
+resolvectl query localhost
+dig +short example.com A          # needs a network; A = the IPv4 address record
+```
+
+If only `getent` works, read `nsswitch.conf` too.
+
+</details>
 
 </Technical>
 <Layman>
 
-DNS maps names to addresses. Name servers keep the data. A resolver is the library code that a program uses to ask them. <Cite n={13} /> <Cite n={26} /> Each record has a TTL. The TTL is the time that a cache can keep the record. <Cite n={13} /> <Cite n={14} />
+**Goal:** See the answer that a normal program gets for a name, and the DNS server that it asks.
 
-Programs that call C library functions such as `gethostbyname(3)` use the Name Service Switch. The `hosts:` line of `/etc/nsswitch.conf` gives the order of the sources, for example `files` and then `dns`. <Cite n={25} /> `files` means the file `/etc/hosts`. <Cite n={24} /> `getent hosts NAME` shows the answer that a normal program gets. <Cite n={29} />
+DNS maps names to addresses. Name servers keep the data. A resolver is the library code that a program uses to ask them. <Cite n={13} /> <Cite n={26} /> Programs that call C library functions such as `gethostbyname(3)` use the Name Service Switch. The `hosts:` line of `/etc/nsswitch.conf` gives the order of the sources, for example `files` and then `dns`. <Cite n={25} /> `files` means the file `/etc/hosts`. <Cite n={24} /> `getent hosts NAME` shows the answer that a normal program gets. <Cite n={29} /> `/etc/resolv.conf` tells the resolver which servers to ask. <Cite n={26} />
 
-`/etc/resolv.conf` tells the resolver which servers to ask. <Cite n={26} /> On a systemd-resolved host, this file can point to a small local DNS service at 127.0.0.53. `resolvectl status` shows the real servers. <Cite n={27} /> <Cite n={28} /> A network manager can change this file, so do not edit it by hand. <Cite n={40} /> `dig` asks DNS servers directly. <Cite n={33} />
+**Try it:** look up `localhost` like a normal program, then read the DNS server line. Both commands only read.
 
-Tutorial's own advice: when a name fails in a test, compare `getent hosts NAME` with `dig NAME`. If only `getent` works, read `/etc/hosts` and `nsswitch.conf`. Before a planned address change, make the TTL of the record lower. Then caches drop the old address sooner. <Cite n={13} />
+```bash
+(
+  getent hosts localhost                # 127.0.0.1       localhost
+  grep '^nameserver' /etc/resolv.conf   # nameserver 127.0.0.53
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: when a name fails in a test, compare `getent hosts NAME` with `dig NAME`. If only `getent` works, read `/etc/hosts`.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Each record has a TTL. The TTL is the time that a cache can keep the record. <Cite n={13} /> <Cite n={14} /> Tutorial's own advice: before a planned address change, make the TTL lower. Then caches drop the old address sooner. <Cite n={13} />
+- On a systemd-resolved host, `/etc/resolv.conf` can point to a small local DNS service at 127.0.0.53. `resolvectl status` shows the real servers. <Cite n={27} /> <Cite n={28} />
+- A network manager can change this file, so do not edit it by hand. <Cite n={40} />
+- `dig` asks DNS servers directly. <Cite n={33} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-DNS (Domain Name System) name-কে address-এ রূপান্তর করে। Name server-গুলো data রাখে। Resolver হলো library code, যা দিয়ে একটি program তাদের জিজ্ঞেস করে। <Cite n={13} /> <Cite n={26} /> প্রতিটি record-এর একটি TTL থাকে; এটি হলো একটি cache record-টি কতক্ষণ রাখতে পারবে, সেই সময়। <Cite n={13} /> <Cite n={14} />
+**লক্ষ্য:** একটি name-এর জন্য সাধারণ program কী উত্তর পায়, আর সে কোন DNS server-কে জিজ্ঞেস করে, তা দেখুন।
 
-যে program `gethostbyname(3)`-এর মতো C library function ব্যবহার করে, সেটি Name Service Switch ব্যবহার করে। `/etc/nsswitch.conf`-এর `hosts:` line source-গুলোর ক্রম ঠিক করে, যেমন আগে `files`, তারপর `dns`। <Cite n={25} /> `files` মানে `/etc/hosts`, যার প্রতিটি line-এ একটি IP address, একটি name আর alias থাকে। <Cite n={24} /> `getent hosts NAME` দেখায় একটি সাধারণ program কী উত্তর পায়। <Cite n={29} />
+DNS (Domain Name System) name-কে address-এ রূপান্তর করে। Name server-গুলো data রাখে। Resolver হলো library code, যা দিয়ে একটি program তাদের জিজ্ঞেস করে। <Cite n={13} /> <Cite n={26} /> যে program `gethostbyname(3)`-এর মতো C library function ব্যবহার করে, সেটি Name Service Switch ব্যবহার করে। `/etc/nsswitch.conf`-এর `hosts:` line source-গুলোর ক্রম ঠিক করে, যেমন আগে `files`, তারপর `dns`। <Cite n={25} /> `files` মানে `/etc/hosts`। <Cite n={24} /> `getent hosts NAME` দেখায় একটি সাধারণ program কী উত্তর পায়। <Cite n={29} /> `/etc/resolv.conf` resolver-কে বলে কোন server-গুলোকে জিজ্ঞেস করতে হবে। <Cite n={26} />
 
-`/etc/resolv.conf` resolver-কে বলে কোন server-গুলোকে জিজ্ঞেস করতে হবে। এতে সর্বোচ্চ তিনটি `nameserver` line, একটি `search` list আর `options` থাকতে পারে; যেমন `timeout:n`, যার default 5 s। <Cite n={26} /> systemd-resolved host-এ file-টি local stub 127.0.0.53-এর দিকে নির্দেশ করতে পারে; stub হলো একটি ছোট local DNS service, যা query forward করে। আসল server দেখতে `resolvectl status` চালান। <Cite n={27} /> <Cite n={28} /> একটি network manager file-টি নতুন করে লিখতে পারে, তাই হাতে edit করবেন না। <Cite n={40} />
+**চেষ্টা করুন:** একটি সাধারণ program-এর মতো `localhost` খুঁজুন, তারপর DNS server-এর line পড়ুন। দুটি command-ই শুধু পড়ে।
 
-`dig` সরাসরি DNS server-কে জিজ্ঞেস করে। আপনি server-এর নাম না দিলে এটি `resolv.conf`-এর server ব্যবহার করে, আর `+search` না দিলে কোনো search list ব্যবহার করে না। <Cite n={33} />
+```bash
+(
+  getent hosts localhost                # 127.0.0.1       localhost
+  grep '^nameserver' /etc/resolv.conf   # nameserver 127.0.0.53
+)
+```
 
-Tutorial-এর নিজের পরামর্শ: test-এ কোনো name fail করলে `getent hosts NAME` আর `dig NAME` মিলিয়ে দেখুন। শুধু `getent` কাজ করলে `/etc/hosts` আর `nsswitch.conf` পড়ুন। পরিকল্পিত address বদলের আগে record-এর TTL কমিয়ে দিন, তাহলে cache-গুলো পুরনো address তাড়াতাড়ি ছেড়ে দেবে। <Cite n={13} />
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: Test-এ name fail করলে `getent hosts NAME` আর `dig NAME` মিলিয়ে দেখুন। শুধু `getent` কাজ করলে `/etc/hosts` পড়ুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- প্রতিটি record-এর একটি TTL থাকে; এটি হলো একটি cache record-টি কতক্ষণ রাখতে পারবে, সেই সময়। <Cite n={13} /> <Cite n={14} /> Tutorial-এর নিজস্ব পরামর্শ: পরিকল্পিত address বদলের আগে record-এর TTL কমিয়ে দিন, তাহলে cache-গুলো পুরনো address তাড়াতাড়ি ছেড়ে দেবে। <Cite n={13} />
+- `/etc/hosts`-এর প্রতিটি line-এ একটি IP address, একটি name আর alias থাকে। <Cite n={24} />
+- `/etc/resolv.conf`-এ সর্বোচ্চ তিনটি `nameserver` line, একটি `search` list আর `options` থাকতে পারে; যেমন `timeout:n`, যার default 5 s। <Cite n={26} />
+- systemd-resolved host-এ file-টি local stub 127.0.0.53-এর দিকে নির্দেশ করতে পারে; stub হলো একটি ছোট local DNS service, যা query forward করে। আসল server দেখতে `resolvectl status` চালান। <Cite n={27} /> <Cite n={28} />
+- একটি network manager file-টি নতুন করে লিখতে পারে, তাই হাতে edit করবেন না। <Cite n={40} />
+- `dig` সরাসরি DNS server-কে জিজ্ঞেস করে। আপনি server-এর নাম না দিলে এটি `resolv.conf`-এর server ব্যবহার করে, আর `+search` না দিলে কোনো search list ব্যবহার করে না। <Cite n={33} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -464,55 +971,108 @@ Tutorial-এর নিজের পরামর্শ: test-এ কোনো nam
 <Voices>
 <Technical>
 
-ICMP (Internet Control Message Protocol) carries error and control messages for IP. <Cite n={15} /> Its messages travel inside IP datagrams, and the first octet is the Type. <Cite n={15} /> ICMP does not make IP reliable. A datagram can still vanish without a report. <Cite n={15} />
+**Goal:** Read the kernel settings that control the ICMP answers of your host.
 
-Four messages matter most. Echo request is type 8 and echo reply is type 0. Destination unreachable is type 3. Its codes include 0 for net, 1 for host, 3 for port, and 4 for fragmentation needed with DF (the Don't Fragment flag) set. Time exceeded is type 11 with code 0, which means that the TTL ran out. <Cite n={15} /> TTL (time to live) is a counter in the IP header, not the DNS TTL. Each router lowers it, and the packet dies at zero. <Cite n={15} />
-
-The Linux kernel answers echo requests itself, and it limits the rate of ICMP error packets. <Cite n={21} /> The sysctl `icmp_echo_ignore_all` stops the answers. <Cite n={34} />
-
-A closed TCP port answers with a reset, a message that refuses the connection. <Cite n={4} /> A closed UDP port may bring back an ICMP port unreachable message. <Cite n={15} /> If packets vanish without a reply, TCP retries, and the program finally gets `ETIMEDOUT`. <Cite n={23} />
+ICMP (Internet Control Message Protocol) carries error and control messages for IP. <Cite n={15} /> Echo request is type 8 and echo reply is type 0. Destination unreachable is type 3. Time exceeded is type 11 with code 0, which means that the TTL ran out. <Cite n={15} /> This TTL (time to live) is a counter in the IP header, not the DNS TTL. Each router lowers it. <Cite n={15} /> The Linux kernel answers echo requests itself, and it limits the rate of ICMP error packets. <Cite n={21} />
 
 ```bash
-ping -c 1 127.0.0.1                          # one echo request to your own host
-cat /proc/sys/net/ipv4/icmp_echo_ignore_all  # 0 means that the kernel answers
-cat /proc/sys/net/ipv4/icmp_ratelimit        # minimum gap between limited ICMP replies, in ms
+ping -c 1 127.0.0.1      # one echo request to your own host
+```
+
+**Try it:** read two sysctls, the kernel settings in `/proc/sys`. <Cite n={34} />
+
+```bash
+(
+  cat /proc/sys/net/ipv4/icmp_echo_ignore_all   # 0: the kernel answers echo requests
+  cat /proc/sys/net/ipv4/icmp_ratelimit         # 1000: the minimum gap between limited ICMP replies, in ms
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: an echo reply proves only that IP works up to the host. It does not prove that your service is up, so test the TCP port too. Do not drop all ICMP in a test firewall. The fragmentation needed message supports path MTU discovery, which finds the largest packet size of a path. <Cite n={21} />
+Tutorial's own advice: an echo reply proves only that IP works up to the host. Test the TCP port of your service too.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- ICMP messages travel inside IP datagrams, and the first octet is the Type. ICMP does not make IP reliable. A datagram can still vanish without a report. <Cite n={15} />
+- Codes of destination unreachable include 0 for net, 1 for host, 3 for port, and 4 for fragmentation needed with DF (the Don't Fragment flag) set. A packet dies when its TTL reaches zero. <Cite n={15} />
+- The sysctl `icmp_echo_ignore_all` stops the echo answers. <Cite n={34} />
+- A closed TCP port answers with a reset, a message that refuses the connection. <Cite n={4} /> A closed UDP port may bring back an ICMP port unreachable message. <Cite n={15} />
+- If packets vanish without a reply, TCP retries, and the program finally gets `ETIMEDOUT`. <Cite n={23} />
+
+Tutorial's own advice: do not drop all ICMP in a test firewall. The fragmentation needed message supports path MTU discovery, which finds the largest packet size of a path. <Cite n={21} />
+
+</details>
 
 </Technical>
 <Layman>
 
-ICMP carries error messages and control messages for IP. <Cite n={15} />
+**Goal:** Read the kernel settings that control the ICMP answers of your computer.
 
-These messages are the most important: <Cite n={15} />
+ICMP carries error messages and control messages for IP. <Cite n={15} /> Echo request is type 8 and echo reply is type 0. Destination unreachable is type 3. Time exceeded is type 11 with code 0. It means that the TTL ran out. <Cite n={15} /> Here, the TTL is a counter in the IP header. It is not the DNS TTL. Each router makes it lower. <Cite n={15} /> The Linux kernel answers echo requests itself, and it limits the rate of ICMP error packets. <Cite n={21} />
 
-- Echo request (type 8) and echo reply (type 0).
-- Destination unreachable (type 3). Code 0 is for net, 1 for host, 3 for port, and 4 for "fragmentation needed" with the DF (Don't Fragment) flag set.
-- Time exceeded (type 11, code 0). This means that the TTL ran out.
+**Try it:** read two sysctls, the kernel settings in `/proc/sys`. <Cite n={34} />
 
-Here, the TTL is a counter in the IP header. It is not the DNS TTL. Each router makes it lower, and the packet dies at zero. <Cite n={15} />
+```bash
+(
+  cat /proc/sys/net/ipv4/icmp_echo_ignore_all   # 0: the kernel answers echo requests
+  cat /proc/sys/net/ipv4/icmp_ratelimit         # 1000: the minimum gap between limited ICMP replies, in ms
+)
+```
 
-The Linux kernel answers echo requests itself. <Cite n={21} /> The sysctl `icmp_echo_ignore_all` stops these answers. <Cite n={34} /> A closed TCP port answers with a reset, which refuses the connection. <Cite n={4} /> A closed UDP port can send back an ICMP port unreachable message. <Cite n={15} />
+<Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: an echo reply shows only that IP works up to the host. It does not show that your service is up, so test the TCP port too. Do not drop all ICMP in a test firewall.
+Tutorial's own advice: an echo reply shows only that IP works up to the host. Test the TCP port of your service too.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Destination unreachable: code 0 is for net, 1 for host, 3 for port, and 4 for "fragmentation needed" with the DF (Don't Fragment) flag set. The packet dies when the TTL reaches zero. <Cite n={15} />
+- The sysctl `icmp_echo_ignore_all` stops the echo answers. <Cite n={34} />
+- A closed TCP port answers with a reset, which refuses the connection. <Cite n={4} /> A closed UDP port can send back an ICMP port unreachable message. <Cite n={15} />
+- Tutorial's own advice: do not drop all ICMP in a test firewall.
+
+</details>
 
 </Layman>
 <Bangla>
 
-ICMP (Internet Control Message Protocol) IP-এর জন্য error ও control message বহন করে। <Cite n={15} /> এর message-গুলো IP datagram-এর ভেতরে যায়, আর প্রথম octet হলো Type। ICMP, IP-কে নির্ভরযোগ্য করে না; কোনো report ছাড়াই একটি datagram হারিয়ে যেতে পারে। <Cite n={15} />
+**লক্ষ্য:** আপনার host-এর ICMP উত্তর নিয়ন্ত্রণ করে যে kernel setting, তা পড়ুন।
 
-চারটি message সবচেয়ে গুরুত্বপূর্ণ। Echo request হলো type 8, আর echo reply হলো type 0। Destination unreachable হলো type 3; এর code-এর মধ্যে আছে net-এর জন্য 0, host-এর জন্য 1, port-এর জন্য 3, আর DF (Don't Fragment) flag set থাকা অবস্থায় fragmentation needed-এর জন্য 4। Time exceeded হলো type 11, code 0, যার মানে TTL শেষ হয়ে গেছে। <Cite n={15} /> এখানে TTL (time to live) হলো IP header-এর একটি counter, DNS TTL নয়। প্রতিটি router এটি কমায়, আর শূন্যে পৌঁছালে packet-টি বাতিল হয়। <Cite n={15} />
+ICMP (Internet Control Message Protocol) IP-এর জন্য error ও control message বহন করে। <Cite n={15} /> Echo request হলো type 8, আর echo reply হলো type 0। Destination unreachable হলো type 3। Time exceeded হলো type 11, code 0, যার মানে TTL শেষ হয়ে গেছে। <Cite n={15} /> এখানে TTL (time to live) হলো IP header-এর একটি counter, DNS TTL নয়। প্রতিটি router এটি কমায়। <Cite n={15} /> Linux kernel নিজেই echo request-এর উত্তর দেয় এবং ICMP error packet-এর rate সীমিত রাখে। <Cite n={21} />
 
-Linux kernel নিজেই echo request-এর উত্তর দেয় এবং ICMP error packet-এর rate সীমিত রাখে। <Cite n={21} /> Sysctl `icmp_echo_ignore_all` এই উত্তর বন্ধ করে। <Cite n={34} />
+**চেষ্টা করুন:** দুটি sysctl পড়ুন, অর্থাৎ `/proc/sys`-এর kernel setting। <Cite n={34} />
 
-বন্ধ TCP port একটি reset দিয়ে উত্তর দেয়, যা connection প্রত্যাখ্যান করে। <Cite n={4} /> বন্ধ UDP port একটি ICMP port unreachable message ফেরত পাঠাতে পারে। <Cite n={15} /> কোনো reply ছাড়া packet হারিয়ে গেলে TCP আবার চেষ্টা করে, আর শেষে program `ETIMEDOUT` পায়। <Cite n={23} />
+```bash
+(
+  cat /proc/sys/net/ipv4/icmp_echo_ignore_all   # 0: the kernel answers echo requests
+  cat /proc/sys/net/ipv4/icmp_ratelimit         # 1000: the minimum gap between limited ICMP replies, in ms
+)
+```
 
-Tutorial-এর নিজের পরামর্শ: echo reply শুধু প্রমাণ করে যে host পর্যন্ত IP কাজ করছে; আপনার service চালু আছে কি না, তা প্রমাণ করে না, তাই TCP port-ও test করুন। Test firewall-এ সব ICMP drop করবেন না। Fragmentation needed message path MTU discovery-তে সাহায্য করে, যা একটি path-এর সবচেয়ে বড় packet size খুঁজে বের করে। <Cite n={21} />
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: Echo reply শুধু প্রমাণ করে যে host পর্যন্ত IP কাজ করছে। আপনার service-এর TCP port-ও test করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- ICMP message-গুলো IP datagram-এর ভেতরে যায়, আর প্রথম octet হলো Type। ICMP, IP-কে নির্ভরযোগ্য করে না; কোনো report ছাড়াই একটি datagram হারিয়ে যেতে পারে। <Cite n={15} />
+- Destination unreachable-এর code-এর মধ্যে আছে net-এর জন্য 0, host-এর জন্য 1, port-এর জন্য 3, আর DF (Don't Fragment) flag set থাকা অবস্থায় fragmentation needed-এর জন্য 4। TTL শূন্যে পৌঁছালে packet-টি বাতিল হয়। <Cite n={15} />
+- Sysctl `icmp_echo_ignore_all` echo উত্তর বন্ধ করে। <Cite n={34} />
+- বন্ধ TCP port একটি reset দিয়ে উত্তর দেয়, যা connection প্রত্যাখ্যান করে। <Cite n={4} /> বন্ধ UDP port একটি ICMP port unreachable message ফেরত পাঠাতে পারে। <Cite n={15} />
+- কোনো reply ছাড়া packet হারিয়ে গেলে TCP আবার চেষ্টা করে, আর শেষে program `ETIMEDOUT` পায়। <Cite n={23} />
+
+Tutorial-এর নিজস্ব পরামর্শ: Test firewall-এ সব ICMP drop করবেন না। Fragmentation needed message path MTU discovery-তে সাহায্য করে, যা একটি path-এর সবচেয়ে বড় packet size খুঁজে বের করে। <Cite n={21} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -522,7 +1082,40 @@ Tutorial-এর নিজের পরামর্শ: echo reply শুধু �
 <Voices>
 <Technical>
 
-`ping` sends ICMP echo requests and waits for echo replies. <Cite n={42} /> An echo request is a small test message that asks a host to answer. Each reply line shows the sequence number, the IP TTL (not the DNS TTL), and the round-trip time. That is the time of a request and its reply. The summary shows the packet loss and the minimum, average, maximum, and deviation of the round-trip time. <Cite n={42} /> This page describes the iputils `ping` of Linux. <Cite n={42} />
+**Goal:** Check that a host answers, and read the result from the exit status.
+
+`ping` sends ICMP echo requests and waits for echo replies. <Cite n={42} /> Each reply line shows the sequence number, the IP TTL (not the DNS TTL), and the round-trip time, the time of a request and its reply. The summary shows the packet loss. <Cite n={42} /> The exit status is the number that a command returns. It is 0 if a reply came, 1 if no reply came, and 2 for other errors. <Cite n={42} />
+
+```bash
+ping -c 1 -W 2 HOST     # 1 request, wait 2 s for the reply
+```
+
+**Try it:** send 2 requests to your own host. `-c 2` stops after 2 requests, `-n` skips name lookups, and `$?` holds the exit status. <Cite n={42} />
+
+```bash
+(
+  ping -c 2 -n 127.0.0.1
+  echo "exit status: $?"
+)
+# PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+# 64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.053 ms
+# 64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.088 ms
+#
+# --- 127.0.0.1 ping statistics ---
+# 2 packets transmitted, 2 received, 0% packet loss, time 1006ms
+# rtt min/avg/max/mdev = 0.053/0.070/0.088/0.017 ms
+# exit status: 0
+# Your times differ.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: for a CI health check, test the TCP port of the service. Never use flood mode (`-f`) in a script.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
 
 | Option | Effect |
 |---|---|
@@ -534,42 +1127,92 @@ Tutorial-এর নিজের পরামর্শ: echo reply শুধু �
 
 <Cite n={42} />
 
-The exit status is the number that a command returns. It is 0 if a reply came, 1 if no reply came, and 2 for other errors. <Cite n={42} /> If the kernel does not let the user open an ICMP echo socket, `ping` needs `CAP_NET_RAW`. A locked-down container can fail for this reason. <Cite n={42} />
+- An echo request is a small test message that asks a host to answer. <Cite n={42} />
+- The summary shows the minimum, average, maximum, and deviation of the round-trip time. This page describes the iputils `ping` of Linux. <Cite n={42} />
+- If the kernel does not let the user open an ICMP echo socket, `ping` needs `CAP_NET_RAW`. A locked-down container can fail for this reason. <Cite n={42} />
+- The manual calls `ping` in automated scripts unwise, because it can load a network. <Cite n={42} />
 
-```bash
-ping -c 3 127.0.0.1              # 3 echo requests to your own host
-ping -c 1 -W 1 -n 127.0.0.1      # 1 request, wait 1 s, numeric output
-# Example reply line: 64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.042 ms
-echo $?                          # 0: reply, 1: no reply, 2: other error
-```
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: for a CI health check, test the TCP port of the service. If you use `ping`, run `ping -c 1 -W 2 HOST` and read the exit status. Never use flood mode (`-f`). The manual calls `ping` in automated scripts unwise, because it can load a network. <Cite n={42} />
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-`ping` sends ICMP echo requests and waits for echo replies. <Cite n={42} /> Each reply line shows the sequence number, the IP TTL, and the round-trip time. The round-trip time is the time of a request and its reply. At the end, `ping` shows the packet loss and the round-trip times. <Cite n={42} />
+**Goal:** Check that a host answers, and read the result from the exit status.
 
-Useful options: `-c N` stops after N requests. `-W S` waits S seconds for a reply. `-w S` stops after S seconds. `-n` does no reverse DNS lookups. <Cite n={42} />
+`ping` sends ICMP echo requests and waits for echo replies. <Cite n={42} /> Each reply line shows the sequence number, the IP TTL, and the round-trip time. The round-trip time is the time of a request and its reply. At the end, `ping` shows the packet loss. <Cite n={42} /> The exit status is 0 if a reply came, 1 if no reply came, and 2 for other errors. <Cite n={42} />
 
-The exit status is 0 if a reply came, 1 if no reply came, and 2 for other errors. <Cite n={42} /> If the kernel does not let the user open an ICMP echo socket, `ping` needs `CAP_NET_RAW`. For this reason, `ping` can fail in a locked-down container. <Cite n={42} />
+**Try it:** send 2 requests to your own host. `-c 2` stops after 2 requests, `-n` skips name lookups, and `$?` holds the exit status. <Cite n={42} />
 
-Tutorial's own advice: for a CI health check, test the TCP port of the service. If you use `ping`, run `ping -c 1 -W 2 HOST` and read the exit status. Never use flood mode (`-f`). The manual says that `ping` in automated scripts is unwise, because it can put load on a network. <Cite n={42} />
+```bash
+(
+  ping -c 2 -n 127.0.0.1
+  echo "exit status: $?"
+)
+# PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+# 64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.053 ms
+# 64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.088 ms
+#
+# --- 127.0.0.1 ping statistics ---
+# 2 packets transmitted, 2 received, 0% packet loss, time 1006ms
+# rtt min/avg/max/mdev = 0.053/0.070/0.088/0.017 ms
+# exit status: 0
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: for a CI health check, test the TCP port of the service. Never use flood mode (`-f`) in a script.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `-W S` waits S seconds for a reply. `-w S` stops after S seconds. <Cite n={42} />
+- If the kernel does not let the user open an ICMP echo socket, `ping` needs `CAP_NET_RAW`. For this reason, `ping` can fail in a locked-down container. <Cite n={42} />
+- The manual says that `ping` in automated scripts is unwise, because it can put load on a network. <Cite n={42} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-`ping` ICMP echo request পাঠায় এবং echo reply-এর জন্য অপেক্ষা করে। <Cite n={42} /> Echo request হলো একটি ছোট test message, যা একটি host-কে উত্তর দিতে বলে। প্রতিটি reply line-এ sequence number, IP TTL (DNS TTL নয়) এবং round-trip time দেখা যায়; round-trip time হলো একটি request আর তার reply-এর সময়। শেষের summary-তে packet loss এবং round-trip time-এর minimum, average, maximum ও deviation দেখা যায়। <Cite n={42} /> এই পেজ Linux-এর iputils `ping` নিয়ে কথা বলে। <Cite n={42} />
+**লক্ষ্য:** একটি host উত্তর দেয় কি না দেখুন, আর ফলাফল exit status থেকে পড়ুন।
 
-দরকারি option: `-c N` N-টি request-এর পরে থামে। `-W S` একটি reply-এর জন্য S second অপেক্ষা করে। `-w S` যা-ই ঘটুক, S second পরে বের হয়ে যায়। `-i S` request-গুলোর মাঝের second; 2 ms-এর কম হলে root লাগে। `-n` কোনো reverse DNS lookup করে না। <Cite n={42} />
+`ping` ICMP echo request পাঠায় এবং echo reply-এর জন্য অপেক্ষা করে। <Cite n={42} /> প্রতিটি reply line-এ sequence number, IP TTL (DNS TTL নয়) এবং round-trip time দেখা যায়; round-trip time হলো একটি request আর তার reply-এর সময়। Summary-তে packet loss দেখা যায়। <Cite n={42} /> Exit status হলো একটি command যে সংখ্যা ফেরত দেয়। Reply এলে এটি 0, কোনো reply না এলে 1, আর অন্য error-এ 2। <Cite n={42} />
 
-Exit status হলো একটি command যে সংখ্যা ফেরত দেয়। Reply এলে এটি 0, কোনো reply না এলে 1, আর অন্য error-এ 2। <Cite n={42} /> Kernel যদি user-কে ICMP echo socket খুলতে না দেয়, তাহলে `ping`-এর `CAP_NET_RAW` লাগে। এই কারণে একটি locked-down container-এ এটি fail করতে পারে। <Cite n={42} />
+**চেষ্টা করুন:** নিজের host-এ 2টি request পাঠান। `-c 2` 2টি request-এর পরে থামে, `-n` name lookup বাদ দেয়, আর `$?` exit status রাখে। <Cite n={42} />
 
-Tutorial-এর নিজের পরামর্শ: CI health check-এর জন্য service-এর TCP port test করুন। `ping` ব্যবহার করলে `ping -c 1 -W 2 HOST` চালান এবং exit status পড়ুন। কখনো flood mode (`-f`) ব্যবহার করবেন না। Manual বলে, automated script-এ `ping` ব্যবহার করা বুদ্ধিমানের কাজ নয়, কারণ এটি network-এ load তৈরি করতে পারে। <Cite n={42} />
+```bash
+(
+  ping -c 2 -n 127.0.0.1
+  echo "exit status: $?"
+)
+# PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+# 64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.053 ms
+# 64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.088 ms
+#
+# --- 127.0.0.1 ping statistics ---
+# 2 packets transmitted, 2 received, 0% packet loss, time 1006ms
+# rtt min/avg/max/mdev = 0.053/0.070/0.088/0.017 ms
+# exit status: 0
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: CI health check-এর জন্য service-এর TCP port test করুন। Script-এ কখনো flood mode (`-f`) ব্যবহার করবেন না।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Echo request হলো একটি ছোট test message, যা একটি host-কে উত্তর দিতে বলে। <Cite n={42} />
+- `-W S` একটি reply-এর জন্য S second অপেক্ষা করে। `-w S` যা-ই ঘটুক, S second পরে বের হয়ে যায়। `-i S` request-গুলোর মাঝের second; 2 ms-এর কম হলে root লাগে। <Cite n={42} />
+- Summary-তে round-trip time-এর minimum, average, maximum ও deviation দেখা যায়। এই পেজ Linux-এর iputils `ping` নিয়ে কথা বলে। <Cite n={42} />
+- Kernel যদি user-কে ICMP echo socket খুলতে না দেয়, তাহলে `ping`-এর `CAP_NET_RAW` লাগে। এই কারণে একটি locked-down container-এ এটি fail করতে পারে। <Cite n={42} />
+- Manual বলে, automated script-এ `ping` ব্যবহার করা বুদ্ধিমানের কাজ নয়, কারণ এটি network-এ load তৈরি করতে পারে। <Cite n={42} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -579,53 +1222,134 @@ Tutorial-এর নিজের পরামর্শ: CI health check-এর �
 <Voices>
 <Technical>
 
-`traceroute` lists the routers between your host and a destination. Each router on the path is a hop. It sends probe packets with an IP TTL that starts at 1 and grows by 1. A router that drops a probe because the TTL ended sends back an ICMP time exceeded message. <Cite n={43} /> By default, each hop gets 3 probes, and the limit is 30 hops. A `*` means that no reply came before the timeout. <Cite n={43} />
+**Goal:** Find the hop where a network path stops.
 
-The default probes are UDP datagrams to unlikely ports, starting at 33434. This method works without root. <Cite n={43} /> Firewalls often filter these probes. Then use `-I` for ICMP echo probes, or `-T` for TCP SYN probes (the first packet of a TCP connection) with `-p` for the port. <Cite n={43} /> The manual names no unprivileged mode for `-T`, so plan to use root. <Cite n={43} /> Option `-n` skips name lookups, and `-m` sets the maximum hops. <Cite n={43} /> A router can limit its ICMP replies, so a star in the middle is not always a fault. <Cite n={43} />
+`traceroute` lists the routers between your host and a destination. Each router on the path is a hop. It sends probe packets with an IP TTL that starts at 1 and grows by 1. A router that drops a probe because the TTL ended sends back an ICMP time exceeded message. <Cite n={43} /> A `*` means that no reply came before the timeout. <Cite n={43} />
 
 ```bash
-traceroute --help                                # the options of your version
-traceroute -n -m 15 test-host.example.com        # 15 hops at most; needs a network and your own host
-traceroute -n -T -p 443 test-host.example.com    # TCP SYN probes to port 443; plan to use root
-# Example output (documentation addresses):
-#  1  198.51.100.1  0.6 ms  0.5 ms  0.5 ms
-#  2  * * *
-#  3  203.0.113.9  4.1 ms  4.0 ms  4.2 ms
+traceroute -n HOST      # -n: no name lookups
 ```
 
-<Callout type="danger" title="Probe only your own hosts">
+**Try it:** trace 127.0.0.1, so no packet leaves the machine. It needs the `traceroute` package. `-m 3` sets the maximum hops. <Cite n={43} />
 
-A trace, and a port scanner such as `nmap`, send unrequested packets to other hosts. Tutorial's own warning: test only hosts that you own or may test.
-
-</Callout>
+```bash
+(
+  if command -v traceroute >/dev/null; then   # is traceroute installed?
+    traceroute -n -m 3 127.0.0.1              # loopback only
+  else
+    echo "traceroute is not installed"
+  fi
+)
+# On the machine that ran this block: traceroute is not installed
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: when a test cannot connect, run `traceroute -n HOST` on the CI runner and on your laptop. The last hop that answers shows where the path stops. If a firewall stops UDP and ICMP probes, try `-T -p PORT` as root. <Cite n={43} />
+A trace sends unrequested packets to other hosts. Tutorial's own warning: trace only hosts that you own or may test.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+| Option | Effect |
+|---|---|
+| (default) | UDP probes to unlikely ports, from 33434. Works without root. |
+| `-I` | ICMP echo probes |
+| `-T` with `-p PORT` | TCP SYN probes (the first packet of a TCP connection) to a port |
+| `-n` | No name lookups |
+| `-m N` | At most N hops. The default limit is 30. |
+
+<Cite n={43} />
+
+- By default, each hop gets 3 probes. <Cite n={43} />
+- Firewalls often filter the default probes. Then try `-I` or `-T`. <Cite n={43} /> The manual names no unprivileged mode for `-T`, so plan to use root. <Cite n={43} />
+- A router can limit its ICMP replies, so a star in the middle is not always a fault. <Cite n={43} />
+- A port scanner such as `nmap` also sends unrequested packets to other hosts.
+
+```bash
+traceroute -n -T -p 443 test-host.example.com   # TCP SYN probes to port 443; your own host; plan to use root
+```
+
+Tutorial's own advice: when a test cannot connect, run `traceroute -n HOST` on the CI runner and on your laptop. Use a host that you own. The last hop that answers shows where the path stops.
+
+</details>
 
 </Technical>
 <Layman>
 
-`traceroute` lists the routers between your host and a destination. Each router on the path is a hop. It sends test packets (probes) with an IP TTL that starts at 1 and grows by 1. A router that drops a probe because the TTL ended sends back an ICMP time exceeded message. <Cite n={43} /> By default, each hop gets 3 probes, and the limit is 30 hops. A `*` means that no reply came before the timeout. <Cite n={43} />
+**Goal:** Find the hop where a network path stops.
 
-The default probes are UDP packets to unlikely ports, starting at 33434. This works without root. <Cite n={43} /> Firewalls often filter these probes. Then use `-I` for ICMP echo probes, or `-T` with `-p` for TCP SYN probes to a port. Plan to use root for `-T`. <Cite n={43} />
+`traceroute` lists the routers between your host and a destination. Each router on the path is a hop. It sends test packets (probes) with an IP TTL that starts at 1 and grows by 1. A router that drops a probe because the TTL ended sends back an ICMP time exceeded message. <Cite n={43} /> A `*` means that no reply came before the timeout. <Cite n={43} />
 
-Tutorial's own warning: a trace sends packets that nobody asked for to other hosts. Test only hosts that you own or may test.
+**Try it:** trace 127.0.0.1, so no packet leaves the machine. It needs the `traceroute` package. `-m 3` sets the maximum hops. <Cite n={43} />
+
+```bash
+(
+  if command -v traceroute >/dev/null; then   # is traceroute installed?
+    traceroute -n -m 3 127.0.0.1              # loopback only
+  else
+    echo "traceroute is not installed"
+  fi
+)
+# On the machine that ran this block: traceroute is not installed
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+A trace sends packets that nobody asked for to other hosts. Tutorial's own warning: trace only hosts that you own or may test.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- By default, each hop gets 3 probes, and the limit is 30 hops. <Cite n={43} />
+- The default probes are UDP packets to unlikely ports, starting at 33434. This works without root. <Cite n={43} />
+- Firewalls often filter these probes. Then use `-I` for ICMP echo probes, or `-T` with `-p` for TCP SYN probes to a port. Plan to use root for `-T`. <Cite n={43} />
 
 Tutorial's own advice: when a test cannot connect, run `traceroute -n HOST` on the CI runner and on your laptop. The last hop that answers shows where the path stops.
+
+</details>
 
 </Layman>
 <Bangla>
 
-`traceroute` আপনার host আর একটি destination-এর মাঝের router-গুলোর list দেখায়। Path-এর প্রতিটি router হলো একটি hop। এটি probe packet পাঠায়, যার IP TTL 1 থেকে শুরু হয়ে প্রতিবার 1 করে বাড়ে। TTL শেষ হওয়ায় যে router একটি probe ফেলে দেয়, সে একটি ICMP time exceeded message ফেরত পাঠায়। <Cite n={43} /> Default-ভাবে প্রতিটি hop-এ 3টি probe যায়, আর সীমা 30 hop। `*` মানে timeout-এর আগে কোনো reply আসেনি। <Cite n={43} />
+**লক্ষ্য:** একটি network path কোন hop-এ থেমে যায়, তা খুঁজে বের করুন।
 
-Default probe হলো অপ্রচলিত port-এ পাঠানো UDP datagram, যা 33434 থেকে শুরু হয়; এই পদ্ধতি root ছাড়াই কাজ করে। <Cite n={43} /> Firewall প্রায়ই এই probe আটকে দেয়। তখন ICMP echo probe-এর জন্য `-I` ব্যবহার করুন, অথবা TCP SYN probe-এর জন্য (TCP connection-এর প্রথম packet) `-T` আর port-এর জন্য `-p` ব্যবহার করুন। Manual `-T`-এর কোনো unprivileged mode-এর কথা বলে না, তাই root ব্যবহারের পরিকল্পনা রাখুন। <Cite n={43} /> `-n` name lookup বাদ দেয়, আর `-m` সর্বোচ্চ hop ঠিক করে। <Cite n={43} /> একটি router তার ICMP reply সীমিত রাখতে পারে, তাই মাঝখানের একটি star সবসময় fault নয়। <Cite n={43} />
+`traceroute` আপনার host আর একটি destination-এর মাঝের router-গুলোর list দেখায়। Path-এর প্রতিটি router হলো একটি hop। এটি probe packet পাঠায়, যার IP TTL 1 থেকে শুরু হয়ে প্রতিবার 1 করে বাড়ে। TTL শেষ হওয়ায় যে router একটি probe ফেলে দেয়, সে একটি ICMP time exceeded message ফেরত পাঠায়। <Cite n={43} /> `*` মানে timeout-এর আগে কোনো reply আসেনি। <Cite n={43} />
 
-Tutorial-এর নিজের সতর্কতা: একটি trace, এবং `nmap`-এর মতো port scanner, অন্য host-এ না-চাওয়া packet পাঠায়। শুধু সেই host-গুলো test করুন, যেগুলো আপনার নিজের অথবা যেগুলো test করার অনুমতি আপনার আছে।
+**চেষ্টা করুন:** 127.0.0.1 trace করুন, যাতে কোনো packet মেশিনের বাইরে না যায়। এর জন্য `traceroute` package লাগবে। `-m 3` সর্বোচ্চ hop ঠিক করে। <Cite n={43} />
 
-Tutorial-এর নিজের পরামর্শ: কোনো test connect করতে না পারলে CI runner-এ এবং আপনার laptop-এ `traceroute -n HOST` চালান। শেষ যে hop উত্তর দেয়, সেটি দেখায় path কোথায় থেমে গেছে। Firewall UDP ও ICMP probe আটকালে root হিসেবে `-T -p PORT` চেষ্টা করুন। <Cite n={43} />
+```bash
+(
+  if command -v traceroute >/dev/null; then   # is traceroute installed?
+    traceroute -n -m 3 127.0.0.1              # loopback only
+  else
+    echo "traceroute is not installed"
+  fi
+)
+# On the machine that ran this block: traceroute is not installed
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+একটি trace অন্য host-এ না-চাওয়া packet পাঠায়। Tutorial-এর নিজস্ব সতর্কতা: শুধু নিজের, বা অনুমতি আছে এমন host trace করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Default-ভাবে প্রতিটি hop-এ 3টি probe যায়। `-n` name lookup বাদ দেয়, আর `-m` সর্বোচ্চ hop ঠিক করে; default সীমা 30 hop। <Cite n={43} />
+- Default probe হলো অপ্রচলিত port-এ পাঠানো UDP datagram, যা 33434 থেকে শুরু হয়; এই পদ্ধতি root ছাড়াই কাজ করে। <Cite n={43} />
+- Firewall প্রায়ই এই probe আটকে দেয়। তখন ICMP echo probe-এর জন্য `-I` ব্যবহার করুন, অথবা TCP SYN probe-এর জন্য (TCP connection-এর প্রথম packet) `-T` আর port-এর জন্য `-p` ব্যবহার করুন। Manual `-T`-এর কোনো unprivileged mode-এর কথা বলে না, তাই root ব্যবহারের পরিকল্পনা রাখুন। <Cite n={43} />
+- একটি router তার ICMP reply সীমিত রাখতে পারে, তাই মাঝখানের একটি star সবসময় fault নয়। <Cite n={43} />
+- `nmap`-এর মতো port scanner-ও অন্য host-এ না-চাওয়া packet পাঠায়।
+
+Tutorial-এর নিজস্ব পরামর্শ: কোনো test connect করতে না পারলে CI runner-এ আর laptop-এ `traceroute -n HOST` চালান। শেষ যে hop উত্তর দেয়, path সেখানে থেমেছে।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -635,7 +1359,38 @@ Tutorial-এর নিজের পরামর্শ: কোনো test connect
 <Voices>
 <Technical>
 
-`netstat` comes from the net-tools package. It prints open sockets, routing tables, and interface counters. <Cite n={44} /> Its manual calls it mostly obsolete. The `ss` command replaces it, and commands of iproute2 replace its other modes. <Cite n={44} /> A minimal container can have neither tool.
+**Goal:** Find the process that listens on a port, with `ss`, the replacement of `netstat`.
+
+`netstat` comes from the net-tools package. It prints open sockets, routing tables, and interface counters. <Cite n={44} /> Its manual calls it mostly obsolete. The `ss` command replaces it for sockets. <Cite n={44} /> The letters `-t`, `-u`, `-l`, and `-n` mean the same in both: TCP, UDP, listening sockets only, and numbers. <Cite n={44} /> <Cite n={30} /> Option `-p` adds the process. <Cite n={44} /> The `ss` filter `sport = :PORT` selects a local port. <Cite n={30} />
+
+```bash
+ss -tln
+```
+
+**Try it:** start a throw-away web server on 127.0.0.1, read its listener, then stop it. `&` runs the server in the background, and `$!` holds its process ID (PID).
+
+```bash
+(
+  d=$(mktemp -d)
+  python3 -m http.server 18080 --bind 127.0.0.1 -d "$d" >/dev/null 2>&1 &
+  server=$!
+  sleep 1
+  ss -tlnp 'sport = :18080'
+  kill "$server"; rm -rf "$d"
+)
+# State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess
+# LISTEN 0      5          127.0.0.1:18080      0.0.0.0:*    users:(("python3",pid=39479,fd=3))
+# Your PID differs.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: before a test run, check that the port is free with `ss -tln 'sport = :PORT'`. Only the header line must appear.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
 
 | Old command | Replacement |
 |---|---|
@@ -646,41 +1401,90 @@ Tutorial-এর নিজের পরামর্শ: কোনো test connect
 
 <Cite n={44} />
 
-The letters `-t`, `-u`, `-l`, and `-n` mean the same in both `netstat` and `ss`: TCP, UDP, listening sockets only, and numbers. <Cite n={44} /> <Cite n={30} /> Without `-n`, `netstat` turns addresses and ports into names. <Cite n={44} /> Option `-p` adds the process. In `netstat`, other users' processes need root. <Cite n={44} /> A listening socket waits for new connections. A `TIME_WAIT` socket waits after close for stray packets. <Cite n={44} /> The `ss` filter `sport = :PORT` selects a local port. <Cite n={30} />
+- Without `-n`, `netstat` turns addresses and ports into names. In `netstat`, `-p` needs root for the processes of other users. <Cite n={44} />
+- A listening socket waits for new connections. A `TIME_WAIT` socket waits after close for stray packets. <Cite n={44} />
+- A minimal container can have neither tool.
 
-```bash
-d=$(mktemp -d)
-python3 -m http.server 18080 --bind 127.0.0.1 -d "$d" &   # a throw-away local server
-server=$!
-sleep 1
-ss -tlnp 'sport = :18080'    # who listens on port 18080
-kill "$server"               # stop the server
-rm -rf "$d"                  # remove the temporary directory
-```
+Tutorial's own advice: check the port again after the run. A process left over from an old job can break the next one.
 
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: before a test run, check that the port is free with `ss -tln 'sport = :PORT'`. Only the header line must appear. After the run, check again. A process left over from an old job can break the next one.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-`netstat` comes from the net-tools package. It shows open sockets, routing tables, and interface counters. <Cite n={44} /> Its manual says that it is mostly obsolete. The `ss` command and other iproute2 commands replace it: `ss` for sockets, `ip route` for `netstat -r`, `ip -s link` for `netstat -i`, and `ip maddr` for `netstat -g`. <Cite n={44} />
+**Goal:** Find the process that listens on a port, with `ss`, the replacement of `netstat`.
 
-The options `-t`, `-u`, `-l`, and `-n` mean the same in `netstat` and `ss`: TCP, UDP, listening sockets only, and numbers. <Cite n={44} /> <Cite n={30} /> Option `-p` adds the process. <Cite n={44} /> A listening socket waits for new connections. A `TIME_WAIT` socket waits after close for stray packets. <Cite n={44} /> The `ss` filter `sport = :PORT` selects a local port. <Cite n={30} />
+`netstat` comes from the net-tools package. It shows open sockets, routing tables, and interface counters. <Cite n={44} /> Its manual says that it is mostly obsolete. The `ss` command replaces it for sockets. <Cite n={44} /> The options `-t`, `-u`, `-l`, and `-n` mean the same in `netstat` and `ss`: TCP, UDP, listening sockets only, and numbers. <Cite n={44} /> <Cite n={30} /> Option `-p` adds the process. <Cite n={44} /> The `ss` filter `sport = :PORT` selects a local port. <Cite n={30} />
 
-Tutorial's own advice: before a test run, check that the port is free with `ss -tln 'sport = :PORT'`. Only the header line must show. Check again after the run. A process left over from an old job can break the next job.
+**Try it:** start a throw-away web server on 127.0.0.1, read its listener, then stop it. `&` runs the server in the background, and `$!` holds its process ID (PID).
+
+```bash
+(
+  d=$(mktemp -d)
+  python3 -m http.server 18080 --bind 127.0.0.1 -d "$d" >/dev/null 2>&1 &
+  server=$!
+  sleep 1
+  ss -tlnp 'sport = :18080'
+  kill "$server"; rm -rf "$d"
+)
+# State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess
+# LISTEN 0      5          127.0.0.1:18080      0.0.0.0:*    users:(("python3",pid=39479,fd=3))
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: before a test run, check that the port is free with `ss -tln 'sport = :PORT'`. Only the header line must show.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `ip route` replaces `netstat -r`, `ip -s link` replaces `netstat -i`, and `ip maddr` replaces `netstat -g`. <Cite n={44} />
+- A listening socket waits for new connections. A `TIME_WAIT` socket waits after close for stray packets. <Cite n={44} />
+- Tutorial's own advice: check again after the run. A process left over from an old job can break the next job.
+
+</details>
 
 </Layman>
 <Bangla>
 
-`netstat` আসে net-tools package থেকে। এটি open socket, routing table এবং interface counter দেখায়। <Cite n={44} /> এর manual একে প্রায় obsolete বলে। `ss` command এর জায়গা নেয়, আর iproute2-এর অন্য command-গুলো এর বাকি mode-এর জায়গা নেয়: socket-এর জন্য `ss`, `netstat -r`-এর বদলে `ip route`, `netstat -i`-এর বদলে `ip -s link`, এবং `netstat -g`-এর বদলে `ip maddr`। <Cite n={44} /> একটি minimal container-এ দুটি tool-এর কোনোটিই না-ও থাকতে পারে।
+**লক্ষ্য:** `netstat`-এর বদলি `ss` দিয়ে খুঁজে বের করুন, কোন process একটি port-এ listen করছে।
 
-`netstat` আর `ss` দুটিতেই `-t`, `-u`, `-l` এবং `-n`-এর অর্থ এক: TCP, UDP, শুধু listening socket, এবং সংখ্যা। <Cite n={44} /> <Cite n={30} /> `-n` ছাড়া `netstat` address আর port-কে name-এ বদলে দেয়। `-p` option process যোগ করে; `netstat`-এ অন্য user-এর process দেখতে root লাগে। <Cite n={44} /> Listening socket নতুন connection-এর জন্য অপেক্ষা করে। `TIME_WAIT` socket close হওয়ার পরে দেরিতে আসা packet-এর জন্য অপেক্ষা করে। <Cite n={44} /> `ss`-এর filter `sport = :PORT` একটি local port বেছে নেয়। <Cite n={30} />
+`netstat` আসে net-tools package থেকে। এটি open socket, routing table এবং interface counter দেখায়। <Cite n={44} /> এর manual একে প্রায় obsolete বলে। Socket-এর জন্য `ss` command এর জায়গা নেয়। <Cite n={44} /> `netstat` আর `ss` দুটিতেই `-t`, `-u`, `-l` এবং `-n`-এর অর্থ এক: TCP, UDP, শুধু listening socket, এবং সংখ্যা। <Cite n={44} /> <Cite n={30} /> `-p` option process যোগ করে। <Cite n={44} /> `ss`-এর filter `sport = :PORT` একটি local port বেছে নেয়। <Cite n={30} />
 
-Tutorial-এর নিজের পরামর্শ: test run-এর আগে `ss -tln 'sport = :PORT'` দিয়ে দেখুন port-টি free কি না; শুধু header line দেখা যাওয়া উচিত। Run-এর পরে আবার দেখুন। পুরনো job থেকে রয়ে যাওয়া একটি process পরের job-কে নষ্ট করতে পারে।
+**চেষ্টা করুন:** 127.0.0.1-এ একটি throw-away web server চালু করুন, তার listener পড়ুন, তারপর server বন্ধ করুন। `&` server-টিকে background-এ চালায়, আর `$!` তার process ID (PID) রাখে।
+
+```bash
+(
+  d=$(mktemp -d)
+  python3 -m http.server 18080 --bind 127.0.0.1 -d "$d" >/dev/null 2>&1 &
+  server=$!
+  sleep 1
+  ss -tlnp 'sport = :18080'
+  kill "$server"; rm -rf "$d"
+)
+# State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess
+# LISTEN 0      5          127.0.0.1:18080      0.0.0.0:*    users:(("python3",pid=39479,fd=3))
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: Test run-এর আগে `ss -tln 'sport = :PORT'` দিয়ে দেখুন port-টি free কি না; শুধু header line দেখা উচিত।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `netstat -r`-এর বদলে `ip route`, `netstat -i`-এর বদলে `ip -s link`, এবং `netstat -g`-এর বদলে `ip maddr`। <Cite n={44} />
+- `-n` ছাড়া `netstat` address আর port-কে name-এ বদলে দেয়। `netstat`-এ অন্য user-এর process দেখতে root লাগে। <Cite n={44} />
+- Listening socket নতুন connection-এর জন্য অপেক্ষা করে। `TIME_WAIT` socket close হওয়ার পরে দেরিতে আসা packet-এর জন্য অপেক্ষা করে। <Cite n={44} />
+- একটি minimal container-এ দুটি tool-এর কোনোটিই না-ও থাকতে পারে।
+
+Tutorial-এর নিজস্ব পরামর্শ: Run-এর পরে আবার দেখুন। পুরনো job থেকে রয়ে যাওয়া একটি process পরের job-কে নষ্ট করতে পারে।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -690,52 +1494,137 @@ Tutorial-এর নিজের পরামর্শ: test run-এর আগে
 <Voices>
 <Technical>
 
-Netfilter is the packet-filtering framework inside the Linux kernel. It has hooks, which are points in the network stack where kernel modules register callbacks. <Cite n={45} /> A firewall is a set of rules that accepts or drops packets. Two tools set these rules: `iptables` and its successor `nftables`. <Cite n={45} />
+**Goal:** Find the firewall tool and backend of your host, without a change to a rule.
 
-`iptables` has tables. A table groups chains for one job. A chain is an ordered list of rules. A rule has matches and one target, such as `ACCEPT` or `DROP`. <Cite n={48} /> If no rule of a built-in chain matches, the policy of the chain (its default action) decides. <Cite n={48} /> `nftables` has one tool, `nft`, and no predefined tables. <Cite n={46} /> On some hosts, `iptables` is a front end to nftables, and `iptables -V` prints `(nf_tables)`. <Cite n={50} />
+Netfilter is the packet-filtering framework inside the Linux kernel. <Cite n={45} /> A firewall is a set of rules that accepts or drops packets. Two tools set these rules: `iptables` and its successor `nftables`. <Cite n={45} /> On some hosts, `iptables` is a front end to nftables, and `iptables -V` prints `(nf_tables)`. <Cite n={50} />
 
 ```bash
-iptables -V                  # the version; (nf_tables) means the nftables backend
-# The next commands need root. They only read.
-iptables -S                  # the rules of the filter table, as commands
-iptables -t nat -L -n -v     # the nat table, with numbers and counters
-nft list ruleset             # all tables, chains, and rules of nftables
-nft -c -f rules.nft          # check a rules file; changes nothing
+nft list ruleset        # all rules of nftables; needs root; only reads
+```
+
+**Try it:** print the versions of both tools. <Cite n={48} /> <Cite n={47} /> They only read and need no root.
+
+```bash
+(
+  iptables -V      # iptables v1.8.11 (nf_tables)
+  nft --version    # nftables v1.1.6 (Commodore Bullmoose #7)
+)
+# Your versions can differ.
 ```
 
 <Callout type="danger" title="Firewall changes can lock you out">
 
-A `DROP` policy without an SSH accept rule cuts your own session. <Cite n={48} /> The command `iptables -F` deletes rules, and `nft flush ruleset` clears all of nftables. <Cite n={48} /> <Cite n={47} /> As root, save the rules first: `iptables-save > FILE` and `nft list ruleset > FILE`. <Cite n={49} /> <Cite n={47} /> The redirect `>` overwrites an existing file, so use a new name. Tutorial's own warning: rules live in kernel memory, so a reboot can remove unsaved rules. Change rules only on a console, or in a network namespace. <Cite n={36} />
+A default `DROP` policy without an SSH accept rule cuts your own session. <Cite n={48} /> As root, save the rules before a change: `nft list ruleset > NEW-FILE`. <Cite n={47} />
 
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: test rules in a network namespace or a throw-away VM. Check a rules file with `nft -c -f FILE` before you load it. <Cite n={47} /> In CI, keep the output of `nft list ruleset` as a build artifact.
+Tutorial's own advice: test rules in a network namespace or a throw-away VM. In CI, keep the output of `nft list ruleset` as a build artifact.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Netfilter has hooks, which are points in the network stack where kernel modules register callbacks. <Cite n={45} />
+- In `iptables`, a table groups chains for one job. A chain is an ordered list of rules. A rule has matches and one target, such as `ACCEPT` or `DROP`. If no rule of a built-in chain matches, the policy of the chain (its default action) decides. <Cite n={48} />
+- `nftables` has one tool, `nft`, and no predefined tables. <Cite n={46} />
+- `iptables -F` deletes rules, and `nft flush ruleset` clears all of nftables. <Cite n={48} /> <Cite n={47} />
+- `iptables-save > FILE` saves the rules of `iptables`. <Cite n={49} /> The redirect `>` overwrites an existing file, so use a new name.
+
+```bash
+# The next commands need root. They only read.
+iptables -S                  # the rules of the filter table, as commands
+iptables -t nat -L -n -v     # the nat table, with numbers and counters
+nft -c -f rules.nft          # check a rules file; changes nothing
+```
+
+Tutorial's own warning: rules live in kernel memory, so a reboot can remove unsaved rules. Change rules only on a console, or in a network namespace. <Cite n={36} /> Check a rules file with `nft -c -f FILE` before you load it. <Cite n={47} />
+
+</details>
 
 </Technical>
 <Layman>
 
-Netfilter is the packet-filtering framework inside the Linux kernel. <Cite n={45} /> A firewall is a set of rules that accepts or drops packets. Two tools set these rules: `iptables` and its successor, `nftables`. <Cite n={45} />
+**Goal:** Find the firewall tool and backend of your computer, without a change to a rule.
 
-In `iptables`, a table groups chains for one job. A chain is an ordered list of rules. A rule has matches and one target, such as `ACCEPT` or `DROP`. If no rule of a built-in chain matches, the policy of the chain (its default action) decides. <Cite n={48} /> `nftables` has one tool, `nft`, and no predefined tables. <Cite n={46} /> On some hosts, `iptables` is a front end to nftables. Then `iptables -V` shows `(nf_tables)`. <Cite n={50} />
+Netfilter is the packet-filtering framework inside the Linux kernel. <Cite n={45} /> A firewall is a set of rules that accepts or drops packets. Two tools set these rules: `iptables` and its successor, `nftables`. <Cite n={45} /> On some hosts, `iptables` is a front end to nftables. Then `iptables -V` shows `(nf_tables)`. <Cite n={50} />
 
-Be careful: a `DROP` policy without a rule that accepts SSH cuts your own session. <Cite n={48} /> As root, save the rules first: `iptables-save > FILE` and `nft list ruleset > FILE`. <Cite n={49} /> <Cite n={47} /> Tutorial's own warning: a reboot can remove rules that you did not save.
+**Try it:** print the versions of both tools. <Cite n={48} /> <Cite n={47} /> They only read and need no root.
 
-Tutorial's own advice: test rules in a network namespace or a throw-away VM. Check a rules file with `nft -c -f FILE` before you load it. <Cite n={47} />
+```bash
+(
+  iptables -V      # iptables v1.8.11 (nf_tables)
+  nft --version    # nftables v1.1.6 (Commodore Bullmoose #7)
+)
+# Your versions can differ.
+```
+
+<Callout type="danger" title="Firewall changes can lock you out">
+
+A default `DROP` policy without a rule that accepts SSH cuts your own session. <Cite n={48} /> As root, save the rules before a change: `nft list ruleset > NEW-FILE`. <Cite n={47} />
+
+</Callout>
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: test rules in a network namespace or a throw-away VM. In CI, keep the output of `nft list ruleset` as a build artifact.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- In `iptables`, a table groups chains for one job. A chain is an ordered list of rules. A rule has matches and one target, such as `ACCEPT` or `DROP`. If no rule of a built-in chain matches, the policy of the chain (its default action) decides. <Cite n={48} />
+- `nftables` has one tool, `nft`, and no predefined tables. <Cite n={46} />
+- `iptables-save > FILE` saves the `iptables` rules. <Cite n={49} />
+- Tutorial's own warning: a reboot can remove rules that you did not save.
+- Check a rules file with `nft -c -f FILE` before you load it. <Cite n={47} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Netfilter হলো Linux kernel-এর ভেতরের packet-filtering framework। এতে hook আছে; hook হলো network stack-এর এমন জায়গা, যেখানে kernel module callback register করে। <Cite n={45} /> Firewall হলো কিছু rule, যা packet গ্রহণ করে বা ফেলে দেয়। দুটি tool এই rule ঠিক করে: `iptables` এবং তার উত্তরসূরি `nftables`। <Cite n={45} />
+**লক্ষ্য:** কোনো rule না বদলে আপনার host-এর firewall tool আর backend খুঁজে বের করুন।
 
-`iptables`-এ table থাকে; একটি table একটি কাজের জন্য chain-গুলোকে একসাথে রাখে। Chain হলো rule-এর একটি ক্রমানুসারী list। একটি rule-এ match আর একটি target থাকে, যেমন `ACCEPT` বা `DROP`। কোনো built-in chain-এর কোনো rule না মিললে chain-এর policy, অর্থাৎ তার default action, সিদ্ধান্ত নেয়। <Cite n={48} /> `nftables`-এর একটিই tool, `nft`, এবং এতে কোনো predefined table নেই। <Cite n={46} /> কিছু host-এ `iptables` হলো nftables-এর একটি front end, আর তখন `iptables -V` `(nf_tables)` দেখায়। <Cite n={50} />
+Netfilter হলো Linux kernel-এর ভেতরের packet-filtering framework। <Cite n={45} /> Firewall হলো কিছু rule, যা packet গ্রহণ করে বা ফেলে দেয়। দুটি tool এই rule ঠিক করে: `iptables` এবং তার উত্তরসূরি `nftables`। <Cite n={45} /> কিছু host-এ `iptables` হলো nftables-এর একটি front end, আর তখন `iptables -V` `(nf_tables)` দেখায়। <Cite n={50} />
 
-সাবধান: SSH accept rule ছাড়া একটি `DROP` policy আপনার নিজের session কেটে দেয়। <Cite n={48} /> `iptables -F` rule মুছে দেয়, আর `nft flush ruleset` পুরো nftables খালি করে। <Cite n={48} /> <Cite n={47} /> Root হিসেবে আগে rule save করুন: `iptables-save > FILE` এবং `nft list ruleset > FILE`। <Cite n={49} /> <Cite n={47} /> `>` redirect পুরনো file-কে overwrite করে, তাই নতুন নাম দিন। Tutorial-এর নিজের সতর্কতা: rule kernel memory-তে থাকে, তাই reboot করলে save না করা rule মুছে যেতে পারে।
+**চেষ্টা করুন:** দুটি tool-এর version print করুন। <Cite n={47} /> Command-গুলো শুধু পড়ে, root লাগে না।
 
-Tutorial-এর নিজের পরামর্শ: network namespace বা একটি throw-away VM-এ rule test করুন। Load করার আগে `nft -c -f FILE` দিয়ে rules file check করুন। <Cite n={47} /> CI-তে `nft list ruleset`-এর output একটি build artifact হিসেবে রেখে দিন।
+```bash
+(
+  iptables -V      # iptables v1.8.11 (nf_tables)
+  nft --version    # nftables v1.1.6 (Commodore Bullmoose #7)
+)
+# Your versions can differ.
+```
+
+<Callout type="danger" title="Firewall changes can lock you out">
+
+SSH accept rule ছাড়া একটি default `DROP` policy আপনার নিজের session কেটে দেয়। <Cite n={48} /> Root হিসেবে বদলের আগে rule save করুন: `nft list ruleset > NEW-FILE`। <Cite n={47} />
+
+</Callout>
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: Network namespace বা throw-away VM-এ rule test করুন। CI-তে `nft list ruleset`-এর output build artifact হিসেবে রাখুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Netfilter-এ hook আছে; hook হলো network stack-এর এমন জায়গা, যেখানে kernel module callback register করে। <Cite n={45} />
+- `iptables`-এ একটি table একটি কাজের জন্য chain-গুলোকে একসাথে রাখে। Chain হলো rule-এর একটি ক্রমানুসারী list। একটি rule-এ match আর একটি target থাকে, যেমন `ACCEPT` বা `DROP`। কোনো built-in chain-এর কোনো rule না মিললে chain-এর policy, অর্থাৎ তার default action, সিদ্ধান্ত নেয়। <Cite n={48} />
+- `nftables`-এর একটিই tool, `nft`, এবং এতে কোনো predefined table নেই। <Cite n={46} />
+- `iptables -F` rule মুছে দেয়, আর `nft flush ruleset` পুরো nftables খালি করে। <Cite n={48} /> <Cite n={47} />
+- `iptables-save > FILE` `iptables`-এর rule save করে। <Cite n={49} /> `>` redirect পুরনো file-কে overwrite করে, তাই নতুন নাম দিন।
+
+Tutorial-এর নিজস্ব সতর্কতা: rule kernel memory-তে থাকে, তাই reboot করলে save না করা rule মুছে যেতে পারে। Load করার আগে `nft -c -f FILE` দিয়ে rules file check করুন। <Cite n={47} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -745,7 +1634,34 @@ Tutorial-এর নিজের পরামর্শ: network namespace বা 
 <Voices>
 <Technical>
 
-A packet capture is a copy of the packets that pass a network interface. A pcap file is a saved capture. `tcpdump` prints the packets that match a filter expression. <Cite n={51} /> Reading live packets can need special privileges, but reading a saved file does not. <Cite n={51} />
+**Goal:** Check a capture filter before you capture, with no root.
+
+A packet capture is a copy of the packets that pass a network interface. A pcap file is a saved capture. `tcpdump` prints the packets that match a filter expression. <Cite n={51} /> A filter uses primitives such as `host`, `port`, and `tcp`, joined with `and`, `or`, and `not`. <Cite n={52} /> Reading live packets can need special privileges, but reading a saved file does not. <Cite n={51} />
+
+```bash
+tcpdump -n -r test.pcap      # read a saved capture; no root
+```
+
+**Try it:** compile a good filter and a filter with a typo. `-d` prints the compiled filter and stops, so nothing is captured. <Cite n={51} /> `>/dev/null 2>&1` hides the output, and `&&` runs `echo` only if `tcpdump` succeeds.
+
+```bash
+(
+  tcpdump -d 'tcp port 8080' >/dev/null 2>&1 && echo "filter OK"
+  tcpdump -d 'tcp prot 8080'     # the typo: prot
+)
+# filter OK
+# Warning: assuming Ethernet
+# tcpdump: can't parse filter expression: syntax error
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+A capture holds all its data, and unencrypted passwords and tokens are readable in it. <Cite n={51} /> Tutorial's own advice: capture only your own test traffic.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
 
 | tcpdump option | Effect |
 |---|---|
@@ -754,55 +1670,95 @@ A packet capture is a copy of the packets that pass a network interface. A pcap 
 | `-n` | No name lookups |
 | `-w FILE` | Write packets to a file |
 | `-r FILE` | Read a file |
+| `-A`, `-X` | Print the payload, the data part of a packet |
 
 <Cite n={51} />
 
-A filter uses primitives such as `host`, `port`, and `tcp`, joined with `and`, `or`, and `not`. <Cite n={52} /> `tshark` is the command-line tool of Wireshark. Option `-f` takes a capture filter, and `-Y` takes a display filter. Capture filters are more efficient on a busy network. <Cite n={53} /> The Wireshark guide lists QA engineers as users. <Cite n={54} /> As root, `tcpdump` can switch to another user before it opens the output file. Use `-Z "$USER"` to write to your directory. <Cite n={51} />
+- `tshark` is the command-line tool of Wireshark. Option `-f` takes a capture filter, and `-Y` takes a display filter. Capture filters are more efficient on a busy network. <Cite n={53} />
+- The Wireshark guide lists QA engineers as users. <Cite n={54} />
+- As root, `tcpdump` can switch to another user before it opens the output file. Use `-Z "$USER"` to write to your directory. <Cite n={51} />
 
 ```bash
 d=$(mktemp -d)
 tcpdump -D                                                  # list interfaces
 tcpdump -n -i lo -c 100 -Z "$USER" -w "$d/test.pcap" 'tcp port 8080'   # needs root; send test traffic from a second terminal; Ctrl-C stops it
-tcpdump -n -r "$d/test.pcap"                                # read the file; no root
-# Example tcpdump line (invented, from a capture on lo):
-# 14:53:20.000000 IP 127.0.0.1.40000 > 127.0.0.1.8080: Flags [S], seq 1000, ...
 tshark -r "$d/test.pcap" -Y 'ip.addr == 127.0.0.1'          # display filter
 rm -rf "$d"                                                 # remove the temporary directory
 ```
 
-<Callout type="danger" title="A capture can hold secrets">
+Tutorial's own advice: capture only with permission, use narrow filters, and delete the file afterwards. When a test fails only in CI, capture with a narrow filter such as `tcp port 8080`, and keep the pcap. For a test that talks to `127.0.0.1`, capture on `lo`.
 
-A capture holds all data that it sees. Passwords and tokens that a protocol sends without encryption are readable in it. Options `-A` and `-X` print the payload, the data part of a packet. <Cite n={51} /> Tutorial's own advice: capture only your own test traffic, with permission. Use narrow filters and delete the file afterwards.
-
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: when a test fails only in CI, capture with a narrow filter such as `tcp port 8080`, and keep the pcap. For a test that talks to `127.0.0.1`, capture on `lo`.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-A packet capture is a copy of the packets that pass a network interface. A pcap file is a saved capture. `tcpdump` shows the packets that match a filter. <Cite n={51} /> To read live packets, you can need special privileges. To read a saved file, you do not. <Cite n={51} />
+**Goal:** Check a capture filter before you capture, with no root.
 
-Useful `tcpdump` options: `-i` selects the interface, `-c N` stops after N packets, `-n` does no name lookups, `-w FILE` writes the packets to a file, and `-r FILE` reads a file. <Cite n={51} /> A filter uses words such as `host`, `port`, and `tcp`, joined with `and`, `or`, and `not`. <Cite n={52} />
+A packet capture is a copy of the packets that pass a network interface. A pcap file is a saved capture. `tcpdump` shows the packets that match a filter. <Cite n={51} /> A filter uses words such as `host`, `port`, and `tcp`, joined with `and`, `or`, and `not`. <Cite n={52} /> To read live packets, you can need special privileges. To read a saved file, you do not. <Cite n={51} />
 
-Be careful: a capture keeps all the data that it sees. If a protocol sends passwords or tokens without encryption, you can read them in the capture. <Cite n={51} /> Tutorial's own advice: capture only your own test traffic, with permission. Use narrow filters, and delete the file afterwards.
+**Try it:** compile a good filter and a filter with a typo. `-d` prints the compiled filter and stops, so nothing is captured. <Cite n={51} /> `>/dev/null 2>&1` hides the output, and `&&` runs `echo` only if `tcpdump` succeeds.
 
-Tutorial's own advice: when a test fails only in CI, capture with a narrow filter such as `tcp port 8080`, and keep the pcap file. For a test that talks to `127.0.0.1`, capture on `lo`.
+```bash
+(
+  tcpdump -d 'tcp port 8080' >/dev/null 2>&1 && echo "filter OK"
+  tcpdump -d 'tcp prot 8080'     # the typo: prot
+)
+# filter OK
+# Warning: assuming Ethernet
+# tcpdump: can't parse filter expression: syntax error
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+A capture keeps all its data. Passwords and tokens sent without encryption are readable in it. <Cite n={51} /> Tutorial's own advice: capture only your own test traffic.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Useful `tcpdump` options: `-i` selects the interface, `-c N` stops after N packets, `-n` does no name lookups, `-w FILE` writes the packets to a file, and `-r FILE` reads a file. <Cite n={51} />
+- Tutorial's own advice: capture only with permission. Use narrow filters, and delete the file afterwards.
+- Tutorial's own advice: when a test fails only in CI, capture with a narrow filter such as `tcp port 8080`, and keep the pcap file. For a test that talks to `127.0.0.1`, capture on `lo`.
+
+</details>
 
 </Layman>
 <Bangla>
 
-Packet capture হলো একটি network interface দিয়ে যাওয়া packet-গুলোর একটি copy। pcap file হলো save করা একটি capture। `tcpdump` একটি filter expression-এর সাথে মেলে এমন packet দেখায়। <Cite n={51} /> Live packet পড়তে বিশেষ privilege লাগতে পারে, কিন্তু save করা file পড়তে লাগে না। <Cite n={51} />
+**লক্ষ্য:** Capture করার আগে, root ছাড়াই, একটি capture filter check করুন।
 
-দরকারি `tcpdump` option: `-i` interface বেছে নেয় (`any` মানে সব), `-c N` N-টি packet-এর পরে থামে, `-n` name lookup করে না, `-w FILE` packet-গুলো একটি file-এ লেখে, আর `-r FILE` একটি file পড়ে। <Cite n={51} /> Filter-এ `host`, `port` ও `tcp`-এর মতো primitive থাকে, যেগুলো `and`, `or` ও `not` দিয়ে যুক্ত হয়। <Cite n={52} /> `tshark` হলো Wireshark-এর command-line tool; `-f` capture filter নেয়, আর `-Y` display filter নেয়। ব্যস্ত network-এ capture filter বেশি efficient। <Cite n={53} /> Wireshark guide QA engineer-দের এর user হিসেবে উল্লেখ করে। <Cite n={54} /> Root হিসেবে `tcpdump` output file খোলার আগে অন্য user-এ বদলাতে পারে; নিজের directory-তে লিখতে `-Z "$USER"` ব্যবহার করুন। <Cite n={51} />
+Packet capture হলো একটি network interface দিয়ে যাওয়া packet-গুলোর একটি copy। pcap file হলো save করা একটি capture। `tcpdump` একটি filter expression-এর সাথে মেলে এমন packet দেখায়। <Cite n={51} /> Filter-এ `host`, `port` ও `tcp`-এর মতো primitive থাকে, যেগুলো `and`, `or` ও `not` দিয়ে যুক্ত হয়। <Cite n={52} /> Live packet পড়তে বিশেষ privilege লাগতে পারে, কিন্তু save করা file পড়তে লাগে না। <Cite n={51} />
 
-সাবধান: একটি capture যা দেখে, সব data রেখে দেয়। কোনো protocol encryption ছাড়া password বা token পাঠালে capture-এ সেগুলো পড়া যায়। `-A` আর `-X` option payload, অর্থাৎ packet-এর data অংশ, print করে। <Cite n={51} /> Tutorial-এর নিজের পরামর্শ: অনুমতি নিয়ে শুধু নিজের test traffic capture করুন। সরু filter ব্যবহার করুন এবং পরে file-টি মুছে ফেলুন।
+**চেষ্টা করুন:** একটি ঠিক filter আর একটি typo-ওয়ালা filter compile করুন। `-d` compile করা filter print করে থেমে যায়, তাই কিছুই capture হয় না। <Cite n={51} /> `>/dev/null 2>&1` output লুকায়, আর `&&` শুধু `tcpdump` সফল হলে `echo` চালায়।
 
-Tutorial-এর নিজের পরামর্শ: কোনো test শুধু CI-তে fail করলে `tcp port 8080`-এর মতো সরু filter দিয়ে capture করুন এবং pcap রেখে দিন। `127.0.0.1`-এর সাথে কথা বলা test-এর জন্য `lo`-তে capture করুন।
+```bash
+(
+  tcpdump -d 'tcp port 8080' >/dev/null 2>&1 && echo "filter OK"
+  tcpdump -d 'tcp prot 8080'     # the typo: prot
+)
+# filter OK
+# Warning: assuming Ethernet
+# tcpdump: can't parse filter expression: syntax error
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Capture সব data রাখে; encryption ছাড়া পাঠানো password ও token এতে পড়া যায়। <Cite n={51} /> Tutorial-এর নিজস্ব পরামর্শ: শুধু নিজের test traffic capture করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- দরকারি `tcpdump` option: `-i` interface বেছে নেয় (`any` মানে সব), `-c N` N-টি packet-এর পরে থামে, `-n` name lookup করে না, `-w FILE` packet-গুলো একটি file-এ লেখে, আর `-r FILE` একটি file পড়ে। `-A` আর `-X` payload, অর্থাৎ packet-এর data অংশ, print করে। <Cite n={51} />
+- `tshark` হলো Wireshark-এর command-line tool; `-f` capture filter নেয়, আর `-Y` display filter নেয়। ব্যস্ত network-এ capture filter বেশি efficient। <Cite n={53} /> Wireshark guide QA engineer-দের এর user হিসেবে উল্লেখ করে। <Cite n={54} />
+- Root হিসেবে `tcpdump` output file খোলার আগে অন্য user-এ বদলাতে পারে; নিজের directory-তে লিখতে `-Z "$USER"` ব্যবহার করুন। <Cite n={51} />
+
+Tutorial-এর নিজস্ব পরামর্শ: অনুমতি নিয়ে capture করুন, সরু filter ব্যবহার করুন এবং পরে file-টি মুছে ফেলুন। কোনো test শুধু CI-তে fail করলে `tcp port 8080`-এর মতো সরু filter দিয়ে capture করুন এবং pcap রেখে দিন। `127.0.0.1`-এর সাথে কথা বলা test-এর জন্য `lo`-তে capture করুন।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -812,60 +1768,150 @@ Tutorial-এর নিজের পরামর্শ: কোনো test শু�
 <Voices>
 <Technical>
 
-SSH (Secure Shell) gives logins and remote commands over an encrypted channel. The client is `ssh`. <Cite n={55} /> The server is `sshd`, a daemon (a background service), and it listens on port 22 by default. <Cite n={57} />
+**Goal:** Make a test key pair and read the client settings, with no connection.
 
-A key pair has a private key, which the user keeps, and a public key, which the server keeps in `~/.ssh/authorized_keys`. <Cite n={55} /> OpenSSH 9.5 and newer make Ed25519 keys by default. <Cite n={58} /> <Cite n={66} /> Older versions can differ, so use `-t ed25519`. `ssh` ignores a private key that others can access, so set mode 0600 (owner only). <Cite n={55} />
-
-A host key identifies a server. The client stores the host keys that it has seen in `~/.ssh/known_hosts`. If a host key changes, `ssh` warns you and disables password login. <Cite n={55} /> The option `StrictHostKeyChecking` controls this. Its value `accept-new` adds new keys but refuses changed keys. <Cite n={56} />
+SSH (Secure Shell) gives logins and remote commands over an encrypted channel. The client is `ssh`. <Cite n={55} /> The server is `sshd`, and it listens on port 22 by default. <Cite n={57} /> A key pair has a private key, which the user keeps, and a public key, which the server keeps in `~/.ssh/authorized_keys`. <Cite n={55} /> A host key identifies a server, and the client keeps the host keys that it has seen in `~/.ssh/known_hosts`. <Cite n={55} />
 
 ```bash
-d=$(mktemp -d)
-ssh-keygen -t ed25519 -N '' -C ci-test -f "$d/test_key"   # empty passphrase (no key password): tests only
-ls -l "$d/test_key" "$d/test_key.pub"                     # the private key has mode -rw-------
-ssh-keygen -l -f "$d/test_key.pub"                        # show the key fingerprint (a short code of the key)
-ssh -G -F /dev/null localhost | grep -i -E '^(port|stricthostkeychecking) '   # no connection
-# Login to a host that you own:
-# ssh -i "$d/test_key" -p 22 -o BatchMode=yes -o ConnectTimeout=5 testuser@test-host.example.com 'uname -r'
-rm -rf "$d"                                               # remove the temporary directory
+ssh-keygen -t ed25519
 ```
 
-<Callout type="danger" title="Do not weaken the checks">
+**Try it:** make a key in a temporary directory, and read its mode and fingerprint (a short code of the key). `ssh -G` prints the settings and connects to nothing. <Cite n={55} />
 
-`StrictHostKeyChecking=no` accepts new host keys without asking and lets a changed key pass. This weakens the protection against a man-in-the-middle, an attacker in the path. <Cite n={56} /> A `UserKnownHostsFile` of `/dev/null` (tutorial's own note) makes `ssh` ignore your saved keys. Agent forwarding (`-A`) lets users who bypass file permissions on the remote host use your agent, which holds your keys. <Cite n={55} /> A server accepts passwords by default (`PasswordAuthentication yes`). Turn it off if keys are enough. <Cite n={57} />
-
-</Callout>
+```bash
+(
+  d=$(mktemp -d)
+  ssh-keygen -q -t ed25519 -N '' -C ci-test -f "$d/test_key"   # -N '': no passphrase, for tests only
+  stat -c '%A %n' "$d/test_key" "$d/test_key.pub"             # mode and name
+  ssh-keygen -l -f "$d/test_key.pub"
+  ssh -G -F /dev/null localhost | grep -E '^(port|stricthostkeychecking) '
+  rm -rf "$d"
+)
+# -rw------- /tmp/tmp.XXXXXXXXXX/test_key
+# -rw-r--r-- /tmp/tmp.XXXXXXXXXX/test_key.pub
+# 256 SHA256:<random> ci-test (ED25519)
+# port 22
+# stricthostkeychecking ask
+# Your directory name and fingerprint differ.
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: in CI, use one key pair for each pipeline, kept in the CI secret store. Add the server's host key to `known_hosts` first. Use `-o BatchMode=yes -o ConnectTimeout=5` to fail fast. <Cite n={56} />
+Never use `StrictHostKeyChecking=no` in CI. It lets a changed host key pass, which weakens the protection against a man-in-the-middle. <Cite n={56} />
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `sshd` is a daemon, a background service. <Cite n={57} />
+- `-N ''` of `ssh-keygen` sets an empty passphrase. <Cite n={58} /> OpenSSH 9.5 and newer make Ed25519 keys by default. <Cite n={58} /> <Cite n={66} /> Older versions can differ, so use `-t ed25519`.
+- `ssh` ignores a private key that others can access, so set mode 0600 (owner only). <Cite n={55} />
+- If a host key changes, `ssh` warns you and disables password login. <Cite n={55} />
+- `StrictHostKeyChecking=no` also accepts new host keys without a question. The value `accept-new` adds new keys but refuses changed keys. <Cite n={56} />
+- A man-in-the-middle is an attacker in the path. A `UserKnownHostsFile` of `/dev/null` (tutorial's own note) makes `ssh` ignore your saved keys.
+- Agent forwarding (`-A`) lets users who bypass file permissions on the remote host use your agent, which holds your keys. <Cite n={55} />
+- A server accepts passwords by default (`PasswordAuthentication yes`). Turn it off if keys are enough. <Cite n={57} />
+- Use `-o BatchMode=yes -o ConnectTimeout=5` to fail fast. <Cite n={56} />
+
+```bash
+# Login to a host that you own:
+ssh -i ./test_key -p 22 -o BatchMode=yes -o ConnectTimeout=5 testuser@test-host.example.com 'uname -r'
+```
+
+Tutorial's own advice: in CI, keep one key pair for each pipeline in the CI secret store. Add the server's host key to `known_hosts` first.
+
+</details>
 
 </Technical>
 <Layman>
 
-SSH (Secure Shell) lets you log in and run commands on another computer over an encrypted channel. The client is `ssh`. <Cite n={55} /> The server is `sshd`, which listens on port 22 by default. <Cite n={57} />
+**Goal:** Make a test key pair and read the client settings, with no connection.
 
-In a key pair, the user keeps the private key. The server keeps the public key in `~/.ssh/authorized_keys`. <Cite n={55} /> OpenSSH 9.5 and newer make Ed25519 keys by default. <Cite n={58} /> <Cite n={66} /> `ssh` ignores a private key that other users can access, so set mode 0600. <Cite n={55} />
+SSH (Secure Shell) lets you log in and run commands on another computer over an encrypted channel. The client is `ssh`. <Cite n={55} /> The server is `sshd`, which listens on port 22 by default. <Cite n={57} /> In a key pair, the user keeps the private key. The server keeps the public key in `~/.ssh/authorized_keys`. <Cite n={55} /> A host key identifies a server. The client keeps the host keys that it saw in `~/.ssh/known_hosts`. <Cite n={55} />
 
-A host key identifies a server. The client keeps the host keys that it saw in `~/.ssh/known_hosts`. If a host key changes, `ssh` warns you and turns off password login. <Cite n={55} /> The value `accept-new` of `StrictHostKeyChecking` adds new keys but refuses changed keys. <Cite n={56} />
+**Try it:** make a key in a temporary directory, and read its mode and fingerprint (a short code of the key). `ssh -G` prints the settings and connects to nothing. <Cite n={55} />
 
-Be careful: `StrictHostKeyChecking=no` accepts new host keys without a question and lets a changed key pass. This weakens the protection against a man-in-the-middle, an attacker in the path. <Cite n={56} />
+```bash
+(
+  d=$(mktemp -d)
+  ssh-keygen -q -t ed25519 -N '' -C ci-test -f "$d/test_key"   # -N '': no passphrase, for tests only
+  stat -c '%A %n' "$d/test_key" "$d/test_key.pub"             # mode and name
+  ssh-keygen -l -f "$d/test_key.pub"
+  ssh -G -F /dev/null localhost | grep -E '^(port|stricthostkeychecking) '
+  rm -rf "$d"
+)
+# -rw------- /tmp/tmp.XXXXXXXXXX/test_key
+# -rw-r--r-- /tmp/tmp.XXXXXXXXXX/test_key.pub
+# 256 SHA256:<random> ci-test (ED25519)
+# port 22
+# stricthostkeychecking ask
+```
 
-Tutorial's own advice: in CI, use one key pair for each pipeline, and keep it in the CI secret store. Add the server's host key to `known_hosts` first. Use `-o BatchMode=yes -o ConnectTimeout=5` to fail fast. <Cite n={56} />
+<Callout type="tip" title="Why it matters for testing">
+
+Never use `StrictHostKeyChecking=no` in CI. It lets a changed host key pass. This weakens the protection against an attacker in the path. <Cite n={56} />
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- OpenSSH 9.5 and newer make Ed25519 keys by default. <Cite n={58} /> <Cite n={66} />
+- `ssh` ignores a private key that other users can access, so set mode 0600. <Cite n={55} />
+- If a host key changes, `ssh` warns you and turns off password login. <Cite n={55} />
+- The value `accept-new` of `StrictHostKeyChecking` adds new keys but refuses changed keys. <Cite n={56} />
+- Use `-o BatchMode=yes -o ConnectTimeout=5` to fail fast. <Cite n={56} />
+
+Tutorial's own advice: in CI, use one key pair for each pipeline, and keep it in the CI secret store. Add the server's host key to `known_hosts` first.
+
+</details>
 
 </Layman>
 <Bangla>
 
-SSH (Secure Shell) একটি encrypted channel-এর মাধ্যমে login আর remote command চালানোর সুযোগ দেয়। Client হলো `ssh`। <Cite n={55} /> Server হলো `sshd`, একটি daemon (background service), এবং default-ভাবে এটি port 22-এ listen করে। <Cite n={57} />
+**লক্ষ্য:** কোনো connection ছাড়াই একটি test key pair বানান, আর client-এর setting পড়ুন।
 
-একটি key pair-এ থাকে একটি private key, যা user নিজের কাছে রাখে, আর একটি public key, যা server `~/.ssh/authorized_keys`-এ রাখে। <Cite n={55} /> OpenSSH 9.5 ও তার পরের version default-ভাবে Ed25519 key বানায়। <Cite n={58} /> <Cite n={66} /> পুরনো version আলাদা হতে পারে, তাই `-t ed25519` ব্যবহার করুন। অন্যরা access করতে পারে এমন private key `ssh` উপেক্ষা করে, তাই mode 0600 (শুধু owner) set করুন। <Cite n={55} />
+SSH (Secure Shell) একটি encrypted channel-এর মাধ্যমে login আর remote command চালানোর সুযোগ দেয়। Client হলো `ssh`। <Cite n={55} /> Server হলো `sshd`, এবং default-ভাবে এটি port 22-এ listen করে। <Cite n={57} /> একটি key pair-এ থাকে একটি private key, যা user নিজের কাছে রাখে, আর একটি public key, যা server `~/.ssh/authorized_keys`-এ রাখে। <Cite n={55} /> Host key একটি server-কে চেনায়। Client যে host key-গুলো দেখেছে, সেগুলো `~/.ssh/known_hosts`-এ রাখে। <Cite n={55} />
 
-Host key একটি server-কে চেনায়। Client যে host key-গুলো দেখেছে, সেগুলো `~/.ssh/known_hosts`-এ রাখে। কোনো host key বদলে গেলে `ssh` আপনাকে সতর্ক করে এবং password login বন্ধ করে দেয়। <Cite n={55} /> `StrictHostKeyChecking` option এটি নিয়ন্ত্রণ করে; এর `accept-new` value নতুন key যোগ করে, কিন্তু বদলে যাওয়া key প্রত্যাখ্যান করে। <Cite n={56} />
+**চেষ্টা করুন:** একটি temporary directory-তে একটি key বানান, আর তার mode ও fingerprint (key-এর একটি ছোট code) পড়ুন। `ssh -G` setting print করে, কোথাও connect করে না। <Cite n={55} />
 
-সাবধান: `StrictHostKeyChecking=no` কিছু না জিজ্ঞেস করেই নতুন host key গ্রহণ করে এবং বদলে যাওয়া key-ও পার হতে দেয়। এতে man-in-the-middle, অর্থাৎ path-এর মাঝের attacker-এর বিরুদ্ধে সুরক্ষা দুর্বল হয়। <Cite n={56} /> Server default-ভাবে password গ্রহণ করে (`PasswordAuthentication yes`); key যথেষ্ট হলে এটি বন্ধ করুন। <Cite n={57} />
+```bash
+(
+  d=$(mktemp -d)
+  ssh-keygen -q -t ed25519 -N '' -C ci-test -f "$d/test_key"   # -N '': no passphrase, for tests only
+  stat -c '%A %n' "$d/test_key" "$d/test_key.pub"             # mode and name
+  ssh-keygen -l -f "$d/test_key.pub"
+  ssh -G -F /dev/null localhost | grep -E '^(port|stricthostkeychecking) '
+  rm -rf "$d"
+)
+# -rw------- /tmp/tmp.XXXXXXXXXX/test_key
+# -rw-r--r-- /tmp/tmp.XXXXXXXXXX/test_key.pub
+# 256 SHA256:<random> ci-test (ED25519)
+# port 22
+# stricthostkeychecking ask
+```
 
-Tutorial-এর নিজের পরামর্শ: CI-তে প্রতিটি pipeline-এর জন্য একটি key pair ব্যবহার করুন এবং সেটি CI secret store-এ রাখুন। আগে server-এর host key `known_hosts`-এ যোগ করুন। দ্রুত fail করতে `-o BatchMode=yes -o ConnectTimeout=5` ব্যবহার করুন। <Cite n={56} />
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+CI-তে কখনো `StrictHostKeyChecking=no` ব্যবহার করবেন না। এটি বদলে যাওয়া host key পার হতে দেয়, তাই man-in-the-middle-এর বিরুদ্ধে সুরক্ষা দুর্বল হয়। <Cite n={56} />
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `sshd` একটি daemon (background service)। <Cite n={57} />
+- OpenSSH 9.5 ও তার পরের version default-ভাবে Ed25519 key বানায়। <Cite n={58} /> <Cite n={66} /> পুরনো version আলাদা হতে পারে, তাই `-t ed25519` ব্যবহার করুন।
+- অন্যরা access করতে পারে এমন private key `ssh` উপেক্ষা করে, তাই mode 0600 (শুধু owner) set করুন। <Cite n={55} />
+- কোনো host key বদলে গেলে `ssh` আপনাকে সতর্ক করে এবং password login বন্ধ করে দেয়। <Cite n={55} />
+- `StrictHostKeyChecking=no` কিছু না জিজ্ঞেস করেই নতুন host key-ও গ্রহণ করে। `accept-new` value নতুন key যোগ করে, কিন্তু বদলে যাওয়া key প্রত্যাখ্যান করে। Man-in-the-middle মানে path-এর মাঝের attacker। <Cite n={56} />
+- Server default-ভাবে password গ্রহণ করে (`PasswordAuthentication yes`); key যথেষ্ট হলে এটি বন্ধ করুন। <Cite n={57} />
+- দ্রুত fail করতে `-o BatchMode=yes -o ConnectTimeout=5` ব্যবহার করুন। <Cite n={56} />
+
+Tutorial-এর নিজস্ব পরামর্শ: CI-তে প্রতিটি pipeline-এর জন্য একটি key pair ব্যবহার করুন এবং সেটি CI secret store-এ রাখুন। আগে server-এর host key `known_hosts`-এ যোগ করুন।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -875,62 +1921,162 @@ Tutorial-এর নিজের পরামর্শ: CI-তে প্রতি
 <Voices>
 <Technical>
 
-Several tool families move files. `scp` and `sftp` use an ssh connection. <Cite n={59} /> <Cite n={60} /> `rsync` sends only the differences between files and uses ssh by default. <Cite n={62} /> `curl` and `wget` download from HTTP, HTTPS, and FTP servers. <Cite n={63} /> <Cite n={64} />
+**Goal:** Copy a directory with `rsync`, after a dry run.
 
-Since OpenSSH 9.0, `scp` moves files with the SFTP protocol. <Cite n={67} /> The option `-O` selects the old protocol, and `-P` sets the port. <Cite n={59} /> The OpenSSH 8.0 notes call the old scp protocol outdated and recommend sftp and rsync. <Cite n={61} /> FTPS adds TLS, the encryption of HTTPS, to FTP, an old file transfer protocol. <Cite n={65} /> SFTP is a different protocol, which runs over ssh. <Cite n={60} />
-
-For `rsync`, `-a` keeps links, attributes, permissions, and owners, and `-n` makes a dry run, which changes nothing. <Cite n={62} /> A trailing slash on the source copies the contents of the directory. Without it, `rsync` copies the directory itself. <Cite n={62} /> `curl -f` fails with status 22 on an HTTP error, and `wget -c` resumes a partial download. <Cite n={63} /> <Cite n={64} />
+Several tool families move files. `scp` and `sftp` use an ssh connection. <Cite n={59} /> <Cite n={60} /> `rsync` sends only the differences between files and uses ssh by default. <Cite n={62} /> `curl` and `wget` download from HTTP, HTTPS, and FTP servers. <Cite n={63} /> <Cite n={64} /> For `rsync`, `-a` keeps links, attributes, permissions, and owners, and `-n` makes a dry run, which changes nothing. <Cite n={62} />
 
 ```bash
-d=$(mktemp -d); mkdir -p "$d/src/app" "$d/dst"; echo hi > "$d/src/app/a.txt"
-rsync -avn "$d/src/app/" "$d/dst/"    # dry run: a.txt would land in dst/
-rsync -ai  "$d/src/app/" "$d/dst/"    # the real copy; -i lists each change
-# Remote forms need a host that you own:
-# rsync -av --dry-run ./build/ testuser@test-host.example.com:/srv/app/
-# scp -P 22 ./report.xml testuser@test-host.example.com:/tmp/
-python3 -m http.server 18080 --bind 127.0.0.1 -d "$d/src/app" & s=$!; sleep 1   # local test server
-curl -fsS -o "$d/out.txt" http://127.0.0.1:18080/a.txt   # -f fails on HTTP errors
-kill "$s"                                                # stop the server
-rm -rf "$d"                                              # remove the temporary directory
+rsync -avn SRC/ DEST/     # dry run first
+```
+
+**Try it:** copy a directory in a temporary directory. `-v` lists the files, and `-i` lists each change. <Cite n={62} />
+
+```bash
+(
+  d=$(mktemp -d); cd "$d"
+  mkdir -p src/app dst && echo hi > src/app/a.txt
+  rsync -avn src/app/ dst/     # dry run: lists a.txt, copies nothing
+  rsync -ai src/app/ dst/      # the real copy
+  cd / && rm -rf "$d"
+)
+# sending incremental file list
+# a.txt
+#
+# sent 100 bytes  received 19 bytes  238.00 bytes/sec
+# total size is 3  speedup is 0.03 (DRY RUN)
+# >f+++++++++ a.txt
 ```
 
 <Callout type="danger" title="Check before you delete or skip verification">
 
-The option `rsync --delete` removes destination files that the source does not have. The manual advises a dry run with `-n` first. <Cite n={62} /> The option `curl -k` turns off certificate checks. <Cite n={63} /> If you resume a partial file with `sftp -a`, and the partial content differs, the file is likely corrupt. <Cite n={60} /> Tutorial's own advice: `scp` can overwrite existing files, so copy to a new name.
+`rsync --delete` removes destination files that the source does not have. The manual advises a dry run with `-n` first. <Cite n={62} /> `curl -k` turns off certificate checks. <Cite n={63} />
 
 </Callout>
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: in CI, use `curl -fsS`, so that a 404 fails the job. Use `rsync -c` when times differ but content must match. <Cite n={62} />
+Tutorial's own advice: in CI, use `curl -fsS`, so that a 404 fails the job.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Since OpenSSH 9.0, `scp` moves files with the SFTP protocol. <Cite n={67} /> The option `-O` selects the old protocol, and `-P` sets the port. <Cite n={59} />
+- The OpenSSH 8.0 notes call the old scp protocol outdated and recommend sftp and rsync. <Cite n={61} />
+- FTPS adds TLS, the encryption of HTTPS, to FTP, an old file transfer protocol. <Cite n={65} /> SFTP is a different protocol, which runs over ssh. <Cite n={60} />
+- A trailing slash on the source copies the contents of the directory. Without it, `rsync` copies the directory itself. <Cite n={62} />
+- `curl -f` fails with status 22 on an HTTP error, and `wget -c` resumes a partial download. <Cite n={63} /> <Cite n={64} />
+- If you resume a partial file with `sftp -a`, and the partial content differs, the file is likely corrupt. <Cite n={60} />
+- Use `rsync -c` when times differ but content must match. <Cite n={62} />
+
+```bash
+# Remote forms need a host that you own:
+rsync -av --dry-run ./build/ testuser@test-host.example.com:/srv/app/
+scp -P 22 ./report.xml testuser@test-host.example.com:/tmp/
+```
+
+Tutorial's own advice: `scp` can overwrite existing files, so copy to a new name.
+
+</details>
 
 </Technical>
 <Layman>
 
-Many tools move files. `scp` and `sftp` use an ssh connection. <Cite n={59} /> <Cite n={60} /> `rsync` sends only the differences between files, and it uses ssh by default. <Cite n={62} /> `curl` and `wget` download from HTTP, HTTPS, and FTP servers. <Cite n={63} /> <Cite n={64} />
+**Goal:** Copy a directory with `rsync`, after a dry run.
 
-Since OpenSSH 9.0, `scp` moves files with the SFTP protocol. <Cite n={67} /> The option `-O` selects the old protocol. <Cite n={59} /> The OpenSSH 8.0 notes call the old scp protocol outdated. <Cite n={61} />
+Many tools move files. `scp` and `sftp` use an ssh connection. <Cite n={59} /> <Cite n={60} /> `rsync` sends only the differences between files, and it uses ssh by default. <Cite n={62} /> `curl` and `wget` download from HTTP, HTTPS, and FTP servers. <Cite n={63} /> <Cite n={64} /> For `rsync`, `-a` keeps links, attributes, permissions, and owners. `-n` makes a dry run, which changes nothing. <Cite n={62} />
 
-For `rsync`, `-a` keeps links, attributes, permissions, and owners. `-n` makes a dry run, which changes nothing. <Cite n={62} /> A slash at the end of the source copies the contents of the directory. Without it, `rsync` copies the directory itself. <Cite n={62} /> `curl -f` fails with status 22 on an HTTP error. <Cite n={63} />
+**Try it:** copy a directory in a temporary directory. `-v` lists the files, and `-i` lists each change. <Cite n={62} />
 
-Be careful: `rsync --delete` removes destination files that the source does not have. Do a dry run with `-n` first. <Cite n={62} /> `curl -k` turns off certificate checks. <Cite n={63} />
+```bash
+(
+  d=$(mktemp -d); cd "$d"
+  mkdir -p src/app dst && echo hi > src/app/a.txt
+  rsync -avn src/app/ dst/     # dry run: lists a.txt, copies nothing
+  rsync -ai src/app/ dst/      # the real copy
+  cd / && rm -rf "$d"
+)
+# sending incremental file list
+# a.txt
+#
+# sent 100 bytes  received 19 bytes  238.00 bytes/sec
+# total size is 3  speedup is 0.03 (DRY RUN)
+# >f+++++++++ a.txt
+```
 
-Tutorial's own advice: in CI, use `curl -fsS`, so that a 404 makes the job fail. Use `rsync -c` when the file times differ but the content must match. <Cite n={62} />
+<Callout type="danger" title="Check before you delete or skip verification">
+
+`rsync --delete` removes destination files that the source does not have. Do a dry run with `-n` first. <Cite n={62} /> `curl -k` turns off certificate checks. <Cite n={63} />
+
+</Callout>
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: in CI, use `curl -fsS`, so that a 404 makes the job fail.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- Since OpenSSH 9.0, `scp` moves files with the SFTP protocol. <Cite n={67} /> The option `-O` selects the old protocol. <Cite n={59} /> The OpenSSH 8.0 notes call the old scp protocol outdated. <Cite n={61} />
+- A slash at the end of the source copies the contents of the directory. Without it, `rsync` copies the directory itself. <Cite n={62} />
+- `curl -f` fails with status 22 on an HTTP error. <Cite n={63} />
+- Use `rsync -c` when the file times differ but the content must match. <Cite n={62} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-File সরানোর জন্য কয়েক ধরনের tool আছে। `scp` আর `sftp` একটি ssh connection ব্যবহার করে। <Cite n={59} /> <Cite n={60} /> `rsync` file-গুলোর শুধু পার্থক্যটুকু পাঠায় এবং default-ভাবে ssh ব্যবহার করে। <Cite n={62} /> `curl` আর `wget` HTTP, HTTPS ও FTP server থেকে download করে। <Cite n={63} /> <Cite n={64} />
+**লক্ষ্য:** একটি dry run-এর পরে `rsync` দিয়ে একটি directory copy করুন।
 
-OpenSSH 9.0 থেকে `scp` SFTP protocol দিয়ে file সরায়। <Cite n={67} /> `-O` option পুরনো protocol বেছে নেয়, আর `-P` port ঠিক করে। <Cite n={59} /> OpenSSH 8.0-এর notes পুরনো scp protocol-কে outdated বলে এবং sftp ও rsync-এর পরামর্শ দেয়। <Cite n={61} /> FTPS পুরনো file transfer protocol FTP-তে TLS যোগ করে। <Cite n={65} /> SFTP একটি আলাদা protocol, যা ssh-এর ওপর চলে। <Cite n={60} />
+File সরানোর জন্য কয়েক ধরনের tool আছে। `scp` আর `sftp` একটি ssh connection ব্যবহার করে। <Cite n={59} /> <Cite n={60} /> `rsync` file-গুলোর শুধু পার্থক্যটুকু পাঠায় এবং default-ভাবে ssh ব্যবহার করে। <Cite n={62} /> `curl` আর `wget` HTTP, HTTPS ও FTP server থেকে download করে। <Cite n={63} /> <Cite n={64} /> `rsync`-এ `-a` link, attribute, permission ও owner রেখে দেয়, আর `-n` একটি dry run করে, যা কিছুই বদলায় না। <Cite n={62} />
 
-`rsync`-এ `-a` link, attribute, permission ও owner রেখে দেয়, আর `-n` একটি dry run করে, যা কিছুই বদলায় না। Source-এর শেষে slash থাকলে directory-র ভেতরের জিনিস copy হয়; না থাকলে `rsync` directory-টিই copy করে। <Cite n={62} /> `curl -f` HTTP error-এ status 22 দিয়ে fail করে, আর `wget -c` আংশিক download আবার শুরু করে। <Cite n={63} /> <Cite n={64} />
+**চেষ্টা করুন:** একটি temporary directory-র ভেতরে একটি directory copy করুন। `-v` file-গুলোর list দেখায়, আর `-i` প্রতিটি বদল দেখায়। <Cite n={62} />
 
-সাবধান: `rsync --delete` destination-এর সেই file-গুলো মুছে দেয়, যেগুলো source-এ নেই; manual আগে `-n` দিয়ে dry run করার পরামর্শ দেয়। <Cite n={62} /> `curl -k` certificate check বন্ধ করে দেয়। <Cite n={63} /> Tutorial-এর নিজের পরামর্শ: `scp` আগের file overwrite করতে পারে, তাই নতুন নামে copy করুন।
+```bash
+(
+  d=$(mktemp -d); cd "$d"
+  mkdir -p src/app dst && echo hi > src/app/a.txt
+  rsync -avn src/app/ dst/     # dry run: lists a.txt, copies nothing
+  rsync -ai src/app/ dst/      # the real copy
+  cd / && rm -rf "$d"
+)
+# sending incremental file list
+# a.txt
+#
+# sent 100 bytes  received 19 bytes  238.00 bytes/sec
+# total size is 3  speedup is 0.03 (DRY RUN)
+# >f+++++++++ a.txt
+```
 
-Tutorial-এর নিজের পরামর্শ: CI-তে `curl -fsS` ব্যবহার করুন, যাতে একটি 404 job-কে fail করায়। Time আলাদা হলেও content মিলতে হবে এমন ক্ষেত্রে `rsync -c` ব্যবহার করুন। <Cite n={62} />
+<Callout type="danger" title="Check before you delete or skip verification">
+
+`rsync --delete` destination-এর সেই file-গুলো মুছে দেয়, যেগুলো source-এ নেই; manual আগে `-n` দিয়ে dry run করার পরামর্শ দেয়। <Cite n={62} /> `curl -k` certificate check বন্ধ করে দেয়। <Cite n={63} />
+
+</Callout>
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: CI-তে `curl -fsS` ব্যবহার করুন, যাতে একটি 404 job-কে fail করায়।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- OpenSSH 9.0 থেকে `scp` SFTP protocol দিয়ে file সরায়। <Cite n={67} /> `-O` option পুরনো protocol বেছে নেয়, আর `-P` port ঠিক করে। <Cite n={59} />
+- OpenSSH 8.0-এর notes পুরনো scp protocol-কে outdated বলে এবং sftp ও rsync-এর পরামর্শ দেয়। <Cite n={61} />
+- FTPS পুরনো file transfer protocol FTP-তে TLS যোগ করে। <Cite n={65} /> SFTP একটি আলাদা protocol, যা ssh-এর ওপর চলে। <Cite n={60} />
+- Source-এর শেষে slash থাকলে directory-র ভেতরের জিনিস copy হয়; না থাকলে `rsync` directory-টিই copy করে। <Cite n={62} />
+- `curl -f` HTTP error-এ status 22 দিয়ে fail করে, আর `wget -c` আংশিক download আবার শুরু করে। <Cite n={63} /> <Cite n={64} />
+- Time আলাদা হলেও content মিলতে হবে এমন ক্ষেত্রে `rsync -c` ব্যবহার করুন। <Cite n={62} />
+
+Tutorial-এর নিজস্ব পরামর্শ: `scp` আগের file overwrite করতে পারে, তাই নতুন নামে copy করুন।
+
+</details>
 
 </Bangla>
 </Voices>

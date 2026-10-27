@@ -436,3 +436,32 @@ The Packet Analysis block now uses `-Z "$USER"` and the comment "send test traff
 
 The `mktemp -d` mode is local knowledge (it creates a directory that only the owner can use); it is not cited. The command was not run (needs root).
 
+
+## Round 2 (2026-10-27): Try it commands
+
+The page is rewritten as short lessons (Goal, Core, Try it, tip, Go deeper). Every Try-it ran on Ubuntu 26.04.1 LTS with GNU bash 5.3.9, iproute2 6.19.0 (`ip`, `ss`), iputils 20250605 (`ping`), tcpdump 4.99.6 (libpcap 1.10.6), iptables 1.8.11 (nf_tables), nftables 1.1.6, OpenSSH 10.2p1, rsync 3.4.1, and Python 3.14.4. No Try-it uses `sudo`, sends traffic off the host, or changes an interface, route, firewall, or DNS setting. Machine-specific values are stand-ins (marked in a comment on the page): interface name `eth0`, addresses from 198.51.100.0/24, the uid, the PID, the temporary directory name, and the key fingerprint.
+
+| Topic | Try-it command | Real output (stand-ins marked) |
+|---|---|---|
+| Networking | `ip -br addr show lo` | `lo  UNKNOWN  127.0.0.1/8 ::1/128` |
+| TCP/IP | `cat /proc/sys/net/ipv4/ip_unprivileged_port_start`, `.../ip_local_port_range` | `1024`; `32768	60999` |
+| Ethernet, ARP, and RARP | `ip -br link show lo`; `ip neigh show dev lo \| wc -l` | `lo  UNKNOWN  00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>`; `0` |
+| Subnetting | `echo $(( 2 ** (32 - 26) ))`; two `python3 -c` lines with `ipaddress` | `64`; `255.255.255.192 192.0.2.63`; `False` |
+| IP Routing | `ip route get 127.0.0.1` | `local 127.0.0.1 dev lo src 127.0.0.1 uid 1000` / `cache <local>` (uid is machine-specific) |
+| DHCP | `ip route show proto dhcp` | `default via 198.51.100.1 dev eth0 src 198.51.100.20 metric 600` (stand-ins for a private address and a wireless interface name) |
+| DNS Resolution | `getent hosts localhost`; `grep '^nameserver' /etc/resolv.conf` | `127.0.0.1       localhost`; `nameserver 127.0.0.53` |
+| ICMP | `cat /proc/sys/net/ipv4/icmp_echo_ignore_all`, `.../icmp_ratelimit` | `0`; `1000` |
+| ping | `ping -c 2 -n 127.0.0.1; echo "exit status: $?"` | 2 replies, `ttl=64`, `0% packet loss`, `exit status: 0` |
+| traceroute | `command -v traceroute` guard, then `traceroute -n -m 3 127.0.0.1` | `traceroute is not installed` (the test machine has no `traceroute`; the loopback trace itself was not run) |
+| netstat | local `python3 -m http.server 18080 --bind 127.0.0.1`, `ss -tlnp 'sport = :18080'`, `kill` | header line and `LISTEN 0 5 127.0.0.1:18080 0.0.0.0:* users:(("python3",pid=…,fd=3))` |
+| Netfilter | `iptables -V`; `nft --version` | `iptables v1.8.11 (nf_tables)`; `nftables v1.1.6 (Commodore Bullmoose #7)` |
+| Packet Analysis | `tcpdump -d 'tcp port 8080'` and `tcpdump -d 'tcp prot 8080'` (no root, no capture) | `filter OK`; `Warning: assuming Ethernet`; `tcpdump: can't parse filter expression: syntax error` |
+| SSH | `ssh-keygen -q -t ed25519 -N '' …` in `mktemp -d`; `stat -c '%A %n'`; `ssh-keygen -l`; `ssh -G -F /dev/null localhost` | `-rw-------`, `-rw-r--r--`, `256 SHA256:<random> ci-test (ED25519)`, `port 22`, `stricthostkeychecking ask` |
+| File Transfer | `rsync -avn src/app/ dst/`; `rsync -ai src/app/ dst/` in `mktemp -d` | dry run lists `a.txt` and ends `(DRY RUN)`; copy prints `>f+++++++++ a.txt` |
+
+Checks that failed and were not used: `nft -c -f FILE` as a normal user fails with `netlink: Error: cache initialization failed: Operation not permitted`, so the Netfilter Try-it reads only the versions. `busybox traceroute` needs a raw socket (`Operation not permitted`). `ssh -G` printed `Pseudo-terminal will not be allocated because stdin is not a terminal.` on stderr only because the test shell had no terminal; the page does not show it.
+
+Facts moved, none deleted:
+- Danger callouts of traceroute (probe only your own hosts) and SSH (`StrictHostKeyChecking=no`) are now the tip of the topic. The other danger callouts (routing, DHCP, Netfilter, File Transfer) are shorter; their details are in "Go deeper". The capture-secrets warning of Packet Analysis is the tip.
+- New cite placements (sources already on the page): S18 for "`ip route show proto dhcp` lists only the routes with the tag `dhcp`" (the `proto` selector of `ip route show`) and for "`local` means that the destination is on this host"; S34 for the unit of `icmp_ratelimit` (ms); S43 for `-m`; S47 and S48 for `nft --version` and `iptables -V`; S51 for `tcpdump -d` (dump the compiled filter and stop); S55 for `ssh -G` (print the configuration and exit); S58 for `-N ''`.
+- Example outputs that no run produced (the traceroute sample, the invented tcpdump line) are removed. The routing example line in "Go deeper" is a real `ip route show` line with stand-ins.
