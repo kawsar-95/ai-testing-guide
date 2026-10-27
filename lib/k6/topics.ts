@@ -24,7 +24,8 @@ export type K6Slug =
   | "reports-and-dashboard"
   | "influxdb-and-grafana"
   | "k6-test-types"
-  | "k6-in-ci";
+  | "k6-in-ci"
+  | "case-study";
 
 const parts = [
   { num: 1, title: "Performance testing basics" },
@@ -54,6 +55,7 @@ const entries: readonly FlatEntry<K6Slug>[] = [
   { slug: "influxdb-and-grafana", title: "Live Results with InfluxDB and Grafana", description: "Send k6 metrics to InfluxDB and watch them in a Grafana dashboard.", kind: "topic", part: 5 },
   { slug: "k6-test-types", title: "Smoke, Load, Stress, Spike, Soak, and Breakpoint Tests", description: "One k6 script for each type of test.", kind: "topic", part: 5 },
   { slug: "k6-in-ci", title: "k6 in CI", description: "Run k6 in GitHub Actions and fail the job when a threshold fails.", kind: "topic", part: 5 },
+  { slug: "case-study", title: "Case Study: Testing a Money-Transfer API", description: "Walk through a real k6 project: 13 scenarios, thresholds for each API, and a deadlock that the test found.", kind: "topic", part: 5 },
 ];
 
 export const K6 = defineFlatModule({

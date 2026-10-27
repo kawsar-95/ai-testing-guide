@@ -26,23 +26,24 @@ const ENTRIES = [
   ["influxdb-and-grafana", 5],
   ["k6-test-types", 5],
   ["k6-in-ci", 5],
+  ["case-study", 5],
 ] as const;
 
 const dir = new URL("../content/k6/", import.meta.url);
 const read = (slug: string) => readFileSync(new URL(`${slug}.mdx`, dir), "utf8");
 
-test("there are 19 entries in spec order, with their parts", () => {
+test("there are 20 entries in spec order, with their parts", () => {
   assert.deepEqual(
     K6.items.map((i) => [i.slug, i.part, i.kind]),
     ENTRIES.map((e) => [e[0], e[1], "topic"]),
   );
   assert.deepEqual(
     K6.groups().map((g) => [g.part?.num, g.items.length]),
-    [[1, 3], [2, 4], [3, 4], [4, 4], [5, 4]],
+    [[1, 3], [2, 4], [3, 4], [4, 4], [5, 5]],
   );
 });
 
-test("content/k6 has exactly the 19 files, and the route map is K6.routes", () => {
+test("content/k6 has exactly the 20 files, and the route map is K6.routes", () => {
   assert.deepEqual(readdirSync(dir).sort(), ENTRIES.map((e) => `${e[0]}.mdx`).sort());
   assert.deepEqual(K6.routes, ["/k6/", ...ENTRIES.map((e) => `/k6/${e[0]}/`)]);
   const map: Record<string, string> = JSON.parse(
@@ -69,12 +70,12 @@ test("each MdxImage src in content/k6 is a file in public/", () => {
   }
 });
 
-test("the progress ids are the 19 slugs, under k6-progress", () => {
+test("the progress ids are the 20 slugs, under k6-progress", () => {
   assert.equal(K6.progress?.storageKey, "k6-progress");
   assert.deepEqual(K6.lessonIds, ENTRIES.map((e) => e[0]));
 });
 
-test("precacheUrls includes /k6/ and the 19 page routes", () => {
+test("precacheUrls includes /k6/ and the 20 page routes", () => {
   const urls = precacheUrls("");
   assert.ok(urls.includes("/k6/"));
   for (const [slug] of ENTRIES) assert.ok(urls.includes(`/k6/${slug}/`), slug);

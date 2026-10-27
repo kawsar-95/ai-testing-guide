@@ -45,14 +45,14 @@ test("sitemapPaths has the 41 Course routes", () => {
   for (const route of COURSE.routes) assert.ok(paths.includes(route), route);
 });
 
-test("sitemapPaths has the 20 k6 routes", () => {
+test("sitemapPaths has the 21 k6 routes", () => {
   const paths = sitemapPaths();
-  assert.equal(K6.routes.length, 20);
+  assert.equal(K6.routes.length, 21);
   for (const route of K6.routes) assert.ok(paths.includes(route), route);
 });
 
 test("sitemapPaths has no duplicate path", () => {
   const paths = sitemapPaths();
   assert.equal(new Set(paths).size, paths.length);
-  assert.equal(paths.length, 150);
+  assert.equal(paths.length, 151);
 });

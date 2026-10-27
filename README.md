@@ -25,7 +25,7 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 150 pages: 7 sections and 3 helper pages.
+The site has 151 pages: 7 sections and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
@@ -35,7 +35,7 @@ The site has 150 pages: 7 sections and 3 helper pages.
 | [System Design](https://kawsar-95.github.io/ai-testing-guide/system-design/) | 15 case studies | How well-known systems work (Kafka, YouTube, WhatsApp, and more) |
 | [Architecture](https://kawsar-95.github.io/ai-testing-guide/architecture/) | 19 topics and 30 practice questions | The building blocks of system architecture |
 | [Course](https://kawsar-95.github.io/ai-testing-guide/course/) | 40 topics (55 entries with links) | System design from the ground up, in 6 parts |
-| [k6](https://kawsar-95.github.io/ai-testing-guide/k6/) | 19 topics in 5 parts | Performance testing and the k6 tool, from the first script to CI |
+| [k6](https://kawsar-95.github.io/ai-testing-guide/k6/) | 20 topics in 5 parts | Performance testing and the k6 tool, from the first script to CI |
 
 Three helper pages sit beside the sections: [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) lists everything, [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows your progress, and [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) links to the interview material.
 
@@ -82,7 +82,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 
 ### Three voices for every section
 
-128 pages let you read each `##` section in three voices:
+129 pages let you read each `##` section in three voices:
 
 | Voice | What it is |
 |---|---|
@@ -124,7 +124,7 @@ The site tracks your work in your browser. It never sends it to a server.
 
 ![The Linux roadmap with a progress bar and checklists](docs/assets/linux.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 140`), your bookmarks, the topic progress of the five modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 141`), your bookmarks, the topic progress of the five modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
 
@@ -175,7 +175,7 @@ The layout adapts to phone widths. Below 1200 px the top navigation moves into t
 
 ### Install it and read offline
 
-The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 150 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
+The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 151 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
 
 ### Accessibility
 
@@ -232,7 +232,7 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `python3 scripts/check_routes.py out` | Checks that every route of the route maps has a built page. |
 | `python3 scripts/check_links.py out` | Checks internal links and assets. |
 | `python3 scripts/check_outline.py out` | Checks that every "On this page" link has a target. |
-| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 140 pages checked, 0 skipped`. |
+| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 141 pages checked, 0 skipped`. |
 
 Run the `out` checks after `npm run build`, on a build without a base path.
 
@@ -241,7 +241,7 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 ```text
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
-content/<group>/     The MDX pages: 23 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 19 k6
+content/<group>/     The MDX pages: 23 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6
 lib/                 nav.ts (tutorial page order), one data file for each module, search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
 scripts/             Python check scripts and the route maps (one JSON file for each module)

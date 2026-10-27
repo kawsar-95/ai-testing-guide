@@ -65,7 +65,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper), `MdxImage` (an image with the base path), `MdxTable` (the `table` wrapper: it adds `role` and the `data-label` of each cell) |
 | `app/(site)/architecture/page.tsx`, `app/(site)/architecture/[topic]/page.tsx` | The Architecture module: the home and one topic or the practice page. Both files are thin: they render `FlatModuleHome` and `FlatTopicPage` with `ARCHITECTURE`. `[topic]` loads `content/architecture/<topic>.mdx`. Static params come from `lib/architecture/topics.ts`. |
 | `app/(site)/k6/page.tsx`, `app/(site)/k6/[topic]/page.tsx` | The k6 module: the home (grouped by part) and one topic. Both files are thin, like the Architecture ones, with `K6`. `[topic]` loads `content/k6/<topic>.mdx`. Static params come from `lib/k6/topics.ts`. |
-| `lib/k6/topics.ts`, `lib/k6/ui.ts`, `lib/bn/k6.ts` | The one ordered list of the 19 k6 topics in 5 parts, and the English and Bangla strings. See "k6 Module". |
+| `lib/k6/topics.ts`, `lib/k6/ui.ts`, `lib/bn/k6.ts` | The one ordered list of the 20 k6 topics in 5 parts, and the English and Bangla strings. See "k6 Module". |
 | `public/images/k6/` | The owner's 5 screenshots (WebP): the first run, the VUs and duration output, and 3 Grafana steps |
 | `components/architecture/` | `PracticeQuestion` (the only Architecture-specific component) |
 | `lib/architecture/topics.ts`, `lib/architecture/ui.ts` | The one ordered list of the 19 Architecture topics and the practice page, the progress ids, and the English strings. See "Architecture Module". |
@@ -96,7 +96,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
 | `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture, Course, k6). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 150 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (all 151 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels, the three START HERE pages, `WHY_ITEMS`, and `COURSE_CARDS` |
@@ -120,7 +120,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
 | `content/course/<slug>.mdx` | The 40 Course topic pages |
-| `content/k6/<slug>.mdx` | The 19 k6 topic pages |
+| `content/k6/<slug>.mdx` | The 20 k6 topic pages |
 | `public/images/fundamentals/` | The images of the owner's notes |
 | `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `contents`, `header-nav`, `interview`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard`, `flat-module`, `course`, `k6` |
 | `docs/ARCHITECTURE.md` | How the site is built, for developers. Update it when a route, a module, or a shared mechanism changes. |
@@ -131,7 +131,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `scripts/system-design-route-map.json` | The 16 System Design routes: `/system-design/` and the 15 cases. Same identity map. |
 | `scripts/architecture-route-map.json` | The 21 Architecture routes: `/architecture/`, the 19 topics, and the practice page. Same identity map. |
 | `scripts/course-route-map.json` | The 41 Course routes: `/course/` and the 40 topic pages. Same identity map. |
-| `scripts/k6-route-map.json` | The 20 k6 routes: `/k6/` and the 19 topic pages. Same identity map. |
+| `scripts/k6-route-map.json` | The 21 k6 routes: `/k6/` and the 20 topic pages. Same identity map. |
 | `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
 | `scripts/contents-route-map.json` | The 1 contents route: `/contents/`. Same identity map. |
 | `scripts/dashboard-route-map.json` | The 1 dashboard route: `/dashboard/`. Same identity map. |
@@ -140,7 +140,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 150 routes:
+The site has 151 routes:
 
 | Routes | Count |
 |---|---|
@@ -154,7 +154,7 @@ The site has 150 routes:
 | `/fundamentals/` and the 11 Fundamentals chapters | 12 |
 | `/architecture/`, the 19 topics, and the practice page | 21 |
 | `/course/` and the 40 Course topics | 41 |
-| `/k6/` and the 19 k6 topics | 20 |
+| `/k6/` and the 20 k6 topics | 21 |
 
 | Group | Folder | Pages |
 |---|---|---|
@@ -171,7 +171,7 @@ The site has 150 routes:
 |---|---|
 | Header | Sticky, 64 px. The brand mark in a teal tile, then the top nav (from the `nav` breakpoint), then search, voice, install, theme, and the menu button (below `nav`). |
 | Top nav | `HEADER_NAV`: 4 plain links: Home, Contents, Dashboard, and Interview. The current item has a teal underline (`activeNavId`). A tutorial or module page has no current item. A module is reached from the home page and `/contents/`. Below the `nav` breakpoint, the drawer shows the same 4 links above its list (`MobileNav`). |
-| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 140 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
+| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 141 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
 | Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. Below `chapter`, `ContentsButton` above the title of a content page opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. On close, the focus goes back to the button that opened it. |
 | One section at a time | `SectionFocus` (in `ChapterLayout`) groups the flat children of `article[data-content]` by `##` heading and hides all sections but one (`data-sec-hidden`, CSS in `app/globals.css`, screen only). The text before the first `##` stays visible. A step bar sits above the section, and Previous and Next buttons below it. "Show all sections" turns it off (`localStorage` key `section-focus`). A hash or an in-page link into a hidden section shows it. Pages with fewer than 3 sections, and pages with no JavaScript, show everything. The strings are in `lib/ui.ts` and `lib/bn/shell.ts`. |
 | `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, Architecture, Course, and k6. |
@@ -182,8 +182,8 @@ The site has 150 routes:
 |---|---|
 | `ChapterTools` | Under the meta line of each content page (in the `PageMeta` slot): the pill `📖 N min read` and the toggles Bookmark and Mark as read (`aria-pressed`). It saves the page to `last-page` on mount. |
 | Reading time | `lib/reading-time.ts`: the words of the Technical text (no code, export statements, tags, or link URLs). A Fundamentals chapter gets one value per version (`getReadingMinutesByVersion`), and the version CSS shows the one of the switch / 200, rounded up, 1 at least. Computed at build time. |
-| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 140 content pages. |
-| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 140`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, and k6, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 8 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 8 keys. |
+| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 141 content pages. |
+| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 141`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, and k6, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 8 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 8 keys. |
 | Strings | `lib/dashboard.ts` (`DASHBOARD_UI`, the route). The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle. |
 
 ## Linux Module
@@ -279,18 +279,19 @@ To add a topic, add it to `lib/course/topics.ts` and to `CourseSlug`, create `co
 
 ## k6 Module
 
-The k6 module is the home at `/k6/` and 19 topic pages at `/k6/<slug>/`. It teaches performance testing and the k6 tool, in plain words for testers with no performance testing experience. The base is the owner's notes "Learn K6". The design is `docs/superpowers/specs/2026-10-27-k6-module-design.md`.
+The k6 module is the home at `/k6/` and 20 topic pages at `/k6/<slug>/`. It teaches performance testing and the k6 tool, in plain words for testers with no performance testing experience. The base is the owner's notes "Learn K6". The design is `docs/superpowers/specs/2026-10-27-k6-module-design.md`.
 
-`lib/k6/topics.ts` defines the module (`K6`) with its 5 parts and its one ordered list of 19 `topic` entries. The parts are: 1 "Performance testing basics", 2 "Start with k6", 3 "Configure the load", 4 "Write real scripts", and 5 "Results and practice". The list drives the drawer, the home page, prev/next, search (group `k6`), the sitemap, the precache, and the progress store (`localStorage` key `k6-progress`). The strings are in `lib/k6/ui.ts` (`K6_UI`), and the Bangla twin is `K6_UI_BN` in `lib/bn/k6.ts`.
+`lib/k6/topics.ts` defines the module (`K6`) with its 5 parts and its one ordered list of 20 `topic` entries. The parts are: 1 "Performance testing basics", 2 "Start with k6", 3 "Configure the load", 4 "Write real scripts", and 5 "Results and practice". The list drives the drawer, the home page, prev/next, search (group `k6`), the sitemap, the precache, and the progress store (`localStorage` key `k6-progress`). The strings are in `lib/k6/ui.ts` (`K6_UI`), and the Bangla twin is `K6_UI_BN` in `lib/bn/k6.ts`.
 
 | Rule | Detail |
 |---|---|
 | Page shape | The `##` sections follow the owner's notes. `## Key words` (a table) is always last. Each `##` section except `## Key words` has `<Voices>` (see "Voices"). Code blocks have a language. A k6 output is a `text` block. `npm test` (`tests/k6.test.ts`) checks the shape. |
 | Demo target | `https://quickpizza.grafana.com` or `http://localhost:3000`. |
-| Images | `<MdxImage src="/images/k6/<name>.webp" alt="…" width height />`. Only the owner's own screenshots (5 files in `public/images/k6/`). `npm test` checks that each `src` is a file in `public/`. |
+| Images | `<MdxImage src="/images/k6/<name>.webp" alt="…" width height />`. Only the owner's own screenshots (7 files in `public/images/k6/`, 2 of them from the owner's example project). `npm test` checks that each `src` is a file in `public/`. |
 | Sources | The owner's notes are not public and have no `<Cite>`. Each fact has a `<Cite>` to an official source: grafana.com/docs/k6, github.com/grafana/k6, InfluxData, Grafana, Docker, or GitHub docs, or the site of a tool in the tool table. No blogs or AI summaries. |
 | Owner text | Kept, with the owner's examples and numbers. Fix only what is wrong or out of date, with a cite. `test-api.k6.io` is replaced by QuickPizza, and the page follows the current k6 version. |
 | Privacy | No real login, password, token, domain, or person's name. Use `https://api.example.com` and `__ENV` values. A token in an output is `<token>`. |
+| Case study | `case-study` walks through the owner's example project [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) (commit `51e4b9e`). Facts about that project have no `<Cite>`: an agent checks them against its files, as in the Case Study group. Facts about k6 itself have a `<Cite>`. No email, password, phone number, key, or token from the project. 5 other pages and the module home link the project (`projectLink` in `K6_UI`). |
 | Third-party art | No screenshot of the k6 docs and no Statista chart. A table and a text diagram replace them. |
 | Research notes | `docs/superpowers/research/k6-<slug>.md`, `k6-<slug>.factcheck.md`, and `k6-<slug>.voices.factcheck.md`. A page is done only when both reports end with `Open FAILs: 0`, written by an agent that did not write the page. |
 
@@ -315,7 +316,7 @@ To add a topic, add it to `lib/architecture/topics.ts` and to `ArchitectureSlug`
 
 ## Voices
 
-A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 128 pages have voices: the 23 tutorial pages, the 12 Linux stages, the 15 System Design cases, the 19 Architecture topics, the 40 Course topics, and the 19 k6 topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
+A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 129 pages have voices: the 23 tutorial pages, the 12 Linux stages, the 15 System Design cases, the 19 Architecture topics, the 40 Course topics, and the 20 k6 topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
 
 ### What the reader sees
 
@@ -516,7 +517,7 @@ To change a page:
 
 The site installs as an app and is offline first.
 
-- The service worker caches all 150 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
+- The service worker caches all 151 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
 - Pages, RSC payloads, and the search index use stale-while-revalidate: the cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Offline, a page that is not in the cache gets the 404 page.
 - Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
@@ -548,7 +549,7 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 140 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 141 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 
