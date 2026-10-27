@@ -18,6 +18,8 @@ export const LINUX_UI_BN: Bn<typeof LINUX_UI> = {
   stageMeta: (topics, minutesText) => `${topics}টি টপিক · ${minutesText}`,
 
   stageEyebrow: (number) => `ধাপ ${String(number).padStart(2, "0")} · LINUX`,
+  inThisStage: "এই ধাপে",
+  inThisStageMeta: (topics, minutesText) => `${topics}টি টপিক · প্রায় ${minutesText}`,
   stageNav: "Linux-এর ধাপসমূহ",
   allStages: "সব ধাপ",
   previousStage: "আগের ধাপ",

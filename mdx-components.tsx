@@ -7,6 +7,7 @@ import { TestLevelsDiagram } from "@/components/fundamentals/diagrams/TestLevels
 import { TestPyramidDiagram } from "@/components/fundamentals/diagrams/TestPyramidDiagram";
 import { TestQuadrantsDiagram } from "@/components/fundamentals/diagrams/TestQuadrantsDiagram";
 import { TestingClassificationDiagram } from "@/components/fundamentals/diagrams/TestingClassificationDiagram";
+import { FlowDiagram } from "@/components/linux/FlowDiagram";
 import { Version } from "@/components/fundamentals/Version";
 import { Callout } from "@/components/mdx/Callout";
 import { Cite } from "@/components/mdx/Cite";
@@ -24,6 +25,7 @@ const components: MDXComponents = {
   Callout,
   CardGrid,
   Cite,
+  FlowDiagram,
   InfoCard,
   MdxImage,
   PinStateDiagram,

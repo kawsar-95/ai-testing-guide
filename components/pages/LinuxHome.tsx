@@ -52,8 +52,14 @@ export function LinuxHome() {
           <section
             key={stage.slug}
             aria-labelledby={`stage-${stage.slug}`}
-            className="border-b border-border py-5"
+            className="relative border-b border-border py-5 pl-14"
           >
+            <span
+              aria-hidden="true"
+              className="absolute left-0 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft font-mono text-[13px] font-semibold text-accent"
+            >
+              {stage.number}
+            </span>
             <p className={`${LABEL} text-accent`}>
               <T en={LINUX_UI.stageEyebrow(stage.number)} bn={BN.stageEyebrow(stage.number)} />
             </p>

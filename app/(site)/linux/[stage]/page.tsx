@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { MDXContent } from "mdx/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { LINUX_HOME, STAGES, getStage } from "@/lib/linux/stages";
+import { LINUX_HOME, STAGES, formatMinutes, getStage, studyMinutes } from "@/lib/linux/stages";
 import type { LinuxStage } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
 import { LINUX_UI_BN as BN } from "@/lib/bn/linux";
@@ -24,6 +24,8 @@ import { TopicChecklist } from "@/components/linux/TopicChecklist";
 type MdxPage = { default: MDXContent; metadata: Metadata; page?: PageInfo };
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
+/** "2 h 20 min" in Bangla units. */
+const bnMinutes = (text: string) => text.replace(" h", " ঘণ্টা").replace(" min", " মিনিট");
 const NAV_LINK = "text-accent underline underline-offset-2";
 
 export const dynamicParams = false;
@@ -105,7 +107,28 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
         <div className="mb-6 hidden chapter:block">
           <LinuxProgressSummary ids={ids} title={stage.title} />
         </div>
-        <article data-content className="mdx">
+        <aside className="mb-8 rounded-md border border-border bg-bg-raised p-4">
+          <h2 className={`${LABEL} text-accent`}>
+            <T en={LINUX_UI.inThisStage} bn={BN.inThisStage} />
+          </h2>
+          <p className="mt-1 font-mono text-[12px] text-text-dim">
+            <T
+              en={LINUX_UI.inThisStageMeta(stage.topics.length, formatMinutes(studyMinutes(stage)))}
+              bn={BN.inThisStageMeta(stage.topics.length, bnMinutes(formatMinutes(studyMinutes(stage))))}
+            />
+          </p>
+          <ol className="mt-3 grid list-none gap-x-6 gap-y-1 p-0 text-[15px] sm:grid-cols-2">
+            {stage.topics.map((topic, i) => (
+              <li key={topic.id} className="m-0 p-0">
+                <a href={`#${topic.anchor}`} className="text-text no-underline hover:text-accent">
+                  <span className="mr-2 font-mono text-[12px] text-accent">{i + 1}</span>
+                  {topic.title}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </aside>
+        <article data-content className="mdx linux-topics">
           <Content
             components={{
               PageMeta: () =>
