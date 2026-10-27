@@ -128,15 +128,13 @@ Tutorial's own advice: two jobs on one host compete for CPU and memory, so a bus
 
 **Goal:** See the namespaces of a process, and make a new namespace with `unshare`.
 
-A container is a group of processes. The kernel keeps them apart from the rest of the host. <Cite n={21} /> <Cite n={7} /> These terms matter:
+A container is a group of processes that the kernel keeps apart from the host. <Cite n={21} /> <Cite n={7} /> These terms matter:
 
 - A **namespace** gives a process its own view of one shared resource, for example process IDs or the hostname. <Cite n={7} />
-- A **cgroup** (control group) limits and counts the resources of a group of processes. <Cite n={6} />
-- An **image** is a read-only package of the app and the files that it needs. <Cite n={2} />
+- A **cgroup** limits and counts the resources of a group of processes. <Cite n={6} />
+- An **image** is a read-only package of an app and its files. <Cite n={2} />
 
-A container uses the kernel of the host. A virtual machine (VM) runs its own kernel. <Cite n={3} />
-
-**Try it:** set a hostname in a new UTS (hostname) namespace. `--user --map-root-user` makes you root in a new user namespace, without `sudo`. <Cite n={10} /> It needs user namespaces: the per-user limit in `/proc/sys/user/max_user_namespaces` must allow one more. <Cite n={7} /> The hostname of your system does not change. <Cite n={7} />
+**Try it:** set a hostname in a new UTS (hostname) namespace. `--user --map-root-user` makes you root in a new user namespace, without `sudo`. <Cite n={10} /> It needs user namespaces: the per-user limit in `/proc/sys/user/max_user_namespaces` must allow one more. <Cite n={7} />
 
 ```bash
 (
@@ -156,6 +154,10 @@ Tutorial's own advice: in each CI job, log `uname -r`, `cat /proc/self/cgroup`, 
 
 <details>
 <summary>Go deeper</summary>
+
+In the Try-it, the hostname of your system does not change. <Cite n={7} />
+
+A container uses the kernel of the host. A virtual machine (VM) runs its own kernel. <Cite n={3} />
 
 Each namespace type keeps one thing apart: for example `pid` (process IDs), `net` (network devices and ports), `mnt` (mount points), and `uts` (the hostname). <Cite n={7} /> The same number in `/proc/self/ns` means the same namespace. <Cite n={7} />
 
@@ -415,7 +417,7 @@ Tutorial's own advice: add `--rm` to remove finished containers. <Cite n={24} />
 
 **Goal:** Check the Docker client and list the running containers.
 
-Docker Engine has a long-running background service (`dockerd`) and the `docker` client. <Cite n={22} /> An **image** is a read-only template. A **container** is a runnable copy of it. <Cite n={21} /> `docker ps` lists the running containers. <Cite n={25} />
+Docker Engine has a long-running background service (`dockerd`) and the `docker` client. <Cite n={22} /> `docker ps` lists the running containers. <Cite n={25} />
 
 **Try it:** print the client version and the running containers. You need Docker and access to its daemon <Cite n={21} />, which runs as root unless rootless. <Cite n={39} /> Both commands only read.
 
@@ -441,7 +443,7 @@ Tutorial's own advice: pin the base image by digest. Publish ports on `127.0.0.1
 <details>
 <summary>Go deeper</summary>
 
-Each Dockerfile instruction, such as `RUN` or `COPY`, adds a layer. <Cite n={21} /> <Cite n={23} /> `docker run` starts a container from an image. <Cite n={24} />
+An **image** is a read-only template. A **container** is a runnable copy of it. <Cite n={21} /> Each Dockerfile instruction, such as `RUN` or `COPY`, adds a layer. <Cite n={21} /> <Cite n={23} /> `docker run` starts a container from an image. <Cite n={24} />
 
 A **volume** is storage that Docker manages. <Cite n={30} /> A **bind mount** shares a host path. You can write to it unless you add `ro`. <Cite n={31} /> A tag can move, but a digest (the hash of the image) pins one exact image. <Cite n={35} /> Compose starts several containers from one YAML file. <Cite n={36} />
 
@@ -454,7 +456,7 @@ The commands `docker ps -a`, `logs`, `exec`, `stop`, and `rm` manage containers.
 
 **লক্ষ্য:** Docker client যাচাই করুন, আর চলমান container-গুলোর তালিকা দেখুন।
 
-Docker Engine-এ একটি long-running daemon (`dockerd`) আর `docker` client থাকে। <Cite n={22} /> **Image** হলো একটি read-only template, আর **container** হলো তার একটি runnable instance। <Cite n={21} /> `docker ps` চলমান container-গুলোর তালিকা দেখায়। <Cite n={25} />
+Docker Engine-এ একটি long-running daemon (`dockerd`) আর `docker` client থাকে। <Cite n={22} /> `docker ps` চলমান container-গুলোর তালিকা দেখায়। <Cite n={25} />
 
 **চেষ্টা করুন:** client-এর version print করুন, আর চলমান container-গুলোর তালিকা দেখুন। এর জন্য Docker আর তার daemon-এ access লাগে <Cite n={21} />; rootless না হলে daemon root হিসেবে চলে। <Cite n={39} /> দুটি command শুধু পড়ে।
 
@@ -480,6 +482,7 @@ Tutorial-এর নিজস্ব পরামর্শ: base image digest দ�
 <details>
 <summary>আরও জানুন</summary>
 
+- **Image** হলো একটি read-only template, আর **container** হলো তার একটি runnable instance। <Cite n={21} />
 - `RUN` বা `COPY`-এর মতো প্রতিটি Dockerfile instruction একটি layer যোগ করে। <Cite n={21} /> <Cite n={23} />
 - `docker run` একটি image থেকে container চালু করে। <Cite n={24} />
 - **Volume** হলো Docker-এর পরিচালিত storage। <Cite n={30} />
@@ -568,7 +571,7 @@ systemd-cgls --no-pager | head -n 20    # the cgroup tree on a systemd host
 
 **Goal:** Find the cgroup of a process and read its limits.
 
-A cgroup puts processes in groups that have limits and counters. <Cite n={6} /> The files are usually at `/sys/fs/cgroup`. <Cite n={6} /> In cgroup v2, the entry in `/proc/self/cgroup` is `0::path`. <Cite n={12} /> `memory.max` caps the memory of the cgroup. `pids.max` caps the number of tasks. The value `max` means no limit. <Cite n={12} />
+`memory.max` caps memory, and `pids.max` caps tasks. The value `max` means no limit. <Cite n={12} />
 
 **Try it:** read two limit files of your cgroup. It needs cgroup v2: the first line starts with `0::`. The root cgroup (`0::/`) has no `memory.max` or `pids.max`. <Cite n={12} /> `cut -d: -f3` keeps the path after `0::`. <Cite n={49} />
 
@@ -596,7 +599,7 @@ Tutorial's own advice: test with the limits of CI. A low memory limit shows as a
 <details>
 <summary>Go deeper</summary>
 
-A **controller** manages one resource, such as `cpu`, `memory`, `io`, or `pids`. <Cite n={6} /> cgroup v1 has one tree for each controller, or shared trees. cgroup v2 has one unified tree. <Cite n={6} />
+A cgroup puts processes in groups that have limits and counters. <Cite n={6} /> The files are usually at `/sys/fs/cgroup`. <Cite n={6} /> In cgroup v2, the entry in `/proc/self/cgroup` is `0::path`. <Cite n={12} /> A **controller** manages one resource, such as `cpu`, `memory`, `io`, or `pids`. <Cite n={6} /> cgroup v1 has one tree for each controller, or shared trees. cgroup v2 has one unified tree. <Cite n={6} />
 
 If a v2 cgroup reaches `memory.max` and cannot shrink, the OOM killer runs inside that cgroup. The OOM killer is the process killer of the kernel. <Cite n={12} /> `cpu.max` caps CPU time. <Cite n={12} /> Docker sets cgroup limits with `--memory`, `--cpus`, and `--pids-limit`. <Cite n={41} /> <Cite n={24} />
 
@@ -607,7 +610,7 @@ If a v2 cgroup reaches `memory.max` and cannot shrink, the OOM killer runs insid
 
 **লক্ষ্য:** একটি process-এর cgroup খুঁজে বের করুন, আর তার limit পড়ুন।
 
-Cgroup process-গুলোকে limit আর counter সহ group-এ রাখে। <Cite n={6} /> এর file সাধারণত `/sys/fs/cgroup`-এ থাকে। <Cite n={6} /> cgroup v2-এ `/proc/self/cgroup`-এর entry হলো `0::path`। <Cite n={12} /> `memory.max` cgroup-এর memory সীমিত করে, আর `pids.max` task-এর সংখ্যা সীমিত করে। `max` মান মানে কোনো limit নেই। <Cite n={12} />
+Cgroup process-গুলোকে limit আর counter সহ group-এ রাখে। <Cite n={6} /> cgroup v2-এ `/proc/self/cgroup`-এর entry হলো `0::path`। <Cite n={12} /> `memory.max` cgroup-এর memory সীমিত করে, আর `pids.max` task-এর সংখ্যা সীমিত করে। `max` মান মানে কোনো limit নেই। <Cite n={12} />
 
 **চেষ্টা করুন:** আপনার cgroup-এর দুটি limit file পড়ুন। এর জন্য cgroup v2 লাগে: প্রথম লাইন `0::` দিয়ে শুরু হয়। Root cgroup (`0::/`)-এ `memory.max` বা `pids.max` থাকে না। <Cite n={12} /> `cut -d: -f3` `0::`-এর পরের path রাখে। <Cite n={49} />
 
@@ -635,7 +638,7 @@ Tutorial-এর নিজস্ব পরামর্শ: CI-এর limit দি
 <details>
 <summary>আরও জানুন</summary>
 
-একটি **controller** একটি resource পরিচালনা করে, যেমন `cpu`, `memory`, `io`, বা `pids`। <Cite n={6} /> cgroup v1-এ প্রতিটি controller-এর জন্য একটি tree থাকে, অথবা tree ভাগ করা থাকে; cgroup v2-এ একটিমাত্র unified tree থাকে। <Cite n={6} /> Memory limit v1-এ `memory.limit_in_bytes`, আর v2-এ `memory.max`। <Cite n={12} /> I/O controller-এর নাম v1-এ `blkio`। <Cite n={6} /> কোনো v1 hierarchy-ও চালু থাকলে `/proc/self/cgroup`-এ আরও লাইন থাকে। <Cite n={12} />
+এর file সাধারণত `/sys/fs/cgroup`-এ থাকে। <Cite n={6} /> একটি **controller** একটি resource পরিচালনা করে, যেমন `cpu`, `memory`, `io`, বা `pids`। <Cite n={6} /> cgroup v1-এ প্রতিটি controller-এর জন্য একটি tree থাকে, অথবা tree ভাগ করা থাকে; cgroup v2-এ একটিমাত্র unified tree থাকে। <Cite n={6} /> Memory limit v1-এ `memory.limit_in_bytes`, আর v2-এ `memory.max`। <Cite n={12} /> I/O controller-এর নাম v1-এ `blkio`। <Cite n={6} /> কোনো v1 hierarchy-ও চালু থাকলে `/proc/self/cgroup`-এ আরও লাইন থাকে। <Cite n={12} />
 
 - একটি v2 cgroup `memory.max`-এ পৌঁছালে এবং ছোট হতে না পারলে, সেই cgroup-এর ভেতরে OOM killer (kernel-এর process killer) চলে। <Cite n={12} />
 - `pids.max` process আর thread দুটোই গোনে। `cpu.max` CPU time সীমিত করে। CPU limit `cpu.stat`-এ `nr_throttled` হিসেবে দেখা যায়। <Cite n={12} />
