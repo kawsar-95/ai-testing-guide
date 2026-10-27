@@ -57,7 +57,7 @@ Each part of the site has one ordered list. The lists drive the drawer, the home
 | Part | List | Notes |
 |---|---|---|
 | Tutorial | `lib/nav.ts` | Groups and pages (`slug`, `title`, `description`, `tagline`). It derives `part` (1–23, continuous across the groups), `href`, `PAGES`, `GROUPS`, and `getNeighbors`. |
-| Linux | `lib/linux/stages.ts` | 12 stages and 103 topics. A topic has an `id`, a title, and an `anchor`. |
+| Linux | `lib/linux/stages.ts` | 12 stages and 103 topics. A topic has an `id`, a title, and an `anchor`. `nextTopic(done)` gives the first topic that is not done, with its link `/linux/<stage>/#<anchor>`. |
 | Fundamentals | `lib/fundamentals/chapters.ts` | 11 chapters and 117 topics. A topic id is `<chapter-slug>-NNN`. |
 | System Design | `lib/system-design/cases.ts` | 15 case studies. A flat module. |
 | Architecture | `lib/architecture/topics.ts` | 19 topics and a practice page with 30 questions. A flat module. |
@@ -173,10 +173,15 @@ A `##` section can have three voices of its text: Technical, plain English (`Lay
 | Section | `Voices.tsx`, `VoiceSwitcher.tsx`, `panels.tsx` | `Voices` holds the state of one section. The switcher has 3 buttons (Technical, `সহজ English`, `বাংলা`) with arrow-key navigation. Panels render `<div data-panel="…">`. |
 | Header | `components/layout/VoiceToggle.tsx` | Sets the site-wide default voice. Every section follows it. |
 | CSS | `app/globals.css` | Before hydration, the panel of `html[data-voice-default]` shows. After hydration, the `data-voice` of the wrapper decides. |
-| Reveal | `Voices.tsx` | A URL hash, or a click on an in-page link, that targets an element in a hidden panel shows that panel and scrolls to the element. |
+| Page voice (Linux) | `components/voice/PageVoiceSwitcher.tsx`, `lib/voice.ts` | A Linux stage page has one switcher for the whole page. CSS hides the section switchers there (`.linux-topics .voice-switch`). The switcher sets `data-voice-page` on `article[data-content]`, and CSS shows that voice in every section. It saves the choice in `localStorage` key `linux-voice` (`technical`, `layman`, or `bangla`). Without a saved choice, the page follows the site default. A change of the site default clears the choice. |
+| Reveal | `Voices.tsx`, `PageVoiceSwitcher.tsx` | A URL hash, or a click on an in-page link, that targets an element in a hidden panel shows that panel and scrolls to the element. |
 | UI text | `components/i18n/T.tsx`, `useBn.ts`, `lib/bn/`, `lib/bn.ts` | The fixed UI text has a Bangla twin for each English `*_UI` object. `<T>` renders both languages and CSS (`.i18n-en`, `.i18n-bn`) shows one from `data-voice-default`. `useBn` serves attributes. `tests/i18n.test.ts` checks that each twin has the same keys. |
 
 `lib/voice-source.ts` is the authoring check for `<Voices>` blocks. `tests/voice-source.test.ts` runs it on every MDX file. Each page with voices has a voice fact-check report in `docs/superpowers/research/`. The authoring rules are in CLAUDE.md.
+
+### Linux lessons
+
+Each `##` topic of a Linux stage page is a short lesson: Goal, Core text, Try it, a tip, and a closed "Go deeper" block. `lib/linux-lesson.ts` checks the shape with a line scan, like `lib/voice-source.ts`. `tests/linux-lesson.test.ts` runs it on all 12 stages. It checks the shape of the Technical panel, the limit of 150 words before `<details>` and the limit of 160 characters for the tip in all 3 voices, and that no code block runs `rm -r` on `$PWD` or on a variable with no `:?` guard. A stage page shows an "In this stage" box and numbers its topics with a CSS counter (class `linux-topics`). On `/linux/`, `ContinueButton` reads `linux-progress` and links to the first topic that is not done. The rules are in CLAUDE.md, section "Linux Module".
 
 ## Progress, reading state, and Dashboard
 
@@ -187,7 +192,7 @@ All progress is client-side. The shared code keeps its old `prep` names (`lib/pr
 | `linux-progress`, `fundamentals-progress`, `architecture-progress`, `course-progress`, `k6-progress` | Lists of done topic ids |
 | `page-read`, `page-bookmarks` | Lists of routes |
 | `last-page` | One route: the last content page that the reader opened |
-| `theme`, `voice`, `fundamentals-version` | The theme, the default voice, and the Fundamentals version |
+| `theme`, `voice`, `linux-voice`, `fundamentals-version` | The theme, the default voice, the voice of the Linux stage pages, and the Fundamentals version |
 
 `ChapterTools` (the reading pill, Bookmark, and Mark as read) sits under the meta line of each content page. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
 
@@ -281,7 +286,7 @@ The Python checks are not part of the workflow, because they expect a build with
 
 | Check | Type | What it protects |
 |---|---|---|
-| `npm test` | Node unit tests (`tests/*.test.ts`, run without a compile step on Node 22.18 or newer) | The nav lists and the files in `content/`, outline ids, search docs and ranking, theme and voice head scripts, page helpers, reading aids and reading state, the Dashboard, the PWA manifest, precache list, and worker, the data of each module, the Fundamentals version logic and structure, the `<Voices>` authoring rules, the header nav, and the token contrast |
+| `npm test` | Node unit tests (`tests/*.test.ts`, run without a compile step on Node 22.18 or newer) | The nav lists and the files in `content/`, outline ids, search docs and ranking, theme and voice head scripts, page helpers, reading aids and reading state, the Dashboard, the PWA manifest, precache list, and worker, the data of each module, the Fundamentals version logic and structure, the `<Voices>` authoring rules, the Linux lesson shape and limits, the header nav, and the token contrast |
 | `python3 -m unittest scripts/test_checks.py` | Python unit tests | The check scripts themselves |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Python unit tests | The Linux research scripts |
 | `check_routes.py out` | Build check | Every route of the route maps has a page |
@@ -315,6 +320,7 @@ The design documents in `docs/superpowers/` record how the site got here. The sp
 | Case Study group (parts 18–23) | [spec](superpowers/specs/2026-10-10-case-study-design.md) | [plan](superpowers/plans/2026-10-10-case-study.md) |
 | Interview Prep module (removed on 2026-10-20; the current `/interview/` page is a small new page, not this module) | [spec](superpowers/specs/2026-10-13-prep-module-design.md) | [plan](superpowers/plans/2026-10-13-prep-module.md) |
 | Linux module | [spec](superpowers/specs/2026-10-16-linux-module-design.md) | [plan](superpowers/plans/2026-10-16-linux-module.md) |
+| Linux module revamp (lessons, page voice, Continue) | [spec](superpowers/specs/2026-10-27-linux-revamp-design.md) | [plan](superpowers/plans/2026-10-27-linux-revamp.md) |
 | Fundamentals module | [spec](superpowers/specs/2026-10-20-fundamentals-module-design.md) | [plan](superpowers/plans/2026-10-20-fundamentals-module.md) |
 | Architecture module | [spec](superpowers/specs/2026-10-20-architecture-module-design.md) | none |
 | Voices (Technical, plain English, Bangla) | [spec](superpowers/specs/2026-10-20-voices-design.md) | [plan](superpowers/plans/2026-10-20-voices.md) |
