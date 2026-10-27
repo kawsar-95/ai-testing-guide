@@ -296,3 +296,8 @@ Facts moved (no fact deleted; every old `<Cite n>` is still on the page):
 - Super User: S20 (`wheel`, lock root), the sudo timestamp options, and the sudoers file rules moved to "Go deeper". A shorter danger callout (visudo, syntax error, `NOPASSWD: ALL`) stays visible. New gloss in "Go deeper": `getent` prints no line for a key that it cannot find (S15: exit status 2, "One or more supplied key could not be found").
 - File Permissions: the file type letters, the directory bits, and the special bits (now a table) moved to "Go deeper". The FlowDiagram of mode 640 stays in the Core part.
 - Managing Permissions: the owner rule (S30), `X`, `chown`, `chgrp`, `-R` with `-L`, and the `2770` advice moved to "Go deeper". The danger callout (`chmod -R 777`, `chown -R` on a wrong path) stays visible; it now cites S32 for the 777 claim (row D2).
+
+### Round 2, fix round 1 (2026-10-27)
+- The Try-it blocks of File Permissions and Managing Permissions now start with `cd "$(mktemp -d)" || exit`. Run again (bash 5.3.9, uutils coreutils 0.10.0): the output is unchanged. With `TMPDIR=/nonexistent_zz`, each block printed `mktemp: failed to create directory ...` and `cd: null directory`, exited with status 1, and the current directory and its file stayed.
+- Moved back to the visible danger callouts: `userdel -f` (S7) and `useradd -p` (S5) in Create, Update, and Delete Users; `-R` with `-L` (S30) in Managing Permissions. To stay in 150 words, "These programs need root" moved to Go deeper of Create, and "check the path with `ls -ld`" moved to the tutorial advice in Go deeper of Managing Permissions.
+- Super User gloss: `getent group wheel` prints no line and exits with status 2 if the group does not exist (S15; local run: exit 2).
