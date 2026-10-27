@@ -1,11 +1,374 @@
-export const metadata = { title: 'Custom Metrics', description: 'Add your own Counter, Gauge, Rate, and Trend metrics.' }
-export const page = { updated: '2026-10-27', sources: [] }
+export const metadata = { title: 'Custom Metrics', description: 'Add your own Counter, Gauge, Rate, and Trend metrics, set thresholds on them, and find them in the summary.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Create custom metrics', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/metrics/create-custom-metrics/', accessed: '2026-10-27' },
+    { title: 'Counter', publisher: 'Grafana k6 documentation (k6/metrics)', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-metrics/counter/', accessed: '2026-10-27' },
+    { title: 'Gauge', publisher: 'Grafana k6 documentation (k6/metrics)', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-metrics/gauge/', accessed: '2026-10-27' },
+    { title: 'Rate', publisher: 'Grafana k6 documentation (k6/metrics)', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-metrics/rate/', accessed: '2026-10-27' },
+    { title: 'Trend', publisher: 'Grafana k6 documentation (k6/metrics)', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-metrics/trend/', accessed: '2026-10-27' },
+    { title: 'k6/metrics', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6-metrics/', accessed: '2026-10-27' },
+    { title: 'Built-in metrics', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/metrics/reference/', accessed: '2026-10-27' },
+    { title: 'Tags and groups', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/tags-and-groups/', accessed: '2026-10-27' },
+  ],
+}
 
 # Custom Metrics
 
-Add your own Counter, Gauge, Rate, and Trend metrics.
+The built-in metrics tell you about requests. They do not know your business. A custom metric lets you count or time the thing that matters to you, such as a failed login or the time of one step.
+
+<PageMeta />
+
+## Why you need custom metrics
+
+<Voices>
+<Technical>
+
+k6 has built-in metrics for HTTP, such as `http_req_duration`, which gives the time of one request <Cite n={7} />. A custom metric measures something that you define. The module `k6/metrics` creates custom metrics of several types <Cite n={6} />.
+
+Here are two examples:
+
+- The time of one business step, such as "log in, then open the pizza list". One step can use several requests. The built-in `group_duration` times a group <Cite n={8} /> and `iteration_duration` times a full iteration <Cite n={7} />. In the tutorial's own view, a custom `Trend` is simpler when you want one named number for one step.
+- The count of failed logins. A login can return a status that the test treats as a failure, and you want a number for it.
+
+This is the tutorial's own view: add a custom metric when you want a threshold or a chart for a number that the built-in metrics do not give.
+
+</Technical>
+<Layman>
+
+k6 has built-in metrics for HTTP, such as `http_req_duration`, which gives the time of one request <Cite n={7} />. A custom metric measures something that you choose. The module `k6/metrics` makes custom metrics <Cite n={6} />.
+
+Here are two examples:
+
+- The time of one business step, such as "log in, then open the pizza list". One step can use several requests.
+- The count of failed logins.
+
+This is the tutorial's own view: add a custom metric when you want a threshold or a chart for a number that the built-in metrics do not give.
+
+</Layman>
+<Bangla>
+
+k6-এ HTTP-র জন্য built-in metric আছে, যেমন `http_req_duration`, যা একটা request-এর সময় দেয় <Cite n={7} />। Custom metric এমন কিছু মাপে যা আপনি ঠিক করেন। `k6/metrics` module custom metric বানায় <Cite n={6} />।
+
+দুটো উদাহরণ:
+
+- একটা business step-এর সময়, যেমন "login করে pizza list খোলা"। একটা step-এ কয়েকটা request থাকতে পারে। built-in `group_duration` একটা group-এর সময় মাপে <Cite n={8} />, আর `iteration_duration` পুরো একটা iteration-এর সময় মাপে <Cite n={7} />। টিউটোরিয়ালের নিজের মত: একটা step-এর জন্য একটা নামওয়ালা সংখ্যা চাইলে custom `Trend` সহজ।
+- ফেইল হওয়া login-এর সংখ্যা।
+
+এটা টিউটোরিয়ালের নিজের মত: built-in metric যে সংখ্যা দেয় না, তার জন্য threshold বা chart চাইলে custom metric যোগ করুন।
+
+</Bangla>
+</Voices>
+
+## The four metric types
+
+<Voices>
+<Technical>
+
+k6 has four custom metric types <Cite n={6} />:
+
+| Type | What it does | Threshold variable |
+| --- | --- | --- |
+| `Counter` | Adds up the values <Cite n={6} />. | `count` or `rate` <Cite n={2} /> |
+| `Gauge` | Keeps the latest value. The summary also shows the min and max <Cite n={3} /> <Cite n={6} />. | `value` <Cite n={3} /> |
+| `Rate` | Gives the share of values that are not zero, from 0.00 to 1.00 <Cite n={4} />. | `rate` <Cite n={4} /> |
+| `Trend` | Gives the min, max, average, median, and percentiles <Cite n={5} />. | `avg`, `min`, `max`, `med`, `p(N)` <Cite n={5} /> |
+
+All four types have the method `add(value, [tags])` <Cite n={2} />. `Gauge` and `Trend` also take a second constructor argument, `isTime`. If it is `true`, k6 treats the values as time values. If it is `false` or missing, the values have no type <Cite n={3} /> <Cite n={5} />.
+
+A `Rate` takes `true`, `false`, `1`, or `0`. Any non-zero value counts as a hit <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+k6 has four custom metric types <Cite n={6} />:
+
+| Type | What it does | Threshold variable |
+| --- | --- | --- |
+| `Counter` | Adds up the values <Cite n={6} />. | `count` or `rate` <Cite n={2} /> |
+| `Gauge` | Keeps the latest value. The summary also shows the min and max <Cite n={3} /> <Cite n={6} />. | `value` <Cite n={3} /> |
+| `Rate` | Gives the share of values that are not zero, from 0.00 to 1.00 <Cite n={4} />. | `rate` <Cite n={4} /> |
+| `Trend` | Gives the min, max, average, median, and percentiles <Cite n={5} />. | `avg`, `min`, `max`, `med`, `p(N)` <Cite n={5} /> |
+
+All four types have the method `add(value, [tags])` <Cite n={2} />. `Gauge` and `Trend` also take a second argument, `isTime`. If it is `true`, k6 treats the values as time values. If it is `false` or missing, the values have no type <Cite n={3} /> <Cite n={5} />.
+
+A `Rate` takes `true`, `false`, `1`, or `0`. Any value that is not zero counts as a hit <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+k6-এ চার ধরনের custom metric আছে <Cite n={6} />:
+
+| Type | কী করে | Threshold variable |
+| --- | --- | --- |
+| `Counter` | value যোগ করে যায় <Cite n={6} />। | `count` বা `rate` <Cite n={2} /> |
+| `Gauge` | সবশেষ value রাখে। summary-তে min আর max-ও দেখায় <Cite n={3} /> <Cite n={6} />। | `value` <Cite n={3} /> |
+| `Rate` | শূন্য নয় এমন value-র অনুপাত দেয়, ০.০০ থেকে ১.০০ <Cite n={4} />। | `rate` <Cite n={4} /> |
+| `Trend` | min, max, average, median আর percentile দেয় <Cite n={5} />। | `avg`, `min`, `max`, `med`, `p(N)` <Cite n={5} /> |
+
+চারটা type-এরই `add(value, [tags])` method আছে <Cite n={2} />। `Gauge` আর `Trend` দ্বিতীয় আর্গুমেন্ট হিসেবে `isTime` নেয়। এটা `true` হলে k6 value-গুলোকে সময় ধরে। `false` হলে বা না দিলে value-র কোনো type থাকে না <Cite n={3} /> <Cite n={5} />।
+
+`Rate` নেয় `true`, `false`, `1` বা `0`। শূন্য নয় এমন যেকোনো value একটা hit গোনা হয় <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## A script with all four
+
+<Voices>
+<Technical>
+
+Create each metric in the init context, outside `default` <Cite n={1} />. Then call `add` in the VU code to take a measurement <Cite n={1} />. This script targets the public demo app `quickpizza.grafana.com`. It runs 2 VUs for 5 s.
+
+```javascript
+import http from 'k6/http';
+import { sleep } from 'k6';
+import { Counter, Gauge, Rate, Trend } from 'k6/metrics';
+
+// Create every custom metric in the init context.
+const badStatus = new Counter('bad_status_count');
+const bodySize = new Gauge('home_body_bytes');
+const failedRate = new Rate('failed_requests');
+const waiting = new Trend('home_waiting_time', true);
+
+export const options = {
+  vus: 2,
+  duration: '5s',
+  thresholds: {
+    bad_status_count: ['count==0'],
+    home_body_bytes: ['value>0'],
+    failed_requests: ['rate<0.01'],
+    home_waiting_time: ['p(95)<1000'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com/');
+  const failed = res.status >= 400;
+
+  if (failed) {
+    badStatus.add(1, { page: 'home' });
+  }
+  bodySize.add(res.body.length);
+  failedRate.add(failed);
+  waiting.add(res.timings.waiting);
+
+  sleep(1);
+}
+```
+
+The `{ page: 'home' }` object is a tag. You can add tags to any value. You can use them to filter results <Cite n={1} />. A tagged value also creates a sub-metric, and a threshold can name it, as in `bad_status_count{page:home}` <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+Create each metric outside `default`, in the init context <Cite n={1} />. Then call `add` in the VU code to take a measurement <Cite n={1} />. This script targets the public demo app `quickpizza.grafana.com`. It runs 2 VUs for 5 s.
+
+```javascript
+import http from 'k6/http';
+import { sleep } from 'k6';
+import { Counter, Gauge, Rate, Trend } from 'k6/metrics';
+
+// Create every custom metric in the init context.
+const badStatus = new Counter('bad_status_count');
+const bodySize = new Gauge('home_body_bytes');
+const failedRate = new Rate('failed_requests');
+const waiting = new Trend('home_waiting_time', true);
+
+export const options = {
+  vus: 2,
+  duration: '5s',
+  thresholds: {
+    bad_status_count: ['count==0'],
+    home_body_bytes: ['value>0'],
+    failed_requests: ['rate<0.01'],
+    home_waiting_time: ['p(95)<1000'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com/');
+  const failed = res.status >= 400;
+
+  if (failed) {
+    badStatus.add(1, { page: 'home' });
+  }
+  bodySize.add(res.body.length);
+  failedRate.add(failed);
+  waiting.add(res.timings.waiting);
+
+  sleep(1);
+}
+```
+
+The `{ page: 'home' }` object is a tag. You can add tags to any value. You can use them to filter results <Cite n={1} />. A tagged value also makes a sub-metric. A threshold can name it, as in `bad_status_count{page:home}` <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+প্রতিটা metric init context-এ, `default`-এর বাইরে বানান <Cite n={1} />। এরপর VU code-এ `add` কল করে একটা measurement নিন <Cite n={1} />। এই script public demo app `quickpizza.grafana.com`-কে target করে। এটা ২টা VU নিয়ে ৫ s চলে।
+
+```javascript
+import http from 'k6/http';
+import { sleep } from 'k6';
+import { Counter, Gauge, Rate, Trend } from 'k6/metrics';
+
+// Create every custom metric in the init context.
+const badStatus = new Counter('bad_status_count');
+const bodySize = new Gauge('home_body_bytes');
+const failedRate = new Rate('failed_requests');
+const waiting = new Trend('home_waiting_time', true);
+
+export const options = {
+  vus: 2,
+  duration: '5s',
+  thresholds: {
+    bad_status_count: ['count==0'],
+    home_body_bytes: ['value>0'],
+    failed_requests: ['rate<0.01'],
+    home_waiting_time: ['p(95)<1000'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com/');
+  const failed = res.status >= 400;
+
+  if (failed) {
+    badStatus.add(1, { page: 'home' });
+  }
+  bodySize.add(res.body.length);
+  failedRate.add(failed);
+  waiting.add(res.timings.waiting);
+
+  sleep(1);
+}
+```
+
+`{ page: 'home' }` একটা tag। যেকোনো value-তে tag যোগ করা যায়। tag দিয়ে result filter করা যায় <Cite n={1} />। tag দেওয়া value একটা sub-metric-ও বানায়। threshold তার নাম দিতে পারে, যেমন `bad_status_count{page:home}` <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Thresholds on a custom metric
+
+<Voices>
+<Technical>
+
+A threshold on a custom metric works like any other threshold. The key is the metric name. The expression uses the variable of the metric type <Cite n={2} /> <Cite n={3} /> <Cite n={4} /> <Cite n={5} />. The script above has one threshold for each type. See [Thresholds](/k6/thresholds/) for the full syntax.
+
+Keep these points in mind:
+
+- Trend values are in milliseconds, so `p(95)<1000` means 1 s <Cite n={5} />. Pass `true` as the second argument when the values are times <Cite n={5} />.
+- A `Rate` goes from 0.00 to 1.00, so `rate<0.01` means less than 1% <Cite n={4} />.
+- Use percentiles for a `Trend`. The k6 docs do not recommend `min` and `max` in thresholds, because they show outliers <Cite n={5} />.
+- k6 needs to know the metric before the test starts. This is one reason why you create metrics in the init context <Cite n={1} />.
+
+If a threshold fails, the test fails, as with any threshold.
+
+</Technical>
+<Layman>
+
+A threshold on a custom metric works like any other threshold. The key is the metric name. The expression uses the variable of the metric type <Cite n={2} /> <Cite n={3} /> <Cite n={4} /> <Cite n={5} />. The script above has one threshold for each type. See [Thresholds](/k6/thresholds/) for the full syntax.
+
+Keep these points in mind:
+
+- Trend values are in milliseconds, so `p(95)<1000` means 1 s <Cite n={5} />. Pass `true` as the second argument when the values are times <Cite n={5} />.
+- A `Rate` goes from 0.00 to 1.00, so `rate<0.01` means less than 1% <Cite n={4} />.
+- Use percentiles for a `Trend`. The k6 docs do not recommend `min` and `max` in thresholds, because they show outliers <Cite n={5} />.
+- k6 must know the metric before the test starts. This is one reason why you create metrics in the init context <Cite n={1} />.
+
+If a threshold fails, the test fails, as with any threshold.
+
+</Layman>
+<Bangla>
+
+Custom metric-এর threshold অন্য threshold-এর মতোই কাজ করে। key হলো metric-এর নাম। expression-এ metric type-এর variable লাগে <Cite n={2} /> <Cite n={3} /> <Cite n={4} /> <Cite n={5} />। উপরের script-এ প্রতিটা type-এর জন্য একটা threshold আছে। পুরো syntax-এর জন্য [Thresholds](/k6/thresholds/) দেখুন।
+
+কয়েকটা কথা মনে রাখুন:
+
+- Trend-এর value millisecond-এ থাকে, তাই `p(95)<1000` মানে ১ s <Cite n={5} />। value সময় হলে দ্বিতীয় আর্গুমেন্টে `true` দিন <Cite n={5} />।
+- `Rate` ০.০০ থেকে ১.০০ পর্যন্ত যায়, তাই `rate<0.01` মানে ১%-এর কম <Cite n={4} />।
+- `Trend`-এ percentile ব্যবহার করুন। k6 docs threshold-এ `min` আর `max` ব্যবহার করতে বলে না, কারণ এগুলো outlier দেখায় <Cite n={5} />।
+- টেস্ট শুরুর আগে k6-কে metric জানতে হয়। তাই init context-এ metric বানাতে হয় <Cite n={1} />।
+
+threshold fail করলে অন্য threshold-এর মতো টেস্টও fail করে।
+
+</Bangla>
+</Voices>
+
+## Custom metrics in the summary
+
+<Voices>
+<Technical>
+
+k6 prints custom metrics in the summary at the end of a test. They are also in the raw data points <Cite n={1} />. This is the output of one local run of the script above. The numbers change on each run.
+
+```text
+  █ TOTAL RESULTS 
+
+    CUSTOM
+    bad_status_count...............: 0      0/s
+    failed_requests................: 0.00%  0 out of 8
+    home_body_bytes................: 2847   min=2847   max=2847
+    home_waiting_time..............: avg=353.85ms min=308.57ms med=322.38ms max=605.78ms p(90)=411.26ms p(95)=508.52ms
+```
+
+Each type has its own format in the summary. The `Counter` shows a total and a rate per second. The `Rate` shows a percentage and the counts. The `Gauge` shows the latest value with its min and max. The `Trend` shows its statistics, and `ms` appears because of `isTime`. All 4 thresholds passed, so k6 printed a check mark for each and exited with code 0. See [Reading Results](/k6/reading-results/) for how to read the full summary.
+
+k6 collects custom metrics from the VUs only at the end of an iteration. In a long script, a custom metric can appear only after the test has run for a while <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+k6 prints custom metrics in the summary at the end of a test. They are also in the raw data points <Cite n={1} />. This is the output of one local run of the script above. The numbers change on each run.
+
+```text
+  █ TOTAL RESULTS 
+
+    CUSTOM
+    bad_status_count...............: 0      0/s
+    failed_requests................: 0.00%  0 out of 8
+    home_body_bytes................: 2847   min=2847   max=2847
+    home_waiting_time..............: avg=353.85ms min=308.57ms med=322.38ms max=605.78ms p(90)=411.26ms p(95)=508.52ms
+```
+
+Each type has its own format in the summary. The `Counter` shows a total and a rate per second. The `Rate` shows a percentage and the counts. The `Gauge` shows the latest value with its min and max. The `Trend` shows its statistics, and `ms` appears because of `isTime`. All 4 thresholds passed, so k6 printed a check mark for each and exited with code 0. See [Reading Results](/k6/reading-results/) for how to read the full summary.
+
+k6 collects custom metrics from the VUs only at the end of an iteration. In a long script, a custom metric can appear only after the test has run for a while <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+Custom metric end-of-test summary-তে আর granular data point-এ দেখা যায় <Cite n={1} />। নিচের output উপরের script-এর একটা local run-এর। প্রতিবার সংখ্যা বদলায়।
+
+```text
+  █ TOTAL RESULTS 
+
+    CUSTOM
+    bad_status_count...............: 0      0/s
+    failed_requests................: 0.00%  0 out of 8
+    home_body_bytes................: 2847   min=2847   max=2847
+    home_waiting_time..............: avg=353.85ms min=308.57ms med=322.38ms max=605.78ms p(90)=411.26ms p(95)=508.52ms
+```
+
+summary-তে প্রতিটা type-এর নিজের format আছে। `Counter` মোট সংখ্যা আর প্রতি সেকেন্ডের rate দেখায়। `Rate` শতাংশ আর গণনা দেখায়। `Gauge` সবশেষ value আর তার min-max দেখায়। `Trend` তার statistic দেখায়, আর `isTime`-এর কারণে `ms` দেখা যায়। ৪টা threshold-ই pass করেছে, তাই k6 প্রতিটার পাশে check mark দেখিয়েছে আর exit code 0 দিয়ে শেষ হয়েছে। পুরো summary কীভাবে পড়বেন তার জন্য [Reading Results](/k6/reading-results/) দেখুন।
+
+k6 শুধু iteration শেষে VU থেকে custom metric সংগ্রহ করে। লম্বা script-এ custom metric কিছুক্ষণ পরে দেখা দিতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
 
 ## Key words
 
 | Term | Meaning |
 | --- | --- |
+| Custom metric | A metric that you create with `k6/metrics`. |
+| `Counter` | A metric that adds up the values. |
+| `Gauge` | A metric that keeps the latest value. |
+| `Rate` | A metric for the share of non-zero values. |
+| `Trend` | A metric for statistics such as average and percentiles. |
+| `add(value, [tags])` | The method that records one value. |
+| `isTime` | An option of `Gauge` and `Trend`: the values are times. |
+| Init context | The code outside `default`, where you create metrics. |
+| Sub-metric | A metric for one tag value, such as `bad_status_count{page:home}`. |
