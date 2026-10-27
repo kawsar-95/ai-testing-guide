@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { LESSON_WORD_LIMIT, lessonProblems, topicTechnicals } from "../lib/linux-lesson.ts";
 
 // Stage slugs whose pages are already in the lesson shape. Each task adds its stage.
-const LESSON_STAGES: string[] = [];
+const LESSON_STAGES: string[] = ["shell-basics"];
 
 const GOOD = [
   "**Goal:** Know what `ls` does.",
