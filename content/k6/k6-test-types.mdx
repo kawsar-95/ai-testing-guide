@@ -1,0 +1,969 @@
+export const metadata = { title: 'Smoke, Load, Stress, Spike, Soak, and Breakpoint Tests', description: 'One k6 script for each type of test: the goal, when to run it, the load shape, and the thresholds.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Load test types', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/testing-guides/test-types/', accessed: '2026-10-27' },
+    { title: 'Smoke testing', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/testing-guides/test-types/smoke-testing/', accessed: '2026-10-27' },
+    { title: 'Average-load testing', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/testing-guides/test-types/load-testing/', accessed: '2026-10-27' },
+    { title: 'Stress testing', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/testing-guides/test-types/stress-testing/', accessed: '2026-10-27' },
+    { title: 'Spike testing', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/testing-guides/test-types/spike-testing/', accessed: '2026-10-27' },
+    { title: 'Soak testing', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/testing-guides/test-types/soak-testing/', accessed: '2026-10-27' },
+    { title: 'Breakpoint testing', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/testing-guides/test-types/breakpoint-testing/', accessed: '2026-10-27' },
+    { title: 'Thresholds', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/thresholds/', accessed: '2026-10-27' },
+    { title: 'Ramping arrival rate', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/ramping-arrival-rate/', accessed: '2026-10-27' },
+  ],
+}
+
+# Smoke, Load, Stress, Spike, Soak, and Breakpoint Tests
+
+Each type of performance test asks a different question, and each has its own load shape. This page gives one short k6 script for each type, with thresholds, so you can copy it and change the URL.
+
+<PageMeta />
+
+## The six types and how to use them
+
+<Voices>
+<Technical>
+
+The k6 docs name six main types: smoke, average-load, stress, soak, spike, and breakpoint <Cite n={1} />. Each one has its own goal and its own load shape. This tutorial writes "load test" for the average-load type. The k6 docs avoid the plain name "load test", because it can also mean any test that simulates traffic <Cite n={3} />. For the concepts behind each type, see [Types of Performance Testing](/k6/performance-test-types/).
+
+Three rules from the docs apply to every type:
+
+- Start with a smoke test. Check that the script works and that the system copes with a few users. Then move to average load, and then to heavier or longer patterns <Cite n={1} />.
+- No single type removes all risk. The risk profile of your system decides which types matter most. A system that runs for days needs soak tests. A system with heavy use needs stress tests <Cite n={1} />.
+- Keep the load shape simple: ramp up, plateau, ramp down. Avoid a "rollercoaster" where the load rises and falls many times. It wastes resources and hides the cause of a problem <Cite n={1} />.
+
+The names are not standard. The docs say that no consensus exists about them, and that a stress test for one application can be an average-load test for another <Cite n={1} />. Every number on this page is an example value. Replace it with numbers from your own system.
+
+<Callout type="danger" title="Run only the smoke test against a public host">
+
+All scripts on this page use `https://quickpizza.grafana.com`, a demo site for learning. Run only the smoke test against it, with a few VUs for a few seconds. Do not run the load, stress, spike, soak, or breakpoint scripts against a public host that you do not own. They send heavy traffic and can harm the host. Run them only against your own system, in a test environment, with the permission of its owner. This is the tutorial's own safety rule. The other scripts here were only checked with `k6 inspect`, which reads a script and prints its options without sending any request.
+
+</Callout>
+
+Every script sends one `GET` request and checks the status. All except the breakpoint script then pause for one second. The breakpoint script has no pause, as the breakpoint section explains. Only `options` changes from one type to the next. The docs say that this keeps the load setup apart from the iteration logic <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+The k6 docs name six main test types: smoke, average-load, stress, soak, spike, and breakpoint <Cite n={1} />. Each one has its own goal and its own load shape. This tutorial writes "load test" for the average-load type. The docs avoid the plain name, because it can mean any test that simulates traffic <Cite n={3} />. For the ideas behind each type, see [Types of Performance Testing](/k6/performance-test-types/).
+
+Three rules from the docs apply to every type:
+
+- Start with a smoke test. Check that the script works and that the system copes with a few users. Then move to average load, and then to heavier or longer tests <Cite n={1} />.
+- No single type removes all risk. The risk of your system decides which types matter most <Cite n={1} />.
+- Keep the load shape simple: ramp up, plateau, ramp down. Do not raise and lower the load many times. That wastes resources and hides the cause of a problem <Cite n={1} />.
+
+The names are not standard. The docs say that no one agrees on them <Cite n={1} />. Every number on this page is an example value. Replace it with numbers from your own system.
+
+<Callout type="danger" title="Run only the smoke test against a public host">
+
+All scripts here use `https://quickpizza.grafana.com`, a demo site for learning. Run only the smoke test against it, with a few VUs for a few seconds. Do not run the other scripts against a public host that you do not own. They send heavy traffic and can harm the host. Run them only against your own system, in a test environment, with the permission of its owner. This is the tutorial's own safety rule. I only checked the other scripts with `k6 inspect`.
+
+</Callout>
+
+Every script sends one `GET` request and checks the status. All except the breakpoint script then pause for one second. The breakpoint script has no pause, as the breakpoint section explains. Only `options` changes. The docs say that this keeps the load setup apart from the iteration logic <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+k6 ডকুমেন্টেশনে ছয়টা প্রধান টেস্ট টাইপের নাম আছে: smoke, average-load, stress, soak, spike আর breakpoint <Cite n={1} />। প্রতিটার নিজস্ব লক্ষ্য আর নিজস্ব load shape আছে। এই টিউটোরিয়ালে "load test" বলতে average-load টাইপ বোঝানো হয়েছে। ডকুমেন্টেশন সাধারণ "load test" নামটা এড়িয়ে চলে, কারণ এটা ট্রাফিক সিমুলেট করা যেকোনো টেস্ট বোঝাতে পারে <Cite n={3} />। প্রতিটা টাইপের ধারণার জন্য দেখুন [Types of Performance Testing](/k6/performance-test-types/)।
+
+ডকুমেন্টেশনের তিনটা নিয়ম সব টাইপের জন্য খাটে:
+
+- smoke test দিয়ে শুরু করুন। দেখে নিন স্ক্রিপ্ট কাজ করে কি না, আর অল্প ইউজারে সিস্টেম ঠিক চলে কি না। তারপর average load, তারপর বেশি বা লম্বা টেস্টে যান <Cite n={1} />।
+- কোনো একটা টাইপ সব ঝুঁকি দূর করে না। আপনার সিস্টেমের ঝুঁকি ঠিক করে কোন টাইপ বেশি জরুরি <Cite n={1} />।
+- load shape সহজ রাখুন: ramp up, plateau, ramp down। load বারবার বাড়ানো-কমানো করবেন না। এতে রিসোর্স নষ্ট হয় আর সমস্যার কারণ লুকিয়ে যায় <Cite n={1} />।
+
+টাইপের নামগুলো স্ট্যান্ডার্ড নয়। ডকুমেন্টেশন বলে, এ নিয়ে কোনো ঐকমত্য নেই <Cite n={1} />। এই পেজের সব সংখ্যা উদাহরণ। এগুলো বদলে আপনার নিজের সিস্টেমের সংখ্যা বসান।
+
+<Callout type="danger" title="পাবলিক হোস্টে শুধু smoke test চালান">
+
+এখানকার সব স্ক্রিপ্ট `https://quickpizza.grafana.com` ব্যবহার করে, এটা শেখার জন্য একটা ডেমো সাইট। এর বিপরীতে শুধু smoke test চালান, কয়েকটা VU নিয়ে কয়েক সেকেন্ডের জন্য। যে পাবলিক হোস্টের মালিক আপনি নন, তার বিপরীতে বাকি স্ক্রিপ্ট চালাবেন না। এগুলো ভারী ট্রাফিক পাঠায় আর হোস্টের ক্ষতি করতে পারে। এগুলো শুধু নিজের সিস্টেমে, টেস্ট এনভায়রনমেন্টে, মালিকের অনুমতি নিয়ে চালান। এটা টিউটোরিয়ালের নিজের নিরাপত্তা নিয়ম। বাকি স্ক্রিপ্ট আমি শুধু `k6 inspect` দিয়ে চেক করেছি।
+
+</Callout>
+
+প্রতিটা স্ক্রিপ্ট একটা `GET` request পাঠায় আর status check করে। breakpoint স্ক্রিপ্ট ছাড়া বাকি সবগুলো তারপর এক সেকেন্ড pause করে। breakpoint স্ক্রিপ্টে pause নেই, কারণ breakpoint সেকশন ব্যাখ্যা করেছে। শুধু `options` বদলায়। ডকুমেন্টেশন বলে, এতে load সেটআপ আর iteration logic আলাদা থাকে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Smoke test
+
+<Voices>
+<Technical>
+
+**Goal.** A smoke test checks that your script has no errors, that the system has no errors under minimal load, and it gathers baseline numbers for the response time <Cite n={2} />. The docs say to use a few VUs. More than 5 VUs is already a mini-load test. The test lasts from seconds to a few minutes at most, or a low number of iterations <Cite n={2} />. Some people call it a shakeout test <Cite n={2} />.
+
+**When to run it.** Run it whenever you create or change a script, and whenever the application code changes. It is the first step before any larger test <Cite n={2} />.
+
+**Load shape.** A flat line at a very low level:
+
+```text
+VUs
+ 3 |###########
+   +-----------> time
+    10 s (flat)
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  vus: 3,
+  duration: '10s',
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<1000'],
+    checks: ['rate>0.99'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The thresholds are example values: fewer than 1 % failed requests, `p(95)` under 1 second, and more than 99 % of checks passing. The docs show the same idea with a check on status 200 <Cite n={2} />. Thresholds can also fail a run by themselves <Cite n={8} />. This is the one script that you may run for real. Here are lines from one real run against the demo site, with 3 VUs for 10 seconds. It is one run, so your numbers will differ:
+
+```text
+checks_total.......: 24      2.130895/s
+checks_succeeded...: 100.00% 24 out of 24
+checks_failed......: 0.00%   0 out of 24
+http_req_duration..............: avg=318.48ms min=302.7ms med=317.79ms max=345.86ms p(90)=334.68ms p(95)=336.4ms
+http_req_failed................: 0.00%  0 out of 24
+iterations.....................: 24     2.130895/s
+vus_max........................: 3      min=3       max=3
+```
+
+If the smoke test shows errors from the script, fix the script first. If it shows poor performance at this tiny load, report it, fix the environment, and run the smoke test again before any larger test <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+**Goal.** A smoke test checks three things. Your script has no errors. The system has no errors under minimal load. You also get baseline numbers for the response time <Cite n={2} />. Use a few VUs. More than 5 VUs is already a mini-load test. The test lasts from seconds to a few minutes at most <Cite n={2} />. Some people call it a shakeout test <Cite n={2} />.
+
+**When to run it.** Run it when you create or change a script. Run it when the application code changes. It is the first step before any larger test <Cite n={2} />.
+
+**Load shape.** A flat line at a very low level:
+
+```text
+VUs
+ 3 |###########
+   +-----------> time
+    10 s (flat)
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  vus: 3,
+  duration: '10s',
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<1000'],
+    checks: ['rate>0.99'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The thresholds are example values. Fewer than 1 % of requests may fail. `p(95)` must stay under 1 second. More than 99 % of checks must pass. The docs show the same idea with a check on status 200 <Cite n={2} />. Thresholds can also fail a run by themselves <Cite n={8} />. This is the one script that you may run for real. Here are lines from one real run against the demo site, with 3 VUs for 10 seconds. It is one run, so your numbers will differ:
+
+```text
+checks_total.......: 24      2.130895/s
+checks_succeeded...: 100.00% 24 out of 24
+checks_failed......: 0.00%   0 out of 24
+http_req_duration..............: avg=318.48ms min=302.7ms med=317.79ms max=345.86ms p(90)=334.68ms p(95)=336.4ms
+http_req_failed................: 0.00%  0 out of 24
+iterations.....................: 24     2.130895/s
+vus_max........................: 3      min=3       max=3
+```
+
+Does the smoke test show script errors? Fix the script first. Does it show poor performance at this tiny load? Report it, fix the environment, and run the smoke test again before any larger test <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**লক্ষ্য।** smoke test তিনটা জিনিস দেখে। আপনার স্ক্রিপ্টে কোনো error নেই। সামান্য load-এ সিস্টেমেও কোনো error নেই। সাথে response time-এর baseline সংখ্যাও পাওয়া যায় <Cite n={2} />। কয়েকটা VU ব্যবহার করুন। ৫টার বেশি VU মানেই ছোট একটা load test। টেস্ট চলে কয়েক সেকেন্ড থেকে বড়জোর কয়েক মিনিট <Cite n={2} />। কেউ কেউ একে shakeout test বলে <Cite n={2} />।
+
+**কখন চালাবেন।** স্ক্রিপ্ট বানালে বা বদলালে চালান। অ্যাপ্লিকেশনের কোড বদলালেও চালান। বড় যেকোনো টেস্টের আগে এটাই প্রথম ধাপ <Cite n={2} />।
+
+**Load shape।** খুব নিচে একটা সমান রেখা:
+
+```text
+VUs
+ 3 |###########
+   +-----------> time
+    10 s (flat)
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  vus: 3,
+  duration: '10s',
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<1000'],
+    checks: ['rate>0.99'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+threshold গুলো উদাহরণ মান। ১ শতাংশের কম request fail করতে পারবে। `p(95)` ১ সেকেন্ডের নিচে থাকতে হবে। ৯৯ শতাংশের বেশি check pass করতে হবে। ডকুমেন্টেশনও status 200-এর check দিয়ে একই ধারণা দেখায় <Cite n={2} />। threshold নিজেই একটা run ফেল করাতে পারে <Cite n={8} />। এটাই একমাত্র স্ক্রিপ্ট যেটা আপনি সত্যিই চালাতে পারেন। নিচে ডেমো সাইটের বিপরীতে ৩টা VU নিয়ে ১০ সেকেন্ডের একটা আসল run থেকে কয়েকটা লাইন। এটা একটাই run, তাই আপনার সংখ্যা আলাদা হবে:
+
+```text
+checks_total.......: 24      2.130895/s
+checks_succeeded...: 100.00% 24 out of 24
+checks_failed......: 0.00%   0 out of 24
+http_req_duration..............: avg=318.48ms min=302.7ms med=317.79ms max=345.86ms p(90)=334.68ms p(95)=336.4ms
+http_req_failed................: 0.00%  0 out of 24
+iterations.....................: 24     2.130895/s
+vus_max........................: 3      min=3       max=3
+```
+
+smoke test-এ স্ক্রিপ্টের error দেখা গেলে আগে স্ক্রিপ্ট ঠিক করুন। এই ছোট load-এও performance খারাপ দেখালে সেটা রিপোর্ট করুন, এনভায়রনমেন্ট ঠিক করুন, আর বড় কোনো টেস্টের আগে আবার smoke test চালান <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Average-load test (the load test)
+
+<Voices>
+<Technical>
+
+**Goal.** An average-load test checks how the system performs under typical load, such as a normal day in production <Cite n={3} />. The docs say it may also be called a day-in-life test or a volume test <Cite n={3} />.
+
+**When to run it.** Run it to check that the system meets its goals on a typical day, to find early signs of degradation during the ramp-up or the full-load period, and to confirm that the standards still hold after a code or infrastructure change <Cite n={3} />.
+
+**Load shape.** A ramp up, a long plateau at the average, and a ramp down. The docs give these guides: take the number of users and the throughput from monitoring or analytics tools of production, or from the business. Make the ramp-up 5 % to 15 % of the test time, so the system can warm up or auto-scale. Keep the plateau at least five times the length of the ramp-up. The ramp-down lasts about as long as the ramp-up, or a bit less <Cite n={3} />.
+
+```text
+VUs
+100 |      ##############
+    |     #              #
+    |    #                #
+  0 +---#------------------#--> time
+     5 min    30 min     5 min
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '5m', target: 100 },
+    { duration: '30m', target: 100 },
+    { duration: '5m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<500'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The thresholds are example values for a system with a one-second pause per iteration. The ramp-up shows whether the response time gets worse as the load grows. The plateau shows whether the system and its resources stay stable under full load <Cite n={3} />. If a first test makes your system or staging environment crash, that is a useful result: start small, or ramp up more slowly <Cite n={3} />. Thresholds turn the result into a pass or a fail <Cite n={8} />.
+
+</Technical>
+<Layman>
+
+**Goal.** An average-load test checks how the system performs under typical load, such as a normal day in production <Cite n={3} />. The docs say it may also be called a day-in-life test or a volume test <Cite n={3} />.
+
+**When to run it.** Run it to check that the system meets its goals on a typical day. Run it to find early signs of degradation during the ramp-up or the full load. Run it after a code or infrastructure change, to confirm that the standards still hold <Cite n={3} />.
+
+**Load shape.** A ramp up, a long plateau at the average, and a ramp down. Take the number of users and the throughput from production monitoring or analytics tools, or from the business <Cite n={3} />. Make the ramp-up 5 % to 15 % of the test time. This lets the system warm up or auto-scale. Keep the plateau at least five times the length of the ramp-up. The ramp-down lasts about as long as the ramp-up, or a bit less <Cite n={3} />.
+
+```text
+VUs
+100 |      ##############
+    |     #              #
+    |    #                #
+  0 +---#------------------#--> time
+     5 min    30 min     5 min
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '5m', target: 100 },
+    { duration: '30m', target: 100 },
+    { duration: '5m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<500'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The thresholds are example values for a system with a one-second pause per iteration. The ramp-up shows whether the response time gets worse as the load grows. The plateau shows whether the system and its resources stay stable under full load <Cite n={3} />. Did your first test crash your system or staging environment? That is a useful result. Start small, or ramp up more slowly <Cite n={3} />. Thresholds turn the result into a pass or a fail <Cite n={8} />.
+
+</Layman>
+<Bangla>
+
+**লক্ষ্য।** average-load test দেখে সাধারণ load-এ, যেমন প্রোডাকশনের একটা স্বাভাবিক দিনে, সিস্টেম কেমন চলে <Cite n={3} />। ডকুমেন্টেশন বলে, একে day-in-life test বা volume test-ও বলা হতে পারে <Cite n={3} />।
+
+**কখন চালাবেন।** একটা সাধারণ দিনে সিস্টেম তার লক্ষ্য পূরণ করে কি না দেখতে চালান। ramp-up বা পূর্ণ load-এর সময় degradation-এর প্রথম লক্ষণ ধরতেও চালান। কোড বা ইনফ্রাস্ট্রাকচার বদলের পরে মান ঠিক আছে কি না নিশ্চিত করতেও চালান <Cite n={3} />।
+
+**Load shape।** ramp up, গড় মানে একটা লম্বা plateau, তারপর ramp down। ইউজারের সংখ্যা আর throughput নিন প্রোডাকশনের monitoring বা analytics টুল থেকে, অথবা বিজনেস টিমের কাছ থেকে <Cite n={3} />। ramp-up রাখুন মোট টেস্ট সময়ের ৫ থেকে ১৫ শতাংশ। এতে সিস্টেম warm up বা auto-scale করার সময় পায়। plateau রাখুন ramp-up-এর অন্তত পাঁচ গুণ লম্বা। ramp-down চলে প্রায় ramp-up-এর সমান, বা একটু কম সময় <Cite n={3} />।
+
+```text
+VUs
+100 |      ##############
+    |     #              #
+    |    #                #
+  0 +---#------------------#--> time
+     5 min    30 min     5 min
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '5m', target: 100 },
+    { duration: '30m', target: 100 },
+    { duration: '5m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<500'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+threshold গুলো উদাহরণ মান, প্রতি iteration-এ এক সেকেন্ডের pause ধরে। ramp-up দেখায় load বাড়লে response time খারাপ হয় কি না। plateau দেখায় পূর্ণ load-এ সিস্টেম আর তার রিসোর্স স্থির থাকে কি না <Cite n={3} />। প্রথম টেস্টেই আপনার সিস্টেম বা staging এনভায়রনমেন্ট ক্র্যাশ করলে সেটাও কাজের ফল। ছোট থেকে শুরু করুন, বা ramp-up ধীরে করুন <Cite n={3} />। threshold ফলকে pass বা fail-এ বদলে দেয় <Cite n={8} />।
+
+</Bangla>
+</Voices>
+
+## Stress test
+
+<Voices>
+<Technical>
+
+**Goal.** A stress test checks how the system performs when the load is heavier than usual. The load shape is like the average-load test, but the load is higher and the ramp-up is longer in proportion <Cite n={4} />. The docs say it may also be called a rush-hour, surge, or scale test <Cite n={4} />.
+
+**When to run it.** Run it for moments of heavy use, such as deadlines, paydays, and rush hours <Cite n={4} />. There is no fixed percentage for the extra load. It can be a few percent above average, 50 % to 100 % above, or even twice, triple, or many times more. Choose it from the risks of your system <Cite n={4} />. Run it only after the smoke test and the average-load test. Reuse the average-load script and raise the VUs <Cite n={4} />.
+
+**Load shape.** The same as the average-load shape, but higher, with a longer ramp-up:
+
+```text
+VUs
+200 |             ##############
+    |            #              #
+    |          #                  #
+    |       #                      #
+  0 +----#----------------------------#--> time
+       10 min       30 min         5 min
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '10m', target: 200 },
+    { duration: '30m', target: 200 },
+    { duration: '5m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.05'],
+    http_req_duration: ['p(95)<1000'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The thresholds are example values, looser than the average-load ones, because you expect worse results. The test shows how far the performance falls under the extra load, and if the system survives <Cite n={4} />. A well-built system should keep a steady response time under a constant load <Cite n={4} />. Do not run a stress test early. It makes a problem at a low load hard to find <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+**Goal.** A stress test checks how the system performs when the load is heavier than usual. The shape is like the average-load test. The load is higher, and the ramp-up is longer in proportion <Cite n={4} />. The docs say it may also be called a rush-hour, surge, or scale test <Cite n={4} />.
+
+**When to run it.** Run it for moments of heavy use, such as deadlines, paydays, and rush hours <Cite n={4} />. There is no fixed percentage for the extra load. It can be a few percent above average, 50 % to 100 % above, or many times more. Choose it from the risks of your system <Cite n={4} />. Run it only after the smoke test and the average-load test. Reuse the average-load script and raise the VUs <Cite n={4} />.
+
+**Load shape.** The same as the average-load shape, but higher, with a longer ramp-up:
+
+```text
+VUs
+200 |             ##############
+    |            #              #
+    |          #                  #
+    |       #                      #
+  0 +----#----------------------------#--> time
+       10 min       30 min         5 min
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '10m', target: 200 },
+    { duration: '30m', target: 200 },
+    { duration: '5m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.05'],
+    http_req_duration: ['p(95)<1000'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The thresholds are example values, looser than the average-load ones, because you expect worse results. The test shows how far the performance falls under the extra load, and if the system survives <Cite n={4} />. A well-built system should keep a steady response time under a constant load <Cite n={4} />. Do not run a stress test early. A problem at a low load is then hard to find <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+**লক্ষ্য।** stress test দেখে স্বাভাবিকের চেয়ে ভারী load-এ সিস্টেম কেমন চলে। shape average-load test-এর মতোই, তবে load বেশি আর ramp-up আনুপাতিক হারে লম্বা <Cite n={4} />। ডকুমেন্টেশন বলে, একে rush-hour, surge বা scale test-ও বলা হয় <Cite n={4} />।
+
+**কখন চালাবেন।** ভারী ব্যবহারের মুহূর্তের জন্য চালান, যেমন ডেডলাইন, বেতনের দিন আর rush hour <Cite n={4} />। বাড়তি load-এর কোনো নির্দিষ্ট শতাংশ নেই। এটা গড়ের চেয়ে কয়েক শতাংশ বেশি হতে পারে, ৫০ থেকে ১০০ শতাংশ বেশি হতে পারে, বা আরও অনেক গুণ হতে পারে। আপনার সিস্টেমের ঝুঁকি দেখে ঠিক করুন <Cite n={4} />। শুধু smoke test আর average-load test-এর পরে চালান। average-load স্ক্রিপ্ট আবার ব্যবহার করে VU বাড়ান <Cite n={4} />।
+
+**Load shape।** average-load shape-এর মতোই, তবে উঁচু, আর ramp-up লম্বা:
+
+```text
+VUs
+200 |             ##############
+    |            #              #
+    |          #                  #
+    |       #                      #
+  0 +----#----------------------------#--> time
+       10 min       30 min         5 min
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '10m', target: 200 },
+    { duration: '30m', target: 200 },
+    { duration: '5m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.05'],
+    http_req_duration: ['p(95)<1000'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+threshold গুলো উদাহরণ মান। average-load-এর চেয়ে ঢিলে, কারণ আপনি খারাপ ফল আশা করেন। টেস্ট দেখায় বাড়তি load-এ performance কতটা পড়ে, আর সিস্টেম টিকে থাকে কি না <Cite n={4} />। ভালো সিস্টেমের একটা স্থির load-এ response time স্থির থাকা উচিত <Cite n={4} />। stress test আগেভাগে চালাবেন না। তাহলে কম load-এর সমস্যা খুঁজে পাওয়া কঠিন হয়ে যায় <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Spike test
+
+<Voices>
+<Technical>
+
+**Goal.** A spike test checks whether the system survives and performs under a sudden, massive rush of use <Cite n={5} />.
+
+**When to run it.** Run it when you expect such a rush: a ticket sale, a product launch, a broadcast ad, a deadline, or a seasonal sale <Cite n={5} />. The rush may use other processes than a normal day, so the script may need different steps. Add only the processes that are in high demand <Cite n={5} />.
+
+**Load shape.** A very fast ramp-up to a very high load, with no plateau or a very short one, and a fast ramp-down <Cite n={5} />. The graph looks like a spike:
+
+```text
+VUs
+2000 |             #
+     |           #   #
+     |         #       #
+     |       #           #
+   0 +-----#---------------#--> time
+        2 min (up)   1 min (down)
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '2m', target: 2000 },
+    { duration: '1m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.10'],
+    http_req_duration: ['p(95)<2000'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The docs' own example uses 2000 users over 2 minutes and 1 minute down, with no plateau <Cite n={5} />. Treat the numbers as an example value. The thresholds here are also example values, looser than the stress ones. Errors are common in a spike test, and the test often does not finish <Cite n={5} />. Look at the recovery time after the rush and the time to return to normal, and watch the backend while the test runs <Cite n={5} />. Run, tune, and repeat until you trust the system <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+**Goal.** A spike test checks whether the system survives and performs under a sudden, massive rush of use <Cite n={5} />.
+
+**When to run it.** Run it when you expect such a rush. Examples are a ticket sale, a product launch, a broadcast ad, a deadline, and a seasonal sale <Cite n={5} />. The rush may use other processes than a normal day. The script may then need different steps. Add only the processes that are in high demand <Cite n={5} />.
+
+**Load shape.** A very fast ramp-up to a very high load. There is no plateau, or a very short one. The ramp-down is fast <Cite n={5} />. The graph looks like a spike:
+
+```text
+VUs
+2000 |             #
+     |           #   #
+     |         #       #
+     |       #           #
+   0 +-----#---------------#--> time
+        2 min (up)   1 min (down)
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '2m', target: 2000 },
+    { duration: '1m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.10'],
+    http_req_duration: ['p(95)<2000'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The docs' own example uses 2000 users over 2 minutes and 1 minute down, with no plateau <Cite n={5} />. Treat the numbers as an example value. The thresholds here are also example values, looser than the stress ones. Errors are common in a spike test. The test often does not finish <Cite n={5} />. Look at the recovery time after the rush and the time to return to normal. Watch the backend while the test runs <Cite n={5} />. Run, tune, and repeat until you trust the system <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+**লক্ষ্য।** spike test দেখে হঠাৎ বিশাল চাপে সিস্টেম টিকে থাকে কি না আর ঠিকমতো চলে কি না <Cite n={5} />।
+
+**কখন চালাবেন।** এমন চাপ আসার আশা থাকলে চালান। উদাহরণ: টিকিট বিক্রি, প্রোডাক্ট লঞ্চ, ব্রডকাস্ট বিজ্ঞাপন, ডেডলাইন আর মৌসুমি সেল <Cite n={5} />। এই চাপে সাধারণ দিনের চেয়ে অন্য প্রসেস ব্যবহার হতে পারে। তখন স্ক্রিপ্টে অন্য ধাপ লাগতে পারে। শুধু যে প্রসেসগুলোর চাহিদা বেশি, সেগুলো যোগ করুন <Cite n={5} />।
+
+**Load shape।** খুব দ্রুত ramp-up হয়ে খুব উঁচু load-এ পৌঁছানো। plateau থাকে না, বা খুবই ছোট থাকে। ramp-down দ্রুত <Cite n={5} />। গ্রাফটা দেখতে spike-এর মতো:
+
+```text
+VUs
+2000 |             #
+     |           #   #
+     |         #       #
+     |       #           #
+   0 +-----#---------------#--> time
+        2 min (up)   1 min (down)
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '2m', target: 2000 },
+    { duration: '1m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.10'],
+    http_req_duration: ['p(95)<2000'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+ডকুমেন্টেশনের নিজের উদাহরণে ২ মিনিটে ২০০০ ইউজার আর ১ মিনিটে নামা আছে, কোনো plateau ছাড়া <Cite n={5} />। সংখ্যাগুলোকে উদাহরণ মান ধরুন। এখানকার threshold গুলোও উদাহরণ মান, stress-এর চেয়ে ঢিলে। spike test-এ error সাধারণ ব্যাপার, আর টেস্ট প্রায়ই শেষ হয় না <Cite n={5} />। চাপের পরে recovery time আর স্বাভাবিক অবস্থায় ফেরার সময় দেখুন। টেস্ট চলার সময় backend monitor করুন <Cite n={5} />। সিস্টেমের উপর ভরসা না আসা পর্যন্ত run, tune আর repeat করুন <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## Soak test
+
+<Voices>
+<Technical>
+
+**Goal.** A soak test checks the system over a long time: its loss of performance, its use of resources, and its availability and stability <Cite n={6} />. It finds defects that show only after long use, such as slower responses, leaks of memory or other resources, saturated data, and full storage <Cite n={6} />. The docs say it may also be called an endurance or stamina test <Cite n={6} />.
+
+**When to run it.** Run it for a system that must stay on for days, weeks, or months. Run it only after the smoke test and the average-load test <Cite n={6} />. If you can, reuse the average-load script and change only the plateau time. The docs list typical times from 3 hours up to 72 hours <Cite n={6} />.
+
+**Load shape.** The same ramp-up and ramp-down as the average-load test, with a plateau that lasts hours or days <Cite n={6} />:
+
+```text
+VUs
+100 |  ###################################
+    | #                                   #
+    |#                                     #
+  0 +----------------------------------------> time
+     5 min        8 hours               5 min
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '5m', target: 100 },
+    { duration: '8h', target: 100 },
+    { duration: '5m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<500'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The docs' example holds 100 users for 8 hours <Cite n={6} />. During the test, watch for changes in every metric as time passes, and compare them with the backend: memory, CPU, network, and cloud resources. The expected result is that the response times and the resource use stay stable, or stay within the normal range <Cite n={6} />. Of all the types, soak tests need backend monitoring the most <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+**Goal.** A soak test checks the system over a long time. It looks at the loss of performance, the use of resources, and the availability and stability <Cite n={6} />. It finds defects that show only after long use. Examples are slower responses, leaks of memory or other resources, saturated data, and full storage <Cite n={6} />. The docs say it may also be called an endurance or stamina test <Cite n={6} />.
+
+**When to run it.** Run it for a system that must stay on for days, weeks, or months. Run it only after the smoke test and the average-load test <Cite n={6} />. If you can, reuse the average-load script and change only the plateau time. The docs list typical times from 3 hours up to 72 hours <Cite n={6} />.
+
+**Load shape.** The same ramp-up and ramp-down as the average-load test. The plateau lasts hours or days <Cite n={6} />:
+
+```text
+VUs
+100 |  ###################################
+    | #                                   #
+    |#                                     #
+  0 +----------------------------------------> time
+     5 min        8 hours               5 min
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '5m', target: 100 },
+    { duration: '8h', target: 100 },
+    { duration: '5m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<500'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The docs' example holds 100 users for 8 hours <Cite n={6} />. During the test, watch for changes in every metric as time passes. Compare them with the backend: memory, CPU, network, and cloud resources. The expected result is that the response times and the resource use stay stable, or stay within the normal range <Cite n={6} />. Of all the types, soak tests need backend monitoring the most <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+**লক্ষ্য।** soak test অনেকক্ষণ ধরে সিস্টেম দেখে। সে performance-এর অবনতি, রিসোর্স ব্যবহার, availability আর স্থিতিশীলতা দেখে <Cite n={6} />। এটা সেসব ত্রুটি ধরে যা দীর্ঘ ব্যবহারের পরেই দেখা যায়। যেমন ধীর response, memory বা অন্য রিসোর্সের leak, data saturation আর ভরে যাওয়া storage <Cite n={6} />। ডকুমেন্টেশন বলে, একে endurance বা stamina test-ও বলা হয় <Cite n={6} />।
+
+**কখন চালাবেন।** যে সিস্টেমকে দিনের পর দিন, সপ্তাহ বা মাস ধরে চালু থাকতে হয়, তার জন্য চালান। শুধু smoke test আর average-load test-এর পরে চালান <Cite n={6} />। পারলে average-load স্ক্রিপ্ট আবার ব্যবহার করুন, শুধু plateau-র সময় বদলান। ডকুমেন্টেশন সাধারণ সময় হিসেবে ৩ ঘণ্টা থেকে ৭২ ঘণ্টা পর্যন্ত দেয় <Cite n={6} />।
+
+**Load shape।** ramp-up আর ramp-down average-load test-এর মতোই। plateau চলে কয়েক ঘণ্টা বা দিন <Cite n={6} />:
+
+```text
+VUs
+100 |  ###################################
+    | #                                   #
+    |#                                     #
+  0 +----------------------------------------> time
+     5 min        8 hours               5 min
+```
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '5m', target: 100 },
+    { duration: '8h', target: 100 },
+    { duration: '5m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<500'],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+ডকুমেন্টেশনের উদাহরণে ১০০ ইউজারকে ৮ ঘণ্টা ধরে রাখা হয় <Cite n={6} />। টেস্টের সময় সময়ের সাথে প্রতিটা metric-এর পরিবর্তন দেখুন। সেগুলো backend-এর সাথে মেলান: memory, CPU, network আর cloud রিসোর্স। আশা করা ফল হলো response time আর রিসোর্স ব্যবহার স্থির থাকবে, বা স্বাভাবিক সীমার মধ্যে থাকবে <Cite n={6} />। soak test-এর জন্য backend monitoring বিশেষভাবে জরুরি <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## Breakpoint test
+
+<Voices>
+<Technical>
+
+**Goal.** A breakpoint test finds the limits of the system. You learn where and how the system starts to fail, so you can tune the weak spots or plan what to do when the system nears a limit <Cite n={7} />. The docs say it may also be called a capacity, point load, or limit test <Cite n={7} />.
+
+**When to run it.** Run it when you must know the limits: when the load will grow, when resource use is high, or after a big change to code or infrastructure. After you tune the system, repeat the test to see if the limits moved <Cite n={7} />. Run it only when the system already performs well under the other types <Cite n={7} />. Avoid it in an elastic cloud environment. The environment may grow with the load, and you would only find the limit of your cloud bill. If you must, turn the elasticity off <Cite n={7} />.
+
+**Load shape.** The load rises slowly to an unrealistically high level. There is no plateau and no ramp-down. The test usually fails before it reaches the target, and you must stop it <Cite n={7} />:
+
+```text
+iterations/s
+20000 |                               #
+      |                          #
+      |                    #
+      |              #
+      |        #
+   10 +--#--------------------------------> time
+       0                                2 h
+   (the test stops early, at the first failed threshold)
+```
+
+```js
+import http from 'k6/http';
+import { check } from 'k6';
+
+export const options = {
+  scenarios: {
+    breakpoint: {
+      executor: 'ramping-arrival-rate',
+      startRate: 10,
+      timeUnit: '1s',
+      preAllocatedVUs: 500,
+      maxVUs: 5000,
+      stages: [{ duration: '2h', target: 20000 }],
+    },
+  },
+  thresholds: {
+    http_req_failed: [{ threshold: 'rate<0.05', abortOnFail: true, delayAbortEval: '1m' }],
+    http_req_duration: [{ threshold: 'p(95)<2000', abortOnFail: true, delayAbortEval: '1m' }],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+}
+```
+
+The docs recommend the `ramping-arrival-rate` executor for this type. It keeps raising the rate of new iterations even when the system slows down <Cite n={7} />. Because the executor paces the iterations, the script has no `sleep()` at the end <Cite n={9} />. The executor needs `preAllocatedVUs`. `startRate`, `timeUnit`, and `maxVUs` are optional <Cite n={9} />. All numbers here are example values.
+
+You can stop the test by hand with `Ctrl+C`, or by a threshold with `abortOnFail: true` <Cite n={7} />. `delayAbortEval` waits before the threshold is checked, so the metric has some samples <Cite n={8} />. When a threshold stops the test, you have found a limit.
+
+Failure means different things to different teams. The docs list five points that you may want to find: degraded performance, troublesome performance, timeouts, errors, and system failure <Cite n={7} />. After the run, you can accept the limits and prepare for them, or tune the system and run the test again <Cite n={7} />.
+
+</Technical>
+<Layman>
+
+**Goal.** A breakpoint test finds the limits of the system. You learn where and how the system starts to fail. You can then tune the weak spots or plan what to do when the system nears a limit <Cite n={7} />. The docs say it may also be called a capacity, point load, or limit test <Cite n={7} />.
+
+**When to run it.** Run it when you must know the limits. For example, the load will grow, resource use is high, or the code or infrastructure changed a lot. After you tune the system, repeat the test to see if the limits moved <Cite n={7} />. Run it only when the system already performs well under the other types <Cite n={7} />. Avoid it in an elastic cloud environment. The environment may grow with the load, and you would only find the limit of your cloud bill. If you must, turn the elasticity off <Cite n={7} />.
+
+**Load shape.** The load rises slowly to an unrealistically high level. There is no plateau and no ramp-down. The test usually fails before it reaches the target. You must stop it <Cite n={7} />:
+
+```text
+iterations/s
+20000 |                               #
+      |                          #
+      |                    #
+      |              #
+      |        #
+   10 +--#--------------------------------> time
+       0                                2 h
+   (the test stops early, at the first failed threshold)
+```
+
+```js
+import http from 'k6/http';
+import { check } from 'k6';
+
+export const options = {
+  scenarios: {
+    breakpoint: {
+      executor: 'ramping-arrival-rate',
+      startRate: 10,
+      timeUnit: '1s',
+      preAllocatedVUs: 500,
+      maxVUs: 5000,
+      stages: [{ duration: '2h', target: 20000 }],
+    },
+  },
+  thresholds: {
+    http_req_failed: [{ threshold: 'rate<0.05', abortOnFail: true, delayAbortEval: '1m' }],
+    http_req_duration: [{ threshold: 'p(95)<2000', abortOnFail: true, delayAbortEval: '1m' }],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+}
+```
+
+The docs recommend the `ramping-arrival-rate` executor for this type. It keeps raising the rate of new iterations even when the system slows down <Cite n={7} />. The executor paces the iterations, so the script has no `sleep()` at the end <Cite n={9} />. The executor needs `preAllocatedVUs`. `startRate`, `timeUnit`, and `maxVUs` are optional <Cite n={9} />. All numbers here are example values.
+
+You can stop the test by hand with `Ctrl+C`, or by a threshold with `abortOnFail: true` <Cite n={7} />. `delayAbortEval` waits before the threshold is checked, so the metric has some samples <Cite n={8} />. When a threshold stops the test, you have found a limit.
+
+Failure means different things to different teams. The docs list five points that you may want to find: degraded performance, troublesome performance, timeouts, errors, and system failure <Cite n={7} />. After the run, you can accept the limits and prepare for them. Or you can tune the system and run the test again <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+**লক্ষ্য।** breakpoint test সিস্টেমের সীমা খুঁজে বের করে। সিস্টেম কোথায় আর কীভাবে ফেল করতে শুরু করে, সেটা জানা যায়। তখন দুর্বল জায়গা tune করা যায়, বা সিস্টেম সীমার কাছে গেলে কী করবেন সেটা পরিকল্পনা করা যায় <Cite n={7} />। ডকুমেন্টেশন বলে, একে capacity, point load বা limit test-ও বলা হয় <Cite n={7} />।
+
+**কখন চালাবেন।** সীমা জানা দরকার হলে চালান। যেমন load বাড়তে থাকবে, রিসোর্স ব্যবহার বেশি, বা কোড কিংবা ইনফ্রাস্ট্রাকচারে বড় বদল হয়েছে। সিস্টেম tune করার পরে টেস্ট আবার চালিয়ে দেখুন সীমা সরেছে কি না <Cite n={7} />। অন্য টাইপগুলোতে সিস্টেম ভালো চলার পরেই শুধু এটা চালান <Cite n={7} />। elastic ক্লাউড এনভায়রনমেন্টে এটা এড়িয়ে চলুন। এনভায়রনমেন্ট load-এর সাথে বড় হতে পারে, আর আপনি শুধু আপনার ক্লাউড বিলের সীমা খুঁজে পাবেন। বাধ্য হলে elasticity বন্ধ করুন <Cite n={7} />।
+
+**Load shape।** load ধীরে ধীরে অবাস্তব রকম উঁচুতে ওঠে। plateau বা ramp-down নেই। টেস্ট সাধারণত লক্ষ্যে পৌঁছানোর আগেই ফেল করে। আপনাকে সেটা থামাতে হয় <Cite n={7} />:
+
+```text
+iterations/s
+20000 |                               #
+      |                          #
+      |                    #
+      |              #
+      |        #
+   10 +--#--------------------------------> time
+       0                                2 h
+   (the test stops early, at the first failed threshold)
+```
+
+```js
+import http from 'k6/http';
+import { check } from 'k6';
+
+export const options = {
+  scenarios: {
+    breakpoint: {
+      executor: 'ramping-arrival-rate',
+      startRate: 10,
+      timeUnit: '1s',
+      preAllocatedVUs: 500,
+      maxVUs: 5000,
+      stages: [{ duration: '2h', target: 20000 }],
+    },
+  },
+  thresholds: {
+    http_req_failed: [{ threshold: 'rate<0.05', abortOnFail: true, delayAbortEval: '1m' }],
+    http_req_duration: [{ threshold: 'p(95)<2000', abortOnFail: true, delayAbortEval: '1m' }],
+  },
+};
+
+export default function () {
+  const res = http.get('https://quickpizza.grafana.com');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+}
+```
+
+ডকুমেন্টেশন এই টাইপের জন্য `ramping-arrival-rate` executor সুপারিশ করে। সিস্টেম ধীর হয়ে গেলেও এটা নতুন iteration শুরুর হার বাড়াতে থাকে <Cite n={7} />। executor নিজেই iteration-এর গতি ঠিক করে, তাই স্ক্রিপ্টের শেষে `sleep()` নেই <Cite n={9} />। executor-এ `preAllocatedVUs` লাগে। `startRate`, `timeUnit` আর `maxVUs` ঐচ্ছিক <Cite n={9} />। এখানকার সব সংখ্যা উদাহরণ মান।
+
+আপনি `Ctrl+C` দিয়ে হাতে টেস্ট থামাতে পারেন, অথবা `abortOnFail: true` সহ একটা threshold দিয়ে থামাতে পারেন <Cite n={7} />। `delayAbortEval` threshold চেক করার আগে অপেক্ষা করে, যাতে metric-এ কিছু sample জমে <Cite n={8} />। threshold টেস্ট থামালে বুঝবেন একটা সীমা পাওয়া গেছে।
+
+ফেল করার মানে এক এক টিমের কাছে এক এক রকম। ডকুমেন্টেশন পাঁচটা বিন্দুর কথা বলে যেগুলো আপনি খুঁজতে চাইতে পারেন: degraded performance, troublesome performance, timeout, error আর system failure <Cite n={7} />। run-এর পরে আপনি সীমা মেনে নিয়ে তার জন্য প্রস্তুতি নিতে পারেন। অথবা সিস্টেম tune করে টেস্ট আবার চালাতে পারেন <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+| --- | --- |
+| Smoke test | A test with a few VUs for a short time. It checks the script and gives baseline numbers. |
+| Average-load test | A test at the typical load of a normal day. Many people call it a load test. |
+| Stress test | A test at a load above the average, to see how much performance falls. |
+| Spike test | A test with a sudden, massive rise in load and no or a very short plateau. |
+| Soak test | An average-load test with a plateau of hours or days. It finds leaks and slow decay. |
+| Breakpoint test | A test with a load that rises until the system fails or a threshold stops the test. |
+| Ramp-up | The part of a test where the load rises to its target. |
+| Plateau | The part of a test where the load stays at its target. |
+| `stages` | An option that lists the ramp-up, plateau, and ramp-down steps of a test. |
+| `ramping-arrival-rate` | An executor that raises the rate of new iterations, even when the system slows down. |
+| `abortOnFail` | A threshold setting that stops the test as soon as the threshold fails. |

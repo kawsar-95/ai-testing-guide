@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { CHAPTERS } from "@/lib/fundamentals/chapters";
 import { STAGES } from "@/lib/linux/stages";
 import type { FlatModule } from "@/lib/modules/flat";
-import { ARCHITECTURE, COURSE, SYSTEM_DESIGN } from "@/lib/modules/registry";
+import { ARCHITECTURE, COURSE, K6, SYSTEM_DESIGN } from "@/lib/modules/registry";
 import { PAGES } from "@/lib/nav";
 import {
   buildFlatSearchDocs,
@@ -45,5 +45,6 @@ export function GET() {
     ...buildFundamentalsSearchDocs(fundamentals),
     ...flatDocs(ARCHITECTURE),
     ...flatDocs(COURSE),
+    ...flatDocs(K6),
   ]);
 }

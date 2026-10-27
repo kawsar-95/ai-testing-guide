@@ -1,0 +1,680 @@
+export const metadata = { title: 'Live Results with InfluxDB and Grafana', description: 'Send k6 metrics to InfluxDB and watch them in a Grafana dashboard.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'InfluxDB output', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/results-output/real-time/influxdb/', accessed: '2026-10-27' },
+    { title: 'xk6-output-influxdb', publisher: 'Grafana Labs (GitHub)', url: 'https://github.com/grafana/xk6-output-influxdb', accessed: '2026-10-27' },
+    { title: 'InfluxDB OSS v1 release notes', publisher: 'InfluxData', url: 'https://docs.influxdata.com/influxdb/v1/about_the_project/release-notes/', accessed: '2026-10-27' },
+    { title: 'InfluxDB OSS v2 release notes', publisher: 'InfluxData', url: 'https://docs.influxdata.com/influxdb/v2/reference/release-notes/influxdb/', accessed: '2026-10-27' },
+    { title: 'influxdb (Docker Official Image)', publisher: 'Docker Hub', url: 'https://hub.docker.com/_/influxdb', accessed: '2026-10-27' },
+    { title: 'Install InfluxDB v1 with Docker', publisher: 'InfluxData', url: 'https://docs.influxdata.com/influxdb/v1/introduction/install/docker/', accessed: '2026-10-27' },
+    { title: 'influx command line interface (v1)', publisher: 'InfluxData', url: 'https://docs.influxdata.com/influxdb/v1/tools/influx-cli/', accessed: '2026-10-27' },
+    { title: 'Manage databases with InfluxQL (v1)', publisher: 'InfluxData', url: 'https://docs.influxdata.com/influxdb/v1/query_language/manage-database/', accessed: '2026-10-27' },
+    { title: 'Explore your schema with InfluxQL (v1)', publisher: 'InfluxData', url: 'https://docs.influxdata.com/influxdb/v1/query_language/explore-schema/', accessed: '2026-10-27' },
+    { title: 'Line protocol tutorial (v1)', publisher: 'InfluxData', url: 'https://docs.influxdata.com/influxdb/v1/write_protocols/line_protocol_tutorial/', accessed: '2026-10-27' },
+    { title: 'Install Grafana', publisher: 'Grafana Labs', url: 'https://grafana.com/docs/grafana/latest/setup-grafana/installation/', accessed: '2026-10-27' },
+    { title: 'Run Grafana Docker image', publisher: 'Grafana Labs', url: 'https://grafana.com/docs/grafana/latest/setup-grafana/installation/docker/', accessed: '2026-10-27' },
+    { title: 'Sign in to Grafana', publisher: 'Grafana Labs', url: 'https://grafana.com/docs/grafana/latest/setup-grafana/sign-in-to-grafana/', accessed: '2026-10-27' },
+    { title: 'Configure the InfluxDB data source', publisher: 'Grafana Labs', url: 'https://grafana.com/docs/grafana/latest/datasources/influxdb/configure-influxdb-data-source/', accessed: '2026-10-27' },
+    { title: 'Import dashboards', publisher: 'Grafana Labs', url: 'https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/import-dashboards/', accessed: '2026-10-27' },
+    { title: 'k6 Load Testing Results (dashboard 2587)', publisher: 'Grafana Labs', url: 'https://grafana.com/grafana/dashboards/2587-k6-load-testing-results/', accessed: '2026-10-27' },
+    { title: 'Bridge network driver', publisher: 'Docker', url: 'https://docs.docker.com/engine/network/drivers/bridge/', accessed: '2026-10-27' },
+    { title: 'Networking how-tos (Docker Desktop)', publisher: 'Docker', url: 'https://docs.docker.com/desktop/features/networking/networking-how-tos/', accessed: '2026-10-27' },
+    { title: 'Authentication and authorization in InfluxDB (v1)', publisher: 'InfluxData', url: 'https://docs.influxdata.com/influxdb/v1/administration/authentication_and_authorization/', accessed: '2026-10-27' },
+  ],
+}
+
+# Live Results with InfluxDB and Grafana
+
+The summary at the end of a k6 run shows the result only after the test stops. With InfluxDB and Grafana you watch the numbers move while the test runs.
+
+<PageMeta />
+
+## Why use InfluxDB and Grafana
+
+<Voices>
+<Technical>
+
+A load test is more useful when you can see how the system behaves while the load runs. You want to see the request rate, the response time, and the error rate as lines on a graph. A graph shows when the system turns slow, and whether an error spike comes with it.
+
+Two tools do this job together. **InfluxDB** is a time-series database: it stores values together with the time of each value. k6 writes its metrics into it. **Grafana** is a dashboard tool: it reads the data and draws the graphs. k6 has built-in support for sending metrics to InfluxDB v1 <Cite n={1} />. Grafana can query and show data from an InfluxDB instance <Cite n={1} />.
+
+```text
+k6 (runs the test)
+  |  --out influxdb=http://localhost:8086/k6
+  v
+InfluxDB (stores the metrics, port 8086)
+  ^
+  |  Grafana asks InfluxDB for the data
+Grafana (draws the dashboard, port 3000)
+```
+
+This page uses InfluxDB 1.x, because k6 supports it without any extra software <Cite n={1} />. The owner of this tutorial also likes this setup because it needs no plugin, unlike a JMeter setup. That is the tutorial's own view.
+
+</Technical>
+<Layman>
+
+You want to watch three things on a graph: how many requests go out, how fast the answers come, and how many fail. The graph shows the moment the system gets slow.
+
+Two tools give you this view. **InfluxDB** is a database that keeps each number with its time. k6 sends its metrics there. **Grafana** reads those numbers and draws the graphs. k6 can send metrics to InfluxDB v1 without extra software <Cite n={1} />. Grafana can read from InfluxDB <Cite n={1} />.
+
+```text
+k6 (runs the test)
+  |  --out influxdb=http://localhost:8086/k6
+  v
+InfluxDB (stores the metrics, port 8086)
+  ^
+  |  Grafana asks InfluxDB for the data
+Grafana (draws the dashboard, port 3000)
+```
+
+This page uses InfluxDB 1.x. The owner likes it because it needs no plugin. That is the tutorial's own view.
+
+</Layman>
+<Bangla>
+
+লোড টেস্টের সময় সিস্টেম কেমন আচরণ করছে সেটা দেখতে পারলে টেস্ট বেশি কাজে লাগে। আপনি request rate, response time আর error rate গ্রাফের লাইন হিসেবে দেখতে চান। গ্রাফ দেখায় সিস্টেম কখন slow হচ্ছে, আর তার সাথে error spike হচ্ছে কি না।
+
+দুটো টুল একসাথে এই কাজ করে। **InfluxDB** একটা time-series database: এটা প্রতিটা value তার সময়ের সাথে রাখে। k6 তার metric এখানে লেখে। **Grafana** একটা ড্যাশবোর্ড টুল: এটা ডেটা পড়ে গ্রাফ আঁকে। k6-এ InfluxDB v1-এ metric পাঠানোর built-in support আছে <Cite n={1} />। Grafana InfluxDB থেকে ডেটা query করে দেখাতে পারে <Cite n={1} />।
+
+```text
+k6 (টেস্ট চালায়)
+  |  --out influxdb=http://localhost:8086/k6
+  v
+InfluxDB (metric জমা রাখে, port 8086)
+  ^
+  |  Grafana InfluxDB থেকে ডেটা চায়
+Grafana (ড্যাশবোর্ড আঁকে, port 3000)
+```
+
+এই পেজে InfluxDB 1.x ব্যবহার হয়, কারণ k6 কোনো বাড়তি সফটওয়্যার ছাড়াই এটা সাপোর্ট করে <Cite n={1} />। এই tutorial-এর owner-এর এই setup ভালো লাগে, কারণ JMeter-এর মতো কোনো plugin লাগে না। এটা tutorial-এর নিজের মত।
+
+</Bangla>
+</Voices>
+
+## The three InfluxDB versions
+
+<Voices>
+<Technical>
+
+InfluxDB has three main versions. They are not the same product, and the k6 setup is different for each.
+
+| Version | Current release | Main ideas | How k6 connects |
+| --- | --- | --- | --- |
+| 1.x | 1.13 (Docker tags `1.13` and `1.13.1`) <Cite n={3} /> <Cite n={5} /> | Databases, and the InfluxQL query language <Cite n={14} /> | Built into k6 <Cite n={1} /> |
+| 2.x | 2.9.1 <Cite n={4} /> | Buckets, organizations, and API tokens <Cite n={1} /> <Cite n={14} /> | The xk6-output-influxdb extension <Cite n={1} /> |
+| 3.x | Docker tags `3-core` and `3-enterprise`, currently 3.12.1 <Cite n={5} /> | The InfluxDB 3 Core product is the latest stable version <Cite n={3} /> | Not covered by this page |
+
+A bucket in 2.x and 3.x is the same idea as a database in 1.x <Cite n={14} />. The version numbers change often, so read the current numbers on the release notes pages of InfluxData <Cite n={3} /> <Cite n={4} />.
+
+For InfluxDB v2, k6 needs a custom k6 binary that you build with the **xk6** tool and the extension <Cite n={1} />. The k6 team made a separate extension, because v2 has breaking changes in its API <Cite n={2} />. This page installs only InfluxDB 1.x, because it needs no extension.
+
+Do not use the Docker tag `latest` for InfluxDB. The InfluxData docs warn that this tag can change to a different major version, and tell you to use a specific version tag <Cite n={4} />. Use a tag such as `influxdb:1.13`.
+
+</Technical>
+<Layman>
+
+InfluxDB has three major versions. They are not the same. Pick the right one before you start.
+
+| Version | Current release | Main ideas | How k6 connects |
+| --- | --- | --- | --- |
+| 1.x | 1.13 (Docker tags `1.13` and `1.13.1`) <Cite n={3} /> <Cite n={5} /> | Databases, and the InfluxQL query language <Cite n={14} /> | Built into k6 <Cite n={1} /> |
+| 2.x | 2.9.1 <Cite n={4} /> | Buckets, organizations, and API tokens <Cite n={1} /> <Cite n={14} /> | The xk6-output-influxdb extension <Cite n={1} /> |
+| 3.x | Docker tags `3-core` and `3-enterprise`, currently 3.12.1 <Cite n={5} /> | The InfluxDB 3 Core product is the latest stable version <Cite n={3} /> | Not covered by this page |
+
+A bucket in 2.x and 3.x is what a database is in 1.x <Cite n={14} />. Version numbers change often. Check the release notes of InfluxData for the current ones <Cite n={3} /> <Cite n={4} />.
+
+Version 2 needs a special k6 program. You build it yourself with the **xk6** tool and an extension <Cite n={1} />. The k6 team made a separate extension, because v2 changed its API <Cite n={2} />. This page uses only 1.x. It needs no extension.
+
+Never use the Docker tag `latest` for InfluxDB. It can jump to a new major version. InfluxData says to pin a tag <Cite n={4} />. Use a tag such as `influxdb:1.13`.
+
+</Layman>
+<Bangla>
+
+InfluxDB-র তিনটা main version আছে। এগুলো একই product নয়, আর প্রতিটার জন্য k6 setup আলাদা।
+
+| Version | Current release | মূল ধারণা | k6 কীভাবে connect করে |
+| --- | --- | --- | --- |
+| 1.x | 1.13 (Docker tag `1.13` আর `1.13.1`) <Cite n={3} /> <Cite n={5} /> | Database, আর InfluxQL query language <Cite n={14} /> | k6-এর ভেতরেই built-in <Cite n={1} /> |
+| 2.x | 2.9.1 <Cite n={4} /> | Bucket, organization আর API token <Cite n={1} /> <Cite n={14} /> | xk6-output-influxdb extension <Cite n={1} /> |
+| 3.x | Docker tag `3-core` আর `3-enterprise`, এখন 3.12.1 <Cite n={5} /> | InfluxDB 3 Core হলো latest stable version <Cite n={3} /> | এই পেজে নেই |
+
+2.x আর 3.x-এর bucket হলো 1.x-এর database-এর মতোই ধারণা <Cite n={14} />। version number প্রায়ই বদলায়, তাই current number InfluxData-র release notes পেজে দেখুন <Cite n={3} /> <Cite n={4} />।
+
+InfluxDB v2-এর জন্য k6-র একটা custom binary লাগে। এটা আপনি **xk6** টুল আর extension দিয়ে build করেন <Cite n={1} />। v2-এর API-তে breaking change আছে, তাই k6 team আলাদা extension বানিয়েছে <Cite n={2} />। এই পেজ শুধু InfluxDB 1.x install করে, কারণ এতে extension লাগে না।
+
+InfluxDB-র জন্য Docker tag `latest` ব্যবহার করবেন না। InfluxData-র docs সতর্ক করে, এই tag অন্য major version-এ বদলে যেতে পারে, আর specific version tag ব্যবহার করতে বলে <Cite n={4} />। `influxdb:1.13`-এর মতো একটা tag ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## Run InfluxDB 1.x with Docker
+
+<Voices>
+<Technical>
+
+Docker is the simplest way to run InfluxDB. Check that Docker is installed, then start the container. The InfluxData Docker guide shows a named volume and the port `8086` <Cite n={6} />:
+
+```bash
+docker --version
+docker network create k6net
+docker run -d --name influxdb --network k6net -p 8086:8086 -v influxdb-data:/var/lib/influxdb influxdb:1.13
+```
+
+`docker network create k6net` makes a user-defined Docker network. Grafana will join it later, so that it can reach this container by its name <Cite n={17} />. This network is the tutorial's own addition to the InfluxData command. `-p 8086:8086` makes InfluxDB reachable on port `8086` of your machine <Cite n={6} />. The named volume `influxdb-data` keeps the data when the container stops. On macOS with Docker Desktop, use a named volume or a delegated directory. A bind-mounted directory must belong to user and group ID 1500 <Cite n={6} />.
+
+The owner of this tutorial used the tag `influxdb:1.8`. That tag still exists, but the Docker Hub list of supported tags now starts at `1.11`, and the newest is `1.13` <Cite n={5} />. Use `1.13`. The InfluxData guide pulls `influxdb:1.13.0`; a minor tag such as `1.13` follows the newest `1.13.x` patch <Cite n={5} /> <Cite n={6} />.
+
+Check that the container runs, then open the InfluxDB shell in it <Cite n={6} />:
+
+```bash
+docker ps
+docker exec -it influxdb influx
+```
+
+In the shell, you can create a database by hand. This step is not required for k6, because k6 creates a missing database on its own <Cite n={1} />. It is a good way to learn how InfluxDB works. `CREATE DATABASE` is an InfluxQL command <Cite n={8} />, and `SHOW DATABASES` lists the databases <Cite n={9} />:
+
+```text
+CREATE DATABASE k6
+SHOW DATABASES
+```
+
+Then write one test point. A point is written in **line protocol**: the measurement name, then the tag set, then the field set, and an optional timestamp <Cite n={10} />. The shell command `INSERT` takes a point in this form <Cite n={10} />:
+
+```text
+INSERT response_time,api=login value=250
+SELECT * FROM response_time
+```
+
+Here `response_time` is the measurement, `api=login` is a tag, and `value=250` is a field. The query returns the point with its time.
+
+</Technical>
+<Layman>
+
+Docker is the easy way to start InfluxDB. First check that Docker is installed. Then start two things: a Docker network and the container. The InfluxData guide shows the volume and the port `8086` <Cite n={6} />:
+
+```bash
+docker --version
+docker network create k6net
+docker run -d --name influxdb --network k6net -p 8086:8086 -v influxdb-data:/var/lib/influxdb influxdb:1.13
+```
+
+The network `k6net` is a private link between containers. Grafana joins it later, so it can find this container by name <Cite n={17} />. This network is the tutorial's own idea. The InfluxData command does not have it.
+
+`-p 8086:8086` opens port `8086` on your machine <Cite n={6} />. The volume `influxdb-data` keeps your data after the container stops. On macOS with Docker Desktop, use a named volume or a delegated directory <Cite n={6} />.
+
+The owner used the tag `influxdb:1.8`. It still exists. Today the supported tags on Docker Hub start at `1.11`. The newest is `1.13` <Cite n={5} />. Use `1.13`.
+
+Now check that the container runs. Then open the InfluxDB shell inside it <Cite n={6} />:
+
+```bash
+docker ps
+docker exec -it influxdb influx
+```
+
+You can make a database by hand in the shell. k6 does not need this. It makes a missing database itself <Cite n={1} />. But it teaches you how InfluxDB works. `CREATE DATABASE` is an InfluxQL command <Cite n={8} />. `SHOW DATABASES` lists what you have <Cite n={9} />:
+
+```text
+CREATE DATABASE k6
+SHOW DATABASES
+```
+
+Next, save one test value. InfluxDB reads a value in **line protocol**. It has a name, then labels (tags), then values (fields), and an optional time <Cite n={10} />. The `INSERT` command of the shell takes this form <Cite n={10} />:
+
+```text
+INSERT response_time,api=login value=250
+SELECT * FROM response_time
+```
+
+Here `response_time` is the name. `api=login` is a label. `value=250` is the value. The query gives the value back with its time.
+
+</Layman>
+<Bangla>
+
+Docker দিয়ে InfluxDB চালানো সবচেয়ে সহজ। প্রথমে Docker install আছে কি না দেখুন, তারপর container চালু করুন। InfluxData-র Docker guide একটা named volume আর port `8086` দেখায় <Cite n={6} />:
+
+```bash
+docker --version
+docker network create k6net
+docker run -d --name influxdb --network k6net -p 8086:8086 -v influxdb-data:/var/lib/influxdb influxdb:1.13
+```
+
+`docker network create k6net` একটা user-defined Docker network বানায়। Grafana পরে এতে যোগ দেবে, যাতে নাম ধরে এই container-এ পৌঁছাতে পারে <Cite n={17} />। এই network tutorial-এর নিজের যোগ করা, InfluxData-র command-এ নেই। `-p 8086:8086` মানে InfluxDB আপনার machine-এর `8086` port-এ চলবে <Cite n={6} />। named volume `influxdb-data` container বন্ধ হলেও ডেটা রাখে। macOS-এ Docker Desktop-এ named volume বা delegated directory ব্যবহার করুন। bind-mount করা directory-র মালিক হতে হবে user ও group ID 1500 <Cite n={6} />।
+
+এই tutorial-এর owner `influxdb:1.8` tag ব্যবহার করেছিলেন। ওই tag এখনো আছে, কিন্তু Docker Hub-এর supported tag তালিকা এখন `1.11` থেকে শুরু, আর সবচেয়ে নতুন `1.13` <Cite n={5} />। আপনি `1.13` ব্যবহার করুন। InfluxData-র guide `influxdb:1.13.0` pull করে; `1.13`-এর মতো minor tag নতুন `1.13.x` patch-কে অনুসরণ করে <Cite n={5} /> <Cite n={6} />।
+
+container চলছে কি না দেখুন, তারপর তার ভেতরে InfluxDB shell খুলুন <Cite n={6} />:
+
+```bash
+docker ps
+docker exec -it influxdb influx
+```
+
+shell-এ আপনি হাতে database বানাতে পারেন। k6-র জন্য এই ধাপ লাগে না, কারণ k6 না থাকলে নিজেই database বানায় <Cite n={1} />। InfluxDB কীভাবে কাজ করে তা শেখার জন্য এটা ভালো উপায়। `CREATE DATABASE` একটা InfluxQL command <Cite n={8} />, আর `SHOW DATABASES` database-এর তালিকা দেখায় <Cite n={9} />:
+
+```text
+CREATE DATABASE k6
+SHOW DATABASES
+```
+
+এরপর একটা test point লিখুন। একটা point **line protocol**-এ লেখা হয়: measurement-এর নাম, তারপর tag set, তারপর field set, আর ইচ্ছামতো একটা timestamp <Cite n={10} />। shell-এর `INSERT` command এই রূপের point নেয় <Cite n={10} />:
+
+```text
+INSERT response_time,api=login value=250
+SELECT * FROM response_time
+```
+
+এখানে `response_time` হলো measurement, `api=login` একটা tag, আর `value=250` একটা field। query point-টা তার সময়সহ ফেরত দেয়।
+
+</Bangla>
+</Voices>
+
+## Send k6 data to InfluxDB
+
+<Voices>
+<Technical>
+
+This script runs 50 iterations with 2 VUs. After each request it sleeps for one second. It targets the public demo app QuickPizza:
+
+```javascript
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  vus: 2,
+  iterations: 50,
+};
+
+export default function () {
+  http.get('https://quickpizza.grafana.com/');
+  // One second of think time keeps the load low and the graph readable.
+  sleep(1);
+}
+```
+
+Run it with the `--out` flag and the InfluxDB address. The last part of the URL is the database name <Cite n={1} />:
+
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 first-script.js
+```
+
+k6 connects to the local InfluxDB and sends the results of the test to the database `k6`. If the database does not exist, k6 creates it <Cite n={1} />. k6 takes the last segment of the URL path as the database name. A URL that ends with a slash does not name a database, and k6 then uses the default database `k6` <Cite n={1} />.
+
+Now look at the data. Open the InfluxDB shell on the database, and list the measurements <Cite n={7} /> <Cite n={9} />:
+
+```bash
+docker exec -it influxdb influx -database k6
+```
+
+```text
+SHOW MEASUREMENTS
+```
+
+In the owner's run, the list had one measurement for each k6 metric. Part of it is shown here. This output is the owner's own result; it is not from a source:
+
+```text
+name: measurements
+name
+----
+data_received
+data_sent
+http_req_duration
+http_req_failed
+http_reqs
+iteration_duration
+iterations
+vus
+vus_max
+```
+
+The database name is `k6` in lower case. The owner's notes wrote it in capital letters in one step. Use the same lower-case spelling in the URL, in the shell, and later in Grafana.
+
+</Technical>
+<Layman>
+
+This script uses 2 VUs and makes 50 iterations. It waits one second after each request. It calls the public demo app QuickPizza:
+
+```javascript
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  vus: 2,
+  iterations: 50,
+};
+
+export default function () {
+  http.get('https://quickpizza.grafana.com/');
+  // One second of think time keeps the load low and the graph readable.
+  sleep(1);
+}
+```
+
+To send the data, add the `--out` flag and the InfluxDB address. The end of the address is the database name <Cite n={1} />:
+
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 first-script.js
+```
+
+k6 finds InfluxDB on your machine. It stores the test data in the database `k6`. k6 makes the database if it is missing <Cite n={1} />. If the address ends with a slash, there is no database name. Then k6 uses the default database, `k6` <Cite n={1} />.
+
+Now look at the stored data. Open the InfluxDB shell on that database. Then list the measurements <Cite n={7} /> <Cite n={9} />:
+
+```bash
+docker exec -it influxdb influx -database k6
+```
+
+```text
+SHOW MEASUREMENTS
+```
+
+In the owner's run, each k6 metric had its own measurement. Here is part of the list. It is the owner's own result, not from a source:
+
+```text
+name: measurements
+name
+----
+data_received
+data_sent
+http_req_duration
+http_req_failed
+http_reqs
+iteration_duration
+iterations
+vus
+vus_max
+```
+
+Write the database name `k6` in lower case. Use that spelling in the address, in the shell, and in Grafana.
+
+</Layman>
+<Bangla>
+
+এই script ২টা VU নিয়ে ৫০টা iteration চালায়। প্রতিটা request-এর পর এক সেকেন্ড sleep করে। এটা public demo app QuickPizza-কে target করে:
+
+```javascript
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  vus: 2,
+  iterations: 50,
+};
+
+export default function () {
+  http.get('https://quickpizza.grafana.com/');
+  // One second of think time keeps the load low and the graph readable.
+  sleep(1);
+}
+```
+
+`--out` flag আর InfluxDB address দিয়ে এটা চালান। URL-এর শেষ অংশ হলো database-এর নাম <Cite n={1} />:
+
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 first-script.js
+```
+
+k6 লোকাল InfluxDB-র সাথে connect করে আর টেস্টের ফলাফল `k6` database-এ পাঠায়। database না থাকলে k6 সেটা বানিয়ে নেয় <Cite n={1} />। k6 URL path-এর শেষ অংশকে database-এর নাম ধরে। যে URL slash দিয়ে শেষ হয় সেটা কোনো database-এর নাম দেয় না, তখন k6 default database `k6` ব্যবহার করে <Cite n={1} />।
+
+এবার ডেটা দেখুন। database-এর উপর InfluxDB shell খুলুন, আর measurement-এর তালিকা দেখুন <Cite n={7} /> <Cite n={9} />:
+
+```bash
+docker exec -it influxdb influx -database k6
+```
+
+```text
+SHOW MEASUREMENTS
+```
+
+owner-এর run-এ তালিকায় প্রতিটা k6 metric-এর জন্য একটা measurement ছিল। এখানে তার একটা অংশ দেখানো হলো। এই output owner-এর নিজের ফলাফল; এটা কোনো source থেকে নয়:
+
+```text
+name: measurements
+name
+----
+data_received
+data_sent
+http_req_duration
+http_req_failed
+http_reqs
+iteration_duration
+iterations
+vus
+vus_max
+```
+
+database-এর নাম `k6`, ছোট হাতের অক্ষরে। owner-এর notes-এর একটা ধাপে এটা বড় হাতের অক্ষরে লেখা ছিল। URL-এ, shell-এ আর পরে Grafana-তে একই ছোট হাতের বানান ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## Run Grafana
+
+<Voices>
+<Technical>
+
+Grafana runs on Linux (Debian, Ubuntu, RHEL, Fedora, and SUSE families), macOS, and Windows. It also runs in Docker <Cite n={11} />. The install steps differ for each system, and they change between releases. Follow the guide for your system on the Grafana install page, and do not copy a fixed file name from an old tutorial <Cite n={11} />.
+
+Docker is the simplest way here, because you already use it for InfluxDB. The Grafana guide gives this command <Cite n={12} />. The tutorial adds `--network k6net`:
+
+```bash
+docker run -d -p 3000:3000 --name=grafana --network k6net grafana/grafana-enterprise
+```
+
+`-d` runs the container in the background. `-p 3000:3000` makes Grafana reachable on port `3000` of your machine <Cite n={12} />. The Enterprise image is free, and it has all the features of the open-source edition <Cite n={12} />. If you want the open-source image by name, use `grafana/grafana`. The older repository `grafana/grafana-oss` is not updated from Grafana 12.4.0 <Cite n={12} />.
+
+Open `http://localhost:3000` in a browser. The first sign-in uses `admin` as the user name and as the password. Grafana then asks you to change the password. Grafana strongly recommends that you change it <Cite n={13} />.
+
+A Grafana container and an InfluxDB container are separate. Inside the Grafana container, `localhost` means the Grafana container itself, not your machine. This is the tutorial's own explanation, not a point from the Docker docs. So Grafana cannot reach InfluxDB at `http://localhost:8086`. On a user-defined bridge network, containers resolve each other by name <Cite n={17} />. Both `docker run` commands above use the network `k6net`, so Grafana reaches InfluxDB at `http://influxdb:8086`. That is the container name and the port. The k6 command still runs on your machine, so it keeps `http://localhost:8086/k6`. The network is the tutorial's own setup.
+
+On Docker Desktop, a container can also reach a service on the host with the special name `host.docker.internal` <Cite n={18} />. This name is for Docker Desktop. The owner's screenshots show Grafana that runs on the host, so they show `http://localhost:8086`.
+
+</Technical>
+<Layman>
+
+Grafana runs on Linux (Debian, Ubuntu, RHEL, Fedora, SUSE), macOS, and Windows. It also runs in Docker <Cite n={11} />. The steps differ for each system, and they change with each release. Read the guide for your system on the Grafana install page. Do not copy a file name from an old tutorial <Cite n={11} />.
+
+Docker is easiest here, because InfluxDB already uses it. The Grafana guide gives this command <Cite n={12} />. The tutorial adds `--network k6net`:
+
+```bash
+docker run -d -p 3000:3000 --name=grafana --network k6net grafana/grafana-enterprise
+```
+
+`-d` starts the container in the background. `-p 3000:3000` opens port `3000` on your machine <Cite n={12} />. The Enterprise image is free. It has every feature of the open-source edition <Cite n={12} />. For the open-source image by name, use `grafana/grafana` <Cite n={12} />.
+
+Open `http://localhost:3000` in a browser. The first user name and password are both `admin`. Grafana then asks for a new password, and it strongly advises you to set one <Cite n={13} />.
+
+The two containers are separate. Inside the Grafana container, `localhost` points to Grafana itself. It does not point to your machine. This is the tutorial's own explanation, not a point from the Docker docs. So Grafana cannot use `http://localhost:8086`.
+
+On a user-defined network, containers find each other by name <Cite n={17} />. Both containers use `k6net`. So Grafana uses `http://influxdb:8086`. The k6 command runs on your machine. It keeps `http://localhost:8086/k6`. This network setup is the tutorial's own.
+
+On Docker Desktop, a container can reach your machine with the name `host.docker.internal` <Cite n={18} />. That name is for Docker Desktop only. The owner's screenshots show Grafana on the host, so they show `http://localhost:8086`.
+
+</Layman>
+<Bangla>
+
+Grafana Linux (Debian, Ubuntu, RHEL, Fedora, SUSE পরিবার), macOS আর Windows-এ চলে। এটা Docker-এও চলে <Cite n={11} />। প্রতিটা system-এর install ধাপ আলাদা, আর release-এর সাথে বদলায়। Grafana install পেজে আপনার system-এর guide অনুসরণ করুন। পুরোনো tutorial থেকে একটা fixed file name কপি করবেন না <Cite n={11} />।
+
+এখানে Docker সবচেয়ে সহজ, কারণ InfluxDB-র জন্য আপনি আগেই Docker ব্যবহার করছেন। Grafana-র guide এই command দেয় <Cite n={12} />। tutorial `--network k6net` যোগ করেছে:
+
+```bash
+docker run -d -p 3000:3000 --name=grafana --network k6net grafana/grafana-enterprise
+```
+
+`-d` container-কে background-এ চালায়। `-p 3000:3000` Grafana-কে আপনার machine-এর `3000` port-এ reachable করে <Cite n={12} />। Enterprise image ফ্রি, আর এতে open-source edition-এর সব feature আছে <Cite n={12} />। নাম ধরে open-source image চাইলে `grafana/grafana` ব্যবহার করুন। পুরোনো `grafana/grafana-oss` repository Grafana 12.4.0 থেকে আর update হয় না <Cite n={12} />।
+
+ব্রাউজারে `http://localhost:3000` খুলুন। প্রথম sign-in-এ user name আর password দুটোই `admin`। এরপর Grafana password বদলাতে বলে। Grafana জোরালোভাবে বলে, password বদলে নিন <Cite n={13} />।
+
+Grafana container আর InfluxDB container আলাদা। Grafana container-এর ভেতরে `localhost` মানে Grafana container নিজেই, আপনার machine নয়। এটা tutorial-এর নিজের ব্যাখ্যা, Docker docs-এর কথা নয়। তাই Grafana `http://localhost:8086`-এ InfluxDB-তে পৌঁছাতে পারে না। user-defined bridge network-এ container-গুলো নাম ধরে একে অপরকে খুঁজে পায় <Cite n={17} />। উপরের দুটো `docker run` command-ই `k6net` network ব্যবহার করে, তাই Grafana `http://influxdb:8086`-এ InfluxDB-তে পৌঁছায়। এটা container-এর নাম আর port। k6 command আপনার machine-এই চলে, তাই সেখানে `http://localhost:8086/k6` থাকে। network-টা tutorial-এর নিজের setup।
+
+Docker Desktop-এ container বিশেষ নাম `host.docker.internal` দিয়ে host-এর service-এও পৌঁছাতে পারে <Cite n={18} />। এই নাম Docker Desktop-এর জন্য। owner-এর screenshot-এ Grafana host-এ চলছে, তাই সেখানে `http://localhost:8086` দেখা যায়।
+
+</Bangla>
+</Voices>
+
+## Connect Grafana to InfluxDB
+
+<Voices>
+<Technical>
+
+In Grafana, use the left menu: **Connections**, then **Add new connection**. Search for `InfluxDB`, choose the **InfluxDB** entry, and use the **Add new data source** button in the top right <Cite n={14} />. The screenshot shows the list of data sources that you see afterwards. It is the owner's screenshot, with Grafana run on the host, so it shows `http://localhost:8086`. With the Docker commands of this page, use `http://influxdb:8086`.
+
+<MdxImage src="/images/k6/grafana-connections.webp" alt="The Data sources page of Grafana with one InfluxDB data source named influxdb at http://localhost:8086, marked as default." width={1920} height={889} />
+
+Fill in the settings <Cite n={14} />:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| Query language | InfluxQL | InfluxDB 1.x uses InfluxQL. Flux is for 2.x. |
+| URL | `http://influxdb:8086` | The name of the InfluxDB container on the `k6net` network, and the API port. The default API port is 8086. |
+| Database | `k6` | The database that k6 writes to. |
+| HTTP Method | `POST` | POST allows larger queries. It is the default. |
+
+<MdxImage src="/images/k6/grafana-influxdb-settings.webp" alt="The settings page of the InfluxDB data source in Grafana. Red arrows point to the URL field with http://localhost:8086, the Database field with k6, and the HTTP Method field with POST." width={1920} height={1808} />
+
+The screenshot above is the owner's run, with Grafana on the host. It shows `http://localhost:8086` and a user and password. The steps above use `http://influxdb:8086` and an empty User and Password.
+
+Leave **User** and **Password** empty. The InfluxDB container above has no authentication, because InfluxDB 1.x has authentication disabled by default <Cite n={19} />.
+
+Click **Save & test** <Cite n={14} />. Do this before you rename a new data source. If you rename it first, Grafana checks the whole form and gives an error, because the URL has no value yet <Cite n={14} />.
+
+</Technical>
+<Layman>
+
+Open the left menu in Grafana. Choose **Connections**, then **Add new connection**. Search for `InfluxDB` and choose it. Then press **Add new data source** at the top right <Cite n={14} />. The screenshot shows the data source list that you see next. It is the owner's screenshot, with Grafana on the host, so it shows `http://localhost:8086`. With the Docker commands of this page, use `http://influxdb:8086`.
+
+<MdxImage src="/images/k6/grafana-connections.webp" alt="The Data sources page of Grafana with one InfluxDB data source named influxdb at http://localhost:8086, marked as default." width={1920} height={889} />
+
+Fill in these settings <Cite n={14} />:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| Query language | InfluxQL | InfluxDB 1.x uses InfluxQL. Flux is for 2.x. |
+| URL | `http://influxdb:8086` | The InfluxDB container name on the `k6net` network, and its API port. The default API port is 8086. |
+| Database | `k6` | The database that k6 writes to. |
+| HTTP Method | `POST` | POST allows larger queries. It is the default. |
+
+<MdxImage src="/images/k6/grafana-influxdb-settings.webp" alt="The settings page of the InfluxDB data source in Grafana. Red arrows point to the URL field with http://localhost:8086, the Database field with k6, and the HTTP Method field with POST." width={1920} height={1808} />
+
+The screenshot above is the owner's run, with Grafana on the host. It shows `http://localhost:8086` and a user and password. The steps above use `http://influxdb:8086` and an empty User and Password.
+
+Leave **User** and **Password** empty. The InfluxDB container above has no login, because InfluxDB 1.x has authentication off by default <Cite n={19} />.
+
+Press **Save & test** <Cite n={14} />. Do it before you rename a new data source. If you rename first, Grafana shows an error, because the URL is still empty <Cite n={14} />.
+
+</Layman>
+<Bangla>
+
+Grafana-র বাঁ দিকের মেনুতে যান: **Connections**, তারপর **Add new connection**। `InfluxDB` খুঁজুন, **InfluxDB** এন্ট্রি বেছে নিন, আর উপরের ডান কোণের **Add new data source** বাটন চাপুন <Cite n={14} />। screenshot-এ পরে দেখা data source-এর তালিকা আছে। এটা owner-এর screenshot, সেখানে Grafana host-এ চলছে, তাই `http://localhost:8086` দেখা যায়। এই পেজের Docker command-এ `http://influxdb:8086` ব্যবহার করুন।
+
+<MdxImage src="/images/k6/grafana-connections.webp" alt="Grafana-র Data sources পেজ। এখানে influxdb নামে একটা InfluxDB data source আছে, URL http://localhost:8086, আর সেটা default হিসেবে চিহ্নিত।" width={1920} height={889} />
+
+settings পূরণ করুন <Cite n={14} />:
+
+| Setting | Value | কেন |
+| --- | --- | --- |
+| Query language | InfluxQL | InfluxDB 1.x InfluxQL ব্যবহার করে। Flux হলো 2.x-এর জন্য। |
+| URL | `http://influxdb:8086` | `k6net` network-এ InfluxDB container-এর নাম, আর API port। default API port হলো 8086। |
+| Database | `k6` | k6 যে database-এ লেখে। |
+| HTTP Method | `POST` | POST বড় query চালাতে দেয়। এটাই default। |
+
+<MdxImage src="/images/k6/grafana-influxdb-settings.webp" alt="Grafana-তে InfluxDB data source-এর settings পেজ। লাল তীর URL ফিল্ডে http://localhost:8086, Database ফিল্ডে k6, আর HTTP Method ফিল্ডে POST দেখায়।" width={1920} height={1808} />
+
+উপরের screenshot owner-এর run, যেখানে Grafana host-এ চলছে। এতে `http://localhost:8086` আর একটা user ও password দেখা যায়। উপরের ধাপে `http://influxdb:8086` আর ফাঁকা User ও Password ব্যবহার হয়েছে।
+
+**User** আর **Password** ফাঁকা রাখুন। উপরের InfluxDB container-এ authentication নেই, কারণ InfluxDB 1.x-এ authentication ডিফল্টভাবে বন্ধ <Cite n={19} />।
+
+**Save & test** চাপুন <Cite n={14} />। নতুন data source-এর নাম বদলানোর আগেই এটা করুন। আগে নাম বদলালে Grafana পুরো form যাচাই করে error দেয়, কারণ URL ফিল্ড তখনো ফাঁকা <Cite n={14} />।
+
+</Bangla>
+</Voices>
+
+## Watch a test live in a dashboard
+
+<Voices>
+<Technical>
+
+Now build a dashboard by hand, the way the owner did. This teaches how the data is shaped:
+
+1. Create a new dashboard in Grafana, and choose **Add visualization**.
+2. Pick the InfluxDB data source.
+3. In the query editor, choose a measurement in **FROM**, for example `http_reqs` or `iteration_duration`. You can add more than one query to one panel.
+4. Save the dashboard.
+5. In the time picker choose **Last 5 minutes**. Set auto refresh to **5s**.
+6. Start the test again, with the same command as before:
+
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 first-script.js
+```
+
+<MdxImage src="/images/k6/grafana-dashboard.webp" alt="A Grafana panel editor with a time series graph. The legend shows http_reqs.mean and iteration_duration.mean. The query reads from the influxdb data source, the measurement http_reqs, with the time range Last 5 minutes and a refresh rate of 5s." width={1920} height={906} />
+
+The lines move while the test runs. The k6 output sends the metrics in real time <Cite n={1} />.
+
+You do not have to build every panel yourself. Grafana can import a ready dashboard by its ID or URL from Grafana.com, and it lets you map the dashboard to your own data source <Cite n={15} />. The k6 docs do not name one dashboard ID. They say you can build a custom dashboard, and they point to the extension repository, which has a docker-compose setup with two basic dashboards <Cite n={1} />. One community dashboard on Grafana.com is "k6 Load Testing Results", ID 2587. It was made for the InfluxDB output, and it has a drop-down for any `http_req_*` metric <Cite n={16} />. Its version history is from 2017, so check that its panels work with your k6 version before you trust them. This check is the tutorial's own advice.
+
+</Technical>
+<Layman>
+
+Now build a dashboard by hand, as the owner did. You learn how the data looks:
+
+1. In Grafana, make a new dashboard. Choose **Add visualization**.
+2. Pick the InfluxDB data source.
+3. In the query editor, pick a measurement under **FROM**, such as `http_reqs` or `iteration_duration`. One panel can have many queries.
+4. Save the dashboard.
+5. In the time picker, choose **Last 5 minutes**. Set auto refresh to **5s**.
+6. Run the same test again:
+
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 first-script.js
+```
+
+<MdxImage src="/images/k6/grafana-dashboard.webp" alt="A Grafana panel editor with a time series graph. The legend shows http_reqs.mean and iteration_duration.mean. The query reads from the influxdb data source, the measurement http_reqs, with the time range Last 5 minutes and a refresh rate of 5s." width={1920} height={906} />
+
+The lines move while the test runs. The k6 output sends metrics as they happen <Cite n={1} />.
+
+You do not need to build every panel. Grafana can import a ready dashboard from Grafana.com by its ID or URL. You then link it to your own data source <Cite n={15} />. The k6 docs name no dashboard ID. They say you can build your own. They also point to the extension repository, which has a docker-compose setup with two basic dashboards <Cite n={1} />.
+
+One community dashboard is "k6 Load Testing Results", ID 2587. It was made for the InfluxDB output <Cite n={16} />. Its history starts in 2017. Test it with your k6 version before you trust it. That advice is the tutorial's own.
+
+</Layman>
+<Bangla>
+
+এবার owner-এর মতো হাতে একটা dashboard বানান। এতে ডেটা কেমন আকারে থাকে তা বোঝা যায়:
+
+1. Grafana-তে একটা নতুন dashboard বানান, আর **Add visualization** বেছে নিন।
+2. InfluxDB data source বেছে নিন।
+3. query editor-এর **FROM**-এ একটা measurement বেছে নিন, যেমন `http_reqs` বা `iteration_duration`। একটা panel-এ একাধিক query যোগ করা যায়।
+4. dashboard save করুন।
+5. time picker-এ **Last 5 minutes** বেছে নিন। auto refresh **5s** করুন।
+6. আগের command দিয়েই আবার টেস্ট চালান:
+
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 first-script.js
+```
+
+<MdxImage src="/images/k6/grafana-dashboard.webp" alt="Grafana-র panel editor-এ একটা time series গ্রাফ। legend-এ http_reqs.mean আর iteration_duration.mean আছে। query influxdb data source-এর http_reqs measurement থেকে পড়ে; সময়সীমা Last 5 minutes আর refresh 5s।" width={1920} height={906} />
+
+টেস্ট চলার সময় লাইনগুলো নড়ে। k6 output real time-এ metric পাঠায় <Cite n={1} />।
+
+প্রতিটা panel আপনাকে নিজে বানাতে হবে না। Grafana, Grafana.com থেকে ID বা URL দিয়ে তৈরি dashboard import করতে পারে, আর dashboard-কে আপনার নিজের data source-এর সাথে মেলাতে দেয় <Cite n={15} />। k6 docs কোনো একটা dashboard ID-র নাম দেয় না। তারা বলে আপনি custom dashboard বানাতে পারেন, আর extension repository দেখায়, যেখানে দুটো basic dashboard-সহ একটা docker-compose setup আছে <Cite n={1} />। Grafana.com-এর একটা community dashboard হলো "k6 Load Testing Results", ID 2587। এটা InfluxDB output-এর জন্য বানানো <Cite n={16} />। এর version history ২০১৭ সালের। তাই ভরসা করার আগে দেখে নিন এর panel আপনার k6 version-এ কাজ করে কি না। এই যাচাই tutorial-এর নিজের পরামর্শ।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+| --- | --- |
+| InfluxDB | A time-series database. It stores values with their time. k6 can write its metrics to it. |
+| Time series | A list of values, each with a time. A graph of response time over a test is one. |
+| Database (InfluxDB 1.x) | The place where InfluxDB 1.x keeps data. In this page it is `k6`. |
+| Bucket | The InfluxDB 2.x and 3.x name for a place that stores data. It matches a database in 1.x. |
+| Measurement | A group of values in InfluxDB. k6 writes one measurement for each metric, such as `http_reqs`. |
+| Tag and field | Parts of a point. A tag is a label such as `api=login`. A field is a value such as `value=250`. |
+| InfluxQL | The SQL-like query language of InfluxDB. Grafana uses it for InfluxDB 1.x. |
+| Line protocol | The text form of a point: measurement, tag set, field set, and timestamp. |
+| xk6 | A tool that builds a custom k6 binary with extensions. InfluxDB v2 output needs it. |
+| Grafana | A dashboard tool. It reads data from a data source and draws graphs. |
+| Data source | A saved connection in Grafana to a place that holds data, such as InfluxDB. |
+| Dashboard | A page of panels in Grafana. Each panel shows the result of one query. |

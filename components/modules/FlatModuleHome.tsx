@@ -20,6 +20,13 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
       <p>
         <T en={ui.sourceNote} bn={bn.sourceNote} />
       </p>
+      {ui.projectLink && bn.projectLink ? (
+        <p>
+          <a href={ui.projectLink.href}>
+            <T en={ui.projectLink.label} bn={bn.projectLink.label} />
+          </a>
+        </p>
+      ) : null}
     </Callout>
   );
   return (

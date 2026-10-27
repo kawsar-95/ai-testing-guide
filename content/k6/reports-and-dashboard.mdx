@@ -1,0 +1,459 @@
+export const metadata = { title: 'Reports and the Web Dashboard', description: 'Get a summary, a JSON file, or a web dashboard from a run.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Custom summary', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/end-of-test/custom-summary/', accessed: '2026-10-27' },
+    { title: 'Web dashboard', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/web-dashboard/', accessed: '2026-10-27' },
+    { title: 'End of test', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/end-of-test/', accessed: '2026-10-27' },
+    { title: 'JSON', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/real-time/json/', accessed: '2026-10-27' },
+    { title: 'CSV', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/real-time/csv/', accessed: '2026-10-27' },
+    { title: 'k6 options reference', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/', accessed: '2026-10-27' },
+    { title: 'Version 2.0.0 release notes', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/release-notes/v2.0.0/', accessed: '2026-10-27' },
+  ],
+}
+
+# Reports and the Web Dashboard
+
+The terminal summary is enough for a quick look, but a team often needs a file or a page to share. k6 can write the summary as JSON or text, show a live web dashboard, save an HTML report, and dump every raw data point.
+
+<PageMeta />
+
+## Pick the right output
+
+<Voices>
+<Technical>
+
+k6 gives you 4 ways to get results out of a run. Each one answers a different need.
+
+| You want | Use | Output |
+| --- | --- | --- |
+| A custom summary: JSON, text, XML, HTML | `handleSummary(data)` <Cite n={1} /> | Any file, `stdout`, or `stderr` |
+| A live view and a shareable report | The web dashboard <Cite n={2} /> | A browser page and an HTML file |
+| Every raw data point | `--out json=…` or `--out csv=…` <Cite n={4} /> <Cite n={5} /> | A JSON or CSV file |
+| The summary as one JSON file, from the command line | `--summary-export` <Cite n={6} /> | A JSON file |
+
+The next sections show each one. The tutorial's own view: start with `handleSummary()` and the dashboard. Use the raw files only when you need to analyze each request.
+
+</Technical>
+<Layman>
+
+k6 has 4 ways to get results out of a run. Each one is for a different need.
+
+Use `handleSummary(data)` when you want a summary as JSON, text, XML, or HTML <Cite n={1} />. Use the web dashboard when you want a live view and a report you can share <Cite n={2} />. Use `--out json=…` or `--out csv=…` when you want every raw data point <Cite n={4} /> <Cite n={5} />. Use `--summary-export` when you want the summary as one JSON file from the command line <Cite n={6} />.
+
+The tutorial's own view: start with `handleSummary()` and the dashboard. Use the raw files only when you need to look at each request.
+
+</Layman>
+<Bangla>
+
+k6 থেকে run-এর ফল বের করার ৪টা উপায় আছে। প্রতিটা আলাদা প্রয়োজনের জন্য।
+
+JSON, text, XML বা HTML summary চাইলে `handleSummary(data)` ব্যবহার করুন <Cite n={1} />। live view আর শেয়ার করার মতো report চাইলে web dashboard ব্যবহার করুন <Cite n={2} />। প্রতিটা raw data point চাইলে `--out json=…` অথবা `--out csv=…` ব্যবহার করুন <Cite n={4} /> <Cite n={5} />। command line থেকে summary একটা JSON ফাইলে চাইলে `--summary-export` ব্যবহার করুন <Cite n={6} />।
+
+টিউটোরিয়ালের নিজস্ব মত: `handleSummary()` আর dashboard দিয়ে শুরু করুন। প্রতিটা request আলাদা করে দেখতে হলেই কেবল raw ফাইল ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## Write your own summary with handleSummary
+
+<Voices>
+<Technical>
+
+After the test, k6 collects the metrics into one JavaScript object. It passes this object to your `handleSummary()` function. The function is optional <Cite n={1} />. k6 calls it at the end of the test lifecycle <Cite n={1} />.
+
+The function returns a map. Each key says where to put the content. A key is `stdout`, `stderr`, or a path to a file. k6 overwrites a file that already exists. Each value is a string or an `ArrayBuffer` <Cite n={1} />. One return can have several keys <Cite n={1} />.
+
+If your script exports `handleSummary()`, k6 does not print its default summary <Cite n={1} />. To keep a text summary, use `textSummary`, which the k6 JS utilities library exports <Cite n={1} />. The version in the k6 docs is `0.0.2` <Cite n={1} />. The k6 docs say that these helpers can change, so check jslib.k6.io for the latest <Cite n={1} />.
+
+```javascript
+import http from 'k6/http';
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js';
+
+export const options = { vus: 2, duration: '5s' };
+
+export default function () {
+  http.get('https://quickpizza.grafana.com/');
+}
+
+export function handleSummary(data) {
+  return {
+    stdout: textSummary(data, { indent: ' ', enableColors: false }),
+    'summary.json': JSON.stringify(data),
+  };
+}
+```
+
+`textSummary` has 2 options: `indent` and `enableColors` <Cite n={1} />. This script prints the text summary and writes all the data to `summary.json`.
+
+The output below is one short run of this script on the tutorial's machine. Your numbers will differ.
+
+```text
+     http_req_duration..............: avg=340.19ms min=311.2ms  med=338.64ms max=376.46ms p(90)=362.48ms p(95)=371.71ms
+       { expected_response:true }...: avg=340.19ms min=311.2ms  med=338.64ms max=376.46ms p(90)=362.48ms p(95)=371.71ms
+     http_req_failed................: 0.00%  ✓ 0        ✗ 26
+     http_reqs......................: 26     5.081088/s
+     iterations.....................: 26     5.081088/s
+     vus............................: 2      min=2     max=2
+```
+
+All metrics are in the top-level `metrics` object of `data`. For example, `data.metrics.http_req_duration` is the object of that metric <Cite n={1} />. Each metric has a `type`, a `contains`, and a `values` object. A metric with a threshold also has `thresholds`, and each threshold has an `ok` flag <Cite n={1} />. The keys inside `values` for a Trend follow the `summaryTrendStats` option <Cite n={1} />.
+
+In the same run, `summary.json` had the top-level keys `root_group`, `options`, `state`, and `metrics`. The docs describe a newer machine-readable format. k6 v1.5.0 added it, and you turn it on with the `--new-machine-readable-summary` flag <Cite n={1} />. The docs say it will become the default in k6 v2 <Cite n={1} />. In k6 v2.3.0 it is not yet the default: a 2 VU, 5 second `handleSummary` test against QuickPizza gave the keys `root_group`, `options`, `state`, and `metrics` in the JSON file. k6 also adds `setup_data` when the script has a `setup()` function: a 2 VU, 5 second variant with `setup()` showed it. These are observed results, not from a source. So print the file once with your k6 version before you write code that reads it.
+
+You are not limited to JSON. The `handleSummary()` function can turn the data into JSON, HTML, console text, or XML. It can also send the data to a remote server <Cite n={1} />. For example, the `jUnit` helper of the same library makes a JUnit XML file that says if the thresholds failed <Cite n={1} />.
+
+<Callout type="tip" title="See it in a real project">
+
+In the owner's [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository, `handleSummary()` builds Markdown tables for each API and each time window and saves them as a `.md` file. It saves the summary data as a `.json` file. It removes `setup_data` from the JSON file, because that data holds the login tokens. The repository also uses a third-party HTML reporter that this tutorial does not teach. This is the tutorial's own example project, not an official source.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+After the test, k6 puts the metrics into one JavaScript object. It gives this object to your `handleSummary()` function <Cite n={1} />. You write this function. It is optional. k6 calls it at the end of the test lifecycle <Cite n={1} />.
+
+The function returns a map. Each key says where the content goes: `stdout`, `stderr`, or a file path. k6 overwrites a file that exists. Each value is a string or an `ArrayBuffer` <Cite n={1} />. One return can have many keys <Cite n={1} />.
+
+If your script exports `handleSummary()`, k6 does not print its default summary <Cite n={1} />. To keep a text summary, use `textSummary`, which the k6 JS utilities library exports <Cite n={1} />. The docs use version `0.0.2`. The k6 docs say these helpers can change, so check jslib.k6.io for the latest <Cite n={1} />.
+
+The script in the Technical text prints the text summary and writes all the data to `summary.json`. `textSummary` has 2 options: `indent` and `enableColors` <Cite n={1} />.
+
+The output in the Technical text is one short run on the tutorial's machine. Your numbers will differ.
+
+All metrics are in the `metrics` object of `data`. For example, `data.metrics.http_req_duration` is the object of that metric <Cite n={1} />. Each metric has a `type`, a `contains`, and a `values` object. A metric with a threshold also has `thresholds`. Each threshold has an `ok` flag <Cite n={1} />. The keys in `values` for a Trend follow the `summaryTrendStats` option <Cite n={1} />.
+
+In the same run, `summary.json` had the keys `root_group`, `options`, `state`, and `metrics`. The docs describe a newer machine-readable format. k6 v1.5.0 added it. You turn it on with the `--new-machine-readable-summary` flag <Cite n={1} />. The docs say it will become the default in k6 v2 <Cite n={1} />. In k6 v2.3.0 it is not yet the default: a 2 VU, 5 second `handleSummary` test against QuickPizza gave the keys `root_group`, `options`, `state`, and `metrics` in the JSON file. k6 also adds `setup_data` when the script has a `setup()` function: a 2 VU, 5 second variant with `setup()` showed it. These are observed results, not from a source. So print the file once with your k6 version before you write code that reads it.
+
+You can make more than JSON. `handleSummary()` can make JSON, HTML, console text, or XML. It can also send the data to a remote server <Cite n={1} />. The `jUnit` helper of the same library makes a JUnit XML file that says if the thresholds failed <Cite n={1} />.
+
+<Callout type="tip" title="See it in a real project">
+
+In the owner's [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository, `handleSummary()` builds Markdown tables for each API and each time window. It saves them as a `.md` file. It saves the summary data as a `.json` file. It removes `setup_data` from the JSON file, because that data holds the login tokens. The repository also uses a third-party HTML reporter. This tutorial does not teach it. This is the tutorial's own example project. It is not an official source.
+
+</Callout>
+
+</Layman>
+<Bangla>
+
+টেস্টের পর k6 সব metric একটা JavaScript object-এ রাখে। এই object আপনার `handleSummary()` function-কে দেয় <Cite n={1} />। এই function আপনি লেখেন। এটা optional। k6 test lifecycle-এর শেষে এটা call করে <Cite n={1} />।
+
+function একটা map return করে। প্রতিটা key বলে content কোথায় যাবে: `stdout`, `stderr`, অথবা একটা ফাইলের path। ফাইল আগে থেকে থাকলে k6 সেটা overwrite করে। প্রতিটা value একটা string অথবা `ArrayBuffer` <Cite n={1} />। একটা return-এ অনেক key থাকতে পারে <Cite n={1} />।
+
+আপনার script `handleSummary()` export করলে k6 তার default summary ছাপে না <Cite n={1} />। text summary রাখতে `textSummary` ব্যবহার করুন, যা k6 JS utilities library export করে <Cite n={1} />। docs-এ ব্যবহৃত version `0.0.2`। k6 docs বলে এই helper বদলাতে পারে, তাই সর্বশেষটা jslib.k6.io-তে দেখে নিন <Cite n={1} />।
+
+Technical লেখার script text summary ছাপে এবং সব data `summary.json` ফাইলে লেখে। `textSummary`-র ২টা option আছে: `indent` আর `enableColors` <Cite n={1} />।
+
+Technical লেখার output টিউটোরিয়ালের মেশিনে একটা ছোট run-এর ফল। আপনার সংখ্যা আলাদা হবে।
+
+সব metric `data`-র `metrics` object-এ থাকে। যেমন `data.metrics.http_req_duration` ওই metric-এর object <Cite n={1} />। প্রতিটা metric-এর একটা `type`, একটা `contains`, আর একটা `values` object আছে। threshold থাকলে metric-এ `thresholds`-ও থাকে। প্রতিটা threshold-এ একটা `ok` flag আছে <Cite n={1} />। Trend-এর `values`-এর key `summaryTrendStats` option অনুযায়ী বদলায় <Cite n={1} />।
+
+একই run-এ `summary.json`-এর key ছিল `root_group`, `options`, `state` আর `metrics`। docs একটা নতুন machine-readable format-এর কথা বলে। k6 v1.5.0 এটা যোগ করেছে। `--new-machine-readable-summary` flag দিয়ে এটা চালু করতে হয় <Cite n={1} />। docs বলে এটা k6 v2-তে default হবে <Cite n={1} />। k6 v2.3.0-এ এটা এখনো default নয়: QuickPizza-র বিরুদ্ধে ২ VU, ৫ সেকেন্ডের একটা `handleSummary` টেস্টে JSON ফাইলে key ছিল `root_group`, `options`, `state` আর `metrics`। script-এ `setup()` function থাকলে k6 `setup_data`-ও যোগ করে: `setup()`-সহ ২ VU, ৫ সেকেন্ডের একটা variant-এ এটা দেখা গেছে। এগুলো পর্যবেক্ষণ করা ফল, কোনো source থেকে নয়। তাই ফাইল পড়ার code লেখার আগে আপনার k6 version-এ ফাইলটা একবার ছাপিয়ে দেখুন।
+
+শুধু JSON নয়, আরও বানানো যায়। `handleSummary()` JSON, HTML, console text বা XML বানাতে পারে। এটা data একটা remote server-এও পাঠাতে পারে <Cite n={1} />। একই library-র `jUnit` helper একটা JUnit XML ফাইল বানায়, যেটা বলে threshold fail করেছে কি না <Cite n={1} />।
+
+<Callout type="tip" title="বাস্তব প্রজেক্টে দেখুন">
+
+মালিকের [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository-তে `handleSummary()` প্রতিটা API আর প্রতিটা time window-এর জন্য Markdown টেবিল বানায় আর সেগুলো একটা `.md` ফাইলে সেভ করে। summary data সেভ করে একটা `.json` ফাইলে। JSON ফাইল থেকে এটা `setup_data` সরিয়ে দেয়, কারণ ওই ডেটায় login token থাকে। repository-টা একটা third-party HTML reporter-ও ব্যবহার করে, যেটা এই টিউটোরিয়াল শেখায় না। এটা টিউটোরিয়ালের নিজের উদাহরণ প্রজেক্ট, অফিশিয়াল সোর্স নয়।
+
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Use the built-in web dashboard
+
+<Voices>
+<Technical>
+
+k6 has a built-in web dashboard. It shows the results in real time while the test runs <Cite n={2} />. Since k6 v2.0.0, the dashboard code is part of the k6 binary, so you do not install an extension <Cite n={7} />. Set the variable `K6_WEB_DASHBOARD` to `true` <Cite n={2} />:
+
+```bash
+K6_WEB_DASHBOARD=true k6 run script.js
+```
+
+k6 prints the address of the dashboard in its header. The default is localhost, port `5665` <Cite n={2} />. In the check run of this page, k6 v2.3.0 printed this line:
+
+```text
+ web dashboard: http://127.0.0.1:5665
+        output: -
+```
+
+Open the address in a browser while the test runs. You can set the dashboard with these environment variables <Cite n={2} />:
+
+| Variable | Meaning | Default |
+| --- | --- | --- |
+| `K6_WEB_DASHBOARD` | Turns the dashboard on | `false` |
+| `K6_WEB_DASHBOARD_HOST` | The host to bind to | `localhost` |
+| `K6_WEB_DASHBOARD_PORT` | The port to bind to | `5665` |
+| `K6_WEB_DASHBOARD_PERIOD` | How often the dashboard updates | `10s` |
+| `K6_WEB_DASHBOARD_OPEN` | Opens the dashboard in the default browser | `false` |
+| `K6_WEB_DASHBOARD_EXPORT` | The file name for an HTML report at the end of the run | empty (no report) |
+
+The k6 process waits to exit while a browser window for the dashboard is open <Cite n={2} />. This is a problem in a CI pipeline. There, the docs advise you to set the port to `-1`, which turns off the HTTP port <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+k6 has a built-in web dashboard. It shows the results live while the test runs <Cite n={2} />. Since k6 v2.0.0, the dashboard is part of the k6 binary. You do not install an extension <Cite n={7} />. Set the variable `K6_WEB_DASHBOARD` to `true` <Cite n={2} />. The Technical text shows the command.
+
+k6 prints the dashboard address in its header. The default is localhost, port `5665` <Cite n={2} />. Open that address in a browser while the test runs.
+
+You can change the dashboard with environment variables <Cite n={2} />. `K6_WEB_DASHBOARD_HOST` and `K6_WEB_DASHBOARD_PORT` set the address. `K6_WEB_DASHBOARD_PERIOD` sets how often the page updates. The default is `10s`. `K6_WEB_DASHBOARD_OPEN` opens the page in your default browser. `K6_WEB_DASHBOARD_EXPORT` sets a file name for an HTML report at the end of the run.
+
+The k6 process waits to exit while a browser window for the dashboard is open <Cite n={2} />. This is a problem in a CI pipeline. There, the docs advise you to set the port to `-1`. This turns off the HTTP port <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+k6-এ একটা built-in web dashboard আছে। টেস্ট চলার সময় এটা ফল live দেখায় <Cite n={2} />। k6 v2.0.0 থেকে dashboard k6 binary-র অংশ, তাই কোনো extension install করতে হয় না <Cite n={7} />। `K6_WEB_DASHBOARD` variable-কে `true` করুন <Cite n={2} />। command-টা Technical লেখায় আছে।
+
+k6 তার header-এ dashboard-এর address ছাপে। default হলো localhost, port `5665` <Cite n={2} />। টেস্ট চলার সময় ওই address একটা browser-এ খুলুন।
+
+environment variable দিয়ে dashboard বদলানো যায় <Cite n={2} />। `K6_WEB_DASHBOARD_HOST` আর `K6_WEB_DASHBOARD_PORT` address ঠিক করে। `K6_WEB_DASHBOARD_PERIOD` ঠিক করে পেজ কত পরপর update হবে। default `10s`। `K6_WEB_DASHBOARD_OPEN` পেজটা আপনার default browser-এ খোলে। `K6_WEB_DASHBOARD_EXPORT` run-এর শেষে HTML report-এর ফাইলের নাম ঠিক করে।
+
+dashboard-এর একটা browser window খোলা থাকলে k6 process বের হওয়ার জন্য অপেক্ষা করে <Cite n={2} />। CI pipeline-এ এটা সমস্যা। সেখানে docs port `-1` করতে বলে। এতে HTTP port বন্ধ হয় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Save the dashboard as an HTML report
+
+<Voices>
+<Technical>
+
+The dashboard can give you a report that is one self-contained HTML file. You share it with your team <Cite n={2} />. There are 2 ways to get it <Cite n={2} />:
+
+- In the dashboard, click **Report** in the menu.
+- From the command line, set `K6_WEB_DASHBOARD_EXPORT`. k6 writes the file when the test ends.
+
+```bash
+K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=html-report.html k6 run script.js
+```
+
+There is a rule about the length of the test. The report has graphs only if the test lasts more than 3 times the aggregation period <Cite n={2} />. The period is `K6_WEB_DASHBOARD_PERIOD`, and its default is `10s` <Cite n={2} />. So with the default, a test must run for more than 30 seconds.
+
+This page checked the rule. A script with 2 VUs and `duration: '10s'` ran with the default period. k6 v2.3.0 printed a warning and wrote no file:
+
+```text
+level=warning msg="The test run was short, report generation was skipped (not enough data)"
+```
+
+The same script ran again with `K6_WEB_DASHBOARD_PERIOD=1s`. The 10 second test is then longer than 3 periods, and k6 wrote the HTML file:
+
+```bash
+K6_WEB_DASHBOARD=true \
+K6_WEB_DASHBOARD_PERIOD=1s \
+K6_WEB_DASHBOARD_EXPORT=html-report.html \
+k6 run script.js
+```
+
+Use a short period only for short practice runs. For a real test, keep the default period and run the test long enough.
+
+The tutorial's owner made an HTML report from `handleSummary()` with a community package that the script loaded from a URL. The built-in export needs no import from a URL, so this page teaches it instead.
+
+</Technical>
+<Layman>
+
+The dashboard can give you a report. It is one self-contained HTML file. You share it with your team <Cite n={2} />. There are 2 ways to get it <Cite n={2} />:
+
+- In the dashboard, click **Report** in the menu.
+- From the command line, set `K6_WEB_DASHBOARD_EXPORT`. k6 writes the file when the test ends.
+
+The Technical text shows the command.
+
+There is a rule about the length of the test. The report has graphs only if the test lasts more than 3 times the aggregation period <Cite n={2} />. The period is `K6_WEB_DASHBOARD_PERIOD`. Its default is `10s` <Cite n={2} />. So with the default, a test must run for more than 30 seconds.
+
+This page checked the rule. A script with 2 VUs ran for 10 seconds with the default period. k6 v2.3.0 printed a warning and wrote no file. The same script ran again with `K6_WEB_DASHBOARD_PERIOD=1s`. A 10 second test is then longer than 3 periods, and k6 wrote the HTML file.
+
+Use a short period only for short practice runs. For a real test, keep the default period and run the test long enough.
+
+The tutorial's owner made an HTML report from `handleSummary()` with a community package that the script loaded from a URL. The built-in export needs no import from a URL, so this page teaches it instead.
+
+</Layman>
+<Bangla>
+
+dashboard আপনাকে একটা report দিতে পারে। এটা একটাই self-contained HTML ফাইল। আপনি এটা টিমের সাথে শেয়ার করেন <Cite n={2} />। পাওয়ার ২টা উপায় আছে <Cite n={2} />:
+
+- dashboard-এর menu-তে **Report** চাপুন।
+- command line থেকে `K6_WEB_DASHBOARD_EXPORT` সেট করুন। টেস্ট শেষ হলে k6 ফাইলটা লেখে।
+
+command-টা Technical লেখায় আছে।
+
+টেস্টের দৈর্ঘ্য নিয়ে একটা নিয়ম আছে। টেস্ট aggregation period-এর ৩ গুণের বেশি চললেই কেবল report-এ graph থাকে <Cite n={2} />। period হলো `K6_WEB_DASHBOARD_PERIOD`। এর default `10s` <Cite n={2} />। তাই default থাকলে টেস্ট ৩০ সেকেন্ডের বেশি চালাতে হবে।
+
+এই পেজ নিয়মটা পরীক্ষা করেছে। ২টা VU-র একটা script default period-এ ১০ সেকেন্ড চলেছে। k6 v2.3.0 একটা warning ছাপে এবং কোনো ফাইল লেখে না। একই script `K6_WEB_DASHBOARD_PERIOD=1s` দিয়ে আবার চালানো হয়। তখন ১০ সেকেন্ডের টেস্ট ৩ period-এর চেয়ে বড়, আর k6 HTML ফাইল লেখে।
+
+ছোট period শুধু ছোট practice run-এ ব্যবহার করুন। আসল টেস্টে default period রাখুন এবং টেস্ট যথেষ্ট সময় চালান।
+
+টিউটোরিয়ালের মালিক `handleSummary()` থেকে HTML report বানিয়েছিলেন একটা community package দিয়ে, যেটা script একটা URL থেকে লোড করত। built-in export-এ URL থেকে import লাগে না, তাই এই পেজ সেটাই শেখায়।
+
+</Bangla>
+</Voices>
+
+## Save raw results to a file
+
+<Voices>
+<Technical>
+
+The summary has only totals. To get every data point, use the `--out` flag. It writes each sample as k6 collects it.
+
+```bash
+k6 run --out json=test_results.json script.js
+k6 run --out csv=test_results.csv script.js
+```
+
+A file name that ends in `.gz` gives a gzip file <Cite n={4} /> <Cite n={5} />. You can follow a file live with `tail -f` <Cite n={4} /> <Cite n={5} />.
+
+The JSON file has one JSON object on each line. A `Metric` line says that a metric exists. A `Point` line is one sample <Cite n={4} />. A `Point` has a `time`, a `value`, and `tags`. Time values are in milliseconds <Cite n={4} />. The `jq` tool can filter the lines, for example by the metric name <Cite n={4} />.
+
+The 2 lines below are from one short run of a script on the tutorial's machine, with the URL and tags shortened. Your lines will differ.
+
+```text
+{"type":"Metric","data":{"name":"http_req_duration","type":"trend","contains":"time","thresholds":[]},"metric":"http_req_duration"}
+{"metric":"http_req_duration","type":"Point","data":{"time":"2026-10-27T09:43:31+06:00","value":376.401122,"tags":{"method":"GET","status":"200","scenario":"default"}}}
+```
+
+The CSV file has a header line. The columns start with `metric_name`, `timestamp`, and `metric_value`. They go on with the tags, such as `check`, `error`, `group`, `method`, `status`, and `url` <Cite n={5} />. If an error happens, the `error` and `error_code` fields have a value <Cite n={5} />.
+
+These files get large, because they have one line for each sample. A long test with many VUs gives a big file. Use them to analyze requests one by one, not as a report to share.
+
+</Technical>
+<Layman>
+
+The summary has only totals. To get every data point, use the `--out` flag. It writes each sample as k6 collects it. The Technical text shows both commands.
+
+A file name that ends in `.gz` gives a gzip file <Cite n={4} /> <Cite n={5} />. You can follow a file live with `tail -f` <Cite n={4} /> <Cite n={5} />.
+
+The JSON file has one JSON object on each line. A `Metric` line says that a metric exists. A `Point` line is one sample <Cite n={4} />. A `Point` has a `time`, a `value`, and `tags`. Time values are in milliseconds <Cite n={4} />. The `jq` tool can filter the lines, for example by the metric name <Cite n={4} />.
+
+The CSV file has a header line. The columns start with `metric_name`, `timestamp`, and `metric_value`. They go on with the tags, such as `check`, `error`, `group`, `method`, `status`, and `url` <Cite n={5} />. If an error happens, the `error` and `error_code` fields have a value <Cite n={5} />.
+
+These files get large, because they have one line for each sample. A long test with many VUs gives a big file. Use them to look at requests one by one, not as a report to share.
+
+</Layman>
+<Bangla>
+
+summary-তে শুধু মোট সংখ্যা থাকে। প্রতিটা data point পেতে `--out` flag ব্যবহার করুন। k6 যেমন sample সংগ্রহ করে, তেমন ফাইলে লেখে। দুটো command Technical লেখায় আছে।
+
+ফাইলের নাম `.gz` দিয়ে শেষ হলে gzip ফাইল পাবেন <Cite n={4} /> <Cite n={5} />। `tail -f` দিয়ে ফাইলটা live অনুসরণ করা যায় <Cite n={4} /> <Cite n={5} />।
+
+JSON ফাইলের প্রতিটা লাইনে একটা JSON object থাকে। `Metric` লাইন বলে একটা metric আছে। `Point` লাইন হলো একটা sample <Cite n={4} />। `Point`-এ `time`, `value` আর `tags` থাকে। সময়ের মান millisecond-এ <Cite n={4} />। `jq` tool দিয়ে লাইন ফিল্টার করা যায়, যেমন metric-এর নাম দিয়ে <Cite n={4} />।
+
+CSV ফাইলে একটা header লাইন থাকে। column শুরু হয় `metric_name`, `timestamp` আর `metric_value` দিয়ে। তারপর আসে tag, যেমন `check`, `error`, `group`, `method`, `status` আর `url` <Cite n={5} />। error হলে `error` আর `error_code` field-এ মান থাকে <Cite n={5} />।
+
+এই ফাইল বড় হয়, কারণ প্রতিটা sample-এর জন্য একটা লাইন থাকে। অনেক VU নিয়ে লম্বা টেস্টে ফাইল বিশাল হয়। এগুলো প্রতিটা request আলাদা করে দেখার জন্য ব্যবহার করুন, শেয়ার করার report হিসেবে নয়।
+
+</Bangla>
+</Voices>
+
+## The older summary export
+
+<Voices>
+<Technical>
+
+`--summary-export` saves the end-of-test summary to a JSON file. The environment variable is `K6_SUMMARY_EXPORT` <Cite n={6} />.
+
+```bash
+k6 run --summary-export export.json script.js
+```
+
+k6 v2.3.0 still has this flag. It is not deprecated, but the docs now discourage it. They say that `handleSummary()` gives a more flexible JSON export, and also other formats and full control of the summary <Cite n={6} />.
+
+Know what v2.0.0 removed. The `--no-summary` flag is gone. Use `--summary-mode=disabled` instead <Cite n={7} />. The `legacy` summary mode is gone too. Use `compact` (the default) or `full` <Cite n={7} /> <Cite n={3} />. The `disabled` mode also turns off `handleSummary()` and `--summary-export` <Cite n={6} />. If a report is empty, check that you did not set this mode.
+
+</Technical>
+<Layman>
+
+`--summary-export` saves the end-of-test summary to a JSON file. The environment variable is `K6_SUMMARY_EXPORT` <Cite n={6} />. The Technical text shows the command.
+
+k6 v2.3.0 still has this flag. It is not deprecated, but the docs now discourage it. They say that `handleSummary()` gives a more flexible JSON export, and also other formats and full control of the summary <Cite n={6} />.
+
+Know what v2.0.0 removed. The `--no-summary` flag is gone. Use `--summary-mode=disabled` instead <Cite n={7} />. The `legacy` summary mode is gone too. Use `compact` (the default) or `full` <Cite n={7} /> <Cite n={3} />. The `disabled` mode also turns off `handleSummary()` and `--summary-export` <Cite n={6} />. If a report is empty, check that you did not set this mode.
+
+</Layman>
+<Bangla>
+
+`--summary-export` end-of-test summary একটা JSON ফাইলে সেভ করে। environment variable হলো `K6_SUMMARY_EXPORT` <Cite n={6} />। command-টা Technical লেখায় আছে।
+
+k6 v2.3.0-তে এই flag এখনও আছে। এটা deprecated নয়, কিন্তু docs এখন এটা ব্যবহার করতে নিরুৎসাহিত করে। docs বলে `handleSummary()` বেশি flexible JSON export দেয়, সাথে অন্য format আর summary-র পূর্ণ নিয়ন্ত্রণও দেয় <Cite n={6} />।
+
+v2.0.0 কী সরিয়েছে, জেনে রাখুন। `--no-summary` flag নেই। এর বদলে `--summary-mode=disabled` ব্যবহার করুন <Cite n={7} />। `legacy` summary mode-ও নেই। `compact` (default) অথবা `full` ব্যবহার করুন <Cite n={7} /> <Cite n={3} />। `disabled` mode `handleSummary()` আর `--summary-export`-ও বন্ধ করে দেয় <Cite n={6} />। report খালি এলে দেখুন আপনি এই mode সেট করেছেন কি না।
+
+</Bangla>
+</Voices>
+
+## Duration and iterations together
+
+<Voices>
+<Technical>
+
+The tutorial owner's script had these options:
+
+```javascript
+export const options = {
+  vus: 100,
+  duration: '10s',
+  iterations: 100,
+};
+```
+
+The options `vus` and `duration` alone are a shortcut for one scenario with the constant-VUs executor <Cite n={6} />. The options `vus` and `iterations` alone are a shortcut for one scenario with the shared-iterations executor <Cite n={6} />. When you give all three, the `iterations` shortcut wins. The `duration` option then sets the `maxDuration` of that scenario <Cite n={6} />. The default `maxDuration` is 10 minutes <Cite n={6} />.
+
+So the owner's options mean: run 100 iterations shared among 100 VUs, and stop after 10 seconds if the iterations are not done. The run ends at whichever comes first. This page ran a small version of this to check it, with `vus: 2`, `duration: '5s'` and `iterations: 6`. k6 v2.3.0 printed this scenario line:
+
+```text
+default: 6 iterations shared among 2 VUs (maxDuration: 5s, gracefulStop: 30s)
+```
+
+The 6 iterations ended in less than 2 seconds, so the run did not wait for 5 seconds. With shared iterations, a faster VU completes more iterations than the others <Cite n={6} />. So 100 VUs and 100 iterations do not always give one iteration for each VU.
+
+The tutorial's own advice: set the duration or the iterations, not both, unless you want a time limit as a safety net. It keeps the meaning of the test clear.
+
+</Technical>
+<Layman>
+
+The tutorial owner's script had `vus: 100`, `duration: '10s'`, and `iterations: 100`. The Technical text shows the code.
+
+The options `vus` and `duration` alone are a shortcut for one scenario with the constant-VUs executor <Cite n={6} />. The options `vus` and `iterations` alone are a shortcut for one scenario with the shared-iterations executor <Cite n={6} />. When you give all three, the `iterations` shortcut wins. The `duration` option then sets the `maxDuration` of that scenario <Cite n={6} />. The default `maxDuration` is 10 minutes <Cite n={6} />.
+
+So the owner's options mean this. Run 100 iterations shared among 100 VUs. Stop after 10 seconds if the iterations are not done. The run ends at whichever comes first.
+
+This page ran a small version to check it, with `vus: 2`, `duration: '5s'` and `iterations: 6`. k6 v2.3.0 printed that 6 iterations are shared among 2 VUs, with a `maxDuration` of 5 seconds. The 6 iterations ended in less than 2 seconds. The run did not wait for 5 seconds.
+
+With shared iterations, a faster VU completes more iterations than the others <Cite n={6} />. So 100 VUs and 100 iterations do not always give one iteration for each VU.
+
+The tutorial's own advice: set the duration or the iterations, not both, unless you want a time limit as a safety net. It keeps the meaning of the test clear.
+
+</Layman>
+<Bangla>
+
+টিউটোরিয়াল-মালিকের script-এ ছিল `vus: 100`, `duration: '10s'` আর `iterations: 100`। code Technical লেখায় আছে।
+
+শুধু `vus` আর `duration` হলো constant-VUs executor-এর একটা scenario-র shortcut <Cite n={6} />। শুধু `vus` আর `iterations` হলো shared-iterations executor-এর একটা scenario-র shortcut <Cite n={6} />। তিনটাই দিলে `iterations` shortcut জেতে। তখন `duration` option ওই scenario-র `maxDuration` ঠিক করে <Cite n={6} />। `maxDuration`-এর default ১০ মিনিট <Cite n={6} />।
+
+তাই মালিকের option-এর মানে এই: ১০০টা VU-র মধ্যে ভাগ করে ১০০টা iteration চালান। iteration শেষ না হলে ১০ সেকেন্ড পরে থামুন। যেটা আগে ঘটে, তখনই run শেষ হয়।
+
+এই পেজ ছোট একটা সংস্করণ চালিয়ে পরীক্ষা করেছে, `vus: 2`, `duration: '5s'` আর `iterations: 6` দিয়ে। k6 v2.3.0 ছেপেছে যে ৬টা iteration ২টা VU-র মধ্যে ভাগ হয়েছে, `maxDuration` ৫ সেকেন্ড। ৬টা iteration ২ সেকেন্ডের কম সময়ে শেষ হয়েছে। run ৫ সেকেন্ড অপেক্ষা করেনি।
+
+shared iterations-এ যে VU দ্রুত চলে, সে অন্যদের চেয়ে বেশি iteration শেষ করে <Cite n={6} />। তাই ১০০ VU আর ১০০ iteration সবসময় প্রতি VU-তে একটা iteration দেয় না।
+
+টিউটোরিয়ালের নিজস্ব পরামর্শ: সময়সীমার safety net না চাইলে duration অথবা iterations যেকোনো একটা সেট করুন, দুটো নয়। এতে টেস্টের মানে পরিষ্কার থাকে।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+| --- | --- |
+| `handleSummary(data)` | A function that k6 calls at the end of the test. It returns where to put the summary: `stdout`, `stderr`, or files <Cite n={1} />. |
+| `textSummary` | A helper from the k6 JS utilities library. It makes the text summary that k6 prints by default <Cite n={1} />. |
+| Web dashboard | A built-in page that shows results in real time. You turn it on with `K6_WEB_DASHBOARD=true` <Cite n={2} />. |
+| `K6_WEB_DASHBOARD_EXPORT` | The file name for an HTML report at the end of the run <Cite n={2} />. |
+| Aggregation period | How often the dashboard updates (`K6_WEB_DASHBOARD_PERIOD`, default `10s`). A report has graphs only if the test lasts more than 3 periods <Cite n={2} />. |
+| `--out json=…` and `--out csv=…` | Flags that write every data point to a file <Cite n={4} /> <Cite n={5} />. |
+| `--summary-export` | A flag that saves the summary to a JSON file. The docs discourage it, and prefer `handleSummary()` <Cite n={6} />. |
+| `--summary-mode` | A flag that sets the end-of-test summary: `compact` (default), `full`, or `disabled` <Cite n={7} /> <Cite n={6} />. |
+| Shared iterations | An executor that shares a fixed number of iterations among the VUs. The shortcut `vus` plus `iterations` uses it <Cite n={6} />. |

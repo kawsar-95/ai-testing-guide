@@ -29,5 +29,6 @@ export const DASHBOARD_UI_BN: Bn<typeof DASHBOARD_UI> = {
     architecture: "Architecture",
     "system-design": "System Design",
     course: "Course",
+    k6: "k6",
   },
 };

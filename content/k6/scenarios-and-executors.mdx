@@ -1,0 +1,465 @@
+export const metadata = { title: 'Scenarios and Executors', description: 'Model a real traffic mix with scenarios, choose an executor for each one, and know the difference between open and closed models.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Scenarios', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/', accessed: '2026-10-27' },
+    { title: 'Executors', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/', accessed: '2026-10-27' },
+    { title: 'Open and closed models', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/concepts/open-vs-closed/', accessed: '2026-10-27' },
+    { title: 'Constant arrival rate', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/constant-arrival-rate/', accessed: '2026-10-27' },
+    { title: 'Running large tests', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/testing-guides/running-large-tests/', accessed: '2026-10-27' },
+    { title: 'k6 v2.0.0 release notes', publisher: 'grafana/k6 (GitHub)', url: 'https://github.com/grafana/k6/releases/tag/v2.0.0', accessed: '2026-10-27' },
+    { title: 'Ramping arrival rate', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/ramping-arrival-rate/', accessed: '2026-10-27' },
+    { title: 'Shared iterations', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/shared-iterations/', accessed: '2026-10-27' },
+    { title: 'Per VU iterations', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/per-vu-iterations/', accessed: '2026-10-27' },
+    { title: 'Constant VUs', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/constant-vus/', accessed: '2026-10-27' },
+    { title: 'Ramping VUs', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/ramping-vus/', accessed: '2026-10-27' },
+    { title: 'Graceful stop', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/concepts/graceful-stop/', accessed: '2026-10-27' },
+    { title: 'Dropped iterations', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/concepts/dropped-iterations/', accessed: '2026-10-27' },
+  ],
+}
+
+# Scenarios and Executors
+
+Real users do not all do the same thing. A scenario lets one script run several kinds of user work at the same time, and an executor decides how k6 schedules the VUs and iterations of each scenario.
+
+<PageMeta />
+
+## Why one script needs many scenarios
+
+<Voices>
+<Technical>
+
+Until now, one script had one flow and one load shape. Real traffic is a mix. In a mobile wallet, some users recharge a phone, some send money, some withdraw cash, some pay a shop, and some pay a bill. A **scenario** configures the VU and iteration schedule in detail, so that one script can model this mix <Cite n={1} />.
+
+The benefits of scenarios are these <Cite n={1} />:
+
+- You can declare many scenarios in one script. Each one can run a different JavaScript function.
+- Each scenario can have its own VU and iteration pattern.
+- Scenarios are independent and run in parallel. You can make them look sequential with `startTime`.
+- You can set environment variables and tags for each scenario, so the results are easier to split.
+
+You set scenarios with the `scenarios` key of the `options` object. The scenario name must be unique in the script. It shows in the result summary and in the tags <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+Until now, one script had one flow and one load shape. Real traffic is a mix. In a mobile wallet, some users recharge a phone. Some send money. Some withdraw cash. Some pay a shop. Some pay a bill. A **scenario** sets up the VU and iteration schedule in detail. So one script can model this mix <Cite n={1} />.
+
+The benefits of scenarios are these <Cite n={1} />:
+
+- You can put many scenarios in one script. Each one can run a different JavaScript function.
+- Each scenario can have its own VU and iteration pattern.
+- Scenarios are independent and run in parallel. You can make them look sequential with `startTime`.
+- You can set environment variables and tags for each scenario. So the results are easier to split.
+
+You set scenarios with the `scenarios` key of the `options` object. The scenario name must be unique in the script. It shows in the result summary and in the tags <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+এতক্ষণ একটা স্ক্রিপ্টে একটাই ফ্লো আর একটাই লোড শেপ ছিল। বাস্তবে ট্রাফিক একটা মিক্স। একটা মোবাইল ওয়ালেটে কেউ ফোন রিচার্জ করে, কেউ send money করে, কেউ ক্যাশ withdraw করে, কেউ দোকানে পেমেন্ট করে, আবার কেউ বিল দেয়। **scenario** VU আর iteration-এর শিডিউল বিস্তারিতভাবে ঠিক করে, তাই একটা স্ক্রিপ্টেই এই মিক্স মডেল করা যায় <Cite n={1} />।
+
+scenario-র সুবিধাগুলো এই <Cite n={1} />:
+
+- একটা স্ক্রিপ্টে অনেক scenario রাখা যায়। প্রতিটা আলাদা JavaScript function চালাতে পারে।
+- প্রতিটা scenario-র নিজের VU আর iteration প্যাটার্ন থাকতে পারে।
+- scenario গুলো স্বাধীন এবং একসাথে (parallel) চলে। `startTime` দিয়ে এগুলোকে একটার পর একটা চলার মতো করা যায়।
+- প্রতিটা scenario-র জন্য আলাদা environment variable আর tag দেওয়া যায়, ফলে রেজাল্ট ভাগ করে দেখা সহজ হয়।
+
+`options` অবজেক্টের `scenarios` key দিয়ে scenario সেট করতে হয়। স্ক্রিপ্টে scenario-র নাম অনন্য (unique) হতে হবে। নামটা রেজাল্ট সামারি আর tag-এ দেখা যায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## A traffic-mix example
+
+<Voices>
+<Technical>
+
+This is the tutorial's own example, from the owner's notes. A mobile wallet handles 100,000 transactions each day. The owner splits the users like this. The split is the tutorial's own assumption. It is not a measured fact.
+
+| Operation | Share of users | Scenario name |
+| --- | --- | --- |
+| Mobile recharge | 50 % | `recharge` |
+| Send money | 20 % | `sendMoney` |
+| Withdraw money | 10 % | `withdrawMoney` |
+| Merchant payment | 10 % | `merchantPayment` |
+| Utility bill payment | 10 % | `utilityPayment` |
+
+The notes use one `constant-vus` scenario for each operation, and 100,000 VUs in total. One machine has limits. The k6 docs say that one k6 instance can run about 30,000 to 40,000 VUs when the machine and the script are tuned <Cite n={5} />. For a larger test, the docs say that you can split the load over many k6 instances, and that Grafana Cloud k6 runs large tests for you <Cite n={5} />. So 100,000 VUs needs distributed or cloud execution.
+
+For learning, keep the same split and make the scale 1,000 times smaller: 50, 20, 10, 10, and 10 VUs for 1 minute. The script below has the same shape, and it runs on a laptop. The host `https://wallet.example.com` is a placeholder. Point the script at your own test system, not at a real service.
+
+```javascript
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  scenarios: {
+    recharge: { executor: 'constant-vus', vus: 50, duration: '1m', exec: 'recharge' },
+    sendMoney: { executor: 'constant-vus', vus: 20, duration: '1m', exec: 'sendMoney' },
+    withdrawMoney: { executor: 'constant-vus', vus: 10, duration: '1m', exec: 'withdrawMoney' },
+    merchantPayment: { executor: 'constant-vus', vus: 10, duration: '1m', exec: 'merchantPayment' },
+    utilityPayment: { executor: 'constant-vus', vus: 10, duration: '1m', exec: 'utilityPayment' },
+  },
+};
+
+const BASE_URL = 'https://wallet.example.com';
+
+function call(path) {
+  http.post(`${BASE_URL}${path}`, JSON.stringify({ amount: 100 }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  sleep(1);
+}
+
+export function recharge() { call('/recharge'); }
+export function sendMoney() { call('/sendMoney'); }
+export function withdrawMoney() { call('/withdrawMoney'); }
+export function merchantPayment() { call('/merchantPayment'); }
+export function utilityPayment() { call('/utilityPayment'); }
+```
+
+Each scenario has three parts:
+
+- `executor: 'constant-vus'` keeps a fixed number of VUs busy for the whole `duration` <Cite n={10} />.
+- `vus` is that number. Here it is the share of the 100 VUs.
+- `exec` is the name of the exported function that the scenario runs <Cite n={1} />. Without `exec`, a scenario runs the default function <Cite n={1} />.
+
+So the `recharge` scenario runs 50 VUs for 1 minute, and each VU runs `recharge()` again and again. All five scenarios start together and run in parallel <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+This is the tutorial's own example, from the owner's notes. A mobile wallet handles 100,000 transactions each day. The owner splits the users in five groups. The split is the tutorial's own guess. It is not a measured fact. 50 % recharge a phone. 20 % send money. 10 % withdraw money. 10 % pay a shop. 10 % pay a bill.
+
+The notes use one `constant-vus` scenario for each operation, and 100,000 VUs in total. One machine has limits. The k6 docs say that one k6 instance can run about 30,000 to 40,000 VUs when the machine and the script are tuned <Cite n={5} />. For a larger test, the docs say that you can split the load over many k6 instances. They also say that Grafana Cloud k6 runs large tests for you <Cite n={5} />. So 100,000 VUs needs distributed or cloud execution.
+
+For learning, keep the same split and make the scale 1,000 times smaller: 50, 20, 10, 10, and 10 VUs for 1 minute. The script has the same shape, and it runs on a laptop. The host `https://wallet.example.com` is a placeholder. Point the script at your own test system, not at a real service.
+
+Each scenario has three parts. `executor: 'constant-vus'` keeps a fixed number of VUs busy for the whole `duration` <Cite n={10} />. `vus` is that number. `exec` is the name of the exported function that the scenario runs <Cite n={1} />. Without `exec`, a scenario runs the default function <Cite n={1} />.
+
+So the `recharge` scenario runs 50 VUs for 1 minute. Each VU runs `recharge()` again and again. All five scenarios start together and run in parallel <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+এটা টিউটোরিয়ালের নিজের উদাহরণ, owner-এর নোট থেকে। একটা মোবাইল ওয়ালেটে প্রতিদিন ১ লাখ transaction হয়। owner ইউজারদের ভাগ করেছেন এভাবে। এই ভাগ টিউটোরিয়ালের নিজের ধারণা। এটা মাপা তথ্য নয়। ৫০% ফোন রিচার্জ করে। ২০% send money করে। ১০% withdraw করে। ১০% দোকানে পেমেন্ট করে। ১০% বিল দেয়।
+
+নোটে প্রতিটা অপারেশনের জন্য একটা করে `constant-vus` scenario আছে, আর মোট ১,০০,০০০ VUs। একটা মেশিনের সীমা আছে। k6 ডকস বলে, মেশিন আর স্ক্রিপ্ট টিউন করা থাকলে একটা k6 instance প্রায় ৩০,০০০ থেকে ৪০,০০০ VUs চালাতে পারে <Cite n={5} />। এর চেয়ে বড় টেস্টের জন্য ডকস বলে, লোড অনেক k6 instance-এ ভাগ করা যায়। আরও বলে, Grafana Cloud k6 বড় টেস্ট চালিয়ে দেয় <Cite n={5} />। তাই ১,০০,০০০ VUs-এর জন্য distributed বা cloud execution লাগে।
+
+শেখার জন্য একই ভাগ রাখুন, আর স্কেল ১,০০০ গুণ ছোট করুন: ১ মিনিটের জন্য ৫০, ২০, ১০, ১০ আর ১০ VUs। স্ক্রিপ্টের শেপ একই, আর এটা ল্যাপটপে চলে। `https://wallet.example.com` একটা placeholder হোস্ট। স্ক্রিপ্টকে আপনার নিজের টেস্ট সিস্টেমে পাঠান, কোনো আসল সার্ভিসে নয়।
+
+প্রতিটা scenario-র তিনটা অংশ আছে। `executor: 'constant-vus'` পুরো `duration` ধরে নির্দিষ্ট সংখ্যক VU চালু রাখে <Cite n={10} />। `vus` হলো সেই সংখ্যা। `exec` হলো যে exported function scenario চালাবে তার নাম <Cite n={1} />। `exec` না দিলে scenario default function চালায় <Cite n={1} />।
+
+তাই `recharge` scenario ১ মিনিট ধরে ৫০ VUs চালায়। প্রতিটা VU বারবার `recharge()` চালায়। পাঁচটা scenario একসাথে শুরু হয় এবং parallel চলে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Common scenario options
+
+<Voices>
+<Technical>
+
+Every scenario takes the `executor` option, which is required, and a set of common options <Cite n={1} />:
+
+| Option | What it does | Default |
+| --- | --- | --- |
+| `executor` | The name of the executor. | None (required) |
+| `startTime` | The time offset from the test start at which the scenario begins. | `"0s"` |
+| `gracefulStop` | How long k6 waits for running iterations to finish before it stops them by force. | `"30s"` |
+| `exec` | The name of the exported function to run. | `"default"` |
+| `env` | Environment variables for this scenario only. | `{}` |
+| `tags` | Tags for this scenario only. | `{}` |
+
+Every executor accepts `gracefulStop` <Cite n={12} />. A forced stop in the middle of an iteration can skew the metrics, and a graceful stop avoids this <Cite n={12} />.
+
+The script below runs two scenarios. `browse` starts at once. `checkout` starts after 10 seconds, so it overlaps with `browse`. It has its own `env` and `tags`, and each scenario runs its own function. The script uses the QuickPizza demo site, which the k6 docs use for examples.
+
+```javascript
+import http from 'k6/http';
+
+export const options = {
+  scenarios: {
+    browse: {
+      executor: 'constant-vus',
+      vus: 5,
+      duration: '30s',
+      exec: 'browse',
+    },
+    checkout: {
+      executor: 'per-vu-iterations',
+      vus: 2,
+      iterations: 5,
+      startTime: '10s',
+      gracefulStop: '5s',
+      exec: 'checkout',
+      env: { STEP: 'checkout' },
+      tags: { flow: 'checkout' },
+    },
+  },
+};
+
+export function browse() {
+  http.get('https://quickpizza.grafana.com/');
+}
+
+export function checkout() {
+  http.get(`https://quickpizza.grafana.com/?step=${__ENV.STEP}`);
+}
+```
+
+When you run a script with scenarios, the k6 output gives high-level information about each scenario <Cite n={1} />. You can set tags for each scenario with the `tags` option <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+Every scenario takes the `executor` option, which is required. It also takes a set of common options <Cite n={1} />. `startTime` is the time offset from the test start at which the scenario begins. The default is `"0s"`. `gracefulStop` is how long k6 waits for running iterations to finish before it stops them by force. The default is `"30s"`. `exec` is the name of the exported function to run. The default is `"default"`. `env` sets environment variables for this scenario only. `tags` sets tags for this scenario only.
+
+Every executor accepts `gracefulStop` <Cite n={12} />. A forced stop in the middle of an iteration can skew the metrics. A graceful stop avoids this <Cite n={12} />.
+
+The script in the Technical text runs two scenarios. `browse` starts at once. `checkout` starts after 10 seconds, so it overlaps with `browse`. It has its own `env` and `tags`. Each scenario runs its own function. The script uses the QuickPizza demo site, which the k6 docs use for examples.
+
+When you run a script with scenarios, the k6 output gives high-level information about each scenario <Cite n={1} />. You can set tags for each scenario with the `tags` option <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+প্রতিটা scenario-তে `executor` option লাগে, এটা বাধ্যতামূলক। এর সাথে কিছু common option আছে <Cite n={1} />। `startTime` হলো টেস্ট শুরু থেকে কত পরে scenario শুরু হবে তার অফসেট। default `"0s"`। `gracefulStop` হলো চলমান iteration শেষ হওয়ার জন্য k6 জোর করে থামানোর আগে কতক্ষণ অপেক্ষা করবে। default `"30s"`। `exec` হলো যে exported function চলবে তার নাম। default `"default"`। `env` শুধু এই scenario-র জন্য environment variable দেয়। `tags` শুধু এই scenario-র জন্য tag দেয়।
+
+প্রতিটা executor `gracefulStop` নেয় <Cite n={12} />। iteration-এর মাঝখানে জোর করে থামালে metrics বেঁকে যেতে পারে। graceful stop এটা এড়ায় <Cite n={12} />।
+
+Technical টেক্সটের স্ক্রিপ্টে দুটো scenario চলে। `browse` সাথে সাথে শুরু হয়। `checkout` ১০ সেকেন্ড পরে শুরু হয়, তাই এটা `browse`-এর সাথে একসাথে চলে। এর নিজের `env` আর `tags` আছে। প্রতিটা scenario নিজের function চালায়। স্ক্রিপ্টটা QuickPizza ডেমো সাইট ব্যবহার করে, যেটা k6 ডকস উদাহরণে ব্যবহার করে।
+
+scenario সহ স্ক্রিপ্ট চালালে k6 আউটপুট প্রতিটা scenario সম্পর্কে সংক্ষিপ্ত তথ্য দেয় <Cite n={1} />। `tags` option দিয়ে প্রতিটা scenario-র জন্য আলাদা tag দেওয়া যায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## The executors
+
+<Voices>
+<Technical>
+
+An **executor** schedules the VU workload of one scenario. It decides how long the scenario runs, whether the load stays constant or changes, and whether k6 models the load by VUs or by arrival rate <Cite n={1} />. You write its name in the `executor` key, with hyphens <Cite n={2} />. These are the six current executors <Cite n={2} />:
+
+| Executor | Value | What it does | Model |
+| --- | --- | --- | --- |
+| Shared iterations | `shared-iterations` | A fixed number of iterations is shared between a number of VUs <Cite n={2} />. The test ends when all iterations are done <Cite n={8} />. | Closed |
+| Per VU iterations | `per-vu-iterations` | Each VU runs an exact number of iterations <Cite n={2} />. The total is `vus * iterations` <Cite n={9} />. | Closed |
+| Constant VUs | `constant-vus` | A fixed number of VUs run as many iterations as possible for a set time <Cite n={2} />. | Closed |
+| Ramping VUs | `ramping-vus` | A variable number of VUs run as many iterations as possible for a set time <Cite n={2} />. | Closed |
+| Constant arrival rate | `constant-arrival-rate` | A fixed number of iterations start in a set period <Cite n={2} />. | Open |
+| Ramping arrival rate | `ramping-arrival-rate` | A variable number of iterations start in a set period <Cite n={2} />. | Open |
+
+The model column follows the next section: the arrival-rate executors use the open model, and the other executors use the closed model <Cite n={3} />.
+
+When to use each one <Cite n={8} /> <Cite n={9} /> <Cite n={10} /> <Cite n={11} /> <Cite n={7} />:
+
+- `shared-iterations`: you want a fixed amount of work and you care about the time to finish. A quick check in the development cycle is a good use. The number of iterations for each VU is not important.
+- `per-vu-iterations`: each VU must do the same number of iterations. This helps when you split a fixed set of test data between VUs.
+- `constant-vus`: you need a fixed number of VUs for a set time.
+- `ramping-vus`: the number of VUs must go up or down in `stages`. Its extra options include `startVUs` and `gracefulRampDown`.
+- `constant-arrival-rate` and `ramping-arrival-rate`: you want iterations to start at a set rate, whatever the system does. The ramping type changes the rate in `stages`, with `startRate` and `timeUnit`.
+
+The `vus` and `duration` options, the `vus` and `iterations` options, and the `stages` option are shortcuts for `constant-vus`, `shared-iterations`, and `ramping-vus` <Cite n={10} /> <Cite n={8} /> <Cite n={11} />. You used these shortcuts in the earlier pages.
+
+<Callout type="warning" title="externally-controlled was removed">
+
+Older tutorials list a seventh executor, `externally-controlled`. k6 v2.0.0 removed it. A script with `executor: 'externally-controlled'` does not start, and there is no replacement <Cite n={6} />. The release notes tell you to move to another executor that fits the load you want, such as `ramping-vus`, `constant-vus`, or `constant-arrival-rate` <Cite n={6} />.
+
+</Callout>
+
+For a given scenario, you cannot be sure that a specific VU runs a specific iteration <Cite n={2} />. You can map the tenth VU to the tenth item of a `SharedArray`, but you cannot reliably map the tenth VU to the tenth iteration <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+An **executor** schedules the VU workload of one scenario. It decides how long the scenario runs. It decides whether the load stays constant or changes. It also decides whether k6 models the load by VUs or by arrival rate <Cite n={1} />. You write its name in the `executor` key, with hyphens <Cite n={2} />. There are six current executors <Cite n={2} />.
+
+`shared-iterations` shares a fixed number of iterations between a number of VUs <Cite n={2} />. The test ends when all iterations are done <Cite n={8} />. `per-vu-iterations` makes each VU run an exact number of iterations <Cite n={2} />. The total is `vus * iterations` <Cite n={9} />. `constant-vus` keeps a fixed number of VUs busy for a set time <Cite n={2} />. `ramping-vus` changes the number of VUs over a set time <Cite n={2} />. `constant-arrival-rate` starts a fixed number of iterations in a set period <Cite n={2} />. `ramping-arrival-rate` starts a variable number of iterations in a set period <Cite n={2} />.
+
+The arrival-rate executors use the open model. The other four use the closed model <Cite n={3} />. The next section explains both models.
+
+When to use each one <Cite n={8} /> <Cite n={9} /> <Cite n={10} /> <Cite n={11} /> <Cite n={7} />. Use `shared-iterations` when you want a fixed amount of work and you care about the time to finish. A quick check in the development cycle is a good use. Use `per-vu-iterations` when each VU must do the same number of iterations. This helps when you split a fixed set of test data between VUs. Use `constant-vus` when you need a fixed number of VUs for a set time. Use `ramping-vus` when the number of VUs must go up or down in `stages`. Use the two arrival-rate executors when you want iterations to start at a set rate, whatever the system does.
+
+The `vus` and `duration` options, the `vus` and `iterations` options, and the `stages` option are shortcuts for `constant-vus`, `shared-iterations`, and `ramping-vus` <Cite n={10} /> <Cite n={8} /> <Cite n={11} />. You used these shortcuts in the earlier pages.
+
+Older tutorials list a seventh executor, `externally-controlled`. k6 v2.0.0 removed it. A script with this executor does not start, and there is no replacement <Cite n={6} />. The release notes tell you to move to another executor that fits the load you want <Cite n={6} />.
+
+For a given scenario, you cannot be sure that a specific VU runs a specific iteration <Cite n={2} />. You can map the tenth VU to the tenth item of a `SharedArray`. You cannot reliably map the tenth VU to the tenth iteration <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**executor** একটা scenario-র VU workload শিডিউল করে। scenario কতক্ষণ চলবে, লোড ধ্রুব থাকবে না বদলাবে, আর k6 লোডকে VU দিয়ে মডেল করবে না arrival rate দিয়ে, এসব executor ঠিক করে <Cite n={1} />। `executor` key-তে এর নাম হাইফেন দিয়ে লিখতে হয় <Cite n={2} />। বর্তমানে ছয়টা executor আছে <Cite n={2} />।
+
+`shared-iterations` একটা নির্দিষ্ট সংখ্যক iteration কয়েকটা VU-র মধ্যে ভাগ করে দেয় <Cite n={2} />। সব iteration শেষ হলে টেস্ট শেষ হয় <Cite n={8} />। `per-vu-iterations` প্রতিটা VU-কে ঠিক নির্দিষ্ট সংখ্যক iteration চালাতে দেয় <Cite n={2} />। মোট হয় `vus * iterations` <Cite n={9} />। `constant-vus` নির্দিষ্ট সংখ্যক VU কে নির্দিষ্ট সময় ধরে চালু রাখে <Cite n={2} />। `ramping-vus` নির্দিষ্ট সময়ে VU-র সংখ্যা বদলায় <Cite n={2} />। `constant-arrival-rate` নির্দিষ্ট সময়ে নির্দিষ্ট সংখ্যক iteration শুরু করে <Cite n={2} />। `ramping-arrival-rate` নির্দিষ্ট সময়ে পরিবর্তনশীল সংখ্যক iteration শুরু করে <Cite n={2} />।
+
+arrival-rate executor দুটো open model ব্যবহার করে। বাকি চারটা closed model ব্যবহার করে <Cite n={3} />। পরের সেকশনে দুটো model ব্যাখ্যা করা হয়েছে।
+
+কোনটা কখন ব্যবহার করবেন <Cite n={8} /> <Cite n={9} /> <Cite n={10} /> <Cite n={11} /> <Cite n={7} />। নির্দিষ্ট পরিমাণ কাজ চাইলে এবং শেষ হতে কত সময় লাগে সেটা দেখতে চাইলে `shared-iterations` ব্যবহার করুন। ডেভেলপমেন্টের সময় দ্রুত চেকের জন্য এটা ভালো। প্রতিটা VU-কে একই সংখ্যক iteration করতে হলে `per-vu-iterations` ব্যবহার করুন। নির্দিষ্ট টেস্ট ডেটা VU-দের মধ্যে ভাগ করার সময় এটা কাজে লাগে। নির্দিষ্ট সময় ধরে নির্দিষ্ট সংখ্যক VU লাগলে `constant-vus` ব্যবহার করুন। `stages` দিয়ে VU-র সংখ্যা বাড়াতে বা কমাতে হলে `ramping-vus` ব্যবহার করুন। সিস্টেম যা-ই করুক, iteration নির্দিষ্ট হারে শুরু করতে চাইলে দুটো arrival-rate executor ব্যবহার করুন।
+
+`vus` ও `duration` option, `vus` ও `iterations` option, আর `stages` option হলো যথাক্রমে `constant-vus`, `shared-iterations` আর `ramping-vus`-এর শর্টকাট <Cite n={10} /> <Cite n={8} /> <Cite n={11} />। আগের পেজগুলোতে আপনি এই শর্টকাট ব্যবহার করেছেন।
+
+পুরোনো টিউটোরিয়ালে সপ্তম একটা executor, `externally-controlled`, দেখা যায়। k6 v2.0.0 এটা সরিয়ে দিয়েছে। এই executor সহ স্ক্রিপ্ট চালু হয় না, আর এর কোনো বিকল্প নেই <Cite n={6} />। রিলিজ নোট বলে, যে লোড চান তার সাথে মেলে এমন অন্য executor-এ যেতে হবে <Cite n={6} />।
+
+একটা scenario-তে নির্দিষ্ট VU নির্দিষ্ট iteration চালাবে, এর নিশ্চয়তা দেওয়া যায় না <Cite n={2} />। দশম VU-কে `SharedArray`-র দশম আইটেমে মেলানো যায়। কিন্তু দশম VU-কে দশম iteration-এ নির্ভরযোগ্যভাবে মেলানো যায় না <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Open and closed models
+
+<Voices>
+<Technical>
+
+The executors schedule VUs in two different ways. Some use the **closed model**. The arrival-rate executors use the **open model** <Cite n={3} />. In the closed model, a VU starts its next iteration only when the last one ends. In the open model, iterations start on their own schedule, whether or not earlier ones have ended <Cite n={3} />.
+
+**Closed model.** The run time of each iteration decides how many iterations the test runs <Cite n={3} />. The docs give an example: one VU with `constant-vus`, and a request that takes about 6 seconds. New iterations start about once every 6 seconds, so a 1-minute test gets about 10 iterations <Cite n={3} />.
+
+A closed model has a drawback. When the system under test gets slower, each iteration takes longer, and k6 starts new iterations less often <Cite n={3} />. The load on the system goes down just when the system is under stress. The docs call this problem *coordinated omission* <Cite n={3} />. It is a bad fit when you want to simulate a set arrival rate or a set number of requests per second <Cite n={3} />.
+
+**Open model.** The open model separates the start of new iterations from the run time of iterations. The response time of the system no longer changes the load <Cite n={3} />. In the docs example, `constant-arrival-rate` starts 1 iteration every second, even with a 6-second request. A 1-minute test gets 60 iterations <Cite n={3} />. For this, k6 uses more VUs at the same time. The docs output shows 11 VUs for that run <Cite n={3} />.
+
+The tutorial's own rule of thumb: use a closed model when you care about "N users doing things", and an open model when you care about "N requests or arrivals every second".
+
+</Technical>
+<Layman>
+
+The executors schedule VUs in two different ways. Some use the **closed model**. The arrival-rate executors use the **open model** <Cite n={3} />. In the closed model, a VU starts its next iteration only when the last one ends. In the open model, iterations start on their own schedule. It does not matter whether earlier ones have ended <Cite n={3} />.
+
+**Closed model.** The run time of each iteration decides how many iterations the test runs <Cite n={3} />. The docs give an example. One VU uses `constant-vus`, and a request takes about 6 seconds. New iterations start about once every 6 seconds. So a 1-minute test gets about 10 iterations <Cite n={3} />.
+
+A closed model has a drawback. When the system under test gets slower, each iteration takes longer. Then k6 starts new iterations less often <Cite n={3} />. The load on the system goes down just when the system is under stress. The docs call this problem *coordinated omission* <Cite n={3} />. It is a bad fit when you want to simulate a set arrival rate or a set number of requests per second <Cite n={3} />.
+
+**Open model.** The open model separates the start of new iterations from the run time of iterations. The response time of the system no longer changes the load <Cite n={3} />. In the docs example, `constant-arrival-rate` starts 1 iteration every second, even with a 6-second request. A 1-minute test gets 60 iterations <Cite n={3} />. For this, k6 uses more VUs at the same time. The docs output shows 11 VUs for that run <Cite n={3} />.
+
+The tutorial's own rule of thumb: use a closed model when you care about "N users doing things". Use an open model when you care about "N requests or arrivals every second".
+
+</Layman>
+<Bangla>
+
+executor গুলো VU-কে দুই রকমভাবে শিডিউল করে। কিছু executor **closed model** ব্যবহার করে। arrival-rate executor গুলো **open model** ব্যবহার করে <Cite n={3} />। closed model-এ একটা VU আগের iteration শেষ হলে তবেই পরের iteration শুরু করে। open model-এ iteration নিজের শিডিউলে শুরু হয়। আগেরগুলো শেষ হয়েছে কি না, তাতে কিছু আসে যায় না <Cite n={3} />।
+
+**Closed model।** প্রতিটা iteration-এর চলার সময় ঠিক করে টেস্টে কয়টা iteration চলবে <Cite n={3} />। ডকসের একটা উদাহরণ আছে। একটা VU `constant-vus` ব্যবহার করে, আর একটা request-এ প্রায় ৬ সেকেন্ড লাগে। নতুন iteration প্রায় প্রতি ৬ সেকেন্ডে একটা শুরু হয়। তাই ১ মিনিটের টেস্টে প্রায় ১০টা iteration হয় <Cite n={3} />।
+
+closed model-এর একটা অসুবিধা আছে। টেস্ট করা সিস্টেম ধীর হলে প্রতিটা iteration-এ বেশি সময় লাগে। তখন k6 কম ঘন ঘন নতুন iteration শুরু করে <Cite n={3} />। ঠিক যখন সিস্টেম চাপের মধ্যে থাকে, তখনই সিস্টেমের ওপর লোড কমে যায়। ডকস এই সমস্যাকে *coordinated omission* বলে <Cite n={3} />। নির্দিষ্ট arrival rate বা প্রতি সেকেন্ডে নির্দিষ্ট সংখ্যক request সিমুলেট করতে চাইলে এটা ভালো মানায় না <Cite n={3} />।
+
+**Open model।** open model নতুন iteration শুরু করাকে iteration-এর চলার সময় থেকে আলাদা করে। সিস্টেমের response time আর লোড বদলায় না <Cite n={3} />। ডকসের উদাহরণে `constant-arrival-rate` প্রতি সেকেন্ডে ১টা iteration শুরু করে, request ৬ সেকেন্ড লাগলেও। ১ মিনিটের টেস্টে ৬০টা iteration হয় <Cite n={3} />। এজন্য k6 একই সময়ে বেশি VU ব্যবহার করে। ডকসের আউটপুটে সেই রানে ১১টা VU দেখা যায় <Cite n={3} />।
+
+টিউটোরিয়ালের নিজের নিয়ম: "N জন ইউজার কাজ করছে" দেখতে চাইলে closed model ব্যবহার করুন। "প্রতি সেকেন্ডে N টা request বা arrival" দেখতে চাইলে open model ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## An arrival-rate example
+
+<Voices>
+<Technical>
+
+This script uses `constant-arrival-rate` to start 5 iterations every second for 30 seconds. It pre-allocates 5 VUs and lets k6 add more, up to 20, if the system gets slower.
+
+```javascript
+import http from 'k6/http';
+
+export const options = {
+  scenarios: {
+    steady_rate: {
+      executor: 'constant-arrival-rate',
+      rate: 5,
+      timeUnit: '1s',
+      duration: '30s',
+      preAllocatedVUs: 5,
+      maxVUs: 20,
+    },
+  },
+};
+
+export default function () {
+  http.get('https://quickpizza.grafana.com/');
+}
+```
+
+The options of this executor are these <Cite n={4} />:
+
+| Option | Meaning | Default |
+| --- | --- | --- |
+| `duration` | The total scenario time, without `gracefulStop`. Required. | None |
+| `rate` | How many iterations start in each `timeUnit`. Required. | None |
+| `preAllocatedVUs` | How many VUs k6 makes before the test starts, to save resources at run time. Required. | None |
+| `timeUnit` | The period that the `rate` applies to. | `"1s"` |
+| `maxVUs` | The most VUs that k6 may use in the run. | The same as `preAllocatedVUs` |
+
+How it works:
+
+- While VUs are free, the executor keeps starting iterations at your rate <Cite n={4} />. If iterations get slower, it starts more VUs to keep the rate <Cite n={4} />.
+- With the arrival-rate executors, k6 drops iterations when no VU is free, and it counts them in the `dropped_iterations` metric <Cite n={13} />. A `maxVUs` that is too low can cause this. If you set `preAllocatedVUs` too low, k6 must make VUs during the test, and the test spends less time at the target rate <Cite n={4} />.
+- Do not put `sleep()` at the end of the VU code. The `rate` and `timeUnit` already set the pace <Cite n={4} />.
+- Iterations do not start at the same instant. If `rate` is 10 per second (`timeUnit` of `1s`), one iteration starts about every 100 ms <Cite n={4} />.
+
+The `ramping-arrival-rate` executor works in the same way, but it takes `stages` with a target rate for each stage, and it has `startRate` as well <Cite n={7} />.
+
+<Callout type="tip" title="See it in a real project">
+
+The owner's [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository uses this pattern in `dmoney-transactions.k6.js`. A loop over a list of 13 flows builds one `constant-arrival-rate` scenario for each flow, and `startTime` puts each flow in its time window. This is the tutorial's own example project, not an official source.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+The script in the Technical text uses `constant-arrival-rate` to start 5 iterations every second for 30 seconds. It pre-allocates 5 VUs. It lets k6 add more, up to 20, if the system gets slower.
+
+The executor needs `duration`, `rate`, and `preAllocatedVUs` <Cite n={4} />. `duration` is the total scenario time, without `gracefulStop`. `rate` is how many iterations start in each `timeUnit`. `preAllocatedVUs` is how many VUs k6 makes before the test starts, to save resources at run time. `timeUnit` is the period that the `rate` applies to. The default is `"1s"`. `maxVUs` is the most VUs that k6 may use. If you do not set it, it is the same as `preAllocatedVUs` <Cite n={4} />.
+
+How it works. While VUs are free, the executor keeps starting iterations at your rate <Cite n={4} />. If iterations get slower, it starts more VUs to keep the rate <Cite n={4} />. With the arrival-rate executors, k6 drops iterations when no VU is free, and it counts them in the `dropped_iterations` metric <Cite n={13} />. A `maxVUs` that is too low can cause this. If you set `preAllocatedVUs` too low, k6 must make VUs during the test. Then the test spends less time at the target rate <Cite n={4} />.
+
+Do not put `sleep()` at the end of the VU code. The `rate` and `timeUnit` already set the pace <Cite n={4} />. Iterations do not start at the same instant. If `rate` is 10 per second (`timeUnit` of `1s`), one iteration starts about every 100 ms <Cite n={4} />.
+
+The `ramping-arrival-rate` executor works in the same way. It takes `stages` with a target rate for each stage, and it has `startRate` as well <Cite n={7} />.
+
+<Callout type="tip" title="See it in a real project">
+
+The owner's [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository uses this pattern in `dmoney-transactions.k6.js`. A loop over a list of 13 flows makes one `constant-arrival-rate` scenario for each flow. `startTime` puts each flow in its time window. This is the tutorial's own example project. It is not an official source.
+
+</Callout>
+
+</Layman>
+<Bangla>
+
+Technical টেক্সটের স্ক্রিপ্ট `constant-arrival-rate` দিয়ে ৩০ সেকেন্ড ধরে প্রতি সেকেন্ডে ৫টা iteration শুরু করে। এটা ৫টা VU আগে থেকে তৈরি (pre-allocate) করে রাখে। সিস্টেম ধীর হলে k6 ২০ পর্যন্ত আরও VU যোগ করতে পারে।
+
+এই executor-এ `duration`, `rate` আর `preAllocatedVUs` লাগে <Cite n={4} />। `duration` হলো `gracefulStop` ছাড়া মোট scenario-র সময়। `rate` হলো প্রতি `timeUnit`-এ কয়টা iteration শুরু হবে। `preAllocatedVUs` হলো টেস্ট শুরুর আগে k6 কয়টা VU তৈরি করে রাখবে, যাতে রানের সময় রিসোর্স বাঁচে। `timeUnit` হলো যে সময়ের জন্য `rate` খাটে। default `"1s"`। `maxVUs` হলো k6 সর্বোচ্চ কয়টা VU ব্যবহার করতে পারবে। না দিলে এটা `preAllocatedVUs`-এর সমান <Cite n={4} />।
+
+কীভাবে কাজ করে। VU খালি থাকলে executor দেওয়া হারে iteration শুরু করতে থাকে <Cite n={4} />। iteration ধীর হলে হার ধরে রাখতে সে আরও VU চালু করে <Cite n={4} />। arrival-rate executor-এ কোনো VU খালি না থাকলে k6 iteration বাদ দেয় (drop করে) এবং `dropped_iterations` metric-এ গোনে <Cite n={13} />। `maxVUs` খুব কম হলে এটা ঘটতে পারে। `preAllocatedVUs` খুব কম দিলে k6-কে টেস্টের সময় VU বানাতে হয়। তখন টেস্ট টার্গেট রেটে কম সময় থাকে <Cite n={4} />।
+
+VU code-এর শেষে `sleep()` দেবেন না। `rate` আর `timeUnit` আগেই গতি ঠিক করে দেয় <Cite n={4} />। iteration গুলো ঠিক একই মুহূর্তে শুরু হয় না। `timeUnit` `1s` আর `rate` ১০ হলে প্রায় প্রতি ১০০ ms-এ একটা iteration শুরু হয় <Cite n={4} />।
+
+`ramping-arrival-rate` executor একইভাবে কাজ করে। এতে প্রতিটা stage-এর জন্য টার্গেট রেট সহ `stages` দিতে হয়, আর `startRate`-ও আছে <Cite n={7} />।
+
+<Callout type="tip" title="বাস্তব প্রজেক্টে দেখুন">
+
+মালিকের [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository-র `dmoney-transactions.k6.js` ফাইলে এই প্যাটার্ন আছে। 13টা flow-এর একটা লিস্টের ওপর একটা loop প্রতিটা flow-এর জন্য একটা করে `constant-arrival-rate` scenario বানায়। `startTime` প্রতিটা flow-কে তার time window-তে বসায়। এটা টিউটোরিয়ালের নিজের উদাহরণ প্রজেক্ট, অফিশিয়াল সোর্স নয়।
+
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+| --- | --- |
+| Scenario | A named block in `options.scenarios` with its own executor and function <Cite n={1} />. |
+| Executor | The part of a scenario that schedules VUs and iterations <Cite n={1} />. |
+| `exec` | The name of the exported function that a scenario runs <Cite n={1} />. |
+| `startTime` | The offset from the test start at which a scenario begins <Cite n={1} />. |
+| `gracefulStop` | The time that k6 waits for running iterations before a forced stop <Cite n={12} />. |
+| Closed model | VUs start a new iteration only when the last one ends <Cite n={3} />. |
+| Open model | Iterations start at a set rate, whether or not earlier ones have ended <Cite n={3} />. |
+| Arrival rate | The number of iterations that start in a period of time <Cite n={2} />. |
+| `preAllocatedVUs` | The VUs that k6 makes before an arrival-rate test starts <Cite n={4} />. |
+| Coordinated omission | The closed-model effect where slow responses lower the rate of new iterations <Cite n={3} />. |
+| Distributed execution | Splitting one test over many k6 instances <Cite n={5} />. |

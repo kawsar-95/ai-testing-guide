@@ -1,0 +1,364 @@
+export const metadata = { title: 'The k6 Test Lifecycle', description: 'The four stages of a k6 script: init, setup, VU code, and teardown.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Test lifecycle', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/test-lifecycle/', accessed: '2026-10-27' },
+    { title: 'Environment variables', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/environment-variables/', accessed: '2026-10-27' },
+    { title: 'Checks', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/checks/', accessed: '2026-10-27' },
+  ],
+}
+
+# The k6 Test Lifecycle
+
+The four stages of a k6 script: init, setup, VU code, and teardown.
+
+<PageMeta />
+
+## The four stages
+
+<Voices>
+<Technical>
+
+A k6 script always runs through the same stages in the same order <Cite n={1} />. Init code prepares the script. Setup prepares the test environment and data. VU code is the test itself. Teardown cleans up. Except for init, each stage is a **lifecycle function**: a function that k6 calls at a set point of the run <Cite n={1} />.
+
+| Stage | Purpose | Example | How often it runs |
+| --- | --- | --- | --- |
+| 1. Init | Load files, import modules, set `options`, define the lifecycle functions. Required. | `import http from 'k6/http'` | Once for each VU <Cite n={1} /> |
+| 2. Setup | Prepare data. Share it with the VUs. Optional. | Log in and get a token | Once for the whole test |
+| 3. VU code | Run the test steps. Required. | Send HTTP requests, check the answers | Once for each iteration, as many times as the options need |
+| 4. Teardown | Process the result of setup. Stop the test environment. Optional. | Check a result, send a webhook | Once for the whole test |
+
+In a cloud run, init code can run more often than once for each VU <Cite n={1} />.
+
+The data flows in one direction only:
+
+```text
+init (each VU)
+   |
+   v
+setup()  -- runs once -- returns data (JSON only)
+   |
+   +--> a copy of data --> default(data)  (VU 1, every iteration)
+   +--> a copy of data --> default(data)  (VU 2, every iteration)
+   +--> a copy of data --> default(data)  (VU N, every iteration)
+   |
+   +--> a copy of data --> teardown(data) -- runs once, after all VUs stop
+```
+
+This is the skeleton of every k6 script <Cite n={1} />:
+
+```js
+// 1. init code: runs once for each VU
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  vus: 2,
+  duration: '5s',
+};
+
+// 2. setup code: runs once for the whole test
+export function setup() {
+  return { startedAt: Date.now() };
+}
+
+// 3. VU code: runs again and again for each VU
+export default function (data) {
+  http.get('https://quickpizza.grafana.com/api/json?name=Margherita');
+  sleep(1);
+}
+
+// 4. teardown code: runs once at the end
+export function teardown(data) {
+  console.log(`The test ran for ${Date.now() - data.startedAt} ms`);
+}
+```
+
+Each stage has its own rules:
+
+- **Init** is the code outside of every lifecycle function. It runs first. It loads files, imports modules, sets the options, and defines the lifecycle functions <Cite n={1} />. It cannot make HTTP requests, so the init stage is the same in every run <Cite n={1} />.
+- **Setup** runs after init and before the VU stage. **Teardown** runs after the VU stage <Cite n={1} />. Both can use the full k6 API, for example HTTP requests <Cite n={1} />.
+- **VU code** is the `default` function, or the function of a scenario. A VU runs it from start to end, then starts it again. Each time, k6 resets the VU: it clears cookies, and it can close TCP connections <Cite n={1} />. VU code does not load local files and does not import modules <Cite n={1} />.
+- Setup must finish within `setupTimeout`. The default is 60 seconds. If setup takes longer, the test fails before any VU starts <Cite n={1} />.
+- If setup throws an error, k6 does not call teardown <Cite n={1} />.
+- `k6 run --no-setup --no-teardown script.js` skips both stages <Cite n={1} />.
+- `handleSummary()` is one more lifecycle function. k6 calls it at the very end of the test <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+A k6 script always runs in the same order <Cite n={1} />. First, k6 prepares the script. Then it runs setup. Then the virtual users run the test. At the end, teardown cleans up.
+
+| Stage | What it is for | Example | How often it runs |
+| --- | --- | --- | --- |
+| 1. Init | Load files and modules, set the options | `import http from 'k6/http'` | Once for each VU <Cite n={1} /> |
+| 2. Setup | Prepare data for the test | Log in and get a token | Once for the whole test |
+| 3. VU code | The test steps | Send requests, check the answers | Once for each iteration |
+| 4. Teardown | Clean up after the test | Check a result, send a webhook | Once for the whole test |
+
+The data moves in one direction. Setup returns data. Each virtual user gets its own copy of that data. Teardown gets a copy too. Nobody sends data back.
+
+Init code cannot make HTTP requests <Cite n={1} />. Setup and teardown can <Cite n={1} />. A virtual user starts the test function again and again. Each time, k6 clears its cookies <Cite n={1} />.
+
+Setup has a time limit of 60 seconds by default. If setup is slower, the test fails before any virtual user starts <Cite n={1} />. If setup throws an error, teardown does not run <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+k6 স্ক্রিপ্ট সবসময় একই ক্রমে চলে <Cite n={1} />। শুরুতে init, তারপর setup, তারপর VU code, শেষে teardown।
+
+| Stage | কী কাজ | উদাহরণ | কতবার চলে |
+| --- | --- | --- | --- |
+| 1. Init | ফাইল ও মডিউল লোড করা, `options` সেট করা | `import http from 'k6/http'` | প্রতিটা VU-র জন্য একবার <Cite n={1} /> |
+| 2. Setup | টেস্টের ডেটা তৈরি করা | লগইন করে token নেওয়া | পুরো টেস্টে একবার |
+| 3. VU code | টেস্টের ধাপগুলো | HTTP request পাঠানো, response check করা | প্রতিটা iteration-এ একবার |
+| 4. Teardown | টেস্টের পরে পরিষ্কার করা | ফলাফল যাচাই করা, webhook পাঠানো | পুরো টেস্টে একবার |
+
+ডেটা শুধু একদিকে যায়। `setup()` ডেটা return করে। প্রতিটা VU তার নিজের একটা কপি পায়। `teardown()`-ও একটা কপি পায়। কেউ ডেটা ফেরত পাঠায় না।
+
+Init code HTTP request পাঠাতে পারে না <Cite n={1} />। `setup()` ও `teardown()` পারে <Cite n={1} />। একটা VU টেস্ট ফাংশন বারবার চালায়। প্রতিবার k6 তার cookie মুছে দেয় <Cite n={1} />।
+
+`setup()`-এর ডিফল্ট সময়সীমা ৬০ সেকেন্ড। এর বেশি লাগলে কোনো VU শুরু হওয়ার আগেই টেস্ট fail করে <Cite n={1} />। `setup()` error throw করলে `teardown()` চলে না <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## A login and token example
+
+<Voices>
+<Technical>
+
+A common use of setup is to log in one time and share the token with all VUs. The script below does this with QuickPizza, the public demo app of Grafana k6. It creates a new user in setup. The endpoints and the status codes in the script come from the tutorial's own test of the app, not from the k6 docs, so they can change. The tutorial uses this app only for short runs with a few VUs.
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+const BASE_URL = 'https://quickpizza.grafana.com';
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+export const options = {
+  stages: [{ duration: '5s', target: 3 }],
+};
+
+// Runs once. It creates a user and logs in to get one shared token.
+export function setup() {
+  const username = `user_${Date.now()}`;
+  const password = `pw_${Math.random().toString(36).slice(2)}`;
+  const credentials = JSON.stringify({ username, password });
+
+  const registerRes = http.post(`${BASE_URL}/api/users`, credentials, { headers: JSON_HEADERS });
+  if (registerRes.status !== 201) {
+    throw new Error(`Failed to register: ${registerRes.status}`);
+  }
+
+  const loginRes = http.post(`${BASE_URL}/api/users/token/login`, credentials, { headers: JSON_HEADERS });
+  if (loginRes.status !== 200) {
+    throw new Error(`Failed to log in: ${loginRes.status}`);
+  }
+  return { token: loginRes.json('token') };
+}
+
+// Runs again and again for each VU. Every VU gets its own copy of data.
+export default function (data) {
+  const params = { headers: { Authorization: `Bearer ${data.token}` } };
+  const res = http.get(`${BASE_URL}/api/ratings`, params);
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+
+// Runs once at the end. It does not print the token.
+export function teardown(data) {
+  console.log(`Teardown finished. The token has ${data.token.length} characters.`);
+}
+```
+
+One local run of this script (3 VUs, 5 seconds) printed this. Your numbers will differ:
+
+```text
+level=info msg="Teardown finished. The token has 16 characters." source=console
+checks_succeeded...: 100.00% 5 out of 5
+✓ status is 200
+http_req_failed................: 0.00%  0 out of 7
+iterations.....................: 5      0.65728/s
+```
+
+The `http_req_failed` line shows 7 requests. Five of them are from the VU code. The other two are the register and login requests from setup.
+
+To test your own API, replace `BASE_URL` and the two requests. Never write a real email or password in the script. k6 gives the environment variables to the script in the global `__ENV` object <Cite n={2} />. Read the email and the password from it, for example `__ENV.TEST_EMAIL` and `__ENV.TEST_PASSWORD`, and give them with `k6 run -e TEST_EMAIL=… -e TEST_PASSWORD=… script.js` <Cite n={2} />. The host `https://api.example.com` in the next sections is an example name, so do not run load against it.
+
+<Callout type="tip" title="See it in a real project">
+
+In the owner's [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository, `setup()` logs in each of 6 test users one time and returns their tokens. Each transaction then sends the token of its sender. Before the load starts, `setup()` also checks the balances and stops the test with `fail()` if a sender does not have enough money. This is the tutorial's own example project, not an official source.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+A common use of setup is to log in one time. All virtual users then share the token. The script below does this with QuickPizza, the public demo app of Grafana k6. It creates a new user in setup. The endpoints and the status codes in the script come from the tutorial's own test of the app, not from the k6 docs, so they can change.
+
+The script has the four stages. Setup registers a user and logs in. The VU code calls an API with the token. Teardown prints a short message and does not print the token.
+
+One local run of the script (3 VUs, 5 seconds) gave 5 passed checks out of 5. The `http_req_failed` line showed 7 requests. Five came from the VU code. Two came from setup. Your numbers will differ.
+
+To test your own API, replace the address and the two requests. Never write a real email or password in the script. Read them from the global `__ENV` object, for example `__ENV.TEST_EMAIL` <Cite n={2} />. The host `https://api.example.com` in the next sections is only an example name.
+
+<Callout type="tip" title="See it in a real project">
+
+In the owner's [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository, `setup()` logs in each of 6 test users one time. It returns their tokens. Each transaction then sends the token of its sender. Before the load starts, `setup()` also checks the balances. It stops the test with `fail()` if a sender does not have enough money. This is the tutorial's own example project. It is not an official source.
+
+</Callout>
+
+</Layman>
+<Bangla>
+
+Setup-এর একটা সাধারণ ব্যবহার হলো একবার লগইন করে সব VU-র সাথে token শেয়ার করা। নিচের স্ক্রিপ্ট QuickPizza দিয়ে এটা করে। QuickPizza হলো Grafana k6-এর পাবলিক ডেমো অ্যাপ। `setup()` একটা নতুন ইউজার বানায়। স্ক্রিপ্টের endpoint ও status code এই টিউটোরিয়ালের নিজের টেস্ট থেকে নেওয়া, k6 docs থেকে নয়, তাই এগুলো বদলাতে পারে।
+
+স্ক্রিপ্টে চারটা stage-ই আছে। `setup()` ইউজার রেজিস্টার করে ও লগইন করে। VU code token দিয়ে একটা API কল করে। `teardown()` একটা ছোট মেসেজ প্রিন্ট করে, token প্রিন্ট করে না।
+
+লোকাল মেশিনে একবার (৩ VU, ৫ সেকেন্ড) চালালে ৫টা check-এর ৫টাই পাস করেছে। `http_req_failed` লাইনে ৭টা request দেখা গেছে। ৫টা VU code থেকে, ২টা `setup()` থেকে। আপনার সংখ্যা আলাদা হবে।
+
+নিজের API টেস্ট করতে হলে অ্যাড্রেস আর দুটো request বদলে নিন। স্ক্রিপ্টে কখনো আসল email বা password লিখবেন না। global `__ENV` object থেকে পড়ুন, যেমন `__ENV.TEST_EMAIL` <Cite n={2} />। পরের অংশের `https://api.example.com` শুধু একটা উদাহরণ নাম।
+
+<Callout type="tip" title="বাস্তব প্রজেক্টে দেখুন">
+
+মালিকের [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository-তে `setup()` 6 জন test user-এর প্রত্যেককে একবার করে login করায় আর তাদের token ফেরত দেয়। এরপর প্রতিটা transaction তার sender-এর token পাঠায়। লোড শুরুর আগে `setup()` balance-ও চেক করে, আর কোনো sender-এর যথেষ্ট টাকা না থাকলে `fail()` দিয়ে টেস্ট থামিয়ে দেয়। এটা টিউটোরিয়ালের নিজের উদাহরণ প্রজেক্ট, অফিশিয়াল সোর্স নয়।
+
+</Callout>
+
+</Bangla>
+</Voices>
+
+## How the example works
+
+<Voices>
+<Technical>
+
+The owner's original notes explain a similar script with `https://api.example.com`. The same four steps apply to the QuickPizza script above.
+
+**Init.** The script imports `http`, `check`, and `sleep` from k6, and it sets the load in `options`: a ramp to 100 VUs over 60 seconds in the owner's version <Cite n={1} />. The owner's first version used `check` without an import. Import it from `k6`, as the checks docs show <Cite n={3} />.
+
+**Setup.** Setup makes the prerequisite of the test: it gets one token. Each VU then uses this token <Cite n={1} />. If the login fails, the script throws an error. Setup then ends abnormally, and k6 does not call teardown <Cite n={1} />.
+
+**VU code.** The default function holds the VU code of the test. A scenario function can hold it too <Cite n={1} />. In the owner's version it sends a `GET` request to `/users/list` with the token in the `Authorization` header. It does not call `/user/login`: the login is in setup. Then it checks that the status is 200. Each VU runs this function again and again for the whole duration <Cite n={1} />.
+
+**Teardown.** Teardown runs one time at the end. The owner's version printed the token. In this tutorial's view, do not print a token or a password in a log, because logs are often stored and shared. Instead, teardown can call a logout API to make the token invalid, or it can write a short log line.
+
+Here is the same script with `https://api.example.com` and credentials from `__ENV`. It is a pattern for your own API, not a script to run against that host:
+
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [{ duration: '60s', target: 100 }],
+};
+
+export function setup() {
+  const res = http.post(
+    'https://api.example.com/user/login',
+    JSON.stringify({ email: __ENV.TEST_EMAIL, password: __ENV.TEST_PASSWORD }),
+    { headers: { 'Content-Type': 'application/json' } },
+  );
+  if (res.status !== 200) {
+    throw new Error(`Failed to log in: ${res.status}`);
+  }
+  return { token: res.json('token') };
+}
+
+export default function (data) {
+  const params = { headers: { Authorization: `Bearer ${data.token}` } };
+  const res = http.get('https://api.example.com/users/list', params);
+  check(res, { 'is status 200': (r) => r.status === 200 });
+  sleep(1);
+}
+
+export function teardown(data) {
+  console.log('Teardown completed.');
+}
+```
+
+</Technical>
+<Layman>
+
+The same four steps apply to the QuickPizza script and to a script for your own API.
+
+**Init.** The script imports `http`, `check`, and `sleep` from k6. It sets the load in `options`. In the owner's version this is a ramp to 100 virtual users over 60 seconds <Cite n={1} />. The owner's first version used `check` without an import. Import `check` from `k6` <Cite n={3} />.
+
+**Setup.** Setup gets one token. Each virtual user then uses this token <Cite n={1} />. If the login fails, the script throws an error. Setup then ends abnormally, and k6 does not call teardown <Cite n={1} />.
+
+**VU code.** The default function holds the VU code of the test. A scenario function can hold it too <Cite n={1} />. In the owner's version it sends a `GET` request to `/users/list` with the token. It does not call `/user/login`, because the login is in setup. Then it checks that the status is 200. Each virtual user runs this function again and again <Cite n={1} />.
+
+**Teardown.** Teardown runs one time at the end. The owner's version printed the token. In this tutorial's view, do not print a token or a password in a log. Logs are often stored and shared. Teardown can call a logout API instead, or write a short log line.
+
+The last script in this section is a pattern for your own API. Do not run it against `https://api.example.com`.
+
+</Layman>
+<Bangla>
+
+QuickPizza স্ক্রিপ্ট আর আপনার নিজের API-র স্ক্রিপ্ট, দুটোতেই একই চারটা ধাপ।
+
+**Init।** স্ক্রিপ্ট k6 থেকে `http`, `check` ও `sleep` import করে। `options`-এ লোড ঠিক করে। মালিকের ভার্সনে এটা ৬০ সেকেন্ডে ১০০ VU পর্যন্ত ramp up <Cite n={1} />। মালিকের প্রথম ভার্সনে `check` import ছাড়াই ব্যবহার হয়েছিল। এটা fail করে। `check` `k6` থেকে import করুন, যেমন checks docs দেখায় <Cite n={3} />।
+
+**Setup।** `setup()` একটা token নেয়। এরপর প্রতিটা VU এই token ব্যবহার করে <Cite n={1} />। লগইন fail করলে স্ক্রিপ্ট error throw করে। তখন `setup()` অস্বাভাবিকভাবে শেষ হয়, আর k6 `teardown()` চালায় না <Cite n={1} />।
+
+**VU code।** `default` function-এ টেস্টের VU code থাকে। scenario function-এও থাকতে পারে <Cite n={1} />। মালিকের ভার্সনে এটা token সহ `/users/list`-এ একটা `GET` request পাঠায়। এটা `/user/login` কল করে না, কারণ লগইন `setup()`-এ। তারপর status 200 কিনা check করে। প্রতিটা VU এই ফাংশন বারবার চালায় <Cite n={1} />।
+
+**Teardown।** `teardown()` শেষে একবার চলে। মালিকের ভার্সনে token প্রিন্ট হয়েছিল। এই টিউটোরিয়ালের মত হলো, লগে token বা password প্রিন্ট করবেন না। লগ প্রায়ই সংরক্ষণ ও শেয়ার করা হয়। তার বদলে logout API কল করে token invalid করা যায়, বা একটা ছোট লগ লেখা যায়।
+
+এই অংশের শেষ স্ক্রিপ্টটা আপনার নিজের API-র জন্য একটা প্যাটার্ন। `https://api.example.com`-এর বিরুদ্ধে এটা চালাবেন না।
+
+</Bangla>
+</Voices>
+
+## Five good practices
+
+<Voices>
+<Technical>
+
+The first four points come from how k6 passes data between the stages. The fifth is the owner's advice.
+
+1. **Return only JSON data from `setup()`.** Setup can hand over plain data (JSON) only, and it cannot hand over a function <Cite n={1} />. Objects, arrays, strings, numbers, and booleans are fine.
+2. **Return only the data you need.** If setup returns a large object, it uses more memory <Cite n={1} />. A large dataset in setup makes the whole test heavier.
+3. **Do not change `data` in the default function and expect teardown to see it.** You cannot change data in the default function and then pass it to teardown <Cite n={1} />. k6 avoids this because it is complex and costly to pass changing data between all VUs and teardown, especially in distributed runs <Cite n={1} />.
+4. **Each VU gets its own copy of the setup data.** Each stage and each VU has a fresh copy of what setup returns <Cite n={1} />. If one VU changes its copy, other VUs do not see the change. Teardown also gets a copy of the original data <Cite n={1} />.
+5. **Plan the data flow (the owner's advice).** In the tutorial owner's view, decide before you write the script what setup prepares and what it returns. A script that passes only the needed data is smaller and easier to read. This point is the owner's own view, not a rule of the k6 docs.
+
+</Technical>
+<Layman>
+
+The first four points come from how k6 passes data between the stages. The fifth is the owner's advice.
+
+1. **Return only JSON data from `setup()`.** Setup can hand over plain data only, and it cannot hand over a function <Cite n={1} />. Objects, arrays, strings, numbers, and booleans are fine.
+2. **Return only the data you need.** Large data from setup uses more memory <Cite n={1} />. It makes the whole test heavier.
+3. **Do not change `data` in the default function and expect teardown to see it.** Teardown cannot see changes from the default function <Cite n={1} />. It is complex and costly to share changing data between all virtual users, especially in distributed runs <Cite n={1} />.
+4. **Each virtual user gets its own copy of the setup data.** If one user changes its copy, other users do not see the change <Cite n={1} />. Teardown gets a copy of the original data <Cite n={1} />.
+5. **Plan the data flow (the owner's advice).** Decide before you write the script what setup prepares and what it returns. A script with only the needed data is smaller and easier to read. This is the owner's own view, not a rule of the k6 docs.
+
+</Layman>
+<Bangla>
+
+প্রথম চারটা পয়েন্ট আসে k6 কীভাবে stage-গুলোর মধ্যে ডেটা পাঠায় সেখান থেকে। পঞ্চমটা মালিকের পরামর্শ।
+
+1. **`setup()` থেকে শুধু JSON ডেটা return করুন।** শুধু ডেটা পাঠানো যায়, function পাঠানো যায় না <Cite n={1} />। object, array, string, number ও boolean ঠিক আছে।
+2. **শুধু প্রয়োজনীয় ডেটা return করুন।** `setup()` থেকে বড় ডেটা return করলে বেশি memory লাগে <Cite n={1} />। এতে পুরো টেস্ট ভারী হয়।
+3. **default function-এ `data` বদলালে teardown তা দেখবে, এমন আশা করবেন না।** default function-এর বদলানো ডেটা teardown-এ পাঠানো যায় না <Cite n={1} />। সব VU-র মধ্যে বদলানো ডেটা শেয়ার করা জটিল ও খরচসাপেক্ষ, বিশেষ করে distributed রানে <Cite n={1} />।
+4. **প্রতিটা VU `setup()` ডেটার আলাদা কপি পায়।** এক VU নিজের কপি বদলালে অন্য VU তা দেখে না <Cite n={1} />। `teardown()` মূল ডেটার একটা কপি পায় <Cite n={1} />।
+5. **ডেটা ফ্লো আগে থেকে পরিকল্পনা করুন (মালিকের পরামর্শ)।** স্ক্রিপ্ট লেখার আগে ঠিক করুন `setup()` কী তৈরি করবে ও কী return করবে। শুধু প্রয়োজনীয় ডেটা পাঠালে স্ক্রিপ্ট ছোট ও পড়তে সহজ হয়। এটা মালিকের নিজের মত, k6 docs-এর নিয়ম নয়।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+| --- | --- |
+| Init context | The code outside every lifecycle function. It runs first, once for each VU. |
+| Lifecycle function | A function that k6 calls at a set point: `setup`, `default` (or a scenario function), `teardown`, and `handleSummary`. |
+| `setup()` | An optional function that runs once before the VUs start. It can return data. |
+| VU code | The test function that each VU runs again and again, usually `default`. |
+| Iteration | One run of the VU code from start to end. |
+| `teardown(data)` | An optional function that runs once after the VU stage. |
+| `setupTimeout` | The time limit of `setup()`. The default is 60 seconds. |
+| `__ENV` | A global object with the environment variables <Cite n={2} />. Use it for credentials and hosts. |

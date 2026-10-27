@@ -1,0 +1,467 @@
+export const metadata = { title: 'Tags and Groups', description: 'Label requests so that you can split the results.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Tags and Groups', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/tags-and-groups/', accessed: '2026-10-27' },
+    { title: 'HTTP Requests', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/http-requests/', accessed: '2026-10-27' },
+    { title: 'Thresholds', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/thresholds/', accessed: '2026-10-27' },
+    { title: 'group( name, fn )', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6/group/', accessed: '2026-10-27' },
+    { title: 'End of test summary', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/end-of-test/', accessed: '2026-10-27' },
+    { title: 'Object initializer (Duplicate property names)', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer', accessed: '2026-10-27' },
+  ],
+}
+
+# Tags and Groups
+
+Label requests so that you can split the results.
+
+<PageMeta />
+
+## Calling more than one URL
+
+<Voices>
+<Technical>
+
+A real test often calls more than one endpoint. This script calls two endpoints of `https://quickpizza.grafana.com` in each iteration and checks both.
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  vus: 10,
+  duration: '5s',
+  thresholds: {
+    http_req_duration: ['p(95)<1000'],
+  },
+};
+
+export default function () {
+  // Call the first API
+  const quotesRes = http.get('https://quickpizza.grafana.com/api/quotes');
+  check(quotesRes, { 'quotes request successful': (r) => r.status === 200 });
+
+  // Call the second API
+  const headersRes = http.get('https://quickpizza.grafana.com/api/headers');
+  check(headersRes, { 'headers request successful': (r) => r.status === 200 });
+
+  sleep(1);
+}
+```
+
+k6 shows one `http_req_duration` line for both requests. The line is a mix of the two. It cannot tell you which endpoint is slow. Tags and groups fix this.
+
+This is the output of the owner's own run of the same kind of script. The owner called another host, `jsonplaceholder.typicode.com`, which this page no longer uses. The numbers are one run on one machine. They are not a k6 fact, and your run gives other numbers.
+
+```text
+  █ THRESHOLDS
+
+    http_req_duration
+    ✓ 'p(95)<1000' p(95)=769.76ms
+
+  █ TOTAL RESULTS
+
+    checks_total.......: 72      11.503951/s
+    checks_succeeded...: 100.00% 72 out of 72
+    checks_failed......: 0.00%   0 out of 72
+
+    ✓ All list API request successful
+    ✓ Get item data request successful
+
+    HTTP
+    http_req_duration..............: avg=229.51ms min=8.35ms med=174.85ms max=1.76s p(90)=188.25ms p(95)=769.76ms
+    http_req_failed................: 0.00%  0 out of 72
+    http_reqs......................: 72     11.503951/s
+```
+
+The `p(95)` of 769.76 ms covers all 72 requests together. The output does not show which of the two endpoints caused it.
+
+<Callout type="warning" title="A common mistake: the same key twice in thresholds">
+
+The owner's first script had the same key two times in the `thresholds` object. This is not an error, and k6 gives no warning <Cite n={3} />. In a JavaScript object, a second property with the same name replaces the first one <Cite n={6} />. So k6 sees only one threshold. If the two limits differ, only the last one counts:
+
+```javascript
+import http from 'k6/http';
+
+export const options = {
+  thresholds: {
+    'http_req_duration': ['p(95)<1000'],
+    'http_req_duration': ['p(95)<500'],
+  },
+};
+
+export default function () {
+  http.get('https://quickpizza.grafana.com/api/quotes');
+}
+```
+
+`k6 inspect` on this script lists only `p(95)<500` for `http_req_duration`. The `p(95)<1000` limit is gone. To give one metric more than one limit, put all expressions in the same array, for example `['p(95)<1000', 'p(99)<1500']` <Cite n={3} />.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+A real test often calls more than one endpoint. The script on this page calls two endpoints of `https://quickpizza.grafana.com` in each iteration. It checks both.
+
+k6 shows one `http_req_duration` line for both requests. The line is a mix of the two. It cannot tell you which endpoint is slow. Tags and groups fix this.
+
+The owner ran the same kind of script against another host, `jsonplaceholder.typicode.com`. This page does not use that host now. The output is one run on one machine. Your run gives other numbers. In that run, the `p(95)` of 769.76 ms covers all 72 requests together. It does not show which endpoint caused it.
+
+A common mistake is to write the same key two times in the `thresholds` object. The owner's first script did this. k6 gives no error and no warning <Cite n={3} />. In a JavaScript object, a second property with the same name replaces the first one <Cite n={6} />. So k6 sees only one threshold. If the two limits differ, only the last one counts. `k6 inspect` on such a script lists only the last limit.
+
+To give one metric more than one limit, put all expressions in the same array, for example `['p(95)<1000', 'p(99)<1500']` <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+একটা বাস্তব টেস্ট প্রায়ই একাধিক endpoint কল করে। এই পেজের স্ক্রিপ্ট প্রতিটা iteration-এ `https://quickpizza.grafana.com`-এর দুটো endpoint কল করে এবং দুটোই check করে।
+
+k6 দুটো request-এর জন্য একটাই `http_req_duration` লাইন দেখায়। লাইনটা দুটোর মিশ্রণ। কোন endpoint ধীর, এটা থেকে বোঝা যায় না। Tags আর groups এই সমস্যা মেটায়।
+
+Owner একই ধরনের স্ক্রিপ্ট অন্য একটা host, `jsonplaceholder.typicode.com`-এর বিরুদ্ধে চালিয়েছিলেন। এই পেজ এখন সেই host ব্যবহার করে না। আউটপুটটা একটা মেশিনে একটা রান। আপনার রানে অন্য সংখ্যা আসবে। ওই রানে `p(95)` ছিল 769.76 ms, যা সব 72টা request একসাথে ধরে। কোন endpoint এর কারণ, সেটা এখানে বোঝা যায় না।
+
+একটা সাধারণ ভুল হলো `thresholds` অবজেক্টে একই key দুইবার লেখা। Owner-এর প্রথম স্ক্রিপ্টে এটা ছিল। k6 কোনো error বা warning দেয় না <Cite n={3} />। JavaScript অবজেক্টে একই নামের দ্বিতীয় property প্রথমটাকে বদলে দেয় <Cite n={6} />। তাই k6 শুধু একটা threshold দেখে। দুটো limit আলাদা হলে শুধু শেষটা কাজ করে। এমন স্ক্রিপ্টে `k6 inspect` চালালে শুধু শেষ limit-টা দেখা যায়।
+
+একটা metric-এ একের বেশি limit দিতে চাইলে সব expression একই array-এ রাখুন, যেমন `['p(95)<1000', 'p(99)<1500']` <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Tags
+
+<Voices>
+<Technical>
+
+A **tag** is a key-value pair. You use tags to label requests, checks, thresholds, and custom metrics, so that you can filter the results <Cite n={1} />. k6 has two kinds of tags <Cite n={1} />:
+
+| Kind | Who sets it | Examples |
+| --- | --- | --- |
+| System tags | k6 sets them for you | `proto`, `status`, `method`, `url`, `name`, `group`, `check`, `error`, `scenario`, `expected_response` <Cite n={1} /> |
+| User-defined tags | You set them in the script | `endpoint: 'quotes'` |
+
+Some system tags are off by default and you can turn them on: `vu`, `iter`, `ip`, and `ocsp_status` <Cite n={1} />. The `systemTags` option turns off some system tags <Cite n={1} />.
+
+You add a tag to a request with the `tags` field of the request parameters. A tag on a request becomes a filter. The key of a threshold can name a metric and a tag in braces, as in `http_req_duration{endpoint:quotes}`. k6 makes one sub-metric for each tagged value <Cite n={3} />. A threshold on a sub-metric limits only the requests with that tag <Cite n={1} />.
+
+The same script as above, with one tag for each endpoint:
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  vus: 10,
+  duration: '5s',
+  thresholds: {
+    'http_req_duration{endpoint:quotes}': ['p(95)<1000'],
+    'http_req_duration{endpoint:headers}': ['p(95)<1000'],
+  },
+};
+
+export default function () {
+  const quotesRes = http.get('https://quickpizza.grafana.com/api/quotes', {
+    tags: { endpoint: 'quotes' },
+  });
+  check(quotesRes, { 'quotes request successful': (r) => r.status === 200 });
+
+  const headersRes = http.get('https://quickpizza.grafana.com/api/headers', {
+    tags: { endpoint: 'headers' },
+  });
+  check(headersRes, { 'headers request successful': (r) => r.status === 200 });
+
+  sleep(1);
+}
+```
+
+You can also tag a check and a custom metric value. The third argument of `check()` takes tags, and the `add()` method of a custom metric takes tags as its second argument <Cite n={1} />.
+
+This is the output of the owner's own run against the old host `jsonplaceholder.typicode.com`. It is one run on one machine, so the numbers are examples only. Each tagged request now has its own line:
+
+```text
+  █ THRESHOLDS
+
+    http_req_duration{endpoint:getItem}
+    ✓ 'p(95)<1000' p(95)=166.59ms
+
+    http_req_duration{endpoint:listData}
+    ✓ 'p(95)<1000' p(95)=188.02ms
+
+  █ TOTAL RESULTS
+
+    HTTP
+    http_req_duration..............: avg=248.87ms min=8.63ms  med=164.89ms max=8.22s    p(90)=187.18ms p(95)=187.67ms
+      { endpoint:getItem }.........: avg=148.39ms min=8.63ms  med=164.4ms  max=449.22ms p(90)=165.87ms p(95)=166.59ms
+      { endpoint:listData }........: avg=349.36ms min=11.21ms med=184.93ms max=8.22s    p(90)=187.49ms p(95)=188.02ms
+      { expected_response:true }...: avg=248.87ms min=8.63ms  med=164.89ms max=8.22s    p(90)=187.18ms p(95)=187.67ms
+```
+
+The first line is the mix of all requests. The two lines with `endpoint` show each endpoint alone. The line `{ expected_response:true }` is a system tag that k6 added itself <Cite n={1} />.
+
+**Test-wide tags** go on every metric of the run. You can set them with the `--tag NAME=VALUE` flag, with the `K6_TAGS` environment variable (`K6_TAGS=name:value,other:value`), in the `tags` key of `options`, or in a JSON config file <Cite n={1} />:
+
+```javascript
+export const options = {
+  tags: { testid: 'tags-demo' },
+};
+```
+
+These tags help you compare the results of different runs <Cite n={1} />. By default, k6 does not merge test-wide tags from more than one source. The source with the highest order of precedence replaces all the tags of the lower ones <Cite n={1} />. The `merge-run-tags` feature flag changes this <Cite n={1} />.
+
+<Callout type="tip" title="See it in a real project">
+
+The owner's [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository sets an `api` tag on each transaction request and a `window` tag on each scenario. Its `handleSummary()` report then shows the response time and the failure rate of each API in each time window. This is the tutorial's own example project, not an official source.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+A **tag** is a label with a name and a value. You put tags on requests, checks, thresholds, and custom metrics. Then you can filter the results by tag <Cite n={1} />. k6 has two kinds of tags <Cite n={1} />:
+
+| Kind | Who sets it | Examples |
+| --- | --- | --- |
+| System tags | k6 sets them for you | `proto`, `status`, `method`, `url`, `name`, `group`, `check`, `error`, `scenario`, `expected_response` <Cite n={1} /> |
+| User-defined tags | You set them in the script | `endpoint: 'quotes'` |
+
+Some system tags are off by default and you can turn them on: `vu`, `iter`, `ip`, and `ocsp_status` <Cite n={1} />. The `systemTags` option turns off some system tags <Cite n={1} />.
+
+You add a tag to a request with the `tags` field of the request parameters. A threshold key can name a metric and a tag in braces, as in `http_req_duration{endpoint:quotes}`. k6 makes one sub-metric for each tagged value <Cite n={3} />. A threshold on a sub-metric limits only the requests with that tag <Cite n={1} />.
+
+You can also tag a check and a custom metric value. The third argument of `check()` takes tags, and the `add()` method of a custom metric takes tags as its second argument <Cite n={1} />.
+
+In the owner's run against the old host, each tagged request got its own line in the result. The numbers come from one run on one machine, so they are examples only. The first line is the mix of all requests. The two lines with `endpoint` show each endpoint alone. The line `{ expected_response:true }` is a system tag that k6 added itself <Cite n={1} />.
+
+**Test-wide tags** go on every metric of the run. You can set them in four ways <Cite n={1} />. Use the `--tag NAME=VALUE` flag, or the `K6_TAGS` environment variable. Or use the `tags` key of `options`, or a JSON config file. These tags help you compare the results of different runs <Cite n={1} />. By default, k6 does not merge test-wide tags from more than one source. The source with the highest order of precedence replaces all the tags of the lower ones <Cite n={1} />. The `merge-run-tags` feature flag changes this <Cite n={1} />.
+
+<Callout type="tip" title="See it in a real project">
+
+The owner's [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository sets an `api` tag on each transaction request. It sets a `window` tag on each scenario. Its `handleSummary()` report then shows the response time and the failure rate of each API in each time window. This is the tutorial's own example project. It is not an official source.
+
+</Callout>
+
+</Layman>
+<Bangla>
+
+**Tag** হলো নাম আর মান (value) সহ একটা লেবেল। Request, check, threshold আর custom metric-এ tag লাগানো যায়। তারপর tag দিয়ে ফলাফল filter করা যায় <Cite n={1} />। k6-এ দুই ধরনের tag আছে <Cite n={1} />:
+
+| ধরন | কে সেট করে | উদাহরণ |
+| --- | --- | --- |
+| System tags | k6 নিজে সেট করে | `proto`, `status`, `method`, `url`, `name`, `group`, `check`, `error`, `scenario`, `expected_response` <Cite n={1} /> |
+| User-defined tags | আপনি স্ক্রিপ্টে সেট করেন | `endpoint: 'quotes'` |
+
+কিছু system tag ডিফল্টভাবে বন্ধ থাকে, আর আপনি সেগুলো চালু করতে পারেন: `vu`, `iter`, `ip`, এবং `ocsp_status` <Cite n={1} />। `systemTags` option কিছু system tag বন্ধ করে দেয় <Cite n={1} />।
+
+Request-এ tag যোগ করতে request parameters-এর `tags` field ব্যবহার করুন। Threshold-এর key-তে একটা metric আর braces-এর ভেতরে একটা tag লেখা যায়, যেমন `http_req_duration{endpoint:quotes}`। k6 প্রতিটা tag-এর মানের জন্য একটা sub-metric বানায় <Cite n={3} />। Sub-metric-এর threshold শুধু ওই tag-ওয়ালা request-কে সীমা দেয় <Cite n={1} />।
+
+Check আর custom metric-এর মানেও tag দেওয়া যায়। `check()`-এর তৃতীয় argument tag নেয়, আর custom metric-এর `add()` method দ্বিতীয় argument হিসেবে tag নেয় <Cite n={1} />।
+
+পুরোনো host-এর বিরুদ্ধে owner-এর রানে প্রতিটা tagged request ফলাফলে নিজের আলাদা লাইন পেয়েছিল। সংখ্যাগুলো একটা মেশিনে একটা রানের, তাই শুধু উদাহরণ। প্রথম লাইন সব request-এর মিশ্রণ। `endpoint` সহ দুটো লাইন প্রতিটা endpoint আলাদাভাবে দেখায়। `{ expected_response:true }` লাইনটা একটা system tag, যা k6 নিজে যোগ করেছে <Cite n={1} />।
+
+**Test-wide tags** রানের প্রতিটা metric-এ লাগে। এগুলো সেট করা যায় `--tag NAME=VALUE` flag দিয়ে, `K6_TAGS` environment variable দিয়ে, `options`-এর `tags` key-তে, অথবা একটা JSON config file-এ <Cite n={1} />। এই tag আলাদা আলাদা রানের ফলাফল তুলনা করতে সাহায্য করে <Cite n={1} />। ডিফল্টভাবে k6 একাধিক জায়গার test-wide tag merge করে না। সবচেয়ে বেশি precedence-এর উৎস নিচের উৎসগুলোর সব tag বদলে দেয় <Cite n={1} />। `merge-run-tags` feature flag এটা বদলায় <Cite n={1} />।
+
+<Callout type="tip" title="বাস্তব প্রজেক্টে দেখুন">
+
+মালিকের [k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) repository প্রতিটা transaction request-এ একটা `api` tag আর প্রতিটা scenario-তে একটা `window` tag দেয়। এরপর এর `handleSummary()` রিপোর্ট প্রতিটা time window-তে প্রতিটা API-র response time আর failure rate দেখায়। এটা টিউটোরিয়ালের নিজের উদাহরণ প্রজেক্ট, অফিশিয়াল সোর্স নয়।
+
+</Callout>
+
+</Bangla>
+</Voices>
+
+## The name tag for dynamic URLs
+
+<Voices>
+<Technical>
+
+By default, the `name` tag holds the URL of the request <Cite n={2} />. This is a problem when the URL has a changing part, such as an ID. Each ID gives a different `name`, and the metrics stream gets a large number of unique URLs <Cite n={2} />. The results are then hard to read.
+
+To collect all these requests under one name, set the `name` tag yourself <Cite n={2} />. You can also use the `http.url` template tag, which sets the `name` tag to the template with the value left out <Cite n={2} />. This is called URL grouping. The script below makes the same three calls in two ways. The first call uses `http.url`. The second call sets `tags.name`.
+
+```javascript
+import http from 'k6/http';
+
+export const options = {
+  tags: { testid: 'tags-demo' },
+};
+
+export default function () {
+  for (const code of [200, 201, 202]) {
+    // One sub-metric for all three URLs
+    http.get(http.url`https://quickpizza.grafana.com/api/status/${code}`);
+    // The same effect with an explicit name tag
+    http.get(`https://quickpizza.grafana.com/api/status/${code}`, {
+      tags: { name: 'StatusURL' },
+    });
+  }
+}
+```
+
+In a local test run, the `http.url` calls got the `name` value `https://quickpizza.grafana.com/api/status/${}`, and the other calls got `StatusURL`. Each name had 3 data points, not one name for each status code. You can then use `http_req_duration{name:StatusURL}` in a threshold.
+
+The k6 docs also say not to wrap every request in its own group. For dynamic URLs, use URL grouping. For a clear request name, set `tags.name` <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+By default, the `name` tag holds the URL of the request <Cite n={2} />. This is a problem when the URL has a changing part, such as an ID. Each ID gives a different `name`, and the metrics stream gets a large number of unique URLs <Cite n={2} />. The results are then hard to read.
+
+To collect all these requests under one name, set the `name` tag yourself <Cite n={2} />. You can also use the `http.url` template tag. It sets the `name` tag to the template with the value left out <Cite n={2} />. This is called URL grouping.
+
+In a local test run of the script on this page, the `http.url` calls got one `name` for all status codes. The calls with `tags.name` got the name `StatusURL`. You can then use `http_req_duration{name:StatusURL}` in a threshold.
+
+The k6 docs also say not to wrap every request in its own group. For dynamic URLs, use URL grouping. For a clear request name, set `tags.name` <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+ডিফল্টভাবে `name` tag-এ request-এর URL থাকে <Cite n={2} />। URL-এ কোনো বদলানো অংশ থাকলে, যেমন একটা ID, সমস্যা হয়। প্রতিটা ID আলাদা `name` দেয়, আর metrics stream-এ অনেক unique URL জমে যায় <Cite n={2} />। তখন ফলাফল পড়া কঠিন হয়ে যায়।
+
+এই সব request একটা নামের নিচে জড়ো করতে `name` tag নিজে সেট করুন <Cite n={2} />। আপনি `http.url` template tag-ও ব্যবহার করতে পারেন। এটা `name` tag-কে সেট করে এমন template দিয়ে, যেখানে মানটা বাদ দেওয়া থাকে <Cite n={2} />। এটাকে বলে URL grouping।
+
+এই পেজের স্ক্রিপ্ট লোকাল রানে চালালে `http.url` কলগুলো সব status code-এর জন্য একটাই `name` পেয়েছিল। `tags.name` সহ কলগুলো `StatusURL` নাম পেয়েছিল। তখন threshold-এ `http_req_duration{name:StatusURL}` ব্যবহার করা যায়।
+
+k6 docs আরও বলে, প্রতিটা request আলাদা group-এ মুড়ে দেবেন না। Dynamic URL-এর জন্য URL grouping ব্যবহার করুন। Request-এর পরিষ্কার নামের জন্য `tags.name` সেট করুন <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Groups
+
+<Voices>
+<Technical>
+
+A **group** is a way to organize a script by function. You wrap a part of the script in `group(name, fn)` <Cite n={4} />. Groups can be nested <Cite n={1} />. A group does two things <Cite n={1} />:
+
+- k6 emits the `group_duration` metric for each `group()` call. It holds the total time to run the group function.
+- Each check, request, or custom metric inside the group gets the tag `group` with the group name.
+
+The value of the `group` tag is the names of all wrapping groups, separated by `::` (two colons). The root group has an empty name. So a single group named `List quotes` has the `group` value `::List quotes` <Cite n={1} />.
+
+This script puts each request in its own group, and adds one threshold on `group_duration`:
+
+```javascript
+import http from 'k6/http';
+import { check, group, sleep } from 'k6';
+
+export const options = {
+  vus: 10,
+  duration: '5s',
+  thresholds: {
+    'http_req_duration{endpoint:quotes}': ['p(95)<1000'],
+    'http_req_duration{endpoint:headers}': ['p(95)<1000'],
+    'group_duration{group:::List quotes}': ['p(95)<1500'],
+  },
+};
+
+export default function () {
+  group('List quotes', function () {
+    const res = http.get('https://quickpizza.grafana.com/api/quotes', {
+      tags: { endpoint: 'quotes' },
+    });
+    check(res, { 'quotes request successful': (r) => r.status === 200 });
+  });
+
+  group('Get headers', function () {
+    const res = http.get('https://quickpizza.grafana.com/api/headers', {
+      tags: { endpoint: 'headers' },
+    });
+    check(res, { 'headers request successful': (r) => r.status === 200 });
+  });
+
+  sleep(1);
+}
+```
+
+The key `group_duration{group:::List quotes}` has three colons after `group`. The first colon separates the tag name from its value. The last two are the `::` prefix of the group name <Cite n={3} />.
+
+The default summary does not print a section for each group. The `--summary-mode=full` option adds the results of each group and scenario <Cite n={5} />. This is the owner's output from one run against the old host (the emoji in the check names come from the owner's script, and this run used the default summary). It shows that the threshold lines stay split by tag:
+
+```text
+  █ THRESHOLDS
+
+    http_req_duration{endpoint:getItem}
+    ✓ 'p(95)<1000' p(95)=167.93ms
+
+    http_req_duration{endpoint:listData}
+    ✓ 'p(95)<1000' p(95)=349.1ms
+
+  █ TOTAL RESULTS
+
+    ✓ ✅ All list API request successful
+    ✓ ✅ Get item data request successful
+
+    HTTP
+    http_req_duration..............: avg=182.92ms min=10.25ms med=166.68ms max=708.08ms p(90)=187.55ms p(95)=262.13ms
+      { endpoint:getItem }.........: avg=171.1ms  min=10.25ms med=164.47ms max=708.08ms p(90)=166.67ms p(95)=167.93ms
+      { endpoint:listData }........: avg=194.75ms min=11.66ms med=185.68ms max=654.69ms p(90)=210.8ms  p(95)=349.1ms
+```
+
+A group name is just a label of the code. A request tag such as `endpoint` is a label of the request. You can use both, and you can set thresholds on both. Use a group for a user step, such as "log in" or "check out". Use `name` or another tag to tell requests apart.
+
+<Callout type="tip" title="Tutorial advice">
+
+Use few groups. One group around each request adds noise, and the k6 docs suggest URL grouping or `tags.name` instead <Cite n={1} />. This is the tutorial's own view: put a group around a whole user step, and use tags for single requests.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+A **group** is a way to organize a script by function. You wrap a part of the script in `group(name, fn)` <Cite n={4} />. Groups can be nested <Cite n={1} />. A group does two things <Cite n={1} />:
+
+- k6 emits the `group_duration` metric for each `group()` call. It holds the total time to run the group function.
+- Each check, request, or custom metric inside the group gets the tag `group` with the group name.
+
+The value of the `group` tag is the names of all wrapping groups, separated by `::` (two colons). The root group has an empty name. So a single group named `List quotes` has the `group` value `::List quotes` <Cite n={1} />.
+
+A threshold key for a group is `group_duration{group:::List quotes}`. It has three colons after `group`. The first colon separates the tag name from its value. The last two are the `::` prefix of the group name <Cite n={3} />.
+
+The default summary does not print a section for each group. The `--summary-mode=full` option adds the results of each group and scenario <Cite n={5} />.
+
+A group name is a label of the code. A request tag such as `endpoint` is a label of the request. You can use both, and you can set thresholds on both. Use a group for a user step, such as "log in" or "check out". Use `name` or another tag to tell requests apart.
+
+<Callout type="tip" title="Tutorial advice">
+
+Use few groups. One group around each request adds noise, and the k6 docs suggest URL grouping or `tags.name` instead <Cite n={1} />. This is the tutorial's own view: put a group around a whole user step, and use tags for single requests.
+
+</Callout>
+
+</Layman>
+<Bangla>
+
+**Group** হলো স্ক্রিপ্টকে function অনুযায়ী সাজানোর একটা উপায়। স্ক্রিপ্টের একটা অংশ `group(name, fn)`-এর ভেতরে রাখতে হয় <Cite n={4} />। Group nested করা যায় <Cite n={1} />। একটা group দুটো কাজ করে <Cite n={1} />:
+
+- k6 প্রতিটা `group()` কলের জন্য `group_duration` metric পাঠায়। এতে group function চালাতে মোট যত সময় লেগেছে, তা থাকে।
+- Group-এর ভেতরের প্রতিটা check, request বা custom metric `group` tag পায়, যার মান group-এর নাম।
+
+`group` tag-এর মান হলো ঘিরে থাকা সব group-এর নাম, `::` (দুটো কোলন) দিয়ে আলাদা করা। Root group-এর নাম ফাঁকা। তাই `List quotes` নামের একটা group-এর `group` মান হয় `::List quotes` <Cite n={1} />।
+
+একটা group-এর threshold key হলো `group_duration{group:::List quotes}`। `group`-এর পরে তিনটা কোলন আছে। প্রথম কোলন tag-এর নাম আর মানকে আলাদা করে। শেষ দুটো হলো group নামের `::` prefix <Cite n={3} />।
+
+ডিফল্ট summary প্রতিটা group-এর জন্য আলাদা অংশ দেখায় না। `--summary-mode=full` option প্রতিটা group আর scenario-র ফলাফল যোগ করে <Cite n={5} />।
+
+Group-এর নাম কোডের একটা লেবেল। `endpoint`-এর মতো request tag হলো request-এর লেবেল। আপনি দুটোই ব্যবহার করতে পারেন, আর দুটোর ওপরেই threshold দিতে পারেন। ব্যবহারকারীর একটা ধাপের জন্য group ব্যবহার করুন, যেমন "log in" বা "check out"। Request আলাদা করতে `name` বা অন্য tag ব্যবহার করুন।
+
+<Callout type="tip" title="Tutorial advice">
+
+কম group ব্যবহার করুন। প্রতিটা request-এর চারপাশে একটা group বাড়তি শব্দ আনে, আর k6 docs তার বদলে URL grouping বা `tags.name` সুপারিশ করে <Cite n={1} />। এটা tutorial-এর নিজের মত: পুরো ব্যবহারকারী-ধাপের চারপাশে group দিন, আর একক request-এর জন্য tag ব্যবহার করুন।
+
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+| --- | --- |
+| Tag | A key-value label on a request, check, threshold, or custom metric. |
+| System tag | A tag that k6 sets for you, such as `status`, `method`, `url`, `name`, and `group`. |
+| User-defined tag | A tag that you set in the script, such as `endpoint: 'quotes'`. |
+| Test-wide tag | A tag in `options.tags`, `--tag`, or `K6_TAGS`. It goes on every metric of the run. |
+| Sub-metric | The part of a metric with one tag value. You name it in braces, as in `http_req_duration{endpoint:quotes}`. |
+| `name` tag | The tag that holds the request name. By default it is the URL. |
+| URL grouping | Collecting requests with a changing URL under one `name`, with `http.url` or `tags.name`. |
+| Group | A named part of the script, set with `group(name, fn)`. It can be nested. |
+| `group_duration` | The metric with the total time to run one group function. |

@@ -1,0 +1,491 @@
+export const metadata = { title: 'Reading the k6 Results', description: 'The built-in metrics, p95 and p99, and a checklist to read a result.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Built-in metrics', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/metrics/reference/', accessed: '2026-10-27' },
+    { title: 'End of test', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/end-of-test/', accessed: '2026-10-27' },
+    { title: 'Metrics', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/metrics/', accessed: '2026-10-27' },
+    { title: 'Thresholds', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/thresholds/', accessed: '2026-10-27' },
+  ],
+}
+
+# Reading the k6 Results
+
+A k6 run ends with a wall of numbers. This page shows what each number means, why the average can hide a problem, and which numbers to read first.
+
+<PageMeta />
+
+## The end-of-test summary
+
+<Voices>
+<Technical>
+
+When a test ends, k6 writes the combined results of the run to stdout as a summary <Cite n={2} />. The `--summary-mode` option sets how much it shows <Cite n={2} />:
+
+| Mode | What it shows |
+| --- | --- |
+| `compact` (default) | Thresholds, checks, and the aggregated metrics by category <Cite n={2} /> |
+| `full` | Everything in `compact`, plus more metrics and results for each group and scenario <Cite n={2} /> |
+| `disabled` | No summary <Cite n={2} /> |
+
+The thresholds block is always at the top <Cite n={2} />. In k6 v2, k6 removed the `--no-summary` flag and the old legacy mode. Use `--summary-mode=disabled` instead <Cite n={2} />. Two more options change the layout: `--summary-trend-stats` picks the statistics of Trend metrics, and `--summary-time-unit` sets one time unit for all values <Cite n={2} />.
+
+This is a trimmed `full` summary of one short run: 3 iterations, 1 VU, against `https://quickpizza.grafana.com`. Your numbers will differ.
+
+```text
+    HTTP
+    http_req_duration..............: avg=338.63ms min=310.94ms med=345.52ms max=359.44ms p(90)=356.66ms p(95)=358.05ms
+    http_req_failed................: 0.00%  0 out of 3
+    http_reqs......................: 3      0.624287/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.6s     min=1.31s    med=1.36s    max=2.13s    p(90)=1.97s    p(95)=2.05s
+    iterations.....................: 3      0.624287/s
+    vus............................: 1      min=1      max=1
+```
+
+Each Trend metric shows `avg`, `min`, `med`, `max`, `p(90)`, and `p(95)` <Cite n={2} />. The other columns are rates and counts for the whole run.
+
+</Technical>
+<Layman>
+
+When a test ends, k6 prints the results of the run as a summary. The `--summary-mode` option sets how much it shows <Cite n={2} />.
+
+| Mode | What it shows |
+| --- | --- |
+| `compact` (default) | Thresholds, checks, and the metrics by category <Cite n={2} /> |
+| `full` | Everything in `compact`, plus more metrics and results for each group and scenario <Cite n={2} /> |
+| `disabled` | No summary <Cite n={2} /> |
+
+The thresholds block is always at the top <Cite n={2} />. In k6 v2, use `--summary-mode=disabled` to turn the summary off. The old `--no-summary` flag is gone <Cite n={2} />. Two more options change the layout. `--summary-trend-stats` picks which statistics to show. `--summary-time-unit` sets one time unit for all values <Cite n={2} />.
+
+This is a short `full` summary of one small run. It used 3 iterations and 1 VU against `https://quickpizza.grafana.com`. Your numbers will differ.
+
+```text
+    HTTP
+    http_req_duration..............: avg=338.63ms min=310.94ms med=345.52ms max=359.44ms p(90)=356.66ms p(95)=358.05ms
+    http_req_failed................: 0.00%  0 out of 3
+    http_reqs......................: 3      0.624287/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.6s     min=1.31s    med=1.36s    max=2.13s    p(90)=1.97s    p(95)=2.05s
+    iterations.....................: 3      0.624287/s
+    vus............................: 1      min=1      max=1
+```
+
+Each timing metric shows `avg`, `min`, `med`, `max`, `p(90)`, and `p(95)` <Cite n={2} />. The other lines are rates and counts for the whole run.
+
+</Layman>
+<Bangla>
+
+টেস্ট শেষ হলে k6 ফলাফলের একটা summary প্রিন্ট করে <Cite n={2} />। `--summary-mode` option ঠিক করে summary-তে কতটা দেখাবে <Cite n={2} />।
+
+| Mode | কী দেখায় |
+| --- | --- |
+| `compact` (default) | Thresholds, checks, আর category অনুযায়ী metrics <Cite n={2} /> |
+| `full` | `compact`-এর সবকিছু, সাথে বাড়তি metrics এবং প্রতিটা group ও scenario-র ফলাফল <Cite n={2} /> |
+| `disabled` | কোনো summary নেই <Cite n={2} /> |
+
+Thresholds ব্লক সবসময় সবার উপরে থাকে <Cite n={2} />। k6 v2-তে summary বন্ধ করতে `--summary-mode=disabled` ব্যবহার করুন। পুরনো `--no-summary` flag আর নেই <Cite n={2} />। আরও দুটো option layout বদলায়। `--summary-trend-stats` ঠিক করে কোন statistics দেখাবে। `--summary-time-unit` সব মানের জন্য একটা time unit ঠিক করে <Cite n={2} />।
+
+নিচেরটা একটা ছোট রানের `full` summary। এতে ৩টা iteration আর ১টা VU ছিল, `https://quickpizza.grafana.com`-এর বিরুদ্ধে। আপনার সংখ্যা আলাদা হবে।
+
+```text
+    HTTP
+    http_req_duration..............: avg=338.63ms min=310.94ms med=345.52ms max=359.44ms p(90)=356.66ms p(95)=358.05ms
+    http_req_failed................: 0.00%  0 out of 3
+    http_reqs......................: 3      0.624287/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.6s     min=1.31s    med=1.36s    max=2.13s    p(90)=1.97s    p(95)=2.05s
+    iterations.....................: 3      0.624287/s
+    vus............................: 1      min=1      max=1
+```
+
+প্রতিটা timing metric-এ `avg`, `min`, `med`, `max`, `p(90)` আর `p(95)` দেখায় <Cite n={2} />। বাকি লাইনগুলো পুরো রানের rate আর count।
+
+</Bangla>
+</Voices>
+
+## The built-in metrics
+
+<Voices>
+<Technical>
+
+k6 has four metric types <Cite n={3} />:
+
+- A **Counter** sums values.
+- A **Gauge** tracks the smallest, largest, and latest values.
+- A **Rate** tracks how often a non-zero value occurs.
+- A **Trend** calculates statistics, such as the mean and percentiles, over many values.
+
+k6 always collects these metrics, whatever the protocol <Cite n={1} />:
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `checks` | Rate | The rate of successful checks. The summary shows it as `checks_total`, `checks_succeeded`, and `checks_failed` <Cite n={1} /> |
+| `data_received` | Counter | The amount of received data <Cite n={1} /> |
+| `data_sent` | Counter | The amount of sent data <Cite n={1} /> |
+| `dropped_iterations` | Counter | Iterations that did not start, for lack of VUs (arrival-rate executors) or lack of time (iteration-based executors) <Cite n={1} /> |
+| `iteration_duration` | Trend | The time for one full iteration, including setup and teardown time <Cite n={1} /> |
+| `iterations` | Counter | How many times the VUs ran the default function <Cite n={1} /> |
+| `vus` | Gauge | The current number of active virtual users <Cite n={1} /> |
+| `vus_max` | Gauge | The maximum possible number of VUs. k6 allocates VU resources before it needs them <Cite n={1} /> |
+
+k6 creates these metrics only when the test makes HTTP requests <Cite n={1} />:
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `http_req_blocked` | Trend | Time blocked, while it waits for a free TCP connection slot, before the request starts <Cite n={1} /> |
+| `http_req_connecting` | Trend | Time to open the TCP connection to the host <Cite n={1} /> |
+| `http_req_tls_handshaking` | Trend | Time for the TLS handshake with the host <Cite n={1} /> |
+| `http_req_sending` | Trend | Time to send data to the host <Cite n={1} /> |
+| `http_req_waiting` | Trend | Time spent waiting for the response, also called "time to first byte" (TTFB) <Cite n={1} /> |
+| `http_req_receiving` | Trend | Time to receive the response data <Cite n={1} /> |
+| `http_req_duration` | Trend | The total time of the request: `http_req_sending` + `http_req_waiting` + `http_req_receiving` <Cite n={1} /> |
+| `http_req_failed` | Rate | The rate of failed requests, by the rule of `setResponseCallback` <Cite n={1} /> |
+| `http_reqs` | Counter | How many HTTP requests k6 made <Cite n={1} /> |
+
+Note one thing about `http_req_duration`. It does not include the blocked, connecting, and TLS times. The docs say it is the time that the remote server takes to process the request and answer, without the first DNS lookup and connection times <Cite n={1} />. If a request is slow to start, look at `http_req_blocked` and `http_req_connecting` too.
+
+k6 also has metrics for the `k6/browser` module, for WebSocket, and for gRPC <Cite n={1} />. This page does not cover them.
+
+</Technical>
+<Layman>
+
+k6 has four metric types <Cite n={3} />:
+
+- A **Counter** adds up values.
+- A **Gauge** tracks the smallest, largest, and latest values.
+- A **Rate** tracks how often a non-zero value occurs.
+- A **Trend** calculates statistics, such as the mean and percentiles, over many values.
+
+k6 always collects these metrics, whatever the protocol <Cite n={1} />:
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `checks` | Rate | The rate of successful checks <Cite n={1} /> |
+| `data_received` | Counter | The amount of received data <Cite n={1} /> |
+| `data_sent` | Counter | The amount of sent data <Cite n={1} /> |
+| `dropped_iterations` | Counter | Iterations that did not start, because k6 had no free VU or no time left <Cite n={1} /> |
+| `iteration_duration` | Trend | The time for one full iteration <Cite n={1} /> |
+| `iterations` | Counter | How many times the VUs ran the default function <Cite n={1} /> |
+| `vus` | Gauge | The current number of active virtual users <Cite n={1} /> |
+| `vus_max` | Gauge | The maximum possible number of VUs <Cite n={1} /> |
+
+k6 creates these metrics only when the test makes HTTP requests <Cite n={1} />:
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `http_req_blocked` | Trend | Time blocked, while it waits for a free TCP connection slot, before the request starts <Cite n={1} /> |
+| `http_req_connecting` | Trend | Time to open the TCP connection <Cite n={1} /> |
+| `http_req_tls_handshaking` | Trend | Time for the TLS handshake <Cite n={1} /> |
+| `http_req_sending` | Trend | Time to send data to the host <Cite n={1} /> |
+| `http_req_waiting` | Trend | Time spent waiting for the response, also called "time to first byte" (TTFB) <Cite n={1} /> |
+| `http_req_receiving` | Trend | Time to receive the response data <Cite n={1} /> |
+| `http_req_duration` | Trend | The total time of the request: sending plus waiting plus receiving <Cite n={1} /> |
+| `http_req_failed` | Rate | The rate of failed requests <Cite n={1} /> |
+| `http_reqs` | Counter | How many HTTP requests k6 made <Cite n={1} /> |
+
+Note one thing about `http_req_duration`. It does not include the blocked, connecting, and TLS times <Cite n={1} />. If a request is slow to start, look at `http_req_blocked` and `http_req_connecting` too.
+
+k6 also has metrics for the `k6/browser` module, for WebSocket, and for gRPC <Cite n={1} />. This page does not cover them.
+
+</Layman>
+<Bangla>
+
+k6-তে চার ধরনের metric type আছে <Cite n={3} />:
+
+- **Counter** মানগুলো যোগ করে।
+- **Gauge** সবচেয়ে ছোট, সবচেয়ে বড় আর সর্বশেষ মান ট্র্যাক করে।
+- **Rate** ট্র্যাক করে শূন্য নয় এমন মান কত ঘন ঘন আসে।
+- **Trend** অনেক মানের উপর mean আর percentile-এর মতো statistics হিসাব করে।
+
+Protocol যা-ই হোক, k6 সবসময় এই metrics সংগ্রহ করে <Cite n={1} />:
+
+| Metric | Type | অর্থ |
+| --- | --- | --- |
+| `checks` | Rate | সফল checks-এর rate <Cite n={1} /> |
+| `data_received` | Counter | পাওয়া ডেটার পরিমাণ <Cite n={1} /> |
+| `data_sent` | Counter | পাঠানো ডেটার পরিমাণ <Cite n={1} /> |
+| `dropped_iterations` | Counter | যে iteration শুরু হয়নি, কারণ k6-র কাছে ফাঁকা VU বা সময় ছিল না <Cite n={1} /> |
+| `iteration_duration` | Trend | একটা পুরো iteration-এর সময় <Cite n={1} /> |
+| `iterations` | Counter | VU-গুলো কতবার default function চালিয়েছে <Cite n={1} /> |
+| `vus` | Gauge | এই মুহূর্তে active virtual user-এর সংখ্যা <Cite n={1} /> |
+| `vus_max` | Gauge | সর্বোচ্চ সম্ভাব্য VU-এর সংখ্যা <Cite n={1} /> |
+
+টেস্ট HTTP request করলে তবেই k6 এই metrics তৈরি করে <Cite n={1} />:
+
+| Metric | Type | অর্থ |
+| --- | --- | --- |
+| `http_req_blocked` | Trend | request শুরুর আগে একটা ফাঁকা TCP connection slot-এর জন্য অপেক্ষার সময় <Cite n={1} /> |
+| `http_req_connecting` | Trend | TCP connection খুলতে যত সময় লাগে <Cite n={1} /> |
+| `http_req_tls_handshaking` | Trend | TLS handshake-এর সময় <Cite n={1} /> |
+| `http_req_sending` | Trend | host-এ ডেটা পাঠাতে যত সময় লাগে <Cite n={1} /> |
+| `http_req_waiting` | Trend | response-এর জন্য অপেক্ষার সময়, যাকে "time to first byte" (TTFB)-ও বলে <Cite n={1} /> |
+| `http_req_receiving` | Trend | response ডেটা পেতে যত সময় লাগে <Cite n={1} /> |
+| `http_req_duration` | Trend | request-এর মোট সময়: sending + waiting + receiving <Cite n={1} /> |
+| `http_req_failed` | Rate | ব্যর্থ request-এর rate <Cite n={1} /> |
+| `http_reqs` | Counter | k6 মোট কতগুলো HTTP request করেছে <Cite n={1} /> |
+
+`http_req_duration` নিয়ে একটা বিষয় মনে রাখুন। এতে blocked, connecting আর TLS সময় ধরা হয় না <Cite n={1} />। কোনো request শুরু হতেই দেরি হলে `http_req_blocked` আর `http_req_connecting`-ও দেখুন।
+
+`k6/browser` module, WebSocket আর gRPC-র জন্যও k6-র আলাদা metrics আছে <Cite n={1} />। এই পেজে সেগুলো নেই।
+
+</Bangla>
+</Voices>
+
+## An example run
+
+<Voices>
+<Technical>
+
+The owner of this tutorial ran a script with 1 VU and 10 iterations, and read the summary. These values come from that one run. They are an example, not a rule for k6 or for any server:
+
+```text
+http_reqs.................: 10
+iterations................: 10      iteration_duration: avg=1.33s  min=1.26s   max=1.89s
+http_req_duration.........: avg=264.25ms  min=261.48ms  max=266.4ms
+  http_req_waiting........: avg=263.54ms  min=261.48ms  max=265.69ms
+  http_req_sending........: avg=67.54µs   max=675.4µs
+  http_req_receiving......: avg=645.05µs  max=2.31ms
+http_req_blocked..........: avg=62.18ms   min=0s  max=621.8ms
+http_req_connecting.......: avg=26.14ms   min=0s  max=261.48ms
+http_req_tls_handshaking..: avg=28.31ms   min=0s  max=283.13ms
+data_received.............: 119 kB   data_sent: 1.4 kB
+vus: 1   vus_max: 1
+```
+
+Three things to read here:
+
+1. `http_req_waiting` (263.54 ms) is almost all of `http_req_duration` (264.25 ms). Sending and receiving are only microseconds. This fits the formula in the docs: duration is sending, waiting, and receiving <Cite n={1} />. The server took the time.
+2. `http_req_blocked` has an average of 62.18 ms and a maximum of 621.8 ms. Ten requests ran, and 621.8 ms / 10 = 62.18 ms. So one request paid the whole cost, and the other nine paid almost nothing. This is the tutorial's own reading of the example. A likely cause is the first request, which has to open a connection. The same pattern shows in `http_req_connecting` and `http_req_tls_handshaking`.
+3. `iteration_duration` (1.33 s) is much longer than `http_req_duration` (264 ms). One iteration is more than one request. The docs say it includes the time in setup and teardown <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+The owner of this tutorial ran a script with 1 VU and 10 iterations, and read the summary. These values come from that one run. They are an example, not a rule for k6 or for any server:
+
+```text
+http_reqs.................: 10
+iterations................: 10      iteration_duration: avg=1.33s  min=1.26s   max=1.89s
+http_req_duration.........: avg=264.25ms  min=261.48ms  max=266.4ms
+  http_req_waiting........: avg=263.54ms  min=261.48ms  max=265.69ms
+  http_req_sending........: avg=67.54µs   max=675.4µs
+  http_req_receiving......: avg=645.05µs  max=2.31ms
+http_req_blocked..........: avg=62.18ms   min=0s  max=621.8ms
+http_req_connecting.......: avg=26.14ms   min=0s  max=261.48ms
+http_req_tls_handshaking..: avg=28.31ms   min=0s  max=283.13ms
+data_received.............: 119 kB   data_sent: 1.4 kB
+vus: 1   vus_max: 1
+```
+
+Three things to read here:
+
+1. `http_req_waiting` (263.54 ms) is almost all of `http_req_duration` (264.25 ms). Sending and receiving take only microseconds. The docs say duration is sending, waiting, and receiving <Cite n={1} />. So the server took the time.
+2. `http_req_blocked` has an average of 62.18 ms and a maximum of 621.8 ms. Ten requests ran, and 621.8 ms / 10 = 62.18 ms. So one request paid the whole cost. The other nine paid almost nothing. This is the tutorial's own reading of the example. A likely cause is the first request, which has to open a connection. The same pattern shows in `http_req_connecting` and `http_req_tls_handshaking`.
+3. `iteration_duration` (1.33 s) is much longer than `http_req_duration` (264 ms). One iteration is more than one request. The docs say it includes the time in setup and teardown <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+এই টিউটোরিয়ালের মালিক ১টা VU আর ১০টা iteration দিয়ে একটা script চালিয়ে summary পড়েছেন। নিচের মানগুলো সেই একটা রান থেকে এসেছে। এগুলো একটা উদাহরণ, k6 বা কোনো server-এর নিয়ম নয়:
+
+```text
+http_reqs.................: 10
+iterations................: 10      iteration_duration: avg=1.33s  min=1.26s   max=1.89s
+http_req_duration.........: avg=264.25ms  min=261.48ms  max=266.4ms
+  http_req_waiting........: avg=263.54ms  min=261.48ms  max=265.69ms
+  http_req_sending........: avg=67.54µs   max=675.4µs
+  http_req_receiving......: avg=645.05µs  max=2.31ms
+http_req_blocked..........: avg=62.18ms   min=0s  max=621.8ms
+http_req_connecting.......: avg=26.14ms   min=0s  max=261.48ms
+http_req_tls_handshaking..: avg=28.31ms   min=0s  max=283.13ms
+data_received.............: 119 kB   data_sent: 1.4 kB
+vus: 1   vus_max: 1
+```
+
+এখানে তিনটা জিনিস পড়ার আছে:
+
+1. `http_req_waiting` (263.54 ms) প্রায় পুরো `http_req_duration` (264.25 ms)। Sending আর receiving মাত্র কয়েক microsecond। docs বলে duration হলো sending, waiting আর receiving-এর যোগফল <Cite n={1} />। অর্থাৎ সময়টা server নিয়েছে।
+2. `http_req_blocked`-এর average 62.18 ms আর maximum 621.8 ms। দশটা request চলেছে, আর 621.8 ms / 10 = 62.18 ms। অর্থাৎ একটা request পুরো খরচ বহন করেছে, বাকি নয়টা প্রায় কিছুই দেয়নি। এটা এই টিউটোরিয়ালের নিজের ব্যাখ্যা। সম্ভাব্য কারণ প্রথম request, যাকে একটা connection খুলতে হয়। `http_req_connecting` আর `http_req_tls_handshaking`-এও একই ছাঁচ দেখা যায়।
+3. `iteration_duration` (1.33 s) `http_req_duration`-এর (264 ms) চেয়ে অনেক বেশি। একটা iteration মানে একটার বেশি কাজ। docs বলে এতে setup আর teardown-এর সময়ও ধরা হয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Average, median, and percentiles
+
+<Voices>
+<Technical>
+
+A Trend metric shows `avg`, `min`, `max`, `med`, and percentiles written as `p(N)`, where N is a number from 0 to 100 <Cite n={4} />. A percentile has a simple meaning. `p(95)` is the value that 95 % of the requests are below. The threshold docs use this reading: `p(95)<200` means 95 % of requests are below 200 ms <Cite n={4} />.
+
+- `avg` is the sum of all values divided by their number. One very slow value moves it.
+- `med` is the middle value. Half of the requests are faster, and half are slower.
+- `p(90)`, `p(95)`, and `p(99)` show the slow end. They tell you how bad it is for the slowest 10 %, 5 %, or 1 % of requests.
+- `max` is the single worst request. It is often one odd event.
+
+The average can mislead. This is the tutorial's own example. Say a page gets 100 requests. 92 of them take 65 ms, and 8 of them take 3 s. The average is about 300 ms (29 980 ms / 100). The median is 65 ms. But `p(95)` is 3 s. The average of 300 ms looks acceptable. It does not show that 8 users in 100 wait 3 seconds. Most requests are fast, but some users get a very slow answer. That is why you read `p(95)` and `p(99)` with the average.
+
+This is also why a threshold usually uses a percentile, such as `http_req_duration: ['p(95)<200']` <Cite n={4} />. The Thresholds page of this module shows how to write them.
+
+</Technical>
+<Layman>
+
+A timing metric shows `avg`, `min`, `max`, `med`, and percentiles written as `p(N)`. N is a number from 0 to 100 <Cite n={4} />. A percentile has a simple meaning. `p(95)` is the value that 95 % of the requests are below. The threshold docs use this reading. `p(95)<200` means 95 % of requests are below 200 ms <Cite n={4} />.
+
+- `avg` is the sum of all values divided by their number. One very slow value moves it.
+- `med` is the middle value. Half of the requests are faster, and half are slower.
+- `p(90)`, `p(95)`, and `p(99)` show the slow end. They tell you how bad it is for the slowest 10 %, 5 %, or 1 % of requests.
+- `max` is the single worst request. It is often one odd event.
+
+The average can mislead. This is the tutorial's own example. Say a page gets 100 requests. 92 of them take 65 ms, and 8 of them take 3 s. The average is about 300 ms (29 980 ms / 100). The median is 65 ms. But `p(95)` is 3 s. The average of 300 ms looks acceptable. It hides that 8 users in 100 wait 3 seconds. Most requests are fast, but some users get a very slow answer. So read `p(95)` and `p(99)` with the average.
+
+A threshold usually uses a percentile too, such as `http_req_duration: ['p(95)<200']` <Cite n={4} />. The Thresholds page of this module shows how to write them.
+
+</Layman>
+<Bangla>
+
+একটা Trend metric-এ `avg`, `min`, `max`, `med` আর `p(N)` আকারে লেখা percentile দেখায়। N হলো ০ থেকে ১০০-র একটা সংখ্যা <Cite n={4} />। Percentile-এর অর্থ সহজ। `p(95)` হলো সেই মান, যার নিচে ৯৫% request থাকে। threshold docs এই অর্থই ব্যবহার করে: `p(95)<200` মানে ৯৫% request ২০০ ms-এর নিচে <Cite n={4} />।
+
+- `avg` হলো সব মানের যোগফলকে সংখ্যা দিয়ে ভাগ করা। একটা খুব ধীর মান এটাকে নাড়িয়ে দেয়।
+- `med` হলো মাঝের মান। অর্ধেক request এর চেয়ে দ্রুত, অর্ধেক ধীর।
+- `p(90)`, `p(95)` আর `p(99)` ধীর প্রান্ত দেখায়। সবচেয়ে ধীর ১০%, ৫% বা ১% request-এর অবস্থা কত খারাপ, সেটা বলে।
+- `max` হলো একক সবচেয়ে খারাপ request। এটা প্রায়ই একটা আলাদা ঘটনা।
+
+Average বিভ্রান্ত করতে পারে। এটা এই টিউটোরিয়ালের নিজের উদাহরণ। ধরুন একটা পেজ ১০০টা request পায়। ৯২টা নেয় 65 ms, আর ৮টা নেয় 3 s। average প্রায় 300 ms (29 980 ms / 100)। median 65 ms। কিন্তু `p(95)` হলো 3 s। 300 ms average গ্রহণযোগ্য মনে হয়। এটা লুকিয়ে রাখে যে প্রতি ১০০ জনে ৮ জন user ৩ সেকেন্ড অপেক্ষা করে। বেশিরভাগ request দ্রুত, কিন্তু কিছু user খুব ধীর উত্তর পায়। তাই average-এর সাথে `p(95)` আর `p(99)`-ও পড়ুন।
+
+Threshold-ও সাধারণত percentile ব্যবহার করে, যেমন `http_req_duration: ['p(95)<200']` <Cite n={4} />। এই module-এর Thresholds পেজে লেখার নিয়ম আছে।
+
+</Bangla>
+</Voices>
+
+## Which metrics to read first
+
+<Voices>
+<Technical>
+
+Not all metrics matter the same. The k6 docs suggest a start: if you are not sure, read the requests, the errors, and the duration, which are the RED method <Cite n={3} />. In k6 these are `http_reqs`, `http_req_failed`, and `http_req_duration` <Cite n={3} />. In other words they measure traffic, availability, and latency <Cite n={3} />.
+
+The owner's list of the metrics to focus on is longer. This is the owner's own view, not a rule of the docs:
+
+| Metric | What to ask |
+| --- | --- |
+| `http_req_duration` | What are `avg`, `p(95)`, and `p(99)`? |
+| `http_req_waiting` | Is the server slow to answer? A high value points to the back end, the database, or a third-party call. |
+| `http_req_failed` | What share of requests failed? Fast answers do not help if many are errors. |
+| `http_reqs` | How much traffic did the test make? |
+| `iterations` | How many full user journeys finished? |
+| `iteration_duration` | How long does one full journey take, such as login, search, and pay? |
+| `vus` and `vus_max` | At what load level did the test run? |
+
+Read `http_req_blocked`, `http_req_connecting`, and `http_req_tls_handshaking` when the start of a request looks slow, and `data_received` when the answers are big.
+
+</Technical>
+<Layman>
+
+Not all metrics matter the same. The k6 docs suggest a start. If you are not sure, read the requests, the errors, and the duration. This is the RED method <Cite n={3} />. In k6 these are `http_reqs`, `http_req_failed`, and `http_req_duration` <Cite n={3} />. In other words they measure traffic, availability, and latency <Cite n={3} />.
+
+The owner's list of the metrics to focus on is longer. This is the owner's own view, not a rule of the docs:
+
+| Metric | What to ask |
+| --- | --- |
+| `http_req_duration` | What are `avg`, `p(95)`, and `p(99)`? |
+| `http_req_waiting` | Is the server slow to answer? A high value points to the back end, the database, or a third-party call. |
+| `http_req_failed` | What share of requests failed? Fast answers do not help if many are errors. |
+| `http_reqs` | How much traffic did the test make? |
+| `iterations` | How many full user journeys finished? |
+| `iteration_duration` | How long does one full journey take, such as login, search, and pay? |
+| `vus` and `vus_max` | At what load level did the test run? |
+
+Read `http_req_blocked`, `http_req_connecting`, and `http_req_tls_handshaking` when the start of a request looks slow. Read `data_received` when the answers are big.
+
+</Layman>
+<Bangla>
+
+সব metric সমান গুরুত্বপূর্ণ নয়। k6 docs একটা শুরু সুপারিশ করে: নিশ্চিত না হলে requests, errors আর duration পড়ুন। এটাই RED method <Cite n={3} />। k6-তে এগুলো হলো `http_reqs`, `http_req_failed` আর `http_req_duration` <Cite n={3} />। অন্য কথায়, এগুলো traffic, availability আর latency মাপে <Cite n={3} />।
+
+মালিকের তালিকা আরও লম্বা। এটা মালিকের নিজের মত, docs-এর নিয়ম নয়:
+
+| Metric | কী জিজ্ঞেস করবেন |
+| --- | --- |
+| `http_req_duration` | `avg`, `p(95)` আর `p(99)` কত? |
+| `http_req_waiting` | server কি উত্তর দিতে ধীর? বেশি মান backend, database বা third-party call-এর দিকে ইঙ্গিত করে। |
+| `http_req_failed` | কত অংশ request ব্যর্থ হয়েছে? অনেকগুলো error হলে দ্রুত উত্তর কাজে আসে না। |
+| `http_reqs` | টেস্ট কত traffic বানিয়েছে? |
+| `iterations` | কতগুলো পুরো user journey শেষ হয়েছে? |
+| `iteration_duration` | একটা পুরো journey, যেমন login, search আর payment, কত সময় নেয়? |
+| `vus` আর `vus_max` | টেস্ট কোন load level-এ চলেছে? |
+
+একটা request-এর শুরু ধীর মনে হলে `http_req_blocked`, `http_req_connecting` আর `http_req_tls_handshaking` পড়ুন। উত্তর বড় হলে `data_received` পড়ুন।
+
+</Bangla>
+</Voices>
+
+## A checklist to read a result
+
+<Voices>
+<Technical>
+
+This checklist is the owner's list, in the tutorial's own words. It is advice, not a rule from the docs. Do not stop at the average response time. Ask these questions each time:
+
+1. What is the average response time?
+2. What are `p(95)` and `p(99)`?
+3. What is the failure rate (`http_req_failed`)?
+4. Which endpoint is slow? Tags and groups, in a later page of this module, split the numbers by endpoint.
+5. Does the response time grow when you add load?
+6. Is there a bottleneck in the server CPU, the memory, the database, or the network? This is the tutorial's own advice: check these with your monitoring tools, next to the k6 results.
+7. How long does a full user journey take (`iteration_duration`)?
+
+Start with the thresholds block at the top of the summary <Cite n={2} />. A failed threshold means the test did not meet the goal you set. The checks block then shows which assertions failed <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+This checklist is the owner's list, in the tutorial's own words. It is advice, not a rule from the docs. Do not stop at the average response time. Ask these questions each time:
+
+1. What is the average response time?
+2. What are `p(95)` and `p(99)`?
+3. What is the failure rate (`http_req_failed`)?
+4. Which endpoint is slow? Tags and groups, in a later page of this module, split the numbers by endpoint.
+5. Does the response time grow when you add load?
+6. Is there a bottleneck in the server CPU, the memory, the database, or the network? This is the tutorial's own advice: check these with your monitoring tools, next to the k6 results.
+7. How long does a full user journey take (`iteration_duration`)?
+
+Start with the thresholds block at the top of the summary <Cite n={2} />. A failed threshold means the test did not meet the goal you set. The checks block then shows which assertions failed <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+এই checklist মালিকের তালিকা, এই টিউটোরিয়ালের নিজের ভাষায়। এটা পরামর্শ, docs-এর নিয়ম নয়। শুধু average response time দেখে থামবেন না। প্রতিবার এই প্রশ্নগুলো করুন:
+
+1. average response time কত?
+2. `p(95)` আর `p(99)` কত?
+3. failure rate (`http_req_failed`) কত?
+4. কোন endpoint ধীর? এই module-এর একটা পরের পেজে tags আর groups সংখ্যাগুলোকে endpoint অনুযায়ী ভাগ করে।
+5. load বাড়ালে response time কি বাড়ে?
+6. server-এর CPU, memory, database বা network-এ কি bottleneck আছে? এটা এই টিউটোরিয়ালের নিজের পরামর্শ: k6-র ফলাফলের পাশে আপনার monitoring tool দিয়ে এগুলো দেখুন।
+7. একটা পুরো user journey কত সময় নেয় (`iteration_duration`)?
+
+Summary-র উপরের thresholds ব্লক দিয়ে শুরু করুন <Cite n={2} />। একটা threshold ব্যর্থ হলে বুঝবেন টেস্ট আপনার ঠিক করা লক্ষ্য পূরণ করেনি। এরপর checks ব্লক দেখায় কোন assertion ব্যর্থ হয়েছে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+| --- | --- |
+| Summary | The block of aggregated results that k6 prints at the end of a test, set by `--summary-mode`. |
+| Counter | A metric type that sums values. |
+| Gauge | A metric type that tracks the smallest, largest, and latest values. |
+| Rate | A metric type that tracks how often a non-zero value occurs. |
+| Trend | A metric type that calculates statistics, such as `avg`, `med`, and percentiles. |
+| Average (`avg`) | The sum of the values divided by their number. A few slow values can hide in it. |
+| Median (`med`) | The middle value: half of the values are lower. |
+| Percentile (`p(N)`) | The value that N % of the results are below. `p(95)` is the 95th percentile. |
+| TTFB | Time to first byte: the wait for the first byte of the response. In k6 it is `http_req_waiting`. |
+| `http_req_duration` | The total time of a request: sending plus waiting plus receiving. It does not include the connection times. |
+| Iteration | One run of the default function by a VU. |
