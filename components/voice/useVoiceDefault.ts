@@ -1,8 +1,9 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { VOICE_DEFAULT_ATTR, VOICE_STORAGE_KEY, resolveVoiceDefault } from "@/lib/voice";
-import type { VoiceDefault } from "@/lib/voice";
+// A relative import, so that `node --test` can load this file (tests/voice.test.ts).
+import { PAGE_VOICE_STORAGE_KEY, VOICE_DEFAULT_ATTR, VOICE_STORAGE_KEY, resolveVoiceDefault } from "../../lib/voice.ts";
+import type { VoiceDefault } from "../../lib/voice.ts";
 
 function apply(voice: VoiceDefault) {
   document.documentElement.setAttribute(VOICE_DEFAULT_ATTR, voice);
@@ -35,11 +36,16 @@ export function useVoiceDefault(): VoiceDefault | null {
   return useSyncExternalStore(subscribe, read, () => null);
 }
 
-/** Sets the default voice for this page, then saves it for the next visit. */
+/**
+ * Sets the default voice for this page, then saves it for the next visit. It
+ * also clears the saved page voice of the Linux stages, also when no Linux page
+ * is open.
+ */
 export function setVoiceDefault(next: VoiceDefault): void {
   apply(next);
   try {
     localStorage.setItem(VOICE_STORAGE_KEY, next);
+    localStorage.removeItem(PAGE_VOICE_STORAGE_KEY);
   } catch {
     // Storage is blocked: the voice still changes for this page.
   }

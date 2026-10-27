@@ -10,6 +10,8 @@ import {
   unsafeCleanups,
   voiceProblems,
 } from "../lib/linux-lesson.ts";
+import { plainTitle, sourceLines } from "../lib/headings.ts";
+import { STAGES } from "../lib/linux/stages.ts";
 
 // The 12 stages, in the order of lib/linux/stages.ts.
 const LESSON_STAGES: string[] = [
@@ -155,13 +157,38 @@ test("topicTechnicals returns one entry per topic with voices and skips a sectio
   assert.deepEqual(topicTechnicals(source), [{ heading: "First topic", technical: "Body one." }]);
 });
 
-test("every converted stage has the lesson shape", () => {
+/** The titles of the `##` sections that have a `<Voices>` line (code blocks are skipped). */
+function titlesWithVoices(source: string): Set<string> {
+  const titles = new Set<string>();
+  let heading = "";
+  for (const { text, kind } of sourceLines(source)) {
+    if (kind !== "text") continue;
+    const section = /^##\s+(.*)$/.exec(text);
+    if (section) heading = plainTitle(section[1]);
+    else if (text.trim() === "<Voices>") titles.add(heading);
+  }
+  return titles;
+}
+
+test("every converted stage has the lesson shape, and no topic is skipped", () => {
+  const noVoices: string[] = [];
   for (const slug of LESSON_STAGES) {
     const source = readFileSync(new URL(`../content/linux/${slug}.mdx`, import.meta.url), "utf8");
-    for (const { heading, technical } of topicTechnicals(source)) {
+    const stage = STAGES.find((s) => s.slug === slug);
+    assert.ok(stage, slug);
+    const voiced = titlesWithVoices(source);
+    const expected = stage.topics.map((t) => t.title).filter((title) => voiced.has(title));
+    noVoices.push(...stage.topics.map((t) => t.title).filter((title) => !voiced.has(title)));
+
+    const technicals = topicTechnicals(source);
+    assert.deepEqual(technicals.map((t) => t.heading), expected, `${slug}: Technical panels`);
+    assert.deepEqual(topicVoices(source).map((t) => t.heading), expected, `${slug}: Layman and Bangla panels`);
+    for (const { heading, technical } of technicals) {
       assert.deepEqual(lessonProblems(technical), [], `${slug}: ${heading}`);
     }
   }
+  // Only the cheat sheet keeps its original wording with no voices.
+  assert.deepEqual(noVoices, ["Permissions Cheat Sheet"]);
 });
 
 const VOICE_SOURCE = [

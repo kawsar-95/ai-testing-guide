@@ -36,14 +36,8 @@ export function PageVoiceSwitcher() {
   const [seenDef, setSeenDef] = useState(def);
   if (def !== seenDef) {
     setSeenDef(def);
-    if (seenDef !== null) {
-      setChoice(null);
-      try {
-        localStorage.removeItem(PAGE_VOICE_STORAGE_KEY);
-      } catch {
-        // Storage is blocked: the choice still resets for this page.
-      }
-    }
+    // setVoiceDefault clears the saved page voice.
+    if (seenDef !== null) setChoice(null);
   }
 
   useEffect(() => {

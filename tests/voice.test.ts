@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import {
+  PAGE_VOICE_STORAGE_KEY,
   PANEL_TITLES,
   VOICE_DEFAULT_ATTR,
   VOICE_INIT_SCRIPT,
@@ -221,4 +222,29 @@ test("resolvePageVoice falls back to the default for null and for a bad value", 
 test("isVoice accepts the three voices only", () => {
   for (const v of ["technical", "layman", "bangla"]) assert.equal(isVoice(v), true);
   for (const v of [null, "", "x", "Technical", "english"]) assert.equal(isVoice(v), false);
+});
+
+test("setVoiceDefault sets the attribute, saves the voice, and clears the saved page voice", async () => {
+  const attrs = new Map<string, string>();
+  const store = new Map<string, string>([[PAGE_VOICE_STORAGE_KEY, "layman"]]);
+  const g = globalThis as Record<string, unknown>;
+  g.document = { documentElement: { setAttribute: (k: string, v: string) => attrs.set(k, v) } };
+  g.localStorage = {
+    setItem: (k: string, v: string) => store.set(k, v),
+    removeItem: (k: string) => store.delete(k),
+  };
+  try {
+    const { setVoiceDefault } = await import("../components/voice/useVoiceDefault.ts");
+    setVoiceDefault("bangla");
+    assert.equal(attrs.get(VOICE_DEFAULT_ATTR), "bangla");
+    assert.equal(store.get(VOICE_STORAGE_KEY), "bangla");
+    assert.equal(store.has(PAGE_VOICE_STORAGE_KEY), false);
+    // Blocked storage does not throw.
+    g.localStorage = { setItem: () => { throw new Error("blocked"); }, removeItem: () => { throw new Error("blocked"); } };
+    setVoiceDefault("technical");
+    assert.equal(attrs.get(VOICE_DEFAULT_ATTR), "technical");
+  } finally {
+    delete g.document;
+    delete g.localStorage;
+  }
 });
