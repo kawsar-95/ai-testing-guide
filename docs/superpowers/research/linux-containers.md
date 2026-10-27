@@ -197,3 +197,8 @@ Moved facts (none deleted; every old cite number stays on the page):
 - Container Runtime: the intermediary role (S2), the OCI specs (S11, S13, S14, S15), CRI-O (S4, S18), the Docker/Podman table (S19, S22, S39), rootless (S20, S40), and the `runc spec`/`runc run` flow moved to "Go deeper".
 - Docker: layers (S21, S23), `docker run` (S24), volumes, bind mounts, `-p`, networks, digest, `.dockerignore`, Compose, Desktop (S24, S30-S37), the manage commands and `stop` signals (S25-S29), `--rm` (S24), and trusted images and `USER` (S5) moved to "Go deeper". The danger callout stays visible before "Go deeper". The port tip keeps S33.
 - Cgroups: the v1/v2 table (S6, S12), the OOM killer, `cpu.max`, `nr_throttled`, `EAGAIN`, "processes and threads" (S12), the Docker flags (S24, S41), systemd (S42, S43, S44), the cgroup namespace (S9), and the `kill -9` / `docker stop` note (S8, S28) moved to "Go deeper". The warning "do not write into `/sys/fs/cgroup`" moved from the danger callout into the Core text.
+
+### Fix round 1 (2026-10-27)
+
+- New sources: S48 bash(1) (https://man7.org/linux/man-pages/man1/bash.1.html) for the `command -v` gloss; S49 cut(1) (https://man7.org/linux/man-pages/man1/cut.1.html) for the `cut -d: -f3` gloss. Quotes are in the factcheck report, Round 4 (2026-10-27), rows 18 and 44.
+- The Try-it commands and their outputs did not change. Only the prose around them changed (user namespaces need, S7; cgroup v2 need and the root cgroup without `memory.max`/`pids.max`, S12).
