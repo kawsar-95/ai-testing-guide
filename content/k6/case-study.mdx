@@ -1,0 +1,740 @@
+export const metadata = { title: 'Case Study: Testing a Money-Transfer API', description: 'Walk through a real k6 project: 13 scenarios, thresholds for each API, a custom report, and a deadlock that the test found.' }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Scenarios', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/', accessed: '2026-10-27' },
+    { title: 'Constant arrival rate', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/constant-arrival-rate/', accessed: '2026-10-27' },
+    { title: 'Thresholds', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/thresholds/', accessed: '2026-10-27' },
+    { title: 'Test lifecycle', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/test-lifecycle/', accessed: '2026-10-27' },
+    { title: 'Custom summary', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/end-of-test/custom-summary/', accessed: '2026-10-27' },
+    { title: 'fail( [err] )', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/javascript-api/k6/fail/', accessed: '2026-10-27' },
+    { title: 'Dropped iterations', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/concepts/dropped-iterations/', accessed: '2026-10-27' },
+  ],
+}
+
+# Case Study: Testing a Money-Transfer API
+
+This page walks through one real k6 project, line by line, so that you can copy its patterns into your own project. The project, its code, and its numbers come from the owner of this tutorial, not from the k6 documentation.
+
+<PageMeta />
+
+## The project in plain words
+
+<Voices>
+<Technical>
+
+The project is [kawsar-95/k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) (commit `51e4b9e`). Every fact about the project on this page comes from its files: the scripts, the `README.md`, and the files in `results/`. These facts have no cite, because they are not k6 documentation. The k6 facts have cites.
+
+The project tests a practice mobile-wallet API (dMoney) that runs on the local machine. The test drives 3 transaction APIs: deposit, send money, and payment. It uses 6 users: 2 agents, 2 customers, and 2 merchants. The test lasts 2 minutes. It has 4 windows of 30 seconds each, and each window adds or changes the traffic.
+
+The goal is to compare the response time, the throughput, and the failure rate of each API as the load changes. The pass or fail result of each API is a threshold.
+
+| File | Job |
+|---|---|
+| `dmoney-seed.k6.js` | Creates and funds the 6 users. You run it before the test, and again when the balances get low. |
+| `dmoney-transactions.k6.js` | The main test: 13 scenarios, checks, thresholds, and the report. |
+| `lib/dmoney.js` | Shared helpers: the base URL, the headers, the login, and the balance call. |
+| `sendmoney-concurrency.k6.js` | A second test: customers send money in stages of load. |
+| `results/` | The saved reports and a written analysis. |
+
+</Technical>
+<Layman>
+
+The project is a real k6 project from the owner of this tutorial. Every fact about the project comes from its own files.
+
+It tests a practice wallet API that runs on the local machine. The test uses 3 APIs: deposit, send money, and payment. It uses 6 users: 2 agents, 2 customers, and 2 merchants.
+
+The test lasts 2 minutes. It has 4 windows of 30 seconds each. In each window, the traffic changes.
+
+The goal is to compare the speed and the failure rate of each API as the load changes. The pass or fail result of each API is a threshold.
+
+The project has a seed script that creates the users. It has a main test script, a helper file, a second test script, and a folder of saved reports.
+
+</Layman>
+<Bangla>
+
+প্রজেক্টটা এই টিউটোরিয়ালের owner-এর নিজের একটা বাস্তব k6 প্রজেক্ট। প্রজেক্ট নিয়ে এই পেজের সব তথ্য তার নিজের ফাইল থেকে এসেছে। এগুলোর কোনো cite নেই, কারণ এগুলো k6 documentation নয়।
+
+প্রজেক্টটা লোকাল মেশিনে চলা একটা practice wallet API (dMoney) টেস্ট করে। টেস্ট ৩টা API চালায়: deposit, send money আর payment। ইউজার ৬ জন: ২ জন agent, ২ জন customer আর ২ জন merchant।
+
+টেস্ট ২ মিনিট চলে। এতে ৩০ সেকেন্ডের ৪টা window আছে। প্রতিটা window-তে ট্রাফিক বদলায়।
+
+লক্ষ্য হলো লোড বদলালে প্রতিটা API-র response time, throughput আর failure rate তুলনা করা। প্রতিটা API-র pass বা fail ফলাফল একটা threshold।
+
+প্রজেক্টে ইউজার তৈরির একটা seed script আছে। আছে মূল টেস্ট script, একটা helper ফাইল, দ্বিতীয় একটা টেস্ট script আর সেভ করা রিপোর্টের একটা ফোল্ডার।
+
+</Bangla>
+</Voices>
+
+## The traffic plan: 13 flows
+
+<Voices>
+<Technical>
+
+The project calls one kind of transaction between two users a **flow**. A window runs several flows at the same time, and each flow sends 1 request per second for the full 30 seconds. The plan from `README.md` has 13 flows:
+
+| Window | API | From | To |
+|---|---|---|---|
+| w1 (0–30 s) | send money | Customer 1 | Customer 2 |
+| | payment | Customer 2 | Merchant 1 |
+| w2 (30–60 s) | send money | Customer 2 | Customer 1 |
+| | deposit | Agent 1 | Customer 2 |
+| | payment | Customer 1 | Merchant 1 |
+| w3 (60–90 s) | deposit | Agent 1 | Customer 1 |
+| | deposit | Agent 2 | Customer 2 |
+| | send money | Customer 1 | Customer 2 |
+| | payment | Customer 2 | Merchant 2 |
+| w4 (90–120 s) | payment | Agent 1 | Merchant 1 |
+| | payment | Agent 2 | Merchant 2 |
+| | payment | Customer 1 | Merchant 1 |
+| | payment | Customer 2 | Merchant 2 |
+
+The window w4 has the same load as w3: 4 flows, 4 requests per second. The difference is the mix. In w4, all 4 flows are payments from 4 different senders. This detail matters for the deadlock later on this page.
+
+This plan is a good model for your own test. Write the traffic as data first: who does what, to whom, and when. Then turn the data into scenarios.
+
+</Technical>
+<Layman>
+
+The project calls one kind of transaction between two users a **flow**. A window runs several flows at the same time. Each flow sends 1 request per second for the full 30 seconds.
+
+The plan has 13 flows. Window 1 has 2 flows. Window 2 has 3 flows. Windows 3 and 4 have 4 flows each.
+
+Windows 3 and 4 have the same load: 4 requests per second. The mix is different. In window 4, all 4 flows are payments from 4 different senders. This detail matters for the deadlock later on this page.
+
+This plan is a good model for your own test. Write the traffic as data first: who does what, to whom, and when. Then turn the data into scenarios.
+
+</Layman>
+<Bangla>
+
+প্রজেক্টটা দুইজন ইউজারের মধ্যে এক ধরনের transaction-কে **flow** বলে। একটা window একসাথে কয়েকটা flow চালায়। প্রতিটা flow পুরো ৩০ সেকেন্ড ধরে প্রতি সেকেন্ডে ১টা request পাঠায়।
+
+প্ল্যানে ১৩টা flow আছে। window ১-এ ২টা, window ২-এ ৩টা, আর window ৩ ও ৪-এ ৪টা করে flow।
+
+window ৩ আর ৪-এর লোড একই: প্রতি সেকেন্ডে ৪টা request। কিন্তু মিক্স আলাদা। window ৪-এ ৪টা flow-ই payment, আর ৪ জন আলাদা sender থেকে। এই তথ্যটা এই পেজের পরে deadlock-এর অংশে কাজে লাগবে।
+
+নিজের টেস্টের জন্য এই প্ল্যানটা একটা ভালো মডেল। আগে ট্রাফিকটা ডেটা হিসেবে লিখুন: কে কী করে, কাকে, কখন। তারপর ডেটাকে scenario-তে বদলান।
+
+</Bangla>
+</Voices>
+
+## Pattern: scenarios built from a list of flows
+
+<Voices>
+<Technical>
+
+The script does not write 13 scenarios by hand. It keeps the 13 flows in a `FLOWS` list and builds the `scenarios` object with a loop. Each scenario uses the `constant-arrival-rate` executor, which starts a fixed number of iterations in a period and starts them without waiting for the system to answer <Cite n={2} />. This executor needs `preAllocatedVUs`, and `maxVUs` is the upper limit of VUs that k6 can add to keep the rate <Cite n={2} />.
+
+Excerpt from `dmoney-transactions.k6.js`:
+
+```js
+const scenarios = {};
+for (const f of FLOWS) {
+    scenarios[`w${f.window}_${f.api}_${f.from}_to_${f.to}`] = {
+        executor: 'constant-arrival-rate',
+        exec: 'transact',
+        startTime: `${(f.window - 1) * WINDOW_S}s`,
+        duration: `${WINDOW_S}s`,
+        rate: RATE,
+        timeUnit: TIME_UNIT,
+        preAllocatedVUs: Math.max(2, Math.ceil(RATE * 2)),
+        maxVUs: 20,
+        gracefulStop: '5s',
+        env: { API: f.api, FROM: f.from, TO: f.to },
+        tags: { window: `w${f.window}` },
+    };
+}
+```
+
+Four scenario options do the work <Cite n={1} />:
+
+- `startTime` is the offset from the start of the test at which the scenario begins. A window w3 flow gets `startTime` of `60s`, so it starts when w3 starts. Scenarios run in parallel, so all flows of a window run together.
+- `exec` is the name of the exported function to run. All 13 scenarios run the same function, `transact`.
+- `env` sets environment variables for one scenario. The scenario tells `transact` its API, its sender, and its receiver this way.
+- `tags` sets tags for one scenario. Each request gets the `window` tag (`w1` to `w4`).
+
+The `transact` function reads the flow from `__ENV`. One shared function serves all 13 flows, so a change to the request code is one change, not 13.
+
+```js
+export function transact(data) {
+    const { API, FROM, TO } = __ENV;
+    const api = APIS[API];
+    const from = data.users[FROM];
+    // ... the http.post call and the checks
+}
+```
+
+The project's analysis says that k6 dropped 0 iterations. A dropped iteration is an iteration that k6 could not start. With `constant-arrival-rate`, iterations drop when no VU is free <Cite n={7} />. So 0 dropped iterations means that the API kept up with the arrival rate.
+
+Read more about scenarios on [Scenarios and Executors](/k6/scenarios-and-executors/).
+
+</Technical>
+<Layman>
+
+The script does not write 13 scenarios by hand. It keeps the 13 flows in a list. Then a loop builds the scenarios from the list.
+
+Each scenario uses the `constant-arrival-rate` executor. It starts a fixed number of requests in each period. It does not wait for the system to answer <Cite n={2} />.
+
+Four scenario options do the work <Cite n={1} />:
+
+- `startTime` tells a scenario when to begin. A window 3 flow starts at 60 seconds. All flows of a window run together.
+- `exec` names the function to run. All 13 scenarios run the same function, `transact`.
+- `env` gives variables to one scenario. This is how `transact` learns its API, its sender, and its receiver.
+- `tags` gives tags to one scenario. Each request gets a `window` tag from `w1` to `w4`.
+
+One shared function serves all 13 flows. So a change to the request code is one change, not 13.
+
+The project's analysis says that k6 dropped 0 iterations. With this executor, an iteration drops when no VU is free <Cite n={7} />. So the API kept up with the arrival rate.
+
+Read more on [Scenarios and Executors](/k6/scenarios-and-executors/).
+
+</Layman>
+<Bangla>
+
+স্ক্রিপ্ট ১৩টা scenario হাতে লেখে না। এটা ১৩টা flow একটা `FLOWS` লিস্টে রাখে, আর একটা loop দিয়ে `scenarios` অবজেক্ট বানায়।
+
+প্রতিটা scenario `constant-arrival-rate` executor ব্যবহার করে। এটা প্রতি period-এ নির্দিষ্ট সংখ্যক iteration শুরু করে, আর সিস্টেমের উত্তরের জন্য অপেক্ষা করে না <Cite n={2} />।
+
+চারটা scenario option কাজটা করে <Cite n={1} />:
+
+- `startTime` বলে scenario কখন শুরু হবে। window ৩-এর একটা flow ৬০ সেকেন্ডে শুরু হয়। একটা window-র সব flow একসাথে চলে।
+- `exec` বলে কোন function চলবে। ১৩টা scenario-ই একই function `transact` চালায়।
+- `env` একটা scenario-কে variable দেয়। এভাবেই `transact` তার API, sender আর receiver জানে।
+- `tags` একটা scenario-কে tag দেয়। প্রতিটা request `w1` থেকে `w4` পর্যন্ত একটা `window` tag পায়।
+
+একটা shared function ১৩টা flow-কেই চালায়। তাই request code বদলাতে হলে একবারই বদলাতে হয়, ১৩ বার নয়।
+
+প্রজেক্টের analysis বলে k6 কোনো iteration drop করেনি (০টা)। এই executor-এ কোনো VU ফাঁকা না থাকলে iteration drop হয় <Cite n={7} />। তাই API arrival rate-এর সাথে তাল মিলিয়েছিল।
+
+আরও জানতে [Scenarios and Executors](/k6/scenarios-and-executors/) দেখুন।
+
+</Bangla>
+</Voices>
+
+## Pattern: log in once in setup() and check the test data
+
+<Voices>
+<Technical>
+
+The `setup()` function runs one time, after the init stage and before the VU code <Cite n={4} />. You can use the full k6 API in it, so it can make HTTP requests. The data that it returns goes to the VU code. Only data (JSON) can pass, and each VU gets its own copy <Cite n={4} />.
+
+The project uses `setup()` for two jobs.
+
+1. **Log in once.** Each of the 6 users logs in with its own credentials, and `setup()` returns the tokens. The 13 scenarios then use the token of the sender, so a transaction does not log in again before each request.
+2. **Check the test data before the load.** The money flows change the balance of the users. If a sender has too little money, the test would fail for a reason that is not a defect in the API. So `setup()` works out the most that each user can send and receive, reads the real balances, and calls `fail()` when the data is not enough.
+
+Excerpt from `dmoney-transactions.k6.js`:
+
+```js
+const problems = [];
+for (const key of Object.keys(USERS)) {
+    const balance = getBalance(users[key].token, users[key].phone);
+    console.log(`${key.padEnd(10)} ${users[key].phone}  balance=${balance}  outgoing<=${out[key] || 0}  incoming<=${inc[key] || 0}`);
+    if (out[key] && balance < out[key]) problems.push(`${key} has ${balance} tk and needs ${out[key]} tk`);
+    if (USERS[key].role === 'Customer' && balance + (inc[key] || 0) >= CUSTOMER_CAP) {
+        problems.push(`${key} can reach the ${CUSTOMER_CAP} tk deposit cap (${balance} + ${inc[key]})`);
+    }
+}
+if (problems.length) fail(`balance pre-check failed: ${problems.join('; ')}. Run dmoney-seed.k6.js.`);
+```
+
+The function `fail()` throws an error <Cite n={6} />. An error in `setup()` means that setup ends abnormally, and k6 does not call `teardown()` <Cite n={4} />. The project's `README.md` says that the test stops with a clear message when the pre-check fails. That is the project's own statement. The message also tells you what to do: run the seed script. The pre-check uses an upper bound of the iterations that a scenario can start, plus a fee estimate for each transfer.
+
+A long `setup()` can hit the setup time limit. The `setupTimeout` option (60 seconds by default) is that limit, and the test fails before any VU starts if `setup()` takes longer <Cite n={4} />. The project sets `setupTimeout` to `60s` in its options.
+
+Read more on [Test Lifecycle](/k6/test-lifecycle/).
+
+</Technical>
+<Layman>
+
+The `setup()` function runs one time, before the VU code <Cite n={4} />. It can make HTTP requests. The data that it returns goes to the VU code <Cite n={4} />.
+
+The project uses `setup()` for two jobs.
+
+1. **Log in once.** Each of the 6 users logs in one time. `setup()` returns the tokens. The load then does not include a login for each request.
+2. **Check the test data before the load.** Money flows change the balance of the users. If a sender has too little money, the test fails for a reason that is not an API defect. So `setup()` reads the real balances. It calls `fail()` when the money is not enough.
+
+The function `fail()` throws an error <Cite n={6} />. An error in `setup()` means that setup ends abnormally, and k6 does not call `teardown()` <Cite n={4} />. The project's `README.md` says that the test stops with a clear message. That is the project's own statement. The message also tells you what to do: run the seed script.
+
+A long `setup()` can hit a time limit. That limit is `setupTimeout`. The default is 60 seconds <Cite n={4} />.
+
+Read more on [Test Lifecycle](/k6/test-lifecycle/).
+
+</Layman>
+<Bangla>
+
+`setup()` function একবার চলে, VU code-এর আগে <Cite n={4} />। এটা HTTP request করতে পারে। এটা যে ডেটা return করে তা VU code-এ যায় <Cite n={4} />।
+
+প্রজেক্ট `setup()` দিয়ে দুটো কাজ করে।
+
+1. **একবার login।** ৬ জন ইউজার প্রত্যেকে একবার login করে। `setup()` token গুলো return করে। তাই লোডে প্রতি request-এর জন্য আলাদা login থাকে না।
+2. **লোডের আগে টেস্ট ডেটা যাচাই।** টাকার flow ইউজারের balance বদলায়। কোনো sender-এর টাকা কম থাকলে টেস্ট এমন কারণে fail করে যা API-র defect নয়। তাই `setup()` আসল balance পড়ে। টাকা যথেষ্ট না হলে `fail()` ডাকে।
+
+`fail()` একটা error throw করে <Cite n={6} />। `setup()`-এ error হলে setup অস্বাভাবিকভাবে শেষ হয়, আর k6 `teardown()` ডাকে না <Cite n={4} />। প্রজেক্টের `README.md` বলে টেস্ট একটা পরিষ্কার message দিয়ে থেমে যায়। এটা প্রজেক্টের নিজের বক্তব্য। message-টা কী করতে হবে তাও বলে: seed script চালান।
+
+লম্বা `setup()` একটা সময়সীমায় আটকাতে পারে। সেই সীমা `setupTimeout`। ডিফল্ট ৬০ সেকেন্ড <Cite n={4} />।
+
+আরও জানতে [Test Lifecycle](/k6/test-lifecycle/) দেখুন।
+
+</Bangla>
+</Voices>
+
+## Pattern: strict checks on the response body
+
+<Voices>
+<Technical>
+
+A status code alone can lie. An API can return `201` with an empty or wrong body. The `transact` function runs 4 checks on each response, and a request passes only when all 4 pass. The project's `README.md` lists them.
+
+| Check | Rule |
+|---|---|
+| Status | `status === 201` |
+| Success | status 201, `currentBalance` is in the body, and there is no `error` field |
+| Transaction ID | `trnxId` matches `^TXN[A-Z0-9]{10}$` |
+| Message | `Deposit successful`, `Send money successful`, or `Payment successful` |
+
+Excerpt from `dmoney-transactions.k6.js`:
+
+```js
+let body = {};
+try { body = res.json() || {}; } catch (e) { /* not JSON: checks below fail */ }
+
+const ok = check(res, {
+    [`${API}: status is 201`]: (r) => r.status === 201,
+    [`${API}: transaction is successful`]: (r) => r.status === 201 && body.currentBalance !== undefined && !body.error,
+    [`${API}: transaction ID is returned`]: () => /^TXN[A-Z0-9]{10}$/.test(body.trnxId || ''),
+    [`${API}: message is "${api.message}"`]: () => body.message === api.message,
+}, { type: 'transaction', api: API });
+```
+
+Three details are worth copying:
+
+- The body is parsed one time in a `try` block. A body that is not JSON does not stop the iteration. It makes the checks fail, and that is what you want.
+- The check names include the API name, so the output shows which API failed which check.
+- The checks have tags (`type` and `api`). A tag on a check lets a threshold look at a group of checks <Cite n={3} />. The next section uses this.
+
+The project's analysis says that each failed request failed all 4 checks. A failed request was an HTTP 500 with an error body.
+
+Read more on [Stages and Checks](/k6/stages-and-checks/).
+
+</Technical>
+<Layman>
+
+A status code alone can lie. An API can return `201` with a wrong body. So the `transact` function runs 4 checks on each response. A request passes only when all 4 pass.
+
+The 4 checks look at the status, the success fields, the transaction ID format, and the success message.
+
+Three details are worth copying:
+
+- The body is parsed one time inside a `try` block. A body that is not JSON does not stop the iteration. It makes the checks fail, and that is what you want.
+- The check names include the API name. So the output shows which API failed which check.
+- The checks have tags. A tag on a check lets a threshold look at a group of checks <Cite n={3} />. The next section uses this.
+
+The project's analysis says that each failed request failed all 4 checks.
+
+Read more on [Stages and Checks](/k6/stages-and-checks/).
+
+</Layman>
+<Bangla>
+
+শুধু status code মিথ্যা বলতে পারে। একটা API ভুল body সহ `201` return করতে পারে। তাই `transact` function প্রতিটা response-এ ৪টা check চালায়। চারটা check-ই pass করলে তবেই request pass করে।
+
+৪টা check দেখে status, success field, transaction ID-র ফরম্যাট আর success message।
+
+তিনটা ছোট বিষয় কপি করার মতো:
+
+- body একবারই `try` ব্লকে parse করা হয়। JSON না হলে iteration থামে না। check গুলো fail করে, আর আপনি ঠিক সেটাই চান।
+- check-এর নামে API-র নাম থাকে। তাই আউটপুটে বোঝা যায় কোন API কোন check-এ fail করেছে।
+- check-এ tag আছে। check-এর tag দিয়ে একটা threshold এক দল check দেখতে পারে <Cite n={3} />। পরের অংশ এটা ব্যবহার করে।
+
+প্রজেক্টের analysis বলে প্রতিটা failed request ৪টা check-ই fail করেছে।
+
+আরও জানতে [Stages and Checks](/k6/stages-and-checks/) দেখুন।
+
+</Bangla>
+</Voices>
+
+## Pattern: tags, thresholds for each API, and report-only thresholds
+
+<Voices>
+<Technical>
+
+The project tags each request with `api` (`deposit`, `sendmoney`, or `payment`), and each scenario adds the `window` tag. Tagged requests create sub-metrics that a threshold can name, in the form `metric_name{tag_name:tag_value}` <Cite n={3} />. So the script can set one pass or fail limit for each API.
+
+Excerpt from `dmoney-transactions.k6.js`:
+
+```js
+const thresholds = {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<1000'],
+    'checks{type:transaction}': ['rate>=0.99'],
+};
+for (const [api, cfg] of Object.entries(APIS)) {
+    thresholds[`http_req_duration{api:${api}}`] = [`p(95)<${cfg.p95}`];
+    thresholds[`http_req_failed{api:${api}}`] = ['rate<0.01'];
+    thresholds[`checks{api:${api}}`] = ['rate>=0.99'];
+}
+```
+
+Each API gets 3 limits: p95 of the duration under 1000 ms, a failure rate under 1%, and a check pass rate of 99% or more. The p95 limits are in `APIS`, so you can change them with environment variables. The failure-rate and check-rate limits are fixed in the script. A failed threshold fails the test <Cite n={3} />.
+
+The project uses a second trick. The per-window report needs numbers for each pair of `window` and `api`. The script's own comment says that k6 adds a sub-metric to the summary only when a threshold names it. So the script adds thresholds that always pass, only to get the numbers.
+
+```js
+const reportOnly = (key, expr) => { thresholds[key] = [expr]; };
+// for each flow:
+reportOnly(`http_req_duration{${sel}}`, 'max>=0');
+reportOnly(`http_reqs{${sel}}`, 'count>=0');
+reportOnly(`http_req_failed{${sel}}`, 'rate>=0');
+```
+
+The `sel` value is `window:w3,api:deposit` for example. An expression such as `count>=0` is always true, so it never fails the test. The project keeps a set of the real pass or fail keys (`PASS_FAIL`), so the threshold table of the report skips the report-only ones.
+
+The project's second script, `sendmoney-concurrency.k6.js`, uses a threshold in a different way. It has a `Counter` named `sendmoney_skipped`. The script counts one when it has no slot left for a send. The threshold `sendmoney_skipped: ['count==0']` fails the run when the reusable customers ran out of limit or balance. A counter supports the `count` aggregation <Cite n={3} />. Read more on [Custom Metrics](/k6/custom-metrics/).
+
+Read more on [Thresholds](/k6/thresholds/) and [Tags and Groups](/k6/tags-and-groups/).
+
+</Technical>
+<Layman>
+
+The project tags each request with the `api` name. Each scenario adds a `window` tag. Tagged requests create sub-metrics that a threshold can name <Cite n={3} />. So the script can set one pass or fail limit for each API.
+
+Each API gets 3 limits: the p95 duration under 1000 ms, a failure rate under 1%, and a check pass rate of 99% or more. A failed threshold fails the test <Cite n={3} />.
+
+The project uses a second trick. The report needs numbers for each pair of window and API. The script's own comment says that k6 adds a sub-metric to the summary only when a threshold names it. So the script adds thresholds that always pass. They exist only to get the numbers.
+
+An expression such as `count>=0` is always true. It never fails the test.
+
+The second script has a counter named `sendmoney_skipped`. The script counts one when it has no send left to make. A threshold fails the run if that count is not 0. A counter supports the `count` aggregation <Cite n={3} />. Read more on [Custom Metrics](/k6/custom-metrics/).
+
+Read more on [Thresholds](/k6/thresholds/) and [Tags and Groups](/k6/tags-and-groups/).
+
+</Layman>
+<Bangla>
+
+প্রজেক্ট প্রতিটা request-এ `api` নামের tag দেয়। প্রতিটা scenario একটা `window` tag যোগ করে। tag দেওয়া request sub-metric তৈরি করে, যার নাম threshold-এ ব্যবহার করা যায় <Cite n={3} />। তাই স্ক্রিপ্ট প্রতিটা API-র জন্য আলাদা pass বা fail সীমা দিতে পারে।
+
+প্রতিটা API ৩টা সীমা পায়: duration-এর p95 ১০০০ ms-এর নিচে, failure rate ১%-এর নিচে, আর check pass rate ৯৯% বা তার বেশি। একটা threshold fail করলে টেস্ট fail করে <Cite n={3} />।
+
+প্রজেক্ট দ্বিতীয় একটা কৌশল ব্যবহার করে। রিপোর্টে প্রতিটা window আর API জোড়ার সংখ্যা লাগে। স্ক্রিপ্টের নিজের comment বলে, কোনো threshold নাম না ধরলে k6 সেই sub-metric সামারিতে যোগ করে না। তাই স্ক্রিপ্ট এমন threshold যোগ করে যা সবসময় pass করে। এগুলো শুধু সংখ্যা পাওয়ার জন্য।
+
+`count>=0`-এর মতো expression সবসময় সত্য। এটা টেস্ট fail করায় না।
+
+দ্বিতীয় স্ক্রিপ্টে `sendmoney_skipped` নামের একটা counter আছে। পাঠানোর মতো কোনো send বাকি না থাকলে স্ক্রিপ্ট ১ গোনে। count ০ না হলে একটা threshold রান fail করে। counter `count` aggregation সমর্থন করে <Cite n={3} />। আরও জানতে [Custom Metrics](/k6/custom-metrics/) দেখুন।
+
+আরও জানতে [Thresholds](/k6/thresholds/) আর [Tags and Groups](/k6/tags-and-groups/) দেখুন।
+
+</Bangla>
+</Voices>
+
+## Pattern: a custom report with handleSummary()
+
+<Voices>
+<Technical>
+
+At the end of the test, k6 gives the summary data to `handleSummary()`. The function returns a map. A key is `stdout` or a file path, and a value is the text to write. A file write overwrites the file <Cite n={5} />. If a script exports `handleSummary()`, k6 does not print the default summary, so a script that wants it must print it itself <Cite n={5} />. The project keeps the default text with `textSummary` from the k6 JS utilities library, and adds its own report.
+
+The summary data has a `metrics` object. Each metric, and each sub-metric, has `values` and `thresholds` <Cite n={5} />. The project's `buildReport()` reads them to build 3 tables: the thresholds, the numbers for each API, and the numbers for each window.
+
+Excerpt from `dmoney-transactions.k6.js`:
+
+```js
+export function handleSummary(data) {
+    const report = buildReport(data);
+    return {
+        stdout: `${textSummary(data, { indent: ' ', enableColors: true })}\n\n${report}\n`,
+        [`${RESULTS_DIR}/dmoney-transactions-summary.md`]: report,
+        // setup_data holds the login tokens, so it is left out of the saved file.
+        [`${RESULTS_DIR}/dmoney-transactions-summary.json`]: JSON.stringify({ ...data, setup_data: undefined }, null, 2),
+    };
+}
+```
+
+The excerpt is shortened: the project also writes an HTML report with a third-party library. This module teaches `handleSummary()` and the k6 web dashboard instead, so that part is not a pattern to copy. See [Reports and Dashboard](/k6/reports-and-dashboard/).
+
+Note the comment on the last key. The project's script says that the data holds the login tokens, so it removes `setup_data` before it saves the JSON. This keeps the tokens out of the saved file. Never save secrets in a report.
+
+This image shows the project's report in the terminal, from the run described below.
+
+<MdxImage src="/images/k6/case-study-terminal-report.webp" alt="A terminal window with the custom report of the dMoney test. It has a threshold table where all duration thresholds pass and all failure and check thresholds fail, a per-API table, a per-window table, and a last line with 420 requests, 15.24% failed, and 0 dropped iterations." width={2268} height={2008} />
+
+</Technical>
+<Layman>
+
+At the end of the test, k6 gives the summary data to `handleSummary()`. The function returns a map. A key is `stdout` or a file path. A value is the text to write <Cite n={5} />.
+
+If a script has `handleSummary()`, k6 does not print the default summary <Cite n={5} />. The project keeps the default text with `textSummary`. Then it adds its own report.
+
+The project's report has 3 tables: the thresholds, the numbers for each API, and the numbers for each window.
+
+The script removes `setup_data` before it saves the JSON file. The script says that this data holds the login tokens. Never save secrets in a report.
+
+The project also writes an HTML report with a third-party library. This module teaches `handleSummary()` and the k6 web dashboard instead. So that part is not a pattern to copy. See [Reports and Dashboard](/k6/reports-and-dashboard/).
+
+This image shows the project's report in the terminal.
+
+<MdxImage src="/images/k6/case-study-terminal-report.webp" alt="A terminal window with the custom report of the dMoney test. It has a threshold table where all duration thresholds pass and all failure and check thresholds fail, a per-API table, a per-window table, and a last line with 420 requests, 15.24% failed, and 0 dropped iterations." width={2268} height={2008} />
+
+</Layman>
+<Bangla>
+
+টেস্ট শেষে k6 summary data `handleSummary()`-কে দেয়। function একটা map return করে। key হয় `stdout` বা একটা ফাইল path। value হলো যে টেক্সট লেখা হবে <Cite n={5} />।
+
+স্ক্রিপ্টে `handleSummary()` থাকলে k6 ডিফল্ট সামারি প্রিন্ট করে না <Cite n={5} />। প্রজেক্ট `textSummary` দিয়ে ডিফল্ট টেক্সট রাখে। তারপর নিজের রিপোর্ট যোগ করে।
+
+প্রজেক্টের রিপোর্টে ৩টা টেবিল আছে: threshold, প্রতিটা API-র সংখ্যা আর প্রতিটা window-র সংখ্যা।
+
+JSON ফাইল সেভ করার আগে স্ক্রিপ্ট `setup_data` সরিয়ে দেয়। স্ক্রিপ্ট বলে এই ডেটায় login token আছে। রিপোর্টে কখনো secret সেভ করবেন না।
+
+প্রজেক্ট একটা third-party library দিয়ে HTML রিপোর্টও লেখে। এই মডিউল তার বদলে `handleSummary()` আর k6 web dashboard শেখায়। তাই ওই অংশ কপি করার মতো প্যাটার্ন নয়। [Reports and Dashboard](/k6/reports-and-dashboard/) দেখুন।
+
+এই ছবিটা টার্মিনালে প্রজেক্টের রিপোর্ট দেখায়।
+
+<MdxImage src="/images/k6/case-study-terminal-report.webp" alt="dMoney টেস্টের custom রিপোর্ট সহ একটা টার্মিনাল উইন্ডো। এতে একটা threshold টেবিল আছে, যেখানে সব duration threshold pass আর সব failure ও check threshold fail করেছে। আছে per-API টেবিল, per-window টেবিল, আর শেষ লাইনে ৪২০ request, ১৫.২৪% failed, ০ dropped iteration।" width={2268} height={2008} />
+
+</Bangla>
+</Voices>
+
+## The results of one local run
+
+<Voices>
+<Technical>
+
+These numbers come from one run on 2026-10-09, on a local machine with the API and the MySQL database on the same host. They come from the project's `results/dmoney-transactions-summary.md`. They are not a benchmark. A shared or remote environment gives different numbers.
+
+The test **failed**. All duration thresholds passed, and all failure and check thresholds failed. The run had 420 requests. Of these, 402 were transactions and 18 were setup requests (login, verify-otp, and balance for each of the 6 users). Of all 420, 15.24% failed. The overall p95 was 392.6 ms, and k6 dropped 0 iterations.
+
+**Per API, for the whole run:**
+
+| API | Requests | Req/s while active | Median ms | p95 ms | Max ms | Failed |
+|---|---|---|---|---|---|---|
+| deposit | 93 | 1.55 | 205.8 | 378.6 | 502.7 | 22.58% |
+| sendmoney | 93 | 1.03 | 179.1 | 325.1 | 441.3 | 16.13% |
+| payment | 216 | 1.80 | 217.3 | 407.4 | 642.5 | 12.96% |
+
+**Per window:**
+
+| Window | Flows | API | Requests | p95 ms | Failed |
+|---|---|---|---|---|---|
+| w1 | 2 | sendmoney | 31 | 259.8 | 0.00% |
+| w1 | 2 | payment | 31 | 291.5 | 0.00% |
+| w2 | 3 | deposit | 31 | 375.1 | 0.00% |
+| w2 | 3 | sendmoney | 31 | 319.5 | 12.90% |
+| w2 | 3 | payment | 31 | 273.2 | 32.26% |
+| w3 | 4 | deposit | 62 | 374.2 | 33.87% |
+| w3 | 4 | sendmoney | 31 | 343.3 | 35.48% |
+| w3 | 4 | payment | 31 | 375.5 | 58.06% |
+| w4 | 4 | payment | 123 | 417.9 | 0.00% |
+
+Two things stand out. First, the response time is good. The worst p95 is 417.9 ms in a window, against a limit of 1000 ms. Second, the failures are high, and they are not spread evenly. They appear in w2 and w3, and w4 has none.
+
+This is why you need more than one number. A p95 that passes can hide a failure rate that does not. Read more on [Reading Results](/k6/reading-results/).
+
+The k6 web dashboard of the same run shows the same story over time. The failure line rises in the middle of the run and falls at the end.
+
+<MdxImage src="/images/k6/case-study-web-dashboard.webp" alt="The k6 web dashboard of the run. The overview chart plots the request rate, the p95 request duration, and the request failure rate over time. The failure rate rises in the middle of the run and falls to zero in the last window. Below are charts for VUs, transfer rate, HTTP request duration, and iteration duration." width={1400} height={1450} />
+
+</Technical>
+<Layman>
+
+These numbers come from one run on 2026-10-09. The API and the database ran on the same local machine. The numbers come from the project's own report. They are not a benchmark. Another environment gives different numbers.
+
+The test failed. All the speed thresholds passed. All the failure and check thresholds failed. The run had 420 requests. Of these, 402 were transactions and 18 were setup requests. Of all 420, 15.24% failed. The overall p95 was 392.6 ms. k6 dropped 0 iterations.
+
+Per API, the p95 was 378.6 ms for deposit, 325.1 ms for send money, and 407.4 ms for payment. The failure rates were 22.58%, 16.13%, and 12.96%.
+
+Two things stand out. First, the response time is good. The limit was 1000 ms. Second, the failures are high, and they are not even. They appear in windows 2 and 3. Window 4 has none.
+
+A p95 that passes can hide a failure rate that does not. So you need more than one number. Read more on [Reading Results](/k6/reading-results/).
+
+The k6 web dashboard of the same run shows the same story over time. The failure line rises in the middle of the run and falls at the end.
+
+<MdxImage src="/images/k6/case-study-web-dashboard.webp" alt="The k6 web dashboard of the run. The overview chart plots the request rate, the p95 request duration, and the request failure rate over time. The failure rate rises in the middle of the run and falls to zero in the last window. Below are charts for VUs, transfer rate, HTTP request duration, and iteration duration." width={1400} height={1450} />
+
+</Layman>
+<Bangla>
+
+এই সংখ্যাগুলো ২০২৬-১০-০৯ তারিখের একটা রান থেকে এসেছে। API আর ডেটাবেস একই লোকাল মেশিনে চলেছিল। সংখ্যাগুলো প্রজেক্টের নিজের রিপোর্ট থেকে নেওয়া। এগুলো benchmark নয়। অন্য environment-এ সংখ্যা আলাদা হবে।
+
+টেস্ট fail করেছে। সব duration threshold pass করেছে। সব failure আর check threshold fail করেছে। রানে ৪২০টা request ছিল। এর ৪০২টা transaction আর ১৮টা setup request (৬ জন ইউজারের প্রত্যেকের login, verify-otp আর balance)। মোট ৪২০টার ১৫.২৪% fail করেছে। সামগ্রিক p95 ছিল ৩৯২.৬ ms। k6 কোনো iteration drop করেনি।
+
+প্রতিটা API-র p95: deposit ৩৭৮.৬ ms, send money ৩২৫.১ ms আর payment ৪০৭.৪ ms। failure rate ছিল যথাক্রমে ২২.৫৮%, ১৬.১৩% আর ১২.৯৬%।
+
+দুটো বিষয় চোখে পড়ে। প্রথমত, response time ভালো। সীমা ছিল ১০০০ ms। দ্বিতীয়ত, failure বেশি, আর তা সমানভাবে ছড়ানো নয়। failure window ২ আর ৩-এ আছে। window ৪-এ নেই।
+
+pass করা p95 একটা খারাপ failure rate লুকাতে পারে। তাই একটা সংখ্যা যথেষ্ট নয়। আরও জানতে [Reading Results](/k6/reading-results/) দেখুন।
+
+একই রানের k6 web dashboard সময়ের সাথে একই গল্প দেখায়। failure রেখাটা রানের মাঝখানে ওঠে আর শেষে নামে।
+
+<MdxImage src="/images/k6/case-study-web-dashboard.webp" alt="রানের k6 web dashboard। overview চার্টে সময়ের সাথে request rate, p95 request duration আর request failure rate আঁকা আছে। failure rate রানের মাঝখানে ওঠে আর শেষ window-তে শূন্যে নামে। নিচে VU, transfer rate, HTTP request duration আর iteration duration-এর চার্ট আছে।" width={1400} height={1450} />
+
+</Bangla>
+</Voices>
+
+## How the test found a deadlock
+
+<Voices>
+<Technical>
+
+Look at w3 and w4 in the table above. Both windows have the same load: 4 flows and 4 requests per second. Yet w3 has 50 failures (40%) and w4 has 0. The project's analysis says this means the failures depend on lock conflicts, not on the load.
+
+The project's analysis gives this reason. In w2 and w3, deposits write to Customer 1 and Customer 2. At the same time, the same customers send money and pay. So 2 or 3 flows lock the same accounts. In w4, all 4 flows are payments from 4 different senders, and no sender account is shared.
+
+All 64 failures in the run were HTTP 500 responses. The analysis says that the cause is a MySQL deadlock (`ER_LOCK_DEADLOCK`). The server log has 66 deadlock errors. 64 of them are from this run and match the 64 failed requests in k6. The other 2 are from a smoke run before it.
+
+The analysis also gives the root cause, from the project's own investigation of the API:
+
+- The `Transactions` table has only the `PRIMARY` index. It has no index on `account`.
+- Each transaction API runs a locked read, `SELECT SUM(credit) - SUM(debit) … WHERE account = ? FOR UPDATE`. Without an index on `account`, MySQL scans the full table and locks rows on the `PRIMARY` index. Two transactions can each hold a lock that the other one needs.
+- The controllers do not retry after a deadlock. They return HTTP 500.
+
+The analysis lists 3 possible fixes. It says that they are not applied, and that the development team decides:
+
+1. Add an index on `Transactions(account)`, so that the locked read locks only the rows of that account.
+2. Lock the accounts in a fixed order, for example the lower phone number first, when a request locks 2 accounts.
+3. Retry the transaction 1 or 2 times on a deadlock before the API returns an error.
+
+The analysis also reports that the same script ran 3 times on 2026-10-09. The pass or fail result was the same each time, but the number of deadlocks changed (39, 32, and 64 failed transactions), because it depends on the exact timing of concurrent requests. So run a test like this more than once.
+
+What did the test teach? The test used 4 windows with a different mix of flows on purpose. Because the windows had different mixes, comparing them showed that the failures follow the shared accounts. A test with one flow and one rate would not have found this.
+
+</Technical>
+<Layman>
+
+Look at windows 3 and 4 in the results. They have the same load: 4 flows and 4 requests per second. Yet window 3 has 50 failures, which is 40%. Window 4 has none. The project's analysis says the failures depend on lock conflicts, not on the load.
+
+The analysis gives this reason. In windows 2 and 3, deposits write to Customer 1 and Customer 2. At the same time, the same customers send money and pay. So 2 or 3 flows lock the same accounts. In window 4, all 4 flows are payments from 4 different senders. No account is shared.
+
+All 64 failures were HTTP 500 responses. The analysis says the cause is a MySQL deadlock. A deadlock happens when two transactions each hold a lock that the other one needs. The server log has matching deadlock errors.
+
+The analysis also gives the root cause. The `Transactions` table has only the `PRIMARY` index. It has no index on `account`. A locked read without that index scans the whole table. The controllers do not retry after a deadlock. They return HTTP 500.
+
+The analysis lists 3 possible fixes. It says they are not applied. The development team decides.
+
+1. Add an index on `Transactions(account)`.
+2. Lock the accounts in a fixed order.
+3. Retry the transaction 1 or 2 times on a deadlock.
+
+The same script ran 3 times that day. The result was the same each time. The number of deadlocks changed. So run a test like this more than once.
+
+The windows had different mixes on purpose. This is how the test showed that the failures follow the shared accounts. A test with one flow and one rate would not have found this.
+
+</Layman>
+<Bangla>
+
+ফলাফলের w৩ আর w৪ দেখুন। দুটোরই লোড একই: ৪টা flow আর প্রতি সেকেন্ডে ৪টা request। তবু w৩-এ ৫০টা failure (৪০%), আর w৪-এ ০টা। প্রজেক্টের analysis বলে এর মানে failure লোডের উপর নির্ভর করে না, lock conflict-এর উপর নির্ভর করে।
+
+analysis এই কারণ দেয়। w২ আর w৩-এ deposit Customer 1 আর Customer 2-এ লেখে। একই সময়ে একই customer টাকা পাঠায় আর পেমেন্ট করে। তাই ২ বা ৩টা flow একই account lock করে। w৪-এ ৪টা flow-ই ৪ জন আলাদা sender-এর payment, আর কোনো sender account শেয়ার হয় না।
+
+রানের ৬৪টা failure-ই ছিল HTTP 500 response। analysis বলে কারণ একটা MySQL deadlock (`ER_LOCK_DEADLOCK`)। সার্ভার লগে ৬৬টা deadlock error আছে। এর ৬৪টা এই রানের, আর k6-র ৬৪টা failed request-এর সাথে মেলে। বাকি ২টা এর আগের একটা smoke run-এর।
+
+analysis মূল কারণও দেয়:
+
+- `Transactions` টেবিলে শুধু `PRIMARY` index আছে। `account`-এর উপর কোনো index নেই।
+- প্রতিটা transaction API একটা locked read চালায়: `SELECT SUM(credit) - SUM(debit) … WHERE account = ? FOR UPDATE`। `account`-এ index না থাকলে MySQL পুরো টেবিল scan করে আর `PRIMARY` index-এর row lock করে। দুটো transaction প্রত্যেকে এমন lock ধরে রাখতে পারে যা অন্যটার লাগে।
+- controller deadlock-এর পর আবার চেষ্টা (retry) করে না। তারা HTTP 500 return করে।
+
+analysis ৩টা সম্ভাব্য সমাধান দেয়। সেগুলো প্রয়োগ করা হয়নি, ডেভেলপমেন্ট টিম সিদ্ধান্ত নেবে:
+
+1. `Transactions(account)`-এর উপর একটা index যোগ করা, যাতে locked read শুধু ওই account-এর row lock করে।
+2. একটা request ২টা account lock করলে একটা নির্দিষ্ট ক্রমে lock করা, যেমন ছোট ফোন নম্বর আগে।
+3. API error দেওয়ার আগে deadlock হলে transaction ১ বা ২ বার retry করা।
+
+analysis আরও জানায় একই স্ক্রিপ্ট ২০২৬-১০-০৯ তারিখে ৩ বার চলেছিল। pass বা fail ফলাফল প্রতিবার একই ছিল, কিন্তু deadlock-এর সংখ্যা বদলেছিল (৩৯, ৩২ আর ৬৪টা failed transaction), কারণ এটা concurrent request-এর ঠিক সময়ের উপর নির্ভর করে। তাই এমন টেস্ট একাধিকবার চালান।
+
+টেস্ট কী শেখাল? টেস্ট ইচ্ছা করেই ৪টা window-তে আলাদা flow-মিক্স ব্যবহার করেছে। মিক্স আলাদা ছিল বলে তুলনা করে বোঝা গেছে failure শেয়ার করা account-কে অনুসরণ করে। একটা flow আর একটা rate-এর টেস্ট এটা ধরতে পারত না।
+
+</Bangla>
+</Voices>
+
+## What to copy into your own project
+
+<Voices>
+<Technical>
+
+Here is a checklist from this project. Take the patterns, not the files.
+
+1. Write the traffic plan as a list of data rows, then build the scenarios in a loop. Give all scenarios one shared `exec` function, and pass the flow in `env`.
+2. Log in once in `setup()`, and check the test data before the load starts. Stop with a message that tells the reader what to fix.
+3. Check the body of each response, not only the status code.
+4. Tag requests by the thing that you want to compare (an API, a window), and write a threshold for each tag value.
+5. Compare windows with different mixes. A change in the failure rate between two windows with the same load points to a cause that is not load.
+6. Keep secrets out of saved reports.
+7. Write the analysis in plain words, and mark what is a fact, what is a cause, and what is only a possible fix.
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own, not a fact from a source.
+
+- Keep credentials out of the repository. This example project commits its test passwords. That is acceptable for a local practice API, and it is a bad habit for any real project. Pass credentials with environment variables or k6 secrets (see [Environment and Data](/k6/env-and-data/)), and keep a sample file with fake values.
+- Run a test like this only against a local or test environment. It writes real records, and the example uses a login shortcut that exists only for development.
+- Do not copy a result table as a promise. Say that it is one run on one machine, with the date.
+- Do not use a third-party report library only because the example does. Learn `handleSummary()` and the k6 web dashboard first.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Here is a checklist from this project. Take the patterns, not the files.
+
+1. Write the traffic plan as data rows. Build the scenarios in a loop. Use one shared function and pass the flow in `env`.
+2. Log in once in `setup()`. Check the test data before the load starts. Stop with a message that tells the reader what to fix.
+3. Check the body of each response, not only the status code.
+4. Tag requests by the thing that you want to compare. Write a threshold for each tag value.
+5. Compare windows with different mixes. A change in the failure rate between two windows with the same load points to a cause that is not load.
+6. Keep secrets out of saved reports.
+7. Write the analysis in plain words. Mark what is a fact, what is a cause, and what is only a possible fix.
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own, not a fact from a source.
+
+- Keep credentials out of the repository. This example project commits its test passwords. That is acceptable for a local practice API. It is a bad habit for a real project. Pass credentials with environment variables or k6 secrets (see [Environment and Data](/k6/env-and-data/)).
+- Run a test like this only against a local or test environment. It writes real records.
+- Do not copy a result table as a promise. Say that it is one run on one machine, with the date.
+- Do not use a third-party report library only because the example does. Learn `handleSummary()` and the k6 web dashboard first.
+
+</Callout>
+
+</Layman>
+<Bangla>
+
+এই প্রজেক্ট থেকে একটা চেকলিস্ট। ফাইল নয়, প্যাটার্ন নিন।
+
+1. ট্রাফিক প্ল্যান ডেটার সারি হিসেবে লিখুন, তারপর একটা loop-এ scenario বানান। সব scenario-কে একটা shared `exec` function দিন, আর flow-টা `env`-এ পাঠান।
+2. `setup()`-এ একবার login করুন, আর লোড শুরুর আগে টেস্ট ডেটা যাচাই করুন। এমন message দিয়ে থামুন যা পাঠককে বলে কী ঠিক করতে হবে।
+3. শুধু status code নয়, প্রতিটা response-এর body check করুন।
+4. যা তুলনা করতে চান (API, window) সেটা দিয়ে request-এ tag দিন, আর প্রতিটা tag value-র জন্য threshold লিখুন।
+5. আলাদা মিক্সের window তুলনা করুন। একই লোডের দুই window-র মধ্যে failure rate বদলালে কারণটা লোড নয়।
+6. সেভ করা রিপোর্টে secret রাখবেন না।
+7. analysis সহজ ভাষায় লিখুন। কোনটা তথ্য, কোনটা কারণ, আর কোনটা শুধু সম্ভাব্য সমাধান তা চিহ্নিত করুন।
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজের, কোনো সূত্রের তথ্য নয়।
+
+- credential রিপোজিটরির বাইরে রাখুন। এই উদাহরণ প্রজেক্ট তার টেস্ট password commit করেছে। লোকাল practice API-র জন্য এটা চলে, কিন্তু বাস্তব প্রজেক্টের জন্য খারাপ অভ্যাস। credential পাঠান environment variable বা k6 secrets দিয়ে ([Environment and Data](/k6/env-and-data/) দেখুন)।
+- এমন টেস্ট শুধু লোকাল বা টেস্ট environment-এ চালান। এটা আসল record লেখে।
+- result টেবিলকে প্রতিশ্রুতি হিসেবে কপি করবেন না। বলুন এটা এক মেশিনে একটা রান, তারিখসহ।
+- উদাহরণ করেছে বলে third-party রিপোর্ট library ব্যবহার করবেন না। আগে `handleSummary()` আর k6 web dashboard শিখুন।
+
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Flow | In this project, one kind of transaction between two users, such as a payment from a customer to a merchant. Each flow is one scenario. |
+| Window | A part of the test with a start time and a length. This project has 4 windows of 30 seconds. |
+| `startTime` | A scenario option: the offset from the start of the test at which the scenario begins. |
+| `exec` | A scenario option: the name of the exported function that the scenario runs. |
+| `constant-arrival-rate` | An executor that starts a fixed number of iterations in a period, whatever the response time. |
+| Pre-check | A check in `setup()` that the test data is enough, before the load starts. |
+| Sub-metric | A metric filtered by a tag, written `metric{tag:value}`. A threshold can name it. |
+| Report-only threshold | A threshold that always passes. This project uses it to get a sub-metric into the summary. |
+| `handleSummary()` | A function that gets the summary data at the end of the test and returns what to print or save. |
+| Deadlock | A fault in a database where two transactions each hold a lock that the other one needs. The database ends one of them with an error. |

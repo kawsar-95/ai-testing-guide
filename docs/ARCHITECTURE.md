@@ -10,9 +10,9 @@ The site is a static export of a Next.js 16 App Router project. There is no serv
 flowchart LR
   nav["lib/nav.ts<br/>(tutorial groups and pages)"]
   mods["lib/linux, lib/fundamentals,<br/>lib/system-design, lib/architecture,<br/>lib/course, lib/k6<br/>(one ordered list for each module)"]
-  mdx["content/&lt;group&gt;/&lt;slug&gt;.mdx<br/>(140 pages)"]
+  mdx["content/&lt;group&gt;/&lt;slug&gt;.mdx<br/>(141 pages)"]
   build["next build<br/>(output: export)"]
-  out["out/<br/>150 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
+  out["out/<br/>151 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
   pages["GitHub Pages"]
 
   nav --> build
@@ -26,7 +26,7 @@ The ordered lists and the MDX files are the inputs. Everything else is code that
 
 ## Routes
 
-The site has 150 routes.
+The site has 151 routes.
 
 | Route | Source | Output |
 |---|---|---|
@@ -40,7 +40,7 @@ The site has 150 routes.
 | `/system-design/`, `/system-design/<slug>/` | `app/(site)/system-design/` | The home and the 15 case studies (16 routes) |
 | `/architecture/`, `/architecture/<slug>/` | `app/(site)/architecture/` | The home, the 19 topics, and the practice page (21 routes) |
 | `/course/`, `/course/<slug>/` | `app/(site)/course/` | The home and the 40 topics (41 routes) |
-| `/k6/`, `/k6/<slug>/` | `app/(site)/k6/` | The home and the 19 topics (20 routes) |
+| `/k6/`, `/k6/<slug>/` | `app/(site)/k6/` | The home and the 20 topics (21 routes) |
 | `/search-index.json` | `app/search-index.json/route.ts` | The search documents (static) |
 | `/sitemap.xml`, `/robots.txt` | `app/sitemap.ts`, `app/robots.ts` | SEO files |
 | `/manifest.webmanifest`, `/sw.js` | `app/manifest.ts`, `app/sw.js/route.ts` | The installable app and its service worker |
@@ -62,7 +62,7 @@ Each part of the site has one ordered list. The lists drive the drawer, the home
 | System Design | `lib/system-design/cases.ts` | 15 case studies. A flat module. |
 | Architecture | `lib/architecture/topics.ts` | 19 topics and a practice page with 30 questions. A flat module. |
 | Course | `lib/course/topics.ts` | 55 entries in 6 parts: 40 topics with a page and 15 links to Architecture and System Design pages. A flat module. |
-| k6 | `lib/k6/topics.ts` | 19 topics in 5 parts. A flat module. |
+| k6 | `lib/k6/topics.ts` | 20 topics in 5 parts. A flat module. |
 
 The top nav comes from `lib/header-nav.ts` (`HEADER_NAV`). It has four plain links: Home, Contents, Dashboard, and Interview. `activeNavId` marks the current item, and a tutorial or module page has none. A reader reaches a module from the home page or the contents page. `lib/interview.ts` holds the strings and the three cards of the interview page.
 
@@ -139,7 +139,7 @@ The "On this page" list and the search results link to heading ids. Those ids mu
 
 ## Page layout and navigation parts
 
-`ChapterLayout` (`components/content/`) has three columns for the 140 content pages.
+`ChapterLayout` (`components/content/`) has three columns for the 141 content pages.
 
 | Column | Shows | From |
 |---|---|---|
@@ -164,7 +164,7 @@ The whole layout is 1400 px wide at most. The page passes its route to `ChapterL
 
 ## Voices
 
-A `##` section can have three voices of its text: Technical, plain English (`Layman`), and Bangla. 128 pages have voices. The Fundamentals chapters, `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic have none.
+A `##` section can have three voices of its text: Technical, plain English (`Layman`), and Bangla. 129 pages have voices. The Fundamentals chapters, `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic have none.
 
 | Part | Where | Job |
 |---|---|---|
@@ -191,7 +191,7 @@ All progress is client-side. The shared code keeps its old `prep` names (`lib/pr
 
 `ChapterTools` (the reading pill, Bookmark, and Mark as read) sits under the meta line of each content page. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
 
-The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 140`), the bookmarks, the topic progress of the five modules, and a Continue reading card. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
+The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 141`), the bookmarks, the topic progress of the five modules, and a Continue reading card. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
 
 ## Fundamentals version switch
 
@@ -230,7 +230,7 @@ The look follows the reference site [systemdesignbangla.com](https://www.systemd
 
 | Part | Behavior |
 |---|---|
-| Install | Caches all 150 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
+| Install | Caches all 151 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
 | Pages, RSC payloads, and the search index | Stale-while-revalidate. The cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. |
 | `/_next/static/` files | Cache first. Their file names have a content hash. |
 | Offline, page not cached | Shows the cached 404 page |
@@ -287,7 +287,7 @@ The Python checks are not part of the workflow, because they expect a build with
 | `check_routes.py out` | Build check | Every route of the route maps has a page |
 | `check_links.py out` | Build check | No broken internal links or assets |
 | `check_outline.py out` | Build check | Every "On this page" link has a target id |
-| `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 140 pages checked, 0 skipped`. |
+| `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 141 pages checked, 0 skipped`. |
 
 The route maps in `scripts/` list the routes that the build checks read: `route-map.json` (tutorial) and one file each for Linux, System Design, Fundamentals, Architecture, Course, k6, contents, dashboard, and interview. `npm test` checks that each page is in its map.
 
