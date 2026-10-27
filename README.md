@@ -25,7 +25,7 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 151 pages: 7 sections and 3 helper pages.
+The site has 152 pages: 7 sections and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
@@ -52,7 +52,7 @@ The tutorial has 23 parts in 6 groups. Each part is one page.
 | **Automate** | 15 [Headless & CI](https://kawsar-95.github.io/ai-testing-guide/automate/headless/) · 16 [GitHub Actions](https://kawsar-95.github.io/ai-testing-guide/automate/github-actions/) · 17 [Browser Testing with Playwright](https://kawsar-95.github.io/ai-testing-guide/automate/playwright/) |
 | **Case Study** | 18 [The Practice Project](https://kawsar-95.github.io/ai-testing-guide/case-study/overview/) · 19 [Bug Hunting with a Review Gate](https://kawsar-95.github.io/ai-testing-guide/case-study/bug-hunt/) · 20 [From Issue to Reviewed PR](https://kawsar-95.github.io/ai-testing-guide/case-study/pr-review/) · 21 [Design, Execute, Fix, Retest](https://kawsar-95.github.io/ai-testing-guide/case-study/test-and-retest/) · 22 [Load and Browser Automation](https://kawsar-95.github.io/ai-testing-guide/case-study/automation/) · 23 [What to Fix in the Setup](https://kawsar-95.github.io/ai-testing-guide/case-study/lessons/) |
 
-New to Claude Code? Start with parts 01, 03, and 04. To see the features work together in one real QA project, read parts 18–23.
+New to Claude Code? Start with parts 01, 03, and 04. To see the features work together in one real QA project, read parts 18–24.
 
 ## Features
 
@@ -82,7 +82,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 
 ### Three voices for every section
 
-129 pages let you read each `##` section in three voices:
+130 pages let you read each `##` section in three voices:
 
 | Voice | What it is |
 |---|---|
@@ -124,7 +124,7 @@ The site tracks your work in your browser. It never sends it to a server.
 
 ![The Linux roadmap with a progress bar and checklists](docs/assets/linux.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 141`), your bookmarks, the topic progress of the five modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 142`), your bookmarks, the topic progress of the five modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
 
@@ -175,7 +175,7 @@ The layout adapts to phone widths. Below 1200 px the top navigation moves into t
 
 ### Install it and read offline
 
-The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 151 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
+The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 152 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
 
 ### Accessibility
 
@@ -193,7 +193,7 @@ Every page states facts that a reader can check.
 - **Citations:** each fact has a numbered `[n]` link to the Sources list at the end of its page.
 - **Fact-check:** an agent that did not write the page checked each claim against its cited source. Each page has a report in [`docs/superpowers/research/`](docs/superpowers/research/). A page is done only when its report ends with `Open FAILs: 0`.
 - **Voices:** each page with voices has a second report. An agent that did not write the voices checked them against the Technical text.
-- **Case study:** parts 18–23 describe the author's private practice workspace. Facts about that workspace have no citation link. A separate agent checked each one against the workspace files. Emails, phone numbers, and similar values are replaced with placeholders.
+- **Case study:** parts 18 and 20–24 describe the author's private practice workspace. Part 19 tours its public version, kawsar-95/genAI-project. Facts about that workspace have no citation link. A separate agent checked each one against the workspace files. Emails, phone numbers, and similar values are replaced with placeholders.
 - **Dates:** each page shows the date of its last update. "Suggest an edit" opens the page source on GitHub.
 
 Claude Code changes often. If a page is out of date, open an issue or a pull request.
@@ -232,7 +232,7 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `python3 scripts/check_routes.py out` | Checks that every route of the route maps has a built page. |
 | `python3 scripts/check_links.py out` | Checks internal links and assets. |
 | `python3 scripts/check_outline.py out` | Checks that every "On this page" link has a target. |
-| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 141 pages checked, 0 skipped`. |
+| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 142 pages checked, 0 skipped`. |
 
 Run the `out` checks after `npm run build`, on a build without a base path.
 
@@ -241,7 +241,7 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 ```text
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
-content/<group>/     The MDX pages: 23 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6
+content/<group>/     The MDX pages: 24 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6
 lib/                 nav.ts (tutorial page order), one data file for each module, search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
 scripts/             Python check scripts and the route maps (one JSON file for each module)

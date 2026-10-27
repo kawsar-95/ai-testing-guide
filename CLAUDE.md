@@ -96,7 +96,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
 | `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture, Course, k6). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 151 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (all 152 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels, the three START HERE pages, `WHY_ITEMS`, and `COURSE_CARDS` |
@@ -115,7 +115,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/scroll-lock.ts` | One page-scroll lock, shared by the drawer and the search dialog |
 | `mdx-components.tsx` | Registers the MDX components |
 | `public/images/<group>/` | The images of the content pages, for example `public/images/linux/`. A page refers to one as `/images/<group>/<file>`. |
-| `content/<group>/<page>.mdx` | The 23 tutorial pages |
+| `content/<group>/<page>.mdx` | The 24 tutorial pages |
 | `content/linux/<stage>.mdx` | The 12 Linux stage pages |
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
@@ -138,9 +138,9 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `scripts/interview-route-map.json` | The 1 interview route: `/interview/`. Same identity map. |
 | `scripts/fundamentals-route-map.json` | The 12 Fundamentals routes: `/fundamentals/` and the 11 chapters. Same identity map as `route-map.json`. |
 
-`lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the part numbers (`PART 01`…`PART 23`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
+`lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the part numbers (`PART 01`…`PART 24`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 151 routes:
+The site has 152 routes:
 
 | Routes | Count |
 |---|---|
@@ -148,7 +148,7 @@ The site has 151 routes:
 | `/contents/` | 1 |
 | `/dashboard/` | 1 |
 | `/interview/` | 1 |
-| `/<group>/<page>/` for the 23 tutorial pages | 23 |
+| `/<group>/<page>/` for the 24 tutorial pages | 23 |
 | `/linux/` and the 12 Linux stages | 13 |
 | `/system-design/` and the 15 case studies | 16 |
 | `/fundamentals/` and the 11 Fundamentals chapters | 12 |
@@ -163,7 +163,7 @@ The site has 151 routes:
 | Configure | `content/configure/` | `claude-md`, `settings` |
 | Extend | `content/extend/` | `skills`, `subagents`, `hooks`, `mcp`, `plugins` |
 | Automate | `content/automate/` | `headless`, `github-actions`, `playwright` |
-| Case Study | `content/case-study/` | `overview`, `bug-hunt`, `pr-review`, `test-and-retest`, `automation`, `lessons` |
+| Case Study | `content/case-study/` | `overview`, `bug-hunt`, `pr-review`, `test-and-retest`, `automation`, `lessons`, `codebase-tour` |
 
 ## Navigation
 
@@ -171,7 +171,7 @@ The site has 151 routes:
 |---|---|
 | Header | Sticky, 64 px. The brand mark in a teal tile, then the top nav (from the `nav` breakpoint), then search, voice, install, theme, and the menu button (below `nav`). |
 | Top nav | `HEADER_NAV`: 4 plain links: Home, Contents, Dashboard, and Interview. The current item has a teal underline (`activeNavId`). A tutorial or module page has no current item. A module is reached from the home page and `/contents/`. Below the `nav` breakpoint, the drawer shows the same 4 links above its list (`MobileNav`). |
-| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 141 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
+| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 142 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
 | Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. Below `chapter`, `ContentsButton` above the title of a content page opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. On close, the focus goes back to the button that opened it. |
 | One section at a time | `SectionFocus` (in `ChapterLayout`) groups the flat children of `article[data-content]` by `##` heading and hides all sections but one (`data-sec-hidden`, CSS in `app/globals.css`, screen only). The text before the first `##` stays visible. A step bar sits above the section, and Previous and Next buttons below it. "Show all sections" turns it off (`localStorage` key `section-focus`). A hash or an in-page link into a hidden section shows it. Pages with fewer than 3 sections, and pages with no JavaScript, show everything. The strings are in `lib/ui.ts` and `lib/bn/shell.ts`. |
 | `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, Architecture, Course, and k6. |
@@ -182,8 +182,8 @@ The site has 151 routes:
 |---|---|
 | `ChapterTools` | Under the meta line of each content page (in the `PageMeta` slot): the pill `📖 N min read` and the toggles Bookmark and Mark as read (`aria-pressed`). It saves the page to `last-page` on mount. |
 | Reading time | `lib/reading-time.ts`: the words of the Technical text (no code, export statements, tags, or link URLs). A Fundamentals chapter gets one value per version (`getReadingMinutesByVersion`), and the version CSS shows the one of the switch / 200, rounded up, 1 at least. Computed at build time. |
-| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 141 content pages. |
-| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 141`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, and k6, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 8 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 8 keys. |
+| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 142 content pages. |
+| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 142`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, and k6, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 8 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 8 keys. |
 | Strings | `lib/dashboard.ts` (`DASHBOARD_UI`, the route). The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle. |
 
 ## Linux Module
@@ -316,7 +316,7 @@ To add a topic, add it to `lib/architecture/topics.ts` and to `ArchitectureSlug`
 
 ## Voices
 
-A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 129 pages have voices: the 23 tutorial pages, the 12 Linux stages, the 15 System Design cases, the 19 Architecture topics, the 40 Course topics, and the 20 k6 topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
+A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 130 pages have voices: the 24 tutorial pages, the 12 Linux stages, the 15 System Design cases, the 19 Architecture topics, the 40 Course topics, and the 20 k6 topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
 
 ### What the reader sees
 
@@ -407,7 +407,7 @@ Every page with voices has a report: `docs/superpowers/research/<group>-<slug>.v
 | `architecture/practice` | The page is a question list. |
 | The `Permissions Cheat Sheet` topic of Linux stage 4 | It keeps its original wording. |
 
-Case Study pages (parts 18–23): the voices restate the workspace facts of the Technical text. They add no new workspace fact.
+Case Study pages (parts 18 and 20–24): the voices restate the workspace facts of the Technical text. They add no new workspace fact.
 
 ## How to Add a Page
 
@@ -490,7 +490,7 @@ Every factual claim on a page has a source. A claim is a version, a command, a f
 |---|---|
 | Source order | Official docs first: `code.claude.com/docs`, `platform.claude.com/docs`, `modelcontextprotocol.io`, `playwright.dev`, and the GitHub repos of the named tools. Then primary sources: vendor docs, ISTQB/ASTQB. No blogs, forums, or AI summaries. |
 | Cite | Each changed or new claim has a `<Cite n={k} />` to an entry in that page's `page.sources`. |
-| Case study | Facts about the private practice workspace (parts 18–23) have no `<Cite>`. A separate agent checks them against the workspace files. See section 5 of the case study spec. |
+| Case study | Facts about the private practice workspace (parts 18 and 20–24) have no `<Cite>`. A separate agent checks them against the workspace files. See section 5 of the case study spec. |
 | Research notes | `docs/superpowers/research/<group>-<slug>.md`: the sources (S1, S2, …) and a claims table with quotes. Write it before the page. |
 | Fact-check report | `docs/superpowers/research/<group>-<slug>.factcheck.md`: one row per claim with the cite, a PASS or FAIL verdict, and the quote. It ends with `Open FAILs: N`. |
 | Done | A page is done only when its fact-check report ends with `Open FAILs: 0`. |
@@ -517,7 +517,7 @@ To change a page:
 
 The site installs as an app and is offline first.
 
-- The service worker caches all 151 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
+- The service worker caches all 152 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
 - Pages, RSC payloads, and the search index use stale-while-revalidate: the cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Offline, a page that is not in the cache gets the 404 page.
 - Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
@@ -549,7 +549,7 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 141 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 142 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 
@@ -560,5 +560,5 @@ Run `check_sources.py` without flags. The normal command is `python3 scripts/che
 - `docs/superpowers/specs/2026-10-09-nextra-reorganization-design.md` and `docs/superpowers/plans/2026-10-09-nextra-reorganization.md` are the earlier migration to the grouped URLs.
 - `docs/superpowers/audits/2026-10-09-content-audit.md` lists the outdated claims in the old tutorial text. Its "Resolution (2026-10-10)" section maps each High and Med row to the new page that fixes it.
 - `docs/superpowers/specs/2026-10-10-content-refresh-design.md` and `docs/superpowers/plans/2026-10-10-content-refresh.md` are phase 2 (content refresh): the 17 pages, the cite and sources model, and the reading aids.
-- `docs/superpowers/specs/2026-10-10-case-study-design.md` and `docs/superpowers/plans/2026-10-10-case-study.md` are the Case Study group (parts 18–23). Its spec section 3 has the publishing rules for facts from the private practice workspace. Section 5 says how those facts are checked: against the workspace files, with no `<Cite>`.
+- `docs/superpowers/specs/2026-10-10-case-study-design.md` and `docs/superpowers/plans/2026-10-10-case-study.md` are the Case Study group (parts 18–24). Its spec section 3 has the publishing rules for facts from the private practice workspace. Section 5 says how those facts are checked: against the workspace files, with no `<Cite>`.
 - `docs/superpowers/research/` holds the research notes and the fact-check reports of each page.
