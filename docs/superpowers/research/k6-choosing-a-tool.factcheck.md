@@ -55,4 +55,19 @@ Checked 2026-10-27 by an agent that did not write the page. Sources fetched fres
 
 Round 1 FAILs: 6 (rows 13-17, 28). All fixed in round 2. Copy check re-run: no run of 8 or more words.
 
+## Round 3 (final-review fixes)
+
+Checked the diff of commit f1ff844 for this page (steps 3 and 4 of "Choosing by elimination", all 3 panels).
+
+| # | Claim | Cite | Verdict | Note |
+|---|---|---|---|---|
+| 36 | Step 3 rule: keep the tools that support JavaScript | none | PASS | The owner's method rule, not a fact. The section intro says "The steps below are the tutorial's own method", and step 4 ends "This is the tutorial's own method". |
+| 37 | The Gatling repo lists JavaScript and TypeScript (so a current step 3 keeps it) | 9 | PASS | "Write tests in Java, JavaScript, TypeScript, Kotlin or Scala." Source 9 is still Gatling README. |
+| 38 | Step 4: the notes leave k6 and Artillery; the notes do not compare Gatling; a current run compares k6, Artillery, and Gatling by the same test | none | PASS | Statement about the owner's notes and the owner's test, no new fact. The reader is sent to the Gatling docs for the answer; the page gives no Gatling fact there. |
+| 39 | Artillery docs say YAML, TypeScript, or JavaScript | 6 | PASS | Unchanged (row 10). |
+
+Copy check re-run: no run of 8 or more words. All `<Cite n>` still map to the 13 sources (counts unchanged). No new heading, no new number.
+
+Round 3 FAILs: 0.
+
 Open FAILs: 0

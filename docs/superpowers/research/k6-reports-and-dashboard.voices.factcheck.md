@@ -26,4 +26,8 @@ Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone
 
 Round 3 re-check (2026-10-27): all 3 panels (lines 108, 133, 158 of the MDX) match Technical and lines 255 and 257 of dmoney-transactions.k6.js.
 
+## Round 4 (final-review fixes)
+
+Changed panels: `handleSummary` section, Layman and Bangla (commit f1ff844). Both give the same facts as the Technical panel: v2.3.0 not yet default, the 5 keys, "observed result, not from a source". No new fact, number, or cite; no তুমি form; names stay in English; no Layman sentence over 25 words. PASS. Note: the `setup_data` claim itself is a FAIL in the Technical text (factcheck row 48); when the writer fixes it, the 2 panels must change with it.
+
 Open FAILs: 0

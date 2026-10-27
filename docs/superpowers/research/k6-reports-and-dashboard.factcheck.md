@@ -85,4 +85,15 @@ Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone
 
 Round 3 re-check (2026-10-27): the FAIL row is fixed. All 3 panels (lines 108, 133, 158 of the MDX) match lines 255 and 257 of dmoney-transactions.k6.js.
 
-Open FAILs: 0
+## Round 4 (final-review fixes)
+
+Changed text (commit f1ff844): in the `handleSummary` section, a sentence says that in k6 v2.3.0 the new format is not yet the default, and that a 2 VU, 5 s `handleSummary` run against QuickPizza gave `root_group`, `options`, `state`, `metrics`, `setup_data`. It is labeled "an observed result, not from a source".
+
+| # | Claim | Cite | Verdict | Reason |
+|---|---|---|---|---|
+| 47 | In v2.3.0 the new format is not yet the default (legacy keys present) | none (observed) | PASS | Reproduced: the page's own script (2 VUs, 5 s, no `setup()`) wrote `summary.json` with keys `root_group`, `options`, `state`, `metrics`. |
+| 48 | The same kind of run gave the extra key `setup_data` | none (observed) | FAIL | Not reproduced with the page's script: no `setup_data` key. The key appears only when the script exports `setup()` (a test script with `setup()` returning data gave `metrics`, `setup_data`, `root_group`, `options`, `state`). The page also says "In the same run" the keys were 4, so the 2 sentences conflict. Fix: say `setup_data` is added when the script has a `setup()` function, or remove `setup_data` from the list. |
+
+Overlap re-run: 6 runs, all source URLs. `node --test tests/voice-source.test.ts tests/k6.test.ts`: 30 pass, 0 fail.
+
+Open FAILs: 1

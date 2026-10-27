@@ -44,4 +44,13 @@ Page: `content/k6/k6-in-ci.mdx`. I did not write this page or its voices. Each `
 - V2: PASS (round 3). Section 1 Layman now ends "So a failed threshold can fail the job (the tutorial's own reasoning)." Bangla ends "... ফেল করাতে পারে (এটা tutorial-এর নিজের যুক্তি)।" Both match the label of Technical. Section 3 was already PASS.
 - `node --test tests/voice-source.test.ts tests/k6.test.ts`: 29 pass, 0 fail.
 
+
+## Round 4 (final-review fixes, 2026-10-27)
+
+The Layman and Bangla panels of "The workflow file" got the new sentence about `K6_WEB_DASHBOARD_PORT: '-1'`.
+
+- Layman: "Both jobs set `K6_WEB_DASHBOARD_PORT: '-1'`. A CI process must stop when the test ends. The docs say to turn off the dashboard port with `-1` in this case <Cite n={4} />." Same facts and cite as Technical. Sentences are under 25 words. PASS.
+- Bangla: same facts and cite 4; the variable name and `-1` stay in English; the reader is addressed with a command form, no তুমি. PASS.
+- Cite 4 appears in Technical of the block. No new fact, number, or name. PASS.
+
 Open FAILs: 0

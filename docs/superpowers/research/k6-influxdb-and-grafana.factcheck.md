@@ -91,4 +91,28 @@ Round 2 (2026-10-27): claims 38 and 55 fixed, the Docker `latest` sentence re-ch
 
 Round 3 (2026-10-27): claim 69 fixed. Overlap check: 2 runs, both source URLs. Tests pass.
 
-Open FAILs: 0
+## Round 4 (final-review fixes)
+
+Checked 2026-10-27 against commit f1ff844 (uncommitted tree equals it for the page). Sources 17, 18, 19 fetched fresh with curl. New or changed claims:
+
+| # | Claim (short) | Cite | Verdict | Quote or reason |
+|---|---|---|---|---|
+| 70 | `docker network create k6net` makes a user-defined Docker network | 17 | PASS | "Use the docker network create command to create a user-defined bridge network." |
+| 71 | On a user-defined bridge network, containers reach each other by name | 17 | PASS | "On a user-defined bridge network, containers can resolve each other by name or alias." |
+| 72 | `--network k6net` on both `docker run` lines; the network is the tutorial's own addition | none | PASS | Marked as the tutorial's own. Both lines (InfluxDB and Grafana) have the flag. |
+| 73 | Grafana reaches InfluxDB at `http://influxdb:8086` (container name and port); the data source URL row says the same | 17, 14 | PASS | Follows from claim 71 and the container name `--name influxdb`; port 8086 from source 14. |
+| 74 | The k6 command runs on the host and keeps `http://localhost:8086/k6` | 6 | PASS | The InfluxDB container publishes `-p 8086:8086` (source 6 guide). |
+| 75 | Inside the Grafana container, `localhost` means the Grafana container, not your machine | none | **FAIL** | A Docker networking fact with no cite and no "tutorial's own" marker on that sentence (round 1 had the marker). Source 18 only says to use a special DNS name for the host. Add a cite or mark the sentence as the tutorial's own explanation. |
+| 76 | On Docker Desktop a container reaches the host with `host.docker.internal`; the name is for Docker Desktop | 18 | PASS | Docker Desktop how-tos: "To connect to services running on your host, use the special DNS name: host.docker.internal Resolves to the internal IP address of your host". |
+| 77 | The owner's screenshots show Grafana on the host, so they show `http://localhost:8086` | none | PASS | The first screenshot shows URL `http://localhost:8086`. The page text says it is the owner's. |
+| 78 | Leave User and Password empty; InfluxDB 1.x has authentication off by default | 19 | PASS | "By default, authentication is disabled, all credentials are silently ignored, and all users have all privileges." Note (not a FAIL): the second screenshot (`grafana-influxdb-settings.webp`) shows User `admin` and Password "configured", and the URL `localhost`. The page says "leave empty" and the note about the owner's screenshot sits only under the first image. Suggest the same one-line note under the second image. |
+| 79 | Table row: URL `http://influxdb:8086` | 14 | PASS | Default API port 8086 (source 14); name from claim 73. |
+| 80 | Technical text of the Docker latest tag, versions, and steps (unchanged) | 3,4,5,6,14 | PASS | Not changed in meaning; re-read. |
+
+Other round 4 checks:
+- Overlap check (with sources 17 to 19 added): 2 runs, both source URLs. PASS.
+- `node --test tests/voice-source.test.ts tests/k6.test.ts`: pass 30, fail 0.
+- No new `k6` script. The two `docker run` lines were not run (no Docker).
+- All sources 1 to 19 are cited at least once (17 in blocks 3 and 5, 18 in block 5, 19 in block 6).
+
+Open FAILs: 1

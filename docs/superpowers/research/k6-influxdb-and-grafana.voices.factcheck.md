@@ -18,4 +18,18 @@ Round 2: blocks 2 and 6 changed in all 3 panels. Block 2: Layman and Bangla say 
 
 Round 3: block 6 steps reworded in all 3 panels. Same 5 steps, same cite 14, "left menu" and "top right" in all three (PASS round 3).
 
-Open FAILs: 0
+## Round 4 (final-review fixes)
+
+Compared every changed Layman and Bangla panel with Technical of the same block. A script checked cites (no cite in Layman or Bangla that Technical of the block lacks), Layman sentence length (no sentence over 25 words), and তুমি (none).
+
+| Block | Layman | Bangla | Notes |
+|---|---|---|---|
+| 1. Why use | **FAIL** | PASS | Layman starts with a new example: "Think of a car trip. A summary after the trip tells you the average speed. A speedometer tells you the speed while you drive." Technical has no such example. Remove it or move it into Technical. The rest of the panel matches Technical. |
+| 2. Versions | PASS | PASS | Rewording only ("major versions", "pin a tag", "special k6 program"). No new fact; `influxdb:1.13` is in Technical. |
+| 3. Docker | PASS | PASS | The network sentences (`docker network create k6net`, reach by name, tutorial's own idea, cite 17) are in Technical. Bangla has the same. |
+| 4. Send data | PASS | PASS | Rewording only. |
+| 5. Run Grafana | PASS | PASS | `--network k6net`, `localhost` inside the container, `http://influxdb:8086`, `host.docker.internal` (Docker Desktop only), and the owner's screenshots on the host: all in Technical. Cites 17, 18 as in Technical. |
+| 6. Connect | PASS | PASS | Screenshot note, URL row, "leave User and Password empty", and cite 19 are in Technical. Bangla keeps `User` and `Password` in English. |
+| 7. Dashboard | PASS | PASS | Rewording only; the ID 2587 text is the same. |
+
+Open FAILs: 1

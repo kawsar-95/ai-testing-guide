@@ -82,4 +82,16 @@ Changed text compared with the round-1 text. New sources 10 (k6 environment vari
 
 Re-checks: YAML parses (`yaml.safe_load`; smoke step 3 has the 4 env keys). `k6 inspect` of `smoke.js` and of the full `load.js` (the page block is now a full script with `check`, `fail`, `sleep`, `http` imported): exit 0 for both. Overlap check (12 files): no run of 8 or more words. `node --test tests/voice-source.test.ts tests/k6.test.ts`: 29 pass, 0 fail. Layman sentences: none over 25 words.
 
+
+## Round 4 (final-review fixes, 2026-10-27)
+
+Change of commit f1ff844: `K6_WEB_DASHBOARD_PORT: '-1'` in both `env` blocks, and a sentence with cite 4.
+
+| # | Claim | Cite | Verdict | Quote or reason |
+|---|---|---|---|---|
+| 38 | In CI, k6 must exit after the test; the docs advise to turn off the dashboard HTTP port with `-1` | 4 | PASS | k6 web dashboard docs (fetched fresh): "The k6 process waits to exit as long as there's at least one open browser window for the dashboard extension. In certain environments, such as a CI/CD pipeline, the k6 process has to exit after the test run completes. In that case, it's advisable to disable the HTTP port by setting it to -1." |
+| 39 | `K6_WEB_DASHBOARD_PORT` is the variable name | 4 | PASS | Options table: "K6_WEB_DASHBOARD_PORT Port to bind the web dashboard to 5665". |
+
+Checks: YAML parses; both `env` blocks (smoke and load) have `K6_WEB_DASHBOARD_PORT: '-1'` (a quoted string, so YAML does not read it as a number). A local run with `K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PORT=-1 K6_WEB_DASHBOARD_PERIOD=1s K6_WEB_DASHBOARD_EXPORT=rep.html k6 run` exits 0 and still writes the HTML report. Overlap check (12 files): no run of 8 or more words. `node --test tests/voice-source.test.ts tests/k6.test.ts`: 30 pass, 0 fail.
+
 Open FAILs: 0

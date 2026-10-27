@@ -21,4 +21,8 @@ Note: the uncited "Grafana Labs builds it" and the Go claims in Layman and Bangl
 - Table row 2: Layman "speed of Go" (synonym, same meaning), Bangla "Go-এর performance". PASS.
 - Non-blocking note: Layman opens with "a free tool"; Technical says "open-source". Not a FAIL, but "open source" alone is safer.
 
+## Round 3 (final-review fixes)
+
+Commit f1ff844 changed one Layman sentence in "What k6 is": "a free tool ... It is open source" became "an open-source tool that tests how an app behaves under load <Cite n={1} />". Technical says "an open-source tool for performance testing <Cite n={1} />". Same fact, same cite, no new claim; "free" is gone. Sentence is under 25 words. PASS. Bangla and the other panels are unchanged.
+
 Open FAILs: 0

@@ -57,4 +57,8 @@ Re-checked the changed text against the page (`grep` of content/k6/what-is-k6.md
 - Table row 2 (Technical "performance of Go", Bangla "Go-এর performance") matches S2. Layman says "speed of Go", a synonym of "performance of Go" with the same meaning. PASS.
 - Script block unchanged. Overlap check: still only the docs URL in `page.sources`. PASS.
 
+## Round 3 (final-review fixes)
+
+The f1ff844 change touches only a Layman sentence. No Technical claim changed, so no row needs a re-check.
+
 Open FAILs: 0

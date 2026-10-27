@@ -26,4 +26,13 @@ Round 2 note: "small" is removed from both panels; the Cite 4 on the last line i
 
 Round 1 FAILs: 4. All fixed in round 2.
 
+## Round 3 (final-review fixes)
+
+| # | Panel | Verdict | Note |
+|---|---|---|---|
+| 9 | Layman step 3 and 4 | PASS | Gives the rule, "the notes do not compare Gatling", and the beginner test, all in Technical. Cites 9 and 6 are the same as Technical. Longest sentence is under 25 words. |
+| 10 | Bangla step 3 and 4 | PASS | Same content as Technical, no new fact. Gatling, Artillery, k6, beginner, docs stay in English letters. Uses আপনি form (imperative). No তুমি. |
+
+Round 3 FAILs: 0.
+
 Open FAILs: 0
