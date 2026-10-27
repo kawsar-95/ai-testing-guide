@@ -1,11 +1,356 @@
 export const metadata = { title: 'k6 in CI', description: 'Run k6 in GitHub Actions and fail the job when a threshold fails.' }
-export const page = { updated: '2026-10-27', sources: [] }
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Thresholds', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/thresholds/', accessed: '2026-10-27' },
+    { title: 'errext/exitcodes/codes.go', publisher: 'grafana/k6 (GitHub)', url: 'https://github.com/grafana/k6/blob/master/errext/exitcodes/codes.go', accessed: '2026-10-27' },
+    { title: 'Automated performance testing', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/testing-guides/automated-performance-testing/', accessed: '2026-10-27' },
+    { title: 'k6 web dashboard', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/web-dashboard/', accessed: '2026-10-27' },
+    { title: 'grafana/setup-k6-action', publisher: 'Grafana Labs (GitHub)', url: 'https://github.com/grafana/setup-k6-action', accessed: '2026-10-27' },
+    { title: 'grafana/run-k6-action', publisher: 'Grafana Labs (GitHub)', url: 'https://github.com/grafana/run-k6-action', accessed: '2026-10-27' },
+    { title: 'Events that trigger workflows', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows', accessed: '2026-10-27' },
+    { title: 'Using secrets in GitHub Actions', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions', accessed: '2026-10-27' },
+    { title: 'actions/upload-artifact', publisher: 'GitHub', url: 'https://github.com/actions/upload-artifact', accessed: '2026-10-27' },
+    { title: 'Variables (environment variables)', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/environment-variables/', accessed: '2026-10-27' },
+    { title: 'Evaluate expressions in workflows and actions', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/actions/reference/workflows-and-actions/expressions', accessed: '2026-10-27' },
+    { title: 'actions/checkout', publisher: 'GitHub', url: 'https://github.com/actions/checkout', accessed: '2026-10-27' },
+  ],
+}
 
 # k6 in CI
 
-Run k6 in GitHub Actions and fail the job when a threshold fails.
+Nobody wants to run a load test by hand before every release. A CI job can run k6 for you, and a failed threshold can stop the build. This page shows how to do it with GitHub Actions.
+
+<PageMeta />
+
+## Why run k6 in CI
+
+<Voices>
+<Technical>
+
+Automation means that you plan performance tests as part of your software life cycle. Often this means running tests with pass/fail conditions in a CI/CD pipeline <Cite n={3} />. Nightly jobs and cron jobs are other ways to run tests on a regular basis <Cite n={3} />. The k6 docs also say that not all performance tests suit a CI/CD pipeline <Cite n={3} />.
+
+Thresholds are what makes k6 fit CI. When all thresholds pass, k6 exits with code 0. When a threshold fails, k6 exits with a non-zero code <Cite n={1} />. The code is 99 <Cite n={2} />. A CI system marks a step as failed when its command exits with a non-zero code. So a failed threshold can fail the job (the tutorial's own reasoning; the k6 sources give the exit code only).
+
+You can check the number yourself. Run a script with a limit that cannot pass, such as `http_req_duration: ['p(95)<1']`, and read the exit code with `echo $?`. In a test run for this page, k6 v2.3.0 printed `thresholds on metrics 'http_req_duration' have been crossed` and exited with 99.
+
+</Technical>
+<Layman>
+
+Nobody wants to run a load test by hand before every release. A CI job can run the test for you.
+
+Thresholds make this work. When all thresholds pass, k6 exits with code 0. When a threshold fails, k6 exits with a code that is not 0 <Cite n={1} />. The code is 99 <Cite n={2} />. A CI system marks a step as failed when its command exits with a code that is not 0. So a failed threshold can fail the job (the tutorial's own reasoning).
+
+You can check the number yourself. Use a limit that cannot pass, such as `http_req_duration: ['p(95)<1']`. Then read the exit code with `echo $?`.
+
+The k6 docs say that not all performance tests suit a CI pipeline <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+প্রতিটা রিলিজের আগে হাত দিয়ে load test চালাতে কেউ চায় না। CI job আপনার হয়ে টেস্টটা চালাতে পারে।
+
+Threshold-ই k6-কে CI-র উপযোগী করে। সব threshold পাস করলে k6 exit code 0 দিয়ে শেষ হয়। কোনো threshold ফেল করলে exit code 0 হয় না <Cite n={1} />। কোডটা 99 <Cite n={2} />। কমান্ড 0 ছাড়া অন্য কোড দিয়ে শেষ হলে CI সিস্টেম ওই step-কে ফেল ধরে। তাই একটা ফেল করা threshold পুরো job ফেল করাতে পারে (এটা tutorial-এর নিজের যুক্তি)।
+
+নম্বরটা আপনি নিজেই দেখে নিতে পারেন। এমন একটা limit দিন যা পাস করা সম্ভব না, যেমন `http_req_duration: ['p(95)<1']`। তারপর `echo $?` দিয়ে exit code পড়ুন।
+
+k6 docs বলে, সব performance test CI pipeline-এর জন্য ঠিক নয় <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Which test to run where
+
+<Voices>
+<Technical>
+
+Do not run the same test everywhere. The k6 docs say to schedule smoke tests as part of the automated tests in the CI flow, and that you can schedule them on project changes <Cite n={3} />. A smoke test also finds script errors before you run a larger test <Cite n={3} />.
+
+The tutorial's own advice, not a rule from the docs:
+
+| When | Test | Why |
+|---|---|---|
+| On each pull request | A short smoke test: 1 VU, about 10 seconds | It is fast and cheap. It shows that the script and the app still work. |
+| On a schedule (for example each night) | A longer load test with stages | It takes many minutes, so it does not belong in each pull request. |
+| Before a big release, by hand | A stress, spike, or soak test | These need people to watch the result. |
+
+Run each test against a test environment, not against production.
+
+</Technical>
+<Layman>
+
+Do not run the same test everywhere. The k6 docs say to run smoke tests as part of the automated tests in CI. You can run them when the project changes <Cite n={3} />. A smoke test also finds script errors before you run a larger test <Cite n={3} />.
+
+The tutorial's own advice, not a rule from the docs:
+
+| When | Test | Why |
+|---|---|---|
+| On each pull request | A short smoke test: 1 VU, about 10 seconds | It is fast and cheap. It shows that the script and the app still work. |
+| On a schedule, for example each night | A longer load test with stages | It takes many minutes, so it does not belong in each pull request. |
+| Before a big release, by hand | A stress, spike, or soak test | People need to watch the result. |
+
+Run each test against a test environment, not against production.
+
+</Layman>
+<Bangla>
+
+সব জায়গায় একই টেস্ট চালাবেন না। k6 docs বলে, CI-তে automated test-এর অংশ হিসেবে smoke test চালান। প্রজেক্টে পরিবর্তন এলে সেগুলো চালাতে পারেন <Cite n={3} />। বড় টেস্ট চালানোর আগে smoke test স্ক্রিপ্টের ভুলও ধরে ফেলে <Cite n={3} />।
+
+এটা tutorial-এর নিজের পরামর্শ, docs-এর নিয়ম নয়:
+
+| কখন | টেস্ট | কেন |
+|---|---|---|
+| প্রতিটা pull request-এ | ছোট smoke test: 1 VU, প্রায় 10 সেকেন্ড | এটা দ্রুত আর সস্তা। স্ক্রিপ্ট আর অ্যাপ এখনো কাজ করছে কি না, তা দেখায়। |
+| schedule অনুযায়ী, যেমন প্রতি রাতে | stages সহ লম্বা load test | এতে অনেক মিনিট লাগে, তাই প্রতিটা pull request-এ মানায় না। |
+| বড় রিলিজের আগে, হাতে | stress, spike বা soak test | ফলাফল মানুষের দেখা দরকার। |
+
+প্রতিটা টেস্ট test environment-এ চালান, production-এ নয়।
+
+</Bangla>
+</Voices>
+
+## The workflow file
+
+<Voices>
+<Technical>
+
+`grafana/setup-k6-action` installs k6. It uses the latest k6 unless you set `k6-version` <Cite n={5} />. `grafana/run-k6-action` is a wrapper over `k6 run`. It takes a glob in `path` and extra flags in `flags`. It does not install k6 <Cite n={6} />. Use both, in this order. Both READMEs show `@v1` of the actions <Cite n={5} /><Cite n={6} />.
+
+Set `K6_WEB_DASHBOARD=true` and `K6_WEB_DASHBOARD_EXPORT=<file>.html` to write an HTML report when the test ends <Cite n={4} />. The report has graphs only if the test runs longer than three times the aggregation period <Cite n={4} />. The upload step publishes the file as an artifact <Cite n={9} />.
+
+Save this as `.github/workflows/k6.yml`. The two scripts are `tests/smoke.js` and `tests/load.js` in the same repository.
+
+```yaml
+name: k6
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  smoke:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: grafana/setup-k6-action@v1
+      - uses: grafana/run-k6-action@v1
+        env:
+          BASE_URL: ${{ secrets.TEST_BASE_URL }}
+          K6_WEB_DASHBOARD: 'true'
+          K6_WEB_DASHBOARD_EXPORT: smoke-report.html
+          K6_WEB_DASHBOARD_PERIOD: 1s
+        with:
+          path: ./tests/smoke.js
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: k6-smoke-report
+          path: smoke-report.html
+
+  load:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: grafana/setup-k6-action@v1
+      - uses: grafana/run-k6-action@v1
+        env:
+          BASE_URL: ${{ secrets.TEST_BASE_URL }}
+          K6_WEB_DASHBOARD: 'true'
+          K6_WEB_DASHBOARD_EXPORT: load-report.html
+        with:
+          path: ./tests/load.js
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: k6-load-report
+          path: load-report.html
+```
+
+How the file works:
+
+- `on: pull_request` starts the `smoke` job on pull request activity <Cite n={7} />. `on: schedule` with a `cron` line starts the `load` job at the set time. A scheduled run starts only when the default branch has the workflow file <Cite n={7} />. The `if` lines choose the job for each event.
+- A failed threshold gives exit code 99 <Cite n={2} />. The step fails, and so does the job (the tutorial's own reasoning, see the first section).
+- `if: always()` runs the upload step even when the test step failed <Cite n={11} />. This keeps the report of a failed run, which is the report you most want to read (the tutorial's own advice).
+- The versions in the file (`@v1`, `@v7`) are the ones in the READMEs on 27 October 2026 <Cite n={5} /><Cite n={6} /><Cite n={9} /><Cite n={12} />. Check each README for the current major version before you copy the file.
+
+The smoke script (`tests/smoke.js`) has three thresholds, so that a slow or failing app fails the job. The `BASE_URL` default is `https://quickpizza.grafana.com`, a host that the k6 docs use in examples. A fork pull request has no secret, so the smoke job then tests this host with 1 VU (the tutorial's own choice):
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  vus: 1,
+  duration: '10s',
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<800'],
+    checks: ['rate>0.99'],
+  },
+};
+
+const BASE_URL = __ENV.BASE_URL || 'https://quickpizza.grafana.com';
+
+export default function () {
+  const res = http.get(`${BASE_URL}/`);
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The load script (`tests/load.js`) has the first two thresholds of the smoke script. It uses `stages` instead of `vus` and `duration`: 2 minutes up to 20 VUs, 5 minutes at 20 VUs, and 1 minute down to 0. It has no default host. The `setup()` function calls `fail()` when `BASE_URL` is empty, so k6 stops and exits with a non-zero code (107 in a test run for this page). If the `TEST_BASE_URL` secret is missing, the scheduled job fails and does not load-test the public demo host.
+
+```javascript
+import http from 'k6/http';
+import { check, fail, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '2m', target: 20 },
+    { duration: '5m', target: 20 },
+    { duration: '1m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<800'],
+  },
+};
+
+const BASE_URL = __ENV.BASE_URL;
+
+export function setup() {
+  if (!BASE_URL) {
+    fail('BASE_URL is empty: set the TEST_BASE_URL secret');
+  }
+}
+
+export default function () {
+  const res = http.get(`${BASE_URL}/`);
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+The smoke job sets `K6_WEB_DASHBOARD_PERIOD: 1s`. The reason is the report rule: the HTML report has graphs only if the test is longer than three times the aggregation period <Cite n={4} />. The default period is 10 seconds, so a 10 second smoke test would give a report with no graphs. With a period of 1 second, the test is longer than three periods. The load job keeps the default period, because it runs for 8 minutes. See [reports and the dashboard](/k6/reports-and-dashboard/) for the rule.
+
+</Technical>
+<Layman>
+
+`grafana/setup-k6-action` installs k6. It uses the latest k6 unless you set `k6-version` <Cite n={5} />. `grafana/run-k6-action` is a wrapper over `k6 run`. It takes a glob in `path` and extra flags in `flags`. It does not install k6 <Cite n={6} />. Use both, in this order.
+
+Set `K6_WEB_DASHBOARD=true` and `K6_WEB_DASHBOARD_EXPORT=<file>.html`. Then k6 writes an HTML report when the test ends <Cite n={4} />. The report has graphs only if the test runs longer than three times the aggregation period <Cite n={4} />. The upload step publishes the file as an artifact <Cite n={9} />.
+
+The file is `.github/workflows/k6.yml`, shown in the Technical text. It uses the scripts `tests/smoke.js` and `tests/load.js`.
+
+How the file works:
+
+- `on: pull_request` starts the `smoke` job on pull request activity <Cite n={7} />. `on: schedule` with a `cron` line starts the `load` job at the set time. A scheduled run starts only when the default branch has the workflow file <Cite n={7} />.
+- A failed threshold gives exit code 99 <Cite n={2} />. The step fails, and so does the job (the tutorial's own reasoning, see the first section).
+- `if: always()` runs the upload step even when the test step failed <Cite n={11} />. You keep the report of a failed run. That is the report you most want to read. This is the tutorial's own advice.
+- Check each README for the current major version of the actions before you copy the file <Cite n={5} /><Cite n={6} /><Cite n={9} /><Cite n={12} />.
+
+The smoke script has three thresholds. A slow or failing app fails the job. The load script has the first two of them. It uses `stages`: 2 minutes up to 20 VUs, 5 minutes at 20 VUs, and 1 minute down to 0.
+
+The load script has no default host. Its `setup()` function calls `fail()` when `BASE_URL` is empty. Then k6 stops with a non-zero exit code. If the `TEST_BASE_URL` secret is missing, the scheduled job fails. It does not load-test the public demo host.
+
+The smoke job sets `K6_WEB_DASHBOARD_PERIOD: 1s`. The HTML report has graphs only if the test is longer than three times the aggregation period <Cite n={4} />. The default period is 10 seconds. A 10 second test would give a report with no graphs. With a period of 1 second, the test is longer than three periods. The load job keeps the default period, because it runs for 8 minutes. See [reports and the dashboard](/k6/reports-and-dashboard/) for the rule.
+
+</Layman>
+<Bangla>
+
+`grafana/setup-k6-action` k6 ইনস্টল করে। `k6-version` না দিলে এটা সর্বশেষ k6 নেয় <Cite n={5} />। `grafana/run-k6-action` হলো `k6 run`-এর একটা wrapper। এটা `path`-এ glob আর `flags`-এ বাড়তি flag নেয়। এটা k6 ইনস্টল করে না <Cite n={6} />। দুটোই এই ক্রমে ব্যবহার করুন।
+
+`K6_WEB_DASHBOARD=true` আর `K6_WEB_DASHBOARD_EXPORT=<file>.html` সেট করুন। তাহলে টেস্ট শেষে k6 একটা HTML রিপোর্ট লেখে <Cite n={4} />। টেস্ট aggregation period-এর তিন গুণের বেশি চললে তবেই রিপোর্টে গ্রাফ থাকে <Cite n={4} />। upload step ফাইলটাকে artifact হিসেবে প্রকাশ করে <Cite n={9} />।
+
+ফাইলটা `.github/workflows/k6.yml`, Technical লেখায় দেখানো আছে। এটা `tests/smoke.js` আর `tests/load.js` স্ক্রিপ্ট ব্যবহার করে।
+
+ফাইলটা যেভাবে কাজ করে:
+
+- `on: pull_request` pull request-এর কাজে `smoke` job শুরু করে <Cite n={7} />। `cron` লাইনসহ `on: schedule` নির্দিষ্ট সময়ে `load` job শুরু করে। default branch-এ workflow ফাইল থাকলে তবেই scheduled run শুরু হয় <Cite n={7} />।
+- threshold ফেল করলে exit code 99 হয় <Cite n={2} />। step ফেল করে, আর job-ও ফেল করে (এটা tutorial-এর নিজের যুক্তি, প্রথম section দেখুন)।
+- test step ফেল করলেও `if: always()` upload step চালায় <Cite n={11} />। ফেল করা run-এর রিপোর্ট আপনি পেয়ে যান, আর সেটাই সবচেয়ে বেশি পড়া দরকার। এটা tutorial-এর নিজের পরামর্শ।
+- ফাইল কপি করার আগে action-গুলোর বর্তমান major version প্রতিটা README-তে দেখে নিন <Cite n={5} /><Cite n={6} /><Cite n={9} /><Cite n={12} />।
+
+smoke স্ক্রিপ্টে তিনটা threshold আছে। অ্যাপ ধীর বা ফেল হলে job ফেল করে। load স্ক্রিপ্টে প্রথম দুটো threshold আছে। সেটা `stages` ব্যবহার করে: 2 মিনিটে 20 VUs পর্যন্ত, 5 মিনিট 20 VUs-এ, আর 1 মিনিটে 0-তে নামা।
+
+load স্ক্রিপ্টে কোনো default host নেই। `BASE_URL` ফাঁকা হলে এর `setup()` ফাংশন `fail()` ডাকে। তখন k6 থেমে যায় আর exit code 0 হয় না। `TEST_BASE_URL` secret না থাকলে scheduled job ফেল করে। এটা পাবলিক demo host-এ load test করে না।
+
+smoke job `K6_WEB_DASHBOARD_PERIOD: 1s` সেট করে। টেস্ট aggregation period-এর তিন গুণের বেশি চললে তবেই HTML রিপোর্টে গ্রাফ থাকে <Cite n={4} />। default period 10 সেকেন্ড। 10 সেকেন্ডের টেস্টে রিপোর্টে কোনো গ্রাফ থাকত না। 1 সেকেন্ড period দিলে টেস্ট তিন period-এর চেয়ে লম্বা হয়। load job default period রাখে, কারণ সেটা 8 মিনিট চলে। নিয়মটার জন্য [reports and the dashboard](/k6/reports-and-dashboard/) দেখুন।
+
+</Bangla>
+</Voices>
+
+## Secrets and safe targets
+
+<Voices>
+<Technical>
+
+Never write a host, a token, or a password in the workflow file or in a script. Read it with `${{ secrets.NAME }}`, as the workflow above does with `TEST_BASE_URL` <Cite n={8} />. Pass the value as an environment variable, and read it in the script with `__ENV.NAME` <Cite n={10} />. You can also pass it with the `-e NAME=value` flag of `k6 run` <Cite n={10} />, through the `flags` input of `run-k6-action` <Cite n={6} />. GitHub does not pass secrets to the runner when a workflow starts from a forked repository <Cite n={8} />. So a pull request from a fork cannot read `TEST_BASE_URL`, and the smoke job falls back to the script default.
+
+<Callout type="danger" title="Never load-test production, or a host you do not own">
+
+A load test can slow down or stop a service. Run CI tests only against a test environment that you own, or that the owner allows you to test. The k6 docs use `quickpizza.grafana.com` in examples. This tutorial uses it only for the 1 VU smoke test, and that is the tutorial's own choice. Do not load-test it from the scheduled job. Do not point a scheduled job at a production host or at someone else's host. This is the tutorial's own safety advice.
+
+</Callout>
+
+What a tester can check:
+
+- Does the job fail when you break a threshold on purpose, for example `p(95)<1`? A gate that never fails proves nothing.
+- Is the artifact there after a failed run?
+- Does the secret value appear in the job log? It must not.
+- Does the schedule point at the test environment, and not at production?
+
+</Technical>
+<Layman>
+
+Never write a host, a token, or a password in the workflow file or in a script. Read it with `${{ secrets.NAME }}`, as the workflow does with `TEST_BASE_URL` <Cite n={8} />. Pass the value as an environment variable. Read it in the script with `__ENV.NAME` <Cite n={10} />. You can also pass it with the `-e NAME=value` flag of `k6 run` <Cite n={10} />, through the `flags` input of `run-k6-action` <Cite n={6} />. GitHub does not pass secrets to the runner when a workflow starts from a forked repository <Cite n={8} />. So a pull request from a fork cannot read `TEST_BASE_URL`. The smoke job uses the script default.
+
+<Callout type="danger" title="Never load-test production, or a host you do not own">
+
+A load test can slow down or stop a service. Run CI tests only against a test environment that you own, or that the owner allows you to test. The k6 docs use `quickpizza.grafana.com` in examples. This tutorial uses it only for the 1 VU smoke test, and that is the tutorial's own choice. Do not load-test it from the scheduled job. Do not point a scheduled job at a production host or at someone else's host. This is the tutorial's own safety advice.
+
+</Callout>
+
+What a tester can check:
+
+- Does the job fail when you break a threshold on purpose, for example `p(95)<1`? A gate that never fails proves nothing.
+- Is the artifact there after a failed run?
+- Does the secret value appear in the job log? It must not.
+- Does the schedule point at the test environment, and not at production?
+
+</Layman>
+<Bangla>
+
+workflow ফাইলে বা স্ক্রিপ্টে কখনো host, token বা password লিখবেন না। `${{ secrets.NAME }}` দিয়ে পড়ুন, উপরের workflow যেমন `TEST_BASE_URL`-এর জন্য করে <Cite n={8} />। মানটা environment variable হিসেবে পাঠান, আর স্ক্রিপ্টে `__ENV.NAME` দিয়ে পড়ুন <Cite n={10} />। `run-k6-action`-এর `flags` input দিয়ে `k6 run`-এর `-e NAME=value` flag-ও দিতে পারেন <Cite n={10} /><Cite n={6} />। workflow forked repository থেকে শুরু হলে GitHub runner-এ secret পাঠায় না <Cite n={8} />। তাই fork থেকে আসা pull request `TEST_BASE_URL` পড়তে পারে না। smoke job স্ক্রিপ্টের default ব্যবহার করে।
+
+<Callout type="danger" title="Production বা আপনার নয় এমন host-এ কখনো load test করবেন না">
+
+load test একটা সার্ভিসকে ধীর বা বন্ধ করে দিতে পারে। CI টেস্ট শুধু এমন test environment-এ চালান যা আপনার নিজের, বা যার মালিক আপনাকে টেস্ট করার অনুমতি দিয়েছে। k6 docs উদাহরণে `quickpizza.grafana.com` ব্যবহার করে। এই tutorial এটা শুধু 1 VU-এর smoke test-এ ব্যবহার করে, আর এটা tutorial-এর নিজের পছন্দ। scheduled job থেকে এতে load test করবেন না। scheduled job-কে production host-এ বা অন্য কারও host-এ পয়েন্ট করবেন না। এটা tutorial-এর নিজের নিরাপত্তা-পরামর্শ।
+
+</Callout>
+
+একজন tester কী দেখতে পারেন:
+
+- ইচ্ছা করে threshold ভাঙলে, যেমন `p(95)<1` দিলে, job কি ফেল করে? যে gate কখনো ফেল করে না, সে কিছু প্রমাণ করে না।
+- ফেল করা run-এর পরেও artifact কি আছে?
+- job log-এ secret-এর মান কি দেখা যায়? দেখা যাওয়া চলবে না।
+- schedule কি test environment-এ পয়েন্ট করে, production-এ নয়?
+
+</Bangla>
+</Voices>
 
 ## Key words
 
 | Term | Meaning |
 | --- | --- |
+| CI (continuous integration) | A job that builds and tests the code on each change. |
+| Threshold | A pass/fail limit on a metric. A failed threshold gives exit code 99. |
+| Exit code | The number a command returns when it ends. 0 means success. |
+| Smoke test | A very short test with a few VUs. It shows that the script and the app work. |
+| Workflow | A GitHub Actions file in `.github/workflows/`. It lists the events and the jobs. |
+| Secret | A value that GitHub stores for you and gives to a job as `${{ secrets.NAME }}`. |
+| Artifact | A file that a job saves, such as the HTML report. |
+| `setup-k6-action` / `run-k6-action` | The actions of Grafana that install k6 and run a script. |
