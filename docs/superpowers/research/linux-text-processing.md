@@ -364,3 +364,44 @@ S49. unexpand (POSIX.1-2024) — The Open Group — https://pubs.opengroup.org/o
 | C161 | POSIX `unexpand` has only `-a` and `-t`; `--first-only` is not in it. | S49 | "unexpand [-a\|-t tablist] [file...]" |
 
 Own statements without a source: a "systemd host" is a Linux system that uses systemd (gloss); "a minimal container may have no `journalctl`" (own caution, as in the notes of earlier stages); the `nl` note says only that not every version has the long names (hedged, no claim of who lacks them). Local check: `split -l 10` of 25 lines, then `split -l 10` of 5 lines with the same prefix, left `p_ab` and `p_ac` from the first run (wc -l: 5, 10, 5): stale pieces stay behind. The code comments of the `uniq` example were re-run: `uniq events.txt` prints `timeout, ok, timeout, ok, error`.
+
+## Round 2 (2026-10-27): Try it commands
+
+The page is now in the lesson shape (Goal, Core, Try it, tip, Go deeper) in all 3 voices. Text moved into "Go deeper"; no fact was removed. Every cite number 1-49 is still on the page, and every `##` heading is the same.
+
+Machine: Ubuntu 26.04.1 LTS. Shell: `GNU bash, version 5.3.9(1)-release`. The default `/usr/bin` tools are `uutils coreutils 0.10.0` and `mawk 1.3.4 20260129`; `grep` is `GNU grep 3.12`. Each block ran twice with `bash --norc` in a new `mktemp -d` directory under the session scratch directory: one time with GNU coreutils 9.7 first in `PATH` (the `gnu*` binaries of the `gnu-coreutils` package), and one time with the default tools. Both runs gave the same output. The page shows it. gawk is not installed; the awk Try-it uses only basic awk features, and mawk gave the output below.
+
+| Topic | Try-it command (in `( cd "$(mktemp -d)"; ... )`) | Real output | Source of the claim |
+|---|---|---|---|
+| Text Processing | `printf '%s\n' 'ok login' 'fail login' 'ok search' 'fail login' > results.txt; grep fail results.txt \| sort \| uniq -c` | `      2 fail login` | S1, S2 (pipe) |
+| Stdout, Stdin, and Stderr | `touch a.txt; ls a.txt /does-not-exist > listing.txt; echo "exit status: $?"; cat listing.txt` | screen: `ls: cannot access '/does-not-exist': No such file or directory`, `exit status: 2`; file: `a.txt` | S3 |
+| Redirects | `echo one > notes.txt; echo two >> notes.txt; cat notes.txt; ls /no/such/dir > all.txt 2>&1; cat all.txt` | `one`, `two`, `ls: cannot access '/no/such/dir': No such file or directory` | S5 |
+| Pipes | `printf '%s\n' 'b 2' 'a 1' 'b 3' > pairs.txt; sort pairs.txt \| cut -d ' ' -f1 \| uniq; false \| true; echo "$?"; set -o pipefail; false \| true; echo "$?"` | `a`, `b`, `0`, `1` | S8, S9 |
+| Tee | `echo 'run 1: ok' \| tee run.log; echo 'run 2: fail' \| tee -a run.log; cat run.log` | `run 1: ok`, `run 2: fail`, then the file: `run 1: ok`, `run 2: fail` | S11 |
+| grep | `grep -n ERROR app.log; grep -q FATAL app.log; echo "$?"; grep ERROR no-such.log; echo "$?"` | `2:ERROR db down`, `4:ERROR disk full`, `1`, `grep: no-such.log: No such file or directory`, `2` | S12 |
+| awk | `awk '$2 > 300 { print $1, $2 }' times.txt; awk '{ sum += $2 } END { print sum }' times.txt` | `search 340`, `checkout 410`, `965` | S14, S16, S20, S44 |
+| cut | `cut -d, -f2 cases.csv` | `name`, `login`, `search` | S23 |
+| sort | `sort timings.txt; sort -k2,2n timings.txt` | `checkout 410`, `login 120`, `login 95`, `search 340`; then `login 95`, `login 120`, `search 340`, `checkout 410` (locale `en_US.UTF-8`) | S24 |
+| uniq | `uniq events.txt \| wc -l; sort events.txt \| uniq -c` | `5`; `      1 error`, `      3 ok`, `      2 timeout` | S25, S26 |
+| wc | `wc run.log; wc -l < run.log; grep failed run.log \| wc -l` | ` 3  6 33 run.log`, `3`, `1` | S26 |
+| head | `seq 15 > nums.txt; head nums.txt \| wc -l; head -n 3 nums.txt` | `10`, `1`, `2`, `3` | S27 |
+| tail | `tail -n 1 cases.csv; tail -n +2 cases.csv` | `2,search`; `1,login`, `2,search` | S28 |
+| nl | `printf '%s\n' alpha '' beta > t.txt; nl t.txt; nl -b a t.txt` | `     1<TAB>alpha`, a line of 7 spaces, `     2<TAB>beta`; then `     1<TAB>alpha`, `     2<TAB>`, `     3<TAB>beta` | S29 |
+| paste | `paste -d, ids names` | `1,login`, `2,search`, `3,logout` | S30 |
+| join | `join cases results; join -v 1 cases results` | `1 login pass`, `2 search pass`; `4 admin` | S31, S33 |
+| split | `seq 25 > big.txt; split -l 10 big.txt part_; wc -l part_*` | `10 part_aa`, `10 part_ab`, ` 5 part_ac`, `25 total` | S34 |
+| tr | `printf 'Login OK\r\n' > crlf.txt; wc -c < crlf.txt; tr -d '\r' < crlf.txt > lf.txt; wc -c < lf.txt; echo 'Hello World' \| tr '[:lower:]' '[:upper:]'` | `10`, `9`, `HELLO WORLD` | S35, S37, S38 |
+| expand | `printf 'a\tb\tc\n' > tabs.txt; expand -t 4 tabs.txt; expand -t 4 tabs.txt \| tr ' ' '.'` | `a   b   c`, `a...b...c` | S39 |
+| unexpand | `printf 'if x:\n    run()\n' > code.txt; unexpand code.txt \| tr -cd '\t' \| wc -c; unexpand -t 4 code.txt \| tr -cd '\t' \| wc -c` | `0`, `1` | S40, S35, S26 |
+
+Go deeper examples that ran again with GNU coreutils 9.7: `paste -s -d, names` gave `login,search,logout`; `seq 6 | paste - - -` gave `1<TAB>2<TAB>3` and `4<TAB>5<TAB>6`; `cat part_* | cmp - big.txt && echo same` gave `same`; `echo 'a   b' | tr -s ' '` gave `a b`; `awk -v limit=300 '$2 > limit { print NR ": " $0 }'` gave `2: search 340 fail`; `nl -b pb t.txt` numbered only `beta`; `printf 'caf\303\251\n' | wc -c` gave `6` and `wc -m` gave `5` in `en_US.UTF-8`.
+
+Moved facts (no fact removed):
+
+- Each `<Callout type="danger">` (Redirects, Tee, sort, join, split, tr, expand, unexpand) is gone. Its risk is now one sentence in the Core text (`>` empties the file first; `tee` without `-a` overwrites; unsorted `join` input gives wrong lines; `split` replaced old pieces in our test). The rest of each callout is in "Go deeper".
+- Option tables, GNU-only options, POSIX notes, and locale notes moved into "Go deeper".
+- The intro topic's old example used `/tmp/text-demo`; the Try-it now uses `mktemp -d`. The old sentence "Run them in an empty scratch directory" is now in "Go deeper" with the subshell gloss (S6).
+- The old tail example `tail -F service.log` / `journalctl -f` (not runnable in a Try-it) is now prose in "Go deeper".
+- `join`: the Try-it files are already sorted, so the `LC_ALL=C sort -k 1b,1` step moved into "Go deeper".
+
+Glosses with no source in `page.sources` (they describe what the reader sees, not a sourced claim): `mktemp -d` ("make and enter a new, empty directory"), `touch` ("make an empty file"), `printf '%s\n'` ("one line per argument"), `seq 15` ("one per line"), `false | true` ("a failing command, then a good one"), `tr ' ' '.'` ("change each space into a dot").
