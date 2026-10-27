@@ -213,3 +213,61 @@ Notes:
   5. Installing, Removing, and Upgrading, Layman: "`unattended-upgrades` installs security updates by default" can read as a setting. Better: "the default package `unattended-upgrades` installs security updates."
 
 Open FAILs: 0
+
+## Round 4 (2026-10-27): the lesson rewrite
+
+Checker: an independent voices checker (Sonnet 5.5), 2026-10-27. I did not write these voices. Page: `content/linux/packages.mdx` at commit 2caeb52, compared with its parent (`git diff 2caeb52^ 2caeb52`). I read the Layman and Bangla panels of the 6 topics against the Technical panel of the same topic as it is now, and against the old voices (`git show 2caeb52^:content/linux/packages.mdx`).
+
+Method: a script listed the `<Cite n>` set and the tip length (without `<Cite />`) of each panel. `node --test tests/voice-source.test.ts` passes (22 of 22). Every voice cite is in the Technical set of the same topic (no extra cite). All tips are 160 characters or fewer in all 3 voices (largest: Bangla Installing, 150). The Try-it code block and output of each voice equal the Technical one, except that the voices leave out the Technical trailing comment "Your versions / numbers / version, Rev, and times differ" (Finding, Installing, Snap), as in earlier rounds. The 4 old danger callouts: the root-script warning (Repositories, Finding), the `-y` and change warning (Installing), and `snap remove --purge` (Snap) are visible in the Core text of both voices. "Never pipe `curl` into `sudo sh`" is in Go deeper of Layman and Bangla, marked "Tutorial's own advice" / "Tutorial-এর নিজস্ব পরামর্শ".
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 1 | Package Management | Layman | PASS | Same Goal, Core, Try-it code, and tip (142) as Technical. Go deeper keeps the family facts as prose, with cites {18,7,9,26,25,6,11} in Technical. No new fact. |
+| 2 | Package Management | Bangla | PASS | Correct Bangla; `dpkg`, `apt`, `.deb`, `rpm`, `dnf` stay in English. "বন্ধনী আপনার shell-কে অপরিবর্তিত রাখে" matches "The parentheses keep your shell unchanged". Tip 147. |
+| 3 | Package Repositories | Layman | FAIL | Root-script warning and "never pipe `curl` into `sudo sh`" are kept. The Technical Go deeper bullet "A trusted archive means a trusted maintainer, not safe code. [13]" is missing (item 6, safety fact). Fix: add to Go deeper of Layman, before the fingerprint bullet: `- A trusted archive means a trusted maintainer, not safe code. <Cite n={13} />` |
+| 4 | Package Repositories | Bangla | FAIL | Same gap. Fix: add to Go deeper before the fingerprint bullet: `- বিশ্বস্ত archive মানে বিশ্বস্ত maintainer, নিরাপদ code নয়। <Cite n={13} />` |
+| 5 | Finding and Installing Packages | Layman | PASS | Core has the "runs as root" warning and `apt-get -s` (cite {17}, {10}). The Try-it equals Technical, and `grep '^Inst'` is explained. Tip 101 keeps the point (pin the version, dependencies are not pinned). |
+| 6 | Finding and Installing Packages | Bangla | PASS | Correct and natural. "দেখায় কী হতো, কিন্তু কিছুই বদলায় না" matches "shows what would happen and changes nothing". The `dnf search` and `dnf provides` facts equal Technical. Tip 107. |
+| 7 | Installing, Removing, and Upgrading Packages | Layman | PASS | The Core warning ("change or delete software", "`-y` answers every prompt with yes", "preview with `-s`") equals Technical. Try-it, `autoremove` gloss with cite {17}, and the Go deeper facts are all in Technical. Tip 138. See observation 1. |
+| 8 | Installing, Removing, and Upgrading Packages | Bangla | PASS | Core warning and Go deeper facts match Technical. The "exit status" gloss and `unattended-upgrade --dry-run` are in the voice, as in Technical. Tip 150 keeps both points. |
+| 9 | Listing Installed Packages | Layman | PASS | Core, Try-it code (with the inline "your count differs" comments), and tip (139) equal Technical. Go deeper has no new fact. See observation 2. |
+| 10 | Listing Installed Packages | Bangla | PASS | Same code and tip meaning (141). `dpkg -S` and `rpm -qf` facts match. See observation 3. |
+| 11 | Snap | Layman | FAIL | `snap remove --purge` warning is in Core. But Technical Go deeper says "A `classic` snap has no sandbox. [31] Install it only from a publisher that you trust." and the voice has no such line (item 6, safety fact). Fix: add to Go deeper after the confinement bullet: `- A `classic` snap has no sandbox. <Cite n={31} /> Install it only from a publisher that you trust.` |
+| 12 | Snap | Bangla | FAIL | Same gap. Fix: add to Go deeper after the confinement bullet: `- একটি `classic` snap-এর কোনো sandbox নেই। <Cite n={31} /> শুধু আপনার বিশ্বস্ত publisher-এর snap install করুন।` |
+
+Observations (not FAILs):
+1. Installing, Layman: "exit status" is used in Go deeper without the gloss that Technical and Bangla have ("An exit status is the number that a command returns."). The old Layman text had the same gap. Optional: add the sentence.
+2. Old to new: the old tips (Installing, Listing) had advice that the 160-character limit forced out: the CI sequence `apt-get update`, then `apt-get install -y` with fixed versions (Installing), and "or image build" (Listing). New Technical keeps them in Go deeper tutorial-advice lines; the Layman and Bangla panels do not. It is advice, not a fact or a warning, so I did not mark a FAIL. Optional: add the same Go deeper line to both voices. Note that the Core warning against `-y` has no counterpoint in the voices ("a script on a disposable container or CI runner needs it"); this errs on the safe side.
+3. Listing, Bangla: "আপনি নিজে চাইলে APT ... manual হিসেবে mark করে" reads as a present wish (same note as Round 3). Optional: "আপনি নিজে যে package install করতে বলেছেন, APT সেটিকে manual হিসেবে mark করে; dependency হিসেবে এলে automatic হিসেবে।"
+4. The Core code block (`dpkg-query -W bash`, `apt show jq`, and so on) is only in Technical in all 6 topics. The voices have the same Core text and the Try-it block. This matches the pilot, so it is not a FAIL.
+5. The voices leave out these Technical sentences: the `jq=<version>` example in the tip (Finding), `apt-cache policy` without a name, `pkg/release`, "`dnf provides` also accepts a command name", "DNF 5 keeps these commands" (Finding, Layman), "An old version may leave the repository..." tutorial advice (Finding, Listing), the table and "Name the family of each test image" (Package Management), Components, `.repo` fields, "Ubuntu releases before 24.04" (Repositories), `dnf-automatic`, `unattended-upgrade --dry-run` (Installing, Layman), `dpkg -s`, `rpm -qi`, `rpm -ql`, the default `dpkg-query -W` format (Listing), `snap find`, `snap info`, `/snap/bin`, `/var/snap`, `~/snap`, and the confinement tip (Snap, Layman; Bangla has the paths). None is a warning. No new fact was added in any voice.
+6. Old to new: I found no fact of the old Layman or Bangla text that is missing from the new voice, except the advice lines in observation 2. The old voices did not have the 2 safety facts of rows 3, 4, 11, and 12, so these are not regressions of the rewrite.
+7. The voices do not translate or explain the trailing "your numbers differ" comments. A reader sees the sample numbers only.
+
+Open FAILs: 4
+
+## Round 5 (2026-10-27): the fix rounds
+
+Checker: an independent voices checker (an agent that did not write or fix the voices), 2026-10-27, HEAD c8cd682. I read `git diff -U2 2caeb52 HEAD -- content/linux/packages.mdx` for the Layman and Bangla panels against the Technical panel of the same topic, and I re-fetched S13 and S31. Method: a script listed the `<Cite n>` set of each panel (every Layman and Bangla cite is in the Technical set of the same topic: 0 extra), the words before `<details>` (code blocks removed, `<Cite />` removed, tip included) and the tip length. `node --test tests/voice-source.test.ts`: 22 of 22 pass. Words: Package Management 146 / 126, Repositories 149 / 141, Finding 131 / 125, Installing 141 / 141, Listing 124 / 112, Snap 129 / 118 (Layman / Bangla; all 150 or fewer). Tips (Layman / Bangla): 157 / 147, 128 / 142, 101 / 107, 138 / 150, 139 / 141, 96 / 105 (all 160 or fewer). Bangla commands, flags, and paths stay in English.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| R5-1 | Package Repositories | Layman | FIXED | Round 4 row 3. Go deeper now has "A trusted archive means a trusted maintainer, not safe code. <Cite n={13} />" before the fingerprint bullet. Same as Technical; S13 says it. |
+| R5-2 | Package Repositories | Bangla | FIXED | Round 4 row 4. Go deeper has "বিশ্বস্ত archive মানে বিশ্বস্ত maintainer, নিরাপদ code নয়। <Cite n={13} />". Correct and natural. |
+| R5-3 | Snap | Layman | FIXED | Round 4 row 11. Go deeper has "A `classic` snap has no sandbox. <Cite n={31} /> Install it only from a publisher that you trust." after the confinement bullet; equal to Technical. S31: classic snaps "lack the protections and guardrails offered by sandboxing". |
+| R5-4 | Snap | Bangla | FIXED | Round 4 row 12. Go deeper has "একটি `classic` snap-এর কোনো sandbox নেই। <Cite n={31} /> শুধু আপনার বিশ্বস্ত publisher-এর snap install করুন।" Correct. |
+| R5-5 | Package Repositories | Layman | PASS | Core: "never pipe `curl` into `sudo sh`" is now in Core, marked "Tutorial's own advice:", after the root-script warning (cite 17); the same text as Technical. The `*.repo` fact moved to Go deeper with cite 22 and the `gpgcheck` default fact; both are in Technical. 149 words. No new fact. |
+| R5-6 | Package Repositories | Bangla | PASS | Core ends with "Tutorial-এর নিজস্ব পরামর্শ: কখনো `curl`-কে `sudo sh`-এ pipe করবেন না।" (marked). Go deeper: "RHEL ও Fedora `/etc/yum.repos.d`-এর `*.repo` file ব্যবহার করে। DNF-এ `gpgcheck`-এর default হলো off, তাই এটি set করুন। <Cite n={22} />". Correct, natural. 141 words. |
+| R5-7 | Finding and Installing Packages | Layman | PASS | Cite 11 is now after the `apt search` sentence and after the `apt-cache policy` sentence, as in Technical. Cites unchanged otherwise. |
+| R5-8 | Finding and Installing Packages | Bangla | PASS | Same: "`apt search` package-এর নাম ও description-এ খোঁজে। <Cite n={11} />" then the `apt-cache policy` sentence with cite 11. Correct. |
+| R5-9 | Installing, Removing, and Upgrading Packages | Layman | PASS | Core: "`-y` answers every prompt with yes. On a shared machine, do not use `-y` or `apt upgrade`. Preview a change with `-s` first." Equal to Technical; the data-loss warning stays visible. |
+| R5-10 | Installing, Removing, and Upgrading Packages | Bangla | PASS | Core: "Shared machine-এ `-y` বা `apt upgrade` ব্যবহার করবেন না।" Correct; matches Technical. |
+| R5-11 | Package Management | Layman | PASS | Tip equals Technical (157 characters): "put the package manager and package versions in each test report ...". Try-it block changed to the safe cleanup; run, same output as Technical. |
+| R5-12 | Package Management | Bangla | PASS | Tip: "প্রতি test report-এ package manager ও package version লিখুন। Runner-এ failure প্রায়ই অন্য dependency version থেকে আসে।" (147). Correct. See observation O1. Try-it block safe, run, same output. |
+| R5-13 | Listing Installed Packages | Layman and Bangla | PASS | Only the Try-it cleanup changed. Both blocks run: `2051`, `bash=5.3-2ubuntu1`, `base-files: /etc/host.conf`; the temp directory is removed. The `dpkg -l` comment is in the Technical Core code only (voices have no such block), so Round 4 R4-56 needs no voices change. |
+
+Observations (not FAILs):
+- O1: Bangla tip of Package Management says "Runner-এ failure" and not "একটি runner-এ failure" (Technical: "a failure on one runner"). The point (a failure on one runner often comes from another dependency version) is kept; optional wording: "একটি runner-এ failure প্রায়ই অন্য dependency version থেকে আসে।"
+- O2: Round 4 observations 1 to 3 and 5 (the "exit status" gloss in Installing Layman; CI advice lines in Go deeper; the Listing Bangla "চাইলে" wording; leftover Technical sentences not in the voices) are unchanged and are optional, not FAILs.
+
+Open FAILs: 0

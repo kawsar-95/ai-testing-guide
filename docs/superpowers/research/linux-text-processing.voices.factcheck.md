@@ -431,3 +431,101 @@ Flagged items from my reading:
 | 414 | unexpand | Bangla | Tutorial advice: use unexpand --first-only -t 4 only when a project rule asks for tab indents | "Use `unexpand --first-only -t 4` only when a project rule asks for tab indents." | PASS | OK |
 
 Open FAILs: 0
+
+## Round 4 (2026-10-27): the lesson rewrite
+
+The check ran in two parts by two independent agents (topics 1-10 and topics 11-20) on commit f91c93c. Part 1 is first, part 2 second.
+
+### Part 1 (topics 1-10)
+
+Checker: independent voices checker (Sonnet 5.5). I did not write these voices. Part 1 (topics 1-10) of `content/linux/text-processing.mdx` at commit f91c93c, compared with f91c93c^.
+
+Method: I read Technical, Layman, and Bangla of topics 1-10 and compared each sentence, number, command, flag, and path with the Technical panel of the same topic. A script listed the tip length (without `<Cite />`) and the Try-it code block of each panel. All tips are 160 characters or fewer (largest: Technical Stdout, Stdin, and Stderr, 151). Each Try-it block of a voice equals the Technical one. `node --test tests/voice-source.test.ts` passes (22 of 22). The 3 Core data-loss sentences in this part (Redirects, Tee, sort) are in both voices.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 1 | Text Processing | Layman | PASS | Same Goal, Core, Try-it, tip, Go deeper. Cites {1,2,6} equal Technical. No new fact. Tip 130 chars. |
+| 2 | Text Processing | Bangla | PASS | Same facts and cites {1,2,6}. Commands and code stay in English. Correct Bangla. Tip 129 chars. |
+| 3 | Stdout, Stdin, and Stderr | Layman | PASS | Same facts: 3 streams, descriptors 0/1/2, shell can connect them, `$?`, buffering. Cites {3,2,4}. The table is merged into the Core. Tip 141. |
+| 4 | Stdout, Stdin, and Stderr | Bangla | PASS | Same facts and cites. Correct Bangla ("unbuffered", "line-buffered" glossed). Tip 129. |
+| 5 | Redirects | Layman | PASS | Data-loss sentence kept in the Core (`sort data.txt > data.txt` leaves it empty). Go deeper has `<`, `&>`, left-to-right, POSIX, `/dev/null`, `set -C`. Cites {5,2,6,7,8}. Tip 138. |
+| 6 | Redirects | Bangla | PASS | Data-loss sentence kept ("সাবধান ... data হারিয়ে যায়"). Same facts and cites. Correct Bangla. Tip 126. |
+| 7 | Pipes | Layman | PASS | Same facts: only stdout goes through, status of last command, `pipefail`, `|&`, POSIX 2024. Cites {9,8,10,6}. Diagram description equals Technical. Tip 133. |
+| 8 | Pipes | Bangla | PASS | Same facts and cites. Diagram and code equal Technical. Correct Bangla. Tip 135. |
+| 9 | Tee | Layman | PASS | Overwrite-without-`-a` data-loss sentence kept in the Core. `sudo tee -a`, `-p`, and the same-file rule kept. Cites {11,5}. Tip 143. |
+| 10 | Tee | Bangla | PASS | Data-loss sentence kept ("সাবধান ... পুরনো content হারিয়ে যায়"). Same facts and cites. Tip 147. |
+| 11 | grep | Layman | PASS | Same facts: exit status 0/1/2, quoting, `-n`, `-q`, `-E`, `-F`, option list incl. GNU `-P`/`-H`. Cites {12,13}. Tip 127. |
+| 12 | grep | Bangla | PASS | Same facts and cites. Correct Bangla. Tip 126. |
+| 13 | awk | Layman | PASS | Same facts: rule form, record, field, `$0`, `$1`, `END`, `NF`, `NR`, `FS`, `-F`, `-v`, `BEGIN`. Cites {14,15,16,20,17,21,18,44,19,22}. Omits the "basic features" note and the `limit=300` example. Tip 133. |
+| 14 | awk | Bangla | PASS | Same facts and cites. Includes the `-v limit=300` and gawk notes. Correct Bangla. Tip 134. |
+| 15 | cut | Layman | PASS | Same facts: `-f`, `-d`, TAB default, numbering from 1, list forms, order, `-s`, `--complement`, CSV quotes. Cites {23}. Omits `-c1-3` (see observations). Tip 133. |
+| 16 | cut | Bangla | PASS | Same facts and cite {23}, incl. `-c1-3`. Correct Bangla. Tip 131. |
+| 17 | sort | Layman | PASS | Data-loss sentence kept in the Core (`>` to the input file; shell empties it first). Go deeper has `-r`, `-u`, `-t`, `-c`, `-k 2,2n`, `-h`/`-V`, and the `-o` crash risk. Cites {24,5}. Tip 134. |
+| 18 | sort | Bangla | PASS | Data-loss sentence kept ("সাবধান: `>` দিয়ে ... খালি করে দেয়"). Same facts and cites. `-o` crash risk kept. Tip 125. |
+| 19 | uniq | Layman | PASS | Same facts: adjacent only, sort first, `-c`, `-d`, `-u`, `-i`, `-f N`, `sort -u`, `sort -n -u`, flaky test. Cites {25,24}. Try-it equal. Tip 128. |
+| 20 | uniq | Bangla | PASS | Same facts and cites. Correct Bangla. Tip 136. |
+
+Observations (not FAILs):
+- The voices of Redirects, Tee, awk, and uniq leave out the short illustration code block that Technical shows before Try it (`cmd > out.txt 2>&1`, `make test 2>&1 | tee test.log`, `awk '{ print $1 }' times.txt`, `sort events.txt | uniq -c`). No fact is lost: each command is in the Try-it or the tip.
+- Go deeper tables of Technical (Stdout, Redirects, grep, sort, uniq) are bullet lists in the voices. The Layman `-o` bullet of sort says "`-o` can name the input file" without the Technical table row "`-o FILE` writes the result to FILE". Optional: add "`-o FILE` writes the result to FILE." (also in Bangla).
+- Layman cut omits `-c1-3` and the explanation of `--complement`; Layman awk omits the `limit=300` example and the "basic features" note. Omissions only.
+- Old to new: I found no old Layman or Bangla fact that is lost and also missing from the new Technical text.
+
+Part 1 FAILs: 0
+
+
+### Part 2 (topics 11-20)
+
+Part 2 (topics 11-20: wc, head, tail, nl, paste, join, split, tr, expand, unexpand). Checker: an independent agent, 2026-10-27, commit f91c93c. Method: I read each Layman and Bangla panel against the Technical panel of the same topic as it is now. A script checked the `<Cite n>` sets, the tip lengths (without the cite tags), the headings, and the Try-it code (commands and output). I read the old Layman panels (f91c93c^) for lost facts. `node --test tests/voice-source.test.ts` passes (22 of 22).
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 11 | wc | Layman | PASS | Same facts, cites {26,42,45}. Try-it code and output equal. Tip 126 chars. The `-w -c -m -L` table is now one sentence with the same facts. |
+| 11 | wc | Bangla | PASS | Same facts and cites. Try-it equal (comments in English). Tip 132 chars. Terms natural. |
+| 12 | head | Layman | PASS | Same facts, cites {27,47}. Try-it equal. Tip 148 chars (the same as Technical). GNU `-n -12` form and POSIX note kept. |
+| 12 | head | Bangla | PASS | Same facts and cites. Tip 146 chars. "ধীর step" for "slowest" is correct. |
+| 13 | tail | Layman | PASS | Same facts, cites {28,43,46,41,48}. Try-it equal. Tip 136 chars keeps the `--pid` point. The `--pid=$!` form is only in Technical (omission, no new fact). |
+| 13 | tail | Bangla | PASS | All Technical facts kept, including the `--pid` form and the minimal-container note. Tip 129 chars. |
+| 14 | nl | Layman | PASS | Same facts, cite {29}. Try-it equal (TAB sentence kept). Tip 135 chars. Option table is now bullets; the `-b pb` example and the `-s` default TAB are only in Technical (omission). |
+| 14 | nl | Bangla | PASS | Same facts. Tip 130 chars. Defaults 6 and TAB kept. |
+| 15 | paste | Layman | PASS | Same facts, cite {30}. Try-it equal. Tip 131 chars. The `-s` example, the `seq 6 | paste - - -` example, and the GNU escapes line are only in Technical (omission). |
+| 15 | paste | Bangla | PASS | Same facts, GNU escapes line kept. Tip 136 chars. |
+| 16 | join | Layman | PASS | Same facts, cites {31,33,32}. Try-it equal. Tip 126 chars. The safety fact (unsorted input, no warning) is in Core. `-t`, "diagnoses only when a line has no partner", and the GNU-option note are only in Technical (omission). |
+| 16 | join | Bangla | PASS | Same facts, `-t` and the GNU note kept. The warning "সাবধান: unsorted input ... সতর্ক না-ও করতে পারে" is correct. Tip 120 chars. |
+| 17 | split | Layman | PASS | Core keeps the data-loss sentence (second run replaced old pieces with no warning, use an empty directory). Cite {34}. Try-it equal. Tip 112 chars. |
+| 17 | split | Bangla | PASS | Core keeps the data-loss sentence. All Go deeper facts kept. Tip 125 chars. |
+| 18 | tr | Layman | PASS | Core keeps the data-loss sentence (`tr ... < file > file` empties `file`, cite 5) and "Write to a new file". Cites {35,38,5,36,37}. Try-it equal. Tip 109 chars. |
+| 18 | tr | Bangla | PASS | Core keeps the sentence and the cite. All Go deeper facts kept, including the `[0-9]` bracket warning. Tip 105 chars. |
+| 19 | expand | Layman | PASS | Core keeps the data-loss sentence (cite 5). Cites {39,5}. Try-it equal. Tip 145 chars (Technical 142). The in-place `mv` command is only in Technical. |
+| 19 | expand | Bangla | PASS | Core keeps the sentence. `--tabs=2,4,/8` and the `mv` command kept. Tip 130 chars. |
+| 20 | unexpand | Layman | PASS | Core keeps the data-loss sentence (cite 5). Cites {40,5,49,35,26}. Try-it (0 and 1 tab) equal. Tip 117 chars. `-a` changes spaces inside text: kept. |
+| 20 | unexpand | Bangla | PASS | Core keeps the sentence. `-a` warning and "সাবধানে ব্যবহার করুন" kept. POSIX note kept. Tip 102 chars. |
+
+Observations (none is a FAIL):
+- wc and head: the Core one-line code block (`wc -l run.log`, `head -n 1 results.csv`) is only in Technical, in both voices. It adds no fact. The Try-it block is equal in all 20 voice panels.
+- split Layman and Bangla Core say "use an empty directory", but only Technical Go deeper says that `split` writes all pieces into the current directory. Optional: no change needed.
+- unexpand Layman drops the Technical "Use it with care" after the `-a` warning. The warning fact stays.
+- tail Layman has `--pid` in the tip without the `--pid=$!` form (the form is in Technical and Bangla). Optional.
+- Each voice has no Markdown heading. Cites in every voice are a subset of the Technical cites of the same block. No fact was lost from the old voices that is not also in the new Technical text.
+
+Part 2 FAILs: 0
+
+
+Open FAILs: 0
+
+
+## Round 5 (2026-10-27): the fix rounds
+
+Checker: an independent agent that did not write or fix the page, 2026-10-27, HEAD c8cd682. Scope: the 8 changed Layman and Bangla lines of `git diff -U2 f91c93c HEAD -- content/linux/text-processing.mdx` (3 topics). Round 4 of the voices report had 0 FAILs, so no FAIL is re-checked; the Technical-mirroring fixes are checked against the Technical text of the same topic (fixed and checked in the Technical report, R5-1 to R5-4).
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| R5-V1 | Stdout, Stdin, and Stderr | Layman | PASS | Try it (line 235): `$?` sentence now has `<Cite n={6} />` and `<Cite n={9} />`, same as Technical (line 193), which cites 6 and 9. Go deeper bullet (line 257): "A stream is a channel for input or output between a program and its environment. <Cite n={4} />", the same fact and cite as Technical (line 221). No new fact. Layman Core is 142 words before `<details>`, the tip is 141 characters. |
+| R5-V2 | Stdout, Stdin, and Stderr | Bangla | PASS | Try it (line 271): `$?` ... exit status `<Cite n={6} />`, আর 0 মানে সফল। `<Cite n={9} />`. Go deeper (line 293): "Stream হলো একটি program আর তার environment-এর মধ্যে input বা output-এর একটি channel। `<Cite n={4} />`". Correct and natural; `$?`, `stderr`, program, environment, input, output stay in English. Cites 6, 9, 4 are in the Technical block. 134 words, tip 129 characters. |
+| R5-V3 | join | Layman | PASS | `<Cite n={33} />` after "no partner." (line 1993); Technical cites 33 in the same block. No new fact. 135 words, tip 126 characters. |
+| R5-V4 | join | Bangla | PASS | `<Cite n={33} />` after "সেগুলো print করুন।" (line 2030); 33 is in the Technical block. `-v 1` stays in English. 122 words, tip 120 characters. |
+| R5-V5 | split | Layman | PASS | "If you also name an input file, the last argument is your own prefix." (line 2116). Same fact as Technical (line 2071; S34 synopsis `split [option]... [input [prefix]]`). The "Be careful: use an empty directory" data-loss warning is still there. 134 words, tip 112 characters. |
+| R5-V6 | split | Bangla | PASS | "Input file-এর নামও দিলে, শেষ argument হলো আপনার নিজের prefix।" (line 2156). Correct and natural; the "সাবধান: একটি খালি directory-তে চালান" warning is still visible. 117 words, tip 125 characters. |
+| R5-V7 | all | both | PASS | No other voice line changed (12-line diff: 4 Technical, 4 Layman, 4 Bangla). `<Voices>` structure: `node --test tests/voice-source.test.ts` pass 22, fail 0; `lessoncheck.mjs text-processing` 0 problems. Every `<Cite n>` in a voice is cited by the same block's Technical. |
+
+Open FAILs: 0

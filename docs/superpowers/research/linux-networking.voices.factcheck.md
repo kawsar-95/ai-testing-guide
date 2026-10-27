@@ -432,3 +432,102 @@ Flagged items:
 | 414 | File Transfer | Bangla | Use rsync -c when times differ but content must match [62] | "Use `rsync -c` when times differ but content must match. [62]" | PASS | OK |
 
 Open FAILs: 0
+
+## Round 4 (2026-10-27): the lesson rewrite
+
+The check ran in two parts by two independent agents (topics 1-8 and topics 9-15) on commit 70678b8.
+
+### Part 1 (topics 1-8)
+
+Checker: independent voices checker (Sonnet 5.5), 2026-10-27, part 1 (topics 1-8). I did not write these voices. Page: `content/linux/networking.mdx` at commit 70678b8, compared with 70678b8^. I compared each sentence, number, command, flag, and path of the Layman and Bangla panels with the Technical panel of the same topic as it is now (Go deeper included). A script listed the `<Cite n>` set, the tip length (after removing `<Cite />`), and the Try-it code of each panel. A second script listed the sentences of the old Technical, Layman, and Bangla panels that the new panel of the same voice no longer has. `node --test tests/voice-source.test.ts`: 22 of 22 pass.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 1 | Networking | Layman | PASS | Same parts and order, no heading. Cites {2,22,16,30,4,36} are a subset of the Technical set. Try-it and tip equal Technical (tip 142 chars). No new fact. Omits `ss`/`netstat` and `ip netns`, and the minimal-image advice (see observations). |
+| 2 | Networking | Bangla | PASS | Same facts, cites {2,22,16,30,4,36,35}, all in Technical. Try-it equal, tip 141 chars. Commands and terms stay in English. Correct Bangla. The minimal-image advice is kept. |
+| 3 | TCP/IP | Layman | PASS | Same facts: IP no ack/retransmit, TCP in order, port, bind, `CAP_NET_BIND_SERVICE` below 1024, local range, two sysctls, 32768 to 60999, `ss -tln` advice. Cites {3,4,22,34}. Try-it equal, tip 123 chars. Omits the `ss` flags and the stream/datagram sentence (see observations). |
+| 4 | TCP/IP | Bangla | PASS | Same facts and cites {3,4,22,34}. The `ss` flags, UDP datagram and TCP stream sockets are kept. Try-it equal, tip 121 chars. Correct Bangla. |
+| 5 | Ethernet, ARP, and RARP | Layman | PASS | Same facts: 48-bit MAC, ARP asks all stations, neighbour cache and ARP table, 1500 bytes, `INCOMPLETE`, `FAILED`, IPv6 NS, RARP, DHCP. Cites {5,20,19,7,8,6,12}. Try-it equal, tip 138 chars. Omits type 0800, stale, and the same-IP advice (see observations). |
+| 6 | Ethernet, ARP, and RARP | Bangla | FAIL | "Frame হলো link layer-এর একক: একটি header আর data।" says that a frame is the link-layer unit. Technical says only "A frame is a header plus data" (the old Technical had "link-layer unit"; the rewrite dropped it). Fix: change to "Frame হলো একটি header আর data।". All else PASS: cites {5,20,19,7,8,6,12}, 0800, 1500, stale, `INCOMPLETE`, same-IP advice, Try-it equal, tip 128 chars. |
+| 7 | Subnetting | Layman | PASS | Same facts: 32 bits, prefix, CIDR 0 to 32, mask, /26 gives 6 host bits, 64, first is network address, 192.0.2.63, 62 hosts, three RFC 1918 blocks, three RFC 5737 blocks, gateway advice. Cites {9,39,2,37,10,11}. Try-it equal, tip 112 chars. "directed" and the AND sentence are omitted (see observations). |
+| 8 | Subnetting | Bangla | PASS | Same facts and cites {9,39,2,37,10,11}. The AND sentence and "directed broadcast" are kept. Try-it equal, tip 119 chars. Correct Bangla. |
+| 9 | IP Routing | Layman | PASS | Same facts: next hop, most specific match, `default`, `ip route get` sends nothing, `local`, blackhole/unreachable, `ip_forward` 0, console advice. The danger callout is kept: `add`, `del`, `replace`, `flush`, and loss of remote access over SSH. It adds no fact. Cites {9,18,34,36}. Try-it equal, tip 100 chars. |
+| 10 | IP Routing | Bangla | PASS | Same facts and cites {9,18,34,36}. The danger callout is kept with the same four verbs and the SSH risk. Try-it equal, tip 101 chars. Correct Bangla. The table fields `dev`, `src`, `scope link` are not in the voice (omission only). |
+| 11 | DHCP | Layman | PASS | Same facts: address and settings, lease, `proto`, `ip route show proto dhcp`, four steps, T1 half, T2 0.875, `nmcli -f DHCP4`, `systemd-networkd DHCP=yes`, `journalctl -u`. The danger callout is kept (new lease, address change, SSH session stops). It adds no fact. Cites {12,18,31,32,41}. Try-it equal, tip 116 chars. |
+| 12 | DHCP | Bangla | PASS | Same facts and cites {12,18,31,32,41}. The danger callout is kept. The "service restart" warning and "second way to reach the host" are kept. Try-it equal, tip 127 chars. Correct Bangla. |
+| 13 | DNS Resolution | Layman | PASS | Same facts: resolver, NSS and `hosts:` order, `files` is `/etc/hosts`, `getent`, `resolv.conf`, TTL and the lower-TTL advice, stub 127.0.0.53, `resolvectl status`, do not edit by hand, `dig`. Cites {13,26,25,24,29,14,27,28,40,33}. Tip 139 chars. The Try-it commands equal Technical; the last code comment is missing (see observations). |
+| 14 | DNS Resolution | Bangla | PASS | Same facts and cites {13,26,25,24,29,14,27,28,40,33}. `resolv.conf` limits (three `nameserver`, `search`, `options`, `timeout:n` 5 s) and the `dig` search-list rule are kept. Correct Bangla; names stay in English. Tip 141 chars. The Try-it commands equal Technical; the last code comment is missing (see observations). |
+| 15 | ICMP | Layman | PASS | Same facts: types 8, 0, 3, 11 code 0, the IP-header TTL is not the DNS TTL, kernel answers echo and limits error rate, two sysctls, codes 0, 1, 3, 4 with DF, TCP reset, UDP port unreachable, do not drop all ICMP. Cites {15,21,34,4}. Try-it equal, tip 116 chars. Omits PMTU, `ETIMEDOUT`, and "ICMP does not make IP reliable". |
+| 16 | ICMP | Bangla | PASS | Same facts and cites {15,21,34,4,23}, all in Technical. Includes `ETIMEDOUT`, PMTU, and "ICMP does not make IP reliable". Try-it equal, tip 122 chars. Correct Bangla. |
+
+Observations (not FAILs):
+- Old to new: every fact that left a voice either stays in the new Technical, or it also left the Technical. Examples that left both: "Linux has more than one DHCP client", "The Python module `ipaddress` does the subnet maths".
+- Danger callouts (IP Routing, DHCP): both voices keep them as a danger callout in a shorter form, with the same verbs and the same risk. No new fact.
+- The Technical panel has a first "Core" code block in every topic (for example `ip -br addr`, `ss -tln`). No voice shows it. The voices keep the Try-it block. This is an omission of an example, and it is the same in all 16 voice panels, as in the pilot (shell-basics).
+- DNS Resolution: Technical has a last Try-it line "# Your output can differ. 127.0.0.53 is the local stub of systemd-resolved." Layman and Bangla omit it (the pilot treated the same kind of omission as an observation). Recommended, not required: add the line to both Try-it blocks, as IP Routing and DHCP do.
+- IP Routing Bangla: "Forwarding-এ longest match ব্যবহার হয়" keeps the word "forwarding" from the old Technical; the new Technical says only "the most specific prefix (the longest match) wins". The meaning is the same. "`via` তার নাম বলে" means that `via` shows the gateway; fine.
+- Layman jargon: "stub", "TTL", "DF", "sysctl" are explained in the text where they first appear. "neighbour cache" and "Name Service Switch" stay without a gloss, as in Technical.
+- Longest tips of part 1: Layman 142 (Networking), Bangla 141 (DNS Resolution). All are 160 characters or fewer, and each keeps the point of the Technical tip.
+- Cites: no voice cites a number that the Technical panel of the same topic does not cite.
+
+Part 1 FAILs: 1
+
+
+### Part 2 (topics 9-15)
+
+Part 2 (topics 9-15) checker: independent voices checker (Sonnet 5.5), 2026-10-27. I did not write these voices. Page: `content/linux/networking.mdx` at commit 70678b8, compared with 70678b8^. I read the Technical, Layman, and Bangla panels of ping, traceroute, netstat, Netfilter, Packet Analysis, SSH, and File Transfer, and the old Layman and Bangla panels of the parent commit. A script compared the `<Cite n>` set, the Try-it code block, and the tip length (Cite tags removed) of each panel. `node --test tests/voice-source.test.ts` passes (22 of 22).
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 17 | ping | Layman | PASS | Same parts as Technical, no heading. Cites {42} equal. Same facts: echo request/reply, IP TTL, round-trip time, packet loss, exit status 0/1/2, `-c`, `-n`, `$?`, `-W`, `-w`, `CAP_NET_RAW`, the "unwise in scripts" sentence. Tip is the same as Technical (120). No new fact. |
+| 18 | ping | Bangla | PASS | Same facts and cite {42}. "IP TTL (DNS TTL নয়)" keeps the Technical "not the DNS TTL". `-i` and "2 ms root" kept. Commands stay in English. Correct Bangla. Tip 132. |
+| 19 | traceroute | Layman | PASS | Same facts and cite {43}. Try-it block equals Technical (guard branch, "not installed" comment). Tip keeps the warning (own or permitted hosts only), 126. Go deeper: 3 probes, limit 30, UDP from 33434, no root, `-I`, `-T -p`, root for `-T`. No new fact. |
+| 20 | traceroute | Bangla | PASS | Same facts and cite {43}, including the SYN gloss, the "no unprivileged mode for -T" sentence, the star-in-the-middle sentence, and the `nmap` line. Try-it block equal. Warning tip kept (122). |
+| 21 | netstat | Layman | PASS | Same facts and cites {44,30}: `ss -tln`, `-t -u -l -n -p`, `sport = :PORT`, replacement of `-r`, `-i`, `-g`, `TIME_WAIT`, tip. `&` and `$!` explained as in Technical. Tip 133. No new fact. |
+| 22 | netstat | Bangla | PASS | Same facts and cites {44,30}. The `-n`/`-p` root fact and the minimal-container line are kept. Correct Bangla. Tip 129. |
+| 23 | Netfilter | Layman | PASS | Cites {45,46,47,48,49,50} are a subset of Technical (no [36]). Danger callout kept in a shorter form, with the SSH lock-out and the `nft list ruleset > NEW-FILE` save. Try-it block equal (with "Your versions can differ"). Go deeper: table/chain/rule/policy, `nftables`, `iptables-save`, reboot warning, `nft -c -f`. No new fact. |
+| 24 | Netfilter | Bangla | PASS | Same facts and cites {45-50}. Danger kept with the same advice. Go deeper keeps `iptables -F`, `nft flush ruleset`, the `>` overwrite note, the reboot warning, and `nft -c -f`. Commands stay in English. Correct Bangla. Tip 143. |
+| 25 | Packet Analysis | Layman | PASS | Cites {51,52} are a subset of Technical. Same Try-it block and explanation of `-d`, `>/dev/null 2>&1`, `&&`. The capture-secrets warning stays visible in the tip: 153 characters, which is 160 or fewer, so PASS (the "153 is a FAIL" note of the task is not a violation of the 160 limit). Go deeper: options, narrow filters, CI advice. No new fact. |
+| 26 | Packet Analysis | Bangla | PASS | Same facts and cites {51,52,53,54}. Warning tip kept (143). `-A`/`-X` payload gloss, `tshark`, `-Z "$USER"` kept. Try-it block equal. Correct Bangla. |
+| 27 | SSH | Layman | PASS | Cites {55,56,57,58,66} equal Technical. Warning tip kept: `StrictHostKeyChecking=no` in CI, a changed host key passes, weaker protection against an attacker in the path (137). Try-it block equal. Go deeper: Ed25519 default from 9.5, mode 0600, host-key change, `accept-new`, `-o BatchMode`, CI key advice. No new fact. |
+| 28 | SSH | Bangla | PASS | Same facts and cites. The warning tip is kept (148). The Go deeper part keeps the "accepts new keys without a question", the man-in-the-middle gloss, `-t ed25519`, `PasswordAuthentication yes`, and the CI advice. Correct Bangla. Try-it block equal. |
+| 29 | File Transfer | Layman | PASS | Cites {59,60,61,62,63,64,67}, a subset of Technical (no [65]). Danger callout kept (`rsync --delete`, dry run with `-n`, `curl -k`). Try-it block equal; `-v`, `-i` explained as in Technical. Tip 80. No new fact. |
+| 30 | File Transfer | Bangla | PASS | Same facts and cites {59,60,61,62,63,64,65,67}. Danger kept. FTPS, SFTP, `-O`/`-P`, trailing slash, `curl -f` status 22, `wget -c`, `rsync -c`, and "scp can overwrite" kept. Correct Bangla. Try-it block equal. Tip 92. |
+
+Observations (not FAILs):
+- Tip lengths (Cite tags removed): Technical max 145 (Packet Analysis); Layman max 153 (Packet Analysis); Bangla max 148 (SSH). All are 160 or fewer. All 7 warning tips (traceroute, Packet Analysis, SSH) and the 2 kept danger callouts (Netfilter, File Transfer) are visible in all 3 voices.
+- The Try-it code block of a voice equals the Technical one, except that the last caveat comment line is missing in ping (`# Your times differ.`), netstat (`# Your PID differs.`), and SSH (`# Your directory name and fingerprint differ.`), in both Layman and Bangla. Netfilter keeps its caveat line in all voices. Optional: add the line back, or remove it from the Technical block, so that the 4 topics behave the same. Same kind of gap as in the pilot round.
+- The Core code block of Technical (for example `ping -c 1 -W 2 HOST`, `nft list ruleset`, `tcpdump -n -r test.pcap`, `rsync -avn SRC/ DEST/`) and the Go deeper code blocks and tables are only in Technical. The old Layman and Bangla ping text had the command `ping -c 1 -W 2 HOST` as advice; now it is only in the Technical Core block. It is an omission, not a new fact.
+- Facts that Technical keeps in Go deeper and that the Layman text leaves out (no cite is lost for a number): the `-i` and `-n` rows of ping, the echo request gloss, the summary min/avg/max/deviation, the "explicit `StrictHostKeyChecking=no` accepts new keys without a question" clause, agent forwarding, `PasswordAuthentication yes`, `iptables -F` and `nft flush ruleset`, the `>` overwrite note of `iptables-save`, `scp` overwrite advice, `sftp -a` resume warning, `tshark`, `-Z`. The old Layman text did not have most of these. The Layman text also leaves the SYN gloss out of traceroute (the Bangla text keeps it). Optional to add for the Layman reader.
+- The Bangla text of the 3 danger callouts keeps the English title ("Firewall changes can lock you out", "Check before you delete or skip verification"), while the tip titles are in Bangla. The same is true in the other sections of this page (IP Routing, DHCP). Optional: translate the titles.
+- Bangla Packet Analysis: "Wireshark guide QA engineer-দের এর user হিসেবে উল্লেখ করে" has a stray "এর". Optional wording fix: "Wireshark guide QA engineer-দের user হিসেবে উল্লেখ করে।" It was in the old text too.
+- Old to new: every fact of the old Layman and Bangla text for these 7 topics is in the new voice, or in Go deeper, or it is not a new fact. Only the Core code block advice of ping and the Layman SSH "accepts new keys without a question" clause left the Layman text (see above).
+
+Part 2 FAILs: 0
+
+
+Open FAILs: 1
+
+
+## Round 5 (2026-10-27): the fix rounds
+
+Checker: an independent agent (did not write or fix the voices), 2026-10-27, HEAD `c8cd682`, diff base `70678b8`. Scope: the changed hunks in the Layman and Bangla panels, checked against the Technical text of the same topic.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| R5-v1 | Ethernet | Bangla | FIXED | Round 4 FAIL "Frame হলো link layer-এর একক: ..." is now "Frame হলো একটি header আর data।" (line 390). Equals Technical "A frame is a header plus data". The unsupported "unit of the link layer" claim is gone. |
+| R5-v2 | DHCP | Layman | PASS | Goal "Find the routes that carry the route tag `dhcp`." and "No output means that no route has this tag." equal Technical. Cites {12, 18} subset of Technical. 150 words. |
+| R5-v3 | DHCP | Bangla | PASS | Goal "`dhcp` route tag-ওয়ালা route-গুলো খুঁজে বের করুন।" and "কোনো output না এলে কোনো route-এ এই tag নেই।" are correct and natural; same fact as Technical. Commands in English. |
+| R5-v4 | TCP/IP | Layman | PASS | Shortened (147 to 145 prose words by my count): all facts of Technical that the voice had are kept, including "bind (attach)", `CAP_NET_BIND_SERVICE` below 1024 and the local source-port range. No new fact; cites 3, 4, 22, 34 are in Technical. |
+| R5-v5 | Ethernet | Layman | PASS | Shortened: frame, 48-bit MAC, ARP, broadcast request, neighbour cache and ARP table kept. No fact lost that Technical states; "to send an IP packet" is not in Technical either (Technical wording also shortened). Cites 5, 20, 19 equal. |
+| R5-v6 | IP Routing | Layman | PASS | Shortened: next hop, most specific match, `default`, `ip route get` sends no packet. Danger callout kept visible ("a deleted default route can end your remote access"). Cites 9, 18 equal. 148 words. |
+| R5-v7 | Packet Analysis | Layman | PASS | Tip: Cite 51 removed, text equals Technical (tip 153 characters). Capture-secrets warning visible. |
+| R5-v8 | Packet Analysis | Bangla | PASS | Tip: Cite removed, same as Technical. Go deeper: "Wireshark guide QA engineer-দের user হিসেবে উল্লেখ করে।" The stray "এর" is gone. Natural. |
+| R5-v9 | DNS, ping, netstat, SSH | Layman | PASS | Caveat comment lines added after the Try-it output, same text as Technical's kind of caveat; commands unchanged. No new fact. |
+| R5-v10 | DNS, ping, netstat, SSH | Bangla | PASS | Same caveat comment lines (English comments in the code block, like the other comments). Commands unchanged. |
+| R5-v11 | netstat, SSH, File Transfer, Packet Analysis | Layman, Bangla | PASS | Try-it blocks: guards `d=$(mktemp -d) \|\| exit 1` (netstat, SSH, in a subshell) and `d=$(mktemp -d) && cd "$d" \|\| exit 1` (File Transfer), cleanup `rm -rf -- "${d:?}"`. Commands equal Technical. I ran the Technical blocks (same commands): all read-only or loopback-only, output as shown, server stopped, temporary directories removed. |
+| R5-v12 | All | Layman, Bangla | PASS | Limits: Layman words max 150, Bangla max 141; tips max 153 characters; every `<Cite n>` in a voice is in the same block's Technical (Cite 51 count 17 to 14, only the three tips changed); `lessoncheck` 0 problems; `voice-source` test 22 pass. Warnings (traceroute, Packet Analysis, SSH tips; Netfilter and File Transfer danger callouts; IP Routing danger callout) are still visible in both voices. |
+
+Observations (not FAILs): Ethernet Layman could keep "to send a packet" for clarity (also absent from Technical). The Bangla danger-callout titles stay in English, as noted in Round 4.
+
+Open FAILs: 0

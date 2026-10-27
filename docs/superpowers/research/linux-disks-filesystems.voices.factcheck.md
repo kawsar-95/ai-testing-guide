@@ -174,3 +174,59 @@ None. No row has a new fact, a changed number, flag, command, path, product name
 - The Bangla keeps the common technical terms in English (block device, partition, filesystem, mount, inode, hard link, swap, snapshot, extent, and the commands). It uses আপনি forms ("করুন", "দেখে নিন"). Every English word with a Bangla suffix has a hyphen. Good.
 
 Open FAILs: 0
+
+## Round 4 (2026-10-27): the lesson rewrite
+
+Checker: independent voices checker (Sonnet 5.5). I did not write these voices. Page: `content/linux/disks-filesystems.mdx` at commit c001c92, compared with its parent (`git diff c001c92^ c001c92`). I also read the stage report of the writer.
+
+Method: I read all 7 topics (Goal, Core, Try it, tip, Go deeper) in Technical, Layman, and Bangla, and compared each sentence, number, command, flag, and path of a voice with the Technical panel of the same topic, Try it and Go deeper included. A script listed the `<Cite n>` set, the tip length (without `<Cite />`), and the difference between the Try-it code block of each voice and the Technical one. `node --test tests/voice-source.test.ts` passes (22 of 22). Special checks: (a) each data-loss warning of Technical is in the voices; (b) each voice says that the Try-it formats a file, not a device.
+
+Results of the scripts: every `<Cite n>` of a voice is in the Technical set of the same topic. All tips are 160 characters or less (largest: Technical Disks and Filesystems and Inodes, 140). Each Try-it code block of a voice equals the Technical one, except that the voices leave out the last code comment of Technical ("Your ... differ", "... are stand-ins") in all 7 topics.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| 1 | Disks and Filesystems | Layman | PASS | Same facts: block device, `/dev/sda`, `/dev/sda1`, 3 steps, `df` and `du`, `-e7`, `status=none`, 1 MiB, the tip, MBR 2 TiB, GPT, hidden files below a mount, reserved blocks, `lsof +L1`. Cites {8,14,15,17,18,20,33,52,54,56} are a subset. No new fact. The `lsblk -f` code block, the `df -T`/`du -x` lines, and the "protective MBR" fact are left out. |
+| 2 | Disks and Filesystems | Bangla | PASS | Same facts and cites. Correct Bangla. Commands, paths, `MBR`, `GPT`, `UUID` stay in English. Sector, partition table, and protective MBR are kept. |
+| 3 | Filesystems | Layman | PASS | Goal, Core, and Try-it text equal Technical. The `mkfs` warning is kept in the Core ("erases the start of the device, so the old filesystem is lost ... check the device name"). The Try-it says "in an 8 MiB file, not on a device" and "Nothing is mounted". No new fact. Cites are a subset. |
+| 4 | Filesystems | Bangla | PASS | The `mkfs` warning is kept ("মুছে ফেলে, তাই পুরনো filesystem হারিয়ে যায় ... device-এর নাম check করুন"). "একটি 8 MiB file-এ ... কোনো device-এ নয়" and "কিছুই mount হয় না" are correct. The tip drops the `echo x > /dev/full` example (see observations). |
+| 5 | Inodes | Layman | PASS | Same facts: inode, no file name, directory entry, hard link, `ln`, `%i`, `%h`, `df -i`, `nr_inodes`. Cites {5,17,24,25,27,28,33,38} are a subset. No new fact. |
+| 6 | Inodes | Bangla | PASS | Same facts and cites, including `mke2fs -i` and `-N` and the archive advice. Correct Bangla. Code and output equal Technical. |
+| 7 | Mounts | Layman | PASS | Same facts: a mount hides the old contents, `ls -A` first, `findmnt`, `--target`, `-o`, "only read", `ro`, `noexec`, `nofail`, `tmpfs`, `umount` busy, `fuser -m`, `umount -l`. No new fact. The fstab field list, bind mount, `/proc/mounts`, and `umount -f` are left out. |
+| 8 | Mounts | Bangla | PASS | Same facts and cites {19,20,21,22,27,38,45,47,51}. Correct Bangla. The "hides the old contents" sentence and the `umount -f` warning ("এটিও আটকে যেতে পারে") are kept. |
+| 9 | Adding Disks | Layman | PASS | The Core is the same as Technical, with the data-loss warning ("a wrong name destroys data ... keep a backup"). The Goal and Try-it say "on a file" and "build a filesystem in a file"; the code comment says "a fake 8 MiB disk" and `-F: a regular file is OK`. The 6 steps keep the order, and the `nofail` boot warning. No new fact. |
+| 10 | Adding Disks | Bangla | PASS | The warning is kept ("ভুল নাম দিলে data নষ্ট হয়। ... backup রাখুন"). Goal and Try-it say a file and "UUID-টি একটি file-এর, কোনো device-এর নয়". The 6 steps, `defaults`, and the `nofail` warning are kept and correct. |
+| 11 | Swap | Layman | FAIL | (1) The Core says "check the target with `lsblk -f` first". Technical says only "check the target first" (the writer removed `lsblk -f` from Technical, see the stage report). `lsblk -f` is a command that the Technical Swap panel does not give. Fix: "`mkswap` erases the start of its target, so check the target first." (2) Technical Go deeper has "`dd of=` writes into its target file or device. Check the target first." The Layman Go deeper leaves out this data-loss caution. Fix: add the bullet "- `dd of=` writes into its target file or device. <Cite n={56} /> Check the target first." The cite 56 is also in Technical. The rest passes: same facts, cites {10,29,30,31,40}, the Try-it says "a 1 MiB swap file and do not start it". |
+| 12 | Swap | Bangla | FAIL | The Core says "তাই আগে `lsblk -f` দিয়ে target check করুন". Technical gives no `lsblk -f` in this topic. Fix: "`mkswap` তার target-এর শুরুর অংশ মুছে ফেলে, তাই আগে target check করুন।" The rest passes: the `dd of=` caution is kept, cites {10,29,30,31,40,48,49,56} are a subset, "কিছু ... চালু করবেন না" matches "do not start it", and the Bangla is correct. |
+| 13 | LVM | Layman | FAIL | Technical Go deeper has "Run `vgs` and `lvs` first. Check the names before any `lvreduce` or `lvremove`." The Layman Go deeper leaves out this data-loss caution. The `lvreduce` data-loss sentence in the Core is kept. Fix: add the bullet "- Run `vgs` and `lvs` first. Check the names before any `lvreduce` or `lvremove`." (no cite, as in Technical). The rest passes: same facts, cites {12,13,14,41,42,43,44,55}, "Shrink the filesystem before `lvreduce`", the snapshot tip with "it holds space". |
+| 14 | LVM | Bangla | PASS | The Core warning is kept ("`lvreduce` সরানো অংশের data নষ্ট করে, তাই আগে backup নিন"). The `vgs`/`lvs`/`lvremove` caution is kept. Same facts and cites. Correct Bangla; the Try-it comment says "This machine has no LVM". |
+
+Observations (not FAILs):
+- Data-loss warnings: Filesystems (`mkfs`), Adding Disks (`fdisk` and `mkfs`, wrong name), Swap (`mkswap`), and LVM (`lvreduce`) are in the Core of all 3 voices. The Goal and Try-it of Filesystems, Adding Disks, and Swap say a file, not a device, in all 3 voices. No voice has a Try-it that runs on a device.
+- Only Technical has the Go deeper code block with "ERASES the partition" (Adding Disks) and the `mkfs.ext4 -n` dry-run line (Filesystems). The voices keep the `mke2fs -n` dry-run sentence. The Adding Disks Core warning is in all voices, so I did not make this a FAIL.
+- The voices leave out the last code comment of Technical in all 7 Try-it blocks ("Your device names differ", "The names are stand-ins", "util-linux 2.41 output", and so on). Same as the pilot round. Optional: add the comment back where it matters most (Disks and Filesystems, Mounts, LVM: the names are stand-ins; Adding Disks: the output is util-linux 2.41).
+- Layman Core of Filesystems and Adding Disks is word for word the Technical Core, with "journaling", "UUID", and `fstab` not explained. The Technical text is already plain, and Go deeper explains the journal and the UUID. It is not a regression of rule 6, but a reader gets no simpler words there.
+- Layman Swap Go deeper says "`vm.swappiness` takes 0 to 200" and leaves out "(older kernels: less)". The text says "in the latest kernel docs", so it is still true.
+- Layman and Bangla Swap leave out the `swapoff` caution (it can slow the host or start the OOM killer) and Layman leaves out the `oom_score` line. No data is lost with these, so they are not FAILs. Optional to add.
+- Bangla Filesystems Go deeper: "শুধু `mkfs` একটি deprecated front end" can be read as "only mkfs". Technical says "Plain `mkfs`" (no type). Optional: "type ছাড়া শুধু `mkfs`".
+- Bangla LVM Try-it: "holder device থাকে সে যে device ব্যবহার করে তার নিচে" is understandable but "সে" is vague. Optional: "holder device থাকে যে device-কে সে ব্যবহার করে তার নিচে" or "যে device ব্যবহার করে হয়, তার নিচে".
+- Bangla Filesystems tip drops "Try `echo x > /dev/full`". The point (a write to `/dev/full` fails with `ENOSPC`) is kept.
+- Bangla terms: block device, partition, filesystem, mount, inode, swap, snapshot, extent, and all commands stay in English, and it uses আপনি forms. Words with a Bangla suffix have a hyphen. Good.
+
+Open FAILs: 3
+
+## Round 5 (2026-10-27): the fix rounds
+
+Checker: an independent agent (Sonnet 5.5, 2026-10-27), HEAD c8cd682, diff base c001c92. I did not write or fix these voices. I compared every changed hunk of the Layman and Bangla panels with the Technical panel of the same topic, and checked the 3 Round 4 FAILs (rows 11, 12, 13). `node --test tests/voice-source.test.ts`: 22 of 22 pass. Cites of the changed voice lines are all in the Technical set of the same block (cite 56 in Swap, cites 14 and 41 in LVM).
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| R5-1 | Swap | Layman | FIXED | Core: "`mkswap` erases the start of its target, so check the target first. <Cite 30>" (no `lsblk -f`, as Technical). Go deeper has "`dd of=` writes into its target file or device. <Cite 56> Check the target first." The `chmod 600` sentence is deleted, as in Technical. |
+| R5-2 | Swap | Bangla | FIXED | Core: "...তাই আগে target check করুন।" (no `lsblk -f`). The `dd of=` bullet was already there. The `chmod 600` sentence is deleted. Bangla is correct. |
+| R5-3 | LVM | Layman | FIXED | Go deeper has "Run `vgs` and `lvs` first. Check the names before any `lvreduce` or `lvremove`." as in Technical (no cite). The Try-it is "...every block device, except RAM disks, in a tree. <Cite 14> ... <Cite 41>", the same as Technical. |
+| R5-4 | LVM | Bangla | PASS | Try-it: "`lsblk` RAM disk ছাড়া সব block device একটি tree-তে দেখায়। <Cite 14> LV একটি virtual block device, ... <Cite 41>". Correct, natural, equal to Technical. The old "holder device" sentence is gone. The `vgs`/`lvs` caution was already there. |
+| R5-5 | All 7 topics | Layman, Bangla | PASS | The Try-it code of every voice: first line `tmp=$(mktemp -d) && cd "$tmp" \|\| exit 1`, last line `rm -r -- "${tmp:?}"`, the same as Technical (grep: 0 old patterns). Each voice still says that the Try-it uses a file, not a device. The 5 `mktemp` Try-its of each voice ran (see the Technical report). |
+| R5-6 | Data-loss warnings | Layman, Bangla | PASS | Still visible in the Core of both voices: `mkfs` erases (Filesystems), a wrong name destroys data (Adding Disks), `mkswap` erases the start (Swap), `lvreduce` loses data (LVM). The `dd of=` caution (Swap) and the `vgs`/`lvs` caution (LVM) are now in Go deeper of both voices. |
+| R5-7 | Disks and Filesystems | Layman | FIXED | Re-checked at commit 251997e: the Core now reads "To use a disk, do three steps: partition it, make a filesystem, and mount it. <Cite 8>". Only the word "you" is gone; the 3 steps, their order, the cite, and the meaning are unchanged, and the imperative is correct and matches Technical. Count with the same counter: 150 (limit 150). Every other Layman and Bangla panel is 150 or fewer (Layman 133, 133, 114, 150, 140, 141; Bangla 134, 124, 111, 108, 135, 138, 126). `lessoncheck.mjs disks-filesystems`: 0 problems. `node --test tests/voice-source.test.ts`: 22 of 22 pass. |
+| R5-8 | All voices | Layman, Bangla | PASS | Tips: 132, 123, 140, 114, 137, 139, 125 characters (Layman) and 135, 114, 131, 117, 134, 135, 130 (Bangla); all 160 or fewer. |
+
+Open FAILs: 0
