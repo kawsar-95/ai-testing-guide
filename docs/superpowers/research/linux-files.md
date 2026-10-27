@@ -207,3 +207,10 @@ Moved facts (no fact deleted; every `<Cite n>` 1-28 is still on the page):
 - Option tables, `touch -c`/`-d`, `cat > file`, `rmdir`, `rm -I`, `cp` options, cross-filesystem `mv`, the nano key table, `-%`, the Vim key table, E37, `vimtutor`, VIM Adventures, the hard link limits, `ln -sfn`, `gzip -k`/`-d`, ZIP, and the unsafe names of `tar` moved to "Go deeper".
 - The nano `--version` option: the nano manual (S16) lists `-V, --version`, and `nano --help` shows "Print version information and exit".
 - Glosses with no cite (Try-it mechanics only): `mktemp -d`, the shell expands `*.log`, `vi -es` (no screen), `-c` (one `:` command), `1d` (delete line 1). The Vim glosses come from Vim `starting.txt` and `change.txt`, which are not in `page.sources`; they were checked by the local run.
+
+### Fix round 1 (2026-10-27)
+
+- All 24 Try-it blocks now start with `tmp=$(mktemp -d) && cd "$tmp" || exit 1` and end with `rm -r -- "${tmp:?}"` (R4-86). Run again with bash 5.3.9: the output did not change, and no temp directory was left.
+- Vim: the glosses of `-es`, `-c`, and `1d` are removed (R4-60 to R4-62). The Try-it prose states only the effect of the example: delete line 1, then quit with `:q!` or with `:wq`.
+- Nano Goal: "Check that nano is installed, and learn the keys that save and exit." (R4-50).
+- Archiving: the unsafe names (`../`, absolute) and the `tar -c` erase warning are Core sentences with Cite 28 (R4-84, R4-85). "Compression makes data smaller" and `-z` moved to Go deeper.
