@@ -137,10 +137,14 @@ export function topicVoices(source: string): TopicVoices[] {
   return topics;
 }
 
-const RM = /(?:^|[;&|(]\s*|\s)rm\s+((?:-\S+\s+)+)(?:--\s+)?("?\$(?:PWD\b|\w+|\{\w+\})"?)(?=\s|$|[;&|)])/;
+// No end-of-target check: `"$d"/*` with an empty `d` is `rm -rf /*`. `${d:?}` does not match `\{\w+\}`.
+const RM = /(?:^|[;&|(]\s*|\s)rm\s+((?:-\S+\s+)+)(?:--\s+)?"?\$(?:PWD\b|\w+|\{\w+\})/;
 const RECURSIVE = /^--recursive$|^-[a-zA-Z]*[rR][a-zA-Z]*$/;
 
-/** A message for each line of a code block that runs `rm -r` on `$PWD` or on a variable with no `:?` guard. */
+/**
+ * A message for each line of a code block that runs `rm -r` on a target that
+ * starts with `$PWD` or with a variable with no `:?` guard (also `"$d"/x`).
+ */
 export function unsafeCleanups(source: string): string[] {
   const messages: string[] = [];
   for (const { text, index, kind } of sourceLines(source)) {
@@ -150,6 +154,24 @@ export function unsafeCleanups(source: string): string[] {
     // `--` ends the flags, so the target regex above starts after it. Check each flag word before it.
     if (match[1].trim().split(/\s+/).some((flag) => RECURSIVE.test(flag))) {
       messages.push(`line ${index + 1}: unsafe recursive rm, use "\${var:?}": ${text.trim()}`);
+    }
+  }
+  return messages;
+}
+
+const MKTEMP_CD = /\bcd\s+"?\$\(mktemp\b/;
+const GUARD = /\|\|\s*(?:exit|return)\b/;
+
+/**
+ * A message for each line of a code block with `cd "$(mktemp -d)"` and no
+ * `|| exit` or `|| return` on the same line. If mktemp fails, `cd ""` stays in
+ * the folder of the reader, and the next lines change the files of the reader.
+ */
+export function unguardedMktempCd(source: string): string[] {
+  const messages: string[] = [];
+  for (const { text, index, kind } of sourceLines(source)) {
+    if (kind === "code" && MKTEMP_CD.test(text) && !GUARD.test(text)) {
+      messages.push(`line ${index + 1}: cd into mktemp with no "|| exit 1": ${text.trim()}`);
     }
   }
   return messages;

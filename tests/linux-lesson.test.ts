@@ -7,6 +7,7 @@ import {
   lessonProblems,
   topicTechnicals,
   topicVoices,
+  unguardedMktempCd,
   unsafeCleanups,
   voiceProblems,
 } from "../lib/linux-lesson.ts";
@@ -269,6 +270,10 @@ test("unsafeCleanups flags a recursive rm of $PWD or of an unguarded variable", 
     "rm -R $tmp",
     'rm --recursive "${d}"',
     'cd x && rm -fr -- "$d"',
+    'rm -rf "$d"/*',
+    "rm -rf $d/x",
+    'rm -r "${d}"/sub',
+    'rm -rf -- "$PWD"/demo',
   ]) {
     assert.equal(unsafeCleanups(fence(line)).length, 1, line);
   }
@@ -278,6 +283,8 @@ test("unsafeCleanups allows guarded variables, rmdir, literals, and prose", () =
   for (const line of [
     'rm -r -- "${tmp:?}"',
     'rm -rf -- "${d:?}"',
+    'rm -rf -- "${tmp:?}"/x',
+    'rm -r "${d:?}"/*',
     'rmdir "$OLDPWD"',
     "rm -f file",
     "rm -rf /tmp/demo",
@@ -293,6 +300,18 @@ test("unsafeCleanups names the line number and the line", () => {
   assert.ok(message.includes("line 4") && message.includes('rm -rf "$d"'), message);
 });
 
+test("unguardedMktempCd flags a cd into mktemp with no || exit or || return on the line", () => {
+  for (const line of ['cd "$(mktemp -d)"', 'cd "$(mktemp -d)"   # a new empty folder', "( cd $(mktemp -d) && ls )"]) {
+    assert.equal(unguardedMktempCd(fence(line)).length, 1, line);
+  }
+  for (const line of ['cd "$(mktemp -d)" || exit 1', 'cd "$(mktemp -d)" || return  # x', 'tmp=$(mktemp -d)']) {
+    assert.deepEqual(unguardedMktempCd(fence(line)), [], line);
+  }
+  assert.deepEqual(unguardedMktempCd('Run cd "$(mktemp -d)" first.'), []);
+  const [message] = unguardedMktempCd(`text\n\n${fence('cd "$(mktemp -d)"')}`);
+  assert.ok(message.includes("line 4"), message);
+});
+
 test("every Layman and Bangla panel of every converted stage is within the word and tip limits", () => {
   for (const slug of LESSON_STAGES) {
     const source = readFileSync(new URL(`../content/linux/${slug}.mdx`, import.meta.url), "utf8");
@@ -303,9 +322,10 @@ test("every Layman and Bangla panel of every converted stage is within the word 
   }
 });
 
-test("no Linux Try-it block removes a directory unsafely", () => {
+test("no Linux Try-it block removes a directory unsafely or runs an unguarded cd into mktemp", () => {
   const dir = new URL("../content/linux/", import.meta.url);
   for (const file of readdirSync(dir).filter((name) => name.endsWith(".mdx"))) {
-    assert.deepEqual(unsafeCleanups(readFileSync(new URL(file, dir), "utf8")), [], file);
+    const source = readFileSync(new URL(file, dir), "utf8");
+    assert.deepEqual([...unsafeCleanups(source), ...unguardedMktempCd(source)], [], file);
   }
 });
