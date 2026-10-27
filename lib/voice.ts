@@ -42,9 +42,14 @@ export const PAGE_VOICE_STORAGE_KEY = "linux-voice";
 /** The attribute on article[data-content] that holds the page voice. */
 export const PAGE_VOICE_ATTR = "data-voice-page";
 
+/** True if the value is one of the three voices. */
+export function isVoice(value: string | null): value is Voice {
+  return value === "technical" || value === "layman" || value === "bangla";
+}
+
 /** The stored page voice if it is a voice, else the site default. */
 export function resolvePageVoice(stored: string | null, def: VoiceDefault): Voice {
-  return stored === "technical" || stored === "layman" || stored === "bangla" ? stored : def;
+  return isVoice(stored) ? stored : def;
 }
 
 /** The buttons of the voice switch, in order. The default voice is first. */

@@ -10,6 +10,7 @@ import {
   VOICE_STORAGE_KEY,
   VOICE_TOGGLE_TEXT,
   isPanelVisible,
+  isVoice,
   resolvePageVoice,
   resolveVoiceDefault,
   switchStyle,
@@ -215,4 +216,9 @@ test("resolvePageVoice falls back to the default for null and for a bad value", 
   assert.equal(resolvePageVoice(null, "bangla"), "bangla");
   assert.equal(resolvePageVoice("x", "bangla"), "bangla");
   assert.equal(resolvePageVoice("", "technical"), "technical");
+});
+
+test("isVoice accepts the three voices only", () => {
+  for (const v of ["technical", "layman", "bangla"]) assert.equal(isVoice(v), true);
+  for (const v of [null, "", "x", "Technical", "english"]) assert.equal(isVoice(v), false);
 });

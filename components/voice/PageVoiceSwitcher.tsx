@@ -1,12 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { PAGE_VOICE_ATTR, PAGE_VOICE_STORAGE_KEY, resolvePageVoice, voiceOrder } from "@/lib/voice";
+import { useEffect, useState } from "react";
+import { PAGE_VOICE_ATTR, PAGE_VOICE_STORAGE_KEY, isVoice, voiceOrder } from "@/lib/voice";
 import type { Voice } from "@/lib/voice";
+import { useRevealTarget } from "./useRevealTarget";
 import { useVoiceDefault } from "./useVoiceDefault";
 import { VoiceSwitcher } from "./VoiceSwitcher";
 
 const article = () => document.querySelector("article[data-content]");
+
+/** The saved page voice, or null. The server and blocked storage give null. */
+function savedVoice(): Voice | null {
+  try {
+    const stored = localStorage.getItem(PAGE_VOICE_STORAGE_KEY);
+    return isVoice(stored) ? stored : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * One voice switcher for a whole page (Linux stages). The CSS hides the
@@ -16,7 +27,10 @@ const article = () => document.querySelector("article[data-content]");
  */
 export function PageVoiceSwitcher() {
   const def = useVoiceDefault();
-  const [choice, setChoice] = useState<Voice | null>(null);
+  // Read the saved voice in the first state, so the effect below applies it
+  // before the reveal check of useRevealTarget runs. This component renders
+  // null until def is known, so no markup depends on it.
+  const [choice, setChoice] = useState<Voice | null>(savedVoice);
 
   // Same pattern as Voices.tsx: the change from null at hydration is not a reader action.
   const [seenDef, setSeenDef] = useState(def);
@@ -33,61 +47,13 @@ export function PageVoiceSwitcher() {
   }
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(PAGE_VOICE_STORAGE_KEY);
-      // A bad value gives the fallback, which is never equal to it.
-      if (stored !== null && resolvePageVoice(stored, "technical") === stored) {
-        setChoice(stored as Voice);
-        // Set it now, so the reveal check below sees the right panels.
-        article()?.setAttribute(PAGE_VOICE_ATTR, stored);
-      }
-    } catch {
-      // Storage is blocked: follow the site default.
-    }
-  }, []);
-
-  const pending = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
     const el = article();
     if (!el) return;
     if (choice === null) el.removeAttribute(PAGE_VOICE_ATTR);
     else el.setAttribute(PAGE_VOICE_ATTR, choice);
-    // Scroll after the attribute shows the panel of a revealed target.
-    pending.current?.scrollIntoView();
-    pending.current = null;
   }, [choice]);
 
-  // A hash or an in-page link into a panel that the choice hides: switch to that panel.
-  useEffect(() => {
-    const reveal = (hash: string) => {
-      let el: HTMLElement | null = null;
-      try {
-        el = hash.length > 1 ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
-      } catch {
-        return;
-      }
-      const panel = el?.closest("[data-panel]");
-      const voice = panel?.getAttribute("data-panel") as Voice | undefined;
-      if (!el || !voice || el.getClientRects().length > 0) return;
-      pending.current = el;
-      setChoice(voice);
-    };
-    const onClick = (event: MouseEvent) => {
-      if (event.button !== 0 || !(event.target instanceof Element)) return;
-      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-      const link = event.target.closest('a[href^="#"]');
-      if (link) reveal(link.getAttribute("href") ?? "");
-    };
-    const onHashChange = () => reveal(window.location.hash);
-    reveal(window.location.hash);
-    document.addEventListener("click", onClick, true);
-    window.addEventListener("hashchange", onHashChange);
-    return () => {
-      document.removeEventListener("click", onClick, true);
-      window.removeEventListener("hashchange", onHashChange);
-    };
-  }, []);
+  useRevealTarget(article, setChoice, choice);
 
   if (def === null) return null;
 

@@ -388,6 +388,7 @@ Plain English text.
 |---|---|
 | `lib/voice.ts` | The types, the labels, `VOICE_STORAGE_KEY` (`voice`), `resolveVoiceDefault`, `voiceOrder`, `isPanelVisible`, `switchStyle` (the colors of the selected switcher button), and `VOICE_INIT_SCRIPT`. Only the stored value `bangla` gives Bangla. Any other value gives Technical. |
 | `components/voice/useVoiceDefault.ts` | A `useSyncExternalStore` hook on `data-voice-default` of `<html>`. A `storage` event of another tab updates it. `setVoiceDefault` sets the attribute and saves the value. A blocked storage does not throw. |
+| `components/voice/useRevealTarget.ts` | The shared reveal of `Voices` and `PageVoiceSwitcher`: a hash or an in-page link into a hidden panel selects that panel and scrolls to the target. A target in a visible panel changes nothing. |
 | `components/voice/PageVoiceSwitcher.tsx` | The one switcher of a Linux stage page. It uses `VoiceSwitcher`, `useVoiceDefault`, and `resolvePageVoice` (`lib/voice.ts`). |
 | `components/voice/Voices.tsx`, `VoiceSwitcher.tsx`, `panels.tsx` | `Voices` holds the state of one section. `Technical`, `Layman`, and `Bangla` render `<div data-panel="…">`. `Layman` and `Bangla` add the tinted box and the title. `Bangla` adds `lang="bn"`. |
 | `components/layout/VoiceToggle.tsx`, `InstallButton.tsx` | The 2 header buttons. |
