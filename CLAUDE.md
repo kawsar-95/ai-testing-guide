@@ -90,7 +90,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/nav.ts` | The single source of the page order. See below. |
 | `lib/outline.ts`, `lib/headings.ts` | The `##`/`###` outline of an MDX file, with the same ids as `rehype-slug` |
 | `lib/search.ts` | Builds the search docs, the index, and runs a search |
-| `lib/voice.ts` | The voice types, the labels, `VOICE_STORAGE_KEY`, `resolveVoiceDefault`, and `VOICE_INIT_SCRIPT`. See "Voices". |
+| `lib/voice.ts` | The voice types, the labels, `VOICE_STORAGE_KEY`, `resolveVoiceDefault`, `PAGE_VOICE_STORAGE_KEY`, `PAGE_VOICE_ATTR`, `resolvePageVoice`, and `VOICE_INIT_SCRIPT`. See "Voices". |
 | `lib/voice-source.ts` | The authoring check for `<Voices>` blocks. `npm test` uses it. |
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
@@ -201,6 +201,7 @@ The progress code is shared and lives under `prep` names, left from the Intervie
 | Raw text | `scripts/linux_fetch.py` downloads the roadmap links as text. Never commit this text. It is third-party text. `scripts/linux_overlap.py` finds word runs that a page copies from it. |
 | Done | A stage is done only when its fact-check report ends with `Open FAILs: 0`. |
 | Cheat sheet topic | The last topic of stage 4, `Permissions Cheat Sheet`, is not from the roadmap. It is the cheat sheet of abrahimcse (GitHub), included with attribution and kept in its original wording. It has no 250-word limit. Each factual correction is marked "Correction" and has an official cite. |
+| Voices | A stage page has one voice switcher for the whole page, not one for each section. See "Voices". |
 | Topics | `npm test` checks that each stage has an MDX file and that each topic anchor is the id of a `##` heading. |
 
 To add or change a topic, edit `lib/linux/stages.ts` and the `##` heading of the MDX file together. The title of a topic is its heading. The `anchor` comes from the title with the `rehype-slug` rules. Six topics have an anchor that ends in `-1`, because the `#` title of the page takes the plain slug first.
@@ -325,6 +326,7 @@ A `##` section can have 3 voices of its text: Technical (the current text), `স
 | `বাংলা` header button | `VoiceToggle` sets the site-wide default voice. The text is `বাংলা` if the default is Technical, and `English` if the default is Bangla. A click saves `bangla` or `technical` in `localStorage` key `voice` and sets `data-voice-default` on `<html>`. Every section follows the new default. The button has no `aria-pressed`. Its accessible name starts with the visible word (WCAG 2.5.3 Label in Name): `voiceToBangla` and `voiceToTechnical` in `lib/ui.ts`. |
 | Section choice | A click on the switcher changes one section only. If the site-wide default changes, every section goes back to the default. |
 | Bangla default | `বাংলা` moves to the first position of each switcher. |
+| Linux stage pages | The section switchers are hidden (`.linux-topics .voice-switch` in `app/globals.css`). One page switcher (`PageVoiceSwitcher`, between the "In this stage" box and the article) sets `data-voice-page` on `article[data-content]`, and the CSS shows that voice in every section. It saves the choice in `localStorage` key `linux-voice` (`PAGE_VOICE_STORAGE_KEY`). A change of the site default (the header button) clears the choice and the key. A hash or an in-page link into a hidden panel switches the page to that panel. |
 | Install button | `InstallButton` shows only after the browser fires `beforeinstallprompt` (Chromium). If the event comes before hydration, the head script `INSTALL_CAPTURE_SCRIPT` (`lib/pwa-install.ts`) keeps it, and the button reads it on mount. A click shows the install prompt. Other browsers use their own menu. |
 
 The `বাংলা` header button also changes the fixed UI text (see "UI text in Bangla"). Titles of pages, stages, chapters, and topics, their descriptions, and the module names stay in English. There is one URL for each page. There is no `/bn/` copy.
@@ -386,6 +388,7 @@ Plain English text.
 |---|---|
 | `lib/voice.ts` | The types, the labels, `VOICE_STORAGE_KEY` (`voice`), `resolveVoiceDefault`, `voiceOrder`, `isPanelVisible`, `switchStyle` (the colors of the selected switcher button), and `VOICE_INIT_SCRIPT`. Only the stored value `bangla` gives Bangla. Any other value gives Technical. |
 | `components/voice/useVoiceDefault.ts` | A `useSyncExternalStore` hook on `data-voice-default` of `<html>`. A `storage` event of another tab updates it. `setVoiceDefault` sets the attribute and saves the value. A blocked storage does not throw. |
+| `components/voice/PageVoiceSwitcher.tsx` | The one switcher of a Linux stage page. It uses `VoiceSwitcher`, `useVoiceDefault`, and `resolvePageVoice` (`lib/voice.ts`). |
 | `components/voice/Voices.tsx`, `VoiceSwitcher.tsx`, `panels.tsx` | `Voices` holds the state of one section. `Technical`, `Layman`, and `Bangla` render `<div data-panel="…">`. `Layman` and `Bangla` add the tinted box and the title. `Bangla` adds `lang="bn"`. |
 | `components/layout/VoiceToggle.tsx`, `InstallButton.tsx` | The 2 header buttons. |
 | No flash | `VOICE_INIT_SCRIPT` runs in `<head>` after the theme script and sets `data-voice-default` before the first paint. Before hydration, a `.voices` wrapper has no `data-voice`. The CSS then shows the panel of `html[data-voice-default]`. After hydration, the wrapper has `data-voice` and the CSS uses it. The switcher is hidden (`visibility`) until the wrapper has `data-voice`. `tests/voice.test.ts` checks that the script and `resolveVoiceDefault` agree. |

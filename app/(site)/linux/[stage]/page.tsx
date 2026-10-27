@@ -20,6 +20,7 @@ import { ReadingProgress } from "@/components/content/ReadingProgress";
 import { Sources } from "@/components/content/Sources";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
 import { TopicChecklist } from "@/components/linux/TopicChecklist";
+import { PageVoiceSwitcher } from "@/components/voice/PageVoiceSwitcher";
 
 type MdxPage = { default: MDXContent; metadata: Metadata; page?: PageInfo };
 
@@ -128,6 +129,7 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
             ))}
           </ol>
         </aside>
+        <PageVoiceSwitcher />
         <article data-content className="mdx linux-topics">
           <Content
             components={{

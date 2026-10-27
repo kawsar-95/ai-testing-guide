@@ -36,6 +36,17 @@ export function resolveVoiceDefault(stored: string | null): VoiceDefault {
   return stored === "bangla" ? "bangla" : "technical";
 }
 
+/** The localStorage key of the voice choice of a whole Linux stage page. */
+export const PAGE_VOICE_STORAGE_KEY = "linux-voice";
+
+/** The attribute on article[data-content] that holds the page voice. */
+export const PAGE_VOICE_ATTR = "data-voice-page";
+
+/** The stored page voice if it is a voice, else the site default. */
+export function resolvePageVoice(stored: string | null, def: VoiceDefault): Voice {
+  return stored === "technical" || stored === "layman" || stored === "bangla" ? stored : def;
+}
+
 /** The buttons of the voice switch, in order. The default voice is first. */
 export function voiceOrder(def: VoiceDefault): Voice[] {
   return def === "bangla" ? ["bangla", "technical", "layman"] : ["technical", "layman", "bangla"];

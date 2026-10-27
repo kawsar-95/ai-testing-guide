@@ -10,6 +10,7 @@ import {
   VOICE_STORAGE_KEY,
   VOICE_TOGGLE_TEXT,
   isPanelVisible,
+  resolvePageVoice,
   resolveVoiceDefault,
   switchStyle,
   voiceOrder,
@@ -203,4 +204,15 @@ test("the box title has 4.5:1 contrast on the box tint in both themes", () => {
     }
   }
   assert.deepEqual(low, []);
+});
+
+test("resolvePageVoice returns a stored voice", () => {
+  assert.equal(resolvePageVoice("layman", "technical"), "layman");
+  assert.equal(resolvePageVoice("bangla", "technical"), "bangla");
+});
+
+test("resolvePageVoice falls back to the default for null and for a bad value", () => {
+  assert.equal(resolvePageVoice(null, "bangla"), "bangla");
+  assert.equal(resolvePageVoice("x", "bangla"), "bangla");
+  assert.equal(resolvePageVoice("", "technical"), "technical");
 });
