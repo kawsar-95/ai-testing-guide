@@ -399,3 +399,17 @@ Fact lost? A sentence comparison of the old and the new Technical text found no 
 Privacy: no real name, e-mail, home path, or login name on the page (grep for the owner names, `/home/<name>`, and `@<word>` found nothing). The `/home` rows of the directory table are the standard directory name.
 
 Open FAILs: 0
+
+## Round 6 (2026-10-27): mechanical edits of commit 151fe3b
+
+| # | Location | Check | Verdict | Evidence |
+|---|---|---|---|---|
+| R6-1 | 6 lines (6 Try-it blocks, all 3 voices) | Each changed line differs from the 251997e line only by ` || exit 1` | PASS | `git diff 251997e 151fe3b`: 6 and 6 lines; the comment after the command is unchanged |
+| R6-2 | whole stage | No unguarded `cd "$(mktemp -d)"` remains | PASS | 6 blocks with `mktemp`, 6 have `|| exit 1` |
+| R6-3 | Layman and Bangla vs Technical | The code of each Try-it equals the Technical code | PASS | script compare: 0 difference of commands. One pre-existing comment difference: Technical of "Navigation Basics" has `# Your directory name differs from tmp.XXXXXXXXXX.` after the closing `)` (line 310). It was already there at 0faa44c (line 303) and at 251997e. It is a comment only, so it is harmless. |
+| R6-4 | `touch .hidden notes.txt; ls; ls -a` block | Output equals the page | PASS | run: `notes.txt`, then `.` `..` `.hidden` `notes.txt` |
+| R6-5 | all 6 blocks | Run without error | PASS | exit status 0 for all 6 |
+| R6-6 | `TMPDIR=/nonexistent` on `shell-basics-6` | The block exits 1 and writes nothing | PASS | `mktemp` failed, `cd: null directory`, exit 1, run directory empty |
+| R6-7 | tests | Pass | PASS | `tests/linux-lesson.test.ts` 28 of 28; `tests/voice-source.test.ts` 22 of 22 |
+
+Open FAILs: 0

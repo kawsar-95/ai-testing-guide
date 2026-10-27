@@ -374,3 +374,16 @@ Limits: `lessoncheck.mjs processes` gave `8 topics with voices, 0 with problems`
 Counts: the set of Cite numbers is the same as at 59767e6 (Priorities now also cites 16 in all 3 voices, through R5-2; 16 was already cited elsewhere). All 49 sources are cited at least once. No real name, e-mail, or home path in the page.
 
 Open FAILs: 0
+
+## Round 6 (2026-10-27): mechanical edits of commit 151fe3b
+
+| # | Location | Check | Verdict | Evidence |
+|---|---|---|---|---|
+| R6-1 | `processes.mdx` line 687 (Technical `trap` block) | The line differs from the 251997e line only by ` || exit 1` | PASS | `git diff 251997e 151fe3b`: 1 line removed, 1 added |
+| R6-2 | whole stage | No unguarded `cd "$(mktemp -d)"` remains | PASS | the only other `mktemp` is `tmp=$(mktemp)` (a file, no `cd`) inside the script that the block writes |
+| R6-3 | `trap` block | Output equals the page comment (`# prints: cleaned up`) | PASS | run: `cleaned up`, exit status 0 |
+| R6-4 | `TMPDIR=/nonexistent` on `processes-21` | The block exits 1 and writes nothing | PASS | `mktemp` failed, `cd: null directory`, exit 1, no `trap-demo.sh` written |
+| R6-5 | Layman and Bangla | They have no `mktemp` block, so nothing to compare | PASS | script compare: 0 `mktemp` block in both voices |
+| R6-6 | tests | Pass | PASS | `tests/linux-lesson.test.ts` 28 of 28; `tests/voice-source.test.ts` 22 of 22 |
+
+Open FAILs: 0

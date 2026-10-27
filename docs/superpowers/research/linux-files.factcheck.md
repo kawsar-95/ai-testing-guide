@@ -447,3 +447,21 @@ I ran the 8 different blocks (every topic that has a Try-it) with `TMPDIR` in th
 Nano has no code block to run besides `nano --version | head -n 1` (it prints the version line; unchanged, R4 PASS).
 
 Open FAILs: 0
+
+## Round 6 (2026-10-27): mechanical edits of commit 151fe3b
+
+| # | Location | Check | Verdict | Evidence |
+|---|---|---|---|---|
+| R6-1 | 30 changed lines, 3 voices | Each line differs from the 251997e line only by `results` to `demo-results` or `data.txt` to `demo-data.txt` (and spaces of the comment alignment) | PASS | `git diff 251997e 151fe3b`: 30 and 30 lines; a script applied the rename to the old lines; the only other difference is the extra spaces before `(your inode number differs)` in 3 lines |
+| R6-2 | whole file | No fact with a `<Cite>` changed name | PASS | the names are the tutorial's own demo names (`mkdir -p`, `rm -r`, hard link examples); no path or flag argument changed |
+| R6-3 | whole file | No mismatch between a code block and its printed output, comment, or prose | PASS | the 3 `mkdir -p`/`rm -r` blocks and the 3 hard-link blocks use `demo-` names in code, output comments and the `stat` output; `grep` shows no prose with the old names |
+| R6-4 | remaining `results` / `data.txt` | They do not mismatch | PASS | line 180 (`mkdir -p results/2026/run1`) and line 1028 (`ln data.txt data-hard.txt`) are separate non-Try-it examples; the `tar` Try-it blocks (3 voices) use their own `results` and `results.tar.gz` consistently and clean up with `rm -r -- "${tmp:?}"` |
+| R6-5 | Layman and Bangla vs Technical | The code of each Try-it equals the Technical code (comments aside) | PASS | script compare of all mktemp blocks per `##` section: 0 difference |
+| R6-6 | `mkdir -p demo-results/run1` block | Output equals the page | PASS | run: `second run: OK`, `new`, `hello.txt` |
+| R6-7 | hard-link block | Output equals the page | PASS | run: `10749 2 demo-data.txt`, `10749 2 hard.txt`, `data`, `cat: soft.txt: No such file or directory` (inode number differs, as the page says) |
+| R6-8 | `stat` block, `cp -p` block | Output equals the page | PASS | `report.txt: 5 bytes, 1 hard links`, `empty.txt: 0 bytes, 1 hard links`; `retries=3`, `timeout=30`, `debug=false`, `port=8080` |
+| R6-9 | all 24 blocks | Run without error | PASS | exit status 0 for all 24 |
+| R6-10 | `TMPDIR=/nonexistent` on `files-3` | The block exits 1 and writes nothing | PASS | `mktemp` failed, exit 1, run directory empty |
+| R6-11 | words before `<details>` | At most 150 in every panel | PASS | `node --test tests/linux-lesson.test.ts` 28 of 28; `tests/voice-source.test.ts` 22 of 22 |
+
+Open FAILs: 0

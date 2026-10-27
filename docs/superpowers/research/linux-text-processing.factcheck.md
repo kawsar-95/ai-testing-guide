@@ -659,3 +659,20 @@ Try-it results (Ubuntu, bash --norc, in new `mktemp -d` directories under the sc
 Limits: `lessoncheck.mjs text-processing`: 20 topics with voices, 0 with problems. `node --test tests/voice-source.test.ts`: pass 22, fail 0. Changed topics, words before `<details>` (code removed): Layman 142, 135, 134; Bangla 134, 122, 117 (all 150 or fewer). Tips (Cite removed): 141, 126, 112 (Layman), 129, 120, 125 (Bangla), all 160 characters or fewer. The data-loss warning of `split` ("Be careful: use an empty directory ...") is still visible in the Layman and Bangla Core text. Privacy: no name, e-mail, home path, or login in the changed lines.
 
 Open FAILs: 0
+
+## Round 6 (2026-10-27): mechanical edits of commit 151fe3b
+
+| # | Location | Check | Verdict | Evidence |
+|---|---|---|---|---|
+| R6-1 | all 3 voices, 60 lines | Each changed line differs from the 251997e line only by ` || exit 1` after `cd "$(mktemp -d)"` | PASS | `git diff 251997e 151fe3b`: 60 lines removed, 60 added, a script added the text to each old line and got the new line for all 60 (0 other difference) |
+| R6-2 | whole stage | No unguarded `cd "$(mktemp -d)"` remains | PASS | 60 blocks with `mktemp`, 60 have `|| exit 1`; `grep` finds no other `mktemp` line in the file |
+| R6-3 | Layman and Bangla vs Technical | The code of each Try-it equals the Technical code (comments aside) | PASS | script compare of all mktemp blocks per `##` section: 0 difference |
+| R6-4 | `printf ... > results.txt \| grep fail \| sort \| uniq -c` | Output equals the page | PASS | run: `      2 fail login` |
+| R6-5 | `uniq events.txt \| wc -l` and `sort \| uniq -c` | Output equals the page | PASS | run: `5`, then `1 error`, `3 ok`, `2 timeout` |
+| R6-6 | `paste -d, ids names` | Output equals the page | PASS | run: `1,login` `2,search` `3,logout` |
+| R6-7 | `unexpand` | Output equals the page | PASS | run: `0` then `1` |
+| R6-8 | all 60 blocks | Run without error (bash, `TMPDIR` in a throw-away directory) | PASS | exit status 0 for all 60 |
+| R6-9 | `TMPDIR=/nonexistent` on `text-processing-0` | The block exits 1 and writes nothing | PASS | `mktemp: failed to create directory`, `cd: null directory`, exit 1, run directory empty |
+| R6-10 | `node --test tests/linux-lesson.test.ts`, `tests/voice-source.test.ts` | Pass | PASS | 28 of 28 and 22 of 22 |
+
+Open FAILs: 0
