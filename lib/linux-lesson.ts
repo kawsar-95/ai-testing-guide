@@ -3,11 +3,14 @@
 import { plainTitle, sourceLines } from "./headings.ts";
 
 export const LESSON_WORD_LIMIT = 150;
+/** About 2 lines at the text width. Counted on the tip body, with `<Cite />` tags removed. */
+export const LESSON_TIP_LIMIT = 160;
 
 export type TopicTechnical = { heading: string; technical: string };
 
 const SECTION = /^##\s+(.*)$/;
 const CITE = /<Cite\s[^>]*\/>/g;
+const TIP_OPEN = '<Callout type="tip" title="Why it matters for testing">';
 
 /** For each `##` heading, the text of its `<Technical>` panel. A section with none is skipped. */
 export function topicTechnicals(source: string): TopicTechnical[] {
@@ -64,6 +67,13 @@ export function lessonProblems(technical: string): string[] {
   const before = open.length ? lines.slice(0, open[0]) : lines;
   const count = before.join("\n").replace(CITE, "").split(/\s+/).filter(Boolean).length;
   if (count > LESSON_WORD_LIMIT) problems.push(`${count} words before <details>, the limit is ${LESSON_WORD_LIMIT}`);
+
+  const tip = lines.findIndex((line) => line.trim() === TIP_OPEN);
+  if (tip >= 0) {
+    const end = lines.findIndex((line, i) => i > tip && line.trim() === "</Callout>");
+    const body = lines.slice(tip + 1, end < 0 ? undefined : end).join(" ").replace(CITE, "").replace(/\s+/g, " ").trim();
+    if (body.length > LESSON_TIP_LIMIT) problems.push(`the tip has ${body.length} characters, the limit is ${LESSON_TIP_LIMIT}`);
+  }
 
   return problems;
 }

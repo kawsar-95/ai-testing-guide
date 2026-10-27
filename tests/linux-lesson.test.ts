@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { LESSON_WORD_LIMIT, lessonProblems, topicTechnicals } from "../lib/linux-lesson.ts";
+import { LESSON_TIP_LIMIT, LESSON_WORD_LIMIT, lessonProblems, topicTechnicals } from "../lib/linux-lesson.ts";
 
 // Stage slugs whose pages are already in the lesson shape. Each task adds its stage.
 const LESSON_STAGES: string[] = ["shell-basics"];
@@ -63,6 +63,24 @@ test("more than 150 words before details is reported", () => {
 test("words inside a fenced code block and in Cite tags do not count", () => {
   const body = `${words(LESSON_WORD_LIMIT - 14)} <Cite n={3} />\n\n\`\`\`bash\n${words(200)}\n\`\`\``;
   assert.deepEqual(lessonProblems(GOOD.replace("`ls` lists the files of a folder.", body)), []);
+});
+
+const withTip = (body: string) =>
+  GOOD.replace(
+    "<details>",
+    `<Callout type="tip" title="Why it matters for testing">\n\n${body}\n\n</Callout>\n\n<details>`,
+  );
+
+test("a tip of 160 characters passes, and Cite tags do not count", () => {
+  assert.deepEqual(lessonProblems(withTip(`${"x".repeat(LESSON_TIP_LIMIT)} <Cite n={1} />`)), []);
+});
+
+test("a tip of 161 characters is reported", () => {
+  assert.equal(lessonProblems(withTip("x".repeat(LESSON_TIP_LIMIT + 1))).length, 1);
+});
+
+test("a topic without a tip callout is not reported by the tip rule", () => {
+  assert.ok(lessonProblems(GOOD).every((problem) => !problem.includes("tip")));
 });
 
 test("topicTechnicals returns one entry per topic with voices and skips a section with no Technical panel", () => {

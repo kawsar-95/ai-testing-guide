@@ -175,3 +175,21 @@ Machine: Ubuntu 26.04.1 LTS. Shell: `GNU bash, version 5.3.9(1)-release (x86_64-
 | Environment Variables | `API_URL=http://localhost:8080; bash -c 'echo "[$API_URL]"'; export API_URL; bash -c 'echo "[$API_URL]"'` (in a child `bash`) | `[]` then `[http://localhost:8080]` | S1 (`export`), S21 |
 
 `mktemp -d` and `touch` only make the throw-away directory and files. The page makes no claim about them.
+
+## Round 2 fix 1 (2026-10-27): changed Try it commands
+
+Same machine and versions as above. Each block ran under `script -qc 'bash --norc try.sh' /dev/null` (a pseudo-terminal), with `TMPDIR` set to the session scratch directory. Machine paths are replaced with `<tmpdir>`.
+
+| Topic | Command | Real output | Source of the claim |
+|---|---|---|---|
+| Shell Basics | `bash --norc -ic 'echo "$-"'` | `himBHc` | S1 (local bash 5.3 wording): "--norc Do not read and execute the system wide initialization file /etc/bash.bashrc and the personal initialization file ~/.bashrc if the shell is interactive." |
+| Shell Basics | `bash -c 'echo "$-"'` | `hBc` | S1 |
+| Basic Commands | `( cd "$(mktemp -d)"; touch .hidden notes.txt; ls; ls -a )` | `notes.txt`, then `.  ..  .hidden  notes.txt` | S2; S1: "(list) list is executed in a subshell ... Variable assignments and builtin commands that affect the shell's environment do not remain in effect after the command completes." |
+| Navigation Basics | `( cd "$(mktemp -d)"; mkdir -p a/b && cd a/b; cd ..; pwd; cd - )` | `<tmpdir>/a`, then `<tmpdir>/a/b` | S1, S13 |
+| Directory Hierarchy | `ls -d /etc /var/log /tmp` | `/etc  /tmp  /var/log` | S2: "-d, --directory list directories themselves, not their contents" |
+| Directory Hierarchy (Go deeper) | `ls -d /etc /no-such-dir; echo "$?"` | `ls: cannot access '/no-such-dir': No such file or directory`, `/etc`, `2` | S2 (exit status 2); S1 (local bash 5.3 wording): "? ($?) Expands to the exit status of the most recently executed command." |
+| Environment Variables | `( API_URL=http://localhost:8080; bash -c 'echo "[$API_URL]"'; export API_URL; bash -c 'echo "[$API_URL]"' )` | `[]`, then `[http://localhost:8080]` | S1, S21 |
+
+After the subshell blocks, the calling shell had no `API_URL` and the same working directory (checked with `echo "[${API_URL-unset}] $PWD"`).
+
+`mktemp -d` has the comment "make and enter a new, empty directory" and `tr ':' '\n'` has "one directory per line". Neither tool is in `page.sources`; the comments describe what the reader sees, not a sourced claim.

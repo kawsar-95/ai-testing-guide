@@ -50,11 +50,11 @@ The shell is a program that passes your typed commands to the operating system. 
 echo "$SHELL"
 ```
 
-**Try it:** start one interactive bash and one non-interactive bash, and print `$-` in each. Bash puts `i` in `$-` when the shell is interactive. <Cite n={1} />
+**Try it:** start one interactive bash (`-i`, with no `~/.bashrc`: `--norc`) and one non-interactive bash, and print `$-` in each. Bash puts `i` in `$-` when the shell is interactive. <Cite n={1} />
 
 ```bash
-bash -ic 'echo "$-"'   # himBHc  (has i)
-bash -c 'echo "$-"'    # hBc     (no i)
+bash --norc -ic 'echo "$-"'   # himBHc  (has i)
+bash -c 'echo "$-"'           # hBc     (no i)
 # The other letters can differ on your machine.
 ```
 
@@ -76,7 +76,6 @@ Bash reads different startup files in different modes. <Cite n={1} />
 - A script that you run with `bash script.sh` does not read `~/.bashrc`. A non-interactive shell reads the file that `BASH_ENV` names instead.
 
 ```bash
-echo "$-"       # contains i in an interactive shell
 bash --version
 ```
 
@@ -96,8 +95,8 @@ The shell is a program. It takes the commands that you type and passes them to t
 **Try it:** start bash two times, one interactive and one not, and print `$-`. An interactive shell has the letter `i` in `$-`. <Cite n={1} />
 
 ```bash
-bash -ic 'echo "$-"'   # himBHc  (has i)
-bash -c 'echo "$-"'    # hBc     (no i)
+bash --norc -ic 'echo "$-"'   # himBHc  (has i)
+bash -c 'echo "$-"'           # hBc     (no i)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
@@ -131,8 +130,8 @@ Shell হলো একটি program, যা আপনার type করা comm
 **চেষ্টা করুন:** একটি interactive আর একটি non-interactive bash চালান, আর দুটিতেই `$-` print করুন। Shell interactive হলে bash `$-`-এ `i` রাখে। <Cite n={1} />
 
 ```bash
-bash -ic 'echo "$-"'   # himBHc  (i আছে)
-bash -c 'echo "$-"'    # hBc     (i নেই)
+bash --norc -ic 'echo "$-"'   # himBHc  (i আছে)
+bash -c 'echo "$-"'           # hBc     (i নেই)
 ```
 
 <Callout type="tip" title="টেস্টিং-এ কেন দরকার">
@@ -162,7 +161,7 @@ Tutorial-এর নিজস্ব পরামর্শ: একটি ছোট
 <Voices>
 <Technical>
 
-**Goal:** Print where you are, move to another directory, and list its files.
+**Goal:** List the files of a directory, the hidden ones too.
 
 `pwd` prints the absolute path of the current directory. <Cite n={1} /> `cd` changes the current directory. <Cite n={1} /> `ls` lists the entries of a directory. If you give no path, it lists the current directory. <Cite n={2} /> `ls` hides the names that start with a dot. Add `-a` to show them. <Cite n={2} />
 
@@ -170,18 +169,20 @@ Tutorial-এর নিজস্ব পরামর্শ: একটি ছোট
 ls -l
 ```
 
-**Try it:** in a throw-away directory, make one normal file and one dot file. List them without and with `-a`.
+**Try it:** in a throw-away directory, make one normal file and one dot file. List them without and with `-a`. The parentheses run the block in a subshell, so your shell does not change. <Cite n={1} />
 
 ```bash
-cd "$(mktemp -d)"
-touch .hidden notes.txt
-ls       # notes.txt
-ls -a    # .  ..  .hidden  notes.txt
+(
+  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  touch .hidden notes.txt
+  ls       # notes.txt
+  ls -a    # .  ..  .hidden  notes.txt
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: before a step that fails in a pipeline, print `pwd` and `ls -la`. A flaky test often depends on a working directory or on a file that is not there yet.
+Tutorial's own advice: print `pwd` and `ls -la` before a failing pipeline step. A flaky test often depends on the working directory or a file not there yet.
 
 </Callout>
 
@@ -213,22 +214,24 @@ Tutorial's own advice: `ls -ltr` puts the newest report or log at the end of the
 </Technical>
 <Layman>
 
-**Goal:** Print where you are, move to another directory, and list its files.
+**Goal:** List the files of a directory, the hidden ones too.
 
 `pwd` prints the absolute path of the current directory. <Cite n={1} /> `cd` changes the current directory. <Cite n={1} /> `ls` lists the entries of a directory. With no path, it lists the current directory. <Cite n={2} /> `ls` does not show names that start with a dot. Add `-a` to show them. <Cite n={2} />
 
-**Try it:** in a throw-away directory, make one normal file and one dot file. List them without and with `-a`.
+**Try it:** in a throw-away directory, make one normal file and one dot file. List them without and with `-a`. The parentheses run the block in a subshell, so your shell does not change. <Cite n={1} />
 
 ```bash
-cd "$(mktemp -d)"
-touch .hidden notes.txt
-ls       # notes.txt
-ls -a    # .  ..  .hidden  notes.txt
+(
+  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  touch .hidden notes.txt
+  ls       # notes.txt
+  ls -a    # .  ..  .hidden  notes.txt
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: when a pipeline step fails, print `pwd` and `ls -la` before it. A flaky test often depends on the working directory or on a file that is not there yet.
+Tutorial's own advice: print `pwd` and `ls -la` before a failing pipeline step. A flaky test often depends on the working directory or a file not there yet.
 
 </Callout>
 
@@ -246,22 +249,24 @@ Tutorial's own advice: `ls -ltr` puts the newest report or log at the end of the
 </Layman>
 <Bangla>
 
-**লক্ষ্য:** আপনি কোথায় আছেন তা print করুন, অন্য directory-তে যান, আর তার file-গুলোর list দেখুন।
+**লক্ষ্য:** একটি directory-এর file-গুলোর list দেখুন, লুকানো file-সহ।
 
 `pwd` current directory-এর absolute path print করে। <Cite n={1} /> `cd` current directory বদলায়। <Cite n={1} /> `ls` একটি directory-এর entry-গুলোর list দেখায়; কোনো path না দিলে এটি current directory-এর list দেখায়। <Cite n={2} /> Dot দিয়ে শুরু হওয়া নাম `ls` লুকিয়ে রাখে। সেগুলো দেখতে `-a` যোগ করুন। <Cite n={2} />
 
-**চেষ্টা করুন:** একটি throw-away directory-তে একটি সাধারণ file আর একটি dot file তৈরি করুন। তারপর `-a` ছাড়া এবং `-a` দিয়ে list দেখুন।
+**চেষ্টা করুন:** একটি throw-away directory-তে একটি সাধারণ file আর একটি dot file তৈরি করুন। তারপর `-a` ছাড়া এবং `-a` দিয়ে list দেখুন। বন্ধনী block-টিকে একটি subshell-এ চালায়, তাই আপনার shell বদলায় না। <Cite n={1} />
 
 ```bash
-cd "$(mktemp -d)"
-touch .hidden notes.txt
-ls       # notes.txt
-ls -a    # .  ..  .hidden  notes.txt
+(
+  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  touch .hidden notes.txt
+  ls       # notes.txt
+  ls -a    # .  ..  .hidden  notes.txt
+)
 ```
 
 <Callout type="tip" title="টেস্টিং-এ কেন দরকার">
 
-Tutorial-এর নিজস্ব পরামর্শ: Pipeline-এ যে step fail করে, তার আগে `pwd` এবং `ls -la` print করুন। একটি flaky test প্রায়ই working directory-এর ওপর, অথবা এমন একটি file-এর ওপর নির্ভর করে যা তখনও তৈরি হয়নি।
+Tutorial-এর নিজস্ব পরামর্শ: Fail করা pipeline step-এর আগে `pwd` ও `ls -la` print করুন। Flaky test প্রায়ই working directory বা না-থাকা file-এর ওপর নির্ভর করে।
 
 </Callout>
 
@@ -292,20 +297,22 @@ An absolute path starts with `/`, the root of the file tree. A relative path sta
 cd /usr/local/bin
 ```
 
-**Try it:** in a throw-away directory, go down two levels, up one with `..`, and back with `cd -`. `cd -` prints the directory that it goes to. <Cite n={1} />
+**Try it:** in a throw-away directory, go down two levels, up one with `..`, and back with `cd -`. `cd -` prints the directory that it goes to. <Cite n={1} /> The parentheses keep your shell unchanged. <Cite n={1} />
 
 ```bash
-cd "$(mktemp -d)"
-mkdir -p a/b && cd a/b
-cd ..
-pwd     # /tmp/tmp.XXXXXXXXXX/a
-cd -    # /tmp/tmp.XXXXXXXXXX/a/b
+(
+  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  mkdir -p a/b && cd a/b
+  cd ..
+  pwd     # /tmp/tmp.XXXXXXXXXX/a
+  cd -    # /tmp/tmp.XXXXXXXXXX/a/b
+)
 # Your directory name differs from tmp.XXXXXXXXXX.
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: use absolute paths in test scripts. A relative path works only from the directory where you started the test, and a CI runner often starts in another one.
+Tutorial's own advice: use absolute paths in test scripts. A relative path works only from the start directory, and a CI runner often starts in another one.
 
 </Callout>
 
@@ -338,14 +345,16 @@ Tutorial's own advice: you can also set the directory at the top of a script wit
 
 An absolute path starts with `/`, the root of the file tree. A relative path starts from the current directory. <Cite n={13} /> In a path, `.` is the current directory and `..` is the parent directory. <Cite n={13} /> `cd -` goes back to the previous working directory, which `OLDPWD` holds. <Cite n={1} />
 
-**Try it:** in a throw-away directory, go down two levels, up one with `..`, and back with `cd -`. `cd -` prints the directory that it goes to. <Cite n={1} />
+**Try it:** in a throw-away directory, go down two levels, up one with `..`, and back with `cd -`. `cd -` prints the directory that it goes to. <Cite n={1} /> The parentheses keep your shell unchanged. <Cite n={1} />
 
 ```bash
-cd "$(mktemp -d)"
-mkdir -p a/b && cd a/b
-cd ..
-pwd     # /tmp/tmp.XXXXXXXXXX/a
-cd -    # /tmp/tmp.XXXXXXXXXX/a/b
+(
+  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  mkdir -p a/b && cd a/b
+  cd ..
+  pwd     # /tmp/tmp.XXXXXXXXXX/a
+  cd -    # /tmp/tmp.XXXXXXXXXX/a/b
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
@@ -372,19 +381,21 @@ Tutorial's own advice: you can set the directory at the top of a script with `cd
 
 Absolute path শুরু হয় `/` দিয়ে, যা file tree-এর root। Relative path শুরু হয় current directory থেকে। <Cite n={13} /> Path-এ `.` মানে current directory, আর `..` মানে parent directory। <Cite n={13} /> `cd -` আপনাকে `OLDPWD`-এ থাকা আগের working directory-তে ফিরিয়ে নেয়। <Cite n={1} />
 
-**চেষ্টা করুন:** একটি throw-away directory-তে দুই ধাপ নিচে যান, `..` দিয়ে এক ধাপ ওপরে উঠুন, আর `cd -` দিয়ে ফিরে যান। `cd -` যে directory-তে যায় সেটি print করে। <Cite n={1} />
+**চেষ্টা করুন:** একটি throw-away directory-তে দুই ধাপ নিচে যান, `..` দিয়ে এক ধাপ ওপরে উঠুন, আর `cd -` দিয়ে ফিরে যান। `cd -` যে directory-তে যায় সেটি print করে। <Cite n={1} /> বন্ধনী আপনার shell-কে অপরিবর্তিত রাখে। <Cite n={1} />
 
 ```bash
-cd "$(mktemp -d)"
-mkdir -p a/b && cd a/b
-cd ..
-pwd     # /tmp/tmp.XXXXXXXXXX/a
-cd -    # /tmp/tmp.XXXXXXXXXX/a/b
+(
+  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  mkdir -p a/b && cd a/b
+  cd ..
+  pwd     # /tmp/tmp.XXXXXXXXXX/a
+  cd -    # /tmp/tmp.XXXXXXXXXX/a/b
+)
 ```
 
 <Callout type="tip" title="টেস্টিং-এ কেন দরকার">
 
-Tutorial-এর নিজস্ব পরামর্শ: Test script-এ absolute path ব্যবহার করুন। Relative path শুধু সেই directory থেকে কাজ করে, যেখান থেকে আপনি test শুরু করেছেন, আর একটি CI runner প্রায়ই অন্য directory থেকে শুরু করে।
+Tutorial-এর নিজস্ব পরামর্শ: Test script-এ absolute path ব্যবহার করুন। একটি CI runner প্রায়ই অন্য directory থেকে শুরু করে।
 
 </Callout>
 
@@ -395,7 +406,7 @@ Tutorial-এর নিজস্ব পরামর্শ: Test script-এ absolu
 
 Symbolic link হলো এমন file, যা অন্য একটি path-এর দিকে নির্দেশ করে। Default হিসেবে `cd` symbolic link-কে logical-ভাবে (`-L`) follow করে। `-P` option দিলে `cd` physical directory structure ব্যবহার করে। <Cite n={1} /> `pwd`-এর `-P` option symbolic link ছাড়া path print করে। <Cite n={1} />
 
-Tutorial-এর নিজস্ব পরামর্শ: Script-এর শুরুতে `cd "$(dirname "$0")" || exit 1` দিয়েও directory ঠিক করে নিতে পারেন। Script-টি চালান, `source` করবেন না, কারণ তখন `$0` script-এর path থাকে না।
+Tutorial-এর নিজস্ব পরামর্শ: Relative path শুধু সেই directory থেকে কাজ করে, যেখান থেকে আপনি test শুরু করেছেন। Script-এর শুরুতে `cd "$(dirname "$0")" || exit 1` দিয়েও directory ঠিক করে নিতে পারেন। Script-টি চালান, `source` করবেন না, কারণ তখন `$0` script-এর path থাকে না।
 
 </details>
 
@@ -526,10 +537,10 @@ Tutorial-এর নিজস্ব পরামর্শ: help থেকে ঠ�
 When a command name has no slash, bash looks in a fixed order. It tries a shell function, then a builtin, then the directories of `PATH`. <Cite n={1} /> `PATH` is a list of directories with a colon between them. The shell searches the list from the first to the last. <Cite n={7} /> If bash finds no command, it prints an error and returns exit status 127. <Cite n={1} />
 
 ```bash
-echo "$PATH" | tr ':' '\n'
+echo "$PATH" | tr ':' '\n'   # one directory per line
 ```
 
-**Try it:** run a name that does not exist in a child shell, then print the exit status.
+**Try it:** run a name that does not exist in a child shell, then print the exit status. `$?` holds the exit status of the last command. <Cite n={1} />
 
 ```bash
 bash -c 'no-such-tool'   # bash: line 1: no-such-tool: command not found
@@ -538,7 +549,7 @@ echo "$?"                # 127
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: if a CI step prints "command not found" with status 127, check `PATH` first. The first match wins, so an old copy of a tool can hide the new one.
+Tutorial's own advice: on "command not found" (status 127) in CI, check `PATH` first. The first match wins, so an old copy of a tool can hide the new one.
 
 </Callout>
 
@@ -572,7 +583,7 @@ Tutorial's own advice: print `$PATH` and run `command -v tool` at the start of a
 
 When a command name has no slash, bash looks in a fixed order. First it tries a shell function, then a builtin, then the directories of `PATH`. <Cite n={1} /> `PATH` is a list of directories with a colon between them. The shell searches it from the first directory to the last. <Cite n={7} /> If bash finds no command, it prints an error and returns exit status 127. <Cite n={1} />
 
-**Try it:** run a name that does not exist in a child shell, then print the exit status.
+**Try it:** run a name that does not exist in a child shell, then print the exit status. `$?` holds the exit status of the last command. <Cite n={1} />
 
 ```bash
 bash -c 'no-such-tool'   # bash: line 1: no-such-tool: command not found
@@ -581,7 +592,7 @@ echo "$?"                # 127
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: if a CI step prints "command not found" with status 127, check `PATH` first. The first match wins, so an old copy of a tool can hide the new one.
+Tutorial's own advice: on "command not found" (status 127) in CI, check `PATH` first. The first match wins, so an old copy of a tool can hide the new one.
 
 </Callout>
 
@@ -601,7 +612,7 @@ An empty entry in `PATH` means the current directory. Two colons in a row make o
 
 Command-এর নামে slash না থাকলে bash একটি নির্দিষ্ট ক্রমে খোঁজে: প্রথমে shell function, তারপর builtin, তারপর `PATH`-এর directory-গুলো। <Cite n={1} /> `PATH` হলো colon দিয়ে আলাদা করা directory-এর একটি list, আর shell প্রথম থেকে শেষ পর্যন্ত এই list-এ খোঁজে। <Cite n={7} /> কোনো command না পেলে bash একটি error print করে এবং exit status 127 return করে। <Cite n={1} />
 
-**চেষ্টা করুন:** একটি child shell-এ এমন একটি নাম চালান যার কোনো command নেই, তারপর exit status print করুন।
+**চেষ্টা করুন:** একটি child shell-এ এমন একটি নাম চালান যার কোনো command নেই, তারপর exit status print করুন। `$?`-এ শেষ command-এর exit status থাকে। <Cite n={1} />
 
 ```bash
 bash -c 'no-such-tool'   # bash: line 1: no-such-tool: command not found
@@ -610,7 +621,7 @@ echo "$?"                # 127
 
 <Callout type="tip" title="টেস্টিং-এ কেন দরকার">
 
-Tutorial-এর নিজস্ব পরামর্শ: একটি CI step যদি status 127 সহ "command not found" print করে, আগে `PATH` দেখুন। প্রথম match-টিই জেতে, তাই একটি পুরোনো tool নতুনটিকে আড়াল করতে পারে।
+Tutorial-এর নিজস্ব পরামর্শ: CI-তে status 127 সহ "command not found" এলে আগে `PATH` দেখুন। প্রথম match-টিই জেতে, তাই পুরোনো tool নতুনটিকে আড়াল করতে পারে।
 
 </Callout>
 
@@ -641,14 +652,10 @@ All files sit under one root, `/`. The absolute path of each file goes through t
 ls /
 ```
 
-**Try it:** check two paths that exist and one that does not. `ls -d` lists a directory itself, not its contents. `ls` returns 2 when it cannot access a path that you name. <Cite n={2} />
+**Try it:** check that the directories for configuration, logs, and temporary files exist. `ls -d` lists a directory itself, not its contents. <Cite n={2} />
 
 ```bash
-ls -d /etc /var/log /no-such-dir
-echo "$?"
-# ls: cannot access '/no-such-dir': No such file or directory
-# /etc  /var/log
-# 2
+ls -d /etc /var/log /tmp   # /etc  /tmp  /var/log
 ```
 
 <Callout type="tip" title="Why it matters for testing">
@@ -661,6 +668,16 @@ Tutorial's own advice: do not keep test evidence in `/tmp`. The system may delet
 <summary>Go deeper</summary>
 
 The root filesystem must be enough to boot, restore, recover, and repair the system. <Cite n={10} />
+
+`ls` returns 2 when it cannot access a path that you name. <Cite n={2} /> `$?` holds the exit status of the last command. <Cite n={1} />
+
+```bash
+ls -d /etc /no-such-dir
+echo "$?"
+# ls: cannot access '/no-such-dir': No such file or directory
+# /etc
+# 2
+```
 
 | Path | What it holds |
 |---|---|
@@ -691,14 +708,10 @@ Tutorial's own advice: when a service under test fails, look in `/var/log` for i
 
 All files sit under one root, `/`. The absolute path of each file goes through the root. <Cite n={19} /> The Filesystem Hierarchy Standard (FHS) sets the directory structure and the purpose of each directory. <Cite n={19} /> <Cite n={10} /> `/etc` holds the configuration files. `/var` holds data that changes while the system runs, for example logs. `/tmp` holds temporary files, and the system may delete them without notice. <Cite n={6} />
 
-**Try it:** check two paths that exist and one that does not. `ls -d` lists a directory itself, not what is in it. `ls` returns 2 when it cannot open a path that you name. <Cite n={2} />
+**Try it:** check that the directories for settings, logs, and temporary files exist. `ls -d` lists a directory itself, not what is in it. <Cite n={2} />
 
 ```bash
-ls -d /etc /var/log /no-such-dir
-echo "$?"
-# ls: cannot access '/no-such-dir': No such file or directory
-# /etc  /var/log
-# 2
+ls -d /etc /var/log /tmp   # /etc  /tmp  /var/log
 ```
 
 <Callout type="tip" title="Why it matters for testing">
@@ -711,6 +724,8 @@ Tutorial's own advice: do not keep test evidence in `/tmp`. The system may delet
 <summary>Go deeper</summary>
 
 The root filesystem must be enough to boot, restore, recover, and repair the system. <Cite n={10} />
+
+`ls` returns 2 when it cannot open a path that you name. <Cite n={2} />
 
 Some main directories <Cite n={6} />:
 
@@ -730,19 +745,15 @@ Tutorial's own advice: when a service under test fails, look in `/var/log` for i
 
 সব file একটি root-এর নিচে থাকে, যা `/`। প্রতিটি file-এর absolute path root-এর মধ্য দিয়ে যায়। <Cite n={19} /> Filesystem Hierarchy Standard (FHS) directory structure এবং প্রতিটি directory-এর কাজ ঠিক করে দেয়। <Cite n={19} /> <Cite n={10} /> `/etc`-এ configuration file থাকে। `/var`-এ এমন data থাকে যা system চলার সময় বদলায়, যেমন log। `/tmp`-এ temporary file থাকে, যা system কোনো notice ছাড়াই মুছে দিতে পারে। <Cite n={6} />
 
-**চেষ্টা করুন:** দুটি আছে এমন path আর একটি নেই এমন path দেখুন। `ls -d` একটি directory-কেই list করে, তার ভেতরের জিনিস নয়। আপনার দেওয়া কোনো path access করতে না পারলে `ls` 2 return করে। <Cite n={2} />
+**চেষ্টা করুন:** configuration, log, আর temporary file-এর directory-গুলো আছে কি না দেখুন। `ls -d` একটি directory-কেই list করে, তার ভেতরের জিনিস নয়। <Cite n={2} />
 
 ```bash
-ls -d /etc /var/log /no-such-dir
-echo "$?"
-# ls: cannot access '/no-such-dir': No such file or directory
-# /etc  /var/log
-# 2
+ls -d /etc /var/log /tmp   # /etc  /tmp  /var/log
 ```
 
 <Callout type="tip" title="টেস্টিং-এ কেন দরকার">
 
-Tutorial-এর নিজস্ব পরামর্শ: Test-এর প্রমাণ `/tmp`-এ রাখবেন না, কারণ system সেগুলো মুছে দিতে পারে। Report এবং log এমন folder-এ copy করুন, যা আপনার CI job save করে।
+Tutorial-এর নিজস্ব পরামর্শ: Test-এর প্রমাণ `/tmp`-এ রাখবেন না, কারণ system সেগুলো মুছে দিতে পারে। Report ও log CI job-এর save করা folder-এ রাখুন।
 
 </Callout>
 
@@ -750,6 +761,8 @@ Tutorial-এর নিজস্ব পরামর্শ: Test-এর প্র�
 <summary>আরও জানুন</summary>
 
 Root filesystem-এ system boot, restore, recover, এবং repair করার মতো যথেষ্ট জিনিস থাকতে হবে। <Cite n={10} />
+
+আপনার দেওয়া কোনো path access করতে না পারলে `ls` 2 return করে। <Cite n={2} />
 
 আরও কিছু প্রধান directory <Cite n={6} />: `/home`-এ user-দের home directory থাকে, আর `/root` হলো root user-এর home directory। `/usr/bin` হলো executable program-এর প্রধান directory, আর `/usr/local`-এ site-এর নিজস্ব program থাকে। `/var`-এ cache-ও থাকে। `/dev`-এ device-এর special file, `/proc`-এ চলমান process এবং kernel-এর তথ্য, আর `/opt`-এ add-on application package থাকে।
 
@@ -773,18 +786,20 @@ The environment is a list of strings in the form `name=value`. A child process (
 printenv HOME
 ```
 
-**Try it:** start a throw-away shell with `bash`. Set a variable, and read it from a child shell before and after `export`. Type `exit` at the end.
+**Try it:** set a variable, and read it from a child shell before and after `export`. The parentheses run the block in a subshell, so your shell does not change. <Cite n={1} />
 
 ```bash
-API_URL=http://localhost:8080
-bash -c 'echo "[$API_URL]"'    # []
-export API_URL
-bash -c 'echo "[$API_URL]"'    # [http://localhost:8080]
+(
+  API_URL=http://localhost:8080
+  bash -c 'echo "[$API_URL]"'    # []
+  export API_URL
+  bash -c 'echo "[$API_URL]"'    # [http://localhost:8080]
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: a test can read a URL, a token, or `LANG` from the environment, so it can behave differently on a laptop and on a runner. Do not run `printenv` in a shared CI log. It can print secrets.
+Tutorial's own advice: do not run `printenv` in a shared CI log. It can print secrets.
 
 </Callout>
 
@@ -801,7 +816,7 @@ env -i PATH="$PATH" HOME="$HOME" printenv   # a clean environment
 
 `printenv` prints the named variables, or all of them. <Cite n={9} /> The form `NAME=value command` sets a variable only for that command. <Cite n={7} /> `env -i` empties the environment. The command then gets only the variables that you list, so keep `PATH` and `HOME` if it needs them. <Cite n={8} /> A login shell runs `~/.bash_profile` at each login. <Cite n={20} /> Use `~/.bashrc` for interactive terminals and `~/.bash_profile` or `~/.profile` for login shells. <Cite n={21} /> A login file does not read `~/.bashrc` unless you source it. <Cite n={21} /> Common names are `HOME`, `PATH`, `PWD`, `SHELL`, `USER`, `LANG`, and `TMPDIR`. <Cite n={7} />
 
-Tutorial's own advice: run a test with `env -i` and set only the variables that you need, such as `PATH` and `HOME`. A CI job or script must set its variables in the job or in the script, not in these files.
+Tutorial's own advice: a test can read a URL, a token, or `LANG` from the environment, so it can behave differently on a laptop and on a runner. Run a test with `env -i` and set only the variables that you need, such as `PATH` and `HOME`. A CI job or script must set its variables in the job or in the script, not in these files.
 
 </details>
 
@@ -812,13 +827,15 @@ Tutorial's own advice: run a test with `env -i` and set only the variables that 
 
 The environment is a list of strings in the form `name=value`. A child process is a program that another program starts. It gets a copy of the environment of its parent. <Cite n={7} /> A normal assignment makes a shell variable. A child process does not see it. `export` puts the name in the environment of later commands. <Cite n={1} /> <Cite n={21} />
 
-**Try it:** start a throw-away shell with `bash`. Set a variable, and read it from a child shell before and after `export`. Type `exit` at the end.
+**Try it:** set a variable, and read it from a child shell before and after `export`. The parentheses run the block in a subshell, so your shell does not change. <Cite n={1} />
 
 ```bash
-API_URL=http://localhost:8080
-bash -c 'echo "[$API_URL]"'    # []
-export API_URL
-bash -c 'echo "[$API_URL]"'    # [http://localhost:8080]
+(
+  API_URL=http://localhost:8080
+  bash -c 'echo "[$API_URL]"'    # []
+  export API_URL
+  bash -c 'echo "[$API_URL]"'    # [http://localhost:8080]
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
@@ -845,18 +862,20 @@ Use `~/.bashrc` for interactive terminals. Use `~/.bash_profile` or `~/.profile`
 
 Environment হলো `name=value` রূপে লেখা string-এর একটি list। একটি child process (যে program-কে অন্য একটি program শুরু করে) তার parent-এর environment-এর একটি copy পায়। <Cite n={7} /> সাধারণ assignment একটি shell variable তৈরি করে, যা child process দেখতে পায় না। `export` command নামটিকে পরের command-গুলোর environment-এর জন্য চিহ্নিত করে। <Cite n={1} /> <Cite n={21} />
 
-**চেষ্টা করুন:** `bash` দিয়ে একটি throw-away shell শুরু করুন। একটি variable set করুন, আর `export`-এর আগে ও পরে একটি child shell থেকে সেটি পড়ুন। শেষে `exit` লিখুন।
+**চেষ্টা করুন:** একটি variable set করুন, আর `export`-এর আগে ও পরে একটি child shell থেকে সেটি পড়ুন। বন্ধনী block-টিকে একটি subshell-এ চালায়, তাই আপনার shell বদলায় না। <Cite n={1} />
 
 ```bash
-API_URL=http://localhost:8080
-bash -c 'echo "[$API_URL]"'    # []
-export API_URL
-bash -c 'echo "[$API_URL]"'    # [http://localhost:8080]
+(
+  API_URL=http://localhost:8080
+  bash -c 'echo "[$API_URL]"'    # []
+  export API_URL
+  bash -c 'echo "[$API_URL]"'    # [http://localhost:8080]
+)
 ```
 
 <Callout type="tip" title="টেস্টিং-এ কেন দরকার">
 
-Tutorial-এর নিজস্ব পরামর্শ: একটি test environment থেকে URL, token, বা `LANG` পড়তে পারে, তাই laptop আর runner-এ এটি আলাদা আচরণ করতে পারে। Shared CI log-এ `printenv` চালাবেন না, কারণ এটি secret print করতে পারে।
+Tutorial-এর নিজস্ব পরামর্শ: Shared CI log-এ `printenv` চালাবেন না, কারণ এটি secret print করতে পারে।
 
 </Callout>
 
@@ -869,7 +888,7 @@ Tutorial-এর নিজস্ব পরামর্শ: একটি test envi
 
 একটি login shell প্রতিবার login-এ `~/.bash_profile` চালায়। <Cite n={20} /> Interactive terminal-এর জন্য `~/.bashrc`, আর login shell-এর জন্য `~/.bash_profile` বা `~/.profile` ব্যবহার করুন। Login file `~/.bashrc` পড়ে না, যদি না আপনি সেটি source করেন। <Cite n={21} /> সাধারণ নামগুলো হলো `HOME`, `PATH`, `PWD`, `SHELL`, `USER`, `LANG`, এবং `TMPDIR`। <Cite n={7} />
 
-Tutorial-এর নিজস্ব পরামর্শ: CI job বা script-কে তার variable job-এ বা script-এ set করতে হবে, এই file-গুলোতে নয়।
+Tutorial-এর নিজস্ব পরামর্শ: একটি test environment থেকে URL, token, বা `LANG` পড়তে পারে, তাই laptop আর runner-এ এটি আলাদা আচরণ করতে পারে। CI job বা script-কে তার variable job-এ বা script-এ set করতে হবে, এই file-গুলোতে নয়।
 
 </details>
 
