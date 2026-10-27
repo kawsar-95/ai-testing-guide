@@ -53,7 +53,7 @@ export function PageVoiceSwitcher() {
     else el.setAttribute(PAGE_VOICE_ATTR, choice);
   }, [choice]);
 
-  useRevealTarget(article, setChoice, choice);
+  useRevealTarget(article, setChoice, choice, def !== null);
 
   if (def === null) return null;
 
