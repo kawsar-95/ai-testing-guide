@@ -82,7 +82,7 @@ chmod +x setup.sh
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   printf '%s\n' '#!/usr/bin/env bash' '[ "$1" = "ok" ]' > setup.sh
   chmod +x setup.sh
   ./setup.sh ok;  echo "status: $?"    # status: 0
@@ -101,6 +101,7 @@ Tutorial's own advice: in CI, check the exit status of a script, not its printed
 <summary>Go deeper</summary>
 
 - A shell is a program that passes your commands to the operating system. <Cite n={2} />
+- A non-interactive shell has no person at the prompt. <Cite n={11} />
 - `#!/usr/bin/env bash` finds the first `bash` in `PATH`. <Cite n={11} />
 - `./setup.sh` runs the file in a child shell, so its variables vanish at the end. <Cite n={11} />
 - `. ./setup.sh` (or `source`) runs the file in the current shell. Its variables stay in your shell. <Cite n={35} /> <Cite n={36} />
@@ -123,7 +124,7 @@ A shell script is a text file of commands. Bash runs it with no person at the pr
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   printf '%s\n' '#!/usr/bin/env bash' '[ "$1" = "ok" ]' > setup.sh
   chmod +x setup.sh
   ./setup.sh ok;  echo "status: $?"    # status: 0
@@ -158,7 +159,7 @@ Shell script হলো command-এর একটি text file। Bash এটি �
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   printf '%s\n' '#!/usr/bin/env bash' '[ "$1" = "ok" ]' > setup.sh
   chmod +x setup.sh
   ./setup.sh ok;  echo "status: $?"    # status: 0
@@ -401,7 +402,7 @@ Tutorial's own advice: put `grep` patterns in single quotes, and write JSON test
 - A single quote cannot go inside single quotes. <Cite n={21} /> To add one, close the string, write `\'`, and open the string again. <Cite n={5} />
 - `$'...'` decodes escapes such as `\n` and `\t`. <Cite n={23} />
 - A here-document gives several lines of input to a command. The word after `<<` marks the end. If you quote that word, nothing inside expands. <Cite n={24} />
-- `$((expression))` does arithmetic on whole numbers. <Cite n={26} /> <Cite n={25} /> A leading `0` means octal, and `0x` means hexadecimal. <Cite n={25} /> POSIX requires only decimal, octal, and hexadecimal constants, so other shells may reject the `base#n` form. <Cite n={25} /> <Cite n={39} />
+- `$((expression))` does arithmetic on whole numbers. <Cite n={26} /> <Cite n={25} /> A leading `0` means octal, and `0x` means hexadecimal. <Cite n={25} /> The form `base#n` writes a number in another base. POSIX requires only decimal, octal, and hexadecimal constants, so other shells may reject the `base#n` form. <Cite n={25} /> <Cite n={39} />
 
 Tutorial's own advice: `$((08))` is an error, because `08` is not a valid octal number.
 
@@ -437,7 +438,7 @@ Tutorial-এর নিজস্ব পরামর্শ: `grep` pattern single 
 - Single quote-এর ভেতরে single quote রাখা যায় না। <Cite n={21} /> একটি রাখতে string বন্ধ করুন, `\'` যোগ করুন, তারপর আবার খুলুন। <Cite n={5} />
 - `$'...'` `\n` এবং `\t`-এর মতো escape decode করে। <Cite n={23} /> 2024 সালের POSIX standard এটি define করে <Cite n={39} />, কিন্তু একটি test-এ dash এটি decode করেনি।
 - Here-document একটি command-কে input হিসেবে কয়েকটি লাইন দেয়। `<<`-এর পরের word-টি শেষের marker। Marker quote করলে ভেতরের কিছুই expand হয় না; না করলে variable এবং `$(...)` expand হয়। `<<-` দিলে shell শুরুর tab-গুলো সরিয়ে দেয়। <Cite n={24} />
-- `$((expression))` C operator দিয়ে পূর্ণসংখ্যার হিসাব করে। <Cite n={26} /> <Cite n={25} /> শুরুতে `0` মানে octal, আর `0x` মানে hexadecimal। <Cite n={25} /> POSIX শুধু decimal, octal এবং hexadecimal constant চায়, তাই অন্য shell `base#n` reject করতে পারে। <Cite n={25} /> <Cite n={39} />
+- `$((expression))` C operator দিয়ে পূর্ণসংখ্যার হিসাব করে। <Cite n={26} /> <Cite n={25} /> শুরুতে `0` মানে octal, আর `0x` মানে hexadecimal। <Cite n={25} /> `base#n` form অন্য base-এ একটি সংখ্যা লেখে। POSIX শুধু decimal, octal এবং hexadecimal constant চায়, তাই অন্য shell `base#n` reject করতে পারে। <Cite n={25} /> <Cite n={39} />
 
 Tutorial-এর নিজস্ব পরামর্শ: `$((08))` একটি error, কারণ `08` একটি valid octal সংখ্যা নয়।
 
@@ -463,7 +464,7 @@ if [ -f "$path" ]; then echo "a file"; fi
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   touch notes.txt
   [ -f notes.txt ]; echo "status: $?"   # status: 0  (a regular file)
   [ -d notes.txt ]; echo "status: $?"   # status: 1  (not a directory)
@@ -481,7 +482,7 @@ Tutorial's own advice: check preconditions at the top of a script, such as `[ -d
 <details>
 <summary>Go deeper</summary>
 
-- The `if` command can be any program, such as `grep -q`. <Cite n={27} />
+- The command after `if` can be any program, such as `grep -q`. <Cite n={27} />
 - `-e` tests that a path exists, and `-r` that it is readable. <Cite n={28} /> Numbers use `-eq -ne -lt -le -gt -ge`. Strings use `= !=`. <Cite n={7} /> <Cite n={28} /> Use a single `=` inside `[ ]` for portability. <Cite n={28} />
 - An empty unquoted variable vanishes and leaves a broken test. <Cite n={32} />
 - `[[ ... ]]` is a Bash keyword that POSIX leaves unspecified. <Cite n={27} /> <Cite n={39} /> It does not split words, it matches patterns with `==`, and `=~` matches a regular expression. In `[[ =~ ]]`, keep the pattern unquoted or in a variable: quotes make the match literal. <Cite n={27} />
@@ -511,7 +512,7 @@ Tutorial's own advice: a fast, clear failure is better in CI than a wrong result
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   touch notes.txt
   [ -f notes.txt ]; echo "status: $?"   # status: 0  (a regular file)
   [ -d notes.txt ]; echo "status: $?"   # status: 1  (not a directory)
@@ -547,7 +548,7 @@ Tutorial's own advice: check preconditions at the top of a script, such as `[ -d
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   touch notes.txt
   [ -f notes.txt ]; echo "status: $?"   # status: 0  (a regular file)
   [ -d notes.txt ]; echo "status: $?"   # status: 1  (not a directory)
@@ -565,7 +566,7 @@ Tutorial-এর নিজস্ব পরামর্শ: script-এর শু�
 <details>
 <summary>আরও জানুন</summary>
 
-- Command-টি যেকোনো program হতে পারে, যেমন `grep -q`। <Cite n={27} />
+- `if`-এর পরের command যেকোনো program হতে পারে, যেমন `grep -q`। <Cite n={27} />
 - `-e` path আছে কি না, আর `-r` readable কি না test করে। <Cite n={28} /> সংখ্যার জন্য `-eq -ne -lt -le -gt -ge`, আর string-এর জন্য `= !=`। <Cite n={7} /> <Cite n={28} /> Portability-র জন্য `[ ]`-এর ভেতরে একটি `=` ব্যবহার করুন। <Cite n={28} />
 - Quote ছাড়া একটি empty variable হারিয়ে যায় এবং test ভেঙে যায়। <Cite n={32} />
 - `[[ ... ]]` একটি Bash keyword, যা POSIX unspecified রাখে। <Cite n={27} /> <Cite n={39} /> এটি word split করে না, `==` দিয়ে pattern match করে, আর `=~` দিয়ে regular expression match করে। <Cite n={27} />
@@ -594,7 +595,7 @@ for f in ./*.txt; do echo "file: $f"; done
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   touch "my report.txt" b.txt
   for f in ./*.txt; do echo "file: $f"; done
   # file: ./b.txt
@@ -642,7 +643,7 @@ A loop repeats commands. `for name in words; do ...; done` runs one time for eac
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   touch "my report.txt" b.txt
   for f in ./*.txt; do echo "file: $f"; done
   # file: ./b.txt
@@ -667,7 +668,7 @@ Tutorial's own advice: when `until` waits for a service, always add a counter or
 - `break` stops the loop, and `continue` starts the next round. <Cite n={35} />
 - If no file matches, the glob stays as you typed it. So test each name with `[ -e "$f" ] || continue`. <Cite n={31} /> Put `--` before names that can start with a dash. <Cite n={6} />
 - To read a file one line at a time, use `while IFS= read -r line`. `-r` keeps backslashes. <Cite n={36} /> An empty `IFS` keeps leading spaces. <Cite n={32} /> <Cite n={6} />
-- Do not pipe into `while`. Each part of a pipeline runs in its own subshell, so the loop loses its variables. <Cite n={33} /> Write `done < file` instead.
+- Do not pipe into `while`. Each part of a pipeline runs in its own subshell, a child copy of the shell, so the loop loses its variables. <Cite n={33} /> Write `done < file` instead.
 
 </details>
 
@@ -682,7 +683,7 @@ Loop command-গুলো বারবার চালায়। `for name in 
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   touch "my report.txt" b.txt
   for f in ./*.txt; do echo "file: $f"; done
   # file: ./b.txt
@@ -708,7 +709,7 @@ Tutorial-এর নিজস্ব পরামর্শ: service-এর জন�
 - C-style `for ((i=0; i<3; i++))` একটি Bash form; একটি test-এ dash এটি reject করেছে। <Cite n={30} />
 - কিছু match না করলে glob যেমন লেখা তেমনই থাকে, তাই `[ -e "$f" ] || continue` দিয়ে test করুন। <Cite n={31} /> যে নাম dash দিয়ে শুরু হতে পারে, তার আগে `--` দিন। <Cite n={6} />
 - একটি file লাইন ধরে ধরে পড়তে `while IFS= read -r line` ব্যবহার করুন। `-r` backslash রেখে দেয়। <Cite n={36} /> Empty `IFS` শুরুর space রেখে দেয়। <Cite n={32} /> <Cite n={6} />
-- `while`-এর ভেতরে pipe করবেন না। Pipeline-এর প্রতিটি অংশ নিজের subshell-এ চলে, তাই loop-এ set করা variable হারিয়ে যায়। <Cite n={33} /> এর বদলে `done < file` লিখুন।
+- `while`-এ pipe করে input দেবেন না। Pipeline-এর প্রতিটি অংশ নিজের subshell-এ চলে, তাই loop-এ set করা variable হারিয়ে যায়। <Cite n={33} /> এর বদলে `done < file` লিখুন।
 
 </details>
 
@@ -732,7 +733,7 @@ bash -x script.sh
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   printf '%s\n' 'set -euo pipefail' 'echo "start"' 'false' 'echo "never reached"' > flaky.sh
   bash -n flaky.sh && echo "syntax ok"   # syntax ok
   bash -x flaky.sh; echo "status: $?"
@@ -777,13 +778,13 @@ PS4='+ ${BASH_SOURCE##*/}:${LINENO}: '                    # with bash -x: + file
 
 **Goal:** Trace a script and stop it at the first failed command.
 
-`bash -n script.sh` reports syntax errors and runs nothing. <Cite n={34} /> <Cite n={10} /> `bash -x script.sh` prints each command after expansion. `set -e` stops a script after a command fails. `set -u` makes an unset variable an error. `set -o pipefail` makes a pipeline fail when any part fails. <Cite n={34} /> If a variable can be empty, never run `rm -rf "$dir/"`, because the path can become `/`. Use `${dir:?}`. <Cite n={16} />
+`bash -n script.sh` reports syntax errors and runs nothing. <Cite n={34} /> <Cite n={10} /> `bash -x script.sh` prints each command after expansion. `set -e` stops a script after a command fails. `set -u` makes an unset variable an error. `set -o pipefail` makes a pipeline fail when any part fails. <Cite n={34} /> If a variable can be empty, never run `rm -rf "$dir/"`, because the path can become `/`. Use `${dir:?}`, which stops the script if the variable is unset or empty. <Cite n={16} />
 
 **Try it:** write a script that fails in the middle, check its syntax, and trace it. `bash -x` writes each command with a `+` in front. <Cite n={37} />
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   printf '%s\n' 'set -euo pipefail' 'echo "start"' 'false' 'echo "never reached"' > flaky.sh
   bash -n flaky.sh && echo "syntax ok"   # syntax ok
   bash -x flaky.sh; echo "status: $?"
@@ -822,7 +823,7 @@ Tutorial's own advice: in CI, trace with `set -x` only around the failing step. 
 
 ```bash
 (
-  cd "$(mktemp -d)"   # make and enter a new, empty directory
+  cd "$(mktemp -d)" || exit 1   # make and enter a new, empty directory
   printf '%s\n' 'set -euo pipefail' 'echo "start"' 'false' 'echo "never reached"' > flaky.sh
   bash -n flaky.sh && echo "syntax ok"   # syntax ok
   bash -x flaky.sh; echo "status: $?"
