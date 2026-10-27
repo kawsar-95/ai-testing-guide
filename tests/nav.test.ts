@@ -63,6 +63,7 @@ test("the order of the pages is pinned", () => {
       "/automate/github-actions/",
       "/automate/playwright/",
       "/case-study/overview/",
+      "/case-study/codebase-tour/",
       "/case-study/bug-hunt/",
       "/case-study/pr-review/",
       "/case-study/test-and-retest/",
@@ -94,6 +95,7 @@ test("the page titles are pinned", () => {
       "GitHub Actions",
       "Browser Testing with Playwright",
       "The Practice Project",
+      "The dMoney Codebase",
       "Bug Hunting with a Review Gate",
       "From Issue to Reviewed PR",
       "Design, Execute, Fix, Retest",
@@ -110,7 +112,7 @@ test("groups are in sidebar order", () => {
   );
   assert.deepEqual(
     GROUPS.map((g) => g.pages.length),
-    [3, 4, 2, 5, 3, 6],
+    [3, 4, 2, 5, 3, 7],
   );
 });
 
@@ -161,7 +163,7 @@ test("getNeighbors crosses group borders", () => {
 });
 
 test("every page has a tagline of 1 to 8 words", () => {
-  assert.equal(PAGES.length, 23);
+  assert.equal(PAGES.length, 24);
   for (const page of PAGES) {
     const words = page.tagline.trim().split(/\s+/).filter(Boolean);
     assert.ok(words.length >= 1 && words.length <= 8, `${page.href}: "${page.tagline}" has ${words.length} words`);

@@ -177,6 +177,12 @@ const SOURCE: { slug: GroupSlug; title: string; pages: PageEntry[] }[] = [
         tagline: "one QA workspace, end to end",
       },
       {
+        slug: "codebase-tour",
+        title: "The dMoney Codebase",
+        description: "A tour of the public repository: the practice app, its ledger, the web app, the Claude Code layer, and the class notes.",
+        tagline: "the public repo, folder by folder",
+      },
+      {
         slug: "bug-hunt",
         title: "Bug Hunting with a Review Gate",
         description: "A `find-bug` skill, a context hook, and a read-only reviewer subagent that gates each bug report.",

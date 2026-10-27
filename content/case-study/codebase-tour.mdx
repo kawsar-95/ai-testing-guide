@@ -1,0 +1,520 @@
+export const metadata = {
+  title: 'The dMoney Codebase',
+  description: 'A tour of the public genAI-project repository: the practice app, its ledger, the web app, the Claude Code layer, and the class notes.',
+}
+
+export const page = {
+  updated: '2026-10-27',
+  sources: [
+    { title: 'Extend Claude with skills', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/skills', accessed: '2026-10-27' },
+    { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-10-27' },
+    { title: 'Hooks reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks', accessed: '2026-10-27' },
+    { title: 'Connect Claude Code to tools via MCP', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/mcp', accessed: '2026-10-27' },
+    { title: 'Authentication', publisher: 'Playwright docs', url: 'https://playwright.dev/docs/auth', accessed: '2026-10-27' },
+  ],
+}
+
+# The dMoney Codebase
+
+Parts 18 and 20 to 24 describe a QA workspace. The author also published it as the public repository [kawsar-95/genAI-project](https://github.com/kawsar-95/genAI-project). This part is a tour of that repository. It shows what each folder does and how the folders work together.
+
+<PageMeta />
+
+<Callout type="note" title="Where these facts come from">
+
+The facts on this page come from the files of the public repository, read on 2026-10-27. They have no cites, because a cite links to an official source. Facts about Claude Code, MCP, and Playwright link to the official docs. The repository changes over time, so check its README for the latest state.
+
+</Callout>
+
+<Callout type="warning" title="The app has bugs on purpose">
+
+dMoney is a practice target. It has known weaknesses, for example a default JWT secret, an OTP bypass for development, open CORS, and a balance query that builds SQL from a string. The repository documents known weaknesses in `qa-findings/` and in the `CLAUDE.md` file of the API. Do not deploy the app. Do not open it to the internet.
+
+</Callout>
+
+## What the repository is
+
+<Voices>
+<Technical>
+
+The repository is not one application. It has three layers.
+
+| Layer | What it is | Where it lives |
+|---|---|---|
+| The app under test | dMoney, a mobile-money wallet like bKash or Nagad. It has a REST API and a web app. | `dmoney-transaction-api/`, `dmoney-web-react/` |
+| The AI layer | Skills, subagents, a hook, and MCP servers for Claude Code | `.claude/`, `.mcp.json`, and one `.claude/` folder in each sub-project |
+| The output | Bug reports, test cases, reviews, and test results that the AI layer writes | `qa-findings/`, `.artifacts/` |
+
+The app has five roles: SYSTEM, Admin, Agent, Customer, and Merchant.
+
+</Technical>
+<Layman>
+
+The repository is not one app. It has three layers.
+
+- The app: dMoney, a mobile-money wallet like bKash or Nagad. It has a REST API and a web app.
+- The AI layer: skills, subagents, a hook, and MCP servers for Claude Code.
+- The output: the bug reports, test cases, reviews, and test results that the AI layer writes.
+
+The app has five roles: SYSTEM, Admin, Agent, Customer, and Merchant.
+
+</Layman>
+<Bangla>
+
+Repository-টি একটি app নয়। এর তিনটি layer আছে।
+
+- App: dMoney, bKash বা Nagad-এর মতো একটি mobile-money wallet। এতে একটি REST API ও একটি web app আছে।
+- AI layer: Claude Code-এর জন্য skill, subagent, একটি hook এবং MCP server।
+- Output: AI layer যে bug report, test case, review ও test result লেখে।
+
+App-এ পাঁচটি role আছে: SYSTEM, Admin, Agent, Customer ও Merchant।
+
+</Bangla>
+</Voices>
+
+## The folder map
+
+<Voices>
+<Technical>
+
+| Path | Role |
+|---|---|
+| `dmoney-transaction-api/` | The backend: Node.js, Express, Sequelize, MySQL |
+| `dmoney-web-react/` | The web app: Next.js 15 (App Router), TypeScript, MUI, Tailwind 4 |
+| `sql_scripts/` | A MySQL dump of the `dmoneydb` database, with its seed data |
+| `class_notes/` | Eight course notes on AI-driven quality engineering |
+| `.claude/` | The workspace skills, subagents, and hook |
+| `.mcp.json` | Project MCP servers: `playwright`, `jira`, and `dmoney-db` |
+| `GRAPHIFY_SETUP.md` | How to install graphify, a tool that builds a knowledge graph of the code. The graph itself is not in the public repository. |
+
+</Technical>
+<Layman>
+
+Each top-level folder has one job.
+
+- `dmoney-transaction-api/` is the backend. It uses Node.js, Express, Sequelize, and MySQL.
+- `dmoney-web-react/` is the web app. It uses Next.js 15, TypeScript, MUI, and Tailwind 4.
+- `sql_scripts/` has a copy of the `dmoneydb` database with its seed data.
+- `class_notes/` has eight course notes.
+- `.claude/` has the workspace skills, subagents, and hook.
+- `.mcp.json` lists the project MCP servers: `playwright`, `jira`, and `dmoney-db`.
+- `GRAPHIFY_SETUP.md` explains how to install graphify, a tool that builds a knowledge graph of the code. The graph itself is not in the public repository.
+
+</Layman>
+<Bangla>
+
+প্রতিটি top-level folder-এর একটি কাজ আছে।
+
+- `dmoney-transaction-api/` হলো backend। এটি Node.js, Express, Sequelize ও MySQL ব্যবহার করে।
+- `dmoney-web-react/` হলো web app। এটি Next.js 15, TypeScript, MUI ও Tailwind 4 ব্যবহার করে।
+- `sql_scripts/`-এ `dmoneydb` database-এর একটি copy ও seed data আছে।
+- `class_notes/`-এ আটটি course note আছে।
+- `.claude/`-এ workspace-এর skill, subagent ও hook আছে।
+- `.mcp.json` project-এর MCP server-গুলোর তালিকা দেয়: `playwright`, `jira` ও `dmoney-db`।
+- `GRAPHIFY_SETUP.md` ব্যাখ্যা করে কীভাবে graphify install করতে হয়। graphify code-এর একটি knowledge graph বানায়। Graph-টি নিজে public repository-তে নেই।
+
+</Bangla>
+</Voices>
+
+## The backend
+
+<Voices>
+<Technical>
+
+A request goes through these files in this order:
+
+```text
+server.js → app.js → routes/*.route.js → controllers/**/*.controller.js
+          → sequelizeModel/* and services/* → MySQL
+```
+
+| File or folder | What it does |
+|---|---|
+| `server.js` | Creates the HTTP server and listens on the port. |
+| `app.js` | Adds body parsing, CORS, request logging, and the Swagger pages. It mounts all routes at `/` (there is no `/api` prefix). It ends with a 404 handler and an error handler. |
+| `jwtMiddleware.js` | `authenticateJWT` needs a valid Bearer token and a matching `X-AUTH-SECRET-KEY` header. `publicAuthenticateJWT` checks the token only. |
+| `routes/` | `/user/*` routes and `/transaction/*` routes. |
+| `controllers/users/` | Register, two-step login, OTP check, user CRUD, and password reset. |
+| `controllers/transactions/` | One file for each operation: deposit, withdraw, send money, payment, admin deposit, Stripe cash-in, and the read endpoints. |
+| `sequelizeModel/` | The models: `Users`, `Role`, `Transactions`, `Commission`, and `TransactionLimit`. The `Users`, `Transactions`, and `Role` models create their tables when they load. `Users` and `Transactions` also add seed rows. The fee and limit tables come from the scripts in `migrations/`. |
+| `services/` | Helpers for the balance, the transaction ID, the daily and monthly limits, and OTP email. |
+| `migrations/` | One-off scripts that change the schema. Each script checks first, so you can run it twice. |
+| `performance/` | The k6 load test. |
+
+### Login and the two middlewares
+
+Login has two steps for most roles. `POST /user/login` sends a 4-digit OTP that expires after 2 minutes. `POST /user/verify-otp` returns the JWT. Admin and SYSTEM accounts skip the OTP. A development switch (`?env=dev` with a default OTP) skips the real OTP too. The security report lists it as a known weakness.
+
+### The ledger
+
+The database has no balance column. The `Transactions` table is an append-only double-entry ledger. A row has an `account`, a `debit`, a `credit`, a `trnxId`, and a `transaction_type`. The balance of an account is the sum of its credits minus the sum of its debits.
+
+The fees come from the `Commissions` table. The caps for a customer come from the `TransactionLimits` table. The rules are data, so a test can check them without a code change.
+
+### Send Money, step by step
+
+`sendMoney.controller.js` is the most important file for the case study. It does these steps:
+
+1. It checks the input: both accounts are text, and the amount is a number with at most 2 decimals.
+2. It loads the fee rule from `Commission`.
+3. It checks that the token belongs to the sender.
+4. It checks that both accounts are active Customers, that they are not the same account, and that the amount meets the minimum.
+5. It opens a database transaction and reads the sender balance with `FOR UPDATE`. This lock makes parallel requests from one sender wait for each other.
+6. It checks the daily and monthly limits inside the lock.
+7. It checks that the balance covers the amount plus the fee.
+8. It writes 3 ledger rows: the sender debit, the receiver credit, and the fee credit to SYSTEM.
+9. It commits. If any step fails, it rolls back all 3 rows.
+
+The lock and the rollback are the reason for the k6 test in [part 23](/case-study/automation/).
+
+</Technical>
+<Layman>
+
+A request goes through the files in this order: `server.js`, `app.js`, a route file, a controller, then a model or a service, and then MySQL.
+
+How login works:
+
+- Most roles log in with two steps. The first step sends a 4-digit OTP. The OTP expires after 2 minutes. The second step returns the JWT.
+- Admin and SYSTEM skip the OTP.
+- A development switch also skips the real OTP. The security report lists it as a known weakness.
+
+How the money is kept:
+
+- The database has no balance column.
+- The `Transactions` table is a ledger. Each row adds a debit or a credit, and rows are never changed.
+- The balance of an account is the sum of its credits minus the sum of its debits.
+- The fees and the caps are rows in the `Commissions` and `TransactionLimits` tables. A test can read them.
+
+How Send Money works:
+
+1. It checks the input and loads the fee.
+2. It checks that the token belongs to the sender, and that both accounts are active Customers.
+3. It opens a database transaction and locks the sender balance with `FOR UPDATE`. Parallel requests from one sender wait.
+4. It checks the limits and the balance inside the lock.
+5. It writes 3 ledger rows: the sender debit, the receiver credit, and the fee credit to SYSTEM.
+6. It commits. If a step fails, it rolls back all 3 rows.
+
+</Layman>
+<Bangla>
+
+একটি request এই ক্রমে file-গুলোর মধ্য দিয়ে যায়: `server.js`, `app.js`, একটি route file, একটি controller, তারপর একটি model বা service, এবং শেষে MySQL।
+
+Login যেভাবে কাজ করে:
+
+- বেশিরভাগ role দুই ধাপে login করে। প্রথম ধাপে 4 অঙ্কের একটি OTP যায়। OTP 2 মিনিট পরে expire করে। দ্বিতীয় ধাপে JWT পাওয়া যায়।
+- Admin ও SYSTEM OTP বাদ দেয়।
+- একটি development switch-ও আসল OTP বাদ দেয়। Security report এটিকে known weakness হিসেবে তালিকাভুক্ত করেছে।
+
+টাকা যেভাবে রাখা হয়:
+
+- Database-এ কোনো balance column নেই।
+- `Transactions` table একটি ledger। প্রতিটি row একটি debit বা credit যোগ করে, এবং row কখনো বদলানো হয় না।
+- একটি account-এর balance হলো তার credit-এর যোগফল বিয়োগ debit-এর যোগফল।
+- Fee ও cap হলো `Commissions` ও `TransactionLimits` table-এর row। একটি test সেগুলো পড়তে পারে।
+
+Send Money যেভাবে কাজ করে:
+
+1. এটি input check করে ও fee load করে।
+2. এটি check করে যে token sender-এর, এবং দুটি account-ই active Customer।
+3. এটি একটি database transaction খোলে ও `FOR UPDATE` দিয়ে sender-এর balance lock করে। একই sender-এর parallel request অপেক্ষা করে।
+4. Lock-এর ভেতরে এটি limit ও balance check করে।
+5. এটি 3টি ledger row লেখে: sender-এর debit, receiver-এর credit এবং SYSTEM-এ fee-এর credit।
+6. এটি commit করে। কোনো ধাপ fail করলে 3টি row-ই rollback হয়।
+
+</Bangla>
+</Voices>
+
+## The web app
+
+<Voices>
+<Technical>
+
+The web app calls the API at the address in `NEXT_PUBLIC_API_URL`.
+
+| File or folder | What it does |
+|---|---|
+| `src/app/<role>/…/page.tsx` | One page for each feature, grouped by role: `admin/`, `agent/`, `customer/`, `merchant/`. Login, register, profile, and password pages are shared. |
+| `src/lib/api.ts` | One axios client. Before each request it checks if the JWT is expired. It adds the `Authorization` and `X-AUTH-SECRET-KEY` headers. On a 401 response it logs the user out. |
+| `src/middleware.ts` | Sends a user without a `token` cookie to `/login`. |
+| `src/components/` | The dashboard layout, the role menu, pagination, and the account statement. |
+| `e2e/` | The Playwright tests. |
+| `README.md` | The business requirements: validation, limits, fees, and error codes. |
+
+The web app and the API agree on two things: the JWT and the secret-key header. The token is also saved in a cookie, so `middleware.ts` can protect the routes on the server.
+
+</Technical>
+<Layman>
+
+The web app calls the API at the address in `NEXT_PUBLIC_API_URL`.
+
+- Each feature has its own page, grouped by role: `admin/`, `agent/`, `customer/`, and `merchant/`.
+- One axios client in `src/lib/api.ts` adds the `Authorization` and `X-AUTH-SECRET-KEY` headers. It checks if the JWT expired before each request. On a 401 response it logs the user out.
+- `src/middleware.ts` sends a user without a `token` cookie to `/login`.
+- `e2e/` has the Playwright tests.
+
+The web app and the API agree on two things: the JWT and the secret-key header.
+
+</Layman>
+<Bangla>
+
+Web app `NEXT_PUBLIC_API_URL`-এর address-এ API call করে।
+
+- প্রতিটি feature-এর নিজের page আছে, role অনুযায়ী সাজানো: `admin/`, `agent/`, `customer/` ও `merchant/`।
+- `src/lib/api.ts`-এর একটি axios client `Authorization` ও `X-AUTH-SECRET-KEY` header যোগ করে। প্রতিটি request-এর আগে এটি check করে JWT expire হয়েছে কি না। 401 response পেলে এটি user-কে logout করায়।
+- `token` cookie নেই এমন user-কে `src/middleware.ts` `/login`-এ পাঠায়।
+- `e2e/`-এ Playwright test আছে।
+
+Web app ও API দুটি বিষয়ে একমত: JWT ও secret-key header।
+
+</Bangla>
+</Voices>
+
+## The AI layer
+
+<Voices>
+<Technical>
+
+The workspace skills are in `.claude/skills/`. A skill is a folder with a `SKILL.md` file <Cite n={1} />.
+
+| Skill | Job |
+|---|---|
+| `understand-task` | Explains an issue, a pull request, or a Jira ticket and lists its acceptance criteria. |
+| `find-bug` | Hunts bugs in one module through the UI and the API. |
+| `blast-radius` | Finds what a change can affect and ranks the retest list by risk. |
+| `pr-review` | Reviews a pull request against the issues it closes. |
+| `test-charter` | Writes exploratory test charters. |
+| `test-design` | Designs traceable test cases. |
+| `execute-test` | Runs prepared test cases and records pass, failed, or not executed. |
+
+Two subagents do work that must stay separate <Cite n={2} />. `qa-reviewer-agent` only reads. It marks each drafted bug as approved, flagged, or rejected. `test-executor-agent` only runs existing test cases with `curl` and a browser tool. It does not design tests and it does not raise bugs.
+
+One hook runs before the `test-design` and `find-bug` skills <Cite n={3} />. The hook runs a `graphify query` with the arguments of the skill. If the skill has no arguments, it adds the overview of the graph. The model does not have to remember this step.
+
+The file `.mcp.json` lists three MCP servers <Cite n={4} />: `playwright` for the browser, `jira` for tickets, and `dmoney-db` for the database. The README says the database server is for read-only checks during analysis.
+
+</Technical>
+<Layman>
+
+The workspace skills are in `.claude/skills/`. A skill is a folder with a `SKILL.md` file <Cite n={1} />.
+
+- `understand-task` explains a ticket and lists its acceptance criteria.
+- `find-bug` hunts bugs in one module.
+- `blast-radius` finds what a change can affect.
+- `pr-review` reviews a pull request against its issues.
+- `test-charter` writes exploratory test charters.
+- `test-design` designs traceable test cases.
+- `execute-test` runs prepared test cases.
+
+Two subagents have one job each <Cite n={2} />. `qa-reviewer-agent` only reads, and it approves, flags, or rejects each drafted bug. `test-executor-agent` only runs existing test cases. It does not design tests or raise bugs.
+
+A hook runs before the `test-design` and `find-bug` skills <Cite n={3} />. It runs a `graphify query` and adds the result to the context.
+
+The file `.mcp.json` lists three MCP servers <Cite n={4} />: `playwright`, `jira`, and `dmoney-db`.
+
+</Layman>
+<Bangla>
+
+Workspace-এর skill `.claude/skills/`-এ আছে। একটি skill হলো `SKILL.md` file সহ একটি folder <Cite n={1} />।
+
+- `understand-task` একটি ticket ব্যাখ্যা করে ও তার acceptance criteria তালিকাভুক্ত করে।
+- `find-bug` একটি module-এ bug খোঁজে।
+- `blast-radius` খুঁজে বের করে একটি পরিবর্তন কী কী প্রভাবিত করতে পারে।
+- `pr-review` একটি pull request-কে তার issue-এর সঙ্গে মিলিয়ে review করে।
+- `test-charter` exploratory test charter লেখে।
+- `test-design` traceable test case design করে।
+- `execute-test` তৈরি করা test case চালায়।
+
+দুটি subagent-এর প্রত্যেকের একটি করে কাজ <Cite n={2} />। `qa-reviewer-agent` শুধু পড়ে, এবং প্রতিটি draft করা bug approve, flag বা reject করে। `test-executor-agent` শুধু আগে থেকে থাকা test case চালায়। এটি test design করে না এবং bug তোলে না।
+
+`test-design` ও `find-bug` skill-এর আগে একটি hook চলে <Cite n={3} />। এটি একটি `graphify query` চালায় ও ফলাফল context-এ যোগ করে।
+
+`.mcp.json` file তিনটি MCP server-এর তালিকা দেয় <Cite n={4} />: `playwright`, `jira` ও `dmoney-db`।
+
+</Bangla>
+</Voices>
+
+## How the layers work together
+
+<Voices>
+<Technical>
+
+```text
+find-bug ─▶ qa-reviewer-agent ─▶ qa-findings/NN-*-bugs.md ─▶ GitHub issues
+                                                                  │
+analyze-requirement ◀─────────────────────────────────────────────┘
+        │
+fix on a branch ─▶ PR ─▶ pr-review ─▶ blast-radius ─▶ test-charter
+        │
+test-design + qa-agent-advocate ─▶ test-executor-agent ─▶ fix failures ─▶ retest ─▶ k6
+```
+
+Each step writes a file. The next step reads it. The `analyze-requirement` skill (in each sub-project) turns an issue into acceptance criteria. The files are in `qa-findings/` and `.artifacts/`.
+
+| Folder | Content |
+|---|---|
+| `qa-findings/` | Eight numbered reports: login and auth bugs, deposit bugs, deposit test cases, 11 security issues, deposit charters, a deposit test design, cash-in bugs, and 7 Send Money bugs. |
+| `.artifacts/` | The files that skills write for each issue and each pull request: requirements, reviews, impact reports, charters, test cases, and test results. |
+
+The Send Money work followed the whole chain. PR #8 had 17 passed, 5 failed, and 2 not executed test cases. PR #9 fixed the 5 failures.
+
+</Technical>
+<Layman>
+
+The steps run in a chain. Each step writes a file, and the next step reads it.
+
+1. `find-bug` finds a bug, and `qa-reviewer-agent` checks it. The bug goes to `qa-findings/` and then to a GitHub issue.
+2. `analyze-requirement` turns the issue into acceptance criteria.
+3. A fix goes on a branch and into a pull request.
+4. `pr-review` and `blast-radius` check the pull request.
+5. `test-charter` and `test-design` plan the tests.
+6. `test-executor-agent` runs the tests.
+7. The author fixes the failures, retests, and runs the k6 check.
+
+The files are in `qa-findings/` (eight numbered reports) and `.artifacts/` (the files for each issue and each pull request). PR #8 had 17 passed, 5 failed, and 2 not executed test cases. PR #9 fixed the 5 failures.
+
+</Layman>
+<Bangla>
+
+ধাপগুলো একটি chain-এ চলে। প্রতিটি ধাপ একটি file লেখে, এবং পরের ধাপ সেটি পড়ে।
+
+1. `find-bug` একটি bug খোঁজে, এবং `qa-reviewer-agent` সেটি check করে। Bug যায় `qa-findings/`-এ, তারপর একটি GitHub issue-তে।
+2. `analyze-requirement` issue-টিকে acceptance criteria-তে বদলায়।
+3. একটি fix একটি branch-এ যায় ও একটি pull request-এ ঢোকে।
+4. `pr-review` ও `blast-radius` pull request-টি check করে।
+5. `test-charter` ও `test-design` test-এর পরিকল্পনা করে।
+6. `test-executor-agent` test চালায়।
+7. লেখক failure ঠিক করেন, retest করেন এবং k6 check চালান।
+
+File-গুলো আছে `qa-findings/`-এ (আটটি নম্বর দেওয়া report) ও `.artifacts/`-এ (প্রতিটি issue ও pull request-এর file)। PR #8-এ 17টি test case pass, 5টি failed এবং 2টি not executed ছিল। PR #9 সেই 5টি failure ঠিক করেছে।
+
+</Bangla>
+</Voices>
+
+## The test code
+
+<Voices>
+<Technical>
+
+| Test | Where | Idea |
+|---|---|---|
+| k6 load test | `dmoney-transaction-api/performance/` | Ramps from 0 to 3 to 10 users over one minute. It reuses existing customers and rotates the senders, so no one goes over the daily or monthly limit. It uses the development OTP bypass, so run it on a local copy only. |
+| Playwright tests | `dmoney-web-react/e2e/` | One setup project for each role logs in and saves the session. The test projects for that role start with the saved session <Cite n={5} />. |
+
+The setup for the agent role gets its OTP from Gmail. It accepts only a message that arrived after the login started. This stops a stale OTP from a previous run. The helper skips a new login while the saved JWT has more than 10 minutes left.
+
+</Technical>
+<Layman>
+
+There are two kinds of test code.
+
+- The k6 load test is in `dmoney-transaction-api/performance/`. It ramps from 0 to 3 to 10 users in one minute. It reuses existing customers and rotates the senders, so no one goes over a limit. It uses the development OTP bypass, so run it on a local copy only.
+- The Playwright tests are in `dmoney-web-react/e2e/`. A setup project for each role logs in and saves the session. The tests of that role start with the saved session <Cite n={5} />.
+
+The agent setup gets its OTP from Gmail. It accepts only a message that arrived after the login started. A new login is skipped while the saved JWT has more than 10 minutes left.
+
+</Layman>
+<Bangla>
+
+Test code দুই ধরনের।
+
+- k6 load test আছে `dmoney-transaction-api/performance/`-এ। এটি এক মিনিটে 0 থেকে 3 এবং তারপর 10 user পর্যন্ত বাড়ে। এটি আগে থেকে থাকা customer ব্যবহার করে ও sender বদলে বদলে নেয়, যাতে কেউ limit পার না করে। এটি development OTP bypass ব্যবহার করে, তাই শুধু local copy-তে চালান।
+- Playwright test আছে `dmoney-web-react/e2e/`-এ। প্রতিটি role-এর একটি setup project login করে ও session save করে। সেই role-এর test saved session দিয়ে শুরু হয় <Cite n={5} />।
+
+Agent setup Gmail থেকে OTP নেয়। Login শুরু হওয়ার পরে আসা message-ই এটি গ্রহণ করে। Saved JWT-তে 10 মিনিটের বেশি বাকি থাকলে নতুন login বাদ যায়।
+
+</Bangla>
+</Voices>
+
+## The class notes
+
+<Voices>
+<Technical>
+
+The folder `class_notes/` has 8 notes. Each note matches code in the repository.
+
+| # | Topic | Where you see it |
+|---|---|---|
+| 1 | The 3-layer AI system, context engineering, and MCP | `.mcp.json`, `.claude/settings.json` |
+| 2 | Setup, the knowledge graph, and blast radius | `GRAPHIFY_SETUP.md`, the `CLAUDE.md` file of each sub-project |
+| 3 | Skills, context budgets, and white-box testing | `.claude/skills/` |
+| 4 | graphify and Serena, and the 5-stage test chain | the five matching skills: four in `.claude/skills/`, and `analyze-requirement` in each sub-project |
+| 5 | Bug discovery tools and pre-hooks | the graphify hook, `find-bug` |
+| 6 | Main agent, subagents, skills, and the adversarial gate | the two subagents |
+| 7 | Issue to pull request, and the concurrency bug | PR #8, `sendMoney.controller.js` |
+| 8 | Role-based Playwright tests and OTP from Gmail | `dmoney-web-react/e2e/` |
+
+</Technical>
+<Layman>
+
+The folder `class_notes/` has 8 notes. Each note matches code in the repository.
+
+1. The 3-layer AI system, context engineering, and MCP: see `.mcp.json` and `.claude/settings.json`.
+2. Setup, the knowledge graph, and blast radius: see `GRAPHIFY_SETUP.md` and the `CLAUDE.md` file of each sub-project.
+3. Skills, context budgets, and white-box testing: see `.claude/skills/`.
+4. graphify and Serena, and the 5-stage test chain: see the five matching skills: four in `.claude/skills/`, and `analyze-requirement` in each sub-project.
+5. Bug discovery tools and pre-hooks: see the graphify hook and `find-bug`.
+6. Main agent, subagents, skills, and the adversarial gate: see the two subagents.
+7. Issue to pull request, and the concurrency bug: see PR #8 and `sendMoney.controller.js`.
+8. Role-based Playwright tests and OTP from Gmail: see `dmoney-web-react/e2e/`.
+
+</Layman>
+<Bangla>
+
+`class_notes/` folder-এ 8টি note আছে। প্রতিটি note repository-র code-এর সঙ্গে মেলে।
+
+1. 3-layer AI system, context engineering ও MCP: দেখুন `.mcp.json` ও `.claude/settings.json`।
+2. Setup, knowledge graph ও blast radius: দেখুন `GRAPHIFY_SETUP.md` ও প্রতিটি sub-project-এর `CLAUDE.md` file।
+3. Skill, context budget ও white-box testing: দেখুন `.claude/skills/`।
+4. graphify ও Serena, এবং 5-stage test chain: দেখুন পাঁচটি মিলে যাওয়া skill: চারটি `.claude/skills/`-এ, আর `analyze-requirement` প্রতিটি sub-project-এ।
+5. Bug discovery tool ও pre-hook: দেখুন graphify hook ও `find-bug`।
+6. Main agent, subagent, skill ও adversarial gate: দেখুন দুটি subagent।
+7. Issue থেকে pull request, এবং concurrency bug: দেখুন PR #8 ও `sendMoney.controller.js`।
+8. Role-based Playwright test ও Gmail থেকে OTP: দেখুন `dmoney-web-react/e2e/`।
+
+</Bangla>
+</Voices>
+
+## Take-aways
+
+<Voices>
+<Technical>
+
+- Keep the app, the AI setup, and the outputs in one repository. Each layer can then point to the other two.
+- Store the business rules in data. Tests and reviews can read them.
+- Give each subagent one job. A reviewer that cannot write and an executor that cannot design catch more mistakes.
+- Use a hook for a step that must run before a skill starts.
+- Write each result to a file. The next skill reads the file, not the chat.
+
+</Technical>
+<Layman>
+
+- Keep the app, the AI setup, and the outputs in one repository. Each layer can then point to the other two.
+- Store the business rules in data. Tests and reviews can read them.
+- Give each subagent one job.
+- Use a hook for a step that must run before a skill starts.
+- Write each result to a file. The next skill reads the file, not the chat.
+
+</Layman>
+<Bangla>
+
+- App, AI setup ও output একই repository-তে রাখুন। তাহলে প্রতিটি layer বাকি দুটির দিকে নির্দেশ করতে পারে।
+- Business rule data হিসেবে রাখুন। Test ও review সেগুলো পড়তে পারে।
+- প্রতিটি subagent-কে একটি কাজ দিন।
+- যে ধাপ একটি skill শুরু হওয়ার আগে চলতে হবে তার জন্য hook ব্যবহার করুন।
+- প্রতিটি ফলাফল একটি file-এ লিখুন। পরের skill chat নয়, file পড়ে।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Ledger | A table where each row adds a debit or a credit. Rows are never changed. |
+| `FOR UPDATE` | A database lock. Other requests wait until the transaction ends. |
+| JWT | A signed token that proves who the user is. |
+| OTP | A one-time password. It is valid for a short time. |
+| Skill | A folder with a `SKILL.md` file that Claude loads for a type of task. |
+| Subagent | A helper with its own role and its own tool list. |
+| Hook | A command that the tool runs at a set point, for example before a skill. |
+| MCP server | A program that gives Claude extra tools, for example a browser. |

@@ -12,7 +12,7 @@ test("groupLabel is the uppercase title and the count of parts", () => {
 test("every group gets a label with its own count", () => {
   assert.deepEqual(
     GROUPS.map((g) => groupLabel(g.title, g.pages.length)),
-    ["GETTING STARTED · 3 PARTS", "FOUNDATIONS · 4 PARTS", "CONFIGURE · 2 PARTS", "EXTEND · 5 PARTS", "AUTOMATE · 3 PARTS", "CASE STUDY · 6 PARTS"],
+    ["GETTING STARTED · 3 PARTS", "FOUNDATIONS · 4 PARTS", "CONFIGURE · 2 PARTS", "EXTEND · 5 PARTS", "AUTOMATE · 3 PARTS", "CASE STUDY · 7 PARTS"],
   );
 });
 
@@ -39,7 +39,7 @@ test("the course cards are the 6 groups, then the 6 modules", () => {
   );
   assert.deepEqual(
     COURSE_CARDS.slice(0, 6).map((c) => c.count),
-    [3, 4, 2, 5, 3, 6],
+    [3, 4, 2, 5, 3, 7],
   );
   assert.deepEqual(
     COURSE_CARDS.slice(6).map((c) => c.count),
