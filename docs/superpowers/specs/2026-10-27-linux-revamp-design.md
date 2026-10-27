@@ -54,8 +54,8 @@ Rules:
 ## 2. Voices
 
 - On a Linux stage page, the switcher of each section is hidden (CSS, scoped by an attribute on `article[data-content]`, for example `data-voice-scope="page"`).
-- A new switcher at the top of the page sets the voice of every section of the page. It uses the same three voices and the same storage as the header button.
-- A click on the page switcher changes the site default (`setVoiceDefault`), so there is one choice and not two.
+- A new switcher at the top of the page sets the voice of every section of the page. It has the same three voices.
+- The site default (`voice` key) can hold only `technical` or `bangla`, so the page choice has its own key, `linux-voice` (`technical`, `layman`, or `bangla`). A saved page choice wins on Linux pages. Without one, the page follows the site default. A change of the site default (the header button) clears the page choice.
 - The panels stay in the HTML. Search, the fact-check, and `tests/voice-source.test.ts` do not change.
 - Other modules keep their per-section switchers.
 
