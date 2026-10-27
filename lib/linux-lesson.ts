@@ -64,7 +64,16 @@ export function lessonProblems(technical: string): string[] {
     );
   }
 
-  const before = open.length ? lines.slice(0, open[0]) : lines;
+  problems.push(...sizeProblems(lines, (line) => line.trim() === TIP_OPEN));
+
+  return problems;
+}
+
+/** The word limit before `<details>` and the tip limit, for the text lines of a panel. */
+function sizeProblems(lines: string[], isTipOpen: (line: string) => boolean): string[] {
+  const problems: string[] = [];
+  const open = lines.findIndex((line) => line.trim() === "<details>");
+  const before = open >= 0 ? lines.slice(0, open) : lines;
   // A diagram is not text: skip a `<FlowDiagram` block up to its first `/>` line (if none, count it).
   const prose: string[] = [];
   for (let i = 0; i < before.length; i++) {
@@ -75,12 +84,73 @@ export function lessonProblems(technical: string): string[] {
   const count = prose.join("\n").replace(CITE, "").split(/\s+/).filter(Boolean).length;
   if (count > LESSON_WORD_LIMIT) problems.push(`${count} words before <details>, the limit is ${LESSON_WORD_LIMIT}`);
 
-  const tip = lines.findIndex((line) => line.trim() === TIP_OPEN);
+  const tip = lines.findIndex(isTipOpen);
   if (tip >= 0) {
     const end = lines.findIndex((line, i) => i > tip && line.trim() === "</Callout>");
     const body = lines.slice(tip + 1, end < 0 ? undefined : end).join(" ").replace(CITE, "").replace(/\s+/g, " ").trim();
     if (body.length > LESSON_TIP_LIMIT) problems.push(`the tip has ${body.length} characters, the limit is ${LESSON_TIP_LIMIT}`);
   }
-
   return problems;
+}
+
+/** The rules of a Layman or Bangla panel: the word limit and the tip limit (the title of the tip is free). */
+export function voiceProblems(panel: string): string[] {
+  const lines = sourceLines(panel).filter((line) => line.kind === "text").map((line) => line.text);
+  return sizeProblems(lines, (line) => line.trim().startsWith('<Callout type="tip"'));
+}
+
+export type TopicVoices = { heading: string; layman: string; bangla: string };
+
+/** For each `##` heading with `<Voices>`, the text of its `<Layman>` and `<Bangla>` panels. */
+export function topicVoices(source: string): TopicVoices[] {
+  const topics: TopicVoices[] = [];
+  let current: TopicVoices | null = null;
+  let heading = "";
+  let panel: "layman" | "bangla" | null = null;
+  let body: string[] = [];
+
+  for (const { text, kind } of sourceLines(source)) {
+    if (kind === "text") {
+      const trimmed = text.trim();
+      const open = trimmed === "<Layman>" ? "layman" : trimmed === "<Bangla>" ? "bangla" : null;
+      if (open) {
+        panel = open;
+        body = [];
+        continue;
+      }
+      if (panel && trimmed === `</${panel === "layman" ? "Layman" : "Bangla"}>`) {
+        if (!current) topics.push((current = { heading, layman: "", bangla: "" }));
+        current[panel] = body.join("\n").trim();
+        panel = null;
+        continue;
+      }
+      const section = SECTION.exec(text);
+      if (section) {
+        heading = plainTitle(section[1]);
+        current = null;
+        panel = null;
+        continue;
+      }
+    }
+    if (panel) body.push(text);
+  }
+  return topics;
+}
+
+const RM = /(?:^|[;&|(]\s*|\s)rm\s+((?:-\S+\s+)+)(?:--\s+)?("?\$(?:PWD\b|\w+|\{\w+\})"?)(?=\s|$|[;&|)])/;
+const RECURSIVE = /^--recursive$|^-[a-zA-Z]*[rR][a-zA-Z]*$/;
+
+/** A message for each line of a code block that runs `rm -r` on `$PWD` or on a variable with no `:?` guard. */
+export function unsafeCleanups(source: string): string[] {
+  const messages: string[] = [];
+  for (const { text, index, kind } of sourceLines(source)) {
+    if (kind !== "code") continue;
+    const match = RM.exec(text);
+    if (!match) continue;
+    // `--` ends the flags, so the target regex above starts after it. Check each flag word before it.
+    if (match[1].trim().split(/\s+/).some((flag) => RECURSIVE.test(flag))) {
+      messages.push(`line ${index + 1}: unsafe recursive rm, use "\${var:?}": ${text.trim()}`);
+    }
+  }
+  return messages;
 }

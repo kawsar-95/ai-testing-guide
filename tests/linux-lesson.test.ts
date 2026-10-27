@@ -1,10 +1,31 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { LESSON_TIP_LIMIT, LESSON_WORD_LIMIT, lessonProblems, topicTechnicals } from "../lib/linux-lesson.ts";
+import { readdirSync, readFileSync } from "node:fs";
+import {
+  LESSON_TIP_LIMIT,
+  LESSON_WORD_LIMIT,
+  lessonProblems,
+  topicTechnicals,
+  topicVoices,
+  unsafeCleanups,
+  voiceProblems,
+} from "../lib/linux-lesson.ts";
 
-// Stage slugs whose pages are already in the lesson shape. Each task adds its stage.
-const LESSON_STAGES: string[] = ["shell-basics"];
+// The 12 stages, in the order of lib/linux/stages.ts.
+const LESSON_STAGES: string[] = [
+  "shell-basics",
+  "files",
+  "text-processing",
+  "users-permissions",
+  "processes",
+  "shell-scripting",
+  "packages",
+  "disks-filesystems",
+  "networking",
+  "boot-services",
+  "troubleshooting",
+  "containers",
+];
 
 const GOOD = [
   "**Goal:** Know what `ls` does.",
@@ -140,5 +161,124 @@ test("every converted stage has the lesson shape", () => {
     for (const { heading, technical } of topicTechnicals(source)) {
       assert.deepEqual(lessonProblems(technical), [], `${slug}: ${heading}`);
     }
+  }
+});
+
+const VOICE_SOURCE = [
+  "# Stage",
+  "",
+  "## First topic",
+  "",
+  "<Voices>",
+  "<Technical>",
+  "",
+  "Tech.",
+  "",
+  "</Technical>",
+  "<Layman>",
+  "",
+  "Plain.",
+  "",
+  "```bash",
+  "## not a heading",
+  "</Layman>",
+  "```",
+  "",
+  "</Layman>",
+  "<Bangla>",
+  "",
+  "বাংলা।",
+  "",
+  "</Bangla>",
+  "</Voices>",
+  "",
+  "## Second topic",
+  "",
+  "No voices here.",
+].join("\n");
+
+test("topicVoices returns the Layman and Bangla text of each topic with voices", () => {
+  const [topic, ...rest] = topicVoices(VOICE_SOURCE);
+  assert.equal(rest.length, 0);
+  assert.equal(topic.heading, "First topic");
+  assert.ok(topic.layman.startsWith("Plain.") && topic.layman.includes("</Layman>\n```"));
+  assert.equal(topic.bangla, "বাংলা।");
+});
+
+const PANEL = (before: string, tip = "") =>
+  `${before}\n\n${tip}<details>\n<summary>Go deeper</summary>\n\nx\n\n</details>`;
+const TIP = (title: string, body: string) => `<Callout type="tip" title="${title}">\n\n${body}\n\n</Callout>\n\n`;
+
+test("voiceProblems: 150 words pass and 151 words are reported", () => {
+  assert.deepEqual(voiceProblems(PANEL(words(LESSON_WORD_LIMIT))), []);
+  assert.equal(voiceProblems(PANEL(words(LESSON_WORD_LIMIT + 1))).length, 1);
+});
+
+test("voiceProblems: a tip of 160 characters passes and 161 is reported, whatever its title", () => {
+  const ok = "x".repeat(LESSON_TIP_LIMIT);
+  assert.deepEqual(voiceProblems(PANEL("Text.", TIP("Why it matters for testing", `${ok} <Cite n={1} />`))), []);
+  assert.deepEqual(voiceProblems(PANEL("Text.", TIP("টেস্টিংয়ে কেন জরুরি", ok))), []);
+  assert.equal(voiceProblems(PANEL("Text.", TIP("Why it matters for testing", `${ok}x`))).length, 1);
+  assert.equal(voiceProblems(PANEL("Text.", TIP("টেস্টিংয়ে কেন জরুরি", `${ok}x`))).length, 1);
+});
+
+test("voiceProblems: a panel with no tip is fine", () => {
+  assert.deepEqual(voiceProblems(PANEL("Text.")), []);
+});
+
+test("voiceProblems counts words as lessonProblems does", () => {
+  const body = `${words(LESSON_WORD_LIMIT)} <Cite n={3} />\n\n\`\`\`bash\n${words(200)}\n\`\`\`\n\n${diagram}`;
+  assert.deepEqual(voiceProblems(PANEL(body)), []);
+});
+
+const fence = (...lines: string[]) => ["```bash", ...lines, "```"].join("\n");
+
+test("unsafeCleanups flags a recursive rm of $PWD or of an unguarded variable", () => {
+  for (const line of [
+    'rm -r "$PWD"',
+    'rm -r -- "$PWD"',
+    'rm -rf "$d"',
+    'rm -rf -- "$d"',
+    "rm -R $tmp",
+    'rm --recursive "${d}"',
+    'cd x && rm -fr -- "$d"',
+  ]) {
+    assert.equal(unsafeCleanups(fence(line)).length, 1, line);
+  }
+});
+
+test("unsafeCleanups allows guarded variables, rmdir, literals, and prose", () => {
+  for (const line of [
+    'rm -r -- "${tmp:?}"',
+    'rm -rf -- "${d:?}"',
+    'rmdir "$OLDPWD"',
+    "rm -f file",
+    "rm -rf /tmp/demo",
+    "rm -rf ./build/*",
+  ]) {
+    assert.deepEqual(unsafeCleanups(fence(line)), [], line);
+  }
+  assert.deepEqual(unsafeCleanups('Do not run rm -rf "$d" here.'), []);
+});
+
+test("unsafeCleanups names the line number and the line", () => {
+  const [message] = unsafeCleanups(`text\n\n${fence('rm -rf "$d"')}`);
+  assert.ok(message.includes("line 4") && message.includes('rm -rf "$d"'), message);
+});
+
+test("every Layman and Bangla panel of every converted stage is within the word and tip limits", () => {
+  for (const slug of LESSON_STAGES) {
+    const source = readFileSync(new URL(`../content/linux/${slug}.mdx`, import.meta.url), "utf8");
+    for (const { heading, layman, bangla } of topicVoices(source)) {
+      assert.deepEqual(voiceProblems(layman), [], `${slug}: ${heading} (Layman)`);
+      assert.deepEqual(voiceProblems(bangla), [], `${slug}: ${heading} (Bangla)`);
+    }
+  }
+});
+
+test("no Linux Try-it block removes a directory unsafely", () => {
+  const dir = new URL("../content/linux/", import.meta.url);
+  for (const file of readdirSync(dir).filter((name) => name.endsWith(".mdx"))) {
+    assert.deepEqual(unsafeCleanups(readFileSync(new URL(file, dir), "utf8")), [], file);
   }
 });
