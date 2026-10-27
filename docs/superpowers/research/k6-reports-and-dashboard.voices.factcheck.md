@@ -30,4 +30,8 @@ Round 3 re-check (2026-10-27): all 3 panels (lines 108, 133, 158 of the MDX) mat
 
 Changed panels: `handleSummary` section, Layman and Bangla (commit f1ff844). Both give the same facts as the Technical panel: v2.3.0 not yet default, the 5 keys, "observed result, not from a source". No new fact, number, or cite; no তুমি form; names stay in English; no Layman sentence over 25 words. PASS. Note: the `setup_data` claim itself is a FAIL in the Technical text (factcheck row 48); when the writer fixes it, the 2 panels must change with it.
 
+## Round 5 (commit ed1c428)
+
+Layman and Bangla panels of the `handleSummary` section re-read against the Technical panel: same 4 keys, same `setup()` and `setup_data` statement, same "observed results" label, no new fact or cite, no তুমি form, names in English, no Layman sentence over 25 words. PASS.
+
 Open FAILs: 0

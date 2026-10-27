@@ -92,8 +92,12 @@ Changed text (commit f1ff844): in the `handleSummary` section, a sentence says t
 | # | Claim | Cite | Verdict | Reason |
 |---|---|---|---|---|
 | 47 | In v2.3.0 the new format is not yet the default (legacy keys present) | none (observed) | PASS | Reproduced: the page's own script (2 VUs, 5 s, no `setup()`) wrote `summary.json` with keys `root_group`, `options`, `state`, `metrics`. |
-| 48 | The same kind of run gave the extra key `setup_data` | none (observed) | FAIL | Not reproduced with the page's script: no `setup_data` key. The key appears only when the script exports `setup()` (a test script with `setup()` returning data gave `metrics`, `setup_data`, `root_group`, `options`, `state`). The page also says "In the same run" the keys were 4, so the 2 sentences conflict. Fix: say `setup_data` is added when the script has a `setup()` function, or remove `setup_data` from the list. |
+| 48 | The same kind of run gave the extra key `setup_data` | none (observed) | PASS (round 5) | Not reproduced with the page's script: no `setup_data` key. The key appears only when the script exports `setup()` (a test script with `setup()` returning data gave `metrics`, `setup_data`, `root_group`, `options`, `state`). The page also says "In the same run" the keys were 4, so the 2 sentences conflict. Fix: say `setup_data` is added when the script has a `setup()` function, or remove `setup_data` from the list. |
 
 Overlap re-run: 6 runs, all source URLs. `node --test tests/voice-source.test.ts tests/k6.test.ts`: 30 pass, 0 fail.
 
-Open FAILs: 1
+## Round 5 (commit ed1c428)
+
+Row 48 re-checked. The page now lists 4 keys (`root_group`, `options`, `state`, `metrics`) for its script and says k6 adds `setup_data` when the script has `setup()`, labeled as observed results. Both match my runs: the page's script (no `setup()`) gave the 4 keys; a variant with `setup()` returned data gave `metrics`, `setup_data`, `root_group`, `options`, `state`. The 2 sentences no longer conflict. Overlap re-run: 6 runs, all source URLs. `node --test tests/voice-source.test.ts tests/k6.test.ts`: 30 pass, 0 fail.
+
+Open FAILs: 0
