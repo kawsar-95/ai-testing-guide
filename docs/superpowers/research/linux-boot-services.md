@@ -171,3 +171,28 @@ Sample outputs on the page (`systemctl status myapp.service`, the unit file) are
 | C89 | `systemctl status PID` shows the unit of a PID. | S12 | "or a PID to show the unit containing that PID" |
 | C90 | A container's main process is the `ENTRYPOINT`/`CMD`; Docker advises one service per container. | S29 | "A container's main running process is the ENTRYPOINT and/or CMD at the end of the Dockerfile." / "It's best practice to separate areas of concern by using one service per container." |
 | C91 | (Tutorial's own note, marked on the page) Many container images start no systemd, so `systemctl` can fail there. A minimal image may also lack `ps`. | none | Not stated in S29; the page labels it "Tutorial's own note" and puts it after the cited S29 sentence. |
+
+## Round 2 (2026-10-27): Try it commands
+
+The page is now in the lesson shape (Goal, Core, Try it, tip, Go deeper). Text moved into "Go deeper"; no fact was removed and every cite number 1-30 is still on the page.
+
+Machine: Ubuntu, systemd as PID 1. Versions: `systemd 259 (259.9-0ubuntu0.1)` (also `systemd-analyze` and `journalctl`), `GNU bash, version 5.3.9(1)-release`, `ls (uutils coreutils) 0.10.0`, `ps from procps-ng 4.0.4`. Every Try-it only reads, except Creating Services, which writes one file in a `mktemp -d` directory under the session scratch directory and deletes it. No `sudo`, no unit installed, enabled, or started, no GRUB change.
+
+| Topic | Command | Real output (machine values replaced) | Source of the claim |
+|---|---|---|---|
+| Booting Linux | `ps -p 1 -o comm=` | `systemd` | S10 (PID 1), S11 |
+| Booting Linux | `systemctl get-default` | `graphical.target` | S9 (default target) |
+| Booting Linux | `systemd-analyze time` | `Startup finished in 1min 16.226s (firmware) + 4.280s (loader) + 1.813s (kernel) + 4.713s (initrd) + 40.024s (userspace) = 2min 7.058s` and `graphical.target reached after 23.257s in userspace.` The page shows stand-in times. | S17 (`time` splits kernel, initrd, userspace) |
+| Boot Loaders | `cat /proc/cmdline` | `BOOT_IMAGE=/boot/vmlinuz-<version>-generic root=UUID=<uuid> ro quiet splash crashkernel=...`. The page shows a stand-in version and drops `crashkernel=`. | page claim is only "the kernel command line of this boot" |
+| Boot Loaders | `ls /boot` | `System.map-*`, `config-*`, `efi`, `grub`, `initrd.img*`, `memtest` files, `vmlinuz*`. The page shows a trimmed list with a stand-in version. | S23 (`grub.cfg` in `/boot/grub`) |
+| Service Management | `systemctl cat systemd-journald.service --no-pager \| grep -E '^# /(etc\|run\|usr)/'` | `# /usr/lib/systemd/system/systemd-journald.service`, `# /usr/lib/systemd/system/systemd-journald.service.d/nice.conf` (an Ubuntu drop-in) | S12 (`cat` prints the unit file and drop-ins), S13 (drop-ins) |
+| Creating Services | unit file with `Restrat=on-failure`, then `systemd-analyze verify ./myapp.service` | `<tmpdir>/myapp.service:6: Unknown key 'Restrat' in section [Service], ignoring.` Exit status 0 (the page does not claim an exit status). | S17 ("warns about unknown keys") |
+| Starting and Stopping | `systemctl is-enabled systemd-journald.service`; `systemctl is-active systemd-journald.service` | `static`; `active` | S12 (`static`: no `[Install]` section, cannot be enabled) |
+| Checking Service Status | `systemctl status systemd-journald.service --no-pager \| grep -E 'Loaded\|Active'` | `Loaded: loaded (/usr/lib/systemd/system/systemd-journald.service; static)`, `Active: active (running) since <date>; 41min ago` (stand-in date) | S12 |
+| Checking Service Status | `systemctl is-active systemd-journald.service; echo $?`; `systemctl is-active no-such.service; echo $?` | `active`, `0`; `inactive`, `4` | S12 (0 active, 3 not active, 4 no such unit) |
+| Checking Service Logs | `journalctl -u systemd-journald.service -b -n 3 --no-pager` | 3 lines of the form `<date> <host> systemd-journald[465]: <message>`. The page shows one real message with the stand-in host `example-host`. | S18 (`-u`, `-b`, `-n`, `--no-pager`, read access) |
+| Running Services | `systemctl list-units --type=service --state=running --no-pager \| head -n 4` | header line, then `accounts-daemon.service`, `avahi-daemon.service`, `bluetooth.service` | S6, S12 |
+
+Moved facts (all kept with their cites): the four Wikipedia steps, MBR/ESP, the initramfs details, targets, `blame` and `critical-chain` (Booting Linux); GRUB Legacy, `/etc/default/grub`, `update-grub`, `systemd-boot`, the menu keys, the rescue target (Boot Loaders); socket and timer units, the unit directories, SysV init (Service Management); `Restart=`, `User=`, `Environment=`, `Type=`, `daemon-reload`, `edit`, `revert` (Creating Services); the command table, `--now`, `--user`, `mask`, `isolate` (Starting and Stopping); `failed`, `is-failed`, `is-enabled`, `reset-failed` (Checking Service Status); the option table, journal storage, `StandardOutput=` (Checking Service Logs); timers, sockets, `ss`, `ps`, containers (Running Services). The three danger callouts stay before `<details>`, shortened. The rescue-boot network warning is in the Boot Loaders danger callout ("can lock you out") and in Go deeper.
+
+`ps -o comm=`, `grep -E`, `head`, and `mktemp -d` are glossed in the prose or a comment; the page makes no sourced claim about them.
