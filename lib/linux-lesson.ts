@@ -65,7 +65,14 @@ export function lessonProblems(technical: string): string[] {
   }
 
   const before = open.length ? lines.slice(0, open[0]) : lines;
-  const count = before.join("\n").replace(CITE, "").split(/\s+/).filter(Boolean).length;
+  // A diagram is not text: skip a `<FlowDiagram` block up to its first `/>` line (if none, count it).
+  const prose: string[] = [];
+  for (let i = 0; i < before.length; i++) {
+    const end = before[i].startsWith("<FlowDiagram") ? before.indexOf("/>", i + 1) : -1;
+    if (end > i) i = end;
+    else prose.push(before[i]);
+  }
+  const count = prose.join("\n").replace(CITE, "").split(/\s+/).filter(Boolean).length;
   if (count > LESSON_WORD_LIMIT) problems.push(`${count} words before <details>, the limit is ${LESSON_WORD_LIMIT}`);
 
   const tip = lines.findIndex((line) => line.trim() === TIP_OPEN);

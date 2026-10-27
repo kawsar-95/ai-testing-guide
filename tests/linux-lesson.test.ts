@@ -65,6 +65,31 @@ test("words inside a fenced code block and in Cite tags do not count", () => {
   assert.deepEqual(lessonProblems(GOOD.replace("`ls` lists the files of a folder.", body)), []);
 });
 
+const diagram = [
+  "<FlowDiagram",
+  '  title="A flow"',
+  `  description="${words(80)}"`,
+  '  steps={[{ label: "One" }, { label: "Two" }]}',
+  "/>",
+].join("\n");
+
+test("the lines of a FlowDiagram block do not count as words", () => {
+  const body = `${words(LESSON_WORD_LIMIT - 14)}\n\n${diagram}`;
+  assert.deepEqual(lessonProblems(GOOD.replace("`ls` lists the files of a folder.", body)), []);
+});
+
+test("151 words of text next to a FlowDiagram block are still reported", () => {
+  const body = `${words(LESSON_WORD_LIMIT - 14 + 1)}\n\n${diagram}`;
+  assert.equal(lessonProblems(GOOD.replace("`ls` lists the files of a folder.", body)).length, 1);
+});
+
+test("a FlowDiagram line inside a fenced code block is only code, and an unclosed block still counts", () => {
+  const fenced = `\`\`\`mdx\n<FlowDiagram\n\`\`\`\n\n${words(LESSON_WORD_LIMIT - 14 + 1)}`;
+  assert.equal(lessonProblems(GOOD.replace("`ls` lists the files of a folder.", fenced)).length, 1);
+  const unclosed = `<FlowDiagram\n\n${words(LESSON_WORD_LIMIT - 14 + 1)}`;
+  assert.equal(lessonProblems(GOOD.replace("`ls` lists the files of a folder.", unclosed)).length, 1);
+});
+
 const withTip = (body: string) =>
   GOOD.replace(
     "<details>",
