@@ -198,3 +198,21 @@ Observations (not FAILs):
 - The prose word count of Layman Create (153) and Layman Managing Permissions (159) is above 150 only if the JSX tag tokens (`<Callout type="danger">` and so on) are counted. The Technical script counts them, so Technical is at its limit (150 and 149). The voices were already above 150 by that count in the rewrite commit and Round 4 did not flag them. By reader text (no markup) all voices are 148 or fewer.
 
 Open FAILs: 0
+
+## Round 5 addendum (2026-10-27)
+
+Checker: an independent agent that did not write the voices, 2026-10-27. Commit `817745d` (`git diff c8cd682 817745d -- content/linux/users-permissions.mdx`); the page is unchanged from `817745d` to the current HEAD. Scope: the 4 shortened panels.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| R5A-1 | User Management | Layman | PASS | "...one line for each account, with seven colon-separated fields: ..." and "The login shell is the program that starts at login." Same facts as Technical (S2); Cite 2, 2, 15 unchanged. Words before `<details>`: 141 (149 with JSX tag tokens). |
+| R5A-2 | Create, Update, and Delete Users | Layman | PASS | "`-m` makes the home directory and copies the files of `/etc/skel` into it. <Cite 5>" and "`userdel` removes it. <Cite 7>" - the same facts as Technical (`userdel NAME` removes the account). The danger callout is unchanged and visible: `usermod -G`, `userdel -r`, `userdel -f` (Cite 7), `useradd -p` visible in the process list (Cite 5). Words: 138 (149 with tag tokens). |
+| R5A-3 | Managing Permissions | Layman | PASS | "Use octal to set all bits at once" - same meaning as Technical. The `umask` sentence (Cite 36) moved from the Try-it line to Go deeper ("`umask` is a command inside the shell. <Cite 36>"): no fact lost, Cite 36 still in the block and in Technical. The subshell gloss is removed (Technical keeps it; a removal adds no fact). The danger callout is unchanged: `chmod -R 777` and `-R` with `-L` (Cite 30) visible. Words: 134 (145 with tag tokens). |
+| R5A-4 | Managing Permissions | Bangla | PASS | "বন্ধনী একটি subshell চালায়, তাই পরিবর্তনটি সেখানেই সীমাবদ্ধ থাকে। <Cite 38>" is natural and correct; "subshell" stays in English. The `umask` shell builtin sentence (Cite 36) is still in the Try-it line. The danger callout (with `chmod -R 777` and the `-R`/`-L` warning, Cite 30) is unchanged and visible. Words: 138 (147 with tag tokens). |
+| R5A-5 | All 6 topics | Layman, Bangla | PASS | Script over every panel: cites of each block unchanged since `c8cd682`, and each Layman/Bangla cite set is a subset of the Technical set of the same block; the cite set of the page is the same (44 numbers). The `userdel -f`, `useradd -p`, `-R`/`-L` and `chmod -R 777` warnings are before `<details>` in all 3 voices. Tips of Layman and Bangla: at most 155 characters (unchanged). Words before `<details>` in every Layman and Bangla panel: at most 148 by reader text and at most 150 with tag tokens (the 4 changed panels are 134 to 141 and 145 to 149). |
+| R5A-6 | Permissions Cheat Sheet | none | PASS | md5 `8c7cb0b1cb852019a2e1e4d1c2e584ef` at `4972821` and at HEAD: byte-identical. |
+| R5A-7 | Limits | none | PASS | `lessoncheck.mjs users-permissions`: "6 topics with voices, 0 with problems". `node --test tests/voice-source.test.ts`: 22 pass, 0 fail. |
+
+Observation (not a FAIL): the Layman Managing Permissions Try-it line says "subshell" with no gloss now. Technical says it the same way, and the sentence says what it does ("so the change stays local").
+
+Open FAILs: 0

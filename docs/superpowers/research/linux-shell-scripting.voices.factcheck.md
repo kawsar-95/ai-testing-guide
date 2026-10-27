@@ -242,3 +242,16 @@ Results of the scripts: `node scratchpad/lessoncheck.mjs shell-scripting` gives 
 Observations (not FAILs): the Layman and Bangla panels still leave out the new Technical bullet "A non-interactive shell has no person at the prompt" (Shell Programming Go deeper); the Core text of both voices already says "no person at the prompt" (Round 4 row 1 and 2). Round 4 observations 4 (`PS4` wording) and 5 (`dash` for the hyphen in Bangla Loops) are not changed and stay optional.
 
 Open FAILs: 0
+
+## Round 5 addendum (2026-10-27)
+
+Checker: the same independent agent as Round 5. Checked commit eb649b6 against c8cd682 (`git diff c8cd682 eb649b6 -- content/linux/shell-scripting.mdx`): 2 changed lines, both in the Layman panel of Shell Programming.
+
+| # | Topic | Voice | Verdict | Evidence / Fix |
+|---|---|---|---|---|
+| A5-1 | Shell Programming (Core) | Layman | PASS | "The kernel reads it when it runs the file. The file needs the execute permission." is now the Technical wording (S41, cite 41, same as the Technical panel). No fact lost: shebang, `chmod +x`, exit status 0 to 255, `$?`, and the status of the last command are all still there. No fact that Technical lacks. "Bash runs it with no person at the prompt" is unchanged (Round 4 row 1). |
+| A5-2 | Shell Programming (tip) | Layman | PASS | "in CI, check the exit status, not the printed text. A status other than 0 is a fail." keeps the point of the Technical tip ("check the exit status of a script, not its printed text"). 84 characters without `<Cite />` (limit 160). |
+| A5-3 | Shell Programming | Layman | PASS | Cites unchanged: {11, 12, 15, 38, 41, 42}, equal to the Technical set. Words before `<details>` (no code, cites, tags): 140 (was 145; limit 150). Technical 142, Bangla 130. |
+| A5-4 | Whole page | all | PASS | `node scratchpad/lessoncheck.mjs shell-scripting`: 6 topics, 0 with problems. `node --test tests/voice-source.test.ts`: 22 of 22 pass. |
+
+Open FAILs: 0
