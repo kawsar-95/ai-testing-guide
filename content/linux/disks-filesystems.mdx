@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-10-27',
   sources: [
     { title: 'Linux Roadmap', publisher: 'roadmap.sh', url: 'https://roadmap.sh/linux', accessed: '2026-10-19' },
     { title: 'Partitions And Filesystems In Linux - Introduction', publisher: 'LinuxForDevices', url: 'https://www.linuxfordevices.com/tutorials/linux/partitions-and-filesystems', accessed: '2026-10-19' },
@@ -76,45 +76,155 @@ A disk is useless until you partition it, put a filesystem on it, and mount it. 
 <Voices>
 <Technical>
 
-A block device is a device that the kernel reads and writes in fixed-size blocks, such as a disk. A whole disk is named like `/dev/sda`. A partition adds a number, as in `/dev/sda1`. <Cite n={15} />
+**Goal:** List the disks, and compare the space that `df` and `du` report.
 
-A partition is a slice of a disk. The partition table records where each slice starts and ends. A sector is the unit in which a disk addresses its data. <Cite n={15} /> An MBR (Master Boot Record) table sits in sector 0 and holds 4 primary partitions. GPT (GUID Partition Table) is the modern standard, with checksums and UUIDs (unique IDs). A GPT disk keeps a protective MBR in sector 0. <Cite n={15} /> MBR stores sector numbers in 32 bits, which allows about 2 TiB with 512-byte sectors. <Cite n={15} />
-
-A disk becomes usable in three steps: partition, make a filesystem, mount. <Cite n={8} /> `df` reports the space of a whole filesystem. <Cite n={17} /> `du` adds up the files that it can see below a path, so the two numbers can differ. <Cite n={18} /> A mount can hide files below it. <Cite n={20} /> On ext4, reserved blocks, which only root may use, lower the free space that `df` shows. <Cite n={33} /> <Cite n={6} /> `df -T` is a GNU option. <Cite n={17} />
+A block device is a device that the kernel reads and writes in fixed-size blocks, such as a disk. A whole disk has a name like `/dev/sda`. A partition adds a number, as in `/dev/sda1`. <Cite n={15} /> A disk becomes usable in three steps: partition, make a filesystem, mount. <Cite n={8} /> `df` reports the space of a whole filesystem. <Cite n={17} /> `du` adds up the files that it can see below a path. <Cite n={18} />
 
 ```bash
-lsblk -f                  # the tree: disks, partitions, filesystems, mount points
-df -hT /                  # type and free space of the filesystem that holds /
-du -xsh /var/log          # space of the files below one path (-x: one filesystem)
+lsblk -f
+```
+
+**Try it:** list the disks, then make a 1 MiB file and compare `du` with `df`. `-e7` hides the loop devices (major number 7). <Cite n={14} /> <Cite n={52} /> `status=none` stops the statistics of `dd`. <Cite n={56} />
+
+```bash
+(
+  cd "$(mktemp -d)"     # make and enter a new, empty directory
+  lsblk -e7 -o NAME,TYPE,SIZE,MOUNTPOINTS
+  # NAME   TYPE  SIZE MOUNTPOINTS
+  # sda    disk  100G
+  # ├─sda1 part    1G /boot/efi
+  # └─sda2 part   99G /
+  dd if=/dev/zero of=big.bin bs=1M count=1 status=none   # a 1 MiB file of zeros
+  du -sh .              # 1.0M  .   (only the files below this path)
+  df -h .               # the whole filesystem that holds this path:
+  # Filesystem  Size  Used Avail Use% Mounted on
+  # tmpfs       7.3G   64M  7.2G   1% /tmp
+  rm -r "$PWD"          # remove the throw-away directory
+)
+# Your device names and sizes differ. The names above are stand-ins.
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: print `lsblk -f` and `df -hT` at the start of each CI job. If `df` shows a full disk and `du` does not, a deleted file that a process still holds open may be the cause. `lsof +L1` lists such files. <Cite n={54} />
+Tutorial's own advice: print `lsblk -f` and `df -hT` at the start of each CI job. Then the log of a full-disk failure already has the facts.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+| Term | Meaning |
+|---|---|
+| Partition | A slice of a disk. The partition table records where each slice starts and ends. <Cite n={15} /> |
+| Sector | The unit in which a disk addresses its data. <Cite n={15} /> |
+| MBR | Master Boot Record. The table sits in sector 0 and holds 4 primary partitions. It stores sector numbers in 32 bits, which allows about 2 TiB with 512-byte sectors. <Cite n={15} /> |
+| GPT | GUID Partition Table, the modern standard, with checksums and UUIDs (unique IDs). A GPT disk keeps a protective MBR in sector 0. <Cite n={15} /> |
+
+Why `df` and `du` can differ:
+
+- `du` counts only the files that it can see. A mount can hide files below it. <Cite n={20} />
+- On ext4, reserved blocks, which only root may use, lower the free space that `df` shows. <Cite n={33} /> <Cite n={6} />
+- `df -T` prints the filesystem type. It is a GNU option. <Cite n={17} /> `du -x` stays on one filesystem. <Cite n={18} />
+
+```bash
+df -hT /                  # type and free space of the filesystem that holds /
+du -xsh /var/log          # space of the files below one path (-x: one filesystem)
+```
+
+Tutorial's own advice: if `df` shows a full disk and `du` does not, a deleted file that a process still holds open may be the cause. `lsof +L1` lists such files. <Cite n={54} />
+
+</details>
 
 </Technical>
 <Layman>
 
-A block device is a device, such as a disk, that the kernel reads and writes in fixed-size blocks. A whole disk has a name like `/dev/sda`. A partition adds a number, as in `/dev/sda1` <Cite n={15} />.
+**Goal:** List the disks and partitions, and see why `df` and `du` give different numbers.
 
-A partition is a slice of a disk. The partition table records where each slice starts and ends. An MBR table sits in sector 0 and holds 4 primary partitions. GPT is the modern standard. It has checksums and unique IDs <Cite n={15} />. With 512-byte sectors, MBR allows about 2 TiB <Cite n={15} />.
+A block device is a device, such as a disk, that the kernel reads and writes in fixed-size blocks. A whole disk has a name like `/dev/sda`. A partition adds a number, as in `/dev/sda1`. <Cite n={15} /> To use a disk, you do three steps: partition it, make a filesystem, and mount it. <Cite n={8} /> `df` shows the space of a whole filesystem. <Cite n={17} /> `du` adds up only the files that it can see below a path. <Cite n={18} />
 
-To use a disk, you do three steps: partition it, make a filesystem, and mount it <Cite n={8} />. `df` shows the space of a whole filesystem <Cite n={17} />. `du` adds up the files that it can see below a path, so the two numbers can differ <Cite n={18} />.
+**Try it:** list the disks, then make a 1 MiB file and compare `du` with `df`. `-e7` hides the loop devices (major number 7). <Cite n={14} /> <Cite n={52} /> `status=none` stops the statistics of `dd`. <Cite n={56} />
 
-Tutorial's own advice: print `lsblk -f` and `df -hT` at the start of each CI job. If `df` shows a full disk and `du` does not, a deleted file that a process still holds open can be the cause. `lsof +L1` lists such files <Cite n={54} />.
+```bash
+(
+  cd "$(mktemp -d)"     # make and enter a new, empty directory
+  lsblk -e7 -o NAME,TYPE,SIZE,MOUNTPOINTS
+  # NAME   TYPE  SIZE MOUNTPOINTS
+  # sda    disk  100G
+  # ├─sda1 part    1G /boot/efi
+  # └─sda2 part   99G /
+  dd if=/dev/zero of=big.bin bs=1M count=1 status=none   # a 1 MiB file of zeros
+  du -sh .              # 1.0M  .   (only the files below this path)
+  df -h .               # the whole filesystem that holds this path:
+  # Filesystem  Size  Used Avail Use% Mounted on
+  # tmpfs       7.3G   64M  7.2G   1% /tmp
+  rm -r "$PWD"          # remove the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: print `lsblk -f` and `df -hT` at the start of each CI job. Then a full-disk failure has its facts in the log.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- A partition is a slice of a disk. The partition table records where each slice starts and ends. <Cite n={15} />
+- An MBR table sits in sector 0 and holds 4 primary partitions. With 512-byte sectors, MBR allows about 2 TiB. <Cite n={15} />
+- GPT is the modern standard. It has checksums and unique IDs. <Cite n={15} />
+- A mount can hide files below it, and `du` does not see them. <Cite n={20} />
+- On ext4, some reserved blocks are for root only, so `df` shows less free space. <Cite n={33} />
+
+Tutorial's own advice: if `df` shows a full disk and `du` does not, a deleted file that a process still holds open can be the cause. `lsof +L1` lists such files. <Cite n={54} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Block device হলো এমন একটি device, যেমন disk, যা kernel নির্দিষ্ট আকারের block-এ পড়ে ও লেখে। একটি পুরো disk-এর নাম হয় `/dev/sda`-এর মতো। Partition-এর নামে একটি সংখ্যা যোগ হয়, যেমন `/dev/sda1` <Cite n={15} />।
+**লক্ষ্য:** Disk ও partition-এর তালিকা দেখুন, আর বুঝুন কেন `df` ও `du` আলাদা সংখ্যা দেয়।
 
-Partition হলো disk-এর একটি অংশ। Partition table লিখে রাখে, প্রতিটি অংশ কোথায় শুরু ও কোথায় শেষ হয়। Sector হলো সেই একক, যা দিয়ে disk তার data-র ঠিকানা ঠিক করে। MBR table থাকে sector 0-এ, এবং এতে 4টি primary partition থাকে। GPT হলো আধুনিক standard; এতে checksum ও UUID (unique ID) আছে। একটি GPT disk sector 0-এ একটি protective MBR রাখে <Cite n={15} />। MBR sector নম্বর 32 bit-এ রাখে, তাই 512-byte sector হলে প্রায় 2 TiB পর্যন্ত ব্যবহার করা যায় <Cite n={15} />।
+Block device হলো এমন একটি device, যেমন disk, যা kernel নির্দিষ্ট আকারের block-এ পড়ে ও লেখে। একটি পুরো disk-এর নাম হয় `/dev/sda`-এর মতো। Partition-এর নামে একটি সংখ্যা যোগ হয়, যেমন `/dev/sda1`। <Cite n={15} /> একটি disk তিন ধাপে ব্যবহারযোগ্য হয়: partition, filesystem তৈরি, আর mount। <Cite n={8} /> `df` পুরো filesystem-এর জায়গার হিসাব দেয়। <Cite n={17} /> `du` একটি path-এর নিচে যে file-গুলো দেখতে পায়, শুধু সেগুলোর জায়গা যোগ করে। <Cite n={18} />
 
-একটি disk তিন ধাপে ব্যবহারযোগ্য হয়: partition, filesystem তৈরি, আর mount <Cite n={8} />। `df` পুরো filesystem-এর জায়গার হিসাব দেয় <Cite n={17} />। `du` একটি path-এর নিচে যে file-গুলো দেখতে পায়, শুধু সেগুলোর জায়গা যোগ করে, তাই দুটি সংখ্যা আলাদা হতে পারে <Cite n={18} />। একটি mount তার নিচের file লুকিয়ে রাখতে পারে <Cite n={20} />। ext4-এ কিছু reserved block শুধু root ব্যবহার করতে পারে, তাই `df`-এ free space কম দেখায় <Cite n={33} />।
+**চেষ্টা করুন:** Disk-এর তালিকা দেখুন, তারপর একটি 1 MiB file বানিয়ে `du` আর `df` মিলিয়ে দেখুন। `-e7` loop device-গুলো লুকিয়ে রাখে (major number 7)। <Cite n={14} /> <Cite n={52} /> `status=none` `dd`-এর পরিসংখ্যান বন্ধ রাখে। <Cite n={56} />
 
-Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি CI job-এর শুরুতে `lsblk -f` ও `df -hT` print করুন। `df` disk পূর্ণ দেখালে কিন্তু `du` না দেখালে, কারণ হতে পারে এমন একটি deleted file, যা কোনো process এখনও খোলা রেখেছে। `lsof +L1` এমন file-গুলোর তালিকা দেয় <Cite n={54} />।
+```bash
+(
+  cd "$(mktemp -d)"     # make and enter a new, empty directory
+  lsblk -e7 -o NAME,TYPE,SIZE,MOUNTPOINTS
+  # NAME   TYPE  SIZE MOUNTPOINTS
+  # sda    disk  100G
+  # ├─sda1 part    1G /boot/efi
+  # └─sda2 part   99G /
+  dd if=/dev/zero of=big.bin bs=1M count=1 status=none   # a 1 MiB file of zeros
+  du -sh .              # 1.0M  .   (only the files below this path)
+  df -h .               # the whole filesystem that holds this path:
+  # Filesystem  Size  Used Avail Use% Mounted on
+  # tmpfs       7.3G   64M  7.2G   1% /tmp
+  rm -r "$PWD"          # remove the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি CI job-এর শুরুতে `lsblk -f` ও `df -hT` print করুন। তাহলে disk পূর্ণ হয়ে fail করলে log-এ তথ্য থাকে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Partition হলো disk-এর একটি অংশ। Partition table লিখে রাখে, প্রতিটি অংশ কোথায় শুরু ও কোথায় শেষ হয়। Sector হলো সেই একক, যা দিয়ে disk তার data-র ঠিকানা ঠিক করে। <Cite n={15} />
+- MBR table থাকে sector 0-এ, এবং এতে 4টি primary partition থাকে। MBR sector নম্বর 32 bit-এ রাখে, তাই 512-byte sector হলে প্রায় 2 TiB পর্যন্ত ব্যবহার করা যায়। <Cite n={15} />
+- GPT হলো আধুনিক standard; এতে checksum ও UUID (unique ID) আছে। একটি GPT disk sector 0-এ একটি protective MBR রাখে। <Cite n={15} />
+- একটি mount তার নিচের file লুকিয়ে রাখতে পারে, আর `du` সেগুলো দেখে না। <Cite n={20} />
+- ext4-এ কিছু reserved block শুধু root ব্যবহার করতে পারে, তাই `df`-এ free space কম দেখায়। <Cite n={33} />
+- `df -T` filesystem-এর type দেখায়; এটি একটি GNU option। <Cite n={17} /> `du -x` একটি filesystem-এর ভেতরে থাকে। <Cite n={18} />
+
+Tutorial-এর নিজস্ব পরামর্শ: `df` disk পূর্ণ দেখালে কিন্তু `du` না দেখালে, কারণ হতে পারে এমন একটি deleted file, যা কোনো process এখনও খোলা রেখেছে। `lsof +L1` এমন file-গুলোর তালিকা দেয়। <Cite n={54} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -124,52 +234,132 @@ Tutorial-এর নিজস্ব পরামর্শ: প্রতিটি 
 <Voices>
 <Technical>
 
-A filesystem is the structure that stores file names, data, and metadata on a device. The kernel's virtual filesystem (VFS) layer sits above all types. <Cite n={4} /> `ext4` and `xfs` are journaling filesystems. `btrfs` is copy-on-write (changes go to new blocks), with snapshots and checksums. `vfat` is the FAT type. `tmpfs` keeps its files in memory. <Cite n={23} /> <Cite n={36} /> <Cite n={37} /> A journal is a log of metadata changes. After a crash, the kernel replays it to restore a consistent state. <Cite n={35} />
+**Goal:** Find the filesystem type of a path, and build a filesystem in a file.
 
-`/proc/filesystems` lists the types that the kernel supports. A `nodev` mark means that the type needs no block device. <Cite n={46} /> `stat -f` prints the block size and the number of inodes (file records) of a filesystem. <Cite n={25} /> Its type name can be vague, because `ext2`, `ext3`, and `ext4` share one type code. <Cite n={26} /> A block is the smallest unit that a filesystem allocates. <Cite n={3} /> The `overlay` filesystem stacks a writable layer on read-only layers. Docker uses it for container storage. <Cite n={39} /> <Cite n={50} />
-
-`mkfs.<type>` builds a filesystem. Plain `mkfs` is a deprecated front end. <Cite n={32} />
-
-<Callout type="danger" title="mkfs destroys the old data">
-
-`mkfs` tools erase the start of the device, so the old filesystem is lost. <Cite n={30} /> Run `lsblk -f` first. Check the name and mount point. `mke2fs -n` and `wipefs -n` show a plan and change nothing. <Cite n={33} /> <Cite n={34} />
-
-</Callout>
+A filesystem is the structure that stores file names, data, and metadata on a device. <Cite n={4} /> `ext4` and `xfs` are journaling filesystems. `tmpfs` keeps its files in memory. <Cite n={23} /> <Cite n={36} /> <Cite n={37} /> `mkfs.<type>` builds a filesystem. <Cite n={32} /> It erases the start of the device, so the old filesystem is lost. <Cite n={30} /> Run `lsblk -f` first and check the device name.
 
 ```bash
-cat /proc/filesystems                       # the types that this kernel knows
-findmnt -no FSTYPE /                        # the type of the root filesystem
-stat -f -c 'block=%S free=%f inodes=%c' /   # GNU stat: block size, free blocks, inodes
-# mkfs.ext4 -n /dev/sdX1                    # needs root; -n = dry run; sdX1 is a fake name
+findmnt -no FSTYPE /
+```
+
+**Try it:** build an ext4 filesystem in an 8 MiB file, not on a device. `-F` lets `mkfs.ext4` use a regular file, and `-q` makes it quiet. <Cite n={33} /> `-o value -s TYPE` prints only the type. <Cite n={16} /> Nothing is mounted.
+
+```bash
+(
+  cd "$(mktemp -d)"                 # make and enter a new, empty directory
+  findmnt -no FSTYPE --target .     # tmpfs   (the type that holds this directory)
+  dd if=/dev/zero of=disk.img bs=1M count=8 status=none   # an 8 MiB file
+  mkfs.ext4 -q -F disk.img          # a filesystem inside the file
+  blkid -o value -s TYPE disk.img   # ext4
+  rm -r "$PWD"                      # remove the throw-away directory
+)
+# Your first line can be ext4 or another type.
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: test the full-disk case on purpose. Writes to `/dev/full` always fail with `ENOSPC`, "No space left on device". <Cite n={52} /> Run `echo x > /dev/full; echo $?` to see how your code reacts.
+Tutorial's own advice: test the full-disk case. Writes to `/dev/full` always fail with `ENOSPC`. <Cite n={52} /> Try `echo x > /dev/full`.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- The kernel's virtual filesystem (VFS) layer sits above all types. <Cite n={4} />
+- `btrfs` is copy-on-write (changes go to new blocks), with snapshots and checksums. `vfat` is the FAT type. <Cite n={23} /> <Cite n={37} />
+- A journal is a log of metadata changes. After a crash, the kernel replays it to restore a consistent state. <Cite n={35} />
+- `/proc/filesystems` lists the types that the kernel supports. A `nodev` mark means that the type needs no block device. <Cite n={46} />
+- `stat -f` prints the block size and the number of inodes (file records) of a filesystem. <Cite n={25} /> Its type name can be vague, because `ext2`, `ext3`, and `ext4` share one type code. <Cite n={26} />
+- A block is the smallest unit that a filesystem allocates. <Cite n={3} />
+- The `overlay` filesystem stacks a writable layer on read-only layers. Docker uses it for container storage. <Cite n={39} /> <Cite n={50} />
+- Plain `mkfs` is a deprecated front end. Use `mkfs.<type>`. <Cite n={32} />
+- `mke2fs -n` and `wipefs -n` show a plan and change nothing. <Cite n={33} /> <Cite n={34} />
+
+```bash
+cat /proc/filesystems                       # the types that this kernel knows
+stat -f -c 'block=%S free=%f inodes=%c' /   # GNU stat: block size, free blocks, inodes
+# mkfs.ext4 -n /dev/sdX1                    # needs root; -n = dry run; sdX1 is a fake name
+```
+
+</details>
 
 </Technical>
 <Layman>
 
-A filesystem is the structure that stores file names, data, and metadata on a device. The kernel's VFS layer sits above all filesystem types <Cite n={4} />. `ext4` and `xfs` are journaling filesystems. `btrfs` writes changes to new blocks and has snapshots and checksums. `tmpfs` keeps its files in memory <Cite n={23} /> <Cite n={36} /> <Cite n={37} />. A journal is a log of metadata changes. After a crash, the kernel replays it to get back to a consistent state <Cite n={35} />.
+**Goal:** Find the filesystem type of a path, and build a filesystem in a file.
 
-`/proc/filesystems` lists the types that the kernel supports <Cite n={46} />. `stat -f` shows the block size and the number of inodes of a filesystem <Cite n={25} />. The `overlay` filesystem puts a writable layer on top of read-only layers. Docker uses it for container storage <Cite n={39} /> <Cite n={50} />.
+A filesystem is the structure that stores file names, data, and metadata on a device. <Cite n={4} /> `ext4` and `xfs` are journaling filesystems. `tmpfs` keeps its files in memory. <Cite n={23} /> <Cite n={36} /> <Cite n={37} /> `mkfs.<type>` builds a filesystem. <Cite n={32} /> It erases the start of the device, so the old filesystem is lost. <Cite n={30} /> Run `lsblk -f` first and check the device name.
 
-`mkfs.<type>` builds a filesystem <Cite n={32} />. These tools erase the start of the device, so the old filesystem is lost <Cite n={30} />. Run `lsblk -f` first. `mke2fs -n` and `wipefs -n` show a plan and change nothing <Cite n={33} /> <Cite n={34} />.
+**Try it:** build an ext4 filesystem in an 8 MiB file, not on a device. `-F` lets `mkfs.ext4` use a regular file, and `-q` makes it quiet. <Cite n={33} /> `-o value -s TYPE` prints only the type. <Cite n={16} /> Nothing is mounted.
 
-Tutorial's own advice: test the full-disk case on purpose. Writes to `/dev/full` always fail with `ENOSPC` <Cite n={52} />.
+```bash
+(
+  cd "$(mktemp -d)"                 # make and enter a new, empty directory
+  findmnt -no FSTYPE --target .     # tmpfs   (the type that holds this directory)
+  dd if=/dev/zero of=disk.img bs=1M count=8 status=none   # an 8 MiB file
+  mkfs.ext4 -q -F disk.img          # a filesystem inside the file
+  blkid -o value -s TYPE disk.img   # ext4
+  rm -r "$PWD"                      # remove the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: test the full-disk case. Writes to `/dev/full` always fail with `ENOSPC`. <Cite n={52} /> Try `echo x > /dev/full`.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- The kernel's VFS layer sits above all filesystem types. <Cite n={4} />
+- `btrfs` writes changes to new blocks and has snapshots and checksums. <Cite n={37} />
+- A journal is a log of metadata changes. After a crash, the kernel replays it to get back to a consistent state. <Cite n={35} />
+- `/proc/filesystems` lists the types that the kernel supports. <Cite n={46} />
+- `stat -f` shows the block size and the number of inodes of a filesystem. <Cite n={25} />
+- The `overlay` filesystem puts a writable layer on top of read-only layers. Docker uses it for container storage. <Cite n={39} /> <Cite n={50} />
+- `mke2fs -n` and `wipefs -n` show a plan and change nothing. <Cite n={33} /> <Cite n={34} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Filesystem হলো সেই কাঠামো, যা একটি device-এ file-এর নাম, data ও metadata রাখে। Kernel-এর VFS (virtual filesystem) layer সব ধরনের filesystem-এর উপরে থাকে <Cite n={4} />। `ext4` ও `xfs` হলো journaling filesystem। `btrfs` হলো copy-on-write, অর্থাৎ পরিবর্তন নতুন block-এ যায়; এতে snapshot ও checksum আছে। `vfat` হলো FAT ধরনের। `tmpfs` তার file-গুলো memory-তে রাখে <Cite n={23} /> <Cite n={36} /> <Cite n={37} />। Journal হলো metadata পরিবর্তনের একটি log। Crash-এর পরে kernel এটি আবার চালিয়ে একটি consistent অবস্থা ফিরিয়ে আনে <Cite n={35} />।
+**লক্ষ্য:** একটি path কোন filesystem type-এ আছে তা খুঁজুন, আর একটি file-এর ভেতরে filesystem তৈরি করুন।
 
-`/proc/filesystems` kernel-এর support করা ধরনগুলোর তালিকা দেয় <Cite n={46} />। `stat -f` একটি filesystem-এর block size ও inode-এর সংখ্যা দেখায় <Cite n={25} />। `overlay` filesystem read-only layer-গুলোর উপরে একটি writable layer বসায়। Docker container storage-এর জন্য এটি ব্যবহার করে <Cite n={39} /> <Cite n={50} />।
+Filesystem হলো সেই কাঠামো, যা একটি device-এ file-এর নাম, data ও metadata রাখে। <Cite n={4} /> `ext4` ও `xfs` হলো journaling filesystem। `tmpfs` তার file-গুলো memory-তে রাখে। <Cite n={23} /> <Cite n={36} /> <Cite n={37} /> `mkfs.<type>` একটি filesystem তৈরি করে। <Cite n={32} /> এটি device-এর শুরুর অংশ মুছে ফেলে, তাই পুরনো filesystem হারিয়ে যায়। <Cite n={30} /> আগে `lsblk -f` চালিয়ে device-এর নাম check করুন।
 
-`mkfs.<type>` একটি filesystem তৈরি করে; শুধু `mkfs` একটি deprecated front end <Cite n={32} />। এই tool-গুলো device-এর শুরুর অংশ মুছে ফেলে, তাই পুরনো filesystem হারিয়ে যায় <Cite n={30} />। আগে `lsblk -f` চালিয়ে নাম ও mount point দেখে নিন। `mke2fs -n` ও `wipefs -n` শুধু একটি পরিকল্পনা দেখায়, কিছু বদলায় না <Cite n={33} /> <Cite n={34} />।
+**চেষ্টা করুন:** একটি 8 MiB file-এ ext4 filesystem তৈরি করুন, কোনো device-এ নয়। `-F` দিলে `mkfs.ext4` একটি সাধারণ file ব্যবহার করে, আর `-q` এটিকে চুপ রাখে। <Cite n={33} /> `-o value -s TYPE` শুধু type print করে। <Cite n={16} /> কিছুই mount হয় না।
 
-Tutorial-এর নিজস্ব পরামর্শ: disk পূর্ণ হওয়ার অবস্থা ইচ্ছা করে test করুন। `/dev/full`-এ লেখা সবসময় `ENOSPC` দিয়ে fail করে <Cite n={52} />।
+```bash
+(
+  cd "$(mktemp -d)"                 # make and enter a new, empty directory
+  findmnt -no FSTYPE --target .     # tmpfs   (the type that holds this directory)
+  dd if=/dev/zero of=disk.img bs=1M count=8 status=none   # an 8 MiB file
+  mkfs.ext4 -q -F disk.img          # a filesystem inside the file
+  blkid -o value -s TYPE disk.img   # ext4
+  rm -r "$PWD"                      # remove the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: disk পূর্ণ হওয়ার অবস্থা test করুন। `/dev/full`-এ লেখা সবসময় `ENOSPC` দিয়ে fail করে। <Cite n={52} />
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Kernel-এর VFS (virtual filesystem) layer সব ধরনের filesystem-এর উপরে থাকে। <Cite n={4} />
+- `btrfs` হলো copy-on-write, অর্থাৎ পরিবর্তন নতুন block-এ যায়; এতে snapshot ও checksum আছে। `vfat` হলো FAT ধরনের। <Cite n={23} /> <Cite n={37} />
+- Journal হলো metadata পরিবর্তনের একটি log। Crash-এর পরে kernel এটি আবার চালিয়ে একটি consistent অবস্থা ফিরিয়ে আনে। <Cite n={35} />
+- `/proc/filesystems` kernel-এর support করা ধরনগুলোর তালিকা দেয়। <Cite n={46} />
+- `stat -f` একটি filesystem-এর block size ও inode-এর সংখ্যা দেখায়। <Cite n={25} />
+- `overlay` filesystem read-only layer-গুলোর উপরে একটি writable layer বসায়। Docker container storage-এর জন্য এটি ব্যবহার করে। <Cite n={39} /> <Cite n={50} />
+- শুধু `mkfs` একটি deprecated front end। <Cite n={32} /> `mke2fs -n` ও `wipefs -n` শুধু একটি পরিকল্পনা দেখায়, কিছু বদলায় না। <Cite n={33} /> <Cite n={34} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -179,50 +369,129 @@ Tutorial-এর নিজস্ব পরামর্শ: disk পূর্ণ �
 <Voices>
 <Technical>
 
-An inode is a record that holds the metadata of one file. It stores the device, the inode number, the type and mode, the link count, the owner, the size, and the timestamps. <Cite n={24} /> It does not store the file name. A directory entry links a name to an inode number. <Cite n={5} /> <Cite n={3} />
+**Goal:** Show that a hard link is a second name for the same inode.
 
-`ls -i` prints the inode number of each file. <Cite n={27} /> `stat` shows it with `%i`, and the link count with `%h`. <Cite n={25} /> A hard link is a second name for the same inode. `ln` makes a hard link by default. <Cite n={28} /> Inode numbers are unique only within one filesystem, so a hard link cannot cross filesystems. <Cite n={24} />
-
-A filesystem can run out of inodes while it still has free space. This happens with very many small files. `df -i` shows the inode use. <Cite n={17} /> <Cite n={6} /> On `ext4`, the number of inodes is set when the filesystem is made. `mke2fs -i` sets the bytes per inode, and `-N` sets the count. <Cite n={33} /> A `tmpfs` has its own limit, `nr_inodes`. <Cite n={38} />
+An inode is a record that holds the metadata of one file. <Cite n={24} /> It does not store the file name. A directory entry links a name to an inode number. <Cite n={5} /> <Cite n={3} /> A hard link is a second name for the same inode. `ln` makes a hard link by default. <Cite n={28} />
 
 ```bash
-d=$(mktemp -d) || exit 1               # a fresh demo directory, safe to run twice
-cd "$d" || exit 1
-echo data > a.txt
-ln a.txt b.txt                         # a second name for the same inode
-ls -i a.txt b.txt                      # the same inode number twice
-stat -c '%i inode, %h links' a.txt     # GNU stat -c
-df -i .                                # inode use of this filesystem
-rm -f a.txt b.txt; cd / && rmdir "$d"  # remove only the demo files
+ls -i
+```
+
+**Try it:** make a file and a hard link to it, and compare the inode numbers. `ls -i` prints the inode number. <Cite n={27} /> In GNU `stat -c`, `%i` is the inode number and `%h` is the link count. <Cite n={25} />
+
+```bash
+(
+  cd "$(mktemp -d)"                    # make and enter a new, empty directory
+  echo data > a.txt
+  ln a.txt b.txt                       # a second name for the same inode
+  ls -i a.txt b.txt                    # 2166 a.txt
+                                       # 2166 b.txt
+  stat -c '%i inode, %h links' a.txt   # 2166 inode, 2 links
+  rm -r "$PWD"                         # remove the throw-away directory
+)
+# Your inode number differs from 2166.
 ```
 
 <Callout type="tip" title="Why it matters for testing">
 
-Tutorial's own advice: a test that makes thousands of tiny files can fill the inodes and not the bytes. Add `df -i` to the failure report. Keep test data in one archive when you can.
+Tutorial's own advice: a test that makes thousands of tiny files can use up the inodes and not the bytes. Add `df -i` to the failure report.
 
 </Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- An inode stores the device, the inode number, the type and mode, the link count, the owner, the size, and the timestamps. <Cite n={24} />
+- Inode numbers are unique only within one filesystem, so a hard link cannot cross filesystems. <Cite n={24} />
+- A filesystem can run out of inodes while it still has free space. This happens with very many small files. `df -i` shows the inode use. <Cite n={17} /> <Cite n={6} />
+- On `ext4`, the number of inodes is set when the filesystem is made. `mke2fs -i` sets the bytes per inode, and `-N` sets the count. <Cite n={33} />
+- A `tmpfs` has its own limit, `nr_inodes`. <Cite n={38} />
+
+```bash
+df -i .                                # inode use of the filesystem that holds this directory
+```
+
+Tutorial's own advice: keep test data in one archive when you can.
+
+</details>
 
 </Technical>
 <Layman>
 
-An inode is a record that holds the metadata of one file: the device, the inode number, the type and mode, the link count, the owner, the size, and the timestamps <Cite n={24} />. It does not hold the file name. A directory entry links a name to an inode number <Cite n={5} />.
+**Goal:** Show that a hard link is a second name for the same inode.
 
-`ls -i` shows the inode number of each file <Cite n={27} />. A hard link is a second name for the same inode. `ln` makes a hard link by default <Cite n={28} />. Inode numbers are unique only in one filesystem. So a hard link cannot cross to a different filesystem <Cite n={24} />.
+An inode is a record that holds the metadata of one file. <Cite n={24} /> It does not hold the file name. A directory entry links a name to an inode number. <Cite n={5} /> A hard link is a second name for the same inode. `ln` makes a hard link by default. <Cite n={28} />
 
-A filesystem can run out of inodes while it still has free space. This occurs when there are very many small files. `df -i` shows the inode use <Cite n={17} />. On `ext4`, the number of inodes is set when you make the filesystem <Cite n={33} />. A `tmpfs` has its own limit, `nr_inodes` <Cite n={38} />.
+**Try it:** make a file and a hard link to it, and compare the inode numbers. `ls -i` shows the inode number. <Cite n={27} /> In GNU `stat -c`, `%i` is the inode number and `%h` is the link count. <Cite n={25} />
 
-Tutorial's own advice: a test that makes thousands of tiny files can fill the inodes and not the bytes. Add `df -i` to the failure report.
+```bash
+(
+  cd "$(mktemp -d)"                    # make and enter a new, empty directory
+  echo data > a.txt
+  ln a.txt b.txt                       # a second name for the same inode
+  ls -i a.txt b.txt                    # 2166 a.txt
+                                       # 2166 b.txt
+  stat -c '%i inode, %h links' a.txt   # 2166 inode, 2 links
+  rm -r "$PWD"                         # remove the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: a test that makes thousands of tiny files can use up the inodes and not the bytes. Add `df -i` to the failure report.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- An inode holds the device, the inode number, the type and mode, the link count, the owner, the size, and the timestamps. <Cite n={24} />
+- Inode numbers are unique only in one filesystem. So a hard link cannot cross to a different filesystem. <Cite n={24} />
+- A filesystem can run out of inodes while it still has free space. This occurs when there are very many small files. `df -i` shows the inode use. <Cite n={17} />
+- On `ext4`, the number of inodes is set when you make the filesystem. <Cite n={33} />
+- A `tmpfs` has its own limit, `nr_inodes`. <Cite n={38} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Inode হলো একটি record, যা একটি file-এর metadata রাখে: device, inode নম্বর, type ও mode, link count, owner, size, এবং timestamp <Cite n={24} />। এতে file-এর নাম থাকে না। একটি directory entry একটি নামকে একটি inode নম্বরের সাথে যুক্ত করে <Cite n={5} />।
+**লক্ষ্য:** দেখান যে hard link হলো একই inode-এর দ্বিতীয় একটি নাম।
 
-`ls -i` প্রতিটি file-এর inode নম্বর দেখায় <Cite n={27} />। `stat` এটি `%i` দিয়ে, আর link count `%h` দিয়ে দেখায় <Cite n={25} />। Hard link হলো একই inode-এর দ্বিতীয় একটি নাম। `ln` default হিসেবে hard link তৈরি করে <Cite n={28} />। Inode নম্বর শুধু একটি filesystem-এর ভেতরে unique, তাই hard link এক filesystem থেকে অন্য filesystem-এ যেতে পারে না <Cite n={24} />।
+Inode হলো একটি record, যা একটি file-এর metadata রাখে। <Cite n={24} /> এতে file-এর নাম থাকে না। একটি directory entry একটি নামকে একটি inode নম্বরের সাথে যুক্ত করে। <Cite n={5} /> Hard link হলো একই inode-এর দ্বিতীয় একটি নাম। `ln` default হিসেবে hard link তৈরি করে। <Cite n={28} />
 
-একটি filesystem-এ free space থাকা অবস্থায়ও inode শেষ হয়ে যেতে পারে। খুব বেশি ছোট file থাকলে এমন হয়। `df -i` inode-এর ব্যবহার দেখায় <Cite n={17} />। `ext4`-এ filesystem তৈরির সময়ই inode-এর সংখ্যা ঠিক হয়ে যায়। `mke2fs -i` প্রতি inode-এ কত byte তা ঠিক করে, আর `-N` সংখ্যাটি ঠিক করে <Cite n={33} />। `tmpfs`-এর নিজস্ব সীমা আছে, `nr_inodes` <Cite n={38} />।
+**চেষ্টা করুন:** একটি file আর তার একটি hard link বানিয়ে দুটির inode নম্বর মিলিয়ে দেখুন। `ls -i` inode নম্বর দেখায়। <Cite n={27} /> GNU `stat -c`-এ `%i` হলো inode নম্বর, আর `%h` হলো link count। <Cite n={25} />
 
-Tutorial-এর নিজস্ব পরামর্শ: যে test হাজার হাজার ছোট file তৈরি করে, সেটি byte শেষ না করেও inode শেষ করে ফেলতে পারে। Failure report-এ `df -i` যোগ করুন। সম্ভব হলে test data একটি archive-এ রাখুন।
+```bash
+(
+  cd "$(mktemp -d)"                    # make and enter a new, empty directory
+  echo data > a.txt
+  ln a.txt b.txt                       # a second name for the same inode
+  ls -i a.txt b.txt                    # 2166 a.txt
+                                       # 2166 b.txt
+  stat -c '%i inode, %h links' a.txt   # 2166 inode, 2 links
+  rm -r "$PWD"                         # remove the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: হাজার হাজার ছোট file বানানো test byte নয়, inode শেষ করে ফেলতে পারে। Failure report-এ `df -i` যোগ করুন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Inode রাখে device, inode নম্বর, type ও mode, link count, owner, size, এবং timestamp। <Cite n={24} />
+- Inode নম্বর শুধু একটি filesystem-এর ভেতরে unique, তাই hard link এক filesystem থেকে অন্য filesystem-এ যেতে পারে না। <Cite n={24} />
+- একটি filesystem-এ free space থাকা অবস্থায়ও inode শেষ হয়ে যেতে পারে। খুব বেশি ছোট file থাকলে এমন হয়। `df -i` inode-এর ব্যবহার দেখায়। <Cite n={17} />
+- `ext4`-এ filesystem তৈরির সময়ই inode-এর সংখ্যা ঠিক হয়ে যায়। `mke2fs -i` প্রতি inode-এ কত byte তা ঠিক করে, আর `-N` সংখ্যাটি ঠিক করে। <Cite n={33} />
+- `tmpfs`-এর নিজস্ব সীমা আছে, `nr_inodes`। <Cite n={38} />
+
+Tutorial-এর নিজস্ব পরামর্শ: সম্ভব হলে test data একটি archive-এ রাখুন।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -232,7 +501,36 @@ Tutorial-এর নিজস্ব পরামর্শ: যে test হাজ�
 <Voices>
 <Technical>
 
-A mount point is a directory where a filesystem is attached to the tree. A new mount hides the old contents of that directory. <Cite n={20} /> <Cite n={7} /> `findmnt` prints the mounts as a tree, and `findmnt --target /path` shows the filesystem of a path. <Cite n={19} /> `/proc/mounts` lists the mounts that the current process sees, in `fstab` format. <Cite n={47} />
+**Goal:** Find the filesystem that holds a path, and its mount options.
+
+A mount point is a directory where a filesystem is attached to the tree. A new mount hides the old contents of that directory. <Cite n={20} /> <Cite n={7} /> Before you mount over a directory, run `ls -A /path` to see its files. <Cite n={27} /> `findmnt` prints the mounts as a tree. `findmnt --target /path` shows the filesystem that holds a path. <Cite n={19} />
+
+```bash
+findmnt
+```
+
+**Try it:** ask `findmnt` which filesystems hold `/tmp` and `/`. `-o` picks the columns. <Cite n={19} /> The commands only read.
+
+```bash
+(
+  findmnt --target /tmp -o TARGET,SOURCE,FSTYPE,OPTIONS
+  # TARGET SOURCE FSTYPE OPTIONS
+  # /tmp   tmpfs  tmpfs  rw,nosuid,nodev,nr_inodes=1048576,inode64,usrquota
+  findmnt --target / -o TARGET,SOURCE,FSTYPE,OPTIONS
+  # TARGET SOURCE    FSTYPE OPTIONS
+  # /      /dev/sda2 ext4   rw,relatime
+)
+# Your sources and options differ. /dev/sda2 is a stand-in.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: put build and test scratch files on a `tmpfs` for speed. Set `size=` to cap the memory use.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
 
 `/etc/fstab` has up to six fields on each line. <Cite n={22} />
 
@@ -244,18 +542,38 @@ A mount point is a directory where a filesystem is attached to the tree. A new m
 | 4 | Options, such as `ro`, `noexec`, `nofail` |
 | 5, 6 | `dump` backup flag; `fsck` (disk check) order |
 
-`ro` mounts read-only. `noexec` blocks direct execution of programs. `nofail` hides the error when the device is absent. <Cite n={20} /> A bind mount shows a directory at a second place. <Cite n={20} /> A `tmpfs` mount lives in memory. <Cite n={38} /> Its size counts against the memory limit of a container. <Cite n={51} /> `umount` fails with "busy" when a process uses the filesystem. <Cite n={21} />
-
-<Callout type="danger" title="Mount and unmount with care">
-
-`umount -f` is for an unreachable NFS (network filesystem) share and may still hang. `umount -l` detaches a busy filesystem now and cleans up later. <Cite n={21} /> Find the user with `fuser -m` first. <Cite n={45} /> Before you mount over a directory, run `ls -A /path` to see files and `findmnt --target /path` to see mounts. <Cite n={27} /> <Cite n={19} />
-
-</Callout>
+- `ro` mounts read-only. `noexec` blocks direct execution of programs. `nofail` hides the error when the device is absent. <Cite n={20} />
+- A bind mount shows a directory at a second place. <Cite n={20} />
+- A `tmpfs` mount lives in memory. <Cite n={38} /> Its size counts against the memory limit of a container. <Cite n={51} />
+- `/proc/mounts` lists the mounts that the current process sees, in `fstab` format. <Cite n={47} />
+- `umount` fails with "busy" when a process uses the filesystem. Find that process with `fuser -m` first. <Cite n={21} /> <Cite n={45} />
+- `umount -f` is for an unreachable NFS (network filesystem) share and may still hang. `umount -l` detaches a busy filesystem now and cleans up later. <Cite n={21} />
 
 ```bash
-findmnt --target /tmp -o TARGET,SOURCE,FSTYPE,OPTIONS   # which filesystem holds /tmp
 # fuser -m /mnt/data                              # needs root for other users; who blocks umount?
 # mount -t tmpfs -o size=256m tmpfs /mnt/fast     # needs root; a RAM-backed test directory
+```
+
+</details>
+
+</Technical>
+<Layman>
+
+**Goal:** Find the filesystem that holds a path, and its mount options.
+
+A mount point is a directory where a filesystem is attached to the tree. A new mount hides the old contents of that directory. <Cite n={20} /> Before you mount over a directory, run `ls -A /path` to see its files. <Cite n={27} /> `findmnt` shows the mounts as a tree. `findmnt --target /path` shows the filesystem that holds a path. <Cite n={19} />
+
+**Try it:** ask `findmnt` which filesystems hold `/tmp` and `/`. `-o` picks the columns. <Cite n={19} /> The commands only read.
+
+```bash
+(
+  findmnt --target /tmp -o TARGET,SOURCE,FSTYPE,OPTIONS
+  # TARGET SOURCE FSTYPE OPTIONS
+  # /tmp   tmpfs  tmpfs  rw,nosuid,nodev,nr_inodes=1048576,inode64,usrquota
+  findmnt --target / -o TARGET,SOURCE,FSTYPE,OPTIONS
+  # TARGET SOURCE    FSTYPE OPTIONS
+  # /      /dev/sda2 ext4   rw,relatime
+)
 ```
 
 <Callout type="tip" title="Why it matters for testing">
@@ -264,27 +582,54 @@ Tutorial's own advice: put build and test scratch files on a `tmpfs` for speed. 
 
 </Callout>
 
-</Technical>
-<Layman>
+<details>
+<summary>Go deeper</summary>
 
-A mount point is a directory where a filesystem is attached to the tree. A new mount hides the old contents of that directory <Cite n={20} />. `findmnt` shows the mounts as a tree. `findmnt --target /path` shows the filesystem that holds a path <Cite n={19} />.
+- `/etc/fstab` has up to six fields on each line: the device (or `UUID=` or `LABEL=`), the mount point, the type, the options, a `dump` backup flag, and the `fsck` order. <Cite n={22} />
+- The option `ro` mounts read-only. `noexec` blocks direct execution of programs. `nofail` hides the error when the device is absent. <Cite n={20} />
+- A `tmpfs` mount lives in memory. <Cite n={38} /> Its size counts against the memory limit of a container. <Cite n={51} />
+- `umount` fails with "busy" when a process uses the filesystem. <Cite n={21} /> Find that process with `fuser -m` first. <Cite n={45} />
+- `umount -l` detaches a busy filesystem now and cleans up later. <Cite n={21} />
 
-`/etc/fstab` has up to six fields on each line: the device (or `UUID=` or `LABEL=`), the mount point, the type, the options, a `dump` backup flag, and the `fsck` order <Cite n={22} />. The option `ro` mounts read-only. `noexec` blocks direct execution of programs. `nofail` hides the error when the device is absent <Cite n={20} />. A `tmpfs` mount lives in memory <Cite n={38} />. Its size counts against the memory limit of a container <Cite n={51} />.
-
-`umount` fails with "busy" when a process uses the filesystem <Cite n={21} />. Find that process with `fuser -m` first <Cite n={45} />. `umount -l` detaches a busy filesystem now and cleans up later <Cite n={21} />.
-
-Tutorial's own advice: put build and test scratch files on a `tmpfs` for speed. Set `size=` to cap the memory use.
+</details>
 
 </Layman>
 <Bangla>
 
-Mount point হলো এমন একটি directory, যেখানে একটি filesystem মূল tree-তে যুক্ত হয়। নতুন mount সেই directory-র পুরনো content লুকিয়ে ফেলে <Cite n={20} />। `findmnt` mount-গুলো একটি tree আকারে দেখায়, আর `findmnt --target /path` একটি path কোন filesystem-এ আছে তা দেখায় <Cite n={19} />। `/proc/mounts` বর্তমান process যে mount-গুলো দেখে, সেগুলোর তালিকা `fstab` format-এ দেয় <Cite n={47} />।
+**লক্ষ্য:** একটি path কোন filesystem-এ আছে, আর তার mount option কী, তা খুঁজুন।
 
-`/etc/fstab`-এর প্রতিটি line-এ সর্বোচ্চ ছয়টি field থাকে: device (অথবা `UUID=` বা `LABEL=`), mount point, type, option, `dump` backup flag, এবং `fsck` (disk check) order <Cite n={22} />। `ro` read-only mount করে। `noexec` program সরাসরি চালানো বন্ধ রাখে। Device না থাকলে `nofail` error লুকিয়ে রাখে <Cite n={20} />। Bind mount একটি directory-কে দ্বিতীয় একটি জায়গায় দেখায় <Cite n={20} />। `tmpfs` mount memory-তে থাকে <Cite n={38} />, এবং এর size container-এর memory limit-এর মধ্যে গণনা হয় <Cite n={51} />।
+Mount point হলো এমন একটি directory, যেখানে একটি filesystem মূল tree-তে যুক্ত হয়। নতুন mount সেই directory-র পুরনো content লুকিয়ে ফেলে। <Cite n={20} /> একটি directory-র উপরে mount করার আগে `ls -A /path` চালিয়ে তার file-গুলো দেখে নিন। <Cite n={27} /> `findmnt` mount-গুলো একটি tree আকারে দেখায়। `findmnt --target /path` একটি path কোন filesystem-এ আছে তা দেখায়। <Cite n={19} />
 
-কোনো process filesystem ব্যবহার করলে `umount` "busy" বলে fail করে <Cite n={21} />। আগে `fuser -m` দিয়ে সেই process খুঁজে নিন <Cite n={45} />। `umount -l` একটি busy filesystem এখনই আলাদা করে এবং পরে পরিষ্কার করে। `umount -f` হলো unreachable NFS share-এর জন্য, এবং এটিও আটকে যেতে পারে <Cite n={21} />।
+**চেষ্টা করুন:** `findmnt`-কে জিজ্ঞেস করুন, `/tmp` আর `/` কোন filesystem-এ আছে। `-o` column বেছে নেয়। <Cite n={19} /> Command-গুলো শুধু পড়ে, কিছু বদলায় না।
 
-Tutorial-এর নিজস্ব পরামর্শ: গতি বাড়াতে build ও test-এর scratch file `tmpfs`-এ রাখুন। Memory-র ব্যবহার সীমিত রাখতে `size=` ঠিক করে দিন।
+```bash
+(
+  findmnt --target /tmp -o TARGET,SOURCE,FSTYPE,OPTIONS
+  # TARGET SOURCE FSTYPE OPTIONS
+  # /tmp   tmpfs  tmpfs  rw,nosuid,nodev,nr_inodes=1048576,inode64,usrquota
+  findmnt --target / -o TARGET,SOURCE,FSTYPE,OPTIONS
+  # TARGET SOURCE    FSTYPE OPTIONS
+  # /      /dev/sda2 ext4   rw,relatime
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: গতি বাড়াতে build ও test-এর scratch file `tmpfs`-এ রাখুন। Memory সীমিত রাখতে `size=` দিন।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `/etc/fstab`-এর প্রতিটি line-এ সর্বোচ্চ ছয়টি field থাকে: device (অথবা `UUID=` বা `LABEL=`), mount point, type, option, `dump` backup flag, এবং `fsck` (disk check) order। <Cite n={22} />
+- `ro` read-only mount করে। `noexec` program সরাসরি চালানো বন্ধ রাখে। Device না থাকলে `nofail` error লুকিয়ে রাখে। Bind mount একটি directory-কে দ্বিতীয় একটি জায়গায় দেখায়। <Cite n={20} />
+- `tmpfs` mount memory-তে থাকে। <Cite n={38} /> এর size container-এর memory limit-এর মধ্যে গণনা হয়। <Cite n={51} />
+- `/proc/mounts` বর্তমান process যে mount-গুলো দেখে, সেগুলোর তালিকা `fstab` format-এ দেয়। <Cite n={47} />
+- কোনো process filesystem ব্যবহার করলে `umount` "busy" বলে fail করে। <Cite n={21} /> আগে `fuser -m` দিয়ে সেই process খুঁজে নিন। <Cite n={45} />
+- `umount -l` একটি busy filesystem এখনই আলাদা করে এবং পরে পরিষ্কার করে। `umount -f` হলো unreachable NFS share-এর জন্য, এবং এটিও আটকে যেতে পারে। <Cite n={21} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -294,33 +639,32 @@ Tutorial-এর নিজস্ব পরামর্শ: গতি বাড়
 <Voices>
 <Technical>
 
-Add a disk in a fixed order. Each step needs the result of the step before it.
+**Goal:** Rehearse the disk steps on a file, and check an `fstab` line before a reboot.
 
-1. Identify the new disk with `lsblk -f`. It shows no filesystem and no mount point. <Cite n={14} />
-2. Partition it with `fdisk`. It edits the table in memory, `w` writes it, and `q` quits without saving. <Cite n={15} /> <Cite n={9} />
-3. Make a filesystem with `mkfs.ext4` or another `mkfs.<type>`. <Cite n={8} /> <Cite n={32} />
-4. Create a mount point and mount the partition. <Cite n={20} />
-5. Read the UUID with `blkid` or `lsblk -f`. Device names follow the order of detection and can change. Use `UUID=` in `/etc/fstab`. <Cite n={16} /> <Cite n={22} />
-6. Check `/etc/fstab` before a reboot. `findmnt --verify` is the recommended check, and the manual calls `mount -a` a bad way to check. <Cite n={19} /> <Cite n={20} />
-
-`defaults` means the usual options. Add `nofail` for a disk that the boot does not need. <Cite n={22} />
+Add a disk in a fixed order: find it, partition it, make a filesystem, mount it, add a `UUID=` line to `/etc/fstab`, and check that file. <Cite n={8} /> <Cite n={22} /> `fdisk` rewrites the partition table, and `mkfs` erases the start of the partition. <Cite n={15} /> <Cite n={30} /> Both act on the device that you name, so a wrong name destroys data. Check the name with `lsblk -f` and keep a backup.
 
 ```bash
-lsblk -f                  # 1. read-only: the new disk has no FSTYPE and no MOUNTPOINTS
-# All commented lines below need root. /dev/sdX is a fake name: replace it with your checked device.
-# fdisk /dev/sdX          # 2. partition: n, then w to write
-# mkfs.ext4 /dev/sdX1     # 3. make the filesystem (ERASES the partition)
-# mkdir -p /mnt/data && mount /dev/sdX1 /mnt/data   # 4. mount
-# blkid /dev/sdX1         # 5. read the UUID
-# UUID=<uuid>  /mnt/data  ext4  defaults,nofail  0  2   # the line to add to /etc/fstab
-findmnt --verify          # 6. read-only check of /etc/fstab
+findmnt --verify
 ```
 
-<Callout type="danger" title="The wrong device name destroys data">
+**Try it:** build a filesystem in a file, read its UUID, and check a test `fstab` line. `--tab-file` checks the test file, not `/etc/fstab`. <Cite n={19} /> The UUID belongs to a file, not to a device, so the check finds an error.
 
-`fdisk` rewrites the partition table, and `mkfs` erases the start of the partition. <Cite n={15} /> <Cite n={30} /> Both act on the device that you name. Without `nofail`, a failing `/etc/fstab` line can stop the boot. <Cite n={53} /> Check the name with `lsblk -f`, keep a backup, and test the file before you reboot.
-
-</Callout>
+```bash
+(
+  cd "$(mktemp -d)"                                       # make and enter a new, empty directory
+  dd if=/dev/zero of=disk.img bs=1M count=8 status=none   # a fake 8 MiB disk
+  mkfs.ext4 -q -F disk.img                                # -F: a regular file is OK
+  mkdir mnt
+  echo "UUID=$(blkid -o value -s UUID disk.img) $PWD/mnt ext4 defaults,nofail 0 2" > fstab.test
+  findmnt --verify --tab-file fstab.test
+  # /tmp/tmp.XXXXXXXXXX/mnt
+  #    [E] unreachable on boot required source: UUID=1b2c3d4e-...
+  #
+  # 0 parse errors, 1 error, 0 warnings
+  rm -r "$PWD"                                            # remove the throw-away directory
+)
+# Your directory name and UUID differ. util-linux 2.41 output.
+```
 
 <Callout type="tip" title="Why it matters for testing">
 
@@ -328,37 +672,121 @@ Tutorial's own advice: practice on a throw-away virtual machine with a spare vir
 
 </Callout>
 
+<details>
+<summary>Go deeper</summary>
+
+The six steps on a real disk. Each step needs the result of the step before it.
+
+1. Identify the new disk with `lsblk -f`. It shows no filesystem and no mount point. <Cite n={14} />
+2. Partition it with `fdisk`. It edits the table in memory, `w` writes it, and `q` quits without saving. <Cite n={15} /> <Cite n={9} />
+3. Make a filesystem with `mkfs.ext4` or another `mkfs.<type>`. <Cite n={32} />
+4. Create a mount point and mount the partition. <Cite n={20} />
+5. Read the UUID with `blkid` or `lsblk -f`. Device names follow the order of detection and can change, so use `UUID=` in `/etc/fstab`. <Cite n={16} /> <Cite n={22} />
+6. Check `/etc/fstab` before a reboot. `findmnt --verify` is the recommended check. The manual calls `mount -a` a bad way to check. <Cite n={19} /> <Cite n={20} />
+
+- `defaults` means the usual options. Add `nofail` for a disk that the boot does not need. <Cite n={22} />
+- Without `nofail`, a failing `/etc/fstab` line can stop the boot. <Cite n={53} />
+
+```bash
+# All lines below need root. /dev/sdX is a fake name: replace it with your checked device.
+# fdisk /dev/sdX          # 2. partition: n, then w to write
+# mkfs.ext4 /dev/sdX1     # 3. make the filesystem (ERASES the partition)
+# mkdir -p /mnt/data && mount /dev/sdX1 /mnt/data   # 4. mount
+# blkid /dev/sdX1         # 5. read the UUID
+# UUID=<uuid>  /mnt/data  ext4  defaults,nofail  0  2   # the line to add to /etc/fstab
+```
+
+</details>
+
 </Technical>
 <Layman>
 
-Add a disk in a fixed order. Each step needs the result of the step before it.
+**Goal:** Practice the disk steps on a file, and check an `fstab` line before a reboot.
 
-1. Find the new disk with `lsblk -f`. It shows no filesystem and no mount point <Cite n={14} />.
-2. Partition it with `fdisk`. `w` writes the table, and `q` quits with no save <Cite n={15} />.
-3. Make a filesystem with `mkfs.ext4` or another `mkfs.<type>` <Cite n={32} />.
-4. Make a mount point and mount the partition <Cite n={20} />.
-5. Read the UUID with `blkid` or `lsblk -f`. Device names can change, so use `UUID=` in `/etc/fstab` <Cite n={16} /> <Cite n={22} />.
-6. Check `/etc/fstab` with `findmnt --verify` before a reboot <Cite n={19} />.
+Add a disk in a fixed order: find it, partition it, make a filesystem, mount it, add a `UUID=` line to `/etc/fstab`, and check that file. <Cite n={8} /> <Cite n={22} /> `fdisk` rewrites the partition table, and `mkfs` erases the start of the partition. <Cite n={15} /> <Cite n={30} /> Both act on the device that you name, so a wrong name destroys data. Check the name with `lsblk -f` and keep a backup.
 
-Add `nofail` for a disk that the boot does not need <Cite n={22} />. Without `nofail`, a failing `/etc/fstab` line can stop the boot <Cite n={53} />. `fdisk` rewrites the partition table, and `mkfs` erases the start of the partition <Cite n={15} /> <Cite n={30} />. Both act on the device that you name, so check the name with `lsblk -f` first.
+**Try it:** build a filesystem in a file, read its UUID, and check a test `fstab` line. `--tab-file` checks the test file, not `/etc/fstab`. <Cite n={19} /> The UUID belongs to a file, not to a device, so the check finds an error.
+
+```bash
+(
+  cd "$(mktemp -d)"                                       # make and enter a new, empty directory
+  dd if=/dev/zero of=disk.img bs=1M count=8 status=none   # a fake 8 MiB disk
+  mkfs.ext4 -q -F disk.img                                # -F: a regular file is OK
+  mkdir mnt
+  echo "UUID=$(blkid -o value -s UUID disk.img) $PWD/mnt ext4 defaults,nofail 0 2" > fstab.test
+  findmnt --verify --tab-file fstab.test
+  # /tmp/tmp.XXXXXXXXXX/mnt
+  #    [E] unreachable on boot required source: UUID=1b2c3d4e-...
+  #
+  # 0 parse errors, 1 error, 0 warnings
+  rm -r "$PWD"                                            # remove the throw-away directory
+)
+```
+
+<Callout type="tip" title="Why it matters for testing">
 
 Tutorial's own advice: practice on a throw-away virtual machine with a spare virtual disk. Never practice on the disk of a shared runner.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+1. Find the new disk with `lsblk -f`. It shows no filesystem and no mount point. <Cite n={14} />
+2. Partition it with `fdisk`. `w` writes the table, and `q` quits with no save. <Cite n={15} />
+3. Make a filesystem with `mkfs.ext4` or another `mkfs.<type>`. <Cite n={32} />
+4. Make a mount point and mount the partition. <Cite n={20} />
+5. Read the UUID with `blkid` or `lsblk -f`. Device names can change, so use `UUID=` in `/etc/fstab`. <Cite n={16} /> <Cite n={22} />
+6. Check `/etc/fstab` with `findmnt --verify` before a reboot. <Cite n={19} />
+
+Add `nofail` for a disk that the boot does not need. <Cite n={22} /> Without `nofail`, a failing `/etc/fstab` line can stop the boot. <Cite n={53} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-একটি disk নির্দিষ্ট ক্রমে যোগ করুন। প্রতিটি ধাপের জন্য আগের ধাপের ফল দরকার।
+**লক্ষ্য:** একটি file-এর উপর disk যোগের ধাপগুলো অনুশীলন করুন, আর reboot-এর আগে একটি `fstab` line check করুন।
 
-1. `lsblk -f` দিয়ে নতুন disk-টি চিনে নিন। এতে কোনো filesystem ও mount point দেখা যায় না <Cite n={14} />।
-2. `fdisk` দিয়ে partition করুন। এটি table memory-তে বদলায়; `w` table লেখে, আর `q` save না করে বের হয় <Cite n={15} />।
-3. `mkfs.ext4` বা অন্য কোনো `mkfs.<type>` দিয়ে filesystem তৈরি করুন <Cite n={32} />।
-4. একটি mount point তৈরি করে partition-টি mount করুন <Cite n={20} />।
-5. `blkid` বা `lsblk -f` দিয়ে UUID পড়ুন। Device-এর নাম detect হওয়ার ক্রম অনুযায়ী হয় এবং বদলে যেতে পারে, তাই `/etc/fstab`-এ `UUID=` ব্যবহার করুন <Cite n={16} /> <Cite n={22} />।
-6. Reboot-এর আগে `/etc/fstab` check করুন। `findmnt --verify` হলো recommended check; manual-এ `mount -a`-কে check করার একটি খারাপ উপায় বলা হয়েছে <Cite n={19} /> <Cite n={20} />।
+একটি disk নির্দিষ্ট ক্রমে যোগ করুন: disk খুঁজুন, partition করুন, filesystem তৈরি করুন, mount করুন, `/etc/fstab`-এ একটি `UUID=` line যোগ করুন, আর file-টি check করুন। <Cite n={8} /> <Cite n={22} /> `fdisk` partition table নতুন করে লেখে, আর `mkfs` partition-এর শুরুর অংশ মুছে ফেলে। <Cite n={15} /> <Cite n={30} /> দুটিই আপনার দেওয়া device-এ কাজ করে, তাই ভুল নাম দিলে data নষ্ট হয়। `lsblk -f` দিয়ে নাম check করুন এবং backup রাখুন।
 
-`defaults` মানে সাধারণ option-গুলো। Boot-এর জন্য দরকার নেই এমন disk-এ `nofail` যোগ করুন <Cite n={22} />। `nofail` না থাকলে `/etc/fstab`-এর একটি fail করা line boot থামিয়ে দিতে পারে <Cite n={53} />। `fdisk` partition table নতুন করে লেখে, আর `mkfs` partition-এর শুরুর অংশ মুছে ফেলে <Cite n={15} /> <Cite n={30} />। দুটিই আপনার দেওয়া device-এ কাজ করে, তাই আগে `lsblk -f` দিয়ে নাম check করুন এবং backup রাখুন।
+**চেষ্টা করুন:** একটি file-এ filesystem তৈরি করুন, তার UUID পড়ুন, আর একটি test `fstab` line check করুন। `--tab-file` test file-টি check করে, `/etc/fstab` নয়। <Cite n={19} /> UUID-টি একটি file-এর, কোনো device-এর নয়, তাই check একটি error পায়।
 
-Tutorial-এর নিজস্ব পরামর্শ: একটি অতিরিক্ত virtual disk-সহ ফেলে দেওয়া যায় এমন virtual machine-এ অনুশীলন করুন। কখনো shared runner-এর disk-এ অনুশীলন করবেন না।
+```bash
+(
+  cd "$(mktemp -d)"                                       # make and enter a new, empty directory
+  dd if=/dev/zero of=disk.img bs=1M count=8 status=none   # a fake 8 MiB disk
+  mkfs.ext4 -q -F disk.img                                # -F: a regular file is OK
+  mkdir mnt
+  echo "UUID=$(blkid -o value -s UUID disk.img) $PWD/mnt ext4 defaults,nofail 0 2" > fstab.test
+  findmnt --verify --tab-file fstab.test
+  # /tmp/tmp.XXXXXXXXXX/mnt
+  #    [E] unreachable on boot required source: UUID=1b2c3d4e-...
+  #
+  # 0 parse errors, 1 error, 0 warnings
+  rm -r "$PWD"                                            # remove the throw-away directory
+)
+```
+
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: অতিরিক্ত virtual disk-সহ একটি throw-away virtual machine-এ অনুশীলন করুন। কখনো shared runner-এর disk-এ নয়।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+1. `lsblk -f` দিয়ে নতুন disk-টি চিনে নিন। এতে কোনো filesystem ও mount point দেখা যায় না। <Cite n={14} />
+2. `fdisk` দিয়ে partition করুন। এটি table memory-তে বদলায়; `w` table লেখে, আর `q` save না করে বের হয়। <Cite n={15} />
+3. `mkfs.ext4` বা অন্য কোনো `mkfs.<type>` দিয়ে filesystem তৈরি করুন। <Cite n={32} />
+4. একটি mount point তৈরি করে partition-টি mount করুন। <Cite n={20} />
+5. `blkid` বা `lsblk -f` দিয়ে UUID পড়ুন। Device-এর নাম detect হওয়ার ক্রম অনুযায়ী হয় এবং বদলে যেতে পারে, তাই `/etc/fstab`-এ `UUID=` ব্যবহার করুন। <Cite n={16} /> <Cite n={22} />
+6. Reboot-এর আগে `/etc/fstab` check করুন। `findmnt --verify` হলো recommended check; manual-এ `mount -a`-কে check করার একটি খারাপ উপায় বলা হয়েছে। <Cite n={19} /> <Cite n={20} />
+
+`defaults` মানে সাধারণ option-গুলো। Boot-এর জন্য দরকার নেই এমন disk-এ `nofail` যোগ করুন। <Cite n={22} /> `nofail` না থাকলে `/etc/fstab`-এর একটি fail করা line boot থামিয়ে দিতে পারে। <Cite n={53} />
+
+</details>
 
 </Bangla>
 </Voices>
@@ -368,57 +796,144 @@ Tutorial-এর নিজস্ব পরামর্শ: একটি অতি
 <Voices>
 <Technical>
 
-Swap is disk space that the kernel uses when memory is short. It can be a partition or a file. <Cite n={10} /> `swapon --show` lists the active swap areas. `free -h` shows memory and swap use. `/proc/swaps` has the same list. <Cite n={29} /> <Cite n={31} /> <Cite n={48} />
+**Goal:** Check the memory and swap use, and prepare a swap area in a file.
 
-A new swap area needs two steps: `mkswap` prepares it, and `swapon` starts it. <Cite n={30} /> A swap file must not have holes (unwritten gaps). `cp` and `truncate` make files with holes, and `swapon` rejects them. The portable way to make the file is `dd` with `/dev/zero`. <Cite n={29} /> <Cite n={11} /> To keep swap after a reboot, add an entry of type `swap` to `/etc/fstab`. <Cite n={29} />
-
-In the latest kernel docs, `vm.swappiness` takes 0 to 200 (older kernels: less), and the default is 60. A low value tells the kernel that swap IO is costly. <Cite n={40} /> When the kernel runs out of memory, the OOM killer ends a process. <Cite n={40} /> A higher `oom_score` means a more likely victim. <Cite n={49} />
+Swap is disk space that the kernel uses when memory is short. It can be a partition or a file. <Cite n={10} /> `swapon --show` lists the active swap areas. `free -h` shows memory and swap use. <Cite n={29} /> <Cite n={31} /> A new swap area needs two steps: `mkswap` prepares it, and `swapon` starts it. <Cite n={30} /> `mkswap` erases the start of its target, so check the target first. <Cite n={30} />
 
 ```bash
-swapon --show                  # active swap areas
-free -h                        # memory and swap, human units
-cat /proc/swaps                # the same areas, from the kernel
+swapon --show
+```
+
+**Try it:** show memory and swap, then prepare a 1 MiB swap file and do not start it. `dd` from `/dev/zero` writes every block, so the file has no holes (unwritten gaps). <Cite n={29} /> `chmod 600` stops a permission warning of `mkswap`.
+
+```bash
+(
+  free -h
+  #                total        used        free      shared  buff/cache   available
+  # Mem:            14Gi        11Gi       1.0Gi       396Mi       2.5Gi       2.8Gi
+  # Swap:          8.0Gi       1.8Gi       6.2Gi
+  cd "$(mktemp -d)"                  # make and enter a new, empty directory
+  dd if=/dev/zero of=swap.img bs=1M count=1 status=none
+  chmod 600 swap.img                 # only the owner can read and write it
+  mkswap swap.img                    # prepare only: no swapon
+  # Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
+  # no label, UUID=2c3d4e5f-...
+  blkid -o value -s TYPE swap.img    # swap
+  rm -r "$PWD"                       # remove the throw-away directory
+)
+# Your memory numbers and UUID differ.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: record `free -h` in the test logs. Without swap, memory pressure may kill a test. With swap, it may only run slowly.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `/proc/swaps` has the same list as `swapon --show`. <Cite n={48} />
+- `cp` and `truncate` make files with holes, and `swapon` rejects them. The portable way to make the file is `dd` with `/dev/zero`. <Cite n={29} /> <Cite n={11} />
+- To keep swap after a reboot, add an entry of type `swap` to `/etc/fstab`. <Cite n={29} />
+- In the latest kernel docs, `vm.swappiness` takes 0 to 200 (older kernels: less), and the default is 60. A low value tells the kernel that swap IO is costly. <Cite n={40} />
+- When the kernel runs out of memory, the OOM killer ends a process. <Cite n={40} /> A higher `oom_score` means a more likely victim. <Cite n={49} />
+- `dd of=` writes into its target file or device. <Cite n={56} /> Check the target first.
+- `swapoff` fails with an out-of-memory status when free memory cannot take the swapped pages back. <Cite n={29} /> Tutorial's own advice: it may also slow the host or start the OOM killer.
+
+```bash
+cat /proc/swaps                # the active swap areas, from the kernel
 cat /proc/sys/vm/swappiness    # the current swappiness
 cat /proc/$$/oom_score         # the OOM score of this shell ($$ is its process ID)
 ```
 
-<Callout type="danger" title="Swap commands can lose data">
-
-`mkswap` erases the start of its target. <Cite n={30} /> `dd of=` writes into its target file or device. <Cite n={56} /> Check the target with `lsblk -f` first. `swapoff` fails with an out-of-memory status when free memory cannot take the swapped pages back. <Cite n={29} /> Tutorial's own advice: it may also slow the host or start the OOM killer.
-
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: record `free -h` in the test logs. Without swap, memory pressure may kill a test. With swap, the test may only run slowly.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-Swap is disk space that the kernel uses when memory is short. It can be a partition or a file <Cite n={10} />. `swapon --show` lists the active swap areas, and `free -h` shows memory and swap use <Cite n={29} /> <Cite n={31} />.
+**Goal:** Check the memory and swap use, and prepare a swap area in a file.
 
-To make a new swap area, `mkswap` prepares it and `swapon` starts it <Cite n={30} />. A swap file must not have holes (unwritten gaps). `swapon` rejects such a file. The portable way to make the file is `dd` with `/dev/zero` <Cite n={29} />. To keep swap after a reboot, add an entry of type `swap` to `/etc/fstab` <Cite n={29} />.
+Swap is disk space that the kernel uses when memory is short. It can be a partition or a file. <Cite n={10} /> `swapon --show` lists the active swap areas, and `free -h` shows memory and swap use. <Cite n={29} /> <Cite n={31} /> To make a new swap area, `mkswap` prepares it and `swapon` starts it. <Cite n={30} /> `mkswap` erases the start of its target, so check the target with `lsblk -f` first. <Cite n={30} />
 
-In the latest kernel docs, `vm.swappiness` takes 0 to 200, and the default is 60. A low value tells the kernel that swap IO is costly <Cite n={40} />. When the kernel runs out of memory, the OOM killer ends a process <Cite n={40} />.
+**Try it:** show memory and swap, then prepare a 1 MiB swap file and do not start it. `dd` from `/dev/zero` writes every block, so the file has no holes (unwritten gaps). <Cite n={29} /> `chmod 600` stops a permission warning of `mkswap`.
 
-`mkswap` erases the start of its target <Cite n={30} />, so check the target with `lsblk -f` first.
+```bash
+(
+  free -h
+  #                total        used        free      shared  buff/cache   available
+  # Mem:            14Gi        11Gi       1.0Gi       396Mi       2.5Gi       2.8Gi
+  # Swap:          8.0Gi       1.8Gi       6.2Gi
+  cd "$(mktemp -d)"                  # make and enter a new, empty directory
+  dd if=/dev/zero of=swap.img bs=1M count=1 status=none
+  chmod 600 swap.img                 # only the owner can read and write it
+  mkswap swap.img                    # prepare only: no swapon
+  # Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
+  # no label, UUID=2c3d4e5f-...
+  blkid -o value -s TYPE swap.img    # swap
+  rm -r "$PWD"                       # remove the throw-away directory
+)
+```
 
-Tutorial's own advice: record `free -h` in the test logs. Without swap, memory pressure may kill a test. With swap, the test may only run slowly.
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: record `free -h` in the test logs. Without swap, memory pressure may kill a test. With swap, it may only run slowly.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- `swapon` rejects a swap file with holes. The portable way to make the file is `dd` with `/dev/zero`. <Cite n={29} />
+- To keep swap after a reboot, add an entry of type `swap` to `/etc/fstab`. <Cite n={29} />
+- In the latest kernel docs, `vm.swappiness` takes 0 to 200, and the default is 60. A low value tells the kernel that swap IO is costly. <Cite n={40} />
+- When the kernel runs out of memory, the OOM killer ends a process. <Cite n={40} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-Swap হলো disk-এর এমন জায়গা, যা memory কম পড়লে kernel ব্যবহার করে। এটি একটি partition বা একটি file হতে পারে <Cite n={10} />। `swapon --show` active swap area-গুলোর তালিকা দেয়, `free -h` memory ও swap-এর ব্যবহার দেখায়, আর `/proc/swaps`-এও একই তালিকা থাকে <Cite n={29} /> <Cite n={31} /> <Cite n={48} />।
+**লক্ষ্য:** Memory ও swap-এর ব্যবহার দেখুন, আর একটি file-এ swap area প্রস্তুত করুন।
 
-নতুন swap area-র জন্য দুটি ধাপ লাগে: `mkswap` এটি প্রস্তুত করে, আর `swapon` এটি চালু করে <Cite n={30} />। Swap file-এ কোনো hole (না-লেখা ফাঁকা অংশ) থাকা চলবে না। `cp` ও `truncate` hole-সহ file তৈরি করে, আর `swapon` সেগুলো গ্রহণ করে না। File তৈরির portable উপায় হলো `/dev/zero`-সহ `dd` <Cite n={29} />। Reboot-এর পরেও swap রাখতে `/etc/fstab`-এ `swap` type-এর একটি entry যোগ করুন <Cite n={29} />।
+Swap হলো disk-এর এমন জায়গা, যা memory কম পড়লে kernel ব্যবহার করে। এটি একটি partition বা একটি file হতে পারে। <Cite n={10} /> `swapon --show` active swap area-গুলোর তালিকা দেয়, আর `free -h` memory ও swap-এর ব্যবহার দেখায়। <Cite n={29} /> <Cite n={31} /> নতুন swap area-র জন্য দুটি ধাপ লাগে: `mkswap` এটি প্রস্তুত করে, আর `swapon` এটি চালু করে। <Cite n={30} /> `mkswap` তার target-এর শুরুর অংশ মুছে ফেলে, তাই আগে `lsblk -f` দিয়ে target check করুন। <Cite n={30} />
 
-সর্বশেষ kernel docs অনুযায়ী `vm.swappiness` 0 থেকে 200 পর্যন্ত মান নেয় (পুরনো kernel-এ কম), আর default হলো 60। কম মান kernel-কে জানায় যে swap IO ব্যয়বহুল <Cite n={40} />। Kernel-এর memory শেষ হলে OOM killer একটি process বন্ধ করে দেয় <Cite n={40} />। যে process-এর `oom_score` বেশি, সেটির বন্ধ হওয়ার সম্ভাবনা বেশি <Cite n={49} />।
+**চেষ্টা করুন:** Memory ও swap দেখুন, তারপর একটি 1 MiB swap file প্রস্তুত করুন, কিন্তু চালু করবেন না। `/dev/zero` থেকে `dd` প্রতিটি block লেখে, তাই file-এ কোনো hole (না-লেখা ফাঁকা অংশ) থাকে না। <Cite n={29} /> `chmod 600` `mkswap`-এর একটি permission warning বন্ধ করে।
 
-`mkswap` তার target-এর শুরুর অংশ মুছে ফেলে <Cite n={30} />, আর `dd of=` তার target file বা device-এ লেখে <Cite n={56} />। তাই আগে `lsblk -f` দিয়ে target check করুন।
+```bash
+(
+  free -h
+  #                total        used        free      shared  buff/cache   available
+  # Mem:            14Gi        11Gi       1.0Gi       396Mi       2.5Gi       2.8Gi
+  # Swap:          8.0Gi       1.8Gi       6.2Gi
+  cd "$(mktemp -d)"                  # make and enter a new, empty directory
+  dd if=/dev/zero of=swap.img bs=1M count=1 status=none
+  chmod 600 swap.img                 # only the owner can read and write it
+  mkswap swap.img                    # prepare only: no swapon
+  # Setting up swapspace version 1, size = 1020 KiB (1044480 bytes)
+  # no label, UUID=2c3d4e5f-...
+  blkid -o value -s TYPE swap.img    # swap
+  rm -r "$PWD"                       # remove the throw-away directory
+)
+```
 
-Tutorial-এর নিজস্ব পরামর্শ: test log-এ `free -h` লিখে রাখুন। Swap না থাকলে memory-র চাপে একটি test বন্ধ হয়ে যেতে পারে। Swap থাকলে test হয়তো শুধু ধীরে চলবে।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: test log-এ `free -h` লিখে রাখুন। Swap না থাকলে memory-র চাপে test বন্ধ হতে পারে; থাকলে শুধু ধীরে চলতে পারে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- `/proc/swaps`-এও একই তালিকা থাকে। <Cite n={48} />
+- `cp` ও `truncate` hole-সহ file তৈরি করে, আর `swapon` সেগুলো গ্রহণ করে না। File তৈরির portable উপায় হলো `/dev/zero`-সহ `dd`। <Cite n={29} />
+- Reboot-এর পরেও swap রাখতে `/etc/fstab`-এ `swap` type-এর একটি entry যোগ করুন। <Cite n={29} />
+- সর্বশেষ kernel docs অনুযায়ী `vm.swappiness` 0 থেকে 200 পর্যন্ত মান নেয় (পুরনো kernel-এ কম), আর default হলো 60। কম মান kernel-কে জানায় যে swap IO ব্যয়বহুল। <Cite n={40} />
+- Kernel-এর memory শেষ হলে OOM killer একটি process বন্ধ করে দেয়। <Cite n={40} /> যে process-এর `oom_score` বেশি, সেটির বন্ধ হওয়ার সম্ভাবনা বেশি। <Cite n={49} />
+- `dd of=` তার target file বা device-এ লেখে। <Cite n={56} /> তাই আগে target check করুন।
+
+</details>
 
 </Bangla>
 </Voices>
@@ -428,63 +943,130 @@ Tutorial-এর নিজস্ব পরামর্শ: test log-এ `free -h`
 <Voices>
 <Technical>
 
-LVM (Logical Volume Manager) builds virtual block devices from physical devices. A physical volume (PV) is a disk or partition given to LVM. A volume group (VG) is a pool of PVs. A logical volume (LV) is a part of a VG that acts like a partition: you format it and mount it. <Cite n={41} /> <Cite n={13} /> An extent is the smallest unit of storage that LVM allocates. <Cite n={13} /> <Cite n={42} />
+**Goal:** Name the three LVM layers, and find an LV in the device tree.
 
-`pvs`, `vgs`, and `lvs` report on each layer. <Cite n={41} /> They only report.
-
-`lvextend` grows an LV from the free extents of its VG. With `-r` it also resizes the filesystem. <Cite n={43} /> `ext4` can grow while mounted, but it shrinks only when unmounted. <Cite n={55} /> A snapshot is a frozen image of an LV, for example for a backup. `lvcreate -s` makes one. <Cite n={42} /> The main gain is resizing without repartitioning. <Cite n={12} /> In this tutorial's view, the costs are one more layer to learn and a VG that can span several disks.
+LVM (Logical Volume Manager) builds virtual block devices from physical devices. A physical volume (PV) is a disk or partition given to LVM. A volume group (VG) is a pool of PVs. A logical volume (LV) is a part of a VG that acts like a partition: you format it and mount it. <Cite n={41} /> <Cite n={13} /> `pvs`, `vgs`, and `lvs` report on each layer. <Cite n={41} /> `lvreduce` destroys the data in the removed area, so back up first. <Cite n={44} />
 
 ```bash
-pvs                          # needs root and the lvm2 tools; physical volumes
-vgs                          # volume groups
-lvs                          # logical volumes
-# All commented lines below need root. vgX and lvX are fake names.
+lvs        # needs root and the lvm2 tools
+```
+
+**Try it:** `lsblk` lists every block device in a tree, with holder devices below the device that they use. <Cite n={14} /> An LV is a virtual block device, so it shows there too. <Cite n={41} />
+
+```bash
+(
+  lsblk -e7 -o NAME,TYPE,SIZE      # -e7: hide the loop devices
+  # NAME   TYPE  SIZE
+  # sda    disk  100G
+  # ├─sda1 part    1G
+  # └─sda2 part   99G
+)
+# This machine has no LVM. With LVM, each LV is a row below its PV, for example below sda2.
+# The names are stand-ins.
+```
+
+<Callout type="tip" title="Why it matters for testing">
+
+Tutorial's own advice: take a snapshot before a destructive test run, to keep the data from before it. Remove it afterwards: it holds space.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- An extent is the smallest unit of storage that LVM allocates. <Cite n={13} /> <Cite n={42} />
+- `pvs`, `vgs`, and `lvs` only report. <Cite n={41} />
+- `lvextend` grows an LV from the free extents of its VG. With `-r` it also resizes the filesystem. <Cite n={43} />
+- `ext4` can grow while mounted, but it shrinks only when unmounted. <Cite n={55} /> Shrink the filesystem before `lvreduce`. <Cite n={44} />
+- A snapshot is a frozen image of an LV, for example for a backup. `lvcreate -s` makes one. <Cite n={42} />
+- The main gain is resizing without repartitioning. <Cite n={12} /> In this tutorial's view, the costs are one more layer to learn and a VG that can span several disks.
+- `lvcreate` and `lvextend` take free extents from the VG, and `lvextend -r` changes a filesystem. <Cite n={42} /> <Cite n={43} /> Run `vgs` and `lvs` first. Check the names before any `lvreduce` or `lvremove`.
+
+```bash
+# All lines below need root. vgX and lvX are fake names.
+# pvs; vgs; lvs                        # physical volumes, volume groups, logical volumes
 # lvcreate -L 10G -n lvX vgX           # a new LV of 10 GiB
 # lvextend -r -L +5G vgX/lvX           # grow the LV and its filesystem
 # lvcreate -s -L 1G -n snapX vgX/lvX   # a snapshot with 1 GiB for changes
 ```
 
-<Callout type="danger" title="Resizing an LV can lose data">
-
-`lvreduce` destroys the data in the removed area. Shrink the filesystem first, and back up before you try. <Cite n={44} /> `lvcreate` and `lvextend` take free extents from the VG, and `lvextend -r` changes a filesystem. <Cite n={42} /> <Cite n={43} /> Run `vgs` and `lvs` first. Check the names before any `lvreduce` or `lvremove`.
-
-</Callout>
-
-<Callout type="tip" title="Why it matters for testing">
-
-Tutorial's own advice: take a snapshot before a destructive test run, so that you keep the data from before the test. Remove the snapshot afterwards, because it holds space.
-
-</Callout>
+</details>
 
 </Technical>
 <Layman>
 
-LVM (Logical Volume Manager) makes virtual block devices from physical devices. It has three layers <Cite n={41} /> <Cite n={13} />:
+**Goal:** Name the three LVM layers, and find an LV in the device tree.
 
-- A physical volume (PV) is a disk or partition that you give to LVM.
-- A volume group (VG) is a pool of PVs.
-- A logical volume (LV) is a part of a VG. It acts like a partition: you format it and mount it.
+LVM (Logical Volume Manager) makes virtual block devices from physical devices. A physical volume (PV) is a disk or partition that you give to LVM. A volume group (VG) is a pool of PVs. A logical volume (LV) is a part of a VG. It acts like a partition: you format it and mount it. <Cite n={41} /> <Cite n={13} /> `pvs`, `vgs`, and `lvs` show each layer. <Cite n={41} /> `lvreduce` destroys the data in the removed area, so make a backup first. <Cite n={44} />
 
-`pvs`, `vgs`, and `lvs` show each layer. They only report <Cite n={41} />.
+**Try it:** `lsblk` lists every block device in a tree, with holder devices below the device that they use. <Cite n={14} /> An LV is a virtual block device, so it shows there too. <Cite n={41} />
 
-`lvextend` makes an LV bigger from the free extents of its VG. An extent is the smallest unit that LVM allocates. With `-r`, `lvextend` also resizes the filesystem <Cite n={43} />. `ext4` can grow while mounted, but it can shrink only when unmounted <Cite n={55} />. `lvcreate -s` makes a snapshot, a frozen image of an LV <Cite n={42} />. The main gain of LVM is that you can resize without repartitioning <Cite n={12} />.
+```bash
+(
+  lsblk -e7 -o NAME,TYPE,SIZE      # -e7: hide the loop devices
+  # NAME   TYPE  SIZE
+  # sda    disk  100G
+  # ├─sda1 part    1G
+  # └─sda2 part   99G
+)
+# This machine has no LVM. With LVM, each LV is a row below its PV, for example below sda2.
+```
 
-`lvreduce` destroys the data in the removed area. Shrink the filesystem first, and make a backup before you try <Cite n={44} />.
+<Callout type="tip" title="Why it matters for testing">
 
 Tutorial's own advice: take a snapshot before a destructive test run. Remove the snapshot afterwards, because it holds space.
+
+</Callout>
+
+<details>
+<summary>Go deeper</summary>
+
+- An extent is the smallest unit that LVM allocates. <Cite n={13} />
+- `lvextend` makes an LV bigger from the free extents of its VG. With `-r`, it also resizes the filesystem. <Cite n={43} />
+- `ext4` can grow while mounted, but it can shrink only when unmounted. <Cite n={55} />
+- `lvcreate -s` makes a snapshot, a frozen image of an LV. <Cite n={42} />
+- The main gain of LVM is that you can resize without repartitioning. <Cite n={12} />
+- Shrink the filesystem before `lvreduce`. <Cite n={44} />
+
+</details>
 
 </Layman>
 <Bangla>
 
-LVM (Logical Volume Manager) physical device থেকে virtual block device তৈরি করে <Cite n={41} />। Physical volume (PV) হলো LVM-কে দেওয়া একটি disk বা partition। Volume group (VG) হলো কয়েকটি PV-এর একটি pool। Logical volume (LV) হলো VG-এর একটি অংশ, যা partition-এর মতো কাজ করে: আপনি এটি format ও mount করেন <Cite n={41} /> <Cite n={13} />। Extent হলো storage-এর সবচেয়ে ছোট একক, যা LVM বরাদ্দ করে <Cite n={13} /> <Cite n={42} />।
+**লক্ষ্য:** LVM-এর তিনটি layer-এর নাম বলুন, আর block device tree-তে LVM volume খুঁজুন।
 
-`pvs`, `vgs` ও `lvs` প্রতিটি layer-এর report দেয় <Cite n={41} />। এগুলো শুধু report করে, কিছু বদলায় না।
+LVM (Logical Volume Manager) physical device থেকে virtual block device তৈরি করে। Physical volume (PV) হলো LVM-কে দেওয়া একটি disk বা partition। Volume group (VG) হলো কয়েকটি PV-এর একটি pool। Logical volume (LV) হলো VG-এর একটি অংশ, যা partition-এর মতো কাজ করে: আপনি এটি format ও mount করেন। <Cite n={41} /> <Cite n={13} /> `pvs`, `vgs` ও `lvs` প্রতিটি layer-এর report দেয়। <Cite n={41} /> `lvreduce` সরানো অংশের data নষ্ট করে, তাই আগে backup নিন। <Cite n={44} />
 
-`lvextend` তার VG-এর free extent থেকে একটি LV বড় করে। `-r` দিলে এটি filesystem-ও resize করে <Cite n={43} />। `ext4` mount থাকা অবস্থায় বড় হতে পারে, কিন্তু ছোট হতে পারে শুধু unmount অবস্থায় <Cite n={55} />। Snapshot হলো একটি LV-এর স্থির ছবি, যেমন backup-এর জন্য; `lvcreate -s` এটি তৈরি করে <Cite n={42} />। LVM-এর প্রধান সুবিধা হলো repartition না করেই resize করা <Cite n={12} />। এই tutorial-এর মতে, এর খরচ হলো শেখার জন্য আরও একটি layer, এবং একটি VG কয়েকটি disk জুড়ে থাকতে পারে।
+**চেষ্টা করুন:** `lsblk` সব block device একটি tree-তে দেখায়; holder device থাকে সে যে device ব্যবহার করে তার নিচে। <Cite n={14} /> LV একটি virtual block device, তাই এটিও সেখানে দেখা যায়। <Cite n={41} />
 
-`lvreduce` সরানো অংশের data নষ্ট করে। আগে filesystem ছোট করুন, আর চেষ্টার আগে backup নিন <Cite n={44} />। `lvreduce` বা `lvremove`-এর আগে `vgs` ও `lvs` চালিয়ে নাম check করুন।
+```bash
+(
+  lsblk -e7 -o NAME,TYPE,SIZE      # -e7: hide the loop devices
+  # NAME   TYPE  SIZE
+  # sda    disk  100G
+  # ├─sda1 part    1G
+  # └─sda2 part   99G
+)
+# This machine has no LVM. With LVM, each LV is a row below its PV, for example below sda2.
+```
 
-Tutorial-এর নিজস্ব পরামর্শ: destructive test run-এর আগে একটি snapshot নিন, যাতে test-এর আগের data থেকে যায়। পরে snapshot-টি সরিয়ে ফেলুন, কারণ এটি জায়গা ধরে রাখে।
+<Callout type="tip" title="টেস্টিং-এ কেন দরকার">
+
+Tutorial-এর নিজস্ব পরামর্শ: destructive test run-এর আগে একটি snapshot নিন। পরে snapshot-টি সরিয়ে ফেলুন, কারণ এটি জায়গা ধরে রাখে।
+
+</Callout>
+
+<details>
+<summary>আরও জানুন</summary>
+
+- Extent হলো storage-এর সবচেয়ে ছোট একক, যা LVM বরাদ্দ করে। <Cite n={13} /> <Cite n={42} />
+- `lvextend` তার VG-এর free extent থেকে একটি LV বড় করে। `-r` দিলে এটি filesystem-ও resize করে। <Cite n={43} />
+- `ext4` mount থাকা অবস্থায় বড় হতে পারে, কিন্তু ছোট হতে পারে শুধু unmount অবস্থায়। <Cite n={55} /> `lvreduce`-এর আগে filesystem ছোট করুন। <Cite n={44} />
+- Snapshot হলো একটি LV-এর স্থির ছবি, যেমন backup-এর জন্য; `lvcreate -s` এটি তৈরি করে। <Cite n={42} />
+- LVM-এর প্রধান সুবিধা হলো repartition না করেই resize করা। <Cite n={12} /> এই tutorial-এর মতে, এর খরচ হলো শেখার জন্য আরও একটি layer, এবং একটি VG কয়েকটি disk জুড়ে থাকতে পারে।
+- `lvreduce` বা `lvremove`-এর আগে `vgs` ও `lvs` চালিয়ে নাম check করুন।
+
+</details>
 
 </Bangla>
 </Voices>
