@@ -1,0 +1,191 @@
+export const metadata = { title: 'Checkpointing', description: 'Save the state of the work outside the model, so the agent can rewind or resume after an interruption.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Checkpointing', publisher: 'Claude Code documentation', url: 'https://code.claude.com/docs/en/checkpointing', accessed: '2026-10-28' },
+    { title: 'How Claude Code works', publisher: 'Claude Code documentation', url: 'https://code.claude.com/docs/en/how-claude-code-works', accessed: '2026-10-28' },
+    { title: 'Rewind file changes with checkpointing', publisher: 'Claude Agent SDK documentation', url: 'https://code.claude.com/docs/en/agent-sdk/file-checkpointing', accessed: '2026-10-28' },
+    { title: 'Checkpointers', publisher: 'LangGraph documentation', url: 'https://docs.langchain.com/oss/python/langgraph/checkpointers', accessed: '2026-10-28' },
+    { title: 'Persistence', publisher: 'LangGraph documentation', url: 'https://docs.langchain.com/oss/python/langgraph/persistence', accessed: '2026-10-28' },
+    { title: 'Using the Messages API', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/build-with-claude/working-with-messages', accessed: '2026-10-28' },
+  ],
+}
+
+# Checkpointing
+
+A harness can save the state of the work outside the model. After an interruption, it loads that checkpoint and continues. For example, a support agent can resume its reply with the order lookup result that it already has.
+
+<PageMeta />
+
+## Why a harness saves state
+
+<Voices>
+<Technical>
+
+The Messages API is stateless <Cite n={6} />, so the model does not keep state. If the process stops, the work in the loop is lost, unless the harness saved it. A saved state is a **checkpoint**.
+
+```text
+Support agent checks the order
+          │ save
+          ▼
+Checkpoint: order delivered
+          │ interruption ... restart and load
+          ▼
+Agent resumes → reply ready
+```
+
+The LangGraph docs give the reasons: persistence matters when an agent needs to continue a conversation, resume after an interruption, recover from a failure, or remember information across interactions <Cite n={5} />. Checkpoints also let a person look at the state at any time, which human-in-the-loop work needs <Cite n={4} />.
+
+Two kinds of checkpoint are common:
+
+- A checkpoint of the **files** that the agent changed, so you can undo the changes. Claude Code does this <Cite n={1} />.
+- A checkpoint of the **run state**, so the run can continue later. LangGraph does this <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+The model does not save anything <Cite n={6} />. If the program stops, the work is lost, unless the harness saved it first. A saved state is a **checkpoint**.
+
+A checkpoint helps an agent to continue a chat, to restart after a stop, to recover from a failure, and to remember things between sessions <Cite n={5} />. It also lets a person look at the work at any time <Cite n={4} />.
+
+There are two common kinds. One saves the **files** that the agent changed, so you can undo them. Claude Code does this <Cite n={1} />. The other saves the **state of the run**, so the run can continue later. LangGraph does this <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+মডেল নিজে কিছু সেভ করে না <Cite n={6} />। প্রোগ্রাম বন্ধ হয়ে গেলে কাজ হারিয়ে যায়, যদি না harness আগে সেটা সেভ করে রাখে। সেভ করা এই অবস্থাকে বলে **checkpoint**।
+
+checkpoint একটা এজেন্টকে চ্যাট চালিয়ে যেতে, থেমে যাওয়ার পর আবার শুরু করতে, ফেইলিওর থেকে ফিরে আসতে আর এক সেশন থেকে আরেক সেশনে কিছু মনে রাখতে সাহায্য করে <Cite n={5} />। এতে একজন মানুষ যেকোনো সময় কাজের অবস্থা দেখতে পারে <Cite n={4} />।
+
+সাধারণত দুই ধরনের checkpoint হয়। একটা এজেন্টের বদলানো **ফাইল** সেভ করে, যাতে বদলগুলো undo করা যায়। Claude Code এটা করে <Cite n={1} />। আরেকটা **রানের অবস্থা** সেভ করে, যাতে রানটা পরে আবার চলতে পারে। LangGraph এটা করে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Checkpoints in Claude Code
+
+<Voices>
+<Technical>
+
+Claude Code captures the state of your code before each prompt that starts a turn <Cite n={1} />. Before Claude edits a file, it snapshots the current contents <Cite n={2} />. It keeps file snapshots for the 100 most recent checkpoints of a session <Cite n={1} />.
+
+Run `/rewind`, or press `Esc` two times when the prompt input is empty, to open the rewind menu <Cite n={1} />. You can restore the code and the conversation, only the conversation, or only the code <Cite n={1} />. The checkpoints are saved with the conversation, so `/rewind` works also after you resume a session with `claude --continue` or `claude --resume` <Cite n={1} /> <Cite n={2} />.
+
+<Callout type="warning" title="What a checkpoint does not undo">
+A file that only Bash commands changed is not tracked <Cite n={1} />. Actions on remote systems (databases, APIs, deployments) cannot be checkpointed <Cite n={2} />. Changes outside Claude Code are normally not captured <Cite n={1} />. Checkpoints are for quick recovery in a session. Keep using Git for permanent history <Cite n={1} />.
+</Callout>
+
+</Technical>
+<Layman>
+
+Claude Code saves the state of your code before each prompt that starts a turn <Cite n={1} />. Before Claude changes a file, it saves a copy of the file <Cite n={2} />.
+
+To go back, run `/rewind`, or press `Esc` two times in an empty prompt <Cite n={1} />. You can go back with the code and the chat, only the chat, or only the code <Cite n={1} />. This works also after you reopen an old session <Cite n={1} />.
+
+<Callout type="warning" title="What a checkpoint does not undo">
+A file that only a Bash command changed is not saved <Cite n={1} />. A change to a database, an API, or a deployment cannot be undone <Cite n={2} />. Keep using Git for real history <Cite n={1} />.
+</Callout>
+
+</Layman>
+<Bangla>
+
+যে prompt একটা নতুন turn শুরু করে, তার আগে Claude Code আপনার কোডের অবস্থা সেভ করে <Cite n={1} />। Claude কোনো ফাইল বদলানোর আগে ফাইলটার একটা কপি সেভ করে <Cite n={2} />।
+
+আগের অবস্থায় ফিরতে `/rewind` চালান, অথবা খালি prompt-এ দুবার `Esc` চাপুন <Cite n={1} />। আপনি কোড আর চ্যাট দুটোই, শুধু চ্যাট, অথবা শুধু কোড ফিরিয়ে আনতে পারেন <Cite n={1} />। `claude --continue` বা `claude --resume` দিয়ে পুরোনো সেশন খুললেও এটা কাজ করে <Cite n={1} />।
+
+<Callout type="warning" title="checkpoint যা undo করে না">
+যে ফাইল শুধু একটা Bash কমান্ড বদলেছে, সেটা সেভ হয় না <Cite n={1} />। ডেটাবেস, API বা deployment-এ করা বদল undo করা যায় না <Cite n={2} />। আসল হিস্টোরির জন্য Git ব্যবহার করতে থাকুন <Cite n={1} />।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Checkpoints in an SDK
+
+<Voices>
+<Technical>
+
+The Claude Agent SDK tracks file changes when you set `enable_file_checkpointing=True` (Python) or `enableFileCheckpointing: true` (TypeScript) <Cite n={3} />. To go back, call `rewind_files()` or `rewindFiles()` with the checkpoint UUID <Cite n={3} />. File rewinding restores the files on disk. It does not rewind the conversation <Cite n={3} />.
+
+LangGraph saves the run state. A checkpointer saves a snapshot of the graph state at each super-step, organized into threads <Cite n={4} />. When you invoke a graph with a checkpointer, you must give a `thread_id` in the `configurable` part of the config <Cite n={4} />:
+
+```python
+config = {"configurable": {"thread_id": "order-A-1001"}}
+graph.invoke({"messages": [{"role": "user", "content": "Where is my order?"}]}, config)
+```
+
+If a node fails at a super-step, you can restart the graph from the last successful step <Cite n={4} />. Checkpointers also allow "time travel": replay earlier runs to review or debug one step <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+The Claude Agent SDK can save file changes if you turn on file checkpointing <Cite n={3} />. Later it can put the files back as they were. It does not change the chat back <Cite n={3} />.
+
+LangGraph saves the state of the whole run after each step <Cite n={4} />. Each conversation is a thread with its own `thread_id`, and its saved states are kept under it <Cite n={4} />.
+
+If a step fails, the run can start again from the last step that worked <Cite n={4} />. You can also replay an old run to see what happened at one step <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+file checkpointing চালু করলে (`enable_file_checkpointing=True`) Claude Agent SDK ফাইলের বদলগুলো সেভ করে <Cite n={3} />। পরে `rewind_files()` দিয়ে ফাইলগুলো আগের অবস্থায় ফেরানো যায়। এতে চ্যাট আগের অবস্থায় ফেরে না <Cite n={3} />।
+
+LangGraph প্রতিটা ধাপের (super-step) পরে পুরো রানের অবস্থা সেভ করে <Cite n={4} />। প্রতিটা কথোপকথন একটা thread, যার নিজের একটা `thread_id` থাকে, আর তার সেভ করা অবস্থাগুলো সেই `thread_id`-এর নিচে রাখা হয় <Cite n={4} />।
+
+কোনো ধাপ ফেল করলে রানটা শেষ সফল ধাপ থেকে আবার শুরু হতে পারে <Cite n={4} />। কোনো এক ধাপে কী হয়েছিল দেখতে পুরোনো রান আবার চালানোও যায় <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+Test the recovery, not only the save:
+
+- **Kill and resume:** stop the agent after the order lookup and before the reply. On resume, the agent must use the saved result and must not repeat a side effect, such as a second refund.
+- **Rewind:** rewind after an edit. Check every file that the agent changed, also the files that a shell command changed.
+- **Wrong thread:** resume with the `thread_id` of another customer. The agent must not show their data.
+- **Remote effects:** a rewind does not undo an email or a database write. Check that the harness asks before such actions.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+Test the restart, not only the save:
+
+- Stop the agent after the order lookup. When it starts again, it uses the saved result and does not do a side effect two times, such as a second refund.
+- Go back after an edit, and check every file that the agent changed.
+- Restart with the `thread_id` of another customer. The agent must not show their data.
+- Going back does not undo an email or a database change. Check that the agent asks first.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+শুধু সেভ না, আবার শুরু হওয়াটাও টেস্ট করুন:
+
+- order lookup-এর পরে এজেন্টকে থামান। আবার শুরু হলে সে সেভ করা ফলাফল ব্যবহার করে, আর কোনো কাজ দুবার করে না, যেমন দ্বিতীয়বার refund।
+- একটা এডিটের পরে rewind করুন, আর এজেন্টের বদলানো প্রতিটা ফাইল চেক করুন।
+- অন্য কাস্টমারের `thread_id` দিয়ে আবার শুরু করুন। এজেন্ট যেন তার ডেটা না দেখায়।
+- rewind একটা ইমেইল বা ডেটাবেসের বদল undo করে না। দেখুন এজেন্ট আগে অনুমতি চায় কি না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Checkpoint | A saved state of the work, outside the model |
+| Rewind | Go back to a checkpoint |
+| `/rewind` | The Claude Code command that opens the rewind menu |
+| File checkpointing | The Agent SDK option that tracks file changes for a rewind |
+| Checkpointer | The LangGraph part that saves the graph state at each super-step |
+| `thread_id` | The LangGraph key of a thread. The checkpoints of a sequence of runs (for example one conversation) are saved under it. |
+| Time travel | Replay an earlier run to review or debug a step |

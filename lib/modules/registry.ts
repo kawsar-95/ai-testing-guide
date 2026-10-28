@@ -5,6 +5,7 @@
 import { AI_ENGINEERING } from "../ai-engineering/topics.ts";
 import { ARCHITECTURE } from "../architecture/topics.ts";
 import { COURSE } from "../course/topics.ts";
+import { HARNESS } from "../harness/topics.ts";
 import { K6 } from "../k6/topics.ts";
 import { SYSTEM_DESIGN } from "../system-design/cases.ts";
 

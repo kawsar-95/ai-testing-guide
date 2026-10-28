@@ -294,7 +294,7 @@ The Python checks are not part of the workflow, because they expect a build with
 | `check_routes.py out` | Build check | Every route of the route maps has a page |
 | `check_links.py out` | Build check | No broken internal links or assets |
 | `check_outline.py out` | Build check | Every "On this page" link has a target id |
-| `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 142 pages checked, 0 skipped`. |
+| `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 148 pages checked, 0 skipped`. |
 
 The route maps in `scripts/` list the routes that the build checks read: `route-map.json` (tutorial) and one file each for Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, contents, dashboard, and interview. `npm test` checks that each page is in its map.
 

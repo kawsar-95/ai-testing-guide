@@ -1,0 +1,222 @@
+export const metadata = { title: 'Tool Calling', description: 'The model asks for an action by tool name and arguments. The harness checks it, runs it, and returns the result.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Tool use with Claude', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview', accessed: '2026-10-28' },
+    { title: 'Define tools', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use', accessed: '2026-10-28' },
+    { title: 'Handle tool calls', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls', accessed: '2026-10-28' },
+    { title: 'Parallel tool use', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use', accessed: '2026-10-28' },
+  ],
+}
+
+# Tool Calling
+
+The model asks for an action with a tool name and arguments. The harness checks the request, runs the tool, and gives the result back. For example, an order lookup gives the delivery status for the reply.
+
+<PageMeta />
+
+## Define a tool
+
+<Voices>
+<Technical>
+
+A tool definition has three main fields <Cite n={2} />:
+
+| Field | Content |
+|---|---|
+| `name` | The name of the tool. It must match `^[a-zA-Z0-9_-]{1,128}$`. |
+| `description` | A plain text description of what the tool does, when to use it, and how it behaves |
+| `input_schema` | A JSON Schema object for the parameters of the tool |
+
+This definition gives the model an order lookup tool:
+
+```json
+{
+  "name": "get_order",
+  "description": "Get the delivery status of one order. Use it when the customer asks where an order is.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "order_id": { "type": "string", "description": "The order ID, for example A-1001" }
+    },
+    "required": ["order_id"]
+  }
+}
+```
+
+The model does not run the tool. It decides when to call it from the request and the description, and your application runs the call <Cite n={1} />.
+
+If you add `strict: true` to a custom tool definition, the tool calls of Claude always match your schema exactly <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+To give the model a tool, you describe the tool in three parts <Cite n={2} />:
+
+- A **name**, for example `get_order`.
+- A **description** in plain words: what the tool does and when to use it.
+- An **input schema**: the inputs that the tool needs, for example an order ID.
+
+The model never runs the tool itself. It reads the request of the user and this description, and decides when to ask for the tool <Cite n={1} />.
+
+If you add `strict: true` to the definition, the requests of the model always match your input schema exactly <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+মডেলকে একটা টুল দিতে হলে টুলটাকে তিনটা অংশে বর্ণনা করতে হয় <Cite n={2} />:
+
+- একটা **name**, যেমন `get_order`।
+- সহজ ভাষায় একটা **description**: টুলটা কী করে আর কখন ব্যবহার করতে হবে।
+- একটা **input_schema**: টুলের কী কী ইনপুট লাগে, যেমন একটা order ID। এটা একটা JSON Schema।
+
+মডেল নিজে কখনো টুল চালায় না। সে ইউজারের রিকোয়েস্ট আর এই বর্ণনাটা পড়ে ঠিক করে কখন টুলটা চাইবে <Cite n={1} />।
+
+ডেফিনিশনে `strict: true` দিলে মডেলের রিকোয়েস্ট সবসময় হুবহু আপনার schema মেনে চলে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## The request and the result
+
+<Voices>
+<Technical>
+
+When Claude wants a tool, the response has `stop_reason: "tool_use"` and one or more `tool_use` blocks. Your code runs the operation and sends back a `tool_result` <Cite n={1} />. A `tool_use` block has an `id`, the `name` of the tool, and an `input` object that follows the `input_schema` <Cite n={3} />:
+
+```json
+{ "type": "tool_use", "id": "toolu_01A", "name": "get_order", "input": { "order_id": "A-1001" } }
+```
+
+Your code runs the tool that has that name, with that input <Cite n={3} />. Then it sends a new `user` message with a `tool_result` block. Its `tool_use_id` is the `id` of the request <Cite n={3} />:
+
+```json
+{ "type": "tool_result", "tool_use_id": "toolu_01A", "content": "delivered" }
+```
+
+The model uses the result in its reply, for example "Your order was delivered."
+
+If the tool fails, set `is_error` to `true` and put the error message in `content` <Cite n={3} />. Claude then uses the error in its reply to the user <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+The steps of one tool call are <Cite n={1} />:
+
+1. The model stops and says "I want to use `get_order` with order `A-1001`". The API marks this stop with the reason `tool_use`.
+2. Your code runs the real order lookup <Cite n={3} />.
+3. Your code sends the result back, with the ID of the request, so the model knows which request it answers <Cite n={3} />.
+4. The model writes the reply: "Your order was delivered."
+
+If the lookup fails, your code says so with `is_error: true` and an error message <Cite n={3} />. Then the model uses the error in its reply to the user <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+একটা টুল কলের ধাপগুলো হলো <Cite n={1} />:
+
+1. মডেল থামে আর বলে "আমি `A-1001` অর্ডারের জন্য `get_order` ব্যবহার করতে চাই"। API এই থামাকে `stop_reason: "tool_use"` দিয়ে চিহ্নিত করে।
+2. আপনার কোড আসল order lookup-টা চালায় <Cite n={3} />।
+3. আপনার কোড একটা `tool_result` ফেরত পাঠায়, সাথে রিকোয়েস্টের ID (`tool_use_id`), যাতে মডেল বোঝে কোন রিকোয়েস্টের উত্তর এটা <Cite n={3} />।
+4. মডেল উত্তর লেখে: "আপনার অর্ডার ডেলিভারি হয়ে গেছে।"
+
+lookup ফেল করলে আপনার কোড `is_error: true` আর একটা এরর মেসেজ দিয়ে সেটা জানায় <Cite n={3} />। তখন মডেল তার উত্তরে ইউজারকে এররটা জানায় <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Where the tool runs
+
+<Voices>
+<Technical>
+
+Tools differ mainly by where the code runs <Cite n={1} />:
+
+| Kind | Where it runs | Example |
+|---|---|---|
+| Client tools | In your application <Cite n={1} /> | The user-defined `get_order` tool |
+| Server tools | On Anthropic's infrastructure <Cite n={1} /> | `web_search`, `web_fetch`, `code_execution` |
+
+For a client tool, your application runs each call <Cite n={1} />, so the check before the run is your job. For server tools, you do not need to handle `is_error` results <Cite n={3} />.
+
+The model can also ask for several tools in one turn. The response then has several `tool_use` blocks <Cite n={4} />. Return one `tool_result` for each `tool_use` block, all together in the next user message <Cite n={4} />. If you do not run one of the calls, still return a `tool_result` for it, with `is_error: true` and a short explanation <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+A tool runs in one of two places <Cite n={1} />:
+
+- A **client tool** runs in your own application, for example your order lookup <Cite n={1} />. Your code must check each request before it runs it.
+- A **server tool** runs on Anthropic's servers, for example web search <Cite n={1} />.
+
+The model can ask for several tools at the same time <Cite n={4} />. Your code then sends all the results back together in one message <Cite n={4} />. If your code skips one request, it still answers that request with an error and a short reason <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা টুল দুই জায়গার একটায় চলে <Cite n={1} />:
+
+- **client tool** আপনার নিজের অ্যাপ্লিকেশনে চলে, যেমন আপনার order lookup <Cite n={1} />। প্রতিটা রিকোয়েস্ট চালানোর আগে আপনার কোডকেই সেটা চেক করতে হবে।
+- **server tool** Anthropic-এর সার্ভারে চলে, যেমন `web_search` <Cite n={1} />।
+
+মডেল একসাথে কয়েকটা টুল চাইতে পারে <Cite n={4} />। তখন আপনার কোড সব `tool_result` একসাথে একটা মেসেজে ফেরত পাঠায় <Cite n={4} />। কোনো একটা রিকোয়েস্ট না চালালেও তার জন্য `is_error: true` আর ছোট একটা কারণ দিয়ে উত্তর দিতে হয় <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+A tool call is an input from the model to your code. Test it like any other input:
+
+- **Bad arguments:** a missing `order_id`, a wrong type, or an ID of an order of another customer.
+- **Tool failure:** a timeout or a 500 from the order service. The reply must not say "delivered".
+- **Unknown tool:** a request for a tool name that does not exist.
+- **Parallel calls:** two lookups in one turn. Each result must go back with the correct `tool_use_id`.
+- **Description quality:** a vague description makes the model pick the wrong tool. Test the prompts that sit between two tools.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+Treat each tool request as input that can be wrong:
+
+- A missing or wrong order ID, or the order of another customer.
+- The order service is down. The reply must not say "delivered".
+- A request for a tool that does not exist.
+- Two lookups at the same time. Each result must match its request.
+- A vague tool description that makes the model pick the wrong tool.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+প্রতিটা টুল রিকোয়েস্টকে এমন ইনপুট ভাবুন, যেটা ভুল হতে পারে:
+
+- order ID নেই, ভুল, বা অন্য কাস্টমারের অর্ডার।
+- order সার্ভিস বন্ধ। তখন উত্তরে "ডেলিভারি হয়ে গেছে" বলা যাবে না।
+- এমন টুলের রিকোয়েস্ট, যেটার অস্তিত্ব নেই।
+- একসাথে দুটো lookup। প্রতিটা ফলাফল তার নিজের রিকোয়েস্টের সাথে মিলতে হবে।
+- অস্পষ্ট description, যার কারণে মডেল ভুল টুল বেছে নেয়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Tool definition | The `name`, `description`, and `input_schema` of a tool |
+| `tool_use` | The block in which the model asks for a tool, with an `id` and an `input` |
+| `tool_result` | The block in which your code returns the result, with the `tool_use_id` |
+| `stop_reason: "tool_use"` | The model stopped because it wants a tool |
+| `is_error` | Set to `true` in a `tool_result` when the tool failed |
+| Client tool | A tool that runs in your application |
+| Server tool | A tool that runs on Anthropic's infrastructure |
+| `strict: true` | Makes the tool calls match the schema exactly |

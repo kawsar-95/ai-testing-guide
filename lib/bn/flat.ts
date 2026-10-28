@@ -4,6 +4,7 @@ import type { FlatModuleId } from "../modules/registry.ts";
 import { AI_ENGINEERING_UI_BN } from "./ai-engineering.ts";
 import { ARCHITECTURE_UI_BN } from "./architecture.ts";
 import { COURSE_UI_BN } from "./course.ts";
+import { HARNESS_UI_BN } from "./harness.ts";
 import { K6_UI_BN } from "./k6.ts";
 import { SYSTEM_DESIGN_UI_BN } from "./system-design.ts";
 
