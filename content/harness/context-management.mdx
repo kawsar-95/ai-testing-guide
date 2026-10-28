@@ -1,0 +1,166 @@
+export const metadata = { title: 'Context Management', description: 'What the model sees in each step, and what the harness does when the context window fills up.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'How Claude Code works', publisher: 'Claude Code documentation', url: 'https://code.claude.com/docs/en/how-claude-code-works', accessed: '2026-10-28' },
+    { title: 'Context windows', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/build-with-claude/context-windows', accessed: '2026-10-28' },
+    { title: 'Compaction overview', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/build-with-claude/compaction', accessed: '2026-10-28' },
+    { title: 'Using the Messages API', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/build-with-claude/working-with-messages', accessed: '2026-10-28' },
+  ],
+}
+
+# Context Management
+
+What the model sees comes from your instructions, the conversation, and the tool results. When the window fills up, the harness compacts the older messages, and your instructions decide what stays.
+
+<PageMeta />
+
+## What the context window holds
+
+<Voices>
+<Technical>
+
+The Messages API is stateless: you always send the full conversation history <Cite n={4} />. So the model has no memory between two requests. It sees only what the harness sends in the request. The API docs say that everything in the request counts toward the context window: the system prompt, every message (with tool results, images, and documents), and the tool definitions <Cite n={2} />. The docs call the context window the "working memory" of the model <Cite n={2} />.
+
+In Claude Code, the context window holds the conversation history, file contents, command outputs, CLAUDE.md, auto memory, loaded skills, and system instructions <Cite n={1} />. Claude sees the skill descriptions at session start, but the full content of a skill loads only when Claude uses it <Cite n={1} />.
+
+The window has a size limit. It holds up to 1M tokens, depending on the model <Cite n={2} />. A bigger window is not always better: as the token count grows, accuracy and recall degrade. The docs call this **context rot** <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+The model does not remember earlier requests. It only sees what the harness sends to it each time <Cite n={4} />. Everything in the request counts: the instructions, every message, the tool results, and the tool descriptions <Cite n={2} />. Think of the context window as the "working memory" of the model <Cite n={2} />.
+
+In Claude Code, this memory holds the chat, the files that Claude read, the command outputs, CLAUDE.md, the loaded skills, and the system instructions <Cite n={1} />.
+
+The window has a limit, up to 1M tokens on some models <Cite n={2} />. More text is not always better. When the window gets very full, the model gets less accurate. This is called **context rot** <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+মডেল আগের রিকোয়েস্টগুলো মনে রাখে না। harness প্রতিবার যা পাঠায়, সে শুধু সেটাই দেখে <Cite n={4} />। রিকোয়েস্টের সবকিছুই গোনা হয়: system prompt, প্রতিটা মেসেজ, tool result আর tool definition <Cite n={2} />। context window-কে মডেলের "working memory" ভাবতে পারেন <Cite n={2} />।
+
+Claude Code-এ এই মেমরিতে থাকে চ্যাট, Claude যেসব ফাইল পড়েছে, কমান্ডের আউটপুট, CLAUDE.md, লোড করা skill আর system instructions <Cite n={1} />।
+
+উইন্ডোর একটা লিমিট আছে, কিছু মডেলে 1M টোকেন পর্যন্ত <Cite n={2} />। বেশি টেক্সট সবসময় ভালো না। উইন্ডো খুব ভরে গেলে মডেলের নির্ভুলতা কমে যায়। একে বলে **context rot** <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## When the window fills up
+
+<Voices>
+<Technical>
+
+Claude Code manages the context automatically when it comes near the limit. It compacts the conversation into a summary <Cite n={1} />. The summary keeps your requests and the key code snippets, but detailed instructions from early in the conversation can be lost <Cite n={1} />. If one file or tool output is so large that the context fills again right after each summary, Claude Code stops auto-compacting after a few attempts and shows an error. It does not loop <Cite n={1} />.
+
+```text
+Available: [Policy] [Instructions] [Old chat]
+                 │                     │
+                 │              compacted to a summary
+                 ▼                     ▼
+This step: [Policy] [Instructions] [Summary] ──► Model
+```
+
+You control what stays <Cite n={1} />:
+
+- Put the rules that must stay in CLAUDE.md, not only in the conversation.
+- Add a "Compact Instructions" section to CLAUDE.md.
+- Run `/compact` with a focus, for example `/compact focus on the API changes`.
+- Run `/context` to see what uses the space.
+
+</Technical>
+<Layman>
+
+When the window is nearly full, Claude Code makes a summary of the conversation and uses the summary in place of the old messages <Cite n={1} />. This is called **compaction**. The summary keeps your requests and the important code. Detailed instructions from the start of the chat can get lost <Cite n={1} />.
+
+So keep important rules in CLAUDE.md, not only in the chat <Cite n={1} />. You can also tell Claude what to keep: run `/compact` with a focus, for example `/compact focus on the API changes`. To see what fills the window, run `/context` <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+উইন্ডো প্রায় ভরে গেলে Claude Code কথোপকথনের একটা সারসংক্ষেপ বানায় আর পুরোনো মেসেজের জায়গায় সেটা ব্যবহার করে <Cite n={1} />। একে বলে **compaction**। সারসংক্ষেপে আপনার রিকোয়েস্ট আর গুরুত্বপূর্ণ কোড থাকে। চ্যাটের শুরুর দিকের বিস্তারিত নির্দেশ হারিয়ে যেতে পারে <Cite n={1} />।
+
+তাই জরুরি নিয়মগুলো শুধু চ্যাটে না রেখে CLAUDE.md-তে রাখুন <Cite n={1} />। কী রাখতে হবে তা Claude-কে বলেও দিতে পারেন: একটা ফোকাস দিয়ে `/compact` চালান, যেমন `/compact focus on the API changes`। উইন্ডো কী দিয়ে ভরেছে দেখতে `/context` চালান <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Compaction in the API
+
+<Voices>
+<Technical>
+
+If you build your own harness on the Claude API, the API docs name server-side compaction as the primary strategy for context management in long conversations and agentic workflows <Cite n={2} />. Compaction replaces the older turns of a conversation with a summary that Claude writes on the server, so you need no summarization code of your own <Cite n={3} />. With threshold compaction, the API compacts when the input tokens reach the trigger that you set <Cite n={3} />.
+
+The feature is in beta for Claude 4.6 and later models <Cite n={2} />. The API docs also list tool result clearing: it clears old tool results in agentic workflows <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+If you build your own agent on the Claude API, the API can do the compaction for you on the server <Cite n={2} />. It replaces the old turns with a summary that Claude writes, so you do not write summary code yourself <Cite n={3} />. You set a limit, and the API compacts when the input reaches it <Cite n={3} />.
+
+This feature is in beta for Claude 4.6 and later models <Cite n={2} />. The API can also clear old tool results to save space <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+Claude API দিয়ে নিজের এজেন্ট বানালে API সার্ভারেই আপনার জন্য compaction করতে পারে <Cite n={2} />। এটা পুরোনো টার্নগুলোর জায়গায় Claude-এর লেখা একটা সারসংক্ষেপ বসায়, তাই আপনাকে নিজে সারসংক্ষেপের কোড লিখতে হয় না <Cite n={3} />। আপনি একটা লিমিট (trigger) ঠিক করেন, আর ইনপুট সেখানে পৌঁছালে API compaction করে <Cite n={3} />।
+
+এই ফিচারটা Claude 4.6 ও পরের মডেলগুলোর জন্য beta-তে আছে <Cite n={2} />। জায়গা বাঁচাতে API পুরোনো tool result মুছেও দিতে পারে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+Most context bugs show only in long sessions. Test these:
+
+- **Lost rule:** give a rule early in a long session, force a compaction, then check that the agent still follows the rule.
+- **Rule in CLAUDE.md:** do the same with the rule in CLAUDE.md. Compare the two results.
+- **Large tool output:** a tool that returns a very large result. Check that the agent still answers well.
+- **Old data:** after compaction, check that the agent does not use an old value that a later step changed.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+Context bugs often show only in long sessions. Try these:
+
+- Give a rule at the start, make the session long, and check that the agent still follows the rule.
+- Do the same with the rule in CLAUDE.md, and compare.
+- Make a tool return a very large result, and check the answer.
+- After a summary, check that the agent does not use an old value.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+কনটেক্সটের বাগ সাধারণত লম্বা সেশনেই দেখা যায়। এগুলো চেষ্টা করুন:
+
+- শুরুতে একটা নিয়ম দিন, সেশন লম্বা করুন, তারপর দেখুন এজেন্ট এখনো নিয়মটা মানছে কি না।
+- একই কাজ নিয়মটা CLAUDE.md-তে রেখে করুন, তারপর তুলনা করুন।
+- একটা টুল দিয়ে খুব বড় একটা ফলাফল ফেরত দিন, তারপর উত্তরটা চেক করুন।
+- সারসংক্ষেপের পরে দেখুন এজেন্ট কোনো পুরোনো মান ব্যবহার করছে কি না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Context window | All the text that the model sees in one request, its "working memory" |
+| Token | The unit in which the size of the context is counted |
+| Context rot | Accuracy and recall degrade as the token count grows |
+| Compaction | The harness replaces older messages with a summary |
+| `/compact` | The Claude Code command that compacts now, with an optional focus |
+| `/context` | The Claude Code command that shows what uses the space |
+| CLAUDE.md | The file of persistent rules of a Claude Code project |
