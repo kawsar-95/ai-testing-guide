@@ -18,7 +18,7 @@ export const HOME_UI_BN: Bn<typeof HOME_UI> = {
   courseEyebrow: "কোর্সের কাঠামো",
   courseTitle: "ছয়টি টিউটোরিয়াল গ্রুপ ও নয়টি মডিউল",
   courseSub:
-    "টিউটোরিয়াল ক্রমানুসারে পড়ুন, তারপর Linux, টেস্টিং ফান্ডামেন্টালস, সিস্টেম ডিজাইন, আর্কিটেকচার, System Design Course, k6 পারফরম্যান্স টেস্টিং, AI Engineering, AI Harnesses বা AI স্কিলের মডিউল খুলুন।",
+    "টিউটোরিয়াল ক্রমানুসারে পড়ুন, তারপর Linux, টেস্টিং ফান্ডামেন্টালস, সিস্টেম ডিজাইন, আর্কিটেকচার, System Design Course, k6 পারফরম্যান্স টেস্টিং, AI Engineering, AI Harnesses, AI স্কিল বা AI Concepts-এর মডিউল খুলুন।",
   cardCount: (n) => `${n}টি পেজ`,
 };
 

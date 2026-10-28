@@ -1,0 +1,351 @@
+export const metadata = { title: 'Inference Economics', description: 'Price the finished task, not the single call: tokens, caching, batching, and effort.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Pricing', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/about-claude/pricing', accessed: '2026-10-28' },
+    { title: 'Prompt caching', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching', accessed: '2026-10-28' },
+    { title: 'Batch processing', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', accessed: '2026-10-28' },
+    { title: 'Effort', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/effort', accessed: '2026-10-28' },
+    { title: 'Steering thinking', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/thinking-steering-and-cost', accessed: '2026-10-28' },
+    { title: 'Pricing', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/pricing', accessed: '2026-10-28' },
+    { title: 'Prompt caching', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/guides/prompt-caching', accessed: '2026-10-28' },
+    { title: 'Batch API', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/guides/batch', accessed: '2026-10-28' },
+    { title: 'Manage costs effectively', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/costs', accessed: '2026-10-28' },
+    { title: 'CLI reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/cli-reference', accessed: '2026-10-28' },
+  ],
+}
+
+# Inference Economics
+
+A taxi meter counts each kilometre, but you care about the price of the whole trip. A model API bills each token, but your team cares about the price of each finished task. This page shows how the bill is made, which levers cut it, and how a tester measures it.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Inference** is one run of a trained model: you send a prompt, and the model sends back an answer. A model API bills inference by **tokens**, the small pieces of text that the model reads and writes. Prices are given per million tokens (MTok) <Cite n={1} />.
+
+The bill has a few parts:
+
+- **Input tokens**: the prompt, the system prompt, tool definitions, and the history that you send.
+- **Output tokens**: the answer, the tool calls, and the thinking. Thinking tokens are billed as output tokens <Cite n={5} />.
+- **Cache tokens**: input that the provider stored from an earlier request and reads again at a lower price <Cite n={1} />.
+
+For the two list prices below, an output token costs 5 times an input token. Claude Sonnet 5.5 costs $2 per MTok for input and $10 per MTok for output <Cite n={1} />. OpenAI's gpt-6.1-sol has the same list price: $2.00 and $10.00 per 1M tokens for short prompts (272K input tokens or fewer). Above that, it is $4.00 and $15.00 <Cite n={6} />. These ratios belong to one provider, one model, and one date (2026-10-28). Check the current price page before you plan a budget.
+
+One call is not the unit that matters. An agent can make many calls, retry, and still fail. So the useful number is the **cost per finished task**: the total spend divided by the number of tasks that really succeeded. This metric is the tutorial's own framing, not a vendor term.
+
+</Technical>
+<Layman>
+
+**Inference** is one run of a trained model. You send a prompt, and the model sends back an answer. A model API bills inference by **tokens**. Tokens are small pieces of text that the model reads and writes. Prices are given per million tokens (MTok) <Cite n={1} />.
+
+The bill has a few parts:
+
+- **Input tokens**: everything you send. That is the prompt, the system prompt, the tool definitions, and the history.
+- **Output tokens**: everything the model makes. That is the answer, the tool calls, and the thinking. Thinking is billed as output <Cite n={5} />.
+- **Cache tokens**: input that the provider kept from an earlier request. It reads them again at a lower price <Cite n={1} />.
+
+For the two list prices below, one output token costs 5 times one input token. Claude Sonnet 5.5 costs $2 per MTok for input and $10 per MTok for output <Cite n={1} />. OpenAI's gpt-6.1-sol has the same list price for short prompts <Cite n={6} />. These numbers are true for one provider, one model, and one date (2026-10-28). Check the price page again before you plan a budget.
+
+One call is not what matters. An agent can make many calls, try again, and still fail. So count the **cost per finished task**: all the money spent, divided by the tasks that really worked. This idea is the tutorial's own, not a vendor term.
+
+</Layman>
+<Bangla>
+
+**Inference** মানে একটা ট্রেইন করা মডেলের একবার চলা। আপনি একটা prompt পাঠান, মডেল একটা উত্তর ফেরত দেয়। মডেল API এই inference-এর বিল করে **token** দিয়ে। Token হলো লেখার ছোট ছোট টুকরো, যা মডেল পড়ে আর লেখে। দাম দেওয়া থাকে প্রতি মিলিয়ন token (MTok) হিসেবে <Cite n={1} />।
+
+বিলের কয়েকটা অংশ আছে:
+
+- **Input token**: আপনি যা পাঠান। যেমন prompt, system prompt, tool definition, আর আগের কথোপকথন।
+- **Output token**: মডেল যা বানায়। যেমন উত্তর, tool call, আর thinking। Thinking token-এর বিল হয় output token হিসেবে <Cite n={5} />।
+- **Cache token**: আগের রিকুয়েস্ট থেকে প্রোভাইডার যে input রেখে দিয়েছে। সেটা আবার পড়লে দাম কম পড়ে <Cite n={1} />।
+
+নিচের দুটো লিস্ট প্রাইসে একটা output token-এর দাম একটা input token-এর ৫ গুণ। Claude Sonnet 5.5-এ input প্রতি MTok $2, output প্রতি MTok $10 <Cite n={1} />। OpenAI-এর gpt-6.1-sol-এর ছোট prompt-এর লিস্ট প্রাইসও একই <Cite n={6} />। এই হিসাব একটা প্রোভাইডার, একটা মডেল আর একটা তারিখের (2026-10-28)। বাজেট করার আগে আপনি বর্তমান দামের পেজ আবার দেখে নিন।
+
+একটা call আসল হিসাব নয়। একটা agent অনেক call করতে পারে, আবার চেষ্টা করতে পারে, তবুও ফেল করতে পারে। তাই আপনি গুনুন **cost per finished task**: মোট খরচকে সত্যিই সফল task-এর সংখ্যা দিয়ে ভাগ করুন। এই ধারণাটা টিউটোরিয়ালের নিজের, কোনো vendor-এর শব্দ নয়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+Each request goes through the same meter. The provider counts the tokens of each kind and multiplies each count by its own price.
+
+```text
+request
+  |-- shared prefix (system prompt, tools, docs)
+  |       cache hit?  yes -> cache read price (cheap)
+  |                   no  -> cache write price (a bit more than input)
+  |-- new input (this test's log)        -> input price
+  '-- output (thinking + text + tool calls) -> output price (highest)
+                                             |
+                                    sum of all parts = cost of the call
+```
+
+**Prompt caching.** The provider stores a prompt **prefix** and reuses it when the next request starts with the same prefix <Cite n={2} />. On the Claude API, a 5-minute cache write costs 1.25x the base input price, and a 1-hour write costs 2x. A cache read costs 0.1x on most models, 0.05x on Claude Opus 5.5 and Sonnet 5.5, and 0.025x on Claude Fable 5.1 and Mythos 5.1 <Cite n={1} />. The default lifetime is 5 minutes, and each use refreshes it at no cost <Cite n={2} />. The response reports `cache_creation_input_tokens`, `cache_read_input_tokens`, and `input_tokens`. Their sum is the total input <Cite n={2} />. OpenAI turns caching on by default and gives cached input a discount of up to 95%. Its response reports `usage.input_tokens_details.cached_tokens` <Cite n={7} />.
+
+**Batching.** A batch API runs many requests later, not now. The Claude Message Batches API gives 50% off input and output tokens <Cite n={1} />. Most batches finish within 1 hour, and a batch expires if it does not finish within 24 hours <Cite n={3} />. OpenAI's Batch API also gives a 50% discount, with a 24-hour completion window <Cite n={8} />. On the Claude API, the cache multipliers stack with the batch discount <Cite n={1} />.
+
+**Effort.** The Claude `effort` setting changes how many tokens the model spends. It affects all output tokens: text, tool calls, and thinking <Cite n={4} />. It is a signal, not a strict budget <Cite n={4} />. Most Claude models default to `high`; Claude Opus 5.5 and Haiku 5.5 default to `medium` <Cite n={4} />. The hard limit on output is `max_tokens`, which covers thinking and text together <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+Each request goes through the same meter. The provider counts each kind of token. Then it multiplies each count by its own price and adds them up.
+
+The parts are these. A shared start of the prompt (the system prompt, the tools, the docs) is cheap if the cache has it. The new input (for example, the log of one test) costs the input price. The output (thinking, text, and tool calls) costs the most.
+
+**Prompt caching.** The provider keeps the start of a prompt, the **prefix**. It reuses the prefix when the next request starts the same way <Cite n={2} />. On the Claude API, writing to the 5-minute cache costs 1.25 times the normal input price. Writing to the 1-hour cache costs 2 times. Reading from the cache costs 0.1 times on most models. It costs 0.05 times on Claude Opus 5.5 and Sonnet 5.5, and 0.025 times on Claude Fable 5.1 and Mythos 5.1 <Cite n={1} />. The cache lives for 5 minutes by default. Each use starts the clock again for free <Cite n={2} />. The response tells you how many tokens were written to the cache, read from it, or not cached <Cite n={2} />. OpenAI turns caching on by default. It takes up to 95% off cached input and reports `cached_tokens` <Cite n={7} />.
+
+**Batching.** A batch API runs many requests later, not right now. The Claude batch API takes 50% off input and output <Cite n={1} />. Most batches finish within 1 hour. A batch that does not finish in 24 hours expires <Cite n={3} />. OpenAI's batch API also takes 50% off and has a 24-hour window <Cite n={8} />. On the Claude API, you can get the cache price and the batch discount together <Cite n={1} />.
+
+**Effort.** The Claude `effort` setting changes how many tokens the model spends. It changes all output: text, tool calls, and thinking <Cite n={4} />. It is a hint, not a strict limit <Cite n={4} />. Most Claude models start at `high`. Claude Opus 5.5 and Haiku 5.5 start at `medium` <Cite n={4} />. The real hard limit is `max_tokens`. It covers thinking and text together <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+প্রতিটা রিকুয়েস্ট একই মিটারের মধ্য দিয়ে যায়। প্রোভাইডার প্রতিটা ধরনের token গোনে। তারপর প্রতিটা সংখ্যাকে তার নিজের দাম দিয়ে গুণ করে যোগ করে।
+
+অংশগুলো এই রকম। Prompt-এর শেয়ার করা শুরুর অংশ (system prompt, tool, ডকুমেন্ট) cache-এ থাকলে সস্তা পড়ে। নতুন input (যেমন একটা টেস্টের log) input-এর দামে যায়। Output (thinking, লেখা, tool call)-এর দাম সবচেয়ে বেশি।
+
+**Prompt caching.** প্রোভাইডার prompt-এর শুরুর অংশ, মানে **prefix**, রেখে দেয়। পরের রিকুয়েস্ট একইভাবে শুরু হলে সে prefix আবার ব্যবহার করে <Cite n={2} />। Claude API-তে 5 মিনিটের cache-এ লিখতে সাধারণ input দামের 1.25 গুণ লাগে। 1 ঘণ্টার cache-এ লিখতে লাগে 2 গুণ। বেশিরভাগ মডেলে cache থেকে পড়তে লাগে 0.1 গুণ। Claude Opus 5.5 আর Sonnet 5.5-এ লাগে 0.05 গুণ, আর Claude Fable 5.1 ও Mythos 5.1-এ 0.025 গুণ <Cite n={1} />। ডিফল্টভাবে cache 5 মিনিট থাকে। প্রতিবার ব্যবহারে ঘড়ি বিনা খরচে আবার শুরু হয় <Cite n={2} />। Response আপনাকে বলে কতগুলো token cache-এ লেখা হলো, cache থেকে পড়া হলো, আর কতগুলো cache হয়নি <Cite n={2} />। OpenAI ডিফল্টভাবে caching চালু রাখে। Cached input-এ সর্বোচ্চ 95% ছাড় দেয় আর `cached_tokens` রিপোর্ট করে <Cite n={7} />।
+
+**Batching.** Batch API অনেক রিকুয়েস্ট এখনই নয়, পরে চালায়। Claude-এর batch API input আর output-এ 50% ছাড় দেয় <Cite n={1} />। বেশিরভাগ batch 1 ঘণ্টার মধ্যে শেষ হয়। 24 ঘণ্টায় শেষ না হলে batch expire হয়ে যায় <Cite n={3} />। OpenAI-এর batch API-ও 50% ছাড় দেয়, আর তার সময়সীমা 24 ঘণ্টা <Cite n={8} />। Claude API-তে cache-এর দাম আর batch-এর ছাড় একসাথে পাওয়া যায় <Cite n={1} />।
+
+**Effort.** Claude-এর `effort` সেটিং ঠিক করে মডেল কত token খরচ করবে। এটা সব output-এ প্রভাব ফেলে: লেখা, tool call আর thinking <Cite n={4} />। এটা একটা ইঙ্গিত, কড়া সীমা নয় <Cite n={4} />। বেশিরভাগ Claude মডেল `high` দিয়ে শুরু করে। Claude Opus 5.5 আর Haiku 5.5 শুরু করে `medium` দিয়ে <Cite n={4} />। আসল কড়া সীমা হলো `max_tokens`। এটা thinking আর লেখা দুটো মিলিয়ে গোনে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## Trade-offs
+
+<Voices>
+<Technical>
+
+Each lever saves money and costs something else.
+
+| Lever | Saves | Costs |
+|---|---|---|
+| Prompt cache | Cheap reads of a repeated prefix <Cite n={1} /> | A write costs more than plain input (1.25x or 2x on Claude) <Cite n={1} />. Prompts below a minimum length are not cached, and the API returns no error <Cite n={2} />. |
+| Batch API | 50% on input and output <Cite n={1} /> | Results can take up to 24 hours <Cite n={3} />. Not for a user who waits. |
+| Lower effort | Fewer output tokens <Cite n={4} /> | Some loss of capability <Cite n={4} />. A change of top-level effort between requests also breaks the prompt cache <Cite n={4} />. |
+| Smaller model | Lower price per token (Claude Haiku 4.5 is $1 / $5 per MTok, Opus 5.5 is $4 / $20) <Cite n={1} /> | It can fail more tasks. |
+
+The 5-minute cache pays off after one read, and the 1-hour cache after two reads <Cite n={1} />. So caching helps only when the same prefix comes back soon.
+
+The last two rows show the main trap. A cheaper call that fails more often can make the **finished task** more expensive. You find out only when you measure success and cost together.
+
+</Technical>
+<Layman>
+
+Each way to save money has a price of its own.
+
+- **Prompt cache.** Reads of a repeated start are cheap <Cite n={1} />. But a write costs more than plain input: 1.25 or 2 times on Claude <Cite n={1} />. A prompt that is too short is not cached, and the API shows no error <Cite n={2} />.
+- **Batch API.** You save 50% on input and output <Cite n={1} />. But results can take up to 24 hours <Cite n={3} />. It does not suit a user who waits.
+- **Lower effort.** The model writes fewer output tokens <Cite n={4} />. But it can do a bit worse <Cite n={4} />. If you change the top-level effort between requests, the cache stops working <Cite n={4} />.
+- **Smaller model.** Each token is cheaper. Claude Haiku 4.5 is $1 / $5 per MTok, and Opus 5.5 is $4 / $20 <Cite n={1} />. But it can fail more tasks.
+
+The 5-minute cache pays for itself after one read. The 1-hour cache pays for itself after two reads <Cite n={1} />. So caching helps only when the same start comes back soon.
+
+The last two points show the main trap. A cheaper call that fails more often can make each **finished task** cost more. You see this only when you measure success and cost together.
+
+</Layman>
+<Bangla>
+
+খরচ কমানোর প্রতিটা উপায়ের নিজস্ব একটা দাম আছে।
+
+- **Prompt cache.** বারবার আসা শুরুর অংশ পড়া সস্তা <Cite n={1} />। কিন্তু cache-এ লেখা সাধারণ input-এর চেয়ে দামি: Claude-এ 1.25 বা 2 গুণ <Cite n={1} />। খুব ছোট prompt cache হয় না, আর API কোনো error দেখায় না <Cite n={2} />।
+- **Batch API.** Input আর output-এ 50% বাঁচে <Cite n={1} />। কিন্তু ফল আসতে 24 ঘণ্টা পর্যন্ত লাগতে পারে <Cite n={3} />। যে ইউজার অপেক্ষা করছেন, তাঁর জন্য এটা ঠিক নয়।
+- **কম effort.** মডেল কম output token লেখে <Cite n={4} />। কিন্তু কাজের মান একটু কমতে পারে <Cite n={4} />। রিকুয়েস্টের মাঝে top-level effort বদলালে cache আর কাজ করে না <Cite n={4} />।
+- **ছোট মডেল.** প্রতিটা token সস্তা। Claude Haiku 4.5 প্রতি MTok $1 / $5, আর Opus 5.5 $4 / $20 <Cite n={1} />। কিন্তু এটা বেশি task-এ ফেল করতে পারে।
+
+5 মিনিটের cache একবার পড়লেই খরচ উঠে আসে। 1 ঘণ্টার cache-এ উঠে আসে দুবার পড়লে <Cite n={1} />। তাই একই শুরুর অংশ তাড়াতাড়ি ফিরে এলে তবেই caching কাজে লাগে।
+
+শেষের দুটো পয়েন্টই আসল ফাঁদ দেখায়। সস্তা call যদি বেশি ফেল করে, তাহলে প্রতিটা **finished task**-এর খরচ বেড়ে যেতে পারে। সাফল্য আর খরচ একসাথে মাপলে তবেই আপনি এটা দেখতে পাবেন।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This is an invented example. The prices are the Claude Sonnet 5.5 list prices on 2026-10-28: input $2, 5-minute cache write $2.50, cache read $0.10, and output $10 per MTok <Cite n={1} />. A batch would halve input and output <Cite n={1} />.
+
+A test-triage agent reads each failing test of a nightly run and labels it "product bug", "test bug", or "flaky". One night has 200 failures. Each call sends a 20,000-token shared prefix (instructions, tool definitions, a project guide), 3,000 tokens of the failure log, and gets 1,000 output tokens back, thinking included.
+
+```text
+No cache:     per call = 23,000 x $2/M + 1,000 x $10/M
+                       = $0.046 + $0.010 = $0.056
+              200 calls = $11.20
+Batch only:   $11.20 / 2 = $5.60
+
+With cache (all calls inside the 5-minute lifetime):
+  call 1      = 20,000 x $2.50/M + 3,000 x $2/M + 1,000 x $10/M
+              = $0.050 + $0.006 + $0.010 = $0.066
+  calls 2-200 = 20,000 x $0.10/M + 3,000 x $2/M + 1,000 x $10/M
+              = $0.002 + $0.006 + $0.010 = $0.018 each
+  total       = $0.066 + 199 x $0.018 = $3.648
+
+Cost per finished task (160 labels were right):
+  $3.648 / 160 = $0.0228
+
+Lower effort, 600 output tokens, only 100 labels right:
+  total = $0.062 + 199 x $0.014 = $2.848
+  $2.848 / 100 = $0.0285   <- cheaper night, dearer task
+```
+
+The cache cut the night from $11.20 to about $3.65. The low-effort run cost less in total, but each correct label cost more. The team keeps the higher effort.
+
+</Technical>
+<Layman>
+
+This is an invented example. The prices are the Claude Sonnet 5.5 list prices on 2026-10-28. Input is $2, a 5-minute cache write is $2.50, a cache read is $0.10, and output is $10, all per MTok <Cite n={1} />. A batch would cut input and output in half <Cite n={1} />.
+
+A test-triage agent reads each failing test from a nightly run. It labels each one "product bug", "test bug", or "flaky". One night has 200 failures. Each call sends a shared start of 20,000 tokens and a failure log of 3,000 tokens. It gets 1,000 output tokens back, thinking included.
+
+- **No cache:** each call costs $0.046 for input and $0.010 for output, so $0.056. 200 calls cost $11.20.
+- **Batch only:** half of that, $5.60.
+- **With cache:** the first call writes the cache and costs $0.066. Each of the other 199 calls reads the cache and costs $0.018. The total is $3.648.
+- **Cost per finished task:** 160 labels were right. $3.648 / 160 = $0.0228.
+- **Lower effort:** 600 output tokens and only 100 right labels. The night costs $2.848, but each right label costs $0.0285.
+
+The cache cut the night from $11.20 to about $3.65. The low-effort run was cheaper in total, but each correct label cost more. The team keeps the higher effort.
+
+</Layman>
+<Bangla>
+
+এটা একটা বানানো উদাহরণ। দামগুলো 2026-10-28 তারিখের Claude Sonnet 5.5-এর লিস্ট প্রাইস। প্রতি MTok-এ input $2, 5 মিনিটের cache write $2.50, cache read $0.10, আর output $10 <Cite n={1} />। Batch করলে input আর output-এর দাম অর্ধেক হতো <Cite n={1} />।
+
+একটা test-triage agent রাতের রানের প্রতিটা ফেল করা টেস্ট পড়ে। সে প্রতিটাকে "product bug", "test bug" বা "flaky" লেবেল দেয়। এক রাতে 200টা ফেল আছে। প্রতিটা call পাঠায় 20,000 token-এর শেয়ার করা শুরুর অংশ আর 3,000 token-এর ফেল log। ফেরত আসে 1,000 output token, thinking সহ।
+
+- **Cache ছাড়া:** প্রতি call-এ input $0.046 আর output $0.010, মোট $0.056। 200টা call-এ $11.20।
+- **শুধু batch:** তার অর্ধেক, $5.60।
+- **Cache সহ:** প্রথম call cache-এ লেখে, খরচ $0.066। বাকি 199টা call cache থেকে পড়ে, প্রতিটা $0.018। মোট $3.648।
+- **Cost per finished task:** 160টা লেবেল ঠিক ছিল। $3.648 / 160 = $0.0228।
+- **কম effort:** 600 output token, আর মাত্র 100টা লেবেল ঠিক। রাতের খরচ $2.848, কিন্তু প্রতিটা ঠিক লেবেলের খরচ $0.0285।
+
+Cache রাতের খরচ $11.20 থেকে প্রায় $3.65-এ নামিয়েছে। কম effort-এর রানে মোট খরচ কম, কিন্তু প্রতিটা ঠিক লেবেলের দাম বেশি। তাই টিম বেশি effort-ই রাখে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **One ratio for every provider.** "Output costs 5x input" and "a cache hit costs 5%" are not laws. On the Claude API a cache read is 0.1x on most models and 0.05x only on Opus 5.5 and Sonnet 5.5 <Cite n={1} />. OpenAI says "up to 95%" off cached input <Cite n={7} />. Read the price page of your provider and model, and write down the date.
+- **Free cache writes.** On the Claude API a cache write costs 1.25x or 2x the base input price <Cite n={1} />. A cache that is never read again costs more than no cache.
+- **A silent cache miss.** A prompt below the minimum length (for example 1,024 tokens on Claude Sonnet 5) is not cached, and no error comes back <Cite n={2} />. A change of top-level effort between requests also breaks the cache <Cite n={4} />.
+- **Counting only the visible answer.** You pay for the full thinking, not the summary that you see <Cite n={5} />.
+- **Token counts carried across models.** Claude 4.7 and later models use a tokenizer that makes about 30% more tokens for the same text <Cite n={1} />. The same prompt can cost more on a new model at the same price per token.
+- **Batch for a live user.** A batch can take up to 24 hours <Cite n={3} />.
+- **Price per call as the goal.** A cheaper call that fails more often can raise the cost per finished task (see the example above).
+
+</Technical>
+<Layman>
+
+- **One ratio for all providers.** "Output costs 5 times input" and "a cache hit costs 5%" are not rules. On the Claude API, a cache read costs 0.1 times on most models. It costs 0.05 times only on Opus 5.5 and Sonnet 5.5 <Cite n={1} />. OpenAI says "up to 95%" off cached input <Cite n={7} />. Read the price page for your provider and model, and note the date.
+- **Believing that cache writes are free.** On the Claude API, a cache write costs 1.25 or 2 times the normal input price <Cite n={1} />. A cache that nobody reads again costs more than no cache.
+- **A cache miss you do not see.** A prompt that is too short (for example under 1,024 tokens on Claude Sonnet 5) is not cached. No error comes back <Cite n={2} />. If you change the top-level effort between requests, the cache also breaks <Cite n={4} />.
+- **Counting only the answer you see.** You pay for all the thinking, not only the summary on the screen <Cite n={5} />.
+- **Using old token counts on a new model.** Claude 4.7 and later models make about 30% more tokens for the same text <Cite n={1} />. The same prompt can cost more, even at the same price per token.
+- **Batch for a user who waits.** A batch can take up to 24 hours <Cite n={3} />.
+- **Price per call as the goal.** A cheaper call that fails more can make each finished task cost more. The example above shows this.
+
+</Layman>
+<Bangla>
+
+- **সব প্রোভাইডারের জন্য একই অনুপাত ধরা।** "Output-এর দাম input-এর ৫ গুণ" বা "cache hit-এ ৫% খরচ" কোনো নিয়ম নয়। Claude API-তে বেশিরভাগ মডেলে cache read 0.1 গুণ। শুধু Opus 5.5 আর Sonnet 5.5-এ 0.05 গুণ <Cite n={1} />। OpenAI বলে cached input-এ "up to 95%" ছাড় <Cite n={7} />। আপনার প্রোভাইডার আর মডেলের দামের পেজ পড়ুন, আর তারিখটা লিখে রাখুন।
+- **Cache write বিনা পয়সায় ভাবা।** Claude API-তে cache write-এ সাধারণ input দামের 1.25 বা 2 গুণ লাগে <Cite n={1} />। যে cache আর কেউ পড়ে না, তার খরচ cache না থাকার চেয়েও বেশি।
+- **চোখে না পড়া cache miss।** খুব ছোট prompt (যেমন Claude Sonnet 5-এ 1,024 token-এর কম) cache হয় না। কোনো error-ও আসে না <Cite n={2} />। রিকুয়েস্টের মাঝে top-level effort বদলালেও cache ভেঙে যায় <Cite n={4} />।
+- **শুধু দেখা উত্তরটা গোনা।** আপনি পুরো thinking-এর দাম দেন, স্ক্রিনে দেখা summary-র নয় <Cite n={5} />।
+- **নতুন মডেলে পুরোনো token সংখ্যা ধরা।** Claude 4.7 আর পরের মডেলগুলো একই লেখায় প্রায় 30% বেশি token বানায় <Cite n={1} />। প্রতি token-এর দাম একই থাকলেও একই prompt-এর খরচ বেশি হতে পারে।
+- **অপেক্ষারত ইউজারের জন্য batch।** একটা batch-এ 24 ঘণ্টা পর্যন্ত লাগতে পারে <Cite n={3} />।
+- **প্রতি call-এর দামকে লক্ষ্য বানানো।** সস্তা call বেশি ফেল করলে প্রতিটা finished task-এর খরচ বেড়ে যেতে পারে। ওপরের উদাহরণে এটা দেখানো আছে।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+Claude Code shows the session cost with `/usage`. The figure is a local estimate at list price, not the bill <Cite n={9} />. The same screen shows the share of input tokens served from cache and the cache misses <Cite n={9} />. In print mode, `--output-format json` gives machine-readable output <Cite n={10} />, and `--max-budget-usd` stops a run once the estimated spend reaches a limit. The spend can pass the cap, so leave headroom <Cite n={10} />. In the API response, read `cache_read_input_tokens`, `cache_creation_input_tokens`, and `input_tokens` <Cite n={2} />, and `usage.output_tokens_details.thinking_tokens` <Cite n={5} />.
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice.
+
+- Log the tokens of each kind and the cost of every test run. Store them next to the pass or fail result.
+- Report the cost per finished task: total spend divided by the tasks that passed review, not by the calls.
+- Check the cache hit rate: cache read tokens divided by total input tokens. Alert when it drops after a prompt or tool change.
+- Check that a prompt you mark for caching is above the minimum length, and that the second request shows cache reads.
+- Compare two effort levels or two models on the same task set. Compare success rate and cost together.
+- Set a cost budget in CI. Fail or warn the job when one run passes it, and keep headroom under the hard cap.
+- Re-read the price page when you change provider, model, or region, and record the date of the prices you used.
+</Callout>
+
+</Technical>
+<Layman>
+
+Claude Code shows the cost of a session with `/usage`. The number is a local guess at list price, not the bill <Cite n={9} />. The same screen shows how much input came from the cache, and how many times the cache missed <Cite n={9} />. In print mode, `--output-format json` gives output that a program can read <Cite n={10} />. `--max-budget-usd` stops a run when the guessed spend reaches a limit. The spend can go a bit over, so leave room <Cite n={10} />. In the API response, read the cache read, cache write, and plain input counts <Cite n={2} />, and the thinking token count <Cite n={5} />.
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice.
+
+- Save the token counts and the cost of every test run, next to the pass or fail result.
+- Report the cost per finished task: all the spend divided by the tasks that passed review, not by the calls.
+- Check how often the cache hits: cache read tokens divided by all input tokens. Raise an alert when it drops after a change to a prompt or a tool.
+- Check that a prompt you mark for caching is long enough, and that the second request shows cache reads.
+- Try two effort levels or two models on the same tasks. Compare success and cost together.
+- Set a cost budget in CI. Fail or warn the job when one run goes over it. Keep some room under the hard limit.
+- Read the price page again when you change provider, model, or region. Write down the date of the prices you used.
+</Callout>
+
+</Layman>
+<Bangla>
+
+Claude Code-এ `/usage` দিয়ে একটা session-এর খরচ দেখা যায়। এই সংখ্যাটা লিস্ট প্রাইসে লোকাল আনুমানিক হিসাব, আসল বিল নয় <Cite n={9} />। একই স্ক্রিনে দেখা যায় কতটা input cache থেকে এসেছে, আর cache কতবার miss করেছে <Cite n={9} />। Print mode-এ `--output-format json` এমন output দেয় যা একটা প্রোগ্রাম পড়তে পারে <Cite n={10} />। `--max-budget-usd` আনুমানিক খরচ একটা সীমায় পৌঁছালে রান থামিয়ে দেয়। খরচ সীমা একটু পার হতে পারে, তাই আপনি কিছুটা জায়গা রাখুন <Cite n={10} />। API response-এ cache read, cache write আর সাধারণ input-এর সংখ্যা পড়ুন <Cite n={2} />, আর thinking token-এর সংখ্যাও পড়ুন <Cite n={5} />।
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকাটা টিউটোরিয়ালের নিজের পরামর্শ।
+
+- প্রতিটা টেস্ট রানের token সংখ্যা আর খরচ pass বা fail ফলের পাশে সেভ করুন।
+- Cost per finished task রিপোর্ট করুন: মোট খরচকে review-তে পাস করা task দিয়ে ভাগ করুন, call দিয়ে নয়।
+- Cache hit rate দেখুন: cache read token-কে মোট input token দিয়ে ভাগ করুন। Prompt বা tool বদলের পর এটা কমে গেলে alert দিন।
+- যে prompt cache-এর জন্য মার্ক করেছেন, সেটা যথেষ্ট লম্বা কিনা দেখুন। দ্বিতীয় রিকুয়েস্টে cache read আসছে কিনা দেখুন।
+- একই task-এর সেটে দুটো effort লেভেল বা দুটো মডেল চালান। সাফল্য আর খরচ একসাথে তুলনা করুন।
+- CI-তে একটা cost budget ঠিক করুন। কোনো রান সেটা পার হলে job fail বা warn করুন। কড়া সীমার নিচে কিছুটা জায়গা রাখুন।
+- প্রোভাইডার, মডেল বা region বদলালে দামের পেজ আবার পড়ুন। যে দাম ব্যবহার করেছেন, তার তারিখ লিখে রাখুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Inference | One run of a trained model on a prompt |
+| Token | A small piece of text that the model reads or writes; the unit of billing |
+| MTok | One million tokens; the unit of most price tables |
+| Input tokens | What you send: prompt, system prompt, tools, history |
+| Output tokens | What the model writes: text, tool calls, and thinking |
+| Thinking tokens | Tokens of the model's reasoning, billed as output |
+| Prompt caching | Storing a prompt prefix so that later requests read it at a lower price |
+| Cache write / cache read | Storing the prefix (a higher price) / reusing it (a lower price) |
+| Cache hit rate | Cache read tokens divided by total input tokens |
+| Batch API | An API that runs many requests later at a discount |
+| Effort | A Claude setting that changes how many tokens the model spends |
+| `max_tokens` | The hard limit on output tokens of one request |
+| Cost per finished task | Total spend divided by the tasks that really succeeded |

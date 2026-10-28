@@ -1,0 +1,299 @@
+export const metadata = { title: 'Subagents and Multi-Agent Systems', description: 'One job per agent, each with its own clean context, and an orchestrator that merges the results.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'How we built our multi-agent research system', publisher: 'Anthropic (Engineering)', url: 'https://www.anthropic.com/engineering/multi-agent-research-system', accessed: '2026-10-28' },
+    { title: 'Building effective agents', publisher: 'Anthropic (Engineering)', url: 'https://www.anthropic.com/engineering/building-effective-agents', accessed: '2026-10-28' },
+    { title: 'Create custom subagents', publisher: 'Claude Code Docs', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-10-28' },
+    { title: 'Subagents in the SDK', publisher: 'Claude Code Docs (Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/subagents', accessed: '2026-10-28' },
+    { title: 'Handoffs', publisher: 'OpenAI Agents SDK docs', url: 'https://openai.github.io/openai-agents-python/handoffs/', accessed: '2026-10-28' },
+  ],
+}
+
+# Subagents and Multi-Agent Systems
+
+A test lead does not run every test alone. The lead splits the work, gives each tester one clear job, and then puts the reports together. A multi-agent system does the same with AI agents: one agent plans and merges, and other agents each do one job in their own clean workspace.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **subagent** is a separate agent instance that a main agent starts to do one focused subtask <Cite n={4} />. In Claude Code, each subagent runs in its own context window, with its own system prompt, its own tool access, and its own permissions <Cite n={3} />.
+
+A **multi-agent system** uses more than one agent on one task. A common shape is **orchestrator-workers**: a central model breaks the task down, gives the parts to worker models, and combines their results <Cite n={2} />. Anthropic's research feature uses this pattern: a lead agent coordinates and delegates to specialized subagents <Cite n={1} />.
+
+The main benefit is a clean context. The subagent can read many files, but its tool calls and results stay inside it. Only its final message goes back to the parent <Cite n={4} />. The main cost is tokens: each subagent spends tokens of its own <Cite n={3} />.
+
+This page is about the concept. For how to set up subagents in Claude Code, see [Subagents](/extend/subagents/).
+
+</Technical>
+<Layman>
+
+A **subagent** is a second agent that the main agent starts to do one small job <Cite n={4} />. In Claude Code, each subagent has its own memory space (its context window), its own instructions, its own tools, and its own permissions <Cite n={3} />.
+
+A **multi-agent system** uses more than one agent for one task. A common shape is **orchestrator-workers**. One model splits the task, gives the parts to worker models, and then joins their results <Cite n={2} />. Anthropic's research feature works this way. A lead agent plans and hands jobs to helper agents <Cite n={1} />.
+
+The big win is a clean workspace. The helper can read many files, but all that reading stays with the helper. Only its last message goes back to the main agent <Cite n={4} />. The price is tokens. Each helper uses tokens of its own <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+**Subagent** হলো আলাদা একটা agent, যাকে main agent একটা ছোট, নির্দিষ্ট কাজের জন্য চালু করে <Cite n={4} />। Claude Code-এ প্রতিটা subagent নিজের context window-এ চলে। তার নিজের system prompt, নিজের tool, আর নিজের permission থাকে <Cite n={3} />।
+
+**Multi-agent system** একটা কাজে একাধিক agent ব্যবহার করে। একটা পরিচিত গঠন হলো **orchestrator-workers**। একটা কেন্দ্রীয় model কাজটাকে ভাগ করে, ভাগগুলো worker model-দের দেয়, তারপর তাদের ফলাফল একসাথে জোড়ে <Cite n={2} />। Anthropic-এর research feature এভাবেই কাজ করে। একটা lead agent সমন্বয় করে আর বিশেষ subagent-দের কাজ ভাগ করে দেয় <Cite n={1} />।
+
+সবচেয়ে বড় সুবিধা হলো পরিষ্কার context। Subagent অনেক ফাইল পড়তে পারে, কিন্তু তার tool call আর ফলাফল তার ভেতরেই থাকে। শুধু শেষ message-টা parent-এর কাছে ফেরে <Cite n={4} />। খরচ হলো token। প্রতিটা subagent নিজের token খরচ করে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+Here is one example layout. The four worker roles are an example, not a fixed set:
+
+```text
+                 +----------------------+
+   task  ----->  |  Orchestrator (lead) |  -----> one merged answer
+                 +----------------------+
+                   |      |      |     ^
+         prompt    v      v      v     |  final message only
+          +----------+ +--------+ +----------+
+          | Research | | Coding | | Verifier |  ... more workers
+          | own ctx  | | own ctx| | own ctx  |
+          | own tools| | own    | | read-only|
+          +----------+ +--------+ +----------+
+```
+
+1. **Split.** The orchestrator breaks the task into parts <Cite n={2} />. Each subagent needs an objective, an output format, guidance on tools and sources, and clear task boundaries <Cite n={1} />.
+2. **Hand off.** Unless the subagent is a fork (a copy of the parent conversation), the only input it gets from the parent is the prompt string of the Agent tool. File paths, errors, and decisions must be in that prompt <Cite n={4} />.
+3. **Work in parallel.** Subagents can run at the same time, so independent parts finish in the time of the slowest one, not the sum <Cite n={4} />. Anthropic's lead agent starts 3 to 5 subagents in parallel <Cite n={1} />.
+4. **Return.** Tool calls stay inside the subagent. Only its final message returns <Cite n={4} />. The parent may summarize that report <Cite n={4} />.
+5. **Merge.** The orchestrator combines the results <Cite n={2} />.
+
+A **verifier** is a common worker. In the evaluator-optimizer pattern, one model call writes a response and another evaluates it and gives feedback in a loop <Cite n={2} />. Anthropic's research system ends with a separate CitationAgent that processes the documents and the report to place the citations <Cite n={1} />.
+
+Other frameworks use other words. In the OpenAI Agents SDK, a **handoff** lets one agent delegate to another, and the model sees the handoff as a tool such as `transfer_to_refund_agent` <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+Picture one lead agent at the top and some helper agents below it. As an example, the helpers can be a research helper, a coding helper, and a checking helper. Each helper has its own workspace and its own tools. This set of helpers is only an example.
+
+1. **Split.** The lead splits the task into parts <Cite n={2} />. Each helper needs a goal, a shape for its answer, advice on tools and sources, and clear limits <Cite n={1} />.
+2. **Hand off.** Unless the helper is a fork (a copy of the main conversation), it gets only the prompt that the lead writes for it. So file paths, errors, and decisions must be in that prompt <Cite n={4} />.
+3. **Work at the same time.** Helpers can run together. Then the whole job takes as long as the slowest helper, not all of them added up <Cite n={4} />. Anthropic's lead agent starts 3 to 5 helpers at once <Cite n={1} />.
+4. **Return.** The helper's steps stay with the helper. Only its last message comes back <Cite n={4} />. The lead may shorten that report <Cite n={4} />.
+5. **Merge.** The lead joins the results <Cite n={2} />.
+
+A checking helper is common. In one pattern, one model call writes an answer, and another call checks it and gives feedback, again and again <Cite n={2} />. Anthropic's research system ends with a separate agent that finds where each source belongs in the report <Cite n={1} />.
+
+Other tools use other words. In the OpenAI Agents SDK, a **handoff** lets one agent pass a job to another agent. The model sees it as a tool, for example `transfer_to_refund_agent` <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+ধরুন, ওপরে একটা lead agent আর নিচে কয়েকটা subagent। উদাহরণ হিসেবে: একটা research agent, একটা coding agent, আর একটা verifier agent। প্রতিটার নিজের context আর নিজের tool আছে। এই ভূমিকাগুলো শুধু একটা উদাহরণ, নির্দিষ্ট কোনো তালিকা নয়।
+
+1. **ভাগ করা।** Orchestrator কাজটাকে কয়েকটা অংশে ভাগ করে <Cite n={2} />। প্রতিটা subagent-এর দরকার একটা লক্ষ্য, উত্তরের একটা format, tool আর source নিয়ে নির্দেশনা, আর কাজের পরিষ্কার সীমা <Cite n={1} />।
+2. **হস্তান্তর।** Subagent যদি fork (parent conversation-এর একটা কপি) না হয়, তাহলে parent থেকে সে শুধু Agent tool-এর prompt string পায়। তাই file path, error, আর সিদ্ধান্ত সেই prompt-এই লিখতে হয় <Cite n={4} />।
+3. **একসাথে কাজ।** Subagent-রা একই সময়ে চলতে পারে। তখন পুরো কাজে সময় লাগে সবচেয়ে ধীর subagent-এর সমান, সবার যোগফল নয় <Cite n={4} />। Anthropic-এর lead agent একসাথে 3 থেকে 5টা subagent চালু করে <Cite n={1} />।
+4. **ফেরত।** Tool call-গুলো subagent-এর ভেতরেই থাকে। শুধু শেষ message ফেরে <Cite n={4} />। Parent সেই report সংক্ষেপ করতে পারে <Cite n={4} />।
+5. **একত্র করা।** Orchestrator ফলাফলগুলো জোড়ে <Cite n={2} />।
+
+Verifier একটা পরিচিত worker। Evaluator-optimizer pattern-এ একটা model call উত্তর লেখে, আরেকটা call সেটা যাচাই করে feedback দেয়, বারবার <Cite n={2} />। Anthropic-এর research system শেষে আলাদা একটা CitationAgent চালায়, যেটা document আর report দেখে citation বসায় <Cite n={1} />।
+
+অন্য framework অন্য শব্দ ব্যবহার করে। OpenAI Agents SDK-তে **handoff** দিয়ে একটা agent আরেকটা agent-কে কাজ দেয়। Model এটাকে একটা tool হিসেবে দেখে, যেমন `transfer_to_refund_agent` <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## Trade-offs
+
+<Voices>
+<Technical>
+
+| Gain | Cost |
+|---|---|
+| A clean main context: the parent gets a summary, not every file <Cite n={4} /> | More tokens: agents use about 4x the tokens of a chat, and Anthropic's multi-agent system used about 15x <Cite n={1} /> |
+| Parallel work: the time of the slowest part <Cite n={4} /> | More parts that can fail: minor failures can be catastrophic for agents <Cite n={1} /> |
+| Tight tools: a read-only worker cannot edit files <Cite n={4} /> | Information can get lost: the parent may summarize the report <Cite n={4} /> |
+
+So "each extra agent costs more tokens" is true in direction, but there is no fixed price per agent. The 15x number is one measurement of one system <Cite n={1} />. In Anthropic's analysis, token usage alone explained 80% of the variance in performance <Cite n={1} />, and its multi-agent system beat a single Claude Opus 4 agent by 90.2% on an internal research eval <Cite n={1} />.
+
+Use more agents only when the task is worth it. Anthropic says multi-agent systems need tasks whose value pays for the extra cost <Cite n={1} />. Tasks where all agents need the same context, or with many dependencies between agents, are a poor fit, and most coding tasks have fewer parallel parts than research <Cite n={1} />. A simple fact-finding job needs 1 agent and 3 to 10 tool calls <Cite n={1} />. Start with the simplest solution and add complexity only when needed <Cite n={2} />. To control cost, you can send a task to a faster, lower-cost model <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+More agents give you three good things. The main agent stays clean, because it gets a summary and not every file <Cite n={4} />. Parts run at the same time <Cite n={4} />. A helper can have only safe tools, for example read-only tools <Cite n={4} />.
+
+They also cost more. Agents use about 4 times the tokens of a chat. Anthropic's multi-agent system used about 15 times <Cite n={1} />. More parts can break, and small failures can be very bad for agents <Cite n={1} />. Details can get lost, because the main agent may shorten a report <Cite n={4} />.
+
+So "each extra agent costs more tokens" is right in direction. But there is no fixed price for each agent. The 15 times number comes from one system <Cite n={1} />. In Anthropic's study, the number of tokens used explained 80% of the difference in results <Cite n={1} />. Their multi-agent system beat a single Claude Opus 4 agent by 90.2% on their own research test <Cite n={1} />.
+
+Use more agents only when the task is worth the cost <Cite n={1} />. Tasks where every agent needs the same information, or where agents depend a lot on each other, are a poor fit. Most coding tasks have fewer parts that can run at the same time than research does <Cite n={1} />. A simple fact search needs 1 agent and 3 to 10 tool calls <Cite n={1} />. Start with the simplest solution <Cite n={2} />. To save money, you can give a task to a faster, cheaper model <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+বেশি agent তিনটা সুবিধা দেয়। Main agent-এর context পরিষ্কার থাকে, কারণ সে প্রতিটা ফাইল নয়, একটা summary পায় <Cite n={4} />। অংশগুলো একসাথে চলে <Cite n={4} />। একটা subagent-কে শুধু নিরাপদ tool দেওয়া যায়, যেমন read-only tool <Cite n={4} />।
+
+খরচও বেশি। Agent সাধারণত একটা chat-এর প্রায় 4 গুণ token খরচ করে। Anthropic-এর multi-agent system প্রায় 15 গুণ খরচ করেছে <Cite n={1} />। অংশ বেশি হলে ভাঙার জায়গাও বেশি, আর ছোট failure-ও agent-এর জন্য বড় বিপদ হতে পারে <Cite n={1} />। তথ্য হারাতে পারে, কারণ parent report সংক্ষেপ করতে পারে <Cite n={4} />।
+
+তাই "প্রতিটা বাড়তি agent মানে বেশি token" কথাটা দিক হিসেবে ঠিক। কিন্তু প্রতি agent-এর কোনো নির্দিষ্ট দাম নেই। 15 গুণ সংখ্যাটা একটা system-এর একটা মাপ <Cite n={1} />। Anthropic-এর বিশ্লেষণে শুধু token ব্যবহার performance-এর পার্থক্যের 80% ব্যাখ্যা করেছে <Cite n={1} />। তাদের multi-agent system একটা internal research eval-এ একক Claude Opus 4 agent-এর চেয়ে 90.2% ভালো করেছে <Cite n={1} />।
+
+কাজের মূল্য খরচের চেয়ে বেশি হলে তবেই বেশি agent ব্যবহার করুন <Cite n={1} />। যেখানে সব agent-এর একই context লাগে, বা agent-রা একে অপরের ওপর খুব নির্ভর করে, সেখানে এটা ভালো খাটে না। বেশিরভাগ coding কাজে research-এর চেয়ে কম অংশ একসাথে চালানো যায় <Cite n={1} />। একটা সহজ তথ্য খোঁজায় 1টা agent আর 3 থেকে 10টা tool call যথেষ্ট <Cite n={1} />। সবচেয়ে সহজ সমাধান দিয়ে শুরু করুন <Cite n={2} />। খরচ কমাতে কাজটা দ্রুত, কম দামের model-কে দিতে পারেন <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This is an invented example. A team asks an agent: "Find why the checkout tests fail on staging, fix the cause, and prove the fix."
+
+- The **orchestrator** writes three prompts. Each has an objective, an output format, and clear limits, as the Anthropic guidance asks <Cite n={1} />.
+- A **research** subagent reads the CI logs and the last ten commits. It returns a short list of suspect changes, not the whole logs, because only its final message goes back <Cite n={4} />.
+- A **coding** subagent changes the code and adds a test.
+- A **verifier** subagent has read-only tools, so it can run nothing that edits files <Cite n={4} />. It checks the change against the bug report and gives feedback, like the evaluator in an evaluator-optimizer loop <Cite n={2} />.
+- The orchestrator merges the three reports into one pull request summary.
+
+The run uses many more tokens than one chat would <Cite n={1} />. If the team writes a vague prompt for the research subagent, it can repeat work or leave gaps <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+This is a made-up example. A team asks an agent: "Find why the checkout tests fail on staging, fix it, and show that the fix works."
+
+- The **lead agent** writes three prompts. Each one has a goal, a shape for the answer, and clear limits <Cite n={1} />.
+- A **research** helper reads the build logs and the last ten changes. It sends back a short list of suspect changes, not the whole logs. Only its last message goes back <Cite n={4} />.
+- A **coding** helper changes the code and adds a test.
+- A **checking** helper has only read tools, so it cannot edit files <Cite n={4} />. It checks the change against the bug report and gives feedback <Cite n={2} />.
+- The lead joins the three reports into one summary.
+
+The run uses many more tokens than one chat <Cite n={1} />. If a prompt is vague, a helper can repeat work or miss things <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+এটা একটা বানানো উদাহরণ। একটা টিম agent-কে বলে: "Staging-এ checkout test কেন fail করছে খুঁজে বের করো, কারণটা ঠিক করো, আর প্রমাণ দাও যে fix কাজ করে।"
+
+- **Orchestrator** তিনটা prompt লেখে। প্রতিটায় একটা লক্ষ্য, উত্তরের format, আর পরিষ্কার সীমা থাকে <Cite n={1} />।
+- একটা **research** subagent CI log আর শেষ দশটা commit পড়ে। সে পুরো log নয়, সন্দেহজনক পরিবর্তনের একটা ছোট তালিকা ফেরত দেয়, কারণ শুধু শেষ message ফেরে <Cite n={4} />।
+- একটা **coding** subagent code বদলায় আর একটা test যোগ করে।
+- একটা **verifier** subagent-এর শুধু read-only tool আছে, তাই সে কোনো ফাইল edit করতে পারে না <Cite n={4} />। সে bug report-এর সাথে পরিবর্তনটা মিলিয়ে দেখে আর feedback দেয় <Cite n={2} />।
+- Orchestrator তিনটা report মিলিয়ে একটা pull request summary বানায়।
+
+এই run একটা chat-এর চেয়ে অনেক বেশি token খরচ করে <Cite n={1} />। Research subagent-এর prompt অস্পষ্ট হলে সে একই কাজ আবার করতে পারে বা কিছু বাদ দিতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Vague task descriptions.** Without detail, agents duplicate work, leave gaps, or miss information <Cite n={1} />.
+- **Missing context in the prompt.** A subagent that is not a fork does not see the parent conversation. Put the paths, errors, and decisions in the prompt <Cite n={4} />.
+- **Too many agents for a small job.** A simple fact-finding task needs 1 agent <Cite n={1} />. Start simple <Cite n={2} />.
+- **No limits on growth.** Each subagent's requests count toward the query's `total_cost_usd`, and a subagent can start subagents of its own, so one prompt can grow into a tree of agents <Cite n={4} />. The Agent SDK has caps for depth, concurrency, and spend <Cite n={4} />.
+- **Splitting tightly linked work.** Tasks where all agents need the same context are a poor fit <Cite n={1} />.
+- **Trusting the merge blindly.** The parent may summarize a report <Cite n={4} />, and minor failures can be catastrophic for agents <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+- **Vague jobs.** Without detail, helpers repeat work, leave gaps, or miss information <Cite n={1} />.
+- **Missing facts in the prompt.** A helper does not see the main conversation, unless it is a fork (a copy of that conversation). Put the paths, errors, and decisions in its prompt <Cite n={4} />.
+- **Too many agents for a small job.** A simple fact search needs 1 agent <Cite n={1} />. Start simple <Cite n={2} />.
+- **No limits.** Each helper's requests add to the total cost. A helper can start its own helpers, so one prompt can grow into a tree of agents <Cite n={4} />. The Agent SDK has limits for depth, for how many run at once, and for spend <Cite n={4} />.
+- **Splitting work that belongs together.** Tasks where all agents need the same information are a poor fit <Cite n={1} />.
+- **Trusting the merge blindly.** The main agent may shorten a report <Cite n={4} />. Small failures can be very bad for agents <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **অস্পষ্ট কাজের বর্ণনা।** বিস্তারিত না থাকলে agent-রা একই কাজ আবার করে, ফাঁক রাখে, বা তথ্য খুঁজে পায় না <Cite n={1} />।
+- **Prompt-এ context নেই।** Fork (parent conversation-এর কপি) না হলে subagent parent-এর conversation দেখে না। Path, error, আর সিদ্ধান্ত prompt-এ লিখুন <Cite n={4} />।
+- **ছোট কাজে অনেক agent।** একটা সহজ তথ্য খোঁজায় 1টা agent যথেষ্ট <Cite n={1} />। সহজ দিয়ে শুরু করুন <Cite n={2} />।
+- **বাড়ার কোনো সীমা নেই।** প্রতিটা subagent-এর request query-র `total_cost_usd`-এ যোগ হয়। একটা subagent নিজেও subagent চালু করতে পারে, তাই একটা prompt থেকে agent-এর একটা tree তৈরি হতে পারে <Cite n={4} />। Agent SDK-তে depth, concurrency, আর spend-এর সীমা আছে <Cite n={4} />।
+- **জড়িত কাজ ভাগ করা।** যেখানে সব agent-এর একই context লাগে, সেখানে এটা ভালো খাটে না <Cite n={1} />।
+- **Merge-কে চোখ বুজে বিশ্বাস করা।** Parent report সংক্ষেপ করতে পারে <Cite n={4} />, আর ছোট failure-ও agent-এর জন্য বড় বিপদ হতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice for a system that uses subagents.
+
+- **Test the merge.** Give two workers results that conflict (for example, one says the bug is in the API and one says it is in the UI). Check that the final answer shows the conflict and does not hide one side.
+- **Check that nothing is lost.** Compare each worker's report with the merged answer. Every key finding must still be there.
+- **Check the hand-off prompt.** Read the prompt each worker got. It must hold the paths, IDs, and limits the worker needs.
+- **Measure cost per run.** Log the tokens and the cost of the whole run, workers included. Set a budget and fail the run if it goes over.
+- **Check tool limits.** Ask a read-only worker to edit a file. The edit must not happen.
+- **Use a verifier as a test step.** Make the verifier check the output against a clear rule or the source, and record its verdict. Then test the verifier itself with known good and known bad inputs.
+- **Test a failed worker.** Stop one worker in the middle. The orchestrator must report the gap, not invent the missing part.
+- **Repeat the run.** Run the same task several times and compare the results and the cost.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice for a system that uses helper agents.
+
+- **Test the merge.** Give two helpers answers that disagree. Check that the final answer shows the disagreement and does not hide one side.
+- **Check that nothing is lost.** Compare each helper's report with the final answer. Every key finding must still be there.
+- **Check the prompt each helper got.** It must hold the paths, IDs, and limits the helper needs.
+- **Measure cost per run.** Record the tokens and the cost of the whole run, helpers included. Set a budget and fail the run if it goes over.
+- **Check tool limits.** Ask a read-only helper to edit a file. The edit must not happen.
+- **Use a checking helper as a test step.** Make it check the output against a clear rule and record its verdict. Then test the checker with known good and known bad inputs.
+- **Test a failed helper.** Stop one helper in the middle. The lead must report the gap, not make up the missing part.
+- **Repeat the run.** Run the same task several times and compare the results and the cost.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই check-গুলো subagent ব্যবহার করে এমন system-এর জন্য এই tutorial-এর নিজের পরামর্শ।
+
+- **Merge test করুন।** দুটো worker-কে পরস্পরবিরোধী ফলাফল দিন। দেখুন final উত্তর বিরোধটা দেখায় কি না, একটা দিক লুকিয়ে ফেলে কি না।
+- **কিছু হারাল কি না দেখুন।** প্রতিটা worker-এর report final উত্তরের সাথে মেলান। প্রতিটা মূল finding থাকতে হবে।
+- **Hand-off prompt দেখুন।** প্রতিটা worker যে prompt পেয়েছে সেটা পড়ুন। তাতে দরকারি path, ID, আর সীমা থাকতে হবে।
+- **প্রতি run-এর খরচ মাপুন।** Worker-সহ পুরো run-এর token আর খরচ log করুন। একটা budget ঠিক করুন, আর তার বেশি হলে run fail করান।
+- **Tool-এর সীমা যাচাই করুন।** একটা read-only worker-কে ফাইল edit করতে বলুন। Edit হওয়া চলবে না।
+- **Verifier-কে test step হিসেবে ব্যবহার করুন।** Verifier output-কে একটা পরিষ্কার নিয়ম বা source-এর সাথে মিলিয়ে দেখুক, আর তার রায় record করুন। তারপর জানা ভালো আর জানা খারাপ input দিয়ে verifier-কেই test করুন।
+- **একটা worker fail করান।** মাঝপথে একটা worker থামিয়ে দিন। Orchestrator-কে ফাঁকটা জানাতে হবে, অনুপস্থিত অংশ বানিয়ে বলা চলবে না।
+- **Run বারবার চালান।** একই কাজ কয়েকবার চালিয়ে ফলাফল আর খরচ তুলনা করুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Subagent | A separate agent instance that a main agent starts for one focused subtask |
+| Multi-agent system | A system that uses more than one agent on one task |
+| Orchestrator (lead agent) | The agent that splits the task, hands out the parts, and merges the results |
+| Worker | An agent that does one part of the task and reports back |
+| Context window | The text an agent can see at one time; each subagent has its own |
+| Verifier | A worker that checks another worker's output and gives feedback |
+| Handoff | In the OpenAI Agents SDK, a way for one agent to pass a task to another agent |
+| Token | The unit that model usage and cost are counted in |

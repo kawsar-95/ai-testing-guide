@@ -4,6 +4,7 @@ import { ARCHITECTURE } from "../lib/architecture/topics.ts";
 import { COURSE } from "../lib/course/topics.ts";
 import { K6 } from "../lib/k6/topics.ts";
 import { AI_ENGINEERING } from "../lib/ai-engineering/topics.ts";
+import { AI_CONCEPTS } from "../lib/ai-concepts/topics.ts";
 import { AI_SKILLS } from "../lib/ai-skills/topics.ts";
 import { FUNDAMENTALS_ROUTES } from "../lib/fundamentals/chapters.ts";
 import { LINUX_ROUTES } from "../lib/linux/stages.ts";
@@ -65,8 +66,14 @@ test("sitemapPaths has the 21 AI Skills routes", () => {
   for (const route of AI_SKILLS.routes) assert.ok(paths.includes(route), route);
 });
 
+test("sitemapPaths has the 10 AI Concepts routes", () => {
+  const paths = sitemapPaths();
+  assert.equal(AI_CONCEPTS.routes.length, 10);
+  for (const route of AI_CONCEPTS.routes) assert.ok(paths.includes(route), route);
+});
+
 test("sitemapPaths has no duplicate path", () => {
   const paths = sitemapPaths();
   assert.equal(new Set(paths).size, paths.length);
-  assert.equal(paths.length, 209);
+  assert.equal(paths.length, 219);
 });

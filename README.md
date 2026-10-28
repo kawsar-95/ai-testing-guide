@@ -25,7 +25,7 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 209 pages: 10 sections and 3 helper pages.
+The site has 219 pages: 11 sections and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
@@ -39,6 +39,7 @@ The site has 209 pages: 10 sections and 3 helper pages.
 | [AI Engineering](https://kawsar-95.github.io/ai-testing-guide/ai-engineering/) | 28 topics in 2 parts | What AI engineering involves, from prompts and RAG to evals, guardrails, observability, and system design |
 | [AI Harnesses](https://kawsar-95.github.io/ai-testing-guide/harness/) | 6 topics | How an AI harness works: the agent loop, tool calling, context, checkpoints, permissions, and guardrails |
 | [AI Skills](https://kawsar-95.github.io/ai-testing-guide/ai-skills/) | 20 skills in 4 tiers | 20 AI skills, from prompting to fine-tuning, and how a tester uses each one |
+| [AI Concepts](https://kawsar-95.github.io/ai-testing-guide/ai-concepts/) | 9 topics | Agent loops, MCP, subagents, AI gateways, cost, evals, guardrails, observability, and the agent harness |
 
 Three helper pages sit beside the sections: [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) lists everything, [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows your progress, and [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) links to the interview material.
 
@@ -121,13 +122,13 @@ The ISTQB version has seven inline diagrams, for example the test pyramid, the t
 
 The site tracks your work in your browser. It never sends it to a server.
 
-- **Topic checklists:** the Linux stages, the Fundamentals chapters, the Architecture topics (and its 30 practice questions), the Course topics, the k6 topics, the AI Engineering topics, and the AI skills have checkboxes and progress bars.
+- **Topic checklists:** the Linux stages, the Fundamentals chapters, the Architecture topics (and its 30 practice questions), the Course topics, the k6 topics, the AI Engineering topics, the AI skills, and the AI Concepts topics have checkboxes and progress bars.
 - **Pages read and bookmarks:** each content page has a **Mark as read** toggle and a **Bookmark** toggle under its title.
 - **Last page:** the site remembers the last content page that you opened.
 
 ![The Linux roadmap with a progress bar and checklists](docs/assets/linux.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 196`), your bookmarks, the topic progress of the seven modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 205`), your bookmarks, the topic progress of the eight modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
 
@@ -244,7 +245,7 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 ```text
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
-content/<group>/     The MDX pages: 24 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills
+content/<group>/     The MDX pages: 24 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts
 lib/                 nav.ts (tutorial page order), one data file for each module, search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
 scripts/             Python check scripts and the route maps (one JSON file for each module)
@@ -263,7 +264,7 @@ For a tutorial page:
 3. Give each fact a `<Cite n={k} />` and a matching entry in `page.sources`.
 4. Run `npm test`, `npm run build`, and the checks above.
 
-The other modules keep their page lists in their own data files: `lib/linux/stages.ts`, `lib/fundamentals/chapters.ts`, `lib/system-design/cases.ts`, `lib/architecture/topics.ts`, `lib/course/topics.ts`, `lib/k6/topics.ts`, `lib/ai-engineering/topics.ts`, `lib/harness/topics.ts`, and `lib/ai-skills/topics.ts`. Each module has its own route map in `scripts/`. A page with voices also needs a voice fact-check report. `npm test` checks that the lists, the MDX files, and the route maps agree.
+The other modules keep their page lists in their own data files: `lib/linux/stages.ts`, `lib/fundamentals/chapters.ts`, `lib/system-design/cases.ts`, `lib/architecture/topics.ts`, `lib/course/topics.ts`, `lib/k6/topics.ts`, `lib/ai-engineering/topics.ts`, `lib/harness/topics.ts`, `lib/ai-skills/topics.ts`, and `lib/ai-concepts/topics.ts`. Each module has its own route map in `scripts/`. A page with voices also needs a voice fact-check report. `npm test` checks that the lists, the MDX files, and the route maps agree.
 
 [CLAUDE.md](CLAUDE.md) has the full rules: the MDX components, the voices, the citation rules, and the research and fact-check workflow. It is written as the guide for AI coding agents, and it is the most complete reference for humans too.
 
