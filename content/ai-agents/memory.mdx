@@ -1,0 +1,255 @@
+export const metadata = { title: 'Memory', description: 'Short-term memory is the context window. Long-term memory is a store that the agent writes to and reads back.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Context windows', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/context-windows', accessed: '2026-10-28' },
+    { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
+    { title: 'Memory tool', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool', accessed: '2026-10-28' },
+    { title: 'How Claude remembers your project', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/memory', accessed: '2026-10-28' },
+    { title: 'Memory overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/memory', accessed: '2026-10-28' },
+  ],
+}
+
+# Memory
+
+A model forgets everything when a request ends. An agent seems to remember because its harness puts the right text back in front of the model. This page explains the two kinds of agent memory, short-term and long-term, and how a tester checks what the agent keeps and what it loses.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An agent has two kinds of memory.
+
+**Short-term memory** is the **context window**. Anthropic defines the context window as all the text that the model can reference when it writes a response, and calls it a "working memory" for the model. It is not the training data <Cite n={1} />. In the Agent SDK, the window does not reset between turns in a session. The prompt, the history, the tool inputs, and the tool outputs all accumulate <Cite n={2} />.
+
+**Long-term memory** is a store outside the window. The agent writes facts to it and reads them back in a later session. The Claude memory tool, for example, lets Claude keep information in a directory of files and read it back in later conversations <Cite n={3} />. LangGraph keeps long-term memories in **stores** that work across conversations <Cite n={5} />.
+
+So the harness decides what goes into the window on each call. Memory is a design choice, not a property of the model.
+
+This page is an overview. For the 7 types of agent memory (working, semantic, episodic, procedural, and more), see the [Agent Memory](/agent-memory/) module.
+
+</Technical>
+<Layman>
+
+An agent has two kinds of memory.
+
+**Short-term memory** is the **context window**. Anthropic says the context window is all the text that the model can look at when it writes an answer. It calls this a "working memory" for the model. It is not the data that the model learned from in training <Cite n={1} />. In the Agent SDK, the window does not empty between turns. The prompt, the history, and every tool input and output pile up in it <Cite n={2} />.
+
+**Long-term memory** is a store outside the window. The agent writes facts into it and reads them back later, in a new session. For example, the Claude memory tool lets Claude save and find information across conversations, in a folder of files <Cite n={3} />. LangGraph keeps long-term memories in **stores** that work across conversations <Cite n={5} />.
+
+So the harness chooses what goes into the window each time. Memory is a design choice. The model does not remember on its own.
+
+This page is a short overview. The 7 types of agent memory are in the [Agent Memory](/agent-memory/) module.
+
+</Layman>
+<Bangla>
+
+একটা agent-এর দুই ধরনের memory থাকে।
+
+**Short-term memory** হলো **context window**। Anthropic বলে, context window হলো সেই সব text, যেটা model উত্তর লেখার সময় দেখতে পারে। একে তারা model-এর "working memory" বলে। এটা training-এর data নয় <Cite n={1} />। Agent SDK-তে একটা session-এর turn-গুলোর মাঝে window খালি হয় না। Prompt, history, আর প্রতিটা tool-এর input ও output এতে জমতে থাকে <Cite n={2} />।
+
+**Long-term memory** হলো window-এর বাইরের একটা store। Agent এতে তথ্য লেখে, আর পরে নতুন session-এ আবার পড়ে। যেমন, Claude memory tool দিয়ে Claude ফাইলের একটা ফোল্ডারে তথ্য রাখতে আর এক conversation থেকে আরেক conversation-এ খুঁজে পেতে পারে <Cite n={3} />। LangGraph long-term memory রাখে **store**-এ, যেটা conversation পার হয়েও কাজ করে <Cite n={5} />।
+
+তাই প্রতিবার window-এ কী যাবে, সেটা harness ঠিক করে। Memory একটা design-এর সিদ্ধান্ত। Model নিজে থেকে কিছু মনে রাখে না।
+
+এই পেজটা একটা ছোট overview। Agent memory-র 7 ধরন জানতে [Agent Memory](/agent-memory/) module দেখুন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**Short-term: the window fills up.** Everything in a request counts toward the window: the system prompt, the messages, the tool results, and the tool definitions <Cite n={1} />. The window holds up to 1M tokens, depending on the model. But more is not always better: as the token count grows, accuracy and recall degrade. Anthropic calls this **context rot** <Cite n={1} />. If the input alone is larger than the window, the API returns a 400 error ("prompt is too long") <Cite n={1} />.
+
+When the window gets full, the harness can **compact** it: it summarizes older history to free space <Cite n={1} />. In the Agent SDK, compaction can lose specific instructions from early in the conversation, so persistent rules belong in CLAUDE.md <Cite n={2} />.
+
+**Long-term: write, store, retrieve.** There are two ways to get long-term memory:
+
+| Way | How it works | Example |
+|---|---|---|
+| Automatic | The harness loads the memory into the window at the start of each session. | Claude Code loads CLAUDE.md and auto memory at the start of every conversation <Cite n={4} />. |
+| Through a tool | The model calls a tool to read or write memory when it needs it. | The Claude memory tool: `view`, `create`, `str_replace`, `insert`, `delete`, `rename` on files under `/memories` <Cite n={3} />. |
+
+The memory tool runs **client-side**: Claude asks for a file operation, and your application runs it on storage that you control <Cite n={3} />. With the tool enabled, Claude checks its memory directory before it starts a task <Cite n={3} />.
+
+In Claude Code, auto memory loads the first 200 lines or 25KB of `MEMORY.md` at session start. Claude reads the other topic files on demand <Cite n={4} />. Claude Code treats CLAUDE.md and auto memory as context, not as enforced configuration <Cite n={4} />.
+
+In LangGraph, short-term memory is part of the agent state, saved with thread-scoped **checkpoints**. Long-term memory lives in **stores**, in namespaces that you choose <Cite n={5} />. An agent can write memories in the hot path (while it runs) or in a background task <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+**Short-term: the window fills up.** Everything in a request counts toward the window: the system prompt, the messages, the tool results, and the tool definitions <Cite n={1} />. The window holds up to 1M tokens, based on the model. But more is not always better. When the number of tokens grows, the model gets less accurate and recalls less. Anthropic calls this **context rot** <Cite n={1} />. If the input alone is bigger than the window, the API returns a 400 error ("prompt is too long") <Cite n={1} />.
+
+When the window is full, the harness can **compact** it. It writes a summary of the older history to make space <Cite n={1} />. In the Agent SDK, this summary can drop exact instructions from the start of the conversation. So rules that must stay belong in CLAUDE.md <Cite n={2} />.
+
+**Long-term: write, store, read back.** There are two ways:
+
+- **Automatic.** The harness puts the memory into the window when each session starts. Claude Code loads CLAUDE.md and auto memory at the start of every conversation <Cite n={4} />.
+- **Through a tool.** The model calls a tool to read or write memory when it needs it. The Claude memory tool has the commands `view`, `create`, `str_replace`, `insert`, `delete`, and `rename`, for files under `/memories` <Cite n={3} />.
+
+The memory tool runs on **your side**. Claude asks for a file action, and your application does it on storage that you own <Cite n={3} />. When the tool is on, Claude looks in its memory folder before it starts a task <Cite n={3} />.
+
+In Claude Code, auto memory loads the first 200 lines or 25KB of `MEMORY.md` when a session starts. Claude reads the other topic files only when it needs them <Cite n={4} />. Claude Code treats CLAUDE.md and auto memory as context. They are not rules that it must obey <Cite n={4} />.
+
+In LangGraph, short-term memory is part of the agent state. It is saved with **checkpoints** for each thread. Long-term memory lives in **stores**, in namespaces that you choose <Cite n={5} />. An agent can write memories while it runs, or in a separate background task <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+**Short-term: window ভরে যায়।** একটা request-এর সবকিছু window-এ জায়গা নেয়: system prompt, message, tool result, আর tool definition <Cite n={1} />। Model অনুযায়ী window-এ 1M পর্যন্ত token ধরে। কিন্তু বেশি মানেই ভালো নয়। Token যত বাড়ে, model-এর accuracy আর মনে রাখার ক্ষমতা তত কমে। Anthropic একে বলে **context rot** <Cite n={1} />। শুধু input-ই যদি window-এর চেয়ে বড় হয়, API একটা 400 error দেয় ("prompt is too long") <Cite n={1} />।
+
+Window ভরে গেলে harness একে **compact** করতে পারে। পুরোনো history-র একটা summary লিখে জায়গা খালি করে <Cite n={1} />। Agent SDK-তে এই summary-তে conversation-এর শুরুর নির্দিষ্ট নির্দেশ হারিয়ে যেতে পারে। তাই যে নিয়ম সবসময় থাকতে হবে, সেটা CLAUDE.md-তে রাখুন <Cite n={2} />।
+
+**Long-term: লেখা, রাখা, আবার পড়া।** এর দুটো উপায় আছে:
+
+- **Automatic।** প্রতিটা session শুরু হলে harness memory-কে window-এ রেখে দেয়। Claude Code প্রতিটা conversation-এর শুরুতে CLAUDE.md আর auto memory load করে <Cite n={4} />।
+- **Tool দিয়ে।** দরকার হলে model একটা tool call করে memory পড়ে বা লেখে। Claude memory tool-এ `/memories`-এর ফাইলের জন্য `view`, `create`, `str_replace`, `insert`, `delete`, আর `rename` command আছে <Cite n={3} />।
+
+Memory tool **client-side**-এ চলে। Claude একটা ফাইলের কাজ চায়, আর আপনার application সেটা আপনার নিজের storage-এ করে <Cite n={3} />। Tool চালু থাকলে Claude কাজ শুরুর আগে তার memory ফোল্ডার দেখে নেয় <Cite n={3} />।
+
+Claude Code-এ session শুরু হলে auto memory `MEMORY.md`-এর প্রথম 200 লাইন বা 25KB load করে। বাকি topic ফাইলগুলো Claude দরকার হলে পড়ে <Cite n={4} />। Claude Code, CLAUDE.md আর auto memory-কে context হিসেবে দেখে, জোর করে মানতে হবে এমন configuration হিসেবে নয় <Cite n={4} />।
+
+LangGraph-এ short-term memory হলো agent state-এর অংশ, যেটা প্রতিটা thread-এর **checkpoint** দিয়ে save হয়। Long-term memory থাকে **store**-এ, আপনার বেছে নেওয়া namespace-এ <Cite n={5} />। Agent চলার সময়েই memory লিখতে পারে, বা আলাদা একটা background task-এ লিখতে পারে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This example is invented. A QA team uses a support agent with the Claude memory tool. On Monday, a user says: "I always want test reports as CSV." The agent saves this in a file under `/memories`. On Tuesday, a new conversation starts. The agent checks its memory directory first, as the tool docs describe <Cite n={3} />, finds the note, and sends a CSV.
+
+```text
+Monday    user: "reports as CSV"   -> memory: create /memories/prefs.md
+          (session ends, window is gone)
+Tuesday   new session              -> memory: view /memories
+                                   -> reads prefs.md -> sends CSV
+```
+
+The same week, a long debugging session fills the window. The harness compacts the history. An instruction that the user gave only in the first message ("never touch the `payments` folder") is not in the summary any more. The Agent SDK docs warn about this: early instructions may not survive compaction <Cite n={2} />. The fix is to put that rule in CLAUDE.md. The Claude Code docs say that the project-root CLAUDE.md survives compaction, because Claude reads it again from disk <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+This example is invented. A QA team uses a support agent with the Claude memory tool. On Monday, a user says: "I always want test reports as CSV." The agent saves this in a file under `/memories`. On Tuesday, a new conversation starts. The agent looks in its memory folder first, as the tool docs say <Cite n={3} />. It finds the note and sends a CSV.
+
+In the same week, a long debugging session fills the window. The harness compacts the history into a summary. The user gave one rule only in the first message: "never touch the `payments` folder." That rule is not in the summary any more. The Agent SDK docs warn about this. Early instructions may be lost when the history is compacted <Cite n={2} />. The fix is to put that rule in CLAUDE.md. The Claude Code docs say that the CLAUDE.md at the project root survives compaction, because Claude reads it again from disk <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটা বানানো। একটা QA টিম Claude memory tool সহ একটা support agent ব্যবহার করে। সোমবার একজন user বলেন: "আমি সবসময় test report CSV-তে চাই।" Agent এটা `/memories`-এর একটা ফাইলে save করে। মঙ্গলবার একটা নতুন conversation শুরু হয়। Tool-এর docs যেমন বলে, agent প্রথমে তার memory ফোল্ডার দেখে <Cite n={3} />। সে নোটটা পায় আর CSV পাঠায়।
+
+একই সপ্তাহে একটা লম্বা debugging session window ভরে ফেলে। Harness history-কে compact করে একটা summary বানায়। User একটা নিয়ম শুধু প্রথম message-এ দিয়েছিলেন: "`payments` ফোল্ডার কখনো ছোঁবে না।" সেই নিয়ম আর summary-তে নেই। Agent SDK-এর docs এ নিয়ে সতর্ক করে: compaction-এর পর শুরুর নির্দেশ হারিয়ে যেতে পারে <Cite n={2} />। সমাধান হলো নিয়মটা CLAUDE.md-তে রাখা। Claude Code-এর docs বলে, project root-এর CLAUDE.md compaction-এর পরও থাকে, কারণ Claude এটা disk থেকে আবার পড়ে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Thinking that the model remembers.** Each Claude Code session begins with a fresh context window <Cite n={4} />. Only what the harness loads or what a tool reads comes back.
+- **Filling the window "to be safe".** More context is not automatically better. Recall degrades as the token count grows <Cite n={1} />. LangGraph's docs also say that most LLMs perform poorly over long contexts <Cite n={5} />.
+- **Keeping rules only in the chat.** Compaction can drop early instructions. Put lasting rules in CLAUDE.md <Cite n={2} />.
+- **Treating memory as a hard rule.** CLAUDE.md and auto memory are context, not enforced configuration. To block an action, Claude Code points to a `PreToolUse` hook <Cite n={4} />.
+- **No limits on the store.** The memory tool docs put the safeguards on you: validate every path against traversal (for example `/memories/../../secrets.env`), keep sensitive data out, cap file sizes, and delete old files <Cite n={3} />.
+- **Forgetting that memory is local.** Claude Code auto memory is machine-local. It is not shared across machines or cloud environments <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+- **Thinking that the model remembers.** Each Claude Code session starts with an empty context window <Cite n={4} />. Only what the harness loads, or what a tool reads, comes back.
+- **Filling the window "to be safe".** More context is not always better. The model recalls less when the number of tokens grows <Cite n={1} />. The LangGraph docs also say that most LLMs do badly with long contexts <Cite n={5} />.
+- **Keeping rules only in the chat.** Compaction can drop early instructions. Put rules that must last in CLAUDE.md <Cite n={2} />.
+- **Treating memory as a hard rule.** CLAUDE.md and auto memory are context. Claude Code does not force them. To block an action, the docs point to a `PreToolUse` hook <Cite n={4} />.
+- **No limits on the store.** The memory tool docs make the safety your job. Check every path, so a path like `/memories/../../secrets.env` cannot escape. Keep secret data out. Limit file sizes. Delete old files <Cite n={3} />.
+- **Forgetting that memory is local.** Claude Code auto memory stays on one machine. It is not shared with other machines or cloud environments <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+- **ভাবা যে model মনে রাখে।** প্রতিটা Claude Code session একটা নতুন, খালি context window দিয়ে শুরু হয় <Cite n={4} />। শুধু harness যা load করে, বা tool যা পড়ে, সেটাই ফিরে আসে।
+- **"নিরাপদ থাকতে" window ভরে ফেলা।** বেশি context মানেই ভালো নয়। Token বাড়লে model কম মনে রাখে <Cite n={1} />। LangGraph-এর docs-ও বলে, বেশিরভাগ LLM লম্বা context-এ খারাপ করে <Cite n={5} />।
+- **নিয়ম শুধু chat-এ রাখা।** Compaction শুরুর নির্দেশ ফেলে দিতে পারে। যে নিয়ম থাকতে হবে, সেটা CLAUDE.md-তে রাখুন <Cite n={2} />।
+- **Memory-কে কড়া নিয়ম ভাবা।** CLAUDE.md আর auto memory হলো context, Claude Code এগুলো জোর করে মানায় না। কোনো action আটকাতে docs একটা `PreToolUse` hook ব্যবহার করতে বলে <Cite n={4} />।
+- **Store-এ কোনো সীমা না রাখা।** Memory tool-এর docs নিরাপত্তার দায়িত্ব আপনাকে দেয়। প্রতিটা path যাচাই করুন, যাতে `/memories/../../secrets.env`-এর মতো path বাইরে যেতে না পারে। গোপন data বাইরে রাখুন। ফাইলের size সীমিত করুন। পুরোনো ফাইল মুছে দিন <Cite n={3} />।
+- **ভুলে যাওয়া যে memory local।** Claude Code-এর auto memory একটা machine-এই থাকে। অন্য machine বা cloud environment-এ এটা share হয় না <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **It remembers across sessions.** Tell the agent a preference. End the session. Start a new one and ask a question that needs the preference.
+- **It forgets on purpose.** Delete or change the memory entry. The next session must follow the new state, not an old copy.
+- **It keeps rules after compaction.** Run a long session until the harness compacts. Then check that a rule from the first message still holds, or that it is in CLAUDE.md.
+- **It keeps users apart.** Save a fact as user A. Log in as user B. User B must not see it.
+- **It rejects bad paths.** Ask the memory handler for a path with `../`. It must refuse.
+- **It keeps secrets out.** Give the agent a password or token in chat. Read the memory files. The secret must not be there.
+- **It does not trust stale memory.** Store an old fact, then change the real system. Check that the agent checks the source when the two disagree.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **It remembers across sessions.** Tell the agent a preference. End the session. Start a new one. Ask a question that needs the preference.
+- **It forgets when told to.** Delete or change the memory entry. The next session must use the new state, not an old copy.
+- **It keeps rules after compaction.** Run a long session until the history is compacted. Check that a rule from the first message still works, or that it is in CLAUDE.md.
+- **It keeps users apart.** Save a fact as user A. Log in as user B. User B must not see it.
+- **It blocks bad paths.** Ask the memory handler for a path with `../`. It must say no.
+- **It keeps secrets out.** Give the agent a password or a token in the chat. Read the memory files. The secret must not be in them.
+- **It does not trust old memory.** Save an old fact. Then change the real system. When the two do not match, the agent must check the real source.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **Session পার হয়েও মনে রাখে।** Agent-কে একটা পছন্দ বলুন। Session শেষ করুন। নতুন session শুরু করে এমন প্রশ্ন করুন, যেটার জন্য পছন্দটা লাগে।
+- **বললে ভুলে যায়।** Memory-র entry মুছুন বা বদলান। পরের session-কে নতুন অবস্থা মানতে হবে, পুরোনো copy নয়।
+- **Compaction-এর পরও নিয়ম রাখে।** History compact না হওয়া পর্যন্ত একটা লম্বা session চালান। দেখুন প্রথম message-এর নিয়মটা এখনো মানা হচ্ছে কি না, বা সেটা CLAUDE.md-তে আছে কি না।
+- **User-দের আলাদা রাখে।** User A হিসেবে একটা তথ্য save করুন। User B হিসেবে login করুন। User B যেন সেটা দেখতে না পায়।
+- **খারাপ path আটকায়।** Memory handler-এর কাছে `../` সহ একটা path চান। তাকে না বলতে হবে।
+- **গোপন তথ্য বাইরে রাখে।** Chat-এ agent-কে একটা password বা token দিন। Memory ফাইলগুলো পড়ুন। সেখানে গোপন তথ্যটা থাকা চলবে না।
+- **পুরোনো memory অন্ধভাবে বিশ্বাস করে না।** একটা পুরোনো তথ্য save করুন। তারপর আসল সিস্টেম বদলান। দুটো না মিললে agent-কে আসল source যাচাই করতে হবে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Short-term memory | What the agent holds now: the context window of the current session. |
+| Context window | All the text the model can reference when it writes a response. Anthropic calls it a working memory. |
+| Context rot | Accuracy and recall degrade as the token count grows. |
+| Compaction | The harness summarizes older history to free space in the window. |
+| Long-term memory | A store outside the window that the agent writes to and reads back in later sessions. |
+| Memory tool | A Claude tool for file operations under `/memories`. Your application runs them. |
+| CLAUDE.md | A file of instructions that Claude Code loads at the start of every session. |
+| Auto memory | Notes that Claude Code writes itself, in `MEMORY.md` and topic files. |
+| Checkpointer | LangGraph: saves the state of one thread (short-term memory). |
+| Store | LangGraph: keeps long-term memories across threads, in namespaces. |

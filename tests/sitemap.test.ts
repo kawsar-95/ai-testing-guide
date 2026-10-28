@@ -75,5 +75,5 @@ test("sitemapPaths has the 10 AI Concepts routes", () => {
 test("sitemapPaths has no duplicate path", () => {
   const paths = sitemapPaths();
   assert.equal(new Set(paths).size, paths.length);
-  assert.equal(paths.length, 227);
+  assert.equal(paths.length, 238);
 });

@@ -1,0 +1,295 @@
+export const metadata = { title: 'Build Context', description: 'Before each model call, the harness puts together what the model sees: the system prompt, the tools, the history, retrieved data, and tool results.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Effective context engineering for AI agents', publisher: 'Anthropic (Engineering)', url: 'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents', accessed: '2026-10-28' },
+    { title: 'Context windows', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/context-windows', accessed: '2026-10-28' },
+    { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
+    { title: 'Define tools', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools', accessed: '2026-10-28' },
+    { title: 'Glossary', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/about-claude/glossary', accessed: '2026-10-28' },
+  ],
+}
+
+# Build Context
+
+The model in an agent knows only what is in front of it on this call. So the first step of each turn is to build that view: the instructions, the tools, the history, and the new results. This page explains what goes into the context, why its size has a limit, and how a tester checks that the right things are in it.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The **context window** is all the text that the model can reference when it generates a response, including the response itself. Anthropic calls it the model's "working memory". It is not the training data <Cite n={2} />.
+
+Everything in the request counts toward the window: the system prompt, every message (with tool results, images, and documents), and the tool definitions. The output of the turn, with its thinking, counts too <Cite n={2} />. In each turn, the input holds all the previous history plus the new message <Cite n={2} />.
+
+So "build context" is the step where the harness decides what goes into the next request. Anthropic calls the skill **context engineering**: curating and maintaining the best set of tokens for the model. Context is a finite resource <Cite n={1} />. The aim is the smallest set of high-signal tokens that gives the result you want <Cite n={1} />.
+
+For how a harness manages context over a long run, see [Context management](/harness/context-management/). For the memory view, see [Working memory](/agent-memory/working-memory/) and [Memory](/ai-agents/memory/). For the next step of the loop, see [The LLM Decides](/ai-agents/llm-decides/).
+
+</Technical>
+<Layman>
+
+The **context window** is all the text the model can look at when it writes an answer. The answer is part of it too. Anthropic calls it the model's "working memory". It is not the data the model learned from <Cite n={2} />.
+
+Everything you send counts: the system prompt, every message (with tool results, images, and documents), and the tool list. The answer of the turn, with its thinking, counts too <Cite n={2} />. Each turn sends all the earlier history plus the new message <Cite n={2} />.
+
+So "build context" is the step where the harness chooses what goes into the next request. Anthropic calls this skill **context engineering**: picking and keeping the best set of tokens for the model. Context is limited <Cite n={1} />. The goal is the smallest set of useful tokens that gets the result you want <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**Context window** হলো সেই সব text, যেটা model উত্তর লেখার সময় দেখতে পারে। উত্তরটাও এর অংশ। Anthropic একে model-এর "working memory" বলে। এটা model-এর training data নয় <Cite n={2} />।
+
+আপনি যা পাঠান, সবই গোনা হয়: system prompt, প্রতিটা message (tool result, image আর document সহ), আর tool-এর তালিকা। ওই turn-এর উত্তর, তার thinking সহ, সেটাও গোনা হয় <Cite n={2} />। প্রতিটা turn-এ আগের সব history আর নতুন message একসঙ্গে যায় <Cite n={2} />।
+
+তাই "build context" হলো সেই ধাপ, যেখানে harness ঠিক করে পরের request-এ কী যাবে। Anthropic এই দক্ষতাকে বলে **context engineering**: model-এর জন্য সবচেয়ে ভালো token-গুলো বেছে রাখা। Context সীমিত <Cite n={1} />। লক্ষ্য হলো সবচেয়ে ছোট, কাজের token-এর সেট, যেটা আপনার চাওয়া ফলাফল দেয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+In the Agent SDK, Claude gets your prompt with the system prompt, the tool definitions, and the conversation history <Cite n={3} />. The context does not reset between turns. The system prompt, tool definitions, history, tool inputs, and tool outputs all accumulate <Cite n={3} />.
+
+```text
+next request
++-------------------------------------------+
+| system prompt          (every request)    |
+| CLAUDE.md              (every request)    |
+| tool definitions       (core tools; MCP   |
+|                         tools on demand)  |
+| skill descriptions     (short summaries)  |
+| retrieved documents    (if the app adds)  |
+| history: prompts, answers,                |
+|          tool calls, tool results         |
+| new message                               |
++-------------------------------------------+
+            |
+            v
+          model
+```
+
+**The parts** <Cite n={3} />:
+
+| Part | When it loads | Effect |
+|---|---|---|
+| System prompt | Every request | Small fixed cost |
+| CLAUDE.md | Session start | Full content in every request, prompt cached |
+| Tool definitions | Core tools every request; MCP tools deferred by tool search by default | Every definition takes space |
+| History | Grows each turn | Prompts, answers, tool inputs, tool outputs |
+| Skill descriptions | Session start | Full content loads only when the skill runs |
+
+A tool definition has a `name`, a `description`, and an `input_schema`. When you send `tools`, the API builds a special system prompt from the tool definitions and your own system prompt <Cite n={4} />. In retrieval augmented generation (RAG), the app retrieves documents at runtime and passes them into the context window with the query <Cite n={5} />.
+
+**The limit.** The window is up to 1M tokens, depending on the model. Other models have 200k <Cite n={2} />. If the input alone is larger than the window, the API returns a 400 error, "prompt is too long" <Cite n={2} />. More context is not automatically better: as the token count grows, accuracy and recall degrade. This is **context rot** <Cite n={2} />.
+
+**Ways to keep it small.**
+
+- **Compaction**: summarize a conversation that is near the limit <Cite n={1} />. The Agent SDK does this automatically. It summarizes older history and emits a `compact_boundary` message <Cite n={3} />.
+- **Tool result clearing**: remove old tool results. It is one of the lightest forms of compaction <Cite n={1} />.
+- **Just in time**: keep light identifiers, such as file paths, and load the data with tools when it is needed <Cite n={1} />.
+- **Subagents**: a subagent returns only its final response, so the main context grows by a summary <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+In the Agent SDK, Claude gets your prompt plus the system prompt, the tool list, and the history <Cite n={3} />. The context does not reset between turns. The system prompt, the tool list, the history, and every tool call and tool result keep adding up <Cite n={3} />.
+
+**The parts** <Cite n={3} />:
+
+- **System prompt**: in every request. A small fixed cost.
+- **CLAUDE.md**: loads at the start. Its full text goes into every request, and it is cached.
+- **Tool list**: core tools go in every request. MCP tools load only when needed, by default.
+- **History**: grows each turn with prompts, answers, tool calls, and tool results.
+- **Skill descriptions**: short summaries. The full skill loads only when it runs.
+
+A tool definition has a `name`, a `description`, and an `input_schema`. When you send tools, the API builds a special system prompt from them and from your own system prompt <Cite n={4} />. With RAG, the app finds documents at run time and puts them into the context window with the question <Cite n={5} />.
+
+**The limit.** The window is up to 1M tokens, depending on the model. Other models have 200k <Cite n={2} />. If the input alone is too big, the API returns a 400 error, "prompt is too long" <Cite n={2} />. More context is not always better. As the context grows, the model remembers and uses it less well. This is called **context rot** <Cite n={2} />.
+
+**Ways to keep it small.**
+
+- **Compaction**: summarize a conversation that is near the limit <Cite n={1} />. The Agent SDK does this by itself. It summarizes older history and sends a `compact_boundary` message <Cite n={3} />.
+- **Tool result clearing**: remove old tool results. It is one of the lightest kinds of compaction <Cite n={1} />.
+- **Just in time**: keep only short pointers, such as file paths, and load the data with a tool when needed <Cite n={1} />.
+- **Subagents**: a subagent sends back only its final answer. The main context grows only by that summary <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+Agent SDK-তে Claude আপনার prompt-এর সঙ্গে system prompt, tool-এর তালিকা আর history পায় <Cite n={3} />। Turn-এর মাঝে context মুছে যায় না। System prompt, tool-এর তালিকা, history, আর প্রতিটা tool call ও tool result জমতে থাকে <Cite n={3} />।
+
+**অংশগুলো** <Cite n={3} />:
+
+- **System prompt**: প্রতিটা request-এ থাকে। ছোট, নির্দিষ্ট খরচ।
+- **CLAUDE.md**: শুরুতে load হয়। এর পুরো text প্রতিটা request-এ যায়, আর এটা cache হয়।
+- **Tool-এর তালিকা**: মূল tool-গুলো প্রতিটা request-এ যায়। ডিফল্টভাবে MCP tool শুধু দরকার হলে load হয়।
+- **History**: প্রতিটা turn-এ prompt, উত্তর, tool call আর tool result দিয়ে বাড়ে।
+- **Skill-এর বর্ণনা**: ছোট সারাংশ। পুরো skill শুধু চালানোর সময় load হয়।
+
+একটা tool definition-এ থাকে `name`, `description` আর `input_schema`। আপনি tool পাঠালে API সেগুলো আর আপনার system prompt থেকে একটা বিশেষ system prompt বানায় <Cite n={4} />। RAG-এ app চলার সময় document খুঁজে প্রশ্নের সঙ্গে context window-এ দেয় <Cite n={5} />।
+
+**সীমা।** Model অনুযায়ী window সর্বোচ্চ 1M token। অন্য model-এ 200k <Cite n={2} />। শুধু input-ই খুব বড় হলে API একটা 400 error দেয়, "prompt is too long" <Cite n={2} />। বেশি context সবসময় ভালো নয়। Context বাড়লে model তথ্য কম ঠিকভাবে মনে রাখে আর ব্যবহার করে। একে বলে **context rot** <Cite n={2} />।
+
+**ছোট রাখার উপায়।**
+
+- **Compaction**: সীমার কাছে পৌঁছানো conversation-কে সারাংশ করা <Cite n={1} />। Agent SDK এটা নিজেই করে। পুরোনো history সারাংশ করে আর একটা `compact_boundary` message পাঠায় <Cite n={3} />।
+- **Tool result clearing**: পুরোনো tool result সরিয়ে ফেলা। এটা compaction-এর সবচেয়ে হালকা ধরনগুলোর একটা <Cite n={1} />।
+- **Just in time**: শুধু ছোট pointer রাখা, যেমন file path, আর দরকার হলে tool দিয়ে data load করা <Cite n={1} />।
+- **Subagent**: subagent শুধু তার চূড়ান্ত উত্তর ফেরত দেয়। মূল context শুধু ওই সারাংশটুকু বাড়ে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This example is invented. A QA team runs an agent in CI: "Find why the checkout test failed. Do not edit any test file."
+
+```text
+turn 1  context: system prompt + CLAUDE.md + tool definitions
+                 + the prompt
+turn 2  + Bash output: 6,000-line CI log          (large)
+turn 3  + Read output: checkout.ts                (large)
+...
+turn 14 near the limit -> compaction              (summary)
+```
+
+Large tool outputs use much context. One big file or one verbose command can use thousands of tokens in a single turn <Cite n={3} />.
+
+At turn 14, the SDK compacts the history. Compaction replaces older messages with a summary, so an instruction from early in the conversation may be lost <Cite n={3} />. "Do not edit any test file" was only in the first prompt, so the team moves it to CLAUDE.md. CLAUDE.md is re-injected on every request <Cite n={3} />.
+
+The team also gives the log search to a subagent. It reads the log and returns only a short summary of the errors <Cite n={3} />. A `PreCompact` hook archives the full transcript before each compaction <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+This example is invented. A QA team runs an agent in CI with this task: "Find why the checkout test failed. Do not edit any test file."
+
+Turn 1 has the system prompt, CLAUDE.md, the tool list, and the task. Turn 2 adds a 6,000-line CI log. Turn 3 adds a whole source file. Big tool outputs fill the context fast. One big file or one long command output can use thousands of tokens in one turn <Cite n={3} />.
+
+By turn 14, the context is near the limit, and the SDK compacts it. Compaction replaces older messages with a summary. An instruction from the start can get lost <Cite n={3} />. "Do not edit any test file" was only in the first prompt. So the team moves it to CLAUDE.md, which goes into every request again <Cite n={3} />.
+
+The team also gives the log search to a subagent. It reads the log and sends back only a short list of the errors <Cite n={3} />. A `PreCompact` hook saves the full transcript before each compaction <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটা বানানো। একটা QA টিম CI-তে একটা agent চালায়, এই কাজ দিয়ে: "checkout টেস্ট কেন fail করেছে খুঁজে বের করো। কোনো test file edit করবে না।"
+
+Turn 1-এ থাকে system prompt, CLAUDE.md, tool-এর তালিকা আর কাজটা। Turn 2-এ যোগ হয় 6,000 লাইনের একটা CI log। Turn 3-এ যোগ হয় একটা পুরো source file। বড় tool output context দ্রুত ভরে ফেলে। একটা বড় file বা লম্বা command output এক turn-এই হাজার হাজার token নিতে পারে <Cite n={3} />।
+
+Turn 14-এ context সীমার কাছে পৌঁছায়, আর SDK compaction চালায়। Compaction পুরোনো message-গুলোর জায়গায় একটা সারাংশ রাখে। শুরুর দিকের কোনো নির্দেশ হারিয়ে যেতে পারে <Cite n={3} />। "কোনো test file edit করবে না" শুধু প্রথম prompt-এ ছিল। তাই টিম এটা CLAUDE.md-তে সরিয়ে নেয়, যেটা প্রতিটা request-এ আবার যায় <Cite n={3} />।
+
+টিম log খোঁজার কাজটা একটা subagent-কেও দেয়। সে log পড়ে আর শুধু error-গুলোর একটা ছোট তালিকা ফেরত দেয় <Cite n={3} />। প্রতিটা compaction-এর আগে একটা `PreCompact` hook পুরো transcript সংরক্ষণ করে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A rule only in the first prompt.** Compaction can drop it. Put persistent rules in CLAUDE.md, which is re-injected on every request <Cite n={3} />.
+- **"More context is better."** Accuracy and recall degrade as the token count grows <Cite n={2} />. Aim for the smallest set of high-signal tokens <Cite n={1} />.
+- **Bloated tool results.** A tool that returns every field wastes context. Return only the fields the model needs for its next step <Cite n={4} />.
+- **Too many tools up front.** Every tool definition takes context space. When tool search is off, each MCP server adds all its tool schemas to every request <Cite n={3} />.
+- **Vague tool descriptions.** A detailed description is by far the most important factor in tool performance <Cite n={4} />. The description is part of the context that the model reads.
+- **Thinking that caching frees space.** Cached prefixes still occupy the context window. Caching changes what you pay, not whether the tokens count <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+- **A rule only in the first prompt.** Compaction can remove it. Put lasting rules in CLAUDE.md, which goes into every request again <Cite n={3} />.
+- **"More context is better."** As the context grows, the model recalls it less well <Cite n={2} />. Aim for the smallest set of useful tokens <Cite n={1} />.
+- **Tool results that are too big.** A tool that returns every field wastes space. Return only what the model needs for the next step <Cite n={4} />.
+- **Too many tools at the start.** Every tool definition takes space. When tool search is off, each MCP server adds all its tool schemas to every request <Cite n={3} />.
+- **Vague tool descriptions.** A detailed description matters more than anything else for good tool use <Cite n={4} />. The model reads the description as part of its context.
+- **Thinking that the cache frees space.** Cached text still takes space in the window. The cache changes the price, not the count <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+- **নিয়ম শুধু প্রথম prompt-এ রাখা।** Compaction এটা মুছে দিতে পারে। স্থায়ী নিয়ম CLAUDE.md-তে রাখুন, যেটা প্রতিটা request-এ আবার যায় <Cite n={3} />।
+- **"বেশি context মানেই ভালো" ভাবা।** Context বাড়লে model তথ্য কম ঠিকভাবে মনে রাখে <Cite n={2} />। সবচেয়ে ছোট, কাজের token-এর সেট রাখার চেষ্টা করুন <Cite n={1} />।
+- **খুব বড় tool result।** যে tool সব field ফেরত দেয়, সে জায়গা নষ্ট করে। পরের ধাপের জন্য model-এর যা দরকার, শুধু সেটুকু ফেরত দিন <Cite n={4} />।
+- **শুরুতেই অনেক tool।** প্রতিটা tool definition জায়গা নেয়। Tool search বন্ধ থাকলে প্রতিটা MCP server তার সব tool schema প্রতিটা request-এ যোগ করে <Cite n={3} />।
+- **অস্পষ্ট tool description।** ভালো tool ব্যবহারের জন্য বিস্তারিত description-ই সবচেয়ে গুরুত্বপূর্ণ <Cite n={4} />। Model এই description-কে তার context-এর অংশ হিসেবে পড়ে।
+- **Cache জায়গা খালি করে, এমন ভাবা।** Cache করা text-ও window-এ জায়গা নেয়। Cache দাম বদলায়, গোনা বদলায় না <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Read the real request.** Log one full request of the agent. Check that the system prompt, the tool list, and the history are what you expect, and that no secret or personal data is in it.
+- **Track the token count.** Record the input tokens of each turn. Look for a turn that jumps, for example after a big file read.
+- **Test a long run.** Run a task long enough to trigger compaction. After compaction, check that the agent still follows the key rules, such as "do not edit tests".
+- **Test the limit.** Send an input that is larger than the window. The app must handle the error and not crash or hang.
+- **Check the tool results.** Each tool must return only the fields that the agent needs. Flag a tool that returns a whole page or a whole table.
+- **Check retrieved documents.** For a RAG step, check that the documents in the context match the question, and that an old or wrong document does not get in.
+- **Compare short and long contexts.** Ask the same question with a small context and with a large one. A worse answer with the large context is a sign of context rot.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Read the real request.** Log one full request. Check the system prompt, the tool list, and the history. Make sure that no secret or personal data is in it.
+- **Watch the token count.** Write down the input tokens of each turn. Look for a turn that jumps, for example after a big file read.
+- **Test a long run.** Give a task that is long enough to cause compaction. After it, check that the agent still follows the key rules, such as "do not edit tests".
+- **Test the limit.** Send an input that is too big. The app must handle the error. It must not crash or hang.
+- **Check the tool results.** Each tool must return only what the agent needs. Flag a tool that returns a whole page or a whole table.
+- **Check the found documents.** For a RAG step, check that the documents match the question. An old or wrong document must not get in.
+- **Compare short and long contexts.** Ask the same question with a small context and with a big one. If the big one gives a worse answer, that is a sign of context rot.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **আসল request পড়ুন।** Agent-এর একটা পুরো request log করুন। System prompt, tool-এর তালিকা আর history ঠিক আছে কি না দেখুন। এতে কোনো secret বা ব্যক্তিগত data নেই, সেটা নিশ্চিত করুন।
+- **Token সংখ্যা দেখুন।** প্রতিটা turn-এর input token লিখে রাখুন। কোন turn-এ হঠাৎ লাফ দেয় খুঁজুন, যেমন বড় file পড়ার পরে।
+- **লম্বা run টেস্ট করুন।** এমন কাজ দিন যেটা compaction ঘটাতে যথেষ্ট লম্বা। তারপর দেখুন agent এখনো মূল নিয়ম মানছে কি না, যেমন "টেস্ট edit করবে না"।
+- **সীমা টেস্ট করুন।** খুব বড় একটা input পাঠান। App-কে error সামলাতে হবে। Crash বা আটকে যাওয়া চলবে না।
+- **Tool result যাচাই করুন।** প্রতিটা tool শুধু agent-এর দরকারি অংশ ফেরত দেবে। যে tool পুরো page বা পুরো table ফেরত দেয়, সেটা চিহ্নিত করুন।
+- **খুঁজে আনা document যাচাই করুন।** RAG ধাপে দেখুন document-গুলো প্রশ্নের সঙ্গে মেলে কি না। পুরোনো বা ভুল document ঢুকতে পারবে না।
+- **ছোট আর বড় context তুলনা করুন।** একই প্রশ্ন ছোট context আর বড় context দিয়ে করুন। বড়টায় উত্তর খারাপ হলে সেটা context rot-এর লক্ষণ।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Context | Everything the model sees on one call: system prompt, tools, messages, and results. |
+| Context window | All the text the model can reference when it generates a response, including the response. |
+| Token | The unit that the model reads and writes. The window size is counted in tokens. |
+| System prompt | The standing instructions of the app. They go into every request. |
+| Tool definition | A tool's `name`, `description`, and `input_schema`. |
+| Context engineering | Choosing and keeping the best set of tokens in the context. |
+| Context rot | Accuracy and recall degrade as the context grows. |
+| Compaction | Replacing older history with a summary when the context is near the limit. |
+| Tool result clearing | Removing old tool results from the context. |
+| RAG | Retrieval augmented generation: documents found at run time go into the context. |

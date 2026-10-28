@@ -162,15 +162,15 @@ test("a link entry without href throws", () => {
   );
 });
 
-test("the registry is System Design, Architecture, the Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, then Agent Memory, with unique ids", () => {
+test("the registry is System Design, Architecture, the Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, then How AI Agents Work, with unique ids", () => {
   assert.deepEqual(
     FLAT_MODULES.map((m) => m.id),
-    ["system-design", "architecture", "course", "k6", "ai-engineering", "harness", "ai-skills", "ai-concepts", "agent-memory"],
+    ["system-design", "architecture", "course", "k6", "ai-engineering", "harness", "ai-skills", "ai-concepts", "agent-memory", "ai-agents"],
   );
   assert.equal(new Set(FLAT_MODULES.map((m) => m.id)).size, FLAT_MODULES.length);
   assert.deepEqual(
     PROGRESS_MODULES.map((m) => m.id),
-    ["architecture", "course", "k6", "ai-engineering", "ai-skills", "ai-concepts", "agent-memory"],
+    ["architecture", "course", "k6", "ai-engineering", "ai-skills", "ai-concepts", "agent-memory", "ai-agents"],
   );
 });
 
@@ -194,7 +194,7 @@ test("Architecture: the next page of observability is practice, and practice has
 });
 
 test("the search index route has a flatDocs call for each flat module", () => {
-  const constOf: Record<string, string> = { "system-design": "SYSTEM_DESIGN", architecture: "ARCHITECTURE", course: "COURSE", k6: "K6", "ai-engineering": "AI_ENGINEERING", harness: "HARNESS", "ai-skills": "AI_SKILLS", "ai-concepts": "AI_CONCEPTS", "agent-memory": "AGENT_MEMORY" };
+  const constOf: Record<string, string> = { "system-design": "SYSTEM_DESIGN", architecture: "ARCHITECTURE", course: "COURSE", k6: "K6", "ai-engineering": "AI_ENGINEERING", harness: "HARNESS", "ai-skills": "AI_SKILLS", "ai-concepts": "AI_CONCEPTS", "agent-memory": "AGENT_MEMORY", "ai-agents": "AI_AGENTS" };
   const ids = FLAT_MODULES.map((m) => m.id);
   assert.deepEqual(Object.keys(constOf).sort(), [...ids].sort(), "add the new module to constOf");
   const route = readFileSync("app/search-index.json/route.ts", "utf8");

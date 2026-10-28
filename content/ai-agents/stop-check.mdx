@@ -1,0 +1,295 @@
+export const metadata = { title: 'The Stop Check', description: 'After each step, the loop asks one question: answer now, or keep going? Here is how the loop ends.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
+    { title: 'CLI reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/cli-reference', accessed: '2026-10-28' },
+    { title: 'Hooks reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks', accessed: '2026-10-28' },
+    { title: 'Running agents', publisher: 'OpenAI (Agents SDK docs)', url: 'https://openai.github.io/openai-agents-python/running_agents/', accessed: '2026-10-28' },
+    { title: 'Graph API overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/graph-api', accessed: '2026-10-28' },
+    { title: 'Handling stop reasons', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons', accessed: '2026-10-28' },
+    { title: 'Building effective agents', publisher: 'Anthropic (Engineering)', url: 'https://www.anthropic.com/engineering/building-effective-agents', accessed: '2026-10-28' },
+    { title: 'src/agents/run_config.py (DEFAULT_MAX_TURNS)', publisher: 'OpenAI (openai-agents-python on GitHub)', url: 'https://github.com/openai/openai-agents-python/blob/main/src/agents/run_config.py', accessed: '2026-10-28' },
+  ],
+}
+
+# The Stop Check
+
+After each step, an agent loop asks one question: answer now, or keep going? This page explains how the loop decides to end, which hard limits stop it, what the harness reports when a limit is hit, and how a tester checks each way out.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The **stop check** is the point in the loop where the agent either gives its final output or goes around again. In most harnesses, the model makes this choice through its output. In the Claude Agent SDK, the loop goes on until Claude gives a response with **no tool calls**. That response is the final result <Cite n={1} />. The OpenAI Agents SDK uses the same rule: output of the desired type with no tool calls is the final output, and tool calls start the loop again <Cite n={4} />.
+
+The model's choice is not the only way out. Anthropic notes that agents often also have **stopping conditions**, such as a maximum number of iterations, to keep control <Cite n={7} />. Harnesses give you these limits:
+
+- a **turn limit** (Claude Agent SDK, Claude Code CLI, OpenAI Agents SDK) <Cite n={1} /> <Cite n={2} /> <Cite n={4} />
+- a **budget limit** (Claude Agent SDK, Claude Code CLI) <Cite n={1} /> <Cite n={2} />
+- a **recursion limit** on graph steps (LangGraph) <Cite n={5} />
+
+A run can also end on an error. So the stop check has three exits: **done**, **limit hit**, and **error**. A tester must know which exit a run took. See also [Agentic Loops](/ai-concepts/agentic-loops/).
+
+</Technical>
+<Layman>
+
+The **stop check** is the point where the agent either gives its final answer or goes around the loop again. Usually the model makes this choice through what it writes. In the Claude Agent SDK, the loop goes on until Claude answers with **no tool calls**. That answer is the final result <Cite n={1} />. The OpenAI Agents SDK uses the same rule: an answer of the right type with no tool calls is the final output. Tool calls start the loop again <Cite n={4} />.
+
+The model's choice is not the only way out. Anthropic notes that agents often also have **stopping conditions**, such as a maximum number of rounds, to keep control <Cite n={7} />. Harnesses give you these limits:
+
+- a **turn limit** (Claude Agent SDK, Claude Code CLI, OpenAI Agents SDK) <Cite n={1} /> <Cite n={2} /> <Cite n={4} />
+- a **budget limit** (Claude Agent SDK, Claude Code CLI) <Cite n={1} /> <Cite n={2} />
+- a **recursion limit** on graph steps (LangGraph) <Cite n={5} />
+
+A run can also end because of an error. So there are three ways out: **done**, **limit hit**, and **error**. A tester must know which way a run ended. See also [Agentic Loops](/ai-concepts/agentic-loops/).
+
+</Layman>
+<Bangla>
+
+**Stop check** হলো loop-এর সেই জায়গা, যেখানে agent হয় চূড়ান্ত উত্তর দেয়, নয়তো আবার loop ঘোরে। বেশিরভাগ harness-এ model তার output দিয়েই এই সিদ্ধান্ত নেয়। Claude Agent SDK-তে loop চলতে থাকে যতক্ষণ না Claude **কোনো tool call ছাড়া** একটা উত্তর দেয়। সেই উত্তরই চূড়ান্ত result <Cite n={1} />। OpenAI Agents SDK-ও একই নিয়ম মানে: ঠিক type-এর আর tool call ছাড়া output হলো final output, আর tool call থাকলে loop আবার চলে <Cite n={4} />।
+
+Model-এর সিদ্ধান্তই বের হওয়ার একমাত্র পথ নয়। Anthropic বলে, নিয়ন্ত্রণ রাখতে agent-এ প্রায়ই **stopping condition**-ও থাকে, যেমন সর্বোচ্চ কতবার ঘুরবে <Cite n={7} />। Harness আপনাকে এই সীমাগুলো দেয়:
+
+- একটা **turn-এর সীমা** (Claude Agent SDK, Claude Code CLI, OpenAI Agents SDK) <Cite n={1} /> <Cite n={2} /> <Cite n={4} />
+- একটা **budget-এর সীমা** (Claude Agent SDK, Claude Code CLI) <Cite n={1} /> <Cite n={2} />
+- graph step-এর ওপর একটা **recursion limit** (LangGraph) <Cite n={5} />
+
+একটা run error-এর কারণেও শেষ হতে পারে। তাই বের হওয়ার পথ তিনটা: **কাজ শেষ**, **সীমা পার**, আর **error**। একজন tester-কে জানতে হবে একটা run কোন পথে শেষ হলো। [Agentic Loops](/ai-concepts/agentic-loops/)-ও দেখুন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**The model decides it is done.** A turn is one round trip: tool calls, the tools run, and the results go back. Turns continue until the output has no tool calls <Cite n={1} />.
+
+```text
+model response
+     |
+     +-- has tool calls? -- yes --> run tools --> limit hit? -- no --> next turn
+     |                                                |
+     no                                              yes
+     |                                                |
+     v                                                v
+ final output (success)                     error result (no final text)
+```
+
+**The hard limits.**
+
+| Harness | Limit | Default | At the limit |
+|---|---|---|---|
+| Claude Agent SDK | `max_turns`, `max_budget_usd` | No limit | Result subtype `error_max_turns` or `error_max_budget_usd` <Cite n={1} /> |
+| Claude Code CLI | `--max-turns`, `--max-budget-usd` (print mode only) | No limit for `--max-turns` | `--max-turns` exits with an error <Cite n={2} /> |
+| OpenAI Agents SDK | `max_turns` | 10 (`DEFAULT_MAX_TURNS`) <Cite n={8} />; `max_turns=None` turns it off | `MaxTurnsExceeded` exception <Cite n={4} /> |
+| LangGraph | `recursion_limit` (super-steps) | 1000 (from version 1.0.6) | `GraphRecursionError` <Cite n={5} /> |
+
+Some details matter for tests. In the Agent SDK, `max_turns` must count one extra turn for the final text-only response. Without it, the run ends with `error_max_turns` and no final response <Cite n={1} />. The budget is checked after each response arrives, so spend can pass the cap by up to the cost of one response <Cite n={1} />. In LangGraph, `recursion_limit` is a top-level config key, not a key inside `configurable` <Cite n={5} />.
+
+**What the harness reports.** The Agent SDK result has a `subtype`: `success`, `error_max_turns`, `error_max_budget_usd`, `error_during_execution`, or `error_max_structured_output_retries`. Only `success` has the `result` text. Every subtype has `total_cost_usd`, `usage`, `num_turns`, and `session_id` <Cite n={1} />. A single-shot `query()` raises an error after an error result, and the Claude Code process exits with a nonzero code <Cite n={1} />. The result also has a `stop_reason`, for example `end_turn`, `max_tokens`, or `refusal` <Cite n={1} />.
+
+**Graceful ends.** The OpenAI Agents SDK accepts `error_handlers`, which can return a controlled final output instead of the error <Cite n={4} />. LangGraph has a `RemainingSteps` value, so a graph can wrap up before it hits the limit <Cite n={5} />.
+
+**A check before the stop.** In Claude Code, a `Stop` hook runs when the main agent finishes. It does not run after a user interrupt <Cite n={3} />. It can block the stop and make Claude continue. The `stop_hook_active` field is `true` when Claude already continues because of a stop hook. After 8 stop-hook continuations in a row, Claude Code ends the turn <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+**The model decides it is done.** A turn is one round trip: the model asks for tools, the tools run, and the results go back. Turns go on until the model answers with no tool calls <Cite n={1} />.
+
+**The hard limits.**
+
+- **Claude Agent SDK:** `max_turns` and `max_budget_usd`. No limit by default. At a limit, the result subtype is `error_max_turns` or `error_max_budget_usd` <Cite n={1} />.
+- **Claude Code CLI:** `--max-turns` and `--max-budget-usd`, in print mode only. `--max-turns` has no limit by default. `--max-turns` exits with an error at the limit <Cite n={2} />.
+- **OpenAI Agents SDK:** `max_turns`. The default is 10 (`DEFAULT_MAX_TURNS`) <Cite n={8} />, and `max_turns=None` turns the limit off. Past the limit, you get a `MaxTurnsExceeded` exception <Cite n={4} />.
+- **LangGraph:** `recursion_limit` counts super-steps. The default is 1000 (from version 1.0.6). Past the limit, you get `GraphRecursionError` <Cite n={5} />.
+
+Some details matter for tests. In the Agent SDK, `max_turns` must count one extra turn for the final text answer. If not, the run ends with `error_max_turns` and no final answer <Cite n={1} />. The budget is checked after each response comes back, so spend can go past the cap by up to the cost of one response <Cite n={1} />. In LangGraph, `recursion_limit` is a top-level config key, not a key inside `configurable` <Cite n={5} />.
+
+**What the harness reports.** The Agent SDK result has a `subtype`: `success`, `error_max_turns`, `error_max_budget_usd`, `error_during_execution`, or `error_max_structured_output_retries`. Only `success` has the `result` text. Every subtype has the cost, the usage, the number of turns, and the session ID <Cite n={1} />. A single-shot `query()` raises an error after an error result, and the Claude Code process exits with a nonzero code <Cite n={1} />. The result also has a `stop_reason`, for example `end_turn`, `max_tokens`, or `refusal` <Cite n={1} />.
+
+**Soft endings.** The OpenAI Agents SDK has `error_handlers`. They can give back a controlled final output instead of the error <Cite n={4} />. LangGraph has a `RemainingSteps` value, so a graph can finish up before it hits the limit <Cite n={5} />.
+
+**A check before the stop.** In Claude Code, a `Stop` hook runs when the main agent finishes. It does not run after a user interrupt <Cite n={3} />. It can block the stop and make Claude keep working. The `stop_hook_active` field is `true` when Claude already keeps working because of a stop hook. After 8 such continues in a row, Claude Code ends the turn <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+**Model ঠিক করে কাজ শেষ।** একটা turn হলো একটা round trip: model tool চায়, tool চলে, আর ফলাফল ফেরত যায়। Model tool call ছাড়া উত্তর না দেওয়া পর্যন্ত turn চলতে থাকে <Cite n={1} />।
+
+**কড়া সীমাগুলো।**
+
+- **Claude Agent SDK:** `max_turns` আর `max_budget_usd`। ডিফল্টভাবে কোনো সীমা নেই। সীমায় পৌঁছালে result subtype হয় `error_max_turns` বা `error_max_budget_usd` <Cite n={1} />।
+- **Claude Code CLI:** `--max-turns` আর `--max-budget-usd`, শুধু print mode-এ। ডিফল্টভাবে `--max-turns`-এর কোনো সীমা নেই। সীমায় পৌঁছালে `--max-turns` একটা error দিয়ে বের হয়ে যায় <Cite n={2} />।
+- **OpenAI Agents SDK:** `max_turns`। ডিফল্ট হলো 10 (`DEFAULT_MAX_TURNS`) <Cite n={8} />, আর `max_turns=None` দিলে সীমা বন্ধ হয়। সীমা পার হলে একটা `MaxTurnsExceeded` exception আসে <Cite n={4} />।
+- **LangGraph:** `recursion_limit` super-step গোনে। ডিফল্ট হলো 1000 (version 1.0.6 থেকে)। সীমা পার হলে `GraphRecursionError` আসে <Cite n={5} />।
+
+টেস্টের জন্য কিছু খুঁটিনাটি জরুরি। Agent SDK-তে `max_turns`-এ শেষ text উত্তরের জন্য একটা বাড়তি turn গুনতে হয়। না গুনলে run `error_max_turns` দিয়ে শেষ হয়, কোনো চূড়ান্ত উত্তর ছাড়া <Cite n={1} />। প্রতিটা response আসার পরে budget যাচাই হয়, তাই খরচ একটা response-এর খরচ পর্যন্ত সীমা পার হতে পারে <Cite n={1} />। LangGraph-এ `recursion_limit` হলো config-এর top-level key, `configurable`-এর ভেতরের key নয় <Cite n={5} />।
+
+**Harness কী রিপোর্ট দেয়।** Agent SDK result-এ একটা `subtype` থাকে: `success`, `error_max_turns`, `error_max_budget_usd`, `error_during_execution`, বা `error_max_structured_output_retries`। শুধু `success`-এ `result` text থাকে। প্রতিটা subtype-এ খরচ, usage, turn সংখ্যা আর session ID থাকে <Cite n={1} />। একটা single-shot `query()` error result-এর পরে একটা error raise করে, আর Claude Code process একটা nonzero code দিয়ে বের হয় <Cite n={1} />। Result-এ একটা `stop_reason`-ও থাকে, যেমন `end_turn`, `max_tokens`, বা `refusal` <Cite n={1} />।
+
+**নরমভাবে শেষ করা।** OpenAI Agents SDK-তে `error_handlers` আছে। এগুলো error-এর বদলে একটা নিয়ন্ত্রিত final output ফেরত দিতে পারে <Cite n={4} />। LangGraph-এ একটা `RemainingSteps` value আছে, তাই সীমায় পৌঁছানোর আগেই graph কাজ গুছিয়ে শেষ করতে পারে <Cite n={5} />।
+
+**থামার আগে একটা যাচাই।** Claude Code-এ main agent কাজ শেষ করলে একটা `Stop` hook চলে। User interrupt করলে এটা চলে না <Cite n={3} />। এটা থামা আটকে Claude-কে কাজ চালিয়ে যেতে বলতে পারে। Claude আগে থেকেই stop hook-এর কারণে কাজ চালালে `stop_hook_active` field `true` হয়। পরপর 8 বার এমন হলে Claude Code turn শেষ করে দেয় <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This example is invented. A team runs a test-fixing agent in CI with `claude -p --max-turns 20 --max-budget-usd 3.00`. These flags work in print mode only <Cite n={2} />.
+
+**Run 1: done.** The agent runs the tests, fixes one file, runs the tests again, and answers with no tool call. The subtype is `success` <Cite n={1} />.
+
+**Run 2: the turn limit.** A test depends on a service that is down, so the test can never pass. The agent tries again and again. At turn 20, the CLI exits with an error <Cite n={2} />. The result has no `result` text, but it still has `num_turns`, `total_cost_usd`, and `session_id` <Cite n={1} />. The CI job fails, and the log shows the subtype `error_max_turns`.
+
+**Run 3: the budget.** A large refactor uses many tokens. The run stops with `error_max_budget_usd`. The final cost is a little above 3.00, because the response that reached the cap still completes <Cite n={1} />.
+
+The team also wants proof before "done". Anthropic says that an agent must get **ground truth** from the environment at each step <Cite n={7} />. So the team adds a `Stop` hook that runs the tests and blocks the stop if they fail. The hook checks `stop_hook_active`, so that it does not block forever on a test that cannot pass <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+This example is invented. A team runs a test-fixing agent in CI with `claude -p --max-turns 20 --max-budget-usd 3.00`. These flags work only in print mode <Cite n={2} />.
+
+**Run 1: done.** The agent runs the tests, fixes one file, runs the tests again, and answers with no tool call. The subtype is `success` <Cite n={1} />.
+
+**Run 2: the turn limit.** A test needs a service that is down, so the test can never pass. The agent tries again and again. At turn 20, the CLI exits with an error <Cite n={2} />. The result has no `result` text. It still has `num_turns`, `total_cost_usd`, and `session_id` <Cite n={1} />. The CI job fails, and the log shows `error_max_turns`.
+
+**Run 3: the budget.** A big refactor uses many tokens. The run stops with `error_max_budget_usd`. The final cost is a little over 3.00, because the response that reached the cap still finishes <Cite n={1} />.
+
+The team also wants proof before "done". Anthropic says an agent must get **ground truth** from the environment at each step <Cite n={7} />. So the team adds a `Stop` hook. It runs the tests and blocks the stop if they fail. The hook checks `stop_hook_active`, so it does not block forever on a test that cannot pass <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটা বানানো। একটা টিম CI-তে `claude -p --max-turns 20 --max-budget-usd 3.00` দিয়ে একটা test-fixing agent চালায়। এই flag-গুলো শুধু print mode-এ কাজ করে <Cite n={2} />।
+
+**Run 1: কাজ শেষ।** Agent টেস্ট চালায়, একটা file ঠিক করে, আবার টেস্ট চালায়, আর কোনো tool call ছাড়া উত্তর দেয়। Subtype হয় `success` <Cite n={1} />।
+
+**Run 2: turn-এর সীমা।** একটা টেস্ট এমন একটা service-এর ওপর নির্ভর করে, যেটা বন্ধ। তাই টেস্টটা কখনো pass করবে না। Agent বারবার চেষ্টা করে। Turn 20-এ CLI একটা error দিয়ে বের হয়ে যায় <Cite n={2} />। Result-এ কোনো `result` text থাকে না, কিন্তু `num_turns`, `total_cost_usd` আর `session_id` থাকে <Cite n={1} />। CI job fail করে, আর log-এ `error_max_turns` দেখা যায়।
+
+**Run 3: budget।** একটা বড় refactor অনেক token খরচ করে। Run `error_max_budget_usd` দিয়ে থামে। চূড়ান্ত খরচ 3.00-এর একটু বেশি হয়, কারণ যে response সীমায় পৌঁছায়, সেটা তবুও শেষ হয় <Cite n={1} />।
+
+টিম "কাজ শেষ" বলার আগে প্রমাণও চায়। Anthropic বলে, agent-কে প্রতিটা ধাপে environment থেকে **ground truth** পেতে হবে <Cite n={7} />। তাই টিম একটা `Stop` hook যোগ করে। এটা টেস্ট চালায়, আর টেস্ট fail করলে থামা আটকে দেয়। Hook-টা `stop_hook_active` যাচাই করে, যাতে যে টেস্ট pass করতে পারে না, তার জন্য চিরকাল আটকে না রাখে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **No limit at all.** In the Agent SDK, turn and budget limits are off by default <Cite n={1} />. In the CLI, `--max-turns` has no limit by default <Cite n={2} />. An open-ended prompt can then run long. Anthropic calls a budget a good default for production agents <Cite n={1} />.
+- **A turn limit with no room for the answer.** If `max_turns` does not count the final text-only turn, a run that would succeed ends with `error_max_turns` <Cite n={1} />.
+- **A budget with no headroom.** Spend can pass the cap by up to one response, plus the spend of sub-agents that still run <Cite n={1} />.
+- **Reading `result` without the subtype.** The `result` text exists only on `success` <Cite n={1} />.
+- **Treating every end as success.** A refusal comes back as a normal HTTP 200 response, not as an error <Cite n={6} />. A `max_tokens` stop means the response hit the token limit <Cite n={6} />.
+- **Ignoring `pause_turn`.** With server tools, the API can return `pause_turn` when its own loop reaches its iteration limit (10 by default). Send the response back to let Claude continue <Cite n={6} />.
+- **The wrong config place.** In LangGraph, `recursion_limit` inside `configurable` is wrong. It is a top-level config key <Cite n={5} />.
+- **A stop check that never lets go.** A `Stop` hook that blocks on a condition that never resolves keeps the agent busy. Check `stop_hook_active` <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+- **No limit at all.** In the Agent SDK, the turn and budget limits are off by default <Cite n={1} />. In the CLI, `--max-turns` has no limit by default <Cite n={2} />. An open task can then run for a long time. Anthropic says a budget is a good default for production agents <Cite n={1} />.
+- **A turn limit with no room for the answer.** If `max_turns` does not count the last text-only turn, a run that would succeed ends with `error_max_turns` <Cite n={1} />.
+- **A budget with no extra room.** Spend can go past the cap by up to one response, plus what running sub-agents spend <Cite n={1} />.
+- **Reading `result` without the subtype.** Only `success` has the `result` text <Cite n={1} />.
+- **Thinking every end is a success.** A refusal comes back as a normal HTTP 200 response, not as an error <Cite n={6} />. A `max_tokens` stop means the answer hit the token limit <Cite n={6} />.
+- **Ignoring `pause_turn`.** With server tools, the API can return `pause_turn` when its own loop reaches its limit (10 rounds by default). Send the response back so Claude can go on <Cite n={6} />.
+- **The wrong config place.** In LangGraph, do not put `recursion_limit` inside `configurable`. It is a top-level config key <Cite n={5} />.
+- **A stop check that never lets go.** A `Stop` hook that waits for something that never happens keeps the agent busy. Check `stop_hook_active` <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+- **কোনো সীমাই না রাখা।** Agent SDK-তে turn আর budget-এর সীমা ডিফল্টভাবে বন্ধ <Cite n={1} />। CLI-তে `--max-turns`-এর ডিফল্টভাবে কোনো সীমা নেই <Cite n={2} />। তখন একটা খোলা কাজ অনেকক্ষণ চলতে পারে। Anthropic বলে, production agent-এর জন্য budget রাখা একটা ভালো ডিফল্ট <Cite n={1} />।
+- **উত্তরের জন্য জায়গা না রাখা turn-এর সীমা।** `max_turns` যদি শেষ text-only turn না গোনে, তাহলে যে run সফল হতো, সেটা `error_max_turns` দিয়ে শেষ হয় <Cite n={1} />।
+- **বাড়তি জায়গা ছাড়া budget।** খরচ একটা response পর্যন্ত, আর চলতে থাকা sub-agent-এর খরচ যোগ করে, সীমা পার হতে পারে <Cite n={1} />।
+- **Subtype না দেখে `result` পড়া।** শুধু `success`-এ `result` text থাকে <Cite n={1} />।
+- **প্রতিটা শেষকে সফল ধরা।** একটা refusal error হিসেবে নয়, একটা সাধারণ HTTP 200 response হিসেবে আসে <Cite n={6} />। `max_tokens` দিয়ে থামা মানে উত্তর token-এর সীমায় পৌঁছেছে <Cite n={6} />।
+- **`pause_turn` উপেক্ষা করা।** Server tool থাকলে API-এর নিজের loop সীমায় (ডিফল্ট 10 বার) পৌঁছালে API `pause_turn` দিতে পারে। Response-টা ফেরত পাঠান, যাতে Claude চালিয়ে যেতে পারে <Cite n={6} />।
+- **ভুল জায়গায় config।** LangGraph-এ `recursion_limit` `configurable`-এর ভেতরে দেবেন না। এটা config-এর top-level key <Cite n={5} />।
+- **এমন stop check যেটা কখনো ছাড়ে না।** যে `Stop` hook কখনো না মেটা শর্তে আটকে রাখে, সেটা agent-কে ব্যস্ত রাখে। `stop_hook_active` যাচাই করুন <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Each exit is reachable.** Write one test for each exit: success, the turn limit, the budget limit, and an error. Check the subtype, the exception, or the exit code of each.
+- **A limit is always set.** Check the config of every CI and production run for a turn limit and a budget. Fail the review if one is missing.
+- **The final answer fits in the limit.** Give a task that needs exactly N tool turns. With `max_turns` set to N, expect `error_max_turns`. With N + 1, expect `success`.
+- **The budget overshoot is small.** Set a small budget and compare the final cost with the cap.
+- **No false "done".** Compare the final text with the real state. "All tests pass" must match a real green run.
+- **Partial work is reported.** When a limit stops the run, check that the logs show the turns, the cost, and the session ID, so someone can resume or debug.
+- **A refusal or a cut answer is not a pass.** Check that your harness flags `refusal` and `max_tokens` as non-success.
+- **The stop check lets go.** Make the done-check fail every time. The run must still end, and the report must say that the task is not done.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Every way out works.** Write one test for each way out: success, the turn limit, the budget limit, and an error. Check the subtype, the exception, or the exit code of each.
+- **A limit is always set.** Look at the config of every CI and production run. It needs a turn limit and a budget. If one is missing, fail the review.
+- **The final answer fits.** Give a task that needs exactly N tool turns. With `max_turns` at N, expect `error_max_turns`. With N + 1, expect `success`.
+- **The budget goes over only a little.** Set a small budget. Compare the final cost with the cap.
+- **No false "done".** Compare the final text with the real state. "All tests pass" must match a real green run.
+- **Half-done work is reported.** When a limit stops the run, check that the logs show the turns, the cost, and the session ID. Then someone can resume or debug.
+- **A refusal or a cut answer is not a pass.** Check that your harness marks `refusal` and `max_tokens` as not a success.
+- **The stop check lets go.** Make the done-check fail every time. The run must still end. The report must say that the task is not done.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **প্রতিটা বের হওয়ার পথ কাজ করে।** প্রতিটা পথের জন্য একটা করে টেস্ট লিখুন: success, turn-এর সীমা, budget-এর সীমা, আর একটা error। প্রতিটার subtype, exception বা exit code দেখুন।
+- **সবসময় একটা সীমা থাকে।** প্রতিটা CI আর production run-এর config দেখুন। একটা turn-এর সীমা আর একটা budget লাগবে। একটা না থাকলে review fail করুন।
+- **চূড়ান্ত উত্তর সীমার ভেতরে আসে।** এমন কাজ দিন যাতে ঠিক N টা tool turn লাগে। `max_turns` N হলে `error_max_turns` আশা করুন। N + 1 হলে `success` আশা করুন।
+- **Budget একটু-ই পার হয়।** ছোট একটা budget দিন। চূড়ান্ত খরচকে সীমার সঙ্গে মিলিয়ে দেখুন।
+- **মিথ্যা "কাজ শেষ" নয়।** চূড়ান্ত text-কে আসল অবস্থার সঙ্গে মিলিয়ে দেখুন। "সব টেস্ট pass" কথাটা একটা আসল সবুজ run-এর সঙ্গে মিলতে হবে।
+- **অর্ধেক কাজের রিপোর্ট থাকে।** সীমার কারণে run থামলে দেখুন log-এ turn, খরচ আর session ID আছে কি না, যাতে কেউ resume বা debug করতে পারে।
+- **Refusal বা কাটা উত্তর pass নয়।** দেখুন আপনার harness `refusal` আর `max_tokens`-কে success নয় বলে চিহ্নিত করে কি না।
+- **Stop check ছেড়ে দেয়।** কাজ-শেষের যাচাইটা প্রতিবার fail করান। Run-কে তবুও শেষ হতে হবে, আর রিপোর্টে বলতে হবে কাজ শেষ হয়নি।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Stop check | The point where the loop gives a final output or goes around again. |
+| Final output | A response with no tool calls, which ends the loop. |
+| Turn | One round trip: tool calls, the tools run, and the results go back. |
+| `max_turns` | A limit on turns (Claude Agent SDK, OpenAI Agents SDK). `--max-turns` in the Claude Code CLI. |
+| `max_budget_usd` | A limit on estimated spend (Claude Agent SDK). `--max-budget-usd` in the CLI. |
+| `recursion_limit` | The LangGraph limit on super-steps. Raises `GraphRecursionError`. |
+| `MaxTurnsExceeded` | The OpenAI Agents SDK exception when a run passes `max_turns`. |
+| Result subtype | The end state of an Agent SDK run, for example `success` or `error_max_turns`. |
+| `stop_reason` | Why the model stopped its last response, for example `end_turn`, `max_tokens`, or `refusal`. |
+| `Stop` hook | A Claude Code hook that runs when the agent finishes and can make it keep working. |

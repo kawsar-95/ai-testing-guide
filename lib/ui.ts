@@ -28,7 +28,7 @@ export const search = "Search";
 export const searchAll = "Search all parts";
 export const searchClose = "Close search";
 export const searchResults = "Search results";
-export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, the Architecture topics, the Course topics, the k6 topics, the AI Engineering topics, the AI Harnesses topics, the AI skills, the AI Concepts topics, and the Agent Memory topics.`;
+export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, the Architecture topics, the Course topics, the k6 topics, the AI Engineering topics, the AI Harnesses topics, the AI skills, the AI Concepts topics, the Agent Memory topics, and the AI Agents topics.`;
 /** The text of the link to the tutorial in the drawer of another section. */
 export const crossToTutorial = "Tutorial";
 /** The link to the home of a module in the sidebar. */
@@ -70,8 +70,8 @@ export const HOME_UI = {
   whyTitle: "Learn by doing, with sources",
   whySub: "Short parts, real commands, and a source for each fact.",
   courseEyebrow: "COURSE STRUCTURE",
-  courseTitle: "Six tutorial groups and eleven modules",
-  courseSub: "Read the tutorial in order, then open a module for Linux, testing fundamentals, system design, architecture, the System Design Course, k6 performance testing, AI engineering, AI harnesses, AI skills, AI concepts, or AI agent memory.",
+  courseTitle: "Six tutorial groups and twelve modules",
+  courseSub: "Read the tutorial in order, then open a module for Linux, testing fundamentals, system design, architecture, the System Design Course, k6 performance testing, AI engineering, AI harnesses, AI skills, AI concepts, AI agent memory, or how AI agents work.",
   cardCount: (n: number) => `${n} ${n === 1 ? "page" : "pages"}`,
 };
 

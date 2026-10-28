@@ -1,0 +1,304 @@
+export const metadata = { title: 'Observability and Evals', description: 'Traces, logs, cost, and latency show what an agent did. Evals show whether the result was any good.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Semantic Conventions for GenAI agent and framework spans', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-agent-spans.md', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for generative AI metrics', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md', accessed: '2026-10-28' },
+    { title: 'Tracing', publisher: 'OpenAI Agents SDK (Python)', url: 'https://openai.github.io/openai-agents-python/tracing/', accessed: '2026-10-28' },
+    { title: 'Monitoring', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/monitoring-usage', accessed: '2026-10-28' },
+    { title: 'Demystifying evals for AI agents', publisher: 'Anthropic (Engineering)', url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for generative AI client inference', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/client-inference.md', accessed: '2026-10-28' },
+  ],
+}
+
+# Observability and Evals
+
+An agent runs a loop that you cannot see from the outside. Observability records what happened in each step: the model calls, the tool calls, the time, and the cost. Evals answer a different question: is the result any good? This page explains both, and how a tester uses them together.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Observability** tells you what the agent did. **Evals** tell you if the agent did it well. You need both.
+
+For observability, the agent sends signals while it runs. The OpenAI Agents SDK calls this a full record of the events of a run. A **trace** is one end-to-end operation. A **span** is one step in it, with a start time and an end time. Spans nest inside other spans <Cite n={3} />.
+
+For evals, Anthropic uses a few clear terms <Cite n={5} />:
+
+- A **task** is one test with defined inputs and success criteria.
+- A **trial** is one attempt at a task.
+- A **grader** is logic that scores some part of the agent's work.
+- A **transcript** is the complete record of a trial. The **outcome** is the final state of the environment at the end of the trial.
+
+The two parts meet in the transcript. The trace shows the path. The grader scores the outcome.
+
+For a longer overview of each idea, see [Evals](/ai-concepts/evals/) and [Observability](/ai-concepts/observability/).
+
+</Technical>
+<Layman>
+
+**Observability** shows what the agent did. **Evals** show if it did a good job. You need both.
+
+For observability, the agent sends records while it works. The OpenAI Agents SDK calls this a full record of the events of a run. A **trace** is one whole job from start to end. A **span** is one step inside it, with a start time and an end time. Spans can sit inside other spans <Cite n={3} />.
+
+For evals, Anthropic uses a few simple words <Cite n={5} />:
+
+- A **task** is one test, with set inputs and a rule for success.
+- A **trial** is one try at a task.
+- A **grader** is logic that gives a score to some part of the work.
+- A **transcript** is the full record of one trial. The **outcome** is how things look at the end of the trial.
+
+The two parts meet in the transcript. The trace shows the path. The grader scores the result.
+
+For a longer overview, see [Evals](/ai-concepts/evals/) and [Observability](/ai-concepts/observability/).
+
+</Layman>
+<Bangla>
+
+**Observability** দেখায় agent কী করেছে। **Evals** দেখায় কাজটা ভালো হয়েছে কি না। আপনার দুটোই দরকার।
+
+Observability-র জন্য agent কাজ করার সময় signal পাঠায়। OpenAI Agents SDK একে বলে একটা run-এর সব event-এর পূর্ণ রেকর্ড। একটা **trace** হলো শুরু থেকে শেষ পর্যন্ত একটা পুরো কাজ। একটা **span** হলো তার ভেতরের একটা ধাপ, যার একটা শুরুর সময় আর একটা শেষের সময় থাকে। একটা span আরেকটা span-এর ভেতরে থাকতে পারে <Cite n={3} />।
+
+Evals-এর জন্য Anthropic কয়েকটা পরিষ্কার শব্দ ব্যবহার করে <Cite n={5} />:
+
+- একটা **task** হলো একটা টেস্ট, যার নির্দিষ্ট input আর সফলতার শর্ত আছে।
+- একটা **trial** হলো একটা task-এর একটা চেষ্টা।
+- একটা **grader** হলো এমন logic, যেটা কাজের কোনো একটা দিকের score দেয়।
+- একটা **transcript** হলো একটা trial-এর পূর্ণ রেকর্ড। **Outcome** হলো trial শেষে environment-এর চূড়ান্ত অবস্থা।
+
+দুটো অংশ transcript-এ এসে মেলে। Trace পথটা দেখায়। Grader ফলাফলের score দেয়।
+
+আরও বিস্তারিত দেখতে [Evals](/ai-concepts/evals/) আর [Observability](/ai-concepts/observability/) পড়ুন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**Traces with OpenTelemetry.** OpenTelemetry has semantic conventions for GenAI agents. Their status is Development, so names can still change <Cite n={1} />. Two span types map to the agent loop <Cite n={1} />:
+
+| Span name | Step of the loop |
+|---|---|
+| `invoke_agent {gen_ai.agent.name}` | One call of the agent |
+| `execute_tool {gen_ai.tool.name}` | One tool call |
+
+An agent span can carry the token counts `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`. It carries `error.type` if the operation ended in an error <Cite n={1} />. For latency, the metric `gen_ai.client.operation.duration` records the duration of a GenAI operation in seconds. A server metric, `gen_ai.server.time_to_first_token`, records the time to the first token <Cite n={2} />.
+
+**Traces in an agent SDK.** In the OpenAI Agents SDK, tracing is on by default. Set `OPENAI_AGENTS_DISABLE_TRACING=1` to turn it off. By default the SDK makes spans for each agent run, each LLM call (a generation span), each function tool call, each guardrail, and each handoff <Cite n={3} />.
+
+**Cost and latency in Claude Code.** Claude Code exports OpenTelemetry data only when you set `CLAUDE_CODE_ENABLE_TELEMETRY=1` <Cite n={4} />. It has these signals <Cite n={4} />:
+
+- The metrics `claude_code.cost.usage` (USD) and `claude_code.token.usage` (tokens).
+- The event `claude_code.api_request` with `duration_ms` and `cost_usd`. The cost is an estimate.
+- The event `claude_code.tool_result` with `tool_name`, `success`, and `duration_ms`.
+
+Tracing in Claude Code is a beta feature and is off by default <Cite n={4} />.
+
+**Evals.** An eval runs tasks, often with several trials each, and graders score them <Cite n={5} />. There are three types of grader <Cite n={5} />:
+
+| Grader | Good | Weak |
+|---|---|---|
+| Code-based | Fast, cheap, objective | Brittle to valid variations |
+| Model-based | Flexible, catches nuance | Non-deterministic, costs more |
+| Human | Gold standard quality | Expensive and slow |
+
+An agent does not give the same answer each time, so one trial is not enough. **pass@k** is the chance of at least one correct result in k trials. **pass^k** is the chance that all k trials succeed. pass^k falls as k grows <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+**Traces with OpenTelemetry.** OpenTelemetry has naming rules for GenAI agents. They are still in Development, so the names can change <Cite n={1} />. Two kinds of span match the agent loop <Cite n={1} />. `invoke_agent` is one call of the agent. `execute_tool` is one tool call.
+
+An agent span can hold the number of input and output tokens. It holds `error.type` if the step ended in an error <Cite n={1} />. For speed, the metric `gen_ai.client.operation.duration` records how long a GenAI step took, in seconds. A server metric records the time to the first token <Cite n={2} />.
+
+**Traces in an agent SDK.** In the OpenAI Agents SDK, tracing is on by default. `OPENAI_AGENTS_DISABLE_TRACING=1` turns it off. The SDK makes a span for each agent run, each model call, each tool call, each guardrail, and each handoff <Cite n={3} />.
+
+**Cost and speed in Claude Code.** Claude Code sends OpenTelemetry data only when you set `CLAUDE_CODE_ENABLE_TELEMETRY=1` <Cite n={4} />. It records the cost in USD and the number of tokens. For each model request, it records the time (`duration_ms`) and an estimated cost (`cost_usd`). For each tool result, it records the tool name, whether it worked, and the time. Tracing in Claude Code is in beta and is off by default <Cite n={4} />.
+
+**Evals.** An eval runs tasks, often with several tries each, and graders score them <Cite n={5} />. There are three kinds of grader <Cite n={5} />:
+
+- **Code-based**: fast, cheap, and objective, but it can fail a correct answer that looks different.
+- **Model-based**: flexible and sees nuance, but it is not always the same and costs more.
+- **Human**: the best quality, but expensive and slow.
+
+An agent does not give the same answer each time, so one try is not enough. **pass@k** is the chance that at least one of k tries is correct. **pass^k** is the chance that all k tries are correct. pass^k gets lower as k gets bigger <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+**OpenTelemetry দিয়ে trace।** OpenTelemetry-তে GenAI agent-এর জন্য নামকরণের নিয়ম (semantic conventions) আছে। এগুলো এখনো Development অবস্থায়, তাই নাম বদলাতে পারে <Cite n={1} />। দুই ধরনের span agent loop-এর সঙ্গে মেলে <Cite n={1} />। `invoke_agent` হলো agent-এর একটা call। `execute_tool` হলো একটা tool call।
+
+একটা agent span-এ input আর output token-এর সংখ্যা থাকতে পারে। ধাপটা error-এ শেষ হলে তাতে `error.type` থাকে <Cite n={1} />। গতির জন্য `gen_ai.client.operation.duration` metric একটা GenAI ধাপে কত সেকেন্ড লাগল সেটা রেকর্ড করে। একটা server metric প্রথম token আসতে কত সময় লাগল সেটা রেকর্ড করে <Cite n={2} />।
+
+**Agent SDK-তে trace।** OpenAI Agents SDK-তে tracing ডিফল্টভাবে চালু থাকে। `OPENAI_AGENTS_DISABLE_TRACING=1` দিলে বন্ধ হয়। SDK প্রতিটা agent run, প্রতিটা model call, প্রতিটা tool call, প্রতিটা guardrail আর প্রতিটা handoff-এর জন্য একটা span বানায় <Cite n={3} />।
+
+**Claude Code-এ খরচ আর গতি।** আপনি `CLAUDE_CODE_ENABLE_TELEMETRY=1` দিলে তবেই Claude Code OpenTelemetry data পাঠায় <Cite n={4} />। এটা USD-তে খরচ আর token-এর সংখ্যা রেকর্ড করে। প্রতিটা model request-এর জন্য সময় (`duration_ms`) আর আনুমানিক খরচ (`cost_usd`) রেকর্ড করে। প্রতিটা tool result-এর জন্য tool-এর নাম, কাজ হলো কি না, আর সময় রেকর্ড করে। Claude Code-এ tracing এখনো beta, আর ডিফল্টভাবে বন্ধ <Cite n={4} />।
+
+**Evals।** একটা eval কয়েকটা task চালায়, প্রায়ই প্রতিটা কয়েকবার, আর grader-রা score দেয় <Cite n={5} />। Grader তিন ধরনের <Cite n={5} />:
+
+- **Code-based**: দ্রুত, সস্তা আর নিরপেক্ষ, কিন্তু অন্যভাবে লেখা একটা সঠিক উত্তরকে fail করতে পারে।
+- **Model-based**: নমনীয়, সূক্ষ্ম পার্থক্য ধরতে পারে, কিন্তু প্রতিবার একই ফল দেয় না আর খরচ বেশি।
+- **Human**: সবচেয়ে ভালো মান, কিন্তু খরচ বেশি আর ধীর।
+
+Agent প্রতিবার একই উত্তর দেয় না, তাই একটা চেষ্টা যথেষ্ট নয়। **pass@k** হলো k বার চেষ্টায় অন্তত একবার সঠিক হওয়ার সম্ভাবনা। **pass^k** হলো k বারের সবগুলো সঠিক হওয়ার সম্ভাবনা। k বাড়লে pass^k কমে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This example is invented. A team runs a support agent that answers order questions. Users say that some answers are slow and some are wrong.
+
+First, the team turns on tracing. One slow trace shows this shape:
+
+```text
+invoke_agent support_agent          9.8 s
+  chat example-model                1.2 s
+  execute_tool lookup_order         7.9 s   <- most of the time
+  chat example-model                0.7 s
+```
+
+The trace shows that the tool, not the model, takes most of the time. The agent and tool span names follow the OpenTelemetry conventions <Cite n={1} />. A model call span is named `{gen_ai.operation.name} {gen_ai.request.model}`: here `chat` and an invented model name <Cite n={6} />. In Claude Code, the `duration_ms` of `claude_code.tool_result` gives the same kind of number for each tool <Cite n={4} />.
+
+Next, the team builds an eval for the wrong answers. Anthropic says that 20 to 50 simple tasks from real failures are a great start <Cite n={5} />. The team writes 30 tasks from real tickets. A code-based grader checks the order status in the final answer. Each task runs 5 trials, and the team reports pass@5 and pass^5 <Cite n={5} />.
+
+The team then reads the transcripts of the failed trials. Anthropic says that you only know whether graders work if you read many transcripts and grades <Cite n={5} />. In 4 tasks, the grader failed a correct answer that used other words. The team fixes the grader, not the agent.
+
+</Technical>
+<Layman>
+
+This example is invented. A team runs a support agent that answers questions about orders. Users say that some answers are slow and some are wrong.
+
+First, the team turns on tracing. One slow trace shows that the agent call took about 10 seconds, and one tool call (`lookup_order`) took almost 8 of them. So the tool is slow, not the model. The span names follow the OpenTelemetry rules <Cite n={1} /> <Cite n={6} />. A model call span has the operation (`chat`) and the model name. In Claude Code, `duration_ms` on each tool result gives the same kind of number <Cite n={4} />.
+
+Next, the team builds an eval for the wrong answers. Anthropic says that 20 to 50 simple tasks from real failures are a great start <Cite n={5} />. The team writes 30 tasks from real tickets. A code-based grader checks the order status in the final answer. Each task runs 5 times. The team reports pass@5 and pass^5 <Cite n={5} />.
+
+Then the team reads the records of the failed tries. Anthropic says that you only know if your graders work when you read many transcripts and grades <Cite n={5} />. In 4 tasks, the grader failed a correct answer that used other words. The team fixes the grader, not the agent.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটা বানানো। একটা টিম একটা support agent চালায়, যেটা order নিয়ে প্রশ্নের উত্তর দেয়। ব্যবহারকারীরা বলে, কিছু উত্তর ধীর আর কিছু উত্তর ভুল।
+
+প্রথমে টিমটা tracing চালু করে। একটা ধীর trace দেখায়, agent call-এ প্রায় 10 সেকেন্ড লেগেছে, আর তার প্রায় 8 সেকেন্ড নিয়েছে একটা tool call (`lookup_order`)। তাই ধীর হলো tool, model নয়। Span-এর নামগুলো OpenTelemetry-র নিয়ম মেনে চলে <Cite n={1} /> <Cite n={6} />। একটা model call-এর span-এর নামে operation (`chat`) আর model-এর নাম থাকে। Claude Code-এ প্রতিটা tool result-এর `duration_ms` একই ধরনের সংখ্যা দেয় <Cite n={4} />।
+
+এরপর টিমটা ভুল উত্তরের জন্য একটা eval বানায়। Anthropic বলে, আসল ব্যর্থতা থেকে নেওয়া 20 থেকে 50টা সহজ task দিয়ে শুরু করাই ভালো <Cite n={5} />। টিমটা আসল ticket থেকে 30টা task লেখে। একটা code-based grader চূড়ান্ত উত্তরে order status যাচাই করে। প্রতিটা task 5 বার চলে। টিমটা pass@5 আর pass^5 রিপোর্ট করে <Cite n={5} />।
+
+তারপর টিমটা fail করা চেষ্টাগুলোর transcript পড়ে। Anthropic বলে, অনেক transcript আর grade না পড়লে আপনি জানবেন না grader ঠিক কাজ করছে কি না <Cite n={5} />। 4টা task-এ grader একটা সঠিক উত্তরকে fail করেছিল, কারণ উত্তরটা অন্য শব্দে লেখা ছিল। টিমটা agent নয়, grader ঠিক করে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Logging only the final answer.** Without spans for each model call and tool call, you cannot see which step was slow or failed. The default spans of the OpenAI Agents SDK cover agents, model calls, tools, guardrails, and handoffs <Cite n={3} />.
+- **Logging private data by accident.** Message content in GenAI spans is opt-in, and the conventions warn that it is likely to contain sensitive user data <Cite n={1} />. Generation and function spans of the OpenAI Agents SDK can hold sensitive inputs and outputs <Cite n={3} />. Claude Code redacts prompt text by default <Cite n={4} />. Turn content on only with a reason.
+- **Reading the cost as a bill.** `cost_usd` in Claude Code is an estimate <Cite n={4} />.
+- **Building on names that can change.** The GenAI conventions have the status Development <Cite n={1} />. Pin the version that your dashboards expect.
+- **Grading the path, not the outcome.** Anthropic says it is often better to grade what the agent produced. A strict step-order check fails valid new approaches <Cite n={5} />.
+- **One trial per task.** One pass can be luck. Use pass@k when one success is enough, and pass^k when every run must succeed <Cite n={5} />.
+- **Trusting the grader without reading transcripts.** A code-based grader can be brittle to valid variations <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+- **Logging only the final answer.** Without a span for each model call and tool call, you cannot see which step was slow or failed. The OpenAI Agents SDK makes spans for agents, model calls, tools, guardrails, and handoffs by default <Cite n={3} />.
+- **Logging private data by mistake.** In the OpenTelemetry rules, message text is opt-in, and the rules warn that it likely has private user data <Cite n={1} />. Some spans of the OpenAI Agents SDK can hold private inputs and outputs <Cite n={3} />. Claude Code hides prompt text by default <Cite n={4} />. Turn text logging on only when you need it.
+- **Reading the cost as a bill.** `cost_usd` in Claude Code is only an estimate <Cite n={4} />.
+- **Building on names that can change.** The GenAI rules are still in Development <Cite n={1} />. Fix the version that your dashboards expect.
+- **Grading the path, not the result.** Anthropic says it is often better to grade what the agent made. A strict check of the step order fails new ways that also work <Cite n={5} />.
+- **One try per task.** One pass can be luck. Use pass@k when one success is enough. Use pass^k when every run must succeed <Cite n={5} />.
+- **Trusting the grader without reading transcripts.** A code-based grader can fail correct answers that look different <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+- **শুধু চূড়ান্ত উত্তর log করা।** প্রতিটা model call আর tool call-এর span না থাকলে আপনি দেখতে পারবেন না কোন ধাপ ধীর বা fail হয়েছে। OpenAI Agents SDK ডিফল্টভাবে agent, model call, tool, guardrail আর handoff-এর span বানায় <Cite n={3} />।
+- **ভুল করে ব্যক্তিগত data log করা।** OpenTelemetry-র নিয়মে message-এর লেখা opt-in, আর নিয়মগুলো সতর্ক করে যে তাতে সম্ভবত ব্যবহারকারীর সংবেদনশীল data থাকে <Cite n={1} />। OpenAI Agents SDK-র কিছু span-এ সংবেদনশীল input আর output থাকতে পারে <Cite n={3} />। Claude Code ডিফল্টভাবে prompt-এর লেখা লুকিয়ে রাখে <Cite n={4} />। দরকার হলে তবেই লেখা log করা চালু করুন।
+- **খরচকে আসল bill ভাবা।** Claude Code-এ `cost_usd` শুধু একটা আনুমানিক হিসাব <Cite n={4} />।
+- **বদলাতে পারে এমন নামের ওপর কাজ বানানো।** GenAI-র নিয়মগুলো এখনো Development অবস্থায় <Cite n={1} />। আপনার dashboard যে version আশা করে, সেটা স্থির করে রাখুন।
+- **ফলাফল নয়, পথের grade দেওয়া।** Anthropic বলে, agent কী বানিয়েছে তার grade দেওয়াই প্রায়ই ভালো। ধাপের ক্রমের কড়া যাচাই নতুন কিন্তু সঠিক পথকে fail করে <Cite n={5} />।
+- **প্রতি task-এ একটা মাত্র চেষ্টা।** একবার pass হওয়া ভাগ্যও হতে পারে। একবার সফল হলেই চললে pass@k ব্যবহার করুন। প্রতিটা run সফল হতে হলে pass^k ব্যবহার করুন <Cite n={5} />।
+- **Transcript না পড়ে grader-কে বিশ্বাস করা।** একটা code-based grader অন্যভাবে লেখা সঠিক উত্তরকে fail করতে পারে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Every step has a span.** Run one task. Check that the trace has a span for each model call and each tool call, nested under the agent span.
+- **Errors are visible.** Make a tool fail. Check that its span shows the error and that the trace still ends.
+- **No private data leaks.** Send a prompt with a fake email address. Search the logs and traces for it with content logging off.
+- **Cost and latency add up.** Compare the cost and token numbers in the telemetry with the totals that the run reports.
+- **Evals run more than once.** Check that each task has several trials and that the report shows pass@k or pass^k, not one pass.
+- **Graders are tested too.** Give the grader a known good answer with other words, and a known bad answer. It must pass the first and fail the second.
+- **Regression evals run in CI.** A change to the prompt, the model, or a tool must run the regression set before release.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Each step has a span.** Run one task. Check that the trace has a span for each model call and each tool call, inside the agent span.
+- **Errors show.** Make a tool fail. Check that its span shows the error and that the trace still ends.
+- **No private data leaks.** Send a prompt with a fake email address. Search the logs and traces for it while text logging is off.
+- **Cost and time add up.** Compare the cost and token numbers in the telemetry with the totals of the run.
+- **Evals run more than once.** Check that each task has several tries and that the report shows pass@k or pass^k, not one pass.
+- **Test the graders too.** Give the grader a good answer in other words, and a bad answer. It must pass the first and fail the second.
+- **Regression evals run in CI.** A change to the prompt, the model, or a tool must run the regression set before release.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **প্রতিটা ধাপের span আছে।** একটা task চালান। দেখুন trace-এ প্রতিটা model call আর tool call-এর span আছে কি না, agent span-এর ভেতরে।
+- **Error দেখা যায়।** একটা tool fail করান। দেখুন তার span-এ error দেখা যায় কি না, আর trace তবুও শেষ হয় কি না।
+- **ব্যক্তিগত data বের হয় না।** একটা নকল email ঠিকানা দিয়ে prompt পাঠান। লেখা log করা বন্ধ রেখে log আর trace-এ সেটা খুঁজুন।
+- **খরচ আর সময় মেলে।** Telemetry-র খরচ আর token-এর সংখ্যা run-এর মোট হিসাবের সঙ্গে মিলিয়ে দেখুন।
+- **Eval একবারের বেশি চলে।** দেখুন প্রতিটা task কয়েকবার চলে কি না, আর রিপোর্টে একটা pass নয়, pass@k বা pass^k দেখায় কি না।
+- **Grader-কেও টেস্ট করুন।** Grader-কে অন্য শব্দে লেখা একটা সঠিক উত্তর আর একটা ভুল উত্তর দিন। প্রথমটা pass, দ্বিতীয়টা fail হতে হবে।
+- **Regression eval CI-তে চলে।** Prompt, model বা tool বদলালে release-এর আগে regression set চলতে হবে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Observability | Signals that show what a system did inside: traces, metrics, and logs. |
+| Trace | One end-to-end operation, for example one agent run. |
+| Span | One step of a trace, with a start time and an end time. |
+| `invoke_agent` / `execute_tool` | OpenTelemetry GenAI span names for an agent call and a tool call. |
+| Eval | A test of an AI system that scores its output. |
+| Task | One eval test with defined inputs and success criteria. |
+| Trial | One attempt at a task. |
+| Grader | Logic that scores part of the agent's work: code-based, model-based, or human. |
+| Transcript | The complete record of a trial. |
+| pass@k | The chance of at least one correct result in k trials. |
+| pass^k | The chance that all k trials succeed. |
+| Regression eval | An eval that checks the agent still does what it did before. |
