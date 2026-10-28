@@ -15,7 +15,7 @@ export const SHELL_BN: Omit<Bn<typeof ui>, "HOME_UI"> = {
   themeToLight: "লাইট থিমে যান",
   themeToDark: "ডার্ক থিমে যান",
   themeGeneric: "কালার থিম বদলান",
-  footerSummary: `${PAGES.length}টি পর্ব · Software Testing with AI`,
+  footerSummary: `${PAGES.length}টি পর্ব · Agentic QA`,
   partNumber: pad,
   partLabel: (n) => `পর্ব ${pad(n)}`,
 

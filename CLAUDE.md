@@ -59,7 +59,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `app/sitemap.ts`, `app/robots.ts`, `app/not-found.tsx` | Sitemap, robots, 404 page |
 | `app/manifest.ts`, `app/sw.js/route.ts` | The PWA: `/manifest.webmanifest` and the service worker `/sw.js`, both from `lib/pwa.ts` |
 | `app/icon.svg`, `app/apple-icon.png`, `public/icons/` | The favicon, the iOS home-screen icon, and the manifest icons (192 px, 512 px, maskable 512 px) |
-| `components/layout/` | `SiteShell`, `SiteHeader`, `HeaderNav` (the top nav), `MobileNav` (the drawer), `ContentsButton`, `NavList` and `SidebarList` (the lists of the drawer), `SiteFooter`, `ThemeToggle`, `RegisterServiceWorker`, `BrandMark` (the site mark: a magnifier with a check mark, the same drawing as `app/icon.svg`) |
+| `components/layout/` | `SiteShell`, `SiteHeader`, `HeaderNav` (the top nav), `MobileNav` (the drawer), `ContentsButton`, `NavList` and `SidebarList` (the lists of the drawer), `SiteFooter`, `ThemeToggle`, `RegisterServiceWorker`, `BrandMark` (the site mark: a loop arrow around a check mark, the same drawing as `app/icon.svg`) |
 | `components/navigation/` | `SectionNav` ("On this page"), `SearchPalette` (Ctrl/Cmd+K) |
 | `components/content/` | `SectionFocus` (one `##` section at a time: see "Navigation"), `PageHeader` (the `PART 05 · CONFIGURE` eyebrow), `MetaLine` (the meta line), `Sources`, `ReadingProgress`, `BackToTop`, `PrevNext`, `CopyButton` |
 | `components/mdx/` | `Callout`, `CardGrid`, `InfoCard`, `Cite`, `CodeBlock` (the `pre` wrapper), `MdxImage` (an image with the base path), `MdxTable` (the `table` wrapper: it adds `role` and the `data-label` of each cell) |

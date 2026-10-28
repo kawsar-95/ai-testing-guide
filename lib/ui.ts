@@ -12,7 +12,7 @@ export const menuClose = "Close the list of parts";
 export const themeToLight = "Switch to light theme";
 export const themeToDark = "Switch to dark theme";
 export const themeGeneric = "Switch color theme";
-export const footerSummary = `${PAGES.length} parts · Software Testing with AI`;
+export const footerSummary = `${PAGES.length} parts · Agentic QA`;
 
 /** `05`: the part number, zero-padded to 2 digits. */
 export function partNumber(n: number): string {
@@ -57,8 +57,8 @@ export const installApp = "Install this site as an app";
 
 /** The strings of the home page. */
 export const HOME_UI = {
-  eyebrow: "SOFTWARE TESTING WITH AI · 2026",
-  titleLine1: "Software Testing",
+  eyebrow: "AGENTIC QA · 2026",
+  titleLine1: "Agentic QA",
   titleLine2Before: "with",
   titleMark: "Claude AI",
   sub: "A hands-on tutorial for QA engineers and SDETs: install Claude Code, learn how it works, configure and extend it, and automate testing in CI and the browser. Then follow one real QA project from a bug hunt to a second fix PR.",
