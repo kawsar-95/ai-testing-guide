@@ -18,7 +18,7 @@ import checks
 
 
 def default_routes():
-    """The tutorial pages, the Linux stage pages, the System Design case pages, the Fundamentals chapter pages, the Architecture pages, the Course pages, and the k6 pages, without the seven homes."""
+    """The tutorial pages, the Linux stage pages, the System Design case pages, the Fundamentals chapter pages, the Architecture pages, the Course pages, the k6 pages, and the Agent Memory pages, without the eight homes."""
     here = Path(__file__).resolve().parent
     routes = []
     for name, home in (
@@ -29,6 +29,7 @@ def default_routes():
         ("architecture-route-map.json", "/architecture/"),
         ("course-route-map.json", "/course/"),
         ("k6-route-map.json", "/k6/"),
+        ("agent-memory-route-map.json", "/agent-memory/"),
     ):
         route_map = json.loads((here / name).read_text())
         routes += [route for route in route_map.values() if route != home]

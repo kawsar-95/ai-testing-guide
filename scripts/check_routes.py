@@ -19,6 +19,7 @@ def load_routes():
         "architecture-route-map.json",
         "course-route-map.json",
         "k6-route-map.json",
+        "agent-memory-route-map.json",
         "contents-route-map.json",
         "dashboard-route-map.json",
         "interview-route-map.json",

@@ -28,7 +28,7 @@ export const search = "Search";
 export const searchAll = "Search all parts";
 export const searchClose = "Close search";
 export const searchResults = "Search results";
-export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, the Architecture topics, the Course topics, and the k6 topics.`;
+export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, the Architecture topics, the Course topics, the k6 topics, and the Agent Memory topics.`;
 /** The text of the link to the tutorial in the drawer of another section. */
 export const crossToTutorial = "Tutorial";
 /** The link to the home of a module in the sidebar. */
@@ -70,8 +70,8 @@ export const HOME_UI = {
   whyTitle: "Learn by doing, with sources",
   whySub: "Short parts, real commands, and a source for each fact.",
   courseEyebrow: "COURSE STRUCTURE",
-  courseTitle: "Six tutorial groups and six modules",
-  courseSub: "Read the tutorial in order, then open a module for Linux, testing fundamentals, system design, architecture, the System Design Course, or k6 performance testing.",
+  courseTitle: "Six tutorial groups and seven modules",
+  courseSub: "Read the tutorial in order, then open a module for Linux, testing fundamentals, system design, architecture, the System Design Course, k6 performance testing, or AI agent memory.",
   cardCount: (n: number) => `${n} ${n === 1 ? "page" : "pages"}`,
 };
 
