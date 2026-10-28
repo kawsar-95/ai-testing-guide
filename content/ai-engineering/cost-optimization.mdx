@@ -1,0 +1,285 @@
+export const metadata = { title: "Cost Optimization", description: "Token budgets, smaller models, and smart routing." }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Pricing', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/about-claude/pricing', accessed: '2026-10-28' },
+    { title: 'Prompt caching', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching', accessed: '2026-10-28' },
+    { title: 'Batch processing', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', accessed: '2026-10-28' },
+    { title: 'Token counting', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/token-counting', accessed: '2026-10-28' },
+    { title: 'Optimizing for cost and intelligence', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence', accessed: '2026-10-28' },
+    { title: 'Rate limits', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/rate-limits', accessed: '2026-10-28' },
+    { title: 'Models overview', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/about-claude/models/overview', accessed: '2026-10-28' },
+  ],
+}
+
+# Cost Optimization
+
+An AI feature has a meter that runs on every request. A prompt that is a little too long, sent a million times, becomes a large bill. Cost optimization finds the tokens that do no work and stops paying for them, without making the answers worse.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The Claude API bills by **tokens**: input tokens that you send, and output tokens that the model writes. Prices are in USD per million tokens (MTok) <Cite n={1} />. Output tokens cost more than input tokens. For Claude Sonnet 5.5, input is $2 / MTok and output is $10 / MTok <Cite n={1} />.
+
+So the cost of one request depends on three things: the model, the number of input tokens, and the number of output tokens. **Cost optimization** works on all three, with these levers:
+
+- a smaller model for simple work,
+- prompt caching for text that repeats,
+- batches for work that can wait,
+- limits on tokens and spend.
+
+Anthropic advises to judge the result by the cost of a completed task, not the price of a token <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+The Claude API charges by **tokens**. Input tokens are what you send. Output tokens are what the model writes. Prices are in USD for each million tokens (MTok) <Cite n={1} />. Output tokens cost more than input tokens. For Claude Sonnet 5.5, input costs $2 / MTok and output costs $10 / MTok <Cite n={1} />.
+
+So the cost of one request depends on three things: the model, the number of input tokens, and the number of output tokens. **Cost optimization** works on all three. It uses these tools:
+
+- a smaller model for simple work,
+- prompt caching for text that repeats,
+- batches for work that can wait,
+- limits on tokens and on spend.
+
+Anthropic says to judge the result by the cost of a finished task, not the price of a token <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+Claude API **টোকেন (token)** অনুযায়ী বিল করে। ইনপুট টোকেন হলো যা আপনি পাঠান। আউটপুট টোকেন হলো যা মডেল লেখে। দাম USD-তে, প্রতি মিলিয়ন টোকেনে (MTok) <Cite n={1} />। আউটপুট টোকেনের দাম ইনপুট টোকেনের চেয়ে বেশি। Claude Sonnet 5.5-এর ইনপুট $2 / MTok, আউটপুট $10 / MTok <Cite n={1} />।
+
+তাই একটা রিকুয়েস্টের খরচ তিনটা জিনিসের ওপর নির্ভর করে: মডেল, ইনপুট টোকেনের সংখ্যা ও আউটপুট টোকেনের সংখ্যা। **কস্ট অপ্টিমাইজেশন (cost optimization)** তিনটা নিয়েই কাজ করে। এটা এই উপায়গুলো ব্যবহার করে:
+
+- সহজ কাজের জন্য ছোট মডেল,
+- বারবার আসা টেক্সটের জন্য প্রম্পট ক্যাশিং,
+- অপেক্ষা করা যায় এমন কাজের জন্য ব্যাচ,
+- টোকেন ও খরচের সীমা।
+
+Anthropic বলে, ফল বিচার করুন একটা শেষ হওয়া কাজের খরচ দিয়ে, একটা টোকেনের দাম দিয়ে নয় <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Prices of the current models
+
+| Model | Input / MTok | Output / MTok | Cache hit / MTok |
+|---|---|---|---|
+| Claude Opus 5.5 | $4 | $20 | $0.20 |
+| Claude Sonnet 5.5 | $2 | $10 | $0.10 |
+| Claude Haiku 5.5 (prompt up to 100,000 tokens) | $0.10 | $0.50 | $0.01 |
+
+All prices are from the Claude pricing page <Cite n={1} />. Claude Haiku 5.5 has higher prices for a prompt over 100,000 tokens <Cite n={1} />.
+
+### Lever 1: prompt caching
+
+A cache write costs more than normal input: 1.25 times the base input price for a 5-minute cache, and 2 times for a 1-hour cache <Cite n={2} />. A cache read costs much less: 0.1 times the base input price on most models, and 0.05 times on Claude Opus 5.5 and Claude Sonnet 5.5 <Cite n={2} />. So a long system prompt that every request repeats is the first thing to cache.
+
+### Lever 2: batches
+
+The Batch API gives a 50 % discount on input and output tokens <Cite n={1} />. The work runs asynchronously, so use it only when nobody waits for the answer <Cite n={3} />. The caching multipliers stack with the batch discount <Cite n={2} />.
+
+### Lever 3: count and cap tokens
+
+The token counting endpoint returns the number of input tokens of a message before you send it <Cite n={4} />. Use it to find prompts that grew too large. The API ID of Claude Sonnet 5.5 is `claude-sonnet-5-5` <Cite n={7} />.
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+count = client.messages.count_tokens(
+    model="claude-sonnet-5-5",
+    system="You write test cases from user stories.",
+    messages=[{"role": "user", "content": "Story: a user resets a password."}],
+)
+print(count.input_tokens)
+```
+
+Every tool definition that you attach is input on every turn <Cite n={5} />. `max_tokens` limits the length of one response. The model cannot see it, so a lower value does not make the model save tokens. A cut-off response is still billed <Cite n={5} />.
+
+### Lever 4: spend limits
+
+The Start, Build, and Scale usage tiers each have a monthly spend cap. You can set your own lower limit for the organization <Cite n={6} />. This is the last safety net if a bug sends too many requests.
+
+</Technical>
+<Layman>
+
+These are the prices of the current models, from the Claude pricing page <Cite n={1} />:
+
+- Claude Opus 5.5: $4 input, $20 output, $0.20 cache hit, for each million tokens.
+- Claude Sonnet 5.5: $2 input, $10 output, $0.10 cache hit, for each million tokens.
+- Claude Haiku 5.5 (prompt up to 100,000 tokens): $0.10 input, $0.50 output, $0.01 cache hit, for each million tokens.
+
+Claude Haiku 5.5 has higher prices for a prompt over 100,000 tokens <Cite n={1} />.
+
+**Lever 1: prompt caching.** A cache write costs more than normal input. It is 1.25 times the base input price for a 5-minute cache. It is 2 times for a 1-hour cache <Cite n={2} />. A cache read costs much less. It is 0.1 times the base input price on most models. It is 0.05 times on Claude Opus 5.5 and Claude Sonnet 5.5 <Cite n={2} />. So cache a long system prompt that every request repeats first.
+
+**Lever 2: batches.** The Batch API gives a 50 % discount on input and output tokens <Cite n={1} />. The work runs in the background. So use it only when nobody waits for the answer <Cite n={3} />. The batch discount also applies on top of the caching prices <Cite n={2} />.
+
+**Lever 3: count and cap tokens.** The token counting endpoint tells you the number of input tokens of a message before you send it <Cite n={4} />. Use it to find prompts that grew too large. The Technical text has a short Python example of this call.
+
+Every tool definition that you attach is input on every turn <Cite n={5} />. `max_tokens` limits the length of one response. The model cannot see it. So a lower value does not make the model use fewer tokens. A response that was cut off is still billed <Cite n={5} />.
+
+**Lever 4: spend limits.** The Start, Build, and Scale usage tiers each have a monthly spend cap. You can set your own lower limit for the organization <Cite n={6} />. This is the last safety net if a bug sends too many requests.
+
+</Layman>
+<Bangla>
+
+Claude-এর দামের পেজ থেকে বর্তমান মডেলগুলোর দাম <Cite n={1} />:
+
+- Claude Opus 5.5: প্রতি মিলিয়ন টোকেনে ইনপুট $4, আউটপুট $20, ক্যাশ হিট $0.20।
+- Claude Sonnet 5.5: প্রতি মিলিয়ন টোকেনে ইনপুট $2, আউটপুট $10, ক্যাশ হিট $0.10।
+- Claude Haiku 5.5 (100,000 টোকেন পর্যন্ত প্রম্পট): প্রতি মিলিয়ন টোকেনে ইনপুট $0.10, আউটপুট $0.50, ক্যাশ হিট $0.01।
+
+100,000 টোকেনের বেশি প্রম্পটে Claude Haiku 5.5-এর দাম বেশি <Cite n={1} />।
+
+**উপায় 1: প্রম্পট ক্যাশিং।** একটা ক্যাশ রাইটের দাম সাধারণ ইনপুটের চেয়ে বেশি। 5 মিনিটের ক্যাশে এটা মূল ইনপুট দামের 1.25 গুণ। 1 ঘণ্টার ক্যাশে 2 গুণ <Cite n={2} />। একটা ক্যাশ রিডের দাম অনেক কম। বেশিরভাগ মডেলে এটা মূল ইনপুট দামের 0.1 গুণ। Claude Opus 5.5 ও Claude Sonnet 5.5-এ 0.05 গুণ <Cite n={2} />। তাই প্রতিটা রিকুয়েস্টে যে লম্বা সিস্টেম প্রম্পট আসে, সেটা আগে ক্যাশ করুন।
+
+**উপায় 2: ব্যাচ।** Batch API ইনপুট ও আউটপুট টোকেনে 50 % ছাড় দেয় <Cite n={1} />। কাজটা ব্যাকগ্রাউন্ডে চলে। তাই যখন কেউ উত্তরের জন্য অপেক্ষা করে না, শুধু তখনই এটা ব্যবহার করুন <Cite n={3} />। ক্যাশিংয়ের দামের ওপরও ব্যাচের ছাড় খাটে <Cite n={2} />।
+
+**উপায় 3: টোকেন গুনুন ও সীমা দিন।** Token counting এন্ডপয়েন্ট পাঠানোর আগেই একটা মেসেজের ইনপুট টোকেনের সংখ্যা জানায় <Cite n={4} />। যে প্রম্পট অনেক বড় হয়ে গেছে, তা খুঁজতে এটা ব্যবহার করুন। Technical টেক্সটে এই কলের একটা ছোট Python উদাহরণ আছে।
+
+আপনার যোগ করা প্রতিটা টুলের সংজ্ঞা প্রতিটা টার্নে ইনপুট হিসেবে যায় <Cite n={5} />। `max_tokens` একটা রেসপন্সের দৈর্ঘ্য সীমিত করে। মডেল এটা দেখতে পায় না। তাই কম মান দিলে মডেল কম টোকেন ব্যবহার করে না। কেটে যাওয়া রেসপন্সেরও বিল হয় <Cite n={5} />।
+
+**উপায় 4: খরচের সীমা।** Start, Build ও Scale usage tier-এর প্রতিটার একটা মাসিক খরচের সীমা আছে। আপনি অর্গানাইজেশনের জন্য নিজের একটা কম সীমা দিতে পারেন <Cite n={6} />। কোনো বাগ যদি অনেক বেশি রিকুয়েস্ট পাঠায়, এটাই শেষ নিরাপত্তা জাল।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A team runs a test-case generator on Claude Sonnet 5.5. It gets 10,000 requests a day. Each request has 3,000 input tokens (2,500 of them are the same system prompt) and 500 output tokens. The numbers below are the tutorial's own calculation, with the prices above <Cite n={1} />:
+
+```text
+Before:
+  input   10,000 x 3,000 = 30 M tokens x $2.00  = $60.00
+  output  10,000 x   500 =  5 M tokens x $10.00 = $50.00
+  total per day                                 = $110.00
+
+After caching the 2,500-token system prompt (cache hit $0.10 / MTok):
+  cached  10,000 x 2,500 = 25 M tokens x $0.10  =  $2.50
+  input   10,000 x   500 =  5 M tokens x $2.00  = $10.00
+  output  (no change)                           = $50.00
+  total per day (plus a few cache writes)       = about $62.50
+```
+
+The output is now the largest part of the bill. The team asks for shorter test cases, and moves the nightly regression run of 2,000 stories to the Batch API, at 50 % off <Cite n={1} /><Cite n={3} />.
+
+</Technical>
+<Layman>
+
+A team runs a test-case generator on Claude Sonnet 5.5. It gets 10,000 requests a day. Each request has 3,000 input tokens. 2,500 of them are the same system prompt. Each request also has 500 output tokens. The numbers below are the tutorial's own calculation, with the prices above <Cite n={1} />:
+
+- Before: the input is 30 million tokens, which costs $60. The output is 5 million tokens, which costs $50. The total is $110 a day.
+- After the team caches the system prompt of 2,500 tokens: 25 million cached tokens cost $2.50. The other 5 million input tokens cost $10. The output still costs $50. The total is about $62.50 a day, plus a few cache writes.
+
+The output is now the largest part of the bill. The team asks for shorter test cases. It moves the nightly regression run of 2,000 stories to the Batch API, at 50 % off <Cite n={1} /><Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+একটা দল Claude Sonnet 5.5-এ একটা টেস্ট কেস জেনারেটর চালায়। দিনে 10,000 রিকুয়েস্ট আসে। প্রতিটা রিকুয়েস্টে 3,000 ইনপুট টোকেন। এর 2,500 টোকেন একই সিস্টেম প্রম্পট। প্রতিটা রিকুয়েস্টে 500 আউটপুট টোকেনও আছে। নিচের হিসাবটা টিউটোরিয়ালের নিজের, ওপরের দাম দিয়ে করা <Cite n={1} />:
+
+- আগে: ইনপুট 30 মিলিয়ন টোকেন, খরচ $60। আউটপুট 5 মিলিয়ন টোকেন, খরচ $50। মোট দিনে $110।
+- দল 2,500 টোকেনের সিস্টেম প্রম্পট ক্যাশ করার পর: 25 মিলিয়ন ক্যাশ করা টোকেনের খরচ $2.50। বাকি 5 মিলিয়ন ইনপুট টোকেনের খরচ $10। আউটপুটের খরচ এখনো $50। মোট দিনে প্রায় $62.50, সাথে কয়েকটা ক্যাশ রাইট।
+
+এখন আউটপুটই বিলের সবচেয়ে বড় অংশ। দল ছোট টেস্ট কেস চায়। রাতের 2,000 স্টোরির রিগ্রেশন রান Batch API-তে সরায়, 50 % ছাড়ে <Cite n={1} /><Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Comparing token prices only.** A failed task still bills its tokens and then the retry, so compare cost per completed task <Cite n={5} />.
+- **Caching a prompt that is too short.** A prompt below the minimum length for the model is not cached, and the API returns no error <Cite n={2} />.
+- **Trusting a low `max_tokens` to save money.** The model does not see the cap, and cut-off answers are still billed <Cite n={5} />.
+- **Attaching every tool to every request.** Each definition is input on every turn <Cite n={5} />.
+- **No spend limit.** Without your own limit, only the tier cap stops a runaway job <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+- **Comparing token prices only.** A failed task still costs its tokens. Then the retry costs more. So compare the cost of each finished task <Cite n={5} />.
+- **Caching a prompt that is too short.** A prompt below the minimum length for the model is not cached. The API returns no error <Cite n={2} />.
+- **Trusting a low `max_tokens` to save money.** The model does not see the limit. Answers that were cut off are still billed <Cite n={5} />.
+- **Attaching every tool to every request.** Each tool definition is input on every turn <Cite n={5} />.
+- **No spend limit.** Without your own limit, only the tier cap stops a job that runs out of control <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+- **শুধু টোকেনের দাম তুলনা করা।** একটা ব্যর্থ কাজেও তার টোকেনের বিল হয়। তারপর রিট্রাইয়ের খরচ যোগ হয়। তাই প্রতিটা শেষ হওয়া কাজের খরচ তুলনা করুন <Cite n={5} />।
+- **খুব ছোট প্রম্পট ক্যাশ করা।** মডেলের ন্যূনতম দৈর্ঘ্যের চেয়ে ছোট প্রম্পট ক্যাশ হয় না। API কোনো এরর দেয় না <Cite n={2} />।
+- **টাকা বাঁচাতে কম `max_tokens`-এ ভরসা করা।** মডেল সীমাটা দেখে না। কেটে যাওয়া উত্তরেরও বিল হয় <Cite n={5} />।
+- **প্রতিটা রিকুয়েস্টে সব টুল যোগ করা।** প্রতিটা টুলের সংজ্ঞা প্রতিটা টার্নে ইনপুট হিসেবে যায় <Cite n={5} />।
+- **খরচের কোনো সীমা না থাকা।** নিজের সীমা না থাকলে নিয়ন্ত্রণের বাইরে চলে যাওয়া একটা কাজ শুধু tier-এর সীমাই থামায় <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Cost per test run.** Log the `usage` of every call in your AI test suite. Report the cost of each run, and flag a run that costs much more than the last one.
+- **Prompt size gate.** In CI, count the tokens of each prompt template. Fail the build when a template grows past an agreed budget.
+- **Cache hit rate.** In a staging run, check how many requests show `cache_read_input_tokens` above 0. A low rate means the cached prefix changes between requests.
+- **Runaway loop.** Make an agent loop forever in a test setup. Check that a step limit or a spend limit stops it.
+- **Same quality, lower cost.** After each cost change, run the evaluation set again. Check that the pass rate did not drop.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Cost for each test run.** Log the `usage` of every call in your AI test suite. Report the cost of each run. Flag a run that costs much more than the last one.
+- **A gate for prompt size.** In CI, count the tokens of each prompt template. Fail the build when a template grows past an agreed budget.
+- **Cache hit rate.** In a staging run, check how many requests show `cache_read_input_tokens` above 0. A low rate means that the cached prefix changes between requests.
+- **A loop that never ends.** In a test setup, make an agent loop forever. Check that a step limit or a spend limit stops it.
+- **Same quality, lower cost.** After each cost change, run the evaluation set again. Check that the pass rate did not drop.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **প্রতিটা টেস্ট রানের খরচ।** আপনার AI টেস্ট স্যুটের প্রতিটা কলের `usage` লগ করুন। প্রতিটা রানের খরচ জানান। আগের রানের চেয়ে অনেক বেশি খরচের রান চিহ্নিত করুন।
+- **প্রম্পটের আকারের গেট।** CI-তে প্রতিটা প্রম্পট টেমপ্লেটের টোকেন গুনুন। কোনো টেমপ্লেট ঠিক করা বাজেটের বেশি বড় হলে বিল্ড ফেল করান।
+- **ক্যাশ হিট রেট।** একটা স্টেজিং রানে দেখুন কতগুলো রিকুয়েস্টে `cache_read_input_tokens` 0-এর বেশি। রেট কম হলে বুঝবেন রিকুয়েস্টের মধ্যে ক্যাশ করা প্রিফিক্স বদলায়।
+- **কখনো শেষ না হওয়া লুপ।** একটা টেস্ট সেটআপে একটা এজেন্টকে চিরকাল লুপে চালান। দেখুন একটা ধাপের সীমা বা খরচের সীমা এটা থামায় কি না।
+- **একই মান, কম খরচ।** প্রতিটা খরচ পরিবর্তনের পর ইভ্যালুয়েশন সেট আবার চালান। দেখুন পাস রেট কমেনি।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| MTok | One million tokens, the unit of the prices <Cite n={1} /> |
+| Cache read | Input tokens served from the prompt cache, at a much lower price <Cite n={2} /> |
+| Cache write | Input tokens stored in the cache, at a higher price than normal input <Cite n={2} /> |
+| Batch API | Asynchronous processing of many requests at 50 % off <Cite n={1} /><Cite n={3} /> |
+| Token counting | An endpoint that counts the input tokens of a message before you send it <Cite n={4} /> |
+| Cost per task | The full cost of one completed task, retries included <Cite n={5} /> |
+| Spend limit | A maximum monthly cost for API use <Cite n={6} /> |

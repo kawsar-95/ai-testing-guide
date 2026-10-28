@@ -1,0 +1,193 @@
+export const metadata = { title: 'Agent Loop', description: 'The harness calls the model, runs the tools it asks for, and returns the results until the task is done.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'How Claude Code works', publisher: 'Claude Code documentation', url: 'https://code.claude.com/docs/en/how-claude-code-works', accessed: '2026-10-28' },
+    { title: 'How the agent loop works', publisher: 'Claude Agent SDK documentation', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
+  ],
+}
+
+# Agent Loop
+
+The harness runs the loop: it calls the model, runs the tools that the model asks for, and gives the results back. The loop stops when the model gives an answer with no tool call, when a limit is reached, or when a person interrupts it.
+
+<PageMeta />
+
+## What a harness is
+
+<Voices>
+<Technical>
+
+A model alone can only read text and write text. To change a file or run a command, it needs software around it. The Claude Code docs call this software the **agentic harness**: the layer around the model that provides the tools and manages the context that the model sees <Cite n={1} />.
+
+The docs say it this way: without tools, Claude can only respond with text, and with tools, Claude can act <Cite n={1} />. So the harness decides three things for each step:
+
+- Which tools the model can use.
+- What the model sees (the context).
+- What the harness does with each tool request <Cite n={2} />.
+
+The six topics of this module are the parts of a harness. This page is the first part: the loop that connects them.
+
+</Technical>
+<Layman>
+
+A model alone can only read text and write text. It cannot open a file or run a command by itself. The **harness** is the software around the model that gives it tools and controls what it sees <Cite n={1} />.
+
+Without tools, the model can only answer with text. With tools, it can act <Cite n={1} />. The harness decides which tools the model gets, what it sees, and what happens to each request.
+
+This module has six topics. Each topic is one part of a harness. This page is about the loop that connects all the parts.
+
+</Layman>
+<Bangla>
+
+একটা মডেল একা শুধু টেক্সট পড়তে আর লিখতে পারে। নিজে থেকে ফাইল খুলতে বা কমান্ড চালাতে পারে না। মডেলের চারপাশের যে সফটওয়্যার তাকে টুল দেয় আর সে কী দেখবে তা নিয়ন্ত্রণ করে, সেটাই **harness** <Cite n={1} />।
+
+টুল ছাড়া মডেল শুধু টেক্সটে উত্তর দিতে পারে। টুল থাকলে সে কাজ করতে পারে <Cite n={1} />। মডেল কোন টুল পাবে, কী দেখবে, আর প্রতিটা রিকোয়েস্টের কী হবে, তা harness ঠিক করে।
+
+এই মডিউলে ছয়টা টপিক আছে। প্রতিটা টপিক harness-এর একটা অংশ। এই পেজটা সেই লুপ নিয়ে, যেটা সব অংশকে জোড়া লাগায়।
+
+</Bangla>
+</Voices>
+
+## How the loop works
+
+<Voices>
+<Technical>
+
+The Claude Agent SDK runs the same loop that powers Claude Code. Claude evaluates the prompt, calls tools to take action, receives the results, and repeats until the task is complete <Cite n={2} />.
+
+```text
+            ┌──────────────┐
+Request ──► │    Model     │ ── tool call ──► Harness runs the tool
+            └──────────────┘                         │
+               ▲      │                              │
+               │      └─ no tool call ──► Final answer
+               └──────── tool result ◄───────────────┘
+```
+
+Each set of tool results feeds back to Claude for the next decision <Cite n={2} />. The turns continue until Claude produces output with no tool calls. Then the loop ends and the harness delivers the final result <Cite n={2} />.
+
+In Claude Code, the work goes through three phases: gather context, take action, and verify results. The docs say that these phases blend together <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+The loop has a small number of steps, and they repeat <Cite n={2} />:
+
+1. The model reads the request.
+2. The model asks for a tool, for example "read this file".
+3. The harness runs the tool and gives the result back to the model.
+4. The model uses the result to decide the next step.
+
+When the model answers with no tool request, the loop stops. The harness then gives the final answer to the user <Cite n={2} />.
+
+Claude Code describes the work as three phases: gather context, take action, and verify results. The phases mix together while Claude works <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+লুপে অল্প কয়েকটা ধাপ আছে, আর ধাপগুলো বারবার ঘোরে <Cite n={2} />:
+
+1. মডেল রিকোয়েস্টটা পড়ে।
+2. মডেল একটা টুল চায়, যেমন "এই ফাইলটা পড়ো"।
+3. harness টুলটা চালায় আর ফলাফলটা মডেলকে ফেরত দেয়।
+4. মডেল সেই ফলাফল দেখে পরের ধাপ ঠিক করে।
+
+মডেল যখন কোনো টুল না চেয়ে উত্তর দেয়, তখন লুপ থামে। তারপর harness ইউজারকে ফাইনাল উত্তর দেয় <Cite n={2} />।
+
+Claude Code কাজটাকে তিনটা ধাপে ভাগ করে: কনটেক্সট জোগাড় করা, কাজ করা, আর ফলাফল যাচাই করা। কাজের সময় ধাপগুলো একটার সাথে আরেকটা মিশে যায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How the loop stops
+
+<Voices>
+<Technical>
+
+A loop with no limit can run for a long time and cost a lot. The Agent SDK has two limits <Cite n={2} />:
+
+| Option (Python / TypeScript) | What it limits |
+|---|---|
+| `max_turns` / `maxTurns` | The number of tool-use turns |
+| `max_budget_usd` / `maxBudgetUsd` | The estimated spend at which the loop stops |
+
+If the loop hits a limit, the SDK returns a `ResultMessage` with the error subtype `error_max_turns` or `error_max_budget_usd` <Cite n={2} />. The `ResultMessage` marks the end of the loop. It has the final text, the token usage, the cost, and the session ID <Cite n={2} />. The `result` field is only on the success variant, so check the subtype before you read it <Cite n={2} />.
+
+A person can also stop the loop. In Claude Code, `Esc` stops Claude at once: the running tool call is canceled and Claude waits for the next instruction <Cite n={1} />. You can also interrupt to give more context or to ask for a different approach <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+A loop without a limit can run for a long time and cost a lot of money. So the Agent SDK lets you set two limits: a maximum number of turns, and a maximum budget <Cite n={2} />.
+
+If the loop reaches a limit, the SDK stops it and reports an error type that tells you which limit it was <Cite n={2} />. The last message of the loop has the final text, the token use, the cost, and the session ID <Cite n={2} />. The final text is only there when the run succeeded, so check the type first <Cite n={2} />.
+
+A person can stop the loop too. In Claude Code, press `Esc`. Claude stops the running tool and waits for you <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+লিমিট ছাড়া একটা লুপ অনেকক্ষণ চলতে পারে আর অনেক খরচ করতে পারে। তাই Agent SDK-তে দুটো লিমিট দেওয়া যায়: সর্বোচ্চ কয়টা টার্ন (`max_turns`), আর সর্বোচ্চ কত বাজেট (`max_budget_usd`) <Cite n={2} />।
+
+লুপ কোনো লিমিটে পৌঁছালে SDK থেমে যায় আর একটা error subtype দেয়: `error_max_turns` অথবা `error_max_budget_usd` <Cite n={2} />। শেষ মেসেজ `ResultMessage`-এ ফাইনাল টেক্সট, টোকেন ব্যবহার, খরচ আর session ID থাকে <Cite n={2} />। `result` ফিল্ড শুধু সফল রানে থাকে, তাই আগে subtype চেক করুন <Cite n={2} />।
+
+মানুষও লুপ থামাতে পারে। Claude Code-এ `Esc` চাপলে Claude চলমান টুলটা বাতিল করে আপনার পরের নির্দেশের জন্য অপেক্ষা করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+The loop is where an agent spends time and money. Test these cases:
+
+- **Normal end:** a simple task ends with a final answer and a success result.
+- **Turn limit:** set a low turn limit and give a long task. The run stops with the turn-limit error, not with a crash.
+- **Budget limit:** do the same with a low budget.
+- **Interrupt:** stop the agent in the middle of a tool call. Check that it waits and that no half-done action stays.
+- **Endless loop:** give a task that cannot succeed, such as a test that always fails. The agent must stop and ask, not try forever.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+Try these cases when you test an agent:
+
+- A simple task ends with a final answer.
+- A low turn limit stops a long task with a clear error.
+- A low budget stops the run with a clear error.
+- If you stop the agent in the middle of a step, it waits and leaves nothing half done.
+- A task that cannot succeed does not make the agent try forever.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+একটা এজেন্ট টেস্ট করার সময় এই কেসগুলো চেষ্টা করুন:
+
+- একটা সহজ কাজ ফাইনাল উত্তর দিয়ে শেষ হয়।
+- কম turn limit দিলে লম্বা কাজ একটা পরিষ্কার এরর দিয়ে থামে।
+- কম বাজেট দিলেও রান একটা পরিষ্কার এরর দিয়ে থামে।
+- মাঝপথে এজেন্টকে থামালে সে অপেক্ষা করে, কোনো কাজ অর্ধেক করা অবস্থায় রেখে যায় না।
+- যে কাজ কখনো সফল হবে না, তার জন্য এজেন্ট অনন্তকাল চেষ্টা করে না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Harness | The software around the model. It gives tools, manages the context, and runs the loop. |
+| Agent loop | Model call, tool run, result back, repeated until the model gives an answer with no tool call |
+| Turn | One round of the loop |
+| `max_turns` | The Agent SDK limit on the number of tool-use turns |
+| `max_budget_usd` | The Agent SDK limit on the estimated spend |
+| `ResultMessage` | The last message of an Agent SDK run, with the result, the usage, and the cost |

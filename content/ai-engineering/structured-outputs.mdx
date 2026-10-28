@@ -1,0 +1,282 @@
+export const metadata = { title: "Structured Outputs", description: "Get reliable JSON that matches a schema, and parse it safely." }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Structured outputs', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/structured-outputs', accessed: '2026-10-28' },
+    { title: 'Understanding JSON Schema: object', publisher: 'JSON Schema', url: 'https://json-schema.org/understanding-json-schema/reference/object', accessed: '2026-10-28' },
+    { title: 'Structured model outputs', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/guides/structured-outputs', accessed: '2026-10-28' },
+    { title: 'LLM05:2025 Improper Output Handling', publisher: 'OWASP GenAI Security Project', url: 'https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/', accessed: '2026-10-28' },
+  ],
+}
+
+# Structured Outputs
+
+A chat answer is written for a person. Code cannot read it safely. Structured outputs make the model answer in a fixed JSON shape, so your code can read each field like the response of a normal API.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+Without help, a model can return broken JSON, leave out a required field, or use the wrong data type <Cite n={1} />. **Structured outputs** fix the shape of the answer. You give a JSON Schema, and the API limits the model output to text that matches it <Cite n={1} />.
+
+The Claude API has two related features <Cite n={1} />:
+
+- **JSON outputs** (`output_config.format`): the text of the response is JSON that matches your schema.
+- **Strict tool use** (`strict: true`): the name and the input of a tool call match the tool schema.
+
+OpenAI has the same idea. Its docs separate **JSON mode**, which gives valid JSON only, from **Structured Outputs**, which also match your schema <Cite n={3} />.
+
+A valid shape is not a true answer. The schema controls the form of the data, not the facts in it.
+
+</Technical>
+<Layman>
+
+Without help, a model can return broken JSON. It can leave out a required field. It can use the wrong data type <Cite n={1} />. **Structured outputs** fix the shape of the answer. You give a JSON Schema. The API then lets the model write only text that matches it <Cite n={1} />.
+
+The Claude API has two related features <Cite n={1} />:
+
+- **JSON outputs** (`output_config.format`): the answer text is JSON that matches your schema.
+- **Strict tool use** (`strict: true`): the name and the input of a tool call match the tool schema.
+
+OpenAI has the same idea. Its docs make a difference between two modes. **JSON mode** gives valid JSON only. **Structured Outputs** also match your schema <Cite n={3} />.
+
+A correct shape is not a correct answer. The schema controls the form of the data. It does not control the facts in it.
+
+</Layman>
+<Bangla>
+
+কোনো সাহায্য ছাড়া একটা মডেল ভাঙা JSON ফেরত দিতে পারে। সে একটা দরকারি ফিল্ড বাদ দিতে পারে। সে ভুল ডেটা টাইপ ব্যবহার করতে পারে <Cite n={1} />। **Structured outputs** উত্তরের আকার ঠিক করে দেয়। আপনি একটা JSON Schema দেন। তখন API মডেলকে শুধু সেই স্কিমার সাথে মেলে এমন টেক্সট লিখতে দেয় <Cite n={1} />।
+
+Claude API-তে দুটো সম্পর্কিত ফিচার আছে <Cite n={1} />:
+
+- **JSON outputs** (`output_config.format`): উত্তরের টেক্সট এমন JSON, যা আপনার স্কিমার সাথে মেলে।
+- **Strict tool use** (`strict: true`): টুল কলের নাম ও ইনপুট টুলের স্কিমার সাথে মেলে।
+
+OpenAI-রও একই ধারণা আছে। তাদের ডকস দুটো মোড আলাদা করে। **JSON mode** শুধু বৈধ JSON দেয়। **Structured Outputs** আপনার স্কিমার সাথেও মেলে <Cite n={3} />।
+
+সঠিক আকার মানে সঠিক উত্তর নয়। স্কিমা ডেটার আকার নিয়ন্ত্রণ করে। এর ভেতরের তথ্য নিয়ন্ত্রণ করে না।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Three steps
+
+1. Describe the shape with a JSON Schema. An SDK can also build the schema from a type in your code <Cite n={1} />.
+2. Send it in `output_config.format` with `type: "json_schema"` <Cite n={1} />.
+3. Read the JSON from the text block of the response. An SDK helper can parse it into your type <Cite n={1} />.
+
+In JSON Schema, a property is optional unless you list it in `required` <Cite n={2} />. Extra properties are allowed unless you set `additionalProperties` to `false` <Cite n={2} />. For Claude, every object must set `additionalProperties: false` <Cite n={1} />.
+
+```python
+import os
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+schema = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "severity": {"type": "string", "enum": ["low", "medium", "high"]},
+        "steps": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["title", "severity", "steps"],
+    "additionalProperties": False,
+}
+
+response = client.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Turn this bug report into JSON: ..."}],
+    output_config={"format": {"type": "json_schema", "schema": schema}},
+)
+text = next(block.text for block in response.content if block.type == "text")
+print(response.stop_reason, text)
+```
+
+### What the API supports
+
+The API supports a subset of JSON Schema <Cite n={1} />. Some features that it does not support:
+
+| Not supported | Example |
+|---|---|
+| Recursive schemas | A comment that holds a list of comments |
+| Number limits | `minimum`, `maximum`, `multipleOf` |
+| String length limits | `minLength`, `maxLength` |
+| External references | `"$ref": "http://..."` |
+
+A schema with a feature that is not supported gets a 400 error <Cite n={1} />. Some SDK helpers remove these limits from the schema that they send, write them into the field description, and then check the response against your full schema <Cite n={1} />.
+
+### Cost and speed
+
+The first request with a new schema is slower, because the API compiles a grammar. The compiled grammar stays in a cache for 24 hours after its last use <Cite n={1} />. The API also adds a short system prompt about the format, so you pay a few more input tokens <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+The work has three steps:
+
+1. Describe the shape with a JSON Schema. An SDK can also build the schema from a type in your code <Cite n={1} />.
+2. Send it in `output_config.format` with `type: "json_schema"` <Cite n={1} />.
+3. Read the JSON from the text block of the response. An SDK helper can turn it into your type <Cite n={1} />.
+
+In JSON Schema, a property is optional. It becomes required only when you list it in `required` <Cite n={2} />. Extra properties are allowed. They stop only when you set `additionalProperties` to `false` <Cite n={2} />. For Claude, every object must set `additionalProperties: false` <Cite n={1} />.
+
+The Technical text has a short Python example. It asks for a bug report with three fields: `title`, `severity`, and `steps`.
+
+The API supports only part of JSON Schema <Cite n={1} />. For example, it does not support a schema that refers to itself. It does not support number limits such as `minimum`. It does not support length limits such as `maxLength`. It does not support links to an outside schema. If you use one of these, you get a 400 error <Cite n={1} />. Some SDK helpers take these limits out of the schema that they send. They put them into the field description. Then they check the answer against your full schema <Cite n={1} />.
+
+The first request with a new schema is slower, because the API builds a grammar. The API keeps the grammar for 24 hours after its last use <Cite n={1} />. The API also adds a short system prompt about the format. So you pay for a few more input tokens <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+কাজটার তিনটা ধাপ:
+
+1. একটা JSON Schema দিয়ে আকারটা বর্ণনা করুন। একটা SDK আপনার কোডের একটা টাইপ থেকেও স্কিমা তৈরি করতে পারে <Cite n={1} />।
+2. এটা `output_config.format`-এ `type: "json_schema"` দিয়ে পাঠান <Cite n={1} />।
+3. রেসপন্সের টেক্সট ব্লক থেকে JSON পড়ুন। একটা SDK হেল্পার এটাকে আপনার টাইপে রূপ দিতে পারে <Cite n={1} />।
+
+JSON Schema-তে একটা প্রপার্টি ঐচ্ছিক। আপনি `required`-এ রাখলে তবেই সেটা দরকারি হয় <Cite n={2} />। বাড়তি প্রপার্টি অনুমোদিত। আপনি `additionalProperties`-কে `false` করলে তবেই সেগুলো বন্ধ হয় <Cite n={2} />। Claude-এর জন্য প্রতিটা অবজেক্টে `additionalProperties: false` থাকতে হবে <Cite n={1} />।
+
+Technical টেক্সটে একটা ছোট Python উদাহরণ আছে। এটা তিনটা ফিল্ডসহ একটা বাগ রিপোর্ট চায়: `title`, `severity` ও `steps`।
+
+API JSON Schema-র শুধু একটা অংশ সাপোর্ট করে <Cite n={1} />। যেমন, যে স্কিমা নিজেকেই নির্দেশ করে, সেটা সাপোর্ট করে না। `minimum`-এর মতো সংখ্যার সীমা সাপোর্ট করে না। `maxLength`-এর মতো দৈর্ঘ্যের সীমা সাপোর্ট করে না। বাইরের স্কিমার লিংক সাপোর্ট করে না। এর কোনোটা ব্যবহার করলে আপনি 400 এরর পাবেন <Cite n={1} />। কিছু SDK হেল্পার পাঠানো স্কিমা থেকে এই সীমাগুলো সরিয়ে দেয়। তারা সেগুলো ফিল্ডের বর্ণনায় লিখে দেয়। তারপর তারা উত্তরটা আপনার পুরো স্কিমার সাথে মিলিয়ে দেখে <Cite n={1} />।
+
+নতুন স্কিমার প্রথম রিকুয়েস্ট ধীর হয়, কারণ API একটা গ্রামার (grammar) তৈরি করে। শেষ ব্যবহারের পর API গ্রামারটা 24 ঘণ্টা রাখে <Cite n={1} />। API ফরম্যাট নিয়ে একটা ছোট সিস্টেম প্রম্পটও যোগ করে। তাই আপনাকে কয়েকটা বেশি ইনপুট টোকেনের দাম দিতে হয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A QA team builds a bug triage helper. A tester pastes a free-text bug report, and the helper returns JSON with `title`, `severity`, and `steps`. A script then creates a ticket from the JSON.
+
+With the schema above, the parse step no longer fails on broken JSON. Two problems still show up in the logs:
+
+- One report is very long, and the response stops with `stop_reason: "max_tokens"`. The JSON is cut off, so it can be incomplete and not match the schema <Cite n={1} />.
+- The API does not guarantee the capitalization of `enum` values, so a value such as `"High"` can come back for the enum value `"high"` <Cite n={1} />. The script compares enum values without case, as the docs advise <Cite n={1} />.
+
+The team also escapes the `title` before the ticket page shows it. OWASP says to treat model output like input from any user, and to encode it for the place where it is used <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+A QA team builds a helper for bug triage. A tester pastes a bug report in free text. The helper returns JSON with `title`, `severity`, and `steps`. A script then creates a ticket from the JSON.
+
+With the schema, the parse step no longer fails on broken JSON. But two problems still show up in the logs:
+
+- One report is very long. The response stops with `stop_reason: "max_tokens"`. The JSON is cut off. So it can be incomplete and not match the schema <Cite n={1} />.
+- The API does not promise the capital letters of `enum` values. So a value such as `"High"` can come back for the enum value `"high"` <Cite n={1} />. The script compares enum values without case, as the docs advise <Cite n={1} />.
+
+The team also makes the `title` safe before the ticket page shows it. OWASP says to treat model output like input from any user. It says to encode the output for the place where it is used <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা QA দল বাগ ট্রায়াজের (triage) জন্য একটা হেল্পার বানায়। একজন টেস্টার সাধারণ টেক্সটে একটা বাগ রিপোর্ট পেস্ট করেন। হেল্পার `title`, `severity` ও `steps` সহ JSON ফেরত দেয়। তারপর একটা স্ক্রিপ্ট সেই JSON থেকে একটা টিকিট তৈরি করে।
+
+স্কিমা থাকায় পার্স ধাপ আর ভাঙা JSON-এ ফেল করে না। তবু লগে দুটো সমস্যা দেখা যায়:
+
+- একটা রিপোর্ট অনেক লম্বা। রেসপন্স `stop_reason: "max_tokens"` দিয়ে থেমে যায়। JSON কেটে যায়। তাই এটা অসম্পূর্ণ হতে পারে এবং স্কিমার সাথে না মিলতে পারে <Cite n={1} />।
+- API `enum` মানের বড় হাতের অক্ষরের নিশ্চয়তা দেয় না। তাই enum মান `"high"`-এর জায়গায় `"High"` আসতে পারে <Cite n={1} />। ডকসের পরামর্শ মতো স্ক্রিপ্ট অক্ষরের ছোট-বড় না দেখে enum মান তুলনা করে <Cite n={1} />।
+
+টিকিট পেজে দেখানোর আগে দল `title`-কেও নিরাপদ করে। OWASP বলে, মডেলের আউটপুটকে যেকোনো ইউজারের ইনপুটের মতো ধরুন। এটা বলে, আউটপুট যেখানে ব্যবহার হবে সেই জায়গার জন্য এনকোড করুন <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Using JSON mode and calling it a schema check.** JSON mode makes the JSON valid, but it does not make it match a schema <Cite n={3} />.
+- **Not reading `stop_reason`.** A refusal (`"refusal"`) or a cut-off answer (`"max_tokens"`) can give output that does not match the schema <Cite n={1} />. A refusal still has status 200 and still costs tokens <Cite n={1} />.
+- **Using a schema feature that is not supported.** Recursive schemas and number limits get a 400 error <Cite n={1} />.
+- **Expecting the property order of the schema.** Required properties come first in the output, then the optional ones <Cite n={1} />.
+- **Trusting the content.** Model output that goes into HTML, SQL, or a shell without checks can cause XSS, SQL injection, or code execution <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+- **Using JSON mode and calling it a schema check.** JSON mode makes the JSON valid. It does not make it match a schema <Cite n={3} />.
+- **Not reading `stop_reason`.** A refusal (`"refusal"`) can give output that does not match the schema. A cut-off answer (`"max_tokens"`) can do the same <Cite n={1} />. A refusal still has status 200. It still costs tokens <Cite n={1} />.
+- **Using a schema feature that is not supported.** A schema that refers to itself gets a 400 error. Number limits get a 400 error too <Cite n={1} />.
+- **Expecting the property order of the schema.** Required properties come first in the output. The optional ones come after them <Cite n={1} />.
+- **Trusting the content.** Model output can go into HTML, SQL, or a shell without checks. Then it can cause XSS, SQL injection, or code execution <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+- **JSON mode ব্যবহার করে সেটাকে স্কিমা চেক বলা।** JSON mode JSON-কে বৈধ করে। এটা স্কিমার সাথে মেলানো নিশ্চিত করে না <Cite n={3} />।
+- **`stop_reason` না পড়া।** একটা প্রত্যাখ্যান (`"refusal"`) এমন আউটপুট দিতে পারে যা স্কিমার সাথে মেলে না। কেটে যাওয়া উত্তরও (`"max_tokens"`) একই কাজ করতে পারে <Cite n={1} />। প্রত্যাখ্যানেও স্ট্যাটাস 200 থাকে। এতেও টোকেনের খরচ হয় <Cite n={1} />।
+- **সাপোর্ট নেই এমন স্কিমা ফিচার ব্যবহার করা।** নিজেকে নির্দেশ করা স্কিমা 400 এরর পায়। সংখ্যার সীমাও 400 এরর পায় <Cite n={1} />।
+- **স্কিমার প্রপার্টির ক্রম আশা করা।** আউটপুটে দরকারি প্রপার্টিগুলো আগে আসে। ঐচ্ছিকগুলো পরে আসে <Cite n={1} />।
+- **কনটেন্টে বিশ্বাস করা।** মডেলের আউটপুট কোনো চেক ছাড়া HTML, SQL বা শেলে যেতে পারে। তখন এটা XSS, SQL injection বা কোড এক্সিকিউশন ঘটাতে পারে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Validate every response.** Run each JSON answer through a JSON Schema validator in the test, also when the API promises the shape.
+- **Force a cut-off.** Set a very low `max_tokens` on a test request. Check that the app reads `stop_reason` and does not save half a record.
+- **Enum case.** Send inputs that tempt a capital letter. Check that the app accepts `"High"` and `"high"` the same way, or rejects both clearly.
+- **Hostile text in fields.** Put `<script>` or a SQL fragment in the source text. Check that the UI and the database get escaped values.
+- **Schema change.** When a developer changes the schema, run the old test inputs again. Watch for fields that became optional or moved.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Validate every response.** Run each JSON answer through a JSON Schema validator in the test. Do this also when the API promises the shape.
+- **Force a cut-off.** Set a very low `max_tokens` on a test request. Check that the app reads `stop_reason`. Check that it does not save half a record.
+- **Enum case.** Send inputs that tempt a capital letter. Check that the app accepts `"High"` and `"high"` the same way. Or check that it rejects both clearly.
+- **Hostile text in fields.** Put `<script>` or a piece of SQL in the source text. Check that the UI and the database get safe, escaped values.
+- **Schema change.** When a developer changes the schema, run the old test inputs again. Look for fields that became optional or moved.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **প্রতিটা রেসপন্স যাচাই করুন।** টেস্টে প্রতিটা JSON উত্তর একটা JSON Schema ভ্যালিডেটর দিয়ে চালান। API আকারের প্রতিশ্রুতি দিলেও এটা করুন।
+- **ইচ্ছা করে কাটুন।** একটা টেস্ট রিকুয়েস্টে খুব কম `max_tokens` দিন। দেখুন অ্যাপ `stop_reason` পড়ে কি না। দেখুন অ্যাপ অর্ধেক রেকর্ড সেভ করে না।
+- **Enum-এর ছোট-বড় অক্ষর।** এমন ইনপুট পাঠান যা বড় হাতের অক্ষর আনতে পারে। দেখুন অ্যাপ `"High"` ও `"high"` একইভাবে নেয় কি না। অথবা দুটোই পরিষ্কারভাবে বাতিল করে কি না।
+- **ফিল্ডে ক্ষতিকর টেক্সট।** সোর্স টেক্সটে `<script>` বা SQL-এর একটা টুকরো দিন। দেখুন UI ও ডেটাবেস নিরাপদ, escape করা মান পায় কি না।
+- **স্কিমা বদল।** একজন ডেভেলপার স্কিমা বদলালে পুরোনো টেস্ট ইনপুটগুলো আবার চালান। কোন ফিল্ড ঐচ্ছিক হলো বা জায়গা বদলাল, তা খুঁজুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Structured outputs | A feature that limits the model output to a JSON Schema <Cite n={1} /> |
+| JSON Schema | A language that describes the shape of JSON data, with keywords such as `required` <Cite n={2} /> |
+| `additionalProperties: false` | A rule that allows no properties other than the listed ones <Cite n={2} /> |
+| JSON mode | A mode that gives valid JSON but does not check it against a schema <Cite n={3} /> |
+| Strict tool use | A Claude feature that makes a tool call match the tool schema <Cite n={1} /> |
+| `stop_reason` | The field that says why the response stopped, for example `max_tokens` or `refusal` <Cite n={1} /> |
+| Improper output handling | Passing model output to other systems without checks <Cite n={4} /> |

@@ -1,0 +1,273 @@
+export const metadata = { title: 'RAG Basics', description: 'Retrieve the right documents and give them to the model, so it answers from your data, and test both the search and the answer.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-10-28' },
+    { title: 'Introducing Contextual Retrieval', publisher: 'Anthropic', url: 'https://www.anthropic.com/research/contextual-retrieval', accessed: '2026-10-28' },
+    { title: 'Reduce hallucinations', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations', accessed: '2026-10-28' },
+    { title: 'LLM08:2025 Vector and Embedding Weaknesses', publisher: 'OWASP Gen AI Security Project', url: 'https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/', accessed: '2026-10-28' },
+    { title: 'LLM01:2025 Prompt Injection', publisher: 'OWASP Gen AI Security Project', url: 'https://genai.owasp.org/llmrisk/llm01-prompt-injection/', accessed: '2026-10-28' },
+  ],
+}
+
+# RAG Basics
+
+A model knows only what was in its training data. It does not know your company's leave policy, last week's release notes, or the bug fixed yesterday. RAG is the usual way to give the model that knowledge at the moment it answers.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**RAG** (retrieval-augmented generation) means: first **retrieve** the pieces of your documents that match the question, then add them to the prompt, then let the model **generate** the answer <Cite n={2} />.
+
+The name comes from a 2020 paper by Lewis and others. It combined two kinds of memory: the knowledge stored inside a trained model (parametric memory) and an outside index of documents that a retriever searches (non-parametric memory) <Cite n={1} />. The paper found that this mix gave more specific and more factual text than the model alone <Cite n={1} />.
+
+RAG has two parts that can fail on their own: the **search** (did it find the right text?) and the **answer** (did the model use that text correctly?). A tester checks both.
+
+</Technical>
+<Layman>
+
+**RAG** (retrieval-augmented generation) has 3 steps. First, find the parts of your documents that match the question. Second, add them to the prompt. Third, let the model write the answer <Cite n={2} />.
+
+The name comes from a 2020 paper by Lewis and others. It combined 2 kinds of memory. One is the knowledge stored inside a trained model. The other is an outside index of documents that a search part looks through <Cite n={1} />. The paper found that this mix gave more specific and more factual text than the model alone <Cite n={1} />.
+
+RAG has 2 parts that can fail on their own. The **search** can find the wrong text. The **answer** can use the text wrongly. A tester checks both.
+
+</Layman>
+<Bangla>
+
+**RAG** (retrieval-augmented generation)-এর ৩টা ধাপ। প্রথমে প্রশ্নের সাথে মেলে এমন ডকুমেন্টের অংশগুলো খুঁজে বের করা হয়। তারপর সেগুলো প্রম্পটে যোগ করা হয়। তারপর মডেল উত্তর লেখে <Cite n={2} />।
+
+নামটা এসেছে Lewis ও অন্যদের ২০২০ সালের একটা পেপার থেকে। এটা ২ ধরনের মেমরি একসাথে করেছিল। একটা হলো ট্রেইন করা মডেলের ভেতরে রাখা জ্ঞান। আরেকটা হলো ডকুমেন্টের একটা বাইরের ইনডেক্স, যেখানে একটা রিট্রিভার (retriever) খোঁজে <Cite n={1} />। পেপারটা দেখেছিল, এই মিশ্রণ শুধু মডেলের চেয়ে বেশি নির্দিষ্ট আর বেশি তথ্যনির্ভর টেক্সট দেয় <Cite n={1} />।
+
+RAG-এর ২টা অংশ আলাদাভাবে ফেল করতে পারে। **সার্চ** ভুল টেক্সট খুঁজে পেতে পারে। **উত্তর** টেক্সটটা ভুলভাবে ব্যবহার করতে পারে। একজন টেস্টার দুটোই চেক করেন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Before any question: build the index
+
+Anthropic describes the usual preparation in 3 steps <Cite n={2} />:
+
+1. Split the documents (the **corpus**) into small **chunks**, usually a few hundred tokens or less.
+2. Turn each chunk into an **embedding**, a vector that encodes its meaning, with an embedding model.
+3. Store the embeddings in a **vector database** that can search by meaning.
+
+### At question time: retrieve, then generate
+
+The app turns the question into an embedding, finds the most similar chunks, and adds the top ones to the prompt <Cite n={2} />.
+
+```text
+question --> embed --> vector search --> top-K chunks
+                                              |
+           prompt = instructions + chunks + question --> model --> answer
+```
+
+### Search by meaning and by exact words
+
+Embeddings find text with a similar meaning, but they can miss an exact match, such as the error code `TS-999` <Cite n={2} />. **BM25** is an older ranking method that matches exact words, so it helps with IDs and technical terms <Cite n={2} />. Anthropic suggests that you run both and merge the results <Cite n={2} />.
+
+### Chunks lose their context
+
+A chunk such as "Sales went up 3% from the quarter before" does not say which company or which quarter <Cite n={2} />. Anthropic's **Contextual Retrieval** adds a short, chunk-specific context (usually 50 to 100 tokens) to each chunk before indexing <Cite n={2} />. In Anthropic's tests, this cut failed retrievals by 49%, and by 67% with reranking <Cite n={2} />.
+
+### Make the model stay with the documents
+
+The prompt should tell the model to use only the given documents. Two helpful rules <Cite n={3} />:
+
+- Allow the model to say "I don't know" when the documents do not hold the answer.
+- Ask for quotes or citations for each claim, so a person can check them.
+
+### When you do not need RAG
+
+Anthropic notes that a small knowledge base (in their article, under 200,000 tokens, about 500 pages) can go into the prompt whole, with no retrieval step <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+Before any question, the team builds an index. Anthropic describes 3 steps <Cite n={2} />:
+
+1. Split the documents into small **chunks**. A chunk is usually a few hundred tokens or less.
+2. Turn each chunk into an **embedding**. An embedding is a list of numbers that holds the meaning of the text. An embedding model makes it.
+3. Store the embeddings in a **vector database**. This database can search by meaning.
+
+When a question comes, the app turns the question into an embedding. It finds the chunks with the most similar meaning. It adds the best ones to the prompt <Cite n={2} />. The prompt now has the instructions, the chunks, and the question. The model writes the answer.
+
+Embeddings find text with a similar meaning. But they can miss an exact match, such as the error code `TS-999` <Cite n={2} />. **BM25** is an older search method that matches exact words. It helps with IDs and technical terms <Cite n={2} />. Anthropic suggests that you run both and merge the results <Cite n={2} />.
+
+A chunk can lose its context. For example, "Sales went up 3% from the quarter before" does not say which company or which quarter <Cite n={2} />. Anthropic's **Contextual Retrieval** adds a short context to each chunk before indexing. It is usually 50 to 100 tokens <Cite n={2} />. In Anthropic's tests, this cut failed searches by 49%. With reranking, it cut them by 67% <Cite n={2} />.
+
+The prompt should tell the model to use only the given documents. 2 rules help <Cite n={3} />. Let the model say "I don't know" when the documents do not hold the answer. Ask for quotes or citations for each claim, so a person can check them.
+
+You do not always need RAG. Anthropic notes that a small knowledge base can go into the prompt whole. In their article, small means under 200,000 tokens, about 500 pages <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+কোনো প্রশ্নের আগে টিম একটা ইনডেক্স বানায়। Anthropic ৩টা ধাপ বলে <Cite n={2} />:
+
+1. ডকুমেন্টগুলো ছোট ছোট **চাঙ্ক** (chunk)-এ ভাগ করুন। একটা চাঙ্ক সাধারণত কয়েকশো টোকেন বা কম।
+2. প্রতিটা চাঙ্ককে একটা **এমবেডিং** (embedding)-এ রূপ দিন। এমবেডিং হলো সংখ্যার একটা তালিকা, যা টেক্সটের অর্থ ধরে রাখে। একটা এমবেডিং মডেল এটা বানায়।
+3. এমবেডিংগুলো একটা **ভেক্টর ডেটাবেস**-এ রাখুন। এই ডেটাবেস অর্থ দিয়ে সার্চ করতে পারে।
+
+প্রশ্ন এলে অ্যাপ প্রশ্নটাকে একটা এমবেডিং-এ রূপ দেয়। সবচেয়ে কাছাকাছি অর্থের চাঙ্কগুলো খুঁজে বের করে। সেরাগুলো প্রম্পটে যোগ করে <Cite n={2} />। প্রম্পটে এখন আছে নির্দেশনা, চাঙ্ক, আর প্রশ্ন। মডেল উত্তর লেখে।
+
+এমবেডিং কাছাকাছি অর্থের টেক্সট খুঁজে পায়। কিন্তু হুবহু মিল মিস করতে পারে, যেমন এরর কোড `TS-999` <Cite n={2} />। **BM25** একটা পুরোনো সার্চ পদ্ধতি, যা হুবহু শব্দ মেলায়। এটা ID আর টেকনিক্যাল শব্দে কাজে দেয় <Cite n={2} />। Anthropic দুটোই চালিয়ে ফল মিলিয়ে নেওয়ার পরামর্শ দেয় <Cite n={2} />।
+
+একটা চাঙ্ক তার প্রসঙ্গ হারাতে পারে। যেমন "Sales went up 3% from the quarter before" বলে না কোন কোম্পানি বা কোন কোয়ার্টার <Cite n={2} />। Anthropic-এর **Contextual Retrieval** ইনডেক্স করার আগে প্রতিটা চাঙ্কে একটা ছোট প্রসঙ্গ যোগ করে। এটা সাধারণত ৫০ থেকে ১০০ টোকেন <Cite n={2} />। Anthropic-এর টেস্টে এটা ব্যর্থ সার্চ ৪৯% কমিয়েছে। রির‍্যাঙ্কিং (reranking) সহ কমিয়েছে ৬৭% <Cite n={2} />।
+
+প্রম্পটে মডেলকে শুধু দেওয়া ডকুমেন্ট ব্যবহার করতে বলা উচিত। ২টা নিয়ম কাজে দেয় <Cite n={3} />। ডকুমেন্টে উত্তর না থাকলে মডেলকে "I don't know" বলার অনুমতি দিন। প্রতিটা দাবির জন্য উদ্ধৃতি বা সাইটেশন চান, যাতে একজন মানুষ সেগুলো চেক করতে পারেন।
+
+সবসময় RAG লাগে না। Anthropic বলে, একটা ছোট নলেজ বেস পুরোটাই প্রম্পটে দেওয়া যায়। তাদের লেখায় ছোট মানে ২,০০,০০০ টোকেনের কম, প্রায় ৫০০ পৃষ্ঠা <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A company builds an HR policy assistant. Employees ask questions such as "How many days of parental leave do I get?" The policy handbook has 900 pages, so the team uses RAG <Cite n={2} />.
+
+The tester finds 3 problems:
+
+1. **Wrong chunk.** A question about the "WFH-2" rule returns chunks about remote work in general, not the rule with that code. Exact codes are where embeddings are weak and BM25 helps <Cite n={2} />.
+2. **Chunk without context.** A chunk says "Employees get 20 days", but the heading that said "contractors" is in the chunk before it. The model gives the contractor number to a full-time employee. This is the lost-context problem that Contextual Retrieval targets <Cite n={2} />.
+3. **Invented answer.** For a question that the handbook does not answer, the bot invents a rule. The team adds "If the documents do not contain the answer, say so" and asks for a quote with each answer <Cite n={3} />.
+
+The team also keeps each region's policy in its own partition, so a query from one region does not get the documents of another <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+A company builds an HR policy assistant. Employees ask questions such as "How many days of parental leave do I get?" The policy handbook has 900 pages, so the team uses RAG <Cite n={2} />.
+
+The tester finds 3 problems:
+
+1. **Wrong chunk.** A question about the "WFH-2" rule finds chunks about remote work in general. It does not find the rule with that code. Exact codes are where embeddings are weak and BM25 helps <Cite n={2} />.
+2. **Chunk without context.** A chunk says "Employees get 20 days". But the heading that said "contractors" is in the chunk before it. So the model gives the contractor number to a full-time employee. Contextual Retrieval targets this problem <Cite n={2} />.
+3. **Invented answer.** The handbook does not answer one question. The bot invents a rule. The team adds a rule to the prompt: "If the documents do not contain the answer, say so." They also ask for a quote with each answer <Cite n={3} />.
+
+The team keeps the policy of each region in its own partition. So a question from one region does not get the documents of another <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা কোম্পানি একটা HR পলিসি অ্যাসিস্ট্যান্ট বানায়। কর্মীরা প্রশ্ন করেন, যেমন "How many days of parental leave do I get?" পলিসি হ্যান্ডবুক ৯০০ পৃষ্ঠার, তাই টিম RAG ব্যবহার করে <Cite n={2} />।
+
+টেস্টার ৩টা সমস্যা খুঁজে পান:
+
+1. **ভুল চাঙ্ক।** "WFH-2" নিয়ম নিয়ে প্রশ্ন সাধারণ রিমোট কাজের চাঙ্ক খুঁজে আনে। ঐ কোডের নিয়মটা আনে না। হুবহু কোডে এমবেডিং দুর্বল, আর এখানে BM25 সাহায্য করে <Cite n={2} />।
+2. **প্রসঙ্গ ছাড়া চাঙ্ক।** একটা চাঙ্ক বলে "Employees get 20 days"। কিন্তু "contractors" লেখা হেডিংটা আগের চাঙ্কে। তাই মডেল একজন ফুল-টাইম কর্মীকে কন্ট্রাক্টরের সংখ্যা বলে দেয়। Contextual Retrieval এই সমস্যাটাকেই লক্ষ্য করে <Cite n={2} />।
+3. **বানানো উত্তর।** হ্যান্ডবুকে একটা প্রশ্নের উত্তর নেই। বট একটা নিয়ম বানিয়ে বলে। টিম প্রম্পটে একটা নিয়ম যোগ করে: "If the documents do not contain the answer, say so." তারা প্রতিটা উত্তরের সাথে একটা উদ্ধৃতিও চায় <Cite n={3} />।
+
+টিম প্রতিটা অঞ্চলের পলিসি আলাদা পার্টিশনে রাখে। তাই এক অঞ্চলের প্রশ্ন অন্য অঞ্চলের ডকুমেন্ট পায় না <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Testing only the final answer.** If the answer is wrong, you must know if the search or the model failed. Log the retrieved chunks with each answer. (Tutorial's own view.)
+- **Chunks without context.** Small chunks can lose the facts that make them meaningful, such as the company or the period <Cite n={2} />.
+- **Only semantic search.** Embeddings can miss exact IDs and codes <Cite n={2} />.
+- **No "I don't know".** Without permission to say it, the model is more likely to invent an answer <Cite n={3} />.
+- **No access control in the index.** If many users share one vector database, one user's question can retrieve another group's data. OWASP recommends permission-aware stores and strict partitions <Cite n={4} />.
+- **Trusting every document.** A retrieved document can carry hidden instructions, such as white text in a resume. This is data poisoning and indirect prompt injection <Cite n={4} /> <Cite n={5} />. Accept data only from trusted sources, and validate it <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+- **Testing only the final answer.** If the answer is wrong, you must know if the search or the model failed. Log the found chunks with each answer. (This is the tutorial's own view.)
+- **Chunks without context.** Small chunks can lose the facts that give them meaning, such as the company or the time period <Cite n={2} />.
+- **Only meaning-based search.** Embeddings can miss exact IDs and codes <Cite n={2} />.
+- **No "I don't know".** If the model may not say it, it is more likely to invent an answer <Cite n={3} />.
+- **No access control in the index.** Many users can share one vector database. Then one user's question can find another group's data. OWASP recommends stores that check permissions, and strict partitions <Cite n={4} />.
+- **Trusting every document.** A found document can carry hidden instructions, such as white text in a resume. This is data poisoning and indirect prompt injection <Cite n={4} /> <Cite n={5} />. Accept data only from trusted sources. Validate it <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+- **শুধু শেষ উত্তর টেস্ট করা।** উত্তর ভুল হলে আপনাকে জানতে হবে সার্চ ফেল করেছে নাকি মডেল। প্রতিটা উত্তরের সাথে খুঁজে পাওয়া চাঙ্কগুলো লগ করুন। (এটা টিউটোরিয়ালের নিজের মত।)
+- **প্রসঙ্গ ছাড়া চাঙ্ক।** ছোট চাঙ্ক সেই তথ্য হারাতে পারে যা তাকে অর্থ দেয়, যেমন কোম্পানি বা সময়কাল <Cite n={2} />।
+- **শুধু অর্থভিত্তিক সার্চ।** এমবেডিং হুবহু ID আর কোড মিস করতে পারে <Cite n={2} />।
+- **"I don't know" নেই।** মডেলকে এটা বলার অনুমতি না দিলে সে উত্তর বানিয়ে বলার সম্ভাবনা বেশি <Cite n={3} />।
+- **ইনডেক্সে অ্যাক্সেস কন্ট্রোল নেই।** অনেক ইউজার একটা ভেক্টর ডেটাবেস শেয়ার করতে পারেন। তখন একজনের প্রশ্ন আরেক গ্রুপের ডেটা খুঁজে আনতে পারে। OWASP পারমিশন যাচাই করে এমন স্টোর আর কড়া পার্টিশনের পরামর্শ দেয় <Cite n={4} />।
+- **প্রতিটা ডকুমেন্টকে বিশ্বাস করা।** খুঁজে পাওয়া একটা ডকুমেন্টে লুকানো নির্দেশনা থাকতে পারে, যেমন একটা রিজিউমে সাদা রঙের টেক্সট। এটা ডেটা পয়জনিং (data poisoning) আর পরোক্ষ প্রম্পট ইনজেকশন <Cite n={4} /> <Cite n={5} />। শুধু বিশ্বস্ত সোর্স থেকে ডেটা নিন। সেটা যাচাই করুন <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Build a question set with known sources.** For 30 to 50 questions, write down which document and section holds the answer.
+- **Measure the search alone.** For each question, check if the right chunk is in the top 5 results.
+- **Check the answer against the chunk.** Every fact in the answer must be in a retrieved chunk. Flag anything else.
+- **Ask what is not there.** Ask questions that the documents do not answer. The bot must say so.
+- **Exact IDs.** Ask about codes, ticket numbers, and product names. These often fail in pure semantic search.
+- **Update the source.** Change one document, re-index, and ask again. The old answer must disappear.
+- **Cross-user leaks.** As user A, ask for data that only user B may see.
+- **Poisoned document.** In a test index, add a document with "ignore all previous instructions". The answer must not follow it.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Build a question set with known sources.** For 30 to 50 questions, write down which document and section holds the answer.
+- **Measure the search alone.** For each question, check if the right chunk is in the top 5 results.
+- **Check the answer against the chunk.** Every fact in the answer must be in a found chunk. Flag anything else.
+- **Ask what is not there.** Ask questions that the documents do not answer. The bot must say so.
+- **Exact IDs.** Ask about codes, ticket numbers, and product names. These often fail in pure meaning-based search.
+- **Update the source.** Change one document, index again, and ask again. The old answer must disappear.
+- **Cross-user leaks.** As user A, ask for data that only user B may see.
+- **Poisoned document.** In a test index, add a document with "ignore all previous instructions". The answer must not follow it.
+
+</Layman>
+<Bangla>
+
+এই টেস্ট আইডিয়াগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **জানা সোর্স সহ একটা প্রশ্ন সেট বানান।** ৩০ থেকে ৫০টা প্রশ্নের জন্য লিখে রাখুন কোন ডকুমেন্টের কোন অংশে উত্তর আছে।
+- **শুধু সার্চ মাপুন।** প্রতিটা প্রশ্নে ঠিক চাঙ্কটা প্রথম ৫টা ফলের মধ্যে আছে কিনা দেখুন।
+- **চাঙ্কের সাথে উত্তর মেলান।** উত্তরের প্রতিটা তথ্য একটা খুঁজে পাওয়া চাঙ্কে থাকতে হবে। বাকি সবকিছু চিহ্নিত করুন।
+- **যা নেই তা জিজ্ঞেস করুন।** এমন প্রশ্ন করুন যার উত্তর ডকুমেন্টে নেই। বটকে সেটা বলতে হবে।
+- **হুবহু ID।** কোড, টিকিট নম্বর আর প্রোডাক্টের নাম জিজ্ঞেস করুন। শুধু অর্থভিত্তিক সার্চে এগুলো প্রায়ই ফেল করে।
+- **সোর্স আপডেট করুন।** একটা ডকুমেন্ট বদলান, আবার ইনডেক্স করুন, আবার জিজ্ঞেস করুন। পুরোনো উত্তর চলে যেতে হবে।
+- **ইউজারের মধ্যে ফাঁস।** ইউজার A হিসেবে এমন ডেটা চান যা শুধু ইউজার B দেখতে পারেন।
+- **বিষাক্ত ডকুমেন্ট।** একটা টেস্ট ইনডেক্সে "ignore all previous instructions" লেখা একটা ডকুমেন্ট যোগ করুন। উত্তর সেটা মানবে না।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| RAG | Retrieve matching document parts, add them to the prompt, then generate the answer <Cite n={2} /> |
+| Chunk | A small piece of a document, usually a few hundred tokens or less <Cite n={2} /> |
+| Embedding | A vector that encodes the meaning of a text <Cite n={2} /> |
+| Vector database | A store that searches embeddings by similarity of meaning <Cite n={2} /> |
+| BM25 | A ranking method that matches exact words <Cite n={2} /> |
+| Parametric memory | The knowledge stored inside a trained model <Cite n={1} /> |
+| Hallucination | Text that is wrong or does not match the given context <Cite n={3} /> |
+| Data poisoning | Bad or hostile data in the knowledge base that changes the output <Cite n={4} /> |

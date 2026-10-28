@@ -1,0 +1,292 @@
+export const metadata = { title: "Observability", description: "Trace prompts, tool calls, tokens, and failures." }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Traces', publisher: 'OpenTelemetry (Docs: Concepts)', url: 'https://opentelemetry.io/docs/concepts/signals/traces/', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for GenAI client inference', publisher: 'OpenTelemetry (semantic-conventions-genai on GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/client-inference.md', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for generative client AI spans', publisher: 'OpenTelemetry (semantic-conventions-genai on GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for generative AI metrics', publisher: 'OpenTelemetry (semantic-conventions-genai on GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md', accessed: '2026-10-28' },
+    { title: 'Messages API reference', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-10-28' },
+    { title: 'Claude API errors', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/errors', accessed: '2026-10-28' },
+    { title: 'Instrumentation (Python)', publisher: 'OpenTelemetry (Docs: Languages)', url: 'https://opentelemetry.io/docs/languages/python/instrumentation/', accessed: '2026-10-28' },
+    { title: 'Maturity levels', publisher: 'OpenTelemetry (Specification)', url: 'https://opentelemetry.io/docs/specs/otel/maturity-levels/', accessed: '2026-10-28' },
+  ],
+}
+
+# Observability
+
+When a normal API fails, the logs show a stack trace. When an AI feature gives a strange answer, you need more: the prompt it got, the tools it called, the tokens it used, and the time each step took. Observability is the practice of recording all of that, so that you can explain any answer after the fact.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Observability** means that you can see what a system did from the data that it sends out. For AI features, the most useful data is a **trace**. A trace shows the full path of one request through the application <Cite n={1} />.
+
+A trace is made of **spans**. A span is one unit of work, such as one model call or one tool call <Cite n={1} />. Each span has a name, a start time, an end time, a parent span, attributes, and a status <Cite n={1} />.
+
+The OpenTelemetry (OTel) project publishes **semantic conventions** for generative AI: shared names for the attributes of a model call, so that every tool reads the same fields <Cite n={2} />. These GenAI conventions still have the status "Development", so names can change <Cite n={3} /><Cite n={8} />.
+
+</Technical>
+<Layman>
+
+**Observability** means that you can see what a system did from the data that it sends out. For AI features, the most useful data is a **trace**. A trace shows the full path of one request through the app <Cite n={1} />.
+
+A trace is made of **spans**. A span is one piece of work, such as one model call or one tool call <Cite n={1} />. Each span has a name, a start time, an end time, a parent span, attributes, and a status <Cite n={1} />.
+
+The OpenTelemetry (OTel) project publishes **semantic conventions** for generative AI. These are shared names for the details of a model call. So every tool reads the same fields <Cite n={2} />. These GenAI conventions still have the status "Development". So the names can change <Cite n={3} /><Cite n={8} />.
+
+</Layman>
+<Bangla>
+
+**অবজারভেবিলিটি (observability)** মানে একটা সিস্টেম যে ডেটা পাঠায়, তা দেখে আপনি বুঝতে পারেন সিস্টেমটা কী করেছে। AI ফিচারের জন্য সবচেয়ে কাজের ডেটা হলো একটা **ট্রেস (trace)**। একটা ট্রেস অ্যাপের ভেতর দিয়ে একটা রিকুয়েস্টের পুরো পথ দেখায় <Cite n={1} />।
+
+একটা ট্রেস **স্প্যান (span)** দিয়ে তৈরি। একটা স্প্যান হলো কাজের একটা অংশ, যেমন একটা মডেল কল বা একটা টুল কল <Cite n={1} />। প্রতিটা স্প্যানে একটা নাম, শুরুর সময়, শেষের সময়, একটা প্যারেন্ট স্প্যান, অ্যাট্রিবিউট (attribute) ও একটা স্ট্যাটাস থাকে <Cite n={1} />।
+
+OpenTelemetry (OTel) প্রজেক্ট জেনারেটিভ AI-এর জন্য **semantic conventions** প্রকাশ করে। এগুলো একটা মডেল কলের তথ্যের জন্য শেয়ার করা নাম। তাই প্রতিটা টুল একই ফিল্ড পড়ে <Cite n={2} />। এই GenAI conventions-এর স্ট্যাটাস এখনো "Development"। তাই নামগুলো বদলাতে পারে <Cite n={3} /><Cite n={8} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### What to record for each model call
+
+The OTel GenAI conventions name the span `{gen_ai.operation.name} {gen_ai.request.model}`, for example `chat claude-sonnet-5-5` <Cite n={2} />. Useful attributes <Cite n={2} />:
+
+| Attribute | What it holds |
+|---|---|
+| `gen_ai.operation.name` | The operation, for example `chat` (required) |
+| `gen_ai.request.model` | The model that the app asked for |
+| `gen_ai.response.model` | The model name in the response |
+| `gen_ai.usage.input_tokens` | All input tokens, including cached tokens |
+| `gen_ai.usage.output_tokens` | Output tokens, as the provider reports them |
+| `gen_ai.response.finish_reasons` | Why the model stopped |
+| `error.type` | The class of error, if the call failed |
+
+The Claude Messages API returns these numbers in its `usage` object. The total input is the sum of `input_tokens`, `cache_creation_input_tokens`, and `cache_read_input_tokens` <Cite n={5} />. Every Claude API response also has a `request-id` header. Log it, because support asks for it <Cite n={6} />.
+
+### Tool calls and retries
+
+A tool call gets its own span with the operation name `execute_tool` <Cite n={3} />. If the client retried a call after a short failure, the span should cover the whole logical operation, with all retries <Cite n={3} />.
+
+### Prompts and answers
+
+The text of the prompt and the answer can go into opt-in attributes, such as `gen_ai.input.messages` and `gen_ai.output.messages` <Cite n={2} />. They are opt-in because they are likely to hold sensitive data, including personal data <Cite n={2} />.
+
+### Metrics
+
+Traces explain one request. Metrics show trends. OTel defines `gen_ai.client.operation.duration`, a histogram of how long a GenAI operation takes, in seconds <Cite n={4} />. For streaming, `gen_ai.client.inference.time_to_first_chunk` measures the time from the request to the first chunk <Cite n={2} />.
+
+In Python, a tracer opens a span with `start_as_current_span`, and `set_attribute` adds a value to the span <Cite n={7} />:
+
+```python
+import os
+from anthropic import Anthropic
+from opentelemetry import trace
+
+tracer = trace.get_tracer("support-bot")
+client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+with tracer.start_as_current_span("chat claude-sonnet-5-5") as span:
+    span.set_attribute("gen_ai.operation.name", "chat")
+    span.set_attribute("gen_ai.request.model", "claude-sonnet-5-5")
+    msg = client.messages.create(
+        model="claude-sonnet-5-5",
+        max_tokens=512,
+        messages=[{"role": "user", "content": "Where is my order?"}],
+    )
+    span.set_attribute("gen_ai.response.model", msg.model)
+    u = msg.usage
+    # The OTel value includes cached tokens; the Claude usage object splits them out.
+    span.set_attribute(
+        "gen_ai.usage.input_tokens",
+        u.input_tokens + (u.cache_creation_input_tokens or 0) + (u.cache_read_input_tokens or 0),
+    )
+    span.set_attribute("gen_ai.usage.output_tokens", u.output_tokens)
+    span.set_attribute("gen_ai.response.finish_reasons", [msg.stop_reason])
+```
+
+</Technical>
+<Layman>
+
+Record these details for each model call. The OTel GenAI conventions name the span `{gen_ai.operation.name} {gen_ai.request.model}`. An example is `chat claude-sonnet-5-5` <Cite n={2} />. Useful attributes are <Cite n={2} />:
+
+- `gen_ai.operation.name`: the operation, for example `chat`. It is required.
+- `gen_ai.request.model`: the model that the app asked for.
+- `gen_ai.response.model`: the model name in the response.
+- `gen_ai.usage.input_tokens`: all the input tokens, including the cached tokens.
+- `gen_ai.usage.output_tokens`: the output tokens, as the provider reports them.
+- `gen_ai.response.finish_reasons`: why the model stopped.
+- `error.type`: the class of error, if the call failed.
+
+The Claude Messages API returns these numbers in its `usage` object. The total input is the sum of `input_tokens`, `cache_creation_input_tokens`, and `cache_read_input_tokens` <Cite n={5} />. Every Claude API response also has a `request-id` header. Log it, because support asks for it <Cite n={6} />.
+
+A tool call gets its own span. Its operation name is `execute_tool` <Cite n={3} />. Sometimes the client tries a call again after a short failure. Then the span should cover the whole operation, with all the tries <Cite n={3} />.
+
+The text of the prompt and the answer can go into special attributes, such as `gen_ai.input.messages` and `gen_ai.output.messages`. You must turn them on yourself <Cite n={2} />. They are off by default because they are likely to hold sensitive data. This includes personal data <Cite n={2} />.
+
+Traces explain one request. Metrics show trends. OTel defines `gen_ai.client.operation.duration`. It is a histogram of how long a GenAI operation takes, in seconds <Cite n={4} />. For streaming, `gen_ai.client.inference.time_to_first_chunk` measures the time from the request to the first chunk <Cite n={2} />.
+
+In Python, a tracer opens a span with `start_as_current_span`. The method `set_attribute` adds a value to the span <Cite n={7} />. The Technical text has a short Python example. It opens a span, calls the model, and saves the model name, the token counts, and the stop reason on the span.
+
+</Layman>
+<Bangla>
+
+প্রতিটা মডেল কলের জন্য এই তথ্যগুলো রেকর্ড করুন। OTel GenAI conventions স্প্যানের নাম দেয় `{gen_ai.operation.name} {gen_ai.request.model}`। একটা উদাহরণ হলো `chat claude-sonnet-5-5` <Cite n={2} />। কাজের অ্যাট্রিবিউটগুলো হলো <Cite n={2} />:
+
+- `gen_ai.operation.name`: অপারেশন, যেমন `chat`। এটা দরকারি।
+- `gen_ai.request.model`: অ্যাপ যে মডেল চেয়েছিল।
+- `gen_ai.response.model`: রেসপন্সে থাকা মডেলের নাম।
+- `gen_ai.usage.input_tokens`: ক্যাশ করা টোকেনসহ সব ইনপুট টোকেন।
+- `gen_ai.usage.output_tokens`: প্রোভাইডারের জানানো আউটপুট টোকেন।
+- `gen_ai.response.finish_reasons`: মডেল কেন থামল।
+- `error.type`: কল ফেল করলে এররের ধরন।
+
+Claude Messages API এই সংখ্যাগুলো তার `usage` অবজেক্টে ফেরত দেয়। মোট ইনপুট হলো `input_tokens`, `cache_creation_input_tokens` ও `cache_read_input_tokens`-এর যোগফল <Cite n={5} />। প্রতিটা Claude API রেসপন্সে একটা `request-id` হেডারও থাকে। এটা লগ করুন, কারণ সাপোর্ট এটা চায় <Cite n={6} />।
+
+একটা টুল কল নিজের একটা স্প্যান পায়। এর অপারেশনের নাম `execute_tool` <Cite n={3} />। কখনো একটা ছোট ব্যর্থতার পর ক্লায়েন্ট কলটা আবার চেষ্টা করে। তখন স্প্যান সব চেষ্টাসহ পুরো অপারেশন ঢেকে রাখবে <Cite n={3} />।
+
+প্রম্পট ও উত্তরের টেক্সট বিশেষ অ্যাট্রিবিউটে যেতে পারে, যেমন `gen_ai.input.messages` ও `gen_ai.output.messages`। এগুলো আপনাকে নিজে চালু করতে হয় <Cite n={2} />। এগুলো ডিফল্টে বন্ধ, কারণ এতে সংবেদনশীল ডেটা থাকার সম্ভাবনা বেশি। এর মধ্যে ব্যক্তিগত ডেটাও আছে <Cite n={2} />।
+
+ট্রেস একটা রিকুয়েস্ট ব্যাখ্যা করে। মেট্রিক প্রবণতা দেখায়। OTel `gen_ai.client.operation.duration` নির্ধারণ করে। এটা একটা হিস্টোগ্রাম (histogram), যা দেখায় একটা GenAI অপারেশনে কত সেকেন্ড লাগে <Cite n={4} />। স্ট্রিমিংয়ের জন্য `gen_ai.client.inference.time_to_first_chunk` রিকুয়েস্ট থেকে প্রথম চাঙ্ক (chunk) পর্যন্ত সময় মাপে <Cite n={2} />।
+
+Python-এ একটা tracer `start_as_current_span` দিয়ে একটা স্প্যান খোলে। `set_attribute` মেথড স্প্যানে একটা মান যোগ করে <Cite n={7} />। Technical টেক্সটে একটা ছোট Python উদাহরণ আছে। এটা একটা স্প্যান খোলে, মডেল কল করে, এবং স্প্যানে মডেলের নাম, টোকেনের সংখ্যা ও থামার কারণ সেভ করে।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A team runs an assistant that writes test cases from user stories. It calls a tool that reads the story from the ticket system. Users report that some answers take 40 seconds, and the bill for one week doubled.
+
+The team opens the traces of the slow requests:
+
+1. The root span is the user request. Under it are one `chat` span and one `execute_tool` span <Cite n={1} /><Cite n={3} />.
+2. The `execute_tool` span takes 35 seconds, because the ticket system answers slowly and the client retries. The span covers all the retries, so the time is visible in one place <Cite n={3} />.
+3. The `chat` span shows `gen_ai.usage.input_tokens` near 90,000 <Cite n={2} />. The tool sends the full ticket history to the model, not only the story.
+
+The fix has two parts: a timeout on the tool, and a filter that sends only the story text. The team can confirm both fixes from the same attributes after the release.
+
+</Technical>
+<Layman>
+
+A team runs an assistant that writes test cases from user stories. It calls a tool that reads the story from the ticket system. Users say that some answers take 40 seconds. The bill for one week doubled.
+
+The team opens the traces of the slow requests:
+
+1. The root span is the user request. Under it are one `chat` span and one `execute_tool` span <Cite n={1} /><Cite n={3} />.
+2. The `execute_tool` span takes 35 seconds. The ticket system answers slowly, and the client tries again. The span covers all the tries. So the time is visible in one place <Cite n={3} />.
+3. The `chat` span shows `gen_ai.usage.input_tokens` near 90,000 <Cite n={2} />. The tool sends the full ticket history to the model, not only the story.
+
+The fix has two parts. The tool gets a time limit. A filter sends only the story text. After the release, the team can confirm both fixes from the same attributes.
+
+</Layman>
+<Bangla>
+
+একটা দল একটা অ্যাসিস্ট্যান্ট চালায়, যা ইউজার স্টোরি থেকে টেস্ট কেস লেখে। এটা একটা টুল কল করে, যা টিকিট সিস্টেম থেকে স্টোরি পড়ে। ইউজাররা বলেন, কিছু উত্তরে 40 সেকেন্ড লাগে। এক সপ্তাহের বিল দ্বিগুণ হয়েছে।
+
+দল ধীর রিকুয়েস্টগুলোর ট্রেস খোলে:
+
+1. রুট স্প্যান হলো ইউজারের রিকুয়েস্ট। এর নিচে একটা `chat` স্প্যান ও একটা `execute_tool` স্প্যান আছে <Cite n={1} /><Cite n={3} />।
+2. `execute_tool` স্প্যানে 35 সেকেন্ড লাগে। টিকিট সিস্টেম ধীরে উত্তর দেয়, আর ক্লায়েন্ট আবার চেষ্টা করে। স্প্যান সব চেষ্টা ঢেকে রাখে। তাই সময়টা এক জায়গায় দেখা যায় <Cite n={3} />।
+3. `chat` স্প্যান দেখায় `gen_ai.usage.input_tokens` প্রায় 90,000 <Cite n={2} />। টুলটা শুধু স্টোরি নয়, টিকিটের পুরো ইতিহাস মডেলে পাঠায়।
+
+সমাধানের দুটো অংশ। টুল একটা সময়সীমা পায়। একটা ফিল্টার শুধু স্টোরির টেক্সট পাঠায়। রিলিজের পর দল একই অ্যাট্রিবিউট দিয়ে দুটো সমাধানই নিশ্চিত করতে পারে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Logging only the final answer.** Without spans for each step, you cannot see which step was slow or wrong <Cite n={1} />.
+- **Saving full prompts by default.** Prompt and answer text is likely to hold personal data, so OTel makes it opt-in <Cite n={2} />.
+- **Counting only `input_tokens`.** With prompt caching, the total input also includes the cache creation and cache read tokens <Cite n={5} />.
+- **Dropping the request id.** Support needs the `request-id` value to find a request <Cite n={6} />.
+- **One span for each retry, with no parent.** The span of a logical operation should cover all of its retries <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+- **Logging only the final answer.** Without a span for each step, you cannot see which step was slow or wrong <Cite n={1} />.
+- **Saving full prompts by default.** The text of prompts and answers is likely to hold personal data. So OTel makes you turn it on yourself <Cite n={2} />.
+- **Counting only `input_tokens`.** With prompt caching, the total input also includes the cache creation tokens and the cache read tokens <Cite n={5} />.
+- **Dropping the request id.** Support needs the `request-id` value to find a request <Cite n={6} />.
+- **One span for each retry, with no parent.** The span of one logical operation should cover all of its retries <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+- **শুধু শেষ উত্তর লগ করা।** প্রতিটা ধাপের স্প্যান না থাকলে আপনি দেখতে পারবেন না কোন ধাপ ধীর বা ভুল ছিল <Cite n={1} />।
+- **ডিফল্টে পুরো প্রম্পট সেভ করা।** প্রম্পট ও উত্তরের টেক্সটে ব্যক্তিগত ডেটা থাকার সম্ভাবনা বেশি। তাই OTel এটা আপনাকে নিজে চালু করতে বলে <Cite n={2} />।
+- **শুধু `input_tokens` গোনা।** প্রম্পট ক্যাশিং থাকলে মোট ইনপুটে ক্যাশ তৈরির টোকেন ও ক্যাশ পড়ার টোকেনও থাকে <Cite n={5} />।
+- **রিকুয়েস্ট id বাদ দেওয়া।** একটা রিকুয়েস্ট খুঁজতে সাপোর্টের `request-id` মান দরকার <Cite n={6} />।
+- **প্রতিটা রিট্রাইয়ের জন্য প্যারেন্ট ছাড়া একটা করে স্প্যান।** একটা লজিক্যাল অপারেশনের স্প্যান তার সব রিট্রাই ঢেকে রাখবে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **One request, one trace.** Send one test request. Check that one trace shows every model call and tool call as a span under the same root.
+- **Token numbers match.** Compare the token attributes on the span with the `usage` object of the same response.
+- **Errors are visible.** Force a failure (a wrong API key in a test setup, or a tool that times out). Check that the span has an error status and an `error.type`.
+- **No secrets in traces.** Search the trace store for test emails, phone numbers, and API keys from your test data. Expect zero hits unless content capture is on by design.
+- **Alerts fire.** Make a test request slow on purpose. Check that the duration metric moves and that the alert reaches the right channel.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **One request, one trace.** Send one test request. Check that one trace shows every model call and tool call as a span under the same root.
+- **Token numbers match.** Compare the token attributes on the span with the `usage` object of the same response.
+- **Errors are visible.** Make a call fail. For example, use a wrong API key in a test setup, or a tool that runs out of time. Check that the span has an error status and an `error.type`.
+- **No secrets in traces.** Search the trace store for test emails, phone numbers, and API keys from your test data. Expect no results, unless the team saves content on purpose.
+- **Alerts fire.** Make a test request slow on purpose. Check that the duration metric moves. Check that the alert reaches the right channel.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **এক রিকুয়েস্ট, এক ট্রেস।** একটা টেস্ট রিকুয়েস্ট পাঠান। দেখুন একটা ট্রেস একই রুটের নিচে প্রতিটা মডেল কল ও টুল কলকে স্প্যান হিসেবে দেখায় কি না।
+- **টোকেনের সংখ্যা মেলে।** স্প্যানের টোকেন অ্যাট্রিবিউট একই রেসপন্সের `usage` অবজেক্টের সাথে তুলনা করুন।
+- **এরর দেখা যায়।** একটা কল ফেল করান। যেমন, টেস্ট সেটআপে একটা ভুল API key, বা একটা টুল যার সময় শেষ হয়ে যায়। দেখুন স্প্যানে একটা এরর স্ট্যাটাস ও একটা `error.type` আছে কি না।
+- **ট্রেসে কোনো সিক্রেট নেই।** আপনার টেস্ট ডেটার ইমেইল, ফোন নম্বর ও API key ট্রেস স্টোরে খুঁজুন। কোনো ফল না পাওয়াই প্রত্যাশিত, যদি না দল ইচ্ছা করে কনটেন্ট সেভ করে।
+- **অ্যালার্ট চালু হয়।** একটা টেস্ট রিকুয়েস্ট ইচ্ছা করে ধীর করুন। দেখুন duration মেট্রিক বদলায় কি না। দেখুন অ্যালার্ট সঠিক চ্যানেলে পৌঁছায় কি না।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Trace | The full path of one request through an application <Cite n={1} /> |
+| Span | One unit of work in a trace, with a start, an end, and attributes <Cite n={1} /> |
+| Semantic conventions | Shared attribute names, for example `gen_ai.usage.input_tokens` <Cite n={2} /> |
+| `execute_tool` | The operation name of a tool call span <Cite n={3} /> |
+| `gen_ai.client.operation.duration` | A metric for the duration of a GenAI operation, in seconds <Cite n={4} /> |
+| `usage` | The token counts in a Claude API response <Cite n={5} /> |
+| `request-id` | The unique id header of each Claude API response <Cite n={6} /> |
+| Tracer | The object that creates spans <Cite n={7} /> |

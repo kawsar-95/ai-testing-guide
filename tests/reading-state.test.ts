@@ -11,9 +11,9 @@ import {
 } from "../lib/reading-state.ts";
 import { sitemapPaths } from "../lib/sitemap.ts";
 
-test("CONTENT_PAGES has the 162 content pages, each once and each a known route", () => {
-  assert.equal(CONTENT_PAGES.length, 162);
-  assert.equal(new Set(CONTENT_PAGES.map((p) => p.href)).size, 162);
+test("CONTENT_PAGES has the 170 content pages, each once and each a known route", () => {
+  assert.equal(CONTENT_PAGES.length, 196);
+  assert.equal(new Set(CONTENT_PAGES.map((p) => p.href)).size, 196);
   const paths = new Set(sitemapPaths());
   for (const page of CONTENT_PAGES) assert.ok(paths.has(page.href), page.href);
 });
@@ -21,7 +21,7 @@ test("CONTENT_PAGES has the 162 content pages, each once and each a known route"
 test("CONTENT_PAGES counts per module", () => {
   const counts: Record<string, number> = {};
   for (const page of CONTENT_PAGES) counts[page.module] = (counts[page.module] ?? 0) + 1;
-  assert.deepEqual(counts, { tutorial: 24, linux: 12, fundamentals: 11, "system-design": 15, architecture: 20, course: 40, k6: 20, "ai-skills": 20 });
+  assert.deepEqual(counts, { tutorial: 24, linux: 12, fundamentals: 11, "system-design": 15, architecture: 20, course: 40, k6: 20, "ai-engineering": 28, harness: 6, "ai-skills": 20 });
 });
 
 test("every content page points to its MDX file", () => {
@@ -43,11 +43,12 @@ test("the storage keys", () => {
     "architecture-progress",
     "course-progress",
     "k6-progress",
+    "ai-engineering-progress",
     "ai-skills-progress",
   ]);
 });
 
-test("exportProgress has version 1, the time, and all 8 keys", () => {
+test("exportProgress has version 1, the time, and all 9 keys", () => {
   const now = new Date("2026-10-22T08:00:00Z");
   const storage = { getItem: (key: string) => (key === "page-read" ? '["/extend/hooks/"]' : null) };
   const file = exportProgress(storage, now);

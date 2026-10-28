@@ -1,0 +1,292 @@
+export const metadata = { title: 'Using LangChain', description: 'A framework that connects models, prompts, tools, and data sources, and how a tester can test an app built on it.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'LangChain overview', publisher: 'LangChain (Docs)', url: 'https://docs.langchain.com/oss/python/langchain/overview', accessed: '2026-10-28' },
+    { title: 'Install LangChain', publisher: 'LangChain (Docs)', url: 'https://docs.langchain.com/oss/python/langchain/install', accessed: '2026-10-28' },
+    { title: 'Models', publisher: 'LangChain (Docs)', url: 'https://docs.langchain.com/oss/python/langchain/models', accessed: '2026-10-28' },
+    { title: 'Tools', publisher: 'LangChain (Docs)', url: 'https://docs.langchain.com/oss/python/langchain/tools', accessed: '2026-10-28' },
+    { title: 'Agents', publisher: 'LangChain (Docs)', url: 'https://docs.langchain.com/oss/python/langchain/agents', accessed: '2026-10-28' },
+    { title: 'Test', publisher: 'LangChain (Docs)', url: 'https://docs.langchain.com/oss/python/langchain/test', accessed: '2026-10-28' },
+    { title: 'Unit testing', publisher: 'LangChain (Docs)', url: 'https://docs.langchain.com/oss/python/langchain/test/unit-testing', accessed: '2026-10-28' },
+  ],
+}
+
+# Using LangChain
+
+You can call a model API directly with a few lines of code. When an app needs several models, tools, and data sources, many teams use a framework that gives all of them one shape. LangChain is one of the best-known of these frameworks.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**LangChain** is a framework for apps that use language models. It gives one standard interface to the models of many providers, so you can try and switch models with little code change <Cite n={3} />. It supports OpenAI, Anthropic, Google, and more <Cite n={1} />.
+
+Its main building block today is `create_agent`. LangChain describes an agent as a model plus a **harness**: the prompt, the tools, and the **middleware** around the model loop <Cite n={1} />. The same model interface also works alone, outside an agent, for tasks such as text generation, classification, or extraction <Cite n={3} />.
+
+The LangChain team also makes LangGraph, a lower-level framework for flows that mix fixed steps with agent steps, and LangSmith, a tool to trace, debug, and evaluate agents <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+**LangChain** is a framework for apps that use language models. It gives one standard way to talk to the models of many providers. So you can try and switch models with little code change <Cite n={3} />. It supports OpenAI, Anthropic, Google, and more <Cite n={1} />.
+
+Its main building block today is `create_agent`. LangChain says an agent is a model plus a **harness**. A harness holds the parts that surround the model: the prompt, the tools, and the **middleware** (code that changes the behavior) <Cite n={1} />. You can also use a model alone, without an agent. Examples are text generation, classification, or extraction <Cite n={3} />.
+
+The LangChain team also makes 2 other tools. LangGraph is a lower-level framework for flows that mix fixed steps with agent steps. LangSmith traces, debugs, and evaluates agents <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**LangChain** হলো ল্যাঙ্গুয়েজ মডেল ব্যবহার করে এমন অ্যাপের জন্য একটা ফ্রেমওয়ার্ক। এটা অনেক প্রোভাইডারের মডেলের সাথে কথা বলার একটা স্ট্যান্ডার্ড উপায় দেয়। তাই সামান্য কোড বদলে আপনি মডেল চেষ্টা করতে আর বদলাতে পারেন <Cite n={3} />। এটা OpenAI, Anthropic, Google, আর আরও অনেককে সাপোর্ট করে <Cite n={1} />।
+
+এখন এর মূল বিল্ডিং ব্লক হলো `create_agent`। LangChain বলে, একটা এজেন্ট হলো একটা মডেল আর একটা **harness**। Harness হলো মডেলের চারপাশের সবকিছু: প্রম্পট, টুল, আর **middleware** (যে কোড আচরণ বদলায়) <Cite n={1} />। এজেন্ট ছাড়াও আপনি শুধু মডেলটা ব্যবহার করতে পারেন। যেমন টেক্সট জেনারেশন, ক্লাসিফিকেশন, বা এক্সট্র্যাকশন <Cite n={3} />।
+
+LangChain টিম আরও ২টা টুল বানায়। LangGraph হলো একটা নিচু স্তরের ফ্রেমওয়ার্ক, যেসব ফ্লোতে নির্দিষ্ট ধাপ আর এজেন্ট ধাপ মেশানো থাকে তাদের জন্য। LangSmith এজেন্টকে ট্রেস, ডিবাগ আর ইভ্যালুয়েট করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Install
+
+You install the `langchain` package, and then one package for each provider, for example `langchain-anthropic` or `langchain-openai`. LangChain needs Python 3.10 or later <Cite n={2} />.
+
+```bash
+pip install -U langchain langchain-anthropic
+```
+
+### A model
+
+`init_chat_model` creates a chat model from a model name. A model can also be written as `provider:model`, for example `openai:o1` <Cite n={3} />. The API key usually comes from an environment variable <Cite n={3} />. The model has 3 key methods: `invoke` (one full answer), `stream` (the answer in parts), and `batch` (many requests at once) <Cite n={3} />.
+
+```python
+from langchain.chat_models import init_chat_model
+
+model = init_chat_model("claude-sonnet-4-6", temperature=0, timeout=30, max_retries=6)
+answer = model.invoke("List 3 boundary values for an age field that accepts 18 to 65.")
+print(answer.content)
+```
+
+Chat models retry failed calls with exponential backoff, up to 6 times by default. They retry network errors, 429, and 5xx errors, but not 401 or 404 <Cite n={3} />.
+
+### A tool
+
+The `@tool` decorator turns a Python function into a tool. The docstring becomes the description that tells the model when to use it, and the type hints are required, because they define the input schema <Cite n={4} />.
+
+```python
+from langchain.tools import tool
+
+@tool
+def find_ticket(ticket_id: str) -> str:
+    """Return the status of a bug ticket by its ID, for example BUG-123."""
+    return lookup_ticket_status(ticket_id)  # your own code
+```
+
+### An agent
+
+An agent is a model that calls tools in a loop until the task is done <Cite n={5} />. `create_agent` takes the model, the tools, and a system prompt <Cite n={1} />:
+
+```python
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model="claude-sonnet-4-6",
+    tools=[find_ticket],
+    system_prompt="You help testers check the status of bug tickets.",
+)
+result = agent.invoke({"messages": [{"role": "user", "content": "Is BUG-123 fixed?"}]})
+print(result["messages"][-1].content_blocks)
+```
+
+</Technical>
+<Layman>
+
+You install the `langchain` package. Then you install one package for each provider, for example `langchain-anthropic` or `langchain-openai`. LangChain needs Python 3.10 or later <Cite n={2} />.
+
+`init_chat_model` creates a chat model from a model name. You can also write a model as `provider:model`, for example `openai:o1` <Cite n={3} />. The API key usually comes from an environment variable <Cite n={3} />. The model has 3 key methods <Cite n={3} />:
+
+- `invoke` gives one full answer.
+- `stream` gives the answer in parts.
+- `batch` sends many requests at once.
+
+Chat models try failed calls again, with a growing wait. They do this up to 6 times by default. They retry network errors, 429, and 5xx errors. They do not retry 401 or 404 <Cite n={3} />.
+
+The `@tool` decorator turns a Python function into a tool. The docstring becomes the description. It tells the model when to use the tool. The type hints are required, because they define the input of the tool <Cite n={4} />.
+
+An agent is a model that calls tools in a loop until the task is done <Cite n={5} />. `create_agent` takes the model, the tools, and a system prompt <Cite n={1} />. The Technical text has short examples of a model, a tool, and an agent.
+
+</Layman>
+<Bangla>
+
+আপনি `langchain` প্যাকেজ ইনস্টল করেন। তারপর প্রতিটা প্রোভাইডারের জন্য একটা প্যাকেজ ইনস্টল করেন, যেমন `langchain-anthropic` বা `langchain-openai`। LangChain-এর জন্য Python 3.10 বা নতুন লাগে <Cite n={2} />।
+
+`init_chat_model` একটা মডেলের নাম থেকে একটা চ্যাট মডেল তৈরি করে। মডেলকে `provider:model` আকারেও লেখা যায়, যেমন `openai:o1` <Cite n={3} />। API key সাধারণত একটা এনভায়রনমেন্ট ভেরিয়েবল থেকে আসে <Cite n={3} />। মডেলের ৩টা মূল মেথড আছে <Cite n={3} />:
+
+- `invoke` একটা পুরো উত্তর দেয়।
+- `stream` উত্তরটা অংশে অংশে দেয়।
+- `batch` একসাথে অনেক রিকুয়েস্ট পাঠায়।
+
+চ্যাট মডেল ফেল করা কল আবার চেষ্টা করে, প্রতিবার অপেক্ষা বাড়িয়ে। ডিফল্টভাবে এটা ৬ বার পর্যন্ত করে। এটা নেটওয়ার্ক এরর, 429, আর 5xx এরর রিট্রাই করে। 401 বা 404 রিট্রাই করে না <Cite n={3} />।
+
+`@tool` ডেকোরেটর একটা Python ফাংশনকে টুলে পরিণত করে। Docstring হয়ে যায় টুলের বর্ণনা। এটা মডেলকে বলে কখন টুলটা ব্যবহার করতে হবে। টাইপ হিন্ট বাধ্যতামূলক, কারণ এগুলোই টুলের ইনপুট ঠিক করে <Cite n={4} />।
+
+এজেন্ট হলো এমন একটা মডেল, যা কাজ শেষ না হওয়া পর্যন্ত একটা লুপে টুল কল করে <Cite n={5} />। `create_agent` নেয় মডেল, টুল, আর একটা সিস্টেম প্রম্পট <Cite n={1} />। Technical লেখায় মডেল, টুল আর এজেন্টের ছোট উদাহরণ আছে।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A QA team builds a "release helper" for its testers. A tester asks: "Which bugs in release 4.2 are still open?" The agent has 2 tools: one reads the bug tracker, and one reads the release notes. The model decides which tool to call and when to stop <Cite n={3} />.
+
+At first the team uses an OpenAI model. Later they try an Anthropic model. Because LangChain gives one interface for both, they change only the model name and install the provider package <Cite n={3} /> <Cite n={2} />.
+
+For the unit tests, the team does not call a real model. They use `GenericFakeChatModel`, which returns scripted answers, including tool calls, one per call <Cite n={7} />:
+
+```python
+from langchain.agents import create_agent
+from langchain.messages import AIMessage, HumanMessage, ToolCall
+from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
+
+class FakeToolCallingModel(GenericFakeChatModel):
+    def bind_tools(self, tools, **kwargs):  # create_agent calls bind_tools
+        return self
+
+model = FakeToolCallingModel(messages=iter([
+    AIMessage(content="", tool_calls=[ToolCall(name="find_ticket", args={"ticket_id": "BUG-123"}, id="call_1")]),
+    AIMessage(content="BUG-123 is fixed in build 4.2.1."),
+]))
+agent = create_agent(model, tools=[find_ticket])
+result = agent.invoke({"messages": [HumanMessage(content="Is BUG-123 fixed?")]})
+assert "BUG-123" in result["messages"][-1].text
+```
+
+`GenericFakeChatModel` has no `bind_tools` method, and `create_agent` calls it when you pass tools. So the test uses a small subclass, as the LangChain docs show <Cite n={7} />.
+
+The tests are now fast, free, and repeatable, and they need no API key <Cite n={7} />. The team adds integration tests with the real model too, because those find problems with keys, schemas, and latency <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+A QA team builds a "release helper" for its testers. A tester asks: "Which bugs in release 4.2 are still open?" The agent has 2 tools. One reads the bug tracker. One reads the release notes. The model decides which tool to call and when to stop <Cite n={3} />.
+
+At first the team uses an OpenAI model. Later they try an Anthropic model. LangChain gives one interface for both. So they change only the model name and install the provider package <Cite n={3} /> <Cite n={2} />.
+
+For the unit tests, the team does not call a real model. They use `GenericFakeChatModel`. It returns scripted answers, one per call. The answers can include tool calls <Cite n={7} />. This fake model has no `bind_tools` method, and `create_agent` needs it. So the test uses a small subclass <Cite n={7} />. The Technical text shows the code.
+
+The tests are now fast, free, and repeatable. They need no API key <Cite n={7} />. The team also adds integration tests with the real model. Those tests find problems with keys, schemas, and speed <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+একটা QA টিম তাদের টেস্টারদের জন্য একটা "release helper" বানায়। একজন টেস্টার জিজ্ঞেস করেন: "Which bugs in release 4.2 are still open?" এজেন্টের ২টা টুল আছে। একটা বাগ ট্র্যাকার পড়ে। আরেকটা রিলিজ নোট পড়ে। কোন টুল কল করতে হবে আর কখন থামতে হবে, মডেল তা ঠিক করে <Cite n={3} />।
+
+প্রথমে টিম একটা OpenAI মডেল ব্যবহার করে। পরে তারা একটা Anthropic মডেল চেষ্টা করে। LangChain দুটোর জন্য একটাই ইন্টারফেস দেয়। তাই তারা শুধু মডেলের নাম বদলায় আর প্রোভাইডার প্যাকেজ ইনস্টল করে <Cite n={3} /> <Cite n={2} />।
+
+ইউনিট টেস্টে টিম আসল মডেল কল করে না। তারা `GenericFakeChatModel` ব্যবহার করে। এটা প্রতি কলে একটা করে আগে থেকে লেখা উত্তর দেয়। উত্তরে টুল কলও থাকতে পারে <Cite n={7} />। এই ফেক মডেলে `bind_tools` মেথড নেই, কিন্তু `create_agent`-এর এটা লাগে। তাই টেস্টে একটা ছোট সাবক্লাস ব্যবহার হয় <Cite n={7} />। Technical লেখায় কোডটা আছে।
+
+টেস্টগুলো এখন দ্রুত, ফ্রি, আর বারবার একই ফল দেয়। এগুলোর জন্য কোনো API key লাগে না <Cite n={7} />। টিম আসল মডেল দিয়ে ইন্টিগ্রেশন টেস্টও যোগ করে। এই টেস্টগুলো key, স্কিমা আর লেটেন্সির সমস্যা ধরে <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Old tutorials.** LangChain changes fast. The current docs build agents with `create_agent` <Cite n={1} />. Check the version of an example before you copy it.
+- **A weak docstring.** The model chooses a tool from its description, which comes from the docstring <Cite n={4} />. A vague docstring leads to wrong tool calls.
+- **Missing type hints.** Type hints define the tool's input schema, and they are required <Cite n={4} />.
+- **Only real-model tests.** LLM output is not deterministic, so tests that always call a real model can be flaky <Cite n={6} />. Use fake models for logic, and real models for integration <Cite n={6} /> <Cite n={7} />.
+- **Fake model limits.** `FakeListChatModel` starts again at the first answer when it runs out <Cite n={7} />. A test that calls it too many times can pass by accident.
+- **Hidden retries.** 6 retries by default can hide a real outage and make a request slow <Cite n={3} />. Set `max_retries` and `timeout` for your case.
+
+</Technical>
+<Layman>
+
+- **Old tutorials.** LangChain changes fast. The current docs build agents with `create_agent` <Cite n={1} />. Check the version of an example before you copy it.
+- **A weak docstring.** The model chooses a tool from its description. The description comes from the docstring <Cite n={4} />. A vague docstring leads to wrong tool calls.
+- **Missing type hints.** Type hints define the input of a tool. They are required <Cite n={4} />.
+- **Only real-model tests.** The output of a model is not always the same. So tests that always call a real model can be flaky <Cite n={6} />. Use fake models for logic. Use real models for integration <Cite n={6} /> <Cite n={7} />.
+- **Fake model limits.** `FakeListChatModel` starts again at the first answer when it runs out <Cite n={7} />. A test that calls it too many times can pass by accident.
+- **Hidden retries.** 6 retries by default can hide a real outage. They can also make a request slow <Cite n={3} />. Set `max_retries` and `timeout` for your case.
+
+</Layman>
+<Bangla>
+
+- **পুরোনো টিউটোরিয়াল।** LangChain দ্রুত বদলায়। বর্তমান ডক `create_agent` দিয়ে এজেন্ট বানায় <Cite n={1} />। কোনো উদাহরণ কপি করার আগে তার ভার্সন দেখুন।
+- **দুর্বল docstring।** মডেল টুলের বর্ণনা দেখে টুল বাছে। বর্ণনা আসে docstring থেকে <Cite n={4} />। অস্পষ্ট docstring ভুল টুল কলের দিকে নেয়।
+- **টাইপ হিন্ট নেই।** টাইপ হিন্ট টুলের ইনপুট ঠিক করে। এগুলো বাধ্যতামূলক <Cite n={4} />।
+- **শুধু আসল মডেলের টেস্ট।** মডেলের আউটপুট সবসময় এক রকম হয় না। তাই যে টেস্ট সবসময় আসল মডেল কল করে, তা অস্থির (flaky) হতে পারে <Cite n={6} />। লজিকের জন্য ফেক মডেল, আর ইন্টিগ্রেশনের জন্য আসল মডেল ব্যবহার করুন <Cite n={6} /> <Cite n={7} />।
+- **ফেক মডেলের সীমা।** `FakeListChatModel`-এর উত্তর শেষ হলে এটা আবার প্রথম উত্তর থেকে শুরু করে <Cite n={7} />। যে টেস্ট একে বেশিবার কল করে, তা ভুল করে পাস করতে পারে।
+- **লুকানো রিট্রাই।** ডিফল্ট ৬টা রিট্রাই একটা আসল আউটেজ লুকিয়ে রাখতে পারে। রিকুয়েস্ট ধীরও করতে পারে <Cite n={3} />। আপনার দরকার অনুযায়ী `max_retries` আর `timeout` সেট করুন।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Unit tests with fakes.** Script a tool call and a final answer. Check that the right tool runs with the right arguments.
+- **Tool errors.** Make a tool raise an error or return empty data. The agent must answer clearly, not invent a result.
+- **Tool choice.** Ask 20 questions that need a known tool. Count how often the agent picks it.
+- **Model swap.** When the team changes the model name, run the same eval set on the old and the new model.
+- **Retries and timeouts.** Mock a 429 and a slow answer. Check the total time and the message to the user.
+- **Pin the versions.** Check that `langchain` and the provider packages have fixed versions in the lock file.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Unit tests with fakes.** Script a tool call and a final answer. Check that the right tool runs with the right arguments.
+- **Tool errors.** Make a tool fail or return empty data. The agent must answer clearly. It must not invent a result.
+- **Tool choice.** Ask 20 questions that need a known tool. Count how often the agent picks it.
+- **Model swap.** When the team changes the model, run the same tests on the old and the new model.
+- **Retries and timeouts.** Mock a 429 and a slow answer. Check the total time and the message to the user.
+- **Pin the versions.** Check that `langchain` and the provider packages have fixed versions in the lock file.
+
+</Layman>
+<Bangla>
+
+এই টেস্ট আইডিয়াগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **ফেক মডেল দিয়ে ইউনিট টেস্ট।** একটা টুল কল আর একটা শেষ উত্তর স্ক্রিপ্ট করুন। ঠিক টুলটা ঠিক আর্গুমেন্ট দিয়ে চলে কিনা চেক করুন।
+- **টুলের এরর।** একটা টুলকে ফেল করান বা খালি ডেটা ফেরত দেওয়ান। এজেন্টকে পরিষ্কার উত্তর দিতে হবে। ফল বানিয়ে বলা যাবে না।
+- **টুল বাছাই।** এমন ২০টা প্রশ্ন করুন যাতে একটা জানা টুল লাগে। এজেন্ট কতবার সেটা বাছে গুনুন।
+- **মডেল বদল।** টিম মডেল বদলালে পুরোনো আর নতুন মডেলে একই টেস্ট সেট চালান।
+- **রিট্রাই আর টাইমআউট।** একটা 429 আর একটা ধীর উত্তর মক করুন। মোট সময় আর ইউজারের কাছে যাওয়া মেসেজ চেক করুন।
+- **ভার্সন পিন করুন।** লক ফাইলে `langchain` আর প্রোভাইডার প্যাকেজের নির্দিষ্ট ভার্সন আছে কিনা চেক করুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| LangChain | A framework with one interface for the models of many providers <Cite n={3} /> |
+| Chat model | A model object with `invoke`, `stream`, and `batch` <Cite n={3} /> |
+| Tool | A function the model can call; its docstring is its description <Cite n={4} /> |
+| Agent | A model that calls tools in a loop until the task is done <Cite n={5} /> |
+| Harness | The prompt, tools, and middleware around the model loop <Cite n={1} /> |
+| Fake chat model | A test model that returns scripted answers, with no API call <Cite n={7} /> |
+| LangSmith | A tool to trace, debug, and evaluate agents <Cite n={1} /> |

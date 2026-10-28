@@ -1,0 +1,317 @@
+export const metadata = { title: 'Model Evaluation', description: 'How evals measure the quality of an AI app: success criteria, test sets, graders, LLM judges, and pass rates over many trials.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Define success criteria and build evaluations', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/test-and-evaluate/develop-tests', accessed: '2026-10-28' },
+    { title: 'Evaluation best practices', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/evaluation-best-practices', accessed: '2026-10-28' },
+    { title: 'Demystifying evals for AI agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents', accessed: '2026-10-28' },
+    { title: 'Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena (Zheng et al., 2023)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2306.05685', accessed: '2026-10-28' },
+  ],
+}
+
+# Model Evaluation
+
+A tester never signs off a release because "it seems to work". You run a test suite with expected results and report a pass rate. Model evaluation brings the same discipline to AI: a fixed set of tasks, a clear way to grade each answer, and a score that you can compare between versions.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **eval** is a structured test that measures how well a model or an AI app performs <Cite n={2} />. Evals are needed because generative AI is variable: the same input can give different outputs, so classic tests with one fixed expected output are not enough <Cite n={2} />.
+
+The word "eval" can mean three things <Cite n={2} />:
+
+1. Public benchmarks that compare models, such as MMLU.
+2. Standard scores, such as ROUGE.
+3. Your own tests for your own app.
+
+For an app team, the third kind matters most. Anthropic says the work starts with clear **success criteria** and then evals that measure against them <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+An **eval** is a test with a fixed structure. It measures how well a model or an AI app works <Cite n={2} />. We need evals because AI output changes. The same input can give different outputs. So a classic test with one fixed expected output is not enough <Cite n={2} />.
+
+The word "eval" can mean three things <Cite n={2} />:
+
+1. Public benchmarks that compare models, such as MMLU.
+2. Standard scores, such as ROUGE.
+3. Your own tests for your own app.
+
+For an app team, the third kind matters most. Anthropic says the work starts with clear **success criteria**. Then you build evals that measure against them <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটা **eval** হলো নির্দিষ্ট গঠনের একটা টেস্ট। এটা মাপে একটা মডেল বা AI অ্যাপ কতটা ভালো কাজ করে <Cite n={2} />। Eval দরকার কারণ AI-এর আউটপুট বদলায়। একই ইনপুট ভিন্ন আউটপুট দিতে পারে। তাই একটা নির্দিষ্ট প্রত্যাশিত আউটপুটের ক্লাসিক টেস্ট যথেষ্ট নয় <Cite n={2} />।
+
+"Eval" শব্দের তিনটা মানে হতে পারে <Cite n={2} />:
+
+1. মডেলগুলোর তুলনা করার পাবলিক বেঞ্চমার্ক, যেমন MMLU।
+2. স্ট্যান্ডার্ড স্কোর, যেমন ROUGE।
+3. আপনার নিজের অ্যাপের জন্য আপনার নিজের টেস্ট।
+
+একটা অ্যাপ টিমের জন্য তৃতীয়টাই সবচেয়ে জরুরি। Anthropic বলে কাজ শুরু হয় পরিষ্কার **সাফল্যের মানদণ্ড** (success criteria) দিয়ে। তারপর আপনি এমন evals বানান, যা সেগুলোর সঙ্গে মিলিয়ে মাপে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### 1. Define success criteria
+
+Good criteria are specific, measurable, achievable, and relevant <Cite n={1} />. "Good performance" is not a criterion; "accurate sentiment classification" is <Cite n={1} />. Most apps need several criteria at once, for example accuracy, tone, and latency <Cite n={1} />.
+
+### 2. Build the dataset
+
+- **Mirror real use.** Tasks should follow the real mix of inputs, plus edge cases: missing or irrelevant input, very long input, harmful input, and cases where even humans disagree <Cite n={1} />.
+- **Prefer volume.** Anthropic says many automatically graded questions beat a few hand-graded ones <Cite n={1} />.
+- **Mine the logs.** OpenAI advises logging everything during development, so you can find good eval cases later <Cite n={2} />.
+
+### 3. Choose a grader
+
+| Grader | Strength | Weakness |
+|---|---|---|
+| Code (exact or string match) | Fastest, most reliable, very scalable <Cite n={1} /> | No nuance for complex judgments <Cite n={1} /> |
+| Human | Most flexible, high quality <Cite n={1} /> | Slow and expensive <Cite n={1} /> |
+| LLM (model as judge) | Fast, flexible, good for complex judgments <Cite n={1} /> | Must be tested for reliability first <Cite n={1} /> |
+
+For an LLM grader, write a detailed rubric and ask for a fixed output, such as `correct` / `incorrect` or a score from 1 to 5 <Cite n={1} />. A study of LLM judges found position, verbosity, and self-enhancement biases. Self-enhancement means that a judge may prefer answers that it wrote itself. The study also found that strong judges agreed with human preferences more than 80% of the time, about as often as humans agree with each other <Cite n={4} />. OpenAI advises calibrating automated scores against human judgment <Cite n={2} />.
+
+### 4. Run it, more than once
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+cases = [
+    {"report": "App crashes when I tap Pay", "label": "critical"},
+    {"report": "Typo on the About page", "label": "low"},
+    # ... 200 more labeled reports
+]
+
+def classify(report: str) -> str:
+    msg = client.messages.create(
+        model="claude-opus-5-5",
+        max_tokens=10,
+        messages=[{"role": "user", "content": f"Severity of this bug: critical, high, medium, or low. Answer with one word.\n{report}"}],
+    )
+    return next(b.text for b in msg.content if b.type == "text").strip().lower()
+
+TRIALS = 3
+passed = sum(classify(c["report"]) == c["label"] for c in cases for _ in range(TRIALS))
+print(f"accuracy: {passed / (len(cases) * TRIALS):.1%}")
+```
+
+Because outputs vary, Anthropic runs several **trials** of each task <Cite n={3} />. Two scores tell different stories <Cite n={3} />:
+
+- **pass@k:** at least 1 of k trials succeeds. It rises with k.
+- **pass^k:** all k trials succeed. It falls with k. With a 75% success rate per trial, 3 out of 3 passes happen only about 42% of the time.
+
+### 5. Keep it running
+
+Anthropic separates **capability evals** (what can the system do? they start with a low pass rate) from **regression evals** (does it still do what it did? they should pass nearly 100%) <Cite n={3} />. OpenAI advises continuous evaluation on every change <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+**1. Define success criteria.** Good criteria are specific, measurable, possible to reach, and relevant <Cite n={1} />. "Good performance" is not a criterion. "Accurate sentiment classification" is <Cite n={1} />. Most apps need more than one criterion, for example accuracy, tone, and speed <Cite n={1} />.
+
+**2. Build the dataset.**
+
+- **Copy real use.** Tasks should follow the real mix of inputs. Add edge cases: missing or unrelated input, very long input, harmful input, and cases where even humans disagree <Cite n={1} />.
+- **Prefer many questions.** Anthropic says many questions with automatic grading beat a few questions that people grade by hand <Cite n={1} />.
+- **Use the logs.** OpenAI advises logging everything while you build. Later, you can find good eval cases in the logs <Cite n={2} />.
+
+**3. Choose a grader** <Cite n={1} />.
+
+- **Code** (exact match or string match): the fastest and most reliable. It scales very well. But it has no nuance for complex judgments.
+- **Human:** the most flexible, with high quality. But it takes a long time and costs a lot.
+- **LLM** (a model as judge): fast and flexible. Good for complex judgments. But you must test that it is reliable first.
+
+For an LLM grader, write a detailed rubric. Ask for a fixed output, such as `correct` / `incorrect` or a score from 1 to 5 <Cite n={1} />. A study of LLM judges found some biases. Judges were affected by the position of an answer and by its length. A judge may also prefer answers that it wrote itself. The study also found that strong judges agreed with people more than 80% of the time. That is about as often as people agree with each other <Cite n={4} />. OpenAI advises that you check automatic scores against human judgment <Cite n={2} />.
+
+**4. Run it, more than once.** The code example asks a model to rate the severity of about 200 bug reports. It compares each answer with the known label. It runs each case 3 times and prints the accuracy.
+
+Outputs change from run to run. So Anthropic runs each task several times. Each run is a **trial** <Cite n={3} />. Two scores tell different stories <Cite n={3} />:
+
+- **pass@k:** at least 1 of k trials succeeds. It goes up when k grows.
+- **pass^k:** all k trials succeed. It goes down when k grows. Say each trial succeeds 75% of the time. Then all 3 of 3 trials pass only about 42% of the time.
+
+**5. Keep it running.** Anthropic has two kinds of evals <Cite n={3} />. **Capability evals** ask what the system can do. They start with a low pass rate. **Regression evals** ask if the system still does what it did before. They should pass nearly 100%. OpenAI advises running evals on every change <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**1. সাফল্যের মানদণ্ড ঠিক করুন।** ভালো মানদণ্ড হয় নির্দিষ্ট, মাপা যায় এমন, অর্জনযোগ্য আর প্রাসঙ্গিক <Cite n={1} />। "ভালো পারফরম্যান্স" কোনো মানদণ্ড নয়। "সঠিক sentiment classification" একটা মানদণ্ড <Cite n={1} />। বেশিরভাগ অ্যাপের একাধিক মানদণ্ড লাগে, যেমন নির্ভুলতা, ভঙ্গি (tone) আর গতি <Cite n={1} />।
+
+**2. ডেটাসেট বানান।**
+
+- **আসল ব্যবহারের মতো রাখুন।** টাস্কগুলো ইনপুটের আসল মিশ্রণ মেনে চলবে। এজ কেস যোগ করুন: অনুপস্থিত বা অপ্রাসঙ্গিক ইনপুট, খুব লম্বা ইনপুট, ক্ষতিকর ইনপুট, আর এমন কেস যেখানে মানুষও একমত হয় না <Cite n={1} />।
+- **বেশি প্রশ্নকে প্রাধান্য দিন।** Anthropic বলে স্বয়ংক্রিয়ভাবে গ্রেড করা অনেক প্রশ্ন হাতে গ্রেড করা কয়েকটা প্রশ্নের চেয়ে ভালো <Cite n={1} />।
+- **লগ কাজে লাগান।** OpenAI বলে ডেভেলপমেন্টের সময় সব লগ করুন। পরে লগ থেকে ভালো eval কেস খুঁজে পাবেন <Cite n={2} />।
+
+**3. একটা গ্রেডার বেছে নিন** <Cite n={1} />।
+
+- **কোড** (exact match বা string match): সবচেয়ে দ্রুত আর নির্ভরযোগ্য। খুব ভালোভাবে স্কেল করে। কিন্তু জটিল বিচারে সূক্ষ্মতা নেই।
+- **মানুষ:** সবচেয়ে নমনীয় আর উঁচু মানের। কিন্তু ধীর আর ব্যয়বহুল।
+- **LLM** (বিচারক হিসেবে মডেল): দ্রুত আর নমনীয়। জটিল বিচারের জন্য ভালো। কিন্তু আগে যাচাই করতে হবে এটা নির্ভরযোগ্য কি না।
+
+LLM গ্রেডারের জন্য একটা বিস্তারিত রুব্রিক লিখুন। একটা নির্দিষ্ট আউটপুট চান, যেমন `correct` / `incorrect` বা 1 থেকে 5-এর স্কোর <Cite n={1} />। LLM বিচারকদের নিয়ে একটা গবেষণায় কিছু পক্ষপাত পাওয়া গেছে। উত্তরের অবস্থান আর তার দৈর্ঘ্য বিচারকদের প্রভাবিত করেছে। একজন বিচারক নিজের লেখা উত্তরকেও বেশি পছন্দ করতে পারে। গবেষণায় আরও দেখা গেছে, শক্তিশালী বিচারকেরা 80%-এর বেশি সময় মানুষের সঙ্গে একমত হয়েছে। মানুষ নিজেরা প্রায় ততটাই একমত হয় <Cite n={4} />। OpenAI বলে স্বয়ংক্রিয় স্কোরকে মানুষের বিচারের সঙ্গে মিলিয়ে নিন <Cite n={2} />।
+
+**4. একবারের বেশি চালান।** কোডের উদাহরণ একটা মডেলকে প্রায় 200টা বাগ রিপোর্টের severity বলতে বলে। প্রতিটা উত্তর জানা লেবেলের সঙ্গে মেলায়। প্রতিটা কেস 3 বার চালায় আর নির্ভুলতা প্রিন্ট করে।
+
+আউটপুট রান থেকে রানে বদলায়। তাই Anthropic প্রতিটা টাস্ক কয়েকবার চালায়। প্রতিটা রান একটা **trial** <Cite n={3} />। দুটো স্কোর ভিন্ন গল্প বলে <Cite n={3} />:
+
+- **pass@k:** k-টা trial-এর অন্তত 1টা সফল। k বাড়লে এটা বাড়ে।
+- **pass^k:** k-টা trial-এর সবগুলো সফল। k বাড়লে এটা কমে। ধরুন প্রতিটা trial 75% সময় সফল। তাহলে 3-এর মধ্যে 3টাই পাস হয় মাত্র প্রায় 42% সময়।
+
+**5. চালু রাখুন।** Anthropic দুই ধরনের eval রাখে <Cite n={3} />। **Capability eval** জিজ্ঞেস করে সিস্টেম কী করতে পারে। এগুলো কম পাস রেট দিয়ে শুরু হয়। **Regression eval** জিজ্ঞেস করে সিস্টেম আগে যা করত, এখনো তা করে কি না। এগুলো প্রায় 100% পাস করা উচিত। OpenAI প্রতিটা পরিবর্তনে eval চালানোর পরামর্শ দেয় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A support chatbot answers refund questions. The team defines three criteria and one grader for each:
+
+| Criterion | Grader | Target |
+|---|---|---|
+| The ticket is resolved | Code: check the refund record in the test database | 95% |
+| Finished in fewer than 10 turns | Code: count the turns in the transcript | 90% |
+| The tone is polite and calm | LLM judge with a 1 to 5 rubric, checked against 50 human ratings | average 4 or more |
+
+This follows Anthropic's example of a support agent: a state check, a transcript limit, and a rubric for tone <Cite n={3} />. The state check matters because the **outcome** is the final state of the system, not what the agent says. A bot can say "refund done" when no refund exists <Cite n={3} />.
+
+The team runs 150 tasks, 3 trials each. The numbers become a baseline. Each prompt change must keep the regression set near 100% <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+A support chatbot answers refund questions. The team sets three criteria. Each one has its own grader:
+
+- **The ticket is solved.** Code checks the refund record in the test database. Target: 95%.
+- **It ends in fewer than 10 turns.** Code counts the turns in the transcript. Target: 90%.
+- **The tone is polite and calm.** An LLM judge uses a rubric from 1 to 5. The team checks the judge against 50 ratings from people. Target: an average of 4 or more.
+
+This follows Anthropic's example of a support agent. It has a check of the state, a limit on the transcript, and a rubric for tone <Cite n={3} />. The state check matters. The **outcome** is the final state of the system, not what the agent says. A bot can say "refund done" when no refund exists <Cite n={3} />.
+
+The team runs 150 tasks, 3 trials each. The numbers become a baseline. After each prompt change, the regression set must still pass near 100% <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+একটা সাপোর্ট চ্যাটবট রিফান্ডের প্রশ্নের উত্তর দেয়। টিম তিনটা মানদণ্ড ঠিক করে। প্রতিটার আলাদা গ্রেডার আছে:
+
+- **টিকিট সমাধান হয়েছে।** কোড টেস্ট ডেটাবেসে রিফান্ডের রেকর্ড দেখে। লক্ষ্য: 95%।
+- **10 টার্নের কমে শেষ হয়।** কোড ট্রান্সক্রিপ্টের টার্ন গোনে। লক্ষ্য: 90%।
+- **ভঙ্গি ভদ্র আর শান্ত।** একটা LLM বিচারক 1 থেকে 5-এর রুব্রিক ব্যবহার করে। টিম বিচারককে মানুষের 50টা রেটিংয়ের সঙ্গে মিলিয়ে দেখে। লক্ষ্য: গড় 4 বা বেশি।
+
+এটা Anthropic-এর সাপোর্ট এজেন্টের উদাহরণ মেনে চলে। এতে আছে স্টেটের একটা চেক, ট্রান্সক্রিপ্টের একটা সীমা আর ভঙ্গির জন্য একটা রুব্রিক <Cite n={3} />। স্টেট চেক জরুরি। **Outcome** হলো সিস্টেমের চূড়ান্ত অবস্থা, এজেন্ট কী বলে তা নয়। কোনো রিফান্ড না থাকলেও একটা বট বলতে পারে "refund done" <Cite n={3} />।
+
+টিম 150টা টাস্ক চালায়, প্রতিটা 3টা trial। সংখ্যাগুলো একটা baseline হয়। প্রতিটা প্রম্পট পরিবর্তনের পর রিগ্রেশন সেটকে প্রায় 100% পাস করতেই হবে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Vibe-based evals.** "It seems to work" is not an eval. Waiting until after launch is not either <Cite n={2} />.
+- **Only generic metrics.** Academic scores such as perplexity or BLEU alone do not tell you if your app does its job <Cite n={2} />.
+- **A dataset that does not match production.** Biased eval data gives a false picture <Cite n={2} />.
+- **An unchecked LLM judge.** Judges have position and verbosity biases. Test the judge against human ratings first <Cite n={4} /> <Cite n={1} />.
+- **One run per task.** Output varies, so one trial hides flaky behavior <Cite n={3} />.
+- **Grading the words, not the outcome.** The agent can claim success that the system state does not show <Cite n={3} />.
+- **A judge that writes free text.** Ask for a fixed label or score; free text is hard to grade at scale <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+- **Evals by feeling.** "It seems to work" is not an eval. Waiting until after launch is not one either <Cite n={2} />.
+- **Only general metrics.** Academic scores such as perplexity or BLEU alone do not tell you if your app does its job <Cite n={2} />.
+- **A dataset that does not match real traffic.** Biased eval data gives a false picture <Cite n={2} />.
+- **An LLM judge that nobody checked.** Judges are affected by the position and the length of answers. Test the judge against ratings from people first <Cite n={4} /> <Cite n={1} />.
+- **One run per task.** Output changes. So one trial hides flaky behavior <Cite n={3} />.
+- **Grading the words, not the result.** The agent can say it succeeded when the system state does not show it <Cite n={3} />.
+- **A judge that writes free text.** Ask for a fixed label or score. Free text is hard to grade in large numbers <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **অনুভূতি দিয়ে eval।** "মনে হচ্ছে কাজ করছে" কোনো eval নয়। লঞ্চের পর পর্যন্ত অপেক্ষা করাও নয় <Cite n={2} />।
+- **শুধু সাধারণ মেট্রিক।** Perplexity বা BLEU-এর মতো একাডেমিক স্কোর একা বলে না আপনার অ্যাপ তার কাজ করছে কি না <Cite n={2} />।
+- **আসল ট্রাফিকের সঙ্গে না মেলা ডেটাসেট।** পক্ষপাতদুষ্ট eval ডেটা ভুল ছবি দেয় <Cite n={2} />।
+- **কেউ যাচাই করেনি এমন LLM বিচারক।** উত্তরের অবস্থান আর দৈর্ঘ্য বিচারকদের প্রভাবিত করে। আগে বিচারককে মানুষের রেটিংয়ের সঙ্গে মিলিয়ে টেস্ট করুন <Cite n={4} /> <Cite n={1} />।
+- **প্রতি টাস্কে একটা রান।** আউটপুট বদলায়। তাই একটা trial অস্থির (flaky) আচরণ লুকিয়ে রাখে <Cite n={3} />।
+- **ফলাফল নয়, কথা গ্রেড করা।** সিস্টেমের অবস্থা না দেখালেও এজেন্ট বলতে পারে সে সফল <Cite n={3} />।
+- **ফ্রি টেক্সট লেখা বিচারক।** একটা নির্দিষ্ট লেবেল বা স্কোর চান। অনেক বেশি ফ্রি টেক্সট গ্রেড করা কঠিন <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice.
+
+- **Ask for the criteria in writing.** Each criterion needs a number and a target before anyone tunes a prompt.
+- **Review the dataset like test data.** Check the mix of inputs, the edge cases, and the labels. Fix wrong labels before you trust any score.
+- **Audit the judge.** Take 30 cases, grade them yourself, and compare with the LLM judge. Swap the answer order and check if the verdict changes.
+- **Report pass^k for user-facing flows.** A feature that passes 2 times out of 3 is flaky, not done.
+- **Keep a regression suite.** Every fixed failure becomes a new eval case, as a fixed bug gets a regression test.
+- **Version everything.** Store the prompt, the model ID, the dataset, and the grader version with each score, so two runs can be compared.
+</Callout>
+
+</Technical>
+<Layman>
+
+These checks are the tutorial's own advice.
+
+- **Ask for the criteria in writing.** Each criterion needs a number and a target before anyone changes a prompt.
+- **Review the dataset like test data.** Check the mix of inputs, the edge cases, and the labels. Fix wrong labels before you trust any score.
+- **Check the judge.** Take 30 cases. Grade them yourself. Compare with the LLM judge. Swap the order of the answers and see if the verdict changes.
+- **Report pass^k for flows that users see.** A feature that passes 2 times out of 3 is flaky, not done.
+- **Keep a regression suite.** Each failure that you fix becomes a new eval case, as a fixed bug gets a regression test.
+- **Version everything.** Save the prompt, the model ID, the dataset, and the grader version with each score. Then you can compare two runs.
+
+</Layman>
+<Bangla>
+
+এই চেকগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **মানদণ্ড লিখিতভাবে চান।** কেউ প্রম্পট বদলানোর আগে প্রতিটা মানদণ্ডের একটা সংখ্যা আর লক্ষ্য দরকার।
+- **ডেটাসেটকে টেস্ট ডেটার মতো রিভিউ করুন।** ইনপুটের মিশ্রণ, এজ কেস আর লেবেল দেখুন। কোনো স্কোরে ভরসা করার আগে ভুল লেবেল ঠিক করুন।
+- **বিচারককে যাচাই করুন।** 30টা কেস নিন। নিজে গ্রেড করুন। LLM বিচারকের সঙ্গে মেলান। উত্তরের ক্রম অদলবদল করে দেখুন রায় বদলায় কি না।
+- **ইউজার যে ফ্লো দেখেন, তার জন্য pass^k জানান।** যে ফিচার 3 বারে 2 বার পাস করে, সেটা অস্থির (flaky), শেষ নয়।
+- **একটা রিগ্রেশন স্যুট রাখুন।** ঠিক করা প্রতিটা ব্যর্থতা একটা নতুন eval কেস হয়, যেমন ঠিক করা বাগ একটা রিগ্রেশন টেস্ট পায়।
+- **সবকিছুর ভার্সন রাখুন।** প্রতিটা স্কোরের সঙ্গে প্রম্পট, মডেল ID, ডেটাসেট আর গ্রেডারের ভার্সন সেভ করুন। তখন দুটো রান তুলনা করা যায়।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Eval | A structured test that measures the performance of a model or an AI app <Cite n={2} /> |
+| Success criteria | Specific, measurable targets that say what "good" means for the app <Cite n={1} /> |
+| Grader | The logic that scores an answer: code, a human, or an LLM <Cite n={3} /> |
+| LLM-as-a-judge | Using a strong model to grade the answers of another model <Cite n={4} /> |
+| Trial | One attempt at one task; evals run several trials because output varies <Cite n={3} /> |
+| pass@k / pass^k | At least one of k trials succeeds / all k trials succeed <Cite n={3} /> |
+| Regression eval | A set of tasks the system already handles, which should pass nearly 100% <Cite n={3} /> |
