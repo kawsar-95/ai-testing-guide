@@ -23,6 +23,7 @@ def load_routes():
         "harness-route-map.json",
         "ai-skills-route-map.json",
         "ai-concepts-route-map.json",
+        "agent-memory-route-map.json",
         "contents-route-map.json",
         "dashboard-route-map.json",
         "interview-route-map.json",

@@ -74,6 +74,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `app/(site)/ai-concepts/page.tsx`, `app/(site)/ai-concepts/[topic]/page.tsx` | The AI Concepts module: the home and one topic. Thin, like k6, with `AI_CONCEPTS`. `[topic]` loads `content/ai-concepts/<topic>.mdx`. |
 | `lib/ai-concepts/topics.ts`, `lib/ai-concepts/ui.ts`, `lib/bn/ai-concepts.ts` | The one ordered list of the 9 AI Concepts topics, and the English and Bangla strings. See "AI Concepts Module". |
 | `lib/ai-skills/topics.ts`, `lib/ai-skills/ui.ts`, `lib/bn/ai-skills.ts` | The one ordered list of the 20 AI skills in 4 tiers, and the English and Bangla strings. See "AI Skills Module". |
+| `app/(site)/agent-memory/page.tsx`, `app/(site)/agent-memory/[topic]/page.tsx` | The Agent Memory module: the home and one topic. Both files are thin, like the k6 ones, with `AGENT_MEMORY`. `[topic]` loads `content/agent-memory/<topic>.mdx`. |
+| `lib/agent-memory/topics.ts`, `lib/agent-memory/ui.ts`, `lib/bn/agent-memory.ts` | The one ordered list of the 7 Agent Memory topics, and the English and Bangla strings. See "Agent Memory Module". |
 | `public/images/k6/` | The owner's 5 screenshots (WebP): the first run, the VUs and duration output, and 3 Grafana steps |
 | `components/architecture/` | `PracticeQuestion` (the only Architecture-specific component) |
 | `lib/architecture/topics.ts`, `lib/architecture/ui.ts` | The one ordered list of the 19 Architecture topics and the practice page, the progress ids, and the English strings. See "Architecture Module". |
@@ -104,8 +106,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
-| `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture, Course, k6, AI Engineering). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 219 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture, Course, k6, AI Engineering, Agent Memory). It has relative `.ts` imports, so `node --test` can load it. |
+| `lib/pwa.ts` | The web manifest, the precache list (all 227 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels, the three START HERE pages, `WHY_ITEMS`, and `COURSE_CARDS` |
@@ -134,8 +136,9 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `content/harness/<slug>.mdx` | The 6 AI Harnesses topic pages |
 | `content/ai-skills/<slug>.mdx` | The 20 AI Skills pages |
 | `content/ai-concepts/<slug>.mdx` | The 9 AI Concepts topic pages |
+| `content/agent-memory/<slug>.mdx` | The 7 Agent Memory topic pages |
 | `public/images/fundamentals/` | The images of the owner's notes |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `linux-lesson`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `contents`, `header-nav`, `interview`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard`, `flat-module`, `course`, `k6`, `ai-engineering`, `harness`, `ai-skills`, `ai-concepts` |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `linux-lesson`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `contents`, `header-nav`, `interview`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard`, `flat-module`, `course`, `k6`, `ai-engineering`, `harness`, `ai-skills`, `ai-concepts`, `agent-memory` |
 | `docs/ARCHITECTURE.md` | How the site is built, for developers. Update it when a route, a module, or a shared mechanism changes. |
 | `docs/assets/` | The screenshots of `README.md` (1280×800, and 390×844 for the phone ones). Take them again when the look changes. Use a root build and seed demo progress in `localStorage`. |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
@@ -149,6 +152,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `scripts/harness-route-map.json` | The 7 AI Harnesses routes: `/harness/` and the 6 topic pages. Same identity map. |
 | `scripts/ai-concepts-route-map.json` | The 10 AI Concepts routes: `/ai-concepts/` and the 9 topics. Same identity map. |
 | `scripts/ai-skills-route-map.json` | The 21 AI Skills routes: `/ai-skills/` and the 20 skill pages. Same identity map. |
+| `scripts/agent-memory-route-map.json` | The 8 Agent Memory routes: `/agent-memory/` and the 7 topic pages. Same identity map. |
 | `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
 | `scripts/contents-route-map.json` | The 1 contents route: `/contents/`. Same identity map. |
 | `scripts/dashboard-route-map.json` | The 1 dashboard route: `/dashboard/`. Same identity map. |
@@ -157,7 +161,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the part numbers (`PART 01`…`PART 24`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 219 routes:
+The site has 227 routes:
 
 | Routes | Count |
 |---|---|
@@ -176,6 +180,7 @@ The site has 219 routes:
 | `/harness/` and the 6 AI Harnesses topics | 7 |
 | `/ai-skills/` and the 20 AI skills | 21 |
 | `/ai-concepts/` and the 9 AI Concepts topics | 10 |
+| `/agent-memory/` and the 7 Agent Memory topics | 8 |
 
 | Group | Folder | Pages |
 |---|---|---|
@@ -192,10 +197,10 @@ The site has 219 routes:
 |---|---|
 | Header | Sticky, 64 px. The brand mark in a teal tile, then the top nav (from the `nav` breakpoint), then search, voice, install, theme, and the menu button (below `nav`). |
 | Top nav | `HEADER_NAV`: 4 plain links: Home, Contents, Dashboard, and Interview. The current item has a teal underline (`activeNavId`). A tutorial or module page has no current item. A module is reached from the home page and `/contents/`. Below the `nav` breakpoint, the drawer shows the same 4 links above its list (`MobileNav`). |
-| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 205 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
+| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 212 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
 | Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. Below `chapter`, `ContentsButton` above the title of a content page opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. On close, the focus goes back to the button that opened it. |
 | One section at a time | `SectionFocus` (in `ChapterLayout`) groups the flat children of `article[data-content]` by `##` heading and hides all sections but one (`data-sec-hidden`, CSS in `app/globals.css`, screen only). The text before the first `##` stays visible. A step bar sits above the section, and Previous and Next buttons below it. "Show all sections" turns it off (`localStorage` key `section-focus`). A hash or an in-page link into a hidden section shows it. Pages with fewer than 3 sections, and pages with no JavaScript, show everything. The strings are in `lib/ui.ts` and `lib/bn/shell.ts`. |
-| `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, Architecture, Course, k6, and AI Engineering. |
+| `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, Architecture, Course, k6, AI Engineering, and Agent Memory. |
 
 ## Reading state and Dashboard
 
@@ -203,8 +208,8 @@ The site has 219 routes:
 |---|---|
 | `ChapterTools` | Under the meta line of each content page (in the `PageMeta` slot): the pill `📖 N min read` and the toggles Bookmark and Mark as read (`aria-pressed`). It saves the page to `last-page` on mount. |
 | Reading time | `lib/reading-time.ts`: the words of the Technical text (no code, export statements, tags, or link URLs). A Fundamentals chapter gets one value per version (`getReadingMinutesByVersion`), and the version CSS shows the one of the switch / 200, rounded up, 1 at least. Computed at build time. |
-| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 205 content pages. |
-| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 205`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, and AI Concepts, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 11 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 11 keys. |
+| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 212 content pages. |
+| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 212`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, and Agent Memory, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 12 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 12 keys. |
 | Strings | `lib/dashboard.ts` (`DASHBOARD_UI`, the route). The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle. |
 
 ## Linux Module
@@ -235,7 +240,7 @@ To add or change a topic, edit `lib/linux/stages.ts` and the `##` heading of the
 
 ## Flat modules
 
-A flat module is a home page and a list of pages at `/<id>/<slug>/`. Architecture, System Design, Course, k6, AI Engineering, AI Harnesses, AI Skills, and AI Concepts are flat modules. `defineFlatModule` (`lib/modules/flat.ts`) builds the routes, the numbers, the neighbours, and the progress ids from one entry list. An entry has a kind: `topic` (a page with a progress id when the module has progress), `practice` (a page with its own question ids), or `link` (a link to an `href`, with no page).
+A flat module is a home page and a list of pages at `/<id>/<slug>/`. Architecture, System Design, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, and Agent Memory are flat modules. `defineFlatModule` (`lib/modules/flat.ts`) builds the routes, the numbers, the neighbours, and the progress ids from one entry list. An entry has a kind: `topic` (a page with a progress id when the module has progress), `practice` (a page with its own question ids), or `link` (a link to an `href`, with no page).
 
 To add a flat module:
 
@@ -381,6 +386,20 @@ The AI Concepts module is the home at `/ai-concepts/` and 9 topic pages at `/ai-
 
 To add a topic, add it to `lib/ai-concepts/topics.ts` and to `AiConceptsSlug`, create `content/ai-concepts/<slug>.mdx`, and add its route to `scripts/ai-concepts-route-map.json`. `npm test` checks that the three agree.
 
+## Agent Memory Module
+
+The Agent Memory module is the home at `/agent-memory/` and 7 topic pages at `/agent-memory/<slug>/`. Each page explains one of the 7 types of agent memory of the infographic "7 Types of Agent Memory" by Neo Kim and Telnyx: working, semantic, episodic, procedural, retrieval, parametric, and prospective.
+
+`lib/agent-memory/topics.ts` defines the module (`AGENT_MEMORY`) with its one ordered list of 7 `topic` entries, in the order of the infographic. It drives the drawer, the home page, prev/next, search (group `agent memory`), the sitemap, the precache, and the progress store (`localStorage` key `agent-memory-progress`).
+
+| Rule | Detail |
+|---|---|
+| Page shape | `## In plain words`, `## Where it comes from`, `## How an agent gets it`, `## A real-life example`, `## Common mistakes`, `## What a tester can check` (a "Tutorial advice" tip with no cites), `## Key words` (a table, always last). Each `##` section except `## Key words` has `<Voices>`. `npm test` (`tests/agent-memory.test.ts`) checks the order. |
+| Sources | Primary sources only: research papers on arXiv (CoALA, RAG, MemGPT, Generative Agents, …), the APA Dictionary of Psychology, and the Anthropic, LangChain, and Telnyx docs. No Neo Kim article lists the 7 types, so the infographic is named but not cited. If no source uses a memory name (for example "retrieval memory") or a mapping (for example CLAUDE.md as procedural memory), the page says that it is the tutorial's own view. |
+| Research notes | `docs/superpowers/research/agent-memory-<slug>.md`, `agent-memory-<slug>.factcheck.md`, and `agent-memory-<slug>.voices.factcheck.md`, and the source overview `agent-memory-sources.md`. A page is done only when both reports end with `Open FAILs: 0`, written by an agent that did not write the page. |
+
+To add a topic, add it to `lib/agent-memory/topics.ts` and to `AgentMemorySlug`, create `content/agent-memory/<slug>.mdx`, and add its route to `scripts/agent-memory-route-map.json`. `npm test` checks that the three agree.
+
 ## Architecture Module
 
 The System Architecture Foundations module is the home at `/architecture/`, 19 topic pages, and a practice page with 30 questions, all at `/architecture/<slug>/`. It teaches the building blocks of system architecture in plain words for testers. The base is the owner's notes (`docs/superpowers/research/architecture-owner-notes.md`) and the owner's diagrams. The design is `docs/superpowers/specs/2026-10-20-architecture-module-design.md`.
@@ -400,7 +419,7 @@ To add a topic, add it to `lib/architecture/topics.ts` and to `ArchitectureSlug`
 
 ## Voices
 
-A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 193 pages have voices: the 24 tutorial pages, the 12 Linux stages, the 15 System Design cases, the 19 Architecture topics, the 40 Course topics, the 20 k6 topics, the 28 AI Engineering topics, the 6 AI Harnesses topics, the 20 AI Skills pages, and the 9 AI Concepts topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
+A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 200 pages have voices: the 24 tutorial pages, the 12 Linux stages, the 15 System Design cases, the 19 Architecture topics, the 40 Course topics, the 20 k6 topics, the 28 AI Engineering topics, the 6 AI Harnesses topics, the 20 AI Skills pages, the 9 AI Concepts topics, and the 7 Agent Memory topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
 
 ### What the reader sees
 
@@ -604,7 +623,7 @@ To change a page:
 
 The site installs as an app and is offline first.
 
-- The service worker caches all 219 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
+- The service worker caches all 227 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
 - Pages, RSC payloads, and the search index use stale-while-revalidate: the cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Offline, a page that is not in the cache gets the 404 page.
 - Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
@@ -628,15 +647,15 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 | `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), the Course data, page shape, search, and precache (`tests/course.test.ts`), the k6 data, page shape, search, and precache (`tests/k6.test.ts`), the AI Engineering data, page shape, search, and precache (`tests/ai-engineering.test.ts`), the voice helpers and head script (`tests/voice.test.ts`), the authoring rules of `<Voices>` in every MDX file (`tests/voice-source.test.ts`), the Linux lesson shape, the word and tip limits in all voices, and unsafe cleanups in Try-it blocks (`tests/linux-lesson.test.ts`), the contents page and stats (`tests/contents.test.ts`), the top nav (`tests/header-nav.test.ts`), the token contrast (`tests/contrast.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
-| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, `fundamentals-route-map.json`, `architecture-route-map.json`, `course-route-map.json`, `k6-route-map.json`, `ai-engineering-route-map.json`, `harness-route-map.json`, `ai-skills-route-map.json`, `ai-concepts-route-map.json`, `contents-route-map.json`, `dashboard-route-map.json`, and `interview-route-map.json` that has no page in `out/` |
+| `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, `fundamentals-route-map.json`, `architecture-route-map.json`, `course-route-map.json`, `k6-route-map.json`, `ai-engineering-route-map.json`, `harness-route-map.json`, `ai-skills-route-map.json`, `ai-concepts-route-map.json`, `agent-memory-route-map.json`, `contents-route-map.json`, `dashboard-route-map.json`, and `interview-route-map.json` that has no page in `out/` |
 | `python3 scripts/check_links.py out` | Lists broken internal links and assets |
 | `python3 scripts/check_outline.py out` | Checks that each "On this page" link points to an element id |
-| `python3 scripts/check_sources.py out` | Checks each tutorial page, each Linux stage page, each System Design case page, each Fundamentals chapter page, each Architecture page, each Course page, each k6 page, each AI Engineering page, each AI Harnesses page, each AI Skills page, and each AI Concepts page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
+| `python3 scripts/check_sources.py out` | Checks each tutorial page, each Linux stage page, each System Design case page, each Fundamentals chapter page, each Architecture page, each Course page, each k6 page, each AI Engineering page, each AI Harnesses page, each AI Skills page, each AI Concepts page, and each Agent Memory page: one meta line with `updated Mon YYYY`, 1 or more sources, a `#src-k` target for each `[k]` cite, a cite for each source, and `https://` source links |
 | `scripts/compare_text.py` | Historical record of the phase-3 migration. It cannot run now. See below. |
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 205 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 212 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 

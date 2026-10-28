@@ -19,7 +19,7 @@ import checks
 
 
 def default_routes():
-    """The tutorial pages, the Linux stage pages, the System Design case pages, the Fundamentals chapter pages, the Architecture pages, the Course pages, the k6 pages, the AI Engineering pages, the AI Harnesses pages, the AI Skills pages, and the AI Concepts pages, without the homes."""
+    """The tutorial pages, the Linux stage pages, the System Design case pages, the Fundamentals chapter pages, the Architecture pages, the Course pages, the k6 pages, the AI Engineering pages, the AI Harnesses pages, the AI Skills pages, the AI Concepts pages, and the Agent Memory pages, without the homes."""
     here = Path(__file__).resolve().parent
     routes = []
     for name, home in (
@@ -34,6 +34,7 @@ def default_routes():
         ("harness-route-map.json", "/harness/"),
         ("ai-skills-route-map.json", "/ai-skills/"),
         ("ai-concepts-route-map.json", "/ai-concepts/"),
+        ("agent-memory-route-map.json", "/agent-memory/"),
     ):
         route_map = json.loads((here / name).read_text())
         routes += [route for route in route_map.values() if route != home]

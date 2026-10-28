@@ -34,5 +34,6 @@ export const DASHBOARD_UI_BN: Bn<typeof DASHBOARD_UI> = {
     harness: "AI Harnesses",
     "ai-skills": "AI Skills",
     "ai-concepts": "AI Concepts",
+    "agent-memory": "Agent Memory",
   },
 };

@@ -16,6 +16,8 @@ export const MODULE_TAGLINES_BN: Record<ModuleId, string> = {
     "AI ইঞ্জিনিয়ারিং আসলে কী নিয়ে, টেস্টারদের জন্য: প্রম্পট ও RAG থেকে eval, guardrail, observability ও সিস্টেম ডিজাইন পর্যন্ত।",
   k6: "পারফরম্যান্স টেস্টিং ও k6, প্রথম স্ক্রিপ্ট থেকে লাইভ ড্যাশবোর্ড ও CI পর্যন্ত।",
   harness: "AI হারনেস কীভাবে কাজ করে তার ছয়টি টার্ম: এজেন্ট লুপ, টুল কলিং, কনটেক্সট, চেকপয়েন্ট, পারমিশন ও গার্ডরেইল।",
+  "agent-memory":
+    "AI এজেন্টের ৭ ধরনের মেমরি সহজ ভাষায়: working, semantic, episodic, procedural, retrieval, parametric ও prospective।",
   "ai-skills": "৪টি ধাপে ২০টি AI স্কিল, প্রম্পটিং থেকে ফাইন-টিউনিং পর্যন্ত, প্রতিটায় একজন টেস্টার কীভাবে ব্যবহার করবেন তা সহ।",
   "ai-concepts":
     "টেস্টারদের জন্য সহজ ভাষায় নয়টি AI engineering আইডিয়া: agent loop, MCP, subagent, gateway, খরচ, eval, guardrail, observability ও harness।",
