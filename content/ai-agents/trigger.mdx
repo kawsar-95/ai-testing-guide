@@ -1,0 +1,282 @@
+export const metadata = { title: 'Trigger', description: 'What starts an agent run: a user message, an event, a schedule, or another agent.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Building effective agents', publisher: 'Anthropic (Engineering)', url: 'https://www.anthropic.com/engineering/building-effective-agents', accessed: '2026-10-28' },
+    { title: 'Claude Code GitHub Actions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/github-actions', accessed: '2026-10-28' },
+    { title: 'Events that trigger workflows', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows', accessed: '2026-10-28' },
+    { title: 'Workflow syntax for GitHub Actions', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax', accessed: '2026-10-28' },
+    { title: 'Run prompts on a schedule', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/scheduled-tasks', accessed: '2026-10-28' },
+    { title: 'Automate work with scheduled tasks', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/routines', accessed: '2026-10-28' },
+    { title: 'Push events into a running session with channels', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/channels', accessed: '2026-10-28' },
+    { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-10-28' },
+    { title: 'Handoffs', publisher: 'OpenAI (Agents SDK docs)', url: 'https://openai.github.io/openai-agents-python/handoffs/', accessed: '2026-10-28' },
+  ],
+}
+
+# Trigger
+
+An agent does nothing until something starts it. That start is the trigger. This page explains the four kinds of trigger: a person, an event, a schedule, and another agent. It also shows what a tester checks, because a wrong trigger can start a run that nobody wanted, or miss a run that somebody needed.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **trigger** is what starts one run of the agent loop. Anthropic says that agents begin their work with a command from the user, or with an interactive discussion with the user <Cite n={1} />. That is the most common trigger, but it is not the only one.
+
+This tutorial puts triggers in four groups. The grouping is the tutorial's own:
+
+| Trigger | Example | Who is there |
+|---|---|---|
+| **A person** | A message in a chat or a terminal, or an `@claude` comment <Cite n={2} /> | A person who waits for the answer |
+| **An event** | A pull request, a push that changes files, a webhook <Cite n={3} /> | Often nobody |
+| **A schedule** | A cron expression, for example every day at 09:00 <Cite n={3} /> | Nobody |
+| **Another agent** | A subagent or a handoff <Cite n={8} /> <Cite n={9} /> | The agent that started it |
+
+The trigger also gives the first input. A person gives a request. An event gives data about what happened. A schedule gives only the saved prompt. A parent agent gives a task.
+
+</Technical>
+<Layman>
+
+A **trigger** is what starts one run of the agent. Anthropic says that agents start their work with a command from a person, or with a talk with a person <Cite n={1} />. That is the most common trigger, but there are others.
+
+This tutorial puts triggers in four groups. The groups are the tutorial's own:
+
+- **A person.** Someone types a message, or writes `@claude` in a comment <Cite n={2} />. That person waits for the answer.
+- **An event.** Something happens, for example a new pull request, a push that changes files, or a webhook <Cite n={3} />. Often nobody is watching.
+- **A schedule.** A clock starts the run, for example every day at 09:00 <Cite n={3} />. Nobody is watching.
+- **Another agent.** One agent gives work to a second agent, as a subagent or a handoff <Cite n={8} /> <Cite n={9} />.
+
+The trigger also gives the first input. A person gives a request. An event gives facts about what happened. A schedule gives only the saved prompt. A parent agent gives a task.
+
+</Layman>
+<Bangla>
+
+**Trigger** হলো সেই জিনিস, যেটা agent-এর একটা run শুরু করে। Anthropic বলে, agent তার কাজ শুরু করে ব্যবহারকারীর একটা command দিয়ে, বা ব্যবহারকারীর সঙ্গে একটা আলাপ দিয়ে <Cite n={1} />। এটাই সবচেয়ে সাধারণ trigger, কিন্তু একমাত্র নয়।
+
+এই টিউটোরিয়াল trigger-কে চারটা দলে ভাগ করে। এই ভাগ টিউটোরিয়ালের নিজের:
+
+- **একজন মানুষ।** কেউ একটা message লেখেন, বা একটা comment-এ `@claude` লেখেন <Cite n={2} />। সেই মানুষটা উত্তরের অপেক্ষায় থাকেন।
+- **একটা event।** কিছু একটা ঘটে, যেমন নতুন pull request, file বদলানো একটা push, বা একটা webhook <Cite n={3} />। প্রায়ই কেউ দেখছে না।
+- **একটা schedule।** একটা ঘড়ি run শুরু করে, যেমন প্রতিদিন 09:00-এ <Cite n={3} />। কেউ দেখছে না।
+- **আরেকটা agent।** একটা agent দ্বিতীয় একটা agent-কে কাজ দেয়, subagent বা handoff হিসেবে <Cite n={8} /> <Cite n={9} />।
+
+Trigger প্রথম input-ও দেয়। মানুষ একটা অনুরোধ দেন। Event যা ঘটেছে তার তথ্য দেয়। Schedule শুধু সেভ করা prompt দেয়। Parent agent একটা কাজ দেয়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### A person
+
+In Claude Code GitHub Actions, **interactive mode** runs when the workflow has no `prompt` input. Claude waits for the trigger phrase, `@claude` by default, in an issue or pull request comment <Cite n={2} />. The example workflow listens to the `issue_comment` and `pull_request_review_comment` events <Cite n={2} />.
+
+### An event
+
+With a `prompt` input, the action runs in **automation mode**: it runs without waiting for a mention, on any GitHub event <Cite n={2} />. GitHub has many events. For example, `push` runs when you push a commit or a tag, `workflow_dispatch` lets a person start a workflow by hand, and `repository_dispatch` lets the GitHub API start a workflow for activity outside GitHub <Cite n={3} />. To react to a file change, use a `paths` filter on `push` or `pull_request`. The workflow runs only if at least one changed path matches <Cite n={4} />.
+
+Claude Code cloud scheduled tasks (formerly routines, in research preview) have two event triggers. A **GitHub** trigger reacts to pull request, release, and issue events. An **API** trigger starts a run when you send an HTTP POST with a bearer token to the task's endpoint <Cite n={6} />. A **channel** is an MCP server that pushes events, such as a CI result or a webhook, into a Claude Code session that is already open. Channels are also in research preview <Cite n={7} />.
+
+### A schedule
+
+GitHub's `schedule` event uses POSIX cron syntax. The shortest interval is once every 5 minutes, and runs can be delayed at times of high load <Cite n={3} />. Scheduled workflows run in UTC by default <Cite n={4} />. Cloud scheduled tasks reject cron expressions that run more often than once per hour <Cite n={6} />. Inside one Claude Code session, `/loop` re-runs a prompt on an interval <Cite n={5} />.
+
+### Another agent
+
+In Claude Code, the main agent delegates to a **subagent** based on the task and the subagent's `description` field. The subagent works in its own context window and returns only a summary <Cite n={8} />. In the OpenAI Agents SDK, a **handoff** lets one agent delegate to another. The model sees a handoff as a tool, for example `transfer_to_refund_agent`. By default, the new agent sees the whole previous conversation <Cite n={9} />.
+
+</Technical>
+<Layman>
+
+**A person.** In Claude Code GitHub Actions, **interactive mode** is used when the workflow has no `prompt`. Claude waits for the words `@claude` (the default) in an issue or pull request comment <Cite n={2} />. The example workflow listens to the `issue_comment` and `pull_request_review_comment` events <Cite n={2} />.
+
+**An event.** If the workflow has a `prompt`, the action uses **automation mode**. It runs on any GitHub event and does not wait for a mention <Cite n={2} />. GitHub has many events. `push` runs when you push a commit or a tag. `workflow_dispatch` lets a person start a workflow by hand. `repository_dispatch` lets the GitHub API start a workflow for something that happens outside GitHub <Cite n={3} />. To react to changed files, add a `paths` filter to `push` or `pull_request`. Then the workflow runs only if at least one changed file matches <Cite n={4} />.
+
+Claude Code cloud scheduled tasks (once called routines, still in research preview) have two event triggers. A **GitHub** trigger reacts to pull requests, releases, and issues. An **API** trigger starts a run when a program sends an HTTP POST with a secret token <Cite n={6} />. A **channel** is an MCP server that pushes events, such as a CI result or a webhook, into a Claude Code session that is already open. Channels are also in research preview <Cite n={7} />.
+
+**A schedule.** GitHub's `schedule` event uses cron syntax. The shortest gap is 5 minutes, and runs can start late when GitHub is busy <Cite n={3} />. The times are in UTC by default <Cite n={4} />. Cloud scheduled tasks do not allow a schedule that runs more than once an hour <Cite n={6} />. Inside one Claude Code session, `/loop` runs a prompt again and again on a timer <Cite n={5} />.
+
+**Another agent.** In Claude Code, the main agent gives work to a **subagent**. It chooses the subagent from the task and the subagent's `description`. The subagent works in its own context and sends back only a summary <Cite n={8} />. In the OpenAI Agents SDK, a **handoff** passes the work to another agent. The model sees the handoff as a tool, for example `transfer_to_refund_agent`. By default, the new agent sees the whole earlier conversation <Cite n={9} />.
+
+</Layman>
+<Bangla>
+
+**একজন মানুষ।** Claude Code GitHub Actions-এ workflow-এ কোনো `prompt` না থাকলে **interactive mode** চলে। Claude একটা issue বা pull request comment-এ trigger phrase-এর জন্য অপেক্ষা করে, ডিফল্ট হলো `@claude` <Cite n={2} />। উদাহরণের workflow `issue_comment` আর `pull_request_review_comment` event শোনে <Cite n={2} />।
+
+**একটা event।** Workflow-এ `prompt` থাকলে action **automation mode**-এ চলে। এটা কোনো mention-এর অপেক্ষা না করে যেকোনো GitHub event-এ চলে <Cite n={2} />। GitHub-এ অনেক event আছে। আপনি commit বা tag push করলে `push` চলে। `workflow_dispatch` দিয়ে একজন মানুষ হাতে workflow চালাতে পারেন। `repository_dispatch` দিয়ে GitHub API, GitHub-এর বাইরের কোনো ঘটনার জন্য workflow চালাতে পারে <Cite n={3} />। File বদলানোর সময় চালাতে চাইলে `push` বা `pull_request`-এ একটা `paths` filter দিন। তখন অন্তত একটা বদলানো path মিললে তবেই workflow চলে <Cite n={4} />।
+
+Claude Code-এর cloud scheduled task-এ (আগের নাম routines, এখনো research preview-তে) দুটো event trigger আছে। **GitHub** trigger pull request, release আর issue event-এ সাড়া দেয়। **API** trigger একটা run শুরু করে, যখন কেউ task-এর endpoint-এ একটা bearer token সহ HTTP POST পাঠায় <Cite n={6} />। **Channel** হলো একটা MCP server, যেটা CI result বা webhook-এর মতো event আগে থেকে খোলা একটা Claude Code session-এ পাঠিয়ে দেয়। Channel-ও research preview-তে আছে <Cite n={7} />।
+
+**একটা schedule।** GitHub-এর `schedule` event POSIX cron syntax ব্যবহার করে। সবচেয়ে ছোট বিরতি 5 মিনিট, আর বেশি চাপের সময় run দেরিতে শুরু হতে পারে <Cite n={3} />। ডিফল্টভাবে সময় UTC-তে ধরা হয় <Cite n={4} />। Cloud scheduled task ঘণ্টায় একবারের বেশি চলা cron expression গ্রহণ করে না <Cite n={6} />। একটা Claude Code session-এর ভেতরে `/loop` একটা নির্দিষ্ট বিরতিতে prompt আবার চালায় <Cite n={5} />।
+
+**আরেকটা agent।** Claude Code-এ main agent কাজ আর subagent-এর `description` দেখে একটা **subagent**-কে কাজ দেয়। Subagent নিজের context window-এ কাজ করে আর শুধু একটা সারাংশ ফেরত দেয় <Cite n={8} />। OpenAI Agents SDK-তে **handoff** দিয়ে একটা agent আরেকটা agent-কে কাজ দেয়। Model handoff-কে একটা tool হিসেবে দেখে, যেমন `transfer_to_refund_agent`। ডিফল্টভাবে নতুন agent আগের পুরো কথোপকথন দেখে <Cite n={9} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This example is invented. A QA team uses one agent with three triggers.
+
+```yaml
+on:
+  issue_comment:                 # a person: "@claude why does this test fail?"
+    types: [created]
+  pull_request:                  # an event: only when test files change
+    types: [opened, synchronize]
+    paths: ['tests/**']
+  schedule:                      # a schedule: every weekday, 06:00 UTC
+    - cron: '0 6 * * 1-5'
+```
+
+The `paths` filter means that a pull request that changes only the docs does not start the agent <Cite n={4} />. The cron time is in UTC <Cite n={4} />, so the team writes "06:00 UTC" in the workflow name.
+
+The comment trigger is safe by default. On issue and pull request events, the action runs only if the person who triggered it has write access. A schedule has no author, so it skips that check. The action also rejects bot actors, unless they are in `allowed_bots`, which keeps bots from triggering Claude in a loop <Cite n={2} />.
+
+The night job sometimes starts late, because GitHub can delay scheduled runs under high load <Cite n={3} />. The team does not depend on an exact start time.
+
+</Technical>
+<Layman>
+
+This example is invented. A QA team uses one agent with three triggers:
+
+- **A person.** Someone writes "@claude why does this test fail?" in a comment.
+- **An event.** A pull request starts the agent, but only when files in `tests/` change.
+- **A schedule.** The agent runs every weekday at 06:00 UTC.
+
+Because of the `paths` filter, a pull request that changes only the docs does not start the agent <Cite n={4} />. The cron time is in UTC <Cite n={4} />, so the team writes "06:00 UTC" in the workflow name.
+
+The comment trigger is safe by default. On issue and pull request events, the action runs only if the person who started it has write access. A schedule has no author, so it skips that check. The action also says no to bots, unless they are in `allowed_bots`. This stops bots from starting Claude again and again in a loop <Cite n={2} />.
+
+The night job sometimes starts late, because GitHub can delay scheduled runs when it is busy <Cite n={3} />. The team does not depend on an exact start time.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটা বানানো। একটা QA টিম তিনটা trigger সহ একটা agent ব্যবহার করে:
+
+- **একজন মানুষ।** কেউ একটা comment-এ লেখেন "@claude why does this test fail?"।
+- **একটা event।** একটা pull request agent চালু করে, কিন্তু শুধু তখন, যখন `tests/`-এর file বদলায়।
+- **একটা schedule।** Agent প্রতি কর্মদিবসে 06:00 UTC-তে চলে।
+
+`paths` filter-এর কারণে যে pull request শুধু docs বদলায়, সেটা agent চালু করে না <Cite n={4} />। Cron-এর সময় UTC-তে <Cite n={4} />, তাই টিম workflow-এর নামে "06:00 UTC" লিখে রাখে।
+
+Comment trigger ডিফল্টভাবে নিরাপদ। Issue আর pull request event-এ action শুধু তখনই চলে, যখন যিনি trigger করেছেন তাঁর write access আছে। Schedule-এর কোনো লেখক নেই, তাই এই যাচাই বাদ যায়। Action bot-কেও বাতিল করে, যদি না সেটা `allowed_bots`-এ থাকে। এতে bot বারবার loop-এ Claude-কে চালু করতে পারে না <Cite n={2} />।
+
+রাতের কাজ মাঝে মাঝে দেরিতে শুরু হয়, কারণ বেশি চাপের সময় GitHub scheduled run দেরি করাতে পারে <Cite n={3} />। টিম ঠিক নির্দিষ্ট সময়ে শুরুর ওপর নির্ভর করে না।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Expecting a missed schedule to catch up.** Session tasks fire only while Claude Code is running and idle, and there is no catch-up for missed fires. If Claude is busy at the scheduled time, the task fires once when Claude is idle again, not once for each missed interval. Recurring session tasks also expire after 7 days <Cite n={5} />. For a job that must run when your laptop is closed, use a cloud scheduled task or GitHub Actions <Cite n={5} />.
+- **Writing the cron time in local time.** GitHub scheduled workflows run in UTC by default <Cite n={4} />. Cloud scheduled tasks also read a plain five-field cron expression in UTC <Cite n={6} />.
+- **A trigger that triggers itself.** An agent that pushes commits can start its own workflow again. The action rejects bot actors to stop such loops <Cite n={2} />. GitHub also does not start workflows for commits made with the default `GITHUB_TOKEN` <Cite n={2} />.
+- **Trusting the event text.** Text that comes with an API trigger arrives labeled as untrusted data. The task does not act on it unless its own prompt says so <Cite n={6} />. A channel accepts only senders on its allowlist <Cite n={7} />.
+- **No cap on event triggers.** A busy repository can send many events. Cloud tasks have hourly limits. GitHub events beyond the cap are dropped, and API fires beyond the limit fail <Cite n={6} />. In GitHub Actions, use timeouts, `--max-turns`, and concurrency controls <Cite n={2} />.
+- **Reading "succeeded" as "done".** For cloud tasks, the run status says how the session ended, not whether Claude did the work <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+- **Thinking a missed schedule will catch up.** Session tasks run only while Claude Code is open and idle. Missed runs are not made up. If Claude is busy at the set time, the task runs only once when Claude is free again, not once for each missed time. Repeating session tasks also stop after 7 days <Cite n={5} />. For a job that must run while your laptop is closed, use a cloud scheduled task or GitHub Actions <Cite n={5} />.
+- **Writing the cron time in your local time.** GitHub schedules use UTC by default <Cite n={4} />. Cloud scheduled tasks also read a plain five-part cron expression as UTC <Cite n={6} />.
+- **A trigger that starts itself.** An agent that pushes commits can start its own workflow again. The action says no to bots to stop such loops <Cite n={2} />. Also, GitHub does not start workflows for commits made with the default `GITHUB_TOKEN` <Cite n={2} />.
+- **Trusting the text that comes with an event.** Text sent with an API trigger is marked as untrusted. The task does not obey it unless its own prompt says so <Cite n={6} />. A channel accepts messages only from senders on its allowlist <Cite n={7} />.
+- **No limit on event triggers.** A busy repository can send many events. Cloud tasks have hourly limits. Extra GitHub events are dropped, and extra API calls fail <Cite n={6} />. In GitHub Actions, use timeouts, `--max-turns`, and concurrency controls <Cite n={2} />.
+- **Reading "succeeded" as "done".** For cloud tasks, the status says how the session ended. It does not say whether Claude did the work <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+- **ভাবা যে ছুটে যাওয়া schedule পরে চলবে।** Session task শুধু তখনই চলে, যখন Claude Code খোলা আর idle থাকে, মানে অন্য কোনো কাজ করছে না। ছুটে যাওয়া run পরে পুষিয়ে দেওয়া হয় না। নির্দিষ্ট সময়ে Claude ব্যস্ত থাকলে, Claude আবার idle হলে task একবারই চলে, প্রতিটা ছুটে যাওয়া সময়ের জন্য একবার করে নয়। বারবার চলা session task 7 দিন পরে শেষ হয়ে যায় <Cite n={5} />। Laptop বন্ধ থাকলেও যে কাজ চলতে হবে, তার জন্য cloud scheduled task বা GitHub Actions ব্যবহার করুন <Cite n={5} />।
+- **Cron-এর সময় স্থানীয় সময়ে লেখা।** GitHub-এর schedule ডিফল্টভাবে UTC-তে চলে <Cite n={4} />। Cloud scheduled task-ও সাধারণ পাঁচ-অংশের cron expression-কে UTC হিসেবে পড়ে <Cite n={6} />।
+- **যে trigger নিজেকেই আবার চালু করে।** যে agent commit push করে, সে নিজের workflow আবার চালু করে ফেলতে পারে। এমন loop থামাতে action bot-কে বাতিল করে <Cite n={2} />। এছাড়া ডিফল্ট `GITHUB_TOKEN` দিয়ে করা commit-এ GitHub কোনো workflow চালু করে না <Cite n={2} />।
+- **Event-এর সঙ্গে আসা text বিশ্বাস করা।** API trigger-এর সঙ্গে আসা text অবিশ্বস্ত (untrusted) data হিসেবে চিহ্নিত হয়ে আসে। Task-এর নিজের prompt না বললে task সেটা মানে না <Cite n={6} />। Channel শুধু তার allowlist-এ থাকা প্রেরকের message নেয় <Cite n={7} />।
+- **Event trigger-এ কোনো সীমা না রাখা।** ব্যস্ত repository অনেক event পাঠাতে পারে। Cloud task-এ ঘণ্টাপ্রতি সীমা আছে। সীমার বেশি GitHub event বাদ পড়ে, আর সীমার বেশি API fire fail করে <Cite n={6} />। GitHub Actions-এ timeout, `--max-turns` আর concurrency control ব্যবহার করুন <Cite n={2} />।
+- **"Succeeded"-কে "কাজ শেষ" ভাবা।** Cloud task-এ status বলে session কীভাবে শেষ হলো। Claude কাজটা করেছে কি না, সেটা বলে না <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **It starts when it should.** For each trigger, cause the real event once: a comment, a pull request, a manual run. Check that exactly one run starts.
+- **It does not start when it should not.** Change a file outside the `paths` filter. Write a comment without the trigger phrase. No run must start.
+- **The wrong person cannot start it.** Comment from an account with no write access, and from a bot. The run must fail before Claude starts.
+- **It does not trigger itself.** Let the agent push a commit. Check that the push does not start the same agent again.
+- **The time is right.** Convert the cron time to UTC and to your local time. Write both in the test plan, and allow for a late start.
+- **Untrusted input stays data.** Send event text that contains an instruction, such as "delete the branch". The agent must not obey it.
+- **A burst is safe.** Send many events in a short time. Check that the runs queue or stop at a cap, and that cost stays in budget.
+- **The handoff is right.** For a subagent or a handoff, check which agent got the task, and what context it got.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **It starts when it should.** For each trigger, make the real event happen once: a comment, a pull request, a manual run. Check that exactly one run starts.
+- **It does not start when it should not.** Change a file outside the `paths` filter. Write a comment without the trigger words. No run must start.
+- **The wrong person cannot start it.** Comment from an account with no write access, and from a bot. The run must fail before Claude starts.
+- **It does not start itself.** Let the agent push a commit. Check that the push does not start the same agent again.
+- **The time is right.** Change the cron time to UTC and to your local time. Write both in the test plan. Expect that it can start late.
+- **Untrusted text stays data.** Send event text with an order in it, such as "delete the branch". The agent must not obey it.
+- **Many events at once are safe.** Send many events in a short time. Check that the runs wait in a queue or stop at a limit, and that the cost stays in budget.
+- **The handoff is right.** For a subagent or a handoff, check which agent got the task and what it was told.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **যখন চলার কথা, তখন চলে।** প্রতিটা trigger-এর আসল event একবার ঘটান: একটা comment, একটা pull request, একটা হাতে চালানো run। দেখুন ঠিক একটা run শুরু হয় কি না।
+- **যখন চলার কথা নয়, তখন চলে না।** `paths` filter-এর বাইরের একটা file বদলান। Trigger phrase ছাড়া একটা comment লিখুন। কোনো run শুরু হওয়া চলবে না।
+- **ভুল মানুষ চালু করতে পারে না।** Write access নেই এমন account থেকে, আর একটা bot থেকে comment করুন। Claude শুরুর আগেই run-কে fail করতে হবে।
+- **নিজেকে নিজে চালু করে না।** Agent-কে একটা commit push করতে দিন। দেখুন সেই push একই agent-কে আবার চালু করে কি না।
+- **সময় ঠিক আছে।** Cron-এর সময় UTC আর আপনার স্থানীয় সময়ে বদলে দেখুন। Test plan-এ দুটোই লিখুন, আর দেরিতে শুরুর সম্ভাবনা ধরে রাখুন।
+- **অবিশ্বস্ত input data-ই থাকে।** এমন event text পাঠান যার ভেতরে একটা নির্দেশ আছে, যেমন "delete the branch"। Agent যেন সেটা না মানে।
+- **একসঙ্গে অনেক event নিরাপদ।** অল্প সময়ে অনেক event পাঠান। দেখুন run-গুলো queue-তে অপেক্ষা করে বা একটা সীমায় থামে কি না, আর খরচ budget-এর মধ্যে থাকে কি না।
+- **Handoff ঠিক আছে।** Subagent বা handoff-এ দেখুন কোন agent কাজটা পেল, আর সে কোন context পেল।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Trigger | What starts one run of an agent: a person, an event, a schedule, or another agent. |
+| Event | Something that happens in a system, such as a pull request or a push, that can start a run. |
+| Webhook | An HTTP request that one system sends to another when an event happens. |
+| Cron expression | A five-field text that sets a schedule, for example `0 6 * * 1-5`. |
+| `paths` filter | A GitHub Actions filter: the workflow runs only if a changed file matches. |
+| Interactive mode | The GitHub Action waits for `@claude` in a comment. |
+| Automation mode | The GitHub Action runs a saved `prompt` on an event, with no mention. |
+| Channel | An MCP server that pushes events into an open Claude Code session. |
+| Subagent | A helper agent with its own context that the main agent gives a task to. |
+| Handoff | In the OpenAI Agents SDK, one agent passes the conversation to another agent. |

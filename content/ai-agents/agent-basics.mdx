@@ -1,0 +1,289 @@
+export const metadata = { title: 'What an AI Agent Is', description: 'An agent is a model plus a harness that runs a loop: build context, decide, act, check, and stop with an output.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Building effective agents', publisher: 'Anthropic (Engineering)', url: 'https://www.anthropic.com/engineering/building-effective-agents', accessed: '2026-10-28' },
+    { title: 'How Claude Code works', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/how-claude-code-works', accessed: '2026-10-28' },
+    { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
+    { title: 'Agents', publisher: 'OpenAI (Agents SDK docs)', url: 'https://openai.github.io/openai-agents-python/agents/', accessed: '2026-10-28' },
+    { title: 'Running agents', publisher: 'OpenAI (Agents SDK docs)', url: 'https://openai.github.io/openai-agents-python/running_agents/', accessed: '2026-10-28' },
+  ],
+}
+
+# What an AI Agent Is
+
+A model alone reads text and writes text. An agent is a model plus a harness: code that gives the model tools, feeds it context, and runs it in a loop until the goal is met. This page explains the two parts, how an agent is different from a workflow, and the loop at a glance.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **AI agent** has two parts. The **model** reasons and decides. The **harness** is the code around the model. The Claude Code docs say the agentic loop has two components: models that reason and tools that act. Claude Code is the layer around the model that gives the tools and manages the context that the model sees. The docs call this layer the **agentic harness** <Cite n={2} />.
+
+So in this tutorial, we write it as a short rule: **agent = model + harness that runs a loop**. This rule is the tutorial's own summary.
+
+Anthropic separates two kinds of systems <Cite n={1} />:
+
+- In a **workflow**, your code sets the path. The model and the tools follow predefined code paths.
+- In an **agent**, the model directs its own process and chooses its own tools.
+
+Anthropic also says that agents are often just models that use tools, based on feedback from the environment, in a loop <Cite n={1} />. OpenAI gives a similar definition: an agent is a model configured with instructions, tools, and optional runtime behavior <Cite n={4} />.
+
+Without tools, the model can only answer with text. With tools, it can read files, run commands, and change things <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+An **AI agent** has two parts. The **model** thinks and decides. The **harness** is the code around the model. The Claude Code docs say the loop has two parts: models that think and tools that act. Claude Code is the layer around the model. It gives the tools and controls what the model sees. The docs call this layer the **agentic harness** <Cite n={2} />.
+
+This tutorial says it in one short rule: **agent = model + harness that runs a loop**. This rule is the tutorial's own summary.
+
+Anthropic separates two kinds of systems <Cite n={1} />:
+
+- In a **workflow**, your code sets the path. The model and the tools follow steps that you wrote before.
+- In an **agent**, the model decides its own steps and picks its own tools.
+
+Anthropic also says that an agent is often just a model that uses tools in a loop and learns from what happens <Cite n={1} />. OpenAI says almost the same: an agent is a model with instructions, tools, and some optional settings <Cite n={4} />.
+
+Without tools, the model can only write text. With tools, it can read files, run commands, and change things <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+একটা **AI agent**-এর দুটো অংশ। **Model** চিন্তা করে আর সিদ্ধান্ত নেয়। **Harness** হলো model-এর চারপাশের কোড। Claude Code docs বলে, loop-এর দুটো অংশ: যে model চিন্তা করে, আর যে tool কাজ করে। Claude Code হলো model-এর চারপাশের স্তর। এটা tool দেয়, আর model কোন context দেখবে সেটা সামলায়। Docs এই স্তরকে বলে **agentic harness** <Cite n={2} />।
+
+এই টিউটোরিয়াল এটাকে একটা ছোট নিয়মে বলে: **agent = model + loop চালানো একটা harness**। এই নিয়মটা টিউটোরিয়ালের নিজের সারাংশ।
+
+Anthropic দুই ধরনের সিস্টেম আলাদা করে <Cite n={1} />:
+
+- **Workflow**-এ আপনার কোড পথ ঠিক করে দেয়। Model আর tool আগে থেকে লেখা কোডের পথে চলে।
+- **Agent**-এ model নিজেই তার ধাপ ঠিক করে আর নিজের tool বেছে নেয়।
+
+Anthropic আরও বলে, agent প্রায়ই শুধু একটা model, যেটা environment থেকে আসা feedback দেখে loop-এ tool ব্যবহার করে <Cite n={1} />। OpenAI-ও প্রায় একই কথা বলে: agent হলো instructions, tool আর কিছু ঐচ্ছিক runtime setting সহ একটা model <Cite n={4} />।
+
+Tool ছাড়া model শুধু text দিয়ে উত্তর দিতে পারে। Tool থাকলে সে file পড়তে, command চালাতে আর জিনিস বদলাতে পারে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**What the harness does.** The harness does the work that the model cannot do alone:
+
+- It **builds the context**. At the start, Claude gets your prompt, the system prompt, the tool definitions, and the conversation history <Cite n={3} />. Claude Code also gives the model access to your project files, your git state, and your `CLAUDE.md` <Cite n={2} />.
+- It **runs the tools**. The model only asks for a tool call. The SDK runs each tool and sends the result back <Cite n={3} />.
+- It **controls the tools**. Hooks can intercept, change, or block a tool call before it runs <Cite n={3} />.
+- It **sets the limits**. The Agent SDK has `max_turns` and `max_budget_usd`. Both have no limit by default <Cite n={3} />.
+
+**The loop at a glance.** This module splits the loop into six steps. The step names are the tutorial's own. Claude Code describes the same cycle as gather context, take action, and verify results <Cite n={2} />.
+
+```text
+trigger -> build context -> model decides -> act (tools)
+                ^                                 |
+                |       goal met? no              v
+                +---------------------------- check
+                                                  | yes
+                                                  v
+                                            final output
+```
+
+1. **Trigger.** Something starts the run, for example a command from the user <Cite n={1} />.
+2. **Build context.** The harness collects what the model needs to see <Cite n={3} />.
+3. **Decide.** The model answers with text, asks for tool calls, or both <Cite n={3} />.
+4. **Act.** The harness runs the tools. Each result feeds back and informs the next decision <Cite n={2} />.
+5. **Check.** The agent gets ground truth from the environment at each step, for example a test result <Cite n={1} />.
+6. **Final output.** In the Agent SDK, the loop ends when the model answers with no tool calls <Cite n={3} />. In the OpenAI Agents SDK, the loop ends at a final output: text of the expected type with no tool calls <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+**What the harness does.** The harness does the jobs that the model cannot do alone:
+
+- It **builds the context**. At the start, Claude gets your request, the system prompt, the list of tools, and the history <Cite n={3} />. Claude Code also lets the model use your project files, your git state, and your `CLAUDE.md` <Cite n={2} />.
+- It **runs the tools**. The model only asks to use a tool. The SDK runs the tool and gives the result back <Cite n={3} />.
+- It **controls the tools**. Hooks can catch, change, or block a tool call before it runs <Cite n={3} />.
+- It **sets the limits**. The Agent SDK has `max_turns` and `max_budget_usd`. Both have no limit by default <Cite n={3} />.
+
+**The loop at a glance.** This module splits the loop into six steps. The step names are the tutorial's own. Claude Code calls the same cycle gather context, take action, and verify results <Cite n={2} />.
+
+1. **Trigger.** Something starts the run, for example a request from a person <Cite n={1} />.
+2. **Build context.** The harness collects what the model must see <Cite n={3} />.
+3. **Decide.** The model writes text, asks to use tools, or both <Cite n={3} />.
+4. **Act.** The harness runs the tools. Each result goes back and helps the next decision <Cite n={2} />.
+5. **Check.** The agent learns the real state at each step, for example from a test result <Cite n={1} />.
+6. **Final output.** In the Agent SDK, the loop ends when the model answers with no tool calls <Cite n={3} />. In the OpenAI Agents SDK, the loop ends at a final output: text of the right type with no tool calls <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+**Harness কী করে।** Model একা যে কাজগুলো করতে পারে না, harness সেগুলো করে:
+
+- এটা **context তৈরি করে**। শুরুতে Claude আপনার prompt, system prompt, tool-এর তালিকা আর আগের history পায় <Cite n={3} />। Claude Code model-কে আপনার project file, git state আর `CLAUDE.md`-এর access-ও দেয় <Cite n={2} />।
+- এটা **tool চালায়**। Model শুধু tool call চায়। SDK প্রতিটা tool চালায় আর ফলাফল ফেরত পাঠায় <Cite n={3} />।
+- এটা **tool নিয়ন্ত্রণ করে**। Hook একটা tool call চলার আগে সেটা ধরতে, বদলাতে বা আটকাতে পারে <Cite n={3} />।
+- এটা **সীমা ঠিক করে**। Agent SDK-তে `max_turns` আর `max_budget_usd` আছে। ডিফল্টভাবে দুটোরই কোনো সীমা নেই <Cite n={3} />।
+
+**এক নজরে loop।** এই module loop-কে ছয়টা ধাপে ভাগ করে। ধাপের নামগুলো টিউটোরিয়ালের নিজের। Claude Code একই চক্রকে বলে context সংগ্রহ, action নেওয়া আর ফলাফল যাচাই <Cite n={2} />।
+
+1. **Trigger।** কিছু একটা run শুরু করে, যেমন ব্যবহারকারীর একটা command <Cite n={1} />।
+2. **Context তৈরি।** Model-এর যা দেখা দরকার, harness সেটা জড়ো করে <Cite n={3} />।
+3. **সিদ্ধান্ত।** Model text দিয়ে উত্তর দেয়, tool call চায়, বা দুটোই করে <Cite n={3} />।
+4. **কাজ (Act)।** Harness tool চালায়। প্রতিটা ফলাফল ফিরে আসে আর পরের সিদ্ধান্তে সাহায্য করে <Cite n={2} />।
+5. **যাচাই।** প্রতিটা ধাপে agent environment থেকে আসল অবস্থা (ground truth) জানে, যেমন একটা টেস্টের ফলাফল থেকে <Cite n={1} />।
+6. **চূড়ান্ত output।** Agent SDK-তে model কোনো tool call ছাড়া উত্তর দিলে loop শেষ হয় <Cite n={3} />। OpenAI Agents SDK-তে loop শেষ হয় একটা final output-এ: ঠিক ধরনের text, কোনো tool call ছাড়া <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This example is invented. A tester types into Claude Code: "Find why the checkout test fails, and fix it." Here is the same task, first as a workflow and then as an agent.
+
+**As a workflow.** A script always runs the same steps: run the tests, send the error log to the model, and print the model's answer. The code sets the path <Cite n={1} />. The script cannot open a second file or run the test again, because nobody wrote that step.
+
+**As an agent.** The harness gives the model the prompt, the tool list, and the `CLAUDE.md` <Cite n={3} />. The model chooses its own steps <Cite n={1} />:
+
+```text
+decide: run tests        -> act: Bash      -> 1 failure (checkout)
+decide: read the code    -> act: Read      -> wrong tax rounding
+decide: fix it           -> act: Edit      -> file changed
+decide: check the fix    -> act: Bash      -> all tests pass
+decide: report           -> no tool call   -> loop ends
+```
+
+Each tool result informs the next decision <Cite n={2} />. The run ends when the model answers with no tool call. The SDK then gives a result with the subtype `success` <Cite n={3} />.
+
+The tester watches the run. When the agent starts to edit the wrong file, the tester presses Esc. Claude stops at once, and the running tool call is canceled <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+This example is invented. A tester types into Claude Code: "Find why the checkout test fails, and fix it." Here is the same task, first as a workflow and then as an agent.
+
+**As a workflow.** A script always does the same steps. It runs the tests, sends the error log to the model, and prints the answer. The code sets the path <Cite n={1} />. The script cannot open a second file or run the tests again, because nobody wrote that step.
+
+**As an agent.** The harness gives the model the request, the list of tools, and the `CLAUDE.md` <Cite n={3} />. The model picks its own steps <Cite n={1} />. It runs the tests and sees one failure. It reads the code and finds a rounding mistake. It fixes the file. It runs the tests again, and they pass. Then it writes a short report with no tool call.
+
+Each tool result helps the next decision <Cite n={2} />. The run ends when the model answers with no tool call. The SDK then gives a result with the subtype `success` <Cite n={3} />.
+
+The tester watches the run. When the agent starts to edit the wrong file, the tester presses Esc. Claude stops at once, and the tool that was running is canceled <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটা বানানো। একজন tester Claude Code-এ লেখেন: "checkout টেস্ট কেন fail করছে খুঁজে বের করো, আর ঠিক করো।" একই কাজ প্রথমে workflow হিসেবে, তারপর agent হিসেবে দেখুন।
+
+**Workflow হিসেবে।** একটা script সবসময় একই ধাপ চালায়। সে টেস্ট চালায়, error log model-কে পাঠায়, আর model-এর উত্তর print করে। পথটা কোড ঠিক করে দেয় <Cite n={1} />। Script দ্বিতীয় কোনো file খুলতে বা আবার টেস্ট চালাতে পারে না, কারণ কেউ সেই ধাপ লেখেনি।
+
+**Agent হিসেবে।** Harness model-কে prompt, tool-এর তালিকা আর `CLAUDE.md` দেয় <Cite n={3} />। Model নিজের ধাপ নিজে বেছে নেয় <Cite n={1} />। সে টেস্ট চালায় আর একটা failure দেখে। সে কোড পড়ে আর একটা rounding ভুল খুঁজে পায়। সে file ঠিক করে। সে আবার টেস্ট চালায়, আর সব pass করে। তারপর সে কোনো tool call ছাড়া একটা ছোট রিপোর্ট লেখে।
+
+প্রতিটা tool-এর ফলাফল পরের সিদ্ধান্তে সাহায্য করে <Cite n={2} />। Model কোনো tool call ছাড়া উত্তর দিলে run শেষ হয়। তখন SDK `success` subtype সহ একটা result দেয় <Cite n={3} />।
+
+Tester run-টা দেখছেন। Agent ভুল file edit করা শুরু করলে tester Esc চাপেন। Claude সঙ্গে সঙ্গে থেমে যায়, আর চলমান tool call বাতিল হয় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Calling every model call an agent.** A fixed chain of model calls is a workflow, because code sets the path. It is an agent only when the model directs its own steps and tool use <Cite n={1} />.
+- **Using an agent where a workflow is enough.** Anthropic advises the simplest solution first. Agents cost more, and their errors can compound <Cite n={1} />.
+- **Forgetting that the harness sets the limits.** In the Agent SDK, `max_turns` and `max_budget_usd` have no limit by default <Cite n={3} />. Anthropic advises stopping conditions, such as a maximum number of iterations <Cite n={1} />.
+- **Reading the final text without the end state.** The Agent SDK `result` text exists only on `success`. A run that hit `error_max_turns` has no final answer <Cite n={3} />. In the OpenAI Agents SDK, a run that passes `max_turns` raises `MaxTurnsExceeded` <Cite n={5} />.
+- **Blaming the model for a harness fault.** The model only asks for a tool call. The harness runs it, and hooks can block it <Cite n={3} />. A missing tool or a wrong rule is a harness problem.
+
+</Technical>
+<Layman>
+
+- **Calling every model call an agent.** A fixed chain of model calls is a workflow, because the code sets the path. It is an agent only when the model picks its own steps and tools <Cite n={1} />.
+- **Using an agent when a workflow is enough.** Anthropic says: start with the simplest solution. Agents cost more, and their errors can add up <Cite n={1} />.
+- **Forgetting that the harness sets the limits.** In the Agent SDK, `max_turns` and `max_budget_usd` have no limit by default <Cite n={3} />. Anthropic says to add stop rules, such as a maximum number of rounds <Cite n={1} />.
+- **Reading the final text but not how the run ended.** In the Agent SDK, only `success` has the `result` text. A run that hit `error_max_turns` has no final answer <Cite n={3} />. In the OpenAI Agents SDK, a run that goes past `max_turns` raises `MaxTurnsExceeded` <Cite n={5} />.
+- **Blaming the model for a harness problem.** The model only asks to use a tool. The harness runs it, and hooks can block it <Cite n={3} />. A missing tool or a wrong rule is a harness problem.
+
+</Layman>
+<Bangla>
+
+- **প্রতিটা model call-কে agent বলা।** Model call-এর একটা নির্দিষ্ট শিকল হলো workflow, কারণ পথটা কোড ঠিক করে। Model যখন নিজের ধাপ আর tool নিজে বেছে নেয়, শুধু তখনই সেটা agent <Cite n={1} />।
+- **Workflow-ই যথেষ্ট, এমন জায়গায় agent ব্যবহার করা।** Anthropic সবচেয়ে সহজ সমাধান দিয়ে শুরু করতে বলে। Agent-এর খরচ বেশি, আর তার ভুল জমে বড় হতে পারে <Cite n={1} />।
+- **ভুলে যাওয়া যে সীমা harness ঠিক করে।** Agent SDK-তে ডিফল্টভাবে `max_turns` আর `max_budget_usd`-এর কোনো সীমা নেই <Cite n={3} />। Anthropic থামার শর্ত যোগ করতে বলে, যেমন সর্বোচ্চ কতবার চলবে <Cite n={1} />।
+- **Run কীভাবে শেষ হলো না দেখে শুধু শেষ text পড়া।** Agent SDK-তে শুধু `success`-এ `result` text থাকে। যে run `error_max_turns`-এ থেমেছে, তার কোনো চূড়ান্ত উত্তর নেই <Cite n={3} />। OpenAI Agents SDK-তে `max_turns` পার হলে `MaxTurnsExceeded` আসে <Cite n={5} />।
+- **Harness-এর দোষ model-এর ঘাড়ে চাপানো।** Model শুধু tool call চায়। Harness সেটা চালায়, আর hook সেটা আটকাতে পারে <Cite n={3} />। একটা tool না থাকা বা ভুল নিয়ম হলো harness-এর সমস্যা।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Name the two parts.** For each agent under test, write down the model and the harness. Test the harness rules (tools, hooks, limits) apart from the model's answers.
+- **Workflow or agent?** Read the code. If the steps are fixed, test it like normal code with fixed inputs. If the model chooses the steps, test many runs, not one.
+- **Check what the model sees.** Log the context of a run: the prompt, the tool list, and the loaded files. A wrong answer often starts with wrong context.
+- **Check each tool on its own.** Call each tool directly with good and bad input before you test the agent.
+- **Check the end state.** Read the result subtype first, then the text. A run that hit a limit is not a pass.
+- **Check that a limit exists.** Run a task that cannot finish. The run must stop at a limit, not run forever.
+- **Check the human stop.** Press Esc in the middle of a tool call. The agent must stop, and no half-done change must stay.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Name the two parts.** For each agent you test, write down the model and the harness. Test the harness rules (tools, hooks, limits) apart from the model's answers.
+- **Workflow or agent?** Read the code. If the steps are fixed, test it like normal code. If the model picks the steps, test many runs, not one.
+- **Check what the model sees.** Save the context of a run: the request, the tool list, and the files it read. A wrong answer often starts with wrong context.
+- **Check each tool alone.** Call each tool yourself with good and bad input before you test the agent.
+- **Check how the run ended.** Read the result subtype first, then the text. A run that hit a limit is not a pass.
+- **Check that a limit exists.** Give a task that cannot finish. The run must stop at a limit. It must not run forever.
+- **Check that a person can stop it.** Press Esc while a tool runs. The agent must stop, and no half-done change must stay.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **দুটো অংশের নাম লিখুন।** যে agent টেস্ট করছেন, তার model আর harness আলাদা করে লিখুন। Harness-এর নিয়ম (tool, hook, সীমা) model-এর উত্তর থেকে আলাদা করে টেস্ট করুন।
+- **Workflow না agent?** কোড পড়ুন। ধাপগুলো নির্দিষ্ট হলে সাধারণ কোডের মতো টেস্ট করুন। Model নিজে ধাপ বেছে নিলে একবার নয়, অনেকবার run করে টেস্ট করুন।
+- **Model কী দেখে, যাচাই করুন।** একটা run-এর context log করুন: prompt, tool-এর তালিকা আর লোড হওয়া file। ভুল উত্তর প্রায়ই ভুল context থেকে শুরু হয়।
+- **প্রতিটা tool আলাদা করে যাচাই করুন।** Agent টেস্ট করার আগে প্রতিটা tool নিজে ভালো আর খারাপ input দিয়ে চালান।
+- **Run কীভাবে শেষ হলো, যাচাই করুন।** আগে result subtype পড়ুন, তারপর text। যে run সীমায় থেমেছে, সেটা pass নয়।
+- **সীমা আছে কি না, যাচাই করুন।** এমন কাজ দিন যেটা শেষ হতে পারে না। Run-কে একটা সীমায় থামতে হবে, চিরকাল চলা চলবে না।
+- **মানুষ থামাতে পারে কি না, যাচাই করুন।** একটা tool চলার সময় Esc চাপুন। Agent-কে থামতে হবে, আর অর্ধেক করা কোনো পরিবর্তন থাকা চলবে না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| AI agent | A model plus a harness that runs it in a loop with tools until the goal is met. |
+| Model | The part that reasons and decides what to do next. |
+| Harness | The code around the model: it gives tools, builds context, runs the loop, and sets limits. |
+| Workflow | A system in which code sets the path of the model and the tools. |
+| Tool call | A request from the model to run a tool. The harness runs it. |
+| Turn | One round trip: tool calls, the tools run, and the results go back to the model. |
+| Final output | The answer that ends the loop: a response with no tool calls. |
+| Ground truth | Real feedback from the environment, such as a test result. |

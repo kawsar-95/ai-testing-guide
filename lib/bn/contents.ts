@@ -5,10 +5,10 @@ import type { CONTENTS_UI } from "../contents.ts";
 export const CONTENTS_UI_BN: Bn<typeof CONTENTS_UI> = {
   siteTitle: "সূচিপত্র",
   description:
-    "Every part of the tutorial and every page of the Linux, Fundamentals, System Design, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, and Agent Memory modules on one page.",
+    "Every part of the tutorial and every page of the Linux, Fundamentals, System Design, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, and How AI Agents Work modules on one page.",
   eyebrow: "সূচিপত্র",
   heading: "সব পর্ব ও মডিউল",
-  lede: "টিউটোরিয়াল দিয়ে শুরু করুন, অথবা একটা মডিউল খুলুন। Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts ও Agent Memory-তে আপনার প্রগ্রেস এই ব্রাউজারেই থাকে।",
+  lede: "টিউটোরিয়াল দিয়ে শুরু করুন, অথবা একটা মডিউল খুলুন। Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory ও AI Agents-এ আপনার প্রগ্রেস এই ব্রাউজারেই থাকে।",
   tutorialHeading: "Tutorial",
   modulesHeading: "মডিউল",
   groupMeta: (count) => `${count}টি পর্ব`,

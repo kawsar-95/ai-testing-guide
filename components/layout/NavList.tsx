@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { T } from "@/components/i18n/T";
 import { AGENT_MEMORY_UI_BN } from "@/lib/bn/agent-memory";
+import { AI_AGENTS_UI_BN } from "@/lib/bn/ai-agents";
 import { ARCHITECTURE_UI_BN } from "@/lib/bn/architecture";
 import { COURSE_UI_BN } from "@/lib/bn/course";
 import { K6_UI_BN } from "@/lib/bn/k6";
@@ -36,6 +37,7 @@ const FLAT_NAME_BN: Record<FlatModuleId, string> = {
   "ai-skills": AI_SKILLS_UI_BN.crossTo,
   "ai-concepts": AI_CONCEPTS_UI_BN.crossTo,
   "agent-memory": AGENT_MEMORY_UI_BN.crossTo,
+  "ai-agents": AI_AGENTS_UI_BN.crossTo,
 };
 
 const SECTIONS: readonly { id: Section; href: string; label: string; bn: string }[] = [

@@ -1,0 +1,298 @@
+export const metadata = { title: 'The LLM Decides', description: 'On each turn, the model reads the context and chooses: answer in text or ask for a tool call. The stop reason tells your code which one it chose.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Tool use with Claude', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview', accessed: '2026-10-28' },
+    { title: 'Define tools', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools', accessed: '2026-10-28' },
+    { title: 'Stop reasons and fallback', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons', accessed: '2026-10-28' },
+    { title: 'Thinking', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/thinking', accessed: '2026-10-28' },
+    { title: 'Glossary', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/about-claude/glossary', accessed: '2026-10-28' },
+    { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
+  ],
+}
+
+# The LLM Decides
+
+After the context is built, the model reads it and makes one choice: answer now, or ask for a tool. The model only asks. Your code runs the tool. This page explains how the model shows its choice, which settings steer it, and why the same input can give a different choice the next time.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+With tools, Claude decides when to call a tool. It bases the choice on the user's request and on the tool's description <Cite n={1} />. With the default `tool_choice` of `auto`, Claude decides on each turn whether to call a tool or to respond directly. Claude picks a tool when the request matches what that tool is described to do, and the answer is not in the context yet <Cite n={1} />.
+
+In the Agent SDK loop, Claude can respond with text, ask for one or more tool calls, or both <Cite n={6} />. The model does not run the tool. For a client tool, Claude returns `stop_reason: "tool_use"` with at least one `tool_use` block. Your code runs the tool and returns its output in a `tool_result` block <Cite n={1} />.
+
+The loop goes on until Claude gives a response with no tool calls <Cite n={6} />. So each decision is also a vote on whether the loop ends.
+
+For what goes into the context before the choice, see [Build Context](/ai-agents/build-context/). For what happens after it, see [Act with Tools](/ai-agents/act-with-tools/). For the tool side of this step, see [Tool calling](/harness/tool-calling/). For the whole cycle, see [Agentic loops](/ai-concepts/agentic-loops/).
+
+</Technical>
+<Layman>
+
+When tools are available, Claude decides when to use one. It looks at what the user asked and at the description of each tool <Cite n={1} />. By default (`tool_choice` set to `auto`), Claude decides on each turn: use a tool, or just answer. It uses a tool when the request matches what the tool does and the answer is not already in the context <Cite n={1} />.
+
+In the Agent SDK loop, Claude can answer with text, ask for one or more tool calls, or both <Cite n={6} />. The model does not run the tool itself. It sends back `stop_reason: "tool_use"` and one or more `tool_use` blocks. Your code runs the tool and sends back a `tool_result` <Cite n={1} />.
+
+The loop goes on until Claude answers with no tool calls <Cite n={6} />. So each choice also decides whether the loop ends.
+
+</Layman>
+<Bangla>
+
+Tool থাকলে Claude নিজেই ঠিক করে কখন একটা tool ব্যবহার করবে। সে দেখে user কী চেয়েছে আর প্রতিটা tool-এর description কী বলে <Cite n={1} />। ডিফল্টভাবে (`tool_choice` হলো `auto`) Claude প্রতিটা turn-এ ঠিক করে: tool ব্যবহার করবে, নাকি সরাসরি উত্তর দেবে। Request যখন কোনো tool-এর কাজের সঙ্গে মেলে আর উত্তরটা আগে থেকে context-এ নেই, তখন সে tool ব্যবহার করে <Cite n={1} />।
+
+Agent SDK loop-এ Claude text দিয়ে উত্তর দিতে পারে, এক বা একাধিক tool call চাইতে পারে, বা দুটোই <Cite n={6} />। Model নিজে tool চালায় না। সে `stop_reason: "tool_use"` আর এক বা একাধিক `tool_use` block ফেরত দেয়। আপনার কোড tool চালায় আর একটা `tool_result` ফেরত পাঠায় <Cite n={1} />।
+
+Claude যতক্ষণ না কোনো tool call ছাড়া উত্তর দেয়, loop চলতে থাকে <Cite n={6} />। তাই প্রতিটা সিদ্ধান্ত এটাও ঠিক করে যে loop শেষ হবে কি না।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**What a decision looks like.** One response can hold text and a tool call. Claude often says what it is doing before it calls a tool <Cite n={2} />. The thinking block appears when thinking is on. On many current models, such as Claude Opus 5.5, thinking is on by default <Cite n={4} />.
+
+```json
+{
+  "stop_reason": "tool_use",
+  "content": [
+    { "type": "thinking", "thinking": "", "signature": "..." },
+    { "type": "text", "text": "I'll check the login endpoint." },
+    { "type": "tool_use", "id": "toolu_...", "name": "http_get",
+      "input": { "url": "https://staging.example.com/health" } }
+  ]
+}
+```
+
+**The stop reason.** `stop_reason` is part of every successful response. It is not an error. It tells you why Claude stopped writing <Cite n={3} />:
+
+| `stop_reason` | When it occurs |
+|---|---|
+| `end_turn` | Claude finished its response. |
+| `tool_use` | Claude is calling a tool. Run it and return the result. |
+| `max_tokens` | The response reached your `max_tokens` limit. |
+| `stop_sequence` | Claude wrote one of your stop sequences. |
+| `pause_turn` | A server-tool loop reached its iteration limit. |
+| `refusal` | Claude declined to respond. |
+| `model_context_window_exceeded` | The response filled the context window. |
+
+**Steering the choice with `tool_choice`** <Cite n={2} />:
+
+- `auto`: Claude decides whether to call a tool. The default when you give tools.
+- `any`: Claude must use one of the tools, but it picks which one.
+- `tool`: Claude must use the named tool.
+- `none`: Claude must not use tools. The default when you give no tools.
+
+With `any` or `tool`, the API prefills the response, so Claude writes no text before the `tool_use` block. A forced tool call also skips thinking <Cite n={2} />. Claude Opus 5.5, Claude Sonnet 5.5, Claude Fable 5.1, and Claude Mythos 5.1 do not accept `any` or `tool`. They return a 400 error <Cite n={2} />. You can also steer the choice with the system prompt <Cite n={1} />.
+
+**Thinking before the choice.** With thinking on, Claude works through the problem first. The thinking comes in `thinking` blocks before the response <Cite n={4} />. Adaptive thinking lets Claude decide when and how deeply to think <Cite n={4} />. With interleaved thinking, Claude also thinks between tool calls and reasons about each tool result <Cite n={4} />. The text in a thinking block is a summary, never the raw chain of thought. With `display: "omitted"`, the default on many models, the field is empty <Cite n={4} />. Thinking tokens are billed as output tokens and count toward `max_tokens` <Cite n={4} />. In the Agent SDK, the `effort` option sets how much reasoning Claude applies <Cite n={6} />.
+
+**Why the choice can change.** Temperature controls the randomness of the output. Even at temperature 0, the results are not fully deterministic: identical inputs can give different outputs <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+**What a choice looks like.** One response can have text and a tool call. Claude often says what it will do before it calls a tool <Cite n={2} />. A thinking block shows up when thinking is on. On many current models, such as Claude Opus 5.5, thinking is on by default <Cite n={4} />.
+
+**The stop reason.** Every successful response has a `stop_reason`. It is not an error. It tells you why Claude stopped writing <Cite n={3} />:
+
+- `end_turn`: Claude finished.
+- `tool_use`: Claude wants a tool. Run it and send back the result.
+- `max_tokens`: the answer hit your `max_tokens` limit.
+- `stop_sequence`: Claude wrote one of your stop words.
+- `pause_turn`: a server-tool loop hit its limit.
+- `refusal`: Claude said no.
+- `model_context_window_exceeded`: the answer filled the context window.
+
+**Steering with `tool_choice`** <Cite n={2} />:
+
+- `auto`: Claude decides. This is the default when you give tools.
+- `any`: Claude must use a tool, but it picks which one.
+- `tool`: Claude must use the tool you name.
+- `none`: Claude must not use tools. This is the default when you give no tools.
+
+With `any` or `tool`, Claude writes no text before the tool call, and it skips thinking <Cite n={2} />. Some new models, such as Claude Opus 5.5 and Claude Sonnet 5.5, do not accept `any` or `tool`. They return a 400 error <Cite n={2} />. The system prompt can also steer the choice <Cite n={1} />.
+
+**Thinking first.** With thinking on, Claude works through the problem before it answers. The thinking comes in `thinking` blocks before the answer <Cite n={4} />. With adaptive thinking, Claude decides when and how much to think. With interleaved thinking, it also thinks between tool calls about each tool result <Cite n={4} />. What you see in a thinking block is a summary, not the raw reasoning. On many models, the field is empty by default <Cite n={4} />. Thinking tokens cost the same as output tokens and count toward `max_tokens` <Cite n={4} />. In the Agent SDK, `effort` sets how much Claude reasons <Cite n={6} />.
+
+**Why the choice can change.** Temperature controls how random the output is. Even at 0, the output is not fully fixed. The same input can give a different output <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+**একটা সিদ্ধান্ত দেখতে কেমন।** একটা response-এ text আর একটা tool call দুটোই থাকতে পারে। Tool call করার আগে Claude প্রায়ই বলে সে কী করবে <Cite n={2} />। Thinking চালু থাকলে একটা thinking block আসে। Claude Opus 5.5-এর মতো অনেক বর্তমান model-এ thinking ডিফল্টভাবেই চালু থাকে <Cite n={4} />।
+
+**Stop reason।** প্রতিটা সফল response-এ একটা `stop_reason` থাকে। এটা error নয়। এটা বলে Claude কেন লেখা থামিয়েছে <Cite n={3} />:
+
+- `end_turn`: Claude শেষ করেছে।
+- `tool_use`: Claude একটা tool চায়। Tool চালান আর result ফেরত পাঠান।
+- `max_tokens`: উত্তর আপনার `max_tokens` সীমায় পৌঁছেছে।
+- `stop_sequence`: Claude আপনার দেওয়া একটা stop sequence লিখেছে।
+- `pause_turn`: একটা server-tool loop তার সীমায় পৌঁছেছে।
+- `refusal`: Claude উত্তর দিতে রাজি হয়নি।
+- `model_context_window_exceeded`: উত্তর context window ভরে ফেলেছে।
+
+**`tool_choice` দিয়ে নিয়ন্ত্রণ** <Cite n={2} />:
+
+- `auto`: Claude নিজে ঠিক করে। Tool দিলে এটাই ডিফল্ট।
+- `any`: Claude-কে একটা tool ব্যবহার করতেই হবে, তবে কোনটা, সেটা সে বাছে।
+- `tool`: আপনি যে tool-এর নাম দেন, Claude-কে সেটাই ব্যবহার করতে হবে।
+- `none`: Claude কোনো tool ব্যবহার করবে না। Tool না দিলে এটাই ডিফল্ট।
+
+`any` বা `tool` দিলে Claude tool call-এর আগে কোনো text লেখে না, আর thinking বাদ দেয় <Cite n={2} />। কিছু নতুন model, যেমন Claude Opus 5.5 আর Claude Sonnet 5.5, `any` বা `tool` নেয় না। তারা একটা 400 error দেয় <Cite n={2} />। System prompt দিয়েও সিদ্ধান্তকে প্রভাবিত করা যায় <Cite n={1} />।
+
+**আগে চিন্তা।** Thinking চালু থাকলে Claude উত্তর দেওয়ার আগে সমস্যাটা নিয়ে কাজ করে। Thinking আসে উত্তরের আগে `thinking` block-এ <Cite n={4} />। Adaptive thinking-এ Claude ঠিক করে কখন আর কতটা চিন্তা করবে। Interleaved thinking-এ সে দুটো tool call-এর মাঝেও প্রতিটা tool result নিয়ে চিন্তা করে <Cite n={4} />। Thinking block-এ আপনি যা দেখেন, সেটা একটা সারাংশ, আসল চিন্তার ধারা নয়। অনেক model-এ ডিফল্টভাবে field-টা খালি থাকে <Cite n={4} />। Thinking token-এর দাম output token-এর মতো, আর এগুলো `max_tokens`-এর মধ্যে গোনা হয় <Cite n={4} />। Agent SDK-তে `effort` ঠিক করে Claude কতটা চিন্তা করবে <Cite n={6} />।
+
+**সিদ্ধান্ত কেন বদলাতে পারে।** Temperature ঠিক করে output কতটা এলোমেলো হবে। Temperature 0 হলেও output পুরোপুরি নির্দিষ্ট নয়। একই input ভিন্ন output দিতে পারে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This example is invented. A QA team builds a small agent with one tool, `http_get`. The prompt is: "Is the login service on staging up?"
+
+```text
+call 1  context: prompt + http_get definition
+        -> text + tool_use(http_get, /health)   stop_reason: tool_use
+        your code runs the request -> tool_result: 200 OK
+call 2  context: + tool_use + tool_result
+        -> "Yes, the login service is up."      stop_reason: end_turn
+```
+
+Call 1 ends with `tool_use`, so the code runs the tool and sends the result <Cite n={1} />. Call 2 has no tool call, so the loop ends <Cite n={6} />.
+
+The team then runs the same prompt 50 times. Most runs look like the trace above, but not all of them. Identical inputs can give different outputs, even at temperature 0 <Cite n={5} />. In another test, the prompt says only "Is login up?" with no environment. When a required parameter is missing, Claude may ask for it, or it may guess a value <Cite n={1} />. Here it guesses a production URL. The team adds "Ask for the environment if it is not given" to the system prompt, because the system prompt steers when Claude calls a tool <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+This example is invented. A QA team builds a small agent with one tool, `http_get`. The question is: "Is the login service on staging up?"
+
+In call 1, Claude says what it will do and asks for `http_get` on the health page. The stop reason is `tool_use`. The team's code runs the request and sends back "200 OK" <Cite n={1} />. In call 2, Claude answers "Yes, the login service is up." with no tool call. So the loop ends <Cite n={6} />.
+
+Then the team runs the same question 50 times. Most runs look the same, but not all. The same input can give a different output, even at temperature 0 <Cite n={5} />. In another test, the question is only "Is login up?", with no environment. When a needed value is missing, Claude may ask for it, or it may guess <Cite n={1} />. Here it guesses a production URL. The team adds "Ask for the environment if it is not given" to the system prompt. The system prompt can steer when Claude uses a tool <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটা বানানো। একটা QA টিম একটা ছোট agent বানায়, যার একটাই tool: `http_get`। প্রশ্ন হলো: "staging-এ login service চালু আছে কি?"
+
+Call 1-এ Claude বলে সে কী করবে, আর health page-এর জন্য `http_get` চায়। Stop reason হলো `tool_use`। টিমের কোড request চালায় আর "200 OK" ফেরত পাঠায় <Cite n={1} />। Call 2-এ Claude কোনো tool call ছাড়া উত্তর দেয়: "হ্যাঁ, login service চালু আছে।" তাই loop শেষ হয় <Cite n={6} />।
+
+তারপর টিম একই প্রশ্ন 50 বার চালায়। বেশিরভাগ run একই রকম, কিন্তু সব নয়। Temperature 0 হলেও একই input ভিন্ন output দিতে পারে <Cite n={5} />। আরেকটা টেস্টে প্রশ্ন শুধু "login চালু আছে?", কোনো environment ছাড়া। দরকারি কোনো value না থাকলে Claude সেটা জিজ্ঞেস করতে পারে, বা অনুমান করতে পারে <Cite n={1} />। এখানে সে একটা production URL অনুমান করে। টিম system prompt-এ যোগ করে: "environment না দিলে জিজ্ঞেস করো।" Claude কখন tool ব্যবহার করবে, system prompt সেটা প্রভাবিত করতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Not checking `stop_reason`.** Anthropic advises you to check it in your response handling every time <Cite n={3} />. Code that reads only the text misses a tool call, a refusal, or a cut-off answer.
+- **A cut-off tool call.** If `max_tokens` cuts a response inside a `tool_use` block, the call is incomplete. Retry with a higher `max_tokens` <Cite n={3} />.
+- **Parsing the text around a tool call.** Claude can phrase that text in many ways. Treat it like any other model text and do not rely on a fixed format <Cite n={2} />.
+- **Expecting the same output every time.** Temperature 0 does not make the output fully deterministic <Cite n={5} />.
+- **Forcing a tool on a model that rejects it.** `any` and `tool` return a 400 error on some current models <Cite n={2} />. And a forced call has no text and no thinking before it <Cite n={2} />.
+- **Reading thinking as the real reasoning.** A thinking block holds a summary, never the raw chain of thought, and it can be empty <Cite n={4} />.
+- **A vague prompt with a required value missing.** Claude may guess the value and call the tool with it <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+- **Not checking `stop_reason`.** Anthropic says to check it every time you handle a response <Cite n={3} />. Code that reads only the text misses a tool call, a refusal, or an answer that was cut off.
+- **A tool call that was cut off.** If `max_tokens` cuts the answer inside a `tool_use` block, the call is not complete. Try again with a higher `max_tokens` <Cite n={3} />.
+- **Reading the text around a tool call as data.** Claude can word it in many ways. Do not expect a fixed format <Cite n={2} />.
+- **Expecting the same answer every time.** Even at temperature 0, the output is not fully fixed <Cite n={5} />.
+- **Forcing a tool on a model that does not allow it.** `any` and `tool` give a 400 error on some current models <Cite n={2} />. Also, a forced call has no text and no thinking before it <Cite n={2} />.
+- **Treating thinking as the real reasoning.** A thinking block is only a summary, and it can be empty <Cite n={4} />.
+- **A vague prompt with a needed value missing.** Claude may guess the value and use it in a tool call <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **`stop_reason` যাচাই না করা।** Anthropic বলে, প্রতিবার response সামলানোর সময় এটা যাচাই করুন <Cite n={3} />। যে কোড শুধু text পড়ে, সে tool call, refusal বা কেটে যাওয়া উত্তর ধরতে পারে না।
+- **কেটে যাওয়া tool call।** `max_tokens` যদি `tool_use` block-এর মাঝখানে উত্তর কেটে দেয়, call-টা অসম্পূর্ণ থাকে। বড় `max_tokens` দিয়ে আবার চেষ্টা করুন <Cite n={3} />।
+- **Tool call-এর আশেপাশের text-কে data হিসেবে পড়া।** Claude এটা নানা ভাবে লিখতে পারে। নির্দিষ্ট format আশা করবেন না <Cite n={2} />।
+- **প্রতিবার একই উত্তর আশা করা।** Temperature 0 হলেও output পুরোপুরি নির্দিষ্ট নয় <Cite n={5} />।
+- **যে model মানে না, তাতে tool জোর করা।** কিছু বর্তমান model-এ `any` আর `tool` একটা 400 error দেয় <Cite n={2} />। তাছাড়া জোর করা call-এর আগে কোনো text বা thinking থাকে না <Cite n={2} />।
+- **Thinking-কে আসল চিন্তা ভাবা।** Thinking block শুধু একটা সারাংশ, আর এটা খালিও থাকতে পারে <Cite n={4} />।
+- **দরকারি value ছাড়া অস্পষ্ট prompt।** Claude value-টা অনুমান করে tool call-এ ব্যবহার করতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Run each case many times.** Send the same input 20 to 50 times. Record how often the agent calls each tool. Set a pass rate, not a single expected output.
+- **Test every stop reason.** Make the app meet `tool_use`, `end_turn`, `max_tokens`, and `refusal`. Each one needs its own path in the code.
+- **Assert on the tool call, not the words.** Check the tool name and the input fields of the `tool_use` block. Do not assert on the exact text before it.
+- **Remove a required value.** Leave out a value that a tool needs. The agent must ask for it, not guess it.
+- **Check "answer from context".** Put the answer in the context. The agent should answer directly and not call a tool again.
+- **Check `tool_choice` settings.** With `none`, the agent must not call a tool. On a model that rejects forced tools, the app must handle the 400 error.
+- **Compare the answer with the tool result.** The final text must agree with what the tool returned, for example "up" only after a 200 response.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Run each case many times.** Send the same input 20 to 50 times. Count how often the agent uses each tool. Set a pass rate, not one exact expected answer.
+- **Test every stop reason.** Make the app get `tool_use`, `end_turn`, `max_tokens`, and `refusal`. Each one needs its own path in the code.
+- **Check the tool call, not the words.** Check the tool name and the input values. Do not check the exact text before the call.
+- **Leave out a needed value.** Remove a value that a tool needs. The agent must ask for it, not guess.
+- **Check "answer from context".** Put the answer in the context already. The agent should just answer, without calling a tool again.
+- **Check the `tool_choice` settings.** With `none`, the agent must not call a tool. On a model that does not allow forced tools, the app must handle the 400 error.
+- **Compare the answer with the tool result.** The final answer must match what the tool returned. For example, "up" only after a 200 response.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **প্রতিটা case অনেকবার চালান।** একই input 20 থেকে 50 বার পাঠান। Agent কোন tool কতবার ব্যবহার করে, গুনে রাখুন। একটা নির্দিষ্ট উত্তরের বদলে একটা pass rate ঠিক করুন।
+- **প্রতিটা stop reason টেস্ট করুন।** App যেন `tool_use`, `end_turn`, `max_tokens` আর `refusal` পায়, এমন case বানান। প্রতিটার জন্য কোডে আলাদা পথ লাগে।
+- **শব্দ নয়, tool call যাচাই করুন।** Tool-এর নাম আর input value যাচাই করুন। Call-এর আগের হুবহু text যাচাই করবেন না।
+- **দরকারি value বাদ দিন।** Tool-এর দরকারি একটা value সরিয়ে দিন। Agent-কে সেটা জিজ্ঞেস করতে হবে, অনুমান নয়।
+- **"Context থেকে উত্তর" যাচাই করুন।** উত্তরটা আগে থেকেই context-এ রাখুন। Agent-এর উচিত সরাসরি উত্তর দেওয়া, আবার tool call না করা।
+- **`tool_choice` setting যাচাই করুন।** `none` দিলে agent কোনো tool call করবে না। যে model জোর করা tool মানে না, সেখানে app-কে 400 error সামলাতে হবে।
+- **উত্তরকে tool result-এর সঙ্গে মেলান।** চূড়ান্ত উত্তর tool-এর ফেরত দেওয়া result-এর সঙ্গে মিলতে হবে। যেমন, "চালু আছে" শুধু 200 response-এর পরে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Tool call | A `tool_use` block in which the model asks your code to run a tool with given inputs. |
+| `tool_result` | The block your code sends back with the output of a tool. |
+| `stop_reason` | The field that says why the model stopped writing, for example `end_turn` or `tool_use`. |
+| `tool_choice` | The setting that allows, forces, or blocks tool use: `auto`, `any`, `tool`, `none`. |
+| Forced tool use | `tool_choice` set to `any` or `tool`. The model must call a tool. |
+| Thinking | Reasoning that the model does before or between its outputs, returned in `thinking` blocks. |
+| Adaptive thinking | Thinking in which the model decides when and how much to think. |
+| Interleaved thinking | Thinking between tool calls, about each tool result. |
+| Temperature | A setting for the randomness of the output. |
+| Non-determinism | The same input can give a different output, even at temperature 0. |

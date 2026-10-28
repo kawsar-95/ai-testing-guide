@@ -18,6 +18,8 @@ export const MODULE_TAGLINES_BN: Record<ModuleId, string> = {
   harness: "AI হারনেস কীভাবে কাজ করে তার ছয়টি টার্ম: এজেন্ট লুপ, টুল কলিং, কনটেক্সট, চেকপয়েন্ট, পারমিশন ও গার্ডরেইল।",
   "agent-memory":
     "AI এজেন্টের ৭ ধরনের মেমরি সহজ ভাষায়: working, semantic, episodic, procedural, retrieval, parametric ও prospective।",
+  "ai-agents":
+    "AI এজেন্ট ধাপে ধাপে কীভাবে কাজ করে: trigger, context, মডেলের সিদ্ধান্ত, tool, stop check, memory, guardrail, observability ও final output।",
   "ai-skills": "৪টি ধাপে ২০টি AI স্কিল, প্রম্পটিং থেকে ফাইন-টিউনিং পর্যন্ত, প্রতিটায় একজন টেস্টার কীভাবে ব্যবহার করবেন তা সহ।",
   "ai-concepts":
     "টেস্টারদের জন্য সহজ ভাষায় নয়টি AI engineering আইডিয়া: agent loop, MCP, subagent, gateway, খরচ, eval, guardrail, observability ও harness।",

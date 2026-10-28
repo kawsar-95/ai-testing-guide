@@ -23,7 +23,7 @@ export const SHELL_BN: Omit<Bn<typeof ui>, "HOME_UI"> = {
   searchAll: "সব পর্বে সার্চ করুন",
   searchClose: "সার্চ বন্ধ করুন",
   searchResults: "সার্চের ফলাফল",
-  searchType: `${PAGES.length}টি পর্ব, Linux stage, Fundamentals chapter, System Design কেস স্টাডি, Architecture টপিক, Course টপিক, k6 টপিক, AI Engineering টপিক, AI Harnesses টপিক, AI স্কিল, AI Concepts টপিক এবং Agent Memory টপিকে সার্চ করতে লিখুন।`,
+  searchType: `${PAGES.length}টি পর্ব, Linux stage, Fundamentals chapter, System Design কেস স্টাডি, Architecture টপিক, Course টপিক, k6 টপিক, AI Engineering টপিক, AI Harnesses টপিক, AI স্কিল, AI Concepts টপিক, Agent Memory টপিক এবং AI Agents টপিকে সার্চ করতে লিখুন।`,
   crossToTutorial: "টিউটোরিয়াল",
   sidebarHome: "মডিউল হোম",
   searchLoading: "সার্চ ইনডেক্স লোড হচ্ছে…",
