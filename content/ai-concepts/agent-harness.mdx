@@ -1,0 +1,341 @@
+export const metadata = { title: 'The Agent Harness', description: 'Same model, better harness, better agent: context, tools, permissions, sandbox, checks, and recovery.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Improving Deep Agents with harness engineering', publisher: 'LangChain', url: 'https://www.langchain.com/blog/improving-deep-agents-with-harness-engineering', accessed: '2026-10-28' },
+    { title: 'Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Command Line Interfaces', publisher: 'Terminal-Bench authors (arXiv)', url: 'https://arxiv.org/abs/2601.11868', accessed: '2026-10-28' },
+    { title: 'Effective harnesses for long-running agents', publisher: 'Anthropic', url: 'https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents', accessed: '2026-10-28' },
+    { title: 'Effective context engineering for AI agents', publisher: 'Anthropic', url: 'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents', accessed: '2026-10-28' },
+    { title: 'Agent SDK overview', publisher: 'Anthropic (Claude Code Docs)', url: 'https://code.claude.com/docs/en/agent-sdk/overview', accessed: '2026-10-28' },
+    { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code Docs)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
+    { title: 'Sandboxing', publisher: 'Anthropic (Claude Code Docs)', url: 'https://code.claude.com/docs/en/sandboxing', accessed: '2026-10-28' },
+    { title: 'Checkpointing', publisher: 'Anthropic (Claude Code Docs)', url: 'https://code.claude.com/docs/en/checkpointing', accessed: '2026-10-28' },
+  ],
+}
+
+# The Agent Harness
+
+A model on its own only writes text. The harness is all the software around the model that turns that text into checked work: what the model reads, which tools it can use, which rules stop it, and how it recovers when it goes wrong. When you change the harness, the same model can become a much better agent.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **agent harness** is the software that runs a model as an agent. The model picks the next step. The harness does the rest: it builds the context, runs the loop, offers the tools, checks each tool call, and keeps state between sessions.
+
+Claude Code is one harness. The Claude Agent SDK gives you the same tools, agent loop, and context management that power Claude Code <Cite n={5} />. Its features include built-in tools, hooks, subagents, MCP, permissions, sessions, and skills and memory <Cite n={5} />. Anthropic calls its Managed Agents product a hosted agent harness that runs the agent loop <Cite n={5} />.
+
+The harness can matter as much as the model. LangChain kept its model fixed (`gpt-5.2-codex`) and changed only three parts of its harness: the system prompt, the tools, and the middleware (hooks around model and tool calls) <Cite n={1} />. Its coding agent went from 52.8 to 66.5 on Terminal-Bench 2.0, and from the Top 30 to the Top 5 <Cite n={1} />. Terminal-Bench 2.0 is a hard benchmark of 89 tasks in terminal environments. Each task has its own environment, a human-written solution, and tests <Cite n={2} />.
+
+This tutorial splits a harness into six parts. The grouping is the tutorial's own:
+
+| Part | Its job |
+|---|---|
+| Context and memory | Choose what the model reads now, and what it keeps for later |
+| Tools and skills | The actions the agent can take |
+| Permissions | Decide which tool calls run, ask first, or are blocked |
+| Sandbox | An outer wall around files and the network |
+| Checks | Tests and hooks that verify the work before it counts |
+| Recovery | Ways to undo, resume, or start again |
+
+</Technical>
+<Layman>
+
+An **agent harness** is the software that runs a model as an agent. The model picks the next step. The harness does everything else. It builds what the model reads, runs the loop, offers the tools, checks each tool call, and remembers state between sessions.
+
+Claude Code is one harness. The Claude Agent SDK gives you the same tools, loop, and context management that power Claude Code <Cite n={5} />. It has built-in tools, hooks, subagents, MCP, permissions, sessions, and skills and memory <Cite n={5} />. Anthropic calls its Managed Agents product a hosted agent harness <Cite n={5} />.
+
+The harness can matter as much as the model. LangChain kept the same model (`gpt-5.2-codex`). It changed only three things around it: the system prompt, the tools, and the middleware. Middleware means hooks around the model calls and the tool calls <Cite n={1} />. Its coding agent went from a score of 52.8 to 66.5 on Terminal-Bench 2.0. It moved from the Top 30 to the Top 5 <Cite n={1} />. Terminal-Bench 2.0 is a hard test set of 89 tasks in a terminal. Each task has its own setup, a solution written by a person, and tests <Cite n={2} />.
+
+This tutorial splits a harness into six parts. The grouping is the tutorial's own:
+
+- **Context and memory:** what the model reads now, and what it keeps for later.
+- **Tools and skills:** the actions the agent can take.
+- **Permissions:** which tool calls run, which ask first, and which are blocked.
+- **Sandbox:** an outer wall around files and the network.
+- **Checks:** tests and hooks that verify the work before it counts.
+- **Recovery:** ways to undo, continue, or start again.
+
+</Layman>
+<Bangla>
+
+**Agent harness** হলো সেই সফটওয়্যার, যা একটা model-কে agent হিসেবে চালায়। Model ঠিক করে পরের ধাপ কী হবে। বাকি সব কাজ করে harness। সে context তৈরি করে, loop চালায়, tool দেয়, প্রতিটা tool call যাচাই করে, আর এক session থেকে আরেক session-এ অবস্থা (state) মনে রাখে।
+
+Claude Code একটা harness। Claude Agent SDK আপনাকে সেই একই tool, agent loop আর context management দেয়, যা Claude Code চালায় <Cite n={5} />। এতে আছে built-in tool, hook, subagent, MCP, permission, session, আর skill ও memory <Cite n={5} />। Anthropic তার Managed Agents প্রোডাক্টকে বলে একটা hosted agent harness, যা agent loop চালায় <Cite n={5} />।
+
+Harness-এর গুরুত্ব model-এর সমান হতে পারে। LangChain একই model (`gpt-5.2-codex`) রেখেছিল। সে শুধু harness-এর তিনটা অংশ বদলেছিল: system prompt, tool, আর middleware। Middleware মানে model call আর tool call-এর চারপাশের hook <Cite n={1} />। এতে তাদের coding agent-এর স্কোর Terminal-Bench 2.0-এ 52.8 থেকে 66.5 হয়। অবস্থান Top 30 থেকে Top 5-এ ওঠে <Cite n={1} />। Terminal-Bench 2.0 হলো terminal-এ চলা 89টা কঠিন task-এর একটা benchmark। প্রতিটা task-এর নিজের environment, মানুষের লেখা একটা সমাধান, আর test আছে <Cite n={2} />।
+
+এই টিউটোরিয়াল একটা harness-কে ছয় ভাগে ভাগ করে। এই ভাগ টিউটোরিয়ালের নিজের:
+
+- **Context ও memory:** model এখন কী পড়বে, আর পরের জন্য কী রাখবে।
+- **Tool ও skill:** agent কোন কোন কাজ করতে পারে।
+- **Permission:** কোন tool call চলবে, কোনটা আগে অনুমতি চাইবে, কোনটা আটকে যাবে।
+- **Sandbox:** ফাইল আর নেটওয়ার্কের চারপাশে একটা বাইরের দেয়াল।
+- **Check:** test আর hook, যা কাজটা গোনার আগে যাচাই করে।
+- **Recovery:** আগের অবস্থায় ফেরা, আবার চালু করা, বা নতুন করে শুরু করার উপায়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+```text
+ user or app
+      |
+      v
++--------------------- agent harness ---------------------+
+|  context & memory    tools & skills    permissions      |
+|  sandbox             checks            recovery         |
++---------------------------------------------------------+
+      |                                   ^
+      v                                   |
+   model  ---- tool call ---->  tools and MCP servers
+      ^                                   |
+      +-------- tool result --------------+
+      |
+      v
+ checked output
+```
+
+**The loop.** The model reads the prompt, calls tools, gets the results, and repeats until it gives a reply with no tool calls <Cite n={6} />. The harness can stop the loop with a maximum number of turns or a maximum budget. Then the result reports `error_max_turns` or `error_max_budget_usd` <Cite n={6} />.
+
+**Context and memory.** Context is a finite resource. The goal is the smallest set of high-signal tokens <Cite n={4} />. As the context grows, the model recalls it less well ("context rot") <Cite n={4} />. Context does not reset between turns. Near the limit, the SDK compacts it: it summarizes older history, so early instructions may be lost. Rules that must last belong in `CLAUDE.md` <Cite n={6} />. An agent can also write notes outside its context window <Cite n={4} />.
+
+**Tools and skills.** Give a minimal set of tools with little overlap. A bloated tool set is a common failure <Cite n={4} />.
+
+**Permissions.** An allow list approves tools, a deny list blocks them, and a permission mode sets how much a human must approve. A denied call returns a rejection message to the model <Cite n={6} />. The `bypassPermissions` mode is only for isolated environments <Cite n={6} />.
+
+**Sandbox.** In Claude Code, the Bash sandbox is a boundary that the operating system enforces: Seatbelt on macOS and bubblewrap on Linux <Cite n={7} />. A sandboxed command has no direct route to the network. A proxy checks each host name against allowed and denied domains <Cite n={7} />. Sandbox, permission rules, and permission modes are separate layers, and the sandbox holds whatever the model chose to run <Cite n={7} />.
+
+**Checks.** Hooks run at fixed points of the loop. A `PreToolUse` hook can block a tool call, and a `Stop` hook can validate the result <Cite n={6} />. LangChain added self-verification, used traces to find failure modes, and added a middleware that counts the edits to each file to catch loops <Cite n={1} />.
+
+**Recovery.** Each new session of a long-running agent starts with no memory <Cite n={3} />. Anthropic's harness for such agents keeps a progress file and commits each step to git <Cite n={3} />. A session can be resumed by its ID <Cite n={6} />. Claude Code checkpoints track Claude's file edits, and `/rewind` restores them <Cite n={8} />.
+
+**The other pages of this module, as parts of a harness:**
+
+- [Agentic loops](/ai-concepts/agentic-loops/): the loop that the harness runs.
+- [MCP](/ai-concepts/mcp/): how the harness connects tools and data.
+- [Subagents](/ai-concepts/subagents/): helpers with a clean context window <Cite n={4} />.
+- [AI gateway](/ai-concepts/ai-gateway/): the door between your apps and the models.
+- [Inference economics](/ai-concepts/inference-economics/): the cost that a budget limit controls.
+- [Evals](/ai-concepts/evals/): how you prove that a harness change helped.
+- [Guardrails](/ai-concepts/guardrails/): the rules on what goes in and out.
+- [Observability](/ai-concepts/observability/): the traces that show each step.
+
+</Technical>
+<Layman>
+
+The order is this. A user or an app sends a task to the harness. The harness has six parts: context and memory, tools and skills, permissions, sandbox, checks, and recovery. The harness sends the task to the model. The model asks for a tool call. The tool or MCP server runs and sends a result back. This repeats. At the end, the output goes through the checks.
+
+**The loop.** The model reads the prompt, calls tools, gets the results, and does it again. It stops when it gives a reply with no tool calls <Cite n={6} />. The harness can stop the loop after a set number of turns or a set amount of money. Then the result says `error_max_turns` or `error_max_budget_usd` <Cite n={6} />.
+
+**Context and memory.** The model can read only a limited amount. So give it the smallest set of useful tokens <Cite n={4} />. When the context grows, the model remembers it less well. This is called "context rot" <Cite n={4} />. The context does not reset between turns. When it is nearly full, the SDK makes a summary of the old part. Early instructions can get lost. Rules that must stay belong in `CLAUDE.md` <Cite n={6} />. An agent can also write notes outside its context <Cite n={4} />.
+
+**Tools and skills.** Give a small set of tools that do not overlap. Too many tools is a common failure <Cite n={4} />.
+
+**Permissions.** An allow list approves tools. A deny list blocks tools. A permission mode sets how much a person must approve. When a call is denied, the model gets a rejection message <Cite n={6} />. Use the `bypassPermissions` mode only in an isolated environment <Cite n={6} />.
+
+**Sandbox.** In Claude Code, the Bash sandbox is a wall that the operating system keeps. macOS uses Seatbelt. Linux uses bubblewrap <Cite n={7} />. A command in the sandbox cannot reach the network directly. A proxy checks each host name against a list of allowed and denied domains <Cite n={7} />. The sandbox, the permission rules, and the permission modes are separate layers. The sandbox holds whatever the model decides to run <Cite n={7} />.
+
+**Checks.** Hooks run at fixed points of the loop. A `PreToolUse` hook can block a tool call. A `Stop` hook can check the result <Cite n={6} />. LangChain added self-checks. It used traces to find where the agent failed. It also added a middleware that counts the edits to each file, to catch an agent that goes round in circles <Cite n={1} />.
+
+**Recovery.** Each new session of a long-running agent starts with no memory <Cite n={3} />. Anthropic's harness for such agents keeps a progress file. It commits each step to git <Cite n={3} />. You can resume a session by its ID <Cite n={6} />. Claude Code checkpoints save Claude's file edits, and `/rewind` brings them back <Cite n={8} />.
+
+**The other pages of this module, as parts of a harness:**
+
+- [Agentic loops](/ai-concepts/agentic-loops/): the loop that the harness runs.
+- [MCP](/ai-concepts/mcp/): how the harness connects tools and data.
+- [Subagents](/ai-concepts/subagents/): helpers that start with a clean context <Cite n={4} />.
+- [AI gateway](/ai-concepts/ai-gateway/): the door between your apps and the models.
+- [Inference economics](/ai-concepts/inference-economics/): the cost that a budget limit controls.
+- [Evals](/ai-concepts/evals/): how you prove that a harness change helped.
+- [Guardrails](/ai-concepts/guardrails/): the rules on what goes in and out.
+- [Observability](/ai-concepts/observability/): the traces that show each step.
+
+</Layman>
+<Bangla>
+
+ক্রমটা এরকম। একজন user বা একটা app harness-কে একটা task পাঠায়। Harness-এর ছয়টা অংশ: context ও memory, tool ও skill, permission, sandbox, check, আর recovery। Harness task-টা model-কে পাঠায়। Model একটা tool call চায়। Tool বা MCP server সেটা চালিয়ে result ফেরত পাঠায়। এটা বারবার চলে। শেষে output check-এর মধ্য দিয়ে যায়।
+
+**Loop.** Model prompt পড়ে, tool call করে, result পায়, আবার একই কাজ করে। যখন সে tool call ছাড়া একটা উত্তর দেয়, তখন থামে <Cite n={6} />। Harness নির্দিষ্ট সংখ্যক turn বা নির্দিষ্ট খরচের পরে loop থামাতে পারে। তখন result-এ লেখা থাকে `error_max_turns` বা `error_max_budget_usd` <Cite n={6} />।
+
+**Context ও memory.** Model একবারে সীমিত পরিমাণই পড়তে পারে। তাই তাকে সবচেয়ে ছোট কিন্তু কাজের token-এর সেট দিন <Cite n={4} />। Context যত বাড়ে, model তত কম ভালোভাবে মনে রাখে। একে বলে "context rot" <Cite n={4} />। Turn-এর মাঝে context রিসেট হয় না। প্রায় ভরে গেলে SDK পুরনো অংশের একটা সারাংশ বানায়। তাতে শুরুর দিকের নির্দেশ হারিয়ে যেতে পারে। যে নিয়ম সবসময় থাকতে হবে, সেটা `CLAUDE.md`-এ রাখুন <Cite n={6} />। Agent নিজের context-এর বাইরে note-ও লিখে রাখতে পারে <Cite n={4} />।
+
+**Tool ও skill.** অল্প কয়েকটা tool দিন, যাদের কাজ একটার সঙ্গে আরেকটা মেলে না। অনেক বেশি tool দেওয়া একটা সাধারণ ভুল <Cite n={4} />।
+
+**Permission.** Allow list tool অনুমোদন করে। Deny list tool আটকায়। Permission mode ঠিক করে, একজন মানুষকে কতটা অনুমোদন দিতে হবে। কোনো call আটকে গেলে model একটা rejection message পায় <Cite n={6} />। `bypassPermissions` mode শুধু আলাদা করা (isolated) environment-এ ব্যবহার করুন <Cite n={6} />।
+
+**Sandbox.** Claude Code-এ Bash sandbox হলো এমন একটা দেয়াল, যা operating system নিজে রক্ষা করে। macOS-এ Seatbelt, Linux-এ bubblewrap <Cite n={7} />। Sandbox-এর ভেতরের command সরাসরি নেটওয়ার্কে যেতে পারে না। একটা proxy প্রতিটা host name অনুমোদিত আর নিষিদ্ধ domain-এর তালিকার সঙ্গে মিলিয়ে দেখে <Cite n={7} />। Sandbox, permission rule আর permission mode আলাদা আলাদা স্তর। Model যা-ই চালাক, sandbox-এর দেয়াল টিকে থাকে <Cite n={7} />।
+
+**Check.** Loop-এর নির্দিষ্ট জায়গায় hook চলে। `PreToolUse` hook একটা tool call আটকাতে পারে। `Stop` hook result যাচাই করতে পারে <Cite n={6} />। LangChain self-verification যোগ করেছিল, আর trace দেখে agent কোথায় ভুল করে তা খুঁজে বের করেছিল। সঙ্গে একটা middleware যোগ করেছিল, যা প্রতিটা ফাইলে কতবার edit হলো তা গোনে, যাতে একই জায়গায় ঘুরতে থাকা agent ধরা পড়ে <Cite n={1} />।
+
+**Recovery.** দীর্ঘ সময় চলা agent-এর প্রতিটা নতুন session কোনো memory ছাড়াই শুরু হয় <Cite n={3} />। এমন agent-এর জন্য Anthropic-এর harness একটা progress ফাইল রাখে। প্রতিটা ধাপ git-এ commit করে <Cite n={3} />। ID দিয়ে একটা session আবার চালু (resume) করা যায় <Cite n={6} />। Claude Code-এর checkpoint Claude-এর ফাইল edit মনে রাখে, আর `/rewind` সেগুলো ফিরিয়ে আনে <Cite n={8} />।
+
+**এই module-এর অন্য পেজগুলো, harness-এর অংশ হিসেবে:**
+
+- [Agentic loops](/ai-concepts/agentic-loops/): harness যে loop চালায়।
+- [MCP](/ai-concepts/mcp/): harness কীভাবে tool আর data যুক্ত করে।
+- [Subagents](/ai-concepts/subagents/): পরিষ্কার context নিয়ে শুরু করা সাহায্যকারী agent <Cite n={4} />।
+- [AI gateway](/ai-concepts/ai-gateway/): আপনার app আর model-এর মাঝের দরজা।
+- [Inference economics](/ai-concepts/inference-economics/): budget limit যে খরচ নিয়ন্ত্রণ করে।
+- [Evals](/ai-concepts/evals/): harness-এ বদল কাজে লাগল কি না, তা প্রমাণের উপায়।
+- [Guardrails](/ai-concepts/guardrails/): কী ঢুকবে আর কী বের হবে, তার নিয়ম।
+- [Observability](/ai-concepts/observability/): প্রতিটা ধাপ দেখানো trace।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This is an invented example. A team runs an agent in CI each night to fix failing Playwright tests. One morning the agent's report says "all fixed", but 5 tests still fail. The tester checks the harness before blaming the model:
+
+1. **Context.** The run log shows a compaction. The rule "never change an expected value" was only in the first prompt, and the summary lost it. Rules that must last belong in `CLAUDE.md` <Cite n={6} />. The team moves the rule there.
+2. **Tools.** The agent had no way to start the app, so it could not run the tests end to end. It declared the work done too early. Anthropic saw the same failure in its own long-running agents. Its fix was to test as a human user would, and to mark a feature as passing only after careful testing <Cite n={3} />.
+3. **Permissions.** The allow list did not include the test command, so the agent got a rejection message each time it tried <Cite n={6} />. The team allows one narrow rule, in the same style as `Bash(npm *)` <Cite n={6} />.
+4. **Checks.** The team adds a `Stop` hook that runs the suite and rejects "done" while a test fails <Cite n={6} />.
+
+The model stays the same. Only the harness changes.
+
+</Technical>
+<Layman>
+
+This is an invented example. A team runs an agent in CI each night. It fixes failing Playwright tests. One morning the report says "all fixed". But 5 tests still fail. The tester checks the harness before blaming the model:
+
+1. **Context.** The run log shows a summary step. The rule "never change an expected value" was only in the first prompt. The summary lost it. Rules that must stay belong in `CLAUDE.md` <Cite n={6} />. The team moves the rule there.
+2. **Tools.** The agent could not start the app. So it could not run the tests from start to end. It said the work was done too early. Anthropic saw the same failure in its own long-running agents. Its fix was to test like a human user, and to mark a feature as passing only after careful testing <Cite n={3} />.
+3. **Permissions.** The allow list did not have the test command. So each try got a rejection message <Cite n={6} />. The team allows one narrow rule, in the same style as `Bash(npm *)` <Cite n={6} />.
+4. **Checks.** The team adds a `Stop` hook. It runs the tests and says no to "done" while a test fails <Cite n={6} />.
+
+The model stays the same. Only the harness changes.
+
+</Layman>
+<Bangla>
+
+এটা একটা বানানো উদাহরণ। একটা টিম প্রতি রাতে CI-তে একটা agent চালায়। সেটা fail করা Playwright test ঠিক করে। এক সকালে agent-এর রিপোর্ট বলে "all fixed"। কিন্তু 5টা test তখনও fail করছে। Model-কে দোষ দেওয়ার আগে tester harness পরীক্ষা করেন:
+
+1. **Context.** Run log-এ দেখা যায় একটা compaction হয়েছে। "কখনো expected value বদলাবে না" নিয়মটা ছিল শুধু প্রথম prompt-এ। সারাংশে সেটা হারিয়ে গেছে। যে নিয়ম সবসময় থাকতে হবে, সেটা `CLAUDE.md`-এ রাখতে হয় <Cite n={6} />। টিম নিয়মটা সেখানে সরায়।
+2. **Tool.** Agent app চালু করতে পারেনি। তাই সে শুরু থেকে শেষ পর্যন্ত test চালাতে পারেনি। সে খুব আগেই বলে দিয়েছে কাজ শেষ। Anthropic তাদের নিজের long-running agent-এও একই ভুল দেখেছিল। তাদের সমাধান ছিল একজন সাধারণ user-এর মতো test করা, আর ভালোভাবে test করার পরেই কোনো feature-কে passing বলা <Cite n={3} />।
+3. **Permission.** Allow list-এ test command ছিল না। তাই প্রতিবার চেষ্টায় agent একটা rejection message পেয়েছে <Cite n={6} />। টিম একটা সরু নিয়ম অনুমোদন করে, `Bash(npm *)`-এর মতো ধাঁচে <Cite n={6} />।
+4. **Check.** টিম একটা `Stop` hook যোগ করে। সেটা test suite চালায়, আর কোনো test fail করলে "done" মানে না <Cite n={6} />।
+
+Model একই থাকে। শুধু harness বদলায়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Blaming the model first.** LangChain changed only its harness and gained 13.7 points with the same model <Cite n={1} />.
+- **Too much context or too many tools.** Context is a finite resource, and a bloated tool set is a common failure <Cite n={4} />.
+- **Important rules only in the first prompt.** Compaction can drop them <Cite n={6} />.
+- **No limit on the loop.** By default there is no limit on turns or budget <Cite n={6} />.
+- **`bypassPermissions` on a shared machine.** The docs say to use it only in isolated environments <Cite n={6} />.
+- **Assuming the sandbox is on.** In Claude Code it is off by default <Cite n={7} />.
+- **Trusting "done".** An agent can declare the work done too early <Cite n={3} />.
+- **Checkpoints instead of git.** A file that only Bash changed is not tracked, and checkpoints do not replace version control <Cite n={8} />.
+
+</Technical>
+<Layman>
+
+- **Blaming the model first.** LangChain changed only the harness. With the same model, it gained 13.7 points <Cite n={1} />.
+- **Too much context or too many tools.** The model can read only so much. Too many tools is a common failure <Cite n={4} />.
+- **Important rules only in the first prompt.** The summary step can drop them <Cite n={6} />.
+- **No limit on the loop.** By default there is no limit on turns or money <Cite n={6} />.
+- **`bypassPermissions` on a shared machine.** The docs say to use it only in an isolated environment <Cite n={6} />.
+- **Thinking the sandbox is on.** In Claude Code it is off by default <Cite n={7} />.
+- **Trusting "done".** An agent can say the work is done too early <Cite n={3} />.
+- **Checkpoints instead of git.** A file that only Bash changed is not tracked. Checkpoints do not replace version control <Cite n={8} />.
+
+</Layman>
+<Bangla>
+
+- **প্রথমেই model-কে দোষ দেওয়া।** LangChain শুধু harness বদলেছিল। একই model দিয়ে স্কোর 13.7 পয়েন্ট বেড়েছিল <Cite n={1} />।
+- **বেশি context বা বেশি tool।** Context একটা সীমিত সম্পদ। অনেক বেশি tool দেওয়া একটা সাধারণ ভুল <Cite n={4} />।
+- **জরুরি নিয়ম শুধু প্রথম prompt-এ রাখা।** Compaction সেটা বাদ দিতে পারে <Cite n={6} />।
+- **Loop-এর কোনো সীমা না রাখা।** Default অবস্থায় turn বা budget-এর কোনো সীমা থাকে না <Cite n={6} />।
+- **শেয়ার করা মেশিনে `bypassPermissions`।** Docs বলে, এটা শুধু isolated environment-এ ব্যবহার করতে <Cite n={6} />।
+- **ধরে নেওয়া যে sandbox চালু আছে।** Claude Code-এ এটা default অবস্থায় বন্ধ থাকে <Cite n={7} />।
+- **"done" কথাটা বিশ্বাস করা।** Agent খুব আগেই বলে দিতে পারে যে কাজ শেষ <Cite n={3} />।
+- **git-এর বদলে checkpoint।** যে ফাইল শুধু Bash বদলেছে, সেটা track হয় না। Checkpoint version control-এর বিকল্প নয় <Cite n={8} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Harness first.** When an agent fails, read its trace in this order: context, tools, permissions. Blame the model last.
+- **Context.** List what the agent saw at the start: the system prompt, the project rules file, and the tool list. In a long run, check that a key rule still holds after a summary step.
+- **Missing tool.** Give a task that needs a tool the agent does not have. It should say so, not fake a result.
+- **Permissions.** In a throw-away environment, ask for a blocked action, such as a write outside the project. Expect a clear denial.
+- **Sandbox.** From inside the sandbox, try to call a host that is not allowed. Expect it to fail.
+- **Checks.** Plant one failing test. The agent must not report "done".
+- **Recovery.** Stop a run halfway, resume it, and check the progress file and the git log.
+- **Limits.** Set a low turn limit. The run should stop with a clear status, not hang.
+- **Same model, two harnesses.** Run the same eval set before and after a harness change, and compare.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Harness first.** When an agent fails, read its trace in this order: context, tools, permissions. Blame the model last.
+- **Context.** List what the agent saw at the start: the system prompt, the project rules file, and the tool list. In a long run, check that a key rule still holds after a summary step.
+- **Missing tool.** Give a task that needs a tool the agent does not have. It should say so. It should not fake a result.
+- **Permissions.** In a throw-away environment, ask for a blocked action. An example is a write outside the project. Expect a clear denial.
+- **Sandbox.** From inside the sandbox, try to call a host that is not allowed. Expect it to fail.
+- **Checks.** Plant one failing test. The agent must not say "done".
+- **Recovery.** Stop a run halfway. Resume it. Check the progress file and the git log.
+- **Limits.** Set a low turn limit. The run should stop with a clear status. It should not hang.
+- **Same model, two harnesses.** Run the same eval set before and after a harness change. Compare the results.
+
+</Layman>
+<Bangla>
+
+এই test আইডিয়াগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **আগে harness।** কোনো agent fail করলে তার trace এই ক্রমে পড়ুন: context, tool, permission। Model-কে দোষ দিন সবার শেষে।
+- **Context.** শুরুতে agent কী কী দেখেছিল তার তালিকা করুন: system prompt, project-এর নিয়মের ফাইল, আর tool-এর তালিকা। লম্বা run-এ দেখুন, সারাংশ তৈরির পরেও জরুরি নিয়মটা মানা হচ্ছে কি না।
+- **নেই এমন tool।** এমন একটা task দিন, যার জন্য দরকারি tool agent-এর কাছে নেই। সে সেটা স্বীকার করবে। ভুয়া result দেবে না।
+- **Permission.** একটা throw-away environment-এ একটা নিষিদ্ধ কাজ চান, যেমন project-এর বাইরে ফাইল লেখা। পরিষ্কার একটা denial আশা করুন।
+- **Sandbox.** Sandbox-এর ভেতর থেকে অনুমোদন নেই এমন একটা host-কে call করার চেষ্টা করুন। এটা fail করা উচিত।
+- **Check.** ইচ্ছে করে একটা fail করা test রাখুন। Agent যেন "done" না বলে।
+- **Recovery.** একটা run মাঝপথে থামান, তারপর resume করুন। Progress ফাইল আর git log দেখুন।
+- **Limit.** কম turn limit দিন। Run যেন পরিষ্কার status দিয়ে থামে, আটকে না থাকে।
+- **একই model, দুটো harness।** Harness বদলানোর আগে আর পরে একই eval set চালান, আর তুলনা করুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Agent harness | The software around a model that runs it as an agent: context, loop, tools, permissions, and state <Cite n={5} /> |
+| Harness engineering | Changing the harness, not the model, to make an agent better <Cite n={1} /> |
+| Terminal-Bench 2.0 | A benchmark of 89 hard tasks in terminal environments <Cite n={2} /> |
+| Context rot | The model recalls less well as the context grows <Cite n={4} /> |
+| Compaction | A summary of older history when the context is nearly full <Cite n={6} /> |
+| Permission mode | The setting for how much a human must approve tool calls <Cite n={6} /> |
+| Sandbox | A boundary, enforced by the operating system, around the agent's shell commands <Cite n={7} /> |
+| Hook | Code that runs at a fixed point of the loop, for example before a tool runs <Cite n={6} /> |
+| Checkpoint | A saved state of the agent's file edits that you can rewind to <Cite n={8} /> |
+| Progress file | A file where a long-running agent logs what it has done <Cite n={3} /> |

@@ -1,0 +1,300 @@
+export const metadata = { title: 'Agentic Loops', description: 'An agent gathers context, acts, checks its work, and repeats until a stop rule ends the loop.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
+    { title: 'How Claude Code works', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/how-claude-code-works', accessed: '2026-10-28' },
+    { title: 'Building effective agents', publisher: 'Anthropic (Engineering)', url: 'https://www.anthropic.com/engineering/building-effective-agents', accessed: '2026-10-28' },
+    { title: 'Building agents with the Claude Agent SDK', publisher: 'Anthropic (Claude blog)', url: 'https://claude.com/blog/building-agents-with-the-claude-agent-sdk', accessed: '2026-10-28' },
+    { title: 'Hooks reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks', accessed: '2026-10-28' },
+    { title: 'CLI reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/cli-reference', accessed: '2026-10-28' },
+  ],
+}
+
+# Agentic Loops
+
+A chatbot answers once and stops. An agent works in a loop: it looks around, does one step, checks the result, and goes again. This page explains that loop, the rules that make it stop, and how a tester checks that it stops at the right time.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **agentic loop** is the cycle that an AI agent repeats to finish a task. Anthropic separates two kinds of systems. In a **workflow**, your code sets the path that the model and the tools follow. In an **agent**, the model directs its own process and chooses its own tools <Cite n={3} />.
+
+Claude Code works through three phases: **gather context**, **take action**, and **verify results**. The phases blend together, and Claude uses tools in each phase <Cite n={2} />. The Agent SDK blog gives the same cycle in a short form: gather context, take action, verify work, repeat <Cite n={4} />.
+
+The loop needs an end. In the Agent SDK, the loop ends when Claude gives a response with no tool calls <Cite n={1} />. You can also set hard limits: a maximum number of turns and a maximum budget. Both limits are off by default <Cite n={1} />.
+
+So a loop has two parts that you must design and test:
+
+- The **work cycle**: what the agent reads, what it does, and how it checks the result.
+- The **stop rule**: when the loop ends, and what the agent reports when it ends.
+
+</Technical>
+<Layman>
+
+An **agentic loop** is the cycle that an AI agent repeats to finish a task. Anthropic separates two kinds of systems. In a **workflow**, your code sets the path. In an **agent**, the model decides its own steps and picks its own tools <Cite n={3} />.
+
+Claude Code works in three phases. First it **gathers context**. Then it **takes action**. Then it **verifies the result**. The phases mix together, and Claude uses tools in each one <Cite n={2} />. The Agent SDK blog says the same thing in short: gather context, take action, verify work, repeat <Cite n={4} />.
+
+The loop must end. In the Agent SDK, it ends when Claude answers with no tool calls <Cite n={1} />. You can also set two hard limits: a maximum number of turns and a maximum budget. Both are off by default <Cite n={1} />.
+
+So you design and test two parts:
+
+- The **work cycle**: what the agent reads, does, and checks.
+- The **stop rule**: when the loop ends, and what the agent says at the end.
+
+</Layman>
+<Bangla>
+
+**Agentic loop** হলো সেই চক্র, যেটা একটা AI agent একটা কাজ শেষ করতে বারবার চালায়। Anthropic দুই ধরনের সিস্টেম আলাদা করে। **Workflow**-এ আপনার কোড ঠিক করে দেয় model আর tool কোন পথে চলবে। **Agent**-এ model নিজেই তার ধাপ ঠিক করে আর নিজের tool বেছে নেয় <Cite n={3} />।
+
+Claude Code তিনটা ধাপে কাজ করে: **context সংগ্রহ**, **action নেওয়া**, আর **ফলাফল যাচাই (verify)**। ধাপগুলো একটার সঙ্গে আরেকটা মিশে যায়, আর প্রতিটা ধাপে Claude tool ব্যবহার করে <Cite n={2} />। Agent SDK ব্লগ একই চক্রকে ছোট করে বলে: context সংগ্রহ, action, কাজ যাচাই, আবার শুরু <Cite n={4} />।
+
+Loop-এর একটা শেষ থাকতে হয়। Agent SDK-তে loop শেষ হয় যখন Claude কোনো tool call ছাড়া একটা উত্তর দেয় <Cite n={1} />। আপনি দুটো কড়া সীমাও দিতে পারেন: সর্বোচ্চ turn সংখ্যা আর সর্বোচ্চ budget। ডিফল্টভাবে দুটোই বন্ধ থাকে <Cite n={1} />।
+
+তাই আপনাকে দুটো অংশ ডিজাইন আর টেস্ট করতে হয়:
+
+- **কাজের চক্র**: agent কী পড়ে, কী করে, আর ফলাফল কীভাবে যাচাই করে।
+- **থামার নিয়ম (stop rule)**: loop কখন শেষ হয়, আর শেষে agent কী রিপোর্ট করে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+In the Agent SDK, one session follows the same steps each time <Cite n={1} />:
+
+1. Claude gets your prompt, the system prompt, the tool definitions, and the history.
+2. Claude decides what to do. It can answer with text, ask for tool calls, or both.
+3. The SDK runs the tools and sends the results back to Claude.
+4. Steps 2 and 3 repeat. Each full cycle is one **turn**.
+5. When Claude answers with no tool calls, the SDK returns a final result with the text, the token usage, and the cost.
+
+```text
+prompt
+  |
+  v
+gather context --> take action --> verify result
+      ^                                  |
+      |        no: loop again            v
+      +-------------------------- done? (no tool calls)
+                                         |
+                                         | yes, or a limit is hit
+                                         v
+                                   result + subtype
+```
+
+Each tool result feeds back into the loop and informs the next decision <Cite n={2} />. Anthropic calls this ground truth from the environment: a test result or a command output tells the agent where it really stands <Cite n={3} />.
+
+**The stop rules.** The Agent SDK has two limits <Cite n={1} />:
+
+| Option | What it limits | Default |
+|---|---|---|
+| `max_turns` / `maxTurns` | Tool-use round trips | No limit |
+| `max_budget_usd` / `maxBudgetUsd` | Estimated spend | No limit |
+
+In headless mode, the CLI has the same limits as `--max-turns` and `--max-budget-usd`. They work in print mode (`claude -p`) only, and `--max-turns` exits with an error at the limit <Cite n={6} />.
+
+**How the loop reports its end.** The final result has a `subtype`: `success`, `error_max_turns`, `error_max_budget_usd`, or `error_during_execution`, among others. The `result` text is present only on `success`. Every subtype carries the cost, the usage, the turn count (`num_turns`), and the session ID <Cite n={1} />.
+
+**A check before the stop.** In Claude Code, a `Stop` hook runs when Claude finishes responding. It can return `decision: "block"` with a `reason`, and then Claude keeps working <Cite n={5} />. This is how you add your own "done" check, for example "the tests must pass".
+
+</Technical>
+<Layman>
+
+In the Agent SDK, each session follows the same steps <Cite n={1} />:
+
+1. Claude gets your prompt, the system prompt, the list of tools, and the history.
+2. Claude decides what to do. It can answer with text, ask to use tools, or both.
+3. The SDK runs the tools and gives the results back to Claude.
+4. Steps 2 and 3 repeat. One full cycle is one **turn**.
+5. When Claude answers with no tool calls, the SDK gives a final result. It has the text, the token usage, and the cost.
+
+Each tool result goes back into the loop and helps Claude choose the next step <Cite n={2} />. Anthropic calls this ground truth from the environment. A test result or a command output shows the agent where it really is <Cite n={3} />.
+
+**The stop rules.** The Agent SDK has two limits <Cite n={1} />. `max_turns` limits the number of tool-use round trips. `max_budget_usd` limits the estimated spend. Both have no limit by default.
+
+The command line has the same limits: `--max-turns` and `--max-budget-usd`. They work only in print mode (`claude -p`). `--max-turns` exits with an error at the limit <Cite n={6} />.
+
+**How the loop says it ended.** The final result has a `subtype`, for example `success`, `error_max_turns`, `error_max_budget_usd`, or `error_during_execution`. Only `success` has the `result` text. Every subtype has the cost, the usage, the number of turns (`num_turns`), and the session ID <Cite n={1} />.
+
+**A check before the stop.** In Claude Code, a `Stop` hook runs when Claude finishes. It can return `decision: "block"` with a `reason`. Then Claude keeps working <Cite n={5} />. You can use this for your own "done" check, for example "the tests must pass".
+
+</Layman>
+<Bangla>
+
+Agent SDK-তে প্রতিটা session একই ধাপ মেনে চলে <Cite n={1} />:
+
+1. Claude আপনার prompt, system prompt, tool-এর তালিকা আর আগের history পায়।
+2. Claude ঠিক করে কী করবে। সে text দিয়ে উত্তর দিতে পারে, tool call চাইতে পারে, বা দুটোই।
+3. SDK tool-গুলো চালায় আর ফলাফল Claude-কে ফেরত দেয়।
+4. ধাপ 2 আর 3 বারবার চলে। একটা পুরো চক্র হলো একটা **turn**।
+5. Claude যখন কোনো tool call ছাড়া উত্তর দেয়, SDK একটা চূড়ান্ত result দেয়। তাতে text, token usage আর খরচ (cost) থাকে।
+
+প্রতিটা tool result আবার loop-এ ফেরে, আর পরের সিদ্ধান্ত নিতে সাহায্য করে <Cite n={2} />। Anthropic একে বলে environment থেকে আসা ground truth। একটা টেস্টের ফলাফল বা একটা command-এর output agent-কে দেখায় সে আসলে কোথায় আছে <Cite n={3} />।
+
+**থামার নিয়ম।** Agent SDK-তে দুটো সীমা আছে <Cite n={1} />। `max_turns` tool ব্যবহারের round trip-এর সংখ্যা সীমিত করে। `max_budget_usd` আনুমানিক খরচ সীমিত করে। ডিফল্টভাবে দুটোরই কোনো সীমা নেই।
+
+Command line-এও একই সীমা আছে: `--max-turns` আর `--max-budget-usd`। এগুলো শুধু print mode-এ (`claude -p`) কাজ করে। সীমায় পৌঁছালে `--max-turns` একটা error দিয়ে বের হয়ে যায় <Cite n={6} />।
+
+**Loop কীভাবে জানায় সে শেষ হয়েছে।** চূড়ান্ত result-এ একটা `subtype` থাকে, যেমন `success`, `error_max_turns`, `error_max_budget_usd`, বা `error_during_execution`। শুধু `success`-এ `result` text থাকে। প্রতিটা subtype-এ খরচ, usage, turn-এর সংখ্যা (`num_turns`) আর session ID থাকে <Cite n={1} />।
+
+**থামার আগে একটা যাচাই।** Claude Code-এ Claude উত্তর শেষ করলে একটা `Stop` hook চলে। এটা একটা `reason` সহ `decision: "block"` ফেরত দিতে পারে, তখন Claude কাজ চালিয়ে যায় <Cite n={5} />। এভাবে আপনি নিজের "কাজ শেষ" যাচাই যোগ করতে পারেন, যেমন "টেস্টগুলো pass করতে হবে"।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This example is invented. A team asks an agent: "Fix the failing tests in the login module." The Claude Code docs describe this kind of task: the agent runs the test suite, reads the error output, searches for the source files, reads them, edits them, and runs the tests again to verify <Cite n={2} />.
+
+```text
+turn 1  run tests          -> 3 failures         (gather context)
+turn 2  read 2 files       -> finds the cause    (gather context)
+turn 3  edit, run tests    -> 3 pass             (act + verify)
+final   text, no tool call -> loop ends          (done)
+```
+
+The Agent SDK docs give the same shape: three turns with tool calls and one final text-only turn <Cite n={1} />.
+
+The team runs the agent in CI with `claude -p --max-turns 30 --max-budget-usd 5.00`. The limits stop a run that goes nowhere. In CI, nobody is there to press Esc, which in an interactive session stops Claude at once <Cite n={2} />.
+
+The team also adds a `Stop` hook. It runs `npm test`. If the tests fail, it blocks the stop with the reason "Tests not passing". The hook checks `stop_hook_active`, because that field is `true` when Claude already continues because of a stop hook. Without this check, a hook can block on a condition that never resolves <Cite n={5} />. Claude Code also has a safety cap: after 8 stop-hook continuations in a row, it ends the turn <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+This example is invented. A team asks an agent: "Fix the failing tests in the login module." The Claude Code docs describe this kind of task. The agent runs the tests and reads the errors. It finds and reads the source files. It edits them. Then it runs the tests again to verify <Cite n={2} />.
+
+The Agent SDK docs show the same shape. There are three turns with tool calls and one last turn with only text <Cite n={1} />.
+
+The team runs the agent in CI with `claude -p --max-turns 30 --max-budget-usd 5.00`. The limits stop a run that goes nowhere. In CI, nobody can press Esc. In a normal session, Esc stops Claude at once <Cite n={2} />.
+
+The team also adds a `Stop` hook. It runs `npm test`. If the tests fail, it blocks the stop and says "Tests not passing". The hook checks `stop_hook_active`. That field is `true` when Claude already continues because of a stop hook. Without this check, a hook can keep blocking on something that never gets fixed <Cite n={5} />. Claude Code also has a safety cap. After 8 stop-hook continuations in a row, it ends the turn <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+এই উদাহরণটা বানানো। একটা টিম একটা agent-কে বলে: "login module-এর fail করা টেস্টগুলো ঠিক করো।" Claude Code docs এই ধরনের কাজের বর্ণনা দেয়। Agent টেস্ট চালায় আর error পড়ে। সে source file খুঁজে বের করে পড়ে। সে সেগুলো edit করে। তারপর যাচাই করতে আবার টেস্ট চালায় <Cite n={2} />।
+
+Agent SDK docs-ও একই আকার দেখায়। tool call সহ তিনটা turn, আর শেষে শুধু text সহ একটা turn <Cite n={1} />।
+
+টিমটা CI-তে agent চালায় `claude -p --max-turns 30 --max-budget-usd 5.00` দিয়ে। সীমাগুলো এমন run থামিয়ে দেয় যেটা কোথাও পৌঁছাচ্ছে না। CI-তে Esc চাপার কেউ নেই। সাধারণ session-এ Esc চাপলে Claude সঙ্গে সঙ্গে থেমে যায় <Cite n={2} />।
+
+টিমটা একটা `Stop` hook-ও যোগ করে। এটা `npm test` চালায়। টেস্ট fail করলে এটা থামা আটকে দেয় আর বলে "Tests not passing"। Hook-টা `stop_hook_active` যাচাই করে। Claude যখন আগে থেকেই একটা stop hook-এর কারণে কাজ চালিয়ে যাচ্ছে, তখন এই field `true` থাকে। এই যাচাই না থাকলে hook এমন একটা শর্তে আটকে থাকতে পারে যেটা কখনো মেটে না <Cite n={5} />। Claude Code-এ একটা নিরাপত্তা সীমাও আছে। পরপর 8 বার stop hook কাজ চালিয়ে নিলে সে turn শেষ করে দেয় <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **No limit on an unattended run.** Both limits are off by default. Without them, the loop runs until Claude finishes on its own, and an open-ended prompt can run long. The docs call a budget a good default for production agents <Cite n={1} />.
+- **Treating the budget as an exact wall.** Claude Code checks the spend after each model response. The response that reaches the cap still completes, so spend can pass the cap by up to the cost of that response, plus what running subagents spend before they stop. Leave headroom <Cite n={1} />.
+- **Reading `result` without the `subtype`.** The `result` text exists only on `success`. A run that hit `error_max_turns` has no final answer, so a pipeline must not report it as a pass <Cite n={1} />.
+- **Trusting "done" with no real check.** The loop ends when the model stops calling tools <Cite n={1} />. That is the model's own opinion. Clear rules, such as a linter or a test run, are the best feedback. A second model as a judge is generally not a very robust method <Cite n={4} />.
+- **A stop check that can never pass.** A `Stop` hook that always blocks keeps the agent working on a condition that never resolves. Check `stop_hook_active` <Cite n={5} />.
+- **Using an agent where a workflow is enough.** Agents trade cost for autonomy, and their errors can compound <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+- **No limit on a run that nobody watches.** Both limits are off by default. Without them, the loop runs until Claude stops by itself. A vague prompt can run for a long time. The docs say a budget is a good default for production agents <Cite n={1} />.
+- **Thinking the budget is an exact wall.** Claude Code checks the spend after each model response. The response that reaches the cap still finishes. So the spend can go past the cap by the cost of that one response, plus what running subagents spend before they stop. Leave some room <Cite n={1} />.
+- **Reading `result` without the `subtype`.** Only `success` has the `result` text. A run that hit `error_max_turns` has no final answer. A pipeline must not call it a pass <Cite n={1} />.
+- **Trusting "done" with no real check.** The loop ends when the model stops calling tools <Cite n={1} />. That is only the model's own opinion. Clear rules, such as a linter or a test run, give the best feedback. A second model as a judge is usually not very reliable <Cite n={4} />.
+- **A stop check that can never pass.** A `Stop` hook that always blocks keeps the agent stuck on something that never gets fixed. Check `stop_hook_active` <Cite n={5} />.
+- **Using an agent when a workflow is enough.** Agents cost more, and their errors can add up <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+- **কেউ দেখছে না এমন run-এ কোনো সীমা না দেওয়া।** ডিফল্টভাবে দুটো সীমাই বন্ধ। সীমা না থাকলে Claude নিজে না থামা পর্যন্ত loop চলে। অস্পষ্ট prompt অনেকক্ষণ চলতে পারে। Docs বলে, production agent-এর জন্য budget একটা ভালো ডিফল্ট <Cite n={1} />।
+- **Budget-কে একদম নিখুঁত দেয়াল ভাবা।** Claude Code প্রতিটা model response-এর পরে খরচ যাচাই করে। যে response সীমায় পৌঁছায়, সেটাও শেষ হয়। তাই খরচ ওই একটা response-এর খরচ, আর চলতে থাকা subagent-গুলো থামার আগে যা খরচ করে, সেটুকু পর্যন্ত সীমা পার হতে পারে। কিছু বাড়তি জায়গা রাখুন <Cite n={1} />।
+- **`subtype` না দেখে `result` পড়া।** শুধু `success`-এ `result` text থাকে। যে run `error_max_turns`-এ থেমেছে, তার কোনো চূড়ান্ত উত্তর নেই। Pipeline যেন একে pass না বলে <Cite n={1} />।
+- **আসল যাচাই ছাড়া "কাজ শেষ" বিশ্বাস করা।** Model tool call করা বন্ধ করলে loop শেষ হয় <Cite n={1} />। এটা শুধু model-এর নিজের মত। পরিষ্কার নিয়ম, যেমন linter বা টেস্ট run, সবচেয়ে ভালো feedback দেয়। Judge হিসেবে আরেকটা model সাধারণত খুব নির্ভরযোগ্য নয় <Cite n={4} />।
+- **এমন stop check যেটা কখনো pass করে না।** যে `Stop` hook সবসময় block করে, সেটা agent-কে এমন শর্তে আটকে রাখে যেটা কখনো মেটে না। `stop_hook_active` যাচাই করুন <Cite n={5} />।
+- **Workflow-ই যথেষ্ট, এমন জায়গায় agent ব্যবহার করা।** Agent-এর খরচ বেশি, আর তার ভুল জমে বড় হতে পারে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **It stops on success.** Give a small task that the agent can finish. Check that the result is `success` and that `num_turns` is small.
+- **It stops at the turn limit.** Give a task that cannot finish, with a low `max_turns`. Check for `error_max_turns`, no `result` text, and a non-zero exit code in CI.
+- **It stops at the budget.** Set a small `max_budget_usd`. Check for `error_max_budget_usd` and how far `total_cost_usd` went past the cap.
+- **It does not loop forever.** Make the check fail every time (for example a test that can never pass). The run must end, and the report must say it did not finish.
+- **It verifies before "done".** Read the transcript. The last action before the final answer must be a check, such as a test run, not an edit.
+- **It reports honestly.** Compare the final text with the real state. "All tests pass" must match a real green run.
+- **It handles a broken tool.** Make a tool fail or time out. The agent must try another way or stop and report, not repeat the same call.
+- **It reports cost and turns on every exit.** Each subtype must log the cost, the turns, and the session ID.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **It stops when it succeeds.** Give a small task that the agent can finish. Check that the result is `success` and that `num_turns` is small.
+- **It stops at the turn limit.** Give a task that cannot finish and a low `max_turns`. Check for `error_max_turns`, no `result` text, and an error exit code in CI.
+- **It stops at the budget.** Set a small `max_budget_usd`. Check for `error_max_budget_usd`. See how far `total_cost_usd` went past the cap.
+- **It does not loop forever.** Make the check fail every time, for example with a test that can never pass. The run must end. The report must say that the task is not done.
+- **It checks before it says "done".** Read the transcript. The last action before the final answer must be a check, such as a test run, not an edit.
+- **It tells the truth.** Compare the final text with the real state. "All tests pass" must match a real green run.
+- **It handles a broken tool.** Make a tool fail or time out. The agent must try another way, or stop and report. It must not repeat the same call again and again.
+- **It reports cost and turns every time.** Each subtype must log the cost, the turns, and the session ID.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **সফল হলে থামে।** Agent শেষ করতে পারে এমন একটা ছোট কাজ দিন। দেখুন result `success` কি না, আর `num_turns` ছোট কি না।
+- **Turn-এর সীমায় থামে।** এমন কাজ দিন যেটা শেষ হতে পারে না, আর কম `max_turns` দিন। দেখুন `error_max_turns` আসে কি না, `result` text নেই কি না, আর CI-তে error exit code আসে কি না।
+- **Budget-এ থামে।** ছোট একটা `max_budget_usd` দিন। দেখুন `error_max_budget_usd` আসে কি না। `total_cost_usd` সীমা কতটা পার হলো, সেটা দেখুন।
+- **চিরকাল loop করে না।** যাচাইটা প্রতিবার fail করান, যেমন এমন একটা টেস্ট দিয়ে যেটা কখনো pass করবে না। Run-কে শেষ হতেই হবে। রিপোর্টে বলতে হবে কাজ শেষ হয়নি।
+- **"কাজ শেষ" বলার আগে যাচাই করে।** Transcript পড়ুন। চূড়ান্ত উত্তরের আগের শেষ কাজটা একটা যাচাই হতে হবে, যেমন টেস্ট run, কোনো edit নয়।
+- **সত্যি রিপোর্ট দেয়।** চূড়ান্ত text-কে আসল অবস্থার সঙ্গে মিলিয়ে দেখুন। "সব টেস্ট pass" কথাটা একটা আসল সবুজ run-এর সঙ্গে মিলতে হবে।
+- **নষ্ট tool সামলায়।** একটা tool fail বা timeout করান। Agent-কে অন্য উপায় চেষ্টা করতে হবে, বা থেমে রিপোর্ট দিতে হবে। একই call বারবার করা চলবে না।
+- **প্রতিবার খরচ আর turn রিপোর্ট করে।** প্রতিটা subtype-এ খরচ, turn আর session ID log হতে হবে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Agentic loop | The cycle an agent repeats: gather context, take action, verify, and go again. |
+| Agent | A system in which the model directs its own steps and tool use. |
+| Workflow | A system in which code sets the path of the model and the tools. |
+| Turn | One round trip: tool calls, the tools run, and the results go back to the model. |
+| Stop rule | What ends the loop: a response with no tool calls, a limit, an error, or the user. |
+| `max_turns` | The Agent SDK limit on tool-use round trips. Off by default. |
+| `max_budget_usd` | The Agent SDK limit on estimated spend. Off by default. |
+| Result subtype | The end state of a run, for example `success` or `error_max_turns`. |
+| `Stop` hook | A Claude Code hook that runs when Claude finishes and can make it keep working. |
+| Ground truth | Real feedback from the environment, such as a test result or a command output. |

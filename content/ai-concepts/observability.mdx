@@ -1,0 +1,304 @@
+export const metadata = { title: 'Observability for AI Agents', description: 'Trace every step of an agent run, and fix problems with evidence.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Observability primer', publisher: 'OpenTelemetry', url: 'https://opentelemetry.io/docs/concepts/observability-primer/', accessed: '2026-10-28' },
+    { title: 'Signals', publisher: 'OpenTelemetry', url: 'https://opentelemetry.io/docs/concepts/signals/', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for generative AI systems', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/README.md', accessed: '2026-10-28' },
+    { title: 'Semantic Conventions for GenAI agent and framework spans', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-agent-spans.md', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for generative client AI spans', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for generative AI metrics', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for Generative AI events', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-events.md', accessed: '2026-10-28' },
+    { title: 'Versioning and stability for OpenTelemetry clients', publisher: 'OpenTelemetry', url: 'https://opentelemetry.io/docs/specs/otel/versioning-and-stability/', accessed: '2026-10-28' },
+    { title: 'Monitoring', publisher: 'Claude Code Docs (Anthropic)', url: 'https://code.claude.com/docs/en/monitoring-usage', accessed: '2026-10-28' },
+    { title: 'Demystifying evals for AI agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents', accessed: '2026-10-28' },
+  ],
+}
+
+# Observability for AI Agents
+
+An AI agent does many steps before it gives an answer: it calls a model, runs tools, and calls the model again. When the result is wrong, the final answer alone does not tell you which step failed. Observability records each step, so you can find the cause with evidence and not with guesses.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Observability** lets you understand a system from the outside <Cite n={1} />. You get it from **telemetry**: the data that a system emits about its behavior <Cite n={1} />. OpenTelemetry supports four signals: traces, metrics, logs, and baggage <Cite n={2} />. This page uses the first three:
+
+- A **trace** is the path of one request through your application <Cite n={2} />. It is made of **spans**. A span is one unit of work <Cite n={1} />.
+- A **metric** is a measurement captured at run time, such as a duration or a count <Cite n={2} />.
+- A **log** is a timestamped message about an event <Cite n={1} />.
+
+For an AI agent, one request is one **agent run**. The trace of the run shows each model call and each tool call as its own span, in order and with its duration. A transcript of an agent run is the complete record of the run: its outputs, tool calls, reasoning, and intermediate results <Cite n={10} />. A trace is the structured, searchable form of that record.
+
+OpenTelemetry has **semantic conventions for generative AI**: standard names for the spans, metrics, and events of model calls and agents <Cite n={3} />. Their status is **Development**, not Stable <Cite n={3} />. In Development, breaking changes can occur <Cite n={8} />, so names can still change.
+
+</Technical>
+<Layman>
+
+**Observability** means you can understand a system from the outside <Cite n={1} />. You get it from **telemetry**. Telemetry is the data that a system sends out about what it does <Cite n={1} />. OpenTelemetry supports four kinds of data (signals): traces, metrics, logs, and baggage <Cite n={2} />. This page uses the first three:
+
+- A **trace** shows the path of one request through your app <Cite n={2} />. A trace is made of **spans**. A span is one piece of work <Cite n={1} />.
+- A **metric** is a number measured while the app runs, such as a time or a count <Cite n={2} />.
+- A **log** is a message with a time stamp about one event <Cite n={1} />.
+
+For an AI agent, one request is one **agent run**. The trace of the run shows each model call and each tool call as its own span. You see them in order, and you see how long each one took. A transcript of an agent run is the full record of the run. It has the outputs, the tool calls, the reasoning, and the results in between <Cite n={10} />. A trace keeps that record in a form that you can search.
+
+OpenTelemetry has standard names for the data of model calls and agents <Cite n={3} />. These names are still in **Development**, not Stable <Cite n={3} />. In Development, changes that break things can happen <Cite n={8} />. So the names can still change.
+
+</Layman>
+<Bangla>
+
+**Observability** মানে বাইরে থেকে একটা সিস্টেমকে বুঝতে পারা <Cite n={1} />। এটা আসে **telemetry** থেকে। Telemetry হলো সেই ডেটা, যা একটা সিস্টেম তার কাজের ব্যাপারে বাইরে পাঠায় <Cite n={1} />। OpenTelemetry চারটা সিগন্যাল (signal) সাপোর্ট করে: trace, metric, log, আর baggage <Cite n={2} />। এই পেজে প্রথম তিনটা নিয়ে কথা হবে:
+
+- একটা **trace** আপনার অ্যাপের ভেতর দিয়ে একটা রিকোয়েস্টের পুরো পথ দেখায় <Cite n={2} />। Trace তৈরি হয় অনেকগুলো **span** দিয়ে। একটা span হলো কাজের একটা একক <Cite n={1} />।
+- একটা **metric** হলো অ্যাপ চলার সময় মাপা একটা সংখ্যা, যেমন সময় বা গণনা <Cite n={2} />।
+- একটা **log** হলো একটা ঘটনা নিয়ে সময়সহ একটা মেসেজ <Cite n={1} />।
+
+একটা AI agent-এর জন্য একটা রিকোয়েস্ট মানে একটা **agent run**। এই run-এর trace প্রতিটা model call আর প্রতিটা tool call-কে আলাদা span হিসেবে দেখায়। আপনি এগুলো ক্রম অনুযায়ী দেখতে পান, আর কোনটায় কত সময় লেগেছে তাও দেখেন। একটা agent run-এর transcript হলো সেই run-এর পুরো রেকর্ড: আউটপুট, tool call, reasoning, আর মাঝের ফলাফল <Cite n={10} />। Trace সেই রেকর্ডকে এমনভাবে রাখে, যাতে আপনি খুঁজে দেখতে পারেন।
+
+OpenTelemetry-তে model call আর agent-এর ডেটার জন্য স্ট্যান্ডার্ড নাম আছে <Cite n={3} />। এই নামগুলো এখনো **Development** অবস্থায়, Stable না <Cite n={3} />। Development অবস্থায় ভেঙে দেওয়ার মতো পরিবর্তন (breaking change) হতে পারে <Cite n={8} />। তাই নামগুলো এখনো বদলাতে পারে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**1. The agent run becomes a tree of spans.** The OpenTelemetry GenAI conventions name the operations. `invoke_agent` is one agent invocation, `chat` is one chat model call, and `execute_tool` is one tool call <Cite n={5} />. The agent span is named `invoke_agent {gen_ai.agent.name}` <Cite n={4} />, and a tool span is named `execute_tool {gen_ai.tool.name}` <Cite n={5} />:
+
+```text
+invoke_agent test-fixer                one agent run (root span)
+├── chat <model>                       step 1: the model plans
+├── execute_tool read_file             step 2: a tool call
+├── chat <model>                       step 3: the model reads the result
+└── execute_tool run_tests             step 4: a tool call, error.type if it fails
+```
+
+**2. Each span carries attributes.** An agent span can record `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens` <Cite n={4} />. If the operation ends in an error, the span gets `error.type` <Cite n={4} />. A tool span must have `gen_ai.tool.name` <Cite n={5} />.
+
+**3. Metrics sum up many runs.** The conventions define `gen_ai.invoke_agent.duration` (the end-to-end time of one agent run), `gen_ai.invoke_agent.tool_calls` (the tool calls in one run), and `gen_ai.execute_tool.duration` (the time of one tool call) <Cite n={6} />.
+
+**4. Feedback becomes an event.** The `gen_ai.evaluation.result` event records the result of an evaluation of a model output, with a score or a label such as `pass` or `fail` <Cite n={7} />.
+
+**5. A backend shows it all.** You send the data to a tracing or metrics backend, and you query it there.
+
+**Cost is not a standard GenAI metric.** The GenAI metrics list has no cost metric <Cite n={6} />. Some tools add their own. Claude Code is one example. It exports metrics, events, and, as an option, traces through OpenTelemetry <Cite n={9} />. You turn it on with `CLAUDE_CODE_ENABLE_TELEMETRY=1` <Cite n={9} />. Its metrics include `claude_code.token.usage` and `claude_code.cost.usage` (in USD) <Cite n={9} />. Each `api_request` event has `cost_usd`, an estimated cost <Cite n={9} />. All events of one user prompt share one `prompt.id` <Cite n={9} />. Tracing is beta and off by default. It also needs `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and `OTEL_TRACES_EXPORTER` <Cite n={9} />. Each prompt then starts a `claude_code.interaction` root span, with API calls and tool calls as its children <Cite n={9} />.
+
+</Technical>
+<Layman>
+
+**1. The agent run becomes a tree of spans.** OpenTelemetry gives each kind of step a name. `invoke_agent` is one run of an agent. `chat` is one call to a chat model. `execute_tool` is one tool call <Cite n={5} />. The agent span is named `invoke_agent` plus the agent name <Cite n={4} />. A tool span is named `execute_tool` plus the tool name <Cite n={5} />. In the tree, the agent run is at the top. Steps 1 and 3 are model calls. Steps 2 and 4 are tool calls.
+
+**2. Each span carries details.** An agent span can record how many tokens went in and how many came out <Cite n={4} />. If the step ends in an error, the span gets `error.type` <Cite n={4} />. A tool span must have the name of the tool <Cite n={5} />.
+
+**3. Metrics sum up many runs.** There are standard metrics for the full time of one agent run, the number of tool calls in one run, and the time of one tool call <Cite n={6} />.
+
+**4. Feedback becomes an event.** The `gen_ai.evaluation.result` event records how an output was graded. It has a score or a label such as `pass` or `fail` <Cite n={7} />.
+
+**5. A backend shows it all.** You send the data to a tool that stores traces or metrics. You search it there.
+
+**Cost is not a standard metric.** The standard list of GenAI metrics has no cost metric <Cite n={6} />. Some tools add their own. Claude Code is one example. It sends metrics, events, and, if you want, traces through OpenTelemetry <Cite n={9} />. You turn it on with `CLAUDE_CODE_ENABLE_TELEMETRY=1` <Cite n={9} />. It counts tokens (`claude_code.token.usage`) and cost in USD (`claude_code.cost.usage`) <Cite n={9} />. Each `api_request` event has `cost_usd`. This is an estimate <Cite n={9} />. All events of one prompt share one `prompt.id` <Cite n={9} />. Tracing is beta and off by default. It also needs `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and `OTEL_TRACES_EXPORTER` <Cite n={9} />. Then each prompt starts a top span, `claude_code.interaction`. The API calls and tool calls sit under it <Cite n={9} />.
+
+</Layman>
+<Bangla>
+
+**১. Agent run একটা span-এর ট্রি হয়ে যায়।** OpenTelemetry প্রতিটা ধাপের একটা নাম দেয়। `invoke_agent` মানে agent-এর একটা run। `chat` মানে একটা chat model-কে একবার কল করা। `execute_tool` মানে একটা tool call <Cite n={5} />। Agent span-এর নাম হয় `invoke_agent` আর তার পরে agent-এর নাম <Cite n={4} />। Tool span-এর নাম হয় `execute_tool` আর তার পরে tool-এর নাম <Cite n={5} />। ট্রি-র মাথায় থাকে agent run। ধাপ ১ আর ৩ হলো model call। ধাপ ২ আর ৪ হলো tool call।
+
+**২. প্রতিটা span-এ তথ্য থাকে।** একটা agent span-এ লেখা থাকতে পারে কত token ঢুকেছে আর কত token বের হয়েছে <Cite n={4} />। কোনো ধাপ error-এ শেষ হলে span-এ `error.type` বসে <Cite n={4} />। একটা tool span-এ tool-এর নাম থাকতেই হবে <Cite n={5} />।
+
+**৩. Metric অনেকগুলো run-এর হিসাব দেয়।** একটা agent run-এর পুরো সময়, একটা run-এ কয়টা tool call হলো, আর একটা tool call-এর সময়ের জন্য স্ট্যান্ডার্ড metric আছে <Cite n={6} />।
+
+**৪. Feedback একটা event হয়ে যায়।** `gen_ai.evaluation.result` event রেকর্ড করে একটা আউটপুটকে কীভাবে মূল্যায়ন করা হলো। এতে একটা score বা `pass` বা `fail`-এর মতো একটা label থাকে <Cite n={7} />।
+
+**৫. একটা backend সব দেখায়।** আপনি ডেটা এমন একটা টুলে পাঠান, যেটা trace বা metric জমা রাখে। সেখানে আপনি খুঁজে দেখেন।
+
+**Cost স্ট্যান্ডার্ড metric না।** GenAI metric-এর স্ট্যান্ডার্ড তালিকায় cost-এর কোনো metric নেই <Cite n={6} />। কিছু টুল নিজেরা এটা যোগ করে। Claude Code তার একটা উদাহরণ। এটা OpenTelemetry দিয়ে metric, event, আর চাইলে trace পাঠায় <Cite n={9} />। আপনি এটা চালু করেন `CLAUDE_CODE_ENABLE_TELEMETRY=1` দিয়ে <Cite n={9} />। এটা token গোনে (`claude_code.token.usage`) আর USD-তে cost গোনে (`claude_code.cost.usage`) <Cite n={9} />। প্রতিটা `api_request` event-এ `cost_usd` থাকে। এটা একটা আনুমানিক হিসাব <Cite n={9} />। একটা prompt-এর সব event-এর `prompt.id` একই <Cite n={9} />। Tracing এখনো beta, আর ডিফল্টভাবে বন্ধ। এর জন্য `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` আর `OTEL_TRACES_EXPORTER`-ও লাগে <Cite n={9} />। তখন প্রতিটা prompt একটা উপরের span, `claude_code.interaction`, শুরু করে। API call আর tool call তার নিচে থাকে <Cite n={9} />।
+
+</Bangla>
+</Voices>
+
+## Trade-offs
+
+<Voices>
+<Technical>
+
+The most useful data for debugging is also the most dangerous to store. Model instructions, user messages, and model outputs are sensitive <Cite n={5} />. The input messages of an agent span are likely to contain user and personal data <Cite n={4} />. So the conventions say: do not capture them by default, and give users an option to opt in <Cite n={5} />. Tool call arguments and tool results are also opt-in <Cite n={5} />. For production, the conventions recommend storing the content outside the telemetry and recording only a reference, when sensitive data needs secure handling <Cite n={5} />.
+
+Claude Code follows the same idea. Prompt text is redacted by default (`OTEL_LOG_USER_PROMPTS`) <Cite n={9} />. Tool details are off by default (`OTEL_LOG_TOOL_DETAILS`), and the docs warn that arguments can still contain sensitive values <Cite n={9} />.
+
+The cost of this choice: a trace without content shows *which* step failed, but not always *why*. Decide per environment. A test environment with fake data can record more than production can.
+
+</Technical>
+<Layman>
+
+The data that helps you most when you debug is also the most risky to keep. The instructions to the model, the messages of users, and the answers of the model are sensitive <Cite n={5} />. The input messages of an agent run will likely contain user data and personal data <Cite n={4} />. So the standard says: do not record them by default, and let users turn it on if they want <Cite n={5} />. The inputs and results of tool calls are also off until you turn them on <Cite n={5} />. In production, when sensitive data needs safe handling, the standard says to keep the content in a separate store and put only a link to it in the telemetry <Cite n={5} />.
+
+Claude Code does the same. It hides the text of prompts by default (`OTEL_LOG_USER_PROMPTS`) <Cite n={9} />. Tool details are off by default (`OTEL_LOG_TOOL_DETAILS`). The docs warn that tool inputs can still contain sensitive values <Cite n={9} />.
+
+The price: a trace without content shows *which* step failed, but not always *why*. Choose for each environment. A test environment with fake data can record more than production can.
+
+</Layman>
+<Bangla>
+
+Debug করার সময় যে ডেটা সবচেয়ে কাজে লাগে, সেটা জমা রাখাই সবচেয়ে ঝুঁকির। Model-এর instruction, ইউজারের মেসেজ, আর model-এর আউটপুট সংবেদনশীল (sensitive) <Cite n={5} />। একটা agent span-এর input message-এ সম্ভবত ইউজারের ডেটা আর ব্যক্তিগত ডেটা (PII) থাকবে <Cite n={4} />। তাই স্ট্যান্ডার্ড বলে: ডিফল্টভাবে এগুলো রেকর্ড করবেন না, আর ইউজার চাইলে চালু করার একটা অপশন দিন <Cite n={5} />। Tool call-এর input আর ফলাফলও আপনি চালু না করা পর্যন্ত বন্ধ থাকে <Cite n={5} />। Production-এ sensitive ডেটা নিরাপদে রাখতে হলে স্ট্যান্ডার্ড বলে, কনটেন্ট আলাদা জায়গায় রাখুন আর telemetry-তে শুধু তার একটা রেফারেন্স রাখুন <Cite n={5} />।
+
+Claude Code-ও একই কাজ করে। ডিফল্টভাবে এটা prompt-এর লেখা লুকিয়ে রাখে (`OTEL_LOG_USER_PROMPTS`) <Cite n={9} />। Tool-এর বিস্তারিত ডিফল্টভাবে বন্ধ (`OTEL_LOG_TOOL_DETAILS`)। Docs সতর্ক করে যে tool-এর input-এ তবুও sensitive মান থাকতে পারে <Cite n={9} />।
+
+এর দাম হলো: কনটেন্ট ছাড়া একটা trace দেখায় *কোন* ধাপ fail করেছে, কিন্তু সবসময় *কেন* তা দেখায় না। প্রতিটা এনভায়রনমেন্টের জন্য আলাদা করে ঠিক করুন। ভুয়া ডেটার একটা টেস্ট এনভায়রনমেন্ট production-এর চেয়ে বেশি রেকর্ড করতে পারে।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This is an invented example. A team runs a test-automation agent in CI. Its job: when a UI test fails, read the test, fix the locator, and run the test again. One night the agent reports "fixed", but the test still fails the next morning.
+
+The final answer says nothing useful. The trace of the run does:
+
+```text
+invoke_agent test-fixer                     41 s
+├── chat <model>                             3 s
+├── execute_tool read_file                 0.1 s
+├── chat <model>                             4 s
+├── execute_tool edit_file                 0.1 s
+└── execute_tool run_tests                  30 s   error.type=timeout
+```
+
+The tester sees three facts at once. The edit happened. The test run ended in an error, not a pass, because the tool span has `error.type` <Cite n={5} />. And no `chat` span follows the failed `run_tests` span, so the agent wrote its "fixed" report without reading the test result. The bug is in the agent loop, not in the locator.
+
+The team then does two things. They add a check to the agent: no "fixed" report without a passing test run. And they turn this run into an eval case, because user-reported failures that become test cases keep an eval suite close to real use <Cite n={10} />.
+
+</Technical>
+<Layman>
+
+This is an invented example. A team runs a test-automation agent in CI. Its job is this: when a UI test fails, read the test, fix the locator, and run the test again. One night the agent says "fixed". But the next morning the test still fails.
+
+The final answer does not help. The trace of the run does. It shows five steps under the agent run: a model call, a file read, a model call, a file edit, and a test run. The test run took 30 seconds and has `error.type=timeout`.
+
+The tester sees three facts at once. The edit happened. The test run ended in an error, not a pass, because the tool span has `error.type` <Cite n={5} />. And no model call comes after the failed test run. So the agent said "fixed" without reading the test result. The bug is in the agent loop, not in the locator.
+
+The team then does two things. They add a rule to the agent: no "fixed" report without a test run that passes. And they turn this run into an eval case. When failures that users report become test cases, the eval suite stays close to real use <Cite n={10} />.
+
+</Layman>
+<Bangla>
+
+এটা একটা বানানো উদাহরণ। একটা টিম CI-তে একটা test-automation agent চালায়। এর কাজ হলো: কোনো UI টেস্ট fail করলে টেস্টটা পড়া, locator ঠিক করা, আর টেস্টটা আবার চালানো। এক রাতে agent জানায় "fixed"। কিন্তু পরের সকালেও টেস্টটা fail করে।
+
+শেষ উত্তরটা কোনো কাজে আসে না। Run-এর trace কাজে আসে। এটা agent run-এর নিচে পাঁচটা ধাপ দেখায়: একটা model call, একটা ফাইল পড়া, একটা model call, একটা ফাইল এডিট, আর একটা টেস্ট রান। টেস্ট রানে ৩০ সেকেন্ড লেগেছে, আর এতে `error.type=timeout` আছে।
+
+টেস্টার একসাথে তিনটা জিনিস দেখেন। এডিট হয়েছে। টেস্ট রান pass না করে error-এ শেষ হয়েছে, কারণ tool span-এ `error.type` আছে <Cite n={5} />। আর fail করা টেস্ট রানের পরে কোনো model call নেই। মানে agent টেস্টের ফলাফল না পড়েই "fixed" বলেছে। Bug-টা agent-এর loop-এ, locator-এ না।
+
+তারপর টিম দুটো কাজ করে। তারা agent-এ একটা নিয়ম যোগ করে: টেস্ট pass না করলে "fixed" রিপোর্ট নয়। আর তারা এই run-টাকে একটা eval case বানায়। ইউজারের জানানো fail-গুলো test case হলে eval suite আসল ব্যবহারের কাছাকাছি থাকে <Cite n={10} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Only the final answer is logged.** Then you cannot see which step failed. A transcript needs the tool calls and intermediate results too <Cite n={10} />.
+- **Some tool calls are not traced.** Automatic instrumentation does not cover every tool. The conventions ask developers to instrument by hand the tool calls that it misses <Cite n={5} />. A missing span looks like a step that never happened.
+- **Prompts and tool inputs are logged in production with no review.** They are sensitive and can hold personal data <Cite n={5} /> <Cite n={4} />. Also, with OAuth sign-in, Claude Code puts `user.email` in its telemetry attributes <Cite n={9} />. Check what your backend stores and who can read it.
+- **The cost number is treated as the bill.** In Claude Code, `cost_usd` is an estimate <Cite n={9} />. Use the provider's billing for money; use telemetry to spot trends.
+- **The GenAI names are treated as stable.** They are in Development <Cite n={3} />, and breaking changes can occur <Cite n={8} />. Pin the version you depend on, and check dashboards after an upgrade.
+- **Traces are collected but never read.** Anthropic's advice for evals is to read the transcripts; you cannot know if graders work otherwise <Cite n={10} />.
+
+</Technical>
+<Layman>
+
+- **Only the final answer is logged.** Then you cannot see which step failed. A transcript needs the tool calls and the results in between too <Cite n={10} />.
+- **Some tool calls are not traced.** Automatic tools do not cover every tool call. The standard asks developers to add the missing ones by hand <Cite n={5} />. A missing span looks like a step that never happened.
+- **Prompts and tool inputs are logged in production with no review.** They are sensitive and can hold personal data <Cite n={5} /> <Cite n={4} />. Also, when you sign in with OAuth, Claude Code puts `user.email` in its telemetry <Cite n={9} />. Check what your backend keeps and who can read it.
+- **The cost number is treated as the bill.** In Claude Code, `cost_usd` is an estimate <Cite n={9} />. Use the bill of the provider for money. Use telemetry to see trends.
+- **The standard names are treated as fixed.** They are in Development <Cite n={3} />, and changes that break things can happen <Cite n={8} />. Pin the version you use. Check your dashboards after an upgrade.
+- **Traces are collected but nobody reads them.** Anthropic's advice for evals is to read the transcripts. Otherwise you cannot know if the graders work <Cite n={10} />.
+
+</Layman>
+<Bangla>
+
+- **শুধু শেষ উত্তর log করা হয়।** তখন কোন ধাপ fail করেছে তা দেখা যায় না। একটা transcript-এ tool call আর মাঝের ফলাফলও লাগে <Cite n={10} />।
+- **কিছু tool call trace করা হয় না।** অটোমেটিক instrumentation সব tool call ধরে না। স্ট্যান্ডার্ড বলে, যেগুলো বাদ পড়ে সেগুলো ডেভেলপার নিজে হাতে যোগ করবেন <Cite n={5} />। একটা span না থাকলে মনে হয় ধাপটা কখনো হয়ইনি।
+- **কোনো রিভিউ ছাড়াই production-এ prompt আর tool input log করা হয়।** এগুলো sensitive, আর এতে ব্যক্তিগত ডেটা থাকতে পারে <Cite n={5} /> <Cite n={4} />। তাছাড়া OAuth দিয়ে sign in করলে Claude Code তার telemetry-তে `user.email` রাখে <Cite n={9} />। আপনার backend কী জমা রাখে আর কে তা পড়তে পারে, দেখে নিন।
+- **Cost-এর সংখ্যাকে বিল ধরে নেওয়া হয়।** Claude Code-এ `cost_usd` একটা আনুমানিক হিসাব <Cite n={9} />। টাকার হিসাবের জন্য provider-এর বিল দেখুন। Telemetry দিয়ে ট্রেন্ড দেখুন।
+- **স্ট্যান্ডার্ড নামগুলোকে স্থায়ী ধরে নেওয়া হয়।** এগুলো Development অবস্থায় আছে <Cite n={3} />, আর breaking change হতে পারে <Cite n={8} />। আপনি যে ভার্সন ব্যবহার করেন সেটা পিন করুন। আপগ্রেডের পরে dashboard চেক করুন।
+- **Trace জমা হয়, কিন্তু কেউ পড়ে না।** Eval নিয়ে Anthropic-এর পরামর্শ হলো transcript পড়া। না পড়লে grader ঠিকমতো কাজ করছে কিনা আপনি জানতে পারবেন না <Cite n={10} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a quote from a source.
+
+- **Debug from the trace.** When an agent test fails, open the trace of that run first. Find the first span with an error, and the first step where the agent went the wrong way.
+- **Every tool call has a span.** Run a scenario that uses each tool one time. Count the tool spans and compare with the tools that ran.
+- **Errors are marked.** Force a tool to fail (a timeout, a bad file path). Check that the span shows the error and that the run does not report success.
+- **No secrets in telemetry.** Put a fake API key, a fake password, and a fake email in a prompt and in a tool input. Search the backend for each value. Repeat with the content-logging options on and off.
+- **Token and cost numbers add up.** Compare the token counts in the telemetry with the usage that the model provider reports for the same runs.
+- **One run, one trace.** Check that all model calls and tool calls of one run, also the ones of a subagent, are in the same trace.
+- **Failures feed the evals.** Take each failed production trace, remove the personal data, and add it to the eval suite as a test case with the expected result.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a quote from a source.
+
+- **Debug from the trace.** When an agent test fails, open the trace of that run first. Find the first step with an error. Find the first step where the agent went the wrong way.
+- **Every tool call has a span.** Run a test that uses each tool one time. Count the tool spans. Compare them with the tools that ran.
+- **Errors are marked.** Make a tool fail on purpose, for example with a timeout or a bad file path. Check that the span shows the error. Check that the run does not say it passed.
+- **No secrets in telemetry.** Put a fake API key, a fake password, and a fake email in a prompt and in a tool input. Search the backend for each one. Do it again with content logging on and off.
+- **Token and cost numbers add up.** Compare the token counts in the telemetry with the usage that the model provider shows for the same runs.
+- **One run, one trace.** Check that all model calls and tool calls of one run are in the same trace. This includes the calls of a subagent.
+- **Failures feed the evals.** Take each failed trace from production. Remove the personal data. Add it to the eval suite as a test case with the expected result.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো সোর্সের উদ্ধৃতি না।
+
+- **Trace দেখে debug করুন।** একটা agent টেস্ট fail করলে আগে সেই run-এর trace খুলুন। Error আছে এমন প্রথম ধাপটা খুঁজুন। Agent প্রথম কোন ধাপে ভুল পথে গেছে, সেটা খুঁজুন।
+- **প্রতিটা tool call-এর একটা span আছে।** এমন একটা টেস্ট চালান, যেটা প্রতিটা tool একবার করে ব্যবহার করে। Tool span গুনুন। যেসব tool চলেছে তার সাথে মিলিয়ে দেখুন।
+- **Error চিহ্নিত হয়।** ইচ্ছা করে একটা tool fail করান, যেমন timeout বা ভুল ফাইল path দিয়ে। দেখুন span-এ error দেখাচ্ছে কিনা। দেখুন run নিজেকে pass বলছে না।
+- **Telemetry-তে কোনো secret নেই।** একটা prompt আর একটা tool input-এ একটা ভুয়া API key, ভুয়া password, আর ভুয়া email দিন। Backend-এ প্রতিটা খুঁজুন। কনটেন্ট logging চালু আর বন্ধ করে আবার করুন।
+- **Token আর cost-এর হিসাব মেলে।** একই run-গুলোর জন্য telemetry-র token সংখ্যা model provider-এর দেখানো usage-এর সাথে মিলিয়ে দেখুন।
+- **এক run, এক trace।** দেখুন একটা run-এর সব model call আর tool call একই trace-এ আছে কিনা। Subagent-এর call-ও এর মধ্যে পড়ে।
+- **Fail-গুলো eval-এ যায়।** Production-এর প্রতিটা fail করা trace নিন। ব্যক্তিগত ডেটা সরিয়ে ফেলুন। প্রত্যাশিত ফলাফলসহ test case হিসেবে eval suite-এ যোগ করুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Observability | The ability to understand a system from the outside, from the data it emits |
+| Telemetry | The data that a system emits about its behavior |
+| Trace | The path of one request, for example one agent run, as a tree of spans |
+| Span | One unit of work in a trace, for example one model call or one tool call |
+| Metric | A measurement taken at run time, such as a duration, a count, or a token total |
+| Log / event | A timestamped record of one thing that happened |
+| `invoke_agent` / `execute_tool` | The OpenTelemetry GenAI operation names for one agent run and one tool call |
+| `error.type` | The span attribute that names the class of error when a step fails |
+| Opt-in content | Prompts, outputs, and tool inputs that telemetry records only if you turn it on |
+| Transcript | The full record of one agent run: outputs, tool calls, reasoning, and intermediate results |
+| Eval case | A test for an AI system; a failed production trace can become one |

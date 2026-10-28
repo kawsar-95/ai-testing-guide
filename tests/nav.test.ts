@@ -18,7 +18,8 @@ const mdxFiles = readdirSync(new URL("../content", import.meta.url), { recursive
       !file.startsWith("fundamentals/") &&
       !file.startsWith("architecture/") &&
       !file.startsWith("course/") &&
-      !file.startsWith("k6/"),
+      !file.startsWith("k6/") &&
+      !file.startsWith("ai-concepts/"),
   )
   .map((file) => file.replace(/\.mdx$/, ""))
   .sort();

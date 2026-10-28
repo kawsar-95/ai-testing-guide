@@ -1,0 +1,318 @@
+export const metadata = { title: 'Evals', description: 'Grade the whole agent run, not just the final answer, with code checks, model judges, and human review.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Demystifying evals for AI agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents', accessed: '2026-10-28' },
+    { title: 'Define success criteria and build evaluations', publisher: 'Claude Developer Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/test-and-evaluate/develop-tests', accessed: '2026-10-28' },
+    { title: 'Evaluate agent workflows', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/agent-evals', accessed: '2026-10-28' },
+    { title: 'AI RMF Core (AI Risk Management Framework 1.0, section 5)', publisher: 'NIST', url: 'https://airc.nist.gov/airmf-resources/airmf/5-sec-core/', accessed: '2026-10-28' },
+  ],
+}
+
+# Evals
+
+You already know this idea. A test case has an input and an expected result, and an oracle says pass or fail. An eval is the same idea for an AI system. The hard part is that the AI does not give the same answer every time, so one green run proves little.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **eval** is a test for an AI system: you give it an input, then you apply grading logic to its output to measure success <Cite n={1} />. For an agent, the parts have names <Cite n={1} />:
+
+| Eval word | Meaning | QA word you know |
+|---|---|---|
+| Task | One test with defined inputs and success criteria | Test case |
+| Trial | One attempt at a task | One test run |
+| Grader | Logic that scores one aspect of the run | Oracle or assertion |
+| Transcript (trace) | The complete record of a trial | Test log |
+| Outcome | The final state of the environment at the end | The state you assert on |
+| Harness | The system that runs evals end to end | Test runner |
+
+The difference from a normal test is that model outputs vary between runs <Cite n={1} />. So you run each task more than once and you report a rate, not one result.
+
+An eval also needs clear success criteria. They must be specific, measurable, achievable, and relevant, and most uses need several criteria at once, for example task fidelity, consistency, privacy, latency, and price <Cite n={2} />. NIST's AI Risk Management Framework says AI systems should be tested before deployment and regularly while in operation <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+An **eval** is a test for an AI system. You give it an input. Then a check looks at the output and decides if it is good <Cite n={1} />. For an agent, a **task** is one test case. A **trial** is one attempt at the task. A **grader** is the check, like an oracle. A **transcript** or **trace** is the full record of one attempt, like a test log. The **outcome** is the final state at the end. The **harness** runs it all, like a test runner <Cite n={1} />.
+
+The AI can give a different output each time you run it <Cite n={1} />. So you run each task more than once and you count how often it passes.
+
+You also need clear goals. A goal must be specific and measurable. Most systems need several goals at once, such as correct work, steady results, privacy, speed, and price <Cite n={2} />. NIST says to test an AI system before it goes live and again and again while it runs <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+**eval** হলো একটা AI সিস্টেমের টেস্ট। আপনি একটা input দেন, তারপর grading logic দিয়ে output দেখে ঠিক করেন সেটা সফল কি না <Cite n={1} />। agent-এর ক্ষেত্রে **task** মানে একটা টেস্ট কেস। **trial** মানে task-এর একবারের চেষ্টা। **grader** হলো চেক, অনেকটা oracle-এর মতো। **transcript** বা **trace** হলো একবারের চেষ্টার পুরো রেকর্ড, অনেকটা টেস্ট লগের মতো। **outcome** হলো শেষে environment-এর অবস্থা। **harness** পুরো কাজটা চালায়, অনেকটা test runner-এর মতো <Cite n={1} />।
+
+একই input-এ AI প্রতিবার আলাদা output দিতে পারে <Cite n={1} />। তাই প্রতিটা task আপনি একাধিকবার চালাবেন, আর কতবার পাস করল সেটা গুনবেন।
+
+আপনার পরিষ্কার লক্ষ্যও দরকার। লক্ষ্য হতে হবে নির্দিষ্ট আর মাপা যায় এমন। বেশিরভাগ সিস্টেমে একসাথে কয়েকটা লক্ষ্য লাগে, যেমন কাজ ঠিক হওয়া, ধারাবাহিকতা, privacy, latency, আর দাম <Cite n={2} />। NIST বলে, AI সিস্টেম চালু করার আগে টেস্ট করতে হবে, আর চালু থাকার সময়ও নিয়মিত টেস্ট করতে হবে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+A simple eval loop for an agent looks like this:
+
+```text
+golden set of real tasks (20-50 to start)
+        |
+        v
+harness: clean environment --> agent runs --> transcript (trace) + outcome
+        |                                       |
+        |              +------------------------+------------------+
+        |              v                        v                  v
+        |        code check               model judge        human spot-check
+        |      (state, tests, rules)     (rubric, score)    (calibrate judges)
+        |              +------------------------+------------------+
+        v                                       v
+repeat each task k times  ------------->  pass rate, pass@k, pass^k,
+                                          cost, latency, tokens
+```
+
+**Start small.** About 20 to 50 simple tasks drawn from real failures is a good start <Cite n={1} />. Mirror your real task mix, and add edge cases: missing or irrelevant input, very long input, harmful input, and cases where even people would disagree <Cite n={2} />.
+
+**Isolate each trial.** Each trial should start from a clean environment <Cite n={1} />, like a test that resets its database.
+
+**Use three kinds of grader** <Cite n={1} />:
+
+- A **code-based** grader is fast, cheap, objective, and reproducible, but it breaks on valid answers that do not match the expected pattern.
+- A **model-based** grader (an LLM judge) is flexible and catches nuance, but it is non-deterministic and needs calibration against human graders.
+- A **human** grader is the gold standard, but it is slow and expensive.
+
+For an LLM judge, give it a detailed rubric, ask for a specific output such as only "correct" or "incorrect" or a 1-5 score, and let it reason before it scores <Cite n={2} />. It is best practice to grade with a different model from the one that made the output <Cite n={2} />.
+
+**Grade the trace.** A trace records the model calls, tool calls, guardrails, and handoffs of one run <Cite n={3} />. Trace grading can check if the agent picked the right tool and if it broke an instruction or a safety policy <Cite n={3} />. But do not demand one exact path: it is often better to grade what the agent produced, not the path it took <Cite n={1} />. When you know what good looks like, move from single traces to repeatable datasets and eval runs <Cite n={3} />.
+
+**Keep two suites.** A capability eval asks what the agent can do and starts at a low pass rate. A regression eval asks if the agent still does what it did before; it should pass nearly 100 % and run continuously, for example in CI/CD <Cite n={1} />. The same task bank also tracks latency, token usage, cost per task, and error rates <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+Here is the loop in simple steps.
+
+First, collect a small set of real tasks. About 20 to 50 simple tasks from real failures is a good start <Cite n={1} />. Make them look like real use, and add hard cases: missing input, very long input, harmful input, and cases where even people would not agree <Cite n={2} />.
+
+Second, start each attempt from a clean place <Cite n={1} />. It is like a test that resets its database.
+
+Third, grade the run. There are three kinds of grader <Cite n={1} />. A code check is fast, cheap, and always gives the same result, but it can fail a good answer that looks different. A model judge (an AI that grades) is flexible, but it can change its mind and you must compare it with people. A human is the best judge, but slow and costly.
+
+If you use a model judge, give it a clear scoring guide and ask for a short answer, such as "correct" or "incorrect", or a score from 1 to 5. Let it think before it scores <Cite n={2} />. Use a different model from the one you test <Cite n={2} />.
+
+Fourth, look at the trace. It shows the model calls, the tool calls, the guardrails, and the handoffs of one run <Cite n={3} />. A grader can check if the agent used the right tool and if it broke a rule or a safety policy <Cite n={3} />. But do not require one fixed path. It is often better to grade the result <Cite n={1} />. Later, turn your traces into a fixed data set that you run again and again <Cite n={3} />.
+
+Last, keep two suites. A capability suite shows what the agent can do, and it starts with a low pass rate. A regression suite checks that old tasks still pass. It should pass almost 100 % and run all the time, for example in CI/CD <Cite n={1} />. The same tasks also measure speed, tokens, cost per task, and errors <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+ধাপে ধাপে লুপটা এমন।
+
+প্রথমে বাস্তব task-এর একটা ছোট সেট বানান। শুরুতে বাস্তব failure থেকে নেওয়া ২০ থেকে ৫০টা সহজ task যথেষ্ট ভালো <Cite n={1} />। task-গুলো যেন বাস্তব ব্যবহারের মতো হয়। সাথে edge case যোগ করুন: input নেই বা অপ্রাসঙ্গিক, খুব লম্বা input, ক্ষতিকর input, আর এমন কেস যেখানে মানুষও একমত হবে না <Cite n={2} />।
+
+দ্বিতীয়ত, প্রতিটা trial একটা পরিষ্কার environment থেকে শুরু করুন <Cite n={1} />। এটা এমন টেস্টের মতো যেটা প্রতিবার database রিসেট করে।
+
+তৃতীয়ত, রানটা grade করুন। grader তিন রকম <Cite n={1} />। code-based grader দ্রুত, সস্তা, আর প্রতিবার একই ফল দেয়, কিন্তু সঠিক উত্তর অন্য রকম দেখালে সেটাকে ফেল করাতে পারে। model-based grader (LLM judge) নমনীয়, কিন্তু এর ফল বদলাতে পারে, তাই মানুষের grading-এর সাথে মিলিয়ে নিতে হয়। মানুষ সবচেয়ে ভালো grader, কিন্তু ধীর আর খরচ বেশি।
+
+LLM judge ব্যবহার করলে তাকে একটা বিস্তারিত rubric দিন। ছোট আর নির্দিষ্ট উত্তর চান, যেমন শুধু "correct" বা "incorrect", অথবা ১ থেকে ৫ স্কোর। স্কোর দেওয়ার আগে তাকে ভাবতে দিন <Cite n={2} />। যে model output বানিয়েছে, grading-এর জন্য তার থেকে আলাদা model ব্যবহার করুন <Cite n={2} />।
+
+চতুর্থত, trace দেখুন। একটা রানের model call, tool call, guardrail আর handoff সব trace-এ থাকে <Cite n={3} />। grader দেখতে পারে agent ঠিক tool বেছেছে কি না, আর কোনো নির্দেশ বা safety policy ভেঙেছে কি না <Cite n={3} />। তবে একটাই নির্দিষ্ট পথ দাবি করবেন না। প্রায়ই agent কী বানাল সেটা grade করা ভালো, কোন পথে গেল সেটা নয় <Cite n={1} />। পরে trace থেকে একটা স্থির dataset বানান, যেটা বারবার চালানো যায় <Cite n={3} />।
+
+শেষে দুটো suite রাখুন। capability suite দেখায় agent কী পারে, আর এটা কম pass rate দিয়ে শুরু হয়। regression suite দেখে পুরনো task এখনো পাস করে কি না। এটা প্রায় ১০০% পাস করা উচিত, আর নিয়মিত চলা উচিত, যেমন CI/CD-তে <Cite n={1} />। একই task-গুলো দিয়ে latency, token, প্রতি task-এর খরচ আর error rate-ও মাপা যায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Trade-offs
+
+<Voices>
+<Technical>
+
+**pass@k or pass^k.** pass@k is the chance that the agent gets at least one correct result in k attempts. pass^k is the chance that all k trials succeed <Cite n={1} />. They tell different stories. If one trial passes 75 % of the time, all three of three trials pass only about 42 % of the time ((0.75)³) <Cite n={1} />. pass^k fits an agent that customers use and must be right every time; pass@k fits a tool where one success is enough <Cite n={1} />.
+
+**Volume or polish.** More questions with slightly weaker automated grading beat fewer questions graded by hand <Cite n={2} />. Pick the fastest, most reliable, most scalable grading method. Human grading is slow and expensive, so avoid it where you can, and test an LLM grader for reliability before you scale it <Cite n={2} />.
+
+**Strict or flexible.** A strict code check gives the same result every time, but it can fail a valid answer <Cite n={1} />. A model judge accepts valid variations, but its own result can vary <Cite n={1} />. Many teams combine them, because no single evaluation layer catches every issue <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+**pass@k or pass^k.** pass@k is the chance that at least one of k attempts is right. pass^k is the chance that all k attempts are right <Cite n={1} />. These numbers can be very different. If one attempt passes 75 % of the time, then all three of three attempts pass only about 42 % of the time <Cite n={1} />. Use pass^k for an agent that customers use and that must be right every time. Use pass@k for a tool where one good result is enough <Cite n={1} />.
+
+**Many tests or perfect tests.** Many tests with automatic grading are better than a few tests that people grade by hand <Cite n={2} />. Pick the fastest and most reliable way to grade. Grading by people is slow and costly, so avoid it if you can. Test a model judge well before you use it a lot <Cite n={2} />.
+
+**Strict or flexible.** A strict code check always gives the same result, but it can fail a good answer <Cite n={1} />. A model judge accepts good answers in other forms, but its own result can change <Cite n={1} />. Many teams use more than one kind of check, because no single check finds every problem <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**pass@k নাকি pass^k।** pass@k মানে k বার চেষ্টায় অন্তত একবার ঠিক হওয়ার সম্ভাবনা। pass^k মানে k বারের সবগুলো ঠিক হওয়ার সম্ভাবনা <Cite n={1} />। দুটো সংখ্যা অনেক আলাদা হতে পারে। একবারের চেষ্টা যদি ৭৫% সময় পাস করে, তাহলে তিনবারের তিনটাই পাস করে মাত্র প্রায় ৪২% সময় <Cite n={1} />। যে agent গ্রাহকরা ব্যবহার করেন আর যাকে প্রতিবার ঠিক হতে হবে, তার জন্য pass^k নিন। যে tool-এ একবার সফল হলেই চলে, তার জন্য pass@k নিন <Cite n={1} />।
+
+**বেশি টেস্ট নাকি নিখুঁত টেস্ট।** হাতে grade করা অল্প কিছু প্রশ্নের চেয়ে automated grading-সহ অনেক বেশি প্রশ্ন ভালো, যদিও প্রতিটার signal একটু দুর্বল <Cite n={2} />। সবচেয়ে দ্রুত আর নির্ভরযোগ্য grading পদ্ধতি বেছে নিন। মানুষ দিয়ে grading ধীর আর খরচ বেশি, তাই পারলে এড়িয়ে চলুন। বড় পরিসরে চালানোর আগে LLM grader নির্ভরযোগ্য কি না টেস্ট করুন <Cite n={2} />।
+
+**কড়া নাকি নমনীয়।** কড়া code check প্রতিবার একই ফল দেয়, কিন্তু সঠিক উত্তরও ফেল করাতে পারে <Cite n={1} />। model judge অন্য রূপের সঠিক উত্তরও মেনে নেয়, কিন্তু তার নিজের ফল বদলাতে পারে <Cite n={1} />। অনেক টিম একাধিক ধরনের check একসাথে ব্যবহার করে, কারণ কোনো একটা স্তর সব সমস্যা ধরতে পারে না <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+This is an invented example. A team uses a test-automation agent that reads a failing Playwright test and proposes a fix. Before they trust it in CI, a tester builds an eval.
+
+1. **Golden set.** The tester collects 30 real failures from the last two months, each in a frozen copy of the repo. That is inside the 20-50 start range <Cite n={1} />. Ten tasks are traps: the test is right and the app has a real bug, so the correct output is "do not change the test".
+2. **Clean runs.** The harness starts each trial from a fresh checkout <Cite n={1} />.
+3. **Graders.** A code check runs the fixed test and the full suite. A model judge, with a written rubric, reads the trace and answers only "correct" or "incorrect" to one question: did the agent hide a real bug, for example by deleting an assertion <Cite n={2} />? Each week a person grades a sample of traces to check that the judge agrees <Cite n={1} />.
+4. **Repeats.** Each task runs 5 times. The team reports pass^5 for the trap tasks, because a fix that hides a bug even once in five is not acceptable <Cite n={1} />.
+
+The first run shows 90 % on normal tasks but poor pass^5 on the traps. The traces show that the agent often loosens a timeout or removes an assertion. That was a safety rule, not a path rule, so grading the trace was right <Cite n={3} />. After a prompt change, the 30 tasks become the team's regression suite in CI <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+This is an invented example. A team has an agent that reads a failing Playwright test and suggests a fix. Before they let it work in CI, a tester builds an eval.
+
+1. The tester collects 30 real failures from the last two months. This fits the 20 to 50 start size <Cite n={1} />. Ten of them are traps. In a trap, the test is right and the app has a real bug. The right answer is "do not change the test".
+2. Each attempt starts from a fresh copy of the code <Cite n={1} />.
+3. A code check runs the fixed test and the full suite. A model judge follows a written scoring guide. It reads the trace and answers only "correct" or "incorrect" to one question: did the agent hide a real bug <Cite n={2} />? Each week a person grades some traces to see if the judge agrees <Cite n={1} />.
+4. Each task runs 5 times. For the traps, the team wants all 5 runs to pass (pass^5). One hidden bug in five runs is too many <Cite n={1} />.
+
+On the first run, normal tasks pass well, but the traps often fail. The traces show that the agent loosens a timeout or removes an assertion. That is a safety rule, so it was right to grade the trace <Cite n={3} />. After a prompt change, the 30 tasks become the team's regression suite in CI <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+এটা একটা বানানো উদাহরণ। একটা টিমের একটা agent আছে, যেটা ফেল করা Playwright টেস্ট পড়ে একটা fix প্রস্তাব করে। CI-তে এটাকে বিশ্বাস করার আগে একজন টেস্টার একটা eval বানান।
+
+1. টেস্টার গত দুই মাসের ৩০টা বাস্তব failure সংগ্রহ করেন। এটা শুরুর ২০ থেকে ৫০-এর মধ্যে পড়ে <Cite n={1} />। এর মধ্যে ১০টা ফাঁদ। ফাঁদে টেস্টটা ঠিক, আর অ্যাপে আসল bug আছে। ঠিক উত্তর হলো "টেস্ট বদলাবেন না"।
+2. প্রতিটা trial কোডের একটা নতুন কপি থেকে শুরু হয় <Cite n={1} />।
+3. একটা code check ঠিক করা টেস্ট আর পুরো suite চালায়। একটা model judge লিখিত rubric মেনে trace পড়ে, আর একটা প্রশ্নের উত্তরে শুধু "correct" বা "incorrect" বলে: agent কি আসল bug লুকিয়েছে <Cite n={2} />? প্রতি সপ্তাহে একজন মানুষ কিছু trace grade করে দেখেন judge তাঁর সাথে একমত কি না <Cite n={1} />।
+4. প্রতিটা task ৫ বার চলে। ফাঁদগুলোর জন্য টিম চায় ৫ বারই পাস হোক (pass^5)। পাঁচবারে একবারও bug লুকানো চলবে না <Cite n={1} />।
+
+প্রথম রানে সাধারণ task ভালো পাস করে, কিন্তু ফাঁদগুলো প্রায়ই ফেল করে। trace দেখায়, agent timeout ঢিলা করে বা assertion মুছে দেয়। এটা একটা safety নিয়ম, তাই trace grade করাটা ঠিক ছিল <Cite n={3} />। prompt বদলানোর পর ওই ৩০টা task টিমের CI-তে regression suite হয়ে যায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **One run, one verdict.** Outputs vary between runs <Cite n={1} />. A single green run is a flaky test that happened to pass. Run each task several times.
+- **Blaming the agent for a broken task.** A 0 % pass rate across many trials is most often a sign of a broken task, and an unclear task spec becomes noise in the metrics <Cite n={1} />. Check the task, like you check a bad test before you file a bug.
+- **Grading a fixed path.** If the grader expects one exact sequence of steps, it fails valid solutions. It is often better to grade what the agent produced <Cite n={1} />.
+- **Trusting the judge blindly.** A model judge needs calibration against human graders <Cite n={1} />. You will not know if your graders work unless you read the transcripts and grades from many trials <Cite n={1} />.
+- **Only happy paths.** One-sided evals create one-sided optimization <Cite n={1} />. Add edge cases such as harmful or ambiguous input <Cite n={2} />.
+- **Shared state between trials.** Each trial should start from a clean environment <Cite n={1} />.
+- **Testing once and stopping.** Test before deployment and regularly while the system runs <Cite n={4} />, and document the test sets, metrics, and tools <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+- **One run, one answer.** The output changes between runs <Cite n={1} />. One green run is like a flaky test that passed by luck. Run each task many times.
+- **Blaming the agent for a bad task.** If a task never passes in many runs, the task itself is most often broken. A task with unclear words makes the numbers noisy <Cite n={1} />. Check the task first.
+- **Demanding one fixed path.** If the check wants one exact set of steps, it fails good solutions. It is often better to grade the result <Cite n={1} />.
+- **Trusting the judge blindly.** A model judge must be compared with people <Cite n={1} />. Read the traces and the grades of many runs, or you will not know if the grading works <Cite n={1} />.
+- **Only easy cases.** If you test only one side, you improve only one side <Cite n={1} />. Add hard cases, such as harmful or unclear input <Cite n={2} />.
+- **Leftovers from the last run.** Each attempt must start clean <Cite n={1} />.
+- **Testing once and stopping.** Test before go-live and again while the system runs <Cite n={4} />. Write down your test sets, numbers, and tools <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+- **একবার চালিয়ে রায় দেওয়া।** প্রতিবার রানে output বদলায় <Cite n={1} />। একবারের সবুজ রান হলো ভাগ্যক্রমে পাস করা flaky টেস্টের মতো। প্রতিটা task কয়েকবার চালান।
+- **ভাঙা task-এর দোষ agent-কে দেওয়া।** অনেকবার চালিয়েও কোনো task একবারও পাস না করলে, বেশিরভাগ সময় task-টাই ভাঙা। অস্পষ্ট task-এর বর্ণনা মেট্রিকে noise তৈরি করে <Cite n={1} />। আগে task-টা চেক করুন।
+- **একটাই নির্দিষ্ট পথ দাবি করা।** check যদি একদম নির্দিষ্ট কিছু ধাপ চায়, তাহলে সঠিক সমাধানও ফেল করে। প্রায়ই ফলাফলটা grade করা ভালো <Cite n={1} />।
+- **judge-কে চোখ বুজে বিশ্বাস করা।** model judge-কে মানুষের grading-এর সাথে মিলিয়ে নিতে হয় <Cite n={1} />। অনেক রানের transcript আর grade না পড়লে আপনি জানবেন না grading ঠিক কাজ করছে কি না <Cite n={1} />।
+- **শুধু সহজ কেস।** একদিক দেখে টেস্ট করলে শুধু সেই দিকটাই উন্নত হয় <Cite n={1} />। ক্ষতিকর বা অস্পষ্ট input-এর মতো edge case যোগ করুন <Cite n={2} />।
+- **আগের রানের অবশিষ্ট state।** প্রতিটা trial পরিষ্কার environment থেকে শুরু হওয়া উচিত <Cite n={1} />।
+- **একবার টেস্ট করে থেমে যাওয়া।** চালু করার আগে টেস্ট করুন, আর সিস্টেম চলার সময়ও নিয়মিত টেস্ট করুন <Cite n={4} />। test set, মেট্রিক আর tool লিখে রাখুন <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a system that uses evals.
+
+- Ask for the golden set. Check that it comes from real use, has edge cases and negative cases, and that each task has a clear expected outcome.
+- Run one task 5 to 10 times. Compare the pass rate with what the team reports from a single run.
+- Ask which number the release gate uses. For a customer-facing agent, ask for "all runs pass", not "one run passed".
+- Read 10 traces by hand, both passes and fails. Check that each grade matches what you see.
+- Feed the LLM judge a known bad answer and a known good answer. It must fail the first and pass the second.
+- Pick a task with 0 % pass and read the task. Find out if the task or the agent is wrong.
+- Check that each trial starts clean: no files, cache, or data from the last run.
+- Check that the regression suite runs in CI and that cost, latency, and tokens per task show on a chart.
+- Check the trace for rule breaks: wrong tool, skipped approval, or an action outside the allowed scope.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a system that uses evals.
+
+- Ask to see the set of test tasks. Check that it comes from real use, has hard and negative cases, and that each task has a clear expected result.
+- Run one task 5 to 10 times. Compare how often it passes with what the team says from one run.
+- Ask which number decides a release. For an agent that customers use, ask for "every run passes", not "one run passed".
+- Read 10 traces yourself, passes and fails. Check that each grade matches what you see.
+- Give the model judge one answer that you know is bad and one you know is good. It must fail the first and pass the second.
+- Pick a task that never passes and read it. Find out if the task or the agent is wrong.
+- Check that each attempt starts clean, with nothing left from the last run.
+- Check that the regression suite runs in CI and that cost, speed, and tokens per task show on a chart.
+- Check the trace for broken rules: the wrong tool, a skipped approval, or an action that is not allowed.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, eval ব্যবহার করে এমন সিস্টেমের জন্য।
+
+- golden set দেখতে চান। দেখুন সেটা বাস্তব ব্যবহার থেকে এসেছে কি না, তাতে edge case আর negative case আছে কি না, আর প্রতিটা task-এর প্রত্যাশিত ফল পরিষ্কার কি না।
+- একটা task ৫ থেকে ১০ বার চালান। টিম একবারের রান থেকে যা বলছে, তার সাথে pass rate মিলিয়ে দেখুন।
+- জিজ্ঞেস করুন release gate কোন সংখ্যা দেখে। গ্রাহকদের agent-এর জন্য "সব রান পাস" চান, "একবার পাস হয়েছে" নয়।
+- নিজে ১০টা trace পড়ুন, পাস আর ফেল দুটোই। দেখুন প্রতিটা grade আপনি যা দেখছেন তার সাথে মেলে কি না।
+- LLM judge-কে একটা জানা খারাপ উত্তর আর একটা জানা ভালো উত্তর দিন। প্রথমটা ফেল আর দ্বিতীয়টা পাস হতে হবে।
+- ০% পাস করা একটা task বেছে পড়ুন। খুঁজে দেখুন ভুলটা task-এ নাকি agent-এ।
+- দেখুন প্রতিটা trial পরিষ্কার শুরু হয় কি না: আগের রানের কোনো ফাইল, cache বা ডেটা নেই।
+- দেখুন regression suite CI-তে চলে কি না, আর প্রতি task-এর খরচ, latency আর token চার্টে দেখা যায় কি না।
+- trace-এ নিয়ম ভাঙা খুঁজুন: ভুল tool, বাদ পড়া approval, বা অনুমতির বাইরের কোনো কাজ।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Eval | A test for an AI system: an input, then grading logic on the output |
+| Task | One test with defined inputs and success criteria |
+| Trial | One attempt at a task |
+| Grader | Logic that scores one aspect of a run: code, model, or human |
+| Transcript (trace) | The complete record of one trial, with model calls and tool calls |
+| Outcome | The final state of the environment at the end of a trial |
+| Harness | The system that runs evals end to end |
+| LLM judge | A model-based grader that scores output with a rubric |
+| Golden set | The tutorial's name for a small, fixed set of real tasks with known good outcomes |
+| pass@k | The chance of at least one success in k attempts |
+| pass^k | The chance that all k attempts succeed |
+| Capability eval | An eval of what the agent can do; it starts at a low pass rate |
+| Regression eval | An eval that checks old tasks still pass; it should pass nearly 100 % |

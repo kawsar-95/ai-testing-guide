@@ -17,6 +17,8 @@ import { ARCHITECTURE_UI } from "../lib/architecture/ui.ts";
 import { ARCHITECTURE_UI_BN } from "../lib/bn/architecture.ts";
 import { COURSE_UI } from "../lib/course/ui.ts";
 import { COURSE_UI_BN } from "../lib/bn/course.ts";
+import { AI_CONCEPTS_UI } from "../lib/ai-concepts/ui.ts";
+import { AI_CONCEPTS_UI_BN } from "../lib/bn/ai-concepts.ts";
 import { K6_UI } from "../lib/k6/ui.ts";
 import { K6_UI_BN } from "../lib/bn/k6.ts";
 import { SYSTEM_DESIGN_UI } from "../lib/system-design/ui.ts";
@@ -62,6 +64,7 @@ const PAIRS: [string, unknown, unknown][] = [
   ["ARCHITECTURE_UI", ARCHITECTURE_UI, ARCHITECTURE_UI_BN],
   ["COURSE_UI", COURSE_UI, COURSE_UI_BN],
   ["K6_UI", K6_UI, K6_UI_BN],
+  ["AI_CONCEPTS_UI", AI_CONCEPTS_UI, AI_CONCEPTS_UI_BN],
   ["SYSTEM_DESIGN_UI", SYSTEM_DESIGN_UI, SYSTEM_DESIGN_UI_BN],
 ];
 
