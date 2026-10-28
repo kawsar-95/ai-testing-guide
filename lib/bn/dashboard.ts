@@ -30,6 +30,6 @@ export const DASHBOARD_UI_BN: Bn<typeof DASHBOARD_UI> = {
     "system-design": "System Design",
     course: "Course",
     k6: "k6",
-    harness: "AI Harnesses",
+    "ai-engineering": "AI Engineering",
   },
 };

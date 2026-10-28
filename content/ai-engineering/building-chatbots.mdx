@@ -1,0 +1,257 @@
+export const metadata = { title: 'Building Chatbots', description: 'Keep the conversation history, send it with each turn, and manage it when it grows too long for the context window.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Using the Messages API', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/working-with-messages', accessed: '2026-10-28' },
+    { title: 'Messages (API reference)', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-10-28' },
+    { title: 'Context windows', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/context-windows', accessed: '2026-10-28' },
+    { title: 'Conversation state', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/guides/conversation-state', accessed: '2026-10-28' },
+    { title: 'Short-term memory', publisher: 'LangChain (Docs)', url: 'https://docs.langchain.com/oss/python/langchain/short-term-memory', accessed: '2026-10-28' },
+    { title: 'Persistence', publisher: 'LangChain (LangGraph Docs)', url: 'https://docs.langchain.com/oss/python/langgraph/persistence', accessed: '2026-10-28' },
+  ],
+}
+
+# Building Chatbots
+
+A chatbot seems to remember what you said a minute ago. In most cases the model remembers nothing: the app sends the whole conversation again with every new message. This page shows how that works, and where it breaks.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **chatbot** is an app that talks with a user over many turns. The model behind it does not keep the conversation between requests. The Claude Messages API is **stateless**: each request must carry the full conversation history <Cite n={1} />. OpenAI says the same of its text generation requests: each one is independent, so the app sends the earlier messages again <Cite n={4} />.
+
+So the chatbot app has one main job: keep the list of messages, add each new turn to it, and send it with the next request. This list is the bot's **short-term memory**. LangChain calls one conversation a **thread**, like one email thread <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+A **chatbot** is an app that talks with a user over many turns. The model behind it does not keep the conversation between requests. The Claude Messages API is **stateless**. Each request must carry the full conversation history <Cite n={1} />. OpenAI says the same of its requests. Each one is independent, so the app sends the earlier messages again <Cite n={4} />.
+
+So the app has one main job. It keeps the list of messages. It adds each new turn to the list. It sends the list with the next request. This list is the bot's **short-term memory**. LangChain calls one conversation a **thread**, like one email thread <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+**চ্যাটবট** হলো এমন একটা অ্যাপ, যা অনেকগুলো পালায় (turn) ইউজারের সাথে কথা বলে। এর পেছনের মডেল দুটো রিকুয়েস্টের মাঝে কথোপকথন মনে রাখে না। Claude Messages API **stateless**: প্রতিটা রিকুয়েস্টে পুরো কথোপকথনের ইতিহাস পাঠাতে হয় <Cite n={1} />। OpenAI-ও তার রিকুয়েস্ট সম্পর্কে একই কথা বলে। প্রতিটা রিকুয়েস্ট আলাদা, তাই অ্যাপ আগের মেসেজগুলো আবার পাঠায় <Cite n={4} />।
+
+তাই অ্যাপের একটা মূল কাজ আছে। এটা মেসেজের তালিকা রাখে। প্রতিটা নতুন পালা তালিকায় যোগ করে। পরের রিকুয়েস্টের সাথে তালিকাটা পাঠায়। এই তালিকাই বটের **শর্ট-টার্ম মেমরি** (short-term memory)। LangChain একটা কথোপকথনকে বলে **thread**, একটা ইমেইল থ্রেডের মতো <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### One turn after another
+
+The messages list alternates between `user` and `assistant` turns. Each item has a `role` and `content` <Cite n={2} />. The bot's rules go in the top-level `system` parameter, not in the list <Cite n={2} />.
+
+```python
+from anthropic import Anthropic
+
+client = Anthropic()
+history = []  # the conversation so far
+
+def chat(user_text):
+    history.append({"role": "user", "content": user_text})
+    reply = client.messages.create(
+        model="claude-opus-5-5",
+        max_tokens=1024,
+        system="You are the help desk bot of an online shop. Answer only shop questions.",
+        messages=history,
+    )
+    text = "".join(b.text for b in reply.content if b.type == "text")
+    history.append({"role": "assistant", "content": text})
+    return text
+```
+
+The earlier `assistant` turns do not have to come from the model. The app can add **synthetic** assistant messages, for example a fixed greeting <Cite n={1} />.
+
+### The context window fills up
+
+The **context window** is all the text the model can use for one answer, including the answer itself. It is the model's working memory <Cite n={3} />. Each user message and each reply stays in it, so the input grows with every turn <Cite n={3} />. The system prompt, every message, and the output all count <Cite n={3} />.
+
+What happens at the limit <Cite n={3} />:
+
+| Case | Result |
+|---|---|
+| The input alone is larger than the window | HTTP 400, `invalid_request_error`, "prompt is too long" |
+| The answer reaches the limit (Claude 4.5 models and newer) | The model stops with `stop_reason: "model_context_window_exceeded"` |
+
+A large window does not mean "send everything". As the token count grows, accuracy and recall drop. Anthropic calls this **context rot** <Cite n={3} />.
+
+### Ways to keep the history small
+
+LangChain lists these common patterns <Cite n={5} />:
+
+- **Trim:** remove the first or last N messages before the call.
+- **Delete:** remove messages from the stored state for good.
+- **Summarize:** replace older messages with a summary.
+
+Trimming can lose information, which is why some apps summarize <Cite n={5} />. Anthropic also offers **compaction**, which summarizes older parts of the conversation on the server <Cite n={3} />.
+
+### Server-side state
+
+OpenAI can also keep the state for you: `previous_response_id` chains responses, and the Conversations API stores a conversation with a lasting ID <Cite n={4} />. The earlier input tokens in a chain are still billed as input <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+The messages list takes turns: `user`, then `assistant`, then `user` again. Each item has a `role` and `content` <Cite n={2} />. The bot's rules go in a separate `system` field, not in the list <Cite n={2} />. The Technical text has a short Python example. It adds the user message to the list, sends the list, and adds the reply to the list.
+
+The earlier `assistant` turns do not have to come from the model. The app can add made-up assistant messages, for example a fixed greeting <Cite n={1} />.
+
+The **context window** is all the text the model can use for one answer. The answer itself counts too. It is the model's working memory <Cite n={3} />. Each message and each reply stays in it, so the input grows with every turn <Cite n={3} />. The system prompt, every message, and the output all count <Cite n={3} />.
+
+At the limit, 2 things can happen <Cite n={3} />. If the input alone is too large, the API returns HTTP 400 with "prompt is too long". If the answer reaches the limit (on Claude 4.5 models and newer), the model stops with `stop_reason: "model_context_window_exceeded"`.
+
+A large window does not mean "send everything". When the text grows, accuracy and recall drop. Anthropic calls this **context rot** <Cite n={3} />.
+
+LangChain lists common ways to keep the history small <Cite n={5} />. **Trim** removes the first or last N messages before the call. **Delete** removes messages from the stored state for good. **Summarize** replaces older messages with a summary. Trimming can lose information, so some apps summarize <Cite n={5} />. Anthropic also offers **compaction**. It summarizes older parts of the conversation on the server <Cite n={3} />.
+
+OpenAI can also keep the state for you. `previous_response_id` links one response to the next. The Conversations API stores a conversation with a lasting ID <Cite n={4} />. You still pay for the earlier input tokens in the chain <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+মেসেজের তালিকা পালা করে চলে: `user`, তারপর `assistant`, তারপর আবার `user`। প্রতিটা আইটেমে থাকে একটা `role` আর `content` <Cite n={2} />। বটের নিয়মগুলো যায় আলাদা `system` প্যারামিটারে, তালিকায় নয় <Cite n={2} />। Technical লেখায় একটা ছোট Python উদাহরণ আছে। এটা ইউজারের মেসেজ তালিকায় যোগ করে, তালিকাটা পাঠায়, আর উত্তরটা তালিকায় যোগ করে।
+
+আগের `assistant` পালাগুলো মডেল থেকেই আসতে হবে এমন নয়। অ্যাপ নিজে বানানো (synthetic) assistant মেসেজ যোগ করতে পারে, যেমন একটা নির্দিষ্ট শুভেচ্ছা বার্তা <Cite n={1} />।
+
+**কনটেক্সট উইন্ডো** (context window) হলো একটা উত্তরের জন্য মডেল যত টেক্সট ব্যবহার করতে পারে, তার সবটা। উত্তরটাও এর মধ্যে পড়ে। এটা মডেলের ওয়ার্কিং মেমরি <Cite n={3} />। প্রতিটা মেসেজ আর উত্তর এতে থেকে যায়, তাই প্রতি পালায় ইনপুট বাড়ে <Cite n={3} />। সিস্টেম প্রম্পট, প্রতিটা মেসেজ, আর আউটপুট, সবই গোনা হয় <Cite n={3} />।
+
+সীমায় পৌঁছালে ২টা জিনিস হতে পারে <Cite n={3} />। শুধু ইনপুটই খুব বড় হলে API HTTP 400 ফেরত দেয়, সাথে "prompt is too long"। উত্তর সীমায় পৌঁছালে (Claude 4.5 ও নতুন মডেলে) মডেল `stop_reason: "model_context_window_exceeded"` দিয়ে থামে।
+
+বড় উইন্ডো মানে "সব পাঠিয়ে দাও" নয়। টেক্সট বাড়লে নির্ভুলতা আর মনে রাখার ক্ষমতা কমে। Anthropic একে বলে **context rot** <Cite n={3} />।
+
+ইতিহাস ছোট রাখার কিছু সাধারণ উপায় LangChain দেয় <Cite n={5} />। **Trim** কলের আগে প্রথম বা শেষ N-টা মেসেজ সরায়। **Delete** সেভ করা স্টেট থেকে মেসেজ স্থায়ীভাবে মুছে দেয়। **Summarize** পুরোনো মেসেজের জায়গায় একটা সারাংশ রাখে। Trim করলে তথ্য হারাতে পারে, তাই কিছু অ্যাপ সারাংশ করে <Cite n={5} />। Anthropic **compaction**-ও দেয়। এটা সার্ভারে কথোপকথনের পুরোনো অংশের সারাংশ করে <Cite n={3} />।
+
+OpenAI আপনার হয়ে স্টেটও রাখতে পারে। `previous_response_id` একটা রেসপন্সকে পরেরটার সাথে যুক্ত করে। Conversations API একটা স্থায়ী ID সহ কথোপকথন সেভ করে <Cite n={4} />। চেইনের আগের ইনপুট টোকেনের জন্য তবুও আপনাকে টাকা দিতে হয় <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+An online shop runs a help desk bot. A user writes: "My order 4471 has not arrived." Then: "Can you change the address?" The second message makes sense only with the first one. Because the API is stateless, the app sends both turns in the second request <Cite n={1} />.
+
+After a long chat (40 turns, product lists, and pasted error text), the bot starts to forget the order number from turn 1 and gives slower answers. This matches what LangChain warns about: long histories distract the model and cost more time and money <Cite n={5} />. The team adds a rule: keep the last 20 messages, and replace older ones with a short summary that keeps the order number and the address <Cite n={5} />.
+
+The team also stores each conversation under its own thread ID <Cite n={5} />. In LangGraph, this short-term memory is scoped to a single thread <Cite n={6} />. In the tutorial's own view, this is also what keeps the histories of two users apart.
+
+</Technical>
+<Layman>
+
+An online shop runs a help desk bot. A user writes: "My order 4471 has not arrived." Then the user writes: "Can you change the address?" The second message makes sense only with the first one. The API is stateless, so the app sends both turns in the second request <Cite n={1} />.
+
+After a long chat, the bot starts to forget the order number from turn 1. The chat has 40 turns, product lists, and pasted error text. The answers also get slower. LangChain warns about this. Long histories distract the model and cost more time and money <Cite n={5} />. The team adds a rule. Keep the last 20 messages. Replace older ones with a short summary that keeps the order number and the address <Cite n={5} />.
+
+The team also stores each conversation under its own thread ID <Cite n={5} />. In LangGraph, this short-term memory belongs to one thread only <Cite n={6} />. In the tutorial's own view, this also keeps the histories of two users apart.
+
+</Layman>
+<Bangla>
+
+একটা অনলাইন শপ একটা হেল্প ডেস্ক বট চালায়। একজন ইউজার লেখেন: "My order 4471 has not arrived." তারপর লেখেন: "Can you change the address?" দ্বিতীয় মেসেজটা প্রথমটা ছাড়া অর্থহীন। API stateless, তাই অ্যাপ দ্বিতীয় রিকুয়েস্টে দুটো পালাই পাঠায় <Cite n={1} />।
+
+একটা লম্বা চ্যাটের পর বট প্রথম পালার অর্ডার নম্বর ভুলে যেতে শুরু করে। চ্যাটে আছে ৪০টা পালা, প্রোডাক্টের তালিকা, আর পেস্ট করা এরর টেক্সট। উত্তরও ধীর হয়ে যায়। LangChain এ বিষয়ে সতর্ক করে। লম্বা ইতিহাস মডেলকে বিভ্রান্ত করে, আর বেশি সময় ও টাকা লাগে <Cite n={5} />। টিম একটা নিয়ম যোগ করে। শেষ ২০টা মেসেজ রাখা হবে। পুরোনোগুলোর জায়গায় একটা ছোট সারাংশ রাখা হবে, যাতে অর্ডার নম্বর আর ঠিকানা থাকে <Cite n={5} />।
+
+টিম প্রতিটা কথোপকথন তার নিজের thread ID-তে সেভ করে <Cite n={5} />। LangGraph-এ এই শর্ট-টার্ম মেমরি শুধু একটা thread-এর মধ্যে থাকে <Cite n={6} />। টিউটোরিয়ালের নিজের মতে, এটাই দুজন ইউজারের ইতিহাস আলাদা রাখে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Expecting the model to remember.** Without the history in the request, the model has no earlier turns. The app must send them <Cite n={1} />.
+- **Unlimited history.** The history grows with every turn <Cite n={3} />. A long chat ends with a 400 error or a cut answer, and it gets slower and costs more on the way <Cite n={3} /> <Cite n={5} />.
+- **Blind trimming.** Cutting old messages can drop a fact that the user gave at the start, such as a name or an order number <Cite n={5} />.
+- **Rules inside the user turn.** Put the bot's role and rules in the `system` parameter <Cite n={2} />, not in a user message that a trim can remove.
+- **Thinking server-side state is free.** With `previous_response_id`, all earlier input tokens of the chain are billed again <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+- **Expecting the model to remember.** If the history is not in the request, the model has no earlier turns. The app must send them <Cite n={1} />.
+- **Unlimited history.** The history grows with every turn <Cite n={3} />. A long chat ends with a 400 error or a cut answer. On the way, it gets slower and costs more <Cite n={3} /> <Cite n={5} />.
+- **Blind trimming.** Cutting old messages can drop a fact from the start, such as a name or an order number <Cite n={5} />.
+- **Rules inside the user turn.** Put the bot's role and rules in the `system` field <Cite n={2} />. A trim can remove a user message.
+- **Thinking server-side state is free.** With `previous_response_id`, you pay again for all earlier input tokens of the chain <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+- **মডেল মনে রাখবে ভাবা।** রিকুয়েস্টে ইতিহাস না থাকলে মডেলের কাছে আগের কোনো পালা নেই। অ্যাপকেই সেগুলো পাঠাতে হবে <Cite n={1} />।
+- **সীমাহীন ইতিহাস।** প্রতি পালায় ইতিহাস বাড়ে <Cite n={3} />। লম্বা চ্যাট শেষ হয় 400 এরর বা কাটা উত্তরে। পথে এটা ধীর হয় আর খরচ বাড়ে <Cite n={3} /> <Cite n={5} />।
+- **না দেখে ছাঁটাই।** পুরোনো মেসেজ কাটলে শুরুর কোনো তথ্য হারাতে পারে, যেমন একটা নাম বা অর্ডার নম্বর <Cite n={5} />।
+- **ইউজার পালার ভেতরে নিয়ম।** বটের রোল আর নিয়ম `system` প্যারামিটারে রাখুন <Cite n={2} />। Trim একটা ইউজার মেসেজ সরিয়ে দিতে পারে।
+- **সার্ভার-সাইড স্টেট ফ্রি ভাবা।** `previous_response_id` দিলে চেইনের আগের সব ইনপুট টোকেনের জন্য আবার টাকা দিতে হয় <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Memory test.** Give a fact in turn 1 (a name, an order number). Ask about it in turn 10, turn 30, and after a summary or trim.
+- **Long chat test.** Script a chat that grows until the limit. The bot must not crash, and it must tell the user what happened.
+- **Isolation test.** Open two sessions as two users. A fact from user A must never show up for user B.
+- **Reload test.** Reload the page or reconnect. Check whether the history is kept, as the requirements say.
+- **Rule test.** After 50 turns, ask the bot to break its rules. The system rules must still apply.
+- **Cost check.** Log the input tokens per turn. They should not grow without limit.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Memory test.** Give a fact in turn 1, such as a name or an order number. Ask about it in turn 10, turn 30, and after a summary or trim.
+- **Long chat test.** Script a chat that grows until the limit. The bot must not crash. It must tell the user what happened.
+- **Isolation test.** Open two sessions as two users. A fact from user A must never show up for user B.
+- **Reload test.** Reload the page or reconnect. Check that the history behaves as the requirements say.
+- **Rule test.** After 50 turns, ask the bot to break its rules. The rules must still apply.
+- **Cost check.** Log the input tokens of each turn. They should not grow without limit.
+
+</Layman>
+<Bangla>
+
+এই টেস্ট আইডিয়াগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **মেমরি টেস্ট।** প্রথম পালায় একটা তথ্য দিন, যেমন একটা নাম বা অর্ডার নম্বর। ১০ম পালায়, ৩০তম পালায়, আর একটা সারাংশ বা trim-এর পরে সেটা জিজ্ঞেস করুন।
+- **লম্বা চ্যাট টেস্ট।** এমন একটা চ্যাট স্ক্রিপ্ট করুন যা সীমা পর্যন্ত বাড়ে। বট ক্র্যাশ করবে না। কী হয়েছে তা ইউজারকে জানাবে।
+- **আলাদা রাখার টেস্ট।** দুজন ইউজার হিসেবে দুটো সেশন খুলুন। ইউজার A-এর কোনো তথ্য কখনো ইউজার B-এর কাছে দেখা যাবে না।
+- **রিলোড টেস্ট।** পেজ রিলোড বা রিকানেক্ট করুন। রিকোয়ারমেন্ট অনুযায়ী ইতিহাস থাকে কিনা চেক করুন।
+- **নিয়ম টেস্ট।** ৫০ পালার পর বটকে তার নিয়ম ভাঙতে বলুন। নিয়মগুলো তখনো কাজ করবে।
+- **খরচ চেক।** প্রতি পালার ইনপুট টোকেন লগ করুন। এগুলো সীমাহীনভাবে বাড়া উচিত নয়।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Stateless API | An API that keeps nothing between requests, so each request sends the full history <Cite n={1} /> |
+| Conversation history | The list of `user` and `assistant` messages so far <Cite n={2} /> |
+| System prompt | The role and rules of the bot, in the `system` parameter <Cite n={2} /> |
+| Context window | All the text the model can use for one answer, including the answer <Cite n={3} /> |
+| Context rot | The drop in accuracy and recall as the token count grows <Cite n={3} /> |
+| Thread | One conversation, stored under its own ID <Cite n={5} /> |
+| Compaction | A server-side summary of older parts of a conversation <Cite n={3} /> |

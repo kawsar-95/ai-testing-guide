@@ -1,0 +1,258 @@
+export const metadata = { title: "Model Routing", description: "Choose a model for each request by cost, latency, and capability." }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Choosing the right model', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/about-claude/models/choosing-a-model', accessed: '2026-10-28' },
+    { title: 'Models overview', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/about-claude/models/overview', accessed: '2026-10-28' },
+    { title: 'Optimizing for cost and intelligence', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence', accessed: '2026-10-28' },
+    { title: 'RouteLLM: Learning to Route LLMs with Preference Data (Ong et al., 2024)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2406.18665', accessed: '2026-10-28' },
+    { title: 'FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance (Chen, Zaharia, Zou, 2023)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2305.05176', accessed: '2026-10-28' },
+  ],
+}
+
+# Model Routing
+
+A hospital does not send every patient to the top surgeon. A nurse looks at each case first and sends it to the right person. Model routing does the same for AI requests: a small rule or a small model looks at each request and picks the model that should answer it.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A provider sells several models. A stronger model costs more, and a cheaper model is less capable <Cite n={4} />. In its 2023 review of commercial LLM APIs such as GPT-4 and ChatGPT, the FrugalGPT paper found fees that differed by up to two orders of magnitude <Cite n={5} />.
+
+The Claude docs name three things to weigh when you pick a model: capability, speed, and cost <Cite n={1} />. **Model routing** makes that choice for each request, not once for the whole app. A **router** sends easy requests to a fast, cheap model and hard requests to a strong model <Cite n={4} />.
+
+Research shows that routing can cut cost. In the 2024 RouteLLM paper, routers that chose between GPT-4 and Mixtral-8x7B cut cost by more than 2 times in some cases on public benchmarks such as MT Bench and MMLU, with no loss in answer quality <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+A provider sells several models. A stronger model costs more. A cheaper model can do less <Cite n={4} />. In 2023, the FrugalGPT paper looked at the prices of commercial AI services such as GPT-4 and ChatGPT. Some prices were up to about 100 times higher than others <Cite n={5} />.
+
+The Claude docs name three things to compare when you pick a model: what it can do, how fast it is, and what it costs <Cite n={1} />. **Model routing** makes that choice for each request. It does not make one choice for the whole app. A **router** sends easy requests to a fast, cheap model. It sends hard requests to a strong model <Cite n={4} />.
+
+Research shows that routing can cut cost. The RouteLLM paper (2024) tested routers that chose between GPT-4 and Mixtral-8x7B. On public benchmarks such as MT Bench and MMLU, the cost went down by more than 2 times in some cases. The quality of the answers did not drop <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা প্রোভাইডার কয়েকটা মডেল বিক্রি করে। শক্তিশালী মডেলের দাম বেশি। সস্তা মডেল কম কাজ পারে <Cite n={4} />। 2023 সালে FrugalGPT পেপার GPT-4 ও ChatGPT-এর মতো কমার্শিয়াল LLM API-র দাম দেখেছে। কিছু দাম অন্যগুলোর চেয়ে প্রায় 100 গুণ পর্যন্ত বেশি ছিল <Cite n={5} />।
+
+মডেল বাছাই করার সময় Claude ডকস তিনটা জিনিস তুলনা করতে বলে: সে কী পারে, সে কত দ্রুত, আর তার দাম কত <Cite n={1} />। **মডেল রাউটিং (model routing)** প্রতিটা রিকুয়েস্টের জন্য এই বাছাই করে। পুরো অ্যাপের জন্য একবার বাছাই করে না। একটা **রাউটার (router)** সহজ রিকুয়েস্ট একটা দ্রুত, সস্তা মডেলে পাঠায়। কঠিন রিকুয়েস্ট একটা শক্তিশালী মডেলে পাঠায় <Cite n={4} />।
+
+গবেষণা দেখায় যে রাউটিং খরচ কমাতে পারে। 2024 সালের RouteLLM পেপারে রাউটার GPT-4 ও Mixtral-8x7B-এর মধ্যে বাছাই করেছে। MT Bench ও MMLU-র মতো পাবলিক বেঞ্চমার্কে কিছু ক্ষেত্রে খরচ 2 গুণের বেশি কমেছে। উত্তরের মান কমেনি <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Know the options
+
+The Claude models overview compares the current models <Cite n={2} />:
+
+| Model | API id | Latency (relative) | Price per million tokens (input / output) |
+|---|---|---|---|
+| Claude Opus 5.5 | `claude-opus-5-5` | Moderate | $4 / $20 |
+| Claude Sonnet 5.5 | `claude-sonnet-5-5` | Fast | $2 / $10 |
+| Claude Haiku 5.5 | `claude-haiku-5-5` | Fastest | from $0.10 / from $0.50 |
+
+The docs list Haiku 5.5 for the lowest latency and price, for example real-time apps and high-volume work <Cite n={1} />.
+
+### Three ways to route
+
+1. **Rules.** Code looks at the request (its type, its length, the user plan) and picks a model. The router is cheap and easy to test.
+2. **A learned router.** A small model predicts which model will answer well. RouteLLM trains such routers on human preference data <Cite n={4} />.
+3. **A cascade.** Try the cheap model first. If the answer fails a check, send the request to a stronger model. FrugalGPT is a cascade that learns which models to use for which queries <Cite n={5} />. Anthropic describes a related policy: give each task a first try at a low setting, then repeat only the failed tasks at a higher setting <Cite n={3} />. This works only when you have a reliable failure signal, and each failure costs extra time <Cite n={3} />.
+
+Tutorial's own view: start with rules. Add a learned router only when the rules leave clear savings on the table.
+
+```python
+def pick_model(request_type: str, text: str) -> str:
+    # Rule-based router: easy, short requests go to the fast model.
+    if request_type in {"faq", "classify"} and len(text) < 2000:
+        return "claude-haiku-5-5"
+    if request_type == "code_review":
+        return "claude-opus-5-5"
+    return "claude-sonnet-5-5"
+```
+
+### Compare the right number
+
+Anthropic advises to compare models on the cost of a completed task, not the cost of a token <Cite n={3} />. A failed task still costs its tokens, then the retry <Cite n={3} />. So a cheap model that fails often can cost more in total.
+
+</Technical>
+<Layman>
+
+First, know the options. The Claude models overview compares the current models <Cite n={2} />:
+
+- Claude Opus 5.5 (`claude-opus-5-5`): moderate speed. $4 per million input tokens and $20 per million output tokens.
+- Claude Sonnet 5.5 (`claude-sonnet-5-5`): fast. $2 input and $10 output per million tokens.
+- Claude Haiku 5.5 (`claude-haiku-5-5`): the fastest. From $0.10 input and from $0.50 output per million tokens.
+
+The docs list Haiku 5.5 for the shortest wait and the lowest price. Examples are real-time apps and work with a high volume <Cite n={1} />.
+
+There are three ways to route:
+
+1. **Rules.** Code looks at the request: its type, its length, or the plan of the user. Then it picks a model. This router is cheap and easy to test.
+2. **A learned router.** A small model guesses which model will answer well. RouteLLM trains such routers on data about what people prefer <Cite n={4} />.
+3. **A cascade.** Try the cheap model first. If the answer fails a check, send the request to a stronger model. FrugalGPT is a cascade. It learns which models to use for which questions <Cite n={5} />. Anthropic describes a similar plan. Run every task at a low setting. Run only the failures again at a higher setting <Cite n={3} />. This works only when you can detect a failure reliably. Each failure also costs extra time <Cite n={3} />.
+
+Tutorial's own view: start with rules. Add a learned router only when the rules clearly miss savings.
+
+The Technical text has a short Python example. Short FAQ and classify requests go to Haiku. Code reviews go to Opus. All other requests go to Sonnet.
+
+Compare the right number. Anthropic says to compare models on the cost of a finished task, not the cost of a token <Cite n={3} />. A failed task still costs its tokens. Then the retry costs more <Cite n={3} />. So a cheap model that fails often can cost more in total.
+
+</Layman>
+<Bangla>
+
+প্রথমে বিকল্পগুলো জানুন। Claude models overview বর্তমান মডেলগুলোর তুলনা দেয় <Cite n={2} />:
+
+- Claude Opus 5.5 (`claude-opus-5-5`): মাঝারি গতি। প্রতি মিলিয়ন ইনপুট টোকেনে $4, প্রতি মিলিয়ন আউটপুট টোকেনে $20।
+- Claude Sonnet 5.5 (`claude-sonnet-5-5`): দ্রুত। প্রতি মিলিয়ন টোকেনে ইনপুট $2, আউটপুট $10।
+- Claude Haiku 5.5 (`claude-haiku-5-5`): সবচেয়ে দ্রুত। প্রতি মিলিয়ন টোকেনে ইনপুট $0.10 থেকে, আউটপুট $0.50 থেকে।
+
+ডকস সবচেয়ে কম লেটেন্সি (latency) ও দামের জন্য Haiku 5.5-এর কথা বলে। উদাহরণ হলো রিয়েল-টাইম অ্যাপ ও বেশি পরিমাণের কাজ <Cite n={1} />।
+
+রাউট করার তিনটা উপায় আছে:
+
+1. **নিয়ম।** কোড রিকুয়েস্ট দেখে: তার ধরন, তার দৈর্ঘ্য, বা ইউজারের প্ল্যান। তারপর একটা মডেল বাছাই করে। এই রাউটার সস্তা এবং টেস্ট করা সহজ।
+2. **শেখা রাউটার।** একটা ছোট মডেল অনুমান করে কোন মডেল ভালো উত্তর দেবে। RouteLLM মানুষের পছন্দের ডেটা দিয়ে এমন রাউটার ট্রেইন করে <Cite n={4} />।
+3. **ক্যাসকেড (cascade)।** আগে সস্তা মডেল চেষ্টা করুন। উত্তর একটা চেকে ফেল করলে রিকুয়েস্টটা শক্তিশালী মডেলে পাঠান। FrugalGPT একটা ক্যাসকেড। এটা শেখে কোন প্রশ্নের জন্য কোন মডেল ব্যবহার করতে হবে <Cite n={5} />। Anthropic একটা মিল থাকা পরিকল্পনার কথা বলে। প্রতিটা কাজ কম সেটিংয়ে চালান। শুধু ব্যর্থগুলো বেশি সেটিংয়ে আবার চালান <Cite n={3} />। এটা তখনই কাজ করে যখন আপনি ব্যর্থতা নির্ভরযোগ্যভাবে ধরতে পারেন। প্রতিটা ব্যর্থতায় বাড়তি সময়ও লাগে <Cite n={3} />।
+
+টিউটোরিয়ালের নিজের মত: নিয়ম দিয়ে শুরু করুন। নিয়ম যখন স্পষ্টভাবে সাশ্রয় হারায়, তখনই একটা শেখা রাউটার যোগ করুন।
+
+Technical টেক্সটে একটা ছোট Python উদাহরণ আছে। ছোট FAQ ও classify রিকুয়েস্ট Haiku-তে যায়। কোড রিভিউ Opus-এ যায়। বাকি সব রিকুয়েস্ট Sonnet-এ যায়।
+
+সঠিক সংখ্যা তুলনা করুন। Anthropic বলে, মডেলের তুলনা করুন একটা শেষ হওয়া কাজের খরচে, একটা টোকেনের খরচে নয় <Cite n={3} />। একটা ব্যর্থ কাজেও তার টোকেনের খরচ হয়। তারপর রিট্রাইয়ের খরচ যোগ হয় <Cite n={3} />। তাই যে সস্তা মডেল প্রায়ই ফেল করে, মোটে তার খরচ বেশি হতে পারে।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A support chatbot answers about 50,000 questions a day. At first, every question goes to the strongest model. The team adds a rule router:
+
+- Order status and password-reset questions go to Claude Haiku 5.5. These are high-volume, simple tasks, the use case that the docs give for Haiku <Cite n={1} />.
+- Refund disputes and complaints go to Claude Opus 5.5.
+- If the Haiku answer fails a check (for example, it does not name an order number), the request goes again to Opus. This is a cascade <Cite n={5} />.
+
+A tester then compares both setups on the same 500 real questions. The team looks at the cost per solved question, not the cost per token <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+A support chatbot answers about 50,000 questions a day. At first, every question goes to the strongest model. The team adds a router with rules:
+
+- Questions about order status and password reset go to Claude Haiku 5.5. These are simple tasks with a high volume. The docs give this use for Haiku <Cite n={1} />.
+- Refund disputes and complaints go to Claude Opus 5.5.
+- Sometimes the Haiku answer fails a check. For example, it does not name an order number. Then the request goes again to Opus. This is a cascade <Cite n={5} />.
+
+A tester then compares both setups on the same 500 real questions. The team looks at the cost for each solved question. It does not look at the cost for each token <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+একটা সাপোর্ট চ্যাটবট দিনে প্রায় 50,000 প্রশ্নের উত্তর দেয়। শুরুতে প্রতিটা প্রশ্ন সবচেয়ে শক্তিশালী মডেলে যায়। দল নিয়মসহ একটা রাউটার যোগ করে:
+
+- অর্ডার স্ট্যাটাস ও পাসওয়ার্ড রিসেটের প্রশ্ন Claude Haiku 5.5-এ যায়। এগুলো বেশি পরিমাণের সহজ কাজ। ডকস Haiku-র জন্য এই ব্যবহারই দেয় <Cite n={1} />।
+- রিফান্ড নিয়ে বিরোধ ও অভিযোগ Claude Opus 5.5-এ যায়।
+- কখনো Haiku-র উত্তর একটা চেকে ফেল করে। যেমন, উত্তরে কোনো অর্ডার নম্বর নেই। তখন রিকুয়েস্টটা আবার Opus-এ যায়। এটা একটা ক্যাসকেড <Cite n={5} />।
+
+তারপর একজন টেস্টার একই 500টা আসল প্রশ্নে দুটো সেটআপের তুলনা করেন। দল প্রতিটা সমাধান হওয়া প্রশ্নের খরচ দেখে। প্রতিটা টোকেনের খরচ দেখে না <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Comparing price per token only.** You pay for completed tasks, so compare cost per task <Cite n={3} />.
+- **Testing on easy cases only.** Anthropic advises to price models on the 10 % of tasks that are hardest, not on a typical task <Cite n={3} />.
+- **A cascade with a weak check.** A checker that passes bad work lets the failures through <Cite n={3} />.
+- **Never checking the router again.** Anthropic advises to check a model pairing again at every model release <Cite n={3} />.
+- **Choosing without your own data.** The docs say that a good evaluation set, with your real prompts and data, is the most important step <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+- **Comparing price per token only.** You pay for finished tasks. So compare the cost for each task <Cite n={3} />.
+- **Testing on easy cases only.** Anthropic says to price models on the 10 % of tasks that are hardest. Do not use only a typical task <Cite n={3} />.
+- **A cascade with a weak check.** A checker that passes bad work lets the failures through <Cite n={3} />.
+- **Never checking the router again.** Anthropic says to check a pair of models again at every new model release <Cite n={3} />.
+- **Choosing without your own data.** The docs say that a good test set is the most important step. It uses your real prompts and data <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **শুধু প্রতি টোকেনের দাম তুলনা করা।** আপনি শেষ হওয়া কাজের দাম দেন। তাই প্রতিটা কাজের খরচ তুলনা করুন <Cite n={3} />।
+- **শুধু সহজ কেসে টেস্ট করা।** Anthropic বলে, আপনার সবচেয়ে কঠিন 10 % কাজে মডেলের দাম তুলনা করুন। শুধু সাধারণ কাজ ব্যবহার করবেন না <Cite n={3} />।
+- **দুর্বল চেকসহ ক্যাসকেড।** যে চেকার খারাপ কাজ পাস করায়, সে ব্যর্থতাগুলো ঢুকতে দেয় <Cite n={3} />।
+- **রাউটার আর কখনো না দেখা।** Anthropic বলে, প্রতিটা নতুন মডেল রিলিজে মডেলের জোড়া আবার দেখুন <Cite n={3} />।
+- **নিজের ডেটা ছাড়া বাছাই করা।** ডকস বলে, একটা ভালো টেস্ট সেট সবচেয়ে জরুরি ধাপ। এতে আপনার আসল প্রম্পট ও ডেটা থাকে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Router unit tests.** For each rule, give one input on each side of the limit (for example 1,999 and 2,001 characters). Check the chosen model.
+- **Log the choice.** Check that each request logs the model that answered it, so that you can compare cost and quality later.
+- **Same set, two setups.** Run one fixed question set through the router and through the strong model alone. Compare pass rate and cost per solved question.
+- **Escalation path.** Force the cheap model to fail the check. Check that the request goes to the strong model and the user gets one answer, not two.
+- **Fallback when a model is missing.** Point the router at a model id that does not exist in a test setup. Check that the app gives a clear error.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Router unit tests.** For each rule, give one input on each side of the limit. For example, use 1,999 and 2,001 characters. Check the chosen model.
+- **Log the choice.** Check that each request logs the model that answered it. Then you can compare cost and quality later.
+- **Same set, two setups.** Run one fixed set of questions through the router. Run it again through the strong model alone. Compare the pass rate and the cost for each solved question.
+- **Escalation path.** Make the cheap model fail the check. Check that the request goes to the strong model. Check that the user gets one answer, not two.
+- **Fallback when a model is missing.** In a test setup, point the router at a model id that does not exist. Check that the app gives a clear error.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **রাউটারের ইউনিট টেস্ট।** প্রতিটা নিয়মের জন্য সীমার দুই পাশে একটা করে ইনপুট দিন। যেমন, 1,999 ও 2,001 অক্ষর। বাছাই করা মডেল দেখুন।
+- **বাছাই লগ করুন।** দেখুন প্রতিটা রিকুয়েস্ট লগে লেখে কোন মডেল উত্তর দিয়েছে। তাহলে পরে খরচ ও মান তুলনা করতে পারবেন।
+- **একই সেট, দুই সেটআপ।** একটা নির্দিষ্ট প্রশ্নের সেট রাউটার দিয়ে চালান। তারপর শুধু শক্তিশালী মডেল দিয়ে আবার চালান। পাস রেট ও প্রতিটা সমাধান হওয়া প্রশ্নের খরচ তুলনা করুন।
+- **উপরে পাঠানোর পথ।** সস্তা মডেলকে চেকে ফেল করান। দেখুন রিকুয়েস্টটা শক্তিশালী মডেলে যায় কি না। দেখুন ইউজার একটা উত্তর পান, দুটো নয়।
+- **মডেল না থাকলে ফলব্যাক।** একটা টেস্ট সেটআপে রাউটারকে এমন model id দিন যা নেই। দেখুন অ্যাপ একটা পরিষ্কার এরর দেখায় কি না।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Model routing | Choosing a model for each request, not once for the whole app <Cite n={4} /> |
+| Router | A rule or a model that selects between a stronger and a weaker model <Cite n={4} /> |
+| Cascade | Trying cheaper models first and moving to stronger ones when needed <Cite n={5} /> |
+| Cost per task | The total cost of one completed task, including retries <Cite n={3} /> |
+| Comparative latency | How fast a model is relative to the other current models <Cite n={2} /> |
+| Evaluation set | Test cases with your real prompts and data, used to compare models <Cite n={1} /> |

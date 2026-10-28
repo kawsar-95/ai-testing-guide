@@ -1,0 +1,267 @@
+export const metadata = { title: 'Vector Databases', description: 'Store embeddings and find the nearest ones to a query, and know what exact and approximate search mean for a tester.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Vector embeddings', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/guides/embeddings', accessed: '2026-10-28' },
+    { title: 'pgvector: open-source vector similarity search for Postgres (README)', publisher: 'pgvector (GitHub)', url: 'https://github.com/pgvector/pgvector', accessed: '2026-10-28' },
+    { title: 'Key concepts', publisher: 'Pinecone (Docs)', url: 'https://docs.pinecone.io/guides/core-concepts/key-terms', accessed: '2026-10-28' },
+    { title: 'Collections', publisher: 'Qdrant (Docs)', url: 'https://qdrant.tech/documentation/manage-data/collections/', accessed: '2026-10-28' },
+    { title: 'Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs (Malkov and Yashunin)', publisher: 'arXiv', url: 'https://arxiv.org/abs/1603.09320', accessed: '2026-10-28' },
+    { title: 'LLM08:2025 Vector and Embedding Weaknesses', publisher: 'OWASP Gen AI Security Project', url: 'https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/', accessed: '2026-10-28' },
+    { title: 'Embeddings', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/embeddings', accessed: '2026-10-28' },
+  ],
+}
+
+# Vector Databases
+
+A normal database finds rows where a field equals a value. A vector database finds rows that are close in meaning to a question, even when they share no words. It is the search engine behind most RAG systems.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **embedding** is a list of floating-point numbers (a **vector**) that an embedding model makes from a text. The distance between two vectors shows how related the texts are: a small distance means closely related, a large distance means not related <Cite n={1} />. Each vector is a point in a space with many dimensions, and points that are close together have a similar meaning <Cite n={3} />.
+
+A **vector database** stores these vectors, often with an ID and extra data (**metadata**), and finds the stored vectors that are nearest to a query vector. This is called semantic search, nearest neighbor search, or vector search <Cite n={3} />.
+
+You can use a dedicated product, such as Pinecone or Qdrant, or an extension of a normal database, such as pgvector for PostgreSQL <Cite n={2} /> <Cite n={3} /> <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+An **embedding** is a list of numbers (a **vector**). An embedding model makes it from a text. The distance between two vectors shows how related the texts are. A small distance means closely related. A large distance means not related <Cite n={1} />. Think of each vector as a point in a space with many directions. Points that are close together have a similar meaning <Cite n={3} />.
+
+A **vector database** stores these vectors. It often keeps an ID and extra data (**metadata**) with each one. It finds the stored vectors that are nearest to the vector of a question. This is called semantic search, nearest neighbor search, or vector search <Cite n={3} />.
+
+You can use a separate product, such as Pinecone or Qdrant. You can also add vector search to a normal database, for example pgvector for PostgreSQL <Cite n={2} /> <Cite n={3} /> <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+**এমবেডিং** (embedding) হলো সংখ্যার একটা তালিকা (একটা **ভেক্টর**)। একটা এমবেডিং মডেল টেক্সট থেকে এটা বানায়। দুটো ভেক্টরের দূরত্ব বলে টেক্সট দুটো কতটা সম্পর্কিত। দূরত্ব কম মানে বেশি সম্পর্কিত। দূরত্ব বেশি মানে কম সম্পর্কিত <Cite n={1} />। প্রতিটা ভেক্টরকে অনেক মাত্রার (dimension) একটা জায়গায় একটা বিন্দু ভাবুন। কাছাকাছি বিন্দুগুলোর অর্থ কাছাকাছি <Cite n={3} />।
+
+**ভেক্টর ডেটাবেস** এই ভেক্টরগুলো রাখে। প্রায়ই প্রতিটার সাথে একটা ID আর বাড়তি ডেটা (**মেটাডেটা**) থাকে। এটা একটা প্রশ্নের ভেক্টরের সবচেয়ে কাছের ভেক্টরগুলো খুঁজে দেয়। একে বলে semantic search, nearest neighbor search, বা vector search <Cite n={3} />।
+
+আপনি আলাদা একটা প্রোডাক্ট ব্যবহার করতে পারেন, যেমন Pinecone বা Qdrant। আবার একটা সাধারণ ডেটাবেসে ভেক্টর সার্চ যোগ করতে পারেন, যেমন PostgreSQL-এর জন্য pgvector <Cite n={2} /> <Cite n={3} /> <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### 1. Make embeddings
+
+You send each text to an embedding model. For example, OpenAI's `text-embedding-3-small` returns a vector of 1536 numbers by default <Cite n={1} />. Anthropic does not make its own embedding model; its docs point to other providers, such as Voyage AI <Cite n={7} />.
+
+### 2. Store them
+
+In pgvector, a vector is a column type. The number in brackets is the dimension <Cite n={2} />:
+
+```sql
+CREATE EXTENSION vector;
+CREATE TABLE chunks (id bigserial PRIMARY KEY, body text, embedding vector(1536));
+```
+
+In Qdrant, every vector in one **collection** must have the same dimension and use one distance metric <Cite n={4} />. In Pinecone, a **namespace** is a partition of an index, and each query reads only one namespace <Cite n={3} />.
+
+### 3. Search by distance
+
+| Metric | pgvector operator <Cite n={2} /> |
+|---|---|
+| L2 (Euclidean) distance | `<->` |
+| Negative inner product | `<#>` |
+| Cosine distance | `<=>` |
+
+```sql
+SELECT id, body FROM chunks ORDER BY embedding <=> '[0.01, -0.02, ...]' LIMIT 5;
+```
+
+OpenAI recommends cosine similarity for its embeddings. Its vectors have length 1, so cosine similarity and Euclidean distance give the same order <Cite n={1} />.
+
+### 4. Exact or approximate
+
+Without an index, pgvector does an **exact** nearest neighbor search, with perfect recall <Cite n={2} />. An index makes the search **approximate**: faster, but with some loss of recall, so the results can change after you add it <Cite n={2} />.
+
+**HNSW** is a common index type. It builds a graph with many layers <Cite n={5} /> <Cite n={2} />. In pgvector, a higher `hnsw.ef_search` gives better recall but slower queries <Cite n={2} />. **IVFFlat** splits the vectors into lists. It builds faster and uses less memory than HNSW, but it has a worse speed-recall trade-off <Cite n={2} />.
+
+### 5. Filters
+
+With an approximate index, pgvector applies a `WHERE` filter after the index scan. With the default `ef_search` of 40 and a filter that matches 10% of rows, only about 4 rows come back <Cite n={2} />. Since version 0.8.0, **iterative index scans** read more of the index until enough rows match <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+First, you make embeddings. You send each text to an embedding model. For example, OpenAI's `text-embedding-3-small` gives a vector of 1536 numbers by default <Cite n={1} />. Anthropic does not make its own embedding model. Its docs point to other providers, such as Voyage AI <Cite n={7} />.
+
+Second, you store them. In pgvector, a vector is a column type, such as `vector(1536)`. The number is the dimension <Cite n={2} />. In Qdrant, every vector in one **collection** must have the same dimension and use one distance metric <Cite n={4} />. In Pinecone, a **namespace** is a part of an index. Each query reads only one namespace <Cite n={3} />.
+
+Third, you search by distance. pgvector has 3 main operators <Cite n={2} />. `<->` is L2 (straight-line) distance. `<#>` is the negative inner product. `<=>` is cosine distance. The query sorts the rows by distance and takes the first 5. The Technical text shows the SQL.
+
+OpenAI recommends cosine similarity for its embeddings. Its vectors have length 1. So cosine similarity and straight-line distance give the same order <Cite n={1} />.
+
+Fourth, you choose exact or approximate search. Without an index, pgvector checks every row. This is **exact** search, and it finds every true match <Cite n={2} />. An index makes the search **approximate**. It is faster, but it can miss some matches. So the results can change after you add the index <Cite n={2} />.
+
+**HNSW** is a common index type. It builds a graph with many layers <Cite n={5} /> <Cite n={2} />. In pgvector, a higher `hnsw.ef_search` finds more true matches but makes queries slower <Cite n={2} />. **IVFFlat** splits the vectors into lists. It builds faster and uses less memory than HNSW. But it is worse at the balance of speed and matches <Cite n={2} />.
+
+Last, filters. With an approximate index, pgvector applies a `WHERE` filter after the index search. Take the default `ef_search` of 40 and a filter that matches 10% of rows. Only about 4 rows come back <Cite n={2} />. Since version 0.8.0, **iterative index scans** read more of the index until enough rows match <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+প্রথমে এমবেডিং বানান। প্রতিটা টেক্সট একটা এমবেডিং মডেলে পাঠান। যেমন OpenAI-এর `text-embedding-3-small` ডিফল্টভাবে ১৫৩৬টা সংখ্যার একটা ভেক্টর দেয় <Cite n={1} />। Anthropic নিজের কোনো এমবেডিং মডেল বানায় না। এর ডক অন্য প্রোভাইডার দেখায়, যেমন Voyage AI <Cite n={7} />।
+
+দ্বিতীয়ত, এগুলো রাখুন। pgvector-এ ভেক্টর একটা কলাম টাইপ, যেমন `vector(1536)`। সংখ্যাটা হলো ডাইমেনশন <Cite n={2} />। Qdrant-এ একটা **collection**-এর প্রতিটা ভেক্টরের ডাইমেনশন একই হতে হবে, আর একটাই দূরত্বের মাপ (metric) ব্যবহার করতে হবে <Cite n={4} />। Pinecone-এ **namespace** হলো একটা ইনডেক্সের একটা ভাগ। প্রতিটা কুয়েরি শুধু একটা namespace পড়ে <Cite n={3} />।
+
+তৃতীয়ত, দূরত্ব দিয়ে সার্চ করুন। pgvector-এর ৩টা মূল অপারেটর আছে <Cite n={2} />। `<->` হলো L2 (সরল রেখার) দূরত্ব। `<#>` হলো নেগেটিভ inner product। `<=>` হলো cosine দূরত্ব। কুয়েরি সারিগুলো দূরত্ব অনুযায়ী সাজিয়ে প্রথম ৫টা নেয়। Technical লেখায় SQL আছে।
+
+OpenAI তার এমবেডিং-এর জন্য cosine similarity-র পরামর্শ দেয়। এর ভেক্টরের দৈর্ঘ্য ১। তাই cosine similarity আর সরল রেখার দূরত্ব একই ক্রম দেয় <Cite n={1} />।
+
+চতুর্থত, exact নাকি approximate সার্চ, তা বাছুন। ইনডেক্স ছাড়া pgvector প্রতিটা সারি দেখে। এটা **exact** সার্চ, আর এটা প্রতিটা আসল মিল খুঁজে পায় <Cite n={2} />। একটা ইনডেক্স সার্চকে **approximate** করে। এটা দ্রুত, কিন্তু কিছু মিল বাদ পড়তে পারে। তাই ইনডেক্স যোগ করার পর ফল বদলাতে পারে <Cite n={2} />।
+
+**HNSW** একটা প্রচলিত ইনডেক্স টাইপ। এটা অনেক স্তরের একটা গ্রাফ বানায় <Cite n={5} /> <Cite n={2} />। pgvector-এ `hnsw.ef_search` বেশি দিলে বেশি আসল মিল পাওয়া যায়, কিন্তু কুয়েরি ধীর হয় <Cite n={2} />। **IVFFlat** ভেক্টরগুলোকে কয়েকটা তালিকায় ভাগ করে। HNSW-এর চেয়ে এটা দ্রুত তৈরি হয় আর কম মেমরি নেয়। কিন্তু গতি আর মিলের ভারসাম্যে এটা দুর্বল <Cite n={2} />।
+
+শেষে, ফিল্টার। approximate ইনডেক্সে pgvector ইনডেক্স সার্চের পরে `WHERE` ফিল্টার বসায়। ডিফল্ট `ef_search` ৪০ আর একটা ফিল্টার যা ১০% সারির সাথে মেলে, ধরুন। তাহলে গড়ে মাত্র ৪টা সারি ফেরত আসে <Cite n={2} />। ভার্সন 0.8.0 থেকে **iterative index scans** যথেষ্ট সারি না মেলা পর্যন্ত ইনডেক্সের আরও অংশ পড়ে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A support team stores 200,000 help-center chunks in PostgreSQL with pgvector, so the vectors live next to the rest of the app data <Cite n={2} />. Each row also has a `product` column.
+
+With no index, a search takes 2 seconds. The team adds an HNSW index, and the search takes 30 ms. Two problems show up in testing:
+
+1. **Different results.** Some queries now return a slightly different top 5. This is expected: the index makes the search approximate and trades recall for speed <Cite n={2} />. The team measures recall against exact search on 100 test queries and raises `hnsw.ef_search` until recall is good enough <Cite n={2} />.
+2. **Too few results.** A query filtered to one small product returns only 1 or 2 rows, not 5. The filter runs after the index scan <Cite n={2} />. The team turns on iterative index scans <Cite n={2} />.
+
+They also learn that the customers of different companies must never share one search space. They split the data, as OWASP recommends for shared vector stores <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+A support team stores 200,000 help-center chunks in PostgreSQL with pgvector. So the vectors live next to the rest of the app data <Cite n={2} />. Each row also has a `product` column.
+
+With no index, a search takes 2 seconds. The team adds an HNSW index. Now the search takes 30 ms. Testing finds 2 problems:
+
+1. **Different results.** Some queries now return a slightly different top 5. This is expected. The index makes the search approximate. It gives up some matches for speed <Cite n={2} />. The team compares the results with exact search on 100 test queries. They raise `hnsw.ef_search` until the results are good enough <Cite n={2} />.
+2. **Too few results.** A query filtered to one small product returns only 1 or 2 rows, not 5. The filter runs after the index search <Cite n={2} />. The team turns on iterative index scans <Cite n={2} />.
+
+They also learn that customers of different companies must never share one search space. They split the data, as OWASP recommends for shared vector stores <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+একটা সাপোর্ট টিম pgvector দিয়ে PostgreSQL-এ হেল্প সেন্টারের ২,০০,০০০টা চাঙ্ক রাখে। তাই ভেক্টরগুলো অ্যাপের বাকি ডেটার পাশেই থাকে <Cite n={2} />। প্রতিটা সারিতে একটা `product` কলামও আছে।
+
+ইনডেক্স ছাড়া একটা সার্চে ২ সেকেন্ড লাগে। টিম একটা HNSW ইনডেক্স যোগ করে। এখন সার্চে ৩০ ms লাগে। টেস্টে ২টা সমস্যা ধরা পড়ে:
+
+1. **ভিন্ন ফল।** কিছু কুয়েরি এখন একটু ভিন্ন প্রথম ৫টা ফল দেয়। এটা প্রত্যাশিত। ইনডেক্স সার্চকে approximate করে। গতির জন্য কিছু মিল ছেড়ে দেয় <Cite n={2} />। টিম ১০০টা টেস্ট কুয়েরিতে exact সার্চের সাথে ফল তুলনা করে। ফল যথেষ্ট ভালো না হওয়া পর্যন্ত তারা `hnsw.ef_search` বাড়ায় <Cite n={2} />।
+2. **খুব কম ফল।** একটা ছোট প্রোডাক্টে ফিল্টার করা কুয়েরি ৫টার বদলে মাত্র ১ বা ২টা সারি দেয়। ফিল্টার চলে ইনডেক্স সার্চের পরে <Cite n={2} />। টিম iterative index scans চালু করে <Cite n={2} />।
+
+তারা এটাও শেখে যে আলাদা কোম্পানির কাস্টমাররা কখনো একটা সার্চের জায়গা শেয়ার করবেন না। শেয়ার্ড ভেক্টর স্টোরের জন্য OWASP যেমন বলে, তারা ডেটা ভাগ করে রাখে <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Mixed dimensions or models.** All vectors in one collection must have the same dimension <Cite n={4} />. In the tutorial's own view, the query and the documents must also come from the same embedding model, or the distances mean nothing.
+- **Expecting exact results from an approximate index.** Results can change after you add an index <Cite n={2} />.
+- **The wrong distance operator.** In pgvector, you add an index for each distance function that you use, such as `vector_cosine_ops` for cosine distance. To use the index, the query must `ORDER BY` a distance operator, not an expression, in ascending order <Cite n={2} />.
+- **Filters that return too little.** With an approximate index, a selective filter can leave very few rows <Cite n={2} />.
+- **Only semantic search.** Vector search finds similar meaning. For exact product names, IDs, and codes, full-text (BM25) search is often better <Cite n={3} />.
+- **No tenant isolation.** If many groups share one vector store, data can leak between them. Use permission-aware stores and strict partitions <Cite n={6} />. A Pinecone namespace is one way to isolate each customer <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+- **Mixed dimensions or models.** All vectors in one collection must have the same dimension <Cite n={4} />. In the tutorial's own view, the question and the documents must also come from the same embedding model. If not, the distances mean nothing.
+- **Expecting exact results from an approximate index.** Results can change after you add an index <Cite n={2} />.
+- **The wrong distance operator.** In pgvector, you add an index for each distance function that you use, such as `vector_cosine_ops` for cosine distance. To use the index, the query must `ORDER BY` a distance operator, not an expression, in ascending order <Cite n={2} />.
+- **Filters that return too little.** With an approximate index, a strict filter can leave very few rows <Cite n={2} />.
+- **Only meaning-based search.** Vector search finds similar meaning. For exact product names, IDs, and codes, full-text (BM25) search is often better <Cite n={3} />.
+- **No customer isolation.** If many groups share one vector store, data can leak between them. Use stores that check permissions, and strict partitions <Cite n={6} />. A Pinecone namespace is one way to keep each customer apart <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+- **মেশানো ডাইমেনশন বা মডেল।** একটা collection-এর সব ভেক্টরের ডাইমেনশন একই হতে হবে <Cite n={4} />। টিউটোরিয়ালের নিজের মতে, প্রশ্ন আর ডকুমেন্টও একই এমবেডিং মডেল থেকে আসতে হবে। না হলে দূরত্বের কোনো মানে থাকে না।
+- **approximate ইনডেক্স থেকে exact ফল আশা করা।** ইনডেক্স যোগ করার পর ফল বদলাতে পারে <Cite n={2} />।
+- **ভুল দূরত্বের অপারেটর।** pgvector-এ আপনি যে প্রতিটা দূরত্বের ফাংশন ব্যবহার করেন, তার জন্য একটা করে ইনডেক্স যোগ করতে হয়, যেমন cosine দূরত্বের জন্য `vector_cosine_ops`। ইনডেক্সটা কাজে লাগাতে কুয়েরিকে একটা দূরত্বের অপারেটর দিয়ে (কোনো expression দিয়ে নয়) ছোট থেকে বড় ক্রমে `ORDER BY` করতে হবে <Cite n={2} />।
+- **খুব কম ফল দেওয়া ফিল্টার।** approximate ইনডেক্সে একটা কড়া ফিল্টার খুব কম সারি রাখতে পারে <Cite n={2} />।
+- **শুধু অর্থভিত্তিক সার্চ।** ভেক্টর সার্চ কাছাকাছি অর্থ খোঁজে। হুবহু প্রোডাক্টের নাম, ID আর কোডের জন্য full-text (BM25) সার্চ প্রায়ই ভালো <Cite n={3} />।
+- **কাস্টমার আলাদা না রাখা।** অনেক গ্রুপ একটা ভেক্টর স্টোর শেয়ার করলে তাদের মধ্যে ডেটা ফাঁস হতে পারে। পারমিশন যাচাই করে এমন স্টোর আর কড়া পার্টিশন ব্যবহার করুন <Cite n={6} />। প্রতিটা কাস্টমারকে আলাদা রাখার একটা উপায় হলো Pinecone namespace <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Measure recall.** For 50 to 100 queries, compare the top 10 of the indexed search with the top 10 of an exact search. Track the share that matches.
+- **Known neighbors.** Insert a near-copy of a document. A query with that text must return both near the top.
+- **Dimension check.** Try to insert a vector with the wrong length. The database must reject it.
+- **Filter plus limit.** Filter to a rare value and ask for 10 results. Check that you get 10 when 10 exist.
+- **Delete and update.** Delete or change a document. It must not come back in search results.
+- **Tenant isolation.** As customer A, search for text that only customer B has. Nothing from B must come back.
+- **Load test.** Measure the query time at the expected number of vectors and requests, not on a small test set.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Measure recall.** For 50 to 100 queries, compare the top 10 of the indexed search with the top 10 of an exact search. Track the share that matches.
+- **Known neighbors.** Insert a near-copy of a document. A query with that text must return both near the top.
+- **Dimension check.** Try to insert a vector with the wrong length. The database must reject it.
+- **Filter plus limit.** Filter to a rare value and ask for 10 results. Check that you get 10 when 10 exist.
+- **Delete and update.** Delete or change a document. It must not come back in search results.
+- **Customer isolation.** As customer A, search for text that only customer B has. Nothing from B must come back.
+- **Load test.** Measure the query time at the real number of vectors and requests, not on a small test set.
+
+</Layman>
+<Bangla>
+
+এই টেস্ট আইডিয়াগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **Recall মাপুন।** ৫০ থেকে ১০০টা কুয়েরিতে ইনডেক্স করা সার্চের প্রথম ১০টা আর exact সার্চের প্রথম ১০টা তুলনা করুন। কতটা মেলে তা ট্র্যাক করুন।
+- **জানা প্রতিবেশী।** একটা ডকুমেন্টের প্রায় হুবহু কপি যোগ করুন। সেই টেক্সট দিয়ে কুয়েরি করলে দুটোই উপরের দিকে আসতে হবে।
+- **ডাইমেনশন চেক।** ভুল দৈর্ঘ্যের একটা ভেক্টর যোগ করার চেষ্টা করুন। ডেটাবেসকে তা প্রত্যাখ্যান করতে হবে।
+- **ফিল্টার আর লিমিট।** একটা বিরল মানে ফিল্টার করে ১০টা ফল চান। ১০টা থাকলে ১০টাই পান কিনা চেক করুন।
+- **মোছা আর আপডেট।** একটা ডকুমেন্ট মুছুন বা বদলান। সার্চের ফলে সেটা আর ফিরবে না।
+- **কাস্টমার আলাদা রাখা।** কাস্টমার A হিসেবে এমন টেক্সট সার্চ করুন যা শুধু কাস্টমার B-এর আছে। B-এর কিছুই ফেরত আসবে না।
+- **লোড টেস্ট।** ছোট টেস্ট সেটে নয়, আসল সংখ্যার ভেক্টর আর রিকুয়েস্টে কুয়েরির সময় মাপুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Embedding | A vector of numbers that a model makes from a text; distance shows relatedness <Cite n={1} /> |
+| Vector database | A store that finds the vectors nearest to a query vector <Cite n={3} /> |
+| Dimension | The number of values in a vector, for example 1536 <Cite n={1} /> |
+| Cosine distance | One of the distance metrics, written `<=>` in pgvector <Cite n={2} /> |
+| Exact search | A search that compares every vector, with perfect recall <Cite n={2} /> |
+| Approximate search (ANN) | A faster search with an index that can miss some neighbors <Cite n={2} /> |
+| HNSW | An index that builds a graph with many layers <Cite n={5} /> |
+| Namespace | A partition of a Pinecone index; each query reads one <Cite n={3} /> |

@@ -1,0 +1,303 @@
+export const metadata = { title: 'CI/CD for AI', description: 'Run evals on every change to a prompt, a workflow, or a model, pin the model version, and keep API keys safe in the pipeline.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Define success criteria and build evaluations', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/test-and-evaluate/develop-tests', accessed: '2026-10-28' },
+    { title: 'Demystifying evals for AI agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents', accessed: '2026-10-28' },
+    { title: 'Models overview', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/about-claude/models/overview', accessed: '2026-10-28' },
+    { title: 'Using secrets in GitHub Actions', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets', accessed: '2026-10-28' },
+    { title: 'Workflow syntax for GitHub Actions', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax', accessed: '2026-10-28' },
+    { title: 'Get started with Claude', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/get-started', accessed: '2026-10-28' },
+    { title: 'actions/checkout README', publisher: 'GitHub (actions/checkout)', url: 'https://github.com/actions/checkout', accessed: '2026-10-28' },
+  ],
+}
+
+# CI/CD for AI
+
+In a normal app, CI runs the unit tests on every pull request. In an AI app, a one-word change to a prompt can change thousands of answers. So the pipeline must also run evals: tests that send real inputs to the model and grade the outputs.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **eval** tests an AI system: you give it an input and apply grading logic to the output <Cite n={2} />. CI/CD for AI runs a set of evals before each deployment, the same way CI runs unit tests.
+
+What changes in an AI app, and so what the pipeline must test:
+
+- **The prompt**: the system prompt and the templates.
+- **The workflow**: the chain of calls, the tools, and the retrieval step.
+- **The model**: a new model ID, or a new model version.
+
+Anthropic describes the cycle as: define success criteria first, then design evals that measure the app against them <Cite n={1} />. Once the evals exist, you can also track latency, token use, cost per task, and error rate on a fixed set of tasks <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+An **eval** tests an AI system. You give it an input. Then you grade the output with some logic <Cite n={2} />. CI/CD for AI runs a set of evals before each deployment. It is like CI that runs unit tests.
+
+Three things change in an AI app. The pipeline must test all three.
+
+- **The prompt**: the system prompt and the templates.
+- **The workflow**: the chain of calls, the tools, and the retrieval step.
+- **The model**: a new model ID, or a new model version.
+
+Anthropic describes the cycle like this. First, define what success means. Then design evals that measure the app against it <Cite n={1} />. When the evals exist, you can also track latency, token use, cost per task, and error rate on a fixed set of tasks <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**Eval** হলো একটা AI সিস্টেমের টেস্ট: আপনি একটা ইনপুট দেন, তারপর আউটপুটে গ্রেডিং লজিক প্রয়োগ করেন <Cite n={2} />। AI-এর CI/CD প্রতিটা ডিপ্লয়মেন্টের আগে কিছু eval চালায়, ঠিক যেমন CI ইউনিট টেস্ট চালায়।
+
+একটা AI অ্যাপে 3টা জিনিস বদলায়, তাই পাইপলাইনকে 3টাই টেস্ট করতে হয়:
+
+- **প্রম্পট**: সিস্টেম প্রম্পট আর টেমপ্লেট।
+- **ওয়ার্কফ্লো**: কলের চেইন, টুল আর রিট্রিভাল ধাপ।
+- **মডেল**: নতুন মডেল ID, বা মডেলের নতুন ভার্সন।
+
+Anthropic চক্রটা এভাবে বর্ণনা করে: আগে সাফল্যের মানদণ্ড ঠিক করুন, তারপর এমন eval বানান যা অ্যাপকে সেই মানদণ্ডে মাপে <Cite n={1} />। Eval তৈরি হয়ে গেলে একটা নির্দিষ্ট টাস্ক-সেটের ওপর latency, টোকেন খরচ, প্রতি টাস্কের খরচ আর এরর রেটও ট্র্যাক করা যায় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Graders
+
+Anthropic ranks 3 grading methods <Cite n={1} />:
+
+| Method | Strength | Weakness |
+|---|---|---|
+| Code-based (exact match, string match) | Fastest, most reliable, very scalable | No nuance for complex judgments |
+| Human | Most flexible, high quality | Slow and expensive |
+| LLM-based | Fast, flexible, good for complex judgments | Test its reliability first |
+
+The same page gives 3 design rules: make the evals task-specific with edge cases, automate the grading when possible, and prefer more questions with automated grading over fewer hand-graded ones <Cite n={1} />.
+
+### A small eval
+
+This script asks the model to rate the severity of bug reports and checks the label with exact match. The API call has the same shape as the example in the Anthropic docs <Cite n={1} />. The SDK reads the key from the `ANTHROPIC_API_KEY` environment variable <Cite n={6} />:
+
+```python
+import anthropic, sys
+
+cases = [
+    {"text": "Checkout page returns 500 for every user.", "label": "critical"},
+    {"text": "Typo in the footer: 'Contcat us'.", "label": "low"},
+    # ... more cases, with edge cases
+]
+
+client = anthropic.Anthropic()  # reads the key from the environment
+
+def classify(text: str) -> str:
+    msg = client.messages.create(
+        model="claude-opus-5-5",
+        max_tokens=10,
+        messages=[{"role": "user", "content":
+            f"Rate the severity as critical, high, medium, or low. Output only the label.\n{text}"}],
+    )
+    return next(b.text for b in msg.content if b.type == "text").strip().lower()
+
+passed = sum(classify(c["text"]) == c["label"] for c in cases)
+accuracy = passed / len(cases)
+print(f"accuracy={accuracy:.2%}")
+sys.exit(0 if accuracy >= 0.90 else 1)  # the threshold is the team's choice
+```
+
+### The pipeline
+
+In GitHub Actions, a path filter runs the workflow only when matching files change <Cite n={5} />. The API key comes from a repository secret through the `secrets` context <Cite n={4} />. The `actions/checkout` step puts the repository on the runner, and `v7` is its current major version <Cite n={7} />:
+
+```yaml
+on:
+  pull_request:
+    paths:
+      - 'prompts/**'
+      - 'evals/**'
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: pip install anthropic && python evals/severity.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+When a fork triggers the workflow, the runner gets no secrets, except `GITHUB_TOKEN` <Cite n={4} />.
+
+### Pin the model
+
+Each Claude model ID names one fixed snapshot <Cite n={3} />. For models before the 4.6 generation, an alias points to a dated ID <Cite n={3} />. Tutorial's own view: put the exact ID in the config, so a model change is a code change that goes through the evals.
+
+### Flaky by nature
+
+Agent behavior varies between runs <Cite n={2} />. Anthropic names 2 metrics: **pass@k** is the chance of at least 1 success in k tries, and **pass^k** is the chance that all k tries succeed <Cite n={2} />. With a 75% success rate per try, 3 tries all pass only about 42% of the time <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+**Graders.** Anthropic ranks 3 ways to grade <Cite n={1} />.
+
+- Code-based grading, such as exact match or string match. It is the fastest and most reliable. It scales very well. But it has no nuance for complex judgments.
+- Human grading. It is the most flexible and has high quality. But it is slow and expensive.
+- LLM-based grading. It is fast and flexible. It is good for complex judgments. Test its reliability first.
+
+The same page gives 3 design rules. Make the evals specific to the task, with edge cases. Automate the grading when you can. Prefer more questions with automatic grading over fewer questions graded by hand <Cite n={1} />.
+
+**A small eval.** The script in the Technical text asks the model to rate the severity of bug reports. It checks the label with exact match. The API call has the same shape as the example in the Anthropic docs <Cite n={1} />. The script fails when the accuracy is under the limit that the team chose.
+
+**The pipeline.** In GitHub Actions, a path filter runs the workflow only when matching files change <Cite n={5} />. The example runs when files in `prompts/` or `evals/` change. The API key comes from a repository secret, through the `secrets` context <Cite n={4} />. A fork can trigger the workflow. Then the runner gets no secrets. `GITHUB_TOKEN` is the only exception <Cite n={4} />.
+
+**Pin the model.** Each Claude model ID names one fixed snapshot <Cite n={3} />. For models before the 4.6 generation, an alias points to a dated ID <Cite n={3} />. The tutorial's own view: put the exact ID in the config. Then a model change is a code change, and it goes through the evals.
+
+**Flaky by nature.** An agent does not act the same in every run <Cite n={2} />. Anthropic names 2 metrics. **pass@k** is the chance of at least 1 success in k tries. **pass^k** is the chance that all k tries succeed <Cite n={2} />. Say each try succeeds 75% of the time. Then all 3 of 3 tries pass only about 42% of the time <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**গ্রেডার।** Anthropic গ্রেড করার 3টা উপায় সাজিয়ে দেয় <Cite n={1} />।
+
+- কোড-ভিত্তিক গ্রেডিং, যেমন exact match বা string match। এটা সবচেয়ে দ্রুত আর নির্ভরযোগ্য, খুব ভালো স্কেল করে। কিন্তু জটিল বিচারে সূক্ষ্মতা নেই।
+- মানুষের গ্রেডিং। সবচেয়ে নমনীয় আর মান উঁচু, কিন্তু ধীর ও ব্যয়বহুল।
+- LLM-ভিত্তিক গ্রেডিং। দ্রুত আর নমনীয়, জটিল বিচারের জন্য ভালো। আগে এর নির্ভরযোগ্যতা টেস্ট করুন।
+
+একই পেজে ডিজাইনের 3টা নিয়ম আছে: eval-কে টাস্ক-নির্দিষ্ট করুন আর edge case রাখুন, যেখানে পারেন গ্রেডিং অটোমেট করুন, আর হাতে-গ্রেড করা কম প্রশ্নের চেয়ে অটোমেটেড গ্রেডিংয়ের বেশি প্রশ্ন বেছে নিন <Cite n={1} />।
+
+**একটা ছোট eval।** Technical লেখার স্ক্রিপ্টটা মডেলকে বাগ রিপোর্টের severity রেট করতে বলে, আর exact match দিয়ে লেবেল চেক করে। API কলের আকার Anthropic ডকুমেন্টেশনের উদাহরণের মতোই <Cite n={1} />। টিমের বেছে নেওয়া সীমার নিচে accuracy হলে স্ক্রিপ্ট ব্যর্থ হয়।
+
+**পাইপলাইন।** GitHub Actions-এ একটা path filter দিলে মিলে যাওয়া ফাইল বদলালেই কেবল ওয়ার্কফ্লো চলে <Cite n={5} />। উদাহরণটা চলে `prompts/` বা `evals/`-এর ফাইল বদলালে। API key আসে রিপোজিটরির একটা secret থেকে, `secrets` context দিয়ে <Cite n={4} />। একটা fork ওয়ার্কফ্লো চালু করলে secret রানারে পাঠানো হয় না, শুধু `GITHUB_TOKEN` ব্যতিক্রম <Cite n={4} />।
+
+**মডেল পিন করুন।** প্রতিটা Claude মডেল ID একটা পিন করা snapshot <Cite n={3} />। 4.6 জেনারেশনের আগের মডেলের ক্ষেত্রে একটা alias একটা তারিখযুক্ত ID-র দিকে নির্দেশ করে <Cite n={3} />। টিউটোরিয়ালের নিজের মত: কনফিগে সঠিক ID লিখুন, যাতে মডেল বদলানো একটা কোড পরিবর্তন হয় আর eval-এর মধ্য দিয়ে যায়।
+
+**স্বভাবগতভাবে flaky।** এজেন্টের আচরণ রান থেকে রানে বদলায় <Cite n={2} />। Anthropic 2টা মেট্রিক বলে: **pass@k** হলো k বারের চেষ্টায় অন্তত 1 বার সফল হওয়ার সম্ভাবনা, আর **pass^k** হলো k বারের সবকটায় সফল হওয়ার সম্ভাবনা <Cite n={2} />। প্রতি চেষ্টায় 75% সাফল্য হলে 3 বারের সবকটা পাস করে মাত্র প্রায় 42% সময় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A team runs a test-case generator: a QA engineer pastes a user story, and the app writes test cases. A developer shortens the system prompt to save tokens. The unit tests pass, because they mock the model.
+
+The eval job runs, because the change is under `prompts/` <Cite n={5} />. It has 200 user stories, each with a check: does the output contain a negative test? Is it valid Markdown? The code-based checks show that the negative tests dropped from 96% to 71%. The pull request is blocked.
+
+Later, the team moves to a new model ID. They change one line in the config, and the same evals run. Anthropic notes that capability evals with high pass rates can become a regression suite that runs all the time <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+A team runs a test-case generator. A QA engineer pastes a user story. The app writes test cases. A developer makes the system prompt shorter to save tokens. The unit tests pass, because they mock the model.
+
+The eval job runs, because the change is under `prompts/` <Cite n={5} />. It has 200 user stories. Each one has checks. Does the output contain a negative test? Is it valid Markdown? The code checks show a drop. Negative tests fell from 96% to 71%. The pull request is blocked.
+
+Later, the team moves to a new model ID. They change one line in the config. The same evals run. Anthropic notes that capability evals with high pass rates can become a regression suite that runs all the time <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+একটা টিম একটা টেস্ট-কেস জেনারেটর চালায়। একজন QA ইঞ্জিনিয়ার একটা user story পেস্ট করেন, আর অ্যাপ টেস্ট কেস লেখে। টোকেন বাঁচাতে একজন ডেভেলপার সিস্টেম প্রম্পট ছোট করেন। ইউনিট টেস্ট পাস করে, কারণ সেগুলো মডেলকে mock করে।
+
+Eval জব চলে, কারণ পরিবর্তনটা `prompts/`-এর মধ্যে <Cite n={5} />। এতে 200টা user story আছে, প্রতিটার সঙ্গে চেক আছে: আউটপুটে কি একটা negative টেস্ট আছে? এটা কি বৈধ Markdown? কোড-ভিত্তিক চেক দেখায় যে negative টেস্ট 96% থেকে নেমে 71% হয়েছে। Pull request আটকে যায়।
+
+পরে টিম একটা নতুন মডেল ID-তে যায়। তারা কনফিগে এক লাইন বদলায়, আর একই eval চলে। Anthropic বলে, উঁচু pass rate-এর capability eval একটা regression suite হয়ে উঠতে পারে, যা সবসময় চলে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Only mocked tests.** A mock never shows a change in model behavior. Tutorial's own view: keep unit tests, and add evals that call the real model.
+- **One run, one verdict.** Results vary between runs, so a single pass or fail can be noise <Cite n={2} />.
+- **An LLM judge that nobody checked.** Test the reliability of LLM grading before you scale it <Cite n={1} />.
+- **Only happy-path cases.** Anthropic lists edge cases such as missing input, very long input, and harmful user input <Cite n={1} />.
+- **A key printed in a log.** A value that is not a registered secret is not redacted. Use `::add-mask::` for such a value <Cite n={4} />.
+- **A skipped required check.** If a path filter skips a workflow, its checks stay "Pending", and a pull request that needs them cannot merge <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+- **Only mocked tests.** A mock never shows a change in how the model acts. The tutorial's own view: keep unit tests. Add evals that call the real model.
+- **One run, one verdict.** Results change between runs. So a single pass or fail can be noise <Cite n={2} />.
+- **An LLM judge that nobody checked.** Test how reliable the LLM grading is before you use it at scale <Cite n={1} />.
+- **Only happy-path cases.** Anthropic lists edge cases. Examples are missing input, very long input, and harmful user input <Cite n={1} />.
+- **A key printed in a log.** A value that is not a registered secret is not hidden. Use `::add-mask::` for such a value <Cite n={4} />.
+- **A skipped required check.** A path filter can skip a workflow. Then its checks stay "Pending". A pull request that needs them cannot merge <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+- **শুধু mock করা টেস্ট।** Mock কখনও মডেলের আচরণের পরিবর্তন দেখায় না। টিউটোরিয়ালের নিজের মত: ইউনিট টেস্ট রাখুন, আর আসল মডেল কল করে এমন eval যোগ করুন।
+- **এক রান, এক রায়।** রান থেকে রানে ফল বদলায়, তাই একবারের পাস বা ফেল নিছক নয়েজ হতে পারে <Cite n={2} />।
+- **কেউ যাচাই করেনি এমন LLM বিচারক।** বড় পরিসরে ব্যবহারের আগে LLM গ্রেডিং কতটা নির্ভরযোগ্য, তা টেস্ট করুন <Cite n={1} />।
+- **শুধু happy-path কেস।** Anthropic কিছু edge case বলে, যেমন ইনপুট না থাকা, খুব লম্বা ইনপুট আর ক্ষতিকর ইউজার ইনপুট <Cite n={1} />।
+- **লগে প্রিন্ট হওয়া API key।** যে মান রেজিস্টার করা secret নয়, তা লুকানো হয় না। এমন মানের জন্য `::add-mask::` ব্যবহার করুন <Cite n={4} />।
+- **স্কিপ হওয়া required চেক।** Path filter একটা ওয়ার্কফ্লো স্কিপ করলে তার চেক "Pending" থাকে, আর যে pull request-এর সেটা দরকার, সেটা merge হয় না <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Change one word.** Edit a prompt in a branch. Check that the eval job starts and that its result shows in the pull request.
+- **Break it on purpose.** Remove an important rule from the prompt. The evals should fail. If they pass, the eval set misses that case.
+- **Read the eval set.** Count the edge cases, harmful inputs, and long inputs. Add cases from real bug reports.
+- **Run it 3 times.** Compare the scores. A large spread means the threshold or the cases need work.
+- **Find the model ID.** Search the config for the model ID. It should be one exact value in one place.
+- **Check the logs.** Open a CI log and search for any part of the key.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Change one word.** Edit a prompt in a branch. Check that the eval job starts. Check that its result shows in the pull request.
+- **Break it on purpose.** Remove an important rule from the prompt. The evals should fail. If they pass, the eval set misses that case.
+- **Read the eval set.** Count the edge cases, harmful inputs, and long inputs. Add cases from real bug reports.
+- **Run it 3 times.** Compare the scores. A large spread means that the threshold or the cases need work.
+- **Find the model ID.** Search the config for the model ID. It should be one exact value in one place.
+- **Check the logs.** Open a CI log. Search for any part of the key.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **একটা শব্দ বদলান।** একটা ব্রাঞ্চে প্রম্পট এডিট করুন। Eval জব শুরু হয় কি না, আর তার ফল pull request-এ দেখায় কি না দেখুন।
+- **ইচ্ছে করে ভাঙুন।** প্রম্পট থেকে একটা জরুরি নিয়ম সরিয়ে দিন। Eval ফেল করার কথা। পাস করলে eval-সেট সেই কেসটা ধরছে না।
+- **Eval-সেট পড়ুন।** Edge case, ক্ষতিকর ইনপুট আর লম্বা ইনপুট গুনুন। আসল বাগ রিপোর্ট থেকে কেস যোগ করুন।
+- **3 বার চালান।** স্কোরগুলো মেলান। বড় ফারাক মানে threshold বা কেসগুলো ঠিক করতে হবে।
+- **মডেল ID খুঁজুন।** কনফিগে মডেল ID খুঁজুন। এটা এক জায়গায় একটা নির্দিষ্ট মান হওয়া উচিত।
+- **লগ দেখুন।** একটা CI লগ খুলে API key-এর যেকোনো অংশ খুঁজুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Eval | A test of an AI system: an input, and grading logic for the output <Cite n={2} /> |
+| Code-based grading | Grading by exact match or string match: fast and reliable <Cite n={1} /> |
+| LLM-based grading | Grading by a model: flexible, but test its reliability first <Cite n={1} /> |
+| pass^k | The chance that all k tries succeed <Cite n={2} /> |
+| Pinned snapshot | A model ID that always means the same model <Cite n={3} /> |
+| Path filter | A rule that runs a workflow only when matching files change <Cite n={5} /> |
+| Secret | A value that GitHub stores for a workflow and hides in logs <Cite n={4} /> |

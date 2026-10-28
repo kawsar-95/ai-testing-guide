@@ -1,0 +1,303 @@
+export const metadata = { title: 'Context Engineering', description: 'How an AI app chooses what goes into the context window at run time, why more context is not always better, and what a tester checks.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Effective context engineering for AI agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents', accessed: '2026-10-28' },
+    { title: 'Context windows', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/build-with-claude/context-windows', accessed: '2026-10-28' },
+    { title: 'Prompt caching', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching', accessed: '2026-10-28' },
+    { title: 'Token counting', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/build-with-claude/token-counting', accessed: '2026-10-28' },
+    { title: 'Lost in the Middle: How Language Models Use Long Contexts (Liu et al., 2023)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2307.03172', accessed: '2026-10-28' },
+  ],
+}
+
+# Context Engineering
+
+When you hand a bug to a developer, you do not attach the whole wiki. You attach the steps, the log lines that matter, and the build number. Context engineering is the same job for a model: at each step, choose the small set of information that gives the best answer.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The **context** is the set of tokens that the model sees when it generates an answer <Cite n={1} />. The **context window** is all the text that the model can use for one response, including the response itself. It works like a working memory, separate from the training data <Cite n={2} />.
+
+Everything in the request counts: the system prompt, all messages (with tool results, images, and documents), the tool definitions, and the output <Cite n={2} />.
+
+**Context engineering** is the set of strategies to choose and keep the best tokens in the context during inference. Anthropic calls it the next step after **prompt engineering**, which is about how to write the instructions <Cite n={1} />. Prompt writing is one task. Context engineering repeats each time the app decides what to send to the model <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+The **context** is all the tokens that the model sees when it writes an answer <Cite n={1} />. The **context window** is all the text that the model can use for one response. The response itself is part of it. It works like a working memory. It is separate from the data that trained the model <Cite n={2} />.
+
+Everything in the request counts <Cite n={2} />:
+
+- the system prompt
+- all messages, with tool results, images, and documents
+- the tool definitions
+- the output
+
+**Context engineering** is the set of methods to choose and keep the best tokens in the context while the model runs. Anthropic calls it the next step after **prompt engineering**. Prompt engineering is about how to write the instructions <Cite n={1} />. Writing a prompt is one task. But you do context engineering again each time the app decides what to send to the model <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**কনটেক্সট** হলো সেই সব টোকেন, যা মডেল উত্তর লেখার সময় দেখে <Cite n={1} />। **কনটেক্সট উইন্ডো** হলো একটা রেসপন্সের জন্য মডেল যত টেক্সট ব্যবহার করতে পারে, তার সবটা। রেসপন্স নিজেও এর অংশ। এটা একটা ওয়ার্কিং মেমরির মতো কাজ করে। মডেলকে ট্রেন করা ডেটা থেকে এটা আলাদা <Cite n={2} />।
+
+রিকুয়েস্টের সবকিছুই গোনা হয় <Cite n={2} />:
+
+- সিস্টেম প্রম্পট
+- সব মেসেজ, টুল রেজাল্ট, ছবি আর ডকুমেন্টসহ
+- টুলের সংজ্ঞা (tool definitions)
+- আউটপুট
+
+**কনটেক্সট ইঞ্জিনিয়ারিং** হলো মডেল চলার সময় কনটেক্সটে সেরা টোকেনগুলো বেছে নেওয়া আর রাখার পদ্ধতির সেট। Anthropic একে **প্রম্পট ইঞ্জিনিয়ারিং**-এর পরের ধাপ বলে। প্রম্পট ইঞ্জিনিয়ারিং হলো নির্দেশনা কীভাবে লিখবেন, তা নিয়ে <Cite n={1} />। প্রম্পট লেখা একটা আলাদা কাজ। কিন্তু অ্যাপ যতবার ঠিক করে মডেলকে কী পাঠাবে, ততবার কনটেক্সট ইঞ্জিনিয়ারিং আবার হয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### More context is not always better
+
+As the token count grows, accuracy and recall go down. Anthropic calls this **context rot** <Cite n={2} />. Anthropic treats context as a finite resource with an "attention budget": each new token uses some of it <Cite n={1} />. Position also matters. A 2023 study found that the models of that time often did best when the relevant text was at the start or the end of the input, and worse when it was in the middle of a long context <Cite n={5} />. The study did not test current models.
+
+The guiding rule: use the fewest tokens that carry the most useful signal, so the wanted result becomes most likely <Cite n={1} />.
+
+### The parts of the context
+
+| Part | Advice from Anthropic |
+|---|---|
+| System prompt | Clear, simple language at the right level: not brittle if-else logic, not vague guidance <Cite n={1} /> |
+| Tools | A minimal set with little overlap. If a human cannot say which tool fits a case, the model cannot either <Cite n={1} /> |
+| Examples | A few diverse, typical examples, not a long list of edge cases <Cite n={1} /> |
+| Retrieved data | Load data "just in time" with tools, from light references such as file paths or links <Cite n={1} /> |
+
+### Measure before you send
+
+The token counting endpoint takes the same input as a message request and returns the number of input tokens <Cite n={4} />:
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+count = client.messages.count_tokens(
+    model="claude-opus-5-5",
+    system=SYSTEM_PROMPT,
+    messages=[{"role": "user", "content": story_and_spec}],
+)
+print(count.input_tokens)
+```
+
+Each real response also reports what it used in its `usage` field <Cite n={2} />.
+
+### Keep the stable part first
+
+**Prompt caching** reuses a prompt prefix across requests, which cuts processing time and cost <Cite n={3} />. The prefix is built in this order: `tools`, `system`, then `messages` <Cite n={3} />. So put the parts that do not change first, and the parts that change per request last. By default, the cache lives for 5 minutes, and each use refreshes it <Cite n={3} />.
+
+### Long tasks
+
+For tasks longer than the window, Anthropic describes three techniques <Cite n={1} />:
+
+- **Compaction:** summarize a conversation near the limit and start a new window with the summary. Clearing old tool results is the lightest form.
+- **Structured note-taking:** the agent writes notes to a store outside the window and reads them back later.
+- **Sub-agents:** each sub-agent works in a clean window and returns a short summary, often 1,000 to 2,000 tokens.
+
+</Technical>
+<Layman>
+
+**More context is not always better.** When the number of tokens grows, the model gets less accurate. It also recalls less. Anthropic calls this **context rot** <Cite n={2} />. Anthropic treats context as a limited resource with an "attention budget". Each new token uses some of it <Cite n={1} />. The place of the text also matters. A 2023 study looked at the models of that time. They often did best when the useful text was at the start or the end. They often did worse when it was in the middle of a long context <Cite n={5} />. The study did not test current models.
+
+The main rule: find the smallest set of useful tokens that makes the wanted result most likely <Cite n={1} />.
+
+**The parts of the context.** Anthropic gives this advice <Cite n={1} />:
+
+- **System prompt:** clear, simple words at the right level. Not fragile if-else rules. Not vague advice.
+- **Tools:** a small set with little overlap. If a human cannot say which tool fits a case, the model cannot either.
+- **Examples:** a few different, typical examples. Not a long list of edge cases.
+- **Data:** load data "just in time" with tools. Start from small references, such as file paths or links.
+
+**Measure before you send.** The token counting endpoint takes the same input as a message request. It returns the number of input tokens <Cite n={4} />. The code example counts the tokens of a system prompt and one user message. Each real response also reports what it used in its `usage` field <Cite n={2} />.
+
+**Keep the stable part first.** **Prompt caching** reuses the start of a prompt across requests. This saves time and cost <Cite n={3} />. The start is built in this order: `tools`, `system`, then `messages` <Cite n={3} />. So put the parts that do not change first. Put the parts that change with each request last. By default, the cache lives for 5 minutes. Each use makes it live longer <Cite n={3} />.
+
+**Long tasks.** Some tasks are longer than the window. For them, Anthropic describes three methods <Cite n={1} />:
+
+- **Compaction:** when a conversation is near the limit, summarize it. Start a new window with the summary. Clearing old tool results is the lightest form.
+- **Notes:** the agent writes notes to a store outside the window. It reads them back later.
+- **Sub-agents:** each sub-agent works in a clean window. It returns a short summary, often 1,000 to 2,000 tokens.
+
+</Layman>
+<Bangla>
+
+**বেশি কনটেক্সট সবসময় ভালো নয়।** টোকেনের সংখ্যা বাড়লে মডেলের নির্ভুলতা কমে। মনে রাখার ক্ষমতাও কমে। Anthropic একে বলে **context rot** <Cite n={2} />। Anthropic কনটেক্সটকে একটা সীমিত রিসোর্স হিসেবে দেখে, যার একটা "attention budget" আছে। প্রতিটা নতুন টোকেন তার কিছুটা খরচ করে <Cite n={1} />। টেক্সটের অবস্থানও জরুরি। 2023 সালের একটা গবেষণা সেই সময়ের মডেলগুলো যাচাই করেছিল। দরকারি টেক্সট শুরুতে বা শেষে থাকলে মডেলগুলো প্রায়ই সবচেয়ে ভালো করত। লম্বা কনটেক্সটের মাঝখানে থাকলে প্রায়ই খারাপ করত <Cite n={5} />। গবেষণাটা এখনকার মডেল যাচাই করেনি।
+
+মূল নিয়ম: দরকারি টোকেনের সবচেয়ে ছোট সেটটা খুঁজুন, যা চাওয়া ফলাফলকে সবচেয়ে সম্ভাব্য করে <Cite n={1} />।
+
+**কনটেক্সটের অংশগুলো।** Anthropic এই পরামর্শ দেয় <Cite n={1} />:
+
+- **সিস্টেম প্রম্পট:** সঠিক স্তরে পরিষ্কার, সহজ ভাষা। ভঙ্গুর if-else নিয়ম নয়। অস্পষ্ট পরামর্শও নয়।
+- **টুল:** কম ওভারল্যাপসহ একটা ছোট সেট। কোন কেসে কোন টুল, তা একজন মানুষ বলতে না পারলে মডেলও পারবে না।
+- **উদাহরণ:** কয়েকটা ভিন্ন, আদর্শ উদাহরণ। এজ কেসের লম্বা তালিকা নয়।
+- **ডেটা:** টুল দিয়ে "just in time" ডেটা লোড করুন। ছোট রেফারেন্স থেকে শুরু করুন, যেমন ফাইল পাথ বা লিংক।
+
+**পাঠানোর আগে মাপুন।** টোকেন কাউন্টিং endpoint একটা মেসেজ রিকুয়েস্টের মতোই ইনপুট নেয়। এটা ইনপুট টোকেনের সংখ্যা ফেরত দেয় <Cite n={4} />। কোডের উদাহরণ একটা সিস্টেম প্রম্পট আর একটা ইউজার মেসেজের টোকেন গোনে। প্রতিটা আসল রেসপন্সও তার `usage` ফিল্ডে জানায় কত খরচ হলো <Cite n={2} />।
+
+**স্থির অংশ আগে রাখুন।** **প্রম্পট ক্যাশিং** রিকুয়েস্টগুলোর মধ্যে প্রম্পটের শুরুর অংশ আবার ব্যবহার করে। এতে সময় আর খরচ বাঁচে <Cite n={3} />। শুরুর অংশ এই ক্রমে তৈরি হয়: `tools`, `system`, তারপর `messages` <Cite n={3} />। তাই যে অংশ বদলায় না, তা আগে রাখুন। যে অংশ প্রতিটা রিকুয়েস্টে বদলায়, তা শেষে রাখুন। ডিফল্টভাবে ক্যাশ 5 মিনিট থাকে। প্রতিবার ব্যবহারে এর মেয়াদ আবার নতুন হয় <Cite n={3} />।
+
+**লম্বা কাজ।** কিছু কাজ উইন্ডোর চেয়ে লম্বা। সেগুলোর জন্য Anthropic তিনটা পদ্ধতি বলে <Cite n={1} />:
+
+- **Compaction:** কথোপকথন সীমার কাছে গেলে সেটার সারাংশ করুন। সারাংশ দিয়ে নতুন উইন্ডো শুরু করুন। পুরোনো টুল রেজাল্ট মুছে ফেলা সবচেয়ে হালকা রূপ।
+- **নোট:** এজেন্ট উইন্ডোর বাইরে একটা স্টোরে নোট লেখে। পরে সেগুলো আবার পড়ে।
+- **সাব-এজেন্ট:** প্রতিটা সাব-এজেন্ট একটা পরিষ্কার উইন্ডোতে কাজ করে। সে একটা ছোট সারাংশ ফেরত দেয়, প্রায়ই 1,000 থেকে 2,000 টোকেন।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A test-case generator writes test cases for a new user story. The first version sends the whole API spec (300 pages), all 40 old test plans, and the story. The answers are long, slow, and often test the wrong endpoint.
+
+The team rebuilds the context:
+
+1. **System prompt first and stable:** the team's test case format and 3 good example cases. This prefix is the same on every request, so prompt caching can reuse it <Cite n={3} />.
+2. **The story last:** the user story and its acceptance criteria change per request, so they go at the end <Cite n={3} />.
+3. **Just in time:** the model gets a `get_endpoint_spec` tool and loads only the 2 endpoints that the story names <Cite n={1} />.
+4. **A budget:** before each call, the app counts tokens and logs the number <Cite n={4} />.
+5. **The key text at the edges:** the acceptance criteria go at the very end, near the question, not in the middle of a long block <Cite n={5} />.
+
+Tutorial's own view: the new version is faster and cheaper, and the team checks with their eval set that it also writes better test cases.
+
+</Technical>
+<Layman>
+
+A test-case generator writes test cases for a new user story. The first version sends three things: the whole API spec (300 pages), all 40 old test plans, and the story. The answers are long and slow. They often test the wrong endpoint.
+
+The team rebuilds the context:
+
+1. **System prompt first, and it does not change:** the test case format of the team and 3 good example cases. This start is the same on every request. So prompt caching can reuse it <Cite n={3} />.
+2. **The story last:** the user story and its acceptance criteria change with each request. So they go at the end <Cite n={3} />.
+3. **Just in time:** the model gets a `get_endpoint_spec` tool. It loads only the 2 endpoints that the story names <Cite n={1} />.
+4. **A budget:** before each call, the app counts the tokens and logs the number <Cite n={4} />.
+5. **The key text at the edges:** the acceptance criteria go at the very end, near the question. They are not in the middle of a long block <Cite n={5} />.
+
+Tutorial's own view: the new version is faster and cheaper. The team checks with their eval set that it also writes better test cases.
+
+</Layman>
+<Bangla>
+
+একটা টেস্ট-কেস জেনারেটর একটা নতুন ইউজার স্টোরির জন্য টেস্ট কেস লেখে। প্রথম ভার্সন তিনটা জিনিস পাঠায়: পুরো API স্পেক (300 পৃষ্ঠা), পুরোনো 40টা টেস্ট প্ল্যান আর স্টোরি। উত্তরগুলো লম্বা আর ধীর। প্রায়ই ভুল endpoint টেস্ট করে।
+
+টিম কনটেক্সট নতুন করে বানায়:
+
+1. **সিস্টেম প্রম্পট আগে, আর এটা বদলায় না:** টিমের টেস্ট কেস ফরম্যাট আর 3টা ভালো উদাহরণ কেস। এই শুরুর অংশ প্রতিটা রিকুয়েস্টে একই। তাই প্রম্পট ক্যাশিং এটা আবার ব্যবহার করতে পারে <Cite n={3} />।
+2. **স্টোরি শেষে:** ইউজার স্টোরি আর তার acceptance criteria প্রতিটা রিকুয়েস্টে বদলায়। তাই এগুলো শেষে যায় <Cite n={3} />।
+3. **Just in time:** মডেল একটা `get_endpoint_spec` টুল পায়। স্টোরিতে যে 2টা endpoint-এর নাম আছে, শুধু সেগুলো লোড করে <Cite n={1} />।
+4. **একটা বাজেট:** প্রতিটা কলের আগে অ্যাপ টোকেন গোনে আর সংখ্যাটা লগ করে <Cite n={4} />।
+5. **জরুরি টেক্সট কিনারায়:** acceptance criteria একদম শেষে, প্রশ্নের কাছে যায়। লম্বা ব্লকের মাঝখানে থাকে না <Cite n={5} />।
+
+টিউটোরিয়ালের নিজের মত: নতুন ভার্সন দ্রুত আর সস্তা। টিম তাদের eval সেট দিয়ে যাচাই করে যে এটা ভালো টেস্ট কেসও লেখে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **"The window is 1M tokens, so send everything."** A bigger window does not mean better answers. Accuracy and recall fall as the context grows <Cite n={2} />.
+- **The key fact in the middle of a long prompt.** In a 2023 study, models often missed information in the middle of a long context <Cite n={5} />.
+- **A laundry list of edge cases in the prompt.** Anthropic advises a few typical examples instead <Cite n={1} />.
+- **Too many overlapping tools.** The model cannot pick the right one if the choice is unclear <Cite n={1} />.
+- **A timestamp at the top of the system prompt.** It changes the prefix on every request, so the cache cannot be reused. The prefix order is `tools`, `system`, `messages` <Cite n={3} />.
+- **Compaction that drops a key detail.** Too aggressive a summary can lose context whose value shows only later <Cite n={1} />.
+- **Old tool results that stay forever.** A raw result deep in the history rarely helps again <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+- **"The window is 1M tokens, so send everything."** A bigger window does not mean better answers. Accuracy and recall fall when the context grows <Cite n={2} />.
+- **The key fact in the middle of a long prompt.** In a 2023 study, models often missed information in the middle of a long context <Cite n={5} />.
+- **A long list of edge cases in the prompt.** Anthropic advises a few typical examples instead <Cite n={1} />.
+- **Too many tools that overlap.** The model cannot pick the right one if the choice is unclear <Cite n={1} />.
+- **A timestamp at the top of the system prompt.** It changes the start of the prompt on every request. So the cache cannot be used again. The order is `tools`, `system`, `messages` <Cite n={3} />.
+- **A summary that drops a key detail.** A summary that cuts too much can lose context. Its value may show only later <Cite n={1} />.
+- **Old tool results that stay forever.** A raw result deep in the history rarely helps again <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **"উইন্ডো 1M টোকেনের, তাই সব পাঠান।"** বড় উইন্ডো মানেই ভালো উত্তর নয়। কনটেক্সট বাড়লে নির্ভুলতা আর মনে রাখার ক্ষমতা কমে <Cite n={2} />।
+- **লম্বা প্রম্পটের মাঝখানে জরুরি তথ্য।** 2023 সালের একটা গবেষণায় লম্বা কনটেক্সটের মাঝখানের তথ্য মডেল প্রায়ই মিস করত <Cite n={5} />।
+- **প্রম্পটে এজ কেসের লম্বা তালিকা।** Anthropic এর বদলে কয়েকটা আদর্শ উদাহরণের পরামর্শ দেয় <Cite n={1} />।
+- **একটার সঙ্গে আরেকটা মেলে এমন অনেক টুল।** বাছাই অস্পষ্ট হলে মডেল সঠিক টুলটা বেছে নিতে পারে না <Cite n={1} />।
+- **সিস্টেম প্রম্পটের মাথায় টাইমস্ট্যাম্প।** এটা প্রতিটা রিকুয়েস্টে প্রম্পটের শুরুটা বদলে দেয়। তাই ক্যাশ আবার ব্যবহার করা যায় না। ক্রম হলো `tools`, `system`, `messages` <Cite n={3} />।
+- **যে সারাংশ জরুরি তথ্য বাদ দেয়।** যে সারাংশ বেশি কাটে, সে কনটেক্সট হারাতে পারে। তার মূল্য হয়তো পরে বোঝা যায় <Cite n={1} />।
+- **পুরোনো টুল রেজাল্ট চিরকাল থেকে যাওয়া।** ইতিহাসের গভীরে থাকা একটা কাঁচা রেজাল্ট খুব কমই আবার কাজে লাগে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice.
+
+- **Log the final prompt.** For a sample of requests, save the exact context that went to the model. Most context bugs are visible only there.
+- **Watch the token count.** Track input tokens per request over time. A sudden jump often means a bug, such as a duplicated history.
+- **Move the key fact.** Put the same key fact at the start, the middle, and the end of a long context. Compare the answers.
+- **Test the long conversation.** Run a 50-turn session. Ask at the end about a detail from turn 2. Check that compaction or notes kept it.
+- **Check the cache.** Send the same request twice. The second response should report cached input tokens. If not, find what changes in the prefix.
+- **Check what must never enter.** Secrets, other users' data, and debug logs must not appear in the logged context.
+</Callout>
+
+</Technical>
+<Layman>
+
+These checks are the tutorial's own advice.
+
+- **Log the final prompt.** For a sample of requests, save the exact context that went to the model. Most context bugs show only there.
+- **Watch the token count.** Track the input tokens of each request over time. A sudden jump often means a bug, such as a history that is copied twice.
+- **Move the key fact.** Put the same key fact at the start, the middle, and the end of a long context. Compare the answers.
+- **Test the long conversation.** Run a session with 50 turns. At the end, ask about a detail from turn 2. Check that the summary or the notes kept it.
+- **Check the cache.** Send the same request twice. The second response should report cached input tokens. If not, find what changes at the start of the prompt.
+- **Check what must never go in.** Secrets, data of other users, and debug logs must not show up in the logged context.
+
+</Layman>
+<Bangla>
+
+এই চেকগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **চূড়ান্ত প্রম্পট লগ করুন।** কিছু রিকুয়েস্টের নমুনায় মডেলের কাছে যাওয়া হুবহু কনটেক্সট সেভ করুন। বেশিরভাগ কনটেক্সট বাগ শুধু সেখানেই দেখা যায়।
+- **টোকেনের সংখ্যা লক্ষ করুন।** সময়ের সঙ্গে প্রতিটা রিকুয়েস্টের ইনপুট টোকেন ট্র্যাক করুন। হঠাৎ লাফ প্রায়ই একটা বাগ বোঝায়, যেমন দুবার কপি হওয়া হিস্টরি।
+- **জরুরি তথ্যের জায়গা বদলান।** একই জরুরি তথ্য লম্বা কনটেক্সটের শুরুতে, মাঝখানে আর শেষে রাখুন। উত্তরগুলো মিলিয়ে দেখুন।
+- **লম্বা কথোপকথন টেস্ট করুন।** 50 টার্নের একটা সেশন চালান। শেষে টার্ন 2-এর একটা খুঁটিনাটি জিজ্ঞেস করুন। দেখুন সারাংশ বা নোট সেটা রেখেছে কি না।
+- **ক্যাশ যাচাই করুন।** একই রিকুয়েস্ট দুবার পাঠান। দ্বিতীয় রেসপন্সে ক্যাশ করা ইনপুট টোকেন দেখানো উচিত। না দেখালে প্রম্পটের শুরুতে কী বদলাচ্ছে তা খুঁজুন।
+- **যা কখনো ঢুকবে না, তা যাচাই করুন।** সিক্রেট, অন্য ইউজারের ডেটা আর ডিবাগ লগ লগ করা কনটেক্সটে থাকা চলবে না।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Context | The set of tokens that the model sees when it generates a response <Cite n={1} /> |
+| Context window | All the text the model can use for one response, including the response <Cite n={2} /> |
+| Context rot | The fall in accuracy and recall as the token count grows <Cite n={2} /> |
+| Just-in-time context | Loading data with tools at run time, from light references <Cite n={1} /> |
+| Compaction | Summarizing a long conversation and starting a new window with the summary <Cite n={1} /> |
+| Prompt caching | Reusing a prompt prefix across requests to save time and cost <Cite n={3} /> |
+| Token counting | Counting the input tokens of a request before you send it <Cite n={4} /> |

@@ -28,7 +28,7 @@ export const search = "Search";
 export const searchAll = "Search all parts";
 export const searchClose = "Close search";
 export const searchResults = "Search results";
-export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, the Architecture topics, the Course topics, the k6 topics, and the AI Harnesses topics.`;
+export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, the Architecture topics, the Course topics, the k6 topics, and the AI Engineering topics.`;
 /** The text of the link to the tutorial in the drawer of another section. */
 export const crossToTutorial = "Tutorial";
 /** The link to the home of a module in the sidebar. */
@@ -71,7 +71,7 @@ export const HOME_UI = {
   whySub: "Short parts, real commands, and a source for each fact.",
   courseEyebrow: "COURSE STRUCTURE",
   courseTitle: "Six tutorial groups and seven modules",
-  courseSub: "Read the tutorial in order, then open a module for Linux, testing fundamentals, system design, architecture, the System Design Course, k6 performance testing, or AI harnesses.",
+  courseSub: "Read the tutorial in order, then open a module for Linux, testing fundamentals, system design, architecture, the System Design Course, k6 performance testing, or AI engineering.",
   cardCount: (n: number) => `${n} ${n === 1 ? "page" : "pages"}`,
 };
 
