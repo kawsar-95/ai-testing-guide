@@ -1,0 +1,272 @@
+export const metadata = { title: 'MCP Connectors', description: 'How the Model Context Protocol connects an AI app to your tools and data, and how a tester connects a browser, a tracker, or a test database safely.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'What is the Model Context Protocol (MCP)?', publisher: 'Model Context Protocol', url: 'https://modelcontextprotocol.io/docs/getting-started/intro', accessed: '2026-10-28' },
+    { title: 'Architecture overview', publisher: 'Model Context Protocol', url: 'https://modelcontextprotocol.io/docs/learn/architecture', accessed: '2026-10-28' },
+    { title: 'Security Best Practices', publisher: 'Model Context Protocol', url: 'https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices', accessed: '2026-10-28' },
+    { title: 'Connect Claude Code to tools via MCP', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/mcp', accessed: '2026-10-28' },
+    { title: 'Playwright MCP', publisher: 'Microsoft (GitHub)', url: 'https://github.com/microsoft/playwright-mcp', accessed: '2026-10-28' },
+    { title: 'Glossary', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/about-claude/glossary', accessed: '2026-10-28' },
+  ],
+}
+
+# MCP Connectors
+
+An AI assistant that cannot see your browser, your bug tracker, or your test database can only guess. A connector gives it a door into one of those systems. The Model Context Protocol (MCP) is the common shape of that door, so one connector works in many AI apps.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The **Model Context Protocol** (MCP) is an open-source standard that links AI apps to outside systems <Cite n={1} />. With MCP, an AI app can reach data sources such as files and databases, tools such as search engines, and workflows such as ready-made prompts <Cite n={1} />. The MCP docs compare it to a USB-C port: one standard way to plug things in <Cite n={1} />.
+
+Many apps support it, among them Claude, ChatGPT, Visual Studio Code, and Cursor <Cite n={1} />. So a team can build or install a connector one time and use it in more than one tool.
+
+In daily speech, a **connector** is an MCP server that you add to your AI app. The protocol itself calls the parts host, client, and server, as the next section shows. This page is about using connectors in testing work. The site's [MCP](/extend/mcp/) page shows the Claude Code setup step by step.
+
+</Technical>
+<Layman>
+
+**MCP** (Model Context Protocol) is an open standard. It connects AI apps to outside systems <Cite n={1} />. With MCP, an AI app can reach data sources, such as files and databases. It can reach tools, such as search engines. It can reach workflows, such as ready-made prompts <Cite n={1} />. The MCP docs compare it to a USB-C port: one standard way to plug things in <Cite n={1} />.
+
+Many apps support it, among them Claude, ChatGPT, Visual Studio Code, and Cursor <Cite n={1} />. So a team can build or install a connector one time and use it in more than one tool.
+
+In daily speech, a **connector** is an MCP server that you add to your AI app. The protocol itself calls the parts host, client, and server. This page is about using connectors in testing work.
+
+</Layman>
+<Bangla>
+
+**MCP** (Model Context Protocol) হলো AI অ্যাপকে বাইরের সিস্টেমের সাথে যুক্ত করার একটা open-source স্ট্যান্ডার্ড <Cite n={1} />। MCP দিয়ে একটা AI অ্যাপ ফাইল আর ডেটাবেসের মতো ডেটা সোর্সে, সার্চ ইঞ্জিনের মতো টুলে, আর তৈরি প্রম্পটের মতো workflow-তে পৌঁছাতে পারে <Cite n={1} />। MCP ডকস একে একটা USB-C পোর্টের সাথে তুলনা করে: জিনিস লাগানোর একটা স্ট্যান্ডার্ড উপায় <Cite n={1} />।
+
+অনেক অ্যাপ এটা সাপোর্ট করে, যেমন Claude, ChatGPT, Visual Studio Code আর Cursor <Cite n={1} />। তাই একটা দল একবার একটা connector বানিয়ে বা ইনস্টল করে একাধিক টুলে ব্যবহার করতে পারে।
+
+সাধারণ কথায় **connector** হলো একটা MCP server, যা আপনি আপনার AI অ্যাপে যোগ করেন। প্রোটোকল নিজে অংশগুলোকে host, client আর server বলে। এই পেজটা টেস্টিংয়ের কাজে connector ব্যবহার নিয়ে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+MCP has three roles <Cite n={2} />:
+
+- The **host** is the AI application, for example Claude Code.
+- The host makes one **client** for each server. Each client keeps its own connection to its server.
+- The **server** is a program that provides context to the client.
+
+```text
+Claude Code (host)
+  +-- client 1 --stdio-------------> Playwright server (your machine)
+  +-- client 2 --Streamable HTTP---> issue tracker server (remote)
+  +-- client 3 --stdio-------------> test database server (your machine)
+```
+
+The messages use JSON-RPC 2.0 <Cite n={2} />. There are two transports. **stdio** connects two processes on the same machine. **Streamable HTTP** connects to a remote server and accepts bearer tokens, API keys, or custom headers for auth. For the tokens, MCP recommends OAuth <Cite n={2} />.
+
+A server can offer three kinds of things <Cite n={2} />: **tools** (functions that the AI can call), **resources** (data, such as a file or a database schema), and **prompts** (reusable templates). The client first asks for the list (`tools/list`) and then calls a tool (`tools/call`) <Cite n={2} />. Each tool has a name, a description, and an `inputSchema` in JSON Schema <Cite n={2} />. A server can also ask the user for more input or for a confirmation (**elicitation**) <Cite n={2} />.
+
+In Claude Code, you add a server with `claude mcp add`. For a remote server: `claude mcp add --transport http <name> <url>`. For a local one, put the start command after `--` <Cite n={4} />. A server can have the scope local, project, or user, and the project scope is saved in `.mcp.json` at the project root <Cite n={4} />. The `/mcp` command shows the servers and handles OAuth logins <Cite n={4} />. The older SSE transport is deprecated <Cite n={4} />. Apps built on the Claude API can use the MCP connector, which reaches MCP servers from the Messages API with no MCP client of your own <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+MCP has three roles <Cite n={2} />:
+
+- The **host** is the AI app, for example Claude Code.
+- The host makes one **client** for each server. Each client keeps its own connection to its server.
+- The **server** is a program that gives context to the client.
+
+For example, Claude Code is the host. One client talks to a Playwright server on your machine. Another client talks to a remote issue tracker server. A third client talks to a test database server on your machine.
+
+The messages use JSON-RPC 2.0 <Cite n={2} />. There are two ways to connect. **stdio** connects two programs on the same machine. **Streamable HTTP** connects to a remote server. It accepts bearer tokens, API keys, or custom headers for auth. For the tokens, MCP recommends OAuth <Cite n={2} />.
+
+A server can offer three kinds of things <Cite n={2} />. **Tools** are functions that the AI can call. **Resources** are data, such as a file or a database schema. **Prompts** are reusable templates. The client first asks for the list (`tools/list`). Then it calls a tool (`tools/call`) <Cite n={2} />. Each tool has a name, a description, and an `inputSchema` in JSON Schema <Cite n={2} />. A server can also ask the user for more input or for a confirmation. This is called **elicitation** <Cite n={2} />.
+
+In Claude Code, you add a server with `claude mcp add`. For a remote server: `claude mcp add --transport http <name> <url>`. For a local one, put the start command after `--` <Cite n={4} />. A server can have the scope local, project, or user. The project scope is saved in `.mcp.json` at the project root <Cite n={4} />. The `/mcp` command shows the servers and handles OAuth logins <Cite n={4} />. The older SSE transport is deprecated <Cite n={4} />. Apps built on the Claude API can use the MCP connector. It reaches MCP servers from the Messages API, with no MCP client of your own <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+MCP-তে তিনটা ভূমিকা আছে <Cite n={2} />:
+
+- **Host** হলো AI অ্যাপ, যেমন Claude Code।
+- Host প্রতিটা server-এর জন্য একটা করে **client** বানায়। প্রতিটা client তার server-এর সাথে নিজের আলাদা কানেকশন রাখে।
+- **Server** হলো একটা প্রোগ্রাম, যা client-কে কনটেক্সট দেয়।
+
+যেমন, Claude Code হলো host। একটা client আপনার মেশিনের একটা Playwright server-এর সাথে কথা বলে। আরেকটা client একটা রিমোট issue tracker server-এর সাথে কথা বলে। তৃতীয় একটা client আপনার মেশিনের একটা টেস্ট ডেটাবেস server-এর সাথে কথা বলে।
+
+মেসেজগুলো JSON-RPC 2.0 ব্যবহার করে <Cite n={2} />। যুক্ত হওয়ার দুটো উপায় (transport) আছে। **stdio** একই মেশিনের দুটো প্রোগ্রামকে যুক্ত করে। **Streamable HTTP** একটা রিমোট server-এর সাথে যুক্ত করে। এটা bearer token, API key আর custom header সাপোর্ট করে। টোকেনের জন্য MCP OAuth সুপারিশ করে <Cite n={2} />।
+
+একটা server তিন ধরনের জিনিস দিতে পারে <Cite n={2} />। **Tools** হলো ফাংশন, যা AI কল করতে পারে। **Resources** হলো ডেটা, যেমন একটা ফাইল বা ডেটাবেস schema। **Prompts** হলো বারবার ব্যবহারযোগ্য টেমপ্লেট। Client প্রথমে তালিকা চায় (`tools/list`), তারপর একটা টুল কল করে (`tools/call`) <Cite n={2} />। প্রতিটা টুলের একটা নাম, একটা বর্ণনা আর JSON Schema-তে একটা `inputSchema` থাকে <Cite n={2} />। একটা server ইউজারের কাছে আরও ইনপুট বা একটা নিশ্চিতকরণও চাইতে পারে। একে বলে **elicitation** <Cite n={2} />।
+
+Claude Code-এ `claude mcp add` দিয়ে একটা server যোগ করেন। রিমোট server-এর জন্য: `claude mcp add --transport http <name> <url>`। লোকাল server-এর জন্য চালু করার কমান্ড `--`-এর পরে দিন <Cite n={4} />। একটা server-এর scope হতে পারে local, project বা user। Project scope প্রজেক্টের রুটে `.mcp.json`-এ সেভ হয় <Cite n={4} />। `/mcp` কমান্ড server-গুলো দেখায় আর OAuth লগইন সামলায় <Cite n={4} />। পুরোনো SSE transport deprecated <Cite n={4} />। Claude API দিয়ে বানানো অ্যাপ MCP connector ব্যবহার করতে পারে। এটা নিজের কোনো MCP client ছাড়াই Messages API থেকে MCP server-এ পৌঁছায় <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Drive a browser.** Playwright MCP gives the AI browser tools. It works from structured page data, with no vision model <Cite n={5} />. Ask it to open a staging page, fill a form with edge-case values, and report what breaks. See [Playwright](/automate/playwright/) for turning a session into a real test.
+
+**Read the bug tracker and the docs.** A remote server for your issue tracker lets the assistant read a ticket, check the steps against the app, and draft a comment for you to review. Add it with the `--transport http` form <Cite n={4} />.
+
+**Query a test database.** The MCP docs describe a database server with tools that run queries, a resource with the schema, and a prompt with examples <Cite n={2} />. With it, you can ask "which test users have an expired card?" and get the rows without writing SQL first.
+
+**Share the setup with the team.** Use the project scope, so the server list lives in `.mcp.json` in the repo <Cite n={4} />. Every tester then gets the same connectors.
+
+**Test an MCP server that your team builds.** Check `tools/list`, call each tool with valid and invalid input against its `inputSchema`, and check the errors <Cite n={2} />. The MCP Inspector is a tool for this kind of work <Cite n={2} />.
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice. Give every connector the smallest access that the task needs: a read-only database user, a test project in the tracker, and a staging URL for the browser. Keep tokens in environment variables, never in `.mcp.json`.
+</Callout>
+
+</Technical>
+<Layman>
+
+**Drive a browser.** Playwright MCP gives the AI browser tools. It works from structured page data, with no vision model <Cite n={5} />. Ask it to open a staging page, fill a form with edge-case values, and report what breaks.
+
+**Read the bug tracker and the docs.** A remote server for your issue tracker lets the assistant read a ticket. It can check the steps against the app and draft a comment for you to review. Add it with the `--transport http` form <Cite n={4} />.
+
+**Query a test database.** The MCP docs describe a database server. It has tools that run queries, a resource with the schema, and a prompt with examples <Cite n={2} />. With it, you can ask "which test users have an expired card?" You get the rows without writing SQL first.
+
+**Share the setup with the team.** Use the project scope. Then the server list lives in `.mcp.json` in the repo <Cite n={4} />. Every tester gets the same connectors.
+
+**Test an MCP server that your team builds.** Check `tools/list`. Call each tool with good and bad input, based on its `inputSchema`. Check the errors <Cite n={2} />. The MCP Inspector is a tool for this kind of work <Cite n={2} />.
+
+This is the tutorial's own advice. Give every connector the smallest access that the task needs: a read-only database user, a test project in the tracker, and a staging URL for the browser. Keep tokens in environment variables, never in `.mcp.json`.
+
+</Layman>
+<Bangla>
+
+**ব্রাউজার চালানো।** Playwright MCP AI-কে ব্রাউজারের টুল দেয়। এটা পেজের structured data দিয়ে কাজ করে, কোনো vision model ছাড়াই <Cite n={5} />। একটা staging পেজ খুলতে, edge-case মান দিয়ে একটা ফর্ম পূরণ করতে, আর কী ভাঙছে তা জানাতে বলুন।
+
+**Bug tracker আর ডকস পড়া।** আপনার issue tracker-এর একটা রিমোট server থাকলে assistant একটা টিকিট পড়তে পারে। সে অ্যাপের সাথে ধাপগুলো মিলিয়ে দেখতে পারে আর আপনার রিভিউয়ের জন্য একটা কমেন্টের খসড়া করতে পারে। `--transport http` রূপে এটা যোগ করুন <Cite n={4} />।
+
+**টেস্ট ডেটাবেসে কুয়েরি।** MCP ডকস একটা ডেটাবেস server-এর কথা বলে, যাতে কুয়েরি চালানোর টুল, schema-সহ একটা resource আর উদাহরণসহ একটা prompt থাকে <Cite n={2} />। এটা দিয়ে আপনি জিজ্ঞেস করতে পারেন "which test users have an expired card?"। আগে SQL না লিখেই সারিগুলো পাবেন।
+
+**দলের সাথে সেটআপ শেয়ার করা।** Project scope ব্যবহার করুন। তাহলে server-এর তালিকা repo-র `.mcp.json`-এ থাকে <Cite n={4} />। প্রত্যেক টেস্টার একই connector পান।
+
+**আপনার দলের বানানো MCP server টেস্ট করা।** `tools/list` দেখুন। প্রতিটা টুলকে তার `inputSchema` অনুযায়ী ঠিক আর ভুল ইনপুট দিয়ে কল করুন। এররগুলো দেখুন <Cite n={2} />। MCP Inspector এই ধরনের কাজের একটা টুল <Cite n={2} />।
+
+এটা টিউটোরিয়ালের নিজের পরামর্শ। প্রতিটা connector-কে কাজের জন্য সবচেয়ে কম অ্যাক্সেস দিন: একটা read-only ডেটাবেস ইউজার, tracker-এ একটা টেস্ট প্রজেক্ট, আর ব্রাউজারের জন্য একটা staging URL। টোকেন environment variable-এ রাখুন, কখনো `.mcp.json`-এ নয়।
+
+</Bangla>
+</Voices>
+
+## Tools to try
+
+<Voices>
+<Technical>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| Playwright MCP | Browser automation for an AI app | Add it with `claude mcp add playwright npx @playwright/mcp@latest` <Cite n={5} /> |
+| MCP Inspector | Try and debug an MCP server | It is one of the MCP development tools <Cite n={2} /> |
+| Reference servers | Example servers from the MCP project | The project keeps reference server implementations <Cite n={2} /> |
+| `claude mcp` | Add and list servers in Claude Code | Project scope saves the list in `.mcp.json` <Cite n={4} /> |
+| Claude API MCP connector | Use MCP servers from your own app | No MCP client of your own is needed <Cite n={6} /> |
+
+</Technical>
+<Layman>
+
+- **Playwright MCP**: browser automation for an AI app. Add it with `claude mcp add playwright npx @playwright/mcp@latest` <Cite n={5} />.
+- **MCP Inspector**: try and debug an MCP server. It is one of the MCP development tools <Cite n={2} />.
+- **Reference servers**: example servers from the MCP project. The project keeps reference server implementations <Cite n={2} />.
+- **`claude mcp`**: add and list servers in Claude Code. Project scope saves the list in `.mcp.json` <Cite n={4} />.
+- **Claude API MCP connector**: use MCP servers from your own app. You do not need an MCP client of your own <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+- **Playwright MCP**: একটা AI অ্যাপের জন্য browser automation। `claude mcp add playwright npx @playwright/mcp@latest` দিয়ে যোগ করুন <Cite n={5} />।
+- **MCP Inspector**: একটা MCP server চালিয়ে দেখা আর ডিবাগ করা। এটা MCP-র development tool-গুলোর একটা <Cite n={2} />।
+- **Reference servers**: MCP প্রজেক্টের উদাহরণ server। প্রজেক্টটা reference server implementation রাখে <Cite n={2} />।
+- **`claude mcp`**: Claude Code-এ server যোগ করা আর তালিকা দেখা। Project scope তালিকাটা `.mcp.json`-এ সেভ করে <Cite n={4} />।
+- **Claude API MCP connector**: নিজের অ্যাপ থেকে MCP server ব্যবহার করা। নিজের কোনো MCP client লাগে না <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Adding any server you find.** Check that you trust each server first. A server that fetches outside content can bring a prompt injection risk <Cite n={4} />. A local server that is not safe can run any command with the rights of the client <Cite n={3} />. Fix: install servers from sources you know, and read the start command.
+- **Broad access.** The MCP security guide recommends a least-privilege model that starts with a minimal set of scopes <Cite n={3} />. Fix: use test accounts with the smallest rights.
+- **Secrets in the shared file.** `.mcp.json` is meant for the repo <Cite n={4} />. Fix: pass keys as environment variables, as the `--env` option of `claude mcp add` shows <Cite n={4} />.
+- **Using SSE for a new server.** The SSE transport is deprecated <Cite n={4} />. Fix: use Streamable HTTP for remote servers.
+- **Testing your own server only on the happy path.** Fix: also send input that breaks the `inputSchema` <Cite n={2} />, and check that a server never accepts a token that was not issued for it <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+- **Adding any server you find.** First check that you trust each server. A server that fetches outside content can bring a prompt injection risk <Cite n={4} />. A local server that is not safe can run any command with the rights of the client <Cite n={3} />. Fix: install servers from sources you know. Read the start command.
+- **Broad access.** The MCP security guide recommends the least access. Start with a minimal set of scopes <Cite n={3} />. Fix: use test accounts with the smallest rights.
+- **Secrets in the shared file.** `.mcp.json` is meant for the repo <Cite n={4} />. Fix: pass keys as environment variables, as the `--env` option of `claude mcp add` shows <Cite n={4} />.
+- **Using SSE for a new server.** The SSE transport is deprecated <Cite n={4} />. Fix: use Streamable HTTP for remote servers.
+- **Testing your own server only on the happy path.** Fix: also send input that breaks the `inputSchema` <Cite n={2} />. Check that a server never accepts a token that was not made for it <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+- **যা পান সেই server যোগ করা।** আগে দেখুন প্রতিটা server-কে আপনি বিশ্বাস করেন কিনা। যে server বাইরের কনটেন্ট আনে, সে prompt injection-এর ঝুঁকি আনতে পারে <Cite n={4} />। একটা অনিরাপদ লোকাল server client-এর অধিকার নিয়ে যেকোনো কমান্ড চালাতে পারে <Cite n={3} />। সমাধান: পরিচিত সোর্স থেকে server ইনস্টল করুন। চালু করার কমান্ডটা পড়ে দেখুন।
+- **বেশি অ্যাক্সেস।** MCP-র সিকিউরিটি গাইড least-privilege মডেল সুপারিশ করে, যা সবচেয়ে কম scope দিয়ে শুরু হয় <Cite n={3} />। সমাধান: সবচেয়ে কম অধিকারসহ টেস্ট অ্যাকাউন্ট ব্যবহার করুন।
+- **শেয়ার করা ফাইলে secret।** `.mcp.json` repo-তে রাখার জন্য <Cite n={4} />। সমাধান: key-গুলো environment variable হিসেবে দিন, যেমন `claude mcp add`-এর `--env` অপশন দেখায় <Cite n={4} />।
+- **নতুন server-এ SSE ব্যবহার।** SSE transport deprecated <Cite n={4} />। সমাধান: রিমোট server-এর জন্য Streamable HTTP ব্যবহার করুন।
+- **নিজের server শুধু happy path-এ টেস্ট করা।** সমাধান: `inputSchema` ভাঙে এমন ইনপুটও পাঠান <Cite n={2} />। দেখুন server যেন কখনো তার জন্য দেওয়া হয়নি এমন টোকেন গ্রহণ না করে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## How to start
+
+<Voices>
+<Technical>
+
+1. Add Playwright MCP to Claude Code with the command in the table above <Cite n={5} />.
+2. Run `/mcp` and check that the server is connected <Cite n={4} />.
+3. Ask Claude to open your staging site and walk through one flow. Read every tool call that it asks to run.
+4. Add one more server for a system that you use every day, with a test account.
+5. When the setup works, move it to the project scope so that the team shares it <Cite n={4} />. Then read [MCP](/extend/mcp/) and [Hooks](/extend/hooks/) to add guard rails.
+
+</Technical>
+<Layman>
+
+1. Add Playwright MCP to Claude Code with the command in the list above <Cite n={5} />.
+2. Run `/mcp`. Check that the server is connected <Cite n={4} />.
+3. Ask Claude to open your staging site and walk through one flow. Read every tool call that it asks to run.
+4. Add one more server for a system that you use every day. Use a test account.
+5. When the setup works, move it to the project scope. Then the team shares it <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+1. ওপরের তালিকার কমান্ড দিয়ে Claude Code-এ Playwright MCP যোগ করুন <Cite n={5} />।
+2. `/mcp` চালান। দেখুন server যুক্ত হয়েছে কিনা <Cite n={4} />।
+3. Claude-কে আপনার staging সাইট খুলে একটা flow পার হতে বলুন। সে যে প্রতিটা টুল কল চালাতে চায়, তা পড়ুন।
+4. যে সিস্টেম আপনি প্রতিদিন ব্যবহার করেন, তার জন্য আরেকটা server যোগ করুন। একটা টেস্ট অ্যাকাউন্ট ব্যবহার করুন।
+5. সেটআপ কাজ করলে project scope-এ নিয়ে যান, যাতে দল এটা শেয়ার করে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| MCP | An open-source standard that connects AI apps to outside systems <Cite n={1} /> |
+| Host | The AI application that manages one or more MCP clients <Cite n={2} /> |
+| Server | A program that gives tools, resources, and prompts to a client <Cite n={2} /> |
+| Tool | A function on a server that the AI app can call <Cite n={2} /> |
+| Transport | How client and server talk: stdio or Streamable HTTP <Cite n={2} /> |
+| Project scope | Claude Code servers shared through `.mcp.json` in the repo <Cite n={4} /> |

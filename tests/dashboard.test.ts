@@ -16,15 +16,15 @@ test("readByModule counts only known routes, per module", () => {
   const rows = readByModule(["/extend/hooks/", "/linux/shell-basics/", "/nope/"]);
   assert.deepEqual(
     rows.map((r) => r.module),
-    ["tutorial", "linux", "fundamentals", "system-design", "architecture", "course", "k6"],
+    ["tutorial", "linux", "fundamentals", "system-design", "architecture", "course", "k6", "ai-skills"],
   );
   assert.deepEqual(
     rows.map((r) => r.total),
-    [24, 12, 11, 15, 20, 40, 20],
+    [24, 12, 11, 15, 20, 40, 20, 20],
   );
   assert.deepEqual(
     rows.map((r) => r.read),
-    [1, 1, 0, 0, 0, 0, 0],
+    [1, 1, 0, 0, 0, 0, 0, 0],
   );
 });
 

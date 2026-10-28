@@ -25,7 +25,7 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 152 pages: 7 sections and 3 helper pages.
+The site has 173 pages: 8 sections and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
@@ -36,6 +36,7 @@ The site has 152 pages: 7 sections and 3 helper pages.
 | [Architecture](https://kawsar-95.github.io/ai-testing-guide/architecture/) | 19 topics and 30 practice questions | The building blocks of system architecture |
 | [Course](https://kawsar-95.github.io/ai-testing-guide/course/) | 40 topics (55 entries with links) | System design from the ground up, in 6 parts |
 | [k6](https://kawsar-95.github.io/ai-testing-guide/k6/) | 20 topics in 5 parts | Performance testing and the k6 tool, from the first script to CI |
+| [AI Skills](https://kawsar-95.github.io/ai-testing-guide/ai-skills/) | 20 skills in 4 tiers | 20 AI skills, from prompting to fine-tuning, and how a tester uses each one |
 
 Three helper pages sit beside the sections: [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) lists everything, [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows your progress, and [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) links to the interview material.
 
@@ -82,7 +83,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 
 ### Three voices for every section
 
-130 pages let you read each `##` section in three voices:
+150 pages let you read each `##` section in three voices:
 
 | Voice | What it is |
 |---|---|
@@ -118,13 +119,13 @@ The ISTQB version has seven inline diagrams, for example the test pyramid, the t
 
 The site tracks your work in your browser. It never sends it to a server.
 
-- **Topic checklists:** the Linux stages, the Fundamentals chapters, the Architecture topics (and its 30 practice questions), the Course topics, and the k6 topics have checkboxes and progress bars.
+- **Topic checklists:** the Linux stages, the Fundamentals chapters, the Architecture topics (and its 30 practice questions), the Course topics, the k6 topics, and the AI skills have checkboxes and progress bars.
 - **Pages read and bookmarks:** each content page has a **Mark as read** toggle and a **Bookmark** toggle under its title.
 - **Last page:** the site remembers the last content page that you opened.
 
 ![The Linux roadmap with a progress bar and checklists](docs/assets/linux.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 142`), your bookmarks, the topic progress of the five modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 162`), your bookmarks, the topic progress of the six modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
 
@@ -175,7 +176,7 @@ The layout adapts to phone widths. Below 1200 px the top navigation moves into t
 
 ### Install it and read offline
 
-The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 152 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
+The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 173 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
 
 ### Accessibility
 
@@ -232,7 +233,7 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `python3 scripts/check_routes.py out` | Checks that every route of the route maps has a built page. |
 | `python3 scripts/check_links.py out` | Checks internal links and assets. |
 | `python3 scripts/check_outline.py out` | Checks that every "On this page" link has a target. |
-| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 142 pages checked, 0 skipped`. |
+| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 162 pages checked, 0 skipped`. |
 
 Run the `out` checks after `npm run build`, on a build without a base path.
 
@@ -241,7 +242,7 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 ```text
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
-content/<group>/     The MDX pages: 24 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6
+content/<group>/     The MDX pages: 24 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 20 AI Skills
 lib/                 nav.ts (tutorial page order), one data file for each module, search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
 scripts/             Python check scripts and the route maps (one JSON file for each module)
@@ -260,7 +261,7 @@ For a tutorial page:
 3. Give each fact a `<Cite n={k} />` and a matching entry in `page.sources`.
 4. Run `npm test`, `npm run build`, and the checks above.
 
-The other modules keep their page lists in their own data files: `lib/linux/stages.ts`, `lib/fundamentals/chapters.ts`, `lib/system-design/cases.ts`, `lib/architecture/topics.ts`, `lib/course/topics.ts`, and `lib/k6/topics.ts`. Each module has its own route map in `scripts/`. A page with voices also needs a voice fact-check report. `npm test` checks that the lists, the MDX files, and the route maps agree.
+The other modules keep their page lists in their own data files: `lib/linux/stages.ts`, `lib/fundamentals/chapters.ts`, `lib/system-design/cases.ts`, `lib/architecture/topics.ts`, `lib/course/topics.ts`, `lib/k6/topics.ts`, and `lib/ai-skills/topics.ts`. Each module has its own route map in `scripts/`. A page with voices also needs a voice fact-check report. `npm test` checks that the lists, the MDX files, and the route maps agree.
 
 [CLAUDE.md](CLAUDE.md) has the full rules: the MDX components, the voices, the citation rules, and the research and fact-check workflow. It is written as the guide for AI coding agents, and it is the most complete reference for humans too.
 

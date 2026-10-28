@@ -1,0 +1,282 @@
+export const metadata = { title: 'AI Agents', description: 'How an AI agent uses tools in a loop to finish a task, and how a tester uses agents to triage failures, explore an app, and run checks in CI.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'How Claude Code works', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/how-claude-code-works', accessed: '2026-10-28' },
+    { title: 'Agent SDK overview', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/agent-sdk/overview', accessed: '2026-10-28' },
+    { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
+    { title: 'Tool use with Claude', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview', accessed: '2026-10-28' },
+    { title: 'ReAct: Synergizing Reasoning and Acting in Language Models', publisher: 'arXiv (2210.03629)', url: 'https://arxiv.org/abs/2210.03629', accessed: '2026-10-28' },
+    { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-10-28' },
+    { title: 'Playwright MCP', publisher: 'Microsoft (GitHub)', url: 'https://github.com/microsoft/playwright-mcp', accessed: '2026-10-28' },
+    { title: 'Connect Claude Code to tools via MCP', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/mcp', accessed: '2026-10-28' },
+    { title: 'Best practices for Claude Code', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/best-practices', accessed: '2026-10-28' },
+    { title: 'Security', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/security', accessed: '2026-10-28' },
+  ],
+}
+
+# AI Agents
+
+A chat model answers your question and stops. An agent takes a goal, picks its own next step, uses a tool, looks at the result, and goes on until the goal is met. For a tester, that is the difference between "explain this stack trace" and "find why the login tests fail, fix it, and show me the green run".
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **AI agent** is a program that gets a task done by choosing its own next steps and using tools, for example tools that open files, run shell commands, or change code <Cite n={2} />. A model with no tools can only reply with text. With tools, it can read your code, edit files, run commands, and search the web <Cite n={1} />.
+
+The idea comes from research such as ReAct (2022). In ReAct, a language model writes reasoning steps and actions in turns, and the actions let it work with outside sources such as a knowledge base <Cite n={5} />.
+
+The agent that most testers meet first is Claude Code. It is an agentic assistant that runs in the terminal <Cite n={1} />. You give it a goal such as "fix the failing tests", and it decides which commands to run and which files to read <Cite n={1} />. The site's [How Claude Code works](/foundations/how-claude-code-works/) page goes deeper.
+
+</Technical>
+<Layman>
+
+An **AI agent** is a program that finishes a task on its own. It plans its own steps. It calls tools, for example tools that open files, run shell commands, or change code <Cite n={2} />. A model with no tools can only reply with text. With tools, it can read your code, edit files, run commands, and search the web <Cite n={1} />.
+
+The idea comes from research such as ReAct (2022). In ReAct, a language model writes a reasoning step, then an action, then another reasoning step, and so on. The actions let it work with outside sources, such as a knowledge base <Cite n={5} />.
+
+Most testers meet Claude Code first. It is an agent that runs in the terminal <Cite n={1} />. You give it a goal, such as "fix the failing tests". It decides which commands to run and which files to read <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**AI agent** হলো এমন একটা প্রোগ্রাম, যে নিজের ধাপ নিজে প্ল্যান করে এবং টুল (tool) কল করে একটা কাজ শেষ করে। যেমন ফাইল খোলা, শেল কমান্ড চালানো বা কোড বদলানোর টুল <Cite n={2} />। টুল ছাড়া একটা মডেল শুধু টেক্সটে উত্তর দিতে পারে। টুল থাকলে সে আপনার কোড পড়তে, ফাইল এডিট করতে, কমান্ড চালাতে এবং ওয়েবে সার্চ করতে পারে <Cite n={1} />।
+
+ধারণাটা এসেছে ReAct (2022)-এর মতো গবেষণা থেকে। ReAct-এ একটা ল্যাঙ্গুয়েজ মডেল পালা করে যুক্তির ধাপ (reasoning) আর অ্যাকশন (action) লেখে। অ্যাকশনগুলো তাকে বাইরের সোর্সের সাথে কাজ করতে দেয়, যেমন একটা knowledge base <Cite n={5} />।
+
+বেশিরভাগ টেস্টার প্রথমে Claude Code-এর সাথে পরিচিত হন। এটা টার্মিনালে চলা একটা এজেন্ট <Cite n={1} />। আপনি একটা লক্ষ্য দেন, যেমন "fix the failing tests"। কোন কমান্ড চালাবে আর কোন ফাইল পড়বে, তা সে নিজে ঠিক করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The Claude Code loop has three phases: **gather context**, then **take action**, then **verify results**. It uses tools in all three <Cite n={1} />. The Agent SDK documents the same loop in detail <Cite n={3} />:
+
+1. Claude gets your prompt, the system prompt, the tool definitions, and the conversation so far.
+2. Claude answers with text, with one or more tool calls, or with both.
+3. The SDK runs each tool and sends the results back to Claude.
+4. Steps 2 and 3 repeat. Each full cycle is one **turn**. The loop ends when Claude gives a response with no tool calls.
+
+```text
+goal --> [ model decides ] --> tool call --> [ tool runs ] --> result
+              ^                                                  |
+              +--------------------------------------------------+
+         (repeat until the answer has no tool call: done)
+```
+
+At the API level, a tool you define is a **client tool**. Claude stops with `stop_reason: "tool_use"` and a `tool_use` block, your code runs the tool, and you send back a `tool_result`. A **server tool**, such as web search, runs on Anthropic's side <Cite n={4} />.
+
+You keep control of the loop:
+
+- **Limits.** `max_turns` caps the tool-use turns and `max_budget_usd` caps the spend. Both have no limit by default <Cite n={3} />.
+- **Tool rules.** `allowed_tools` approves listed tools with no prompt, `disallowed_tools` blocks tools, and a rule such as `Bash(npm *)` allows only some commands <Cite n={3} />.
+- **Hooks.** A `PreToolUse` hook can reject a tool call before it runs <Cite n={3} />. See [Hooks](/extend/hooks/).
+- **Subagents.** A subagent has its own context window, its own system prompt, and its own tool access <Cite n={6} />.
+- **You.** You can interrupt at any point and steer the agent <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+Claude Code works in three phases. It gathers context. It takes action. It verifies the results. It uses tools in all three phases <Cite n={1} />. The Agent SDK describes the same loop in more detail <Cite n={3} />:
+
+1. Claude gets your prompt, the system prompt, the tool definitions, and the conversation so far.
+2. Claude answers with text, with one or more tool calls, or with both.
+3. The SDK runs each tool and sends the results back to Claude.
+4. Steps 2 and 3 repeat. One full cycle is one **turn**. The loop ends when Claude gives an answer with no tool call.
+
+In short: the goal goes to the model, the model asks for a tool, the tool runs, and the result goes back to the model. This repeats until the answer has no tool call.
+
+In the API, a tool that you define is a **client tool**. Claude stops with `stop_reason: "tool_use"` and a `tool_use` block. Your code runs the tool. Then you send back a `tool_result`. A **server tool**, such as web search, runs on Anthropic's side <Cite n={4} />.
+
+You keep control of the loop:
+
+- **Limits.** `max_turns` caps the number of tool-use turns. `max_budget_usd` caps the spend. By default, neither has a limit <Cite n={3} />.
+- **Tool rules.** `allowed_tools` lets listed tools run with no question. `disallowed_tools` blocks tools. A rule such as `Bash(npm *)` allows only some commands <Cite n={3} />.
+- **Hooks.** A `PreToolUse` hook can stop a tool call before it runs <Cite n={3} />.
+- **Subagents.** A subagent has its own context window, its own system prompt, and its own tools <Cite n={6} />.
+- **You.** You can stop the agent at any point and give it a new direction <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+Claude Code তিনটা ধাপে কাজ করে: কনটেক্সট জোগাড় করা (gather context), কাজ করা (take action) এবং ফলাফল যাচাই করা (verify results)। তিনটা ধাপেই সে টুল ব্যবহার করে <Cite n={1} />। Agent SDK একই লুপ (loop) আরও বিস্তারিত বলে <Cite n={3} />:
+
+1. Claude আপনার প্রম্পট, system prompt, টুলের সংজ্ঞা (tool definitions) এবং এখন পর্যন্ত কথোপকথন পায়।
+2. Claude টেক্সট দিয়ে, এক বা একাধিক টুল কল দিয়ে, অথবা দুটো দিয়েই উত্তর দেয়।
+3. SDK প্রতিটা টুল চালায় এবং ফলাফল Claude-কে ফেরত পাঠায়।
+4. ধাপ 2 আর 3 বারবার চলে। একটা পুরো চক্রকে বলে এক **turn**। Claude যখন টুল কল ছাড়া উত্তর দেয়, লুপ শেষ হয়।
+
+সংক্ষেপে: লক্ষ্য মডেলের কাছে যায়, মডেল একটা টুল চায়, টুল চলে, ফলাফল আবার মডেলের কাছে যায়। উত্তরে টুল কল না থাকা পর্যন্ত এটা চলতে থাকে।
+
+API-তে আপনার বানানো টুলকে বলে **client tool**। Claude `stop_reason: "tool_use"` আর একটা `tool_use` ব্লক দিয়ে থামে। আপনার কোড টুলটা চালায়, তারপর আপনি একটা `tool_result` ফেরত পাঠান। **Server tool**, যেমন web search, Anthropic-এর দিকে চলে <Cite n={4} />।
+
+লুপের নিয়ন্ত্রণ আপনার হাতে থাকে:
+
+- **সীমা।** `max_turns` টুল-ব্যবহারের turn-এর সংখ্যা বেঁধে দেয়। `max_budget_usd` খরচ বেঁধে দেয়। ডিফল্টভাবে কোনোটারই সীমা নেই <Cite n={3} />।
+- **টুলের নিয়ম।** `allowed_tools` তালিকার টুলগুলো কোনো প্রশ্ন ছাড়া চলতে দেয়। `disallowed_tools` টুল বন্ধ করে। `Bash(npm *)`-এর মতো নিয়ম শুধু কিছু কমান্ড চলতে দেয় <Cite n={3} />।
+- **Hooks।** একটা `PreToolUse` hook কোনো টুল কল চলার আগেই আটকাতে পারে <Cite n={3} />।
+- **Subagents।** একটা subagent-এর নিজের context window, নিজের system prompt আর নিজের টুল থাকে <Cite n={6} />।
+- **আপনি।** আপনি যেকোনো সময় এজেন্টকে থামিয়ে নতুন দিক দেখাতে পারেন <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Triage a failing test.** Ask the agent to fix the failing tests. The Claude Code docs show the typical steps: run the suite, read the error, search for the source, read it, edit it, and run the tests again <Cite n={1} />. You review the diff and the final test output.
+
+**Explore the app in a real browser.** Playwright MCP gives an agent browser tools. It reads the page as structured data from the accessibility tree, so it needs no vision model <Cite n={7} />. You can ask the agent to walk through a signup flow on `https://staging.example.com` and list what looks wrong. The [Playwright](/automate/playwright/) page and the [MCP Connectors](/ai-skills/mcp-connectors/) skill go deeper.
+
+**Run the agent in CI.** The same loop runs without a person: call `claude -p` and add `--output-format json` <Cite n={2} />. See [Headless mode](/automate/headless/) and [GitHub Actions](/automate/github-actions/).
+
+**Split a big job.** Give a review job to a subagent. Its tool calls stay out of your main context, and you get back a summary <Cite n={1} />. See [Subagents](/extend/subagents/).
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice. Give every agent task a check that a machine can run, such as `npm test` or one Playwright spec. Ask for the exact command and its output at the end. Start in a test environment, never on production data.
+</Callout>
+
+</Technical>
+<Layman>
+
+**Triage a failing test.** Ask the agent to fix the failing tests. The Claude Code docs show the usual steps. It runs the tests. It reads the error. It searches for the code. It reads the code and edits it. Then it runs the tests again <Cite n={1} />. You check the change and the last test output.
+
+**Explore the app in a real browser.** Playwright MCP gives an agent browser tools. It reads the page as structured data, so it needs no vision model <Cite n={7} />. You can ask the agent to go through a signup flow on `https://staging.example.com` and list what looks wrong.
+
+**Run the agent in CI.** The same loop can run with no person watching. You call `claude -p` and add `--output-format json` <Cite n={2} />.
+
+**Split a big job.** Give a review job to a subagent. Its tool calls stay out of your main conversation. You get back a short summary <Cite n={1} />.
+
+This is the tutorial's own advice. Give every agent task a check that a machine can run, such as `npm test` or one Playwright spec. Ask for the exact command and its output at the end. Start in a test environment, never on production data.
+
+</Layman>
+<Bangla>
+
+**ফেইল করা টেস্ট খুঁজে দেখা (triage)।** এজেন্টকে ফেইল করা টেস্টগুলো ঠিক করতে বলুন। Claude Code ডকস সাধারণ ধাপগুলো দেখায়: টেস্ট চালানো, এরর পড়া, সোর্স খোঁজা, সেটা পড়া, এডিট করা, তারপর আবার টেস্ট চালানো <Cite n={1} />। আপনি পরিবর্তন (diff) আর শেষ টেস্ট আউটপুট দেখে নিন।
+
+**আসল ব্রাউজারে অ্যাপ ঘুরে দেখা।** Playwright MCP একটা এজেন্টকে ব্রাউজারের টুল দেয়। সে পেজটা structured data হিসেবে পড়ে, তাই কোনো vision model লাগে না <Cite n={7} />। আপনি এজেন্টকে `https://staging.example.com`-এ একটা signup flow পার হয়ে কী কী ভুল লাগছে তার তালিকা দিতে বলতে পারেন।
+
+**CI-তে এজেন্ট চালানো।** একই লুপ কোনো মানুষ ছাড়াও চলতে পারে। CLI-কে `-p` আর `--output-format json` দিয়ে চালান <Cite n={2} />।
+
+**বড় কাজ ভাগ করা।** একটা রিভিউয়ের কাজ একটা subagent-কে দিন। তার টুল কলগুলো আপনার মূল কথোপকথনের বাইরে থাকে। আপনি একটা সংক্ষিপ্ত সারাংশ পান <Cite n={1} />।
+
+এটা টিউটোরিয়ালের নিজের পরামর্শ। প্রতিটা এজেন্টের কাজে এমন একটা চেক দিন যা মেশিন চালাতে পারে, যেমন `npm test` বা একটা Playwright spec। শেষে ঠিক কোন কমান্ড চলেছে আর তার আউটপুট চেয়ে নিন। টেস্ট এনভায়রনমেন্টে শুরু করুন, কখনো production ডেটায় নয়।
+
+</Bangla>
+</Voices>
+
+## Tools to try
+
+<Voices>
+<Technical>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| Claude Code | An agent in your terminal, IDE, or CI | It works in three phases: gather context, take action, verify results <Cite n={1} /> |
+| Claude Agent SDK | The Claude Code loop as a library | It gives you the tools, the agent loop, and the context handling of Claude Code, in Python and TypeScript <Cite n={2} /> |
+| Claude API tool use | Build your own loop | Your code runs a client tool and returns a `tool_result` <Cite n={4} /> |
+| Playwright MCP | Browser tools for an agent | Add it with `claude mcp add playwright npx @playwright/mcp@latest` <Cite n={7} /> |
+
+</Technical>
+<Layman>
+
+- **Claude Code**: an agent in your terminal, IDE, or CI. It works in three phases: gather context, take action, verify results <Cite n={1} />.
+- **Claude Agent SDK**: the Claude Code loop as a library. It gives you the tools, the loop, and the context handling of Claude Code. It works in Python and TypeScript <Cite n={2} />.
+- **Claude API tool use**: build your own loop. Your code runs a client tool and returns a `tool_result` <Cite n={4} />.
+- **Playwright MCP**: browser tools for an agent. Add it with `claude mcp add playwright npx @playwright/mcp@latest` <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+- **Claude Code**: আপনার টার্মিনাল, IDE বা CI-তে চলা একটা এজেন্ট। এটা তিন ধাপে কাজ করে: gather context, take action, verify results <Cite n={1} />।
+- **Claude Agent SDK**: Claude Code-এর লুপ, একটা লাইব্রেরি হিসেবে। এটা আপনাকে Claude Code-এর টুল, agent loop আর context handling দেয়। এটা Python আর TypeScript-এ চলে <Cite n={2} />।
+- **Claude API tool use**: নিজের লুপ নিজে বানান। আপনার কোড একটা client tool চালায় এবং একটা `tool_result` ফেরত দেয় <Cite n={4} />।
+- **Playwright MCP**: এজেন্টের জন্য ব্রাউজার টুল। `claude mcp add playwright npx @playwright/mcp@latest` দিয়ে যোগ করুন <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **No stop rule.** With no limits, the loop runs until the agent finishes, and an open-ended prompt can run long <Cite n={3} />. Fix: give a clear goal, and set `max_turns` or a budget in scripts.
+- **"Done" with no proof.** An agent stops when the work looks done <Cite n={9} />. Fix: ask for the command it ran and its output <Cite n={9} />.
+- **Too much permission.** The `bypassPermissions` mode is only for isolated environments <Cite n={3} />. Fix: allow only the tools and commands that the task needs, for example `Bash(npm *)` <Cite n={3} />.
+- **Trusting outside content.** A server that fetches outside content can bring a prompt injection risk <Cite n={8} />. Fix: connect only servers that you trust, and point the agent at test data.
+- **Side effects you cannot undo.** Claude Code checkpoints undo file edits only. Changes to databases, APIs, and deployments cannot be rolled back that way <Cite n={1} />. Fix: run agents against a test environment.
+
+</Technical>
+<Layman>
+
+- **No stop rule.** With no limits, the loop runs until the agent finishes. An open-ended prompt can run for a long time <Cite n={3} />. Fix: give a clear goal. In scripts, set `max_turns` or a budget.
+- **"Done" with no proof.** An agent stops when the work looks done <Cite n={9} />. Fix: ask for the command it ran and its output <Cite n={9} />.
+- **Too much permission.** The `bypassPermissions` mode is only for isolated environments <Cite n={3} />. Fix: allow only the tools and commands that the task needs, for example `Bash(npm *)` <Cite n={3} />.
+- **Trusting outside content.** A server that fetches outside content can bring a prompt injection risk <Cite n={8} />. Fix: connect only servers that you trust. Point the agent at test data.
+- **Side effects you cannot undo.** Claude Code checkpoints undo file edits only. They cannot undo changes to databases, APIs, or deployments <Cite n={1} />. Fix: run agents against a test environment.
+
+</Layman>
+<Bangla>
+
+- **থামার কোনো নিয়ম নেই।** কোনো সীমা না থাকলে এজেন্ট কাজ শেষ না করা পর্যন্ত লুপ চলে। খোলা-মাথার (open-ended) প্রম্পট অনেকক্ষণ চলতে পারে <Cite n={3} />। সমাধান: পরিষ্কার লক্ষ্য দিন। স্ক্রিপ্টে `max_turns` বা একটা বাজেট সেট করুন।
+- **প্রমাণ ছাড়া "Done"।** কাজ শেষ মনে হলেই এজেন্ট থামে <Cite n={9} />। সমাধান: সে কোন কমান্ড চালিয়েছে আর তার আউটপুট কী, তা চেয়ে নিন <Cite n={9} />।
+- **বেশি অনুমতি।** `bypassPermissions` মোড শুধু আলাদা করা (isolated) এনভায়রনমেন্টের জন্য <Cite n={3} />। সমাধান: কাজে যে টুল আর কমান্ড লাগে শুধু সেগুলোর অনুমতি দিন, যেমন `Bash(npm *)` <Cite n={3} />।
+- **বাইরের কনটেন্টে বিশ্বাস।** যে সার্ভার বাইরের কনটেন্ট আনে, সে prompt injection-এর ঝুঁকি আনতে পারে <Cite n={8} />। সমাধান: শুধু বিশ্বস্ত সার্ভার যুক্ত করুন। এজেন্টকে টেস্ট ডেটায় কাজ করান।
+- **যে ক্ষতি ফেরানো যায় না।** Claude Code-এর checkpoint শুধু ফাইল এডিট ফেরাতে পারে। ডেটাবেস, API বা deployment-এর পরিবর্তন সে ফেরাতে পারে না <Cite n={1} />। সমাধান: এজেন্টকে টেস্ট এনভায়রনমেন্টে চালান।
+
+</Bangla>
+</Voices>
+
+## How to start
+
+<Voices>
+<Technical>
+
+1. Open Claude Code in a test project in **Plan** mode. In this mode it explores and proposes a plan, and it does not edit your source files <Cite n={1} />. Ask it to explain how the tests are organized.
+2. Give one small task with a check: "run the login tests, fix the first failure, and show me the test output".
+3. Allow the safe commands that you run often, such as `npm test`, in `.claude/settings.json` <Cite n={1} />. See [Settings](/configure/settings/).
+4. Add Playwright MCP and ask the agent to walk through one flow on a staging site.
+5. When a task repeats, move it to a headless run in CI with a turn limit.
+
+</Technical>
+<Layman>
+
+1. Open Claude Code in a test project in **Plan** mode. In this mode, it explores and proposes a plan. It does not edit your source files <Cite n={1} />. Ask it to explain how the tests are organized.
+2. Give one small task with a check: "run the login tests, fix the first failure, and show me the test output".
+3. Allow the safe commands that you run often, such as `npm test`, in `.claude/settings.json` <Cite n={1} />.
+4. Add Playwright MCP. Ask the agent to walk through one flow on a staging site.
+5. When a task repeats, move it to a headless run in CI with a turn limit.
+
+</Layman>
+<Bangla>
+
+1. একটা টেস্ট প্রজেক্টে Claude Code **Plan** মোডে খুলুন। এই মোডে সে ঘুরে দেখে আর একটা প্ল্যান দেয়, আপনার সোর্স ফাইল এডিট করে না <Cite n={1} />। টেস্টগুলো কীভাবে সাজানো, তা ব্যাখ্যা করতে বলুন।
+2. একটা চেকসহ একটা ছোট কাজ দিন: "run the login tests, fix the first failure, and show me the test output"।
+3. যে নিরাপদ কমান্ডগুলো আপনি প্রায়ই চালান, যেমন `npm test`, সেগুলো `.claude/settings.json`-এ allow করুন <Cite n={1} />।
+4. Playwright MCP যোগ করুন। এজেন্টকে একটা staging সাইটে একটা flow পার হতে বলুন।
+5. কোনো কাজ বারবার হলে সেটাকে turn limit সহ CI-তে headless রানে নিয়ে যান।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Agent | A program that plans its own steps and calls tools to finish a task <Cite n={2} /> |
+| Agentic loop | Gather context, take action, verify results, and repeat <Cite n={1} /> |
+| Turn | One cycle of tool calls and tool results inside the loop <Cite n={3} /> |
+| Tool use | The model asks for a tool call, and an application or Anthropic runs it <Cite n={4} /> |
+| Subagent | A helper agent with its own context window, prompt, and tools <Cite n={6} /> |
+| Prompt injection | An attack that puts harmful text into content to take over the AI's instructions <Cite n={10} /> |

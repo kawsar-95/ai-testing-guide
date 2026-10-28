@@ -1,0 +1,279 @@
+export const metadata = { title: 'Context Engineering', description: 'How to give an AI model the right background once, with CLAUDE.md, Claude Projects, and Gemini Notebook, so every test answer uses it.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Context windows', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/context-windows', accessed: '2026-10-28' },
+    { title: 'How Claude remembers your project', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/memory', accessed: '2026-10-28' },
+    { title: 'What are projects?', publisher: 'Anthropic (Claude Help Center)', url: 'https://support.claude.com/en/articles/9517075-what-are-projects', accessed: '2026-10-28' },
+    { title: 'Creating and editing GPTs', publisher: 'OpenAI Help Center', url: 'https://help.openai.com/en/articles/8554397-creating-and-editing-gpts', accessed: '2026-10-28' },
+    { title: 'Learn about Gemini Notebook', publisher: 'Google (Gemini Notebook Help)', url: 'https://support.google.com/notebooklm/answer/16164461', accessed: '2026-10-28' },
+    { title: 'NotebookLM is now Gemini Notebook', publisher: 'Google', url: 'https://blog.google/innovation-and-ai/products/gemini-notebook/notebooklm-gemini-notebook/', accessed: '2026-10-28' },
+    { title: 'Prompting best practices', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices', accessed: '2026-10-28' },
+  ],
+}
+
+# Context Engineering
+
+A good prompt tells the model what to do. Good context tells it what your product is, how your team tests, and what your words mean. This page shows how a tester writes that background once and lets every chat and every test task use it.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The **context window** is all the text that a model can refer to when it writes an answer, and the answer itself counts too <Cite n={1} />. The Claude docs call it the model's "working memory". It is not the data that the model learned in training <Cite n={1} />.
+
+A bigger window does not mean that more text is better. As the token count grows, accuracy and recall drop. The docs call this **context rot** <Cite n={1} />. So the choice of what goes into the context is as important as the size of the window <Cite n={1} />.
+
+In this tutorial, **context engineering** means that choice: you decide which background the model gets, you write it down once, and you keep it short and current. This definition is the tutorial's own.
+
+For a tester, the background is the product, the test strategy, the risk areas, the test data rules, and the team's glossary. Without it, the model guesses. With it, a test case uses your real field names and your real priority rules.
+
+</Technical>
+<Layman>
+
+The **context window** is all the text that a model can look at when it writes an answer. The answer itself counts too <Cite n={1} />. The Claude docs call it the model's "working memory". It is not what the model learned in training <Cite n={1} />.
+
+More text is not always better. When the text gets very long, the model gets less accurate and forgets more. The docs call this **context rot** <Cite n={1} />. So what you put in is as important as how much space there is <Cite n={1} />.
+
+In this tutorial, **context engineering** means this choice. You decide which background the model gets. You write it down once. You keep it short and up to date. This meaning is the tutorial's own.
+
+For a tester, the background is the product, the test strategy, the risk areas, the test data rules, and the team's word list. Without it, the model guesses. With it, a test case uses your real field names and your real priority rules.
+
+</Layman>
+<Bangla>
+
+**Context window** হলো সেই সব টেক্সট, যা একটা মডেল উত্তর লেখার সময় দেখতে পারে। উত্তরটাও এর মধ্যে গোনা হয় <Cite n={1} />। Claude-এর ডকস একে মডেলের "working memory" বলে। এটা ট্রেনিংয়ে শেখা ডেটা নয় <Cite n={1} />।
+
+বড় window মানেই বেশি টেক্সট ভালো, এমন নয়। Token সংখ্যা বাড়লে নির্ভুলতা আর মনে রাখার ক্ষমতা কমে যায়। ডকস একে **context rot** বলে <Cite n={1} />। তাই context-এ কী রাখবেন, সেটা window-এর আকারের মতোই গুরুত্বপূর্ণ <Cite n={1} />।
+
+এই টিউটোরিয়ালে **context engineering** মানে এই বাছাই। মডেল কোন পটভূমি পাবে তা আপনি ঠিক করেন, একবার লিখে রাখেন, আর ছোট ও হালনাগাদ রাখেন। এই সংজ্ঞাটা টিউটোরিয়ালের নিজের।
+
+একজন টেস্টারের জন্য পটভূমি হলো প্রোডাক্ট, test strategy, ঝুঁকির জায়গা, test data-র নিয়ম, আর টিমের glossary। এটা ছাড়া মডেল অনুমান করে। এটা থাকলে একটা test case আপনার আসল field-এর নাম আর আসল priority-র নিয়ম ব্যবহার করে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The system prompt, every message (with tool results, images, and documents), and the tool definitions all use space in the context window <Cite n={1} />. Context engineering decides what fills that space. A simple layer view, which is the tutorial's own picture:
+
+```text
+Standing context   CLAUDE.md, project instructions, GPT instructions
+   (every chat)    product summary, test strategy, glossary
+Reference files    requirements, API spec, old bug reports
+   (when needed)   uploaded to a project or a notebook
+This task          the story, the diff, the failing log
+Your prompt        what to do now, and in what format
+```
+
+**Standing context in Claude Code.** A new Claude Code session has an empty context window <Cite n={2} />. CLAUDE.md files carry knowledge across sessions. They load at the start of every conversation <Cite n={2} />. A project CLAUDE.md lives at `./CLAUDE.md` or `./.claude/CLAUDE.md`, and the team shares it through version control <Cite n={2} />. `/init` writes a first version for you <Cite n={2} />. The docs suggest less than 200 lines for each file, because longer files use more context and are followed less well <Cite n={2} />. See [CLAUDE.md](/configure/claude-md/) for the full setup.
+
+**Standing context in chat apps.** A Claude Project is a separate workspace with its own chat history and knowledge base <Cite n={3} />. You upload documents to the knowledge base and write project instructions, and Claude uses them in each chat of that project <Cite n={3} />. In a custom GPT, the instructions hold the rules, tone, and workflow, and the knowledge files hold reference material <Cite n={4} />.
+
+**Reference files on demand.** A CLAUDE.md file can pull in another file with `@path/to/import`. But an import does not lower the context cost, because the imported file loads too <Cite n={2} />. Gemini Notebook (named NotebookLM until July 2026) <Cite n={7} /> answers from the sources that you upload and shows inline citations <Cite n={5} />.
+
+**Order inside one prompt.** With long documents, put the documents at the top, above the question and the instructions <Cite n={6} />. Wrap each one in a `<document>` tag with `<source>` and `<document_content>` inside <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+The system prompt, every message (with tool results, images, and documents), and the tool definitions all take space in the context window <Cite n={1} />. Context engineering decides what fills that space. The tutorial uses a simple picture with four layers: standing context for every chat, reference files when needed, the files of this task, and your prompt.
+
+**Standing context in Claude Code.** Each Claude Code session starts with an empty context window <Cite n={2} />. CLAUDE.md files carry knowledge from one session to the next. They load at the start of every conversation <Cite n={2} />. A project CLAUDE.md is at `./CLAUDE.md` or `./.claude/CLAUDE.md`. The team shares it through version control <Cite n={2} />. The `/init` command writes a first version for you <Cite n={2} />. The docs suggest fewer than 200 lines for each file. Longer files use more space, and Claude follows them less well <Cite n={2} />.
+
+**Standing context in chat apps.** A Claude Project is a separate workspace with its own chats and its own knowledge base <Cite n={3} />. You upload documents and write project instructions. Claude uses them in each chat of that project <Cite n={3} />. In a custom GPT, the instructions hold the rules, the tone, and the steps. The knowledge files hold reference material <Cite n={4} />.
+
+**Reference files when needed.** A CLAUDE.md file can pull in another file with `@path/to/import`. But this does not save space, because the other file loads too <Cite n={2} />. Gemini Notebook was called NotebookLM until July 2026 <Cite n={7} />. It answers from the sources that you upload, and it shows citations in the text <Cite n={5} />.
+
+**Order inside one prompt.** With long documents, put the documents at the top, above the question and the instructions <Cite n={6} />. Put each one in a `<document>` tag, with `<source>` and `<document_content>` inside <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+একটা request-এর সবকিছু context window-এর জায়গা নেয়: system prompt, প্রতিটা message (tool result, ছবি, ডকুমেন্টসহ), আর tool definition <Cite n={1} />। Context engineering ঠিক করে সেই জায়গা কী দিয়ে ভরবে। টিউটোরিয়াল চারটা স্তরের একটা সহজ ছবি ব্যবহার করে: প্রতিটা চ্যাটের জন্য স্থায়ী context, দরকার হলে reference file, এই কাজের ফাইল, আর আপনার prompt।
+
+**Claude Code-এ স্থায়ী context.** প্রতিটা Claude Code session একটা নতুন, খালি context window দিয়ে শুরু হয় <Cite n={2} />। CLAUDE.md ফাইল এক session থেকে আরেক session-এ জ্ঞান বয়ে নেয়। প্রতিটা কথোপকথনের শুরুতে এগুলো লোড হয় <Cite n={2} />। Project-এর CLAUDE.md থাকে `./CLAUDE.md` বা `./.claude/CLAUDE.md`-এ, আর টিম version control দিয়ে এটা শেয়ার করে <Cite n={2} />। `/init` কমান্ড আপনার জন্য প্রথম সংস্করণ লিখে দেয় <Cite n={2} />। ডকস প্রতিটা ফাইল 200 লাইনের কম রাখতে বলে, কারণ বড় ফাইল বেশি জায়গা নেয় আর Claude সেটা কম ভালোভাবে মানে <Cite n={2} />।
+
+**Chat app-এ স্থায়ী context.** একটা Claude Project হলো নিজস্ব chat history আর knowledge base-সহ আলাদা একটা workspace <Cite n={3} />। আপনি knowledge base-এ ডকুমেন্ট আপলোড করেন আর project instructions লেখেন। Claude সেই project-এর প্রতিটা চ্যাটে এগুলো ব্যবহার করে <Cite n={3} />। একটা custom GPT-তে instructions-এ থাকে নিয়ম, ধরন আর কাজের ধাপ, আর knowledge file-এ থাকে reference material <Cite n={4} />।
+
+**দরকার হলে reference file.** একটা CLAUDE.md ফাইল `@path/to/import` দিয়ে আরেকটা ফাইল টেনে আনতে পারে। কিন্তু এতে জায়গা বাঁচে না, কারণ সেই ফাইলটাও লোড হয় <Cite n={2} />। Gemini Notebook-এর নাম July 2026 পর্যন্ত ছিল NotebookLM <Cite n={7} />। এটা আপনার আপলোড করা সোর্স থেকে উত্তর দেয় আর লেখার ভেতরেই citation দেখায় <Cite n={5} />।
+
+**এক prompt-এর ভেতরে ক্রম.** লম্বা ডকুমেন্ট থাকলে সেগুলো ওপরে রাখুন, প্রশ্ন আর নির্দেশনার আগে <Cite n={6} />। প্রতিটা ডকুমেন্ট একটা `<document>` ট্যাগে রাখুন, ভেতরে `<source>` আর `<document_content>` দিয়ে <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**A test context pack.** Write one short file with four parts: a product summary (who uses it, the main flows), the test strategy (levels, tools, what "done" means), a glossary (your terms, such as "tenant" or "draft order"), and the risk areas. Put it in the project CLAUDE.md, or import it with `@` <Cite n={2} />. The same text can go into a Claude Project or a custom GPT as instructions.
+
+**Reference files in one place.** Upload the requirements, the API spec, and a sample of old bug reports to a Claude Project <Cite n={3} />, or to Gemini Notebook if you want each answer to show where it came from <Cite n={5} />. Then ask "which stories touch the refund flow?" and open the cited parts.
+
+**Rules, not wishes.** CLAUDE.md is context, not enforced configuration. If an action must never happen, such as a write to the production database, block it with a PreToolUse hook <Cite n={2} />. See [Hooks](/extend/hooks/).
+
+**Short and specific.** Specific and concise instructions are followed more consistently <Cite n={2} />. "Use the `qa-` prefix for test users" beats "use sensible test data".
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice. Review the test context pack at each release, like a test plan. Delete what is no longer true. A wrong line in the context is worse than a missing line, because the model uses it in every answer.
+</Callout>
+
+</Technical>
+<Layman>
+
+**A test context pack.** Write one short file with four parts: a product summary (who uses it and the main flows), the test strategy (levels, tools, and what "done" means), a word list (your terms, like "tenant" or "draft order"), and the risk areas. Put it in the project CLAUDE.md, or pull it in with `@` <Cite n={2} />. The same text can go into a Claude Project or a custom GPT as instructions.
+
+**Reference files in one place.** Upload the requirements, the API spec, and some old bug reports to a Claude Project <Cite n={3} />. Or use Gemini Notebook if you want each answer to show where it came from <Cite n={5} />. Then ask "which stories touch the refund flow?" and open the cited parts.
+
+**Rules, not wishes.** CLAUDE.md is context. It is not a setting that Claude must obey. If something must never happen, like a write to the live database, block it with a PreToolUse hook <Cite n={2} />.
+
+**Short and specific.** Claude follows specific and short instructions more often <Cite n={2} />. "Use the `qa-` prefix for test users" is better than "use sensible test data".
+
+This is the tutorial's own advice. Check the test context pack at each release, like a test plan. Delete what is no longer true. A wrong line is worse than a missing line, because the model uses it in every answer.
+
+</Layman>
+<Bangla>
+
+**একটা test context pack.** চার অংশের একটা ছোট ফাইল লিখুন: প্রোডাক্টের সারাংশ (কারা ব্যবহার করে, মূল flow কী), test strategy (level, tool, আর "done" মানে কী), একটা glossary (আপনার শব্দ, যেমন "tenant" বা "draft order"), আর ঝুঁকির জায়গা। এটা project-এর CLAUDE.md-এ রাখুন, অথবা `@` দিয়ে import করুন <Cite n={2} />। একই লেখা Claude Project বা custom GPT-তে instructions হিসেবেও যেতে পারে।
+
+**Reference file এক জায়গায়.** Requirements, API spec, আর কিছু পুরোনো bug report একটা Claude Project-এ আপলোড করুন <Cite n={3} />। প্রতিটা উত্তর কোথা থেকে এলো তা দেখতে চাইলে Gemini Notebook ব্যবহার করুন <Cite n={5} />। তারপর জিজ্ঞেস করুন "which stories touch the refund flow?" আর cite করা অংশগুলো খুলে দেখুন।
+
+**ইচ্ছা নয়, নিয়ম.** CLAUDE.md হলো context, বাধ্যতামূলক configuration নয়। কোনো কাজ যদি কখনোই হওয়া চলবে না, যেমন production database-এ লেখা, তাহলে PreToolUse hook দিয়ে সেটা আটকান <Cite n={2} />।
+
+**ছোট আর নির্দিষ্ট.** নির্দিষ্ট আর সংক্ষিপ্ত নির্দেশনা Claude বেশি ধারাবাহিকভাবে মানে <Cite n={2} />। "use sensible test data"-এর চেয়ে "Use the `qa-` prefix for test users" ভালো।
+
+এটা টিউটোরিয়ালের নিজের পরামর্শ। প্রতিটা release-এ test context pack একটা test plan-এর মতো রিভিউ করুন। যা আর সত্য নয় তা মুছে দিন। Context-এ একটা ভুল লাইন না থাকা লাইনের চেয়েও খারাপ, কারণ মডেল প্রতিটা উত্তরে সেটা ব্যবহার করে।
+
+</Bangla>
+</Voices>
+
+## Tools to try
+
+<Voices>
+<Technical>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| CLAUDE.md (Claude Code) | Standing instructions for a code repository | It loads at the start of every conversation <Cite n={2} /> |
+| Claude Projects | A workspace with its own chats, knowledge base, and instructions | Claude uses the project knowledge in each chat of the project <Cite n={3} /> |
+| Custom GPTs (ChatGPT) | A ChatGPT version with your instructions and files | Instructions hold rules and workflow; knowledge files hold reference material. OpenAI plans to retire custom GPTs (standard date: December 11, 2026), and personal ChatGPT accounts can no longer create new ones <Cite n={4} /> |
+| Gemini Notebook (Google) | Questions and answers over your uploaded sources | It answers from your sources with inline citations <Cite n={5} /> |
+
+For test work in a repository, start with CLAUDE.md. For a team that tests without a code tool, start with a Claude Project or a notebook.
+
+</Technical>
+<Layman>
+
+- **CLAUDE.md (Claude Code):** standing instructions for a code repository. It loads at the start of every conversation <Cite n={2} />.
+- **Claude Projects:** a workspace with its own chats, knowledge base, and instructions. Claude uses the project knowledge in each chat of the project <Cite n={3} />.
+- **Custom GPTs (ChatGPT):** a ChatGPT version with your instructions and files. Instructions hold the rules and steps. Knowledge files hold reference material <Cite n={4} />. OpenAI plans to shut down custom GPTs. The standard date is December 11, 2026. Personal ChatGPT accounts can no longer make new ones <Cite n={4} />.
+- **Gemini Notebook (Google):** questions and answers over your uploaded sources. It answers from your sources, with citations in the text <Cite n={5} />.
+
+For test work in a repository, start with CLAUDE.md. For a team that tests without a code tool, start with a Claude Project or a notebook.
+
+</Layman>
+<Bangla>
+
+- **CLAUDE.md (Claude Code):** একটা code repository-র স্থায়ী নির্দেশনা। প্রতিটা কথোপকথনের শুরুতে এটা লোড হয় <Cite n={2} />।
+- **Claude Projects:** নিজস্ব chat, knowledge base আর instructions-সহ একটা workspace। Claude সেই project-এর প্রতিটা চ্যাটে project knowledge ব্যবহার করে <Cite n={3} />।
+- **Custom GPTs (ChatGPT):** আপনার instructions আর file-সহ ChatGPT-র একটা সংস্করণ। Instructions-এ থাকে নিয়ম আর ধাপ, knowledge file-এ থাকে reference material <Cite n={4} />। OpenAI custom GPT বন্ধ করার পরিকল্পনা করছে (standard তারিখ: December 11, 2026), আর personal ChatGPT account দিয়ে আর নতুন GPT বানানো যায় না <Cite n={4} />।
+- **Gemini Notebook (Google):** আপনার আপলোড করা সোর্সের ওপর প্রশ্ন-উত্তর। এটা আপনার সোর্স থেকে উত্তর দেয়, লেখার ভেতরে citation-সহ <Cite n={5} />।
+
+Repository-তে টেস্টের কাজ হলে CLAUDE.md দিয়ে শুরু করুন। Code tool ছাড়া টেস্ট করে এমন টিম হলে একটা Claude Project বা notebook দিয়ে শুরু করুন।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Paste everything.** A full wiki export fills the window and lowers accuracy <Cite n={1} />. Fix: keep only what the model needs for most tasks, and add the rest per task.
+
+**A CLAUDE.md that grows forever.** Fix: stay under about 200 lines and move long material out <Cite n={2} />. Remember that an `@` import still loads the file <Cite n={2} />.
+
+**Trust a rule in the context.** The model treats CLAUDE.md as context, not as enforced configuration <Cite n={2} />. Fix: use a hook or a permission rule for anything that must never happen.
+
+**Rules in the knowledge files.** If you still use a custom GPT, note that a rule in an uploaded file is in the wrong place. Fix: put rules, tone, and workflow in the instructions, and keep reference material in the files <Cite n={4} />.
+
+**The question before the documents.** Fix: in a long prompt, put the documents first and the question last <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+**Paste everything.** A full wiki export fills the window and makes answers less accurate <Cite n={1} />. Fix: keep only what the model needs for most tasks. Add the rest for each task.
+
+**A CLAUDE.md that grows forever.** Fix: stay under about 200 lines, and move long material out <Cite n={2} />. An `@` import still loads the file <Cite n={2} />.
+
+**Trust a rule in the context.** The model treats CLAUDE.md as context, not as a setting that it must obey <Cite n={2} />. Fix: use a hook or a permission rule for anything that must never happen.
+
+**Rules in the knowledge files.** If you still use a custom GPT, note that a rule in an uploaded file is in the wrong place. Fix: put rules, tone, and steps in the instructions. Keep reference material in the files <Cite n={4} />.
+
+**The question before the documents.** Fix: in a long prompt, put the documents first and the question last <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+**সবকিছু পেস্ট করা.** পুরো wiki export window ভরে ফেলে আর নির্ভুলতা কমায় <Cite n={1} />। সমাধান: বেশিরভাগ কাজে মডেলের যা লাগে শুধু তা রাখুন, বাকিটা প্রতিটা কাজের সময় যোগ করুন।
+
+**অনবরত বড় হতে থাকা CLAUDE.md.** সমাধান: মোটামুটি 200 লাইনের নিচে রাখুন, লম্বা অংশ বাইরে সরান <Cite n={2} />। মনে রাখবেন, `@` import করা ফাইলও লোড হয় <Cite n={2} />।
+
+**Context-এর নিয়মে ভরসা.** মডেল CLAUDE.md-কে context হিসেবে নেয়, বাধ্যতামূলক configuration হিসেবে নয় <Cite n={2} />। সমাধান: যা কখনো হওয়া চলবে না তার জন্য hook বা permission rule ব্যবহার করুন।
+
+**Knowledge file-এ নিয়ম.** আপনি যদি এখনো custom GPT ব্যবহার করেন, মনে রাখবেন: আপলোড করা ফাইলে নিয়ম রাখা ভুল জায়গা। সমাধান: নিয়ম, ধরন আর কাজের ধাপ instructions-এ রাখুন, আর reference material ফাইলে রাখুন <Cite n={4} />।
+
+**ডকুমেন্টের আগে প্রশ্ন.** সমাধান: লম্বা prompt-এ ডকুমেন্ট আগে আর প্রশ্ন শেষে রাখুন <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## How to start
+
+<Voices>
+<Technical>
+
+1. In a test repository, run `/init` to get a first CLAUDE.md <Cite n={2} />.
+2. Add your test context pack: product summary, test strategy, glossary, and risk areas. Keep the file short.
+3. Ask the same question with and without the pack, for example "write test cases for the refund story". Compare the field names and the priorities in the two answers.
+4. For documents that are too long for CLAUDE.md, create a Claude Project and upload them to its knowledge base <Cite n={3} />.
+5. Put a review of the pack on the release checklist. Then read [AI Research](/ai-skills/ai-research/) to bring outside facts into your context safely.
+
+</Technical>
+<Layman>
+
+1. In a test repository, run `/init` to get a first CLAUDE.md <Cite n={2} />.
+2. Add your test context pack: product summary, test strategy, word list, and risk areas. Keep the file short.
+3. Ask the same question with and without the pack, for example "write test cases for the refund story". Compare the field names and the priorities in the two answers.
+4. For documents that are too long for CLAUDE.md, make a Claude Project and upload them to its knowledge base <Cite n={3} />.
+5. Put a review of the pack on the release checklist. Then read the page on AI research.
+
+</Layman>
+<Bangla>
+
+1. একটা test repository-তে `/init` চালিয়ে প্রথম CLAUDE.md নিন <Cite n={2} />।
+2. আপনার test context pack যোগ করুন: প্রোডাক্টের সারাংশ, test strategy, glossary, আর ঝুঁকির জায়গা। ফাইলটা ছোট রাখুন।
+3. Pack-সহ আর pack ছাড়া একই প্রশ্ন করুন, যেমন "write test cases for the refund story"। দুই উত্তরের field-এর নাম আর priority মিলিয়ে দেখুন।
+4. যে ডকুমেন্ট CLAUDE.md-এর জন্য অনেক লম্বা, সেগুলোর জন্য একটা Claude Project বানিয়ে তার knowledge base-এ আপলোড করুন <Cite n={3} />।
+5. Release checklist-এ pack রিভিউ যোগ করুন। তারপর AI research-এর পেজটা পড়ুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Context window | All the text a model can refer to when it answers, including the answer <Cite n={1} /> |
+| Context rot | The drop in accuracy and recall as the token count grows <Cite n={1} /> |
+| CLAUDE.md | A file of standing instructions that Claude Code loads at the start of each conversation <Cite n={2} /> |
+| Project knowledge | Files uploaded to a Claude Project, used in every chat of that project <Cite n={3} /> |
+| Context engineering | In this tutorial: choosing, writing, and maintaining the background that a model gets |

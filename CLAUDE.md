@@ -66,6 +66,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `app/(site)/architecture/page.tsx`, `app/(site)/architecture/[topic]/page.tsx` | The Architecture module: the home and one topic or the practice page. Both files are thin: they render `FlatModuleHome` and `FlatTopicPage` with `ARCHITECTURE`. `[topic]` loads `content/architecture/<topic>.mdx`. Static params come from `lib/architecture/topics.ts`. |
 | `app/(site)/k6/page.tsx`, `app/(site)/k6/[topic]/page.tsx` | The k6 module: the home (grouped by part) and one topic. Both files are thin, like the Architecture ones, with `K6`. `[topic]` loads `content/k6/<topic>.mdx`. Static params come from `lib/k6/topics.ts`. |
 | `lib/k6/topics.ts`, `lib/k6/ui.ts`, `lib/bn/k6.ts` | The one ordered list of the 20 k6 topics in 5 parts, and the English and Bangla strings. See "k6 Module". |
+| `app/(site)/ai-skills/page.tsx`, `app/(site)/ai-skills/[topic]/page.tsx` | The AI Skills module: the home (grouped by tier) and one skill. Both files are thin, like the Architecture ones, with `AI_SKILLS`. `[topic]` loads `content/ai-skills/<slug>.mdx`. Static params come from `lib/ai-skills/topics.ts`. |
+| `lib/ai-skills/topics.ts`, `lib/ai-skills/ui.ts`, `lib/bn/ai-skills.ts` | The one ordered list of the 20 AI skills in 4 tiers, and the English and Bangla strings. See "AI Skills Module". |
 | `public/images/k6/` | The owner's 5 screenshots (WebP): the first run, the VUs and duration output, and 3 Grafana steps |
 | `components/architecture/` | `PracticeQuestion` (the only Architecture-specific component) |
 | `lib/architecture/topics.ts`, `lib/architecture/ui.ts` | The one ordered list of the 19 Architecture topics and the practice page, the progress ids, and the English strings. See "Architecture Module". |
@@ -96,8 +98,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
-| `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture, Course, k6). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 152 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture, Course, k6, AI Skills). It has relative `.ts` imports, so `node --test` can load it. |
+| `lib/pwa.ts` | The web manifest, the precache list (all 173 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels, the three START HERE pages, `WHY_ITEMS`, and `COURSE_CARDS` |
@@ -122,8 +124,9 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
 | `content/course/<slug>.mdx` | The 40 Course topic pages |
 | `content/k6/<slug>.mdx` | The 20 k6 topic pages |
+| `content/ai-skills/<slug>.mdx` | The 20 AI Skills pages |
 | `public/images/fundamentals/` | The images of the owner's notes |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `linux-lesson`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `contents`, `header-nav`, `interview`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard`, `flat-module`, `course`, `k6` |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-progress`, `linux-lesson`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `contents`, `header-nav`, `interview`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard`, `flat-module`, `course`, `k6`, `ai-skills` |
 | `docs/ARCHITECTURE.md` | How the site is built, for developers. Update it when a route, a module, or a shared mechanism changes. |
 | `docs/assets/` | The screenshots of `README.md` (1280×800, and 390×844 for the phone ones). Take them again when the look changes. Use a root build and seed demo progress in `localStorage`. |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
@@ -133,6 +136,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `scripts/architecture-route-map.json` | The 21 Architecture routes: `/architecture/`, the 19 topics, and the practice page. Same identity map. |
 | `scripts/course-route-map.json` | The 41 Course routes: `/course/` and the 40 topic pages. Same identity map. |
 | `scripts/k6-route-map.json` | The 21 k6 routes: `/k6/` and the 20 topic pages. Same identity map. |
+| `scripts/ai-skills-route-map.json` | The 21 AI Skills routes: `/ai-skills/` and the 20 skill pages. Same identity map. |
 | `scripts/linux_fetch.py`, `scripts/linux_overlap.py` | Research tools for the Linux module. See "Linux Module". |
 | `scripts/contents-route-map.json` | The 1 contents route: `/contents/`. Same identity map. |
 | `scripts/dashboard-route-map.json` | The 1 dashboard route: `/dashboard/`. Same identity map. |
@@ -141,7 +145,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 
 `lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the part numbers (`PART 01`…`PART 24`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 152 routes:
+The site has 173 routes:
 
 | Routes | Count |
 |---|---|
@@ -156,6 +160,7 @@ The site has 152 routes:
 | `/architecture/`, the 19 topics, and the practice page | 21 |
 | `/course/` and the 40 Course topics | 41 |
 | `/k6/` and the 20 k6 topics | 21 |
+| `/ai-skills/` and the 20 AI skills | 21 |
 
 | Group | Folder | Pages |
 |---|---|---|
@@ -172,10 +177,10 @@ The site has 152 routes:
 |---|---|
 | Header | Sticky, 64 px. The brand mark in a teal tile, then the top nav (from the `nav` breakpoint), then search, voice, install, theme, and the menu button (below `nav`). |
 | Top nav | `HEADER_NAV`: 4 plain links: Home, Contents, Dashboard, and Interview. The current item has a teal underline (`activeNavId`). A tutorial or module page has no current item. A module is reached from the home page and `/contents/`. Below the `nav` breakpoint, the drawer shows the same 4 links above its list (`MobileNav`). |
-| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 142 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
+| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 162 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the pages of the current module. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
 | Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. Below `chapter`, `ContentsButton` above the title of a content page opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. On close, the focus goes back to the button that opened it. |
 | One section at a time | `SectionFocus` (in `ChapterLayout`) groups the flat children of `article[data-content]` by `##` heading and hides all sections but one (`data-sec-hidden`, CSS in `app/globals.css`, screen only). The text before the first `##` stays visible. A step bar sits above the section, and Previous and Next buttons below it. "Show all sections" turns it off (`localStorage` key `section-focus`). A hash or an in-page link into a hidden section shows it. Pages with fewer than 3 sections, and pages with no JavaScript, show everything. The strings are in `lib/ui.ts` and `lib/bn/shell.ts`. |
-| `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, Architecture, Course, and k6. |
+| `/contents/` | All groups and modules as cards, with the progress bars of Linux, Fundamentals, Architecture, Course, k6, and AI Skills. |
 
 ## Reading state and Dashboard
 
@@ -183,8 +188,8 @@ The site has 152 routes:
 |---|---|
 | `ChapterTools` | Under the meta line of each content page (in the `PageMeta` slot): the pill `📖 N min read` and the toggles Bookmark and Mark as read (`aria-pressed`). It saves the page to `last-page` on mount. |
 | Reading time | `lib/reading-time.ts`: the words of the Technical text (no code, export statements, tags, or link URLs). A Fundamentals chapter gets one value per version (`getReadingMinutesByVersion`), and the version CSS shows the one of the switch / 200, rounded up, 1 at least. Computed at build time. |
-| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 142 content pages. |
-| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 142`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, and k6, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 8 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 8 keys. |
+| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 162 content pages. |
+| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 162`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, k6, and AI Skills, Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. Export downloads `progress-YYYY-MM-DD.json` with the 9 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 9 keys. |
 | Strings | `lib/dashboard.ts` (`DASHBOARD_UI`, the route). The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle. |
 
 ## Linux Module
@@ -215,7 +220,7 @@ To add or change a topic, edit `lib/linux/stages.ts` and the `##` heading of the
 
 ## Flat modules
 
-A flat module is a home page and a list of pages at `/<id>/<slug>/`. Architecture, System Design, Course, and k6 are flat modules. `defineFlatModule` (`lib/modules/flat.ts`) builds the routes, the numbers, the neighbours, and the progress ids from one entry list. An entry has a kind: `topic` (a page with a progress id when the module has progress), `practice` (a page with its own question ids), or `link` (a link to an `href`, with no page).
+A flat module is a home page and a list of pages at `/<id>/<slug>/`. Architecture, System Design, Course, k6, and AI Skills are flat modules. `defineFlatModule` (`lib/modules/flat.ts`) builds the routes, the numbers, the neighbours, and the progress ids from one entry list. An entry has a kind: `topic` (a page with a progress id when the module has progress), `practice` (a page with its own question ids), or `link` (a link to an `href`, with no page).
 
 To add a flat module:
 
@@ -305,6 +310,20 @@ The k6 module is the home at `/k6/` and 20 topic pages at `/k6/<slug>/`. It teac
 
 To add a topic, add it to `lib/k6/topics.ts` and to `K6Slug`, create `content/k6/<slug>.mdx`, and add its route to `scripts/k6-route-map.json`. `npm test` (`tests/k6.test.ts`) checks that the three agree.
 
+## AI Skills Module
+
+The AI Skills module is the home at `/ai-skills/` and 20 skill pages at `/ai-skills/<slug>/`. It teaches 20 AI skills to testers, from prompting to fine-tuning, and shows how a tester uses each one. The skill list and the 4 tiers follow the infographic "20 AI Skills Your Team Must Master in 2026" by AI for Leaders. The text is the tutorial's own. The design is `docs/superpowers/specs/2026-10-28-ai-skills-module-design.md`.
+
+`lib/ai-skills/topics.ts` defines the module (`AI_SKILLS`) with its 4 parts (the tiers: 1 "Learn first", 2 "This quarter", 3 "Role-specific", 4 "Specialist") and its one ordered list of 20 `topic` entries. Progress key `ai-skills-progress`. Search group `ai skills`. The strings are in `lib/ai-skills/ui.ts` (`AI_SKILLS_UI`) and `lib/bn/ai-skills.ts` (`AI_SKILLS_UI_BN`).
+
+| Rule | Detail |
+|---|---|
+| Page shape | `## In plain words`, `## How it works`, `## How a tester uses it` (ends with a "Tutorial advice" tip with no cites), `## Tools to try` (a table), `## Common mistakes`, `## How to start`, `## Key words` (a table, last). Each section except `## Key words` has `<Voices>`. `npm test` (`tests/ai-skills.test.ts`) checks the order. |
+| Sources | Each fact has a `<Cite>` to an official source: vendor docs, a GitHub repo, a standard (NIST, ISO, OWASP, the European Commission), or the original paper. No blogs, news, or AI summaries. No prices. The infographic gives the list only: the pages do not repeat its week estimates. |
+| Research notes | `docs/superpowers/research/ai-skills-<slug>.md`, `ai-skills-<slug>.factcheck.md`, and `ai-skills-<slug>.voices.factcheck.md`. A page is done only when both reports end with `Open FAILs: 0`, written by an agent that did not write the page. |
+
+To add a skill, add it to `lib/ai-skills/topics.ts` and to `AiSkillsSlug`, create `content/ai-skills/<slug>.mdx`, and add its route to `scripts/ai-skills-route-map.json`. `npm test` (`tests/ai-skills.test.ts`) checks that the three agree.
+
 ## Architecture Module
 
 The System Architecture Foundations module is the home at `/architecture/`, 19 topic pages, and a practice page with 30 questions, all at `/architecture/<slug>/`. It teaches the building blocks of system architecture in plain words for testers. The base is the owner's notes (`docs/superpowers/research/architecture-owner-notes.md`) and the owner's diagrams. The design is `docs/superpowers/specs/2026-10-20-architecture-module-design.md`.
@@ -324,7 +343,7 @@ To add a topic, add it to `lib/architecture/topics.ts` and to `ArchitectureSlug`
 
 ## Voices
 
-A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 130 pages have voices: the 24 tutorial pages, the 12 Linux stages, the 15 System Design cases, the 19 Architecture topics, the 40 Course topics, and the 20 k6 topics. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
+A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 150 pages have voices: the 24 tutorial pages, the 12 Linux stages, the 15 System Design cases, the 19 Architecture topics, the 40 Course topics, the 20 k6 topics, and the 20 AI Skills pages. These have no voices: the Fundamentals chapters (each topic already has a notes and an ISTQB version), `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic. A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
 
 ### What the reader sees
 
@@ -528,7 +547,7 @@ To change a page:
 
 The site installs as an app and is offline first.
 
-- The service worker caches all 152 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
+- The service worker caches all 173 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
 - Pages, RSC payloads, and the search index use stale-while-revalidate: the cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Offline, a page that is not in the cache gets the 404 page.
 - Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
@@ -560,7 +579,7 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 142 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 162 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 

@@ -51,11 +51,11 @@ for (const path of TEMPLATES) {
   });
 }
 
-for (const path of ["app/(site)/architecture/[topic]/page.tsx", "app/(site)/system-design/[topic]/page.tsx", "app/(site)/course/[topic]/page.tsx", "app/(site)/k6/[topic]/page.tsx"]) {
+for (const path of ["app/(site)/architecture/[topic]/page.tsx", "app/(site)/system-design/[topic]/page.tsx", "app/(site)/course/[topic]/page.tsx", "app/(site)/k6/[topic]/page.tsx", "app/(site)/ai-skills/[topic]/page.tsx"]) {
   test(`${path} renders FlatTopicPage and loads its MDX with a literal folder`, () => {
     const src = source(path);
     assert.match(src, /<FlatTopicPage /);
-    assert.match(src, /import\(`@\/content\/(architecture|system-design|course|k6)\/\$\{slug\}\.mdx`\)/);
+    assert.match(src, /import\(`@\/content\/(architecture|system-design|course|k6|ai-skills)\/\$\{slug\}\.mdx`\)/);
   });
 }
 

@@ -1,0 +1,251 @@
+export const metadata = { title: 'Your Own Data (RAG)', description: 'How retrieval-augmented generation lets a model answer from your own documents, and how a tester checks the retrieval and the answer separately.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks', publisher: 'arXiv (2005.11401)', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-10-28' },
+    { title: 'Glossary', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/about-claude/glossary', accessed: '2026-10-28' },
+    { title: 'Embeddings', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/embeddings', accessed: '2026-10-28' },
+    { title: 'Citations', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/citations', accessed: '2026-10-28' },
+    { title: 'Faithfulness', publisher: 'Ragas docs', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/faithfulness/', accessed: '2026-10-28' },
+    { title: 'Context Recall', publisher: 'Ragas docs', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/context_recall/', accessed: '2026-10-28' },
+    { title: 'pgvector', publisher: 'pgvector (GitHub)', url: 'https://github.com/pgvector/pgvector', accessed: '2026-10-28' },
+  ],
+}
+
+# Your Own Data (RAG)
+
+A model knows what it saw in training. It does not know your requirements, your test plans, or last week's bug reports. Retrieval-augmented generation (RAG) finds the right pieces of your own documents and gives them to the model with the question, so the answer comes from your data.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**RAG** (retrieval-augmented generation) combines information retrieval with text generation. The goal is an answer that is grounded in evidence <Cite n={2} />. When a question comes in, the system retrieves relevant documents at that moment and passes them into the model's context window, together with the question <Cite n={2} />.
+
+The term comes from a 2020 research paper. It joined two kinds of memory: a pretrained model (the "parametric" memory) and a dense vector index of Wikipedia that a neural retriever reads (the "non-parametric" memory) <Cite n={1} />. The paper named two open problems of models without retrieval: showing where an answer came from, and updating what the model knows <Cite n={1} />.
+
+RAG lets the model use information beyond its training data. It helps most with up-to-date facts, domain knowledge, and answers that must cite their sources <Cite n={2} />. It is only as good as the documents and the retrieval step: a weak knowledge base or a wrong search result gives a weak answer <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+**RAG** (retrieval-augmented generation) joins search with text generation. The goal is an answer that rests on evidence <Cite n={2} />. When a question comes in, the system finds the right documents at that moment. It puts them into the model's context window, together with the question <Cite n={2} />.
+
+The term comes from a 2020 research paper. It joined two kinds of memory. One is a trained model. The other is a search index of Wikipedia that a retriever reads <Cite n={1} />. The paper named two open problems of models without retrieval. One is showing where an answer came from. The other is updating what the model knows <Cite n={1} />.
+
+RAG lets the model use information that was not in its training. It helps most with new facts, special domain knowledge, and answers that must cite their sources <Cite n={2} />. It is only as good as the documents and the search step. Weak documents or a wrong search result give a weak answer <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**RAG** (retrieval-augmented generation) তথ্য খোঁজা (retrieval) আর টেক্সট তৈরি (generation) একসাথে করে। লক্ষ্য হলো প্রমাণের ওপর দাঁড়ানো একটা উত্তর <Cite n={2} />। একটা প্রশ্ন এলে সিস্টেম সেই মুহূর্তে দরকারি ডকুমেন্ট খুঁজে আনে। তারপর প্রশ্নের সাথে সেগুলো মডেলের context window-এ দেয় <Cite n={2} />।
+
+শব্দটা এসেছে 2020 সালের একটা গবেষণাপত্র থেকে। এতে দুই ধরনের মেমোরি জোড়া হয়েছিল। একটা হলো আগে থেকে ট্রেইন করা মডেল। অন্যটা হলো Wikipedia-র একটা vector index, যা একটা retriever পড়ে <Cite n={1} />। পেপারটা retrieval ছাড়া মডেলের দুটো খোলা সমস্যার কথা বলেছিল: উত্তর কোথা থেকে এলো তা দেখানো, আর মডেলের জ্ঞান আপডেট করা <Cite n={1} />।
+
+RAG মডেলকে তার ট্রেনিংয়ের বাইরের তথ্য ব্যবহার করতে দেয়। নতুন তথ্য, নির্দিষ্ট ডোমেইনের জ্ঞান, আর যে উত্তরে সোর্স দেখাতে হয়, সেখানে এটা সবচেয়ে কাজে লাগে <Cite n={2} />। এটা ততটাই ভালো, যতটা ভালো ডকুমেন্ট আর খোঁজার ধাপ। দুর্বল ডকুমেন্ট বা ভুল সার্চ ফলাফল দুর্বল উত্তর দেয় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+A RAG system has two stages: index the documents once, then answer each question.
+
+**Index.** Split each document into small pieces (chunks) and turn each chunk into an **embedding**. An embedding is a list of numbers that represents the text, so that texts with a similar meaning get similar numbers <Cite n={3} />. Anthropic offers no embedding model of its own. Its docs name Voyage AI as one provider <Cite n={3} />. You store the vectors in a vector store, for example pgvector, which adds vector similarity search to Postgres <Cite n={7} />.
+
+**Answer.** Turn the question into an embedding too, and run a nearest neighbor search to find the closest chunks <Cite n={3} />. For retrieval, the embedding call should say whether the text is a query or a document (`input_type`) <Cite n={3} />. Then send the top chunks and the question to the model <Cite n={2} />.
+
+```text
+INDEX (once)      docs --> chunks --> embeddings --> vector store
+ANSWER (each)     question --> embedding --> nearest chunks
+                  nearest chunks + question --> model --> answer + citations
+```
+
+**Citations.** Claude can cite the exact passages of the documents that you give it <Cite n={4} />. Plain text and PDF documents are split into sentences, and the docs suggest one plain text document for each RAG chunk if you want sentence-level citations <Cite n={4} />. The API checks that each citation points to a real place in the documents <Cite n={4} />. That is useful for a tester: every claim in the answer can be traced.
+
+</Technical>
+<Layman>
+
+A RAG system has two stages. First, it indexes the documents once. Then it answers each question.
+
+**Index.** Split each document into small pieces, called chunks. Turn each chunk into an **embedding**. An embedding is a list of numbers that stands for the text. Texts with a similar meaning get similar numbers <Cite n={3} />. Anthropic offers no embedding model of its own. Its docs name Voyage AI as one provider <Cite n={3} />. You keep the numbers in a vector store. One example is pgvector, which adds vector search to Postgres <Cite n={7} />.
+
+**Answer.** Turn the question into an embedding too. Search for the closest chunks <Cite n={3} />. For search, the embedding call should say if the text is a query or a document (`input_type`) <Cite n={3} />. Then send the best chunks and the question to the model <Cite n={2} />.
+
+In short: once, documents become chunks, chunks become embeddings, and embeddings go into a store. For each question, the question becomes an embedding, the system finds the closest chunks, and the model answers from them with citations.
+
+**Citations.** Claude can cite the exact parts of the documents that you give it <Cite n={4} />. Plain text and PDF documents are split into sentences. The docs suggest one plain text document for each RAG chunk if you want citations to single sentences <Cite n={4} />. The API checks that each citation points to a real place in the documents <Cite n={4} />. This helps a tester: you can trace every claim in the answer.
+
+</Layman>
+<Bangla>
+
+একটা RAG সিস্টেমের দুটো ধাপ। প্রথমে একবার ডকুমেন্টগুলো index করা। তারপর প্রতিটা প্রশ্নের উত্তর দেওয়া।
+
+**Index।** প্রতিটা ডকুমেন্টকে ছোট ছোট টুকরো (chunk) করুন। প্রতিটা chunk-কে একটা **embedding**-এ রূপ দিন। Embedding হলো সংখ্যার একটা তালিকা, যা টেক্সটকে প্রকাশ করে। একই রকম মানের টেক্সট কাছাকাছি সংখ্যা পায় <Cite n={3} />। Anthropic নিজের কোনো embedding model দেয় না। এর ডকস একটা প্রোভাইডার হিসেবে Voyage AI-এর নাম দেয় <Cite n={3} />। সংখ্যাগুলো একটা vector store-এ রাখা হয়। একটা উদাহরণ pgvector, যা Postgres-এ vector similarity search যোগ করে <Cite n={7} />।
+
+**উত্তর।** প্রশ্নটাকেও একটা embedding বানান। তারপর সবচেয়ে কাছের chunk-গুলো খুঁজুন (nearest neighbor search) <Cite n={3} />। খোঁজার জন্য embedding কলে বলে দিতে হয় টেক্সটটা query না document (`input_type`) <Cite n={3} />। তারপর সেরা chunk-গুলো আর প্রশ্নটা মডেলকে পাঠান <Cite n={2} />।
+
+সংক্ষেপে: একবার ডকুমেন্ট থেকে chunk, chunk থেকে embedding, আর embedding যায় store-এ। প্রতিটা প্রশ্নে প্রশ্নটা embedding হয়, সিস্টেম কাছের chunk খোঁজে, আর মডেল সেগুলো থেকে citation-সহ উত্তর দেয়।
+
+**Citations।** আপনার দেওয়া ডকুমেন্টের ঠিক কোন অংশ থেকে উত্তর এলো, Claude তা উল্লেখ (cite) করতে পারে <Cite n={4} />। Plain text আর PDF ডকুমেন্ট বাক্যে ভাগ হয়। এক বাক্য ধরে citation চাইলে ডকস প্রতিটা RAG chunk-এর জন্য একটা করে plain text document দিতে বলে <Cite n={4} />। API যাচাই করে যে প্রতিটা citation ডকুমেন্টের একটা আসল জায়গা দেখায় <Cite n={4} />। টেস্টারের জন্য এটা কাজের: উত্তরের প্রতিটা দাবি আপনি খুঁজে দেখতে পারেন।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Test a RAG feature in your product.** A RAG answer can fail in two places, so test them apart. Retrieval: did the system find the right chunks? Ragas calls this **context recall**: how many of the relevant documents were retrieved <Cite n={6} />. Generation: does the answer stay with what was retrieved? Ragas calls this **faithfulness**, a score from 0 to 1 for how consistent the answer is with the retrieved context <Cite n={5} />.
+
+**Ask questions of your own test documents.** Give Claude your requirements or a set of old bug reports as documents with citations turned on, and ask "which cases cover a refund after a partial shipment?" Each claim in the answer points to a passage you can open <Cite n={4} />.
+
+**Build a question set with known answers.** For each question, write the passage that answers it. This set is the base of an eval. See [Checking AI Quality (Evals)](/ai-skills/ai-evals/).
+
+**Test the edges.** Ask a question that the documents do not answer, and one where a document is out of date. RAG quality depends on the documents and the retrieval <Cite n={2} />, so these cases show real risk.
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice. For each question in your set, save three things: the question, the ID of the chunk that should be found, and the key fact that the answer must contain. Then a failed case tells you at once whether search or the answer broke.
+</Callout>
+
+</Technical>
+<Layman>
+
+**Test a RAG feature in your product.** A RAG answer can fail in two places, so test them apart. Retrieval: did the system find the right chunks? Ragas calls this **context recall**. It is how many of the relevant documents were found <Cite n={6} />. Generation: does the answer stay with what was found? Ragas calls this **faithfulness**. It is a score from 0 to 1 for how well the answer agrees with the found text <Cite n={5} />.
+
+**Ask questions of your own test documents.** Give Claude your requirements or a set of old bug reports as documents, with citations turned on. Ask "which cases cover a refund after a partial shipment?" Each claim in the answer points to a part that you can open <Cite n={4} />.
+
+**Build a question set with known answers.** For each question, write down the part of a document that answers it. This set is the base of an eval.
+
+**Test the edges.** Ask a question that the documents do not answer. Ask one where a document is out of date. RAG quality depends on the documents and the search <Cite n={2} />. So these cases show real risk.
+
+This is the tutorial's own advice. For each question in your set, save three things: the question, the ID of the chunk that should be found, and the key fact that the answer must contain. Then a failed case tells you at once if the search or the answer broke.
+
+</Layman>
+<Bangla>
+
+**আপনার প্রোডাক্টের RAG ফিচার টেস্ট করা।** একটা RAG উত্তর দুই জায়গায় ভুল হতে পারে, তাই দুটো আলাদা করে টেস্ট করুন। Retrieval: সিস্টেম কি ঠিক chunk খুঁজে পেয়েছে? Ragas একে বলে **context recall**: দরকারি ডকুমেন্টের কতগুলো খুঁজে পাওয়া গেছে <Cite n={6} />। Generation: উত্তর কি খুঁজে পাওয়া টেক্সটের মধ্যেই আছে? Ragas একে বলে **faithfulness**: উত্তর খুঁজে পাওয়া কনটেক্সটের সাথে কতটা মেলে, তার 0 থেকে 1 পর্যন্ত একটা স্কোর <Cite n={5} />।
+
+**নিজের টেস্ট ডকুমেন্টে প্রশ্ন করা।** আপনার requirements বা পুরোনো bug report-গুলো citations চালু করে ডকুমেন্ট হিসেবে Claude-কে দিন। জিজ্ঞেস করুন "which cases cover a refund after a partial shipment?"। উত্তরের প্রতিটা দাবি এমন একটা অংশ দেখায়, যা আপনি খুলে দেখতে পারেন <Cite n={4} />।
+
+**জানা উত্তরসহ প্রশ্নের সেট বানানো।** প্রতিটা প্রশ্নের জন্য যে অংশ উত্তর দেয় তা লিখে রাখুন। এই সেট একটা eval-এর ভিত্তি।
+
+**সীমানার কেস টেস্ট করা।** এমন প্রশ্ন করুন যার উত্তর ডকুমেন্টে নেই। এমন প্রশ্নও করুন যেখানে একটা ডকুমেন্ট পুরোনো। RAG-এর মান নির্ভর করে ডকুমেন্ট আর খোঁজার ওপর <Cite n={2} />। তাই এই কেসগুলো আসল ঝুঁকি দেখায়।
+
+এটা টিউটোরিয়ালের নিজের পরামর্শ। সেটের প্রতিটা প্রশ্নের জন্য তিনটা জিনিস রাখুন: প্রশ্ন, যে chunk পাওয়া উচিত তার ID, আর উত্তরে অবশ্যই থাকতে হবে এমন মূল তথ্য। তাহলে একটা কেস ফেইল করলে সঙ্গে সঙ্গে বুঝবেন খোঁজা ভেঙেছে না উত্তর।
+
+</Bangla>
+</Voices>
+
+## Tools to try
+
+<Voices>
+<Technical>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| Voyage AI embeddings | Turn text into vectors | The Claude docs name it as one embedding provider, because Anthropic offers no embedding model of its own <Cite n={3} /> |
+| pgvector | Store and search vectors in Postgres | It supports cosine distance, among other distance functions <Cite n={7} /> |
+| Claude citations | Answer with links to exact passages | It works with plain text, PDF, and custom content documents <Cite n={4} /> |
+| Ragas | Score a RAG pipeline | Faithfulness runs from 0 to 1, and higher is better <Cite n={5} /> |
+
+</Technical>
+<Layman>
+
+- **Voyage AI embeddings**: turn text into vectors. The Claude docs name it as one embedding provider, because Anthropic offers no embedding model of its own <Cite n={3} />.
+- **pgvector**: store and search vectors in Postgres. It supports cosine distance and other distance functions <Cite n={7} />.
+- **Claude citations**: answer with links to exact parts of the documents. It works with plain text, PDF, and custom content documents <Cite n={4} />.
+- **Ragas**: score a RAG pipeline. Faithfulness runs from 0 to 1. Higher is better <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+- **Voyage AI embeddings**: টেক্সটকে vector-এ রূপ দেয়। Anthropic নিজের কোনো embedding model দেয় না বলে Claude ডকস একে একটা প্রোভাইডার হিসেবে উল্লেখ করে <Cite n={3} />।
+- **pgvector**: Postgres-এ vector রাখে আর খোঁজে। এটা cosine distance-সহ আরও কিছু distance function সাপোর্ট করে <Cite n={7} />।
+- **Claude citations**: ডকুমেন্টের ঠিক অংশের রেফারেন্সসহ উত্তর দেয়। এটা plain text, PDF আর custom content ডকুমেন্টে কাজ করে <Cite n={4} />।
+- **Ragas**: একটা RAG pipeline-কে স্কোর দেয়। Faithfulness 0 থেকে 1 পর্যন্ত, বেশি হলে ভালো <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Testing only the final answer.** A wrong answer may come from bad search, not from the model. Fix: measure retrieval on its own, for example with context recall <Cite n={6} />.
+- **Exact text asserts.** Even at temperature 0, the same input can give a different output <Cite n={2} />. Fix: check the key facts and the citations, not the exact wording.
+- **Mixed embedding types.** The Claude embeddings docs say to set `input_type` to query or document for retrieval, and not to leave it out <Cite n={3} />. Fix: check that the index and the search use the right type.
+- **Scanned PDFs.** A PDF that is a scan with no text layer cannot be cited <Cite n={4} />. Fix: test with your real document types, and run text extraction first.
+- **No "not in the documents" case.** A RAG answer is only as good as what was retrieved <Cite n={2} />. Fix: add questions with no answer in the documents, and decide what the right reply is.
+
+</Technical>
+<Layman>
+
+- **Testing only the final answer.** A wrong answer may come from a bad search, not from the model. Fix: measure the search on its own, for example with context recall <Cite n={6} />.
+- **Exact text checks.** Even at temperature 0, the same input can give a different output <Cite n={2} />. Fix: check the key facts and the citations, not the exact words.
+- **Mixed embedding types.** The Claude embeddings docs say to set `input_type` to query or document for search, and not to leave it out <Cite n={3} />. Fix: check that the index and the search use the right type.
+- **Scanned PDFs.** A PDF that is only a scan, with no text, cannot be cited <Cite n={4} />. Fix: test with your real document types. Get the text out first.
+- **No "not in the documents" case.** A RAG answer is only as good as what was found <Cite n={2} />. Fix: add questions with no answer in the documents. Decide what the right reply is.
+
+</Layman>
+<Bangla>
+
+- **শুধু শেষ উত্তর টেস্ট করা।** ভুল উত্তর মডেল থেকে না এসে খারাপ খোঁজা থেকেও আসতে পারে। সমাধান: খোঁজার ধাপ আলাদা করে মাপুন, যেমন context recall দিয়ে <Cite n={6} />।
+- **হুবহু টেক্সট মেলানো।** Temperature 0-তেও একই ইনপুট আলাদা আউটপুট দিতে পারে <Cite n={2} />। সমাধান: হুবহু শব্দ নয়, মূল তথ্য আর citation যাচাই করুন।
+- **Embedding-এর টাইপ গুলিয়ে ফেলা।** Claude-এর embeddings ডকস বলে retrieval-এর জন্য `input_type`-কে query বা document সেট করতে, বাদ না দিতে <Cite n={3} />। সমাধান: index আর search ঠিক টাইপ ব্যবহার করছে কিনা দেখুন।
+- **স্ক্যান করা PDF।** যে PDF শুধু স্ক্যান, যাতে টেক্সট নেই, তা cite করা যায় না <Cite n={4} />। সমাধান: আপনার আসল ধরনের ডকুমেন্ট দিয়ে টেস্ট করুন। আগে টেক্সট বের করুন।
+- **"ডকুমেন্টে নেই" কেস না রাখা।** RAG-এর উত্তর ততটাই ভালো, যতটা ভালো যা খুঁজে পাওয়া গেছে <Cite n={2} />। সমাধান: এমন প্রশ্ন যোগ করুন যার উত্তর ডকুমেন্টে নেই। সঠিক জবাব কী হবে, তা ঠিক করে রাখুন।
+
+</Bangla>
+</Voices>
+
+## How to start
+
+<Voices>
+<Technical>
+
+1. Pick 20 real questions about your product. For each one, note the passage in your docs that answers it.
+2. Give Claude the documents with citations turned on, and ask the questions <Cite n={4} />.
+3. Open each citation and check that it supports the claim next to it.
+4. If your team builds a RAG feature, ask for two numbers on the same set: context recall for the search <Cite n={6} /> and faithfulness for the answer <Cite n={5} />.
+5. Keep the set and run it after each change. The [Evals](/ai-skills/ai-evals/) page shows how.
+
+</Technical>
+<Layman>
+
+1. Pick 20 real questions about your product. For each one, note the part of your docs that answers it.
+2. Give Claude the documents with citations turned on. Ask the questions <Cite n={4} />.
+3. Open each citation. Check that it supports the claim next to it.
+4. If your team builds a RAG feature, ask for two numbers on the same set: context recall for the search <Cite n={6} /> and faithfulness for the answer <Cite n={5} />.
+5. Keep the set. Run it after each change.
+
+</Layman>
+<Bangla>
+
+1. আপনার প্রোডাক্ট নিয়ে 20টা আসল প্রশ্ন বাছুন। প্রতিটার জন্য আপনার ডকসের কোন অংশ উত্তর দেয় তা লিখে রাখুন।
+2. Citations চালু করে ডকুমেন্টগুলো Claude-কে দিন, তারপর প্রশ্নগুলো করুন <Cite n={4} />।
+3. প্রতিটা citation খুলুন। দেখুন সেটা পাশের দাবিকে সমর্থন করে কিনা।
+4. আপনার দল যদি একটা RAG ফিচার বানায়, একই সেটে দুটো সংখ্যা চান: খোঁজার জন্য context recall <Cite n={6} /> আর উত্তরের জন্য faithfulness <Cite n={5} />।
+5. সেটটা রেখে দিন। প্রতিটা পরিবর্তনের পর আবার চালান।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| RAG | Retrieval-augmented generation: retrieve documents at runtime and give them to the model with the question <Cite n={2} /> |
+| Embedding | A list of numbers that represents a text, used to measure similar meaning <Cite n={3} /> |
+| Vector store | A store that searches embeddings by similarity, for example pgvector <Cite n={7} /> |
+| Citation | A pointer from a claim in the answer to a passage of a document <Cite n={4} /> |
+| Context recall | How many of the relevant documents were retrieved <Cite n={6} /> |
+| Faithfulness | How consistent the answer is with the retrieved context, from 0 to 1 <Cite n={5} /> |

@@ -1,0 +1,277 @@
+export const metadata = { title: 'Workflow Automation', description: 'How a tester connects apps and AI steps with n8n, Make, or Zapier, for bug-report triage and test-run notifications.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Understand workflows', publisher: 'n8n (docs)', url: 'https://docs.n8n.io/workflows/', accessed: '2026-10-28' },
+    { title: 'Webhook', publisher: 'n8n (docs)', url: 'https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook', accessed: '2026-10-28' },
+    { title: 'Handle errors gracefully', publisher: 'n8n (docs)', url: 'https://docs.n8n.io/flow-logic/error-handling/', accessed: '2026-10-28' },
+    { title: 'Host n8n', publisher: 'n8n (docs)', url: 'https://docs.n8n.io/hosting/', accessed: '2026-10-28' },
+    { title: 'Integrate AI', publisher: 'n8n (docs)', url: 'https://docs.n8n.io/build/integrate-ai.md', accessed: '2026-10-28' },
+    { title: 'Learn key concepts in Zap workflows', publisher: 'Zapier Help Center', url: 'https://help.zapier.com/hc/en-us/articles/8496181725453-Learn-key-concepts-in-Zapier', accessed: '2026-10-28' },
+    { title: 'Scenario settings', publisher: 'Make Help Center', url: 'https://help.make.com/scenario-settings', accessed: '2026-10-28' },
+    { title: 'About webhooks', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/webhooks/about-webhooks', accessed: '2026-10-28' },
+  ],
+}
+
+# Workflow Automation
+
+Some test work is the same every day: sort new bug reports, tell the team that a test run failed, collect flaky tests into one list. A workflow tool connects your apps and AI steps so this work runs without you. This page shows how these tools work and how a tester builds a first flow safely.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **workflow** is a chain of steps that runs on its own. In n8n, a workflow is a set of connected nodes that automates a process <Cite n={1} />. Zapier calls its workflow a **Zap**, an automation that connects your apps and services <Cite n={6} />. Make calls its workflow a **scenario** <Cite n={7} />.
+
+Every workflow starts with a **trigger**: an event that starts the run <Cite n={6} />. After the trigger come **actions**: the steps that the workflow performs <Cite n={6} />. An action can be a plain app step, such as "create a ticket", or an AI step. n8n, for example, lets an AI step use models from several providers, for example OpenAI, Anthropic, or Google <Cite n={5} />.
+
+For a tester, workflow automation removes the glue work between tools: the bug tracker, the CI system, the chat app, and the test report. You set the flow up once, and it runs on every event.
+
+It is different from test automation. A Playwright test checks the product. A workflow moves information about the tests and the bugs. The two meet when a test run is the trigger.
+
+</Technical>
+<Layman>
+
+A **workflow** is a chain of steps that runs by itself. In n8n, a workflow is a set of connected nodes that does a job for you <Cite n={1} />. Zapier calls its workflow a **Zap**. It connects your apps and services <Cite n={6} />. Make calls its workflow a **scenario** <Cite n={7} />.
+
+Every workflow starts with a **trigger**. This is an event that starts the run <Cite n={6} />. After the trigger come **actions**. These are the steps that the workflow does <Cite n={6} />. An action can be a normal app step, like "create a ticket", or an AI step. For example, n8n lets an AI step use models from several providers, for example OpenAI, Anthropic, or Google <Cite n={5} />.
+
+For a tester, workflow automation removes the copy-and-paste work between tools: the bug tracker, the CI system, the chat app, and the test report. You set the flow up once. Then it runs on every event.
+
+It is not the same as test automation. A Playwright test checks the product. A workflow moves information about the tests and the bugs. The two meet when a test run starts a workflow.
+
+</Layman>
+<Bangla>
+
+**Workflow** হলো ধাপের একটা শিকল, যা নিজে নিজে চলে। n8n-এ একটা workflow হলো যুক্ত node-এর একটা সেট, যা একটা প্রক্রিয়া স্বয়ংক্রিয় করে <Cite n={1} />। Zapier তাদের workflow-কে বলে **Zap**, যা আপনার app আর service যুক্ত করে <Cite n={6} />। Make তাদের workflow-কে বলে **scenario** <Cite n={7} />।
+
+প্রতিটা workflow একটা **trigger** দিয়ে শুরু হয়: যে ঘটনা রানটা শুরু করে <Cite n={6} />। Trigger-এর পরে আসে **action**: workflow যে ধাপগুলো করে <Cite n={6} />। একটা action সাধারণ app-এর ধাপ হতে পারে, যেমন "create a ticket", অথবা একটা AI ধাপ। যেমন, n8n AI ধাপকে OpenAI, Anthropic, Google-এর মতো LLM provider-এর সাথে যুক্ত করতে পারে <Cite n={5} />।
+
+একজন টেস্টারের জন্য workflow automation টুলগুলোর মাঝের জোড়া লাগানোর কাজ সরিয়ে দেয়: bug tracker, CI সিস্টেম, chat app আর test report। আপনি flow একবার সেট করেন, তারপর প্রতিটা ঘটনায় সেটা চলে।
+
+এটা test automation থেকে আলাদা। একটা Playwright test প্রোডাক্ট যাচাই করে। একটা workflow টেস্ট আর বাগের তথ্য এক জায়গা থেকে আরেক জায়গায় নেয়। দুটো মেলে যখন একটা test run trigger হয়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**Triggers by event.** Many triggers are **webhooks**. A webhook lets you subscribe to events in another system. When the event happens, that system sends the event details to your URL in an HTTP request <Cite n={8} />. You get the data as it happens, and you do not have to poll an API <Cite n={8} />. The n8n Webhook node receives such data from apps and services <Cite n={2} />. It has a test URL, which shows the incoming data in the editor, and a production URL, which works after you publish the workflow <Cite n={2} />.
+
+**Branches.** A Zapier filter lets a Zap run only when certain conditions are true. Paths run different actions for different conditions <Cite n={6} />.
+
+**A bug triage flow.** This sketch is the tutorial's own example:
+
+```text
+Trigger   new issue in the bug tracker (webhook)
+Filter    only issues with the label "bug"
+AI step   suggest component and severity, as JSON
+Action    post the suggestion as a comment
+Human     a tester accepts or changes it
+```
+
+**Errors.** A workflow can fail too. In n8n, you can set an **error workflow** for each workflow in its settings. It must start with the Error Trigger node, and one error workflow can serve many workflows <Cite n={3} />. In Make, a failed run can be saved as an incomplete execution, so its data is not lost <Cite n={7} />.
+
+**Logs.** Zapier's Zap history is a log of every run <Cite n={6} />. Check it the same way you check a CI log.
+
+</Technical>
+<Layman>
+
+**Triggers by event.** Many triggers are **webhooks**. A webhook lets you sign up for events in another system. When the event happens, that system sends an HTTP request with the event data to your URL <Cite n={8} />. You get the data at once. You do not have to ask an API again and again <Cite n={8} />. The n8n Webhook node receives such data from apps and services <Cite n={2} />. It has a test URL, which shows the data in the editor. It also has a production URL, which works after you publish the workflow <Cite n={2} />.
+
+**Branches.** A Zapier filter lets a Zap run only when some conditions are true. Paths run different actions for different conditions <Cite n={6} />.
+
+**A bug triage flow.** This is the tutorial's own example. A new issue in the bug tracker starts the flow. A filter keeps only issues with the label "bug". An AI step suggests the part of the product and the severity. An action posts this as a comment. Then a tester accepts or changes it.
+
+**Errors.** A workflow can fail too. In n8n, you can set an **error workflow** for each workflow in its settings. It must start with the Error Trigger node. One error workflow can serve many workflows <Cite n={3} />. In Make, a failed run can be saved as an incomplete execution, so its data is not lost <Cite n={7} />.
+
+**Logs.** Zapier's Zap history is a log of every run <Cite n={6} />. Check it the same way that you check a CI log.
+
+</Layman>
+<Bangla>
+
+**ঘটনা দিয়ে trigger.** অনেক trigger হলো **webhook**। Webhook দিয়ে আপনি আরেকটা সিস্টেমের ঘটনায় subscribe করেন। ঘটনাটা ঘটলে সেই সিস্টেম ঘটনার ডেটাসহ একটা HTTP request আপনার URL-এ পাঠায় <Cite n={8} />। ডেটা ঘটনার সাথে সাথেই আসে, বারবার API poll করতে হয় না <Cite n={8} />। n8n-এর Webhook node app আর service থেকে এমন ডেটা গ্রহণ করে <Cite n={2} />। এর একটা test URL আছে, যা editor-এ আসা ডেটা দেখায়, আর একটা production URL আছে, যা workflow publish করার পরে কাজ করে <Cite n={2} />।
+
+**শাখা.** Zapier-এর filter দিয়ে একটা Zap শুধু নির্দিষ্ট শর্ত সত্য হলে চলে। Paths ভিন্ন শর্তে ভিন্ন action চালায় <Cite n={6} />।
+
+**একটা bug triage flow.** এটা টিউটোরিয়ালের নিজের উদাহরণ। Bug tracker-এ নতুন issue flow শুরু করে। একটা filter শুধু "bug" label-এর issue রাখে। একটা AI ধাপ component আর severity প্রস্তাব করে। একটা action এটা comment হিসেবে পোস্ট করে। তারপর একজন টেস্টার সেটা মেনে নেন বা বদলান।
+
+**Error.** Workflow-ও ফেইল করতে পারে। n8n-এ প্রতিটা workflow-এর settings-এ একটা **error workflow** সেট করা যায়। এটা Error Trigger node দিয়ে শুরু হতে হবে, আর একটা error workflow অনেক workflow-এর কাজে লাগতে পারে <Cite n={3} />। Make-এ একটা ফেইল করা রান incomplete execution হিসেবে সেভ হতে পারে, যাতে তার ডেটা হারায় না <Cite n={7} />।
+
+**Log.** Zapier-এর Zap history প্রতিটা রানের একটা log <Cite n={6} />। CI log যেভাবে দেখেন, এটাও সেভাবে দেখুন।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Bug-report triage.** Use the flow above. The AI step only suggests. A person decides. Return the suggestion as JSON with fixed fields, so the next step can read it. See [Prompting](/ai-skills/prompting/) for the format part of the prompt.
+
+**Test-run notifications.** Let the CI system call a webhook when a run ends <Cite n={8} />. Add a filter so only failed runs on the main branch pass <Cite n={6} />. Post a short message with the failed test names and a link to the report. For the CI side, see [GitHub Actions](/automate/github-actions/).
+
+**A weekly flaky-test digest.** Collect the tests that failed and then passed on a retry, and send one list to the team each week, with an AI summary of the common error messages.
+
+**Sketch the flow on paper first.** Before you open a tool, draw the boxes: trigger, filters, AI step, actions, and the human check. Mark what happens when each box fails. This is the same work as a test design for the flow.
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice. Test the workflow like a product. Send it a normal event, an event that the filter must drop, an event with empty fields, and an event that makes the AI step return bad JSON. Check the run log after each one. Set an error workflow before you switch the flow on.
+</Callout>
+
+</Technical>
+<Layman>
+
+**Bug-report triage.** Use the flow above. The AI step only suggests. A person decides. Ask for the suggestion as JSON with fixed fields, so the next step can read it.
+
+**Test-run alerts.** Let the CI system call a webhook when a run ends <Cite n={8} />. Add a filter so only failed runs on the main branch go through <Cite n={6} />. Post a short message with the names of the failed tests and a link to the report.
+
+**A weekly flaky-test list.** Collect the tests that failed and then passed on a retry. Send one list to the team each week, with an AI summary of the common error messages.
+
+**Draw the flow on paper first.** Before you open a tool, draw the boxes: trigger, filters, AI step, actions, and the human check. Mark what happens when each box fails. This is the same work as a test design for the flow.
+
+This is the tutorial's own advice. Test the workflow like a product. Send it a normal event, an event that the filter must drop, an event with empty fields, and an event that makes the AI step return bad JSON. Check the run log after each one. Set an error workflow before you switch the flow on.
+
+</Layman>
+<Bangla>
+
+**Bug-report triage.** ওপরের flow ব্যবহার করুন। AI ধাপ শুধু প্রস্তাব দেয়, সিদ্ধান্ত নেন একজন মানুষ। প্রস্তাবটা নির্দিষ্ট field-সহ JSON হিসেবে চান, যাতে পরের ধাপ সেটা পড়তে পারে।
+
+**Test-run notification.** একটা রান শেষ হলে CI সিস্টেমকে একটা webhook কল করতে দিন <Cite n={8} />। একটা filter যোগ করুন, যাতে শুধু main branch-এর ফেইল করা রান পার হয় <Cite n={6} />। ফেইল করা টেস্টের নাম আর রিপোর্টের লিংকসহ একটা ছোট মেসেজ পোস্ট করুন।
+
+**সাপ্তাহিক flaky-test তালিকা.** যে টেস্টগুলো ফেইল করে retry-তে পাস করেছে সেগুলো জমা করুন। প্রতি সপ্তাহে টিমকে একটা তালিকা পাঠান, সাধারণ error message-গুলোর একটা AI সারাংশসহ।
+
+**আগে কাগজে flow আঁকুন.** টুল খোলার আগে বাক্সগুলো আঁকুন: trigger, filter, AI ধাপ, action, আর মানুষের যাচাই। প্রতিটা বাক্স ফেইল করলে কী হবে তা চিহ্নিত করুন। এটা flow-এর জন্য একটা test design-এর মতোই কাজ।
+
+এটা টিউটোরিয়ালের নিজের পরামর্শ। Workflow-কে একটা প্রোডাক্টের মতো টেস্ট করুন। একটা স্বাভাবিক ঘটনা পাঠান, এমন ঘটনা যা filter-এর বাদ দেওয়া উচিত, খালি field-সহ ঘটনা, আর এমন ঘটনা যাতে AI ধাপ ভুল JSON ফেরত দেয়। প্রতিটার পরে run log দেখুন। Flow চালু করার আগে একটা error workflow সেট করুন।
+
+</Bangla>
+</Voices>
+
+## Tools to try
+
+<Voices>
+<Technical>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| n8n | Workflows of connected nodes, with AI steps | You can self-host it on your own servers, on-premises, or in a private cloud <Cite n={4} /> |
+| Make | Visual scenarios that connect apps | A failed run can be kept as an incomplete execution, so the data is not lost <Cite n={7} /> |
+| Zapier | Zaps: a trigger and actions across many apps | A sample record from the trigger app serves as test data when you set up the actions <Cite n={6} /> |
+
+If test data or bug reports must stay inside your network, a self-hosted tool such as n8n fits better. Check the rules with your team first. See [AI Governance](/ai-skills/ai-governance/).
+
+</Technical>
+<Layman>
+
+- **n8n:** workflows of connected nodes, with AI steps. You can host it yourself, on your own servers, on-premises, or in a private cloud <Cite n={4} />.
+- **Make:** visual scenarios that connect apps. A failed run can be kept as an incomplete execution, so the data is not lost <Cite n={7} />.
+- **Zapier:** Zaps with a trigger and actions across many apps. A sample record from the trigger app is used as test data when you set up the actions <Cite n={6} />.
+
+If test data or bug reports must stay inside your network, a tool that you host yourself, like n8n, fits better. Check the rules with your team first.
+
+</Layman>
+<Bangla>
+
+- **n8n:** AI ধাপসহ যুক্ত node-এর workflow। আপনি এটা নিজের সার্ভারে, on-premises বা private cloud-এ self-host করতে পারেন <Cite n={4} />।
+- **Make:** app যুক্ত করার visual scenario। একটা ফেইল করা রান incomplete execution হিসেবে রাখা যায়, যাতে ডেটা হারায় না <Cite n={7} />।
+- **Zapier:** অনেক app জুড়ে একটা trigger আর কিছু action-সহ Zap। Action সেট করার সময় trigger app-এর একটা sample record test data হিসেবে কাজ করে <Cite n={6} />।
+
+Test data বা bug report যদি আপনার নেটওয়ার্কের ভেতরেই রাখতে হয়, তাহলে n8n-এর মতো self-hosted টুল বেশি মানায়। আগে টিমের সাথে নিয়মগুলো মিলিয়ে নিন।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Build in the tool first.** Fix: sketch the flow on paper, with the failure path of each box, before you open the editor.
+
+**Test only on the test URL.** In n8n, the test URL and the production URL behave differently: production runs do not show in the editor <Cite n={2} />. Fix: after you publish, send one real event and check the run log.
+
+**No error path.** A silent failure looks like "no bugs today". Fix: set an error workflow that starts with the Error Trigger <Cite n={3} />, or keep failed runs in Make <Cite n={7} />.
+
+**Let the AI step act alone.** Fix: let the AI step suggest, and let a person accept the change that matters, such as a severity or a close.
+
+**Run on every event.** Fix: add a filter, so the flow runs only when the conditions are met <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+**Build in the tool first.** Fix: draw the flow on paper, with what happens when each box fails, before you open the editor.
+
+**Test only on the test URL.** In n8n, the test URL and the production URL work differently. Production runs do not show in the editor <Cite n={2} />. Fix: after you publish, send one real event and check the run log.
+
+**No error path.** A silent failure looks like "no bugs today". Fix: set an error workflow that starts with the Error Trigger <Cite n={3} />, or keep failed runs in Make <Cite n={7} />.
+
+**Let the AI step act alone.** Fix: let the AI step suggest. Let a person accept the change that matters, like a severity or a close.
+
+**Run on every event.** Fix: add a filter, so the flow runs only when the conditions are true <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+**আগে টুলে বানানো.** সমাধান: editor খোলার আগে কাগজে flow আঁকুন, প্রতিটা বাক্স ফেইল করলে কী হবে তা-সহ।
+
+**শুধু test URL-এ টেস্ট.** n8n-এ test URL আর production URL আলাদাভাবে কাজ করে: production রান editor-এ দেখা যায় না <Cite n={2} />। সমাধান: publish করার পরে একটা আসল ঘটনা পাঠিয়ে run log দেখুন।
+
+**Error-এর পথ নেই.** নীরব ফেইল দেখতে "আজ কোনো বাগ নেই"-এর মতো লাগে। সমাধান: Error Trigger দিয়ে শুরু হওয়া একটা error workflow সেট করুন <Cite n={3} />, অথবা Make-এ ফেইল করা রান রেখে দিন <Cite n={7} />।
+
+**AI ধাপকে একা কাজ করতে দেওয়া.** সমাধান: AI ধাপকে প্রস্তাব দিতে দিন, আর গুরুত্বপূর্ণ পরিবর্তন, যেমন severity বা issue বন্ধ করা, একজন মানুষকে মেনে নিতে দিন।
+
+**প্রতিটা ঘটনায় চালানো.** সমাধান: একটা filter যোগ করুন, যাতে শর্ত পূরণ হলেই শুধু flow চলে <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## How to start
+
+<Voices>
+<Technical>
+
+1. Pick one repeated task, for example "post failed nightly runs to the team chat".
+2. Sketch it on paper: trigger, filter, actions, the human check, and the error path.
+3. Build it in one tool. Use a webhook trigger if the source system supports webhooks <Cite n={8} />.
+4. Test it with a normal event, a filtered event, and a broken event. Read the run log after each one <Cite n={6} />.
+5. Add the error workflow <Cite n={3} />, publish, and check the first real run. Then add one AI step, and read [AI Agents](/ai-skills/ai-agents/) to see when a flow should become an agent.
+
+</Technical>
+<Layman>
+
+1. Pick one task that repeats, for example "post failed nightly runs to the team chat".
+2. Draw it on paper: trigger, filter, actions, the human check, and the error path.
+3. Build it in one tool. Use a webhook trigger if the source system supports webhooks <Cite n={8} />.
+4. Test it with a normal event, a filtered event, and a broken event. Read the run log after each one <Cite n={6} />.
+5. Add the error workflow <Cite n={3} />, publish, and check the first real run. Then add one AI step, and read the page on AI agents.
+
+</Layman>
+<Bangla>
+
+1. বারবার হয় এমন একটা কাজ বাছুন, যেমন "post failed nightly runs to the team chat"।
+2. কাগজে আঁকুন: trigger, filter, action, মানুষের যাচাই, আর error-এর পথ।
+3. একটা টুলে বানান। সোর্স সিস্টেম webhook সমর্থন করলে webhook trigger ব্যবহার করুন <Cite n={8} />।
+4. একটা স্বাভাবিক ঘটনা, একটা filter-এ বাদ পড়া ঘটনা, আর একটা ভাঙা ঘটনা দিয়ে টেস্ট করুন। প্রতিটার পরে run log পড়ুন <Cite n={6} />।
+5. Error workflow যোগ করুন <Cite n={3} />, publish করুন, আর প্রথম আসল রানটা দেখুন। তারপর একটা AI ধাপ যোগ করুন, আর AI agents-এর পেজটা পড়ুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Workflow | A set of connected steps (nodes) that automates a process <Cite n={1} /> |
+| Trigger | The event that starts a workflow <Cite n={6} /> |
+| Action | A step that the workflow performs after the trigger <Cite n={6} /> |
+| Webhook | A subscription to events, delivered as HTTP requests when they happen <Cite n={8} /> |
+| Error workflow | In n8n, a workflow that starts with the Error Trigger, set in the settings of the workflow that it watches <Cite n={3} /> |
+| Incomplete execution | In Make, a failed run that is saved so its data is not lost <Cite n={7} /> |

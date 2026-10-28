@@ -1,15 +1,16 @@
 /**
  * The registry of the flat modules, in the order of the site: System Design,
- * Architecture, the Course, then k6. The module files must not import this file.
+ * Architecture, the Course, k6, then AI Skills. The module files must not import this file.
  */
+import { AI_SKILLS } from "../ai-skills/topics.ts";
 import { ARCHITECTURE } from "../architecture/topics.ts";
 import { COURSE } from "../course/topics.ts";
 import { K6 } from "../k6/topics.ts";
 import { SYSTEM_DESIGN } from "../system-design/cases.ts";
 
-export { ARCHITECTURE, COURSE, K6, SYSTEM_DESIGN };
+export { AI_SKILLS, ARCHITECTURE, COURSE, K6, SYSTEM_DESIGN };
 
-export const FLAT_MODULES = [SYSTEM_DESIGN, ARCHITECTURE, COURSE, K6] as const;
+export const FLAT_MODULES = [SYSTEM_DESIGN, ARCHITECTURE, COURSE, K6, AI_SKILLS] as const;
 
 export type FlatModuleId = (typeof FLAT_MODULES)[number]["id"];
 
