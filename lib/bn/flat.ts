@@ -3,6 +3,7 @@ import type { FlatModuleUI, FlatProgressUI } from "../modules/flat.ts";
 import type { FlatModuleId } from "../modules/registry.ts";
 import { AGENT_MEMORY_UI_BN } from "./agent-memory.ts";
 import { AI_ENGINEERING_UI_BN } from "./ai-engineering.ts";
+import { AI_CONCEPTS_UI_BN } from "./ai-concepts.ts";
 import { AI_SKILLS_UI_BN } from "./ai-skills.ts";
 import { ARCHITECTURE_UI_BN } from "./architecture.ts";
 import { COURSE_UI_BN } from "./course.ts";
@@ -19,5 +20,6 @@ export const FLAT_UI_BN: Record<FlatModuleId, Bn<FlatModuleUI & Partial<FlatProg
   "ai-engineering": AI_ENGINEERING_UI_BN,
   harness: HARNESS_UI_BN,
   "ai-skills": AI_SKILLS_UI_BN,
+  "ai-concepts": AI_CONCEPTS_UI_BN,
   "agent-memory": AGENT_MEMORY_UI_BN,
 };

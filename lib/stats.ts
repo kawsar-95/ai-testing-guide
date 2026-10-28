@@ -19,7 +19,7 @@ export type SiteModule = {
 const pagesOf = (list: readonly { href: string; title: string }[]) =>
   list.map(({ href, title }) => ({ href, title }));
 
-/** The ten modules beside the tutorial, in header order. */
+/** The eleven modules beside the tutorial, in header order. */
 export const MODULES: readonly SiteModule[] = [
   { id: "linux", title: LINUX_UI.headerLink, href: LINUX_HOME, tagline: LINUX_UI.description, pages: pagesOf(STAGES) },
   {

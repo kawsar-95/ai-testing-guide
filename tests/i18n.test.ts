@@ -21,6 +21,8 @@ import { AI_ENGINEERING_UI } from "../lib/ai-engineering/ui.ts";
 import { AI_ENGINEERING_UI_BN } from "../lib/bn/ai-engineering.ts";
 import { HARNESS_UI } from "../lib/harness/ui.ts";
 import { HARNESS_UI_BN } from "../lib/bn/harness.ts";
+import { AI_CONCEPTS_UI } from "../lib/ai-concepts/ui.ts";
+import { AI_CONCEPTS_UI_BN } from "../lib/bn/ai-concepts.ts";
 import { AI_SKILLS_UI } from "../lib/ai-skills/ui.ts";
 import { AI_SKILLS_UI_BN } from "../lib/bn/ai-skills.ts";
 import { K6_UI } from "../lib/k6/ui.ts";
@@ -71,6 +73,7 @@ const PAIRS: [string, unknown, unknown][] = [
   ["AI_ENGINEERING_UI", AI_ENGINEERING_UI, AI_ENGINEERING_UI_BN],
   ["HARNESS_UI", HARNESS_UI, HARNESS_UI_BN],
   ["AI_SKILLS_UI", AI_SKILLS_UI, AI_SKILLS_UI_BN],
+  ["AI_CONCEPTS_UI", AI_CONCEPTS_UI, AI_CONCEPTS_UI_BN],
   ["SYSTEM_DESIGN_UI", SYSTEM_DESIGN_UI, SYSTEM_DESIGN_UI_BN],
 ];
 
