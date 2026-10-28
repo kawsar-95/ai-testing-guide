@@ -1,4 +1,4 @@
-# Software Testing with AI
+# Agentic QA
 
 A free site that teaches QA engineers and SDETs how to use Claude Code for software testing. It also has notes on Linux, manual testing, and system design, in plain words for testers.
 

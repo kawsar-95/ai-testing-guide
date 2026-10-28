@@ -1,8 +1,8 @@
 /**
- * The site mark: a magnifier with a check mark. app/icon.svg and the PWA
- * icons use the same drawing on a dark tile. It is decorative. With `mono`,
- * all strokes take the current text color, for the teal tile of the header
- * and the footer.
+ * The site mark: a loop arrow (the agent loop) around a check mark. app/icon.svg
+ * and the PWA icons use the same drawing on a dark tile. It is decorative. With
+ * `mono`, all strokes take the current text color, for the teal tile of the
+ * header and the footer.
  */
 export function BrandMark({ className = "", mono = false }: { className?: string; mono?: boolean }) {
   const ring = mono ? "stroke-current" : "stroke-accent";
@@ -17,9 +17,9 @@ export function BrandMark({ className = "", mono = false }: { className?: string
       strokeLinejoin="round"
       className={className}
     >
-      <circle cx="10.5" cy="10.5" r="7" className={ring} />
-      <path d="m15.6 15.6 4.9 4.9" className={ring} />
-      <path d="m7.4 10.8 2.2 2.2 3.9-4.3" className={check} />
+      <path d="M20.5 12a8.5 8.5 0 1 1-2.5-6l2.5 2.5" className={ring} />
+      <path d="M20.5 3.5v5h-4" className={ring} />
+      <path d="m7.6 12.6 2.6 2.6 4.6-4.8" className={check} />
     </svg>
   );
 }

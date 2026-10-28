@@ -3,8 +3,8 @@ import type { HOME_UI } from "../ui.ts";
 
 /** The Bangla twin of HOME_UI. `titleMark` is a product name and stays English. */
 export const HOME_UI_BN: Bn<typeof HOME_UI> = {
-  eyebrow: "AI দিয়ে সফটওয়্যার টেস্টিং · 2026",
-  titleLine1: "সফটওয়্যার টেস্টিং",
+  eyebrow: "AGENTIC QA · 2026",
+  titleLine1: "Agentic QA",
   titleLine2Before: "শিখুন",
   titleMark: "Claude AI",
   sub: "QA ইঞ্জিনিয়ার ও SDET-দের জন্য হাতে-কলমে টিউটোরিয়াল: Claude Code ইনস্টল করুন, এটা কীভাবে কাজ করে শিখুন, কনফিগার ও এক্সটেন্ড করুন, আর CI ও ব্রাউজারে টেস্টিং অটোমেট করুন। তারপর বাগ খোঁজা থেকে দ্বিতীয় ফিক্স PR পর্যন্ত একটা সত্যিকারের QA প্রজেক্ট অনুসরণ করুন।",
