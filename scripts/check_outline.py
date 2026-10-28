@@ -5,9 +5,10 @@ Without --routes it checks every page in route-map.json except "/", every Linux
 stage page in linux-route-map.json, every System Design case page in
 system-design-route-map.json, every Fundamentals chapter page in
 fundamentals-route-map.json, every Architecture page in
-architecture-route-map.json, every Course page in course-route-map.json, every k6 page in k6-route-map.json, and every AI Concepts page in ai-concepts-route-map.json
+architecture-route-map.json, every Course page in course-route-map.json, every k6 page in k6-route-map.json, every AI Engineering page in ai-engineering-route-map.json,
+every AI Harnesses page in harness-route-map.json, every AI Skills page in ai-skills-route-map.json, and every AI Concepts page in ai-concepts-route-map.json
 (not the homes "/linux/", "/system-design/", "/fundamentals/",
-"/architecture/", "/course/", "/k6/" and "/ai-concepts/", which have no meta line).
+"/architecture/", "/course/", "/k6/", "/ai-engineering/", "/harness/", "/ai-skills/" and "/ai-concepts/", which have no meta line).
 """
 import argparse
 import json
@@ -18,7 +19,7 @@ import checks
 
 
 def default_routes():
-    """The tutorial pages, the Linux stage pages, the System Design case pages, the Fundamentals chapter pages, the Architecture pages, the Course pages, the k6 pages, and the AI Concepts pages, without the eight homes."""
+    """The tutorial pages, the Linux stage pages, the System Design case pages, the Fundamentals chapter pages, the Architecture pages, the Course pages, the k6 pages, the AI Engineering pages, the AI Harnesses pages, the AI Skills pages, and the AI Concepts pages, without the homes."""
     here = Path(__file__).resolve().parent
     routes = []
     for name, home in (
@@ -29,6 +30,9 @@ def default_routes():
         ("architecture-route-map.json", "/architecture/"),
         ("course-route-map.json", "/course/"),
         ("k6-route-map.json", "/k6/"),
+        ("ai-engineering-route-map.json", "/ai-engineering/"),
+        ("harness-route-map.json", "/harness/"),
+        ("ai-skills-route-map.json", "/ai-skills/"),
         ("ai-concepts-route-map.json", "/ai-concepts/"),
     ):
         route_map = json.loads((here / name).read_text())

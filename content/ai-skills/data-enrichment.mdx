@@ -1,0 +1,263 @@
+export const metadata = { title: 'Data Enrichment at Scale', description: 'How to add data to many records at a time with AI and data tools, and how a tester uses it to build large, realistic, repeatable test data.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Waterfalls', publisher: 'Clay docs', url: 'https://university.clay.com/docs/building-a-data-waterfall', accessed: '2026-10-28' },
+    { title: 'Actors', publisher: 'Apify docs', url: 'https://docs.apify.com/platform/actors', accessed: '2026-10-28' },
+    { title: 'Introduction', publisher: 'Firecrawl docs', url: 'https://docs.firecrawl.dev/introduction', accessed: '2026-10-28' },
+    { title: 'Batch processing', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', accessed: '2026-10-28' },
+    { title: 'Structured outputs', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/structured-outputs', accessed: '2026-10-28' },
+    { title: 'Getting Started', publisher: 'Faker docs', url: 'https://fakerjs.dev/guide/', accessed: '2026-10-28' },
+    { title: 'Usage', publisher: 'Faker docs', url: 'https://fakerjs.dev/guide/usage', accessed: '2026-10-28' },
+  ],
+}
+
+# Data Enrichment at Scale
+
+Sales teams use AI to fill in missing facts about thousands of companies at once. Testers have the same problem with a different table: ten thousand test users, a product catalog, a set of real-world pages. Data enrichment is the skill of adding the missing fields to many rows at a time, and checking that the result is right.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+In this tutorial, **data enrichment** means this: you start with a table of records and add new fields to every row from another source. The source can be a data provider, a web page, or a language model.
+
+Sales tools made the idea popular. In Clay, for example, you add an enrichment to a table, and a **waterfall** asks several data providers in a set order <Cite n={1} />. Web tools do the same for page content: Firecrawl gets clean Markdown or structured data from live websites <Cite n={3} />, and an Apify **Actor** is a cloud program that takes JSON input and runs a task such as web scraping or browser automation <Cite n={2} />.
+
+For a tester, the rows are **test data**: users, orders, addresses, product texts, and the pages that your app must handle. A library such as Faker makes fake but realistic rows for unit tests and performance tests <Cite n={6} />. Enrichment then adds the fields that a simple generator cannot make well, such as a realistic product review or a valid address format for one country.
+
+</Technical>
+<Layman>
+
+In this tutorial, **data enrichment** means this. You start with a table of records. You add new fields to every row from another source. The source can be a data provider, a web page, or a language model.
+
+Sales tools made the idea popular. In Clay, for example, you add an enrichment to a table. A **waterfall** asks several data providers, one after another, in a set order <Cite n={1} />. Web tools do the same for page content. Firecrawl gets clean Markdown or structured data from live websites <Cite n={3} />. An Apify **Actor** is a cloud program. It takes JSON input and runs a task, such as web scraping or browser automation <Cite n={2} />.
+
+For a tester, the rows are **test data**: users, orders, addresses, product texts, and the pages that your app must handle. A library such as Faker makes fake but realistic rows for unit tests and performance tests <Cite n={6} />. Enrichment then adds the fields that a simple generator cannot make well. Examples are a realistic product review, or a valid address format for one country.
+
+</Layman>
+<Bangla>
+
+এই টিউটোরিয়ালে **data enrichment** মানে হলো: আপনি রেকর্ডের একটা টেবিল দিয়ে শুরু করেন, তারপর অন্য একটা সোর্স থেকে প্রতিটা সারিতে (row) নতুন ফিল্ড যোগ করেন। সোর্স হতে পারে একটা ডেটা প্রোভাইডার, একটা ওয়েব পেজ, বা একটা ল্যাঙ্গুয়েজ মডেল।
+
+সেলস টুলগুলো এই ধারণাকে জনপ্রিয় করেছে। যেমন Clay-তে আপনি একটা টেবিলে একটা enrichment যোগ করেন, আর একটা **waterfall** একটা নির্দিষ্ট ক্রমে একাধিক ডেটা প্রোভাইডারকে জিজ্ঞেস করে <Cite n={1} />। ওয়েব টুলগুলো পেজের কনটেন্টের জন্য একই কাজ করে। Firecrawl লাইভ ওয়েবসাইট থেকে পরিষ্কার Markdown বা structured data আনে <Cite n={3} />। একটা Apify **Actor** হলো একটা ক্লাউড প্রোগ্রাম। এটা JSON ইনপুট নেয় আর web scraping বা browser automation-এর মতো একটা কাজ চালায় <Cite n={2} />।
+
+টেস্টারের জন্য সারিগুলো হলো **test data**: ইউজার, অর্ডার, ঠিকানা, প্রোডাক্টের টেক্সট, আর যে পেজগুলো আপনার অ্যাপকে সামলাতে হয়। Faker-এর মতো একটা লাইব্রেরি unit test আর performance test-এর জন্য নকল কিন্তু বাস্তবসম্মত সারি বানায় <Cite n={6} />। তারপর enrichment এমন ফিল্ড যোগ করে যা একটা সাধারণ জেনারেটর ভালো বানাতে পারে না। যেমন একটা বাস্তবসম্মত প্রোডাক্ট রিভিউ, বা একটা দেশের সঠিক ঠিকানার ফরম্যাট।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+An enrichment job is a pipeline. Each row goes through the same steps:
+
+```text
+base rows (Faker, seed 42)
+   |
+   v
+enrich each row --> data provider | web page (Firecrawl, Apify) | model (batch)
+   |
+   v
+validate (schema, rules) --> rejected rows go to a review list
+   |
+   v
+test data set (versioned file or seed script)
+```
+
+**Base rows.** Faker makes the skeleton rows. Set your own seed, and you get the same data on every run <Cite n={7} />.
+
+**Model calls at scale.** For thousands of rows, send the model calls as a batch. The Message Batches API processes a large number of requests asynchronously <Cite n={4} />. One batch holds up to 100,000 requests or 256 MB <Cite n={4} />. You can read the results when all requests are done or after 24 hours, and a batch that does not finish in 24 hours expires <Cite n={4} />. The results can come back in any order, so match each one by its `custom_id` <Cite n={4} />.
+
+**A fixed shape.** Ask for each row in a JSON schema with structured outputs. Claude's response then follows the schema, so your script can always parse it <Cite n={5} />. The schema goes in `output_config.format` <Cite n={5} />.
+
+**Web content.** Firecrawl can search, scrape, map, and crawl sites <Cite n={3} />, and it can also be self-hosted <Cite n={3} />. Apify has ready-made public Actors in Apify Store <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+An enrichment job is a pipeline. Each row goes through the same steps. First, you make base rows with Faker. Then you enrich each row from a data provider, a web page, or a model. Then you check each row against a schema and your rules. Bad rows go to a list for review. The good rows become your test data set, in a file or a seed script.
+
+**Base rows.** Faker makes the basic rows. Set your own seed, and you get the same data on every run <Cite n={7} />.
+
+**Model calls at scale.** For thousands of rows, send the model calls as a batch. The Message Batches API handles a large number of requests in the background <Cite n={4} />. One batch holds up to 100,000 requests or 256 MB <Cite n={4} />. You can read the results when all requests are done, or after 24 hours. A batch that does not finish in 24 hours expires <Cite n={4} />. The results can come back in any order. So match each one by its `custom_id` <Cite n={4} />.
+
+**A fixed shape.** Ask for each row in a JSON schema with structured outputs. Then Claude's response follows the schema, and your script can always read it <Cite n={5} />. The schema goes in `output_config.format` <Cite n={5} />.
+
+**Web content.** Firecrawl can search, scrape, map, and crawl sites <Cite n={3} />. You can also run it on your own servers <Cite n={3} />. Apify has ready-made public Actors in Apify Store <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+একটা enrichment কাজ হলো একটা pipeline। প্রতিটা সারি একই ধাপগুলো পার হয়। প্রথমে Faker দিয়ে মূল সারি বানান। তারপর একটা ডেটা প্রোভাইডার, একটা ওয়েব পেজ বা একটা মডেল থেকে প্রতিটা সারি enrich করুন। তারপর প্রতিটা সারি একটা schema আর আপনার নিয়মের সাথে মিলিয়ে দেখুন। খারাপ সারি রিভিউয়ের তালিকায় যায়। ভালো সারিগুলো একটা ফাইল বা seed script-এ আপনার টেস্ট ডেটা সেট হয়।
+
+**মূল সারি।** Faker মূল সারিগুলো বানায়। নিজের seed সেট করলে প্রতিবার একই ডেটা পাবেন <Cite n={7} />।
+
+**বড় পরিসরে মডেল কল।** হাজার হাজার সারির জন্য মডেল কলগুলো একটা batch হিসেবে পাঠান। Message Batches API অনেক রিকুয়েস্ট asynchronous-ভাবে প্রসেস করে <Cite n={4} />। একটা batch-এ সর্বোচ্চ 100,000 রিকুয়েস্ট বা 256 MB থাকে <Cite n={4} />। সব রিকুয়েস্ট শেষ হলে, অথবা 24 ঘণ্টা পরে, আপনি ফলাফল পড়তে পারেন। 24 ঘণ্টায় শেষ না হলে batch-এর মেয়াদ শেষ হয় <Cite n={4} />। ফলাফল যেকোনো ক্রমে আসতে পারে, তাই প্রতিটা ফলাফল তার `custom_id` দিয়ে মেলান <Cite n={4} />।
+
+**নির্দিষ্ট আকার।** Structured outputs দিয়ে প্রতিটা সারি একটা JSON schema-তে চান। তখন Claude-এর উত্তর schema মেনে চলে, তাই আপনার স্ক্রিপ্ট সবসময় সেটা পার্স করতে পারে <Cite n={5} />। Schema যায় `output_config.format`-এ <Cite n={5} />।
+
+**ওয়েবের কনটেন্ট।** Firecrawl সাইট search, scrape, map আর crawl করতে পারে <Cite n={3} />। আপনি এটা নিজের সার্ভারেও চালাতে পারেন <Cite n={3} />। Apify Store-এ রেডিমেড পাবলিক Actor আছে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Data for a load test.** A load test needs many different users, not one user ten thousand times. Make the base rows with Faker <Cite n={6} />, then let a batch job add realistic text fields in a fixed schema <Cite n={4} /> <Cite n={5} />. Feed the file to your load script. The [k6 module](/k6/) shows how to use a data file in a test.
+
+**Edge cases for every row.** Ask the model to add hard variants to each base row: a very long name, a name with accents, an address with no postal code. A schema field such as `variant_reason` keeps the reason next to the data <Cite n={5} />.
+
+**A corpus of real pages.** If your app parses or searches web content, collect a set of public pages as clean Markdown with Firecrawl <Cite n={3} /> or an Apify Actor <Cite n={2} />. Save the files in the repo, so tests do not depend on the live web.
+
+**Testing an enrichment feature.** If your product has a waterfall like Clay, test the order of the providers and what happens when one returns nothing <Cite n={1} />.
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice. Never enrich test data with real customer records. Start from synthetic rows, keep the seed and the prompt in the repo, and check the terms of a website before you collect its pages.
+</Callout>
+
+</Technical>
+<Layman>
+
+**Data for a load test.** A load test needs many different users, not one user ten thousand times. Make the base rows with Faker <Cite n={6} />. Then let a batch job add realistic text fields in a fixed schema <Cite n={4} /> <Cite n={5} />. Give the file to your load script. The [k6 module](/k6/) shows how to use a data file in a test.
+
+**Edge cases for every row.** Ask the model to add hard variants to each base row. Examples are a very long name, a name with accents, and an address with no postal code. A schema field such as `variant_reason` keeps the reason next to the data <Cite n={5} />.
+
+**A set of real pages.** Your app may read or search web content. Then collect a set of public pages as clean Markdown with Firecrawl <Cite n={3} /> or an Apify Actor <Cite n={2} />. Save the files in the repo. Then tests do not depend on the live web.
+
+**Testing an enrichment feature.** Your product may have a waterfall like Clay. Then test the order of the providers. Test what happens when one provider returns nothing <Cite n={1} />.
+
+This is the tutorial's own advice. Never enrich test data with real customer records. Start from fake rows. Keep the seed and the prompt in the repo. Check the terms of a website before you collect its pages.
+
+</Layman>
+<Bangla>
+
+**Load test-এর ডেটা।** একটা load test-এ অনেক আলাদা ইউজার লাগে, একই ইউজার দশ হাজার বার নয়। Faker দিয়ে মূল সারি বানান <Cite n={6} />। তারপর একটা batch কাজ দিয়ে নির্দিষ্ট schema-তে বাস্তবসম্মত টেক্সট ফিল্ড যোগ করান <Cite n={4} /> <Cite n={5} />। ফাইলটা আপনার load script-কে দিন। একটা টেস্টে ডেটা ফাইল কীভাবে ব্যবহার করবেন, তা [k6 module](/k6/)-এ দেখুন।
+
+**প্রতিটা সারিতে edge case।** মডেলকে প্রতিটা মূল সারিতে কঠিন রূপ (variant) যোগ করতে বলুন। যেমন খুব লম্বা নাম, accent-সহ নাম, postal code ছাড়া ঠিকানা। `variant_reason`-এর মতো একটা schema ফিল্ড কারণটা ডেটার পাশে রাখে <Cite n={5} />।
+
+**আসল পেজের সংগ্রহ।** আপনার অ্যাপ যদি ওয়েব কনটেন্ট পড়ে বা সার্চ করে, তাহলে Firecrawl <Cite n={3} /> বা একটা Apify Actor <Cite n={2} /> দিয়ে কিছু পাবলিক পেজ পরিষ্কার Markdown হিসেবে সংগ্রহ করুন। ফাইলগুলো repo-তে রাখুন। তাহলে টেস্ট লাইভ ওয়েবের ওপর নির্ভর করবে না।
+
+**Enrichment ফিচার টেস্ট করা।** আপনার প্রোডাক্টে যদি Clay-এর মতো waterfall থাকে, প্রোভাইডারদের ক্রম টেস্ট করুন। একটা প্রোভাইডার কিছু না দিলে কী হয়, সেটাও টেস্ট করুন <Cite n={1} />।
+
+এটা টিউটোরিয়ালের নিজের পরামর্শ। কখনো আসল কাস্টমারের রেকর্ড দিয়ে টেস্ট ডেটা enrich করবেন না। নকল সারি দিয়ে শুরু করুন। Seed আর প্রম্পট repo-তে রাখুন। কোনো ওয়েবসাইটের পেজ সংগ্রহের আগে তার শর্তাবলি (terms) দেখে নিন।
+
+</Bangla>
+</Voices>
+
+## Tools to try
+
+<Voices>
+<Technical>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| Clay | Enrich table rows from data providers | A waterfall uses several providers in a set order <Cite n={1} /> |
+| Apify | Run scraping and browser automation in the cloud | Public Actors are in Apify Store <Cite n={2} /> |
+| Firecrawl | Turn websites into Markdown or structured data | It can be self-hosted <Cite n={3} /> |
+| Faker | Make fake but realistic base rows | A fixed seed gives the same data on each run <Cite n={7} /> |
+| Claude Message Batches | Run thousands of model calls at once | Up to 100,000 requests in one batch <Cite n={4} /> |
+
+</Technical>
+<Layman>
+
+- **Clay**: enrich table rows from data providers. A waterfall uses several providers in a set order <Cite n={1} />.
+- **Apify**: run scraping and browser automation in the cloud. Public Actors are in Apify Store <Cite n={2} />.
+- **Firecrawl**: turn websites into Markdown or structured data. You can run it on your own servers <Cite n={3} />.
+- **Faker**: make fake but realistic base rows. A fixed seed gives the same data on each run <Cite n={7} />.
+- **Claude Message Batches**: run thousands of model calls at once. One batch holds up to 100,000 requests <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+- **Clay**: ডেটা প্রোভাইডার থেকে টেবিলের সারি enrich করে। একটা waterfall নির্দিষ্ট ক্রমে একাধিক প্রোভাইডার ব্যবহার করে <Cite n={1} />।
+- **Apify**: ক্লাউডে scraping আর browser automation চালায়। পাবলিক Actor-গুলো Apify Store-এ আছে <Cite n={2} />।
+- **Firecrawl**: ওয়েবসাইটকে Markdown বা structured data-তে রূপ দেয়। আপনি এটা নিজের সার্ভারে চালাতে পারেন <Cite n={3} />।
+- **Faker**: নকল কিন্তু বাস্তবসম্মত মূল সারি বানায়। একটা নির্দিষ্ট seed প্রতিবার একই ডেটা দেয় <Cite n={7} />।
+- **Claude Message Batches**: একসাথে হাজার হাজার মডেল কল চালায়। একটা batch-এ সর্বোচ্চ 100,000 রিকুয়েস্ট থাকে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Real personal data in test sets.** Fix: generate synthetic rows with a tool such as Faker <Cite n={6} />, and enrich only those.
+- **Data that changes on every run.** A failing test is hard to debug when the data is new each time. Fix: set a seed <Cite n={7} />, and save the enriched file in the repo.
+- **Free text that breaks the parser.** Fix: use structured outputs, so each response follows your JSON schema <Cite n={5} />.
+- **Matching batch results by position.** Batch results can come back in any order <Cite n={4} />. Fix: give each request a `custom_id` and join on it <Cite n={4} />.
+- **No check after enrichment.** A model can add a plausible but wrong value. Fix: validate every row with rules (formats, ranges, required fields), and review a random sample by hand.
+
+</Technical>
+<Layman>
+
+- **Real personal data in test sets.** Fix: make fake rows with a tool such as Faker <Cite n={6} />. Enrich only those.
+- **Data that changes on every run.** A failing test is hard to debug when the data is new each time. Fix: set a seed <Cite n={7} />. Save the enriched file in the repo.
+- **Free text that breaks the parser.** Fix: use structured outputs. Then each response follows your JSON schema <Cite n={5} />.
+- **Matching batch results by position.** Batch results can come back in any order <Cite n={4} />. Fix: give each request a `custom_id`. Match the results on it <Cite n={4} />.
+- **No check after enrichment.** A model can add a value that looks right but is wrong. Fix: check every row with rules, such as formats, ranges, and required fields. Look at a random sample by hand.
+
+</Layman>
+<Bangla>
+
+- **টেস্ট সেটে আসল ব্যক্তিগত ডেটা।** সমাধান: Faker-এর মতো টুল দিয়ে নকল সারি বানান <Cite n={6} />। শুধু সেগুলোই enrich করুন।
+- **প্রতি রানে বদলে যাওয়া ডেটা।** প্রতিবার ডেটা নতুন হলে একটা ফেইল করা টেস্ট ডিবাগ করা কঠিন। সমাধান: একটা seed সেট করুন <Cite n={7} />। Enrich করা ফাইলটা repo-তে রাখুন।
+- **এমন free text যা পার্সার ভেঙে দেয়।** সমাধান: structured outputs ব্যবহার করুন। তখন প্রতিটা উত্তর আপনার JSON schema মেনে চলে <Cite n={5} />।
+- **অবস্থান দেখে batch-এর ফলাফল মেলানো।** Batch-এর ফলাফল যেকোনো ক্রমে আসতে পারে <Cite n={4} />। সমাধান: প্রতিটা রিকুয়েস্টে একটা `custom_id` দিন এবং সেটা দিয়ে মেলান <Cite n={4} />।
+- **Enrichment-এর পরে কোনো চেক নেই।** একটা মডেল দেখতে ঠিক কিন্তু আসলে ভুল একটা মান যোগ করতে পারে। সমাধান: নিয়ম দিয়ে প্রতিটা সারি যাচাই করুন, যেমন ফরম্যাট, সীমা আর আবশ্যিক ফিল্ড। এলোমেলো কিছু নমুনা হাতে দেখুন।
+
+</Bangla>
+</Voices>
+
+## How to start
+
+<Voices>
+<Technical>
+
+1. Write down the fields that your test needs and the rules for each field (format, range, required).
+2. Generate 100 base rows with Faker and a fixed seed <Cite n={7} />.
+3. Write one prompt that enriches one row, with a JSON schema for the answer <Cite n={5} />. Try it on 10 rows and read every result.
+4. Run the same prompt on all rows as a batch, with the row ID as the `custom_id` <Cite n={4} />.
+5. Validate the rows, save the file in the repo, and use it in one test.
+
+</Technical>
+<Layman>
+
+1. Write down the fields that your test needs. Write the rules for each field: format, range, and required or not.
+2. Make 100 base rows with Faker and a fixed seed <Cite n={7} />.
+3. Write one prompt that enriches one row, with a JSON schema for the answer <Cite n={5} />. Try it on 10 rows. Read every result.
+4. Run the same prompt on all rows as a batch. Use the row ID as the `custom_id` <Cite n={4} />.
+5. Check the rows. Save the file in the repo. Use it in one test.
+
+</Layman>
+<Bangla>
+
+1. আপনার টেস্টে যে ফিল্ডগুলো লাগে আর প্রতিটা ফিল্ডের নিয়ম (ফরম্যাট, সীমা, আবশ্যিক কিনা) লিখে ফেলুন।
+2. একটা নির্দিষ্ট seed দিয়ে Faker থেকে 100টা মূল সারি বানান <Cite n={7} />।
+3. একটা প্রম্পট লিখুন যা একটা সারি enrich করে, উত্তরের জন্য একটা JSON schema-সহ <Cite n={5} />। 10টা সারিতে চালিয়ে প্রতিটা ফলাফল পড়ুন।
+4. একই প্রম্পট সব সারিতে একটা batch হিসেবে চালান। সারির ID-কে `custom_id` হিসেবে দিন <Cite n={4} />।
+5. সারিগুলো যাচাই করুন, ফাইলটা repo-তে রাখুন, আর একটা টেস্টে ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Data enrichment | Adding new fields to many existing records from another source (the tutorial's own definition) |
+| Waterfall | Several data providers asked in a set order <Cite n={1} /> |
+| Actor | An Apify cloud program that runs a task such as web scraping <Cite n={2} /> |
+| Message batch | A group of model requests that runs asynchronously <Cite n={4} /> |
+| Structured output | A model response that follows a given JSON schema <Cite n={5} /> |
+| Seed | A fixed start value that makes generated data the same on each run <Cite n={7} /> |

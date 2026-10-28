@@ -1,0 +1,284 @@
+export const metadata = { title: 'Retrieval Engineering', description: 'How hybrid search, rank fusion, reranking, and metadata filters find the right chunks for a RAG app, and how a tester measures it.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Introducing Contextual Retrieval', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/contextual-retrieval', accessed: '2026-10-28' },
+    { title: 'Reciprocal rank fusion', publisher: 'Elastic Docs', url: 'https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion', accessed: '2026-10-28' },
+    { title: 'Hybrid search', publisher: 'Weaviate Docs', url: 'https://docs.weaviate.io/weaviate/search/hybrid', accessed: '2026-10-28' },
+    { title: 'Filtering', publisher: 'Qdrant Documentation', url: 'https://qdrant.tech/documentation/concepts/filtering/', accessed: '2026-10-28' },
+    { title: 'Rerank results', publisher: 'Pinecone Docs', url: 'https://docs.pinecone.io/guides/search/rerank-results', accessed: '2026-10-28' },
+    { title: 'Retrieval', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/retrieval', accessed: '2026-10-28' },
+  ],
+}
+
+# Retrieval Engineering
+
+A good test search finds the one bug report you need among 10,000, even when you remember only an error code or a vague description. Retrieval engineering is the work that makes a RAG app find the right chunks: it mixes keyword and meaning search, sorts the results again, and filters out what the user must not see.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+In a RAG app, the model can answer only from the chunks that **retrieval** gives it. If the right chunk is not found, the answer is wrong or empty, even with a strong model.
+
+Two kinds of search find different things:
+
+- **Embedding (vector) search** finds chunks with a similar meaning, but it can miss exact matches <Cite n={1} />.
+- **BM25** is a keyword ranking function. It is good for exact words, such as IDs and technical terms <Cite n={1} />.
+
+Anthropic's example: for the query "Error code TS-999", an embedding search can return pages about error codes in general and skip the page for "TS-999" itself. BM25 searches for that exact string <Cite n={1} />.
+
+Retrieval engineering combines both kinds, reranks the results, and filters them by **metadata**.
+
+</Technical>
+<Layman>
+
+In a RAG app, the model can answer only from the chunks that **retrieval** gives it. If search does not find the right chunk, the answer is wrong or empty. A strong model cannot fix this.
+
+Two kinds of search find different things:
+
+- **Embedding (vector) search** finds chunks with a similar meaning. But it can miss exact matches <Cite n={1} />.
+- **BM25** is a keyword ranking function. It is good for exact words, such as IDs and technical terms <Cite n={1} />.
+
+Here is Anthropic's example. The query is "Error code TS-999". An embedding search can return pages about error codes in general. It can skip the page for "TS-999" itself. BM25 searches for that exact text <Cite n={1} />.
+
+Retrieval engineering uses both kinds of search. It sorts the results again (reranking). It filters them by **metadata**.
+
+</Layman>
+<Bangla>
+
+একটা RAG অ্যাপে মডেল শুধু সেই চাংক থেকেই উত্তর দিতে পারে, যেগুলো **রিট্রিভাল** তাকে দেয়। সার্চ সঠিক চাংক না পেলে উত্তর ভুল বা ফাঁকা হয়। শক্তিশালী মডেলও এটা ঠিক করতে পারে না।
+
+দুই ধরনের সার্চ আলাদা জিনিস খুঁজে পায়:
+
+- **এমবেডিং (ভেক্টর) সার্চ** একই রকম অর্থের চাংক খুঁজে পায়। কিন্তু হুবহু মিল মিস করতে পারে <Cite n={1} />।
+- **BM25** একটা কিওয়ার্ড র‍্যাঙ্কিং ফাংশন। এটা হুবহু শব্দের জন্য ভালো, যেমন ID আর টেকনিক্যাল টার্ম <Cite n={1} />।
+
+Anthropic-এর উদাহরণ দেখুন। কুয়েরি হলো "Error code TS-999"। এমবেডিং সার্চ সাধারণভাবে এরর কোড নিয়ে পেজ ফেরত দিতে পারে। হুবহু "TS-999" মিস করতে পারে। BM25 ঠিক ওই টেক্সটটাই খোঁজে <Cite n={1} />।
+
+রিট্রিভাল ইঞ্জিনিয়ারিং দুই ধরনের সার্চই ব্যবহার করে। ফলাফল আবার সাজায় (reranking)। **মেটাডেটা** দিয়ে ফিল্টার করে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Hybrid search and rank fusion
+
+**Hybrid search** runs a vector search and a keyword (BM25) search, then fuses the two result lists <Cite n={3} />. Anthropic's flow: find top chunks with BM25, find top chunks with embeddings, then combine and deduplicate them with rank fusion <Cite n={1} />.
+
+**Reciprocal rank fusion** (RRF) is a common fusion method. It needs no tuning, and the two scores do not need to be related <Cite n={2} />. Each document gets `1 / (k + rank)` from each list it is in, and the sums give the final order <Cite n={2} />. In Elasticsearch, `rank_constant` (the `k`) defaults to 60 <Cite n={2} />.
+
+```python
+def rrf(result_lists, k=60):
+    scores = {}
+    for results in result_lists:
+        for rank, doc_id in enumerate(results, start=1):
+            scores[doc_id] = scores.get(doc_id, 0.0) + 1.0 / (k + rank)
+    return sorted(scores, key=scores.get, reverse=True)
+
+rrf([["a", "b", "c"], ["c", "a", "d"]])  # -> ['a', 'c', 'b', 'd']
+```
+
+Some stores let you weight the two sides. In Weaviate, `alpha=1` is pure vector search and `alpha=0` is pure keyword search <Cite n={3} />.
+
+### Reranking
+
+The first search is fast but rough. A **reranker** is a second model that scores each result for relevance to the query and gives back a better order <Cite n={5} />. Anthropic retrieved the top 150 chunks, reranked them, and passed the top 20 to the model <Cite n={1} />. Embeddings, BM25, contextual chunks, and a reranker together cut failed retrievals by 67% in their tests <Cite n={1} />. The cost: reranking adds a step at run time, so it adds latency <Cite n={1} />.
+
+### Metadata filters
+
+A filter limits the search by fields that the embedding cannot express, such as stock, location, or price range <Cite n={4} />. In Qdrant, `must` works like AND, `should` like OR, and `must_not` excludes matches <Cite n={4} />:
+
+```json
+{ "filter": { "must": [
+  { "key": "country", "match": { "value": "BD" } },
+  { "key": "audience", "match": { "value": "staff" } }
+] } }
+```
+
+Qdrant suggests a payload index on each field that you filter on <Cite n={4} />.
+
+### Other knobs
+
+- **Top-K.** OpenAI file search returns 10 results by default and up to 50 with `max_num_results` <Cite n={6} />. Anthropic found that 20 chunks worked better than 10 or 5 <Cite n={1} />.
+- **Score threshold.** A higher `score_threshold` keeps only more relevant chunks, but can drop useful ones <Cite n={6} />.
+- **Query rewriting.** With `rewrite_query=true`, OpenAI rewrites the query into a better search form <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+**Hybrid search** runs a vector search and a keyword (BM25) search. Then it joins the two result lists <Cite n={3} />. Anthropic's flow has three steps. Find top chunks with BM25. Find top chunks with embeddings. Then join the lists, remove copies, and sort them with rank fusion <Cite n={1} />.
+
+**Reciprocal rank fusion** (RRF) is a common way to join lists. It needs no tuning. The two scores do not need to be related <Cite n={2} />. Each document gets `1 / (k + rank)` from each list it is in. The sums give the final order <Cite n={2} />. In Elasticsearch, `rank_constant` (the `k`) is 60 by default <Cite n={2} />. In the code example, `a` is first in one list and second in the other, so it wins.
+
+Some stores let you set how much each side counts. In Weaviate, `alpha=1` is pure vector search. `alpha=0` is pure keyword search <Cite n={3} />.
+
+**Reranking.** The first search is fast but rough. A **reranker** is a second model. It scores each result for relevance to the query. It gives back a better order <Cite n={5} />. Anthropic took the top 150 chunks, reranked them, and gave the top 20 to the model <Cite n={1} />. In their tests, embeddings, BM25, chunks with context, and a reranker together cut failed retrievals by 67% <Cite n={1} />. The cost is time. Reranking adds a step when the app runs, so the answer comes later <Cite n={1} />.
+
+**Metadata filters.** A filter limits the search by fields that the embedding cannot hold. Examples are stock, location, or price range <Cite n={4} />. In Qdrant, `must` works like AND. `should` works like OR. `must_not` removes matches <Cite n={4} />. The example keeps only chunks for `country` BD and `audience` staff. Qdrant suggests an index on each field that you filter on <Cite n={4} />.
+
+Other settings:
+
+- **Top-K.** OpenAI file search returns 10 results by default. You can get up to 50 with `max_num_results` <Cite n={6} />. Anthropic found that 20 chunks worked better than 10 or 5 <Cite n={1} />.
+- **Score threshold.** A higher `score_threshold` keeps only more relevant chunks. But it can drop useful ones <Cite n={6} />.
+- **Query rewriting.** With `rewrite_query=true`, OpenAI rewrites the query into a better form for search <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+**Hybrid search** একটা ভেক্টর সার্চ আর একটা কিওয়ার্ড (BM25) সার্চ চালায়। তারপর দুটো ফলাফলের তালিকা জোড়া দেয় <Cite n={3} />। Anthropic-এর ফ্লোতে তিনটা ধাপ। BM25 দিয়ে সেরা চাংক খুঁজুন। এমবেডিং দিয়ে সেরা চাংক খুঁজুন। তারপর rank fusion দিয়ে তালিকা জোড়া দিন, কপি সরান আর সাজান <Cite n={1} />।
+
+**Reciprocal rank fusion** (RRF) তালিকা জোড়ার একটা প্রচলিত উপায়। এতে কোনো টিউনিং লাগে না। দুটো স্কোরের মধ্যে সম্পর্ক থাকার দরকার নেই <Cite n={2} />। প্রতিটা ডকুমেন্ট যে তালিকায় আছে, সেখান থেকে `1 / (k + rank)` পায়। যোগফল চূড়ান্ত ক্রম ঠিক করে <Cite n={2} />। Elasticsearch-এ `rank_constant` (মানে `k`) ডিফল্টভাবে 60 <Cite n={2} />। কোডের উদাহরণে `a` এক তালিকায় প্রথম আর অন্যটায় দ্বিতীয়, তাই সে জেতে।
+
+কিছু স্টোরে আপনি ঠিক করতে পারেন কোন দিক কতটা গুরুত্ব পাবে। Weaviate-এ `alpha=1` মানে শুধু ভেক্টর সার্চ। `alpha=0` মানে শুধু কিওয়ার্ড সার্চ <Cite n={3} />।
+
+**রির‍্যাঙ্কিং।** প্রথম সার্চ দ্রুত কিন্তু মোটা দাগের। একটা **reranker** হলো দ্বিতীয় একটা মডেল। সে কুয়েরির সঙ্গে মিলিয়ে প্রতিটা ফলাফলকে স্কোর দেয়। নতুন, আরও সঠিক একটা ক্রম ফেরত দেয় <Cite n={5} />। Anthropic সেরা 150টা চাংক নিয়েছে, রির‍্যাঙ্ক করেছে, আর সেরা 20টা মডেলকে দিয়েছে <Cite n={1} />। তাদের টেস্টে এমবেডিং, BM25, কনটেক্সটসহ চাংক আর একটা reranker একসঙ্গে ব্যর্থ রিট্রিভাল 67% কমিয়েছে <Cite n={1} />। খরচ হলো সময়। অ্যাপ চলার সময় রির‍্যাঙ্কিং একটা ধাপ যোগ করে, তাই উত্তর দেরিতে আসে <Cite n={1} />।
+
+**মেটাডেটা ফিল্টার।** ফিল্টার এমন ফিল্ড দিয়ে সার্চ সীমিত করে, যা এমবেডিং ধরে রাখতে পারে না। উদাহরণ: স্টক, লোকেশন বা দামের সীমা <Cite n={4} />। Qdrant-এ `must` কাজ করে AND-এর মতো। `should` কাজ করে OR-এর মতো। `must_not` মিলগুলো বাদ দেয় <Cite n={4} />। উদাহরণটা শুধু `country` BD আর `audience` staff-এর চাংক রাখে। যে ফিল্ডে ফিল্টার করবেন, তাতে একটা ইনডেক্স রাখার পরামর্শ দেয় Qdrant <Cite n={4} />।
+
+অন্য সেটিং:
+
+- **Top-K।** OpenAI file search ডিফল্টভাবে 10টা ফলাফল দেয়। `max_num_results` দিয়ে 50টা পর্যন্ত পাওয়া যায় <Cite n={6} />। Anthropic দেখেছে 20টা চাংক 10 বা 5টার চেয়ে ভালো কাজ করে <Cite n={1} />।
+- **স্কোর থ্রেশহোল্ড।** বেশি `score_threshold` শুধু বেশি প্রাসঙ্গিক চাংক রাখে। কিন্তু দরকারি চাংকও বাদ দিতে পারে <Cite n={6} />।
+- **কুয়েরি রিরাইট।** `rewrite_query=true` দিলে OpenAI কুয়েরিকে সার্চের জন্য ভালো রূপে লিখে নেয় <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A support chatbot answers questions from the product docs. Users often paste error codes.
+
+1. **Before:** vector search only, top 5. For "What does error E-4012 mean?", the bot returns a general page about error handling. The exact page for E-4012 is at rank 9.
+2. **Add BM25 and RRF.** The keyword list has the E-4012 page at rank 1, so the fused list puts it near the top <Cite n={1} /> <Cite n={2} />.
+3. **Add a reranker.** The app retrieves 50 chunks, reranks them, and keeps the top 10. Retrieve wide, then rerank, is the two-stage pattern of Pinecone and Anthropic <Cite n={5} /> <Cite n={1} />.
+4. **Add a filter.** Each chunk has a `product_version` field. A user on version 3 gets only version 3 chunks <Cite n={4} />.
+
+The team measures each change with a fixed set of 100 questions and the known right chunk for each. Anthropic uses a similar measure: the share of relevant chunks that do not appear in the top 20 <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+A support chatbot answers questions from the product docs. Users often paste error codes.
+
+1. **Before:** vector search only, top 5. A user asks "What does error E-4012 mean?". The bot returns a general page about error handling. The exact page for E-4012 is at place 9.
+2. **Add BM25 and RRF.** The keyword list has the E-4012 page at place 1. So the joined list puts it near the top <Cite n={1} /> <Cite n={2} />.
+3. **Add a reranker.** The app gets 50 chunks, reranks them, and keeps the top 10. Pinecone and Anthropic both use this two-stage pattern: get many, then rerank <Cite n={5} /> <Cite n={1} />.
+4. **Add a filter.** Each chunk has a `product_version` field. A user on version 3 gets only version 3 chunks <Cite n={4} />.
+
+The team measures each change with a fixed set of 100 questions. For each question, they know the right chunk. Anthropic uses a similar measure. It counts the share of relevant chunks that do not show in the top 20 <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটা সাপোর্ট চ্যাটবট প্রোডাক্ট ডকস থেকে প্রশ্নের উত্তর দেয়। ইউজাররা প্রায়ই এরর কোড পেস্ট করেন।
+
+1. **আগে:** শুধু ভেক্টর সার্চ, সেরা 5টা। একজন ইউজার জিজ্ঞেস করেন "What does error E-4012 mean?"। বট এরর হ্যান্ডলিং নিয়ে একটা সাধারণ পেজ দেয়। E-4012-এর আসল পেজ 9 নম্বরে।
+2. **BM25 আর RRF যোগ করুন।** কিওয়ার্ড তালিকায় E-4012 পেজ 1 নম্বরে। তাই জোড়া তালিকা সেটাকে ওপরের কাছে রাখে <Cite n={1} /> <Cite n={2} />।
+3. **একটা reranker যোগ করুন।** অ্যাপ 50টা চাংক আনে, রির‍্যাঙ্ক করে, সেরা 10টা রাখে। Pinecone আর Anthropic দুজনেই এই দুই-ধাপের প্যাটার্ন ব্যবহার করে: অনেকগুলো আনুন, তারপর রির‍্যাঙ্ক করুন <Cite n={5} /> <Cite n={1} />।
+4. **একটা ফিল্টার যোগ করুন।** প্রতিটা চাংকে একটা `product_version` ফিল্ড আছে। ভার্সন 3-এর ইউজার শুধু ভার্সন 3-এর চাংক পান <Cite n={4} />।
+
+টিম প্রতিটা পরিবর্তন 100টা প্রশ্নের একটা স্থির সেট দিয়ে মাপে। প্রতিটা প্রশ্নের সঠিক চাংক তারা জানে। Anthropic একই রকম মাপ ব্যবহার করে। সেটা গোনে প্রাসঙ্গিক চাংকের কত ভাগ সেরা 20-এ আসে না <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Vector search alone for exact terms.** It can miss IDs, codes, and product names <Cite n={1} />.
+- **Adding raw scores from two searches.** BM25 and vector search give different kinds of relevance scores. Rank fusion uses the rank, not the raw score, so the two scores do not have to be related <Cite n={2} />.
+- **Reranking too many chunks.** More chunks give better quality, but more latency and cost <Cite n={1} />.
+- **A score threshold set too high.** It drops useful chunks <Cite n={6} />.
+- **Filtering after the search.** Tutorial's own view: if you search first and filter the top 10 later, the right chunk can be lost. Filter inside the search query.
+- **Tuning by feel.** Each change should be measured on a fixed question set. Anthropic advises experiments on your own use case <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+- **Only vector search for exact terms.** It can miss IDs, codes, and product names <Cite n={1} />.
+- **Adding raw scores from two searches.** BM25 and vector search give different kinds of scores. Rank fusion uses the place in the list, not the raw score. So the two scores do not need to be related <Cite n={2} />.
+- **Reranking too many chunks.** More chunks give better quality. But they also add delay and cost <Cite n={1} />.
+- **A score threshold that is too high.** It drops useful chunks <Cite n={6} />.
+- **Filtering after the search.** Tutorial's own view: say you search first and filter the top 10 later. The right chunk can be lost. Filter inside the search query.
+- **Tuning by feel.** Measure each change on a fixed set of questions. Anthropic advises tests on your own use case <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **হুবহু টার্মের জন্য শুধু ভেক্টর সার্চ।** এটা ID, কোড আর প্রোডাক্টের নাম মিস করতে পারে <Cite n={1} />।
+- **দুটো সার্চের কাঁচা স্কোর যোগ করা।** BM25 আর ভেক্টর সার্চ আলাদা ধরনের স্কোর দেয়। Rank fusion তালিকার অবস্থান ব্যবহার করে, কাঁচা স্কোর নয়। তাই দুটো স্কোরের মধ্যে সম্পর্ক থাকার দরকার নেই <Cite n={2} />।
+- **অনেক বেশি চাংক রির‍্যাঙ্ক করা।** বেশি চাংক মান বাড়ায়। কিন্তু দেরি আর খরচও বাড়ায় <Cite n={1} />।
+- **খুব বেশি স্কোর থ্রেশহোল্ড।** এটা দরকারি চাংক বাদ দেয় <Cite n={6} />।
+- **সার্চের পরে ফিল্টার করা।** টিউটোরিয়ালের নিজের মত: ধরুন আগে সার্চ করলেন আর পরে সেরা 10টা ফিল্টার করলেন। সঠিক চাংক হারিয়ে যেতে পারে। সার্চ কুয়েরির ভেতরেই ফিল্টার করুন।
+- **আন্দাজে টিউন করা।** প্রতিটা পরিবর্তন প্রশ্নের একটা স্থির সেটে মাপুন। Anthropic আপনার নিজের কাজের ওপর পরীক্ষা করার পরামর্শ দেয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice.
+
+- **Build a golden set.** Write 50 to 100 real questions, each with the ID of the chunk that must be found. Run it after every change.
+- **Measure recall at K.** For each question, check if the right chunk is in the top K. Report the failure rate, not only a few good examples.
+- **Test exact strings.** Ask with error codes, ticket IDs, and product names. Keyword search must find them.
+- **Test synonyms.** Ask the same question with other words. Vector search must still find the chunk.
+- **Test the filters as access control.** Ask as a user from group A for a chunk of group B. It must never come back, in any position.
+- **Time each stage.** Log the time of search, rerank, and generation, so a slow reranker is visible.
+</Callout>
+
+</Technical>
+<Layman>
+
+These checks are the tutorial's own advice.
+
+- **Build a golden set.** Write 50 to 100 real questions. For each one, note the ID of the chunk that search must find. Run the set after every change.
+- **Measure recall at K.** For each question, check if the right chunk is in the top K. Report the failure rate, not only a few good examples.
+- **Test exact text.** Ask with error codes, ticket IDs, and product names. Keyword search must find them.
+- **Test other words.** Ask the same question with different words. Vector search must still find the chunk.
+- **Test the filters as access control.** Ask as a user from group A for a chunk of group B. It must never come back, in any place.
+- **Time each stage.** Log the time of search, rerank, and answer. Then a slow reranker is easy to see.
+
+</Layman>
+<Bangla>
+
+এই চেকগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **একটা গোল্ডেন সেট বানান।** 50 থেকে 100টা আসল প্রশ্ন লিখুন। প্রতিটার জন্য সেই চাংকের ID লিখে রাখুন, যেটা সার্চকে খুঁজে পেতেই হবে। প্রতিটা পরিবর্তনের পর সেটটা চালান।
+- **Recall at K মাপুন।** প্রতিটা প্রশ্নে দেখুন সঠিক চাংক সেরা K-তে আছে কি না। ব্যর্থতার হার জানান, শুধু কয়েকটা ভালো উদাহরণ নয়।
+- **হুবহু টেক্সট টেস্ট করুন।** এরর কোড, টিকিট ID আর প্রোডাক্টের নাম দিয়ে প্রশ্ন করুন। কিওয়ার্ড সার্চকে এগুলো খুঁজে পেতেই হবে।
+- **অন্য শব্দ টেস্ট করুন।** একই প্রশ্ন ভিন্ন শব্দে করুন। ভেক্টর সার্চকে তবুও চাংকটা খুঁজে পেতে হবে।
+- **ফিল্টারকে অ্যাক্সেস কন্ট্রোল হিসেবে টেস্ট করুন।** গ্রুপ A-এর ইউজার হিসেবে গ্রুপ B-এর একটা চাংক চান। সেটা কোনো অবস্থানেই ফিরে আসা চলবে না।
+- **প্রতিটা ধাপের সময় মাপুন।** সার্চ, রির‍্যাঙ্ক আর উত্তরের সময় লগ করুন। তখন ধীর reranker সহজে চোখে পড়ে।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| BM25 | A keyword ranking function that finds exact word and phrase matches <Cite n={1} /> |
+| Hybrid search | A search that fuses vector search results with keyword search results <Cite n={3} /> |
+| RRF | Reciprocal rank fusion: each list adds `1 / (k + rank)` to a document's score <Cite n={2} /> |
+| Alpha | In Weaviate, the weight between keyword search (0) and vector search (1) <Cite n={3} /> |
+| Reranker | A second model that scores the first results against the query and reorders them <Cite n={5} /> |
+| Metadata filter | A condition on stored fields that limits which chunks a search can return <Cite n={4} /> |
+| Top-K | The number of results that the search returns <Cite n={6} /> |

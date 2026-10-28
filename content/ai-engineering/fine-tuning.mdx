@@ -1,0 +1,303 @@
+export const metadata = { title: 'Fine-Tuning Models', description: 'How fine-tuning trains a model more on your own examples, when it helps, what LoRA is, and what a tester checks before and after a fine-tune.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Supervised fine-tuning', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/supervised-fine-tuning', accessed: '2026-10-28' },
+    { title: 'Fine-tuning best practices', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/fine-tuning-best-practices', accessed: '2026-10-28' },
+    { title: 'LoRA: Low-Rank Adaptation of Large Language Models (Hu et al., 2021)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2106.09685', accessed: '2026-10-28' },
+    { title: 'LoRA (conceptual guide)', publisher: 'Hugging Face PEFT docs', url: 'https://huggingface.co/docs/peft/main/en/conceptual_guides/lora', accessed: '2026-10-28' },
+    { title: 'SFT Trainer', publisher: 'Hugging Face TRL docs', url: 'https://huggingface.co/docs/trl/sft_trainer', accessed: '2026-10-28' },
+    { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-10-28' },
+  ],
+}
+
+# Fine-Tuning Models
+
+A new tester learns the house style of the team from many old bug reports, not from one long rule book. Fine-tuning does the same for a model: you train it more on your own examples, so it copies the behavior that those examples show.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Fine-tuning** trains an existing model more on your own examples. In **supervised fine-tuning** (SFT), each example is a prompt and the correct answer. The result is a custom model that gives your wanted style and content more reliably <Cite n={1} />.
+
+OpenAI lists these good uses for SFT: classification, nuanced translation, output in a specific format, and fixes for instruction-following failures <Cite n={1} />.
+
+Fine-tuning changes the **weights** of the model, so the knowledge is inside its parameters. The RAG paper says that such models have limits: it is hard for them to show where an answer came from, and hard to update their world knowledge <Cite n={6} />. Tutorial's own view: for facts that change, retrieval (RAG) is often the better tool.
+
+</Technical>
+<Layman>
+
+**Fine-tuning** trains an existing model more on your own examples. In **supervised fine-tuning** (SFT), each example is a prompt and the correct answer. The result is a custom model. It gives your wanted style and content more reliably <Cite n={1} />.
+
+OpenAI lists these good uses for SFT <Cite n={1} />:
+
+- sort text into classes (classification)
+- translation with fine detail
+- output in a specific format
+- fix a model that does not follow instructions well
+
+Fine-tuning changes the **weights** of the model. So the knowledge goes inside the model. The RAG paper says this has limits. It is hard for such a model to show where an answer came from. It is also hard to update what it knows about the world <Cite n={6} />. Tutorial's own view: for facts that change, retrieval (RAG) is often the better tool.
+
+</Layman>
+<Bangla>
+
+**Fine-tuning** মানে একটা তৈরি মডেলকে আপনার নিজের উদাহরণ দিয়ে আরও ট্রেনিং দেওয়া। **Supervised fine-tuning** (SFT)-এ প্রতিটা উদাহরণ হলো একটা প্রম্পট আর তার সঠিক উত্তর। ফলাফল একটা কাস্টম মডেল, যেটা আপনার চাওয়া স্টাইল আর কনটেন্ট আরও নির্ভরযোগ্যভাবে দেয় <Cite n={1} />।
+
+OpenAI SFT-র জন্য এই ভালো কাজগুলোর কথা বলে <Cite n={1} />:
+
+- টেক্সটকে শ্রেণিতে ভাগ করা (classification)
+- সূক্ষ্ম অনুবাদ
+- নির্দিষ্ট ফরম্যাটে আউটপুট
+- যে মডেল নির্দেশ ঠিকমতো মানে না, তাকে ঠিক করা
+
+Fine-tuning মডেলের **weights** বদলায়। তাই জ্ঞানটা মডেলের ভেতরে ঢুকে যায়। RAG পেপার বলে এর সীমা আছে। এমন মডেলের পক্ষে উত্তর কোথা থেকে এলো তা দেখানো কঠিন। দুনিয়া সম্পর্কে তার জ্ঞান আপডেট করাও কঠিন <Cite n={6} />। টিউটোরিয়ালের নিজের মত: যে তথ্য বদলায়, তার জন্য রিট্রিভাল (RAG) প্রায়ই ভালো টুল।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### The four steps
+
+OpenAI splits SFT into four parts <Cite n={1} />:
+
+1. Build a training dataset that shows what "good" looks like.
+2. Upload the dataset.
+3. Create a fine-tuning job on a base model.
+4. Evaluate the fine-tuned model.
+
+OpenAI says to set up evals first. You need a reliable way to see if the fine-tuned model is better than the base model <Cite n={1} />.
+
+### The data
+
+The training file is **JSONL**: one complete JSON object on each line. It needs at least 10 lines. OpenAI says that many tasks improve with 50 to 100 examples, and suggests a start with 50 good examples <Cite n={1} />. One line in the chat format looks like this:
+
+```json
+{"messages": [{"role": "user", "content": "Login button does nothing on Safari 17"}, {"role": "assistant", "content": "UI"}]}
+```
+
+Quality counts more than size. If you must choose, a small set of good examples usually beats a big set of poor ones <Cite n={2} />. The balance also counts: if 60% of the training answers refuse, but only 5% should refuse in real use, the model will likely refuse too often <Cite n={2} />.
+
+### The job
+
+A job needs a base model (`model`) and the ID of the uploaded file (`training_file`). Supervised is the default method <Cite n={1} />:
+
+```bash
+curl https://api.openai.com/v1/fine_tuning/jobs \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -d '{"training_file": "file-abc123", "model": "gpt-4.1-mini-2025-04-14"}'
+```
+
+When the job ends, it returns a `fine_tuned_model` ID that starts with `ft:`. You call the model with this ID <Cite n={1} />. The main **hyperparameters** are the epochs (full passes through the data), the learning rate multiplier, and the batch size <Cite n={2} />.
+
+<Callout type="warning" title="Platform status">
+OpenAI is winding down its fine-tuning platform. New users cannot use it. Eligible existing customers can create jobs until January 6, 2027, unless the base model shuts down earlier. The model of the example, `gpt-4.1-mini-2025-04-14`, and its fine-tuned versions shut down on January 14, 2027 <Cite n={1} />.
+</Callout>
+
+### LoRA: train less, keep the base
+
+Full fine-tuning retrains all parameters of the model. **LoRA** (Low-Rank Adaptation) freezes the original weights and trains two small "update matrices" in each layer <Cite n={3} /> <Cite n={4} />. On GPT-3 175B, LoRA needed 10,000 times fewer trainable parameters and 3 times less GPU memory than full fine-tuning, with no extra inference latency <Cite n={3} />. Because the base stays frozen, you can keep many small LoRA adapters for different tasks on one base model <Cite n={4} />.
+
+The Hugging Face TRL library trains a LoRA adapter when you pass a `LoraConfig` to `SFTTrainer` <Cite n={5} />:
+
+```python
+from datasets import load_dataset
+from trl import SFTTrainer
+from peft import LoraConfig
+
+dataset = load_dataset("trl-lib/Capybara", split="train")
+trainer = SFTTrainer("Qwen/Qwen3-0.6B", train_dataset=dataset, peft_config=LoraConfig())
+trainer.train()
+```
+
+SFT learns by next-token prediction with a cross-entropy loss <Cite n={5} />. For a prompt-completion dataset, TRL counts the loss on the completion tokens only, by default <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+OpenAI splits SFT into four parts <Cite n={1} />:
+
+1. Build a training dataset that shows what "good" looks like.
+2. Upload the dataset.
+3. Create a fine-tuning job on a base model.
+4. Evaluate the fine-tuned model.
+
+OpenAI says to set up evals first. You need a reliable way to see if the new model is better than the base model <Cite n={1} />.
+
+The training file is **JSONL**. Each line holds one complete JSON object. The file needs at least 10 lines. OpenAI says that many tasks improve with 50 to 100 examples. It suggests a start with 50 good examples <Cite n={1} />. In the example, each line has a user message (a bug title) and an assistant message (the right class, such as `UI`).
+
+Quality counts more than size. A small set of good examples usually beats a big set of poor ones <Cite n={2} />. Balance also counts. Say 60% of the training answers refuse. But only 5% should refuse in real use. Then the model will likely refuse too often <Cite n={2} />.
+
+A job needs a base model (`model`) and the ID of the uploaded file (`training_file`). Supervised is the default method <Cite n={1} />. When the job ends, you get a model ID that starts with `ft:`. You call the model with this ID <Cite n={1} />. The main settings (**hyperparameters**) are the epochs, the learning rate multiplier, and the batch size. One epoch is one full pass through the data <Cite n={2} />.
+
+Note: OpenAI is winding down its fine-tuning platform. New users cannot use it. Eligible existing customers can create jobs until January 6, 2027, if the base model does not shut down earlier. The model of the example, `gpt-4.1-mini-2025-04-14`, and its fine-tuned versions shut down on January 14, 2027 <Cite n={1} />.
+
+Full fine-tuning retrains all parameters of the model. **LoRA** (Low-Rank Adaptation) is lighter. It freezes the original weights. It trains two small "update matrices" in each layer <Cite n={3} /> <Cite n={4} />. On GPT-3 175B, LoRA needed 10,000 times fewer trainable parameters than full fine-tuning. It needed 3 times less GPU memory. It added no extra delay when the model answers <Cite n={3} />. The base stays frozen. So you can keep many small LoRA adapters for different tasks on one base model <Cite n={4} />.
+
+The Hugging Face TRL library trains a LoRA adapter when you pass a `LoraConfig` to `SFTTrainer` <Cite n={5} />. SFT learns to predict the next token. It uses a cross-entropy loss <Cite n={5} />. For a dataset of prompts and completions, TRL counts the loss on the completion only, by default <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+OpenAI SFT-কে চারটা অংশে ভাগ করে <Cite n={1} />:
+
+1. একটা ট্রেনিং ডেটাসেট বানান, যেটা দেখায় "ভালো" দেখতে কেমন।
+2. ডেটাসেট আপলোড করুন।
+3. একটা বেস মডেলে fine-tuning job তৈরি করুন।
+4. Fine-tuned মডেলকে মূল্যায়ন (evaluate) করুন।
+
+OpenAI বলে আগে evals সেট আপ করুন। নতুন মডেল বেস মডেলের চেয়ে ভালো কি না, তা দেখার একটা নির্ভরযোগ্য উপায় আপনার দরকার <Cite n={1} />।
+
+ট্রেনিং ফাইল হলো **JSONL**। প্রতিটা লাইনে একটা সম্পূর্ণ JSON অবজেক্ট থাকে। ফাইলে অন্তত 10টা লাইন লাগে। OpenAI বলে অনেক কাজ 50 থেকে 100টা উদাহরণে উন্নত হয়। শুরুতে 50টা ভালো উদাহরণ নেওয়ার পরামর্শ দেয় <Cite n={1} />। উদাহরণে প্রতিটা লাইনে একটা user মেসেজ (বাগের শিরোনাম) আর একটা assistant মেসেজ (সঠিক শ্রেণি, যেমন `UI`) আছে।
+
+সংখ্যার চেয়ে মান বেশি জরুরি। ভালো উদাহরণের ছোট সেট সাধারণত খারাপ উদাহরণের বড় সেটকে হারায় <Cite n={2} />। ভারসাম্যও জরুরি। ধরুন ট্রেনিংয়ের 60% উত্তর প্রত্যাখ্যান করে, কিন্তু আসল ব্যবহারে মাত্র 5% প্রত্যাখ্যান করা উচিত। তখন মডেল সম্ভবত খুব বেশি প্রত্যাখ্যান করবে <Cite n={2} />।
+
+একটা job-এ লাগে একটা বেস মডেল (`model`) আর আপলোড করা ফাইলের ID (`training_file`)। Supervised হলো ডিফল্ট মেথড <Cite n={1} />। Job শেষ হলে আপনি `ft:` দিয়ে শুরু হওয়া একটা মডেল ID পান। এই ID দিয়ে মডেলকে কল করেন <Cite n={1} />। মূল সেটিংগুলো (**hyperparameters**) হলো epochs, learning rate multiplier আর batch size। এক epoch মানে ডেটার ভেতর দিয়ে একবার পুরো যাওয়া <Cite n={2} />।
+
+খেয়াল করুন: OpenAI তাদের fine-tuning প্ল্যাটফর্ম গুটিয়ে আনছে। নতুন ইউজাররা এটা ব্যবহার করতে পারে না। যোগ্য পুরোনো কাস্টমাররা January 6, 2027 পর্যন্ত job তৈরি করতে পারে, যদি বেস মডেল তার আগে বন্ধ না হয়। উদাহরণের মডেল `gpt-4.1-mini-2025-04-14` আর তার fine-tuned ভার্সনগুলো January 14, 2027-এ বন্ধ হবে <Cite n={1} />।
+
+পুরো fine-tuning মডেলের সব প্যারামিটার আবার ট্রেন করে। **LoRA** (Low-Rank Adaptation) হালকা। এটা মূল weights জমিয়ে (freeze) রাখে। প্রতিটা লেয়ারে দুটো ছোট "update matrix" ট্রেন করে <Cite n={3} /> <Cite n={4} />। GPT-3 175B-তে LoRA ট্রেনযোগ্য প্যারামিটার 10,000 গুণ কমিয়েছে। GPU মেমরি 3 গুণ কমিয়েছে। উত্তর দেওয়ার সময় বাড়তি দেরি যোগ করেনি <Cite n={3} />। বেস জমানো থাকে। তাই একটা বেস মডেলের ওপর আলাদা কাজের জন্য অনেক ছোট LoRA adapter রাখা যায় <Cite n={4} />।
+
+Hugging Face-এর TRL লাইব্রেরি LoRA adapter ট্রেন করে, যখন আপনি `SFTTrainer`-কে একটা `LoraConfig` দেন <Cite n={5} />। SFT পরের টোকেন অনুমান করতে শেখে। এটা cross-entropy loss ব্যবহার করে <Cite n={5} />। প্রম্পট আর completion-এর ডেটাসেটে TRL ডিফল্টভাবে শুধু completion-এর ওপর loss গোনে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A QA team gets 200 bug reports a week. They want each report sorted into `UI`, `API`, `Data`, or `Performance`. This is a classification task, a good fit for SFT <Cite n={1} />.
+
+1. The team writes a prompt with clear rules and runs it on 100 old, labeled reports. This is the eval and the baseline.
+2. The prompt gets 81% right. The errors are mostly `API` and `Data` mixed up.
+3. The team writes 50 more labeled examples, with many `API`/`Data` edge cases. They keep 20 old reports apart as a holdout set. OpenAI says to carve out holdout data before the job and to give it the same mix of inputs as the training data <Cite n={1} />.
+4. They fine-tune, then run the same eval on the holdout set with the base model and the fine-tuned model.
+
+Tutorial's own view: the team ships the fine-tuned model only if it beats the prompt on the holdout set, and they keep the eval to run on each new version.
+
+</Technical>
+<Layman>
+
+A QA team gets 200 bug reports a week. They want to put each report in one class: `UI`, `API`, `Data`, or `Performance`. This is a classification task. It is a good fit for SFT <Cite n={1} />.
+
+1. The team writes a prompt with clear rules. They run it on 100 old reports with known classes. This is the eval and the baseline.
+2. The prompt gets 81% right. Most errors mix up `API` and `Data`.
+3. The team writes 50 more examples with known classes. Many are hard `API`/`Data` cases. They keep 20 old reports apart as a holdout set. OpenAI says to set holdout data apart before the job. It should have the same mix of inputs as the training data <Cite n={1} />.
+4. They fine-tune. Then they run the same eval on the holdout set with both models: the base model and the fine-tuned model.
+
+Tutorial's own view: the team ships the new model only if it beats the prompt on the holdout set. They keep the eval and run it on each new version.
+
+</Layman>
+<Bangla>
+
+একটা QA টিম সপ্তাহে 200টা বাগ রিপোর্ট পায়। তারা প্রতিটা রিপোর্টকে একটা শ্রেণিতে রাখতে চায়: `UI`, `API`, `Data`, বা `Performance`। এটা একটা classification কাজ। এটা SFT-র জন্য ভালো মানানসই <Cite n={1} />।
+
+1. টিম পরিষ্কার নিয়মসহ একটা প্রম্পট লেখে। জানা শ্রেণিসহ 100টা পুরোনো রিপোর্টে সেটা চালায়। এটাই eval আর baseline।
+2. প্রম্পট 81% ঠিক পায়। বেশিরভাগ ভুলে `API` আর `Data` গুলিয়ে যায়।
+3. টিম জানা শ্রেণিসহ আরও 50টা উদাহরণ লেখে। অনেকগুলো কঠিন `API`/`Data` কেস। তারা 20টা পুরোনো রিপোর্ট holdout সেট হিসেবে আলাদা রাখে। OpenAI বলে job-এর আগে holdout ডেটা আলাদা করুন। এতে ট্রেনিং ডেটার মতোই ইনপুটের মিশ্রণ থাকা উচিত <Cite n={1} />।
+4. তারা fine-tune করে। তারপর holdout সেটে দুটো মডেল দিয়েই একই eval চালায়: বেস মডেল আর fine-tuned মডেল।
+
+টিউটোরিয়ালের নিজের মত: টিম নতুন মডেল তখনই চালু করে, যখন সেটা holdout সেটে প্রম্পটকে হারায়। তারা eval রেখে দেয় আর প্রতিটা নতুন ভার্সনে চালায়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Fine-tuning before evals exist.** Without evals, you cannot tell if the new model is better than the base <Cite n={1} />.
+- **Adding more data when 50 examples did nothing.** OpenAI says to rethink the task or the prompt first <Cite n={1} />.
+- **Training data with the same faults you want to remove.** If the examples have grammar, logic, or style errors, the model learns them <Cite n={2} />.
+- **Answers that use facts not in the prompt.** The model can learn to invent information <Cite n={2} />.
+- **Labels that people do not agree on.** If labelers agree on only 70% of cases, the model will likely not do better than that <Cite n={2} />.
+- **Using fine-tuning to teach facts that change.** Knowledge inside the weights is hard to update <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+- **Fine-tuning before evals exist.** Without evals, you cannot tell if the new model is better than the base <Cite n={1} />.
+- **Adding more data when 50 examples did nothing.** OpenAI says to rethink the task or the prompt first <Cite n={1} />.
+- **Training data with the faults you want to remove.** If the examples have grammar, logic, or style errors, the model learns them <Cite n={2} />.
+- **Answers that use facts not in the prompt.** The model can learn to make up information <Cite n={2} />.
+- **Labels that people do not agree on.** Say the people who label agree on only 70% of cases. Then the model will likely not do better than 70% <Cite n={2} />.
+- **Using fine-tuning to teach facts that change.** Knowledge inside the weights is hard to update <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+- **Evals তৈরির আগেই fine-tune করা।** Evals ছাড়া আপনি বুঝতে পারবেন না নতুন মডেল বেসের চেয়ে ভালো কি না <Cite n={1} />।
+- **50টা উদাহরণে কিছু না হলেও আরও ডেটা যোগ করা।** OpenAI বলে আগে কাজ বা প্রম্পট নিয়ে নতুন করে ভাবুন <Cite n={1} />।
+- **যে দোষ সরাতে চান, ট্রেনিং ডেটায় সেই দোষই থাকা।** উদাহরণে ব্যাকরণ, যুক্তি বা স্টাইলের ভুল থাকলে মডেল সেগুলো শিখে ফেলে <Cite n={2} />।
+- **প্রম্পটে নেই এমন তথ্য দিয়ে উত্তর লেখা।** মডেল তথ্য বানিয়ে বলতে শিখতে পারে <Cite n={2} />।
+- **যে লেবেলে মানুষ একমত নয়।** ধরুন লেবেল দেওয়া মানুষেরা মাত্র 70% কেসে একমত। তাহলে মডেল সম্ভবত 70%-এর চেয়ে ভালো করবে না <Cite n={2} />।
+- **বদলায় এমন তথ্য শেখাতে fine-tuning ব্যবহার করা।** weights-এর ভেতরের জ্ঞান আপডেট করা কঠিন <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice.
+
+- **Ask for the baseline.** Before a fine-tune, ask for the eval score of the best prompt on the base model. Without it, "better" means nothing.
+- **Check the split.** Make sure no holdout example is also in the training file. Search for exact and near duplicates.
+- **Read 20 training lines.** Look for wrong labels, typos, and answers that use facts the prompt does not give.
+- **Count the classes.** Compare the share of each label in the training data with the share in real traffic.
+- **Run old tests on the new model.** A fine-tune can fix one task and break another. Keep a small regression set of general prompts.
+- **Pin the model ID.** Check that the app calls the exact `ft:` model ID that passed the eval, and that the base model is not near its shutdown date.
+</Callout>
+
+</Technical>
+<Layman>
+
+These checks are the tutorial's own advice.
+
+- **Ask for the baseline.** Before a fine-tune, ask for the eval score of the best prompt on the base model. Without it, "better" means nothing.
+- **Check the split.** Make sure no holdout example is also in the training file. Look for exact and near copies.
+- **Read 20 training lines.** Look for wrong labels, typos, and answers that use facts the prompt does not give.
+- **Count the classes.** Compare the share of each label in the training data with the share in real traffic.
+- **Run old tests on the new model.** A fine-tune can fix one task and break another. Keep a small set of general prompts as regression tests.
+- **Pin the model ID.** Check that the app calls the exact `ft:` model ID that passed the eval. Check that the base model is not near its shutdown date.
+
+</Layman>
+<Bangla>
+
+এই চেকগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **Baseline চেয়ে নিন।** Fine-tune-এর আগে বেস মডেলে সেরা প্রম্পটের eval স্কোর চেয়ে নিন। এটা ছাড়া "ভালো" কথাটার কোনো মানে নেই।
+- **ভাগটা দেখুন।** নিশ্চিত করুন কোনো holdout উদাহরণ ট্রেনিং ফাইলেও নেই। হুবহু আর প্রায়-একই কপি খুঁজুন।
+- **20টা ট্রেনিং লাইন পড়ুন।** ভুল লেবেল, বানান ভুল, আর প্রম্পটে নেই এমন তথ্য দিয়ে লেখা উত্তর খুঁজুন।
+- **শ্রেণিগুলো গুনুন।** ট্রেনিং ডেটায় প্রতিটা লেবেলের ভাগ আর আসল ট্রাফিকে তার ভাগ মিলিয়ে দেখুন।
+- **নতুন মডেলে পুরোনো টেস্ট চালান।** একটা fine-tune এক কাজ ঠিক করে আরেকটা ভেঙে দিতে পারে। রিগ্রেশন টেস্ট হিসেবে সাধারণ প্রম্পটের একটা ছোট সেট রাখুন।
+- **মডেল ID স্থির রাখুন।** দেখুন অ্যাপ ঠিক সেই `ft:` মডেল ID কল করছে কি না, যেটা eval পাস করেছে। দেখুন বেস মডেলের বন্ধ হওয়ার তারিখ কাছে কি না।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Fine-tuning | More training of an existing model on your own examples <Cite n={1} /> |
+| SFT | Supervised fine-tuning: training on prompts with their correct answers <Cite n={1} /> |
+| JSONL | A file with one complete JSON object on each line <Cite n={1} /> |
+| Epoch | One full pass through the whole training dataset <Cite n={2} /> |
+| Holdout set | Examples kept out of training and used only for the eval <Cite n={1} /> |
+| LoRA | A method that freezes the base weights and trains small update matrices <Cite n={3} /> |
+| Adapter | The small set of trained LoRA weights that sits on top of a frozen base model <Cite n={4} /> |

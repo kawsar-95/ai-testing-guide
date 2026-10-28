@@ -1,0 +1,292 @@
+export const metadata = { title: 'Calling LLM APIs', description: 'Send a request to a model API such as Claude, GPT, or Gemini, read the response, and handle its errors and limits.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'API overview', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/overview', accessed: '2026-10-28' },
+    { title: 'Messages (API reference)', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-10-28' },
+    { title: 'Using the Messages API', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/working-with-messages', accessed: '2026-10-28' },
+    { title: 'Claude API errors', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/errors', accessed: '2026-10-28' },
+    { title: 'Python SDK', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/python', accessed: '2026-10-28' },
+    { title: 'Streaming Messages', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/streaming', accessed: '2026-10-28' },
+    { title: 'Text generation', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/guides/text', accessed: '2026-10-28' },
+    { title: 'Text generation', publisher: 'Google AI for Developers (Gemini API docs)', url: 'https://ai.google.dev/gemini-api/docs/text-generation', accessed: '2026-10-28' },
+  ],
+}
+
+# Calling LLM APIs
+
+A chat window is only one way to use a language model. Most AI features in real products call the model from code, over HTTP, like any other web API. This page shows what goes into that request, what comes back, and what can go wrong.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **LLM API** is a web API that runs a large language model for you. Your code sends an HTTP request with the input, and the API sends back the text that the model wrote.
+
+The Claude API is a REST API at `https://api.anthropic.com` <Cite n={1} />. Its main endpoint is `POST /v1/messages`. You send a list of input messages, and the model writes the next message of the conversation <Cite n={2} />. OpenAI and Google offer the same kind of API for their models <Cite n={7} /> <Cite n={8} />.
+
+You can call the API with plain HTTP (for example `curl`) or with an official SDK. The SDK adds the required headers (the key, the API version, and the content type) for you <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+An **LLM API** is a web API that runs a large language model for you. Your code sends a request with the input. The API sends back the text that the model wrote.
+
+The Claude API is a REST API at `https://api.anthropic.com` <Cite n={1} />. Its main address is `POST /v1/messages`. You send a list of input messages. The model writes the next message of the conversation <Cite n={2} />. OpenAI and Google offer the same kind of API for their models <Cite n={7} /> <Cite n={8} />.
+
+You can call the API with plain HTTP, for example with `curl`. You can also use an official SDK (a code library). The SDK adds the required headers for you <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**LLM API** হলো একটা ওয়েব API, যা আপনার হয়ে একটা লার্জ ল্যাঙ্গুয়েজ মডেল চালায়। আপনার কোড ইনপুট সহ একটা রিকুয়েস্ট পাঠায়। API মডেলের লেখা টেক্সট ফেরত পাঠায়।
+
+Claude API হলো `https://api.anthropic.com`-এ একটা REST API <Cite n={1} />। এর মূল এন্ডপয়েন্ট `POST /v1/messages`। আপনি ইনপুট মেসেজের একটা তালিকা পাঠান। মডেল কথোপকথনের পরের মেসেজটা লেখে <Cite n={2} />। OpenAI আর Google তাদের মডেলের জন্য একই ধরনের API দেয় <Cite n={7} /> <Cite n={8} />।
+
+আপনি সাধারণ HTTP দিয়ে API কল করতে পারেন, যেমন `curl` দিয়ে। আবার একটা অফিশিয়াল SDK (কোড লাইব্রেরি) ব্যবহার করতে পারেন। SDK দরকারি হেডারগুলো আপনার হয়ে যোগ করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### The request
+
+A request to the Claude API has these headers <Cite n={1} />:
+
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer` and your API key. The older `x-api-key` header is still supported as a fallback. |
+| `anthropic-version` | The API version |
+| `content-type` | `application/json` |
+
+The body needs 3 fields <Cite n={2} />:
+
+- `model`: the model that writes the answer.
+- `max_tokens`: the largest number of tokens the model may write. The model can stop before this limit, and each model has its own maximum.
+- `messages`: the conversation so far. Each item has a `role` (`user` or `assistant`) and `content`. The roles take turns.
+
+This is the basic request from the Anthropic docs. It uses the `x-api-key` header, and the key comes from an environment variable <Cite n={3} />:
+
+```bash
+curl https://api.anthropic.com/v1/messages \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "content-type: application/json" \
+  -d '{
+    "model": "claude-opus-5-5",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "Hello, Claude"}]
+  }'
+```
+
+With the Python SDK, the client reads `ANTHROPIC_API_KEY` by default <Cite n={5} />:
+
+```python
+from anthropic import Anthropic
+
+client = Anthropic()
+
+message = client.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hello, Claude"}],
+)
+
+for block in message.content:
+    if block.type == "text":
+        print(block.text)
+```
+
+### The response
+
+The response is a JSON object <Cite n={3} />. These fields matter most <Cite n={2} />:
+
+| Field | Meaning |
+|---|---|
+| `content` | A list of content blocks. A text block has `"type": "text"`. |
+| `stop_reason` | Why the model stopped: `end_turn`, `max_tokens`, `stop_sequence`, `tool_use`, `pause_turn`, `refusal`, or `model_context_window_exceeded` |
+| `usage.input_tokens`, `usage.output_tokens` | The tokens used by the request and by the answer |
+
+### Other providers
+
+The idea is the same, but the names change. OpenAI's Responses API takes `model` and `input`, and the SDK gives an `output_text` property <Cite n={7} />. The Gemini API uses the header `x-goog-api-key` for the key <Cite n={8} />.
+
+### Streaming
+
+If you set `"stream": true`, the API sends the answer in small parts with server-sent events (SSE), so the user sees text before the full answer is ready <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+A request to the Claude API has 3 headers <Cite n={1} />. `Authorization` holds `Bearer` and your API key. The older `x-api-key` header still works too. `anthropic-version` holds the API version. `content-type` is `application/json`.
+
+The body needs 3 fields <Cite n={2} />:
+
+- `model`: the model that writes the answer.
+- `max_tokens`: the largest number of tokens the model may write. The model can stop before this limit. Each model has its own maximum.
+- `messages`: the conversation so far. Each item has a `role` (`user` or `assistant`) and `content`. The roles take turns.
+
+The Anthropic docs show a basic `curl` request. The key comes from an environment variable, `$ANTHROPIC_API_KEY` <Cite n={3} />. With the Python SDK, the client reads `ANTHROPIC_API_KEY` by default <Cite n={5} />. The code examples are in the Technical text.
+
+The response is a JSON object <Cite n={3} />. 3 fields matter most <Cite n={2} />:
+
+- `content` is a list of content blocks. A text block has `"type": "text"`.
+- `stop_reason` says why the model stopped. For example, `end_turn` means a natural end. `max_tokens` means the limit was reached. `refusal` and `model_context_window_exceeded` are other values.
+- `usage` gives the tokens of the request and of the answer.
+
+Other providers use the same idea with other names. OpenAI's Responses API takes `model` and `input`. Its SDK gives an `output_text` property <Cite n={7} />. The Gemini API takes the key in the header `x-goog-api-key` <Cite n={8} />.
+
+If you set `"stream": true`, the API sends the answer in small parts (server-sent events). The user sees text before the full answer is ready <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+Claude API-তে একটা রিকুয়েস্টে ৩টা হেডার থাকে <Cite n={1} />। `Authorization`-এ থাকে `Bearer` আর আপনার API key। পুরোনো `x-api-key` হেডারও এখনো কাজ করে। `anthropic-version`-এ থাকে API ভার্সন। `content-type` হলো `application/json`।
+
+বডিতে ৩টা ফিল্ড লাগে <Cite n={2} />:
+
+- `model`: যে মডেল উত্তর লিখবে।
+- `max_tokens`: মডেল সর্বোচ্চ কতগুলো টোকেন লিখতে পারবে। মডেল এই সীমার আগেও থামতে পারে। প্রতিটা মডেলের নিজের সর্বোচ্চ মান আছে।
+- `messages`: এখন পর্যন্ত কথোপকথন। প্রতিটা আইটেমে একটা `role` (`user` বা `assistant`) আর `content` থাকে। রোলগুলো পালা করে আসে।
+
+Anthropic ডকে একটা সাধারণ `curl` রিকুয়েস্ট আছে। Key আসে একটা এনভায়রনমেন্ট ভেরিয়েবল `$ANTHROPIC_API_KEY` থেকে <Cite n={3} />। Python SDK-তে ক্লায়েন্ট ডিফল্টভাবে `ANTHROPIC_API_KEY` পড়ে <Cite n={5} />। কোড উদাহরণগুলো Technical লেখায় আছে।
+
+রেসপন্স হলো একটা JSON অবজেক্ট <Cite n={3} />। ৩টা ফিল্ড সবচেয়ে জরুরি <Cite n={2} />:
+
+- `content` হলো কনটেন্ট ব্লকের একটা তালিকা। টেক্সট ব্লকে থাকে `"type": "text"`।
+- `stop_reason` বলে মডেল কেন থামল। যেমন `end_turn` মানে স্বাভাবিক শেষ। `max_tokens` মানে সীমায় পৌঁছেছে। `refusal` আর `model_context_window_exceeded` অন্য মান।
+- `usage` রিকুয়েস্ট আর উত্তরের টোকেন সংখ্যা দেয়।
+
+অন্য প্রোভাইডাররা একই ধারণা ভিন্ন নামে ব্যবহার করে। OpenAI-এর Responses API নেয় `model` আর `input`। এর SDK একটা `output_text` প্রপার্টি দেয় <Cite n={7} />। Gemini API key নেয় `x-goog-api-key` হেডারে <Cite n={8} />।
+
+`"stream": true` দিলে API উত্তরটা ছোট ছোট অংশে পাঠায় (server-sent events)। পুরো উত্তর তৈরি হওয়ার আগেই ইউজার টেক্সট দেখতে পান <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+An HR team adds a "Summarize this policy" button to its intranet. The backend reads the policy text and sends one request to `POST /v1/messages` with a short instruction and the policy in the user message <Cite n={2} />.
+
+In the first week, some summaries end in the middle of a sentence. The logs show `stop_reason: "max_tokens"` for those answers <Cite n={2} />. The team had set `max_tokens` too low for long policies. They raise the limit, and the app now checks `stop_reason` and shows a "summary is cut short" note when it is not `end_turn`.
+
+On a busy morning, some requests fail with HTTP 529 (`overloaded_error`) and 429 (`rate_limit_error`) <Cite n={4} />. The Python SDK already retries these 2 times with exponential backoff <Cite n={5} />. The team logs the `request-id` header of each failed call, so they can give it to support <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+An HR team adds a "Summarize this policy" button to its intranet. The backend reads the policy text. It sends one request to `POST /v1/messages`, with a short instruction and the policy in the user message <Cite n={2} />.
+
+In the first week, some summaries stop in the middle of a sentence. The logs show `stop_reason: "max_tokens"` for those answers <Cite n={2} />. The team had set `max_tokens` too low for long policies. They raise the limit. The app now checks `stop_reason`. If it is not `end_turn`, the app shows a "summary is cut short" note.
+
+On a busy morning, some requests fail. They get HTTP 529 (`overloaded_error`) and 429 (`rate_limit_error`) <Cite n={4} />. The Python SDK already retries these 2 times, with a growing wait between tries <Cite n={5} />. The team logs the `request-id` header of each failed call. They can give it to support <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা HR টিম তাদের ইন্ট্রানেটে "Summarize this policy" বাটন যোগ করে। ব্যাকএন্ড পলিসির টেক্সট পড়ে। এটা `POST /v1/messages`-এ একটা রিকুয়েস্ট পাঠায়, যার ইউজার মেসেজে থাকে একটা ছোট নির্দেশনা আর পলিসিটা <Cite n={2} />।
+
+প্রথম সপ্তাহে কিছু সারাংশ বাক্যের মাঝখানে থেমে যায়। লগে সেই উত্তরগুলোর জন্য `stop_reason: "max_tokens"` দেখা যায় <Cite n={2} />। লম্বা পলিসির জন্য টিম `max_tokens` খুব কম দিয়েছিল। তারা সীমা বাড়ায়। অ্যাপ এখন `stop_reason` চেক করে। এটা `end_turn` না হলে অ্যাপ একটা "সারাংশ ছোট হয়ে গেছে" নোট দেখায়।
+
+এক ব্যস্ত সকালে কিছু রিকুয়েস্ট ফেল করে। সেগুলো পায় HTTP 529 (`overloaded_error`) আর 429 (`rate_limit_error`) <Cite n={4} />। Python SDK এগুলো আগে থেকেই ২ বার রিট্রাই করে, প্রতিবার অপেক্ষার সময় বাড়িয়ে <Cite n={5} />। টিম প্রতিটা ফেল করা কলের `request-id` হেডার লগ করে। তারা এটা সাপোর্টকে দিতে পারে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A key in the code.** Keep the API key out of source control. The SDK docs suggest a `.env` file or an environment variable <Cite n={5} />.
+- **Reading only the first block.** The `content` field is a list, and it can hold more than one block <Cite n={2} />. OpenAI warns that its output list often has more than one item, so `output[0]` is not always the text <Cite n={7} />.
+- **Ignoring `stop_reason`.** `max_tokens` means that the answer is cut off, and `refusal` means that the model refused <Cite n={2} />. Code that shows the text without this check shows a broken answer.
+- **No error handling.** Errors come back as JSON with a `type` and a `message` <Cite n={4} />. A 401 means a problem with the key, 413 means the request is too large, and 500 means an internal error <Cite n={4} />. A streamed answer can also fail after the API sent a 200 <Cite n={4} />.
+- **No timeout.** The Python SDK waits 10 minutes by default before a request times out <Cite n={5} />. A user-facing feature usually needs a shorter limit.
+
+</Technical>
+<Layman>
+
+- **A key in the code.** Keep the API key out of source control. The SDK docs suggest a `.env` file or an environment variable <Cite n={5} />.
+- **Reading only the first block.** The `content` field is a list. It can hold more than one block <Cite n={2} />. OpenAI warns that its output list often has more than one item. So `output[0]` is not always the text <Cite n={7} />.
+- **Ignoring `stop_reason`.** `max_tokens` means the answer is cut off. `refusal` means the model refused <Cite n={2} />. Without this check, the app can show a broken answer.
+- **No error handling.** Errors come back as JSON with a `type` and a `message` <Cite n={4} />. A 401 means a problem with the key. A 413 means the request is too large. A 500 means an internal error <Cite n={4} />. A streamed answer can also fail after the API sent a 200 <Cite n={4} />.
+- **No timeout.** The Python SDK waits 10 minutes by default before a request times out <Cite n={5} />. A feature for users usually needs a shorter limit.
+
+</Layman>
+<Bangla>
+
+- **কোডে key রাখা।** API key সোর্স কন্ট্রোলের বাইরে রাখুন। SDK ডক একটা `.env` ফাইল বা এনভায়রনমেন্ট ভেরিয়েবলের কথা বলে <Cite n={5} />।
+- **শুধু প্রথম ব্লক পড়া।** `content` ফিল্ড একটা তালিকা। এতে একাধিক ব্লক থাকতে পারে <Cite n={2} />। OpenAI সতর্ক করে যে তার আউটপুট তালিকায় প্রায়ই একাধিক আইটেম থাকে। তাই `output[0]` সবসময় টেক্সট নয় <Cite n={7} />।
+- **`stop_reason` উপেক্ষা করা।** `max_tokens` মানে উত্তর কেটে গেছে। `refusal` মানে মডেল প্রত্যাখ্যান করেছে <Cite n={2} />। এই চেক ছাড়া অ্যাপ একটা ভাঙা উত্তর দেখাতে পারে।
+- **কোনো এরর হ্যান্ডলিং নেই।** এরর আসে `type` আর `message` সহ JSON হিসেবে <Cite n={4} />। 401 মানে key-এর সমস্যা। 413 মানে রিকুয়েস্ট খুব বড়। 500 মানে ভেতরের এরর <Cite n={4} />। স্ট্রিম করা উত্তর API 200 পাঠানোর পরেও ফেল করতে পারে <Cite n={4} />।
+- **কোনো টাইমআউট নেই।** Python SDK ডিফল্টভাবে টাইমআউটের আগে ১০ মিনিট অপেক্ষা করে <Cite n={5} />। ইউজারের জন্য একটা ফিচারে সাধারণত আরও ছোট সীমা লাগে।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Mock the API in unit tests.** Return fixed JSON with each `stop_reason`, and check what the app shows for each one.
+- **Force the errors.** Use a wrong key (401), a huge input (413), and a mock 429 or 529. The app must show a clear message, not a stack trace.
+- **Cut the answer short.** Set a very small `max_tokens` in a test build. The app must not show a cut answer as complete.
+- **Log the request ID.** Check that each failed call writes its `request-id` to the logs.
+- **Search for keys.** Scan the repo, the logs, and the browser bundle for API keys. A key must never reach the client.
+- **Watch the cost.** Record `usage` tokens per test run, so a prompt change that doubles the tokens is visible.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Mock the API in unit tests.** Return fixed JSON with each `stop_reason`. Check what the app shows for each one.
+- **Force the errors.** Use a wrong key (401), a huge input (413), and a mock 429 or 529. The app must show a clear message, not a stack trace.
+- **Cut the answer short.** Set a very small `max_tokens` in a test build. The app must not show a cut answer as complete.
+- **Log the request ID.** Check that each failed call writes its `request-id` to the logs.
+- **Search for keys.** Scan the repo, the logs, and the browser bundle for API keys. A key must never reach the browser.
+- **Watch the cost.** Record the tokens of each test run. Then a prompt change that doubles the tokens is easy to see.
+
+</Layman>
+<Bangla>
+
+এই টেস্ট আইডিয়াগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **ইউনিট টেস্টে API মক (mock) করুন।** প্রতিটা `stop_reason` সহ নির্দিষ্ট JSON ফেরত দিন। প্রতিটার জন্য অ্যাপ কী দেখায় তা চেক করুন।
+- **এরর ঘটান।** ভুল key (401), বিশাল ইনপুট (413), আর মক 429 বা 529 ব্যবহার করুন। অ্যাপকে স্ট্যাক ট্রেস নয়, একটা পরিষ্কার মেসেজ দেখাতে হবে।
+- **উত্তর ছোট করুন।** টেস্ট বিল্ডে খুব ছোট `max_tokens` দিন। অ্যাপ কাটা উত্তরকে সম্পূর্ণ হিসেবে দেখাবে না।
+- **রিকুয়েস্ট ID লগ করুন।** প্রতিটা ফেল করা কল তার `request-id` লগে লেখে কিনা চেক করুন।
+- **Key খুঁজুন।** রিপো, লগ আর ব্রাউজার বান্ডেলে API key খুঁজুন। কোনো key কখনো ব্রাউজারে পৌঁছাবে না।
+- **খরচ দেখুন।** প্রতিটা টেস্ট রানের টোকেন রেকর্ড করুন। তাহলে যে প্রম্পট বদল টোকেন দ্বিগুণ করে, তা সহজে দেখা যায়।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| LLM API | A web API that runs a language model, for example `POST /v1/messages` <Cite n={2} /> |
+| API key | The secret that authenticates your requests <Cite n={1} /> |
+| SDK | An official library that sends the headers and handles errors for you <Cite n={1} /> |
+| `max_tokens` | The largest number of tokens the model may write <Cite n={2} /> |
+| `stop_reason` | The reason why the model stopped, such as `end_turn` or `max_tokens` <Cite n={2} /> |
+| Token | The unit of text that the API counts for input and output (`usage`) <Cite n={2} /> |
+| Streaming | Getting the answer in parts with server-sent events <Cite n={6} /> |
+| Request ID | A unique ID in the `request-id` header of each response <Cite n={4} /> |

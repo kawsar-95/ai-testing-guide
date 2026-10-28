@@ -2,8 +2,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ARCHITECTURE } from "../lib/architecture/topics.ts";
 import { COURSE } from "../lib/course/topics.ts";
-import { AI_CONCEPTS } from "../lib/ai-concepts/topics.ts";
 import { K6 } from "../lib/k6/topics.ts";
+import { AI_ENGINEERING } from "../lib/ai-engineering/topics.ts";
+import { AI_CONCEPTS } from "../lib/ai-concepts/topics.ts";
+import { AI_SKILLS } from "../lib/ai-skills/topics.ts";
 import { FUNDAMENTALS_ROUTES } from "../lib/fundamentals/chapters.ts";
 import { LINUX_ROUTES } from "../lib/linux/stages.ts";
 import { PAGES } from "../lib/nav.ts";
@@ -52,6 +54,18 @@ test("sitemapPaths has the 21 k6 routes", () => {
   for (const route of K6.routes) assert.ok(paths.includes(route), route);
 });
 
+test("sitemapPaths has the 29 AI Engineering routes", () => {
+  const paths = sitemapPaths();
+  assert.equal(AI_ENGINEERING.routes.length, 29);
+  for (const route of AI_ENGINEERING.routes) assert.ok(paths.includes(route), route);
+});
+
+test("sitemapPaths has the 21 AI Skills routes", () => {
+  const paths = sitemapPaths();
+  assert.equal(AI_SKILLS.routes.length, 21);
+  for (const route of AI_SKILLS.routes) assert.ok(paths.includes(route), route);
+});
+
 test("sitemapPaths has the 10 AI Concepts routes", () => {
   const paths = sitemapPaths();
   assert.equal(AI_CONCEPTS.routes.length, 10);
@@ -61,5 +75,5 @@ test("sitemapPaths has the 10 AI Concepts routes", () => {
 test("sitemapPaths has no duplicate path", () => {
   const paths = sitemapPaths();
   assert.equal(new Set(paths).size, paths.length);
-  assert.equal(paths.length, 162);
+  assert.equal(paths.length, 219);
 });

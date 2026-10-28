@@ -32,7 +32,7 @@ export const WHY_ITEMS: readonly { icon: string; title: string; text: string }[]
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/** The numbered cards of "Course structure": the 6 tutorial groups, then the 6 modules. */
+/** The numbered cards of "Course structure": the 6 tutorial groups, then the 9 modules. */
 export const COURSE_CARDS: readonly { n: string; title: string; tagline: string; count: number; href: string }[] = [
   ...GROUPS.map((group) => ({
     title: group.title,

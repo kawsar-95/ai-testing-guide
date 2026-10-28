@@ -1,0 +1,269 @@
+export const metadata = { title: 'Data Pipelines', description: 'How an AI app loads, cleans, chunks, and enriches its documents before a model sees them, and what a tester checks at each step.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Introducing Contextual Retrieval', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/contextual-retrieval', accessed: '2026-10-28' },
+    { title: 'Retrieval', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/retrieval', accessed: '2026-10-28' },
+    { title: 'Text splitter integrations', publisher: 'LangChain docs', url: 'https://docs.langchain.com/oss/python/integrations/splitters', accessed: '2026-10-28' },
+    { title: 'Document loader integrations', publisher: 'LangChain docs', url: 'https://docs.langchain.com/oss/python/integrations/document_loaders', accessed: '2026-10-28' },
+    { title: 'Build a semantic search engine with LangChain', publisher: 'LangChain docs', url: 'https://docs.langchain.com/oss/python/langchain/knowledge-base', accessed: '2026-10-28' },
+    { title: 'LLM08:2025 Vector and Embedding Weaknesses', publisher: 'OWASP GenAI Security Project', url: 'https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/', accessed: '2026-10-28' },
+  ],
+}
+
+# Data Pipelines
+
+A test environment is only as good as its test data: wrong, stale, or broken data gives wrong results, even when the code is correct. An AI app is the same. Before the model sees a document, a data pipeline loads it, cleans it, cuts it into chunks, and adds labels to it.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **data pipeline** for an AI app prepares your documents so that the app can find the right part later. The usual case is **RAG** (retrieval-augmented generation): the app retrieves relevant text from a knowledge base and adds it to the prompt of the user <Cite n={1} />.
+
+A RAG pipeline does this preprocessing <Cite n={1} />:
+
+1. Split the documents (the **corpus**) into small **chunks**, usually a few hundred tokens or less.
+2. Turn each chunk into a vector **embedding** with an embedding model.
+3. Store the embeddings in a vector database that can search by meaning.
+
+If the whole knowledge base is under about 200,000 tokens (about 500 pages), Anthropic says you can put all of it in the prompt and skip RAG <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+A **data pipeline** for an AI app gets your documents ready. Later, the app can find the right part. The usual case is **RAG** (retrieval-augmented generation). The app finds relevant text in a knowledge base. It adds that text to the prompt of the user <Cite n={1} />.
+
+A RAG pipeline does these steps first <Cite n={1} />:
+
+1. Cut the documents (the **corpus**) into small parts called **chunks**. A chunk is usually a few hundred tokens or less.
+2. Turn each chunk into a list of numbers (an **embedding**) with an embedding model.
+3. Save the embeddings in a vector database. This database can search by meaning.
+
+Say the whole knowledge base is under about 200,000 tokens (about 500 pages). Then Anthropic says you can put all of it in the prompt. You do not need RAG <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটা AI অ্যাপের **ডেটা পাইপলাইন** আপনার ডকুমেন্টগুলো তৈরি করে রাখে। পরে অ্যাপ ঠিক অংশটা খুঁজে পায়। সাধারণ উদাহরণ হলো **RAG** (retrieval-augmented generation)। অ্যাপ একটা নলেজ বেস থেকে প্রাসঙ্গিক টেক্সট খুঁজে আনে। সেটা ইউজারের প্রম্পটের সঙ্গে জুড়ে দেয় <Cite n={1} />।
+
+একটা RAG পাইপলাইন আগে এই ধাপগুলো করে <Cite n={1} />:
+
+1. ডকুমেন্টগুলোকে (**corpus**) ছোট ছোট অংশে কাটে, যাদের বলে **চাংক** (chunk)। একটা চাংক সাধারণত কয়েকশো টোকেন বা তার কম।
+2. একটা এমবেডিং মডেল দিয়ে প্রতিটা চাংককে সংখ্যার তালিকায় (**এমবেডিং**) রূপ দেয়।
+3. এমবেডিংগুলো একটা ভেক্টর ডেটাবেসে রাখে। এই ডেটাবেস অর্থ দিয়ে খুঁজতে পারে।
+
+ধরুন পুরো নলেজ বেস প্রায় 200,000 টোকেনের কম (প্রায় 500 পৃষ্ঠা)। তখন Anthropic বলে আপনি পুরোটা প্রম্পটে দিতে পারেন। RAG লাগবে না <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Load
+
+A **document loader** reads data from a source (for example Slack, Notion, or Google Drive) into one standard format <Cite n={4} />. In LangChain, `load()` reads all documents at once, and `lazy_load()` streams them, for big datasets <Cite n={4} />. Each `Document` has `page_content` (the text) and `metadata` (a dict, for example the source file and the page number) <Cite n={5} />.
+
+### Clean and validate
+
+The input can be dirty or hostile. OWASP says to validate the knowledge sources, to accept data only from trusted sources, and to audit the knowledge base for hidden content and data poisoning <Cite n={6} />. Its example: a resume with white text on a white background that tells the model to recommend the candidate <Cite n={6} />.
+
+### Chunk
+
+A **text splitter** cuts large documents into chunks that you can retrieve one at a time and that fit the context window <Cite n={3} />. LangChain suggests `RecursiveCharacterTextSplitter` as the start for most cases. It tries to keep paragraphs whole, then falls back to sentences, then to words <Cite n={3} />. For HTML, Markdown, JSON, or code, a splitter can follow the structure of the document, such as the headers <Cite n={3} />.
+
+```python
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000, chunk_overlap=200, add_start_index=True
+)
+chunks = splitter.split_documents(docs)
+```
+
+`add_start_index=True` saves the character offset of each chunk in the original document in its metadata <Cite n={5} />. The **overlap** repeats some text at the edge of two chunks. The OpenAI vector store, by default, cuts files into 800-token chunks with a 400-token overlap. You can set your own size from 100 to 4096 tokens, and the overlap should not be more than half of the chunk size <Cite n={2} />.
+
+### Enrich
+
+A chunk alone can lose its meaning. Anthropic's example: "revenue grew by 3%" does not say which company or which quarter <Cite n={1} />. **Contextual Retrieval** asks a model to write a short context for each chunk, usually 50 to 100 tokens, and adds it to the front of the chunk before embedding and indexing <Cite n={1} />. In Anthropic's tests, this cut failed retrievals by 49% <Cite n={1} />.
+
+You can also add **metadata** for filters. In the OpenAI vector store, each file can have `attributes`, with at most 16 keys <Cite n={2} />. OWASP says to tag and classify the data to control access levels <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+**Load.** A **document loader** reads data from a source into one standard format. Examples of sources are Slack, Notion, and Google Drive <Cite n={4} />. In LangChain, `load()` reads all documents at once. `lazy_load()` reads them one by one, for big datasets <Cite n={4} />. Each `Document` has `page_content` (the text) and `metadata`. The metadata is a dict, for example with the source file and the page number <Cite n={5} />.
+
+**Clean and check.** The input can be dirty or even an attack. OWASP says to check the knowledge sources. Accept data only from trusted sources. Audit the knowledge base for hidden content and poisoned data <Cite n={6} />. The OWASP example is a resume with white text on a white background. The hidden text tells the model to recommend the candidate <Cite n={6} />.
+
+**Chunk.** A **text splitter** cuts large documents into chunks. You can find each chunk alone, and each chunk fits the context window <Cite n={3} />. LangChain suggests `RecursiveCharacterTextSplitter` as the start for most cases. It tries to keep paragraphs whole. If a paragraph is too big, it splits by sentences, then by words <Cite n={3} />. For HTML, Markdown, JSON, or code, a splitter can follow the structure, such as the headers <Cite n={3} />.
+
+In the code example, `add_start_index=True` saves where each chunk starts in the original document. It goes in the metadata <Cite n={5} />. The **overlap** repeats some text at the edge of two chunks. The OpenAI vector store, by default, cuts files into chunks of 800 tokens with 400 tokens of overlap. You can set your own size from 100 to 4096 tokens. The overlap should not be more than half of the chunk size <Cite n={2} />.
+
+**Enrich.** A chunk alone can lose its meaning. The Anthropic example is "revenue grew by 3%". It does not say which company or which quarter <Cite n={1} />. **Contextual Retrieval** asks a model to write a short context for each chunk. The context is usually 50 to 100 tokens. It goes at the front of the chunk, before embedding and indexing <Cite n={1} />. In Anthropic's tests, this cut failed retrievals by 49% <Cite n={1} />.
+
+You can also add **metadata** for filters. In the OpenAI vector store, each file can have `attributes`, with at most 16 keys <Cite n={2} />. OWASP says to tag and classify the data to control who can see it <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+**লোড।** একটা **document loader** কোনো সোর্স থেকে ডেটা পড়ে একটা স্ট্যান্ডার্ড ফরম্যাটে আনে। সোর্সের উদাহরণ Slack, Notion আর Google Drive <Cite n={4} />। LangChain-এ `load()` সব ডকুমেন্ট একবারে পড়ে। `lazy_load()` একটা একটা করে পড়ে, বড় ডেটাসেটের জন্য <Cite n={4} />। প্রতিটা `Document`-এ থাকে `page_content` (টেক্সট) আর `metadata`। মেটাডেটা একটা dict, যেমন সোর্স ফাইল আর পৃষ্ঠা নম্বর <Cite n={5} />।
+
+**পরিষ্কার ও যাচাই।** ইনপুট নোংরা হতে পারে, এমনকি আক্রমণও হতে পারে। OWASP বলে নলেজ সোর্সগুলো যাচাই করুন। শুধু বিশ্বস্ত সোর্স থেকে ডেটা নিন। লুকানো কনটেন্ট আর বিষাক্ত (poisoned) ডেটার জন্য নলেজ বেস অডিট করুন <Cite n={6} />। OWASP-এর উদাহরণ হলো সাদা ব্যাকগ্রাউন্ডে সাদা লেখাসহ একটা রেজিউমে। লুকানো লেখাটা মডেলকে ক্যান্ডিডেটকে সুপারিশ করতে বলে <Cite n={6} />।
+
+**চাংক।** একটা **text splitter** বড় ডকুমেন্টকে চাংকে কাটে। প্রতিটা চাংক আলাদাভাবে খুঁজে পাওয়া যায়, আর প্রতিটা কনটেক্সট উইন্ডোতে আঁটে <Cite n={3} />। বেশিরভাগ ক্ষেত্রে শুরু করার জন্য LangChain `RecursiveCharacterTextSplitter`-এর পরামর্শ দেয়। এটা অনুচ্ছেদ পুরো রাখার চেষ্টা করে। অনুচ্ছেদ খুব বড় হলে বাক্য ধরে ভাগ করে, তারপর শব্দ ধরে <Cite n={3} />। HTML, Markdown, JSON বা কোডের জন্য splitter ডকুমেন্টের গঠন, যেমন হেডার, মেনে চলতে পারে <Cite n={3} />।
+
+কোডের উদাহরণে `add_start_index=True` মূল ডকুমেন্টে প্রতিটা চাংক কোথায় শুরু, তা মেটাডেটায় রাখে <Cite n={5} />। **Overlap** মানে দুটো চাংকের কিনারায় কিছু টেক্সট দুবার থাকা। OpenAI vector store ডিফল্টভাবে ফাইলকে 800 টোকেনের চাংকে কাটে, 400 টোকেন overlap সহ। আপনি নিজে 100 থেকে 4096 টোকেনের সাইজ দিতে পারেন। Overlap চাংক সাইজের অর্ধেকের বেশি হওয়া উচিত নয় <Cite n={2} />।
+
+**সমৃদ্ধ করা (enrich)।** একা একটা চাংক তার অর্থ হারাতে পারে। Anthropic-এর উদাহরণ হলো "revenue grew by 3%"। এটা বলে না কোন কোম্পানি বা কোন কোয়ার্টার <Cite n={1} />। **Contextual Retrieval** একটা মডেলকে প্রতিটা চাংকের জন্য একটা ছোট কনটেক্সট লিখতে বলে। কনটেক্সট সাধারণত 50 থেকে 100 টোকেন। এমবেডিং আর ইনডেক্সিংয়ের আগে সেটা চাংকের সামনে বসে <Cite n={1} />। Anthropic-এর টেস্টে এটা ব্যর্থ রিট্রিভাল 49% কমিয়েছে <Cite n={1} />।
+
+ফিল্টারের জন্য আপনি **মেটাডেটা**-ও যোগ করতে পারেন। OpenAI vector store-এ প্রতিটা ফাইলের `attributes` থাকতে পারে, সর্বোচ্চ 16টা key <Cite n={2} />। OWASP বলে কে দেখতে পারবে তা নিয়ন্ত্রণ করতে ডেটা ট্যাগ ও শ্রেণিবদ্ধ করুন <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+An HR policy assistant answers questions from staff. Its pipeline reads 300 policy PDFs every night.
+
+| Step | What the pipeline does |
+|---|---|
+| Load | A PDF loader makes one `Document` per page, with `source` and `page` in the metadata <Cite n={5} />. |
+| Clean | The pipeline drops hidden text and accepts files only from the HR folder, as OWASP advises <Cite n={6} />. |
+| Chunk | A recursive splitter runs with `chunk_size=1000` and `chunk_overlap=200`, the values of the LangChain tutorial <Cite n={5} />. |
+| Enrich | A model adds a short context to each chunk, for example "From the Bangladesh leave policy, 2026 version" <Cite n={1} />. |
+| Tag | Each chunk gets `country`, `updated`, and `audience` metadata. Only HR staff can retrieve chunks tagged `audience: hr`. OWASP calls this a permission-aware store <Cite n={6} />. |
+
+Without the enrich step, the chunk "Staff get 20 days" could match a question about any country. With it, the right country policy comes first.
+
+</Technical>
+<Layman>
+
+An HR policy assistant answers questions from staff. Its pipeline reads 300 policy PDFs every night.
+
+1. **Load.** A PDF loader makes one `Document` for each page. The metadata has `source` and `page` <Cite n={5} />.
+2. **Clean.** The pipeline drops hidden text. It accepts files only from the HR folder, as OWASP advises <Cite n={6} />.
+3. **Chunk.** A recursive splitter runs with `chunk_size=1000` and `chunk_overlap=200`. These are the values of the LangChain tutorial <Cite n={5} />.
+4. **Enrich.** A model adds a short context to each chunk. An example is "From the Bangladesh leave policy, 2026 version" <Cite n={1} />.
+5. **Tag.** Each chunk gets `country`, `updated`, and `audience` metadata. Only HR staff can get chunks tagged `audience: hr`. OWASP calls this a store that knows permissions <Cite n={6} />.
+
+Without the enrich step, the chunk "Staff get 20 days" could match a question about any country. With it, the policy of the right country comes first.
+
+</Layman>
+<Bangla>
+
+একটা HR পলিসি অ্যাসিস্ট্যান্ট কর্মীদের প্রশ্নের উত্তর দেয়। এর পাইপলাইন প্রতি রাতে 300টা পলিসি PDF পড়ে।
+
+1. **লোড।** একটা PDF loader প্রতিটা পৃষ্ঠার জন্য একটা `Document` বানায়। মেটাডেটায় থাকে `source` আর `page` <Cite n={5} />।
+2. **পরিষ্কার।** পাইপলাইন লুকানো টেক্সট বাদ দেয়। OWASP-এর পরামর্শ মেনে শুধু HR ফোল্ডারের ফাইল নেয় <Cite n={6} />।
+3. **চাংক।** একটা recursive splitter `chunk_size=1000` আর `chunk_overlap=200` দিয়ে চলে। এগুলো LangChain টিউটোরিয়ালের মান <Cite n={5} />।
+4. **সমৃদ্ধ করা।** একটা মডেল প্রতিটা চাংকে একটা ছোট কনটেক্সট যোগ করে। উদাহরণ: "From the Bangladesh leave policy, 2026 version" <Cite n={1} />।
+5. **ট্যাগ।** প্রতিটা চাংক পায় `country`, `updated` আর `audience` মেটাডেটা। শুধু HR কর্মীরা `audience: hr` ট্যাগের চাংক পায়। OWASP একে বলে পারমিশন বোঝে এমন স্টোর (permission-aware store) <Cite n={6} />।
+
+Enrich ধাপ ছাড়া "Staff get 20 days" চাংকটা যেকোনো দেশের প্রশ্নের সঙ্গে মিলে যেতে পারে। এই ধাপ থাকলে সঠিক দেশের পলিসি আগে আসে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Chunks with no context.** A chunk that does not name its subject is hard to retrieve and hard to use <Cite n={1} />.
+- **One chunk size for every document.** Chunk size, boundary, and overlap all change retrieval quality, so test them <Cite n={1} />.
+- **Plain splits of structured files.** Markdown, HTML, JSON, and code often group related text by their structure <Cite n={3} />.
+- **No source or offset in the metadata.** Then nobody can trace an answer back to its page (the tutorial's own advice).
+- **Ingesting anything that arrives.** Unverified sources can bring poisoned data or hidden instructions <Cite n={6} />.
+- **One shared store for all users.** In a shared vector database, one group can get the private data of another group <Cite n={6} />.
+- **Old versions that stay in the index.** Sources that disagree cause knowledge conflicts <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+- **Chunks with no context.** A chunk that does not name its subject is hard to find and hard to use <Cite n={1} />.
+- **One chunk size for every document.** Chunk size, the cut points, and the overlap all change how well search works. So test them <Cite n={1} />.
+- **Plain splits of structured files.** Markdown, HTML, JSON, and code often group related text by their structure <Cite n={3} />.
+- **No source or position in the metadata.** Then nobody can trace an answer back to its page (the tutorial's own advice).
+- **Taking in anything that arrives.** Sources that nobody checked can bring poisoned data or hidden instructions <Cite n={6} />.
+- **One shared store for all users.** In a shared vector database, one group can get the private data of another group <Cite n={6} />.
+- **Old versions that stay in the index.** When sources disagree, the model gets a knowledge conflict <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+- **কনটেক্সট ছাড়া চাংক।** যে চাংক তার বিষয়ের নাম বলে না, তাকে খুঁজে পাওয়া কঠিন, ব্যবহার করাও কঠিন <Cite n={1} />।
+- **সব ডকুমেন্টে একই চাংক সাইজ।** চাংক সাইজ, কাটার জায়গা আর overlap সবই খোঁজার মান বদলায়। তাই এগুলো টেস্ট করুন <Cite n={1} />।
+- **গঠনওয়ালা ফাইলের সাধারণ ভাগ।** Markdown, HTML, JSON আর কোড প্রায়ই তাদের গঠন দিয়ে সম্পর্কিত টেক্সট এক জায়গায় রাখে <Cite n={3} />।
+- **মেটাডেটায় সোর্স বা অবস্থান না থাকা।** তখন কেউ একটা উত্তরকে তার পৃষ্ঠা পর্যন্ত খুঁজে যেতে পারে না (টিউটোরিয়ালের নিজের পরামর্শ)।
+- **যা আসে সবই নিয়ে নেওয়া।** কেউ যাচাই করেনি এমন সোর্স বিষাক্ত ডেটা বা লুকানো নির্দেশ আনতে পারে <Cite n={6} />।
+- **সব ইউজারের জন্য একটা শেয়ার্ড স্টোর।** শেয়ার্ড ভেক্টর ডেটাবেসে এক গ্রুপ আরেক গ্রুপের গোপন ডেটা পেয়ে যেতে পারে <Cite n={6} />।
+- **ইনডেক্সে পুরোনো ভার্সন থেকে যাওয়া।** সোর্সগুলো একমত না হলে মডেল জ্ঞানের দ্বন্দ্বে (knowledge conflict) পড়ে <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice.
+
+- **Count in and out.** Compare the number of source files with the number of indexed files. A silent loader failure drops files with no error.
+- **Read 10 random chunks.** Each chunk should make sense alone, name its subject, and not cut a table or a sentence in half.
+- **Check the metadata.** Each chunk should have its source, page or offset, and date. Pick one chunk and open the original at that place.
+- **Plant a hidden line.** Add a test file with white-on-white text. The clean step should drop it, or the answer should ignore it.
+- **Test access tags.** Ask a question as a user without access to a tagged document. The answer must not use that document.
+- **Update and delete.** Change one policy and delete another. After the next run, the old text must not come back in answers.
+</Callout>
+
+</Technical>
+<Layman>
+
+These checks are the tutorial's own advice.
+
+- **Count in and out.** Compare the number of source files with the number of indexed files. A loader can fail with no error and drop files.
+- **Read 10 random chunks.** Each chunk should make sense alone and name its subject. It should not cut a table or a sentence in half.
+- **Check the metadata.** Each chunk should have its source, page or position, and date. Pick one chunk. Open the original at that place.
+- **Plant a hidden line.** Add a test file with white text on a white background. The clean step should drop it, or the answer should ignore it.
+- **Test access tags.** Ask a question as a user who has no access to a tagged document. The answer must not use that document.
+- **Update and delete.** Change one policy and delete another. After the next run, the old text must not come back in answers.
+
+</Layman>
+<Bangla>
+
+এই চেকগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **ঢোকা আর বের হওয়া গুনুন।** সোর্স ফাইলের সংখ্যা আর ইনডেক্স হওয়া ফাইলের সংখ্যা মিলিয়ে দেখুন। একটা loader কোনো এরর ছাড়াই ব্যর্থ হয়ে ফাইল বাদ দিতে পারে।
+- **এলোমেলো 10টা চাংক পড়ুন।** প্রতিটা চাংক একাই অর্থপূর্ণ হওয়া উচিত আর তার বিষয়ের নাম বলা উচিত। এটা কোনো টেবিল বা বাক্য মাঝখানে কাটা উচিত নয়।
+- **মেটাডেটা দেখুন।** প্রতিটা চাংকে সোর্স, পৃষ্ঠা বা অবস্থান, আর তারিখ থাকা উচিত। একটা চাংক বেছে নিন। মূল ডকুমেন্টের সেই জায়গাটা খুলুন।
+- **একটা লুকানো লাইন রাখুন।** সাদা ব্যাকগ্রাউন্ডে সাদা লেখাসহ একটা টেস্ট ফাইল যোগ করুন। পরিষ্কারের ধাপের সেটা বাদ দেওয়া উচিত, নয়তো উত্তরের সেটা উপেক্ষা করা উচিত।
+- **অ্যাক্সেস ট্যাগ টেস্ট করুন।** এমন একজন ইউজার হিসেবে প্রশ্ন করুন, যার একটা ট্যাগ করা ডকুমেন্টে অ্যাক্সেস নেই। উত্তর সেই ডকুমেন্ট ব্যবহার করবে না।
+- **আপডেট আর ডিলিট।** একটা পলিসি বদলান, আরেকটা মুছুন। পরের রানের পর পুরোনো টেক্সট উত্তরে ফিরে আসবে না।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Corpus | The full set of documents in a knowledge base <Cite n={1} /> |
+| Document loader | Code that reads data from a source into a standard document format <Cite n={4} /> |
+| Chunk | A small piece of a document that is retrieved on its own <Cite n={3} /> |
+| Chunk overlap | Text that two neighbor chunks share at their edge <Cite n={2} /> |
+| Embedding | A vector that encodes the meaning of a chunk <Cite n={1} /> |
+| Metadata | Extra fields on a chunk, such as its source, page, or access tag <Cite n={5} /> |
+| Contextual Retrieval | Adding a short, model-written context to each chunk before indexing <Cite n={1} /> |
+| Data poisoning | Harmful or wrong data put into the knowledge base on purpose or by accident <Cite n={6} /> |

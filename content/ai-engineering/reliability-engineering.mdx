@@ -1,0 +1,291 @@
+export const metadata = { title: "Reliability Engineering", description: "Fallbacks, retries, timeouts, and error handling." }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Claude API errors', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/errors', accessed: '2026-10-28' },
+    { title: 'Rate limits', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/rate-limits', accessed: '2026-10-28' },
+    { title: 'Python SDK', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/sdks/python', accessed: '2026-10-28' },
+    { title: 'Site Reliability Engineering, Chapter 22: Addressing Cascading Failures', publisher: 'Google (sre.google)', url: 'https://sre.google/sre-book/addressing-cascading-failures/', accessed: '2026-10-28' },
+    { title: 'Site Reliability Engineering, Chapter 21: Handling Overload', publisher: 'Google (sre.google)', url: 'https://sre.google/sre-book/handling-overload/', accessed: '2026-10-28' },
+    { title: 'Refusals and fallback', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback', accessed: '2026-10-28' },
+  ],
+}
+
+# Reliability Engineering
+
+A model API is a service on the network, like a payment gateway. Sometimes it is busy, slow, or down. Reliability engineering decides what your app does at those moments: wait, try again, use a plan B, or tell the user clearly that something went wrong.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+Every call to a model API can fail. The Claude API returns an HTTP error code and a JSON body with an error `type` and a `message` <Cite n={1} />. Some errors are short and pass on their own, such as `429` (rate limit), `500` (internal error), and `529` (the API is overloaded) <Cite n={1} />. Others will fail again on every try, such as `400` (a bad request) or `401` (a bad API key) <Cite n={1} />.
+
+**Reliability engineering** handles both kinds with four tools:
+
+- **Retries** for short failures, with a wait that grows each time (exponential backoff).
+- **Timeouts**, so that a call cannot wait forever.
+- **Fallbacks**, a simpler answer or another path when the main path fails.
+- **Clear error handling**, so that the user and the logs show what happened.
+
+The Google SRE book warns that careless retries can turn a small problem into a large outage <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+Every call to a model API can fail. The Claude API returns an HTTP error code. It also returns a JSON body with an error `type` and a `message` <Cite n={1} />. Some errors are short and go away on their own. Examples are `429` (rate limit), `500` (internal error), and `529` (the API is overloaded) <Cite n={1} />. Other errors fail again on every try. Examples are `400` (a bad request) and `401` (a bad API key) <Cite n={1} />.
+
+**Reliability engineering** handles both kinds with four tools:
+
+- **Retries** for short failures. The wait grows each time. This is called exponential backoff.
+- **Timeouts**, so that a call cannot wait forever.
+- **Fallbacks**: a simpler answer or another path when the main path fails.
+- **Clear error handling**, so that the user and the logs show what happened.
+
+The Google SRE book warns that careless retries can turn a small problem into a large outage <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা মডেল API-এর প্রতিটা কল ফেল করতে পারে। Claude API একটা HTTP এরর কোড ফেরত দেয়। এটা একটা JSON বডিও দেয়, যাতে একটা এরর `type` ও একটা `message` থাকে <Cite n={1} />। কিছু এরর অল্প সময়ের এবং নিজে থেকেই চলে যায়। যেমন `429` (রেট লিমিট), `500` (ভেতরের এরর) ও `529` (API ওভারলোডেড) <Cite n={1} />। অন্য এররগুলো প্রতিবার চেষ্টাতেই আবার ফেল করে। যেমন `400` (ভুল রিকুয়েস্ট) ও `401` (ভুল API key) <Cite n={1} />।
+
+**রিলায়েবিলিটি ইঞ্জিনিয়ারিং (reliability engineering)** চারটা উপায়ে দুই ধরনই সামলায়:
+
+- অল্প সময়ের ব্যর্থতার জন্য **রিট্রাই (retry)**। প্রতিবার অপেক্ষার সময় বাড়ে। একে exponential backoff বলে।
+- **টাইমআউট (timeout)**, যাতে একটা কল চিরকাল অপেক্ষা করতে না পারে।
+- **ফলব্যাক (fallback)**: মূল পথ ফেল করলে একটা সহজ উত্তর বা অন্য একটা পথ।
+- **পরিষ্কার এরর হ্যান্ডলিং**, যাতে ইউজার ও লগ দুটোই দেখায় কী ঘটেছে।
+
+Google SRE বই সতর্ক করে যে অসাবধান রিট্রাই একটা ছোট সমস্যাকে একটা বড় বিভ্রাটে পরিণত করতে পারে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Retries with backoff
+
+By default, the Claude Python SDK makes 2 retries, and it waits a little longer before each one. It does this for connection errors, `408`, `409`, `429`, and `>=500` <Cite n={3} />. It honors the `retry-after` header when the response has one <Cite n={1} />. You change the count with `max_retries` <Cite n={3} />.
+
+The SRE book gives three rules for retries <Cite n={4} />:
+
+1. Use randomized exponential backoff (add jitter), so that many clients do not retry at the same moment.
+2. Limit the retries for each request. Never retry forever.
+3. Consider a retry budget for the whole server, for example 60 retries per minute. When the budget is used up, fail the request.
+
+Do not retry an error that will fail again. A `429` from a reached monthly spend cap has no `retry-after` header, and retries fail until access resumes <Cite n={2} />.
+
+### Timeouts
+
+By default, the SDK stops a request after 10 minutes <Cite n={3} />. Set a timeout that fits the feature with the `timeout` option. On a timeout, the SDK raises `APITimeoutError`, and it retries a timed-out request 2 times by default <Cite n={3} />. The SRE book advises to always set a deadline: no deadline, or a very long one, lets old problems keep using resources <Cite n={4} />.
+
+### Fallbacks
+
+Under extreme load, a service can send a **degraded response**: an answer with less detail that costs less to compute <Cite n={5} />. For an AI feature, this can be a cached answer or a simpler model. A refusal is a separate case. A model can decline a request with a normal response that has `stop_reason: "refusal"`, not an error, and the app can retry it on a fallback model <Cite n={6} />.
+
+```python
+import os
+import anthropic
+
+client = anthropic.Anthropic(
+    api_key=os.environ["ANTHROPIC_API_KEY"],
+    max_retries=2,   # the SDK default, with exponential backoff
+    timeout=30.0,    # seconds, instead of the 10-minute default
+)
+
+def answer(question: str) -> str:
+    try:
+        msg = client.messages.create(
+            model="claude-opus-5-5",
+            max_tokens=512,
+            messages=[{"role": "user", "content": question}],
+        )
+    except anthropic.RateLimitError:
+        return "We are busy. Please try again in a minute."
+    except anthropic.APIStatusError as e:
+        log_error(e.status_code, e.response.headers.get("request-id"))
+        return FALLBACK_TEXT
+    except anthropic.APITimeoutError:
+        return FALLBACK_TEXT
+    except anthropic.APIConnectionError:
+        return FALLBACK_TEXT
+    return msg.content[0].text
+```
+
+The SDK raises a subclass of `APIError` for a connection failure or a `4xx` or `5xx` status. `RateLimitError` is the class for `429` <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+**Retries with backoff.** The Claude Python SDK already retries some errors 2 times by default. It waits a short time that grows each time. It retries connection errors, `408`, `409`, `429`, and `>=500` <Cite n={3} />. It follows the `retry-after` header when the response has one <Cite n={1} />. You change the count with `max_retries` <Cite n={3} />.
+
+The SRE book gives three rules for retries <Cite n={4} />:
+
+1. Use exponential backoff with some random time added. This random part is called jitter. Then many clients do not retry at the same moment.
+2. Limit the retries for each request. Never retry forever.
+3. Think about a retry budget for the whole server. An example is 60 retries per minute. When the budget is used up, fail the request.
+
+Do not retry an error that will fail again. A `429` can come from a reached monthly spend cap. It has no `retry-after` header. Retries fail until access comes back <Cite n={2} />.
+
+**Timeouts.** By default, the SDK stops a request after 10 minutes <Cite n={3} />. Set a timeout that fits the feature with the `timeout` option. On a timeout, the SDK raises `APITimeoutError`. It retries a request that timed out 2 times by default <Cite n={3} />. The SRE book says to always set a deadline. No deadline, or a very long one, lets old problems keep using resources <Cite n={4} />.
+
+**Fallbacks.** Under very high load, a service can send a **degraded response**. This is an answer with less detail that costs less to compute <Cite n={5} />. For an AI feature, this can be a cached answer or a simpler model. A refusal is a different case. A model can decline a request with a normal response that has `stop_reason: "refusal"`. It is not an error. The app can retry it on a fallback model <Cite n={6} />.
+
+The Technical text has a short Python example. It sets `max_retries` to 2 and `timeout` to 30 seconds. It catches `RateLimitError`, `APIStatusError`, `APITimeoutError`, and `APIConnectionError`, and returns a fallback text for each. The SDK raises a subclass of `APIError` for a connection failure or a `4xx` or `5xx` status. `RateLimitError` is the class for `429` <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+**Backoff সহ রিট্রাই।** Claude Python SDK ডিফল্টে কিছু এরর 2 বার রিট্রাই করে। এটা একটা ছোট সময় অপেক্ষা করে, যা প্রতিবার বাড়ে। এটা কানেকশন এরর, `408`, `409`, `429` ও `>=500` রিট্রাই করে <Cite n={3} />। রেসপন্সে `retry-after` হেডার থাকলে এটা সেটা মানে <Cite n={1} />। `max_retries` দিয়ে আপনি সংখ্যাটা বদলান <Cite n={3} />।
+
+SRE বই রিট্রাইয়ের জন্য তিনটা নিয়ম দেয় <Cite n={4} />:
+
+1. কিছু এলোমেলো সময় যোগ করে exponential backoff ব্যবহার করুন। এই এলোমেলো অংশকে jitter বলে। তখন অনেক ক্লায়েন্ট একই মুহূর্তে রিট্রাই করে না।
+2. প্রতিটা রিকুয়েস্টের রিট্রাই সীমিত করুন। কখনো চিরকাল রিট্রাই করবেন না।
+3. পুরো সার্ভারের জন্য একটা রিট্রাই বাজেটের কথা ভাবুন। যেমন, মিনিটে 60টা রিট্রাই। বাজেট শেষ হলে রিকুয়েস্টটা ফেল করান।
+
+যে এরর আবার ফেল করবে, তা রিট্রাই করবেন না। মাসিক খরচের সীমায় পৌঁছালে একটা `429` আসতে পারে। এতে কোনো `retry-after` হেডার থাকে না। অ্যাক্সেস ফিরে না আসা পর্যন্ত রিট্রাই ফেল করে <Cite n={2} />।
+
+**টাইমআউট।** ডিফল্টে SDK 10 মিনিট পর একটা রিকুয়েস্ট থামায় <Cite n={3} />। `timeout` অপশন দিয়ে ফিচারের সাথে মানানসই একটা টাইমআউট দিন। টাইমআউট হলে SDK `APITimeoutError` দেয়। টাইমআউট হওয়া রিকুয়েস্ট এটা ডিফল্টে 2 বার রিট্রাই করে <Cite n={3} />। SRE বই সবসময় একটা ডেডলাইন দিতে বলে। ডেডলাইন না থাকলে, বা খুব লম্বা হলে, পুরোনো সমস্যা রিসোর্স খরচ করতে থাকে <Cite n={4} />।
+
+**ফলব্যাক।** খুব বেশি লোডে একটা সার্ভিস একটা **degraded response** পাঠাতে পারে। এটা কম বিস্তারিত একটা উত্তর, যা হিসাব করতে কম খরচ হয় <Cite n={5} />। একটা AI ফিচারে এটা একটা ক্যাশ করা উত্তর বা একটা সহজ মডেল হতে পারে। প্রত্যাখ্যান একটা আলাদা ব্যাপার। একটা মডেল `stop_reason: "refusal"` সহ একটা সাধারণ রেসপন্স দিয়ে রিকুয়েস্ট ফিরিয়ে দিতে পারে। এটা এরর নয়। অ্যাপ এটা একটা ফলব্যাক মডেলে আবার চেষ্টা করতে পারে <Cite n={6} />।
+
+Technical টেক্সটে একটা ছোট Python উদাহরণ আছে। এটা `max_retries` 2 ও `timeout` 30 সেকেন্ড দেয়। এটা `RateLimitError`, `APIStatusError`, `APITimeoutError` ও `APIConnectionError` ধরে এবং প্রতিটার জন্য একটা ফলব্যাক টেক্সট ফেরত দেয়। কানেকশন ব্যর্থ হলে বা `4xx` বা `5xx` স্ট্যাটাস এলে SDK `APIError`-এর একটা সাবক্লাস দেয়। `429`-এর ক্লাস হলো `RateLimitError` <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A support chatbot has a busy hour every Monday morning. The API returns some `529` (overloaded) and `429` (rate limit) errors <Cite n={1} />. The team wrote its own loop that tries each call up to 3 times, around the SDK. The SDK retries 2 times by default, so each try is up to 3 attempts <Cite n={3} />. So one user message can become 3 × 3 = 9 API calls. The SRE book describes how retries like these add load to a server that is already overloaded <Cite n={4} />.
+
+The team fixes it:
+
+1. One retry layer only: the SDK, with its exponential backoff <Cite n={3} />.
+2. A 30-second timeout, because users leave long before 10 minutes <Cite n={3} />.
+3. A fallback: after the retries fail, the bot shows a short message and a link to a human agent. This is a degraded response, not a blank screen <Cite n={5} />.
+4. Traffic grows slowly before a marketing campaign, because a sharp rise in usage can hit acceleration limits <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+A support chatbot has a busy hour every Monday morning. The API returns some `529` (overloaded) and `429` (rate limit) errors <Cite n={1} />. The team wrote its own loop that tries each call up to 3 times. The loop is around the SDK. The SDK retries 2 times by default, so each try is up to 3 attempts <Cite n={3} />. So one user message can become 3 × 3 = 9 API calls. The SRE book describes how retries like these add load to a server that is already overloaded <Cite n={4} />.
+
+The team fixes it:
+
+1. Only one retry layer: the SDK, with its exponential backoff <Cite n={3} />.
+2. A timeout of 30 seconds, because users leave long before 10 minutes <Cite n={3} />.
+3. A fallback: after the retries fail, the bot shows a short message and a link to a human agent. This is a degraded response, not a blank screen <Cite n={5} />.
+4. Traffic grows slowly before a marketing campaign. A sharp rise in usage can hit acceleration limits <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটা সাপোর্ট চ্যাটবটের প্রতি সোমবার সকালে একটা ব্যস্ত ঘণ্টা থাকে। API কিছু `529` (ওভারলোডেড) ও `429` (রেট লিমিট) এরর দেয় <Cite n={1} />। দল নিজেদের একটা লুপ লিখেছিল, যা প্রতিটা কল সর্বোচ্চ 3 বার চেষ্টা করে। লুপটা SDK-এর চারপাশে। SDK ডিফল্টে 2 বার রিট্রাই করে, তাই প্রতিটা চেষ্টা সর্বোচ্চ 3টা attempt <Cite n={3} />। তাই একটা ইউজার মেসেজ 3 × 3 = 9টা API কল হয়ে যেতে পারে। SRE বই বর্ণনা করে, এমন রিট্রাই কীভাবে আগেই ওভারলোডেড একটা সার্ভারে আরও লোড যোগ করে <Cite n={4} />।
+
+দল এটা ঠিক করে:
+
+1. শুধু একটা রিট্রাই স্তর: SDK, তার exponential backoff সহ <Cite n={3} />।
+2. 30 সেকেন্ডের একটা টাইমআউট, কারণ ইউজাররা 10 মিনিটের অনেক আগেই চলে যান <Cite n={3} />।
+3. একটা ফলব্যাক: রিট্রাই ফেল করলে বট একটা ছোট মেসেজ ও একজন মানুষ এজেন্টের লিংক দেখায়। এটা একটা degraded response, ফাঁকা স্ক্রিন নয় <Cite n={5} />।
+4. একটা মার্কেটিং ক্যাম্পেইনের আগে ট্রাফিক ধীরে বাড়ে। ব্যবহার হঠাৎ বাড়লে acceleration limit-এ পড়তে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Retries at every layer.** Retries multiply, and the extra load can make an overload worse <Cite n={4} />.
+- **Retries with no jitter.** Clients that retry at the same moment send waves of load <Cite n={4} />.
+- **Retrying errors that cannot pass.** A `400` or `401` will fail again. A spend-cap `429` fails until access resumes <Cite n={1} /><Cite n={2} />.
+- **Keeping the 10-minute default timeout for a chat feature.** The user waits far too long <Cite n={3} />.
+- **Treating a refusal as an error.** A refusal comes back with status 200 and `stop_reason: "refusal"` <Cite n={6} />.
+- **Missing a mid-stream error.** With streaming, an error can come after the API already returned `200` <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+- **Retries at every layer.** Retries multiply. The extra load can make an overload worse <Cite n={4} />.
+- **Retries with no jitter.** Clients that retry at the same moment send waves of load <Cite n={4} />.
+- **Retrying errors that cannot pass.** A `400` or `401` will fail again. A `429` from the spend cap fails until access comes back <Cite n={1} /><Cite n={2} />.
+- **Keeping the 10-minute default timeout for a chat feature.** The user waits far too long <Cite n={3} />.
+- **Treating a refusal as an error.** A refusal comes back as a normal response with `stop_reason: "refusal"` <Cite n={6} />.
+- **Missing an error in the middle of a stream.** With streaming, an error can come after the API already returned `200` <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **প্রতিটা স্তরে রিট্রাই।** রিট্রাই গুণ হয়ে বাড়ে। বাড়তি লোড একটা ওভারলোডকে আরও খারাপ করতে পারে <Cite n={4} />।
+- **Jitter ছাড়া রিট্রাই।** যে ক্লায়েন্টরা একই মুহূর্তে রিট্রাই করে, তারা লোডের ঢেউ পাঠায় <Cite n={4} />।
+- **যে এরর পার হবে না, তা রিট্রাই করা।** একটা `400` বা `401` আবার ফেল করবে। খরচের সীমার `429` অ্যাক্সেস ফিরে না আসা পর্যন্ত ফেল করে <Cite n={1} /><Cite n={2} />।
+- **চ্যাট ফিচারে 10 মিনিটের ডিফল্ট টাইমআউট রাখা।** ইউজারকে অনেক বেশি অপেক্ষা করতে হয় <Cite n={3} />।
+- **প্রত্যাখ্যানকে এরর হিসেবে ধরা।** একটা প্রত্যাখ্যান `stop_reason: "refusal"` সহ একটা সাধারণ রেসপন্স হিসেবে আসে <Cite n={6} />।
+- **স্ট্রিমের মাঝের এরর না ধরা।** স্ট্রিমিংয়ে API `200` দেওয়ার পরেও একটা এরর আসতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Fake each error.** Put a mock server or a proxy in front of the API in a test setup. Return `429`, `500`, `529`, and `401`. Check what the user sees for each.
+- **Count the calls.** For one user message during a `529` storm, count the API calls. The number should match the retry policy, not grow with each layer.
+- **Slow responses.** Make the mock answer after 60 seconds. Check that the app stops at its own timeout and shows the fallback.
+- **Break a stream.** Send an error event after a few text chunks. Check that the UI does not show half an answer as complete.
+- **No retry for bad keys.** Use a wrong API key in a test setup. Check that the app fails fast and logs the `request-id`, with no retry loop.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Fake each error.** In a test setup, put a mock server or a proxy in front of the API. Return `429`, `500`, `529`, and `401`. Check what the user sees for each one.
+- **Count the calls.** During a storm of `529` errors, count the API calls for one user message. The number should match the retry policy. It should not grow with each layer.
+- **Slow responses.** Make the mock answer after 60 seconds. Check that the app stops at its own timeout and shows the fallback.
+- **Break a stream.** Send an error event after a few pieces of text. Check that the UI does not show half an answer as complete.
+- **No retry for bad keys.** In a test setup, use a wrong API key. Check that the app fails fast and logs the `request-id`. Check that there is no retry loop.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **প্রতিটা এরর নকল করুন।** একটা টেস্ট সেটআপে API-এর সামনে একটা mock সার্ভার বা proxy রাখুন। `429`, `500`, `529` ও `401` ফেরত দিন। প্রতিটার জন্য ইউজার কী দেখেন তা দেখুন।
+- **কল গুনুন।** `529` এররের ঝড়ের সময় একটা ইউজার মেসেজের জন্য API কল গুনুন। সংখ্যাটা রিট্রাই পলিসির সাথে মিলবে। প্রতিটা স্তরে এটা বাড়বে না।
+- **ধীর রেসপন্স।** Mock-কে 60 সেকেন্ড পর উত্তর দিতে দিন। দেখুন অ্যাপ নিজের টাইমআউটে থামে এবং ফলব্যাক দেখায় কি না।
+- **একটা স্ট্রিম ভাঙুন।** কয়েকটা টেক্সট টুকরোর পর একটা এরর ইভেন্ট পাঠান। দেখুন UI অর্ধেক উত্তরকে সম্পূর্ণ হিসেবে দেখায় না।
+- **ভুল key-তে রিট্রাই নয়।** একটা টেস্ট সেটআপে একটা ভুল API key দিন। দেখুন অ্যাপ দ্রুত ফেল করে এবং `request-id` লগ করে কি না। দেখুন কোনো রিট্রাই লুপ নেই।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Exponential backoff | Waiting longer before each new retry <Cite n={3} /> |
+| Jitter | A random part added to the wait, so that clients do not retry together <Cite n={4} /> |
+| Retry budget | A limit on the number of retries, per request or per server <Cite n={4} /> |
+| Timeout (deadline) | The longest time that a call may wait for an answer <Cite n={3} /><Cite n={4} /> |
+| Degraded response | A simpler answer that costs less to compute, sent under overload <Cite n={5} /> |
+| `529 overloaded_error` | The Claude API is temporarily overloaded <Cite n={1} /> |
+| `retry-after` | A response header with the number of seconds to wait before a retry <Cite n={2} /> |
+| Fallback model | A model that gets a request again after the first model refuses it <Cite n={6} /> |

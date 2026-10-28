@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { T } from "@/components/i18n/T";
-import { AI_CONCEPTS_UI_BN } from "@/lib/bn/ai-concepts";
 import { ARCHITECTURE_UI_BN } from "@/lib/bn/architecture";
 import { COURSE_UI_BN } from "@/lib/bn/course";
 import { K6_UI_BN } from "@/lib/bn/k6";
+import { AI_ENGINEERING_UI_BN } from "@/lib/bn/ai-engineering";
+import { AI_CONCEPTS_UI_BN } from "@/lib/bn/ai-concepts";
+import { AI_SKILLS_UI_BN } from "@/lib/bn/ai-skills";
+import { HARNESS_UI_BN } from "@/lib/bn/harness";
 import { FUNDAMENTALS_UI_BN } from "@/lib/bn/fundamentals";
 import { LINUX_UI_BN } from "@/lib/bn/linux";
 import { SHELL_BN } from "@/lib/bn/shell";
@@ -27,6 +30,9 @@ const FLAT_NAME_BN: Record<FlatModuleId, string> = {
   architecture: ARCHITECTURE_UI_BN.crossTo,
   course: COURSE_UI_BN.crossTo,
   k6: K6_UI_BN.crossTo,
+  "ai-engineering": AI_ENGINEERING_UI_BN.crossTo,
+  harness: HARNESS_UI_BN.crossTo,
+  "ai-skills": AI_SKILLS_UI_BN.crossTo,
   "ai-concepts": AI_CONCEPTS_UI_BN.crossTo,
 };
 
