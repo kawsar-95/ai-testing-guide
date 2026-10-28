@@ -1,0 +1,271 @@
+export const metadata = { title: 'System Design for AI', description: 'Put the parts of an AI app together: start simple, add retrieval and tools, choose workflows or agents, and plan for load, cost, and failure.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Building effective agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/building-effective-agents', accessed: '2026-10-28' },
+    { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-10-28' },
+    { title: 'Prompt caching', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching', accessed: '2026-10-28' },
+    { title: 'Batch processing', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', accessed: '2026-10-28' },
+    { title: 'Handling Overload (Site Reliability Engineering, chapter 21)', publisher: 'Google SRE', url: 'https://sre.google/sre-book/handling-overload/', accessed: '2026-10-28' },
+    { title: 'Rate limits', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/api/rate-limits', accessed: '2026-10-28' },
+  ],
+}
+
+# System Design for AI
+
+The earlier pages of this module each explain one part: prompts, retrieval, tools, evals, monitoring, security. System design is the job of putting the parts together so that the whole system gives good answers, stays up under load, and costs what the business can pay.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+Anthropic's first advice is to find the simplest solution that works, and to add complexity only when it is needed. Sometimes that means no agentic system at all <Cite n={1} />. Agentic systems often give better task results in exchange for more latency and cost <Cite n={1} />.
+
+The basic building block is an **augmented LLM**: a model with retrieval, tools, and memory <Cite n={1} />. On top of it, you choose one of 2 shapes <Cite n={1} />:
+
+| Shape | Who decides the steps |
+|---|---|
+| Workflow | Your code. The LLM and the tools run through predefined code paths. |
+| Agent | The LLM. It directs its own process and tool use. |
+
+Workflows give predictability and consistency for tasks that are well defined <Cite n={1} />. Then you design the rest like any system: what happens under load, what it costs, and what fails.
+
+</Technical>
+<Layman>
+
+Anthropic's first advice is this. Find the simplest solution that works. Add complexity only when you need it. Sometimes that means no agentic system at all <Cite n={1} />. Agentic systems often give better task results, but they cost more and take longer <Cite n={1} />.
+
+The basic building block is an **augmented LLM**. It is a model with retrieval, tools, and memory <Cite n={1} />. On top of it, you choose one of 2 shapes <Cite n={1} />.
+
+- A workflow: your code decides the steps. The LLM and the tools run through code paths that you wrote before.
+- An agent: the LLM decides the steps. It directs its own process and its own tool use.
+
+Workflows are predictable and consistent for tasks that are well defined <Cite n={1} />. Then you design the rest like any system. What happens under load? What does it cost? What fails?
+
+</Layman>
+<Bangla>
+
+Anthropic-এর প্রথম পরামর্শ: যে সবচেয়ে সহজ সমাধান কাজ করে, সেটা খুঁজুন, আর দরকার হলেই কেবল জটিলতা বাড়ান। কখনও এর মানে কোনো agentic সিস্টেমই না বানানো <Cite n={1} />। Agentic সিস্টেম প্রায়ই ভালো ফলাফলের বদলে বেশি latency আর খরচ নেয় <Cite n={1} />।
+
+মূল বিল্ডিং ব্লক হলো একটা **augmented LLM**: রিট্রিভাল, টুল আর মেমরিসহ একটা মডেল <Cite n={1} />। এর ওপর আপনি 2টা আকারের একটা বেছে নেন <Cite n={1} />:
+
+- ওয়ার্কফ্লো: ধাপগুলো ঠিক করে আপনার কোড। LLM আর টুল আগে থেকে লেখা কোড-পথ ধরে চলে।
+- এজেন্ট: ধাপগুলো ঠিক করে LLM। সে নিজের প্রসেস আর টুলের ব্যবহার নিজেই চালায়।
+
+ভালোভাবে সংজ্ঞায়িত টাস্কে ওয়ার্কফ্লো অনুমানযোগ্যতা আর ধারাবাহিকতা দেয় <Cite n={1} />। তারপর বাকিটা যেকোনো সিস্টেমের মতো ডিজাইন করুন: লোডে কী হয়, খরচ কত, আর কী ব্যর্থ হয়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### A reference shape
+
+Tutorial's own view of a common design for a question-answering app:
+
+```text
+            +--> router (cheap model or rules) --+--> FAQ answer (cached)
+user --> API|                                    +--> RAG path:
+            |                                         retrieve -> rerank -> LLM -> checks
+            +--> rate limit, auth, logging            |
+                                                      +--> tools (read-only by default)
+offline:  documents -> pipeline -> vector index
+          nightly jobs -> batch API
+```
+
+### The parts and the reasons
+
+- **Retrieval (RAG).** The RAG paper combines a model's own knowledge with an outside index that a retriever searches <Cite n={2} />. The authors note that a model alone has trouble updating its knowledge and showing where an answer came from <Cite n={2} />. An index of your documents addresses both.
+- **Routing.** Routing classifies an input and sends it to a specialized task. Without it, tuning for one kind of input can hurt the others <Cite n={1} />.
+- **Prompt caching.** A long system prompt or document set that repeats can be cached as a prefix. This cuts processing time and cost <Cite n={3} />. The default cache lifetime is 5 minutes, and a 1-hour lifetime is also available <Cite n={3} />.
+- **Batch work.** Jobs that do not need an instant answer, such as nightly evals or bulk tagging, can use the Message Batches API. It charges 50% of the standard price, and a batch ends when all requests finish or after 24 hours <Cite n={4} />.
+- **Capacity.** The model API has limits in requests and tokens per minute <Cite n={6} />. Your own design needs a plan for overload too <Cite n={5} />.
+
+### Overload and failure
+
+Google SRE describes **degraded responses**: answers that are less accurate or have less data, but cost less to compute, such as a search over only part of the data <Cite n={5} />. Under extreme overload, even that may not work, and the service may have to return errors <Cite n={5} />. SRE also describes per-customer quotas, so that one client cannot use all the capacity <Cite n={5} />.
+
+Tutorial's own view: for an AI app, a degraded response can be a smaller model, fewer retrieved chunks, or a "please try again" message with the FAQ links. Decide this in the design, not during the incident.
+
+</Technical>
+<Layman>
+
+**A reference shape.** Here is the tutorial's own view of a common design for an app that answers questions. The user calls the API. The API checks the rate limit and the login, and it logs the request. A router sends easy questions to a cached FAQ answer. The router is a cheap model or simple rules. Other questions take the RAG path. The app finds documents, ranks them, asks the LLM, and checks the answer. Tools are read-only by default. Offline, a pipeline turns documents into a vector index. Nightly jobs use the batch API.
+
+**The parts and the reasons.**
+
+- **Retrieval (RAG).** The RAG paper combines the knowledge inside a model with an outside index. A retriever searches the index <Cite n={2} />. The authors note two problems of a model alone. It is hard to update its knowledge. It is hard to show where an answer came from <Cite n={2} />. An index of your documents helps with both.
+- **Routing.** Routing sorts an input and sends it to a special task. Without it, tuning for one kind of input can hurt the others <Cite n={1} />.
+- **Prompt caching.** A long system prompt or set of documents can repeat. You can cache it as a prefix. This cuts processing time and cost <Cite n={3} />. The cache lasts 5 minutes by default. A 1-hour lifetime is also available <Cite n={3} />.
+- **Batch work.** Some jobs do not need an answer at once. Nightly evals and bulk tagging are examples. They can use the Message Batches API. It charges 50% of the standard price. A batch ends when all requests finish, or after 24 hours <Cite n={4} />.
+- **Capacity.** The model API has limits in requests and tokens per minute <Cite n={6} />. Your own design needs a plan for overload too.
+
+**Overload and failure.** Google SRE describes **degraded responses**. These answers are less accurate or have less data. But they cost less to compute. One example is a search over only part of the data <Cite n={5} />. Under extreme overload, even that may not work. The service may have to return errors <Cite n={5} />. SRE also describes quotas for each customer. Then one client cannot use all the capacity <Cite n={5} />.
+
+The tutorial's own view: for an AI app, a degraded response can be a smaller model, fewer documents, or a "please try again" message with the FAQ links. Decide this in the design, not during the incident.
+
+</Layman>
+<Bangla>
+
+**একটা নমুনা আকার।** প্রশ্নের উত্তর দেওয়া অ্যাপের একটা সাধারণ ডিজাইন নিয়ে টিউটোরিয়ালের নিজের মত এই। ইউজার API কল করেন। API রেট লিমিট আর লগইন চেক করে, আর রিকুয়েস্ট লগ করে। একটা router সহজ প্রশ্ন পাঠায় ক্যাশ করা FAQ উত্তরে; router হলো একটা সস্তা মডেল বা সহজ নিয়ম। অন্য প্রশ্ন যায় RAG পথে: অ্যাপ ডকুমেন্ট খোঁজে, সাজায়, LLM-কে জিজ্ঞেস করে, আর উত্তর চেক করে। টুলগুলো ডিফল্টভাবে read-only। অফলাইনে একটা পাইপলাইন ডকুমেন্টকে ভেক্টর ইনডেক্সে পরিণত করে। রাতের জবগুলো batch API ব্যবহার করে।
+
+**অংশগুলো আর তার কারণ।**
+
+- **রিট্রিভাল (RAG)।** RAG পেপার মডেলের নিজের জ্ঞানের সঙ্গে একটা বাইরের ইনডেক্স মেলায়, যেটা একটা retriever খোঁজে <Cite n={2} />। লেখকরা বলেন, একা একটা মডেলের জ্ঞান আপডেট করা আর উত্তর কোথা থেকে এল তা দেখানো কঠিন <Cite n={2} />। আপনার ডকুমেন্টের একটা ইনডেক্স দুটোতেই সাহায্য করে।
+- **রাউটিং।** রাউটিং একটা ইনপুটকে শ্রেণিভুক্ত করে একটা বিশেষ টাস্কে পাঠায়। এটা না থাকলে এক ধরনের ইনপুটের জন্য টিউন করলে অন্যগুলোর ক্ষতি হতে পারে <Cite n={1} />।
+- **প্রম্পট ক্যাশিং।** বারবার আসা লম্বা সিস্টেম প্রম্পট বা ডকুমেন্টের সেট একটা prefix হিসেবে ক্যাশ করা যায়। এতে প্রসেসিংয়ের সময় আর খরচ কমে <Cite n={3} />। ডিফল্টভাবে ক্যাশ 5 মিনিট থাকে, 1 ঘণ্টার মেয়াদও পাওয়া যায় <Cite n={3} />।
+- **ব্যাচের কাজ।** যে কাজে সঙ্গে সঙ্গে উত্তর লাগে না, যেমন রাতের eval বা একসঙ্গে অনেক কিছু ট্যাগ করা, সেগুলো Message Batches API ব্যবহার করতে পারে। এটা স্বাভাবিক দামের 50% নেয়, আর সব রিকুয়েস্ট শেষ হলে বা 24 ঘণ্টা পরে একটা batch শেষ হয় <Cite n={4} />।
+- **ক্ষমতা (capacity)।** মডেল API-র প্রতি মিনিটে রিকুয়েস্ট আর টোকেনের লিমিট আছে <Cite n={6} />। আপনার নিজের ডিজাইনেও ওভারলোডের পরিকল্পনা লাগবে।
+
+**ওভারলোড আর ব্যর্থতা।** Google SRE **degraded response**-এর কথা বলে: এমন উত্তর, যা কম নির্ভুল বা কম ডেটার, কিন্তু হিসাব করতে কম খরচ, যেমন ডেটার শুধু একটা অংশে সার্চ <Cite n={5} />। চরম ওভারলোডে এটাও কাজ না করতে পারে, তখন সার্ভিসকে এরর ফেরত দিতে হতে পারে <Cite n={5} />। SRE প্রতিটা কাস্টমারের জন্য কোটার কথাও বলে, যাতে একজন ক্লায়েন্ট সব ক্ষমতা নিয়ে নিতে না পারে <Cite n={5} />।
+
+টিউটোরিয়ালের নিজের মত: একটা AI অ্যাপে degraded response হতে পারে একটা ছোট মডেল, কম ডকুমেন্ট, বা FAQ লিংকসহ "আবার চেষ্টা করুন" মেসেজ। এটা ডিজাইনের সময়ই ঠিক করুন, ইনসিডেন্টের সময় নয়।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A software company wants an assistant that answers questions from its 20,000 help-center articles, for 50,000 users a day.
+
+Version 1 was a single agent with a web-search tool and 12 other tools. It was slow, costly, and hard to test. The redesign follows the "simplest solution" advice <Cite n={1} />:
+
+1. A router sends billing questions to a billing prompt and product questions to the RAG path <Cite n={1} />.
+2. The RAG path retrieves from an index of the help-center articles, so answers can name their source article <Cite n={2} />.
+3. The system prompt and the style guide are a cached prefix, because every request repeats them <Cite n={3} />.
+4. The nightly job that re-tags new articles runs through the batch API at half price <Cite n={4} />.
+5. When the model API returns 429s, the app serves a degraded answer: the 3 best-matching article links with no generated text <Cite n={5} /> <Cite n={6} />.
+
+The team can now test each part on its own, and test the whole path end to end.
+
+</Technical>
+<Layman>
+
+A software company wants an assistant. It answers questions from 20,000 help-center articles, for 50,000 users a day.
+
+Version 1 was a single agent. It had a web-search tool and 12 other tools. It was slow, cost a lot, and was hard to test. The redesign follows the "simplest solution" advice <Cite n={1} />.
+
+1. A router sends billing questions to a billing prompt. It sends product questions to the RAG path <Cite n={1} />.
+2. The RAG path searches an index of the help-center articles. So each answer can name its source article <Cite n={2} />.
+3. The system prompt and the style guide are a cached prefix, because every request repeats them <Cite n={3} />.
+4. A nightly job tags new articles again. It runs through the batch API at half price <Cite n={4} />.
+5. The model API can return 429s. Then the app gives a degraded answer: the links to the 3 best-matching articles, with no generated text <Cite n={5} /> <Cite n={6} />.
+
+Now the team can test each part on its own. It can also test the whole path from end to end.
+
+</Layman>
+<Bangla>
+
+একটা সফটওয়্যার কোম্পানি এমন একটা অ্যাসিস্ট্যান্ট চায়, যা তাদের 20,000 হেল্প-সেন্টার আর্টিকেল থেকে দিনে 50,000 ইউজারের প্রশ্নের উত্তর দেবে।
+
+ভার্সন 1 ছিল একটা একক এজেন্ট, একটা ওয়েব-সার্চ টুল আর আরও 12টা টুলসহ। এটা ধীর, ব্যয়বহুল আর টেস্ট করা কঠিন ছিল। নতুন ডিজাইন "সবচেয়ে সহজ সমাধান"-এর পরামর্শ মেনে চলে <Cite n={1} />:
+
+1. একটা router বিলিংয়ের প্রশ্ন পাঠায় একটা বিলিং প্রম্পটে, আর প্রোডাক্টের প্রশ্ন পাঠায় RAG পথে <Cite n={1} />।
+2. RAG পথ হেল্প-সেন্টার আর্টিকেলের একটা ইনডেক্স থেকে খোঁজে, তাই প্রতিটা উত্তর তার সোর্স আর্টিকেলের নাম বলতে পারে <Cite n={2} />।
+3. সিস্টেম প্রম্পট আর স্টাইল গাইড একটা ক্যাশ করা prefix, কারণ প্রতিটা রিকুয়েস্টে এগুলো আসে <Cite n={3} />।
+4. নতুন আর্টিকেল আবার ট্যাগ করার রাতের জব batch API দিয়ে অর্ধেক দামে চলে <Cite n={4} />।
+5. মডেল API 429 ফেরত দিলে অ্যাপ একটা degraded উত্তর দেয়: সবচেয়ে মেলে এমন 3টা আর্টিকেলের লিংক, কোনো তৈরি করা লেখা ছাড়া <Cite n={5} /> <Cite n={6} />।
+
+এখন টিম প্রতিটা অংশ আলাদা করে টেস্ট করতে পারে, আর পুরো পথটা শুরু থেকে শেষ পর্যন্তও টেস্ট করতে পারে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **An agent for a fixed task.** If the steps are known, a workflow is more predictable and more consistent <Cite n={1} />.
+- **One prompt for every kind of question.** Tuning it for one type of input can make other types worse. Routing separates them <Cite n={1} />.
+- **No source for answers.** A model alone cannot easily show where an answer came from <Cite n={2} />. Without retrieval and citations, a tester cannot check an answer against a document.
+- **Real-time calls for offline work.** Bulk jobs pay the full price, when the batch API charges 50% of it <Cite n={4} />.
+- **No plan for overload.** Under heavy load, a service may only be able to return errors <Cite n={5} />. Tutorial's own view: design the degraded mode and test it.
+- **Cache that expires before reuse.** The default cache lives 5 minutes <Cite n={3} />. Traffic that comes less often than that pays to write the cache without reading it.
+
+</Technical>
+<Layman>
+
+- **An agent for a fixed task.** If you know the steps, a workflow is more predictable and more consistent <Cite n={1} />.
+- **One prompt for every kind of question.** Tuning it for one type of input can make the other types worse. Routing keeps them apart <Cite n={1} />.
+- **No source for answers.** A model alone cannot easily show where an answer came from <Cite n={2} />. Without retrieval and citations, a tester cannot check an answer against a document.
+- **Real-time calls for offline work.** Bulk jobs pay the full price. The batch API charges only 50% of it <Cite n={4} />.
+- **No plan for overload.** Under heavy load, a service may only be able to return errors <Cite n={5} />. The tutorial's own view: design the degraded mode, and test it.
+- **A cache that expires before reuse.** The default cache lives 5 minutes <Cite n={3} />. If traffic comes less often, you pay to write the cache but never read it.
+
+</Layman>
+<Bangla>
+
+- **নির্দিষ্ট টাস্কের জন্য এজেন্ট।** ধাপগুলো জানা থাকলে ওয়ার্কফ্লো বেশি অনুমানযোগ্য আর ধারাবাহিক <Cite n={1} />।
+- **সব ধরনের প্রশ্নের জন্য এক প্রম্পট।** এক ধরনের ইনপুটের জন্য টিউন করলে অন্যগুলো খারাপ হতে পারে। রাউটিং এগুলো আলাদা রাখে <Cite n={1} />।
+- **উত্তরের কোনো সোর্স নেই।** একা একটা মডেল সহজে দেখাতে পারে না উত্তর কোথা থেকে এল <Cite n={2} />। রিট্রিভাল আর সাইটেশন ছাড়া একজন টেস্টার উত্তরকে কোনো ডকুমেন্টের সঙ্গে মেলাতে পারেন না।
+- **অফলাইন কাজে রিয়েল-টাইম কল।** একসঙ্গে অনেক কাজের জব পুরো দাম দেয়, অথচ batch API নেয় তার মাত্র 50% <Cite n={4} />।
+- **ওভারলোডের পরিকল্পনা নেই।** ভারী লোডে একটা সার্ভিস হয়তো শুধু এরর ফেরত দিতে পারে <Cite n={5} />। টিউটোরিয়ালের নিজের মত: degraded মোড ডিজাইন করুন আর টেস্ট করুন।
+- **আবার ব্যবহারের আগেই মেয়াদ শেষ হওয়া ক্যাশ।** ডিফল্ট ক্যাশ 5 মিনিট থাকে <Cite n={3} />। এর চেয়ে কম ঘন ঘন ট্রাফিক এলে ক্যাশ লেখার খরচ দেন, কিন্তু পড়া হয় না।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Draw the diagram.** Ask the team for the design diagram. Mark each model call, each store, and each tool. Each one is a test target and a failure point.
+- **Test each route.** Write questions for each route of the router, and edge cases that sit between 2 routes.
+- **Check the sources.** For 20 answers, open the cited article and check that it supports the answer.
+- **Force the degraded mode.** In staging, block the model API. Check that users get the planned fallback, not a stack trace.
+- **Load test the full path.** Measure latency and errors at the expected peak, and find which part saturates first.
+- **Check the batch path.** Submit a small batch and check that results arrive, and that failed items are retried or reported.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Draw the diagram.** Ask the team for the design diagram. Mark each model call, each store, and each tool. Each one is a test target and a failure point.
+- **Test each route.** Write questions for each route of the router. Add edge cases that sit between 2 routes.
+- **Check the sources.** For 20 answers, open the cited article. Check that it supports the answer.
+- **Force the degraded mode.** In staging, block the model API. Check that users get the planned fallback, not a stack trace.
+- **Load test the full path.** Measure latency and errors at the expected peak. Find which part fills up first.
+- **Check the batch path.** Submit a small batch. Check that results arrive. Check that failed items are retried or reported.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **ডায়াগ্রাম আঁকুন।** টিমের কাছে ডিজাইন ডায়াগ্রাম চান। প্রতিটা মডেল কল, প্রতিটা স্টোর আর প্রতিটা টুল চিহ্নিত করুন। প্রতিটাই একটা টেস্টের লক্ষ্য আর একটা ব্যর্থতার জায়গা।
+- **প্রতিটা রুট টেস্ট করুন।** Router-এর প্রতিটা রুটের জন্য প্রশ্ন লিখুন, আর এমন edge case যোগ করুন যা 2টা রুটের মাঝামাঝি।
+- **সোর্স চেক করুন।** 20টা উত্তরের জন্য উল্লেখ করা আর্টিকেল খুলুন, আর দেখুন সেটা উত্তরকে সমর্থন করে কি না।
+- **Degraded মোড চালু করান।** Staging-এ মডেল API আটকে দিন। ইউজার পরিকল্পিত বিকল্প উত্তর পান কি না দেখুন, stack trace নয়।
+- **পুরো পথে লোড টেস্ট।** প্রত্যাশিত সর্বোচ্চ লোডে latency আর এরর মাপুন, আর কোন অংশ আগে ভরে যায় খুঁজুন।
+- **Batch পথ চেক করুন।** একটা ছোট batch জমা দিন। ফল আসে কি না, আর ব্যর্থ আইটেম আবার চেষ্টা হয় বা রিপোর্ট হয় কি না দেখুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Augmented LLM | A model with retrieval, tools, and memory <Cite n={1} /> |
+| Workflow | LLMs and tools that run through predefined code paths <Cite n={1} /> |
+| Agent | An LLM that directs its own process and tool use <Cite n={1} /> |
+| RAG | A model combined with a retriever over an outside index <Cite n={2} /> |
+| Prompt caching | Reuse a cached prompt prefix to cut time and cost <Cite n={3} /> |
+| Batch API | Send many requests for asynchronous processing at a lower price <Cite n={4} /> |
+| Degraded response | A cheaper, less complete answer served under overload <Cite n={5} /> |

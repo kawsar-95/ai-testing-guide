@@ -1,0 +1,278 @@
+export const metadata = { title: 'AI Infrastructure', description: 'How an AI app runs in production: a hosted model API or your own model, containers, Kubernetes, GPUs, probes, autoscaling, and rate limits.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'What is a container?', publisher: 'Docker Docs', url: 'https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/', accessed: '2026-10-28' },
+    { title: 'Deployments', publisher: 'Kubernetes Documentation', url: 'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/', accessed: '2026-10-28' },
+    { title: 'Liveness, Readiness, and Startup Probes', publisher: 'Kubernetes Documentation', url: 'https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/', accessed: '2026-10-28' },
+    { title: 'Horizontal Pod Autoscaling', publisher: 'Kubernetes Documentation', url: 'https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/', accessed: '2026-10-28' },
+    { title: 'Schedule GPUs', publisher: 'Kubernetes Documentation', url: 'https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/', accessed: '2026-10-28' },
+    { title: 'Rate limits', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/api/rate-limits', accessed: '2026-10-28' },
+    { title: 'API overview', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/api/overview', accessed: '2026-10-28' },
+  ],
+}
+
+# AI Infrastructure
+
+A prompt that works on a laptop is not yet a product. The product needs a server that runs all day, starts again after a crash, grows when traffic grows, and talks to a model that has its own limits. That is AI infrastructure.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An AI app has 2 kinds of parts:
+
+- **Your own services**: the API, the web app, the retrieval service, and the database. They run the same way as in any web system.
+- **The model**: either a hosted API, or a model that you run yourself on GPUs.
+
+A hosted model is the easy start. You can call Claude on the Claude API itself, or on a cloud platform such as Amazon Bedrock or Microsoft Foundry <Cite n={7} />. On a cloud platform, the authentication goes through the IAM system of the cloud provider <Cite n={7} />. The Claude API has rate limits. If you pass one, you get a 429 error <Cite n={6} />.
+
+Your own services usually run in **containers**. A container is an isolated process with all the files it needs to run <Cite n={1} />. **Kubernetes** then runs many containers on many machines, replaces failed ones, and adds copies when load grows <Cite n={2} /> <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+An AI app has 2 kinds of parts.
+
+- **Your own services.** These are the API, the web app, the retrieval service, and the database. They run the same way as in any web system.
+- **The model.** It is a hosted API, or a model that you run yourself on GPUs.
+
+A hosted model is the easy start. You can reach Claude through the direct Claude API. You can also reach it through cloud platforms, such as Amazon Bedrock and Microsoft Foundry <Cite n={7} />. On a cloud platform, login goes through the IAM system of the cloud provider <Cite n={7} />. The Claude API has rate limits. If you go over one, you get a 429 error <Cite n={6} />.
+
+Your own services usually run in **containers**. A container is an isolated process. It has all the files it needs to run <Cite n={1} />. **Kubernetes** runs many containers on many machines. It replaces the ones that fail. It adds copies when the load grows <Cite n={2} /> <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা AI অ্যাপের 2 ধরনের অংশ থাকে:
+
+- **আপনার নিজের সার্ভিস**: API, ওয়েব অ্যাপ, রিট্রিভাল সার্ভিস আর ডেটাবেস। এগুলো যেকোনো ওয়েব সিস্টেমের মতোই চলে।
+- **মডেল**: হয় একটা হোস্টেড API, নয়তো GPU-তে আপনার নিজের চালানো একটা মডেল।
+
+হোস্টেড মডেল দিয়ে শুরু করা সহজ। Claude পাওয়া যায় সরাসরি Claude API দিয়ে, আবার Amazon Bedrock ও Microsoft Foundry-র মতো ক্লাউড প্ল্যাটফর্ম দিয়েও <Cite n={7} />। ক্লাউড প্ল্যাটফর্মে অথেনটিকেশন যায় ক্লাউড প্রোভাইডারের IAM সিস্টেমের মধ্য দিয়ে <Cite n={7} />। Claude API-র রেট লিমিট আছে। একটা পার হলে আপনি 429 এরর পাবেন <Cite n={6} />।
+
+আপনার নিজের সার্ভিসগুলো সাধারণত **কন্টেইনারে (container)** চলে। কন্টেইনার হলো একটা আলাদা (isolated) প্রসেস, যার চলার জন্য দরকারি সব ফাইল তার সঙ্গেই থাকে <Cite n={1} />। এরপর **Kubernetes** অনেক মেশিনে অনেক কন্টেইনার চালায়, নষ্ট হওয়াগুলো বদলে দেয়, আর লোড বাড়লে আরও কপি যোগ করে <Cite n={2} /> <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Containers
+
+A container is self-contained: it does not rely on what is installed on the host. It is portable: the same container runs the same way on a laptop and in the cloud <Cite n={1} />. All containers on a machine share one kernel, so they use less infrastructure than virtual machines <Cite n={1} />.
+
+### Deployments
+
+A Kubernetes **Deployment** gives declarative updates for Pods. You describe the desired state, and the controller moves the actual state to it at a controlled rate <Cite n={2} />. A change to the Pod template, such as a new image, starts a rollout <Cite n={2} />. By default, a rolling update allows 25% of the Pods to be unavailable <Cite n={2} />.
+
+### Probes
+
+Kubernetes asks each container if it is healthy <Cite n={3} />:
+
+| Probe | Question |
+|---|---|
+| Startup | Has the app started? Until it succeeds, the other probes do not run. |
+| Readiness | Can it take traffic now? Useful while the app loads files or warms caches. |
+| Liveness | Is it stuck? A failed check restarts the container. |
+
+### Autoscaling
+
+A **HorizontalPodAutoscaler** updates a Deployment to match capacity to demand. Horizontal scaling adds Pods. Vertical scaling gives more CPU or memory to the Pods that run <Cite n={4} />.
+
+### GPUs for a self-hosted model
+
+The node needs the GPU driver and the device plugin of the vendor. Then the cluster offers a resource such as `nvidia.com/gpu` <Cite n={5} />. You set GPUs in `limits`. If you also set `requests`, the 2 values must be equal <Cite n={5} />.
+
+```yaml
+# Part of a Pod spec for a model server (example values)
+containers:
+  - name: model-server
+    image: registry.example.com/model-server:1.4.2
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8080
+```
+
+### Model API limits
+
+The Claude Messages API sets 3 limits for each model class: RPM (the requests in a minute), ITPM (the input tokens in a minute), and, for output, OTPM <Cite n={6} />. It uses a token bucket, so the capacity refills all the time and does not reset at fixed times <Cite n={6} />. If a 429 response carries `retry-after`, its value is the number of seconds to wait before the next try <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+**Containers.** A container is self-contained. It does not depend on what is installed on the host. It is portable. The same container runs the same way on a laptop and in the cloud <Cite n={1} />. All containers on a machine share one kernel. So they use less infrastructure than virtual machines <Cite n={1} />.
+
+**Deployments.** A Kubernetes **Deployment** updates Pods in a declarative way. You describe the state you want. The controller moves the real state to it, at a controlled speed <Cite n={2} />. A change to the Pod template starts a rollout. A new image is one such change <Cite n={2} />. By default, a rolling update lets 25% of the Pods be unavailable <Cite n={2} />.
+
+**Probes.** Kubernetes asks each container if it is healthy <Cite n={3} />.
+
+- The startup probe asks: has the app started? Until it succeeds, the other probes do not run.
+- The readiness probe asks: can it take traffic now? This helps while the app loads files or warms caches.
+- The liveness probe asks: is it stuck? A failed check restarts the container.
+
+**Autoscaling.** A **HorizontalPodAutoscaler** updates a Deployment so that capacity matches demand. Horizontal scaling adds Pods. Vertical scaling gives more CPU or memory to the Pods that already run <Cite n={4} />.
+
+**GPUs for your own model.** The node needs the GPU driver and the device plugin of the vendor. Then the cluster offers a resource such as `nvidia.com/gpu` <Cite n={5} />. You set GPUs in `limits`. If you also set `requests`, the 2 values must be the same <Cite n={5} />. The example in the Technical text asks for 1 GPU and adds a readiness check on `/ready`.
+
+**Model API limits.** The Claude Messages API sets 3 limits: RPM (the requests in a minute), ITPM (the input tokens in a minute), and OTPM for output. The limits are for each model class <Cite n={6} />. It uses a token bucket. So the capacity refills all the time. It does not reset at fixed times <Cite n={6} />. A 429 response can carry `retry-after`. Its value is the number of seconds to wait before the next try <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+**কন্টেইনার।** কন্টেইনার স্বয়ংসম্পূর্ণ (self-contained): হোস্টে কী ইনস্টল করা আছে, তার ওপর নির্ভর করে না। এটা পোর্টেবল: একই কন্টেইনার ল্যাপটপে আর ক্লাউডে একইভাবে চলে <Cite n={1} />। একটা মেশিনের সব কন্টেইনার একটাই kernel শেয়ার করে, তাই ভার্চুয়াল মেশিনের চেয়ে কম ইনফ্রাস্ট্রাকচার লাগে <Cite n={1} />।
+
+**ডিপ্লয়মেন্ট।** Kubernetes-এর **Deployment** Pod-গুলোকে declarative উপায়ে আপডেট করে। আপনি যে অবস্থা চান তা বর্ণনা করেন। কন্ট্রোলার একটা নিয়ন্ত্রিত গতিতে আসল অবস্থাকে সেদিকে নিয়ে যায় <Cite n={2} />। Pod template-এ পরিবর্তন, যেমন নতুন image, একটা rollout শুরু করে <Cite n={2} />। ডিফল্টভাবে rolling update-এ 25% Pod অনুপলব্ধ থাকতে পারে <Cite n={2} />।
+
+**প্রোব (probe)।** Kubernetes প্রতিটা কন্টেইনারকে জিজ্ঞেস করে সেটা সুস্থ কি না <Cite n={3} />।
+
+- Startup প্রোব জিজ্ঞেস করে: অ্যাপ কি চালু হয়েছে? এটা সফল না হওয়া পর্যন্ত অন্য প্রোবগুলো চলে না।
+- Readiness প্রোব জিজ্ঞেস করে: এখন কি ট্রাফিক নিতে পারবে? অ্যাপ যখন ফাইল লোড করে বা ক্যাশ গরম করে, তখন এটা কাজে লাগে।
+- Liveness প্রোব জিজ্ঞেস করে: এটা কি আটকে আছে? চেক ব্যর্থ হলে কন্টেইনার রিস্টার্ট হয়।
+
+**অটোস্কেলিং।** **HorizontalPodAutoscaler** একটা Deployment আপডেট করে, যাতে ক্ষমতা চাহিদার সঙ্গে মেলে। Horizontal স্কেলিং মানে আরও Pod যোগ করা। Vertical স্কেলিং মানে চলমান Pod-কে বেশি CPU বা মেমরি দেওয়া <Cite n={4} />।
+
+**নিজের মডেলের জন্য GPU।** নোডে ভেন্ডরের GPU ড্রাইভার আর device plugin লাগে। তারপর ক্লাস্টার `nvidia.com/gpu`-এর মতো একটা রিসোর্স দেয় <Cite n={5} />। GPU সেট করতে হয় `limits`-এ। `requests`-ও দিলে দুটো মান সমান হতে হবে <Cite n={5} />। Technical লেখার উদাহরণটা 1টা GPU চায় আর `/ready`-তে একটা readiness চেক যোগ করে।
+
+**মডেল API-র লিমিট।** Claude Messages API প্রতিটা মডেল ক্লাসের জন্য প্রতি মিনিটে রিকুয়েস্ট (RPM), ইনপুট টোকেন (ITPM) আর আউটপুট টোকেন (OTPM) সীমিত করে <Cite n={6} />। এটা token bucket ব্যবহার করে, তাই ক্ষমতা সবসময় আবার ভরে ওঠে, নির্দিষ্ট সময়ে রিসেট হয় না <Cite n={6} />। একটা 429 রেসপন্সে `retry-after` হেডার থাকলে আবার চেষ্টার আগে ততগুলো সেকেন্ড অপেক্ষা করুন <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+An HR company runs a policy assistant. Employees ask questions about leave rules. The setup:
+
+```text
+browser --> web app (3 Pods) --> assistant API (Deployment, autoscaled)
+                                      |--> vector search service
+                                      |--> Claude API (hosted model)
+```
+
+Tutorial's own view of what happens on a busy Monday morning: traffic doubles. The autoscaler adds Pods to the assistant API, as it is designed to do <Cite n={4} />. But the Claude API enforces its limits at the organization level, for each model class, so more Pods send more requests into the same RPM and token limits <Cite n={6} />. Some calls get a 429. The team adds a queue and respects `retry-after` <Cite n={6} />.
+
+A new Pod of the vector search service needs time to load its index. Its readiness probe keeps traffic away until it is ready <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+An HR company runs a policy assistant. Employees ask it about leave rules. The browser talks to a web app with 3 Pods. The web app talks to the assistant API. The assistant API is a Deployment with autoscaling. It calls a vector search service and the hosted Claude API.
+
+Here is the tutorial's own view of a busy Monday morning. Traffic doubles. The autoscaler adds Pods to the assistant API. That is its job <Cite n={4} />. But the Claude API limits do not grow with the Pods. They are for the whole organization, for each model class <Cite n={6} />. So more Pods send more requests into the same limits. Some calls get a 429. The team adds a queue. It waits for the time in `retry-after` <Cite n={6} />.
+
+A new Pod of the vector search service needs time to load its index. Its readiness probe keeps traffic away until it is ready <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+একটা HR কোম্পানি একটা পলিসি অ্যাসিস্ট্যান্ট চালায়। কর্মীরা ছুটির নিয়ম নিয়ে প্রশ্ন করেন। ব্রাউজার কথা বলে 3টা Pod-এর একটা ওয়েব অ্যাপের সঙ্গে। ওয়েব অ্যাপ কথা বলে assistant API-র সঙ্গে। Assistant API অটোস্কেলিংসহ একটা Deployment। এটা একটা ভেক্টর সার্চ সার্ভিস আর হোস্টেড Claude API কল করে।
+
+ব্যস্ত সোমবার সকালে কী হয়, তা নিয়ে টিউটোরিয়ালের নিজের মত: ট্রাফিক দ্বিগুণ হয়। অটোস্কেলার assistant API-তে Pod যোগ করে, এটাই তার কাজ <Cite n={4} />। কিন্তু Claude API-র লিমিট Pod-এর সঙ্গে বাড়ে না, এটা পুরো অর্গানাইজেশনের জন্য, প্রতিটা মডেল ক্লাসের জন্য <Cite n={6} />। তাই বেশি Pod একই লিমিটে বেশি রিকুয়েস্ট পাঠায়। কিছু কল 429 পায়। টিম একটা queue যোগ করে আর `retry-after` মেনে চলে <Cite n={6} />।
+
+ভেক্টর সার্চ সার্ভিসের নতুন Pod-এর ইনডেক্স লোড করতে সময় লাগে। তার readiness প্রোব তৈরি না হওয়া পর্যন্ত ট্রাফিক দূরে রাখে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Scale the app, forget the model.** More Pods do not raise the model API limits <Cite n={6} />.
+- **Retry at once after a 429.** The API tells you how long to wait in `retry-after` <Cite n={6} />. Short bursts can also trigger errors, because 60 RPM can be enforced as 1 request per second <Cite n={6} />.
+- **No readiness probe.** A Pod that is still loading a model or an index gets traffic and fails <Cite n={3} />.
+- **A liveness probe that is too strict.** A slow start looks like a hang, and Kubernetes restarts the container again and again. A startup probe gives the app time first <Cite n={3} />.
+- **GPU requests without limits.** Kubernetes does not accept a GPU request without a limit <Cite n={5} />.
+- **Same image tag for a new build.** A rollout starts only when the Pod template changes <Cite n={2} />. Tutorial's own view: use a new tag for each build.
+
+</Technical>
+<Layman>
+
+- **Scale the app, forget the model.** More Pods do not raise the model API limits <Cite n={6} />.
+- **Retry at once after a 429.** The API tells you how long to wait in `retry-after` <Cite n={6} />. Short bursts can also cause errors. A limit of 60 RPM can be enforced as 1 request per second <Cite n={6} />.
+- **No readiness probe.** A Pod still loads a model or an index. It gets traffic and fails <Cite n={3} />.
+- **A liveness probe that is too strict.** A slow start looks like a hang. Kubernetes restarts the container again and again. A startup probe gives the app time first <Cite n={3} />.
+- **GPU requests without limits.** Kubernetes does not accept a GPU request without a limit <Cite n={5} />.
+- **The same image tag for a new build.** A rollout starts only when the Pod template changes <Cite n={2} />. The tutorial's own view: use a new tag for each build.
+
+</Layman>
+<Bangla>
+
+- **অ্যাপ স্কেল করা, মডেল ভুলে যাওয়া।** বেশি Pod মডেল API-র লিমিট বাড়ায় না <Cite n={6} />।
+- **429-এর পর সঙ্গে সঙ্গে আবার চেষ্টা।** কতক্ষণ অপেক্ষা করতে হবে, API তা `retry-after`-এ বলে দেয় <Cite n={6} />। ছোট ঝটকা (burst)-তেও এরর হতে পারে, কারণ 60 RPM-কে প্রতি সেকেন্ডে 1টা রিকুয়েস্ট হিসেবে প্রয়োগ করা হতে পারে <Cite n={6} />।
+- **Readiness প্রোব নেই।** যে Pod এখনও মডেল বা ইনডেক্স লোড করছে, সে ট্রাফিক পায় আর ব্যর্থ হয় <Cite n={3} />।
+- **খুব কড়া liveness প্রোব।** ধীর শুরুকে আটকে যাওয়া মনে হয়, আর Kubernetes বারবার কন্টেইনার রিস্টার্ট করে। Startup প্রোব আগে অ্যাপকে সময় দেয় <Cite n={3} />।
+- **Limit ছাড়া GPU request।** Kubernetes limit ছাড়া GPU request গ্রহণ করে না <Cite n={5} />।
+- **নতুন বিল্ডে একই image tag।** Pod template বদলালে তবেই rollout শুরু হয় <Cite n={2} />। টিউটোরিয়ালের নিজের মত: প্রতিটা বিল্ডে নতুন tag দিন।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Run the same container.** Test the image that goes to production, not a local run of the code.
+- **Kill a Pod.** In a test cluster, delete one Pod during a load test. Users should see no errors, or only a short dip.
+- **Cold start.** Scale to 0 and back up. Measure the time until the readiness probe passes and the first answer comes back.
+- **Hit the model limit.** With a test key, send a burst that passes the rate limit. Check that the app waits for `retry-after` and shows a friendly message.
+- **Autoscaling.** Run a load test and watch the Pod count go up and down. Check that the model limits are not the real bottleneck.
+- **Rollout.** Deploy a new version during a load test. Count failed requests.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Run the same container.** Test the image that goes to production. Do not test only a local run of the code.
+- **Kill a Pod.** In a test cluster, delete one Pod during a load test. Users should see no errors, or only a short dip.
+- **Cold start.** Scale to 0 and back up. Measure the time until the readiness probe passes and the first answer comes back.
+- **Hit the model limit.** With a test key, send a burst that goes over the rate limit. Check that the app waits for `retry-after`. Check that it shows a friendly message.
+- **Autoscaling.** Run a load test. Watch the Pod count go up and down. Check that the model limits are not the real bottleneck.
+- **Rollout.** Deploy a new version during a load test. Count the failed requests.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **একই কন্টেইনার চালান।** প্রোডাকশনে যে image যায়, সেটাই টেস্ট করুন, শুধু কোডের লোকাল রান নয়।
+- **একটা Pod মেরে ফেলুন।** একটা টেস্ট ক্লাস্টারে লোড টেস্টের সময় একটা Pod মুছে দিন। ইউজারের কোনো এরর দেখার কথা নয়, বড়জোর সামান্য সময়ের জন্য কমতি।
+- **কোল্ড স্টার্ট।** 0-তে নামিয়ে আবার তুলুন। Readiness প্রোব পাস হওয়া আর প্রথম উত্তর আসা পর্যন্ত সময় মাপুন।
+- **মডেলের লিমিট ছুঁয়ে দেখুন।** একটা টেস্ট কী দিয়ে রেট লিমিট পার হওয়ার মতো একটা burst পাঠান। অ্যাপ `retry-after` মেনে অপেক্ষা করে আর ভদ্র একটা মেসেজ দেখায় কি না দেখুন।
+- **অটোস্কেলিং।** একটা লোড টেস্ট চালান আর Pod-এর সংখ্যা ওঠানামা দেখুন। মডেলের লিমিটই আসল বাধা (bottleneck) কি না যাচাই করুন।
+- **Rollout।** লোড টেস্টের সময় নতুন ভার্সন ডিপ্লয় করুন। ব্যর্থ রিকুয়েস্ট গুনুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Container | An isolated process with all the files it needs to run <Cite n={1} /> |
+| Deployment | A Kubernetes object that moves Pods to a desired state at a controlled rate <Cite n={2} /> |
+| Readiness probe | A check that says when a container can take traffic <Cite n={3} /> |
+| Liveness probe | A check that says when to restart a container <Cite n={3} /> |
+| Horizontal scaling | Add more Pods when the load grows <Cite n={4} /> |
+| Device plugin | The part that lets Pods use hardware such as GPUs <Cite n={5} /> |
+| Rate limit | The maximum requests or tokens per minute that the model API accepts <Cite n={6} /> |

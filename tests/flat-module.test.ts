@@ -162,15 +162,15 @@ test("a link entry without href throws", () => {
   );
 });
 
-test("the registry is System Design, Architecture, the Course, then k6, with unique ids", () => {
+test("the registry is System Design, Architecture, the Course, k6, then AI Engineering, with unique ids", () => {
   assert.deepEqual(
     FLAT_MODULES.map((m) => m.id),
-    ["system-design", "architecture", "course", "k6"],
+    ["system-design", "architecture", "course", "k6", "ai-engineering"],
   );
   assert.equal(new Set(FLAT_MODULES.map((m) => m.id)).size, FLAT_MODULES.length);
   assert.deepEqual(
     PROGRESS_MODULES.map((m) => m.id),
-    ["architecture", "course", "k6"],
+    ["architecture", "course", "k6", "ai-engineering"],
   );
 });
 
@@ -194,7 +194,7 @@ test("Architecture: the next page of observability is practice, and practice has
 });
 
 test("the search index route has a flatDocs call for each flat module", () => {
-  const constOf: Record<string, string> = { "system-design": "SYSTEM_DESIGN", architecture: "ARCHITECTURE", course: "COURSE", k6: "K6" };
+  const constOf: Record<string, string> = { "system-design": "SYSTEM_DESIGN", architecture: "ARCHITECTURE", course: "COURSE", k6: "K6", "ai-engineering": "AI_ENGINEERING" };
   const ids = FLAT_MODULES.map((m) => m.id);
   assert.deepEqual(Object.keys(constOf).sort(), [...ids].sort(), "add the new module to constOf");
   const route = readFileSync("app/search-index.json/route.ts", "utf8");

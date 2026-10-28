@@ -1,0 +1,265 @@
+export const metadata = { title: 'Production Monitoring', description: 'Watch an AI app after release: the 4 golden signals, token usage and cost, drift, answer quality, and incidents.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Monitoring Distributed Systems (Site Reliability Engineering, chapter 6)', publisher: 'Google SRE', url: 'https://sre.google/sre-book/monitoring-distributed-systems/', accessed: '2026-10-28' },
+    { title: 'Introduction to Model Monitoring (Gemini Enterprise Agent Platform)', publisher: 'Google Cloud Documentation', url: 'https://cloud.google.com/vertex-ai/docs/model-monitoring/overview', accessed: '2026-10-28' },
+    { title: 'Usage and Cost API', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/manage-claude/usage-cost-api', accessed: '2026-10-28' },
+    { title: 'Postmortem Culture: Learning from Failure (Site Reliability Engineering, chapter 15)', publisher: 'Google SRE', url: 'https://sre.google/sre-book/postmortem-culture/', accessed: '2026-10-28' },
+    { title: 'AI RMF Core (AI Risk Management Framework 1.0, section 5)', publisher: 'NIST AI Resource Center', url: 'https://airc.nist.gov/airmf-resources/airmf/5-sec-core/', accessed: '2026-10-28' },
+    { title: 'Demystifying evals for AI agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents', accessed: '2026-10-28' },
+  ],
+}
+
+# Production Monitoring
+
+The tests passed and the app is live. Now real users ask questions that no test case had, the data changes, and the bill grows. Production monitoring tells you, with numbers, whether the app still works well and what it costs.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+This tutorial splits the production monitoring of an AI app into 2 layers:
+
+- **The service layer**, the same as any web service. Google SRE names 4 golden signals: latency, traffic, errors, and saturation. With room for only 4 metrics, pick these <Cite n={1} />.
+- **The AI layer**, which is new: token use and cost, drift in the input or output data, and the quality of the answers.
+
+NIST lists this as an outcome of AI risk management: the system and its parts are monitored in production <Cite n={5} />. Anthropic notes that evals work together with production monitoring, A/B tests, and user research <Cite n={6} />. An eval suite checks what you thought of before release. Monitoring shows what real use brings <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+This tutorial splits the production monitoring of an AI app into 2 layers.
+
+- **The service layer** is the same as in any web service. Google SRE names 4 golden signals. They are latency, traffic, errors, and saturation. With room for only 4 metrics, pick these <Cite n={1} />.
+- **The AI layer** is new. It covers token use and cost, drift in the input or output data, and the quality of the answers.
+
+NIST lists this as an outcome of AI risk management. The system and its parts are monitored in production <Cite n={5} />. Anthropic notes that evals work together with production monitoring, A/B tests, and user research <Cite n={6} />. An eval suite checks what you thought of before the release. Monitoring shows what real use brings <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+এই টিউটোরিয়াল একটা AI অ্যাপের প্রোডাকশন মনিটরিংকে 2টা স্তরে ভাগ করে:
+
+- **সার্ভিস স্তর**, যেকোনো ওয়েব সার্ভিসের মতোই। Google SRE 4টা golden signal বলে: latency, traffic, errors আর saturation। মাত্র 4টা মেট্রিক মাপতে পারলে এই 4টাই মাপুন <Cite n={1} />।
+- **AI স্তর**, যা নতুন: টোকেন ব্যবহার আর খরচ, ইনপুট বা আউটপুট ডেটার drift, আর উত্তরের মান।
+
+NIST এটাকে AI ঝুঁকি ব্যবস্থাপনার একটা ফলাফল হিসেবে রাখে: সিস্টেম আর তার অংশগুলো প্রোডাকশনে মনিটর করা হয় <Cite n={5} />। Anthropic বলে, eval কাজ করে প্রোডাকশন মনিটরিং, A/B টেস্ট আর ইউজার রিসার্চের সঙ্গে মিলে <Cite n={6} />। Eval suite সেটাই চেক করে, যা আপনি রিলিজের আগে ভেবেছিলেন। মনিটরিং দেখায় আসল ব্যবহারে কী আসে <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### The service signals
+
+| Signal | For an AI app |
+|---|---|
+| Latency | The time to serve a request. Track the latency of errors too, because a slow error is worse than a fast one <Cite n={1} />. |
+| Traffic | The demand on the system <Cite n={1} />, for example chat turns per minute. |
+| Errors | Failed requests <Cite n={1} />, including 429 and 5xx answers from the model API. |
+| Saturation | How full the service is <Cite n={1} />, for example a queue that waits for the model. |
+
+SRE says a monitoring system should answer 2 questions: what is broken (the symptom), and why (the cause) <Cite n={1} />. Every page to the on-call person should be actionable <Cite n={1} />.
+
+### Token use and cost
+
+The Claude Usage API reports token use for an organization at `/v1/organizations/usage_report/messages` <Cite n={3} />. It groups the data in buckets of `1m`, `1h`, or `1d`, counts output tokens and 3 kinds of input tokens: uncached, cached, and cache creation, and filters by API key, workspace, and model <Cite n={3} />. It needs an Admin API credential, such as an Admin API key; a workspace API key does not work <Cite n={3} />.
+
+```bash
+# Daily token use for one week, grouped by model (Admin key from the environment)
+curl "https://api.anthropic.com/v1/organizations/usage_report/messages?\
+starting_at=2026-10-01T00:00:00Z&ending_at=2026-10-08T00:00:00Z&\
+group_by[]=model&bucket_width=1d" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "x-api-key: $ANTHROPIC_ADMIN_KEY"
+```
+
+### Drift
+
+Data changes over time. The features that a model learned from may not be relevant for today's inputs. Google Cloud calls this deviation **drift** <Cite n={2} />. Model Monitoring in Google Cloud (Gemini Enterprise Agent Platform) tracks the quality of tabular models. It compares the distribution of input features, and of the model output, with a baseline, and alerts when the difference passes a threshold <Cite n={2} />. Tutorial's own view: the source is about tabular models, but the same idea can apply to an LLM app, to the topics that users ask about and to the answers. Sample real questions each week and compare them with the eval set.
+
+### Quality
+
+Capability evals with high pass rates can become a regression suite that runs all the time to catch drift <Cite n={6} />. NIST adds that users need a way to report problems and to appeal outcomes, and that this feedback goes into the evaluation metrics <Cite n={5} />.
+
+### Incidents
+
+Common postmortem triggers are user-visible downtime or degradation past a threshold, any data loss, and a monitoring failure <Cite n={4} />. A postmortem records the incident, its impact, the actions, the root causes, and the follow-up actions <Cite n={4} />. It is blameless: it finds causes without blaming a person or a team <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+**The service signals.**
+
+- Latency is the time to serve a request. Track the latency of errors too. A slow error is worse than a fast one <Cite n={1} />.
+- Traffic is the demand on the system <Cite n={1} />. One example is chat turns per minute.
+- Errors are failed requests <Cite n={1} />. They include 429 and 5xx answers from the model API.
+- Saturation is how full the service is <Cite n={1} />. One example is a queue that waits for the model.
+
+SRE says a monitoring system answers 2 questions. What is broken? That is the symptom. Why? That is the cause <Cite n={1} />. Every page to the on-call person should lead to an action <Cite n={1} />.
+
+**Token use and cost.** The Claude Usage API reports the token use of an organization. Its endpoint is `/v1/organizations/usage_report/messages` <Cite n={3} />. It groups the data in buckets of `1m`, `1h`, or `1d`. It counts output tokens and 3 kinds of input tokens: uncached, cached, and cache creation. It filters by API key, workspace, and model <Cite n={3} />. It needs an Admin API credential, such as an Admin API key. A workspace API key does not work <Cite n={3} />. The example in the Technical text asks for the daily use of one week, grouped by model.
+
+**Drift.** Data changes over time. The features that a model learned from may not fit the inputs of today. Google Cloud calls this change **drift** <Cite n={2} />. Model Monitoring in Google Cloud (Gemini Enterprise Agent Platform) tracks the quality of tabular models. It compares the input features and the model output with a baseline. It sends an alert when the difference goes past a threshold <Cite n={2} />. The tutorial's own view: the source is about tabular models, but the same idea can apply to an LLM app. It can apply to the topics that users ask about, and to the answers. Each week, take a sample of real questions. Compare them with the eval set.
+
+**Quality.** Capability evals with high pass rates can become a regression suite. It runs all the time and catches drift <Cite n={6} />. NIST adds this: users need a way to report problems and to appeal outcomes. This feedback goes into the evaluation metrics <Cite n={5} />.
+
+**Incidents.** Common reasons for a postmortem are user-visible downtime or degradation past a threshold, any data loss, and a monitoring failure <Cite n={4} />. A postmortem records the incident, its impact, the actions, the root causes, and the follow-up actions <Cite n={4} />. It is blameless. It finds causes. It does not blame a person or a team <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+**সার্ভিসের সিগন্যাল।**
+
+- Latency হলো একটা রিকুয়েস্ট সার্ভ করার সময়। এররের latency-ও ট্র্যাক করুন, কারণ ধীর এরর দ্রুত এররের চেয়ে খারাপ <Cite n={1} />।
+- Traffic হলো সিস্টেমের ওপর চাহিদা <Cite n={1} />, যেমন প্রতি মিনিটে চ্যাটের টার্ন।
+- Errors হলো ব্যর্থ রিকুয়েস্ট <Cite n={1} />, মডেল API-র 429 আর 5xx উত্তরসহ।
+- Saturation হলো সার্ভিস কতটা ভরা <Cite n={1} />, যেমন মডেলের জন্য অপেক্ষারত একটা queue।
+
+SRE বলে, মনিটরিং সিস্টেম 2টা প্রশ্নের উত্তর দেবে: কী ভেঙেছে (লক্ষণ), আর কেন (কারণ) <Cite n={1} />। অন-কল মানুষের কাছে প্রতিটা পেজ এমন হবে, যাতে কিছু করার থাকে <Cite n={1} />।
+
+**টোকেন ব্যবহার আর খরচ।** Claude Usage API একটা অর্গানাইজেশনের টোকেন ব্যবহার জানায় `/v1/organizations/usage_report/messages`-এ <Cite n={3} />। এটা ডেটাকে `1m`, `1h` বা `1d`-এর bucket-এ সাজায়, uncached input, cached input, cache creation আর output টোকেন গোনে, আর API key, workspace ও মডেল দিয়ে ফিল্টার করে <Cite n={3} />। এর জন্য একটা Admin API credential লাগে, যেমন Admin API key; workspace API key কাজ করে না <Cite n={3} />। Technical লেখার উদাহরণ এক সপ্তাহের দৈনিক ব্যবহার চায়, মডেল অনুযায়ী সাজানো।
+
+**Drift।** সময়ের সঙ্গে ডেটা বদলায়। মডেল যে feature থেকে শিখেছিল, সেগুলো আজকের ইনপুটে প্রাসঙ্গিক না-ও থাকতে পারে। Google Cloud এই বিচ্যুতিকে **drift** বলে <Cite n={2} />। Google Cloud-এর (Gemini Enterprise Agent Platform) Model Monitoring tabular মডেলের মান ট্র্যাক করে। এটা ইনপুট feature আর মডেলের আউটপুটের বিন্যাস একটা baseline-এর সঙ্গে মেলায়, আর পার্থক্য একটা threshold পার হলে সতর্ক করে <Cite n={2} />। টিউটোরিয়ালের নিজের মত: সোর্সটা tabular মডেল নিয়ে, তবে একই ধারণা একটা LLM অ্যাপেও খাটতে পারে, ইউজাররা যে বিষয়ে প্রশ্ন করেন আর উত্তরগুলোর ওপর। প্রতি সপ্তাহে আসল প্রশ্নের একটা নমুনা নিন, আর eval-সেটের সঙ্গে মেলান।
+
+**মান (quality)।** উঁচু pass rate-এর capability eval একটা regression suite হয়ে উঠতে পারে, যা সবসময় চলে আর drift ধরে <Cite n={6} />। NIST যোগ করে: ইউজারদের সমস্যা জানানো আর ফলাফলের বিরুদ্ধে আপিল করার উপায় থাকা চাই, আর এই ফিডব্যাক eval মেট্রিকে যায় <Cite n={5} />।
+
+**ইনসিডেন্ট।** Postmortem-এর সাধারণ কারণ হলো একটা সীমার বেশি ইউজার-দৃশ্যমান downtime বা অবনতি, যেকোনো ডেটা হারানো, আর মনিটরিং ব্যর্থ হওয়া <Cite n={4} />। একটা postmortem লিখে রাখে ইনসিডেন্ট, তার প্রভাব, নেওয়া পদক্ষেপ, মূল কারণ আর পরের করণীয় <Cite n={4} />। এটা blameless: কোনো মানুষ বা টিমকে দোষ না দিয়ে কারণ খোঁজে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A bank runs a support chatbot. The dashboards show:
+
+```text
+latency p95     2.1 s   (normal)
+error rate      0.3 %   (normal)
+output tokens   +40 %   since Tuesday
+thumbs-down     +3x     on "card" questions
+```
+
+The service signals look fine, so a classic dashboard says "healthy". The AI layer says something else. The team groups the usage by model and day <Cite n={3} /> and finds the jump starts on the day a new card product launched. Users now ask about a product that the knowledge base does not cover, and the bot gives long, vague answers.
+
+In the tutorial's own view, this is drift in the input data (a change compared with a baseline <Cite n={2} />): the questions of today differ from the questions before the launch. The team adds the new product documents, adds 30 card questions to the eval set, and writes a blameless postmortem, because users saw worse answers <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+A bank runs a support chatbot. The dashboards show 4 things. Latency p95 is 2.1 seconds, which is normal. The error rate is 0.3%, which is normal. Output tokens are up 40% since Tuesday. Thumbs-down votes on "card" questions are 3 times higher.
+
+The service signals look fine. A classic dashboard says "healthy". The AI layer says something else. The team groups the usage by model and day <Cite n={3} />. The jump starts on the day that a new card product launched. Users now ask about a product that the knowledge base does not cover. The bot gives long, vague answers.
+
+In the tutorial's own view, this is drift in the input data. Drift is a change compared with a baseline <Cite n={2} />. The questions of today differ from the questions before the launch. The team adds the documents of the new product. It adds 30 card questions to the eval set. It writes a blameless postmortem, because users saw worse answers <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা ব্যাংক একটা সাপোর্ট চ্যাটবট চালায়। ড্যাশবোর্ডে 4টা জিনিস দেখা যায়: latency p95 2.1 সেকেন্ড (স্বাভাবিক), এরর রেট 0.3% (স্বাভাবিক), মঙ্গলবার থেকে আউটপুট টোকেন 40% বেশি, আর "card" প্রশ্নে thumbs-down 3 গুণ।
+
+সার্ভিসের সিগন্যাল ঠিক দেখায়, তাই একটা সাধারণ ড্যাশবোর্ড বলে "সুস্থ"। AI স্তর অন্য কথা বলে। টিম ব্যবহারকে মডেল আর দিন অনুযায়ী সাজায় <Cite n={3} />, আর দেখে যে লাফটা শুরু হয়েছে যেদিন একটা নতুন কার্ড প্রোডাক্ট চালু হয়েছে। ইউজাররা এখন এমন প্রোডাক্ট নিয়ে প্রশ্ন করেন, যা নলেজ বেসে নেই, আর বট লম্বা, অস্পষ্ট উত্তর দেয়।
+
+টিউটোরিয়ালের নিজের মতে, এটা ইনপুট ডেটার drift (একটা baseline-এর তুলনায় পরিবর্তন <Cite n={2} />): আজকের প্রশ্ন লঞ্চের আগের প্রশ্ন থেকে আলাদা। টিম নতুন প্রোডাক্টের ডকুমেন্ট যোগ করে, eval-সেটে কার্ড নিয়ে 30টা প্রশ্ন যোগ করে, আর একটা blameless postmortem লেখে, কারণ ইউজাররা খারাপ উত্তর দেখেছেন <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Only service metrics.** A 200 response with the wrong content is still an error <Cite n={1} />. Tutorial's own view: add at least one quality signal, such as user ratings or sampled reviews.
+- **Errors left out of latency.** A fast 500 makes the average look good. Track the latency of errors on its own <Cite n={1} />.
+- **Alerts that need no action.** A page that only needs a robotic response should not be a page <Cite n={1} />.
+- **No baseline.** Drift is a change compared with a baseline distribution <Cite n={2} />. Without one, there is nothing to compare.
+- **The bill as the cost monitor.** The Usage API gives buckets as small as 1 minute <Cite n={3} />. Tutorial's own view: a sudden jump in tokens per hour is often the first sign of a loop or an abuse case.
+- **No way out.** NIST asks for mechanisms to supersede, disengage, or deactivate an AI system whose outcomes do not match its intended use <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+- **Only service metrics.** A 200 response with the wrong content is still an error <Cite n={1} />. The tutorial's own view: add at least one quality signal. User ratings or sampled reviews are examples.
+- **Errors left out of latency.** A fast 500 makes the average look good. Track the latency of errors on its own <Cite n={1} />.
+- **Alerts that need no action.** A page that needs only a robotic response should not be a page <Cite n={1} />.
+- **No baseline.** Drift is a change compared with a baseline <Cite n={2} />. Without one, you have nothing to compare.
+- **The bill as the cost monitor.** The Usage API gives buckets as small as 1 minute <Cite n={3} />. The tutorial's own view: a sudden jump in tokens per hour is often the first sign of a loop or of abuse.
+- **No way out.** NIST asks for ways to supersede, disengage, or turn off an AI system when its outcomes do not match its intended use <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+- **শুধু সার্ভিস মেট্রিক।** ভুল কনটেন্টসহ একটা 200 রেসপন্সও একটা এরর <Cite n={1} />। টিউটোরিয়ালের নিজের মত: অন্তত একটা মানের সিগন্যাল যোগ করুন, যেমন ইউজারের রেটিং বা নমুনা রিভিউ।
+- **Latency থেকে এরর বাদ দেওয়া।** দ্রুত একটা 500 গড়কে ভালো দেখায়। এররের latency আলাদা করে ট্র্যাক করুন <Cite n={1} />।
+- **যে অ্যালার্টে কিছু করার নেই।** যে পেজে শুধু যান্ত্রিক সাড়া লাগে, সেটা পেজ হওয়া উচিত নয় <Cite n={1} />।
+- **Baseline নেই।** Drift হলো একটা baseline-এর তুলনায় পরিবর্তন <Cite n={2} />। Baseline না থাকলে তুলনা করার কিছু নেই।
+- **খরচের মনিটর হিসেবে বিল।** Usage API 1 মিনিট পর্যন্ত ছোট bucket দেয় <Cite n={3} />। টিউটোরিয়ালের নিজের মত: প্রতি ঘণ্টায় টোকেনের হঠাৎ লাফ প্রায়ই একটা loop বা অপব্যবহারের প্রথম লক্ষণ।
+- **বের হওয়ার পথ নেই।** যে AI সিস্টেমের ফলাফল তার উদ্দেশ্যের সঙ্গে মেলে না, তাকে বদলে দেওয়া, বিচ্ছিন্ন করা বা বন্ধ করার ব্যবস্থা চায় NIST <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Find the 4 signals.** Ask for the dashboard. Check that latency, traffic, errors, and saturation are there, with errors split out.
+- **Trigger an alert.** In staging, force the model API to fail. Check that an alert fires and that it says what is broken.
+- **Check the token numbers.** Send 10 known requests from a test workspace. Compare the tokens in the app logs with the Usage API.
+- **Plant a new topic.** Send many questions on a topic that the app does not know. Check that a quality or drift signal moves.
+- **Test the feedback button.** Give a thumbs-down. Check that it reaches the place where the team reviews it.
+- **Find the off switch.** Ask how the team turns the AI feature off. Try it in staging.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Find the 4 signals.** Ask for the dashboard. Check that latency, traffic, errors, and saturation are there. Errors should be split out.
+- **Trigger an alert.** In staging, make the model API fail. Check that an alert fires. Check that it says what is broken.
+- **Check the token numbers.** Send 10 known requests from a test workspace. Compare the tokens in the app logs with the Usage API.
+- **Plant a new topic.** Send many questions on a topic that the app does not know. Check that a quality or drift signal moves.
+- **Test the feedback button.** Give a thumbs-down. Check that it reaches the place where the team reviews it.
+- **Find the off switch.** Ask how the team turns the AI feature off. Try it in staging.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **4টা সিগন্যাল খুঁজুন।** ড্যাশবোর্ড চান। Latency, traffic, errors আর saturation আছে কি না, আর এরর আলাদা করে দেখানো হয় কি না দেখুন।
+- **একটা অ্যালার্ট চালু করুন।** Staging-এ মডেল API-কে ব্যর্থ করান। অ্যালার্ট আসে কি না, আর তাতে কী ভেঙেছে বলা আছে কি না দেখুন।
+- **টোকেনের সংখ্যা মেলান।** একটা টেস্ট workspace থেকে 10টা জানা রিকুয়েস্ট পাঠান। অ্যাপের লগের টোকেন Usage API-র সঙ্গে মেলান।
+- **নতুন বিষয় ঢোকান।** অ্যাপ জানে না এমন বিষয়ে অনেক প্রশ্ন পাঠান। মান বা drift-এর কোনো সিগন্যাল নড়ে কি না দেখুন।
+- **ফিডব্যাক বাটন টেস্ট করুন।** একটা thumbs-down দিন। টিম যেখানে রিভিউ করে, সেখানে পৌঁছায় কি না দেখুন।
+- **বন্ধ করার সুইচ খুঁজুন।** টিম AI ফিচার কীভাবে বন্ধ করে, জিজ্ঞেস করুন। Staging-এ চেষ্টা করে দেখুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Golden signals | Latency, traffic, errors, and saturation <Cite n={1} /> |
+| Symptom and cause | What is broken, and why it is broken <Cite n={1} /> |
+| Drift | A change in the input or output data compared with a baseline <Cite n={2} /> |
+| Time bucket | A fixed interval (1 minute, 1 hour, or 1 day) for usage data <Cite n={3} /> |
+| Postmortem | A document that records an incident, its impact, causes, and follow-up actions <Cite n={4} /> |
+| Blameless | Find the causes of an incident without blaming a person or team <Cite n={4} /> |

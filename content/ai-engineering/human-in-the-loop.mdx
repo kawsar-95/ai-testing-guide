@@ -1,0 +1,260 @@
+export const metadata = { title: 'Human-in-the-Loop', description: 'Let a person approve, correct, or take over what an AI system does: approval steps, escalation, review queues, and how to test them.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'LLM06:2025 Excessive Agency', publisher: 'OWASP Gen AI Security Project', url: 'https://genai.owasp.org/llmrisk/llm062025-excessive-agency/', accessed: '2026-10-28' },
+    { title: 'Interrupts', publisher: 'LangGraph Docs (LangChain)', url: 'https://docs.langchain.com/oss/python/langgraph/interrupts', accessed: '2026-10-28' },
+    { title: 'Configure permissions', publisher: 'Claude Code Docs (Anthropic)', url: 'https://code.claude.com/docs/en/permissions', accessed: '2026-10-28' },
+    { title: 'Building effective agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/building-effective-agents', accessed: '2026-10-28' },
+    { title: 'AI RMF Core (AI Risk Management Framework 1.0, section 5)', publisher: 'NIST AI Resource Center', url: 'https://airc.nist.gov/airmf-resources/airmf/5-sec-core/', accessed: '2026-10-28' },
+  ],
+}
+
+# Human-in-the-Loop
+
+A model can be wrong with full confidence. For a summary, a wrong word is a small cost. For a refund, a deleted record, or a message to a customer, the cost is real. Human-in-the-loop means a person checks the step before it happens, or can step in after.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Human-in-the-loop** (HITL) is a design where an AI system stops at chosen points and waits for a person. The person approves, rejects, edits, or answers a question, and then the system goes on.
+
+OWASP lists it as a defense against excessive agency: a person must approve actions with a high impact before they run <Cite n={1} />. Anthropic describes agents that stop at checkpoints, or at a blocker, to get feedback from a human <Cite n={4} />. NIST asks that an organization defines, assesses, and documents how humans oversee the system <Cite n={5} />.
+
+In the tutorial's own grouping, HITL has 3 common forms:
+
+| Form | When the human acts |
+|---|---|
+| Approval | Before an action runs |
+| Escalation | When the system is stuck or unsure, it hands the case to a person |
+| Review | After the output, a person checks a sample or a queue, and users can appeal |
+
+</Technical>
+<Layman>
+
+**Human-in-the-loop** (HITL) is a design. The AI system stops at chosen points and waits for a person. The person approves, rejects, edits, or answers a question. Then the system goes on.
+
+OWASP lists it as a defense against excessive agency. A human must approve actions with a big effect before they happen <Cite n={1} />. Anthropic describes agents that stop at checkpoints, or when they are blocked, to get feedback from a human <Cite n={4} />. NIST asks that an organization defines, assesses, and documents how humans oversee the system <Cite n={5} />.
+
+In the tutorial's own grouping, HITL has 3 common forms.
+
+- Approval: the human acts before an action runs.
+- Escalation: the system is stuck or unsure, and it hands the case to a person.
+- Review: after the output, a person checks a sample or a queue. Users can appeal.
+
+</Layman>
+<Bangla>
+
+**Human-in-the-loop** (HITL) এমন একটা ডিজাইন, যেখানে AI সিস্টেম নির্দিষ্ট কিছু জায়গায় থেমে একজন মানুষের জন্য অপেক্ষা করে। মানুষটি অনুমোদন দেন, বাতিল করেন, এডিট করেন বা একটা প্রশ্নের উত্তর দেন, তারপর সিস্টেম এগোয়।
+
+OWASP একে excessive agency-র বিরুদ্ধে একটা প্রতিরক্ষা হিসেবে রাখে: বড় প্রভাবের কাজ হওয়ার আগে একজন মানুষের অনুমোদন লাগবে <Cite n={1} />। Anthropic এমন এজেন্টের কথা বলে, যেগুলো checkpoint-এ বা আটকে গেলে মানুষের ফিডব্যাকের জন্য থামে <Cite n={4} />। NIST চায়, মানুষের তদারকির (human oversight) প্রক্রিয়া ঠিক করা, যাচাই করা আর লিখে রাখা হোক <Cite n={5} />।
+
+টিউটোরিয়ালের নিজের ভাগ অনুযায়ী HITL-এর 3টা সাধারণ রূপ:
+
+- অনুমোদন (approval): কোনো কাজ চলার আগে মানুষ সিদ্ধান্ত দেন।
+- এসকেলেশন (escalation): সিস্টেম আটকে গেলে বা নিশ্চিত না হলে কেসটা একজন মানুষের হাতে দেয়।
+- রিভিউ (review): আউটপুটের পরে একজন মানুষ একটা নমুনা বা queue দেখেন, আর ইউজার আপিল করতে পারেন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Pause and resume in code
+
+LangGraph has **interrupts**: they pause the graph at a point and wait for outside input <Cite n={2} />. When an interrupt fires, LangGraph saves the graph state with its persistence layer and waits with no time limit until you resume <Cite n={2} />. You resume with a `Command`, and its value becomes the return value of `interrupt()` <Cite n={2} />. A `thread_id` tells the checkpointer which saved state to load <Cite n={2} />.
+
+```python
+from typing import Literal
+from langgraph.types import interrupt, Command
+
+def approve_refund(state: State) -> Command[Literal["refund", "cancel"]]:
+    # Pause and show the reviewer what the agent wants to do
+    ok = interrupt({"question": "Issue this refund?", "details": state["refund"]})
+    return Command(goto="refund" if ok else "cancel")
+
+# Later, after the reviewer clicks a button:
+# graph.invoke(Command(resume=True), config={"configurable": {"thread_id": "case-123"}})
+```
+
+One rule matters for testers: on resume, the node runs again from its start, so any code before `interrupt()` runs twice <Cite n={2} />. Side effects before the interrupt should be idempotent, or move after it <Cite n={2} />.
+
+### Approval rules in a tool
+
+Claude Code shows the same idea as configuration. **Allow** rules run a tool with no prompt, **ask** rules prompt for confirmation, and **deny** rules block the tool <Cite n={3} />. Deny rules are checked first, then ask rules, then allow rules, and the first match wins. An allow rule cannot make an exception to a deny rule <Cite n={3} />.
+
+### Where to put the check
+
+OWASP says the approval can live in a downstream system or in the tool itself. Its example: an app that posts to social media on behalf of a user includes an approval step in the "post" function <Cite n={1} />. Tutorial's own view: put the check in code that the model cannot skip, not in the prompt.
+
+### After the fact
+
+NIST asks for post-deployment monitoring plans that include ways to capture user input, appeal and override, and incident response <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+**Pause and resume in code.** LangGraph has **interrupts**. They pause the graph at a point and wait for input from outside <Cite n={2} />. When an interrupt fires, LangGraph saves the state of the graph. It waits with no time limit until you resume <Cite n={2} />. You resume with a `Command`. Its value becomes the return value of `interrupt()` <Cite n={2} />. A `thread_id` tells the checkpointer which saved state to load <Cite n={2} />. The example in the Technical text pauses before a refund. It shows the reviewer the details. The answer of the reviewer sends the graph to "refund" or to "cancel".
+
+One rule matters for testers. On resume, the node runs again from its start. So any code before `interrupt()` runs twice <Cite n={2} />. Side effects before the interrupt should be idempotent. Or move them after it <Cite n={2} />.
+
+**Approval rules in a tool.** Claude Code shows the same idea as configuration. **Allow** rules run a tool with no prompt. **Ask** rules ask for confirmation. **Deny** rules block the tool <Cite n={3} />. Deny rules are checked first, then ask rules, then allow rules. The first match wins. An allow rule cannot make an exception to a deny rule <Cite n={3} />.
+
+**Where to put the check.** OWASP says the approval can be in a downstream system or in the tool itself. Its example is an app that posts to social media for a user. The "post" function includes an approval step <Cite n={1} />. The tutorial's own view: put the check in code that the model cannot skip. Do not put it in the prompt.
+
+**After the fact.** NIST asks for monitoring plans after deployment. They include ways to capture user input, appeal and override, and incident response <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+**কোডে থামা আর আবার চালু করা।** LangGraph-এ **interrupt** আছে: এগুলো graph-কে একটা জায়গায় থামিয়ে বাইরের ইনপুটের জন্য অপেক্ষা করে <Cite n={2} />। Interrupt চালু হলে LangGraph graph-এর অবস্থা সেভ করে, আর আপনি আবার চালু না করা পর্যন্ত সময়সীমা ছাড়াই অপেক্ষা করে <Cite n={2} />। আবার চালু করা হয় একটা `Command` দিয়ে, আর তার মান `interrupt()`-এর রিটার্ন মান হয়ে যায় <Cite n={2} />। একটা `thread_id` checkpointer-কে বলে কোন সেভ করা অবস্থা লোড করতে হবে <Cite n={2} />। Technical লেখার উদাহরণ একটা রিফান্ডের আগে থামে, রিভিউয়ারকে বিস্তারিত দেখায়, আর রিভিউয়ারের উত্তর graph-কে "refund" বা "cancel"-এ পাঠায়।
+
+টেস্টারদের জন্য একটা নিয়ম জরুরি: আবার চালু হলে node শুরু থেকে আবার চলে, তাই `interrupt()`-এর আগের যেকোনো কোড দুবার চলে <Cite n={2} />। Interrupt-এর আগের side effect idempotent হওয়া উচিত, নয়তো সেগুলো পরে সরিয়ে দিন <Cite n={2} />।
+
+**টুলে অনুমোদনের নিয়ম।** Claude Code একই ধারণা কনফিগারেশন হিসেবে দেখায়। **Allow** নিয়ম কোনো প্রশ্ন ছাড়াই টুল চালায়, **ask** নিয়ম নিশ্চিত হতে জিজ্ঞেস করে, আর **deny** নিয়ম টুল আটকে দেয় <Cite n={3} />। ক্রম হলো deny, তারপর ask, তারপর allow, আর প্রথম মিলটাই জেতে। একটা allow নিয়ম deny নিয়মের ব্যতিক্রম বানাতে পারে না <Cite n={3} />।
+
+**চেক কোথায় রাখবেন।** OWASP বলে, অনুমোদনের ধাপ downstream সিস্টেমে বা টুলের ভেতরেই থাকতে পারে। তার উদাহরণ: ইউজারের হয়ে সোশ্যাল মিডিয়ায় পোস্ট করা একটা অ্যাপ তার "post" ফাংশনে একটা অনুমোদনের ধাপ রাখে <Cite n={1} />। টিউটোরিয়ালের নিজের মত: চেকটা এমন কোডে রাখুন, যা মডেল এড়িয়ে যেতে পারে না, প্রম্পটে নয়।
+
+**ঘটনার পরে।** NIST ডিপ্লয়মেন্টের পরের মনিটরিং পরিকল্পনা চায়, যাতে ইউজারের ইনপুট নেওয়া, আপিল ও override, আর incident response-এর ব্যবস্থা থাকে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+An online shop runs a support agent. Anthropic names customer support as a good fit for agents, with tools for order history and actions such as refunds <Cite n={4} />. The team sets these rules:
+
+```text
+refund <= 20 USD and order delivered   -> agent refunds, logged
+refund >  20 USD                       -> interrupt: support lead approves
+customer says "lawyer" or "complaint"  -> escalate: human takes the chat
+every day                              -> 2 % of closed chats go to a review queue
+```
+
+A tester finds a bug: the agent writes the refund note to the ticket before the interrupt. When the lead approves, the node runs again <Cite n={2} />, and the ticket gets 2 notes. The fix is to move the write after the interrupt, as the LangGraph docs advise <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+An online shop runs a support agent. Anthropic names customer support as a good fit for agents. Tools can read the order history and do actions such as refunds <Cite n={4} />. The team sets these rules.
+
+- A refund of 20 USD or less, for a delivered order: the agent refunds, and it is logged.
+- A refund over 20 USD: an interrupt, and a support lead approves.
+- The customer says "lawyer" or "complaint": escalation, and a human takes the chat.
+- Every day: 2% of closed chats go to a review queue.
+
+A tester finds a bug. The agent writes the refund note to the ticket before the interrupt. The lead approves. Then the node runs again <Cite n={2} />. The ticket gets 2 notes. The fix is to move the write after the interrupt, as the LangGraph docs advise <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+একটা অনলাইন দোকান একটা সাপোর্ট এজেন্ট চালায়। Anthropic কাস্টমার সাপোর্টকে এজেন্টের জন্য উপযুক্ত বলে, যেখানে টুল অর্ডারের ইতিহাস পড়ে আর রিফান্ডের মতো কাজ করে <Cite n={4} />। টিম এই নিয়মগুলো ঠিক করে:
+
+- 20 USD বা কম রিফান্ড, ডেলিভারি হওয়া অর্ডারে: এজেন্ট রিফান্ড দেয়, আর লগ রাখা হয়।
+- 20 USD-এর বেশি রিফান্ড: একটা interrupt, আর একজন সাপোর্ট লিড অনুমোদন দেন।
+- কাস্টমার "lawyer" বা "complaint" বললে: এসকেলেশন, আর একজন মানুষ চ্যাটটা নেন।
+- প্রতিদিন: বন্ধ হওয়া চ্যাটের 2% একটা রিভিউ queue-তে যায়।
+
+একজন টেস্টার একটা বাগ পান: এজেন্ট interrupt-এর আগেই টিকিটে রিফান্ডের নোট লিখে ফেলে। লিড অনুমোদন দিলে node আবার চলে <Cite n={2} />, আর টিকিটে 2টা নোট হয়। সমাধান হলো লেখার কাজটা interrupt-এর পরে সরানো, যেমন LangGraph ডকুমেন্টেশন পরামর্শ দেয় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Approval in the prompt only.** "Always ask before a refund" is a request to the model, not a control. OWASP says to put authorization in downstream systems, not in a decision by the LLM <Cite n={1} />.
+- **Side effects before the pause.** The node runs again on resume, so the effect happens twice <Cite n={2} />.
+- **An allow rule that "overrides" a deny.** It does not: deny always wins <Cite n={3} />.
+- **No stop condition.** Anthropic suggests stopping conditions, such as a cap on iterations, to keep control of an agent <Cite n={4} />.
+- **No path back.** Users cannot report a bad outcome or appeal it. NIST asks for such feedback processes <Cite n={5} />.
+- **Too many prompts.** Tutorial's own view: if every step asks for approval, people click "yes" without reading. Ask only for actions that are hard to undo.
+
+</Technical>
+<Layman>
+
+- **Approval only in the prompt.** "Always ask before a refund" is a request to the model. It is not a control. OWASP says: the downstream systems must do the authorization, not the LLM <Cite n={1} />.
+- **Side effects before the pause.** The node runs again on resume. So the effect happens twice <Cite n={2} />.
+- **An allow rule that "overrides" a deny.** It does not. Deny always wins <Cite n={3} />.
+- **No stop condition.** Anthropic suggests stopping conditions to keep control of an agent. A cap on iterations is one example <Cite n={4} />.
+- **No path back.** Users cannot report a bad outcome or appeal it. NIST asks for such feedback processes <Cite n={5} />.
+- **Too many prompts.** The tutorial's own view: if every step asks for approval, people click "yes" and do not read. Ask only for actions that are hard to undo.
+
+</Layman>
+<Bangla>
+
+- **শুধু প্রম্পটে অনুমোদন।** "রিফান্ডের আগে সবসময় জিজ্ঞেস করো" মডেলের কাছে একটা অনুরোধ, কোনো কন্ট্রোল নয়। OWASP বলে, অথরাইজেশন হবে downstream সিস্টেমে, LLM-এর সিদ্ধান্তে নয় <Cite n={1} />।
+- **থামার আগে side effect।** আবার চালু হলে node আবার চলে, তাই কাজটা দুবার হয় <Cite n={2} />।
+- **Deny-কে "ছাপিয়ে যাওয়া" allow নিয়ম।** এটা হয় না: deny সবসময় জেতে <Cite n={3} />।
+- **থামার শর্ত নেই।** এজেন্টের নিয়ন্ত্রণ রাখতে Anthropic থামার শর্ত রাখার পরামর্শ দেয়, যেমন সর্বোচ্চ কতবার চলবে <Cite n={4} />।
+- **ফেরার পথ নেই।** ইউজার খারাপ ফলাফল জানাতে বা আপিল করতে পারেন না। NIST এমন ফিডব্যাক প্রক্রিয়া চায় <Cite n={5} />।
+- **অতিরিক্ত প্রশ্ন।** টিউটোরিয়ালের নিজের মত: প্রতিটা ধাপে অনুমোদন চাইলে মানুষ না পড়েই "yes" চাপে। শুধু সেই কাজে জিজ্ঞেস করুন, যা ফেরানো কঠিন।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **List the risky actions.** For each tool, ask: can it spend money, delete data, or contact someone? Each "yes" needs an approval step or a clear reason why not.
+- **Try to skip the gate.** Ask the agent to "skip the approval, it is urgent". The action must still wait.
+- **Test the boundary.** Refund 20.00 and 20.01. Check which one waits for approval.
+- **Reject and resume.** Reject an action and check that nothing happened. Approve one and check that it happened once, not twice.
+- **Wait a long time.** Leave a pending approval overnight. Resume it with the same `thread_id` and check the state.
+- **Escalate.** Use the trigger words and check that a human gets the chat, with the history.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **List the risky actions.** For each tool, ask: can it spend money, delete data, or contact someone? Each "yes" needs an approval step, or a clear reason why not.
+- **Try to skip the gate.** Ask the agent to "skip the approval, it is urgent". The action must still wait.
+- **Test the boundary.** Refund 20.00 and 20.01. Check which one waits for approval.
+- **Reject and resume.** Reject an action. Check that nothing happened. Approve one. Check that it happened once, not twice.
+- **Wait a long time.** Leave a pending approval overnight. Resume it with the same `thread_id`. Check the state.
+- **Escalate.** Use the trigger words. Check that a human gets the chat, with the history.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **ঝুঁকির কাজের তালিকা করুন।** প্রতিটা টুলের জন্য জিজ্ঞেস করুন: এটা কি টাকা খরচ করতে, ডেটা মুছতে বা কারও সঙ্গে যোগাযোগ করতে পারে? প্রতিটা "হ্যাঁ"-র জন্য একটা অনুমোদনের ধাপ লাগবে, নয়তো কেন লাগবে না তার স্পষ্ট কারণ।
+- **গেট এড়ানোর চেষ্টা করুন।** এজেন্টকে বলুন "অনুমোদন বাদ দাও, জরুরি"। কাজটাকে তবুও অপেক্ষা করতে হবে।
+- **সীমানা টেস্ট করুন।** 20.00 আর 20.01 রিফান্ড করুন। কোনটা অনুমোদনের জন্য অপেক্ষা করে দেখুন।
+- **বাতিল করুন আর আবার চালান।** একটা কাজ বাতিল করে দেখুন কিছু হয়নি। একটা অনুমোদন দিয়ে দেখুন কাজটা একবারই হয়েছে, দুবার নয়।
+- **অনেকক্ষণ অপেক্ষা করুন।** একটা অপেক্ষমাণ অনুমোদন সারারাত রেখে দিন। একই `thread_id` দিয়ে আবার চালু করে অবস্থাটা দেখুন।
+- **এসকেলেট করুন।** ট্রিগার শব্দগুলো ব্যবহার করুন, আর দেখুন একজন মানুষ ইতিহাসসহ চ্যাটটা পান কি না।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Human-in-the-loop | A design where a person approves, corrects, or takes over steps of an AI system, for example a human approves high-impact actions before they run <Cite n={1} /> |
+| Interrupt | A pause in a LangGraph graph that waits for outside input <Cite n={2} /> |
+| Checkpointer | The part that saves the graph state so that it can resume later <Cite n={2} /> |
+| Idempotent | The same operation can run many times with the same result <Cite n={2} /> |
+| Ask rule | A Claude Code rule that asks for confirmation before a tool runs <Cite n={3} /> |
+| Human oversight | Processes, defined and documented, by which people supervise an AI system <Cite n={5} /> |

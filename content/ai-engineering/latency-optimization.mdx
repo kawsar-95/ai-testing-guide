@@ -1,0 +1,262 @@
+export const metadata = { title: "Latency Optimization", description: "Caching, batching, streaming, and parallel calls." }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Reducing latency', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-latency', accessed: '2026-10-28' },
+    { title: 'Prompt caching', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching', accessed: '2026-10-28' },
+    { title: 'Streaming messages', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/streaming', accessed: '2026-10-28' },
+    { title: 'Batch processing', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/batch-processing', accessed: '2026-10-28' },
+    { title: 'Latency optimization', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/guides/latency-optimization', accessed: '2026-10-28' },
+    { title: 'Python SDK', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/api/sdks/python', accessed: '2026-10-28' },
+  ],
+}
+
+# Latency Optimization
+
+A user waits for a chatbot the way a customer waits in a shop queue. A long wait with nothing happening feels broken. Latency optimization makes the answer come sooner, or makes the wait feel shorter, without making the answer worse.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Latency** is the time that the model takes to read a prompt and produce an output. A bigger model, a more complex prompt, and the infrastructure behind the API can all make it longer <Cite n={1} />.
+
+Two numbers are common <Cite n={1} />:
+
+- **Baseline latency**: the time to process the prompt and produce the full response.
+- **Time to first token (TTFT)**: the time from sending the prompt to the first token of the answer. It matters most with streaming.
+
+The Claude docs advise to make the prompt work well first, and only then reduce latency. If you cut latency too early, you may never see the best quality that the task can reach <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+**Latency** is the time that the model takes to read a prompt and produce an answer. A bigger model can make it longer. A more complex prompt and the infrastructure behind the API can make it longer too <Cite n={1} />.
+
+Two numbers are common <Cite n={1} />:
+
+- **Baseline latency**: the time to read the prompt and produce the full answer.
+- **Time to first token (TTFT)**: the time from sending the prompt to the first token of the answer. It matters most with streaming.
+
+The Claude docs say: first make the prompt work well. Only then reduce latency. If you cut latency too early, you may never see the best quality that the task can reach <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**লেটেন্সি (latency)** হলো একটা প্রম্পট পড়ে আউটপুট তৈরি করতে মডেলের যে সময় লাগে। মডেলের আকার এটা বদলায়। প্রম্পটের জটিলতা ও ইনফ্রাস্ট্রাকচারও এটা বদলায় <Cite n={1} />।
+
+দুটো সংখ্যা প্রচলিত <Cite n={1} />:
+
+- **Baseline latency**: প্রম্পট পড়ে পুরো উত্তর তৈরি করার সময়।
+- **Time to first token (TTFT)**: প্রম্পট পাঠানো থেকে উত্তরের প্রথম টোকেন পর্যন্ত সময়। স্ট্রিমিংয়ে এটা সবচেয়ে বেশি জরুরি।
+
+Claude ডকস বলে: আগে প্রম্পটটা ভালোভাবে কাজ করান। তারপরই লেটেন্সি কমান। খুব আগে লেটেন্সি কমালে আপনি হয়তো কখনো দেখবেন না কাজটা সবচেয়ে ভালো কোন মানে পৌঁছাতে পারে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### 1. A faster model and fewer output tokens
+
+A smaller, faster model answers sooner. For speed-critical apps, the Claude docs point to Claude Haiku 5.5 <Cite n={1} />. Output length matters more than input length. The OpenAI guide gives a rule of thumb: half the output tokens may give about half the latency, but half the prompt may give only 1–5 % <Cite n={5} />. Ask for a short answer, and set `max_tokens` as a hard limit <Cite n={1} />.
+
+### 2. Streaming
+
+With `"stream": true`, the API sends the answer in pieces as server-sent events <Cite n={3} />. The user sees the output in real time, so the app feels much more responsive <Cite n={1} />.
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+
+with client.messages.stream(
+    model="claude-haiku-5-5",
+    max_tokens=512,
+    messages=[{"role": "user", "content": "Summarize this bug report: ..."}],
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)
+```
+
+### 3. Prompt caching
+
+Prompt caching lets the API reuse a prefix of the prompt that a recent request already processed. This cuts processing time and cost <Cite n={2} />. The prefix covers `tools`, then `system`, then `messages`, up to the block with `cache_control` <Cite n={2} />. By default a cache entry lives 5 minutes, and each use refreshes it <Cite n={2} />. A prompt that is shorter than the minimum for the model (512 tokens for Claude Haiku 5.5) is not cached, and the API returns no error <Cite n={2} />.
+
+### 4. Parallel calls
+
+If two steps do not depend on each other, run them at the same time <Cite n={5} />. The Python SDK has `AsyncAnthropic` for async calls <Cite n={6} />. If the steps must run in order, the OpenAI guide suggests fewer, combined requests, because each request adds a round trip <Cite n={5} />.
+
+### 5. Batching: the opposite trade
+
+The Message Batches API runs many requests in the background at 50 % lower cost. Most batches finish within 1 hour, but a batch can take up to 24 hours <Cite n={4} />. It suits tasks that do not need an immediate response <Cite n={4} />. Use it only for work that can wait, such as a nightly evaluation run <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+There are five main tools.
+
+**1. A faster model and fewer output tokens.** A smaller, faster model answers sooner. For apps where speed is critical, the Claude docs point to Claude Haiku 5.5 <Cite n={1} />. The length of the output matters more than the length of the input. The OpenAI guide gives a rough rule. Half the output tokens may give about half the latency. But half the prompt may give only 1–5 % <Cite n={5} />. Ask for a short answer. Set `max_tokens` as a hard limit <Cite n={1} />.
+
+**2. Streaming.** With `"stream": true`, the API sends the answer in pieces, as server-sent events <Cite n={3} />. The user sees the output in real time. So the app feels much more responsive <Cite n={1} />. The Technical text has a short Python example that prints each piece of text when it arrives.
+
+**3. Prompt caching.** Prompt caching lets the API reuse the start of a prompt that a recent request already processed. This cuts processing time and cost <Cite n={2} />. The start covers `tools`, then `system`, then `messages`, up to the block with `cache_control` <Cite n={2} />. By default, a cache entry lives 5 minutes. Each use refreshes it <Cite n={2} />. A prompt that is shorter than the minimum for the model is not cached. For Claude Haiku 5.5, the minimum is 512 tokens. The API returns no error in this case <Cite n={2} />.
+
+**4. Parallel calls.** Two steps may not depend on each other. Then run them at the same time <Cite n={5} />. The Python SDK has `AsyncAnthropic` for async calls <Cite n={6} />. Some steps must run in order. Then the OpenAI guide suggests fewer requests that do more, because each request adds a round trip <Cite n={5} />.
+
+**5. Batching, the opposite trade.** The Message Batches API runs many requests in the background. The cost is 50 % lower. Most batches finish within 1 hour. But a batch can take up to 24 hours <Cite n={4} />. It suits tasks that do not need an immediate response <Cite n={4} />. Use it only for work that can wait, such as an evaluation run at night <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+পাঁচটা প্রধান উপায় আছে।
+
+**1. দ্রুত মডেল ও কম আউটপুট টোকেন।** একটা ছোট, দ্রুত মডেল আগে উত্তর দেয়। যে অ্যাপে গতি খুব জরুরি, তার জন্য Claude ডকস Claude Haiku 5.5-এর কথা বলে <Cite n={1} />। ইনপুটের দৈর্ঘ্যের চেয়ে আউটপুটের দৈর্ঘ্য বেশি জরুরি। OpenAI গাইড একটা মোটামুটি নিয়ম দেয়। অর্ধেক আউটপুট টোকেন লেটেন্সি প্রায় অর্ধেক কমাতে পারে। কিন্তু অর্ধেক প্রম্পট হয়তো শুধু 1–5 % কমায় <Cite n={5} />। ছোট উত্তর চান। `max_tokens` একটা কঠিন সীমা হিসেবে দিন <Cite n={1} />।
+
+**2. স্ট্রিমিং।** `"stream": true` দিলে API উত্তরটা টুকরো টুকরো করে server-sent events হিসেবে পাঠায় <Cite n={3} />। ইউজার রিয়েল টাইমে আউটপুট দেখেন। তাই অ্যাপটা অনেক বেশি সাড়া দেয় বলে মনে হয় <Cite n={1} />। Technical টেক্সটে একটা ছোট Python উদাহরণ আছে, যা প্রতিটা টুকরো আসার সাথে সাথে প্রিন্ট করে।
+
+**3. প্রম্পট ক্যাশিং।** প্রম্পট ক্যাশিং API-কে একটা প্রম্পটের শুরুর অংশ আবার ব্যবহার করতে দেয়, যা একটা সাম্প্রতিক রিকুয়েস্ট আগেই প্রসেস করেছে। এতে প্রসেসিংয়ের সময় ও খরচ কমে <Cite n={2} />। শুরুর অংশে থাকে `tools`, তারপর `system`, তারপর `messages`, `cache_control` থাকা ব্লক পর্যন্ত <Cite n={2} />। ডিফল্টে একটা ক্যাশ এন্ট্রি 5 মিনিট থাকে। প্রতিবার ব্যবহারে এটা নতুন হয় <Cite n={2} />। মডেলের ন্যূনতম সীমার চেয়ে ছোট প্রম্পট ক্যাশ হয় না। Claude Haiku 5.5-এর জন্য এই সীমা 512 টোকেন। এই অবস্থায় API কোনো এরর দেয় না <Cite n={2} />।
+
+**4. প্যারালাল কল।** দুটো ধাপ একটা আরেকটার ওপর নির্ভর না করলে সেগুলো একসাথে চালান <Cite n={5} />। Python SDK-তে async কলের জন্য `AsyncAnthropic` আছে <Cite n={6} />। কিছু ধাপ ক্রম অনুযায়ী চালাতে হয়। তখন OpenAI গাইড কম কিন্তু বেশি কাজের রিকুয়েস্টের পরামর্শ দেয়, কারণ প্রতিটা রিকুয়েস্টে একটা রাউন্ড ট্রিপ যোগ হয় <Cite n={5} />।
+
+**5. ব্যাচিং, উল্টো লেনদেন।** Message Batches API অনেক রিকুয়েস্ট ব্যাকগ্রাউন্ডে চালায়। খরচ 50 % কম। বেশিরভাগ ব্যাচ 1 ঘণ্টার মধ্যে শেষ হয়। কিন্তু একটা ব্যাচে 24 ঘণ্টা পর্যন্ত লাগতে পারে <Cite n={4} />। এটা এমন কাজের জন্য, যেখানে সাথে সাথে উত্তর লাগে না <Cite n={4} />। শুধু অপেক্ষা করা যায় এমন কাজে এটা ব্যবহার করুন, যেমন রাতের একটা ইভ্যালুয়েশন রান <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+An HR policy assistant answers employee questions. Each request sends a 6,000-token policy handbook in the system prompt, then the question. Users wait 9 seconds and see a spinner the whole time.
+
+The team makes three changes:
+
+1. **Streaming.** The answer appears word by word, so the first text shows within about a second <Cite n={3} /><Cite n={5} />.
+2. **Caching.** The handbook is the same in every request, so it becomes a cached prefix with `cache_control`. The question stays after it, because a cache hit needs the same prefix <Cite n={2} />.
+3. **Parallel work.** The input screen and the main answer start at the same time. If the screen flags the question, the app cancels the answer. The OpenAI guide calls this speculative execution <Cite n={5} />.
+
+The weekly report on all answers moves to the Message Batches API, because nobody waits for it <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+An HR policy assistant answers questions from employees. Each request sends a policy handbook of 6,000 tokens in the system prompt. Then it sends the question. Users wait 9 seconds. They see a spinner the whole time.
+
+The team makes three changes:
+
+1. **Streaming.** The answer appears word by word. So the first text shows within about a second <Cite n={3} /><Cite n={5} />.
+2. **Caching.** The handbook is the same in every request. So it becomes a cached prefix with `cache_control`. The question stays after it, because a cache hit needs the same prefix <Cite n={2} />.
+3. **Parallel work.** The input screen and the main answer start at the same time. If the screen flags the question, the app cancels the answer. The OpenAI guide calls this speculative execution <Cite n={5} />.
+
+The weekly report on all answers moves to the Message Batches API, because nobody waits for it <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা HR পলিসি অ্যাসিস্ট্যান্ট কর্মীদের প্রশ্নের উত্তর দেয়। প্রতিটা রিকুয়েস্ট সিস্টেম প্রম্পটে 6,000 টোকেনের একটা পলিসি হ্যান্ডবুক পাঠায়। তারপর প্রশ্নটা পাঠায়। ইউজাররা 9 সেকেন্ড অপেক্ষা করেন। পুরো সময় তাঁরা একটা স্পিনার দেখেন।
+
+দল তিনটা পরিবর্তন করে:
+
+1. **স্ট্রিমিং।** উত্তর শব্দে শব্দে দেখা দেয়। তাই প্রথম টেক্সট প্রায় এক সেকেন্ডের মধ্যে দেখা যায় <Cite n={3} /><Cite n={5} />।
+2. **ক্যাশিং।** প্রতিটা রিকুয়েস্টে হ্যান্ডবুক একই। তাই এটা `cache_control` দিয়ে একটা ক্যাশ করা প্রিফিক্স (prefix) হয়। প্রশ্নটা এর পরে থাকে, কারণ ক্যাশ হিটের জন্য একই প্রিফিক্স দরকার <Cite n={2} />।
+3. **প্যারালাল কাজ।** ইনপুট স্ক্রিন ও মূল উত্তর একসাথে শুরু হয়। স্ক্রিন প্রশ্নটাকে চিহ্নিত করলে অ্যাপ উত্তর বাতিল করে। OpenAI গাইড এটাকে speculative execution বলে <Cite n={5} />।
+
+সব উত্তরের সাপ্তাহিক রিপোর্ট Message Batches API-তে যায়, কারণ কেউ এর জন্য অপেক্ষা করে না <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Optimizing before the prompt works.** You may lose quality that you never measured <Cite n={1} />.
+- **Shortening the prompt and expecting a big gain.** Output tokens drive most of the latency <Cite n={5} />.
+- **Putting changing text before the cached part.** A timestamp or a user name at the start changes the prefix, so the cache never hits <Cite n={2} />.
+- **Not checking that caching works.** If `cache_creation_input_tokens` and `cache_read_input_tokens` are both 0, the prompt was not cached <Cite n={2} />.
+- **Using `max_tokens` as a style tool.** At the limit, the answer stops mid-sentence or mid-word <Cite n={1} />.
+- **Using batches for interactive features.** A batch can take up to 24 hours <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+- **Optimizing before the prompt works.** You may lose quality that you never measured <Cite n={1} />.
+- **Shortening the prompt and expecting a big gain.** Output tokens cause most of the latency <Cite n={5} />.
+- **Putting changing text before the cached part.** A timestamp or a user name at the start changes the prefix. So the cache never hits <Cite n={2} />.
+- **Not checking that caching works.** Sometimes `cache_creation_input_tokens` and `cache_read_input_tokens` are both 0. Then the prompt was not cached <Cite n={2} />.
+- **Using `max_tokens` to control style.** At the limit, the answer stops in the middle of a sentence or a word <Cite n={1} />.
+- **Using batches for interactive features.** A batch can take up to 24 hours <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+- **প্রম্পট কাজ করার আগেই অপ্টিমাইজ করা।** আপনি এমন মান হারাতে পারেন যা কখনো মাপেননি <Cite n={1} />।
+- **প্রম্পট ছোট করে বড় লাভ আশা করা।** লেটেন্সির বেশিরভাগ আসে আউটপুট টোকেন থেকে <Cite n={5} />।
+- **ক্যাশ করা অংশের আগে বদলানো টেক্সট রাখা।** শুরুতে একটা টাইমস্ট্যাম্প বা ইউজারের নাম প্রিফিক্স বদলে দেয়। তাই ক্যাশ কখনো হিট করে না <Cite n={2} />।
+- **ক্যাশিং কাজ করছে কি না না দেখা।** কখনো `cache_creation_input_tokens` ও `cache_read_input_tokens` দুটোই 0 হয়। তখন প্রম্পট ক্যাশ হয়নি <Cite n={2} />।
+- **স্টাইল নিয়ন্ত্রণে `max_tokens` ব্যবহার করা।** সীমায় পৌঁছালে উত্তর একটা বাক্য বা শব্দের মাঝে থেমে যায় <Cite n={1} />।
+- **ইন্টারঅ্যাক্টিভ ফিচারে ব্যাচ ব্যবহার করা।** একটা ব্যাচে 24 ঘণ্টা পর্যন্ত লাগতে পারে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice.
+
+- **Measure two numbers.** Record time to first token and total time for a fixed set of prompts. Report the median and the slowest 5 %, not only the average.
+- **Compare before and after.** Run the same set before and after each latency change. Check that answer quality did not drop.
+- **Prove the cache.** Send the same long prompt twice within 5 minutes. Check that the second response shows `cache_read_input_tokens` above 0.
+- **Break the stream.** Cut the network in the middle of a streamed answer. Check that the UI shows a clear message and does not keep half an answer as final.
+- **Load test.** Send many requests at once. Check that parallel calls do not hit rate limits and turn into slow retries.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice.
+
+- **Measure two numbers.** Record the time to the first token and the total time for a fixed set of prompts. Report the median and the slowest 5 %, not only the average.
+- **Compare before and after.** Run the same set before and after each latency change. Check that the quality of the answers did not drop.
+- **Prove the cache.** Send the same long prompt twice within 5 minutes. Check that the second response shows `cache_read_input_tokens` above 0.
+- **Break the stream.** Cut the network in the middle of a streamed answer. Check that the UI shows a clear message. Check that it does not keep half an answer as final.
+- **Load test.** Send many requests at once. Check that parallel calls do not hit rate limits and turn into slow retries.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **দুটো সংখ্যা মাপুন।** একটা নির্দিষ্ট প্রম্পট সেটের জন্য প্রথম টোকেন পর্যন্ত সময় ও মোট সময় রেকর্ড করুন। শুধু গড় নয়, মিডিয়ান ও সবচেয়ে ধীর 5 % জানান।
+- **আগে ও পরে তুলনা করুন।** প্রতিটা লেটেন্সি পরিবর্তনের আগে ও পরে একই সেট চালান। দেখুন উত্তরের মান কমেনি।
+- **ক্যাশ প্রমাণ করুন।** একই লম্বা প্রম্পট 5 মিনিটের মধ্যে দুবার পাঠান। দেখুন দ্বিতীয় রেসপন্সে `cache_read_input_tokens` 0-এর বেশি কি না।
+- **স্ট্রিম ভাঙুন।** একটা স্ট্রিম হওয়া উত্তরের মাঝে নেটওয়ার্ক কেটে দিন। দেখুন UI একটা পরিষ্কার মেসেজ দেখায় কি না। দেখুন এটা অর্ধেক উত্তরকে চূড়ান্ত হিসেবে রাখে না।
+- **লোড টেস্ট।** একসাথে অনেক রিকুয়েস্ট পাঠান। দেখুন প্যারালাল কলগুলো রেট লিমিটে পড়ে ধীর রিট্রাইয়ে পরিণত হয় কি না।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Latency | How long the model needs to read a prompt and write its output <Cite n={1} /> |
+| Time to first token (TTFT) | The time from sending the prompt to the first token of the answer <Cite n={1} /> |
+| Streaming | Sending the answer in pieces as server-sent events <Cite n={3} /> |
+| Prompt caching | Reusing a prompt prefix that a recent request already processed <Cite n={2} /> |
+| Message Batches API | Running many requests in the background at a lower cost <Cite n={4} /> |
+| Speculative execution | Starting a later step before an earlier check ends, and cancelling it if the check fails <Cite n={5} /> |
+| `AsyncAnthropic` | The async client of the Claude Python SDK <Cite n={6} /> |
