@@ -1,0 +1,280 @@
+export const metadata = { title: 'Fine-Tuning', description: 'Train a model further on your own labeled examples, know when not to, and test the new model against the base model.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'LoRA: Low-Rank Adaptation of Large Language Models (arXiv 2106.09685)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2106.09685', accessed: '2026-10-28' },
+    { title: 'QLoRA: Efficient Finetuning of Quantized LLMs (arXiv 2305.14314)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2305.14314', accessed: '2026-10-28' },
+    { title: 'PEFT', publisher: 'Hugging Face (GitHub)', url: 'https://github.com/huggingface/peft', accessed: '2026-10-28' },
+    { title: 'SFT Trainer', publisher: 'Hugging Face TRL docs', url: 'https://huggingface.co/docs/trl/sft_trainer', accessed: '2026-10-28' },
+    { title: 'Process', publisher: 'Hugging Face Datasets docs', url: 'https://huggingface.co/docs/datasets/process', accessed: '2026-10-28' },
+    { title: 'An Empirical Study of Catastrophic Forgetting in Large Language Models During Continual Fine-tuning (arXiv 2308.08747)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2308.08747', accessed: '2026-10-28' },
+    { title: 'Unsloth', publisher: 'Unsloth (GitHub)', url: 'https://github.com/unslothai/unsloth', accessed: '2026-10-28' },
+    { title: 'Model optimization', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/model-optimization', accessed: '2026-10-28' },
+    { title: 'Model Cards', publisher: 'Hugging Face Hub docs', url: 'https://huggingface.co/docs/hub/model-cards', accessed: '2026-10-28' },
+  ],
+}
+
+# Fine-Tuning
+
+Fine-tuning trains an existing model a little more on your own examples, so that it learns one job well. It is a specialist skill. Learn it only when you have many labeled examples and better prompts and retrieval still do not give the result you need.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A model comes pretrained on a very large amount of text. **Fine-tuning** trains it further on a smaller set of your own examples. The most common method is **supervised fine-tuning (SFT)**: each example is a pair of an input and the output that you want, and the model learns from these pairs <Cite n={4} />. The result is a new version of the model.
+
+Fine-tuning is not the first tool to reach for. A vendor guide says that good prompts may be all you need <Cite n={8} />. Try a better brief first (see [Prompting](/ai-skills/prompting/)), then your own documents with retrieval (see [Your Own Data (RAG)](/ai-skills/rag/)).
+
+**The trigger for this skill:** you have many labeled examples of one task, and prompting and RAG are not enough. Examples are a fixed output format that the model keeps breaking, or a narrow classification task, such as sorting bug reports into your own categories.
+
+For a tester, the main point is this: a fine-tuned model is a new build. It needs its own tests, and it must not lose what the base model could already do.
+
+</Technical>
+<Layman>
+
+A model comes already trained on a very large amount of text. **Fine-tuning** trains it a bit more on a smaller set of your own examples. The most common method is **supervised fine-tuning (SFT)**. Each example is a pair: an input, and the output that you want. The model learns from these pairs <Cite n={4} />. The result is a new version of the model.
+
+Do not start with fine-tuning. A vendor guide says that good prompts may be all you need <Cite n={8} />. First, write a better brief (see [Prompting](/ai-skills/prompting/)). Then try your own documents with retrieval (see [Your Own Data (RAG)](/ai-skills/rag/)).
+
+**When to learn this skill:** you have many labeled examples of one task, and prompts and RAG are not enough. One example is a fixed output format that the model keeps breaking. Another is a narrow sorting task, such as putting bug reports into your own categories.
+
+For a tester, remember one thing. A fine-tuned model is a new build. It needs its own tests. It must not lose what the base model could already do.
+
+</Layman>
+<Bangla>
+
+একটা মডেল আগে থেকেই বিশাল পরিমাণ টেক্সটে ট্রেইন করা থাকে। **Fine-tuning** মানে আপনার নিজের ছোট একটা উদাহরণের সেটে মডেলটাকে আরও একটু ট্রেইন করা। সবচেয়ে প্রচলিত পদ্ধতি হলো **supervised fine-tuning (SFT)**। প্রতিটা উদাহরণ একটা জোড়া: একটা ইনপুট, আর আপনি যে আউটপুট চান সেটা। মডেল এই জোড়াগুলো থেকে শেখে <Cite n={4} />। ফলাফল হলো মডেলের একটা নতুন ভার্সন।
+
+Fine-tuning দিয়ে শুরু করবেন না। একটা ভেন্ডর গাইড বলে, ভালো প্রম্পটই হয়তো আপনার জন্য যথেষ্ট <Cite n={8} />। আগে একটা ভালো ব্রিফ লিখুন ([Prompting](/ai-skills/prompting/) দেখুন)। তারপর রিট্রিভাল দিয়ে আপনার নিজের ডকুমেন্ট ব্যবহার করে দেখুন ([Your Own Data (RAG)](/ai-skills/rag/) দেখুন)।
+
+**কখন এই স্কিল শিখবেন:** একটা কাজের অনেক লেবেল করা উদাহরণ আপনার কাছে আছে, আর প্রম্পট ও RAG যথেষ্ট হচ্ছে না। একটা উদাহরণ হলো একটা নির্দিষ্ট আউটপুট ফরম্যাট, যেটা মডেল বারবার ভাঙে। আরেকটা হলো একটা সরু বাছাইয়ের কাজ, যেমন বাগ রিপোর্টগুলো আপনার নিজের ক্যাটাগরিতে ভাগ করা।
+
+টেস্টার হিসেবে একটা কথা মনে রাখুন। Fine-tuned মডেল একটা নতুন বিল্ড। এর নিজের টেস্ট দরকার। বেস মডেল আগে যা পারত, সেটা যেন এটা হারিয়ে না ফেলে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**Full fine-tuning** changes all the weights of the model. That needs a lot of memory and storage. **Parameter-efficient fine-tuning (PEFT)** trains only a small number of extra parameters and keeps the rest. This cuts the compute and storage cost a lot <Cite n={3} />.
+
+**LoRA** is one PEFT method. It freezes the pretrained weights and adds small trainable matrices to each layer of the Transformer <Cite n={1} />. In the LoRA paper, compared with full fine-tuning of GPT-3 175B, LoRA needed 10,000 times fewer trainable parameters and 3 times less GPU memory, and it added no extra latency at inference <Cite n={1} />. **QLoRA** goes further: it trains LoRA adapters on top of a frozen base model that is stored in 4-bit form. With it, the authors fine-tuned a 65B model on one 48GB GPU <Cite n={2} />.
+
+The data is a file of examples. In the Hugging Face TRL library, a row can be plain text or a prompt and a completion, and a conversational row holds a list of messages with roles such as `user` and `assistant` <Cite n={4} />:
+
+```json
+{"messages": [{"role": "user", "content": "Classify: login page shows 500 after reset"},
+              {"role": "assistant", "content": "severity: high; area: auth"}]}
+```
+
+During SFT, the model learns to predict the target output token by token, and the trainer measures a token-level cross-entropy loss <Cite n={4} />. The trainer can also take a separate evaluation dataset <Cite n={4} />.
+
+```text
+labeled examples --> split --+--> train set --> SFT + LoRA --> adapter (new model)
+                             |                                     |
+                             +--> held-out test set ---------------+--> eval:
+                                                                       base vs tuned
+```
+
+</Technical>
+<Layman>
+
+**Full fine-tuning** changes all the weights of the model. That needs a lot of memory and storage. **Parameter-efficient fine-tuning (PEFT)** trains only a small number of extra parameters. It keeps the rest as they are. This cuts the cost of compute and storage a lot <Cite n={3} />.
+
+**LoRA** is one PEFT method. It freezes the weights of the trained model. It adds small matrices that can learn to each layer of the Transformer <Cite n={1} />. The LoRA paper compared it with full fine-tuning of GPT-3 175B. LoRA needed 10,000 times fewer parameters to train and 3 times less GPU memory. It added no extra delay when the model runs <Cite n={1} />. **QLoRA** goes one step further. It trains LoRA adapters on top of a frozen base model that is stored in 4-bit form. With it, the authors fine-tuned a 65B model on one 48GB GPU <Cite n={2} />.
+
+The data is a file of examples. In the Hugging Face TRL library, a row can be plain text, or a prompt and a completion. A chat row holds a list of messages with roles such as `user` and `assistant` <Cite n={4} />. For example, the user message is a bug title, and the assistant message is the wanted label, such as "severity: high; area: auth".
+
+During SFT, the model learns to predict the wanted output one token at a time. The trainer measures the error as a token-level cross-entropy loss <Cite n={4} />. The trainer can also take a separate data set for evaluation <Cite n={4} />.
+
+The flow is this. You split the labeled examples. The train set goes into SFT with LoRA, and you get an adapter: the new model. The held-out test set stays apart. At the end, you run the same eval on the base model and on the tuned model.
+
+</Layman>
+<Bangla>
+
+**Full fine-tuning** মডেলের সব weight বদলায়। এতে অনেক মেমরি আর স্টোরেজ লাগে। **Parameter-efficient fine-tuning (PEFT)** শুধু অল্প কিছু বাড়তি প্যারামিটার ট্রেইন করে। বাকিগুলো যেমন আছে তেমন রাখে। এতে কম্পিউট আর স্টোরেজের খরচ অনেক কমে <Cite n={3} />।
+
+**LoRA** হলো একটা PEFT পদ্ধতি। এটা ট্রেইন করা মডেলের weight জমিয়ে (freeze) রাখে। Transformer-এর প্রতিটা লেয়ারে ছোট ছোট ট্রেইনযোগ্য ম্যাট্রিক্স যোগ করে <Cite n={1} />। LoRA পেপারে GPT-3 175B-এর full fine-tuning-এর সাথে তুলনা করা হয়েছে। LoRA-তে ট্রেইন করার প্যারামিটার ১০,০০০ গুণ কম লেগেছে, GPU মেমরি ৩ গুণ কম লেগেছে। মডেল চালানোর সময় কোনো বাড়তি দেরি হয়নি <Cite n={1} />। **QLoRA** আরও এক ধাপ এগিয়ে। এটা 4-bit আকারে রাখা একটা জমানো বেস মডেলের ওপর LoRA adapter ট্রেইন করে। এর সাহায্যে লেখকরা একটা মাত্র 48GB GPU-তে একটা 65B মডেল fine-tune করেছেন <Cite n={2} />।
+
+ডেটা হলো উদাহরণের একটা ফাইল। Hugging Face TRL লাইব্রেরিতে একটা রো সাধারণ টেক্সট হতে পারে, অথবা একটা prompt আর একটা completion। চ্যাট ধরনের রো-তে `user` আর `assistant`-এর মতো role সহ মেসেজের একটা তালিকা থাকে <Cite n={4} />। যেমন, user মেসেজ একটা বাগের শিরোনাম, আর assistant মেসেজ হলো কাঙ্ক্ষিত লেবেল, যেমন "severity: high; area: auth"।
+
+SFT-এর সময় মডেল কাঙ্ক্ষিত আউটপুট এক টোকেন করে আন্দাজ করতে শেখে। ট্রেইনার ভুলটা মাপে token-level cross-entropy loss হিসেবে <Cite n={4} />। ট্রেইনার মূল্যায়নের জন্য আলাদা একটা ডেটা সেটও নিতে পারে <Cite n={4} />।
+
+ধাপগুলো এমন। আপনি লেবেল করা উদাহরণগুলো ভাগ করেন। Train set যায় LoRA সহ SFT-তে, আর আপনি পান একটা adapter, মানে নতুন মডেল। আলাদা করে রাখা test set দূরে থাকে। শেষে আপনি বেস মডেল আর টিউন করা মডেল, দুটোর ওপর একই eval চালান।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+Most testers do not train the model. They prepare the data and test the result. These are the main jobs:
+
+1. **Keep a held-out test set.** Split the labeled data before training. In Hugging Face Datasets, `train_test_split()` makes a train split and a test split, `test_size` sets the size of the test split, and the rows are shuffled by default <Cite n={5} />. The test rows never go into training, so the score shows how the model does on cases it has not seen.
+2. **Compare with the base model.** Run the same eval on the base model with your best prompt and on the fine-tuned model. A vendor guide advises to measure both the prompt and the fine-tuned model on test data <Cite n={8} />. Ship the tuned model only if it wins on your cases. See [Checking AI Quality (Evals)](/ai-skills/ai-evals/).
+3. **Run a regression set for old skills.** Fine-tuning on one task can damage other skills. A study found this "catastrophic forgetting" in general in models from 1b to 7b parameters during continual fine-tuning <Cite n={6} />. Keep a small set of general tasks (summaries, plain questions, your safety checks) and run it on every new version.
+4. **Check the training data.** Check that each row has the format the trainer expects <Cite n={4} />. Look for duplicate rows, wrong labels, and rows that are also in the test set.
+5. **Trace the version.** A model card can name the base model of a fine-tune or an adapter in the `base_model` field <Cite n={9} />, and it should list the training data and the eval results <Cite n={9} />. Ask for this record, so that a bug report can name the exact model.
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice. Treat the training file like test data: version it, review it, and keep personal data and secrets out of it. Write the eval before the training starts, so that nobody moves the target after they see the score.
+</Callout>
+
+</Technical>
+<Layman>
+
+Most testers do not train the model. They prepare the data and test the result. These are the main jobs:
+
+1. **Keep a test set apart.** Split the labeled data before training. In Hugging Face Datasets, `train_test_split()` makes a train part and a test part. `test_size` sets the size of the test part. The rows are shuffled by default <Cite n={5} />. The test rows never go into training. So the score shows how the model does on cases that it has not seen.
+2. **Compare with the base model.** Run the same eval on two models: the base model with your best prompt, and the fine-tuned model. A vendor guide says to measure both on test data <Cite n={8} />. Ship the tuned model only if it wins on your cases. See [Checking AI Quality (Evals)](/ai-skills/ai-evals/).
+3. **Check that old skills still work.** Training on one task can damage other skills. A study found this "catastrophic forgetting" in general in models from 1b to 7b parameters during continual fine-tuning <Cite n={6} />. Keep a small set of general tasks, such as summaries, plain questions, and your safety checks. Run it on every new version.
+4. **Check the training data.** Check that each row has the format that the trainer expects <Cite n={4} />. Look for rows that repeat, wrong labels, and rows that are also in the test set.
+5. **Trace the version.** A model card can name the base model of a fine-tune or an adapter in the `base_model` field <Cite n={9} />. It should also list the training data and the eval results <Cite n={9} />. Ask for this record. Then a bug report can name the exact model.
+
+This is the tutorial's own advice. Treat the training file like test data. Give it versions, review it, and keep personal data and secrets out of it. Write the eval before the training starts. Then nobody can move the target after they see the score.
+
+</Layman>
+<Bangla>
+
+বেশিরভাগ টেস্টার মডেল ট্রেইন করেন না। তাঁরা ডেটা তৈরি করেন আর ফলাফল টেস্ট করেন। মূল কাজগুলো এই:
+
+1. **একটা test set আলাদা রাখুন।** ট্রেইনিংয়ের আগে লেবেল করা ডেটা ভাগ করুন। Hugging Face Datasets-এ `train_test_split()` একটা train অংশ আর একটা test অংশ বানায়। `test_size` test অংশের আকার ঠিক করে। ডিফল্টভাবে রো-গুলো এলোমেলো (shuffle) করা হয় <Cite n={5} />। Test রো কখনো ট্রেইনিংয়ে যায় না। তাই স্কোর দেখায়, মডেল না-দেখা কেসে কেমন করে।
+2. **বেস মডেলের সাথে তুলনা করুন।** দুটো মডেলে একই eval চালান: আপনার সেরা প্রম্পট সহ বেস মডেল, আর fine-tuned মডেল। একটা ভেন্ডর গাইড বলে, test ডেটায় দুটোই মাপুন <Cite n={8} />। আপনার কেসগুলোতে জিতলে তবেই টিউন করা মডেল শিপ করুন। [Checking AI Quality (Evals)](/ai-skills/ai-evals/) দেখুন।
+3. **পুরনো দক্ষতা ঠিক আছে কিনা দেখুন।** একটা কাজে ট্রেইন করলে অন্য দক্ষতা নষ্ট হতে পারে। একটা গবেষণায় continual fine-tuning-এর সময় 1b থেকে 7b প্যারামিটারের মডেলে সাধারণভাবে এই "catastrophic forgetting" দেখা গেছে <Cite n={6} />। সাধারণ কাজের একটা ছোট সেট রাখুন, যেমন সারাংশ, সাধারণ প্রশ্ন, আর আপনার safety চেক। প্রতিটা নতুন ভার্সনে এটা চালান।
+4. **ট্রেইনিং ডেটা চেক করুন।** প্রতিটা রো ট্রেইনারের প্রত্যাশিত ফরম্যাটে আছে কিনা দেখুন <Cite n={4} />। একই রো বারবার আছে কিনা, ভুল লেবেল আছে কিনা, আর কোনো রো test set-এও আছে কিনা খুঁজুন।
+5. **ভার্সন ট্রেস করুন।** একটা model card-এর `base_model` ফিল্ডে একটা fine-tune বা adapter-এর বেস মডেলের নাম থাকতে পারে <Cite n={9} />। এতে ট্রেইনিং ডেটা আর eval-এর ফলাফলও থাকা উচিত <Cite n={9} />। এই রেকর্ড চেয়ে নিন। তাহলে একটা বাগ রিপোর্টে ঠিক কোন মডেল, সেটা লেখা যাবে।
+
+এটা টিউটোরিয়ালের নিজের পরামর্শ। ট্রেইনিং ফাইলকে টেস্ট ডেটার মতো দেখুন। এর ভার্সন রাখুন, রিভিউ করুন, আর ব্যক্তিগত তথ্য ও গোপন কী এর বাইরে রাখুন। ট্রেইনিং শুরুর আগে eval লিখে ফেলুন। তাহলে স্কোর দেখার পর কেউ লক্ষ্য সরাতে পারবে না।
+
+</Bangla>
+</Voices>
+
+## Tools to try
+
+<Voices>
+<Technical>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| PEFT (Hugging Face) | A library of parameter-efficient fine-tuning methods, such as LoRA | It is under the Apache-2.0 license <Cite n={3} />. |
+| TRL `SFTTrainer` (Hugging Face) | A trainer for supervised fine-tuning | It can train LoRA adapters through `peft_config` <Cite n={4} />. |
+| Unsloth | A toolkit to fine-tune open models with less memory | It supports LoRA, QLoRA, and full fine-tuning <Cite n={7} />. It has two licenses: Apache 2.0 and AGPL-3.0 <Cite n={7} />. |
+| Hugging Face Datasets | Loads, cleans, and splits data | `train_test_split()` makes the held-out test split <Cite n={5} />. |
+
+To run an open model on your own machine, see [Open Models](/ai-skills/open-models/).
+
+</Technical>
+<Layman>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| PEFT (Hugging Face) | A library of fine-tuning methods that train few parameters, such as LoRA | It is under the Apache-2.0 license <Cite n={3} />. |
+| TRL `SFTTrainer` (Hugging Face) | A trainer for supervised fine-tuning | It can train LoRA adapters through `peft_config` <Cite n={4} />. |
+| Unsloth | A toolkit to fine-tune open models with less memory | It supports LoRA, QLoRA, and full fine-tuning <Cite n={7} />. It has two licenses: Apache 2.0 and AGPL-3.0 <Cite n={7} />. |
+| Hugging Face Datasets | Loads, cleans, and splits data | `train_test_split()` makes the test part that you keep apart <Cite n={5} />. |
+
+To run an open model on your own machine, see [Open Models](/ai-skills/open-models/).
+
+</Layman>
+<Bangla>
+
+| টুল | কী করে | একটা তথ্য |
+|---|---|---|
+| PEFT (Hugging Face) | কম প্যারামিটার ট্রেইন করা fine-tuning পদ্ধতির একটা লাইব্রেরি, যেমন LoRA | এটা Apache-2.0 লাইসেন্সে <Cite n={3} />। |
+| TRL `SFTTrainer` (Hugging Face) | Supervised fine-tuning-এর একটা ট্রেইনার | এটা `peft_config` দিয়ে LoRA adapter ট্রেইন করতে পারে <Cite n={4} />। |
+| Unsloth | কম মেমরিতে ওপেন মডেল fine-tune করার একটা টুলকিট | এটা LoRA, QLoRA আর full fine-tuning সাপোর্ট করে <Cite n={7} />। এর দুটো লাইসেন্স: Apache 2.0 আর AGPL-3.0 <Cite n={7} />। |
+| Hugging Face Datasets | ডেটা লোড করে, পরিষ্কার করে, ভাগ করে | `train_test_split()` আলাদা রাখার test অংশ বানায় <Cite n={5} />। |
+
+নিজের মেশিনে একটা ওপেন মডেল চালাতে [Open Models](/ai-skills/open-models/) দেখুন।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Fine-tuning first.** The team trains a model before it tries better prompts. Fix: try prompting and RAG first, and write the evals early. A vendor guide even suggests to write evals before prompts <Cite n={8} />.
+- **Testing on the training rows.** The score looks great, because the model has seen the answers. Fix: split the data before training and keep the test split apart <Cite n={5} />.
+- **Checking only the new task.** The tuned model is better at one job and worse at others <Cite n={6} />. Fix: run a general regression set on every version.
+- **No record of what was trained.** Nobody knows the base model or the data of the model in production. Fix: fill in the model card, with the base model and the training data <Cite n={9} />.
+- **Private data in the training file.** Nobody reviews the rows before training. Fix (the tutorial's advice): remove personal data and secrets before training, and test for leaks with prompts that ask for them.
+
+</Technical>
+<Layman>
+
+- **Fine-tuning first.** The team trains a model before it tries better prompts. Fix: try prompts and RAG first, and write the evals early. A vendor guide even says to write evals before prompts <Cite n={8} />.
+- **Testing on the training rows.** The score looks great, because the model has seen the answers. Fix: split the data before training. Keep the test part apart <Cite n={5} />.
+- **Checking only the new task.** The tuned model is better at one job and worse at others <Cite n={6} />. Fix: run a set of general tests on every version.
+- **No record of what was trained.** Nobody knows the base model or the data of the model in production. Fix: fill in the model card, with the base model and the training data <Cite n={9} />.
+- **Private data in the training file.** Nobody reviews the rows before training. Fix (the tutorial's advice): remove personal data and secrets before training. Then test for leaks with prompts that ask for them.
+
+</Layman>
+<Bangla>
+
+- **আগেই fine-tuning করা।** ভালো প্রম্পট চেষ্টা করার আগেই টিম মডেল ট্রেইন করে। সমাধান: আগে প্রম্পট আর RAG চেষ্টা করুন, আর eval আগেভাগে লিখুন। একটা ভেন্ডর গাইড তো প্রম্পটের আগেই eval লেখার কথা বলে <Cite n={8} />।
+- **ট্রেইনিংয়ের রো দিয়েই টেস্ট করা।** স্কোর দারুণ দেখায়, কারণ মডেল উত্তরগুলো আগেই দেখেছে। সমাধান: ট্রেইনিংয়ের আগে ডেটা ভাগ করুন। Test অংশ আলাদা রাখুন <Cite n={5} />।
+- **শুধু নতুন কাজটা চেক করা।** টিউন করা মডেল একটা কাজে ভালো হয়, অন্যগুলোতে খারাপ হয় <Cite n={6} />। সমাধান: প্রতিটা ভার্সনে সাধারণ টেস্টের একটা সেট চালান।
+- **কী ট্রেইন হয়েছে তার রেকর্ড নেই।** প্রোডাকশনের মডেলের বেস মডেল বা ডেটা কেউ জানে না। সমাধান: model card পূরণ করুন, বেস মডেল আর ট্রেইনিং ডেটা সহ <Cite n={9} />।
+- **ট্রেইনিং ফাইলে ব্যক্তিগত তথ্য।** ট্রেইনিংয়ের আগে কেউ রো-গুলো রিভিউ করে না। সমাধান (টিউটোরিয়ালের পরামর্শ): ট্রেইনিংয়ের আগে ব্যক্তিগত তথ্য আর গোপন কী সরিয়ে ফেলুন। তারপর সেগুলো চেয়ে প্রম্পট দিয়ে লিক টেস্ট করুন।
+
+</Bangla>
+</Voices>
+
+## How to start
+
+<Voices>
+<Technical>
+
+1. Write down the task and why prompting and RAG failed. Keep the failing cases.
+2. Build an eval set from real cases with the expected output. See [Checking AI Quality (Evals)](/ai-skills/ai-evals/) and [Test Design with Claude](/foundations/test-design/).
+3. Score the base model with your best prompt. This is the number to beat.
+4. Split the labeled data into a train split and a test split <Cite n={5} />, and check the format of each row <Cite n={4} />.
+5. Ask the team to train a small LoRA adapter first <Cite n={1} />, not a full fine-tune.
+6. Run the same eval on the tuned model, plus the general regression set. Report both numbers, and the base model and data version <Cite n={9} />.
+
+</Technical>
+<Layman>
+
+1. Write down the task, and why prompts and RAG failed. Keep the cases that failed.
+2. Build an eval set from real cases, with the expected output. See [Checking AI Quality (Evals)](/ai-skills/ai-evals/) and [Test Design with Claude](/foundations/test-design/).
+3. Score the base model with your best prompt. This is the number to beat.
+4. Split the labeled data into a train part and a test part <Cite n={5} />. Check the format of each row <Cite n={4} />.
+5. Ask the team to train a small LoRA adapter first <Cite n={1} />, not a full fine-tune.
+6. Run the same eval on the tuned model, and also the set of general tests. Report both numbers. Also report the base model and the data version <Cite n={9} />.
+
+</Layman>
+<Bangla>
+
+1. কাজটা লিখে রাখুন, আর কেন প্রম্পট ও RAG ব্যর্থ হয়েছে। ব্যর্থ কেসগুলো রেখে দিন।
+2. আসল কেস আর প্রত্যাশিত আউটপুট দিয়ে একটা eval set বানান। [Checking AI Quality (Evals)](/ai-skills/ai-evals/) আর [Test Design with Claude](/foundations/test-design/) দেখুন।
+3. আপনার সেরা প্রম্পট দিয়ে বেস মডেলের স্কোর নিন। এই সংখ্যাটাকেই হারাতে হবে।
+4. লেবেল করা ডেটা একটা train অংশ আর একটা test অংশে ভাগ করুন <Cite n={5} />। প্রতিটা রো-এর ফরম্যাট চেক করুন <Cite n={4} />।
+5. টিমকে বলুন, আগে full fine-tune নয়, একটা ছোট LoRA adapter ট্রেইন করতে <Cite n={1} />।
+6. টিউন করা মডেলে একই eval চালান, সাথে সাধারণ টেস্টের সেটও। দুটো সংখ্যাই রিপোর্ট করুন। বেস মডেল আর ডেটার ভার্সনও জানান <Cite n={9} />।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Fine-tuning | More training of a pretrained model on your own examples <Cite n={4} /> |
+| SFT | Supervised fine-tuning: training on pairs of input and wanted output <Cite n={4} /> |
+| PEFT | Fine-tuning that trains only a small number of extra parameters <Cite n={3} /> |
+| LoRA | A PEFT method that freezes the weights and adds small trainable matrices to each layer <Cite n={1} /> |
+| QLoRA | LoRA adapters trained on top of a frozen 4-bit base model <Cite n={2} /> |
+| Held-out test set | Labeled rows kept out of training, used only to score the model <Cite n={5} /> |
+| Catastrophic forgetting | A model loses old skills when it is trained on a new task <Cite n={6} /> |
+| Base model | The model that a fine-tune or adapter starts from <Cite n={9} /> |

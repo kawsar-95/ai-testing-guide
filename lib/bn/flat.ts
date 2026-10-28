@@ -2,6 +2,7 @@ import type { Bn } from "../bn.ts";
 import type { FlatModuleUI, FlatProgressUI } from "../modules/flat.ts";
 import type { FlatModuleId } from "../modules/registry.ts";
 import { AI_ENGINEERING_UI_BN } from "./ai-engineering.ts";
+import { AI_SKILLS_UI_BN } from "./ai-skills.ts";
 import { ARCHITECTURE_UI_BN } from "./architecture.ts";
 import { COURSE_UI_BN } from "./course.ts";
 import { HARNESS_UI_BN } from "./harness.ts";
@@ -15,4 +16,6 @@ export const FLAT_UI_BN: Record<FlatModuleId, Bn<FlatModuleUI & Partial<FlatProg
   course: COURSE_UI_BN,
   k6: K6_UI_BN,
   "ai-engineering": AI_ENGINEERING_UI_BN,
+  harness: HARNESS_UI_BN,
+  "ai-skills": AI_SKILLS_UI_BN,
 };

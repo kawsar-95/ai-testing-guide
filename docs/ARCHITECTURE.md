@@ -9,10 +9,10 @@ The site is a static export of a Next.js 16 App Router project. There is no serv
 ```mermaid
 flowchart LR
   nav["lib/nav.ts<br/>(tutorial groups and pages)"]
-  mods["lib/linux, lib/fundamentals,<br/>lib/system-design, lib/architecture,<br/>lib/course, lib/k6,<br/>lib/ai-engineering<br/>(one ordered list for each module)"]
-  mdx["content/&lt;group&gt;/&lt;slug&gt;.mdx<br/>(170 pages)"]
+  mods["lib/linux, lib/fundamentals,<br/>lib/system-design, lib/architecture,<br/>lib/course, lib/k6,<br/>lib/ai-engineering, lib/harness,<br/>lib/ai-skills<br/>(one ordered list for each module)"]
+  mdx["content/&lt;group&gt;/&lt;slug&gt;.mdx<br/>(196 pages)"]
   build["next build<br/>(output: export)"]
-  out["out/<br/>181 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
+  out["out/<br/>209 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
   pages["GitHub Pages"]
 
   nav --> build
@@ -26,7 +26,7 @@ The ordered lists and the MDX files are the inputs. Everything else is code that
 
 ## Routes
 
-The site has 181 routes.
+The site has 209 routes.
 
 | Route | Source | Output |
 |---|---|---|
@@ -42,6 +42,8 @@ The site has 181 routes.
 | `/course/`, `/course/<slug>/` | `app/(site)/course/` | The home and the 40 topics (41 routes) |
 | `/k6/`, `/k6/<slug>/` | `app/(site)/k6/` | The home and the 20 topics (21 routes) |
 | `/ai-engineering/`, `/ai-engineering/<slug>/` | `app/(site)/ai-engineering/` | The home and the 28 topics (29 routes) |
+| `/harness/`, `/harness/<slug>/` | `app/(site)/harness/` | The home and the 6 topics (7 routes) |
+| `/ai-skills/`, `/ai-skills/<slug>/` | `app/(site)/ai-skills/` | The home and the 20 skills (21 routes) |
 | `/search-index.json` | `app/search-index.json/route.ts` | The search documents (static) |
 | `/sitemap.xml`, `/robots.txt` | `app/sitemap.ts`, `app/robots.ts` | SEO files |
 | `/manifest.webmanifest`, `/sw.js` | `app/manifest.ts`, `app/sw.js/route.ts` | The installable app and its service worker |
@@ -65,12 +67,14 @@ Each part of the site has one ordered list. The lists drive the drawer, the home
 | Course | `lib/course/topics.ts` | 55 entries in 6 parts: 40 topics with a page and 15 links to Architecture and System Design pages. A flat module. |
 | k6 | `lib/k6/topics.ts` | 20 topics in 5 parts. A flat module. |
 | AI Engineering | `lib/ai-engineering/topics.ts` | 28 topics in 2 parts. A flat module. |
+| AI Harnesses | `lib/harness/topics.ts` | 6 topics. A flat module with no progress store. |
+| AI Skills | `lib/ai-skills/topics.ts` | 20 skills in 4 tiers. A flat module. |
 
 The top nav comes from `lib/header-nav.ts` (`HEADER_NAV`). It has four plain links: Home, Contents, Dashboard, and Interview. `activeNavId` marks the current item, and a tutorial or module page has none. A reader reaches a module from the home page or the contents page. `lib/interview.ts` holds the strings and the three cards of the interview page.
 
 ### Flat modules
 
-System Design, Architecture, Course, k6, and AI Engineering have the same shape: a home page and a list of pages at `/<id>/<slug>/`. `defineFlatModule` (`lib/modules/flat.ts`) builds the routes, the numbers, the neighbours, and the progress ids from one entry list. An entry is a `topic` (a page), a `practice` (a page with its own question ids), or a `link` (a link to another page, with no page of its own).
+System Design, Architecture, Course, k6, AI Engineering, AI Harnesses, and AI Skills have the same shape: a home page and a list of pages at `/<id>/<slug>/`. `defineFlatModule` (`lib/modules/flat.ts`) builds the routes, the numbers, the neighbours, and the progress ids from one entry list. An entry is a `topic` (a page), a `practice` (a page with its own question ids), or a `link` (a link to another page, with no page of its own).
 
 `lib/modules/registry.ts` holds `FLAT_MODULES` and `PROGRESS_MODULES`. The PWA, the sitemap, the stats, the search, the contents page, and the dashboard read the modules from it. Two thin route files show a flat module: `app/(site)/<id>/page.tsx` renders `FlatModuleHome`, and `app/(site)/<id>/[topic]/page.tsx` renders `FlatTopicPage`. The shared components live in `components/modules/`. CLAUDE.md has the five steps that add a module.
 
@@ -141,7 +145,7 @@ The "On this page" list and the search results link to heading ids. Those ids mu
 
 ## Page layout and navigation parts
 
-`ChapterLayout` (`components/content/`) has three columns for the 170 content pages.
+`ChapterLayout` (`components/content/`) has three columns for the 196 content pages.
 
 | Column | Shows | From |
 |---|---|---|
@@ -191,14 +195,14 @@ All progress is client-side. The shared code keeps its old `prep` names (`lib/pr
 
 | `localStorage` key | Holds |
 |---|---|
-| `linux-progress`, `fundamentals-progress`, `architecture-progress`, `course-progress`, `k6-progress`, `ai-engineering-progress` | Lists of done topic ids |
+| `linux-progress`, `fundamentals-progress`, `architecture-progress`, `course-progress`, `k6-progress`, `ai-engineering-progress`, `ai-skills-progress` | Lists of done topic ids |
 | `page-read`, `page-bookmarks` | Lists of routes |
 | `last-page` | One route: the last content page that the reader opened |
 | `theme`, `voice`, `linux-voice`, `fundamentals-version` | The theme, the default voice, the voice of the Linux stage pages, and the Fundamentals version |
 
 `ChapterTools` (the reading pill, Bookmark, and Mark as read) sits under the meta line of each content page. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
 
-The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 170`), the bookmarks, the topic progress of the six modules, and a Continue reading card. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
+The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 196`), the bookmarks, the topic progress of the seven modules, and a Continue reading card. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
 
 ## Fundamentals version switch
 
@@ -237,7 +241,7 @@ The look follows the reference site [systemdesignbangla.com](https://www.systemd
 
 | Part | Behavior |
 |---|---|
-| Install | Caches all 181 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
+| Install | Caches all 209 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
 | Pages, RSC payloads, and the search index | Stale-while-revalidate. The cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. |
 | `/_next/static/` files | Cache first. Their file names have a content hash. |
 | Offline, page not cached | Shows the cached 404 page |
@@ -296,7 +300,7 @@ The Python checks are not part of the workflow, because they expect a build with
 | `check_outline.py out` | Build check | Every "On this page" link has a target id |
 | `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 148 pages checked, 0 skipped`. |
 
-The route maps in `scripts/` list the routes that the build checks read: `route-map.json` (tutorial) and one file each for Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, contents, dashboard, and interview. `npm test` checks that each page is in its map.
+The route maps in `scripts/` list the routes that the build checks read: `route-map.json` (tutorial) and one file each for Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, contents, dashboard, and interview. `npm test` checks that each page is in its map.
 
 `scripts/compare_text.py` is a record of an earlier migration. It cannot run now. `scripts/linux_fetch.py` and `scripts/linux_overlap.py` are research tools for the Linux and System Design modules. The raw text that they download is third-party text and is never committed.
 
@@ -330,6 +334,7 @@ The design documents in `docs/superpowers/` record how the site got here. The sp
 | Reference redesign (current look) | [spec](superpowers/specs/2026-10-21-reference-redesign-design.md) | [plan](superpowers/plans/2026-10-21-reference-redesign.md) |
 | Flat modules | [spec](superpowers/specs/2026-10-22-flat-modules-design.md) | [plan](superpowers/plans/2026-10-22-flat-modules.md) |
 | k6 module | [spec](superpowers/specs/2026-10-27-k6-module-design.md) | [plan](superpowers/plans/2026-10-27-k6-module.md) |
+| AI Skills module | [spec](superpowers/specs/2026-10-28-ai-skills-module-design.md) | none |
 | System Design Course | [spec](superpowers/specs/2026-10-22-course-module-design.md) | Deliveries [1](superpowers/plans/2026-10-22-course-delivery-1.md), [2](superpowers/plans/2026-10-22-course-delivery-2.md), [3](superpowers/plans/2026-10-22-course-delivery-3.md), [4](superpowers/plans/2026-10-22-course-delivery-4.md), [5](superpowers/plans/2026-10-22-course-delivery-5.md) |
 
 An earlier redesign ([spec](superpowers/specs/2026-04-18-w3schools-redesign.md), [plan](superpowers/plans/2026-04-18-w3schools-redesign.md)) is replaced by the editorial redesign. The [content audit](superpowers/audits/2026-10-09-content-audit.md) lists the outdated claims of the old tutorial and, in its resolution section, the page that fixes each one.

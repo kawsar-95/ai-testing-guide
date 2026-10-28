@@ -1,0 +1,288 @@
+export const metadata = { title: 'Checking AI Quality (Evals)', description: 'How to test an AI feature with a fixed set of real cases, graders, and a pass-rate gate, and which tools a tester uses for it.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Create strong empirical evaluations', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/test-and-evaluate/develop-tests', accessed: '2026-10-28' },
+    { title: 'Glossary', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/about-claude/glossary', accessed: '2026-10-28' },
+    { title: 'Intro', publisher: 'promptfoo docs', url: 'https://www.promptfoo.dev/docs/intro/', accessed: '2026-10-28' },
+    { title: 'Configuration guide', publisher: 'promptfoo docs', url: 'https://www.promptfoo.dev/docs/configuration/guide/', accessed: '2026-10-28' },
+    { title: 'Command line', publisher: 'promptfoo docs', url: 'https://www.promptfoo.dev/docs/usage/command-line/', accessed: '2026-10-28' },
+    { title: 'Evaluate and monitor GenAI apps', publisher: 'MLflow docs', url: 'https://mlflow.org/docs/latest/genai/eval-monitor/', accessed: '2026-10-28' },
+    { title: 'Evaluate', publisher: 'Hugging Face docs', url: 'https://huggingface.co/docs/evaluate/index', accessed: '2026-10-28' },
+    { title: 'A quick tour', publisher: 'Hugging Face docs (Evaluate)', url: 'https://huggingface.co/docs/evaluate/a_quick_tour', accessed: '2026-10-28' },
+  ],
+}
+
+# Checking AI Quality (Evals)
+
+"I tried it three times and it looked fine" is not a test. An AI feature can give a different answer to the same input, and a prompt change that fixes one case can break ten others. An eval is the tester's answer: a fixed set of real cases, a grader for each, and a pass rate that must stay above a line before anything ships.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An **eval** (evaluation) is a test suite for AI output. It has three parts: a set of test cases (inputs and what a good output looks like), a **grader** that marks each output as a pass or a fail or gives it a score, and a **pass rate** that you compare with a target.
+
+Anthropic's guide gives the main rule: design evals that mirror the real distribution of tasks, and do not forget edge cases <Cite n={1} />. It also says that more cases with automated grading beat fewer cases graded by hand <Cite n={1} />.
+
+Why not test by hand? Model output is not fully deterministic. Even with temperature 0, the same input can give a different output on another call <Cite n={2} />. So one good try proves little. A set of cases, run again on every change, shows whether quality goes up or down. This is regression testing, with a grader in place of an exact `assertEqual`.
+
+</Technical>
+<Layman>
+
+An **eval** (evaluation) is a test suite for AI output. It has three parts. The first is a set of test cases: inputs, and what a good output looks like. The second is a **grader**. It marks each output as a pass or a fail, or gives it a score. The third is a **pass rate** that you compare with a target.
+
+Anthropic's guide gives the main rule. Make evals that look like the real tasks. Do not forget edge cases <Cite n={1} />. It also says that more cases with automatic grading are better than fewer cases graded by hand <Cite n={1} />.
+
+Why not test by hand? Model output is not fully fixed. Even with temperature 0, the same input can give a different output on another call <Cite n={2} />. So one good try proves little. A set of cases, run again on every change, shows if quality goes up or down. This is regression testing, with a grader in place of an exact `assertEqual`.
+
+</Layman>
+<Bangla>
+
+**Eval** (evaluation) হলো AI আউটপুটের জন্য একটা test suite। এর তিনটা অংশ। প্রথমটা টেস্ট কেসের একটা সেট: ইনপুট, আর একটা ভালো আউটপুট দেখতে কেমন। দ্বিতীয়টা একটা **grader**, যে প্রতিটা আউটপুটকে pass বা fail দেয়, অথবা একটা স্কোর দেয়। তৃতীয়টা একটা **pass rate**, যা আপনি একটা লক্ষ্যের সাথে মেলান।
+
+Anthropic-এর গাইড মূল নিয়মটা বলে: এমন eval বানান যা আসল কাজের বণ্টনের মতো, আর edge case ভুলবেন না <Cite n={1} />। এটা আরও বলে যে হাতে গ্রেড করা অল্প কেসের চেয়ে স্বয়ংক্রিয় গ্রেডিংসহ বেশি কেস ভালো <Cite n={1} />।
+
+হাতে টেস্ট কেন নয়? মডেলের আউটপুট পুরোপুরি নির্দিষ্ট (deterministic) নয়। Temperature 0-তেও একই ইনপুট আরেক কলে আলাদা আউটপুট দিতে পারে <Cite n={2} />। তাই একবার ভালো ফল খুব কম প্রমাণ করে। প্রতিটা পরিবর্তনে আবার চালানো কেসের একটা সেট দেখায় মান বাড়ছে না কমছে। এটা regression testing, শুধু হুবহু `assertEqual`-এর জায়গায় একটা grader।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+An eval run has the same steps every time:
+
+```text
+cases.yaml --> run the AI feature on each input --> outputs
+                                                      |
+                                    grader per case (code | LLM | human)
+                                                      |
+                              pass rate 46/50 = 92% --> gate: >= 90%? ship : stop
+```
+
+Anthropic's guide compares three kinds of grader <Cite n={1} />:
+
+| Grader | Strong side | Weak side |
+|---|---|---|
+| Code-based (exact match, contains, valid JSON) | Fastest and most reliable, scales well | Lacks nuance for complex judgment |
+| Human | Most flexible, high quality | Slow and expensive; avoid if you can |
+| LLM-based ("LLM as a judge") | Fast, flexible, good for complex judgment | Test that it is reliable first, then scale |
+
+For an LLM grader, the guide gives three tips: write a detailed, clear **rubric**; ask for a fixed result such as "correct" or "incorrect", or a score from 1 to 5; and let the grader reason before it scores <Cite n={1} />. Its example code also says it is best practice to use another model as the grader, not the one that wrote the output <Cite n={1} />.
+
+The **gate** turns the score into a pass or a fail for the build. In promptfoo, `promptfoo eval` ends with exit code 100 if one or more tests fail <Cite n={5} />. The variable `PROMPTFOO_PASS_RATE_THRESHOLD` sets the lowest pass rate in percent, and with no value it allows no failures <Cite n={5} />. Because output varies, the `--repeat` option runs each test more than one time <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+An eval run has the same steps every time. You run the AI feature on each input in your case file. A grader checks each output. The grader can be code, another AI model, or a person. You count the passes, for example 46 of 50, which is 92%. Then a gate checks the number: if it is 90% or more, you ship; if not, you stop.
+
+Anthropic's guide compares three kinds of grader <Cite n={1} />:
+
+- **Code-based** (exact match, contains, valid JSON): the fastest and most reliable, and it scales well. But it lacks nuance for complex judgment.
+- **Human**: the most flexible, with high quality. But it is slow and expensive. Avoid it if you can.
+- **LLM-based** ("LLM as a judge"): fast, flexible, and good for complex judgment. Test that it is reliable first, then scale.
+
+For an LLM grader, the guide gives three tips. Write a detailed, clear **rubric**. Ask for a fixed result, such as "correct" or "incorrect", or a score from 1 to 5. Let the grader reason before it scores <Cite n={1} />. Its example code also says it is best to use another model as the grader, not the one that wrote the output <Cite n={1} />.
+
+The **gate** turns the score into a pass or a fail for the build. In promptfoo, `promptfoo eval` ends with exit code 100 if one or more tests fail <Cite n={5} />. The variable `PROMPTFOO_PASS_RATE_THRESHOLD` sets the lowest pass rate in percent. With no value, it allows no failures <Cite n={5} />. Output varies, so the `--repeat` option runs each test more than one time <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+প্রতিবার একটা eval রান একই ধাপে চলে। আপনার কেস ফাইলের প্রতিটা ইনপুটে AI ফিচারটা চালান। একটা grader প্রতিটা আউটপুট যাচাই করে। Grader হতে পারে কোড, আরেকটা AI মডেল, বা একজন মানুষ। আপনি pass গোনেন, যেমন 50-এর মধ্যে 46, মানে 92%। তারপর একটা gate সংখ্যাটা দেখে: 90% বা বেশি হলে ship করেন, না হলে থামেন।
+
+Anthropic-এর গাইড তিন ধরনের grader তুলনা করে <Cite n={1} />:
+
+- **Code-based** (exact match, contains, valid JSON): সবচেয়ে দ্রুত আর সবচেয়ে নির্ভরযোগ্য, বড় পরিসরে ভালো চলে। কিন্তু জটিল বিচারের সূক্ষ্মতা এতে নেই।
+- **Human**: সবচেয়ে নমনীয়, উচ্চ মানের। কিন্তু ধীর আর ব্যয়বহুল। পারলে এড়িয়ে চলুন।
+- **LLM-based** ("LLM as a judge"): দ্রুত, নমনীয়, জটিল বিচারের জন্য ভালো। আগে দেখুন এটা নির্ভরযোগ্য কিনা, তারপর বড় পরিসরে চালান।
+
+LLM grader-এর জন্য গাইড তিনটা টিপ দেয়: একটা বিস্তারিত, পরিষ্কার **rubric** লিখুন; "correct" বা "incorrect", অথবা 1 থেকে 5 স্কোরের মতো একটা নির্দিষ্ট ফল চান; আর স্কোর দেওয়ার আগে grader-কে যুক্তি দিতে দিন <Cite n={1} />। এর উদাহরণ কোড আরও বলে যে যে মডেল আউটপুট লিখেছে তার বদলে আলাদা একটা মডেল দিয়ে গ্রেড করাই ভালো চর্চা <Cite n={1} />।
+
+**Gate** স্কোরকে বিল্ডের pass বা fail-এ রূপ দেয়। promptfoo-তে অন্তত একটা টেস্ট ফেইল করলে `promptfoo eval` exit code 100 দেয় <Cite n={5} />। `PROMPTFOO_PASS_RATE_THRESHOLD` ভেরিয়েবল শতাংশে সর্বনিম্ন pass rate ঠিক করে। কোনো মান না দিলে এটা কোনো ফেইল মানে না <Cite n={5} />। আউটপুট বদলায়, তাই `--repeat` অপশন প্রতিটা টেস্ট একাধিকবার চালায় <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Build the case set.** Start from real inputs: support tickets, search queries, or the bug reports that the feature reads. Then add the edge cases from Anthropic's guide: irrelevant or missing input, very long input, poor or harmful user input, and ambiguous cases where even people would disagree <Cite n={1} />.
+
+**Write the cases as a config.** promptfoo is a command-line tool and library that tests and red-teams LLM apps <Cite n={3} />. Its config file `promptfooconfig.yaml` lists prompts, providers, and tests, and each test has `vars` and `assert` checks such as `contains`, `equals`, and `llm-rubric` <Cite n={4} />. This is a shape example; take the provider id from the promptfoo docs:
+
+```yaml
+prompts:
+  - "Summarize this bug report in one sentence: {{report}}"
+providers:
+  - <your provider id>
+tests:
+  - vars:
+      report: "Login fails with a 500 error after a password reset."
+    assert:
+      - type: contains
+        value: "password reset"
+      - type: llm-rubric
+        value: "Says that login fails with a 500 error. Adds no details that are not in the report."
+```
+
+Run it with `promptfoo eval` <Cite n={4} />.
+
+**Gate the pipeline.** promptfoo can run in CI/CD <Cite n={3} />, and its exit code and pass-rate variable decide the build <Cite n={5} />. See [GitHub Actions](/automate/github-actions/).
+
+**Track quality over time.** MLflow keeps evaluation datasets, runs scorers, and has built-in LLM-as-a-judge scorers. You start a run with `mlflow.genai.evaluate` <Cite n={6} />.
+
+**Classic metrics for a classifier.** If the AI feature puts tickets into categories, plain accuracy works. Hugging Face Evaluate loads a metric with `evaluate.load("accuracy")`, and a metric compares predictions with ground-truth labels <Cite n={8} />.
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice. Every bug that a user reports in an AI feature becomes a new case in the eval set, the same way a bug becomes a regression test. Agree on the gate (for example 90 percent) with the team before the first run, not after a bad score.
+</Callout>
+
+</Technical>
+<Layman>
+
+**Build the case set.** Start from real inputs, such as support tickets, search queries, or the bug reports that the feature reads. Then add the edge cases from Anthropic's guide. These are inputs that are off-topic or missing, very long inputs, poor or harmful user input, and unclear cases where even people would disagree <Cite n={1} />.
+
+**Write the cases as a config.** promptfoo is a command-line tool and library that tests and red-teams LLM apps <Cite n={3} />. Its config file `promptfooconfig.yaml` lists prompts, providers, and tests. Each test has `vars` and `assert` checks, such as `contains`, `equals`, and `llm-rubric` <Cite n={4} />. For example, a test can give a bug report about a failed login after a password reset. It then checks that the summary contains "password reset", and that a judge model agrees the summary adds no new details. Run it with `promptfoo eval` <Cite n={4} />.
+
+**Gate the pipeline.** promptfoo can run in CI/CD <Cite n={3} />. Its exit code and pass-rate variable decide the build <Cite n={5} />.
+
+**Track quality over time.** MLflow keeps evaluation datasets and runs scorers. It has built-in LLM-as-a-judge scorers. You start a run with `mlflow.genai.evaluate` <Cite n={6} />.
+
+**Classic metrics for a classifier.** The AI feature may put tickets into categories. Then plain accuracy works. Hugging Face Evaluate loads a metric with `evaluate.load("accuracy")`. A metric compares predictions with the correct labels <Cite n={8} />.
+
+This is the tutorial's own advice. Every bug that a user reports in an AI feature becomes a new case in the eval set, the same way a bug becomes a regression test. Agree on the gate (for example 90 percent) with the team before the first run, not after a bad score.
+
+</Layman>
+<Bangla>
+
+**কেস সেট বানানো।** আসল ইনপুট দিয়ে শুরু করুন: সাপোর্ট টিকিট, সার্চ কুয়েরি, বা ফিচারটা যে bug report পড়ে। তারপর Anthropic-এর গাইডের edge case যোগ করুন: অপ্রাসঙ্গিক বা না-থাকা ইনপুট, খুব লম্বা ইনপুট, খারাপ বা ক্ষতিকর ইউজার ইনপুট, আর অস্পষ্ট কেস যেখানে মানুষও একমত হতো না <Cite n={1} />।
+
+**কেসগুলো config হিসেবে লেখা।** promptfoo হলো LLM অ্যাপ টেস্ট আর red-team করার একটা command-line টুল ও লাইব্রেরি <Cite n={3} />। এর config ফাইল `promptfooconfig.yaml`-এ prompts, providers আর tests থাকে। প্রতিটা টেস্টে `vars` আর `assert` চেক থাকে, যেমন `contains`, `equals` আর `llm-rubric` <Cite n={4} />। যেমন, একটা টেস্ট password reset-এর পর লগইন ফেইলের একটা bug report দিতে পারে। তারপর দেখে সারাংশে "password reset" আছে কিনা, আর একটা judge মডেল একমত কিনা যে সারাংশে নতুন কোনো তথ্য যোগ হয়নি। `promptfoo eval` দিয়ে চালান <Cite n={4} />।
+
+**Pipeline-এ gate বসানো।** promptfoo CI/CD-তে চলতে পারে <Cite n={3} />। এর exit code আর pass-rate ভেরিয়েবল বিল্ডের ফল ঠিক করে <Cite n={5} />।
+
+**সময়ের সাথে মান দেখা।** MLflow evaluation dataset রাখে আর scorer চালায়। এতে built-in LLM-as-a-judge scorer আছে। `mlflow.genai.evaluate` দিয়ে একটা রান শুরু করেন <Cite n={6} />।
+
+**Classifier-এর জন্য ক্লাসিক মেট্রিক।** AI ফিচার যদি টিকিটকে ক্যাটাগরিতে ভাগ করে, তাহলে সাধারণ accuracy কাজ করে। Hugging Face Evaluate `evaluate.load("accuracy")` দিয়ে একটা মেট্রিক লোড করে। একটা মেট্রিক prediction-কে সঠিক label-এর সাথে মেলায় <Cite n={8} />।
+
+এটা টিউটোরিয়ালের নিজের পরামর্শ। AI ফিচারে ইউজারের রিপোর্ট করা প্রতিটা বাগ eval সেটে একটা নতুন কেস হয়, যেমন একটা বাগ একটা regression test হয়। প্রথম রানের আগেই দলের সাথে gate (যেমন 90 শতাংশ) ঠিক করুন, খারাপ স্কোর আসার পরে নয়।
+
+</Bangla>
+</Voices>
+
+## Tools to try
+
+<Voices>
+<Technical>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| promptfoo | Eval and red-team LLM apps from a YAML config | `promptfoo eval` exits with code 100 when a test fails <Cite n={5} /> |
+| MLflow | Datasets, scorers, and LLM judges for GenAI apps | You run an eval with `mlflow.genai.evaluate` <Cite n={6} /> |
+| Hugging Face Evaluate | Classic ML metrics such as accuracy | A library to evaluate models and datasets <Cite n={7} /> |
+| Anthropic eval guide | How to design cases and graders | It recommends automated grading where possible <Cite n={1} /> |
+
+</Technical>
+<Layman>
+
+- **promptfoo**: evals and red-teaming for LLM apps from a YAML config. `promptfoo eval` exits with code 100 when a test fails <Cite n={5} />.
+- **MLflow**: datasets, scorers, and LLM judges for GenAI apps. You run an eval with `mlflow.genai.evaluate` <Cite n={6} />.
+- **Hugging Face Evaluate**: classic ML metrics such as accuracy. It is a library to evaluate models and datasets <Cite n={7} />.
+- **Anthropic eval guide**: how to design cases and graders. It recommends automatic grading where possible <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **promptfoo**: একটা YAML config থেকে LLM অ্যাপের eval আর red-teaming। কোনো টেস্ট ফেইল করলে `promptfoo eval` code 100 দিয়ে বের হয় <Cite n={5} />।
+- **MLflow**: GenAI অ্যাপের জন্য dataset, scorer আর LLM judge। `mlflow.genai.evaluate` দিয়ে একটা eval চালান <Cite n={6} />।
+- **Hugging Face Evaluate**: accuracy-র মতো ক্লাসিক ML মেট্রিক। এটা মডেল আর dataset evaluate করার একটা লাইব্রেরি <Cite n={7} />।
+- **Anthropic eval guide**: কেস আর grader কীভাবে ডিজাইন করবেন। যেখানে সম্ভব স্বয়ংক্রিয় গ্রেডিং সুপারিশ করে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A few cases graded by hand.** Fix: write more cases with automated grading. The Anthropic guide prefers volume over hand-graded quality <Cite n={1} />.
+- **Only happy-path cases.** Fix: add the edge cases (missing, long, harmful, ambiguous input) <Cite n={1} />.
+- **Exact text match on free text.** The same input can give different words <Cite n={2} />. Fix: use code checks for structure (valid JSON, a required word) and a rubric for meaning.
+- **An LLM judge nobody checked.** Fix: test the judge on cases with a known verdict before you trust it at scale, and give it a detailed rubric <Cite n={1} />. Use a grader model that is not the model under test <Cite n={1} />.
+- **One run per case.** Fix: run each case more than one time, for example with `--repeat` <Cite n={5} />, and look at cases that pass only some of the time.
+
+</Technical>
+<Layman>
+
+- **A few cases graded by hand.** Fix: write more cases with automatic grading. The Anthropic guide prefers more cases over hand-graded quality <Cite n={1} />.
+- **Only happy-path cases.** Fix: add the edge cases: missing, long, harmful, and unclear input <Cite n={1} />.
+- **Exact text match on free text.** The same input can give different words <Cite n={2} />. Fix: use code checks for structure, such as valid JSON or a required word. Use a rubric for meaning.
+- **An LLM judge that nobody checked.** Fix: test the judge on cases with a known answer before you trust it at scale. Give it a detailed rubric <Cite n={1} />. Use a grader model that is not the model under test <Cite n={1} />.
+- **One run per case.** Fix: run each case more than one time, for example with `--repeat` <Cite n={5} />. Look at cases that pass only some of the time.
+
+</Layman>
+<Bangla>
+
+- **হাতে গ্রেড করা অল্প কিছু কেস।** সমাধান: স্বয়ংক্রিয় গ্রেডিংসহ বেশি কেস লিখুন। Anthropic গাইড হাতে গ্রেড করা মানের চেয়ে বেশি সংখ্যাকে প্রাধান্য দেয় <Cite n={1} />।
+- **শুধু happy-path কেস।** সমাধান: edge case যোগ করুন: না-থাকা, লম্বা, ক্ষতিকর আর অস্পষ্ট ইনপুট <Cite n={1} />।
+- **Free text-এ হুবহু মেলানো।** একই ইনপুট আলাদা শব্দ দিতে পারে <Cite n={2} />। সমাধান: গঠনের জন্য কোড চেক ব্যবহার করুন, যেমন valid JSON বা একটা আবশ্যিক শব্দ। অর্থের জন্য একটা rubric ব্যবহার করুন।
+- **কেউ যাচাই করেনি এমন LLM judge।** সমাধান: বড় পরিসরে বিশ্বাস করার আগে জানা উত্তরের কেসে judge-কে টেস্ট করুন। একটা বিস্তারিত rubric দিন <Cite n={1} />। যে মডেল টেস্ট হচ্ছে তার বদলে আলাদা মডেল দিয়ে গ্রেড করুন <Cite n={1} />।
+- **প্রতি কেসে একবার রান।** সমাধান: প্রতিটা কেস একাধিকবার চালান, যেমন `--repeat` দিয়ে <Cite n={5} />। যে কেস মাঝে মাঝে pass করে, সেগুলো দেখুন।
+
+</Bangla>
+</Voices>
+
+## How to start
+
+<Voices>
+<Technical>
+
+1. Pick one AI feature and write 20 to 50 cases (the tutorial's own starting size) from real inputs, plus a few edge cases <Cite n={1} />.
+2. For each case, write what a pass means: a word that must be there, a JSON shape, or a short rubric.
+3. Put the cases in `promptfooconfig.yaml` and run `promptfoo eval` <Cite n={4} />. Read every failure: is the output wrong, or the case?
+4. Agree on a gate with the team, set `PROMPTFOO_PASS_RATE_THRESHOLD`, and run the eval in CI on every prompt or model change <Cite n={5} />.
+5. Add a case for each new bug. For the prompt side of the work, read [Prompting](/foundations/prompting/) and the [Prompting](/ai-skills/prompting/) skill.
+
+</Technical>
+<Layman>
+
+1. Pick one AI feature. Write 20 to 50 cases (the tutorial's own starting size) from real inputs, plus a few edge cases <Cite n={1} />.
+2. For each case, write what a pass means: a word that must be there, a JSON shape, or a short rubric.
+3. Put the cases in `promptfooconfig.yaml`. Run `promptfoo eval` <Cite n={4} />. Read every failure. Is the output wrong, or the case?
+4. Agree on a gate with the team. Set `PROMPTFOO_PASS_RATE_THRESHOLD`. Run the eval in CI on every prompt or model change <Cite n={5} />.
+5. Add a case for each new bug.
+
+</Layman>
+<Bangla>
+
+1. একটা AI ফিচার বাছুন। আসল ইনপুট থেকে 20 থেকে 50টা কেস লিখুন (টিউটোরিয়ালের নিজের শুরুর সংখ্যা), সাথে কিছু edge case <Cite n={1} />।
+2. প্রতিটা কেসে pass মানে কী, তা লিখুন: একটা শব্দ যা থাকতেই হবে, একটা JSON আকার, বা একটা ছোট rubric।
+3. কেসগুলো `promptfooconfig.yaml`-এ রাখুন আর `promptfoo eval` চালান <Cite n={4} />। প্রতিটা ফেইল পড়ুন: আউটপুট ভুল, নাকি কেসটা?
+4. দলের সাথে একটা gate ঠিক করুন, `PROMPTFOO_PASS_RATE_THRESHOLD` সেট করুন, আর প্রতিটা প্রম্পট বা মডেল পরিবর্তনে CI-তে eval চালান <Cite n={5} />।
+5. প্রতিটা নতুন বাগের জন্য একটা কেস যোগ করুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Eval | A fixed set of cases with graders that tests AI output <Cite n={1} /> |
+| Grader | Code, a person, or a model that marks an output as a pass or a fail <Cite n={1} /> |
+| LLM as a judge | A model that grades another model's output with a rubric <Cite n={1} /> <Cite n={6} /> |
+| Rubric | Clear written rules that say what a good answer is <Cite n={1} /> |
+| Pass rate | The share of cases that pass; a gate needs a minimum <Cite n={5} /> |
+| Metric | A score from predictions and ground-truth labels, such as accuracy <Cite n={8} /> |
+| Non-determinism | The same input can give a different output <Cite n={2} /> |
