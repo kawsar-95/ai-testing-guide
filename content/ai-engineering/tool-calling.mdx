@@ -1,0 +1,317 @@
+export const metadata = { title: 'Tool Calling', description: 'How a model calls your functions through tool schemas, how your code runs the call and returns errors, and how to limit what a tool can do.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Tool use with Claude', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview', accessed: '2026-10-28' },
+    { title: 'Define tools', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools', accessed: '2026-10-28' },
+    { title: 'Handle tool calls', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls', accessed: '2026-10-28' },
+    { title: 'Strict tool use', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use', accessed: '2026-10-28' },
+    { title: 'JSON Schema reference: object', publisher: 'JSON Schema', url: 'https://json-schema.org/understanding-json-schema/reference/object', accessed: '2026-10-28' },
+    { title: 'Specification 2025-06-18: Tools', publisher: 'Model Context Protocol', url: 'https://modelcontextprotocol.io/specification/2025-06-18/server/tools', accessed: '2026-10-28' },
+    { title: 'LLM06:2025 Excessive Agency', publisher: 'OWASP GenAI Security Project', url: 'https://genai.owasp.org/llmrisk/llm062025-excessive-agency/', accessed: '2026-10-28' },
+    { title: 'Writing effective tools for AI agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/writing-tools-for-agents', accessed: '2026-10-28' },
+  ],
+}
+
+# Tool Calling
+
+A test runner does not guess what a test step means: it calls a function with exact arguments and checks the result. Tool calling gives a model the same power. The model asks for a function call with structured arguments, your code runs it, and the result goes back to the model.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Tool calling** (also called function calling) lets a model call functions that you define. The model decides when to call a tool from the request of the user and the description of the tool. It returns a structured call, and your application runs it <Cite n={1} />.
+
+The model never runs your code itself. For a **client tool**, the model only says "call `get_weather` with these arguments". Your code runs the function and sends back the result <Cite n={1} />. **Server tools**, such as web search, run on the infrastructure of the vendor <Cite n={1} />.
+
+So tool calling has two sides that you must test: what the model asks for, and what your code does with the request.
+
+</Technical>
+<Layman>
+
+**Tool calling** (also called function calling) lets a model use functions that you write. The model decides when to use a tool. It looks at the request of the user and the description of the tool. It sends back a structured call. Your app runs it <Cite n={1} />.
+
+The model never runs your code itself. For a **client tool**, the model only says "call `get_weather` with these values". Your code runs the function. It sends the result back <Cite n={1} />. **Server tools**, such as web search, run on the computers of the vendor <Cite n={1} />.
+
+So tool calling has two sides to test. One is what the model asks for. The other is what your code does with the request.
+
+</Layman>
+<Bangla>
+
+**টুল কলিং** (function calling নামেও পরিচিত) মডেলকে আপনার লেখা ফাংশন ব্যবহার করতে দেয়। মডেল ঠিক করে কখন একটা টুল ব্যবহার করবে। সে ইউজারের রিকুয়েস্ট আর টুলের বর্ণনা দেখে। সে একটা গঠিত (structured) কল ফেরত পাঠায়। আপনার অ্যাপ সেটা চালায় <Cite n={1} />।
+
+মডেল নিজে কখনো আপনার কোড চালায় না। **Client tool**-এর ক্ষেত্রে মডেল শুধু বলে "এই মানগুলো দিয়ে `get_weather` কল করো"। আপনার কোড ফাংশনটা চালায়। ফলাফল ফেরত পাঠায় <Cite n={1} />। **Server tool**, যেমন web search, ভেন্ডরের কম্পিউটারে চলে <Cite n={1} />।
+
+তাই টুল কলিংয়ের দুটো দিক টেস্ট করতে হয়। একটা হলো মডেল কী চাইছে। অন্যটা হলো আপনার কোড সেই রিকুয়েস্ট নিয়ে কী করে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### The schema
+
+You list tools in the `tools` parameter. Each tool has a `name`, a `description`, and an `input_schema`, which is a JSON Schema object <Cite n={2} />. The description is the most important factor for tool performance: explain its job, the cases for it, and its output <Cite n={2} />. In JSON Schema, properties are optional unless you list them in `required`, and extra properties are allowed unless you set `additionalProperties` to `false` <Cite n={5} />.
+
+### The round trip
+
+1. You send the request with `tools`.
+2. The response has `stop_reason: "tool_use"` and at least one `tool_use` block. Each block has an `id`, a `name`, and an `input` <Cite n={3} />.
+3. Your code runs the function and sends a `tool_result` block with the same `tool_use_id` <Cite n={3} />.
+4. The model uses the result to continue its answer <Cite n={3} />.
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+tools = [{
+    "name": "jira_get_issue",
+    "description": "Get one Jira issue by key, e.g. QA-123. Returns status, summary, and assignee.",
+    "strict": True,
+    "input_schema": {
+        "type": "object",
+        "properties": {"key": {"type": "string", "pattern": "^[A-Z]+-[0-9]+$"}},
+        "required": ["key"],
+        "additionalProperties": False,
+    },
+}]
+messages = [{"role": "user", "content": "What is the status of QA-123?"}]
+response = client.messages.create(model="claude-opus-5-5", max_tokens=1024, tools=tools, messages=messages)
+
+if response.stop_reason == "tool_use":
+    call = next(b for b in response.content if b.type == "tool_use")
+    try:
+        result = {"type": "tool_result", "tool_use_id": call.id, "content": get_issue(call.input["key"])}
+    except LookupError:
+        result = {"type": "tool_result", "tool_use_id": call.id, "is_error": True,
+                  "content": "Issue not found. Check the key and try again."}
+    messages += [{"role": "assistant", "content": response.content}, {"role": "user", "content": [result]}]
+    response = client.messages.create(model="claude-opus-5-5", max_tokens=1024, tools=tools, messages=messages)
+```
+
+`get_issue` is your own function. The `tool_result` blocks must come right after the `tool_use` message, and first in the content of the user message <Cite n={3} />.
+
+### Validation and strict mode
+
+Without strict mode, a model can send the wrong type (`"2"` and not `2`) or leave out a required field <Cite n={4} />. With `strict: true`, Claude constrains its sampling so that the tool input always matches the schema <Cite n={4} />. Strict mode checks the shape only. Your code must still check the meaning: does the user have access to `QA-123`? The MCP specification says that servers must validate all tool inputs <Cite n={6} />.
+
+### Errors and retries
+
+If the tool fails, return the error text in `content` with `"is_error": true` <Cite n={3} />. Write useful messages: say what went wrong and what to try next, for example "Retry after 60 seconds" <Cite n={3} />. If a call is invalid, Claude retries 2 to 3 times with corrections before it apologizes to the user <Cite n={3} />.
+
+### Choosing and limiting tools
+
+`tool_choice` controls tool use: `auto` (the default when tools exist), `any`, `tool` (one named tool), or `none` <Cite n={2} />. On some models, such as Claude Opus 5.5, `any` and `tool` return a 400 error; the docs suggest `auto` with strict tool use there <Cite n={2} />.
+
+OWASP calls the main risk **Excessive Agency**: too much functionality, too many permissions, or too much autonomy <Cite n={7} />. Its advice: give only the tools that are needed, limit their permissions, run them in the context of the user, ask a human to approve high-impact actions, and check authorization in the downstream system, not in the model <Cite n={7} />.
+
+</Technical>
+<Layman>
+
+**The schema.** You list tools in the `tools` parameter. Each tool has a `name`, a `description`, and an `input_schema`. The schema is a JSON Schema object <Cite n={2} />. The description is the most important factor for how well a tool works. Explain its job, the cases for it, and its output <Cite n={2} />. In JSON Schema, a property is optional unless you list it in `required`. Extra properties are allowed unless you set `additionalProperties` to `false` <Cite n={5} />.
+
+**The round trip.**
+
+1. You send the request with `tools`.
+2. The response has `stop_reason: "tool_use"` and at least one `tool_use` block. Each block has an `id`, a `name`, and an `input` <Cite n={3} />.
+3. Your code runs the function. It sends a `tool_result` block with the same `tool_use_id` <Cite n={3} />.
+4. The model uses the result to finish its answer <Cite n={3} />.
+
+The code example defines one tool, `jira_get_issue`, with one required field, `key`. It runs your own function `get_issue`. If the issue is not found, it sends back an error. Then it asks the model again. The `tool_result` blocks must come right after the `tool_use` message. They must also come first in the user message <Cite n={3} />.
+
+**Checks and strict mode.** Without strict mode, a model can send the wrong type, such as `"2"` and not `2`. It can also leave out a required field <Cite n={4} />. With `strict: true`, Claude limits its output so that the tool input always matches the schema <Cite n={4} />. Strict mode checks the shape only. Your code must still check the meaning. For example: can this user see `QA-123`? The MCP specification says that servers must check all tool inputs <Cite n={6} />.
+
+**Errors and retries.** If the tool fails, send the error text in `content` with `"is_error": true` <Cite n={3} />. Write useful messages. Say what went wrong and what to try next, for example "Retry after 60 seconds" <Cite n={3} />. If a call is not valid, Claude tries again 2 to 3 times with fixes. Then it says sorry to the user <Cite n={3} />.
+
+**Choosing and limiting tools.** `tool_choice` controls tool use. The options are `auto` (the default when tools exist), `any`, `tool` (one named tool), and `none` <Cite n={2} />. On some models, such as Claude Opus 5.5, `any` and `tool` return a 400 error. There the docs suggest `auto` with strict tool use <Cite n={2} />.
+
+OWASP calls the main risk **Excessive Agency**. It means too many functions, too many permissions, or too much freedom to act alone <Cite n={7} />. OWASP advises this <Cite n={7} />:
+
+- Give only the tools that are needed.
+- Limit their permissions.
+- Run them as the user, not as a powerful account.
+- Ask a human to approve actions with a big impact.
+- Check permissions in the system behind the tool, not in the model.
+
+</Layman>
+<Bangla>
+
+**স্কিমা।** আপনি `tools` প্যারামিটারে টুলগুলোর তালিকা দেন। প্রতিটা টুলের থাকে একটা `name`, একটা `description` আর একটা `input_schema`। স্কিমাটা একটা JSON Schema অবজেক্ট <Cite n={2} />। টুল কতটা ভালো কাজ করবে, তার সবচেয়ে বড় কারণ হলো বর্ণনা। টুল কী করে, কখন ব্যবহার করতে হবে আর কী ফেরত দেয়, তা লিখুন <Cite n={2} />। JSON Schema-তে একটা প্রপার্টি ঐচ্ছিক, যদি না আপনি সেটা `required`-এ রাখেন। বাড়তি প্রপার্টি চলে, যদি না আপনি `additionalProperties`-কে `false` করেন <Cite n={5} />।
+
+**আসা-যাওয়ার ধাপ।**
+
+1. আপনি `tools` সহ রিকুয়েস্ট পাঠান।
+2. মডেল উত্তর দেয় `stop_reason: "tool_use"` আর এক বা একাধিক `tool_use` ব্লক দিয়ে। প্রতিটা ব্লকে থাকে একটা `id`, একটা `name` আর একটা `input` <Cite n={3} />।
+3. আপনার কোড ফাংশনটা চালায়। একই `tool_use_id` সহ একটা `tool_result` ব্লক পাঠায় <Cite n={3} />।
+4. মডেল ফলাফল ব্যবহার করে তার উত্তর শেষ করে <Cite n={3} />।
+
+কোডের উদাহরণে একটা টুল আছে, `jira_get_issue`, যার একটা দরকারি ফিল্ড `key`। এটা আপনার নিজের ফাংশন `get_issue` চালায়। ইস্যু না পেলে একটা এরর ফেরত পাঠায়। তারপর মডেলকে আবার জিজ্ঞেস করে। `tool_result` ব্লকগুলো `tool_use` মেসেজের ঠিক পরেই আসতে হবে। ইউজার মেসেজেও এগুলো প্রথমে থাকতে হবে <Cite n={3} />।
+
+**যাচাই আর strict মোড।** Strict মোড ছাড়া মডেল ভুল টাইপ পাঠাতে পারে, যেমন `2`-এর বদলে `"2"`। একটা দরকারি ফিল্ড বাদও দিতে পারে <Cite n={4} />। `strict: true` দিলে Claude তার আউটপুট এমনভাবে সীমিত করে যে টুল ইনপুট সবসময় স্কিমার সঙ্গে মেলে <Cite n={4} />। Strict মোড শুধু আকার যাচাই করে। অর্থ যাচাই আপনার কোডকেই করতে হবে। যেমন: এই ইউজার কি `QA-123` দেখতে পারেন? MCP স্পেসিফিকেশন বলে সার্ভারকে সব টুল ইনপুট যাচাই করতেই হবে <Cite n={6} />।
+
+**এরর আর রিট্রাই।** টুল ব্যর্থ হলে এররের টেক্সট `content`-এ `"is_error": true` সহ পাঠান <Cite n={3} />। কাজের মেসেজ লিখুন। কী ভুল হলো আর এরপর কী চেষ্টা করতে হবে তা বলুন, যেমন "Retry after 60 seconds" <Cite n={3} />। কল বৈধ না হলে Claude সংশোধনসহ 2 থেকে 3 বার আবার চেষ্টা করে। তারপর ইউজারের কাছে দুঃখ প্রকাশ করে <Cite n={3} />।
+
+**টুল বাছাই আর সীমিত করা।** `tool_choice` টুল ব্যবহার নিয়ন্ত্রণ করে। অপশনগুলো হলো `auto` (টুল থাকলে ডিফল্ট), `any`, `tool` (একটা নির্দিষ্ট টুল) আর `none` <Cite n={2} />। কিছু মডেলে, যেমন Claude Opus 5.5-এ, `any` আর `tool` 400 এরর দেয়। সেখানে ডকস strict tool use সহ `auto` ব্যবহারের পরামর্শ দেয় <Cite n={2} />।
+
+OWASP মূল ঝুঁকিকে বলে **Excessive Agency**। মানে খুব বেশি ফাংশন, খুব বেশি পারমিশন, বা একা কাজ করার খুব বেশি স্বাধীনতা <Cite n={7} />। OWASP এই পরামর্শ দেয় <Cite n={7} />:
+
+- শুধু দরকারি টুল দিন।
+- তাদের পারমিশন সীমিত করুন।
+- শক্তিশালী অ্যাকাউন্ট হিসেবে নয়, ইউজার হিসেবে চালান।
+- বড় প্রভাবের কাজে একজন মানুষের অনুমোদন নিন।
+- পারমিশন যাচাই করুন টুলের পেছনের সিস্টেমে, মডেলে নয়।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A QA assistant helps testers in chat. It has three tools:
+
+| Tool | Kind | Control |
+|---|---|---|
+| `jira_get_issue` | Read | Runs with the token of the signed-in tester |
+| `testrail_get_run` | Read | Read-only API key |
+| `jira_create_bug` | Write | The app shows the draft and waits for the tester to click Approve |
+
+This follows the OWASP advice: the minimum tools, the minimum permissions, actions in the context of the user, and human approval for high-impact actions <Cite n={7} />. MCP also says that a human should be able to deny a tool call, and that the app should ask for confirmation of sensitive operations <Cite n={6} />.
+
+A tester types "file a bug for the failed login test in run 88". The model calls `testrail_get_run` with `{"run_id": 88}`, reads the failure, and then calls `jira_create_bug` with a title and steps. The app does not create the issue yet. It shows the draft. The tester edits one step and approves.
+
+</Technical>
+<Layman>
+
+A QA assistant helps testers in chat. It has three tools:
+
+- `jira_get_issue` reads an issue. It runs with the token of the tester who is signed in.
+- `testrail_get_run` reads a test run. It uses a key that can only read.
+- `jira_create_bug` writes a new bug. The app shows the draft. It waits for the tester to click Approve.
+
+This follows the OWASP advice. Give the fewest tools and the fewest permissions. Act as the user. Ask a human to approve actions with a big impact <Cite n={7} />. MCP also says that a human should be able to refuse a tool call. The app should ask for confirmation of sensitive actions <Cite n={6} />.
+
+A tester types "file a bug for the failed login test in run 88". The model calls `testrail_get_run` with `{"run_id": 88}`. It reads the failure. Then it calls `jira_create_bug` with a title and steps. The app does not create the issue yet. It shows the draft. The tester changes one step and approves.
+
+</Layman>
+<Bangla>
+
+একটা QA অ্যাসিস্ট্যান্ট চ্যাটে টেস্টারদের সাহায্য করে। এর তিনটা টুল আছে:
+
+- `jira_get_issue` একটা ইস্যু পড়ে। এটা সাইন ইন করা টেস্টারের টোকেন দিয়ে চলে।
+- `testrail_get_run` একটা টেস্ট রান পড়ে। এটা এমন একটা key ব্যবহার করে, যেটা শুধু পড়তে পারে।
+- `jira_create_bug` একটা নতুন বাগ লেখে। অ্যাপ ড্রাফট দেখায়। টেস্টার Approve ক্লিক করা পর্যন্ত অপেক্ষা করে।
+
+এটা OWASP-এর পরামর্শ মেনে চলে। সবচেয়ে কম টুল আর সবচেয়ে কম পারমিশন দিন। ইউজার হিসেবে কাজ করুন। বড় প্রভাবের কাজে একজন মানুষের অনুমোদন নিন <Cite n={7} />। MCP-ও বলে একজন মানুষের একটা টুল কল বাতিল করার ক্ষমতা থাকা উচিত। সংবেদনশীল কাজে অ্যাপের নিশ্চিতকরণ চাওয়া উচিত <Cite n={6} />।
+
+একজন টেস্টার লেখেন "file a bug for the failed login test in run 88"। মডেল `{"run_id": 88}` দিয়ে `testrail_get_run` কল করে। ব্যর্থতাটা পড়ে। তারপর একটা শিরোনাম আর ধাপসহ `jira_create_bug` কল করে। অ্যাপ এখনই ইস্যু তৈরি করে না। ড্রাফট দেখায়। টেস্টার একটা ধাপ বদলান আর অনুমোদন দেন।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A short, vague description.** The description is the biggest factor in how well the model uses a tool <Cite n={2} />.
+- **Trusting the input because the schema passed.** The schema checks types, not access rights. Authorization belongs in the downstream system <Cite n={7} />.
+- **One open-ended tool, such as "run a shell command".** OWASP advises small tools with narrow functions <Cite n={7} />.
+- **A service account with full rights.** An extension that reads data should not also have UPDATE and DELETE rights <Cite n={7} />.
+- **Errors that say only "failed".** The model cannot recover without a clear reason and a next step <Cite n={3} />.
+- **Huge tool results.** Bloated responses waste context. Return only the fields that the model needs <Cite n={2} />.
+- **No timeouts and no logs.** MCP says clients should set timeouts for tool calls and log tool use for audit <Cite n={6} />.
+- **No eval for the tools.** Anthropic advises an evaluation with many tasks from real use, and metrics such as tool calls, tool errors, and tokens <Cite n={8} />.
+
+</Technical>
+<Layman>
+
+- **A short, vague description.** The description is the biggest factor in how well the model uses a tool <Cite n={2} />.
+- **Trusting the input because the schema passed.** The schema checks types, not access rights. The system behind the tool must check permissions <Cite n={7} />.
+- **One tool that can do anything, such as "run a shell command".** OWASP advises small tools that each do one narrow job <Cite n={7} />.
+- **A service account with full rights.** A tool that only reads data should not also be able to change or delete data <Cite n={7} />.
+- **Errors that say only "failed".** The model cannot recover without a clear reason and a next step <Cite n={3} />.
+- **Huge tool results.** Very large answers waste context. Send back only the fields that the model needs <Cite n={2} />.
+- **No timeouts and no logs.** MCP says apps should set time limits for tool calls. They should log tool use for audits <Cite n={6} />.
+- **No eval for the tools.** Anthropic advises an evaluation with many tasks from real use. It suggests counting tool calls, tool errors, and tokens <Cite n={8} />.
+
+</Layman>
+<Bangla>
+
+- **ছোট, অস্পষ্ট বর্ণনা।** মডেল একটা টুল কতটা ভালো ব্যবহার করে, তার সবচেয়ে বড় কারণ বর্ণনা <Cite n={2} />।
+- **স্কিমা পাস করেছে বলে ইনপুটে ভরসা করা।** স্কিমা টাইপ যাচাই করে, অ্যাক্সেসের অধিকার নয়। টুলের পেছনের সিস্টেমকেই পারমিশন যাচাই করতে হবে <Cite n={7} />।
+- **সবকিছু করতে পারে এমন একটা টুল, যেমন "run a shell command"।** OWASP ছোট টুলের পরামর্শ দেয়, যার প্রতিটা একটা সরু কাজ করে <Cite n={7} />।
+- **পুরো অধিকারসহ একটা সার্ভিস অ্যাকাউন্ট।** যে টুল শুধু ডেটা পড়ে, তার ডেটা বদলানো বা মোছার ক্ষমতা থাকা উচিত নয় <Cite n={7} />।
+- **শুধু "failed" বলা এরর।** পরিষ্কার কারণ আর পরের ধাপ ছাড়া মডেল সামলে উঠতে পারে না <Cite n={3} />।
+- **বিশাল টুল রেজাল্ট।** খুব বড় উত্তর কনটেক্সট নষ্ট করে। শুধু সেই ফিল্ডগুলো ফেরত দিন, যা মডেলের দরকার <Cite n={2} />।
+- **টাইমআউট আর লগ না থাকা।** MCP বলে অ্যাপের টুল কলে সময়সীমা রাখা উচিত। অডিটের জন্য টুল ব্যবহার লগ করা উচিত <Cite n={6} />।
+- **টুলের কোনো eval না থাকা।** Anthropic আসল ব্যবহার থেকে নেওয়া অনেক কাজ দিয়ে একটা ইভ্যালুয়েশনের পরামর্শ দেয়। টুল কল, টুল এরর আর টোকেন গোনার কথা বলে <Cite n={8} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice.
+
+- **Test the handler without the model.** Call each tool function directly with valid, invalid, empty, and huge inputs, as you test any API.
+- **Fake a model call.** Send a `tool_use` block with a wrong type, a missing field, or an extra field. The handler must reject it with a clear `is_error` result.
+- **Test access, not just shape.** Ask for `QA-999` as a tester who cannot see it. The tool must refuse, even with a valid schema.
+- **Force a failure.** Make the downstream API time out or return 500. Check the error text and that the app does not loop forever.
+- **Check approval gates.** Try to make the model call a write tool with a tricky prompt. Nothing may change before a human approves.
+- **Read the logs.** Each tool call should have its name, its input, the user, the result, and the time.
+- **Track tool metrics.** Count tool calls, tool errors, and tokens per task.
+</Callout>
+
+</Technical>
+<Layman>
+
+These checks are the tutorial's own advice.
+
+- **Test the code behind the tool without the model.** Call each tool function directly with good, bad, empty, and very large inputs, as you test any API.
+- **Fake a model call.** Send a `tool_use` block with a wrong type, a missing field, or an extra field. The code must reject it with a clear `is_error` result.
+- **Test access, not just shape.** Ask for `QA-999` as a tester who cannot see it. The tool must refuse, even with a valid schema.
+- **Force a failure.** Make the API behind the tool time out or return 500. Check the error text. Check that the app does not loop forever.
+- **Check approval steps.** Try to make the model call a write tool with a tricky prompt. Nothing may change before a human approves.
+- **Read the logs.** Each tool call should have its name, its input, the user, the result, and the time.
+- **Track tool numbers.** Count tool calls, tool errors, and tokens for each task.
+
+</Layman>
+<Bangla>
+
+এই চেকগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **মডেল ছাড়া টুলের পেছনের কোড টেস্ট করুন।** যেকোনো API-র মতো, প্রতিটা টুল ফাংশন সরাসরি ভালো, খারাপ, ফাঁকা আর খুব বড় ইনপুট দিয়ে কল করুন।
+- **মডেলের একটা কল নকল করুন।** ভুল টাইপ, বাদ পড়া ফিল্ড, বা বাড়তি ফিল্ডসহ একটা `tool_use` ব্লক পাঠান। কোডকে পরিষ্কার `is_error` রেজাল্ট দিয়ে সেটা বাতিল করতে হবে।
+- **শুধু আকার নয়, অ্যাক্সেস টেস্ট করুন।** এমন একজন টেস্টার হিসেবে `QA-999` চান, যিনি এটা দেখতে পারেন না। বৈধ স্কিমা থাকলেও টুলকে মানা করতে হবে।
+- **ইচ্ছা করে ব্যর্থ করান।** টুলের পেছনের API-কে টাইমআউট বা 500 ফেরত দেওয়ান। এররের টেক্সট দেখুন। দেখুন অ্যাপ অনন্তকাল লুপে ঘুরছে না।
+- **অনুমোদনের ধাপ যাচাই করুন।** কৌশলী প্রম্পট দিয়ে মডেলকে একটা write টুল কল করানোর চেষ্টা করুন। মানুষ অনুমোদন দেওয়ার আগে কিছুই বদলাবে না।
+- **লগ পড়ুন।** প্রতিটা টুল কলে থাকা উচিত তার নাম, ইনপুট, ইউজার, ফলাফল আর সময়।
+- **টুলের মেট্রিক ট্র্যাক করুন।** প্রতিটা কাজে টুল কল, টুল এরর আর টোকেন গুনুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Tool calling | A model asks your code to run a function with structured arguments <Cite n={1} /> |
+| Client tool | A tool that your application runs, not the vendor <Cite n={1} /> |
+| `input_schema` | The JSON Schema that defines the arguments of a tool <Cite n={2} /> |
+| `tool_use` / `tool_result` | The block with the call from the model, and the block with your answer <Cite n={3} /> |
+| `is_error` | A flag on a `tool_result` that tells the model the tool failed <Cite n={3} /> |
+| Strict mode | `strict: true`: tool inputs always match the schema <Cite n={4} /> |
+| Excessive Agency | The risk that a model can do damaging actions through its tools <Cite n={7} /> |

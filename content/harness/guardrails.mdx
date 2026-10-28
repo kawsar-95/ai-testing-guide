@@ -1,0 +1,200 @@
+export const metadata = { title: 'Guardrails', description: 'Checks on inputs, outputs, and tool calls, and a pause for human approval before a risky action.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Hooks reference', publisher: 'Claude Code documentation', url: 'https://code.claude.com/docs/en/hooks', accessed: '2026-10-28' },
+    { title: 'Guardrails', publisher: 'OpenAI Agents SDK documentation', url: 'https://openai.github.io/openai-agents-python/guardrails/', accessed: '2026-10-28' },
+    { title: 'Human-in-the-loop', publisher: 'OpenAI Agents SDK documentation', url: 'https://openai.github.io/openai-agents-python/human_in_the_loop/', accessed: '2026-10-28' },
+  ],
+}
+
+# Guardrails
+
+A harness can check inputs, outputs, and tool requests, and pause an action for human approval. For example, an output check inspects a reply before it is sent. These controls can still miss errors.
+
+<PageMeta />
+
+## Guardrails in the OpenAI Agents SDK
+
+<Voices>
+<Technical>
+
+A guardrail is a check that runs beside the model and can stop the run. The OpenAI Agents SDK has these kinds <Cite n={2} />:
+
+| Kind | When it runs |
+|---|---|
+| Input guardrail | On the initial user input, only for the first agent in the chain |
+| Output guardrail | On the final output, only for the agent that produces it |
+| Input tool guardrail | Before a function tool runs. It can skip the call, replace the output with a message, or raise a tripwire. |
+| Output tool guardrail | After a function tool runs. It can replace the output or raise a tripwire. |
+
+When an input or output guardrail sets its **tripwire**, the runner raises `InputGuardrailTripwireTriggered` or `OutputGuardrailTripwireTriggered` and halts the agent <Cite n={2} />.
+
+An input guardrail runs in parallel with the agent by default (`run_in_parallel=True`) <Cite n={2} />. With `run_in_parallel=False`, it completes before the agent starts. If it trips, the agent never runs, so no tokens are used and no tool runs <Cite n={2} />. Output guardrails always run after the agent completes <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+A **guardrail** is a check that watches the agent and can stop it. The OpenAI Agents SDK has checks in four places <Cite n={2} />:
+
+- On the **input** of the user, for the first agent only.
+- On the **final output**, before the user sees it.
+- **Before a tool runs.** The check can skip the tool or stop the run.
+- **After a tool runs.** The check can change the result or stop the run.
+
+When a check fails, it "trips a wire": the SDK raises an error and stops the agent <Cite n={2} />.
+
+By default, an input check runs at the same time as the agent <Cite n={2} />. You can make it run first. Then a failed check stops the agent before it uses any tokens or tools <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**guardrail** হলো একটা চেক, যেটা এজেন্টকে নজরে রাখে আর তাকে থামাতে পারে। OpenAI Agents SDK-তে চার জায়গায় চেক আছে <Cite n={2} />:
+
+- ইউজারের **input**-এ, শুধু প্রথম এজেন্টের জন্য।
+- **ফাইনাল output**-এ, ইউজার দেখার আগে।
+- **টুল চলার আগে।** চেকটা টুলটা বাদ দিতে বা রান থামাতে পারে।
+- **টুল চলার পরে।** চেকটা ফলাফল বদলাতে বা রান থামাতে পারে।
+
+চেক ফেল করলে একটা "tripwire" ট্রিগার হয়: SDK একটা exception দেয় (`InputGuardrailTripwireTriggered`) আর এজেন্ট থামিয়ে দেয় <Cite n={2} />।
+
+ডিফল্টভাবে input চেক এজেন্টের সাথে একই সময়ে চলে (`run_in_parallel=True`) <Cite n={2} />। আপনি এটাকে আগে চালাতে পারেন। তখন চেক ফেল করলে এজেন্ট কোনো টোকেন বা টুল ব্যবহারের আগেই থেমে যায় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Human approval
+
+<Voices>
+<Technical>
+
+The human-in-the-loop (HITL) flow pauses the agent until a person approves or rejects a sensitive tool call <Cite n={3} />. In the OpenAI Agents SDK, set `needs_approval` to `True` on a tool, or give an async function that decides for each call <Cite n={3} />.
+
+```text
+Draft ready → needs approval? ── pending ──► Wait
+                    │
+                    └── approved ──► Sent
+```
+
+If a call needs approval and no decision is stored, the run pauses, and `RunResult.interruptions` lists the pending calls <Cite n={3} />. Convert the result with `result.to_state()`, call `state.approve(...)` or `state.reject(...)`, then resume with `Runner.run(agent, state)` <Cite n={3} />. The run continues where it stopped <Cite n={3} />. A rejected call returns the standard rejection text of the SDK to the run, by default <Cite n={3} />.
+
+The SDK docs also warn: deserialize a saved state only from trusted storage, or after you verify its integrity and ownership <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+For a risky action, the harness can stop and wait for a person <Cite n={3} />. This is called **human-in-the-loop**. In the OpenAI Agents SDK, you mark a tool with `needs_approval`. Then each call of that tool waits for a yes or a no <Cite n={3} />.
+
+While the agent waits, the run is paused <Cite n={3} />. A person approves or rejects the call, and the run continues from the same place <Cite n={3} />. If the person says no, the agent gets a standard "rejected" message <Cite n={3} />.
+
+Keep the saved state of a paused run in a safe place. Load it only from storage that you trust <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+ঝুঁকির কোনো কাজের আগে harness থেমে একজন মানুষের জন্য অপেক্ষা করতে পারে <Cite n={3} />। একে বলে **human-in-the-loop**। OpenAI Agents SDK-তে একটা টুলে `needs_approval` দিলে সেই টুলের প্রতিটা কল একটা হ্যাঁ বা না-এর জন্য অপেক্ষা করে <Cite n={3} />।
+
+এজেন্ট অপেক্ষা করার সময় রানটা থেমে থাকে <Cite n={3} />। একজন মানুষ কলটা approve বা reject করে, আর রানটা একই জায়গা থেকে আবার চলে <Cite n={3} />। মানুষটা না বললে এজেন্ট একটা স্ট্যান্ডার্ড "rejected" মেসেজ পায় <Cite n={3} />।
+
+থেমে থাকা রানের সেভ করা অবস্থা নিরাপদ জায়গায় রাখুন। শুধু বিশ্বাসযোগ্য স্টোরেজ থেকেই সেটা লোড করুন <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Hooks in Claude Code
+
+<Voices>
+<Technical>
+
+Claude Code has no "guardrail" object. Hooks do the same job. Hooks are user-defined shell commands, HTTP endpoints, MCP tool calls, LLM prompts, or subagents that run automatically at points in the lifecycle of Claude Code <Cite n={1} />:
+
+| Event | When it runs |
+|---|---|
+| `UserPromptSubmit` | When a prompt is submitted, before Claude processes it |
+| `PreToolUse` | Before a tool call runs. It can block the call. |
+| `PostToolUse` | After a tool call succeeds |
+| `PostToolUseFailure` | After a tool call fails |
+| `Stop` | When Claude finishes its response |
+
+A `PreToolUse` hook can return a `permissionDecision` of `"deny"`, for example when a command contains `rm -rf` <Cite n={1} />. Exit code 0 with no output means that the hook has no decision, and the call continues through the normal permission flow <Cite n={1} />. The hook can deny the call, but no output does not approve it <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+Claude Code uses **hooks** as its guardrails. A hook is your own script, or another check, that runs at a fixed point while Claude works <Cite n={1} />:
+
+- When you send a prompt, before Claude reads it.
+- Before a tool runs. Here the hook can block the tool.
+- After a tool runs, or after it fails.
+- When Claude finishes its answer.
+
+For example, a hook that runs before each tool can block every command that contains `rm -rf` <Cite n={1} />. If the hook says nothing, the normal permission rules decide <Cite n={1} />. A silent hook never approves a call by itself <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+Claude Code guardrail হিসেবে **hook** ব্যবহার করে। hook হলো আপনার নিজের একটা স্ক্রিপ্ট বা অন্য কোনো চেক, যেটা Claude কাজ করার সময় নির্দিষ্ট একটা মুহূর্তে চলে <Cite n={1} />:
+
+- আপনি prompt পাঠালে, Claude সেটা পড়ার আগে (`UserPromptSubmit`)।
+- একটা টুল চলার আগে (`PreToolUse`)। এখানে hook টুলটা ব্লক করতে পারে।
+- একটা টুল চলার পরে, বা ফেল করার পরে (`PostToolUse`, `PostToolUseFailure`)।
+- Claude উত্তর শেষ করলে (`Stop`)।
+
+যেমন, প্রতিটা টুলের আগে চলা একটা hook এমন প্রতিটা কমান্ড ব্লক করতে পারে, যেটায় `rm -rf` আছে <Cite n={1} />। hook কিছু না বললে স্বাভাবিক permission rule সিদ্ধান্ত নেয় <Cite n={1} />। চুপ থাকা hook নিজে থেকে কখনো কোনো কল approve করে না <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+A guardrail is code, and it has bugs too. Test each check with a pass case and a fail case:
+
+- **Input check:** a prompt that the check must block, and a close prompt that it must allow. Count the false blocks.
+- **Output check:** a reply with a wrong fact or a private value. The check must stop it before it is sent.
+- **Parallel mode:** with a parallel input guardrail, check which tools ran before the tripwire fired.
+- **Approval:** reject a refund. The agent must not try a different tool to issue it.
+- **Silent hook:** a hook that crashes or prints nothing. The call must go to the normal permission flow, not be approved.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+A guardrail is code, so it can be wrong too. Test each check two ways: once where it must stop the agent, and once where it must let the agent go on.
+
+- A prompt that must be blocked, and a similar one that must not be.
+- A reply with a wrong fact or a private value. It must not be sent.
+- A rejected refund. The agent must not find another way to give it.
+- A broken or silent hook. It must not approve the action by itself. The normal permission rules decide.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+guardrail-ও কোড, তাই সেটাও ভুল হতে পারে। প্রতিটা চেক দুইভাবে টেস্ট করুন: একবার যেখানে চেকটাকে এজেন্ট থামাতেই হবে, আরেকবার যেখানে এজেন্টকে চলতে দিতে হবে।
+
+- একটা prompt যেটা ব্লক হতে হবে, আর প্রায় একই রকম একটা যেটা ব্লক হওয়া চলবে না।
+- ভুল তথ্য বা গোপন কোনো মানসহ একটা উত্তর। সেটা পাঠানো যাবে না।
+- একটা reject করা refund। এজেন্ট যেন অন্য কোনো পথে সেটা না দেয়।
+- একটা নষ্ট বা চুপ থাকা hook। সেটা নিজে থেকে কাজটা approve করবে না। স্বাভাবিক permission rule সিদ্ধান্ত নেবে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Guardrail | A check on an input, an output, or a tool call that can stop the run |
+| Tripwire | The signal of a failed guardrail. The runner raises an exception and halts. |
+| Human-in-the-loop (HITL) | The run pauses until a person approves or rejects a call |
+| `needs_approval` | The OpenAI Agents SDK tool option that requires approval |
+| Hook | A Claude Code command or check that runs at a lifecycle event |
+| `PreToolUse` | The hook event before a tool call. It can block the call. |
+| `permissionDecision` | The field in which a `PreToolUse` hook returns `"deny"` |

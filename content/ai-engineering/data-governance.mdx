@@ -1,0 +1,268 @@
+export const metadata = { title: 'Data Governance', description: 'Rules for the data that flows through an AI app: what goes to the model, who can see it, how long it is kept, and how you prove it later.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'AI RMF Core (AI Risk Management Framework 1.0, section 5)', publisher: 'NIST AI Resource Center', url: 'https://airc.nist.gov/airmf-resources/airmf/5-sec-core/', accessed: '2026-10-28' },
+    { title: 'LLM02:2025 Sensitive Information Disclosure', publisher: 'OWASP Gen AI Security Project', url: 'https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/', accessed: '2026-10-28' },
+    { title: 'API and data retention', publisher: 'Claude Platform Docs (Anthropic)', url: 'https://platform.claude.com/docs/en/manage-claude/api-and-data-retention', accessed: '2026-10-28' },
+    { title: 'Data controls in the OpenAI platform', publisher: 'OpenAI API Docs', url: 'https://developers.openai.com/api/docs/guides/your-data', accessed: '2026-10-28' },
+    { title: 'Auditing', publisher: 'Kubernetes Documentation', url: 'https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/', accessed: '2026-10-28' },
+  ],
+}
+
+# Data Governance
+
+An AI app moves data in new ways. A user types a question with a customer name in it. The app adds 5 internal documents and sends all of it to a model provider. The answer goes into a log. Data governance is the set of rules that says what may go where, who can see it, and how long it stays.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+Tutorial's own view: data governance for an AI app covers 4 questions.
+
+| Question | Topic |
+|---|---|
+| What data may enter the system, and the model? | Privacy |
+| How long is each copy kept, and where? | Retention |
+| Who and what can read it? | Access |
+| Can we show later what happened? | Audit trail |
+
+OWASP lists the data at risk in an LLM app: personal data, financial and health data, confidential business data, credentials, and legal papers <Cite n={2} />. NIST names governance outcomes that fit here: the legal and regulatory requirements for AI are understood, managed, and documented <Cite n={1} />; there is an inventory of AI systems <Cite n={1} />; and the privacy risk of each system is examined and documented <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+The tutorial's own view: data governance for an AI app covers 4 questions.
+
+- Privacy: what data may enter the system and the model?
+- Retention: how long is each copy kept, and where?
+- Access: who and what can read it?
+- Audit trail: can we show later what happened?
+
+OWASP lists the data at risk in an LLM app. It is personal data, financial and health data, confidential business data, credentials, and legal papers <Cite n={2} />. NIST names governance outcomes that fit here. The legal and regulatory requirements for AI are understood, managed, and documented <Cite n={1} />. There is a list of the AI systems <Cite n={1} />. The privacy risk of each system is examined and documented <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+টিউটোরিয়ালের নিজের মত: একটা AI অ্যাপের ডেটা গভর্নেন্স (data governance) 4টা প্রশ্নের উত্তর দেয়:
+
+- প্রাইভেসি: কোন ডেটা সিস্টেমে আর মডেলে ঢুকতে পারবে?
+- রিটেনশন (retention): প্রতিটা কপি কতদিন আর কোথায় রাখা হয়?
+- অ্যাক্সেস: কে আর কী এটা পড়তে পারে?
+- অডিট ট্রেইল (audit trail): পরে কি দেখানো যাবে কী ঘটেছিল?
+
+OWASP একটা LLM অ্যাপে ঝুঁকিতে থাকা ডেটার তালিকা দেয়: ব্যক্তিগত ডেটা, আর্থিক তথ্য, স্বাস্থ্যের রেকর্ড, গোপন ব্যবসায়িক ডেটা, সিকিউরিটি credential আর আইনি ডকুমেন্ট <Cite n={2} />। NIST এখানে খাটে এমন কিছু গভর্নেন্স ফলাফল বলে: AI-সংক্রান্ত আইনি ও নিয়ন্ত্রক শর্তগুলো বোঝা, সামলানো আর লিখে রাখা হয় <Cite n={1} />; AI সিস্টেমগুলোর একটা তালিকা (inventory) থাকে <Cite n={1} />; আর প্রতিটা সিস্টেমের প্রাইভেসি ঝুঁকি পরীক্ষা করে লিখে রাখা হয় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Map the copies
+
+Tutorial's own view: start with a map of every place the data lands. A typical chat app:
+
+```text
+user question --> app server logs
+              --> vector store (documents, chunks)
+              --> model provider (prompt + response)
+              --> trace / observability tool
+              --> chat history database
+              --> eval set (sampled questions)
+```
+
+Each box needs an owner, a retention period, and an access rule.
+
+### Privacy: send less
+
+OWASP advises data sanitization, such as scrubbing or masking sensitive content, so that user data does not enter training <Cite n={2} />. It also suggests pattern matching to detect and redact confidential content before processing <Cite n={2} />. OWASP warns that a rule in the system prompt about what data to return can be bypassed through prompt injection <Cite n={2} />.
+
+### Retention at the model provider
+
+Each provider documents what it keeps. Read the page of your provider:
+
+- **Anthropic**: conversation content is not retained by default, except for some models that need 30-day retention <Cite n={3} />. Under a zero data retention (ZDR) arrangement, prompts and responses are not stored at rest after the response returns <Cite n={3} />. ZDR is enabled per organization, and it does not cover features such as code execution, which the eligibility table marks "No" <Cite n={3} />.
+- **OpenAI**: since March 1, 2023, API data is not used to train its models unless the customer opts in <Cite n={4} />. Abuse monitoring logs are kept for up to 30 days, unless the law needs longer, or a longer period is reasonably needed to protect its services or others <Cite n={4} />.
+
+### Access
+
+OWASP says: limit access to sensitive data by the principle of least privilege, and grant only the data that a user or process needs <Cite n={2} />. Tutorial's own view: in a retrieval app, that means the search step filters by the permissions of the user before the model sees any document.
+
+### Audit trail
+
+An audit trail is a time-ordered record of actions. Kubernetes auditing is one model: it records who did what, when, on what, and from where <Cite n={5} />. Tutorial's own view: for an AI app, log the user, the documents retrieved, the tools called, and the model ID, and protect that log like the data itself.
+
+</Technical>
+<Layman>
+
+**Map the copies.** The tutorial's own view: start with a map of every place where the data lands. In a typical chat app, the question of the user goes to many places. They are the app server logs, the vector store, the model provider, a trace tool, the chat history database, and the eval set. Each place needs an owner, a retention period, and an access rule.
+
+**Privacy: send less.** OWASP advises data sanitization. Scrub or mask sensitive content, so that user data does not enter training <Cite n={2} />. It also suggests pattern matching. It finds and removes confidential content before processing <Cite n={2} />. OWASP warns about one thing. A rule in the system prompt about what data to return can be bypassed with prompt injection <Cite n={2} />.
+
+**Retention at the model provider.** Each provider documents what it keeps. Read the page of your provider.
+
+- **Anthropic**: conversation content is not kept by default. Some models are the exception. They need 30-day retention <Cite n={3} />. With zero data retention (ZDR), prompts and responses are not stored at rest after the response returns <Cite n={3} />. ZDR is turned on for each organization. It does not cover features such as code execution, which the table marks "No" <Cite n={3} />.
+- **OpenAI**: since March 1, 2023, API data does not train its models, unless the customer opts in <Cite n={4} />. Abuse monitoring logs are kept for up to 30 days. The law can need a longer period. A longer period can also be reasonably needed to protect its services or others <Cite n={4} />.
+
+**Access.** OWASP says: limit access to sensitive data with the principle of least privilege. Give a user or process only the data that it needs <Cite n={2} />. The tutorial's own view: in a retrieval app, the search step filters by the permissions of the user. This happens before the model sees any document.
+
+**Audit trail.** An audit trail is a record of actions in time order. Kubernetes auditing is one model. It records who did what, when, on what, and from where <Cite n={5} />. The tutorial's own view: for an AI app, log the user, the documents found, the tools called, and the model ID. Protect that log like the data itself.
+
+</Layman>
+<Bangla>
+
+**কপিগুলোর মানচিত্র বানান।** টিউটোরিয়ালের নিজের মত: ডেটা যেখানে যেখানে যায়, তার একটা মানচিত্র দিয়ে শুরু করুন। একটা সাধারণ চ্যাট অ্যাপে ইউজারের প্রশ্ন যায় অ্যাপ সার্ভারের লগে, ভেক্টর স্টোরে, মডেল প্রোভাইডারের কাছে, একটা trace টুলে, চ্যাট হিস্ট্রির ডেটাবেসে আর eval-সেটে। প্রতিটা জায়গার একজন মালিক, একটা রিটেনশন সময় আর একটা অ্যাক্সেসের নিয়ম লাগবে।
+
+**প্রাইভেসি: কম পাঠান।** OWASP data sanitization-এর পরামর্শ দেয়, যেমন সংবেদনশীল লেখা মুছে ফেলা বা ঢেকে দেওয়া, যাতে ইউজারের ডেটা ট্রেনিংয়ে না ঢোকে <Cite n={2} />। প্রসেস করার আগে গোপন লেখা খুঁজে সরিয়ে দিতে pattern matching-এর কথাও বলে <Cite n={2} />। OWASP সতর্ক করে: কোন ডেটা ফেরত দেবে, সে বিষয়ে সিস্টেম প্রম্পটের নিয়ম prompt injection দিয়ে এড়ানো যায় <Cite n={2} />।
+
+**মডেল প্রোভাইডারের কাছে রিটেনশন।** প্রতিটা প্রোভাইডার লিখে রাখে সে কী রাখে। আপনার প্রোভাইডারের পেজটা পড়ুন।
+
+- **Anthropic**: কথোপকথনের লেখা ডিফল্টভাবে রাখা হয় না, তবে কিছু মডেল ব্যতিক্রম, সেগুলোর 30 দিনের রিটেনশন লাগে <Cite n={3} />। Zero data retention (ZDR) ব্যবস্থায় রেসপন্স ফেরত যাওয়ার পর প্রম্পট আর রেসপন্স at rest রাখা হয় না <Cite n={3} />। ZDR প্রতিটা অর্গানাইজেশনের জন্য আলাদা চালু হয়, আর টেবিলে "No" লেখা ফিচার, যেমন code execution, এর আওতায় পড়ে না <Cite n={3} />।
+- **OpenAI**: March 1, 2023 থেকে API-র ডেটা তাদের মডেল ট্রেনিংয়ে ব্যবহার হয় না, যদি না কাস্টমার নিজে opt in করেন <Cite n={4} />। Abuse monitoring লগ 30 দিন পর্যন্ত রাখা হয়, যদি না আইন আরও বেশি সময় চায়, বা তাদের সার্ভিস বা অন্যদের সুরক্ষার জন্য আরও বেশি সময় যুক্তিসঙ্গতভাবে দরকার হয় <Cite n={4} />।
+
+**অ্যাক্সেস।** OWASP বলে: least privilege নীতিতে সংবেদনশীল ডেটার অ্যাক্সেস সীমিত করুন, আর একজন ইউজার বা প্রসেসকে শুধু ততটুকু ডেটা দিন, যতটুকু তার দরকার <Cite n={2} />। টিউটোরিয়ালের নিজের মত: একটা রিট্রিভাল অ্যাপে এর মানে, মডেল কোনো ডকুমেন্ট দেখার আগেই সার্চ ধাপ ইউজারের পারমিশন দিয়ে ফিল্টার করে।
+
+**অডিট ট্রেইল।** অডিট ট্রেইল হলো সময়ের ক্রমে কাজের একটা রেকর্ড। Kubernetes auditing একটা নমুনা: এটা লিখে রাখে কে কী করেছে, কখন, কিসের ওপর আর কোথা থেকে <Cite n={5} />। টিউটোরিয়ালের নিজের মত: একটা AI অ্যাপে ইউজার, খুঁজে পাওয়া ডকুমেন্ট, কল করা টুল আর মডেল ID লগ করুন, আর সেই লগকে ডেটার মতোই সুরক্ষিত রাখুন।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A hospital group builds an internal assistant that answers questions about shift rules. The data map shows a problem: nurses paste patient notes into the chat to ask about a procedure. Those notes go to the app log, the trace tool, and the model provider.
+
+The team makes 4 changes:
+
+1. A redaction step masks names and record numbers before the prompt leaves the app, as OWASP suggests <Cite n={2} />.
+2. They check the retention terms of their provider and request ZDR for the organization <Cite n={3} />.
+3. The trace tool keeps only the redacted prompt, and keeps it for 14 days. Tutorial's own view: a log often holds more personal data than the main database.
+4. Each answer logs the user ID, the document IDs, and the model ID, so a later question "who saw what?" has an answer <Cite n={5} />.
+
+NIST also asks that the privacy risk is examined and documented <Cite n={1} />, so the team writes it down in the system inventory.
+
+</Technical>
+<Layman>
+
+A hospital group builds an internal assistant. It answers questions about shift rules. The data map shows a problem. Nurses paste patient notes into the chat to ask about a procedure. Those notes go to the app log, the trace tool, and the model provider.
+
+The team makes 4 changes.
+
+1. A redaction step masks names and record numbers before the prompt leaves the app. OWASP suggests this <Cite n={2} />.
+2. They check the retention terms of their provider. They ask for ZDR for the organization <Cite n={3} />.
+3. The trace tool keeps only the redacted prompt, for 14 days. The tutorial's own view: a log often holds more personal data than the main database.
+4. Each answer logs the user ID, the document IDs, and the model ID. So a later question "who saw what?" has an answer <Cite n={5} />.
+
+NIST also asks that the privacy risk is examined and documented <Cite n={1} />. So the team writes it down in the list of AI systems.
+
+</Layman>
+<Bangla>
+
+একটা হাসপাতাল গ্রুপ শিফটের নিয়ম নিয়ে প্রশ্নের উত্তর দেওয়ার জন্য একটা অভ্যন্তরীণ অ্যাসিস্ট্যান্ট বানায়। ডেটার মানচিত্র একটা সমস্যা দেখায়: নার্সরা একটা প্রসিডিউর নিয়ে জিজ্ঞেস করতে রোগীর নোট চ্যাটে পেস্ট করেন। সেই নোট যায় অ্যাপের লগে, trace টুলে আর মডেল প্রোভাইডারের কাছে।
+
+টিম 4টা পরিবর্তন করে:
+
+1. প্রম্পট অ্যাপ থেকে বের হওয়ার আগে একটা redaction ধাপ নাম আর রেকর্ড নম্বর ঢেকে দেয়, যেমন OWASP পরামর্শ দেয় <Cite n={2} />।
+2. তারা প্রোভাইডারের রিটেনশনের শর্ত দেখে, আর অর্গানাইজেশনের জন্য ZDR চায় <Cite n={3} />।
+3. Trace টুল শুধু ঢাকা প্রম্পট রাখে, 14 দিনের জন্য। টিউটোরিয়ালের নিজের মত: একটা লগে প্রায়ই মূল ডেটাবেসের চেয়ে বেশি ব্যক্তিগত ডেটা থাকে।
+4. প্রতিটা উত্তর ইউজার ID, ডকুমেন্ট ID আর মডেল ID লগ করে, যাতে পরে "কে কী দেখেছে?" প্রশ্নের উত্তর থাকে <Cite n={5} />।
+
+NIST চায় প্রাইভেসি ঝুঁকি পরীক্ষা করে লিখে রাখা হোক <Cite n={1} />, তাই টিম এটা AI সিস্টেমের তালিকায় লিখে রাখে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **"The provider keeps nothing."** Retention depends on the provider, the feature, and the contract. For example, ZDR leaves out the features that its table marks "No" <Cite n={3} />, and OpenAI keeps abuse monitoring logs for up to 30 days by default <Cite n={4} />.
+- **Forgotten copies.** The prompt is redacted, but the trace tool and the eval set keep the raw text. Tutorial's own view: this is the most common leak.
+- **The model filters access.** A system prompt that says "only show HR data to HR" can be bypassed <Cite n={2} />. Filter before retrieval.
+- **No inventory.** Nobody knows which teams run which AI features. NIST asks for mechanisms to inventory AI systems <Cite n={1} />.
+- **Logs with no answer.** The log shows a request, but not who sent it or what data it touched. An audit record should answer who, what, when, and on what <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+- **"The provider keeps nothing."** Retention depends on the provider, the feature, and the contract. For example, ZDR leaves out the features that its table marks "No" <Cite n={3} />. And OpenAI keeps abuse monitoring logs for up to 30 days by default <Cite n={4} />.
+- **Forgotten copies.** The prompt is redacted. But the trace tool and the eval set keep the raw text. The tutorial's own view: this is the most common leak.
+- **The model filters access.** A system prompt says "only show HR data to HR". This can be bypassed <Cite n={2} />. Filter before retrieval.
+- **No inventory.** Nobody knows which teams run which AI features. NIST asks for ways to keep a list of AI systems <Cite n={1} />.
+- **Logs with no answer.** The log shows a request. But it does not show who sent it, or what data it touched. An audit record should answer who, what, when, and on what <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+- **"প্রোভাইডার কিছুই রাখে না।"** রিটেনশন নির্ভর করে প্রোভাইডার, ফিচার আর চুক্তির ওপর। যেমন, টেবিলে "No" লেখা ফিচার ZDR-এর আওতায় পড়ে না <Cite n={3} />, আর OpenAI ডিফল্টভাবে abuse monitoring লগ 30 দিন পর্যন্ত রাখে <Cite n={4} />।
+- **ভুলে যাওয়া কপি।** প্রম্পট ঢাকা হয়েছে, কিন্তু trace টুল আর eval-সেট আসল লেখাটা রেখে দেয়। টিউটোরিয়ালের নিজের মত: এটাই সবচেয়ে সাধারণ ফাঁস।
+- **মডেল অ্যাক্সেস ফিল্টার করে।** "HR-এর ডেটা শুধু HR-কে দেখাও" লেখা সিস্টেম প্রম্পট এড়ানো যায় <Cite n={2} />। রিট্রিভালের আগেই ফিল্টার করুন।
+- **তালিকা নেই।** কোন টিম কোন AI ফিচার চালায়, কেউ জানে না। NIST AI সিস্টেমের তালিকা রাখার ব্যবস্থা চায় <Cite n={1} />।
+- **উত্তরহীন লগ।** লগে একটা রিকুয়েস্ট দেখা যায়, কিন্তু কে পাঠিয়েছে বা কোন ডেটা ছুঁয়েছে দেখা যায় না। একটা অডিট রেকর্ডের উত্তর দেওয়া উচিত কে, কী, কখন আর কিসের ওপর <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These test ideas are the tutorial's own advice. Use fake data only.
+
+- **Follow a canary.** Type a unique fake value, such as a made-up customer number, into the chat. Then search every log, trace, and store for it.
+- **Check redaction.** Send fake names, card-like numbers, and email addresses on example.com. Check what reaches the model call and the logs.
+- **Cross-user retrieval.** Log in as a user with no HR rights and ask about an HR document. No HR text should appear, not even in a citation.
+- **Delete and verify.** Delete a test chat. Check that it is gone from the history, the search index, and the traces, within the promised time.
+- **Read the audit log.** For one test request, check that you can find the user, the time, the documents, and the model ID.
+- **Ask for the retention table.** Each store should have a written period. Compare it with what you see in the data.
+</Callout>
+
+</Technical>
+<Layman>
+
+These test ideas are the tutorial's own advice. Use fake data only.
+
+- **Follow a canary.** Type a unique fake value into the chat, such as a made-up customer number. Then search every log, trace, and store for it.
+- **Check redaction.** Send fake names, numbers that look like card numbers, and email addresses on example.com. Check what reaches the model call and the logs.
+- **Cross-user retrieval.** Log in as a user with no HR rights. Ask about an HR document. No HR text should appear, not even in a citation.
+- **Delete and verify.** Delete a test chat. Check that it is gone from the history, the search index, and the traces, within the promised time.
+- **Read the audit log.** For one test request, check that you can find the user, the time, the documents, and the model ID.
+- **Ask for the retention table.** Each store should have a written period. Compare it with what you see in the data.
+
+</Layman>
+<Bangla>
+
+এই টেস্টের ধারণাগুলো টিউটোরিয়ালের নিজের পরামর্শ। শুধু নকল ডেটা ব্যবহার করুন।
+
+- **একটা canary অনুসরণ করুন।** চ্যাটে একটা অনন্য নকল মান লিখুন, যেমন বানানো একটা কাস্টমার নম্বর। তারপর প্রতিটা লগ, trace আর স্টোরে সেটা খুঁজুন।
+- **Redaction চেক করুন।** নকল নাম, কার্ড নম্বরের মতো দেখতে সংখ্যা আর example.com-এর ইমেইল অ্যাড্রেস পাঠান। মডেল কলে আর লগে কী পৌঁছায় দেখুন।
+- **অন্য ইউজারের রিট্রিভাল।** HR অধিকার নেই এমন ইউজার হিসেবে লগইন করে একটা HR ডকুমেন্ট নিয়ে প্রশ্ন করুন। কোনো HR লেখা আসা উচিত নয়, এমনকি সাইটেশনেও না।
+- **মুছে যাচাই করুন।** একটা টেস্ট চ্যাট মুছে দিন। প্রতিশ্রুত সময়ের মধ্যে সেটা হিস্ট্রি, সার্চ ইনডেক্স আর trace থেকে চলে গেছে কি না দেখুন।
+- **অডিট লগ পড়ুন।** একটা টেস্ট রিকুয়েস্টের জন্য ইউজার, সময়, ডকুমেন্ট আর মডেল ID খুঁজে পান কি না দেখুন।
+- **রিটেনশনের টেবিল চান।** প্রতিটা স্টোরের একটা লেখা সময়সীমা থাকা উচিত। ডেটায় যা দেখছেন, তার সঙ্গে মেলান।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Sensitive information | Personal, financial, health, business, credential, or legal data <Cite n={2} /> |
+| Data sanitization | Scrub or mask sensitive content before it goes into training <Cite n={2} /> |
+| Least privilege | Grant only the data that a user or process needs <Cite n={2} /> |
+| Zero data retention (ZDR) | Prompts and responses are not stored at rest after the response returns <Cite n={3} /> |
+| Abuse monitoring logs | Logs that a provider keeps to enforce its usage policies <Cite n={4} /> |
+| Audit trail | A time-ordered record of who did what, when, and on what <Cite n={5} /> |
+| AI inventory | A list of the AI systems of an organization <Cite n={1} /> |

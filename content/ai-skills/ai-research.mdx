@@ -1,0 +1,278 @@
+export const metadata = { title: 'AI Research', description: 'How a tester uses AI search and deep research tools to study a product, an API, or a standard, and how to check every cite.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Web search tool', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool', accessed: '2026-10-28' },
+    { title: 'Use research on Claude', publisher: 'Anthropic (Claude Help Center)', url: 'https://support.claude.com/en/articles/11088861-using-research-on-claude-ai', accessed: '2026-10-28' },
+    { title: 'Deep research', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/guides/deep-research', accessed: '2026-10-28' },
+    { title: 'Perplexity Search API quickstart', publisher: 'Perplexity (API docs)', url: 'https://docs.perplexity.ai/docs/search/quickstart', accessed: '2026-10-28' },
+    { title: 'Exa Search API', publisher: 'Exa (API docs)', url: 'https://exa.ai/docs/reference/getting-started', accessed: '2026-10-28' },
+    { title: 'Reduce hallucinations', publisher: 'Anthropic (Claude Platform docs)', url: 'https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations', accessed: '2026-10-28' },
+  ],
+}
+
+# AI Research
+
+AI search tools read many web pages for you and write an answer with links. They save hours when you must learn a new product, an API, or a standard before you test it. But a link next to a sentence is not proof. This page shows how the tools work and how a tester checks what they cite.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A model alone knows only its training data. An **AI search** tool lets it read current web pages first. The Claude web search tool, for example, gives Claude real-time web content past its knowledge cutoff, and the answer cites the sources that it used <Cite n={1} />.
+
+A **deep research** mode goes further. It runs many searches in a row, and each search builds on what the last one found <Cite n={2} />. OpenAI says its deep research models can find, analyze, and combine hundreds of sources into one report <Cite n={3} />.
+
+For a tester, these tools answer questions such as "what does the OAuth spec say about token expiry?" or "which browsers does this payment SDK support?". They give a fast first map of a topic.
+
+They do not give certainty. Methods such as cited quotes reduce made-up claims, but they do not remove them, so critical facts still need a human check <Cite n={6} />. That check is a testing job, and testers are good at it.
+
+</Technical>
+<Layman>
+
+A model alone knows only what it learned in training. An **AI search** tool lets it read current web pages first. For example, the Claude web search tool gives Claude new web content from after its training. The answer shows the sources that it used <Cite n={1} />.
+
+A **deep research** mode goes further. It runs many searches in a row. Each search builds on what the last one found <Cite n={2} />. OpenAI says its deep research models can find, study, and combine hundreds of sources into one report <Cite n={3} />.
+
+For a tester, these tools answer questions like "what does the OAuth spec say about token expiry?" or "which browsers does this payment SDK support?". They give a fast first map of a topic.
+
+They do not give certainty. Cited quotes lower the number of made-up claims, but some remain. So a person must still check the important facts <Cite n={6} />. That check is a testing job, and testers are good at it.
+
+</Layman>
+<Bangla>
+
+শুধু মডেল একা তার ট্রেনিংয়ের ডেটাই জানে। একটা **AI search** টুল তাকে আগে বর্তমান ওয়েব পেজ পড়তে দেয়। যেমন, Claude-এর web search tool Claude-কে তার knowledge cutoff-এর পরের real-time ওয়েব কনটেন্ট দেয়, আর উত্তরে ব্যবহার করা সোর্সগুলো cite করা থাকে <Cite n={1} />।
+
+**Deep research** মোড আরও এগিয়ে যায়। এটা পরপর অনেকগুলো সার্চ চালায়, আর প্রতিটা সার্চ আগেরটা যা পেয়েছে তার ওপর দাঁড়ায় <Cite n={2} />। OpenAI বলে তাদের deep research মডেল শত শত সোর্স খুঁজে, বিশ্লেষণ করে, একটা রিপোর্টে একসাথে করতে পারে <Cite n={3} />।
+
+একজন টেস্টারের জন্য এই টুলগুলো এমন প্রশ্নের উত্তর দেয়: "what does the OAuth spec say about token expiry?" বা "which browsers does this payment SDK support?"। এগুলো একটা বিষয়ের দ্রুত প্রথম মানচিত্র দেয়।
+
+তবে এগুলো নিশ্চয়তা দেয় না। উদ্ধৃতিসহ cite করার মতো পদ্ধতি বানানো দাবি কমায়, কিন্তু পুরো দূর করে না। তাই গুরুত্বপূর্ণ তথ্য একজন মানুষকে যাচাই করতেই হবে <Cite n={6} />। এই যাচাই একটা টেস্টিংয়ের কাজ, আর টেস্টাররা এতে দক্ষ।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The basic loop is the same in most tools. This picture is the tutorial's own summary:
+
+```text
+Your question
+   -> model writes a search query
+   -> search engine returns pages
+   -> model reads, then searches again if it needs more
+   -> answer with citations
+   -> YOU open each citation and check it
+```
+
+With the Claude web search tool, Claude decides when to search, the API runs the search, and this can happen several times in one request. At the end, Claude gives an answer with cited sources <Cite n={1} />. Citations are always on for this tool, and each citation carries up to 150 characters of the cited text <Cite n={1} />. Each search result also has a `page_age` field: the time when the site was last updated <Cite n={1} />.
+
+You can steer the search. The tool takes `allowed_domains` or `blocked_domains`, but not both in one request <Cite n={1} />, and `max_uses` caps the number of searches <Cite n={1} />. Search APIs have the same idea: Perplexity's `search_domain_filter` limits results to chosen domains <Cite n={4} />, and Exa's `includeDomains` restricts results to sources you trust <Cite n={5} />.
+
+Deep research runs this loop many times. OpenAI's deep research answer comes with inline citations, and a task can take tens of minutes <Cite n={3} />.
+
+There is a risk in the loop. A web page is data, but it can hide instructions. OpenAI warns that search results can carry prompt-injection payloads and that no automatic filter catches every case <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+The basic loop is the same in most tools. This is the tutorial's own summary: you ask a question, the model writes a search query, the search engine returns pages, the model reads them and searches again if it needs more, and then it answers with citations. Then you open each citation and check it.
+
+With the Claude web search tool, Claude decides when to search. The API runs the search. This can happen several times in one request. At the end, Claude gives an answer with cited sources <Cite n={1} />. Citations are always on for this tool. Each citation carries up to 150 characters of the cited text <Cite n={1} />. Each search result also has a `page_age` field. It tells when the site was last updated <Cite n={1} />.
+
+You can steer the search. The tool takes `allowed_domains` or `blocked_domains`, but not both at once <Cite n={1} />. `max_uses` sets the most searches it can do <Cite n={1} />. Search APIs have the same idea. Perplexity's `search_domain_filter` limits results to chosen sites <Cite n={4} />. Exa's `includeDomains` keeps only sources that you trust <Cite n={5} />.
+
+Deep research runs this loop many times. OpenAI's deep research answer has citations in the text. A task can take tens of minutes <Cite n={3} />.
+
+There is a risk. A web page is data, but it can hide instructions. OpenAI warns that search results can carry prompt-injection attacks. No automatic filter catches all of them <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+বেশিরভাগ টুলে মূল লুপ একই। এটা টিউটোরিয়ালের নিজের সারাংশ: আপনি প্রশ্ন করেন, মডেল একটা search query লেখে, search engine পেজ ফেরত দেয়, মডেল পড়ে আর দরকার হলে আবার সার্চ করে, তারপর citation-সহ উত্তর দেয়। এরপর আপনি প্রতিটা citation খুলে যাচাই করেন।
+
+Claude-এর web search tool-এ Claude ঠিক করে কখন সার্চ করবে, API সার্চটা চালায়, আর এক request-এ এটা কয়েকবার হতে পারে। শেষে Claude cite করা সোর্সসহ উত্তর দেয় <Cite n={1} />। এই টুলে citation সবসময় চালু থাকে, আর প্রতিটা citation-এ cite করা লেখার সর্বোচ্চ 150 অক্ষর থাকে <Cite n={1} />। প্রতিটা search result-এ একটা `page_age` field-ও থাকে: সাইটটা শেষ কবে আপডেট হয়েছিল <Cite n={1} />।
+
+আপনি সার্চ নিয়ন্ত্রণ করতে পারেন। টুলটা `allowed_domains` বা `blocked_domains` নেয়, কিন্তু এক request-এ দুটো একসাথে নয় <Cite n={1} />। `max_uses` সার্চের সংখ্যার সীমা ঠিক করে <Cite n={1} />। Search API-গুলোতেও একই ধারণা আছে: Perplexity-র `search_domain_filter` ফলাফল বাছাই করা ডোমেইনে সীমিত রাখে <Cite n={4} />, আর Exa-র `includeDomains` শুধু আপনার বিশ্বস্ত সোর্স রাখে <Cite n={5} />।
+
+Deep research এই লুপ অনেকবার চালায়। OpenAI-এর deep research উত্তরে লেখার ভেতরে citation থাকে, আর একটা কাজে কয়েক দশ মিনিট লাগতে পারে <Cite n={3} />।
+
+এই লুপে একটা ঝুঁকি আছে। একটা ওয়েব পেজ হলো ডেটা, কিন্তু তাতে নির্দেশনা লুকানো থাকতে পারে। OpenAI সতর্ক করে যে search result-এ prompt-injection payload থাকতে পারে, আর কোনো automatic filter সব ধরতে পারে না <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Learn a product before you test it.** Ask for the main user flows, the known limits, and the release notes of a third-party product that your app depends on. Use the answer as a list of questions, not as a list of facts.
+
+**Read an API before you write tests.** Restrict the search to the vendor's docs domain with `allowed_domains` <Cite n={1} /> or a domain filter <Cite n={4} />. Ask for the error codes, the rate limits, and the auth flow, each with a citation. Then turn each cited rule into a test case.
+
+**Check a standard.** For a spec such as an RFC or a WCAG rule, ask the tool to quote the exact requirement for each claim, and to drop a claim when it finds no quote <Cite n={6} />. A quoted "MUST" becomes an assertion in your test.
+
+**Check every cite.** Open the link. Find the sentence. Check that it says what the answer says, for the version that you test. Check the date: `page_age` shows when the page was last updated <Cite n={1} />.
+
+<Callout type="tip" title="Tutorial advice">
+This is the tutorial's own advice. Rank sources before you start: the vendor's official docs and the standard first, the vendor's GitHub repository second, everything else last. Tell the tool this order in the prompt. A test that rests on a forum post tests the forum, not the product.
+</Callout>
+
+</Technical>
+<Layman>
+
+**Learn a product before you test it.** Ask for the main user flows, the known limits, and the release notes of an outside product that your app uses. Use the answer as a list of questions, not as a list of facts.
+
+**Read an API before you write tests.** Limit the search to the vendor's docs site with `allowed_domains` <Cite n={1} /> or a domain filter <Cite n={4} />. Ask for the error codes, the rate limits, and the login flow, each with a citation. Then turn each cited rule into a test case.
+
+**Check a standard.** For a spec such as an RFC or a WCAG rule, ask the tool to quote the exact rule for each claim. Ask it to drop a claim when it finds no quote <Cite n={6} />. A quoted "MUST" becomes a check in your test.
+
+**Check every cite.** Open the link. Find the sentence. Check that it says what the answer says, for the version that you test. Check the date. `page_age` shows when the page was last updated <Cite n={1} />.
+
+This is the tutorial's own advice. Rank sources before you start: the vendor's official docs and the standard first, the vendor's GitHub repository second, and everything else last. Tell the tool this order in the prompt. A test that rests on a forum post tests the forum, not the product.
+
+</Layman>
+<Bangla>
+
+**টেস্ট করার আগে প্রোডাক্ট জানা.** আপনার app যে বাইরের প্রোডাক্টের ওপর নির্ভর করে, তার মূল user flow, জানা সীমাবদ্ধতা আর release notes চান। উত্তরটাকে তথ্যের তালিকা নয়, প্রশ্নের তালিকা হিসেবে ব্যবহার করুন।
+
+**টেস্ট লেখার আগে API পড়া.** `allowed_domains` <Cite n={1} /> বা একটা domain filter <Cite n={4} /> দিয়ে সার্চ vendor-এর ডকস ডোমেইনে সীমিত রাখুন। Error code, rate limit আর auth flow চান, প্রতিটা citation-সহ। তারপর cite করা প্রতিটা নিয়মকে একটা test case বানান।
+
+**একটা standard যাচাই.** RFC বা WCAG rule-এর মতো spec-এর জন্য টুলকে প্রতিটা দাবির জন্য হুবহু requirement উদ্ধৃত করতে বলুন, আর উদ্ধৃতি না পেলে দাবিটা বাদ দিতে বলুন <Cite n={6} />। উদ্ধৃত একটা "MUST" আপনার টেস্টে একটা assertion হয়ে যায়।
+
+**প্রতিটা cite যাচাই.** লিংক খুলুন। বাক্যটা খুঁজুন। আপনি যে version টেস্ট করছেন, তার জন্য সেটা উত্তরের কথাই বলে কিনা দেখুন। তারিখ দেখুন: `page_age` দেখায় পেজটা শেষ কবে আপডেট হয়েছিল <Cite n={1} />।
+
+এটা টিউটোরিয়ালের নিজের পরামর্শ। শুরুর আগে সোর্সের ক্রম ঠিক করুন: প্রথমে vendor-এর অফিসিয়াল ডকস আর standard, তারপর vendor-এর GitHub repository, বাকি সব শেষে। Prompt-এ টুলকে এই ক্রম বলে দিন। Forum post-এর ওপর দাঁড়ানো টেস্ট প্রোডাক্ট নয়, forum-কে টেস্ট করে।
+
+</Bangla>
+</Voices>
+
+## Tools to try
+
+<Voices>
+<Technical>
+
+| Tool | What it does | One fact |
+|---|---|---|
+| Claude web search and Research | Search inside Claude, or many linked searches in Research mode | Research runs searches that build on each other <Cite n={2} /> |
+| OpenAI deep research | Long multi-step research into a cited report | A task can take tens of minutes <Cite n={3} /> |
+| Perplexity Search API | Ranked web results for your own scripts | It returns titles, URLs, and extracted text, with no generated answer <Cite n={4} /> |
+| Exa | Web search in natural language for apps and agents | `includeDomains` restricts results to sources you trust <Cite n={5} /> |
+
+Use a chat mode for one question. Use a search API when you want the same research step in a script, for example a weekly check of a vendor's changelog.
+
+</Technical>
+<Layman>
+
+- **Claude web search and Research:** search inside Claude, or many linked searches in Research mode. Research runs searches that build on each other <Cite n={2} />.
+- **OpenAI deep research:** long research in many steps, with a cited report at the end. A task can take tens of minutes <Cite n={3} />.
+- **Perplexity Search API:** ranked web results for your own scripts. It returns titles, URLs, and page text, with no written answer <Cite n={4} />.
+- **Exa:** web search in plain language for apps and agents. `includeDomains` keeps only sources that you trust <Cite n={5} />.
+
+Use a chat mode for one question. Use a search API when you want the same research step in a script, for example a weekly check of a vendor's change list.
+
+</Layman>
+<Bangla>
+
+- **Claude web search আর Research:** Claude-এর ভেতরে সার্চ, অথবা Research মোডে পরপর যুক্ত অনেক সার্চ। Research এমন সার্চ চালায় যা একটা আরেকটার ওপর দাঁড়ায় <Cite n={2} />।
+- **OpenAI deep research:** অনেক ধাপের লম্বা গবেষণা, শেষে cite করা রিপোর্ট। একটা কাজে কয়েক দশ মিনিট লাগতে পারে <Cite n={3} />।
+- **Perplexity Search API:** আপনার নিজের script-এর জন্য ranked web result। এটা title, URL আর পেজের লেখা দেয়, কোনো তৈরি করা উত্তর দেয় না <Cite n={4} />।
+- **Exa:** app আর agent-এর জন্য সাধারণ ভাষায় web search। `includeDomains` শুধু আপনার বিশ্বস্ত সোর্স রাখে <Cite n={5} />।
+
+একটা প্রশ্নের জন্য chat মোড ব্যবহার করুন। একই research ধাপ একটা script-এ চাইলে search API ব্যবহার করুন, যেমন প্রতি সপ্তাহে একটা vendor-এর changelog যাচাই।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**A link counts as proof.** A cited page may not say what the sentence says. Fix: open each cite and find the supporting text. Ask the tool to remove a claim that has no quote <Cite n={6} />.
+
+**Old pages for a new version.** Fix: check `page_age` <Cite n={1} /> and the version in the page, and compare it with the version under test.
+
+**Any source is fine.** Fix: limit the search to the official domains with a domain filter <Cite n={1} /> <Cite n={4} />.
+
+**Instructions from a web page are followed.** A search result can carry a prompt injection <Cite n={3} />. Fix: give research tools no write access to your systems, and read the plan of an agent before it acts. See [AI Agents](/ai-skills/ai-agents/).
+
+**No room for "I don't know".** Fix: tell the tool that it may say the sources do not answer the question <Cite n={6} />. A gap in the docs is a finding too: report it.
+
+</Technical>
+<Layman>
+
+**A link counts as proof.** A cited page may not say what the sentence says. Fix: open each cite and find the text that supports it. Ask the tool to remove a claim that has no quote <Cite n={6} />.
+
+**Old pages for a new version.** Fix: check `page_age` <Cite n={1} /> and the version in the page. Compare it with the version that you test.
+
+**Any source is fine.** Fix: limit the search to the official sites with a domain filter <Cite n={1} /> <Cite n={4} />.
+
+**The tool follows instructions from a web page.** A search result can carry a prompt injection <Cite n={3} />. Fix: give research tools no write access to your systems. Read an agent's plan before it acts.
+
+**No room for "I don't know".** Fix: tell the tool that it may say the sources do not answer the question <Cite n={6} />. A gap in the docs is a finding too, so report it.
+
+</Layman>
+<Bangla>
+
+**লিংক মানেই প্রমাণ.** Cite করা পেজ হয়তো বাক্যটার কথা বলেই না। সমাধান: প্রতিটা cite খুলে সমর্থক লেখাটা খুঁজুন। যে দাবির উদ্ধৃতি নেই, টুলকে সেটা সরাতে বলুন <Cite n={6} />।
+
+**নতুন version-এর জন্য পুরোনো পেজ.** সমাধান: `page_age` <Cite n={1} /> আর পেজের version দেখুন, আর যে version টেস্ট করছেন তার সাথে মেলান।
+
+**যেকোনো সোর্সই চলবে.** সমাধান: domain filter দিয়ে সার্চ অফিসিয়াল ডোমেইনে সীমিত রাখুন <Cite n={1} /> <Cite n={4} />।
+
+**ওয়েব পেজের নির্দেশনা মেনে চলা.** একটা search result-এ prompt injection থাকতে পারে <Cite n={3} />। সমাধান: research tool-কে আপনার সিস্টেমে লেখার অনুমতি দেবেন না, আর একটা agent কাজ করার আগে তার plan পড়ুন।
+
+**"I don't know"-এর জায়গা নেই.** সমাধান: টুলকে বলুন যে সোর্সে উত্তর না থাকলে সে সেটা বলতে পারে <Cite n={6} />। ডকসে একটা ফাঁকও একটা finding, তাই সেটা রিপোর্ট করুন।
+
+</Bangla>
+</Voices>
+
+## How to start
+
+<Voices>
+<Technical>
+
+1. Pick one real question from your next test task, for example the error codes of an API that you integrate with.
+2. Ask it in a research mode, and limit the sources to the vendor's domain <Cite n={1} />.
+3. Ask for a quote for each claim, and permission to say "not found" <Cite n={6} />.
+4. Open every cite. Mark each claim as confirmed, wrong, or not found. Count the wrong ones: that number tells you how much to trust the tool for this topic.
+5. Turn the confirmed claims into test cases. Then read [Workflow Automation](/ai-skills/workflow-automation/) to run a research step on a schedule.
+
+</Technical>
+<Layman>
+
+1. Pick one real question from your next test task, for example the error codes of an API that your app uses.
+2. Ask it in a research mode. Limit the sources to the vendor's site <Cite n={1} />.
+3. Ask for a quote for each claim. Allow the answer "not found" <Cite n={6} />.
+4. Open every cite. Mark each claim as confirmed, wrong, or not found. Count the wrong ones. That number tells you how much to trust the tool for this topic.
+5. Turn the confirmed claims into test cases. Then read the page on workflow automation.
+
+</Layman>
+<Bangla>
+
+1. আপনার পরের test task থেকে একটা আসল প্রশ্ন বাছুন, যেমন যে API-এর সাথে আপনার app যুক্ত তার error code।
+2. প্রশ্নটা একটা research মোডে করুন, আর সোর্স vendor-এর ডোমেইনে সীমিত রাখুন <Cite n={1} />।
+3. প্রতিটা দাবির জন্য একটা উদ্ধৃতি চান, আর "not found" বলার অনুমতি দিন <Cite n={6} />।
+4. প্রতিটা cite খুলুন। প্রতিটা দাবিকে confirmed, wrong বা not found হিসেবে চিহ্নিত করুন। ভুলগুলো গুনুন: এই সংখ্যা বলে এই বিষয়ে টুলটাকে কতটা বিশ্বাস করা যায়।
+5. Confirmed দাবিগুলোকে test case বানান। তারপর workflow automation-এর পেজটা পড়ুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | Meaning |
+|---|---|
+| Web search tool | A tool that lets the model read current web pages and cite them <Cite n={1} /> |
+| Deep research | Many linked searches that end in one report with citations <Cite n={3} /> |
+| Citation | A pointer from a claim in the answer to the source text <Cite n={1} /> |
+| Domain filter | A setting that limits search results to chosen sites <Cite n={4} /> |
+| Prompt injection | Hidden instructions in content, such as a search result, that try to steer the model <Cite n={3} /> |

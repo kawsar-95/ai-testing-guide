@@ -1,0 +1,315 @@
+export const metadata = { title: 'Agent Orchestration', description: 'How workflows, agents, memory, and many agents work together, which patterns exist, and what a tester checks in a multi-step AI system.' }
+export const page = {
+  updated: '2026-10-28',
+  sources: [
+    { title: 'Building effective agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/building-effective-agents', accessed: '2026-10-28' },
+    { title: 'How we built our multi-agent research system', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/multi-agent-research-system', accessed: '2026-10-28' },
+    { title: 'Handoffs', publisher: 'OpenAI Agents SDK docs', url: 'https://openai.github.io/openai-agents-python/handoffs/', accessed: '2026-10-28' },
+    { title: 'Persistence', publisher: 'LangGraph docs (LangChain)', url: 'https://docs.langchain.com/oss/python/langgraph/persistence', accessed: '2026-10-28' },
+    { title: 'Memory tool', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool', accessed: '2026-10-28' },
+  ],
+}
+
+# Agent Orchestration
+
+A test lead does not run every test alone. The lead splits the work, gives each tester a clear scope, collects the results, and decides if the release can go. Agent orchestration is the same job for AI: it decides which model call or agent does which step, in which order, with which memory.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+Anthropic splits **agentic systems** into two kinds <Cite n={1} />:
+
+- A **workflow** runs models and tools through code paths that you define in advance.
+- An **agent** lets the model direct its own process and its own tool use.
+
+**Orchestration** is the code that connects these parts: which step runs next, which model or agent does it, what data passes between them, and what the system remembers.
+
+Anthropic advises the simplest solution that works, and more complexity only when needed. Agentic systems often give better results, but they are slower and cost more. For many apps, one well-built model call with retrieval and examples is enough <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+Anthropic puts **agentic systems** into two kinds <Cite n={1} />:
+
+- A **workflow** runs models and tools along paths that you write in code before.
+- An **agent** lets the model decide its own steps and which tools to use.
+
+**Orchestration** is the code that connects these parts. It decides which step runs next and which model or agent does it. It decides what data passes between them and what the system remembers.
+
+Anthropic advises the simplest solution that works. Add more parts only when you need them. Agentic systems often cost more time and money for better results. For many apps, one good model call with search and examples is enough <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+Anthropic **এজেন্টিক সিস্টেম**-কে দুই ভাগে ভাগ করে <Cite n={1} />:
+
+- একটা **ওয়ার্কফ্লো** মডেল আর টুলকে এমন পথে চালায়, যা আপনি আগেই কোডে লিখে রাখেন।
+- একটা **এজেন্ট** মডেলকে নিজের ধাপ আর কোন টুল ব্যবহার করবে, তা নিজেই ঠিক করতে দেয়।
+
+**অর্কেস্ট্রেশন** হলো সেই কোড, যা এই অংশগুলো জোড়ে। এটা ঠিক করে এরপর কোন ধাপ চলবে আর কোন মডেল বা এজেন্ট সেটা করবে। এটা ঠিক করে তাদের মধ্যে কী ডেটা যাবে আর সিস্টেম কী মনে রাখবে।
+
+Anthropic সবচেয়ে সহজ সমাধানের পরামর্শ দেয়, যা কাজ করে। দরকার হলেই শুধু আরও অংশ যোগ করুন। ভালো ফলাফলের জন্য এজেন্টিক সিস্টেম প্রায়ই বেশি সময় আর টাকা খরচ করে। অনেক অ্যাপের জন্য সার্চ আর উদাহরণসহ একটা ভালো মডেল কলই যথেষ্ট <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### The building block
+
+The base unit is an **augmented LLM**: a model with retrieval, tools, and memory <Cite n={1} />.
+
+### Five workflow patterns
+
+| Pattern | What it does | Good fit |
+|---|---|---|
+| Prompt chaining | Each call works on the output of the call before. A code "gate" can check each step <Cite n={1} /> | Tasks that split cleanly into fixed steps |
+| Routing | Classify the input, then send it to a special prompt or model <Cite n={1} /> | Distinct categories, such as refund questions vs. technical support |
+| Parallelization | Run parts at the same time (sectioning), or run one task many times and vote <Cite n={1} /> | Speed, or more confidence |
+| Orchestrator-workers | A central model splits the task at run time, sends parts to workers, and combines their results <Cite n={1} /> | Tasks where you cannot predict the subtasks |
+| Evaluator-optimizer | One call writes, another call checks and gives feedback, in a loop <Cite n={1} /> | Clear criteria, and feedback that measurably helps |
+
+An **agent** is usually a model that uses tools in a loop, based on feedback from the environment. Use one when you cannot predict the number of steps. Its autonomy means higher cost and errors that can compound, so Anthropic advises tests in a sandbox and guardrails <Cite n={1} />.
+
+### Many agents
+
+In Anthropic's research system, a lead agent plans and starts subagents that search in parallel, then combines their results. This is the orchestrator-worker pattern <Cite n={2} />. Give each subagent a goal, the shape of its output, advice on which tools and sources to use, and clear limits. Without them, agents repeat work or leave gaps <Cite n={2} />.
+
+The cost is real: agents used about 4 times the tokens of a chat, and multi-agent systems about 15 times <Cite n={2} />.
+
+### Handoffs
+
+A **handoff** passes the task from one agent to another, for example from a triage agent to a refund agent. In the OpenAI Agents SDK, the model sees a handoff as a tool, such as `transfer_to_refund_agent` <Cite n={3} />.
+
+### Memory and state
+
+- **Short-term state.** LangGraph saves the graph state of a thread as **checkpoints**. They support conversation continuity, human-in-the-loop steps, time travel, and fault tolerance <Cite n={4} />.
+- **Long-term memory.** A LangGraph **store** keeps data across threads, such as user preferences <Cite n={4} />. The Claude memory tool lets Claude create, read, update, and delete files under `/memories` that persist between sessions. Your app runs these file operations <Cite n={5} />.
+
+```python
+from langgraph.checkpoint.memory import InMemorySaver
+
+graph = builder.compile(checkpointer=InMemorySaver())
+graph.invoke({"messages": [{"role": "user", "content": "Check build 4.2"}]},
+             {"configurable": {"thread_id": "release-4.2"}})
+```
+
+The same `thread_id` lets a later call continue the same thread <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+**The building block.** The base unit is an **augmented LLM**. It is a model with search, tools, and memory <Cite n={1} />.
+
+**Five workflow patterns** <Cite n={1} />:
+
+- **Prompt chaining.** Each call works on the output of the call before. A code check (a "gate") can test each step. Good for tasks that split cleanly into fixed steps.
+- **Routing.** Sort the input first. Then send it to a special prompt or model. Good for clear groups, such as refund questions and technical support.
+- **Parallelization.** Run parts at the same time. Or run one task many times and vote. Good for speed or for more confidence.
+- **Orchestrator-workers.** A central model splits the task while it runs. It sends parts to workers and joins their results. Good when you cannot know the subtasks before.
+- **Evaluator-optimizer.** One call writes. Another call checks it and gives feedback, in a loop. Good when the criteria are clear and feedback helps.
+
+An **agent** is usually a model that uses tools in a loop. It acts on feedback from its environment. Use one when you cannot know the number of steps before. Its freedom costs more. Its errors can add up. So Anthropic advises tests in a safe sandbox, with guardrails <Cite n={1} />.
+
+**Many agents.** In Anthropic's research system, a lead agent makes a plan. It starts subagents that search at the same time. Then it joins their results. This is the orchestrator-worker pattern <Cite n={2} />. Each subagent needs a goal, an output format, advice on tools and sources, and clear limits. Without them, agents repeat work or leave gaps <Cite n={2} />.
+
+The cost is real. Agents used about 4 times the tokens of a chat. Systems with many agents used about 15 times <Cite n={2} />.
+
+**Handoffs.** A **handoff** passes the task from one agent to another. An example is a triage agent that passes a task to a refund agent. In the OpenAI Agents SDK, the model sees a handoff as a tool, such as `transfer_to_refund_agent` <Cite n={3} />.
+
+**Memory and state.**
+
+- **Short-term state.** LangGraph saves the state of a thread as **checkpoints**. They help a conversation continue, allow human steps, let you go back in time, and help recover from failures <Cite n={4} />.
+- **Long-term memory.** A LangGraph **store** keeps data across threads, such as the preferences of a user <Cite n={4} />. The Claude memory tool lets Claude create, read, change, and delete files under `/memories`. The files stay between sessions. Your app runs these file actions <Cite n={5} />.
+
+The code example builds a graph with a checkpointer. It runs the graph with a `thread_id`. The same `thread_id` lets a later call continue the same thread <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+**মূল একক।** ভিত্তি হলো একটা **augmented LLM**। মানে সার্চ, টুল আর মেমরিসহ একটা মডেল <Cite n={1} />।
+
+**পাঁচটা ওয়ার্কফ্লো প্যাটার্ন** <Cite n={1} />:
+
+- **Prompt chaining।** প্রতিটা কল আগের কলের আউটপুট নিয়ে কাজ করে। একটা কোড চেক ("gate") প্রতিটা ধাপ পরীক্ষা করতে পারে। যে কাজ পরিষ্কারভাবে নির্দিষ্ট ধাপে ভাগ হয়, তার জন্য ভালো।
+- **Routing।** আগে ইনপুটকে শ্রেণিতে ভাগ করুন। তারপর একটা বিশেষ প্রম্পট বা মডেলে পাঠান। পরিষ্কার গ্রুপের জন্য ভালো, যেমন রিফান্ডের প্রশ্ন আর টেকনিক্যাল সাপোর্ট।
+- **Parallelization।** অংশগুলো একসঙ্গে চালান। অথবা একটা কাজ অনেকবার চালিয়ে ভোট নিন। গতি বা বেশি আস্থার জন্য ভালো।
+- **Orchestrator-workers।** একটা কেন্দ্রীয় মডেল চলার সময় কাজটা ভাগ করে। অংশগুলো ওয়ার্কারদের পাঠায় আর তাদের ফলাফল জোড়ে। আগে থেকে সাব-টাস্ক জানা না গেলে ভালো।
+- **Evaluator-optimizer।** একটা কল লেখে। আরেকটা কল সেটা যাচাই করে মতামত দেয়, একটা লুপে। মানদণ্ড পরিষ্কার আর মতামত কাজে লাগলে ভালো।
+
+একটা **এজেন্ট** সাধারণত একটা মডেল, যে লুপে টুল ব্যবহার করে। সে তার পরিবেশের ফিডব্যাক অনুযায়ী কাজ করে। ধাপের সংখ্যা আগে জানা না গেলে এজেন্ট ব্যবহার করুন। এর স্বাধীনতার খরচ বেশি। এর ভুলগুলো জমে বড় হতে পারে। তাই Anthropic গার্ডরেইলসহ একটা নিরাপদ স্যান্ডবক্সে টেস্টের পরামর্শ দেয় <Cite n={1} />।
+
+**অনেক এজেন্ট।** Anthropic-এর রিসার্চ সিস্টেমে একটা লিড এজেন্ট পরিকল্পনা করে। সে সাব-এজেন্ট চালু করে, যারা একসঙ্গে সার্চ করে। তারপর সে তাদের ফলাফল জোড়ে। এটাই orchestrator-worker প্যাটার্ন <Cite n={2} />। প্রতিটা সাব-এজেন্টের দরকার একটা লক্ষ্য, একটা আউটপুট ফরম্যাট, টুল আর সোর্স নিয়ে পরামর্শ, আর পরিষ্কার সীমা। এগুলো না থাকলে এজেন্টরা একই কাজ দুবার করে বা ফাঁক রেখে দেয় <Cite n={2} />।
+
+খরচ সত্যিই বেশি। এজেন্টরা একটা চ্যাটের প্রায় 4 গুণ টোকেন ব্যবহার করেছে। অনেক এজেন্টের সিস্টেম প্রায় 15 গুণ <Cite n={2} />।
+
+**হ্যান্ডঅফ।** একটা **handoff** কাজটা এক এজেন্ট থেকে আরেক এজেন্টের কাছে দেয়। উদাহরণ: একটা triage এজেন্ট একটা কাজ রিফান্ড এজেন্টের কাছে দেয়। OpenAI Agents SDK-তে মডেল হ্যান্ডঅফকে একটা টুল হিসেবে দেখে, যেমন `transfer_to_refund_agent` <Cite n={3} />।
+
+**মেমরি আর স্টেট।**
+
+- **স্বল্পমেয়াদি স্টেট।** LangGraph একটা থ্রেডের স্টেট **checkpoint** হিসেবে সেভ করে। এগুলো কথোপকথন চালিয়ে যেতে, মানুষের ধাপ রাখতে, সময়ে পেছনে যেতে আর ব্যর্থতা থেকে ফিরে আসতে সাহায্য করে <Cite n={4} />।
+- **দীর্ঘমেয়াদি মেমরি।** LangGraph-এর একটা **store** থ্রেডের বাইরেও ডেটা রাখে, যেমন একজন ইউজারের পছন্দ <Cite n={4} />। Claude-এর memory tool Claude-কে `/memories`-এর নিচে ফাইল তৈরি, পড়া, বদলানো আর মোছার সুযোগ দেয়। ফাইলগুলো সেশনের পরেও থাকে। এই ফাইলের কাজগুলো আপনার অ্যাপ চালায় <Cite n={5} />।
+
+কোডের উদাহরণ একটা checkpointer সহ একটা গ্রাফ বানায়। একটা `thread_id` দিয়ে গ্রাফটা চালায়। একই `thread_id` পরের একটা কলকে একই থ্রেড চালিয়ে যেতে দেয় <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## A real-life example
+
+<Voices>
+<Technical>
+
+A release assistant answers "Is build 4.2 ready to ship?". The team picks the orchestrator-workers pattern, because the checks depend on what changed <Cite n={1} />.
+
+```text
+lead agent (plan, then combine)
+   |-- worker: read the test run results      (read-only tool)
+   |-- worker: list open bugs of priority P1  (read-only tool)
+   |-- worker: compare p95 latency with 4.1   (read-only tool)
+   v
+evaluator: does the report cite a source for each claim?
+   v
+human: release manager approves or rejects
+```
+
+- Each worker gets a clear objective, an output format, and its own tool, as Anthropic advises for subagents <Cite n={2} />.
+- The workers run at the same time, because their parts do not depend on each other <Cite n={1} />.
+- An evaluator call checks the draft against clear criteria before a human sees it <Cite n={1} />.
+- A checkpointer saves the state, so a failed worker can be retried without a full restart <Cite n={4} />.
+
+Tutorial's own view: the decision to ship stays with a human. The agents prepare the evidence.
+
+</Technical>
+<Layman>
+
+A release assistant answers "Is build 4.2 ready to ship?". The team picks the orchestrator-workers pattern. The checks depend on what changed <Cite n={1} />.
+
+A lead agent makes a plan. It starts three workers. One reads the test run results. One lists open bugs with priority P1. One compares the p95 latency with version 4.1. Each worker has a tool that can only read. Then an evaluator checks the report. Last, the release manager approves or rejects.
+
+- Each worker gets a clear goal, an output format, and its own tool. Anthropic advises this for subagents <Cite n={2} />.
+- The workers run at the same time. Their parts do not depend on each other <Cite n={1} />.
+- An evaluator call checks the draft against clear criteria. It does this before a human sees it <Cite n={1} />.
+- A checkpointer saves the state. So a failed worker can run again without a full restart <Cite n={4} />.
+
+Tutorial's own view: the decision to ship stays with a human. The agents prepare the evidence.
+
+</Layman>
+<Bangla>
+
+একটা রিলিজ অ্যাসিস্ট্যান্ট উত্তর দেয় "Is build 4.2 ready to ship?"। টিম orchestrator-workers প্যাটার্ন বেছে নেয়। কারণ চেকগুলো নির্ভর করে কী বদলেছে তার ওপর <Cite n={1} />।
+
+একটা লিড এজেন্ট পরিকল্পনা করে। সে তিনটা ওয়ার্কার চালু করে। একটা টেস্ট রানের ফলাফল পড়ে। একটা P1 প্রায়োরিটির খোলা বাগের তালিকা করে। একটা ভার্সন 4.1-এর সঙ্গে p95 latency মেলায়। প্রতিটা ওয়ার্কারের এমন একটা টুল আছে, যেটা শুধু পড়তে পারে। তারপর একটা evaluator রিপোর্ট যাচাই করে। শেষে রিলিজ ম্যানেজার অনুমোদন বা বাতিল করেন।
+
+- প্রতিটা ওয়ার্কার পায় একটা পরিষ্কার লক্ষ্য, একটা আউটপুট ফরম্যাট আর নিজের টুল। Anthropic সাব-এজেন্টের জন্য এই পরামর্শ দেয় <Cite n={2} />।
+- ওয়ার্কাররা একসঙ্গে চলে। তাদের অংশগুলো একে অপরের ওপর নির্ভর করে না <Cite n={1} />।
+- একটা evaluator কল পরিষ্কার মানদণ্ডে ড্রাফট যাচাই করে। মানুষ দেখার আগেই সে এটা করে <Cite n={1} />।
+- একটা checkpointer স্টেট সেভ করে। তাই একটা ব্যর্থ ওয়ার্কার পুরো রিস্টার্ট ছাড়াই আবার চলতে পারে <Cite n={4} />।
+
+টিউটোরিয়ালের নিজের মত: শিপ করার সিদ্ধান্ত মানুষের কাছেই থাকে। এজেন্টরা প্রমাণ তৈরি করে দেয়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Many agents for a one-call task.** Start simple. Add complexity only when it clearly improves results <Cite n={1} />.
+- **A framework you do not understand.** Frameworks can hide the prompts and responses, which makes debugging harder <Cite n={1} />.
+- **Vague task descriptions for subagents.** Agents then duplicate work or leave gaps <Cite n={2} />.
+- **No plan for cost.** Multi-agent systems used about 15 times the tokens of a chat <Cite n={2} />.
+- **A restart from zero after each error.** Errors compound in long agent runs. Anthropic built systems that resume from where the error happened <Cite n={2} />.
+- **Testing only one agent.** Small changes to the lead agent can change how subagents behave in ways nobody predicted <Cite n={2} />.
+- **Memory paths with no check.** A path such as `/memories/../../secrets.env` can escape the memory folder. The handler must validate every path <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+- **Many agents for a task that needs one call.** Start simple. Add more only when it clearly gives better results <Cite n={1} />.
+- **A framework you do not understand.** Frameworks can hide the prompts and the answers. Then debugging is harder <Cite n={1} />.
+- **Vague tasks for subagents.** Then agents do the same work twice or leave gaps <Cite n={2} />.
+- **No plan for cost.** Systems with many agents used about 15 times the tokens of a chat <Cite n={2} />.
+- **A restart from zero after each error.** Errors add up in long agent runs. Anthropic built systems that continue from where the error happened <Cite n={2} />.
+- **Testing only one agent.** A small change to the lead agent can change how the subagents act, in ways nobody expected <Cite n={2} />.
+- **Memory paths with no check.** A path such as `/memories/../../secrets.env` can escape the memory folder. The code must check every path <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+- **এক কলের কাজে অনেক এজেন্ট।** সহজ দিয়ে শুরু করুন। যখন স্পষ্টভাবে ভালো ফল দেয়, শুধু তখনই আরও যোগ করুন <Cite n={1} />।
+- **যে ফ্রেমওয়ার্ক আপনি বোঝেন না।** ফ্রেমওয়ার্ক প্রম্পট আর উত্তর লুকিয়ে ফেলতে পারে। তখন ডিবাগ করা কঠিন হয় <Cite n={1} />।
+- **সাব-এজেন্টের জন্য অস্পষ্ট কাজ।** তখন এজেন্টরা একই কাজ দুবার করে বা ফাঁক রেখে দেয় <Cite n={2} />।
+- **খরচের পরিকল্পনা না থাকা।** অনেক এজেন্টের সিস্টেম একটা চ্যাটের প্রায় 15 গুণ টোকেন ব্যবহার করেছে <Cite n={2} />।
+- **প্রতিটা এররের পর শূন্য থেকে রিস্টার্ট।** লম্বা এজেন্ট রানে এরর জমে যায়। Anthropic এমন সিস্টেম বানিয়েছে, যা এরর যেখানে হয়েছে সেখান থেকে আবার চলে <Cite n={2} />।
+- **শুধু একটা এজেন্ট টেস্ট করা।** লিড এজেন্টে ছোট পরিবর্তন সাব-এজেন্টদের আচরণ এমনভাবে বদলাতে পারে, যা কেউ আশা করেনি <Cite n={2} />।
+- **যাচাই ছাড়া মেমরি পাথ।** `/memories/../../secrets.env`-এর মতো পাথ মেমরি ফোল্ডারের বাইরের ফাইলে পৌঁছাতে পারে। কোডকে প্রতিটা পাথ যাচাই করতে হবে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+These checks are the tutorial's own advice.
+
+- **Draw the flow first.** Ask for the list of steps, agents, tools, and handoffs. Each arrow is a place where data can be lost or changed.
+- **Test each step alone.** Give a worker a fixed input and check its output format, as a unit test.
+- **Judge the end state.** For agents that change data, check the final state of the system, not each turn.
+- **Kill a worker.** Stop one worker in the middle of a run. The run should resume from the checkpoint, not start over or hang.
+- **Check handoffs.** Send a request that should go to agent B. Check that B gets it with the right context, and that A does not answer too.
+- **Count tokens and calls per task.** Set a budget and alert when a run goes over it. Loops show up here first.
+- **Attack the memory.** Ask the agent to read `/memories/../config`. The handler must refuse.
+</Callout>
+
+</Technical>
+<Layman>
+
+These checks are the tutorial's own advice.
+
+- **Draw the flow first.** Ask for the list of steps, agents, tools, and handoffs. Each arrow is a place where data can be lost or changed.
+- **Test each step alone.** Give a worker a fixed input. Check its output format, as a unit test.
+- **Judge the end state.** For agents that change data, check the final state of the system, not each turn.
+- **Stop a worker.** Stop one worker in the middle of a run. The run should continue from the checkpoint. It should not start over or hang.
+- **Check handoffs.** Send a request that should go to agent B. Check that B gets it with the right context. Check that A does not answer too.
+- **Count tokens and calls for each task.** Set a budget. Alert when a run goes over it. Loops show up here first.
+- **Attack the memory.** Ask the agent to read `/memories/../config`. The code must refuse.
+
+</Layman>
+<Bangla>
+
+এই চেকগুলো টিউটোরিয়ালের নিজের পরামর্শ।
+
+- **আগে ফ্লো আঁকুন।** ধাপ, এজেন্ট, টুল আর হ্যান্ডঅফের তালিকা চেয়ে নিন। প্রতিটা তীর এমন জায়গা, যেখানে ডেটা হারাতে বা বদলাতে পারে।
+- **প্রতিটা ধাপ আলাদা টেস্ট করুন।** একটা ওয়ার্কারকে একটা স্থির ইনপুট দিন। ইউনিট টেস্টের মতো তার আউটপুট ফরম্যাট যাচাই করুন।
+- **শেষ অবস্থা বিচার করুন।** যে এজেন্ট ডেটা বদলায়, তার জন্য প্রতিটা টার্ন নয়, সিস্টেমের চূড়ান্ত অবস্থা যাচাই করুন।
+- **একটা ওয়ার্কার থামান।** রানের মাঝখানে একটা ওয়ার্কার বন্ধ করুন। রান checkpoint থেকে আবার চলা উচিত। শুরু থেকে শুরু হওয়া বা আটকে থাকা উচিত নয়।
+- **হ্যান্ডঅফ যাচাই করুন।** এমন একটা রিকুয়েস্ট পাঠান, যা এজেন্ট B-র কাছে যাওয়ার কথা। দেখুন B সঠিক কনটেক্সটসহ সেটা পায় কি না। দেখুন A-ও উত্তর দিচ্ছে কি না।
+- **প্রতিটা কাজের টোকেন আর কল গুনুন।** একটা বাজেট ঠিক করুন। কোনো রান সেটা ছাড়ালে অ্যালার্ট দিন। লুপ সবার আগে এখানেই ধরা পড়ে।
+- **মেমরিতে আক্রমণ করুন।** এজেন্টকে `/memories/../config` পড়তে বলুন। কোডকে মানা করতেই হবে।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Workflow | Models and tools that run through code paths defined in advance <Cite n={1} /> |
+| Agent | A model that directs its own steps and tool use, usually in a loop <Cite n={1} /> |
+| Orchestrator-workers | A central model splits a task, sends parts to workers, and combines the results <Cite n={1} /> |
+| Subagent | A worker agent that a lead agent starts for one part of the task <Cite n={2} /> |
+| Handoff | Passing the task to another agent, shown to the model as a tool <Cite n={3} /> |
+| Checkpoint | A saved snapshot of the state of a thread <Cite n={4} /> |
+| Memory tool | A tool that lets Claude keep files under `/memories` across sessions <Cite n={5} /> |
