@@ -1,0 +1,372 @@
+export const metadata = { title: 'CI/CD Integration and Capstone Presentation', description: 'Put the capstone\'s test pipeline into GitHub Actions on every pull request, build a quality dashboard, and present the results.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'GitHub Actions documentation', publisher: 'GitHub', url: 'https://docs.github.com/en/actions', accessed: '2026-11-01' },
+    { title: 'CI/CD integration', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
+  ],
+}
+
+# CI/CD Integration and Capstone Presentation
+
+A test suite that only runs on your laptop is a suite someone will forget to run.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The last technical step of the capstone is making the test pipeline run itself, on every pull request, without anyone remembering to trigger it. GitHub Actions is the CI platform that runs a defined job on a repository event such as a pull request <Cite n={1} />, and Promptfoo ships first-class support for running its evals inside that kind of pipeline <Cite n={2} />.
+
+The job of the CI job is narrow: run the fast suites (the eval, the hallucination tests) on every PR as a required check, and run the slower ones (red team, Giskard scan, full UI suite) on a schedule or on demand, because they are too slow to block every single commit.
+
+The presentation half of this session is not a technical artifact, but it has a technical dependency: the quality dashboard from the metrics module and the findings table from the test pipeline are what gets presented, not a narrative with no numbers behind it.
+
+</Technical>
+<Layman>
+
+Capstone-এর শেষ প্রযুক্তিগত ধাপ হলো test pipeline-কে নিজে নিজে চালানো, প্রতিটা pull request-এ, কাউকে এটা trigger করার কথা মনে রাখতে না দিয়ে। GitHub Actions হলো সেই CI platform যা একটা pull request-এর মতো repository event-এ একটা নির্ধারিত job চালায় <Cite n={1} />, আর Promptfoo তার eval এই ধরনের pipeline-এর ভেতরে চালানোর জন্য প্রথম-শ্রেণির সমর্থন দেয় <Cite n={2} />।
+
+CI job-এর কাজ সংকীর্ণ: দ্রুত suite (eval, hallucination test) প্রতিটা PR-এ একটা required check হিসেবে চালান, আর ধীর suite (red team, Giskard scan, পূর্ণ UI suite) একটা schedule-এ বা চাহিদামতো চালান, কারণ সেগুলো প্রতিটা একক commit ব্লক করার জন্য খুব ধীর।
+
+এই session-এর presentation অংশ একটা প্রযুক্তিগত artifact নয়, কিন্তু এর একটা প্রযুক্তিগত নির্ভরতা আছে: metrics module-এর quality dashboard আর test pipeline-এর findings table-ই উপস্থাপন করা হয়, সংখ্যা ছাড়া একটা narrative নয়।
+
+</Layman>
+<Bangla>
+
+Capstone-এর শেষ প্রযুক্তিগত ধাপ হলো test pipeline-কে নিজে নিজে চালানো, প্রতিটা pull request-এ, কাউকে এটা trigger করার কথা মনে রাখতে না দিয়ে। GitHub Actions হলো সেই CI platform যা একটা pull request-এর মতো repository event-এ একটা নির্ধারিত job চালায় <Cite n={1} />, আর Promptfoo তার eval এই ধরনের pipeline-এর ভেতরে চালানোর জন্য প্রথম-শ্রেণির সমর্থন দেয় <Cite n={2} />।
+
+CI job-এর কাজ সংকীর্ণ: দ্রুত suite (eval, hallucination test) প্রতিটা PR-এ একটা required check হিসেবে চালান, আর ধীর suite (red team, Giskard scan, পূর্ণ UI suite) একটা schedule-এ বা চাহিদামতো চালান, কারণ সেগুলো প্রতিটা একক commit ব্লক করার জন্য খুব ধীর।
+
+এই session-এর presentation অংশ একটা প্রযুক্তিগত artifact নয়, কিন্তু এর একটা প্রযুক্তিগত নির্ভরতা আছে: metrics module-এর quality dashboard আর test pipeline-এর findings table-ই উপস্থাপন করা হয়, সংখ্যা ছাড়া একটা narrative নয়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The split between what blocks a merge and what runs on a schedule <Cite n={1} />:
+
+```text
+on every pull request (required check, blocks merge)
+    Promptfoo eval
+    DeepEval hallucination suite
+
+on a schedule, or manually triggered (visible, not blocking)
+    Promptfoo red team
+    Giskard scan
+    full Playwright suite
+```
+
+Promptfoo's own GitHub Action wraps the CLI call and posts the results as a PR comment, which is what makes the gate visible to a reviewer without them needing to run anything locally <Cite n={2} />.
+
+The PR comment itself is the smallest version of the quality dashboard from the metrics module: the same numbers, same gate logic, surfaced at the point a human actually makes the merge decision instead of a separate page they would need to remember to check.
+
+</Technical>
+<Layman>
+
+কী merge ব্লক করে আর কী schedule-এ চলে তার বিভাজন <Cite n={1} />:
+
+```text
+on every pull request (required check, blocks merge)
+    Promptfoo eval
+    DeepEval hallucination suite
+
+on a schedule, or manually triggered (visible, not blocking)
+    Promptfoo red team
+    Giskard scan
+    full Playwright suite
+```
+
+Promptfoo-র নিজস্ব GitHub Action CLI call মুড়ে আর ফলাফল একটা PR comment হিসেবে পোস্ট করে, যেটাই একজন reviewer-কে স্থানীয়ভাবে কিছু না চালিয়েই gate-টা দৃশ্যমান করে <Cite n={2} />।
+
+PR comment-টাই metrics module-এর quality dashboard-এর সবচেয়ে ছোট সংস্করণ: একই সংখ্যা, একই gate logic, ঠিক সেই বিন্দুতে দেখানো যেখানে একজন মানুষ আসলে merge সিদ্ধান্ত নেয়, একটা আলাদা পেজের বদলে যা তাদের চেক করার কথা মনে রাখতে হতো।
+
+</Layman>
+<Bangla>
+
+কী merge ব্লক করে আর কী schedule-এ চলে তার বিভাজন <Cite n={1} />:
+
+```text
+on every pull request (required check, blocks merge)
+    Promptfoo eval
+    DeepEval hallucination suite
+
+on a schedule, or manually triggered (visible, not blocking)
+    Promptfoo red team
+    Giskard scan
+    full Playwright suite
+```
+
+Promptfoo-র নিজস্ব GitHub Action CLI call মুড়ে আর ফলাফল একটা PR comment হিসেবে পোস্ট করে, যেটাই একজন reviewer-কে স্থানীয়ভাবে কিছু না চালিয়েই gate-টা দৃশ্যমান করে <Cite n={2} />।
+
+PR comment-টাই metrics module-এর quality dashboard-এর সবচেয়ে ছোট সংস্করণ: একই সংখ্যা, একই gate logic, ঠিক সেই বিন্দুতে দেখানো যেখানে একজন মানুষ আসলে merge সিদ্ধান্ত নেয়, একটা আলাদা পেজের বদলে যা তাদের চেক করার কথা মনে রাখতে হতো।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+A workflow file with the required-vs-scheduled split <Cite n={1} /> <Cite n={2} />:
+
+```yaml
+# .github/workflows/capstone.yml
+name: capstone checks
+on:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * *"  # nightly, for the slow suites
+jobs:
+  fast-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: promptfoo/promptfoo-action@v1
+        with:
+          config: promptfooconfig.yaml
+          fail-on-threshold: true
+      - run: python -m pytest tests/hallucination/
+  nightly-slow-suite:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx promptfoo redteam run --config redteam.yaml
+      - run: python -m scripts.run_giskard_scan
+      - run: npx playwright test
+```
+
+A short presentation outline built from the suite's own output, not written from memory:
+
+```text
+1. architecture        the diagram from capstone-project-setup
+2. test strategy       the plan's scope, risks, and gates
+3. results             the quality dashboard: current values vs. gates
+4. vulnerabilities     the red team + Giskard findings table, by OWASP id
+5. CI/CD               the PR comment from a real run, screenshotted
+6. what broke          one real failure found during the capstone, and the fix
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Put the fast suite on `pull_request` as a required status check, not just a workflow that runs; a workflow that runs but is not required can still be merged past.
+- Keep the nightly suite's results somewhere a reviewer finds without asking, such as a pinned issue or a status badge in the README.
+- Present the one real failure you found and fixed during the capstone; it is more convincing than a suite that has always been green.
+</Callout>
+
+</Technical>
+<Layman>
+
+Required-বনাম-scheduled বিভাজন সহ একটা workflow ফাইল <Cite n={1} /> <Cite n={2} />:
+
+```yaml
+# .github/workflows/capstone.yml
+name: capstone checks
+on:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * *"  # nightly, for the slow suites
+jobs:
+  fast-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: promptfoo/promptfoo-action@v1
+        with:
+          config: promptfooconfig.yaml
+          fail-on-threshold: true
+      - run: python -m pytest tests/hallucination/
+  nightly-slow-suite:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx promptfoo redteam run --config redteam.yaml
+      - run: python -m scripts.run_giskard_scan
+      - run: npx playwright test
+```
+
+Suite-এর নিজস্ব output থেকে বানানো একটা সংক্ষিপ্ত presentation outline, স্মৃতি থেকে লেখা নয়:
+
+```text
+1. architecture        the diagram from capstone-project-setup
+2. test strategy       the plan's scope, risks, and gates
+3. results             the quality dashboard: current values vs. gates
+4. vulnerabilities     the red team + Giskard findings table, by OWASP id
+5. CI/CD               the PR comment from a real run, screenshotted
+6. what broke          one real failure found during the capstone, and the fix
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- দ্রুত suite-কে `pull_request`-এ একটা required status check হিসেবে বসান, শুধু চলে এমন একটা workflow নয়; required নয় এমন একটা workflow তবুও merge করে পার হওয়া যায়।
+- nightly suite-এর ফলাফল এমন কোথাও রাখুন যা একজন reviewer জিজ্ঞেস না করেই খুঁজে পায়, যেমন একটা pinned issue বা README-তে একটা status badge।
+- capstone-এর সময় পাওয়া আর ঠিক করা একটা real failure উপস্থাপন করুন; এটা সবসময় green থাকা একটা suite-এর চেয়ে বেশি বিশ্বাসযোগ্য।
+</Callout>
+
+</Layman>
+<Bangla>
+
+Required-বনাম-scheduled বিভাজন সহ একটা workflow ফাইল <Cite n={1} /> <Cite n={2} />:
+
+```yaml
+# .github/workflows/capstone.yml
+name: capstone checks
+on:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * *"  # nightly, for the slow suites
+jobs:
+  fast-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: promptfoo/promptfoo-action@v1
+        with:
+          config: promptfooconfig.yaml
+          fail-on-threshold: true
+      - run: python -m pytest tests/hallucination/
+  nightly-slow-suite:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx promptfoo redteam run --config redteam.yaml
+      - run: python -m scripts.run_giskard_scan
+      - run: npx playwright test
+```
+
+Suite-এর নিজস্ব output থেকে বানানো একটা সংক্ষিপ্ত presentation outline, স্মৃতি থেকে লেখা নয়:
+
+```text
+1. architecture        the diagram from capstone-project-setup
+2. test strategy       the plan's scope, risks, and gates
+3. results             the quality dashboard: current values vs. gates
+4. vulnerabilities     the red team + Giskard findings table, by OWASP id
+5. CI/CD               the PR comment from a real run, screenshotted
+6. what broke          one real failure found during the capstone, and the fix
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- দ্রুত suite-কে `pull_request`-এ একটা required status check হিসেবে বসান, শুধু চলে এমন একটা workflow নয়; required নয় এমন একটা workflow তবুও merge করে পার হওয়া যায়।
+- nightly suite-এর ফলাফল এমন কোথাও রাখুন যা একজন reviewer জিজ্ঞেস না করেই খুঁজে পায়, যেমন একটা pinned issue বা README-তে একটা status badge।
+- capstone-এর সময় পাওয়া আর ঠিক করা একটা real failure উপস্থাপন করুন; এটা সবসময় green থাকা একটা suite-এর চেয়ে বেশি বিশ্বাসযোগ্য।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: a workflow that runs but is not required.** GitHub only blocks a merge on checks explicitly marked required in branch protection <Cite n={1} />.
+
+**Mistake 2: running the slow suites on every PR.** This either makes every PR wait ten minutes or teaches the team to ignore a check that is always still running when they want to merge.
+
+**Mistake 3: no PR comment, only a pass/fail badge.** A reviewer who has to click into logs to see which assertion failed will eventually stop checking <Cite n={2} />.
+
+**Mistake 4: presenting a suite that has never found anything.** It reads as untested, not as high quality; show the real failure that was found and fixed.
+
+**Mistake 5: the presentation has no numbers from the actual dashboard.** A narrative description of quality is not evidence of it.
+
+</Technical>
+<Layman>
+
+**Mistake ১: চলে কিন্তু required নয় এমন একটা workflow।** GitHub শুধু branch protection-এ স্পষ্টভাবে required চিহ্নিত check-এ merge ব্লক করে <Cite n={1} />।
+
+**Mistake ২: প্রতিটা PR-এ ধীর suite চালানো।** এটা হয় প্রতিটা PR-কে দশ মিনিট অপেক্ষা করায় অথবা দলকে একটা check উপেক্ষা করতে শেখায় যা merge করতে চাওয়ার সময় সবসময় চলছে থাকে।
+
+**Mistake ৩: কোনো PR comment নেই, শুধু একটা pass/fail badge।** একজন reviewer যাকে কোন assertion ব্যর্থ হয়েছে দেখতে log-এ ক্লিক করতে হয় সে শেষ পর্যন্ত চেক করা বন্ধ করে দেবে <Cite n={2} />।
+
+**Mistake ৪: কখনো কিছু খুঁজে পায়নি এমন একটা suite উপস্থাপন করা।** এটা untested মনে হয়, high quality নয়; capstone-এ পাওয়া আর ঠিক করা real failure দেখান।
+
+**Mistake ৫: presentation-এ আসল dashboard থেকে কোনো সংখ্যা নেই।** quality-র একটা narrative বর্ণনা এর প্রমাণ নয়।
+
+</Layman>
+<Bangla>
+
+**ভুল ১: চলে কিন্তু required নয় এমন একটা workflow।** GitHub শুধু branch protection-এ স্পষ্টভাবে required চিহ্নিত check-এ merge ব্লক করে <Cite n={1} />।
+
+**ভুল ২: প্রতিটা PR-এ ধীর suite চালানো।** এটা হয় প্রতিটা PR-কে দশ মিনিট অপেক্ষা করায় অথবা দলকে একটা check উপেক্ষা করতে শেখায় যা merge করতে চাওয়ার সময় সবসময় চলছে থাকে।
+
+**ভুল ৩: কোনো PR comment নেই, শুধু একটা pass/fail badge।** একজন reviewer যাকে কোন assertion ব্যর্থ হয়েছে দেখতে log-এ ক্লিক করতে হয় সে শেষ পর্যন্ত চেক করা বন্ধ করে দেবে <Cite n={2} />।
+
+**ভুল ৪: কখনো কিছু খুঁজে পায়নি এমন একটা suite উপস্থাপন করা।** এটা untested মনে হয়, high quality নয়; capstone-এ পাওয়া আর ঠিক করা real failure দেখান।
+
+**ভুল ৫: presentation-এ আসল dashboard থেকে কোনো সংখ্যা নেই।** quality-র একটা narrative বর্ণনা এর প্রমাণ নয়।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Confirm the fast suite is marked a required check in branch protection, not just present in the workflow file.
+- Confirm the nightly suite's results are visible somewhere a reviewer checks without being told to.
+- Build the presentation from the dashboard and findings table directly, not from a separately written summary.
+- Include at least one real failure found and fixed during the project.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Confirm the fast suite is marked a required check in branch protection, not just present in the workflow file.
+- Confirm the nightly suite's results are visible somewhere a reviewer checks without being told to.
+- Build the presentation from the dashboard and findings table directly, not from a separately written summary.
+- Include at least one real failure found and fixed during the project.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- দ্রুত suite branch protection-এ একটা required check হিসেবে চিহ্নিত তা নিশ্চিত করুন, শুধু workflow ফাইলে উপস্থিত থাকা নয়।
+- nightly suite-এর ফলাফল এমন কোথাও দৃশ্যমান তা নিশ্চিত করুন যা একজন reviewer না বলা সত্ত্বেও চেক করে।
+- presentation সরাসরি dashboard আর findings table থেকে বানান, আলাদাভাবে লেখা একটা সারাংশ থেকে নয়।
+- project-এর সময় পাওয়া আর ঠিক করা অন্তত একটা real failure অন্তর্ভুক্ত করুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Required check | A CI job marked in branch protection so a failure blocks the merge |
+| Fast gate | The subset of tests fast enough to run on every pull request |
+| Scheduled suite | Slower tests run nightly or on demand instead of on every commit |
+| PR comment | A CI result posted directly on the pull request for the reviewer |

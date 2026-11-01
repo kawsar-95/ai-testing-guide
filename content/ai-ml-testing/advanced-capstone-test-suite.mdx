@@ -1,0 +1,382 @@
+export const metadata = { title: 'Advanced Capstone: A Comprehensive Test Suite', description: 'Build RAG eval with Ragas (50+ cases across four metrics), agent decision tests, multi-turn conversation tests, a DSPy-generated dataset, and a Giskard red team run.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
+    { title: 'DSPy', publisher: 'Stanford NLP (DSPy docs)', url: 'https://dspy.ai/', accessed: '2026-11-01' },
+    { title: 'Scan a model', publisher: 'Giskard (docs)', url: 'https://docs.giskard.ai/oss/scan', accessed: '2026-11-01' },
+  ],
+}
+
+# Advanced Capstone: A Comprehensive Test Suite
+
+Fifty Ragas cases, forty Giskard probes, and a DSPy-generated dataset: coverage with a number attached, not a feeling.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+This session's test suite covers four kinds of thing the advanced capstone's agent architecture introduced: retrieval and answer quality (Ragas, across all four of its core metrics — faithfulness, answer relevancy, context precision, context recall <Cite n={1} />), agent decisions (did it pick the right branch and the right tool arguments, reusing the routing-test pattern from the setup session), multi-turn behaviour (does the conversation hold up across several turns, not just one), and synthetic coverage at scale, generated with DSPy <Cite n={2} /> rather than written by hand.
+
+The red teaming step reuses Giskard's scan <Cite n={3} /> against this specific app, at the scale the course specifies: 40 or more automated attack probes, because an agent with a tool-use layer has a wider attack surface than a read-only chatbot — excessive agency is a real risk here in a way it was not for the Phase 1 capstone.
+
+</Technical>
+<Layman>
+
+এই session-এর test suite advanced capstone-এর agent architecture যে চার ধরনের জিনিস নিয়ে এসেছে তা কভার করে: retrieval আর answer quality (Ragas, এর চারটা মূল metric জুড়ে — faithfulness, answer relevancy, context precision, context recall <Cite n={1} />), agent decision (এটা কি সঠিক শাখা আর সঠিক tool argument বেছে নিয়েছে, setup session-এর routing-test প্যাটার্ন আবার ব্যবহার করে), multi-turn আচরণ (কথোপকথন একাধিক turn-এ টিকে থাকে কিনা, শুধু একটা নয়), আর DSPy দিয়ে generate করা স্কেলে synthetic coverage <Cite n={2} />, হাতে লেখা নয়।
+
+Red teaming ধাপ এই নির্দিষ্ট app-এর বিরুদ্ধে Giskard-এর scan আবার ব্যবহার করে <Cite n={3} />, course যে স্কেল বলে তাতে: ৪০ বা তার বেশি automated attack probe, কারণ tool-use layer সহ একটা agent-এর read-only chatbot-এর চেয়ে বড় attack surface আছে — excessive agency এখানে একটা real ঝুঁকি, যা Phase 1 capstone-এর জন্য ছিল না।
+
+</Layman>
+<Bangla>
+
+এই session-এর test suite advanced capstone-এর agent architecture যে চার ধরনের জিনিস নিয়ে এসেছে তা কভার করে: retrieval আর answer quality (Ragas, এর চারটা মূল metric জুড়ে — faithfulness, answer relevancy, context precision, context recall <Cite n={1} />), agent decision (এটা কি সঠিক শাখা আর সঠিক tool argument বেছে নিয়েছে, setup session-এর routing-test প্যাটার্ন আবার ব্যবহার করে), multi-turn আচরণ (কথোপকথন একাধিক turn-এ টিকে থাকে কিনা, শুধু একটা নয়), আর DSPy দিয়ে generate করা স্কেলে synthetic coverage <Cite n={2} />, হাতে লেখা নয়।
+
+Red teaming ধাপ এই নির্দিষ্ট app-এর বিরুদ্ধে Giskard-এর scan আবার ব্যবহার করে <Cite n={3} />, course যে স্কেল বলে তাতে: ৪০ বা তার বেশি automated attack probe, কারণ tool-use layer সহ একটা agent-এর read-only chatbot-এর চেয়ে বড় attack surface আছে — excessive agency এখানে একটা real ঝুঁকি, যা Phase 1 capstone-এর জন্য ছিল না।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+Four suites, each targeting a different layer of the agent architecture from the setup session:
+
+```text
+Ragas eval (50+ cases)     targets: search_docs branch, answer quality
+agent decision tests       targets: the route() function, tool arguments
+multi-turn tests           targets: the whole graph, run over several turns
+DSPy synthetic dataset     targets: coverage breadth, generated not written
+Giskard scan (40+ probes)  targets: every branch, for security
+```
+
+DSPy generates question/answer pairs programmatically from a knowledge source and a signature describing the task, which is a different approach from Giskard RAGET's template-based generation: DSPy's strength is optimizing a prompt or a pipeline against a metric, and that same machinery can produce a synthetic dataset to optimize against <Cite n={2} />.
+
+Multi-turn tests specifically exercise state that a single-question test cannot: does the agent remember an order id mentioned two turns ago, does a topic switch confuse the routing, does the conversation history grow correctly across an escalation.
+
+</Technical>
+<Layman>
+
+চারটা suite, প্রতিটা setup session-এর agent architecture-এর একটা আলাদা layer লক্ষ্য করে:
+
+```text
+Ragas eval (50+ cases)     targets: search_docs branch, answer quality
+agent decision tests       targets: the route() function, tool arguments
+multi-turn tests           targets: the whole graph, run over several turns
+DSPy synthetic dataset     targets: coverage breadth, generated not written
+Giskard scan (40+ probes)  targets: every branch, for security
+```
+
+DSPy একটা knowledge source আর কাজ বর্ণনা করা একটা signature থেকে প্রোগ্রামেটিক্যালি প্রশ্ন/উত্তর জোড়া generate করে, যা Giskard RAGET-এর template-ভিত্তিক generation থেকে আলাদা একটা পদ্ধতি: DSPy-র শক্তি হলো একটা metric-এর বিরুদ্ধে একটা prompt বা pipeline optimize করা, আর একই যন্ত্র একটা synthetic dataset তৈরি করতে পারে যার বিরুদ্ধে optimize করা যায় <Cite n={2} />।
+
+Multi-turn টেস্ট বিশেষভাবে এমন state পরীক্ষা করে যা একটা একক-প্রশ্ন টেস্ট পারে না: agent কি দুই turn আগে উল্লেখ করা একটা order id মনে রাখে, একটা topic switch কি routing-কে বিভ্রান্ত করে, একটা escalation জুড়ে কথোপকথনের ইতিহাস সঠিকভাবে বাড়ে কিনা।
+
+</Layman>
+<Bangla>
+
+চারটা suite, প্রতিটা setup session-এর agent architecture-এর একটা আলাদা layer লক্ষ্য করে:
+
+```text
+Ragas eval (50+ cases)     targets: search_docs branch, answer quality
+agent decision tests       targets: the route() function, tool arguments
+multi-turn tests           targets: the whole graph, run over several turns
+DSPy synthetic dataset     targets: coverage breadth, generated not written
+Giskard scan (40+ probes)  targets: every branch, for security
+```
+
+DSPy একটা knowledge source আর কাজ বর্ণনা করা একটা signature থেকে প্রোগ্রামেটিক্যালি প্রশ্ন/উত্তর জোড়া generate করে, যা Giskard RAGET-এর template-ভিত্তিক generation থেকে আলাদা একটা পদ্ধতি: DSPy-র শক্তি হলো একটা metric-এর বিরুদ্ধে একটা prompt বা pipeline optimize করা, আর একই যন্ত্র একটা synthetic dataset তৈরি করতে পারে যার বিরুদ্ধে optimize করা যায় <Cite n={2} />।
+
+Multi-turn টেস্ট বিশেষভাবে এমন state পরীক্ষা করে যা একটা একক-প্রশ্ন টেস্ট পারে না: agent কি দুই turn আগে উল্লেখ করা একটা order id মনে রাখে, একটা topic switch কি routing-কে বিভ্রান্ত করে, একটা escalation জুড়ে কথোপকথনের ইতিহাস সঠিকভাবে বাড়ে কিনা।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+A Ragas suite over 50 generated cases <Cite n={1} />:
+
+```python
+from ragas import evaluate
+from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
+
+def test_the_rag_branch_meets_all_four_metrics(fifty_cases):
+    result = evaluate(
+        dataset=build_eval_dataset(fifty_cases),
+        metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
+    )
+    for metric in ("faithfulness", "answer_relevancy", "context_precision", "context_recall"):
+        assert result[metric] >= 0.85, f"{metric}: {result[metric]}"
+```
+
+A DSPy-generated dataset, built from the knowledge base and a task signature <Cite n={2} />:
+
+```python
+import dspy
+
+class AnswerFromDocs(dspy.Signature):
+    """Answer the question using only the given context."""
+    context: str = dspy.InputField()
+    question: str = dspy.InputField()
+    answer: str = dspy.OutputField()
+
+generator = dspy.Predict(AnswerFromDocs)
+synthetic_cases = [
+    {"question": q, "expected": generator(context=ctx, question=q).answer}
+    for ctx, q in sample_context_question_pairs(knowledge_base, n=100)
+]
+```
+
+A multi-turn conversation test over the full agent graph:
+
+```python
+def test_the_agent_remembers_the_order_id_across_turns(agent):
+    state = agent.invoke({"question": "I have a problem with order #4821"})
+    state = agent.invoke({**state, "question": "What is its status?"})
+    assert "4821" in state["tool_calls"][-1]["arguments"]["order_id"]
+```
+
+The Giskard scan at the course's specified scale <Cite n={3} />:
+
+```python
+report = giskard.scan(model, dataset, only=None)  # the full probe library, 40+
+assert len(report.get_issues(severity="high")) == 0, report
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Run the DSPy-generated and the hand-written cases as separate suites, with separate pass thresholds, since the generated set's quality depends on the generator model.
+- Write at least five deliberate multi-turn scenarios by hand; a generated dataset rarely covers multi-turn state well.
+- Treat any high-severity Giskard finding as a release blocker given the agent's tool-use surface, not just a note for later.
+</Callout>
+
+</Technical>
+<Layman>
+
+৫০টা generated কেসের ওপর একটা Ragas suite <Cite n={1} />:
+
+```python
+from ragas import evaluate
+from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
+
+def test_the_rag_branch_meets_all_four_metrics(fifty_cases):
+    result = evaluate(
+        dataset=build_eval_dataset(fifty_cases),
+        metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
+    )
+    for metric in ("faithfulness", "answer_relevancy", "context_precision", "context_recall"):
+        assert result[metric] >= 0.85, f"{metric}: {result[metric]}"
+```
+
+knowledge base আর একটা task signature থেকে বানানো একটা DSPy-generated dataset <Cite n={2} />:
+
+```python
+import dspy
+
+class AnswerFromDocs(dspy.Signature):
+    """Answer the question using only the given context."""
+    context: str = dspy.InputField()
+    question: str = dspy.InputField()
+    answer: str = dspy.OutputField()
+
+generator = dspy.Predict(AnswerFromDocs)
+synthetic_cases = [
+    {"question": q, "expected": generator(context=ctx, question=q).answer}
+    for ctx, q in sample_context_question_pairs(knowledge_base, n=100)
+]
+```
+
+পূর্ণ agent graph-এর ওপর একটা multi-turn কথোপকথন টেস্ট:
+
+```python
+def test_the_agent_remembers_the_order_id_across_turns(agent):
+    state = agent.invoke({"question": "I have a problem with order #4821"})
+    state = agent.invoke({**state, "question": "What is its status?"})
+    assert "4821" in state["tool_calls"][-1]["arguments"]["order_id"]
+```
+
+Course-এর নির্দিষ্ট স্কেলে Giskard scan <Cite n={3} />:
+
+```python
+report = giskard.scan(model, dataset, only=None)  # the full probe library, 40+
+assert len(report.get_issues(severity="high")) == 0, report
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- DSPy-generated আর হাতে-লেখা কেস আলাদা suite হিসেবে চালান, আলাদা pass threshold সহ, কারণ generated সেটের মান generator model-এর ওপর নির্ভর করে।
+- অন্তত পাঁচটা ইচ্ছাকৃত multi-turn দৃশ্য হাতে লিখুন; একটা generated dataset খুব কমই multi-turn state ভালোভাবে কভার করে।
+- agent-এর tool-use surface দেখে যেকোনো high-severity Giskard finding-কে একটা release blocker হিসেবে দেখুন, শুধু পরের জন্য একটা নোট নয়।
+</Callout>
+
+</Layman>
+<Bangla>
+
+৫০টা generated কেসের ওপর একটা Ragas suite <Cite n={1} />:
+
+```python
+from ragas import evaluate
+from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
+
+def test_the_rag_branch_meets_all_four_metrics(fifty_cases):
+    result = evaluate(
+        dataset=build_eval_dataset(fifty_cases),
+        metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
+    )
+    for metric in ("faithfulness", "answer_relevancy", "context_precision", "context_recall"):
+        assert result[metric] >= 0.85, f"{metric}: {result[metric]}"
+```
+
+knowledge base আর একটা task signature থেকে বানানো একটা DSPy-generated dataset <Cite n={2} />:
+
+```python
+import dspy
+
+class AnswerFromDocs(dspy.Signature):
+    """Answer the question using only the given context."""
+    context: str = dspy.InputField()
+    question: str = dspy.InputField()
+    answer: str = dspy.OutputField()
+
+generator = dspy.Predict(AnswerFromDocs)
+synthetic_cases = [
+    {"question": q, "expected": generator(context=ctx, question=q).answer}
+    for ctx, q in sample_context_question_pairs(knowledge_base, n=100)
+]
+```
+
+পূর্ণ agent graph-এর ওপর একটা multi-turn কথোপকথন টেস্ট:
+
+```python
+def test_the_agent_remembers_the_order_id_across_turns(agent):
+    state = agent.invoke({"question": "I have a problem with order #4821"})
+    state = agent.invoke({**state, "question": "What is its status?"})
+    assert "4821" in state["tool_calls"][-1]["arguments"]["order_id"]
+```
+
+Course-এর নির্দিষ্ট স্কেলে Giskard scan <Cite n={3} />:
+
+```python
+report = giskard.scan(model, dataset, only=None)  # the full probe library, 40+
+assert len(report.get_issues(severity="high")) == 0, report
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- DSPy-generated আর হাতে-লেখা কেস আলাদা suite হিসেবে চালান, আলাদা pass threshold সহ, কারণ generated সেটের মান generator model-এর ওপর নির্ভর করে।
+- অন্তত পাঁচটা ইচ্ছাকৃত multi-turn দৃশ্য হাতে লিখুন; একটা generated dataset খুব কমই multi-turn state ভালোভাবে কভার করে।
+- agent-এর tool-use surface দেখে যেকোনো high-severity Giskard finding-কে একটা release blocker হিসেবে দেখুন, শুধু পরের জন্য একটা নোট নয়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: treating the generated dataset's pass rate as equal to the hand-written one's.** A generated case is only as good as the generator model that produced it; verify a sample by hand before trusting the whole set <Cite n={2} />.
+
+**Mistake 2: no multi-turn cases at all.** A suite of only single-question tests cannot find a bug that only appears on the second or third turn.
+
+**Mistake 3: running the Giskard scan with a reduced probe set to save time.** The course's 40+ probe figure is the point; a reduced scan finds less and reports a false sense of safety <Cite n={3} />.
+
+**Mistake 4: scoring all four Ragas metrics as one average.** A high faithfulness score hiding a low context recall score means the right answer is reached from the wrong retrieval some of the time <Cite n={1} />.
+
+**Mistake 5: no severity tier on red team findings for this specific app.** An agent that can act needs a stricter bar on excessive-agency findings than a read-only chatbot does.
+
+</Technical>
+<Layman>
+
+**Mistake ১: generated dataset-এর pass rate-কে হাতে-লেখারটার সমান ভাবা।** একটা generated কেস যতটা ভালো তার generator model যতটা ভালো; পুরো সেট বিশ্বাস করার আগে হাতে একটা নমুনা যাচাই করুন <Cite n={2} />।
+
+**Mistake ২: একদমই কোনো multi-turn কেস নেই।** শুধু একক-প্রশ্ন টেস্টের একটা suite এমন একটা বাগ খুঁজে পেতে পারে না যা শুধু দ্বিতীয় বা তৃতীয় turn-এ দেখা যায়।
+
+**Mistake ৩: সময় বাঁচাতে কমানো probe সেট দিয়ে Giskard scan চালানো।** Course-এর ৪০+ probe সংখ্যাটাই মূল বিষয়; একটা কমানো scan কম খুঁজে পায় আর একটা মিথ্যা নিরাপত্তার অনুভূতি রিপোর্ট করে <Cite n={3} />।
+
+**Mistake ৪: চারটা Ragas metric-ই একটা average হিসেবে score করা।** একটা কম context recall score লুকিয়ে রাখা একটা উচ্চ faithfulness score মানে সঠিক উত্তর কিছু সময় ভুল retrieval থেকে পৌঁছায় <Cite n={1} />।
+
+**Mistake ৫: এই নির্দিষ্ট app-এর জন্য red team finding-এ কোনো severity tier নেই।** একটা agent যে কাজ করতে পারে তার excessive-agency finding-এ একটা read-only chatbot-এর চেয়ে কঠোরতর মান দরকার।
+
+</Layman>
+<Bangla>
+
+**ভুল ১: generated dataset-এর pass rate-কে হাতে-লেখারটার সমান ভাবা।** একটা generated কেস যতটা ভালো তার generator model যতটা ভালো; পুরো সেট বিশ্বাস করার আগে হাতে একটা নমুনা যাচাই করুন <Cite n={2} />।
+
+**ভুল ২: একদমই কোনো multi-turn কেস নেই।** শুধু একক-প্রশ্ন টেস্টের একটা suite এমন একটা বাগ খুঁজে পেতে পারে না যা শুধু দ্বিতীয় বা তৃতীয় turn-এ দেখা যায়।
+
+**ভুল ৩: সময় বাঁচাতে কমানো probe সেট দিয়ে Giskard scan চালানো।** Course-এর ৪০+ probe সংখ্যাটাই মূল বিষয়; একটা কমানো scan কম খুঁজে পায় আর একটা মিথ্যা নিরাপত্তার অনুভূতি রিপোর্ট করে <Cite n={3} />।
+
+**ভুল ৪: চারটা Ragas metric-ই একটা average হিসেবে score করা।** একটা কম context recall score লুকিয়ে রাখা একটা উচ্চ faithfulness score মানে সঠিক উত্তর কিছু সময় ভুল retrieval থেকে পৌঁছায় <Cite n={1} />।
+
+**ভুল ৫: এই নির্দিষ্ট app-এর জন্য red team finding-এ কোনো severity tier নেই।** একটা agent যে কাজ করতে পারে তার excessive-agency finding-এ একটা read-only chatbot-এর চেয়ে কঠোরতর মান দরকার।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Run the DSPy-generated and hand-written suites separately, and spot-check a sample of the generated set by hand.
+- Keep a dedicated multi-turn test file with at least five scenarios, reviewed, not generated.
+- Run the full 40+ probe Giskard scan, not a reduced sample, before calling this session done.
+- Report all four Ragas metrics separately, never collapsed into one average.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Run the DSPy-generated and hand-written suites separately, and spot-check a sample of the generated set by hand.
+- Keep a dedicated multi-turn test file with at least five scenarios, reviewed, not generated.
+- Run the full 40+ probe Giskard scan, not a reduced sample, before calling this session done.
+- Report all four Ragas metrics separately, never collapsed into one average.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- DSPy-generated আর হাতে-লেখা suite আলাদাভাবে চালান, আর generated সেটের একটা নমুনা হাতে spot-check করুন।
+- অন্তত পাঁচটা দৃশ্য সহ একটা dedicated multi-turn test ফাইল রাখুন, review করা, generate করা নয়।
+- এই session শেষ বলার আগে পূর্ণ ৪০+ probe Giskard scan চালান, একটা কমানো নমুনা নয়।
+- চারটা Ragas metric আলাদাভাবে রিপোর্ট করুন, কখনো একটা average-এ ভেঙে ফেলবেন না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Four-metric Ragas suite | Scoring faithfulness, answer relevancy, context precision, and context recall separately |
+| DSPy synthetic dataset | Question/answer pairs generated programmatically from a knowledge source and a task signature |
+| Multi-turn test | A test exercising agent state across more than one conversational turn |
+| Probe count | The number of distinct automated attack checks a security scan runs |

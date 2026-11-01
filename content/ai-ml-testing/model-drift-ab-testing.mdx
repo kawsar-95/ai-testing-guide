@@ -1,0 +1,501 @@
+export const metadata = { title: 'Model Drift and A/B Testing', description: 'Detect drift, compare two models in production safely, and know when a difference is real rather than noise.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Evaluation and datasets', publisher: 'Langfuse (docs)', url: 'https://langfuse.com/docs/evaluation/evaluation-methods', accessed: '2026-11-01' },
+    { title: 'Evaluations', publisher: 'Arize (Phoenix docs)', url: 'https://arize.com/docs/phoenix/evaluation/llm-evals', accessed: '2026-11-01' },
+    { title: 'Self-Consistency Improves Chain of Thought Reasoning in Language Models', publisher: 'arXiv', url: 'https://arxiv.org/abs/2203.11171', accessed: '2026-11-01' },
+  ],
+}
+
+# Model Drift and A/B Testing
+
+Two questions that look the same and are not: did the model change, or did the users change? The second one is drift, and it is a product problem.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Drift** is a change in the data, not in the code. The users start asking different questions, the knowledge base changes, or the season changes, and the system's behaviour shifts with no deployment. The measurements tell you *that* something moved; they do not tell you *why*.
+
+There are three kinds worth separating, because the fix is different for each:
+
+```text
+input drift       the questions changed
+knowledge drift   the documents changed
+output drift      the model's behaviour changed
+```
+
+Output drift is the one that gets called "the model got worse", and it is usually a provider change or a prompt change. Input drift is a product signal: the users want something you did not build for.
+
+**A/B testing** two models in production is a different problem. You route a share of the traffic to each, measure both, and decide. The difficulty is statistical: with a low traffic volume, the difference you see can be noise. And with a small sample, a model that is better on average can still be worse for your users, because the categories differ.
+
+The measurement has to be **per category** and the sample has to be big enough. Self-consistency is the related idea from the other direction: instead of comparing two models, you compare one model against itself across samples, which gives you the noise floor for free <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+**Drift** হলো ডেটার পরিবর্তন, code-এর নয়। ব্যবহারকারীরা অন্য প্রশ্ন করতে শুরু করে, knowledge base বদলায়, বা ঋতু বদলায়, আর সিস্টেমের আচরণ বদলে যায় কোনো deployment ছাড়াই। মাপ কেবল বলে *কিছু একটা* সরে গেছে; *কেন* সরে গেছে সেটা বলে না।
+
+তিনটা ধরন আলাদা করা দরকার, কারণ সমাধান আলাদা:
+
+```text
+input drift       the questions changed
+knowledge drift   the documents changed
+output drift      the model's behaviour changed
+```
+
+output drift-কেই "model খারাপ হয়ে গেছে" বলা হয়, আর সেটা সাধারণত provider পরিবর্তন বা prompt পরিবর্তন। input drift হলো একটা product সংকেত: ব্যবহারকারীরা এমন কিছু চান যা আপনি বানাননি।
+
+Production-এ দুটো model-এর **A/B testing** আলাদা সমস্যা। ট্রাফিকের একটা অংশ দুটোর একটায় পাঠান, দুটোই মাপেন, সিদ্ধান্ত নেন। কঠিনতা পরিসংখ্যানগত: কম ট্রাফিকে যে পার্থক্য দেখা যায় সেটা noise হতে পারে। আর ছোট sample-এ গড়ে ভালো model-ও আপনার ব্যবহারকারীদের জন্য খারাপ হতে পারে, কারণ ধরনগুলো আলাদা।
+
+মাপ অবশ্যই **প্রতি ধরনে** হতে হবে আর sample যথেষ্ট বড় হতে হবে। self-consistency একই ধারণা অন্যদিক থেকে: দুটো model না তুলনা করে একটা model-কে নিজের বিভিন্ন sample-এর সাথে তুলনা করা, যেটা noise floor বিনা ফেরত দেয় <Cite n={3} />।
+
+</Layman>
+<Bangla>
+
+**Drift** হলো ডেটার পরিবর্তন, code-এর নয়। ব্যবহারকারীরা অন্য প্রশ্ন করতে শুরু করে, knowledge base বদলায়, বা ঋতু বদলায়, আর সিস্টেমের আচরণ বদলে যায় কোনো deployment ছাড়াই। মাপ কেবল বলে *কিছু একটা* সরে গেছে; *কেন* সরে গেছে সেটা বলে না।
+
+তিনটা ধরন আলাদা করা দরকার, কারণ সমাধান আলাদা:
+
+```text
+input drift       the questions changed
+knowledge drift   the documents changed
+output drift      the model's behaviour changed
+```
+
+output drift-কেই "model খারাপ হয়ে গেছে" বলা হয়, আর সেটা সাধারণত provider পরিবর্তন বা prompt পরিবর্তন। input drift হলো একটা product সংকেত: ব্যবহারকারীরা এমন কিছু চান যা আপনি বানাননি।
+
+Production-এ দুটো model-এর **A/B testing** আলাদা সমস্যা। ট্রাফিকের একটা অংশ দুটোর একটায় পাঠান, দুটোই মাপেন, সিদ্ধান্ত নেন। কঠিনতা পরিসংখ্যানগত: কম ট্রাফিকে যে পার্থক্য দেখা যায় সেটা noise হতে পারে। আর ছোট sample-এ গড়ে ভালো model-ও আপনার ব্যবহারকারীদের জন্য খারাপ হতে পারে, কারণ ধরনগুলো আলাদা।
+
+মাপ অবশ্যই **প্রতি ধরনে** হতে হবে আর sample যথেষ্ট বড় হতে হবে। self-consistency একই ধারণা অন্যদিক থেকে: দুটো model না তুলনা করে একটা model-কে নিজের বিভিন্ন sample-এর সাথে তুলনা করা, যেটা noise floor বিনা ফেরত দেয় <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The drift test and the A/B test are the same measurement with a different control, and the implementation is the same too:
+
+```text
+what changed?      compare the metric distribution of two periods
+which is better?    compare the metric distribution of two arms
+```
+
+**Drift detection** needs a baseline. You take the distribution of a metric over a window, and you compare it to the distribution of the same metric over the baseline window. The comparison has to be on the **distribution**, not on the mean, because a distribution can shift without its mean moving much, and a mean can move because of one outlier.
+
+The **category breakdown** is what makes the finding actionable. A drift in the overall faithfulness might be a drift in one category, and that category is usually a data problem you can fix.
+
+For the A/B test, the implementation is a **router** in front of the model call, with the arm recorded on the trace:
+
+```python
+def choose_arm(user_id: str) -> str:
+    bucket = hash(user_id) % 100
+    if bucket < TRAFFIC_PERCENT:
+        return "candidate"
+    return "control"
+```
+
+The hash has to be on the **user id**, not random per request, or the same user sees both models and the comparison is contaminated.
+
+The **analysis** has three requirements:
+
+1. **Enough traffic.** A difference smaller than the noise floor is not a difference. The noise floor comes from the self-consistency measurement: run the control model several times on the same inputs and see how much its own score moves <Cite n={3} />. The scores from both arms are kept in the evaluation store, so the comparison is against stored history and not against a number someone remembers <Cite n={1} />.
+2. **A fixed decision rule, written before the test.** A test that looks at the results and then decides what counts as a win is not a test.
+3. **Per-category analysis.** A model that wins on 80% of traffic and loses badly on the other 20% is a decision, not an average.
+
+And the **guardrail metric** has to be checked in both arms. A candidate that scores 0.02 higher on relevance but refuses three times as many requests is not a win, and the average would hide it.
+
+</Technical>
+<Layman>
+
+drift টেস্ট আর A/B টেস্ট একই মাপ, আলাদা control — বাস্তবায়নও এক:
+
+```text
+what changed?      compare the metric distribution of two periods
+which is better?    compare the metric distribution of two arms
+```
+
+**Drift detection**-এর baseline দরকার। কোনো metric-এর window-এর বিতরণ নিয়ে সেটাকে baseline window-এর বিতরণের সাথে তুলনা করেন। তুলনাটা **বিতরণের** ওপর হতে হবে, গড়ের ওপর নয়, কারণ বিতরণ গড় না বদলেও সরে যেতে পারে, আর একটা outlier গড়কে সরাতে পারে।
+
+**ধরন অনুযায়ী ভাগ**-ই finding-কে কাজের করে তোলে। সামগ্রিক faithfulness-এ drift হতে পারে একটা ধরনের drift থেকে, আর সেই ধরনটা সাধারণত একটা data সমস্যা যা ঠিক করা যায়।
+
+A/B test-এ বাস্তবায়ন হলো model call-এর সামনে একটা **router**, আর arm ট্রেসে রেকর্ড করা:
+
+```python
+def choose_arm(user_id: str) -> str:
+    bucket = hash(user_id) % 100
+    if bucket < TRAFFIC_PERCENT:
+        return "candidate"
+    return "control"
+```
+
+hash **user id**-র ওপর হতে হবে, প্রতি request-এ random নয়, নইলে একই ব্যবহারকারী দুটো model-ই দেখে তুলনা নষ্ট হয়।
+
+**বিশ্লেষণের** তিনটি শর্ত:
+
+1. **যথেষ্ট ট্রাফিক।** noise floor-এর চেয়ে ছোট পার্থক্য পার্থক্য নয়। noise floor আসে self-consistency মাপ থেকে: একই input-এ control model কয়েকবার চালিয়ে দেখুন তার নিজের স্কোর কতটা নড়ে <Cite n={3} />।
+2. **আগে থেকে লেখা সিদ্ধান্তের নিয়ম।** ফল দেখে তারপর "জিত" কী বুঝবে তা ঠিক করা টেস্ট নয়।
+3. **প্রতি ধরনে বিশ্লেষণ।** যে model ৮০% ট্রাফিকে জেতে আর বাকি ২০%-এ খারাপ হয় সেটা একটা সিদ্ধান্ত, একটা গড় নয়।
+
+আর **guardrail metric** দুটো arm-এই যাচাই করতে হবে। যে candidate relevance-এ ০.০২ বেশি স্কোর করে কিন্তু তিনগুণ বেশি অনুরোধ প্রত্যাখ্যান করে সেটা জয় নয়, আর গড় সেটা ঢেকে দেয়।
+
+</Layman>
+<Bangla>
+
+drift টেস্ট আর A/B টেস্ট একই মাপ, আলাদা control — বাস্তবায়নও এক:
+
+```text
+what changed?      compare the metric distribution of two periods
+which is better?    compare the metric distribution of two arms
+```
+
+**Drift detection**-এর baseline দরকার। কোনো metric-এর window-এর বিতরণ নিয়ে সেটাকে baseline window-এর বিতরণের সাথে তুলনা করেন। তুলনাটা **বিতরণের** ওপর হতে হবে, গড়ের ওপর নয়, কারণ বিতরণ গড় না বদলেও সরে যেতে পারে, আর একটা outlier গড়কে সরাতে পারে।
+
+**ধরন অনুযায়ী ভাগ**-ই finding-কে কাজের করে তোলে। সামগ্রিক faithfulness-এ drift হতে পারে একটা ধরনের drift থেকে, আর সেই ধরনটা সাধারণত একটা data সমস্যা যা ঠিক করা যায়।
+
+A/B test-এ বাস্তবায়ন হলো model call-এর সামনে একটা **router**, আর arm ট্রেসে রেকর্ড করা:
+
+```python
+def choose_arm(user_id: str) -> str:
+    bucket = hash(user_id) % 100
+    if bucket < TRAFFIC_PERCENT:
+        return "candidate"
+    return "control"
+```
+
+hash **user id**-র ওপর হতে হবে, প্রতি request-এ random নয়, নইলে একই ব্যবহারকারী দুটো model-ই দেখে তুলনা নষ্ট হয়।
+
+**বিশ্লেষণের** তিনটি শর্ত:
+
+1. **যথেষ্ট ট্রাফিক।** noise floor-এর চেয়ে ছোট পার্থক্য পার্থক্য নয়। noise floor আসে self-consistency মাপ থেকে: একই input-এ control model কয়েকবার চালিয়ে দেখুন তার নিজের স্কোর কতটা নড়ে <Cite n={3} />।
+2. **আগে থেকে লেখা সিদ্ধান্তের নিয়ম।** ফল দেখে তারপর "জিত" কী বুঝবে তা ঠিক করা টেস্ট নয়।
+3. **প্রতি ধরনে বিশ্লেষণ।** যে model ৮০% ট্রাফিকে জেতে আর বাকি ২০%-এ খারাপ হয় সেটা একটা সিদ্ধান্ত, একটা গড় নয়।
+
+আর **guardrail metric** দুটো arm-এই যাচাই করতে হবে। যে candidate relevance-এ ০.০২ বেশি স্কোর করে কিন্তু তিনগুণ বেশি অনুরোধ প্রত্যাখ্যান করে সেটা জয় নয়, আর গড় সেটা ঢেকে দেয়।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The drift check compares two windows of the same metric, and it has to work on the distribution:
+
+```python
+# tests/ai/test_drift.py
+import pytest
+
+
+@pytest.mark.slow
+def test_the_faithfulness_distribution_has_not_drifted(trace_store, baseline):
+    current = trace_store.scores(metric="faithfulness", window="24h")
+    assert current.count() > 100, "not enough samples to compare"
+    assert current.mean() >= baseline.mean() - 0.02, (
+        f"mean fell from {baseline.mean():.3f} to {current.mean():.3f}"
+    )
+    drift = wasserstein_distance(baseline.samples, current.samples)
+    assert drift < 0.05, f"the distribution moved by {drift:.3f}"
+```
+
+And the per-category version, which is the one that tells you where to look:
+
+```python
+@pytest.mark.slow
+def test_no_single_category_has_drifted(trace_store, baseline):
+    for category in CATEGORIES:
+        current = trace_store.scores(metric="faithfulness", category=category, window="24h")
+        if current.count() < 20:
+            continue
+        assert current.mean() >= baseline.for(category).mean() - 0.03, (
+            f"category {category} drifted"
+        )
+```
+
+Now the A/B test, with the arm recorded so the analysis can group by it:
+
+```python
+def test_the_router_is_stable_for_a_user():
+    arms = {choose_arm("user-42") for _ in range(50)}
+    assert len(arms) == 1, "the user was split across arms"
+```
+
+```python
+def test_the_arms_get_roughly_equal_traffic(trace_store):
+    counts = trace_store.count_by_arm(window="7d")
+    total = sum(counts.values())
+    share = counts["candidate"] / total
+    assert 0.35 < share < 0.45, f"the candidate arm got {share:.0%} of traffic"
+```
+
+And the decision rule, written before the test runs, as a test:
+
+```python
+def test_the_candidate_arm_won_by_the_pre_written_rule(results):
+    candidate = results["candidate"].mean_faithfulness
+    control = results["control"].mean_faithfulness
+    noise = results["noise_floor"]
+    assert candidate - control > noise, (
+        f"the gain {candidate - control:.4f} is inside the noise floor {noise:.4f}"
+    )
+    assert results["candidate_refusal_rate"] <= control_refusal_rate + 0.01
+```
+
+That last assertion is the guardrail check. A candidate that wins on relevance and refuses more is not a win, and the average score would never have shown it.
+
+</Technical>
+<Layman>
+
+drift চেক একই metric-এর দুটো window তুলনা করে, আর বিতরণের ওপর কাজ করতে হয়:
+
+```python
+# tests/ai/test_drift.py
+import pytest
+
+
+@pytest.mark.slow
+def test_the_faithfulness_distribution_has_not_drifted(trace_store, baseline):
+    current = trace_store.scores(metric="faithfulness", window="24h")
+    assert current.count() > 100, "not enough samples to compare"
+    assert current.mean() >= baseline.mean() - 0.02, (
+        f"mean fell from {baseline.mean():.3f} to {current.mean():.3f}"
+    )
+    drift = wasserstein_distance(baseline.samples, current.samples)
+    assert drift < 0.05, f"the distribution moved by {drift:.3f}"
+```
+
+আর প্রতি ধরনের সংস্করণ, যেটাই বলে দেয় কোথায় তাকাবেন:
+
+```python
+@pytest.mark.slow
+def test_no_single_category_has_drifted(trace_store, baseline):
+    for category in CATEGORIES:
+        current = trace_store.scores(metric="faithfulness", category=category, window="24h")
+        if current.count() < 20:
+            continue
+        assert current.mean() >= baseline.for(category).mean() - 0.03, (
+            f"category {category} drifted"
+        )
+```
+
+এখন A/B টেস্ট, arm রেকর্ড করে যাতে বিশ্লেষণে group করা যায়:
+
+```python
+def test_the_router_is_stable_for_a_user():
+    arms = {choose_arm("user-42") for _ in range(50)}
+    assert len(arms) == 1, "the user was split across arms"
+```
+
+```python
+def test_the_arms_get_roughly_equal_traffic(trace_store):
+    counts = trace_store.count_by_arm(window="7d")
+    total = sum(counts.values())
+    share = counts["candidate"] / total
+    assert 0.35 < share < 0.45, f"the candidate arm got {share:.0%} of traffic"
+```
+
+আর সিদ্ধান্তের নিয়ম, টেস্ট চালানোর আগেই লেখা, একটা টেস্ট হিসেবে:
+
+```python
+def test_the_candidate_arm_won_by_the_pre_written_rule(results):
+    candidate = results["candidate"].mean_faithfulness
+    control = results["control"].mean_faithfulness
+    noise = results["noise_floor"]
+    assert candidate - control > noise, (
+        f"the gain {candidate - control:.4f} is inside the noise floor {noise:.4f}"
+    )
+    assert results["candidate_refusal_rate"] <= control_refusal_rate + 0.01
+```
+
+শেষ assertionটাই guardrail চেক। যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা জয় নয়, আর গড় স্কোর কখনোই সেটা দেখাত না।
+
+</Layman>
+<Bangla>
+
+drift চেক একই metric-এর দুটো window তুলনা করে, আর বিতরণের ওপর কাজ করতে হয়:
+
+```python
+# tests/ai/test_drift.py
+import pytest
+
+
+@pytest.mark.slow
+def test_the_faithfulness_distribution_has_not_drifted(trace_store, baseline):
+    current = trace_store.scores(metric="faithfulness", window="24h")
+    assert current.count() > 100, "not enough samples to compare"
+    assert current.mean() >= baseline.mean() - 0.02, (
+        f"mean fell from {baseline.mean():.3f} to {current.mean():.3f}"
+    )
+    drift = wasserstein_distance(baseline.samples, current.samples)
+    assert drift < 0.05, f"the distribution moved by {drift:.3f}"
+```
+
+আর প্রতি ধরনের সংস্করণ, যেটাই বলে দেয় কোথায় তাকাবেন:
+
+```python
+@pytest.mark.slow
+def test_no_single_category_has_drifted(trace_store, baseline):
+    for category in CATEGORIES:
+        current = trace_store.scores(metric="faithfulness", category=category, window="24h")
+        if current.count() < 20:
+            continue
+        assert current.mean() >= baseline.for(category).mean() - 0.03, (
+            f"category {category} drifted"
+        )
+```
+
+এখন A/B টেস্ট, arm রেকর্ড করে যাতে বিশ্লেষণে group করা যায়:
+
+```python
+def test_the_router_is_stable_for_a_user():
+    arms = {choose_arm("user-42") for _ in range(50)}
+    assert len(arms) == 1, "the user was split across arms"
+```
+
+```python
+def test_the_arms_get_roughly_equal_traffic(trace_store):
+    counts = trace_store.count_by_arm(window="7d")
+    total = sum(counts.values())
+    share = counts["candidate"] / total
+    assert 0.35 < share < 0.45, f"the candidate arm got {share:.0%} of traffic"
+```
+
+আর সিদ্ধান্তের নিয়ম, টেস্ট চালানোর আগেই লেখা, একটা টেস্ট হিসেবে:
+
+```python
+def test_the_candidate_arm_won_by_the_pre_written_rule(results):
+    candidate = results["candidate"].mean_faithfulness
+    control = results["control"].mean_faithfulness
+    noise = results["noise_floor"]
+    assert candidate - control > noise, (
+        f"the gain {candidate - control:.4f} is inside the noise floor {noise:.4f}"
+    )
+    assert results["candidate_refusal_rate"] <= control_refusal_rate + 0.01
+```
+
+শেষ assertionটাই guardrail চেক। যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা জয় নয়, আর গড় স্কোর কখনোই সেটা দেখাত না।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: comparing means only.** The mean hides a distribution shift and a shift in one category.
+
+**Mistake 2: no noise floor.** Without one you cannot tell a real difference from a lucky sample <Cite n={3} />.
+
+**Mistake 3: deciding the winner after seeing the results.** That is curve-fitting to noise. Write the rule first.
+
+**Mistake 4: routing per request.** The same user sees both models and the comparison is contaminated.
+
+**Mistake 5: only the overall score.** The categories differ, and the users who matter are in the smaller one.
+
+**Mistake 6: no guardrail metric in the A/B test.** A candidate that wins on relevance and refuses more is a regression in disguise <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+**Mistake ১: শুধু গড় তুলনা।** গড় বিতরণের সরণ ঢেকে দেয় আর একটা ধরনের সরণও ঢেকে দেয়।
+
+**Mistake ২: noise floor নেই।** ছাড়া আপনি বুঝতে পারেন না পার্থক্যটা আসল নাকি ভাগ্যকরম। <Cite n={3} />।
+
+**Mistake ৩: ফল দেখে তারপর জেতা ঠিক করা।** এটা noise-এর সাথে curve-fitting। আগে নিয়ম লিখুন।
+
+**Mistake ৪: প্রতি request-এ route।** একই ব্যবহারকারী দুটো model দেখে তুলনা নষ্ট হয়।
+
+**Mistake ৫: শুধু সামগ্রিক স্কোর।** ধরনগুলো আলাদা, আর যারা গুরুত্বপূর্ণ তারা ছোট ধরনে।
+
+**Mistake ৬: A/B test-এ guardrail metric নেই।** যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা ছদ্মবেশে regression <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+**Mistake ১: শুধু গড় তুলনা।** গড় বিতরণের সরণ ঢেকে দেয় আর একটা ধরনের সরণও ঢেকে দেয়।
+
+**Mistake ২: noise floor নেই।** ছাড়া আপনি বুঝতে পারেন না পার্থক্যটা আসল নাকি ভাগ্যকরম। <Cite n={3} />।
+
+**Mistake ৩: ফল দেখে তারপর জেতা ঠিক করা।** এটা noise-এর সাথে curve-fitting। আগে নিয়ম লিখুন।
+
+**Mistake ৪: প্রতি request-এ route।** একই ব্যবহারকারী দুটো model দেখে তুলনা নষ্ট হয়।
+
+**Mistake ৫: শুধু সামগ্রিক স্কোর।** ধরনগুলো আলাদা, আর যারা গুরুত্বপূর্ণ তারা ছোট ধরনে।
+
+**Mistake ৬: A/B test-এ guardrail metric নেই।** যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা ছদ্মবেশে regression <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Measure the noise floor before you run any A/B test. Five samples of the control model on the same inputs tell you what a difference has to beat.
+- Write the decision rule into the test file, not into a document. A rule in the code cannot be quietly changed after the results arrive.
+- Keep the per-category table for every A/B run. The average decides; the table explains.
+- Route on a hash of the user id, and test that the hash is stable. A session-scoped random is a silent contamination.
+- Compare the candidate's refusal rate as well as its quality score, every single time.
+- When drift is detected, check the knowledge base and the corpus before the model. A provider change is the least likely of the three.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Measure the noise floor before you run any A/B test. Five samples of the control model on the same inputs tell you what a difference has to beat.
+- Write the decision rule into the test file, not into a document. A rule in the code cannot be quietly changed after the results arrive.
+- Keep the per-category table for every A/B run. The average decides; the table explains.
+- Route on a hash of the user id, and test that the hash is stable. A session-scoped random is a silent contamination.
+- Compare the candidate's refusal rate as well as its quality score, every single time.
+- When drift is detected, check the knowledge base and the corpus before the model. A provider change is the least likely of the three.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- কোনো A/B test চালানোর আগে noise floor মাপুন। একই input-এ control model-এর পাঁচটা sample-ই বলে দেয় কোন পার্থক্যকে হারাতে হবে।
+- সিদ্ধান্তের নিয়ম document-এ নয়, টেস্ট ফাইলে লিখুন। code-এ থাকা নিয়ম ফল আসার পর নীরবে বদলানো যায় না।
+- প্রতিটা A/B run-এর প্রতি ধরনের টেবিল রাখুন। গড় সিদ্ধান্ত দেয়, টেবিল ব্যাখ্যা করে।
+- user id-এর hash দিয়ে route করুন, আর hash স্থায়ী কি না তা টেস্ট করুন। session-scoped random হলো নীরবে তুলনা নষ্ট করে।
+- প্রতিবার candidate-এর refusal rate-ও তুলনা করুন, শুধু মানের স্কোর নয়।
+- drift ধরা পড়লে model-এর আগে knowledge base আর corpus যাচাই করুন। provider পরিবর্তন তিনটার মধ্যে সবচেয়ে কম সম্ভাব্য।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Drift | A change in the input data or the knowledge base, with no code change |
+| Input drift | The users started asking different questions |
+| Knowledge drift | The documents changed under the system |
+| Output drift | The model's own behaviour changed |
+| A/B test | Routing a share of traffic to each variant and comparing them |
+| Arm | One group in an A/B test, the control or the candidate |
+| Noise floor | The amount the metric moves on its own, which a real difference must beat |
+| Wasserstein distance | A measure of how far two distributions have moved apart |
+| Guardrail metric | The metric checked in both arms so a quality win cannot hide a refusal spike |

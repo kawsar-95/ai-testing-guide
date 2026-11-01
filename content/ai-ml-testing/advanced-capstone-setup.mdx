@@ -1,0 +1,377 @@
+export const metadata = { title: 'Advanced Capstone Setup: A Production RAG Application with an Agent Layer', description: 'Build a multi-source RAG application with an agent that can search docs, check order status, and escalate to a human, deployed with conversation history.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'LangGraph overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/overview', accessed: '2026-11-01' },
+    { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-11-01' },
+    { title: 'Introduction', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/', accessed: '2026-11-01' },
+  ],
+}
+
+# Advanced Capstone Setup: A Production RAG Application with an Agent Layer
+
+The first capstone answered questions. This one has to decide what to do.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The advanced capstone is the Phase 1 capstone's harder sibling: still a RAG application retrieving from documents at answer time <Cite n={2} />, backed by a vector store <Cite n={3} />, but with two differences that change what the test suite has to cover. First, it pulls from multiple sources — a company knowledge base, product documentation, and an FAQ database — rather than one. Second, it has an agent layer built with LangGraph on top of the chain <Cite n={1} />: it does not just answer, it decides whether to search documents, check an order's status through a tool, or hand the conversation to a human.
+
+That agent layer is what the rest of this module's tests target. A chatbot that only retrieves and answers can be wrong about a fact. An agent that also acts can be wrong about *whether to act at all* — and testing that decision is a different problem from testing an answer's accuracy.
+
+</Technical>
+<Layman>
+
+Advanced capstone হলো Phase 1 capstone-এর কঠিন ভাইবোন: তখনও একটা RAG application যা answer time-এ document থেকে retrieve করে <Cite n={2} />, একটা vector store দিয়ে সমর্থিত <Cite n={3} />, কিন্তু দুটো পার্থক্য আছে যা test suite-কে কী কভার করতে হবে তা বদলে দেয়। প্রথমত, এটা একাধিক উৎস থেকে টানে — একটা কোম্পানির knowledge base, product documentation, আর একটা FAQ database — একটার বদলে। দ্বিতীয়ত, chain-এর ওপর LangGraph দিয়ে বানানো একটা agent layer আছে <Cite n={1} />: এটা শুধু উত্তর দেয় না, এটা সিদ্ধান্ত নেয় document খুঁজবে কিনা, একটা tool দিয়ে একটা order-এর status চেক করবে কিনা, নাকি কথোপকথন একজন মানুষের হাতে দেবে কিনা।
+
+সেই agent layer-ই এই module-এর বাকি টেস্টের লক্ষ্য। একটা chatbot যা শুধু retrieve করে আর উত্তর দেয় একটা তথ্যে ভুল করতে পারে। একটা agent যা কাজও করে *আদৌ কাজ করা উচিত কিনা* তাতে ভুল করতে পারে — আর সেই সিদ্ধান্ত টেস্ট করা একটা উত্তরের সঠিকতা টেস্ট করা থেকে আলাদা সমস্যা।
+
+</Layman>
+<Bangla>
+
+Advanced capstone হলো Phase 1 capstone-এর কঠিন ভাইবোন: তখনও একটা RAG application যা answer time-এ document থেকে retrieve করে <Cite n={2} />, একটা vector store দিয়ে সমর্থিত <Cite n={3} />, কিন্তু দুটো পার্থক্য আছে যা test suite-কে কী কভার করতে হবে তা বদলে দেয়। প্রথমত, এটা একাধিক উৎস থেকে টানে — একটা কোম্পানির knowledge base, product documentation, আর একটা FAQ database — একটার বদলে। দ্বিতীয়ত, chain-এর ওপর LangGraph দিয়ে বানানো একটা agent layer আছে <Cite n={1} />: এটা শুধু উত্তর দেয় না, এটা সিদ্ধান্ত নেয় document খুঁজবে কিনা, একটা tool দিয়ে একটা order-এর status চেক করবে কিনা, নাকি কথোপকথন একজন মানুষের হাতে দেবে কিনা।
+
+সেই agent layer-ই এই module-এর বাকি টেস্টের লক্ষ্য। একটা chatbot যা শুধু retrieve করে আর উত্তর দেয় একটা তথ্যে ভুল করতে পারে। একটা agent যা কাজও করে *আদৌ কাজ করা উচিত কিনা* তাতে ভুল করতে পারে — আর সেই সিদ্ধান্ত টেস্ট করা একটা উত্তরের সঠিকতা টেস্ট করা থেকে আলাদা সমস্যা।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The architecture adds one layer on top of the Phase 1 capstone's chain:
+
+```text
+question -> agent (LangGraph) -> decides: search docs | check order | escalate
+                                       |
+                            search docs: retriever (multi-source) -> model -> answer
+                            check order: mock order-status tool -> model -> answer
+                            escalate:    hand off, with the conversation so far
+```
+
+<Cite n={1} /> Multi-source retrieval means the retriever queries more than one collection — knowledge base, product docs, FAQ — and merges the results, which introduces a new failure mode the single-source Phase 1 capstone never had: two sources disagreeing, or one source's chunk outranking a more relevant one from another source <Cite n={3} />.
+
+The mock order-status tool exists specifically so the agent's tool-use decision can be tested without a real backend: it returns a fixed set of order states, and the test suite's job is to confirm the agent calls it only when the question is actually about an order, and passes it the correct order id extracted from the conversation.
+
+</Technical>
+<Layman>
+
+Architecture Phase 1 capstone-এর chain-এর ওপর একটা layer যোগ করে:
+
+```text
+question -> agent (LangGraph) -> decides: search docs | check order | escalate
+                                       |
+                            search docs: retriever (multi-source) -> model -> answer
+                            check order: mock order-status tool -> model -> answer
+                            escalate:    hand off, with the conversation so far
+```
+
+<Cite n={1} /> Multi-source retrieval মানে retriever একাধিক collection-এ query করে — knowledge base, product docs, FAQ — আর ফলাফল মিশায়, যা একটা নতুন ব্যর্থতা মোড নিয়ে আসে যা একক-উৎস Phase 1 capstone-এর কখনো ছিল না: দুটো উৎস একমত না হওয়া, বা একটা উৎসের chunk অন্য উৎসের একটা বেশি প্রাসঙ্গিক chunk-কে ছাড়িয়ে যাওয়া <Cite n={3} />।
+
+Mock order-status tool বিশেষভাবে এজন্য আছে যাতে agent-এর tool-use সিদ্ধান্ত একটা real backend ছাড়াই টেস্ট করা যায়: এটা একটা স্থির order state সেট ফেরত দেয়, আর test suite-এর কাজ নিশ্চিত করা agent এটা শুধু তখনই কল করে যখন প্রশ্নটা আসলেই একটা order সম্পর্কে, আর কথোপকথন থেকে বের করা সঠিক order id এটাকে পাঠায়।
+
+</Layman>
+<Bangla>
+
+Architecture Phase 1 capstone-এর chain-এর ওপর একটা layer যোগ করে:
+
+```text
+question -> agent (LangGraph) -> decides: search docs | check order | escalate
+                                       |
+                            search docs: retriever (multi-source) -> model -> answer
+                            check order: mock order-status tool -> model -> answer
+                            escalate:    hand off, with the conversation so far
+```
+
+<Cite n={1} /> Multi-source retrieval মানে retriever একাধিক collection-এ query করে — knowledge base, product docs, FAQ — আর ফলাফল মিশায়, যা একটা নতুন ব্যর্থতা মোড নিয়ে আসে যা একক-উৎস Phase 1 capstone-এর কখনো ছিল না: দুটো উৎস একমত না হওয়া, বা একটা উৎসের chunk অন্য উৎসের একটা বেশি প্রাসঙ্গিক chunk-কে ছাড়িয়ে যাওয়া <Cite n={3} />।
+
+Mock order-status tool বিশেষভাবে এজন্য আছে যাতে agent-এর tool-use সিদ্ধান্ত একটা real backend ছাড়াই টেস্ট করা যায়: এটা একটা স্থির order state সেট ফেরত দেয়, আর test suite-এর কাজ নিশ্চিত করা agent এটা শুধু তখনই কল করে যখন প্রশ্নটা আসলেই একটা order সম্পর্কে, আর কথোপকথন থেকে বের করা সঠিক order id এটাকে পাঠায়।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+A LangGraph agent with three branches <Cite n={1} />:
+
+```python
+from langgraph.graph import StateGraph, END
+
+def route(state: dict) -> str:
+    if "order" in state["question"].lower() and extract_order_id(state["question"]):
+        return "check_order"
+    if state.get("requires_human"):
+        return "escalate"
+    return "search_docs"
+
+graph = StateGraph(dict)
+graph.add_node("search_docs", search_docs_node)
+graph.add_node("check_order", check_order_node)
+graph.add_node("escalate", escalate_node)
+graph.set_conditional_entry_point(route, {
+    "search_docs": "search_docs", "check_order": "check_order", "escalate": "escalate",
+})
+for node in ("search_docs", "check_order", "escalate"):
+    graph.add_edge(node, END)
+agent = graph.compile()
+```
+
+Multi-source retrieval merging three collections <Cite n={3} />:
+
+```python
+def search_docs_node(state: dict) -> dict:
+    hits = []
+    for collection in (knowledge_base, product_docs, faq):
+        hits += collection.query(query_texts=[state["question"]], n_results=3)["documents"][0]
+    return {**state, "context": hits, "answer": generate(state["question"], hits)}
+```
+
+A test of the routing decision itself, before any model call:
+
+```python
+ROUTING_CASES = [
+    ("Where is order #4821?", "check_order"),
+    ("What is your return policy?", "search_docs"),
+    ("I want to speak to a manager, this is unacceptable.", "escalate"),
+]
+
+def test_the_agent_routes_to_the_correct_branch(question, expected_branch):
+    assert route({"question": question}) == expected_branch
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Test the routing function directly, separately from the full agent run; it is cheap and it is where most decision bugs live.
+- Keep the mock order-status tool deterministic, with a fixed, documented set of order ids and states, so a test failure is never "the mock data changed".
+- Log which branch the agent took on every real call, from the first day of testing, not added later when a routing bug is suspected.
+</Callout>
+
+</Technical>
+<Layman>
+
+তিনটা শাখা সহ একটা LangGraph agent <Cite n={1} />:
+
+```python
+from langgraph.graph import StateGraph, END
+
+def route(state: dict) -> str:
+    if "order" in state["question"].lower() and extract_order_id(state["question"]):
+        return "check_order"
+    if state.get("requires_human"):
+        return "escalate"
+    return "search_docs"
+
+graph = StateGraph(dict)
+graph.add_node("search_docs", search_docs_node)
+graph.add_node("check_order", check_order_node)
+graph.add_node("escalate", escalate_node)
+graph.set_conditional_entry_point(route, {
+    "search_docs": "search_docs", "check_order": "check_order", "escalate": "escalate",
+})
+for node in ("search_docs", "check_order", "escalate"):
+    graph.add_edge(node, END)
+agent = graph.compile()
+```
+
+তিনটা collection মিশিয়ে Multi-source retrieval <Cite n={3} />:
+
+```python
+def search_docs_node(state: dict) -> dict:
+    hits = []
+    for collection in (knowledge_base, product_docs, faq):
+        hits += collection.query(query_texts=[state["question"]], n_results=3)["documents"][0]
+    return {**state, "context": hits, "answer": generate(state["question"], hits)}
+```
+
+কোনো model call-এর আগে routing সিদ্ধান্তের একটা টেস্ট:
+
+```python
+ROUTING_CASES = [
+    ("Where is order #4821?", "check_order"),
+    ("What is your return policy?", "search_docs"),
+    ("I want to speak to a manager, this is unacceptable.", "escalate"),
+]
+
+def test_the_agent_routes_to_the_correct_branch(question, expected_branch):
+    assert route({"question": question}) == expected_branch
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- routing function সরাসরি টেস্ট করুন, পূর্ণ agent run থেকে আলাদা; এটা সস্তা আর এখানেই বেশিরভাগ সিদ্ধান্ত বাগ থাকে।
+- Mock order-status tool-কে deterministic রাখুন, একটা স্থির, documented order id আর state সেট সহ, যাতে একটা test failure কখনো "mock data বদলেছে" না হয়।
+- প্রতিটা real call-এ agent কোন শাখা নিয়েছে তা লগ করুন, টেস্টিং-এর প্রথম দিন থেকেই, একটা routing bug সন্দেহ হলে পরে যোগ করা নয়।
+</Callout>
+
+</Layman>
+<Bangla>
+
+তিনটা শাখা সহ একটা LangGraph agent <Cite n={1} />:
+
+```python
+from langgraph.graph import StateGraph, END
+
+def route(state: dict) -> str:
+    if "order" in state["question"].lower() and extract_order_id(state["question"]):
+        return "check_order"
+    if state.get("requires_human"):
+        return "escalate"
+    return "search_docs"
+
+graph = StateGraph(dict)
+graph.add_node("search_docs", search_docs_node)
+graph.add_node("check_order", check_order_node)
+graph.add_node("escalate", escalate_node)
+graph.set_conditional_entry_point(route, {
+    "search_docs": "search_docs", "check_order": "check_order", "escalate": "escalate",
+})
+for node in ("search_docs", "check_order", "escalate"):
+    graph.add_edge(node, END)
+agent = graph.compile()
+```
+
+তিনটা collection মিশিয়ে Multi-source retrieval <Cite n={3} />:
+
+```python
+def search_docs_node(state: dict) -> dict:
+    hits = []
+    for collection in (knowledge_base, product_docs, faq):
+        hits += collection.query(query_texts=[state["question"]], n_results=3)["documents"][0]
+    return {**state, "context": hits, "answer": generate(state["question"], hits)}
+```
+
+কোনো model call-এর আগে routing সিদ্ধান্তের একটা টেস্ট:
+
+```python
+ROUTING_CASES = [
+    ("Where is order #4821?", "check_order"),
+    ("What is your return policy?", "search_docs"),
+    ("I want to speak to a manager, this is unacceptable.", "escalate"),
+]
+
+def test_the_agent_routes_to_the_correct_branch(question, expected_branch):
+    assert route({"question": question}) == expected_branch
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- routing function সরাসরি টেস্ট করুন, পূর্ণ agent run থেকে আলাদা; এটা সস্তা আর এখানেই বেশিরভাগ সিদ্ধান্ত বাগ থাকে।
+- Mock order-status tool-কে deterministic রাখুন, একটা স্থির, documented order id আর state সেট সহ, যাতে একটা test failure কখনো "mock data বদলেছে" না হয়।
+- প্রতিটা real call-এ agent কোন শাখা নিয়েছে তা লগ করুন, টেস্টিং-এর প্রথম দিন থেকেই, একটা routing bug সন্দেহ হলে পরে যোগ করা নয়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: testing only the end answer, never the routing decision.** A correct answer reached through the wrong branch (an order lookup that accidentally went through document search) is still a bug.
+
+**Mistake 2: a non-deterministic mock tool.** If the mock order-status tool returns random data, a test failure cannot be told apart from mock noise <Cite n={1} />.
+
+**Mistake 3: no test for source conflict in multi-source retrieval.** Three collections that have never been tested together for a contradicting answer will eventually produce one <Cite n={3} />.
+
+**Mistake 4: treating escalation as a dead end with no test.** The handoff needs to carry the full conversation; a test should confirm the receiving human actually gets that context, not just that the chat ended.
+
+**Mistake 5: building the agent and the test suite in sequence instead of together.** Writing the routing test cases alongside the routing function catches an ambiguous rule before it ships, not after.
+
+</Technical>
+<Layman>
+
+**Mistake ১: শুধু চূড়ান্ত উত্তর টেস্ট করা, কখনো routing সিদ্ধান্ত নয়।** ভুল শাখার মধ্য দিয়ে পৌঁছানো একটা সঠিক উত্তর (একটা order lookup যা দুর্ঘটনাক্রমে document search দিয়ে গেছে) তখনও একটা বাগ।
+
+**Mistake ২: একটা non-deterministic mock tool।** যদি mock order-status tool এলোমেলো data ফেরত দেয়, একটা test failure mock noise থেকে আলাদা করা যায় না <Cite n={1} />।
+
+**Mistake ৩: multi-source retrieval-এ source conflict-এর জন্য কোনো টেস্ট নেই।** তিনটা collection যেগুলো একসাথে বিরোধী উত্তরের জন্য কখনো টেস্ট করা হয়নি শেষ পর্যন্ত একটা তৈরি করবে <Cite n={3} />।
+
+**Mistake ৪: escalation-কে টেস্ট ছাড়া একটা dead end ভাবা।** Handoff-এর পুরো কথোপকথন বহন করা দরকার; একটা টেস্ট নিশ্চিত করা উচিত যে গ্রহণকারী মানুষ আসলেই সেই context পায়, শুধু chat শেষ হয়েছে তা নয়।
+
+**Mistake ৫: agent আর test suite ক্রমানুসারে বানানো, একসাথে নয়।** routing function-এর পাশাপাশি routing test case লেখা ship হওয়ার আগে একটা অস্পষ্ট নিয়ম ধরে, পরে নয়।
+
+</Layman>
+<Bangla>
+
+**ভুল ১: শুধু চূড়ান্ত উত্তর টেস্ট করা, কখনো routing সিদ্ধান্ত নয়।** ভুল শাখার মধ্য দিয়ে পৌঁছানো একটা সঠিক উত্তর (একটা order lookup যা দুর্ঘটনাক্রমে document search দিয়ে গেছে) তখনও একটা বাগ।
+
+**ভুল ২: একটা non-deterministic mock tool।** যদি mock order-status tool এলোমেলো data ফেরত দেয়, একটা test failure mock noise থেকে আলাদা করা যায় না <Cite n={1} />।
+
+**ভুল ৩: multi-source retrieval-এ source conflict-এর জন্য কোনো টেস্ট নেই।** তিনটা collection যেগুলো একসাথে বিরোধী উত্তরের জন্য কখনো টেস্ট করা হয়নি শেষ পর্যন্ত একটা তৈরি করবে <Cite n={3} />।
+
+**ভুল ৪: escalation-কে টেস্ট ছাড়া একটা dead end ভাবা।** Handoff-এর পুরো কথোপকথন বহন করা দরকার; একটা টেস্ট নিশ্চিত করা উচিত যে গ্রহণকারী মানুষ আসলেই সেই context পায়, শুধু chat শেষ হয়েছে তা নয়।
+
+**ভুল ৫: agent আর test suite ক্রমানুসারে বানানো, একসাথে নয়।** routing function-এর পাশাপাশি routing test case লেখা ship হওয়ার আগে একটা অস্পষ্ট নিয়ম ধরে, পরে নয়।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the routing test cases before or alongside the routing function, not after the agent is otherwise complete.
+- Confirm the mock order-status tool is fully deterministic before using it in any test.
+- Build at least one deliberate source-conflict case for the multi-source retriever and confirm the agent handles it sanely.
+- Confirm the escalation branch actually carries the conversation history to the handoff, not just a flag.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the routing test cases before or alongside the routing function, not after the agent is otherwise complete.
+- Confirm the mock order-status tool is fully deterministic before using it in any test.
+- Build at least one deliberate source-conflict case for the multi-source retriever and confirm the agent handles it sanely.
+- Confirm the escalation branch actually carries the conversation history to the handoff, not just a flag.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- agent অন্যথায় সম্পূর্ণ হওয়ার পরে নয়, routing function-এর আগে বা পাশাপাশি routing test case লিখুন।
+- যেকোনো টেস্টে ব্যবহারের আগে mock order-status tool সম্পূর্ণ deterministic তা নিশ্চিত করুন।
+- multi-source retriever-এর জন্য অন্তত একটা ইচ্ছাকৃত source-conflict কেস বানান আর agent সেটা যুক্তিসঙ্গতভাবে সামলায় তা নিশ্চিত করুন।
+- escalation শাখা আসলেই কথোপকথনের ইতিহাস handoff-এ বহন করে, শুধু একটা flag নয়, তা নিশ্চিত করুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Agent layer | The decision-making component on top of a RAG chain that chooses an action |
+| Multi-source retrieval | Querying more than one collection and merging the results |
+| Mock tool | A deterministic stand-in for a real backend, used to test agent tool-use safely |
+| Routing decision | Which branch (search, tool call, escalation) the agent chooses for a question |
+| Escalation | Handing a conversation off to a human, with its context, instead of answering |

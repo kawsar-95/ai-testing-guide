@@ -1,0 +1,471 @@
+export const metadata = { title: 'RAG Testing Fundamentals', description: 'Test a RAG pipeline end to end: retrieval quality, precision and recall, end-to-end faithfulness, and the four failure modes.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-11-01' },
+    { title: 'What is Ragas?', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/', accessed: '2026-11-01' },
+    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
+  ],
+}
+
+# RAG Testing Fundamentals
+
+A RAG system has two halves that fail differently. One finds the wrong passages. The other finds the right passages and still says something the passages do not say.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+RAG is retrieval-augmented generation: the model is given the material at answer time instead of relying on what it memorised in training <Cite n={1} />. The pipeline has three parts, and each has its own test file:
+
+```text
+question -> retriever -> context -> prompt -> model -> answer
+             ^^^^^^^^           ^^^^^
+             retrieval         generation
+```
+
+**Retrieval quality** is the first thing to test, because a bad retrieval makes the generation test meaningless. You need a set of questions where you know which passages should be found. Then you measure:
+
+- **Precision@k**: of the k passages returned, how many are actually relevant? Low precision means the model is reading irrelevant text, which is both a quality problem and a cost problem.
+- **Recall@k**: of all the relevant passages, how many did the retriever find? Low recall means the answer is missing information, and the model can make something up to fill the gap.
+- **Context precision**: a Ragas metric for the order of the results: are the relevant chunks ranked above the irrelevant ones <Cite n={3} />?
+
+**End-to-end quality** is the second. Does the answer match the context that was given? The Ragas metric catalogue keeps these apart: Context Precision and Context Recall measure the retriever, and Faithfulness and Response Relevancy measure the answer <Cite n={3} />. Ragas says its aim is to move from "vibe checks" to systematic evaluation loops <Cite n={2} />.
+
+The four failure modes to look for:
+
+1. **Retrieval failure.** The right passage was never found.
+2. **Context mismatch.** The right passage was found but the prompt did not include it.
+3. **Generation failure.** The passage was included and the answer ignored it.
+4. **Retrieval gap.** No passage contains the answer, and the model invented one instead of saying it does not know.
+
+Numbers 1 and 2 are fixed in the retriever and the prompt. Number 3 is fixed in the prompt and the model. Number 4 is fixed in the knowledge base, and it is often misfiled as a model bug.
+
+</Technical>
+<Layman>
+
+RAG means the model gets the right material at the moment it answers, instead of relying only on what it learned in training <Cite n={1} />. A RAG system has two halves: a search part (the retriever) that finds passages, and a writing part (the model) that answers from them.
+
+Test the search part first. If it brings back the wrong passages, the answer test tells you nothing. Make a list of questions where you already know which passages should come back. Then measure:
+
+- **Precision@k**: of the k passages that came back, how many were useful?
+- **Recall@k**: of all the useful passages, how many came back? Low recall means missing facts, and the model can fill the gap with made-up text.
+- **Context precision**: a Ragas score for the order of the results: are the useful passages near the top <Cite n={3} />?
+
+Then test the writing part: does the answer stick to the passages? Ragas keeps these scores apart, some for the search part and some for the answer <Cite n={3} />.
+
+There are four ways it goes wrong. The right passage was not found. It was found but not put into the prompt. It was in the prompt but the answer ignored it. Or no passage had the answer, and the model made one up. The last one is fixed in the knowledge base, not in the model.
+
+</Layman>
+<Bangla>
+
+RAG মানে retrieval-augmented generation: model training-এর সময় মুখস্থ করা বস্তুর বদলে উত্তর দেওয়ার সময় material পায় <Cite n={1} />। pipeline-এর তিনটা অংশ আছে, আর প্রতিটার নিজস্ব টেস্ট ফাইল দরকার:
+
+```text
+question -> retriever -> context -> prompt -> model -> answer
+             ^^^^^^^^           ^^^^^
+             retrieval         generation
+```
+
+**Retrieval quality** আগে টেস্ট করতে হয়, কারণ খারাপ retrieval-এর পরে generation-এর টেস্ট মানহীন। একটা প্রশ্নের তালিকা দরকার যেগুলোর উত্তরে কোন অংশ থাকা উচিত সেটা আপনি জানেন। তারপর মাপুন:
+
+- **Precision@k**: ফেরত পাওয়া kটির মধ্যে কতগুলো আসলেই প্রাসঙ্গিক? precision কম হলে model অপ্রাসঙ্গিক লেখা পড়ছে, যেটা মানের সমস্যা আর খরচের সমস্যা দুটোই।
+- **Recall@k**: সব প্রাসঙ্গিক অংশের কতগুলো পাওয়া গেল? recall কম হলে তথ্য অনুপস্থিত, আর model ফাঁকটা বানিয়ে পূরণ করতে পারে।
+- **Context precision**: ফলাফলের ক্রম মাপার একটা Ragas metric: প্রাসঙ্গিক chunk-গুলো কি অপ্রাসঙ্গিকগুলোর আগে আছে <Cite n={3} />?
+
+**End-to-end quality** হলো দ্বিতীয়টা। উত্তর কি দেওয়া context-এর সাথে মেলে? Ragas-এর metric তালিকা এগুলো আলাদা রাখে: Context Precision আর Context Recall মাপে retriever, আর Faithfulness ও Response Relevancy মাপে উত্তর <Cite n={3} />। Ragas বলে, এর লক্ষ্য হলো "vibe check" থেকে পদ্ধতিগত evaluation loop-এ যাওয়া <Cite n={2} />।
+
+চারটা failure mode খুঁজুন:
+
+1. **Retrieval failure।** সঠিক অংশ কখনো পাওয়া যায়নি।
+2. **Context mismatch।** সঠিক অংশ পাওয়া গেছে কিন্তু prompt-এ যায়নি।
+3. **Generation failure।** অংশ যুক্ত হয়েছে আর উত্তর তা উপেক্ষা করেছে।
+4. **Retrieval gap।** কোনো অংশেই উত্তর নেই, আর model "জানি না" বলার বদলে একটা উত্তর বানিয়ে দিল।
+
+১ আর ২ ঠিক হয় retriever আর prompt-এ। ৩ ঠিক হয় prompt আর model-এ। ৪ ঠিক হয় knowledge base-এ, আর এটাকেই প্রায়ই ভুল করে model-এর বাগ হিসেবে লেখা হয়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+Testing a RAG system means testing two components that have a contract between them. The retriever promises: "here are the passages that answer this question." The generator promises: "my answer uses only these passages." Each promise has its own test.
+
+**Retrieval test.** You need a labelled set: a question, and the ids of the passages that should be returned. That set is the ground truth. Then:
+
+```python
+def test_retrieval_finds_the_right_chunks(dataset, retriever):
+    for case in dataset:
+        retrieved = retriever.search(case.question, k=5)
+        expected = set(case.relevant_chunk_ids)
+        found = set(retrieved)
+        recall = len(expected & found) / len(expected)
+        precision = len(expected & found) / len(found)
+        assert recall >= 0.9, f"{case.id}: recall {recall:.2f}"
+        assert precision >= 0.6, f"{case.id}: precision {precision:.2f}"
+```
+
+The thresholds are a decision, not a fact. A high recall and a low precision is often the right trade for a system that can afford a long context; a low recall is always a bug, because the information simply is not there.
+
+**End-to-end test.** The answer must be supported by the retrieved context. The Ragas metric set splits this: Faithfulness checks the answer against the retrieved context, and Response Relevancy checks it against the question <Cite n={3} />. Faithfulness is the one that catches a hallucination, and it uses an LLM as the judge.
+
+**The failure-mode triage.** When an answer is wrong, the test that tells you where to look is the one that separates the four failure modes:
+
+```text
+was the right passage retrieved?   no  -> retrieval failure (fix the retriever)
+was it in the prompt?              no  -> context mismatch (fix the prompt builder)
+does the answer match it?          no  -> generation failure (fix the prompt)
+did any passage contain it?       no  -> retrieval gap (fix the knowledge base)
+```
+
+**Retrieval gap** deserves its own test, because it is the one that is easy to miss and expensive in production. The question asks about something the knowledge base does not cover. The correct behaviour is to say so. The common behaviour is to answer from the model's memory, which is the failure RAG is meant to reduce: the RAG paper reports more factual answers when the model is given retrieved passages <Cite n={1} />.
+
+The final piece is a **cost check**. A retriever that returns five long passages instead of two short ones inflates the token count on every call. That is a quality issue, because more context is more room to be unfaithful, and it is a money issue at the same time.
+
+</Technical>
+<Layman>
+
+Think of two promises. The retriever promises: "these passages answer the question." The model promises: "my answer uses only these passages." Test each promise on its own.
+
+For the retriever, keep a labelled list: each question with the ids of the passages that should come back. Measure recall and precision against it. The pass marks are a team decision, not a fact.
+
+For the answer, check that the passages support it. Ragas has a Faithfulness score for this, and a separate score for whether the answer fits the question <Cite n={3} />. Faithfulness is the one that catches made-up facts, and it uses an LLM as the judge.
+
+When an answer is wrong, ask in order: was the right passage found? Was it in the prompt? Does the answer match it? Did any passage have the answer at all? The first "no" tells you what to fix.
+
+Always test a question that the knowledge base cannot answer. The right reply is "I don't know". RAG is meant to make answers more factual <Cite n={1} />, so an answer from the model's memory is a failure. Also watch the size of the retrieved text: more text costs more and gives the model more room to drift.
+
+</Layman>
+<Bangla>
+
+একটা RAG সিস্টেম টেস্ট করা মানে দুটো অংশ টেস্ট করা, যাদের মধ্যে একটা চুক্তি আছে। retriever প্রতিশ্রুতি দেয়: "এই প্রশ্নের উত্তর দেওয়ার অংশগুলো এখানে।" generator প্রতিশ্রুতি দেয়: "আমার উত্তর শুধু এই অংশগুলো ব্যবহার করে।" প্রতিটি প্রতিশ্রুতির নিজস্ব টেস্ট আছে।
+
+**Retrieval test।** লেবেল করা একটা সেট দরকার: প্রশ্ন, আর যে অংশগুলো ফেরত আসার কথা সেগুলোর id। ওটাই সত্যের উৎস। তারপর:
+
+```python
+def test_retrieval_finds_the_right_chunks(dataset, retriever):
+    for case in dataset:
+        retrieved = retriever.search(case.question, k=5)
+        expected = set(case.relevant_chunk_ids)
+        found = set(retrieved)
+        recall = len(expected & found) / len(expected)
+        precision = len(expected & found) / len(found)
+        assert recall >= 0.9, f"{case.id}: recall {recall:.2f}"
+        assert precision >= 0.6, f"{case.id}: precision {precision:.2f}"
+```
+
+Threshold দুটো একটা সিদ্ধান্ত, কোনো তথ্য নয়। বেশি recall আর কম precision অনেক সময়ই সঠিক বিনিময়, যদি সিস্টেম লম্বা context সামলাতে পারে। কম recall সবসময় বাগ, কারণ তথ্যটা সেখানেই নেই।
+
+**End-to-end test।** উত্তর retrieved context দিয়ে সমর্থিত হতে হবে। Ragas-এর metric সেট এটা ভাগ করে: Faithfulness উত্তরকে retrieved context-এর সাথে মেলায়, আর Response Relevancy উত্তরকে প্রশ্নের সাথে মেলায় <Cite n={3} />। Faithfulness-ই hallucination ধরে, আর এটা judge হিসেবে একটা LLM ব্যবহার করে।
+
+**Failure mode triage।** উত্তর ভুল হলে কোথায় তাকাতে হবে সেটা বলে দেয় যে টেস্টটি চারটা failure mode আলাদা করে:
+
+```text
+was the right passage retrieved?   no  -> retrieval failure (fix the retriever)
+was it in the prompt?              no  -> context mismatch (fix the prompt builder)
+does the answer match it?          no  -> generation failure (fix the prompt)
+did any passage contain it?       no  -> retrieval gap (fix the knowledge base)
+```
+
+**Retrieval gap**-এর নিজস্ব একটা টেস্ট দরকার, কারণ এটাই সহজে বাদ পড়ে আর production-এ দামি। প্রশ্নটা এমন কিছু নিয়ে, যেটা knowledge base-এ নেই। সঠিক আচরণ হলো বলা যে জানা নেই। সাধারণ আচরণ হলো model-এর memory থেকে উত্তর দেওয়া। RAG ঠিক এই ব্যর্থতাই কমাতে চায়: RAG paper জানায়, retrieved অংশ পেলে model আরও তথ্যনিষ্ঠ উত্তর দেয় <Cite n={1} />।
+
+শেষ অংশ হলো **cost check**। যে retriever দুটো ছোট অংশের বদলে পাঁচটা লম্বা অংশ ফেরত দেয়, সে প্রতিটি call-এ token বাড়ায়। এটা মানের সমস্যা, কারণ বেশি context মানে বেশি সুযোগ অসমর্থিত কথা বলার, আর একই সাথে টাকার সমস্যা।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Start with a labelled retrieval set. Write it as a file, because it is the ground truth for every other test:
+
+```python
+# tests/ai/fixtures/retrieval_cases.py
+CASES = [
+    {
+        "id": "return-window",
+        "question": "How long do I have to return a laptop?",
+        "relevant_chunk_ids": ["returns/30-day-window"],
+        "acceptable_chunk_ids": ["returns/exceptions"],
+    },
+    {
+        "id": "refund-timeline",
+        "question": "When do I get my money back after returning?",
+        "relevant_chunk_ids": ["returns/refund-timeline"],
+        "acceptable_chunk_ids": [],
+    },
+]
+```
+
+Note the two lists. `relevant_chunk_ids` are the chunks that must be there. `acceptable_chunk_ids` are the ones that are fine to be there too. Without the second list, a retriever that returns five extra chunks scores badly for precision while actually being fine.
+
+Then the retrieval test and the end-to-end test as separate files:
+
+```python
+# tests/ai/test_retrieval.py
+def test_retrieval_quality(retriever):
+    for case in CASES:
+        found = set(retriever.search(case["question"], k=5))
+        expected = set(case["relevant_chunk_ids"])
+        assert expected <= found, (
+            f"{case['id']}: missing {expected - found}"
+        )
+```
+
+```python
+# tests/ai/test_rag_answer.py
+from openai import AsyncOpenAI
+from ragas.llms import llm_factory
+from ragas.metrics.collections import Faithfulness
+
+judge = llm_factory("gpt-4o-mini", client=AsyncOpenAI())
+faithfulness = Faithfulness(llm=judge)
+
+
+def test_answer_is_faithful_to_the_retrieved_context(rag_chain):
+    for case in CASES:
+        result = rag_chain.answer(case["question"])
+        score = faithfulness.score(
+            user_input=case["question"],
+            response=result.text,
+            retrieved_contexts=[chunk.text for chunk in result.chunks],
+        )
+        assert score.value > 0.9, case["id"]
+```
+
+And the retrieval-gap test, which is the one that catches the expensive failure:
+
+```python
+def test_says_it_does_not_know_when_the_base_has_no_answer(rag_chain):
+    result = rag_chain.answer("What is your policy for returning a yacht?")
+    assert "don't have" in result.lower() or "not covered" in result.lower()
+```
+
+Finally, check the token cost of the retrieval, because it is the number that scales:
+
+```python
+def test_retrieval_does_not_bloat_the_context(retriever):
+    chunks = retriever.search("How long do I have to return a laptop?", k=5)
+    total = sum(count_tokens(chunk.text) for chunk in chunks)
+    assert total < 800, f"retrieval used {total} tokens"
+```
+
+That last assertion turns a cost problem into a test failure you can see in CI.
+
+</Technical>
+<Layman>
+
+Start with a file of test questions. For each question, list the passage ids that must come back, and a second list of ids that are fine to come back too. Without the second list, a retriever that returns a few harmless extra passages gets a bad precision score for no reason.
+
+Then write separate tests:
+
+- a retrieval test: the must-have ids are in the results;
+- an answer test: the Ragas Faithfulness score is above your pass mark;
+- an "I don't know" test: a question about something the knowledge base does not cover (the example asks about returning a yacht) gets a reply that says it is not covered;
+- a cost test: the retrieved passages stay under a token limit (800 in the example).
+
+The last test turns a cost problem into a red test in CI.
+
+</Layman>
+<Bangla>
+
+লেবেল করা একটা retrieval set দিয়ে শুরু করুন। এটা একটা ফাইলে লিখুন, কারণ এটাই বাকি সব টেস্টের সত্যের উৎস:
+
+```python
+# tests/ai/fixtures/retrieval_cases.py
+CASES = [
+    {
+        "id": "return-window",
+        "question": "How long do I have to return a laptop?",
+        "relevant_chunk_ids": ["returns/30-day-window"],
+        "acceptable_chunk_ids": ["returns/exceptions"],
+    },
+    {
+        "id": "refund-timeline",
+        "question": "When do I get my money back after returning?",
+        "relevant_chunk_ids": ["returns/refund-timeline"],
+        "acceptable_chunk_ids": [],
+    },
+]
+```
+
+দুটো তালিকা খেয়াল করুন। `relevant_chunk_ids` হলো যেগুলো অবশ্যই থাকতে হবে। `acceptable_chunk_ids` হলো যেগুলো থাকলেও ঠিক আছে। দ্বিতীয় তালিকা ছাড়া, পাঁচটা বাড়তি অংশ ফেরত দেওয়া retriever precision-এর জন্য খারাপ স্কোর পাবে যদিও আসলে ঠিকই আছে।
+
+তারপর retrieval আর end-to-end টেস্ট আলাদা ফাইলে:
+
+```python
+# tests/ai/test_retrieval.py
+def test_retrieval_quality(retriever):
+    for case in CASES:
+        found = set(retriever.search(case["question"], k=5))
+        expected = set(case["relevant_chunk_ids"])
+        assert expected <= found, (
+            f"{case['id']}: missing {expected - found}"
+        )
+```
+
+```python
+# tests/ai/test_rag_answer.py
+from openai import AsyncOpenAI
+from ragas.llms import llm_factory
+from ragas.metrics.collections import Faithfulness
+
+judge = llm_factory("gpt-4o-mini", client=AsyncOpenAI())
+faithfulness = Faithfulness(llm=judge)
+
+
+def test_answer_is_faithful_to_the_retrieved_context(rag_chain):
+    for case in CASES:
+        result = rag_chain.answer(case["question"])
+        score = faithfulness.score(
+            user_input=case["question"],
+            response=result.text,
+            retrieved_contexts=[chunk.text for chunk in result.chunks],
+        )
+        assert score.value > 0.9, case["id"]
+```
+
+আর retrieval-gap টেস্ট, যেটাই দামি ব্যর্থতাটা ধরে:
+
+```python
+def test_says_it_does_not_know_when_the_base_has_no_answer(rag_chain):
+    result = rag_chain.answer("What is your policy for returning a yacht?")
+    assert "don't have" in result.lower() or "not covered" in result.lower()
+```
+
+শেষে, retrieval-এর token খরচ যাচাই করুন, কারণ এটাই স্কেলে যাওয়া সংখ্যা:
+
+```python
+def test_retrieval_does_not_bloat_the_context(retriever):
+    chunks = retriever.search("How long do I have to return a laptop?", k=5)
+    total = sum(count_tokens(chunk.text) for chunk in chunks)
+    assert total < 800, f"retrieval used {total} tokens"
+```
+
+শেষ assertion-টা খরচের সমস্যাকে এমন একটা টেস্ট ব্যর্থতায় বদলে দেয় যেটা CI-তে দেখা যায়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: testing only the answer.** If the answer is wrong, the failure could be in either half. Test the retrieval separately <Cite n={3} />.
+
+**Mistake 2: no labelled retrieval set.** Without known-relevant chunks you cannot measure precision or recall at all.
+
+**Mistake 3: measuring precision without an acceptable list.** A retriever that returns the right chunk plus three harmless ones is penalised for something it did right.
+
+**Mistake 4: no retrieval-gap test.** The system answers questions the knowledge base cannot answer, from memory. RAG is meant to make answers more factual, and this test checks that it does <Cite n={1} />.
+
+**Mistake 5: ignoring the token cost of the context.** More retrieved text is more latency, more money, and more room for the model to be unfaithful.
+
+**Mistake 6: assuming a low recall is a retriever bug.** Sometimes the chunking split the answer across two chunks and neither contains it. That is a chunking problem, and the fix is overlap or a different split.
+
+</Technical>
+<Layman>
+
+**Mistake 1: testing only the answer.** A wrong answer can come from either half. Test the search part on its own too <Cite n={3} />.
+
+**Mistake 2: no labelled question list.** Without it you cannot measure precision or recall.
+
+**Mistake 3: no list of acceptable extras.** A retriever that returns the right passage plus three harmless ones gets punished for doing well.
+
+**Mistake 4: no "I don't know" test.** The system answers from memory when the knowledge base has no answer. RAG is meant to make answers more factual <Cite n={1} />, and this test checks that.
+
+**Mistake 5: ignoring how much text is retrieved.** More text means slower answers, higher cost, and more room for the model to drift.
+
+**Mistake 6: blaming the retriever for every low recall.** Sometimes the chunking split the answer across two chunks, and neither chunk holds all of it. Then the fix is in the chunking.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: শুধু উত্তর টেস্ট করা।** উত্তর ভুল হলে ব্যর্থতা যেকোনো অর্ধেকে হতে পারে। retrieval আলাদা করে টেস্ট করুন <Cite n={3} />।
+
+**ভুল ২: লেবেল করা retrieval set নেই।** কোন অংশ প্রাসঙ্গিক সেটা না জানলে precision বা recall মাপাই যায় না।
+
+**ভুল ৩: acceptable তালিকা ছাড়া precision মাপা।** সঠিক অংশের সাথে তিনটা নিরপরাধ অংশ ফেরত দেওয়া retriever কিছু ভুল করেনি, তবু বাদ পড়ে।
+
+**ভুল ৪: retrieval-gap টেস্ট নেই।** সিস্টেম knowledge base-এর উত্তর দিতে পারে না এমন প্রশ্নের উত্তর memory থেকে দেয়। RAG-এর উদ্দেশ্য উত্তরকে আরও তথ্যনিষ্ঠ করা, আর এই টেস্ট যাচাই করে সেটা হচ্ছে কি না <Cite n={1} />।
+
+**ভুল ৫: context-এর token খরচ উপেক্ষা করা।** বেশি retrieved text মানে বেশি latency, বেশি টাকা, আর model অসমর্থিত কথা বলার বেশি সুযোগ।
+
+**ভুল ৬: কম recall-কে retriever-এর বাগ ভাবা।** কখনো কখনো chunking উত্তরটা দুটো অংশে ভাগ করে দিয়েছিল আর কোনো অংশেই পুরো উত্তর ছিল না। সেটা chunking-এর সমস্যা, আর সমাধান overlap বা অন্য ভাগ।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the labelled retrieval set in the repo and grow it with every real question that was answered badly.
+- Write the expected behaviour for a question the base cannot answer. If the team has not agreed on it, the model will guess and the test will be argued about.
+- Assert on the ids of the retrieved chunks, not on their text. Text changes when the knowledge base is re-indexed; ids do not.
+- Log the retrieved chunk ids with every answer in the eval report. Then a wrong answer is one click from the passage that caused it.
+- Re-run the retrieval test whenever the chunking strategy, the embedding model, or the embedding dimension changes. Those three break retrieval more often than the retriever code does.
+- Track the token cost of the retrieved context as a metric next to the quality scores, not as an afterthought.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the labelled retrieval set in the repo and grow it with every real question that was answered badly.
+- Write the expected behaviour for a question the base cannot answer. If the team has not agreed on it, the model will guess and the test will be argued about.
+- Assert on the ids of the retrieved chunks, not on their text. Text changes when the knowledge base is re-indexed; ids do not.
+- Log the retrieved chunk ids with every answer in the eval report. Then a wrong answer is one click from the passage that caused it.
+- Re-run the retrieval test whenever the chunking strategy, the embedding model, or the embedding dimension changes. Those three break retrieval more often than the retriever code does.
+- Track the token cost of the retrieved context as a metric next to the quality scores, not as an afterthought.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- লেবেল করা retrieval set-টা repo-তে রাখুন আর প্রতিটা বাস্তব প্রশ্ন যেটার উত্তর খারাপ হয়েছিল তা দিয়ে সেটা বাড়ান।
+- যে প্রশ্নের উত্তর knowledge base দিতে পারে না, তার প্রত্যাশিত আচরণ লিখুন। দল একমত না হলে model অনুমান করবে আর টেস্ট নিয়ে বিতর্ক হবে।
+- retrieved chunk-এর text-এ নয়, id-তে assert করুন। knowledge base re-index হলে text বদলায়, id বদলায় না।
+- eval report-এ প্রতিটি উত্তরের সাথে retrieved chunk id লিখে রাখুন। তাহলে ভুল উত্তর থেকে সমস্যার অংশে এক ক্লিকে পৌঁছানো যায়।
+- chunking strategy, embedding model, বা embedding dimension বদলালে retrieval টেস্ট আবার চালান। এই তিনটা retriever code-এর চেয়ে বেশি বার retrieval ভাঙে।
+- retrieved context-এর token খরচকে মানের স্কোরের পাশেই একটা metric হিসেবে ট্র্যাক করুন, পরে ভাবার বিষয় হিসেবে নয়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| RAG | Retrieval-augmented generation: the model is given the material at answer time |
+| Retriever | The component that finds the passages relevant to the question |
+| Precision@k | Of the k passages returned, how many are actually relevant |
+| Recall@k | Of all the relevant passages, how many the retriever found |
+| Context precision | A Ragas metric: whether the relevant chunks are ranked above the irrelevant ones |
+| Faithfulness | Whether the answer is supported by the retrieved context |
+| Retrieval failure | The right passage was never found |
+| Context mismatch | The right passage was found but never made it into the prompt |
+| Generation failure | The passage was included and the answer ignored it |
+| Retrieval gap | No passage contains the answer, and the model invented one |

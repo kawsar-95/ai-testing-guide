@@ -36,5 +36,6 @@ export const DASHBOARD_UI_BN: Bn<typeof DASHBOARD_UI> = {
     "ai-concepts": "AI Concepts",
     "agent-memory": "Agent Memory",
     "ai-agents": "AI Agents",
+    "ai-ml-testing": "AI/ML Testing",
   },
 };

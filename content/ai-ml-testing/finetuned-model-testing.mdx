@@ -1,0 +1,440 @@
+export const metadata = { title: 'Fine-Tuned Model Testing', description: 'Test a fine-tuned model: did the task improve, what did it forget, and how do you compare it with the base model?' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'On the Catastrophic Forgetting of Large Language Models', publisher: 'arXiv', url: 'https://arxiv.org/abs/2302.12817', accessed: '2026-11-01' },
+    { title: 'Challenges in evaluating AI systems', publisher: 'Anthropic (Research)', url: 'https://www.anthropic.com/research/evaluating-ai-systems', accessed: '2026-11-01' },
+    { title: 'MTEB Massive Text Embedding Benchmark', publisher: 'arXiv', url: 'https://arxiv.org/abs/2210.07316', accessed: '2026-11-01' },
+  ],
+}
+
+# Fine-Tuned Model Testing
+
+Fine-tuning changes a model on purpose. Testing it means measuring what got better and what got worse, because the second one is easy to miss.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A fine-tuned model is a base model whose weights were changed on a set of examples. The change is meant to make the model better at one thing: a specific format, a specific tone, a specific domain.
+
+The testing problem is that **the base model was not broken**. It was general. So there is no failing test to write; there is a comparison to make. The comparison has three parts:
+
+1. **The target task.** The fine-tune should improve here. This is the reason the fine-tune exists.
+2. **The general capability.** The fine-tune should not damage it. The failure mode here is called **catastrophic forgetting**: the model becomes excellent at the target and loses abilities it had before. The research on this describes how the effect depends on how close the fine-tuning data is to the original training data <Cite n={1} />.
+3. **The cost.** A fine-tuned model usually costs more per query than the base model it replaces, because the serving is specialised.
+
+The evaluation design follows from the three parts. You need a **target dataset** that the fine-tune was not trained on, a **general dataset** that measures the abilities you care about, and you need to run both against both models. The eval must be designed before you look at any score, because a fine-tune almost always looks better on the data it was trained on and that comparison is meaningless <Cite n={2} />.
+
+And the third part is the one teams skip: a fine-tune is justified when it makes the target task cheaper or better **enough** to pay for the lost general capability and the serving cost. That is a number, not a feeling.
+
+</Technical>
+<Layman>
+
+fine-tuned model হলো base model যার weight বদলানো হয়েছে একটা উদাহরণের set দিয়ে। পরিবর্তনটার উদ্দেশ্য একটা নির্দিষ্ট জিনিসে model-কে ভালো করা: একটা নির্দিষ্ট format, একটা নির্দিষ্ট tone, একটা নির্দিষ্ট domain।
+
+টেস্টিং-এর সমস্যা হলো **base model ভাঙা ছিল না**। সে সাধারণ ছিল। তাই লেখার কোনো টেস্ট নেই; আছে একটা তুলনা। তুলনার তিনটা অংশ:
+
+1. **Target task।** fine-tune-এ এটা উন্নত হওয়ার কথা। এটাই fine-tune করার কারণ।
+2. **সাধারণ সক্ষমতা।** fine-tune-এ এটা নষ্ট হওয়ার কথা নয়। এই ব্যর্থতার ধরনকে বলে **catastrophic forgetting**: model target-এ অসাধারণ হয়ে যায় আর আগের সক্ষমতা হারায়। এই গবেষণাটি বলে ফলাফল নির্ভর করে fine-tuning data আসল training data-এর কতটা কাছাকাছি <Cite n={1} />।
+3. **খরচ।** fine-tuned model সাধারণত base model-এর চেয়ে প্রতি query-তে বেশি খরচ করে, কারণ serving-টা বিশেষায়িত।
+
+তিনটা অংশ থেকেই evaluation design বের হয়। লাগবে একটা **target dataset** যেটায় fine-tune train হয়নি, একটা **general dataset** যেটা আপনার দক্ষতা মাপে, আর দুটো dataset দুটো model-এর ওপরই চালাতে হবে। কোনো স্কোর দেখার আগে eval ডিজাইন করতে হবে, কারণ fine-tune train করা data-তে প্রায় সবসময় ভালো দেখায়, আর সেই তুলনা অর্থহীন <Cite n={2} />।
+
+আর তৃতীয় অংশটাই দলগুলো বাদ দেয়: fine-tune তখনই justified যখন target task-কে যথেষ্ট ভালো বা সস্তা করে, যা হারানো সাধারণ সক্ষমতা আর serving খরচের দাম পুষিয়ে দেয়। এটা একটা সংখ্যা, অনুভূতি নয়।
+
+</Layman>
+<Bangla>
+
+fine-tuned model হলো base model যার weight বদলানো হয়েছে একটা উদাহরণের set দিয়ে। পরিবর্তনটার উদ্দেশ্য একটা নির্দিষ্ট জিনিসে model-কে ভালো করা: একটা নির্দিষ্ট format, একটা নির্দিষ্ট tone, একটা নির্দিষ্ট domain।
+
+টেস্টিং-এর সমস্যা হলো **base model ভাঙা ছিল না**। সে সাধারণ ছিল। তাই লেখার কোনো টেস্ট নেই; আছে একটা তুলনা। তুলনার তিনটা অংশ:
+
+1. **Target task।** fine-tune-এ এটা উন্নত হওয়ার কথা। এটাই fine-tune করার কারণ।
+2. **সাধারণ সক্ষমতা।** fine-tune-এ এটা নষ্ট হওয়ার কথা নয়। এই ব্যর্থতার ধরনকে বলে **catastrophic forgetting**: model target-এ অসাধারণ হয়ে যায় আর আগের সক্ষমতা হারায়। এই গবেষণাটি বলে ফলাফল নির্ভর করে fine-tuning data আসল training data-এর কতটা কাছাকাছি <Cite n={1} />।
+3. **খরচ।** fine-tuned model সাধারণত base model-এর চেয়ে প্রতি query-তে বেশি খরচ করে, কারণ serving-টা বিশেষায়িত।
+
+তিনটা অংশ থেকেই evaluation design বের হয়। লাগবে একটা **target dataset** যেটায় fine-tune train হয়নি, একটা **general dataset** যেটা আপনার দক্ষতা মাপে, আর দুটো dataset দুটো model-এর ওপরই চালাতে হবে। কোনো স্কোর দেখার আগে eval ডিজাইন করতে হবে, কারণ fine-tune train করা data-তে প্রায় সবসময় ভালো দেখায়, আর সেই তুলনা অর্থহীন <Cite n={2} />।
+
+আর তৃতীয় অংশটাই দলগুলো বাদ দেয়: fine-tune তখনই justified যখন target task-কে যথেষ্ট ভালো বা সস্তা করে, যা হারানো সাধারণ সক্ষমতা আর serving খরচের দাম পুষিয়ে দেয়। এটা একটা সংখ্যা, অনুভূতি নয়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The evaluation runs the **same datasets against both models**, and the report has two columns plus the difference:
+
+```text
+dataset              base      fine-tuned   delta
+target-task          0.72      0.94         +0.22
+general-writing      0.88      0.91         +0.03
+general-reasoning    0.81      0.74         -0.07
+safety-refusal       0.95      0.96         +0.01
+```
+
+Read that table carefully. The target task improved a lot. The general reasoning dropped by seven points, and that is the line item that decides whether the fine-tune is worth it. A team that only reports the target task row will say yes.
+
+The **general capability** dataset is the hard part to choose, and it is specific to your product. It is the set of questions your users ask that the fine-tune was not meant to change. If your bot handles support and the fine-tune is for tone, the general set is the support questions that need a detailed factual answer.
+
+The **catastrophic forgetting** check has a specific shape: compare the two models on the general dataset, and the failing cases must be *the same cases that regressed*, not new random failures. If the fine-tuned model fails on cases the base model passed, the fine-tune damaged that ability.
+
+The **cost** comparison is the third column of the decision:
+
+```text
+base model        1,100 tokens/query   quality 0.72   $X per 1k queries
+fine-tuned model  1,150 tokens/query   quality 0.94   $Y per 1k queries
+```
+
+And a **format regression** test, which is the most common silent break: the fine-tune was meant to produce a specific format, and a change to the serving or the prompt template can break it while the weights stay the same.
+
+The eval has to be designed before the comparison, and the comparison has to be repeatable, which means a fixed dataset and a fixed judge. A fine-tune that is evaluated on its own training data proves nothing <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+evaluation চালায় **একই dataset দুটো model-এর ওপর**, আর রিপোর্টে দুটো কলাম আর পার্থক্য:
+
+```text
+dataset              base      fine-tuned   delta
+target-task          0.72      0.94         +0.22
+general-writing      0.88      0.91         +0.03
+general-reasoning    0.81      0.74         -0.07
+safety-refusal       0.95      0.96         +0.01
+```
+
+টেবিলটা মনোযোগ দিয়ে পড়ুন। target task অনেক উন্নত হয়েছে। সাধারণ reasoning সাত পয়েন্ট কমেছে, আর এই সারিটাই ঠিক করে fine-tune-এর দাম উপযোগী কি না। যে দল শুধু target task-এর সারি রিপোর্ট করে, তারা হ্যাঁ বলবে।
+
+**সাধারণ সক্ষমতা** dataset বাছাই হলো কঠিন অংশ, আর সেটা আপনার product-এর নির্দিষ্ট। এটা সেই প্রশ্নের set যেগুলো আপনার ব্যবহারকারী করে আর fine-tune বদলানোর উদ্দেশ্য ছিল না। যদি আপনার bot support নেয় আর fine-tune tone-এর জন্য, সাধারণ set হলো সেই support প্রশ্নগুলো যেগুলোর উত্তর বিস্তারিত তথ্য দিয়ে দিতে হয়।
+
+**catastrophic forgetting** যাচাইয়ের একটা নির্দিষ্ট গঠন আছে: দুটো model-কে general dataset-এ তুলনা করুন, আর ব্যর্থ হওয়া কেসগুলো যেন **যেগুলো regress করেছে সেগুলোই** হয়, নতুন এলোমেলো ব্যর্থতা নয়। fine-tuned model যেসব কেসে base model পাস করেছিল সেগুলোতে ফেইল করলে, fine-tune সেই সক্ষমতা নষ্ট করেছে।
+
+**খরচের** তুলনা সিদ্ধান্তের তৃতীয় কলাম:
+
+```text
+base model        1,100 tokens/query   quality 0.72   $X per 1k queries
+fine-tuned model  1,150 tokens/query   quality 0.94   $Y per 1k queries
+```
+
+আর একটা **format regression** টেস্ট, যেটা সবচেয়ে সাধারণ নীরব ভাঙা: fine-tune একটা নির্দিষ্ট format বানাতে ছিল, আর serving বা prompt template-এর পরিবর্তন সেটা ভাঙতে পারে যখন weight একই আছে।
+
+eval কোনো স্কোর দেখানোর আগে ডিজাইন করতে হবে, আর তুলনাটা পুনরাবৃত্তিযোগ্য হতে হবে, মানে নির্দিষ্ট dataset আর নির্দিষ্ট judge। নিজের training data-তে মাপা fine-tune কিছুই প্রমাণ করে না <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+evaluation চালায় **একই dataset দুটো model-এর ওপর**, আর রিপোর্টে দুটো কলাম আর পার্থক্য:
+
+```text
+dataset              base      fine-tuned   delta
+target-task          0.72      0.94         +0.22
+general-writing      0.88      0.91         +0.03
+general-reasoning    0.81      0.74         -0.07
+safety-refusal       0.95      0.96         +0.01
+```
+
+টেবিলটা মনোযোগ দিয়ে পড়ুন। target task অনেক উন্নত হয়েছে। সাধারণ reasoning সাত পয়েন্ট কমেছে, আর এই সারিটাই ঠিক করে fine-tune-এর দাম উপযোগী কি না। যে দল শুধু target task-এর সারি রিপোর্ট করে, তারা হ্যাঁ বলবে।
+
+**সাধারণ সক্ষমতা** dataset বাছাই হলো কঠিন অংশ, আর সেটা আপনার product-এর নির্দিষ্ট। এটা সেই প্রশ্নের set যেগুলো আপনার ব্যবহারকারী করে আর fine-tune বদলানোর উদ্দেশ্য ছিল না। যদি আপনার bot support নেয় আর fine-tune tone-এর জন্য, সাধারণ set হলো সেই support প্রশ্নগুলো যেগুলোর উত্তর বিস্তারিত তথ্য দিয়ে দিতে হয়।
+
+**catastrophic forgetting** যাচাইয়ের একটা নির্দিষ্ট গঠন আছে: দুটো model-কে general dataset-এ তুলনা করুন, আর ব্যর্থ হওয়া কেসগুলো যেন **যেগুলো regress করেছে সেগুলোই** হয়, নতুন এলোমেলো ব্যর্থতা নয়। fine-tuned model যেসব কেসে base model পাস করেছিল সেগুলোতে ফেইল করলে, fine-tune সেই সক্ষমতা নষ্ট করেছে।
+
+**খরচের** তুলনা সিদ্ধান্তের তৃতীয় কলাম:
+
+```text
+base model        1,100 tokens/query   quality 0.72   $X per 1k queries
+fine-tuned model  1,150 tokens/query   quality 0.94   $Y per 1k queries
+```
+
+আর একটা **format regression** টেস্ট, যেটা সবচেয়ে সাধারণ নীরব ভাঙা: fine-tune একটা নির্দিষ্ট format বানাতে ছিল, আর serving বা prompt template-এর পরিবর্তন সেটা ভাঙতে পারে যখন weight একই আছে।
+
+eval কোনো স্কোর দেখানোর আগে ডিজাইন করতে হবে, আর তুলনাটা পুনরাবৃত্তিযোগ্য হতে হবে, মানে নির্দিষ্ট dataset আর নির্দিষ্ট judge। নিজের training data-তে মাপা fine-tune কিছুই প্রমাণ করে না <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The comparison test is the whole thing, and it runs the same cases through both models:
+
+```python
+# tests/ai/test_finetune_comparison.py
+import pytest
+
+from app.models import BASE_MODEL, FINE_TUNED_MODEL
+
+
+def test_the_finetune_improves_the_target_task(base_eval, tuned_eval):
+    assert tuned_eval.score("target-task") > base_eval.score("target-task") + 0.05
+```
+
+And the one that catches the damage:
+
+```python
+def test_the_finetune_does_not_break_the_general_ability(base_eval, tuned_eval):
+    regressed = base_eval.passed_cases("general") - tuned_eval.passed_cases("general")
+    assert not regressed, f"the fine-tune broke: {sorted(regressed)[:5]}"
+```
+
+The subtraction is the point. A set difference names exactly the cases that regressed, so the fix has a target.
+
+The **format regression** test is separate, because it catches a different thing:
+
+```python
+def test_the_finetuned_model_still_returns_the_expected_format(tuned_eval):
+    for case in FORMAT_CASES:
+        output = tuned_eval.raw_output(case)
+        assert output.startswith("<result>"), f"format broke: {output[:40]}"
+        assert output.rstrip().endswith("</result>")
+```
+
+And the **cost** check, which turns the comparison into a decision:
+
+```python
+def test_the_finetune_pays_for_itself(report, base_eval, tuned_eval, prices):
+    gain = tuned_eval.score("target-task") - base_eval.score("target-task")
+    extra = prices.fine_tuned - prices.base
+    report.add("quality_gain", "target", gain)
+    report.add("cost_delta", "per_1k", extra)
+    assert gain > 0, "the fine-tune did not improve the target task"
+```
+
+That last assertion is deliberately modest. It asserts the gain exists and records the cost; whether the trade is worth it is a product decision with both numbers in it.
+
+For the **general capability** dataset, the test cases come from real questions, not from a benchmark, because the capability that matters is the one your users need <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+তুলনার টেস্টটাই পুরো ব্যাপার, আর এটা একই কেস দুটো model-এর ওপর চালায়:
+
+```python
+# tests/ai/test_finetune_comparison.py
+import pytest
+
+from app.models import BASE_MODEL, FINE_TUNED_MODEL
+
+
+def test_the_finetune_improves_the_target_task(base_eval, tuned_eval):
+    assert tuned_eval.score("target-task") > base_eval.score("target-task") + 0.05
+```
+
+আর যেটা ক্ষতি ধরে:
+
+```python
+def test_the_finetune_does_not_break_the_general_ability(base_eval, tuned_eval):
+    regressed = base_eval.passed_cases("general") - tuned_eval.passed_cases("general")
+    assert not regressed, f"the fine-tune broke: {sorted(regressed)[:5]}"
+```
+
+set difference-টাই পয়েন্ট। যে কেসগুলো regress করেছে সেগুলোর নাম সঠিকভাবে বের হয়, তাই সমাধানের লক্ষ্যটা থাকে।
+
+**format regression** টেস্ট আলাদা, কারণ সে অন্য কিছু ধরে:
+
+```python
+def test_the_finetuned_model_still_returns_the_expected_format(tuned_eval):
+    for case in FORMAT_CASES:
+        output = tuned_eval.raw_output(case)
+        assert output.startswith("<result>"), f"format broke: {output[:40]}"
+        assert output.rstrip().endswith("</result>")
+```
+
+আর **খরচের** যাচাই, যেটা তুলনাকে সিদ্ধান্তে বদলে:
+
+```python
+def test_the_finetune_pays_for_itself(report, base_eval, tuned_eval, prices):
+    gain = tuned_eval.score("target-task") - base_eval.score("target-task")
+    extra = prices.fine_tuned - prices.base
+    report.add("quality_gain", "target", gain)
+    report.add("cost_delta", "per_1k", extra)
+    assert gain > 0, "the fine-tune did not improve the target task"
+```
+
+শেষ assertion-টা ইচ্ছাকৃতভাবে সহজ। এটা assert করে লাভ আছে আর খরচ লিখে রাখে; trade উপযোগী কি না সেটা দুটো সংখ্যাসহ একটা product সিদ্ধান্ত।
+
+**সাধারণ সক্ষমতা** dataset-এর টেস্ট কেস আসে আসল প্রশ্ন থেকে, benchmark থেকে নয়, কারণ গুরুত্বপূর্ণ সক্ষমতাটাই হলো যেটা আপনার ব্যবহারকারীদের দরকার <Cite n={3} />।
+
+</Layman>
+<Bangla>
+
+তুলনার টেস্টটাই পুরো ব্যাপার, আর এটা একই কেস দুটো model-এর ওপর চালায়:
+
+```python
+# tests/ai/test_finetune_comparison.py
+import pytest
+
+from app.models import BASE_MODEL, FINE_TUNED_MODEL
+
+
+def test_the_finetune_improves_the_target_task(base_eval, tuned_eval):
+    assert tuned_eval.score("target-task") > base_eval.score("target-task") + 0.05
+```
+
+আর যেটা ক্ষতি ধরে:
+
+```python
+def test_the_finetune_does_not_break_the_general_ability(base_eval, tuned_eval):
+    regressed = base_eval.passed_cases("general") - tuned_eval.passed_cases("general")
+    assert not regressed, f"the fine-tune broke: {sorted(regressed)[:5]}"
+```
+
+set difference-টাই পয়েন্ট। যে কেসগুলো regress করেছে সেগুলোর নাম সঠিকভাবে বের হয়, তাই সমাধানের লক্ষ্যটা থাকে।
+
+**format regression** টেস্ট আলাদা, কারণ সে অন্য কিছু ধরে:
+
+```python
+def test_the_finetuned_model_still_returns_the_expected_format(tuned_eval):
+    for case in FORMAT_CASES:
+        output = tuned_eval.raw_output(case)
+        assert output.startswith("<result>"), f"format broke: {output[:40]}"
+        assert output.rstrip().endswith("</result>")
+```
+
+আর **খরচের** যাচাই, যেটা তুলনাকে সিদ্ধান্তে বদলে:
+
+```python
+def test_the_finetune_pays_for_itself(report, base_eval, tuned_eval, prices):
+    gain = tuned_eval.score("target-task") - base_eval.score("target-task")
+    extra = prices.fine_tuned - prices.base
+    report.add("quality_gain", "target", gain)
+    report.add("cost_delta", "per_1k", extra)
+    assert gain > 0, "the fine-tune did not improve the target task"
+```
+
+শেষ assertion-টা ইচ্ছাকৃতভাবে সহজ। এটা assert করে লাভ আছে আর খরচ লিখে রাখে; trade উপযোগী কি না সেটা দুটো সংখ্যাসহ একটা product সিদ্ধান্ত।
+
+**সাধারণ সক্ষমতা** dataset-এর টেস্ট কেস আসে আসল প্রশ্ন থেকে, benchmark থেকে নয়, কারণ গুরুত্বপূর্ণ সক্ষমতাটাই হলো যেটা আপনার ব্যবহারকারীদের দরকার <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: evaluating on the training data.** The fine-tune will win, and the comparison means nothing.
+
+**Mistake 2: reporting only the target task.** The general capability drop is the number that decides whether the fine-tune was worth it <Cite n={1} />.
+
+**Mistake 3: no held-out general dataset.** Without one, you cannot tell a forgetting problem from noise.
+
+**Mistake 4: comparing different prompts.** Any difference may be the prompt, not the weights.
+
+**Mistake 5: no format regression test.** The format the fine-tune was for can break from a serving change.
+
+**Mistake 6: ignoring the cost.** A fine-tune that improves the score by two points and costs four times more is not obviously a win.
+
+**Mistake 7: no repeatability.** The judge must be pinned and the dataset fixed, or the comparison moves on its own <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+**Mistake 1: training data-তে eval করা।** fine-tune জিতবেই, আর তুলনাটা অর্থহীন।
+
+**Mistake 2: শুধু target task রিপোর্ট করা।** সাধারণ সক্ষমতার কমতি সেই সংখ্যা যেটা ঠিক করে fine-tune দাম উপযোগী ছিল কি না <Cite n={1} />।
+
+**Mistake 3: held-out general dataset নেই।** ছাড়া সমস্যা আর noise-এর পার্থক্য বোঝা যায় না।
+
+**Mistake 4: ভিন্ন prompt-এর তুলনা।** পার্থক্যটা weight-এর হতে পারে, prompt-এরও হতে পারে।
+
+**Mistake 5: format regression টেস্ট নেই।** serving-এর পরিবর্তন fine-tune-এর বানানো format ভাঙতে পারে।
+
+**Mistake 6: খরচ উপেক্ষা করা।** যে fine-tune স্কোর দুই পয়েন্ট বাড়ায় আর চারগুণ খরচ করে, সেটা স্পষ্ট জেত নয়।
+
+**Mistake 7: পুনরাবৃত্তিযোগ্যতা নেই।** judge পিন করা আর dataset নির্দিষ্ট হতে হবে, নইলে তুলনা নিজেই নড়বে <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+**Mistake 1: training data-তে eval করা।** fine-tune জিতবেই, আর তুলনাটা অর্থহীন।
+
+**Mistake 2: শুধু target task রিপোর্ট করা।** সাধারণ সক্ষমতার কমতি সেই সংখ্যা যেটা ঠিক করে fine-tune দাম উপযোগী ছিল কি না <Cite n={1} />।
+
+**Mistake 3: held-out general dataset নেই।** ছাড়া সমস্যা আর noise-এর পার্থক্য বোঝা যায় না।
+
+**Mistake 4: ভিন্ন prompt-এর তুলনা।** পার্থক্যটা weight-এর হতে পারে, prompt-এরও হতে পারে।
+
+**Mistake 5: format regression টেস্ট নেই।** serving-এর পরিবর্তন fine-tune-এর বানানো format ভাঙতে পারে।
+
+**Mistake 6: খরচ উপেক্ষা করা।** যে fine-tune স্কোর দুই পয়েন্ট বাড়ায় আর চারগুণ খরচ করে, সেটা স্পষ্ট জেত নয়।
+
+**Mistake 7: পুনরাবৃত্তিযোগ্যতা নেই।** judge পিন করা আর dataset নির্দিষ্ট হতে হবে, নইলে তুলনা নিজেই নড়বে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the base model and the fine-tuned model behind the same interface, so the comparison runs the same code for both.
+- Save the general capability dataset in the repo, with the cases you have seen regress. It is the most valuable artefact of the whole exercise.
+- Report the difference, not the two numbers separately. The delta is what the reader acts on.
+- Keep the judge model and the temperature pinned, and record them with every comparison. A judge change moves the score.
+- Put the cost per thousand queries in the report next to the quality. Both or neither.
+- When a general case regresses, write it down as a test before you fix the fine-tune. It becomes the guard for the next one.
+- Re-run the comparison before every serving or prompt change. A fine-tune is evaluated against the whole system, not just the weights.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the base model and the fine-tuned model behind the same interface, so the comparison runs the same code for both.
+- Save the general capability dataset in the repo, with the cases you have seen regress. It is the most valuable artefact of the whole exercise.
+- Report the difference, not the two numbers separately. The delta is what the reader acts on.
+- Keep the judge model and the temperature pinned, and record them with every comparison. A judge change moves the score.
+- Put the cost per thousand queries in the report next to the quality. Both or neither.
+- When a general case regresses, write it down as a test before you fix the fine-tune. It becomes the guard for the next one.
+- Re-run the comparison before every serving or prompt change. A fine-tune is evaluated against the whole system, not just the weights.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- base model আর fine-tuned model একই interface-এর পিছনে রাখুন, যাতে তুলনায় একই কোড দুটোর জন্য চলে।
+- সাধারণ সক্ষমতার dataset repo-তে রাখুন, যেসব কেস regress করেছে সেগুলোসহ। পুরো কাজের সবচেয়ে মূল্যবান জিনিস এটাই।
+- দুটো সংখ্যা আলাদা নয়, পার্থক্য রিপোর্ট করুন। পাঠক যে অনুযায়ী কাজ করে সেটাই delta।
+- judge model আর temperature পিন করে রাখুন, আর প্রতিটি তুলনার সাথে লিখে রাখুন। judge বদলালে স্কোর সরে যায়।
+- প্রতি হাজার query-এর খরচ মানের পাশে রিপোর্টে রাখুন। দুটোই, নয়তো একটাও নয়।
+- সাধারণ কেস regress করলে fine-tune ঠিক করার আগে সেটা একটা টেস্ট হিসেবে লিখুন। এটাই পরের fine-tune-এর guard হবে।
+- প্রতিটা serving বা prompt পরিবর্তনের আগে তুলনা আবার চালান। fine-tune কেবল weight-এর বিপরীতে নয়, পুরো সিস্টেমের বিপরীতে মূল্যায়ন করা হয়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Fine-tuning | Changing a model's weights on examples so it behaves differently |
+| Base model | The general model the fine-tune starts from |
+| Target task | The specific capability the fine-tune was meant to improve |
+| General capability | The abilities the fine-tune was not meant to change, and might damage |
+| Catastrophic forgetting | The model losing general abilities while gaining the target one |
+| Held-out dataset | Data the model was not trained on, used for a fair comparison |
+| Format regression | The fine-tuned output format breaking for a reason other than the weights |
+| Cost per query | The serving cost of the fine-tuned model against the base |

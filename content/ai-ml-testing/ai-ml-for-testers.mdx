@@ -1,0 +1,340 @@
+export const metadata = { title: 'AI and ML for Testers', description: 'What changes when the thing under test is a model: the three kinds of learning, where a model fits in a product, and why testing it needs different checks.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Challenges in evaluating AI systems', publisher: 'Anthropic (Research)', url: 'https://www.anthropic.com/research/evaluating-ai-systems', accessed: '2026-11-01' },
+    { title: 'OWASP Top 10 for Large Language Model Applications', publisher: 'OWASP', url: 'https://owasp.org/projects/top-10-for-large-language-model-applications', accessed: '2026-11-01' },
+    { title: 'AI Risk Management Framework', publisher: 'NIST', url: 'https://www.nist.gov/itl/ai-risk-management-framework', accessed: '2026-11-01' },
+  ],
+}
+
+# AI and ML for Testers
+
+A traditional system either does what the code says or it does not. A model does neither: it produces an answer that depends on the input, on the settings, and on what it saw in training. That is why the tester's job changes.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Machine learning** is software that learns the rules from examples instead of being given the rules. A program that adds two numbers has the addition written into it. A program that predicts which of ten product photos is a bicycle was shown thousands of labelled photographs and worked out the difference itself.
+
+Three kinds of learning matter to a tester:
+
+- **Supervised learning** learns from labelled examples. The label is the right answer: this email is spam, this loan defaults, this image has a cat. The tester gets a dataset, a model, and a metric such as accuracy or F1.
+- **Unsupervised learning** finds structure in unlabelled data. Nobody said which customers are similar; the algorithm groups them anyway. There is no right answer in the data, so the tester checks whether the groups are useful and stable.
+- **Reinforcement learning** learns from reward. The system tries an action, gets a score, and adjusts. A model that plays a game, or a robot that walks, is trained this way.
+
+The second thing a tester must understand is **where the model sits in the product**. A typical AI feature is a chain: the user's words go to a prompt, the prompt goes to a model, the model returns an answer, guardrails check it, and the answer reaches the user. Every link in that chain can fail on its own, and each link needs its own tests.
+
+The third is **non-determinism**. Ask a normal API the same question twice and you get the same answer twice. Ask a model the same question twice and you may get two different answers, because the model samples one possible continuation rather than storing a fixed one. A test that asserts an exact string is not testing a model; it is testing one lucky run.
+
+The definitions in this section are the tutorial's own short explanations.
+
+</Technical>
+<Layman>
+
+**Machine learning** is software that learns the rules from examples instead of being given the rules. A calculator has addition written into it. A program that picks out bicycles from photos was shown thousands of labelled photographs and worked out the difference itself.
+
+Three kinds of learning matter to a tester:
+
+- **Supervised learning** learns from examples that already have the right answer marked: this email is spam, this loan defaults, this photo has a cat. The tester gets a dataset, a model, and a score such as accuracy.
+- **Unsupervised learning** finds groups in data that has no answer marked. Nobody said which customers are alike; the algorithm decides. There is no right answer in the data, so the tester checks whether the groups are useful and stay the same over time.
+- **Reinforcement learning** learns from a score. The system tries something, gets points, and adjusts. A game-playing model is trained this way.
+
+The second thing to understand is **where the model sits in the product**. A typical AI feature is a chain: the user's words go to a prompt, the prompt goes to a model, the model returns an answer, a safety check looks at it, and the answer reaches the user. Every link can fail on its own, so every link needs its own tests.
+
+The third is **non-determinism**. Ask a normal service the same question twice and you get the same answer twice. Ask a model the same question twice and you may get two different answers, because the model picks one possible answer rather than storing a fixed one. A test that expects one exact sentence is not testing a model; it is testing one lucky run.
+
+The definitions in this section are the tutorial's own short explanations.
+
+</Layman>
+<Bangla>
+
+**Machine learning** হলো এমন সফটওয়্যার যেটা নিয়ম শেখে উদাহরণ থেকে, নিয়ম লিখে দেওয়া থেকে নয়। একটা ক্যালকুলেটরে যোগ নিয়ম লেখা আছে। কিন্তু ছবি থেকে সাইকেল চেনার প্রোগ্রামটাকে হাজার হাজার লেবেল করা ছবি দেখিয়ে শেখানো হয়েছে, নিয়মটা নিজেই বের করতে।
+
+টেস্টারের জন্য তিন ধরনের learning গুরুত্বপূর্ণ:
+
+- **Supervised learning** শেখে উদাহরণ থেকে, যেগুলোর সঠিক উত্তর আগে থেকেই চিহ্নিত: এই ইমেইল spam, এই লোন ডিফল্ট হবে, এই ছবিতে বিড়াল আছে। টেস্টার পায় একটা dataset, একটা model, আর একটা স্কোর যেমন accuracy।
+- **Unsupervised learning** এমন ডেটায় গঠন খোঁজে যেখানে উত্তর চিহ্নিত নেই। কোন ক্রেতারা একে অপরের মতো, সেটা কেউ বলে দেয়নি; algorithm নিজে ঠিক করে। ডেটায় কোনো একমাত্র সঠিক উত্তর নেই, তাই টেস্টার দেখে গ্রুপগুলো কাজের কিনা আর সময়ের সাথে একই থাকে কিনা।
+- **Reinforcement learning** শেখে পুরস্কার থেকে। সিস্টেম কিছু করে, স্কোর পায়, তারপর নিজেকে সমন্বয় করে। যেমন একটা গেম খেলা model।
+
+দ্বিতীয় বিষয় হলো **product-এ model কোথায় বসে**। একটা সাধারণ AI ফিচার একটা শৃঙ্খল: ব্যবহারকারীর কথা যায় prompt-এ, prompt যায় model-এ, model উত্তর দেয়, guardrail সেটা দেখে, তারপর উত্তর user-এর কাছে পৌঁছায়। প্রতিটা লিংক নিজে থেকেই ভাঙতে পারে, তাই প্রতিটার নিজস্ব টেস্ট দরকার।
+
+তৃতীয় বিষয় হলো **non-determinism**। সাধারণ service-এ একই প্রশ্ন দুইবার করলে একই উত্তর পাবেন। model-এ একই প্রশ্ন দুইবার করলে দুটি ভিন্ন উত্তর আসতে পারে, কারণ model নির্দিষ্ট উত্তর সংরক্ষণ করে না, সে সম্ভাব্য উত্তরগুলো থেকে একটা বেছে নেয়। তাই একটা নির্দিষ্ট বাক্যের জন্য লেখা টেস্ট model-কে পরীক্ষা করে না, ভাগ্যক্রমে মিলে যাওয়া একটা run-কে পরীক্ষা করে।
+
+এই অংশের সংজ্ঞাগুলো টিউটোরিয়ালের নিজস্ব সংক্ষিপ্ত ব্যাখ্যা।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+A model is a function with a very large number of parameters. Before training, those parameters are random. Training adjusts them so that, on the training data, the model's output moves toward the expected output. The adjustment is done by the gradient descent family of optimisers: compute how wrong the output was, step each parameter in the direction that makes it less wrong, repeat.
+
+After training, **inference** is the forward pass: the input is turned into tokens, the tokens are embedded, the embeddings pass through the layers, and the model produces a probability distribution over the next token. That is why an LLM is a text predictor: it produces a distribution over tokens, and the API service picks one.
+
+The **temperature** setting controls how that pick is made. At a low temperature the service picks the most likely token most of the time, which makes the output repeatable and dull. At a high temperature it samples more widely, which makes the output varied and more likely to be wrong. These three paragraphs are the tutorial's own simplified explanation.
+
+The consequence for testing is structural. A conventional test has one expected output and one pass or fail. A model test has a **property**: does the answer stay faithful to the source, does it avoid the forbidden topic, does it keep the format, does it cost less than the budget. The property is measured over a dataset, so the result is a score with a spread, not a boolean. Anthropic warns that simple formatting changes to an evaluation can move the score, and that every evaluation can be over-read <Cite n={1} />. So choose the dataset, the metric, and the threshold before you look at the score, and keep them fixed.
+
+Three risks shape the rest of the module. The OWASP list for LLM applications names prompt injection, sensitive information disclosure, and supply chain issues among the top risks <Cite n={2} />. NIST's AI Risk Management Framework gives the vocabulary for managing them: govern, map, measure, manage <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+A model is a function with a huge number of settings. Before training, those settings are random. Training nudges them so that the model's answer gets closer to the right answer, over and over.
+
+After training comes **inference**, the run that produces an answer. The input is broken into pieces of text called tokens, each token is turned into a list of numbers, those numbers pass through the model, and the model produces a score for every possible next token. That is why an LLM is really a text predictor: it scores the options, and the service picks one.
+
+The **temperature** setting decides how that pick is made. Low temperature means the service nearly always picks the most likely option, so the answer repeats and is safe. High temperature means it picks more widely, so the answer varies and is more likely to be wrong. These three paragraphs are the tutorial's own simple explanation.
+
+This changes what a test is. A normal test has one expected answer and passes or fails. A model test checks a **property**: does the answer stick to the source, does it avoid a forbidden topic, does it keep the format, does it cost too much. The property is measured over many examples, so the result is a score with some spread, not a yes or no. Anthropic warns that small format changes to a test can move the score, and that any score can be over-read <Cite n={1} />. So pick the examples, the score, and the pass line before you look at the result, and keep them fixed.
+
+Three risks shape the rest of this module. The OWASP list for LLM applications names prompt injection, leaking sensitive information, and supply chain problems among the top risks <Cite n={2} />. NIST's AI Risk Management Framework gives the words for managing them: govern, map, measure, manage <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+Model হলো এমন একটা function যার অসংখ্য প্যারামিটার আছে। Training-এর আগে ওগুলো এলোমেলো থাকে। Training ওগুলো এমনভাবে বদলায় যাতে training data-তে model-এর উত্তর সঠিক উত্তরের দিকে সরে যায়। এটা gradient descent পরিবারের optimizer করে: কতটা ভুল হলো হিসাব করে, তারপর প্রতিটি প্যারামিটারকে একটু একটু ভুলের বিপরীত দিকে সরায়, আবার শুরু করে।
+
+Training-এর পরে আসে **inference**, মানে উত্তর বের করার run। Input ভেঙে যায় টোকেনে, প্রতিটি টোকেন থেকে সংখ্যার একটা তালিকা তৈরি হয়, সেই সংখ্যাগুলো model-এর স্তর ধরে যায়, আর model পরের টোকেনের জন্য সম্ভাবনার একটা তালিকা দেয়। তাই LLM আসলে একটা text predictor: সে সম্ভাবনা বের করে, আর service সেখান থেকে একটা বেছে নেয়।
+
+**Temperature** ঠিক করে সেই বাছাই কীভাবে হবে। কম temperature-এ service প্রায় সবসময় সবচেয়ে সম্ভাব্য টোকেনটাই বেছে নেয়, ফলে উত্তর নির্দিষ্ট ও নিরাপদ হয়। বেশি temperature-এ সে বিস্তৃতভাবে নমুনা নেয়, ফলে উত্তর নানা হয় কিন্তু ভুল হওয়ার সম্ভাবনাও বাড়ে। এই তিনটা অনুচ্ছেদ টিউটোরিয়ালের নিজস্ব সহজ ব্যাখ্যা।
+
+এতে টেস্টের ধরনই বদলে যায়। সাধারণ টেস্টে একটাই প্রত্যাশিত উত্তর থাকে, আর সেটা পাস বা ফেইল। model-এর টেস্ট একটা **গুণ** দেখে: উত্তর কি সোর্সের সাথে থাকে, নিষিদ্ধ বিষয় এড়ায় কি না, ফরম্যাট ঠিক রাখে কি না, খরচ বেশি হয় কি না। গুণটা অনেক উদাহরণের ওপর মাপা হয়, তাই ফলাফল একটা স্কোর, হ্যাঁ বা না নয়। Anthropic সতর্ক করে যে evaluation-এর ফরম্যাটে ছোট বদলেও স্কোর সরে যেতে পারে, আর যেকোনো স্কোরকে বেশি গুরুত্ব দিয়ে ফেলার ঝুঁকি থাকে <Cite n={1} />। তাই স্কোর দেখার আগেই উদাহরণ, স্কোর আর পাস লাইন ঠিক করুন, আর সেগুলো বদলাবেন না।
+
+তিনটা ঝুঁকি এই মডিউলের বাকি অংশকে ঠিক করে দেয়। LLM application-এর জন্য OWASP-এর তালিকায় prompt injection, sensitive information disclosure আর supply chain সমস্যা শীর্ষ ঝুঁকিগুলোর মধ্যে আছে <Cite n={2} />। NIST-এর AI Risk Management Framework এগুলো সামলানোর ভাষা দেয়: govern, map, measure, manage <Cite n={3} />.
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The first hands-on step is to see the non-determinism yourself, because every later decision depends on it. Send the same prompt to a model several times and keep every response:
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+PROMPT = "Name three colours used in web design."
+
+for run in range(5):
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=100,
+        temperature=1.0,
+        messages=[{"role": "user", "content": PROMPT}],
+    )
+    print(run, message.content[0].text)
+```
+
+Run it twice. The lists differ. Now run it with `temperature=0` and compare again. Do not assume that the answers are now identical: check it, and keep the result in your notes.
+
+The second step is to write down what "good" means before you write any test. For a customer support bot, good might mean: the answer is grounded in the knowledge base, the tone is polite, the answer is under 80 words, and it never promises a refund. Write these as four separate checks, because one combined check tells you nothing when it fails.
+
+The third step is to map the feature into its layers, because each layer needs its own test file:
+
+```text
+user input
+  -> prompt template      (test: does the template inject the right context?)
+  -> model call           (test: latency, tokens, cost, format)
+  -> output validation    (test: schema, required fields, types)
+  -> guardrails           (test: blocked topics, PII, policy)
+  -> user display         (test: streaming, truncation, error states)
+```
+
+This map is the plan for the whole module. Each course module later adds to one row of it.
+
+</Technical>
+<Layman>
+
+The first hands-on step is to see the non-determinism yourself, because everything later depends on it. Send the same prompt to a model several times and keep every answer:
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+PROMPT = "Name three colours used in web design."
+
+for run in range(5):
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=100,
+        temperature=1.0,
+        messages=[{"role": "user", "content": PROMPT}],
+    )
+    print(run, message.content[0].text)
+```
+
+Run it twice. The lists differ. Now run it with `temperature=0` and compare again. Do not assume that the answers are now the same: check it, and write down what you saw.
+
+The second step is to write down what "good" means before you write any test. For a customer support bot, good might mean: the answer comes from the knowledge base, the tone is polite, the answer is under 80 words, and it never promises a refund. Write these as four separate checks, because one combined check tells you nothing when it fails.
+
+The third step is to draw the feature as its layers, because each layer needs its own test file:
+
+```text
+user input
+  -> prompt template      (test: does the template add the right context?)
+  -> model call           (test: speed, tokens, cost, format)
+  -> output validation    (test: schema, required fields, types)
+  -> guardrails           (test: blocked topics, personal data, policy)
+  -> user display         (test: streaming, cut-off text, error states)
+```
+
+This drawing is the plan for the whole module. Each course module later adds to one row of it.
+
+</Layman>
+<Bangla>
+
+প্রথম হাতে-কলমের কাজ হলো non-determinism নিজের চোখে দেখা, কারণ পরের সব সিদ্ধান্ত এর ওপর দাঁড়ায়। একই prompt model-কে কয়েকবার পাঠান আর সব উত্তর রাখুন:
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+PROMPT = "Name three colours used in web design."
+
+for run in range(5):
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=100,
+        temperature=1.0,
+        messages=[{"role": "user", "content": PROMPT}],
+    )
+    print(run, message.content[0].text)
+```
+
+দুইবার চালান। তালিকাগুলো আলাদা হবে। এবার `temperature=0` দিয়ে চালিয়ে আবার তুলনা করুন। ধরে নেবেন না যে উত্তরগুলো এখন হুবহু এক: যাচাই করুন, আর যা দেখলেন তা লিখে রাখুন।
+
+দ্বিতীয় ধাপ হলো যেকোনো টেস্ট লেখার আগে "ভালো" মানে কী, সেটা লিখে ফেলা। একটা customer support bot-এর জন্য ভালো মানে হতে পারে: উত্তর knowledge base থেকে এসেছে, ভাষা ভদ্র, উত্তর ৮০ শব্দের কম, আর কখনো refund-এর প্রতিশ্রুতি দেয় না। এগুলো চারটা আলাদা check হিসেবে লিখুন, কারণ একটা জোড়া check ব্যর্থ হলে কোথায় সমস্যা তা বোঝা যায় না।
+
+তৃতীয় ধাপ হলো ফিচারটাকে তার স্তরে আঁকা, কারণ প্রতিটা স্তরের নিজস্ব টেস্ট ফাইল দরকার:
+
+```text
+user input
+  -> prompt template      (টেস্ট: template ঠিক context যোগ করে?)
+  -> model call           (টেস্ট: গতি, টোকেন, খরচ, ফরম্যাট)
+  -> output validation    (টেস্ট: schema, আবশ্যিক ফিল্ড, টাইপ)
+  -> guardrails           (টেস্ট: নিষিদ্ধ বিষয়, ব্যক্তিগত তথ্য, নীতি)
+  -> user display         (টেস্ট: streaming, কাটা যাওয়া লেখা, error state)
+```
+
+এই ছকটাই পুরো মডিউলের পরিকল্পনা। পরের প্রতিটা কোর্স মডিউল এর একটা সারির সাথে কিছু যোগ করবে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: asserting an exact string.** The test says the answer must equal "The policy covers claims within 30 days." That test passes on one run and fails on the next, and the failure says nothing about quality. Assert a property instead: that the answer mentions the 30-day window, and that it contains no claim outside the policy.
+
+**Mistake 2: testing the model instead of the product.** A test that only calls the model API skips the prompt template, the validation, the guardrails, and the UI. The user never sees the raw model output. Test the path the user takes.
+
+**Mistake 3: one big pass or fail.** A single score over a mixed dataset hides the failure. A model that is perfect on simple questions and invents on hard ones still passes an average. Break the dataset down by category and report each one.
+
+**Mistake 4: no dataset.** Evaluating on three prompts you wrote while developing proves nothing. The dataset must be separate from the prompts you tuned on, and it must be versioned so that two runs can be compared.
+
+**Mistake 5: treating the safety filter as the whole safety story.** A blocked prompt tells you the filter fired. It does not tell you what the model would have said, and it does not cover an indirect injection through a document.
+
+</Technical>
+<Layman>
+
+**Mistake 1: expecting one exact sentence.** The test says the answer must be "The policy covers claims within 30 days." That test passes once and fails next time, and the failure says nothing about quality. Check a property instead: that the answer mentions the 30-day window, and that it says nothing outside the policy.
+
+**Mistake 2: testing the model instead of the product.** A test that only calls the model API skips the prompt, the validation, the safety check, and the page. The user never sees the raw model output. Test the path the user takes.
+
+**Mistake 3: one big pass or fail.** One score over mixed examples hides the failure. A model that is perfect on easy questions and makes things up on hard ones still passes an average. Split the examples by type and report each type separately.
+
+**Mistake 4: no proper test set.** Checking three prompts you wrote while building proves nothing. The test set must be separate from the prompts you tuned on, and it must be versioned so two runs can be compared.
+
+**Mistake 5: treating the safety filter as the whole safety story.** A blocked prompt tells you the filter fired. It does not tell you what the model would have said, and it does not catch an injection hidden inside a document.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: নির্দিষ্ট একটা বাক্য আশা করা।** টেস্টে লেখা "The policy covers claims within 30 days." হুবহু এটাই আসতে হবে। এই টেস্ট একবার পাস করে, পরেরবার ফেইল হয়, আর ফেইলটা কোনো মানের সমস্যা দেখায় না। বদলে গুণ দেখুন: উত্তরে ৩০ দিনের কথা আছে কি না, আর নীতির বাইরে কোনো দাবি নেই কি না।
+
+**ভুল ২: model-কে টেস্ট করা, product-কে নয়।** শুধু model API-তে কল করা টেস্টে prompt template, validation, guardrail আর UI সব বাদ পড়ে। ব্যবহারকারী তো কখনো raw model output দেখে না। ব্যবহারকারীর যে পথ, সেটাই টেস্ট করুন।
+
+**ভুল ৩: একটা বড় পাস বা ফেইল।** মিশ্র উদাহরণের ওপর একটা স্কোর ব্যর্থতা ঢেকে দেয়। সহজ প্রশ্নে পারফেক্ট আর কঠিন প্রশ্নে বানানো model-ও গড়ে পাস করে। উদাহরণগুলো ধরন অনুযায়ী ভাগ করে প্রতিটার আলাদা রিপোর্ট দিন।
+
+**ভুল ৪: আলাদা test set না থাকা।** ডেভেলপ করার সময় লেখা তিনটা prompt দিয়ে যাচাই করা কিছু প্রমাণ করে না। Test set আলাদা রাখতে হবে, আর version রাখতে হবে যাতে দুটো run তুলনা যায়।
+
+**ভুল ৫: safety filter-কে পুরো safety ধরে নেওয়া।** কোনো prompt ব্লক হওয়া মানে শুধু filter কাজ করেছে। model আসলে কী বলত, সেটা জানা যায় না, আর ডকুমেন্টের ভেতরে লুকানো injection-ও ধরা পড়ে না।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the layer map for your feature before you write a single test. Each row becomes a test file later.
+- Keep a small dataset of real user questions, versioned, separate from the examples you tune against.
+- Run the same prompt five times at the start of a session and save the answers. You cannot debug a failure you never reproduced.
+- Split every score by question category. An average hides the broken case.
+- Record the model name, the temperature, and the prompt version with every eval result. Without them, two runs cannot be compared.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write down the layers of your feature before writing any test. Each layer becomes a test file later.
+- Keep a small set of real user questions, versioned, separate from the examples you tune against.
+- Send the same prompt five times at the start and save the answers. You cannot debug a failure you never reproduced.
+- Split every score by question type. An average hides the broken case.
+- Save the model name, the temperature, and the prompt version with every result. Without them, two runs cannot be compared.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- যেকোনো টেস্ট লেখার আগে আপনার ফিচারের স্তরগুলো লিখে ফেলুন। পরে প্রতিটা স্তর নিজস্ব টেস্ট ফাইল হবে।
+- বাস্তব ব্যবহারকারীর কিছু প্রশ্ন রাখুন, version দিন, আর যেসব উদাহরণে prompt টিউন করেছেন তার থেকে আলাদা রাখুন।
+- সেশনের শুরুতে একই prompt পাঁচবার পাঠিয়ে উত্তরগুলো সংরক্ষণ করুন। যে ব্যর্থতা আপনি নিজে দেখেননি, সেটা ডিবাগ করাও যায় না।
+- প্রতিটা স্কোর প্রশ্নের ধরন অনুযায়ী ভাগ করে দেখুন। গড় সংখ্যা ভাঙা কেস ঢেকে দেয়।
+- প্রতিটি ফলাফলের সাথে model-এর নাম, temperature আর prompt-এর version সংরক্ষণ করুন। এগুলো ছাড়া দুটো run তুলনা যায় না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Machine learning | Software that learns its rules from examples instead of being given them |
+| Supervised learning | Learning from labelled examples, where the right answer is already marked |
+| Unsupervised learning | Finding groups in data that has no labels |
+| Reinforcement learning | Learning from a reward signal after an action |
+| Inference | The run that produces an answer from a trained model |
+| Temperature | The setting that controls how varied the sampled output is |
+| Non-determinism | The same input can give a different output on a later run |
+| Ground truth | The known correct answer used to score a model |
+| Golden dataset | A fixed, versioned set of examples used to compare two runs |
+| Property-based test | A test that checks a quality of the output rather than one exact output |

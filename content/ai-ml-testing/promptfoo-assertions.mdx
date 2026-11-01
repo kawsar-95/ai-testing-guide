@@ -1,0 +1,446 @@
+export const metadata = { title: 'Advanced Assertions and LLM-as-Judge', description: 'The assertion types that carry a quality suite: regex, semantic similarity, llm-rubric, and how to keep a judge from drifting.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Assertions', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/configuration/expected-outputs/', accessed: '2026-11-01' },
+    { title: 'Configuration reference', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/configuration/reference/', accessed: '2026-11-01' },
+    { title: 'Challenges in evaluating AI systems', publisher: 'Anthropic (Research)', url: 'https://www.anthropic.com/research/evaluating-ai-systems', accessed: '2026-11-01' },
+  ],
+}
+
+# Advanced Assertions and LLM-as-Judge
+
+A single `contains` check cannot tell you the answer is right. The assertion types can, and choosing between them is the whole skill.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+Promptfoo's assertion reference splits the assertion types into two groups, deterministic and model-assisted, and a good suite uses both <Cite n={1} />.
+
+**Text assertions** look at the output as text: `contains`, `not-contains`, `regex`, `starts-with`, `equals`, `contains-any`, `contains-all`, `is-json`. They are exact and free. Use them for facts the answer must contain, formats the answer must have, and words the answer must not contain.
+
+**Code assertions** are deterministic too: `javascript` and `python` run a check that you write as code. Use them for rules such as a word limit.
+
+**Model-assisted assertions** use a model: `similar`, `llm-rubric`, `model-graded-closedqa`, `factuality`, `answer-relevance`. They are what you use when the property is about meaning.
+
+`llm-rubric` is the important one and the dangerous one. It uses a judge model to grade the output against the rubric you write. The rubric is the test. A vague rubric gives a vague and drifting result.
+
+The `similar` assertion compares the output with a reference answer by embeddings and cosine similarity, and it passes above a threshold <Cite n={1} />. That is how you test "did the answer say the same thing" without requiring the same words.
+
+The failure everybody hits is a **drifting judge**. A judge is itself a model, so the same output can pass on one run and fail on the next. The fixes are the tutorial's own advice: make the rubric binary and specific, pin the judge model, and test the judge against a set of known-good and known-bad outputs.
+
+</Technical>
+<Layman>
+
+Promptfoo has two groups of checks: rule checks and model checks. A good test suite uses both <Cite n={1} />.
+
+**Text checks** read the answer as plain text: `contains`, `not-contains`, `regex`, `starts-with`, `equals`, `contains-any`, `contains-all`, `is-json`. They are exact and free. Use them for facts that must be there, a format that must be right, and words that must not appear.
+
+**Code checks** (`javascript`, `python`) are rule checks too. You write the rule as a few lines of code, for example a word limit.
+
+**Model checks** ask a model: `similar`, `llm-rubric`, `model-graded-closedqa`, `factuality`, `answer-relevance`. Use them when the question is about meaning.
+
+`llm-rubric` is the most useful and the most risky. A judge model reads the answer and your written rule and gives a grade. Your rule is the test. A vague rule gives a vague result that changes from run to run.
+
+`similar` checks whether the answer means the same as a reference answer, even in different words. It passes when the similarity score is above a set number <Cite n={1} />.
+
+The common problem is a judge that changes its mind. The judge is a model too, so the same answer can pass one time and fail the next. The tutorial's advice: write a clear yes-or-no rule, fix which judge model you use, and test the judge on answers you already know are good or bad.
+
+</Layman>
+<Bangla>
+
+Promptfoo-র assertion reference assertion type-গুলোকে দুটো দলে ভাগ করে: deterministic আর model-assisted। ভালো suite দুটোই ব্যবহার করে <Cite n={1} />।
+
+**Text assertion** আউটপুটকে লেখা হিসেবে দেখে: `contains`, `not-contains`, `regex`, `starts-with`, `equals`, `contains-any`, `contains-all`, `is-json`। এগুলো হুবহু আর বিনামূল্যে। যেসব তথ্য উত্তরে থাকতেই হবে, যে ফরম্যাট ঠিক থাকতেই হবে, আর যেসব শব্দ থাকা উচিত নয়, সেগুলোর জন্য এগুলো ব্যবহার করুন।
+
+**Code assertion**-ও deterministic: `javascript` আর `python` আপনার কোডে লেখা একটা যাচাই চালায়। শব্দের সীমার মতো নিয়মের জন্য এগুলো ব্যবহার করুন।
+
+**Model-assisted assertion** একটা model ব্যবহার করে: `similar`, `llm-rubric`, `model-graded-closedqa`, `factuality`, `answer-relevance`। গুণটা অর্থের ব্যাপারে হলে এগুলো লাগে।
+
+`llm-rubric` সবচেয়ে গুরুত্বপূর্ণ এবং সবচেয়ে ঝুঁকির। এটা একটা judge model দিয়ে আপনার লেখা rubric অনুযায়ী আউটপুটকে নম্বর দেয়। rubric-টাই টেস্ট। অস্পষ্ট rubric দিলে ফলাফলও অস্পষ্ট হয়, আর বারবার বদলায়।
+
+`similar` assertion embedding আর cosine similarity দিয়ে আউটপুটকে একটা reference উত্তরের সাথে তুলনা করে, আর একটা threshold-এর ওপরে গেলে pass করে <Cite n={1} />। একই শব্দ না চেয়েও "উত্তরটা কি একই কথা বলেছে" — এটা এভাবেই টেস্ট করা যায়।
+
+সবাই যে সমস্যায় পড়ে সেটা **judge সরে যাওয়া** (drift)। judge নিজেও একটা model, তাই একই আউটপুট একবার pass আর পরের বার fail হতে পারে। টিউটোরিয়ালের নিজের পরামর্শ: rubric-কে হ্যাঁ-না ধরনের আর নির্দিষ্ট করুন, judge model ঠিক করে দিন (pin), আর judge-কে known-good আর known-bad আউটপুট দিয়ে পরীক্ষা করুন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+A model-graded assertion is a small pipeline of its own:
+
+```text
+1. build   the judge prompt: the rubric, the output, and maybe the input
+2. call    the judge model
+3. parse   the judge's answer into pass or fail, with a reason
+4. record  the reason, so a failure is explainable
+```
+
+Step 3 is the weak point, because the judge's answer is free text. A judge that says "The answer is mostly correct but slightly off" is not a test result. The tutorial's advice: make the judge prompt force a structure, usually a single word plus a reason, and make the parser treat anything else as a failure rather than as a pass.
+
+Step 4 matters too. If the reason is not stored, a failing eval tells you that something is wrong but not what. In Promptfoo you can replace the judge prompt with `rubricPrompt`, and you can choose the judge model for one assertion with `provider` <Cite n={1} />.
+
+The **drift** problem has three causes. The fixes are the tutorial's own advice:
+
+```text
+cause                  fix
+the criterion is vague  write it as a binary question with a quoted phrase
+the judge model changed pin the judge model id in the config
+the judge is noisy       test the judge against a known set, and keep the temperature low
+```
+
+Small changes to an eval can move its result. Anthropic reports that changing the labels of the answer options in one eval changed accuracy by about 5% <Cite n={3} />. A change to the judge or to the rubric needs the same care.
+
+The third cause deserves a test of its own. A **judge test** is a small suite where you feed the judge known-good and known-bad outputs and check that it sorts them correctly. It is a test of the test. Without it, a drifting judge can quietly turn the whole suite green.
+
+The **semantic similarity** assertion solves a different problem: the answer must say the same thing as a reference, not contain a keyword. It suits free-text answers where the wording is free but the content is fixed <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+A model check works in four steps:
+
+```text
+1. build   the judge prompt: the rubric, the output, and maybe the input
+2. call    the judge model
+3. parse   the judge's answer into pass or fail, with a reason
+4. record  the reason, so a failure is explainable
+```
+
+Step 3 is the weak point. The judge answers in free text, and "mostly correct but slightly off" is not a test result. The tutorial's advice: make the judge answer with one word plus a reason, and count any other answer as a fail.
+
+Step 4 matters too. If you do not keep the reason, a failed test tells you that something is wrong but not what. In Promptfoo you can write your own judge prompt (`rubricPrompt`) and pick the judge model for one check (`provider`) <Cite n={1} />.
+
+A judge can drift for three reasons. The fixes are the tutorial's advice:
+
+```text
+cause                  fix
+the criterion is vague  write it as a binary question with a quoted phrase
+the judge model changed pin the judge model id in the config
+the judge is noisy       test the judge against a known set, and keep the temperature low
+```
+
+Small changes can move eval results. Anthropic saw accuracy change by about 5% in one eval just because the answer options got different labels <Cite n={3} />. So treat a change to the judge or the rule with the same care.
+
+The third reason needs its own test. A **judge test** gives the judge answers you already know are good or bad, and checks that it sorts them right. It is a test of the test. Without it, a broken judge can quietly pass everything.
+
+The **similarity** check solves a different problem: the answer must mean the same as a reference answer, not contain one word. It fits answers where the wording can change but the content cannot <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+একটা model-graded assertion নিজেই একটা ছোট pipeline:
+
+```text
+1. build   the judge prompt: the rubric, the output, and maybe the input
+2. call    the judge model
+3. parse   the judge's answer into pass or fail, with a reason
+4. record  the reason, so a failure is explainable
+```
+
+তৃতীয় ধাপটাই দুর্বল জায়গা, কারণ judge-এর উত্তর free text। "উত্তরটা মোটামুটি সঠিক কিন্তু একটু ভুল" — এটা টেস্টের ফলাফল নয়। টিউটোরিয়ালের পরামর্শ: judge prompt দিয়ে উত্তরের একটা গঠন বাধ্য করুন, সাধারণত একটা শব্দ আর একটা কারণ, আর parser যেন অন্য যেকোনো উত্তরকে pass নয়, fail ধরে।
+
+চতুর্থ ধাপও গুরুত্বপূর্ণ। কারণ সংরক্ষণ না করলে ব্যর্থ eval শুধু বলে কিছু একটা ভুল, কিন্তু কী ভুল তা বলে না। Promptfoo-তে `rubricPrompt` দিয়ে judge prompt বদলানো যায়, আর `provider` দিয়ে একটা assertion-এর judge model বেছে নেওয়া যায় <Cite n={1} />।
+
+**Drift** সমস্যার তিনটা কারণ আছে। সমাধানগুলো টিউটোরিয়ালের নিজের পরামর্শ:
+
+```text
+cause                  fix
+the criterion is vague  write it as a binary question with a quoted phrase
+the judge model changed pin the judge model id in the config
+the judge is noisy       test the judge against a known set, and keep the temperature low
+```
+
+eval-এ ছোট পরিবর্তনও ফলাফল সরিয়ে দিতে পারে। Anthropic জানায়, একটা eval-এ উত্তরের বিকল্পগুলোর label বদলানোয় accuracy প্রায় 5% বদলে গিয়েছিল <Cite n={3} />। তাই judge বা rubric বদলালেও একই রকম সাবধান থাকুন।
+
+তৃতীয় কারণটার জন্য আলাদা একটা টেস্ট দরকার। **Judge test** হলো একটা ছোট suite, যেখানে judge-কে known-good আর known-bad আউটপুট দিয়ে দেখা হয় সে ঠিকভাবে ভাগ করে কি না। এটা টেস্টের টেস্ট। এটা না থাকলে সরে যাওয়া judge নীরবে পুরো suite সবুজ করে দিতে পারে।
+
+**Semantic similarity** assertion আলাদা সমস্যা সমাধান করে: উত্তরে reference-এর মতো একই কথা থাকতে হবে, শুধু একটা keyword নয়। যেখানে বাক্যের ভাষা বদলাতে পারে কিন্তু বিষয়বস্তু নির্দিষ্ট, সেখানে এটা মানায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Write the rubric as a binary question with a quoted phrase to look for. Compare these two:
+
+```yaml
+# vague: the judge has to interpret "appropriately"
+- type: llm-rubric
+  value: The answer is appropriate and helpful
+
+# binary: the judge checks one thing
+- type: llm-rubric
+  value: Does the answer contain the exact phrase "30 days"? Answer PASS or FAIL.
+  provider: anthropic:messages:claude-sonnet-4-6
+```
+
+Now test the judge itself. This is the suite that keeps the rubric honest:
+
+```python
+JUDGE_CASES = [
+    # output, expected verdict
+    ("You can return it within 30 days.", "PASS"),
+    ("You can return it within 60 days.", "FAIL"),
+    ("Returns are handled case by case.", "FAIL"),
+]
+
+
+def test_judge_sorts_known_outputs():
+    for output, expected in JUDGE_CASES:
+        verdict = judge(output, RUBRIC)
+        assert verdict == expected, f"judge said {verdict}, expected {expected}"
+```
+
+Use `similar` when the wording is free but the content is fixed. The `threshold` key sets the score it must reach; it applies to types such as `similar` and `javascript` <Cite n={2} />:
+
+```yaml
+- type: similar
+  value: The customer can return an unopened item within 30 days of delivery.
+  threshold: 0.8
+```
+
+And use `javascript` for the checks that look like they need a model but do not. A multi-line JavaScript assertion needs an explicit `return` <Cite n={1} />:
+
+```yaml
+- type: javascript
+  value: |-
+    const sentences = output.split(/[.!?]+/).filter(s => s.trim());
+    const words = output.split(/\s+/).length;
+    return words <= 120 && sentences.length <= 3 && !/\brefund\b/i.test(output);
+```
+
+That last check needs no model call and covers three rules at once: length, sentence count, and a banned word. Reserve the model for what really needs judgement.
+
+</Technical>
+<Layman>
+
+Write the rule as a yes-or-no question with the exact words to look for. Compare these two:
+
+```yaml
+# vague: the judge has to interpret "appropriately"
+- type: llm-rubric
+  value: The answer is appropriate and helpful
+
+# binary: the judge checks one thing
+- type: llm-rubric
+  value: Does the answer contain the exact phrase "30 days"? Answer PASS or FAIL.
+  provider: anthropic:messages:claude-sonnet-4-6
+```
+
+Then test the judge itself. This small suite keeps the rule honest:
+
+```python
+JUDGE_CASES = [
+    # output, expected verdict
+    ("You can return it within 30 days.", "PASS"),
+    ("You can return it within 60 days.", "FAIL"),
+    ("Returns are handled case by case.", "FAIL"),
+]
+
+
+def test_judge_sorts_known_outputs():
+    for output, expected in JUDGE_CASES:
+        verdict = judge(output, RUBRIC)
+        assert verdict == expected, f"judge said {verdict}, expected {expected}"
+```
+
+Use `similar` when the words can change but the meaning cannot. `threshold` is the score it must reach <Cite n={2} />:
+
+```yaml
+- type: similar
+  value: The customer can return an unopened item within 30 days of delivery.
+  threshold: 0.8
+```
+
+Use `javascript` for checks that seem to need a model but do not. A JavaScript check of more than one line needs a `return` <Cite n={1} />:
+
+```yaml
+- type: javascript
+  value: |-
+    const sentences = output.split(/[.!?]+/).filter(s => s.trim());
+    const words = output.split(/\s+/).length;
+    return words <= 120 && sentences.length <= 3 && !/\brefund\b/i.test(output);
+```
+
+That last check needs no model call. It checks three rules at once: length, number of sentences, and a banned word. Keep the model for what really needs judgement.
+
+</Layman>
+<Bangla>
+
+rubric লিখুন একটা দ্বিমূলক প্রশ্ন হিসেবে, আর যে বাক্যটা খুঁজবেন সেটা quote করে দিন। এই দুটো তুলনা করুন:
+
+```yaml
+# vague: the judge has to interpret "appropriately"
+- type: llm-rubric
+  value: The answer is appropriate and helpful
+
+# binary: the judge checks one thing
+- type: llm-rubric
+  value: Does the answer contain the exact phrase "30 days"? Answer PASS or FAIL.
+  provider: anthropic:messages:claude-sonnet-4-6
+```
+
+তারপর judge-কেই টেস্ট করুন। rubric-কে সৎ রাখার এই suite:
+
+```python
+JUDGE_CASES = [
+    # output, expected verdict
+    ("You can return it within 30 days.", "PASS"),
+    ("You can return it within 60 days.", "FAIL"),
+    ("Returns are handled case by case.", "FAIL"),
+]
+
+
+def test_judge_sorts_known_outputs():
+    for output, expected in JUDGE_CASES:
+        verdict = judge(output, RUBRIC)
+        assert verdict == expected, f"judge said {verdict}, expected {expected}"
+```
+
+`similar` ব্যবহার করুন যেখানে বাক্যের ভাষা মুক্ত কিন্তু বিষয়বস্তু নির্দিষ্ট। `threshold` key ঠিক করে কত স্কোর পেতে হবে; এটা `similar` আর `javascript`-এর মতো type-এ খাটে <Cite n={2} />:
+
+```yaml
+- type: similar
+  value: The customer can return an unopened item within 30 days of delivery.
+  threshold: 0.8
+```
+
+আর `javascript` ব্যবহার করুন সেই চেকগুলোর জন্য যেগুলো মনে হয় model লাগবে কিন্তু আসলে লাগে না। একাধিক লাইনের JavaScript assertion-এ স্পষ্ট `return` লাগে <Cite n={1} />:
+
+```yaml
+- type: javascript
+  value: |-
+    const sentences = output.split(/[.!?]+/).filter(s => s.trim());
+    const words = output.split(/\s+/).length;
+    return words <= 120 && sentences.length <= 3 && !/\brefund\b/i.test(output);
+```
+
+শেষ চেকটায় কোনো model call লাগে না, আর এটা একসাথে তিনটা নিয়ম যাচাই করে: দৈর্ঘ্য, বাক্যের সংখ্যা, আর একটা নিষিদ্ধ শব্দ। model-কে রাখুন সত্যিই যেখানে বিচার দরকার।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: a vague rubric.** `llm-rubric` grades the output against the rubric you write <Cite n={1} />. "The answer is appropriate" leaves the judge to decide what appropriate means, and the judge can decide differently each run.
+
+**Mistake 2: no judge test.** A judge that always says PASS turns the whole suite green. Test the judge against known-good and known-bad outputs.
+
+**Mistake 3: not pinning the judge model.** A provider upgrade silently changes every rubric result. Pin the judge with the `provider` key of the assertion.
+
+**Mistake 4: parsing the judge answer loosely.** If the judge says "mostly correct", that is not a pass. The parser must accept one token and reject everything else.
+
+**Mistake 5: not storing the reason.** A failure with no reason cannot be triaged. The reason is the most useful part of the output.
+
+**Mistake 6: using a model where a regex would do.** It is slower, it costs a model call, and it is noisier. Use the deterministic check.
+
+</Technical>
+<Layman>
+
+**Mistake 1: a vague rule.** `llm-rubric` grades the answer against the rule you write <Cite n={1} />. "The answer is appropriate" lets the judge decide what appropriate means, and it can decide differently each time.
+
+**Mistake 2: no judge test.** A judge that always says PASS makes every test pass. Test the judge on answers you know are good or bad.
+
+**Mistake 3: not fixing the judge model.** When the provider updates the model, every grade can change without warning. Set the judge model with the `provider` key.
+
+**Mistake 4: reading the judge's answer loosely.** "Mostly correct" is not a pass. Accept one exact word and treat everything else as a fail.
+
+**Mistake 5: not keeping the reason.** Without the reason, nobody can sort out the failure. The reason is the most useful part.
+
+**Mistake 6: using a model where a regex is enough.** A model is slower, costs a call, and is less stable. Use the rule check.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: অস্পষ্ট rubric।** `llm-rubric` আপনার লেখা rubric অনুযায়ী আউটপুটকে নম্বর দেয় <Cite n={1} />। "উত্তরটা উপযুক্ত" বললে judge-কেই ঠিক করতে হয় উপযুক্ত মানে কী, আর judge প্রতিবার ভিন্ন সিদ্ধান্ত নিতে পারে।
+
+**ভুল ২: judge টেস্ট নেই।** যে judge সবসময় PASS বলে, সেটা পুরো suite সবুজ করে দেয়। judge-কে known-good আর known-bad আউটপুটের সাথে টেস্ট করুন।
+
+**ভুল ৩: judge model পিন না করা।** provider upgrade হলে নীরবে প্রতিটা rubric ফলাফল বদলে যায়। assertion-এর `provider` key দিয়ে judge model ঠিক করে দিন।
+
+**ভুল ৪: judge-এর উত্তর আলগাভাবে parse করা।** judge বলল "mostly correct" — এটা পাস নয়। parser একটাই token নেবে, বাকি সব বাদ দেবে।
+
+**ভুল ৫: কারণ সংরক্ষণ না করা।** কারণ ছাড়া ব্যর্থতা triage করা যায় না। কারণটাই আউটপুটের সবচেয়ে দরকারি অংশ।
+
+**ভুল ৬: যেখানে regex যথেষ্ট সেখানে model ব্যবহার করা।** এটা ধীর, এতে একটা model call খরচ হয়, আর এটা বেশি অস্থির। নির্দিষ্ট চেক ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep a `judge-cases` file next to the config with at least ten known-good and ten known-bad outputs, and run it whenever the judge or the rubric changes.
+- Write every rubric as "Does the output contain X? Answer PASS or FAIL." Whenever you catch yourself writing "is it good?", rewrite it.
+- Pin the judge model id and the judge temperature in the config file, not in a shell variable.
+- Store the judge's reason next to the result. When a case fails, that reason is the first thing you read.
+- Count how many assertions in your suite are model-graded. If it is more than half, the suite is slow and unstable.
+- Run one rubric against three different judge models once, and compare. If the verdicts disagree a lot, the rubric is doing too much work.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep a `judge-cases` file next to the config with at least ten known-good and ten known-bad outputs, and run it whenever the judge or the rubric changes.
+- Write every rubric as "Does the output contain X? Answer PASS or FAIL." Whenever you catch yourself writing "is it good?", rewrite it.
+- Pin the judge model id and the judge temperature in the config file, not in a shell variable.
+- Store the judge's reason next to the result. When a case fails, that reason is the first thing you read.
+- Count how many assertions in your suite are model-graded. If it is more than half, the suite is slow and unstable.
+- Run one rubric against three different judge models once, and compare. If the verdicts disagree a lot, the rubric is doing too much work.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- config-এর পাশে একটা `judge-cases` ফাইল রাখুন, কমপক্ষে দশটা known-good আর দশটা known-bad আউটপুট সহ, আর judge বা rubric বদলালে সেটা চালান।
+- প্রতিটা rubric লিখুন "Does the output contain X? Answer PASS or FAIL." এই রকমে। যদি দেখেন আপনি "এটা কি ভালো?" ধরনের কিছু লিখছেন, সেটা নতুন করে লিখুন।
+- judge model id আর judge temperature config ফাইলে পিন করুন, shell variable-এ নয়।
+- judge-এর কারণ ফলাফলের পাশে রাখুন। কোনো কেস ব্যর্থ হলে সেই কারণটাই প্রথমে পড়া হয়।
+- আপনার suite-এ কতগুলো assertion model-graded তা গুনুন। অর্ধেকের বেশি হলে suite ধীর আর অনিশ্চিত।
+- একটা rubric তিনটা ভিন্ন judge model-এর ওপর একবার চালিয়ে তুলনা করুন। ফলাফল অনেক বেশি আলাদা হলে rubric অনেক বেশি কাজ করছে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Assertion | One check applied to the output of a test case |
+| LLM-as-judge | Using a model to decide whether an output meets a written criterion |
+| Rubric | The written criterion the judge checks the output against |
+| Semantic similarity | A check that the output says the same thing as a reference, in different words |
+| Drift | The judge changing its verdict on the same output between runs |
+| Judge test | A test that checks the judge sorts known-good and known-bad outputs correctly |
+| Binary criterion | A rubric phrased so the judge can answer PASS or FAIL |
+| Threshold | The similarity score a semantic check must reach |

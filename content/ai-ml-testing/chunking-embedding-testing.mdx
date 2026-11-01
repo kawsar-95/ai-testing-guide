@@ -1,0 +1,503 @@
+export const metadata = { title: 'Chunking and Embedding Strategy Testing', description: 'Test the choices that decide retrieval quality before it starts: chunk size, overlap, and which embedding model you use.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Introduction', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/', accessed: '2026-11-01' },
+    { title: 'MTEB Massive Text Embedding Benchmark', publisher: 'arXiv', url: 'https://arxiv.org/abs/2210.07316', accessed: '2026-11-01' },
+    { title: 'Querying collections', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/docs/querying-collections', accessed: '2026-11-01' },
+    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
+  ],
+}
+
+# Chunking and Embedding Strategy Testing
+
+Before you can retrieve the right passage, you have to cut the document into passages at all. That decision, and the embedding model, decide most of your accuracy.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **chunk** is a piece of a document that gets embedded and stored. The retriever never sees your document; it sees chunks. So the chunking strategy sets the ceiling on retrieval quality.
+
+Three choices make the chunk:
+
+1. **Size.** Small chunks are precise but lose context. A chunk saying "30 days" is useless without the sentence that says what the 30 days applies to. Large chunks carry context but dilute the embedding, and the question may match the wrong part of a long chunk.
+2. **Overlap.** Chunks that overlap by some tokens avoid losing a sentence that straddles a boundary. The cost is duplicated tokens and a slightly higher chance of a redundant chunk crowding out a good one.
+3. **Where to cut.** Cut on a semantic boundary, a heading, or a paragraph break, rather than mid-sentence.
+
+The **embedding model** is the other half. It turns text into a vector, and two texts that mean the same thing should land close together. Models differ a lot in quality, and the MTEB benchmark exists to compare them <Cite n={2} />. A model that is excellent in English can be poor in Bengali, which is why the choice is a per-language decision.
+
+The testing method is a **benchmark**, not an assertion. You hold the documents and the questions fixed, vary one choice at a time, and measure retrieval quality. Chroma is the easiest database to run that benchmark against, because it runs in the same process as the test and needs no server <Cite n={1} />. Its documentation covers how a collection is queried and what the query options mean <Cite n={3} />, and the RAG metrics give you the numbers to compare <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+**Chunk** হলো একটা document-এর একটা অংশ যেটা embed করে রাখা হয়। retriever আপনার document দেখে না; সে chunk দেখে। তাই chunking-এর সিদ্ধান্তই retrieval quality-এর সীমা ঠিক করে।
+
+chunk তৈরি হয় তিনটা সিদ্ধান্ত থেকে:
+
+1. **আকার।** ছোট chunk নিখুঁত কিন্তু context হারায়। "30 days" লেখা একটা chunk অকার্যকর, কারণ ৩০ দিন কীসের প্রত্যাপ্ত হয় সেটা বাক্য ছাড়া বোঝা যায় না। বড় chunk context বহন করে কিন্তু embedding পাতলা করে, আর প্রশ্নটা chunk-এর ভুল অংশের সাথে মিলে যেতে পারে।
+2. **Overlap।** কিছুটা overlap থাকলে সীমানার মাঝখানে কাটা বাক্য হারায় না। দাম হলো duplicate token আর সামান্য বেশি সম্ভাবনা যে অপ্রয়োজনীয় chunk ভালোটা ঠেলে দেবে।
+3. **কোথায় কাটবেন।** বাক্যের মাঝখানে নয়, বর্যাক্ত অর্থের সীমানায়, heading-এ, বা অনুচ্ছেদের ভাঙায় কাটুন।
+
+**Embedding model** হলো অন্য অর্ধেক। এটা লেখাকে একটা vector বানায়, আর যে দুটো লেখা একই অর্থ বোঝায় তারা কাছে আসা উচিত। মানগুলোর মধ্যে পার্থক্য অনেক, আর MTEB benchmark এদের তুলনা করার জন্যই আছে <Cite n={2} />। ইংরেজিতে চমৎকার model বাংলায় দুর্বল হতে পারে, তাই এই সিদ্ধান্ত প্রতি ভাষায় আলাদা।
+
+টেস্টিং-এর পদ্ধতি হলো **benchmark**, assertion নয়। document আর প্রশ্ন একই রাখুন, একবারে একটা সিদ্ধান্ত বদলান, আর retrieval quality মাপুন। Chroma-র ডকুমেন্টেশনে দেখানো আছে collection কীভাবে query করা হয় আর query option-গুলোর মানে কী <Cite n={3} />, আর তুলনার সংখ্যা দেয় RAG metric <Cite n={4} />।
+
+</Layman>
+<Bangla>
+
+**Chunk** হলো একটা document-এর একটা অংশ যেটা embed করে রাখা হয়। retriever আপনার document দেখে না; সে chunk দেখে। তাই chunking-এর সিদ্ধান্তই retrieval quality-এর সীমা ঠিক করে।
+
+chunk তৈরি হয় তিনটা সিদ্ধান্ত থেকে:
+
+1. **আকার।** ছোট chunk নিখুঁত কিন্তু context হারায়। "30 days" লেখা একটা chunk অকার্যকর, কারণ ৩০ দিন কীসের প্রত্যাপ্ত হয় সেটা বাক্য ছাড়া বোঝা যায় না। বড় chunk context বহন করে কিন্তু embedding পাতলা করে, আর প্রশ্নটা chunk-এর ভুল অংশের সাথে মিলে যেতে পারে।
+2. **Overlap।** কিছুটা overlap থাকলে সীমানার মাঝখানে কাটা বাক্য হারায় না। দাম হলো duplicate token আর সামান্য বেশি সম্ভাবনা যে অপ্রয়োজনীয় chunk ভালোটা ঠেলে দেবে।
+3. **কোথায় কাটবেন।** বাক্যের মাঝখানে নয়, বর্যাক্ত অর্থের সীমানায়, heading-এ, বা অনুচ্ছেদের ভাঙায় কাটুন।
+
+**Embedding model** হলো অন্য অর্ধেক। এটা লেখাকে একটা vector বানায়, আর যে দুটো লেখা একই অর্থ বোঝায় তারা কাছে আসা উচিত। মানগুলোর মধ্যে পার্থক্য অনেক, আর MTEB benchmark এদের তুলনা করার জন্যই আছে <Cite n={2} />। ইংরেজিতে চমৎকার model বাংলায় দুর্বল হতে পারে, তাই এই সিদ্ধান্ত প্রতি ভাষায় আলাদা।
+
+টেস্টিং-এর পদ্ধতি হলো **benchmark**, assertion নয়। document আর প্রশ্ন একই রাখুন, একবারে একটা সিদ্ধান্ত বদলান, আর retrieval quality মাপুন। Chroma-র ডকুমেন্টেশনে দেখানো আছে collection কীভাবে query করা হয় আর query option-গুলোর মানে কী <Cite n={3} />, আর তুলনার সংখ্যা দেয় RAG metric <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The benchmark has one fixed part and one varying part:
+
+```text
+FIXED      a corpus of documents
+           a set of questions, each with the chunk ids that should answer it
+VARYING   the chunk size, the overlap, the boundary rule, the embedding model
+MEASURE   context precision@k, context recall@k, nDCG@k
+```
+
+The **ground truth** is the chunk ids, and it is the hard part. You have to read the corpus and decide which chunks answer which question. A cheaper approximation is to mark the document and accept any chunk from it, which is looser but much faster to build.
+
+**Context precision@k** is the fraction of the k retrieved chunks that are relevant. **Context recall@k** is the fraction of the relevant chunks that came back. **nDCG@k** adds the position, because the chunk at rank one is the one the model reads most carefully.
+
+The typical result, and the reason the benchmark is worth running:
+
+```text
+chunk size   overlap   precision   recall   nDCG
+200          0         0.72        0.61     0.55
+200          50        0.68        0.74     0.63
+500          0         0.55        0.82     0.58
+500          100       0.51        0.88     0.61
+```
+
+Read that table: bigger chunks raise recall and lower precision. That is the trade, and which side you want depends on whether your questions are specific or broad. A question with one right answer wants high precision. A question that needs a whole section wants high recall.
+
+The **embedding model** comparison uses the same corpus and the same questions, with the chunking held fixed. This is the only fair way to compare them, because a better model cannot rescue a bad chunking and a good chunking cannot rescue a bad model. The MTEB benchmark reports results across many datasets and task types, which gives you a starting point before you run your own <Cite n={2} />.
+
+And the **cross-encoder reranker** is the third lever. A bi-encoder embeds the query and the chunk separately and compares the vectors, which is fast but blunt. A cross-encoder reads the query and the chunk together and scores them, which is much more accurate and much more expensive. The test measures whether the rerank improves nDCG enough to pay for its latency.
+
+</Technical>
+<Layman>
+
+benchmark-এর একটা স্থায়ী অংশ আর একটা বদলানো অংশ আছে:
+
+```text
+FIXED      a corpus of documents
+           a set of questions, each with the chunk ids that should answer it
+VARYING   the chunk size, the overlap, the boundary rule, the embedding model
+MEASURE   context precision@k, context recall@k, nDCG@k
+```
+
+**Ground truth** হলো chunk id, আর এটাই কঠিন অংশ। corpus পড়ে ঠিক করতে হয় কোন chunk কোন প্রশ্নের উত্তর। সস্তা সমীকরণ হলো document চিহ্নিত করা আর তার যেকোনো chunk গ্রহণ করা, যেটা আরও ঢিলা কিন্তু বানানো দ্রুত।
+
+**Context precision@k** হলো k ফেরত আসা chunk-এর কতগুলো প্রাসঙ্গিক। **Context recall@k** হলো প্রাসঙ্গিক chunk-এর কতগুলো ফিরে এসেছে। **nDCG@k** যোগ করে অবস্থান, কারণ এক নম্বরে থাকা chunk-টাই model সবচেয়ে মনোযোগ দিয়ে পড়ে।
+
+সাধারণ ফলাফল, আর benchmark চালানোর কারণ:
+
+```text
+chunk size   overlap   precision   recall   nDCG
+200          0         0.72        0.61     0.55
+200          50        0.68        0.74     0.63
+500          0         0.55        0.82     0.58
+500          100       0.51        0.88     0.61
+```
+
+টেবিলটা পড়ুন: বড় chunk recall বাড়ায় আর precision কমায়। এটাই trade, আর কোন দিক চাই তা নির্ভর করে আপনার প্রশ্নগুলো নির্দিষ্ট না বিস্তৃত। একটাই সঠিক উত্তর থাকলে precision চাই। পুরো একটা section লাগলে recall চাই।
+
+**Embedding model** তুলনা একই corpus আর একই প্রশ্ন ব্যবহার করে, chunking একই রেখে। এটাই একমাত্র ন্যায্য তুলনার উপায়, কারণ ভালো model খারাপ chunking বাঁচাতে পারে না আর ভালো chunking খারাপ model বাঁচাতে পারে না। MTEB benchmark অনেক dataset ও task type-এর ফলাফল দেয়, যা আপনার নিজের benchmark চালানোর আগে একটা শুরু দেয় <Cite n={2} />।
+
+আর **cross-encoder reranker** হলো তৃতীয় লিভার। bi-encoder query আর chunk আলাদা করে embed করে vector তুলনা করে, যেটা দ্রুত কিন্তু ভোঁতা। cross-encoder query আর chunk একসাথে পড়ে score দেয়, যেটা অনেক বেশি নির্ভুল আর অনেক বেশি ব্যয়বহুল। টেস্ট মাপে rerank নDCG যথেষ্ট বাড়ায় কি না যা তার latency-এর দাম হিসেবে উঠে পড়ে।
+
+</Layman>
+<Bangla>
+
+benchmark-এর একটা স্থায়ী অংশ আর একটা বদলানো অংশ আছে:
+
+```text
+FIXED      a corpus of documents
+           a set of questions, each with the chunk ids that should answer it
+VARYING   the chunk size, the overlap, the boundary rule, the embedding model
+MEASURE   context precision@k, context recall@k, nDCG@k
+```
+
+**Ground truth** হলো chunk id, আর এটাই কঠিন অংশ। corpus পড়ে ঠিক করতে হয় কোন chunk কোন প্রশ্নের উত্তর। সস্তা সমীকরণ হলো document চিহ্নিত করা আর তার যেকোনো chunk গ্রহণ করা, যেটা আরও ঢিলা কিন্তু বানানো দ্রুত।
+
+**Context precision@k** হলো k ফেরত আসা chunk-এর কতগুলো প্রাসঙ্গিক। **Context recall@k** হলো প্রাসঙ্গিক chunk-এর কতগুলো ফিরে এসেছে। **nDCG@k** যোগ করে অবস্থান, কারণ এক নম্বরে থাকা chunk-টাই model সবচেয়ে মনোযোগ দিয়ে পড়ে।
+
+সাধারণ ফলাফল, আর benchmark চালানোর কারণ:
+
+```text
+chunk size   overlap   precision   recall   nDCG
+200          0         0.72        0.61     0.55
+200          50        0.68        0.74     0.63
+500          0         0.55        0.82     0.58
+500          100       0.51        0.88     0.61
+```
+
+টেবিলটা পড়ুন: বড় chunk recall বাড়ায় আর precision কমায়। এটাই trade, আর কোন দিক চাই তা নির্ভর করে আপনার প্রশ্নগুলো নির্দিষ্ট না বিস্তৃত। একটাই সঠিক উত্তর থাকলে precision চাই। পুরো একটা section লাগলে recall চাই।
+
+**Embedding model** তুলনা একই corpus আর একই প্রশ্ন ব্যবহার করে, chunking একই রেখে। এটাই একমাত্র ন্যায্য তুলনার উপায়, কারণ ভালো model খারাপ chunking বাঁচাতে পারে না আর ভালো chunking খারাপ model বাঁচাতে পারে না। MTEB benchmark অনেক dataset ও task type-এর ফলাফল দেয়, যা আপনার নিজের benchmark চালানোর আগে একটা শুরু দেয় <Cite n={2} />।
+
+আর **cross-encoder reranker** হলো তৃতীয় লিভার। bi-encoder query আর chunk আলাদা করে embed করে vector তুলনা করে, যেটা দ্রুত কিন্তু ভোঁতা। cross-encoder query আর chunk একসাথে পড়ে score দেয়, যেটা অনেক বেশি নির্ভুল আর অনেক বেশি ব্যয়বহুল। টেস্ট মাপে rerank nDCG যথেষ্ট বাড়ায় কি না যা তার latency-এর দাম হিসেবে উঠে পড়ে।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Write the benchmark so the corpus and the questions are data, and the strategy is a parameter:
+
+```python
+# benchmarks/chunking.py
+import chromadb
+
+CORPUS = list_documents()          # fixed
+QUESTIONS = load_questions()        # fixed, with the expected chunk ids
+
+
+def index(chunk_size: int, overlap: int, embedding_model: str):
+    client = chromadb.PersistentClient(path=".chroma")
+    collection = client.get_or_create_collection(
+        name=f"bench-{chunk_size}-{overlap}-{embedding_model}",
+        embedding_function=embedding_fn(embedding_model),
+    )
+    for document in CORPUS:
+        for chunk in split(document, chunk_size, overlap):
+            collection.add(ids=[chunk.id], documents=[chunk.text], metadatas=[chunk.meta])
+    return collection
+```
+
+Then the measurement, and this is the part that makes it a benchmark rather than a test:
+
+```python
+def measure(collection, k: int = 5) -> dict[str, float]:
+    precisions, recalls, ndcgs = [], [], []
+    for question in QUESTIONS:
+        retrieved = collection.query(
+            query_texts=[question.text],
+            n_results=k,
+        )["ids"][0]
+        relevant = set(question.expected_chunk_ids)
+        hits = len(set(retrieved) & relevant)
+        precisions.append(hits / len(retrieved) if retrieved else 0.0)
+        recalls.append(hits / len(relevant) if relevant else 1.0)
+        ndcgs.append(ndcg_at_k(retrieved, relevant, k))
+    return {
+        "precision": mean(precisions),
+        "recall": mean(recalls),
+        "ndcg": mean(ndcgs),
+    }
+```
+
+And the sweep, which is the deliverable:
+
+```python
+for chunk_size in (100, 200, 500):
+    for overlap in (0, 50, 100):
+        for model in ("text-embedding-3-small", "voyage-3"):
+            scores = measure(index(chunk_size, overlap, model))
+            print(chunk_size, overlap, model, scores)
+```
+
+Then the **regression test** that keeps the chosen strategy from drifting. It does not assert an absolute score, because that fails every time the corpus grows. It asserts that the current strategy is still better than the alternatives:
+
+```python
+def test_the_chosen_chunking_still_beats_the_others():
+    chosen = measure(index(CHOSEN_SIZE, CHOSEN_OVERLAP, CHOSEN_MODEL))
+    assert chosen["ndcg"] > 0.6, f"the chosen strategy regressed: {chosen}"
+    for size, overlap in ALTERNATIVES:
+        other = measure(index(size, overlap, CHOSEN_MODEL))
+        assert chosen["ndcg"] >= other["ndcg"], (
+            f"{size}/{overlap} now beats the chosen strategy"
+        )
+```
+
+That last assertion is the useful one. It tells you the moment a better strategy appears, and it does not fail when you add a document.
+
+</Technical>
+<Layman>
+
+benchmark লিখুন যাতে corpus আর প্রশ্ন data হয়, আর strategy একটা parameter:
+
+```python
+# benchmarks/chunking.py
+import chromadb
+
+CORPUS = list_documents()          # fixed
+QUESTIONS = load_questions()        # fixed, with the expected chunk ids
+
+
+def index(chunk_size: int, overlap: int, embedding_model: str):
+    client = chromadb.PersistentClient(path=".chroma")
+    collection = client.get_or_create_collection(
+        name=f"bench-{chunk_size}-{overlap}-{embedding_model}",
+        embedding_function=embedding_fn(embedding_model),
+    )
+    for document in CORPUS:
+        for chunk in split(document, chunk_size, overlap):
+            collection.add(ids=[chunk.id], documents=[chunk.text], metadatas=[chunk.meta])
+    return collection
+```
+
+তারপর মাপাটা, আর এই অংশটাই benchmark-কে টেস্ট থেকে আলাদা করে:
+
+```python
+def measure(collection, k: int = 5) -> dict[str, float]:
+    precisions, recalls, ndcgs = [], [], []
+    for question in QUESTIONS:
+        retrieved = collection.query(
+            query_texts=[question.text],
+            n_results=k,
+        )["ids"][0]
+        relevant = set(question.expected_chunk_ids)
+        hits = len(set(retrieved) & relevant)
+        precisions.append(hits / len(retrieved) if retrieved else 0.0)
+        recalls.append(hits / len(relevant) if relevant else 1.0)
+        ndcgs.append(ndcg_at_k(retrieved, relevant, k))
+    return {
+        "precision": mean(precisions),
+        "recall": mean(recalls),
+        "ndcg": mean(ndcgs),
+    }
+```
+
+আর sweep, যেটাই deliverable:
+
+```python
+for chunk_size in (100, 200, 500):
+    for overlap in (0, 50, 100):
+        for model in ("text-embedding-3-small", "voyage-3"):
+            scores = measure(index(chunk_size, overlap, model))
+            print(chunk_size, overlap, model, scores)
+```
+
+তারপর **regression টেস্ট** যেটা নির্বাচিত strategy-কে সরে যেতে দেয় না। এটা নির্দিষ্ট স্কোর assert করে না, কারণ corpus বাড়লে সেটা প্রতিবার ব্যর্থ হয়। এটা assert করে যে বর্তমান strategy এখনো বিকল্পগুলোর চেয়ে ভালো:
+
+```python
+def test_the_chosen_chunking_still_beats_the_others():
+    chosen = measure(index(CHOSEN_SIZE, CHOSEN_OVERLAP, CHOSEN_MODEL))
+    assert chosen["ndcg"] > 0.6, f"the chosen strategy regressed: {chosen}"
+    for size, overlap in ALTERNATIVES:
+        other = measure(index(size, overlap, CHOSEN_MODEL))
+        assert chosen["ndcg"] >= other["ndcg"], (
+            f"{size}/{overlap} now beats the chosen strategy"
+        )
+```
+
+শেষ assertion-টাই কাজেরটা। এটা জানায় ভালো strategy দেখা দিয়েছে ঠিক কখন, আর document যোগ করলেও ব্যর্থ হয় না।
+
+</Layman>
+<Bangla>
+
+benchmark লিখুন যাতে corpus আর প্রশ্ন data হয়, আর strategy একটা parameter:
+
+```python
+# benchmarks/chunking.py
+import chromadb
+
+CORPUS = list_documents()          # fixed
+QUESTIONS = load_questions()        # fixed, with the expected chunk ids
+
+
+def index(chunk_size: int, overlap: int, embedding_model: str):
+    client = chromadb.PersistentClient(path=".chroma")
+    collection = client.get_or_create_collection(
+        name=f"bench-{chunk_size}-{overlap}-{embedding_model}",
+        embedding_function=embedding_fn(embedding_model),
+    )
+    for document in CORPUS:
+        for chunk in split(document, chunk_size, overlap):
+            collection.add(ids=[chunk.id], documents=[chunk.text], metadatas=[chunk.meta])
+    return collection
+```
+
+তারপর মাপাটা, আর এই অংশটাই benchmark-কে টেস্ট থেকে আলাদা করে:
+
+```python
+def measure(collection, k: int = 5) -> dict[str, float]:
+    precisions, recalls, ndcgs = [], [], []
+    for question in QUESTIONS:
+        retrieved = collection.query(
+            query_texts=[question.text],
+            n_results=k,
+        )["ids"][0]
+        relevant = set(question.expected_chunk_ids)
+        hits = len(set(retrieved) & relevant)
+        precisions.append(hits / len(retrieved) if retrieved else 0.0)
+        recalls.append(hits / len(relevant) if relevant else 1.0)
+        ndcgs.append(ndcg_at_k(retrieved, relevant, k))
+    return {
+        "precision": mean(precisions),
+        "recall": mean(recalls),
+        "ndcg": mean(ndcgs),
+    }
+```
+
+আর sweep, যেটাই deliverable:
+
+```python
+for chunk_size in (100, 200, 500):
+    for overlap in (0, 50, 100):
+        for model in ("text-embedding-3-small", "voyage-3"):
+            scores = measure(index(chunk_size, overlap, model))
+            print(chunk_size, overlap, model, scores)
+```
+
+তারপর **regression টেস্ট** যেটা নির্বাচিত strategy-কে সরে যেতে দেয় না। এটা নির্দিষ্ট স্কোর assert করে না, কারণ corpus বাড়লে সেটা প্রতিবার ব্যর্থ হয়। এটা assert করে যে বর্তমান strategy এখনো বিকল্পগুলোর চেয়ে ভালো:
+
+```python
+def test_the_chosen_chunking_still_beats_the_others():
+    chosen = measure(index(CHOSEN_SIZE, CHOSEN_OVERLAP, CHOSEN_MODEL))
+    assert chosen["ndcg"] > 0.6, f"the chosen strategy regressed: {chosen}"
+    for size, overlap in ALTERNATIVES:
+        other = measure(index(size, overlap, CHOSEN_MODEL))
+        assert chosen["ndcg"] >= other["ndcg"], (
+            f"{size}/{overlap} now beats the chosen strategy"
+        )
+```
+
+শেষ assertion-টাই কাজেরটা। এটা জানায় ভালো strategy দেখা দিয়েছে ঠিক কখন, আর document যোগ করলেও ব্যর্থ হয় না।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: tuning chunking on the eval set.** The corpus and the questions must be held out from the choice, or you are tuning on the test.
+
+**Mistake 2: comparing embedding models with different chunking.** The comparison is meaningless. Hold the chunking fixed.
+
+**Mistake 3: only measuring precision.** A high precision with a low recall means the right chunk is never found.
+
+**Mistake 4: no nDCG.** Position matters, because the model reads the first chunk most carefully.
+
+**Mistake 5: no ground truth.** Without the expected chunk ids there is nothing to measure against <Cite n={4} />.
+
+**Mistake 6: one language.** The embedding model that wins in English may lose in Bengali, and the benchmark must reflect the languages you ship <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+**Mistake ১: eval set-এর ওপর chunking টিউন করা।** corpus আর প্রশ্ন বেছে নেওয়ার থেকে আলাদা রাখতে হবে, নইলে আপনি টেস্টের ওপরই টিউন করছেন।
+
+**Mistake ২: ভিন্ন chunking-এর embedding model তুলনা।** তুলনাটা অর্থহীন। chunking একই রাখুন।
+
+**Mistake ৩: শুধু precision মাপা।** precision বেশি recall কম হলে মানে সঠিক chunk কখনোই পাওয়া যায় না।
+
+**Mistake ৪: nDCG নেই।** অবস্থান গুরুত্বপূর্ণ, কারণ model প্রথম chunk-টাই সবচেয়ে মনোযোগ দিয়ে পড়ে।
+
+**Mistake ৫: ground truth নেই।** প্রত্যাশিত chunk id ছাড়া মাপার কিছু নেই <Cite n={4} />।
+
+**Mistake ৬: এক ভাষা।** ইংরেজিতে যে embedding model জেতে সেটা বাংলায় হেরে যেতে পারে, আর benchmark-এ আপনার যে ভাষায় ship করেন সেটা থাকতে হবে <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+**Mistake ১: eval set-এর ওপর chunking টিউন করা।** corpus আর প্রশ্ন বেছে নেওয়ার থেকে আলাদা রাখতে হবে, নইলে আপনি টেস্টের ওপরই টিউন করছেন।
+
+**Mistake ২: ভিন্ন chunking-এর embedding model তুলনা।** তুলনাটা অর্থহীন। chunking একই রাখুন।
+
+**Mistake ৩: শুধু precision মাপা।** precision বেশি recall কম হলে মানে সঠিক chunk কখনোই পাওয়া যায় না।
+
+**Mistake ৪: nDCG নেই।** অবস্থান গুরুত্বপূর্ণ, কারণ model প্রথম chunk-টাই সবচেয়ে মনোযোগ দিয়ে পড়ে।
+
+**Mistake ৫: ground truth নেই।** প্রত্যাশিত chunk id ছাড়া মাপার কিছু নেই <Cite n={4} />।
+
+**Mistake ৬: এক ভাষা।** ইংরেজিতে যে embedding model জেতে সেটা বাংলায় হেরে যেতে পারে, আর benchmark-এ আপনার যে ভাষায় ship করেন সেটা থাকতে হবে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the benchmark corpus and questions in the repo, next to the code. They are the asset; the script is only the ruler.
+- Record the sweep result in a file and commit it. "We changed the chunk size and nDCG went from 0.61 to 0.63" is the evidence a reviewer can check.
+- Test a Bengali question against an English corpus explicitly. It is a one-line test and it catches a whole class of silent failure.
+- Keep the chosen strategy in one config value, not in three places. The benchmark only works if the app and the benchmark use the same value.
+- Add a test that the chunk ids in the ground truth still exist. Re-chunking changes the ids and silently invalidates the whole benchmark.
+- When you add a document to the corpus, re-run the sweep. A new document can change the best strategy.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the benchmark corpus and questions in the repo, next to the code. They are the asset; the script is only the ruler.
+- Record the sweep result in a file and commit it. "We changed the chunk size and nDCG went from 0.61 to 0.63" is the evidence a reviewer can check.
+- Test a Bengali question against an English corpus explicitly. It is a one-line test and it catches a whole class of silent failure.
+- Keep the chosen strategy in one config value, not in three places. The benchmark only works if the app and the benchmark use the same value.
+- Add a test that the chunk ids in the ground truth still exist. Re-chunking changes the ids and silently invalidates the whole benchmark.
+- When you add a document to the corpus, re-run the sweep. A new document can change the best strategy.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- benchmark-এর corpus আর প্রশ্ন repo-তে কোডের পাশে রাখুন। ওগুলোই সম্পদ; script শুধু মাপকাঠি।
+- sweep-এর ফলাফল একটা ফাইলে লিখে commit করুন। "chunk size বদলে nDCG 0.61 থেকে 0.63 হলো" — এটাই review করা যায় এমন প্রমাণ।
+- ইংরেজি corpus-এর বিপরীতে একটা বাংলা প্রশ্ন স্পষ্ট করে টেস্ট করুন। এক লাইনের টেস্ট আর নীরব ব্যর্থতার একটা পুরো শ্রেণি ধরে।
+- নির্বাচিত strategy একটা config value-তে রাখুন, তিন জায়গায় নয়। app আর benchmark একই value ব্যবহার করলে তবেই benchmark কাজ করে।
+- একটা টেস্ট রাখুন যে ground truth-তে থাকা chunk id-গুলো এখনো আছে। আবার chunk করলে id বদলায় আর পুরো benchmark নীরবে অবৈধ হয়ে যায়।
+- corpus-এ document যোগ করলে sweep আবার চালান। নতুন document সেরা strategy বদলে দিতে পারে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Chunk | The piece of a document that is embedded and stored |
+| Chunk size | How many tokens each chunk holds |
+| Overlap | How many tokens two neighbouring chunks share |
+| Embedding | The vector a piece of text becomes inside the model |
+| Embedding model | The model that turns text into vectors; different models suit different languages |
+| Bi-encoder | Embeds the query and the chunk separately; fast and blunt |
+| Cross-encoder | Reads the query and the chunk together; accurate and slow |
+| Reranking | Reordering the retrieved chunks with a more accurate model |
+| MTEB | The benchmark that compares embedding models across many tasks |
+| nDCG | A ranked-retrieval measure that rewards the right chunk being near the top |

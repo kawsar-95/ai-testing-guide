@@ -1,0 +1,569 @@
+export const metadata = { title: 'Load Testing AI Systems', description: 'Load test an LLM endpoint: throughput, time to first token, tokens per second, rate limits, and the quality cost of load.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Locust documentation', publisher: 'Locust', url: 'https://docs.locust.io/en/stable/', accessed: '2026-11-01' },
+    { title: 'Messages API reference', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-11-01' },
+  ],
+}
+
+# Load Testing AI Systems
+
+An LLM endpoint does not have one latency. It has a time to first token and a tokens-per-second rate, and they fail differently.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+Load testing an AI system measures three things that a normal API load test does not.
+
+1. **Time to first token (TTFT).** How long until the user sees the first word. This is what the user perceives as responsiveness. A request that takes ten seconds total but gives its first token in 300ms feels fast.
+2. **Tokens per second (TPS).** How fast the model produces the rest. This is what determines how long a long answer takes to arrive.
+3. **Total latency.** The sum, and it is a function of the output length, not just of the server. A prompt that produces 800 tokens takes longer than one that produces 50, on the same machine.
+
+The consequence is that **the load test has to fix the output length**, or it is not comparing like with like. `max_tokens` is the control, and it has to be the same on every arm.
+
+The fourth thing is **rate limiting**. Every provider limits you, and the limit is often measured in tokens per minute rather than requests per minute. A load test that ignores the token rate will hit the limit and measure your retry logic instead of your server <Cite n={2} />.
+
+And the fifth is that **load has a quality cost**. A server under strain can degrade by truncating, by serving a shorter answer, or by falling back to a smaller model. A load test that only checks the status code misses all three.
+
+</Technical>
+<Layman>
+
+AI সিস্টেমের load test তিনটা জিনিস মাপে যেগুলো সাধারণ API load test মাপে না:
+
+1. **Time to first token (TTFT)।** ব্যবহারকারী প্রথম শব্দ কবে দেখে। এটাই ব্যবহারকারীর কাছে দ্রুততার অনুভূতি। মোট দশ সেকেন্ড লাগলেও প্রথম token ৩০০ms-এ এলে দ্রুত মনে হয়।
+2. **Tokens per second (TPS)।** বাকি উত্তর model কত দ্রুত বানায়। লম্বা উত্তর কত সময়ে আসবে তা এটা নির্ধারণ করে।
+3. **মোট latency।** দুটোর যোগ, আর এটা আউটপুট দৈর্ঘ্যের ফলাফল, শুধু server-এর নয়। ৮০০ token উৎপন্ন করা prompt একই মেশিনে ৫০ token উৎপন্ন করা prompt-এর চেয়ে বেশি সময় নেয়।
+
+ফলে **load test-এ আউটপুট দৈর্ঘ্য স্থির করতে হবে**, নইলে তুলনা তুলনা হবে না। `max_tokens` হলো control, আর প্রতিটা arm-এ এটা একই রাখতে হবে।
+
+চতুর্থ বিষয় হলো **rate limiting**। প্রতিটা provider আপনাকে সীমা দেয়, আর সেই সীমা প্রায়ই প্রতি মিনিটে request নয়, প্রতি মিনিটে token দিয়ে মাপা হয়। যে load test token rate উপেক্ষা করে সেটা সীমায় ঠেকে গিয়ে আপনার server নয়, retry logic মাপবে <Cite n={2} />।
+
+আর পঞ্চম হলো **load-এর একটা মানের দাম আছে**। চাপের নিচের server উত্তর কেটে দিতে পারে, ছোট উত্তর দিতে পারে, বা ছোট model-এ ফিরে যেতে পারে। শুধু status code দেখা একটা load test তিনটিই মিস করে।
+
+</Layman>
+<Bangla>
+
+AI সিস্টেমের load test তিনটা জিনিস মাপে যেগুলো সাধারণ API load test মাপে না:
+
+1. **Time to first token (TTFT)।** ব্যবহারকারী প্রথম শব্দ কবে দেখে। এটাই ব্যবহারকারীর কাছে দ্রুততার অনুভূতি। মোট দশ সেকেন্ড লাগলেও প্রথম token ৩০০ms-এ এলে দ্রুত মনে হয়।
+2. **Tokens per second (TPS)।** বাকি উত্তর model কত দ্রুত বানায়। লম্বা উত্তর কত সময়ে আসবে তা এটা নির্ধারণ করে।
+3. **মোট latency।** দুটোর যোগ, আর এটা আউটপুট দৈর্ঘ্যের ফলাফল, শুধু server-এর নয়। ৮০০ token উৎপন্ন করা prompt একই মেশিনে ৫০ token উৎপন্ন করা prompt-এর চেয়ে বেশি সময় নেয়।
+
+ফলে **load test-এ আউটপুট দৈর্ঘ্য স্থির করতে হবে**, নইলে তুলনা তুলনা হবে না। `max_tokens` হলো control, আর প্রতিটা arm-এ এটা একই রাখতে হবে।
+
+চতুর্থ বিষয় হলো **rate limiting**। প্রতিটা provider আপনাকে সীমা দেয়, আর সেই সীমা প্রায়ই প্রতি মিনিটে request নয়, প্রতি মিনিটে token দিয়ে মাপা হয়। যে load test token rate উপেক্ষা করে সেটা সীমায় ঠেকে গিয়ে আপনার server নয়, retry logic মাপবে <Cite n={2} />।
+
+আর পঞ্চম হলো **load-এর একটা মানের দাম আছে**। চাপের নিচের server উত্তর কেটে দিতে পারে, ছোট উত্তর দিতে পারে, বা ছোট model-এ ফিরে যেতে পারে। শুধু status code দেখা একটা load test তিনটিই মিস করে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The load profile has to be **shaped like the real traffic**, and real LLM traffic is not uniform. It is bursty, it has a long tail of long prompts, and its arrival is correlated with business hours. A flat ramp tells you almost nothing.
+
+Locust drives the load and gives you the percentile numbers <Cite n={1} />:
+
+```python
+from locust import HttpUser, task, between
+
+
+class SupportUser(HttpUser):
+    wait_time = between(1, 3)
+
+    @task(10)
+    def short_question(self):
+        self.client.post("/api/chat", json={
+            "message": "How long do I have to return a laptop?",
+            "max_tokens": 64,
+        })
+
+    @task(2)
+    def long_question(self):
+        self.client.post("/api/chat", json={
+            "message": LONG_POLICY_QUESTION,
+            "max_tokens": 800,
+        })
+```
+
+The weighted mix matters: the long question is 2% of traffic but a much larger share of the tokens and of the wall-clock time. A load test with only short questions will never find the bottleneck.
+
+**The measurement** has to separate TTFT from total time, and that means the client has to read the stream rather than wait for the body:
+
+```python
+async def measure_one(client, payload) -> dict[str, float]:
+    start = time.perf_counter()
+    first_token_at = None
+    tokens = 0
+    async with client.stream("POST", "/api/chat", json=payload) as response:
+        async for line in response.aiter_lines():
+            if not line.startswith("data: "):
+                continue
+            if first_token_at is None:
+                first_token_at = time.perf_counter()
+            tokens += 1
+    end = time.perf_counter()
+    return {
+        "ttft_ms": (first_token_at - start) * 1000,
+        "total_ms": (end - start) * 1000,
+        "tps": tokens / max(end - start, 1e-6),
+    }
+```
+
+The **quality under load** check is the one nobody writes. The test asserts that the answer is still complete and still correct at peak load:
+
+```python
+def test_the_answer_is_still_complete_under_load(load_results):
+    truncated = [r for r in load_results if r["stop_reason"] == "max_tokens"]
+    assert len(truncated) / len(load_results) < 0.01, (
+        f"{len(truncated)} answers were truncated under load"
+    )
+```
+
+Because a truncated answer can still be grammatical, the assertion on the **stop reason** catches it where a keyword check would not. The same applies to a fallback to a smaller model: the response is fine, and the quality silently drops.
+
+</Technical>
+<Layman>
+
+load profile-এর আকৃতি **আসল ট্রাফিকের মতো** হতে হবে, আর আসল LLM ট্রাফিক সমান নয়। এটা bursty, দীর্ঘ prompt-এর লম্বা tail আছে, আর আসার সময় business hours-এর সাথে যুক্ত। সমান ramp আপনাকে প্রায় কিছুই বলে না।
+
+Locust load চালায় আর percentile সংখ্যা দেয় <Cite n={1} />:
+
+```python
+from locust import HttpUser, task, between
+
+
+class SupportUser(HttpUser):
+    wait_time = between(1, 3)
+
+    @task(10)
+    def short_question(self):
+        self.client.post("/api/chat", json={
+            "message": "How long do I have to return a laptop?",
+            "max_tokens": 64,
+        })
+
+    @task(2)
+    def long_question(self):
+        self.client.post("/api/chat", json={
+            "message": LONG_POLICY_QUESTION,
+            "max_tokens": 800,
+        })
+```
+
+weighted mix গুরুত্বপূর্ণ: লম্বা প্রশ্ন ট্রাফিকের ২% কিন্তু token-এর আর wall-clock সময়ের অনেক বেশি। শুধু ছোট প্রশ্নের load test কখনো bottleneck খুঁজে পাবে না।
+
+**মাপ** TTFT আর মোট সময় আলাদা করতে হয়, আর তার জন্য client-কে body-এর জন্য অপেক্ষা না করে stream পড়তে হয়:
+
+```python
+async def measure_one(client, payload) -> dict[str, float]:
+    start = time.perf_counter()
+    first_token_at = None
+    tokens = 0
+    async with client.stream("POST", "/api/chat", json=payload) as response:
+        async for line in response.aiter_lines():
+            if not line.startswith("data: "):
+                continue
+            if first_token_at is None:
+                first_token_at = time.perf_counter()
+            tokens += 1
+    end = time.perf_counter()
+    return {
+        "ttft_ms": (first_token_at - start) * 1000,
+        "total_ms": (end - start) * 1000,
+        "tps": tokens / max(end - start, 1e-6),
+    }
+```
+
+**load-এর নিচে মানের** চেকটাই কেউ লেখে না। টেস্ট assert করে যে peak load-এও উত্তর এখনো সম্পূর্ণ আর এখনো সঠিক:
+
+```python
+def test_the_answer_is_still_complete_under_load(load_results):
+    truncated = [r for r in load_results if r["stop_reason"] == "max_tokens"]
+    assert len(truncated) / len(load_results) < 0.01, (
+        f"{len(truncated)} answers were truncated under load"
+    )
+```
+
+কারণ কাটা উত্তর ব্যাকরণসঠিক হতে পারে, তাই **stop reason**-এর assertion সেটা ধরে যেখানে keyword check ধরতে পারত না। ছোট model-এ ফিরে যাওয়ার ক্ষেত্রেও তাই হয়: উত্তর ঠিক থাকে, আর মান নীরবে কমে যায়।
+
+</Layman>
+<Bangla>
+
+load profile-এর আকৃতি **আসল ট্রাফিকের মতো** হতে হবে, আর আসল LLM ট্রাফিক সমান নয়। এটা bursty, দীর্ঘ prompt-এর লম্বা tail আছে, আর আসার সময় business hours-এর সাথে যুক্ত। সমান ramp আপনাকে প্রায় কিছুই বলে না।
+
+Locust load চালায় আর percentile সংখ্যা দেয় <Cite n={1} />:
+
+```python
+from locust import HttpUser, task, between
+
+
+class SupportUser(HttpUser):
+    wait_time = between(1, 3)
+
+    @task(10)
+    def short_question(self):
+        self.client.post("/api/chat", json={
+            "message": "How long do I have to return a laptop?",
+            "max_tokens": 64,
+        })
+
+    @task(2)
+    def long_question(self):
+        self.client.post("/api/chat", json={
+            "message": LONG_POLICY_QUESTION,
+            "max_tokens": 800,
+        })
+```
+
+weighted mix গুরুত্বপূর্ণ: লম্বা প্রশ্ন ট্রাফিকের ২% কিন্তু token-এর আর wall-clock সময়ের অনেক বেশি। শুধু ছোট প্রশ্নের load test কখনো bottleneck খুঁজে পাবে না।
+
+**মাপ** TTFT আর মোট সময় আলাদা করতে হয়, আর তার জন্য client-কে body-এর জন্য অপেক্ষা না করে stream পড়তে হয়:
+
+```python
+async def measure_one(client, payload) -> dict[str, float]:
+    start = time.perf_counter()
+    first_token_at = None
+    tokens = 0
+    async with client.stream("POST", "/api/chat", json=payload) as response:
+        async for line in response.aiter_lines():
+            if not line.startswith("data: "):
+                continue
+            if first_token_at is None:
+                first_token_at = time.perf_counter()
+            tokens += 1
+    end = time.perf_counter()
+    return {
+        "ttft_ms": (first_token_at - start) * 1000,
+        "total_ms": (end - start) * 1000,
+        "tps": tokens / max(end - start, 1e-6),
+    }
+```
+
+**load-এর নিচে মানের** চেকটাই কেউ লেখে না। টেস্ট assert করে যে peak load-এও উত্তর এখনো সম্পূর্ণ আর এখনো সঠিক:
+
+```python
+def test_the_answer_is_still_complete_under_load(load_results):
+    truncated = [r for r in load_results if r["stop_reason"] == "max_tokens"]
+    assert len(truncated) / len(load_results) < 0.01, (
+        f"{len(truncated)} answers were truncated under load"
+    )
+```
+
+কারণ কাটা উত্তর ব্যাকরণসঠিক হতে পারে, তাই **stop reason**-এর assertion সেটা ধরে যেখানে keyword check ধরতে পারত না। ছোট model-এ ফিরে যাওয়ার ক্ষেত্রেও তাই হয়: উত্তর ঠিক থাকে, আর মান নীরবে কমে যায়।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The load test asserts on percentiles, not on the average, and it asserts TTFT and total time separately:
+
+```python
+# tests/perf/test_chat_load.py
+import pytest
+
+
+@pytest.mark.perf
+def test_the_p95_latency_is_within_budget(results):
+    ttft = percentile(results["ttft_ms"], 95)
+    total = percentile(results["total_ms"], 95)
+    assert ttft < 800, f"p95 time to first token is {ttft:.0f}ms"
+    assert total < 6000, f"p95 total latency is {total:.0f}ms"
+```
+
+The TTFT budget and the total budget are different numbers for a reason: the user waits for the first one and reads the second. A system that passes the TTFT budget but fails the total budget is fine for a short answer and unusable for a long one, and only the total budget catches that.
+
+The **rate limit** test is the one that stops the load test from measuring your retry logic:
+
+```python
+@pytest.mark.perf
+def test_the_rate_limit_is_respected_not_exceeded(results):
+    total_tokens = sum(r["output_tokens"] for r in results)
+    assert total_tokens <= TOKEN_LIMIT_PER_MINUTE, (
+        f"the test sent {total_tokens} tokens, over the limit"
+    )
+```
+
+And the **quality under load** check, the one that catches the degradation that a status code cannot:
+
+```python
+@pytest.mark.perf
+def test_no_answer_was_truncated_under_load(results):
+    truncated = [r for r in results if r["stop_reason"] == "max_tokens"]
+    assert len(truncated) == 0, f"{len(truncated)} of {len(results)} were truncated"
+```
+
+```python
+@pytest.mark.perf
+def test_no_request_fell_back_to_a_smaller_model(results):
+    fallbacks = [r for r in results if r["model"] != EXPECTED_MODEL]
+    assert not fallbacks, f"{len(fallbacks)} requests used a fallback model"
+```
+
+The second one needs the response to report which model answered, which is another reason the envelope should be logged rather than just the text.
+
+Finally, the **tokens per second** check, because a low TPS is a user-facing problem even when the total latency passes:
+
+```python
+@pytest.mark.perf
+def test_the_generation_rate_is_fast_enough(results):
+    slow = [r for r in results if r["output_tokens"] > 50 and r["tps"] < 20]
+    assert len(slow) / len(results) < 0.05, (
+        f"{len(slow)} long answers generated slower than 20 tokens per second"
+    )
+```
+
+The `output_tokens > 50` filter matters: the first token of a short answer dominates its TPS and would fail the check for the wrong reason.
+
+</Technical>
+<Layman>
+
+load test assert করে গড়ের ওপর নয়, percentile-এর ওপর, আর TTFT আর মোট সময় আলাদা করে:
+
+```python
+# tests/perf/test_chat_load.py
+import pytest
+
+
+@pytest.mark.perf
+def test_the_p95_latency_is_within_budget(results):
+    ttft = percentile(results["ttft_ms"], 95)
+    total = percentile(results["total_ms"], 95)
+    assert ttft < 800, f"p95 time to first token is {ttft:.0f}ms"
+    assert total < 6000, f"p95 total latency is {total:.0f}ms"
+```
+
+TTFT বাজেট আর মোট বাজেট আলাদা সংখ্যা হওয়ার কারণ একটা: ব্যবহারকারী প্রথমটার জন্য অপেক্ষা করে আর দ্বিতীয়টা পড়ে। যে সিস্টেম TTFT বাজেট পাস করে কিন্তু মোট বাজেট ফেইল করে সেটা ছোট উত্তরের জন্য ভালো আর লম্বা উত্তরের জন্য অব্যবহার্য, আর শুধু মোট বাজেটটাই সেটা ধরে।
+
+**rate limit** টেস্টটাই সেটা আটকায় যে load test আপনার retry logic মাপবে না:
+
+```python
+@pytest.mark.perf
+def test_the_rate_limit_is_respected_not_exceeded(results):
+    total_tokens = sum(r["output_tokens"] for r in results)
+    assert total_tokens <= TOKEN_LIMIT_PER_MINUTE, (
+        f"the test sent {total_tokens} tokens, over the limit"
+    )
+```
+
+আর **load-এর নিচে মানের** চেক, যেটা status code-এ ধরা যায় না এমন degradation ধরে:
+
+```python
+@pytest.mark.perf
+def test_no_answer_was_truncated_under_load(results):
+    truncated = [r for r in results if r["stop_reason"] == "max_tokens"]
+    assert len(truncated) == 0, f"{len(truncated)} of {len(results)} were truncated"
+```
+
+```python
+@pytest.mark.perf
+def test_no_request_fell_back_to_a_smaller_model(results):
+    fallbacks = [r for r in results if r["model"] != EXPECTED_MODEL]
+    assert not fallbacks, f"{len(fallbacks)} requests used a fallback model"
+```
+
+দ্বিতীয়টার জন্য response-কে জানাতে হবে কোন model উত্তর দিয়েছে, যেটা envelope log করার আরেকটা কারণ — শুধু লেখা নয়।
+
+শেষে, **tokens per second** চেক, কারণ কম TPS ব্যবহারকারীর সমস্যা এমনক্ষেত্রেও যখন মোট latency পাস করে:
+
+```python
+@pytest.mark.perf
+def test_the_generation_rate_is_fast_enough(results):
+    slow = [r for r in results if r["output_tokens"] > 50 and r["tps"] < 20]
+    assert len(slow) / len(results) < 0.05, (
+        f"{len(slow)} long answers generated slower than 20 tokens per second"
+    )
+```
+
+`output_tokens > 50` ফিল্টারটা গুরুত্বপূর্ণ: ছোট উত্তরের প্রথম token তার TPS-কে আধিপত্য করে আর ভুল কারণে চেক ফেইল করত।
+
+</Layman>
+<Bangla>
+
+load test assert করে গড়ের ওপর নয়, percentile-এর ওপর, আর TTFT আর মোট সময় আলাদা করে:
+
+```python
+# tests/perf/test_chat_load.py
+import pytest
+
+
+@pytest.mark.perf
+def test_the_p95_latency_is_within_budget(results):
+    ttft = percentile(results["ttft_ms"], 95)
+    total = percentile(results["total_ms"], 95)
+    assert ttft < 800, f"p95 time to first token is {ttft:.0f}ms"
+    assert total < 6000, f"p95 total latency is {total:.0f}ms"
+```
+
+TTFT বাজেট আর মোট বাজেট আলাদা সংখ্যা হওয়ার কারণ একটা: ব্যবহারকারী প্রথমটার জন্য অপেক্ষা করে আর দ্বিতীয়টা পড়ে। যে সিস্টেম TTFT বাজেট পাস করে কিন্তু মোট বাজেট ফেইল করে সেটা ছোট উত্তরের জন্য ভালো আর লম্বা উত্তরের জন্য অব্যবহার্য, আর শুধু মোট বাজেটটাই সেটা ধরে।
+
+**rate limit** টেড়টাই সেটা আটকায় যে load test আপনার retry logic মাপবে না:
+
+```python
+@pytest.mark.perf
+def test_the_rate_limit_is_respected_not_exceeded(results):
+    total_tokens = sum(r["output_tokens"] for r in results)
+    assert total_tokens <= TOKEN_LIMIT_PER_MINUTE, (
+        f"the test sent {total_tokens} tokens, over the limit"
+    )
+```
+
+আর **load-এর নিচে মানের** চেক, যেটা status code-এ ধরা যায় না এমন degradation ধরে:
+
+```python
+@pytest.mark.perf
+def test_no_answer_was_truncated_under_load(results):
+    truncated = [r for r in results if r["stop_reason"] == "max_tokens"]
+    assert len(truncated) == 0, f"{len(truncated)} of {len(results)} were truncated"
+```
+
+```python
+@pytest.mark.perf
+def test_no_request_fell_back_to_a_smaller_model(results):
+    fallbacks = [r for r in results if r["model"] != EXPECTED_MODEL]
+    assert not fallbacks, f"{len(fallbacks)} requests used a fallback model"
+```
+
+দ্বিতীয়টার জন্য response-কে জানাতে হবে কোন model উত্তর দিয়েছে, যেটা envelope log করার আরেকটা কারণ — শুধু লেখা নয়।
+
+শেষে, **tokens per second** চেক, কারণ কম TPS ব্যবহারকারীর সমস্যা এমনক্ষেত্রেও যখন মোট latency পাস করে:
+
+```python
+@pytest.mark.perf
+def test_the_generation_rate_is_fast_enough(results):
+    slow = [r for r in results if r["output_tokens"] > 50 and r["tps"] < 20]
+    assert len(slow) / len(results) < 0.05, (
+        f"{len(slow)} long answers generated slower than 20 tokens per second"
+    )
+```
+
+`output_tokens > 50` ফিল্টারটা গুরুত্বপূর্ণ: ছোট উত্তরের প্রথম token তার TPS-কে আধিপত্য করে আর ভুল কারণে চেক ফেইল করত।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: only short questions.** The long prompt is 2% of traffic and a large share of the load.
+
+**Mistake 2: measuring only total latency.** The user perceives the first token, and the two budgets are different numbers.
+
+**Mistake 3: not fixing `max_tokens`.** Then the arms are not comparable, because the output lengths differ <Cite n={2} />.
+
+**Mistake 4: ignoring the token rate limit.** The provider cuts you off and the test measures your retry behaviour instead of your server.
+
+**Mistake 5: only checking the status code.** A truncated or downgraded answer is a 200.
+
+**Mistake 6: running the load test against production traffic.** A load test against live users is a self-inflicted outage <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+**Mistake ১: শুধু ছোট প্রশ্ন।** লম্বা prompt ট্রাফিকের ২% আর load-এর বড় অংশ।
+
+**Mistake ২: শুধু মোট latency মাপা।** ব্যবহারকারী প্রথম token দেখে, আর দুটো বাজেট আলাদা সংখ্যা।
+
+**Mistake ৩: `max_tokens` স্থির না করা।** তাহলে arm দুটো তুলনাযোগ্য নয়, কারণ আউটপুট দৈর্ঘ্য আলাদা <Cite n={2} />।
+
+**Mistake ৪: token rate limit উপেক্ষা করা।** provider আপনাকে কেটে দেয় আর টেস্ট আপনার server নয়, retry আচরণ মাপে।
+
+**Mistake ৫: শুধু status code দেখা।** কাটা বা ছোট model-এ নামানো উত্তরও 200।
+
+**Mistake ৬: production traffic-এর ওপর load test।** live ব্যবহারকারীদের ওপর load test নিজেই ঘটানো outage <Cite n={1} />।
+
+</Layman>
+<Bangla>
+
+**Mistake ১: শুধু ছোট প্রশ্ন।** লম্বা prompt ট্রাফিকের ২% আর load-এর বড় অংশ।
+
+**Mistake ২: শুধু মোট latency মাপা।** ব্যবহারকারী প্রথম token দেখে, আর দুটো বাজেট আলাদা সংখ্যা।
+
+**Mistake ৩: `max_tokens` স্থির না করা।** তাহলে arm দুটো তুলনাযোগ্য নয়, কারণ আউটপুট দৈর্ঘ্য আলাদা <Cite n={2} />।
+
+**Mistake ৪: token rate limit উপেক্ষা করা।** provider আপনাকে কেটে দেয় আর টেস্ট আপনার server নয়, retry আচরণ মাপে।
+
+**Mistake ৫: শুধু status code দেখা।** কাটা বা ছোট model-এ নামানো উত্তরও 200।
+
+**Mistake ৬: production traffic-এর ওপর load test।** live ব্যবহারকারীদের ওপর load test নিজেই ঘটানো outage <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Put the load test behind a `perf` mark so it never runs on every commit. It is slow and it costs tokens.
+- Record the mix of prompt lengths in the test report. "100 users" says nothing; "95 short, 5 long" does.
+- Log the model id with every response so a fallback is visible.
+- Compare against a baseline run, not against an absolute number. The number moves when the provider changes.
+- Test at the rate you expect at peak, not at the maximum the provider allows. The second one just gets you rate limited.
+- Keep the TTFT and total-latency budgets as separate numbers, even when one is derived from the other.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Put the load test behind a `perf` mark so it never runs on every commit. It is slow and it costs tokens.
+- Record the mix of prompt lengths in the test report. "100 users" says nothing; "95 short, 5 long" does.
+- Log the model id with every response so a fallback is visible.
+- Compare against a baseline run, not against an absolute number. The number moves when the provider changes.
+- Test at the rate you expect at peak, not at the maximum the provider allows. The second one just gets you rate limited.
+- Keep the TTFT and total-latency budgets as separate numbers, even when one is derived from the other.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- load test-টা `perf` mark-এর পেছনে রাখুন যাতে প্রতিটা commit-এ না চলে। এটা ধীর আর token খরচ করে।
+- টেস্ট রিপোর্টে prompt দৈর্ঘ্যের মিশ্রণ লিখুন। "১০০ ব্যবহারকারী" কিছু বলে না; "৯৫ ছোট, ৫ লম্বা" বলে।
+- প্রতিটা response-এর সাথে model id লগ করুন যাতে fallback দেখা যায়।
+- নির্দিষ্ট সংখ্যার বদলে baseline run-এর সাথে তুলনা করুন। provider বদলালে সংখ্যা নড়ে।
+- provider-এর সর্বোচ্চ যে rate দেয় তার বদলে আপনি peak-এ যে rate আশা করেন সেই rate-এ টেস্ট করুন। দ্বিতীয়টা শুধু rate limit-এ ঠেকাবে।
+- TTFT আর total-latency বাজেট আলাদা সংখ্যা হিসেবে রাখুন, একটা অন্যটা থেকে বের হলেও।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| TTFT | Time to first token: how long until the user sees the first word |
+| Tokens per second | How fast the model produces the rest of the answer |
+| Load profile | The shape of the traffic a load test generates |
+| Bursty traffic | Traffic that arrives in bursts rather than evenly |
+| Token rate limit | A provider limit measured in tokens per minute rather than requests |
+| p95 | The value that 95 percent of measurements are under |
+| Truncation under load | The server cutting answers short when it is under strain |
+| Fallback model | A smaller model used when the primary one cannot serve the request |
+| Locust | The load-testing tool used to drive concurrent traffic |

@@ -1,0 +1,394 @@
+export const metadata = { title: 'Tokens, Probabilities, and Temperature', description: 'How an LLM turns text into tokens, what temperature actually changes, and how the two decide what a tester sees.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Token counting', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/token-counting', accessed: '2026-11-01' },
+    { title: 'Messages API reference', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-11-01' },
+    { title: 'Lost in the Middle: How Language Models Use Long Contexts', publisher: 'arXiv', url: 'https://arxiv.org/abs/2307.03172', accessed: '2026-11-01' },
+  ],
+}
+
+# Tokens, Probabilities, and Temperature
+
+A model never reads your prompt as text. It reads it as tokens, scores what could come next, and picks one. Temperature is the dial on that pick. Both facts decide what your test can assert.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **token** is the unit the model works with. It is not a word and not a character. Anthropic's token counting endpoint gives the number of input tokens of a message before you send it, and the docs call that number an estimate <Cite n={1} />. The count depends on the text and on the model: the same docs say that Claude 4.7 and later models use a newer tokenizer that produces about 30 percent more tokens for the same text <Cite n={1} />.
+
+Inside the model, each token becomes a vector of numbers called an **embedding**. The model then produces, at each step, a probability for every token in its vocabulary. The service takes that distribution and picks one token, then repeats. The whole answer is built one token at a time.
+
+**Temperature** changes how the pick is made. At temperature 0 the service almost always takes the highest-probability token. Above 0 the distribution is flattened before the sample, so lower-probability tokens get picked more often. This paragraph and the one before it are the tutorial's own simplified explanation.
+
+Two consequences matter for a tester. First, **cost and context are measured in tokens, not characters**. Anthropic names cost and rate limits as reasons to count tokens <Cite n={1} />. Do not guess the count from the word count: measure your own text, in each language and format your product uses. Second, **the same idea can cost different amounts depending on how it is written**, so a prompt change can move your bill and your latency without changing a single character of the output.
+
+</Technical>
+<Layman>
+
+A **token** is the piece the model actually works with. It is not a word and not one letter. Anthropic has an endpoint that tells you how many tokens a message will use before you send it, and the docs say that number is an estimate <Cite n={1} />. The number depends on the text and on the model: Claude 4.7 and later models count about 30 percent more tokens for the same text <Cite n={1} />.
+
+Inside the model, each token turns into a list of numbers called an **embedding**. The model then works out how likely each possible next token is. The service picks one and repeats. The whole answer is built one piece at a time.
+
+**Temperature** changes how that pick is made. At temperature 0 the service nearly always takes the most likely piece. Above 0, the scores get flattened first, so less likely pieces get picked more often. This paragraph and the one before it are the tutorial's own simple explanation.
+
+Two things matter for a tester. First, **cost and context are counted in tokens, not characters**. Anthropic gives cost and rate limits as reasons to count tokens <Cite n={1} />. Do not guess from the number of words: measure your own text, in every language and format your product uses. Second, **the same idea can cost different amounts depending on how it is written**, so editing a prompt can move your bill and your speed without changing the output at all.
+
+</Layman>
+<Bangla>
+
+**Token** হলো সেই ছোট ইউনিট যার ওপর model কাজ করে। এটা পুরো শব্দও নয়, একটা অক্ষরও নয়। Anthropic-এর token counting endpoint পাঠানোর আগেই বলে দেয় একটা message-এ কতগুলো input token লাগবে, আর docs বলে সংখ্যাটা একটা আনুমানিক হিসাব <Cite n={1} />। সংখ্যাটা লেখা আর model দুটোর ওপরই নির্ভর করে: Claude 4.7 আর পরের model-গুলো একই লেখায় প্রায় ৩০ শতাংশ বেশি token গোনে <Cite n={1} />।
+
+model-এর ভেতরে প্রতিটি token সংখ্যার একটা তালিকায় পরিণত হয়, যেটাকে **embedding** বলে। তারপর model বের করে পরের token-গুলো কতটা সম্ভাব্য। service সেখান থেকে একটা বেছে নেয়, তারপর আবার। পুরো উত্তর এভাবে একটা একটা করে তৈরি হয়।
+
+**Temperature** ঠিক করে সেই বাছাই কীভাবে হবে। temperature 0 হলে service প্রায় সবসময় সবচেয়ে সম্ভাব্য token-টাই নেয়। 0-এর বেশি হলে আগে সম্ভাবনাগুলো কাছাকাছি করে দেওয়া হয়, তাই কম সম্ভাব্য token-ও বেশি বেছে নেওয়া হয়। এই অনুচ্ছেদ আর আগেরটা টিউটোরিয়ালের নিজস্ব সহজ ব্যাখ্যা।
+
+টেস্টারের জন্য দুটো বিষয় গুরুত্বপূর্ণ। প্রথমত, **খরচ আর context token-এ মাপা হয়, অক্ষরে নয়**। Anthropic খরচ আর rate limit সামলানোকে token গোনার কারণ হিসেবে বলে <Cite n={1} />। শব্দ গুনে token আন্দাজ করবেন না: আপনার product যেসব ভাষা আর ফরম্যাট ব্যবহার করে, সেগুলোর লেখা নিজে মেপে দেখুন। দ্বিতীয়ত, **একই কথা লেখার ধরনের ওপর নির্ভর করে খরচ বদলাতে পারে**, তাই prompt বদলালে উত্তরের একটা অক্ষরও না বদলে বিল আর গতি বদলে যেতে পারে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The tokenization step is where a text-only system quietly becomes a text-only system with limits. Anthropic exposes a counting endpoint so that an application can measure a prompt before sending it <Cite n={1} />. The count is what you compare against the model's context window, and what drives the cost.
+
+The generation loop is a repetition of four steps:
+
+```text
+1. encode   the text so far becomes token ids
+2. predict  the model returns a score for every token in the vocabulary
+3. sample   the service picks one token, using the temperature rule
+4. repeat   the chosen token joins the text and the loop runs again
+```
+
+The temperature rule in one line: the service takes the probabilities, and the higher the temperature the flatter they get before the draw. At 0 the draw is close to argmax, always taking the top token. The loop and the rule are the tutorial's own simplified model.
+
+Two more settings belong in the same mental model. `max_tokens` is the maximum number of tokens to generate, and when the response reaches it, `stop_reason` is `"max_tokens"` <Cite n={2} />. Such an answer is **truncated**, not finished. A truncated answer can still look plausible, which is why the stop reason is part of what a test asserts. And the **system prompt** is part of the input: the counting endpoint counts it with the messages <Cite n={1} />. Each request sends it again, so it is counted in the input tokens on every turn.
+
+A useful consequence: because the context is a flat list of tokens, everything the model has seen competes for the same window. Research on long contexts found that performance is often highest when the relevant information is at the beginning or the end of the input, and drops when it is in the middle <Cite n={3} />. That is why "do not bury the important part in the middle" is real advice for prompt authors.
+
+</Technical>
+<Layman>
+
+The tokenization step is where a text-only system quietly becomes a text-only system with limits. Anthropic exposes a counting endpoint so an application can measure a prompt before sending it <Cite n={1} />. That count is what you compare against the model's context limit, and what drives the cost.
+
+The generation loop repeats four steps:
+
+```text
+1. encode   the text so far becomes token ids
+2. predict  the model returns a score for every possible next token
+3. sample   the service picks one, using the temperature rule
+4. repeat   that token joins the text and the loop runs again
+```
+
+The temperature rule in one line: the service takes the scores, and the higher the temperature the closer to equal they get before the draw. At 0 it nearly always takes the highest. The loop and the rule are the tutorial's own simple picture.
+
+Two more settings belong here. `max_tokens` is the most tokens the answer may use, and when the answer reaches it, the reason for stopping (`stop_reason`) is `"max_tokens"` <Cite n={2} />. Such an answer is **cut off**, not finished. A cut-off answer can still look reasonable, which is why the reason for stopping is part of what a test checks. And the **system prompt** is part of the input: the counting endpoint counts it together with the messages <Cite n={1} />. Each request sends it again, so it is counted on every turn.
+
+One useful consequence: because the context is one flat list of tokens, everything the model has seen competes for the same space. Research on long inputs found that models do best when the important information is at the beginning or the end, and worse when it is in the middle <Cite n={3} />. That is why "do not bury the important part in the middle" is real advice for prompt authors.
+
+</Layman>
+<Bangla>
+
+Tokenization ধাপেই একটা শুধু-টেক্সট সিস্টেমের সীমা তৈরি হয়। Anthropic একটা counting endpoint দেয়, যাতে অ্যাপ পাঠানোর আগে prompt-এর আকার মাপতে পারে <Cite n={1} />। এই সংখ্যাটাই model-এর context window-এর সাথে তুলনা করা হয়, আর খরচও এর ওপর নির্ভর করে।
+
+Generation loop চারটা ধাপ বারবার চালায়:
+
+```text
+1. encode   এখনকার সব লেখা token id-তে পরিণত হয়
+2. predict  model প্রতিটা সম্ভাব্য পরের token-এর একটা স্কোর দেয়
+3. sample   service temperature-এর নিয়মে একটা বেছে নেয়
+4. repeat   সেই token লেখার সাথে যুক্ত হয়, আবার শুরু
+```
+
+Temperature-এর নিয়ম এক লাইনে: service সম্ভাবনাগুলো নেয়, আর temperature যত বেশি, বাছাইয়ের আগে সেগুলো তত কাছাকাছি হয়ে যায়। 0 হলে প্রায় সবসময় সবচেয়ে সম্ভাব্যটাই নেওয়া হয়। এই loop আর নিয়ম টিউটোরিয়ালের নিজস্ব সহজ ছবি।
+
+আরও দুটো সেটিং একই ছবির অংশ। `max_tokens` হলো সর্বোচ্চ কত token তৈরি হবে, আর উত্তর সেই সীমায় পৌঁছালে `stop_reason` হয় `"max_tokens"` <Cite n={2} />। তখন উত্তর **কেটে যায়**, শেষ হয় না। কাটা উত্তরও দেখতে ঠিকঠাক মনে হতে পারে, তাই উত্তর কেন থামল সেটাও টেস্টে যাচাই করা দরকার। আর **system prompt** ইনপুটের অংশ: counting endpoint সেটাকে message-এর সাথে একসাথে গোনে <Cite n={1} />। প্রতিটা request-এ সেটা আবার পাঠানো হয়, তাই প্রতিটা টার্নেই সেটা গোনা হয়।
+
+একটা কাজে লাগে এমন ফলাফল: context একটা সমতল token-তালিকা, তাই model যা দেখেছে সব একই জায়গার জন্য লড়াই করে। দীর্ঘ input নিয়ে গবেষণায় দেখা গেছে, দরকারি তথ্য শুরুতে বা শেষে থাকলে model সবচেয়ে ভালো করে, আর মাঝখানে থাকলে খারাপ করে <Cite n={3} />। তাই "গুরুত্বপূর্ণ কথা মাঝখানে লুকিয়ে রাখবেন না" prompt লেখার একটা সত্যিকারের পরামর্শ।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Count the tokens before you send, so that a long context is a test failure and not a surprise bill:
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+PROMPT = "Name three colours used in web design."
+
+count = client.messages.count_tokens(
+    model="claude-sonnet-4-6",
+    messages=[{"role": "user", "content": PROMPT}],
+)
+print(count.input_tokens)
+```
+
+Then measure the temperature effect, holding everything else fixed:
+
+```python
+def answer(temperature: float) -> str:
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=100,
+        temperature=temperature,
+        messages=[{"role": "user", "content": PROMPT}],
+    )
+    return message.content[0].text
+
+for temperature in (0.0, 0.5, 1.0):
+    runs = [answer(temperature) for _ in range(5)]
+    print(temperature, len(set(runs)), "distinct answers out of 5")
+```
+
+The number of distinct answers is the signal you want in a test. Expect fewer distinct answers at 0 than at 1; the exact numbers depend on the model and the prompt. If a production prompt is written at temperature 1 and your eval runs at 0, the eval is measuring a system nobody runs.
+
+Finally, assert on the stop reason, not just the text:
+
+```python
+LONG_QUESTION = "Explain, step by step, how a web browser loads a page."
+
+message = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=60,
+    messages=[{"role": "user", "content": LONG_QUESTION}],
+)
+assert message.stop_reason != "max_tokens", "the answer was cut off"
+```
+
+With `max_tokens=60`, this assert is likely to fail, and that is the point of the example. A truncated answer that passes a content check is a common false pass in an LLM test suite.
+
+</Technical>
+<Layman>
+
+Count the tokens before you send, so a long context is a test failure and not a surprise bill:
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+PROMPT = "Name three colours used in web design."
+
+count = client.messages.count_tokens(
+    model="claude-sonnet-4-6",
+    messages=[{"role": "user", "content": PROMPT}],
+)
+print(count.input_tokens)
+```
+
+Then measure the temperature effect, holding everything else the same:
+
+```python
+def answer(temperature: float) -> str:
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=100,
+        temperature=temperature,
+        messages=[{"role": "user", "content": PROMPT}],
+    )
+    return message.content[0].text
+
+for temperature in (0.0, 0.5, 1.0):
+    runs = [answer(temperature) for _ in range(5)]
+    print(temperature, len(set(runs)), "distinct answers out of 5")
+```
+
+The number of different answers is the signal you want in a test. Expect fewer different answers at 0 than at 1; the exact numbers depend on the model and the prompt. If production runs a prompt at temperature 1 and your check runs at 0, you are testing a system nobody uses.
+
+Finally, check the reason the answer stopped, not just the answer:
+
+```python
+LONG_QUESTION = "Explain, step by step, how a web browser loads a page."
+
+message = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=60,
+    messages=[{"role": "user", "content": LONG_QUESTION}],
+)
+assert message.stop_reason != "max_tokens", "the answer was cut off"
+```
+
+With `max_tokens=60`, this check will likely fail, and that is the point of the example. A cut-off answer that passes a content check is a common false pass in an LLM test suite.
+
+</Layman>
+<Bangla>
+
+পাঠানোর আগে token গুনুন, যাতে লম্বা context অপ্রত্যাশিত বিল না হয়ে একটা টেস্ট ব্যর্থতা হয়:
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+PROMPT = "Name three colours used in web design."
+
+count = client.messages.count_tokens(
+    model="claude-sonnet-4-6",
+    messages=[{"role": "user", "content": PROMPT}],
+)
+print(count.input_tokens)
+```
+
+তারপর temperature-এর প্রভাব মাপুন, বাকি সব একই রেখে:
+
+```python
+def answer(temperature: float) -> str:
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=100,
+        temperature=temperature,
+        messages=[{"role": "user", "content": PROMPT}],
+    )
+    return message.content[0].text
+
+for temperature in (0.0, 0.5, 1.0):
+    runs = [answer(temperature) for _ in range(5)]
+    print(temperature, len(set(runs)), "distinct answers out of 5")
+```
+
+ভিন্ন উত্তরের সংখ্যাই হলো সেই সংকেত যা টেস্টে দরকার। 0-এ 1-এর চেয়ে কম ভিন্ন উত্তর আশা করুন; ঠিক কত, সেটা model আর prompt-এর ওপর নির্ভর করে। production-এ যদি prompt temperature 1-এ চলে আর আপনার eval 0-এ চলে, তাহলে আপনি এমন একটা সিস্টেম টেস্ট করছেন যা কেউ ব্যবহার করে না।
+
+শেষে, শুধু উত্তর নয়, উত্তর কেন থামল সেটাও দেখুন:
+
+```python
+LONG_QUESTION = "Explain, step by step, how a web browser loads a page."
+
+message = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=60,
+    messages=[{"role": "user", "content": LONG_QUESTION}],
+)
+assert message.stop_reason != "max_tokens", "the answer was cut off"
+```
+
+`max_tokens=60` হলে এই assert সম্ভবত ফেইল করবে, আর উদাহরণটার উদ্দেশ্যই সেটা। কাটা উত্তর content check পাস করে যাওয়া LLM টেস্ট স্যুটের একটা সাধারণ ভুল পাস।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: measuring context in characters or words.** The API limit is in tokens. The number of words that fit depends on the text and on the model's tokenizer: the same text gives about 30 percent more tokens on Claude 4.7 and later models than on earlier ones. Use the counting endpoint <Cite n={1} />.
+
+**Mistake 2: evaluating at a temperature production does not use.** A temperature of 0 in the eval and 1 in production means the eval never sees the variance the users see. The eval must run at the production setting, and usually several times.
+
+**Mistake 3: ignoring the stop reason.** An answer cut off at `max_tokens` can still satisfy a keyword check. Assert on `stop_reason` <Cite n={2} />.
+
+**Mistake 4: not counting the system prompt.** It is part of the input tokens of every request <Cite n={1} />. A long system prompt with a long conversation fills the window faster than the conversation alone suggests.
+
+**Mistake 5: putting the important instruction in the middle.** In long inputs, models often do worst on information in the middle <Cite n={3} />. Put the instruction at the start or the end, and repeat the constraint that matters most.
+
+**Mistake 6: assuming temperature 0 means the same answer every time.** Check it with repeated runs before a test depends on it.
+
+</Technical>
+<Layman>
+
+**Mistake 1: measuring context in letters or words.** The API limit is in tokens. How many words fit depends on the text and on the model: the same text gives about 30 percent more tokens on Claude 4.7 and later models. Use the counting endpoint <Cite n={1} />.
+
+**Mistake 2: testing at a temperature production does not use.** A temperature of 0 in the check and 1 in production means the check never sees the variety users see. Run the check at the production setting, and usually several times.
+
+**Mistake 3: ignoring why the answer stopped.** An answer cut off at `max_tokens` can still pass a keyword check. Check `stop_reason` <Cite n={2} />.
+
+**Mistake 4: not counting the system prompt.** It is part of the input of every request <Cite n={1} />. A long system prompt plus a long conversation fills the space faster than the conversation alone suggests.
+
+**Mistake 5: putting the important instruction in the middle.** In long inputs, models often do worst on what sits in the middle <Cite n={3} />. Put the instruction at the start or the end, and repeat the most important rule.
+
+**Mistake 6: assuming temperature 0 means the same answer every time.** Check it with repeated runs before a test depends on it.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: context অক্ষর বা শব্দে মাপা।** API-র সীমা token-এ। কতগুলো শব্দ ধরবে, সেটা লেখা আর model-এর tokenizer-এর ওপর নির্ভর করে: Claude 4.7 আর পরের model-এ একই লেখায় প্রায় ৩০ শতাংশ বেশি token হয়। counting endpoint ব্যবহার করুন <Cite n={1} />।
+
+**ভুল ২: production যে temperature ব্যবহার করে না, সেটায় eval চালানো।** eval-এ 0 আর production-এ 1 হলে eval কখনোই ব্যবহারকারীর দেখা বৈচিত্র্য দেখে না। eval production-এর সেটিংয়ে চালাতে হবে, আর সাধারণত কয়েকবার।
+
+**ভুল ৩: উত্তর কেন থামল সেটা উপেক্ষা করা।** `max_tokens`-এ কেটে যাওয়া উত্তরও keyword check পাস করতে পারে। `stop_reason`-এর ওপর assert করুন <Cite n={2} />।
+
+**ভুল ৪: system prompt না গোনা।** সেটা প্রতিটা request-এর input token-এর অংশ <Cite n={1} />। লম্বা system prompt আর লম্বা কথোপকথন মিলে window আগেই ভরে যায়।
+
+**ভুল ৫: গুরুত্বপূর্ণ নির্দেশনা মাঝখানে রাখা।** লম্বা input-এ মাঝখানের তথ্যে model প্রায়ই সবচেয়ে খারাপ করে <Cite n={3} />। নির্দেশনা শুরুতে বা শেষে রাখুন, আর সবচেয়ে জরুরি শর্তটা আবার লিখুন।
+
+**ভুল ৬: ধরে নেওয়া যে temperature 0 মানে প্রতিবার একই উত্তর।** কোনো টেস্ট এর ওপর নির্ভর করার আগে কয়েকবার চালিয়ে যাচাই করুন।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Log the input token count, the output token count, and the stop reason for every call in the test run. A trend line is worth more than a single number.
+- Assert that the prompt plus the system prompt plus the conversation stays inside the context window with room to spare.
+- Run the eval at the same temperature as production, and run it more than once.
+- Put the task instruction at the start or the end of a long prompt, and repeat the critical constraint.
+- Add a test with a deliberately tight `max_tokens` so that the truncated case is covered before production finds it.
+- Track the cost per eval run in the report, next to the quality score. A quality gain that costs ten times more is a product decision, not a testing decision.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Log the input token count, the output token count, and the reason the answer stopped for every call in the test run. A trend is worth more than one number.
+- Check that the prompt, the system prompt, and the conversation together leave room inside the context limit.
+- Run the eval at the same temperature as production, and run it more than once.
+- Put the instruction at the start or the end of a long prompt, and repeat the critical constraint.
+- Add a test with a deliberately tight `max_tokens`, so the cut-off case is covered before production finds it.
+- Track the cost of each eval run next to the quality score. A quality gain that costs ten times more is a product decision, not a testing decision.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- টেস্ট রানের প্রতিটি কলের ইনপুট token সংখ্যা, আউটপুট token সংখ্যা আর উত্তর কেন থামল সেটা লিখে রাখুন। একটা সংখ্যার চেয়ে trend বেশি মূল্যবান।
+- prompt, system prompt আর কথোপকথন মিলে context সীমার ভেতরে যথেষ্ট জায়গা থাকে কি না যাচাই করুন।
+- eval চালান production-এর temperature-এ, আর একবারের বেশি।
+- লম্বা prompt-এর শুরুতে বা শেষে নির্দেশনা রাখুন, আর সবচেয়ে জরুরি শর্তটা আবার লিখুন।
+- ইচ্ছা করে ছোট `max_tokens` দিয়ে একটা টেস্ট রাখুন, যাতে production-এ ধরা পড়ার আগেই কাটা উত্তরের কেস কভার হয়।
+- প্রতিটি eval run-এর খরচ মানের স্কোরের পাশে রাখুন। দশগুণ বেশি খরচে পাওয়া মান উন্নতি একটা প্রোডাক্ট সিদ্ধান্ত, টেস্টিং সিদ্ধান্ত নয়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Token | The unit the model reads and writes. Not a word and not a character |
+| Embedding | The list of numbers a token becomes inside the model |
+| Context window | The maximum number of tokens the model can read at once |
+| Temperature | The setting that flattens the probability distribution before the token is sampled |
+| max_tokens | The cap on the output length. Hitting it truncates the answer |
+| stop_reason | Why the model stopped. `max_tokens` means the answer was cut off |
+| Truncation | An answer that hit the length cap and ends mid-sentence |
+| Argmax | Always picking the highest-probability token. What temperature 0 approximates |
+| System prompt | The instruction that sits before the conversation and is counted on every turn |
+| Sampling | The act of choosing a token from the probability distribution |

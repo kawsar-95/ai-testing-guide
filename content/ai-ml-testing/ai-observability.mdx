@@ -1,0 +1,344 @@
+export const metadata = { title: 'AI Observability and Production Monitoring', description: 'Set up tracing with Arize Phoenix and LangFuse, and know why a clean eval run does not mean a clean production system.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Introduction', publisher: 'Arize (Phoenix docs)', url: 'https://arize.com/docs/phoenix', accessed: '2026-11-01' },
+    { title: 'Introduction', publisher: 'Langfuse (docs)', url: 'https://langfuse.com/docs', accessed: '2026-11-01' },
+  ],
+}
+
+# AI Observability and Production Monitoring
+
+An eval suite tells you what the model does on the questions you thought to ask. Observability tells you what it did on the ones you did not.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+**Observability** is the practice of instrumenting a live system so that every call, its input, its output, and its timing, is recorded and queryable after the fact. For an AI application it answers a question an eval suite cannot: what is the model actually being asked in production, and how is it actually answering, on traffic nobody wrote a test case for.
+
+**Arize Phoenix** is an open-source observability tool built specifically for LLM applications: it traces calls, runs evaluations on live traffic, and surfaces drift <Cite n={1} />. **LangFuse** does the same job with its own focus on tracing and prompt management, and both can sit alongside each other or replace one another depending on the stack <Cite n={2} />.
+
+This page is the introduction: what a trace is, why it matters, and the first setup. The deeper version — specific alert thresholds, drift detection, and A/B comparison in production — is in the Phase 2 module on production observability, once the tools and the agent/RAG concepts that feed it are in place.
+
+</Technical>
+<Layman>
+
+**Observability** হলো একটা live সিস্টেমকে এমনভাবে instrument করার practice যাতে প্রতিটা call, তার input, output, আর timing, রেকর্ড হয় আর পরে query করা যায়। একটা AI application-এর জন্য এটা এমন একটা প্রশ্নের উত্তর দেয় যা eval suite দিতে পারে না: production-এ model-কে আসলে কী জিজ্ঞেস করা হচ্ছে, আর এটা আসলে কীভাবে উত্তর দিচ্ছে, এমন traffic-এ যার জন্য কেউ test case লেখেনি।
+
+**Arize Phoenix** একটা open-source observability টুল, বিশেষভাবে LLM application-এর জন্য বানানো: এটা call trace করে, live traffic-এ evaluation চালায়, আর drift দেখায় <Cite n={1} />। **LangFuse** একই কাজ করে নিজের tracing আর prompt management-এ focus দিয়ে, আর দুটোই একসাথে বসতে পারে বা স্ট্যাক অনুযায়ী একে অপরকে প্রতিস্থাপন করতে পারে <Cite n={2} />।
+
+এই পেজটা ভূমিকা: trace কী, এটা কেন গুরুত্বপূর্ণ, আর প্রথম setup। গভীর সংস্করণ — নির্দিষ্ট alert threshold, drift detection, আর production-এ A/B তুলনা — Phase 2-এর production observability মডিউলে, একবার যে টুল আর agent/RAG ধারণা এটাকে খাওয়ায় সেগুলো জায়গায় থাকলে।
+
+</Layman>
+<Bangla>
+
+**Observability** হলো একটা live সিস্টেমকে এমনভাবে instrument করার practice যাতে প্রতিটা call, তার input, output, আর timing, রেকর্ড হয় আর পরে query করা যায়। একটা AI application-এর জন্য এটা এমন একটা প্রশ্নের উত্তর দেয় যা eval suite দিতে পারে না: production-এ model-কে আসলে কী জিজ্ঞেস করা হচ্ছে, আর এটা আসলে কীভাবে উত্তর দিচ্ছে, এমন traffic-এ যার জন্য কেউ test case লেখেনি।
+
+**Arize Phoenix** একটা open-source observability টুল, বিশেষভাবে LLM application-এর জন্য বানানো: এটা call trace করে, live traffic-এ evaluation চালায়, আর drift দেখায় <Cite n={1} />। **LangFuse** একই কাজ করে নিজের tracing আর prompt management-এ focus দিয়ে, আর দুটোই একসাথে বসতে পারে বা স্ট্যাক অনুযায়ী একে অপরকে প্রতিস্থাপন করতে পারে <Cite n={2} />।
+
+এই পেজটা ভূমিকা: trace কী, এটা কেন গুরুত্বপূর্ণ, আর প্রথম setup। গভীর সংস্করণ — নির্দিষ্ট alert threshold, drift detection, আর production-এ A/B তুলনা — Phase 2-এর production observability মডিউলে, একবার যে টুল আর agent/RAG ধারণা এটাকে খাওয়ায় সেগুলো জায়গায় থাকলে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+A trace is the record of one call to the model, captured at the point the call happens:
+
+```text
+trace    one record: input, output, latency, token counts, model, timestamp
+span     a sub-step inside a trace, e.g. one retrieval call within a RAG answer
+session  a group of traces belonging to one conversation
+```
+
+Both Phoenix <Cite n={1} /> and LangFuse <Cite n={2} /> instrument an application by wrapping the calls it already makes, so adopting one does not mean rewriting the application: it means adding a decorator or a context manager around the existing model and retriever calls.
+
+Once traces are flowing, the basic loop an observability setup supports is:
+
+```text
+collect traces -> sample a subset -> run an eval metric on the sample -> alert if it degrades
+```
+
+This is the same DeepEval- and Ragas-style metrics from the eval modules, run on live traffic instead of a fixed test set — the mechanism does not change, only the data source does.
+
+</Technical>
+<Layman>
+
+একটা trace হলো model-এ একটা call-এর রেকর্ড, call ঘটার মুহূর্তে ধরা:
+
+```text
+trace    one record: input, output, latency, token counts, model, timestamp
+span     a sub-step inside a trace, e.g. one retrieval call within a RAG answer
+session  a group of traces belonging to one conversation
+```
+
+Phoenix <Cite n={1} /> আর LangFuse <Cite n={2} /> দুটোই একটা application-কে instrument করে যা সে ইতিমধ্যে করা call-গুলো মুড়ে, তাই একটা গ্রহণ করা মানে application আবার লেখা নয়: এটা মানে বিদ্যমান model আর retriever call-এর চারপাশে একটা decorator বা context manager যোগ করা।
+
+একবার trace প্রবাহিত হলে, একটা observability setup যে মূল loop সমর্থন করে:
+
+```text
+collect traces -> sample a subset -> run an eval metric on the sample -> alert if it degrades
+```
+
+এটা eval মডিউলের সেই একই DeepEval- আর Ragas-স্টাইল metric, একটা নির্দিষ্ট test set-এর বদলে live traffic-এ চালানো — mechanism বদলায় না, শুধু data source বদলায়।
+
+</Layman>
+<Bangla>
+
+একটা trace হলো model-এ একটা call-এর রেকর্ড, call ঘটার মুহূর্তে ধরা:
+
+```text
+trace    one record: input, output, latency, token counts, model, timestamp
+span     a sub-step inside a trace, e.g. one retrieval call within a RAG answer
+session  a group of traces belonging to one conversation
+```
+
+Phoenix <Cite n={1} /> আর LangFuse <Cite n={2} /> দুটোই একটা application-কে instrument করে যা সে ইতিমধ্যে করা call-গুলো মুড়ে, তাই একটা গ্রহণ করা মানে application আবার লেখা নয়: এটা মানে বিদ্যমান model আর retriever call-এর চারপাশে একটা decorator বা context manager যোগ করা।
+
+একবার trace প্রবাহিত হলে, একটা observability setup যে মূল loop সমর্থন করে:
+
+```text
+collect traces -> sample a subset -> run an eval metric on the sample -> alert if it degrades
+```
+
+এটা eval মডিউলের সেই একই DeepEval- আর Ragas-স্টাইল metric, একটা নির্দিষ্ট test set-এর বদলে live traffic-এ চালানো — mechanism বদলায় না, শুধু data source বদলায়।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+A minimal Phoenix setup that traces an existing OpenAI-style call <Cite n={1} />:
+
+```python
+import phoenix as px
+from openinference.instrumentation.openai import OpenAIInstrumentor
+
+px.launch_app()                 # starts the local Phoenix UI
+OpenAIInstrumentor().instrument()  # traces every OpenAI call from here on
+
+# existing application code, unmodified
+answer = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
+```
+
+Every call now shows up in the Phoenix UI with its input, output, latency, and token counts, with no change to `answer_question()` itself.
+
+A minimal LangFuse setup, decorating the same kind of call <Cite n={2} />:
+
+```python
+from langfuse.decorators import observe
+
+@observe()
+def answer_question(question: str) -> str:
+    return client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": question}],
+    ).choices[0].message.content
+```
+
+Both approaches collect the same shape of data. Choosing between them is usually about which one's UI, pricing, or self-hosting story fits the team, not about a difference in what gets captured.
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Turn on tracing before the first production user, not after the first incident. A trace you did not capture cannot be reviewed later.
+- Tag every trace with the prompt version and model, the same discipline as the quality dashboard.
+- Start by just looking at a sample of real traces by hand, before building any alert. The surprises in real traffic inform what is worth alerting on.
+</Callout>
+
+</Technical>
+<Layman>
+
+একটা বিদ্যমান OpenAI-স্টাইল call trace করা একটা ন্যূনতম Phoenix setup <Cite n={1} />:
+
+```python
+import phoenix as px
+from openinference.instrumentation.openai import OpenAIInstrumentor
+
+px.launch_app()                 # starts the local Phoenix UI
+OpenAIInstrumentor().instrument()  # traces every OpenAI call from here on
+
+# existing application code, unmodified
+answer = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
+```
+
+প্রতিটা call এখন Phoenix UI-তে তার input, output, latency, আর token count সহ দেখা যায়, `answer_question()`-এ কোনো পরিবর্তন ছাড়াই।
+
+একই ধরনের call decorate করা একটা ন্যূনতম LangFuse setup <Cite n={2} />:
+
+```python
+from langfuse.decorators import observe
+
+@observe()
+def answer_question(question: str) -> str:
+    return client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": question}],
+    ).choices[0].message.content
+```
+
+দুটো পদ্ধতিই একই আকারের data সংগ্রহ করে। এদের মধ্যে বেছে নেওয়া সাধারণত নির্ভর করে কারটার UI, pricing, বা self-hosting গল্প দলের সাথে মানানসই তার ওপর, কী ধরা পড়ে তার পার্থক্যের ওপর নয়।
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- প্রথম production ব্যবহারকারীর আগে tracing চালু করুন, প্রথম incident-এর পরে নয়। যে trace ধরা পড়েনি তা পরে review করা যায় না।
+- প্রতিটা trace-কে prompt version আর model দিয়ে ট্যাগ করুন, quality dashboard-এর একই শৃঙ্খলা।
+- কোনো alert বানানোর আগে শুধু হাতে কিছু real trace দেখা শুরু করুন। real traffic-এর বিস্ময়গুলো জানায় কী alert করার যোগ্য।
+</Callout>
+
+</Layman>
+<Bangla>
+
+একটা বিদ্যমান OpenAI-স্টাইল call trace করা একটা ন্যূনতম Phoenix setup <Cite n={1} />:
+
+```python
+import phoenix as px
+from openinference.instrumentation.openai import OpenAIInstrumentor
+
+px.launch_app()                 # starts the local Phoenix UI
+OpenAIInstrumentor().instrument()  # traces every OpenAI call from here on
+
+# existing application code, unmodified
+answer = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
+```
+
+প্রতিটা call এখন Phoenix UI-তে তার input, output, latency, আর token count সহ দেখা যায়, `answer_question()`-এ কোনো পরিবর্তন ছাড়াই।
+
+একই ধরনের call decorate করা একটা ন্যূনতম LangFuse setup <Cite n={2} />:
+
+```python
+from langfuse.decorators import observe
+
+@observe()
+def answer_question(question: str) -> str:
+    return client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": question}],
+    ).choices[0].message.content
+```
+
+দুটো পদ্ধতিই একই আকারের data সংগ্রহ করে। এদের মধ্যে বেছে নেওয়া সাধারণত নির্ভর করে কারটার UI, pricing, বা self-hosting গল্প দলের সাথে মানানসই তার ওপর, কী ধরা পড়ে তার পার্থক্যের ওপর নয়।
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- প্রথম production ব্যবহারকারীর আগে tracing চালু করুন, প্রথম incident-এর পরে নয়। যে trace ধরা পড়েনি তা পরে review করা যায় না।
+- প্রতিটা trace-কে prompt version আর model দিয়ে ট্যাগ করুন, quality dashboard-এর একই শৃঙ্খলা।
+- কোনো alert বানানোর আগে শুধু হাতে কিছু real trace দেখা শুরু করুন। real traffic-এর বিস্ময়গুলো জানায় কী alert করার যোগ্য।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: treating a clean eval run as proof production is fine.** The eval suite only covers the inputs someone thought to write; production traffic always finds the rest.
+
+**Mistake 2: turning on tracing only after an incident.** The traces from before the tool was installed do not exist to review.
+
+**Mistake 3: tracing without session grouping.** A pile of individual calls with no conversation boundary cannot show a multi-turn failure.
+
+**Mistake 4: picking a tool before looking at either one's UI.** Phoenix and LangFuse capture similar data but present it differently; try both on a small slice of real traffic before committing <Cite n={1} /> <Cite n={2} />.
+
+**Mistake 5: no link between a trace and the quality dashboard.** A trace tool and a metrics dashboard that cannot be cross-referenced leave a tester unable to go from "the metric dropped" to "here is the specific call that caused it".
+
+</Technical>
+<Layman>
+
+**Mistake ১: পরিষ্কার eval run-কে production ঠিক আছে তার প্রমাণ ভাবা।** eval suite শুধু সেই input কভার করে যা কেউ লেখার কথা ভেবেছিল; production traffic সবসময় বাকিটা খুঁজে পায়।
+
+**Mistake ২: শুধু একটা incident-এর পরে tracing চালু করা।** টুল install হওয়ার আগের trace review করার জন্য থাকে না।
+
+**Mistake ৩: session grouping ছাড়া tracing।** কথোপকথনের সীমানা ছাড়া পৃথক call-এর একটা স্তূপ একটা multi-turn ব্যর্থতা দেখাতে পারে না।
+
+**Mistake ৪: কারো UI না দেখে একটা টুল বেছে নেওয়া।** Phoenix আর LangFuse একই রকম data ধরে কিন্তু আলাদাভাবে দেখায়; commit করার আগে real traffic-এর একটা ছোট অংশে দুটোই চেষ্টা করুন <Cite n={1} /> <Cite n={2} />।
+
+**Mistake ৫: trace আর quality dashboard-এর মধ্যে কোনো লিংক নেই।** একটা trace টুল আর একটা metrics dashboard যা cross-reference করা যায় না, একজন টেস্টারকে "metric কমেছে" থেকে "এখানে নির্দিষ্ট call যা এটার কারণ"-এ যেতে অক্ষম রাখে।
+
+</Layman>
+<Bangla>
+
+**ভুল ১: পরিষ্কার eval run-কে production ঠিক আছে তার প্রমাণ ভাবা।** eval suite শুধু সেই input কভার করে যা কেউ লেখার কথা ভেবেছিল; production traffic সবসময় বাকিটা খুঁজে পায়।
+
+**ভুল ২: শুধু একটা incident-এর পরে tracing চালু করা।** টুল install হওয়ার আগের trace review করার জন্য থাকে না।
+
+**ভুল ৩: session grouping ছাড়া tracing।** কথোপকথনের সীমানা ছাড়া পৃথক call-এর একটা স্তূপ একটা multi-turn ব্যর্থতা দেখাতে পারে না।
+
+**ভুল ৪: কারো UI না দেখে একটা টুল বেছে নেওয়া।** Phoenix আর LangFuse একই রকম data ধরে কিন্তু আলাদাভাবে দেখায়; commit করার আগে real traffic-এর একটা ছোট অংশে দুটোই চেষ্টা করুন <Cite n={1} /> <Cite n={2} />।
+
+**ভুল ৫: trace আর quality dashboard-এর মধ্যে কোনো লিংক নেই।** একটা trace টুল আর একটা metrics dashboard যা cross-reference করা যায় না, একজন টেস্টারকে "metric কমেছে" থেকে "এখানে নির্দিষ্ট call যা এটার কারণ"-এ যেতে অক্ষম রাখে।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Confirm tracing is live before launch, with a real call visible in the tool's UI, not just the instrumentation code merged.
+- Confirm traces group into sessions, not just individual calls.
+- Spend time reading real traces by hand before writing any alert rule.
+- Confirm a trace can be found starting from a dashboard metric, and a dashboard metric can be explained starting from a trace.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Confirm tracing is live before launch, with a real call visible in the tool's UI, not just the instrumentation code merged.
+- Confirm traces group into sessions, not just individual calls.
+- Spend time reading real traces by hand before writing any alert rule.
+- Confirm a trace can be found starting from a dashboard metric, and a dashboard metric can be explained starting from a trace.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- launch-এর আগে tracing live নিশ্চিত করুন, টুলের UI-তে একটা real call দৃশ্যমান সহ, শুধু instrumentation code merge হওয়া নয়।
+- trace session-এ গ্রুপ হয় তা নিশ্চিত করুন, শুধু পৃথক call নয়।
+- কোনো alert নিয়ম লেখার আগে হাতে real trace পড়ায় সময় দিন।
+- একটা dashboard metric থেকে শুরু করে একটা trace খুঁজে পাওয়া যায় তা নিশ্চিত করুন, আর একটা trace থেকে শুরু করে একটা dashboard metric ব্যাখ্যা করা যায় তাও।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Observability | Instrumenting a live system so every call can be reviewed after the fact |
+| Trace | The record of one call: input, output, latency, token counts, model, timestamp |
+| Span | A sub-step inside a trace, such as one retrieval call within a RAG answer |
+| Session | A group of traces belonging to one conversation |
+| Arize Phoenix | An open-source observability tool built for LLM applications |
+| LangFuse | A tracing and prompt-management platform for LLM applications |

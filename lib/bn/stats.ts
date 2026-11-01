@@ -23,4 +23,6 @@ export const MODULE_TAGLINES_BN: Record<ModuleId, string> = {
   "ai-skills": "৪টি ধাপে ২০টি AI স্কিল, প্রম্পটিং থেকে ফাইন-টিউনিং পর্যন্ত, প্রতিটায় একজন টেস্টার কীভাবে ব্যবহার করবেন তা সহ।",
   "ai-concepts":
     "টেস্টারদের জন্য সহজ ভাষায় নয়টি AI engineering আইডিয়া: agent loop, MCP, subagent, gateway, খরচ, eval, guardrail, observability ও harness।",
+  "ai-ml-testing":
+    "AI ও ML সিস্টেম টেস্টিং: LLM-এর আচরণ, প্রম্পট টেস্টিং, অটোমেটেড eval, hallucination ধরা, RAG ও agent টেস্টিং, red teaming, observability ও CI/CD eval gate।",
 };

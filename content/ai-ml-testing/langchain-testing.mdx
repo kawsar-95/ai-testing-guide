@@ -1,0 +1,441 @@
+export const metadata = { title: 'Testing LangChain Chains', description: 'Test a LangChain chain component by component and end to end, and use LangSmith traces to see which step failed.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Introduction', publisher: 'LangChain (Python docs)', url: 'https://docs.langchain.com/oss/python/langchain/overview', accessed: '2026-11-01' },
+    { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
+  ],
+}
+
+# Testing LangChain Chains
+
+A chain is a pipeline with named steps. Testing it means each step has its own test, and the trace tells you which one broke.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **chain** is a fixed sequence of **steps**: for example a prompt, a model, an output parser, and a retriever. Each step takes an input and produces an output, and the chain passes it to the next step. The course builds exactly this kind of app (prompt, model, output parser). The current LangChain docs centre on agents, which LangChain builds on top of LangGraph <Cite n={1} />; the next page tests those.
+
+That structure is a gift to a tester, because it gives three levels of test:
+
+1. **The step.** The prompt renders the right string. The parser returns the right type. The retriever returns the right documents.
+2. **The chain.** The steps are connected correctly, so the output of one is the input of the next. The tutorial's rule is to test the parts before the whole.
+3. **The application.** The chain is called with the right arguments from the real code path, not from a test helper.
+
+The failure this prevents is the most common one in any pipeline system: the chain is correct in the test and wrong in the app, because the app passes the argument in the wrong position.
+
+**Tracing** is what makes a chain failure diagnosable. In LangSmith, a run is a single unit of work, such as a model call or a retrieval, and a trace is the collection of runs for one operation, with their inputs and outputs <Cite n={2} />. When the answer is wrong, the trace shows which step produced the bad value. Without a trace, you are left guessing which of the five steps did it.
+
+</Technical>
+<Layman>
+
+A chain is a fixed row of steps, for example a prompt, a model, and an output parser. Each step passes its result to the next one. The current LangChain docs focus on agents, which LangChain builds on LangGraph <Cite n={1} />. The next page covers those.
+
+A chain gives you three levels to test:
+
+1. **Each step.** The prompt fills in the right text, the parser returns the right type, and the retriever finds the right documents.
+2. **The chain.** The steps are connected in the right order.
+3. **The app.** The real code calls the chain with the right inputs.
+
+The tutorial's rule is to test the parts before the whole. A common bug: the chain works in the test, but the app passes an input in the wrong place.
+
+**Tracing** shows where it broke. In LangSmith, each unit of work, such as a model call, is a run, and a trace collects the runs of one request with their inputs and outputs <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**chain** হলো **step**-এর একটা নির্দিষ্ট ক্রম: যেমন একটা prompt, একটা model, একটা output parser, একটা retriever। প্রতিটি step একটা input নেয় আর একটা output দেয়, আর chain সেটা পরের step-এ পাঠায়। কোর্সে ঠিক এই ধরনের app বানানো হয় (prompt, model, output parser)। LangChain-এর বর্তমান docs মূলত agent নিয়ে, যেগুলো LangChain বানায় LangGraph-এর ওপর <Cite n={1} />; পরের পেজে সেগুলোর টেস্ট আছে।
+
+গঠনটা টেস্টারের জন্য একটা উপহার, কারণ এতে তিনটা স্তরে টেস্ট করা যায়:
+
+1. **Step।** prompt সঠিক string বানায়। parser সঠিক টাইপ ফেরত দেয়। retriever সঠিক document ফেরত দেয়।
+2. **Chain।** step-গুলো ঠিকভাবে যুক্ত, মানে একটার output পরেরটার input হয়। টিউটোরিয়ালের নিয়ম: পুরোটার আগে অংশগুলো টেস্ট করুন।
+3. **Application।** chain আসল কোডের পথ থেকে সঠিক argument পেয়ে কল হয়, টেস্ট helper থেকে নয়।
+
+এতে যে ব্যর্থতা ঠেকে যায় সেটাই যেকোনো pipeline সিস্টেমের সবচেয়ে সাধারণ: chain টেস্টে সঠিক, অ্যাপে ভুল, কারণ অ্যাপ argument-টা ভুল জায়গায় দেয়।
+
+**Tracing** একটা chain-এর ব্যর্থতা নির্ণয়যোগ্য করে। LangSmith-এ run হলো কাজের একটা একক, যেমন একটা model call বা একটা retrieval, আর trace হলো একটা operation-এর সব run-এর সংগ্রহ, তাদের input আর output সহ <Cite n={2} />। উত্তর ভুল হলে trace দেখায় কোন step খারাপ মান বানিয়েছে। trace ছাড়া আপনি অনুমান করছেন যে পাঁচটার কোনটা ভুল করেছে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The chain is a directed graph of steps. Testing it has three levels, and each level answers a different question.
+
+**Level 1: the step.** Each step is a function, so it can be called with a fixed input and checked with a fixed expectation. This is where you test the prompt template, the parser, and the retriever. These tests are fast, free, and they localise the bug precisely.
+
+**Level 2: the chain.** Call the chain with a known input and check the final output. The chain-level test catches a mis-wired step, which the step-level test cannot.
+
+**Level 3: the application.** The chain is invoked from the real code. The test calls the application entry point, not the chain directly. This catches the argument mix-up and the missing configuration.
+
+**The trace is the fourth layer.** A LangSmith trace holds one run for each unit of work, with its inputs and outputs <Cite n={2} />. The pattern for debugging is:
+
+```text
+1. the final answer is wrong
+2. open the trace for that run
+3. walk the runs from the first to the last
+4. the first run whose output is wrong is the culprit
+```
+
+That last step is the whole value. Without it, a chain with five steps and a non-deterministic model in the middle is nearly impossible to debug, because the only way to find the bad step is to change one thing and re-run.
+
+**The mock boundary.** A chain test should not call a real model, because a real model is slow, costs money, and is non-deterministic. You replace the model with a fake that returns a known output, and you assert on what the rest of the chain did with it. Then you have a separate, slower test that calls the real model, marked so it does not run on every commit.
+
+**The determinism problem.** Debug logs and traces help you see the variation, but they do not make a real model call deterministic, so a chain test that asserts on exact wording is still a flaky test. Assert on structure and properties instead.
+
+</Technical>
+<Layman>
+
+**Level 1: each step.** A step is like a function: give it a fixed input and check the output. These tests are fast, free, and point straight at the bug.
+
+**Level 2: the chain.** Give the whole chain a known input and check the final output. This catches steps that are wired wrong.
+
+**Level 3: the app.** Call the app's real entry point. This catches inputs in the wrong place and missing settings.
+
+**The trace.** A LangSmith trace holds one run for each unit of work, with its inputs and outputs <Cite n={2} />. When the answer is wrong, open the trace and go through the runs in order. The first one with a wrong output is the culprit.
+
+**Use a fake model in fast tests.** A real model is slow, costs money, and gives different answers. A fake one returns a fixed answer, so you test what the rest of the chain does with it. Keep a separate, slower test with the real model.
+
+Logs and traces show you the variation, but they do not remove it. So check the structure of an answer, not its exact words.
+
+</Layman>
+<Bangla>
+
+chain হলো step-এর একটা দিকনির্দেশিত graph। টেস্ট করার তিনটা স্তর আছে, আর প্রতিটা স্তর আলাদা প্রশ্নের উত্তর দেয়।
+
+**স্তর ১: step।** প্রতিটি step একটা function, তাই নির্দিষ্ট input দিয়ে ডাকা যায় আর নির্দিষ্ট প্রত্যাশিত মান দিয়ে যাচাই করা যায়। prompt template, parser আর retriever এখানে টেস্ট হয়। এই টেস্টগুলো দ্রুত, বিনামূল্যে, আর বাগটা ঠিক কোথায় সেটা নির্দিষ্ট করে।
+
+**স্তর ২: chain।** জানা input দিয়ে chain ডাকুন আর শেষ output যাচাই করুন। chain-স্তরের টেস্ট ভুলভাবে জোড়া লাগানো step ধরে, যেটা step-স্তরের টেস্ট ধরতে পারে না।
+
+**স্তর ৩: application।** chain আসল কোড থেকে কল হয়। টেস্ট chain-কে সরাসরি নয়, application-এর entry point ডাকে। এতে argument ভুল জায়গায় যাওয়া আর configuration না থাকা ধরা পড়ে।
+
+**Trace হলো চতুর্থ স্তর।** একটা LangSmith trace-এ কাজের প্রতিটি এককের জন্য একটা run থাকে, তার input আর output সহ <Cite n={2} />। ডিবাগ করার প্যাটার্ন:
+
+```text
+1. the final answer is wrong
+2. open the trace for that run
+3. walk the runs from the first to the last
+4. the first run whose output is wrong is the culprit
+```
+
+শেষ ধাপটাই আসল মূল্য। এটা ছাড়া পাঁচটা step আর মাঝখানে non-deterministic model থাকা একটা chain প্রায় ডিবাগ করাই যায় না, কারণ খারাপ step খুঁজতে একটা জিনিস বদলে আবার চালাতে হয়।
+
+**Mock boundary।** chain টেস্টে আসল model ডাকা উচিত নয়, কারণ আসল model ধীর, খরচসাপেক্ষ আর non-deterministic। model-টা একটা fake দিয়ে বদলান যেটা জানা output দেয়, আর বাকি chain সেটার সাথে কী করল সেটা assert করুন। তারপর আসল model ডাকে একটা আলাদা ধীর টেস্ট রাখুন, যেটা প্রতিটা commit-এ চলে না।
+
+**Determinism সমস্যা।** debug log আর trace দিয়ে পার্থক্যটা দেখা যায়, কিন্তু তাতেও আসল model call deterministic হয় না, তাই exact wording-এ assert করা একটা chain টেস্ট এখনো flaky। structure আর property-র ওপর assert করুন।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Test the steps first, with a fake model. This is fast, free, and it localises the bug:
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+
+PROMPT = ChatPromptTemplate.from_template(
+    "Answer using only the policy.\n\nPolicy: {policy}\n\nQuestion: {question}"
+)
+PARSER = StrOutputParser()
+
+
+def test_the_prompt_renders_the_policy_and_the_question():
+    rendered = PROMPT.format(policy="30 day returns", question="how long?")
+    assert "30 day returns" in rendered
+    assert "how long?" in rendered
+    assert "{policy}" not in rendered
+
+
+def test_the_parser_returns_a_string():
+    assert PARSER.invoke("the answer") == "the answer"
+```
+
+Then the chain, with the model faked so the test is deterministic:
+
+```python
+from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
+from langchain_core.runnables import RunnableLambda
+
+from app.chain import build_support_chain
+
+
+def test_the_chain_passes_the_parsed_answer_through():
+    fake_model = GenericFakeChatModel(messages=iter(["You can return it within 30 days."]))
+    sent = []
+
+    def spy(prompt_value):
+        sent.append(prompt_value.to_string())
+        return fake_model.invoke(prompt_value)
+
+    chain = build_support_chain(model=RunnableLambda(spy))
+    result = chain.invoke({"policy": "30 day returns", "question": "how long?"})
+
+    assert result == "You can return it within 30 days."
+    # the model received the rendered prompt, not the raw variables
+    assert "30 day returns" in sent[0]
+```
+
+The second assertion is the one that catches the argument mix-up.
+
+Then the application-level test, which uses the real entry point:
+
+```python
+def test_the_support_endpoint_uses_the_chain():
+    result = support.answer("How long do I have to return a laptop?")
+    assert "30" in result
+```
+
+And the real-model test, marked slow, that checks the whole thing with a live model and a trace:
+
+```python
+import pytest
+
+
+@pytest.mark.slow
+def test_the_chain_end_to_end_with_a_real_model():
+    result = support.answer("How long do I have to return a laptop?")
+    assert "30" in result
+    assert "refund" not in result.lower()
+```
+
+Finally, the trace assertion. In a test you can inspect the run that just happened:
+
+```python
+def test_every_chain_step_ran(executed_run):
+    # executed_run: this tutorial's fixture that loads the LangSmith run of the test
+    steps = [run.name for run in executed_run.child_runs]
+    assert "retrieve" in steps
+    assert "render_prompt" in steps
+    assert "call_model" in steps
+```
+
+That test catches a step that was silently skipped, which no output assertion would reveal.
+
+</Technical>
+<Layman>
+
+Test in this order:
+
+1. **The steps.** Check that the prompt template puts the policy and the question into the text, and that the parser returns the text unchanged.
+2. **The chain with a fake model.** The fake always answers "You can return it within 30 days." Check that the chain returns this answer, and that the model received the filled-in prompt, not the raw inputs. That second check catches inputs in the wrong place.
+3. **The app.** Call the real entry point and check that the answer mentions 30.
+4. **The real model.** A slow test, marked so that it does not run on every commit.
+5. **The trace.** Check that every named step (retrieve, render the prompt, call the model) ran. This catches a step that was skipped without any error.
+
+</Layman>
+<Bangla>
+
+আগে step গুলো টেস্ট করুন, fake model দিয়ে। এটা দ্রুত, বিনামূল্যে, আর বাগটা ঠিক কোথায় সেটা বলে দেয়:
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+
+PROMPT = ChatPromptTemplate.from_template(
+    "Answer using only the policy.\n\nPolicy: {policy}\n\nQuestion: {question}"
+)
+PARSER = StrOutputParser()
+
+
+def test_the_prompt_renders_the_policy_and_the_question():
+    rendered = PROMPT.format(policy="30 day returns", question="how long?")
+    assert "30 day returns" in rendered
+    assert "how long?" in rendered
+    assert "{policy}" not in rendered
+
+
+def test_the_parser_returns_a_string():
+    assert PARSER.invoke("the answer") == "the answer"
+```
+
+তারপর chain, model-এর জায়গায় fake দিয়ে, যাতে টেস্ট deterministic হয়:
+
+```python
+from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
+from langchain_core.runnables import RunnableLambda
+
+from app.chain import build_support_chain
+
+
+def test_the_chain_passes_the_parsed_answer_through():
+    fake_model = GenericFakeChatModel(messages=iter(["You can return it within 30 days."]))
+    sent = []
+
+    def spy(prompt_value):
+        sent.append(prompt_value.to_string())
+        return fake_model.invoke(prompt_value)
+
+    chain = build_support_chain(model=RunnableLambda(spy))
+    result = chain.invoke({"policy": "30 day returns", "question": "how long?"})
+
+    assert result == "You can return it within 30 days."
+    # the model received the rendered prompt, not the raw variables
+    assert "30 day returns" in sent[0]
+```
+
+দ্বিতীয় assertion-টাই argument ভুল জায়গায় যাওয়া ধরে।
+
+তারপর application-স্তরের টেস্ট, যেটা আসল entry point ব্যবহার করে:
+
+```python
+def test_the_support_endpoint_uses_the_chain():
+    result = support.answer("How long do I have to return a laptop?")
+    assert "30" in result
+```
+
+আর আসল model-এর টেস্ট, slow mark করা, যেটা পুরো ব্যাপারটা আসল model আর trace সহ যাচাই করে:
+
+```python
+import pytest
+
+
+@pytest.mark.slow
+def test_the_chain_end_to_end_with_a_real_model():
+    result = support.answer("How long do I have to return a laptop?")
+    assert "30" in result
+    assert "refund" not in result.lower()
+```
+
+শেষে, trace assertion। টেস্টে আপনি ঠিক এখন যে run হলো সেটা দেখতে পারেন:
+
+```python
+def test_every_chain_step_ran(executed_run):
+    # executed_run: this tutorial's fixture that loads the LangSmith run of the test
+    steps = [run.name for run in executed_run.child_runs]
+    assert "retrieve" in steps
+    assert "render_prompt" in steps
+    assert "call_model" in steps
+```
+
+ওই টেস্টটা নীরবে বাদ পড়া একটা step ধরে, যেটা কোনো output assertion দেখাতে পারত না।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: testing only the chain.** A chain-level failure does not say which step broke. Test the steps.
+
+**Mistake 2: calling the real model in the fast suite.** Slow, costly, and non-deterministic. Fake the model and test the real one separately.
+
+**Mistake 3: asserting on exact wording from a real model.** The assertion passes on a good day and fails on a bad one.
+
+**Mistake 4: no trace.** Without the trace, finding the bad step means changing one thing and re-running, over and over <Cite n={2} />.
+
+**Mistake 5: testing the chain but not the application.** The chain can be correct and the call site wrong.
+
+**Mistake 6: no assertion that every step ran.** A step that is silently skipped produces a plausible output and no failure.
+
+</Technical>
+<Layman>
+
+**Mistake 1: testing only the whole chain.** A failure then does not tell you which step broke.
+
+**Mistake 2: using the real model in fast tests.** It is slow, costly, and different every time. Use a fake.
+
+**Mistake 3: checking the exact words of a real model.** The test passes one day and fails the next.
+
+**Mistake 4: no trace.** Then finding the bad step means changing one thing and running again, over and over <Cite n={2} />.
+
+**Mistake 5: testing the chain but not the app.** The chain can be right and the call to it wrong.
+
+**Mistake 6: not checking that every step ran.** A skipped step can still give an answer that looks fine.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: শুধু chain টেস্ট করা।** chain-স্তরের ব্যর্থতা বলে না কোন step ভাঙল। step গুলো টেস্ট করুন।
+
+**ভুল ২: দ্রুত suite-এ আসল model ডাকা।** ধীর, খরচসাপেক্ষ আর non-deterministic। model-এর জায়গায় fake দিন আর আসলটা আলাদা করে টেস্ট করুন।
+
+**ভুল ৩: আসল model থেকে exact wording-এ assert করা।** ভালো দিনে পাস করে, খারাপ দিনে ফেইল করে।
+
+**ভুল ৪: trace নেই।** trace ছাড়া খারাপ step খুঁজতে হয় বারবার একটা জিনিস বদলে আবার চালাতে হয় <Cite n={2} />।
+
+**ভুল ৫: chain টেস্ট করা, application নয়।** chain সঠিক আর call site ভুল হতে পারে।
+
+**ভুল ৬: প্রতিটা step চলেছে কি না তার assert নেই।** নীরবে বাদ পড়া step একটা যুক্তিসঙ্গত output দেয় আর কোনো ব্যর্থতা দেয় না।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Name every step in the chain. The trace is only readable if the runs have meaningful names instead of a default class name such as `RunnableSequence`.
+- Fake the model in the fast suite with a fixed output. The chain test then tests the wiring, which is the part that is actually broken.
+- Record the trace id with every failing test. Then the report links straight to the run.
+- Assert that the prompt the model received contains the retrieved documents, not just the user's question.
+- Keep a slow marker on the live-model tests and run them nightly. They are the only ones that catch a model upgrade breaking the chain.
+- When the chain changes, the step-level tests should fail if a step was renamed, removed, or reordered.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Name every step in the chain. The trace is only readable if the runs have meaningful names instead of a default class name such as `RunnableSequence`.
+- Fake the model in the fast suite with a fixed output. The chain test then tests the wiring, which is the part that is actually broken.
+- Record the trace id with every failing test. Then the report links straight to the run.
+- Assert that the prompt the model received contains the retrieved documents, not just the user's question.
+- Keep a slow marker on the live-model tests and run them nightly. They are the only ones that catch a model upgrade breaking the chain.
+- When the chain changes, the step-level tests should fail if a step was renamed, removed, or reordered.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- chain-এর প্রতিটা step-এর নাম দিন। run-এর নাম অর্থপূর্ণ না হলে, যেমন শুধু default class name `RunnableSequence` থাকলে, trace পড়া যায় না।
+- দ্রুত suite-এ model-এর জায়গায় নির্দিষ্ট output দেওয়া একটা fake দিন। তাহলে chain টেস্টটা wiring যাচাই করে, আর wiring-ই আসলে যেটা ভাঙে।
+- প্রতিটি ব্যর্থ টেস্টের সাথে trace id সংরক্ষণ করুন। তাহলে report সরাসরি run-এর লিংক দেয়।
+- assert করুন যে model-এর কাছে যাওয়া prompt-এ retrieved document আছে, শুধু ব্যবহারকারীর প্রশ্ন নয়।
+- live-model টেস্টগুলোতে slow marker রাখুন আর রাতে চালান। model upgrade chain ভাঙলে এগুলোই ধরে।
+- chain বদলালে step-স্তরের টেস্টগুলো ফেইল হওয়া উচিত যদি কোনো step rename, remove বা reorder হয়ে থাকে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Chain | A pipeline of named steps where each output is the next input |
+| Step | One component of a chain, such as a prompt, a model, a parser, or a retriever |
+| Run | In LangSmith, a single unit of work in a trace, such as a model call or a retrieval, with its inputs and outputs |
+| Trace | In LangSmith, the collection of runs for one operation |
+| Fake model | A stand-in model that returns a fixed output, so a chain test is deterministic |
+| Argument mix-up | Calling a chain with the arguments in the wrong order |
+| Wiring test | A test that the chain connects its steps correctly |
+| Slow marker | A test label that keeps an expensive test out of the inner loop |

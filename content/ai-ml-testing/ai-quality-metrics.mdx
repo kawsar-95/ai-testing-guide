@@ -1,0 +1,411 @@
+export const metadata = { title: 'AI Quality Metrics and Reporting', description: 'Build a quality dashboard from eval results: hallucination rate, faithfulness, latency P95, and cost per session, in a report a non-tester can read.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Metrics', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-introduction', accessed: '2026-11-01' },
+    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
+    { title: 'Token counting', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/token-counting', accessed: '2026-11-01' },
+  ],
+}
+
+# AI Quality Metrics and Reporting
+
+A number nobody reads is not a metric. The report is the part of the eval suite most teams skip, and it is the part that gets the next sprint funded.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An eval suite produces per-case scores. A **quality dashboard** turns many of those scores into a small number of trend lines that answer "is this getting better or worse" at a glance. The metrics that belong on it:
+
+```text
+hallucination rate      % of answers with an unsupported claim
+faithfulness score      how well the answer sticks to its retrieved context
+answer relevancy        does the answer address the actual question
+toxicity rate           % of answers with harmful or abusive content
+latency P95             the response time 95% of requests beat
+cost per session        tokens in and out, priced, summed per conversation
+```
+
+Hallucination rate, faithfulness, and answer relevancy come from DeepEval's metric set <Cite n={1} /> and Ragas's RAG-specific metrics <Cite n={2} /> directly: they are already 0 to 1 scores per test case, and the dashboard's job is to aggregate them, not invent new ones.
+
+**Cost per session** needs a token count, not a guess: both the input and output token counts for every call in a conversation, summed and priced <Cite n={3} />. **Latency P95** needs the full distribution of response times, not the average — an average hides the slow 5% that the users actually complain about.
+
+</Technical>
+<Layman>
+
+একটা eval suite প্রতি কেসে score তৈরি করে। একটা **quality dashboard** সেই অনেক score-কে অল্প কিছু trend line-এ রূপান্তর করে যা এক নজরে বলে "এটা ভালো হচ্ছে নাকি খারাপ"। যে metric-গুলো সেখানে থাকা উচিত:
+
+```text
+hallucination rate      % of answers with an unsupported claim
+faithfulness score      how well the answer sticks to its retrieved context
+answer relevancy        does the answer address the actual question
+toxicity rate           % of answers with harmful or abusive content
+latency P95             the response time 95% of requests beat
+cost per session        tokens in and out, priced, summed per conversation
+```
+
+Hallucination rate, faithfulness, আর answer relevancy সরাসরি DeepEval-এর metric সেট থেকে আসে <Cite n={1} /> আর Ragas-এর RAG-নির্দিষ্ট metric থেকে <Cite n={2} />: এগুলো ইতিমধ্যে প্রতি test case-এ ০ থেকে ১ score, আর dashboard-এর কাজ হলো সেগুলো একত্র করা, নতুন বানানো নয়।
+
+**Cost per session**-এর একটা অনুমান নয়, একটা token গণনা দরকার: একটা conversation-এর প্রতিটা call-এর input আর output token উভয় গণনা, যোগ আর দাম নির্ধারণ করা <Cite n={3} />। **Latency P95**-এর response time-এর পুরো বিতরণ দরকার, গড় নয় — গড় সেই ধীর ৫% লুকায় যা ব্যবহারকারীরা আসলে অভিযোগ করে।
+
+</Layman>
+<Bangla>
+
+একটা eval suite প্রতি কেসে score তৈরি করে। একটা **quality dashboard** সেই অনেক score-কে অল্প কিছু trend line-এ রূপান্তর করে যা এক নজরে বলে "এটা ভালো হচ্ছে নাকি খারাপ"। যে metric-গুলো সেখানে থাকা উচিত:
+
+```text
+hallucination rate      % of answers with an unsupported claim
+faithfulness score      how well the answer sticks to its retrieved context
+answer relevancy        does the answer address the actual question
+toxicity rate           % of answers with harmful or abusive content
+latency P95             the response time 95% of requests beat
+cost per session        tokens in and out, priced, summed per conversation
+```
+
+Hallucination rate, faithfulness, আর answer relevancy সরাসরি DeepEval-এর metric সেট থেকে আসে <Cite n={1} /> আর Ragas-এর RAG-নির্দিষ্ট metric থেকে <Cite n={2} />: এগুলো ইতিমধ্যে প্রতি test case-এ ০ থেকে ১ score, আর dashboard-এর কাজ হলো সেগুলো একত্র করা, নতুন বানানো নয়।
+
+**Cost per session**-এর একটা অনুমান নয়, একটা token গণনা দরকার: একটা conversation-এর প্রতিটা call-এর input আর output token উভয় গণনা, যোগ আর দাম নির্ধারণ করা <Cite n={3} />। **Latency P95**-এর response time-এর পুরো বিতরণ দরকার, গড় নয় — গড় সেই ধীর ৫% লুকায় যা ব্যবহারকারীরা আসলে অভিযোগ করে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The pipeline from a single eval run to a dashboard point:
+
+```text
+eval run          each test case scored by DeepEval / Ragas metrics
+aggregate         mean (or P95, for latency) across the run's cases
+store             one row: date, metric name, value, model, prompt version
+chart             each metric as a line over time, model and prompt as filters
+```
+
+Storing the **model and prompt version** alongside every point is what makes the dashboard answer "did the last change help" instead of just "is the number going up". Without it, a metric drop after a deploy and a metric drop from normal variance look the same.
+
+Cost per session is computed, not scored, directly from the token counts <Cite n={3} />:
+
+```text
+session cost = sum over every call in the conversation of
+               (input_tokens * input_price + output_tokens * output_price)
+```
+
+Executive-level reporting is a second layer on top of the same data: instead of 50 lines on a chart, a one-page summary with the current value, the trend arrow, and the gate status for each metric that matters to a release decision.
+
+</Technical>
+<Layman>
+
+একটা একক eval run থেকে একটা dashboard point পর্যন্ত pipeline:
+
+```text
+eval run          each test case scored by DeepEval / Ragas metrics
+aggregate         mean (or P95, for latency) across the run's cases
+store             one row: date, metric name, value, model, prompt version
+chart             each metric as a line over time, model and prompt as filters
+```
+
+প্রতিটা point-এর পাশে **model আর prompt version** সংরক্ষণ করাই dashboard-কে "শেষ পরিবর্তন কি সাহায্য করেছে" উত্তর দিতে দেয়, শুধু "সংখ্যা বাড়ছে কিনা" নয়। এটা ছাড়া, deploy-এর পরে একটা metric কমে যাওয়া আর স্বাভাবিক variance থেকে কমে যাওয়া একই রকম দেখায়।
+
+Cost per session গণনা করা হয়, score দেওয়া নয়, সরাসরি token count থেকে <Cite n={3} />:
+
+```text
+session cost = sum over every call in the conversation of
+               (input_tokens * input_price + output_tokens * output_price)
+```
+
+Executive-level reporting একই data-র ওপর একটা দ্বিতীয় স্তর: chart-এ ৫০টা লাইনের বদলে, একটা এক-পৃষ্ঠার সারাংশ যাতে বর্তমান মান, trend arrow, আর release সিদ্ধান্তের জন্য গুরুত্বপূর্ণ প্রতিটা metric-এর gate status থাকে।
+
+</Layman>
+<Bangla>
+
+একটা একক eval run থেকে একটা dashboard point পর্যন্ত pipeline:
+
+```text
+eval run          each test case scored by DeepEval / Ragas metrics
+aggregate         mean (or P95, for latency) across the run's cases
+store             one row: date, metric name, value, model, prompt version
+chart             each metric as a line over time, model and prompt as filters
+```
+
+প্রতিটা point-এর পাশে **model আর prompt version** সংরক্ষণ করাই dashboard-কে "শেষ পরিবর্তন কি সাহায্য করেছে" উত্তর দিতে দেয়, শুধু "সংখ্যা বাড়ছে কিনা" নয়। এটা ছাড়া, deploy-এর পরে একটা metric কমে যাওয়া আর স্বাভাবিক variance থেকে কমে যাওয়া একই রকম দেখায়।
+
+Cost per session গণনা করা হয়, score দেওয়া নয়, সরাসরি token count থেকে <Cite n={3} />:
+
+```text
+session cost = sum over every call in the conversation of
+               (input_tokens * input_price + output_tokens * output_price)
+```
+
+Executive-level reporting একই data-র ওপর একটা দ্বিতীয় স্তর: chart-এ ৫০টা লাইনের বদলে, একটা এক-পৃষ্ঠার সারাংশ যাতে বর্তমান মান, trend arrow, আর release সিদ্ধান্তের জন্য গুরুত্বপূর্ণ প্রতিটা metric-এর gate status থাকে।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Aggregate a run's per-case scores into one dashboard row:
+
+```python
+from statistics import mean
+import numpy as np
+
+def summarise_run(cases: list[dict], model: str, prompt_version: str) -> dict:
+    return {
+        "date": today(),
+        "model": model,
+        "prompt_version": prompt_version,
+        "hallucination_rate": mean(c["hallucination"] for c in cases),
+        "faithfulness": mean(c["faithfulness"] for c in cases),
+        "latency_p95_ms": float(np.percentile([c["latency_ms"] for c in cases], 95)),
+        "cost_per_session_usd": mean(c["cost_usd"] for c in cases),
+    }
+```
+
+Per-call cost from token counts <Cite n={3} />:
+
+```python
+PRICE_PER_1K = {"input": 0.003, "output": 0.015}  # illustrative, check current pricing
+
+def call_cost(input_tokens: int, output_tokens: int) -> float:
+    return (input_tokens / 1000) * PRICE_PER_1K["input"] + (output_tokens / 1000) * PRICE_PER_1K["output"]
+```
+
+An executive summary from the same stored rows:
+
+```python
+def executive_summary(latest: dict, previous: dict, gates: dict) -> str:
+    lines = [f"Quality report — {latest['model']} / {latest['prompt_version']}"]
+    for metric, gate in gates.items():
+        value, was = latest[metric], previous[metric]
+        arrow = "UP" if value > was else "DOWN" if value < was else "FLAT"
+        status = "PASS" if gate(value) else "FAIL"
+        lines.append(f"  {metric}: {value:.3f} ({arrow} from {was:.3f}) — {status}")
+    return "\n".join(lines)
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Store every run's raw per-case scores, not just the aggregate. The aggregate hides which specific case regressed.
+- Put a gate status (pass/fail) next to every number on the report; a raw number with no gate invites debate instead of a decision.
+- Review the report with whoever owns the release decision, not just the testers who ran the suite.
+</Callout>
+
+</Technical>
+<Layman>
+
+একটা run-এর per-case score একটা dashboard সারিতে একত্র করুন:
+
+```python
+from statistics import mean
+import numpy as np
+
+def summarise_run(cases: list[dict], model: str, prompt_version: str) -> dict:
+    return {
+        "date": today(),
+        "model": model,
+        "prompt_version": prompt_version,
+        "hallucination_rate": mean(c["hallucination"] for c in cases),
+        "faithfulness": mean(c["faithfulness"] for c in cases),
+        "latency_p95_ms": float(np.percentile([c["latency_ms"] for c in cases], 95)),
+        "cost_per_session_usd": mean(c["cost_usd"] for c in cases),
+    }
+```
+
+Token count থেকে per-call খরচ <Cite n={3} />:
+
+```python
+PRICE_PER_1K = {"input": 0.003, "output": 0.015}  # illustrative, check current pricing
+
+def call_cost(input_tokens: int, output_tokens: int) -> float:
+    return (input_tokens / 1000) * PRICE_PER_1K["input"] + (output_tokens / 1000) * PRICE_PER_1K["output"]
+```
+
+একই সংরক্ষিত সারি থেকে একটা executive সারাংশ:
+
+```python
+def executive_summary(latest: dict, previous: dict, gates: dict) -> str:
+    lines = [f"Quality report — {latest['model']} / {latest['prompt_version']}"]
+    for metric, gate in gates.items():
+        value, was = latest[metric], previous[metric]
+        arrow = "UP" if value > was else "DOWN" if value < was else "FLAT"
+        status = "PASS" if gate(value) else "FAIL"
+        lines.append(f"  {metric}: {value:.3f} ({arrow} from {was:.3f}) — {status}")
+    return "\n".join(lines)
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- প্রতিটা run-এর কাঁচা per-case score সংরক্ষণ করুন, শুধু aggregate নয়। aggregate লুকায় কোন নির্দিষ্ট case খারাপ হয়েছে।
+- রিপোর্টে প্রতিটা সংখ্যার পাশে একটা gate status (pass/fail) বসান; gate ছাড়া একটা কাঁচা সংখ্যা সিদ্ধান্তের বদলে বিতর্ক ডেকে আনে।
+- যে suite চালিয়েছে তাদের সাথে না, release সিদ্ধান্তের মালিকের সাথে রিপোর্ট review করুন।
+</Callout>
+
+</Layman>
+<Bangla>
+
+একটা run-এর per-case score একটা dashboard সারিতে একত্র করুন:
+
+```python
+from statistics import mean
+import numpy as np
+
+def summarise_run(cases: list[dict], model: str, prompt_version: str) -> dict:
+    return {
+        "date": today(),
+        "model": model,
+        "prompt_version": prompt_version,
+        "hallucination_rate": mean(c["hallucination"] for c in cases),
+        "faithfulness": mean(c["faithfulness"] for c in cases),
+        "latency_p95_ms": float(np.percentile([c["latency_ms"] for c in cases], 95)),
+        "cost_per_session_usd": mean(c["cost_usd"] for c in cases),
+    }
+```
+
+Token count থেকে per-call খরচ <Cite n={3} />:
+
+```python
+PRICE_PER_1K = {"input": 0.003, "output": 0.015}  # illustrative, check current pricing
+
+def call_cost(input_tokens: int, output_tokens: int) -> float:
+    return (input_tokens / 1000) * PRICE_PER_1K["input"] + (output_tokens / 1000) * PRICE_PER_1K["output"]
+```
+
+একই সংরক্ষিত সারি থেকে একটা executive সারাংশ:
+
+```python
+def executive_summary(latest: dict, previous: dict, gates: dict) -> str:
+    lines = [f"Quality report — {latest['model']} / {latest['prompt_version']}"]
+    for metric, gate in gates.items():
+        value, was = latest[metric], previous[metric]
+        arrow = "UP" if value > was else "DOWN" if value < was else "FLAT"
+        status = "PASS" if gate(value) else "FAIL"
+        lines.append(f"  {metric}: {value:.3f} ({arrow} from {was:.3f}) — {status}")
+    return "\n".join(lines)
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- প্রতিটা run-এর কাঁচা per-case score সংরক্ষণ করুন, শুধু aggregate নয়। aggregate লুকায় কোন নির্দিষ্ট case খারাপ হয়েছে।
+- রিপোর্টে প্রতিটা সংখ্যার পাশে একটা gate status (pass/fail) বসান; gate ছাড়া একটা কাঁচা সংখ্যা সিদ্ধান্তের বদলে বিতর্ক ডেকে আনে।
+- যে suite চালিয়েছে তাদের সাথে না, release সিদ্ধান্তের মালিকের সাথে রিপোর্ট review করুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: averaging latency instead of using a percentile.** The average hides the slow tail that users notice; P95 or P99 does not.
+
+**Mistake 2: no model or prompt version on the data point.** Without it, a regression cannot be traced back to the change that caused it.
+
+**Mistake 3: inventing a custom metric instead of using DeepEval's or Ragas's.** A custom score with no definition cannot be compared across teams or tools <Cite n={1} /> <Cite n={2} />.
+
+**Mistake 4: a dashboard nobody reviews on a cadence.** A metric that degrades silently between reviews is a metric that is not actually gating anything.
+
+**Mistake 5: reporting cost without the token breakdown.** A total dollar figure with no input/output split cannot be used to find which part of the pipeline is expensive <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+**Mistake ১: percentile-এর বদলে latency-র average নেওয়া।** average ধীর লেজ লুকায় যা ব্যবহারকারীরা লক্ষ্য করে; P95 বা P99 করে না।
+
+**Mistake ২: data point-এ model বা prompt version নেই।** ছাড়া, একটা regression যে পরিবর্তন কারণ হয়েছে তার কাছে ফিরে track করা যায় না।
+
+**Mistake ৩: DeepEval বা Ragas-এর বদলে custom metric বানানো।** সংজ্ঞা ছাড়া একটা custom score দল বা টুলের মধ্যে তুলনা করা যায় না <Cite n={1} /> <Cite n={2} />।
+
+**Mistake ৪: dashboard যা কেউ নিয়মিত review করে না।** review-এর মাঝে নীরবে খারাপ হওয়া একটা metric আসলে কিছুই gate করছে না।
+
+**Mistake ৫: token breakdown ছাড়া খরচ রিপোর্ট করা।** input/output ভাগ ছাড়া একটা মোট ডলার সংখ্যা pipeline-এর কোন অংশ ব্যয়বহুল তা খুঁজে বের করতে ব্যবহার করা যায় না <Cite n={3} />।
+
+</Layman>
+<Bangla>
+
+**ভুল ১: percentile-এর বদলে latency-র average নেওয়া।** average ধীর লেজ লুকায় যা ব্যবহারকারীরা লক্ষ্য করে; P95 বা P99 করে না।
+
+**ভুল ২: data point-এ model বা prompt version নেই।** ছাড়া, একটা regression যে পরিবর্তন কারণ হয়েছে তার কাছে ফিরে track করা যায় না।
+
+**ভুল ৩: DeepEval বা Ragas-এর বদলে custom metric বানানো।** সংজ্ঞা ছাড়া একটা custom score দল বা টুলের মধ্যে তুলনা করা যায় না <Cite n={1} /> <Cite n={2} />।
+
+**ভুল ৪: dashboard যা কেউ নিয়মিত review করে না।** review-এর মাঝে নীরবে খারাপ হওয়া একটা metric আসলে কিছুই gate করছে না।
+
+**ভুল ৫: token breakdown ছাড়া খরচ রিপোর্ট করা।** input/output ভাগ ছাড়া একটা মোট ডলার সংখ্যা pipeline-এর কোন অংশ ব্যয়বহুল তা খুঁজে বের করতে ব্যবহার করা যায় না <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Use a percentile for every latency number on the dashboard, never a plain average.
+- Tag every stored run with its model name and prompt version, no exceptions.
+- Keep the raw per-case scores, not just the aggregate, for at least one regression cycle.
+- Put a pass/fail gate status next to every metric on the executive report.
+- Review the dashboard on a fixed cadence with the person who owns the release decision.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Use a percentile for every latency number on the dashboard, never a plain average.
+- Tag every stored run with its model name and prompt version, no exceptions.
+- Keep the raw per-case scores, not just the aggregate, for at least one regression cycle.
+- Put a pass/fail gate status next to every metric on the executive report.
+- Review the dashboard on a fixed cadence with the person who owns the release decision.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- dashboard-এ প্রতিটা latency সংখ্যায় একটা percentile ব্যবহার করুন, সাধারণ average কখনো নয়।
+- প্রতিটা সংরক্ষিত run-কে তার model নাম আর prompt version দিয়ে ট্যাগ করুন, কোনো ব্যতিক্রম নেই।
+- অন্তত একটা regression cycle-এর জন্য কাঁচা per-case score রাখুন, শুধু aggregate নয়।
+- executive রিপোর্টে প্রতিটা metric-এর পাশে একটা pass/fail gate status বসান।
+- release সিদ্ধান্তের মালিকের সাথে একটা নির্দিষ্ট ছন্দে dashboard review করুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Quality dashboard | A small set of trend lines aggregated from many eval runs |
+| Hallucination rate | The percentage of answers containing an unsupported claim |
+| Faithfulness | How well an answer sticks to its retrieved context |
+| Latency P95 | The response time that 95% of requests are faster than |
+| Cost per session | The priced sum of input and output tokens across a conversation |
+| Executive summary | A one-page report with the current value, trend, and gate status per metric |

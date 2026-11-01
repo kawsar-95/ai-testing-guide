@@ -1,0 +1,420 @@
+export const metadata = { title: 'Structured Outputs and Validation', description: 'Test JSON mode, function calling, and tool use: the schema check, the field that hallucinates, and the schema the model keeps breaking.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Structured outputs', publisher: 'OpenAI (API docs)', url: 'https://developers.openai.com/api/docs/guides/structured-outputs', accessed: '2026-11-01' },
+    { title: 'Messages API reference', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-11-01' },
+    { title: 'Chat API reference', publisher: 'OpenAI (API docs)', url: 'https://platform.openai.com/docs/api-reference/chat', accessed: '2026-11-01' },
+  ],
+}
+
+# Structured Outputs and Validation
+
+Asking a model for JSON gets you JSON most of the time. Testing it is about the times it does not, and about what your code does when it does not.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+There are three ways to get a structure out of a model, and they have different guarantees:
+
+- **JSON mode.** The output is valid JSON, but OpenAI's guide says JSON mode does not guarantee that it matches any schema: the model picks the keys <Cite n={1} />.
+- **Structured outputs with a schema.** The service is given the schema itself. OpenAI's guide says the model will then always generate responses that adhere to the supplied JSON Schema <Cite n={1} />.
+- **Function calling or tool use.** The model does not produce the final structure; it produces a request to call a function, and your code runs it. The arguments are the structure.
+
+For a tester, the distinction decides what you assert. With JSON mode you assert that the output parses and that the fields you need are present and of the right type. With schema-constrained output you assert the schema holds, and the schema itself becomes the contract. With tool use you assert the **tool selection** and the **arguments**, which is a different test entirely: the model can pick the right tool and still pass the wrong arguments. OpenAI's API reference warns that the model may hallucinate parameters that your function schema does not define, and tells you to validate the arguments in your code <Cite n={3} />.
+
+The failure that catches teams is the **hallucinated field**. The model returns a field the schema did not ask for (in JSON mode or in tool arguments), or invents a value for a field it should have left null. Both are visible only if you compare the output against the schema rather than against a golden example.
+
+</Technical>
+<Layman>
+
+There are three ways to get structured data out of a model, and each promises something different:
+
+- **JSON mode.** The output is valid JSON, but OpenAI's guide says it does not have to match any schema: the model picks the keys <Cite n={1} />.
+- **Structured outputs with a schema.** You give the service the schema itself. OpenAI's guide says the model will then always produce output that follows that schema <Cite n={1} />.
+- **Function calling or tool use.** The model does not write the final result. It asks for a function to be called, and your code runs it. The arguments are the structured part.
+
+The difference decides what you check. With JSON mode, check that the output parses and that the fields you need are there with the right types. With a schema, check that the schema holds; the schema is the contract. With tool use, check **which tool** was picked and **which arguments** were passed. That is a different test: the model can pick the right tool and still pass the wrong arguments. OpenAI's API reference warns that the model may invent parameters that the function does not define, and says to validate the arguments in your code <Cite n={3} />.
+
+The failure that catches teams is the **made-up field**. The model returns a field nobody asked for (in JSON mode or in tool arguments), or fills in a value that should have stayed empty (null). You only see both if you compare the output against the schema, not against one golden example.
+
+</Layman>
+<Bangla>
+
+model থেকে structure বের করার তিনটা উপায় আছে, আর তাদের নিশ্চয়তা আলাদা:
+
+- **JSON mode।** আউটপুট বৈধ JSON হয়, কিন্তু OpenAI-এর গাইড বলে JSON mode কোনো schema-র সাথে মেলার নিশ্চয়তা দেয় না: কোন key থাকবে, model নিজে ঠিক করে <Cite n={1} />।
+- **Schema দিয়ে structured output।** service-কে schema-টাই দেওয়া হয়। OpenAI-এর গাইড বলে, তখন model সবসময় আপনার দেওয়া JSON Schema মেনে উত্তর দেয় <Cite n={1} />।
+- **Function calling বা tool use।** model চূড়ান্ত structure বানায় না; সে একটা function কল করার অনুরোধ বানায়, আর আপনার কোড সেটা চালায়। arguments-ই structure।
+
+টেস্টারের জন্য এই পার্থক্যটাই ঠিক করে কী assert করবেন। JSON mode-এ assert করুন আউটপুট parse হয়, আর দরকারি field আছে ও ঠিক টাইপের। Schema-constrained output-এ assert করুন schema মানা হচ্ছে, আর schema-টাই হয়ে যায় contract। Tool use-এ assert করুন **কোন tool বাছা হলো** আর **arguments কী**, যেটা সম্পূর্ণ আলাদা টেস্ট: model সঠিক tool বেছেও ভুল arguments পাঠাতে পারে। OpenAI-এর API reference সতর্ক করে যে model function schema-তে নেই এমন parameter বানিয়ে দিতে পারে, আর arguments আপনার কোডে validate করতে বলে <Cite n={3} />।
+
+যে ব্যর্থতায় দলগুলো সবচেয়ে বেশি আটকায়, সেটা হলো **বানানো field**। model এমন field ফেরত দেয় যেটা schema চায়নি (JSON mode-এ বা tool arguments-এ), অথবা এমন field-এ মান বানিয়ে দেয় যেটা null থাকা উচিত ছিল। দুটোই ধরা পড়ে শুধু তখন, যখন আউটপুট golden example-এর বদলে schema-র সাথে তুলনা করা হয়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**Schema-constrained output** gives the service the schema itself. OpenAI's guide says that with Structured Outputs the model will always generate responses that adhere to the supplied JSON Schema <Cite n={1} />. The consequence for a tester is important: with a strict schema, a malformed or schema-breaking reply points first at your own plumbing, or at an edge case the guide names, such as a refusal or a response cut at the token limit, and not at the model's formatting. That moves the failure surface to the schema, the prompt, and those edge cases.
+
+**JSON mode** without a schema gives a weaker guarantee: the guide says JSON mode ensures valid JSON, but not that the output matches any schema <Cite n={1} />. Here the test has to define what the keys should be, and that definition is your contract.
+
+**Tool use** splits the problem in two. The first decision is *which tool*. The second is *what arguments*. The model's output is a function name and its arguments, as a string in JSON format; the reference warns that this string is not always valid JSON and may contain parameters your schema does not define <Cite n={3} />. Testing the name and testing the arguments are two separate test suites, and a model can pass one and fail the other. A wrong argument is often more dangerous than a wrong tool: the right tool with the wrong account id still does damage.
+
+Three validation layers belong in the code, and each one is a test target:
+
+```text
+layer 1  parse       is the output valid JSON at all?
+layer 2  schema      do the types and required fields match?
+layer 3  semantics   are the values sensible for this request?
+```
+
+Layer 3 is the one people skip. A valid schema can hold a perfectly wrong value: `{"order_id": "0000", "status": "shipped"}` passes every schema check. Layer 3 needs domain rules, and those rules are the test cases.
+
+There is a fourth failure that is specific to this area: the **truncated output**. A response that hits the token cap is cut in the middle of the JSON, and the parse fails with a confusing error. Assert on the stop reason before you assert on the content: in the Claude Messages API, `stop_reason` is `max_tokens` <Cite n={2} />; in OpenAI Chat Completions, `finish_reason` is `length` <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+**Schema-constrained output** gives the service the schema itself. OpenAI's guide says the model will then always produce output that follows the schema <Cite n={1} />. For a tester, this matters: with a strict schema, broken JSON points first at your own code, or at a case the guide names, such as a refusal or a reply cut off at the token limit. It is not the model's formatting. So you look for failures in the schema, the prompt, and those special cases.
+
+**JSON mode** without a schema promises less: the guide says the output is valid JSON, but not that it matches any schema <Cite n={1} />. Here your test has to say what the keys should be, and that is your contract.
+
+**Tool use** has two decisions: *which tool* and *which arguments*. The model returns a function name and the arguments as JSON text; the reference warns that this text is not always valid JSON and may include parameters the function does not define <Cite n={3} />. Test the name and the arguments in two separate suites, because a model can pass one and fail the other. A wrong argument can be worse than a wrong tool: the right tool with the wrong account id still does damage.
+
+Your code needs three checks, and each one is something to test:
+
+```text
+layer 1  parse       is the output valid JSON at all?
+layer 2  schema      do the types and required fields match?
+layer 3  semantics   are the values sensible for this request?
+```
+
+Check 3 is the one people skip. A reply can pass the schema and still be wrong: `{"order_id": "0000", "status": "shipped"}` passes every schema check. Check 3 needs business rules, and those rules are your test cases.
+
+There is a fourth failure here: the **cut-off reply**. A reply that hits the token limit stops in the middle of the JSON, and the parse fails with a confusing error. Check why the reply stopped before you check what it says: the Claude API reports `stop_reason` `max_tokens` <Cite n={2} />, and OpenAI Chat Completions reports `finish_reason` `length` <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+**Schema দিয়ে structured output**-এ service-কে schema-টাই দেওয়া হয়। OpenAI-এর গাইড বলে, Structured Outputs-এ model সবসময় আপনার দেওয়া JSON Schema মেনে উত্তর দেয় <Cite n={1} />। টেস্টারের জন্য এর ফল গুরুত্বপূর্ণ: strict schema-তে ভাঙা বা schema-ভাঙা উত্তর পেলে আগে সন্দেহ করুন আপনার নিজের plumbing, অথবা গাইডে বলা কোনো বিশেষ কেস, যেমন refusal বা token সীমায় কেটে যাওয়া উত্তর; model-এর format-কে নয়। ফলে ব্যর্থতা খুঁজতে হয় schema, prompt আর ওই বিশেষ কেসগুলোতে।
+
+**Schema ছাড়া JSON mode** কম নিশ্চয়তা দেয়: গাইড বলে আউটপুট বৈধ JSON হবে, কিন্তু কোনো schema-র সাথে মিলবে এমন নিশ্চয়তা নেই <Cite n={1} />। এখানে key কী হওয়া উচিত তা আপনার টেস্টকেই ঠিক করতে হবে, আর সেটাই আপনার contract।
+
+**Tool use** সমস্যাটা দুই ভাগে ভাগ করে। প্রথম সিদ্ধান্ত *কোন tool*, দ্বিতীয় *কোন arguments*। model ফেরত দেয় একটা function নাম আর JSON format-এ লেখা arguments-এর একটা string; reference সতর্ক করে যে এই string সবসময় বৈধ JSON হয় না, আর এতে schema-তে নেই এমন parameter থাকতে পারে <Cite n={3} />। নামের টেস্ট আর arguments-এর টেস্ট দুটো আলাদা suite, আর model একটায় পাস করে অন্যটায় ফেইল করতে পারে। ভুল argument ভুল tool-এর চেয়েও বিপজ্জনক হতে পারে: সঠিক tool ভুল account id নিয়ে চললেও ক্ষতি হয়।
+
+কোডে তিনটা validation স্তর থাকে, আর প্রতিটাই টেস্টের লক্ষ্য:
+
+```text
+layer 1  parse       is the output valid JSON at all?
+layer 2  schema      do the types and required fields match?
+layer 3  semantics   are the values sensible for this request?
+```
+
+স্তর ৩-টাই মানুষ বাদ দেয়। schema-বৈধ উত্তরেও একদম ভুল মান থাকতে পারে: `{"order_id": "0000", "status": "shipped"}` সব schema check পাস করে। স্তর ৩-এ ডোমেইনের নিয়ম লাগে, আর সেই নিয়মগুলোই টেস্ট কেস।
+
+এখানে চতুর্থ একটা ব্যর্থতাও আছে: **কেটে যাওয়া আউটপুট**। token সীমায় পৌঁছে যাওয়া উত্তর JSON-এর মাঝখানেই থেমে যায়, আর parse ব্যর্থ হয়ে একটা বিভ্রান্তিকর error দেয়। কনটেন্ট assert করার আগে stop reason assert করুন: Claude Messages API-তে `stop_reason` হয় `max_tokens` <Cite n={2} />, আর OpenAI Chat Completions-এ `finish_reason` হয় `length` <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Validate in three layers, and keep them as three separate steps so the failure message says which one broke:
+
+```python
+import json
+from pydantic import BaseModel, ValidationError
+
+
+class OrderReply(BaseModel):
+    order_id: str
+    status: str
+    estimated_days: int | None = None
+
+
+def validate(raw: str, known_orders: set[str]) -> OrderReply:
+    # layer 1: parse
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise ValueError(f"not valid JSON: {error}") from error
+
+    # layer 2: schema
+    try:
+        reply = OrderReply.model_validate(data)
+    except ValidationError as error:
+        raise ValueError(f"schema failed: {error}") from error
+
+    # layer 3: semantics
+    if reply.order_id not in known_orders:
+        raise ValueError(f"unknown order id: {reply.order_id}")
+    if reply.status not in {"processing", "shipped", "delivered", "cancelled"}:
+        raise ValueError(f"unknown status: {reply.status}")
+    return reply
+```
+
+Then test the model, not just the validator. The interesting cases are the ones where the model produces a schema-valid but semantically wrong answer:
+
+```python
+def test_model_does_not_invent_an_order_id():
+    raw = run_model("Where is order 4821?")
+    with pytest.raises(ValueError, match="unknown order id"):
+        validate(raw, known_orders={"1001", "1002"})
+```
+
+And test the **tool arguments** separately from the tool choice, because they fail separately:
+
+```python
+def test_right_tool_wrong_arguments():
+    call = model_returns_tool_call("Cancel order 1001")
+    assert call.name == "cancel_order"
+    assert call.arguments["order_id"] == "1001"
+    assert call.arguments["reason"] in ALLOWED_REASONS
+```
+
+The `reason` check is the one that catches a real bug: the model can invent a reason code that the API does not accept, and the request then fails at the server, in production, for one user.
+
+</Technical>
+<Layman>
+
+Validate in three layers, and keep them as three separate steps so the error message says which one broke:
+
+```python
+import json
+from pydantic import BaseModel, ValidationError
+
+
+class OrderReply(BaseModel):
+    order_id: str
+    status: str
+    estimated_days: int | None = None
+
+
+def validate(raw: str, known_orders: set[str]) -> OrderReply:
+    # layer 1: parse
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise ValueError(f"not valid JSON: {error}") from error
+
+    # layer 2: schema
+    try:
+        reply = OrderReply.model_validate(data)
+    except ValidationError as error:
+        raise ValueError(f"schema failed: {error}") from error
+
+    # layer 3: semantics
+    if reply.order_id not in known_orders:
+        raise ValueError(f"unknown order id: {reply.order_id}")
+    if reply.status not in {"processing", "shipped", "delivered", "cancelled"}:
+        raise ValueError(f"unknown status: {reply.status}")
+    return reply
+```
+
+Then test the model, not only the validator. The interesting cases are replies that pass the schema but are wrong in meaning:
+
+```python
+def test_model_does_not_invent_an_order_id():
+    raw = run_model("Where is order 4821?")
+    with pytest.raises(ValueError, match="unknown order id"):
+        validate(raw, known_orders={"1001", "1002"})
+```
+
+And test the **tool arguments** apart from the tool choice, because they fail apart:
+
+```python
+def test_right_tool_wrong_arguments():
+    call = model_returns_tool_call("Cancel order 1001")
+    assert call.name == "cancel_order"
+    assert call.arguments["order_id"] == "1001"
+    assert call.arguments["reason"] in ALLOWED_REASONS
+```
+
+The `reason` check is the one that catches a real bug: the model can invent a reason code that the API does not accept, and then the request fails on the server, in production, for one user.
+
+</Layman>
+<Bangla>
+
+তিন স্তরে validate করুন, আর তিনটা আলাদা ধাপে রাখুন, যাতে ব্যর্থতার বার্তা বলে দেয় কোনটা ভাঙল:
+
+```python
+import json
+from pydantic import BaseModel, ValidationError
+
+
+class OrderReply(BaseModel):
+    order_id: str
+    status: str
+    estimated_days: int | None = None
+
+
+def validate(raw: str, known_orders: set[str]) -> OrderReply:
+    # layer 1: parse
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise ValueError(f"not valid JSON: {error}") from error
+
+    # layer 2: schema
+    try:
+        reply = OrderReply.model_validate(data)
+    except ValidationError as error:
+        raise ValueError(f"schema failed: {error}") from error
+
+    # layer 3: semantics
+    if reply.order_id not in known_orders:
+        raise ValueError(f"unknown order id: {reply.order_id}")
+    if reply.status not in {"processing", "shipped", "delivered", "cancelled"}:
+        raise ValueError(f"unknown status: {reply.status}")
+    return reply
+```
+
+তারপর model টেস্ট করুন, শুধু validator নয়। আসল কেসগুলো হলো যেখানে model schema-বৈধ কিন্তু অর্থের দিক থেকে ভুল উত্তর দেয়:
+
+```python
+def test_model_does_not_invent_an_order_id():
+    raw = run_model("Where is order 4821?")
+    with pytest.raises(ValueError, match="unknown order id"):
+        validate(raw, known_orders={"1001", "1002"})
+```
+
+আর **tool arguments** আলাদা করে টেস্ট করুন, কারণ tool বাছা আর arguments ভুল হওয়া আলাদা আলাদা ব্যর্থতা:
+
+```python
+def test_right_tool_wrong_arguments():
+    call = model_returns_tool_call("Cancel order 1001")
+    assert call.name == "cancel_order"
+    assert call.arguments["order_id"] == "1001"
+    assert call.arguments["reason"] in ALLOWED_REASONS
+```
+
+`reason` যাচাইটাই আসল বাগ ধরে: model এমন reason code বানিয়ে দিতে পারে যেটা API নেয় না, আর request তখন production-এ একজন ব্যবহারকারীর কাছে server-এ ফেইল হয়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: only testing the happy-path parse.** A valid parse says nothing about whether the values are right.
+
+**Mistake 2: one big assertion.** `assert data == expected` tells you the output is wrong, not which field. Assert field by field so the failure names the field.
+
+**Mistake 3: trusting the schema for semantics.** A schema checks types and required keys, not whether the order id exists or the status makes sense.
+
+**Mistake 4: not testing the truncation case.** A schema-constrained response cut at the token limit produces invalid JSON and a misleading error <Cite n={2} />.
+
+**Mistake 5: testing tool choice and arguments together.** A model can pick the right tool and pass the wrong account. Keep them in separate tests <Cite n={3} />.
+
+**Mistake 6: no test for a field the model should leave null.** A model can invent an estimate rather than say it does not know. Assert the null.
+
+</Technical>
+<Layman>
+
+**Mistake 1: only testing that the normal reply parses.** A valid parse says nothing about whether the values are right.
+
+**Mistake 2: one big assertion.** `assert data == expected` tells you the output is wrong, not which field. Check field by field, so the failure names the field.
+
+**Mistake 3: trusting the schema to check meaning.** A schema checks types and required keys, not whether the order id exists or the status makes sense.
+
+**Mistake 4: not testing the cut-off case.** A reply cut at the token limit gives broken JSON and a misleading error <Cite n={2} />.
+
+**Mistake 5: testing tool choice and arguments together.** A model can pick the right tool and pass the wrong account. Keep them in separate tests <Cite n={3} />.
+
+**Mistake 6: no test for a field that should stay empty.** A model can invent an estimate instead of saying it does not know. Check that the field is null.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: শুধু স্বাভাবিক কেসের parse টেস্ট করা।** বৈধ parse বলে না মানগুলো ঠিক আছে কি না।
+
+**ভুল ২: একটা বড় assertion।** `assert data == expected` বলে দেয় আউটপুট ভুল, কিন্তু কোন field ভুল তা বলে না। field ধরে ধরে assert করুন, তাহলে ব্যর্থতা field-এর নাম বলবে।
+
+**ভুল ৩: অর্থ যাচাইয়ের জন্য schema-র ওপর ভরসা করা।** schema টাইপ আর আবশ্যিক key যাচাই করে; order id আসলেই আছে কি না বা status যুক্তিসঙ্গত কি না, তা যাচাই করে না।
+
+**ভুল ৪: কেটে যাওয়া আউটপুটের কেস টেস্ট না করা।** token সীমায় কেটে যাওয়া উত্তর ভাঙা JSON আর বিভ্রান্তিকর error দেয় <Cite n={2} />।
+
+**ভুল ৫: tool বাছা আর arguments একসাথে টেস্ট করা।** model সঠিক tool বেছেও ভুল account দিতে পারে। দুটো আলাদা টেস্টে রাখুন <Cite n={3} />।
+
+**ভুল ৬: যে field null থাকা উচিত, তার টেস্ট নেই।** model না জেনেও একটা estimate বানিয়ে দিতে পারে। null-টা assert করুন।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the schema in one file and generate the validator from it. A schema in the prompt and a different schema in the validator is a silent mismatch.
+- Name the layer in every error message. "invalid output" is not enough to route a bug.
+- Add a test that the model leaves a field null when it does not know. Models prefer to fill a field.
+- Test with a schema that has an `additionalProperties: false` constraint, so a hallucinated key fails loudly.
+- Test the error path end to end. When validation fails, the user must see a useful message and the system must not save a partial record.
+- Keep one test with a very small `max_tokens` so the truncated-JSON case is always covered.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the schema in one file and generate the validator from it. A schema in the prompt and a different schema in the validator is a silent mismatch.
+- Name the layer in every error message. "invalid output" is not enough to route a bug.
+- Add a test that the model leaves a field null when it does not know. Models prefer to fill a field.
+- Test with a schema that has an `additionalProperties: false` constraint, so a hallucinated key fails loudly.
+- Test the error path end to end. When validation fails, the user must see a useful message and the system must not save a partial record.
+- Keep one test with a very small `max_tokens` so the truncated-JSON case is always covered.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- schema একটা ফাইলে রাখুন আর validator সেখান থেকেই তৈরি করুন। prompt-এর schema আর validator-এর schema আলাদা হলে সেটা নীরবে মিসম্যাচ হয়ে যায়।
+- প্রতিটা error message-এ স্তরের নাম রাখুন। "invalid output" দিয়ে বাগ route করা যায় না।
+- একটা টেস্ট রাখুন যেটা দেখে, model কোনো field-এর মান না জানলে সেটা null রাখে কি না। model field ভরা পছন্দ করে।
+- schema-তে `additionalProperties: false` দিয়ে টেস্ট করুন, যাতে বানানো key স্পষ্টভাবে ব্যর্থ হয়।
+- error path-টা end-to-end টেস্ট করুন। validation ব্যর্থ হলে ব্যবহারকারী কাজে লাগার মতো বার্তা দেখবেন, আর সিস্টেম অর্ধেক রেকর্ড সেভ করবে না।
+- ছোট `max_tokens` দিয়ে একটা টেস্ট রাখুন, যাতে কাটা JSON-এর কেস সবসময় ঢাকা থাকে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| JSON mode | The output is valid JSON, but the model chooses the keys |
+| Structured output | The output is constrained to a schema the service is given |
+| Schema | The declaration of the fields, their types, and which are required |
+| Function calling | The model returns a request to call a function, and your code runs it |
+| Tool use | The same as function calling, named differently by some vendors |
+| Validation layer | One of the three checks: parse, schema, semantics |
+| Semantic validation | Checking that the values make sense for the request |
+| Truncated output | A response cut at the token limit, often mid-JSON |
+| Additional properties | A schema constraint that rejects keys the schema did not declare |

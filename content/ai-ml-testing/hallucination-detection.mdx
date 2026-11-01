@@ -1,0 +1,439 @@
+export const metadata = { title: 'Hallucination Detection', description: 'Build a hallucination test suite: factual accuracy, grounding checks, cross-reference validation, and the temperature effect.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Large Language Models', publisher: 'arXiv', url: 'https://arxiv.org/abs/2303.08896', accessed: '2026-11-01' },
+    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
+    { title: 'Challenges in evaluating AI systems', publisher: 'Anthropic (Research)', url: 'https://www.anthropic.com/research/evaluating-ai-systems', accessed: '2026-11-01' },
+    { title: 'Metrics', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-introduction', accessed: '2026-11-01' },
+  ],
+}
+
+# Hallucination Detection
+
+A hallucination is a claim the model made that is not supported. Detect it by checking the claim against something, not by asking the model whether it is sure.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **hallucination** is a fluent statement that is not true. In an LLM system the useful definition is narrower: a **claim in the output that the supplied context does not support**. That definition is testable; "the model is wrong" is not.
+
+Three detection techniques, ordered by how reliable they are in the tutorial's view:
+
+1. **Cross-reference validation.** You have an external source of truth: a database, a second retrieval, a lookup API. You check the claims in the answer against it. It needs a source of truth for your domain.
+2. **Grounding check.** You check whether every claim in the output is supported by the context the model was given. The faithfulness metrics of Ragas and DeepEval work this way <Cite n={2} /> <Cite n={4} />.
+3. **Self-consistency.** You ask the same question several times and look for disagreement. The SelfCheckGPT paper samples the model several times and uses the consistency of the answers to detect non-factual sentences, without an external database <Cite n={1} />.
+
+The last one is appealing because it needs no ground truth. Its blind spot follows from how it works (this is the tutorial's reasoning, not a result of the paper): if the model gives the same wrong answer every time, the samples agree, and the method has nothing to flag.
+
+The temperature is worth testing too (also the tutorial's own reasoning). A higher temperature gives more varied samples, so the rate of unsupported claims can change with it. A hallucination rate measured at one temperature does not describe a system that runs at another.
+
+</Technical>
+<Layman>
+
+A **hallucination** is when the model says something smooth and confident that is not true. For testing, use a narrower meaning: **a claim in the answer that the given information does not support**. You can test that; you cannot test "the model is wrong".
+
+Three ways to find hallucinations, from most to least reliable in the tutorial's view:
+
+1. **Check against a trusted source.** Compare the claims with a database, a second search, or a lookup service. You need such a source for your field.
+2. **Check against the given information.** Check that each claim is backed by the text the model received. The faithfulness metrics of Ragas and DeepEval do this <Cite n={2} /> <Cite n={4} />.
+3. **Ask several times.** Ask the same question again and again and look for answers that disagree. The SelfCheckGPT paper uses this to find false sentences without any outside database <Cite n={1} />.
+
+The third way is attractive because it needs no trusted source. But in the tutorial's reasoning it has a blind spot: if the model gives the same wrong answer every time, the answers agree, and nothing gets flagged.
+
+Also test the temperature (the tutorial's reasoning). A higher temperature makes answers more varied, so the rate of unsupported claims can change. A rate measured at one temperature does not tell you the rate at another.
+
+</Layman>
+<Bangla>
+
+**Hallucination** হলো সাবলীলভাবে বলা এমন কথা, যা সত্য নয়। LLM সিস্টেমে কাজের সংজ্ঞাটা আরও সরু: **উত্তরের এমন একটা দাবি, যা দেওয়া context সমর্থন করে না**। এই সংজ্ঞা টেস্ট করা যায়; "model ভুল" কথাটা টেস্ট করা যায় না।
+
+শনাক্ত করার তিনটা কৌশল, টিউটোরিয়ালের মতে বেশি নির্ভরযোগ্য থেকে কম নির্ভরযোগ্য ক্রমে:
+
+1. **Cross-reference validation।** আপনার কাছে বাইরের একটা সত্যের উৎস আছে: database, দ্বিতীয় একটা retrieval, বা lookup API। উত্তরের দাবিগুলো সেটার সাথে যাচাই করুন। এর জন্য আপনার domain-এর একটা সত্যের উৎস লাগে।
+2. **Grounding check।** উত্তরের প্রতিটা দাবি model-কে দেওয়া context দিয়ে সমর্থিত কি না, তা যাচাই করুন। Ragas আর DeepEval-এর faithfulness metric এভাবেই কাজ করে <Cite n={2} /> <Cite n={4} />।
+3. **Self-consistency।** একই প্রশ্ন কয়েকবার করে উত্তরগুলোর অমিল খুঁজুন। SelfCheckGPT paper model থেকে কয়েকবার sample নিয়ে উত্তরগুলোর সামঞ্জস্য দিয়ে ভুল তথ্যের বাক্য শনাক্ত করে, কোনো বাইরের database ছাড়াই <Cite n={1} />।
+
+শেষ কৌশলটা আকর্ষণীয়, কারণ এতে কোনো ground truth লাগে না। কিন্তু এর একটা অন্ধ জায়গা আছে, যা এর কাজের ধরন থেকেই আসে (এটা টিউটোরিয়ালের যুক্তি, paper-এর ফলাফল নয়): model প্রতিবার একই ভুল উত্তর দিলে sample-গুলো মিলে যায়, আর ধরার মতো কিছু থাকে না।
+
+temperature-ও টেস্ট করা দরকার (এটাও টিউটোরিয়ালের নিজের যুক্তি)। বেশি temperature-এ sample বেশি বৈচিত্র্যময় হয়, তাই অসমর্থিত দাবির হারও এর সাথে বদলাতে পারে। এক temperature-এ মাপা hallucination rate অন্য temperature-এ চলা সিস্টেমের কথা বলে না।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+A hallucination suite has three parts, and they are not equally strong.
+
+**Part 1: the claim extraction.** Before you can check a claim, you have to separate the answer into atomic claims. "You can return it within 30 days, excluding items marked final sale" is two claims. A grounding metric works on the decomposed form, because a partly-supported answer is not supported.
+
+**Part 2: the support check.** For each claim, ask whether the context supports it. Ragas defines its faithfulness score this way: identify the claims in the response, check whether each one can be inferred from the retrieved context, and divide the supported claims by all the claims <Cite n={2} />. DeepEval's `FaithfulnessMetric` has the same shape <Cite n={4} />.
+
+**Part 3: the external check.** Where a source of truth exists, use it. A customer id must exist. A price must match the price table. A policy clause must be in the version of the policy that is live today. Of the three methods, it is the only one that can catch an answer that is wrong in the same way every time.
+
+**Self-consistency** works on a different signal. You sample the model several times and measure how much the answers agree. SelfCheckGPT uses this signal to find non-factual sentences without an external database <Cite n={1} />. The blind spot is the model that is wrong in the same way every time.
+
+So the suite uses all three, and the report separates them. Anthropic warns against overinterpreting the quantitative score of an eval <Cite n={3} />, and a single blended number is easy to overinterpret:
+
+```text
+grounding failures     the model said something the context does not support
+external failures      the model said something factually wrong
+consistency failures   the model disagrees with itself across samples
+```
+
+In the tutorial's view, those three numbers have different fixes. A grounding failure is a prompt or retrieval problem. An external failure is a data or grounding problem. A consistency failure is a sampling or model problem. A single blended "hallucination rate" throws away the information you need to act.
+
+</Technical>
+<Layman>
+
+A hallucination test suite has three parts, and they are not equally strong.
+
+**Part 1: split the answer into claims.** "You can return it within 30 days, except final-sale items" is two claims. You check each one, because an answer that is only partly backed is not backed.
+
+**Part 2: check each claim against the given text.** Ragas scores faithfulness this way: find the claims, check whether each one follows from the retrieved text, and divide the backed claims by all claims <Cite n={2} />. DeepEval's `FaithfulnessMetric` works the same way <Cite n={4} />.
+
+**Part 3: check against a trusted source.** If you have one, use it. A customer id must exist. A price must match the price list. A policy rule must be in today's policy. This is the only one of the three that can catch an answer that is wrong the same way every time.
+
+**Asking several times** uses a different signal: do the answers agree? SelfCheckGPT uses this to find false sentences without an outside database <Cite n={1} />. It misses a model that is wrong the same way every time.
+
+So use all three, and report them apart. Anthropic warns against reading too much into one eval score <Cite n={3} />, and one mixed number is easy to misread:
+
+```text
+grounding failures     the model said something the context does not support
+external failures      the model said something factually wrong
+consistency failures   the model disagrees with itself across samples
+```
+
+In the tutorial's view, each number has its own fix. A grounding failure points to the prompt or the search step. An external failure points to the data. A consistency failure points to the sampling or the model. One mixed "hallucination rate" hides which fix you need.
+
+</Layman>
+<Bangla>
+
+একটা hallucination suite-এর তিনটা অংশ, আর সবগুলো সমান শক্তিশালী নয়।
+
+**অংশ ১: দাবি আলাদা করা।** দাবি যাচাই করার আগে উত্তরটাকে ছোট ছোট (atomic) দাবিতে ভাঙতে হয়। "এটা ৩০ দিনের মধ্যে ফেরত দেওয়া যাবে, তবে final sale চিহ্নিত জিনিস বাদে" — এখানে দুটো দাবি। আংশিকভাবে সমর্থিত উত্তর সমর্থিত নয়, তাই grounding metric ভাঙা রূপের ওপরই কাজ করে।
+
+**অংশ ২: সমর্থনের যাচাই।** প্রতিটা দাবির জন্য দেখুন context সেটা সমর্থন করে কি না। Ragas তার faithfulness স্কোর এভাবেই সংজ্ঞায়িত করে: উত্তরের দাবিগুলো বের করা, প্রতিটা দাবি retrieved context থেকে অনুমান করা যায় কি না দেখা, আর সমর্থিত দাবির সংখ্যাকে মোট দাবির সংখ্যা দিয়ে ভাগ করা <Cite n={2} />। DeepEval-এর `FaithfulnessMetric`-ও একই গঠনে কাজ করে <Cite n={4} />।
+
+**অংশ ৩: বাইরের যাচাই।** যেখানে সত্যের উৎস আছে, সেটা ব্যবহার করুন। customer id আসলেই থাকতে হবে। দাম price table-এর সাথে মিলতে হবে। policy clause আজকের চালু policy-র version-এ থাকতে হবে। তিনটা পদ্ধতির মধ্যে শুধু এটাই এমন উত্তর ধরতে পারে, যা প্রতিবার একইভাবে ভুল।
+
+**Self-consistency** আলাদা একটা সংকেত ব্যবহার করে। model থেকে কয়েকবার sample নিয়ে মাপুন উত্তরগুলো কতটা মেলে। SelfCheckGPT এই সংকেত দিয়ে বাইরের database ছাড়াই ভুল তথ্যের বাক্য খুঁজে বের করে <Cite n={1} />। এর অন্ধ জায়গা হলো সেই model, যা প্রতিবার একইভাবে ভুল।
+
+তাই suite তিনটাই ব্যবহার করে, আর রিপোর্টে এদের আলাদা রাখে। eval-এর সংখ্যাগত স্কোরকে অতিরিক্ত ব্যাখ্যা করা নিয়ে Anthropic সতর্ক করে <Cite n={3} />, আর মিশ্র একটা সংখ্যাকে ভুল ব্যাখ্যা করা খুব সহজ:
+
+```text
+grounding failures     the model said something the context does not support
+external failures      the model said something factually wrong
+consistency failures   the model disagrees with itself across samples
+```
+
+টিউটোরিয়ালের মতে, এই তিনটা সংখ্যার সমাধান আলাদা। grounding failure হলো prompt বা retrieval-এর সমস্যা। external failure হলো data বা grounding-এর সমস্যা। consistency failure হলো sampling বা model-এর সমস্যা। মিশ্র একটা "hallucination rate" কাজ করার জন্য দরকারি তথ্যটাই হারিয়ে ফেলে।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Build the suite as three separate test files, because they fail for different reasons:
+
+```python
+# tests/ai/test_grounding.py - is the answer supported by the context?
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+
+def test_answer_is_grounded_in_the_policy(policy, question):
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question, context=policy),
+        retrieval_context=[policy],
+    )
+    assert_test(test_case, [FaithfulnessMetric(threshold=0.9)])
+```
+
+```python
+# tests/ai/test_external_facts.py - is it true?
+def test_order_status_matches_the_database(order_id, db):
+    output = answer_question(f"What is the status of order {order_id}?")
+    status = parse_status(output)
+    assert status == db.status_for(order_id)
+```
+
+```python
+# tests/ai/test_self_consistency.py - does it agree with itself?
+def test_answer_is_stable_across_samples(question):
+    answers = [answer_question(question, temperature=1.0) for _ in range(5)]
+    facts = [frozenset(extract_facts(a)) for a in answers]
+    assert len(set(facts)) == 1, f"the answer changed: {facts}"
+```
+
+Then measure the temperature effect, because it changes the base rate of every other number:
+
+```python
+import pytest
+
+
+@pytest.mark.parametrize("temperature", [0.0, 0.7, 1.0])
+def test_hallucination_rate_by_temperature(temperature, dataset):
+    rate = grounding_failure_rate(dataset, temperature)
+    print(f"temperature={temperature} hallucination_rate={rate:.3f}")
+```
+
+And add a **known-wrong** case to every file. A suite that only sees good answers cannot tell you whether the check works:
+
+```python
+def test_the_check_catches_a_planted_hallucination():
+    planted = "You can return any item within 90 days, including opened ones."
+    score = grounding_score(planted, context=RETURN_POLICY)
+    assert score < 0.5, "the grounding check missed a planted hallucination"
+```
+
+That last test is the one that keeps the other tests honest.
+
+</Technical>
+<Layman>
+
+Build the suite as three separate test files, because each one fails for a different reason:
+
+```python
+# tests/ai/test_grounding.py - is the answer supported by the context?
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+
+def test_answer_is_grounded_in_the_policy(policy, question):
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question, context=policy),
+        retrieval_context=[policy],
+    )
+    assert_test(test_case, [FaithfulnessMetric(threshold=0.9)])
+```
+
+```python
+# tests/ai/test_external_facts.py - is it true?
+def test_order_status_matches_the_database(order_id, db):
+    output = answer_question(f"What is the status of order {order_id}?")
+    status = parse_status(output)
+    assert status == db.status_for(order_id)
+```
+
+```python
+# tests/ai/test_self_consistency.py - does it agree with itself?
+def test_answer_is_stable_across_samples(question):
+    answers = [answer_question(question, temperature=1.0) for _ in range(5)]
+    facts = [frozenset(extract_facts(a)) for a in answers]
+    assert len(set(facts)) == 1, f"the answer changed: {facts}"
+```
+
+Then measure how the temperature changes the result, because it changes every other number:
+
+```python
+import pytest
+
+
+@pytest.mark.parametrize("temperature", [0.0, 0.7, 1.0])
+def test_hallucination_rate_by_temperature(temperature, dataset):
+    rate = grounding_failure_rate(dataset, temperature)
+    print(f"temperature={temperature} hallucination_rate={rate:.3f}")
+```
+
+And add one answer that you know is wrong to every file. If the tests only ever see good answers, you cannot tell whether the check works:
+
+```python
+def test_the_check_catches_a_planted_hallucination():
+    planted = "You can return any item within 90 days, including opened ones."
+    score = grounding_score(planted, context=RETURN_POLICY)
+    assert score < 0.5, "the grounding check missed a planted hallucination"
+```
+
+That last test keeps the other tests honest.
+
+</Layman>
+<Bangla>
+
+suite তিনটি আলাদা টেস্ট ফাইলে বানান, কারণ ব্যর্থ হওয়ার কারণ আলাদা:
+
+```python
+# tests/ai/test_grounding.py - is the answer supported by the context?
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+
+def test_answer_is_grounded_in_the_policy(policy, question):
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question, context=policy),
+        retrieval_context=[policy],
+    )
+    assert_test(test_case, [FaithfulnessMetric(threshold=0.9)])
+```
+
+```python
+# tests/ai/test_external_facts.py - is it true?
+def test_order_status_matches_the_database(order_id, db):
+    output = answer_question(f"What is the status of order {order_id}?")
+    status = parse_status(output)
+    assert status == db.status_for(order_id)
+```
+
+```python
+# tests/ai/test_self_consistency.py - does it agree with itself?
+def test_answer_is_stable_across_samples(question):
+    answers = [answer_question(question, temperature=1.0) for _ in range(5)]
+    facts = [frozenset(extract_facts(a)) for a in answers]
+    assert len(set(facts)) == 1, f"the answer changed: {facts}"
+```
+
+তারপর temperature-এর প্রভাব মাপুন, কারণ এটা বাকি প্রতিটি সংখ্যার base rate বদলায়:
+
+```python
+import pytest
+
+
+@pytest.mark.parametrize("temperature", [0.0, 0.7, 1.0])
+def test_hallucination_rate_by_temperature(temperature, dataset):
+    rate = grounding_failure_rate(dataset, temperature)
+    print(f"temperature={temperature} hallucination_rate={rate:.3f}")
+```
+
+আর প্রতিটা ফাইলে একটা **জানা-ভুল** কেস যোগ করুন। শুধু ভালো উত্তর দেখা suite বলতে পারে না চেকটা আসলে কাজ করে কি না:
+
+```python
+def test_the_check_catches_a_planted_hallucination():
+    planted = "You can return any item within 90 days, including opened ones."
+    score = grounding_score(planted, context=RETURN_POLICY)
+    assert score < 0.5, "the grounding check missed a planted hallucination"
+```
+
+শেষ টেস্টটাই বাকি টেস্টগুলোকে সৎ রাখে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: one blended hallucination rate.** Grounding failures, factual failures, and instability have different fixes. Report them separately.
+
+**Mistake 2: only self-consistency.** It needs no external database <Cite n={1} />, which is why it is tempting, but by its design it cannot flag a wrong answer that the model repeats every time.
+
+**Mistake 3: only the external check.** A hallucination suite that needs a database for every case cannot run on a product that has no database to check against.
+
+**Mistake 4: no planted failure.** If your check never sees a known-bad output, you do not know that it works.
+
+**Mistake 5: measuring at one temperature.** The rate is a property of the sampling setting as much as of the model.
+
+**Mistake 6: assuming a hallucination is a prompt problem.** When the retrieval returned the wrong policy, the prompt cannot fix it.
+
+</Technical>
+<Layman>
+
+**Mistake 1: one mixed hallucination rate.** Unsupported claims, false facts, and unstable answers need different fixes. Report them apart.
+
+**Mistake 2: only asking several times.** It needs no outside database <Cite n={1} />, so it is tempting. But it cannot flag a wrong answer that the model gives every time.
+
+**Mistake 3: only checking against a trusted source.** If every test needs a database, you cannot test a product that has no database to check against.
+
+**Mistake 4: no planted wrong answer.** If your check never sees an answer you know is wrong, you do not know that it works.
+
+**Mistake 5: testing at one temperature only.** The rate depends on the sampling setting as much as on the model.
+
+**Mistake 6: thinking every hallucination is a prompt problem.** If the search step brought back the wrong policy, a better prompt cannot fix it.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: একটা মিশ্র hallucination rate।** grounding failure, factual failure আর অস্থিরতার সমাধান আলাদা। আলাদা করে রিপোর্ট করুন।
+
+**ভুল ২: শুধু self-consistency।** এতে বাইরের database লাগে না <Cite n={1} />, তাই এটা লোভনীয়। কিন্তু এর গঠনের কারণেই model প্রতিবার যে ভুল উত্তর দেয়, সেটা এটা ধরতে পারে না।
+
+**ভুল ৩: শুধু বাইরের যাচাই।** যে suite-এ প্রতিটা কেসের জন্য database লাগে, সেটা এমন পণ্যে চলে না যেখানে যাচাই করার মতো database নেই।
+
+**ভুল ৪: জানা-ভুল কেস না থাকা।** আপনার চেক যদি কখনো জানা-ভুল আউটপুট না দেখে, তাহলে সেটা কাজ করে কি না আপনি জানেন না।
+
+**ভুল ৫: একটা temperature-এ মাপা।** এই rate যতটা model-এর বৈশিষ্ট্য, ততটাই sampling সেটিং-এর।
+
+**ভুল ৬: ভাবা যে hallucination মানে prompt-এর সমস্যা।** retrieval ভুল policy ফেরত দিয়ে থাকলে prompt দিয়ে সেটা ঠিক হয় না।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the three failure counts separate in the report. A blended number hides which fix is needed.
+- Plant a wrong answer in every check. A detector you never saw fail is not proven to work.
+- Record the temperature with every hallucination rate. Without it the number cannot be compared with a later run.
+- Test the production temperature, not the temperature that gives the best score. The best score is usually at zero and production is usually not.
+- Keep the answer, the context, and the model's confidence in the same record. The three together are what makes a failure diagnosable.
+- When a grounding failure appears, print the unsupported claim. That one line is what the prompt author needs.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the three failure counts separate in the report. A blended number hides which fix is needed.
+- Plant a wrong answer in every check. A detector you never saw fail is not proven to work.
+- Record the temperature with every hallucination rate. Without it the number cannot be compared with a later run.
+- Test the production temperature, not the temperature that gives the best score. The best score is usually at zero and production is usually not.
+- Keep the answer, the context, and the model's confidence in the same record. The three together are what makes a failure diagnosable.
+- When a grounding failure appears, print the unsupported claim. That one line is what the prompt author needs.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- রিপোর্টে তিনটি failure সংখ্যা আলাদা রাখুন। মিশ্র সংখ্যা ঢেকে দেয় কোন সমাধান দরকার।
+- প্রতিটি চেকে একটা ভুল উত্তর ইচ্ছাকৃতভাবে বসান। যে detector-কে আপনি কখনো ব্যর্থ দেখেননি, তার কাজ করা প্রমাণিত নয়।
+- প্রতিটি hallucination rate-এর সাথে temperature লিখে রাখুন। temperature ছাড়া সেই সংখ্যা পরের run-এর সাথে তুলনা যায় না।
+- production-এর temperature-তে টেস্ট করুন, সেরা স্কোর দেয় এমন temperature-এ নয়। সেরা স্কোর সাধারণত শূন্যে, আর production সাধারণত নয়।
+- উত্তর, context আর model-এর confidence একই রেকর্ডে রাখুন। তিনটা একসাথে থাকলেই ব্যর্থতা নির্ণয়যোগ্য হয়।
+- grounding failure এলে অসমর্থিত দাবিটা প্রিন্ট করুন। ওই একটা লাইনই prompt-লেখকের দরকার।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Hallucination | A claim in the output that the supplied context does not support |
+| Grounding check | Checking every claim in the output against the context |
+| Faithfulness | The share of the claims in an answer that the retrieved context supports |
+| Self-consistency | Sampling several times and measuring how much the answers agree |
+| SelfCheckGPT | A sampling-based method that finds non-factual sentences without an external database |
+| Atomic claim | One indivisible statement, split out of a longer answer |
+| Cross-reference validation | Checking the claims against an external source of truth |
+| Planted hallucination | A deliberately wrong output used to prove a detector works |
+| Temperature effect | How the sampling setting changes the observed hallucination rate |

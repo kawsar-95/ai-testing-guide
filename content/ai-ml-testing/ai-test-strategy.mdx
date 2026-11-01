@@ -1,0 +1,395 @@
+export const metadata = { title: 'AI Test Strategy and Planning', description: 'Write a test plan for an AI feature: the scope, the test types, the tools, the metrics, and the risk assessment, before anything breaks.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'AI Risk Management Framework', publisher: 'NIST', url: 'https://www.nist.gov/itl/ai-risk-management-framework', accessed: '2026-11-01' },
+    { title: 'OWASP Top 10 for Large Language Model Applications', publisher: 'OWASP', url: 'https://owasp.org/projects/top-10-for-large-language-model-applications', accessed: '2026-11-01' },
+  ],
+}
+
+# AI Test Strategy and Planning
+
+A test strategy for an AI feature is a list of what could go wrong, written down before it goes wrong.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A test strategy for an AI feature answers five questions before a single test is written: what layers are in scope, what kinds of testing apply, which tools run them, which metrics count as pass or fail, and which risks get checked. Skipping the plan does not remove the questions; it just means they get answered by accident, in production.
+
+The **scope** question reuses the architecture layers: prompt builder, model, retriever (if the feature uses RAG), guardrails, and the user-facing output. Each layer needs at least one test type.
+
+The **risk** question reuses the OWASP Top 10 for LLMs as a checklist: prompt injection, data leakage, excessive agency, and the rest <Cite n={2} />. A plan that does not name which of the ten are in scope for this feature has an unstated assumption that none of them matter.
+
+NIST's AI Risk Management Framework gives the four-part structure that a plan can follow: govern (who owns this), map (what could go wrong and where), measure (how do we know), and manage (what do we do about it) <Cite n={1} />. It is a governance framework, not a testing one, but it maps cleanly onto a test plan's sections.
+
+</Technical>
+<Layman>
+
+একটা AI feature-এর test strategy একটা test লেখার আগেই পাঁচটা প্রশ্নের উত্তর দেয়: কোন layer scope-এ আছে, কোন ধরনের testing প্রযোজ্য, কোন টুল সেগুলো চালায়, কোন metric pass বা fail ঠিক করে, আর কোন ঝুঁকি চেক করা হয়। plan বাদ দেওয়া প্রশ্নগুলো সরিয়ে দেয় না; এটা শুধু মানে প্রশ্নগুলোর উত্তর দুর্ঘটনাক্রমে production-এ হয়।
+
+**Scope** প্রশ্ন architecture layer আবার ব্যবহার করে: prompt builder, model, retriever (RAG ব্যবহার করলে), guardrails, আর user-facing output। প্রতিটা layer-এর অন্তত একটা test type দরকার।
+
+**Risk** প্রশ্ন একটা checklist হিসেবে OWASP Top 10 for LLMs আবার ব্যবহার করে: prompt injection, data leakage, excessive agency, আর বাকিগুলো <Cite n={2} />। যে plan বলে না এই দশটার মধ্যে কোনগুলো এই feature-এর scope-এ আছে, তার একটা না-বলা ধারণা আছে যে কোনোটাই গুরুত্বপূর্ণ নয়।
+
+NIST-এর AI Risk Management Framework চার-অংশের গঠন দেয় যা একটা plan অনুসরণ করতে পারে: govern (কে এটার মালিক), map (কী ভুল হতে পারে আর কোথায়), measure (আমরা কীভাবে জানি), আর manage (আমরা এটা নিয়ে কী করি) <Cite n={1} />। এটা একটা governance framework, testing framework নয়, কিন্তু এটা একটা test plan-এর অংশের সাথে পরিষ্কারভাবে মেলে।
+
+</Layman>
+<Bangla>
+
+একটা AI feature-এর test strategy একটা test লেখার আগেই পাঁচটা প্রশ্নের উত্তর দেয়: কোন layer scope-এ আছে, কোন ধরনের testing প্রযোজ্য, কোন টুল সেগুলো চালায়, কোন metric pass বা fail ঠিক করে, আর কোন ঝুঁকি চেক করা হয়। plan বাদ দেওয়া প্রশ্নগুলো সরিয়ে দেয় না; এটা শুধু মানে প্রশ্নগুলোর উত্তর দুর্ঘটনাক্রমে production-এ হয়।
+
+**Scope** প্রশ্ন architecture layer আবার ব্যবহার করে: prompt builder, model, retriever (RAG ব্যবহার করলে), guardrails, আর user-facing output। প্রতিটা layer-এর অন্তত একটা test type দরকার।
+
+**Risk** প্রশ্ন একটা checklist হিসেবে OWASP Top 10 for LLMs আবার ব্যবহার করে: prompt injection, data leakage, excessive agency, আর বাকিগুলো <Cite n={2} />। যে plan বলে না এই দশটার মধ্যে কোনগুলো এই feature-এর scope-এ আছে, তার একটা না-বলা ধারণা আছে যে কোনোটাই গুরুত্বপূর্ণ নয়।
+
+NIST-এর AI Risk Management Framework চার-অংশের গঠন দেয় যা একটা plan অনুসরণ করতে পারে: govern (কে এটার মালিক), map (কী ভুল হতে পারে আর কোথায়), measure (আমরা কীভাবে জানি), আর manage (আমরা এটা নিয়ে কী করি) <Cite n={1} />। এটা একটা governance framework, testing framework নয়, কিন্তু এটা একটা test plan-এর অংশের সাথে পরিষ্কারভাবে মেলে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+A plan is built top-down, from the feature description to the gate numbers:
+
+```text
+1. describe the feature    what it does, who uses it, what it must never do
+2. map the layers          prompt, model, retriever, guardrails, output
+3. map the risks           which OWASP ids apply, which do not, and why
+4. pick the test types     eval suite, red team, UI, load, each per layer
+5. pick the metrics        the number that decides pass or fail, per test type
+6. set the gate            the threshold that blocks a release
+```
+
+Step 3 is the one most often skipped, and it is the one NIST's framework calls "map": naming the risk before deciding how to measure it <Cite n={1} />. A plan that jumps straight from the feature description to a tool list has skipped the thinking the tool list depends on.
+
+The **risk-to-test-type mapping** is where the OWASP checklist earns its place in the plan:
+
+```text
+risk in scope                test type that covers it
+LLM01 prompt injection        red team suite (direct + indirect)
+LLM02 sensitive info disclosure  data leakage tests, PII scan
+LLM06 excessive agency          agent action tests
+LLM09 misinformation            hallucination and faithfulness eval
+```
+
+<Cite n={2} /> A plan with a risk and no matching test type is a plan with a gap, visible on paper before it is visible in an incident.
+
+</Technical>
+<Layman>
+
+একটা plan উপর থেকে নিচে বানানো হয়, feature description থেকে gate সংখ্যা পর্যন্ত:
+
+```text
+1. describe the feature    what it does, who uses it, what it must never do
+2. map the layers          prompt, model, retriever, guardrails, output
+3. map the risks           which OWASP ids apply, which do not, and why
+4. pick the test types     eval suite, red team, UI, load, each per layer
+5. pick the metrics        the number that decides pass or fail, per test type
+6. set the gate            the threshold that blocks a release
+```
+
+ধাপ ৩ সবচেয়ে বেশি বাদ পড়ে, আর এটাই NIST-এর framework-এ "map" বলে: পরিমাপ করার সিদ্ধান্ত নেওয়ার আগে ঝুঁকির নাম দেওয়া <Cite n={1} />। যে plan feature description থেকে সরাসরি tool তালিকায় লাফ দেয় সে সেই চিন্তা বাদ দিয়েছে যার ওপর tool তালিকা নির্ভর করে।
+
+**Risk-to-test-type mapping**-ই যেখানে OWASP checklist plan-এ তার জায়গা অর্জন করে:
+
+```text
+risk in scope                test type that covers it
+LLM01 prompt injection        red team suite (direct + indirect)
+LLM02 sensitive info disclosure  data leakage tests, PII scan
+LLM06 excessive agency          agent action tests
+LLM09 misinformation            hallucination and faithfulness eval
+```
+
+<Cite n={2} /> একটা ঝুঁকি আর মেলানো test type ছাড়া একটা plan মানে একটা ফাঁক, কাগজে দৃশ্যমান একটা incident-এ দৃশ্যমান হওয়ার আগেই।
+
+</Layman>
+<Bangla>
+
+একটা plan উপর থেকে নিচে বানানো হয়, feature description থেকে gate সংখ্যা পর্যন্ত:
+
+```text
+1. describe the feature    what it does, who uses it, what it must never do
+2. map the layers          prompt, model, retriever, guardrails, output
+3. map the risks           which OWASP ids apply, which do not, and why
+4. pick the test types     eval suite, red team, UI, load, each per layer
+5. pick the metrics        the number that decides pass or fail, per test type
+6. set the gate            the threshold that blocks a release
+```
+
+ধাপ ৩ সবচেয়ে বেশি বাদ পড়ে, আর এটাই NIST-এর framework-এ "map" বলে: পরিমাপ করার সিদ্ধান্ত নেওয়ার আগে ঝুঁকির নাম দেওয়া <Cite n={1} />। যে plan feature description থেকে সরাসরি tool তালিকায় লাফ দেয় সে সেই চিন্তা বাদ দিয়েছে যার ওপর tool তালিকা নির্ভর করে।
+
+**Risk-to-test-type mapping**-ই যেখানে OWASP checklist plan-এ তার জায়গা অর্জন করে:
+
+```text
+risk in scope                test type that covers it
+LLM01 prompt injection        red team suite (direct + indirect)
+LLM02 sensitive info disclosure  data leakage tests, PII scan
+LLM06 excessive agency          agent action tests
+LLM09 misinformation            hallucination and faithfulness eval
+```
+
+<Cite n={2} /> একটা ঝুঁকি আর মেলানো test type ছাড়া একটা plan মানে একটা ফাঁক, কাগজে দৃশ্যমান একটা incident-এ দৃশ্যমান হওয়ার আগেই।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+A worked plan outline for "AI-powered customer support":
+
+```text
+FEATURE   Customer support chatbot, answers from a return-policy knowledge base.
+          Must never promise a refund outside policy or discuss competitors.
+
+SCOPE     prompt builder | model (GPT-4o-mini) | retriever (Chroma) | output validator
+
+RISKS     LLM01 prompt injection        - in scope (public chat widget)
+          LLM02 sensitive info disclosure - in scope (order data in context)
+          LLM06 excessive agency         - out of scope (no tools, read-only)
+          LLM09 misinformation           - in scope (policy must be exact)
+
+TEST TYPES  eval suite (Promptfoo + DeepEval), red team (Promptfoo + Giskard),
+            UI tests (Playwright), load test (10 req/s sustained)
+
+METRICS     faithfulness >= 0.9 | hallucination rate <= 2% | P95 latency <= 3s
+
+GATE        merge blocked if faithfulness < 0.9 or a new high-severity red team finding
+```
+
+Turn the RISKS section into failing tests directly, one per row, so the plan and the suite cannot drift apart:
+
+```python
+SCOPED_RISKS = {
+    "LLM01": True,   # prompt injection: in scope
+    "LLM02": True,   # sensitive info disclosure: in scope
+    "LLM06": False,  # excessive agency: out of scope, no tools
+    "LLM09": True,   # misinformation: in scope
+}
+
+def test_every_in_scope_risk_has_a_test_file(risk_to_test_file):
+    for risk, in_scope in SCOPED_RISKS.items():
+        if in_scope:
+            assert risk in risk_to_test_file, f"{risk} is in scope but has no test"
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the plan before the first eval config, not after. A plan written after the fact just describes what was tested, not what should have been.
+- Keep the plan as a file in the repo, next to the feature, reviewed in the same pull request as the code.
+- Mark a risk "out of scope" explicitly, with the reason, rather than leaving it unmentioned.
+</Callout>
+
+</Technical>
+<Layman>
+
+"AI-powered customer support"-এর জন্য একটা কাজ করা plan outline:
+
+```text
+FEATURE   Customer support chatbot, answers from a return-policy knowledge base.
+          Must never promise a refund outside policy or discuss competitors.
+
+SCOPE     prompt builder | model (GPT-4o-mini) | retriever (Chroma) | output validator
+
+RISKS     LLM01 prompt injection        - in scope (public chat widget)
+          LLM02 sensitive info disclosure - in scope (order data in context)
+          LLM06 excessive agency         - out of scope (no tools, read-only)
+          LLM09 misinformation           - in scope (policy must be exact)
+
+TEST TYPES  eval suite (Promptfoo + DeepEval), red team (Promptfoo + Giskard),
+            UI tests (Playwright), load test (10 req/s sustained)
+
+METRICS     faithfulness >= 0.9 | hallucination rate <= 2% | P95 latency <= 3s
+
+GATE        merge blocked if faithfulness < 0.9 or a new high-severity red team finding
+```
+
+RISKS অংশকে সরাসরি ব্যর্থ হতে পারে এমন test-এ রূপান্তর করুন, প্রতি সারিতে একটা, যাতে plan আর suite আলাদা হয়ে না যায়:
+
+```python
+SCOPED_RISKS = {
+    "LLM01": True,   # prompt injection: in scope
+    "LLM02": True,   # sensitive info disclosure: in scope
+    "LLM06": False,  # excessive agency: out of scope, no tools
+    "LLM09": True,   # misinformation: in scope
+}
+
+def test_every_in_scope_risk_has_a_test_file(risk_to_test_file):
+    for risk, in_scope in SCOPED_RISKS.items():
+        if in_scope:
+            assert risk in risk_to_test_file, f"{risk} is in scope but has no test"
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- প্রথম eval config-এর আগে plan লিখুন, পরে নয়। পরে লেখা plan শুধু কী টেস্ট করা হয়েছে তা বর্ণনা করে, কী করা উচিত ছিল তা নয়।
+- plan-কে repo-তে একটা ফাইল হিসেবে রাখুন, feature-এর পাশে, কোডের একই pull request-এ review করা।
+- একটা ঝুঁকিকে স্পষ্টভাবে "out of scope" চিহ্নিত করুন, কারণ সহ, উল্লেখ না করে রাখার বদলে।
+</Callout>
+
+</Layman>
+<Bangla>
+
+"AI-powered customer support"-এর জন্য একটা কাজ করা plan outline:
+
+```text
+FEATURE   Customer support chatbot, answers from a return-policy knowledge base.
+          Must never promise a refund outside policy or discuss competitors.
+
+SCOPE     prompt builder | model (GPT-4o-mini) | retriever (Chroma) | output validator
+
+RISKS     LLM01 prompt injection        - in scope (public chat widget)
+          LLM02 sensitive info disclosure - in scope (order data in context)
+          LLM06 excessive agency         - out of scope (no tools, read-only)
+          LLM09 misinformation           - in scope (policy must be exact)
+
+TEST TYPES  eval suite (Promptfoo + DeepEval), red team (Promptfoo + Giskard),
+            UI tests (Playwright), load test (10 req/s sustained)
+
+METRICS     faithfulness >= 0.9 | hallucination rate <= 2% | P95 latency <= 3s
+
+GATE        merge blocked if faithfulness < 0.9 or a new high-severity red team finding
+```
+
+RISKS অংশকে সরাসরি ব্যর্থ হতে পারে এমন test-এ রূপান্তর করুন, প্রতি সারিতে একটা, যাতে plan আর suite আলাদা হয়ে না যায়:
+
+```python
+SCOPED_RISKS = {
+    "LLM01": True,   # prompt injection: in scope
+    "LLM02": True,   # sensitive info disclosure: in scope
+    "LLM06": False,  # excessive agency: out of scope, no tools
+    "LLM09": True,   # misinformation: in scope
+}
+
+def test_every_in_scope_risk_has_a_test_file(risk_to_test_file):
+    for risk, in_scope in SCOPED_RISKS.items():
+        if in_scope:
+            assert risk in risk_to_test_file, f"{risk} is in scope but has no test"
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- প্রথম eval config-এর আগে plan লিখুন, পরে নয়। পরে লেখা plan শুধু কী টেস্ট করা হয়েছে তা বর্ণনা করে, কী করা উচিত ছিল তা নয়।
+- plan-কে repo-তে একটা ফাইল হিসেবে রাখুন, feature-এর পাশে, কোডের একই pull request-এ review করা।
+- একটা ঝুঁকিকে স্পষ্টভাবে "out of scope" চিহ্নিত করুন, কারণ সহ, উল্লেখ না করে রাখার বদলে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: the plan is a tool list, not a risk list.** "We use Promptfoo and DeepEval" says nothing about what they are being used to check.
+
+**Mistake 2: no explicit out-of-scope section.** An unmentioned risk looks identical to a considered-and-excluded risk, until the incident.
+
+**Mistake 3: metrics with no threshold.** "We track faithfulness" is not a gate; "faithfulness >= 0.9 blocks the merge" is.
+
+**Mistake 4: the plan is never updated.** A new tool, a new model, or a new feature flag changes the risk map, and the plan needs to change with it.
+
+**Mistake 5: one plan for the whole product.** A plan sized for the product hides which specific feature is actually covered; write one per feature, or per meaningfully different risk surface.
+
+</Technical>
+<Layman>
+
+**Mistake ১: plan একটা tool তালিকা, risk তালিকা নয়।** "আমরা Promptfoo আর DeepEval ব্যবহার করি" কিছুই বলে না তারা কী চেক করতে ব্যবহার হচ্ছে।
+
+**Mistake ২: স্পষ্ট out-of-scope অংশ নেই।** একটা উল্লেখ না করা ঝুঁকি দেখতে বিবেচিত-আর-বাদ-দেওয়া ঝুঁকির মতোই, incident হওয়ার আগ পর্যন্ত।
+
+**Mistake ৩: threshold ছাড়া metric।** "আমরা faithfulness track করি" একটা gate নয়; "faithfulness >= 0.9 merge ব্লক করে" এটাই gate।
+
+**Mistake ৪: plan কখনো update হয় না।** একটা নতুন tool, model, বা feature flag risk map বদলায়, আর plan-কেও তার সাথে বদলাতে হবে।
+
+**Mistake ৫: পুরো product-এর জন্য একটা plan।** product-এর আকারের plan লুকায় কোন নির্দিষ্ট feature আসলে কভার করা; প্রতি feature-এ একটা লিখুন, বা অর্থপূর্ণভাবে আলাদা risk surface-এ।
+
+</Layman>
+<Bangla>
+
+**ভুল ১: plan একটা tool তালিকা, risk তালিকা নয়।** "আমরা Promptfoo আর DeepEval ব্যবহার করি" কিছুই বলে না তারা কী চেক করতে ব্যবহার হচ্ছে।
+
+**ভুল ২: স্পষ্ট out-of-scope অংশ নেই।** একটা উল্লেখ না করা ঝুঁকি দেখতে বিবেচিত-আর-বাদ-দেওয়া ঝুঁকির মতোই, incident হওয়ার আগ পর্যন্ত।
+
+**ভুল ৩: threshold ছাড়া metric।** "আমরা faithfulness track করি" একটা gate নয়; "faithfulness >= 0.9 merge ব্লক করে" এটাই gate।
+
+**ভুল ৪: plan কখনো update হয় না।** একটা নতুন tool, model, বা feature flag risk map বদলায়, আর plan-কেও তার সাথে বদলাতে হবে।
+
+**ভুল ৫: পুরো product-এর জন্য একটা plan।** product-এর আকারের plan লুকায় কোন নির্দিষ্ট feature আসলে কভার করা; প্রতি feature-এ একটা লিখুন, বা অর্থপূর্ণভাবে আলাদা risk surface-এ।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the plan as a short file in the repo: feature, scope, risks (in and out), test types, metrics, gate.
+- For each OWASP risk marked in scope, link the test file that covers it.
+- Put a real number on every metric. A metric with no threshold cannot fail a build.
+- Revisit the plan whenever the model, the prompt, or a tool version changes.
+- Review the plan in the same pull request as the feature, not after the feature ships.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the plan as a short file in the repo: feature, scope, risks (in and out), test types, metrics, gate.
+- For each OWASP risk marked in scope, link the test file that covers it.
+- Put a real number on every metric. A metric with no threshold cannot fail a build.
+- Revisit the plan whenever the model, the prompt, or a tool version changes.
+- Review the plan in the same pull request as the feature, not after the feature ships.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- plan-কে repo-তে একটা সংক্ষিপ্ত ফাইল হিসেবে লিখুন: feature, scope, risks (in আর out), test types, metrics, gate।
+- scope-এ চিহ্নিত প্রতিটা OWASP risk-এর জন্য, যে test file সেটা কভার করে তার লিংক দিন।
+- প্রতিটা metric-এ একটা বাস্তব সংখ্যা বসান। threshold ছাড়া metric একটা build ব্যর্থ করতে পারে না।
+- model, prompt, বা tool version বদলালেই plan আবার দেখুন।
+- feature-এর একই pull request-এ plan review করুন, feature ship হওয়ার পরে নয়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Test strategy | The plan naming the scope, test types, tools, metrics, and risks of a feature |
+| Scope | The layers of the architecture a plan covers: prompt, model, retriever, guardrails, output |
+| Risk mapping | Naming which OWASP LLM risks apply to a feature, and which do not |
+| Gate | The threshold on a metric that blocks a merge or a release |
+| NIST AI RMF | The governance framework: govern, map, measure, manage |
+| Out of scope | A risk explicitly considered and excluded, with a stated reason |

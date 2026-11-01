@@ -1,0 +1,330 @@
+"""The page data of the AI/ML Testing module, Phase 1, course module 3 (continued).
+
+Session 11 of course module 3, LLM Evaluation and Testing Tools: model
+comparison and regression testing. This was the one session of that module
+left unwritten when the rest of the module landed.
+"""
+
+from ai_ml_testing_page import page
+
+page(
+    slug="model-comparison-regression",
+    title="Model Comparison and Regression Testing",
+    description="Run the same golden dataset across three models, track scores over time, and catch what a model upgrade silently broke.",
+    lede="A model upgrade is a code change with no diff. The only way to know what it broke is to run the same questions through it and compare.",
+    sources=["promptfoo-config", "anthropic-evals", "deepeval-metrics"],
+    sections={
+        "In plain words": {
+            "technical": (
+                "A **golden dataset** is a fixed set of question-and-expected-fact pairs that "
+                "stays the same for the whole life of the feature. Fifty pairs is a reasonable "
+                "start. The pairs do not need to be exhaustive; they need to be **stable**, so "
+                "that two runs, weeks apart, are comparing the same thing.\n\n"
+                "**Model comparison** runs that dataset against more than one model and puts "
+                "the scores side by side. Promptfoo does this with a list of providers in one "
+                "config, so the comparison is one command {{cite:promptfoo-config}}.\n\n"
+                "**Regression testing** is the same dataset run again after a change, to see "
+                "what the change broke. The changes that matter here: a model version bump, a "
+                "prompt edit, a retrieval change, a chunking change, a temperature change, and "
+                "a change to the safety settings. Any of these can move the score without "
+                "anyone touching the feature's visible behaviour on purpose.\n\n"
+                "The report has to be broken down by category. An overall score across a mixed "
+                "dataset hides the failure: a model that is perfect on short factual questions "
+                "and invents facts on multi-hop ones still has a good average, and the average "
+                "is the number everyone looks at first {{cite:anthropic-evals}}."
+            ),
+            "layman": (
+                "**Golden dataset** হলো প্রশ্ন আর প্রত্যাশিত তথ্যের একটা নির্দিষ্ট তালিকা, যেটা ফিচারের সারা জীবন ধরে একই থাকে। পঞ্চাশটা জোড়া দিয়ে শুরু করা যুক্তিসঙ্গত। এগুলোর সম্পূর্ণ হওয়ার দরকার নেই; **স্থিতিশীল** হওয়া দরকার, যাতে কয়েক সপ্তাহ পরের দুটো run একই জিনিস তুলনা করে।\n\n"
+                "**Model comparison** সেই dataset একাধিক model-এর ওপর চালিয়ে স্কোর পাশাপাশি রাখে। Promptfoo একটা config-এ provider-এর তালিকা দিয়ে এটা করে, তাই তুলনা একটা কমান্ড {{cite:promptfoo-config}}।\n\n"
+                "**Regression testing** হলো পরিবর্তনের পরে একই dataset আবার চালানো, যাতে দেখা যায় পরিবর্তন কী ভাঙল। যেসব পরিবর্তন গুরুত্বপূর্ণ: model version বাড়ানো, prompt সম্পাদনা, retrieval বদল, chunking বদল, temperature বদল, আর safety setting বদল। এগুলোর যেকোনোটাই ফিচারের দৃশ্যমান আচরণ ইচ্ছাকৃতভাবে না বদলেও স্কোর সরাতে পারে।\n\n"
+                "রিপোর্ট ধরন অনুযায়ী ভাগ করতে হবে। মিশ্র dataset-এর সামগ্রিক স্কোর ব্যর্থতা ঢেকে দেয়: ছোট তথ্যমূলক প্রশ্নে পারফেক্ট আর multi-hop প্রশ্নে বানানো model-ও গড়ে ভালো স্কোর পায়, আর সেই গড়টাই সবাই প্রথমে দেখে {{cite:anthropic-evals}}।"
+            ),
+            "bangla": (
+                "**Golden dataset** হলো প্রশ্ন আর প্রত্যাশিত তথ্যের একটা নির্দিষ্ট তালিকা, যেটা ফিচারের সারা জীবন ধরে একই থাকে। পঞ্চাশটা জোড়া দিয়ে শুরু করা যুক্তিসঙ্গত। এগুলোর সম্পূর্ণ হওয়ার দরকার নেই; **স্থিতিশীল** হওয়া দরকার, যাতে কয়েক সপ্তাহ পরের দুটো run একই জিনিস তুলনা করে।\n\n"
+                "**Model comparison** সেই dataset একাধিক model-এর ওপর চালিয়ে স্কোর পাশাপাশি রাখে। Promptfoo একটা config-এ provider-এর তালিকা দিয়ে এটা করে, তাই তুলনা একটা কমান্ড {{cite:promptfoo-config}}।\n\n"
+                "**Regression testing** হলো পরিবর্তনের পরে একই dataset আবার চালানো, যাতে দেখা যায় পরিবর্তন কী ভাঙল। যেসব পরিবর্তন গুরুত্বপূর্ণ: model version বাড়ানো, prompt সম্পাদনা, retrieval বদল, chunking বদল, temperature বদল, আর safety setting বদল। এগুলোর যেকোনোটাই ফিচারের দৃশ্যমান আচরণ ইচ্ছাকৃতভাবে না বদলেও স্কোর সরাতে পারে।\n\n"
+                "রিপোর্ট ধরন অনুযায়ী ভাগ করতে হবে। মিশ্র dataset-এর সামগ্রিক স্কোর ব্যর্থতা ঢেকে দেয়: ছোট তথ্যমূলক প্রশ্নে পারফেক্ট আর multi-hop প্রশ্নে বানানো model-ও গড়ে ভালো স্কোর পায়, আর সেই গড়টাই সবাই প্রথমে দেখে {{cite:anthropic-evals}}।"
+            ),
+        },
+        "How it works": {
+            "technical": (
+                "One config, several providers, one test list:\n\n"
+                "```yaml\n"
+                "providers:\n"
+                "  - id: anthropic:messages:claude-sonnet-4-6\n"
+                "    label: sonnet-4-6\n"
+                "  - id: anthropic:messages:claude-haiku-4-5\n"
+                "    label: haiku-4-5\n"
+                "  - id: openai:chat:gpt-4o-mini\n"
+                "    label: gpt-4o-mini\n\n"
+                "tests: file://evals/golden-cases.yaml\n"
+                "```\n\n"
+                "One run produces one row per case per provider. The useful comparison is not "
+                "the average but the **per-category breakdown**, because different models fail "
+                "differently:\n\n"
+                "```text\n"
+                "category         cases   sonnet   haiku   mini\n"
+                "short fact         12     0.98    0.96    0.91\n"
+                "policy lookup      18     0.95    0.94    0.72\n"
+                "multi-hop          10     0.91    0.68    0.55\n"
+                "```\n\n"
+                "That table tells you the cheap model is fine for most traffic and useless for "
+                "multi-hop questions, which is a routing decision, not a model decision.\n\n"
+                "**Regression tracking** is the same command over time, with the output files "
+                "diffed:\n\n"
+                "```bash\n"
+                "npx promptfoo eval --output runs/2026-11-01.json\n"
+                "npx promptfoo compare runs/2026-11-01.json runs/2026-11-08.json\n"
+                "```\n\n"
+                "Two costs belong in the report, because they decide whether a quality gain is "
+                "worth it: **token usage** and **latency** per case. A model that scores 0.95 "
+                "instead of 0.90 and costs three times as much may be right for one case and "
+                "wrong for ten thousand {{cite:deepeval-metrics}}."
+            ),
+            "layman": (
+                "একটা config, কয়েকটা provider, একটা test তালিকা:\n\n"
+                "```yaml\n"
+                "providers:\n"
+                "  - id: anthropic:messages:claude-sonnet-4-6\n"
+                "    label: sonnet-4-6\n"
+                "  - id: anthropic:messages:claude-haiku-4-5\n"
+                "    label: haiku-4-5\n"
+                "  - id: openai:chat:gpt-4o-mini\n"
+                "    label: gpt-4o-mini\n\n"
+                "tests: file://evals/golden-cases.yaml\n"
+                "```\n\n"
+                "একটা run থেকে প্রতি কেস প্রতি provider-এর একটা সারি। কাজের তুলনা গড় নয়, **ধরন অনুযায়ী ভাগ**, কারণ ভিন্ন model ভিন্নভাবে ভাঙে:\n\n"
+                "```text\n"
+                "category         cases   sonnet   haiku   mini\n"
+                "short fact         12     0.98    0.96    0.91\n"
+                "policy lookup      18     0.95    0.94    0.72\n"
+                "multi-hop          10     0.91    0.68    0.55\n"
+                "```\n\n"
+                "ওই টেবিল বলে দেয় সস্তা model বেশিরভাগ ট্রাফিকে ঠিক আর multi-hop প্রশ্নে অকেজে, যেটা একটা routing সিদ্ধান্ত, model সিদ্ধান্ত নয়।\n\n"
+                "**Regression tracking** একই কমান্ড সময়ের সাথে, আউটপুট ফাইল তুলনা করে:\n\n"
+                "```bash\n"
+                "npx promptfoo eval --output runs/2026-11-01.json\n"
+                "npx promptfoo compare runs/2026-11-01.json runs/2026-11-08.json\n"
+                "```\n\n"
+                "দুটি খরচ রিপোর্টে থাকতে হবে, কারণ সেগুলোই ঠিক করে মানের উন্নতি সার্থক কি না: প্রতি কেসে **token ব্যবহার** আর **latency**। 0.90-এর বদলে 0.95 দেয় কিন্তু তিনগুণ খরচ করে এমন model একটা কেসের জন্য ঠিক আর বাকি দশ হাজারের জন্য ভুল হতে পারে {{cite:deepeval-metrics}}।"
+            ),
+            "bangla": (
+                "একটা config, কয়েকটা provider, একটা test তালিকা:\n\n"
+                "```yaml\n"
+                "providers:\n"
+                "  - id: anthropic:messages:claude-sonnet-4-6\n"
+                "    label: sonnet-4-6\n"
+                "  - id: anthropic:messages:claude-haiku-4-5\n"
+                "    label: haiku-4-5\n"
+                "  - id: openai:chat:gpt-4o-mini\n"
+                "    label: gpt-4o-mini\n\n"
+                "tests: file://evals/golden-cases.yaml\n"
+                "```\n\n"
+                "একটা run থেকে প্রতি কেস প্রতি provider-এর একটা সারি। কাজের তুলনা গড় নয়, **ধরন অনুযায়ী ভাগ**, কারণ ভিন্ন model ভিন্নভাবে ভাঙে:\n\n"
+                "```text\n"
+                "category         cases   sonnet   haiku   mini\n"
+                "short fact         12     0.98    0.96    0.91\n"
+                "policy lookup      18     0.95    0.94    0.72\n"
+                "multi-hop          10     0.91    0.68    0.55\n"
+                "```\n\n"
+                "ওই টেবিল বলে দেয় সস্তা model বেশিরভাগ ট্রাফিকে ঠিক আর multi-hop প্রশ্নে অকেজে, যেটা একটা routing সিদ্ধান্ত, model সিদ্ধান্ত নয়।\n\n"
+                "**Regression tracking** একই কমান্ড সময়ের সাথে, আউটপুট ফাইল তুলনা করে:\n\n"
+                "```bash\n"
+                "npx promptfoo eval --output runs/2026-11-01.json\n"
+                "npx promptfoo compare runs/2026-11-01.json runs/2026-11-08.json\n"
+                "```\n\n"
+                "দুটি খরচ রিপোর্টে থাকতে হবে, কারণ সেগুলোই ঠিক করে মানের উন্নতি সার্থক কি না: প্রতি কেসে **token ব্যবহার** আর **latency**। 0.90-এর বদলে 0.95 দেয় কিন্তু তিনগুণ খরচ করে এমন model একটা কেসের জন্য ঠিক আর বাকি দশ হাজারের জন্য ভুল হতে পারে {{cite:deepeval-metrics}}।"
+            ),
+        },
+        "In practice": {
+            "technical": (
+                "Build the golden dataset with the category as a field:\n\n"
+                "```yaml\n"
+                "# evals/golden-cases.yaml\n"
+                "tests:\n"
+                "  - description: Return window, simple lookup\n"
+                "    vars:\n"
+                "      policy: file://fixtures/return-policy.txt\n"
+                "      question: How long do I have to return a laptop?\n"
+                "      category: short-fact\n"
+                "    assert:\n"
+                "      - type: contains\n"
+                "        value: \"30 day\"\n"
+                "```\n\n"
+                "Produce the per-category breakdown:\n\n"
+                "```python\n"
+                "import json\n"
+                "from collections import defaultdict\n\n\n"
+                "def by_category(result_file: str) -> dict[str, dict[str, float]]:\n"
+                "    data = json.load(open(result_file))\n"
+                "    scores: dict = defaultdict(lambda: defaultdict(list))\n"
+                "    for case in data[\"results\"][\"tests\"]:\n"
+                "        category = case[\"vars\"][\"category\"]\n"
+                "        for provider, result in case[\"providers\"].items():\n"
+                "            scores[category][provider].append(result[\"score\"])\n"
+                "    return {\n"
+                "        c: {p: sum(v) / len(v) for p, v in ps.items()}\n"
+                "        for c, ps in scores.items()\n"
+                "    }\n"
+                "```\n\n"
+                "Keep the run files; they are the regression history:\n\n"
+                "```bash\n"
+                "npx promptfoo eval --output runs/$(date +%F).json\n"
+                "git add runs/ && git commit -m \"chore(evals): golden run $(date +%F)\"\n"
+                "```\n\n"
+                "The golden dataset rots: a case the model has learned, or a policy that has "
+                "changed, makes the case wrong. Review it on a schedule and version it with "
+                "the policy it tests."
+            ),
+            "layman": (
+                "golden dataset বানান category-কে একটা field হিসেবে রেখে:\n\n"
+                "```yaml\n"
+                "# evals/golden-cases.yaml\n"
+                "tests:\n"
+                "  - description: Return window, simple lookup\n"
+                "    vars:\n"
+                "      policy: file://fixtures/return-policy.txt\n"
+                "      question: How long do I have to return a laptop?\n"
+                "      category: short-fact\n"
+                "    assert:\n"
+                "      - type: contains\n"
+                "        value: \"30 day\"\n"
+                "```\n\n"
+                "ধরন অনুযায়ী ভাগ বের করুন:\n\n"
+                "```python\n"
+                "import json\n"
+                "from collections import defaultdict\n\n\n"
+                "def by_category(result_file: str) -> dict[str, dict[str, float]]:\n"
+                "    data = json.load(open(result_file))\n"
+                "    scores: dict = defaultdict(lambda: defaultdict(list))\n"
+                "    for case in data[\"results\"][\"tests\"]:\n"
+                "        category = case[\"vars\"][\"category\"]\n"
+                "        for provider, result in case[\"providers\"].items():\n"
+                "            scores[category][provider].append(result[\"score\"])\n"
+                "    return {\n"
+                "        c: {p: sum(v) / len(v) for p, v in ps.items()}\n"
+                "        for c, ps in scores.items()\n"
+                "    }\n"
+                "```\n\n"
+                "run ফাইলগুলো রাখুন; ওগুলোই regression-এর ইতিহাস:\n\n"
+                "```bash\n"
+                "npx promptfoo eval --output runs/$(date +%F).json\n"
+                "git add runs/ && git commit -m \"chore(evals): golden run $(date +%F)\"\n"
+                "```\n\n"
+                "golden dataset পচে যায়: model যে কেস শিখে ফেলেছে, বা যে policy বদলেছে, সেই কেস ভুল হয়ে যায়। নির্ধারিত সময়ে পর্যালোচনা করুন আর যে policy পরীক্ষা করে তার সাথে version করুন।"
+            ),
+            "bangla": (
+                "golden dataset বানান category-কে একটা field হিসেবে রেখে:\n\n"
+                "```yaml\n"
+                "# evals/golden-cases.yaml\n"
+                "tests:\n"
+                "  - description: Return window, simple lookup\n"
+                "    vars:\n"
+                "      policy: file://fixtures/return-policy.txt\n"
+                "      question: How long do I have to return a laptop?\n"
+                "      category: short-fact\n"
+                "    assert:\n"
+                "      - type: contains\n"
+                "        value: \"30 day\"\n"
+                "```\n\n"
+                "ধরন অনুযায়ী ভাগ বের করুন:\n\n"
+                "```python\n"
+                "import json\n"
+                "from collections import defaultdict\n\n\n"
+                "def by_category(result_file: str) -> dict[str, dict[str, float]]:\n"
+                "    data = json.load(open(result_file))\n"
+                "    scores: dict = defaultdict(lambda: defaultdict(list))\n"
+                "    for case in data[\"results\"][\"tests\"]:\n"
+                "        category = case[\"vars\"][\"category\"]\n"
+                "        for provider, result in case[\"providers\"].items():\n"
+                "            scores[category][provider].append(result[\"score\"])\n"
+                "    return {\n"
+                "        c: {p: sum(v) / len(v) for p, v in ps.items()}\n"
+                "        for c, ps in scores.items()\n"
+                "    }\n"
+                "```\n\n"
+                "run ফাইলগুলো রাখুন; ওগুলোই regression-এর ইতিহাস:\n\n"
+                "```bash\n"
+                "npx promptfoo eval --output runs/$(date +%F).json\n"
+                "git add runs/ && git commit -m \"chore(evals): golden run $(date +%F)\"\n"
+                "```\n\n"
+                "golden dataset পচে যায়: model যে কেস শিখে ফেলেছে, বা যে policy বদলেছে, সেই কেস ভুল হয়ে যায়। নির্ধারিত সময়ে পর্যালোচনা করুন আর যে policy পরীক্ষা করে তার সাথে version করুন।"
+            ),
+        },
+        "Common mistakes": {
+            "technical": (
+                "**Mistake 1: one overall score.** The average hides the category that broke "
+                "{{cite:anthropic-evals}}.\n\n"
+                "**Mistake 2: no held-out cases.** A golden dataset you also tuned the prompt "
+                "on measures memorisation.\n\n"
+                "**Mistake 3: comparing only against the current model.** A new model is only "
+                "interesting against alternatives, including the cheaper one.\n\n"
+                "**Mistake 4: no cost column.** A quality gain that costs five times more is a "
+                "business decision the tester has to surface {{cite:deepeval-metrics}}.\n\n"
+                "**Mistake 5: the dataset never changes.** A case that became wrong makes every "
+                "future run look like a regression.\n\n"
+                "**Mistake 6: comparing free-text answers exactly.** Use a metric for prose and "
+                "an exact match only for structured output."
+            ),
+            "layman": (
+                "**Mistake ১: একটাই গড় স্কোর।** গড় ঢেকে দেয় কোন ধরন ভাঙল {{cite:anthropic-evals}}।\n\n"
+                "**Mistake ২: held-out কেস নেই।** যে dataset-এর ওপর prompt টিউন করেছেন তা মুখস্থ মাপে।\n\n"
+                "**Mistake ৩: শুধু বর্তমান model-এর সাথে তুলনা।** নতুন model কেবল বিকল্পগুলোর তুলনায় আগ্রহজনক, সস্তাটাও তার মধ্যে।\n\n"
+                "**Mistake ৪: খরচের কলাম নেই।** পাঁচগুণ বেশি খরচে পাওয়া মান উন্নতি একটা business সিদ্ধান্ত, টেস্টারকে সংখ্যাটা দেখাতে হবে {{cite:deepeval-metrics}}।\n\n"
+                "**Mistake ৫: dataset কখনো বদলায় না।** ভুল হয়ে যাওয়া কেস পরের প্রতিটা run-কে regression দেখায়।\n\n"
+                "**Mistake ৬: ফ্রি-টেক্সট উত্তর হুবহু তুলনা।** গদ্যের জন্য metric, structured output-এর জন্য হুবহু তুলনা ব্যবহার করুন।"
+            ),
+            "bangla": (
+                "**ভুল ১: একটাই গড় স্কোর।** গড় ঢেকে দেয় কোন ধরন ভাঙল {{cite:anthropic-evals}}।\n\n"
+                "**ভুল ২: held-out কেস নেই।** যে dataset-এর ওপর prompt টিউন করেছেন তা মুখস্থ মাপে।\n\n"
+                "**ভুল ৩: শুধু বর্তমান model-এর সাথে তুলনা।** নতুন model কেবল বিকল্পগুলোর তুলনায় আগ্রহজনক, সস্তাটাও তার মধ্যে।\n\n"
+                "**ভুল ৪: খরচের কলাম নেই।** পাঁচগুণ বেশি খরচে পাওয়া মান উন্নতি একটা business সিদ্ধান্ত, টেস্টারকে সংখ্যাটা দেখাতে হবে {{cite:deepeval-metrics}}।\n\n"
+                "**ভুল ৫: dataset কখনো বদলায় না।** ভুল হয়ে যাওয়া কেস পরের প্রতিটা run-কে regression দেখায়।\n\n"
+                "**ভুল ৬: ফ্রি-টেক্সট উত্তর হুবহু তুলনা।** গদ্যের জন্য metric, structured output-এর জন্য হুবহু তুলনা ব্যবহার করুন।"
+            ),
+        },
+        "What a tester can check": {
+            "technical": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Store the category in the test data, not in a spreadsheet beside it.\n"
+                "- Commit the run files. They are the history of quality.\n"
+                "- Report the per-category table and the cost per category together.\n"
+                "- Date the golden dataset and review it on the same schedule as the policy.\n"
+                "- Keep one known-bad case per category, so the scores mean something.\n"
+                "- Compare against the model you would switch to, not only the one you run.\n"
+                "</Callout>"
+            ),
+            "layman": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Store the category in the test data, not in a spreadsheet beside it.\n"
+                "- Commit the run files. They are the history of quality.\n"
+                "- Report the per-category table and the cost per category together.\n"
+                "- Date the golden dataset and review it on the same schedule as the policy.\n"
+                "- Keep one known-bad case per category, so the scores mean something.\n"
+                "- Compare against the model you would switch to, not only the one you run.\n"
+                "</Callout>"
+            ),
+            "bangla": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।\n\n"
+                "- category রাখুন test data-তে, পাশের spreadsheet-এ নয়।\n"
+                "- run ফাইলগুলো commit করুন। ওগুলোই মানের ইতিহাস।\n"
+                "- ধরন অনুযায়ী টেবিল আর প্রতি ধরনের খরচ একসাথে রিপোর্ট করুন।\n"
+                "- golden dataset-এ তারিখ দিন আর policy-র সাথে একই সময়ে পর্যালোচনা করুন।\n"
+                "- প্রতি ধরনে একটা known-bad কেস রাখুন, যাতে স্কোরের মান বোঝা যায়।\n"
+                "- যে model-এ বদলাতে চান তার সাথে তুলনা করুন, শুধু যেটা চালাচ্ছেন তার সাথে নয়।\n"
+                "</Callout>"
+            ),
+        },
+    },
+    key_words=[
+        ("Golden dataset", "A fixed, versioned set of question-and-answer pairs kept for comparisons"),
+        ("Model comparison", "Running the same dataset against several models and comparing scores"),
+        ("Regression testing", "Re-running the dataset after a change to catch what broke"),
+        ("Per-category score", "The score for one class of question, which is what the breakdown needs"),
+        ("Token cost", "The number of tokens a case consumed, which belongs beside the score"),
+        ("Held-out set", "Cases not used while tuning, so the score is not memorisation"),
+    ],
+)

@@ -1,0 +1,437 @@
+export const metadata = { title: 'Chatbot UI Testing with Playwright', description: 'Test the chat interface: sending, streaming, history, the empty state, and the long input that breaks the layout.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Playwright intro', publisher: 'Playwright (docs)', url: 'https://playwright.dev/docs/intro', accessed: '2026-11-01' },
+    { title: 'Auto-waiting', publisher: 'Playwright (docs)', url: 'https://playwright.dev/docs/actionability', accessed: '2026-11-01' },
+    { title: 'Assertions', publisher: 'Playwright (docs)', url: 'https://playwright.dev/docs/test-assertions', accessed: '2026-11-01' },
+  ],
+}
+
+# Chatbot UI Testing with Playwright
+
+The model can be perfect and the chat still broken. The last mile between the answer and the screen is where users actually meet the product.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A chatbot UI has four moving parts that a plain form does not: a **conversation history**, a **streaming response**, a **scroll position**, and an **input that can be huge**. Each one has its own failure mode, and each one needs its own test.
+
+**Sending.** The message appears in the transcript, the input clears, the send button becomes a stop button, and the request goes out. The subtle bug is the double send: a user pressing Enter twice, or a slow network and an impatient click, sends the message twice.
+
+**Streaming.** The answer arrives piece by piece and the page must grow as it does. Playwright's auto-waiting is the tool for this: it waits for the element to be actionable rather than sleeping for a fixed time <Cite n={2} />. A fixed sleep is a common cause of flaky AI tests, because the response time varies with the answer length.
+
+**History.** The transcript is the state. Reload the page: does the conversation survive? Open a new conversation: is the old one still there? This is where the storage layer gets tested, and it is where the PII question lives: who can see this transcript?
+
+**The inputs.** Empty input, a single space, a message of 5,000 characters, a message with a link, a message with an emoji, a message in another language, a message with markdown. The last one breaks the layout when the renderer does not escape it.
+
+Playwright is the tool for this: an end-to-end test framework that runs the tests in Chromium, WebKit, and Firefox <Cite n={1} />. Its assertion library is the last piece: its assertions retry until the expected condition is met or the timeout runs out, so a test can wait for an answer that is still arriving <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+A chat screen has four things that a normal form does not: the conversation history, an answer that arrives in pieces, a scroll position, and a text box that can take a very long message. Each one breaks in its own way.
+
+- **Sending.** The message shows up, the box clears, and the request goes out. Watch for the double send: the user presses Enter twice, or clicks again on a slow network, and the message goes twice.
+- **Streaming.** The answer grows piece by piece. Playwright waits for the page to be ready instead of sleeping for a fixed time <Cite n={2} />. A fixed sleep is a common cause of flaky AI tests, because answer times vary.
+- **History.** Reload the page: is the conversation still there? Start a new one: is the old one kept? Also ask who can see the saved conversation.
+- **Inputs.** Try an empty box, a single space, 5,000 characters, a link, an emoji, another language, and markdown. Markdown that is not escaped breaks the layout.
+
+Playwright runs these tests in Chromium, WebKit, and Firefox <Cite n={1} />, and its assertions keep trying until the expected state appears <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+chatbot UI-তে চারটা জিনিস চলে যেগুলো সাধারণ form-এ থাকে না: **কথোপকথনের ইতিহাস**, **stream হয়ে আসা উত্তর**, **scroll অবস্থান**, আর **খুব বড় হতে পারে এমন input**। প্রতিটার নিজস্ব failure mode আছে, আর প্রতিটার নিজস্ব টেস্ট দরকার।
+
+**পাঠানো।** বার্তা transcript-এ দেখা যায়, input খালি হয়, send বাটন stop বাটনে বদলায়, আর request যায়। সূক্ষ্ম বাগ হলো double send: ব্যবহারকারী দুইবার Enter চাপলে, বা নেটওয়ার্ক ধীর আর ব্যবহারকারী অধৈর্য হয়ে আবার click করলে, তখন বার্তা দুইবার যায়।
+
+**Streaming।** উত্তর টুকরো টুকরো আসে আর page-ও সেই সাথে বড় হতে থাকে। এর জন্য Playwright-এর auto-waiting হলো সঠিক হাতিয়ার: এটা নির্দিষ্ট সময় অপেক্ষা না করে element-কে usable হওয়া পর্যন্ত অপেক্ষা করে <Cite n={2} />। নির্দিষ্ট সময় ঘুমানো AI টেস্ট flaky হওয়ার একটা সাধারণ কারণ, কারণ উত্তরের দৈর্ঘ্য অনুযায়ী সময় বদলায়।
+
+**ইতিহাস।** transcript-টাই state। page reload করুন: কথোপকথন কি টিকে থাকে? নতুন কথোপকথন খুলুন: পুরনোটা কি এখনো আছে? এখানেই storage layer টেস্ট হয়, আর PII-এর প্রশ্নও এখানে: এই transcript কে দেখতে পারে?
+
+**Input গুলো।** খালি input, একটা space, ৫,০০০ অক্ষরের বার্তা, link-যুক্ত বার্তা, emoji-যুক্ত বার্তা, অন্য ভাষার বার্তা, markdown-যুক্ত বার্তা। শেষটা layout ভাঙে যখন renderer সেটা escape করে না।
+
+এর জন্য Playwright সঠিক হাতিয়ার: একটা end-to-end test framework, যেটা Chromium, WebKit আর Firefox-এ টেস্ট চালায় <Cite n={1} />। এর assertion library শেষ অংশ: প্রত্যাশিত অবস্থা না আসা বা timeout শেষ না হওয়া পর্যন্ত assertion বারবার চেষ্টা করে, তাই এখনো আসতে থাকা উত্তরের জন্য টেস্ট অপেক্ষা করতে পারে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The testing problem in a chatbot UI is **timing**. Everything the user sees appears over time, and the time is not fixed. There are three ways to wait, and only one of them is reliable.
+
+```text
+wait for a fixed time     never do this; a common source of flaky tests
+wait for a network event   good, when the event is the thing you care about
+wait for a DOM condition    best, when you can express it as a condition
+```
+
+Playwright's auto-waiting handles the third: before an action such as a click on a locator like `page.get_by_role("listitem").filter(has_text="Claude")`, Playwright checks that the element is visible, stable, receives events, and is enabled <Cite n={2} />. For streaming, the condition is that the stop button is gone and the send button is back, or that the message count stopped changing.
+
+**The send-disable trick.** The most common fix for a double send is to disable the button while the request is in flight. But a disabled button is not enough for a keyboard Enter, so the handler must also guard on the pending state.
+
+**The streaming assertion.** You cannot assert on the final text while it is still arriving. The reliable pattern is:
+
+```text
+1. send the message
+2. wait for the response bubble to appear
+3. wait for the streaming indicator to disappear
+4. now assert on the text
+```
+
+**The scroll assertion.** A long answer must scroll the transcript to the bottom. The test checks that the last message is visible, and that the scroll position did not jump back up when a new message arrived.
+
+**The accessibility layer.** A chat transcript is a log. The screen reader user needs to know when a response arrived without moving focus. The test checks the live region, not the visual style:
+
+```text
+the transcript is a live region with role="log"
+a new response is announced politely
+the input keeps focus after sending
+```
+
+**The visual regression layer.** This is where the Playwright MCP server earns its place. A chatbot screenshot at three widths and two themes catches the overflow that a DOM assertion does not: a long unbroken URL, a wide table, an emoji that renders as a colour block, a code block with a horizontal scrollbar that pushes the page wide.
+
+</Technical>
+<Layman>
+
+The hard part is timing. Everything appears over time, and the time is never the same. You can wait a fixed time (never do this), wait for a network event (good when that event is what you care about), or wait for something on the page (best). Before a click, Playwright checks that the element is visible, steady, not covered, and enabled <Cite n={2} />.
+
+- **Double send.** Disable the send button while a request runs, and also block a second Enter key press in the code.
+- **Streaming.** Send the message, wait for the answer bubble, wait for the "still typing" sign to go away, and only then check the text.
+- **Scrolling.** After a long answer, the last message must be visible, and the view must not jump up when a new message arrives.
+- **Accessibility.** The conversation area should be a live region (role="log"), so that a screen reader announces new answers politely. The text box keeps focus after sending.
+- **Screenshots.** Take screenshots at three widths and in two themes with the Playwright MCP server. They catch overflow that code checks miss: a long URL, a wide table, an emoji shown as a colour block, or a wide code block.
+
+</Layman>
+<Bangla>
+
+chatbot UI-এর টেস্টিং সমস্যা হলো **সময়**। ব্যবহারকারী যা দেখেন সবই সময়ের সাথে সাথে আসে, আর সেই সময় নির্দিষ্ট নয়। তিনভাবে অপেক্ষা করা যায়, আর মাত্র একটাই নির্ভরযোগ্য:
+
+```text
+wait for a fixed time     never do this; a common source of flaky tests
+wait for a network event   good, when the event is the thing you care about
+wait for a DOM condition    best, when you can express it as a condition
+```
+
+Playwright-এর auto-waiting তৃতীয়টা সামলায়: `page.get_by_role("listitem").filter(has_text="Claude")`-এর মতো locator-এ click-এর মতো কোনো action-এর আগে Playwright যাচাই করে যে element দৃশ্যমান, স্থির, event পায়, আর enabled <Cite n={2} />। streaming-এর ক্ষেত্রে শর্তটা হলো stop বাটন চলে গেছে আর send বাটন ফিরে এসেছে, অথবা বার্তার সংখ্যা আর বাড়ছে না।
+
+**Send-disable কৌশল।** double send-এর সবচেয়ে সাধারণ সমাধান হলো request চলাকালীন বাটন disabled রাখা। কিন্তু disabled বাটন keyboard Enter-এর জন্য যথেষ্ট নয়, তাই handler-ও pending state দিয়ে guard করতে হবে।
+
+**Streaming assertion।** উত্তর আসতে আসতে তার ওপর assert করা যায় না। নির্ভরযোগ্য প্যাটার্ন:
+
+```text
+1. send the message
+2. wait for the response bubble to appear
+3. wait for the streaming indicator to disappear
+4. now assert on the text
+```
+
+**Scroll assertion।** লম্বা উত্তরে transcript নিচে scroll হতে হবে। টেস্ট যাচাই করে শেষ বার্তাটা দৃশ্যমান, আর নতুন বার্তা এলে scroll অবস্থান উপরে চলে গেল না।
+
+**Accessibility স্তর।** chat transcript একটা log। screen reader ব্যবহারকারীর জানতে হবে উত্তর এসেছে কি না, focus না সরিয়ে। টেস্ট visual style নয়, live region যাচাই করে:
+
+```text
+the transcript is a live region with role="log"
+a new response is announced politely
+the input keeps focus after sending
+```
+
+**Visual regression স্তর।** এখানেই Playwright MCP server-এর জায়গা। তিনটা width আর দুটো theme-এ chatbot-এর screenshot সেই overflow ধরে যেটা DOM assertion ধরে না: ভাঙা ছাড়া একটা লম্বা URL, একটা চওড়া টেবিল, একটা emoji যেটা রঙের ব্লক হয়ে দেখায়, একটা code block যেটার horizontal scrollbar পেজটা চওড়া করে দেয়।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The end-to-end chat test, written so it never sleeps:
+
+```python
+import pytest
+from playwright.sync_api import expect, Page
+
+
+def send(page: Page, text: str) -> None:
+    page.get_by_role("textbox", name="Message").fill(text)
+    page.get_by_role("button", name="Send").click()
+
+
+def wait_for_answer(page: Page) -> str:
+    # the response bubble appears
+    expect(page.get_by_test_id("assistant-message").last).to_be_visible(timeout=30_000)
+    # and the streaming indicator is gone
+    expect(page.get_by_test_id("streaming-indicator")).to_have_count(0, timeout=30_000)
+    return page.get_by_test_id("assistant-message").last.inner_text()
+
+
+def test_the_answer_appears_in_the_transcript(page: Page):
+    send(page, "How long do I have to return a laptop?")
+    answer = wait_for_answer(page)
+    assert "30" in answer
+```
+
+Now the cases that break chat UIs. Each one found a real bug:
+
+```python
+def test_a_long_answer_does_not_break_the_layout(page: Page):
+    send(page, "Explain the return policy in detail. " * 40)
+    wait_for_answer(page)
+    # nothing may push the page wider than the viewport
+    width = page.evaluate("document.documentElement.scrollWidth")
+    viewport = page.evaluate("window.innerWidth")
+    assert width <= viewport + 1, f"page is {width - viewport}px too wide"
+
+
+def test_a_long_url_does_not_overflow(page: Page):
+    send(page, "Explain https://example.com/" + "a" * 200)
+    wait_for_answer(page)
+    assert page.evaluate("document.documentElement.scrollWidth") <= page.evaluate("window.innerWidth") + 1
+
+
+def test_the_input_is_disabled_while_sending(page: Page):
+    send(page, "hello")
+    expect(page.get_by_role("button", name="Send")).to_be_disabled()
+    wait_for_answer(page)
+    expect(page.get_by_role("button", name="Send")).to_be_enabled()
+
+
+def test_the_conversation_survives_a_reload(page: Page):
+    send(page, "What is your return window?")
+    wait_for_answer(page)
+    page.reload()
+    expect(page.get_by_test_id("assistant-message").last).to_contain_text("30")
+```
+
+And the accessibility check, which is the one that is usually missing:
+
+```python
+def test_the_transcript_is_a_live_region(page: Page):
+    # role="log" is a polite live region, so it needs no aria-live attribute
+    expect(page.get_by_role("log")).to_be_visible()
+
+
+def test_the_input_keeps_focus_after_sending(page: Page):
+    send(page, "hello")
+    expect(page.get_by_role("textbox", name="Message")).to_be_focused()
+```
+
+For the visual layer, drive the same page through the Playwright MCP server and take screenshots at 390, 768, and 1280 pixels in both themes. A screenshot at 390 pixels catches the overflow that the DOM assertion above can miss.
+
+</Technical>
+<Layman>
+
+Put the waiting logic in one helper: wait until the answer bubble is visible, then wait until the "still typing" sign is gone (up to 30 seconds each). Then check the text. No test ever sleeps.
+
+The example tests check that:
+
+- the answer appears and contains "30" (the return window);
+- a very long answer, or a URL with 200 extra characters, does not make the page wider than the screen;
+- the send button is disabled while the answer arrives, and enabled after;
+- the conversation is still there after a reload;
+- the conversation area has the role "log";
+- the text box keeps focus after sending.
+
+For the look, take screenshots with the Playwright MCP server at 390, 768, and 1280 pixels in both themes. The 390-pixel one catches overflow that code checks can miss.
+
+</Layman>
+<Bangla>
+
+end-to-end chat টেস্ট, এমনভাবে লেখা যে কখনো ঘুমায় না:
+
+```python
+import pytest
+from playwright.sync_api import expect, Page
+
+
+def send(page: Page, text: str) -> None:
+    page.get_by_role("textbox", name="Message").fill(text)
+    page.get_by_role("button", name="Send").click()
+
+
+def wait_for_answer(page: Page) -> str:
+    # the response bubble appears
+    expect(page.get_by_test_id("assistant-message").last).to_be_visible(timeout=30_000)
+    # and the streaming indicator is gone
+    expect(page.get_by_test_id("streaming-indicator")).to_have_count(0, timeout=30_000)
+    return page.get_by_test_id("assistant-message").last.inner_text()
+
+
+def test_the_answer_appears_in_the_transcript(page: Page):
+    send(page, "How long do I have to return a laptop?")
+    answer = wait_for_answer(page)
+    assert "30" in answer
+```
+
+তারপর সেই কেসগুলো যেগুলো chat UI ভাঙে। প্রতিটাই আসল বাগ ধরেছিল:
+
+```python
+def test_a_long_answer_does_not_break_the_layout(page: Page):
+    send(page, "Explain the return policy in detail. " * 40)
+    wait_for_answer(page)
+    # nothing may push the page wider than the viewport
+    width = page.evaluate("document.documentElement.scrollWidth")
+    viewport = page.evaluate("window.innerWidth")
+    assert width <= viewport + 1, f"page is {width - viewport}px too wide"
+
+
+def test_a_long_url_does_not_overflow(page: Page):
+    send(page, "Explain https://example.com/" + "a" * 200)
+    wait_for_answer(page)
+    assert page.evaluate("document.documentElement.scrollWidth") <= page.evaluate("window.innerWidth") + 1
+
+
+def test_the_input_is_disabled_while_sending(page: Page):
+    send(page, "hello")
+    expect(page.get_by_role("button", name="Send")).to_be_disabled()
+    wait_for_answer(page)
+    expect(page.get_by_role("button", name="Send")).to_be_enabled()
+
+
+def test_the_conversation_survives_a_reload(page: Page):
+    send(page, "What is your return window?")
+    wait_for_answer(page)
+    page.reload()
+    expect(page.get_by_test_id("assistant-message").last).to_contain_text("30")
+```
+
+আর accessibility যাচাই, যেটা সাধারণত অনুপস্থিত:
+
+```python
+def test_the_transcript_is_a_live_region(page: Page):
+    # role="log" is a polite live region, so it needs no aria-live attribute
+    expect(page.get_by_role("log")).to_be_visible()
+
+
+def test_the_input_keeps_focus_after_sending(page: Page):
+    send(page, "hello")
+    expect(page.get_by_role("textbox", name="Message")).to_be_focused()
+```
+
+visual layer-এর জন্য একই page Playwright MCP server দিয়ে চালিয়ে ৩৯০, ৭৬৮ আর ১২৮০ পিক্সেলে দুটো theme-এ screenshot নিন। ৩৯০ পিক্সেলের screenshot-ই সেই overflow ধরে যেটা উপরের DOM assertion ধরতে পারে না।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: a fixed sleep.** `page.wait_for_timeout(5000)` is a guess, and it is the guess that fails on the slow day and wastes time on the fast one. Wait for a condition <Cite n={2} />.
+
+**Mistake 2: asserting on the text while it streams.** The text changes under the assertion. Wait for the streaming indicator to go first.
+
+**Mistake 3: no test for a long answer.** The layout that works for 20 words breaks at 500.
+
+**Mistake 4: no double-send test.** The user presses Enter twice and the conversation gets two copies.
+
+**Mistake 5: no reload test.** The transcript is lost, or the wrong conversation is restored.
+
+**Mistake 6: no accessibility check.** The chat works with a mouse and is unusable with a screen reader. Playwright has assertions for this, such as role and accessible-name checks <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+**Mistake 1: a fixed sleep.** Waiting 5 seconds is a guess. It fails on a slow day and wastes time on a fast one. Wait for a condition instead <Cite n={2} />.
+
+**Mistake 2: checking the text while it is still arriving.** The text changes under the check. Wait for the "still typing" sign to go first.
+
+**Mistake 3: no long-answer test.** A layout that works for 20 words can break at 500.
+
+**Mistake 4: no double-send test.** The user presses Enter twice and the message appears twice.
+
+**Mistake 5: no reload test.** The conversation is lost, or the wrong one comes back.
+
+**Mistake 6: no accessibility check.** The chat works with a mouse but not with a screen reader. Playwright has checks for roles and accessible names <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: নির্দিষ্ট সময় ঘুমানো।** `page.wait_for_timeout(5000)` একটা অনুমান, আর সেই অনুমানটাই ধীর দিনে ভাঙে আর দ্রুত দিনে সময় নষ্ট করে। শর্তের জন্য অপেক্ষা করুন <Cite n={2} />।
+
+**ভুল ২: stream চলতেই text-এর ওপর assert করা।** text বদলাতে থাকে assertion-এর নিচে। আগে streaming indicator যাওয়ার জন্য অপেক্ষা করুন।
+
+**ভুল ৩: লম্বা উত্তরের টেস্ট নেই।** ২০ শব্দে যে layout কাজ করে, ৫০০ শব্দে সেটা ভাঙে।
+
+**ভুল ৪: double-send টেস্ট নেই।** ব্যবহারকারী দুইবার Enter চাপে আর কথোপকথনে দুইটা কপি হয়।
+
+**ভুল ৫: reload টেস্ট নেই।** transcript হারিয়ে যায়, বা ভুল কথোপকথন ফিরে আসে।
+
+**ভুল ৬: accessibility যাচাই নেই।** chat মাউস দিয়ে কাজ করে আর screen reader দিয়ে ব্যবহারযোগ্য নয়। এর জন্য Playwright-এ role আর accessible name যাচাইয়ের assertion আছে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Give the message list a `data-testid`. Chat UIs change their class names; a test id does not.
+- Put the wait-for-answer logic in one helper, as above. Every test that reimplements the wait will eventually get it wrong.
+- Test the input at 0, 1, 1,000, and 50,000 characters. Four cases cover the whole length axis.
+- Take one screenshot per theme at the phone width and look at it. The overflow that breaks a phone is rarely visible in a DOM assertion.
+- Test with the keyboard only: Tab to the input, type, press Enter. If the flow needs a mouse, it fails for some of your users.
+- Assert that the page width never exceeds the viewport. That single check catches most layout overflow bugs.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Give the message list a `data-testid`. Chat UIs change their class names; a test id does not.
+- Put the wait-for-answer logic in one helper, as above. Every test that reimplements the wait will eventually get it wrong.
+- Test the input at 0, 1, 1,000, and 50,000 characters. Four cases cover the whole length axis.
+- Take one screenshot per theme at the phone width and look at it. The overflow that breaks a phone is rarely visible in a DOM assertion.
+- Test with the keyboard only: Tab to the input, type, press Enter. If the flow needs a mouse, it fails for some of your users.
+- Assert that the page width never exceeds the viewport. That single check catches most layout overflow bugs.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- message list-কে একটা `data-testid` দিন। chat UI-র class name বদলায়; test id বদলায় না।
+- wait-for-answer-এর logic উপরের মতো একটা helper-এ রাখুন। যে টেস্ট নিজে নিজে wait বানাবে, সে একদিন ভুল করবেই।
+- input ০, ১, ১,০০০ আর ৫০,০০০ অক্ষরে টেস্ট করুন। চারটা কেস দৈর্ঘ্যের পুরো পরিসর ঢাকে।
+- প্রতিটা theme-এ phone width-এ একটা screenshot নিয়ে তাকান। যে overflow ফোনে layout ভাঙে, সেটা DOM assertion-এ প্রায় দেখা যায় না।
+- শুধু keyboard দিয়ে টেস্ট করুন: Tab দিয়ে input-এ যান, লিখুন, Enter চাপুন। মাউস লাগলে কিছু ব্যবহারকারীর জন্য flow ভাঙে।
+- assert করুন যে page-এর প্রস্থ কখনো viewport-এর চেয়ে বেশি হচ্ছে না। এই একটা চেকই বেশিরভাগ layout overflow বাগ ধরে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Transcript | The log of the conversation. The chat UI's state |
+| Streaming indicator | The element shown while the answer is arriving. Its disappearance is the signal to assert on |
+| Auto-waiting | Playwright waiting for a condition instead of a fixed time |
+| Fixed sleep | Waiting a set number of milliseconds. A common cause of flaky AI tests |
+| Double send | The same message sent twice by an impatient user or a slow network |
+| Live region | The ARIA region that announces new content to a screen reader |
+| aria-live | The attribute that controls how politely a live region announces |
+| Viewport overflow | The page being wider than the screen. A common chat layout bug |
+| Focus | Which element has keyboard focus. It should stay in the input after sending |

@@ -1,0 +1,462 @@
+export const metadata = { title: 'Multi-Turn Conversation Testing', description: 'Test a chatbot that remembers: context retention across turns, topic switching, contradictions, and conversation reset.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'LLM testing', publisher: 'DeepEval docs', url: 'https://docs.confident-ai.com/docs/interview-llm-testing', accessed: '2026-11-01' },
+    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
+    { title: 'Configuration reference', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/configuration/reference/', accessed: '2026-11-01' },
+  ],
+}
+
+# Multi-Turn Conversation Testing
+
+A chatbot that answers each question alone is a search box. The hard part is the conversation, and the conversation is where the state lives.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A multi-turn test has to check three things at once: that the **history** is sent, that the model **uses** it, and that the answer stays **relevant to the current turn**.
+
+The **context window** is the limit on how much history fits. Every turn consumes tokens, so a long conversation eventually pushes the earliest turns out. The question "what did I say earlier?" then fails, and it fails silently, because nothing reports the truncation.
+
+**Topic switching** is the second axis. A user asks about returns, then asks about their password, then asks "and what was the window?" The last question has no answer without the history, and the test has to decide whether the bot should carry the return context across the password question or not. Both behaviours are defensible; the product has to pick one and the test has to enforce it.
+
+**Contradiction** is the third. The user says "my order number is 1001", then says "sorry, 1002". A good bot corrects the earlier value; a naive one answers about 1001.
+
+The **reset** is the fourth. A user says "forget what I told you" or starts a new topic entirely, and the conversation history should be dropped. If the bot keeps the old order id, it acts on a stale order.
+
+The measurement tools exist for this: DeepEval's LLM testing guidance covers multi-turn evaluation, and Ragas has conversation-level metrics <Cite n={1} /> <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+multi-turn টেস্টে একসাথে তিনটা বিষয় দেখতে হয়: **ইতিহাস** পাঠানো হচ্ছে কি না, model সেটা **ব্যবহার** করছে কি না, আর উত্তর **বর্তমান টার্নের** প্রাসঙ্গিক কি না।
+
+**Context window** হলো কতটা ইতিহাস ঢোকে তার সীমা। প্রতিটা টার্ন token খায়, তাই লম্বা কথোপকথনে শেষে প্রথম টার্নগুলো বাইরে চলে যায়। তখন "আমি আগে কী বলেছিলাম?" প্রশ্নটা ব্যর্থ হয়, আর নীরবে ব্যর্থ হয়, কারণ কিছুই truncation-এর কথা জানায় না।
+
+**Topic switching** দ্বিতীয় অক্ষ। ব্যবহারকারী return নিয়ে জিজ্ঞেস করে, তারপর password নিয়ে, তারপর "আর window কত ছিল?" শেষ প্রশ্নের উত্তর ইতিহাস ছাড়া নেই, আর টেস্টকে ঠিক করতে হবে bot-এর return context password প্রশ্নের ওপর দিয়ে নেওয়া উচিত কি না। দুটো আচরণই যুক্তিসঙ্গত; product-কে একটা বেছে নিতে হবে আর টেস্টে সেটা enforce করতে হবে।
+
+**Contradiction** তৃতীয়। ব্যবহারকারী বলে "আমার অর্ডার নম্বর 1001", তারপর বলে "sorry, 1002"। ভালো bot আগের মান শুধরায়; সরল bot 1001 নিয়েই উত্তর দেয়।
+
+**Reset** চতুর্থ। ব্যবহারকারী বলে "আমি যা বলেছি ভুলে গেছো" বা নতুন topic শুরু করে, আর কথোপকথনের ইতিহাস বাদ দেওয়া উচিত। bot পুরোনো order id রাখলে সেটা stale order-এ কাজ করে।
+
+মাপার টুল আছে: DeepEval-এর LLM testing নির্দেশনা multi-turn evaluation কভার করে, আর Ragas-এর conversation-level metric আছে <Cite n={1} /> <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+multi-turn টেস্টে একসাথে তিনটা বিষয় দেখতে হয়: **ইতিহাস** পাঠানো হচ্ছে কি না, model সেটা **ব্যবহার** করছে কি না, আর উত্তর **বর্তমান টার্নের** প্রাসঙ্গিক কি না।
+
+**Context window** হলো কতটা ইতিহাস ঢোকে তার সীমা। প্রতিটা টার্ন token খায়, তাই লম্বা কথোপকথনে শেষে প্রথম টার্নগুলো বাইরে চলে যায়। তখন "আমি আগে কী বলেছিলাম?" প্রশ্নটা ব্যর্থ হয়, আর নীরবে ব্যর্থ হয়, কারণ কিছুই truncation-এর কথা জানায় না।
+
+**Topic switching** দ্বিতীয় অক্ষ। ব্যবহারকারী return নিয়ে জিজ্ঞেস করে, তারপর password নিয়ে, তারপর "আর window কত ছিল?" শেষ প্রশ্নের উত্তর ইতিহাস ছাড়া নেই, আর টেস্টকে ঠিক করতে হবে bot-এর return context password প্রশ্নের ওপর দিয়ে নেওয়া উচিত কি না। দুটো আচরণই যুক্তিসঙ্গত; product-কে একটা বেছে নিতে হবে আর টেস্টে সেটা enforce করতে হবে।
+
+**Contradiction** তৃতীয়। ব্যবহারকারী বলে "আমার অর্ডার নম্বর 1001", তারপর বলে "sorry, 1002"। ভালো bot আগের মান শুধরায়; সরল bot 1001 নিয়েই উত্তর দেয়।
+
+**Reset** চতুর্থ। ব্যবহারকারী বলে "আমি যা বলেছি ভুলে গেছো" বা নতুন topic শুরু করে, আর কথোপকথনের ইতিহাস বাদ দেওয়া উচিত। bot পুরোনো order id রাখলে সেটা stale order-এ কাজ করে।
+
+মাপার টুল আছে: DeepEval-এর LLM testing নির্দেশনা multi-turn evaluation কভার করে, আর Ragas-এর conversation-level metric আছে <Cite n={1} /> <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The conversation state has three parts, and each is separately testable:
+
+```text
+the message list    what is sent to the model, turn by turn
+the summary        the compressed form of older turns, if the app uses one
+the scratchpad      the facts extracted along the way, like an order id
+```
+
+The **message list** is the easiest to test and the easiest to get wrong. The assertion is on the request: after turn three, does the request contain three user messages and three assistant messages, in order, with the right roles? A chatbot that drops the assistant's own replies is a common bug and it is invisible in the UI, which only shows the user's bubbles. A test case holds the expected roles and the expected contents, in the same shape a config-driven eval suite uses <Cite n={3} />.
+
+The **summary** is where the truncation shows. If the app summarises older turns, the summary has to keep the facts that matter, like the order id, and drop the small talk. The test writes a long conversation with one fact buried at the start and checks that the fact survives.
+
+The **scratchpad** is the most useful and the least used. A well-built chatbot extracts the order id once and keeps it, instead of re-reading it from the transcript every turn. That makes the bot faster and more accurate, and the test can assert on the scratchpad directly.
+
+**Contradiction handling** has a policy question and then a test. The policy: does a later correction override an earlier value? The test: give the contradicting value and check that the answer uses the new one.
+
+**Reset** has two forms. The explicit one, where the user asks to forget. The implicit one, where the app detects a new conversation. Both need a test, and the implicit one is the one teams forget: a new conversation id should mean an empty history, and a test that reuses the id across two conversations finds that.
+
+</Technical>
+<Layman>
+
+কথোপকথনের state-এর তিনটা অংশ আছে, আর প্রতিটা আলাদা করে টেস্ট করা যায়:
+
+```text
+the message list    what is sent to the model, turn by turn
+the summary        the compressed form of older turns, if the app uses one
+the scratchpad      the facts extracted along the way, like an order id
+```
+
+**message list** টেস্ট করা সবচেয়ে সহজ আর সবচেয়ে সহজে ভুল হয়। assertion request-এর ওপর: তৃতীয় টার্নের পরে request-এ তিনটা user message আর তিনটা assistant message আছে কি না, ক্রম অনুযায়ী, সঠিক role-এ? নিজের উত্তর বাদ দেওয়া chatbot একটা সাধারণ বাগ, আর UI-তে সেটা দেখা যায় না, কারণ UI-তে শুধু user-এর bubble দেখায়।
+
+**summary**-তে truncation ধরা পড়ে। app যদি পুরোনো টার্নগুলো সংক্ষেপ করে, তাহলে summary-তে গুরুত্বপূর্ণ তথ্য — order id — রাখতে হবে আর ছোট কথাবার্তা বাদ দিতে হবে। টেস্ট একটা লম্বা কথোপকথন লিখে শুরুতে একটা তথ্য লুকিয়ে রাখে আর দেখে সেটা টিকে কি না।
+
+**scratchpad** সবচেয়ে কাজের আর সবচেয়ে কম ব্যবহৃত। ভালো chatbot একবার order id বের করে রাখে, প্রতি টার্নে transcript আবার পড়ে না। এতে bot দ্রুত ও নির্ভুল হয়, আর টেস্ট scratchpad-এর ওপর সরাসরি assert করতে পারে।
+
+**Contradiction** মোকাবিলায় একটা policy প্রশ্ন আছে, তারপর টেস্ট। policy: পরের সংশোধন আগের মানের ওপর প্রাধান্য পায়? টেস্ট: বিরোধী মান দিয়ে দেখা যায় উত্তর নতুন মান ব্যবহার করে কি না।
+
+**Reset**-এর দুটো রূপ আছে। স্পষ্ট রূপ, যেখানে ব্যবহারকারী ভুলে যেতে বলে। অন্তর্নিহিত রূপ, যেখানে app নতুন কথোপকথন শনাক্ত করে। দুটোর টেস্ট দরকার, আর অন্তর্নিহিত রূপটাই দলগুলো ভুলে যায়: নতুন conversation id মানে খালি ইতিহাস, আর দুটো কথোপকথনে একই id ব্যবহার করা টেস্ট সেটা খুঁজে বের করে।
+
+</Layman>
+<Bangla>
+
+কথোপকথনের state-এর তিনটা অংশ আছে, আর প্রতিটা আলাদা করে টেস্ট করা যায়:
+
+```text
+the message list    what is sent to the model, turn by turn
+the summary        the compressed form of older turns, if the app uses one
+the scratchpad      the facts extracted along the way, like an order id
+```
+
+**message list** টেস্ট করা সবচেয়ে সহজ আর সবচেয়ে সহজে ভুল হয়। assertion request-এর ওপর: তৃতীয় টার্নের পরে request-এ তিনটা user message আর তিনটা assistant message আছে কি না, ক্রম অনুযায়ী, সঠিক role-এ? নিজের উত্তর বাদ দেওয়া chatbot একটা সাধারণ বাগ, আর UI-তে সেটা দেখা যায় না, কারণ UI-তে শুধু user-এর bubble দেখায়।
+
+**summary**-তে truncation ধরা পড়ে। app যদি পুরোনো টার্নগুলো সংক্ষেপ করে, তাহলে summary-তে গুরুত্বপূর্ণ তথ্য — order id — রাখতে হবে আর ছোট কথাবার্তা বাদ দিতে হবে। টেস্ট একটা লম্বা কথোপকথন লিখে শুরুতে একটা তথ্য লুকিয়ে রাখে আর দেখে সেটা টিকে কি না।
+
+**scratchpad** সবচেয়ে কাজের আর সবচেয়ে কম ব্যবহৃত। ভালো chatbot একবার order id বের করে রাখে, প্রতি টার্নে transcript আবার পড়ে না। এতে bot দ্রুত ও নির্ভুল হয়, আর টেস্ট scratchpad-এর ওপর সরাসরি assert করতে পারে।
+
+**Contradiction** মোকাবিলায় একটা policy প্রশ্ন আছে, তারপর টেস্ট। policy: পরের সংশোধন আগের মানের ওপর প্রাধান্য পায়? টেস্ট: বিরোধী মান দিয়ে দেখা যায় উত্তর নতুন মান ব্যবহার করে কি না।
+
+**Reset**-এর দুটো রূপ আছে। স্পষ্ট রূপ, যেখানে ব্যবহারকারী ভুলে যেতে বলে। অন্তর্নিহিত রূপ, যেখানে app নতুন কথোপকথন শনাক্ত করে। দুটোর টেস্ট দরকার, আর অন্তর্নিহিত রূপটাই দলগুলো ভুলে যায়: নতুন conversation id মানে খালি ইতিহাস, আর দুটো কথোপকথনে একই id ব্যবহার করা টেস্ট সেটা খুঁজে বের করে।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The message-list test asserts on the request, because that is where the history actually lives:
+
+```python
+def test_the_history_is_sent_in_order(client, conversation):
+    conversation.ask("My order number is 1001")
+    conversation.ask("What is the return window?")
+    conversation.ask("And for opened items?")
+
+    last = client.requests[-1]
+    roles = [m["role"] for m in last["messages"]]
+    assert roles == ["user", "assistant", "user", "assistant", "user"], roles
+    assert last["messages"][0]["content"] == "My order number is 1001"
+```
+
+The contradiction test, which needs the policy stated first:
+
+```python
+def test_a_later_correction_overrides_the_earlier_value(conversation):
+    conversation.ask("My order number is 1001")
+    conversation.ask("What is the status of my order?")
+    conversation.ask("Sorry, the order number is 1002")
+
+    answer = conversation.ask("What is the status of my order?")
+    assert "1002" in answer
+    assert "1001" not in answer, "the bot used the corrected-away order number"
+```
+
+The topic-switch test, which asserts the product's chosen policy:
+
+```python
+def test_the_return_context_does_not_leak_into_an_unrelated_question(conversation):
+    conversation.ask("How long do I have to return a laptop?")
+    conversation.ask("How do I reset my password?")
+    answer = conversation.ask("How long do I have to return a laptop?")
+    assert "30 day" in answer.lower(), "the earlier answer was lost"
+```
+
+The scratchpad test, which is the one that makes a chatbot fast and is almost never written:
+
+```python
+def test_the_order_id_is_extracted_once(conversation, scratchpad):
+    conversation.ask("My order number is 1001")
+    conversation.ask("And opened items?")
+    assert scratchpad["order_id"] == "1001"
+```
+
+And the reset test, both forms:
+
+```python
+def test_an_explicit_reset_clears_the_history(conversation, client):
+    conversation.ask("My order number is 1001")
+    conversation.ask("Forget what I told you")
+    conversation.ask("What is my order number?")
+    last = client.requests[-1]
+    assert "1001" not in str(last["messages"]), "the history survived the reset"
+```
+
+```python
+def test_a_new_conversation_id_starts_with_no_history(client):
+    client.ask(conversation_id="c1", message="My order number is 1001")
+    client.ask(conversation_id="c2", message="What is my order number?")
+    last = client.requests[-1]
+    assert len(last["messages"]) == 1, "the second conversation inherited the history"
+```
+
+The last test catches the bug where the conversation id is generated once per session instead of once per conversation.
+
+</Technical>
+<Layman>
+
+message-list টেস্ট request-এর ওপর assert করে, কারণ ইতিহাস আসলে সেখানেই থাকে:
+
+```python
+def test_the_history_is_sent_in_order(client, conversation):
+    conversation.ask("My order number is 1001")
+    conversation.ask("What is the return window?")
+    conversation.ask("And for opened items?")
+
+    last = client.requests[-1]
+    roles = [m["role"] for m in last["messages"]]
+    assert roles == ["user", "assistant", "user", "assistant", "user"], roles
+    assert last["messages"][0]["content"] == "My order number is 1001"
+```
+
+contradiction টেস্ট, যেটার জন্য আগে policy বলা দরকার:
+
+```python
+def test_a_later_correction_overrides_the_earlier_value(conversation):
+    conversation.ask("My order number is 1001")
+    conversation.ask("What is the status of my order?")
+    conversation.ask("Sorry, the order number is 1002")
+
+    answer = conversation.ask("What is the status of my order?")
+    assert "1002" in answer
+    assert "1001" not in answer, "the bot used the corrected-away order number"
+```
+
+topic-switch টেস্ট, যেটা product-এর বেছে নেওয়া policy assert করে:
+
+```python
+def test_the_return_context_does_not_leak_into_an_unrelated_question(conversation):
+    conversation.ask("How long do I have to return a laptop?")
+    conversation.ask("How do I reset my password?")
+    answer = conversation.ask("How long do I have to return a laptop?")
+    assert "30 day" in answer.lower(), "the earlier answer was lost"
+```
+
+scratchpad টেস্ট, যেটাই bot-কে দ্রুত করে আর প্রায় কেউ লেখে না:
+
+```python
+def test_the_order_id_is_extracted_once(conversation, scratchpad):
+    conversation.ask("My order number is 1001")
+    conversation.ask("And opened items?")
+    assert scratchpad["order_id"] == "1001"
+```
+
+আর reset টেস্ট, দুটো রূপেই:
+
+```python
+def test_an_explicit_reset_clears_the_history(conversation, client):
+    conversation.ask("My order number is 1001")
+    conversation.ask("Forget what I told you")
+    conversation.ask("What is my order number?")
+    last = client.requests[-1]
+    assert "1001" not in str(last["messages"]), "the history survived the reset"
+```
+
+```python
+def test_a_new_conversation_id_starts_with_no_history(client):
+    client.ask(conversation_id="c1", message="My order number is 1001")
+    client.ask(conversation_id="c2", message="What is my order number?")
+    last = client.requests[-1]
+    assert len(last["messages"]) == 1, "the second conversation inherited the history"
+```
+
+শেষ টেস্টটা সেই বাগ ধরে যেখানে conversation id প্রতি session-এ একবার বানানো হয়, প্রতি কথোপকথনে নয়।
+
+</Layman>
+<Bangla>
+
+message-list টেস্ট request-এর ওপর assert করে, কারণ ইতিহাস আসলে সেখানেই থাকে:
+
+```python
+def test_the_history_is_sent_in_order(client, conversation):
+    conversation.ask("My order number is 1001")
+    conversation.ask("What is the return window?")
+    conversation.ask("And opened items?")
+
+    last = client.requests[-1]
+    roles = [m["role"] for m in last["messages"]]
+    assert roles == ["user", "assistant", "user", "assistant", "user"], roles
+    assert last["messages"][0]["content"] == "My order number is 1001"
+```
+
+contradiction টেস্ট, যেটার জন্য আগে policy বলা দরকার:
+
+```python
+def test_a_later_correction_overrides_the_earlier_value(conversation):
+    conversation.ask("My order number is 1001")
+    conversation.ask("What is the status of my order?")
+    conversation.ask("Sorry, the order number is 1002")
+
+    answer = conversation.ask("What is the status of my order?")
+    assert "1002" in answer
+    assert "1001" not in answer, "the bot used the corrected-away order number"
+```
+
+topic-switch টেস্ট, যেটা product-এর বেছে নেওয়া policy assert করে:
+
+```python
+def test_the_return_context_does_not_leak_into_an_unrelated_question(conversation):
+    conversation.ask("How long do I have to return a laptop?")
+    conversation.ask("How do I reset my password?")
+    answer = conversation.ask("How long do I have to return a laptop?")
+    assert "30 day" in answer.lower(), "the earlier answer was lost"
+```
+
+scratchpad টেস্ট, যেটাই bot-কে দ্রুত করে আর প্রায় কেউ লেখে না:
+
+```python
+def test_the_order_id_is_extracted_once(conversation, scratchpad):
+    conversation.ask("My order number is 1001")
+    conversation.ask("And opened items?")
+    assert scratchpad["order_id"] == "1001"
+```
+
+আর reset টেস্ট, দুটো রূপেই:
+
+```python
+def test_an_explicit_reset_clears_the_history(conversation, client):
+    conversation.ask("My order number is 1001")
+    conversation.ask("Forget what I told you")
+    conversation.ask("What is my order number?")
+    last = client.requests[-1]
+    assert "1001" not in str(last["messages"]), "the history survived the reset"
+```
+
+```python
+def test_a_new_conversation_id_starts_with_no_history(client):
+    client.ask(conversation_id="c1", message="My order number is 1001")
+    client.ask(conversation_id="c2", message="What is my order number?")
+    last = client.requests[-1]
+    assert len(last["messages"]) == 1, "the second conversation inherited the history"
+```
+
+শেষ টেস্টটা সেই বাগ ধরে যেখানে conversation id প্রতি session-এ একবার বানানো হয়, প্রতি কথোপকথনে নয়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: testing only the visible transcript.** The transcript is what the user sees; the request is what the model gets. They differ.
+
+**Mistake 2: no policy for contradictions.** "Should the later value win?" is a product decision, and the test has to encode whichever answer you chose.
+
+**Mistake 3: no long-conversation test.** The truncation bug only appears after the context window fills, which is the conversation nobody tests.
+
+**Mistake 4: no reset test.** The stale order id after a reset acts on the wrong order.
+
+**Mistake 5: reusing the conversation id across conversations.** That is a state leak, and it is invisible in a single-conversation test.
+
+**Mistake 6: no evaluation of the conversation as a whole.** The per-turn answers can each be fine while the conversation is useless. The conversation-level metrics exist for that <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+**Mistake 1: শুধু দৃশ্যমান transcript টেস্ট করা।** transcript হলো যা ব্যবহারকারী দেখে; request হলো যা model পায়। দুটো আলাদা।
+
+**Mistake 2: contradiction-এর policy নেই।** "পরের মান কি জেতে?" একটা product সিদ্ধান্ত, আর টেস্টে আপনার বেছে নেওয়া উত্তরই encode করতে হবে।
+
+**Mistake 3: লম্বা কথোপকথনের টেস্ট নেই।** truncation বাগ শুধু context window ভরার পরে দেখা যায়, আর সেই কথোপকথনটাই কেউ টেস্ট করে না।
+
+**Mistake 4: reset টেস্ট নেই।** reset-এর পর stale order id ভুল order-এ কাজ করে।
+
+**Mistake 5: কথোপকথনের মধ্যে conversation id পুনঃব্যবহার।** এটা state leak, আর একটি কথোপকথনের টেস্টে অদৃশ্য।
+
+**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। conversation-level metric ঠিক এর জন্যই আছে <Cite n={1} />।
+
+</Layman>
+<Bangla>
+
+**Mistake 1: শুধু দৃশ্যমান transcript টেস্ট করা।** transcript হলো যা ব্যবহারকারী দেখে; request হলো যা model পায়। দুটো আলাদা।
+
+**Mistake 2: contradiction-এর policy নেই।** "পরের মান কি জেতে?" একটা product সিদ্ধান্ত, আর টেস্টে আপনার বেছে নেওয়া উত্তরই encode করতে হবে।
+
+**Mistake 3: লম্বা কথোপকথনের টেস্ট নেই।** truncation বাগ শুধু context window ভরার পরে দেখা যায়, আর সেই কথোপকথনটাই কেউ টেস্ট করে না।
+
+**Mistake 4: reset টেস্ট নেই।** reset-এর পর stale order id ভুল order-এ কাজ করে।
+
+**Mistake 5: কথোপকথনের মধ্যে conversation id পুনঃব্যবহার।** এটা state leak, আর একটি কথোপকথনের টেস্টে অদৃশ্য।
+
+**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। conversation-level metric ঠিক এর জন্যই আছে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Assert on the request body, not on the transcript. The transcript can look perfect while the history is not being sent.
+- Write the conversation policy down: does a later correction win, does a topic switch carry context, does a reset clear it. The tests are the policy.
+- Keep one test with thirty turns. That is where the context window fills and where the summarisation either works or does not.
+- Test the conversation id, not just the conversation. A reused id is a state leak between users.
+- Evaluate the whole conversation as well as the turns. A chatbot that answers every turn well and never solves the problem is a bad chatbot.
+- Log the token count of every turn in the test output. A conversation that grows the prompt by 500 tokens a turn has a problem before it has a bug.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Assert on the request body, not on the transcript. The transcript can look perfect while the history is not being sent.
+- Write the conversation policy down: does a later correction win, does a topic switch carry context, does a reset clear it. The tests are the policy.
+- Keep one test with thirty turns. That is where the context window fills and where the summarisation either works or does not.
+- Test the conversation id, not just the conversation. A reused id is a state leak between users.
+- Evaluate the whole conversation as well as the turns. A chatbot that answers every turn well and never solves the problem is a bad chatbot.
+- Log the token count of every turn in the test output. A conversation that grows the prompt by 500 tokens a turn has a problem before it has a bug.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- transcript-এর বদলে request body-র ওপর assert করুন। transcript পারফেক্ট দেখাতে পারে অথচ ইতিহাস পাঠানো না হতে পারে।
+- কথোপকথনের policy লিখে ফেলুন: পরের সংশোধন কি জেতে, topic switch-এ context কি বহন হয়, reset কি মুছে দেয়। টেস্টগুলোই policy।
+- ত্রিশটা টার্নের একটা টেস্ট রাখুন। ওখানেই context window ভরে আর সেখানেই summarisation কাজ করে কি না বোঝা যায়।
+- শুধু কথোপকথন নয়, conversation id-ও টেস্ট করুন। পুনঃব্যবহৃত id ব্যবহারকারীদের মধ্যে state leak।
+- প্রতিটা টার্নের পাশাও পুরো কথোপকথন মূল্যায়ন করুন। প্রতিটা টার্ন ঠিকভাবে উত্তর দেয় অথচ সমস্যা কখনো সমাধান করে না — এমন chatbot খারাপ chatbot।
+- প্রতিটা টার্নের token সংখ্যা টেস্ট output-এ লিখুন। প্রতি টার্নে ৫০০ token বাড়া কথোপকথনের বাগ আসার আগেই সমস্যা আছে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Multi-turn | A conversation with more than one exchange, where the history matters |
+| Message list | The turns sent to the model, in order, with their roles |
+| Summary | The compressed form of older turns, used when the history is too long |
+| Scratchpad | The facts extracted along the way, such as an order id, kept separately |
+| Truncation | Older turns falling out of the context window |
+| Contradiction | The user giving a value that conflicts with an earlier one |
+| Conversation reset | Clearing the history, either on request or on a new conversation |
+| State leak | One conversation seeing another's state |
+| Conversation-level metric | A score for the conversation as a whole, not one turn |
