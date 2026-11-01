@@ -627,8 +627,90 @@ To change a page:
 3. Fact-check each changed claim against its source. Fix each FAIL and check again.
 4. Run `npm run build` and `python3 scripts/check_sources.py out`.
 
+## Frontend Design Engineering Rules
+
+These rules sit on top of the rest of this file. They govern any work that
+touches a page's look or behaviour.
+
+### Setup
+
+The three agent skills are vendored under `.claude/skills/` and are not
+committed. `skills-lock.json` is committed, so a fresh clone restores them:
+
+```bash
+npx skills experimental_install
+```
+
+This installs `impeccable`, `design-taste-frontend`, and
+`web-design-guidelines`. The Playwright MCP server is in `.mcp.json` and
+Claude Code asks for approval once per project on first run.
+
+### 1. Design system grounding
+
+- Read `DESIGN.md` before creating or modifying any UI component. Its tokens
+  are normative: the exact hex colors, the type scale, the spacing steps, the
+  radii, and the shadows.
+- Use the Tailwind token, never a raw hex. `text-text-dim`, not `#b8bfc7`. If
+  no token fits, add the token to `app/globals.css` first, in both themes.
+- Keep both themes in step. A change to `:root` needs the same change to
+  `:root[data-theme="light"]`, and `npm test` must still pass.
+
+### 2. Anti-slop governance
+
+- Never use a generic purple-to-blue gradient on a headline. The accent is a
+  single flat teal (`--accent`).
+- Never put an emoji in a tile above a feature heading. Use an inline SVG or
+  the `bg-accent-soft` accent mark.
+- Before shipping a UI change, run the Impeccable checks that fit the change:
+  `/audit` for technical quality (accessibility, performance, theming),
+  `/polish` for the final alignment and spacing pass, `/typeset` for
+  typography, `/harden` for error, overflow, and edge-case states.
+- The Impeccable commands are at `.claude/skills/impeccable/`. Run
+  `.claude/skills/impeccable/scripts/impeccable context` once at the start of a
+  session, then the slash command. The mechanical detector is
+  `.claude/skills/impeccable/scripts/impeccable detect --json <targets>`; run
+  it once after the UI work is finished, not during concept selection.
+- The Taste skill is at `.claude/skills/design-taste-frontend/`. It is for
+  art direction on a page, not for this site's existing shell: use it only for
+  a genuinely new public-facing page, and keep the site's palette and type
+  with `node .claude/skills/design-taste-frontend/scripts/draw.mjs --keep palette,type`.
+- This site is a **Read** surface, so structure for comprehension first.
+
+### 3. UX and accessibility
+
+- Every interactive button and close icon has a hit target of at least
+  24×24px, and 44×44px on a touch screen.
+- Never disable browser zoom. `user-scalable=no` and `maximum-scale=1` are
+  forbidden.
+- Every interactive element has a visible focus ring. The global
+  `:focus-visible` rule draws a 2px `--accent` outline with a 2px offset; never
+  set `outline: none` without a replacement.
+- An accessible name must contain the visible label text (WCAG 2.5.3). Use
+  `useBn(en, bn)` from `components/i18n/useBn.ts` for `aria-label`, `title`,
+  `alt`, and `confirm()`.
+- The site is a static export with no backend round-trip, so there is no
+  pending state to wait for. Do not add a spinner to an action that is not
+  actually pending.
+
+### 4. Closed-loop browser QA
+
+- After building or updating a page, open the running site with the Playwright
+  MCP server (configured in `.mcp.json`): `npm run dev`, then drive
+  `http://localhost:3000` and the route you changed.
+- Click the interactive elements, take a real browser screenshot, and check
+  that no close button or CTA overflows its card or overlaps text.
+- Check both themes (`data-theme="dark"` and `data-theme="light"`) and the
+  phone width (390px).
+- Fix every visual bug before the task is done.
+
 ## Design
 
+- `DESIGN.md` at the project root is the machine-readable token spec: the
+  colors, the type scale, the radii, the spacing steps, and the component
+  variants, each one with the reasoning behind it. Read it before you write or
+  change any UI. It lints with `npx -y @google/design.md lint DESIGN.md` and
+  must stay at 0 errors. Its token values are the dark theme's, because dark is
+  the server default; the light theme redefines the same names.
 - The look follows https://www.systemdesignbangla.com/ (a style reference only; no CSS, text, or art is copied). The design is `docs/superpowers/specs/2026-10-21-reference-redesign-design.md`.
 - The tokens are CSS variables on `:root` in `app/globals.css`: dark (the server default) and light. Light is warm paper (`#faf7f2`) with white cards; dark is blue-black (`#0e1115`). The accent is teal, `--accent-2` is amber. `@theme inline` maps them to Tailwind colors (`bg-bg-raised`, `text-text-dim`, `text-accent`, `text-accent-2`, `bg-accent-soft`, …) and the shadows `--raise-sm/md/lg` to `shadow-sm/md/lg`.
 - Breakpoints: `nav` (75rem) shows the top nav and hides the menu button; `wide` (90rem) shows the label of the search trigger.
@@ -666,6 +748,8 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 | `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`) and progress (`tests/linux-progress.test.ts`), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), the Course data, page shape, search, and precache (`tests/course.test.ts`), the k6 data, page shape, search, and precache (`tests/k6.test.ts`), the AI Engineering data, page shape, search, and precache (`tests/ai-engineering.test.ts`), the voice helpers and head script (`tests/voice.test.ts`), the authoring rules of `<Voices>` in every MDX file (`tests/voice-source.test.ts`), the Linux lesson shape, the word and tip limits in all voices, and unsafe cleanups in Try-it blocks (`tests/linux-lesson.test.ts`), the contents page and stats (`tests/contents.test.ts`), the top nav (`tests/header-nav.test.ts`), the token contrast (`tests/contrast.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
+| `python3 -m unittest scripts/test_ai_ml_course_fetch.py` | Unit tests of `ai_ml_course_fetch.py` |
+| `python3 scripts/ai_ml_course_fetch.py <out-dir>` | Scrapes the AI & ML Testing course syllabus (Phase 1 and Phase 2) from journeytoautomation.org into `<out-dir>/ai-ml-testing-syllabus.{json,md}`. The page is a client-side React app, so the script reads the syllabus out of the JavaScript bundle the page loads. It is third-party text, so keep the output out of `content/`. |
 | `python3 scripts/check_routes.py out` | Lists each route from `route-map.json`, `linux-route-map.json`, `system-design-route-map.json`, `fundamentals-route-map.json`, `architecture-route-map.json`, `course-route-map.json`, `k6-route-map.json`, `ai-engineering-route-map.json`, `harness-route-map.json`, `ai-skills-route-map.json`, `ai-concepts-route-map.json`, `agent-memory-route-map.json`, `ai-agents-route-map.json`, `contents-route-map.json`, `dashboard-route-map.json`, and `interview-route-map.json` that has no page in `out/` |
 | `python3 scripts/check_links.py out` | Lists broken internal links and assets |
 | `python3 scripts/check_outline.py out` | Checks that each "On this page" link points to an element id |
