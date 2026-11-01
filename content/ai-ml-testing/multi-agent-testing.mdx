@@ -1,0 +1,452 @@
+export const metadata = { title: 'Multi-Agent Systems Testing', description: 'Test a team of agents: the handoff between them, the collaboration, the failure cascade, and the cost of the whole chain.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'LangGraph overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/overview', accessed: '2026-11-01' },
+    { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
+    { title: 'OWASP Top 10 for LLM Applications and Generative AI 2025', publisher: 'OWASP GenAI Security Project', url: 'https://genai.owasp.org/llm-top-10/', accessed: '2026-11-01' },
+  ],
+}
+
+# Multi-Agent Systems Testing
+
+One agent can be wrong. A team of agents can be wrong in ways that only appear in the seams between them.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A multi-agent system splits a job across several agents, each with its own tools and its own prompt. The common shape is a pipeline: a **researcher** gathers, a **writer** drafts, a **reviewer** critiques, and a **publisher** posts. LangGraph builds this as a graph with several nodes, each one an agent <Cite n={1} />.
+
+The failures are structural, not model-level. There are four that matter:
+
+1. **The handoff.** The writer receives the researcher's output. If the format changed, or a fact was dropped, the writer works from a broken input and never knows.
+2. **The cascade.** One agent's error becomes the next agent's premise. A hallucinated source in the researcher becomes a confident citation in the writer and a pass in the reviewer.
+3. **The cost.** Three agents means three model calls and three sets of tokens. A system that is not better than one agent is three times the price for the same answer.
+4. **The disagreement.** Two agents reach different conclusions and nothing resolves it. The system needs a rule for who wins, and that rule needs a test.
+
+The first two are correctness bugs and they are invisible from outside, because the final output looks fine. The trace is the only place the intermediate state is visible <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+multi-agent সিস্টেম একটা কাজ কয়েকটা agent-এর ওপর ভাগ করে, প্রত্যেকের নিজস্ব tool আর নিজস্ব prompt। সাধারণ গঠন হলো একটা pipeline: একটা **researcher** তথ্য সংগ্রহ করে, একটা **writer** খসড়া লেখে, একটা **reviewer** সমালোচনা করে, আর একটা **publisher** প্রকাশ করে। LangGraph এটা কয়েকটা node-এর graph হিসেবে বানায়, প্রতিটি node একটা agent <Cite n={1} />।
+
+ব্যর্থতাগুলো গঠনগত, model-স্তরের নয়। চারটা গুরুত্বপূর্ণ:
+
+1. **Handoff।** writer পায় researcher-এর আউটপুট। ফরম্যাট বদলে গেলে বা কোনো তথ্য বাদ পড়লে writer ভাঙা input থেকে কাজ করে আর সেটা বুঝতেই পারে না।
+2. **Cascade।** এক agent-এর ব্যর্থতা পরের agent-এর premise হয়। researcher-এর বানানো source হয়ে যায় writer-এর confident citation আর reviewer-এর পাস।
+3. **খরচ।** তিনটা agent মানে তিনটা model call আর তিন সেট token। যে সিস্টেম একটা agent-এর চেয়ে ভালো নয়, তার একই উত্তরের জন্য তিনগুণ দাম।
+4. **অমিল।** দুটো agent ভিন্ন সিদ্ধান্তে পৌঁছায় আর কিছুই তা সমাধান করে না। সিস্টেমে কে জিতবে তার নিয়ম দরকার, আর সেই নিয়মের টেস্টও দরকার।
+
+প্রথম দুটো correctness বাগ আর বাইরে থেকে দেখা যায় না, কারণ শেষ আউটপুট ঠিকই দেখায়। মাঝের state শুধু trace-এই দৃশ্যমান <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+multi-agent সিস্টেম একটা কাজ কয়েকটা agent-এর ওপর ভাগ করে, প্রত্যেকের নিজস্ব tool আর নিজস্ব prompt। সাধারণ গঠন হলো একটা pipeline: একটা **researcher** তথ্য সংগ্রহ করে, একটা **writer** খসড়া লেখে, একটা **reviewer** সমালোচনা করে, আর একটা **publisher** প্রকাশ করে। LangGraph এটা কয়েকটা node-এর graph হিসেবে বানায়, প্রতিটি node একটা agent <Cite n={1} />।
+
+ব্যর্থতাগুলো গঠনগত, model-স্তরের নয়। চারটা গুরুত্বপূর্ণ:
+
+1. **Handoff।** writer পায় researcher-এর আউটপুট। ফরম্যাট বদলে গেলে বা কোনো তথ্য বাদ পড়লে writer ভাঙা input থেকে কাজ করে আর সেটা বুঝতেই পারে না।
+2. **Cascade।** এক agent-এর ব্যর্থতা পরের agent-এর premise হয়। researcher-এর বানানো source হয়ে যায় writer-এর confident citation আর reviewer-এর পাস।
+3. **খরচ।** তিনটা agent মানে তিনটা model call আর তিন সেট token। যে সিস্টেম একটা agent-এর চেয়ে ভালো নয়, তার একই উত্তরের জন্য তিনগুণ দাম।
+4. **অমিল।** দুটো agent ভিন্ন সিদ্ধান্তে পৌঁছায় আর কিছুই তা সমাধান করে না। সিস্টেমে কে জিতবে তার নিয়ম দরকার, আর সেই নিয়মের টেস্টও দরকার।
+
+প্রথম দুটো correctness বাগ আর বাইরে থেকে দেখা যায় না, কারণ শেষ আউটপুট ঠিকই দেখায়। মাঝের state শুধু trace-এই দৃশ্যমান <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The handoff is the seam where most of the bugs live, and it is testable by checking the **shape** of what one agent passes to the next:
+
+```text
+researcher -> writer      a list of findings, each with a source id
+writer -> reviewer        a draft plus the findings it claims to have used
+reviewer -> publisher     a verdict plus the list of changes demanded
+```
+
+Each handoff has a **contract**, and the contract is a testable thing: the writer's input must contain every finding the researcher produced, with the source ids intact. A handoff that silently drops the least popular finding is a bias bug.
+
+The **cascade** is caught by planting a defect in the first agent and checking that a later one detects it. This is the reviewer agent's whole job, and it needs a test:
+
+```text
+plant    a finding with a source id that does not exist
+expect   the reviewer rejects the draft and names the missing source
+```
+
+If the reviewer passes it, the reviewer is decoration. This is the failure the OWASP list would call sensitive information disclosure or misinformation propagation, and it is invisible in the final output <Cite n={3} />.
+
+The **cost** is a test in the same suite. The whole chain's token count is the metric, and the comparison is against the single-agent baseline:
+
+```text
+multi-agent   3 calls, 4,200 tokens, quality 0.88
+single-agent  1 call, 1,100 tokens, quality 0.84
+```
+
+Four per cent of quality for four times the cost is a decision the product makes, and the tester has to put both numbers in the report.
+
+The **disagreement** needs a rule and a test. If the researcher and the writer disagree, which one wins? The answer is a design decision, and the test encodes it.
+
+And the trace is what makes the chain visible. A trace shows each agent's input and output, so you can see which seam broke <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+handoff হলো সেই seam যেখানে বেশিরভাগ বাগ থাকে, আর সেটা টেস্ট করা যায় এক agent থেকে পরের agent-কে যা যায় তার **গঠন** যাচাই করে:
+
+```text
+researcher -> writer      a list of findings, each with a source id
+writer -> reviewer        a draft plus the findings it claims to have used
+reviewer -> publisher     a verdict plus the list of changes demanded
+```
+
+প্রতিটা handoff-এর একটা **contract** আছে, আর contract একটা টেস্টযোগ্য জিনিস: writer-এর input-এ researcher-এর প্রতিটা finding থাকতে হবে, source id অক্ষত থাকতে হবে। যে handoff নীরবে সবচেয়ে কম জনপ্রিয় finding বাদ দেয় সেটা একটা bias বাগ।
+
+**Cascade** ধরা পড়ে প্রথম agent-এ বাগ বসিয়ে দিয়ে পরেরটা সেটা ধরতে পারে কি না দেখে। এটাই reviewer agent-এর পুরো কাজ, আর এর টেস্ট দরকার:
+
+```text
+plant    a finding with a source id that does not exist
+expect   the reviewer rejects the draft and names the missing source
+```
+
+reviewer পাস করলে সে আলংকার। এই ব্যর্থতাটা শেষ আউটপুটে দেখা যায় না <Cite n={3} />।
+
+**খরচ** একই suite-এর একটা টেস্ট। পুরো chain-এর token সংখ্যাই মাপ, আর তুলনা single-agent baseline-এর সাথে:
+
+```text
+multi-agent   3 calls, 4,200 tokens, quality 0.88
+single-agent  1 call, 1,100 tokens, quality 0.84
+```
+
+চার শতাংশ মানের জন্য চারগুণ খরচ একটা সিদ্ধান্ত যেটা product নেয়, আর টেস্টার দুটো সংখ্যাই রিপোর্টে রাখতে হবে।
+
+**অমিলের** একটা নিয়ম দরকার আর একটা টেস্ট। researcher আর writer অমিল করলে কে জিতবে? উত্তর একটা design সিদ্ধান্ত, আর টেস্ট সেটাই encode করে।
+
+আর trace-ই chain-কে দৃশ্যমান করে। একটা trace দেখায় প্রতিটা agent-এর input আর output, তাই বোঝা যায় কোন seam ভাঙল <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+handoff হলো সেই seam যেখানে বেশিরভাগ বাগ থাকে, আর সেটা টেস্ট করা যায় এক agent থেকে পরের agent-কে যা যায় তার **গঠন** যাচাই করে:
+
+```text
+researcher -> writer      a list of findings, each with a source id
+writer -> reviewer        a draft plus the findings it claims to have used
+reviewer -> publisher     a verdict plus the list of changes demanded
+```
+
+প্রতিটা handoff-এর একটা **contract** আছে, আর contract একটা টেস্টযোগ্য জিনিস: writer-এর input-এ researcher-এর প্রতিটা finding থাকতে হবে, source id অক্ষত থাকতে হবে। যে handoff নীরবে সবচেয়ে কম জনপ্রিয় finding বাদ দেয় সেটা একটা bias বাগ।
+
+**Cascade** ধরা পড়ে প্রথম agent-এ বাগ বসিয়ে দিয়ে পরেরটা সেটা ধরতে পারে কি না দেখে। এটাই reviewer agent-এর পুরো কাজ, আর এর টেস্ট দরকার:
+
+```text
+plant    a finding with a source id that does not exist
+expect   the reviewer rejects the draft and names the missing source
+```
+
+reviewer পাস করলে সে আলংকার। এই ব্যর্থতাটা শেষ আউটপুটে দেখা যায় না <Cite n={3} />।
+
+**খরচ** একই suite-এর একটা টেস্ট। পুরো chain-এর token সংখ্যাই মাপ, আর তুলনা single-agent baseline-এর সাথে:
+
+```text
+multi-agent   3 calls, 4,200 tokens, quality 0.88
+single-agent  1 call, 1,100 tokens, quality 0.84
+```
+
+চার শতাংশ মানের জন্য চারগুণ খরচ একটা সিদ্ধান্ত যেটা product নেয়, আর টেস্টার দুটো সংখ্যাই রিপোর্টে রাখতে হবে।
+
+**অমিলের** একটা নিয়ম দরকার আর একটা টেস্ট। researcher আর writer অমিল করলে কে জিতবে? উত্তর একটা design সিদ্ধান্ত, আর টেস্ট সেটাই encode করে।
+
+আর trace-ই chain-কে দৃশ্যমান করে। একটা trace দেখায় প্রতিটা agent-এর input আর output, তাই বোঝা যায় কোন seam ভাঙল <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Test the handoff contract by checking that nothing is dropped:
+
+```python
+def test_every_finding_reaches_the_writer(researcher, writer, trace):
+    findings = researcher.run("Compare the three refund policies")
+    writer.run(findings)
+
+    received = trace.input_to("writer")["findings"]
+    assert len(received) == len(findings)
+    assert {f["source_id"] for f in received} == {f["source_id"] for f in findings}
+```
+
+The cascade test, planting a defect in the first agent:
+
+```python
+def test_the_reviewer_rejects_a_finding_with_no_source(researcher, writer, reviewer):
+    planted = [{
+        "claim": "The refund window is 45 days.",
+        "source_id": "policy-v5#chunk-99",  # does not exist
+    }]
+    draft = writer.run(planted)
+    verdict = reviewer.run(draft, sources=ALL_SOURCES)
+    assert verdict.rejected
+    assert "chunk-99" in verdict.reason, "the reviewer did not name the bad source"
+```
+
+The cost test, which is the one that decides whether the architecture is worth it:
+
+```python
+def test_the_multi_agent_chain_is_worth_its_cost(chain, single, report):
+    multi = chain.run(DATASET)
+    one = single.run(DATASET)
+    report.add("quality", "multi", multi.quality)
+    report.add("quality", "single", one.quality)
+    report.add("tokens", "multi", multi.tokens)
+    report.add("tokens", "single", one.tokens)
+    assert multi.quality > one.quality, "the chain is not better than one agent"
+```
+
+That last assertion is deliberately strict. It says the complexity has to buy something. Whether the amount is enough is a product decision, but "no better at all" is always a bug.
+
+And the disagreement test, which needs the rule written down first:
+
+```python
+def test_the_reviewer_wins_a_disagreement_with_the_writer(reviewer, trace):
+    verdict = reviewer.run(draft_with_a_factual_error)
+    assert verdict.published is False, "the draft was published despite the review"
+```
+
+The disagreement is resolved in the trace: you can see the reviewer saw the same claim and rejected it, or did not look at it <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+handoff contract টেস্ট করে যাচাই করে কিছু বাদ পড়ছে না:
+
+```python
+def test_every_finding_reaches_the_writer(researcher, writer, trace):
+    findings = researcher.run("Compare the three refund policies")
+    writer.run(findings)
+
+    received = trace.input_to("writer")["findings"]
+    assert len(received) == len(findings)
+    assert {f["source_id"] for f in received} == {f["source_id"] for f in findings}
+```
+
+cascade টেস্ট, প্রথম agent-এ বাগ বসিয়ে দিয়ে:
+
+```python
+def test_the_reviewer_rejects_a_finding_with_no_source(researcher, writer, reviewer):
+    planted = [{
+        "claim": "The refund window is 45 days.",
+        "source_id": "policy-v5#chunk-99",  # does not exist
+    }]
+    draft = writer.run(planted)
+    verdict = reviewer.run(draft, sources=ALL_SOURCES)
+    assert verdict.rejected
+    assert "chunk-99" in verdict.reason, "the reviewer did not name the bad source"
+```
+
+খরচের টেস্ট, যেটা ঠিক করে architecture-এর দাম উপযোগী কি না:
+
+```python
+def test_the_multi_agent_chain_is_worth_its_cost(chain, single, report):
+    multi = chain.run(DATASET)
+    one = single.run(DATASET)
+    report.add("quality", "multi", multi.quality)
+    report.add("quality", "single", one.quality)
+    report.add("tokens", "multi", multi.tokens)
+    report.add("tokens", "single", one.tokens)
+    assert multi.quality > one.quality, "the chain is not better than one agent"
+```
+
+শেষ assertion-টা ইচ্ছাকৃতভাবে কঠোর। এটা বলে জটিলতার কিছু কিনতেই হবে। পরিমাণ যথেষ্ট কি না সেটা product সিদ্ধান্ত, কিন্তু "একেবারে ভালো নয়" সবসময় বাগ।
+
+আর অমিলের টেস্ট, যেটার জন্য আগে নিয়ম লিখতে হয়:
+
+```python
+def test_the_reviewer_wins_a_disagreement_with_the_writer(reviewer, trace):
+    verdict = reviewer.run(draft_with_a_factual_error)
+    assert verdict.published is False, "the draft was published despite the review"
+```
+
+অমিল trace-এ সমাধান হয়: দেখা যায় reviewer একই দাবিটা দেখে ফেলেছে, বা সেটা দেখেই না <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+handoff contract টেস্ট করে যাচাই করে কিছু বাদ পড়ছে না:
+
+```python
+def test_every_finding_reaches_the_writer(researcher, writer, trace):
+    findings = researcher.run("Compare the three refund policies")
+    writer.run(findings)
+
+    received = trace.input_to("writer")["findings"]
+    assert len(received) == len(findings)
+    assert {f["source_id"] for f in received} == {f["source_id"] for f in findings}
+```
+
+cascade টেস্ট, প্রথম agent-এ বাগ বসিয়ে দিয়ে:
+
+```python
+def test_the_reviewer_rejects_a_finding_with_no_source(researcher, writer, reviewer):
+    planted = [{
+        "claim": "The refund window is 45 days.",
+        "source_id": "policy-v5#chunk-99",  # does not exist
+    }]
+    draft = writer.run(planted)
+    verdict = reviewer.run(draft, sources=ALL_SOURCES)
+    assert verdict.rejected
+    assert "chunk-99" in verdict.reason, "the reviewer did not name the bad source"
+```
+
+খরচের টেস্ট, যেটা ঠিক করে architecture-এর দাম উপযোগী কি না:
+
+```python
+def test_the_multi_agent_chain_is_worth_its_cost(chain, single, report):
+    multi = chain.run(DATASET)
+    one = single.run(DATASET)
+    report.add("quality", "multi", multi.quality)
+    report.add("quality", "single", one.quality)
+    report.add("tokens", "multi", multi.tokens)
+    report.add("tokens", "single", one.tokens)
+    assert multi.quality > one.quality, "the chain is not better than one agent"
+```
+
+শেষ assertion-টা ইচ্ছাকৃতভাবে কঠোর। এটা বলে জটিলতার কিছু কিনতেই হবে। পরিমাণ যথেষ্ট কি না সেটা product সিদ্ধান্ত, কিন্তু "একেবারে ভালো নয়" সবসময় বাগ।
+
+আর অমিলের টেস্ট, যেটার জন্য আগে নিয়ম লিখতে হয়:
+
+```python
+def test_the_reviewer_wins_a_disagreement_with_the_writer(reviewer, trace):
+    verdict = reviewer.run(draft_with_a_factual_error)
+    assert verdict.published is False, "the draft was published despite the review"
+```
+
+অমিল trace-এ সমাধান হয়: দেখা যায় reviewer একই দাবিটা দেখে ফেলেছে, বা সেটা দেখেই না <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: testing only the final output.** The chain's quality is the product of its seams, and a good final output hides a broken seam.
+
+**Mistake 2: no handoff contract test.** Dropping a finding is a bias bug that nobody sees.
+
+**Mistake 3: a reviewer that always approves.** It is the easiest agent to build and the easiest to fake, and it catches nothing.
+
+**Mistake 4: no cost comparison.** A three-agent chain that matches one agent is three times the bill.
+
+**Mistake 5: no disagreement rule.** Two agents disagree and the system publishes anyway.
+
+**Mistake 6: trusting the intermediate output.** The researcher's finding can be wrong and still look fine, so each handoff needs its own check <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+**Mistake 1: শুধু শেষ আউটপুট টেস্ট করা।** chain-এর মান তার seam-গুলোর গুণ, আর ভালো শেষ আউটপুট ভাঙা seam ঢেকে দেয়।
+
+**Mistake 2: handoff contract টেস্ট নেই।** finding বাদ পড়া একটা bias বাগ যা কেউ দেখে না।
+
+**Mistake 3: reviewer সবসময় approve করে।** এটাই বানানো সবচেয়ে সহজ agent, আর ধরা সবচেয়ে সহজ, আর কিছুই ধরে না।
+
+**Mistake 4: খরচের তুলনা নেই।** তিন-agent chain যেটা একটা agent-এর সমান, সেটা তিনগুণ বিল।
+
+**Mistake 5: অমিলের নিয়ম নেই।** দুটো agent অমিল করে আর সিস্টেম তবু প্রকাশ করে।
+
+**Mistake 6: মাঝের আউটপুট বিশ্বাস করা।** researcher-এর finding ভুল হয়ে সেও ঠিকই দেখাতে পারে, তাই প্রতিটা handoff-এর নিজস্ব যাচাই দরকার <Cite n={3} />।
+
+</Layman>
+<Bangla>
+
+**Mistake 1: শুধু শেষ আউটপুট টেস্ট করা।** chain-এর মান তার seam-গুলোর গুণ, আর ভালো শেষ আউটপুট ভাঙা seam ঢেকে দেয়।
+
+**Mistake 2: handoff contract টেস্ট নেই।** finding বাদ পড়া একটা bias বাগ যা কেউ দেখে না।
+
+**Mistake 3: reviewer সবসময় approve করে।** এটাই বানানো সবচেয়ে সহজ agent, আর ধরা সবচেয়ে সহজ, আর কিছুই ধরে না।
+
+**Mistake 4: খরচের তুলনা নেই।** তিন-agent chain যেটা একটা agent-এর সমান, সেটা তিনগুণ বিল।
+
+**Mistake 5: অমিলের নিয়ম নেই।** দুটো agent অমিল করে আর সিস্টেম তবু প্রকাশ করে।
+
+**Mistake 6: মাঝের আউটপুট বিশ্বাস করা।** researcher-এর finding ভুল হয়ে সেও ঠিকই দেখাতে পারে, তাই প্রতিটা handoff-এর নিজস্ব যাচাই দরকার <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Give each handoff a typed contract and validate it at the boundary. A list of findings is not the same as a list of findings with source ids.
+- Keep the planted-defect test for the reviewer. It is the only test that proves the reviewer is doing a job.
+- Record the token count of each agent separately. When the bill goes up you need to know which agent got expensive.
+- Write the disagreement rule down before you need it, and put it in the same document as the escalation rules.
+- Test the chain with one agent deliberately broken. The chain should degrade to a worse answer, not to a wrong confident one.
+- Compare against the single-agent baseline before you argue for the chain. The baseline is the cheapest test you can write.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Give each handoff a typed contract and validate it at the boundary. A list of findings is not the same as a list of findings with source ids.
+- Keep the planted-defect test for the reviewer. It is the only test that proves the reviewer is doing a job.
+- Record the token count of each agent separately. When the bill goes up you need to know which agent got expensive.
+- Write the disagreement rule down before you need it, and put it in the same document as the escalation rules.
+- Test the chain with one agent deliberately broken. The chain should degrade to a worse answer, not to a wrong confident one.
+- Compare against the single-agent baseline before you argue for the chain. The baseline is the cheapest test you can write.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- প্রতিটা handoff-কে একটা typed contract দিন আর boundary-তে validate করুন। finding-এর তালিকা আর source id-সহ finding-এর তালিকা এক জিনিস নয়।
+- reviewer-এর জন্য planted-defect টেস্টটা রাখুন। এটাই একমাত্র টেস্ট যেটা প্রমাণ করে reviewer আসলেই কাজ করছে।
+- প্রতিটা agent-এর token সংখ্যা আলাদা করে রেকর্ড করুন। বিল বাড়লে জানতে হবে কোন agent ব্যয়বহুল হয়েছে।
+- অমিলের নিয়ম দরকার হওয়ার আগেই লিখে ফেলুন, আর escalation নিয়মের সাথে একই document-এ রাখুন।
+- একটা agent ইচ্ছাকৃতভাবে ভেঙে দিয়ে chain টেস্ট করুন। chain-এর উত্তর খারাপ হওয়া উচিত, ভুল confident হওয়া নয়।
+- chain-এর পক্ষে যাওয়ার আগে single-agent baseline-এর সাথে তুলনা করুন। baseline-ই সবচেয়ে সস্তা টেস্ট।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Multi-agent system | A job split across several agents, each with its own tools and prompt |
+| Handoff | The point where one agent's output becomes the next agent's input |
+| Handoff contract | The shape one agent must pass to the next, and what must not be dropped |
+| Cascade | One agent's error becoming the next agent's premise |
+| Reviewer agent | The agent whose job is to reject a bad draft; it is the easiest to fake |
+| Disagreement rule | The design decision about which agent wins when they conflict |
+| Single-agent baseline | The one-agent comparison that decides whether the chain earns its cost |
+| Token attribution | Recording the token cost of each agent separately |

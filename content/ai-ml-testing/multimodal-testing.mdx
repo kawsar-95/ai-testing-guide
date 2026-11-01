@@ -1,0 +1,545 @@
+export const metadata = { title: 'Multi-Modal Model Testing', description: 'Test a model that reads images and documents: OCR accuracy, field extraction, chart reading, and the hallucinations that come with pixels.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Vision', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/vision', accessed: '2026-11-01' },
+    { title: 'Learning Transferable Visual Models From Natural Language Supervision', publisher: 'arXiv', url: 'https://arxiv.org/abs/2103.00020', accessed: '2026-11-01' },
+    { title: 'Metrics', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-introduction', accessed: '2026-11-01' },
+  ],
+}
+
+# Multi-Modal Model Testing
+
+A model that reads images can be wrong about the world in a new way: it can misread a number, and then reason correctly about the wrong number.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **multi-modal** model takes text and images together. That adds a whole set of failure modes that the text-only tests never touched.
+
+The failure modes, in order of how often they bite:
+
+1. **OCR errors.** The model misreads a number, a date, or a serial. The danger is that the reasoning on top of it is fine, so the answer looks confident and the wrong digit is buried in the middle.
+2. **Document structure confusion.** A table is read row-wise when it should be read column-wise, or a two-column form is read as one paragraph of text.
+3. **Chart misreading.** The model reports a trend that is not in the chart, usually by confusing the axis labels or reading the wrong series.
+4. **Ignoring the instruction.** The model reads the document correctly and then answers the wrong question about it, because the question and the image compete for attention.
+5. **Confident invention.** The model describes something that is not in the image at all. This is the multi-modal version of hallucination, and it is the one that damages trust fastest, because the user can see the image.
+
+The CLIP paper established the contrastive approach that made image-and-text models practical in the first place, and it is the reference for why the pairing works at all <Cite n={2} />. For the testing side, the measurement tools are the same scored metrics used elsewhere, applied to the extracted values <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+**multi-modal** model লেখা আর ছবি একসাথে নেয়। এতে একগুলো ব্যর্থতার ধরন আসে যেগুলো শুধু লেখার টেস্ট কখনো ছুঁয়েছে না।
+
+ব্যর্থতার ধরন, কত ঘন ঘন কী বিপদ টানে তার ক্রমে:
+
+1. **OCR ভুল।** model সংখ্যা, তারিখ বা serial ভুল পড়ে। বিপদ হলো তার উপরের যুক্তি ঠিক থাকে, তাই উত্তর confident দেখায় আর ভুল digit মাঝখানে লুকানো থাকে।
+2. **Document structure-এর গুলিয়ে যাওয়া।** table row-wise পড়া হয় যখন column-wise পড়া উচিত, বা দুই কলামের ফর্ম একটা অনুচ্ছেদের লেখা হিসেবে পড়া হয়।
+3. **চার্ট ভুল পড়া।** model এমন trend বলে যা চার্টে নেই, সাধারণত axis label গুলিয়ে বা ভুল series পড়ে।
+4. **নির্দেশনা উপেক্ষা করা।** model document ঠিক পড়ে আর তারপর সেই সম্পর্কে ভুল প্রশ্নের উত্তর দেয়, কারণ প্রশ্ন আর ছবি দুটোই attention-এর জন্য স্পধর্দ করে।
+5. **আত্মবিশ্বাসী বানানো।** model এমন কিছু বর্ণনা করে যা ছবিতে নেইই। এটাই multi-modal hallucination, আর বিশ্বাস সবচেয়ে দ্রুত নষ্ট করে, কারণ ব্যবহারকারী তো ছবিটাই দেখতে পান।
+
+CLIP কাগজে contrastive approach-টা প্রতিষ্ঠা করেছিল, যেটা ছবি-সহ-লেখা model বাস্তবসম্ভব করেছিল, আর এটাই কেন জোড়াটা কাজ করে তার reference <Cite n={2} />। টেস্টিং-এর দিকে, মাপগুলো একই scored metric, বের করা মানের ওপর প্রয়োগ করা <Cite n={3} />।
+
+</Layman>
+<Bangla>
+
+**multi-modal** model লেখা আর ছবি একসাথে নেয়। এতে একগুলো ব্যর্থতার ধরন আসে যেগুলো শুধু লেখার টেস্ট কখনো ছুঁয়েছে না।
+
+ব্যর্থতার ধরন, কত ঘন ঘন কী বিপদ টানে তার ক্রমে:
+
+1. **OCR ভুল।** model সংখ্যা, তারিখ বা serial ভুল পড়ে। বিপদ হলো তার উপরের যুক্তি ঠিক থাকে, তাই উত্তর confident দেখায় আর ভুল digit মাঝখানে লুকানো থাকে।
+2. **Document structure-এর গুলিয়ে যাওয়া।** table row-wise পড়া হয় যখন column-wise পড়া উচিত, বা দুই কলামের ফর্ম একটা অনুচ্ছেদের লেখা হিসেবে পড়া হয়।
+3. **চার্ট ভুল পড়া।** model এমন trend বলে যা চার্টে নেই, সাধারণত axis label গুলিয়ে বা ভুল series পড়ে।
+4. **নির্দেশনা উপেক্ষা করা।** model document ঠিক পড়ে আর তারপর সেই সম্পর্কে ভুল প্রশ্নের উত্তর দেয়, কারণ প্রশ্ন আর ছবি দুটোই attention-এর জন্য স্পধর্দ করে।
+5. **আত্মবিশ্বাসী বানানো।** model এমন কিছু বর্ণনা করে যা ছবিতে নেইই। এটাই multi-modal hallucination, আর বিশ্বাস সবচেয়ে দ্রুত নষ্ট করে, কারণ ব্যবহারকারী তো ছবিটাই দেখতে পান।
+
+CLIP কাগজে contrastive approach-টা প্রতিষ্ঠা করেছিল, যেটা ছবি-সহ-লেখা model বাস্তবসম্ভব করেছিল, আর এটাই কেন জোড়াটা কাজ করে তার reference <Cite n={2} />। টেস্টিং-এর দিকে, মাপগুলো একই scored metric, বের করা মানের ওপর প্রয়োগ করা <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The multi-modal test has a property the text-only one does not: **the user can see the image**. That means a wrong answer is instantly checkable, and the test should be too.
+
+**OCR accuracy** is measured against a labelled set of values, and the metric is exact-match or character error rate on the extracted fields:
+
+```text
+field            expected      extracted     error rate
+invoice_number   INV-2024-089  INV-2024-089   0.00
+total            1,250.00       1,250.00       0.00
+total            980.00         980.00         0.00
+total            45.60          4S.60          0.03
+```
+
+A single character error in a serial number is a total failure for that field, so the threshold is per-field and often zero.
+
+**Structure** is tested with the layouts that break parsers: a two-column form, a table with a merged header, a receipt with a narrow right column, a handwritten note under a printed one.
+
+**Charts** are tested with the specific readings that matter, not with a general "describe the chart". The test names the value: the highest point, the value at a given date, the difference between two series. A model that describes the chart beautifully and gets the value wrong fails, and it should.
+
+**Instruction following with an image** is tested by pairing the same image with two different questions and checking the answer changes:
+
+```text
+same invoice image
+question A: what is the total?
+question B: what is the due date?
+expect: two different answers, each correct
+```
+
+**Confident invention** is tested with an image that does not contain the asked-for field, and the expected behaviour is to say so:
+
+```text
+image: a receipt with no expiry date
+question: what is the expiry date?
+expect: it says there is no expiry date on the receipt
+```
+
+That last test is the multi-modal version of the not-found test, and it is the one that most often fails.
+
+**Handwriting** is a separate axis: a model that reads print perfectly can fail on handwriting, and the two need separate thresholds. The vision documentation covers what the models handle <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+multi-modal টেস্টে একটা গুণ আছে যা শুধু লেখার টেস্টে নেই: **ব্যবহারকারী ছবিটাই দেখতে পান**। মানে ভুল উত্তর সাথে সাথেই যাচাই করা যায়, আর টেস্টেও তাই করা উচিত।
+
+**OCR নির্ভুলতা** মাপা হয় একটা labelled মানের set-এর বিপরীতে, আর metric হলো বের করা field-এর exact-match বা character error rate:
+
+```text
+field            expected      extracted     error rate
+invoice_number   INV-2024-089  INV-2024-089   0.00
+total            1,250.00       1,250.00       0.00
+total            980.00         980.00         0.00
+total            45.60          4S.60          0.03
+```
+
+serial নম্বরে একটা অক্ষরের ভুল সেই field-এর জন্য মোট ব্যর্থতা, তাই threshold প্রতি field আলাদা আর প্রায়ই শূন্য।
+
+**গঠন** টেস্ট করে সেই layout গুলো দিয়ে যেগুলো parser ভাঙে: দুই কলামের ফর্ম, merged header-এর table, ডান পাশে সরু কলামের receipt, ছাপার নিচে হাতে লেখা note।
+
+**চার্ট** টেস্ট করে সাধারণ "চার্টটা বর্ণনা করো" দিয়ে নয়, গুরুত্বপূর্ণ নির্দিষ্ট পড়া দিয়ে। টেস্টে মানের নাম থাকে: সর্বোচ্চ বিন্দু, নির্দিষ্ট তারিখের মান, দুই series-এর পার্থক্য। যে model সুন্দর করে চার্ট বর্ণনা করে আর মান ভুল বলে সেটা ফেইল করে, আর করা উচিত।
+
+**ছবি সহ নির্দেশনা** টেস্ট হয় একই ছবির সাথে দুটো ভিন্ন প্রশ্ন জুড়ে উত্তর বদলায় কি না দেখে:
+
+```text
+same invoice image
+question A: what is the total?
+question B: what is the due date?
+expect: two different answers, each correct
+```
+
+**আত্মবিশ্বাসী বানানো** টেস্ট হয় এমন ছবি দিয়ে যেখানে প্রশ্নের করা field নেই, আর প্রত্যাশিত আচরণ হলো সেটা বলা:
+
+```text
+image: a receipt with no expiry date
+question: what is the expiry date?
+expect: it says there is no expiry date on the receipt
+```
+
+শেষ টেস্টটাই multi-modal সংস্করণের not-found টেস্ট, আর এটাই সবচেয়ে বেশি ব্যর্থ হয়।
+
+**হাতের লেখা** আলাদা একটা অক্ষ: যে model print নিখুঁত পড়ে সে handwriting-এ ব্যর্থ হতে পারে, আর দুটোর জন্য আলাদা threshold দরকার। vision ডকুমেন্টেশনে model-গুলো কী সামলায় তা আছে <Cite n={1} />।
+
+</Layman>
+<Bangla>
+
+multi-modal টেস্টে একটা গুণ আছে যা শুধু লেখার টেস্টে নেই: **ব্যবহারকারী ছবিটাই দেখতে পান**। মানে ভুল উত্তর সাথে সাথেই যাচাই করা যায়, আর টেস্টেও তাই করা উচিত।
+
+**OCR নির্ভুলতা** মাপা হয় একটা labelled মানের set-এর বিপরীতে, আর metric হলো বের করা field-এর exact-match বা character error rate:
+
+```text
+field            expected      extracted     error rate
+invoice_number   INV-2024-089  INV-2024-089   0.00
+total            1,250.00       1,250.00       0.00
+total            980.00         980.00         0.00
+total            45.60          4S.60          0.03
+```
+
+serial নম্বরে একটা অক্ষরের ভুল সেই field-এর জন্য মোট ব্যর্থতা, তাই threshold প্রতি field আলাদা আর প্রায়ই শূন্য।
+
+**গঠন** টেস্ট করে সেই layout গুলো দিয়ে যেগুলো parser ভাঙে: দুই কলামের ফর্ম, merged header-এর table, ডান পাশে সরু কলামের receipt, ছাপার নিচে হাতে লেখা note।
+
+**চার্ট** টেস্ট করে সাধারণ "চার্টটা বর্ণনা করো" দিয়ে নয়, গুরুত্বপূর্ণ নির্দিষ্ট পড়া দিয়ে। টেস্টে মানের নাম থাকে: সর্বোচ্চ বিন্দু, নির্দিষ্ট তারিখের মান, দুই series-এর পার্থক্য। যে model সুন্দর করে চার্ট বর্ণনা করে আর মান ভুল বলে সেটা ফেইল করে, আর করা উচিত।
+
+**ছবি সহ নির্দেশনা** টেস্ট হয় একই ছবির সাথে দুটো ভিন্ন প্রশ্ন জুড়ে উত্তর বদলায় কি না দেখে:
+
+```text
+same invoice image
+question A: what is the total?
+question B: what is the due date?
+expect: two different answers, each correct
+```
+
+**আত্মবিশ্বাসী বানানো** টেস্ট হয় এমন ছবি দিয়ে যেখানে প্রশ্নের করা field নেই, আর প্রত্যাশিত আচরণ হলো সেটা বলা:
+
+```text
+image: a receipt with no expiry date
+question: what is the expiry date?
+expect: it says there is no expiry date on the receipt
+```
+
+শেষ টেস্টটাই multi-modal সংস্করণের not-found টেস্ট, আর এটাই সবচেয়ে বেশি ব্যর্থ হয়।
+
+**হাতের লেখা** আলাদা একটা অক্ষ: যে model print নিখুঁত পড়ে সে handwriting-এ ব্যর্থ হতে পারে, আর দুটোর জন্য আলাদা threshold দরকার। vision ডকুমেন্টেশনে model-গুলো কী সামলায় তা আছে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The test data is a set of images with the expected fields, and the test compares the extracted values exactly:
+
+```python
+CASES = [
+    {
+        "image": "fixtures/invoices/inv-2024-089.png",
+        "fields": {
+            "invoice_number": "INV-2024-089",
+            "total": "1,250.00",
+            "due_date": "2024-12-15",
+        },
+    },
+    {
+        "image": "fixtures/invoices/inv-2024-091.png",
+        "fields": {"invoice_number": "INV-2024-091", "total": "45.60"},
+    },
+]
+
+
+def test_the_fields_are_extracted_exactly(case, model):
+    extracted = model.extract_fields(case["image"])
+    for field, expected in case["fields"].items():
+        assert extracted.get(field) == expected, (
+            f"{case['image']}: {field} was {extracted.get(field)!r}, "
+            f"expected {expected!r}"
+        )
+```
+
+The not-found test, which is the one that catches the confident invention:
+
+```python
+def test_the_model_says_when_the_field_is_not_in_the_image(model):
+    answer = model.ask(
+        image="fixtures/invoices/inv-2024-089.png",
+        question="What is the expiry date?",
+    )
+    assert "no expiry" in answer.lower() or "not shown" in answer.lower()
+```
+
+The instruction-following test, with the same image and two questions:
+
+```python
+def test_the_answer_follows_the_question_not_the_image(model):
+    image = "fixtures/invoices/inv-2024-089.png"
+    total = model.ask(image=image, question="What is the total?")
+    due = model.ask(image=image, question="What is the due date?")
+    assert "1,250" in total
+    assert "2024-12-15" in due
+    assert total != due, "the model answered the same question twice"
+```
+
+And the chart test, which reads a specific value rather than asking for a description:
+
+```python
+def test_the_peak_value_is_read_correctly(model):
+    answer = model.ask(
+        image="fixtures/charts/revenue-by-month.png",
+        question="What was the highest monthly revenue, and in which month?",
+    )
+    assert "march" in answer.lower()
+    assert "120" in answer.replace(",", "")
+```
+
+And for handwriting, a separate fixture set with a separate threshold, because the failure rate is different:
+
+```python
+def test_handwritten_fields_are_extracted(model):
+    extracted = model.extract_fields("fixtures/handwritten/note-01.png")
+    assert extracted["amount"] == "45.60"
+```
+
+The scored metrics are applied to the extracted values, so the quality score is about the extraction and not about the prose around it <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+test data হলো ছবির একটা set আর প্রত্যাশিত field, আর টেস্ট বের করা মান হুবহু তুলনা করে:
+
+```python
+CASES = [
+    {
+        "image": "fixtures/invoices/inv-2024-089.png",
+        "fields": {
+            "invoice_number": "INV-2024-089",
+            "total": "1,250.00",
+            "due_date": "2024-12-15",
+        },
+    },
+    {
+        "image": "fixtures/invoices/inv-2024-091.png",
+        "fields": {"invoice_number": "INV-2024-091", "total": "45.60"},
+    },
+]
+
+
+def test_the_fields_are_extracted_exactly(case, model):
+    extracted = model.extract_fields(case["image"])
+    for field, expected in case["fields"].items():
+        assert extracted.get(field) == expected, (
+            f"{case['image']}: {field} was {extracted.get(field)!r}, "
+            f"expected {expected!r}"
+        )
+```
+
+not-found টেস্ট, যেটা আত্মবিশ্বাসী বানানো ধরে:
+
+```python
+def test_the_model_says_when_the_field_is_not_in_the_image(model):
+    answer = model.ask(
+        image="fixtures/invoices/inv-2024-089.png",
+        question="What is the expiry date?",
+    )
+    assert "no expiry" in answer.lower() or "not shown" in answer.lower()
+```
+
+নির্দেশনা অনুসরণের টেস্ট, একই ছবি আর দুটো প্রশ্ন:
+
+```python
+def test_the_answer_follows_the_question_not_the_image(model):
+    image = "fixtures/invoices/inv-2024-089.png"
+    total = model.ask(image=image, question="What is the total?")
+    due = model.ask(image=image, question="What is the due date?")
+    assert "1,250" in total
+    assert "2024-12-15" in due
+    assert total != due, "the model answered the same question twice"
+```
+
+আর চার্ট টেস্ট, যেটা বর্ণনা না চেয়ে নির্দিষ্ট মান পড়ে:
+
+```python
+def test_the_peak_value_is_read_correctly(model):
+    answer = model.ask(
+        image="fixtures/charts/revenue-by-month.png",
+        question="What was the highest monthly revenue, and in which month?",
+    )
+    assert "march" in answer.lower()
+    assert "120" in answer.replace(",", "")
+```
+
+আর হাতের লেখার জন্য আলাদা fixture set আর আলাদা threshold, কারণ ব্যর্থতার হার আলাদা:
+
+```python
+def test_handwritten_fields_are_extracted(model):
+    extracted = model.extract_fields("fixtures/handwritten/note-01.png")
+    assert extracted["amount"] == "45.60"
+```
+
+scored metric বের করা মানের ওপর প্রয়োগ হয়, তাই মানের স্কোর বের করার কাজ নিয়েই, আর তার চারপাশের বাক্য নিয়ে নয় <Cite n={3} />।
+
+</Layman>
+<Bangla>
+
+test data হলো ছবির একটা set আর প্রত্যাশিত field, আর টেস্ট বের করা মান হুবহু তুলনা করে:
+
+```python
+CASES = [
+    {
+        "image": "fixtures/invoices/inv-2024-089.png",
+        "fields": {
+            "invoice_number": "INV-2024-089",
+            "total": "1,250.00",
+            "due_date": "2024-12-15",
+        },
+    },
+    {
+        "image": "fixtures/invoices/inv-2024-091.png",
+        "fields": {"invoice_number": "INV-2024-091", "total": "45.60"},
+    },
+]
+
+
+def test_the_fields_are_extracted_exactly(case, model):
+    extracted = model.extract_fields(case["image"])
+    for field, expected in case["fields"].items():
+        assert extracted.get(field) == expected, (
+            f"{case['image']}: {field} was {extracted.get(field)!r}, "
+            f"expected {expected!r}"
+        )
+```
+
+not-found টেস্ট, যেটা আত্মবিশ্বাসী বানানো ধরে:
+
+```python
+def test_the_model_says_when_the_field_is_not_in_the_image(model):
+    answer = model.ask(
+        image="fixtures/invoices/inv-2024-089.png",
+        question="What is the expiry date?",
+    )
+    assert "no expiry" in answer.lower() or "not shown" in answer.lower()
+```
+
+নির্দেশনা অনুসরণের টেস্ট, একই ছবি আর দুটো প্রশ্ন:
+
+```python
+def test_the_answer_follows_the_question_not_the_image(model):
+    image = "fixtures/invoices/inv-2024-089.png"
+    total = model.ask(image=image, question="What is the total?")
+    due = model.ask(image=image, question="What is the due date?")
+    assert "1,250" in total
+    assert "2024-12-15" in due
+    assert total != due, "the model answered the same question twice"
+```
+
+আর চার্ট টেস্ট, যেটা বর্ণনা না চেয়ে নির্দিষ্ট মান পড়ে:
+
+```python
+def test_the_peak_value_is_read_correctly(model):
+    answer = model.ask(
+        image="fixtures/charts/revenue-by-month.png",
+        question="What was the highest monthly revenue, and in which month?",
+    )
+    assert "march" in answer.lower()
+    assert "120" in answer.replace(",", "")
+```
+
+আর হাতের লেখার জন্য আলাদা fixture set আর আলাদা threshold, কারণ ব্যর্থতার হার আলাদা:
+
+```python
+def test_handwritten_fields_are_extracted(model):
+    extracted = model.extract_fields("fixtures/handwritten/note-01.png")
+    assert extracted["amount"] == "45.60"
+```
+
+scored metric বের করা মানের ওপর প্রয়োগ হয়, তাই মানের স্কোর বের করার কাজ নিয়েই, আর তার চারপাশের বাক্য নিয়ে নয় <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: asking for a description instead of a value.** "Describe this invoice" passes with a fluent paragraph and a wrong total.
+
+**Mistake 2: no not-found test.** The model invents a field that is not in the image, and the user can see that it is.
+
+**Mistake 3: one threshold for print and handwriting.** The failure rates differ enough that one threshold hides one of them.
+
+**Mistake 4: no test for the wrong question.** A model that answers the same thing whatever you ask passes a single-question test.
+
+**Mistake 5: ignoring the structure.** A correct field extracted from the wrong row is still wrong <Cite n={3} />.
+
+**Mistake 6: only testing clean scans.** Real photos have shadows, folds, and a rotated page <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+**Mistake 1: বর্ণনা চেয়ে মান চাওয়া।** "Describe this invoice" একটা সাবলীল অনুচ্ছেদ আর ভুল total দিয়ে পাস করে।
+
+**Mistake 2: not-found টেস্ট নেই।** model ছবিতে নেই এমন field বানিয়ে দেয়, আর ব্যবহারকারী তা দেখতে পান।
+
+**Mistake 3: print আর হাতের লেখার জন্য এক threshold।** ব্যর্থতার হার যথেষ্ট আলাদা যাতে একটা threshold অন্যটা লুকিয়ে দেয়।
+
+**Mistake 4: ভুল প্রশ্নের টেস্ট নেই।** যে model যা জিজ্ঞেস করুক একই উত্তর দেয়, সে এক-প্রশ্নের টেস্ট পাস করে।
+
+**Mistake 5: গঠন উপেক্ষা করা।** ভুল row থেকে বের করা সঠিক field-ও ভুল <Cite n={3} />।
+
+**Mistake 6: শুধু পরিষ্কার scan টেস্ট করা।** আসল ছবিতে ছায়া, ভাঁজ আর ঘোরানো পাতা থাকে <Cite n={1} />।
+
+</Layman>
+<Bangla>
+
+**Mistake 1: বর্ণনা চেয়ে মান চাওয়া।** "Describe this invoice" একটা সাবলীল অনুচ্ছেদ আর ভুল total দিয়ে পাস করে।
+
+**Mistake 2: not-found টেস্ট নেই।** model ছবিতে নেই এমন field বানিয়ে দেয়, আর ব্যবহারকারী তা দেখতে পান।
+
+**Mistake 3: print আর হাতের লেখার জন্য এক threshold।** ব্যর্থতার হার যথেষ্ট আলাদা যাতে একটা threshold অন্যটা লুকিয়ে দেয়।
+
+**Mistake 4: ভুল প্রশ্নের টেস্ট নেই।** যে model যা জিজ্ঞেস করুক একই উত্তর দেয়, সে এক-প্রশ্নের টেস্ট পাস করে।
+
+**Mistake 5: গঠন উপেক্ষা করা।** ভুল row থেকে বের করা সঠিক field-ও ভুল <Cite n={3} />।
+
+**Mistake 6: শুধু পরিষ্কার scan টেস্ট করা।** আসল ছবিতে ছায়া, ভাঁজ আর ঘোরানো পাতা থাকে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the fixture images in the repo with their expected values in one file. A fixture without its expected values is not a test.
+- Assert on exact values, never on a description. A fluent paragraph can contain a wrong number.
+- Always include one image that lacks the field being asked for.
+- Keep handwriting in a separate fixture folder with its own threshold.
+- Take the photos yourself, in bad light, at an angle. The clean scan is not the case that breaks.
+- When the model reads a table, assert on which row and column the value came from, not just the value.
+- Test the same image with two questions. A model that gives the same answer to both is not reading the question.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the fixture images in the repo with their expected values in one file. A fixture without its expected values is not a test.
+- Assert on exact values, never on a description. A fluent paragraph can contain a wrong number.
+- Always include one image that lacks the field being asked for.
+- Keep handwriting in a separate fixture folder with its own threshold.
+- Take the photos yourself, in bad light, at an angle. The clean scan is not the case that breaks.
+- When the model reads a table, assert on which row and column the value came from, not just the value.
+- Test the same image with two questions. A model that gives the same answer to both is not reading the question.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- fixture ছবিগুলো repo-তে রাখুন আর প্রত্যাশিত মানগুলো একটা ফাইলে। প্রত্যাশিত মান ছাড়া fixture টেস্টই নয়।
+- বর্ণনার বদলে নির্দিষ্ট মানের ওপর assert করুন। একটা সাবলীল অনুচ্ছেদে ভুল সংখ্যা থাকতে পারে।
+- সবসময় একটা ছবি রাখুন যেখানে প্রশ্নের করা field নেই।
+- হাতের লেখা আলাদা fixture folder-এ রাখুন, আলাদা threshold-এ।
+- ছবি নিজে তুলুন, খারাপ আলোতে, একটু কোণে। পরিষ্কার scan-ই সেই কেস নয় যেটা ভাঙে।
+- model table পড়লে শুধু মান নয়, কোন row আর কোন column থেকে এসেছে সেটাও assert করুন।
+- একই ছবি দুটো প্রশ্নে টেস্ট করুন। দুটোতেই একই উত্তর দেওয়া model প্রশ্ন পড়ছে না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Multi-modal | A model that takes text and images together |
+| OCR | Optical character recognition; turning the pixels into text the model reads |
+| Character error rate | How many characters the extraction got wrong, against the expected value |
+| Structure | The layout of the document: rows, columns, headers, forms |
+| Chart reading | Extracting values and trends from a graph, not describing it |
+| Not-found test | Asking about a field the image does not contain, and expecting the model to say so |
+| Handwriting | A separate extraction difficulty from print, needing its own threshold |
+| Confident invention | Describing something that is not in the image at all |

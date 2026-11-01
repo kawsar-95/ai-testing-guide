@@ -1,0 +1,386 @@
+export const metadata = { title: 'AI Application Architectures', description: 'Map an AI feature into its layers, find the test point at each one, and know when to reach for fine-tuning, RAG, or a better prompt.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-11-01' },
+    { title: 'Prompt engineering overview', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview', accessed: '2026-11-01' },
+    { title: 'Lost in the Middle: How Language Models Use Long Contexts', publisher: 'arXiv', url: 'https://arxiv.org/abs/2307.03172', accessed: '2026-11-01' },
+    { title: 'OWASP Top 10 for LLM Applications and Generative AI 2025', publisher: 'OWASP GenAI Security Project', url: 'https://genai.owasp.org/llm-top-10/', accessed: '2026-11-01' },
+  ],
+}
+
+# AI Application Architectures
+
+Every AI feature is the same chain wearing different clothes: input, prompt, model, output, guardrails, user. Learn to draw that chain, and you know where every test belongs.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A simple reference shape for an AI feature has five parts. The **input** is what the user gives and what the system knows. The **prompt** assembles that into the instructions the model will read. The **model** produces an answer. The **guardrails** check the answer before it leaves. The **user** sees it. This shape is the tutorial's own.
+
+Between the input and the prompt there is often a **retriever**. A retriever searches a knowledge base for passages related to the question and puts them in the prompt. That whole arrangement is **RAG**, retrieval-augmented generation. The RAG paper joins a pre-trained model, which keeps its knowledge in its parameters, with a dense vector index that a neural retriever searches <Cite n={1} />. The model is given the material at answer time instead of relying only on what it learned in training.
+
+The three ways to give a model knowledge are therefore:
+
+- **Prompt engineering** puts the knowledge in the instructions. In the tutorial's view: cheapest, fastest to change, limited by the context window.
+- **RAG** puts the knowledge in a searchable store and fetches the relevant parts at answer time. The RAG paper names two open problems of knowledge kept only in parameters: showing where an answer came from, and updating world knowledge <Cite n={1} />. So RAG fits when the facts change, or when you must be able to point at the source.
+- **Fine-tuning** changes the model's weights. In the tutorial's view, it fits when the *behaviour* is wrong, not the facts: a format the model never produces, a tone it misses, a domain the language it knows is too vague for.
+
+The test points follow from the layers. Every layer has its own failure mode, and a failure at one layer can look like a failure at another. Also, not every failure is a prompt problem: Anthropic's prompt engineering guide says that not every failing eval is best solved by prompt engineering, and that latency and cost are sometimes easier to fix with a different model <Cite n={2} />. Draw the architecture before you write the tests, so you know which layer to blame.
+
+</Technical>
+<Layman>
+
+A simple standard shape of an AI feature has five parts. The **input** is what the user gives and what the system already knows. The **prompt** packs that into the instructions the model will read. The **model** produces an answer. The **guardrails** check the answer before it leaves. The **user** sees it. This shape is the tutorial's own.
+
+Between the input and the prompt there is often a **retriever**. It searches a knowledge base for passages related to the question and puts them in the prompt. That arrangement is **RAG**. The RAG paper joins a trained model, which keeps what it knows inside its own settings, with a searchable index of documents <Cite n={1} />. The model gets the material at answer time instead of relying only on what it learned in training.
+
+So there are three ways to give a model knowledge:
+
+- **Prompt engineering** puts the knowledge in the instructions. In the tutorial's view: cheapest, fastest to change, and limited by how much fits in the prompt.
+- **RAG** puts the knowledge in a searchable store and fetches the relevant parts at answer time. The RAG paper says that a model which keeps knowledge only in its settings has trouble showing where an answer came from and updating what it knows <Cite n={1} />. So RAG fits when the facts change, or when you must point at the source.
+- **Fine-tuning** changes the model's own weights. In the tutorial's view, it fits when the *behaviour* is wrong rather than the facts: a format the model never produces, a tone it misses, a field where its general language is too vague.
+
+The test points follow from the layers. Every layer has its own way to fail, and a failure at one layer can look like a failure at another. Also, not every failure is a prompt problem: Anthropic's guide says not every failing check is best fixed with the prompt, and speed and cost are sometimes easier to fix with a different model <Cite n={2} />. Draw the shape before you write the tests, so you know which layer to blame.
+
+</Layman>
+<Bangla>
+
+AI ফিচারের একটা সহজ আদর্শ গঠনে পাঁচটা অংশ থাকে। **Input** হলো ব্যবহারকারী যা দিলেন আর সিস্টেম যা আগে থেকে জানে। **Prompt** সেগুলো মিলিয়ে model-এর পড়ার নির্দেশনা বানায়। **Model** উত্তর দেয়। **Guardrail** উত্তর পাঠানোর আগে যাচাই করে। **User** সেটা দেখেন। এই গঠনটা টিউটোরিয়ালের নিজস্ব।
+
+Input আর prompt-এর মাঝে প্রায়ই একটা **retriever** থাকে। সে একটা knowledge base-এ প্রশ্নের সাথে সম্পর্কিত অংশ খুঁজে prompt-এ বসায়। এই গঠনকেই **RAG** বলে। RAG paper একটা pre-trained model, যার জ্ঞান তার parameter-এ থাকে, তার সাথে একটা dense vector index জুড়ে দেয়, যেটা একটা neural retriever খোঁজে <Cite n={1} />। ফলে model শুধু training-এ শেখা জিনিসের ওপর নির্ভর না করে উত্তর দেওয়ার সময় material পায়।
+
+তাই model-কে জ্ঞান দেওয়ার তিনটা উপায়:
+
+- **Prompt engineering** জ্ঞানটা নির্দেশনার ভেতরে রাখে। টিউটোরিয়ালের মতে: সবচেয়ে সস্তা, বদলাতে সবচেয়ে সহজ, আর context window দিয়ে সীমাবদ্ধ।
+- **RAG** জ্ঞানটা একটা searchable store-এ রাখে আর উত্তরের সময় প্রাসঙ্গিক অংশ আনে। RAG paper বলে, শুধু parameter-এ রাখা জ্ঞানের দুটো খোলা সমস্যা আছে: উত্তর কোথা থেকে এল তা দেখানো, আর জ্ঞান হালনাগাদ করা <Cite n={1} />। তাই তথ্য বদলালে বা সোর্স দেখাতে হলে RAG মানানসই।
+- **Fine-tuning** model-এর নিজের weight বদলায়। টিউটোরিয়ালের মতে, এটা মানানসই যখন *আচরণ* ভুল, তথ্য নয়: এমন ফরম্যাট যা model কখনো দেয় না, এমন tone যা সে ধরতে পারে না, এমন ক্ষেত্র যেখানে তার সাধারণ ভাষা খুব অস্পষ্ট।
+
+টেস্ট পয়েন্ট স্তর থেকেই বের হয়। প্রতিটা স্তরের নিজস্ব failure mode আছে, আর এক স্তরের ব্যর্থতা আরেক স্তরের ব্যর্থতার মতো দেখাতে পারে। আবার সব ব্যর্থতা prompt-এর সমস্যাও নয়: Anthropic-এর prompt engineering guide বলে, প্রতিটা ব্যর্থ eval prompt engineering দিয়ে সবচেয়ে ভালো সমাধান হয় না, আর latency ও খরচ কখনো কখনো অন্য model বেছে নিয়ে সহজে ঠিক করা যায় <Cite n={2} />। টেস্ট লেখার আগে গঠনটা আঁকুন, যাতে বোঝেন কোন স্তরের দোষ।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+Here is the chain, with the test point of each layer:
+
+```text
+user query
+   |
+   v
+[1] retriever -----> finds passages in the knowledge base
+   |                  test: did it find the right ones?
+   v
+[2] prompt builder -> puts instructions + passages together
+   |                  test: is the right context in the right order?
+   v
+[3] model call ----> produces the answer
+   |                  test: quality, format, tokens, latency, cost
+   v
+[4] output parser ---> turns the text into a structure
+   |                  test: does it match the schema?
+   v
+[5] guardrails ------> blocks unsafe or off-policy answers
+   |                  test: does it block what it must and pass what it should?
+   v
+[6] UI --------------> shows the answer to the user
+                      test: streaming, truncation, errors, accessibility
+```
+
+The **retriever** is where RAG lives. A RAG system has two parts: a retriever that searches the index, and a generator model that writes the answer <Cite n={1} />. They fail differently. The *search* part must find the passages that contain the answer. The *generation* part must use only what it was given. In the tutorial's experience, a wrong answer in a RAG system is usually one of those two, and you need to know which before you fix anything.
+
+The **prompt builder** is where the context order is decided. Research on long inputs found that models do best when the relevant information is at the start or the end, and worse when it is in the middle <Cite n={3} />. So the same passages in a different order can produce a different answer.
+
+The **guardrail** layer needs two directions of test. It must block what should be blocked, and it must not block what should pass. The OWASP list puts prompt injection first among its risks <Cite n={4} />, so the blocking direction gets attention. Over-blocking is not an item on that list; testing for it is the tutorial's own advice. A guardrail that blocks everything passes a safety test and fails the product.
+
+</Technical>
+<Layman>
+
+Here is the chain, with the test point of each layer:
+
+```text
+user query
+   |
+   v
+[1] retriever -----> finds passages in the knowledge base
+   |                  test: did it find the right ones?
+   v
+[2] prompt builder -> puts instructions + passages together
+   |                  test: is the right context in the right order?
+   v
+[3] model call ----> produces the answer
+   |                  test: quality, format, tokens, speed, cost
+   v
+[4] output parser ---> turns the text into a structure
+   |                  test: does it match the schema?
+   v
+[5] guardrails ------> blocks unsafe or off-policy answers
+   |                  test: does it block what it must and pass what it should?
+   v
+[6] UI --------------> shows the answer to the user
+                      test: streaming, cut-off text, errors, accessibility
+```
+
+The **retriever** is where RAG lives. A RAG system has two parts: a retriever that searches, and a model that writes the answer <Cite n={1} />. They fail in different ways. The *search* part must find the passages that hold the answer. The *generation* part must use only what it was given. In the tutorial's experience, a wrong answer in a RAG system is usually one of those two, and you need to know which before you fix anything.
+
+The **prompt builder** is where the order of the context is decided. Research on long inputs found that models do best when the important information is at the start or the end, and worse when it is in the middle <Cite n={3} />. So the same passages in a different order can give a different answer.
+
+The **guardrail** layer needs tests in two directions. It must block what should be blocked, and it must not block what should pass. The OWASP list puts prompt injection first among its risks <Cite n={4} />. Blocking too much is not on that list; testing for it is the tutorial's own advice. A guardrail that blocks everything passes a safety test and fails the product.
+
+</Layman>
+<Bangla>
+
+এই হলো শৃঙ্খল, আর প্রতিটা স্তরের নিজস্ব টেস্ট পয়েন্ট:
+
+```text
+user query
+   |
+   v
+[1] retriever -----> finds passages in the knowledge base
+   |                  test: did it find the right ones?
+   v
+[2] prompt builder -> puts instructions + passages together
+   |                  test: is the right context in the right order?
+   v
+[3] model call ----> produces the answer
+   |                  test: quality, format, tokens, speed, cost
+   v
+[4] output parser ---> turns the text into a structure
+   |                  test: does it match the schema?
+   v
+[5] guardrails ------> blocks unsafe or off-policy answers
+   |                  test: does it block what it must and pass what it should?
+   v
+[6] UI --------------> shows the answer to the user
+                      test: streaming, cut-off text, errors, accessibility
+```
+
+**Retriever**-ই RAG-এর জায়গা। RAG সিস্টেমের দুটো অংশ: একটা retriever যে খোঁজে, আর একটা model যে উত্তর লেখে <Cite n={1} />। এরা ভিন্নভাবে ভাঙে। *Search* অংশকে উত্তর আছে এমন অংশ খুঁজে পেতে হবে। *Generation* অংশকে শুধু যা দেওয়া হয়েছে তা-ই ব্যবহার করতে হবে। টিউটোরিয়ালের অভিজ্ঞতায়, RAG সিস্টেমের ভুল উত্তর সাধারণত এই দুটোর একটা থেকে আসে, আর ঠিক করার আগে কোনটা তা জানা দরকার।
+
+**Prompt builder**-ই context-এর ক্রম ঠিক করে। দীর্ঘ input নিয়ে গবেষণায় দেখা গেছে, দরকারি তথ্য শুরুতে বা শেষে থাকলে model সবচেয়ে ভালো করে, আর মাঝখানে থাকলে খারাপ করে <Cite n={3} />। তাই একই অংশগুলো অন্য ক্রমে দিলে ভিন্ন উত্তর আসতে পারে।
+
+**Guardrail** স্তরের দুই দিকে টেস্ট দরকার। যা ব্লক করা উচিত তা ব্লক হতে হবে, আর যা পাস করা উচিত তা পাস হতে হবে। OWASP তালিকা ঝুঁকিগুলোর মধ্যে prompt injection-কে প্রথমে রাখে <Cite n={4} />। অতিরিক্ত ব্লকিং সেই তালিকায় নেই; এর টেস্ট টিউটোরিয়ালের নিজস্ব পরামর্শ। সবকিছু ব্লক করে দেওয়া guardrail safety টেস্ট পাস করে, কিন্তু product ফেইল করে।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Draw the chain for your own feature first. Here is a customer support RAG bot, with one test file per layer:
+
+```text
+tests/ai/
+  test_retriever.py    # did it fetch the right chunks?
+  test_prompt.py       # is the context assembled correctly?
+  test_model.py        # is the answer faithful and cheap?
+  test_parser.py       # does the JSON match the schema?
+  test_guardrails.py   # does it block attacks and pass normal traffic?
+  test_ui.py           # does the page behave?
+```
+
+Then decide between the three approaches with a cheap experiment, not with an opinion. Write the failing case first:
+
+```text
+the knowledge base has 400 refund policy pages
+the bot must answer from them, with the page number
+today it answers from memory, and the memory is 8 months old
+```
+
+The failing case decides the approach:
+
+- The facts are wrong and change often, and you must cite the source: **RAG**.
+- The facts are right but the format is wrong every time: **fine-tune**, or start with a stricter schema and a function call.
+- The facts are right, the format is right, and the answer is just vague: **a better prompt**, plus the right examples in it <Cite n={2} />.
+
+Finally, write the layer map into the test suite as a comment, so the next person knows which layer a failing test belongs to.
+
+</Technical>
+<Layman>
+
+Draw the chain for your own feature first. Here is a customer support RAG bot, with one test file per layer:
+
+```text
+tests/ai/
+  test_retriever.py    # did it fetch the right chunks?
+  test_prompt.py       # is the context put together correctly?
+  test_model.py        # is the answer faithful and cheap enough?
+  test_parser.py       # does the JSON match the schema?
+  test_guardrails.py   # does it block attacks and pass normal traffic?
+  test_ui.py           # does the page behave?
+```
+
+Then choose between the three approaches with a cheap experiment, not with an opinion. Write the failing case first:
+
+```text
+the knowledge base has 400 refund policy pages
+the bot must answer from them, with the page number
+today it answers from memory, and the memory is 8 months old
+```
+
+The failing case decides the approach:
+
+- The facts are wrong and change often, and you must point at the source: **RAG**.
+- The facts are right but the format is wrong every time: **fine-tune**, or start with a stricter schema and a function call.
+- The facts are right, the format is right, and the answer is just vague: **a better prompt**, with the right examples in it <Cite n={2} />.
+
+Finally, write the layer map into the test suite as a comment, so the next person knows which layer a failing test belongs to.
+
+</Layman>
+<Bangla>
+
+প্রথমে আপনার নিজের ফিচারের শৃঙ্খলটা আঁকুন। এই হলো একটা customer support RAG bot, প্রতিটা স্তরের জন্য আলাদা টেস্ট ফাইল:
+
+```text
+tests/ai/
+  test_retriever.py    # did it fetch the right chunks?
+  test_prompt.py       # is the context put together correctly?
+  test_model.py        # is the answer faithful and cheap enough?
+  test_parser.py       # does the JSON match the schema?
+  test_guardrails.py   # does it block attacks and pass normal traffic?
+  test_ui.py           # does the page behave?
+```
+
+তারপর তিনটা পদ্ধতির মধ্যে বেছে নিন একটা সস্তা পরীক্ষা দিয়ে, মতামত দিয়ে নয়। আগে ব্যর্থ হওয়া কেসটা লিখুন:
+
+```text
+the knowledge base has 400 refund policy pages
+the bot must answer from them, with the page number
+today it answers from memory, and the memory is 8 months old
+```
+
+ব্যর্থ হওয়া কেসটাই পদ্ধতি ঠিক করে:
+
+- তথ্য ভুল আর বদলায়, আর সোর্স দেখাতে হবে: **RAG**।
+- তথ্য ঠিক আছে কিন্তু ফরম্যাট প্রতিবার ভুল: **fine-tune**, অথবা আগে strict schema আর function call দিয়ে শুরু করুন।
+- তথ্য ঠিক, ফরম্যাট ঠিক, কিন্তু উত্তর শুধু অস্পষ্ট: **আরও ভালো prompt**, সঙ্গে সঠিক উদাহরণ <Cite n={2} />।
+
+শেষে, টেস্ট স্যুটের ভেতরে কমেন্ট হিসেবে এই স্তরের ছকটা লিখে রাখুন, যাতে পরের জন বুঝতে পারেন কোন টেস্ট কোন স্তরের।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: fine-tuning to fix a knowledge gap.** Fine-tuning puts knowledge into the weights, and the RAG paper names showing the source and updating world knowledge as open problems for knowledge kept in parameters <Cite n={1} />. If the fact changes, put it in a retrieval store.
+
+**Mistake 2: testing only the model.** The model is one of six layers. A test that calls the model directly cannot catch a retriever that returned the wrong chunk or a parser that dropped a field.
+
+**Mistake 3: one test file for the whole chain.** A failure then does not say which layer broke. Split by layer so the failure names the cause.
+
+**Mistake 4: no context order test.** Models often do worse on information in the middle of a long input <Cite n={3} />, so the same passages in a different order can produce a different answer.
+
+**Mistake 5: guardrail tested only in the blocking direction.** A filter that rejects every input passes every safety test and breaks the product. Test that normal traffic still passes.
+
+**Mistake 6: assuming the chain is stateless.** A chatbot carries history, and the history changes the answer. That is a layer of its own.
+
+</Technical>
+<Layman>
+
+**Mistake 1: fine-tuning to fix missing knowledge.** Fine-tuning puts knowledge inside the model's settings, and the RAG paper says knowledge kept that way is hard to trace to a source and hard to update <Cite n={1} />. If the fact changes, put it in a store the system can search.
+
+**Mistake 2: testing only the model.** The model is one of six layers. A test that calls the model directly cannot catch a retriever that returned the wrong piece or a parser that dropped a field.
+
+**Mistake 3: one test file for the whole chain.** A failure then does not say which layer broke. Split by layer so the failure names the cause.
+
+**Mistake 4: no test for the order of the context.** Models often do worse on what sits in the middle of a long input <Cite n={3} />, so the same passages in a different order can give a different answer.
+
+**Mistake 5: testing the guardrail only for blocking.** A filter that rejects everything passes every safety test and breaks the product. Check that normal requests still get through.
+
+**Mistake 6: assuming the chain has no memory.** A chatbot carries the conversation so far, and that history changes the answer. That is a layer of its own.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: জ্ঞানের ঘাটতি ঠিক করতে fine-tune করা।** Fine-tuning জ্ঞানটা weight-এর ভেতরে রাখে, আর RAG paper বলে parameter-এ রাখা জ্ঞানের সোর্স দেখানো আর জ্ঞান হালনাগাদ করা এখনো খোলা সমস্যা <Cite n={1} />। তথ্য বদলালে সেটা একটা retrieval store-এ রাখুন।
+
+**ভুল ২: শুধু model টেস্ট করা।** model ছয়টা স্তরের একটা। সরাসরি model-কে কল করা টেস্ট ধরতে পারে না যে retriever ভুল অংশ ফেরত দিয়েছে কিংবা parser কোনো ফিল্ড ফেলে দিয়েছে।
+
+**ভুল ৩: পুরো শৃঙ্খলের জন্য একটাই টেস্ট ফাইল।** ব্যর্থতা তখন বলে না কোন স্তর ভাঙল। স্তর অনুযায়ী ভাগ করুন, তাহলে ব্যর্থতাই কারণ বলে দেবে।
+
+**ভুল ৪: context-এর ক্রমের টেস্ট নেই।** লম্বা input-এর মাঝখানের তথ্যে model প্রায়ই খারাপ করে <Cite n={3} />, তাই একই অংশ অন্য ক্রমে দিলে ভিন্ন উত্তর আসতে পারে।
+
+**ভুল ৫: guardrail শুধু ব্লক করার দিকে টেস্ট করা।** যে filter সব ইনপুট প্রত্যাখ্যান করে, সে সব safety টেস্ট পাস করে কিন্তু product ভাঙে। সাধারণ ট্রাফিক এখনো পাস হয় কি না যাচাই করুন।
+
+**ভুল ৬: ধরে নেওয়া যে শৃঙ্খল stateless।** chatbot আগের কথোপকথন মনে রাখে, আর সেই ইতিহাস উত্তর বদলে দেয়। সেটাও একটা আলাদা স্তর।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the layer map at the top of the test directory, in a README. New contributors need it more than they need the test names.
+- Name every test file after the layer it covers, so a red test names its own cause.
+- For a RAG feature, write the retrieval test before the answer test. Most wrong answers start as a wrong retrieval.
+- Test the prompt assembly, not just the model: assert that the retrieved chunks are present, in the expected order, and that nothing confidential was included.
+- Test the guardrail in both directions every time you change it. Add the innocent request that it wrongly blocks to the test file.
+- When the answer is wrong, capture the retrieved chunks with it. The trace turns a guess into a diagnosis.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the layer map at the top of the test directory, in a README. New contributors need it more than they need the test names.
+- Name every test file after the layer it covers, so a failing test names its own cause.
+- For a RAG feature, write the retrieval test before the answer test. Most wrong answers start as a wrong retrieval.
+- Test the prompt assembly, not just the model: check that the retrieved chunks are there, in the expected order, and that nothing confidential slipped in.
+- Test the guardrail in both directions every time you change it. Add the innocent request that it wrongly blocks to the test file.
+- When the answer is wrong, save the retrieved chunks with it. The trace turns a guess into a diagnosis.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- টেস্ট ডিরেক্টরির শুরুতে একটা README-তে স্তরের ছক লিখুন। নতুন অবদানকারীদের টেস্টের নামের চেয়ে এটাই বেশি দরকার।
+- প্রতিটা টেস্ট ফাইলের নাম রাখুন যে স্তরটা সে কভার করে, যাতে ফেইল হলে টেস্ট নিজেই কারণ বলে।
+- RAG ফিচারে উত্তরের টেস্টের আগে retrieval-এর টেস্ট লিখুন। বেশিরভাগ ভুল উত্তরের শুরু হয় ভুল retrieval থেকে।
+- শুধু model নয়, prompt জোড়া লাগানোও টেস্ট করুন: retrieved অংশগুলো আছে কি না, ক্রম ঠিক আছে কি না, আর কোনো গোপন তথ্য ঢুকে গেল কি না।
+- guardrail বদলালে প্রতিবার দুই দিকে টেস্ট করুন। ভুলভাবে ব্লক করা নিরপরাধ অনুরোধটাও টেস্ট ফাইলে যোগ করুন।
+- উত্তর ভুল হলে সেই সাথে retrieved অংশগুলোও সংরক্ষণ করুন। trace অনুমানকে নির্ণয়ে বদলে দেয়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| RAG | Retrieval-augmented generation: the model is given the material at answer time, not memorised at training time |
+| Retriever | The component that finds the passages relevant to the question |
+| Grounding | The answer is supported by the material that was supplied |
+| Guardrail | The layer that checks an answer before it leaves the system |
+| Fine-tuning | Changing the model's weights so that its behaviour changes |
+| Prompt engineering | Putting the knowledge and the instruction into the prompt instead |
+| Context window | How much the model can read at once |
+| Faithfulness | Whether the answer only says what the supplied context supports |
+| Chain | The order of the parts of an AI feature: input, prompt, model, output, guardrails, user |
+| Over-blocking | A guardrail that rejects requests it should have allowed |

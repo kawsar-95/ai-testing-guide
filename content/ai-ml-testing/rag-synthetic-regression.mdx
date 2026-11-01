@@ -1,0 +1,370 @@
+export const metadata = { title: 'RAG Test Automation at Scale: Synthetic Data and Regression', description: 'Auto-generate hundreds of RAG test questions with Giskard RAGET, build a regression suite that runs on every knowledge base update, and gate the deploy on it.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'RAG evaluation with Giskard', publisher: 'Giskard (docs)', url: 'https://docs.giskard.ai/oss/checks/use-cases/rag-evaluation', accessed: '2026-11-01' },
+    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
+    { title: 'GitHub Actions documentation', publisher: 'GitHub', url: 'https://docs.github.com/en/actions', accessed: '2026-11-01' },
+  ],
+}
+
+# RAG Test Automation at Scale: Synthetic Data and Regression
+
+A knowledge base update is a deploy with no diff. The only way to know what it broke is to run the same questions through it, automatically, every time.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A hand-written RAG eval set of 20 or 50 questions covers what a tester thought to ask. **Giskard RAGET** generates test questions automatically from the knowledge base itself, at a scale no one would write by hand: simple factual questions, questions needing information from more than one document, and questions phrased to be harder to retrieve for, each tagged with a difficulty category <Cite n={1} />.
+
+Automatic generation solves a coverage problem, but it creates a new one: a knowledge base changes constantly (a policy is updated, a document is added or removed), and a test set generated once goes stale. The fix is to treat the knowledge base like code: every update runs the regression suite, scored against the same Ragas faithfulness and context metrics used elsewhere in the course <Cite n={2} />, and a drop below threshold blocks the update from going live, enforced the same way any other CI gate is enforced <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+একটা হাতে-লেখা RAG eval সেট ২০ বা ৫০টা প্রশ্ন, যা একজন টেস্টার জিজ্ঞেস করার কথা ভেবেছিল তা কভার করে। **Giskard RAGET** স্বয়ংক্রিয়ভাবে knowledge base থেকেই test প্রশ্ন তৈরি করে, এমন স্কেলে যা কেউ হাতে লিখবে না: সহজ factual প্রশ্ন, একাধিক document থেকে তথ্য দরকার এমন প্রশ্ন, আর retrieve করা কঠিন করে বলা প্রশ্ন, প্রতিটা একটা difficulty category দিয়ে ট্যাগ করা <Cite n={1} />।
+
+স্বয়ংক্রিয় generation একটা coverage সমস্যা সমাধান করে, কিন্তু একটা নতুন তৈরি করে: একটা knowledge base ক্রমাগত বদলায় (একটা policy update হয়, একটা document যোগ বা সরানো হয়), আর একবার তৈরি করা একটা test set পুরনো হয়ে যায়। সমাধান হলো knowledge base-কে code-এর মতো দেখা: প্রতিটা update regression suite চালায়, course-এর অন্য জায়গায় ব্যবহৃত একই Ragas faithfulness আর context metric দিয়ে score করা <Cite n={2} />, আর threshold-এর নিচে একটা পতন update-কে live হতে বাধা দেয়, অন্য যেকোনো CI gate যেভাবে প্রয়োগ হয় সেভাবেই প্রয়োগ করা <Cite n={3} />।
+
+</Layman>
+<Bangla>
+
+একটা হাতে-লেখা RAG eval সেট ২০ বা ৫০টা প্রশ্ন, যা একজন টেস্টার জিজ্ঞেস করার কথা ভেবেছিল তা কভার করে। **Giskard RAGET** স্বয়ংক্রিয়ভাবে knowledge base থেকেই test প্রশ্ন তৈরি করে, এমন স্কেলে যা কেউ হাতে লিখবে না: সহজ factual প্রশ্ন, একাধিক document থেকে তথ্য দরকার এমন প্রশ্ন, আর retrieve করা কঠিন করে বলা প্রশ্ন, প্রতিটা একটা difficulty category দিয়ে ট্যাগ করা <Cite n={1} />।
+
+স্বয়ংক্রিয় generation একটা coverage সমস্যা সমাধান করে, কিন্তু একটা নতুন তৈরি করে: একটা knowledge base ক্রমাগত বদলায় (একটা policy update হয়, একটা document যোগ বা সরানো হয়), আর একবার তৈরি করা একটা test set পুরনো হয়ে যায়। সমাধান হলো knowledge base-কে code-এর মতো দেখা: প্রতিটা update regression suite চালায়, course-এর অন্য জায়গায় ব্যবহৃত একই Ragas faithfulness আর context metric দিয়ে score করা <Cite n={2} />, আর threshold-এর নিচে একটা পতন update-কে live হতে বাধা দেয়, অন্য যেকোনো CI gate যেভাবে প্রয়োগ হয় সেভাবেই প্রয়োগ করা <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The pipeline runs on every knowledge base change, not on a developer's schedule:
+
+```text
+1. knowledge base updates      a document is added, changed, or removed
+2. RAGET generates questions    200+ questions, difficulty-tagged, from the new KB
+3. the RAG pipeline answers      every generated question, through the real app
+4. Ragas scores the answers      faithfulness, context precision and recall
+5. compare to the threshold      if below, block; if above, deploy
+```
+
+<Cite n={1} /> <Cite n={2} /> RAGET's difficulty tagging matters for step 5: a drop in the simple-question score is a different severity than a drop in the multi-hop-question score, and treating them as one number hides which kind of failure actually happened.
+
+The gate itself is the same shape as any other CI quality gate: a threshold on a score, wired to a pipeline step that can fail a build <Cite n={3} />. What is specific to RAG here is only what feeds the threshold — a freshly regenerated question set instead of a fixed one.
+
+</Technical>
+<Layman>
+
+pipeline প্রতিটা knowledge base পরিবর্তনে চলে, একজন developer-এর schedule-এ নয়:
+
+```text
+1. knowledge base updates      a document is added, changed, or removed
+2. RAGET generates questions    200+ questions, difficulty-tagged, from the new KB
+3. the RAG pipeline answers      every generated question, through the real app
+4. Ragas scores the answers      faithfulness, context precision and recall
+5. compare to the threshold      if below, block; if above, deploy
+```
+
+<Cite n={1} /> <Cite n={2} /> ধাপ ৫-এর জন্য RAGET-এর difficulty ট্যাগিং গুরুত্বপূর্ণ: সহজ-প্রশ্ন score-এ একটা পতন multi-hop-প্রশ্ন score-এ পতনের চেয়ে আলাদা severity, আর দুটোকে একটা সংখ্যা হিসেবে দেখা লুকায় আসলে কোন ধরনের ব্যর্থতা ঘটেছে।
+
+gate নিজেই অন্য যেকোনো CI quality gate-এর মতো আকার: একটা score-এ একটা threshold, একটা pipeline ধাপের সাথে জোড়া যা একটা build ব্যর্থ করতে পারে <Cite n={3} />। এখানে RAG-এর জন্য নির্দিষ্ট শুধু threshold-কে কী খাওয়ায় — একটা স্থির-এর বদলে নতুনভাবে generate করা একটা প্রশ্ন সেট।
+
+</Layman>
+<Bangla>
+
+pipeline প্রতিটা knowledge base পরিবর্তনে চলে, একজন developer-এর schedule-এ নয়:
+
+```text
+1. knowledge base updates      a document is added, changed, or removed
+2. RAGET generates questions    200+ questions, difficulty-tagged, from the new KB
+3. the RAG pipeline answers      every generated question, through the real app
+4. Ragas scores the answers      faithfulness, context precision and recall
+5. compare to the threshold      if below, block; if above, deploy
+```
+
+<Cite n={1} /> <Cite n={2} /> ধাপ ৫-এর জন্য RAGET-এর difficulty ট্যাগিং গুরুত্বপূর্ণ: সহজ-প্রশ্ন score-এ একটা পতন multi-hop-প্রশ্ন score-এ পতনের চেয়ে আলাদা severity, আর দুটোকে একটা সংখ্যা হিসেবে দেখা লুকায় আসলে কোন ধরনের ব্যর্থতা ঘটেছে।
+
+gate নিজেই অন্য যেকোনো CI quality gate-এর মতো আকার: একটা score-এ একটা threshold, একটা pipeline ধাপের সাথে জোড়া যা একটা build ব্যর্থ করতে পারে <Cite n={3} />। এখানে RAG-এর জন্য নির্দিষ্ট শুধু threshold-কে কী খাওয়ায় — একটা স্থির-এর বদলে নতুনভাবে generate করা একটা প্রশ্ন সেট।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Generate the question set with RAGET <Cite n={1} />:
+
+```python
+from giskard.rag import KnowledgeBase, generate_testset
+
+knowledge_base = KnowledgeBase.from_pandas(faq_documents_df, columns=["text"])
+testset = generate_testset(
+    knowledge_base,
+    num_questions=200,
+    agent_description="A customer support chatbot answering from a return-policy knowledge base.",
+)
+testset.save("regression_testset.jsonl")
+```
+
+Score the generated answers with Ragas and gate on the result <Cite n={2} />:
+
+```python
+from ragas import evaluate
+from ragas.metrics import faithfulness, context_precision, context_recall
+
+def test_the_knowledge_base_update_does_not_regress(testset):
+    answers = [answer_question(q) for q in testset["question"]]
+    result = evaluate(
+        dataset=build_eval_dataset(testset, answers),
+        metrics=[faithfulness, context_precision, context_recall],
+    )
+    assert result["faithfulness"] >= 0.9, result
+```
+
+Wire it to run on every knowledge base change, not on a code change <Cite n={3} />:
+
+```yaml
+# .github/workflows/kb-regression.yml
+on:
+  push:
+    paths: ["knowledge_base/**"]
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m scripts.generate_testset
+      - run: python -m pytest tests/test_kb_regression.py
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Regenerate the question set on every run rather than reusing a stale one; a stale set tests the old knowledge base, not the new one.
+- Keep the per-difficulty scores, not just the overall average, in the test output.
+- Scope the trigger to the knowledge base's own path, so an unrelated code change does not spend minutes regenerating 200 questions for nothing.
+</Callout>
+
+</Technical>
+<Layman>
+
+RAGET দিয়ে প্রশ্ন সেট generate করুন <Cite n={1} />:
+
+```python
+from giskard.rag import KnowledgeBase, generate_testset
+
+knowledge_base = KnowledgeBase.from_pandas(faq_documents_df, columns=["text"])
+testset = generate_testset(
+    knowledge_base,
+    num_questions=200,
+    agent_description="A customer support chatbot answering from a return-policy knowledge base.",
+)
+testset.save("regression_testset.jsonl")
+```
+
+Generated উত্তর Ragas দিয়ে score করুন আর ফলাফলে gate করুন <Cite n={2} />:
+
+```python
+from ragas import evaluate
+from ragas.metrics import faithfulness, context_precision, context_recall
+
+def test_the_knowledge_base_update_does_not_regress(testset):
+    answers = [answer_question(q) for q in testset["question"]]
+    result = evaluate(
+        dataset=build_eval_dataset(testset, answers),
+        metrics=[faithfulness, context_precision, context_recall],
+    )
+    assert result["faithfulness"] >= 0.9, result
+```
+
+একটা code পরিবর্তনে নয়, প্রতিটা knowledge base পরিবর্তনে চালানোর জন্য জোড়া দিন <Cite n={3} />:
+
+```yaml
+# .github/workflows/kb-regression.yml
+on:
+  push:
+    paths: ["knowledge_base/**"]
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m scripts.generate_testset
+      - run: python -m pytest tests/test_kb_regression.py
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- একটা পুরনো সেট আবার ব্যবহারের বদলে প্রতিটা run-এ প্রশ্ন সেট regenerate করুন; একটা পুরনো সেট পুরনো knowledge base টেস্ট করে, নতুনটা নয়।
+- test output-এ শুধু সার্বিক average নয়, per-difficulty score রাখুন।
+- trigger-কে knowledge base-এর নিজস্ব path-এ সীমাবদ্ধ করুন, যাতে একটা অসম্পর্কিত code পরিবর্তন অকারণে ২০০টা প্রশ্ন regenerate করতে মিনিট ব্যয় না করে।
+</Callout>
+
+</Layman>
+<Bangla>
+
+RAGET দিয়ে প্রশ্ন সেট generate করুন <Cite n={1} />:
+
+```python
+from giskard.rag import KnowledgeBase, generate_testset
+
+knowledge_base = KnowledgeBase.from_pandas(faq_documents_df, columns=["text"])
+testset = generate_testset(
+    knowledge_base,
+    num_questions=200,
+    agent_description="A customer support chatbot answering from a return-policy knowledge base.",
+)
+testset.save("regression_testset.jsonl")
+```
+
+Generated উত্তর Ragas দিয়ে score করুন আর ফলাফলে gate করুন <Cite n={2} />:
+
+```python
+from ragas import evaluate
+from ragas.metrics import faithfulness, context_precision, context_recall
+
+def test_the_knowledge_base_update_does_not_regress(testset):
+    answers = [answer_question(q) for q in testset["question"]]
+    result = evaluate(
+        dataset=build_eval_dataset(testset, answers),
+        metrics=[faithfulness, context_precision, context_recall],
+    )
+    assert result["faithfulness"] >= 0.9, result
+```
+
+একটা code পরিবর্তনে নয়, প্রতিটা knowledge base পরিবর্তনে চালানোর জন্য জোড়া দিন <Cite n={3} />:
+
+```yaml
+# .github/workflows/kb-regression.yml
+on:
+  push:
+    paths: ["knowledge_base/**"]
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m scripts.generate_testset
+      - run: python -m pytest tests/test_kb_regression.py
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- একটা পুরনো সেট আবার ব্যবহারের বদলে প্রতিটা run-এ প্রশ্ন সেট regenerate করুন; একটা পুরনো সেট পুরনো knowledge base টেস্ট করে, নতুনটা নয়।
+- test output-এ শুধু সার্বিক average নয়, per-difficulty score রাখুন।
+- trigger-কে knowledge base-এর নিজস্ব path-এ সীমাবদ্ধ করুন, যাতে একটা অসম্পর্কিত code পরিবর্তন অকারণে ২০০টা প্রশ্ন regenerate করতে মিনিট ব্যয় না করে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: generating the test set once and reusing it forever.** A regenerated set tests the current knowledge base; a stale one tests a knowledge base that no longer exists.
+
+**Mistake 2: one overall score instead of per-difficulty scores.** A drop hidden inside the multi-hop category can be invisible in the average <Cite n={1} />.
+
+**Mistake 3: running the regression suite on a schedule instead of on the actual change.** A nightly run finds a regression up to 24 hours after it shipped; a push-triggered run finds it before it ships.
+
+**Mistake 4: no threshold, just a report.** A faithfulness number with nothing gating on it does not stop a bad update <Cite n={2} /> <Cite n={3} />.
+
+**Mistake 5: triggering the full suite on unrelated code changes.** Scope the trigger to the knowledge base's own files, not the whole repository.
+
+</Technical>
+<Layman>
+
+**Mistake ১: একবার test set generate করে চিরকাল আবার ব্যবহার করা।** একটা regenerate করা সেট বর্তমান knowledge base টেস্ট করে; একটা পুরনো সেট এমন একটা knowledge base টেস্ট করে যা আর নেই।
+
+**Mistake ২: per-difficulty score-এর বদলে একটা সার্বিক score।** multi-hop category-র ভেতরে লুকানো একটা পতন average-এ অদৃশ্য হতে পারে <Cite n={1} />।
+
+**Mistake ৩: আসল পরিবর্তনের বদলে regression suite একটা schedule-এ চালানো।** একটা nightly run একটা regression ship হওয়ার ২৪ ঘণ্টা পর পর্যন্ত খুঁজে পায়; একটা push-trigger করা run এটা ship হওয়ার আগে খুঁজে পায়।
+
+**Mistake ৪: threshold নেই, শুধু একটা রিপোর্ট।** কিছু gate না করা একটা faithfulness সংখ্যা একটা খারাপ update থামায় না <Cite n={2} /> <Cite n={3} />।
+
+**Mistake ৫: অসম্পর্কিত code পরিবর্তনে পুরো suite trigger করা।** trigger-কে knowledge base-এর নিজস্ব ফাইলে সীমাবদ্ধ করুন, পুরো repository-তে নয়।
+
+</Layman>
+<Bangla>
+
+**ভুল ১: একবার test set generate করে চিরকাল আবার ব্যবহার করা।** একটা regenerate করা সেট বর্তমান knowledge base টেস্ট করে; একটা পুরনো সেট এমন একটা knowledge base টেস্ট করে যা আর নেই।
+
+**ভুল ২: per-difficulty score-এর বদলে একটা সার্বিক score।** multi-hop category-র ভেতরে লুকানো একটা পতন average-এ অদৃশ্য হতে পারে <Cite n={1} />।
+
+**ভুল ৩: আসল পরিবর্তনের বদলে regression suite একটা schedule-এ চালানো।** একটা nightly run একটা regression ship হওয়ার ২৪ ঘণ্টা পর পর্যন্ত খুঁজে পায়; একটা push-trigger করা run এটা ship হওয়ার আগে খুঁজে পায়।
+
+**ভুল ৪: threshold নেই, শুধু একটা রিপোর্ট।** কিছু gate না করা একটা faithfulness সংখ্যা একটা খারাপ update থামায় না <Cite n={2} /> <Cite n={3} />।
+
+**ভুল ৫: অসম্পর্কিত code পরিবর্তনে পুরো suite trigger করা।** trigger-কে knowledge base-এর নিজস্ব ফাইলে সীমাবদ্ধ করুন, পুরো repository-তে নয়।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Confirm the test set is regenerated on every run, not cached from a previous one.
+- Keep and review the per-difficulty breakdown, not only the overall score.
+- Confirm the pipeline triggers on a knowledge base change, scoped to its own path.
+- Confirm the threshold actually blocks the deploy step when it fails, not just logs a warning.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Confirm the test set is regenerated on every run, not cached from a previous one.
+- Keep and review the per-difficulty breakdown, not only the overall score.
+- Confirm the pipeline triggers on a knowledge base change, scoped to its own path.
+- Confirm the threshold actually blocks the deploy step when it fails, not just logs a warning.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- প্রতিটা run-এ test set regenerate হয়, আগেরটা থেকে cache করা নয়, তা নিশ্চিত করুন।
+- শুধু সার্বিক score নয়, per-difficulty breakdown রাখুন আর review করুন।
+- pipeline একটা knowledge base পরিবর্তনে trigger হয়, তার নিজস্ব path-এ সীমাবদ্ধ, তা নিশ্চিত করুন।
+- threshold ব্যর্থ হলে আসলেই deploy ধাপ ব্লক করে, শুধু warning log করে না, তা নিশ্চিত করুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Giskard RAGET | A tool that auto-generates RAG test questions from a knowledge base |
+| Difficulty tag | A label on a generated question: simple, multi-hop, or otherwise harder to retrieve |
+| Regression suite | A test set re-run on every knowledge base change to catch what the update broke |
+| Path-scoped trigger | A CI trigger limited to changes under a specific directory |

@@ -1,0 +1,926 @@
+"""The page data of the AI/ML Testing module, Phase 1, course module 7.
+
+Module 7 is AI Test Planning, Metrics and Observability (3 sessions): test
+strategy, quality metrics and reporting, and an introduction to observability.
+"""
+
+from ai_ml_testing_page import page
+
+# =============================================================================
+# Course module 7: AI Test Planning, Metrics and Observability (3 sessions)
+# =============================================================================
+
+page(
+    slug="ai-test-strategy",
+    title="AI Test Strategy and Planning",
+    description="Write a test plan for an AI feature: the scope, the test types, the tools, the metrics, and the risk assessment, before anything breaks.",
+    lede="A test strategy for an AI feature is a list of what could go wrong, written down before it goes wrong.",
+    sources=["nist-ai-rmf", "owasp-llm"],
+    sections={
+        "In plain words": {
+            "technical": (
+                "A test strategy for an AI feature answers five questions before a single "
+                "test is written: what layers are in scope, what kinds of testing apply, "
+                "which tools run them, which metrics count as pass or fail, and which risks "
+                "get checked. Skipping the plan does not remove the questions; it just means "
+                "they get answered by accident, in production.\n\n"
+                "The **scope** question reuses the architecture layers: prompt builder, "
+                "model, retriever (if the feature uses RAG), guardrails, and the user-facing "
+                "output. Each layer needs at least one test type.\n\n"
+                "The **risk** question reuses the OWASP Top 10 for LLMs as a checklist: "
+                "prompt injection, data leakage, excessive agency, and the rest "
+                "{{cite:owasp-llm}}. A plan that does not name which of the ten are in scope "
+                "for this feature has an unstated assumption that none of them matter.\n\n"
+                "NIST's AI Risk Management Framework gives the four-part structure that a "
+                "plan can follow: govern (who owns this), map (what could go wrong and "
+                "where), measure (how do we know), and manage (what do we do about it) "
+                "{{cite:nist-ai-rmf}}. It is a governance framework, not a testing one, but "
+                "it maps cleanly onto a test plan's sections."
+            ),
+            "layman": (
+                "একটা AI feature-এর test strategy একটা test লেখার আগেই পাঁচটা প্রশ্নের উত্তর দেয়: কোন layer scope-এ আছে, কোন ধরনের testing প্রযোজ্য, কোন টুল সেগুলো চালায়, কোন metric pass বা fail ঠিক করে, আর কোন ঝুঁকি চেক করা হয়। plan বাদ দেওয়া প্রশ্নগুলো সরিয়ে দেয় না; "
+                "এটা শুধু মানে প্রশ্নগুলোর উত্তর দুর্ঘটনাক্রমে production-এ হয়।\n\n"
+                "**Scope** প্রশ্ন architecture layer আবার ব্যবহার করে: prompt builder, model, retriever (RAG ব্যবহার করলে), guardrails, আর user-facing output। প্রতিটা layer-এর অন্তত একটা test type দরকার।\n\n"
+                "**Risk** প্রশ্ন একটা checklist হিসেবে OWASP Top 10 for LLMs আবার ব্যবহার করে: prompt injection, data leakage, excessive agency, আর বাকিগুলো {{cite:owasp-llm}}। যে plan বলে না এই দশটার মধ্যে কোনগুলো এই feature-এর scope-এ আছে, তার একটা না-বলা ধারণা আছে যে কোনোটাই গুরুত্বপূর্ণ নয়।\n\n"
+                "NIST-এর AI Risk Management Framework চার-অংশের গঠন দেয় যা একটা plan অনুসরণ করতে পারে: govern (কে এটার মালিক), map (কী ভুল হতে পারে আর কোথায়), measure (আমরা কীভাবে জানি), আর manage (আমরা এটা নিয়ে কী করি) "
+                "{{cite:nist-ai-rmf}}। এটা একটা governance framework, testing framework নয়, কিন্তু এটা একটা test plan-এর অংশের সাথে পরিষ্কারভাবে মেলে।"
+            ),
+            "bangla": (
+                "একটা AI feature-এর test strategy একটা test লেখার আগেই পাঁচটা প্রশ্নের উত্তর দেয়: কোন layer scope-এ আছে, কোন ধরনের testing প্রযোজ্য, কোন টুল সেগুলো চালায়, কোন metric pass বা fail ঠিক করে, আর কোন ঝুঁকি চেক করা হয়। plan বাদ দেওয়া প্রশ্নগুলো সরিয়ে দেয় না; এটা শুধু মানে "
+                "প্রশ্নগুলোর উত্তর দুর্ঘটনাক্রমে production-এ হয়।\n\n"
+                "**Scope** প্রশ্ন architecture layer আবার ব্যবহার করে: prompt builder, model, retriever (RAG ব্যবহার করলে), guardrails, আর user-facing output। প্রতিটা layer-এর অন্তত একটা test type দরকার।\n\n"
+                "**Risk** প্রশ্ন একটা checklist হিসেবে OWASP Top 10 for LLMs আবার ব্যবহার করে: prompt injection, data leakage, excessive agency, আর বাকিগুলো {{cite:owasp-llm}}। যে plan বলে না এই দশটার মধ্যে কোনগুলো এই feature-এর scope-এ আছে, তার একটা না-বলা ধারণা আছে যে কোনোটাই গুরুত্বপূর্ণ নয়।\n\n"
+                "NIST-এর AI Risk Management Framework চার-অংশের গঠন দেয় যা একটা plan অনুসরণ করতে পারে: govern (কে এটার মালিক), map (কী ভুল হতে পারে আর কোথায়), measure (আমরা কীভাবে জানি), আর manage (আমরা এটা নিয়ে কী করি) {{cite:nist-ai-rmf}}। এটা একটা governance framework, "
+                "testing framework নয়, কিন্তু এটা একটা test plan-এর অংশের সাথে পরিষ্কারভাবে মেলে।"
+            ),
+        },
+        "How it works": {
+            "technical": (
+                "A plan is built top-down, from the feature description to the gate "
+                "numbers:\n\n"
+                "```text\n"
+                "1. describe the feature    what it does, who uses it, what it must never do\n"
+                "2. map the layers          prompt, model, retriever, guardrails, output\n"
+                "3. map the risks           which OWASP ids apply, which do not, and why\n"
+                "4. pick the test types     eval suite, red team, UI, load, each per layer\n"
+                "5. pick the metrics        the number that decides pass or fail, per test type\n"
+                "6. set the gate            the threshold that blocks a release\n"
+                "```\n\n"
+                "Step 3 is the one most often skipped, and it is the one NIST's framework "
+                "calls \"map\": naming the risk before deciding how to measure it "
+                "{{cite:nist-ai-rmf}}. A plan that jumps straight from the feature "
+                "description to a tool list has skipped the thinking the tool list depends "
+                "on.\n\n"
+                "The **risk-to-test-type mapping** is where the OWASP checklist earns its "
+                "place in the plan:\n\n"
+                "```text\n"
+                "risk in scope                test type that covers it\n"
+                "LLM01 prompt injection        red team suite (direct + indirect)\n"
+                "LLM02 sensitive info disclosure  data leakage tests, PII scan\n"
+                "LLM06 excessive agency          agent action tests\n"
+                "LLM09 misinformation            hallucination and faithfulness eval\n"
+                "```\n\n"
+                "{{cite:owasp-llm}} A plan with a risk and no matching test type is a plan "
+                "with a gap, visible on paper before it is visible in an incident."
+            ),
+            "layman": (
+                "একটা plan উপর থেকে নিচে বানানো হয়, feature description থেকে gate সংখ্যা পর্যন্ত:\n\n"
+                "```text\n"
+                "1. describe the feature    what it does, who uses it, what it must never do\n"
+                "2. map the layers          prompt, model, retriever, guardrails, output\n"
+                "3. map the risks           which OWASP ids apply, which do not, and why\n"
+                "4. pick the test types     eval suite, red team, UI, load, each per layer\n"
+                "5. pick the metrics        the number that decides pass or fail, per test type\n"
+                "6. set the gate            the threshold that blocks a release\n"
+                "```\n\n"
+                "ধাপ ৩ সবচেয়ে বেশি বাদ পড়ে, আর এটাই NIST-এর framework-এ \"map\" বলে: পরিমাপ করার সিদ্ধান্ত নেওয়ার আগে ঝুঁকির নাম দেওয়া {{cite:nist-ai-rmf}}। যে plan feature description থেকে সরাসরি tool তালিকায় লাফ দেয় সে সেই চিন্তা বাদ দিয়েছে যার ওপর tool তালিকা নির্ভর করে।\n\n"
+                "**Risk-to-test-type mapping**-ই যেখানে OWASP checklist plan-এ তার জায়গা অর্জন করে:\n\n"
+                "```text\n"
+                "risk in scope                test type that covers it\n"
+                "LLM01 prompt injection        red team suite (direct + indirect)\n"
+                "LLM02 sensitive info disclosure  data leakage tests, PII scan\n"
+                "LLM06 excessive agency          agent action tests\n"
+                "LLM09 misinformation            hallucination and faithfulness eval\n"
+                "```\n\n"
+                "{{cite:owasp-llm}} একটা ঝুঁকি আর মেলানো test type ছাড়া একটা plan মানে একটা ফাঁক, কাগজে দৃশ্যমান একটা incident-এ দৃশ্যমান হওয়ার আগেই।"
+            ),
+            "bangla": (
+                "একটা plan উপর থেকে নিচে বানানো হয়, feature description থেকে gate সংখ্যা পর্যন্ত:\n\n"
+                "```text\n"
+                "1. describe the feature    what it does, who uses it, what it must never do\n"
+                "2. map the layers          prompt, model, retriever, guardrails, output\n"
+                "3. map the risks           which OWASP ids apply, which do not, and why\n"
+                "4. pick the test types     eval suite, red team, UI, load, each per layer\n"
+                "5. pick the metrics        the number that decides pass or fail, per test type\n"
+                "6. set the gate            the threshold that blocks a release\n"
+                "```\n\n"
+                "ধাপ ৩ সবচেয়ে বেশি বাদ পড়ে, আর এটাই NIST-এর framework-এ \"map\" বলে: পরিমাপ করার সিদ্ধান্ত নেওয়ার আগে ঝুঁকির নাম দেওয়া {{cite:nist-ai-rmf}}। যে plan feature description থেকে সরাসরি tool তালিকায় লাফ দেয় সে সেই চিন্তা বাদ দিয়েছে যার ওপর tool তালিকা নির্ভর করে।\n\n"
+                "**Risk-to-test-type mapping**-ই যেখানে OWASP checklist plan-এ তার জায়গা অর্জন করে:\n\n"
+                "```text\n"
+                "risk in scope                test type that covers it\n"
+                "LLM01 prompt injection        red team suite (direct + indirect)\n"
+                "LLM02 sensitive info disclosure  data leakage tests, PII scan\n"
+                "LLM06 excessive agency          agent action tests\n"
+                "LLM09 misinformation            hallucination and faithfulness eval\n"
+                "```\n\n"
+                "{{cite:owasp-llm}} একটা ঝুঁকি আর মেলানো test type ছাড়া একটা plan মানে একটা ফাঁক, কাগজে দৃশ্যমান একটা incident-এ দৃশ্যমান হওয়ার আগেই।"
+            ),
+        },
+        "In practice": {
+            "technical": (
+                "A worked plan outline for \"AI-powered customer support\":\n\n"
+                "```text\n"
+                "FEATURE   Customer support chatbot, answers from a return-policy knowledge base.\n"
+                "          Must never promise a refund outside policy or discuss competitors.\n"
+                "\n"
+                "SCOPE     prompt builder | model (GPT-4o-mini) | retriever (Chroma) | output validator\n"
+                "\n"
+                "RISKS     LLM01 prompt injection        - in scope (public chat widget)\n"
+                "          LLM02 sensitive info disclosure - in scope (order data in context)\n"
+                "          LLM06 excessive agency         - out of scope (no tools, read-only)\n"
+                "          LLM09 misinformation           - in scope (policy must be exact)\n"
+                "\n"
+                "TEST TYPES  eval suite (Promptfoo + DeepEval), red team (Promptfoo + Giskard),\n"
+                "            UI tests (Playwright), load test (10 req/s sustained)\n"
+                "\n"
+                "METRICS     faithfulness >= 0.9 | hallucination rate <= 2% | P95 latency <= 3s\n"
+                "\n"
+                "GATE        merge blocked if faithfulness < 0.9 or a new high-severity red team finding\n"
+                "```\n\n"
+                "Turn the RISKS section into failing tests directly, one per row, so the plan "
+                "and the suite cannot drift apart:\n\n"
+                "```python\n"
+                "SCOPED_RISKS = {\n"
+                "    \"LLM01\": True,   # prompt injection: in scope\n"
+                "    \"LLM02\": True,   # sensitive info disclosure: in scope\n"
+                "    \"LLM06\": False,  # excessive agency: out of scope, no tools\n"
+                "    \"LLM09\": True,   # misinformation: in scope\n"
+                "}\n\n"
+                "def test_every_in_scope_risk_has_a_test_file(risk_to_test_file):\n"
+                "    for risk, in_scope in SCOPED_RISKS.items():\n"
+                "        if in_scope:\n"
+                "            assert risk in risk_to_test_file, f\"{risk} is in scope but has no test\"\n"
+                "```\n\n"
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Write the plan before the first eval config, not after. A plan written "
+                "after the fact just describes what was tested, not what should have been.\n"
+                "- Keep the plan as a file in the repo, next to the feature, reviewed in the "
+                "same pull request as the code.\n"
+                "- Mark a risk \"out of scope\" explicitly, with the reason, rather than "
+                "leaving it unmentioned.\n"
+                "</Callout>"
+            ),
+            "layman": (
+                "\"AI-powered customer support\"-এর জন্য একটা কাজ করা plan outline:\n\n"
+                "```text\n"
+                "FEATURE   Customer support chatbot, answers from a return-policy knowledge base.\n"
+                "          Must never promise a refund outside policy or discuss competitors.\n"
+                "\n"
+                "SCOPE     prompt builder | model (GPT-4o-mini) | retriever (Chroma) | output validator\n"
+                "\n"
+                "RISKS     LLM01 prompt injection        - in scope (public chat widget)\n"
+                "          LLM02 sensitive info disclosure - in scope (order data in context)\n"
+                "          LLM06 excessive agency         - out of scope (no tools, read-only)\n"
+                "          LLM09 misinformation           - in scope (policy must be exact)\n"
+                "\n"
+                "TEST TYPES  eval suite (Promptfoo + DeepEval), red team (Promptfoo + Giskard),\n"
+                "            UI tests (Playwright), load test (10 req/s sustained)\n"
+                "\n"
+                "METRICS     faithfulness >= 0.9 | hallucination rate <= 2% | P95 latency <= 3s\n"
+                "\n"
+                "GATE        merge blocked if faithfulness < 0.9 or a new high-severity red team finding\n"
+                "```\n\n"
+                "RISKS অংশকে সরাসরি ব্যর্থ হতে পারে এমন test-এ রূপান্তর করুন, প্রতি সারিতে একটা, যাতে plan আর suite আলাদা হয়ে না যায়:\n\n"
+                "```python\n"
+                "SCOPED_RISKS = {\n"
+                "    \"LLM01\": True,   # prompt injection: in scope\n"
+                "    \"LLM02\": True,   # sensitive info disclosure: in scope\n"
+                "    \"LLM06\": False,  # excessive agency: out of scope, no tools\n"
+                "    \"LLM09\": True,   # misinformation: in scope\n"
+                "}\n\n"
+                "def test_every_in_scope_risk_has_a_test_file(risk_to_test_file):\n"
+                "    for risk, in_scope in SCOPED_RISKS.items():\n"
+                "        if in_scope:\n"
+                "            assert risk in risk_to_test_file, f\"{risk} is in scope but has no test\"\n"
+                "```\n\n"
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- প্রথম eval config-এর আগে plan লিখুন, পরে নয়। পরে লেখা plan শুধু কী টেস্ট করা হয়েছে তা বর্ণনা করে, কী করা উচিত ছিল তা নয়।\n"
+                "- plan-কে repo-তে একটা ফাইল হিসেবে রাখুন, feature-এর পাশে, কোডের একই pull request-এ review করা।\n"
+                "- একটা ঝুঁকিকে স্পষ্টভাবে \"out of scope\" চিহ্নিত করুন, কারণ সহ, উল্লেখ না করে রাখার বদলে।\n"
+                "</Callout>"
+            ),
+            "bangla": (
+                "\"AI-powered customer support\"-এর জন্য একটা কাজ করা plan outline:\n\n"
+                "```text\n"
+                "FEATURE   Customer support chatbot, answers from a return-policy knowledge base.\n"
+                "          Must never promise a refund outside policy or discuss competitors.\n"
+                "\n"
+                "SCOPE     prompt builder | model (GPT-4o-mini) | retriever (Chroma) | output validator\n"
+                "\n"
+                "RISKS     LLM01 prompt injection        - in scope (public chat widget)\n"
+                "          LLM02 sensitive info disclosure - in scope (order data in context)\n"
+                "          LLM06 excessive agency         - out of scope (no tools, read-only)\n"
+                "          LLM09 misinformation           - in scope (policy must be exact)\n"
+                "\n"
+                "TEST TYPES  eval suite (Promptfoo + DeepEval), red team (Promptfoo + Giskard),\n"
+                "            UI tests (Playwright), load test (10 req/s sustained)\n"
+                "\n"
+                "METRICS     faithfulness >= 0.9 | hallucination rate <= 2% | P95 latency <= 3s\n"
+                "\n"
+                "GATE        merge blocked if faithfulness < 0.9 or a new high-severity red team finding\n"
+                "```\n\n"
+                "RISKS অংশকে সরাসরি ব্যর্থ হতে পারে এমন test-এ রূপান্তর করুন, প্রতি সারিতে একটা, যাতে plan আর suite আলাদা হয়ে না যায়:\n\n"
+                "```python\n"
+                "SCOPED_RISKS = {\n"
+                "    \"LLM01\": True,   # prompt injection: in scope\n"
+                "    \"LLM02\": True,   # sensitive info disclosure: in scope\n"
+                "    \"LLM06\": False,  # excessive agency: out of scope, no tools\n"
+                "    \"LLM09\": True,   # misinformation: in scope\n"
+                "}\n\n"
+                "def test_every_in_scope_risk_has_a_test_file(risk_to_test_file):\n"
+                "    for risk, in_scope in SCOPED_RISKS.items():\n"
+                "        if in_scope:\n"
+                "            assert risk in risk_to_test_file, f\"{risk} is in scope but has no test\"\n"
+                "```\n\n"
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।\n\n"
+                "- প্রথম eval config-এর আগে plan লিখুন, পরে নয়। পরে লেখা plan শুধু কী টেস্ট করা হয়েছে তা বর্ণনা করে, কী করা উচিত ছিল তা নয়।\n"
+                "- plan-কে repo-তে একটা ফাইল হিসেবে রাখুন, feature-এর পাশে, কোডের একই pull request-এ review করা।\n"
+                "- একটা ঝুঁকিকে স্পষ্টভাবে \"out of scope\" চিহ্নিত করুন, কারণ সহ, উল্লেখ না করে রাখার বদলে।\n"
+                "</Callout>"
+            ),
+        },
+        "Common mistakes": {
+            "technical": (
+                "**Mistake 1: the plan is a tool list, not a risk list.** \"We use Promptfoo "
+                "and DeepEval\" says nothing about what they are being used to check.\n\n"
+                "**Mistake 2: no explicit out-of-scope section.** An unmentioned risk looks "
+                "identical to a considered-and-excluded risk, until the incident.\n\n"
+                "**Mistake 3: metrics with no threshold.** \"We track faithfulness\" is not a "
+                "gate; \"faithfulness >= 0.9 blocks the merge\" is.\n\n"
+                "**Mistake 4: the plan is never updated.** A new tool, a new model, or a new "
+                "feature flag changes the risk map, and the plan needs to change with it.\n\n"
+                "**Mistake 5: one plan for the whole product.** A plan sized for the product "
+                "hides which specific feature is actually covered; write one per feature, or "
+                "per meaningfully different risk surface."
+            ),
+            "layman": (
+                "**Mistake ১: plan একটা tool তালিকা, risk তালিকা নয়।** \"আমরা Promptfoo আর DeepEval ব্যবহার করি\" কিছুই বলে না তারা কী চেক করতে ব্যবহার হচ্ছে।\n\n"
+                "**Mistake ২: স্পষ্ট out-of-scope অংশ নেই।** একটা উল্লেখ না করা ঝুঁকি দেখতে বিবেচিত-আর-বাদ-দেওয়া ঝুঁকির মতোই, incident হওয়ার আগ পর্যন্ত।\n\n"
+                "**Mistake ৩: threshold ছাড়া metric।** \"আমরা faithfulness track করি\" একটা gate নয়; \"faithfulness >= 0.9 merge ব্লক করে\" এটাই gate।\n\n"
+                "**Mistake ৪: plan কখনো update হয় না।** একটা নতুন tool, model, বা feature flag risk map বদলায়, আর plan-কেও তার সাথে বদলাতে হবে।\n\n"
+                "**Mistake ৫: পুরো product-এর জন্য একটা plan।** product-এর আকারের plan লুকায় কোন নির্দিষ্ট feature আসলে কভার করা; প্রতি feature-এ একটা লিখুন, বা অর্থপূর্ণভাবে আলাদা risk surface-এ।"
+            ),
+            "bangla": (
+                "**ভুল ১: plan একটা tool তালিকা, risk তালিকা নয়।** \"আমরা Promptfoo আর DeepEval ব্যবহার করি\" কিছুই বলে না তারা কী চেক করতে ব্যবহার হচ্ছে।\n\n"
+                "**ভুল ২: স্পষ্ট out-of-scope অংশ নেই।** একটা উল্লেখ না করা ঝুঁকি দেখতে বিবেচিত-আর-বাদ-দেওয়া ঝুঁকির মতোই, incident হওয়ার আগ পর্যন্ত।\n\n"
+                "**ভুল ৩: threshold ছাড়া metric।** \"আমরা faithfulness track করি\" একটা gate নয়; \"faithfulness >= 0.9 merge ব্লক করে\" এটাই gate।\n\n"
+                "**ভুল ৪: plan কখনো update হয় না।** একটা নতুন tool, model, বা feature flag risk map বদলায়, আর plan-কেও তার সাথে বদলাতে হবে।\n\n"
+                "**ভুল ৫: পুরো product-এর জন্য একটা plan।** product-এর আকারের plan লুকায় কোন নির্দিষ্ট feature আসলে কভার করা; প্রতি feature-এ একটা লিখুন, বা অর্থপূর্ণভাবে আলাদা risk surface-এ।"
+            ),
+        },
+        "What a tester can check": {
+            "technical": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Write the plan as a short file in the repo: feature, scope, risks (in and "
+                "out), test types, metrics, gate.\n"
+                "- For each OWASP risk marked in scope, link the test file that covers it.\n"
+                "- Put a real number on every metric. A metric with no threshold cannot fail "
+                "a build.\n"
+                "- Revisit the plan whenever the model, the prompt, or a tool version changes.\n"
+                "- Review the plan in the same pull request as the feature, not after the "
+                "feature ships.\n"
+                "</Callout>"
+            ),
+            "layman": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Write the plan as a short file in the repo: feature, scope, risks (in and "
+                "out), test types, metrics, gate.\n"
+                "- For each OWASP risk marked in scope, link the test file that covers it.\n"
+                "- Put a real number on every metric. A metric with no threshold cannot fail "
+                "a build.\n"
+                "- Revisit the plan whenever the model, the prompt, or a tool version changes.\n"
+                "- Review the plan in the same pull request as the feature, not after the "
+                "feature ships.\n"
+                "</Callout>"
+            ),
+            "bangla": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।\n\n"
+                "- plan-কে repo-তে একটা সংক্ষিপ্ত ফাইল হিসেবে লিখুন: feature, scope, risks (in আর out), test types, metrics, gate।\n"
+                "- scope-এ চিহ্নিত প্রতিটা OWASP risk-এর জন্য, যে test file সেটা কভার করে তার লিংক দিন।\n"
+                "- প্রতিটা metric-এ একটা বাস্তব সংখ্যা বসান। threshold ছাড়া metric একটা build ব্যর্থ করতে পারে না।\n"
+                "- model, prompt, বা tool version বদলালেই plan আবার দেখুন।\n"
+                "- feature-এর একই pull request-এ plan review করুন, feature ship হওয়ার পরে নয়।\n"
+                "</Callout>"
+            ),
+        },
+    },
+    key_words=[
+        ("Test strategy", "The plan naming the scope, test types, tools, metrics, and risks of a feature"),
+        ("Scope", "The layers of the architecture a plan covers: prompt, model, retriever, guardrails, output"),
+        ("Risk mapping", "Naming which OWASP LLM risks apply to a feature, and which do not"),
+        ("Gate", "The threshold on a metric that blocks a merge or a release"),
+        ("NIST AI RMF", "The governance framework: govern, map, measure, manage"),
+        ("Out of scope", "A risk explicitly considered and excluded, with a stated reason"),
+    ],
+)
+
+page(
+    slug="ai-quality-metrics",
+    title="AI Quality Metrics and Reporting",
+    description="Build a quality dashboard from eval results: hallucination rate, faithfulness, latency P95, and cost per session, in a report a non-tester can read.",
+    lede="A number nobody reads is not a metric. The report is the part of the eval suite most teams skip, and it is the part that gets the next sprint funded.",
+    sources=["deepeval-metrics", "ragas-metrics", "anthropic-tokens"],
+    sections={
+        "In plain words": {
+            "technical": (
+                "An eval suite produces per-case scores. A **quality dashboard** turns many "
+                "of those scores into a small number of trend lines that answer \"is this "
+                "getting better or worse\" at a glance. The metrics that belong on it:\n\n"
+                "```text\n"
+                "hallucination rate      % of answers with an unsupported claim\n"
+                "faithfulness score      how well the answer sticks to its retrieved context\n"
+                "answer relevancy        does the answer address the actual question\n"
+                "toxicity rate           % of answers with harmful or abusive content\n"
+                "latency P95             the response time 95% of requests beat\n"
+                "cost per session        tokens in and out, priced, summed per conversation\n"
+                "```\n\n"
+                "Hallucination rate, faithfulness, and answer relevancy come from DeepEval's "
+                "metric set {{cite:deepeval-metrics}} directly: they are already 0 to 1 scores "
+                "per test case, and the dashboard's job is to aggregate them, not invent new "
+                "ones. Faithfulness is shared with Ragas's RAG-specific metrics "
+                "{{cite:ragas-metrics}}; Ragas's current docs name the relevancy metric "
+                "\"Response Relevancy\" rather than \"Answer Relevancy\", same concept, "
+                "different label depending on the tool.\n\n"
+                "**Cost per session** needs a token count, not a guess: both the input and "
+                "output token counts for every call in a conversation, summed and priced "
+                "{{cite:anthropic-tokens}}. **Latency P95** needs the full distribution of "
+                "response times, not the average — an average hides the slow 5% that the "
+                "users actually complain about."
+            ),
+            "layman": (
+                "একটা eval suite প্রতি কেসে score তৈরি করে। একটা **quality dashboard** সেই অনেক score-কে অল্প কিছু trend line-এ রূপান্তর করে যা এক নজরে বলে \"এটা ভালো হচ্ছে নাকি খারাপ\"। যে metric-গুলো সেখানে থাকা উচিত:\n\n"
+                "```text\n"
+                "hallucination rate      % of answers with an unsupported claim\n"
+                "faithfulness score      how well the answer sticks to its retrieved context\n"
+                "answer relevancy        does the answer address the actual question\n"
+                "toxicity rate           % of answers with harmful or abusive content\n"
+                "latency P95             the response time 95% of requests beat\n"
+                "cost per session        tokens in and out, priced, summed per conversation\n"
+                "```\n\n"
+                "Hallucination rate, faithfulness, আর answer relevancy সরাসরি DeepEval-এর metric সেট থেকে আসে {{cite:deepeval-metrics}}: এগুলো ইতিমধ্যে প্রতি test case-এ ০ থেকে ১ score, আর dashboard-এর কাজ হলো সেগুলো একত্র করা, নতুন বানানো নয়। Faithfulness Ragas-এর RAG-নির্দিষ্ট metric-এর সাথে শেয়ার্ড {{cite:ragas-metrics}}; Ragas-এর বর্তমান docs relevancy metric-টাকে \"Answer Relevancy\" না বলে \"Response Relevancy\" বলে, একই concept, টুল অনুযায়ী আলাদা নাম।\n\n"
+                "**Cost per session**-এর একটা অনুমান নয়, একটা token গণনা দরকার: একটা conversation-এর প্রতিটা call-এর input আর output token উভয় গণনা, যোগ আর দাম নির্ধারণ করা {{cite:anthropic-tokens}}। **Latency P95**-এর response time-এর পুরো বিতরণ দরকার, গড় নয় — গড় সেই ধীর ৫% লুকায় "
+                "যা ব্যবহারকারীরা আসলে অভিযোগ করে।"
+            ),
+            "bangla": (
+                "একটা eval suite প্রতি কেসে score তৈরি করে। একটা **quality dashboard** সেই অনেক score-কে অল্প কিছু trend line-এ রূপান্তর করে যা এক নজরে বলে \"এটা ভালো হচ্ছে নাকি খারাপ\"। যে metric-গুলো সেখানে থাকা উচিত:\n\n"
+                "```text\n"
+                "hallucination rate      % of answers with an unsupported claim\n"
+                "faithfulness score      how well the answer sticks to its retrieved context\n"
+                "answer relevancy        does the answer address the actual question\n"
+                "toxicity rate           % of answers with harmful or abusive content\n"
+                "latency P95             the response time 95% of requests beat\n"
+                "cost per session        tokens in and out, priced, summed per conversation\n"
+                "```\n\n"
+                "Hallucination rate, faithfulness, আর answer relevancy সরাসরি DeepEval-এর metric সেট থেকে আসে {{cite:deepeval-metrics}}: এগুলো ইতিমধ্যে প্রতি test case-এ ০ থেকে ১ score, আর dashboard-এর কাজ হলো সেগুলো একত্র করা, নতুন বানানো নয়। Faithfulness Ragas-এর RAG-নির্দিষ্ট metric-এর সাথে শেয়ার্ড {{cite:ragas-metrics}}; Ragas-এর বর্তমান docs relevancy metric-টাকে \"Answer Relevancy\" না বলে \"Response Relevancy\" বলে, একই concept, টুল অনুযায়ী আলাদা নাম।\n\n"
+                "**Cost per session**-এর একটা অনুমান নয়, একটা token গণনা দরকার: একটা conversation-এর প্রতিটা call-এর input আর output token উভয় গণনা, যোগ আর দাম নির্ধারণ করা {{cite:anthropic-tokens}}। **Latency P95**-এর response time-এর পুরো বিতরণ দরকার, গড় নয় — গড় সেই ধীর ৫% লুকায় যা "
+                "ব্যবহারকারীরা আসলে অভিযোগ করে।"
+            ),
+        },
+        "How it works": {
+            "technical": (
+                "The pipeline from a single eval run to a dashboard point:\n\n"
+                "```text\n"
+                "eval run          each test case scored by DeepEval / Ragas metrics\n"
+                "aggregate         mean (or P95, for latency) across the run's cases\n"
+                "store             one row: date, metric name, value, model, prompt version\n"
+                "chart             each metric as a line over time, model and prompt as filters\n"
+                "```\n\n"
+                "Storing the **model and prompt version** alongside every point is what makes "
+                "the dashboard answer \"did the last change help\" instead of just \"is the "
+                "number going up\". Without it, a metric drop after a deploy and a metric "
+                "drop from normal variance look the same.\n\n"
+                "Cost per session is computed, not scored, directly from the token counts "
+                "{{cite:anthropic-tokens}}:\n\n"
+                "```text\n"
+                "session cost = sum over every call in the conversation of\n"
+                "               (input_tokens * input_price + output_tokens * output_price)\n"
+                "```\n\n"
+                "Executive-level reporting is a second layer on top of the same data: instead "
+                "of 50 lines on a chart, a one-page summary with the current value, the "
+                "trend arrow, and the gate status for each metric that matters to a release "
+                "decision."
+            ),
+            "layman": (
+                "একটা একক eval run থেকে একটা dashboard point পর্যন্ত pipeline:\n\n"
+                "```text\n"
+                "eval run          each test case scored by DeepEval / Ragas metrics\n"
+                "aggregate         mean (or P95, for latency) across the run's cases\n"
+                "store             one row: date, metric name, value, model, prompt version\n"
+                "chart             each metric as a line over time, model and prompt as filters\n"
+                "```\n\n"
+                "প্রতিটা point-এর পাশে **model আর prompt version** সংরক্ষণ করাই dashboard-কে \"শেষ পরিবর্তন কি সাহায্য করেছে\" উত্তর দিতে দেয়, শুধু \"সংখ্যা বাড়ছে কিনা\" নয়। এটা ছাড়া, deploy-এর পরে একটা metric কমে যাওয়া আর স্বাভাবিক variance থেকে কমে যাওয়া একই রকম দেখায়।\n\n"
+                "Cost per session গণনা করা হয়, score দেওয়া নয়, সরাসরি token count থেকে {{cite:anthropic-tokens}}:\n\n"
+                "```text\n"
+                "session cost = sum over every call in the conversation of\n"
+                "               (input_tokens * input_price + output_tokens * output_price)\n"
+                "```\n\n"
+                "Executive-level reporting একই data-র ওপর একটা দ্বিতীয় স্তর: chart-এ ৫০টা লাইনের বদলে, একটা এক-পৃষ্ঠার সারাংশ যাতে বর্তমান মান, trend arrow, আর release সিদ্ধান্তের জন্য গুরুত্বপূর্ণ প্রতিটা metric-এর gate status থাকে।"
+            ),
+            "bangla": (
+                "একটা একক eval run থেকে একটা dashboard point পর্যন্ত pipeline:\n\n"
+                "```text\n"
+                "eval run          each test case scored by DeepEval / Ragas metrics\n"
+                "aggregate         mean (or P95, for latency) across the run's cases\n"
+                "store             one row: date, metric name, value, model, prompt version\n"
+                "chart             each metric as a line over time, model and prompt as filters\n"
+                "```\n\n"
+                "প্রতিটা point-এর পাশে **model আর prompt version** সংরক্ষণ করাই dashboard-কে \"শেষ পরিবর্তন কি সাহায্য করেছে\" উত্তর দিতে দেয়, শুধু \"সংখ্যা বাড়ছে কিনা\" নয়। এটা ছাড়া, deploy-এর পরে একটা metric কমে যাওয়া আর স্বাভাবিক variance থেকে কমে যাওয়া একই রকম দেখায়।\n\n"
+                "Cost per session গণনা করা হয়, score দেওয়া নয়, সরাসরি token count থেকে {{cite:anthropic-tokens}}:\n\n"
+                "```text\n"
+                "session cost = sum over every call in the conversation of\n"
+                "               (input_tokens * input_price + output_tokens * output_price)\n"
+                "```\n\n"
+                "Executive-level reporting একই data-র ওপর একটা দ্বিতীয় স্তর: chart-এ ৫০টা লাইনের বদলে, একটা এক-পৃষ্ঠার সারাংশ যাতে বর্তমান মান, trend arrow, আর release সিদ্ধান্তের জন্য গুরুত্বপূর্ণ প্রতিটা metric-এর gate status থাকে।"
+            ),
+        },
+        "In practice": {
+            "technical": (
+                "Aggregate a run's per-case scores into one dashboard row:\n\n"
+                "```python\n"
+                "from statistics import mean\n"
+                "import numpy as np\n\n"
+                "def summarise_run(cases: list[dict], model: str, prompt_version: str) -> dict:\n"
+                "    return {\n"
+                "        \"date\": today(),\n"
+                "        \"model\": model,\n"
+                "        \"prompt_version\": prompt_version,\n"
+                "        \"hallucination_rate\": mean(c[\"hallucination\"] for c in cases),\n"
+                "        \"faithfulness\": mean(c[\"faithfulness\"] for c in cases),\n"
+                "        \"latency_p95_ms\": float(np.percentile([c[\"latency_ms\"] for c in cases], 95)),\n"
+                "        \"cost_per_session_usd\": mean(c[\"cost_usd\"] for c in cases),\n"
+                "    }\n"
+                "```\n\n"
+                "Per-call cost from token counts {{cite:anthropic-tokens}}:\n\n"
+                "```python\n"
+                "PRICE_PER_1K = {\"input\": 0.003, \"output\": 0.015}  # illustrative, check current pricing\n\n"
+                "def call_cost(input_tokens: int, output_tokens: int) -> float:\n"
+                "    return (input_tokens / 1000) * PRICE_PER_1K[\"input\"] + (output_tokens / 1000) * PRICE_PER_1K[\"output\"]\n"
+                "```\n\n"
+                "An executive summary from the same stored rows:\n\n"
+                "```python\n"
+                "def executive_summary(latest: dict, previous: dict, gates: dict) -> str:\n"
+                "    lines = [f\"Quality report — {latest['model']} / {latest['prompt_version']}\"]\n"
+                "    for metric, gate in gates.items():\n"
+                "        value, was = latest[metric], previous[metric]\n"
+                "        arrow = \"UP\" if value > was else \"DOWN\" if value < was else \"FLAT\"\n"
+                "        status = \"PASS\" if gate(value) else \"FAIL\"\n"
+                "        lines.append(f\"  {metric}: {value:.3f} ({arrow} from {was:.3f}) — {status}\")\n"
+                "    return \"\\n\".join(lines)\n"
+                "```\n\n"
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Store every run's raw per-case scores, not just the aggregate. The "
+                "aggregate hides which specific case regressed.\n"
+                "- Put a gate status (pass/fail) next to every number on the report; a raw "
+                "number with no gate invites debate instead of a decision.\n"
+                "- Review the report with whoever owns the release decision, not just the "
+                "testers who ran the suite.\n"
+                "</Callout>"
+            ),
+            "layman": (
+                "একটা run-এর per-case score একটা dashboard সারিতে একত্র করুন:\n\n"
+                "```python\n"
+                "from statistics import mean\n"
+                "import numpy as np\n\n"
+                "def summarise_run(cases: list[dict], model: str, prompt_version: str) -> dict:\n"
+                "    return {\n"
+                "        \"date\": today(),\n"
+                "        \"model\": model,\n"
+                "        \"prompt_version\": prompt_version,\n"
+                "        \"hallucination_rate\": mean(c[\"hallucination\"] for c in cases),\n"
+                "        \"faithfulness\": mean(c[\"faithfulness\"] for c in cases),\n"
+                "        \"latency_p95_ms\": float(np.percentile([c[\"latency_ms\"] for c in cases], 95)),\n"
+                "        \"cost_per_session_usd\": mean(c[\"cost_usd\"] for c in cases),\n"
+                "    }\n"
+                "```\n\n"
+                "Token count থেকে per-call খরচ {{cite:anthropic-tokens}}:\n\n"
+                "```python\n"
+                "PRICE_PER_1K = {\"input\": 0.003, \"output\": 0.015}  # illustrative, check current pricing\n\n"
+                "def call_cost(input_tokens: int, output_tokens: int) -> float:\n"
+                "    return (input_tokens / 1000) * PRICE_PER_1K[\"input\"] + (output_tokens / 1000) * PRICE_PER_1K[\"output\"]\n"
+                "```\n\n"
+                "একই সংরক্ষিত সারি থেকে একটা executive সারাংশ:\n\n"
+                "```python\n"
+                "def executive_summary(latest: dict, previous: dict, gates: dict) -> str:\n"
+                "    lines = [f\"Quality report — {latest['model']} / {latest['prompt_version']}\"]\n"
+                "    for metric, gate in gates.items():\n"
+                "        value, was = latest[metric], previous[metric]\n"
+                "        arrow = \"UP\" if value > was else \"DOWN\" if value < was else \"FLAT\"\n"
+                "        status = \"PASS\" if gate(value) else \"FAIL\"\n"
+                "        lines.append(f\"  {metric}: {value:.3f} ({arrow} from {was:.3f}) — {status}\")\n"
+                "    return \"\\n\".join(lines)\n"
+                "```\n\n"
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- প্রতিটা run-এর কাঁচা per-case score সংরক্ষণ করুন, শুধু aggregate নয়। aggregate লুকায় কোন নির্দিষ্ট case খারাপ হয়েছে।\n"
+                "- রিপোর্টে প্রতিটা সংখ্যার পাশে একটা gate status (pass/fail) বসান; gate ছাড়া একটা কাঁচা সংখ্যা সিদ্ধান্তের বদলে বিতর্ক ডেকে আনে।\n"
+                "- যে suite চালিয়েছে তাদের সাথে না, release সিদ্ধান্তের মালিকের সাথে রিপোর্ট review করুন।\n"
+                "</Callout>"
+            ),
+            "bangla": (
+                "একটা run-এর per-case score একটা dashboard সারিতে একত্র করুন:\n\n"
+                "```python\n"
+                "from statistics import mean\n"
+                "import numpy as np\n\n"
+                "def summarise_run(cases: list[dict], model: str, prompt_version: str) -> dict:\n"
+                "    return {\n"
+                "        \"date\": today(),\n"
+                "        \"model\": model,\n"
+                "        \"prompt_version\": prompt_version,\n"
+                "        \"hallucination_rate\": mean(c[\"hallucination\"] for c in cases),\n"
+                "        \"faithfulness\": mean(c[\"faithfulness\"] for c in cases),\n"
+                "        \"latency_p95_ms\": float(np.percentile([c[\"latency_ms\"] for c in cases], 95)),\n"
+                "        \"cost_per_session_usd\": mean(c[\"cost_usd\"] for c in cases),\n"
+                "    }\n"
+                "```\n\n"
+                "Token count থেকে per-call খরচ {{cite:anthropic-tokens}}:\n\n"
+                "```python\n"
+                "PRICE_PER_1K = {\"input\": 0.003, \"output\": 0.015}  # illustrative, check current pricing\n\n"
+                "def call_cost(input_tokens: int, output_tokens: int) -> float:\n"
+                "    return (input_tokens / 1000) * PRICE_PER_1K[\"input\"] + (output_tokens / 1000) * PRICE_PER_1K[\"output\"]\n"
+                "```\n\n"
+                "একই সংরক্ষিত সারি থেকে একটা executive সারাংশ:\n\n"
+                "```python\n"
+                "def executive_summary(latest: dict, previous: dict, gates: dict) -> str:\n"
+                "    lines = [f\"Quality report — {latest['model']} / {latest['prompt_version']}\"]\n"
+                "    for metric, gate in gates.items():\n"
+                "        value, was = latest[metric], previous[metric]\n"
+                "        arrow = \"UP\" if value > was else \"DOWN\" if value < was else \"FLAT\"\n"
+                "        status = \"PASS\" if gate(value) else \"FAIL\"\n"
+                "        lines.append(f\"  {metric}: {value:.3f} ({arrow} from {was:.3f}) — {status}\")\n"
+                "    return \"\\n\".join(lines)\n"
+                "```\n\n"
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।\n\n"
+                "- প্রতিটা run-এর কাঁচা per-case score সংরক্ষণ করুন, শুধু aggregate নয়। aggregate লুকায় কোন নির্দিষ্ট case খারাপ হয়েছে।\n"
+                "- রিপোর্টে প্রতিটা সংখ্যার পাশে একটা gate status (pass/fail) বসান; gate ছাড়া একটা কাঁচা সংখ্যা সিদ্ধান্তের বদলে বিতর্ক ডেকে আনে।\n"
+                "- যে suite চালিয়েছে তাদের সাথে না, release সিদ্ধান্তের মালিকের সাথে রিপোর্ট review করুন।\n"
+                "</Callout>"
+            ),
+        },
+        "Common mistakes": {
+            "technical": (
+                "**Mistake 1: averaging latency instead of using a percentile.** The average "
+                "hides the slow tail that users notice; P95 or P99 does not.\n\n"
+                "**Mistake 2: no model or prompt version on the data point.** Without it, a "
+                "regression cannot be traced back to the change that caused it.\n\n"
+                "**Mistake 3: inventing a custom metric instead of using DeepEval's or "
+                "Ragas's.** A custom score with no definition cannot be compared across teams "
+                "or tools {{cite:deepeval-metrics}} {{cite:ragas-metrics}}.\n\n"
+                "**Mistake 4: a dashboard nobody reviews on a cadence.** A metric that "
+                "degrades silently between reviews is a metric that is not actually gating "
+                "anything.\n\n"
+                "**Mistake 5: reporting cost without the token breakdown.** A total dollar "
+                "figure with no input/output split cannot be used to find which part of the "
+                "pipeline is expensive {{cite:anthropic-tokens}}."
+            ),
+            "layman": (
+                "**Mistake ১: percentile-এর বদলে latency-র average নেওয়া।** average ধীর লেজ লুকায় যা ব্যবহারকারীরা লক্ষ্য করে; P95 বা P99 করে না।\n\n"
+                "**Mistake ২: data point-এ model বা prompt version নেই।** ছাড়া, একটা regression যে পরিবর্তন কারণ হয়েছে তার কাছে ফিরে track করা যায় না।\n\n"
+                "**Mistake ৩: DeepEval বা Ragas-এর বদলে custom metric বানানো।** সংজ্ঞা ছাড়া একটা custom score দল বা টুলের মধ্যে তুলনা করা যায় না {{cite:deepeval-metrics}} {{cite:ragas-metrics}}।\n\n"
+                "**Mistake ৪: dashboard যা কেউ নিয়মিত review করে না।** review-এর মাঝে নীরবে খারাপ হওয়া একটা metric আসলে কিছুই gate করছে না।\n\n"
+                "**Mistake ৫: token breakdown ছাড়া খরচ রিপোর্ট করা।** input/output ভাগ ছাড়া একটা মোট ডলার সংখ্যা pipeline-এর কোন অংশ ব্যয়বহুল তা খুঁজে বের করতে ব্যবহার করা যায় না {{cite:anthropic-tokens}}।"
+            ),
+            "bangla": (
+                "**ভুল ১: percentile-এর বদলে latency-র average নেওয়া।** average ধীর লেজ লুকায় যা ব্যবহারকারীরা লক্ষ্য করে; P95 বা P99 করে না।\n\n"
+                "**ভুল ২: data point-এ model বা prompt version নেই।** ছাড়া, একটা regression যে পরিবর্তন কারণ হয়েছে তার কাছে ফিরে track করা যায় না।\n\n"
+                "**ভুল ৩: DeepEval বা Ragas-এর বদলে custom metric বানানো।** সংজ্ঞা ছাড়া একটা custom score দল বা টুলের মধ্যে তুলনা করা যায় না {{cite:deepeval-metrics}} {{cite:ragas-metrics}}।\n\n"
+                "**ভুল ৪: dashboard যা কেউ নিয়মিত review করে না।** review-এর মাঝে নীরবে খারাপ হওয়া একটা metric আসলে কিছুই gate করছে না।\n\n"
+                "**ভুল ৫: token breakdown ছাড়া খরচ রিপোর্ট করা।** input/output ভাগ ছাড়া একটা মোট ডলার সংখ্যা pipeline-এর কোন অংশ ব্যয়বহুল তা খুঁজে বের করতে ব্যবহার করা যায় না {{cite:anthropic-tokens}}।"
+            ),
+        },
+        "What a tester can check": {
+            "technical": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Use a percentile for every latency number on the dashboard, never a plain "
+                "average.\n"
+                "- Tag every stored run with its model name and prompt version, no "
+                "exceptions.\n"
+                "- Keep the raw per-case scores, not just the aggregate, for at least one "
+                "regression cycle.\n"
+                "- Put a pass/fail gate status next to every metric on the executive report.\n"
+                "- Review the dashboard on a fixed cadence with the person who owns the "
+                "release decision.\n"
+                "</Callout>"
+            ),
+            "layman": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Use a percentile for every latency number on the dashboard, never a plain "
+                "average.\n"
+                "- Tag every stored run with its model name and prompt version, no "
+                "exceptions.\n"
+                "- Keep the raw per-case scores, not just the aggregate, for at least one "
+                "regression cycle.\n"
+                "- Put a pass/fail gate status next to every metric on the executive report.\n"
+                "- Review the dashboard on a fixed cadence with the person who owns the "
+                "release decision.\n"
+                "</Callout>"
+            ),
+            "bangla": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।\n\n"
+                "- dashboard-এ প্রতিটা latency সংখ্যায় একটা percentile ব্যবহার করুন, সাধারণ average কখনো নয়।\n"
+                "- প্রতিটা সংরক্ষিত run-কে তার model নাম আর prompt version দিয়ে ট্যাগ করুন, কোনো ব্যতিক্রম নেই।\n"
+                "- অন্তত একটা regression cycle-এর জন্য কাঁচা per-case score রাখুন, শুধু aggregate নয়।\n"
+                "- executive রিপোর্টে প্রতিটা metric-এর পাশে একটা pass/fail gate status বসান।\n"
+                "- release সিদ্ধান্তের মালিকের সাথে একটা নির্দিষ্ট ছন্দে dashboard review করুন।\n"
+                "</Callout>"
+            ),
+        },
+    },
+    key_words=[
+        ("Quality dashboard", "A small set of trend lines aggregated from many eval runs"),
+        ("Hallucination rate", "The percentage of answers containing an unsupported claim"),
+        ("Faithfulness", "How well an answer sticks to its retrieved context"),
+        ("Latency P95", "The response time that 95% of requests are faster than"),
+        ("Cost per session", "The priced sum of input and output tokens across a conversation"),
+        ("Executive summary", "A one-page report with the current value, trend, and gate status per metric"),
+    ],
+)
+
+page(
+    slug="ai-observability",
+    title="AI Observability and Production Monitoring",
+    description="Set up tracing with Arize Phoenix and LangFuse, and know why a clean eval run does not mean a clean production system.",
+    lede="An eval suite tells you what the model does on the questions you thought to ask. Observability tells you what it did on the ones you did not.",
+    sources=["phoenix-intro", "langfuse-intro"],
+    sections={
+        "In plain words": {
+            "technical": (
+                "**Observability** is the practice of instrumenting a live system so that "
+                "every call, its input, its output, and its timing, is recorded and "
+                "queryable after the fact. For an AI application it answers a question an "
+                "eval suite cannot: what is the model actually being asked in production, "
+                "and how is it actually answering, on traffic nobody wrote a test case for.\n\n"
+                "**Arize Phoenix** is an open-source observability tool built specifically "
+                "for LLM applications: it traces calls and runs evaluations on live traffic "
+                "to find failures and regressions {{cite:phoenix-intro}}. **LangFuse** does "
+                "the same job "
+                "with its own focus on tracing and prompt management, and both can sit "
+                "alongside each other or replace one another depending on the stack "
+                "{{cite:langfuse-intro}}.\n\n"
+                "This page is the introduction: what a trace is, why it matters, and the "
+                "first setup. The deeper version — specific alert thresholds, drift "
+                "detection, and A/B comparison in production — is in the Phase 2 module on "
+                "production observability, once the tools and the agent/RAG concepts that "
+                "feed it are in place."
+            ),
+            "layman": (
+                "**Observability** হলো একটা live সিস্টেমকে এমনভাবে instrument করার practice যাতে প্রতিটা call, তার input, output, আর timing, রেকর্ড হয় আর পরে query করা যায়। একটা AI application-এর জন্য এটা এমন একটা প্রশ্নের উত্তর দেয় যা eval suite দিতে পারে না: production-এ model-কে "
+                "আসলে কী জিজ্ঞেস করা হচ্ছে, আর এটা আসলে কীভাবে উত্তর দিচ্ছে, এমন traffic-এ যার জন্য কেউ test case লেখেনি।\n\n"
+                "**Arize Phoenix** একটা open-source observability টুল, বিশেষভাবে LLM application-এর জন্য বানানো: এটা call trace করে আর live traffic-এ evaluation চালায় failure আর regression খুঁজে পেতে {{cite:phoenix-intro}}। **LangFuse** একই কাজ করে নিজের tracing আর prompt "
+                "management-এ focus দিয়ে, আর দুটোই একসাথে বসতে পারে বা স্ট্যাক অনুযায়ী একে অপরকে প্রতিস্থাপন করতে পারে {{cite:langfuse-intro}}।\n\n"
+                "এই পেজটা ভূমিকা: trace কী, এটা কেন গুরুত্বপূর্ণ, আর প্রথম setup। গভীর সংস্করণ — নির্দিষ্ট alert threshold, drift detection, আর production-এ A/B তুলনা — Phase 2-এর production observability মডিউলে, একবার যে টুল আর agent/RAG ধারণা এটাকে খাওয়ায় সেগুলো জায়গায় থাকলে।"
+            ),
+            "bangla": (
+                "**Observability** হলো একটা live সিস্টেমকে এমনভাবে instrument করার practice যাতে প্রতিটা call, তার input, output, আর timing, রেকর্ড হয় আর পরে query করা যায়। একটা AI application-এর জন্য এটা এমন একটা প্রশ্নের উত্তর দেয় যা eval suite দিতে পারে না: production-এ model-কে আসলে কী "
+                "জিজ্ঞেস করা হচ্ছে, আর এটা আসলে কীভাবে উত্তর দিচ্ছে, এমন traffic-এ যার জন্য কেউ test case লেখেনি।\n\n"
+                "**Arize Phoenix** একটা open-source observability টুল, বিশেষভাবে LLM application-এর জন্য বানানো: এটা call trace করে আর live traffic-এ evaluation চালায় failure আর regression খুঁজে পেতে {{cite:phoenix-intro}}। **LangFuse** একই কাজ করে নিজের tracing আর prompt management-এ focus "
+                "দিয়ে, আর দুটোই একসাথে বসতে পারে বা স্ট্যাক অনুযায়ী একে অপরকে প্রতিস্থাপন করতে পারে {{cite:langfuse-intro}}।\n\n"
+                "এই পেজটা ভূমিকা: trace কী, এটা কেন গুরুত্বপূর্ণ, আর প্রথম setup। গভীর সংস্করণ — নির্দিষ্ট alert threshold, drift detection, আর production-এ A/B তুলনা — Phase 2-এর production observability মডিউলে, একবার যে টুল আর agent/RAG ধারণা এটাকে খাওয়ায় সেগুলো জায়গায় থাকলে।"
+            ),
+        },
+        "How it works": {
+            "technical": (
+                "A trace is the record of one call to the model, captured at the point the "
+                "call happens:\n\n"
+                "```text\n"
+                "trace    one record: input, output, latency, token counts, model, timestamp\n"
+                "span     a sub-step inside a trace, e.g. one retrieval call within a RAG answer\n"
+                "session  a group of traces belonging to one conversation\n"
+                "```\n\n"
+                "Both Phoenix {{cite:phoenix-intro}} and LangFuse {{cite:langfuse-intro}} "
+                "instrument an application by wrapping the calls it already makes, so "
+                "adopting one does not mean rewriting the application: it means adding a "
+                "decorator or a context manager around the existing model and retriever "
+                "calls.\n\n"
+                "Once traces are flowing, the basic loop an observability setup supports is:\n\n"
+                "```text\n"
+                "collect traces -> sample a subset -> run an eval metric on the sample -> alert if it degrades\n"
+                "```\n\n"
+                "This is the same DeepEval- and Ragas-style metrics from the eval modules, "
+                "run on live traffic instead of a fixed test set — the mechanism does not "
+                "change, only the data source does."
+            ),
+            "layman": (
+                "একটা trace হলো model-এ একটা call-এর রেকর্ড, call ঘটার মুহূর্তে ধরা:\n\n"
+                "```text\n"
+                "trace    one record: input, output, latency, token counts, model, timestamp\n"
+                "span     a sub-step inside a trace, e.g. one retrieval call within a RAG answer\n"
+                "session  a group of traces belonging to one conversation\n"
+                "```\n\n"
+                "Phoenix {{cite:phoenix-intro}} আর LangFuse {{cite:langfuse-intro}} দুটোই একটা application-কে instrument করে যা সে ইতিমধ্যে করা call-গুলো মুড়ে, তাই একটা গ্রহণ করা মানে application আবার লেখা নয়: এটা মানে বিদ্যমান model আর retriever call-এর চারপাশে একটা "
+                "decorator বা context manager যোগ করা।\n\n"
+                "একবার trace প্রবাহিত হলে, একটা observability setup যে মূল loop সমর্থন করে:\n\n"
+                "```text\n"
+                "collect traces -> sample a subset -> run an eval metric on the sample -> alert if it degrades\n"
+                "```\n\n"
+                "এটা eval মডিউলের সেই একই DeepEval- আর Ragas-স্টাইল metric, একটা নির্দিষ্ট test set-এর বদলে live traffic-এ চালানো — mechanism বদলায় না, শুধু data source বদলায়।"
+            ),
+            "bangla": (
+                "একটা trace হলো model-এ একটা call-এর রেকর্ড, call ঘটার মুহূর্তে ধরা:\n\n"
+                "```text\n"
+                "trace    one record: input, output, latency, token counts, model, timestamp\n"
+                "span     a sub-step inside a trace, e.g. one retrieval call within a RAG answer\n"
+                "session  a group of traces belonging to one conversation\n"
+                "```\n\n"
+                "Phoenix {{cite:phoenix-intro}} আর LangFuse {{cite:langfuse-intro}} দুটোই একটা application-কে instrument করে যা সে ইতিমধ্যে করা call-গুলো মুড়ে, তাই একটা গ্রহণ করা মানে application আবার লেখা নয়: এটা মানে বিদ্যমান model আর retriever call-এর চারপাশে একটা decorator বা "
+                "context manager যোগ করা।\n\n"
+                "একবার trace প্রবাহিত হলে, একটা observability setup যে মূল loop সমর্থন করে:\n\n"
+                "```text\n"
+                "collect traces -> sample a subset -> run an eval metric on the sample -> alert if it degrades\n"
+                "```\n\n"
+                "এটা eval মডিউলের সেই একই DeepEval- আর Ragas-স্টাইল metric, একটা নির্দিষ্ট test set-এর বদলে live traffic-এ চালানো — mechanism বদলায় না, শুধু data source বদলায়।"
+            ),
+        },
+        "In practice": {
+            "technical": (
+                "A minimal Phoenix setup that traces an existing OpenAI-style call "
+                "{{cite:phoenix-intro}}:\n\n"
+                "```python\n"
+                "import phoenix as px\n"
+                "from openinference.instrumentation.openai import OpenAIInstrumentor\n\n"
+                "px.launch_app()                 # starts the local Phoenix UI\n"
+                "OpenAIInstrumentor().instrument()  # traces every OpenAI call from here on\n\n"
+                "# existing application code, unmodified\n"
+                "answer = client.chat.completions.create(model=\"gpt-4o-mini\", messages=messages)\n"
+                "```\n\n"
+                "Every call now shows up in the Phoenix UI with its input, output, latency, "
+                "and token counts, with no change to `answer_question()` itself.\n\n"
+                "A minimal LangFuse setup, decorating the same kind of call "
+                "{{cite:langfuse-intro}}:\n\n"
+                "```python\n"
+                "from langfuse.decorators import observe\n\n"
+                "@observe()\n"
+                "def answer_question(question: str) -> str:\n"
+                "    return client.chat.completions.create(\n"
+                "        model=\"gpt-4o-mini\",\n"
+                "        messages=[{\"role\": \"user\", \"content\": question}],\n"
+                "    ).choices[0].message.content\n"
+                "```\n\n"
+                "Both approaches collect the same shape of data. Choosing between them is "
+                "usually about which one's UI, pricing, or self-hosting story fits the team, "
+                "not about a difference in what gets captured.\n\n"
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Turn on tracing before the first production user, not after the first "
+                "incident. A trace you did not capture cannot be reviewed later.\n"
+                "- Tag every trace with the prompt version and model, the same discipline as "
+                "the quality dashboard.\n"
+                "- Start by just looking at a sample of real traces by hand, before building "
+                "any alert. The surprises in real traffic inform what is worth alerting on.\n"
+                "</Callout>"
+            ),
+            "layman": (
+                "একটা বিদ্যমান OpenAI-স্টাইল call trace করা একটা ন্যূনতম Phoenix setup {{cite:phoenix-intro}}:\n\n"
+                "```python\n"
+                "import phoenix as px\n"
+                "from openinference.instrumentation.openai import OpenAIInstrumentor\n\n"
+                "px.launch_app()                 # starts the local Phoenix UI\n"
+                "OpenAIInstrumentor().instrument()  # traces every OpenAI call from here on\n\n"
+                "# existing application code, unmodified\n"
+                "answer = client.chat.completions.create(model=\"gpt-4o-mini\", messages=messages)\n"
+                "```\n\n"
+                "প্রতিটা call এখন Phoenix UI-তে তার input, output, latency, আর token count সহ দেখা যায়, `answer_question()`-এ কোনো পরিবর্তন ছাড়াই।\n\n"
+                "একই ধরনের call decorate করা একটা ন্যূনতম LangFuse setup {{cite:langfuse-intro}}:\n\n"
+                "```python\n"
+                "from langfuse.decorators import observe\n\n"
+                "@observe()\n"
+                "def answer_question(question: str) -> str:\n"
+                "    return client.chat.completions.create(\n"
+                "        model=\"gpt-4o-mini\",\n"
+                "        messages=[{\"role\": \"user\", \"content\": question}],\n"
+                "    ).choices[0].message.content\n"
+                "```\n\n"
+                "দুটো পদ্ধতিই একই আকারের data সংগ্রহ করে। এদের মধ্যে বেছে নেওয়া সাধারণত নির্ভর করে কারটার UI, pricing, বা self-hosting গল্প দলের সাথে মানানসই তার ওপর, কী ধরা পড়ে তার পার্থক্যের ওপর নয়।\n\n"
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- প্রথম production ব্যবহারকারীর আগে tracing চালু করুন, প্রথম incident-এর পরে নয়। যে trace ধরা পড়েনি তা পরে review করা যায় না।\n"
+                "- প্রতিটা trace-কে prompt version আর model দিয়ে ট্যাগ করুন, quality dashboard-এর একই শৃঙ্খলা।\n"
+                "- কোনো alert বানানোর আগে শুধু হাতে কিছু real trace দেখা শুরু করুন। real traffic-এর বিস্ময়গুলো জানায় কী alert করার যোগ্য।\n"
+                "</Callout>"
+            ),
+            "bangla": (
+                "একটা বিদ্যমান OpenAI-স্টাইল call trace করা একটা ন্যূনতম Phoenix setup {{cite:phoenix-intro}}:\n\n"
+                "```python\n"
+                "import phoenix as px\n"
+                "from openinference.instrumentation.openai import OpenAIInstrumentor\n\n"
+                "px.launch_app()                 # starts the local Phoenix UI\n"
+                "OpenAIInstrumentor().instrument()  # traces every OpenAI call from here on\n\n"
+                "# existing application code, unmodified\n"
+                "answer = client.chat.completions.create(model=\"gpt-4o-mini\", messages=messages)\n"
+                "```\n\n"
+                "প্রতিটা call এখন Phoenix UI-তে তার input, output, latency, আর token count সহ দেখা যায়, `answer_question()`-এ কোনো পরিবর্তন ছাড়াই।\n\n"
+                "একই ধরনের call decorate করা একটা ন্যূনতম LangFuse setup {{cite:langfuse-intro}}:\n\n"
+                "```python\n"
+                "from langfuse.decorators import observe\n\n"
+                "@observe()\n"
+                "def answer_question(question: str) -> str:\n"
+                "    return client.chat.completions.create(\n"
+                "        model=\"gpt-4o-mini\",\n"
+                "        messages=[{\"role\": \"user\", \"content\": question}],\n"
+                "    ).choices[0].message.content\n"
+                "```\n\n"
+                "দুটো পদ্ধতিই একই আকারের data সংগ্রহ করে। এদের মধ্যে বেছে নেওয়া সাধারণত নির্ভর করে কারটার UI, pricing, বা self-hosting গল্প দলের সাথে মানানসই তার ওপর, কী ধরা পড়ে তার পার্থক্যের ওপর নয়।\n\n"
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।\n\n"
+                "- প্রথম production ব্যবহারকারীর আগে tracing চালু করুন, প্রথম incident-এর পরে নয়। যে trace ধরা পড়েনি তা পরে review করা যায় না।\n"
+                "- প্রতিটা trace-কে prompt version আর model দিয়ে ট্যাগ করুন, quality dashboard-এর একই শৃঙ্খলা।\n"
+                "- কোনো alert বানানোর আগে শুধু হাতে কিছু real trace দেখা শুরু করুন। real traffic-এর বিস্ময়গুলো জানায় কী alert করার যোগ্য।\n"
+                "</Callout>"
+            ),
+        },
+        "Common mistakes": {
+            "technical": (
+                "**Mistake 1: treating a clean eval run as proof production is fine.** The "
+                "eval suite only covers the inputs someone thought to write; production "
+                "traffic always finds the rest.\n\n"
+                "**Mistake 2: turning on tracing only after an incident.** The traces from "
+                "before the tool was installed do not exist to review.\n\n"
+                "**Mistake 3: tracing without session grouping.** A pile of individual calls "
+                "with no conversation boundary cannot show a multi-turn failure.\n\n"
+                "**Mistake 4: picking a tool before looking at either one's UI.** Phoenix and "
+                "LangFuse capture similar data but present it differently; try both on a "
+                "small slice of real traffic before committing {{cite:phoenix-intro}} "
+                "{{cite:langfuse-intro}}.\n\n"
+                "**Mistake 5: no link between a trace and the quality dashboard.** A trace "
+                "tool and a metrics dashboard that cannot be cross-referenced leave a tester "
+                "unable to go from \"the metric dropped\" to \"here is the specific call "
+                "that caused it\"."
+            ),
+            "layman": (
+                "**Mistake ১: পরিষ্কার eval run-কে production ঠিক আছে তার প্রমাণ ভাবা।** eval suite শুধু সেই input কভার করে যা কেউ লেখার কথা ভেবেছিল; production traffic সবসময় বাকিটা খুঁজে পায়।\n\n"
+                "**Mistake ২: শুধু একটা incident-এর পরে tracing চালু করা।** টুল install হওয়ার আগের trace review করার জন্য থাকে না।\n\n"
+                "**Mistake ৩: session grouping ছাড়া tracing।** কথোপকথনের সীমানা ছাড়া পৃথক call-এর একটা স্তূপ একটা multi-turn ব্যর্থতা দেখাতে পারে না।\n\n"
+                "**Mistake ৪: কারো UI না দেখে একটা টুল বেছে নেওয়া।** Phoenix আর LangFuse একই রকম data ধরে কিন্তু আলাদাভাবে দেখায়; commit করার আগে real traffic-এর একটা ছোট অংশে দুটোই চেষ্টা করুন {{cite:phoenix-intro}} {{cite:langfuse-intro}}।\n\n"
+                "**Mistake ৫: trace আর quality dashboard-এর মধ্যে কোনো লিংক নেই।** একটা trace টুল আর একটা metrics dashboard যা cross-reference করা যায় না, একজন টেস্টারকে \"metric কমেছে\" থেকে \"এখানে নির্দিষ্ট call যা এটার কারণ\"-এ যেতে অক্ষম রাখে।"
+            ),
+            "bangla": (
+                "**ভুল ১: পরিষ্কার eval run-কে production ঠিক আছে তার প্রমাণ ভাবা।** eval suite শুধু সেই input কভার করে যা কেউ লেখার কথা ভেবেছিল; production traffic সবসময় বাকিটা খুঁজে পায়।\n\n"
+                "**ভুল ২: শুধু একটা incident-এর পরে tracing চালু করা।** টুল install হওয়ার আগের trace review করার জন্য থাকে না।\n\n"
+                "**ভুল ৩: session grouping ছাড়া tracing।** কথোপকথনের সীমানা ছাড়া পৃথক call-এর একটা স্তূপ একটা multi-turn ব্যর্থতা দেখাতে পারে না।\n\n"
+                "**ভুল ৪: কারো UI না দেখে একটা টুল বেছে নেওয়া।** Phoenix আর LangFuse একই রকম data ধরে কিন্তু আলাদাভাবে দেখায়; commit করার আগে real traffic-এর একটা ছোট অংশে দুটোই চেষ্টা করুন {{cite:phoenix-intro}} {{cite:langfuse-intro}}।\n\n"
+                "**ভুল ৫: trace আর quality dashboard-এর মধ্যে কোনো লিংক নেই।** একটা trace টুল আর একটা metrics dashboard যা cross-reference করা যায় না, একজন টেস্টারকে \"metric কমেছে\" থেকে \"এখানে নির্দিষ্ট call যা এটার কারণ\"-এ যেতে অক্ষম রাখে।"
+            ),
+        },
+        "What a tester can check": {
+            "technical": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Confirm tracing is live before launch, with a real call visible in the "
+                "tool's UI, not just the instrumentation code merged.\n"
+                "- Confirm traces group into sessions, not just individual calls.\n"
+                "- Spend time reading real traces by hand before writing any alert rule.\n"
+                "- Confirm a trace can be found starting from a dashboard metric, and a "
+                "dashboard metric can be explained starting from a trace.\n"
+                "</Callout>"
+            ),
+            "layman": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "This advice is the tutorial's own. It does not come from the sources.\n\n"
+                "- Confirm tracing is live before launch, with a real call visible in the "
+                "tool's UI, not just the instrumentation code merged.\n"
+                "- Confirm traces group into sessions, not just individual calls.\n"
+                "- Spend time reading real traces by hand before writing any alert rule.\n"
+                "- Confirm a trace can be found starting from a dashboard metric, and a "
+                "dashboard metric can be explained starting from a trace.\n"
+                "</Callout>"
+            ),
+            "bangla": (
+                "<Callout type=\"tip\" title=\"Tutorial advice\">\n\n"
+                "এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।\n\n"
+                "- launch-এর আগে tracing live নিশ্চিত করুন, টুলের UI-তে একটা real call দৃশ্যমান সহ, শুধু instrumentation code merge হওয়া নয়।\n"
+                "- trace session-এ গ্রুপ হয় তা নিশ্চিত করুন, শুধু পৃথক call নয়।\n"
+                "- কোনো alert নিয়ম লেখার আগে হাতে real trace পড়ায় সময় দিন।\n"
+                "- একটা dashboard metric থেকে শুরু করে একটা trace খুঁজে পাওয়া যায় তা নিশ্চিত করুন, আর একটা trace থেকে শুরু করে একটা dashboard metric ব্যাখ্যা করা যায় তাও।\n"
+                "</Callout>"
+            ),
+        },
+    },
+    key_words=[
+        ("Observability", "Instrumenting a live system so every call can be reviewed after the fact"),
+        ("Trace", "The record of one call: input, output, latency, token counts, model, timestamp"),
+        ("Span", "A sub-step inside a trace, such as one retrieval call within a RAG answer"),
+        ("Session", "A group of traces belonging to one conversation"),
+        ("Arize Phoenix", "An open-source observability tool built for LLM applications"),
+        ("LangFuse", "A tracing and prompt-management platform for LLM applications"),
+    ],
+)

@@ -1,0 +1,544 @@
+export const metadata = { title: 'DeepEval: Pytest for LLMs', description: 'Write LLM tests as Pytest functions with DeepEval metrics, run them with `deepeval test run`, and read the scores.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Getting started', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/getting-started', accessed: '2026-11-01' },
+    { title: 'Metrics', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-introduction', accessed: '2026-11-01' },
+    { title: 'Challenges in evaluating AI systems', publisher: 'Anthropic (Research)', url: 'https://www.anthropic.com/research/evaluating-ai-systems', accessed: '2026-11-01' },
+  ],
+}
+
+# DeepEval: Pytest for LLMs
+
+Promptfoo gives you a config and a table. DeepEval gives you code. That difference matters the moment your team wants the eval in the normal test suite.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+DeepEval plugs into Pytest: `deepeval test run` collects and runs your eval files the same way `pytest` would <Cite n={1} />. A test function builds a test case from the model's answer and checks it with one or more metrics. The metrics are the assertions.
+
+DeepEval sorts its metrics into two kinds, and the difference is the one to remember <Cite n={2} />:
+
+- **Referenceless metrics** work without labeled data. `AnswerRelevancyMetric` asks whether the answer addresses the input. `FaithfulnessMetric` asks whether the answer contradicts the `retrieval_context`, the text your retriever fetched. These suit a chatbot that answers from a knowledge base, and they also work in production.
+- **Reference-based metrics** need ground truth. `HallucinationMetric` compares the answer with a ground-truth `context`. A `GEval` metric can compare the answer with an `expected_output`.
+
+The metric catalogue is the reference to read before you design a suite.
+
+The test function looks like any other test, which is the whole point:
+
+```python
+# test_support.py
+from deepeval import assert_test
+from deepeval.metrics import AnswerRelevancyMetric, HallucinationMetric
+from deepeval.test_case import LLMTestCase
+
+from app.support import answer_question
+
+
+def test_support_answer_is_relevant_and_grounded():
+    question = "How long do I have to return a laptop?"
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question),
+        context=["Unopened items can be returned within 30 days."],
+    )
+    assert_test(test_case, [AnswerRelevancyMetric(), HallucinationMetric()])
+```
+
+Run the file with `deepeval test run` <Cite n={1} />:
+
+```bash
+deepeval test run test_support.py
+```
+
+Because the file is a Pytest file, Pytest features such as fixtures and parametrisation work in it.
+
+</Technical>
+<Layman>
+
+DeepEval lets you write LLM tests as normal Pytest tests. The command `deepeval test run` finds and runs them the way `pytest` does <Cite n={1} />. Each test takes the model's answer and checks it with one or more **metrics**. A metric is the check.
+
+There are two kinds of metrics <Cite n={2} />:
+
+- **Metrics with no right answer needed.** `AnswerRelevancyMetric` checks that the answer is about the question. `FaithfulnessMetric` checks that the answer does not contradict the text your search step found (`retrieval_context`). These fit a chatbot that answers from a knowledge base, and they also work on a live system.
+- **Metrics that need a known truth.** `HallucinationMetric` compares the answer with a trusted `context`. A `GEval` metric can compare the answer with an `expected_output`.
+
+A test looks like any other test:
+
+```python
+# test_support.py
+from deepeval import assert_test
+from deepeval.metrics import AnswerRelevancyMetric, HallucinationMetric
+from deepeval.test_case import LLMTestCase
+
+from app.support import answer_question
+
+
+def test_support_answer_is_relevant_and_grounded():
+    question = "How long do I have to return a laptop?"
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question),
+        context=["Unopened items can be returned within 30 days."],
+    )
+    assert_test(test_case, [AnswerRelevancyMetric(), HallucinationMetric()])
+```
+
+Run it like this <Cite n={1} />:
+
+```bash
+deepeval test run test_support.py
+```
+
+Because it is a Pytest file, Pytest tools such as fixtures and parametrisation work too.
+
+</Layman>
+<Bangla>
+
+DeepEval Pytest-এর সাথে যুক্ত হয়: `deepeval test run` আপনার eval ফাইলগুলো ঠিক `pytest`-এর মতো করেই খুঁজে নিয়ে চালায় <Cite n={1} />। একটা টেস্ট ফাংশন model-এর উত্তর থেকে একটা test case বানায়, আর এক বা একাধিক metric দিয়ে সেটা যাচাই করে। metric-গুলোই assertion।
+
+DeepEval তার metric-গুলোকে দুই ভাগে ভাগ করে, আর এই পার্থক্যটাই মনে রাখার মতো <Cite n={2} />:
+
+- **Referenceless metric** labeled data ছাড়াই কাজ করে। `AnswerRelevancyMetric` দেখে উত্তরটা input-এর প্রশ্নের জবাব দেয় কি না। `FaithfulnessMetric` দেখে উত্তরটা `retrieval_context`-এর, মানে আপনার retriever যে লেখা এনেছে তার, বিরোধিতা করে কি না। knowledge base থেকে উত্তর দেওয়া chatbot-এর জন্য এগুলো মানায়, আর production-এও এগুলো চলে।
+- **Reference-based metric**-এর ground truth লাগে। `HallucinationMetric` উত্তরকে একটা ground-truth `context`-এর সাথে তুলনা করে। একটা `GEval` metric উত্তরকে `expected_output`-এর সাথে তুলনা করতে পারে।
+
+suite ডিজাইন করার আগে metric-এর তালিকাটা পড়ে নিন।
+
+টেস্ট ফাংশনটা দেখতে যেকোনো সাধারণ টেস্টের মতো, আর এটাই মূল কথা:
+
+```python
+# test_support.py
+from deepeval import assert_test
+from deepeval.metrics import AnswerRelevancyMetric, HallucinationMetric
+from deepeval.test_case import LLMTestCase
+
+from app.support import answer_question
+
+
+def test_support_answer_is_relevant_and_grounded():
+    question = "How long do I have to return a laptop?"
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question),
+        context=["Unopened items can be returned within 30 days."],
+    )
+    assert_test(test_case, [AnswerRelevancyMetric(), HallucinationMetric()])
+```
+
+ফাইলটা `deepeval test run` দিয়ে চালান <Cite n={1} />:
+
+```bash
+deepeval test run test_support.py
+```
+
+ফাইলটা যেহেতু Pytest ফাইল, তাই fixture আর parametrisation-এর মতো Pytest-এর সুবিধাগুলো এতে কাজ করে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+A DeepEval test has three moving parts: the **test case**, the **metric**, and the **`assert_test` call**.
+
+The **test case** (`LLMTestCase`) holds the inputs and the outputs. `input` is the question. `actual_output` is what the model said. `expected_output` is the reference answer, when you have one. `context` is the ground truth that the answer should agree with. `retrieval_context` is what your retriever actually fetched. Different metrics read different fields: `HallucinationMetric` reads `context`, and `FaithfulnessMetric` reads `retrieval_context` <Cite n={2} />.
+
+The **metric** is the check. Each metric gives a score from 0 to 1 and a reason, and it passes when the score meets its threshold. Almost all of the built-in metrics use a model as the judge (LLM-as-a-judge), so they inherit the non-determinism of any other model call <Cite n={2} />.
+
+The **`assert_test` call** runs the metrics on the test case inside a test, so a metric below its threshold fails that test. Everything runs locally; if you are logged in to Confident AI, the results also appear there <Cite n={1} />.
+
+Because it is Pytest, you get **parametrisation** for free, and that is how a real suite is built:
+
+```python
+import pytest
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "How long do I have to return a laptop?",
+        "Can I return an opened item?",
+        "What is your refund policy for electronics?",
+    ],
+)
+def test_answer_is_grounded(case):
+    ...
+```
+
+The practical cost is the **judge calls**. A metric can make more than one model call for each test case: `FaithfulnessMetric`, for example, first extracts the claims from the answer and then checks each claim against the retrieval context <Cite n={2} />. So two metrics on fifty cases is at least a hundred judge calls. The tutorial's advice: run fast deterministic checks on every commit, and the metric tests on a schedule.
+
+</Technical>
+<Layman>
+
+A DeepEval test has three parts: the **test case**, the **metric**, and the **`assert_test` call**.
+
+The **test case** holds what went in and what came out. `input` is the question. `actual_output` is the model's answer. `expected_output` is the right answer, if you have one. `context` is the trusted truth the answer should agree with. `retrieval_context` is what your search step really found. Each metric reads its own fields: `HallucinationMetric` reads `context`, and `FaithfulnessMetric` reads `retrieval_context` <Cite n={2} />.
+
+The **metric** is the check. It gives a score from 0 to 1 and a reason, and it passes when the score reaches its threshold. Almost all built-in metrics ask a model to judge, so the result can vary like any model answer <Cite n={2} />.
+
+The **`assert_test` call** runs the metrics inside a test. If a score is below its threshold, the test fails. It all runs on your machine; if you log in to Confident AI, you also see the results there <Cite n={1} />.
+
+Because it is Pytest, you can run one test with many inputs:
+
+```python
+import pytest
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "How long do I have to return a laptop?",
+        "Can I return an opened item?",
+        "What is your refund policy for electronics?",
+    ],
+)
+def test_answer_is_grounded(case):
+    ...
+```
+
+The real cost is the judge calls. One metric can call the model more than once per case. `FaithfulnessMetric`, for example, first pulls out the claims and then checks each one <Cite n={2} />. So two metrics on fifty cases means at least a hundred judge calls. The tutorial's advice: run quick rule checks on every commit, and the metric tests on a schedule.
+
+</Layman>
+<Bangla>
+
+একটা DeepEval টেস্টের তিনটা অংশ: **test case**, **metric**, আর **`assert_test` call**।
+
+**Test case** (`LLMTestCase`)-এ থাকে input আর output। `input` হলো প্রশ্ন। `actual_output` হলো model যা বলেছে। `expected_output` হলো reference উত্তর, যদি থাকে। `context` হলো সেই ground truth, যার সাথে উত্তরটা মিলতে হবে। `retrieval_context` হলো আপনার retriever আসলে যা এনেছে। আলাদা metric আলাদা field পড়ে: `HallucinationMetric` পড়ে `context`, আর `FaithfulnessMetric` পড়ে `retrieval_context` <Cite n={2} />।
+
+**Metric** হলো চেক। প্রতিটা metric ০ থেকে ১-এর মধ্যে একটা স্কোর আর একটা কারণ দেয়, আর স্কোর threshold ছুঁলে pass করে। প্রায় সব built-in metric বিচারক হিসেবে একটা model ব্যবহার করে (LLM-as-a-judge), তাই অন্য যেকোনো model call-এর মতো এদের ফলাফলও বদলাতে পারে <Cite n={2} />।
+
+**`assert_test` call** টেস্টের ভেতরে test case-এর ওপর metric-গুলো চালায়, তাই কোনো metric threshold-এর নিচে থাকলে সেই টেস্ট fail করে। সবকিছু আপনার মেশিনেই চলে; Confident AI-তে login করা থাকলে ফলাফল সেখানেও দেখা যায় <Cite n={1} />।
+
+যেহেতু এটা Pytest, **parametrisation** বিনা খরচে পাবেন, আর আসল suite এভাবেই বানানো হয়:
+
+```python
+import pytest
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "How long do I have to return a laptop?",
+        "Can I return an opened item?",
+        "What is your refund policy for electronics?",
+    ],
+)
+def test_answer_is_grounded(case):
+    ...
+```
+
+বাস্তব খরচ হলো **judge call**। একটা metric প্রতি test case-এ একাধিক model call করতে পারে: যেমন `FaithfulnessMetric` আগে উত্তর থেকে দাবিগুলো বের করে, তারপর প্রতিটা দাবি retrieval context-এর সাথে মিলিয়ে দেখে <Cite n={2} />। তাই পঞ্চাশটা কেসে দুটো metric মানে অন্তত একশোটা judge call। টিউটোরিয়ালের পরামর্শ: প্রতিটা commit-এ দ্রুত deterministic চেক চালান, আর metric টেস্ট চালান নির্দিষ্ট সময় পরপর।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Split the suite by cost, so the expensive part runs less often. Put the tests with the most judge calls in their own file:
+
+```python
+# tests/ai/test_relevancy.py - few judge calls: run on every pull request
+import pytest
+from deepeval import assert_test
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+from app.support import answer_question
+from fixtures.policies import RETURN_POLICY
+
+QUESTIONS = [
+    "How long do I have to return a laptop?",
+    "Can I return an opened item?",
+    "Who pays the return shipping?",
+]
+
+
+@pytest.mark.parametrize("question", QUESTIONS)
+def test_answer_is_relevant(question):
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question, context=RETURN_POLICY),
+    )
+    assert_test(test_case, [AnswerRelevancyMetric(threshold=0.7)])
+```
+
+```python
+# tests/ai/test_faithfulness.py - more judge calls per case: run nightly
+import pytest
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+from app.support import answer_question
+from fixtures.policies import RETURN_POLICY
+from tests.ai.test_relevancy import QUESTIONS
+
+
+@pytest.mark.parametrize("question", QUESTIONS)
+def test_answer_is_faithful_to_the_policy(question):
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question, context=RETURN_POLICY),
+        retrieval_context=[RETURN_POLICY],
+    )
+    assert_test(test_case, [FaithfulnessMetric(threshold=0.8)])
+```
+
+Run each file on its own schedule (the schedule is the tutorial's advice) <Cite n={1} />:
+
+```bash
+deepeval test run tests/ai/test_relevancy.py      # every pull request
+deepeval test run tests/ai/test_faithfulness.py   # nightly
+```
+
+One thing to check carefully: the **threshold**. The default is 0.5 for all metrics <Cite n={2} />. That is a default, not a quality bar that you chose. The tutorial's method: run the suite once on the current prompt, look at the score distribution, and set the threshold where the known-bad cases fall below it and the known-good ones stay above. Then read the scores with care: Anthropic warns against overinterpreting the quantitative score of any eval <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+Split the tests by cost, so the expensive ones run less often. Put the tests with the most judge calls in their own file:
+
+```python
+# tests/ai/test_relevancy.py - few judge calls: run on every pull request
+import pytest
+from deepeval import assert_test
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+from app.support import answer_question
+from fixtures.policies import RETURN_POLICY
+
+QUESTIONS = [
+    "How long do I have to return a laptop?",
+    "Can I return an opened item?",
+    "Who pays the return shipping?",
+]
+
+
+@pytest.mark.parametrize("question", QUESTIONS)
+def test_answer_is_relevant(question):
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question, context=RETURN_POLICY),
+    )
+    assert_test(test_case, [AnswerRelevancyMetric(threshold=0.7)])
+```
+
+```python
+# tests/ai/test_faithfulness.py - more judge calls per case: run nightly
+import pytest
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+from app.support import answer_question
+from fixtures.policies import RETURN_POLICY
+from tests.ai.test_relevancy import QUESTIONS
+
+
+@pytest.mark.parametrize("question", QUESTIONS)
+def test_answer_is_faithful_to_the_policy(question):
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question, context=RETURN_POLICY),
+        retrieval_context=[RETURN_POLICY],
+    )
+    assert_test(test_case, [FaithfulnessMetric(threshold=0.8)])
+```
+
+Run each file on its own schedule. The schedule below is the tutorial's advice <Cite n={1} />:
+
+```bash
+deepeval test run tests/ai/test_relevancy.py      # every pull request
+deepeval test run tests/ai/test_faithfulness.py   # nightly
+```
+
+Check the **threshold** with care. By default it is 0.5 for every metric <Cite n={2} />. That is a default, not a pass mark you chose. The tutorial's method: run the tests once, look at the scores, and set the threshold so that known-bad answers fall below it and known-good answers stay above. Do not read too much into one score; Anthropic warns about this <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+খরচ অনুযায়ী suite ভাগ করুন, যাতে ব্যয়বহুল অংশটা কম চলে। সবচেয়ে বেশি judge call লাগে এমন টেস্টগুলো আলাদা ফাইলে রাখুন:
+
+```python
+# tests/ai/test_relevancy.py - few judge calls: run on every pull request
+import pytest
+from deepeval import assert_test
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+from app.support import answer_question
+from fixtures.policies import RETURN_POLICY
+
+QUESTIONS = [
+    "How long do I have to return a laptop?",
+    "Can I return an opened item?",
+    "Who pays the return shipping?",
+]
+
+
+@pytest.mark.parametrize("question", QUESTIONS)
+def test_answer_is_relevant(question):
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question, context=RETURN_POLICY),
+    )
+    assert_test(test_case, [AnswerRelevancyMetric(threshold=0.7)])
+```
+
+```python
+# tests/ai/test_faithfulness.py - more judge calls per case: run nightly
+import pytest
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+from app.support import answer_question
+from fixtures.policies import RETURN_POLICY
+from tests.ai.test_relevancy import QUESTIONS
+
+
+@pytest.mark.parametrize("question", QUESTIONS)
+def test_answer_is_faithful_to_the_policy(question):
+    test_case = LLMTestCase(
+        input=question,
+        actual_output=answer_question(question, context=RETURN_POLICY),
+        retrieval_context=[RETURN_POLICY],
+    )
+    assert_test(test_case, [FaithfulnessMetric(threshold=0.8)])
+```
+
+প্রতিটা ফাইল তার নিজের সময়সূচিতে চালান (সময়সূচিটা টিউটোরিয়ালের পরামর্শ) <Cite n={1} />:
+
+```bash
+deepeval test run tests/ai/test_relevancy.py      # every pull request
+deepeval test run tests/ai/test_faithfulness.py   # nightly
+```
+
+একটা বিষয় মনোযোগ দিয়ে দেখুন: **threshold**। সব metric-এর default 0.5 <Cite n={2} />। এটা একটা default, আপনার বেছে নেওয়া মানের মাপকাঠি নয়। টিউটোরিয়ালের পদ্ধতি: বর্তমান prompt-এ একবার suite চালান, স্কোরগুলো কীভাবে ছড়িয়ে আছে দেখুন, আর threshold এমন জায়গায় বসান যাতে known-bad কেসগুলো নিচে আর known-good কেসগুলো ওপরে থাকে। তারপর স্কোর সাবধানে পড়ুন: যেকোনো eval-এর সংখ্যাগত স্কোরকে অতিরিক্ত ব্যাখ্যা করা নিয়ে Anthropic সতর্ক করে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: leaving the threshold at the default.** The default of 0.5 <Cite n={2} /> is not a bar you chose. Set the threshold from the score distribution of a known-good and a known-bad set.
+
+**Mistake 2: running every metric test on every commit.** Each metric makes one or more judge calls. Put the expensive ones on a schedule and keep only deterministic checks in the inner loop.
+
+**Mistake 3: confusing `context` and `retrieval_context`.** `context` is the ground truth and `retrieval_context` is what the retriever fetched, and different metrics read different fields <Cite n={2} />. Copying one into the other hides a retrieval bug.
+
+**Mistake 4: one big test function.** When it fails you do not know which case or which metric failed. Parametrise.
+
+**Mistake 5: no reference answers.** Without an expected output you can only measure relevance, not correctness. Keep a reference for at least the important cases.
+
+**Mistake 6: treating the score as absolute.** A 0.8 faithfulness score means nothing without the distribution behind it and the previous run to compare it to.
+
+</Technical>
+<Layman>
+
+**Mistake 1: keeping the default threshold.** The default is 0.5 <Cite n={2} />, and nobody chose it for your app. Set it from the scores of answers you know are good and bad.
+
+**Mistake 2: running every metric test on every commit.** Each metric makes one or more judge calls. Run the expensive ones on a schedule, and keep quick rule checks for every commit.
+
+**Mistake 3: mixing up `context` and `retrieval_context`.** The first is the trusted truth. The second is what your search step found. Each metric reads its own field <Cite n={2} />. If you copy one into the other, you hide a search bug.
+
+**Mistake 4: one big test.** When it fails, you do not know which case or which metric failed. Use parametrisation.
+
+**Mistake 5: no right answers.** Without an expected answer you can only check that the answer is on topic, not that it is correct. Keep right answers for the important cases.
+
+**Mistake 6: reading a score on its own.** A faithfulness score of 0.8 means nothing without the other scores and the last run to compare it with.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: threshold default-এ রেখে দেওয়া।** default 0.5 <Cite n={2} /> আপনার বেছে নেওয়া মাপকাঠি নয়। known-good আর known-bad সেটের স্কোর কীভাবে ছড়িয়ে আছে তা দেখে threshold বসান।
+
+**ভুল ২: প্রতিটা commit-এ সব metric টেস্ট চালানো।** প্রতিটা metric এক বা একাধিক judge call করে। ব্যয়বহুলগুলো নির্ধারিত সময়ে রাখুন আর ভেতরের লুপে শুধু নির্দিষ্ট চেক রাখুন।
+
+**ভুল ৩: `context` আর `retrieval_context` গুলিয়ে ফেলা।** `context` হলো ground truth, আর `retrieval_context` হলো retriever যা এনেছে; আলাদা metric আলাদা field পড়ে <Cite n={2} />। একটাকে অন্যটায় কপি করলে retrieval বাগ ঢাকা পড়ে।
+
+**ভুল ৪: একটা বড় টেস্ট ফাংশন।** ব্যর্থ হলে কোন কেস বা কোন metric ব্যর্থ হলো বোঝা যায় না। parametrise করুন।
+
+**ভুল ৫: reference উত্তর না থাকা।** expected output ছাড়া আপনি শুধু relevancy মাপতে পারেন, সঠিকতা নয়। গুরুত্বপূর্ণ কেসগুলোর জন্য একটা reference রাখুন।
+
+**ভুল ৬: স্কোরকে একা একা পড়া।** 0.8 faithfulness স্কোরের পিছনের বিতরণ আর আগের run না দেখে কিছু মানে আসে না।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the DeepEval suite next to the application tests, in `tests/ai/`. It is a Pytest suite and should feel like one.
+- Put the metric tests with the most judge calls in their own file from the start, even if they are fast today. The day they get slow, the split is already there.
+- Record the metric scores in CI output as well as on Confident AI, if you use it. Confident AI is for history; the CI log is for the pull request.
+- Store the `context` and the `retrieval_context` separately in the test case, even when they are equal today. The day they differ is the day you need it.
+- Save the judge model id with the scores. A score without the judge version cannot be compared with a later run.
+- Write one test with a deliberately bad answer and check that the metric scores it low. A metric that passes everything measures nothing.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the DeepEval suite next to the application tests, in `tests/ai/`. It is a Pytest suite and should feel like one.
+- Put the metric tests with the most judge calls in their own file from the start, even if they are fast today. The day they get slow, the split is already there.
+- Record the metric scores in CI output as well as on Confident AI, if you use it. Confident AI is for history; the CI log is for the pull request.
+- Store the `context` and the `retrieval_context` separately in the test case, even when they are equal today. The day they differ is the day you need it.
+- Save the judge model id with the scores. A score without the judge version cannot be compared with a later run.
+- Write one test with a deliberately bad answer and check that the metric scores it low. A metric that passes everything measures nothing.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- DeepEval suite-টা অ্যাপের টেস্টের পাশে, `tests/ai/`-তে রাখুন। এটা একটা Pytest suite, তাই এটাকে তেমনভাবেই রাখুন।
+- সবচেয়ে বেশি judge call লাগে এমন metric টেস্টগুলো শুরু থেকেই আলাদা ফাইলে রাখুন, আজ দ্রুত হলেও। যেদিন ধীর হবে, সেদিন ভাগটা আগে থেকেই করা থাকবে।
+- metric স্কোর CI output-এও লিখুন, Confident AI ব্যবহার করলে সেখানেও। Confident AI ইতিহাসের জন্য, CI log pull request-এর জন্য।
+- test case-এ `context` আর `retrieval_context` আলাদা আলাদা রাখুন, আজও সমান হলেও। যেদিন আলাদা হবে, সেদিন এটা দরকার হবে।
+- স্কোরের সাথে judge model id সংরক্ষণ করুন। judge-এর version ছাড়া স্কোর পরের run-এর সাথে তুলনা যায় না।
+- ইচ্ছাকৃতভাবে খারাপ একটা উত্তর দিয়ে একটা টেস্ট লিখুন আর দেখুন metric সেটাকে কম স্কোর দেয় কি না। সবকিছু পাস করা metric কিছুই মাপে না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| DeepEval | An LLM evaluation framework that plugs into Pytest |
+| Metric | A scored check on an output, usually judged by a model |
+| Threshold | The score a metric must reach for the test to pass |
+| Referenceless metric | A metric that works without labeled data (ground truth) |
+| Reference-based metric | A metric that needs ground truth, such as an expected output or a ground-truth context |
+| LLMTestCase | The DeepEval object holding the input, the output, the context, and the reference |
+| retrieval_context | What the retriever actually fetched; `context` is the ground truth |
+| Confident AI | The hosted platform where DeepEval results also appear when you log in |
+| assert_test | The DeepEval function that runs the metrics on a test case inside a test |

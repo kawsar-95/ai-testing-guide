@@ -1,0 +1,609 @@
+export const metadata = { title: 'CI/CD Eval Pipelines', description: 'Put the evals in the pipeline: a quality gate that blocks the merge, a cost gate, and the PR report that shows the numbers.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'CI/CD integration', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
+    { title: 'GitHub Actions documentation', publisher: 'GitHub', url: 'https://docs.github.com/en/actions', accessed: '2026-11-01' },
+    { title: 'Challenges in evaluating AI systems', publisher: 'Anthropic (Research)', url: 'https://www.anthropic.com/research/evaluating-ai-systems', accessed: '2026-11-01' },
+  ],
+}
+
+# CI/CD Eval Pipelines
+
+An eval suite that only runs on a laptop is a report. An eval suite that runs on every pull request is a gate.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The pipeline has three jobs, and they run in increasing cost order.
+
+```text
+on every push    the fast, deterministic checks: schema, format, prompt shape
+on every PR      the eval suite with a threshold: a merge blocks below it
+on a schedule    the expensive evals: the full dataset, the model comparison
+```
+
+The **gate** is the point. A gate is a threshold that fails the job, which fails the check, which blocks the merge. The threshold has to be a number the team agreed on before the first failure, and it has to be derived from the quality bar rather than from the current score, or the bar rises every time someone raises it <Cite n={3} />.
+
+The **PR report** is the second point. A failed gate with no explanation is a wall. The report has to name the failing cases, show the outputs, and say which metric moved. Promptfoo's GitHub Action integration writes the results back onto the pull request <Cite n={1} />, and GitHub Actions is where the workflow itself lives <Cite n={2} />.
+
+The **cost gate** is the third. An eval suite that costs more than the feature it protects is not sustainable, and a prompt change that quietly doubles the token count should fail the build like any other regression.
+
+</Technical>
+<Layman>
+
+pipeline-এ তিনটা কাজ আছে, আর সেগুলো খরচ বাড়ার ক্রমে চলে:
+
+```text
+on every push    the fast, deterministic checks: schema, format, prompt shape
+on every PR      the eval suite with a threshold: a merge blocks below it
+on a schedule    the expensive evals: the full dataset, the model comparison
+```
+
+**gate**-ই মূল বিষয়। gate হলো একটা threshold যেটা job-কে ব্যর্থ করায়, যেটা check-কে ব্যর্থ করায়, যেটা merge আটকায়। threshold দলকে প্রথম ব্যর্থতার আগেই ঠিক করতে হবে, আর এটা quality bar থেকে আসতে হবে, বর্তমান স্কোর থেকে নয় — নইলে প্রতিবার কেউ বাড়ালেই bar বাড়ে যাবে <Cite n={3} />।
+
+**PR report** দ্বিতীয় পয়েন্ট। ব্যর্থ gate-এর সাথে ব্যাখ্যা না থাকলে সেটা একটা দেয়াল। report-এ ব্যর্থ কেসগুলোর নাম, output আর কোন metric সরেছে সেটা থাকতে হবে। Promptfoo-র GitHub Action integration ফলাফল pull request-এ লিখে দেয় <Cite n={1} />, আর workflow নিজে থাকে GitHub Actions-এ <Cite n={2} />।
+
+**cost gate** তৃতীয়টা। যে eval suite নিজের ফিচারের চেয়ে বেশি খরচ করে সেটা টেকসই নয়, আর prompt পরিবর্তন যেটা নীরবে token সংখ্যা দ্বিগুণ করে দেয় সেটাও অন্য যেকোনো regression-এর মতোই build fail করা উচিত।
+
+</Layman>
+<Bangla>
+
+pipeline-এ তিনটা কাজ আছে, আর সেগুলো খরচ বাড়ার ক্রমে চলে:
+
+```text
+on every push    the fast, deterministic checks: schema, format, prompt shape
+on every PR      the eval suite with a threshold: a merge blocks below it
+on a schedule    the expensive evals: the full dataset, the model comparison
+```
+
+**gate**-ই মূল বিষয়। gate হলো একটা threshold যেটা job-কে ব্যর্থ করায়, যেটা check-কে ব্যর্থ করায়, যেটা merge আটকায়। threshold দলকে প্রথম ব্যর্থতার আগেই ঠিক করতে হবে, আর এটা quality bar থেকে আসতে হবে, বর্তমান স্কোর থেকে নয় — নইলে প্রতিবার কেউ বাড়ালেই bar বাড়ে যাবে <Cite n={3} />।
+
+**PR report** দ্বিতীয় পয়েন্ট। ব্যর্থ gate-এর সাথে ব্যাখ্যা না থাকলে সেটা একটা দেয়াল। report-এ ব্যর্থ কেসগুলোর নাম, output আর কোন metric সরেছে সেটা থাকতে হবে। Promptfoo-র GitHub Action integration ফলাফল pull request-এ লিখে দেয় <Cite n={1} />, আর workflow নিজে থাকে GitHub Actions-এ <Cite n={2} />।
+
+**cost gate** তৃতীয়টা। যে eval suite নিজের ফিচারের চেয়ে বেশি খরচ করে সেটা টেকসই নয়, আর prompt পরিবর্তন যেটা নীরবে token সংখ্যা দ্বিগুণ করে দেয় সেটাও অন্য যেকোনো regression-এর মতোই build fail করা উচিত।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The workflow file is a normal GitHub Actions workflow with the eval step added. The important detail is that the eval step **fails the job**, because a job that reports a failure without exiting non-zero does not block anything <Cite n={2} />.
+
+```yaml
+# .github/workflows/eval.yml
+name: AI eval gate
+on:
+  pull_request:
+    paths: ["app/ai/**", "prompts/**", "evals/**"]
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - name: Run the eval gate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx promptfoo eval --output results.json
+          npx promptfoo eval --output results.json --assertions
+```
+
+The **paths** filter matters: without it, every pull request pays for the eval, and the team learns to ignore the gate.
+
+The **threshold** is enforced by the assertions in the config rather than by a separate script, so the bar lives in one place next to the cases:
+
+```yaml
+defaultTest:
+  assert:
+    - type: llm-rubric
+      value: The answer only uses the policy
+      metric: faithfulness
+      threshold: 0.9
+```
+
+The **cost gate** is a second check, and it is the one that stops a prompt change from quietly doubling the bill:
+
+```yaml
+  - type: javascript
+    value: |
+      const tokens = context.vars.promptTokens + context.vars.completionTokens;
+      if (tokens > 1500) {
+        return `the prompt used ${tokens} tokens, over the 1500 budget`;
+      }
+      return true;
+```
+
+And the **report**, which is what turns a red check into a fixable problem. The results file goes onto the pull request as a comment, with the failing cases and their outputs <Cite n={1} />.
+
+The last piece is **flakiness control**. An eval that fails randomly will get ignored, and an ignored gate is worse than no gate. The controls are: run the model at a fixed temperature, average the score over several samples per case, and separate the flaky cases into their own suite that runs on a schedule instead of blocking the merge.
+
+</Technical>
+<Layman>
+
+workflow ফাইল একটা সাধারণ GitHub Actions workflow, eval ধাপ যোগ করা। গুরুত্বপূর্ণ বিষয় হলো eval ধাপ **job-কে ব্যর্থ করায়**, কারণ non-zero ছাড়া ব্যর্থতা রিপোর্ট করা job কিছু আটকায় না <Cite n={2} />।
+
+```yaml
+# .github/workflows/eval.yml
+name: AI eval gate
+on:
+  pull_request:
+    paths: ["app/ai/**", "prompts/**", "evals/**"]
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - name: Run the eval gate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx promptfoo eval --output results.json
+          npx promptfoo eval --output results.json --assertions
+```
+
+**paths** ফিল্টারটা গুরুত্বপূর্ণ: এটা ছাড়া প্রতিটা pull request-এর জন্য eval-এর খরচ, আর দল শেখে যায় gate উপেক্ষা করতে।
+
+**threshold** config-এর assertion দিয়ে enforce হয়, আলাদা script দিয়ে নয়, যাতে bar কেসগুলোর পাশেই এক জায়গায় থাকে:
+
+```yaml
+defaultTest:
+  assert:
+    - type: llm-rubric
+      value: The answer only uses the policy
+      metric: faithfulness
+      threshold: 0.9
+```
+
+**cost gate** আরেকটা চেক, আর সেটাই prompt পরিবর্তন যেন নীরবে বিল দ্বিগুণ করে না তা আটকায়:
+
+```yaml
+  - type: javascript
+    value: |
+      const tokens = context.vars.promptTokens + context.vars.completionTokens;
+      if (tokens > 1500) {
+        return `the prompt used ${tokens} tokens, over the 1500 budget`;
+      }
+      return true;
+```
+
+আর **report**, যেটা লাল চেককে সমাধানযোগ্য সমস্যায় বদলে দেয়। ফলাফলের ফাইল pull request-এ comment হিসেবে যায়, ব্যর্থ কেসগুলো আর তাদের output সহ <Cite n={1} />।
+
+শেষ অংশ হলো **flakiness control**। যে eval মাঝে মাঝে এলোমেলো ব্যর্থ হয় সেটা উপেক্ষা হয়, আর উপেক্ষিত gate কোনো gate-এর চেয়ে খারাপ। নিয়ন্ত্রণগুলো: model একটা নির্দিষ্ট temperature-এ চালান, প্রতি কেসে কয়েকবার sample নিয়ে স্কোরের গড় নেওয়া, আর flaky কেসগুলো আলাদা suite-এ রাখা যেটা merge না আটকিয়ে নির্ধারিত সময়ে চলে।
+
+</Layman>
+<Bangla>
+
+workflow ফাইল একটা সাধারণ GitHub Actions workflow, eval ধাপ যোগ করা। গুরুত্বপূর্ণ বিষয় হলো eval ধাপ **job-কে ব্যর্থ করায়**, কারণ non-zero ছাড়া ব্যর্থতা রিপোর্ট করা job কিছু আটকায় না <Cite n={2} />।
+
+```yaml
+# .github/workflows/eval.yml
+name: AI eval gate
+on:
+  pull_request:
+    paths: ["app/ai/**", "prompts/**", "evals/**"]
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - name: Run the eval gate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx promptfoo eval --output results.json
+          npx promptfoo eval --output results.json --assertions
+```
+
+**paths** ফিল্টারটা গুরুত্বপূর্ণ: এটা ছাড়া প্রতিটা pull request-এর জন্য eval-এর খরচ, আর দল শেখে যায় gate উপেক্ষা করতে।
+
+**threshold** config-এর assertion দিয়ে enforce হয়, আলাদা script দিয়ে নয়, যাতে bar কেসগুলোর পাশেই এক জায়গায় থাকে:
+
+```yaml
+defaultTest:
+  assert:
+    - type: llm-rubric
+      value: The answer only uses the policy
+      metric: faithfulness
+      threshold: 0.9
+```
+
+**cost gate** আরেকটা চেক, আর সেটাই prompt পরিবর্তন যেন নীরবে বিল দ্বিগুণ করে না তা আটকায়:
+
+```yaml
+  - type: javascript
+    value: |
+      const tokens = context.vars.promptTokens + context.vars.completionTokens;
+      if (tokens > 1500) {
+        return `the prompt used ${tokens} tokens, over the 1500 budget`;
+      }
+      return true;
+```
+
+আর **report**, যেটা লাল চেককে সমাধানযোগ্য সমস্যায় বদলে দেয়। ফলাফলের ফাইল pull request-এ comment হিসেবে যায়, ব্যর্থ কেসগুলো আর তাদের output সহ <Cite n={1} />।
+
+শেষ অংশ হলো **flakiness control**। যে eval মাঝে মাঝে এলোমেলো ব্যর্থ হয় সেটা উপেক্ষা হয়, আর উপেক্ষিত gate কোনো gate-এর চেয়ে খারাপ। নিয়ন্ত্রণগুলো: model একটা নির্দিষ্ট temperature-এ চালান, প্রতি কেসে কয়েকবার sample নিয়ে স্কোরের গড় নেওয়া, আর flaky কেসগুলো আলাদা suite-এ রাখা যেটা merge না আটকিয়ে নির্ধারিত সময়ে চলে।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The workflow runs the eval, writes the result onto the pull request, and fails on a threshold:
+
+```yaml
+      - name: Run the eval gate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx promptfoo eval --output results.json --no-cache
+          npx promptfoo eval --output results.json --assertions || exit 1
+```
+
+The `--assertions` run is the gate: it exits non-zero when an assertion fails, which fails the step, which fails the job, which blocks the merge <Cite n={1} />.
+
+The **report on the pull request** is what makes the failure useful:
+
+```yaml
+      - name: Comment the results on the pull request
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('results.json', 'utf8'));
+            const failed = results.results.tests.filter(t =>
+              t.success === false
+            );
+            const lines = failed.map(t =>
+              `- **${t.testCase.description}** (${t.provider.label}): ${t.failureReason}`
+            );
+            const body = failed.length
+              ? `## AI eval gate failed\n\n${lines.join('\n')}`
+              : '## AI eval gate passed';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+```
+
+The `if: always()` matters: without it the comment is skipped on failure, which is exactly when you want it.
+
+The **cost gate** as a separate step, because it needs the token counts from the whole run:
+
+```python
+# scripts/check_eval_cost.py
+import json
+import sys
+
+MAX_TOKENS = 1500
+
+results = json.load(open(sys.argv[1]))
+over = [
+    (t["testCase"]["description"], t["tokensUsed"])
+    for t in results["results"]["tests"]
+    if t.get("tokensUsed", 0) > MAX_TOKENS
+]
+if over:
+    for description, tokens in over:
+        print(f"- {description}: {tokens} tokens, over the {MAX_TOKENS} budget")
+    sys.exit(1)
+```
+
+And the **flaky-case isolation**, which is what keeps the gate trusted:
+
+```yaml
+defaultTest:
+  assert:
+    - type: llm-rubric
+      value: The answer only uses the policy
+      metric: faithfulness
+      threshold: 0.9
+tests: file://evals/stable-cases.yaml
+```
+
+The stable cases run in the merge gate. The cases that flake run on the schedule, with the same assertions, so a genuinely flaky case is still measured. Nothing gets a permanent pass, and nothing random blocks a merge.
+
+</Technical>
+<Layman>
+
+workflow eval চালায়, ফলাফল pull request-এ লেখে, আর threshold-এর ওপর ব্যর্থ হয়:
+
+```yaml
+      - name: Run the eval gate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx promptfoo eval --output results.json --no-cache
+          npx promptfoo eval --output results.json --assertions || exit 1
+```
+
+`--assertions` run-টাই gate: কোনো assertion ব্যর্থ হলে non-zero exit করে, যেটা step ব্যর্থ করায়, যেটা job ব্যর্থ করায়, যেটা merge আটকায় <Cite n={1} />।
+
+**pull request-এ report**-ই ব্যর্থতাকে কাজের করে তোলে:
+
+```yaml
+      - name: Comment the results on the pull request
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('results.json', 'utf8'));
+            const failed = results.results.tests.filter(t =>
+              t.success === false
+            );
+            const lines = failed.map(t =>
+              `- **${t.testCase.description}** (${t.provider.label}): ${t.failureReason}`
+            );
+            const body = failed.length
+              ? `## AI eval gate failed\n\n${lines.join('\n')}`
+              : '## AI eval gate passed';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+```
+
+`if: always()` গুরুত্বপূর্ণ: এটা ছাড়া ব্যর্থতার সময় comment-টা বাদ পড়ে, আর ঠিক তখনই সেটা দরকার।
+
+**cost gate** আলাদা ধাপ হিসেবে, কারণ এর জন্য পুরো run-এর token সংখ্যা দরকার:
+
+```python
+# scripts/check_eval_cost.py
+import json
+import sys
+
+MAX_TOKENS = 1500
+
+results = json.load(open(sys.argv[1]))
+over = [
+    (t["testCase"]["description"], t["tokensUsed"])
+    for t in results["results"]["tests"]
+    if t.get("tokensUsed", 0) > MAX_TOKENS
+]
+if over:
+    for description, tokens in over:
+        print(f"- {description}: {tokens} tokens, over the {MAX_TOKENS} budget")
+    sys.exit(1)
+```
+
+আর **flaky-case আলাদা করা**, যেটাই gate-কে বিশ্বসযোগ্য রাখে:
+
+```yaml
+defaultTest:
+  assert:
+    - type: llm-rubric
+      value: The answer only uses the policy
+      metric: faithfulness
+      threshold: 0.9
+tests: file://evals/stable-cases.yaml
+```
+
+স্থায়ী কেসগুলো merge gate-এ চলে। যেসব কেস flaky সেগুলো নির্ধারিত সময়ে চলে, একই assertion-সহ, যাতে সত্যিকারের flaky কেসও মাপা হয়। কিছুকে স্থায়ী পাস দেওয়া হয় না, আর কিছুই এলোমেলো করে merge আটকায় না।
+
+</Layman>
+<Bangla>
+
+workflow eval চালায়, ফলাফল pull request-এ লেখে, আর threshold-এর ওপর ব্যর্থ হয়:
+
+```yaml
+      - name: Run the eval gate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx promptfoo eval --output results.json --no-cache
+          npx promptfoo eval --output results.json --assertions || exit 1
+```
+
+`--assertions` run-টাই gate: কোনো assertion ব্যর্থ হলে non-zero exit করে, যেটা step ব্যর্থ করায়, যেটা job ব্যর্থ করায়, যেটা merge আটকায় <Cite n={1} />।
+
+**pull request-এ report**-ই ব্যর্থতাকে কাজের করে তোলে:
+
+```yaml
+      - name: Comment the results on the pull request
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('results.json', 'utf8'));
+            const failed = results.results.tests.filter(t =>
+              t.success === false
+            );
+            const lines = failed.map(t =>
+              `- **${t.testCase.description}** (${t.provider.label}): ${t.failureReason}`
+            );
+            const body = failed.length
+              ? `## AI eval gate failed\n\n${lines.join('\n')}`
+              : '## AI eval gate passed';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+```
+
+`if: always()` গুরুত্বপূর্ণ: এটা ছাড়া ব্যর্থতার সময় comment-টা বাদ পড়ে, আর ঠিক তখনই সেটা দরকার।
+
+**cost gate** আলাদা ধাপ হিসেবে, কারণ এর জন্য পুরো run-এর token সংখ্যা দরকার:
+
+```python
+# scripts/check_eval_cost.py
+import json
+import sys
+
+MAX_TOKENS = 1500
+
+results = json.load(open(sys.argv[1]))
+over = [
+    (t["testCase"]["description"], t["tokensUsed"])
+    for t in results["results"]["tests"]
+    if t.get("tokensUsed", 0) > MAX_TOKENS
+]
+if over:
+    for description, tokens in over:
+        print(f"- {description}: {tokens} tokens, over the {MAX_TOKENS} budget")
+    sys.exit(1)
+```
+
+আর **flaky-case আলাদা করা**, যেটাই gate-কে বিশ্বসযোগ্য রাখে:
+
+```yaml
+defaultTest:
+  assert:
+    - type: llm-rubric
+      value: The answer only uses the policy
+      metric: faithfulness
+      threshold: 0.9
+tests: file://evals/stable-cases.yaml
+```
+
+স্থায়ী কেসগুলো merge gate-এ চলে। যেসব কেস flaky সেগুলো নির্ধারিত সময়ে চলে, একই assertion-সহ, যাতে সত্যিকারের flaky কেসও মাপা হয়। কিছুকে স্থায়ী পাস দেওয়া হয় না, আর কিছুই এলোমেলো করে merge আটকায় না।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: a gate with no threshold.** "The eval failed" without a number means the team argues about the bar instead of the quality <Cite n={3} />.
+
+**Mistake 2: the threshold set from the current score.** Then the bar silently rises every time somebody raises it.
+
+**Mistake 3: running the eval on every push.** The cost is real and the team learns to ignore it.
+
+**Mistake 4: no report on the pull request.** A red check with no output is a wall <Cite n={1} />.
+
+**Mistake 5: no cost gate.** A prompt change that doubles the token count is a regression like any other.
+
+**Mistake 6: a flaky gate.** A gate that fails randomly gets ignored, and an ignored gate is worse than no gate.
+
+</Technical>
+<Layman>
+
+**Mistake ১: threshold ছাড়া gate।** সংখ্যা ছাড়া "eval ব্যর্থ" মানে দল মান নিয়ে ঝগড়া করে, মান নিয়ে নয় <Cite n={3} />।
+
+**Mistake ২: threshold বর্তমান স্কোর থেকে ঠিক করা।** তাহলে bar নীরবে প্রতিবার বাড়ে।
+
+**Mistake ৩: প্রতিটা push-এ eval চালানো।** খরচ আসল, আর দল শেখে যায় উপেক্ষা করতে।
+
+**Mistake ৪: pull request-এ report নেই।** output ছাড়া লাল চেক একটা দেয়াল <Cite n={1} />।
+
+**Mistake ৫: cost gate নেই।** token সংখ্যা দ্বিগুণ করা prompt পরিবর্তন একটা regression-ই।
+
+**Mistake ৬: flaky gate।** যে gate এলোমেলো ব্যর্থ হয় সেটা উপেক্ষা হয়, আর উপেক্ষিত gate কোনো gate-এর চেয়ে খারাপ।
+
+</Layman>
+<Bangla>
+
+**Mistake ১: threshold ছাড়া gate।** সংখ্যা ছাড়া "eval ব্যর্থ" মানে দল মান নিয়ে ঝগড়া করে, মান নিয়ে নয় <Cite n={3} />।
+
+**Mistake ২: threshold বর্তমান স্কোর থেকে ঠিক করা।** তাহলে bar নীরবে প্রতিবার বাড়ে।
+
+**Mistake ৩: প্রতিটা push-এ eval চালানো।** খরচ আসল, আর দল শেখে যায় উপেক্ষা করতে।
+
+**Mistake ৪: pull request-এ report নেই।** output ছাড়া লাল চেক একটা দেয়াল <Cite n={1} />।
+
+**Mistake ৫: cost gate নেই।** token সংখ্যা দ্বিগুণ করা prompt পরিবর্তন একটা regression-ই।
+
+**Mistake ৬: flaky gate।** যে gate এলোমেলো ব্যর্থ হয় সেটা উপেক্ষা হয়, আর উপেক্ষিত gate কোনো gate-এর চেয়ে খারাপ।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the threshold down in the config next to the cases, with a comment explaining what it protects. A number nobody understands gets changed.
+- Store the eval results as a build artifact. When the score drops three weeks later, the history is the only way to see what moved.
+- Test the gate itself: open a pull request with a deliberately broken assertion and check that it blocks and that the comment explains why.
+- Give the job a token budget of its own and alert when the eval spend itself goes up. The eval is a cost centre too.
+- Put the eval behind the paths filter for the files that can change it. Every unrelated pull request should not pay for it.
+- When you find a flaky case, move it to the scheduled suite in the same commit, so it does not get quietly deleted instead.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Write the threshold down in the config next to the cases, with a comment explaining what it protects. A number nobody understands gets changed.
+- Store the eval results as a build artifact. When the score drops three weeks later, the history is the only way to see what moved.
+- Test the gate itself: open a pull request with a deliberately broken assertion and check that it blocks and that the comment explains why.
+- Give the job a token budget of its own and alert when the eval spend itself goes up. The eval is a cost centre too.
+- Put the eval behind the paths filter for the files that can change it. Every unrelated pull request should not pay for it.
+- When you find a flaky case, move it to the scheduled suite in the same commit, so it does not get quietly deleted instead.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- threshold-টা config-এ কেসগুলোর পাশেই লিখুন, সাথে একটা comment দিয়ে ব্যাখ্যা করুন এটা কী রক্ষা করে। কেউ না বোঝা এমন সংখ্যা বদলে দেওয়া হয়।
+- eval ফলাফল build artifact হিসেবে রাখুন। তিন সপ্তাহ পরে স্কোর কমলে ইতিহাসই একমাত্র উপায় বলতে পারে কী বদলেছে।
+- gate-কেও টেস্ট করুন: ইচ্ছাকৃতভাবে ভাঙা assertion দিয়ে একটা pull request খুলে দেখুন সেটা আটকায় কি না আর comment ব্যাখ্যা করে কি না।
+- job-কে নিজস্ব একটা token বাজেট দিন আর eval খরচ বাড়লে alert দিন। eval-ও একটা cost centre।
+- eval-টা যেসব file বদলাতে পারে তার paths filter-এর পেছনে রাখুন। অপ্রাসঙ্গিক প্রতিটা pull request-এর জন্য এটা খরচ হওয়া উচিত নয়।
+- flaky কেস পেলে একই commit-এ নির্ধারিত suite-এ সরান, যাতে সেটা চুপচাপ delete না হয়ে যায়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Quality gate | A threshold that fails the build, and so blocks the merge |
+| Threshold | The score the eval must reach, agreed before the first failure |
+| CI/CD | The pipeline that runs the checks on every change |
+| Pull request report | The eval results written onto the pull request for the reviewer |
+| Cost gate | A check that fails when a prompt change makes the calls too expensive |
+| Flaky case | A test that fails at random and must be separated from the gate |
+| Paths filter | The list of files that trigger the workflow |
+| Build artifact | The stored eval results, which are the history of the score |
+| Regression | A change that made the quality worse, which the gate is there to catch |

@@ -7,6 +7,7 @@ import { COURSE_UI_BN } from "@/lib/bn/course";
 import { K6_UI_BN } from "@/lib/bn/k6";
 import { AI_ENGINEERING_UI_BN } from "@/lib/bn/ai-engineering";
 import { AI_CONCEPTS_UI_BN } from "@/lib/bn/ai-concepts";
+import { AI_ML_TESTING_UI_BN } from "@/lib/bn/ai-ml-testing";
 import { AI_SKILLS_UI_BN } from "@/lib/bn/ai-skills";
 import { HARNESS_UI_BN } from "@/lib/bn/harness";
 import { FUNDAMENTALS_UI_BN } from "@/lib/bn/fundamentals";
@@ -38,6 +39,7 @@ const FLAT_NAME_BN: Record<FlatModuleId, string> = {
   "ai-concepts": AI_CONCEPTS_UI_BN.crossTo,
   "agent-memory": AGENT_MEMORY_UI_BN.crossTo,
   "ai-agents": AI_AGENTS_UI_BN.crossTo,
+  "ai-ml-testing": AI_ML_TESTING_UI_BN.crossTo,
 };
 
 const SECTIONS: readonly { id: Section; href: string; label: string; bn: string }[] = [

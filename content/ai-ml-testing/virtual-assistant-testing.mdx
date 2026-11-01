@@ -1,0 +1,479 @@
+export const metadata = { title: 'Virtual Assistant Testing', description: 'Test intent classification, the fallback path, and the human handoff: the three places a virtual assistant breaks.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Scan a model', publisher: 'Giskard (docs)', url: 'https://docs.giskard.ai/oss/scan', accessed: '2026-11-01' },
+    { title: 'OWASP Top 10 for LLM Applications and Generative AI 2025', publisher: 'OWASP GenAI Security Project', url: 'https://genai.owasp.org/llm-top-10/', accessed: '2026-11-01' },
+    { title: 'Metrics', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-introduction', accessed: '2026-11-01' },
+  ],
+}
+
+# Virtual Assistant Testing
+
+A virtual assistant does three things: understand what you meant, answer or admit it cannot, and hand over to a human when it should. Each has its own test.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A virtual assistant sits in front of a model and does the work a model should not do on its own:
+
+1. **Intent classification.** The user's message is matched to one of a set of intents, and the right one is chosen. The wrong intent sends the whole conversation down the wrong path, and the answer then looks confident and irrelevant.
+2. **The fallback.** When the intent is unclear or the assistant cannot answer, it says so. A fallback that never fires is a system that answers everything, which is a system that is confidently wrong on all of it.
+3. **The handoff.** When the assistant should stop and let a human take over, it does that cleanly, with the context handed over.
+
+The third one is the one that has to be right in both directions. A system that never escalates is a system that gives a policy answer to a harassment complaint. A system that escalates everything is a system with a chatbot attached to it, and users will leave. Both failures are in the OWASP list of LLM application risks, because a model that answers out of scope is a harmful-content generator <Cite n={2} />.
+
+The testing method for the first one is straightforward: you know the intent of each test utterance, so you measure how often the assistant picks it. For the other two, you measure the **rate** at which the right thing happens, and that rate is a product metric with a threshold, not a boolean.
+
+</Technical>
+<Layman>
+
+virtual assistant model-এর সামনে বসে সেই কাজটা করে যা model-এর একা করা উচিত নয়:
+
+1. **Intent classification।** ব্যবহারকারীর কথা একটা নির্দিষ্ট intent-এর সাথে মেলানো হয়, আর সঠিকটা বাছা হয়। ভুল intent পুরো কথোপকথনকে ভুল পথে নিয়ে যায়, আর উত্তর তখন আত্মবিশ্বাসী ও অপ্রাসঙ্গিক হয়।
+2. **Fallback।** intent অস্পষ্ট বা assistant উত্তর দিতে না পারলে সেটা বলে। যে fallback কখনো চালু হয় না সেটা এমন সিস্টেম যা সবকিছুর উত্তর দেয়, মানে সবকিছুর ওপর আত্মবিশ্বাসী ভুল।
+3. **Handoff।** assistant-এর মানুষের কাছে যাওয়া উচিত হলে সেটা সুন্দরভাবে করে, context তুলে দিয়ে।
+
+তৃতীয়টাই দুই দিক থেকে ঠিক হতে হবে। যে সিস্টেম কখনো escalate করে না, সেটা একটা harassment অভিযোগেও policy উত্তর দেয়। যে সিস্টেম সবকিছু escalate করে, সেটার সাথে chatbot লাগানো আর কাজে দেবে না, আর ব্যবহারকারীরা চলে যাবেন। দুটো ব্যর্থতাই LLM application-এর ঝুঁকির তালিকায়, কারণ scope-এর বাইরে উত্তর দেওয়া model একটা ক্ষতিকরক content generator <Cite n={2} />।
+
+প্রথমটার টেস্টিং সহজ: প্রতিটা test utterance-এর intent আপনি জানেন, তাই মাপা যায় কত ঘনার্থ assistant সেটা বাছে। বাকি দুটোর জন্য মাপা হয় **কত ঘনার্থ** ঠিক জিনিসটা ঘটে, আর সেটা একটা threshold-এর product metric, boolean নয়।
+
+</Layman>
+<Bangla>
+
+virtual assistant model-এর সামনে বসে সেই কাজটা করে যা model-এর একা করা উচিত নয়:
+
+1. **Intent classification।** ব্যবহারকারীর কথা একটা নির্দিষ্ট intent-এর সাথে মেলানো হয়, আর সঠিকটা বাছা হয়। ভুল intent পুরো কথোপকথনকে ভুল পথে নিয়ে যায়, আর উত্তর তখন আত্মবিশ্বাসী ও অপ্রাসঙ্গিক হয়।
+2. **Fallback।** intent অস্পষ্ট বা assistant উত্তর দিতে না পারলে সেটা বলে। যে fallback কখনো চালু হয় না সেটা এমন সিস্টেম যা সবকিছুর উত্তর দেয়, মানে সবকিছুর ওপর আত্মবিশ্বাসী ভুল।
+3. **Handoff।** assistant-এর মানুষের কাছে যাওয়া উচিত হলে সেটা সুন্দরভাবে করে, context তুলে দিয়ে।
+
+তৃতীয়টাই দুই দিক থেকে ঠিক হতে হবে। যে সিস্টেম কখনো escalate করে না, সেটা একটা harassment অভিযোগেও policy উত্তর দেয়। যে সিস্টেম সবকিছু escalate করে, সেটার সাথে chatbot লাগানো আর কাজে দেবে না, আর ব্যবহারকারীরা চলে যাবেন। দুটো ব্যর্থতাই LLM application-এর ঝুঁকির তালিকায়, কারণ scope-এর বাইরে উত্তর দেওয়া model একটা ক্ষতিকরক content generator <Cite n={2} />।
+
+প্রথমটার টেস্টিং সহজ: প্রতিটা test utterance-এর intent আপনি জানেন, তাই মাপা যায় কত ঘনার্থ assistant সেটা বাছে। বাকি দুটোর জন্য মাপা হয় **কত ঘনার্থ** ঠিক জিনিসটা ঘটে, আর সেটা একটা threshold-এর product metric, boolean নয়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The assistant has three measurable behaviours, and each one has a different shape of test:
+
+```text
+behaviour      measured as              the test is
+intent        a classification rate   per intent, with a threshold
+fallback      a trigger rate          per unclear case, with a threshold
+handoff       a trigger rate          per escalation case, with a threshold
+```
+
+**Intent classification** is measured against a labelled set. Each utterance has one correct intent, and the assistant's choice is compared to it. The metric is accuracy per intent, not overall, because a large intent class hides a small one that is completely broken. There is a specific failure here: **several intents that overlap**, where a phrase legitimately belongs to two of them. The product has to decide, and the test set has to say which one wins.
+
+**The fallback** is measured the other way: the rate at which the assistant correctly says it cannot help. The test set is the set of utterances that *should* trigger it: an ambiguous request, an unanswerable question, a request outside the catalogue. The failure is usually that the fallback threshold is too low, so the assistant answers anyway.
+
+**The handoff** is measured on both the trigger and the payload. The trigger is the rate at which the assistant escalates when it should. The payload is the context handed over: the conversation, the collected facts, and what the assistant already tried. A handoff that sends "customer needs help" is a handoff that makes the human start from zero.
+
+**Multi-modal input** is the fourth axis for an assistant that accepts images or documents, and it has its own failure: the assistant answers about the document instead of the question, or reads the document but ignores the instruction attached to it.
+
+Giskard's scanning approach is a good model for the first one: it applies a set of probes to a model and reports which vulnerability categories fired <Cite n={1} />. The same shape works for intents, with the probes being your utterances instead of adversarial ones. Where the intent is judged rather than classified, the scored metrics are the ones built for that <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+assistant-এর তিনটা মাপার যোগ্য আচরণ আছে, আর প্রতিটার টেস্টের আকার আলাদা:
+
+```text
+behaviour      measured as              the test is
+intent        a classification rate   per intent, with a threshold
+fallback      a trigger rate          per unclear case, with a threshold
+handoff       a trigger rate          per escalation case, with a threshold
+```
+
+**Intent classification** একটা labelled set-এর বিপরীতে মাপা হয়। প্রতিটা utterance-এর একটা সঠিক intent আছে, আর assistant-এর বাছাই তার সাথে তুলনা হয়। metric হলো intent অনুযায়ী accuracy, সামগ্রিক নয়, কারণ একটা বড় intent class একটা ছোট class-কে সম্পূর্ণ ভাঙা অবস্থায়ও ঢেকে দেয়। একটা নির্দিষ্ট ব্যর্থতা আছে এখানে: **যেসব intent-এর মধ্যে ওভারল্যাপ আছে**, যেখানে একটা phrase বৈধভাবে দুটোর অন্তর্গত। product-কে ঠিক করতে হবে, আর test set-কে বলতে হবে কোনটা জেতে।
+
+**Fallback** অন্যভাবে মাপা হয়: কত ঘনার্থ সঠিকভাবে বলতে পারছে না। test set হলো সেই utterance-গুলো যেগুলো *fallback চালু করা উচিত*: অস্পষ্ট অনুরোধ, উত্তরযোগ্য নয় এমন প্রশ্ন, catalogue-এর বাইরের অনুরোধ। ব্যর্থতা সাধারণত হয় threshold কম হওয়ায়, তাই assistant উত্তর দিয়েই দেয়।
+
+**Handoff** দুই দিকে মাপা হয়: trigger আর payload-এর ওপর। trigger হলো কত ঘনার্থ সঠিকভাবে escalate করে। payload হলো তুলে দেওয়া context: কথোপকথন, সংগ্রহ করা তথ্য, আর assistant আগে কী চেষ্টা করেছে। যে handoff শুধু "customer needs help" পাঠায়, সেটা এমন handoff যেখানে মানুষকে শূন্য থেকে শুরু করতে হয়।
+
+**Multi-modal input** হলো ছবি বা document নেওয়া assistant-এর চতুর্থ অক্ষ, আর এর নিজস্ব ব্যর্থতা আছে: assistant document নিয়ে কথা বলে প্রশ্নের বদলে, অথবা document পড়ে কিন্তু সাথে দেওয়া নির্দেশনা উপেক্ষা করে।
+
+Giskard-এর scanning পদ্ধতি প্রথমটার জন্য ভালো model: এটা model-এর ওপর একটা probe set চালায় আর কোন vulnerability category-গুলো ফুটে তা জানায় <Cite n={1} />। একই গঠন intent-এর ক্ষেত্রেও কাজ করে, শুধু probe হবে আপনার utterance adversarial নয়।
+
+</Layman>
+<Bangla>
+
+assistant-এর তিনটা মাপার যোগ্য আচরণ আছে, আর প্রতিটার টেস্টের আকার আলাদা:
+
+```text
+behaviour      measured as              the test is
+intent        a classification rate   per intent, with a threshold
+fallback      a trigger rate          per unclear case, with a threshold
+handoff       a trigger rate          per escalation case, with a threshold
+```
+
+**Intent classification** একটা labelled set-এর বিপরীতে মাপা হয়। প্রতিটা utterance-এর একটা সঠিক intent আছে, আর assistant-এর বাছাই তার সাথে তুলনা হয়। metric হলো intent অনুযায়ী accuracy, সামগ্রিক নয়, কারণ একটা বড় intent class একটা ছোট class-কে সম্পূর্ণ ভাঙা অবস্থায়ও ঢেকে দেয়। একটা নির্দিষ্ট ব্যর্থতা আছে এখানে: **যেসব intent-এর মধ্যে ওভারল্যাপ আছে**, যেখানে একটা phrase বৈধভাবে দুটোর অন্তর্গত। product-কে ঠিক করতে হবে, আর test set-কে বলতে হবে কোনটা জেতে।
+
+**Fallback** অন্যভাবে মাপা হয়: কত ঘনার্থ সঠিকভাবে বলতে পারছে না। test set হলো সেই utterance-গুলো যেগুলো *fallback চালু করা উচিত*: অস্পষ্ট অনুরোধ, উত্তরযোগ্য নয় এমন প্রশ্ন, catalogue-এর বাইরের অনুরোধ। ব্যর্থতা সাধারণত হয় threshold কম হওয়ায়, তাই assistant উত্তর দিয়েই দেয়।
+
+**Handoff** দুই দিকে মাপা হয়: trigger আর payload-এর ওপর। trigger হলো কত ঘনার্থ সঠিকভাবে escalate করে। payload হলো তুলে দেওয়া context: কথোপকথন, সংগ্রহ করা তথ্য, আর assistant আগে কী চেষ্টা করেছে। যে handoff শুধু "customer needs help" পাঠায়, সেটা এমন handoff যেখানে মানুষকে শূন্য থেকে শুরু করতে হয়।
+
+**Multi-modal input** হলো ছবি বা document নেওয়া assistant-এর চতুর্থ অক্ষ, আর এর নিজস্ব ব্যর্থতা আছে: assistant document নিয়ে কথা বলে প্রশ্নের বদলে, অথবা document পড়ে কিন্তু সাথে দেওয়া নির্দেশনা উপেক্ষা করে।
+
+Giskard-এর scanning পদ্ধতি প্রথমটার জন্য ভালো model: এটা model-এর ওপর একটা probe set চালায় আর কোন vulnerability category-গুলো ফুটে তা জানায় <Cite n={1} />। একই গঠন intent-এর ক্ষেত্রেও কাজ করে, শুধু probe হবে আপনার utterance adversarial নয়।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The intent test is a labelled set and a per-intent accuracy:
+
+```python
+# tests/ai/test_intents.py
+INTENT_CASES = [
+    ("I want to return a laptop", "return"),
+    ("where is my order", "track_order"),
+    ("I forgot my password", "account"),
+    ("this is ridiculous and nobody helps", "complaint"),
+    ("do you sell laptops", "out_of_scope"),
+]
+
+
+def test_the_intent_is_classified_correctly(classifier):
+    for utterance, expected in INTENT_CASES:
+        actual = classifier.classify(utterance)
+        assert actual == expected, f"{utterance!r} was classified as {actual}"
+```
+
+The threshold version, which is what goes into the report:
+
+```python
+def test_each_intent_is_above_the_threshold(classifier, report):
+    for expected, cases in group_by_intent(INTENT_CASES).items():
+        correct = sum(1 for text, _ in cases if classifier.classify(text) == expected)
+        accuracy = correct / len(cases)
+        report.add("intent_accuracy", expected, accuracy)
+        assert accuracy >= 0.95, f"intent {expected} scored {accuracy:.2f}"
+```
+
+The fallback test, which is the one that catches the over-answering assistant:
+
+```python
+UNCLEAR = [
+    "can you help me with something",
+    "it broke again",
+    "same as last time",
+]
+
+
+def test_the_assistant_asks_instead_of_guessing(assistant):
+    for utterance in UNCLEAR:
+        answer = assistant.respond(utterance)
+        assert asks_for_clarification(answer), f"{utterance!r} got: {answer}"
+```
+
+The handoff test, and it has two halves:
+
+```python
+ESCALATE = [
+    "I've been charged twice and nobody answers",
+    "I want to speak to a human",
+]
+
+
+def test_the_assistant_escalates_and_hands_over_the_context(assistant, handoff):
+    answer = assistant.respond("I want to speak to a human")
+    assert handoff.escalated
+    assert "charged twice" in handoff.summary.lower()
+    assert "1001" in handoff.collected_facts["order_id"]
+```
+
+The second half is the one that matters. A handoff that does not carry the collected facts makes the human ask the customer to repeat everything.
+
+And the over-blocking test, which is the mirror of the escalation test:
+
+```python
+def test_a_normal_request_is_not_escalated(assistant, handoff):
+    assistant.respond("What is the return window?")
+    assert not handoff.escalated, "a normal question was escalated"
+```
+
+Run both directions in the same suite. A change to the escalation rules that fixes one and breaks the other is the normal outcome of tuning a threshold.
+
+</Technical>
+<Layman>
+
+intent টেস্ট একটা labelled set আর intent অনুযায়ী accuracy:
+
+```python
+# tests/ai/test_intents.py
+INTENT_CASES = [
+    ("I want to return a laptop", "return"),
+    ("where is my order", "track_order"),
+    ("I forgot my password", "account"),
+    ("this is ridiculous and nobody helps", "complaint"),
+    ("do you sell laptops", "out_of_scope"),
+]
+
+
+def test_the_intent_is_classified_correctly(classifier):
+    for utterance, expected in INTENT_CASES:
+        actual = classifier.classify(utterance)
+        assert actual == expected, f"{utterance!r} was classified as {actual}"
+```
+
+threshold সংস্করণ, যেটাই রিপোর্টে যায়:
+
+```python
+def test_each_intent_is_above_the_threshold(classifier, report):
+    for expected, cases in group_by_intent(INTENT_CASES).items():
+        correct = sum(1 for text, _ in cases if classifier.classify(text) == expected)
+        accuracy = correct / len(cases)
+        report.add("intent_accuracy", expected, accuracy)
+        assert accuracy >= 0.95, f"intent {expected} scored {accuracy:.2f}"
+```
+
+fallback টেস্ট, যেটাই সবচেয়ে বেশি উত্তর দেওয়া assistant ধরে:
+
+```python
+UNCLEAR = [
+    "can you help me with something",
+    "it broke again",
+    "same as last time",
+]
+
+
+def test_the_assistant_asks_instead_of_guessing(assistant):
+    for utterance in UNCLEAR:
+        answer = assistant.respond(utterance)
+        assert asks_for_clarification(answer), f"{utterance!r} got: {answer}"
+```
+
+handoff টেস্ট, আর এর দুটো অর্ধেক:
+
+```python
+ESCALATE = [
+    "I've been charged twice and nobody answers",
+    "I want to speak to a human",
+]
+
+
+def test_the_assistant_escalates_and_hands_over_the_context(assistant, handoff):
+    answer = assistant.respond("I want to speak to a human")
+    assert handoff.escalated
+    assert "charged twice" in handoff.summary.lower()
+    assert "1001" in handoff.collected_facts["order_id"]
+```
+
+দ্বিতীয় অর্ধেকটাই গুরুত্বপূর্ণ। context তুলে না দেওয়া handoff মানুষকে customer-কে সবকিছু আবার বলাতে হয়।
+
+আর অতিরিক্ত ব্লক টেস্ট, যেটা escalation টেস্টের আয়না:
+
+```python
+def test_a_normal_request_is_not_escalated(assistant, handoff):
+    assistant.respond("What is the return window?")
+    assert not handoff.escalated, "a normal question was escalated"
+```
+
+দুই দিকই একই suite-এ চালান। escalation নিয়ম টিউন করার সময় একটা ঠিক হয়ে আরেকটা ভাঙা — threshold টিউন করার স্বাভাবিক ফলাফল।
+
+</Layman>
+<Bangla>
+
+intent টেস্ট একটা labelled set আর intent অনুযায়ী accuracy:
+
+```python
+# tests/ai/test_intents.py
+INTENT_CASES = [
+    ("I want to return a laptop", "return"),
+    ("where is my order", "track_order"),
+    ("I forgot my password", "account"),
+    ("this is ridiculous and nobody helps", "complaint"),
+    ("do you sell laptops", "out_of_scope"),
+]
+
+
+def test_the_intent_is_classified_correctly(classifier):
+    for utterance, expected in INTENT_CASES:
+        actual = classifier.classify(utterance)
+        assert actual == expected, f"{utterance!r} was classified as {actual}"
+```
+
+threshold সংস্করণ, যেটাই রিপোর্টে যায়:
+
+```python
+def test_each_intent_is_above_the_threshold(classifier, report):
+    for expected, cases in group_by_intent(INTENT_CASES).items():
+        correct = sum(1 for text, _ in cases if classifier.classify(text) == expected)
+        accuracy = correct / len(cases)
+        report.add("intent_accuracy", expected, accuracy)
+        assert accuracy >= 0.95, f"intent {expected} scored {accuracy:.2f}"
+```
+
+fallback টেস্ট, যেটাই সবচেয়ে বেশি উত্তর দেওয়া assistant ধরে:
+
+```python
+UNCLEAR = [
+    "can you help me with something",
+    "it broke again",
+    "same as last time",
+]
+
+
+def test_the_assistant_asks_instead_of_guessing(assistant):
+    for utterance in UNCLEAR:
+        answer = assistant.respond(utterance)
+        assert asks_for_clarification(answer), f"{utterance!r} got: {answer}"
+```
+
+handoff টেস্ট, আর এর দুটো অর্ধেক:
+
+```python
+ESCALATE = [
+    "I've been charged twice and nobody answers",
+    "I want to speak to a human",
+]
+
+
+def test_the_assistant_escalates_and_hands_over_the_context(assistant, handoff):
+    answer = assistant.respond("I want to speak to a human")
+    assert handoff.escalated
+    assert "charged twice" in handoff.summary.lower()
+    assert "1001" in handoff.collected_facts["order_id"]
+```
+
+দ্বিতীয় অর্ধেকটাই গুরুত্বপূর্ণ। context তুলে না দেওয়া handoff মানুষকে customer-কে সবকিছু আবার বলাতে হয়।
+
+আর অতিরিক্ত ব্লক টেস্ট, যেটা escalation টেস্টের আয়না:
+
+```python
+def test_a_normal_request_is_not_escalated(assistant, handoff):
+    assistant.respond("What is the return window?")
+    assert not handoff.escalated, "a normal question was escalated"
+```
+
+দুই দিকই একই suite-এ চালান। escalation নিয়ম টিউন করার সময় একটা ঠিক হয়ে আরেকটা ভাঙা — threshold টিউন করার স্বাভাবিক ফলাফল।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: only measuring the overall intent accuracy.** One broken small intent is hidden by the big ones. Report per intent.
+
+**Mistake 2: testing the fallback only with clear questions.** The fallback is for the unclear ones.
+
+**Mistake 3: testing escalation only in one direction.** A system that escalates every question passes the escalation test and is useless.
+
+**Mistake 4: no payload assertion.** A handoff that carries no context makes the human start from zero, which is the cost the feature was meant to remove.
+
+**Mistake 5: treating the threshold as a number to tune.** It is a product decision with a cost on both sides, and the test should encode the decision rather than chase a number <Cite n={2} />.
+
+**Mistake 6: no multi-modal case.** An assistant that accepts images has a whole second failure surface.
+
+</Technical>
+<Layman>
+
+**Mistake ১: শুধু সামগ্রিক intent accuracy মাপা।** ছোট একটা intent সম্পূর্ণ ভাঙলেও বড়গুলো ঢেকে দেয়। intent অনুযায়ী রিপোর্ট করুন।
+
+**Mistake ২: fallback শুধু পরিষ্কার প্রশ্ন দিয়ে টেস্ট করা।** fallback অস্পষ্ট প্রশ্নের জন্যই।
+
+**Mistake ৩: escalation শুধু এক দিকে টেস্ট করা।** যে সিস্টেম প্রতিটা প্রশ্ন escalate করে সেটা escalation টেস্ট পাস করে আর অকার্যকর।
+
+**Mistake ৪: payload assert নেই।** context না তুলে দেওয়া handoff মানুষকে শূন্য থেকে শুরু করায়, আর ফিচারটার উদ্দেশ্য ছিল সেই খরচ সরানো।
+
+**Mistake ৫: threshold-কে টিউন করার সংখ্যা ভাবা।** এটা দুই পাশেই খরচসহ একটা product সিদ্ধান্ত, আর টেস্টে সংখ্যা ধরার বদলে সিদ্ধান্তটাই encode করা উচিত <Cite n={2} />।
+
+**Mistake ৬: multi-modal কেস নেই।** ছবি নেওয়া assistant-এর পুরো একটা দ্বিতীয় failure surface আছে।
+
+</Layman>
+<Bangla>
+
+**Mistake ১: শুধু সামগ্রিক intent accuracy মাপা।** ছোট একটা intent সম্পূর্ণ ভাঙলেও বড়গুলো ঢেকে দেয়। intent অনুযায়ী রিপোর্ট করুন।
+
+**Mistake ২: fallback শুধু পরিষ্কার প্রশ্ন দিয়ে টেস্ট করা।** fallback অস্পষ্ট প্রশ্নের জন্যই।
+
+**Mistake ৩: escalation শুধু এক দিকে টেস্ট করা।** যে সিস্টেম প্রতিটা প্রশ্ন escalate করে সেটা escalation টেস্ট পাস করে আর অকার্যকর।
+
+**Mistake ৪: payload assert নেই।** context না তুলে দেওয়া handoff মানুষকে শূন্য থেকে শুরু করায়, আর ফিচারটার উদ্দেশ্য ছিল সেই খরচ সরানো।
+
+**Mistake ৫: threshold-কে টিউন করার সংখ্যা ভাবা।** এটা দুই পাশেই খরচসহ একটা product সিদ্ধান্ত, আর টেস্টে সংখ্যা ধরার বদলে সিদ্ধান্তটাই encode করা উচিত <Cite n={2} />।
+
+**Mistake ৬: multi-modal কেস নেই।** ছবি নেওয়া assistant-এর পুরো একটা দ্বিতীয় failure surface আছে।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep one file of real user phrases for the intent set, not phrases you wrote. Users say things you would not have guessed.
+- Report the intent accuracy per intent, with the counts. A rate without a count hides a class with three examples.
+- Write the escalation trigger and the fallback trigger as one policy document. They are the two sides of the same threshold.
+- Assert on the handoff payload, not just that a handoff happened.
+- Add a case where the user is angry. An assistant that stays polite and helpful while the user escalates is the failure the human handoff exists for.
+- Track the escalation rate in production. It is a product metric and it drifts when the model changes.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep one file of real user phrases for the intent set, not phrases you wrote. Users say things you would not have guessed.
+- Report the intent accuracy per intent, with the counts. A rate without a count hides a class with three examples.
+- Write the escalation trigger and the fallback trigger as one policy document. They are the two sides of the same threshold.
+- Assert on the handoff payload, not just that a handoff happened.
+- Add a case where the user is angry. An assistant that stays polite and helpful while the user escalates is the failure the human handoff exists for.
+- Track the escalation rate in production. It is a product metric and it drifts when the model changes.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- intent set-এর জন্য আসল ব্যবহারকারীর phrase-এর একটা ফাইল রাখুন, নিজে লেখা phrase নয়। ব্যবহারকারীরা এমন কথা বলে যা আপনি ভাবেননি।
+- intent accuracy intent অনুযায়ী রিপোর্ট করুন, সংখ্যাসহ। সংখ্যা ছাড়া rate তিনটা উদাহরণের একটা class লুকিয়ে দেয়।
+- escalation trigger আর fallback trigger একই policy document-এ লিখুন। দুটো একই threshold-এর দুই পাশ।
+- শুধু handoff হয়েছে কি না নয়, handoff payload-এর ওপর assert করুন।
+- ব্যবহারকারী রাগানো একটা কেস যোগ করুন। ব্যবহারকারী escalate করার সময়ও assistant বিনয়ী ও সহায়ক থাকলে সেটাই ব্যর্থতা যার জন্য human handoff-এর অস্তিত্ব।
+- production-এ escalation rate track করুন। এটা একটা product metric, আর model বদলালে এটা সরে যায়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Intent | The thing the user wants, which the assistant matches to a category |
+| Intent classification | Choosing the right intent for an utterance |
+| Fallback | The path where the assistant says it cannot help and asks for detail |
+| Escalation | Handing the conversation to a human |
+| Handoff payload | The context sent to the human: transcript, facts, what was tried |
+| Over-blocking | Escalating or refusing requests that should have been handled |
+| Multi-modal input | An assistant that accepts images or documents as well as text |
+| Escalation rate | The share of conversations handed to a human, tracked as a product metric |

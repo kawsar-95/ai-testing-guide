@@ -1,0 +1,395 @@
+export const metadata = { title: 'Capstone Project Setup: Build the AI App to Test', description: 'Build a customer support RAG chatbot with LangChain and ChromaDB, loaded with FAQ documents and deployed as an API, as the target for the rest of the capstone.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Introduction', publisher: 'LangChain (Python docs)', url: 'https://docs.langchain.com/oss/python/langchain/overview', accessed: '2026-11-01' },
+    { title: 'Introduction', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/', accessed: '2026-11-01' },
+    { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-11-01' },
+  ],
+}
+
+# Capstone Project Setup: Build the AI App to Test
+
+Before you can test an AI system end to end, you need one. This is the one the rest of the module tests.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The capstone target is a customer support RAG chatbot: a FAQ knowledge base, a retriever, and a model, wired together with LangChain <Cite n={1} /> and backed by a ChromaDB vector store <Cite n={2} />. It is retrieval-augmented generation — the model answers from documents given to it at answer time, rather than from whatever it memorised in training <Cite n={3} /> — because that is the architecture every earlier module in this course assumed.
+
+Building it is not the point of the capstone; testing it is. But a tester who never builds the thing under test misses how the pieces actually fit together, and that understanding is what makes the test suite target the real failure points instead of the obvious ones.
+
+The app has three parts: a one-time ingestion step that loads the FAQ documents into the vector store, a request handler that retrieves relevant chunks and asks the model to answer from them, and an API endpoint that exposes the handler to a UI or to Postman.
+
+</Technical>
+<Layman>
+
+Capstone target হলো একটা customer support RAG chatbot: একটা FAQ knowledge base, একটা retriever, আর একটা model, LangChain দিয়ে একসাথে জোড়া <Cite n={1} /> আর একটা ChromaDB vector store দিয়ে সমর্থিত <Cite n={2} />। এটা retrieval-augmented generation — model answer time-এ দেওয়া document থেকে উত্তর দেয়, training-এ যা মুখস্থ করেছে তার বদলে <Cite n={3} /> — কারণ এটাই architecture যা এই course-এর প্রতিটা আগের module ধরে নিয়েছে।
+
+এটা বানানো capstone-এর মূল বিষয় নয়; এটা টেস্ট করাই মূল বিষয়। কিন্তু যে টেস্টার কখনো under-test জিনিসটা বানায়নি সে মিস করে কীভাবে অংশগুলো আসলে একসাথে বসে, আর সেই বোঝাপড়াই test suite-কে সুস্পষ্ট ব্যর্থতার বিন্দুর বদলে আসল ব্যর্থতার বিন্দুতে লক্ষ্য করায়।
+
+App-টার তিনটা অংশ আছে: একটা এক-বারের ingestion ধাপ যা FAQ document vector store-এ লোড করে, একটা request handler যা প্রাসঙ্গিক chunk retrieve করে আর model-কে সেগুলো থেকে উত্তর দিতে বলে, আর একটা API endpoint যা handler-কে একটা UI বা Postman-এর কাছে প্রকাশ করে।
+
+</Layman>
+<Bangla>
+
+Capstone target হলো একটা customer support RAG chatbot: একটা FAQ knowledge base, একটা retriever, আর একটা model, LangChain দিয়ে একসাথে জোড়া <Cite n={1} /> আর একটা ChromaDB vector store দিয়ে সমর্থিত <Cite n={2} />। এটা retrieval-augmented generation — model answer time-এ দেওয়া document থেকে উত্তর দেয়, training-এ যা মুখস্থ করেছে তার বদলে <Cite n={3} /> — কারণ এটাই architecture যা এই course-এর প্রতিটা আগের module ধরে নিয়েছে।
+
+এটা বানানো capstone-এর মূল বিষয় নয়; এটা টেস্ট করাই মূল বিষয়। কিন্তু যে টেস্টার কখনো under-test জিনিসটা বানায়নি সে মিস করে কীভাবে অংশগুলো আসলে একসাথে বসে, আর সেই বোঝাপড়াই test suite-কে সুস্পষ্ট ব্যর্থতার বিন্দুর বদলে আসল ব্যর্থতার বিন্দুতে লক্ষ্য করায়।
+
+App-টার তিনটা অংশ আছে: একটা এক-বারের ingestion ধাপ যা FAQ document vector store-এ লোড করে, একটা request handler যা প্রাসঙ্গিক chunk retrieve করে আর model-কে সেগুলো থেকে উত্তর দিতে বলে, আর একটা API endpoint যা handler-কে একটা UI বা Postman-এর কাছে প্রকাশ করে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The build pipeline, in order:
+
+```text
+1. collect the FAQ documents     markdown or text files, one topic each
+2. chunk and embed them          split into passages, embed, store in Chroma
+3. wire the chain                question -> retriever -> prompt -> model -> answer
+4. expose it                     a single POST /ask endpoint
+```
+
+Steps 1-2 are a one-time (or on-update) ingestion job, separate from request handling: ingestion runs when the knowledge base changes, the chain runs on every user question, and conflating the two makes both slower and harder to test independently.
+
+LangChain's job in this pipeline is to compose the retriever, the prompt template, and the model call into one callable chain, so the request handler is a single function call rather than three manually wired steps <Cite n={1} />. ChromaDB's job is to store the embedded chunks and return the closest ones to a query embedding <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+Build pipeline, ক্রমানুসারে:
+
+```text
+1. collect the FAQ documents     markdown or text files, one topic each
+2. chunk and embed them          split into passages, embed, store in Chroma
+3. wire the chain                question -> retriever -> prompt -> model -> answer
+4. expose it                     a single POST /ask endpoint
+```
+
+ধাপ ১-২ একটা এক-বারের (বা update-এ) ingestion job, request handling থেকে আলাদা: knowledge base বদলালে ingestion চলে, প্রতিটা ব্যবহারকারীর প্রশ্নে chain চলে, আর দুটোকে মিশিয়ে ফেলা দুটোকেই ধীর আর আলাদাভাবে টেস্ট করা কঠিন করে।
+
+এই pipeline-এ LangChain-এর কাজ retriever, prompt template, আর model call-কে একটা callable chain-এ একত্র করা, তাই request handler তিনটা হাতে জোড়া ধাপের বদলে একটা একক function call <Cite n={1} />। ChromaDB-এর কাজ embed করা chunk সংরক্ষণ করা আর একটা query embedding-এর সবচেয়ে কাছেরগুলো ফেরত দেওয়া <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+Build pipeline, ক্রমানুসারে:
+
+```text
+1. collect the FAQ documents     markdown or text files, one topic each
+2. chunk and embed them          split into passages, embed, store in Chroma
+3. wire the chain                question -> retriever -> prompt -> model -> answer
+4. expose it                     a single POST /ask endpoint
+```
+
+ধাপ ১-২ একটা এক-বারের (বা update-এ) ingestion job, request handling থেকে আলাদা: knowledge base বদলালে ingestion চলে, প্রতিটা ব্যবহারকারীর প্রশ্নে chain চলে, আর দুটোকে মিশিয়ে ফেলা দুটোকেই ধীর আর আলাদাভাবে টেস্ট করা কঠিন করে।
+
+এই pipeline-এ LangChain-এর কাজ retriever, prompt template, আর model call-কে একটা callable chain-এ একত্র করা, তাই request handler তিনটা হাতে জোড়া ধাপের বদলে একটা একক function call <Cite n={1} />। ChromaDB-এর কাজ embed করা chunk সংরক্ষণ করা আর একটা query embedding-এর সবচেয়ে কাছেরগুলো ফেরত দেওয়া <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Ingestion, loading FAQ documents into Chroma <Cite n={2} />:
+
+```python
+import chromadb
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+client = chromadb.PersistentClient(path="./faq_db")
+collection = client.get_or_create_collection("faq")
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+for doc_path in FAQ_DOCS:
+    chunks = splitter.split_text(open(doc_path).read())
+    collection.add(
+        documents=chunks,
+        ids=[f"{doc_path}-{i}" for i in range(len(chunks))],
+    )
+```
+
+The chain, wiring retrieval to generation <Cite n={1} />:
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+PROMPT = ChatPromptTemplate.from_template(
+    "Answer using only this context. If it is not in the context, say so.\n\n"
+    "Context:\n{context}\n\nQuestion: {question}"
+)
+
+def retrieve(question: str) -> str:
+    results = collection.query(query_texts=[question], n_results=4)
+    return "\n\n".join(results["documents"][0])
+
+chain = PROMPT | ChatOpenAI(model="gpt-4o-mini") | StrOutputParser()
+
+def answer_question(question: str) -> str:
+    return chain.invoke({"context": retrieve(question), "question": question})
+```
+
+The endpoint, exposing it <Cite n={3} />:
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.post("/ask")
+def ask(body: dict):
+    return {"answer": answer_question(body["question"])}
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep ingestion and the request handler as separate scripts. Testing ingestion once and the handler many times is the natural split.
+- Commit the FAQ documents to the repo, so the knowledge base state is reproducible for every test run.
+- Write the `/ask` endpoint to return the retrieved context alongside the answer; the rest of the capstone's tests need it to check faithfulness.
+</Callout>
+
+</Technical>
+<Layman>
+
+FAQ document Chroma-তে লোড করা, Ingestion <Cite n={2} />:
+
+```python
+import chromadb
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+client = chromadb.PersistentClient(path="./faq_db")
+collection = client.get_or_create_collection("faq")
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+for doc_path in FAQ_DOCS:
+    chunks = splitter.split_text(open(doc_path).read())
+    collection.add(
+        documents=chunks,
+        ids=[f"{doc_path}-{i}" for i in range(len(chunks))],
+    )
+```
+
+retrieval-কে generation-এ জোড়া, Chain <Cite n={1} />:
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+PROMPT = ChatPromptTemplate.from_template(
+    "Answer using only this context. If it is not in the context, say so.\n\n"
+    "Context:\n{context}\n\nQuestion: {question}"
+)
+
+def retrieve(question: str) -> str:
+    results = collection.query(query_texts=[question], n_results=4)
+    return "\n\n".join(results["documents"][0])
+
+chain = PROMPT | ChatOpenAI(model="gpt-4o-mini") | StrOutputParser()
+
+def answer_question(question: str) -> str:
+    return chain.invoke({"context": retrieve(question), "question": question})
+```
+
+এটা প্রকাশ করা, Endpoint <Cite n={3} />:
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.post("/ask")
+def ask(body: dict):
+    return {"answer": answer_question(body["question"])}
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Ingestion আর request handler-কে আলাদা script হিসেবে রাখুন। Ingestion একবার আর handler বারবার টেস্ট করা স্বাভাবিক বিভাজন।
+- FAQ document repo-তে commit করুন, যাতে knowledge base state প্রতিটা test run-এর জন্য reproducible থাকে।
+- `/ask` endpoint-কে উত্তরের সাথে retrieved context ফেরত দিতে লিখুন; capstone-এর বাকি টেস্টের faithfulness চেক করার জন্য এটা দরকার।
+</Callout>
+
+</Layman>
+<Bangla>
+
+FAQ document Chroma-তে লোড করা, Ingestion <Cite n={2} />:
+
+```python
+import chromadb
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+client = chromadb.PersistentClient(path="./faq_db")
+collection = client.get_or_create_collection("faq")
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+for doc_path in FAQ_DOCS:
+    chunks = splitter.split_text(open(doc_path).read())
+    collection.add(
+        documents=chunks,
+        ids=[f"{doc_path}-{i}" for i in range(len(chunks))],
+    )
+```
+
+retrieval-কে generation-এ জোড়া, Chain <Cite n={1} />:
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+PROMPT = ChatPromptTemplate.from_template(
+    "Answer using only this context. If it is not in the context, say so.\n\n"
+    "Context:\n{context}\n\nQuestion: {question}"
+)
+
+def retrieve(question: str) -> str:
+    results = collection.query(query_texts=[question], n_results=4)
+    return "\n\n".join(results["documents"][0])
+
+chain = PROMPT | ChatOpenAI(model="gpt-4o-mini") | StrOutputParser()
+
+def answer_question(question: str) -> str:
+    return chain.invoke({"context": retrieve(question), "question": question})
+```
+
+এটা প্রকাশ করা, Endpoint <Cite n={3} />:
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.post("/ask")
+def ask(body: dict):
+    return {"answer": answer_question(body["question"])}
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- Ingestion আর request handler-কে আলাদা script হিসেবে রাখুন। Ingestion একবার আর handler বারবার টেস্ট করা স্বাভাবিক বিভাজন।
+- FAQ document repo-তে commit করুন, যাতে knowledge base state প্রতিটা test run-এর জন্য reproducible থাকে।
+- `/ask` endpoint-কে উত্তরের সাথে retrieved context ফেরত দিতে লিখুন; capstone-এর বাকি টেস্টের faithfulness চেক করার জন্য এটা দরকার।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: chunking too large or too small, without measuring.** This capstone reuses the chunking-and-embedding lessons from earlier in the course; do not skip that tuning just because the deadline is the capstone.
+
+**Mistake 2: no separation between ingestion and the chain.** Re-embedding the whole knowledge base on every request is slow and makes tests flaky on timing.
+
+**Mistake 3: the endpoint returns only the answer, not the context.** Faithfulness and hallucination tests need the retrieved context to check the answer against.
+
+**Mistake 4: no version pin on the embedding model.** Changing the embedding model after ingestion makes old and new embeddings incomparable without a full re-ingest.
+
+**Mistake 5: building the happy path only.** A capstone that only ever answers in-scope questions never exercises its own refusal behaviour, which the rest of the module tests directly.
+
+</Technical>
+<Layman>
+
+**Mistake ১: পরিমাপ ছাড়া খুব বড় বা খুব ছোট chunking।** এই capstone course-এর আগের chunking-and-embedding পাঠ আবার ব্যবহার করে; deadline capstone বলেই সেই টিউনিং বাদ দেবেন না।
+
+**Mistake ২: ingestion আর chain-এর মধ্যে বিভাজন নেই।** প্রতিটা request-এ পুরো knowledge base আবার embed করা ধীর আর timing-এ test flaky করে তোলে।
+
+**Mistake ৩: endpoint শুধু উত্তর ফেরত দেয়, context নয়।** Faithfulness আর hallucination টেস্টের উত্তরটা চেক করার জন্য retrieved context দরকার।
+
+**Mistake ৪: embedding model-এ কোনো version pin নেই।** Ingestion-এর পরে embedding model বদলালে পুরনো আর নতুন embedding পুরো re-ingest ছাড়া তুলনাযোগ্য হয় না।
+
+**Mistake ৫: শুধু happy path বানানো।** একটা capstone যা শুধু in-scope প্রশ্নের উত্তর দেয় কখনো তার নিজের refusal আচরণ পরীক্ষা করে না, যা module-এর বাকি অংশ সরাসরি টেস্ট করে।
+
+</Layman>
+<Bangla>
+
+**ভুল ১: পরিমাপ ছাড়া খুব বড় বা খুব ছোট chunking।** এই capstone course-এর আগের chunking-and-embedding পাঠ আবার ব্যবহার করে; deadline capstone বলেই সেই টিউনিং বাদ দেবেন না।
+
+**ভুল ২: ingestion আর chain-এর মধ্যে বিভাজন নেই।** প্রতিটা request-এ পুরো knowledge base আবার embed করা ধীর আর timing-এ test flaky করে তোলে।
+
+**ভুল ৩: endpoint শুধু উত্তর ফেরত দেয়, context নয়।** Faithfulness আর hallucination টেস্টের উত্তরটা চেক করার জন্য retrieved context দরকার।
+
+**ভুল ৪: embedding model-এ কোনো version pin নেই।** Ingestion-এর পরে embedding model বদলালে পুরনো আর নতুন embedding পুরো re-ingest ছাড়া তুলনাযোগ্য হয় না।
+
+**ভুল ৫: শুধু happy path বানানো।** একটা capstone যা শুধু in-scope প্রশ্নের উত্তর দেয় কখনো তার নিজের refusal আচরণ পরীক্ষা করে না, যা module-এর বাকি অংশ সরাসরি টেস্ট করে।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Commit the FAQ documents and a fixed chunk size and overlap, so every later test runs against a reproducible knowledge base.
+- Confirm `/ask` returns the retrieved context, not just the answer.
+- Write one smoke test now: a known question returns an answer containing the expected fact. Everything the rest of the capstone builds depends on this much working first.
+- Pin the model and embedding model versions in a config file, not hardcoded inline, so a later session can change them deliberately.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Commit the FAQ documents and a fixed chunk size and overlap, so every later test runs against a reproducible knowledge base.
+- Confirm `/ask` returns the retrieved context, not just the answer.
+- Write one smoke test now: a known question returns an answer containing the expected fact. Everything the rest of the capstone builds depends on this much working first.
+- Pin the model and embedding model versions in a config file, not hardcoded inline, so a later session can change them deliberately.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- FAQ document আর একটা নির্দিষ্ট chunk size আর overlap commit করুন, যাতে পরের প্রতিটা টেস্ট একটা reproducible knowledge base-এর বিপরীতে চলে।
+- `/ask` retrieved context ফেরত দেয়, শুধু উত্তর নয়, তা নিশ্চিত করুন।
+- এখনই একটা smoke test লিখুন: একটা জানা প্রশ্ন প্রত্যাশিত তথ্য সম্বলিত একটা উত্তর ফেরত দেয়। capstone-এর বাকি অংশ যা বানায় তার সবকিছু এতটুকু কাজ করার ওপর নির্ভর করে।
+- model আর embedding model version একটা config ফাইলে pin করুন, inline hardcode নয়, যাতে পরের একটা session ইচ্ছাকৃতভাবে সেগুলো বদলাতে পারে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Ingestion | The one-time or on-update step that loads documents into the vector store |
+| Chain | The composed sequence: retriever, prompt template, and model call, as one callable |
+| Retriever | The component that returns the chunks most relevant to a query |
+| Chunk size | The length of each passage the knowledge base is split into |
+| Smoke test | A single known-question test confirming the basic pipeline works end to end |

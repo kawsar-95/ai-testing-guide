@@ -1,0 +1,510 @@
+export const metadata = { title: 'Advanced RAG Failure Modes', description: 'Break a RAG system on purpose: contradictory documents, duplicates, multi-hop questions, stale content, and cross-language retrieval.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-11-01' },
+    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
+    { title: 'Lost in the Middle: How Language Models Use Long Contexts', publisher: 'arXiv', url: 'https://arxiv.org/abs/2307.03172', accessed: '2026-11-01' },
+    { title: 'RAG evaluation with Giskard', publisher: 'Giskard (docs)', url: 'https://docs.giskard.ai/oss/checks/use-cases/rag-evaluation', accessed: '2026-11-01' },
+  ],
+}
+
+# Advanced RAG Failure Modes
+
+A RAG system that answers simple questions is not working. These are the failure modes that only appear once the questions get hard.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The basic RAG test asks: does the right document come back, and does the answer follow it? The advanced test asks: **what happens when the knowledge base itself is the problem?** The pipeline under test is retrieval-augmented generation: the model is given the material at answer time instead of relying on what it memorised in training <Cite n={1} />.
+
+Six failure modes that break a real system, and the one that breaks each:
+
+```text
+contradictory documents   two chunks disagree; the retriever returns both
+near-duplicate documents  the same page in two chunks; the context looks short
+multi-hop questions       the answer needs three documents; the retriever returns one
+stale documents           the policy changed; the index still has last year's
+cross-language retrieval   the question is in Bengali, the documents in English
+context dilution           the right chunk is in the prompt, buried in 40 others
+```
+
+The first five are data and retrieval problems. The last one is a different beast: the chunk is retrieved and placed in the prompt correctly, and the model still ignores it. Research on long contexts found that models attend reliably to the beginning and the end of a long input and less reliably to the middle <Cite n={3} />, which is exactly where a retrieved chunk tends to land in a large context.
+
+The RAG evaluation tooling exists for these cases. Giskard's RAG evaluation checks are built to generate adversarial questions against a knowledge base and measure whether the pipeline survives them <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+সাধারণ RAG টেস্ট জিজ্ঞেস করে: সঠিক document ফিরত এসেছে কি না, আর উত্তর সেটা অনুসরণ করেছে কি না। উন্নত টেস্ট জিজ্ঞেস করে: **knowledge base-ই যখন সমস্যা, তখন কী হয়?**
+
+ছয়টা ব্যর্থতার ধরন যেগুলো আসল সিস্টেম ভাঙে, আর প্রতিটির কারণ:
+
+```text
+contradictory documents   two chunks disagree; the retriever returns both
+near-duplicate documents  the same page in two chunks; the context looks short
+multi-hop questions       the answer needs three documents; the retriever returns one
+stale documents           the policy changed; the index still has last year's
+cross-language retrieval   the question is in Bengali, the documents in English
+context dilution           the right chunk is in the prompt, buried in 40 others
+```
+
+প্রথম পাঁচটা data আর retrieval-এর সমস্যা। শেষটা আলাদা জিনিস: chunk ঠিকভাবে ফিরে আসে আর prompt-এ ঠিকভাবে বসে, তবু model সেটা উপেক্ষা করে। লম্বা context নিয়ে গবেষণায় দেখা গেছে model বড় input-এর শুরু আর শেষে ভালো নজর দেয়, মাঝখানে কম <Cite n={3} />, আর retrieved chunk ঠিক ঠিক মাঝখানেই বসে।
+
+RAG evaluation-এর টুলগুলো এই কেসগুলোর জন্যই আছে। Giskard-এর RAG evaluation check বানানো হয় knowledge base-এর বিপরীতে adversarial প্রশ্ন তৈরি করে আর pipeline কতটা টিকে যায় তা মাপতে <Cite n={4} />।
+
+</Layman>
+<Bangla>
+
+সাধারণ RAG টেস্ট জিজ্ঞেস করে: সঠিক document ফিরত এসেছে কি না, আর উত্তর সেটা অনুসরণ করেছে কি না। উন্নত টেস্ট জিজ্ঞেস করে: **knowledge base-ই যখন সমস্যা, তখন কী হয়?**
+
+ছয়টা ব্যর্থতার ধরন যেগুলো আসল সিস্টেম ভাঙে, আর প্রতিটির কারণ:
+
+```text
+contradictory documents   two chunks disagree; the retriever returns both
+near-duplicate documents  the same page in two chunks; the context looks short
+multi-hop questions       the answer needs three documents; the retriever returns one
+stale documents           the policy changed; the index still has last year's
+cross-language retrieval   the question is in Bengali, the documents in English
+context dilution           the right chunk is in the prompt, buried in 40 others
+```
+
+প্রথম পাঁচটা data আর retrieval-এর সমস্যা। শেষটা আলাদা জিনিস: chunk ঠিকভাবে ফিরে আসে আর prompt-এ ঠিকভাবে বসে, তবু model সেটা উপেক্ষা করে। লম্বা context নিয়ে গবেষণায় দেখা গেছে model বড় input-এর শুরু আর শেষে ভালো নজর দেয়, মাঝখানে কম <Cite n={3} />, আর retrieved chunk ঠিক ঠিক মাঝখানেই বসে।
+
+RAG evaluation-এর টুলগুলো এই কেসগুলোর জন্যই আছে। Giskard-এর RAG evaluation check বানানো হয় knowledge base-এর বিপরীতে adversarial প্রশ্ন তৈরি করে আর pipeline কতটা টিকে যায় তা মাপতে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+Each failure mode has a distinct signature in the trace, and learning the signatures is what makes them fixable:
+
+```text
+failure                retrieval got it?  context had it?  answer used it?
+contradiction         yes               yes            picked the wrong one
+duplicate              yes               yes            fine, but context is redundant
+multi-hop              partly             partly          could not combine them
+stale                  yes               yes            confidently outdated
+cross-language         no                no              answered from memory
+context dilution       yes               yes            ignored it
+```
+
+The three columns are three different tests, and the row tells you which one failed. A **contradiction** is the nastiest because the pipeline worked perfectly: both chunks were retrieved, both were in the prompt, and the model picked the wrong one. The fix is in the data or in the prompt, and the prompt fix is usually to say which document wins and to date the chunks.
+
+**Stale content** is a data-pipeline bug with a testing answer. The chunk id carries a version or a date, and the test asserts that the version in the retrieved chunk matches the version currently live. That single assertion catches every stale-index bug before a user does.
+
+**Multi-hop** questions need the retrieval to return several chunks that together contain the answer. The test has to state which chunks and in which order, because the order changes how the model combines them.
+
+**Context dilution** is the one where the retrieval is right and the model is wrong. The chunk is in the prompt, and the model used the model's memory instead. The test asserts on the answer's faithfulness to the retrieved chunk specifically, and the fix is usually to reduce the number of chunks or to put the best one last <Cite n={3} />.
+
+The measurements behind these tests are the RAG metrics: context precision and context recall for the retrieval side, and faithfulness and answer relevancy for the generation side <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+প্রতিটি ব্যর্থতার ধরনের trace-এ নিজস্ব চিহ্ন আছে, আর সেগুলো চিনতে শেখাই সমস্যা ঠিক করার চাবি:
+
+```text
+failure                retrieval got it?  context had it?  answer used it?
+contradiction         yes               yes            picked the wrong one
+duplicate              yes               yes            fine, but context is redundant
+multi-hop              partly             partly          could not combine them
+stale                  yes               yes            confidently outdated
+cross-language         no                no              answered from memory
+context dilution       yes               yes            ignored it
+```
+
+তিনটা কলাম তিনটা আলাদা টেস্ট, আর সারি বলে দেয় কোনটা ব্যর্থ হয়েছে। **Contradiction** সবচেয়ে খারাপ, কারণ pipeline একদম ঠিকভাবে কাজ করেছে: দুটো chunk-ই এসেছে, দুটোই prompt-এ ছিল, আর model ভুলটা বেছে নিয়েছে। সমাধান data বা prompt-এ, আর prompt-এর সমাধান সাধারণত বলা দেওয়া কোন document জেতে আর chunk-গুলো তারিখ দেওয়া।
+
+**Stale content** একটা data-pipeline বাগ যার টেস্টিং উত্তর আছে। chunk id-তে version বা তারিখ থাকে, আর টেস্ট assert করে retrieved chunk-এর version বর্তমান live version-এর সাথে মেলে। এই একটা assertion প্রতিটা stale-index বাগ ব্যবহারকারীর আগেই ধরে ফেলে।
+
+**Multi-hop** প্রশ্নে retrieval-কে একাধিক chunk ফেরত দিতে হয় যেগুলো একসাথে উত্তর ধরে। টেস্টে বলতে হবে কোন chunk এবং কোন ক্রমে, কারণ ক্রম বদলালে model যেভাবে জোগ করে তাও বদলায়।
+
+**Context dilution** সেটাই যেখানে retrieval ঠিক আর model ভুল। chunk prompt-এ আছে, আর model নিজের memory ব্যবহার করেছে। টেস্ট retrieved chunk-এর বিপরীতে answer-এর faithfulness assert করে, আর সমাধান সাধারণত chunk কমানো বা সেরাটা শেষে রাখা <Cite n={3} />।
+
+এই টেস্টগুলোর পেছনের মাপগুলো হলো RAG metric: retrieval-এর দিকে context precision আর context recall, আর generation-এর দিকে faithfulness আর answer relevancy <Cite n={2} />।
+
+</Layman>
+<Bangla>
+
+প্রতিটি ব্যর্থতার ধরনের trace-এ নিজস্ব চিহ্ন আছে, আর সেগুলো চিনতে শেখাই সমস্যা ঠিক করার চাবি:
+
+```text
+failure                retrieval got it?  context had it?  answer used it?
+contradiction         yes               yes            picked the wrong one
+duplicate              yes               yes            fine, but context is redundant
+multi-hop              partly             partly          could not combine them
+stale                  yes               yes            confidently outdated
+cross-language         no                no              answered from memory
+context dilution       yes               yes            ignored it
+```
+
+তিনটা কলাম তিনটা আলাদা টেস্ট, আর সারি বলে দেয় কোনটা ব্যর্থ হয়েছে। **Contradiction** সবচেয়ে খারাপ, কারণ pipeline একদম ঠিকভাবে কাজ করেছে: দুটো chunk-ই এসেছে, দুটোই prompt-এ ছিল, আর model ভুলটা বেছে নিয়েছে। সমাধান data বা prompt-এ, আর prompt-এর সমাধান সাধারণত বলা দেওয়া কোন document জেতে আর chunk-গুলো তারিখ দেওয়া।
+
+**Stale content** একটা data-pipeline বাগ যার টেস্টিং উত্তর আছে। chunk id-তে version বা তারিখ থাকে, আর টেস্ট assert করে retrieved chunk-এর version বর্তমান live version-এর সাথে মেলে। এই একটা assertion প্রতিটা stale-index বাগ ব্যবহারকারীর আগেই ধরে ফেলে।
+
+**Multi-hop** প্রশ্নে retrieval-কে একাধিক chunk ফেরত দিতে হয় যেগুলো একসাথে উত্তর ধরে। টেস্টে বলতে হবে কোন chunk এবং কোন ক্রমে, কারণ ক্রম বদলালে model যেভাবে জোগ করে তাও বদলায়।
+
+**Context dilution** সেটাই যেখানে retrieval ঠিক আর model ভুল। chunk prompt-এ আছে, আর model নিজের memory ব্যবহার করেছে। টেস্ট retrieved chunk-এর বিপরীতে answer-এর faithfulness assert করে, আর সমাধান সাধারণত chunk কমানো বা সেরাটা শেষে রাখা <Cite n={3} />।
+
+এই টেস্টগুলোর পেছনের মাপগুলো হলো RAG metric: retrieval-এর দিকে context precision আর context recall, আর generation-এর দিকে faithfulness আর answer relevancy <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Write the dataset with the failure mode named, because the mode decides the assertion:
+
+```python
+ADVANCED_RAG_CASES = [
+    {
+        "mode": "contradiction",
+        "question": "How long do I have to return a laptop?",
+        "docs": [POLICY_2024, POLICY_2025],
+        "expected_chunk": "policy-v5#chunk-12",
+        "expected_fact": "30 days",
+        "forbidden_fact": "14 days",
+    },
+    {
+        "mode": "multi-hop",
+        "question": "I returned an opened item 40 days ago, what happens?",
+        "docs": [RETURN_WINDOW_DOC, OPENED_ITEM_DOC],
+        "expected_chunk": ["returns#chunk-4", "opened#chunk-2"],
+        "expected_fact": "not eligible for a refund",
+    },
+    {
+        "mode": "stale",
+        "question": "What is the current refund window?",
+        "docs": [POLICY_2024],
+        "expected_chunk": None,   # the index must not return this at all
+        "expected_fact": "30 days",
+    },
+]
+```
+
+Now the tests, one per mode, each asserting on the column that should fail:
+
+```python
+def test_a_contradiction_is_resolved_to_the_newer_policy(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    assert case["expected_fact"].lower() in answer.lower()
+    assert case["forbidden_fact"].lower() not in answer.lower()
+```
+
+```python
+def test_a_stale_document_is_never_retrieved(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    for chunk in chunks:
+        assert chunk.version == CURRENT_POLICY_VERSION, "a stale chunk was retrieved"
+```
+
+```python
+def test_a_multi_hop_question_gets_both_chunks(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    ids = [chunk.id for chunk in chunks]
+    for expected in case["expected_chunk"]:
+        assert expected in ids, f"missing {expected}"
+    assert case["expected_fact"].lower() in answer.lower()
+```
+
+And the dilution test, which is the one that needs a model:
+
+```python
+def test_the_model_uses_the_retrieved_chunk_not_its_memory(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    score = faithfulness(answer, [chunk.text for chunk in chunks])
+    assert score > 0.9, "the answer was not grounded in the retrieved chunk"
+```
+
+For the **cross-language** case, the test has to run the pipeline twice and compare, because the failure is invisible in a single language:
+
+```python
+def test_retrieval_works_for_a_bengali_question(pipeline):
+    english = pipeline.retrieve("What is the return window?")
+    bengali = pipeline.retrieve("রিটার্নের সময় কত?")
+    assert len(bengali) >= len(english), "bengali retrieval found less"
+```
+
+That test needs an embedding model that handles both languages. If it does not, this test is how you find out, and the fix is a multilingual embedding model or a translation step before retrieval.
+
+</Technical>
+<Layman>
+
+dataset-টা ব্যর্থতার ধরনের নামসহ বানান, কারণ ধরনই ঠিক করে কোন assertion দেবে:
+
+```python
+ADVANCED_RAG_CASES = [
+    {
+        "mode": "contradiction",
+        "question": "How long do I have to return a laptop?",
+        "docs": [POLICY_2024, POLICY_2025],
+        "expected_chunk": "policy-v5#chunk-12",
+        "expected_fact": "30 days",
+        "forbidden_fact": "14 days",
+    },
+    {
+        "mode": "multi-hop",
+        "question": "I returned an opened item 40 days ago, what happens?",
+        "docs": [RETURN_WINDOW_DOC, OPENED_ITEM_DOC],
+        "expected_chunk": ["returns#chunk-4", "opened#chunk-2"],
+        "expected_fact": "not eligible for a refund",
+    },
+    {
+        "mode": "stale",
+        "question": "What is the current refund window?",
+        "docs": [POLICY_2024],
+        "expected_chunk": None,   # the index must not return this at all
+        "expected_fact": "30 days",
+    },
+]
+```
+
+তারপর টেস্টগুলো, ধরন অনুযায়ী একটা করে, প্রতিটা assert করে যে কলামে ব্যর্থতা হওয়ার কথা:
+
+```python
+def test_a_contradiction_is_resolved_to_the_newer_policy(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    assert case["expected_fact"].lower() in answer.lower()
+    assert case["forbidden_fact"].lower() not in answer.lower()
+```
+
+```python
+def test_a_stale_document_is_never_retrieved(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    for chunk in chunks:
+        assert chunk.version == CURRENT_POLICY_VERSION, "a stale chunk was retrieved"
+```
+
+```python
+def test_a_multi_hop_question_gets_both_chunks(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    ids = [chunk.id for chunk in chunks]
+    for expected in case["expected_chunk"]:
+        assert expected in ids, f"missing {expected}"
+    assert case["expected_fact"].lower() in answer.lower()
+```
+
+আর dilution টেস্টটা, যেটার জন্য model লাগে:
+
+```python
+def test_the_model_uses_the_retrieved_chunk_not_its_memory(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    score = faithfulness(answer, [chunk.text for chunk in chunks])
+    assert score > 0.9, "the answer was not grounded in the retrieved chunk"
+```
+
+**cross-language** কেসের জন্য pipeline দুইবার চালিয়ে তুলনা করতে হয়, কারণ এক ভাষায় ব্যর্থতা দেখা যায় না:
+
+```python
+def test_retrieval_works_for_a_bengali_question(pipeline):
+    english = pipeline.retrieve("What is the return window?")
+    bengali = pipeline.retrieve("রিটার্নের সময় কত?")
+    assert len(bengali) >= len(english), "bengali retrieval found less"
+```
+
+ওই টেস্টের জন্য দুই ভাষাই ধরতে পারে এমন embedding model লাগে। না থাকলে এই টেস্টই ধরিয়ে দেয়, আর সমাধান হলো multilingual embedding model বা retrieval-এর আগে একটা translation ধাপ।
+
+</Layman>
+<Bangla>
+
+dataset-টা ব্যর্থতার ধরনের নামসহ বানান, কারণ ধরনই ঠিক করে কোন assertion দেবে:
+
+```python
+ADVANCED_RAG_CASES = [
+    {
+        "mode": "contradiction",
+        "question": "How long do I have to return a laptop?",
+        "docs": [POLICY_2024, POLICY_2025],
+        "expected_chunk": "policy-v5#chunk-12",
+        "expected_fact": "30 days",
+        "forbidden_fact": "14 days",
+    },
+    {
+        "mode": "multi-hop",
+        "question": "I returned an opened item 40 days ago, what happens?",
+        "docs": [RETURN_WINDOW_DOC, OPENED_ITEM_DOC],
+        "expected_chunk": ["returns#chunk-4", "opened#chunk-2"],
+        "expected_fact": "not eligible for a refund",
+    },
+    {
+        "mode": "stale",
+        "question": "What is the current refund window?",
+        "docs": [POLICY_2024],
+        "expected_chunk": None,   # the index must not return this at all
+        "expected_fact": "30 days",
+    },
+]
+```
+
+তারপর টেস্টগুলো, ধরন অনুযায়ী একটা করে, প্রতিটা assert করে যে কলামে ব্যর্থতা হওয়ার কথা:
+
+```python
+def test_a_contradiction_is_resolved_to_the_newer_policy(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    assert case["expected_fact"].lower() in answer.lower()
+    assert case["forbidden_fact"].lower() not in answer.lower()
+```
+
+```python
+def test_a_stale_document_is_never_retrieved(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    for chunk in chunks:
+        assert chunk.version == CURRENT_POLICY_VERSION, "a stale chunk was retrieved"
+```
+
+```python
+def test_a_multi_hop_question_gets_both_chunks(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    ids = [chunk.id for chunk in chunks]
+    for expected in case["expected_chunk"]:
+        assert expected in ids, f"missing {expected}"
+    assert case["expected_fact"].lower() in answer.lower()
+```
+
+আর dilution টেস্টটা, যেটার জন্য model লাগে:
+
+```python
+def test_the_model_uses_the_retrieved_chunk_not_its_memory(case, pipeline):
+    answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    score = faithfulness(answer, [chunk.text for chunk in chunks])
+    assert score > 0.9, "the answer was not grounded in the retrieved chunk"
+```
+
+**cross-language** কেসের জন্য pipeline দুইবার চালিয়ে তুলনা করতে হয়, কারণ এক ভাষায় ব্যর্থতা দেখা যায় না:
+
+```python
+def test_retrieval_works_for_a_bengali_question(pipeline):
+    english = pipeline.retrieve("What is the return window?")
+    bengali = pipeline.retrieve("রিটার্নের সময় কত?")
+    assert len(bengali) >= len(english), "bengali retrieval found less"
+```
+
+ওই টেস্টের জন্য দুই ভাষাই ধরতে পারে এমন embedding model লাগে। না থাকলে এই টেস্টই ধরিয়ে দেয়, আর সমাধান হলো multilingual embedding model বা retrieval-এর আগে একটা translation ধাপ।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: only testing with a clean knowledge base.** The interesting failures come from the contradictions and duplicates that are already there.
+
+**Mistake 2: one assertion for every mode.** The mode decides which assertion fails, so the test has to know the mode.
+
+**Mistake 3: no version on the chunks.** Without it, staleness is undetectable and the index silently serves last year's policy.
+
+**Mistake 4: testing only one language.** Cross-language retrieval is a separate capability of the embedding model and it fails on its own.
+
+**Mistake 5: treating dilution as a retrieval bug.** The chunk was retrieved. The test must assert on the generation side <Cite n={3} />.
+
+**Mistake 6: not generating the cases adversarially.** Hand-written cases cover the failures you imagined. A tool that generates questions from the knowledge base finds the ones you did not <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+**Mistake 1: পরিষ্কার knowledge base দিয়ে শুধু টেস্ট করা।** আসল ব্যর্থতা আসে সেই বিরোধ ও duplicate থেকে যেগুলো ইতিমধ্যেই আছে।
+
+**Mistake 2: সব ধরনের জন্য একটাই assertion।** ধরনই ঠিক করে কোন assertion ব্যর্থ হবে, তাই টেস্টকে ধরন জানতে হবে।
+
+**Mistake 3: chunk-এ version নেই।** তাহলে staleness ধরা যায় না আর index নীরবে গত বছরের policy দেয়।
+
+**Mistake 4: এক ভাষায় শুধু টেস্ট করা।** cross-language retrieval embedding model-এর আলাদা সক্ষমতা, আর সেটা নিজে থেকেই ব্যর্থ হয়।
+
+**Mistake 5: dilution-কে retrieval বাগ ভাবা।** chunk আসে গেছে। টেস্ট generation-এর দিকে assert করতে হবে <Cite n={3} />।
+
+**Mistake 6: কেসগুলো adversarially তৈরি না করা।** হাতে লেখা কেস কেবল আপনার কল্পিত ব্যর্থতা ঢাকে। knowledge base থেকে প্রশ্ন বানানো টুল বানানো ব্যর্থতাও খুঁজে বের করে <Cite n={4} />।
+
+</Layman>
+<Bangla>
+
+**Mistake 1: পরিষ্কার knowledge base দিয়ে শুধু টেস্ট করা।** আসল ব্যর্থতা আসে সেই বিরোধ ও duplicate থেকে যেগুলো ইতিমধ্যেই আছে।
+
+**Mistake 2: সব ধরনের জন্য একটাই assertion।** ধরনই ঠিক করে কোন assertion ব্যর্থ হবে, তাই টেস্টকে ধরন জানতে হবে।
+
+**Mistake 3: chunk-এ version নেই।** তাহলে staleness ধরা যায় না আর index নীরবে গত বছরের policy দেয়।
+
+**Mistake 4: এক ভাষায় শুধু টেস্ট করা।** cross-language retrieval embedding model-এর আলাদা সক্ষমতা, আর সেটা নিজে থেকেই ব্যর্থ হয়।
+
+**Mistake 5: dilution-কে retrieval বাগ ভাবা।** chunk আসে গেছে। টেস্ট generation-এর দিকে assert করতে হবে <Cite n={3} />।
+
+**Mistake 6: কেসগুলো adversarially তৈরি না করা।** হাতে লেখা কেস কেবল আপনার কল্পিত ব্যর্থতা ঢাকে। knowledge base থেকে প্রশ্ন বানানো টুল বানানো ব্যর্থতাও খুঁজে বের করে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Put the failure mode in the test name. `test_stale_document_is_never_retrieved` tells the next person what broke without reading the body.
+- Give every chunk a version or a date in the fixture. It is the cheapest stale-index defence there is.
+- Keep a copy of the contradictory documents in the repo. A test that regenerates them cannot reproduce the bug next quarter.
+- Run the multi-hop cases with the chunks in the wrong order too. The order is part of the contract.
+- When you find a new failure mode, add it as a mode with its own assertion rather than adding a condition to an existing test.
+- Run the advanced dataset against every model you plan to use. Retrieval quality varies by embedding model more than by generator.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Put the failure mode in the test name. `test_stale_document_is_never_retrieved` tells the next person what broke without reading the body.
+- Give every chunk a version or a date in the fixture. It is the cheapest stale-index defence there is.
+- Keep a copy of the contradictory documents in the repo. A test that regenerates them cannot reproduce the bug next quarter.
+- Run the multi-hop cases with the chunks in the wrong order too. The order is part of the contract.
+- When you find a new failure mode, add it as a mode with its own assertion rather than adding a condition to an existing test.
+- Run the advanced dataset against every model you plan to use. Retrieval quality varies by embedding model more than by generator.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- ব্যর্থতার ধরনটা টেস্টের নামে রাখুন। `test_stale_document_is_never_retrieved` পরের জন্য বলে দেয় কী ভাঙল, শরীরটা পড়ার দরকার নেই।
+- fixture-এ প্রতিটা chunk-এর একটা version বা তারিখ দিন। এটাই সবচেয়ে সস্তা stale-index প্রতিরক্ষা।
+- বিরোধী document-গুলোর একটা কপি repo-তে রাখুন। যে টেস্ট সেগুলো নতুন করে বানায়, সেটা পরের কোয়ার্টারে বাগ reproduce করতে পারে না।
+- multi-hop কেসগুলো ভুল ক্রমেও চালান। ক্রমটাও contract-এর অংশ।
+- নতুন ব্যর্থতার ধরন পেলে সেটা নিজের assertion-সহ একটা mode হিসেবে যোগ করুন, পুরোনো টেস্টে শর্ত যোগ না করে।
+- advanced dataset-টা যেসব model ব্যবহার করার পরিকল্পনা করছেন সবগুলোর ওপর চালান। retrieval quality generator-এর চেয়ে embedding model-এ বেশি বদলায়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Contradictory documents | Two chunks that disagree, both retrieved, and the model picks the wrong one |
+| Near-duplicate documents | The same page in two chunks, which wastes context and skews the answer |
+| Multi-hop question | A question whose answer needs several documents combined |
+| Stale content | The policy changed and the index still serves the old version |
+| Cross-language retrieval | Searching in one language over documents in another |
+| Context dilution | The right chunk is in the prompt but the model ignores it |
+| Chunk version | The version or date carried by a chunk, which makes staleness detectable |
+| RAGAS | The metric set that covers context precision, context recall, faithfulness, and relevancy |

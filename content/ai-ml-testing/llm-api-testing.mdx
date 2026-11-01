@@ -1,0 +1,453 @@
+export const metadata = { title: 'Testing LLM APIs', description: 'Test OpenAI, Anthropic, and Gemini endpoints: the request shape, the errors, the rate limits, the streaming, and the response times.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Chat API reference', publisher: 'OpenAI (API docs)', url: 'https://platform.openai.com/docs/api-reference/chat', accessed: '2026-11-01' },
+    { title: 'Messages API reference', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-11-01' },
+    { title: 'Token counting', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/token-counting', accessed: '2026-11-01' },
+    { title: 'Gemini API documentation', publisher: 'Google (AI for Developers)', url: 'https://ai.google.dev/gemini-api/docs', accessed: '2026-11-01' },
+  ],
+}
+
+# Testing LLM APIs
+
+The API is where the model meets your code. Below the model there is an ordinary API, and an ordinary API has ordinary things to test.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+An LLM endpoint looks like any other HTTP API with three differences: the request body contains natural language, the response is billed by the token, and the same request can produce a different response.
+
+That gives a test plan with four parts.
+
+**The request contract.** The shape of the request is a schema like any other: the model id, the messages, the max tokens, the temperature, and the optional parameters. The chat completions reference is the contract <Cite n={1} />. A missing required field, a wrong type, and an unknown model id all have to fail loudly rather than be silently ignored.
+
+**The error paths.** An API has a set of failures, and each one has its own status. The retry rules below are the tutorial's own advice:
+
+```text
+400  the request is malformed          fix it, never retry
+401  the key is wrong or missing       fix the config, never retry
+429  too many requests or quota        wait and retry with backoff
+500  the provider had an internal error retry with backoff
+```
+
+The test that matters most is the last one: **the timeout**. A request that never comes back is worse than one that comes back wrong, and it is the failure a user notices first.
+
+**The streaming path.** When the endpoint streams, the response is a series of events rather than one body. The test has to cover the happy path, a stream that is cut in the middle, and a stream where an error arrives after the first chunk. The last one is the interesting case: the client has already shown the user half an answer, and now it has to decide what to do.
+
+**The performance envelope.** The endpoint has a latency distribution, not a latency. The time to first token matters more to a user than the total time, because the first token is when the page starts to feel alive. This is the tutorial's own view.
+
+</Technical>
+<Layman>
+
+An LLM API is an ordinary web API with three twists: you send plain language, you pay per token, and the same request can give a different answer.
+
+Test four things:
+
+- **The request.** The model name, the messages, the length limit, and the temperature form a contract, like any API schema <Cite n={1} />. A missing field or an unknown model name must fail loudly.
+- **The errors.** 400 means the request is wrong: fix it, do not retry. 401 means the key is wrong: fix the setup, do not retry. 429 (too many requests) and 500 (a server error) can be retried after a wait. These retry rules are the tutorial's own advice. The most important case is the timeout: a request that never comes back.
+- **Streaming.** The answer can arrive in pieces. Test a normal stream, a stream that is cut in the middle, and a stream that sends an error after the first piece.
+- **Speed.** Look at the spread of response times, not one number. In the tutorial's view, the wait for the first word matters most, because that is when the page feels alive.
+
+</Layman>
+<Bangla>
+
+একটা LLM endpoint মনে হতে পারে সাধারণ HTTP API-র মতো, তিনটা পার্থক্য সহ: request body-তে প্রাকৃতিক ভাষা থাকে, response-এর বিল token অনুযায়ী আসে, আর একই request দুটো ভিন্ন response দিতে পারে।
+
+তাই টেস্ট পরিকল্পনা চারটা অংশে ভাগ হয়।
+
+**Request contract।** request-এর গঠন অন্য যেকোনো API-র মতো একটা schema: model id, messages, max tokens, temperature, আর ঐচ্ছিক parameter। chat completions reference-ই সেই contract <Cite n={1} />। আবশ্যিক field না থাকা, ভুল টাইপ, আর অজানা model id — তিনটাই নীরবে উপেক্ষা না হয়ে জোরে ব্যর্থ হওয়া উচিত।
+
+**Error path।** একটা API-র ব্যর্থতার একটা সেট আছে, আর প্রতিটার নিজস্ব status আছে। নিচের retry নিয়মগুলো টিউটোরিয়ালের নিজস্ব পরামর্শ:
+
+```text
+400  the request is malformed          fix it, never retry
+401  the key is wrong or missing       fix the config, never retry
+429  too many requests or quota        wait and retry with backoff
+500  the provider had an internal error retry with backoff
+```
+
+সবচেয়ে গুরুত্বপূর্ণ টেস্টটি শেষেরটা: **timeout**। যে request কখনো ফেরত আসে না, সেটা ভুল উত্তরের চেয়ে খারাপ, আর সেটাই ব্যবহারকারী সবার আগে বোঝেন।
+
+**Streaming path।** endpoint stream করলে response একটা body নয়, event-এর ধারা। টেস্টে happy path, মাঝখানে কাটা stream, আর প্রথম chunk-এর পরে error আসা stream — তিনটা কভার করতে হয়। শেষেরটা আকর্ষণীয়: client ইতিমধ্যে ব্যবহারকারীকে অর্ধেক উত্তর দেখিয়ে ফেলেছে, আর এখন সিদ্ধান্ত নিতে হবে।
+
+**Performance envelope।** endpoint-এর একটা latency বিতরণ আছে, একটা latency নয়। মোট সময়ের চেয়ে প্রথম token-এর সময় বেশি গুরুত্বপূর্ণ, কারণ প্রথম token এলেই পেজটা জীবন্ত মনে হতে শুরু করে। এটা টিউটোরিয়ালের নিজস্ব মত।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+The request path is ordinary HTTP with one unusual field: **stream**. When it is true, the response is a series of server-sent events instead of a single body <Cite n={2} />, and the client has to reassemble them.
+
+That reassembly is where the streaming bugs live:
+
+```text
+the server sends: event A, event B, [network drops], event C
+the client sees: a partial answer and no end marker
+```
+
+The client's job is to notice the missing end and say so rather than showing a truncated answer as if it were complete. The test asserts that behaviour directly.
+
+**The timeout layer.** The provider's own timeout and your client's timeout are different things. The provider's is when the service gives up. Yours is when your application gives up. Yours should be shorter, so that your user sees an error rather than a spinner that never stops.
+
+**The rate limit.** A 429 is not an error to hide; it is a signal about your traffic. The test that matters is the one that checks your retry logic does not make it worse: a naive retry loop turns one 429 into fifty requests in a second, which is how a rate limit becomes an outage.
+
+**The token accounting.** The response reports how many tokens went in and how many came out. The Claude Messages API describes this `usage` field as billing and rate-limit usage <Cite n={2} />, and its token counting endpoint counts the tokens of a message before you send it <Cite n={3} />. A test that asserts the response reports usage, and a second test that asserts the cost per call stays under a limit, are both worth having.
+
+**The provider matrix.** The three providers differ in the details. For example, the Claude Messages API takes the system prompt as a top-level `system` parameter <Cite n={2} />, OpenAI Chat Completions takes it as a `developer` message in the list (older models use `system`) <Cite n={1} />, and the Gemini API has its own SDKs and request format <Cite n={4} />. What they share is the shape of the contract. That is why the test suite should have a shared interface with a provider-specific configuration, and why the test cases themselves should be provider-agnostic.
+
+**The latency measurement.** Report the distribution, not the mean. A mean of 2 seconds hides the 15-second tail that a user noticed. Report the median and the 95th percentile, and measure the time to first token separately from the total time.
+
+</Technical>
+<Layman>
+
+With streaming on, the answer arrives as a series of small events (server-sent events) instead of one block <Cite n={2} />. If the connection drops, the app gets half an answer with no end marker. It must say so, and not show half an answer as if it were complete.
+
+Set your app's timeout shorter than the provider's, so the user sees an error instead of an endless spinner.
+
+A 429 tells you that you send too much traffic. A retry loop with no wait turns one 429 into many requests at once, and a slowdown becomes an outage.
+
+Each response reports how many tokens went in and out. Claude's API calls this billing and rate-limit usage <Cite n={2} />, and you can also count tokens before you send <Cite n={3} />. Test that the count is there and that the cost per call stays under a limit.
+
+The providers differ in details. For example, Claude takes the system prompt as a separate `system` field <Cite n={2} />, OpenAI puts it in the message list <Cite n={1} />, and Gemini has its own request format <Cite n={4} />. Write one shared test suite with a small setup for each provider.
+
+For speed, report the median and the 95th percentile, and measure the first token apart from the total time.
+
+</Layman>
+<Bangla>
+
+request path সাধারণ HTTP, শুধু একটা অস্বাভাবিক field আছে: **stream**। সেটা true হলে response একটা body নয়, server-sent event-এর ধারা <Cite n={2} />, আর client-কে সেগুলো জোড়া লাগাতে হয়।
+
+সেই জোড়া লাগানোর জায়গাতেই streaming-এর বাগ থাকে:
+
+```text
+the server sends: event A, event B, [network drops], event C
+the client sees: a partial answer and no end marker
+```
+
+client-এর কাজ হলো শেষ marker না দেখে বুঝে তা বলা, যাতে কাটা উত্তরকে সম্পূর্ণ মনে করে দেখানো না হয়। টেস্ট সরাসরি সেই আচরণটাই assert করে।
+
+**Timeout layer।** provider-এর নিজস্ব timeout আর আপনার client-এর timeout দুটো আলাদা জিনিস। provider-এরটা হলো service যখন হাল ছেড়ে দেয়। আপনারটা হলো আপনার application যখন হাল ছেড়ে দেয়। আপনারটা ছোট রাখুন, যাতে ব্যবহারকারী কখনো না থামা একটা spinner-এর বদলে একটা error দেখেন।
+
+**Rate limit।** 429 লুকানোর ব্যর্থতা নয়, এটা আপনার traffic সম্পর্কিত সংকেত। সবচেয়ে গুরুত্বপূর্ণ টেস্টটি হলো সেটা যাচাই করে যে আপনার retry logic অবস্থা আর খারাপ করে না: একটা সরল retry loop একটা 429-কে এক সেকেন্ডে পঞ্চাশটা request বানিয়ে দেয়, আর এভাবেই rate limit outage হয়।
+
+**Token accounting।** response জানায় কতগুলো token ঢুকেছে আর কতগুলো বেরিয়েছে। Claude Messages API এই `usage` field-কে billing আর rate-limit usage বলে বর্ণনা করে <Cite n={2} />, আর এর token counting endpoint পাঠানোর আগেই একটা message-এর token গোনে <Cite n={3} />। response usage জানায় কি না assert করা, আর প্রতি call-এর খরচ একটা সীমার নিচে আছে কি না assert করা — দুটোই থাকা উচিত।
+
+**Provider matrix।** তিন provider-এর বিবরণ আলাদা। যেমন, Claude Messages API system prompt নেয় top-level `system` parameter হিসেবে <Cite n={2} />, OpenAI Chat Completions নেয় list-এর ভেতরে একটা `developer` message হিসেবে (পুরনো model-এ `system`) <Cite n={1} />, আর Gemini API-র নিজস্ব SDK আর request format আছে <Cite n={4} />। যা সাধারণ তা হলো contract-এর গঠন। তাই টেস্ট suite-এ একটা shared interface থাকা উচিত provider-নির্দিষ্ট configuration সহ, আর কেসগুলো নিজেরাই provider-এর ওপর নির্ভরশীল না হওয়া উচিত।
+
+**Latency measurement।** গড় নয়, বিতরণ জানান। ২ সেকেন্ডের গড় লুকায় সেই ১৫ সেকেন্ডের tail-টা যেটা ব্যবহারকারী দেখেছিল। median আর 95th percentile জানান, আর মোট সময় থেকে প্রথম token-এর সময় আলাদা করে মাপুন।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Write the provider tests against a shared interface, so one suite covers all three providers:
+
+```python
+# tests/ai/test_api_contract.py
+import pytest
+
+PROVIDERS = [
+    pytest.param(openai_client, id="openai"),
+    pytest.param(anthropic_client, id="anthropic"),
+    pytest.param(gemini_client, id="gemini"),
+]
+
+
+@pytest.mark.parametrize("client", PROVIDERS)
+def test_api_rejects_an_unknown_model(client):
+    with pytest.raises(client.APIError) as error:
+        client.complete(model="model-that-does-not-exist", messages=[{"role": "user", "content": "hi"}])
+    assert 400 <= error.value.status < 500
+
+
+@pytest.mark.parametrize("client", PROVIDERS)
+def test_api_rejects_an_empty_message_list(client):
+    with pytest.raises(client.APIError) as error:
+        client.complete(model=client.default_model, messages=[])
+    assert 400 <= error.value.status < 500
+```
+
+Now the timeout and the retry behaviour, which is where the real bugs are:
+
+```python
+def test_timeout_is_shorter_than_the_provider_timeout():
+    assert app_config.CLIENT_TIMEOUT_SECONDS < app_config.PROVIDER_TIMEOUT_SECONDS
+
+
+def test_a_429_is_retried_with_backoff(monkeypatch):
+    calls = []
+
+    def fake_post(*args, **kwargs):
+        calls.append(1)
+        if len(calls) < 3:
+            raise RateLimitError(retry_after=0.01)
+        return FakeResponse(text="ok")
+
+    monkeypatch.setattr(app.http, "post", fake_post)
+    assert app.answer("hi") == "ok"
+    assert len(calls) == 3
+
+
+def test_a_400_is_not_retried(monkeypatch):
+    calls = []
+
+    def fake_post(*args, **kwargs):
+        calls.append(1)
+        raise BadRequestError("malformed")
+
+    monkeypatch.setattr(app.http, "post", fake_post)
+    with pytest.raises(BadRequestError):
+        app.answer("hi")
+    assert len(calls) == 1, "a 400 must not be retried"
+```
+
+And the streaming test, which needs a fake stream that breaks in the middle:
+
+```python
+def test_a_truncated_stream_is_reported_as_an_error():
+    stream = [b"data: {\"text\": \"Hello\"}\n\n", b"data: {\"text\": \" wor"]
+    with pytest.raises(TruncatedStreamError):
+        collect_answer(stream)
+```
+
+Finally, the cost guard:
+
+```python
+def test_one_call_stays_within_the_budget():
+    result = app.answer(LONG_QUESTION)
+    cost = result.input_tokens * INPUT_PRICE + result.output_tokens * OUTPUT_PRICE
+    assert cost < 0.05, f"one call cost {cost:.4f}"
+```
+
+That last test catches the most common surprise in an LLM product: someone adds the full document to the prompt and the per-call cost triples.
+
+</Technical>
+<Layman>
+
+Write the tests one time against a shared interface, and run them for OpenAI, Anthropic, and Gemini.
+
+The example tests check that:
+
+- an unknown model name and an empty message list are rejected with a 4xx error;
+- your timeout is shorter than the provider's;
+- a 429 is retried with a wait, and the call succeeds on the third try;
+- a 400 is tried only once;
+- a stream that stops in the middle raises an error instead of returning half an answer;
+- one call stays under a cost limit.
+
+The cost test catches a common surprise: someone puts a whole document into the prompt, and each call suddenly costs three times more.
+
+</Layman>
+<Bangla>
+
+provider-এর টেস্ট একটা shared interface-এর বিপরীতে লিখুন, যাতে একটাই suite তিন provider কভার করে:
+
+```python
+# tests/ai/test_api_contract.py
+import pytest
+
+PROVIDERS = [
+    pytest.param(openai_client, id="openai"),
+    pytest.param(anthropic_client, id="anthropic"),
+    pytest.param(gemini_client, id="gemini"),
+]
+
+
+@pytest.mark.parametrize("client", PROVIDERS)
+def test_api_rejects_an_unknown_model(client):
+    with pytest.raises(client.APIError) as error:
+        client.complete(model="model-that-does-not-exist", messages=[{"role": "user", "content": "hi"}])
+    assert 400 <= error.value.status < 500
+
+
+@pytest.mark.parametrize("client", PROVIDERS)
+def test_api_rejects_an_empty_message_list(client):
+    with pytest.raises(client.APIError) as error:
+        client.complete(model=client.default_model, messages=[])
+    assert 400 <= error.value.status < 500
+```
+
+তারপর timeout আর retry-এর আচরণ, যেখানে আসল বাগ থাকে:
+
+```python
+def test_timeout_is_shorter_than_the_provider_timeout():
+    assert app_config.CLIENT_TIMEOUT_SECONDS < app_config.PROVIDER_TIMEOUT_SECONDS
+
+
+def test_a_429_is_retried_with_backoff(monkeypatch):
+    calls = []
+
+    def fake_post(*args, **kwargs):
+        calls.append(1)
+        if len(calls) < 3:
+            raise RateLimitError(retry_after=0.01)
+        return FakeResponse(text="ok")
+
+    monkeypatch.setattr(app.http, "post", fake_post)
+    assert app.answer("hi") == "ok"
+    assert len(calls) == 3
+
+
+def test_a_400_is_not_retried(monkeypatch):
+    calls = []
+
+    def fake_post(*args, **kwargs):
+        calls.append(1)
+        raise BadRequestError("malformed")
+
+    monkeypatch.setattr(app.http, "post", fake_post)
+    with pytest.raises(BadRequestError):
+        app.answer("hi")
+    assert len(calls) == 1, "a 400 must not be retried"
+```
+
+আর streaming টেস্ট, যার জন্য মাঝখানে ভাঙা একটা fake stream দরকার:
+
+```python
+def test_a_truncated_stream_is_reported_as_an_error():
+    stream = [b"data: {\"text\": \"Hello\"}\n\n", b"data: {\"text\": \" wor"]
+    with pytest.raises(TruncatedStreamError):
+        collect_answer(stream)
+```
+
+শেষে, cost guard:
+
+```python
+def test_one_call_stays_within_the_budget():
+    result = app.answer(LONG_QUESTION)
+    cost = result.input_tokens * INPUT_PRICE + result.output_tokens * OUTPUT_PRICE
+    assert cost < 0.05, f"one call cost {cost:.4f}"
+```
+
+শেষ টেস্টটাই LLM পণ্যের সবচেয়ে সাধারণ চমকটা ধরে: কেউ পুরো document prompt-এ যোগ করে দেয় আর প্রতি call-এর খরচ তিনগুণ হয়ে যায়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: testing only the happy path.** The 400, the 429, the timeout, and the truncated stream are the paths that matter in production.
+
+**Mistake 2: retrying everything.** Retrying a 400 or a 401 makes the failure slower and never succeeds. The retry policy must be per status code.
+
+**Mistake 3: no backoff.** A retry loop with no delay is how one rate limit becomes an outage.
+
+**Mistake 4: a client timeout longer than the provider timeout.** Then your user waits until the provider gives up, which can take a long time, before seeing anything.
+
+**Mistake 5: no cost assertion.** The token usage in the response is free information, and the cost per call is the number that surprises a product team <Cite n={2} />.
+
+**Mistake 6: assuming the providers are interchangeable.** Where the system prompt goes and the shape of the request differ <Cite n={2} /> <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+**Mistake 1: testing only the happy path.** The 400, the 429, the timeout, and the cut stream are what matter in production.
+
+**Mistake 2: retrying everything.** A 400 or a 401 never succeeds on a retry. It only fails more slowly. Decide the retry rule for each status code.
+
+**Mistake 3: no wait between retries.** That is how one rate limit becomes an outage.
+
+**Mistake 4: a client timeout longer than the provider's.** Then the user waits until the provider gives up before seeing anything.
+
+**Mistake 5: no cost check.** The response already reports its token usage <Cite n={2} />. Use it.
+
+**Mistake 6: treating the providers as the same.** Where the system prompt goes and the shape of the request differ <Cite n={2} /> <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: শুধু happy path টেস্ট করা।** 400, 429, timeout আর কাটা stream — এগুলোই production-এ গুরুত্বপূর্ণ।
+
+**ভুল ২: সবকিছু retry করা।** 400 বা 401 retry করলে ব্যর্থতা ধীর হয় আর কখনো সফল হয় না। retry নীতিটা status code অনুযায়ী হতে হবে।
+
+**ভুল ৩: backoff নেই।** delay ছাড়া retry loop একটা rate limit-কে outage বানিয়ে দেয়।
+
+**ভুল ৪: provider-এর timeout-এর চেয়ে বড় client timeout।** তাহলে কিছু দেখার আগে ব্যবহারকারীকে provider হাল ছাড়া পর্যন্ত অপেক্ষা করতে হয়, আর সেটা অনেক সময় নিতে পারে।
+
+**ভুল ৫: cost assert নেই।** response-এর token usage বিনামূল্যে তথ্য, আর প্রতি call-এর খরচই সেই সংখ্যা যেটা product team-কে অবাক করে <Cite n={2} />।
+
+**ভুল ৬: provider-গুলো পরস্পরের বদলে ব্যবহারযোগ্য ভাবা।** system prompt কোথায় যায় আর request-এর গঠন আলাদা <Cite n={2} /> <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Put the provider contract tests behind a marker so they do not run on every commit. They call a paid API.
+- Run the error-path tests against a fake server, never against the real one. You cannot ask a provider for a 429 on purpose without wasting money.
+- Record the time to first token and the total time as two separate metrics. They answer different questions.
+- Log the input and output token counts for every request in the test run. The cost trend is more useful than the cost of one call.
+- Test the model id you actually ship. A model id that was renamed last quarter returns a 404 in production, not in a unit test.
+- Check that the error message the user sees is safe. A raw provider error can leak the key or the request.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Put the provider contract tests behind a marker so they do not run on every commit. They call a paid API.
+- Run the error-path tests against a fake server, never against the real one. You cannot ask a provider for a 429 on purpose without wasting money.
+- Record the time to first token and the total time as two separate metrics. They answer different questions.
+- Log the input and output token counts for every request in the test run. The cost trend is more useful than the cost of one call.
+- Test the model id you actually ship. A model id that was renamed last quarter returns a 404 in production, not in a unit test.
+- Check that the error message the user sees is safe. A raw provider error can leak the key or the request.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- provider contract টেস্টগুলো একটা mark-এর পিছনে রাখুন যাতে প্রতিটা commit-এ না চলে। এগুলো paid API ডাকে।
+- error path-এর টেস্ট fake server-এর বিপরীতে চালান, আসলের বিপরীতে কখনো নয়। টাকা নষ্ট না করে provider-এর কাছ থেকে ইচ্ছা করে 429 পাওয়া যায় না।
+- প্রথম token-এর সময় আর মোট সময় দুটো আলাদা metric হিসেবে রেকর্ড করুন। এগুলো আলাদা প্রশ্নের উত্তর দেয়।
+- test run-এ প্রতিটি request-এর ইনপুট আর আউটপুট token সংখ্যা লিখে রাখুন। একটা call-এর খরচের চেয়ে খরচের trend বেশি কাজে লাগে।
+- যে model id আপনি আসলে ship করেন সেটা টেস্ট করুন। গত quarter-এ নাম বদলানো একটা model id unit test-এ নয়, production-এ 404 দেয়।
+- ব্যবহারকারী যে error message দেখে সেটি নিরাপদ কি না যাচাই করুন। provider-এর raw error-এ key বা request চলে যেতে পারে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Stream | The request flag that makes the endpoint send events instead of one body |
+| Server-sent events | The format a streaming response arrives in |
+| Time to first token | How long the user waits before anything appears. The latency a user feels |
+| TTFT | The short name for time to first token |
+| Backoff | Waiting longer between each retry, so a rate limit does not become an outage |
+| 429 | Too many requests. Retry it after a wait, with backoff |
+| 400 | A malformed request. Fix it; never retry it |
+| Truncated stream | A stream that stops before its end marker, leaving a partial answer |
+| Token usage | The input and output token counts the response reports |
+| Cost per call | Input tokens times the input price, plus output tokens times the output price |

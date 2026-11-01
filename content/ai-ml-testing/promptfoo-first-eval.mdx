@@ -1,0 +1,478 @@
+export const metadata = { title: 'Your First Eval with Promptfoo', description: 'Set up Promptfoo, write a YAML config, define test cases, run the eval, and read the result.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Introduction', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/intro/', accessed: '2026-11-01' },
+    { title: 'Configuration reference', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/configuration/reference/', accessed: '2026-11-01' },
+    { title: 'Assertions', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/configuration/expected-outputs/', accessed: '2026-11-01' },
+    { title: 'Challenges in evaluating AI systems', publisher: 'Anthropic (Research)', url: 'https://www.anthropic.com/research/evaluating-ai-systems', accessed: '2026-11-01' },
+  ],
+}
+
+# Your First Eval with Promptfoo
+
+An eval is a test suite where the assertion is a property instead of an exact answer. Promptfoo is an open-source tool that runs one for you.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+Promptfoo takes a **provider**, a set of **test cases**, and a set of **assertions**, runs them, and shows you the results in a table. It is an open-source command-line tool and library for evaluating LLM apps, and its goal is test-driven LLM development instead of trial and error <Cite n={1} />.
+
+The three parts of a Promptfoo config:
+
+```yaml
+prompts:
+  - "Answer the question using only the policy.\n\nPolicy: {{policy}}\n\nQuestion: {{question}}"
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-6
+    label: sonnet
+
+tests:
+  - vars:
+      policy: 30-day returns for unopened items
+      question: How long do I have to return a laptop?
+    assert:
+      - type: contains
+        value: "30"
+```
+
+**Prompts** are the templates. **Providers** are the models to run. **Tests** are the cases, each with its variables and its assertions. The configuration reference is where the exact key names live, and it is worth reading before you guess <Cite n={2} />.
+
+The thing that makes Promptfoo useful to a tester is the separation between **what you send** and **what you check**. The `vars` are the inputs. The `assert` list is the test. Changing an assertion does not change the prompt, so you can tighten a check without changing what the model sees, and you can compare two prompts against the same assertions without rewriting them.
+
+</Technical>
+<Layman>
+
+Promptfoo needs three things: the model to use (the **provider**), some example questions (the **test cases**), and the checks to run on each answer (the **assertions**). It runs them all and shows the results in a table. It is an open-source tool for testing LLM apps <Cite n={1} />.
+
+A small config looks like this:
+
+```yaml
+prompts:
+  - "Answer the question using only the policy.\n\nPolicy: {{policy}}\n\nQuestion: {{question}}"
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-6
+    label: sonnet
+
+tests:
+  - vars:
+      policy: 30-day returns for unopened items
+      question: How long do I have to return a laptop?
+    assert:
+      - type: contains
+        value: "30"
+```
+
+**Prompts** are the message templates. **Providers** are the models. **Tests** are the cases: the values to fill in (`vars`) and the checks (`assert`). The configuration reference has the exact key names, so read it instead of guessing <Cite n={2} />.
+
+The useful idea for a tester: what you send and what you check are kept apart. You can change a check without changing the prompt, and you can test two prompts with the same checks.
+
+</Layman>
+<Bangla>
+
+Promptfoo নেয় একটা **provider** (মানে model), কিছু **test case**, আর কিছু **assertion**, তারপর সব চালিয়ে একটা টেবিল দেখায়। Promptfoo হলো LLM app মূল্যায়নের একটা open-source command-line tool আর library। এর লক্ষ্য অনুমান করে বারবার চেষ্টা নয়, test-driven LLM development <Cite n={1} />।
+
+Promptfoo config-এর তিনটা অংশ:
+
+```yaml
+prompts:
+  - "Answer the question using only the policy.\n\nPolicy: {{policy}}\n\nQuestion: {{question}}"
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-6
+    label: sonnet
+
+tests:
+  - vars:
+      policy: 30-day returns for unopened items
+      question: How long do I have to return a laptop?
+    assert:
+      - type: contains
+        value: "30"
+```
+
+**Prompts** হলো template। **Providers** হলো যেসব model-এ চালাতে হবে। **Tests** হলো কেস, প্রতিটিতে variable আর assertion। সঠিক key-এর নাম কোথায় আছে সেটা configuration reference-এ, আর অনুমান করার আগে সেটা পড়া ভালো <Cite n={2} />।
+
+টেস্টারের জন্য Promptfoo-র সবচেয়ে দরকারি বিষয় হলো **যা পাঠানো হচ্ছে** আর **যা যাচাই করা হচ্ছে** — এই দুটো আলাদা। `vars` হলো input। `assert` তালিকা হলো টেস্ট। assertion বদলালে prompt বদলায় না। তাই model যা দেখে তা না বদলেই আপনি চেক শক্ত করতে পারেন, আর দুটো prompt একই assertion দিয়ে তুলনা করতে পারেন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+When Promptfoo runs, it does this for every test case:
+
+```text
+1. render     the prompt template with the case's vars
+2. call       the provider, once for each prompt and provider
+3. assert     run each assertion against the output
+4. record     the result, the output, and the timing
+```
+
+The rendering step is where `{{variable}}` placeholders are filled. The assertion step is where the quality lives, and it is the part that decides whether the eval is worth anything.
+
+Promptfoo's assertion reference splits the assertion types into two groups <Cite n={3} />, and mixing them up is the usual mistake:
+
+- **Deterministic assertions** are programmatic checks on the text: `contains`, `regex`, `javascript`, `equals`, `is-json`, `starts-with`, and any type with `not-` in front, such as `not-contains`. They are fast, free, and exact. They are also brittle when the wording can legitimately vary.
+- **Model-assisted (model-graded) assertions** use a model to judge the output. `llm-rubric` grades the output against a rubric that you write. They handle "is this polite and on-topic", but each one costs a model call and the verdict can drift.
+
+The rule of thumb for a test suite (the tutorial's own advice): use deterministic assertions wherever a deterministic check exists, and use model grading only for the properties that genuinely need judgement. A suite of only rubric assertions is slow and noisy; a suite of only string assertions does not measure quality.
+
+The **output** of a run is a table with the pass or fail per case, the actual output, and the score. Promptfoo shows the results as a matrix, so you can compare the outputs of many prompts side by side <Cite n={1} />. That table is the artefact a tester attaches to a pull request.
+
+</Technical>
+<Layman>
+
+For each test case, Promptfoo does four things:
+
+```text
+1. render     the prompt template with the case's vars
+2. call       the provider, once for each prompt and provider
+3. assert     run each assertion against the output
+4. record     the result, the output, and the timing
+```
+
+First it fills the `{{variable}}` gaps in the prompt. Then it sends the prompt to the model. Then it runs your checks on the answer. Last, it saves the result. The checks are the part that decides whether the eval is worth anything.
+
+Promptfoo has two kinds of checks <Cite n={3} />:
+
+- **Rule checks** (deterministic), like `contains`, `regex`, or `is-json`. They look at the text. They are fast, free, and exact, but they break when a right answer uses different words.
+- **Model checks** (model-graded), like `llm-rubric`. Another model reads the answer and your written rule and says pass or fail. They can judge things like "is this polite", but each one costs a model call, and the verdict can change.
+
+The tutorial's advice: use a rule check when one can do the job, and a model check only when you really need judgement.
+
+The result is a table: pass or fail for each case, the real answer, and the score. Promptfoo can show many prompts side by side <Cite n={1} />. A tester attaches the table to the pull request.
+
+</Layman>
+<Bangla>
+
+Promptfoo চালালে প্রতিটা test case-এর জন্য এটা করে:
+
+```text
+1. render     the prompt template with the case's vars
+2. call       the provider, once for each prompt and provider
+3. assert     run each assertion against the output
+4. record     the result, the output, and the timing
+```
+
+render ধাপে `{{variable}}` জায়গাগুলো ভরে যায়। assert ধাপেই মান যাচাই হয়, আর এই অংশটাই ঠিক করে eval-টার আসলে কোনো মূল্য আছে কি না।
+
+Promptfoo-র assertion reference assertion type-গুলোকে দুটো দলে ভাগ করে <Cite n={3} />, আর এদের গুলিয়ে ফেলা সাধারণ ভুল:
+
+- **Deterministic assertion** লেখাটা program দিয়ে যাচাই করে: `contains`, `regex`, `javascript`, `equals`, `is-json`, `starts-with`, আর সামনে `not-` লাগানো যেকোনো type, যেমন `not-contains`। এগুলো দ্রুত, বিনামূল্যে, আর হুবহু। কিন্তু সঠিক উত্তর অন্য ভাষায় এলে এগুলো সহজে ভেঙে যায়।
+- **Model-assisted (model-graded) assertion** উত্তর বিচার করতে একটা model ব্যবহার করে। `llm-rubric` আপনার লেখা rubric অনুযায়ী উত্তরকে নম্বর দেয়। "উত্তরটা কি ভদ্র আর প্রাসঙ্গিক" — এমন প্রশ্ন এগুলো ধরতে পারে, কিন্তু প্রতিটায় একটা model call খরচ হয়, আর রায় বদলে যেতে পারে।
+
+টিউটোরিয়ালের নিজের পরামর্শ: যেখানে deterministic যাচাই সম্ভব, সেখানে সেটাই ব্যবহার করুন; model grading রাখুন শুধু যেখানে সত্যিই বিচার লাগে। শুধু rubric assertion-এর suite ধীর আর অস্থির; শুধু string assertion-এর suite মান মাপে না।
+
+একটা run-এর **ফলাফল** একটা টেবিল: প্রতি কেসের pass বা fail, আসল উত্তর, আর স্কোর। Promptfoo ফলাফল matrix আকারে দেখায়, তাই অনেক prompt-এর উত্তর পাশাপাশি তুলনা করা যায় <Cite n={1} />। এই টেবিলটাই টেস্টার pull request-এ যুক্ত করেন।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Promptfoo loads a `promptfooconfig.*` file, such as `promptfooconfig.yaml`, from the current folder, and `npx promptfoo eval` runs it. Use `-c` for a config file with another name <Cite n={2} />:
+
+```bash
+npx promptfoo eval
+npx promptfoo eval -c path/to/config.yaml   # a config file with another name
+```
+
+A complete first config for a support bot:
+
+```yaml
+# promptfooconfig.yaml
+description: Support bot quality checks
+
+prompts:
+  - file://prompts/support.txt
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-6
+    label: sonnet-4-6
+
+defaultTest:
+  options:
+    rubricPrompt: file://prompts/rubric.txt
+
+tests:
+  - description: Policy question
+    vars:
+      policy: file://fixtures/return-policy.txt
+      question: How long do I have to return a laptop?
+    assert:
+      - type: contains
+        value: "30 day"
+      - type: llm-rubric
+        value: The answer only uses the policy and does not promise a refund
+      - type: javascript
+        value: output.split(/\s+/).length <= 60
+```
+
+Notice the third assertion: a plain JavaScript check on the word count. A one-line `javascript` assertion gets the answer as `output` and returns the value of its expression <Cite n={3} />. That is a deterministic check for a property that might seem to need a rubric, and it costs no model call.
+
+Run it and read the table. `--filter-providers` runs only the providers whose `id` or `label` matches <Cite n={2} />:
+
+```bash
+npx promptfoo eval
+npx promptfoo eval --filter-providers sonnet-4-6   # only this provider
+```
+
+Then save the results before and after a prompt change, and compare them case by case:
+
+```bash
+npx promptfoo eval --output results-before.json
+# change the prompt, then run the same tests again
+npx promptfoo eval --output results-after.json
+```
+
+The comparison is where the value is. A prompt change that fixes four cases and breaks two is not obviously good, and only the comparison shows that.
+
+</Technical>
+<Layman>
+
+Promptfoo looks for a file named `promptfooconfig.yaml` (or another `promptfooconfig.*` file) in the current folder. The command `npx promptfoo eval` runs it <Cite n={2} />:
+
+```bash
+npx promptfoo eval
+npx promptfoo eval -c path/to/config.yaml   # a config file with another name
+```
+
+Here is a full first config for a support bot:
+
+```yaml
+# promptfooconfig.yaml
+description: Support bot quality checks
+
+prompts:
+  - file://prompts/support.txt
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-6
+    label: sonnet-4-6
+
+defaultTest:
+  options:
+    rubricPrompt: file://prompts/rubric.txt
+
+tests:
+  - description: Policy question
+    vars:
+      policy: file://fixtures/return-policy.txt
+      question: How long do I have to return a laptop?
+    assert:
+      - type: contains
+        value: "30 day"
+      - type: llm-rubric
+        value: The answer only uses the policy and does not promise a refund
+      - type: javascript
+        value: output.split(/\s+/).length <= 60
+```
+
+It has three checks for one question. The answer must contain "30 day". A judge model checks that the answer uses only the policy and does not promise a refund. A short JavaScript line checks that the answer has 60 words or fewer <Cite n={3} />. The last check needs no model at all.
+
+Run it. The second command runs only the provider with that name <Cite n={2} />:
+
+```bash
+npx promptfoo eval
+npx promptfoo eval --filter-providers sonnet-4-6   # only this provider
+```
+
+Save the results before and after you change the prompt, and compare them case by case:
+
+```bash
+npx promptfoo eval --output results-before.json
+# change the prompt, then run the same tests again
+npx promptfoo eval --output results-after.json
+```
+
+A change that fixes four cases and breaks two is not clearly better. Only the comparison shows that.
+
+</Layman>
+<Bangla>
+
+Promptfoo বর্তমান ফোল্ডার থেকে একটা `promptfooconfig.*` ফাইল, যেমন `promptfooconfig.yaml`, নিজেই load করে, আর `npx promptfoo eval` সেটা চালায়। অন্য নামের config ফাইলের জন্য `-c` ব্যবহার করুন <Cite n={2} />:
+
+```bash
+npx promptfoo eval
+npx promptfoo eval -c path/to/config.yaml   # a config file with another name
+```
+
+একটা support bot-এর জন্য সম্পূর্ণ প্রথম config:
+
+```yaml
+# promptfooconfig.yaml
+description: Support bot quality checks
+
+prompts:
+  - file://prompts/support.txt
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-6
+    label: sonnet-4-6
+
+defaultTest:
+  options:
+    rubricPrompt: file://prompts/rubric.txt
+
+tests:
+  - description: Policy question
+    vars:
+      policy: file://fixtures/return-policy.txt
+      question: How long do I have to return a laptop?
+    assert:
+      - type: contains
+        value: "30 day"
+      - type: llm-rubric
+        value: The answer only uses the policy and does not promise a refund
+      - type: javascript
+        value: output.split(/\s+/).length <= 60
+```
+
+তৃতীয় assertion-টা খেয়াল করুন: শব্দ সংখ্যার একটা সাধারণ JavaScript যাচাই। এক লাইনের `javascript` assertion উত্তরটা `output` নামে পায়, আর তার expression-এর মান ফেরত দেয় <Cite n={3} />। মনে হতে পারে এই গুণের জন্য rubric লাগবে, কিন্তু এটা একটা deterministic যাচাই, আর এতে কোনো model call লাগে না।
+
+চালান আর টেবিল পড়ুন। `--filter-providers` শুধু সেই provider চালায় যার `id` বা `label` মেলে <Cite n={2} />:
+
+```bash
+npx promptfoo eval
+npx promptfoo eval --filter-providers sonnet-4-6   # only this provider
+```
+
+তারপর prompt বদলানোর আগে আর পরে ফলাফল সংরক্ষণ করুন, আর কেস ধরে ধরে তুলনা করুন:
+
+```bash
+npx promptfoo eval --output results-before.json
+# change the prompt, then run the same tests again
+npx promptfoo eval --output results-after.json
+```
+
+তুলনাতেই আসল মান। কোনো prompt পরিবর্তন চারটা কেস ঠিক করে দুটো ভাঙলে সেটা স্পষ্টভাবে ভালো নয়, আর শুধু তুলনাই সেটা দেখায়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: testing with the prompt you tuned on.** An eval over the examples you wrote while building tells you nothing. Use held-out cases.
+
+**Mistake 2: only `contains` assertions.** `contains` is brittle and it does not measure quality. A rubric or a semantic check such as `similar` belongs next to it <Cite n={3} />.
+
+**Mistake 3: only rubric assertions.** Every case then costs at least two model calls (the answer and the judge), the judge drifts, and the run is slow. Prefer a deterministic check when one exists.
+
+**Mistake 4: no output recorded.** If the run does not save the outputs, you cannot debug the failures afterwards.
+
+**Mistake 5: one provider only.** A suite that only runs the current model cannot tell you whether a cheaper model would pass.
+
+**Mistake 6: a passing eval and no threshold.** "All tests passed" is not a quality bar. Set a `threshold`: a test fails when the combined score of its assertions is less than this number <Cite n={2} />. And do not over-read the number: Anthropic warns against overinterpreting the quantitative score of any eval <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+**Mistake 1: testing on the examples you tuned with.** If you test with the same examples you used to write the prompt, the test tells you nothing. Use new cases.
+
+**Mistake 2: only `contains` checks.** A word check breaks easily and does not measure quality. Add a rubric or a meaning check such as `similar` next to it <Cite n={3} />.
+
+**Mistake 3: only rubric checks.** Then every case needs at least two model calls, the judge can change its mind, and the run is slow. Use a rule check when one exists.
+
+**Mistake 4: not saving the answers.** If the run does not keep the answers, you cannot find out later why a case failed.
+
+**Mistake 5: only one model.** If you test only the current model, you cannot tell whether a cheaper one would also pass.
+
+**Mistake 6: no pass mark.** "All tests passed" is not a quality bar. Set a `threshold`: the test fails when its combined score is below that number <Cite n={2} />. Also, do not read too much into one score; Anthropic warns about this <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: যে prompt-এ টিউন করেছেন তার ওপরই eval।** যে উদাহরণগুলো দিয়ে বানিয়েছেন, সেগুলো দিয়ে eval করলে কিছুই জানা যায় না। আলাদা কেস ব্যবহার করুন।
+
+**ভুল ২: শুধু `contains` assertion।** `contains` ভঙ্গুর আর মান মাপে না। এর পাশে rubric বা `similar`-এর মতো semantic check থাকা উচিত <Cite n={3} />।
+
+**ভুল ৩: শুধু rubric assertion।** তখন প্রতি কেসে অন্তত দুটো model call লাগে (উত্তর আর judge), judge সরে যায়, আর run ধীর। নির্দিষ্ট যাচাই যখনই সম্ভব সেটাই ব্যবহার করুন।
+
+**ভুল ৪: output সংরক্ষণ না করা।** run যদি উত্তর না রাখে, পরে ব্যর্থতা ডিবাগ করা যায় না।
+
+**ভুল ৫: একটাই provider।** শুধু বর্তমান model-এ চলা suite বলতে পারে না সস্তা model পাস করত কি না।
+
+**ভুল ৬: পাস করা eval আর কোনো threshold নেই।** "সব টেস্ট পাস" মানের বার নয়। একটা `threshold` দিন: assertion-গুলোর মোট স্কোর এই সংখ্যার কম হলে টেস্ট fail করে <Cite n={2} />। আর সংখ্যাটাকে বেশি গুরুত্ব দেবেন না: যেকোনো eval-এর সংখ্যাগত স্কোরকে অতিরিক্ত ব্যাখ্যা করা নিয়ে Anthropic সতর্ক করে <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Commit `promptfooconfig.yaml` next to the prompt it tests. The config and the prompt are one change, not two.
+- Use `file://` for the prompt, the policy fixtures, and the rubric prompt. Inlined text in the config is impossible to diff cleanly.
+- Save every run's output to a file and attach it to the pull request. The table is the evidence.
+- Keep one case that is expected to fail, and check that it still fails. A suite where everything passes is a suite with no power.
+- Run the eval before and after a prompt change, and put both tables in the pull request. One table alone shows nothing.
+- Put the eval in CI with a threshold, not just in a developer's terminal. That is the CI/CD module later in this course.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Commit `promptfooconfig.yaml` next to the prompt it tests. The config and the prompt are one change, not two.
+- Use `file://` for the prompt, the policy fixtures, and the rubric prompt. Inlined text in the config is impossible to diff cleanly.
+- Save every run's output to a file and attach it to the pull request. The table is the evidence.
+- Keep one case that is expected to fail, and check that it still fails. A suite where everything passes is a suite with no power.
+- Run the eval before and after a prompt change, and put both tables in the pull request. One table alone shows nothing.
+- Put the eval in CI with a threshold, not just in a developer's terminal. That is the CI/CD module later in this course.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- `promptfooconfig.yaml` ফাইলটা যে prompt-এর পরীক্ষা করে তার পাশেই commit করুন। config আর prompt একটাই পরিবর্তন, দুটো নয়।
+- prompt, policy fixture আর rubric prompt-এর জন্য `file://` ব্যবহার করুন। config-এর ভেতরে inline লেখা সুন্দর diff দেখায় না।
+- প্রতিটা run-এর output ফাইলে সংরক্ষণ করে pull request-এ যুক্ত করুন। টেবিলটাই প্রমাণ।
+- একটা কেস রাখুন যেটা ব্যর্থ হওয়ার কথা, আর দেখুন সেটা এখনো ব্যর্থ হচ্ছে। সব কেস পাস করা suite-এর কোনো ক্ষমতা নেই।
+- prompt পরিবর্তনের আগে ও পরে eval চালান, আর দুটো টেবিলই pull request-এ দিন। একটা টেবিল কিছুই দেখায় না।
+- eval-টা শুধু ডেভেলপারের টার্মিনালে নয়, threshold সহ CI-তে রাখুন। এটাই এই কোর্সের পরের CI/CD মডিউল।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Eval | A test suite that measures a property of the output instead of one exact output |
+| Promptfoo | A tool that runs prompts against providers and checks assertions on the results |
+| Provider | The model an eval runs against |
+| Assertion | One check applied to the output of a test case |
+| Rubric | A written criterion that a judge model checks the output against |
+| Model-graded assertion | An assertion that uses a model as the judge (Promptfoo calls these model-assisted) |
+| Deterministic assertion | An assertion that checks the text with a rule, not a model |
+| Test case | One set of variables and the assertions applied to them |
+| Threshold | The score a test or an assertion must reach to pass |

@@ -1,0 +1,508 @@
+export const metadata = { title: 'Testing LangGraph Agents', description: 'Test a multi-step agent: the decision at each node, the tool it picks, the arguments it passes, loop detection, and error recovery.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'LangGraph overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/overview', accessed: '2026-11-01' },
+    { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
+  ],
+}
+
+# Testing LangGraph Agents
+
+A chatbot answers once. An agent decides, acts, and decides again. The test has to check each decision, not just the final answer.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+LangGraph is a low-level framework and runtime for long-running, stateful agents. You build the agent as a graph of nodes joined by edges (`StateGraph`, `add_node`, `add_edge`) <Cite n={1} />. In the agent this page tests, the graph goes back to the model after each tool call, so it can loop. The example from the course syllabus is an agent that searches the web, does a calculation, and answers, using tools at more than one point.
+
+Testing an agent is different from testing a chain in three ways.
+
+**The decision is the product.** A chain's output is fixed by its wiring. An agent's output depends on which node it chose, which tool it called, and whether it looped. The test asserts on the decisions, not only on the answer. You want to know that it called `search` before it called `calculate`, and that it stopped after two searches instead of nine.
+
+**The arguments matter more than the choice.** Picking the right tool with the wrong query is a failure, and picking the wrong tool with the right query is also a failure. They are different bugs and they need different tests.
+
+**The failure modes are structural.** An agent can loop forever, hit the step limit, call a tool that does not exist, pass an argument of the wrong type, or fail to recover from a tool error. Each of those is a bug in the graph, not in the model, and each needs a test.
+
+The tracing tool makes all of this visible: LangSmith records each model call and each tool call as a run, with its inputs and outputs, so a trace of a looping agent shows where it looped <Cite n={2} />. The tutorial's rule from the chain page applies here too: test the parts before the whole.
+
+</Technical>
+<Layman>
+
+LangGraph is a framework for agents that keep track of their state. You build the agent as a graph: boxes (nodes) joined by arrows (edges) <Cite n={1} />. The course example is an agent that searches the web, does a sum, and answers. In this page's agent, the graph goes back to the model after each tool call, so it can loop.
+
+Testing an agent is different from testing a chain in three ways:
+
+- **The choices matter.** Check which tools it used and in what order. For example, check that it searched before it calculated, and that it stopped after two searches, not nine.
+- **The inputs to the tools matter.** The right tool with the wrong search words is a bug. The wrong tool with the right words is a different bug.
+- **It can go wrong in its structure.** It can loop forever, hit the step limit, call a tool that does not exist, pass the wrong type, or fail to recover from a tool error.
+
+LangSmith records each model call and tool call as a run with its inputs and outputs, so you can see where a looping agent looped <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+LangGraph হলো দীর্ঘ সময় চলা, state রাখা agent-এর জন্য একটা low-level framework আর runtime। agent-টা বানানো হয় edge দিয়ে জোড়া node-এর একটা graph হিসেবে (`StateGraph`, `add_node`, `add_edge`) <Cite n={1} />। এই পেজের agent-এ প্রতিটি tool call-এর পর graph আবার model-এ ফেরে, তাই এটা লুপ করতে পারে। কোর্সের উদাহরণ: একটা agent যেটা web-এ খোঁজে, হিসাব করে, আর উত্তর দেয়, একাধিক জায়গায় tool ব্যবহার করে।
+
+agent টেস্ট করা chain টেস্ট করার চেয়ে তিনভাবে আলাদা।
+
+**সিদ্ধান্তটাই পণ্য।** chain-এর output তার wiring-এ ঠিক থাকে। agent-এর output নির্ভর করে কোন node সে বেছে নিল, কোন tool ডাকল, আর লুপ করল কি না। টেস্ট শুধু উত্তরে নয়, সিদ্ধান্তেও assert করে। আপনি জানতে চান যে `calculate` ডাকার আগে সে `search` ডেকেছিল, আর নয়বার নয়, দুইবার খোঁজার পরেই থেমেছিল।
+
+**tool বাছা থেকে arguments বেশি গুরুত্বপূর্ণ।** সঠিক tool ভুল query দিয়ে ডাকা একটা ব্যর্থতা, আর ভুল tool সঠিক query দিয়ে ডাকাও একটা ব্যর্থতা। দুটো আলাদা বাগ আর আলাদা টেস্ট লাগে।
+
+**ব্যর্থতাগুলো গঠনগত।** agent চিরকাল লুপ করতে পারে, step limit-এ ঠেকে যেতে পারে, নেই এমন tool ডাকতে পারে, ভুল টাইপের argument দিতে পারে, বা tool error থেকে বেরিয়ে আসতে না পারে। প্রতিটাই graph-এর বাগ, model-এর নয়, আর প্রতিটার টেস্ট দরকার।
+
+tracing tool এটা সব দৃশ্যমান করে: LangSmith প্রতিটি model call আর tool call একটা run হিসেবে রেকর্ড করে, input আর output সহ, তাই লুপ করা agent-এর trace দেখায় কোথায় লুপ হয়েছিল <Cite n={2} />। chain পেজের নিয়ম এখানেও খাটে: পুরোটার আগে অংশগুলো টেস্ট করুন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+An agent test has four assertion families, and they map onto the four ways an agent goes wrong.
+
+```text
+1. routing      did it pick the right node or edge?
+2. tool call    did it pick the right tool, with the right arguments?
+3. termination  did it stop when it should?
+4. recovery     did it handle a tool failure the way it should?
+```
+
+**Routing.** In LangGraph you build the graph with nodes and edges <Cite n={1} />. In this page's example, the choice of the next node is a plain function of the state (`route_after_tools`). The function is deterministic, so it is the easiest thing in the whole agent to test: call it with a state and check the node it returns.
+
+**Tool call.** The model decides which tool to call and with what arguments. Both are model outputs, so both are non-deterministic, and both need property assertions rather than exact ones:
+
+```python
+def tool_calls(state):
+    # invoke() returns the graph state; the AI messages hold the tool calls
+    return [call for message in state["messages"] for call in getattr(message, "tool_calls", [])]
+
+
+def test_the_agent_searches_before_it_calculates(agent, fake_tools):
+    state = agent.invoke({"messages": [{"role": "user", "content": "What is 15% of 240?"}]})
+    tool_names = [call["name"] for call in tool_calls(state)]
+    assert "search" in tool_names
+    assert tool_names.index("search") < tool_names.index("calculate")
+```
+
+**Termination.** This is the failure everybody hits. An agent that searches, finds nothing useful, searches again, and again, until the step limit. The test asserts the bound:
+
+```python
+def test_the_agent_stops_after_two_searches(agent):
+    # a graph that reaches the recursion limit raises GraphRecursionError
+    state = agent.invoke(
+        {"messages": [{"role": "user", "content": "..."}]},
+        config={"recursion_limit": 20},
+    )
+    searches = [call for call in tool_calls(state) if call["name"] == "search"]
+    assert len(searches) <= 2
+```
+
+**Recovery.** A tool that raises is the input to the recovery path. The test provides a failing tool and checks that the agent handles it rather than crashing:
+
+```python
+def test_a_failing_tool_produces_an_error_message(agent, failing_tools):
+    state = agent.invoke({"messages": [{"role": "user", "content": "What is the weather?"}]})
+    assert "could not" in state["messages"][-1].content.lower()
+```
+
+**The cost dimension.** An agent that loops is also a billing incident. The test should assert the number of model calls, not only the number of tool calls, because a loop can pass through model nodes that call no tool.
+
+</Technical>
+<Layman>
+
+An agent test checks four things: did it take the right path, did it call the right tool with the right inputs, did it stop in time, and did it handle a tool failure?
+
+**The path.** In LangGraph you build the graph from nodes and edges <Cite n={1} />. In this page's example, a plain function looks at the state and picks the next node. It gives the same answer every time, so it is the easiest part to test.
+
+**Tool calls.** The model picks the tool and its inputs, and its choices vary. So check properties, such as "search came before calculate", not exact text.
+
+**Stopping.** The classic bug: the agent searches, finds nothing, and searches again and again. The test checks that it searched at most two times, with a step limit set so that a loop fails fast.
+
+**Recovery.** Give the agent a tool that fails, and check that it tells the user instead of crashing.
+
+**Cost.** A looping agent also runs up a bill. Count the model calls too, not only the tool calls, because a loop can pass through model steps that call no tool.
+
+</Layman>
+<Bangla>
+
+agent টেস্টের চারটা assertion পরিবার আছে, আর সেগুলো agent-এর চারটা ব্যর্থতার সাথে মেলে।
+
+```text
+1. routing      did it pick the right node or edge?
+2. tool call    did it pick the right tool, with the right arguments?
+3. termination  did it stop when it should?
+4. recovery     did it handle a tool failure the way it should?
+```
+
+**Routing।** LangGraph-এ graph বানানো হয় node আর edge দিয়ে <Cite n={1} />। এই পেজের উদাহরণে পরের node বাছাই হয় state-এর একটা সাধারণ function দিয়ে (`route_after_tools`)। function-টা deterministic, তাই পুরো agent-এর সবচেয়ে সহজে টেস্টযোগ্য জিনিস: state দিয়ে ডাকুন আর check করুন সে কোন node ফেরত দিল।
+
+**Tool call।** model ঠিক করে কোন tool ডাকবে আর কী argument দেবে। দুটোই model-এর output, তাই দুটোই non-deterministic, আর দুটোর জন্যই exact নয়, property assertion দরকার:
+
+```python
+def tool_calls(state):
+    # invoke() returns the graph state; the AI messages hold the tool calls
+    return [call for message in state["messages"] for call in getattr(message, "tool_calls", [])]
+
+
+def test_the_agent_searches_before_it_calculates(agent, fake_tools):
+    state = agent.invoke({"messages": [{"role": "user", "content": "What is 15% of 240?"}]})
+    tool_names = [call["name"] for call in tool_calls(state)]
+    assert "search" in tool_names
+    assert tool_names.index("search") < tool_names.index("calculate")
+```
+
+**Termination।** এই ব্যর্থতায় সবাই পড়ে। agent খোঁজে, কিছু খুঁজে পায় না, আবার খোঁজে, আর step limit-এ পৌঁছায়। টেস্ট সীমাটা assert করে:
+
+```python
+def test_the_agent_stops_after_two_searches(agent):
+    # a graph that reaches the recursion limit raises GraphRecursionError
+    state = agent.invoke(
+        {"messages": [{"role": "user", "content": "..."}]},
+        config={"recursion_limit": 20},
+    )
+    searches = [call for call in tool_calls(state) if call["name"] == "search"]
+    assert len(searches) <= 2
+```
+
+**Recovery।** যে tool raise করে সেটাই recovery path-এর input। টেস্ট একটা ব্যর্থ tool দেয় আর যাচাই করে যে agent সেটা সামলায়, crash করে না:
+
+```python
+def test_a_failing_tool_produces_an_error_message(agent, failing_tools):
+    state = agent.invoke({"messages": [{"role": "user", "content": "What is the weather?"}]})
+    assert "could not" in state["messages"][-1].content.lower()
+```
+
+**Cost মাত্রা।** যে agent লুপ করে সেটা একই সাথে বিলের ঘটনাও। টেস্ট শুধু tool call নয়, model call-এরও সংখ্যা assert করা উচিত, কারণ লুপ এমন model node দিয়েও যেতে পারে যেগুলো কোনো tool ডাকে না।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+First, test the routing function on its own. It is pure, so it is free and it localises the bug:
+
+```python
+from app.graph import route_after_tools
+
+
+def test_a_tool_result_routes_to_the_answer_node():
+    state = {"messages": [], "tool_results": [{"name": "search", "output": "..."}]}
+    assert route_after_tools(state) == "answer"
+
+
+def test_an_error_routes_to_the_error_node():
+    state = {"messages": [], "tool_results": [{"name": "search", "error": "timeout"}]}
+    assert route_after_tools(state) == "handle_error"
+```
+
+Then the agent-level tests, with fake tools so the model call is the only non-deterministic part:
+
+```python
+# tests/ai/test_agent_tools.py
+import pytest
+
+
+@pytest.fixture
+def fake_tools(monkeypatch):
+    calls = []
+
+    def search(query: str) -> str:
+        calls.append(("search", query))
+        return "The refund window is 30 days."
+
+    def calculate(expression: str) -> str:
+        calls.append(("calculate", expression))
+        return "36"
+
+    monkeypatch.setattr("app.tools.search", search)
+    monkeypatch.setattr("app.tools.calculate", calculate)
+    return calls
+
+
+def test_the_tool_arguments_are_correct(agent, fake_tools):
+    agent.invoke({"messages": [{"role": "user", "content": "What is 15% of 240?"}]})
+    calculate_calls = [c for c in fake_tools if c[0] == "calculate"]
+    assert calculate_calls, "the agent never called calculate"
+    assert "240" in calculate_calls[0][1]
+    assert "15" in calculate_calls[0][1]
+```
+
+Now the loop and termination tests, which are the ones that catch the expensive bug:
+
+```python
+# tests/ai/test_agent_termination.py
+QUESTION = "What is the airspeed velocity of an unladen swallow?"
+
+
+def test_the_agent_does_not_loop(agent, empty_search):
+    state = agent.invoke(
+        {"messages": [{"role": "user", "content": QUESTION}]},
+        config={"recursion_limit": 20},
+    )
+    calls = tool_calls(state)  # the helper above
+    assert len(calls) <= 3, f"the agent called {len(calls)} tools"
+
+
+def test_the_agent_reports_that_it_could_not_find_the_answer(agent, empty_search):
+    state = agent.invoke({"messages": [{"role": "user", "content": QUESTION}]})
+    assert "could not find" in state["messages"][-1].content.lower()
+```
+
+And the recovery test, with a tool that raises:
+
+```python
+def test_a_tool_error_is_handled_not_raised(agent, monkeypatch):
+    def broken_search(query: str) -> str:
+        raise TimeoutError("search timed out")
+
+    monkeypatch.setattr("app.tools.search", broken_search)
+    # if the agent does not handle the error, invoke() raises and the test fails
+    state = agent.invoke({"messages": [{"role": "user", "content": "What is the weather?"}]})
+    reply = state["messages"][-1].content.lower()
+    assert "unable" in reply or "error" in reply
+```
+
+Finally, the cost guard, because a looping agent is a bill:
+
+```python
+def test_one_agent_run_stays_within_the_model_call_budget(agent, counting_model):
+    agent.invoke({"messages": [{"role": "user", "content": "anything"}]})
+    assert counting_model.calls <= 5
+```
+
+That last one is the difference between a bug report and an invoice.
+
+</Technical>
+<Layman>
+
+1. **Test the path function alone.** Give it a state with a tool result and check that it picks "answer". Give it a state with an error and check that it picks "handle_error".
+2. **Use fake tools that record their calls.** Ask "What is 15% of 240?" and check that the calculate tool got both 15 and 240.
+3. **Test the loop.** With a search tool that always finds nothing, the agent makes at most three tool calls and then says that it could not find the answer.
+4. **Test recovery.** A search tool that times out must lead to a reply that says it was unable or that there was an error, not to a crash.
+5. **Test the cost.** One run makes at most five model calls.
+
+That last test is the difference between a bug report and a big bill.
+
+</Layman>
+<Bangla>
+
+প্রথমে routing function আলাদা করে টেস্ট করুন। এটা pure, তাই বিনামূল্যে আর বাগটা ঠিক কোথায় বলে দেয়:
+
+```python
+from app.graph import route_after_tools
+
+
+def test_a_tool_result_routes_to_the_answer_node():
+    state = {"messages": [], "tool_results": [{"name": "search", "output": "..."}]}
+    assert route_after_tools(state) == "answer"
+
+
+def test_an_error_routes_to_the_error_node():
+    state = {"messages": [], "tool_results": [{"name": "search", "error": "timeout"}]}
+    assert route_after_tools(state) == "handle_error"
+```
+
+তারপর agent-স্তরের টেস্ট, fake tool দিয়ে যাতে শুধু model call-টাই non-deterministic থাকে:
+
+```python
+# tests/ai/test_agent_tools.py
+import pytest
+
+
+@pytest.fixture
+def fake_tools(monkeypatch):
+    calls = []
+
+    def search(query: str) -> str:
+        calls.append(("search", query))
+        return "The refund window is 30 days."
+
+    def calculate(expression: str) -> str:
+        calls.append(("calculate", expression))
+        return "36"
+
+    monkeypatch.setattr("app.tools.search", search)
+    monkeypatch.setattr("app.tools.calculate", calculate)
+    return calls
+
+
+def test_the_tool_arguments_are_correct(agent, fake_tools):
+    agent.invoke({"messages": [{"role": "user", "content": "What is 15% of 240?"}]})
+    calculate_calls = [c for c in fake_tools if c[0] == "calculate"]
+    assert calculate_calls, "the agent never called calculate"
+    assert "240" in calculate_calls[0][1]
+    assert "15" in calculate_calls[0][1]
+```
+
+তারপর loop আর termination-এর টেস্ট, যেগুলো দামি বাগ ধরে:
+
+```python
+# tests/ai/test_agent_termination.py
+QUESTION = "What is the airspeed velocity of an unladen swallow?"
+
+
+def test_the_agent_does_not_loop(agent, empty_search):
+    state = agent.invoke(
+        {"messages": [{"role": "user", "content": QUESTION}]},
+        config={"recursion_limit": 20},
+    )
+    calls = tool_calls(state)  # the helper above
+    assert len(calls) <= 3, f"the agent called {len(calls)} tools"
+
+
+def test_the_agent_reports_that_it_could_not_find_the_answer(agent, empty_search):
+    state = agent.invoke({"messages": [{"role": "user", "content": QUESTION}]})
+    assert "could not find" in state["messages"][-1].content.lower()
+```
+
+আর recovery টেস্ট, tool যেটা raise করে:
+
+```python
+def test_a_tool_error_is_handled_not_raised(agent, monkeypatch):
+    def broken_search(query: str) -> str:
+        raise TimeoutError("search timed out")
+
+    monkeypatch.setattr("app.tools.search", broken_search)
+    # if the agent does not handle the error, invoke() raises and the test fails
+    state = agent.invoke({"messages": [{"role": "user", "content": "What is the weather?"}]})
+    reply = state["messages"][-1].content.lower()
+    assert "unable" in reply or "error" in reply
+```
+
+শেষে, cost guard, কারণ লুপ করা agent মানে বিল:
+
+```python
+def test_one_agent_run_stays_within_the_model_call_budget(agent, counting_model):
+    agent.invoke({"messages": [{"role": "user", "content": "anything"}]})
+    assert counting_model.calls <= 5
+```
+
+শেষ টেস্টটাই একটা বাগ রিপোর্ট আর একটা বিলের মধ্যে পার্থক্য গড়ে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: asserting only on the final answer.** The answer can be right for the wrong reason, or wrong for a reason the answer does not show. Assert on the decisions.
+
+**Mistake 2: no termination test.** The looping agent is the classic agent bug and the one that costs money.
+
+**Mistake 3: no tool-argument assertion.** The right tool with a wrong query is the most dangerous agent bug, because the tool succeeds and does the wrong thing.
+
+**Mistake 4: no recovery test.** One flaky tool call and the agent crashes instead of telling the user.
+
+**Mistake 5: not testing the routing function directly.** It is pure, so testing it alone is free and it localises the bug.
+
+**Mistake 6: no cost assertion.** A looping agent is an invoice, not just a bug.
+
+</Technical>
+<Layman>
+
+**Mistake 1: checking only the final answer.** It can be right for the wrong reason. Check the choices too.
+
+**Mistake 2: no stopping test.** The looping agent is the classic agent bug, and it costs money.
+
+**Mistake 3: no check of the tool inputs.** The right tool with the wrong search words is the most dangerous bug, because the tool works and does the wrong thing.
+
+**Mistake 4: no recovery test.** One flaky tool and the agent crashes instead of telling the user.
+
+**Mistake 5: not testing the path function on its own.** It is a plain function, so the test is free and points straight at the bug.
+
+**Mistake 6: no cost check.** A looping agent is a bill, not only a bug.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: শুধু শেষ উত্তরে assert করা।** উত্তর ভুল কারণে ঠিক হতে পারে, বা এমন কারণে ভুল হতে পারে যা উত্তরে দেখা যায় না। সিদ্ধান্তেও assert করুন।
+
+**ভুল ২: termination টেস্ট নেই।** লুপ করা agent হলো agent-এর classic বাগ আর যেটা টাকা খরচ করে।
+
+**ভুল ৩: tool argument assert নেই।** সঠিক tool ভুল query দিয়ে ডাকা সবচেয়ে বিপজ্জনক agent বাগ, কারণ tool সফল হয় আর ভুল কাজ করে।
+
+**ভুল ৪: recovery টেস্ট নেই।** একটা অস্থির tool call হলেই agent ব্যবহারকারীকে জানানোর বদলে crash করে।
+
+**ভুল ৫: routing function সরাসরি টেস্ট না করা।** এটা pure, তাই আলাদা করে টেস্ট করা বিনামূল্যে আর বাগটা ঠিক কোথায় বলে।
+
+**ভুল ৬: cost assert নেই।** লুপ করা agent একটা বিল, শুধু বাগ নয়।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Give every tool a fake that records its calls, and assert on the recorded calls. The arguments are the thing the model gets wrong.
+- Set the graph's recursion limit in the test, so a loop fails fast instead of burning the run.
+- Write one test with a tool that always returns an empty result. That is the input that produces the looping agent.
+- Save the trace id of every failing agent run. An agent trace is long, and reading it twice is the worst use of an afternoon.
+- Assert the number of model calls per run, not only the number of tool calls. A loop can pass through model nodes that call no tool.
+- Test that the agent says it cannot find something rather than guessing. That is the behaviour that keeps a wrong answer out of production.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Give every tool a fake that records its calls, and assert on the recorded calls. The arguments are the thing the model gets wrong.
+- Set the graph's recursion limit in the test, so a loop fails fast instead of burning the run.
+- Write one test with a tool that always returns an empty result. That is the input that produces the looping agent.
+- Save the trace id of every failing agent run. An agent trace is long, and reading it twice is the worst use of an afternoon.
+- Assert the number of model calls per run, not only the number of tool calls. A loop can pass through model nodes that call no tool.
+- Test that the agent says it cannot find something rather than guessing. That is the behaviour that keeps a wrong answer out of production.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- প্রতিটি tool-কে একটা fake দিন যেটা তার call রেকর্ড করে, আর রেকর্ড করা call-এর ওপর assert করুন। model যেটা ভুল করে সেটা argument।
+- টেস্টে graph-এর recursion limit সেট করুন, যাতে লুপ দ্রুত ব্যর্থ হয় আর run-এর সময় নষ্ট না করে।
+- একটা টেস্ট লিখুন যেখানে tool সবসময় খালি ফলাফল দেয়। লুপ করা agent-এর জন্য এটাই input।
+- প্রতিটি ব্যর্থ agent run-এর trace id সংরক্ষণ করুন। agent trace লম্বা, আর তা দুইবার পড়া একটা বিকেলের সবচেয়ে খারাপ ব্যবহার।
+- প্রতি run-এ model call-এর সংখ্যা assert করুন, শুধু tool call-এর সংখ্যা নয়। লুপ এমন model node দিয়েও যেতে পারে যেগুলো কোনো tool ডাকে না।
+- টেস্ট করুন যে কিছু না পেলে agent অনুমান না করে বলে যে খুঁজে পায়নি। এই আচরণটাই production-এ ভুল উত্তর ঢোকা ঠেকায়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Node | One step in a graph, where the agent does its work |
+| Conditional edge | A function that picks the next node from the current state |
+| Routing test | Testing the routing function directly, because it is a plain, deterministic function of the state |
+| Tool call | The agent's request to run a tool, with its arguments |
+| Termination | The agent stopping when it should, instead of looping |
+| Recursion limit | The maximum number of steps the graph will take before it gives up |
+| Excessive agency | The agent taking more action than the user asked for |
+| Recovery path | The branch that handles a tool failure |
+| Model call budget | The maximum number of model calls one agent run may make |

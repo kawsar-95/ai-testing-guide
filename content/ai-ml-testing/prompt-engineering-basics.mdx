@@ -1,0 +1,365 @@
+export const metadata = { title: 'Prompt Engineering Fundamentals', description: 'How to write a prompt that works: the parts, the few-shot examples, chain of thought, and why a non-English prompt breaks more often.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Prompt engineering overview', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview', accessed: '2026-11-01' },
+    { title: 'Chain-of-Thought Prompting Elicits Reasoning in Large Language Models', publisher: 'arXiv', url: 'https://arxiv.org/abs/2201.11903', accessed: '2026-11-01' },
+    { title: 'Self-Consistency Improves Chain of Thought Reasoning in Language Models', publisher: 'arXiv', url: 'https://arxiv.org/abs/2203.11171', accessed: '2026-11-01' },
+  ],
+}
+
+# Prompt Engineering Fundamentals
+
+A prompt is not a question. It is a specification for an answer, and the difference shows in every test you write afterwards.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A prompt has four parts, and a good one has all four:
+
+```text
+1. role or context   who the model is and what situation it is in
+2. the task           what to produce, in one sentence
+3. the format         how the output must look
+4. examples           one or two samples of the wanted result
+```
+
+The four-part list is the tutorial's own. Anthropic's prompt engineering overview points to the same kind of techniques, from clarity and examples to XML structuring, role prompting, and prompt chaining <Cite n={1} />.
+
+Two techniques matter more than the rest. **Few-shot examples** show the pattern instead of describing it; in the tutorial's experience, two good examples often do more than a paragraph of instructions. **Chain-of-thought** asks the model to write the reasoning before the answer. The original paper found that this improved performance on arithmetic, commonsense, and symbolic reasoning tasks in large enough models <Cite n={2} />. The tester's version of this is simple: ask for the reasoning, check the reasoning, then check the answer.
+
+The last point is the one that catches new teams. **Test every language you ship in, separately.** A model is not always equally good in every language, and an answer can be fluent and still wrong. This is the tutorial's own advice, not a finding of the sources. When the product serves non-English users, write the prompt and the eval dataset in that language too. An eval dataset in English cannot tell you that the Bengali path is broken.
+
+</Technical>
+<Layman>
+
+A prompt has four parts, and a good one has all four:
+
+```text
+1. role or context   who the model is and what situation it is in
+2. the task           what to produce, in one sentence
+3. the format         how the output must look
+4. examples           one or two samples of the wanted result
+```
+
+This four-part list is the tutorial's own. Anthropic's prompt engineering guide points to the same kind of techniques: being clear, giving examples, structuring the prompt with XML tags, giving the model a role, and splitting a task into a chain of prompts <Cite n={1} />.
+
+Two techniques matter most. **Few-shot examples** show the pattern instead of describing it; in the tutorial's experience, two good examples often help more than a paragraph of instructions. **Chain-of-thought** asks the model to write its reasoning before the answer. The original paper found that this helped large enough models on maths, common-sense, and symbol-manipulation tasks <Cite n={2} />. For a tester this is simple: ask for the reasoning, check the reasoning, then check the answer.
+
+The last point catches new teams. **Test every language you ship in, on its own.** A model is not always equally good in every language, and a fluent answer can still be wrong. This is the tutorial's own advice. If the product serves non-English users, write the prompt and the test data in that language too. An English test set cannot tell you that the Bengali path is broken.
+
+</Layman>
+<Bangla>
+
+একটা prompt-এ চারটা অংশ থাকে, আর ভালো prompt-এ চারটাই থাকে:
+
+```text
+1. role or context   model কে, কোন পরিস্থিতিতে
+2. the task           এক বাক্যে কী বানাতে হবে
+3. the format         আউটপুট কেমন হতে হবে
+4. examples           চাওয়া ফলাফলের একটা দুটো নমুনা
+```
+
+চার অংশের এই তালিকা টিউটোরিয়ালের নিজস্ব। Anthropic-এর prompt engineering গাইডও একই ধরনের কৌশলের কথা বলে: স্পষ্টতা, উদাহরণ, XML দিয়ে গঠন, role prompting আর prompt chaining <Cite n={1} />।
+
+দুটো কৌশল বাকিগুলোর চেয়ে বেশি গুরুত্বপূর্ণ। **Few-shot example** নিয়ম বর্ণনা না করে নিয়মটা দেখায়; টিউটোরিয়ালের অভিজ্ঞতায় দুটো ভালো উদাহরণ প্রায়ই নির্দেশনার একটা পুরো অনুচ্ছেদের চেয়ে বেশি কাজ করে। **Chain-of-thought**-এ model-কে উত্তরের আগে যুক্তি লিখতে বলা হয়। মূল গবেষণায় দেখা গেছে, যথেষ্ট বড় model-এ এতে হিসাব, সাধারণ বুদ্ধি আর প্রতীকী যুক্তির কাজে ফল ভালো হয় <Cite n={2} />। টেস্টার হিসেবে আপনার কাজ সহজ: যুক্তি চান, যুক্তি যাচাই করুন, তারপর উত্তর যাচাই করুন।
+
+শেষ বিষয়টাতেই নতুন দলগুলো আটকে যায়। **যে ভাষায় product চালু করবেন, প্রতিটা ভাষা আলাদা করে টেস্ট করুন।** model সব ভাষায় সমান ভালো না-ও হতে পারে, আর সাবলীল উত্তরও ভুল হতে পারে। এটা টিউটোরিয়ালের নিজস্ব পরামর্শ। ব্যবহারকারী বাংলাভাষী হলে prompt আর test data-ও বাংলায় লিখুন। ইংরেজি test set দিয়ে আপনি জানতে পারবেন না বাংলার পথটা ভাঙা কি না।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+A model predicts each next token from the context it reads, and the prompt is part of that context. So a vague prompt does not produce a vague answer by accident: it produces the most likely answer given a vague context. This explanation, and the next two paragraphs, are the tutorial's own view.
+
+This is why a **format** instruction tends to work well. If you ask for JSON, the most likely continuation is JSON, and the same holds for a numbered list. You are not only requesting a format; you are making the format the likely next text.
+
+**Few-shot examples** push in the same direction, often harder than words do, because they show the exact pattern. That is also their risk: a badly chosen example teaches the wrong pattern, and the model can follow the example rather than the instruction.
+
+**Chain-of-thought** adds an intermediate step: the model writes the reasoning, then the answer. The original paper reports gains on arithmetic, commonsense, and symbolic reasoning tasks <Cite n={2} />. A follow-up method, self-consistency, samples several reasoning paths and selects the most consistent answer; its paper reports large accuracy gains, at the cost of more model calls <Cite n={3} />.
+
+The **language** effect is a separate axis. In the tutorial's view, quality can differ between languages, so each language needs its own check: a native-language prompt, native-language examples, and a native-language eval set.
+
+Everything here is an input to the eval design. Anthropic's overview assumes, before any prompt engineering, a clear definition of the success criteria and a way to test against them empirically <Cite n={1} />. A prompt change is a change to the system under test, so it needs the same before-and-after measurement as any other change.
+
+</Technical>
+<Layman>
+
+A model guesses each next word from everything it reads, and your prompt is part of that. So a vague prompt does not give a vague answer by accident: it gives the most likely answer to a vague request. This explanation, and the next two paragraphs, are the tutorial's own view.
+
+That is why asking for a **format** tends to work. Ask for JSON, and JSON becomes the most likely thing to write next. The same goes for a numbered list.
+
+**Few-shot examples** push the same way, often harder than words, because they show the exact pattern. That is also the risk: a bad example teaches the wrong pattern, and the model can copy the example instead of following the instruction.
+
+**Chain-of-thought** adds a step: the model writes its reasoning first, then the answer. The original paper reports better results on maths, common-sense, and symbol-manipulation tasks <Cite n={2} />. A later method, self-consistency, tries several lines of reasoning and keeps the answer they agree on most; its paper reports large accuracy gains, but it needs more model calls <Cite n={3} />.
+
+**Language** is a separate question. In the tutorial's view, quality can differ from one language to another, so each language needs its own check: a prompt, examples, and a test set in that language.
+
+All of this feeds the test design. Anthropic's guide expects you to have clear success criteria, and a way to test against them, before you start tuning a prompt <Cite n={1} />. A prompt change is a change to the system, so measure it before and after, like any other change.
+
+</Layman>
+<Bangla>
+
+model যা পড়ে তার ভিত্তিতে প্রতিটা পরের token অনুমান করে, আর আপনার prompt সেই context-এর অংশ। তাই অস্পষ্ট prompt হঠাৎ করে অস্পষ্ট উত্তর দেয় না: অস্পষ্ট context-এর জন্য সবচেয়ে সম্ভাব্য উত্তরটাই দেয়। এই ব্যাখ্যা আর পরের দুটো অনুচ্ছেদ টিউটোরিয়ালের নিজস্ব মত।
+
+এই কারণেই **format**-এর নির্দেশনা সাধারণত ভালো কাজ করে। JSON চাইলে পরের লেখা হিসেবে JSON-ই সবচেয়ে সম্ভাব্য হয়ে যায়। নম্বরযুক্ত তালিকার ক্ষেত্রেও তাই।
+
+**Few-shot example** একই দিকে ঠেলে, প্রায়ই কথার চেয়ে জোরে, কারণ এটা ঠিক প্যাটার্নটা দেখায়। ঝুঁকিও এখানেই: ভুল উদাহরণ ভুল প্যাটার্ন শেখায়, আর model নির্দেশনার বদলে উদাহরণটা অনুসরণ করতে পারে।
+
+**Chain-of-thought** একটা মাঝের ধাপ যোগ করে: model আগে যুক্তি লেখে, তারপর উত্তর। মূল গবেষণায় হিসাব, সাধারণ বুদ্ধি আর প্রতীকী যুক্তির কাজে উন্নতির কথা আছে <Cite n={2} />। পরের একটা পদ্ধতি, self-consistency, কয়েকটা যুক্তির পথ নিয়ে সবচেয়ে সামঞ্জস্যপূর্ণ উত্তরটা বেছে নেয়; তার গবেষণায় নির্ভুলতা অনেক বাড়ার কথা আছে, তবে এতে model-কে বেশি বার ডাকতে হয় <Cite n={3} />।
+
+**ভাষা** একটা আলাদা বিষয়। টিউটোরিয়ালের মতে, ভাষাভেদে মান আলাদা হতে পারে, তাই প্রতিটা ভাষার আলাদা যাচাই দরকার: সেই ভাষার prompt, সেই ভাষার উদাহরণ, আর সেই ভাষার eval set।
+
+এসবই eval ডিজাইনের ইনপুট। Anthropic-এর গাইড ধরে নেয়, prompt নিয়ে কাজ শুরুর আগে আপনার সাফল্যের স্পষ্ট মানদণ্ড আর তা পরীক্ষা করে দেখার উপায় আছে <Cite n={1} />। prompt বদলানো মানে টেস্টের অধীন সিস্টেম বদলানো, তাই অন্য যেকোনো পরিবর্তনের মতো এরও আগে-পরে মাপ দরকার।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Write the prompt as a template with the parts separated, so that the parts you vary in a test are visible:
+
+```python
+PROMPT = """You are a support agent for an online store.
+Answer the question using only the policy below.
+If the policy does not cover it, say so.
+Reply in at most 3 sentences. Do not offer refunds.
+
+Policy:
+{policy}
+
+Question: {question}
+"""
+```
+
+Then measure the effect of each part separately, rather than changing the whole prompt at once. This is the experiment:
+
+```python
+VARIANTS = {
+    "baseline": PROMPT,
+    "with_example": PROMPT + "\n\nExample:\nQ: ...\nA: ...",
+    "with_cot": PROMPT + "\n\nThink step by step, then answer.",
+    "with_format": PROMPT + "\n\nReply as a JSON object with keys 'answer' and 'source'.",
+}
+```
+
+Run each variant over the same dataset and compare the scores. That table is the evidence for the prompt change, and it goes in the pull request.
+
+For the **language** effect, keep the dataset and the prompt in the same language and compare against the translated version:
+
+```python
+for language, dataset in [("en", EN_CASES), ("bn", BN_CASES)]:
+    score = evaluate(dataset, prompt=prompt_for(language))
+    print(language, score.hallucination_rate, score.faithfulness)
+```
+
+A large gap between the two is a product finding, not a bug to be filed and closed. It tells you which users the feature currently serves badly.
+
+</Technical>
+<Layman>
+
+Write the prompt as a template with its parts kept apart, so you can see which part a test changes:
+
+```python
+PROMPT = """You are a support agent for an online store.
+Answer the question using only the policy below.
+If the policy does not cover it, say so.
+Reply in at most 3 sentences. Do not offer refunds.
+
+Policy:
+{policy}
+
+Question: {question}
+"""
+```
+
+Then measure each part on its own, instead of changing the whole prompt at once. This is the experiment:
+
+```python
+VARIANTS = {
+    "baseline": PROMPT,
+    "with_example": PROMPT + "\n\nExample:\nQ: ...\nA: ...",
+    "with_cot": PROMPT + "\n\nThink step by step, then answer.",
+    "with_format": PROMPT + "\n\nReply as a JSON object with keys 'answer' and 'source'.",
+}
+```
+
+Run each version over the same test set and compare the scores. That table is the proof for the prompt change, and it goes in the pull request.
+
+For **language**, keep the test set and the prompt in the same language, and compare against the translated version:
+
+```python
+for language, dataset in [("en", EN_CASES), ("bn", BN_CASES)]:
+    score = evaluate(dataset, prompt=prompt_for(language))
+    print(language, score.hallucination_rate, score.faithfulness)
+```
+
+A big gap between the two is a product finding, not a bug you file and close. It tells you which users the feature serves badly today.
+
+</Layman>
+<Bangla>
+
+prompt-টা এমন template হিসেবে লিখুন যেখানে অংশগুলো আলাদা, যাতে টেস্টে যেগুলো বদলাচ্ছেন সেগুলো দেখা যায়:
+
+```python
+PROMPT = """You are a support agent for an online store.
+Answer the question using only the policy below.
+If the policy does not cover it, say so.
+Reply in at most 3 sentences. Do not offer refunds.
+
+Policy:
+{policy}
+
+Question: {question}
+"""
+```
+
+তারপর প্রতিটা অংশের প্রভাব আলাদা মাপুন, পুরো prompt একসাথে বদলে না দিয়ে। পরীক্ষাটা হলো:
+
+```python
+VARIANTS = {
+    "baseline": PROMPT,
+    "with_example": PROMPT + "\n\nExample:\nQ: ...\nA: ...",
+    "with_cot": PROMPT + "\n\nThink step by step, then answer.",
+    "with_format": PROMPT + "\n\nReply as a JSON object with keys 'answer' and 'source'.",
+}
+```
+
+প্রতিটা ভ্যারিয়েন্ট একই dataset-এর ওপর চালান আর স্কোর তুলনা করুন। ওই টেবিলটাই prompt পরিবর্তনের প্রমাণ, আর সেটা pull request-এ যায়।
+
+**ভাষা**-র প্রভাবের জন্য dataset আর prompt একই ভাষায় রাখুন, আর অনুবাদ করা সংস্করণের সাথে তুলনা করুন:
+
+```python
+for language, dataset in [("en", EN_CASES), ("bn", BN_CASES)]:
+    score = evaluate(dataset, prompt=prompt_for(language))
+    print(language, score.hallucination_rate, score.faithfulness)
+```
+
+দুই ভাষার মধ্যে বড় ফারাক product নিয়ে একটা finding, এমন বাগ নয় যেটা ফাইল করে বন্ধ করে দেওয়া যায়। এটা বলে দেয় কোন ব্যবহারকারীদের কাছে ফিচারটা এখন খারাপ কাজ করছে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: changing everything at once.** If the prompt, the model, and the dataset all change in one release, no result tells you which change helped. Change one thing and measure.
+
+**Mistake 2: describing the format instead of showing it.** "Return JSON" is often weaker than one example of the JSON you want. This is the tutorial's own advice; Anthropic's overview lists examples among its core techniques <Cite n={1} />.
+
+**Mistake 3: putting the instruction first and the question last.** For a long policy in between, the instruction at the top can get lost in a lot of context. In the tutorial's experience, it helps to put the instruction after the context, or to repeat it at the end.
+
+**Mistake 4: few-shot examples that disagree with the instruction.** When they disagree, the model often follows the example. Pick examples that show exactly the rule.
+
+**Mistake 5: evaluating in one language and shipping in another.** The eval cannot see a problem it never had data for.
+
+**Mistake 6: keeping the reasoning but not checking it.** Chain-of-thought can raise the accuracy of the answer, and it also produces text that looks like reasoning. The paper itself notes that there is no guarantee that the reasoning path is correct, so the reasoning is a thing to assert on <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+**Mistake 1: changing everything at once.** If the prompt, the model, and the test set all change in one release, no result tells you which change helped. Change one thing, then measure.
+
+**Mistake 2: describing the format instead of showing it.** "Return JSON" often works worse than one example of the JSON you want. This is the tutorial's advice; Anthropic's guide lists examples among its main techniques <Cite n={1} />.
+
+**Mistake 3: instruction first, question last.** With a long policy in between, the instruction at the top can get lost. In the tutorial's experience, it helps to put the instruction after the policy, or to repeat it at the end.
+
+**Mistake 4: examples that disagree with the instruction.** When they disagree, the model often copies the example. Pick examples that show exactly the rule.
+
+**Mistake 5: testing in one language and shipping in another.** A test cannot find a problem it has no data for.
+
+**Mistake 6: asking for the reasoning but not checking it.** Chain-of-thought can make the answer more accurate, and it also writes text that looks like reasoning. The paper itself says the reasoning is not guaranteed to be correct, so check the reasoning too <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**ভুল ১: একসাথে সবকিছু বদলানো।** prompt, model আর dataset তিনটাই একসাথে বদলালে কোনো ফলাফলই বলবে না কোন পরিবর্তনে লাভ হয়েছে। একটা করে বদলে মাপুন।
+
+**ভুল ২: format বর্ণনা করা, দেখানো নয়।** "JSON ফেরত দাও" লেখা প্রায়ই আপনি যে JSON চান তার একটা উদাহরণ দেখানোর চেয়ে কম কাজ করে। এটা টিউটোরিয়ালের পরামর্শ; Anthropic-এর গাইড উদাহরণকে মূল কৌশলগুলোর একটা হিসেবে তালিকায় রাখে <Cite n={1} />।
+
+**ভুল ৩: নির্দেশনা প্রথমে, প্রশ্ন শেষে।** মাঝখানে লম্বা policy থাকলে শুরুর নির্দেশনা অনেক context-এর ভিড়ে হারিয়ে যেতে পারে। টিউটোরিয়ালের অভিজ্ঞতায়, context-এর পরে নির্দেশনা দিলে, অথবা শেষে আবার লিখলে কাজ হয়।
+
+**ভুল ৪: few-shot উদাহরণ নির্দেশনার সাথে না মেলা।** দুটো না মিললে model প্রায়ই উদাহরণটাই অনুসরণ করে। এমন উদাহরণ বেছে নিন যেগুলো ঠিক নিয়মটাই দেখায়।
+
+**ভুল ৫: এক ভাষায় eval, অন্য ভাষায় release।** যে সমস্যার data-ই ছিল না, eval সেটা দেখতে পায় না।
+
+**ভুল ৬: যুক্তি রেখে দিয়ে যাচাই না করা।** chain-of-thought উত্তরের নির্ভুলতা বাড়াতে পারে, আর যুক্তির মতো দেখতে লেখাও তৈরি করে। গবেষণাপত্র নিজেই বলে যে যুক্তির পথ সঠিক হবে এমন কোনো নিশ্চয়তা নেই, তাই যুক্তিও assert করুন <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the prompt in one file, versioned, and inject it into the app from there. A prompt copied into five code paths is five prompts to maintain.
+- For every prompt change, attach the before-and-after score table to the pull request. A prompt change with no measurement is a guess.
+- Keep one deliberately hard case in the dataset for every prompt you write. The easy cases stop being informative once the prompt is good.
+- Test the prompt with the context filled by a user, not by your own tidy example. Real context has stray characters and irrelevant passages.
+- When you add a few-shot example, re-run the whole dataset. An example changes the behaviour of every other case too.
+- Give the eval dataset its own folder per language. Do not translate only the prompts and leave the expected answers in English.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Keep the prompt in one versioned file and load it from there. A prompt copied into five code paths is five prompts to maintain.
+- For every prompt change, attach the before-and-after score table to the pull request. A prompt change with no measurement is a guess.
+- Keep one deliberately hard case in the test set for every prompt you write. The easy cases stop being useful once the prompt is good.
+- Test the prompt with the context a real user gave, not with your own tidy example. Real context has stray characters and irrelevant passages.
+- When you add a few-shot example, re-run the whole test set. An example changes every other case too.
+- Give the test data its own folder per language. Do not translate only the prompts and leave the expected answers in English.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- prompt-টা একটা versioned ফাইলে রাখুন আর সেখান থেকেই অ্যাপে ঢোকান। পাঁচটা কোড পাথে কপি করা prompt মানে পাঁচটা prompt রক্ষণাবেক্ষণ করা।
+- প্রতিটা prompt পরিবর্তনের সাথে আগের ও পরের স্কোরের টেবিল pull request-এ যোগ করুন। মাপ ছাড়া prompt পরিবর্তন একটা অনুমান।
+- আপনি যে prompt-ই লিখুন, তার জন্য dataset-এ ইচ্ছে করে রাখা একটা কঠিন কেস রাখুন। prompt ভালো হয়ে গেলে সহজ কেসগুলো আর তথ্য দেয় না।
+- prompt-টা ব্যবহারকারীর দেওয়া context দিয়ে টেস্ট করুন, নিজের গোছানো উদাহরণ দিয়ে নয়। বাস্তব context-এ বাজে চিহ্ন আর অপ্রাসঙ্গিক অংশ থাকে।
+- few-shot উদাহরণ যোগ করলে পুরো dataset আবার চালান। উদাহরণ বাড়ালে বাকি সব কেসের আচরণও বদলায়।
+- প্রতিটা ভাষার জন্য eval data-র আলাদা ফোল্ডার রাখুন, আর শুধু prompt অনুবাদ করে expected answer ইংরেজিতে রেখে দেবেন না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Prompt | The instruction and context the model reads to produce an answer |
+| Few-shot example | A sample of the wanted output, placed in the prompt |
+| Chain-of-thought | Asking the model to write its reasoning before the answer |
+| Self-consistency | Sampling several reasoning paths and taking the most common answer |
+| Instruction | The part of the prompt that says what to do |
+| Context | Everything the model can read: the system prompt, the history, the retrieved text, the question |
+| Prompt drift | The behaviour of a prompt changing as the model or the context changes |
+| Language parity | The feature behaving equally well in every language it ships in |

@@ -6,7 +6,7 @@ every Linux stage page in linux-route-map.json, every System Design case page
 in system-design-route-map.json, every Fundamentals chapter page in
 fundamentals-route-map.json, every Architecture page in
 architecture-route-map.json, every Course page in course-route-map.json, every k6 page in k6-route-map.json, every AI Engineering page in ai-engineering-route-map.json,
-every AI Harnesses page in harness-route-map.json, every AI Skills page in ai-skills-route-map.json, and every AI Concepts page in ai-concepts-route-map.json.
+every AI Harnesses page in harness-route-map.json, every AI Skills page in ai-skills-route-map.json, every AI Concepts page in ai-concepts-route-map.json, every Agent Memory page in agent-memory-route-map.json, every AI Agents page in ai-agents-route-map.json, and every AI/ML Testing page in ai-ml-testing-route-map.json.
 A page needs exactly one [data-page-meta] element with "updated Mon YYYY", at
 least one li[id^="src-"], a #src-k target for each a.cite link, a cite for
 each source, and https links in the sources. --allow-missing skips a page

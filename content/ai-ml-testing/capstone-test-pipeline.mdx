@@ -1,0 +1,413 @@
+export const metadata = { title: 'Capstone Test Pipeline: Eval, Red Team, and UI, Together', description: 'Write the full test suite for the capstone app: a Promptfoo eval, DeepEval hallucination tests, red teaming, a Giskard scan, and Playwright UI tests, traced with LangFuse.' }
+export const page = {
+  updated: '2026-11-01',
+  sources: [
+    { title: 'Configuration reference', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/configuration/reference/', accessed: '2026-11-01' },
+    { title: 'Getting started', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/getting-started', accessed: '2026-11-01' },
+    { title: 'Red teaming', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/red-team/', accessed: '2026-11-01' },
+    { title: 'Scan a model', publisher: 'Giskard (docs)', url: 'https://docs.giskard.ai/oss/scan', accessed: '2026-11-01' },
+    { title: 'Playwright intro', publisher: 'Playwright (docs)', url: 'https://playwright.dev/docs/intro', accessed: '2026-11-01' },
+    { title: 'Introduction', publisher: 'Langfuse (docs)', url: 'https://langfuse.com/docs', accessed: '2026-11-01' },
+  ],
+}
+
+# Capstone Test Pipeline: Eval, Red Team, and UI, Together
+
+Every tool from this course earns its place here, on one app, at the same time.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The capstone's test pipeline is not a new technique; it is the whole course applied to one app at once:
+
+```text
+Promptfoo eval      20 test cases, assertions on the answer <Cite n={1} />
+DeepEval            hallucination and faithfulness, as Pytest <Cite n={2} />
+Promptfoo red team  prompt injection, PII, excessive agency <Cite n={3} />
+Giskard scan        a second attack library, cross-checked against the first <Cite n={4} />
+Playwright          the chat UI end to end <Cite n={5} />
+LangFuse            every call traced, for when a test fails and needs a reason <Cite n={6} />
+```
+
+The point of running all six together is not redundancy. Each one tests a different layer: the eval and DeepEval suites test correctness, the red team and Giskard scan test security, Playwright tests the interface the user actually touches, and LangFuse is the record that makes a failure in any of the other five diagnosable rather than just reproducible.
+
+</Technical>
+<Layman>
+
+Capstone-এর test pipeline একটা নতুন কৌশল নয়; এটা পুরো course একসাথে একটা app-এ প্রয়োগ করা:
+
+```text
+Promptfoo eval      20 test cases, assertions on the answer <Cite n={1} />
+DeepEval            hallucination and faithfulness, as Pytest <Cite n={2} />
+Promptfoo red team  prompt injection, PII, excessive agency <Cite n={3} />
+Giskard scan        a second attack library, cross-checked against the first <Cite n={4} />
+Playwright          the chat UI end to end <Cite n={5} />
+LangFuse            every call traced, for when a test fails and needs a reason <Cite n={6} />
+```
+
+ছয়টা একসাথে চালানোর বিষয় redundancy নয়। প্রতিটা আলাদা একটা layer টেস্ট করে: eval আর DeepEval suite সঠিকতা টেস্ট করে, red team আর Giskard scan নিরাপত্তা টেস্ট করে, Playwright ব্যবহারকারী আসলে যা ছোঁয় সেই interface টেস্ট করে, আর LangFuse সেই রেকর্ড যা বাকি পাঁচটার যেকোনো একটায় ব্যর্থতাকে শুধু reproduce নয়, diagnose করা যায় এমন করে তোলে।
+
+</Layman>
+<Bangla>
+
+Capstone-এর test pipeline একটা নতুন কৌশল নয়; এটা পুরো course একসাথে একটা app-এ প্রয়োগ করা:
+
+```text
+Promptfoo eval      20 test cases, assertions on the answer <Cite n={1} />
+DeepEval            hallucination and faithfulness, as Pytest <Cite n={2} />
+Promptfoo red team  prompt injection, PII, excessive agency <Cite n={3} />
+Giskard scan        a second attack library, cross-checked against the first <Cite n={4} />
+Playwright          the chat UI end to end <Cite n={5} />
+LangFuse            every call traced, for when a test fails and needs a reason <Cite n={6} />
+```
+
+ছয়টা একসাথে চালানোর বিষয় redundancy নয়। প্রতিটা আলাদা একটা layer টেস্ট করে: eval আর DeepEval suite সঠিকতা টেস্ট করে, red team আর Giskard scan নিরাপত্তা টেস্ট করে, Playwright ব্যবহারকারী আসলে যা ছোঁয় সেই interface টেস্ট করে, আর LangFuse সেই রেকর্ড যা বাকি পাঁচটার যেকোনো একটায় ব্যর্থতাকে শুধু reproduce নয়, diagnose করা যায় এমন করে তোলে।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+Running order matters: cheap and fast checks first, so an obvious break fails in seconds, not after a ten-minute red team run.
+
+```text
+1. Promptfoo eval       fast, deterministic assertions       seconds
+2. DeepEval suite       LLM-judged metrics                   a minute or two
+3. Playwright UI        the interface, against a running server   a minute
+4. Promptfoo red team   generated adversarial prompts        several minutes
+5. Giskard scan         a second, independent attack library  several minutes
+```
+
+LangFuse traces everything from step 1 onward <Cite n={6} />, so when step 4 or 5 finds something, the trace for that exact call — the prompt, the retrieved context, the model's answer — is one click away, instead of a re-run with extra logging bolted on.
+
+The Promptfoo eval config and the red team config are two different files against the same target, because they serve different purposes: the eval config asserts correctness on expected inputs <Cite n={1} />, the red team config generates adversarial ones <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+চালানোর ক্রম গুরুত্বপূর্ণ: সস্তা আর দ্রুত চেক আগে, যাতে একটা সুস্পষ্ট ব্রেক সেকেন্ডে ব্যর্থ হয়, দশ-মিনিটের red team run-এর পরে নয়।
+
+```text
+1. Promptfoo eval       fast, deterministic assertions       seconds
+2. DeepEval suite       LLM-judged metrics                   a minute or two
+3. Playwright UI        the interface, against a running server   a minute
+4. Promptfoo red team   generated adversarial prompts        several minutes
+5. Giskard scan         a second, independent attack library  several minutes
+```
+
+LangFuse ধাপ ১ থেকে সবকিছু trace করে <Cite n={6} />, তাই ধাপ ৪ বা ৫ কিছু পেলে, সেই নির্দিষ্ট call-এর trace — prompt, retrieved context, model-এর উত্তর — এক ক্লিক দূরে, অতিরিক্ত logging জুড়ে re-run করার বদলে।
+
+Promptfoo eval config আর red team config একই target-এর বিপরীতে দুটো আলাদা ফাইল, কারণ তারা আলাদা উদ্দেশ্য সাধন করে: eval config প্রত্যাশিত input-এ সঠিকতা assert করে <Cite n={1} />, red team config adversarial input তৈরি করে <Cite n={3} />।
+
+</Layman>
+<Bangla>
+
+চালানোর ক্রম গুরুত্বপূর্ণ: সস্তা আর দ্রুত চেক আগে, যাতে একটা সুস্পষ্ট ব্রেক সেকেন্ডে ব্যর্থ হয়, দশ-মিনিটের red team run-এর পরে নয়।
+
+```text
+1. Promptfoo eval       fast, deterministic assertions       seconds
+2. DeepEval suite       LLM-judged metrics                   a minute or two
+3. Playwright UI        the interface, against a running server   a minute
+4. Promptfoo red team   generated adversarial prompts        several minutes
+5. Giskard scan         a second, independent attack library  several minutes
+```
+
+LangFuse ধাপ ১ থেকে সবকিছু trace করে <Cite n={6} />, তাই ধাপ ৪ বা ৫ কিছু পেলে, সেই নির্দিষ্ট call-এর trace — prompt, retrieved context, model-এর উত্তর — এক ক্লিক দূরে, অতিরিক্ত logging জুড়ে re-run করার বদলে।
+
+Promptfoo eval config আর red team config একই target-এর বিপরীতে দুটো আলাদা ফাইল, কারণ তারা আলাদা উদ্দেশ্য সাধন করে: eval config প্রত্যাশিত input-এ সঠিকতা assert করে <Cite n={1} />, red team config adversarial input তৈরি করে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+The eval config, 20 cases against the live endpoint <Cite n={1} />:
+
+```yaml
+# promptfooconfig.yaml
+providers: ["http://localhost:8000/ask"]
+tests: file://tests/capstone-eval-cases.yaml   # 20 question/expected-fact pairs
+defaultTest:
+  assert:
+    - type: contains
+      value: "{{expected_fact}}"
+```
+
+A DeepEval hallucination test over the same endpoint <Cite n={2} />:
+
+```python
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+def test_the_answer_is_faithful_to_the_retrieved_context(case):
+    response = requests.post("http://localhost:8000/ask", json={"question": case["question"]}).json()
+    assert_test(
+        LLMTestCase(
+            input=case["question"],
+            actual_output=response["answer"],
+            retrieval_context=response["context"],
+        ),
+        [FaithfulnessMetric(threshold=0.9)],
+    )
+```
+
+The red team and the scan, as a two-tool gate <Cite n={3} /> <Cite n={4} />:
+
+```bash
+npx promptfoo redteam run --config redteam.yaml
+python -m scripts.run_giskard_scan --target http://localhost:8000/ask
+```
+
+A Playwright UI test against the chat widget <Cite n={5} />:
+
+```python
+def test_sending_a_question_renders_a_streamed_answer(page):
+    page.goto("http://localhost:3000")
+    page.fill("#chat-input", "What is your return policy?")
+    page.click("#send")
+    page.wait_for_selector(".bot-message", timeout=10_000)
+    assert "30 day" in page.inner_text(".bot-message")
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Run the suites in cost order: assertions, then LLM-judged metrics, then the slower adversarial scans.
+- Point every test at the same running instance of the app, so a LangFuse trace from a failure always has a matching call to inspect.
+- Keep the 20 eval cases and the red team's generated cases in separate files; they have different owners and different update cadences.
+</Callout>
+
+</Technical>
+<Layman>
+
+Eval config, live endpoint-এর বিপরীতে ২০টা কেস <Cite n={1} />:
+
+```yaml
+# promptfooconfig.yaml
+providers: ["http://localhost:8000/ask"]
+tests: file://tests/capstone-eval-cases.yaml   # 20 question/expected-fact pairs
+defaultTest:
+  assert:
+    - type: contains
+      value: "{{expected_fact}}"
+```
+
+একই endpoint-এর ওপর একটা DeepEval hallucination টেস্ট <Cite n={2} />:
+
+```python
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+def test_the_answer_is_faithful_to_the_retrieved_context(case):
+    response = requests.post("http://localhost:8000/ask", json={"question": case["question"]}).json()
+    assert_test(
+        LLMTestCase(
+            input=case["question"],
+            actual_output=response["answer"],
+            retrieval_context=response["context"],
+        ),
+        [FaithfulnessMetric(threshold=0.9)],
+    )
+```
+
+Red team আর scan, একটা দুই-টুল gate হিসেবে <Cite n={3} /> <Cite n={4} />:
+
+```bash
+npx promptfoo redteam run --config redteam.yaml
+python -m scripts.run_giskard_scan --target http://localhost:8000/ask
+```
+
+Chat widget-এর বিপরীতে একটা Playwright UI test <Cite n={5} />:
+
+```python
+def test_sending_a_question_renders_a_streamed_answer(page):
+    page.goto("http://localhost:3000")
+    page.fill("#chat-input", "What is your return policy?")
+    page.click("#send")
+    page.wait_for_selector(".bot-message", timeout=10_000)
+    assert "30 day" in page.inner_text(".bot-message")
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- খরচের ক্রমে suite চালান: assertion, তারপর LLM-judged metric, তারপর ধীর adversarial scan।
+- প্রতিটা টেস্ট app-এর একই চলমান instance-এ নির্দেশ করুন, যাতে একটা ব্যর্থতা থেকে LangFuse trace-এর সবসময় পরিদর্শনের জন্য একটা মিলে যাওয়া call থাকে।
+- ২০টা eval কেস আর red team-এর generated কেস আলাদা ফাইলে রাখুন; তাদের মালিক আর update ছন্দ আলাদা।
+</Callout>
+
+</Layman>
+<Bangla>
+
+Eval config, live endpoint-এর বিপরীতে ২০টা কেস <Cite n={1} />:
+
+```yaml
+# promptfooconfig.yaml
+providers: ["http://localhost:8000/ask"]
+tests: file://tests/capstone-eval-cases.yaml   # 20 question/expected-fact pairs
+defaultTest:
+  assert:
+    - type: contains
+      value: "{{expected_fact}}"
+```
+
+একই endpoint-এর ওপর একটা DeepEval hallucination টেস্ট <Cite n={2} />:
+
+```python
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+def test_the_answer_is_faithful_to_the_retrieved_context(case):
+    response = requests.post("http://localhost:8000/ask", json={"question": case["question"]}).json()
+    assert_test(
+        LLMTestCase(
+            input=case["question"],
+            actual_output=response["answer"],
+            retrieval_context=response["context"],
+        ),
+        [FaithfulnessMetric(threshold=0.9)],
+    )
+```
+
+Red team আর scan, একটা দুই-টুল gate হিসেবে <Cite n={3} /> <Cite n={4} />:
+
+```bash
+npx promptfoo redteam run --config redteam.yaml
+python -m scripts.run_giskard_scan --target http://localhost:8000/ask
+```
+
+Chat widget-এর বিপরীতে একটা Playwright UI test <Cite n={5} />:
+
+```python
+def test_sending_a_question_renders_a_streamed_answer(page):
+    page.goto("http://localhost:3000")
+    page.fill("#chat-input", "What is your return policy?")
+    page.click("#send")
+    page.wait_for_selector(".bot-message", timeout=10_000)
+    assert "30 day" in page.inner_text(".bot-message")
+```
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- খরচের ক্রমে suite চালান: assertion, তারপর LLM-judged metric, তারপর ধীর adversarial scan।
+- প্রতিটা টেস্ট app-এর একই চলমান instance-এ নির্দেশ করুন, যাতে একটা ব্যর্থতা থেকে LangFuse trace-এর সবসময় পরিদর্শনের জন্য একটা মিলে যাওয়া call থাকে।
+- ২০টা eval কেস আর red team-এর generated কেস আলাদা ফাইলে রাখুন; তাদের মালিক আর update ছন্দ আলাদা।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+**Mistake 1: running the slow scans first.** A broken endpoint should fail in the first few seconds of the eval suite, not after ten minutes of red teaming an app that was never going to pass it.
+
+**Mistake 2: no shared target between the suites.** If the UI tests run against a different deployment than the eval suite, a passing eval and a failing UI test are not actually contradictory.
+
+**Mistake 3: not tracing the eval and red team runs, only production traffic.** The traces from a test run are exactly the ones a tester needs when a test fails <Cite n={6} />.
+
+**Mistake 4: one combined report instead of six.** Collapsing correctness, security, and UI findings into one pass/fail hides which layer actually broke.
+
+**Mistake 5: skipping the Playwright suite because the eval suite passed.** An API that answers correctly can still render a broken loading state or drop the second half of a streamed response.
+
+</Technical>
+<Layman>
+
+**Mistake ১: ধীর scan আগে চালানো।** একটা ভাঙা endpoint-এর eval suite-এর প্রথম কয়েক সেকেন্ডেই ব্যর্থ হওয়া উচিত, এমন একটা app-কে দশ মিনিট red team করার পরে নয় যেটা কখনো পাস করত না।
+
+**Mistake ২: suite-গুলোর মধ্যে একটা ভাগাভাগি target নেই।** UI টেস্ট যদি eval suite-এর চেয়ে আলাদা deployment-এর বিপরীতে চলে, একটা পাস করা eval আর একটা ব্যর্থ UI test আসলে পরস্পরবিরোধী নয়।
+
+**Mistake ৩: eval আর red team run trace না করা, শুধু production traffic।** একটা test run-এর trace ঠিক সেগুলোই যা একটা টেস্টারের দরকার যখন একটা test ব্যর্থ হয় <Cite n={6} />।
+
+**Mistake ৪: ছয়টার বদলে একটা combined রিপোর্ট।** সঠিকতা, নিরাপত্তা, আর UI finding-কে একটা pass/fail-এ ভেঙে ফেলা লুকায় কোন layer আসলে ভেঙেছে।
+
+**Mistake ৫: eval suite পাস করেছে বলে Playwright suite বাদ দেওয়া।** একটা API যা সঠিকভাবে উত্তর দেয় তারপরও একটা ভাঙা loading state render করতে পারে বা একটা streamed response-এর দ্বিতীয় অর্ধেক ফেলে দিতে পারে।
+
+</Layman>
+<Bangla>
+
+**ভুল ১: ধীর scan আগে চালানো।** একটা ভাঙা endpoint-এর eval suite-এর প্রথম কয়েক সেকেন্ডেই ব্যর্থ হওয়া উচিত, এমন একটা app-কে দশ মিনিট red team করার পরে নয় যেটা কখনো পাস করত না।
+
+**ভুল ২: suite-গুলোর মধ্যে একটা ভাগাভাগি target নেই।** UI টেস্ট যদি eval suite-এর চেয়ে আলাদা deployment-এর বিপরীতে চলে, একটা পাস করা eval আর একটা ব্যর্থ UI test আসলে পরস্পরবিরোধী নয়।
+
+**ভুল ৩: eval আর red team run trace না করা, শুধু production traffic।** একটা test run-এর trace ঠিক সেগুলোই যা একটা টেস্টারের দরকার যখন একটা test ব্যর্থ হয় <Cite n={6} />।
+
+**ভুল ৪: ছয়টার বদলে একটা combined রিপোর্ট।** সঠিকতা, নিরাপত্তা, আর UI finding-কে একটা pass/fail-এ ভেঙে ফেলা লুকায় কোন layer আসলে ভেঙেছে।
+
+**ভুল ৫: eval suite পাস করেছে বলে Playwright suite বাদ দেওয়া।** একটা API যা সঠিকভাবে উত্তর দেয় তারপরও একটা ভাঙা loading state render করতে পারে বা একটা streamed response-এর দ্বিতীয় অর্ধেক ফেলে দিতে পারে।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Run the six suites in cost order and stop on the first failure category, so time is not spent red teaming an app that fails its own eval suite.
+- Confirm every suite targets the same running instance.
+- Confirm a LangFuse trace exists for any failing case before debugging starts.
+- Produce one findings table combining all six results, with a column for which layer (correctness, security, UI) each finding belongs to.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+
+This advice is the tutorial's own. It does not come from the sources.
+
+- Run the six suites in cost order and stop on the first failure category, so time is not spent red teaming an app that fails its own eval suite.
+- Confirm every suite targets the same running instance.
+- Confirm a LangFuse trace exists for any failing case before debugging starts.
+- Produce one findings table combining all six results, with a column for which layer (correctness, security, UI) each finding belongs to.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+
+এই পরামর্শ টিউটোরিয়ালের নিজস্ব। এটি সোর্স থেকে আসেনি।
+
+- ছয়টা suite খরচের ক্রমে চালান আর প্রথম failure category-তে থামুন, যাতে এমন একটা app red team করতে সময় ব্যয় না হয় যেটা তার নিজের eval suite-এই ব্যর্থ হয়।
+- প্রতিটা suite একই চলমান instance-কে লক্ষ্য করে তা নিশ্চিত করুন।
+- debugging শুরুর আগে যেকোনো ব্যর্থ কেসের জন্য একটা LangFuse trace আছে তা নিশ্চিত করুন।
+- ছয়টা ফলাফল একত্র করে একটা findings table বানান, প্রতিটা finding কোন layer-এর (correctness, security, UI) তার একটা column সহ।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Word | What it means |
+| --- | --- |
+| Test pipeline | The full set of suites run against one app: eval, hallucination, red team, scan, UI |
+| Cost order | Running cheap, fast checks before slow, expensive ones |
+| Shared target | Every test suite pointed at the same running instance of the app |
+| Findings table | A combined report tagging each finding with the layer it belongs to |
+| Trace | The recorded call that lets a test failure be diagnosed, not just reproduced |
