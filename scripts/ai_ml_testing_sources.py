@@ -301,21 +301,21 @@ SOURCES: dict[str, Source] = {
         # --- OWASP and NIST -----------------------------------------------------
         Source(
             "owasp-llm",
-            "OWASP Top 10 for Large Language Model Applications",
-            "OWASP",
-            "https://owasp.org/projects/top-10-for-large-language-model-applications",
+            "OWASP Top 10 for LLM Applications and Generative AI 2025",
+            "OWASP GenAI Security Project",
+            "https://genai.owasp.org/llm-top-10/",
         ),
         Source(
             "owasp-llm-prompt",
-            "LLM01 Prompt Injection",
-            "OWASP",
-            "https://owasp.org/projects/top-10-for-large-language-model-applications",
+            "LLM01:2025 Prompt Injection",
+            "OWASP GenAI Security Project",
+            "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
         ),
         Source(
             "nist-ai-rmf",
-            "AI Risk Management Framework",
-            "NIST",
-            "https://www.nist.gov/itl/ai-risk-management-framework",
+            "AI RMF Playbook (Govern, Map, Measure, Manage)",
+            "NIST (AI Resource Center)",
+            "https://airc.nist.gov/airmf-resources/playbook/",
         ),
         Source(
             "mitre-atlas",
