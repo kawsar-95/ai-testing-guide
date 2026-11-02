@@ -282,7 +282,19 @@ SOURCES: dict[str, Source] = {
             "qdrant-search",
             "Search",
             "Qdrant (docs)",
-            "https://qdrant.tech/documentation/concepts/search/",
+            "https://qdrant.tech/documentation/search/search/",
+        ),
+        Source(
+            "qdrant-collections",
+            "Collections",
+            "Qdrant (docs)",
+            "https://qdrant.tech/documentation/manage-data/collections/",
+        ),
+        Source(
+            "chroma-configure",
+            "Configure collections",
+            "Chroma (docs)",
+            "https://docs.trychroma.com/docs/collections/configure",
         ),
         # --- DSPy -------------------------------------------------------------
         Source(

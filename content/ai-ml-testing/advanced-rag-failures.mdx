@@ -6,6 +6,7 @@ export const page = {
     { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
     { title: 'Lost in the Middle: How Language Models Use Long Contexts', publisher: 'arXiv', url: 'https://arxiv.org/abs/2307.03172', accessed: '2026-11-01' },
     { title: 'RAG evaluation with Giskard', publisher: 'Giskard (docs)', url: 'https://docs.giskard.ai/oss/checks/use-cases/rag-evaluation', accessed: '2026-11-01' },
+    { title: 'Threat taxonomy', publisher: 'Giskard (docs)', url: 'https://docs.giskard.ai/oss/scan/explanation/threat-taxonomy', accessed: '2026-11-01' },
   ],
 }
 
@@ -35,7 +36,7 @@ context dilution           the right chunk is in the prompt, buried in 40 others
 
 The first five are data and retrieval problems. The last one is a different beast: the chunk is retrieved and placed in the prompt correctly, and the model still ignores it. Research on long contexts found that models attend reliably to the beginning and the end of a long input and less reliably to the middle <Cite n={3} />, which is exactly where a retrieved chunk tends to land in a large context.
 
-The RAG evaluation tooling exists for these cases. Giskard's RAG evaluation checks are built to generate adversarial questions against a knowledge base and measure whether the pipeline survives them <Cite n={4} />.
+Giskard's RAG evaluation tutorial shows one way to test these cases: a Giskard Checks suite that validates retrieval quality, groundedness, and handling of out-of-scope questions, and inspects the retrieved documents separately from the answer <Cite n={4} />.
 
 </Technical>
 <Layman>
@@ -55,7 +56,7 @@ context dilution           the right chunk is in the prompt, buried in 40 others
 
 প্রথম পাঁচটা data আর retrieval-এর সমস্যা। শেষটা আলাদা জিনিস: chunk ঠিকভাবে ফিরে আসে আর prompt-এ ঠিকভাবে বসে, তবু model সেটা উপেক্ষা করে। লম্বা context নিয়ে গবেষণায় দেখা গেছে model বড় input-এর শুরু আর শেষে ভালো নজর দেয়, মাঝখানে কম <Cite n={3} />, আর retrieved chunk ঠিক ঠিক মাঝখানেই বসে।
 
-RAG evaluation-এর টুলগুলো এই কেসগুলোর জন্যই আছে। Giskard-এর RAG evaluation check বানানো হয় knowledge base-এর বিপরীতে adversarial প্রশ্ন তৈরি করে আর pipeline কতটা টিকে যায় তা মাপতে <Cite n={4} />।
+Giskard-এর RAG evaluation টিউটোরিয়াল এই কেসগুলো টেস্ট করার একটা উপায় দেখায়: একটা Giskard Checks suite যা retrieval quality, groundedness, আর out-of-scope প্রশ্ন সামলানো যাচাই করে, আর retrieved document answer থেকে আলাদাভাবে দেখে <Cite n={4} />।
 
 </Layman>
 <Bangla>
@@ -75,7 +76,7 @@ context dilution           the right chunk is in the prompt, buried in 40 others
 
 প্রথম পাঁচটা data আর retrieval-এর সমস্যা। শেষটা আলাদা জিনিস: chunk ঠিকভাবে ফিরে আসে আর prompt-এ ঠিকভাবে বসে, তবু model সেটা উপেক্ষা করে। লম্বা context নিয়ে গবেষণায় দেখা গেছে model বড় input-এর শুরু আর শেষে ভালো নজর দেয়, মাঝখানে কম <Cite n={3} />, আর retrieved chunk ঠিক ঠিক মাঝখানেই বসে।
 
-RAG evaluation-এর টুলগুলো এই কেসগুলোর জন্যই আছে। Giskard-এর RAG evaluation check বানানো হয় knowledge base-এর বিপরীতে adversarial প্রশ্ন তৈরি করে আর pipeline কতটা টিকে যায় তা মাপতে <Cite n={4} />।
+Giskard-এর RAG evaluation টিউটোরিয়াল এই কেসগুলো টেস্ট করার একটা উপায় দেখায়: একটা Giskard Checks suite যা retrieval quality, groundedness, আর out-of-scope প্রশ্ন সামলানো যাচাই করে, আর retrieved document answer থেকে আলাদাভাবে দেখে <Cite n={4} />।
 
 </Bangla>
 </Voices>
@@ -103,9 +104,9 @@ The three columns are three different tests, and the row tells you which one fai
 
 **Multi-hop** questions need the retrieval to return several chunks that together contain the answer. The test has to state which chunks and in which order, because the order changes how the model combines them.
 
-**Context dilution** is the one where the retrieval is right and the model is wrong. The chunk is in the prompt, and the model used the model's memory instead. The test asserts on the answer's faithfulness to the retrieved chunk specifically, and the fix is usually to reduce the number of chunks or to put the best one last <Cite n={3} />.
+**Context dilution** is the one where the retrieval is right and the model is wrong. The chunk is in the prompt, and the model used its own memory instead. The test asserts on the answer's faithfulness to the retrieved chunk specifically, and the fix is usually to reduce the number of chunks or to put the best one at the beginning or the end <Cite n={3} />.
 
-The measurements behind these tests are the RAG metrics: context precision and context recall for the retrieval side, and faithfulness and answer relevancy for the generation side <Cite n={2} />.
+The measurements behind these tests are the RAG metrics: context precision and context recall for the retrieval side, and faithfulness and response relevancy for the generation side <Cite n={2} />.
 
 </Technical>
 <Layman>
@@ -128,9 +129,9 @@ context dilution       yes               yes            ignored it
 
 **Multi-hop** প্রশ্নে retrieval-কে একাধিক chunk ফেরত দিতে হয় যেগুলো একসাথে উত্তর ধরে। টেস্টে বলতে হবে কোন chunk এবং কোন ক্রমে, কারণ ক্রম বদলালে model যেভাবে জোগ করে তাও বদলায়।
 
-**Context dilution** সেটাই যেখানে retrieval ঠিক আর model ভুল। chunk prompt-এ আছে, আর model নিজের memory ব্যবহার করেছে। টেস্ট retrieved chunk-এর বিপরীতে answer-এর faithfulness assert করে, আর সমাধান সাধারণত chunk কমানো বা সেরাটা শেষে রাখা <Cite n={3} />।
+**Context dilution** সেটাই যেখানে retrieval ঠিক আর model ভুল। chunk prompt-এ আছে, আর model নিজের memory ব্যবহার করেছে। টেস্ট retrieved chunk-এর বিপরীতে answer-এর faithfulness assert করে, আর সমাধান সাধারণত chunk কমানো বা সেরাটা শুরুতে বা শেষে রাখা <Cite n={3} />।
 
-এই টেস্টগুলোর পেছনের মাপগুলো হলো RAG metric: retrieval-এর দিকে context precision আর context recall, আর generation-এর দিকে faithfulness আর answer relevancy <Cite n={2} />।
+এই টেস্টগুলোর পেছনের মাপগুলো হলো RAG metric: retrieval-এর দিকে context precision আর context recall, আর generation-এর দিকে faithfulness আর response relevancy <Cite n={2} />।
 
 </Layman>
 <Bangla>
@@ -153,9 +154,9 @@ context dilution       yes               yes            ignored it
 
 **Multi-hop** প্রশ্নে retrieval-কে একাধিক chunk ফেরত দিতে হয় যেগুলো একসাথে উত্তর ধরে। টেস্টে বলতে হবে কোন chunk এবং কোন ক্রমে, কারণ ক্রম বদলালে model যেভাবে জোগ করে তাও বদলায়।
 
-**Context dilution** সেটাই যেখানে retrieval ঠিক আর model ভুল। chunk prompt-এ আছে, আর model নিজের memory ব্যবহার করেছে। টেস্ট retrieved chunk-এর বিপরীতে answer-এর faithfulness assert করে, আর সমাধান সাধারণত chunk কমানো বা সেরাটা শেষে রাখা <Cite n={3} />।
+**Context dilution** সেটাই যেখানে retrieval ঠিক আর model ভুল। chunk prompt-এ আছে, আর model নিজের memory ব্যবহার করেছে। টেস্ট retrieved chunk-এর বিপরীতে answer-এর faithfulness assert করে, আর সমাধান সাধারণত chunk কমানো বা সেরাটা শুরুতে বা শেষে রাখা <Cite n={3} />।
 
-এই টেস্টগুলোর পেছনের মাপগুলো হলো RAG metric: retrieval-এর দিকে context precision আর context recall, আর generation-এর দিকে faithfulness আর answer relevancy <Cite n={2} />।
+এই টেস্টগুলোর পেছনের মাপগুলো হলো RAG metric: retrieval-এর দিকে context precision আর context recall, আর generation-এর দিকে faithfulness আর response relevancy <Cite n={2} />।
 
 </Bangla>
 </Voices>
@@ -411,7 +412,7 @@ def test_retrieval_works_for_a_bengali_question(pipeline):
 
 **Mistake 5: treating dilution as a retrieval bug.** The chunk was retrieved. The test must assert on the generation side <Cite n={3} />.
 
-**Mistake 6: not generating the cases adversarially.** Hand-written cases cover the failures you imagined. A tool that generates questions from the knowledge base finds the ones you did not <Cite n={4} />.
+**Mistake 6: not generating the cases adversarially.** Hand-written cases cover the failures you imagined. A tool that generates questions from the knowledge base finds the ones you did not <Cite n={5} />.
 
 </Technical>
 <Layman>
@@ -426,7 +427,7 @@ def test_retrieval_works_for_a_bengali_question(pipeline):
 
 **Mistake 5: dilution-কে retrieval বাগ ভাবা।** chunk আসে গেছে। টেস্ট generation-এর দিকে assert করতে হবে <Cite n={3} />।
 
-**Mistake 6: কেসগুলো adversarially তৈরি না করা।** হাতে লেখা কেস কেবল আপনার কল্পিত ব্যর্থতা ঢাকে। knowledge base থেকে প্রশ্ন বানানো টুল বানানো ব্যর্থতাও খুঁজে বের করে <Cite n={4} />।
+**Mistake 6: কেসগুলো adversarially তৈরি না করা।** হাতে লেখা কেস কেবল আপনার কল্পিত ব্যর্থতা ঢাকে। knowledge base থেকে প্রশ্ন বানানো টুল বানানো ব্যর্থতাও খুঁজে বের করে <Cite n={5} />।
 
 </Layman>
 <Bangla>
@@ -441,7 +442,7 @@ def test_retrieval_works_for_a_bengali_question(pipeline):
 
 **Mistake 5: dilution-কে retrieval বাগ ভাবা।** chunk আসে গেছে। টেস্ট generation-এর দিকে assert করতে হবে <Cite n={3} />।
 
-**Mistake 6: কেসগুলো adversarially তৈরি না করা।** হাতে লেখা কেস কেবল আপনার কল্পিত ব্যর্থতা ঢাকে। knowledge base থেকে প্রশ্ন বানানো টুল বানানো ব্যর্থতাও খুঁজে বের করে <Cite n={4} />।
+**Mistake 6: কেসগুলো adversarially তৈরি না করা।** হাতে লেখা কেস কেবল আপনার কল্পিত ব্যর্থতা ঢাকে। knowledge base থেকে প্রশ্ন বানানো টুল বানানো ব্যর্থতাও খুঁজে বের করে <Cite n={5} />।
 
 </Bangla>
 </Voices>
