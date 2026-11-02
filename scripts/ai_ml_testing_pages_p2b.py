@@ -16,7 +16,7 @@ page(
     title="Agent Architecture: What You Are Testing",
     description="Map an agent's decision tree before you test it: the nodes, the tools, the state, and where the test points are.",
     lede="An agent is a decision tree with a model at each junction. Draw the tree first, and the tests write themselves.",
-    sources=["langgraph-intro", "langsmith-trace", "anthropic-prompt"],
+    sources=["langgraph-intro", "langsmith-trace", "anthropic-tool-define"],
     sections={
         "In plain words": {
             "technical": (
@@ -81,7 +81,7 @@ page(
                 "The **tool descriptions** are part of the prompt, and this surprises people. "
                 "Rewriting \"Searches the web\" as \"Searches the web for current information "
                 "about a product or event\" changes which queries the agent runs. The tool "
-                "descriptions are therefore a test surface of their own {{cite:anthropic-prompt}}.\n\n"
+                "descriptions are therefore a test surface of their own {{cite:anthropic-tool-define}}.\n\n"
                 "The **state** has three parts, and the tests differ:\n\n"
                 "```text\n"
                 "the goal          what the user asked for. Set once, rarely changes.\n"
@@ -111,7 +111,7 @@ page(
                 "`send_email` সবচেয়ে বিপজ্জনক, আর agent-এর permission দরকার হওয়ার কারণই এটা। যে tool পৃথিবী বদলে দেয়, তার একটা টেস্ট দরকার যে assert করে উচিত না হলে সেটা **বলা হয়নি**, আর production-এ একটা human approval "
                 "ধাপ দরকার।\n\n"
                 "**Tool-এর বর্ণনা** prompt-এর অংশ, আর এটা মানুষকে অবাক করে। \"Searches the web\" কে \"Searches the web for current information about a product or event\" লিখলে বদলায় কোন query চলে। তাই tool-এর বর্ণনাও নিজে "
-                "একটা test surface {{cite:anthropic-prompt}}।\n\n"
+                "একটা test surface {{cite:anthropic-tool-define}}।\n\n"
                 "**State**-এর তিনটা অংশ, আর টেস্ট আলাদা:\n\n"
                 "```text\n"
                 "the goal          what the user asked for. Set once, rarely changes.\n"
@@ -133,7 +133,7 @@ page(
                 "```\n\n"
                 "`send_email` সবচেয়ে বিপজ্জনক, আর agent-এর permission দরকার হওয়ার কারণই এটা। যে tool পৃথিবী বদলে দেয়, তার একটা টেস্ট দরকার যে assert করে উচিত না হলে সেটা **বলা হয়নি**, আর production-এ একটা human approval ধাপ দরকার।\n\n"
                 "**Tool-এর বর্ণনা** prompt-এর অংশ, আর এটা মানুষকে অবাক করে। \"Searches the web\" কে \"Searches the web for current information about a product or event\" লিখলে বদলায় কোন query চলে। তাই tool-এর বর্ণনাও নিজে একটা test surface "
-                "{{cite:anthropic-prompt}}।\n\n"
+                "{{cite:anthropic-tool-define}}।\n\n"
                 "**State**-এর তিনটা অংশ, আর টেস্ট আলাদা:\n\n"
                 "```text\n"
                 "the goal          what the user asked for. Set once, rarely changes.\n"
@@ -179,7 +179,7 @@ page(
                 "```\n\n"
                 "And the tool-description test, which is the one teams find surprising:\n\n"
                 "```python\n"
-                "def test_rewriting_a_tool_description_changes_the_behaviour(agent):\n"
+                "def test_a_vague_tool_description_still_picks_the_right_tool(agent):\n"
                 "    agent.run(\"What happened in the news today?\")\n"
                 "    assert agent.tool_calls[0].name == \"search_web\"\n\n"
                 "    agent_with_vague_description = agent.with_tools(\n"
@@ -233,7 +233,7 @@ page(
                 "```\n\n"
                 "আর tool-description টেস্ট, যেটা দলগুলো অবাক করে:\n\n"
                 "```python\n"
-                "def test_rewriting_a_tool_description_changes_the_behaviour(agent):\n"
+                "def test_a_vague_tool_description_still_picks_the_right_tool(agent):\n"
                 "    agent.run(\"What happened in the news today?\")\n"
                 "    assert agent.tool_calls[0].name == \"search_web\"\n\n"
                 "    agent_with_vague_description = agent.with_tools(\n"
@@ -283,7 +283,7 @@ page(
                 "```\n\n"
                 "আর tool-description টেস্ট, যেটা দলগুলো অবাক করে:\n\n"
                 "```python\n"
-                "def test_rewriting_a_tool_description_changes_the_behaviour(agent):\n"
+                "def test_a_vague_tool_description_still_picks_the_right_tool(agent):\n"
                 "    agent.run(\"What happened in the news today?\")\n"
                 "    assert agent.tool_calls[0].name == \"search_web\"\n\n"
                 "    agent_with_vague_description = agent.with_tools(\n"
@@ -311,7 +311,7 @@ page(
                 "that can email without asking is one bad prompt away from emailing every "
                 "customer.\n\n"
                 "**Mistake 3: treating tool descriptions as documentation.** They are prompt "
-                "text, and rewriting one changes the behaviour {{cite:anthropic-prompt}}.\n\n"
+                "text, and rewriting one changes the behaviour {{cite:anthropic-tool-define}}.\n\n"
                 "**Mistake 4: no test for a task that cannot be finished.** The stopping logic "
                 "is only exercised by the goals that never succeed.\n\n"
                 "**Mistake 5: no test for a tool returning an error.** The tool result goes "
@@ -322,7 +322,7 @@ page(
             "layman": (
                 "**Mistake 1: শুধু শেষ উত্তর টেস্ট করা।** উত্তর সঠিক হতে পারে অপচয় বা ভুল পথের পরেও {{cite:langsmith-trace}}।\n\n"
                 "**Mistake 2: পৃথিবী বদলে দেওয়া tool-এর approval টেস্ট নেই।** যে agent না বলেই email পাঠাতে পারে, সে একটা খারাপ prompt থেকে সব customer-কে email করতে পারে।\n\n"
-                "**Mistake 3: tool-এর বর্ণনাকে ডকুমেন্টেশন ভাবা।** এগুলো prompt text, আর একটা বদলালে আচরণ বদলায় {{cite:anthropic-prompt}}।\n\n"
+                "**Mistake 3: tool-এর বর্ণনাকে ডকুমেন্টেশন ভাবা।** এগুলো prompt text, আর একটা বদলালে আচরণ বদলায় {{cite:anthropic-tool-define}}।\n\n"
                 "**Mistake 4: যে কাজ শেষ করা যায় না তার টেস্ট নেই।** শেষ হওয়ার logic কেবল সেই লক্ষ্যেই পরীক্ষিত হয় যেগুলো কখনো সফল হয় না।\n\n"
                 "**Mistake 5: tool error ফেরত দেওয়ার টেস্ট নেই।** tool-এর ফলাফল state-এ ঢোকে, আর agent-কে তার কিছু করতে হয়।\n\n"
                 "**Mistake 6: tool call-এর সংখ্যার ক্যাপ নেই।** ক্যাপ না থাকলে agent এক run-এ পুরো বাজেট খরচ করে।"
@@ -330,7 +330,7 @@ page(
             "bangla": (
                 "**Mistake 1: শুধু শেষ উত্তর টেস্ট করা।** উত্তর সঠিক হতে পারে অপচয় বা ভুল পথের পরেও {{cite:langsmith-trace}}।\n\n"
                 "**Mistake 2: পৃথিবী বদলে দেওয়া tool-এর approval টেস্ট নেই।** যে agent না বলেই email পাঠাতে পারে, সে একটা খারাপ prompt থেকে সব customer-কে email করতে পারে।\n\n"
-                "**Mistake 3: tool-এর বর্ণনাকে ডকুমেন্টেশন ভাবা।** এগুলো prompt text, আর একটা বদলালে আচরণ বদলায় {{cite:anthropic-prompt}}।\n\n"
+                "**Mistake 3: tool-এর বর্ণনাকে ডকুমেন্টেশন ভাবা।** এগুলো prompt text, আর একটা বদলালে আচরণ বদলায় {{cite:anthropic-tool-define}}।\n\n"
                 "**Mistake 4: যে কাজ শেষ করা যায় না তার টেস্ট নেই।** শেষ হওয়ার logic কেবল সেই লক্ষ্যেই পরীক্ষিত হয় যেগুলো কখনো সফল হয় না।\n\n"
                 "**Mistake 5: tool error ফেরত দেওয়ার টেস্ট নেই।** tool-এর ফলাফল state-এ ঢোকে, আর agent-কে তার কিছু করতে হয়।\n\n"
                 "**Mistake 6: tool call-এর সংখ্যার ক্যাপ নেই।** ক্যাপ না থাকলে agent এক run-এ পুরো বাজেট খরচ করে।"
@@ -401,7 +401,7 @@ page(
     title="Agent Decision Testing",
     description="Test the two decisions an agent makes: which tool to call, and what to pass to it. The second one breaks more often.",
     lede="An agent makes two decisions per step: which tool, and with what arguments. Testing only the first one leaves the dangerous half uncovered.",
-    sources=["langgraph-intro", "giskard-scan", "langsmith-trace"],
+    sources=["anthropic-tool-define", "langsmith-trace"],
     sections={
         "In plain words": {
             "technical": (
@@ -410,7 +410,7 @@ page(
                 "**Tool selection** fails when two tools look applicable. \"Cancel my order\" "
                 "might match `cancel_order` or `modify_order`, and the model has no reason to "
                 "prefer one. The fix is usually in the tool descriptions, which are prompt "
-                "text {{cite:langgraph-intro}}.\n\n"
+                "text {{cite:anthropic-tool-define}}.\n\n"
                 "**Argument extraction** fails when the argument is in the conversation but "
                 "implied rather than stated: \"the blue one, last Tuesday\" when the tool needs "
                 "a product id and a date. The agent has to connect two pieces of context. A "
@@ -426,29 +426,29 @@ page(
                 "or report the failure, not repeat the same call.\n\n"
                 "The measurement for all of these is a **decision accuracy** against a labelled "
                 "set of situations, and it is measured per situation, not overall "
-                "{{cite:giskard-scan}}."
+                "."
             ),
             "layman": (
                 "প্রতিটা ধাপে agent দুটো প্রশ্নের উত্তর দেয়: **কোন tool** আর **কী arguments** দিয়ে। এগুলো আলাদা ভাবে ভাঙে, আর দ্বিতীয়টা বেশি বিপজ্জনক।\n\n"
                 "**Tool বাছা** ভাঙে যখন দুটো tool প্রযোজ্য মনে হয়। \"Cancel my order\" হয়তো `cancel_order` বা `modify_order` — মিলে, আর model-এর একটা কারণ নেই একটা বেছে নিতে। সমাধান সাধারণত tool-এর বর্ণনায়, যেটা prompt text "
-                "{{cite:langgraph-intro}}।\n\n"
+                "{{cite:anthropic-tool-define}}।\n\n"
                 "**Argument বের করা** ভাঙে যখন argument কথোপকথনে আছে কিন্তু বলা নেই: \"নীলাটা, গত মঙ্গলবার\" যখন tool-এর product id আর date দরকার। agent-কে দুটো context জোড়া লাগাতে হয়। এখানেই বানানো argument বিপজ্জনক, কারণ tool-টা সঠিক আর call চলে যায়।\n\n"
                 "আর তিনটা আচরণ গুরুত্বপূর্ণ:\n\n"
                 "- **Tool chaining।** কিছু কাজে একটা tool-এর ফলাফল পরের tool-এ যেতে হয়। ভুল ক্রমে ডাকলে confident ভুল উত্তর আসে।\n"
                 "- **Loop detection।** agent একই tool একই argument দিয়ে আবার ডাকে। এটা হয় যখন tool এমন error দেয় যেটা model বোঝে না, আর বাজেট পুড়ে।\n"
                 "- **Error recovery।** tool ব্যর্থ হলে agent অন্য কিছু চেষ্টা করা বা ব্যর্থতা জানানো উচিত, একই call না করে।\n\n"
-                "এগুলোর মাপ হলো একটা labelled situation set-এর বিপরীতে **decision accuracy**, আর সেটা পরিস্থিতি অনুযায়ী মাপা হয়, সামগ্রিকভাবে নয় {{cite:giskard-scan}}।"
+                "এগুলোর মাপ হলো একটা labelled situation set-এর বিপরীতে **decision accuracy**, আর সেটা পরিস্থিতি অনুযায়ী মাপা হয়, সামগ্রিকভাবে নয়।"
             ),
             "bangla": (
                 "প্রতিটা ধাপে agent দুটো প্রশ্নের উত্তর দেয়: **কোন tool** আর **কী arguments** দিয়ে। এগুলো আলাদা ভাবে ভাঙে, আর দ্বিতীয়টা বেশি বিপজ্জনক।\n\n"
                 "**Tool বাছা** ভাঙে যখন দুটো tool প্রযোজ্য মনে হয়। \"Cancel my order\" হয়তো `cancel_order` বা `modify_order` — মিলে, আর model-এর একটা কারণ নেই একটা বেছে নিতে। সমাধান সাধারণত tool-এর বর্ণনায়, যেটা prompt text "
-                "{{cite:langgraph-intro}}।\n\n"
+                "{{cite:anthropic-tool-define}}।\n\n"
                 "**Argument বের করা** ভাঙে যখন argument কথোপকথনে আছে কিন্তু বলা নেই: \"নীলাটা, গত মঙ্গলবার\" যখন tool-এর product id আর date দরকার। agent-কে দুটো context জোড়া লাগাতে হয়। এখানেই বানানো argument বিপজ্জনক, কারণ tool-টা সঠিক আর call চলে যায়।\n\n"
                 "আর তিনটা আচরণ গুরুত্বপূর্ণ:\n\n"
                 "- **Tool chaining।** কিছু কাজে একটা tool-এর ফলাফল পরের tool-এ যেতে হয়। ভুল ক্রমে ডাকলে confident ভুল উত্তর আসে।\n"
                 "- **Loop detection।** agent একই tool একই argument দিয়ে আবার ডাকে। এটা হয় যখন tool এমন error দেয় যেটা model বোঝে না, আর বাজেট পুড়ে।\n"
                 "- **Error recovery।** tool ব্যর্থ হলে agent অন্য কিছু চেষ্টা করা বা ব্যর্থতা জানানো উচিত, একই call না করে।\n\n"
-                "এগুলোর মাপ হলো একটা labelled situation set-এর বিপরীতে **decision accuracy**, আর সেটা পরিস্থিতি অনুযায়ী মাপা হয়, সামগ্রিকভাবে নয় {{cite:giskard-scan}}।"
+                "এগুলোর মাপ হলো একটা labelled situation set-এর বিপরীতে **decision accuracy**, আর সেটা পরিস্থিতি অনুযায়ী মাপা হয়, সামগ্রিকভাবে নয়।"
             ),
         },
         "How it works": {
@@ -489,10 +489,8 @@ page(
                 "```python\n"
                 "def test_the_agent_does_not_invent_an_order_id(agent, trace):\n"
                 "    agent.run(\"Cancel my order\")\n"
-                "    call = next(c for c in trace.tool_calls if c.name == \"cancel_order\")\n"
-                "    assert call.arguments.get(\"order_id\") is None, (\n"
-                "        \"the agent invented an order id\"\n"
-                "    )\n"
+                "    cancels = [c for c in trace.tool_calls if c.name == \"cancel_order\"]\n"
+                "    assert cancels == [], \"the agent called cancel_order without knowing which order\"\n"
                 "```\n\n"
                 "The agent should have asked which order. Inventing an id means cancelling "
                 "someone else's order.\n\n"
@@ -547,10 +545,8 @@ page(
                 "```python\n"
                 "def test_the_agent_does_not_invent_an_order_id(agent, trace):\n"
                 "    agent.run(\"Cancel my order\")\n"
-                "    call = next(c for c in trace.tool_calls if c.name == \"cancel_order\")\n"
-                "    assert call.arguments.get(\"order_id\") is None, (\n"
-                "        \"the agent invented an order id\"\n"
-                "    )\n"
+                "    cancels = [c for c in trace.tool_calls if c.name == \"cancel_order\"]\n"
+                "    assert cancels == [], \"the agent called cancel_order without knowing which order\"\n"
                 "```\n\n"
                 "agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।\n\n"
                 "**loop** টেস্ট এমন একটা tool ব্যবহার করে যা সবসময় একই জিনিস ফেরত দেয়, তাই agent-এর নতুন তথ্য হয় না এবং সে থামা উচিত:\n\n"
@@ -601,10 +597,8 @@ page(
                 "```python\n"
                 "def test_the_agent_does_not_invent_an_order_id(agent, trace):\n"
                 "    agent.run(\"Cancel my order\")\n"
-                "    call = next(c for c in trace.tool_calls if c.name == \"cancel_order\")\n"
-                "    assert call.arguments.get(\"order_id\") is None, (\n"
-                "        \"the agent invented an order id\"\n"
-                "    )\n"
+                "    cancels = [c for c in trace.tool_calls if c.name == \"cancel_order\"]\n"
+                "    assert cancels == [], \"the agent called cancel_order without knowing which order\"\n"
                 "```\n\n"
                 "agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।\n\n"
                 "**loop** টেস্ট এমন একটা tool ব্যবহার করে যা সবসময় একই জিনিস ফেরত দেয়, তাই agent-এর নতুন তথ্য হয় না এবং সে থামা উচিত:\n\n"
@@ -662,10 +656,8 @@ page(
                 "```python\n"
                 "def test_the_agent_does_not_invent_an_order_id(agent, trace):\n"
                 "    agent.run(\"Cancel my order\")\n"
-                "    call = next(c for c in trace.tool_calls if c.name == \"cancel_order\")\n"
-                "    assert call.arguments.get(\"order_id\") is None, (\n"
-                "        \"the agent invented an order id\"\n"
-                "    )\n"
+                "    cancels = [c for c in trace.tool_calls if c.name == \"cancel_order\"]\n"
+                "    assert cancels == [], \"the agent called cancel_order without knowing which order\"\n"
                 "```\n\n"
                 "The agent should have asked which order. Inventing an id means cancelling "
                 "someone else's order.\n\n"
@@ -720,10 +712,8 @@ page(
                 "```python\n"
                 "def test_the_agent_does_not_invent_an_order_id(agent, trace):\n"
                 "    agent.run(\"Cancel my order\")\n"
-                "    call = next(c for c in trace.tool_calls if c.name == \"cancel_order\")\n"
-                "    assert call.arguments.get(\"order_id\") is None, (\n"
-                "        \"the agent invented an order id\"\n"
-                "    )\n"
+                "    cancels = [c for c in trace.tool_calls if c.name == \"cancel_order\"]\n"
+                "    assert cancels == [], \"the agent called cancel_order without knowing which order\"\n"
                 "```\n\n"
                 "agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।\n\n"
                 "**loop** টেস্ট এমন একটা tool ব্যবহার করে যা সবসময় একই জিনিস ফেরত দেয়, তাই agent-এর নতুন তথ্য হয় না এবং সে থামা উচিত:\n\n"
@@ -774,10 +764,8 @@ page(
                 "```python\n"
                 "def test_the_agent_does_not_invent_an_order_id(agent, trace):\n"
                 "    agent.run(\"Cancel my order\")\n"
-                "    call = next(c for c in trace.tool_calls if c.name == \"cancel_order\")\n"
-                "    assert call.arguments.get(\"order_id\") is None, (\n"
-                "        \"the agent invented an order id\"\n"
-                "    )\n"
+                "    cancels = [c for c in trace.tool_calls if c.name == \"cancel_order\"]\n"
+                "    assert cancels == [], \"the agent called cancel_order without knowing which order\"\n"
                 "```\n\n"
                 "agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।\n\n"
                 "**loop** টেস্ট এমন একটা tool ব্যবহার করে যা সবসময় একই জিনিস ফেরত দেয়, তাই agent-এর নতুন তথ্য হয় না এবং সে থামা উচিত:\n\n"
@@ -809,26 +797,26 @@ page(
                 "**Mistake 4: no loop case.** Every test goal is solvable, so the stopping logic "
                 "is never exercised.\n\n"
                 "**Mistake 5: no tool-error case.** The tool that always succeeds hides the "
-                "recovery bug {{cite:langgraph-intro}}.\n\n"
+                "recovery bug.\n\n"
                 "**Mistake 6: one accuracy number for all situations.** A model that is perfect "
                 "on single-tool tasks and wrong on two-tool tasks still looks fine overall "
-                "{{cite:giskard-scan}}."
+                "."
             ),
             "layman": (
                 "**Mistake 1: শুধু tool বাছা টেস্ট করা।** arguments-এই ক্ষতি হয়, কারণ tool সঠিক আর call তবু চলে যায়।\n\n"
                 "**Mistake 2: tool assert করা কিন্তু arguments নয়।** \"cancel_order\" ডাকা হয়েছে প্রমাণ করে না কোন অর্ডার বাতিল হলো।\n\n"
                 "**Mistake 3: বানানো argument-এর কেস নেই।** agent ঘাটতি argument না জিজ্ঞেস করে পূরণ করে দেয়।\n\n"
                 "**Mistake 4: loop কেস নেই।** প্রতিটা test goal সমাধানযোগ্য, তাই শেষ হওয়ার logic কখনোই পরীক্ষিত হয় না।\n\n"
-                "**Mistake 5: tool error কেস নেই।** সবসময় সফল হওয়া tool recovery বাগ ঢেকে দেয় {{cite:langgraph-intro}}।\n\n"
-                "**Mistake 6: সব পরিস্থিতির জন্য একটা accuracy সংখ্যা।** এক-tool কাজে পারফেক্ট আর দুই-tool কাজে ভুল model-ও গড়ে ভালো দেখায় {{cite:giskard-scan}}।"
+                "**Mistake 5: tool error কেস নেই।** সবসময় সফল হওয়া tool recovery বাগ ঢেকে দেয়।\n\n"
+                "**Mistake 6: সব পরিস্থিতির জন্য একটা accuracy সংখ্যা।** এক-tool কাজে পারফেক্ট আর দুই-tool কাজে ভুল model-ও গড়ে ভালো দেখায়।"
             ),
             "bangla": (
                 "**Mistake 1: শুধু tool বাছা টেস্ট করা।** arguments-এই ক্ষতি হয়, কারণ tool সঠিক আর call তবু চলে যায়।\n\n"
                 "**Mistake 2: tool assert করা কিন্তু arguments নয়।** \"cancel_order\" ডাকা হয়েছে প্রমাণ করে না কোন অর্ডার বাতিল হলো।\n\n"
                 "**Mistake 3: বানানো argument-এর কেস নেই।** agent ঘাটতি argument না জিজ্ঞেস করে পূরণ করে দেয়।\n\n"
                 "**Mistake 4: loop কেস নেই।** প্রতিটা test goal সমাধানযোগ্য, তাই শেষ হওয়ার logic কখনোই পরীক্ষিত হয় না।\n\n"
-                "**Mistake 5: tool error কেস নেই।** সবসময় সফল হওয়া tool recovery বাগ ঢেকে দেয় {{cite:langgraph-intro}}।\n\n"
-                "**Mistake 6: সব পরিস্থিতির জন্য একটা accuracy সংখ্যা।** এক-tool কাজে পারফেক্ট আর দুই-tool কাজে ভুল model-ও গড়ে ভালো দেখায় {{cite:giskard-scan}}।"
+                "**Mistake 5: tool error কেস নেই।** সবসময় সফল হওয়া tool recovery বাগ ঢেকে দেয়।\n\n"
+                "**Mistake 6: সব পরিস্থিতির জন্য একটা accuracy সংখ্যা।** এক-tool কাজে পারফেক্ট আর দুই-tool কাজে ভুল model-ও গড়ে ভালো দেখায়।"
             ),
         },
         "What a tester can check": {
@@ -913,8 +901,7 @@ page(
                 "hallucinated source in the researcher becomes a confident citation in the "
                 "writer and a pass in the reviewer.\n"
                 "3. **The cost.** Three agents means three model calls and three sets of "
-                "tokens. A system that is not better than one agent is three times the price "
-                "for the same answer.\n"
+                "tokens. A system that is not better than one agent costs roughly three times the calls and tokens for the same answer.\n"
                 "4. **The disagreement.** Two agents reach different conclusions and nothing "
                 "resolves it. The system needs a rule for who wins, and that rule needs a "
                 "test.\n\n"
@@ -928,7 +915,7 @@ page(
                 "ব্যর্থতাগুলো গঠনগত, model-স্তরের নয়। চারটা গুরুত্বপূর্ণ:\n\n"
                 "1. **Handoff।** writer পায় researcher-এর আউটপুট। ফরম্যাট বদলে গেলে বা কোনো তথ্য বাদ পড়লে writer ভাঙা input থেকে কাজ করে আর সেটা বুঝতেই পারে না।\n"
                 "2. **Cascade।** এক agent-এর ব্যর্থতা পরের agent-এর premise হয়। researcher-এর বানানো source হয়ে যায় writer-এর confident citation আর reviewer-এর পাস।\n"
-                "3. **খরচ।** তিনটা agent মানে তিনটা model call আর তিন সেট token। যে সিস্টেম একটা agent-এর চেয়ে ভালো নয়, তার একই উত্তরের জন্য তিনগুণ দাম।\n"
+                "3. **খরচ।** তিনটা agent মানে তিনটা model call আর তিন সেট token। যে সিস্টেম একটা agent-এর চেয়ে ভালো নয়, তার একই উত্তরের জন্য প্রায় তিনগুণ call আর token খরচ।\n"
                 "4. **অমিল।** দুটো agent ভিন্ন সিদ্ধান্তে পৌঁছায় আর কিছুই তা সমাধান করে না। সিস্টেমে কে জিতবে তার নিয়ম দরকার, আর সেই নিয়মের টেস্টও দরকার।\n\n"
                 "প্রথম দুটো correctness বাগ আর বাইরে থেকে দেখা যায় না, কারণ শেষ আউটপুট ঠিকই দেখায়। মাঝের state শুধু trace-এই দৃশ্যমান {{cite:langsmith-trace}}।"
             ),
@@ -938,7 +925,7 @@ page(
                 "ব্যর্থতাগুলো গঠনগত, model-স্তরের নয়। চারটা গুরুত্বপূর্ণ:\n\n"
                 "1. **Handoff।** writer পায় researcher-এর আউটপুট। ফরম্যাট বদলে গেলে বা কোনো তথ্য বাদ পড়লে writer ভাঙা input থেকে কাজ করে আর সেটা বুঝতেই পারে না।\n"
                 "2. **Cascade।** এক agent-এর ব্যর্থতা পরের agent-এর premise হয়। researcher-এর বানানো source হয়ে যায় writer-এর confident citation আর reviewer-এর পাস।\n"
-                "3. **খরচ।** তিনটা agent মানে তিনটা model call আর তিন সেট token। যে সিস্টেম একটা agent-এর চেয়ে ভালো নয়, তার একই উত্তরের জন্য তিনগুণ দাম।\n"
+                "3. **খরচ।** তিনটা agent মানে তিনটা model call আর তিন সেট token। যে সিস্টেম একটা agent-এর চেয়ে ভালো নয়, তার একই উত্তরের জন্য প্রায় তিনগুণ call আর token খরচ।\n"
                 "4. **অমিল।** দুটো agent ভিন্ন সিদ্ধান্তে পৌঁছায় আর কিছুই তা সমাধান করে না। সিস্টেমে কে জিতবে তার নিয়ম দরকার, আর সেই নিয়মের টেস্টও দরকার।\n\n"
                 "প্রথম দুটো correctness বাগ আর বাইরে থেকে দেখা যায় না, কারণ শেষ আউটপুট ঠিকই দেখায়। মাঝের state শুধু trace-এই দৃশ্যমান {{cite:langsmith-trace}}।"
             ),
@@ -963,17 +950,14 @@ page(
                 "plant    a finding with a source id that does not exist\n"
                 "expect   the reviewer rejects the draft and names the missing source\n"
                 "```\n\n"
-                "If the reviewer passes it, the reviewer is decoration. This is the failure the "
-                "OWASP list would call sensitive information disclosure or misinformation "
-                "propagation, and it is invisible in the final output "
-                "{{cite:owasp-llm}}.\n\n"
+                "If the reviewer passes it, the reviewer is decoration. This is the kind of failure OWASP lists as misinformation (LLM09:2025), and it is invisible in the final output {{cite:owasp-llm}}.\n\n"
                 "The **cost** is a test in the same suite. The whole chain's token count is "
                 "the metric, and the comparison is against the single-agent baseline:\n\n"
                 "```text\n"
-                "multi-agent   3 calls, 4,200 tokens, quality 0.88\n"
+                "multi-agent   3 calls, 4,200 tokens, quality 0.88   (illustrative)\n"
                 "single-agent  1 call, 1,100 tokens, quality 0.84\n"
                 "```\n\n"
-                "Four per cent of quality for four times the cost is a decision the product "
+                "Four points of quality for nearly four times the tokens is a decision the product "
                 "makes, and the tester has to put both numbers in the report.\n\n"
                 "The **disagreement** needs a rule and a test. If the researcher and the "
                 "writer disagree, which one wins? The answer is a design decision, and the "
@@ -999,10 +983,10 @@ page(
                 "reviewer পাস করলে সে আলংকার। এই ব্যর্থতাটা শেষ আউটপুটে দেখা যায় না {{cite:owasp-llm}}।\n\n"
                 "**খরচ** একই suite-এর একটা টেস্ট। পুরো chain-এর token সংখ্যাই মাপ, আর তুলনা single-agent baseline-এর সাথে:\n\n"
                 "```text\n"
-                "multi-agent   3 calls, 4,200 tokens, quality 0.88\n"
+                "multi-agent   3 calls, 4,200 tokens, quality 0.88   (illustrative)\n"
                 "single-agent  1 call, 1,100 tokens, quality 0.84\n"
                 "```\n\n"
-                "চার শতাংশ মানের জন্য চারগুণ খরচ একটা সিদ্ধান্ত যেটা product নেয়, আর টেস্টার দুটো সংখ্যাই রিপোর্টে রাখতে হবে।\n\n"
+                "চার পয়েন্ট মানের জন্য প্রায় চারগুণ token একটা সিদ্ধান্ত যেটা product নেয়, আর টেস্টার দুটো সংখ্যাই রিপোর্টে রাখতে হবে।\n\n"
                 "**অমিলের** একটা নিয়ম দরকার আর একটা টেস্ট। researcher আর writer অমিল করলে কে জিতবে? উত্তর একটা design সিদ্ধান্ত, আর টেস্ট সেটাই encode করে।\n\n"
                 "আর trace-ই chain-কে দৃশ্যমান করে। একটা trace দেখায় প্রতিটা agent-এর input আর output, তাই বোঝা যায় কোন seam ভাঙল {{cite:langsmith-trace}}।"
             ),
@@ -1022,10 +1006,10 @@ page(
                 "reviewer পাস করলে সে আলংকার। এই ব্যর্থতাটা শেষ আউটপুটে দেখা যায় না {{cite:owasp-llm}}।\n\n"
                 "**খরচ** একই suite-এর একটা টেস্ট। পুরো chain-এর token সংখ্যাই মাপ, আর তুলনা single-agent baseline-এর সাথে:\n\n"
                 "```text\n"
-                "multi-agent   3 calls, 4,200 tokens, quality 0.88\n"
+                "multi-agent   3 calls, 4,200 tokens, quality 0.88   (illustrative)\n"
                 "single-agent  1 call, 1,100 tokens, quality 0.84\n"
                 "```\n\n"
-                "চার শতাংশ মানের জন্য চারগুণ খরচ একটা সিদ্ধান্ত যেটা product নেয়, আর টেস্টার দুটো সংখ্যাই রিপোর্টে রাখতে হবে।\n\n"
+                "চার পয়েন্ট মানের জন্য প্রায় চারগুণ token একটা সিদ্ধান্ত যেটা product নেয়, আর টেস্টার দুটো সংখ্যাই রিপোর্টে রাখতে হবে।\n\n"
                 "**অমিলের** একটা নিয়ম দরকার আর একটা টেস্ট। researcher আর writer অমিল করলে কে জিতবে? উত্তর একটা design সিদ্ধান্ত, আর টেস্ট সেটাই encode করে।\n\n"
                 "আর trace-ই chain-কে দৃশ্যমান করে। একটা trace দেখায় প্রতিটা agent-এর input আর output, তাই বোঝা যায় কোন seam ভাঙল {{cite:langsmith-trace}}।"
             ),
@@ -1183,7 +1167,7 @@ page(
                 "**Mistake 1: শুধু শেষ আউটপুট টেস্ট করা।** chain-এর মান তার seam-গুলোর গুণ, আর ভালো শেষ আউটপুট ভাঙা seam ঢেকে দেয়।\n\n"
                 "**Mistake 2: handoff contract টেস্ট নেই।** finding বাদ পড়া একটা bias বাগ যা কেউ দেখে না।\n\n"
                 "**Mistake 3: reviewer সবসময় approve করে।** এটাই বানানো সবচেয়ে সহজ agent, আর ধরা সবচেয়ে সহজ, আর কিছুই ধরে না।\n\n"
-                "**Mistake 4: খরচের তুলনা নেই।** তিন-agent chain যেটা একটা agent-এর সমান, সেটা তিনগুণ বিল।\n\n"
+                "**Mistake 4: খরচের তুলনা নেই।** তিন-agent chain যেটা একটা agent-এর সমান, সেটা প্রায় তিনগুণ call আর token।\n\n"
                 "**Mistake 5: অমিলের নিয়ম নেই।** দুটো agent অমিল করে আর সিস্টেম তবু প্রকাশ করে।\n\n"
                 "**Mistake 6: মাঝের আউটপুট বিশ্বাস করা।** researcher-এর finding ভুল হয়ে সেও ঠিকই দেখাতে পারে, তাই প্রতিটা handoff-এর নিজস্ব যাচাই দরকার {{cite:owasp-llm}}।"
             ),
@@ -1191,7 +1175,7 @@ page(
                 "**Mistake 1: শুধু শেষ আউটপুট টেস্ট করা।** chain-এর মান তার seam-গুলোর গুণ, আর ভালো শেষ আউটপুট ভাঙা seam ঢেকে দেয়।\n\n"
                 "**Mistake 2: handoff contract টেস্ট নেই।** finding বাদ পড়া একটা bias বাগ যা কেউ দেখে না।\n\n"
                 "**Mistake 3: reviewer সবসময় approve করে।** এটাই বানানো সবচেয়ে সহজ agent, আর ধরা সবচেয়ে সহজ, আর কিছুই ধরে না।\n\n"
-                "**Mistake 4: খরচের তুলনা নেই।** তিন-agent chain যেটা একটা agent-এর সমান, সেটা তিনগুণ বিল।\n\n"
+                "**Mistake 4: খরচের তুলনা নেই।** তিন-agent chain যেটা একটা agent-এর সমান, সেটা প্রায় তিনগুণ call আর token।\n\n"
                 "**Mistake 5: অমিলের নিয়ম নেই।** দুটো agent অমিল করে আর সিস্টেম তবু প্রকাশ করে।\n\n"
                 "**Mistake 6: মাঝের আউটপুট বিশ্বাস করা।** researcher-এর finding ভুল হয়ে সেও ঠিকই দেখাতে পারে, তাই প্রতিটা handoff-এর নিজস্ব যাচাই দরকার {{cite:owasp-llm}}।"
             ),
@@ -1281,9 +1265,7 @@ page(
                 "5. **Confident invention.** The model describes something that is not in the "
                 "image at all. This is the multi-modal version of hallucination, and it is "
                 "the one that damages trust fastest, because the user can see the image.\n\n"
-                "The CLIP paper established the contrastive approach that made "
-                "image-and-text models practical in the first place, and it is the reference "
-                "for why the pairing works at all {{cite:clip}}. For the testing side, the "
+                "The CLIP paper is a reference for how image and text can be learned together: it trains on natural-language supervision to get transferable visual models {{cite:clip}}. For the testing side, the "
                 "measurement tools are the same scored metrics used elsewhere, applied to the "
                 "extracted values {{cite:deepeval-metrics}}."
             ),
@@ -1295,7 +1277,7 @@ page(
                 "3. **চার্ট ভুল পড়া।** model এমন trend বলে যা চার্টে নেই, সাধারণত axis label গুলিয়ে বা ভুল series পড়ে।\n"
                 "4. **নির্দেশনা উপেক্ষা করা।** model document ঠিক পড়ে আর তারপর সেই সম্পর্কে ভুল প্রশ্নের উত্তর দেয়, কারণ প্রশ্ন আর ছবি দুটোই attention-এর জন্য স্পধর্দ করে।\n"
                 "5. **আত্মবিশ্বাসী বানানো।** model এমন কিছু বর্ণনা করে যা ছবিতে নেইই। এটাই multi-modal hallucination, আর বিশ্বাস সবচেয়ে দ্রুত নষ্ট করে, কারণ ব্যবহারকারী তো ছবিটাই দেখতে পান।\n\n"
-                "CLIP কাগজে contrastive approach-টা প্রতিষ্ঠা করেছিল, যেটা ছবি-সহ-লেখা model বাস্তবসম্ভব করেছিল, আর এটাই কেন জোড়াটা কাজ করে তার reference {{cite:clip}}। টেস্টিং-এর দিকে, মাপগুলো একই scored metric, বের করা মানের ওপর প্রয়োগ করা {{cite:deepeval-metrics}}।"
+                "CLIP কাগজটা ছবি আর লেখা একসাথে শেখার একটা reference: এটা natural-language supervision থেকে transferable visual model বানায় {{cite:clip}}। টেস্টিং-এর দিকে, মাপগুলো একই scored metric, বের করা মানের ওপর প্রয়োগ করা {{cite:deepeval-metrics}}।"
             ),
             "bangla": (
                 "**multi-modal** model লেখা আর ছবি একসাথে নেয়। এতে একগুলো ব্যর্থতার ধরন আসে যেগুলো শুধু লেখার টেস্ট কখনো ছুঁয়েছে না।\n\n"
@@ -1305,7 +1287,7 @@ page(
                 "3. **চার্ট ভুল পড়া।** model এমন trend বলে যা চার্টে নেই, সাধারণত axis label গুলিয়ে বা ভুল series পড়ে।\n"
                 "4. **নির্দেশনা উপেক্ষা করা।** model document ঠিক পড়ে আর তারপর সেই সম্পর্কে ভুল প্রশ্নের উত্তর দেয়, কারণ প্রশ্ন আর ছবি দুটোই attention-এর জন্য স্পধর্দ করে।\n"
                 "5. **আত্মবিশ্বাসী বানানো।** model এমন কিছু বর্ণনা করে যা ছবিতে নেইই। এটাই multi-modal hallucination, আর বিশ্বাস সবচেয়ে দ্রুত নষ্ট করে, কারণ ব্যবহারকারী তো ছবিটাই দেখতে পান।\n\n"
-                "CLIP কাগজে contrastive approach-টা প্রতিষ্ঠা করেছিল, যেটা ছবি-সহ-লেখা model বাস্তবসম্ভব করেছিল, আর এটাই কেন জোড়াটা কাজ করে তার reference {{cite:clip}}। টেস্টিং-এর দিকে, মাপগুলো একই scored metric, বের করা মানের ওপর প্রয়োগ করা {{cite:deepeval-metrics}}।"
+                "CLIP কাগজটা ছবি আর লেখা একসাথে শেখার একটা reference: এটা natural-language supervision থেকে transferable visual model বানায় {{cite:clip}}। টেস্টিং-এর দিকে, মাপগুলো একই scored metric, বের করা মানের ওপর প্রয়োগ করা {{cite:deepeval-metrics}}।"
             ),
         },
         "How it works": {
@@ -1320,7 +1302,7 @@ page(
                 "invoice_number   INV-2024-089  INV-2024-089   0.00\n"
                 "total            1,250.00       1,250.00       0.00\n"
                 "total            980.00         980.00         0.00\n"
-                "total            45.60          4S.60          0.03\n"
+                "total            45.60          4S.60          0.20\n"
                 "```\n\n"
                 "A single character error in a serial number is a total failure for that "
                 "field, so the threshold is per-field and often zero.\n\n"
@@ -1347,11 +1329,9 @@ page(
                 "expect: it says there is no expiry date on the receipt\n"
                 "```\n\n"
                 "That last test is the multi-modal version of the not-found test, and it is "
-                "the one that most often fails.\n\n"
+                "a test worth keeping in every suite.\n\n"
                 "**Handwriting** is a separate axis: a model that reads print perfectly can "
-                "fail on handwriting, and the two need separate thresholds. The vision "
-                "documentation covers what the models handle "
-                "{{cite:anthropic-vision}}."
+                "fail on handwriting, and the two need separate thresholds. Image quality is another axis: Anthropic's vision documentation warns that Claude might hallucinate or make mistakes on low-quality, rotated or very small images, and that heavy JPEG compression can make text hard to read, so keep degraded copies of your fixtures too {{cite:anthropic-vision}}."
             ),
             "layman": (
                 "multi-modal টেস্টে একটা গুণ আছে যা শুধু লেখার টেস্টে নেই: **ব্যবহারকারী ছবিটাই দেখতে পান**। মানে ভুল উত্তর সাথে সাথেই যাচাই করা যায়, আর টেস্টেও তাই করা উচিত।\n\n"
@@ -1361,7 +1341,7 @@ page(
                 "invoice_number   INV-2024-089  INV-2024-089   0.00\n"
                 "total            1,250.00       1,250.00       0.00\n"
                 "total            980.00         980.00         0.00\n"
-                "total            45.60          4S.60          0.03\n"
+                "total            45.60          4S.60          0.20\n"
                 "```\n\n"
                 "serial নম্বরে একটা অক্ষরের ভুল সেই field-এর জন্য মোট ব্যর্থতা, তাই threshold প্রতি field আলাদা আর প্রায়ই শূন্য।\n\n"
                 "**গঠন** টেস্ট করে সেই layout গুলো দিয়ে যেগুলো parser ভাঙে: দুই কলামের ফর্ম, merged header-এর table, ডান পাশে সরু কলামের receipt, ছাপার নিচে হাতে লেখা note।\n\n"
@@ -1379,8 +1359,8 @@ page(
                 "question: what is the expiry date?\n"
                 "expect: it says there is no expiry date on the receipt\n"
                 "```\n\n"
-                "শেষ টেস্টটাই multi-modal সংস্করণের not-found টেস্ট, আর এটাই সবচেয়ে বেশি ব্যর্থ হয়।\n\n"
-                "**হাতের লেখা** আলাদা একটা অক্ষ: যে model print নিখুঁত পড়ে সে handwriting-এ ব্যর্থ হতে পারে, আর দুটোর জন্য আলাদা threshold দরকার। vision ডকুমেন্টেশনে model-গুলো কী সামলায় তা আছে {{cite:anthropic-vision}}।"
+                "শেষ টেস্টটাই multi-modal সংস্করণের not-found টেস্ট, আর প্রতিটা suite-এ রাখার মতো একটা টেস্ট।\n\n"
+                "**হাতের লেখা** আলাদা একটা অক্ষ: যে model print নিখুঁত পড়ে সে handwriting-এ ব্যর্থ হতে পারে, আর দুটোর জন্য আলাদা threshold দরকার। ছবির মান আরেকটা অক্ষ: Anthropic-এর vision ডকুমেন্টেশন সতর্ক করে যে নিম্নমানের, ঘোরানো বা খুব ছোট ছবিতে Claude hallucinate করতে বা ভুল করতে পারে, আর ভারী JPEG compression লেখা পড়া কঠিন করে দিতে পারে, তাই fixture-এর খারাপ মানের কপিও রাখুন {{cite:anthropic-vision}}।"
             ),
             "bangla": (
                 "multi-modal টেস্টে একটা গুণ আছে যা শুধু লেখার টেস্টে নেই: **ব্যবহারকারী ছবিটাই দেখতে পান**। মানে ভুল উত্তর সাথে সাথেই যাচাই করা যায়, আর টেস্টেও তাই করা উচিত।\n\n"
@@ -1390,7 +1370,7 @@ page(
                 "invoice_number   INV-2024-089  INV-2024-089   0.00\n"
                 "total            1,250.00       1,250.00       0.00\n"
                 "total            980.00         980.00         0.00\n"
-                "total            45.60          4S.60          0.03\n"
+                "total            45.60          4S.60          0.20\n"
                 "```\n\n"
                 "serial নম্বরে একটা অক্ষরের ভুল সেই field-এর জন্য মোট ব্যর্থতা, তাই threshold প্রতি field আলাদা আর প্রায়ই শূন্য।\n\n"
                 "**গঠন** টেস্ট করে সেই layout গুলো দিয়ে যেগুলো parser ভাঙে: দুই কলামের ফর্ম, merged header-এর table, ডান পাশে সরু কলামের receipt, ছাপার নিচে হাতে লেখা note।\n\n"
@@ -1408,8 +1388,8 @@ page(
                 "question: what is the expiry date?\n"
                 "expect: it says there is no expiry date on the receipt\n"
                 "```\n\n"
-                "শেষ টেস্টটাই multi-modal সংস্করণের not-found টেস্ট, আর এটাই সবচেয়ে বেশি ব্যর্থ হয়।\n\n"
-                "**হাতের লেখা** আলাদা একটা অক্ষ: যে model print নিখুঁত পড়ে সে handwriting-এ ব্যর্থ হতে পারে, আর দুটোর জন্য আলাদা threshold দরকার। vision ডকুমেন্টেশনে model-গুলো কী সামলায় তা আছে {{cite:anthropic-vision}}।"
+                "শেষ টেস্টটাই multi-modal সংস্করণের not-found টেস্ট, আর প্রতিটা suite-এ রাখার মতো একটা টেস্ট।\n\n"
+                "**হাতের লেখা** আলাদা একটা অক্ষ: যে model print নিখুঁত পড়ে সে handwriting-এ ব্যর্থ হতে পারে, আর দুটোর জন্য আলাদা threshold দরকার। ছবির মান আরেকটা অক্ষ: Anthropic-এর vision ডকুমেন্টেশন সতর্ক করে যে নিম্নমানের, ঘোরানো বা খুব ছোট ছবিতে Claude hallucinate করতে বা ভুল করতে পারে, আর ভারী JPEG compression লেখা পড়া কঠিন করে দিতে পারে, তাই fixture-এর খারাপ মানের কপিও রাখুন {{cite:anthropic-vision}}।"
             ),
         },
         "In practice": {
@@ -1703,7 +1683,7 @@ page(
     title="Fine-Tuned Model Testing",
     description="Test a fine-tuned model: did the task improve, what did it forget, and how do you compare it with the base model?",
     lede="Fine-tuning changes a model on purpose. Testing it means measuring what got better and what got worse, because the second one is easy to miss.",
-    sources=["catastrophic", "anthropic-evals", "mteb"],
+    sources=["catastrophic", "anthropic-evals"],
     sections={
         "In plain words": {
             "technical": (
@@ -1717,9 +1697,7 @@ page(
                 "reason the fine-tune exists.\n"
                 "2. **The general capability.** The fine-tune should not damage it. The "
                 "failure mode here is called **catastrophic forgetting**: the model becomes "
-                "excellent at the target and loses abilities it had before. The research on "
-                "this describes how the effect depends on how close the fine-tuning data is "
-                "to the original training data {{cite:catastrophic}}.\n"
+                "excellent at the target and loses abilities it had before. An empirical study of continual instruction tuning observed it in models from 1B to 7B parameters, and found the forgetting got more severe as scale increased in that range {{cite:catastrophic}}.\n"
                 "3. **The cost.** A fine-tuned model usually costs more per query than the base "
                 "model it replaces, because the serving is specialised.\n\n"
                 "The evaluation design follows from the three parts. You need a **target "
@@ -1736,8 +1714,7 @@ page(
                 "fine-tuned model হলো base model যার weight বদলানো হয়েছে একটা উদাহরণের set দিয়ে। পরিবর্তনটার উদ্দেশ্য একটা নির্দিষ্ট জিনিসে model-কে ভালো করা: একটা নির্দিষ্ট format, একটা নির্দিষ্ট tone, একটা নির্দিষ্ট domain।\n\n"
                 "টেস্টিং-এর সমস্যা হলো **base model ভাঙা ছিল না**। সে সাধারণ ছিল। তাই লেখার কোনো টেস্ট নেই; আছে একটা তুলনা। তুলনার তিনটা অংশ:\n\n"
                 "1. **Target task।** fine-tune-এ এটা উন্নত হওয়ার কথা। এটাই fine-tune করার কারণ।\n"
-                "2. **সাধারণ সক্ষমতা।** fine-tune-এ এটা নষ্ট হওয়ার কথা নয়। এই ব্যর্থতার ধরনকে বলে **catastrophic forgetting**: model target-এ অসাধারণ হয়ে যায় আর আগের সক্ষমতা হারায়। এই গবেষণাটি বলে ফলাফল নির্ভর করে fine-tuning "
-                "data আসল training data-এর কতটা কাছাকাছি {{cite:catastrophic}}।\n"
+                "2. **সাধারণ সক্ষমতা।** fine-tune-এ এটা নষ্ট হওয়ার কথা নয়। এই ব্যর্থতার ধরনকে বলে **catastrophic forgetting**: model target-এ অসাধারণ হয়ে যায় আর আগের সক্ষমতা হারায়। continual instruction tuning-এর একটা empirical গবেষণা এটা ১B থেকে ৭B parameter-এর model-এ দেখেছে, আর ওই পরিসরে scale বাড়লে forgetting আরও গুরুতর হয়েছে {{cite:catastrophic}}।\n"
                 "3. **খরচ।** fine-tuned model সাধারণত base model-এর চেয়ে প্রতি query-তে বেশি খরচ করে, কারণ serving-টা বিশেষায়িত।\n\n"
                 "তিনটা অংশ থেকেই evaluation design বের হয়। লাগবে একটা **target dataset** যেটায় fine-tune train হয়নি, একটা **general dataset** যেটা আপনার দক্ষতা মাপে, আর দুটো dataset দুটো model-এর ওপরই চালাতে হবে। কোনো স্কোর দেখার আগে eval ডিজাইন করতে হবে, কারণ fine-tune train করা "
                 "data-তে প্রায় সবসময় ভালো দেখায়, আর সেই তুলনা অর্থহীন {{cite:anthropic-evals}}।\n\n"
@@ -1747,8 +1724,7 @@ page(
                 "fine-tuned model হলো base model যার weight বদলানো হয়েছে একটা উদাহরণের set দিয়ে। পরিবর্তনটার উদ্দেশ্য একটা নির্দিষ্ট জিনিসে model-কে ভালো করা: একটা নির্দিষ্ট format, একটা নির্দিষ্ট tone, একটা নির্দিষ্ট domain।\n\n"
                 "টেস্টিং-এর সমস্যা হলো **base model ভাঙা ছিল না**। সে সাধারণ ছিল। তাই লেখার কোনো টেস্ট নেই; আছে একটা তুলনা। তুলনার তিনটা অংশ:\n\n"
                 "1. **Target task।** fine-tune-এ এটা উন্নত হওয়ার কথা। এটাই fine-tune করার কারণ।\n"
-                "2. **সাধারণ সক্ষমতা।** fine-tune-এ এটা নষ্ট হওয়ার কথা নয়। এই ব্যর্থতার ধরনকে বলে **catastrophic forgetting**: model target-এ অসাধারণ হয়ে যায় আর আগের সক্ষমতা হারায়। এই গবেষণাটি বলে ফলাফল নির্ভর করে fine-tuning data আসল training data-এর কতটা কাছাকাছি "
-                "{{cite:catastrophic}}।\n"
+                "2. **সাধারণ সক্ষমতা।** fine-tune-এ এটা নষ্ট হওয়ার কথা নয়। এই ব্যর্থতার ধরনকে বলে **catastrophic forgetting**: model target-এ অসাধারণ হয়ে যায় আর আগের সক্ষমতা হারায়। continual instruction tuning-এর একটা empirical গবেষণা এটা ১B থেকে ৭B parameter-এর model-এ দেখেছে, আর ওই পরিসরে scale বাড়লে forgetting আরও গুরুতর হয়েছে {{cite:catastrophic}}।\n"
                 "3. **খরচ।** fine-tuned model সাধারণত base model-এর চেয়ে প্রতি query-তে বেশি খরচ করে, কারণ serving-টা বিশেষায়িত।\n\n"
                 "তিনটা অংশ থেকেই evaluation design বের হয়। লাগবে একটা **target dataset** যেটায় fine-tune train হয়নি, একটা **general dataset** যেটা আপনার দক্ষতা মাপে, আর দুটো dataset দুটো model-এর ওপরই চালাতে হবে। কোনো স্কোর দেখার আগে eval ডিজাইন করতে হবে, কারণ fine-tune train করা data-তে প্রায় সবসময় ভালো দেখায়, আর সেই তুলনা অর্থহীন "
                 "{{cite:anthropic-evals}}।\n\n"
@@ -1876,7 +1852,7 @@ page(
                 "both numbers in it.\n\n"
                 "For the **general capability** dataset, the test cases come from real "
                 "questions, not from a benchmark, because the capability that matters is the "
-                "one your users need {{cite:mteb}}."
+                "one your users need."
             ),
             "layman": (
                 "তুলনার টেস্টটাই পুরো ব্যাপার, আর এটা একই কেস দুটো model-এর ওপর চালায়:\n\n"
@@ -1912,7 +1888,7 @@ page(
                 "    assert gain > 0, \"the fine-tune did not improve the target task\"\n"
                 "```\n\n"
                 "শেষ assertion-টা ইচ্ছাকৃতভাবে সহজ। এটা assert করে লাভ আছে আর খরচ লিখে রাখে; trade উপযোগী কি না সেটা দুটো সংখ্যাসহ একটা product সিদ্ধান্ত।\n\n"
-                "**সাধারণ সক্ষমতা** dataset-এর টেস্ট কেস আসে আসল প্রশ্ন থেকে, benchmark থেকে নয়, কারণ গুরুত্বপূর্ণ সক্ষমতাটাই হলো যেটা আপনার ব্যবহারকারীদের দরকার {{cite:mteb}}।"
+                "**সাধারণ সক্ষমতা** dataset-এর টেস্ট কেস আসে আসল প্রশ্ন থেকে, benchmark থেকে নয়, কারণ গুরুত্বপূর্ণ সক্ষমতাটাই হলো যেটা আপনার ব্যবহারকারীদের দরকার।"
             ),
             "bangla": (
                 "তুলনার টেস্টটাই পুরো ব্যাপার, আর এটা একই কেস দুটো model-এর ওপর চালায়:\n\n"
@@ -1948,7 +1924,7 @@ page(
                 "    assert gain > 0, \"the fine-tune did not improve the target task\"\n"
                 "```\n\n"
                 "শেষ assertion-টা ইচ্ছাকৃতভাবে সহজ। এটা assert করে লাভ আছে আর খরচ লিখে রাখে; trade উপযোগী কি না সেটা দুটো সংখ্যাসহ একটা product সিদ্ধান্ত।\n\n"
-                "**সাধারণ সক্ষমতা** dataset-এর টেস্ট কেস আসে আসল প্রশ্ন থেকে, benchmark থেকে নয়, কারণ গুরুত্বপূর্ণ সক্ষমতাটাই হলো যেটা আপনার ব্যবহারকারীদের দরকার {{cite:mteb}}।"
+                "**সাধারণ সক্ষমতা** dataset-এর টেস্ট কেস আসে আসল প্রশ্ন থেকে, benchmark থেকে নয়, কারণ গুরুত্বপূর্ণ সক্ষমতাটাই হলো যেটা আপনার ব্যবহারকারীদের দরকার।"
             ),
         },
         "Common mistakes": {
@@ -2058,7 +2034,7 @@ page(
     title="Synthetic Data Generation with DSPy",
     description="Generate test questions from your own knowledge base, verify the answers, and turn the result into a golden dataset.",
     lede="The scarcest thing in AI testing is a good test set. You can generate one from the documents you already have.",
-    sources=["dspy-intro", "dspy-optimizer", "giskard-raget"],
+    sources=["dspy-intro", "dspy-optimizer", "giskard-quality-scan", "giskard-migrate"],
     sections={
         "In plain words": {
             "technical": (
@@ -2066,15 +2042,10 @@ page(
                 "testing it solves the real problem: a hand-written eval set is small, biased "
                 "towards what you already thought of, and expensive to grow.\n\n"
                 "Two tools do this, from opposite ends:\n\n"
-                "- **Giskard's RAGET** generates questions from a knowledge base, and it "
-                "generates them **adversarially**: it looks for the parts of the knowledge base "
-                "where a RAG pipeline is most likely to fail, and writes questions that probe "
-                "them. The questions come with a difficulty category "
-                "{{cite:giskard-raget}}.\n"
+                "- **Giskard's quality scan** generates test scenarios from a knowledge base. Each generator probes one way an assistant goes wrong (hallucination, sycophancy, split or multi-topic questions, out-of-scope questions), and every scenario is tagged with the quality it tests and the component it stresses. It replaced the v2 RAGET tool {{cite:giskard-quality-scan}} {{cite:giskard-migrate}}.\n"
                 "- **DSPy** optimizes a prompt program against a metric. You describe the task "
                 "\"write a question that this document answers\", and it compiles a pipeline "
-                "that does it well, and it can generate the synthetic questions too "
-                "{{cite:dspy-intro}} {{cite:dspy-optimizer}}.\n\n"
+                "that does it well, so it can be used to build the question generator {{cite:dspy-intro}} {{cite:dspy-optimizer}}.\n\n"
                 "The pipeline the two are usually combined into has four stages, and the third "
                 "is the one that matters:\n\n"
                 "```text\n"
@@ -2092,9 +2063,8 @@ page(
             "layman": (
                 "**Synthetic data** হলো সংগ্রহ না করে তৈরি করা test data। AI টেস্টিং-এ এটা আসল সমস্যাটা সমাধান করে: হাতে লেখা eval set ছোট, আপনি যা ভেবেছেন তার দিকে বাঁকানো, আর বড় করা দামি।\n\n"
                 "দুটো টুল এটা করে, দুই প্রান্ত থেকে:\n\n"
-                "- **Giskard-এর RAGET** knowledge base থেকে প্রশ্ন তৈরি করে, আর তা **adversarially** করে: knowledge base-এর যেসব অংশে RAG pipeline সবচেয়ে বেশি ব্যর্থ হওয়ার সম্ভাবনা, সেখানে প্রশ্ন লিখে। প্রশ্নের সাথে একটা কঠিনতার "
-                "শ্রেণিও থাকে {{cite:giskard-raget}}।\n"
-                "- **DSPy** একটা metric-এর বিপরীতে একটা prompt program optimize করে। আপনি কাজটা বর্ণনা করেন \"এই document-এর উত্তর দেয় এমন একটা প্রশ্ন লেখো\", আর সেটা একটা pipeline compile করে যেটা ভালো করে, আর synthetic প্রশ্নও বানাতে পারে {{cite:dspy-intro}} {{cite:dspy-optimizer}}।\n\n"
+                "- **Giskard-এর quality scan** knowledge base থেকে test scenario তৈরি করে। প্রতিটা generator assistant-এর ভুল করার একটা উপায় probe করে (hallucination, sycophancy, split বা multi-topic প্রশ্ন, out-of-scope প্রশ্ন), আর প্রতিটা scenario ট্যাগ করা থাকে কোন গুণ আর কোন component যাচাই করছে। এটা v2-এর RAGET tool-এর জায়গা নিয়েছে {{cite:giskard-quality-scan}} {{cite:giskard-migrate}}।\n"
+                "- **DSPy** একটা metric-এর বিপরীতে একটা prompt program optimize করে। আপনি কাজটা বর্ণনা করেন \"এই document-এর উত্তর দেয় এমন একটা প্রশ্ন লেখো\", আর সেটা একটা pipeline compile করে যেটা ভালো করে, তাই প্রশ্ন generator বানাতে ব্যবহার করা যায় {{cite:dspy-intro}} {{cite:dspy-optimizer}}।\n\n"
                 "দুটোকে যোগ করে যে pipeline বানানো হয় তার চারটা ধাপ, আর তৃতীয়টাই গুরুত্বপূর্ণ:\n\n"
                 "```text\n"
                 "source documents\n"
@@ -2108,8 +2078,8 @@ page(
             "bangla": (
                 "**Synthetic data** হলো সংগ্রহ না করে তৈরি করা test data। AI টেস্টিং-এ এটা আসল সমস্যাটা সমাধান করে: হাতে লেখা eval set ছোট, আপনি যা ভেবেছেন তার দিকে বাঁকানো, আর বড় করা দামি।\n\n"
                 "দুটো টুল এটা করে, দুই প্রান্ত থেকে:\n\n"
-                "- **Giskard-এর RAGET** knowledge base থেকে প্রশ্ন তৈরি করে, আর তা **adversarially** করে: knowledge base-এর যেসব অংশে RAG pipeline সবচেয়ে বেশি ব্যর্থ হওয়ার সম্ভাবনা, সেখানে প্রশ্ন লিখে। প্রশ্নের সাথে একটা কঠিনতার শ্রেণিও থাকে {{cite:giskard-raget}}।\n"
-                "- **DSPy** একটা metric-এর বিপরীতে একটা prompt program optimize করে। আপনি কাজটা বর্ণনা করেন \"এই document-এর উত্তর দেয় এমন একটা প্রশ্ন লেখো\", আর সেটা একটা pipeline compile করে যেটা ভালো করে, আর synthetic প্রশ্নও বানাতে পারে {{cite:dspy-intro}} {{cite:dspy-optimizer}}।\n\n"
+                "- **Giskard-এর quality scan** knowledge base থেকে test scenario তৈরি করে। প্রতিটা generator assistant-এর ভুল করার একটা উপায় probe করে (hallucination, sycophancy, split বা multi-topic প্রশ্ন, out-of-scope প্রশ্ন), আর প্রতিটা scenario ট্যাগ করা থাকে কোন গুণ আর কোন component যাচাই করছে। এটা v2-এর RAGET tool-এর জায়গা নিয়েছে {{cite:giskard-quality-scan}} {{cite:giskard-migrate}}।\n"
+                "- **DSPy** একটা metric-এর বিপরীতে একটা prompt program optimize করে। আপনি কাজটা বর্ণনা করেন \"এই document-এর উত্তর দেয় এমন একটা প্রশ্ন লেখো\", আর সেটা একটা pipeline compile করে যেটা ভালো করে, তাই প্রশ্ন generator বানাতে ব্যবহার করা যায় {{cite:dspy-intro}} {{cite:dspy-optimizer}}।\n\n"
                 "দুটোকে যোগ করে যে pipeline বানানো হয় তার চারটা ধাপ, আর তৃতীয়টাই গুরুত্বপূর্ণ:\n\n"
                 "```text\n"
                 "source documents\n"
@@ -2140,9 +2110,7 @@ page(
                 "distinct     is this question different from the ones already in the set?\n"
                 "```\n\n"
                 "The third check is the one people forget, and without it a big generated "
-                "dataset is mostly the same question forty times. Giskard's RAGET generates "
-                "questions with a difficulty category, which gives you a natural way to keep "
-                "the hard ones and drop the trivial ones {{cite:giskard-raget}}.\n\n"
+                "dataset is mostly the same question forty times. Giskard's quality scan tags each scenario by kind, which gives you a natural way to see which kinds of failure your set already covers {{cite:giskard-quality-scan}}.\n\n"
                 "**The last step** is a human sample. Not all of them: a few dozen, read by "
                 "a person, to estimate the false rate of the verification. The verification "
                 "is itself a model call, and a model that verifies answers is also fallible.\n\n"
@@ -2161,7 +2129,7 @@ page(
                 "answerable   does the document actually contain the answer?\n"
                 "distinct     is this question different from the ones already in the set?\n"
                 "```\n\n"
-                "তৃতীয় যাচাইটাই মানুষ ভুলে যায়, আর ছাড়া বড় তৈরি dataset বেশিরভাগ একই প্রশ্ন চল্লিশবার। Giskard-এর RAGET কঠিনতার শ্রেণিসহ প্রশ্ন তৈরি করে, যেটা দিয়ে কঠিনগুলো রেখে সহজগুলো ফেলার স্বাভাবিক উপায় পাওয়া যায় {{cite:giskard-raget}}।\n\n"
+                "তৃতীয় যাচাইটাই মানুষ ভুলে যায়, আর ছাড়া বড় তৈরি dataset বেশিরভাগ একই প্রশ্ন চল্লিশবার। Giskard-এর quality scan প্রতিটা scenario ধরন অনুযায়ী ট্যাগ করে, যেটা দিয়ে দেখা যায় আপনার set কোন ধরনের ব্যর্থতা ইতিমধ্যে কভার করছে {{cite:giskard-quality-scan}}।\n\n"
                 "**শেষ ধাপ** হলো মানুষের নমুনা। সব নয়: কয়েক ডজন, একজন মানুষ পড়বে, যাতে verification-এর false rate-টা আন্দাজ করা যায়। verification-ও একটা model call, আর উত্তর যাচাই করা model-ও ভুল হতে পারে।\n\n"
                 "DSPy-এর দিকে আরেকটা ব্যবহারযোগ্য জিনিস আছে: **optimizer**। এটা আপনার metric-এর বিপরীতে একটা prompt program compile করে, তাই প্রশ্ন generator আপনার verifier যা accept করে সেটা বানাতে ভালো হয়, আর metric আলাদা script না থেকে সিস্টেমের অংশ হয় {{cite:dspy-intro}}।"
             ),
@@ -2175,7 +2143,7 @@ page(
                 "answerable   does the document actually contain the answer?\n"
                 "distinct     is this question different from the ones already in the set?\n"
                 "```\n\n"
-                "তৃতীয় যাচাইটাই মানুষ ভুলে যায়, আর ছাড়া বড় তৈরি dataset বেশিরভাগ একই প্রশ্ন চল্লিশবার। Giskard-এর RAGET কঠিনতার শ্রেণিসহ প্রশ্ন তৈরি করে, যেটা দিয়ে কঠিনগুলো রেখে সহজগুলো ফেলার স্বাভাবিক উপায় পাওয়া যায় {{cite:giskard-raget}}।\n\n"
+                "তৃতীয় যাচাইটাই মানুষ ভুলে যায়, আর ছাড়া বড় তৈরি dataset বেশিরভাগ একই প্রশ্ন চল্লিশবার। Giskard-এর quality scan প্রতিটা scenario ধরন অনুযায়ী ট্যাগ করে, যেটা দিয়ে দেখা যায় আপনার set কোন ধরনের ব্যর্থতা ইতিমধ্যে কভার করছে {{cite:giskard-quality-scan}}।\n\n"
                 "**শেষ ধাপ** হলো মানুষের নমুনা। সব নয়: কয়েক ডজন, একজন মানুষ পড়বে, যাতে verification-এর false rate-টা আন্দাজ করা যায়। verification-ও একটা model call, আর উত্তর যাচাই করা model-ও ভুল হতে পারে।\n\n"
                 "DSPy-এর দিকে আরেকটা ব্যবহারযোগ্য জিনিস আছে: **optimizer**। এটা আপনার metric-এর বিপরীতে একটা prompt program compile করে, তাই প্রশ্ন generator আপনার verifier যা accept করে সেটা বানাতে ভালো হয়, আর metric আলাদা script না থেকে সিস্টেমের অংশ হয় {{cite:dspy-intro}}।"
             ),
@@ -2231,16 +2199,18 @@ page(
                 "rate has to be measured rather than assumed.\n\n"
                 "The DSPy optimizer then improves the generator against that same metric:\n\n"
                 "```python\n"
-                "from dspy import Example, Signature, dspy\n\n\n"
+                "import dspy\n\n\n"
                 "class WriteQuestion(dspy.Signature):\n"
                 "    document: str = dspy.InputField()\n"
                 "    question: str = dspy.OutputField()\n"
                 "\n\n"
+                "def verifier_metric(example, pred, trace=None):\n"
+                "    return verify(pred.question, example.document)  # True or False\n"
+                "\n\n"
                 "program = dspy.ChainOfThought(WriteQuestion)\n"
-                "program.compile(\n"
-                "    optimizer=dspy.BootstrapFewShot(metric=verifier_metric, max_bootstrapped_demos=8),\n"
-                "    trainset=verified_examples,   # only the examples that passed verification\n"
-                ")\n"
+                "trainset = [dspy.Example(document=d).with_inputs(\"document\") for d in verified_documents]\n"
+                "optimizer = dspy.BootstrapFewShot(metric=verifier_metric, max_bootstrapped_demos=8)\n"
+                "compiled = optimizer.compile(program, trainset=trainset)\n"
                 "```\n\n"
                 "Training the optimizer on the verified examples only is the point: the "
                 "optimizer learns what a good question looks like from the questions that "
@@ -2290,15 +2260,17 @@ page(
                 "শেষ টেস্টটাই পুরো পদ্ধতিটাকে সৎ করে। verifier একটা model, আর উত্তর যাচাই করা model-ও ভুল হতে পারে, তাই তার error rate অনুমান না করে মাপতে হবে।\n\n"
                 "তারপর DSPy optimizer সেই একই metric-এর বিপরীতে generator-কে উন্নত করে:\n\n"
                 "```python\n"
-                "from dspy import Example, Signature, dspy\n\n\n"
+                "import dspy\n\n\n"
                 "class WriteQuestion(dspy.Signature):\n"
                 "    document: str = dspy.InputField()\n"
                 "    question: str = dspy.OutputField()\n\n\n"
+                "def verifier_metric(example, pred, trace=None):\n"
+                "    return verify(pred.question, example.document)  # True or False\n"
+                "\n\n"
                 "program = dspy.ChainOfThought(WriteQuestion)\n"
-                "program.compile(\n"
-                "    optimizer=dspy.BootstrapFewShot(metric=verifier_metric, max_bootstrapped_demos=8),\n"
-                "    trainset=verified_examples,   # only the examples that passed verification\n"
-                ")\n"
+                "trainset = [dspy.Example(document=d).with_inputs(\"document\") for d in verified_documents]\n"
+                "optimizer = dspy.BootstrapFewShot(metric=verifier_metric, max_bootstrapped_demos=8)\n"
+                "compiled = optimizer.compile(program, trainset=trainset)\n"
                 "```\n\n"
                 "শুধু যাচাই পাস করা উদাহরণে optimizer train করাটাই পয়েন্ট: optimizer শেখে ভালো প্রশ্ন কেমন হয়, আর যেগুলো ছুঁড়ে ফেলা হয়েছে সেগুলো থেকে নয় {{cite:dspy-optimizer}}।"
             ),
@@ -2346,15 +2318,17 @@ page(
                 "শেষ টেস্টটাই পুরো পদ্ধতিটাকে সৎ করে। verifier একটা model, আর উত্তর যাচাই করা model-ও ভুল হতে পারে, তাই তার error rate অনুমান না করে মাপতে হবে।\n\n"
                 "তারপর DSPy optimizer সেই একই metric-এর বিপরীতে generator-কে উন্নত করে:\n\n"
                 "```python\n"
-                "from dspy import Example, Signature, dspy\n\n\n"
+                "import dspy\n\n\n"
                 "class WriteQuestion(dspy.Signature):\n"
                 "    document: str = dspy.InputField()\n"
                 "    question: str = dspy.OutputField()\n\n\n"
+                "def verifier_metric(example, pred, trace=None):\n"
+                "    return verify(pred.question, example.document)  # True or False\n"
+                "\n\n"
                 "program = dspy.ChainOfThought(WriteQuestion)\n"
-                "program.compile(\n"
-                "    optimizer=dspy.BootstrapFewShot(metric=verifier_metric, max_bootstrapped_demos=8),\n"
-                "    trainset=verified_examples,   # only the examples that passed verification\n"
-                ")\n"
+                "trainset = [dspy.Example(document=d).with_inputs(\"document\") for d in verified_documents]\n"
+                "optimizer = dspy.BootstrapFewShot(metric=verifier_metric, max_bootstrapped_demos=8)\n"
+                "compiled = optimizer.compile(program, trainset=trainset)\n"
                 "```\n\n"
                 "শুধু যাচাই পাস করা উদাহরণে optimizer train করাটাই পয়েন্ট: optimizer শেখে ভালো প্রশ্ন কেমন হয়, আর যেগুলো ছুঁড়ে ফেলা হয়েছে সেগুলো থেকে নয় {{cite:dspy-optimizer}}।"
             ),
@@ -2367,32 +2341,30 @@ page(
                 "and wrong at the same time is the worst combination.\n\n"
                 "**Mistake 3: no duplicate check.** A large generated set is often a few dozen "
                 "questions repeated.\n\n"
-                "**Mistake 4: no human sample.** The verifier is a model too, and its error "
-                "rate has to be measured {{cite:dspy-intro}}.\n\n"
+                "**Mistake 4: no human sample.** The verifier is a model too, and its error rate has to be measured.\n\n"
                 "**Mistake 5: using the generated set as the only eval.** A dataset written by "
                 "a model tests for the failures that model has.\n\n"
                 "**Mistake 6: training the optimizer on unverified examples.** It learns from "
                 "the questions you were going to throw away.\n\n"
-                "**Mistake 7: regenerating the set on every run.** The eval must be fixed, or "
-                "two runs cannot be compared {{cite:giskard-raget}}."
+                "**Mistake 7: regenerating the set on every run.** The eval must be fixed, or two runs cannot be compared."
             ),
             "layman": (
                 "**Mistake 1: verification ধাপ নেই।** যাচাই না করা synthetic dataset model-কে আত্মবিশ্বাসী ভুল হতে শেখায়, আর তারপর সেটা দিয়ে আপনাকেই টেস্ট করে।\n\n"
                 "**Mistake 2: একই model প্রশ্ন লেখে আর উত্তরও দেয়।** self-consistent আর ভুল একসাথে হওয়াটাই সবচেয়ে খারাপ সমন্বয়।\n\n"
                 "**Mistake 3: duplicate চেক নেই।** বড় তৈরি set প্রায়ই কয়েক ডজন প্রশ্নের পুনরাবৃত্তি।\n\n"
-                "**Mistake 4: মানুষের নমুনা নেই।** verifier-ও একটা model, আর তার error rate মাপতে হবে {{cite:dspy-intro}}।\n\n"
+                "**Mistake 4: মানুষের নমুনা নেই।** verifier-ও একটা model, আর তার error rate মাপতে হবে।\n\n"
                 "**Mistake 5: তৈরি set-কেই একমাত্র eval হিসেবে ব্যবহার করা।** model-এর লেখা dataset ওই model-এর ব্যর্থতাগুলোর জন্যই টেস্ট করে।\n\n"
                 "**Mistake 6: যাচাই না করা উদাহরণে optimizer train করা।** এটা শেখে ফেলে যে প্রশ্নগুলো ছুঁড়ে ফেলা হবে।\n\n"
-                "**Mistake 7: প্রতিটা run-এ set আবার তৈরি করা।** eval-এর নির্দিষ্ট থাকতে হবে, নইলে দুটো run তুলনা যায় না {{cite:giskard-raget}}।"
+                "**Mistake 7: প্রতিটা run-এ set আবার তৈরি করা।** eval-এর নির্দিষ্ট থাকতে হবে, নইলে দুটো run তুলনা যায় না।"
             ),
             "bangla": (
                 "**Mistake 1: verification ধাপ নেই।** যাচাই না করা synthetic dataset model-কে আত্মবিশ্বাসী ভুল হতে শেখায়, আর তারপর সেটা দিয়ে আপনাকেই টেস্ট করে।\n\n"
                 "**Mistake 2: একই model প্রশ্ন লেখে আর উত্তরও দেয়।** self-consistent আর ভুল একসাথে হওয়াটাই সবচেয়ে খারাপ সমন্বয়।\n\n"
                 "**Mistake 3: duplicate চেক নেই।** বড় তৈরি set প্রায়ই কয়েক ডজন প্রশ্নের পুনরাবৃত্তি।\n\n"
-                "**Mistake 4: মানুষের নমুনা নেই।** verifier-ও একটা model, আর তার error rate মাপতে হবে {{cite:dspy-intro}}।\n\n"
+                "**Mistake 4: মানুষের নমুনা নেই।** verifier-ও একটা model, আর তার error rate মাপতে হবে।\n\n"
                 "**Mistake 5: তৈরি set-কেই একমাত্র eval হিসেবে ব্যবহার করা।** model-এর লেখা dataset ওই model-এর ব্যর্থতাগুলোর জন্যই টেস্ট করে।\n\n"
                 "**Mistake 6: যাচাই না করা উদাহরণে optimizer train করা।** এটা শেখে ফেলে যে প্রশ্নগুলো ছুঁড়ে ফেলা হবে।\n\n"
-                "**Mistake 7: প্রতিটা run-এ set আবার তৈরি করা।** eval-এর নির্দিষ্ট থাকতে হবে, নইলে দুটো run তুলনা যায় না {{cite:giskard-raget}}।"
+                "**Mistake 7: প্রতিটা run-এ set আবার তৈরি করা।** eval-এর নির্দিষ্ট থাকতে হবে, নইলে দুটো run তুলনা যায় না।"
             ),
         },
         "What a tester can check": {
@@ -2451,6 +2423,6 @@ page(
         ("Duplicate check", "Rejecting a generated question that is too close to an existing one"),
         ("DSPy", "A framework that compiles and optimises prompt programs against a metric"),
         ("Optimizer", "The component that improves a prompt program using examples and a metric"),
-        ("Adversarial generation", "Writing questions that target the places the system is most likely to fail"),
+        ("Scenario tag", "A label on a generated test scenario naming the quality it tests and the component it stresses"),
     ],
 )

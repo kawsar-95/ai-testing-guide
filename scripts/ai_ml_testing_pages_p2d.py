@@ -17,12 +17,12 @@ page(
     title="RAG Test Automation at Scale: Synthetic Data and Regression",
     description="Auto-generate RAG test scenarios from your knowledge base with Giskard's quality scan, build a regression suite that runs on every knowledge base update, and gate the deploy on it.",
     lede="A knowledge base update is a deploy with no diff. The only way to know what it broke is to run the same questions through it, automatically, every time.",
-    sources=["giskard-raget", "ragas-metrics", "github-actions"],
+    sources=["giskard-quality-scan", "giskard-migrate", "ragas-metrics", "github-actions"],
     sections={
         "In plain words": {
             "technical": (
                 "A hand-written RAG eval set of 20 or 50 questions covers what a tester "
-                "thought to ask. **Giskard's quality scan** generates test scenarios automatically from the knowledge base itself, at a scale no one would write by hand: direct questions grounded in a document, multi-topic and history-dependent questions, sycophancy probes, and out-of-scope questions the documents never cover. It is the Giskard v3 successor of the v2 RAGET tool, and each scenario is tagged with the component it is meant to assess (`llm`, `retrieval`, or `history`) {{cite:giskard-raget}}.\n\n"
+                "thought to ask. **Giskard's quality scan** generates test scenarios automatically from the knowledge base itself, at a scale no one would write by hand: direct questions grounded in a document, multi-topic and history-dependent questions, sycophancy probes, and out-of-scope questions the documents never cover. It is the Giskard v3 successor of the v2 RAGET tool {{cite:giskard-migrate}}, and each scenario is tagged with the component it is meant to assess (`llm`, `retrieval`, or `history`) {{cite:giskard-quality-scan}}.\n\n"
                 "Automatic generation solves a coverage problem, but it creates a new one: "
                 "a knowledge base changes constantly (a policy is updated, a document is "
                 "added or removed), and a test set generated once goes stale. The fix is to "
@@ -31,13 +31,13 @@ page(
                 "is enforced {{cite:github-actions}}."
             ),
             "layman": (
-                "একটা হাতে-লেখা RAG eval সেট ২০ বা ৫০টা প্রশ্ন, যা একজন টেস্টার জিজ্ঞেস করার কথা ভেবেছিল তা কভার করে। **Giskard-এর quality scan** স্বয়ংক্রিয়ভাবে knowledge base থেকেই test scenario তৈরি করে, এমন স্কেলে যা কেউ হাতে লিখবে না: document-ভিত্তিক সরাসরি প্রশ্ন, একাধিক topic বা কথোপকথনের ইতিহাস-নির্ভর প্রশ্ন, sycophancy probe, আর document-এ নেই এমন out-of-scope প্রশ্ন। এটা v2-এর RAGET tool-এর Giskard v3 উত্তরসূরি, আর প্রতিটা scenario ট্যাগ করা থাকে কোন component যাচাই করার জন্য (`llm`, `retrieval`, বা `history`) {{cite:giskard-raget}}।\n\n"
+                "একটা হাতে-লেখা RAG eval সেট ২০ বা ৫০টা প্রশ্ন, যা একজন টেস্টার জিজ্ঞেস করার কথা ভেবেছিল তা কভার করে। **Giskard-এর quality scan** স্বয়ংক্রিয়ভাবে knowledge base থেকেই test scenario তৈরি করে, এমন স্কেলে যা কেউ হাতে লিখবে না: document-ভিত্তিক সরাসরি প্রশ্ন, একাধিক topic বা কথোপকথনের ইতিহাস-নির্ভর প্রশ্ন, sycophancy probe, আর document-এ নেই এমন out-of-scope প্রশ্ন। এটা v2-এর RAGET tool-এর Giskard v3 উত্তরসূরি {{cite:giskard-migrate}}, আর প্রতিটা scenario ট্যাগ করা থাকে কোন component যাচাই করার জন্য (`llm`, `retrieval`, বা `history`) {{cite:giskard-quality-scan}}।\n\n"
                 "স্বয়ংক্রিয় generation একটা coverage সমস্যা সমাধান করে, কিন্তু একটা নতুন তৈরি করে: একটা knowledge base ক্রমাগত বদলায় (একটা policy update হয়, একটা document যোগ বা সরানো হয়), আর একবার তৈরি করা একটা test set পুরনো হয়ে যায়। সমাধান হলো knowledge base-কে "
                 "code-এর মতো দেখা: প্রতিটা update regression suite চালায়, scan-এর LLM judge দিয়ে বিচার করা (দ্বিতীয় মতামতের জন্য course-এর অন্য জায়গায় ব্যবহৃত Ragas faithfulness আর context metric যোগ করতে পারেন {{cite:ragas-metrics}}), আর একটা ব্যর্থ scenario update-কে live হতে বাধা দেয়, অন্য যেকোনো CI "
                 "gate যেভাবে প্রয়োগ হয় সেভাবেই প্রয়োগ করা {{cite:github-actions}}।"
             ),
             "bangla": (
-                "একটা হাতে-লেখা RAG eval সেট ২০ বা ৫০টা প্রশ্ন, যা একজন টেস্টার জিজ্ঞেস করার কথা ভেবেছিল তা কভার করে। **Giskard-এর quality scan** স্বয়ংক্রিয়ভাবে knowledge base থেকেই test scenario তৈরি করে, এমন স্কেলে যা কেউ হাতে লিখবে না: document-ভিত্তিক সরাসরি প্রশ্ন, একাধিক topic বা কথোপকথনের ইতিহাস-নির্ভর প্রশ্ন, sycophancy probe, আর document-এ নেই এমন out-of-scope প্রশ্ন। এটা v2-এর RAGET tool-এর Giskard v3 উত্তরসূরি, আর প্রতিটা scenario ট্যাগ করা থাকে কোন component যাচাই করার জন্য (`llm`, `retrieval`, বা `history`) {{cite:giskard-raget}}।\n\n"
+                "একটা হাতে-লেখা RAG eval সেট ২০ বা ৫০টা প্রশ্ন, যা একজন টেস্টার জিজ্ঞেস করার কথা ভেবেছিল তা কভার করে। **Giskard-এর quality scan** স্বয়ংক্রিয়ভাবে knowledge base থেকেই test scenario তৈরি করে, এমন স্কেলে যা কেউ হাতে লিখবে না: document-ভিত্তিক সরাসরি প্রশ্ন, একাধিক topic বা কথোপকথনের ইতিহাস-নির্ভর প্রশ্ন, sycophancy probe, আর document-এ নেই এমন out-of-scope প্রশ্ন। এটা v2-এর RAGET tool-এর Giskard v3 উত্তরসূরি {{cite:giskard-migrate}}, আর প্রতিটা scenario ট্যাগ করা থাকে কোন component যাচাই করার জন্য (`llm`, `retrieval`, বা `history`) {{cite:giskard-quality-scan}}।\n\n"
                 "স্বয়ংক্রিয় generation একটা coverage সমস্যা সমাধান করে, কিন্তু একটা নতুন তৈরি করে: একটা knowledge base ক্রমাগত বদলায় (একটা policy update হয়, একটা document যোগ বা সরানো হয়), আর একবার তৈরি করা একটা test set পুরনো হয়ে যায়। সমাধান হলো knowledge base-কে code-এর মতো "
                 "দেখা: প্রতিটা update regression suite চালায়, scan-এর LLM judge দিয়ে বিচার করা (দ্বিতীয় মতামতের জন্য course-এর অন্য জায়গায় ব্যবহৃত Ragas faithfulness আর context metric যোগ করতে পারেন {{cite:ragas-metrics}}), আর একটা ব্যর্থ scenario update-কে live হতে বাধা দেয়, অন্য যেকোনো CI gate যেভাবে প্রয়োগ হয় সেভাবেই "
                 "প্রয়োগ করা {{cite:github-actions}}।"
@@ -54,7 +54,7 @@ page(
                 "4. the scan's LLM judge scores    each answer pass or fail, grouped by component\n"
                 "5. compare to the threshold      if any scenario failed, block; if none, deploy\n"
                 "```\n\n"
-                "{{cite:giskard-raget}} The scan's component tags matter for step 5: a failure tagged `retrieval` points somewhere different than one tagged `llm` or `history`. The tags describe what a scenario is designed to assess; they do not prove which internal component caused a failure, so use them to find patterns and then read the trace {{cite:giskard-raget}}.\n\n"
+                "{{cite:giskard-quality-scan}} The scan's component tags matter for step 5: a failure tagged `retrieval` points somewhere different than one tagged `llm` or `history`. The tags describe what a scenario is designed to assess; they do not prove which internal component caused a failure, so use them to find patterns and then read the trace {{cite:giskard-quality-scan}}.\n\n"
                 "The gate itself is the same shape as any other CI quality gate: a threshold "
                 "on a score, wired to a pipeline step that can fail a build "
                 "{{cite:github-actions}}. What is specific to RAG here is only what feeds "
@@ -69,7 +69,7 @@ page(
                 "4. the scan's LLM judge scores    each answer pass or fail, grouped by component\n"
                 "5. compare to the threshold      if any scenario failed, block; if none, deploy\n"
                 "```\n\n"
-                "{{cite:giskard-raget}} ধাপ ৫-এর জন্য scan-এর component ট্যাগ গুরুত্বপূর্ণ: `retrieval` ট্যাগ করা ব্যর্থতা `llm` বা `history` ট্যাগ করা ব্যর্থতার চেয়ে আলাদা দিকে ইঙ্গিত করে। ট্যাগ বলে scenario-টা কী যাচাই করার জন্য বানানো, কোন ভেতরের component ব্যর্থতার কারণ তা প্রমাণ করে না, তাই pattern খুঁজতে ব্যবহার করুন, তারপর trace পড়ুন {{cite:giskard-raget}}।\n\n"
+                "{{cite:giskard-quality-scan}} ধাপ ৫-এর জন্য scan-এর component ট্যাগ গুরুত্বপূর্ণ: `retrieval` ট্যাগ করা ব্যর্থতা `llm` বা `history` ট্যাগ করা ব্যর্থতার চেয়ে আলাদা দিকে ইঙ্গিত করে। ট্যাগ বলে scenario-টা কী যাচাই করার জন্য বানানো, কোন ভেতরের component ব্যর্থতার কারণ তা প্রমাণ করে না, তাই pattern খুঁজতে ব্যবহার করুন, তারপর trace পড়ুন {{cite:giskard-quality-scan}}।\n\n"
                 "gate নিজেই অন্য যেকোনো CI quality gate-এর মতো আকার: একটা score-এ একটা threshold, একটা pipeline ধাপের সাথে জোড়া যা একটা build ব্যর্থ করতে পারে {{cite:github-actions}}। এখানে RAG-এর জন্য নির্দিষ্ট শুধু threshold-কে কী খাওয়ায় — একটা স্থির-এর বদলে "
                 "নতুনভাবে generate করা একটা প্রশ্ন সেট।"
             ),
@@ -82,14 +82,14 @@ page(
                 "4. the scan's LLM judge scores    each answer pass or fail, grouped by component\n"
                 "5. compare to the threshold      if any scenario failed, block; if none, deploy\n"
                 "```\n\n"
-                "{{cite:giskard-raget}} ধাপ ৫-এর জন্য scan-এর component ট্যাগ গুরুত্বপূর্ণ: `retrieval` ট্যাগ করা ব্যর্থতা `llm` বা `history` ট্যাগ করা ব্যর্থতার চেয়ে আলাদা দিকে ইঙ্গিত করে। ট্যাগ বলে scenario-টা কী যাচাই করার জন্য বানানো, কোন ভেতরের component ব্যর্থতার কারণ তা প্রমাণ করে না, তাই pattern খুঁজতে ব্যবহার করুন, তারপর trace পড়ুন {{cite:giskard-raget}}।\n\n"
+                "{{cite:giskard-quality-scan}} ধাপ ৫-এর জন্য scan-এর component ট্যাগ গুরুত্বপূর্ণ: `retrieval` ট্যাগ করা ব্যর্থতা `llm` বা `history` ট্যাগ করা ব্যর্থতার চেয়ে আলাদা দিকে ইঙ্গিত করে। ট্যাগ বলে scenario-টা কী যাচাই করার জন্য বানানো, কোন ভেতরের component ব্যর্থতার কারণ তা প্রমাণ করে না, তাই pattern খুঁজতে ব্যবহার করুন, তারপর trace পড়ুন {{cite:giskard-quality-scan}}।\n\n"
                 "gate নিজেই অন্য যেকোনো CI quality gate-এর মতো আকার: একটা score-এ একটা threshold, একটা pipeline ধাপের সাথে জোড়া যা একটা build ব্যর্থ করতে পারে {{cite:github-actions}}। এখানে RAG-এর জন্য নির্দিষ্ট শুধু threshold-কে কী খাওয়ায় — একটা স্থির-এর বদলে নতুনভাবে generate করা "
                 "একটা প্রশ্ন সেট।"
             ),
         },
         "In practice": {
             "technical": (
-                "Generate the scenarios and run them against the app with Giskard's quality scan {{cite:giskard-raget}}:\n\n"
+                "Generate the scenarios and run them against the app with Giskard's quality scan {{cite:giskard-quality-scan}}:\n\n"
                 "```python\n"
                 "from giskard.scan import KnowledgeBase, quality_scan\n\n"
                 "# support_agent is your wrapped app: async def support_agent(inputs: str) -> str\n"
@@ -104,7 +104,7 @@ page(
                 "        target_mode=\"singleturn\",\n"
                 "    )\n"
                 "```\n\n"
-                "Gate the pipeline on the scan result {{cite:giskard-raget}}:\n\n"
+                "Gate the pipeline on the scan result {{cite:giskard-quality-scan}}:\n\n"
                 "```python\n"
                 "import pytest\n\n"
                 "@pytest.mark.asyncio\n"
@@ -138,7 +138,7 @@ page(
                 "</Callout>"
             ),
             "layman": (
-                "Giskard-এর quality scan দিয়ে scenario generate করে app-এর বিরুদ্ধে চালান {{cite:giskard-raget}}:\n\n"
+                "Giskard-এর quality scan দিয়ে scenario generate করে app-এর বিরুদ্ধে চালান {{cite:giskard-quality-scan}}:\n\n"
                 "```python\n"
                 "from giskard.scan import KnowledgeBase, quality_scan\n\n"
                 "# support_agent is your wrapped app: async def support_agent(inputs: str) -> str\n"
@@ -153,7 +153,7 @@ page(
                 "        target_mode=\"singleturn\",\n"
                 "    )\n"
                 "```\n\n"
-                "scan-এর ফলাফলে pipeline gate করুন {{cite:giskard-raget}}:\n\n"
+                "scan-এর ফলাফলে pipeline gate করুন {{cite:giskard-quality-scan}}:\n\n"
                 "```python\n"
                 "import pytest\n\n"
                 "@pytest.mark.asyncio\n"
@@ -184,7 +184,7 @@ page(
                 "</Callout>"
             ),
             "bangla": (
-                "Giskard-এর quality scan দিয়ে scenario generate করে app-এর বিরুদ্ধে চালান {{cite:giskard-raget}}:\n\n"
+                "Giskard-এর quality scan দিয়ে scenario generate করে app-এর বিরুদ্ধে চালান {{cite:giskard-quality-scan}}:\n\n"
                 "```python\n"
                 "from giskard.scan import KnowledgeBase, quality_scan\n\n"
                 "# support_agent is your wrapped app: async def support_agent(inputs: str) -> str\n"
@@ -199,7 +199,7 @@ page(
                 "        target_mode=\"singleturn\",\n"
                 "    )\n"
                 "```\n\n"
-                "scan-এর ফলাফলে pipeline gate করুন {{cite:giskard-raget}}:\n\n"
+                "scan-এর ফলাফলে pipeline gate করুন {{cite:giskard-quality-scan}}:\n\n"
                 "```python\n"
                 "import pytest\n\n"
                 "@pytest.mark.asyncio\n"
@@ -235,7 +235,7 @@ page(
                 "**Mistake 1: generating the test set once and reusing it forever.** A "
                 "regenerated set tests the current knowledge base; a stale one tests a "
                 "knowledge base that no longer exists.\n\n"
-                "**Mistake 2: one overall number instead of per-component results.** A drop hidden inside one component group (for example `retrieval`) can be invisible in the overall pass rate {{cite:giskard-raget}}.\n\n"
+                "**Mistake 2: one overall number instead of per-component results.** A drop hidden inside one component group (for example `retrieval`) can be invisible in the overall pass rate {{cite:giskard-quality-scan}}.\n\n"
                 "**Mistake 3: running the regression suite on a schedule instead of on the "
                 "actual change.** A nightly run finds a regression up to 24 hours after it "
                 "shipped; a push-triggered run finds it before it ships.\n\n"
@@ -247,14 +247,14 @@ page(
             ),
             "layman": (
                 "**Mistake ১: একবার test set generate করে চিরকাল আবার ব্যবহার করা।** একটা regenerate করা সেট বর্তমান knowledge base টেস্ট করে; একটা পুরনো সেট এমন একটা knowledge base টেস্ট করে যা আর নেই।\n\n"
-                "**Mistake ২: per-component ফলাফলের বদলে একটা সার্বিক সংখ্যা।** একটা component group-এর (যেমন `retrieval`) ভেতরে লুকানো একটা পতন সার্বিক pass rate-এ অদৃশ্য হতে পারে {{cite:giskard-raget}}।\n\n"
+                "**Mistake ২: per-component ফলাফলের বদলে একটা সার্বিক সংখ্যা।** একটা component group-এর (যেমন `retrieval`) ভেতরে লুকানো একটা পতন সার্বিক pass rate-এ অদৃশ্য হতে পারে {{cite:giskard-quality-scan}}।\n\n"
                 "**Mistake ৩: আসল পরিবর্তনের বদলে regression suite একটা schedule-এ চালানো।** একটা nightly run একটা regression ship হওয়ার ২৪ ঘণ্টা পর পর্যন্ত খুঁজে পায়; একটা push-trigger করা run এটা ship হওয়ার আগে খুঁজে পায়।\n\n"
                 "**Mistake ৪: threshold নেই, শুধু একটা রিপোর্ট।** কিছু gate না করা একটা faithfulness সংখ্যা একটা খারাপ update থামায় না {{cite:ragas-metrics}} {{cite:github-actions}}।\n\n"
                 "**Mistake ৫: অসম্পর্কিত code পরিবর্তনে পুরো suite trigger করা।** trigger-কে knowledge base-এর নিজস্ব ফাইলে সীমাবদ্ধ করুন, পুরো repository-তে নয়।"
             ),
             "bangla": (
                 "**ভুল ১: একবার test set generate করে চিরকাল আবার ব্যবহার করা।** একটা regenerate করা সেট বর্তমান knowledge base টেস্ট করে; একটা পুরনো সেট এমন একটা knowledge base টেস্ট করে যা আর নেই।\n\n"
-                "**ভুল ২: per-component ফলাফলের বদলে একটা সার্বিক সংখ্যা।** একটা component group-এর (যেমন `retrieval`) ভেতরে লুকানো একটা পতন সার্বিক pass rate-এ অদৃশ্য হতে পারে {{cite:giskard-raget}}।\n\n"
+                "**ভুল ২: per-component ফলাফলের বদলে একটা সার্বিক সংখ্যা।** একটা component group-এর (যেমন `retrieval`) ভেতরে লুকানো একটা পতন সার্বিক pass rate-এ অদৃশ্য হতে পারে {{cite:giskard-quality-scan}}।\n\n"
                 "**ভুল ৩: আসল পরিবর্তনের বদলে regression suite একটা schedule-এ চালানো।** একটা nightly run একটা regression ship হওয়ার ২৪ ঘণ্টা পর পর্যন্ত খুঁজে পায়; একটা push-trigger করা run এটা ship হওয়ার আগে খুঁজে পায়।\n\n"
                 "**ভুল ৪: threshold নেই, শুধু একটা রিপোর্ট।** কিছু gate না করা একটা faithfulness সংখ্যা একটা খারাপ update থামায় না {{cite:ragas-metrics}} {{cite:github-actions}}।\n\n"
                 "**ভুল ৫: অসম্পর্কিত code পরিবর্তনে পুরো suite trigger করা।** trigger-কে knowledge base-এর নিজস্ব ফাইলে সীমাবদ্ধ করুন, পুরো repository-তে নয়।"

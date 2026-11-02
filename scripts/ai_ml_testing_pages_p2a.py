@@ -1653,7 +1653,7 @@ page(
     title="Multi-Turn Conversation Testing",
     description="Test a chatbot that remembers: context retention across turns, topic switching, contradictions, and conversation reset.",
     lede="A chatbot that answers each question alone is a search box. The hard part is the conversation, and the conversation is where the state lives.",
-    sources=["deepeval-llm-test", "ragas-metrics", "promptfoo-config"],
+    sources=["deepeval-llm-test", "ragas-multiturn"],
     sections={
         "In plain words": {
             "technical": (
@@ -1676,9 +1676,7 @@ page(
                 "The **reset** is the fourth. A user says \"forget what I told you\" or starts a "
                 "new topic entirely, and the conversation history should be dropped. If the "
                 "bot keeps the old order id, it acts on a stale order.\n\n"
-                "The measurement tools exist for this: DeepEval's LLM testing guidance covers "
-                "multi-turn evaluation, and Ragas has conversation-level metrics "
-                "{{cite:deepeval-llm-test}} {{cite:ragas-metrics}}."
+                "The measurement tools exist for this: DeepEval ships multi-turn metrics (Turn Relevancy, Role Adherence, Knowledge Retention, Conversation Completeness) {{cite:deepeval-llm-test}}, and Ragas has a tutorial on evaluating multi-turn conversations {{cite:ragas-multiturn}}."
             ),
             "layman": (
                 "multi-turn টেস্টে একসাথে তিনটা বিষয় দেখতে হয়: **ইতিহাস** পাঠানো হচ্ছে কি না, model সেটা **ব্যবহার** করছে কি না, আর উত্তর **বর্তমান টার্নের** প্রাসঙ্গিক কি না।\n\n"
@@ -1687,7 +1685,7 @@ page(
                 "password প্রশ্নের ওপর দিয়ে নেওয়া উচিত কি না। দুটো আচরণই যুক্তিসঙ্গত; product-কে একটা বেছে নিতে হবে আর টেস্টে সেটা enforce করতে হবে।\n\n"
                 "**Contradiction** তৃতীয়। ব্যবহারকারী বলে \"আমার অর্ডার নম্বর 1001\", তারপর বলে \"sorry, 1002\"। ভালো bot আগের মান শুধরায়; সরল bot 1001 নিয়েই উত্তর দেয়।\n\n"
                 "**Reset** চতুর্থ। ব্যবহারকারী বলে \"আমি যা বলেছি ভুলে গেছো\" বা নতুন topic শুরু করে, আর কথোপকথনের ইতিহাস বাদ দেওয়া উচিত। bot পুরোনো order id রাখলে সেটা stale order-এ কাজ করে।\n\n"
-                "মাপার টুল আছে: DeepEval-এর LLM testing নির্দেশনা multi-turn evaluation কভার করে, আর Ragas-এর conversation-level metric আছে {{cite:deepeval-llm-test}} {{cite:ragas-metrics}}।"
+                "মাপার টুল আছে: DeepEval-এ multi-turn metric আছে (Turn Relevancy, Role Adherence, Knowledge Retention, Conversation Completeness) {{cite:deepeval-llm-test}}, আর Ragas-এর multi-turn কথোপকথন evaluate করার একটা tutorial আছে {{cite:ragas-multiturn}}।"
             ),
             "bangla": (
                 "multi-turn টেস্টে একসাথে তিনটা বিষয় দেখতে হয়: **ইতিহাস** পাঠানো হচ্ছে কি না, model সেটা **ব্যবহার** করছে কি না, আর উত্তর **বর্তমান টার্নের** প্রাসঙ্গিক কি না।\n\n"
@@ -1696,7 +1694,7 @@ page(
                 "দুটো আচরণই যুক্তিসঙ্গত; product-কে একটা বেছে নিতে হবে আর টেস্টে সেটা enforce করতে হবে।\n\n"
                 "**Contradiction** তৃতীয়। ব্যবহারকারী বলে \"আমার অর্ডার নম্বর 1001\", তারপর বলে \"sorry, 1002\"। ভালো bot আগের মান শুধরায়; সরল bot 1001 নিয়েই উত্তর দেয়।\n\n"
                 "**Reset** চতুর্থ। ব্যবহারকারী বলে \"আমি যা বলেছি ভুলে গেছো\" বা নতুন topic শুরু করে, আর কথোপকথনের ইতিহাস বাদ দেওয়া উচিত। bot পুরোনো order id রাখলে সেটা stale order-এ কাজ করে।\n\n"
-                "মাপার টুল আছে: DeepEval-এর LLM testing নির্দেশনা multi-turn evaluation কভার করে, আর Ragas-এর conversation-level metric আছে {{cite:deepeval-llm-test}} {{cite:ragas-metrics}}।"
+                "মাপার টুল আছে: DeepEval-এ multi-turn metric আছে (Turn Relevancy, Role Adherence, Knowledge Retention, Conversation Completeness) {{cite:deepeval-llm-test}}, আর Ragas-এর multi-turn কথোপকথন evaluate করার একটা tutorial আছে {{cite:ragas-multiturn}}।"
             ),
         },
         "How it works": {
@@ -1711,9 +1709,7 @@ page(
                 "assertion is on the request: after turn three, does the request contain three "
                 "user messages and three assistant messages, in order, with the right roles? A "
                 "chatbot that drops the assistant's own replies is a common bug and it is "
-                "invisible in the UI, which only shows the user's bubbles. A test case "
-                "holds the expected roles and the expected contents, in the same shape a "
-                "config-driven eval suite uses {{cite:promptfoo-config}}.\n\n"
+                "invisible in the UI, which only shows the user's bubbles. A test case holds the expected roles and the expected contents.\n\n"
                 "The **summary** is where the truncation shows. If the app summarises older "
                 "turns, the summary has to keep the facts that matter, like the order id, and "
                 "drop the small talk. The test writes a long conversation with one fact "
@@ -1786,7 +1782,7 @@ page(
                 "```\n\n"
                 "The topic-switch test, which asserts the product's chosen policy:\n\n"
                 "```python\n"
-                "def test_the_return_context_does_not_leak_into_an_unrelated_question(conversation):\n"
+                "def test_the_return_context_survives_an_unrelated_question(conversation):\n"
                 "    conversation.ask(\"How long do I have to return a laptop?\")\n"
                 "    conversation.ask(\"How do I reset my password?\")\n"
                 "    answer = conversation.ask(\"How long do I have to return a laptop?\")\n"
@@ -1843,7 +1839,7 @@ page(
                 "```\n\n"
                 "topic-switch টেস্ট, যেটা product-এর বেছে নেওয়া policy assert করে:\n\n"
                 "```python\n"
-                "def test_the_return_context_does_not_leak_into_an_unrelated_question(conversation):\n"
+                "def test_the_return_context_survives_an_unrelated_question(conversation):\n"
                 "    conversation.ask(\"How long do I have to return a laptop?\")\n"
                 "    conversation.ask(\"How do I reset my password?\")\n"
                 "    answer = conversation.ask(\"How long do I have to return a laptop?\")\n"
@@ -1898,7 +1894,7 @@ page(
                 "```\n\n"
                 "topic-switch টেস্ট, যেটা product-এর বেছে নেওয়া policy assert করে:\n\n"
                 "```python\n"
-                "def test_the_return_context_does_not_leak_into_an_unrelated_question(conversation):\n"
+                "def test_the_return_context_survives_an_unrelated_question(conversation):\n"
                 "    conversation.ask(\"How long do I have to return a laptop?\")\n"
                 "    conversation.ask(\"How do I reset my password?\")\n"
                 "    answer = conversation.ask(\"How long do I have to return a laptop?\")\n"
@@ -1944,8 +1940,7 @@ page(
                 "**Mistake 5: reusing the conversation id across conversations.** That is a "
                 "state leak, and it is invisible in a single-conversation test.\n\n"
                 "**Mistake 6: no evaluation of the conversation as a whole.** The per-turn "
-                "answers can each be fine while the conversation is useless. The "
-                "conversation-level metrics exist for that {{cite:deepeval-llm-test}}."
+                "answers can each be fine while the conversation is useless. DeepEval's multi-turn metrics, such as Conversation Completeness, exist for that {{cite:deepeval-llm-test}}."
             ),
             "layman": (
                 "**Mistake 1: শুধু দৃশ্যমান transcript টেস্ট করা।** transcript হলো যা ব্যবহারকারী দেখে; request হলো যা model পায়। দুটো আলাদা।\n\n"
@@ -1953,7 +1948,7 @@ page(
                 "**Mistake 3: লম্বা কথোপকথনের টেস্ট নেই।** truncation বাগ শুধু context window ভরার পরে দেখা যায়, আর সেই কথোপকথনটাই কেউ টেস্ট করে না।\n\n"
                 "**Mistake 4: reset টেস্ট নেই।** reset-এর পর stale order id ভুল order-এ কাজ করে।\n\n"
                 "**Mistake 5: কথোপকথনের মধ্যে conversation id পুনঃব্যবহার।** এটা state leak, আর একটি কথোপকথনের টেস্টে অদৃশ্য।\n\n"
-                "**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। conversation-level metric ঠিক এর জন্যই আছে {{cite:deepeval-llm-test}}।"
+                "**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। DeepEval-এর multi-turn metric, যেমন Conversation Completeness, ঠিক এর জন্যই আছে {{cite:deepeval-llm-test}}।"
             ),
             "bangla": (
                 "**Mistake 1: শুধু দৃশ্যমান transcript টেস্ট করা।** transcript হলো যা ব্যবহারকারী দেখে; request হলো যা model পায়। দুটো আলাদা।\n\n"
@@ -1961,7 +1956,7 @@ page(
                 "**Mistake 3: লম্বা কথোপকথনের টেস্ট নেই।** truncation বাগ শুধু context window ভরার পরে দেখা যায়, আর সেই কথোপকথনটাই কেউ টেস্ট করে না।\n\n"
                 "**Mistake 4: reset টেস্ট নেই।** reset-এর পর stale order id ভুল order-এ কাজ করে।\n\n"
                 "**Mistake 5: কথোপকথনের মধ্যে conversation id পুনঃব্যবহার।** এটা state leak, আর একটি কথোপকথনের টেস্টে অদৃশ্য।\n\n"
-                "**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। conversation-level metric ঠিক এর জন্যই আছে {{cite:deepeval-llm-test}}।"
+                "**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। DeepEval-এর multi-turn metric, যেমন Conversation Completeness, ঠিক এর জন্যই আছে {{cite:deepeval-llm-test}}।"
             ),
         },
         "What a tester can check": {
@@ -2048,9 +2043,7 @@ page(
                 "The third one is the one that has to be right in both directions. A system "
                 "that never escalates is a system that gives a policy answer to a harassment "
                 "complaint. A system that escalates everything is a system with a chatbot "
-                "attached to it, and users will leave. Both failures are in the OWASP list of "
-                "LLM application risks, because a model that answers out of scope is a "
-                "harmful-content generator {{cite:owasp-llm}}.\n\n"
+                "attached to it, and users will leave. Escalation is also a safety control: OWASP's guidance on excessive agency recommends a human approving high-impact actions before they are taken {{cite:owasp-llm}}.\n\n"
                 "The testing method for the first one is straightforward: you know the "
                 "intent of each test utterance, so you measure how often the assistant picks "
                 "it. For the other two, you measure the **rate** at which the right thing "
@@ -2105,10 +2098,7 @@ page(
                 "or documents, and it has its own failure: the assistant answers about the "
                 "document instead of the question, or reads the document but ignores the "
                 "instruction attached to it.\n\n"
-                "Giskard's scanning approach is a good model for the first one: it applies a "
-                "set of probes to a model and reports which vulnerability categories fired "
-                "{{cite:giskard-scan}}. The same shape works for intents, with the probes being "
-                "your utterances instead of adversarial ones. Where the intent is judged "
+                "Giskard's scan is a useful model for the first one: you describe the agent, it generates scenarios, and its report groups the results by tags {{cite:giskard-scan}}. The same shape works for intents, with the scenarios being your labelled utterances. Where the intent is judged "
                 "rather than classified, the scored metrics are the ones built for that "
                 "{{cite:deepeval-metrics}}."
             ),
@@ -2124,7 +2114,7 @@ page(
                 "**Fallback** অন্যভাবে মাপা হয়: কত ঘনার্থ সঠিকভাবে বলতে পারছে না। test set হলো সেই utterance-গুলো যেগুলো *fallback চালু করা উচিত*: অস্পষ্ট অনুরোধ, উত্তরযোগ্য নয় এমন প্রশ্ন, catalogue-এর বাইরের অনুরোধ। ব্যর্থতা সাধারণত হয় threshold কম হওয়ায়, তাই assistant উত্তর দিয়েই দেয়।\n\n"
                 "**Handoff** দুই দিকে মাপা হয়: trigger আর payload-এর ওপর। trigger হলো কত ঘনার্থ সঠিকভাবে escalate করে। payload হলো তুলে দেওয়া context: কথোপকথন, সংগ্রহ করা তথ্য, আর assistant আগে কী চেষ্টা করেছে। যে handoff শুধু \"customer needs help\" পাঠায়, সেটা এমন handoff যেখানে মানুষকে শূন্য থেকে শুরু করতে হয়।\n\n"
                 "**Multi-modal input** হলো ছবি বা document নেওয়া assistant-এর চতুর্থ অক্ষ, আর এর নিজস্ব ব্যর্থতা আছে: assistant document নিয়ে কথা বলে প্রশ্নের বদলে, অথবা document পড়ে কিন্তু সাথে দেওয়া নির্দেশনা উপেক্ষা করে।\n\n"
-                "Giskard-এর scanning পদ্ধতি প্রথমটার জন্য ভালো model: এটা model-এর ওপর একটা probe set চালায় আর কোন vulnerability category-গুলো ফুটে তা জানায় {{cite:giskard-scan}}। একই গঠন intent-এর ক্ষেত্রেও কাজ করে, শুধু probe হবে আপনার utterance adversarial নয়।"
+                "Giskard-এর scan প্রথমটার জন্য একটা কাজের model: আপনি agent-টা বর্ণনা করেন, সে scenario generate করে, আর তার report ফলাফল tag অনুযায়ী ভাগ করে {{cite:giskard-scan}}। একই গঠন intent-এর ক্ষেত্রেও কাজ করে, শুধু scenario হবে আপনার labelled utterance।"
             ),
             "bangla": (
                 "assistant-এর তিনটা মাপার যোগ্য আচরণ আছে, আর প্রতিটার টেস্টের আকার আলাদা:\n\n"
@@ -2138,7 +2128,7 @@ page(
                 "**Fallback** অন্যভাবে মাপা হয়: কত ঘনার্থ সঠিকভাবে বলতে পারছে না। test set হলো সেই utterance-গুলো যেগুলো *fallback চালু করা উচিত*: অস্পষ্ট অনুরোধ, উত্তরযোগ্য নয় এমন প্রশ্ন, catalogue-এর বাইরের অনুরোধ। ব্যর্থতা সাধারণত হয় threshold কম হওয়ায়, তাই assistant উত্তর দিয়েই দেয়।\n\n"
                 "**Handoff** দুই দিকে মাপা হয়: trigger আর payload-এর ওপর। trigger হলো কত ঘনার্থ সঠিকভাবে escalate করে। payload হলো তুলে দেওয়া context: কথোপকথন, সংগ্রহ করা তথ্য, আর assistant আগে কী চেষ্টা করেছে। যে handoff শুধু \"customer needs help\" পাঠায়, সেটা এমন handoff যেখানে মানুষকে শূন্য থেকে শুরু করতে হয়।\n\n"
                 "**Multi-modal input** হলো ছবি বা document নেওয়া assistant-এর চতুর্থ অক্ষ, আর এর নিজস্ব ব্যর্থতা আছে: assistant document নিয়ে কথা বলে প্রশ্নের বদলে, অথবা document পড়ে কিন্তু সাথে দেওয়া নির্দেশনা উপেক্ষা করে।\n\n"
-                "Giskard-এর scanning পদ্ধতি প্রথমটার জন্য ভালো model: এটা model-এর ওপর একটা probe set চালায় আর কোন vulnerability category-গুলো ফুটে তা জানায় {{cite:giskard-scan}}। একই গঠন intent-এর ক্ষেত্রেও কাজ করে, শুধু probe হবে আপনার utterance adversarial নয়।"
+                "Giskard-এর scan প্রথমটার জন্য একটা কাজের model: আপনি agent-টা বর্ণনা করেন, সে scenario generate করে, আর তার report ফলাফল tag অনুযায়ী ভাগ করে {{cite:giskard-scan}}। একই গঠন intent-এর ক্ষেত্রেও কাজ করে, শুধু scenario হবে আপনার labelled utterance।"
             ),
         },
         "In practice": {

@@ -3,7 +3,6 @@ export const page = {
   updated: '2026-11-01',
   sources: [
     { title: 'Evaluation and datasets', publisher: 'Langfuse (docs)', url: 'https://langfuse.com/docs/evaluation/evaluation-methods', accessed: '2026-11-01' },
-    { title: 'Evaluations', publisher: 'Arize (Phoenix docs)', url: 'https://arize.com/docs/phoenix/evaluation/llm-evals', accessed: '2026-11-01' },
     { title: 'Self-Consistency Improves Chain of Thought Reasoning in Language Models', publisher: 'arXiv', url: 'https://arxiv.org/abs/2203.11171', accessed: '2026-11-01' },
   ],
 }
@@ -33,7 +32,7 @@ Output drift is the one that gets called "the model got worse", and it is usuall
 
 **A/B testing** two models in production is a different problem. You route a share of the traffic to each, measure both, and decide. The difficulty is statistical: with a low traffic volume, the difference you see can be noise. And with a small sample, a model that is better on average can still be worse for your users, because the categories differ.
 
-The measurement has to be **per category** and the sample has to be big enough. Self-consistency is the related idea from the other direction: instead of comparing two models, you compare one model against itself across samples, which gives you the noise floor for free <Cite n={3} />.
+The measurement has to be **per category** and the sample has to be big enough. The related idea runs in the other direction: instead of comparing two models, you run one model several times on the same input (the self-consistency paper samples several reasoning paths from one model <Cite n={2} />), and the spread between runs gives you a noise floor.
 
 </Technical>
 <Layman>
@@ -52,7 +51,7 @@ output drift-কেই "model খারাপ হয়ে গেছে" বল�
 
 Production-এ দুটো model-এর **A/B testing** আলাদা সমস্যা। ট্রাফিকের একটা অংশ দুটোর একটায় পাঠান, দুটোই মাপেন, সিদ্ধান্ত নেন। কঠিনতা পরিসংখ্যানগত: কম ট্রাফিকে যে পার্থক্য দেখা যায় সেটা noise হতে পারে। আর ছোট sample-এ গড়ে ভালো model-ও আপনার ব্যবহারকারীদের জন্য খারাপ হতে পারে, কারণ ধরনগুলো আলাদা।
 
-মাপ অবশ্যই **প্রতি ধরনে** হতে হবে আর sample যথেষ্ট বড় হতে হবে। self-consistency একই ধারণা অন্যদিক থেকে: দুটো model না তুলনা করে একটা model-কে নিজের বিভিন্ন sample-এর সাথে তুলনা করা, যেটা noise floor বিনা ফেরত দেয় <Cite n={3} />।
+মাপ অবশ্যই **প্রতি ধরনে** হতে হবে আর sample যথেষ্ট বড় হতে হবে। সম্পর্কিত ধারণাটা উল্টো দিকে: দুটো model না তুলনা করে একটা model-কে একই input-এ কয়েকবার চালানো (self-consistency গবেষণা একটা model থেকে কয়েকটা reasoning path sample করে <Cite n={2} />), আর run-গুলোর মধ্যে ছড়ানোটাই noise floor দেয়।
 
 </Layman>
 <Bangla>
@@ -71,7 +70,7 @@ output drift-কেই "model খারাপ হয়ে গেছে" বল�
 
 Production-এ দুটো model-এর **A/B testing** আলাদা সমস্যা। ট্রাফিকের একটা অংশ দুটোর একটায় পাঠান, দুটোই মাপেন, সিদ্ধান্ত নেন। কঠিনতা পরিসংখ্যানগত: কম ট্রাফিকে যে পার্থক্য দেখা যায় সেটা noise হতে পারে। আর ছোট sample-এ গড়ে ভালো model-ও আপনার ব্যবহারকারীদের জন্য খারাপ হতে পারে, কারণ ধরনগুলো আলাদা।
 
-মাপ অবশ্যই **প্রতি ধরনে** হতে হবে আর sample যথেষ্ট বড় হতে হবে। self-consistency একই ধারণা অন্যদিক থেকে: দুটো model না তুলনা করে একটা model-কে নিজের বিভিন্ন sample-এর সাথে তুলনা করা, যেটা noise floor বিনা ফেরত দেয় <Cite n={3} />।
+মাপ অবশ্যই **প্রতি ধরনে** হতে হবে আর sample যথেষ্ট বড় হতে হবে। সম্পর্কিত ধারণাটা উল্টো দিকে: দুটো model না তুলনা করে একটা model-কে একই input-এ কয়েকবার চালানো (self-consistency গবেষণা একটা model থেকে কয়েকটা reasoning path sample করে <Cite n={2} />), আর run-গুলোর মধ্যে ছড়ানোটাই noise floor দেয়।
 
 </Bangla>
 </Voices>
@@ -95,8 +94,11 @@ The **category breakdown** is what makes the finding actionable. A drift in the 
 For the A/B test, the implementation is a **router** in front of the model call, with the arm recorded on the trace:
 
 ```python
+import hashlib
+
+
 def choose_arm(user_id: str) -> str:
-    bucket = hash(user_id) % 100
+    bucket = int(hashlib.sha256(user_id.encode()).hexdigest(), 16) % 100
     if bucket < TRAFFIC_PERCENT:
         return "candidate"
     return "control"
@@ -106,7 +108,7 @@ The hash has to be on the **user id**, not random per request, or the same user 
 
 The **analysis** has three requirements:
 
-1. **Enough traffic.** A difference smaller than the noise floor is not a difference. The noise floor comes from the self-consistency measurement: run the control model several times on the same inputs and see how much its own score moves <Cite n={3} />. The scores from both arms are kept in the evaluation store, so the comparison is against stored history and not against a number someone remembers <Cite n={1} />.
+1. **Enough traffic.** A difference smaller than the noise floor is not a difference. The noise floor comes from repeated runs: run the control model several times on the same inputs and see how much its own score moves. The scores from both arms are kept in the evaluation store, so the comparison is against stored history and not against a number someone remembers <Cite n={1} />.
 2. **A fixed decision rule, written before the test.** A test that looks at the results and then decides what counts as a win is not a test.
 3. **Per-category analysis.** A model that wins on 80% of traffic and loses badly on the other 20% is a decision, not an average.
 
@@ -129,8 +131,11 @@ which is better?    compare the metric distribution of two arms
 A/B test-এ বাস্তবায়ন হলো model call-এর সামনে একটা **router**, আর arm ট্রেসে রেকর্ড করা:
 
 ```python
+import hashlib
+
+
 def choose_arm(user_id: str) -> str:
-    bucket = hash(user_id) % 100
+    bucket = int(hashlib.sha256(user_id.encode()).hexdigest(), 16) % 100
     if bucket < TRAFFIC_PERCENT:
         return "candidate"
     return "control"
@@ -140,7 +145,7 @@ hash **user id**-র ওপর হতে হবে, প্রতি request-এ 
 
 **বিশ্লেষণের** তিনটি শর্ত:
 
-1. **যথেষ্ট ট্রাফিক।** noise floor-এর চেয়ে ছোট পার্থক্য পার্থক্য নয়। noise floor আসে self-consistency মাপ থেকে: একই input-এ control model কয়েকবার চালিয়ে দেখুন তার নিজের স্কোর কতটা নড়ে <Cite n={3} />।
+1. **যথেষ্ট ট্রাফিক।** noise floor-এর চেয়ে ছোট পার্থক্য পার্থক্য নয়। noise floor আসে বারবার চালানো থেকে: একই input-এ control model কয়েকবার চালিয়ে দেখুন তার নিজের স্কোর কতটা নড়ে।
 2. **আগে থেকে লেখা সিদ্ধান্তের নিয়ম।** ফল দেখে তারপর "জিত" কী বুঝবে তা ঠিক করা টেস্ট নয়।
 3. **প্রতি ধরনে বিশ্লেষণ।** যে model ৮০% ট্রাফিকে জেতে আর বাকি ২০%-এ খারাপ হয় সেটা একটা সিদ্ধান্ত, একটা গড় নয়।
 
@@ -163,8 +168,11 @@ which is better?    compare the metric distribution of two arms
 A/B test-এ বাস্তবায়ন হলো model call-এর সামনে একটা **router**, আর arm ট্রেসে রেকর্ড করা:
 
 ```python
+import hashlib
+
+
 def choose_arm(user_id: str) -> str:
-    bucket = hash(user_id) % 100
+    bucket = int(hashlib.sha256(user_id.encode()).hexdigest(), 16) % 100
     if bucket < TRAFFIC_PERCENT:
         return "candidate"
     return "control"
@@ -174,7 +182,7 @@ hash **user id**-র ওপর হতে হবে, প্রতি request-এ 
 
 **বিশ্লেষণের** তিনটি শর্ত:
 
-1. **যথেষ্ট ট্রাফিক।** noise floor-এর চেয়ে ছোট পার্থক্য পার্থক্য নয়। noise floor আসে self-consistency মাপ থেকে: একই input-এ control model কয়েকবার চালিয়ে দেখুন তার নিজের স্কোর কতটা নড়ে <Cite n={3} />।
+1. **যথেষ্ট ট্রাফিক।** noise floor-এর চেয়ে ছোট পার্থক্য পার্থক্য নয়। noise floor আসে বারবার চালানো থেকে: একই input-এ control model কয়েকবার চালিয়ে দেখুন তার নিজের স্কোর কতটা নড়ে।
 2. **আগে থেকে লেখা সিদ্ধান্তের নিয়ম।** ফল দেখে তারপর "জিত" কী বুঝবে তা ঠিক করা টেস্ট নয়।
 3. **প্রতি ধরনে বিশ্লেষণ।** যে model ৮০% ট্রাফিকে জেতে আর বাকি ২০%-এ খারাপ হয় সেটা একটা সিদ্ধান্ত, একটা গড় নয়।
 
@@ -193,6 +201,7 @@ The drift check compares two windows of the same metric, and it has to work on t
 ```python
 # tests/ai/test_drift.py
 import pytest
+from scipy.stats import wasserstein_distance
 
 
 @pytest.mark.slow
@@ -215,7 +224,7 @@ def test_no_single_category_has_drifted(trace_store, baseline):
         current = trace_store.scores(metric="faithfulness", category=category, window="24h")
         if current.count() < 20:
             continue
-        assert current.mean() >= baseline.for(category).mean() - 0.03, (
+        assert current.mean() >= baseline.for_category(category).mean() - 0.03, (
             f"category {category} drifted"
         )
 ```
@@ -246,7 +255,7 @@ def test_the_candidate_arm_won_by_the_pre_written_rule(results):
     assert candidate - control > noise, (
         f"the gain {candidate - control:.4f} is inside the noise floor {noise:.4f}"
     )
-    assert results["candidate_refusal_rate"] <= control_refusal_rate + 0.01
+    assert results["candidate_refusal_rate"] <= results["control_refusal_rate"] + 0.01
 ```
 
 That last assertion is the guardrail check. A candidate that wins on relevance and refuses more is not a win, and the average score would never have shown it.
@@ -259,6 +268,7 @@ drift চেক একই metric-এর দুটো window তুলনা ক�
 ```python
 # tests/ai/test_drift.py
 import pytest
+from scipy.stats import wasserstein_distance
 
 
 @pytest.mark.slow
@@ -281,7 +291,7 @@ def test_no_single_category_has_drifted(trace_store, baseline):
         current = trace_store.scores(metric="faithfulness", category=category, window="24h")
         if current.count() < 20:
             continue
-        assert current.mean() >= baseline.for(category).mean() - 0.03, (
+        assert current.mean() >= baseline.for_category(category).mean() - 0.03, (
             f"category {category} drifted"
         )
 ```
@@ -312,7 +322,7 @@ def test_the_candidate_arm_won_by_the_pre_written_rule(results):
     assert candidate - control > noise, (
         f"the gain {candidate - control:.4f} is inside the noise floor {noise:.4f}"
     )
-    assert results["candidate_refusal_rate"] <= control_refusal_rate + 0.01
+    assert results["candidate_refusal_rate"] <= results["control_refusal_rate"] + 0.01
 ```
 
 শেষ assertionটাই guardrail চেক। যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা জয় নয়, আর গড় স্কোর কখনোই সেটা দেখাত না।
@@ -325,6 +335,7 @@ drift চেক একই metric-এর দুটো window তুলনা ক�
 ```python
 # tests/ai/test_drift.py
 import pytest
+from scipy.stats import wasserstein_distance
 
 
 @pytest.mark.slow
@@ -347,7 +358,7 @@ def test_no_single_category_has_drifted(trace_store, baseline):
         current = trace_store.scores(metric="faithfulness", category=category, window="24h")
         if current.count() < 20:
             continue
-        assert current.mean() >= baseline.for(category).mean() - 0.03, (
+        assert current.mean() >= baseline.for_category(category).mean() - 0.03, (
             f"category {category} drifted"
         )
 ```
@@ -378,7 +389,7 @@ def test_the_candidate_arm_won_by_the_pre_written_rule(results):
     assert candidate - control > noise, (
         f"the gain {candidate - control:.4f} is inside the noise floor {noise:.4f}"
     )
-    assert results["candidate_refusal_rate"] <= control_refusal_rate + 0.01
+    assert results["candidate_refusal_rate"] <= results["control_refusal_rate"] + 0.01
 ```
 
 শেষ assertionটাই guardrail চেক। যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা জয় নয়, আর গড় স্কোর কখনোই সেটা দেখাত না।
@@ -393,7 +404,7 @@ def test_the_candidate_arm_won_by_the_pre_written_rule(results):
 
 **Mistake 1: comparing means only.** The mean hides a distribution shift and a shift in one category.
 
-**Mistake 2: no noise floor.** Without one you cannot tell a real difference from a lucky sample <Cite n={3} />.
+**Mistake 2: no noise floor.** Without one you cannot tell a real difference from a lucky sample.
 
 **Mistake 3: deciding the winner after seeing the results.** That is curve-fitting to noise. Write the rule first.
 
@@ -401,14 +412,14 @@ def test_the_candidate_arm_won_by_the_pre_written_rule(results):
 
 **Mistake 5: only the overall score.** The categories differ, and the users who matter are in the smaller one.
 
-**Mistake 6: no guardrail metric in the A/B test.** A candidate that wins on relevance and refuses more is a regression in disguise <Cite n={2} />.
+**Mistake 6: no guardrail metric in the A/B test.** A candidate that wins on relevance and refuses more is a regression in disguise.
 
 </Technical>
 <Layman>
 
 **Mistake ১: শুধু গড় তুলনা।** গড় বিতরণের সরণ ঢেকে দেয় আর একটা ধরনের সরণও ঢেকে দেয়।
 
-**Mistake ২: noise floor নেই।** ছাড়া আপনি বুঝতে পারেন না পার্থক্যটা আসল নাকি ভাগ্যকরম। <Cite n={3} />।
+**Mistake ২: noise floor নেই।** ছাড়া আপনি বুঝতে পারেন না পার্থক্যটা আসল নাকি ভাগ্যকরম।
 
 **Mistake ৩: ফল দেখে তারপর জেতা ঠিক করা।** এটা noise-এর সাথে curve-fitting। আগে নিয়ম লিখুন।
 
@@ -416,14 +427,14 @@ def test_the_candidate_arm_won_by_the_pre_written_rule(results):
 
 **Mistake ৫: শুধু সামগ্রিক স্কোর।** ধরনগুলো আলাদা, আর যারা গুরুত্বপূর্ণ তারা ছোট ধরনে।
 
-**Mistake ৬: A/B test-এ guardrail metric নেই।** যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা ছদ্মবেশে regression <Cite n={2} />।
+**Mistake ৬: A/B test-এ guardrail metric নেই।** যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা ছদ্মবেশে regression।
 
 </Layman>
 <Bangla>
 
 **Mistake ১: শুধু গড় তুলনা।** গড় বিতরণের সরণ ঢেকে দেয় আর একটা ধরনের সরণও ঢেকে দেয়।
 
-**Mistake ২: noise floor নেই।** ছাড়া আপনি বুঝতে পারেন না পার্থক্যটা আসল নাকি ভাগ্যকরম। <Cite n={3} />।
+**Mistake ২: noise floor নেই।** ছাড়া আপনি বুঝতে পারেন না পার্থক্যটা আসল নাকি ভাগ্যকরম।
 
 **Mistake ৩: ফল দেখে তারপর জেতা ঠিক করা।** এটা noise-এর সাথে curve-fitting। আগে নিয়ম লিখুন।
 
@@ -431,7 +442,7 @@ def test_the_candidate_arm_won_by_the_pre_written_rule(results):
 
 **Mistake ৫: শুধু সামগ্রিক স্কোর।** ধরনগুলো আলাদা, আর যারা গুরুত্বপূর্ণ তারা ছোট ধরনে।
 
-**Mistake ৬: A/B test-এ guardrail metric নেই।** যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা ছদ্মবেশে regression <Cite n={2} />।
+**Mistake ৬: A/B test-এ guardrail metric নেই।** যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা ছদ্মবেশে regression।
 
 </Bangla>
 </Voices>

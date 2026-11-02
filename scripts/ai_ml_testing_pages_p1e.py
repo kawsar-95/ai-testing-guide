@@ -12,7 +12,7 @@ page(
     title="Model Comparison and Regression Testing",
     description="Run the same golden dataset across three models, track scores over time, and catch what a model upgrade silently broke.",
     lede="A model upgrade is a code change with no diff. The only way to know what it broke is to run the same questions through it and compare.",
-    sources=["promptfoo-config", "anthropic-evals", "deepeval-metrics"],
+    sources=["promptfoo-config", "anthropic-evals", "promptfoo-outputs"],
     sections={
         "In plain words": {
             "technical": (
@@ -27,23 +27,23 @@ page(
                 "what the change broke. The changes that matter here: a model version bump, a "
                 "prompt edit, a retrieval change, a chunking change, a temperature change, and "
                 "a change to the safety settings. Any of these can move the score without "
-                "anyone touching the feature's visible behaviour on purpose.\n\n"
+                "anyone touching the feature's visible behaviour on purpose. Even a trivial formatting change, such as switching answer options from (A) to (1), is reported to change an evaluation's results {{cite:anthropic-evals}}.\n\n"
                 "The report has to be broken down by category. An overall score across a mixed "
                 "dataset hides the failure: a model that is perfect on short factual questions "
                 "and invents facts on multi-hop ones still has a good average, and the average "
-                "is the number everyone looks at first {{cite:anthropic-evals}}."
+                "is the number everyone looks at first."
             ),
             "layman": (
                 "**Golden dataset** হলো প্রশ্ন আর প্রত্যাশিত তথ্যের একটা নির্দিষ্ট তালিকা, যেটা ফিচারের সারা জীবন ধরে একই থাকে। পঞ্চাশটা জোড়া দিয়ে শুরু করা যুক্তিসঙ্গত। এগুলোর সম্পূর্ণ হওয়ার দরকার নেই; **স্থিতিশীল** হওয়া দরকার, যাতে কয়েক সপ্তাহ পরের দুটো run একই জিনিস তুলনা করে।\n\n"
                 "**Model comparison** সেই dataset একাধিক model-এর ওপর চালিয়ে স্কোর পাশাপাশি রাখে। Promptfoo একটা config-এ provider-এর তালিকা দিয়ে এটা করে, তাই তুলনা একটা কমান্ড {{cite:promptfoo-config}}।\n\n"
-                "**Regression testing** হলো পরিবর্তনের পরে একই dataset আবার চালানো, যাতে দেখা যায় পরিবর্তন কী ভাঙল। যেসব পরিবর্তন গুরুত্বপূর্ণ: model version বাড়ানো, prompt সম্পাদনা, retrieval বদল, chunking বদল, temperature বদল, আর safety setting বদল। এগুলোর যেকোনোটাই ফিচারের দৃশ্যমান আচরণ ইচ্ছাকৃতভাবে না বদলেও স্কোর সরাতে পারে।\n\n"
-                "রিপোর্ট ধরন অনুযায়ী ভাগ করতে হবে। মিশ্র dataset-এর সামগ্রিক স্কোর ব্যর্থতা ঢেকে দেয়: ছোট তথ্যমূলক প্রশ্নে পারফেক্ট আর multi-hop প্রশ্নে বানানো model-ও গড়ে ভালো স্কোর পায়, আর সেই গড়টাই সবাই প্রথমে দেখে {{cite:anthropic-evals}}।"
+                "**Regression testing** হলো পরিবর্তনের পরে একই dataset আবার চালানো, যাতে দেখা যায় পরিবর্তন কী ভাঙল। যেসব পরিবর্তন গুরুত্বপূর্ণ: model version বাড়ানো, prompt সম্পাদনা, retrieval বদল, chunking বদল, temperature বদল, আর safety setting বদল। এগুলোর যেকোনোটাই ফিচারের দৃশ্যমান আচরণ ইচ্ছাকৃতভাবে না বদলেও স্কোর সরাতে পারে। এমনকি একটা তুচ্ছ formatting বদল, যেমন উত্তরের option (A) থেকে (1) করা, একটা evaluation-এর ফল বদলে দেয় বলে জানানো হয়েছে {{cite:anthropic-evals}}।\n\n"
+                "রিপোর্ট ধরন অনুযায়ী ভাগ করতে হবে। মিশ্র dataset-এর সামগ্রিক স্কোর ব্যর্থতা ঢেকে দেয়: ছোট তথ্যমূলক প্রশ্নে পারফেক্ট আর multi-hop প্রশ্নে বানানো model-ও গড়ে ভালো স্কোর পায়, আর সেই গড়টাই সবাই প্রথমে দেখে।"
             ),
             "bangla": (
                 "**Golden dataset** হলো প্রশ্ন আর প্রত্যাশিত তথ্যের একটা নির্দিষ্ট তালিকা, যেটা ফিচারের সারা জীবন ধরে একই থাকে। পঞ্চাশটা জোড়া দিয়ে শুরু করা যুক্তিসঙ্গত। এগুলোর সম্পূর্ণ হওয়ার দরকার নেই; **স্থিতিশীল** হওয়া দরকার, যাতে কয়েক সপ্তাহ পরের দুটো run একই জিনিস তুলনা করে।\n\n"
                 "**Model comparison** সেই dataset একাধিক model-এর ওপর চালিয়ে স্কোর পাশাপাশি রাখে। Promptfoo একটা config-এ provider-এর তালিকা দিয়ে এটা করে, তাই তুলনা একটা কমান্ড {{cite:promptfoo-config}}।\n\n"
-                "**Regression testing** হলো পরিবর্তনের পরে একই dataset আবার চালানো, যাতে দেখা যায় পরিবর্তন কী ভাঙল। যেসব পরিবর্তন গুরুত্বপূর্ণ: model version বাড়ানো, prompt সম্পাদনা, retrieval বদল, chunking বদল, temperature বদল, আর safety setting বদল। এগুলোর যেকোনোটাই ফিচারের দৃশ্যমান আচরণ ইচ্ছাকৃতভাবে না বদলেও স্কোর সরাতে পারে।\n\n"
-                "রিপোর্ট ধরন অনুযায়ী ভাগ করতে হবে। মিশ্র dataset-এর সামগ্রিক স্কোর ব্যর্থতা ঢেকে দেয়: ছোট তথ্যমূলক প্রশ্নে পারফেক্ট আর multi-hop প্রশ্নে বানানো model-ও গড়ে ভালো স্কোর পায়, আর সেই গড়টাই সবাই প্রথমে দেখে {{cite:anthropic-evals}}।"
+                "**Regression testing** হলো পরিবর্তনের পরে একই dataset আবার চালানো, যাতে দেখা যায় পরিবর্তন কী ভাঙল। যেসব পরিবর্তন গুরুত্বপূর্ণ: model version বাড়ানো, prompt সম্পাদনা, retrieval বদল, chunking বদল, temperature বদল, আর safety setting বদল। এগুলোর যেকোনোটাই ফিচারের দৃশ্যমান আচরণ ইচ্ছাকৃতভাবে না বদলেও স্কোর সরাতে পারে। এমনকি একটা তুচ্ছ formatting বদল, যেমন উত্তরের option (A) থেকে (1) করা, একটা evaluation-এর ফল বদলে দেয় বলে জানানো হয়েছে {{cite:anthropic-evals}}।\n\n"
+                "রিপোর্ট ধরন অনুযায়ী ভাগ করতে হবে। মিশ্র dataset-এর সামগ্রিক স্কোর ব্যর্থতা ঢেকে দেয়: ছোট তথ্যমূলক প্রশ্নে পারফেক্ট আর multi-hop প্রশ্নে বানানো model-ও গড়ে ভালো স্কোর পায়, আর সেই গড়টাই সবাই প্রথমে দেখে।"
             ),
         },
         "How it works": {
@@ -74,12 +74,13 @@ page(
                 "diffed:\n\n"
                 "```bash\n"
                 "npx promptfoo eval --output runs/2026-11-01.json\n"
-                "npx promptfoo compare runs/2026-11-01.json runs/2026-11-08.json\n"
+                "# by_category.py prints the per-category table (below) as JSON\n"
+                "diff <(python by_category.py runs/2026-11-01.json) <(python by_category.py runs/2026-11-08.json)\n"
                 "```\n\n"
                 "Two costs belong in the report, because they decide whether a quality gain is "
                 "worth it: **token usage** and **latency** per case. A model that scores 0.95 "
                 "instead of 0.90 and costs three times as much may be right for one case and "
-                "wrong for ten thousand {{cite:deepeval-metrics}}."
+                "wrong for ten thousand {{cite:promptfoo-outputs}}."
             ),
             "layman": (
                 "একটা config, কয়েকটা provider, একটা test তালিকা:\n\n"
@@ -104,9 +105,10 @@ page(
                 "**Regression tracking** একই কমান্ড সময়ের সাথে, আউটপুট ফাইল তুলনা করে:\n\n"
                 "```bash\n"
                 "npx promptfoo eval --output runs/2026-11-01.json\n"
-                "npx promptfoo compare runs/2026-11-01.json runs/2026-11-08.json\n"
+                "# by_category.py prints the per-category table (below) as JSON\n"
+                "diff <(python by_category.py runs/2026-11-01.json) <(python by_category.py runs/2026-11-08.json)\n"
                 "```\n\n"
-                "দুটি খরচ রিপোর্টে থাকতে হবে, কারণ সেগুলোই ঠিক করে মানের উন্নতি সার্থক কি না: প্রতি কেসে **token ব্যবহার** আর **latency**। 0.90-এর বদলে 0.95 দেয় কিন্তু তিনগুণ খরচ করে এমন model একটা কেসের জন্য ঠিক আর বাকি দশ হাজারের জন্য ভুল হতে পারে {{cite:deepeval-metrics}}।"
+                "দুটি খরচ রিপোর্টে থাকতে হবে, কারণ সেগুলোই ঠিক করে মানের উন্নতি সার্থক কি না: প্রতি কেসে **token ব্যবহার** আর **latency**। 0.90-এর বদলে 0.95 দেয় কিন্তু তিনগুণ খরচ করে এমন model একটা কেসের জন্য ঠিক আর বাকি দশ হাজারের জন্য ভুল হতে পারে {{cite:promptfoo-outputs}}।"
             ),
             "bangla": (
                 "একটা config, কয়েকটা provider, একটা test তালিকা:\n\n"
@@ -131,9 +133,10 @@ page(
                 "**Regression tracking** একই কমান্ড সময়ের সাথে, আউটপুট ফাইল তুলনা করে:\n\n"
                 "```bash\n"
                 "npx promptfoo eval --output runs/2026-11-01.json\n"
-                "npx promptfoo compare runs/2026-11-01.json runs/2026-11-08.json\n"
+                "# by_category.py prints the per-category table (below) as JSON\n"
+                "diff <(python by_category.py runs/2026-11-01.json) <(python by_category.py runs/2026-11-08.json)\n"
                 "```\n\n"
-                "দুটি খরচ রিপোর্টে থাকতে হবে, কারণ সেগুলোই ঠিক করে মানের উন্নতি সার্থক কি না: প্রতি কেসে **token ব্যবহার** আর **latency**। 0.90-এর বদলে 0.95 দেয় কিন্তু তিনগুণ খরচ করে এমন model একটা কেসের জন্য ঠিক আর বাকি দশ হাজারের জন্য ভুল হতে পারে {{cite:deepeval-metrics}}।"
+                "দুটি খরচ রিপোর্টে থাকতে হবে, কারণ সেগুলোই ঠিক করে মানের উন্নতি সার্থক কি না: প্রতি কেসে **token ব্যবহার** আর **latency**। 0.90-এর বদলে 0.95 দেয় কিন্তু তিনগুণ খরচ করে এমন model একটা কেসের জন্য ঠিক আর বাকি দশ হাজারের জন্য ভুল হতে পারে {{cite:promptfoo-outputs}}।"
             ),
         },
         "In practice": {
@@ -158,10 +161,11 @@ page(
                 "def by_category(result_file: str) -> dict[str, dict[str, float]]:\n"
                 "    data = json.load(open(result_file))\n"
                 "    scores: dict = defaultdict(lambda: defaultdict(list))\n"
-                "    for case in data[\"results\"][\"tests\"]:\n"
-                "        category = case[\"vars\"][\"category\"]\n"
-                "        for provider, result in case[\"providers\"].items():\n"
-                "            scores[category][provider].append(result[\"score\"])\n"
+                "    # field names follow Promptfoo's JSON example; confirm them against your own results file\n"
+                "    for output in data[\"results\"][\"outputs\"]:\n"
+                "        category = output[\"vars\"][\"category\"]\n"
+                "        passed = 1.0 if output[\"pass\"] else 0.0\n"
+                "        scores[category][output[\"provider\"]].append(passed)\n"
                 "    return {\n"
                 "        c: {p: sum(v) / len(v) for p, v in ps.items()}\n"
                 "        for c, ps in scores.items()\n"
@@ -197,10 +201,11 @@ page(
                 "def by_category(result_file: str) -> dict[str, dict[str, float]]:\n"
                 "    data = json.load(open(result_file))\n"
                 "    scores: dict = defaultdict(lambda: defaultdict(list))\n"
-                "    for case in data[\"results\"][\"tests\"]:\n"
-                "        category = case[\"vars\"][\"category\"]\n"
-                "        for provider, result in case[\"providers\"].items():\n"
-                "            scores[category][provider].append(result[\"score\"])\n"
+                "    # field names follow Promptfoo's JSON example; confirm them against your own results file\n"
+                "    for output in data[\"results\"][\"outputs\"]:\n"
+                "        category = output[\"vars\"][\"category\"]\n"
+                "        passed = 1.0 if output[\"pass\"] else 0.0\n"
+                "        scores[category][output[\"provider\"]].append(passed)\n"
                 "    return {\n"
                 "        c: {p: sum(v) / len(v) for p, v in ps.items()}\n"
                 "        for c, ps in scores.items()\n"
@@ -234,10 +239,11 @@ page(
                 "def by_category(result_file: str) -> dict[str, dict[str, float]]:\n"
                 "    data = json.load(open(result_file))\n"
                 "    scores: dict = defaultdict(lambda: defaultdict(list))\n"
-                "    for case in data[\"results\"][\"tests\"]:\n"
-                "        category = case[\"vars\"][\"category\"]\n"
-                "        for provider, result in case[\"providers\"].items():\n"
-                "            scores[category][provider].append(result[\"score\"])\n"
+                "    # field names follow Promptfoo's JSON example; confirm them against your own results file\n"
+                "    for output in data[\"results\"][\"outputs\"]:\n"
+                "        category = output[\"vars\"][\"category\"]\n"
+                "        passed = 1.0 if output[\"pass\"] else 0.0\n"
+                "        scores[category][output[\"provider\"]].append(passed)\n"
                 "    return {\n"
                 "        c: {p: sum(v) / len(v) for p, v in ps.items()}\n"
                 "        for c, ps in scores.items()\n"
@@ -253,32 +259,31 @@ page(
         },
         "Common mistakes": {
             "technical": (
-                "**Mistake 1: one overall score.** The average hides the category that broke "
-                "{{cite:anthropic-evals}}.\n\n"
+                "**Mistake 1: one overall score.** The average hides the category that broke.\n\n"
                 "**Mistake 2: no held-out cases.** A golden dataset you also tuned the prompt "
                 "on measures memorisation.\n\n"
                 "**Mistake 3: comparing only against the current model.** A new model is only "
                 "interesting against alternatives, including the cheaper one.\n\n"
                 "**Mistake 4: no cost column.** A quality gain that costs five times more is a "
-                "business decision the tester has to surface {{cite:deepeval-metrics}}.\n\n"
+                "business decision the tester has to surface {{cite:promptfoo-outputs}}.\n\n"
                 "**Mistake 5: the dataset never changes.** A case that became wrong makes every "
                 "future run look like a regression.\n\n"
                 "**Mistake 6: comparing free-text answers exactly.** Use a metric for prose and "
                 "an exact match only for structured output."
             ),
             "layman": (
-                "**Mistake ১: একটাই গড় স্কোর।** গড় ঢেকে দেয় কোন ধরন ভাঙল {{cite:anthropic-evals}}।\n\n"
+                "**Mistake ১: একটাই গড় স্কোর।** গড় ঢেকে দেয় কোন ধরন ভাঙল।\n\n"
                 "**Mistake ২: held-out কেস নেই।** যে dataset-এর ওপর prompt টিউন করেছেন তা মুখস্থ মাপে।\n\n"
                 "**Mistake ৩: শুধু বর্তমান model-এর সাথে তুলনা।** নতুন model কেবল বিকল্পগুলোর তুলনায় আগ্রহজনক, সস্তাটাও তার মধ্যে।\n\n"
-                "**Mistake ৪: খরচের কলাম নেই।** পাঁচগুণ বেশি খরচে পাওয়া মান উন্নতি একটা business সিদ্ধান্ত, টেস্টারকে সংখ্যাটা দেখাতে হবে {{cite:deepeval-metrics}}।\n\n"
+                "**Mistake ৪: খরচের কলাম নেই।** পাঁচগুণ বেশি খরচে পাওয়া মান উন্নতি একটা business সিদ্ধান্ত, টেস্টারকে সংখ্যাটা দেখাতে হবে {{cite:promptfoo-outputs}}।\n\n"
                 "**Mistake ৫: dataset কখনো বদলায় না।** ভুল হয়ে যাওয়া কেস পরের প্রতিটা run-কে regression দেখায়।\n\n"
                 "**Mistake ৬: ফ্রি-টেক্সট উত্তর হুবহু তুলনা।** গদ্যের জন্য metric, structured output-এর জন্য হুবহু তুলনা ব্যবহার করুন।"
             ),
             "bangla": (
-                "**ভুল ১: একটাই গড় স্কোর।** গড় ঢেকে দেয় কোন ধরন ভাঙল {{cite:anthropic-evals}}।\n\n"
+                "**ভুল ১: একটাই গড় স্কোর।** গড় ঢেকে দেয় কোন ধরন ভাঙল।\n\n"
                 "**ভুল ২: held-out কেস নেই।** যে dataset-এর ওপর prompt টিউন করেছেন তা মুখস্থ মাপে।\n\n"
                 "**ভুল ৩: শুধু বর্তমান model-এর সাথে তুলনা।** নতুন model কেবল বিকল্পগুলোর তুলনায় আগ্রহজনক, সস্তাটাও তার মধ্যে।\n\n"
-                "**ভুল ৪: খরচের কলাম নেই।** পাঁচগুণ বেশি খরচে পাওয়া মান উন্নতি একটা business সিদ্ধান্ত, টেস্টারকে সংখ্যাটা দেখাতে হবে {{cite:deepeval-metrics}}।\n\n"
+                "**ভুল ৪: খরচের কলাম নেই।** পাঁচগুণ বেশি খরচে পাওয়া মান উন্নতি একটা business সিদ্ধান্ত, টেস্টারকে সংখ্যাটা দেখাতে হবে {{cite:promptfoo-outputs}}।\n\n"
                 "**ভুল ৫: dataset কখনো বদলায় না।** ভুল হয়ে যাওয়া কেস পরের প্রতিটা run-কে regression দেখায়।\n\n"
                 "**ভুল ৬: ফ্রি-টেক্সট উত্তর হুবহু তুলনা।** গদ্যের জন্য metric, structured output-এর জন্য হুবহু তুলনা ব্যবহার করুন।"
             ),
