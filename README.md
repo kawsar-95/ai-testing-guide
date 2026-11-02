@@ -1,6 +1,6 @@
 # Agentic QA
 
-A free site that teaches QA engineers and SDETs how to use Claude Code for software testing. It also has notes on Linux, manual testing, and system design, in plain words for testers.
+A free site that teaches QA engineers and SDETs how to use Claude Code for software testing. It also has modules on Linux, manual testing, system design, performance testing with k6, AI engineering and agents, and testing AI and ML systems, in plain words for testers.
 
 **Read it:** https://kawsar-95.github.io/ai-testing-guide/
 
@@ -25,11 +25,11 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 219 pages: 11 sections and 3 helper pages.
+The site has 286 pages. 269 of them are lessons in 14 sections: the tutorial and 13 modules. The other 17 are the home page, the 13 module home pages, and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
-| [Tutorial](https://kawsar-95.github.io/ai-testing-guide/getting-started/setup/) | 23 | Claude Code for software testing (the 6 groups below) |
+| [Tutorial](https://kawsar-95.github.io/ai-testing-guide/getting-started/setup/) | 24 | Claude Code for software testing (the 6 groups below) |
 | [Linux](https://kawsar-95.github.io/ai-testing-guide/linux/) | 12 stages, 103 topics | A Linux roadmap with a progress checklist |
 | [Fundamentals](https://kawsar-95.github.io/ai-testing-guide/fundamentals/) | 11 chapters, 117 topics | Manual testing. Each topic has the author's notes and an ISTQB version, with a switch. |
 | [System Design](https://kawsar-95.github.io/ai-testing-guide/system-design/) | 15 case studies | How well-known systems work (Kafka, YouTube, WhatsApp, and more) |
@@ -40,12 +40,15 @@ The site has 219 pages: 11 sections and 3 helper pages.
 | [AI Harnesses](https://kawsar-95.github.io/ai-testing-guide/harness/) | 6 topics | How an AI harness works: the agent loop, tool calling, context, checkpoints, permissions, and guardrails |
 | [AI Skills](https://kawsar-95.github.io/ai-testing-guide/ai-skills/) | 20 skills in 4 tiers | 20 AI skills, from prompting to fine-tuning, and how a tester uses each one |
 | [AI Concepts](https://kawsar-95.github.io/ai-testing-guide/ai-concepts/) | 9 topics | Agent loops, MCP, subagents, AI gateways, cost, evals, guardrails, observability, and the agent harness |
+| [Agent Memory](https://kawsar-95.github.io/ai-testing-guide/agent-memory/) | 7 topics | The 7 types of memory of an AI agent: working, semantic, episodic, procedural, retrieval, parametric, and prospective |
+| [AI Agents](https://kawsar-95.github.io/ai-testing-guide/ai-agents/) | 10 topics | How an AI agent works, step by step: the trigger, the context, the model's decision, the tools, the stop check, memory, guardrails, observability, and the final output |
+| [AI/ML Testing](https://kawsar-95.github.io/ai-testing-guide/ai-ml-testing/) | 47 topics in 2 phases | Testing AI and ML systems: LLM behavior, prompt testing, automated evals, hallucination detection, RAG and agent testing, red teaming, observability, and CI/CD eval gates |
 
 Three helper pages sit beside the sections: [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) lists everything, [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows your progress, and [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) links to the interview material.
 
 ### The Claude Code tutorial
 
-The tutorial has 23 parts in 6 groups. Each part is one page.
+The tutorial has 24 parts in 6 groups. Each part is one page.
 
 | Group | Parts |
 |---|---|
@@ -54,23 +57,23 @@ The tutorial has 23 parts in 6 groups. Each part is one page.
 | **Configure** | 08 [CLAUDE.md & Memory](https://kawsar-95.github.io/ai-testing-guide/configure/claude-md/) · 09 [Settings & the .claude Folder](https://kawsar-95.github.io/ai-testing-guide/configure/settings/) |
 | **Extend** | 10 [Skills & Commands](https://kawsar-95.github.io/ai-testing-guide/extend/skills/) · 11 [Subagents](https://kawsar-95.github.io/ai-testing-guide/extend/subagents/) · 12 [Hooks](https://kawsar-95.github.io/ai-testing-guide/extend/hooks/) · 13 [MCP Servers](https://kawsar-95.github.io/ai-testing-guide/extend/mcp/) · 14 [Plugins & Marketplaces](https://kawsar-95.github.io/ai-testing-guide/extend/plugins/) |
 | **Automate** | 15 [Headless & CI](https://kawsar-95.github.io/ai-testing-guide/automate/headless/) · 16 [GitHub Actions](https://kawsar-95.github.io/ai-testing-guide/automate/github-actions/) · 17 [Browser Testing with Playwright](https://kawsar-95.github.io/ai-testing-guide/automate/playwright/) |
-| **Case Study** | 18 [The Practice Project](https://kawsar-95.github.io/ai-testing-guide/case-study/overview/) · 19 [Bug Hunting with a Review Gate](https://kawsar-95.github.io/ai-testing-guide/case-study/bug-hunt/) · 20 [From Issue to Reviewed PR](https://kawsar-95.github.io/ai-testing-guide/case-study/pr-review/) · 21 [Design, Execute, Fix, Retest](https://kawsar-95.github.io/ai-testing-guide/case-study/test-and-retest/) · 22 [Load and Browser Automation](https://kawsar-95.github.io/ai-testing-guide/case-study/automation/) · 23 [What to Fix in the Setup](https://kawsar-95.github.io/ai-testing-guide/case-study/lessons/) |
+| **Case Study** | 18 [The Practice Project](https://kawsar-95.github.io/ai-testing-guide/case-study/overview/) · 19 [The dMoney Codebase](https://kawsar-95.github.io/ai-testing-guide/case-study/codebase-tour/) · 20 [Bug Hunting with a Review Gate](https://kawsar-95.github.io/ai-testing-guide/case-study/bug-hunt/) · 21 [From Issue to Reviewed PR](https://kawsar-95.github.io/ai-testing-guide/case-study/pr-review/) · 22 [Design, Execute, Fix, Retest](https://kawsar-95.github.io/ai-testing-guide/case-study/test-and-retest/) · 23 [Load and Browser Automation](https://kawsar-95.github.io/ai-testing-guide/case-study/automation/) · 24 [What to Fix in the Setup](https://kawsar-95.github.io/ai-testing-guide/case-study/lessons/) |
 
 New to Claude Code? Start with parts 01, 03, and 04. To see the features work together in one real QA project, read parts 18–24.
 
 ## Features
 
-### Six sections and one place to find them
+### Navigation and the Contents page
 
 The top navigation has four plain links: **Home**, **Contents**, **Dashboard**, and **Interview**. The current link has a teal underline. A tutorial page or a module page has no current link. You reach a module from the home page or the Contents page. Next to the links are the search button, the voice button, and the theme button.
 
 The home page has a hero with a stats row (tutorial parts, modules, pages, and text voices), three START HERE cards for new readers, a "Why this guide" block, and numbered course cards.
 
-The [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) page shows every group and module as a card. The cards of Linux, Fundamentals, Architecture, and Course have a progress bar.
+The [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) page shows every tutorial group and every module as a card. The 11 modules with a checklist show a progress bar on their card. System Design and AI Harnesses have no checklist.
 
 ![The Contents page with a progress bar on each module](docs/assets/contents.png)
 
-Inside a section, the left list shows the pages of that section. The drawer also has a link to each of the other sections.
+The left list shows the tutorial and every module as a list of pages that you can open and close. The list of the page you are on is open, and each list starts with a link to its home page. The drawer shows the same lists.
 
 ### Interview preparation
 
@@ -86,7 +89,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 
 ### Three voices for every section
 
-184 pages let you read each `##` section in three voices:
+All 269 content pages let you read each `##` section in three voices:
 
 | Voice | What it is |
 |---|---|
@@ -94,7 +97,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 | **সহজ English** | The same facts in plain English |
 | **বাংলা** | The same facts in Bangla. Commands, flags, paths, product names, and acronyms stay in English. |
 
-A switcher with three buttons sits under each section heading: `Technical`, `সহজ English`, and `বাংলা`. The Left, Right, Home, and End keys move the selection. A click changes one section only.
+A switcher with three buttons sits under each section heading: `Technical`, `সহজ English`, and `বাংলা`. The Left, Right, Home, and End keys move the selection. A click changes one section only. On a Linux stage page, one switcher at the top sets the voice of the whole page. The `Key words` tables and the Linux `Permissions Cheat Sheet` topic have one voice only.
 
 ![One section with all three voices open](docs/assets/voices.png)
 
@@ -112,7 +115,7 @@ A link or a search result that points into a hidden voice opens that voice and s
 
 ### Fundamentals: two versions of each topic
 
-The 11 Fundamentals chapters teach manual testing. Chapters 1–10 have two versions of every topic: **My notes** (the author's notes, with images) and **ISTQB** (the ISTQB syllabus and glossary, with citations and diagrams). A switch above the chapter changes the version. The site remembers your choice. If the notes and ISTQB disagree, the notes version has a warning that points you to the ISTQB definition. Chapter 11 is 50 interview questions.
+The 11 Fundamentals chapters teach manual testing. Chapters 1–10 have two versions of every topic: **My notes** (the author's notes, with images) and **ISTQB** (the ISTQB syllabus and glossary, with citations and diagrams). A switch above the chapter changes the version. The site remembers your choice. If the notes and ISTQB disagree, the notes version has a warning that points you to the ISTQB definition. Each version also has the plain English and Bangla voices. Chapter 11 is 50 interview questions.
 
 ![A Fundamentals chapter with the version switch and the chapter progress bar](docs/assets/fundamentals.png)
 
@@ -122,13 +125,13 @@ The ISTQB version has seven inline diagrams, for example the test pyramid, the t
 
 The site tracks your work in your browser. It never sends it to a server.
 
-- **Topic checklists:** the Linux stages, the Fundamentals chapters, the Architecture topics (and its 30 practice questions), the Course topics, the k6 topics, the AI Engineering topics, the AI skills, and the AI Concepts topics have checkboxes and progress bars.
+- **Topic checklists:** 11 modules show your progress with a bar: Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, and AI/ML Testing. Linux and Fundamentals have a checkbox for each topic. The other nine have a mark-as-done button at the end of each page, and Architecture also has a checkbox for each of its 30 practice questions. System Design and AI Harnesses have no checklist.
 - **Pages read and bookmarks:** each content page has a **Mark as read** toggle and a **Bookmark** toggle under its title.
 - **Last page:** the site remembers the last content page that you opened.
 
 ![The Linux roadmap with a progress bar and checklists](docs/assets/linux.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 269`), your bookmarks, the topic progress of the eleven modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 269`) with a progress bar, beside a Continue reading card. Below them, one row for each of the 11 modules with a checklist shows its name, a bar, `done / total`, and the percent. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
 
@@ -156,7 +159,8 @@ Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>K</kbd>, or click the search button, t
 
 ![A tutorial page in the light theme](docs/assets/page.png)
 
-- **Three columns:** a left list of the pages of the current section, the text, and an "On this page" list of the sections. The current section stays marked as you scroll.
+- **Three columns:** a left list of pages (each module is a list that you can open and close), the text, and an "On this page" list of the sections. The current section stays marked as you scroll.
+- **One section at a time:** a page with 3 or more `##` sections shows one section and hides the others. A step bar sits above the section, and Previous and Next buttons sit below it. **Show all sections** turns this off, and the site remembers your choice. A link into a hidden section shows that section. Without JavaScript, every section shows.
 - **Reading time and progress:** each page shows `N min read`, and a bar under the header shows how far you read. A back-to-top button shows after one screen of scrolling.
 - **Meta line:** the number of sections and sources, the update date, and a "Suggest an edit" link that opens the page source on GitHub.
 - **Previous and next:** cards at the end of a page go to the neighbour pages.
@@ -171,7 +175,7 @@ The site follows the theme of your system and remembers your choice. The theme b
 
 ### Phones and small screens
 
-The layout adapts to phone widths. Below 1200 px the top navigation moves into the drawer: the drawer shows the four links (Home, Contents, Dashboard, Interview) above the list of the current section. The drawer traps the focus, closes with Escape, and gives the focus back to the button that opened it. On phones, tables and code scroll inside their own box.
+The layout adapts to phone widths. Below 1200 px the top navigation moves into the drawer: the drawer shows the four links (Home, Contents, Dashboard, Interview) above the same lists as the left column. The drawer traps the focus, closes with Escape, and gives the focus back to the button that opened it. On phones, tables and code scroll inside their own box.
 
 | A content page | The drawer |
 |---|---|
@@ -179,7 +183,7 @@ The layout adapts to phone widths. Below 1200 px the top navigation moves into t
 
 ### Install it and read offline
 
-The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 159 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
+The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 286 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
 
 ### Accessibility
 
@@ -193,10 +197,10 @@ The site has no accounts and no server. Your progress, bookmarks, theme, voice, 
 
 Every page states facts that a reader can check.
 
-- **Sources:** facts come from official docs first (`code.claude.com/docs`, `platform.claude.com/docs`, `modelcontextprotocol.io`, `playwright.dev`, and the GitHub repos of the tools), then from primary sources such as the ISTQB syllabi, IETF RFCs, and the Google SRE books. Blogs, forums, and AI summaries are not used. Two modules have a documented exception: the Linux roadmap links and the System Design newsletter articles are blogs, so those pages also cite an official source for each fact. [CLAUDE.md](CLAUDE.md) has the rules of each module.
+- **Sources:** facts come from official docs first (`code.claude.com/docs`, `platform.claude.com/docs`, `modelcontextprotocol.io`, `playwright.dev`, and the GitHub repos of the tools), then from primary sources such as the ISTQB syllabi, IETF RFCs, the Google SRE books, OWASP and NIST documents, and the original papers on arXiv. Blogs, forums, and AI summaries are not used. Two modules have a documented exception: the Linux roadmap links and the System Design newsletter articles are blogs, so those pages also cite an official source for each fact. [CLAUDE.md](CLAUDE.md) has the rules of each module.
 - **Citations:** each fact has a numbered `[n]` link to the Sources list at the end of its page.
 - **Fact-check:** an agent that did not write the page checked each claim against its cited source. Each page has a report in [`docs/superpowers/research/`](docs/superpowers/research/). A page is done only when its report ends with `Open FAILs: 0`.
-- **Voices:** each page with voices has a second report. An agent that did not write the voices checked them against the Technical text.
+- **Voices:** each page has a second report. An agent that did not write the voices checked them against the Technical text.
 - **Case study:** parts 18 and 20–24 describe the author's private practice workspace. Part 19 tours its public version, kawsar-95/genAI-project. Facts about that workspace have no citation link. A separate agent checked each one against the workspace files. Emails, phone numbers, and similar values are replaced with placeholders.
 - **Dates:** each page shows the date of its last update. "Suggest an edit" opens the page source on GitHub.
 
@@ -233,10 +237,13 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `npm test` | Runs the unit tests in `tests/` with `node --test`. |
 | `python3 -m unittest scripts/test_checks.py` | Runs the unit tests of the Python check scripts. |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Runs the unit tests of the Linux research scripts. |
+| `python3 -m unittest scripts/test_ai_ml_course_fetch.py` | Runs the unit tests of the script that scrapes the AI/ML Testing course syllabus. |
+| `python3 -m unittest scripts/test_ai_ml_testing_pages_gen.py` | Runs the unit tests of the AI/ML Testing page generator. |
+| `python3 scripts/ai_ml_testing_check_sources.py` | Checks that each source URL of the AI/ML Testing module resolves. It needs a network. |
 | `python3 scripts/check_routes.py out` | Checks that every route of the route maps has a built page. |
 | `python3 scripts/check_links.py out` | Checks internal links and assets. |
 | `python3 scripts/check_outline.py out` | Checks that every "On this page" link has a target. |
-| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 148 pages checked, 0 skipped`. |
+| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 269 pages checked, 0 skipped`. |
 
 Run the `out` checks after `npm run build`, on a build without a base path.
 
@@ -245,12 +252,14 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 ```text
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
-content/<group>/     The MDX pages: 24 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts
+content/<group>/     The MDX pages: 24 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts, 7 Agent Memory, 10 AI Agents, 47 AI/ML Testing
 lib/                 nav.ts (tutorial page order), one data file for each module, search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
-scripts/             Python check scripts and the route maps (one JSON file for each module)
+scripts/             Python check scripts, the route maps (one JSON file for each module), and the AI/ML Testing page generator
 public/              Icons, images of the pages, and static files
 docs/                Architecture, screenshots (docs/assets), design specs, plans, the content audit, research notes
+DESIGN.md            The design tokens: colors, type scale, spacing, radii, and components
+.github/workflows/   The GitHub Pages deploy workflow
 ```
 
 For how the parts fit together, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -264,13 +273,17 @@ For a tutorial page:
 3. Give each fact a `<Cite n={k} />` and a matching entry in `page.sources`.
 4. Run `npm test`, `npm run build`, and the checks above.
 
-The other modules keep their page lists in their own data files: `lib/linux/stages.ts`, `lib/fundamentals/chapters.ts`, `lib/system-design/cases.ts`, `lib/architecture/topics.ts`, `lib/course/topics.ts`, `lib/k6/topics.ts`, `lib/ai-engineering/topics.ts`, `lib/harness/topics.ts`, `lib/ai-skills/topics.ts`, and `lib/ai-concepts/topics.ts`. Each module has its own route map in `scripts/`. A page with voices also needs a voice fact-check report. `npm test` checks that the lists, the MDX files, and the route maps agree.
+The other modules keep their page lists in their own data files: `lib/linux/stages.ts`, `lib/fundamentals/chapters.ts`, `lib/system-design/cases.ts`, `lib/architecture/topics.ts`, `lib/course/topics.ts`, `lib/k6/topics.ts`, `lib/ai-engineering/topics.ts`, `lib/harness/topics.ts`, `lib/ai-skills/topics.ts`, `lib/ai-concepts/topics.ts`, `lib/agent-memory/topics.ts`, `lib/ai-agents/topics.ts`, and `lib/ai-ml-testing/topics.ts`. Each module has its own route map in `scripts/`. A page with voices also needs a voice fact-check report. `npm test` checks that the lists, the MDX files, and the route maps agree. To add a whole module, follow [Flat modules](CLAUDE.md#flat-modules) in CLAUDE.md.
+
+The AI/ML Testing pages are generated, so do not edit `content/ai-ml-testing/*.mdx` by hand. To add or change a page, edit its data in `scripts/ai_ml_testing_pages_p*.py` (the sources are in `scripts/ai_ml_testing_sources.py`) and the list in `lib/ai-ml-testing/topics.ts`. Then run `python3 scripts/ai_ml_testing_pages_gen.py` to write the MDX pages, and `python3 scripts/ai_ml_testing_gen.py` to write `scripts/ai-ml-testing-route-map.json` and `tests/ai-ml-testing.test.ts` from the list.
+
+For a change to the look, read [DESIGN.md](DESIGN.md) first: its tokens are the rules for colors, type, spacing, and radii, and both themes must stay in step. `npx skills experimental_install` restores the design skills that `skills-lock.json` lists, and `.mcp.json` sets up the Playwright MCP server for browser checks. The rules are in [CLAUDE.md](CLAUDE.md#frontend-design-engineering-rules).
 
 [CLAUDE.md](CLAUDE.md) has the full rules: the MDX components, the voices, the citation rules, and the research and fact-check workflow. It is written as the guide for AI coding agents, and it is the most complete reference for humans too.
 
 ## Deploy
 
-Each push to `main` deploys the site to GitHub Pages through [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml). The workflow runs `npm ci`, `npm test`, and `npm run build`, then publishes `out/`.
+Each push to `main` deploys the site to GitHub Pages through [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml). The workflow runs `npm ci`, `npm test`, and `npm run build` on Node 24, then publishes `out/`. You can also start it by hand from the Actions tab. It does not run on pull requests, so run the checks yourself before you open one.
 
 The site lives under `/ai-testing-guide/`. The workflow sets `PAGES_BASE_PATH` for that path and `NEXT_PUBLIC_SITE_URL` for canonical URLs and the sitemap. Local builds serve from `/`. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#base-path-github-pages) for the rules that keep links correct under the base path.
 
@@ -286,6 +299,7 @@ The site lives under `/ai-testing-guide/`. The workflow sets `PAGES_BASE_PATH` f
 | Fonts | Crimson Pro, Inter, JetBrains Mono, and Noto Sans Bengali (`next/font/google`) |
 | Search | MiniSearch, with a static search index |
 | Offline | A service worker and a web manifest, built from `lib/pwa.ts` |
+| Tests | `node --test` for the TypeScript tests (Node runs them without a compile step from 22.18) and Python `unittest` for the scripts |
 | Hosting | GitHub Pages, deployed by GitHub Actions |
 
 ## Documentation
@@ -294,6 +308,7 @@ The site lives under `/ai-testing-guide/`. The workflow sets `PAGES_BASE_PATH` f
 |---|---|
 | [CLAUDE.md](CLAUDE.md) | The rules for each module, the voices, the MDX components, and the content workflow. The most complete reference. |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the site is built: routes, ordered lists, MDX pipeline, voices, progress, search, theme, PWA, base path, deploy, and checks |
+| [DESIGN.md](DESIGN.md) | The design tokens: colors, type scale, spacing, radii, and component variants, with the reason for each. Read it before you change the UI. |
 | [docs/superpowers/specs/](docs/superpowers/specs/) and [docs/superpowers/plans/](docs/superpowers/plans/) | The design and the plan of each phase and module |
 | [docs/superpowers/research/](docs/superpowers/research/) | The research notes and the fact-check reports of each page |
 | [docs/superpowers/audits/](docs/superpowers/audits/) | The audit of the outdated claims of the first tutorial text |
@@ -305,6 +320,13 @@ The site lives under `/ai-testing-guide/`. The workflow sets `PAGES_BASE_PATH` f
 - The look follows [systemdesignbangla.com](https://www.systemdesignbangla.com/) (a style reference only; no CSS, text, or art is copied). The earlier editorial shell came from [All Necessary Topics Related to AI Engineering](https://github.com/kawsar-95/All-Necessary-Topics-Related-to-AI-Engineering).
 - The Course follows the topic order of systemdesignbangla.com. The text is the tutorial's own.
 - The System Design case studies are based on articles of The System Design Newsletter (systemdesign.one) by Neo Kim.
+- Some topic lists come from the work of other authors. The pages are the tutorial's own text, and each fact links to an official or primary source.
+  - AI Engineering: "The AI Engineering Iceberg" by Jean Lee.
+  - AI Skills: "20 AI Skills Your Team Must Master in 2026" by AI for Leaders.
+  - AI Concepts: an infographic of GenAI.works (October 2026).
+  - Agent Memory: "7 Types of Agent Memory" by Neo Kim and Telnyx.
+  - AI Agents: "How AI Agents Work" by Basia Kubicka.
+  - AI/ML Testing: the syllabus of the "AI & ML Testing Professional Course" (QodeBench — Journey to Automation).
 - This is an independent tutorial. Anthropic does not maintain or endorse it.
 
 ## License
