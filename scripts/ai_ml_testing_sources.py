@@ -132,6 +132,18 @@ SOURCES: dict[str, Source] = {
             "Promptfoo (docs)",
             "https://www.promptfoo.dev/docs/integrations/github-action/",
         ),
+        Source(
+            "promptfoo-cli",
+            "Command line",
+            "Promptfoo (docs)",
+            "https://www.promptfoo.dev/docs/usage/command-line/",
+        ),
+        Source(
+            "promptfoo-http",
+            "HTTP/HTTPS API provider",
+            "Promptfoo (docs)",
+            "https://www.promptfoo.dev/docs/providers/http/",
+        ),
         # --- DeepEval --------------------------------------------------------
         Source(
             "deepeval-intro",
