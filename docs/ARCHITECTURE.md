@@ -210,7 +210,7 @@ All progress is client-side. The shared code keeps its old `prep` names (`lib/pr
 
 `ChapterTools` (the reading pill, Bookmark, and Mark as read) sits under the meta line of each content page. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
 
-The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 222`), the bookmarks, the topic progress of the ten modules, and a Continue reading card. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
+The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 269`), the bookmarks, the topic progress of the eleven modules with a progress store (Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, and AI/ML Testing), and a Continue reading card. The module rows count the same ids and read the same stores as the module home pages, so the numbers match. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
 
 ## Fundamentals version switch
 

@@ -5,25 +5,69 @@ import type { ReactNode } from "react";
 import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
 import { DASHBOARD_UI_BN } from "@/lib/bn/dashboard";
-import { FundamentalsProgressSummary } from "@/components/fundamentals/FundamentalsProgressSummary";
-import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
 import { useFundamentalsProgress } from "@/components/fundamentals/useFundamentalsProgress";
 import { useLinuxProgress } from "@/components/linux/useLinuxProgress";
-import { ProgressSummary } from "@/components/modules/ProgressSummary";
+import { ProgressBar } from "@/components/prep/ProgressBar";
 import { progressHook } from "@/components/modules/useModuleProgress";
 import { useBookmarks, useLastPage, usePageRead } from "@/components/reading/useReadingState";
 import { DASHBOARD_UI } from "@/lib/dashboard";
 import { contentPage, continueTarget, exportFileName, readByModule } from "@/lib/dashboard-data";
-import { ALL_FUNDAMENTALS_TOPIC_IDS } from "@/lib/fundamentals/chapters";
-import { ALL_TOPIC_IDS } from "@/lib/linux/stages";
+import { countDone, percent } from "@/lib/prep/progress";
+import { ALL_FUNDAMENTALS_TOPIC_IDS, FUNDAMENTALS_HOME } from "@/lib/fundamentals/chapters";
+import { ALL_TOPIC_IDS, LINUX_HOME } from "@/lib/linux/stages";
 import { withBasePath } from "@/lib/base-path";
 import { PROGRESS_MODULES } from "@/lib/modules/registry";
 import { CONTENT_PAGES, exportProgress } from "@/lib/reading-state";
 import { AUTHOR } from "@/lib/site";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
-const CARD = "rounded-2xl border border-border bg-bg-raised p-5 shadow-sm sm:p-6";
+const CARD = "rounded-2xl border border-border bg-bg-raised shadow-sm";
 const NO_STORAGE = { getItem: () => null };
+
+/** The download icon of the Export button. */
+function ExportIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="size-4 shrink-0" fill="none" aria-hidden="true">
+      <path
+        d="M10 3v8m0 0 3.5-3.5M10 11 6.5 7.5M4 14.5v1.2c0 .7.6 1.3 1.3 1.3h9.4c.7 0 1.3-.6 1.3-1.3v-1.2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** The reset arrow of the Reset button. */
+function ResetIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="size-4 shrink-0" fill="none" aria-hidden="true">
+      <path
+        d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6m1.9-.9v3.2h-3.2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** The arrow of the Continue reading card. */
+function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="size-5 shrink-0" fill="none" aria-hidden="true">
+      <path
+        d="M4 10h11m0 0-4-4m4 4-4 4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 /** Download the Export file. Blocked storage gives a file with only null values. */
 function downloadExport() {
@@ -51,15 +95,19 @@ function downloadExport() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function SectionTitle({ id, children }: { id: string; children: ReactNode }) {
+/** A section heading with an optional count on the right. */
+function SectionTitle({ id, meta, children }: { id: string; meta?: ReactNode; children: ReactNode }) {
   return (
-    <h2 id={id} className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}>
-      {children}
-    </h2>
+    <div className="flex items-baseline justify-between gap-4 border-b border-border-strong pb-3">
+      <h2 id={id} className={`${LABEL} text-text-dim`}>
+        {children}
+      </h2>
+      {meta ? <p className="font-mono text-[12px] tabular-nums text-text-faint">{meta}</p> : null}
+    </div>
   );
 }
 
-/** The dashboard: stats, Continue reading, bookmarks, and pages read. All data comes from this browser. */
+/** The dashboard: the reading stats, Continue reading, the module progress, and the lists. All data comes from this browser. */
 export function DashboardPage() {
   const read = usePageRead();
   const marks = useBookmarks();
@@ -74,9 +122,40 @@ export function DashboardPage() {
   const next = continueTarget(lastPage.last);
   const hasLast = contentPage(lastPage.last ?? "") !== undefined;
   const rows = readByModule(read.done);
+  const readRows = rows.filter((row) => row.read > 0);
   const siteTitle = useBn(DASHBOARD_UI.siteTitle, DASHBOARD_UI_BN.siteTitle);
   const authorPhotoAlt = useBn(DASHBOARD_UI.authorPhotoAlt, DASHBOARD_UI_BN.authorPhotoAlt);
   const resetConfirm = useBn(DASHBOARD_UI.resetConfirm, DASHBOARD_UI_BN.resetConfirm);
+  const progressWord = useBn(DASHBOARD_UI.progressWord, DASHBOARD_UI_BN.progressWord);
+  const statReadLabel = useBn(DASHBOARD_UI.statRead, DASHBOARD_UI_BN.statRead);
+
+  // The same counts as the module home pages: the same ids and the same stores.
+  const moduleRows = [
+    {
+      id: "linux",
+      label: DASHBOARD_UI.moduleLabels.linux,
+      href: LINUX_HOME,
+      done: countDone(ALL_TOPIC_IDS, linux.done),
+      total: new Set(ALL_TOPIC_IDS).size,
+    },
+    {
+      id: "fundamentals",
+      label: DASHBOARD_UI.moduleLabels.fundamentals,
+      href: FUNDAMENTALS_HOME,
+      done: countDone(ALL_FUNDAMENTALS_TOPIC_IDS, fundamentals.done),
+      total: new Set(ALL_FUNDAMENTALS_TOPIC_IDS).size,
+    },
+    ...PROGRESS_MODULES.map((m, i) => ({
+      id: m.id,
+      label: m.label,
+      href: m.home,
+      done: countDone(m.lessonIds, flatStores[i].done),
+      total: new Set(m.lessonIds).size,
+    })),
+  ];
+
+  const readPercent = percent(readPages.length, CONTENT_PAGES.length);
+  const pagesLeft = CONTENT_PAGES.length - readPages.length;
 
   function reset() {
     if (!window.confirm(resetConfirm)) return;
@@ -86,85 +165,145 @@ export function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
-      <header className="flex flex-wrap items-end justify-between gap-6">
+      <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
         <div className="max-w-2xl">
-          <p className={`${LABEL} text-accent`}><T en={DASHBOARD_UI.eyebrow} bn={DASHBOARD_UI_BN.eyebrow} /></p>
-          <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-text">
+          <p className={`${LABEL} text-accent`}>
+            <T en={DASHBOARD_UI.eyebrow} bn={DASHBOARD_UI_BN.eyebrow} />
+          </p>
+          <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
             <T en={DASHBOARD_UI.heading} bn={DASHBOARD_UI_BN.heading} />
           </h1>
-          <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim"><T en={DASHBOARD_UI.lede} bn={DASHBOARD_UI_BN.lede} /></p>
+          <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-pretty text-text-dim">
+            <T en={DASHBOARD_UI.lede} bn={DASHBOARD_UI_BN.lede} />
+          </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2.5">
           <button type="button" onClick={downloadExport} className="btn btn-outline btn-sm">
-            <span aria-hidden="true">📥</span>
+            <ExportIcon />
             <T en={DASHBOARD_UI.export} bn={DASHBOARD_UI_BN.export} />
           </button>
           <button type="button" onClick={reset} className="btn btn-ghost btn-sm">
-            <span aria-hidden="true">🗑️</span>
+            <ResetIcon />
             <T en={DASHBOARD_UI.reset} bn={DASHBOARD_UI_BN.reset} />
           </button>
         </div>
       </header>
 
-      <section aria-label={siteTitle} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,0.6fr))_repeat(4,minmax(0,1fr))]">
-        <div className={`${CARD} self-end`}>
-          <p data-stat="read" className="font-display text-[34px] font-bold leading-none text-text tabular-nums">
+      <section aria-label={siteTitle} className="mt-8 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        <div className={`${CARD} flex flex-col p-5 sm:p-6`}>
+          <p className={`${LABEL} text-text-faint`}>
+            <T en={DASHBOARD_UI.statRead} bn={DASHBOARD_UI_BN.statRead} />
+          </p>
+          <p
+            data-stat="read"
+            className="mt-3 font-display text-[44px] font-bold leading-none tracking-[-0.02em] text-text tabular-nums"
+          >
             {readPages.length}
-            <span className="text-xl text-text-faint"> / {CONTENT_PAGES.length}</span>
+            <span className="text-[20px] text-text-faint"> / {CONTENT_PAGES.length}</span>
           </p>
-          <p className="mt-2 text-[14px] text-text-dim"><T en={DASHBOARD_UI.statRead} bn={DASHBOARD_UI_BN.statRead} /></p>
-        </div>
-        <div className={`${CARD} self-end`}>
-          <p data-stat="bookmarks" className="font-display text-[34px] font-bold leading-none text-text tabular-nums">
-            {bookmarks.length}
+          <ProgressBar
+            value={readPercent}
+            label={statReadLabel}
+            valueText={`${readPages.length} / ${CONTENT_PAGES.length}`}
+            className="mt-5"
+          />
+          <p className="mt-4 text-[14px] text-text-dim">
+            <T en={DASHBOARD_UI.pagesLeft(pagesLeft)} bn={DASHBOARD_UI_BN.pagesLeft(pagesLeft)} />
           </p>
-          <p className="mt-2 text-[14px] text-text-dim"><T en={DASHBOARD_UI.statBookmarks} bn={DASHBOARD_UI_BN.statBookmarks} /></p>
         </div>
-        <div>
-          <p className={`${LABEL} mb-2 text-text-faint`}>{DASHBOARD_UI.moduleLabels.linux}</p>
-          <LinuxProgressSummary ids={ALL_TOPIC_IDS} />
-        </div>
-        <div>
-          <p className={`${LABEL} mb-2 text-text-faint`}>{DASHBOARD_UI.moduleLabels.fundamentals}</p>
-          <FundamentalsProgressSummary ids={ALL_FUNDAMENTALS_TOPIC_IDS} />
-        </div>
-        {PROGRESS_MODULES.map((m) => (
-          <div key={m.id}>
-            <p className={`${LABEL} mb-2 text-text-faint`}>{m.label}</p>
-            <ProgressSummary moduleId={m.id} ids={m.lessonIds} />
-          </div>
-        ))}
-      </section>
 
-      <section aria-labelledby="continue-heading" className="mt-12">
-        <SectionTitle id="continue-heading">{hasLast ? <T en={DASHBOARD_UI.continueHeading} bn={DASHBOARD_UI_BN.continueHeading} /> : <T en={DASHBOARD_UI.startHeading} bn={DASHBOARD_UI_BN.startHeading} />}</SectionTitle>
         <Link
           href={next.href}
           data-continue
-          className={`${CARD} mt-5 flex items-center justify-between gap-4 no-underline transition-shadow hover:shadow-md`}
+          className={`${CARD} group flex flex-col justify-between gap-6 p-5 no-underline transition-shadow hover:shadow-md sm:p-6`}
         >
-          <span>
-            <span className={`${LABEL} block text-text-faint`}>{DASHBOARD_UI.moduleLabels[next.module]}</span>
-            <span className="mt-1 block font-display text-2xl font-semibold text-text">{next.title}</span>
+          <span className="min-w-0">
+            <span className={`${LABEL} block text-accent`}>
+              {hasLast ? (
+                <T en={DASHBOARD_UI.continueHeading} bn={DASHBOARD_UI_BN.continueHeading} />
+              ) : (
+                <T en={DASHBOARD_UI.startHeading} bn={DASHBOARD_UI_BN.startHeading} />
+              )}
+            </span>
+            <span className="mt-2 block font-display text-[clamp(1.375rem,2.4vw,1.75rem)] font-semibold leading-tight text-text transition-colors group-hover:text-accent">
+              {next.title}
+            </span>
+            <span className="mt-2 block text-[14px] text-text-dim">
+              {DASHBOARD_UI.moduleLabels[next.module]}
+            </span>
           </span>
-          <span aria-hidden="true" className="text-xl text-accent">
-            →
+          <span className="flex items-center justify-between gap-4">
+            <span className="text-[14px] text-text-dim">
+              <T en={DASHBOARD_UI.resumeHint} bn={DASHBOARD_UI_BN.resumeHint} />
+            </span>
+            <span
+              aria-hidden="true"
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-soft text-accent transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+            >
+              <ArrowIcon />
+            </span>
           </span>
         </Link>
       </section>
 
-      <div className="mt-12 grid gap-10 md:grid-cols-2">
+      <section aria-labelledby="modules-heading" className="mt-12">
+        <SectionTitle id="modules-heading">
+          <T en={DASHBOARD_UI.modulesHeading} bn={DASHBOARD_UI_BN.modulesHeading} />
+        </SectionTitle>
+        <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-text-dim">
+          <T en={DASHBOARD_UI.modulesLede} bn={DASHBOARD_UI_BN.modulesLede} />
+        </p>
+        <ul className={`${CARD} m-0 mt-5 list-none p-0 px-5`}>
+          {moduleRows.map((row) => (
+            <li
+              key={row.id}
+              className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-4 gap-y-2 border-b border-border py-3 last:border-b-0 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_5.5rem_3.5rem]"
+            >
+              <Link
+                href={row.href}
+                className="col-start-1 row-start-1 min-w-0 truncate text-[15px] text-text no-underline hover:text-accent"
+              >
+                {row.label}
+              </Link>
+              <span className="col-start-2 row-start-1 text-right font-mono text-[12px] tabular-nums text-text-dim sm:col-start-3">
+                {row.done} / {row.total}
+              </span>
+              <span className="col-start-3 row-start-1 text-right font-mono text-[12px] tabular-nums text-text sm:col-start-4">
+                {percent(row.done, row.total)}%
+              </span>
+              <span className="col-span-3 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1">
+                <ProgressBar
+                  value={percent(row.done, row.total)}
+                  label={`${row.label} ${progressWord}`}
+                  valueText={`${row.done} / ${row.total}`}
+                />
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className="mt-12 grid gap-10 md:grid-cols-2 md:gap-8">
         <section aria-labelledby="bookmarks-heading">
-          <SectionTitle id="bookmarks-heading"><T en={DASHBOARD_UI.bookmarksHeading} bn={DASHBOARD_UI_BN.bookmarksHeading} /></SectionTitle>
+          <SectionTitle id="bookmarks-heading" meta={<span data-stat="bookmarks">{bookmarks.length}</span>}>
+            <T en={DASHBOARD_UI.bookmarksHeading} bn={DASHBOARD_UI_BN.bookmarksHeading} />
+          </SectionTitle>
           {bookmarks.length === 0 ? (
-            <p className="mt-4 text-[15px] text-text-dim"><T en={DASHBOARD_UI.bookmarksEmpty} bn={DASHBOARD_UI_BN.bookmarksEmpty} /></p>
+            <p className="mt-4 text-[15px] text-text-dim">
+              <T en={DASHBOARD_UI.bookmarksEmpty} bn={DASHBOARD_UI_BN.bookmarksEmpty} />
+            </p>
           ) : (
-            <ul className="m-0 mt-2 list-none p-0">
+            <ul className="m-0 mt-3 list-none p-0">
               {bookmarks.map((page) => (
-                <li key={page.href} className="border-b border-border">
-                  <Link href={page.href} className="flex items-baseline justify-between gap-3 py-3 text-text no-underline hover:text-accent">
-                    <span>{page.title}</span>
-                    <span className="shrink-0 font-mono text-[12px] text-text-faint">{DASHBOARD_UI.moduleLabels[page.module]}</span>
+                <li key={page.href} className="border-b border-border last:border-b-0">
+                  <Link
+                    href={page.href}
+                    className="flex items-baseline justify-between gap-3 py-2.5 text-[15px] text-text no-underline hover:text-accent"
+                  >
+                    <span className="min-w-0">{page.title}</span>
+                    <span className="shrink-0 font-mono text-[11px] text-text-faint">
+                      {DASHBOARD_UI.moduleLabels[page.module]}
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -173,38 +312,53 @@ export function DashboardPage() {
         </section>
 
         <section aria-labelledby="read-heading">
-          <SectionTitle id="read-heading"><T en={DASHBOARD_UI.readHeading} bn={DASHBOARD_UI_BN.readHeading} /></SectionTitle>
-          {readPages.length === 0 ? <p className="mt-4 text-[15px] text-text-dim"><T en={DASHBOARD_UI.readEmpty} bn={DASHBOARD_UI_BN.readEmpty} /></p> : null}
-          {rows.map((row) => {
-            const pages = readPages.filter((page) => page.module === row.module);
-            return (
-              <div key={row.module} className="mt-5">
-                <p className="flex justify-between font-mono text-[12px] text-text-dim">
-                  <span>{DASHBOARD_UI.moduleLabels[row.module]}</span>
-                  <span data-read-row={row.module} className="tabular-nums">
-                    {row.read} / {row.total}
-                  </span>
-                </p>
-                {pages.length > 0 ? (
-                  <ul className="m-0 mt-1 list-none p-0">
+          <SectionTitle id="read-heading" meta={readPages.length}>
+            <T en={DASHBOARD_UI.readHeading} bn={DASHBOARD_UI_BN.readHeading} />
+          </SectionTitle>
+          {readRows.length === 0 ? (
+            <p className="mt-4 text-[15px] text-text-dim">
+              <T en={DASHBOARD_UI.readEmpty} bn={DASHBOARD_UI_BN.readEmpty} />
+            </p>
+          ) : (
+            readRows.map((row) => {
+              const pages = readPages.filter((page) => page.module === row.module);
+              return (
+                <div key={row.module} className="mt-5 first:mt-3">
+                  <p className="flex items-baseline justify-between gap-3">
+                    <span className="text-[15px] font-medium text-text">
+                      {DASHBOARD_UI.moduleLabels[row.module]}
+                    </span>
+                    <span
+                      data-read-row={row.module}
+                      className="shrink-0 font-mono text-[12px] tabular-nums text-text-dim"
+                    >
+                      {row.read} / {row.total}
+                    </span>
+                  </p>
+                  <ul className="m-0 mt-1 list-none border-t border-border p-0">
                     {pages.map((page) => (
-                      <li key={page.href}>
-                        <Link href={page.href} className="block py-1 text-[15px] text-text no-underline hover:text-accent">
+                      <li key={page.href} className="border-b border-border last:border-b-0">
+                        <Link
+                          href={page.href}
+                          className="block py-2 text-[15px] text-text-dim no-underline hover:text-accent"
+                        >
                           {page.title}
                         </Link>
                       </li>
                     ))}
                   </ul>
-                ) : null}
-              </div>
-            );
-          })}
+                </div>
+              );
+            })
+          )}
         </section>
       </div>
 
       <section aria-labelledby="author-heading" className="mt-16">
-        <SectionTitle id="author-heading"><T en={DASHBOARD_UI.authorHeading} bn={DASHBOARD_UI_BN.authorHeading} /></SectionTitle>
-        <div className={`${CARD} mt-5 flex flex-col gap-6 sm:flex-row sm:items-start`}>
+        <SectionTitle id="author-heading">
+          <T en={DASHBOARD_UI.authorHeading} bn={DASHBOARD_UI_BN.authorHeading} />
+        </SectionTitle>
+        <div className={`${CARD} mt-5 flex flex-col gap-6 p-5 sm:flex-row sm:items-start sm:p-6`}>
           {/* eslint-disable-next-line @next/next/no-img-element -- static export: a plain img with the base path added */}
           <img
             src={withBasePath(AUTHOR.photo)}

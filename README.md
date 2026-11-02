@@ -128,7 +128,7 @@ The site tracks your work in your browser. It never sends it to a server.
 
 ![The Linux roadmap with a progress bar and checklists](docs/assets/linux.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 205`), your bookmarks, the topic progress of the eight modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 269`), your bookmarks, the topic progress of the eleven modules, and a Continue reading card. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
 
