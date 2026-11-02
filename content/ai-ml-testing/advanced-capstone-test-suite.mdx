@@ -55,7 +55,7 @@ DSPy synthetic dataset     targets: coverage breadth, generated not written
 Giskard scan (40+ probes)  targets: every branch, for security
 ```
 
-DSPy generates question/answer pairs programmatically from a knowledge source and a signature describing the task, which is a different approach from Giskard RAGET's template-based generation: DSPy's strength is optimizing a prompt or a pipeline against a metric, and that same machinery can produce a synthetic dataset to optimize against <Cite n={2} />.
+DSPy generates question/answer pairs programmatically from a knowledge source and a signature describing the task, which is a different tool from Giskard's quality scan, which generates scenarios from a knowledge base: DSPy's strength is optimizing a prompt or a pipeline against a metric, and that same machinery can produce a synthetic dataset to optimize against <Cite n={2} />.
 
 Multi-turn tests specifically exercise state that a single-question test cannot: does the agent remember an order id mentioned two turns ago, does a topic switch confuse the routing, does the conversation history grow correctly across an escalation.
 
@@ -72,7 +72,7 @@ DSPy synthetic dataset     targets: coverage breadth, generated not written
 Giskard scan (40+ probes)  targets: every branch, for security
 ```
 
-DSPy একটা knowledge source আর কাজ বর্ণনা করা একটা signature থেকে প্রোগ্রামেটিক্যালি প্রশ্ন/উত্তর জোড়া generate করে, যা Giskard RAGET-এর template-ভিত্তিক generation থেকে আলাদা একটা পদ্ধতি: DSPy-র শক্তি হলো একটা metric-এর বিরুদ্ধে একটা prompt বা pipeline optimize করা, আর একই যন্ত্র একটা synthetic dataset তৈরি করতে পারে যার বিরুদ্ধে optimize করা যায় <Cite n={2} />।
+DSPy একটা knowledge source আর কাজ বর্ণনা করা একটা signature থেকে প্রোগ্রামেটিক্যালি প্রশ্ন/উত্তর জোড়া generate করে, যা Giskard-এর quality scan থেকে আলাদা একটা tool, যে scan knowledge base থেকে scenario generate করে: DSPy-র শক্তি হলো একটা metric-এর বিরুদ্ধে একটা prompt বা pipeline optimize করা, আর একই যন্ত্র একটা synthetic dataset তৈরি করতে পারে যার বিরুদ্ধে optimize করা যায় <Cite n={2} />।
 
 Multi-turn টেস্ট বিশেষভাবে এমন state পরীক্ষা করে যা একটা একক-প্রশ্ন টেস্ট পারে না: agent কি দুই turn আগে উল্লেখ করা একটা order id মনে রাখে, একটা topic switch কি routing-কে বিভ্রান্ত করে, একটা escalation জুড়ে কথোপকথনের ইতিহাস সঠিকভাবে বাড়ে কিনা।
 
@@ -89,7 +89,7 @@ DSPy synthetic dataset     targets: coverage breadth, generated not written
 Giskard scan (40+ probes)  targets: every branch, for security
 ```
 
-DSPy একটা knowledge source আর কাজ বর্ণনা করা একটা signature থেকে প্রোগ্রামেটিক্যালি প্রশ্ন/উত্তর জোড়া generate করে, যা Giskard RAGET-এর template-ভিত্তিক generation থেকে আলাদা একটা পদ্ধতি: DSPy-র শক্তি হলো একটা metric-এর বিরুদ্ধে একটা prompt বা pipeline optimize করা, আর একই যন্ত্র একটা synthetic dataset তৈরি করতে পারে যার বিরুদ্ধে optimize করা যায় <Cite n={2} />।
+DSPy একটা knowledge source আর কাজ বর্ণনা করা একটা signature থেকে প্রোগ্রামেটিক্যালি প্রশ্ন/উত্তর জোড়া generate করে, যা Giskard-এর quality scan থেকে আলাদা একটা tool, যে scan knowledge base থেকে scenario generate করে: DSPy-র শক্তি হলো একটা metric-এর বিরুদ্ধে একটা prompt বা pipeline optimize করা, আর একই যন্ত্র একটা synthetic dataset তৈরি করতে পারে যার বিরুদ্ধে optimize করা যায় <Cite n={2} />।
 
 Multi-turn টেস্ট বিশেষভাবে এমন state পরীক্ষা করে যা একটা একক-প্রশ্ন টেস্ট পারে না: agent কি দুই turn আগে উল্লেখ করা একটা order id মনে রাখে, একটা topic switch কি routing-কে বিভ্রান্ত করে, একটা escalation জুড়ে কথোপকথনের ইতিহাস সঠিকভাবে বাড়ে কিনা।
 
@@ -104,16 +104,41 @@ Multi-turn টেস্ট বিশেষভাবে এমন state পরী
 A Ragas suite over 50 generated cases <Cite n={1} />:
 
 ```python
-from ragas import evaluate
-from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
+import pytest
+from openai import AsyncOpenAI
+from ragas.embeddings.base import embedding_factory
+from ragas.llms import llm_factory
+from ragas.metrics.collections import AnswerRelevancy, ContextPrecision, ContextRecall, Faithfulness
 
-def test_the_rag_branch_meets_all_four_metrics(fifty_cases):
-    result = evaluate(
-        dataset=build_eval_dataset(fifty_cases),
-        metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
-    )
-    for metric in ("faithfulness", "answer_relevancy", "context_precision", "context_recall"):
-        assert result[metric] >= 0.85, f"{metric}: {result[metric]}"
+client = AsyncOpenAI()
+llm = llm_factory("gpt-4o-mini", client=client)
+embeddings = embedding_factory("openai", model="text-embedding-3-small", client=client)
+
+@pytest.mark.asyncio
+async def test_the_rag_branch_meets_all_four_metrics(fifty_cases):
+    scorers = {
+        "faithfulness": Faithfulness(llm=llm),
+        "answer_relevancy": AnswerRelevancy(llm=llm, embeddings=embeddings),
+        "context_precision": ContextPrecision(llm=llm),
+        "context_recall": ContextRecall(llm=llm),
+    }
+    totals = dict.fromkeys(scorers, 0.0)
+    for case in fifty_cases:  # each case has question, answer, contexts, reference
+        results = {
+            "faithfulness": await scorers["faithfulness"].ascore(
+                user_input=case.question, response=case.answer, retrieved_contexts=case.contexts),
+            "answer_relevancy": await scorers["answer_relevancy"].ascore(
+                user_input=case.question, response=case.answer),
+            "context_precision": await scorers["context_precision"].ascore(
+                user_input=case.question, reference=case.reference, retrieved_contexts=case.contexts),
+            "context_recall": await scorers["context_recall"].ascore(
+                user_input=case.question, retrieved_contexts=case.contexts, reference=case.reference),
+        }
+        for name, result in results.items():
+            totals[name] += result.value
+    for name, total in totals.items():
+        mean = total / len(fifty_cases)
+        assert mean >= 0.85, f"{name}: {mean:.2f}"
 ```
 
 A DSPy-generated dataset, built from the knowledge base and a task signature <Cite n={2} />:
@@ -146,8 +171,14 @@ def test_the_agent_remembers_the_order_id_across_turns(agent):
 The Giskard scan at the course's specified scale <Cite n={3} />:
 
 ```python
-report = giskard.scan(model, dataset, only=None)  # the full probe library, 40+
-assert len(report.get_issues(severity="high")) == 0, report
+from giskard.scan import vulnerability_scan
+
+result = await vulnerability_scan(
+    target=support_agent,  # async def support_agent(inputs: str) -> str
+    description="A support agent that searches docs, checks orders, and escalates.",
+    languages=["en"],
+)
+assert result.failed_count == 0, result
 ```
 
 <Callout type="tip" title="Tutorial advice">
@@ -156,7 +187,7 @@ This advice is the tutorial's own. It does not come from the sources.
 
 - Run the DSPy-generated and the hand-written cases as separate suites, with separate pass thresholds, since the generated set's quality depends on the generator model.
 - Write at least five deliberate multi-turn scenarios by hand; a generated dataset rarely covers multi-turn state well.
-- Treat any high-severity Giskard finding as a release blocker given the agent's tool-use surface, not just a note for later.
+- Treat any failing Giskard scenario as a release blocker given the agent's tool-use surface, not just a note for later.
 </Callout>
 
 </Technical>
@@ -165,16 +196,41 @@ This advice is the tutorial's own. It does not come from the sources.
 ৫০টা generated কেসের ওপর একটা Ragas suite <Cite n={1} />:
 
 ```python
-from ragas import evaluate
-from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
+import pytest
+from openai import AsyncOpenAI
+from ragas.embeddings.base import embedding_factory
+from ragas.llms import llm_factory
+from ragas.metrics.collections import AnswerRelevancy, ContextPrecision, ContextRecall, Faithfulness
 
-def test_the_rag_branch_meets_all_four_metrics(fifty_cases):
-    result = evaluate(
-        dataset=build_eval_dataset(fifty_cases),
-        metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
-    )
-    for metric in ("faithfulness", "answer_relevancy", "context_precision", "context_recall"):
-        assert result[metric] >= 0.85, f"{metric}: {result[metric]}"
+client = AsyncOpenAI()
+llm = llm_factory("gpt-4o-mini", client=client)
+embeddings = embedding_factory("openai", model="text-embedding-3-small", client=client)
+
+@pytest.mark.asyncio
+async def test_the_rag_branch_meets_all_four_metrics(fifty_cases):
+    scorers = {
+        "faithfulness": Faithfulness(llm=llm),
+        "answer_relevancy": AnswerRelevancy(llm=llm, embeddings=embeddings),
+        "context_precision": ContextPrecision(llm=llm),
+        "context_recall": ContextRecall(llm=llm),
+    }
+    totals = dict.fromkeys(scorers, 0.0)
+    for case in fifty_cases:  # each case has question, answer, contexts, reference
+        results = {
+            "faithfulness": await scorers["faithfulness"].ascore(
+                user_input=case.question, response=case.answer, retrieved_contexts=case.contexts),
+            "answer_relevancy": await scorers["answer_relevancy"].ascore(
+                user_input=case.question, response=case.answer),
+            "context_precision": await scorers["context_precision"].ascore(
+                user_input=case.question, reference=case.reference, retrieved_contexts=case.contexts),
+            "context_recall": await scorers["context_recall"].ascore(
+                user_input=case.question, retrieved_contexts=case.contexts, reference=case.reference),
+        }
+        for name, result in results.items():
+            totals[name] += result.value
+    for name, total in totals.items():
+        mean = total / len(fifty_cases)
+        assert mean >= 0.85, f"{name}: {mean:.2f}"
 ```
 
 knowledge base আর একটা task signature থেকে বানানো একটা DSPy-generated dataset <Cite n={2} />:
@@ -207,8 +263,14 @@ def test_the_agent_remembers_the_order_id_across_turns(agent):
 Course-এর নির্দিষ্ট স্কেলে Giskard scan <Cite n={3} />:
 
 ```python
-report = giskard.scan(model, dataset, only=None)  # the full probe library, 40+
-assert len(report.get_issues(severity="high")) == 0, report
+from giskard.scan import vulnerability_scan
+
+result = await vulnerability_scan(
+    target=support_agent,  # async def support_agent(inputs: str) -> str
+    description="A support agent that searches docs, checks orders, and escalates.",
+    languages=["en"],
+)
+assert result.failed_count == 0, result
 ```
 
 <Callout type="tip" title="Tutorial advice">
@@ -217,7 +279,7 @@ This advice is the tutorial's own. It does not come from the sources.
 
 - DSPy-generated আর হাতে-লেখা কেস আলাদা suite হিসেবে চালান, আলাদা pass threshold সহ, কারণ generated সেটের মান generator model-এর ওপর নির্ভর করে।
 - অন্তত পাঁচটা ইচ্ছাকৃত multi-turn দৃশ্য হাতে লিখুন; একটা generated dataset খুব কমই multi-turn state ভালোভাবে কভার করে।
-- agent-এর tool-use surface দেখে যেকোনো high-severity Giskard finding-কে একটা release blocker হিসেবে দেখুন, শুধু পরের জন্য একটা নোট নয়।
+- agent-এর tool-use surface দেখে যেকোনো ব্যর্থ Giskard scenario-কে একটা release blocker হিসেবে দেখুন, শুধু পরের জন্য একটা নোট নয়।
 </Callout>
 
 </Layman>
@@ -226,16 +288,41 @@ This advice is the tutorial's own. It does not come from the sources.
 ৫০টা generated কেসের ওপর একটা Ragas suite <Cite n={1} />:
 
 ```python
-from ragas import evaluate
-from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
+import pytest
+from openai import AsyncOpenAI
+from ragas.embeddings.base import embedding_factory
+from ragas.llms import llm_factory
+from ragas.metrics.collections import AnswerRelevancy, ContextPrecision, ContextRecall, Faithfulness
 
-def test_the_rag_branch_meets_all_four_metrics(fifty_cases):
-    result = evaluate(
-        dataset=build_eval_dataset(fifty_cases),
-        metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
-    )
-    for metric in ("faithfulness", "answer_relevancy", "context_precision", "context_recall"):
-        assert result[metric] >= 0.85, f"{metric}: {result[metric]}"
+client = AsyncOpenAI()
+llm = llm_factory("gpt-4o-mini", client=client)
+embeddings = embedding_factory("openai", model="text-embedding-3-small", client=client)
+
+@pytest.mark.asyncio
+async def test_the_rag_branch_meets_all_four_metrics(fifty_cases):
+    scorers = {
+        "faithfulness": Faithfulness(llm=llm),
+        "answer_relevancy": AnswerRelevancy(llm=llm, embeddings=embeddings),
+        "context_precision": ContextPrecision(llm=llm),
+        "context_recall": ContextRecall(llm=llm),
+    }
+    totals = dict.fromkeys(scorers, 0.0)
+    for case in fifty_cases:  # each case has question, answer, contexts, reference
+        results = {
+            "faithfulness": await scorers["faithfulness"].ascore(
+                user_input=case.question, response=case.answer, retrieved_contexts=case.contexts),
+            "answer_relevancy": await scorers["answer_relevancy"].ascore(
+                user_input=case.question, response=case.answer),
+            "context_precision": await scorers["context_precision"].ascore(
+                user_input=case.question, reference=case.reference, retrieved_contexts=case.contexts),
+            "context_recall": await scorers["context_recall"].ascore(
+                user_input=case.question, retrieved_contexts=case.contexts, reference=case.reference),
+        }
+        for name, result in results.items():
+            totals[name] += result.value
+    for name, total in totals.items():
+        mean = total / len(fifty_cases)
+        assert mean >= 0.85, f"{name}: {mean:.2f}"
 ```
 
 knowledge base আর একটা task signature থেকে বানানো একটা DSPy-generated dataset <Cite n={2} />:
@@ -268,8 +355,14 @@ def test_the_agent_remembers_the_order_id_across_turns(agent):
 Course-এর নির্দিষ্ট স্কেলে Giskard scan <Cite n={3} />:
 
 ```python
-report = giskard.scan(model, dataset, only=None)  # the full probe library, 40+
-assert len(report.get_issues(severity="high")) == 0, report
+from giskard.scan import vulnerability_scan
+
+result = await vulnerability_scan(
+    target=support_agent,  # async def support_agent(inputs: str) -> str
+    description="A support agent that searches docs, checks orders, and escalates.",
+    languages=["en"],
+)
+assert result.failed_count == 0, result
 ```
 
 <Callout type="tip" title="Tutorial advice">
@@ -278,7 +371,7 @@ assert len(report.get_issues(severity="high")) == 0, report
 
 - DSPy-generated আর হাতে-লেখা কেস আলাদা suite হিসেবে চালান, আলাদা pass threshold সহ, কারণ generated সেটের মান generator model-এর ওপর নির্ভর করে।
 - অন্তত পাঁচটা ইচ্ছাকৃত multi-turn দৃশ্য হাতে লিখুন; একটা generated dataset খুব কমই multi-turn state ভালোভাবে কভার করে।
-- agent-এর tool-use surface দেখে যেকোনো high-severity Giskard finding-কে একটা release blocker হিসেবে দেখুন, শুধু পরের জন্য একটা নোট নয়।
+- agent-এর tool-use surface দেখে যেকোনো ব্যর্থ Giskard scenario-কে একটা release blocker হিসেবে দেখুন, শুধু পরের জন্য একটা নোট নয়।
 </Callout>
 
 </Bangla>
@@ -297,7 +390,7 @@ assert len(report.get_issues(severity="high")) == 0, report
 
 **Mistake 4: scoring all four Ragas metrics as one average.** A high faithfulness score hiding a low context recall score means the right answer is reached from the wrong retrieval some of the time <Cite n={1} />.
 
-**Mistake 5: no severity tier on red team findings for this specific app.** An agent that can act needs a stricter bar on excessive-agency findings than a read-only chatbot does.
+**Mistake 5: no stricter bar on red team findings for this specific app.** An agent that can act needs a stricter bar on excessive-agency findings than a read-only chatbot does.
 
 </Technical>
 <Layman>
@@ -310,7 +403,7 @@ assert len(report.get_issues(severity="high")) == 0, report
 
 **Mistake ৪: চারটা Ragas metric-ই একটা average হিসেবে score করা।** একটা কম context recall score লুকিয়ে রাখা একটা উচ্চ faithfulness score মানে সঠিক উত্তর কিছু সময় ভুল retrieval থেকে পৌঁছায় <Cite n={1} />।
 
-**Mistake ৫: এই নির্দিষ্ট app-এর জন্য red team finding-এ কোনো severity tier নেই।** একটা agent যে কাজ করতে পারে তার excessive-agency finding-এ একটা read-only chatbot-এর চেয়ে কঠোরতর মান দরকার।
+**Mistake ৫: এই নির্দিষ্ট app-এর জন্য red team finding-এ কোনো কঠোরতর মান নেই।** একটা agent যে কাজ করতে পারে তার excessive-agency finding-এ একটা read-only chatbot-এর চেয়ে কঠোরতর মান দরকার।
 
 </Layman>
 <Bangla>
@@ -323,7 +416,7 @@ assert len(report.get_issues(severity="high")) == 0, report
 
 **ভুল ৪: চারটা Ragas metric-ই একটা average হিসেবে score করা।** একটা কম context recall score লুকিয়ে রাখা একটা উচ্চ faithfulness score মানে সঠিক উত্তর কিছু সময় ভুল retrieval থেকে পৌঁছায় <Cite n={1} />।
 
-**ভুল ৫: এই নির্দিষ্ট app-এর জন্য red team finding-এ কোনো severity tier নেই।** একটা agent যে কাজ করতে পারে তার excessive-agency finding-এ একটা read-only chatbot-এর চেয়ে কঠোরতর মান দরকার।
+**ভুল ৫: এই নির্দিষ্ট app-এর জন্য red team finding-এ কোনো কঠোরতর মান নেই।** একটা agent যে কাজ করতে পারে তার excessive-agency finding-এ একটা read-only chatbot-এর চেয়ে কঠোরতর মান দরকার।
 
 </Bangla>
 </Voices>

@@ -351,6 +351,18 @@ SOURCES: dict[str, Source] = {
             "Promptfoo (docs)",
             "https://www.promptfoo.dev/docs/configuration/expected-outputs/deterministic/",
         ),
+        Source(
+            "langgraph-graph-api",
+            "Graph API overview",
+            "LangChain (docs)",
+            "https://docs.langchain.com/oss/python/langgraph/graph-api",
+        ),
+        Source(
+            "phoenix-otel",
+            "The phoenix.otel helpers",
+            "Arize Phoenix (docs)",
+            "https://arize.com/docs/phoenix/tracing/concepts-tracing/otel-openinference/phoenix-otel-helpers",
+        ),
         # --- Guardrails --------------------------------------------------------
         Source(
             "guardrails-intro",
