@@ -4,6 +4,7 @@ export const page = {
   sources: [
     { title: 'GitHub Actions documentation', publisher: 'GitHub', url: 'https://docs.github.com/en/actions', accessed: '2026-11-01' },
     { title: 'CI/CD integration', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
+    { title: 'Command line', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/usage/command-line/', accessed: '2026-11-01' },
   ],
 }
 
@@ -63,7 +64,7 @@ on a schedule, or manually triggered (visible, not blocking)
     full Playwright suite
 ```
 
-Promptfoo's own GitHub Action wraps the CLI call and posts the results as a PR comment, which is what makes the gate visible to a reviewer without them needing to run anything locally <Cite n={2} />.
+`npx promptfoo eval` returns exit code 100 when at least one test case fails (or when the pass rate is below `PROMPTFOO_PASS_RATE_THRESHOLD`), so running it as a CI step is what lets the job fail and block a merge <Cite n={3} />. Promptfoo also ships a GitHub Action that, when prompt files change in a pull request, runs a before-and-after comparison and posts the results to the pull request; it needs `github-token`, `prompts`, and `config` inputs and `pull-requests: write` permission <Cite n={2} />.
 
 The PR comment itself is the smallest version of the quality dashboard from the metrics module: the same numbers, same gate logic, surfaced at the point a human actually makes the merge decision instead of a separate page they would need to remember to check.
 
@@ -83,7 +84,7 @@ on a schedule, or manually triggered (visible, not blocking)
     full Playwright suite
 ```
 
-Promptfoo-র নিজস্ব GitHub Action CLI call মুড়ে আর ফলাফল একটা PR comment হিসেবে পোস্ট করে, যেটাই একজন reviewer-কে স্থানীয়ভাবে কিছু না চালিয়েই gate-টা দৃশ্যমান করে <Cite n={2} />।
+`npx promptfoo eval` অন্তত একটা test case ব্যর্থ হলে (বা pass rate `PROMPTFOO_PASS_RATE_THRESHOLD`-এর নিচে হলে) exit code 100 ফেরত দেয়, তাই এটাকে CI step হিসেবে চালালেই job ব্যর্থ হয়ে merge ব্লক করতে পারে <Cite n={3} />। Promptfoo-র একটা GitHub Action-ও আছে যা pull request-এ prompt ফাইল বদলালে before-and-after তুলনা চালিয়ে ফলাফল pull request-এ পোস্ট করে; এর জন্য `github-token`, `prompts`, `config` input আর `pull-requests: write` permission লাগে <Cite n={2} />।
 
 PR comment-টাই metrics module-এর quality dashboard-এর সবচেয়ে ছোট সংস্করণ: একই সংখ্যা, একই gate logic, ঠিক সেই বিন্দুতে দেখানো যেখানে একজন মানুষ আসলে merge সিদ্ধান্ত নেয়, একটা আলাদা পেজের বদলে যা তাদের চেক করার কথা মনে রাখতে হতো।
 
@@ -103,7 +104,7 @@ on a schedule, or manually triggered (visible, not blocking)
     full Playwright suite
 ```
 
-Promptfoo-র নিজস্ব GitHub Action CLI call মুড়ে আর ফলাফল একটা PR comment হিসেবে পোস্ট করে, যেটাই একজন reviewer-কে স্থানীয়ভাবে কিছু না চালিয়েই gate-টা দৃশ্যমান করে <Cite n={2} />।
+`npx promptfoo eval` অন্তত একটা test case ব্যর্থ হলে (বা pass rate `PROMPTFOO_PASS_RATE_THRESHOLD`-এর নিচে হলে) exit code 100 ফেরত দেয়, তাই এটাকে CI step হিসেবে চালালেই job ব্যর্থ হয়ে merge ব্লক করতে পারে <Cite n={3} />। Promptfoo-র একটা GitHub Action-ও আছে যা pull request-এ prompt ফাইল বদলালে before-and-after তুলনা চালিয়ে ফলাফল pull request-এ পোস্ট করে; এর জন্য `github-token`, `prompts`, `config` input আর `pull-requests: write` permission লাগে <Cite n={2} />।
 
 PR comment-টাই metrics module-এর quality dashboard-এর সবচেয়ে ছোট সংস্করণ: একই সংখ্যা, একই gate logic, ঠিক সেই বিন্দুতে দেখানো যেখানে একজন মানুষ আসলে merge সিদ্ধান্ত নেয়, একটা আলাদা পেজের বদলে যা তাদের চেক করার কথা মনে রাখতে হতো।
 
@@ -130,19 +131,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: promptfoo/promptfoo-action@v1
-        with:
-          config: promptfooconfig.yaml
-          fail-on-threshold: true
+      - run: npx promptfoo eval -c promptfooconfig.yaml   # exit code 100 on any failing test
       - run: python -m pytest tests/hallucination/
   nightly-slow-suite:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx promptfoo redteam run --config redteam.yaml
+      - run: npx promptfoo redteam run --config redteam-config.yaml
       - run: python -m scripts.run_giskard_scan
-      - run: npx playwright test
+      - run: python -m pytest tests/ui/
 ```
 
 A short presentation outline built from the suite's own output, not written from memory:
@@ -183,19 +181,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: promptfoo/promptfoo-action@v1
-        with:
-          config: promptfooconfig.yaml
-          fail-on-threshold: true
+      - run: npx promptfoo eval -c promptfooconfig.yaml   # exit code 100 on any failing test
       - run: python -m pytest tests/hallucination/
   nightly-slow-suite:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx promptfoo redteam run --config redteam.yaml
+      - run: npx promptfoo redteam run --config redteam-config.yaml
       - run: python -m scripts.run_giskard_scan
-      - run: npx playwright test
+      - run: python -m pytest tests/ui/
 ```
 
 Suite-এর নিজস্ব output থেকে বানানো একটা সংক্ষিপ্ত presentation outline, স্মৃতি থেকে লেখা নয়:
@@ -236,19 +231,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: promptfoo/promptfoo-action@v1
-        with:
-          config: promptfooconfig.yaml
-          fail-on-threshold: true
+      - run: npx promptfoo eval -c promptfooconfig.yaml   # exit code 100 on any failing test
       - run: python -m pytest tests/hallucination/
   nightly-slow-suite:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx promptfoo redteam run --config redteam.yaml
+      - run: npx promptfoo redteam run --config redteam-config.yaml
       - run: python -m scripts.run_giskard_scan
-      - run: npx playwright test
+      - run: python -m pytest tests/ui/
 ```
 
 Suite-এর নিজস্ব output থেকে বানানো একটা সংক্ষিপ্ত presentation outline, স্মৃতি থেকে লেখা নয়:

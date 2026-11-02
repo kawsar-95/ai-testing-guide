@@ -62,7 +62,7 @@ The build pipeline, in order:
 
 Steps 1-2 are a one-time (or on-update) ingestion job, separate from request handling: ingestion runs when the knowledge base changes, the chain runs on every user question, and conflating the two makes both slower and harder to test independently.
 
-LangChain's job in this pipeline is to compose the retriever, the prompt template, and the model call into one callable chain, so the request handler is a single function call rather than three manually wired steps <Cite n={1} />. ChromaDB's job is to store the embedded chunks and return the closest ones to a query embedding <Cite n={2} />.
+In this tutorial's pipeline, LangChain's job is to compose the retriever, the prompt template, and the model call into one callable chain, so the request handler is a single function call rather than three manually wired steps. ChromaDB's job is to store the embedded chunks and return the closest ones to a query embedding <Cite n={2} />.
 
 </Technical>
 <Layman>
@@ -78,7 +78,7 @@ Build pipeline, ক্রমানুসারে:
 
 ধাপ ১-২ একটা এক-বারের (বা update-এ) ingestion job, request handling থেকে আলাদা: knowledge base বদলালে ingestion চলে, প্রতিটা ব্যবহারকারীর প্রশ্নে chain চলে, আর দুটোকে মিশিয়ে ফেলা দুটোকেই ধীর আর আলাদাভাবে টেস্ট করা কঠিন করে।
 
-এই pipeline-এ LangChain-এর কাজ retriever, prompt template, আর model call-কে একটা callable chain-এ একত্র করা, তাই request handler তিনটা হাতে জোড়া ধাপের বদলে একটা একক function call <Cite n={1} />। ChromaDB-এর কাজ embed করা chunk সংরক্ষণ করা আর একটা query embedding-এর সবচেয়ে কাছেরগুলো ফেরত দেওয়া <Cite n={2} />।
+এই টিউটোরিয়ালের pipeline-এ LangChain-এর কাজ retriever, prompt template, আর model call-কে একটা callable chain-এ একত্র করা, তাই request handler তিনটা হাতে জোড়া ধাপের বদলে একটা একক function call। ChromaDB-এর কাজ embed করা chunk সংরক্ষণ করা আর একটা query embedding-এর সবচেয়ে কাছেরগুলো ফেরত দেওয়া <Cite n={2} />।
 
 </Layman>
 <Bangla>
@@ -94,7 +94,7 @@ Build pipeline, ক্রমানুসারে:
 
 ধাপ ১-২ একটা এক-বারের (বা update-এ) ingestion job, request handling থেকে আলাদা: knowledge base বদলালে ingestion চলে, প্রতিটা ব্যবহারকারীর প্রশ্নে chain চলে, আর দুটোকে মিশিয়ে ফেলা দুটোকেই ধীর আর আলাদাভাবে টেস্ট করা কঠিন করে।
 
-এই pipeline-এ LangChain-এর কাজ retriever, prompt template, আর model call-কে একটা callable chain-এ একত্র করা, তাই request handler তিনটা হাতে জোড়া ধাপের বদলে একটা একক function call <Cite n={1} />। ChromaDB-এর কাজ embed করা chunk সংরক্ষণ করা আর একটা query embedding-এর সবচেয়ে কাছেরগুলো ফেরত দেওয়া <Cite n={2} />।
+এই টিউটোরিয়ালের pipeline-এ LangChain-এর কাজ retriever, prompt template, আর model call-কে একটা callable chain-এ একত্র করা, তাই request handler তিনটা হাতে জোড়া ধাপের বদলে একটা একক function call। ChromaDB-এর কাজ embed করা chunk সংরক্ষণ করা আর একটা query embedding-এর সবচেয়ে কাছেরগুলো ফেরত দেওয়া <Cite n={2} />।
 
 </Bangla>
 </Voices>
@@ -122,7 +122,7 @@ for doc_path in FAQ_DOCS:
     )
 ```
 
-The chain, wiring retrieval to generation <Cite n={1} />:
+The chain, wiring retrieval to generation:
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -144,7 +144,7 @@ def answer_question(question: str) -> str:
     return chain.invoke({"context": retrieve(question), "question": question})
 ```
 
-The endpoint, exposing it <Cite n={3} />:
+The endpoint, exposing it:
 
 ```python
 from fastapi import FastAPI
@@ -153,7 +153,10 @@ app = FastAPI()
 
 @app.post("/ask")
 def ask(body: dict):
-    return {"answer": answer_question(body["question"])}
+    question = body["question"]
+    chunks = collection.query(query_texts=[question], n_results=4)["documents"][0]
+    answer = chain.invoke({"context": "\n\n".join(chunks), "question": question})
+    return {"answer": answer, "context": chunks}
 ```
 
 <Callout type="tip" title="Tutorial advice">
@@ -186,7 +189,7 @@ for doc_path in FAQ_DOCS:
     )
 ```
 
-retrieval-কে generation-এ জোড়া, Chain <Cite n={1} />:
+retrieval-কে generation-এ জোড়া, Chain:
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -208,7 +211,7 @@ def answer_question(question: str) -> str:
     return chain.invoke({"context": retrieve(question), "question": question})
 ```
 
-এটা প্রকাশ করা, Endpoint <Cite n={3} />:
+এটা প্রকাশ করা, Endpoint:
 
 ```python
 from fastapi import FastAPI
@@ -217,7 +220,10 @@ app = FastAPI()
 
 @app.post("/ask")
 def ask(body: dict):
-    return {"answer": answer_question(body["question"])}
+    question = body["question"]
+    chunks = collection.query(query_texts=[question], n_results=4)["documents"][0]
+    answer = chain.invoke({"context": "\n\n".join(chunks), "question": question})
+    return {"answer": answer, "context": chunks}
 ```
 
 <Callout type="tip" title="Tutorial advice">
@@ -250,7 +256,7 @@ for doc_path in FAQ_DOCS:
     )
 ```
 
-retrieval-কে generation-এ জোড়া, Chain <Cite n={1} />:
+retrieval-কে generation-এ জোড়া, Chain:
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -272,7 +278,7 @@ def answer_question(question: str) -> str:
     return chain.invoke({"context": retrieve(question), "question": question})
 ```
 
-এটা প্রকাশ করা, Endpoint <Cite n={3} />:
+এটা প্রকাশ করা, Endpoint:
 
 ```python
 from fastapi import FastAPI
@@ -281,7 +287,10 @@ app = FastAPI()
 
 @app.post("/ask")
 def ask(body: dict):
-    return {"answer": answer_question(body["question"])}
+    question = body["question"]
+    chunks = collection.query(query_texts=[question], n_results=4)["documents"][0]
+    answer = chain.invoke({"context": "\n\n".join(chunks), "question": question})
+    return {"answer": answer, "context": chunks}
 ```
 
 <Callout type="tip" title="Tutorial advice">

@@ -2,8 +2,7 @@ export const metadata = { title: 'Agent Decision Testing', description: 'Test th
 export const page = {
   updated: '2026-11-01',
   sources: [
-    { title: 'LangGraph overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/overview', accessed: '2026-11-01' },
-    { title: 'Scan a model', publisher: 'Giskard (docs)', url: 'https://docs.giskard.ai/oss/scan', accessed: '2026-11-01' },
+    { title: 'Define tools', publisher: 'Anthropic (docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools', accessed: '2026-11-01' },
     { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
   ],
 }
@@ -31,7 +30,7 @@ Three more decision behaviours matter:
 - **Loop detection.** The agent calls the same tool with the same arguments again. It happens when the tool returns an error the agent does not understand, and it burns the budget.
 - **Error recovery.** When a tool raises, the agent should try something else or report the failure, not repeat the same call.
 
-The measurement for all of these is a **decision accuracy** against a labelled set of situations, and it is measured per situation, not overall <Cite n={2} />.
+The measurement for all of these is a **decision accuracy** against a labelled set of situations, and it is measured per situation, not overall .
 
 </Technical>
 <Layman>
@@ -48,7 +47,7 @@ The measurement for all of these is a **decision accuracy** against a labelled s
 - **Loop detection।** agent একই tool একই argument দিয়ে আবার ডাকে। এটা হয় যখন tool এমন error দেয় যেটা model বোঝে না, আর বাজেট পুড়ে।
 - **Error recovery।** tool ব্যর্থ হলে agent অন্য কিছু চেষ্টা করা বা ব্যর্থতা জানানো উচিত, একই call না করে।
 
-এগুলোর মাপ হলো একটা labelled situation set-এর বিপরীতে **decision accuracy**, আর সেটা পরিস্থিতি অনুযায়ী মাপা হয়, সামগ্রিকভাবে নয় <Cite n={2} />।
+এগুলোর মাপ হলো একটা labelled situation set-এর বিপরীতে **decision accuracy**, আর সেটা পরিস্থিতি অনুযায়ী মাপা হয়, সামগ্রিকভাবে নয়।
 
 </Layman>
 <Bangla>
@@ -65,7 +64,7 @@ The measurement for all of these is a **decision accuracy** against a labelled s
 - **Loop detection।** agent একই tool একই argument দিয়ে আবার ডাকে। এটা হয় যখন tool এমন error দেয় যেটা model বোঝে না, আর বাজেট পুড়ে।
 - **Error recovery।** tool ব্যর্থ হলে agent অন্য কিছু চেষ্টা করা বা ব্যর্থতা জানানো উচিত, একই call না করে।
 
-এগুলোর মাপ হলো একটা labelled situation set-এর বিপরীতে **decision accuracy**, আর সেটা পরিস্থিতি অনুযায়ী মাপা হয়, সামগ্রিকভাবে নয় <Cite n={2} />।
+এগুলোর মাপ হলো একটা labelled situation set-এর বিপরীতে **decision accuracy**, আর সেটা পরিস্থিতি অনুযায়ী মাপা হয়, সামগ্রিকভাবে নয়।
 
 </Bangla>
 </Voices>
@@ -111,10 +110,8 @@ The **hallucinated argument** is caught by a test that asserts the argument is n
 ```python
 def test_the_agent_does_not_invent_an_order_id(agent, trace):
     agent.run("Cancel my order")
-    call = next(c for c in trace.tool_calls if c.name == "cancel_order")
-    assert call.arguments.get("order_id") is None, (
-        "the agent invented an order id"
-    )
+    cancels = [c for c in trace.tool_calls if c.name == "cancel_order"]
+    assert cancels == [], "the agent called cancel_order without knowing which order"
 ```
 
 The agent should have asked which order. Inventing an id means cancelling someone else's order.
@@ -138,7 +135,7 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
-The trace is what makes the decision measurable. A trace shows the tool sequence with the arguments, so the decision accuracy can be computed per situation rather than guessed <Cite n={3} />.
+The trace is what makes the decision measurable. A trace shows the tool sequence with the arguments, so the decision accuracy can be computed per situation rather than guessed <Cite n={2} />.
 
 </Technical>
 <Layman>
@@ -179,10 +176,8 @@ ARGUMENT_CASES = [
 ```python
 def test_the_agent_does_not_invent_an_order_id(agent, trace):
     agent.run("Cancel my order")
-    call = next(c for c in trace.tool_calls if c.name == "cancel_order")
-    assert call.arguments.get("order_id") is None, (
-        "the agent invented an order id"
-    )
+    cancels = [c for c in trace.tool_calls if c.name == "cancel_order"]
+    assert cancels == [], "the agent called cancel_order without knowing which order"
 ```
 
 agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।
@@ -206,7 +201,7 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
-trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={3} />।
+trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={2} />।
 
 </Layman>
 <Bangla>
@@ -247,10 +242,8 @@ ARGUMENT_CASES = [
 ```python
 def test_the_agent_does_not_invent_an_order_id(agent, trace):
     agent.run("Cancel my order")
-    call = next(c for c in trace.tool_calls if c.name == "cancel_order")
-    assert call.arguments.get("order_id") is None, (
-        "the agent invented an order id"
-    )
+    cancels = [c for c in trace.tool_calls if c.name == "cancel_order"]
+    assert cancels == [], "the agent called cancel_order without knowing which order"
 ```
 
 agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।
@@ -274,7 +267,7 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
-trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={3} />।
+trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={2} />।
 
 </Bangla>
 </Voices>
@@ -320,10 +313,8 @@ The **hallucinated argument** is caught by a test that asserts the argument is n
 ```python
 def test_the_agent_does_not_invent_an_order_id(agent, trace):
     agent.run("Cancel my order")
-    call = next(c for c in trace.tool_calls if c.name == "cancel_order")
-    assert call.arguments.get("order_id") is None, (
-        "the agent invented an order id"
-    )
+    cancels = [c for c in trace.tool_calls if c.name == "cancel_order"]
+    assert cancels == [], "the agent called cancel_order without knowing which order"
 ```
 
 The agent should have asked which order. Inventing an id means cancelling someone else's order.
@@ -347,7 +338,7 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
-The trace is what makes the decision measurable. A trace shows the tool sequence with the arguments, so the decision accuracy can be computed per situation rather than guessed <Cite n={3} />.
+The trace is what makes the decision measurable. A trace shows the tool sequence with the arguments, so the decision accuracy can be computed per situation rather than guessed <Cite n={2} />.
 
 </Technical>
 <Layman>
@@ -388,10 +379,8 @@ ARGUMENT_CASES = [
 ```python
 def test_the_agent_does_not_invent_an_order_id(agent, trace):
     agent.run("Cancel my order")
-    call = next(c for c in trace.tool_calls if c.name == "cancel_order")
-    assert call.arguments.get("order_id") is None, (
-        "the agent invented an order id"
-    )
+    cancels = [c for c in trace.tool_calls if c.name == "cancel_order"]
+    assert cancels == [], "the agent called cancel_order without knowing which order"
 ```
 
 agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।
@@ -415,7 +404,7 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
-trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={3} />।
+trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={2} />।
 
 </Layman>
 <Bangla>
@@ -456,10 +445,8 @@ ARGUMENT_CASES = [
 ```python
 def test_the_agent_does_not_invent_an_order_id(agent, trace):
     agent.run("Cancel my order")
-    call = next(c for c in trace.tool_calls if c.name == "cancel_order")
-    assert call.arguments.get("order_id") is None, (
-        "the agent invented an order id"
-    )
+    cancels = [c for c in trace.tool_calls if c.name == "cancel_order"]
+    assert cancels == [], "the agent called cancel_order without knowing which order"
 ```
 
 agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।
@@ -483,7 +470,7 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
-trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={3} />।
+trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={2} />।
 
 </Bangla>
 </Voices>
@@ -501,9 +488,9 @@ trace-ই সিদ্ধান্তকে মাপযোগ্য করে�
 
 **Mistake 4: no loop case.** Every test goal is solvable, so the stopping logic is never exercised.
 
-**Mistake 5: no tool-error case.** The tool that always succeeds hides the recovery bug <Cite n={1} />.
+**Mistake 5: no tool-error case.** The tool that always succeeds hides the recovery bug.
 
-**Mistake 6: one accuracy number for all situations.** A model that is perfect on single-tool tasks and wrong on two-tool tasks still looks fine overall <Cite n={2} />.
+**Mistake 6: one accuracy number for all situations.** A model that is perfect on single-tool tasks and wrong on two-tool tasks still looks fine overall .
 
 </Technical>
 <Layman>
@@ -516,9 +503,9 @@ trace-ই সিদ্ধান্তকে মাপযোগ্য করে�
 
 **Mistake 4: loop কেস নেই।** প্রতিটা test goal সমাধানযোগ্য, তাই শেষ হওয়ার logic কখনোই পরীক্ষিত হয় না।
 
-**Mistake 5: tool error কেস নেই।** সবসময় সফল হওয়া tool recovery বাগ ঢেকে দেয় <Cite n={1} />।
+**Mistake 5: tool error কেস নেই।** সবসময় সফল হওয়া tool recovery বাগ ঢেকে দেয়।
 
-**Mistake 6: সব পরিস্থিতির জন্য একটা accuracy সংখ্যা।** এক-tool কাজে পারফেক্ট আর দুই-tool কাজে ভুল model-ও গড়ে ভালো দেখায় <Cite n={2} />।
+**Mistake 6: সব পরিস্থিতির জন্য একটা accuracy সংখ্যা।** এক-tool কাজে পারফেক্ট আর দুই-tool কাজে ভুল model-ও গড়ে ভালো দেখায়।
 
 </Layman>
 <Bangla>
@@ -531,9 +518,9 @@ trace-ই সিদ্ধান্তকে মাপযোগ্য করে�
 
 **Mistake 4: loop কেস নেই।** প্রতিটা test goal সমাধানযোগ্য, তাই শেষ হওয়ার logic কখনোই পরীক্ষিত হয় না।
 
-**Mistake 5: tool error কেস নেই।** সবসময় সফল হওয়া tool recovery বাগ ঢেকে দেয় <Cite n={1} />।
+**Mistake 5: tool error কেস নেই।** সবসময় সফল হওয়া tool recovery বাগ ঢেকে দেয়।
 
-**Mistake 6: সব পরিস্থিতির জন্য একটা accuracy সংখ্যা।** এক-tool কাজে পারফেক্ট আর দুই-tool কাজে ভুল model-ও গড়ে ভালো দেখায় <Cite n={2} />।
+**Mistake 6: সব পরিস্থিতির জন্য একটা accuracy সংখ্যা।** এক-tool কাজে পারফেক্ট আর দুই-tool কাজে ভুল model-ও গড়ে ভালো দেখায়।
 
 </Bangla>
 </Voices>

@@ -4,6 +4,7 @@ export const page = {
   sources: [
     { title: 'Locust documentation', publisher: 'Locust', url: 'https://docs.locust.io/en/stable/', accessed: '2026-11-01' },
     { title: 'Messages API reference', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-11-01' },
+    { title: 'Rate limits', publisher: 'Anthropic (docs)', url: 'https://platform.claude.com/docs/en/api/rate-limits', accessed: '2026-11-01' },
   ],
 }
 
@@ -26,7 +27,7 @@ Load testing an AI system measures three things that a normal API load test does
 
 The consequence is that **the load test has to fix the output length**, or it is not comparing like with like. `max_tokens` is the control, and it has to be the same on every arm.
 
-The fourth thing is **rate limiting**. Every provider limits you, and the limit is often measured in tokens per minute rather than requests per minute. A load test that ignores the token rate will hit the limit and measure your retry logic instead of your server <Cite n={2} />.
+The fourth thing is **rate limiting**. Every provider limits you, and the limit is often measured in tokens per minute rather than requests per minute. A load test that ignores the token rate will hit the limit and measure your retry logic instead of your server <Cite n={3} />.
 
 And the fifth is that **load has a quality cost**. A server under strain can degrade by truncating, by serving a shorter answer, or by falling back to a smaller model. A load test that only checks the status code misses all three.
 
@@ -41,7 +42,7 @@ AI সিস্টেমের load test তিনটা জিনিস মা�
 
 ফলে **load test-এ আউটপুট দৈর্ঘ্য স্থির করতে হবে**, নইলে তুলনা তুলনা হবে না। `max_tokens` হলো control, আর প্রতিটা arm-এ এটা একই রাখতে হবে।
 
-চতুর্থ বিষয় হলো **rate limiting**। প্রতিটা provider আপনাকে সীমা দেয়, আর সেই সীমা প্রায়ই প্রতি মিনিটে request নয়, প্রতি মিনিটে token দিয়ে মাপা হয়। যে load test token rate উপেক্ষা করে সেটা সীমায় ঠেকে গিয়ে আপনার server নয়, retry logic মাপবে <Cite n={2} />।
+চতুর্থ বিষয় হলো **rate limiting**। প্রতিটা provider আপনাকে সীমা দেয়, আর সেই সীমা প্রায়ই প্রতি মিনিটে request নয়, প্রতি মিনিটে token দিয়ে মাপা হয়। যে load test token rate উপেক্ষা করে সেটা সীমায় ঠেকে গিয়ে আপনার server নয়, retry logic মাপবে <Cite n={3} />।
 
 আর পঞ্চম হলো **load-এর একটা মানের দাম আছে**। চাপের নিচের server উত্তর কেটে দিতে পারে, ছোট উত্তর দিতে পারে, বা ছোট model-এ ফিরে যেতে পারে। শুধু status code দেখা একটা load test তিনটিই মিস করে।
 
@@ -56,7 +57,7 @@ AI সিস্টেমের load test তিনটা জিনিস মা�
 
 ফলে **load test-এ আউটপুট দৈর্ঘ্য স্থির করতে হবে**, নইলে তুলনা তুলনা হবে না। `max_tokens` হলো control, আর প্রতিটা arm-এ এটা একই রাখতে হবে।
 
-চতুর্থ বিষয় হলো **rate limiting**। প্রতিটা provider আপনাকে সীমা দেয়, আর সেই সীমা প্রায়ই প্রতি মিনিটে request নয়, প্রতি মিনিটে token দিয়ে মাপা হয়। যে load test token rate উপেক্ষা করে সেটা সীমায় ঠেকে গিয়ে আপনার server নয়, retry logic মাপবে <Cite n={2} />।
+চতুর্থ বিষয় হলো **rate limiting**। প্রতিটা provider আপনাকে সীমা দেয়, আর সেই সীমা প্রায়ই প্রতি মিনিটে request নয়, প্রতি মিনিটে token দিয়ে মাপা হয়। যে load test token rate উপেক্ষা করে সেটা সীমায় ঠেকে গিয়ে আপনার server নয়, retry logic মাপবে <Cite n={3} />।
 
 আর পঞ্চম হলো **load-এর একটা মানের দাম আছে**। চাপের নিচের server উত্তর কেটে দিতে পারে, ছোট উত্তর দিতে পারে, বা ছোট model-এ ফিরে যেতে পারে। শুধু status code দেখা একটা load test তিনটিই মিস করে।
 
@@ -94,7 +95,7 @@ class SupportUser(HttpUser):
         })
 ```
 
-The weighted mix matters: the long question is 2% of traffic but a much larger share of the tokens and of the wall-clock time. A load test with only short questions will never find the bottleneck.
+The weighted mix matters: the long question is about one request in six (weights 10 and 2) but a much larger share of the tokens and of the wall-clock time. A load test with only short questions will never find the bottleneck.
 
 **The measurement** has to separate TTFT from total time, and that means the client has to read the stream rather than wait for the body:
 
@@ -109,7 +110,7 @@ async def measure_one(client, payload) -> dict[str, float]:
                 continue
             if first_token_at is None:
                 first_token_at = time.perf_counter()
-            tokens += 1
+            tokens += 1  # counts stream events, a proxy for tokens
     end = time.perf_counter()
     return {
         "ttft_ms": (first_token_at - start) * 1000,
@@ -159,7 +160,7 @@ class SupportUser(HttpUser):
         })
 ```
 
-weighted mix গুরুত্বপূর্ণ: লম্বা প্রশ্ন ট্রাফিকের ২% কিন্তু token-এর আর wall-clock সময়ের অনেক বেশি। শুধু ছোট প্রশ্নের load test কখনো bottleneck খুঁজে পাবে না।
+weighted mix গুরুত্বপূর্ণ: লম্বা প্রশ্ন প্রায় ছয়টা অনুরোধের একটা (weight ১০ আর ২) কিন্তু token-এর আর wall-clock সময়ের অনেক বেশি। শুধু ছোট প্রশ্নের load test কখনো bottleneck খুঁজে পাবে না।
 
 **মাপ** TTFT আর মোট সময় আলাদা করতে হয়, আর তার জন্য client-কে body-এর জন্য অপেক্ষা না করে stream পড়তে হয়:
 
@@ -174,7 +175,7 @@ async def measure_one(client, payload) -> dict[str, float]:
                 continue
             if first_token_at is None:
                 first_token_at = time.perf_counter()
-            tokens += 1
+            tokens += 1  # counts stream events, a proxy for tokens
     end = time.perf_counter()
     return {
         "ttft_ms": (first_token_at - start) * 1000,
@@ -224,7 +225,7 @@ class SupportUser(HttpUser):
         })
 ```
 
-weighted mix গুরুত্বপূর্ণ: লম্বা প্রশ্ন ট্রাফিকের ২% কিন্তু token-এর আর wall-clock সময়ের অনেক বেশি। শুধু ছোট প্রশ্নের load test কখনো bottleneck খুঁজে পাবে না।
+weighted mix গুরুত্বপূর্ণ: লম্বা প্রশ্ন প্রায় ছয়টা অনুরোধের একটা (weight ১০ আর ২) কিন্তু token-এর আর wall-clock সময়ের অনেক বেশি। শুধু ছোট প্রশ্নের load test কখনো bottleneck খুঁজে পাবে না।
 
 **মাপ** TTFT আর মোট সময় আলাদা করতে হয়, আর তার জন্য client-কে body-এর জন্য অপেক্ষা না করে stream পড়তে হয়:
 
@@ -239,7 +240,7 @@ async def measure_one(client, payload) -> dict[str, float]:
                 continue
             if first_token_at is None:
                 first_token_at = time.perf_counter()
-            tokens += 1
+            tokens += 1  # counts stream events, a proxy for tokens
     end = time.perf_counter()
     return {
         "ttft_ms": (first_token_at - start) * 1000,
@@ -459,7 +460,7 @@ def test_the_generation_rate_is_fast_enough(results):
 <Voices>
 <Technical>
 
-**Mistake 1: only short questions.** The long prompt is 2% of traffic and a large share of the load.
+**Mistake 1: only short questions.** The long prompt is about one request in six and a large share of the load.
 
 **Mistake 2: measuring only total latency.** The user perceives the first token, and the two budgets are different numbers.
 
@@ -474,7 +475,7 @@ def test_the_generation_rate_is_fast_enough(results):
 </Technical>
 <Layman>
 
-**Mistake ১: শুধু ছোট প্রশ্ন।** লম্বা prompt ট্রাফিকের ২% আর load-এর বড় অংশ।
+**Mistake ১: শুধু ছোট প্রশ্ন।** লম্বা prompt প্রায় ছয়টা অনুরোধের একটা আর load-এর বড় অংশ।
 
 **Mistake ২: শুধু মোট latency মাপা।** ব্যবহারকারী প্রথম token দেখে, আর দুটো বাজেট আলাদা সংখ্যা।
 
@@ -489,7 +490,7 @@ def test_the_generation_rate_is_fast_enough(results):
 </Layman>
 <Bangla>
 
-**Mistake ১: শুধু ছোট প্রশ্ন।** লম্বা prompt ট্রাফিকের ২% আর load-এর বড় অংশ।
+**Mistake ১: শুধু ছোট প্রশ্ন।** লম্বা prompt প্রায় ছয়টা অনুরোধের একটা আর load-এর বড় অংশ।
 
 **Mistake ২: শুধু মোট latency মাপা।** ব্যবহারকারী প্রথম token দেখে, আর দুটো বাজেট আলাদা সংখ্যা।
 

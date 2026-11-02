@@ -2,9 +2,8 @@ export const metadata = { title: 'Multi-Turn Conversation Testing', description:
 export const page = {
   updated: '2026-11-01',
   sources: [
-    { title: 'LLM testing', publisher: 'DeepEval docs', url: 'https://docs.confident-ai.com/docs/interview-llm-testing', accessed: '2026-11-01' },
-    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
-    { title: 'Configuration reference', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/configuration/reference/', accessed: '2026-11-01' },
+    { title: 'Knowledge Retention (multi-turn metrics)', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-knowledge-retention', accessed: '2026-11-01' },
+    { title: 'Evaluating multi-turn conversations', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/howtos/applications/evaluating_multi_turn_conversations/', accessed: '2026-11-01' },
   ],
 }
 
@@ -29,7 +28,7 @@ The **context window** is the limit on how much history fits. Every turn consume
 
 The **reset** is the fourth. A user says "forget what I told you" or starts a new topic entirely, and the conversation history should be dropped. If the bot keeps the old order id, it acts on a stale order.
 
-The measurement tools exist for this: DeepEval's LLM testing guidance covers multi-turn evaluation, and Ragas has conversation-level metrics <Cite n={1} /> <Cite n={2} />.
+The measurement tools exist for this: DeepEval ships multi-turn metrics (Turn Relevancy, Role Adherence, Knowledge Retention, Conversation Completeness) <Cite n={1} />, and Ragas has a tutorial on evaluating multi-turn conversations <Cite n={2} />.
 
 </Technical>
 <Layman>
@@ -44,7 +43,7 @@ multi-turn টেস্টে একসাথে তিনটা বিষয়
 
 **Reset** চতুর্থ। ব্যবহারকারী বলে "আমি যা বলেছি ভুলে গেছো" বা নতুন topic শুরু করে, আর কথোপকথনের ইতিহাস বাদ দেওয়া উচিত। bot পুরোনো order id রাখলে সেটা stale order-এ কাজ করে।
 
-মাপার টুল আছে: DeepEval-এর LLM testing নির্দেশনা multi-turn evaluation কভার করে, আর Ragas-এর conversation-level metric আছে <Cite n={1} /> <Cite n={2} />।
+মাপার টুল আছে: DeepEval-এ multi-turn metric আছে (Turn Relevancy, Role Adherence, Knowledge Retention, Conversation Completeness) <Cite n={1} />, আর Ragas-এর multi-turn কথোপকথন evaluate করার একটা tutorial আছে <Cite n={2} />।
 
 </Layman>
 <Bangla>
@@ -59,7 +58,7 @@ multi-turn টেস্টে একসাথে তিনটা বিষয়
 
 **Reset** চতুর্থ। ব্যবহারকারী বলে "আমি যা বলেছি ভুলে গেছো" বা নতুন topic শুরু করে, আর কথোপকথনের ইতিহাস বাদ দেওয়া উচিত। bot পুরোনো order id রাখলে সেটা stale order-এ কাজ করে।
 
-মাপার টুল আছে: DeepEval-এর LLM testing নির্দেশনা multi-turn evaluation কভার করে, আর Ragas-এর conversation-level metric আছে <Cite n={1} /> <Cite n={2} />।
+মাপার টুল আছে: DeepEval-এ multi-turn metric আছে (Turn Relevancy, Role Adherence, Knowledge Retention, Conversation Completeness) <Cite n={1} />, আর Ragas-এর multi-turn কথোপকথন evaluate করার একটা tutorial আছে <Cite n={2} />।
 
 </Bangla>
 </Voices>
@@ -77,7 +76,7 @@ the summary        the compressed form of older turns, if the app uses one
 the scratchpad      the facts extracted along the way, like an order id
 ```
 
-The **message list** is the easiest to test and the easiest to get wrong. The assertion is on the request: after turn three, does the request contain three user messages and three assistant messages, in order, with the right roles? A chatbot that drops the assistant's own replies is a common bug and it is invisible in the UI, which only shows the user's bubbles. A test case holds the expected roles and the expected contents, in the same shape a config-driven eval suite uses <Cite n={3} />.
+The **message list** is the easiest to test and the easiest to get wrong. The assertion is on the request: after turn three, does the request contain three user messages and three assistant messages, in order, with the right roles? A chatbot that drops the assistant's own replies is a common bug and it is invisible in the UI, which only shows the user's bubbles. A test case holds the expected roles and the expected contents.
 
 The **summary** is where the truncation shows. If the app summarises older turns, the summary has to keep the facts that matter, like the order id, and drop the small talk. The test writes a long conversation with one fact buried at the start and checks that the fact survives.
 
@@ -167,7 +166,7 @@ def test_a_later_correction_overrides_the_earlier_value(conversation):
 The topic-switch test, which asserts the product's chosen policy:
 
 ```python
-def test_the_return_context_does_not_leak_into_an_unrelated_question(conversation):
+def test_the_return_context_survives_an_unrelated_question(conversation):
     conversation.ask("How long do I have to return a laptop?")
     conversation.ask("How do I reset my password?")
     answer = conversation.ask("How long do I have to return a laptop?")
@@ -237,7 +236,7 @@ def test_a_later_correction_overrides_the_earlier_value(conversation):
 topic-switch টেস্ট, যেটা product-এর বেছে নেওয়া policy assert করে:
 
 ```python
-def test_the_return_context_does_not_leak_into_an_unrelated_question(conversation):
+def test_the_return_context_survives_an_unrelated_question(conversation):
     conversation.ask("How long do I have to return a laptop?")
     conversation.ask("How do I reset my password?")
     answer = conversation.ask("How long do I have to return a laptop?")
@@ -307,7 +306,7 @@ def test_a_later_correction_overrides_the_earlier_value(conversation):
 topic-switch টেস্ট, যেটা product-এর বেছে নেওয়া policy assert করে:
 
 ```python
-def test_the_return_context_does_not_leak_into_an_unrelated_question(conversation):
+def test_the_return_context_survives_an_unrelated_question(conversation):
     conversation.ask("How long do I have to return a laptop?")
     conversation.ask("How do I reset my password?")
     answer = conversation.ask("How long do I have to return a laptop?")
@@ -362,7 +361,7 @@ def test_a_new_conversation_id_starts_with_no_history(client):
 
 **Mistake 5: reusing the conversation id across conversations.** That is a state leak, and it is invisible in a single-conversation test.
 
-**Mistake 6: no evaluation of the conversation as a whole.** The per-turn answers can each be fine while the conversation is useless. The conversation-level metrics exist for that <Cite n={1} />.
+**Mistake 6: no evaluation of the conversation as a whole.** The per-turn answers can each be fine while the conversation is useless. DeepEval's multi-turn metrics, such as Conversation Completeness, exist for that <Cite n={1} />.
 
 </Technical>
 <Layman>
@@ -377,7 +376,7 @@ def test_a_new_conversation_id_starts_with_no_history(client):
 
 **Mistake 5: কথোপকথনের মধ্যে conversation id পুনঃব্যবহার।** এটা state leak, আর একটি কথোপকথনের টেস্টে অদৃশ্য।
 
-**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। conversation-level metric ঠিক এর জন্যই আছে <Cite n={1} />।
+**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। DeepEval-এর multi-turn metric, যেমন Conversation Completeness, ঠিক এর জন্যই আছে <Cite n={1} />।
 
 </Layman>
 <Bangla>
@@ -392,7 +391,7 @@ def test_a_new_conversation_id_starts_with_no_history(client):
 
 **Mistake 5: কথোপকথনের মধ্যে conversation id পুনঃব্যবহার।** এটা state leak, আর একটি কথোপকথনের টেস্টে অদৃশ্য।
 
-**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। conversation-level metric ঠিক এর জন্যই আছে <Cite n={1} />।
+**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। DeepEval-এর multi-turn metric, যেমন Conversation Completeness, ঠিক এর জন্যই আছে <Cite n={1} />।
 
 </Bangla>
 </Voices>

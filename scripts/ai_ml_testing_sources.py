@@ -132,6 +132,18 @@ SOURCES: dict[str, Source] = {
             "Promptfoo (docs)",
             "https://www.promptfoo.dev/docs/integrations/github-action/",
         ),
+        Source(
+            "promptfoo-cli",
+            "Command line",
+            "Promptfoo (docs)",
+            "https://www.promptfoo.dev/docs/usage/command-line/",
+        ),
+        Source(
+            "promptfoo-http",
+            "HTTP/HTTPS API provider",
+            "Promptfoo (docs)",
+            "https://www.promptfoo.dev/docs/providers/http/",
+        ),
         # --- DeepEval --------------------------------------------------------
         Source(
             "deepeval-intro",
@@ -147,9 +159,9 @@ SOURCES: dict[str, Source] = {
         ),
         Source(
             "deepeval-llm-test",
-            "LLM testing",
+            "Knowledge Retention (multi-turn metrics)",
             "DeepEval docs",
-            "https://docs.confident-ai.com/docs/interview-llm-testing",
+            "https://deepeval.com/docs/metrics-knowledge-retention",
         ),
         # --- Ragas -----------------------------------------------------------
         Source(
@@ -270,7 +282,19 @@ SOURCES: dict[str, Source] = {
             "qdrant-search",
             "Search",
             "Qdrant (docs)",
-            "https://qdrant.tech/documentation/concepts/search/",
+            "https://qdrant.tech/documentation/search/search/",
+        ),
+        Source(
+            "qdrant-collections",
+            "Collections",
+            "Qdrant (docs)",
+            "https://qdrant.tech/documentation/manage-data/collections/",
+        ),
+        Source(
+            "chroma-configure",
+            "Configure collections",
+            "Chroma (docs)",
+            "https://docs.trychroma.com/docs/collections/configure",
         ),
         # --- DSPy -------------------------------------------------------------
         Source(
@@ -283,7 +307,61 @@ SOURCES: dict[str, Source] = {
             "dspy-optimizer",
             "Optimizers",
             "Stanford NLP (DSPy docs)",
-            "https://dspy.ai/api/optimizers/",
+            "https://dspy.ai/learn/optimization/optimizers/",
+        ),
+        Source(
+            "giskard-quality-scan",
+            "Run a Quality Scan",
+            "Giskard (docs)",
+            "https://docs.giskard.ai/oss/scan/how-to/quality-scan",
+        ),
+        Source(
+            "giskard-migrate",
+            "Migrate from Giskard v2 to v3",
+            "Giskard (docs)",
+            "https://docs.giskard.ai/oss/migrate-from-v2",
+        ),
+        Source(
+            "promptfoo-outputs",
+            "Output formats",
+            "Promptfoo (docs)",
+            "https://www.promptfoo.dev/docs/configuration/outputs/",
+        ),
+        Source(
+            "ragas-multiturn",
+            "Evaluating multi-turn conversations",
+            "Ragas (docs)",
+            "https://docs.ragas.io/en/stable/howtos/applications/evaluating_multi_turn_conversations/",
+        ),
+        Source(
+            "anthropic-tool-define",
+            "Define tools",
+            "Anthropic (docs)",
+            "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools",
+        ),
+        Source(
+            "anthropic-rate-limits",
+            "Rate limits",
+            "Anthropic (docs)",
+            "https://platform.claude.com/docs/en/api/rate-limits",
+        ),
+        Source(
+            "promptfoo-deterministic",
+            "Deterministic assertions",
+            "Promptfoo (docs)",
+            "https://www.promptfoo.dev/docs/configuration/expected-outputs/deterministic/",
+        ),
+        Source(
+            "langgraph-graph-api",
+            "Graph API overview",
+            "LangChain (docs)",
+            "https://docs.langchain.com/oss/python/langgraph/graph-api",
+        ),
+        Source(
+            "phoenix-otel",
+            "The phoenix.otel helpers",
+            "Arize Phoenix (docs)",
+            "https://arize.com/docs/phoenix/tracing/concepts-tracing/otel-openinference/phoenix-otel-helpers",
         ),
         # --- Guardrails --------------------------------------------------------
         Source(
@@ -393,9 +471,9 @@ SOURCES: dict[str, Source] = {
         ),
         Source(
             "catastrophic",
-            "On the Catastrophic Forgetting of Large Language Models",
+            "An Empirical Study of Catastrophic Forgetting in Large Language Models During Continual Fine-tuning",
             "arXiv",
-            "https://arxiv.org/abs/2302.12817",
+            "https://arxiv.org/abs/2308.08747",
         ),
         Source(
             "mteb",
