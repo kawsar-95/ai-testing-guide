@@ -21,7 +21,7 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 - [Deploy](#deploy)
 - [Tech stack](#tech-stack)
 - [Documentation](#documentation)
-- [Credits](#credits) and [License](#license)
+- [License](#license)
 
 ## What you learn
 
@@ -313,21 +313,6 @@ The site lives under `/ai-testing-guide/`. The workflow sets `PAGES_BASE_PATH` f
 | [docs/superpowers/research/](docs/superpowers/research/) | The research notes and the fact-check reports of each page |
 | [docs/superpowers/audits/](docs/superpowers/audits/) | The audit of the outdated claims of the first tutorial text |
 | [docs/assets/](docs/assets/) | The screenshots of this README |
-
-## Credits
-
-- Tutorial and code by [kawsar-95](https://github.com/kawsar-95).
-- The look follows [systemdesignbangla.com](https://www.systemdesignbangla.com/) (a style reference only; no CSS, text, or art is copied). The earlier editorial shell came from [All Necessary Topics Related to AI Engineering](https://github.com/kawsar-95/All-Necessary-Topics-Related-to-AI-Engineering).
-- The Course follows the topic order of systemdesignbangla.com. The text is the tutorial's own.
-- The System Design case studies are based on articles of The System Design Newsletter (systemdesign.one) by Neo Kim.
-- Some topic lists come from the work of other authors. The pages are the tutorial's own text, and each fact links to an official or primary source.
-  - AI Engineering: "The AI Engineering Iceberg" by Jean Lee.
-  - AI Skills: "20 AI Skills Your Team Must Master in 2026" by AI for Leaders.
-  - AI Concepts: an infographic of GenAI.works (October 2026).
-  - Agent Memory: "7 Types of Agent Memory" by Neo Kim and Telnyx.
-  - AI Agents: "How AI Agents Work" by Basia Kubicka.
-  - AI/ML Testing: the syllabus of the "AI & ML Testing Professional Course" (QodeBench — Journey to Automation).
-- This is an independent tutorial. Anthropic does not maintain or endorse it.
 
 ## License
 
