@@ -30,7 +30,7 @@ The site has 286 pages. 269 of them are lessons in 14 sections: the tutorial and
 | Section | Pages | What it teaches |
 |---|---|---|
 | [Tutorial](https://kawsar-95.github.io/ai-testing-guide/getting-started/setup/) | 24 | Claude Code for software testing (the 6 groups below) |
-| [Linux](https://kawsar-95.github.io/ai-testing-guide/linux/) | 12 stages, 103 topics | Every Linux command on a one-page sheet for each stage, with a tick on each card |
+| [Linux](https://kawsar-95.github.io/ai-testing-guide/linux/) | 12 stages, 103 topics | A command sheet for each stage: one card per topic, one row per command, a tick on each card |
 | [Fundamentals](https://kawsar-95.github.io/ai-testing-guide/fundamentals/) | 11 chapters, 117 topics | Manual testing. Each topic has the author's notes and an ISTQB version, with a switch. |
 | [System Design](https://kawsar-95.github.io/ai-testing-guide/system-design/) | 15 case studies | How well-known systems work (Kafka, YouTube, WhatsApp, and more) |
 | [Architecture](https://kawsar-95.github.io/ai-testing-guide/architecture/) | 19 topics and 30 practice questions | The building blocks of system architecture |

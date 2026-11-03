@@ -235,7 +235,7 @@ The progress code is shared and lives under `prep` names, left from the Intervie
 
 ### Command sheets
 
-A stage with an entry in `lib/linux/sheets/index.ts` renders `SheetStage` (`app/(site)/linux/[stage]/page.tsx`): a grid of cards (`components/linux/StageSheet.tsx`), one card for each topic of `lib/linux/stages.ts`, in its order, and one row for each command. All 12 stages have a sheet. The grid has 2 columns from about 1280 px wide and 1 column below that.
+A stage with an entry in `lib/linux/sheets/index.ts` renders `SheetStage` (`app/(site)/linux/[stage]/page.tsx`): a grid of cards (`components/linux/StageSheet.tsx`), one card for each topic of `lib/linux/stages.ts`, in its order, and one row for each command. All 12 stages have a sheet. The grid has 2 columns from 1248 px wide and 1 column below that.
 
 | Rule | Detail |
 |---|---|
@@ -245,7 +245,7 @@ A stage with an entry in `lib/linux/sheets/index.ts` renders `SheetStage` (`app/
 | Sources | Each card cites the official page for its commands and flags: `man7.org`, a Debian man page, a project manual (OpenSSH, systemd, Docker, GNU), or an RFC. Not a blog, and not the roadmap.sh links of the lessons. A path or a behaviour that no official page documents is left off the card. The test checks that every card cites a source, every key is defined and cited, and every url is https. |
 | Check | `node scripts/verify_linux_sheets.mjs [stage ...]` looks up each command, subcommand, and flag of a row in the text of the pages that its card cites (the network is needed). It proves that a flag exists in a cited page, not that the gloss is right: read the gloss against the page. Run it when a row or a source changes, and set `updated` to the day. The report is `docs/superpowers/research/linux-sheets.factcheck.md`. |
 | Voices | A sheet has no voice switcher and no Layman text. The header `বাংলা` button switches the English and the Bangla glosses (`T`). |
-| Home | `/linux/` is a map of every command: a tile for each stage with its commands as chips (`commandIndex`). A chip links to `/linux/<stage>/#<anchor>`: the card named after the command (`grep`, `nano`), else the first card that has the command. The tiles are in 3 columns from about 1440 px wide. |
+| Home | `/linux/` is a map of every command: a tile for each stage with its commands as chips (`commandIndex`). A chip links to `/linux/<stage>/#<anchor>`: the card named after the command (`grep`, `nano`), else the first card that has the command. The tiles are in 1 column below 640 px, 2 from 640 px, and 3 from 1280 px. |
 | Cards | `DoneToggle` is a checkbox that writes the topic id to `linux-progress`. `TargetMark` marks the card of the address with `data-target`, because `:target` does not match after a client-side navigation. The `[n]` chip of a card links to `#src-n`. A link or a chip is at least 24 px high. |
 | Sources list | `SheetSources` shows one line for each source in up to 3 columns. Item n has the id `src-n`, which the `[n]` chips and `check_sources.py` use. |
 | Search | `app/search-index.json/route.ts` indexes a stage that has a sheet by `sheetSource()`: the text of its cards with both glosses. |

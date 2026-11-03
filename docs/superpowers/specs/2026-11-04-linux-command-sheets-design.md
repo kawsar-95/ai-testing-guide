@@ -12,8 +12,8 @@ A stage page is a sheet: one card for each topic, one row for each command, shor
 
 ## What the learner sees
 
-- **Stage page.** Cards in a grid: 2 columns from about 1280 px wide (also at 1366 px, 1440 px, and 1920 px), 1 column below that. A row is the command and one short gloss. A word in capitals is the reader's own value (`FILE`). A red `!` marks a command that can destroy data. A `[n]` chip links to the official page that backs the card. A tick on a card records that you know it.
-- **Home page.** A tile for each stage with its commands as chips (3 columns from about 1440 px wide, 2 at 1024 px, 1 on a phone), the progress, and `ContinueButton`. A chip opens the card of the stage page that teaches the command: the card named after the command (`grep`, `nano`) if there is one, else the first card that has it. The card that the address points to has a ring.
+- **Stage page.** Cards in a grid: 2 columns from 1248 px wide, 1 column below that. The page stops growing at 1680 px, so a 1920 px screen has 2 columns too. A row is the command and one short gloss. A word in capitals is the reader's own value (`FILE`). A red `!` marks a command that can destroy data. A `[n]` chip links to the official page that backs the card. A tick on a card records that you know it.
+- **Home page.** A tile for each stage with its commands as chips (3 columns from 1280 px wide, 2 from 640 px, 1 below that), the progress, and `ContinueButton`. A chip opens the card of the stage page that teaches the command: the card named after the command (`grep`, `nano`) if there is one, else the first card that has it. The card that the address points to has a ring.
 - **Language.** The header `বাংলা` button switches the gloss between English and Bangla. There is no Layman text and no switcher on the page.
 - **Sources.** One line for each source, in up to 3 columns, below the cards.
 - **Search.** A search for a command (`grep`, `nmcli`, `faillock`) finds its card. Both glosses are searchable.
@@ -38,25 +38,25 @@ The routes, the 12 stages, the 103 topics, the topic ids and anchors, and the `l
 
 ## Measured
 
-At 1440 x 900, production build. "Before" is the same page with the shared `Sources` list (two lines and a rule for each source).
+At 1440 x 900. "After" is the production build (`out/`). "Before" was measured on the dev server, before the sources list and the home page were redone (Networking gave 4,414 px on both). On a stage page, "before" had the shared `Sources` list (two lines and a rule for each source). On the home page, it is the old roadmap list. "Before" was measured for these two pages only.
 
 | Page | Before | After |
 |---|---|---|
 | Home | 4,036 px, no command on the first screen | 2,308 px, commands on the first screen |
-| Shell Basics | 3,527 px | 2,641 px |
-| Text Processing | 5,620 px | 4,280 px |
+| Shell Basics | not measured | 2,641 px |
+| Text Processing | not measured | 4,280 px |
 | Networking | 7,314 px | 4,414 px |
-| Containers | 3,746 px | 2,166 px |
+| Containers | not measured | 2,166 px |
 
 The cards of a stage take 0.8 to 3.1 screens (Containers to Text Processing and Networking). **A stage page is not one screen.** Text Processing (20 topics, 109 rows) and Networking (15 topics, 110 rows) are the longest.
 
 ## Checks run
 
-`npm test` (448 tests, 14 of them for the sheets and 6 for the verifier), `npx tsc --noEmit`, `npm run build` (295 of 295 pages), the four Python checks (`check_routes`, `check_outline`, `check_sources` with `OK 269 pages checked, 0 skipped`, `check_links`), `node scripts/verify_linux_sheets.mjs` (701 rows, 345 flags, 0 problems), and a browser run of the chip flows on the static build (chip to card with a ring, `[n]` chip to its source line, a tick saved in `linux-progress` and shown on the home tile, Bangla on the home page). See `docs/superpowers/research/linux-sheets.factcheck.md`.
+`npm test` (454 tests, 6 of them for the verifier), `npx tsc --noEmit`, `npm run build` (295 of 295 pages), the four Python checks (`check_routes`, `check_outline`, `check_sources` with `OK 269 pages checked, 0 skipped`, `check_links`), `node scripts/verify_linux_sheets.mjs` (701 rows, 345 flags, 0 problems), and a browser run of the chip flows on the static build (chip to card with a ring, `[n]` chip to its source line, a tick saved in `linux-progress` and shown on the home tile, Bangla on the home page), and no console error or failed request on the home, Shell Basics, Networking, and Containers pages in light, dark, and Bangla. See `docs/superpowers/research/linux-sheets.factcheck.md`.
 
 ## Not done
 
 - A fact-check by someone who did not write the sheets, and a read of the Bangla by a reader of Bangla. Until then a sheet is not "Done" by the rule of `CLAUDE.md`.
-- `/etc/default/grub`, `/var/log/syslog`, and `/var/log/auth.log` are not on the cards (no fetchable official page).
+- `/var/log/syslog` and `/var/log/auth.log` are not on the cards: no page that was fetched documents them. `/etc/default/grub` is not on a card yet: Debian Reference chapter 3 names it, so the row can be added (see the check report).
 - A decision about the lessons: keep, or delete with `lib/linux-lesson.ts`, `TopicChecklist`, `LessonStage`, `studyMinutes`, the lesson tests, and the research scripts.
-- Below about 1200 px wide a stage page is one column and 1.3 to 1.6 times as tall as at 1440 px (Text Processing: 4,280 px at 1440 px, 6,861 px at 1024 px). A narrow window gets the long page.
+- Below 1248 px wide a stage page is one column, and 1.3 to 1.6 times as tall as at 1440 px (Text Processing: 4,280 px at 1440 px, 6,861 px at 1024 px). A narrow window gets the long page.

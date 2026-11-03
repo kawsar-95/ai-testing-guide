@@ -3,7 +3,7 @@
 export const LINUX_UI = {
   siteTitle: "Linux",
   description:
-    "Every Linux command on one page for each of 12 stages: the shell, files, text tools, users, processes, scripts, networking, services, and containers. Your progress stays in your browser.",
+    "A command sheet for each of 12 Linux stages, from the shell to containers: one card per topic, one row per command. Your progress stays in your browser.",
   eyebrow: (stages: number, topics: number, commands: number) =>
     `LINUX · ${stages} STAGES · ${topics} TOPICS · ${commands} COMMANDS`,
   heading: "Linux",

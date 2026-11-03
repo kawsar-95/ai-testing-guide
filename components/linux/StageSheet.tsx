@@ -100,8 +100,9 @@ function Card({
  * The glance sheet of a stage: one card for each topic, with one row for each
  * command. The cards flow left to right, then down, in the order of the topic
  * numbers, in as many columns as fit (a card is at least 28rem wide), so a
- * whole stage is on one screen or two. The rows of a card sit side by side when its text is
- * at least 22rem wide, and stack below that (a phone).
+ * stage takes as few screens as the width allows: 2 columns from 1248 px, and
+ * the page stops growing at 1680 px. The rows of a card sit side by side when
+ * its text is at least 22rem wide, and stack below that (a phone).
  */
 export function StageSheet({
   stage,

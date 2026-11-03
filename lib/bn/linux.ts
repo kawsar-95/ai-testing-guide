@@ -5,7 +5,7 @@ import type { LINUX_UI } from "../linux/ui.ts";
 export const LINUX_UI_BN: Bn<typeof LINUX_UI> = {
   siteTitle: "Linux",
   description:
-    "Every Linux command on one page for each of 12 stages: the shell, files, text tools, users, processes, scripts, networking, services, and containers. Your progress stays in your browser.",
+    "A command sheet for each of 12 Linux stages, from the shell to containers: one card per topic, one row per command. Your progress stays in your browser.",
   eyebrow: (stages, topics, commands) => `LINUX · ${stages}টি ধাপ · ${topics}টি টপিক · ${commands}টি কমান্ড`,
   heading: "Linux",
   lede: "প্রতিটা ধাপের জন্য একটা পাতা, আর প্রতিটা কার্ডে সেই টপিকের সব কমান্ড। কমান্ডে ক্লিক করলে তার কার্ডে যাবেন, আর জানা হলে কার্ডে টিক দিন।",
