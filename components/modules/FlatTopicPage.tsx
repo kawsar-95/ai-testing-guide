@@ -15,6 +15,8 @@ import { BackToTop } from "@/components/content/BackToTop";
 import { MetaLine } from "@/components/content/MetaLine";
 import { ReadingProgress } from "@/components/content/ReadingProgress";
 import { Sources } from "@/components/content/Sources";
+import { ReelsSection } from "@/components/reels/ReelsSection";
+import { reelsFor } from "@/lib/reels/index";
 import { MarkDoneButton } from "./MarkDoneButton";
 import { T } from "@/components/i18n/T";
 import { FLAT_UI_BN } from "@/lib/bn/flat";
@@ -144,6 +146,7 @@ export async function FlatTopicPage({
           />
         </article>
         {m.progress && item.kind === "topic" ? <MarkDoneButton moduleId={m.id} id={item.slug} /> : null}
+        <ReelsSection reels={reelsFor(m.id, topic)} />
         {info ? <Sources sources={info.sources} /> : null}
         <ItemNav module={m} item={item} />
       </ChapterLayout>
