@@ -6,6 +6,7 @@ import { LINUX_UI_BN as BN } from "@/lib/bn/linux";
 import { T } from "@/components/i18n/T";
 import { Cite } from "@/components/mdx/Cite";
 import { DoneToggle } from "./DoneToggle";
+import { TargetMark } from "./TargetMark";
 
 /** A command. The words that stand for your own value (FILE, PID, …) are set apart. */
 function Cmd({ cmd }: { cmd: string }) {
@@ -64,7 +65,7 @@ function Card({
     <section
       id={topic.anchor}
       aria-labelledby={`${topic.anchor}-title`}
-      className="group @container flex scroll-mt-20 flex-col rounded-[10px] border border-border bg-bg-raised p-4 shadow-sm has-checked:border-accent/60"
+      className="group @container flex scroll-mt-20 flex-col rounded-[10px] border border-border bg-bg-raised p-4 shadow-sm has-checked:border-accent/60 target:border-accent target:ring-2 target:ring-accent/25 data-target:border-accent data-target:ring-2 data-target:ring-accent/25"
     >
       <header className="flex items-center gap-2.5">
         <span
@@ -113,6 +114,7 @@ export function StageSheet({
 }) {
   return (
     <div className="sheet grid grid-cols-[repeat(auto-fill,minmax(min(100%,28rem),1fr))] gap-4">
+      <TargetMark />
       {sheet.cards.map((card, index) => (
         <Card key={card.topic} stage={stage} index={index} card={card} numberOf={numberOf} />
       ))}

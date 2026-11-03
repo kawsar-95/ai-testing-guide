@@ -23,6 +23,7 @@ import { ReadingProgress } from "@/components/content/ReadingProgress";
 import { Sources } from "@/components/content/Sources";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
 import { StageProgress } from "@/components/linux/StageProgress";
+import { SheetSources } from "@/components/linux/SheetSources";
 import { StageSheet } from "@/components/linux/StageSheet";
 import { TopicChecklist } from "@/components/linux/TopicChecklist";
 import { PageVoiceSwitcher } from "@/components/voice/PageVoiceSwitcher";
@@ -138,7 +139,7 @@ function SheetStage({ stage, sheet }: { stage: LinuxStage; sheet: Sheet }) {
           editHref={sheetEditUrl(stage.slug)}
         />
         <ChapterTools route={stage.href} minutes={sheetMinutes(sheet)} />
-        <Sources sources={sources} />
+        <SheetSources sources={sources} />
         <StageNav stage={stage} />
       </ChapterLayout>
       <BackToTop />

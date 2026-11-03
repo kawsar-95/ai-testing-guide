@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CHAPTERS } from "@/lib/fundamentals/chapters";
+import { sheetSource } from "@/lib/linux/sheet";
+import { getSheet } from "@/lib/linux/sheets";
 import { STAGES } from "@/lib/linux/stages";
 import type { FlatModule } from "@/lib/modules/flat";
 import { AGENT_MEMORY, AI_AGENTS, AI_CONCEPTS, AI_ENGINEERING, AI_ML_TESTING, AI_SKILLS, ARCHITECTURE, COURSE, HARNESS, K6, SYSTEM_DESIGN } from "@/lib/modules/registry";
@@ -30,10 +32,16 @@ export function GET() {
     page,
     source: readFileSync(join(process.cwd(), "content", page.group, `${page.slug}.mdx`), "utf8"),
   }));
-  const linux = STAGES.map((stage) => ({
-    stage,
-    source: readFileSync(join(process.cwd(), "content", "linux", `${stage.slug}.mdx`), "utf8"),
-  }));
+  // A stage with a command sheet is searched by the text of the sheet; any other stage by its lesson.
+  const linux = STAGES.map((stage) => {
+    const sheet = getSheet(stage.slug);
+    return {
+      stage,
+      source: sheet
+        ? sheetSource(stage, sheet)
+        : readFileSync(join(process.cwd(), "content", "linux", `${stage.slug}.mdx`), "utf8"),
+    };
+  });
   const fundamentals = CHAPTERS.map((chapter) => ({
     chapter,
     source: readFileSync(join(process.cwd(), "content", "fundamentals", `${chapter.slug}.mdx`), "utf8"),
