@@ -43,6 +43,11 @@ export const MAX_EN_WORDS = 9;
 export const MAX_EN_CHARS = 64;
 export const MAX_BN_CHARS = 96;
 
+/** The words of a gloss, as `MAX_EN_WORDS` counts them: a separator such as `·`, `=`, or `…` is not a word. */
+export function glossWords(text: string): number {
+  return text.split(/\s+/).filter((token) => /[\p{L}\p{N}]/u.test(token)).length;
+}
+
 /**
  * The words that stand for the reader's own value in a command. A page shows
  * them in a different style, and `npm test` rejects any other ALL-CAPS word,
@@ -51,9 +56,9 @@ export const MAX_BN_CHARS = 96;
 export const PLACEHOLDERS: ReadonlySet<string> = new Set([
   "ADDR", "ARGS", "BASE", "BRANCH", "CHAIN", "CMD", "COUNT", "DATE", "DB", "DEV", "DIR", "DOMAIN", "DST",
   "EXT", "FIELD", "FILE", "FILES", "FS", "GROUP", "HOST", "ID", "IF", "IMAGE", "IP", "ITEM", "JOB", "KEY",
-  "LIST", "LV", "MODE", "NAME", "NET", "NUM", "OPTS", "OWNER", "PART", "PATTERN", "PID", "PKG", "PORT",
-  "PRIO", "PROTO", "REGEX", "RULE", "SIG", "SIZE", "SRC", "STR", "TEXT", "TIME", "UNIT", "URL", "USER",
-  "VALUE", "VAR", "VG", "WORD",
+  "LINK", "LIST", "LV", "MODE", "NAME", "NET", "NEW", "NUM", "OLD", "OPTS", "OWNER", "PART", "PATTERN",
+  "PID", "PKG", "PORT", "PRIO", "PROTO", "REGEX", "RULE", "SIG", "SIZE", "SRC", "STR", "SUB", "TARGET",
+  "TEXT", "TIME", "UNIT", "URL", "USER", "VALUE", "VAR", "VG", "WORD",
 ]);
 
 /** ALL-CAPS words that are real names, not placeholders: a signal, a firewall chain, a shell keyword. */
@@ -64,6 +69,7 @@ export const LITERALS: ReadonlySet<string> = new Set([
   "BASH_ENV", "LC_ALL", "DEBUG", "RETURN", "TCP", "UDP", "ICMP", "NEW", "RELATED", "ESTABLISHED",
   "DNAT", "SNAT", "MASQUERADE", "GET", "DELETE", "PRIORITY", "ONBOOT", "DHCP", "DNS", "ARP", "BIOS", "UEFI",
   "GRUB", "MBR", "GPT", "PXE", "FIFO", "TTL", "MTU", "VLAN", "ACL", "CIDR", "RAM", "CPU", "UID", "GID", "PPID",
+  "END", "ERROR", "INT", "MX", "NF", "NR", "RARP", "WARN",
 ]);
 
 /** A word that looks like a placeholder: ALL-CAPS, at least 2 characters, not a flag, key, or `$VAR`. */

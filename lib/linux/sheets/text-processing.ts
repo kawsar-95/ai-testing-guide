@@ -43,7 +43,7 @@ export const TEXT_PROCESSING: StageSheet = {
       topic: "Stdout, Stdin, and Stderr",
       src: ["bash"],
       rows: [
-        ["0  1  2", "stdin · stdout · stderr (file descriptors)", "stdin · stdout · stderr (file descriptor)"],
+        ["0  1  2", "stdin · stdout · stderr (file descriptors)", "stdin · stdout · stderr (file descriptor-এর নম্বর)"],
         ["CMD 2> FILE", "send only errors to a file", "শুধু error file-এ পাঠায়"],
         ["CMD > FILE 2>&1", "send output and errors to one file", "output ও error একই file-এ পাঠায়"],
         ["CMD 2>/dev/null", "hide error messages", "error message লুকায়"],
@@ -212,7 +212,7 @@ export const TEXT_PROCESSING: StageSheet = {
       rows: [
         ["join FILE FILE", "join two sorted files on the first field", "দুটি sorted file প্রথম field ধরে জোড়ে"],
         ["join -t, FILE FILE", "fields are separated by commas", "field-গুলো comma দিয়ে আলাদা"],
-        ["join -1 2 -2 1 FILE FILE", "column 2 of file 1 with column 1 of file 2", "১ম file-এর ২য় column আর ২য় file-এর ১ম column ধরে"],
+        ["join -1 2 -2 1 FILE FILE", "file 1 column 2 matches file 2 column 1", "১ম file-এর ২য় column আর ২য় file-এর ১ম column ধরে"],
         ["join -a1 FILE FILE", "keep the unmatched lines of file 1", "১ম file-এর অমিল লাইনও রাখে"],
       ],
     },

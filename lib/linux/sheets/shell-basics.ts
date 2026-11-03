@@ -91,7 +91,7 @@ export const SHELL_BASICS: StageSheet = {
       rows: [
         ["/", "root of the whole tree", "পুরো tree-র root"],
         ["/home", "user home directories", "user-দের home directory"],
-        ["/etc", "system configuration files", "system configuration file"],
+        ["/etc", "system configuration files", "system-এর configuration file"],
         ["/var", "logs, caches, changing data", "log, cache ও পরিবর্তনশীল data"],
         ["/tmp", "temporary files", "অস্থায়ী file"],
         ["/usr", "installed programs and libraries", "install করা program ও library"],

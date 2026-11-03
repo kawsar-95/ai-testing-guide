@@ -50,7 +50,7 @@ export const USERS_PERMISSIONS: StageSheet = {
       topic: "Users and Groups",
       src: ["passwd5", "shadow", "group", "getent", "id", "groups", "cut"],
       rows: [
-        ["/etc/passwd", "users: name:x:UID:GID:info:home:shell", "user: name:x:UID:GID:info:home:shell"],
+        ["/etc/passwd", "users: name:x:UID:GID:info:home:shell", "user-এর তালিকা: name:x:UID:GID:info:home:shell"],
         ["/etc/shadow", "password hashes (root only)", "password hash (শুধু root দেখতে পারে)"],
         ["/etc/group", "groups and their members", "group ও তাদের সদস্য"],
         ["getent passwd USER", "look up a user (LDAP too)", "user খোঁজে (LDAP-সহ)"],
@@ -123,7 +123,7 @@ export const USERS_PERMISSIONS: StageSheet = {
         ["chmod u+s FILE", "setuid: runs as the file's owner", "setuid: file-এর owner হিসেবে চলে"],
         ["chmod g+s DIR", "setgid: new files get the directory's group", "setgid: নতুন file directory-র group পায়"],
         ["chmod +t DIR", "sticky: only the owner can delete a file", "sticky: file শুধু তার owner মুছতে পারে"],
-        ["s  S  t  T", "in ls -l: small = x also set, capital = x missing", "ls -l-এ: ছোট হাতের = x-ও আছে, বড় হাতের = x নেই"],
+        ["s  S  t  T", "ls -l: small = also x, capital = no x", "ls -l-এ: ছোট হাতের = x-ও আছে, বড় হাতের = x নেই"],
       ],
     },
   ],
