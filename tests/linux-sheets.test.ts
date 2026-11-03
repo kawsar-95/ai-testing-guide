@@ -9,6 +9,8 @@ import {
   MAX_EN_WORDS,
   MAX_ROWS,
   MIN_ROWS,
+  commandIndex,
+  commandName,
   commandNames,
   glossWords,
   numberSources,
@@ -18,6 +20,7 @@ import {
   splitCmd,
   unknownCaps,
 } from "../lib/linux/sheet.ts";
+import type { StageSheet } from "../lib/linux/sheet.ts";
 
 /** Every row of every sheet with a label that names it in a failure message. */
 function allRows() {
@@ -144,6 +147,50 @@ test("each sheet teaches commands, has a reading time, and an edit link to its o
     assert.ok(sheetMinutes(sheet) >= 1, stage.slug);
     assert.ok(sheetEditUrl(stage.slug).endsWith(`/lib/linux/sheets/${stage.slug}.ts`), stage.slug);
   }
+});
+
+test("commandName is a program or builtin after sudo and assignments, not a path, a key, a symbol, or a name", () => {
+  assert.equal(commandName("sudo ls -l"), "ls");
+  assert.equal(commandName("LC_ALL=C sort FILE"), "sort");
+  assert.equal(commandName('arr=(a b c); echo "${arr[1]}"'), "echo");
+  assert.equal(commandName("w"), "w");
+  for (const text of ["s  S  t  T", "/etc/fstab", "Restart=on-failure", "Link · Internet · Transport · Application", "* * *", "arr=(a b c)"]) {
+    assert.equal(commandName(text), null, text);
+  }
+});
+
+test("no command of any sheet is one letter, except w", () => {
+  const letters = STAGES.flatMap((stage) => commandNames(getSheet(stage.slug)!)).filter((name) => name.length === 1);
+  assert.deepEqual([...new Set(letters)], ["w"]);
+});
+
+test("commandIndex lists each command once, with the anchor of a topic of its stage", () => {
+  for (const stage of STAGES) {
+    const sheet = getSheet(stage.slug)!;
+    const anchors = stage.topics.map((topic) => topic.anchor);
+    const index = commandIndex(sheet, anchors);
+    assert.deepEqual(index.map((entry) => entry.name), commandNames(sheet), stage.slug);
+    assert.equal(new Set(index.map((entry) => entry.name)).size, index.length, stage.slug);
+    for (const entry of index) assert.ok(anchors.includes(entry.anchor), `${stage.slug}: ${entry.name} -> ${entry.anchor}`);
+  }
+});
+
+test("a command links to the card named after it, else to the first card that has it; paths and editor keys are not commands", () => {
+  const sheet: StageSheet = {
+    updated: "2026-01-01",
+    sources: {},
+    cards: [
+      { topic: "A", src: [], rows: [["ls -l", "x", "y"], ["/etc", "x", "y"], ["nano FILE", "x", "y"]] },
+      { topic: "B", src: [], rows: [["sudo ls", "x", "y"], ["grep PATTERN FILE", "x", "y"]] },
+      { topic: "Nano", src: [], kind: "keys", rows: [["dd", "x", "y"]] },
+      { topic: "grep", src: [], rows: [["grep -i PATTERN FILE", "x", "y"]] },
+    ],
+  };
+  assert.deepEqual(commandIndex(sheet, ["a", "b", "nano", "grep"]), [
+    { name: "ls", anchor: "a" },
+    { name: "nano", anchor: "nano" },
+    { name: "grep", anchor: "grep" },
+  ]);
 });
 
 test("the search text of a sheet has one section for each topic and every command", () => {

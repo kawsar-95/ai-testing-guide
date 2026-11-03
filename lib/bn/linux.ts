@@ -5,10 +5,10 @@ import type { LINUX_UI } from "../linux/ui.ts";
 export const LINUX_UI_BN: Bn<typeof LINUX_UI> = {
   siteTitle: "Linux",
   description:
-    "Learn Linux in 12 stages: the shell, files, text tools, users, processes, scripts, networking, services, and containers. Your progress stays in your browser.",
-  eyebrow: (stages, topics) => `LINUX · ${stages}টি ধাপ · ${topics}টি টপিক`,
+    "Every Linux command on one page for each of 12 stages: the shell, files, text tools, users, processes, scripts, networking, services, and containers. Your progress stays in your browser.",
+  eyebrow: (stages, topics, commands) => `LINUX · ${stages}টি ধাপ · ${topics}টি টপিক · ${commands}টি কমান্ড`,
   heading: "Linux",
-  lede: "ধাপগুলো ক্রমানুসারে শেষ করুন, অথবা যেটা দরকার সরাসরি সেখানে যান। প্রতিটা ধাপে টপিকের একটা তালিকা আছে। নোট না দেখে ব্যবহার করতে পারলে টপিকটা সম্পন্ন হিসেবে চিহ্নিত করুন।",
+  lede: "প্রতিটা ধাপের জন্য একটা পাতা, আর প্রতিটা কার্ডে সেই টপিকের সব কমান্ড। কমান্ডে ক্লিক করলে তার কার্ডে যাবেন, আর জানা হলে কার্ডে টিক দিন।",
   continueStart: "Shell Basics দিয়ে শুরু করুন",
   continueNext: (title) => `চালিয়ে যান: ${title}`,
   continueDone: "সব টপিক সম্পন্ন হয়েছে।",
@@ -19,7 +19,6 @@ export const LINUX_UI_BN: Bn<typeof LINUX_UI> = {
   summaryText: (done, remaining) => `সম্পন্ন ${done} · বাকি ${remaining}`,
   percentText: (value) => `${value}%`,
   stageCount: (done, total) => `${done} / ${total} সম্পন্ন`,
-  stageMeta: (topics, minutesText) => `${topics}টি টপিক · ${minutesText}`,
 
   stageEyebrow: (number) => `ধাপ ${String(number).padStart(2, "0")} · LINUX`,
   sheetMeta: (topics, commands) => `${topics}টি টপিক · ${commands}টি কমান্ড`,

@@ -72,7 +72,7 @@ export const NETWORKING: StageSheet = {
       topic: "TCP/IP",
       src: ["ss", "nc", "services", "rfc1122"],
       rows: [
-        ["link · internet · transport · application", "the four TCP/IP layers, bottom to top", "TCP/IP-র চার স্তর, নিচ থেকে উপরে"],
+        ["Link · Internet · Transport · Application", "the four TCP/IP layers, bottom to top", "TCP/IP-র চার স্তর, নিচ থেকে উপরে"],
         ["ss -tan", "all TCP connections, numeric", "সব TCP connection, সংখ্যায়"],
         ["ss -ltn", "listening TCP sockets", "যেসব TCP socket শুনছে"],
         ["ss -tn state established", "only established connections", "শুধু established connection"],

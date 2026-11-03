@@ -125,27 +125,56 @@ export function numberSources(sheet: StageSheet, accessed: string = sheet.update
   };
 }
 
+/** The one-letter commands. Any other single letter at the start of a row is a symbol (`s S t T`), not a command. */
+const SINGLE_LETTER_COMMANDS: ReadonlySet<string> = new Set(["w"]);
+
 /** The first word of a command, when it is a program or builtin name. `null` for a path, a key, or a symbol. */
 export function commandName(cmd: string): string | null {
   const words = cmd.trim().split(/\s+/);
   let i = 0;
-  // Skip `sudo` and `VAR=value` prefixes.
-  while (i < words.length - 1 && (words[i] === "sudo" || /^[A-Za-z_]\w*=/.test(words[i]))) i++;
+  // Skip `sudo`, `VAR=value`, and `arr=(a b c)` prefixes.
+  while (i < words.length - 1) {
+    const word = words[i];
+    if (word === "sudo") i++;
+    else if (/^[A-Za-z_]\w*=\(/.test(word) && !word.includes(")")) {
+      while (i < words.length - 1 && !words[i].includes(")")) i++; // an array assignment: up to the word that closes it
+      i++;
+    } else if (/^[A-Za-z_]\w*=/.test(word)) i++;
+    else break;
+  }
   const first = words[i];
+  if (!first || (first.length === 1 && !SINGLE_LETTER_COMMANDS.has(first))) return null;
   return /^[a-z][a-z0-9._+-]*$/.test(first) && !first.endsWith(".conf") && !first.endsWith(".cfg") ? first : null;
+}
+
+/** A command name with the anchor of the first topic whose card has it. */
+export type CommandEntry = { name: string; anchor: string };
+
+/**
+ * The distinct command names of a sheet, in the order of the cards. `anchors[i]`
+ * is the anchor of the topic of card i. The home page links a command to the card
+ * that is named after it (the "grep" card for `grep`), or else to the first card
+ * that has it.
+ */
+export function commandIndex(sheet: StageSheet, anchors: readonly string[]): CommandEntry[] {
+  const index: CommandEntry[] = [];
+  sheet.cards.forEach((card, i) => {
+    if (card.kind === "keys") return;
+    for (const [cmd] of card.rows) {
+      const name = commandName(cmd);
+      if (name && !index.some((entry) => entry.name === name)) index.push({ name, anchor: anchors[i] ?? "" });
+    }
+  });
+  sheet.cards.forEach((card, i) => {
+    const entry = index.find((e) => e.name === card.topic.toLowerCase());
+    if (entry) entry.anchor = anchors[i] ?? "";
+  });
+  return index;
 }
 
 /** The distinct command names of a sheet, in the order of the cards. */
 export function commandNames(sheet: StageSheet): string[] {
-  const names: string[] = [];
-  for (const card of sheet.cards) {
-    if (card.kind === "keys") continue;
-    for (const [cmd] of card.rows) {
-      const name = commandName(cmd);
-      if (name && !names.includes(name)) names.push(name);
-    }
-  }
-  return names;
+  return commandIndex(sheet, []).map((entry) => entry.name);
 }
 
 /** The words that the reading-time pill counts: the commands and the English glosses. */
