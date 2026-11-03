@@ -10,19 +10,29 @@ import { SectionFocus } from "./SectionFocus";
 /**
  * The three columns of a content page: the left list (from the `chapter`
  * breakpoint, 820 px), the text, and "On this page" (from `toc`, 1280 px).
+ *
+ * `wide` is for a glance sheet (the Linux stage pages): the left list stays,
+ * but there is no "On this page", no one-section-at-a-time focus, and the
+ * column uses all the width, so the cards of the sheet can sit side by side.
  */
 export function ChapterLayout({
   children,
   outline,
   route,
+  wide = false,
 }: {
   children: ReactNode;
-  outline: OutlineItem[];
+  /** The `##` outline of an MDX page, for "On this page". A wide page has none. */
+  outline?: OutlineItem[];
   /** The route of the page, with a trailing slash. It selects the list and its current item. */
   route: string;
+  wide?: boolean;
 }) {
+  const columns = wide
+    ? "max-w-[1680px]"
+    : "max-w-[1400px] toc:grid-cols-[240px_minmax(0,1fr)_280px]";
   return (
-    <div className="mx-auto w-full max-w-[1400px] gap-12 px-4 sm:px-6 chapter:grid chapter:grid-cols-[240px_minmax(0,1fr)] toc:grid-cols-[240px_minmax(0,1fr)_280px]">
+    <div className={`mx-auto w-full gap-12 px-4 sm:px-6 chapter:grid chapter:grid-cols-[240px_minmax(0,1fr)] ${columns}`}>
       <aside
         aria-labelledby="chapter-nav-label"
         className="sticky top-20 hidden h-[calc(100vh-6rem)] self-start overflow-y-auto overscroll-contain pt-4 chapter:block"
@@ -32,13 +42,15 @@ export function ChapterLayout({
         </span>
         <ChapterList activePath={route} />
       </aside>
-      <div className="mx-auto w-full min-w-0 max-w-[720px] py-7 sm:py-10">
+      <div className={`mx-auto w-full min-w-0 py-7 sm:py-10 ${wide ? "" : "max-w-[720px]"}`}>
         {children}
-        <SectionFocus key={route} />
+        {wide ? null : <SectionFocus key={route} />}
       </div>
-      <aside className="hidden pt-10 toc:block">
-        <SectionNav items={outline} />
-      </aside>
+      {wide ? null : (
+        <aside className="hidden pt-10 toc:block">
+          <SectionNav items={outline ?? []} />
+        </aside>
+      )}
     </div>
   );
 }

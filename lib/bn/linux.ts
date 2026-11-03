@@ -22,6 +22,9 @@ export const LINUX_UI_BN: Bn<typeof LINUX_UI> = {
   stageMeta: (topics, minutesText) => `${topics}টি টপিক · ${minutesText}`,
 
   stageEyebrow: (number) => `ধাপ ${String(number).padStart(2, "0")} · LINUX`,
+  sheetMeta: (topics, commands) => `${topics}টি টপিক · ${commands}টি কমান্ড`,
+  legend: "UPPERCASE = আপনার নিজের মান · লাল ! = data নষ্ট করতে পারে · জানা হলে কার্ডে টিক দিন",
+  warnLabel: "সতর্কতা",
   inThisStage: "এই ধাপে",
   inThisStageMeta: (topics, minutesText) => `${topics}টি টপিক · প্রায় ${minutesText}`,
   stageNav: "Linux-এর ধাপসমূহ",

@@ -4,6 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LINUX_HOME, STAGES, formatMinutes, getStage, studyMinutes } from "@/lib/linux/stages";
 import type { LinuxStage } from "@/lib/linux/stages";
+import { getSheet } from "@/lib/linux/sheets";
+import { commandNames, numberSources, sheetEditUrl, sheetMinutes } from "@/lib/linux/sheet";
+import type { StageSheet as Sheet } from "@/lib/linux/sheet";
 import { LINUX_UI } from "@/lib/linux/ui";
 import { LINUX_UI_BN as BN } from "@/lib/bn/linux";
 import { T } from "@/components/i18n/T";
@@ -19,6 +22,8 @@ import { MetaLine } from "@/components/content/MetaLine";
 import { ReadingProgress } from "@/components/content/ReadingProgress";
 import { Sources } from "@/components/content/Sources";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
+import { StageProgress } from "@/components/linux/StageProgress";
+import { StageSheet } from "@/components/linux/StageSheet";
 import { TopicChecklist } from "@/components/linux/TopicChecklist";
 import { PageVoiceSwitcher } from "@/components/voice/PageVoiceSwitcher";
 
@@ -35,15 +40,18 @@ export function generateStaticParams() {
   return STAGES.map((stage) => ({ stage: stage.slug }));
 }
 
-/** Loads content/linux/<stage>.mdx. A param that is not a stage gets a 404. */
-async function loadStage(slug: string): Promise<MdxPage> {
+/** Loads content/linux/<stage>.mdx: the lesson of a stage that has no sheet yet. A param that is not a stage gets a 404. */
+async function loadLesson(slug: string): Promise<MdxPage> {
   if (!getStage(slug)) notFound();
   return import(`@/content/linux/${slug}.mdx`);
 }
 
 export async function generateMetadata({ params }: PageProps<"/linux/[stage]">): Promise<Metadata> {
   const { stage: slug } = await params;
-  const { metadata } = await loadStage(slug);
+  const stage = getStage(slug);
+  if (!stage) notFound();
+  if (getSheet(slug)) return { title: stage.title, description: stage.description };
+  const { metadata } = await loadLesson(slug);
   return metadata;
 }
 
@@ -87,11 +95,61 @@ function StageNav({ stage }: { stage: LinuxStage }) {
   );
 }
 
-export default async function StagePage({ params }: PageProps<"/linux/[stage]">) {
-  const { stage: slug } = await params;
-  const stage = getStage(slug);
-  if (!stage) notFound();
-  const { default: Content, page: info } = await loadStage(slug);
+/**
+ * A stage that has a sheet (lib/linux/sheets): one card for each topic, one row
+ * for each command, on a wide layout with no "On this page" and no
+ * one-section-at-a-time focus.
+ */
+function SheetStage({ stage, sheet }: { stage: LinuxStage; sheet: Sheet }) {
+  const { list: sources, numberOf } = numberSources(sheet);
+  const commands = commandNames(sheet).length;
+  const ids = stage.topics.map((topic) => topic.id);
+
+  return (
+    <>
+      <ChapterLayout route={stage.href} wide>
+        <ContentsButton />
+        <header className="mb-6 flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
+          <div className="max-w-2xl">
+            <p className={`${LABEL} text-accent`}>
+              <T en={LINUX_UI.stageEyebrow(stage.number)} bn={BN.stageEyebrow(stage.number)} />
+              {" · "}
+              <T en={LINUX_UI.sheetMeta(stage.topics.length, commands)} bn={BN.sheetMeta(stage.topics.length, commands)} />
+            </p>
+            <h1 className="mt-2 font-display text-[clamp(1.9rem,4.5vw,2.6rem)] font-medium leading-[1.08] tracking-[-0.025em] text-balance text-text">
+              {stage.title}
+            </h1>
+            <p className="mt-2 text-[16px] leading-relaxed text-pretty text-text-dim">{stage.description}</p>
+            <p className="mt-2 text-[13px] leading-relaxed text-text-faint">
+              <T en={LINUX_UI.legend} bn={BN.legend} />
+            </p>
+          </div>
+          <div className="w-full sm:w-64">
+            <StageProgress ids={ids} title={stage.title} />
+          </div>
+        </header>
+
+        <StageSheet stage={stage} sheet={sheet} numberOf={numberOf} />
+
+        <MetaLine
+          sections={stage.topics.length}
+          sources={sources.length}
+          updated={sheet.updated}
+          editHref={sheetEditUrl(stage.slug)}
+        />
+        <ChapterTools route={stage.href} minutes={sheetMinutes(sheet)} />
+        <Sources sources={sources} />
+        <StageNav stage={stage} />
+      </ChapterLayout>
+      <BackToTop />
+    </>
+  );
+}
+
+/** A stage with no sheet yet: the lesson in content/linux/<stage>.mdx, as before. Remove it when every stage has a sheet. */
+async function LessonStage({ stage }: { stage: LinuxStage }) {
+  const slug = stage.slug;
+  const { default: Content, page: info } = await loadLesson(slug);
   const outline = getOutline("linux", slug);
   const sections = outline.filter((item) => item.level === 2).length;
   const ids = stage.topics.map((topic) => topic.id);
@@ -165,4 +223,12 @@ export default async function StagePage({ params }: PageProps<"/linux/[stage]">)
       <BackToTop />
     </>
   );
+}
+
+export default async function StagePage({ params }: PageProps<"/linux/[stage]">) {
+  const { stage: slug } = await params;
+  const stage = getStage(slug);
+  if (!stage) notFound();
+  const sheet = getSheet(slug);
+  return sheet ? <SheetStage stage={stage} sheet={sheet} /> : <LessonStage stage={stage} />;
 }

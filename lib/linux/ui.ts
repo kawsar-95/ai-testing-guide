@@ -21,6 +21,10 @@ export const LINUX_UI = {
 
   // The stage page.
   stageEyebrow: (number: number) => `STAGE ${String(number).padStart(2, "0")} · LINUX`,
+  // A stage that has a command sheet (lib/linux/sheets).
+  sheetMeta: (topics: number, commands: number) => `${topics} topics · ${commands} commands`,
+  legend: "UPPERCASE = your own value · red ! = can destroy data · tick a card when you know it",
+  warnLabel: "Warning",
   inThisStage: "In this stage",
   inThisStageMeta: (topics: number, minutesText: string) => `${topics} topics · about ${minutesText}`,
   stageNav: "Linux stages",
