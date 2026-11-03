@@ -147,7 +147,7 @@ function SheetStage({ stage, sheet }: { stage: LinuxStage; sheet: Sheet }) {
   );
 }
 
-/** A stage with no sheet yet: the lesson in content/linux/<stage>.mdx, as before. Remove it when every stage has a sheet. */
+/** A stage with no sheet: its lesson in content/linux/<stage>.mdx, as before. Every stage has a sheet today, so this does not run; see "Lessons (not shown)" in CLAUDE.md. */
 async function LessonStage({ stage }: { stage: LinuxStage }) {
   const slug = stage.slug;
   const { default: Content, page: info } = await loadLesson(slug);
