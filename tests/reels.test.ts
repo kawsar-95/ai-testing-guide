@@ -1,7 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { AGENT_MEMORY } from "../lib/agent-memory/topics.ts";
+import { AI_AGENTS } from "../lib/ai-agents/topics.ts";
+import { AI_CONCEPTS } from "../lib/ai-concepts/topics.ts";
+import { AI_ENGINEERING } from "../lib/ai-engineering/topics.ts";
+import { AI_ML_TESTING } from "../lib/ai-ml-testing/topics.ts";
+import { AI_SKILLS } from "../lib/ai-skills/topics.ts";
 import { ARCHITECTURE } from "../lib/architecture/topics.ts";
 import { REELS_UI_BN } from "../lib/bn/reels.ts";
+import { HARNESS } from "../lib/harness/topics.ts";
 import { REELS, reelsFor } from "../lib/reels/index.ts";
 import {
   MAX_REEL_SECONDS,
@@ -18,34 +25,83 @@ import { REELS_UI } from "../lib/reels/ui.ts";
 import { SHORTS_CONTROL_ID, isThrottled, oembedProblems, oembedStatusProblem, shortsControlProblem, shortsProblem } from "../lib/reels/verify.ts";
 import { SYSTEM_DESIGN } from "../lib/system-design/cases.ts";
 
-const MODULES = { architecture: ARCHITECTURE, "system-design": SYSTEM_DESIGN } as const;
+const MODULES = {
+  architecture: ARCHITECTURE,
+  "system-design": SYSTEM_DESIGN,
+  "ai-engineering": AI_ENGINEERING,
+  harness: HARNESS,
+  "ai-skills": AI_SKILLS,
+  "ai-concepts": AI_CONCEPTS,
+  "agent-memory": AGENT_MEMORY,
+  "ai-agents": AI_AGENTS,
+  "ai-ml-testing": AI_ML_TESTING,
+} as const;
 /** Every topic page has at least this many reels, and no more than the maximum, so no page is a wall of videos. */
 const MIN_PER_PAGE = 2;
 const MAX_PER_PAGE = 4;
 /** One creator has at most this many reels on one page, so a page does not lean on one voice. */
 const MAX_PER_CHANNEL = 2;
+/**
+ * The pages that truly have fewer than 2 reels, with the exact count. A page is here only when no clip that
+ * passed the review fits what the page teaches: the block shows 1 reel, or nothing. The count is asserted in
+ * both directions, so an entry must be deleted as soon as the page has 2 reels.
+ */
+const THIN_PAGES: Readonly<Record<string, number>> = {
+  "ai-engineering/reliability-engineering": 1,
+  "ai-engineering/production-monitoring": 1,
+  "ai-skills/meeting-intelligence": 1,
+  "ai-skills/ai-data-analysis": 1,
+  "ai-skills/ai-video": 0,
+  "ai-skills/voice-and-avatars": 0,
+  "ai-concepts/guardrails": 1,
+  "ai-agents/trigger": 1,
+  "ai-agents/llm-decides": 1,
+  "ai-ml-testing/deepeval-pytest": 1,
+  "ai-ml-testing/chatbot-ui-testing": 1,
+  "ai-ml-testing/ai-quality-metrics": 1,
+  "ai-ml-testing/capstone-project-setup": 1,
+  "ai-ml-testing/capstone-test-pipeline": 0,
+  "ai-ml-testing/capstone-cicd-presentation": 1,
+  "ai-ml-testing/virtual-assistant-testing": 0,
+  "ai-ml-testing/agent-decision-testing": 1,
+  "ai-ml-testing/cicd-eval-pipelines": 0,
+  "ai-ml-testing/advanced-capstone-test-suite": 0,
+  "ai-ml-testing/advanced-capstone-presentation": 1,
+};
 
 const all = Object.entries(REELS).flatMap(([moduleId, pages]) =>
   Object.entries(pages ?? {}).flatMap(([slug, reels]) => reels.map((reel) => ({ where: `${moduleId}/${slug}`, reel }))),
 );
 
-test("only Architecture and System Design have reels, and every key is a topic page of its module", () => {
-  assert.deepEqual(Object.keys(REELS).sort(), ["architecture", "system-design"]);
+test("the modules with reels are the 9 listed, every key is a topic page of its module, and every topic page has an entry", () => {
+  assert.deepEqual(Object.keys(REELS).sort(), Object.keys(MODULES).sort());
   for (const [moduleId, pages] of Object.entries(REELS)) {
     const module = MODULES[moduleId as keyof typeof MODULES];
     for (const slug of Object.keys(pages ?? {})) {
       assert.equal(module.get(slug)?.kind, "topic", `${moduleId}/${slug} is not a topic page`);
     }
+    for (const page of module.pages.filter((p) => p.kind === "topic")) {
+      assert.ok(page.slug in (pages ?? {}), `${moduleId}/${page.slug} has no entry in its reels file (use [] for no reels)`);
+    }
   }
 });
 
-test("every topic page of Architecture and System Design has between 2 and 4 reels", () => {
+test("every topic page has between 2 and 4 reels, except the listed thin pages, which have exactly the count that is listed", () => {
+  const known = new Set<string>();
   for (const [moduleId, module] of Object.entries(MODULES)) {
     for (const page of module.pages.filter((p) => p.kind === "topic")) {
+      const where = `${moduleId}/${page.slug}`;
+      known.add(where);
       const count = reelsFor(moduleId, page.slug).length;
-      assert.ok(count >= MIN_PER_PAGE && count <= MAX_PER_PAGE, `${moduleId}/${page.slug} has ${count} reels`);
+      if (where in THIN_PAGES) {
+        assert.ok(THIN_PAGES[where] < MIN_PER_PAGE, `${where} is listed as thin with ${THIN_PAGES[where]} reels`);
+        assert.equal(count, THIN_PAGES[where], `${where} is listed as thin with ${THIN_PAGES[where]} reels but has ${count}: update the list`);
+      } else {
+        assert.ok(count >= MIN_PER_PAGE && count <= MAX_PER_PAGE, `${where} has ${count} reels`);
+      }
     }
   }
+  for (const where of Object.keys(THIN_PAGES)) assert.ok(known.has(where), `${where} in THIN_PAGES is not a topic page`);
 });
 
 test("each reel has a valid id, a clean title, a channel, a known kind and language, and 5 to 180 seconds", () => {

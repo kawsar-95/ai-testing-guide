@@ -1,8 +1,8 @@
 # Reels review log
 
-One row per reel on the Architecture and System Design pages. A reel is another creator's video. It is not a source of the page and it is not fact-checked like the page text.
+One row per reel on the topic pages of nine modules: Architecture, System Design, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, and AI/ML Testing. A reel is another creator's video. It is not a source of the page and it is not fact-checked like the page text.
 
-How each reel was checked: `/shorts/<id>` answers 200 (a real Short); YouTube's oEmbed answers 200 (public, embeddable); the official IFrame Player API loads it and reaches the playing state in headless Chrome, and reports the length. Evidence: `transcript` = the video has English captions, which were used to screen it against the page (excerpts were read, not every transcript in full); `translated captions` = only machine-translated captions exist; `frames + title` = no captions, but the on-screen text of 3 frames was read; `title + description` = no captions, so the title, the description, and the channel were judged (typical for Bangla: the spoken words were not checked); `title only` = nothing else was read.
+How each reel was checked: `/shorts/<id>` answers 200 (a real Short); YouTube's oEmbed answers 200 (public, embeddable); the official IFrame Player API loads it and reaches the playing state in headless Chrome, and reports the length. Evidence: `transcript` = the video has captions in the language it is spoken in (English captions, or Bangla automatic captions that were read in Bangla), which were used to screen it against the page (excerpts were read, not every transcript in full); `translated captions` = only machine-translated captions exist; `frames + title` = no captions, but the on-screen text of 3 frames was read; `title + description` = no captions, so the title, the description, and the channel were judged (typical for Bangla: the spoken words were not checked); `title only` = nothing else was read.
 
 Run `node scripts/check-reels.ts` to check again; creators can delete or restrict a video at any time.
 
@@ -110,5 +110,325 @@ Run `node scripts/check-reels.ts` to check again; creators can delete or restric
 | `system-design/payment-system` | `tewVJBvoHDg` | Future Architect | Ledger First Architecture | explainer | en | 57 | transcript | yes |
 | `system-design/payment-system` | `w-FktHoHza0` | Future Architect | PCI DSS & Data Sovereignty | explainer | en | 54 | transcript | yes |
 | `system-design/payment-system` | `pgcnmQfIFeU` | Amigoscode | Webhooks: what Stripe warns you about | explainer | en | 56 | transcript | yes |
+| `ai-engineering/prompt-engineering` | `3dm6nfOxO1c` | codebasics | What is prompt engineering? | explainer | en | 25 | transcript | yes |
+| `ai-engineering/prompt-engineering` | `FbAxP2-Jfps` | Anthropic | AI Prompt Engineering 101: Explained | explainer | en | 60 | transcript | yes |
+| `ai-engineering/calling-llm-apis` | `kQMQGormS4I` | KodeKloud | How LLM API Calls Actually Work (OpenAI SDK vs Raw HTTP) | explainer | en | 74 | transcript | yes |
+| `ai-engineering/calling-llm-apis` | `PrXJgsC_ysY` | AssemblyAI | Getting started with OpenAI API on Python | explainer | en | 56 | transcript | yes |
+| `ai-engineering/building-chatbots` | `fK_T-AiwvWw` | Rayhan AI Architecture | চ্যাটবট বানানো সহজ! কিন্তু Production-এ টিকবে তো? \| AI Engineering | explainer | bn | 26 | transcript | yes |
+| `ai-engineering/building-chatbots` | `7p-Ys3RIbIg` | The Seams | LLM Chat Memory: Re-Send Conversation History | explainer | en | 40 | transcript | yes |
+| `ai-engineering/building-chatbots` | `bpqm_Jhjh-o` | The Seams | LLM Chat Memory: Trim Long Conversation History | explainer | en | 52 | transcript | yes |
+| `ai-engineering/building-chatbots` | `SEI6BVU9tuA` | Kuro Explains | Why Does ChatGPT Forget What You Just Said? (Context Window Explained) | animation | en | 44 | transcript | yes |
+| `ai-engineering/using-langchain` | `HDjeZYduNcs` | Pavan Belagatti | What is LangChain? | explainer | en | 142 | transcript | yes |
+| `ai-engineering/using-langchain` | `Chbv9X3SRJE` | IBM Technology | CHAIN REACTION: Unlocking the Power of LangChain | explainer | en | 53 | transcript | yes |
+| `ai-engineering/using-langchain` | `iYH8E8J2RVs` | Pavan Belagatti | LangChain vs LangGraph! | compare | en | 180 | transcript | yes |
+| `ai-engineering/using-langchain` | `I77wm5WKdJQ` | KodeKloud | When LangChain Isn't Enough → Try LangGraph! | compare | en | 178 | transcript | yes |
+| `ai-engineering/rag-basics` | `1468HyDi5Yw` | Tech With Tim | How AI Agents Remember Long Term Vector Databases + RAG | explainer | en | 38 | transcript | yes |
+| `ai-engineering/rag-basics` | `FN1tz26155o` | Rayhan AI Architecture | RAG কীভাবে কাজ করে? \| AI কীভাবে নিজের Knowledge থেকে উত্তর দেয় | explainer | bn | 41 | transcript | yes |
+| `ai-engineering/rag-basics` | `XCwMlBkUJdo` | Rayhan AI Architecture | RAG মানেই Vector DB? ৯০% মানুষ এখানেই ভুল করে | mistake | bn | 29 | transcript | yes |
+| `ai-engineering/ai-agents` | `BF2k_fKuCVM` | Jeff Su | AI Agents explained in 3 steps | explainer | en | 52 | transcript | yes |
+| `ai-engineering/ai-agents` | `FRrp0Px0peY` | Pavan Belagatti | Understanding AI Types: Generative AI vs AI Agents vs Agentic AI! | compare | en | 72 | transcript | yes |
+| `ai-engineering/ai-agents` | `YeD7ZcOwDqk` | Rayhan AI Architecture | AI Agents: The Future of Work \| কেন AI Agent দরকার? | explainer | bn | 31 | transcript | yes |
+| `ai-engineering/vector-databases` | `-P6Muecu_wI` | MongoDB | What is Vector Search and How Do Vector Databases Work? | explainer | en | 60 | transcript | yes |
+| `ai-engineering/vector-databases` | `n7JyJcP5vJ4` | Pinecone | Vector databases like Pinecone are powerful because they allow application developers to build | explainer | en | 50 | transcript | yes |
+| `ai-engineering/vector-databases` | `_yFL2qgi23I` | Rayhan AI Architecture | Vector Database আসলে কী? \| RAG কীভাবে Relevant Data খুঁজে পায়? | explainer | bn | 21 | transcript | yes |
+| `ai-engineering/vector-databases` | `SGCARmUSHbk` | Rayhan AI Architecture | Embeddings আসলে কী? \| AI কীভাবে Text-এর Meaning বোঝে? | explainer | bn | 29 | transcript | yes |
+| `ai-engineering/fine-tuning` | `0iFEtnHyzE0` | Shaw Talebi | Fine-tuning EXPLAINED in 40 sec | explainer | en | 39 | transcript | yes |
+| `ai-engineering/fine-tuning` | `K3wZYRAaCuc` | KodeKloud | Prompt engineering is a lie. Here's what actually works | explainer | en | 168 | transcript | yes |
+| `ai-engineering/fine-tuning` | `aOZOH-9GH-E` | Pavan Belagatti | What is fine-tuning in LLMs? | explainer | en | 165 | transcript | yes |
+| `ai-engineering/fine-tuning` | `Hy9DmHo64Bc` | Nabid In Motion | AI Model কে সব মুখস্থ করাবেন না! RAG vs Fine-tuning এর আসল পার্থক্য Shorts | compare | bn | 56 | transcript | yes |
+| `ai-engineering/data-pipelines` | `krVJh7KLKn0` | MongoDB | What is Chunking in AI? A Solution to Passing Large Documents | explainer | en | 61 | transcript | yes |
+| `ai-engineering/data-pipelines` | `u7VQzUTXAtQ` | Pinecone | Using Metadata in RAG Systems | explainer | en | 48 | transcript | yes |
+| `ai-engineering/data-pipelines` | `QPQg4DtX_mo` | Nabid In Motion | নোংরা ডাটা দিয়ে কি AI সম্ভব? Data Cleaning Explained (পার্ট-৬) Shorts | explainer | bn | 58 | transcript | yes |
+| `ai-engineering/retrieval-engineering` | `jZeEFKdjSP4` | Pinecone | Cascading Retrieval vs Hybrid Search | explainer | en | 47 | transcript | yes |
+| `ai-engineering/retrieval-engineering` | `fvgr2OmLhTg` | MongoDB | Vector Search + Text Search = Results! \| MongoDB Hybrid Search | explainer | en | 86 | transcript | yes |
+| `ai-engineering/retrieval-engineering` | `luafD8DqB1o` | Rayhan AI Architecture | Reranking কী? \| RAG কীভাব ে সবচেয়ে Relevant Result বেছ ে নেয়? | explainer | bn | 31 | transcript | yes |
+| `ai-engineering/context-engineering` | `AfHU2BL-Bjs` | KodeKloud | Why Context Engineering Is the Future of AI? | explainer | en | 174 | transcript | yes |
+| `ai-engineering/context-engineering` | `-PAavWCzhF4` | Google Cloud Tech | 4 pillars of context engineering for AI agents | explainer | en | 51 | transcript | yes |
+| `ai-engineering/context-engineering` | `6QJJ7yv9GRk` | Gaurav Sen | AI Engineering: 1M context windows | explainer | en | 105 | transcript | yes |
+| `ai-engineering/context-engineering` | `P6uoMAVnkf0` | Rayhan AI Architecture | AI-কে বেশি Data দিলেই কি Result ভালো হবে? \| Context Engineering | explainer | bn | 31 | transcript | yes |
+| `ai-engineering/model-evaluation` | `Sfw-6xR3Jo8` | Aish Reganti | How AI agents cheat on coding benchmarks | explainer | en | 100 | transcript | yes |
+| `ai-engineering/model-evaluation` | `aFjWvkKhBTI` | Jessica Wang | What Are AI Evals | explainer | en | 45 | transcript | yes |
+| `ai-engineering/agent-orchestration` | `AwrLcTW0lNM` | TestMu AI (Formerly LambdaTest) | What Is an AI Orchestrator? AI Agent Orchestration Explained | explainer | en | 64 | transcript | yes |
+| `ai-engineering/agent-orchestration` | `7liBQxFSIuE` | Gaurav Sen | Multi-Agent Orchestration by OpenAI - Swarm | explainer | en | 53 | transcript | yes |
+| `ai-engineering/agent-orchestration` | `k4e-e82ApkE` | Rayhan AI Architecture | একটি AI এজেন্ট দিয়ে সব কাজ করচ্ছেন? বড় ভুল! \| Multi-Agent Systems | mistake | bn | 31 | transcript | yes |
+| `ai-engineering/tool-calling` | `4vfDgLvuNQk` | Google Cloud Tech | Function calling for LLMs, what is it? | explainer | en | 54 | transcript | yes |
+| `ai-engineering/tool-calling` | `TJGmO5ZFJYQ` | Postman | Function Calling: How AI Uses Your APIs | explainer | en | 167 | transcript | yes |
+| `ai-engineering/tool-calling` | `dY9521SoRkI` | AI in Hindi \| Cloud Edventures | Tool Use / Function Calling: How Claude Runs Code | explainer | en | 36 | transcript | yes |
+| `ai-engineering/structured-outputs` | `6jUk_m5r3vM` | Vellumy | Structured Outputs in ChatGPT \| Explained in 30 seconds | explainer | en | 33 | transcript | yes |
+| `ai-engineering/structured-outputs` | `DuC2EcLqTWY` | Atef Ataya | What is OpenAI Structured Outputs? | explainer | en | 35 | transcript | yes |
+| `ai-engineering/guardrails-and-safety` | `2U8z7y3uTYE` | Matt Pocock | The hidden security risk in your system prompts | explainer | en | 122 | transcript | yes |
+| `ai-engineering/guardrails-and-safety` | `NQhsLVmuItA` | Nate Herk \| AI Automation | n8n's NEW Guardrail Node is a Gamechanger for AI Agents | explainer | en | 84 | transcript | yes |
+| `ai-engineering/model-routing` | `f-rFWcSmWkY` | Databricks | 1. AI Model Routing: How Smart Routing Picks the Right LLM | explainer | en | 94 | transcript | yes |
+| `ai-engineering/model-routing` | `PU--u4q_xwg` | Tech world since 2025 | LiteLLM vs OpenRouter! Which one should YOU use with OpenAI Agents SDK? | compare | en | 49 | transcript | yes |
+| `ai-engineering/observability` | `hLxrj2uiQt8` | Tech With Tim | LLMOps The AI Engineering Skill Employers Care About Most | explainer | en | 47 | transcript | yes |
+| `ai-engineering/observability` | `hwkefavUd3Q` | LangChain | Why Clay's Finance Team Loves LangSmith | explainer | en | 43 | transcript | yes |
+| `ai-engineering/latency-optimization` | `5Y_JM6C9xOA` | KodeKloud | How the vLLM inference engine works? | explainer | en | 174 | transcript | yes |
+| `ai-engineering/latency-optimization` | `0wC9Igb3STA` | AssemblyAI | From 7-Second Lag to Sub-1.6s — The Voice AI Latency Journey | real-system | en | 106 | transcript | yes |
+| `ai-engineering/cost-optimization` | `GUSfx3Z4r4A` | ArthaMatrix | AI Token দ্রুত শেষ হয়ে যাচ্ছে? Token খরচ কমানোর ৫টি সেরা কৌশল! | explainer | bn | 173 | transcript | yes |
+| `ai-engineering/cost-optimization` | `7caDFcTAssA` | IBM Technology | Why Are LLMs Expensive to Deploy? | explainer | en | 48 | transcript | yes |
+| `ai-engineering/reliability-engineering` | `pFX7spnBGGc` | AI Quality Nerd | Why some apps survived the OpenAI outage: AI gateway failover | explainer | en | 36 | transcript | yes |
+| `ai-engineering/security` | `3sM_XmXZnDI` | KodeKloud | AI Security: Preventing Data Leaks in RAG | explainer | en | 165 | transcript | yes |
+| `ai-engineering/security` | `jQId5VCOqfs` | Rayhan AI Architecture | API Key আসলে কী? \| AI Project-এ কেন এত গুরুত্বপূর্ণ? | explainer | bn | 41 | transcript | yes |
+| `ai-engineering/security` | `uTmidRg-XV8` | Rayhan AI Architecture | AI System Security \| Production AI Secure রাখার Basic Foundation | explainer | bn | 41 | transcript | yes |
+| `ai-engineering/ai-infrastructure` | `oM5-knpFPw4` | KodeKloud | Kubernetes Liveness vs Readiness Probes, Done Right! | explainer | en | 168 | transcript | yes |
+| `ai-engineering/ai-infrastructure` | `tmQKLYW_M0c` | Rayhan AI Architecture | Docker কী? AI Developer-রা Docker কেন ব্যবহার করে | explainer | bn | 41 | transcript | yes |
+| `ai-engineering/ai-infrastructure` | `gWouZYfYRM4` | Rayhan AI Architecture | Production Server-এ AI System Deploy করার সিক্রেট! \| Part 3 | explainer | bn | 30 | transcript | yes |
+| `ai-engineering/ci-cd-for-ai` | `ejRNIIZ0rCk` | Amigoscode | CI CD with GitHub Actions Explained in 60 Seconds. | explainer | en | 56 | transcript | yes |
+| `ai-engineering/ci-cd-for-ai` | `VMKGSGCZZdE` | Nabid In Motion | কোডিং হবে রোবটের মাধ্যমে! \| GitHub Actions & CI/CD Bangla Tutorial \| (Bangla) - Part 8 Shorts | explainer | bn | 59 | transcript | yes |
+| `ai-engineering/production-monitoring` | `nO84ztgzPV0` | Rajeev Kanth \| BEPEC | Model Drift vs Concept Drift: Tips for Data Scientists!!! | explainer | en | 58 | transcript | yes |
+| `ai-engineering/human-in-the-loop` | `DTnL32C1UMw` | Leon van Zyl | OpenAI Agent Builder: Human-in-the-Loop Optimization | explainer | en | 39 | transcript | yes |
+| `ai-engineering/human-in-the-loop` | `BxuHokLhCOQ` | Rayhan AI Architecture | AI Agent কি সব সিদ্ধান্ত নিজেই নেবে? \| Human-in-the-Loop Explained | explainer | bn | 21 | transcript | yes |
+| `ai-engineering/human-in-the-loop` | `UCxw_q8yqwg` | n8n | New one click human review node for n8n tools | explainer | en | 41 | transcript | yes |
+| `ai-engineering/data-governance` | `n3l518qym3o` | Nabid In Motion | সাবধান! AI Rules না মানলে আপনার প্রজেক্ট ব্যান হতে পারে \| GDPR & EU AI Act Shorts | explainer | bn | 59 | transcript | yes |
+| `ai-engineering/data-governance` | `U5W1MqH3aZs` | Stanford Online | Myth: You Need to Host Your Own Model for Security or Privacy | explainer | en | 59 | transcript | yes |
+| `ai-engineering/system-design` | `FTMFprsV-wI` | Gaurav Sen | AI System Design in 2026 | explainer | en | 63 | transcript | yes |
+| `ai-engineering/system-design` | `oGNSz3HTP9w` | Marina Wyss - AI & Machine Learning | Why bother learning ML System Design? | explainer | en | 26 | transcript | yes |
+| `harness/agent-loop` | `854E1jORFI0` | Tech With Tim | The AI Agent Loop Explained | explainer | en | 40 | transcript | yes |
+| `harness/agent-loop` | `-HtvTk5mv4Q` | Google Cloud Tech | 5 things every AI agent harness needs | explainer | en | 80 | transcript | yes |
+| `harness/agent-loop` | `cW5Vgp00wRE` | ArthaMatrix | সহজ ভাষায় বুঝুন Loop Engineering কি? Loop Engineering vs Prompt Engineering | explainer | bn | 136 | transcript | yes |
+| `harness/tool-calling` | `Fb_FJCfVI54` | Pavan Belagatti | Tool Calling in LLMs! | explainer | en | 112 | transcript | yes |
+| `harness/tool-calling` | `Fanndh77I7w` | KodeKloud | Tool Calling in RAG | explainer | en | 99 | transcript | yes |
+| `harness/tool-calling` | `Hm59uXECwEU` | Mastra | Most developers overcomplicate AI tool calling | explainer | en | 132 | transcript | yes |
+| `harness/tool-calling` | `C2Jl1inw_7M` | Rayhan AI Architecture | Tool Calling কীভাবে কাজ করে? \| AI কীভাবে নিজেই Tools ব্যবহার করে | explainer | bn | 30 | transcript | yes |
+| `harness/context-management` | `9P36wMntNSI` | Matt Pocock | Stop stuffing your context window (here's why) | explainer | en | 129 | transcript | yes |
+| `harness/context-management` | `zkf1BMXvqF0` | KodeKloud | What Is a Context Window? | explainer | en | 76 | transcript | yes |
+| `harness/context-management` | `U1S4FvRFRiY` | Aish Reganti | The Context Window Problem Nobody Talks About | explainer | en | 134 | transcript | yes |
+| `harness/checkpointing` | `BrNDjc3FNTA` | Ali Hamza | Crash-Proof AI Agents: Durable Execution in LangGraph Explained | explainer | en | 37 | transcript | yes |
+| `harness/checkpointing` | `heC_iX8GBH4` | @AIEnthusiast26 | Claude Code's Hidden Time Machine — Rewind Any Mistake | real-system | en | 50 | transcript | yes |
+| `harness/checkpointing` | `3-sSbJKb-fQ` | Hugging Face | Pi Durable: AI agents that survive crashes | explainer | en | 75 | transcript | yes |
+| `harness/permissions-and-sandboxing` | `N0GPmj0ipQQ` | Mastra | Why Every AI Agent Needs a Sandbox | explainer | en | 50 | transcript | yes |
+| `harness/permissions-and-sandboxing` | `g_OqeRku5Pc` | LangChain | Should You Use a Sandbox for Your Agent? \| Max Agency | explainer | en | 63 | transcript | yes |
+| `harness/permissions-and-sandboxing` | `hj7Andj7nQE` | Gaurav Sen | OpenAI agents use internet without permission. | real-system | en | 63 | transcript | yes |
+| `harness/permissions-and-sandboxing` | `3PwysYGHBnw` | Rayhan AI Architecture | AI Agent-কে সব Tool-এর Access দেওয়া কি নিরাপদ? | explainer | bn | 21 | transcript | yes |
+| `harness/guardrails` | `Q9I8sMfq-FM` | Matt Pocock | Building LLM apps that don't suck - Guardrails | explainer | en | 62 | transcript | yes |
+| `harness/guardrails` | `ig2JpD_sAHE` | KodeKloud | What Are AI Guardrails and How Do They Work! | explainer | en | 170 | transcript | yes |
+| `harness/guardrails` | `bapHyVIJ0Ec` | Amigoscode | Make Claude Code Run Your Tests Every Time: Hooks | explainer | en | 68 | transcript | yes |
+| `ai-skills/prompting` | `2kvCNlpDFK0` | Google Cloud Tech | Chain of thought (CoT) prompting | explainer | en | 55 | transcript | yes |
+| `ai-skills/prompting` | `EiqrctWLnKQ` | Unity My Academy | Prompt Engineering কী? AI-এর সাথে কথা বলার শিল্প! | explainer | bn | 25 | transcript | yes |
+| `ai-skills/prompting` | `2-ljCXbmlzo` | ArthaMatrix | সাধারণ Prompt বনাম System Prompt-এর পার্থক্য! | explainer | bn | 128 | transcript | yes |
+| `ai-skills/context-engineering` | `ssxIXBBY9xM` | Pavan Belagatti | RAG vs Context Engineering! | explainer | en | 61 | transcript | yes |
+| `ai-skills/context-engineering` | `9txtxqyGOL4` | Nate Herk \| AI Automation | Context Engineering for AI Agents (Learn This NOW) | explainer | en | 125 | transcript | yes |
+| `ai-skills/context-engineering` | `hQqhVs3-ijk` | ArthaMatrix | বারবার AI-কে একই Prompt দিচ্ছেন? Claude AI-এর Projects & Context Engine বদলে দেবে আপনার Workflow! | explainer | bn | 37 | transcript | yes |
+| `ai-skills/ai-research` | `PZ5Q-OKOMX4` | IBM Technology | AI Research Agents in Action | explainer | en | 36 | transcript | yes |
+| `ai-skills/ai-research` | `MCS7ikRGmaw` | ArthaMatrix | 2 AI দিয়ে Advanced Research-এর দারুণ কৌশল! \| Perplexity Pro + Claude \| ArthaMatrix | explainer | bn | 56 | transcript | yes |
+| `ai-skills/ai-research` | `c71V2fAaIeE` | ArthaMatrix | সম্পূর্ণ বিনামূল্যে আপনার নিজস্ব AI রিসার্চ টিম! \| Google NotebookLM Bangla | explainer | bn | 163 | transcript | yes |
+| `ai-skills/workflow-automation` | `DwGtVdllKRo` | Zapier | New to Zapier? Build Your First Lead Automation (No Code!) | explainer | en | 22 | transcript | yes |
+| `ai-skills/workflow-automation` | `aXf51HXzqLw` | Leon van Zyl | Create an AI Chatbot in Minutes Using n8n! (No Coding Required) | explainer | en | 34 | transcript | yes |
+| `ai-skills/ai-agents` | `VxDNUKw83PY` | Matt Pocock | AI Agents are SO simple to build | explainer | en | 155 | transcript | yes |
+| `ai-skills/ai-agents` | `3lQXYNUyv5o` | Stanford Online | Why AI Agents Matter Now with Stanford's Azalia Mirhoseini and Aakanksha Chowdhery | explainer | en | 57 | transcript | yes |
+| `ai-skills/ai-agents` | `NvKowH8PnaA` | KodeKloud | Build AI Agents in 60 Seconds \| Google ADK Tutorial | explainer | en | 49 | transcript | yes |
+| `ai-skills/rag` | `jG-gbB0ULac` | KodeKloud | What is RAG? How AI Chatbots Access Your Custom Data (Explained Simply) | explainer | en | 175 | transcript | yes |
+| `ai-skills/rag` | `uDfUvC1oi3M` | KodeKloud | Poor Chunking Strategy Undermine RAG System | explainer | en | 94 | transcript | yes |
+| `ai-skills/rag` | `Tb8FBY3rI0E` | Rayhan AI Architecture | AI Agent + RAG কীভাবে একসাথে কাজ করে? \| AI That Knows & Acts | explainer | bn | 41 | transcript | yes |
+| `ai-skills/data-enrichment` | `eBA2AgLTs0U` | Nishkarsh Agarwal | Why One Email Finder Isn't Enough (Data Enrichment Waterfalls) | explainer | en | 42 | transcript | yes |
+| `ai-skills/data-enrichment` | `eV65DGmphIU` | IBM Technology | Synthetic Data | explainer | en | 58 | transcript | yes |
+| `ai-skills/vibe-coding` | `dVDATeeCWcM` | Tech With Tim | Claude Code Skills to Stop You from Vibe Coding Junk | explainer | en | 35 | transcript | yes |
+| `ai-skills/vibe-coding` | `zQCSPGtQPrM` | ArthaMatrix | ভাইব কোডিং (Vibe Coding) কী? কোডিং না জেনেই এআই দিয়ে অ্যাপ বানান! | explainer | bn | 62 | transcript | yes |
+| `ai-skills/mcp-connectors` | `kO21vdEQS5g` | Pavan Belagatti | WTH is Model Context Protocol (MCP)! | explainer | en | 56 | transcript | yes |
+| `ai-skills/mcp-connectors` | `iGJTw_PWogs` | KodeKloud | Why We Need MCP When APIs Already Exist | explainer | en | 179 | transcript | yes |
+| `ai-skills/mcp-connectors` | `4q5FEKWwfh0` | Rayhan AI Architecture | MCP Server Explained! একটা Tool Call-এর পেছনে কী ঘটে? | explainer | bn | 34 | transcript | yes |
+| `ai-skills/ai-evals` | `4lxw0DVTHvc` | New Machina | What are AI and LLM Evals ? | explainer | en | 57 | transcript | yes |
+| `ai-skills/ai-evals` | `Zxrqu5H0qb8` | Mastra | The real reason AI evals feel impossible (and how to fix it) | explainer | en | 40 | transcript | yes |
+| `ai-skills/ai-evals` | `T1h9IBmGH3A` | Mastra | AI Evals - On the walk over ep2 | explainer | en | 179 | transcript | yes |
+| `ai-skills/meeting-intelligence` | `eTK4Z7SeUI4` | AssemblyAI | How Fireflies AI Scaled: Better Speech-to-Text Accuracy and Cheaper LLMs | real-system | en | 43 | transcript | yes |
+| `ai-skills/ai-data-analysis` | `8AGyh2Tc1hQ` | Tech With Tim | Your AI Data Science Is Lying to You | mistake | en | 103 | transcript | yes |
+| `ai-skills/decks-and-design` | `NzcRprKWbD8` | Claude | Make presentations with Claude Slides | explainer | en | 105 | transcript | yes |
+| `ai-skills/decks-and-design` | `qdomkfNtK6Q` | Hablu Programmer | Gamma AI দিয়ে Professional Presentation ১ মিনিটে | explainer | bn | 96 | transcript | yes |
+| `ai-skills/ai-governance` | `sA6UA2fMNHg` | IBM Technology | Why is AI Governance Important? | explainer | en | 46 | transcript | yes |
+| `ai-skills/ai-governance` | `ORcaA7pD9WY` | IBM Technology | Responsible AI in 60 Seconds | explainer | en | 57 | transcript | yes |
+| `ai-skills/ai-governance` | `ITmbZFFGQuI` | Google Cloud Tech | Why AI agents need their own identity & audit trails | explainer | en | 45 | transcript | yes |
+| `ai-skills/fine-tuning` | `bRtnM07Vw5w` | TestMu AI (Formerly LambdaTest) | RAG vs Fine Tuning EXPLAINED! | compare | en | 133 | transcript | yes |
+| `ai-skills/fine-tuning` | `Zq_aquaEpC0` | Microsoft Developer | Is fine-tuning a model like DeepSeek worth it? | explainer | en | 71 | transcript | yes |
+| `ai-skills/fine-tuning` | `Lmwv7P--2zE` | Google Cloud Tech | Fine-tuning use cases | explainer | en | 130 | transcript | yes |
+| `ai-skills/open-models` | `dsW2tAO38-Y` | IBM Technology | Will Open Source AI Models Pass Proprietary Models? | explainer | en | 58 | transcript | yes |
+| `ai-skills/open-models` | `4ucnsFBQmDA` | IBM Technology | What are the differences between DeepSeek models? | compare | en | 142 | transcript | yes |
+| `ai-skills/open-models` | `5J6OXXe4SeM` | Tech With Tim | Why Your Local AI Is Slow | explainer | en | 51 | transcript | yes |
+| `ai-skills/open-models` | `l9xZDkhRhyw` | Divya Rajpurohit \| AI Automation | LLaMA vs Ollama explained in 15 seconds! | compare | en | 16 | transcript | yes |
+| `ai-skills/voice-agents` | `RsmKGpJ1we4` | Google Cloud Tech | What "real-time voice AI" actually means | explainer | en | 52 | transcript | yes |
+| `ai-skills/voice-agents` | `BW0r6_u7Dv4` | AssemblyAI | How to Handle Interruptions in Voice AI Calls | explainer | en | 78 | transcript | yes |
+| `ai-skills/image-generation` | `XOfuq-EtZ3A` | Jeff Su | Midjourney vs. Google's Nano Banana | compare | en | 35 | transcript | yes |
+| `ai-skills/image-generation` | `j5h9dBtWZXM` | 3Blue1Brown | How AI connects text and images | animation | en | 103 | transcript | yes |
+| `ai-concepts/agentic-loops` | `Uimmj3EiXMI` | Google Cloud Tech | What is ReAct prompting? | explainer | en | 60 | transcript | yes |
+| `ai-concepts/agentic-loops` | `kRl_8wG_utU` | ArthaMatrix | Agentic Loop Engineering কী এবং কীভাবে কাজ করে? | explainer | bn | 32 | transcript | yes |
+| `ai-concepts/agentic-loops` | `tjd5IwgIvIg` | Rayhan AI Architecture | Agentic Workflow কীভাবে কাজ করে? \| AI কীভাবে নিজেই সিদ্ধান্ত নেয় | explainer | bn | 38 | transcript | yes |
+| `ai-concepts/mcp` | `r2P6-gqs1xg` | KodeKloud | Model Context Protocol (MCP) Explained in 60 Seconds | explainer | en | 56 | transcript | yes |
+| `ai-concepts/mcp` | `rTW1eM0T_90` | Microsoft Developer | What is Model Context Protocol (MCP)? | explainer | en | 55 | transcript | yes |
+| `ai-concepts/mcp` | `hCDfrgvsC1M` | Rayhan AI Architecture | MCP কী? (AI-এর USB-C পোর্ট) | explainer | bn | 31 | transcript | yes |
+| `ai-concepts/subagents` | `badT4FXj7Mc` | Mastra | Multi-agent systems are the future of AI applications | explainer | en | 177 | transcript | yes |
+| `ai-concepts/subagents` | `SNhmFJzieR4` | LangChain | Why Sierra uses one agent per brand instead of multi-agent systems | real-system | en | 79 | transcript | yes |
+| `ai-concepts/subagents` | `U0wOgXXfdjU` | Rayhan AI Architecture | AI Agent vs Multi-Agent System — এক Agent-এর বদলে অনেক Agent কেন? | explainer | bn | 31 | transcript | yes |
+| `ai-concepts/subagents` | `bcj5zYcv1QQ` | Rayhan AI Architecture | AI Agents-এর Boss কে? \| Orchestrator Explained | explainer | bn | 37 | transcript | yes |
+| `ai-concepts/ai-gateway` | `CqesSUnsw9Y` | AI Quality Nerd | 6 jobs of an AI gateway: failover, caching, guardrails, etc. | explainer | en | 51 | transcript | yes |
+| `ai-concepts/ai-gateway` | `_miSLMmLc0U` | AI Quality Nerd | Which AI gateway should you use? Bifrost, Cloudflare, Kong, Vercel | explainer | en | 49 | transcript | yes |
+| `ai-concepts/ai-gateway` | `HGTlGUt2s8M` | Databricks | AI Gateway Explained in 60 Secs: How to Control Your AI Spend | explainer | en | 57 | transcript | yes |
+| `ai-concepts/ai-gateway` | `iBi4QliiSOk` | Rayhan AI Architecture | AI Gateway কী? Production AI System-এ কেন দরকার? \| AI Architecture | explainer | bn | 31 | transcript | yes |
+| `ai-concepts/inference-economics` | `0E8kDTW10HQ` | KodeKloud | What is Prompt Caching? | explainer | en | 106 | transcript | yes |
+| `ai-concepts/inference-economics` | `GXh1KwzNIIM` | Gaurav Sen | What is Prompt Caching in LLMs? | explainer | en | 84 | transcript | yes |
+| `ai-concepts/inference-economics` | `vHOO_heIsf4` | Rayhan AI Architecture | AI Agent-এর Cost কমাবেন কীভাবে? \| Token Optimization Explained | explainer | bn | 31 | transcript | yes |
+| `ai-concepts/evals` | `KY5hfe_Td14` | Gaurav Sen | Evals are the hottest topic in 2026. | explainer | en | 82 | transcript | yes |
+| `ai-concepts/evals` | `FRETejqa7D8` | Google Cloud Tech | How to build AI agent evals in 4 steps | explainer | en | 55 | transcript | yes |
+| `ai-concepts/evals` | `yPe1I1ogd3A` | codebasics | MakeMyTrip CTO on AI Evals | real-system | en | 72 | transcript | yes |
+| `ai-concepts/evals` | `VOwtHndNK8c` | Rayhan AI Architecture | AI Agent-এর উত্তর ঠিক আছে কিনা বুঝবেন কীভাবে?” | explainer | bn | 27 | transcript | yes |
+| `ai-concepts/guardrails` | `W5rB9HGSdMg` | Rayhan AI Architecture | AI Agent-কে সব কাজ করতে দেওয়া উচিত? \| Guardrails Explained | explainer | bn | 18 | transcript | yes |
+| `ai-concepts/observability` | `PxV1swOlcvI` | Matt Pocock | The one indispensable tool to any AI app developer - Observability | explainer | en | 81 | transcript | yes |
+| `ai-concepts/observability` | `LYsr7yVLXn8` | n8n | n8n Natively supports open telemetry and tracing | explainer | en | 42 | transcript | yes |
+| `ai-concepts/observability` | `ODh1DRil-PA` | LangChain | The LangSmith Feature Built for Multi-Step Agents | explainer | en | 30 | transcript | yes |
+| `ai-concepts/agent-harness` | `_6qHmJ9Trmg` | Google Cloud Tech | What exactly is an Agent Harness? | explainer | en | 82 | transcript | yes |
+| `ai-concepts/agent-harness` | `IVdJj_aNwhE` | KodeKloud | Agent Harness Explained in 2 minutes | explainer | en | 148 | transcript | yes |
+| `ai-concepts/agent-harness` | `7dFvU9zuv0k` | LangChain | What is an agent harness? Explained fast | explainer | en | 79 | transcript | yes |
+| `ai-concepts/agent-harness` | `Rnjad4p62bE` | LangChain | What is an agent harness? | explainer | en | 33 | transcript | yes |
+| `agent-memory/working-memory` | `FHufF_3QU2A` | Weaviate vector database | Stateful Agents self-optimize their Context Window | explainer | en | 43 | transcript | yes |
+| `agent-memory/working-memory` | `827IX97_NG4` | SkipCI | Context Rot: Why Giving AI More Context Makes It More Confidently Wrong | explainer | en | 33 | transcript | yes |
+| `agent-memory/working-memory` | `sVxen1j24Fc` | Aish Reganti | Don't Trust a Big Context Window Yet | explainer | en | 93 | transcript | yes |
+| `agent-memory/semantic-memory` | `tarq5cgw7PE` | Google Cloud Tech | AI agent memory | explainer | en | 42 | transcript | yes |
+| `agent-memory/semantic-memory` | `7EvMKPMGDAU` | Google Cloud Tech | Building an AI tutor that ACTUALLY remembers you | explainer | en | 43 | transcript | yes |
+| `agent-memory/episodic-memory` | `9xdteWeaHvk` | Oracle Developers | Episodic Memory & Hybrid Search for AI Agents | explainer | en | 45 | transcript | yes |
+| `agent-memory/episodic-memory` | `fj9dF_HXL-U` | James Briggs | You're doing AGENTIC "chat history" wrong | explainer | en | 59 | transcript | yes |
+| `agent-memory/episodic-memory` | `51aV0_Mpxz4` | Rayhan AI Architecture | AI Agent কি আপনার আগের কথা মনে রাখতে পারে? \| Agent Memory Explained | explainer | bn | 21 | transcript | yes |
+| `agent-memory/procedural-memory` | `adsrbuYB-WM` | Amigoscode | Stop Repeating Yourself to Claude Code: Use CLAUDE.md | explainer | en | 69 | transcript | yes |
+| `agent-memory/procedural-memory` | `WLngvmntWJI` | n8n | How to use skills in n8n agents | explainer | en | 60 | transcript | yes |
+| `agent-memory/procedural-memory` | `2MX49Tot0p4` | ArthaMatrix | Claude Code-এ Plugin vs Skill: কোনটি কীভাবে কাজ করে? | explainer | bn | 125 | transcript | yes |
+| `agent-memory/retrieval-memory` | `qSvlGGDJ2WM` | KodeKloud | RAG Explained: How Retrieval Augmented Generation Actually Works | explainer | en | 99 | transcript | yes |
+| `agent-memory/retrieval-memory` | `Qx14PG_i6Ko` | ByteMonk | RAG: Retrieval Augmented Generation | explainer | en | 47 | transcript | yes |
+| `agent-memory/retrieval-memory` | `DjJ6ngX2Dv8` | Google Cloud Tech | Advanced RAG techniques for better retrieval performance | explainer | en | 38 | transcript | yes |
+| `agent-memory/retrieval-memory` | `zGQ4hAabezs` | Rayhan AI Architecture | RAG Retrieval কী? \| AI কীভাবে সঠিক Information খুঁজে বের করে? | explainer | bn | 30 | frames + title | yes |
+| `agent-memory/parametric-memory` | `ietNakjXOtk` | KodeKloud | Training Cutoff in LLMs | explainer | en | 88 | transcript | yes |
+| `agent-memory/parametric-memory` | `C80IRQ_PHD4` | AI Made Clear | Why an AI model has a knowledge cutoff | explainer | en | 45 | transcript | yes |
+| `agent-memory/parametric-memory` | `zO5Pi1qJc60` | Orion Stack | Why the Pros Don't Fine-Tune Everything (Catastrophic Forgetting) | explainer | en | 59 | transcript | yes |
+| `agent-memory/prospective-memory` | `KZnrLBBYr6E` | ArthaMatrix | Claude Code Routine \| ঘুমিয়েও AI দিয়ে কাজ করান! \| Workflow Automation Explained | explainer | bn | 44 | transcript | yes |
+| `agent-memory/prospective-memory` | `bsHFD4ivC4U` | ArthaMatrix | ম্যানুয়াল কাজকে বিদায়! Claude AI Scheduled Tasks দিয়ে সব অটোমেট করুন | explainer | bn | 45 | transcript | yes |
+| `ai-agents/agent-basics` | `nrqmgvc9TJ8` | LangChain | What Is an AI Agent, Actually? | explainer | en | 34 | transcript | yes |
+| `ai-agents/agent-basics` | `wXnm4PtBkAA` | Pavan Belagatti | Learn How AI Agents Work [Practical Scenario] | explainer | en | 125 | transcript | yes |
+| `ai-agents/agent-basics` | `Tgsdkn_wO70` | ArthaMatrix | AI Agent কী এবং এটি কিভাবে কাজ করে? \| AI Chatbot vs AI Agent | explainer | bn | 154 | transcript | yes |
+| `ai-agents/agent-basics` | `7UYd3c6Npj4` | Nabid In Motion | চ্যাটজিপিটি কি পুরনো হয়ে যাচ্ছে? AI Agent বনাম Chatbot-এর আসল পার্থক্য Shorts | explainer | bn | 60 | transcript | yes |
+| `ai-agents/trigger` | `khfFtyGPdLg` | Rohit Krishna | n8n webhook explanation | explainer | en | 35 | transcript | yes |
+| `ai-agents/build-context` | `j-yjW7diFE4` | Mastra | RAG vs Long Context - On The Walk Over Ep 11 | explainer | en | 159 | transcript | yes |
+| `ai-agents/build-context` | `Y_p_Y4EF8AA` | Pinecone | Why Million Token Context Windows Fail | explainer | en | 143 | transcript | yes |
+| `ai-agents/llm-decides` | `U7PXtRazU94` | IBM Technology | What is Tool Calling? | explainer | en | 41 | transcript | yes |
+| `ai-agents/act-with-tools` | `mcJfvsyuOSA` | xyzxyz | Function Calling - how AI uses tools and APIs | explainer | en | 32 | transcript | yes |
+| `ai-agents/act-with-tools` | `g87DYmwbzuo` | Gaurav Sen | Too many MCP tools? Anthropic found a solution. | explainer | en | 122 | transcript | yes |
+| `ai-agents/act-with-tools` | `A2VbV8Rowxs` | Rayhan AI Architecture | AI Agent ভুল Tool Call করলে কী হয়? \| Production AI Engineering | explainer | bn | 31 | transcript | yes |
+| `ai-agents/stop-check` | `4AY1E3B3OqA` | Rayhan AI Architecture | AI Agent ভুল করলে নিজেই কীভাবে বুঝবে? | explainer | bn | 21 | transcript | yes |
+| `ai-agents/stop-check` | `3I_sXTNYcQ0` | Agentic Engineering | Why AI Agents Get Stuck in Loops — Stop Conditions Explained | explainer | en | 48 | transcript | yes |
+| `ai-agents/stop-check` | `qVTmzY4w2T4` | Ship It With AI | Claude Code ralph loop - why your loop never stops | explainer | en | 39 | transcript | yes |
+| `ai-agents/memory` | `5yb1PfL8HS8` | Google Cloud Tech | How AI agents can remember you forever | explainer | en | 40 | transcript | yes |
+| `ai-agents/memory` | `g6zr04MSsLg` | Oracle Developers | AI Agent Memory: The Real Race Isn't Bigger Context Windows | explainer | en | 13 | transcript | yes |
+| `ai-agents/memory` | `Z_ogJIzz4zI` | Rayhan AI Architecture | AI Agent Memory কীভাবে কাজ করে? \| AI কীভাবে আগের কথা মনে রাখে | explainer | bn | 31 | transcript | yes |
+| `ai-agents/guardrails` | `XG2A-St5iao` | TestMu AI (Formerly LambdaTest) | What is an AI Sandbox? | explainer | en | 93 | transcript | yes |
+| `ai-agents/guardrails` | `dJmNs8h3Zeo` | LangChain | What Is a Sandbox? (And Why Every Agent Needs One) \| Spill The Tea | explainer | en | 75 | transcript | yes |
+| `ai-agents/guardrails` | `HT4OImmCLsk` | G Talks Tech | My AI Agent Faked My Approval to Get Past Its Own Guardrails | mistake | en | 28 | transcript | yes |
+| `ai-agents/guardrails` | `fbn5EJagBmQ` | LangChain | How Cogent Security sandboxes AI agents that touch customer data \| Max Agency | real-system | en | 50 | transcript | yes |
+| `ai-agents/observability-and-evals` | `tWstu9cXntg` | LangChain | How Podium Traces Every AI Agent Decision | real-system | en | 66 | transcript | yes |
+| `ai-agents/observability-and-evals` | `Bx22XGBbs70` | LangChain | The Self-Driving Eval Trick No AI Benchmark Beats | explainer | en | 47 | transcript | yes |
+| `ai-agents/observability-and-evals` | `OdSoP5TMP0o` | Arize AI | One AI Question - when should I start doing evals, with Aparna Dhinakaran | explainer | en | 43 | transcript | yes |
+| `ai-agents/observability-and-evals` | `dzIuuuICBVY` | Mastra | Are off-the-shelf evals overrated? - AI Hot Takes | explainer | en | 142 | transcript | yes |
+| `ai-agents/final-output` | `CK6t1goWxw8` | Matt Pocock | Building AI Apps That Don't Suck - Handoffs | explainer | en | 80 | transcript | yes |
+| `ai-agents/final-output` | `faIZl69Qk4U` | learnwithparam - AI Engineering Society | Using Pydantic and Structured Outputs for Type-Safe LLM Responses | explainer | en | 54 | transcript | yes |
+| `ai-agents/final-output` | `w_FK4QyNtb8` | Pradip Nichite | Extract Structured Data with OpenAI & Pydantic | explainer | en | 35 | transcript | yes |
+| `ai-ml-testing/ai-ml-for-testers` | `EO6K3ohH5D4` | CodeEmporium | Machine Learning Paradigms: Supervised and Unsupervised Learning | explainer | en | 44 | transcript | yes |
+| `ai-ml-testing/ai-ml-for-testers` | `aR7WVptzFnw` | Nabid In Motion | AI কীভাবে শেখে? \| Supervised vs Unsupervised Explained (পার্ট-৩) Shorts | explainer | bn | 59 | transcript | yes |
+| `ai-ml-testing/ai-ml-for-testers` | `3JxKMQLiHrA` | Nabid In Motion | AI যখন নিজের ভুল থেকে শেখে! \| Reinforcement Learning Explained (পার্ট-৮) Shorts | explainer | bn | 59 | transcript | yes |
+| `ai-ml-testing/llm-tokens-temperature` | `XsLK3tPy9SI` | 3Blue1Brown | Temperature in LLMs | explainer | en | 60 | transcript | yes |
+| `ai-ml-testing/llm-tokens-temperature` | `IVZ2OL8mU8c` | Matt Pocock | Most devs don't know how LLM tokens work | explainer | en | 49 | transcript | yes |
+| `ai-ml-testing/llm-tokens-temperature` | `uh5wFLOyG_4` | KodeKloud | Why Should You Care About AI Tokens in 2026? | explainer | en | 111 | transcript | yes |
+| `ai-ml-testing/llm-tokens-temperature` | `yeU1mH0YSo8` | DataMListic | bpe tokenizer | explainer | en | 103 | transcript | yes |
+| `ai-ml-testing/ai-application-architecture` | `qYLEnmNMXiA` | Pavan Belagatti | RAG vs Fine-Tuning: Which Actually Wins | compare | en | 178 | transcript | yes |
+| `ai-ml-testing/ai-application-architecture` | `qxr7ovnDBHg` | KodeKloud | The simplest RAG explanation ever | explainer | en | 66 | transcript | yes |
+| `ai-ml-testing/ai-application-architecture` | `8wyZ8deR9wM` | Rayhan AI Architecture | Production AI Architecture \| LLM, RAG, Agent, MCP—সব একসাথে কীভাবে কাজ করে? | explainer | bn | 29 | transcript | yes |
+| `ai-ml-testing/prompt-engineering-basics` | `_WwfE5feS8w` | Tech With Tim | Prompt Engineering Skills Real AI Engineers Need | explainer | en | 46 | transcript | yes |
+| `ai-ml-testing/prompt-engineering-basics` | `LTZFHycjk9o` | Nur Azad \| Engineer | Zero-Shot Prompting কী? সহজভাবে শিখুন AI Tricks! | explainer | bn | 41 | transcript | yes |
+| `ai-ml-testing/prompt-testing` | `b1SPKtN05y8` | ByteByteGo | What is Prompt Injection? | explainer | en | 53 | transcript | yes |
+| `ai-ml-testing/prompt-testing` | `PCnP3nWsF8M` | Jas Wong | Emoji smuggling is used as a prompt injection attack vector | explainer | en | 31 | transcript | yes |
+| `ai-ml-testing/prompt-testing` | `BASVwoqCPPc` | DeepLearningAI | Why You Need Users to Break Your AI Project | explainer | en | 55 | transcript | yes |
+| `ai-ml-testing/prompt-testing` | `IB70k_Ak2-A` | AssemblyAI | Fixing Edge Cases & Rapid Iteration in AI Agents | explainer | en | 28 | transcript | yes |
+| `ai-ml-testing/structured-outputs` | `jqOykPd-QXs` | Atef Ataya | OpenAI Function Calling with Structured Outputs | explainer | en | 40 | transcript | yes |
+| `ai-ml-testing/structured-outputs` | `u8PCEwP6AoQ` | Content in Tech | Most developers haven't tried Structured output with JSON schema: stop LLM hallucinations yet. | explainer | en | 60 | transcript | yes |
+| `ai-ml-testing/structured-outputs` | `Dfv-OsRkZAI` | Stefan Kløvning | Unlocking Potential: OpenAI's New Structured Outputs Explained | explainer | en | 42 | transcript | yes |
+| `ai-ml-testing/promptfoo-first-eval` | `4_GdhE1m-Vs` | Arize AI | One AI Question - why should you learn about evals, with Elizabeth Hutton | explainer | en | 41 | transcript | yes |
+| `ai-ml-testing/promptfoo-first-eval` | `DzmcklKXbik` | Mastra | AI Eval Mistakes - AI Hot Takes 2 | mistake | en | 62 | transcript | yes |
+| `ai-ml-testing/promptfoo-assertions` | `XqN4YJOJYik` | Product Founder with Amir Rezaei | Do you really know what “LLM as a judge” means? | explainer | en | 41 | transcript | yes |
+| `ai-ml-testing/promptfoo-assertions` | `fEV78pw6EkQ` | Old Man Tech | LLM as a judge: the biases to test for | explainer | en | 42 | transcript | yes |
+| `ai-ml-testing/promptfoo-assertions` | `ZxnD7TUUpy4` | Valohai | Your LLM judge is not deterministic | explainer | en | 36 | transcript | yes |
+| `ai-ml-testing/deepeval-pytest` | `E_kgCgNcyNc` | The Testing Academy | How to Test API Response via the Deepeval? | explainer | en | 107 | transcript | yes |
+| `ai-ml-testing/hallucination-detection` | `H-JHumbpORI` | Matt Pocock | My agent hallucinated - what do I do? | explainer | en | 92 | transcript | yes |
+| `ai-ml-testing/hallucination-detection` | `FuxVyAk6Z7w` | Gaurav Sen | This is how Lyft reduced agent hallucinations by 20%. | real-system | en | 103 | transcript | yes |
+| `ai-ml-testing/hallucination-detection` | `DtS3wiIWMG8` | Rayhan AI Architecture | Hallucination কী? এর সহজ সমাধান | explainer | bn | 31 | transcript | yes |
+| `ai-ml-testing/hallucination-detection` | `dxicKH0tADc` | ArthaMatrix | AI Hallucination কী? | explainer | bn | 38 | transcript | yes |
+| `ai-ml-testing/model-comparison-regression` | `GAd5J257vA0` | Google Cloud Tech | Compare LLMs like a pro – Now with Vertex AI! | compare | en | 58 | transcript | yes |
+| `ai-ml-testing/model-comparison-regression` | `pTbDqo1_auw` | KodeKloud | Why does AI give you a different answer every time? (Autoregression Explained) | explainer | en | 167 | transcript | yes |
+| `ai-ml-testing/rag-testing-basics` | `1M24UHWL41A` | KodeKloud | RAG Retrieval Metrics Explained: Recall, Precision, MRR & NDCG | explainer | en | 96 | transcript | yes |
+| `ai-ml-testing/rag-testing-basics` | `myJb77fd1fs` | The AI Foundry | How to evaluate RAG answers: faithfulness, relevance, LLM judges, RAGAS, TruLens, DeepEval | explainer | en | 59 | transcript | yes |
+| `ai-ml-testing/llm-api-testing` | `uWzX8Jc9tO8` | KodeKloud | Why Claude Uses 3 Different Rate Limits? | explainer | en | 144 | transcript | yes |
+| `ai-ml-testing/llm-api-testing` | `93cqqRmSZVM` | KodeKloud | OpenAI API Python Code Walkthrough (Line by Line Explained) | explainer | en | 98 | transcript | yes |
+| `ai-ml-testing/chatbot-ui-testing` | `NIxQBIv9o8M` | RoboticQA Academy | 5 Built-in Playwright Fixtures You Must Know! | explainer | en | 43 | transcript | yes |
+| `ai-ml-testing/langchain-testing` | `xpg9JSGSHYk` | KodeKloud | Automate Calendar Events with Langchain! | explainer | en | 83 | transcript | yes |
+| `ai-ml-testing/langchain-testing` | `TIMdcJN4JeY` | LangChain | What Is LangChain, Actually? | explainer | en | 90 | transcript | yes |
+| `ai-ml-testing/langgraph-agent-testing` | `oY1htTx_h9U` | LangChain | The Hardest Part of Testing Agents: Write Access | explainer | en | 64 | transcript | yes |
+| `ai-ml-testing/langgraph-agent-testing` | `An160wrTtt4` | Pavan Belagatti | What is LangGraph! | explainer | en | 139 | transcript | yes |
+| `ai-ml-testing/langgraph-agent-testing` | `ZWgFAtNzGqg` | KodeKloud | How LangGraph Makes LLM Apps Simple & Powerful | explainer | en | 76 | transcript | yes |
+| `ai-ml-testing/langgraph-agent-testing` | `-7GgFPFY4WI` | Google Cloud Tech | How Antigravity Evaluates a LangGraph Agent | explainer | en | 29 | transcript | yes |
+| `ai-ml-testing/owasp-llm-risks` | `mZYVmMRSSQc` | Cyber Adam | AI security is no longer optional OWASP Top 10 LLM risks | explainer | en | 27 | transcript | yes |
+| `ai-ml-testing/owasp-llm-risks` | `PYbcbuNTPBI` | Prashant Dey | Prompt Injection: The Importance of Secure LLM Design | explainer | en | 47 | transcript | yes |
+| `ai-ml-testing/owasp-llm-risks` | `dwnVgpa7p9g` | Appsecco | MCP Security in 30s: 3 Checks Before You Ship | explainer | en | 32 | transcript | yes |
+| `ai-ml-testing/red-teaming` | `iquALVDdDWc` | Giskard | What is AI Red Teaming? (Quick Definition & Why It's Crucial for AI Safety) | explainer | en | 47 | transcript | yes |
+| `ai-ml-testing/red-teaming` | `CON4WoIQ8vc` | Giskard | LLM Jailbreaking Explained by Lead AI researcher at Giskard AI | explainer | en | 52 | transcript | yes |
+| `ai-ml-testing/red-teaming` | `A3TcAcppaqw` | Google Cloud Tech | Protect against vulnerabilities in your app with Red teaming | explainer | en | 38 | transcript | yes |
+| `ai-ml-testing/guardrails-bias` | `htcPiuxMXCM` | IBM Technology | What is Algorithmic Bias in AI? | explainer | en | 53 | transcript | yes |
+| `ai-ml-testing/guardrails-bias` | `rATveXR050k` | Nabid In Motion | AI কি পহেলা বৈশাখ চেনে? \| Machine Learning Bias Explained | explainer | bn | 164 | transcript | yes |
+| `ai-ml-testing/guardrails-bias` | `3Tk0sFoFYvM` | IBM Technology | Human Bias is Harder to Fix than AI Bias | explainer | en | 18 | transcript | yes |
+| `ai-ml-testing/ai-test-strategy` | `FJMOTghjhMg` | Software Testing Mentor | Brief introduction to Test Planning! | explainer | en | 59 | transcript | yes |
+| `ai-ml-testing/ai-test-strategy` | `SJlwDM6KoGg` | TestMu AI (Formerly LambdaTest) | Test Planning in Software Testing! | explainer | en | 59 | transcript | yes |
+| `ai-ml-testing/ai-test-strategy` | `6NLlARqb2AE` | The Testing Academy | How to Create a Test Plan | explainer | en | 53 | transcript | yes |
+| `ai-ml-testing/ai-quality-metrics` | `Zg0do894s9w` | The AI Foundry | RAG retrieval metrics explained: recall@k, precision@k, MRR, nDCG | explainer | en | 54 | transcript | yes |
+| `ai-ml-testing/ai-observability` | `kC1Em8VuIbQ` | Thomas Prommer | Agent Observability: LangSmith vs Arize vs Phoenix | explainer | en | 38 | transcript | yes |
+| `ai-ml-testing/ai-observability` | `jAqnzq4e5GA` | AI Masterclass | Monitoring AI in Production: Model Drift, Observability & Agentic AI \| Jeff Tyler \| AIMC ST 2026 | explainer | en | 57 | transcript | yes |
+| `ai-ml-testing/ai-observability` | `1ge0joWkFIY` | codebasics | Toy Augmented Generation Project to a Production-Ready AI System | explainer | en | 67 | transcript | yes |
+| `ai-ml-testing/capstone-project-setup` | `E53DusBh3jk` | Pavan Belagatti | How Vector Databases Store and Use Data | explainer | en | 51 | transcript | yes |
+| `ai-ml-testing/capstone-cicd-presentation` | `noLED7kKBF4` | GitHub | Multi-stage deployments in GitHub Actions | explainer | en | 28 | transcript | yes |
+| `ai-ml-testing/ai-testing-career-kit` | `N3FDISelpOE` | Tech With Tim | The AI Portfolio That Gives You an Edge in Interviews | explainer | en | 31 | transcript | yes |
+| `ai-ml-testing/ai-testing-career-kit` | `vOVolqtZVLk` | Software Testing Mentor | Is Software Testing a Good Career Option?See how much Software Testers earn? | explainer | en | 61 | transcript | yes |
+| `ai-ml-testing/advanced-rag-failures` | `Wyju19LletQ` | Pinecone | What is Multi-hop retrieval? | explainer | en | 61 | transcript | yes |
+| `ai-ml-testing/advanced-rag-failures` | `MLFzgNwze5c` | Nabid In Motion | Enterprise RAG Strategy - Why Your AI Fails in Production Shorts | explainer | en | 177 | transcript | yes |
+| `ai-ml-testing/chunking-embedding-testing` | `vvp97qJB6CU` | KodeKloud | RAG Chunking Strategies Explained (Fixed Size vs Semantic Chunking) | explainer | en | 132 | transcript | yes |
+| `ai-ml-testing/chunking-embedding-testing` | `qvbMMButyAg` | Pinecone | The Best Chunking Strategy for RAG? | explainer | en | 36 | transcript | yes |
+| `ai-ml-testing/chunking-embedding-testing` | `KTc0qvJEqhY` | KodeKloud | What is an Embedding Model? | explainer | en | 99 | transcript | yes |
+| `ai-ml-testing/chunking-embedding-testing` | `DUQGBH4Dw_E` | Google Cloud Tech | Problem: Too much data for embedding? Solution: Chunk your data! | explainer | en | 60 | transcript | yes |
+| `ai-ml-testing/rag-synthetic-regression` | `MPRyqO4LEgs` | Hamel Husain | Why Synthetic Data Can't Replace Real Users for LLM Products | explainer | en | 45 | transcript | yes |
+| `ai-ml-testing/rag-synthetic-regression` | `4iehiGYajfo` | Automate With SDET | AI for QA \| How to Generate Test Data Using AI \| Valid, Invalid & Boundary Data | explainer | en | 49 | transcript | yes |
+| `ai-ml-testing/vector-db-basics` | `aExSNbSC1f8` | IBM Technology | How Vector Databases Power AI | explainer | en | 76 | transcript | yes |
+| `ai-ml-testing/vector-db-basics` | `0d6tBMxFCt4` | ByteMonk | Vector Database: A Must-Know Guide | explainer | en | 56 | transcript | yes |
+| `ai-ml-testing/vector-db-basics` | `LtpKwnFFgNU` | Gaurav Sen | Notion scaled its vector database by 10x. | real-system | en | 109 | transcript | yes |
+| `ai-ml-testing/vector-db-quality-performance` | `_PiW515vOnY` | MongoDB | Speed Up Vector Search 10x: How Vector Quantization Cuts Costs & Boosts AI Performance | explainer | en | 53 | transcript | yes |
+| `ai-ml-testing/vector-db-quality-performance` | `X5bybYqc5zk` | Nabid In Motion | Why Your Vector Database Is Crashing in Production Shorts | explainer | en | 174 | transcript | yes |
+| `ai-ml-testing/vector-db-quality-performance` | `GDfncxI6bCE` | Hussein Nasser | Why Indexing is Critical in Database Systems | explainer | en | 53 | transcript | yes |
+| `ai-ml-testing/multi-turn-testing` | `iEXxrzexUmw` | Google Cloud Tech | Why do AI agents forget everything? | explainer | en | 47 | transcript | yes |
+| `ai-ml-testing/multi-turn-testing` | `cNxpB5Bj7rg` | Amigoscode | Why Claude Code "Forgets" (and How to Manage Context) | explainer | en | 92 | transcript | yes |
+| `ai-ml-testing/multi-turn-testing` | `VcVUr6phazk` | Arize AI | Why Your LLM Starts Forgetting Instructions | explainer | en | 49 | transcript | yes |
+| `ai-ml-testing/multi-turn-testing` | `EftSu4UgmiQ` | DevHacks 360 | Multi-Turn Attacks Break AI That Looked Safe | explainer | en | 22 | transcript | yes |
+| `ai-ml-testing/agent-architecture` | `zTKm0d0lgU4` | Pavan Belagatti | AI Agent Architecture Explained for Beginners! | explainer | en | 123 | transcript | yes |
+| `ai-ml-testing/agent-architecture` | `Y2eD_I7eC5U` | Google Cloud Tech | ReAct pattern: Reason and act agent architecture | explainer | en | 47 | transcript | yes |
+| `ai-ml-testing/agent-decision-testing` | `6WFqfXZ44Gg` | Soba Labs | Test AI Agents Before Release \| LangChain Tutorial | mistake | en | 31 | transcript | yes |
+| `ai-ml-testing/multi-agent-testing` | `eAfb8coAD0A` | Nabid In Motion | Multi Agent Systems: Why your AI orchestration fails Shorts | explainer | en | 180 | transcript | yes |
+| `ai-ml-testing/multi-agent-testing` | `7EhiJL_6ats` | Google Cloud Tech | Multi-agent vs. single-agent: Which should you use? | explainer | en | 119 | transcript | yes |
+| `ai-ml-testing/multi-agent-testing` | `saMAb2MuKTs` | Pavan Belagatti | Understanding Multi-Agent RAG Systems! | explainer | en | 71 | transcript | yes |
+| `ai-ml-testing/multimodal-testing` | `9B3yvPJVlVw` | DeepLearningAI | Document AI: How Agents add the brain to OCR's eyes | explainer | en | 77 | transcript | yes |
+| `ai-ml-testing/multimodal-testing` | `Ppy4oAzYreI` | codebasics | This AI Agent Handles Your Invoices End to End | explainer | en | 47 | transcript | yes |
+| `ai-ml-testing/finetuned-model-testing` | `dBFLv7q7RYo` | Pavan Belagatti | What is Fine-Tuning LLMs? | explainer | en | 131 | transcript | yes |
+| `ai-ml-testing/finetuned-model-testing` | `TQynIWJ3DHs` | KodeKloud | Why Prompt Engineering is DEAD (Do This to Your LLM Instead) | explainer | en | 166 | transcript | yes |
+| `ai-ml-testing/finetuned-model-testing` | `2tq3qQTUGWE` | Google Cloud Tech | Generic AI? No thank you! It's the fine-tuned models for me | explainer | en | 58 | transcript | yes |
+| `ai-ml-testing/finetuned-model-testing` | `QMnlS39vZdA` | Elvis Saravia | Base LLM vs. Instruction-tuned LLM ChatGPT | compare | en | 45 | transcript | yes |
+| `ai-ml-testing/synthetic-data-dspy` | `rr6O2HQFRkg` | IBM Technology | What is Ground Truth in AI? | explainer | en | 87 | transcript | yes |
+| `ai-ml-testing/synthetic-data-dspy` | `CFQ2gJmucoQ` | Nabid In Motion | ইন্টারনেটের সব ডেটা কি শেষ? এআই এখন নিজেই নিজের ডেটা বানাচ্ছে! Synthetic Data Explained | explainer | bn | 176 | transcript | yes |
+| `ai-ml-testing/production-observability` | `CT7d38_jEnY` | AIEdTalks | LangSmith vs Langfuse vs Arize (in 60 seconds) | compare | en | 59 | transcript | yes |
+| `ai-ml-testing/production-observability` | `_eeAKOaKusY` | PeterTamAI | See exactly what your AI is doing (Phoenix by Arize) | explainer | en | 38 | transcript | yes |
+| `ai-ml-testing/model-drift-ab-testing` | `WrUi-JjJHD8` | ByteMonk | how a/b testing drives better decisions in web systems | explainer | en | 53 | transcript | yes |
+| `ai-ml-testing/model-drift-ab-testing` | `HTe2_uIWSuY` | KodeKloud | Canary Deployment in Kubernetes Explained | explainer | en | 176 | transcript | yes |
+| `ai-ml-testing/ai-load-testing` | `rQWR_D3aoG8` | ByteMonk | Rate Limit : Token Bucket Algorithm | explainer | en | 53 | transcript | yes |
+| `ai-ml-testing/ai-load-testing` | `UfmG0PeMS-k` | KodeKloud | Why Your LLM is Slow Despite High GPU Usage? | explainer | en | 120 | transcript | yes |
+| `ai-ml-testing/advanced-capstone-setup` | `r-7AnDBoBFE` | MongoDB | What is an AI Agent? Agentic RAG and RAG-enabled Chatbots | explainer | en | 60 | transcript | yes |
+| `ai-ml-testing/advanced-capstone-setup` | `do8Rx6CpQX8` | Tech With Tim | 4 Ways to Build an AI Agent | explainer | en | 39 | transcript | yes |
+| `ai-ml-testing/advanced-capstone-pipeline` | `VhqsXifzdvQ` | LangChain | How Benchling's Team Actually Looks at AI Traces \| Max Agency | real-system | en | 48 | transcript | yes |
+| `ai-ml-testing/advanced-capstone-pipeline` | `4sWCCasRzPQ` | LangChain | This Is Why Your Main Agent Shouldn't Read Every Trace | real-system | en | 85 | transcript | yes |
+| `ai-ml-testing/advanced-capstone-presentation` | `MfYL4RnkJFk` | Tech With Tim | The AI Portfolio Mistake That Kills Your Job Chances 2026 | mistake | en | 42 | transcript | yes |
 
-Reels: 102.
+Reels: 422.
