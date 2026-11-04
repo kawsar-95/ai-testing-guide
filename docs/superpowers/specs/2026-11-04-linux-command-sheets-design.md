@@ -52,11 +52,11 @@ The cards of a stage take 0.8 to 3.1 screens (Containers to Text Processing and 
 
 ## Checks run
 
-`npm test` (454 tests, 6 of them for the verifier), `npx tsc --noEmit`, `npm run build` (295 of 295 pages), the four Python checks (`check_routes`, `check_outline`, `check_sources` with `OK 269 pages checked, 0 skipped`, `check_links`), `node scripts/verify_linux_sheets.mjs` (701 rows, 345 flags, 0 problems), and a browser run of the chip flows on the static build (chip to card with a ring, `[n]` chip to its source line, a tick saved in `linux-progress` and shown on the home tile, Bangla on the home page), and no console error or failed request on the home, Shell Basics, Networking, and Containers pages in light, dark, and Bangla. See `docs/superpowers/research/linux-sheets.factcheck.md`.
+`npm test` (454 tests, 6 of them for the verifier), `npx tsc --noEmit`, `npm run build` (295 of 295 pages), the four Python checks (`check_routes`, `check_outline`, `check_sources` with `OK 269 pages checked, 0 skipped`, `check_links`), `node scripts/verify_linux_sheets.mjs` (702 rows, 345 flags, 0 problems), and a browser run of the chip flows on the static build (chip to card with a ring, `[n]` chip to its source line, a tick saved in `linux-progress` and shown on the home tile, Bangla on the home page), and no console error or failed request on the home, Shell Basics, Networking, and Containers pages in light, dark, and Bangla. See `docs/superpowers/research/linux-sheets.factcheck.md`.
 
 ## Not done
 
 - A fact-check by someone who did not write the sheets, and a read of the Bangla by a reader of Bangla. Until then a sheet is not "Done" by the rule of `CLAUDE.md`.
-- `/var/log/syslog` and `/var/log/auth.log` are not on the cards: no page that was fetched documents them. `/etc/default/grub` is not on a card yet: Debian Reference chapter 3 names it, so the row can be added (see the check report).
+- `/var/log/syslog` and `/var/log/auth.log` are not on the cards: no page that was fetched documents them.
 - A decision about the lessons: keep, or delete with `lib/linux-lesson.ts`, `TopicChecklist`, `LessonStage`, `studyMinutes`, the lesson tests, and the research scripts.
 - Below 1248 px wide a stage page is one column, and 1.3 to 1.6 times as tall as at 1440 px (Text Processing: 4,280 px at 1440 px, 6,861 px at 1024 px). A narrow window gets the long page.

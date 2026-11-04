@@ -19,6 +19,7 @@ export const BOOT_SERVICES: StageSheet = {
     grub_mkconfig: ["grub-mkconfig(8) - generate a GRUB configuration file", "Debian Manpages (grub-common)", "https://manpages.debian.org/bookworm/grub-common/grub-mkconfig.8.en.html"],
     grub_install: ["grub-install(8) - install GRUB to a device", "Debian Manpages (grub2-common)", "https://manpages.debian.org/bookworm/grub2-common/grub-install.8.en.html"],
     update_grub: ["update-grub(8) - stub for grub-mkconfig", "Debian Manpages (grub2-common)", "https://manpages.debian.org/bookworm/grub2-common/update-grub.8.en.html"],
+    debian_ref_init: ["Chapter 3. The system initialization", "Debian Reference (debian.org)", "https://www.debian.org/doc/manuals/debian-reference/ch03.en.html"],
     efibootmgr: ["efibootmgr(8) - manipulate the UEFI Boot Manager", "Debian Manpages (efibootmgr)", "https://manpages.debian.org/bookworm/efibootmgr/efibootmgr.8.en.html"],
   },
   cards: [
@@ -38,9 +39,10 @@ export const BOOT_SERVICES: StageSheet = {
     },
     {
       topic: "Boot Loaders",
-      src: ["hier", "update_grub", "grub_mkconfig", "grub_install", "efibootmgr", "ls"],
+      src: ["hier", "debian_ref_init", "update_grub", "grub_mkconfig", "grub_install", "efibootmgr", "ls"],
       rows: [
         ["ls /boot", "kernels and initramfs images", "kernel ও initramfs image"],
+        ["/etc/default/grub", "edit GRUB settings here, not grub.cfg (Debian)", "GRUB-এর সেটিং এখানে বদলান, grub.cfg-এ নয় (Debian)"],
         ["sudo update-grub", "rebuild the GRUB menu (Debian, Ubuntu)", "GRUB menu আবার বানায় (Debian, Ubuntu)"],
         ["sudo grub-mkconfig -o /boot/grub/grub.cfg", "rebuild the menu (other distros)", "menu আবার বানায় (অন্য distro)"],
         ["sudo grub-install DEV", "install GRUB; a wrong DEV can break boot", "GRUB বসায়; ভুল DEV হলে boot নাও হতে পারে"],
