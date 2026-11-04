@@ -26,6 +26,7 @@ export const TEXT_PROCESSING: StageSheet = {
     tr: ["tr(1) - translate or delete characters", "man7.org (coreutils)", "https://man7.org/linux/man-pages/man1/tr.1.html"],
     expand: ["expand(1) - convert tabs to spaces", "man7.org (coreutils)", "https://man7.org/linux/man-pages/man1/expand.1.html"],
     unexpand: ["unexpand(1) - convert spaces to tabs", "man7.org (coreutils)", "https://man7.org/linux/man-pages/man1/unexpand.1.html"],
+    less: ["less(1) - display the contents of a file in a terminal", "man7.org (less)", "https://man7.org/linux/man-pages/man1/less.1.html"],
   },
   cards: [
     {
@@ -44,8 +45,8 @@ export const TEXT_PROCESSING: StageSheet = {
       src: ["bash"],
       rows: [
         ["0  1  2", "stdin · stdout · stderr (file descriptors)", "stdin · stdout · stderr (file descriptor-এর নম্বর)"],
-        ["CMD 2> FILE", "send only errors to a file", "শুধু error file-এ পাঠায়"],
-        ["CMD > FILE 2>&1", "send output and errors to one file", "output ও error একই file-এ পাঠায়"],
+        ["CMD 2> FILE", "send only errors to a file", "শুধু error file-এ পাঠায়", "!"],
+        ["CMD > FILE 2>&1", "send output and errors to one file", "output ও error একই file-এ পাঠায়", "!"],
         ["CMD 2>/dev/null", "hide error messages", "error message লুকায়"],
         ["read VAR", "read a line of stdin into a variable", "stdin-এর এক লাইন variable-এ পড়ে"],
         ["echo TEXT >&2", "print to stderr", "stderr-এ print করে"],
@@ -59,14 +60,14 @@ export const TEXT_PROCESSING: StageSheet = {
         ["CMD >> FILE", "append stdout to a file", "stdout file-এর শেষে যোগ করে"],
         ["CMD < FILE", "read stdin from a file", "file থেকে stdin পড়ে"],
         ["CMD 2>&1", "send stderr where stdout goes", "stderr-কে stdout-এর জায়গায় পাঠায়"],
-        ["CMD &> FILE", "stdout and stderr to a file (bash)", "stdout ও stderr দুটোই file-এ পাঠায় (bash)"],
+        ["CMD &> FILE", "stdout and stderr to a file (bash)", "stdout ও stderr দুটোই file-এ পাঠায় (bash)", "!"],
         ["CMD <<EOF", "here-document: inline input until EOF", "here-document: EOF পর্যন্ত inline input"],
         ["set -o noclobber", "stop > from overwriting files", "> দিয়ে file overwrite বন্ধ করে"],
       ],
     },
     {
       topic: "Pipes",
-      src: ["bash", "xargs"],
+      src: ["bash", "xargs", "wc", "less"],
       rows: [
         ["CMD | CMD", "stdout of one is stdin of the next", "একটির stdout পরেরটির stdin হয়"],
         ["ls | wc -l", "count the entries", "entry গোনে"],
@@ -81,10 +82,10 @@ export const TEXT_PROCESSING: StageSheet = {
       topic: "Tee",
       src: ["tee", "sudo", "bash"],
       rows: [
-        ["CMD | tee FILE", "show the output and save it", "output দেখায় ও save করে"],
+        ["CMD | tee FILE", "show the output and save it", "output দেখায় ও save করে", "!"],
         ["CMD | tee -a FILE", "append instead of replacing", "replace না করে শেষে যোগ করে"],
-        ["CMD | tee FILE | CMD", "save a copy in the middle of a pipeline", "pipeline-এর মাঝখানে একটি কপি save করে"],
-        ["echo TEXT | sudo tee FILE", "write a root-owned file", "root-এর file-এ লেখে"],
+        ["CMD | tee FILE | CMD", "save a copy in the middle of a pipeline", "pipeline-এর মাঝখানে একটি কপি save করে", "!"],
+        ["echo TEXT | sudo tee FILE", "write a root-owned file", "root-এর file-এ লেখে", "!"],
       ],
     },
     {
@@ -221,10 +222,10 @@ export const TEXT_PROCESSING: StageSheet = {
       src: ["split", "cat"],
       rows: [
         ["split -l 100 FILE NAME", "pieces of 100 lines", "১০০ লাইনের টুকরো"],
-        ["split -b 10M FILE NAME", "pieces of 10 MB", "১০ MB-এর টুকরো"],
+        ["split -b 10M FILE NAME", "pieces of 10 MiB", "১০ MiB-এর টুকরো"],
         ["split -n 4 FILE NAME", "exactly 4 pieces", "ঠিক ৪টি টুকরো"],
         ["split -d -l 100 FILE NAME", "numbered names: NAME00, NAME01", "সংখ্যার নাম: NAME00, NAME01"],
-        ["cat NAME* > FILE", "join the pieces back", "টুকরোগুলো আবার জোড়ে"],
+        ["cat NAME* > FILE", "join the pieces back", "টুকরোগুলো আবার জোড়ে", "!"],
       ],
     },
     {

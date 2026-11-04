@@ -45,7 +45,7 @@ export const BOOT_SERVICES: StageSheet = {
         ["/etc/default/grub", "edit GRUB settings here, not grub.cfg (Debian)", "GRUB-এর সেটিং এখানে বদলান, grub.cfg-এ নয় (Debian)"],
         ["sudo update-grub", "rebuild the GRUB menu (Debian, Ubuntu)", "GRUB menu আবার বানায় (Debian, Ubuntu)"],
         ["sudo grub-mkconfig -o /boot/grub/grub.cfg", "rebuild the menu (other distros)", "menu আবার বানায় (অন্য distro)"],
-        ["sudo grub-install DEV", "install GRUB; a wrong DEV can break boot", "GRUB বসায়; ভুল DEV হলে boot নাও হতে পারে"],
+        ["sudo grub-install DEV", "install GRUB; a wrong DEV can break boot", "GRUB বসায়; ভুল DEV হলে boot নাও হতে পারে", "!"],
         ["efibootmgr -v", "the UEFI boot entries", "UEFI boot entry-র তালিকা"],
       ],
     },

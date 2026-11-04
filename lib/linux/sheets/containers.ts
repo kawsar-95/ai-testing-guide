@@ -40,7 +40,7 @@ export const CONTAINERS: StageSheet = {
         ["lsns", "list the namespaces", "namespace-এর তালিকা"],
         ["ls -l /proc/self/ns", "this process's namespaces, one file each", "এই process-এর namespace, প্রতিটির জন্য একটি file"],
         ["sudo nsenter -t PID -n ip addr", "run a command in another process's network namespace", "অন্য process-এর network namespace-এ command চালায়"],
-        ["chroot DIR CMD", "run with another root directory; not a container", "অন্য root directory-তে চালায়; container নয়"],
+        ["chroot DIR CMD", "run CMD with DIR as the root directory", "DIR-কে root directory ধরে CMD চালায়"],
       ],
     },
     {
@@ -51,7 +51,7 @@ export const CONTAINERS: StageSheet = {
         ["docker info", "the runtimes and storage in use", "ব্যবহৃত runtime ও storage"],
         ["docker ps", "running containers", "চলমান container"],
         ["docker inspect NAME", "everything about one container, as JSON", "একটি container-এর সব তথ্য, JSON-এ"],
-        ["podman ps", "Docker-compatible, with no daemon", "Docker-এর মতো, daemon ছাড়া"],
+        ["podman ps", "list running containers with Podman", "Podman দিয়ে চলমান container-এর তালিকা"],
       ],
     },
     {
@@ -63,7 +63,7 @@ export const CONTAINERS: StageSheet = {
         ["docker logs -f NAME", "follow its output", "এর output অনুসরণ করে"],
         ["docker exec -it NAME sh", "open a shell inside it", "ভেতরে একটি shell খোলে"],
         ["docker stop NAME", "stop it", "বন্ধ করে"],
-        ["docker rm NAME", "delete a stopped container", "বন্ধ container মোছে"],
+        ["docker rm NAME", "delete a stopped container", "বন্ধ container মোছে", "!"],
         ["docker build -t IMAGE .", "build an image from a Dockerfile here", "এখানকার Dockerfile থেকে image বানায়"],
         ["docker system prune", "remove stopped containers, unused networks, dangling images", "বন্ধ container, অব্যবহৃত network ও dangling image মোছে", "!"],
       ],

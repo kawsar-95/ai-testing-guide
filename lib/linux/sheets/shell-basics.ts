@@ -18,6 +18,7 @@ export const SHELL_BASICS: StageSheet = {
     environ: ["environ(7) - user environment", "man7.org (Linux man-pages)", "https://man7.org/linux/man-pages/man7/environ.7.html"],
     env: ["env(1) - run a program in a modified environment", "man7.org (coreutils)", "https://man7.org/linux/man-pages/man1/env.1.html"],
     printenv: ["printenv(1) - print all or part of environment", "man7.org (coreutils)", "https://man7.org/linux/man-pages/man1/printenv.1.html"],
+    less: ["less(1) - display the contents of a file in a terminal", "man7.org (less)", "https://man7.org/linux/man-pages/man1/less.1.html"],
   },
   cards: [
     {
@@ -25,7 +26,7 @@ export const SHELL_BASICS: StageSheet = {
       src: ["bash"],
       rows: [
         ["echo $SHELL", "your login shell", "আপনার login shell"],
-        ["Tab", "complete a name; press twice to list", "নাম সম্পূর্ণ করে; দুইবার চাপলে তালিকা দেখায়"],
+        ["Tab", "complete a command or file name", "command বা file-এর নাম সম্পূর্ণ করে"],
         ["↑  ↓", "browse earlier commands", "আগের command-গুলো দেখায়"],
         ["Ctrl+R", "search the command history", "command history-তে খোঁজে"],
         ["Ctrl+C", "stop the running command", "চলমান command থামায়"],
@@ -62,7 +63,7 @@ export const SHELL_BASICS: StageSheet = {
     },
     {
       topic: "Command Help",
-      src: ["man", "apropos", "whatis", "bash"],
+      src: ["man", "apropos", "whatis", "bash", "less"],
       rows: [
         ["man CMD", "open the manual page", "manual page খোলে"],
         ["man -k WORD", "search manual pages by keyword", "keyword দিয়ে manual page খোঁজে"],

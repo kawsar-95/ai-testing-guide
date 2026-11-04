@@ -66,7 +66,7 @@ export const TROUBLESHOOTING: StageSheet = {
         ["free -h", "read 'available', not 'free'", "'available' দেখুন, 'free' নয়"],
         ["/proc/meminfo", "MemAvailable: memory for new programs", "MemAvailable: নতুন program-এর জন্য memory"],
         ["df -h", "free space per filesystem", "প্রতিটি filesystem-এর ফাঁকা জায়গা"],
-        ["df -i", "free inodes; a full table blocks new files", "ফাঁকা inode; ভরে গেলে নতুন file হয় না"],
+        ["df -i", "inode use instead of block use", "block-এর বদলে inode-এর ব্যবহার"],
         ["du -xh --max-depth=1 /var", "what is big under /var", "/var-এর নিচে কী বড়"],
         ["du -sh * | sort -h", "sizes here, biggest last", "এখানকার size, বড়টি শেষে"],
       ],

@@ -50,7 +50,7 @@ export const SHELL_SCRIPTING: StageSheet = {
         ["$'a\\tb'", "ANSI-C quotes: \\t and \\n work", "ANSI-C quote: \\t ও \\n কাজ করে"],
         ["cat <<'EOF'", "here-document with no expansion", "expansion ছাড়া here-document"],
         ['echo -e "a\\nb"', "make echo read \\n", "echo-কে \\n বুঝতে দেয়"],
-        ["printf '%s\\n' TEXT", "portable printing", "portable উপায়ে print করে"],
+        ["printf '%s\\n' TEXT", "print text with a format", "format অনুযায়ী text print করে"],
         ["*.txt  ?  [a-z]", "globs: many · one · a range", "glob: অনেক · একটি · একটি range"],
       ],
     },

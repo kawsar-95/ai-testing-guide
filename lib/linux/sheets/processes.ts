@@ -71,7 +71,7 @@ export const PROCESSES: StageSheet = {
       src: ["kill", "pgrep", "killall", "bash"],
       rows: [
         ["kill PID", "ask a process to stop (SIGTERM)", "process-কে থামতে বলে (SIGTERM)"],
-        ["kill -9 PID", "force it to stop; no clean-up (SIGKILL)", "জোর করে থামায়; cleanup হয় না (SIGKILL)", "!"],
+        ["kill -9 PID", "force it to stop; no clean-up (SIGKILL)", "জোর করে থামায়; cleanup হয় না (SIGKILL)"],
         ["pkill NAME", "kill by name", "নাম দিয়ে kill করে"],
         ["pkill -f PATTERN", "match the whole command line", "পুরো command line মেলায়"],
         ["killall NAME", "kill every process with that name", "ওই নামের সব process kill করে"],
@@ -124,7 +124,7 @@ export const PROCESSES: StageSheet = {
         ["ulimit -u", "max user processes", "সর্বোচ্চ user process"],
         ["ulimit -Hn", "the hard limit for open files", "open file-এর hard limit"],
         ["prlimit --pid PID", "limits of a running process", "চলমান process-এর limit"],
-        ["/etc/security/limits.conf", "set limits for users, permanently", "user-দের limit স্থায়ীভাবে ঠিক করে"],
+        ["/etc/security/limits.conf", "user limits, applied at each login", "user-দের limit, প্রতিটি login-এ প্রযোজ্য"],
       ],
     },
   ],
