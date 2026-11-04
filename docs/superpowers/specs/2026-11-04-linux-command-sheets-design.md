@@ -1,6 +1,6 @@
 # Linux command sheets: design
 
-Date: 2026-11-04. Status: implemented on branch `feat/linux-command-sheets` (draft PR #61 of `kawsar-95/ai-testing-guide`). It changes what a stage page shows. The lessons of `2026-10-27-linux-revamp-design.md` stay in the repo and are not shown.
+Date: 2026-11-04. Status: implemented on branch `feat/linux-command-sheets` (PR #61 of `kawsar-95/ai-testing-guide`). It changes what a stage page shows. The lessons of `2026-10-27-linux-revamp-design.md` stay in the repo and are not shown.
 
 ## Problem
 
@@ -35,28 +35,29 @@ The routes, the 12 stages, the 103 topics, the topic ids and anchors, and the `l
 | A fact with no fetchable official page is left off | A card that cites a page which does not say the fact is a false cite. |
 | The stage page has no "On this page" and no one-section-at-a-time view | The page is the glance. `ChapterLayout` has a `wide` mode for it. |
 | The verifier is in the repo (`scripts/verify_linux_sheets.mjs`) | The claim "every flag is in a cited page" must be checkable by someone else. It needs the network, so it is not part of `npm test`. |
+| The red `!` has one rule, and a test | The command can delete or overwrite data, unless it asks before each one. Round 1 of the independent check found 28 rows that broke it (a `cp` or a `2> FILE` with no `!`, a `kill -9` with one). `tests/linux-sheets-warn.test.ts` now checks every row. |
 
 ## Measured
 
-At 1440 x 900. "After" is the production build (`out/`). "Before" was measured on the dev server, before the sources list and the home page were redone (Networking gave 4,414 px on both). On a stage page, "before" had the shared `Sources` list (two lines and a rule for each source). On the home page, it is the old roadmap list. "Before" was measured for these two pages only.
+At 1440 x 900. "After" is the production build (`out/`). "Before" was measured on the dev server, before the sources list and the home page were redone (on the same code, Networking was 4,414 px on both; the fixes of the independent check moved it to 4,432 px). On a stage page, "before" had the shared `Sources` list (two lines and a rule for each source). On the home page, it is the old roadmap list. "Before" was measured for these two pages only.
 
 | Page | Before | After |
 |---|---|---|
 | Home | 4,036 px, no command on the first screen | 2,308 px, commands on the first screen |
-| Shell Basics | not measured | 2,641 px |
+| Shell Basics | not measured | 2,665 px |
 | Text Processing | not measured | 4,280 px |
-| Networking | 7,314 px | 4,414 px |
-| Containers | not measured | 2,166 px |
+| Networking | 7,314 px | 4,432 px |
+| Containers | not measured | 2,148 px |
 
 The cards of a stage take 0.8 to 3.1 screens (Containers to Text Processing and Networking). **A stage page is not one screen.** Text Processing (20 topics, 109 rows) and Networking (15 topics, 110 rows) are the longest.
 
 ## Checks run
 
-`npm test` (454 tests, 6 of them for the verifier), `npx tsc --noEmit`, `npm run build` (295 of 295 pages), the four Python checks (`check_routes`, `check_outline`, `check_sources` with `OK 269 pages checked, 0 skipped`, `check_links`), `node scripts/verify_linux_sheets.mjs` (702 rows, 345 flags, 0 problems), and a browser run of the chip flows on the static build (chip to card with a ring, `[n]` chip to its source line, a tick saved in `linux-progress` and shown on the home tile, Bangla on the home page), and no console error or failed request on the home, Shell Basics, Networking, and Containers pages in light, dark, and Bangla. See `docs/superpowers/research/linux-sheets.factcheck.md`.
+`npm test` (456 tests: 6 for the verifier and 2 for the rule of the `!`), `npx tsc --noEmit`, `npm run build` (295 of 295 pages), the four Python checks (`check_routes`, `check_outline`, `check_sources` with `OK 269 pages checked, 0 skipped`, `check_links`), `node scripts/verify_linux_sheets.mjs` (702 rows, 344 flags, 0 problems), and a browser run of the chip flows on the static build (chip to card with a ring, `[n]` chip to its source line, a tick saved in `linux-progress` and shown on the home tile, Bangla on the home page), and no console error or failed request on the home, Shell Basics, Networking, and Containers pages in light, dark, and Bangla. Then an independent fact-check of every row in 3 rounds, by checkers that did not write the sheets: Round 1 checked the English gloss, the Bangla gloss, and the red `!` of all 702 rows and found 55 FAILs. Round 2 re-checked the 57 rows that the writer changed or answered, and the `!` of every row, and found 3. Round 3 re-checked those 3 and found none. The reports are `docs/superpowers/research/linux-sheets-<stage>.factcheck.md`; the author's checks are `docs/superpowers/research/linux-sheets.factcheck.md`.
 
 ## Not done
 
-- A fact-check by someone who did not write the sheets, and a read of the Bangla by a reader of Bangla. Until then a sheet is not "Done" by the rule of `CLAUDE.md`.
+- A read of the Bangla glosses by a person who reads Bangla. The independent checkers compared them with the English glosses, as checkers did for the lessons.
 - `/var/log/syslog` and `/var/log/auth.log` are not on the cards: no page that was fetched documents them.
 - A decision about the lessons: keep, or delete with `lib/linux-lesson.ts`, `TopicChecklist`, `LessonStage`, `studyMinutes`, the lesson tests, and the research scripts.
 - Below 1248 px wide a stage page is one column, and 1.3 to 1.6 times as tall as at 1440 px (Text Processing: 4,280 px at 1440 px, 6,861 px at 1024 px). A narrow window gets the long page.

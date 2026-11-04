@@ -1,12 +1,12 @@
-# Fact-check: Linux command sheets (all 12 stages), round 1
+# Fact-check: Linux command sheets (all 12 stages), the author's checks
 
-Date: 2026-11-04. Checker: the author of the sheets, who is NOT independent. Pages: `lib/linux/sheets/<stage>.ts` on branch `feat/linux-command-sheets` (draft PR #61).
+Date: 2026-11-04. Checker: the author of the sheets, who is NOT independent. Pages: `lib/linux/sheets/<stage>.ts` on branch `feat/linux-command-sheets` (PR #61).
 
-This report is not a pass of the "Done" rule of "Linux Module" in `CLAUDE.md`. That rule needs a checker who did not write the sheets, and a reader of Bangla for the Bangla glosses. Neither has happened. Treat everything below as the author's own checks, not as a review.
+This report is the author's own checks, which came first. The independent check is in `linux-sheets-<stage>.factcheck.md`, one report for each stage, by checkers that did not write the sheets (Claude Code, model claude-sonnet-5-5, each in a new session with read-only tools, no web access, and only the cards and the text of the pages they cite). Round 1 checked the English gloss, the Bangla gloss, and the red `!` of all 702 rows and found 55 FAILs. Round 2 re-checked the 57 rows that the writer changed or answered, and the `!` of every row, and found 3. Round 3 re-checked those 3 and found none. All 12 stage reports end with `Open FAILs: 0`, which is the "Done" rule of "Linux Module" in `CLAUDE.md`.
 
 ## What was checked
 
-1. **Mechanical check.** `node scripts/verify_linux_sheets.mjs` looks up each command, subcommand, and flag of each row in the text of the pages that the card of the row cites. The pages were fetched on 2026-11-03 and 2026-11-04. Result: 12 stages, 702 rows, 345 flags, 0 problems, and 1 review note (`nl -ba`: `-b` takes the argument `a`, so `-ba` is `-b a`). The script has a test (`tests/verify-linux-sheets.test.ts`) on a fixture. It was also run on a copy of Shell Basics with a made-up flag (`--humanreadable`) and a misspelled command (`whoamii`): it reported both and exited 1.
+1. **Mechanical check.** `node scripts/verify_linux_sheets.mjs` looks up each command, subcommand, and flag of each row in the text of the pages that the card of the row cites. The pages were fetched on 2026-11-03 and 2026-11-04. Result: 12 stages, 702 rows, 344 flags, 0 problems, and 1 review note (`nl -ba`: `-b` takes the argument `a`, so `-ba` is `-b a`). The script has a test (`tests/verify-linux-sheets.test.ts`) on a fixture. It was also run on a copy of Shell Basics with a made-up flag (`--humanreadable`) and a misspelled command (`whoamii`): it reported both and exited 1.
 2. **Reading check, stages 8 to 12 (288 rows).** The author read the gloss of each row against what the tool does, and searched the cited pages for the claims that the script cannot see: what `dynamic` means in `ip-address(8)`, `ip -br`, `valid_lft`, `DHCP4` in `nmcli`, the privilege that `traceroute -I` needs, `tracepath`, `+short` in the `dig` page, the output of `ipcalc`, the log paths of "Left off the cards", and `/etc/default/grub` in Debian Reference chapter 3. The other glosses were read, not looked up.
 3. **Reading check, stages 1 to 7 (414 rows).** The author read the English gloss of each row against what the tool does. The cited pages were not searched again for these rows.
 4. **Rule check.** `tests/linux-sheets.test.ts` checks the shape of every card (see "Linux Module" in `CLAUDE.md`).
@@ -28,6 +28,8 @@ Found by reading the rows, by the tests of the sheets, by an audit of the home-p
 | 9 | home page chips | `s`, `b` (one-letter names), and `link` (a TCP/IP layer name) were counted as commands. | `commandName` fixed |
 | 10 | boot-services / Boot Loaders / `/etc/default/grub` | Left off on the claim that no fetched page names it. Debian Reference chapter 3 does: on Debian, customize GRUB in `/etc/grub.d/` and `/etc/default/grub`, not in `/boot/grub/grub.cfg`. | row added, cited to that chapter |
 
+The independent check found 55 more: about 6 wrong glosses (`mount -a` called "a good test", `split -b 10M` called 10 MB), about 20 glosses that no cited page backed, and 28 rows whose `!` broke its rule. They are listed, with what changed, in the stage reports. One answer was a rebuttal, not a change: `gunzip` keeps its data, so it has no `!`; round 2 accepted it.
+
 ## Left off the cards
 
 - `/var/log/auth.log`: none of the 296 pages fetched for this work names it.
@@ -38,9 +40,8 @@ The GNU wget manual is replaced by Debian's `wget(1)` page, and the GNU GRUB man
 
 ## Not checked
 
-- **Independent check.** Nobody but the author has read these sheets.
-- **Bangla glosses.** A reader of Bangla has not read them. The author wrote them, and the check proves only that a gloss is in Bangla script.
+- **A person who reads Bangla.** The independent checkers compared each Bangla gloss with its English gloss; no person who reads Bangla has read them.
 - **A real machine.** No command was run for this check: the script reads pages, it does not run anything.
 - **Versions.** The pages are the current man7.org, Debian bookworm, and project pages. A flag can be missing on an older distribution.
 
-Open FAILs: none known. Independent check: not done. Bangla read: not done.
+Open FAILs: 0
