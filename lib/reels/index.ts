@@ -4,7 +4,14 @@
  * data file and one line here: `FlatTopicPage` shows them with no change to the MDX.
  */
 import type { FlatModuleId } from "../modules/registry.ts";
+import { AGENT_MEMORY_REELS } from "./agent-memory.ts";
+import { AI_AGENTS_REELS } from "./ai-agents.ts";
+import { AI_CONCEPTS_REELS } from "./ai-concepts.ts";
+import { AI_ENGINEERING_REELS } from "./ai-engineering.ts";
+import { AI_ML_TESTING_REELS } from "./ai-ml-testing.ts";
+import { AI_SKILLS_REELS } from "./ai-skills.ts";
 import { ARCHITECTURE_REELS } from "./architecture.ts";
+import { HARNESS_REELS } from "./harness.ts";
 import type { Reel } from "./reels.ts";
 import { SYSTEM_DESIGN_REELS } from "./system-design.ts";
 
@@ -13,6 +20,13 @@ type PageReels = Readonly<Record<string, readonly Reel[]>>;
 export const REELS: Partial<Record<FlatModuleId, PageReels>> = {
   "system-design": SYSTEM_DESIGN_REELS,
   architecture: ARCHITECTURE_REELS,
+  "ai-engineering": AI_ENGINEERING_REELS,
+  harness: HARNESS_REELS,
+  "ai-skills": AI_SKILLS_REELS,
+  "ai-concepts": AI_CONCEPTS_REELS,
+  "agent-memory": AGENT_MEMORY_REELS,
+  "ai-agents": AI_AGENTS_REELS,
+  "ai-ml-testing": AI_ML_TESTING_REELS,
 };
 
 /** The reels of one page. A page or a module with none gives an empty list. */
