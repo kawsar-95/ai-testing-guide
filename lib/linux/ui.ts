@@ -25,13 +25,10 @@ export const LINUX_UI = {
   sheetMeta: (topics: number, commands: number) => `${topics} topics · ${commands} commands`,
   legend: "UPPERCASE = your own value · red ! = can destroy data · tick a card when you know it",
   warnLabel: "Warning",
-  inThisStage: "In this stage",
-  inThisStageMeta: (topics: number, minutesText: string) => `${topics} topics · about ${minutesText}`,
   stageNav: "Linux stages",
   allStages: "All stages",
   previousStage: "Previous stage",
   nextStage: "Next stage",
-  checklistHeading: "Topics",
   checklistLabel: (title: string) => `Mark done: ${title}`,
   stageProgressLabel: (title: string) => `Progress of ${title}`,
 

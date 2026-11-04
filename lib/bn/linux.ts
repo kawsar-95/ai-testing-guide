@@ -24,13 +24,10 @@ export const LINUX_UI_BN: Bn<typeof LINUX_UI> = {
   sheetMeta: (topics, commands) => `${topics}টি টপিক · ${commands}টি কমান্ড`,
   legend: "UPPERCASE = আপনার নিজের মান · লাল ! = data নষ্ট করতে পারে · জানা হলে কার্ডে টিক দিন",
   warnLabel: "সতর্কতা",
-  inThisStage: "এই ধাপে",
-  inThisStageMeta: (topics, minutesText) => `${topics}টি টপিক · প্রায় ${minutesText}`,
   stageNav: "Linux-এর ধাপসমূহ",
   allStages: "সব ধাপ",
   previousStage: "আগের ধাপ",
   nextStage: "পরের ধাপ",
-  checklistHeading: "টপিকসমূহ",
   checklistLabel: (title) => `সম্পন্ন চিহ্নিত করুন: ${title}`,
   stageProgressLabel: (title) => `${title}-এর প্রগ্রেস`,
 

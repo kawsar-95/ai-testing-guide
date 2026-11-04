@@ -97,7 +97,7 @@ All 269 content pages let you read each `##` section in three voices:
 | **সহজ English** | The same facts in plain English |
 | **বাংলা** | The same facts in Bangla. Commands, flags, paths, product names, and acronyms stay in English. |
 
-A switcher with three buttons sits under each section heading: `Technical`, `সহজ English`, and `বাংলা`. The Left, Right, Home, and End keys move the selection. A click changes one section only. A Linux stage page is a command sheet with no switcher: the `বাংলা` button in the header switches its English and Bangla glosses. The `Key words` tables and the Linux `Permissions Cheat Sheet` topic have one voice only.
+A switcher with three buttons sits under each section heading: `Technical`, `সহজ English`, and `বাংলা`. The Left, Right, Home, and End keys move the selection. A click changes one section only. A Linux stage page is a command sheet with no switcher: the `বাংলা` button in the header switches its English and Bangla glosses. The `Key words` tables have one voice only.
 
 ![One section with all three voices open](docs/assets/voices.png)
 

@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PAGES } from "../lib/nav.ts";
-import { getOutline } from "../lib/outline.ts";
+import { getOutline, outlineFromSource } from "../lib/outline.ts";
 import { CHAPTERS } from "../lib/fundamentals/chapters.ts";
 import { STAGES } from "../lib/linux/stages.ts";
+import { getSheet } from "../lib/linux/sheets/index.ts";
+import { sheetSource } from "../lib/linux/sheet.ts";
 import { SYSTEM_DESIGN } from "../lib/modules/registry.ts";
 import {
   buildFlatSearchDocs,
@@ -20,7 +22,9 @@ import type { SearchDoc } from "../lib/search.ts";
 const read = (group: string, slug: string) => readFileSync(join("content", group, `${slug}.mdx`), "utf8");
 const docs = buildSearchDocs(PAGES.map((page) => ({ page, source: read(page.group, page.slug) })));
 
-const linuxDocs = buildLinuxSearchDocs(STAGES.map((stage) => ({ stage, source: read("linux", stage.slug) })));
+/** The search text of a Linux stage: its command sheet. */
+const linuxSource = (stage: (typeof STAGES)[number]) => sheetSource(stage, getSheet(stage.slug)!);
+const linuxDocs = buildLinuxSearchDocs(STAGES.map((stage) => ({ stage, source: linuxSource(stage) })));
 
 const fundamentalsDocs = buildFundamentalsSearchDocs(
   CHAPTERS.map((chapter) => ({ chapter, source: read("fundamentals", chapter.slug) })),
@@ -166,7 +170,7 @@ test("a tutorial hit keeps its part number", () => {
 test("buildLinuxSearchDocs gives an intro doc and one doc per ## section for each stage", () => {
   for (const stage of STAGES) {
     const own = linuxDocs.filter((doc) => doc.page === stage.title);
-    const sections = getOutline("linux", stage.slug).filter((item) => item.level === 2);
+    const sections = outlineFromSource(linuxSource(stage)).filter((item) => item.level === 2);
     assert.equal(own[0].href, stage.href, `${stage.href} intro`);
     assert.equal(own[0].title, stage.title);
     assert.equal(own.length, sections.length + 1, stage.href);

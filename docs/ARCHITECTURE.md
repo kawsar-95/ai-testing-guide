@@ -178,7 +178,7 @@ The whole layout is 1400 px wide at most. The page passes its route to `ChapterL
 
 ## Voices
 
-A `##` section can have three voices of its text: Technical, plain English (`Layman`), and Bangla. 193 pages have voices. The Fundamentals chapters, `architecture/practice`, every `## Key words` section, and the Linux "Permissions Cheat Sheet" topic have none.
+A `##` section can have three voices of its text: Technical, plain English (`Layman`), and Bangla. 257 pages have voices: every MDX page in `content/`. Every `##` section has them except `## Key words`. The Linux stage pages are command sheets, not MDX: the header button switches their English and Bangla glosses.
 
 | Part | Where | Job |
 |---|---|---|
@@ -187,15 +187,14 @@ A `##` section can have three voices of its text: Technical, plain English (`Lay
 | Section | `Voices.tsx`, `VoiceSwitcher.tsx`, `panels.tsx` | `Voices` holds the state of one section. The switcher has 3 buttons (Technical, `সহজ English`, `বাংলা`) with arrow-key navigation. Panels render `<div data-panel="…">`. |
 | Header | `components/layout/VoiceToggle.tsx` | Sets the site-wide default voice. Every section follows it. |
 | CSS | `app/globals.css` | Before hydration, the panel of `html[data-voice-default]` shows. After hydration, the `data-voice` of the wrapper decides. |
-| Page voice (Linux) | `components/voice/PageVoiceSwitcher.tsx`, `lib/voice.ts` | A Linux stage page has one switcher for the whole page. CSS hides the section switchers there (`.linux-topics .voice-switch`). The switcher sets `data-voice-page` on `article[data-content]`, and CSS shows that voice in every section. It saves the choice in `localStorage` key `linux-voice` (`technical`, `layman`, or `bangla`). Without a saved choice, the page follows the site default. A change of the site default clears the choice, and `setVoiceDefault` removes the key, also when no Linux page is open. |
-| Reveal | `Voices.tsx`, `PageVoiceSwitcher.tsx` | A URL hash, or a click on an in-page link, that targets an element in a hidden panel shows that panel and scrolls to the element. |
+| Reveal | `Voices.tsx`, `useRevealTarget.ts` | A URL hash, or a click on an in-page link, that targets an element in a hidden panel shows that panel and scrolls to the element. |
 | UI text | `components/i18n/T.tsx`, `useBn.ts`, `lib/bn/`, `lib/bn.ts` | The fixed UI text has a Bangla twin for each English `*_UI` object. `<T>` renders both languages and CSS (`.i18n-en`, `.i18n-bn`) shows one from `data-voice-default`. `useBn` serves attributes. `tests/i18n.test.ts` checks that each twin has the same keys. |
 
 `lib/voice-source.ts` is the authoring check for `<Voices>` blocks. `tests/voice-source.test.ts` runs it on every MDX file. Each page with voices has a voice fact-check report in `docs/superpowers/research/`. The authoring rules are in CLAUDE.md.
 
-### Linux lessons
+### Linux command sheets
 
-Each `##` topic of a Linux stage page is a short lesson: Goal, Core text, Try it, a tip, and a closed "Go deeper" block. `lib/linux-lesson.ts` checks the shape with a line scan, like `lib/voice-source.ts`. `tests/linux-lesson.test.ts` runs it on all 12 stages. It checks the lesson shape (Goal, Try it, and one `<details>` block) only in the Technical panel. It checks the limit of 150 words before `<details>` and the limit of 160 characters for the tip in all 3 voices. It checks that each topic with `<Voices>` has its 3 panels. In a code block, `unsafeCleanups` rejects a recursive `rm` whose target starts with `$PWD` or with a variable with no `:?` guard (also `"$d"/*`), and `unguardedMktempCd` rejects `cd "$(mktemp -d)"` with no `|| exit` on the line. A stage page shows an "In this stage" box and numbers its topics (class `linux-topics`). The badge shows the `data-sec` of the `h2` from `SectionFocus`. With no JavaScript, a CSS counter gives the number. On `/linux/`, `ContinueButton` reads `linux-progress` and links to the first topic that is not done. The rules are in CLAUDE.md, section "Linux Module".
+A Linux stage page is a command sheet (`lib/linux/sheets/<stage>.ts`), not MDX: one card for each topic and one row for each command, with an English and a Bangla gloss. `tests/linux-sheets.test.ts` checks the shape and the limits, `tests/linux-sheets-warn.test.ts` checks the red `!` of every row, and `scripts/verify_linux_sheets.mjs` looks up each command and flag in the pages that its card cites. The rules are in CLAUDE.md ("Command sheets"). The lessons that the sheets replaced (`content/linux/<stage>.mdx`, checked by `lib/linux-lesson.ts`) were removed; they are in the git history.
 
 ## Progress, reading state, and Dashboard
 
@@ -206,7 +205,7 @@ All progress is client-side. The shared code keeps its old `prep` names (`lib/pr
 | `linux-progress`, `fundamentals-progress`, `architecture-progress`, `course-progress`, `k6-progress`, `ai-engineering-progress`, `ai-skills-progress`, `ai-concepts-progress`, `agent-memory-progress`, `ai-agents-progress`, `ai-ml-testing-progress` | Lists of done topic ids |
 | `page-read`, `page-bookmarks` | Lists of routes |
 | `last-page` | One route: the last content page that the reader opened |
-| `theme`, `voice`, `linux-voice`, `fundamentals-version` | The theme, the default voice, the voice of the Linux stage pages, and the Fundamentals version |
+| `theme`, `voice`, `fundamentals-version` | The theme, the default voice, and the Fundamentals version |
 
 `ChapterTools` (the reading pill, Bookmark, and Mark as read) sits under the meta line of each content page. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
 
@@ -300,7 +299,7 @@ The Python checks are not part of the workflow, because they expect a build with
 
 | Check | Type | What it protects |
 |---|---|---|
-| `npm test` | Node unit tests (`tests/*.test.ts`, run without a compile step on Node 22.18 or newer) | The nav lists and the files in `content/`, outline ids, search docs and ranking, theme and voice head scripts, page helpers, reading aids and reading state, the Dashboard, the PWA manifest, precache list, and worker, the data of each module, the Fundamentals version logic and structure, the `<Voices>` authoring rules, the Linux lesson shape and limits, the header nav, and the token contrast |
+| `npm test` | Node unit tests (`tests/*.test.ts`, run without a compile step on Node 22.18 or newer) | The nav lists and the files in `content/`, outline ids, search docs and ranking, theme and voice head scripts, page helpers, reading aids and reading state, the Dashboard, the PWA manifest, precache list, and worker, the data of each module, the Fundamentals version logic and structure, the `<Voices>` authoring rules, the Linux command sheets (their shape and limits, the red `!`, and the sheet verifier on a fixture), the header nav, and the token contrast |
 | `python3 -m unittest scripts/test_checks.py` | Python unit tests | The check scripts themselves |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Python unit tests | The Linux research scripts |
 | `check_routes.py out` | Build check | Every route of the route maps has a page |
@@ -335,6 +334,7 @@ The design documents in `docs/superpowers/` record how the site got here. The sp
 | Interview Prep module (removed on 2026-10-20; the current `/interview/` page is a small new page, not this module) | [spec](superpowers/specs/2026-10-13-prep-module-design.md) | [plan](superpowers/plans/2026-10-13-prep-module.md) |
 | Linux module | [spec](superpowers/specs/2026-10-16-linux-module-design.md) | [plan](superpowers/plans/2026-10-16-linux-module.md) |
 | Linux module revamp (lessons, page voice, Continue) | [spec](superpowers/specs/2026-10-27-linux-revamp-design.md) | [plan](superpowers/plans/2026-10-27-linux-revamp.md) |
+| Linux command sheets (one card per topic, a command map; the lessons removed later) | [spec](superpowers/specs/2026-11-04-linux-command-sheets-design.md) | none |
 | Fundamentals module | [spec](superpowers/specs/2026-10-20-fundamentals-module-design.md) | [plan](superpowers/plans/2026-10-20-fundamentals-module.md) |
 | Architecture module | [spec](superpowers/specs/2026-10-20-architecture-module-design.md) | none |
 | Voices (Technical, plain English, Bangla) | [spec](superpowers/specs/2026-10-20-voices-design.md) | [plan](superpowers/plans/2026-10-20-voices.md) |

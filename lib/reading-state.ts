@@ -22,7 +22,7 @@ export type ContentPage = {
   href: string;
   title: string;
   module: "tutorial" | ModuleId;
-  /** The folder in content/ and the file name without .mdx. */
+  /** The folder in content/ and the file name without .mdx. A Linux stage has no MDX: its command sheet is lib/linux/sheets/<slug>.ts. */
   dir: string;
   slug: string;
 };

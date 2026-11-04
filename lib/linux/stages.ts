@@ -1,7 +1,7 @@
 /**
  * The one ordered list of Linux stages. Each stage is served at
- * /linux/<slug>/ and has its text in content/linux/<slug>.mdx. The title of a
- * topic is also the text of its `##` heading in that file.
+ * /linux/<slug>/ and has its command sheet in lib/linux/sheets/<slug>.ts. The
+ * title of a topic is also the topic of its card in that sheet.
  */
 import GithubSlugger from "github-slugger";
 
@@ -250,19 +250,4 @@ export function nextTopic(
     if (topic) return { stage, topic, href: `${stage.href}#${topic.anchor}` };
   }
   return null;
-}
-
-const MINUTES_PER_TOPIC = 20;
-
-/** The study time of a stage: 20 minutes for each topic. */
-export function studyMinutes(stage: LinuxStage): number {
-  return stage.topics.length * MINUTES_PER_TOPIC;
-}
-
-/** 140 gives "2 h 20 min", 60 gives "1 h", 45 gives "45 min". */
-export function formatMinutes(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (hours === 0) return `${rest} min`;
-  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
 }
