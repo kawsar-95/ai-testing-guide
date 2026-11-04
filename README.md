@@ -151,6 +151,7 @@ Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>K</kbd>, or click the search button, t
 - **System Design:** 15 case studies explain how one well-known system works. Each case has the same shape: the problem in plain words, a text diagram of the big picture, the mechanisms, a table of key words, and what a tester can learn.
 - **Architecture:** 19 topics, each with a diagram, and a practice page with 30 questions. Each question has a checkbox and a model answer that you open when you are ready.
 - **Course:** 40 topics from DNS to case studies, in 6 parts. Each topic has a real-life example, common mistakes, and what a tester can check. A topic of the Course that is covered by an Architecture or System Design page links to that page.
+- **Reels:** each Architecture topic and each System Design case ends with 2 to 4 short videos (YouTube Shorts) by other creators, in English and Bangla. They are other people's work and are not part of the fact-checked text. A reel shows its title first, and nothing loads from YouTube until you press **Play**. A reel needs a connection to play, so it does not play offline.
 
 ![The System Design home page with its 15 case studies](docs/assets/system-design.png)
 
@@ -192,7 +193,7 @@ The site has a skip link, visible focus rings, `aria-pressed` on every toggle, a
 
 ### Privacy
 
-The site has no accounts and no server. Your progress, bookmarks, theme, voice, and version choice stay in the `localStorage` of your browser. Google Analytics is off unless the owner sets `NEXT_PUBLIC_GA_ID` at build time.
+The site has no accounts and no server. Your progress, bookmarks, theme, voice, and version choice stay in the `localStorage` of your browser. Google Analytics is off unless the owner sets `NEXT_PUBLIC_GA_ID` at build time. A reel contacts YouTube (`youtube-nocookie.com`) only after you press Play on it.
 
 ## How the content is made
 
@@ -242,6 +243,7 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `python3 -m unittest scripts/test_ai_ml_course_fetch.py` | Runs the unit tests of the script that scrapes the AI/ML Testing course syllabus. |
 | `python3 -m unittest scripts/test_ai_ml_testing_pages_gen.py` | Runs the unit tests of the AI/ML Testing page generator. |
 | `python3 scripts/ai_ml_testing_check_sources.py` | Checks that each source URL of the AI/ML Testing module resolves. It needs a network. |
+| `node scripts/check-reels.ts` | Asks YouTube about every reel on the Architecture and System Design pages: still public and embeddable, same title and channel, still a Short. It needs a network, so it is not part of `npm test`. Exit code 2 means that the check could not be done. |
 | `python3 scripts/check_routes.py out` | Checks that every route of the route maps has a built page. |
 | `python3 scripts/check_links.py out` | Checks internal links and assets. |
 | `python3 scripts/check_outline.py out` | Checks that every "On this page" link has a target. |
