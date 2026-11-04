@@ -32,15 +32,11 @@ export function GET() {
     page,
     source: readFileSync(join(process.cwd(), "content", page.group, `${page.slug}.mdx`), "utf8"),
   }));
-  // A stage with a command sheet is searched by the text of the sheet; any other stage by its lesson.
+  // Each stage is searched by the text of its command sheet: the cards with both glosses.
   const linux = STAGES.map((stage) => {
     const sheet = getSheet(stage.slug);
-    return {
-      stage,
-      source: sheet
-        ? sheetSource(stage, sheet)
-        : readFileSync(join(process.cwd(), "content", "linux", `${stage.slug}.mdx`), "utf8"),
-    };
+    if (!sheet) throw new Error(`no command sheet for the Linux stage ${stage.slug}`);
+    return { stage, source: sheetSource(stage, sheet) };
   });
   const fundamentals = CHAPTERS.map((chapter) => ({
     chapter,

@@ -8,12 +8,11 @@ const routeMap: Record<string, string> = JSON.parse(
 );
 const routes = new Set(Object.values(routeMap));
 
-/** Every tutorial content/<group>/<slug>.mdx file (not content/linux/, content/system-design/, content/fundamentals/, content/architecture/, content/course/, content/k6/, content/ai-engineering/, content/harness/, content/ai-skills/, content/ai-concepts/, content/agent-memory/, content/ai-agents/, or content/ai-ml-testing/), as "<group>/<slug>". */
+/** Every tutorial content/<group>/<slug>.mdx file (not content/system-design/, content/fundamentals/, content/architecture/, content/course/, content/k6/, content/ai-engineering/, content/harness/, content/ai-skills/, content/ai-concepts/, content/agent-memory/, content/ai-agents/, or content/ai-ml-testing/), as "<group>/<slug>". */
 const mdxFiles = readdirSync(new URL("../content", import.meta.url), { recursive: true, encoding: "utf8" })
   .filter(
     (file) =>
       file.endsWith(".mdx") &&
-      !file.startsWith("linux/") &&
       !file.startsWith("system-design/") &&
       !file.startsWith("fundamentals/") &&
       !file.startsWith("architecture/") &&

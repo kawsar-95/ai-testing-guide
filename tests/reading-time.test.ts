@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { contentWords, getReadingMinutes, getReadingMinutesByVersion, readingMinutes } from "../lib/reading-time.ts";
 import { CONTENT_PAGES } from "../lib/reading-state.ts";
+import { sheetMinutes } from "../lib/linux/sheet.ts";
+import { getSheet } from "../lib/linux/sheets/index.ts";
 
 test("plain prose counts every word", () => {
   assert.equal(contentWords("# Title\n\nOne two three four."), 5);
@@ -36,7 +38,16 @@ test("readingMinutes is words / 200 rounded up, at least 1", () => {
 });
 
 test("every content page has a reading time", () => {
-  for (const page of CONTENT_PAGES) assert.ok(getReadingMinutes(page.dir, page.slug) >= 1, page.href);
+  for (const page of CONTENT_PAGES) {
+    // A Linux stage page shows the reading time of its command sheet, as its page.tsx does.
+    if (page.module === "linux") {
+      const sheet = getSheet(page.slug);
+      assert.ok(sheet, page.href);
+      assert.ok(sheetMinutes(sheet) >= 1, page.href);
+    } else {
+      assert.ok(getReadingMinutes(page.dir, page.slug) >= 1, page.href);
+    }
+  }
 });
 
 test("a multi-line page export is not counted", () => {

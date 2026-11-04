@@ -14,10 +14,10 @@ import { TROUBLESHOOTING } from "./troubleshooting.ts";
 import { USERS_PERMISSIONS } from "./users-permissions.ts";
 
 /**
- * The sheet of each stage that has moved to the glance format. A stage with no
- * entry here still renders its lesson (content/linux/<slug>.mdx).
+ * The command sheet of each stage. Every stage needs one, because its page and
+ * search read it, so the type asks for all 12.
  */
-export const SHEETS: Readonly<Partial<Record<LinuxStageSlug, StageSheet>>> = {
+export const SHEETS: Readonly<Record<LinuxStageSlug, StageSheet>> = {
   "shell-basics": SHELL_BASICS,
   files: FILES,
   "text-processing": TEXT_PROCESSING,

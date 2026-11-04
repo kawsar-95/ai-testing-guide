@@ -24,9 +24,11 @@ test("CONTENT_PAGES counts per module", () => {
   assert.deepEqual(counts, { tutorial: 24, linux: 12, fundamentals: 11, "system-design": 15, architecture: 20, course: 40, k6: 20, "ai-engineering": 28, harness: 6, "ai-skills": 20, "ai-concepts": 9, "agent-memory": 7, "ai-agents": 10, "ai-ml-testing": 47 });
 });
 
-test("every content page points to its MDX file", () => {
+test("every content page points to its MDX file, and a Linux stage to its command sheet", () => {
   for (const page of CONTENT_PAGES) {
-    assert.ok(existsSync(new URL(`../content/${page.dir}/${page.slug}.mdx`, import.meta.url)), page.href);
+    const file =
+      page.module === "linux" ? `../lib/linux/sheets/${page.slug}.ts` : `../content/${page.dir}/${page.slug}.mdx`;
+    assert.ok(existsSync(new URL(file, import.meta.url)), page.href);
   }
 });
 

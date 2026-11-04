@@ -45,11 +45,16 @@ test("the left list renders the list of the route, with no Suspense fallback", (
   assert.doesNotMatch(source("components/content/ChapterList.tsx"), /usePathname/);
 });
 
-for (const path of TEMPLATES) {
+for (const path of TEMPLATES.filter((p) => !p.startsWith("app/(site)/linux/"))) {
   test(`${path} passes its route to ChapterLayout`, () => {
     assert.match(source(path), /<ChapterLayout outline=\{outline\} route=\{[a-z]+\.href\}>/);
   });
 }
+
+// A Linux stage page is a command sheet: a wide layout with no "On this page" outline.
+test("app/(site)/linux/[stage]/page.tsx passes its route to a wide ChapterLayout, with no outline", () => {
+  assert.match(source("app/(site)/linux/[stage]/page.tsx"), /<ChapterLayout route=\{stage\.href\} wide>/);
+});
 
 for (const path of ["app/(site)/architecture/[topic]/page.tsx", "app/(site)/system-design/[topic]/page.tsx", "app/(site)/course/[topic]/page.tsx", "app/(site)/k6/[topic]/page.tsx", "app/(site)/ai-engineering/[topic]/page.tsx", "app/(site)/harness/[topic]/page.tsx", "app/(site)/ai-skills/[topic]/page.tsx"]) {
   test(`${path} renders FlatTopicPage and loads its MDX with a literal folder`, () => {

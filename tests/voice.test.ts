@@ -11,7 +11,6 @@ import {
   VOICE_STORAGE_KEY,
   VOICE_TOGGLE_TEXT,
   isPanelVisible,
-  isVoice,
   resolveVoiceDefault,
   switchStyle,
   voiceOrder,
@@ -205,11 +204,6 @@ test("the box title has 4.5:1 contrast on the box tint in both themes", () => {
     }
   }
   assert.deepEqual(low, []);
-});
-
-test("isVoice accepts the three voices only", () => {
-  for (const v of ["technical", "layman", "bangla"]) assert.equal(isVoice(v), true);
-  for (const v of [null, "", "x", "Technical", "english"]) assert.equal(isVoice(v), false);
 });
 
 test("setVoiceDefault sets the attribute, saves the voice, and clears the saved page voice", async () => {

@@ -1,6 +1,6 @@
 # Linux command sheets: design
 
-Date: 2026-11-04. Status: implemented on branch `feat/linux-command-sheets` (PR #61 of `kawsar-95/ai-testing-guide`). It changes what a stage page shows. The lessons of `2026-10-27-linux-revamp-design.md` stay in the repo and are not shown.
+Date: 2026-11-04. Status: implemented on branch `feat/linux-command-sheets` (PR #61 of `kawsar-95/ai-testing-guide`). It changes what a stage page shows. The lessons of `2026-10-27-linux-revamp-design.md` were not shown after it, and a follow-up PR removed them; they are in the git history.
 
 ## Problem
 
@@ -31,7 +31,7 @@ The routes, the 12 stages, the 103 topics, the topic ids and anchors, and the `l
 | Decision | Why |
 |---|---|
 | Two glosses (English and Bangla), no Layman | A gloss of 9 words has no room for a plain-English twin. The site has the English and Bangla toggle already. |
-| The lessons stay, but are not shown | Deleting 12 lessons, their tests, their research notes, and the scripts that made them is a decision for the owner, not a part of a redesign. They are in `content/linux/` and `tests/linux-lesson.test.ts` still checks them. |
+| The lessons were kept, then removed in a follow-up PR | Deleting 12 lessons was the owner's decision, not a part of the redesign. The follow-up PR removes them with the code, the image, and the tests that only they used; their research notes stay, and git keeps the lessons. |
 | A fact with no fetchable official page is left off | A card that cites a page which does not say the fact is a false cite. |
 | The stage page has no "On this page" and no one-section-at-a-time view | The page is the glance. `ChapterLayout` has a `wide` mode for it. |
 | The verifier is in the repo (`scripts/verify_linux_sheets.mjs`) | The claim "every flag is in a cited page" must be checkable by someone else. It needs the network, so it is not part of `npm test`. |
@@ -59,5 +59,4 @@ The cards of a stage take 0.8 to 3.1 screens (Containers to Text Processing and 
 
 - A read of the Bangla glosses by a person who reads Bangla. The independent checkers compared them with the English glosses, as checkers did for the lessons.
 - `/var/log/syslog` and `/var/log/auth.log` are not on the cards: no page that was fetched documents them.
-- A decision about the lessons: keep, or delete with `lib/linux-lesson.ts`, `TopicChecklist`, `LessonStage`, `studyMinutes`, the lesson tests, and the research scripts.
 - Below 1248 px wide a stage page is one column, and 1.3 to 1.6 times as tall as at 1440 px (Text Processing: 4,280 px at 1440 px, 6,861 px at 1024 px). A narrow window gets the long page.
