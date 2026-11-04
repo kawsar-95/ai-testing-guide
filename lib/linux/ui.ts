@@ -3,10 +3,11 @@
 export const LINUX_UI = {
   siteTitle: "Linux",
   description:
-    "Learn Linux in 12 stages: the shell, files, text tools, users, processes, scripts, networking, services, and containers. Your progress stays in your browser.",
-  eyebrow: (stages: number, topics: number) => `LINUX · ${stages} STAGES · ${topics} TOPICS`,
+    "A command sheet for each of 12 Linux stages, from the shell to containers: one card per topic, one row per command. Your progress stays in your browser.",
+  eyebrow: (stages: number, topics: number, commands: number) =>
+    `LINUX · ${stages} STAGES · ${topics} TOPICS · ${commands} COMMANDS`,
   heading: "Linux",
-  lede: "Work through the stages in order, or jump to the one you need. Each stage has a list of topics. Mark a topic as done when you can use it without notes.",
+  lede: "One page for each stage, with every command on a card. Click a command to jump to its card, and tick a card when you know it.",
   continueStart: "Start with Shell Basics",
   continueNext: (title: string) => `Continue: ${title}`,
   continueDone: "All topics are done.",
@@ -17,10 +18,13 @@ export const LINUX_UI = {
   summaryText: (done: number, remaining: number) => `Done ${done} · Remaining ${remaining}`,
   percentText: (value: number) => `${value}%`,
   stageCount: (done: number, total: number) => `${done} / ${total} done`,
-  stageMeta: (topics: number, minutesText: string) => `${topics} topics · ${minutesText}`,
 
   // The stage page.
   stageEyebrow: (number: number) => `STAGE ${String(number).padStart(2, "0")} · LINUX`,
+  // A stage that has a command sheet (lib/linux/sheets).
+  sheetMeta: (topics: number, commands: number) => `${topics} topics · ${commands} commands`,
+  legend: "UPPERCASE = your own value · red ! = can destroy data · tick a card when you know it",
+  warnLabel: "Warning",
   inThisStage: "In this stage",
   inThisStageMeta: (topics: number, minutesText: string) => `${topics} topics · about ${minutesText}`,
   stageNav: "Linux stages",

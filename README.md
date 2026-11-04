@@ -30,7 +30,7 @@ The site has 286 pages. 269 of them are lessons in 14 sections: the tutorial and
 | Section | Pages | What it teaches |
 |---|---|---|
 | [Tutorial](https://kawsar-95.github.io/ai-testing-guide/getting-started/setup/) | 24 | Claude Code for software testing (the 6 groups below) |
-| [Linux](https://kawsar-95.github.io/ai-testing-guide/linux/) | 12 stages, 103 topics | A Linux roadmap with a progress checklist |
+| [Linux](https://kawsar-95.github.io/ai-testing-guide/linux/) | 12 stages, 103 topics | A command sheet for each stage: one card per topic, one row per command, a tick on each card |
 | [Fundamentals](https://kawsar-95.github.io/ai-testing-guide/fundamentals/) | 11 chapters, 117 topics | Manual testing. Each topic has the author's notes and an ISTQB version, with a switch. |
 | [System Design](https://kawsar-95.github.io/ai-testing-guide/system-design/) | 15 case studies | How well-known systems work (Kafka, YouTube, WhatsApp, and more) |
 | [Architecture](https://kawsar-95.github.io/ai-testing-guide/architecture/) | 19 topics and 30 practice questions | The building blocks of system architecture |
@@ -97,7 +97,7 @@ All 269 content pages let you read each `##` section in three voices:
 | **সহজ English** | The same facts in plain English |
 | **বাংলা** | The same facts in Bangla. Commands, flags, paths, product names, and acronyms stay in English. |
 
-A switcher with three buttons sits under each section heading: `Technical`, `সহজ English`, and `বাংলা`. The Left, Right, Home, and End keys move the selection. A click changes one section only. On a Linux stage page, one switcher at the top sets the voice of the whole page. The `Key words` tables and the Linux `Permissions Cheat Sheet` topic have one voice only.
+A switcher with three buttons sits under each section heading: `Technical`, `সহজ English`, and `বাংলা`. The Left, Right, Home, and End keys move the selection. A click changes one section only. A Linux stage page is a command sheet with no switcher: the `বাংলা` button in the header switches its English and Bangla glosses. The `Key words` tables and the Linux `Permissions Cheat Sheet` topic have one voice only.
 
 ![One section with all three voices open](docs/assets/voices.png)
 
@@ -129,7 +129,8 @@ The site tracks your work in your browser. It never sends it to a server.
 - **Pages read and bookmarks:** each content page has a **Mark as read** toggle and a **Bookmark** toggle under its title.
 - **Last page:** the site remembers the last content page that you opened.
 
-![The Linux roadmap with a progress bar and checklists](docs/assets/linux.png)
+![The Linux home: a tile for each stage with its commands as chips](docs/assets/linux.png)
+![A Linux stage page: one card for each topic, one row for each command](docs/assets/linux-stage.png)
 
 The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 269`) with a progress bar, beside a Continue reading card. Below them, one row for each of the 11 modules with a checklist shows its name, a bar, `done / total`, and the percent. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
@@ -238,6 +239,7 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `npm test` | Runs the unit tests in `tests/` with `node --test`. |
 | `python3 -m unittest scripts/test_checks.py` | Runs the unit tests of the Python check scripts. |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Runs the unit tests of the Linux research scripts. |
+| `node scripts/verify_linux_sheets.mjs` | Checks the commands and flags of the Linux sheets against the pages they cite. It needs a network. |
 | `python3 -m unittest scripts/test_ai_ml_course_fetch.py` | Runs the unit tests of the script that scrapes the AI/ML Testing course syllabus. |
 | `python3 -m unittest scripts/test_ai_ml_testing_pages_gen.py` | Runs the unit tests of the AI/ML Testing page generator. |
 | `python3 scripts/ai_ml_testing_check_sources.py` | Checks that each source URL of the AI/ML Testing module resolves. It needs a network. |
