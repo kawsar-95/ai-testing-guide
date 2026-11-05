@@ -567,4 +567,338 @@ Rejected on reading: a clip whose last frame says "Comment SCALING for the horiz
 
 What was not found: no clip for Bluesky (AT Protocol) or Stock Exchange (matching engine). The searches returned a metal band, trading memes, or 5 to 15 second clips with no captions. Airbnb, Spotify, Reddit, and Google Search gained nothing for the same reasons, or because the clip names the company and then teaches something else.
 
-Reels: 534.
+<!-- kodekloud-additions:start -->
+### KodeKloud additions: DevOps & Cloud, the Course, and other pages
+
+279 rows were added together, all by KodeKloud and all in English: 218 on the 24 pages of the new DevOps & Cloud module, 30 on 18 Course pages, and 31 on pages of AI Engineering, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, AI/ML Testing, and Architecture. Kinds: explainer 233, interview 26, compare 18, real-system 2. Evidence: `transcript` for all 279: the English captions (the `en-orig` track, at least 40 words) were fetched and scanned, and read in part as described below, which is not the same as having watched the clip.
+
+Where they come from: the Shorts tab of the KodeKloud channel (750 Shorts; `kodekloud-shorts-catalog.md` lists every one of them and what became of it). A clip was set aside before any reading if it is an exam-practice question, an advertisement, a career or news item, or a skit. The rest were checked with yt-dlp (length, vertical shape, embeddable, English captions), and then with the same three checks as the rows above: `/shorts/<id>` answers 200, oEmbed answers 200, and the official IFrame Player API reaches the playing state in headless Chrome, with a length within 3 seconds of what yt-dlp reports.
+
+What was read: the opening and the ending of the transcript of every clip outside the two uniform series, and the whole transcript of every clip that a scan or the opening made doubtful. The 70 walkthroughs of the KodeKloud Engineer lab series and the 45 clips of the CNCF series were checked by their spoken opening against the title and the page; each series follows one script. A phrase scan ran over every transcript and every description (a link, "full video", "part 2", "next video", "tomorrow", a course, an e-book, a sign-up). Every clip was compared with what its page teaches, and it stayed only where the page names the concept; a DevOps & Cloud page is a shelf, so there the page's topic and its description decide.
+
+Plugs: the CNCF series ends with a sentence that points to KodeKloud's certification courses, and the lab walkthroughs end with "sign up at engineer.kodekloud.com" (the captions garble the name). Measured over the transcripts of the 279 clips (a call to action is "sign up", "check out our …", "subscribe", "follow us", "learn more", a link or a web address, and its place is the word position in the transcript, not the sentence: many captions have no punctuation): 121 clips (43%) have a call to action in the last quarter of the clip (110 on DevOps & Cloud pages, 6 on Course pages, 5 on others), 7 more have one earlier, 1 has only the series intro ("In this episode of KodeKloud Engineer"), and 150 have none. An outro plug is short: an estimated 1.9 s at the median and 6.3 s at the 90th percentile, at most about 8 s (the estimate counts at most 16 words from the first match). These clips teach first and plug in one closing line, so they were kept; dropping them would remove 121 of the 279 reels. The block labels every reel as another creator's video. An earlier version of this paragraph said "about 70 lab clips" and "45 CNCF clips" from the titles of the two series; the count above is from the transcripts.
+
+Shelf rule: the DevOps & Cloud module is a shelf of one creator's Shorts, so its pages are not held to 4 reels or to 2 reels from one channel. `tests/reels.test.ts` has a separate rule for it (2 to 20 reels on a page, one channel for the whole module). Every other page keeps the rules above. On a shelf page the explainers come first, and the lab walkthroughs follow in the order of their series.
+
+Adjacent picks (the clip teaches a neighbour of the page's concept, or uses one company's system as its example): `RsJWze1YP8U` (how routers choose a route, on the IP page); `zY5dQmF8gEE` (a webhook as the push side of polling, on the long-polling page); `vdx4-z5CoBk` (webhook delivery with retries, on the event-driven page); `xc4nXaKQp7s` (a job queue with workers, on the event-driven page); `uZDNJq18YL0` (fan-out of a notification, on the pub-sub page); `-C_EKxhwYew` (connection pooling, on the database page); `zKa4FXts6Go` (changing a large table online, on the SQL page); `6PtHyHI6RoA` (ALTER TABLE and locks, on the SQL page); `juMinZqHAPQ` (polyglot persistence, on the SQL vs NoSQL page); `Bf5GhT8jZPc` (the Two Generals problem, on the CAP page); `KBs0MerAnoE` (how OpenAI cut the CPU use of its log collectors, on the monitoring page); `fVLmyuCEEy8` (how ChatGPT serves 900 million users, on the AI system design page); `6zZ9flbZwnU` (Sonnet against Opus, on the model routing page); `OIk0DLPLLiQ` (how a model's parameters are trained, on the fine-tuning page); `6wDjcFjzUvE` (what a GPU does, on the AI infrastructure page); `Kf3xIq988RY` (a data-analyst agent on an AWS data stack, on the AI data analysis page); `0X3cQo4euEo` (agents against workflows, on the workflow automation page); `LfB-tKsAmfo` (MCP sessions going stateless, on the tool calling page); `hCWPxZ8wUkY` (a plain RAG explainer, on the RAG testing page); `EwZcKZ_k6d0` (MLOps, on the What is DevOps page); `uKQQzrq9Cqw` (AIOps against DevOps and MLOps, on the What is DevOps page); `aZB4iqTWF3M` (AIOps, on the What is DevOps page); `9F-WHimhscs` (how reasoning models work, on the page of the model that decides).
+
+Course pages with one reel (listed in `THIN_PAGES`): `course/ip`, `course/long-polling-ws-sse`, `course/pub-sub`, `course/rest-graphql-grpc`, `course/sla-slo-sli`, `course/sql-vs-nosql`.
+
+Not used although the title matched a page, with the reason (29 clips):
+
+- `fow0qQ422NE` AWS FINALLY FIXED IT!: news about AWS sign-up and spending-limit changes; it does not teach EC2, EBS, or S3
+- `5V4b2P28-70` Amazon Style Interview Question: teaches awk on a web-server log; only the title says Amazon
+- `zlpgOy3BVB4` DP-900: Microsoft Azure Data Fundamentals \| KodeKloud: advertises the launch of a course
+- `7atGIcL-vRY` Why Git Wasn’t Enough for Anthropic!: a story about one company's source-control tool; not a Git workflow, and no source to check it against
+- `17sw0ygRzQE` Best CI/CD Tools in 2026: a tier list of CI/CD tools: a dated opinion that ends with a plug
+- `YluO7Dr4ybs` Run Powerful AI Models Locally with Docker!: a product feature that the clip calls beta; out of date
+- `CeOsIjO0gzk` How to Deploy an AI Agent in Kubernetes (Kagent): a demo of an AI-agent product, not the control plane; ends with a course plug
+- `dRaipDwap8A` The Best Infrastructure as Code Tool: a ranking of seven IaC tools: opinion, ends with a plug
+- `tQFCUXTkcLs` Best Observability Tools Ranked (2026): a ranking of observability tools in 2026: opinion, ends with a plug
+- `iV8APoJea0E` Why Your Terraform Modules Are Building Tech Debt, Not Preventing It: a hot take that modules are tech debt; it works against the Terraform documentation that the page cites
+- `bv9K31IKZE4` What is Pulumi? \| KodeKloud: the opening of a longer video: it promises the differences and a demo, then stops
+- `V7fCYv6RWbY` Deploying a Multi-Tier App on Kubernetes: the recap of a demo whose first half the clip does not show (the voting app)
+- `PBVa27WDGW0` How to Verify Your Minikube Kubernetes Cluster is Running: one demo step (minikube status), with a Kubernetes version that is out of date
+- `qRwebpavTHU` What is GitOps?: the intro of a longer video: it stops before it says what GitOps is
+- `MTRNTv-ceaY` AWS IAM Explained in 60 Seconds: a second IAM overview that ends on 'in the next lesson'; the page has a better one
+- `BWAEyVB_zAk` AI Agents for Beginners Course - Part 1: the trailer of a course
+- `zfkwEoP0WQo` MLOps roadmap for 2026!: a learning roadmap, not what CI/CD for AI teaches
+- `lmY94ldWa3Q` The complete AIOps roadmap you need to know!: a learning roadmap, not what production monitoring teaches
+- `8JT6DS8yt0s` What is Kubeflow?: Kubeflow, an ML platform; the page is about monitoring, and the CNCF page has a Kubeflow clip
+- `GK-byvi8E7U` Why Knowledge Graph is so powerful?: knowledge graphs; no page of the site teaches them
+- `PXO9wfRa3SA` Meet UV — The Fastest Python Package Manager: the uv package manager; the capstone page does not use uv
+- `l7nHbi9GAVA` What Does GPT Actually Stand For? (Explained Simply): what the letters GPT stand for; no page of the site teaches it
+- `zh0n6S2NcLM` AI Agents vs AI Workflows (Part - 1/2): the first half of a two-part answer: it stops at the question 'who controls the flow'
+- `sJvuNHweGbc` Interview: How Do Websites Store Passwords?: password hashing; no Course page teaches it (the SSO page is about federation)
+- `SfS3yJeKVYQ` Interview: How Browser Cookies Actually Work: browser cookies; no Course page teaches them
+- `0dQx0TzBuQc` The BEST OSI Model Explanation You'll Ever Watch (Networking Fundament: a longer copy of the OSI explanation that stops mid-sentence at the 3-minute limit; the page has the complete one
+- `kTBWEkqBIgg` What Is the New HTTP QUERY Method?: a draft HTTP method that is not what the REST, GraphQL, and gRPC page teaches
+- `awU76_QDa34` System Design: Defeating the SMS Retry Storm!: duplicate requests and retries in an SMS flow; it never says circuit breaker
+- `m5W4WexW5SQ` The 1 File That Lets You Fake Any Domain: the hosts file, a useful trick, but the page holds two reels and the short explainer of DNS is closer to what it teaches
+
+Not done: the Linux and Fundamentals clips that passed every check were left to the curation of those pages, and the tutorial lessons (`extend/mcp`, `foundations/how-claude-code-works`) have no reels. Clips for Architecture and AI pages that already hold 4 reels, or 2 from KodeKloud, were not added (the catalog lists them).
+
+| Page | Video id | Channel | Title | Kind | Lang | Seconds | Evidence | Plays |
+|---|---|---|---|---|---|---|---|---|
+| `agent-memory/parametric-memory` | `h2mTTdoMvzo` | KodeKloud | How LLMs Actually Learn? | explainer | en | 170 | transcript | yes |
+| `agent-memory/working-memory` | `TXuYu-RkSkI` | KodeKloud | Why More Context is KILLING Your LLM Responses (RAG vs Prompt Stuffing) | compare | en | 104 | transcript | yes |
+| `ai-agents/act-with-tools` | `yahZy5tBoeo` | KodeKloud | How Claude Does Web Search? | explainer | en | 98 | transcript | yes |
+| `ai-agents/llm-decides` | `9F-WHimhscs` | KodeKloud | How Reasoning Models Actually Work | explainer | en | 154 | transcript | yes |
+| `ai-concepts/agentic-loops` | `dvvWoRxqkIQ` | KodeKloud | What is Loop Engineering? | explainer | en | 161 | transcript | yes |
+| `ai-concepts/guardrails` | `yyAyR1VrA3c` | KodeKloud | What is Lethal Trifecta in AI Agents? | explainer | en | 151 | transcript | yes |
+| `ai-concepts/inference-economics` | `P-mv2hQc43E` | KodeKloud | What Actually is an AI Token? (Simply Explained) | explainer | en | 174 | transcript | yes |
+| `ai-concepts/mcp` | `7VfKiaGOZcA` | KodeKloud | MCP vs UTCP | compare | en | 179 | transcript | yes |
+| `ai-engineering/agent-orchestration` | `_ACk2DeLfSU` | KodeKloud | Google’s ADK Explained in 60 Seconds | explainer | en | 68 | transcript | yes |
+| `ai-engineering/ai-infrastructure` | `6wDjcFjzUvE` | KodeKloud | What Do GPUs Actually Do? | explainer | en | 113 | transcript | yes |
+| `ai-engineering/calling-llm-apis` | `tbNCwO6qQE0` | KodeKloud | 6 LLM settings every AI Developer needs to know | explainer | en | 173 | transcript | yes |
+| `ai-engineering/cost-optimization` | `WLu6dvfqL3A` | KodeKloud | Every AI request has a price and it's paid in tokens. | explainer | en | 148 | transcript | yes |
+| `ai-engineering/cost-optimization` | `a17HbAv_q78` | KodeKloud | Why does AI charge you MORE every time it replies? | explainer | en | 132 | transcript | yes |
+| `ai-engineering/data-pipelines` | `5Z-ZbD6S0us` | KodeKloud | Chunk Overlap: Helpful or Just Duplicate Noise? | explainer | en | 93 | transcript | yes |
+| `ai-engineering/model-routing` | `6zZ9flbZwnU` | KodeKloud | Why Sonnet 5 When You Have Opus? | explainer | en | 128 | transcript | yes |
+| `ai-engineering/prompt-engineering` | `obj-PvjnaOQ` | KodeKloud | Prompting Basics - Part 3/3 | explainer | en | 177 | transcript | yes |
+| `ai-engineering/prompt-engineering` | `firMkLcdHQk` | KodeKloud | Prompting Basics Part - 1/3 | explainer | en | 50 | transcript | yes |
+| `ai-engineering/rag-basics` | `E4cMVt0BSI4` | KodeKloud | What is RAG in under 90 seconds! | explainer | en | 175 | transcript | yes |
+| `ai-engineering/retrieval-engineering` | `V1iGw0Os27w` | KodeKloud | Why Your AI Can’t Find Your Data! | explainer | en | 121 | transcript | yes |
+| `ai-engineering/system-design` | `fVLmyuCEEy8` | KodeKloud | How ChatGPT Handles 900 Million Users | real-system | en | 174 | transcript | yes |
+| `ai-engineering/tool-calling` | `LfB-tKsAmfo` | KodeKloud | Model Context Protocol Upgrade! | explainer | en | 133 | transcript | yes |
+| `ai-ml-testing/advanced-rag-failures` | `9aZrzDysoZY` | KodeKloud | The 4 RAG Blocks That Matter | explainer | en | 108 | transcript | yes |
+| `ai-ml-testing/multi-agent-testing` | `N8rnFxavJrE` | KodeKloud | How Google's A2A Protocol Works? | explainer | en | 57 | transcript | yes |
+| `ai-ml-testing/prompt-engineering-basics` | `4hebaIPjcig` | KodeKloud | Prompting Basics - Part 2/3 | explainer | en | 106 | transcript | yes |
+| `ai-ml-testing/rag-testing-basics` | `hCWPxZ8wUkY` | KodeKloud | RAG Explained in 60 Seconds | explainer | en | 68 | transcript | yes |
+| `ai-skills/ai-agents` | `kIlgDm5gcMY` | KodeKloud | Why do we need AI Agents when we have AI models? | explainer | en | 118 | transcript | yes |
+| `ai-skills/ai-data-analysis` | `Kf3xIq988RY` | KodeKloud | Building Data Analyst Agent | explainer | en | 175 | transcript | yes |
+| `ai-skills/fine-tuning` | `OIk0DLPLLiQ` | KodeKloud | How LLMs Actually Learn? | explainer | en | 160 | transcript | yes |
+| `ai-skills/mcp-connectors` | `7QUj_vXkivg` | KodeKloud | How Anthropic Fixed MCP Context Bloat Issue | explainer | en | 151 | transcript | yes |
+| `ai-skills/workflow-automation` | `0X3cQo4euEo` | KodeKloud | Why AI Agents Are Killing Workflows in 2026 | explainer | en | 157 | transcript | yes |
+| `architecture/single-server` | `ekWtLUg7GpE` | KodeKloud | Client-Server vs Peer-to-Peer Networks | compare | en | 49 | transcript | yes |
+| `course/cap-theorem` | `HTaKhMv_ZYU` | KodeKloud | What is CAP Theorem in System Design? | explainer | en | 179 | transcript | yes |
+| `course/cap-theorem` | `Bf5GhT8jZPc` | KodeKloud | Why Perfect Networking is Impossible! | explainer | en | 155 | transcript | yes |
+| `course/database` | `8tcHlirj3rM` | KodeKloud | SQLite: The Database on Every Phone! | explainer | en | 157 | transcript | yes |
+| `course/database` | `-C_EKxhwYew` | KodeKloud | Postgres Hit the Connection Limit. Now What? | explainer | en | 176 | transcript | yes |
+| `course/disaster-recovery` | `51q3QjCNQDw` | KodeKloud | Database: Replication vs Backup! | compare | en | 89 | transcript | yes |
+| `course/disaster-recovery` | `UF96IHadCiw` | KodeKloud | Backup vs Disaster Recovery: Why You Need Both for Data Protection \| SRE Concepts | compare | en | 118 | transcript | yes |
+| `course/dns` | `wEjgtknhLUQ` | KodeKloud | Interview: How DNS Finds a Website’s IP Address | interview | en | 179 | transcript | yes |
+| `course/dns` | `Kx9HqKThjL8` | KodeKloud | How DNS Works? | explainer | en | 48 | transcript | yes |
+| `course/event-driven-architecture` | `xc4nXaKQp7s` | KodeKloud | System Design: Background Job-Processing Workers! | explainer | en | 179 | transcript | yes |
+| `course/event-driven-architecture` | `vdx4-z5CoBk` | KodeKloud | Design Webhooks Processing System | explainer | en | 171 | transcript | yes |
+| `course/indexes` | `b3bBGEzi4lg` | KodeKloud | Interview: How Database Indexing Works | interview | en | 177 | transcript | yes |
+| `course/indexes` | `_2WPVe4dw_8` | KodeKloud | Interview: B-Tree vs B+ Tree | interview | en | 159 | transcript | yes |
+| `course/ip` | `RsJWze1YP8U` | KodeKloud | How Do Routers Know Where to Send Your Packet? | explainer | en | 178 | transcript | yes |
+| `course/long-polling-ws-sse` | `zY5dQmF8gEE` | KodeKloud | What is Webhook? | explainer | en | 104 | transcript | yes |
+| `course/osi` | `xuan1dN9bKw` | KodeKloud | The OSI Model: 7 Layers Explained with HTTP Request | explainer | en | 154 | transcript | yes |
+| `course/osi` | `E2srSCtz3bU` | KodeKloud | How the Internet Really Sends Your Data! (TCP/IP Explained Simply) | explainer | en | 59 | transcript | yes |
+| `course/pub-sub` | `uZDNJq18YL0` | KodeKloud | System Design: Notifying 50 Million Users in One Shot | interview | en | 161 | transcript | yes |
+| `course/rest-graphql-grpc` | `29B4wFRJyAo` | KodeKloud | gRPC vs HTTP Explained in 3 minutes | compare | en | 180 | transcript | yes |
+| `course/sharding` | `IwnefaLZhGs` | KodeKloud | The Celebrity Problem in Database Sharding | explainer | en | 162 | transcript | yes |
+| `course/sharding` | `1_xLXicErn0` | KodeKloud | When to Shard Database vs Replicate? Database Scaling Explained. | compare | en | 113 | transcript | yes |
+| `course/sla-slo-sli` | `bORGo7-mLlQ` | KodeKloud | SLA vs SLO vs SLI: What’s the Difference? | compare | en | 114 | transcript | yes |
+| `course/sql` | `zKa4FXts6Go` | KodeKloud | Tricky Database Interview Question | interview | en | 172 | transcript | yes |
+| `course/sql` | `6PtHyHI6RoA` | KodeKloud | Postgres Interview Question! | interview | en | 117 | transcript | yes |
+| `course/sql-vs-nosql` | `juMinZqHAPQ` | KodeKloud | System Design: What is Polyglot Persistence? | explainer | en | 128 | transcript | yes |
+| `course/ssl-tls-mtls` | `lVWXZb_4tU8` | KodeKloud | Interview: How TCP, TLS and HTTP Actually Work Together | interview | en | 158 | transcript | yes |
+| `course/ssl-tls-mtls` | `VT-RK8xbrso` | KodeKloud | System Design: Securing Internal Microservices! | interview | en | 179 | transcript | yes |
+| `course/tcp-udp` | `oYf6qaBpFsw` | KodeKloud | TCP or UDP? Every Developer Must Know This | interview | en | 99 | transcript | yes |
+| `course/tcp-udp` | `mh8geod4VRI` | KodeKloud | TCP vs UDP Explained with WhatsApp | compare | en | 180 | transcript | yes |
+| `course/vm-containers` | `biDEGt6XWc4` | KodeKloud | Containers vs Virtual Machines Explained | compare | en | 69 | transcript | yes |
+| `course/vm-containers` | `oz4WufCnYbs` | KodeKloud | What is Hypervisor? | explainer | en | 62 | transcript | yes |
+| `devops/ansible` | `-OGhkEcT-rM` | KodeKloud | Ansible: Configuring Default SSH User \| Ansible Series | explainer | en | 59 | transcript | yes |
+| `devops/ansible` | `WExhYLSmxu4` | KodeKloud | Copy Data to App Servers using Ansible \| KodeKloud Engineer \| Ansible Series | explainer | en | 60 | transcript | yes |
+| `devops/ansible` | `rD6IkBTb5UI` | KodeKloud | Creating Files on App Servers using Ansible \| Ansible Tutorial \| Ansibleseries | explainer | en | 59 | transcript | yes |
+| `devops/ansible` | `2h1GpukoE1k` | KodeKloud | Ansible: Create Inventory For App Server Testing \| Ansible series \| KodeKloud Engineer | explainer | en | 60 | transcript | yes |
+| `devops/aws-compute-storage` | `QvhsavHRdbU` | KodeKloud | AWS S3 data replication explained in 60 seconds | explainer | en | 67 | transcript | yes |
+| `devops/aws-compute-storage` | `GzjLOPfnLz8` | KodeKloud | Elastic Block Store Explained under 1 minute | explainer | en | 47 | transcript | yes |
+| `devops/aws-compute-storage` | `C6PiS4mPMEI` | KodeKloud | What Is Amazon EC2? Virtual Servers in the Cloud Explained | explainer | en | 70 | transcript | yes |
+| `devops/aws-compute-storage` | `AJpG80no6yE` | KodeKloud | What Is Amazon S3? Simple Cloud Storage Explained in 60 Seconds | explainer | en | 76 | transcript | yes |
+| `devops/aws-compute-storage` | `59I1r0NJlNI` | KodeKloud | Allocating an Elastic IP in AWS | explainer | en | 36 | transcript | yes |
+| `devops/aws-compute-storage` | `x1wEehKrUsc` | KodeKloud | AWS: Creating EC2 Instance \| AWS Series | explainer | en | 58 | transcript | yes |
+| `devops/aws-compute-storage` | `0xcrSWi7_gQ` | KodeKloud | AWS: Change EC2 Instance Type \| AWS Series | explainer | en | 55 | transcript | yes |
+| `devops/aws-compute-storage` | `QQebVodo3Bk` | KodeKloud | AWS: Enable Stop Protection for EC2 Instance \| AWS Series | explainer | en | 45 | transcript | yes |
+| `devops/aws-compute-storage` | `G5OwnXpLcF4` | KodeKloud | AWS: Enable Termination Protection for EC2 Instance \| AWS Series | explainer | en | 50 | transcript | yes |
+| `devops/aws-compute-storage` | `WGSm4RNNTMA` | KodeKloud | AWS: Attaching Elastic IP to EC2 Instance \| KodeKloud Engineer \| AWS Series | explainer | en | 57 | transcript | yes |
+| `devops/aws-compute-storage` | `IPEmRncq0i8` | KodeKloud | Attaching a Volume to EC2 Instance \| AWS Tutorial \| AWS Series | explainer | en | 58 | transcript | yes |
+| `devops/aws-compute-storage` | `yfETVL3afuA` | KodeKloud | Creating an AMI from an EC2 Instance \| AWS Tutorial \| AWS Series | explainer | en | 53 | transcript | yes |
+| `devops/aws-compute-storage` | `OqMigXMscMA` | KodeKloud | Terminating EC2 Instance \| AWS Tutorial \| AWS Series | explainer | en | 53 | transcript | yes |
+| `devops/aws-compute-storage` | `SDNclbUr5d8` | KodeKloud | Creating EBS Snapshot \| AWS Tutorial \| AWS Series | explainer | en | 51 | transcript | yes |
+| `devops/aws-compute-storage` | `mTX-VBxY62Y` | KodeKloud | How to create GP3 Volume \| AWS Series \| KodeKloud Engineer | explainer | en | 53 | transcript | yes |
+| `devops/aws-data-serverless` | `dlTX_TBpVUs` | KodeKloud | AWS Lambda explained in 60 seconds | explainer | en | 78 | transcript | yes |
+| `devops/aws-data-serverless` | `CYrLIDjG4Qc` | KodeKloud | Amazon Athena explained in 120 seconds | explainer | en | 115 | transcript | yes |
+| `devops/aws-data-serverless` | `Izba9YF4tdk` | KodeKloud | AWS Neptune: The Database Built for Relationships | explainer | en | 128 | transcript | yes |
+| `devops/aws-data-serverless` | `HlGs4C1Y5nA` | KodeKloud | AWS Fargate in 60 seconds | explainer | en | 81 | transcript | yes |
+| `devops/aws-data-serverless` | `rR0bwTupqAI` | KodeKloud | AWS Step Functions: The tool that organizes your Lambda mess | explainer | en | 94 | transcript | yes |
+| `devops/aws-data-serverless` | `GrHM7Hby-20` | KodeKloud | AWS RDS vs. DynamoDB: Which Database should you choose? | interview | en | 80 | transcript | yes |
+| `devops/aws-data-serverless` | `LooINFCjgJ0` | KodeKloud | AWS Lambda Explained for Beginners | explainer | en | 64 | transcript | yes |
+| `devops/aws-data-serverless` | `Q6H_nGdg0uY` | KodeKloud | AWS RDS Explained in 90 seconds | explainer | en | 94 | transcript | yes |
+| `devops/aws-identity-security` | `hZ6BTnsn2mM` | KodeKloud | AWS Key Leaked! | interview | en | 94 | transcript | yes |
+| `devops/aws-identity-security` | `4TwmceijWM0` | KodeKloud | AWS IAM Explained in 60 Seconds | explainer | en | 81 | transcript | yes |
+| `devops/aws-identity-security` | `qso_olVQ_iU` | KodeKloud | AWS interview question: Secrets Manager vs Parameter Store | interview | en | 88 | transcript | yes |
+| `devops/aws-identity-security` | `C9BvMXj4z2o` | KodeKloud | AWS IAM Roles Explained | explainer | en | 88 | transcript | yes |
+| `devops/aws-identity-security` | `7q-n0xpQyiw` | KodeKloud | What Is an AWS IAM Policy? | explainer | en | 140 | transcript | yes |
+| `devops/aws-identity-security` | `nTcDjKtX3-8` | KodeKloud | What Is AWS MFA? ( Multi-Factor Authentication Explained ) | explainer | en | 105 | transcript | yes |
+| `devops/aws-identity-security` | `2BYWWhdwp-4` | KodeKloud | What Is AWS Secrets Manager? | explainer | en | 76 | transcript | yes |
+| `devops/aws-identity-security` | `zX-G3wUVz7c` | KodeKloud | What Is AWS KMS? (Key Management Service) | explainer | en | 30 | transcript | yes |
+| `devops/aws-identity-security` | `gb1pXzWDlGc` | KodeKloud | What Are AWS IAM Roles? | explainer | en | 66 | transcript | yes |
+| `devops/aws-identity-security` | `wXRVT0dWM3o` | KodeKloud | Creating IAM User \| AWS Tutorial \| AWS Series | explainer | en | 49 | transcript | yes |
+| `devops/aws-identity-security` | `8vMJ_52zbyg` | KodeKloud | Creating an IAM in AWS \| AWS Tutorial \| AWS Series | explainer | en | 49 | transcript | yes |
+| `devops/aws-identity-security` | `ZEUd1IyAde0` | KodeKloud | Creating an IAM Policy in AWS \| AWS Tutorial \| AWS Series | explainer | en | 60 | transcript | yes |
+| `devops/aws-identity-security` | `OdNnS-0MX-c` | KodeKloud | Attaching an IAM Policy to a User in AWS \| AWS Tutorial \| AWS Series | explainer | en | 53 | transcript | yes |
+| `devops/aws-networking` | `JGzccAh-quU` | KodeKloud | AWS VPC Explained in 60 seconds | explainer | en | 86 | transcript | yes |
+| `devops/aws-networking` | `qjFe9xgl6Dg` | KodeKloud | AWS Route 53 explained in 2 minutes! | explainer | en | 113 | transcript | yes |
+| `devops/aws-networking` | `nPkIpdH67Vw` | KodeKloud | What does CloudFront exactly do? | explainer | en | 110 | transcript | yes |
+| `devops/aws-networking` | `mbtojfukpDk` | KodeKloud | AWS Load Balancers explained but make it actually make sense | explainer | en | 139 | transcript | yes |
+| `devops/aws-networking` | `kzLp-k7vQO8` | KodeKloud | What Is AWS VPC? | explainer | en | 106 | transcript | yes |
+| `devops/aws-networking` | `3nrx0s1QdvE` | KodeKloud | What Is AWS Load Balancer? | explainer | en | 47 | transcript | yes |
+| `devops/aws-networking` | `dP6JWmxzUAQ` | KodeKloud | Attaching Elastic Network Interface to EC2 Instance \| KodeKloud Engineer \| AWS Series | explainer | en | 55 | transcript | yes |
+| `devops/aws-networking` | `CaAnXUBcBcY` | KodeKloud | How to Create a Key Pair \| AWS Series \| KodeKloud Engineer | explainer | en | 60 | transcript | yes |
+| `devops/aws-networking` | `GN53WLSnEJk` | KodeKloud | Creating Subnet in AWS \| AWS Series \| KodeKloud | explainer | en | 49 | transcript | yes |
+| `devops/aws-networking` | `k93sw3AYMrY` | KodeKloud | How to Create a Security Group \| AWS Series \| KodeKloud Engineer | explainer | en | 60 | transcript | yes |
+| `devops/ci-cd` | `JctUTCb0oEQ` | KodeKloud | Shift Left Explained with SQL Injection Bug | explainer | en | 171 | transcript | yes |
+| `devops/ci-cd` | `YexHYnsJxag` | KodeKloud | How to Install Jenkins Plugins \| Jenkins Series | explainer | en | 55 | transcript | yes |
+| `devops/ci-cd` | `Pf_jB1nT-r8` | KodeKloud | Set Up a CI/CD Server in Jenkins \| Jenkins Series \| KodeKloud Engineer | explainer | en | 60 | transcript | yes |
+| `devops/cloud-concepts` | `mH0AnhSFFDg` | KodeKloud | 3 Cloud Deployment Models Simplified | explainer | en | 114 | transcript | yes |
+| `devops/cloud-concepts` | `eA7liickrVE` | KodeKloud | Why Virtualization? | explainer | en | 62 | transcript | yes |
+| `devops/cloud-concepts` | `hUajDv_ZF24` | KodeKloud | What is local stack? | explainer | en | 60 | transcript | yes |
+| `devops/cloud-concepts` | `62l0ej4dqT4` | KodeKloud | Cloud Computing vs Traditional IT: The Key Difference Explained | compare | en | 157 | transcript | yes |
+| `devops/cloud-concepts` | `CsttKzzbaZs` | KodeKloud | What is 12 Factor App? \| KodeKloud | explainer | en | 54 | transcript | yes |
+| `devops/cloud-concepts` | `ZNe-j0YASik` | KodeKloud | 5 Key Principles for Cloud Native Architecture \| KodeKloud | explainer | en | 49 | transcript | yes |
+| `devops/cloud-concepts` | `2n_m6KTl5ME` | KodeKloud | Creating SSH Key Pair for Azure VM \| Azure Series | explainer | en | 85 | transcript | yes |
+| `devops/cloud-concepts` | `Yj_9L1-_EA0` | KodeKloud | Creating an Azure Virtual Machine \| Azure Series | explainer | en | 129 | transcript | yes |
+| `devops/cloud-concepts` | `MBCRQTqwOjM` | KodeKloud | Azure: Create a Virtual Network \| Azure Series | explainer | en | 68 | transcript | yes |
+| `devops/cncf-build-deliver` | `RHnTTP3_Q7Y` | KodeKloud | Helm – The Package Manager for Kubernetes Deployments \| CNCF Project | explainer | en | 91 | transcript | yes |
+| `devops/cncf-build-deliver` | `4hGlOKFtnHU` | KodeKloud | Argo - Automating Workflows and Deployments in Kubernetes \| CNCF Project | explainer | en | 99 | transcript | yes |
+| `devops/cncf-build-deliver` | `nvpWEvbyTpg` | KodeKloud | Backstage – Open Source Framework for Developer Portals \| CNCF Project | explainer | en | 84 | transcript | yes |
+| `devops/cncf-build-deliver` | `B2IRSdQBmKw` | KodeKloud | KEDA – Event-Driven Autoscaling for Kubernetes \| CNCF Graduated Project | explainer | en | 94 | transcript | yes |
+| `devops/cncf-build-deliver` | `HpeBBSFjCgA` | KodeKloud | Flux – The GitOps Solution for Kubernetes Application Management \| CNCF Project | explainer | en | 87 | transcript | yes |
+| `devops/cncf-build-deliver` | `fOBuhKwR8u0` | KodeKloud | Operator Framework – Complete Toolkit for Kubernetes Operators \| CNCF Project | explainer | en | 98 | transcript | yes |
+| `devops/cncf-build-deliver` | `DuTNVHQ7DiU` | KodeKloud | Crossplane – Universal Control Plane for Cloud Resources \| CNCF Incubation Project | explainer | en | 103 | transcript | yes |
+| `devops/cncf-build-deliver` | `FyVOedj56uk` | KodeKloud | Dapr – The Portable Runtime for Modern Distributed Applications \| CNCF Project | explainer | en | 82 | transcript | yes |
+| `devops/cncf-build-deliver` | `NU82e2H6d6g` | KodeKloud | Knative – Bringing Serverless Computing to Kubernetes \| CNCF Project | explainer | en | 93 | transcript | yes |
+| `devops/cncf-build-deliver` | `8MbVCYcnOAs` | KodeKloud | OpenFeature – Simplifying Feature Flag Management for Developers \| CNCF Project | explainer | en | 88 | transcript | yes |
+| `devops/cncf-build-deliver` | `n9GgihQ7_88` | KodeKloud | CloudEvents - Standardizing Events for Interoperability \| CNCF Graduated Project | explainer | en | 92 | transcript | yes |
+| `devops/cncf-build-deliver` | `jIvjgcO9EZk` | KodeKloud | Buildpacks.io - Simplifying Containerization for Developers \| CNCF Incubating Project | explainer | en | 87 | transcript | yes |
+| `devops/cncf-build-deliver` | `28HlZp_Iwgs` | KodeKloud | KubeVela – Simplifying Application Delivery on Kubernetes \| CNCF Project | explainer | en | 91 | transcript | yes |
+| `devops/cncf-build-deliver` | `fb3F5hpbLB0` | KodeKloud | ArtifactHub: Your Gateway to Cloud-Native Packages \| CNCF Incubating Project | explainer | en | 96 | transcript | yes |
+| `devops/cncf-network-security-observability` | `DgFv961J4YA` | KodeKloud | Jaeger - The Distributed Tracing Solution for Microservices \| CNCF Graduated Projects | explainer | en | 97 | transcript | yes |
+| `devops/cncf-network-security-observability` | `KO0m2qdWEOM` | KodeKloud | Istio – The Powerful Service Mesh for Cloud-Native Applications \| CNCF Project | explainer | en | 89 | transcript | yes |
+| `devops/cncf-network-security-observability` | `Jbf1D5oyhrE` | KodeKloud | Cert-manager - Automating TLS Certificate Management in Kubernetes \| CNCF Project | explainer | en | 92 | transcript | yes |
+| `devops/cncf-network-security-observability` | `fAltA5eocMg` | KodeKloud | Cilium - Networking, Security & Observability for Cloud-Native \| CNCF Graduated Projects | explainer | en | 83 | transcript | yes |
+| `devops/cncf-network-security-observability` | `MmyS4xJQHJ8` | KodeKloud | Envoy - The High-Performance Service and Edge Proxy \| CNCF Graduated Project | explainer | en | 87 | transcript | yes |
+| `devops/cncf-network-security-observability` | `pe3n2mJn2EI` | KodeKloud | Open Policy Agent – Unified Policy Enforcement for Cloud-Native Security \| CNCF Project | explainer | en | 94 | transcript | yes |
+| `devops/cncf-network-security-observability` | `xuJQKLj_is0` | KodeKloud | CoreDNS - The Ultimate DNS Server for Cloud-Native Environments \| CNCF Graduated Projects | explainer | en | 79 | transcript | yes |
+| `devops/cncf-network-security-observability` | `gX-ngwB2nkQ` | KodeKloud | Harbor - A Trusted Cloud-Native Registry for Container Security \| CNCF Graduated Projects | explainer | en | 91 | transcript | yes |
+| `devops/cncf-network-security-observability` | `tMAqVkkdpF4` | KodeKloud | Prometheus – Powerful Monitoring & Alerting for Cloud-Native Applications \| CNCF Project | explainer | en | 91 | transcript | yes |
+| `devops/cncf-network-security-observability` | `Xvo18pJCZUA` | KodeKloud | SPIRE - The Foundation for Workload Identity Management \| CNCF Graduated Projects | explainer | en | 78 | transcript | yes |
+| `devops/cncf-network-security-observability` | `dS3Jw1AwGSA` | KodeKloud | How TUF Secures the Cloud-Native Ecosystem \| CNCF Graduated Project | explainer | en | 75 | transcript | yes |
+| `devops/cncf-network-security-observability` | `ko-eKIFXafM` | KodeKloud | Falco - Cloud-Native Security for Detecting Intrusions \| CNCF Graduated Projects | explainer | en | 91 | transcript | yes |
+| `devops/cncf-network-security-observability` | `eR3cAMeME8A` | KodeKloud | SPIFFE - The Identity Framework Keeping Your Services Safe \| CNCF Graduated Projects | explainer | en | 71 | transcript | yes |
+| `devops/cncf-network-security-observability` | `NB6iHqWql6o` | KodeKloud | Linkerd - The Lightweight Service Mesh for Kubernetes \| CNCF Graduated Project | explainer | en | 88 | transcript | yes |
+| `devops/cncf-network-security-observability` | `rNxIqk3nBww` | KodeKloud | In-toto - Securing Your Software Supply Chain \| CNCF Graduated Projects | explainer | en | 74 | transcript | yes |
+| `devops/cncf-network-security-observability` | `-zRPincOvuQ` | KodeKloud | Fluentd - Unified Logging for Cloud-Native Applications \| CNCF Graduated Projects | explainer | en | 80 | transcript | yes |
+| `devops/cncf-runtime-data` | `GWonQMnbyak` | KodeKloud | Vitess - The Ultimate MySQL Clustering Solution for Kubernetes \| CNCF Graduated Projects | explainer | en | 74 | transcript | yes |
+| `devops/cncf-runtime-data` | `5lQSiCBHJv0` | KodeKloud | Kubeflow – End-to-End Machine Learning on Kubernetes \| CNCF Project | explainer | en | 101 | transcript | yes |
+| `devops/cncf-runtime-data` | `kdjlBywmg0o` | KodeKloud | KubeVirt – Run Virtual Machines on Kubernetes \| CNCF Project | explainer | en | 99 | transcript | yes |
+| `devops/cncf-runtime-data` | `cx45ENgTXF4` | KodeKloud | Karmada – Seamless Multi-Cluster Management for Kubernetes \| CNCF Incubation Project | explainer | en | 103 | transcript | yes |
+| `devops/cncf-runtime-data` | `wMPTKD6jshw` | KodeKloud | CRI-O - The Lightweight Container Runtime for Kubernetes \| CNCF Graduated Project | explainer | en | 86 | transcript | yes |
+| `devops/cncf-runtime-data` | `x6XU5u7uwQ4` | KodeKloud | CubeFS - The Future of Distributed Storage in Kubernetes \| CNCF Graduated Project | explainer | en | 69 | transcript | yes |
+| `devops/cncf-runtime-data` | `VLaiPn1tvgQ` | KodeKloud | OpenKruise – Streamlining Workload Management in Kubernetes \| CNCF Project | explainer | en | 93 | transcript | yes |
+| `devops/cncf-runtime-data` | `Zx_NS14K3s8` | KodeKloud | Rook: Your All-in-One Solution for Kubernetes Storage \| CNCF Graduated Project | explainer | en | 80 | transcript | yes |
+| `devops/cncf-runtime-data` | `gE332UkBjt8` | KodeKloud | KubeEdge - Extending Kubernetes to the Edge \| CNCF Graduated Projects | explainer | en | 90 | transcript | yes |
+| `devops/cncf-runtime-data` | `WAE2yBYIFOk` | KodeKloud | Containerd - The Industry-Standard Container Runtime \| CNCF Graduated Project | explainer | en | 86 | transcript | yes |
+| `devops/cncf-runtime-data` | `cD1sQIb1nGE` | KodeKloud | TiKV - The Distributed Key-Value Database for Cloud-Native Applications \| CNCF Graduated Project | explainer | en | 81 | transcript | yes |
+| `devops/cncf-runtime-data` | `h7aZQjL4i_A` | KodeKloud | Volcano - Advanced Batch Scheduling for Kubernetes \| CNCF Incubation Project Day 12 | explainer | en | 109 | transcript | yes |
+| `devops/cncf-runtime-data` | `Rd8Sh5nu6TQ` | KodeKloud | WasmCloud – Universal Application Platform with WebAssembly \| CNCF Incubation Project | explainer | en | 101 | transcript | yes |
+| `devops/cncf-runtime-data` | `2TqrPMMql4E` | KodeKloud | etcd - The Reliable Key-Value Store for Distributed Systems \| CNCF Graduated Projects | explainer | en | 93 | transcript | yes |
+| `devops/docker-basics` | `R2nV-8-lXBU` | KodeKloud | Why Developers Use Docker Containers (The Real Reason) | explainer | en | 179 | transcript | yes |
+| `devops/docker-basics` | `zo-vT_fuzvg` | KodeKloud | Docker vs Kubernetes – What's the Difference and Why It Matters | compare | en | 164 | transcript | yes |
+| `devops/docker-basics` | `3KWoCnWKrjI` | KodeKloud | What are containers? | explainer | en | 60 | transcript | yes |
+| `devops/docker-basics` | `sR3BvvsdNWQ` | KodeKloud | Copying a File to Docker Container \| Docker series | explainer | en | 47 | transcript | yes |
+| `devops/docker-basics` | `SrzjrHlBGAQ` | KodeKloud | Deleting a Container in Docker \| Docker series | explainer | en | 49 | transcript | yes |
+| `devops/docker-basics` | `QMeAxAnvGJY` | KodeKloud | Troubleshooting a Docker Container \| Docker Tutorial \| Docker Series | explainer | en | 60 | transcript | yes |
+| `devops/docker-basics` | `oDYjxqD7c9k` | KodeKloud | Pulling Docker Images \| Docker Tutorial \| Docker Series | explainer | en | 60 | transcript | yes |
+| `devops/docker-basics` | `H3qyLPNh434` | KodeKloud | Updating Docker Permissions \| Docker Tutorial \| Docker Series | explainer | en | 49 | transcript | yes |
+| `devops/docker-basics` | `feOe12tiROo` | KodeKloud | Performing EXEC Operations in Docker \| Docker Tutorial \| Docker Series | explainer | en | 58 | transcript | yes |
+| `devops/docker-basics` | `8XYRYUNbn_0` | KodeKloud | Creating a Docker Network \| Docker Tutorial \| Docker Series | explainer | en | 57 | transcript | yes |
+| `devops/docker-basics` | `Vh8ckUJj2iY` | KodeKloud | Mapping Docker Volumes \| Docker Tutorial \| Docker Series | explainer | en | 59 | transcript | yes |
+| `devops/docker-basics` | `Q0uJpqvx1j0` | KodeKloud | Mapping Ports in Docker \| Docker Tutorial \| Docker Series | explainer | en | 60 | transcript | yes |
+| `devops/docker-basics` | `SnHPSBZrNtk` | KodeKloud | Saving, Loading & Transferring Docker Images \| Docker Tutorial \| Docker Series | explainer | en | 124 | transcript | yes |
+| `devops/docker-basics` | `Gbif1yPguGE` | KodeKloud | Deploy Nginx Container on App Server \| Docker Series \| KodeKloud Engineer | explainer | en | 58 | transcript | yes |
+| `devops/docker-images-compose` | `IiUY9kqAyRg` | KodeKloud | How to Use a .dockerignore File Properly | explainer | en | 143 | transcript | yes |
+| `devops/docker-images-compose` | `QR69xSxxoKU` | KodeKloud | Docker Init Explained in 60 Seconds! | explainer | en | 47 | transcript | yes |
+| `devops/docker-images-compose` | `HIDx7RXtWHU` | KodeKloud | 5 Essential Tweaks to Supercharge Your Dockerfiles for Performance | explainer | en | 90 | transcript | yes |
+| `devops/docker-images-compose` | `i2Xhd6_8eb0` | KodeKloud | What is Docker Compose Watch? | explainer | en | 45 | transcript | yes |
+| `devops/docker-images-compose` | `P7xPTP93xfk` | KodeKloud | What is Docker Bake? | explainer | en | 62 | transcript | yes |
+| `devops/docker-images-compose` | `ys7Iw7Dltus` | KodeKloud | Docker Bake vs Compose: Which Tool Should YOU Use? | compare | en | 49 | transcript | yes |
+| `devops/docker-images-compose` | `H4jJadZ3lNw` | KodeKloud | Creating a Docker Image from a Container \| Docker Tutorial \| Docker Series | explainer | en | 60 | transcript | yes |
+| `devops/docker-images-compose` | `_xwhUsDPmQs` | KodeKloud | Writing a Docker File \| Docker Tutorial \| Docker Series | explainer | en | 57 | transcript | yes |
+| `devops/docker-images-compose` | `cI1QYoLJhgI` | KodeKloud | Writing a Docker Compose File \| Docker Tutorial \| Docker Series | explainer | en | 105 | transcript | yes |
+| `devops/docker-images-compose` | `ncKNoM3PKKg` | KodeKloud | Resolving Docker Compose Issues \| Docker Tutorial \| Docker Series | explainer | en | 109 | transcript | yes |
+| `devops/docker-images-compose` | `qHxfrfgUd_s` | KodeKloud | Resolving Dockerfile Issues \| Docker Tutorial \| Docker Series | explainer | en | 110 | transcript | yes |
+| `devops/docker-images-compose` | `WMt5S7iKSI4` | KodeKloud | Deploying an App on Docker Containers \| Docker Tutorial \| Docker Series | explainer | en | 175 | transcript | yes |
+| `devops/docker-images-compose` | `P6zS59e1Sz4` | KodeKloud | Launching a Dockerized Node App \| Docker Tutorial \| Docker Series | explainer | en | 178 | transcript | yes |
+| `devops/docker-images-compose` | `DLcgYr8BDFk` | KodeKloud | Launching a Docker Python App \| Docker Tutorial \| Docker Series | explainer | en | 175 | transcript | yes |
+| `devops/docker-in-practice` | `OM3LfuQRL3s` | KodeKloud | Docker vs Podman, Explained | compare | en | 179 | transcript | yes |
+| `devops/docker-in-practice` | `8qx9LWQLGoE` | KodeKloud | Container Interview Question | interview | en | 179 | transcript | yes |
+| `devops/docker-in-practice` | `f-MpyJ-aPsY` | KodeKloud | Docker Interview: Rapid Fire Round (Can You Keep Up?) | interview | en | 175 | transcript | yes |
+| `devops/docker-in-practice` | `WgbymXi7mK4` | KodeKloud | Docker Storage: Bind Mounts vs. Named Volumes! | compare | en | 167 | transcript | yes |
+| `devops/docker-in-practice` | `sRtEC4KeaoY` | KodeKloud | Docker to Podman Migration! | explainer | en | 170 | transcript | yes |
+| `devops/docker-in-practice` | `c5aB_QOnwN8` | KodeKloud | Docker Exit Code 137 Explained in 2 Minutes (Interview Question) | interview | en | 160 | transcript | yes |
+| `devops/docker-in-practice` | `6dzjd6wk1EE` | KodeKloud | Interview: Why Docker Still Uses Disk After You Delete Containers? | interview | en | 164 | transcript | yes |
+| `devops/docker-in-practice` | `w3gX6n-Lfdk` | KodeKloud | Docker Image Too Big? Here's What Senior DevOps Engineers Say | interview | en | 140 | transcript | yes |
+| `devops/git-basics` | `QBnVMaG3yCU` | KodeKloud | Clone Git Repo on Storage Server \| Git Tutorial \| Git Series | explainer | en | 58 | transcript | yes |
+| `devops/git-basics` | `geAVf8mSF0w` | KodeKloud | Forking a Git Repository \| Git Tutorial \| Git Series | explainer | en | 53 | transcript | yes |
+| `devops/git-basics` | `b4hTf-PPO1k` | KodeKloud | Updating Git Repo with Sample File \| Git Tutorial \| Git Series | explainer | en | 60 | transcript | yes |
+| `devops/git-basics` | `64W6nU77abk` | KodeKloud | Deleting a Branch in Git \| KodeKloud Engineer \| Git series | explainer | en | 56 | transcript | yes |
+| `devops/git-basics` | `Qp4X9g9ashQ` | KodeKloud | Git Install and Create a Repository \| Git Tutorial \| Git Series | explainer | en | 92 | transcript | yes |
+| `devops/git-basics` | `vJk8VxAx9J4` | KodeKloud | Creating Branches in Git \| Git Tutorial \| Git Series | explainer | en | 83 | transcript | yes |
+| `devops/git-basics` | `vYuk10463dM` | KodeKloud | Merging Git Branches \| Git Tutorial \| Git Series | explainer | en | 152 | transcript | yes |
+| `devops/git-basics` | `4-jMeoefKws` | KodeKloud | Managing Remote Repositories in Git \| Git Tutorial \| Git Series | explainer | en | 137 | transcript | yes |
+| `devops/git-basics` | `LqI9rPYN0Xc` | KodeKloud | Reverting Changes in Git \| Git Tutorial \| Git Series | explainer | en | 90 | transcript | yes |
+| `devops/git-basics` | `4Chk5yGX-2w` | KodeKloud | Managing Git Pull Requests \| Git Tutorial \| Git Series | explainer | en | 138 | transcript | yes |
+| `devops/git-basics` | `PwV0bbPt9j8` | KodeKloud | Performing Hard Reset in Git \| Git Tutorial \| Git Series | explainer | en | 114 | transcript | yes |
+| `devops/git-basics` | `vW0I-CGc-Hw` | KodeKloud | Managing Git Repositories \| Git Tutorial \| Git Series | explainer | en | 173 | transcript | yes |
+| `devops/git-basics` | `SWx0YfIjjx8` | KodeKloud | Git Setup from Scratch \| Git Tutorial \| Git Series | explainer | en | 179 | transcript | yes |
+| `devops/git-workflows` | `XatinqzWCvo` | KodeKloud | Find the Exact Commit That Broke Production | explainer | en | 179 | transcript | yes |
+| `devops/git-workflows` | `efVKPUr9D1A` | KodeKloud | Learn Git Worktrees in Under 3 Minutes | explainer | en | 168 | transcript | yes |
+| `devops/git-workflows` | `oC-sqhHvD3E` | KodeKloud | Cherry Picking in Git \| Git Tutorial \| Git Series | explainer | en | 112 | transcript | yes |
+| `devops/git-workflows` | `aPW-EmupkKE` | KodeKloud | Performing Git Clean \| Git Tutorial \| Git Series | explainer | en | 66 | transcript | yes |
+| `devops/git-workflows` | `vt7zu2e6PDE` | KodeKloud | Git Stash in Action \| Git Tutorial \| Git Series | explainer | en | 97 | transcript | yes |
+| `devops/git-workflows` | `XuDHf1lKF7k` | KodeKloud | How to Use Git Rebase \| Git Tutorial \| Git Series | explainer | en | 104 | transcript | yes |
+| `devops/git-workflows` | `aiRau5Esw5Y` | KodeKloud | Resolving Merge Conflicts in Git \| Git Tutorial \| Git Series | explainer | en | 154 | transcript | yes |
+| `devops/git-workflows` | `MFMQ6Jk5LoE` | KodeKloud | Writing a Git Hook \| Git Tutorial \| Git Series | explainer | en | 178 | transcript | yes |
+| `devops/gitops` | `cE6NjiSycT0` | KodeKloud | 6 GitOps Advantages Every Engineer Should Know | explainer | en | 172 | transcript | yes |
+| `devops/gitops` | `xGOhnRu9X3k` | KodeKloud | Interview: Why You Need GitOps? | interview | en | 145 | transcript | yes |
+| `devops/kubernetes-architecture` | `NXrrVb_tMaQ` | KodeKloud | What Is the Pause Container in Kubernetes? | explainer | en | 126 | transcript | yes |
+| `devops/kubernetes-architecture` | `OdPriWKCH6I` | KodeKloud | Kubernetes Interview: Rapid Fire Questions | interview | en | 179 | transcript | yes |
+| `devops/kubernetes-architecture` | `4yp7p7f9FbQ` | KodeKloud | Kubernetes if API Server Goes Down! | explainer | en | 170 | transcript | yes |
+| `devops/kubernetes-architecture` | `lbPD0l2qEG0` | KodeKloud | Managed K8s or Self Managed? | explainer | en | 59 | transcript | yes |
+| `devops/kubernetes-architecture` | `_YvCg5E7xc8` | KodeKloud | Role of ETCD in Kubernetes | explainer | en | 90 | transcript | yes |
+| `devops/kubernetes-architecture` | `rsn_FCf3gm4` | KodeKloud | Why Control Planes Are Odd Numbers? | explainer | en | 125 | transcript | yes |
+| `devops/kubernetes-basics` | `f44s063zOrQ` | KodeKloud | Kubernetes Explained Without the Jargon! | explainer | en | 78 | transcript | yes |
+| `devops/kubernetes-basics` | `g1lGLFBTt4E` | KodeKloud | Kubernetes vs Docker Swarm | compare | en | 153 | transcript | yes |
+| `devops/kubernetes-basics` | `B4KmkaGBc6Q` | KodeKloud | Kubernetes YAML File Structure Explained | explainer | en | 164 | transcript | yes |
+| `devops/kubernetes-basics` | `PUFGdNyvTMI` | KodeKloud | What is a ReplicaSet in Kubernetes? (High Availability Explained) | explainer | en | 85 | transcript | yes |
+| `devops/kubernetes-basics` | `2dfPRLCKVBE` | KodeKloud | What is a Pod in Kubernetes? (K8s Basics Explained) | explainer | en | 149 | transcript | yes |
+| `devops/kubernetes-basics` | `jTDw8sh5zPE` | KodeKloud | How Minikube Sets Up a Kubernetes Cluster in Minutes | explainer | en | 67 | transcript | yes |
+| `devops/kubernetes-basics` | `LBGPjoGgdqE` | KodeKloud | Kubernetes: The Heart of Cloud-Native Technologies \| CNCF Project | explainer | en | 86 | transcript | yes |
+| `devops/kubernetes-basics` | `9ROsam-pdYs` | KodeKloud | Why You Should Use Kubernetes Deployments Instead of Just Pods | explainer | en | 84 | transcript | yes |
+| `devops/kubernetes-basics` | `9_gwHtqNIxo` | KodeKloud | Setting up Namespaces and Pods in Kubernetes \| Kubernetes Tutorial \| Kubernetes Series | explainer | en | 59 | transcript | yes |
+| `devops/kubernetes-basics` | `0ASchdcKMfI` | KodeKloud | Deploy Applications in Kubernetes \| Kubernetes Tutorial \| Kubernetes Series | explainer | en | 56 | transcript | yes |
+| `devops/kubernetes-basics` | `GcWK5uuspwk` | KodeKloud | Deploy Pods in Kubernetes Cluster \| Kubernetes Tutorial \| Kubernetes Series | explainer | en | 58 | transcript | yes |
+| `devops/kubernetes-networking-storage` | `Fgpf3-gv7Tk` | KodeKloud | How Kubernetes Services Connect Microservices (ClusterIP & NodePort Explained) | explainer | en | 176 | transcript | yes |
+| `devops/kubernetes-networking-storage` | `YZ3_SNwwRrI` | KodeKloud | Kubernetes Storage in 2 Minutes | explainer | en | 122 | transcript | yes |
+| `devops/kubernetes-networking-storage` | `2jvntJGoU3M` | KodeKloud | How Kubernetes Services Work Across Multiple Nodes | explainer | en | 70 | transcript | yes |
+| `devops/kubernetes-networking-storage` | `Fuq-Uo82iSc` | KodeKloud | What Are Kubernetes Services and Why Do You Need Them? | explainer | en | 116 | transcript | yes |
+| `devops/kubernetes-operations` | `jfRxw5-Gdq8` | KodeKloud | How To Upgrade Kubernetes Without Downtime | interview | en | 153 | transcript | yes |
+| `devops/kubernetes-operations` | `clXXHir2BsQ` | KodeKloud | Kubernetes Interview Question | interview | en | 150 | transcript | yes |
+| `devops/kubernetes-operations` | `nv2fi2hlAko` | KodeKloud | Kubernetes Tricky Interview Question! | interview | en | 110 | transcript | yes |
+| `devops/kubernetes-operations` | `4k_Zsf-b90Y` | KodeKloud | What is a Kubernetes Deployment? (Rolling Updates & Rollbacks Explained) | explainer | en | 101 | transcript | yes |
+| `devops/kubernetes-operations` | `tn0LcIQv1rA` | KodeKloud | Three Kubectl Commands to Save Time! | explainer | en | 127 | transcript | yes |
+| `devops/kubernetes-operations` | `DIRw560rnrQ` | KodeKloud | Setting Resource Limits for Pods in Kubernetes \| Kubernetes Tutorial \| Kubernetes Series | explainer | en | 123 | transcript | yes |
+| `devops/kubernetes-operations` | `_jk5qzZ7LhU` | KodeKloud | Executing Rolling updates in Kubernetes \| Kubernetes Tutorial \| Kubernetes Series | explainer | en | 70 | transcript | yes |
+| `devops/kubernetes-security-troubleshooting` | `JBstJnxbozc` | KodeKloud | Stop Storing Kubernetes Secrets Like This! | explainer | en | 176 | transcript | yes |
+| `devops/kubernetes-security-troubleshooting` | `zDl_SBY6M60` | KodeKloud | Interview: Recovering Stuck Pods in Kubernetes! | interview | en | 168 | transcript | yes |
+| `devops/kubernetes-security-troubleshooting` | `J-zSd2lsMaI` | KodeKloud | Pod DNS Not Working - Part 1 | interview | en | 149 | transcript | yes |
+| `devops/kubernetes-security-troubleshooting` | `d40zxMvilJI` | KodeKloud | Kubernetes Pod Security Interview Question | interview | en | 178 | transcript | yes |
+| `devops/kubernetes-security-troubleshooting` | `Tieokbq9jWg` | KodeKloud | Pod DNS Not Working - Part 3 | explainer | en | 125 | transcript | yes |
+| `devops/kubernetes-security-troubleshooting` | `1_UbrZlS3hw` | KodeKloud | Pod DNS Not Working - Part 4 | explainer | en | 114 | transcript | yes |
+| `devops/kubernetes-security-troubleshooting` | `ozRJhwiyYCI` | KodeKloud | Pod DNS Not Working - Part 2 | explainer | en | 138 | transcript | yes |
+| `devops/monitoring-observability` | `KBs0MerAnoE` | KodeKloud | How OpenAI Saved 30,000 CPU Cores! | real-system | en | 178 | transcript | yes |
+| `devops/monitoring-observability` | `Vj16zyTYBjc` | KodeKloud | Design Centralized Logging System | explainer | en | 106 | transcript | yes |
+| `devops/monitoring-observability` | `QMPCogrLTeA` | KodeKloud | System Design: Metric Collection Pipeline for Microservices | explainer | en | 145 | transcript | yes |
+| `devops/monitoring-observability` | `h2b1N55CNeI` | KodeKloud | eBPF Explained in 3 minutes | explainer | en | 178 | transcript | yes |
+| `devops/monitoring-observability` | `UmJ1vFfGUWg` | KodeKloud | What is Grafana Loki? | explainer | en | 52 | transcript | yes |
+| `devops/monitoring-observability` | `yKxNfqiZFYs` | KodeKloud | What Is Amazon CloudWatch? | explainer | en | 86 | transcript | yes |
+| `devops/monitoring-observability` | `zMqo4NXDr3g` | KodeKloud | Reliability and Resilience: The Dynamic Duo of SRE | explainer | en | 119 | transcript | yes |
+| `devops/terraform-iac` | `TH9O9Yno0L4` | KodeKloud | Terraform Interview: Rapid Fire Questions | interview | en | 180 | transcript | yes |
+| `devops/terraform-iac` | `jKipg6vA3mE` | KodeKloud | Crossplane vs Terraform: What's the Real Difference? | compare | en | 95 | transcript | yes |
+| `devops/terraform-iac` | `Witd-zie1Xw` | KodeKloud | Terraform and Crossplane in Production! | explainer | en | 169 | transcript | yes |
+| `devops/terraform-iac` | `TrPRERF_3n0` | KodeKloud | What is HashiCorp Packer? \| KodeKloud | explainer | en | 48 | transcript | yes |
+| `devops/terraform-iac` | `-yPX2-68xpM` | KodeKloud | The Hidden Dangers of Terraform in Production | explainer | en | 63 | transcript | yes |
+| `devops/what-is-devops` | `_pqdHM3sl5w` | KodeKloud | Platform Engineering vs DevOps Explained | compare | en | 107 | transcript | yes |
+| `devops/what-is-devops` | `EwZcKZ_k6d0` | KodeKloud | What is MLOps? | explainer | en | 155 | transcript | yes |
+| `devops/what-is-devops` | `uKQQzrq9Cqw` | KodeKloud | What is AIOps and how does it differ from DevOps and MLOps? | explainer | en | 164 | transcript | yes |
+| `devops/what-is-devops` | `aZB4iqTWF3M` | KodeKloud | What is AIOps? | explainer | en | 168 | transcript | yes |
+| `devops/what-is-devops` | `l5sbRf4Jr-I` | KodeKloud | What is DevOps? | explainer | en | 45 | transcript | yes |
+| `devops/what-is-devops` | `QoR1tsc26Fk` | KodeKloud | 4 DevOps Metrics You MUST Track for Success | explainer | en | 76 | transcript | yes |
+<!-- kodekloud-additions:end -->
+
+Reels: 813.

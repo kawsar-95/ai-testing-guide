@@ -6,6 +6,7 @@ import { AI_AGENTS_UI_BN } from "./ai-agents.ts";
 import { AI_ENGINEERING_UI_BN } from "./ai-engineering.ts";
 import { AI_CONCEPTS_UI_BN } from "./ai-concepts.ts";
 import { AI_ML_TESTING_UI_BN } from "./ai-ml-testing.ts";
+import { DEVOPS_UI_BN } from "./devops.ts";
 import { AI_SKILLS_UI_BN } from "./ai-skills.ts";
 import { ARCHITECTURE_UI_BN } from "./architecture.ts";
 import { COURSE_UI_BN } from "./course.ts";
@@ -26,4 +27,5 @@ export const FLAT_UI_BN: Record<FlatModuleId, Bn<FlatModuleUI & Partial<FlatProg
   "agent-memory": AGENT_MEMORY_UI_BN,
   "ai-agents": AI_AGENTS_UI_BN,
   "ai-ml-testing": AI_ML_TESTING_UI_BN,
+  devops: DEVOPS_UI_BN,
 };

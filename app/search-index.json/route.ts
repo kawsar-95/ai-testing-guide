@@ -5,7 +5,7 @@ import { sheetSource } from "@/lib/linux/sheet";
 import { getSheet } from "@/lib/linux/sheets";
 import { STAGES } from "@/lib/linux/stages";
 import type { FlatModule } from "@/lib/modules/flat";
-import { AGENT_MEMORY, AI_AGENTS, AI_CONCEPTS, AI_ENGINEERING, AI_ML_TESTING, AI_SKILLS, ARCHITECTURE, COURSE, HARNESS, K6, SYSTEM_DESIGN } from "@/lib/modules/registry";
+import { AGENT_MEMORY, AI_AGENTS, AI_CONCEPTS, AI_ENGINEERING, AI_ML_TESTING, AI_SKILLS, ARCHITECTURE, COURSE, DEVOPS, HARNESS, K6, SYSTEM_DESIGN } from "@/lib/modules/registry";
 import { PAGES } from "@/lib/nav";
 import {
   buildFlatSearchDocs,
@@ -57,5 +57,6 @@ export function GET() {
     ...flatDocs(AGENT_MEMORY),
     ...flatDocs(AI_AGENTS),
     ...flatDocs(AI_ML_TESTING),
+    ...flatDocs(DEVOPS),
   ]);
 }

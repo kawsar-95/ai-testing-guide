@@ -25,4 +25,6 @@ export const MODULE_TAGLINES_BN: Record<ModuleId, string> = {
     "টেস্টারদের জন্য সহজ ভাষায় নয়টি AI engineering আইডিয়া: agent loop, MCP, subagent, gateway, খরচ, eval, guardrail, observability ও harness।",
   "ai-ml-testing":
     "AI ও ML সিস্টেম টেস্টিং: LLM-এর আচরণ, প্রম্পট টেস্টিং, অটোমেটেড eval, hallucination ধরা, RAG ও agent টেস্টিং, red teaming, observability ও CI/CD eval gate।",
+  devops:
+    "DevOps ও ক্লাউডের টুলগুলো সহজ ভাষায়: Git, CI/CD, Docker, Kubernetes, AWS, Terraform, Ansible, monitoring ও CNCF প্রজেক্ট, প্রতিটায় সোর্সসহ ব্যাখ্যা আর KodeKloud Shorts।",
 };

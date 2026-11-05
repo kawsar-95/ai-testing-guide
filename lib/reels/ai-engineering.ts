@@ -10,10 +10,13 @@ export const AI_ENGINEERING_REELS: Readonly<Record<AiEngineeringSlug, readonly R
   "prompt-engineering": [
     { id: "3dm6nfOxO1c", title: "What is prompt engineering?", channel: "codebasics", kind: "explainer", lang: "en", seconds: 25 },
     { id: "FbAxP2-Jfps", title: "AI Prompt Engineering 101: Explained", channel: "Anthropic", kind: "explainer", lang: "en", seconds: 60 },
+    { id: "obj-PvjnaOQ", title: "Prompting Basics - Part 3/3", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 177 },
+    { id: "firMkLcdHQk", title: "Prompting Basics Part - 1/3", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 50 },
   ],
   "calling-llm-apis": [
     { id: "kQMQGormS4I", title: "How LLM API Calls Actually Work (OpenAI SDK vs Raw HTTP)", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 74 },
     { id: "PrXJgsC_ysY", title: "Getting started with OpenAI API on Python", channel: "AssemblyAI", kind: "explainer", lang: "en", seconds: 56 },
+    { id: "tbNCwO6qQE0", title: "6 LLM settings every AI Developer needs to know", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 173 },
   ],
   "building-chatbots": [
     { id: "fK_T-AiwvWw", title: "চ্যাটবট বানানো সহজ! কিন্তু Production-এ টিকবে তো? | AI Engineering", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 26 },
@@ -31,6 +34,7 @@ export const AI_ENGINEERING_REELS: Readonly<Record<AiEngineeringSlug, readonly R
     { id: "1468HyDi5Yw", title: "How AI Agents Remember Long Term Vector Databases + RAG", channel: "Tech With Tim", kind: "explainer", lang: "en", seconds: 38 },
     { id: "FN1tz26155o", title: "RAG কীভাবে কাজ করে? | AI কীভাবে নিজের Knowledge থেকে উত্তর দেয়", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 41 },
     { id: "XCwMlBkUJdo", title: "RAG মানেই Vector DB? ৯০% মানুষ এখানেই ভুল করে", channel: "Rayhan AI Architecture", kind: "mistake", lang: "bn", seconds: 29 },
+    { id: "E4cMVt0BSI4", title: "What is RAG in under 90 seconds!", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 175 },
   ],
   "ai-agents": [
     { id: "BF2k_fKuCVM", title: "AI Agents explained in 3 steps", channel: "Jeff Su", kind: "explainer", lang: "en", seconds: 52 },
@@ -53,11 +57,13 @@ export const AI_ENGINEERING_REELS: Readonly<Record<AiEngineeringSlug, readonly R
     { id: "krVJh7KLKn0", title: "What is Chunking in AI? A Solution to Passing Large Documents", channel: "MongoDB", kind: "explainer", lang: "en", seconds: 61 },
     { id: "u7VQzUTXAtQ", title: "Using Metadata in RAG Systems", channel: "Pinecone", kind: "explainer", lang: "en", seconds: 48 },
     { id: "QPQg4DtX_mo", title: "নোংরা ডাটা দিয়ে কি AI সম্ভব? Data Cleaning Explained (পার্ট-৬) Shorts", channel: "Nabid In Motion", kind: "explainer", lang: "bn", seconds: 58 },
+    { id: "5Z-ZbD6S0us", title: "Chunk Overlap: Helpful or Just Duplicate Noise?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 93 },
   ],
   "retrieval-engineering": [
     { id: "jZeEFKdjSP4", title: "Cascading Retrieval vs Hybrid Search", channel: "Pinecone", kind: "explainer", lang: "en", seconds: 47 },
     { id: "fvgr2OmLhTg", title: "Vector Search + Text Search = Results! | MongoDB Hybrid Search", channel: "MongoDB", kind: "explainer", lang: "en", seconds: 86 },
     { id: "luafD8DqB1o", title: "Reranking কী? | RAG কীভাব ে সবচেয়ে Relevant Result বেছ ে নেয়?", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 31 },
+    { id: "V1iGw0Os27w", title: "Why Your AI Can’t Find Your Data!", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 121 },
   ],
   "context-engineering": [
     { id: "AfHU2BL-Bjs", title: "Why Context Engineering Is the Future of AI?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 174 },
@@ -73,11 +79,13 @@ export const AI_ENGINEERING_REELS: Readonly<Record<AiEngineeringSlug, readonly R
     { id: "AwrLcTW0lNM", title: "What Is an AI Orchestrator? AI Agent Orchestration Explained", channel: "TestMu AI (Formerly LambdaTest)", kind: "explainer", lang: "en", seconds: 64 },
     { id: "7liBQxFSIuE", title: "Multi-Agent Orchestration by OpenAI - Swarm", channel: "Gaurav Sen", kind: "explainer", lang: "en", seconds: 53 },
     { id: "k4e-e82ApkE", title: "একটি AI এজেন্ট দিয়ে সব কাজ করচ্ছেন? বড় ভুল! | Multi-Agent Systems", channel: "Rayhan AI Architecture", kind: "mistake", lang: "bn", seconds: 31 },
+    { id: "_ACk2DeLfSU", title: "Google’s ADK Explained in 60 Seconds", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 68 },
   ],
   "tool-calling": [
     { id: "4vfDgLvuNQk", title: "Function calling for LLMs, what is it?", channel: "Google Cloud Tech", kind: "explainer", lang: "en", seconds: 54 },
     { id: "TJGmO5ZFJYQ", title: "Function Calling: How AI Uses Your APIs", channel: "Postman", kind: "explainer", lang: "en", seconds: 167 },
     { id: "dY9521SoRkI", title: "Tool Use / Function Calling: How Claude Runs Code", channel: "AI in Hindi | Cloud Edventures", kind: "explainer", lang: "en", seconds: 36 },
+    { id: "LfB-tKsAmfo", title: "Model Context Protocol Upgrade!", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 133 },
   ],
   "structured-outputs": [
     { id: "6jUk_m5r3vM", title: "Structured Outputs in ChatGPT | Explained in 30 seconds", channel: "Vellumy", kind: "explainer", lang: "en", seconds: 33 },
@@ -90,6 +98,7 @@ export const AI_ENGINEERING_REELS: Readonly<Record<AiEngineeringSlug, readonly R
   "model-routing": [
     { id: "f-rFWcSmWkY", title: "1. AI Model Routing: How Smart Routing Picks the Right LLM", channel: "Databricks", kind: "explainer", lang: "en", seconds: 94 },
     { id: "PU--u4q_xwg", title: "LiteLLM vs OpenRouter! Which one should YOU use with OpenAI Agents SDK?", channel: "Tech world since 2025", kind: "compare", lang: "en", seconds: 49 },
+    { id: "6zZ9flbZwnU", title: "Why Sonnet 5 When You Have Opus?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 128 },
   ],
   "observability": [
     { id: "hLxrj2uiQt8", title: "LLMOps The AI Engineering Skill Employers Care About Most", channel: "Tech With Tim", kind: "explainer", lang: "en", seconds: 47 },
@@ -102,6 +111,8 @@ export const AI_ENGINEERING_REELS: Readonly<Record<AiEngineeringSlug, readonly R
   "cost-optimization": [
     { id: "GUSfx3Z4r4A", title: "AI Token দ্রুত শেষ হয়ে যাচ্ছে? Token খরচ কমানোর ৫টি সেরা কৌশল!", channel: "ArthaMatrix", kind: "explainer", lang: "bn", seconds: 173 },
     { id: "7caDFcTAssA", title: "Why Are LLMs Expensive to Deploy?", channel: "IBM Technology", kind: "explainer", lang: "en", seconds: 48 },
+    { id: "WLu6dvfqL3A", title: "Every AI request has a price and it's paid in tokens.", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 148 },
+    { id: "a17HbAv_q78", title: "Why does AI charge you MORE every time it replies?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 132 },
   ],
   "reliability-engineering": [
     { id: "pFX7spnBGGc", title: "Why some apps survived the OpenAI outage: AI gateway failover", channel: "AI Quality Nerd", kind: "explainer", lang: "en", seconds: 36 },
@@ -115,6 +126,7 @@ export const AI_ENGINEERING_REELS: Readonly<Record<AiEngineeringSlug, readonly R
     { id: "oM5-knpFPw4", title: "Kubernetes Liveness vs Readiness Probes, Done Right!", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 168 },
     { id: "tmQKLYW_M0c", title: "Docker কী? AI Developer-রা Docker কেন ব্যবহার করে", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 41 },
     { id: "gWouZYfYRM4", title: "Production Server-এ AI System Deploy করার সিক্রেট! | Part 3", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 30 },
+    { id: "6wDjcFjzUvE", title: "What Do GPUs Actually Do?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 113 },
   ],
   "ci-cd-for-ai": [
     { id: "ejRNIIZ0rCk", title: "CI CD with GitHub Actions Explained in 60 Seconds.", channel: "Amigoscode", kind: "explainer", lang: "en", seconds: 56 },
@@ -135,5 +147,6 @@ export const AI_ENGINEERING_REELS: Readonly<Record<AiEngineeringSlug, readonly R
   "system-design": [
     { id: "FTMFprsV-wI", title: "AI System Design in 2026", channel: "Gaurav Sen", kind: "explainer", lang: "en", seconds: 63 },
     { id: "oGNSz3HTP9w", title: "Why bother learning ML System Design?", channel: "Marina Wyss - AI & Machine Learning", kind: "explainer", lang: "en", seconds: 26 },
+    { id: "fVLmyuCEEy8", title: "How ChatGPT Handles 900 Million Users", channel: "KodeKloud", kind: "real-system", lang: "en", seconds: 174 },
   ],
 };

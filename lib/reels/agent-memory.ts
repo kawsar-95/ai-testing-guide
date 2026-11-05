@@ -11,6 +11,7 @@ export const AGENT_MEMORY_REELS: Readonly<Record<AgentMemorySlug, readonly Reel[
     { id: "FHufF_3QU2A", title: "Stateful Agents self-optimize their Context Window", channel: "Weaviate vector database", kind: "explainer", lang: "en", seconds: 43 },
     { id: "827IX97_NG4", title: "Context Rot: Why Giving AI More Context Makes It More Confidently Wrong", channel: "SkipCI", kind: "explainer", lang: "en", seconds: 33 },
     { id: "sVxen1j24Fc", title: "Don't Trust a Big Context Window Yet", channel: "Aish Reganti", kind: "explainer", lang: "en", seconds: 93 },
+    { id: "TXuYu-RkSkI", title: "Why More Context is KILLING Your LLM Responses (RAG vs Prompt Stuffing)", channel: "KodeKloud", kind: "compare", lang: "en", seconds: 104 },
   ],
   "semantic-memory": [
     { id: "tarq5cgw7PE", title: "AI agent memory", channel: "Google Cloud Tech", kind: "explainer", lang: "en", seconds: 42 },
@@ -36,6 +37,7 @@ export const AGENT_MEMORY_REELS: Readonly<Record<AgentMemorySlug, readonly Reel[
     { id: "ietNakjXOtk", title: "Training Cutoff in LLMs", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 88 },
     { id: "C80IRQ_PHD4", title: "Why an AI model has a knowledge cutoff", channel: "AI Made Clear", kind: "explainer", lang: "en", seconds: 45 },
     { id: "zO5Pi1qJc60", title: "Why the Pros Don't Fine-Tune Everything (Catastrophic Forgetting)", channel: "Orion Stack", kind: "explainer", lang: "en", seconds: 59 },
+    { id: "h2mTTdoMvzo", title: "How LLMs Actually Learn?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 170 },
   ],
   "prospective-memory": [
     { id: "KZnrLBBYr6E", title: "Claude Code Routine | ঘুমিয়েও AI দিয়ে কাজ করান! | Workflow Automation Explained", channel: "ArthaMatrix", kind: "explainer", lang: "bn", seconds: 44 },

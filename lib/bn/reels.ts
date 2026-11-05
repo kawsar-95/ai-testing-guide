@@ -7,6 +7,8 @@ export const REELS_UI_BN: Bn<typeof REELS_UI> = {
   note: "অন্য ক্রিয়েটরদের বানানো ছোট ভিডিও, এই টপিকের জন্য বাছাই করা। এগুলো এই পেজের ফ্যাক্ট-চেক করা লেখার অংশ নয়। চালান বাটন চাপার আগে YouTube থেকে কিছুই লোড হয় না।",
   play: "চালান",
   watchOnYoutube: "YouTube-এ দেখুন",
+  showMore: (n) => `আরও ${n}টি রিল দেখান`,
+  showFewer: "কম রিল দেখান",
   kinds: {
     explainer: "ব্যাখ্যা",
     animation: "অ্যানিমেশন",

@@ -25,7 +25,7 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 286 pages. 269 of them are lessons in 14 sections: the tutorial and 13 modules. The other 17 are the home page, the 13 module home pages, and 3 helper pages.
+The site has 311 pages. 293 of them are lessons in 15 sections: the tutorial and 14 modules. The other 18 are the home page, the 14 module home pages, and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
@@ -43,6 +43,7 @@ The site has 286 pages. 269 of them are lessons in 14 sections: the tutorial and
 | [Agent Memory](https://kawsar-95.github.io/ai-testing-guide/agent-memory/) | 7 topics | The 7 types of memory of an AI agent: working, semantic, episodic, procedural, retrieval, parametric, and prospective |
 | [AI Agents](https://kawsar-95.github.io/ai-testing-guide/ai-agents/) | 10 topics | How an AI agent works, step by step: the trigger, the context, the model's decision, the tools, the stop check, memory, guardrails, observability, and the final output |
 | [AI/ML Testing](https://kawsar-95.github.io/ai-testing-guide/ai-ml-testing/) | 47 topics in 2 phases | Testing AI and ML systems: LLM behavior, prompt testing, automated evals, hallucination detection, RAG and agent testing, red teaming, observability, and CI/CD eval gates |
+| [DevOps & Cloud](https://kawsar-95.github.io/ai-testing-guide/devops/) | 24 topics in 7 parts | Git, CI/CD, Docker, Kubernetes, AWS, Terraform, Ansible, monitoring, and CNCF projects: a short sourced explanation of each, then KodeKloud Shorts |
 
 Three helper pages sit beside the sections: [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) lists everything, [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows your progress, and [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) links to the interview material.
 
@@ -69,7 +70,7 @@ The top navigation has four plain links: **Home**, **Contents**, **Dashboard**, 
 
 The home page has a hero with a stats row (tutorial parts, modules, pages, and text voices), three START HERE cards for new readers, a "Why this guide" block, and numbered course cards.
 
-The [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) page shows every tutorial group and every module as a card. The 11 modules with a checklist show a progress bar on their card. System Design and AI Harnesses have no checklist.
+The [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) page shows every tutorial group and every module as a card. The 11 modules with a checklist show a progress bar on their card. System Design, AI Harnesses, and DevOps & Cloud have no checklist.
 
 ![The Contents page with a progress bar on each module](docs/assets/contents.png)
 
@@ -89,7 +90,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 
 ### Three voices for every section
 
-All 269 content pages let you read each `##` section in three voices:
+All 293 content pages let you read each `##` section in three voices:
 
 | Voice | What it is |
 |---|---|
@@ -125,14 +126,14 @@ The ISTQB version has seven inline diagrams, for example the test pyramid, the t
 
 The site tracks your work in your browser. It never sends it to a server.
 
-- **Topic checklists:** 11 modules show your progress with a bar: Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, and AI/ML Testing. Linux and Fundamentals have a checkbox for each topic. The other nine have a mark-as-done button at the end of each page, and Architecture also has a checkbox for each of its 30 practice questions. System Design and AI Harnesses have no checklist.
+- **Topic checklists:** 11 modules show your progress with a bar: Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, and AI/ML Testing. Linux and Fundamentals have a checkbox for each topic. The other nine have a mark-as-done button at the end of each page, and Architecture also has a checkbox for each of its 30 practice questions. System Design, AI Harnesses, and DevOps & Cloud have no checklist.
 - **Pages read and bookmarks:** each content page has a **Mark as read** toggle and a **Bookmark** toggle under its title.
 - **Last page:** the site remembers the last content page that you opened.
 
 ![The Linux home: a tile for each stage with its commands as chips](docs/assets/linux.png)
 ![A Linux stage page: one card for each topic, one row for each command](docs/assets/linux-stage.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 269`) with a progress bar, beside a Continue reading card. Below them, one row for each of the 11 modules with a checklist shows its name, a bar, `done / total`, and the percent. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 293`) with a progress bar, beside a Continue reading card. Below them, one row for each of the 11 modules with a checklist shows its name, a bar, `done / total`, and the percent. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
 
@@ -151,7 +152,7 @@ Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>K</kbd>, or click the search button, t
 - **System Design:** 15 case studies explain how one well-known system works. Each case has the same shape: the problem in plain words, a text diagram of the big picture, the mechanisms, a table of key words, and what a tester can learn.
 - **Architecture:** 19 topics, each with a diagram, and a practice page with 30 questions. Each question has a checkbox and a model answer that you open when you are ready.
 - **Course:** 40 topics from DNS to case studies, in 6 parts. Each topic has a real-life example, common mistakes, and what a tester can check. A topic of the Course that is covered by an Architecture or System Design page links to that page.
-- **Reels:** the topic pages of Architecture, System Design, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, and AI/ML Testing, the stages of Linux, and the chapters of Fundamentals end with short videos (YouTube Shorts) by other creators, in English and Bangla: 2 to 4 for each topic, and fewer for the few topics where no clip passed the review. They are other people's work and are not part of the fact-checked text. A reel shows its title first, and nothing loads from YouTube until you press **Play**. A reel needs a connection to play, so it does not play offline.
+- **Reels:** the topic pages of Architecture, System Design, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, and AI/ML Testing, the stages of Linux, the chapters of Fundamentals, 18 topics of the Course, and the 24 topics of DevOps & Cloud end with short videos (YouTube Shorts) by other creators, in English and Bangla: 2 to 4 for each topic, up to 20 on a DevOps & Cloud page (a shelf of KodeKloud Shorts), and fewer for the few topics where no clip passed the review. A page with 6 or more reels shows 4, and a "Show N more reels" button opens the rest. They are other people's work and are not part of the fact-checked text. A reel shows its title first, and nothing loads from YouTube until you press **Play**. A reel needs a connection to play, so it does not play offline.
 
 ![The System Design home page with its 15 case studies](docs/assets/system-design.png)
 
@@ -185,7 +186,7 @@ The layout adapts to phone widths. Below 1200 px the top navigation moves into t
 
 ### Install it and read offline
 
-The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 286 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
+The site is a progressive web app (PWA). Chromium browsers show an **Install** button in the header. After the first visit, the service worker has all 311 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
 
 ### Accessibility
 
@@ -243,11 +244,13 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `python3 -m unittest scripts/test_ai_ml_course_fetch.py` | Runs the unit tests of the script that scrapes the AI/ML Testing course syllabus. |
 | `python3 -m unittest scripts/test_ai_ml_testing_pages_gen.py` | Runs the unit tests of the AI/ML Testing page generator. |
 | `python3 scripts/ai_ml_testing_check_sources.py` | Checks that each source URL of the AI/ML Testing module resolves. It needs a network. |
-| `node scripts/check-reels.ts` | Asks YouTube about every reel on the pages of the 11 modules that have reels: still public and embeddable, same title and channel, still a Short. It needs a network, so it is not part of `npm test`. Exit code 2 means that the check could not be done. |
+| `python3 -m unittest scripts/test_devops_claimcheck.py` | Runs the unit tests of the DevOps & Cloud quote checker. |
+| `python3 scripts/devops_claimcheck.py` | Looks each quote of the DevOps & Cloud research notes up in the text of the source page that it cites. It needs a network. |
+| `node scripts/check-reels.ts` | Asks YouTube about every reel on the pages of the 13 modules that have reels: still public and embeddable, same title and channel, still a Short. It needs a network, so it is not part of `npm test`. Exit code 2 means that the check could not be done. |
 | `python3 scripts/check_routes.py out` | Checks that every route of the route maps has a built page. |
 | `python3 scripts/check_links.py out` | Checks internal links and assets. |
 | `python3 scripts/check_outline.py out` | Checks that every "On this page" link has a target. |
-| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 269 pages checked, 0 skipped`. |
+| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 293 pages checked, 0 skipped`. |
 
 Run the `out` checks after `npm run build`, on a build without a base path.
 
@@ -256,7 +259,7 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 ```text
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
-content/<group>/     The MDX pages: 24 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts, 7 Agent Memory, 10 AI Agents, 47 AI/ML Testing
+content/<group>/     The MDX pages: 24 tutorial, 12 Linux, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts, 7 Agent Memory, 10 AI Agents, 47 AI/ML Testing, 24 DevOps & Cloud
 lib/                 nav.ts (tutorial page order), one data file for each module, search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
 scripts/             Python check scripts, the route maps (one JSON file for each module), and the AI/ML Testing page generator

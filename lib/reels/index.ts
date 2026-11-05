@@ -12,6 +12,8 @@ import { AI_ENGINEERING_REELS } from "./ai-engineering.ts";
 import { AI_ML_TESTING_REELS } from "./ai-ml-testing.ts";
 import { AI_SKILLS_REELS } from "./ai-skills.ts";
 import { ARCHITECTURE_REELS } from "./architecture.ts";
+import { COURSE_REELS } from "./course.ts";
+import { DEVOPS_REELS } from "./devops.ts";
 import { FUNDAMENTALS_REELS } from "./fundamentals.ts";
 import { HARNESS_REELS } from "./harness.ts";
 import { LINUX_REELS } from "./linux.ts";
@@ -35,6 +37,8 @@ export const REELS: Partial<Record<ReelModuleId, PageReels>> = {
   "ai-ml-testing": AI_ML_TESTING_REELS,
   linux: LINUX_REELS,
   fundamentals: FUNDAMENTALS_REELS,
+  course: COURSE_REELS,
+  devops: DEVOPS_REELS,
 };
 
 /** The reels of one page. A page or a module with none gives an empty list. */

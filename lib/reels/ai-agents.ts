@@ -22,11 +22,13 @@ export const AI_AGENTS_REELS: Readonly<Record<AiAgentsSlug, readonly Reel[]>> = 
   ],
   "llm-decides": [
     { id: "U7PXtRazU94", title: "What is Tool Calling?", channel: "IBM Technology", kind: "explainer", lang: "en", seconds: 41 },
+    { id: "9F-WHimhscs", title: "How Reasoning Models Actually Work", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 154 },
   ],
   "act-with-tools": [
     { id: "mcJfvsyuOSA", title: "Function Calling - how AI uses tools and APIs", channel: "xyzxyz", kind: "explainer", lang: "en", seconds: 32 },
     { id: "g87DYmwbzuo", title: "Too many MCP tools? Anthropic found a solution.", channel: "Gaurav Sen", kind: "explainer", lang: "en", seconds: 122 },
     { id: "A2VbV8Rowxs", title: "AI Agent ভুল Tool Call করলে কী হয়? | Production AI Engineering", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 31 },
+    { id: "yahZy5tBoeo", title: "How Claude Does Web Search?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 98 },
   ],
   "stop-check": [
     { id: "4AY1E3B3OqA", title: "AI Agent ভুল করলে নিজেই কীভাবে বুঝবে?", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 21 },

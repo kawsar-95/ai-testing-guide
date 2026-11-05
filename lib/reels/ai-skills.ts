@@ -25,11 +25,13 @@ export const AI_SKILLS_REELS: Readonly<Record<AiSkillsSlug, readonly Reel[]>> = 
   "workflow-automation": [
     { id: "DwGtVdllKRo", title: "New to Zapier? Build Your First Lead Automation (No Code!)", channel: "Zapier", kind: "explainer", lang: "en", seconds: 22 },
     { id: "aXf51HXzqLw", title: "Create an AI Chatbot in Minutes Using n8n! (No Coding Required)", channel: "Leon van Zyl", kind: "explainer", lang: "en", seconds: 34 },
+    { id: "0X3cQo4euEo", title: "Why AI Agents Are Killing Workflows in 2026", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 157 },
   ],
   "ai-agents": [
     { id: "VxDNUKw83PY", title: "AI Agents are SO simple to build", channel: "Matt Pocock", kind: "explainer", lang: "en", seconds: 155 },
     { id: "3lQXYNUyv5o", title: "Why AI Agents Matter Now with Stanford's Azalia Mirhoseini and Aakanksha Chowdhery", channel: "Stanford Online", kind: "explainer", lang: "en", seconds: 57 },
     { id: "NvKowH8PnaA", title: "Build AI Agents in 60 Seconds | Google ADK Tutorial", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 49 },
+    { id: "kIlgDm5gcMY", title: "Why do we need AI Agents when we have AI models?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 118 },
   ],
   "rag": [
     { id: "jG-gbB0ULac", title: "What is RAG? How AI Chatbots Access Your Custom Data (Explained Simply)", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 175 },
@@ -48,6 +50,7 @@ export const AI_SKILLS_REELS: Readonly<Record<AiSkillsSlug, readonly Reel[]>> = 
     { id: "kO21vdEQS5g", title: "WTH is Model Context Protocol (MCP)!", channel: "Pavan Belagatti", kind: "explainer", lang: "en", seconds: 56 },
     { id: "iGJTw_PWogs", title: "Why We Need MCP When APIs Already Exist", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 179 },
     { id: "4q5FEKWwfh0", title: "MCP Server Explained! একটা Tool Call-এর পেছনে কী ঘটে?", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 34 },
+    { id: "7QUj_vXkivg", title: "How Anthropic Fixed MCP Context Bloat Issue", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 151 },
   ],
   "ai-evals": [
     { id: "4lxw0DVTHvc", title: "What are AI and LLM Evals ?", channel: "New Machina", kind: "explainer", lang: "en", seconds: 57 },
@@ -59,6 +62,7 @@ export const AI_SKILLS_REELS: Readonly<Record<AiSkillsSlug, readonly Reel[]>> = 
   ],
   "ai-data-analysis": [
     { id: "8AGyh2Tc1hQ", title: "Your AI Data Science Is Lying to You", channel: "Tech With Tim", kind: "mistake", lang: "en", seconds: 103 },
+    { id: "Kf3xIq988RY", title: "Building Data Analyst Agent", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 175 },
   ],
   "ai-video": [],
   "voice-and-avatars": [],
@@ -75,6 +79,7 @@ export const AI_SKILLS_REELS: Readonly<Record<AiSkillsSlug, readonly Reel[]>> = 
     { id: "bRtnM07Vw5w", title: "RAG vs Fine Tuning EXPLAINED!", channel: "TestMu AI (Formerly LambdaTest)", kind: "compare", lang: "en", seconds: 133 },
     { id: "Zq_aquaEpC0", title: "Is fine-tuning a model like DeepSeek worth it?", channel: "Microsoft Developer", kind: "explainer", lang: "en", seconds: 71 },
     { id: "Lmwv7P--2zE", title: "Fine-tuning use cases", channel: "Google Cloud Tech", kind: "explainer", lang: "en", seconds: 130 },
+    { id: "OIk0DLPLLiQ", title: "How LLMs Actually Learn?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 160 },
   ],
   "open-models": [
     { id: "dsW2tAO38-Y", title: "Will Open Source AI Models Pass Proprietary Models?", channel: "IBM Technology", kind: "explainer", lang: "en", seconds: 58 },

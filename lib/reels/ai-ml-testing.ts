@@ -26,6 +26,7 @@ export const AI_ML_TESTING_REELS: Readonly<Record<AiMlTestingSlug, readonly Reel
   "prompt-engineering-basics": [
     { id: "_WwfE5feS8w", title: "Prompt Engineering Skills Real AI Engineers Need", channel: "Tech With Tim", kind: "explainer", lang: "en", seconds: 46 },
     { id: "LTZFHycjk9o", title: "Zero-Shot Prompting কী? সহজভাবে শিখুন AI Tricks!", channel: "Nur Azad | Engineer", kind: "explainer", lang: "bn", seconds: 41 },
+    { id: "4hebaIPjcig", title: "Prompting Basics - Part 2/3", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 106 },
   ],
   "prompt-testing": [
     { id: "b1SPKtN05y8", title: "What is Prompt Injection?", channel: "ByteByteGo", kind: "explainer", lang: "en", seconds: 53 },
@@ -63,6 +64,7 @@ export const AI_ML_TESTING_REELS: Readonly<Record<AiMlTestingSlug, readonly Reel
   "rag-testing-basics": [
     { id: "1M24UHWL41A", title: "RAG Retrieval Metrics Explained: Recall, Precision, MRR & NDCG", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 96 },
     { id: "myJb77fd1fs", title: "How to evaluate RAG answers: faithfulness, relevance, LLM judges, RAGAS, TruLens, DeepEval", channel: "The AI Foundry", kind: "explainer", lang: "en", seconds: 59 },
+    { id: "hCWPxZ8wUkY", title: "RAG Explained in 60 Seconds", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 68 },
   ],
   "llm-api-testing": [
     { id: "uWzX8Jc9tO8", title: "Why Claude Uses 3 Different Rate Limits?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 144 },
@@ -123,6 +125,7 @@ export const AI_ML_TESTING_REELS: Readonly<Record<AiMlTestingSlug, readonly Reel
   "advanced-rag-failures": [
     { id: "Wyju19LletQ", title: "What is Multi-hop retrieval?", channel: "Pinecone", kind: "explainer", lang: "en", seconds: 61 },
     { id: "MLFzgNwze5c", title: "Enterprise RAG Strategy - Why Your AI Fails in Production Shorts", channel: "Nabid In Motion", kind: "explainer", lang: "en", seconds: 177 },
+    { id: "9aZrzDysoZY", title: "The 4 RAG Blocks That Matter", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 108 },
   ],
   "chunking-embedding-testing": [
     { id: "vvp97qJB6CU", title: "RAG Chunking Strategies Explained (Fixed Size vs Semantic Chunking)", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 132 },
@@ -162,6 +165,7 @@ export const AI_ML_TESTING_REELS: Readonly<Record<AiMlTestingSlug, readonly Reel
     { id: "eAfb8coAD0A", title: "Multi Agent Systems: Why your AI orchestration fails Shorts", channel: "Nabid In Motion", kind: "explainer", lang: "en", seconds: 180 },
     { id: "7EhiJL_6ats", title: "Multi-agent vs. single-agent: Which should you use?", channel: "Google Cloud Tech", kind: "explainer", lang: "en", seconds: 119 },
     { id: "saMAb2MuKTs", title: "Understanding Multi-Agent RAG Systems!", channel: "Pavan Belagatti", kind: "explainer", lang: "en", seconds: 71 },
+    { id: "N8rnFxavJrE", title: "How Google's A2A Protocol Works?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 57 },
   ],
   "multimodal-testing": [
     { id: "9B3yvPJVlVw", title: "Document AI: How Agents add the brain to OCR's eyes", channel: "DeepLearningAI", kind: "explainer", lang: "en", seconds: 77 },

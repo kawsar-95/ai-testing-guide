@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { T } from "@/components/i18n/T";
 import { REELS_UI_BN } from "@/lib/bn/reels";
-import { embedUrl, formatDuration, isoDuration, reelUrl, type Reel } from "@/lib/reels/reels";
+import { embedUrl, formatDuration, isoDuration, reelUrl, splitShelf, type Reel } from "@/lib/reels/reels";
 import { REELS_UI } from "@/lib/reels/ui";
 
 const BENGALI = /[\u0980-\u09FF]/;
@@ -12,18 +12,63 @@ const BENGALI = /[\u0980-\u09FF]/;
  * The posters of a topic's reels. One reel plays at a time: pressing Play on another reel puts the
  * first one back to its poster, so two videos never talk at once. Until then no request goes to
  * YouTube, so a page costs nothing for a reader who does not press Play.
+ *
+ * A long shelf (see `splitShelf`) shows its first reels and keeps the rest in a closed <details>.
+ * That is plain HTML: every card is in the page without JavaScript, and a find-in-page opens it.
  */
 export function ReelGrid({ reels }: { reels: readonly Reel[] }) {
   const [playing, setPlaying] = useState<string | null>(null);
+  const { shown, more } = splitShelf(reels);
+  return (
+    <>
+      <ReelList reels={shown} playing={playing} onPlay={setPlaying} labelled />
+      {more.length > 0 ? (
+        <details
+          className="group mt-8"
+          onToggle={(event) => {
+            // Closing the <details> hides the players in it, and a hidden player goes on playing.
+            if (!event.currentTarget.open && more.some((reel) => reel.id === playing)) setPlaying(null);
+          }}
+        >
+          <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-md border border-border bg-bg-raised px-4 py-1.5 font-mono text-[12px] font-medium uppercase tracking-[0.12em] text-accent transition-colors hover:bg-bg-raised-2 motion-reduce:transition-none [&::-webkit-details-marker]:hidden [@media(pointer:coarse)]:min-h-11">
+            <span aria-hidden="true" className="transition-transform group-open:rotate-90 motion-reduce:transition-none">
+              ▸
+            </span>
+            <span className="group-open:hidden">
+              <T en={REELS_UI.showMore(more.length)} bn={REELS_UI_BN.showMore(more.length)} />
+            </span>
+            <span className="hidden group-open:inline">
+              <T en={REELS_UI.showFewer} bn={REELS_UI_BN.showFewer} />
+            </span>
+          </summary>
+          <ReelList reels={more} playing={playing} onPlay={setPlaying} />
+        </details>
+      ) : null}
+    </>
+  );
+}
+
+function ReelList({
+  reels,
+  playing,
+  onPlay,
+  labelled = false,
+}: {
+  reels: readonly Reel[];
+  playing: string | null;
+  onPlay: (id: string) => void;
+  /** The heading names the first list. The list in the <details> is named by its button. */
+  labelled?: boolean;
+}) {
   return (
     <ul
       role="list"
-      aria-labelledby="reels"
+      aria-labelledby={labelled ? "reels" : undefined}
       className="mt-5 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,12.5rem),1fr))] gap-x-4 gap-y-8 p-0"
     >
       {reels.map((reel) => (
         <li key={reel.id} className="min-w-0 max-w-[17rem]">
-          <ReelCard reel={reel} playing={playing === reel.id} onPlay={() => setPlaying(reel.id)} />
+          <ReelCard reel={reel} playing={playing === reel.id} onPlay={() => onPlay(reel.id)} />
         </li>
       ))}
     </ul>
