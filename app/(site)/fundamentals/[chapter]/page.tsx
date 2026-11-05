@@ -21,6 +21,8 @@ import { Sources } from "@/components/content/Sources";
 import { FundamentalsProgressSummary } from "@/components/fundamentals/FundamentalsProgressSummary";
 import { TopicChecklist } from "@/components/fundamentals/TopicChecklist";
 import { VersionSwitch } from "@/components/fundamentals/VersionSwitch";
+import { ReelsSection } from "@/components/reels/ReelsSection";
+import { reelsFor } from "@/lib/reels/index";
 
 type MdxPage = { default: MDXContent; metadata: Metadata; page?: PageInfo };
 
@@ -129,6 +131,7 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
             }}
           />
         </article>
+        <ReelsSection reels={reelsFor("fundamentals", slug)} />
         {info ? <Sources sources={info.sources} /> : null}
         <section aria-labelledby="checklist-heading" className="mt-10">
           <h2

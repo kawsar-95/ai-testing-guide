@@ -17,6 +17,8 @@ import { MetaLine } from "@/components/content/MetaLine";
 import { StageProgress } from "@/components/linux/StageProgress";
 import { SheetSources } from "@/components/linux/SheetSources";
 import { StageSheet } from "@/components/linux/StageSheet";
+import { ReelsSection } from "@/components/reels/ReelsSection";
+import { reelsFor } from "@/lib/reels/index";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 const NAV_LINK = "text-accent underline underline-offset-2";
@@ -117,6 +119,7 @@ function SheetStage({ stage, sheet }: { stage: LinuxStage; sheet: Sheet }) {
           editHref={sheetEditUrl(stage.slug)}
         />
         <ChapterTools route={stage.href} minutes={sheetMinutes(sheet)} />
+        <ReelsSection reels={reelsFor("linux", stage.slug)} />
         <SheetSources sources={sources} />
         <StageNav stage={stage} />
       </ChapterLayout>
