@@ -1,4 +1,4 @@
-"""Print each route (tutorial, Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, the contents page, the dashboard, and the interview page) that has no page in the build directory."""
+"""Print each route (tutorial, Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, DevOps & Cloud, the contents page, the dashboard, and the interview page) that has no page in the build directory."""
 import json
 import sys
 from pathlib import Path
@@ -9,7 +9,7 @@ HERE = Path(__file__).resolve().parent
 
 
 def load_routes():
-    """The routes of the eighteen maps: tutorial, Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, the contents page, the dashboard, then the interview page."""
+    """The routes of the nineteen maps: tutorial, Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, DevOps & Cloud, the contents page, the dashboard, then the interview page."""
     routes = []
     for name in (
         "route-map.json",
@@ -26,6 +26,7 @@ def load_routes():
         "agent-memory-route-map.json",
         "ai-agents-route-map.json",
         "ai-ml-testing-route-map.json",
+        "devops-route-map.json",
         "contents-route-map.json",
         "dashboard-route-map.json",
         "interview-route-map.json",

@@ -11,9 +11,9 @@ import {
 } from "../lib/reading-state.ts";
 import { sitemapPaths } from "../lib/sitemap.ts";
 
-test("CONTENT_PAGES has the 269 content pages, each once and each a known route", () => {
-  assert.equal(CONTENT_PAGES.length, 269);
-  assert.equal(new Set(CONTENT_PAGES.map((p) => p.href)).size, 269);
+test("CONTENT_PAGES has the 293 content pages, each once and each a known route", () => {
+  assert.equal(CONTENT_PAGES.length, 293);
+  assert.equal(new Set(CONTENT_PAGES.map((p) => p.href)).size, 293);
   const paths = new Set(sitemapPaths());
   for (const page of CONTENT_PAGES) assert.ok(paths.has(page.href), page.href);
 });
@@ -21,7 +21,7 @@ test("CONTENT_PAGES has the 269 content pages, each once and each a known route"
 test("CONTENT_PAGES counts per module", () => {
   const counts: Record<string, number> = {};
   for (const page of CONTENT_PAGES) counts[page.module] = (counts[page.module] ?? 0) + 1;
-  assert.deepEqual(counts, { tutorial: 24, linux: 12, fundamentals: 11, "system-design": 15, architecture: 20, course: 40, k6: 20, "ai-engineering": 28, harness: 6, "ai-skills": 20, "ai-concepts": 9, "agent-memory": 7, "ai-agents": 10, "ai-ml-testing": 47 });
+  assert.deepEqual(counts, { tutorial: 24, linux: 12, fundamentals: 11, "system-design": 15, architecture: 20, course: 40, k6: 20, "ai-engineering": 28, harness: 6, "ai-skills": 20, "ai-concepts": 9, "agent-memory": 7, "ai-agents": 10, "ai-ml-testing": 47, devops: 24 });
 });
 
 test("every content page points to its MDX file, and a Linux stage to its command sheet", () => {

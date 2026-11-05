@@ -16,6 +16,21 @@ export type ReelLang = (typeof REEL_LANGS)[number];
 /** A Short can be up to 3 minutes long. A reel on this site is never longer. */
 export const MAX_REEL_SECONDS = 180;
 
+/**
+ * How many reels a topic page shows before the rest go behind a "Show more" button. Four is also the
+ * most that a page of an ordinary module may have, so only a shelf page is ever cut.
+ */
+export const REELS_SHOWN = 4;
+
+/**
+ * The reels that show at once, and the reels behind the "Show more" button. One reel that is left
+ * over is shown with the others: a button for one video is more to read than the video.
+ */
+export function splitShelf<T>(reels: readonly T[]): { shown: readonly T[]; more: readonly T[] } {
+  if (reels.length <= REELS_SHOWN + 1) return { shown: reels, more: [] };
+  return { shown: reels.slice(0, REELS_SHOWN), more: reels.slice(REELS_SHOWN) };
+}
+
 export type Reel = {
   /** The YouTube video id: 11 characters from A-Z, a-z, 0-9, `_` and `-`. */
   id: string;

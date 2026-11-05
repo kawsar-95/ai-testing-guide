@@ -8,6 +8,8 @@ import { AI_ML_TESTING } from "../lib/ai-ml-testing/topics.ts";
 import { AI_SKILLS } from "../lib/ai-skills/topics.ts";
 import { ARCHITECTURE } from "../lib/architecture/topics.ts";
 import { REELS_UI_BN } from "../lib/bn/reels.ts";
+import { COURSE } from "../lib/course/topics.ts";
+import { DEVOPS } from "../lib/devops/topics.ts";
 import { CHAPTERS } from "../lib/fundamentals/chapters.ts";
 import { HARNESS } from "../lib/harness/topics.ts";
 import { STAGES } from "../lib/linux/stages.ts";
@@ -16,12 +18,14 @@ import {
   MAX_REEL_SECONDS,
   REEL_KINDS,
   REEL_LANGS,
+  REELS_SHOWN,
   embedUrl,
   formatDuration,
   isReelId,
   isoDuration,
   normalizeTitle,
   reelUrl,
+  splitShelf,
 } from "../lib/reels/reels.ts";
 import { REELS_UI } from "../lib/reels/ui.ts";
 import { SHORTS_CONTROL_ID, isThrottled, oembedProblems, oembedStatusProblem, shortsControlProblem, shortsProblem } from "../lib/reels/verify.ts";
@@ -47,12 +51,22 @@ const PAGES: Readonly<Record<string, readonly string[]>> = {
   "ai-ml-testing": topicSlugs(AI_ML_TESTING),
   linux: STAGES.map((stage) => stage.slug),
   fundamentals: CHAPTERS.map((chapter) => chapter.slug),
+  course: topicSlugs(COURSE),
+  devops: topicSlugs(DEVOPS),
 };
 /** Every page that shows reels has at least this many, and no more than the maximum, so no page is a wall of videos. */
 const MIN_PER_PAGE = 2;
 const MAX_PER_PAGE = 4;
 /** One creator has at most this many reels on one page, so a page does not lean on one voice. */
 const MAX_PER_CHANNEL = 2;
+/**
+ * A shelf is a module made of one creator's Shorts, on purpose (DevOps & Cloud: KodeKloud). Its pages are not held to 4 reels or to
+ * 2 reels from one channel; they get a larger limit, and the whole module must have one channel. Naming a module here is a decision.
+ */
+const SHELF_MODULES: ReadonlySet<string> = new Set(["devops"]);
+const MAX_PER_SHELF_PAGE = 20;
+/** A sparse module shows reels only on the pages that are keys in its reels file: a page with no fitting clip has no entry and no block. */
+const SPARSE_MODULES: ReadonlySet<string> = new Set(["course"]);
 /**
  * The pages that truly have fewer than 2 reels, with the exact count. A page is here only when no clip that
  * passed the review fits what the page teaches: the block shows 1 reel, or nothing. The count is asserted in
@@ -62,12 +76,9 @@ const THIN_PAGES: Readonly<Record<string, number>> = {
   "ai-engineering/reliability-engineering": 1,
   "ai-engineering/production-monitoring": 1,
   "ai-skills/meeting-intelligence": 1,
-  "ai-skills/ai-data-analysis": 1,
   "ai-skills/ai-video": 0,
   "ai-skills/voice-and-avatars": 0,
-  "ai-concepts/guardrails": 1,
   "ai-agents/trigger": 1,
-  "ai-agents/llm-decides": 1,
   "ai-ml-testing/deepeval-pytest": 1,
   "ai-ml-testing/chatbot-ui-testing": 1,
   "ai-ml-testing/ai-quality-metrics": 1,
@@ -79,19 +90,26 @@ const THIN_PAGES: Readonly<Record<string, number>> = {
   "ai-ml-testing/cicd-eval-pipelines": 0,
   "ai-ml-testing/advanced-capstone-test-suite": 0,
   "ai-ml-testing/advanced-capstone-presentation": 1,
+  "course/ip": 1,
+  "course/long-polling-ws-sse": 1,
+  "course/pub-sub": 1,
+  "course/rest-graphql-grpc": 1,
+  "course/sql-vs-nosql": 1,
+  "course/sla-slo-sli": 1,
 };
 
 const all = Object.entries(REELS).flatMap(([moduleId, pages]) =>
   Object.entries(pages ?? {}).flatMap(([slug, reels]) => reels.map((reel) => ({ where: `${moduleId}/${slug}`, reel }))),
 );
 
-test("the modules with reels are the 11 listed, every key is a page of its module, and every page has an entry", () => {
+test("the modules with reels are the 13 listed, every key is a page of its module, and every page has an entry (a sparse module needs none)", () => {
   assert.deepEqual(Object.keys(REELS).sort(), Object.keys(PAGES).sort());
   for (const [moduleId, pages] of Object.entries(REELS)) {
     const slugs = PAGES[moduleId];
     for (const slug of Object.keys(pages ?? {})) {
       assert.ok(slugs.includes(slug), `${moduleId}/${slug} is not a page of ${moduleId}`);
     }
+    if (SPARSE_MODULES.has(moduleId)) continue;
     for (const slug of slugs) {
       assert.ok(slug in (pages ?? {}), `${moduleId}/${slug} has no entry in its reels file (use [] for no reels)`);
     }
@@ -104,12 +122,14 @@ test("every page has between 2 and 4 reels, except the listed thin pages, which 
     for (const slug of slugs) {
       const where = `${moduleId}/${slug}`;
       known.add(where);
+      if (SPARSE_MODULES.has(moduleId) && !(slug in (REELS[moduleId as keyof typeof REELS] ?? {}))) continue; // no entry, no block
       const count = reelsFor(moduleId, slug).length;
       if (where in THIN_PAGES) {
         assert.ok(THIN_PAGES[where] < MIN_PER_PAGE, `${where} is listed as thin with ${THIN_PAGES[where]} reels`);
         assert.equal(count, THIN_PAGES[where], `${where} is listed as thin with ${THIN_PAGES[where]} reels but has ${count}: update the list`);
       } else {
-        assert.ok(count >= MIN_PER_PAGE && count <= MAX_PER_PAGE, `${where} has ${count} reels`);
+        const max = SHELF_MODULES.has(moduleId) ? MAX_PER_SHELF_PAGE : MAX_PER_PAGE;
+        assert.ok(count >= MIN_PER_PAGE && count <= max, `${where} has ${count} reels`);
       }
     }
   }
@@ -138,8 +158,9 @@ test("a reel is listed once on the whole site", () => {
   }
 });
 
-test("no channel has more than 2 reels on one page", () => {
+test("no channel has more than 2 reels on one page, except on a shelf", () => {
   for (const [moduleId, pages] of Object.entries(REELS)) {
+    if (SHELF_MODULES.has(moduleId)) continue;
     for (const [slug, reels] of Object.entries(pages ?? {})) {
       const counts = new Map<string, number>();
       for (const reel of reels) counts.set(reel.channel, (counts.get(reel.channel) ?? 0) + 1);
@@ -148,6 +169,36 @@ test("no channel has more than 2 reels on one page", () => {
       }
     }
   }
+});
+
+test("a shelf is one creator's Shorts: the shelf modules are the listed ones, and every reel of a shelf has the same channel", () => {
+  assert.deepEqual([...SHELF_MODULES], ["devops"]);
+  for (const moduleId of SHELF_MODULES) {
+    const pages = (REELS as Record<string, Record<string, readonly { channel: string }[]> | undefined>)[moduleId] ?? {};
+    const channels = new Set(Object.values(pages).flatMap((reels) => reels.map((reel) => reel.channel)));
+    assert.equal(channels.size, 1, `${moduleId} has reels from ${[...channels].join(", ")}`);
+  }
+});
+
+test("a long shelf shows four reels and keeps the rest behind a button; a page of an ordinary module is never cut", () => {
+  const ids = (n: number) => Array.from({ length: n }, (_, i) => i);
+  assert.equal(REELS_SHOWN, MAX_PER_PAGE, "an ordinary page has at most as many reels as show at once");
+  for (const n of [0, 2, 4, 5]) assert.deepEqual(splitShelf(ids(n)).more, [], `${n} reels are all shown (one left over is not hidden)`);
+  const long = splitShelf(ids(14));
+  assert.equal(long.shown.length, REELS_SHOWN);
+  assert.equal(long.more.length, 10);
+  assert.deepEqual([...long.shown, ...long.more], ids(14), "no reel is lost, and the order stays");
+  for (const [moduleId, pages] of Object.entries(REELS)) {
+    if (SHELF_MODULES.has(moduleId)) continue;
+    for (const [slug, reels] of Object.entries(pages ?? {})) assert.equal(splitShelf(reels).more.length, 0, `${moduleId}/${slug} would be cut`);
+  }
+});
+
+test("the 'show more' label carries the number of hidden reels, in both languages", () => {
+  assert.match(REELS_UI.showMore(10), /\b10\b/);
+  assert.match(REELS_UI_BN.showMore(10), /10/);
+  assert.match(REELS_UI_BN.showMore(10), /[\u0980-\u09FF]/);
+  assert.match(REELS_UI_BN.showFewer, /[\u0980-\u09FF]/);
 });
 
 test("reelsFor gives the reels of a page, and nothing for the practice page, an unknown page, or an unknown module", () => {

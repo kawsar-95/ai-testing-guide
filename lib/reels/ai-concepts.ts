@@ -11,11 +11,13 @@ export const AI_CONCEPTS_REELS: Readonly<Record<AiConceptsSlug, readonly Reel[]>
     { id: "Uimmj3EiXMI", title: "What is ReAct prompting?", channel: "Google Cloud Tech", kind: "explainer", lang: "en", seconds: 60 },
     { id: "kRl_8wG_utU", title: "Agentic Loop Engineering কী এবং কীভাবে কাজ করে?", channel: "ArthaMatrix", kind: "explainer", lang: "bn", seconds: 32 },
     { id: "tjd5IwgIvIg", title: "Agentic Workflow কীভাবে কাজ করে? | AI কীভাবে নিজেই সিদ্ধান্ত নেয়", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 38 },
+    { id: "dvvWoRxqkIQ", title: "What is Loop Engineering?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 161 },
   ],
   "mcp": [
     { id: "r2P6-gqs1xg", title: "Model Context Protocol (MCP) Explained in 60 Seconds", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 56 },
     { id: "rTW1eM0T_90", title: "What is Model Context Protocol (MCP)?", channel: "Microsoft Developer", kind: "explainer", lang: "en", seconds: 55 },
     { id: "hCDfrgvsC1M", title: "MCP কী? (AI-এর USB-C পোর্ট)", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 31 },
+    { id: "7VfKiaGOZcA", title: "MCP vs UTCP", channel: "KodeKloud", kind: "compare", lang: "en", seconds: 179 },
   ],
   "subagents": [
     { id: "badT4FXj7Mc", title: "Multi-agent systems are the future of AI applications", channel: "Mastra", kind: "explainer", lang: "en", seconds: 177 },
@@ -33,6 +35,7 @@ export const AI_CONCEPTS_REELS: Readonly<Record<AiConceptsSlug, readonly Reel[]>
     { id: "0E8kDTW10HQ", title: "What is Prompt Caching?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 106 },
     { id: "GXh1KwzNIIM", title: "What is Prompt Caching in LLMs?", channel: "Gaurav Sen", kind: "explainer", lang: "en", seconds: 84 },
     { id: "vHOO_heIsf4", title: "AI Agent-এর Cost কমাবেন কীভাবে? | Token Optimization Explained", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 31 },
+    { id: "P-mv2hQc43E", title: "What Actually is an AI Token? (Simply Explained)", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 174 },
   ],
   "evals": [
     { id: "KY5hfe_Td14", title: "Evals are the hottest topic in 2026.", channel: "Gaurav Sen", kind: "explainer", lang: "en", seconds: 82 },
@@ -42,6 +45,7 @@ export const AI_CONCEPTS_REELS: Readonly<Record<AiConceptsSlug, readonly Reel[]>
   ],
   "guardrails": [
     { id: "W5rB9HGSdMg", title: "AI Agent-কে সব কাজ করতে দেওয়া উচিত? | Guardrails Explained", channel: "Rayhan AI Architecture", kind: "explainer", lang: "bn", seconds: 18 },
+    { id: "yyAyR1VrA3c", title: "What is Lethal Trifecta in AI Agents?", channel: "KodeKloud", kind: "explainer", lang: "en", seconds: 151 },
   ],
   "observability": [
     { id: "PxV1swOlcvI", title: "The one indispensable tool to any AI app developer - Observability", channel: "Matt Pocock", kind: "explainer", lang: "en", seconds: 81 },

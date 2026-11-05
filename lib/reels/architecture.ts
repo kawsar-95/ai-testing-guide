@@ -21,6 +21,7 @@ export const ARCHITECTURE_REELS: Readonly<Record<Exclude<ArchitectureSlug, "prac
     { id: "k7vvdBsKDx8", title: "What is Single Point Of Failure?", channel: "Alada School", kind: "explainer", lang: "bn", seconds: 52 },
     { id: "V65ggmmLxmw", title: "HLD — SPOF 3 Healthy Servers… So Why Is Your Entire App DOWN?", channel: "Tejav Academy", kind: "explainer", lang: "en", seconds: 60 },
     { id: "-26ucu4gN8Y", title: "server কিভাবে কাজ করে?", channel: "ScienceVenture", kind: "explainer", lang: "bn", seconds: 33 },
+    { id: "ekWtLUg7GpE", title: "Client-Server vs Peer-to-Peer Networks", channel: "KodeKloud", kind: "compare", lang: "en", seconds: 49 },
   ],
   "vertical-scaling": [
     { id: "jm5y8pmI00o", title: "Vertical & Horizontal Scaling", channel: "NeetCodeIO", kind: "explainer", lang: "en", seconds: 51 },

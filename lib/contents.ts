@@ -6,7 +6,7 @@ export const CONTENTS_ROUTES: readonly string[] = [CONTENTS_HOME];
 /** The English strings of the contents page and the stats row. */
 export const CONTENTS_UI = {
   siteTitle: "Contents",
-  description: "Every part of the tutorial and every page of the Linux, Fundamentals, System Design, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, and AI/ML Testing modules on one page.",
+  description: "Every part of the tutorial and every page of the Linux, Fundamentals, System Design, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, AI/ML Testing, and DevOps & Cloud modules on one page.",
   eyebrow: "CONTENTS",
   heading: "All parts and modules",
   lede: "Start with the tutorial, or open a module. Your progress in Linux, Fundamentals, Architecture, the Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, and AI/ML Testing stays in this browser.",

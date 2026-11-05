@@ -5,6 +5,8 @@ export const REELS_UI = {
   note: "Short videos from other creators, picked for this topic. They are not part of this page's fact-checked text. Nothing loads from YouTube until you press Play.",
   play: "Play",
   watchOnYoutube: "Watch on YouTube",
+  showMore: (n: number) => `Show ${n} more reels`,
+  showFewer: "Show fewer reels",
   kinds: {
     explainer: "Explainer",
     animation: "Animation",

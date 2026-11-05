@@ -37,6 +37,7 @@ def default_routes():
         ("agent-memory-route-map.json", "/agent-memory/"),
         ("ai-agents-route-map.json", "/ai-agents/"),
         ("ai-ml-testing-route-map.json", "/ai-ml-testing/"),
+        ("devops-route-map.json", "/devops/"),
     ):
         route_map = json.loads((here / name).read_text())
         routes += [route for route in route_map.values() if route != home]
