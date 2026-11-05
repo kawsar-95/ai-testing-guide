@@ -20,16 +20,20 @@ export const SYSTEM_DESIGN_REELS: Readonly<Record<SystemDesignSlug, readonly Ree
   "youtube": [
     { id: "kRAyQ99EfTY", title: "YouTube Video Transcoding Pipeline | System Design Interview", channel: "KodeKloud", kind: "interview", lang: "en", seconds: 175 },
     { id: "weFC9-w9J6s", title: "System Design: How YouTube Knows Where to Resume", channel: "KodeKloud", kind: "interview", lang: "en", seconds: 167 },
+    { id: "lpjS3ok-ncg", title: "HLD — Design Video Upload & Processing How Do You Process MILLIONS of Huge Videos?", channel: "Tejav Academy", kind: "animation", lang: "en", seconds: 60 },
+    { id: "cAsCINv6hYY", title: "How Google saves petabytes of CDN data transfer everyday", channel: "Gaurav Sen", kind: "real-system", lang: "en", seconds: 75 },
   ],
   "google-docs": [
     { id: "0F2BIarnYQo", title: "How two people type in one doc at once", channel: "Systems in Ink", kind: "explainer", lang: "en", seconds: 56 },
     { id: "tLtHk5r0qZc", title: "Conflict-Free Replicated Data Types", channel: "BitSized", kind: "explainer", lang: "en", seconds: 59 },
     { id: "Yt1RvXGf2tU", title: "Figma asks: How to design a collaborative editor frontend | frontend interview", channel: "The Frontend Round", kind: "interview", lang: "en", seconds: 25 },
+    { id: "pIj396OZVTs", title: "HLD — Design Google Docs How Do 100 Users Edit ONE Document at the Same Time?", channel: "Tejav Academy", kind: "animation", lang: "en", seconds: 60 },
   ],
   "whatsapp": [
     { id: "8A48hZtoUPc", title: "How WhatsApp Delivers 100 Billion Messages a Day", channel: "KodeKloud", kind: "real-system", lang: "en", seconds: 179 },
     { id: "7UyhyhxdFsQ", title: "How WhatsApp Video Sharing Works?", channel: "KodeKloud", kind: "real-system", lang: "en", seconds: 128 },
     { id: "5f0gZruaH9Y", title: "WebSocket Protocol Explained", channel: "NeetCodeIO", kind: "explainer", lang: "en", seconds: 34 },
+    { id: "0FXZJ-GWYQM", title: "WhatsApp-এ এক tick আর দুই tick-এর পেছনে কী ঘটে? | Store-and-Forward", channel: "Rabbil Hasan", kind: "explainer", lang: "bn", seconds: 42 },
   ],
   "airbnb": [
     { id: "aKbUH9EJLrA", title: "বাসের শেষ সিটটা দুজন একসাথে Book করলে টিকিট পাবে কে? | Database Transaction", channel: "Rabbil Hasan", kind: "explainer", lang: "bn", seconds: 47 },
@@ -44,6 +48,7 @@ export const SYSTEM_DESIGN_REELS: Readonly<Record<SystemDesignSlug, readonly Ree
   "slack": [
     { id: "dKZMLu_FXiQ", title: "WebSockets sound perfect. So why aren't they the default?", channel: "Amigoscode", kind: "explainer", lang: "en", seconds: 54 },
     { id: "f7KgDNZU3-Y", title: "gRPC, WebSocket and WebHook!", channel: "ByteByteGo", kind: "compare", lang: "en", seconds: 52 },
+    { id: "Yk5ik6yrSXI", title: "HLD — Design a Chat System How Would You Build Chat for MILLIONS of Users?", channel: "Tejav Academy", kind: "animation", lang: "en", seconds: 60 },
   ],
   "reddit": [
     { id: "TpQcMLhIgkw", title: "What Even Is a Job Queue?", channel: "PUQ Cloud", kind: "explainer", lang: "en", seconds: 24 },
@@ -70,6 +75,7 @@ export const SYSTEM_DESIGN_REELS: Readonly<Record<SystemDesignSlug, readonly Ree
     { id: "hJQgRmXUn5o", title: "How URL Shorteners Work (TinyURL System Design)", channel: "Solutions Architect Insights", kind: "explainer", lang: "en", seconds: 35 },
     { id: "MAylSnNKAKo", title: "Crush Long Links: Design a URL Shortener!", channel: "The Code Architect", kind: "explainer", lang: "en", seconds: 51 },
     { id: "Eur837UnXtQ", title: "ছোট্ট একটা link click করলেই সঠিক website খোলে কীভাবে? URL Shortener", channel: "Rabbil Hasan", kind: "explainer", lang: "bn", seconds: 49 },
+    { id: "42vmH3m1dQY", title: "Design a URL Shortener in 60 Seconds | System Design Interview", channel: "The 60-Second Architect", kind: "interview", lang: "en", seconds: 59 },
   ],
   "stock-exchange": [
     { id: "d5M3ydo8Shw", title: "Microservice Design Patterns : Event Sourcing Design Pattern in 60 seconds", channel: "Software Engineering Insights", kind: "explainer", lang: "en", seconds: 34 },

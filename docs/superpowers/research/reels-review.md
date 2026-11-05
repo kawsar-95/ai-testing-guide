@@ -1,6 +1,6 @@
 # Reels review log
 
-One row per reel on the topic pages of nine modules: Architecture, System Design, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, and AI/ML Testing. A reel is another creator's video. It is not a source of the page and it is not fact-checked like the page text.
+One row per reel on the topic pages of nine modules (Architecture, System Design, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, and AI/ML Testing), on the 12 stages of Linux, and on the 11 chapters of Fundamentals. A reel is another creator's video. It is not a source of the page and it is not fact-checked like the page text.
 
 How each reel was checked: `/shorts/<id>` answers 200 (a real Short); YouTube's oEmbed answers 200 (public, embeddable); the official IFrame Player API loads it and reaches the playing state in headless Chrome, and reports the length. Evidence: `transcript` = the video has captions in the language it is spoken in (English captions, or Bangla automatic captions that were read in Bangla), which were used to screen it against the page (excerpts were read, not every transcript in full); `translated captions` = only machine-translated captions exist; `frames + title` = no captions, but the on-screen text of 3 frames was read; `title + description` = no captions, so the title, the description, and the channel were judged (typical for Bangla: the spoken words were not checked); `title only` = nothing else was read.
 
@@ -430,5 +430,141 @@ Run `node scripts/check-reels.ts` to check again; creators can delete or restric
 | `ai-ml-testing/advanced-capstone-pipeline` | `VhqsXifzdvQ` | LangChain | How Benchling's Team Actually Looks at AI Traces \| Max Agency | real-system | en | 48 | transcript | yes |
 | `ai-ml-testing/advanced-capstone-pipeline` | `4sWCCasRzPQ` | LangChain | This Is Why Your Main Agent Shouldn't Read Every Trace | real-system | en | 85 | transcript | yes |
 | `ai-ml-testing/advanced-capstone-presentation` | `MfYL4RnkJFk` | Tech With Tim | The AI Portfolio Mistake That Kills Your Job Chances 2026 | mistake | en | 42 | transcript | yes |
+| `architecture/single-server` | `-26ucu4gN8Y` | ScienceVenture | server কিভাবে কাজ করে? | explainer | bn | 33 | transcript | yes |
+| `architecture/vertical-scaling` | `Og3uCL17t00` | MicroDoseDev | Scale Up vs Scale Out Explained (System Design Revision) | compare | en | 57 | transcript | yes |
+| `architecture/cloud-architecture` | `OWa9yuqQzAo` | Avvaiverse | AWS Multi-Region Failover: Why It Failed in Real Life | explainer | en | 24 | transcript | yes |
+| `architecture/api-gateway` | `QToMS34DSFo` | Bhaiyacodes | API Gateway Explained \| The Gatekeeper of Microservices | explainer | en | 55 | transcript | yes |
+| `architecture/api-gateway` | `U3KcAqjthmc` | Learn Automation Testing from scratch | What is BFF (Backend for Frontend)? \| Simplified in 1 Minute! | explainer | en | 60 | transcript | yes |
+| `fundamentals/basics` | `wlX1VRUlxOA` | QA with Sangeetha | QA vs QC Explained in 30 Seconds \| Most Asked QA Interview Question | interview | en | 39 | transcript | yes |
+| `fundamentals/basics` | `AYF0WI5-94o` | QA with Sangeetha | Why Is Software Testing Important? \| QA Interview Question | interview | en | 41 | transcript | yes |
+| `fundamentals/basics` | `82cbYvGNqlw` | Testing Funda by Zeeshan Asghar | Software Quality Assurance VS Software Testing | compare | en | 36 | transcript | yes |
+| `fundamentals/basics` | `5qsnHib76RA` | Software Testing Mentor | What is difference between Verification and Validation?Software testing Interview Question | interview | en | 61 | transcript | yes |
+| `fundamentals/defects-principles` | `1cMAdlOYIxA` | Software Testing Mentor | Difference Between Error, Defect and Failure - Software Testing Interview Question-5 | interview | en | 61 | transcript | yes |
+| `fundamentals/defects-principles` | `VXF_YvRFH80` | TestSpectrum: Uncovering QA Realms | Testing Principles - Context Dependent | explainer | en | 37 | transcript | yes |
+| `fundamentals/defects-principles` | `ZDRqcGaTX3w` | TestSpectrum: Uncovering QA Realms | Testing Principle - Defect Clustering | explainer | en | 37 | transcript | yes |
+| `fundamentals/defects-principles` | `vkILNB2nQvk` | The Testing Academy | What is Shift Left Testing | explainer | en | 35 | transcript | yes |
+| `fundamentals/lifecycles` | `336SQ8Jq0wo` | Testing Funda by Zeeshan Asghar | Software Development Life Cycle (SDLC) vs Software Testing Life Cycle (STLC) | compare | en | 40 | transcript | yes |
+| `fundamentals/lifecycles` | `UQdQ1ygYvgk` | Last Minute Interview Tips | What is the software testing life cycle (STLC)? | explainer | en | 20 | transcript | yes |
+| `fundamentals/lifecycles` | `5p3VxkbFiFI` | It’s Your Responsibility | TDD vs BDD: What's the Difference? \| Simplified Comparison in 60 Seconds! | compare | en | 50 | transcript | yes |
+| `fundamentals/lifecycles` | `DUI_RnDq9ms` | Project Phoenix | Waterfall vs Agile Testing \| QA Interview Question Explained | interview | en | 20 | transcript | yes |
+| `fundamentals/test-types` | `Q14Ys8eL2Dk` | Testing Funda by Zeeshan Asghar | Difference Between Retesting and Regression Testing | compare | en | 38 | transcript | yes |
+| `fundamentals/test-types` | `u0dND7KIJhc` | Project Phoenix | Smoke Testing vs Sanity Testing QA Interview Question | interview | en | 17 | transcript | yes |
+| `fundamentals/test-types` | `Gz0tdbvLU9w` | QA with Sangeetha | Functional vs Non-Functional Testing Explained in 30 Seconds | compare | en | 34 | transcript | yes |
+| `fundamentals/test-types` | `_NS8pvMB8WE` | Testing Funda by Zeeshan Asghar | Types Of Performance Testing | explainer | en | 55 | transcript | yes |
+| `fundamentals/levels` | `ZVIxjeoU6jE` | Software Testing Mentor | What are Different Levels of Testing? Software Testing Interview Question | interview | en | 61 | transcript | yes |
+| `fundamentals/levels` | `VhIvWxkGTkg` | QA with Sangeetha | What is UAT? User Acceptance Testing Explained in 30 Seconds \| QA | explainer | en | 40 | transcript | yes |
+| `fundamentals/levels` | `-iSbOl8-Jo8` | softwaretestingjournal | Test Pyramid vs Test Ice Cream Cone - Which Are You? | compare | en | 46 | transcript | yes |
+| `fundamentals/levels` | `VDGZ6tUlH4E` | Vandana TechPoint | what is stubs and drivers | explainer | en | 19 | transcript | yes |
+| `fundamentals/black-box` | `PKBjYDPTxf8` | Testing Funda by Zeeshan Asghar | What is equivalence class partitioning | explainer | en | 33 | transcript | yes |
+| `fundamentals/black-box` | `34d0b4c2Id0` | QA with Sangeetha | Boundary Value Analysis (BVA) \| Manual Testing Technique \| QA Interview | interview | en | 66 | transcript | yes |
+| `fundamentals/black-box` | `-It0yqjsZm8` | QA with Sangeetha | Decision Table Testing \| Black Box Testing Technique \| QA Interview | interview | en | 45 | transcript | yes |
+| `fundamentals/black-box` | `_uqby_vRKjk` | Testing Funda by Zeeshan Asghar | What is State transition testing ? | explainer | en | 42 | transcript | yes |
+| `fundamentals/white-box` | `P8DS5uOAGPk` | Last Minute Interview Tips | What is white-box testing, and when is it used? | explainer | en | 19 | transcript | yes |
+| `fundamentals/white-box` | `koyBDuRX9Ak` | Software Testing Mentor | What is Code Coverage? Software Testing Interview Question | interview | en | 61 | transcript | yes |
+| `fundamentals/white-box` | `qOfEAOhkiZ4` | Testify Tech | Unit Testing: The Secret Behind Reliable Software | explainer | en | 19 | transcript | yes |
+| `fundamentals/white-box` | `Iqg7mPm4obA` | Critical Systems Lab | 100% Statement Coverage ≠ Decision Coverage? \| Part 1 | explainer | en | 57 | transcript | yes |
+| `fundamentals/experience-based` | `zKiD0xJRca4` | Testing Funda by Zeeshan Asghar | What is Exploratory Testing? | explainer | en | 34 | transcript | yes |
+| `fundamentals/experience-based` | `s0ZLnphFRo0` | The Testing Academy | Why Exploratory Testing is Important and When Should You Do it? | explainer | en | 52 | transcript | yes |
+| `fundamentals/experience-based` | `_6Y86buYNCM` | Software Testing Mentor | What is Ad-Hoc Testing? Software Testing Interview Question | interview | en | 61 | transcript | yes |
+| `fundamentals/planning` | `OGQ_TW5eyZY` | Vandana TechPoint | What is Test Approach in test plan | explainer | en | 24 | transcript | yes |
+| `fundamentals/planning` | `NiCZYi_5oF0` | The Testing Academy | What is a Test Environment \| Manual Testing Interview Question | interview | en | 53 | transcript | yes |
+| `fundamentals/planning` | `QT2dsbljYQ0` | Software Testing Mentor | What is Acceptance Criteria? Software Testing Interview Question | interview | en | 61 | transcript | yes |
+| `fundamentals/planning` | `i3QYZHQtfZ4` | QA Map | Risk Based Testing in Software Testing \| Test Big Risks First | animation | en | 22 | frames + title | yes |
+| `fundamentals/test-cases-bugs` | `P2QoFagqUog` | The Testing Academy | The BEST Way to Write Manual Test Cases | explainer | en | 48 | transcript | yes |
+| `fundamentals/test-cases-bugs` | `Bm7he5SV0XM` | Testing Funda by Zeeshan Asghar | Test Case vsTest Scenario | explainer | en | 35 | transcript | yes |
+| `fundamentals/test-cases-bugs` | `07bkJm-74qc` | Testing Funda by Zeeshan Asghar | Defect Life Cycle / Bug Life Cycle | explainer | en | 30 | transcript | yes |
+| `fundamentals/test-cases-bugs` | `dt1brGSqqsQ` | Project Phoenix | Severity vs Priority in Software Testing \| Explanation with Examples \| QA Interview Tips | interview | en | 24 | transcript | yes |
+| `fundamentals/interview` | `yuoE5dV4_UY` | Software Testing Mentor | Difference Between Testing and Debugging - Software Testing Interview Question-4 | interview | en | 61 | transcript | yes |
+| `fundamentals/interview` | `14cyfXNqcSA` | Project Phoenix | Black Box vs White Box vs Grey Box Testing QA Interview Question | interview | en | 17 | transcript | yes |
+| `fundamentals/interview` | `_OjvO0fHiao` | QA Map | How to Test a Login Page \| QA Interview Question | interview | en | 44 | transcript | yes |
+| `fundamentals/interview` | `vUZvellJxeE` | QA Map | Release Day: Ship or Stop? \| QA Interview Scenario | interview | en | 45 | transcript | yes |
+| `linux/shell-basics` | `aCO3eMJshrs` | LinuxCert Guru | Linux Filesystem Explained \| What Are /etc, /var, /home & /usr? | explainer | en | 16 | transcript | yes |
+| `linux/shell-basics` | `5_j-Of301sM` | LinuxCert Guru | How Does Linux Find Commands Like ls? \| PATH Explained | explainer | en | 11 | transcript | yes |
+| `linux/shell-basics` | `0JhxwLSD6YQ` | Chris Titus Tech | Learn ANY Linux Command in Seconds (No More Googling!) | explainer | en | 35 | transcript | yes |
+| `linux/shell-basics` | `hJTGSNuuEeI` | Learn Linux TV | Linux Commands in 60 Seconds (or less) - Shell Variables | explainer | en | 55 | transcript | yes |
+| `linux/files` | `9NaRULyPVUM` | LinuxCert Guru | Does tar Compress Files? \| tar vs gzip Explained | compare | en | 15 | transcript | yes |
+| `linux/files` | `Jf_f1O8p7Lw` | Sudo It | Symbolic Link or Soft Link in Linux explained | explainer | en | 58 | transcript | yes |
+| `linux/files` | `AvHNurwQo7k` | Sudo It | understanding Hard Link in Linux \| How to create and use them | explainer | en | 59 | transcript | yes |
+| `linux/files` | `PO2c2DLhDYA` | DevOps Toolbox | Repetitive Vim Motions | explainer | en | 24 | transcript | yes |
+| `linux/text-processing` | `5_t_I_4OuwQ` | Fireship | get a grip on grep | explainer | en | 44 | transcript | yes |
+| `linux/text-processing` | `wdQN2X3PQuU` | Learn Linux TV | Linux Commands in 60 Seconds - The sed Command | explainer | en | 56 | transcript | yes |
+| `linux/text-processing` | `yMEHKhMjk00` | LinuxCert Guru | The Linux Pipe \| Explained \| One Symbol, Powerful Commands | explainer | en | 11 | transcript | yes |
+| `linux/text-processing` | `DC7Ydsxd8qk` | CyberFlux Media | What Is /dev/null in Linux? The Black Hole of Data | explainer | en | 41 | transcript | yes |
+| `linux/users-permissions` | `rzN8sb0ilyE` | CyberFlux Media | Linux File Permissions Explained \| rwx Owner Group Others | explainer | en | 46 | transcript | yes |
+| `linux/users-permissions` | `CectRimCddc` | LinuxCert Guru | What Does chmod 755 Actually Mean? \| Linux Permissions Explained | explainer | en | 15 | transcript | yes |
+| `linux/users-permissions` | `HlgtfXUdHho` | CyberFlux Media | Sudo vs Su in Linux — What’s the Difference? | compare | en | 31 | transcript | yes |
+| `linux/processes` | `3MDTNEq7534` | LinuxCert Guru | The Linux kill Command Doesn't Always Kill! \| SIGTERM vs SIGKILL | compare | en | 11 | transcript | yes |
+| `linux/processes` | `MKxh-PXciTE` | Chris Titus Tech | HTOP - Terminal Task Manager | explainer | en | 56 | transcript | yes |
+| `linux/processes` | `C2rzC7IVBpk` | Chris Titus Tech | NOHUP - No Hangup Signals when closing terminal | explainer | en | 53 | transcript | yes |
+| `linux/processes` | `eGsJGRSwbYs` | LinuxCert Guru | What Is a Zombie Process in Linux? \| Linux Processes Explained | explainer | en | 11 | transcript | yes |
+| `linux/shell-scripting` | `157MIzN-oxA` | CodeCrafters | Shell Scripting Safety Hack with set -euo pipefail | explainer | en | 40 | transcript | yes |
+| `linux/shell-scripting` | `nd4cFKZfvP8` | CSE Society | Shell Script in Linux Explained \| Automate Like a Pro! | explainer | en | 45 | transcript | yes |
+| `linux/shell-scripting` | `O_W6b4BqBmc` | Learn Linux TV | Effortless File Extraction with This Bash Function | explainer | en | 42 | transcript | yes |
+| `linux/shell-scripting` | `2PzjUY80IDw` | Learn Linux TV | Bash Scripting Master CD Command with "auto ls" | explainer | en | 154 | transcript | yes |
+| `linux/packages` | `yE9oct13WTQ` | Learn Linux TV | Linux CLI in 60 Seconds - apt | explainer | en | 60 | transcript | yes |
+| `linux/packages` | `PNttb7co5GQ` | Salty Chip | Package Managers: APT vs DNF vs Pacman | compare | en | 35 | transcript | yes |
+| `linux/packages` | `_y5S1Jyk2jY` | Thinknyx Technologies | Linux Command Series - 'yum' | explainer | en | 59 | transcript | yes |
+| `linux/packages` | `aeaWKB_EwXU` | Root N Reels | Ep 11: How Package Managers Work | explainer | en | 11 | transcript | yes |
+| `linux/disks-filesystems` | `egZ_3Hnb3mk` | LinuxCert Guru | Linux Disk Has Free Space but Can't Create Files? \| Inodes Explained | explainer | en | 11 | transcript | yes |
+| `linux/disks-filesystems` | `dt-ma5ugnR0` | PUQ Cloud | Journaling Differences: ext4 vs XFS | compare | en | 29 | transcript | yes |
+| `linux/disks-filesystems` | `pDFX4L5ZYYo` | LinuxCert Guru | The Reboot Every Linux Admin Fears \| fstab Mistake Explained | mistake | en | 17 | transcript | yes |
+| `linux/disks-filesystems` | `9G6Znvj4bdo` | Thinknyx Technologies | Disk Usage \|\| 'du' command in Linux | explainer | en | 57 | transcript | yes |
+| `linux/networking` | `okLmJ4f8K3U` | Learn Linux TV | Linux CLI in 60 Seconds - ping | explainer | en | 60 | transcript | yes |
+| `linux/networking` | `XZ3r3P0olwk` | Learn Linux TV | Linux Commands in 60 Seconds - The ssh Command | explainer | en | 46 | transcript | yes |
+| `linux/networking` | `Kn_VDfuNy28` | LinuxCert Guru | TCP vs UDP Explained in 20 Seconds \| What's the Difference? | compare | en | 22 | transcript | yes |
+| `linux/networking` | `fC4rnnac9es` | Daily Tech Bangla | DnS কী? | explainer | bn | 36 | transcript | yes |
+| `linux/boot-services` | `s8jrXdQ-QGA` | CyberFlux Media | What is GRUB Bootloader in Linux? \| Linux Boot Process Explained | explainer | en | 54 | transcript | yes |
+| `linux/boot-services` | `xxdcV1dMw_Q` | LinuxCert Guru | What Is systemd in Linux? \| PID 1 & systemctl Explained | explainer | en | 21 | transcript | yes |
+| `linux/boot-services` | `H5L7FbpZkWs` | Learn Linux TV | Linux Commands in 60 Seconds - The systemctl Command | explainer | en | 60 | transcript | yes |
+| `linux/boot-services` | `1dpxZ-ew2AA` | Sudo It | systemd-analyze to visualize boot process and how services have been started | explainer | en | 27 | transcript | yes |
+| `linux/troubleshooting` | `7Tx0DsHEuTM` | Learn Linux TV | Linux Load Average: Simple Explanation for Beginners | explainer | en | 57 | transcript | yes |
+| `linux/troubleshooting` | `eUm59MbuKFc` | LinuxCert Guru | Why Does Linux Suddenly Kill Processes? \| OOM Killer Explained | explainer | en | 21 | transcript | yes |
+| `linux/troubleshooting` | `1vXqmDY79V4` | LinuxCert Guru | Deleted a Linux File but Disk Space Isn't Free? \| Use lsof | explainer | en | 11 | transcript | yes |
+| `linux/troubleshooting` | `UxKhOxgk_os` | Sudo It | systemd-journald and journalctl command: view and filter logs in Linux | explainer | en | 45 | transcript | yes |
+| `linux/containers` | `A_l_qPKIywU` | LinuxCert Guru | Linux Containers vs Virtual Machines \| How Containers Actually Work | compare | en | 29 | transcript | yes |
+| `linux/containers` | `tLnvbg53c8g` | educational_shorts | Advanced Linux Command Day 50 \| Linux Namespaces - unshare. | explainer | en | 26 | transcript | yes |
+| `linux/containers` | `3848hgsDAv8` | LinuxCert Guru | Linux cgroups Explained \| Control CPU & Memory Like a SysAdmin | explainer | en | 29 | transcript | yes |
+| `linux/containers` | `9Hy1btSqEHM` | OjogorStudio | Docker কী? Docker Image & Container সহজ ভাষায় Explained \| Docker Tutorial Bangla | explainer | bn | 56 | transcript | yes |
+| `architecture/requirements` | `rR68FLCHdIw` | Tejav Academy | FAANG HLD \| Functional vs Non-Functional Requirements Explained! | compare | en | 60 | frames + title | yes |
+| `architecture/horizontal-scaling` | `IJ08PhlhFFs` | Learn lo0ud | Horizontal vs Vertical Scaling Explained in 60 Seconds \|System Design Interview | compare | en | 47 | transcript | yes |
+| `architecture/horizontal-scaling` | `NjlMLy2OBIQ` | Programming Hero | One server can’t handle millions of users. So what do big apps do? | explainer | en | 38 | transcript | yes |
+| `architecture/stateless-service` | `k7QDYbdPFzU` | Tejav Academy | FAANG HLD \| Why Stateless Servers Make Scaling EASY! | animation | en | 60 | frames + title | yes |
+| `architecture/object-storage` | `lqyDQ3p2zOA` | DevOps_infinity | AWS S3 Explained (Interview Concept) \| Buckets, Objects, Glacier & Versioning \| AWS S3 | animation | en | 31 | transcript | yes |
+| `architecture/object-storage` | `THhk0EpaDSk` | Rahim Tech Tips | Stop treating your server like a storage room - S3 buckets simplified | explainer | en | 42 | transcript | yes |
+| `architecture/cdn` | `zdhkO5RkVzA` | Vellumy | Netflix CDN in 40 seconds. | real-system | en | 43 | transcript | yes |
+| `architecture/distributed-cache` | `jmNUNLFrCqw` | Solutions Architect Insights | Design a Distributed Cache System | explainer | en | 30 | transcript | yes |
+| `architecture/rate-limiting` | `9GKSmrn8nTg` | ScaleDojo | Token Bucket Algorithm Explained Simply! | explainer | en | 44 | transcript | yes |
+| `architecture/monolith-microservices` | `66Afv_QHlRY` | Tejav Academy | HLD — When to Use Microservices? The Interview Trap! | interview | en | 60 | frames + title | yes |
+| `architecture/observability` | `TXDOb2DVR7A` | Tejav Academy | HLD — Logs vs Metrics vs Traces Debug Production Like a Pro! | compare | en | 60 | frames + title | yes |
+| `system-design/youtube` | `lpjS3ok-ncg` | Tejav Academy | HLD — Design Video Upload & Processing How Do You Process MILLIONS of Huge Videos? | animation | en | 60 | frames + title | yes |
+| `system-design/youtube` | `cAsCINv6hYY` | Gaurav Sen | How Google saves petabytes of CDN data transfer everyday | real-system | en | 75 | transcript | yes |
+| `system-design/google-docs` | `pIj396OZVTs` | Tejav Academy | HLD — Design Google Docs How Do 100 Users Edit ONE Document at the Same Time? | animation | en | 60 | frames + title | yes |
+| `system-design/whatsapp` | `0FXZJ-GWYQM` | Rabbil Hasan | WhatsApp-এ এক tick আর দুই tick-এর পেছনে কী ঘটে? \| Store-and-Forward | explainer | bn | 42 | transcript | yes |
+| `system-design/slack` | `Yk5ik6yrSXI` | Tejav Academy | HLD — Design a Chat System How Would You Build Chat for MILLIONS of Users? | animation | en | 60 | frames + title | yes |
+| `system-design/url-shortener` | `42vmH3m1dQY` | The 60-Second Architect | Design a URL Shortener in 60 Seconds \| System Design Interview | interview | en | 59 | transcript | yes |
 
-Reels: 422.
+### Linux, Fundamentals, and the Architecture additions
+
+95 rows above were added together: 47 for the 12 Linux stages, 43 for the 11 Fundamentals chapters, and 5 more for Architecture pages that had room. Every Linux stage and every Fundamentals chapter has 3 or 4 reels. Language: 92 English, 3 Bangla. Evidence: 94 `transcript`, 1 `frames + title`. Kinds: 61 explainer, 18 interview, 14 compare, 1 mistake, 1 animation.
+
+Each of the 95 passed the same checks as the rows above: `/shorts/<id>` answers 200, oEmbed answers 200, and the official IFrame Player API reaches the playing state, with the same length as yt-dlp reports. The candidates were taken from Shorts-only lists (hashtag pages and channel Shorts tabs), then screened by length, vertical shape, and the transcript. Excerpts were read for every pick. A phrase scan (a link, "full video", a course or an e-book, "part 2", "tomorrow", a sign-up) ran over every transcript and description, and the full transcript was read for each clip that the scan or an excerpt made doubtful.
+
+Rejected on reading, although the title matched the page: clips that only advertise a longer video, an e-book, a course, or a practice platform (the transcript says to watch the full video, to get the book, or to join); clips that tease tomorrow's video; a clip on JavaScript memory leaks for the Linux troubleshooting stage; a clip on prompting an AI for the Fundamentals planning chapter; the first half of a two-part answer; square (1:1) videos and clips of 2 to 5 seconds; and one clip that oEmbed and yt-dlp accepted but the player refused (error 150). A clip with no captions was used only when its frames were read (`frames + title`).
+
+What was not found: no Bangla clip about Linux commands or software testing passed. The Bangla reels are on Linux networking (DNS) and containers (Docker), and on how a server works (Architecture). No System Design case gained a reel in this first round; the second round below added reels to five of them.
+
+### System Design and Architecture, second round
+
+17 rows above were added after the first round: 6 for System Design cases (2 for YouTube, 1 each for WhatsApp, Google Docs, Slack, and URL Shortener) and 11 for Architecture pages that had room. Every Architecture page now has 3 or 4 reels. System Design cases have 2 to 4; Bluesky and Stock Exchange stay at 2. Language: 16 English, 1 Bangla. Evidence: 10 `transcript`, 7 `frames + title`. Kinds: 5 explainer, 5 animation, 3 compare, 2 interview, 2 real-system.
+
+Where the clips came from: the lists of the first round, 130 more hashtag lists (system-design vocabulary and Bangla tags), and a live YouTube search with the under-4-minutes filter (119 queries, 3,556 ids). Of the 140 search hits that were 65 seconds or shorter or had a Bangla title, 5 were Shorts, and yt-dlp reported all 5 as unavailable, so the search added no clip. The 17 picks passed the same three checks as the rows above. One of them, `66Afv_QHlRY`, answered player error 150 once in a run of 3 parallel probes, then played in 6 of 6 solo probes and in the frame grab, so it stays.
+
+The 7 `frames + title` clips are all Tejav Academy's numbered HLD Shorts, which have no captions. Three frames of each were read: each shows a diagram or the steps of its topic, matching the title, and none shows an ad or a call to action. Two limits: the middle and last frames of the Google Docs clip (`pIj396OZVTs`) were caught during a transition, so only its first frame carries a diagram; and `rR68FLCHdIw` is wider than its title, because it shows requirements as step 1 of a six-step design approach and then design and trade-offs.
+
+Four picks end with a one-line outro after a complete explanation. `NjlMLy2OBIQ` and `42vmH3m1dQY` ask to follow. `IJ08PhlhFFs` and `lqyDQ3p2zOA` also name the next video of their series, and the second is cut off in the middle of that sentence. None sells a course or a product. `cAsCINv6hYY` has a course link in its description, which the embed does not show.
+
+Rejected on reading: a clip whose last frame says "Comment SCALING for the horizontal checklist" (`zDZCpwdximM`); a Bangla rate-limiting clip that ends with "comment rate and I will send the guide" (`ze6ncQqSLm0`); a text-only clip that plays music, shows the same slides twice, and ends with a follow request (`rvLoQJGWih8`); a clip that the player refused in every run (`J0y_qrOGa5I`, error 150); four Bangla clips by Nabid In Motion that are cuts of longer episodes (a greeting and series intro, a playlist plug, or an ending in the middle of a sentence); an S3 clip that stops where its explanation starts (`bokPMx-N2uA`); a Memcached clip that is a fragment of a talk with off-topic remarks (`AGdzULZANwE`); Hindi-spoken clips with English titles (`Y7kyPJ6S6bk`, `ztzNe5kWbNc`); and clips of 5 to 15 seconds with no captions whose description was the whole content.
+
+What was not found: no clip for Bluesky (AT Protocol) or Stock Exchange (matching engine). The searches returned a metal band, trading memes, or 5 to 15 second clips with no captions. Airbnb, Spotify, Reddit, and Google Search gained nothing for the same reasons, or because the clip names the company and then teaches something else.
+
+Reels: 534.
