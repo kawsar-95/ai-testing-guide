@@ -26,7 +26,6 @@ export const DASHBOARD_UI = {
   resetConfirm: "Delete all your progress in this browser? This cannot be undone.",
   statRead: "pages read",
   statBookmarks: "bookmarks",
-  pagesLeft: (n: number) => `${n} ${n === 1 ? "page" : "pages"} left to read`,
   resumeHint: "Pick up where you stopped.",
   modulesHeading: "Module progress",
   modulesLede: "Topics you have marked done in each module.",

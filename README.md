@@ -68,13 +68,13 @@ New to Claude Code? Start with parts 01, 03, and 04. To see the features work to
 
 The top navigation has four plain links: **Home**, **Contents**, **Dashboard**, and **Interview**. The current link has a teal underline. A tutorial page or a module page has no current link. You reach a module from the home page or the Contents page. Next to the links are the search button, the voice button, and the theme button.
 
-The home page has a hero with a stats row (tutorial parts, modules, pages, and text voices), three START HERE cards for new readers, a "Why this guide" block, and numbered course cards.
+The home page has a hero with a stats row (tutorial parts, modules, pages, and text voices), a "Why this guide" block, and the course structure as two ruled lists: the tutorial groups (read in order) and the modules (open any).
 
-The [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) page shows every tutorial group and every module as a card. The 11 modules with a checklist show a progress bar on their card. System Design, AI Harnesses, and DevOps & Cloud have no checklist.
+The [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) page shows every tutorial group and every module as one row. Open a row to see its pages. The 11 modules with a checklist show your progress as a percent on their row. System Design, AI Harnesses, and DevOps & Cloud have no checklist.
 
 ![The Contents page with a progress bar on each module](docs/assets/contents.png)
 
-The left list shows the tutorial and every module as a list of pages that you can open and close. The list of the page you are on is open, and each list starts with a link to its home page. The drawer shows the same lists.
+The left list shows the pages of the module you are in, one line for each, under the name of the module (a link to its home page) and a link to Contents for the other modules. The drawer shows the same list.
 
 ### Interview preparation
 
@@ -133,7 +133,7 @@ The site tracks your work in your browser. It never sends it to a server.
 ![The Linux home: a tile for each stage with its commands as chips](docs/assets/linux.png)
 ![A Linux stage page: one card for each topic, one row for each command](docs/assets/linux-stage.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 293`) with a progress bar, beside a Continue reading card. Below them, one row for each of the 11 modules with a checklist shows its name, a bar, `done / total`, and the percent. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 293`) with a progress bar, beside a Continue reading block. Below them, one row for each of the 11 modules with a checklist shows its name, a bar, and `done / total`. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
 
@@ -162,10 +162,10 @@ Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>K</kbd>, or click the search button, t
 
 ![A tutorial page in the light theme](docs/assets/page.png)
 
-- **Three columns:** a left list of pages (each module is a list that you can open and close), the text, and an "On this page" list of the sections. The current section stays marked as you scroll.
+- **Three columns:** a left list of the pages of the current module, the text, and an "On this page" list of the sections. The current section stays marked as you scroll.
 - **One section at a time:** a page with 3 or more `##` sections shows one section and hides the others. A step bar sits above the section, and Previous and Next buttons sit below it. **Show all sections** turns this off, and the site remembers your choice. A link into a hidden section shows that section. Without JavaScript, every section shows.
 - **Reading time and progress:** each page shows `N min read`, and a bar under the header shows how far you read. A back-to-top button shows after one screen of scrolling.
-- **Meta line:** the number of sections and sources, the update date, and a "Suggest an edit" link that opens the page source on GitHub.
+- **Meta row:** the reading time, the number of sections and sources, the update date, and the Bookmark and Mark as read toggles. A "Suggest an edit" link beside the Sources opens the page source on GitHub.
 - **Previous and next:** cards at the end of a page go to the neighbour pages.
 - **Citations:** each fact has a `[n]` link to the numbered Sources list at the end of the page.
 - **Code blocks:** syntax colors (Shiki), a language label, and a Copy button. Code blocks stay dark in both themes.
@@ -178,7 +178,7 @@ The site follows the theme of your system and remembers your choice. The theme b
 
 ### Phones and small screens
 
-The layout adapts to phone widths. Below 1200 px the top navigation moves into the drawer: the drawer shows the four links (Home, Contents, Dashboard, Interview) above the same lists as the left column. The drawer traps the focus, closes with Escape, and gives the focus back to the button that opened it. On phones, tables and code scroll inside their own box.
+The layout adapts to phone widths. Below 1200 px the top navigation moves into the drawer: the drawer shows the four links (Home, Contents, Dashboard, Interview) above the same list as the left column. The drawer traps the focus, closes with Escape, and gives the focus back to the button that opened it. On phones, tables and code scroll inside their own box.
 
 | A content page | The drawer |
 |---|---|

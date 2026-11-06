@@ -30,8 +30,8 @@ The site has 311 routes.
 
 | Route | Source | Output |
 |---|---|---|
-| `/` | `app/(site)/page.tsx` → `components/pages/HomePage.tsx` | The home page: the hero with the stats row, START HERE, "Why this guide", and the numbered course cards |
-| `/contents/` | `app/(site)/contents/page.tsx` → `ContentsPage` | All groups and modules as cards, with progress bars |
+| `/` | `app/(site)/page.tsx` → `components/pages/HomePage.tsx` | The home page: the hero with the stats row, "Why this guide", and the course structure as two ruled lists (the tutorial groups and the modules) |
+| `/contents/` | `app/(site)/contents/page.tsx` → `ContentsPage` | All groups and modules as one ruled index of closed rows, with the progress percent of each module |
 | `/dashboard/` | `app/(site)/dashboard/page.tsx` → `DashboardPage` | The progress of the reader, and the author block |
 | `/interview/` | `app/(site)/interview/page.tsx` → `InterviewPage` | Three cards that link to the interview material. It has no MDX file. |
 | `/<group>/<slug>/` | `app/(site)/[group]/[page]/page.tsx` | The 24 tutorial pages |
@@ -109,7 +109,7 @@ Lede paragraph.
 
 - `metadata` is the standard Next.js metadata object. The page route returns it from `generateMetadata`.
 - `page` (type `PageInfo` in `lib/page.ts`) holds the update date and the numbered sources.
-- `<PageMeta />` is a placeholder. The page route fills it in with the meta line and the reading tools.
+- `<PageMeta />` is a placeholder. The page route fills it in with the meta row (reading time, sections, sources, update date) and the reading tools (Bookmark and Mark as read).
 
 ### The MDX pipeline
 
@@ -172,7 +172,7 @@ The whole layout is 1400 px wide at most. The page passes its route to `ChapterL
 | `SiteShell` | Skip link, header, main area, footer |
 | `SiteHeader`, `HeaderNav` | The sticky 64 px header: the brand mark, the top nav of four links (from the `nav` breakpoint, 75 rem), search, voice toggle, install button, theme toggle, and the menu button (below `nav`) |
 | `MobileNav`, `ContentsButton` | The drawer: the four nav links (below `nav` only) above the list of the current module, focus trap, Escape to close, page scroll lock, and the focus returns to the opening button. Below `chapter`, `ContentsButton` on a content page opens it through the `OPEN_NAV_EVENT` window event. |
-| `NavList`, `SidebarList`, and the module lists | The lists of the drawer and the left column |
+| `NavList`, `SidebarList`, and the module lists | The list of the drawer and the left column: the name of the current module, a link to Contents (left column only), and one line for each page of that module. The drawer mounts it when it first opens. |
 | `SearchPalette` | The search dialog (see Search) |
 | `RegisterServiceWorker` | Registers `/sw.js` in production builds |
 
@@ -209,9 +209,9 @@ All progress is client-side. The shared code keeps its old `prep` names (`lib/pr
 | `last-page` | One route: the last content page that the reader opened |
 | `theme`, `voice`, `fundamentals-version` | The theme, the default voice, and the Fundamentals version |
 
-`ChapterTools` (the reading pill, Bookmark, and Mark as read) sits under the meta line of each content page. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
+`MetaLine` shows the reading time, sections, sources, and update date in one row, and `ChapterTools` (Bookmark and Mark as read) sits at the right end of that row. The "Suggest an edit" link is on the heading row of the Sources list. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
 
-The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 293`), the bookmarks, the topic progress of the eleven modules with a progress store (Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, and AI/ML Testing), and a Continue reading card. The module rows count the same ids and read the same stores as the module home pages, so the numbers match. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
+The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 293`), the bookmarks, the topic progress of the eleven modules with a progress store (Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, and AI/ML Testing), and a Continue reading block. The module rows count the same ids and read the same stores as the module home pages, so the numbers match. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
 
 ## Fundamentals version switch
 

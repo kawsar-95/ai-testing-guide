@@ -21,7 +21,6 @@ import { CONTENT_PAGES, exportProgress } from "@/lib/reading-state";
 import { AUTHOR } from "@/lib/site";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
-const CARD = "rounded-2xl border border-border bg-bg-raised shadow-sm";
 const NO_STORAGE = { getItem: () => null };
 
 /** The download icon of the Export button. */
@@ -155,7 +154,6 @@ export function DashboardPage() {
   ];
 
   const readPercent = percent(readPages.length, CONTENT_PAGES.length);
-  const pagesLeft = CONTENT_PAGES.length - readPages.length;
 
   function reset() {
     if (!window.confirm(resetConfirm)) return;
@@ -189,8 +187,8 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <section aria-label={siteTitle} className="mt-8 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <div className={`${CARD} flex flex-col p-5 sm:p-6`}>
+      <section aria-label={siteTitle} className="mt-10 grid gap-x-12 gap-y-8 lg:grid-cols-[1.4fr_1fr]">
+        <div className="flex flex-col border-t border-border-strong pt-5">
           <p className={`${LABEL} text-text-faint`}>
             <T en={DASHBOARD_UI.statRead} bn={DASHBOARD_UI_BN.statRead} />
           </p>
@@ -207,15 +205,12 @@ export function DashboardPage() {
             valueText={`${readPages.length} / ${CONTENT_PAGES.length}`}
             className="mt-5"
           />
-          <p className="mt-4 text-[14px] text-text-dim">
-            <T en={DASHBOARD_UI.pagesLeft(pagesLeft)} bn={DASHBOARD_UI_BN.pagesLeft(pagesLeft)} />
-          </p>
         </div>
 
         <Link
           href={next.href}
           data-continue
-          className={`${CARD} group flex flex-col justify-between gap-6 p-5 no-underline transition-shadow hover:shadow-md sm:p-6`}
+          className="group flex flex-col justify-between gap-6 border-t border-border-strong pt-5 no-underline"
         >
           <span className="min-w-0">
             <span className={`${LABEL} block text-accent`}>
@@ -238,7 +233,7 @@ export function DashboardPage() {
             </span>
             <span
               aria-hidden="true"
-              className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-soft text-accent transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+              className="shrink-0 text-accent transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
             >
               <ArrowIcon />
             </span>
@@ -253,11 +248,11 @@ export function DashboardPage() {
         <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-text-dim">
           <T en={DASHBOARD_UI.modulesLede} bn={DASHBOARD_UI_BN.modulesLede} />
         </p>
-        <ul className={`${CARD} m-0 mt-5 list-none p-0 px-5`}>
+        <ul className="m-0 mt-3 list-none p-0">
           {moduleRows.map((row) => (
             <li
               key={row.id}
-              className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-4 gap-y-2 border-b border-border py-3 last:border-b-0 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_5.5rem_3.5rem]"
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 border-b border-border py-3 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_5.5rem]"
             >
               <Link
                 href={row.href}
@@ -268,10 +263,7 @@ export function DashboardPage() {
               <span className="col-start-2 row-start-1 text-right font-mono text-[12px] tabular-nums text-text-dim sm:col-start-3">
                 {row.done} / {row.total}
               </span>
-              <span className="col-start-3 row-start-1 text-right font-mono text-[12px] tabular-nums text-text sm:col-start-4">
-                {percent(row.done, row.total)}%
-              </span>
-              <span className="col-span-3 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1">
+              <span className="col-span-2 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1">
                 <ProgressBar
                   value={percent(row.done, row.total)}
                   label={`${row.label} ${progressWord}`}
@@ -358,7 +350,7 @@ export function DashboardPage() {
         <SectionTitle id="author-heading">
           <T en={DASHBOARD_UI.authorHeading} bn={DASHBOARD_UI_BN.authorHeading} />
         </SectionTitle>
-        <div className={`${CARD} mt-5 flex flex-col gap-6 p-5 sm:flex-row sm:items-start sm:p-6`}>
+        <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-start">
           {/* eslint-disable-next-line @next/next/no-img-element -- static export: a plain img with the base path added */}
           <img
             src={withBasePath(AUTHOR.photo)}

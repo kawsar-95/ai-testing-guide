@@ -3,6 +3,7 @@ export function ProgressBar({
   value,
   label,
   valueText,
+  thin = false,
   className = "",
 }: {
   /** An integer from 0 to 100. */
@@ -10,6 +11,8 @@ export function ProgressBar({
   label: string;
   /** Text for screen readers, for example `Done 2 · Remaining 6`. */
   valueText?: string;
+  /** 4 px high instead of 8 px, for a bar inside a list row. */
+  thin?: boolean;
   className?: string;
 }) {
   return (
@@ -20,7 +23,7 @@ export function ProgressBar({
       aria-valuetext={valueText}
       aria-valuemin={0}
       aria-valuemax={100}
-      className={`h-2 overflow-hidden rounded-full ${className}`}
+      className={`${thin ? "h-1" : "h-2"} overflow-hidden rounded-full ${className}`}
     >
       <svg aria-hidden="true" className="block h-full w-full">
         <rect width="100%" height="100%" className="fill-border" />

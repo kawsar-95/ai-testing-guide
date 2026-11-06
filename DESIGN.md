@@ -354,6 +354,8 @@ pattern that a generic build would reach for.
   forbidden.
 - Don't give a button a hit target smaller than `24x24px`, and never smaller
   than `44x44px` on a touch screen.
+- Don't make an index a grid of boxes. Use a ruled list: a hairline for each row. A box is for content (code, a table, a callout, a voice panel, a reel poster, a command card).
+- Don't list the same module, page, or number twice on one surface. The footer does not repeat the module list of the home page and Contents, and a progress row does not show a bar, a fraction, and a percent.
 - Don't add a spinner to an action that is not actually pending. This is a
   static export; there is no server round-trip to wait for.
 - Don't use `style={{...}}` in content, and don't add Bootstrap, Font Awesome,

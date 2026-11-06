@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GROUPS, PAGES } from "../lib/nav.ts";
-import { COURSE_CARDS, START_STEPS, WHY_ITEMS, groupLabel } from "../lib/home.ts";
+import { COURSE_CARDS, MODULE_CARDS, START_STEPS, TUTORIAL_CARDS, WHY_ITEMS, groupLabel } from "../lib/home.ts";
 import { sitemapPaths } from "../lib/sitemap.ts";
 
 test("groupLabel is the uppercase title and the count of parts", () => {
@@ -25,10 +25,10 @@ test("the start-here steps are install, permission modes, how it works", () => {
   for (const step of START_STEPS) assert.ok(PAGES.includes(step));
 });
 
-test("the why grid has 6 items with an icon, a title, and a text", () => {
+test("the why grid has 6 items with a title and a text", () => {
   assert.equal(WHY_ITEMS.length, 6);
   for (const item of WHY_ITEMS) {
-    assert.ok(item.icon.length > 0 && item.title.length > 0 && item.text.length > 0, item.title);
+    assert.ok(item.title.length > 0 && item.text.length > 0, item.title);
   }
 });
 
@@ -49,4 +49,11 @@ test("the course cards are the 6 groups, then the 14 modules", () => {
   assert.equal(COURSE_CARDS[6].href, "/linux/");
   const paths = new Set(sitemapPaths());
   for (const card of COURSE_CARDS) assert.ok(paths.has(card.href), card.href);
+});
+
+test("the home page shows the groups and the modules as two lists that make up the cards", () => {
+  assert.equal(TUTORIAL_CARDS.length, GROUPS.length);
+  assert.deepEqual([...TUTORIAL_CARDS, ...MODULE_CARDS], [...COURSE_CARDS]);
+  assert.ok(MODULE_CARDS.length > 0);
+  assert.equal(MODULE_CARDS[0].href, "/linux/");
 });

@@ -10,19 +10,17 @@ export const HOME_UI_BN: Bn<typeof HOME_UI> = {
   sub: "QA ইঞ্জিনিয়ার ও SDET-দের জন্য হাতে-কলমে টিউটোরিয়াল: Claude Code ইনস্টল করুন, এটা কীভাবে কাজ করে শিখুন, কনফিগার ও এক্সটেন্ড করুন, আর CI ও ব্রাউজারে টেস্টিং অটোমেট করুন। তারপর বাগ খোঁজা থেকে দ্বিতীয় ফিক্স PR পর্যন্ত একটা সত্যিকারের QA প্রজেক্ট অনুসরণ করুন।",
   startReading: "পড়া শুরু করুন",
   seeAll: "সব পর্ব দেখুন",
-  startHere: "এখান থেকে শুরু",
-  step: (n) => `ধাপ ${n}`,
   whyEyebrow: "কেন এই গাইড",
   whyTitle: "হাতে-কলমে শিখুন, সোর্সসহ",
-  whySub: "ছোট ছোট পর্ব, সত্যিকারের কমান্ড, আর প্রতিটা তথ্যের সোর্স।",
   courseEyebrow: "কোর্সের কাঠামো",
-  courseTitle: "ছয়টি টিউটোরিয়াল গ্রুপ ও বারোটি মডিউল",
-  courseSub:
-    "টিউটোরিয়াল ক্রমানুসারে পড়ুন, তারপর Linux, টেস্টিং ফান্ডামেন্টালস, সিস্টেম ডিজাইন, আর্কিটেকচার, System Design Course, k6 পারফরম্যান্স টেস্টিং, AI Engineering, AI Harnesses, AI স্কিল, AI Concepts, AI এজেন্ট মেমরি বা AI এজেন্ট কীভাবে কাজ করে-এর মডিউল খুলুন।",
+  courseTitle: (groups, modules) => `${groups}টি টিউটোরিয়াল গ্রুপ ও ${modules}টি মডিউল`,
+  courseSub: "টিউটোরিয়াল ক্রমানুসারে পড়ুন। দরকার হলে যেকোনো মডিউল খুলুন।",
+  tutorialLabel: "টিউটোরিয়াল · ক্রমানুসারে পড়ুন",
+  modulesLabel: "মডিউল · যেকোনোটি খুলুন",
   cardCount: (n) => `${n}টি পেজ`,
 };
 
-/** The Bangla twin of WHY_ITEMS, in the same order. The icons stay in lib/home.ts. */
+/** The Bangla twin of WHY_ITEMS, in the same order. */
 export const WHY_ITEMS_BN: readonly { title: string; text: string }[] = [
   { title: "হাতে-কলমে", text: "প্রতিটা পর্বে সত্যিকারের কমান্ড, প্রম্পট ও কনফিগ ফাইল আছে। আপনি কপি করে চালাতে পারবেন।" },
   { title: "প্রতিটা দাবির সোর্স আছে", text: "ভার্সন, কমান্ড, ফ্ল্যাগ ও সীমার লিংক অফিসিয়াল ডকসে যায়। প্রতিটা পেজে তার সোর্স তালিকা আছে।" },

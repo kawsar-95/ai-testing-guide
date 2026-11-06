@@ -3,7 +3,6 @@ import { ALL_FUNDAMENTALS_TOPIC_IDS, CHAPTERS } from "@/lib/fundamentals/chapter
 import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
 import { FUNDAMENTALS_UI_BN as BN } from "@/lib/bn/fundamentals";
 import { T } from "@/components/i18n/T";
-import { Callout } from "@/components/mdx/Callout";
 import { ChapterProgress } from "@/components/fundamentals/ChapterProgress";
 import { FundamentalsProgressSummary } from "@/components/fundamentals/FundamentalsProgressSummary";
 import { TopicChecklist } from "@/components/fundamentals/TopicChecklist";
@@ -27,17 +26,12 @@ export function FundamentalsHome() {
         <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
           <T en={FUNDAMENTALS_UI.lede} bn={BN.lede} />
         </p>
+        <p className="mt-4 text-[13px] leading-relaxed text-pretty text-text-faint">
+          <T en={FUNDAMENTALS_UI.privacyNote} bn={BN.privacyNote} />
+        </p>
       </header>
 
       <div className="mt-6 max-w-3xl">
-        <Callout type="note">
-          <p>
-            <T en={FUNDAMENTALS_UI.privacyNote} bn={BN.privacyNote} />
-          </p>
-        </Callout>
-      </div>
-
-      <div className="mt-6">
         <FundamentalsProgressSummary ids={ALL_FUNDAMENTALS_TOPIC_IDS} />
       </div>
 

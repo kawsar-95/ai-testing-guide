@@ -118,21 +118,20 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
             components={{
               PageMeta: () =>
                 info ? (
-                  <>
-                    <MetaLine
-                      sections={sections}
-                      sources={info.sources.length}
-                      updated={info.updated}
-                      editHref={editUrl("fundamentals", slug)}
-                    />
-                    <ChapterTools route={chapter.href} minutes={getReadingMinutesByVersion("fundamentals", slug)} />
-                  </>
+                  <MetaLine
+                    sections={sections}
+                    sources={info.sources.length}
+                    updated={info.updated}
+                    minutes={getReadingMinutesByVersion("fundamentals", slug)}
+                  >
+                    <ChapterTools route={chapter.href} />
+                  </MetaLine>
                 ) : null,
             }}
           />
         </article>
         <ReelsSection reels={reelsFor("fundamentals", slug)} />
-        {info ? <Sources sources={info.sources} /> : null}
+        {info ? <Sources sources={info.sources} editHref={editUrl("fundamentals", slug)} /> : null}
         <section aria-labelledby="checklist-heading" className="mt-10">
           <h2
             id="checklist-heading"

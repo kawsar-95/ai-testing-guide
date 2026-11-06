@@ -15,7 +15,6 @@ export const SHELL_BN: Omit<Bn<typeof ui>, "HOME_UI"> = {
   themeToLight: "লাইট থিমে যান",
   themeToDark: "ডার্ক থিমে যান",
   themeGeneric: "কালার থিম বদলান",
-  footerSummary: `${PAGES.length}টি পর্ব · Agentic QA`,
   partNumber: pad,
   partLabel: (n) => `পর্ব ${pad(n)}`,
 
@@ -25,7 +24,7 @@ export const SHELL_BN: Omit<Bn<typeof ui>, "HOME_UI"> = {
   searchResults: "সার্চের ফলাফল",
   searchType: `${PAGES.length}টি পর্ব, Linux stage, Fundamentals chapter, System Design কেস স্টাডি, Architecture টপিক, Course টপিক, k6 টপিক, AI Engineering টপিক, AI Harnesses টপিক, AI স্কিল, AI Concepts টপিক, Agent Memory টপিক এবং AI Agents টপিকে সার্চ করতে লিখুন।`,
   crossToTutorial: "টিউটোরিয়াল",
-  sidebarHome: "মডিউল হোম",
+  navAllModules: "সব মডিউল",
   searchLoading: "সার্চ ইনডেক্স লোড হচ্ছে…",
   searchNone: "কোনো ফলাফল নেই।",
   searchUnavailable: "এখন সার্চ পাওয়া যাচ্ছে না। পরে আবার চেষ্টা করুন।",
@@ -47,8 +46,6 @@ export const SHELL_BN: Omit<Bn<typeof ui>, "HOME_UI"> = {
   voiceGroup: "লেখার ধরন",
   installApp: "এই সাইটটি অ্যাপ হিসেবে ইনস্টল করুন",
 
-  footerColumns: { tutorial: "টিউটোরিয়াল", modules: "মডিউল", project: "প্রজেক্ট" },
-  footerContents: "সূচিপত্র",
   footerSource: "GitHub-এ সোর্স",
 
   contentsButton: "সূচিপত্র",

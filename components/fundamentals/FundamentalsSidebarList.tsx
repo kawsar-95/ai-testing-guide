@@ -7,6 +7,7 @@ import { FUNDAMENTALS_UI_BN } from "@/lib/bn/fundamentals";
 import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
 import { countDone } from "@/lib/prep/progress";
+import { partNumber } from "@/lib/ui";
 import { useFundamentalsProgress } from "./useFundamentalsProgress";
 
 /**
@@ -38,39 +39,40 @@ export function FundamentalsSidebarList({
                 aria-current={active ? "page" : undefined}
                 onClick={onNavigate}
                 className={
-                  "group block rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
+                  "group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
                   (active
                     ? "border-accent bg-bg-raised"
                     : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")
                 }
               >
-                <span
-                  className={
-                    "flex items-baseline justify-between gap-2 font-mono text-[10.5px] uppercase tracking-[0.12em] " +
-                    (active ? "text-accent" : "text-text-faint")
-                  }
-                >
-                  <span>
+                <span className={"w-5 shrink-0 font-mono text-[10.5px] tabular-nums " + (active ? "text-accent" : "text-text-faint")}>
+                  <span className="sr-only">
                     <T
                       en={FUNDAMENTALS_UI.sidebarChapterLabel(chapter.number)}
                       bn={FUNDAMENTALS_UI_BN.sidebarChapterLabel(chapter.number)}
                     />
                   </span>
-                  <span aria-hidden="true">{FUNDAMENTALS_UI.sidebarCount(count, total)}</span>
-                  <span className="sr-only">
-                    <T
-                      en={FUNDAMENTALS_UI.sidebarCountSr(count, total)}
-                      bn={FUNDAMENTALS_UI_BN.sidebarCountSr(count, total)}
-                    />
-                  </span>
+                  <span aria-hidden="true">{partNumber(chapter.number)}</span>
                 </span>
                 <span
                   className={
-                    "mt-0.5 block text-[13.5px] leading-snug " +
+                    "min-w-0 flex-1 text-[13.5px] leading-snug " +
                     (active ? "text-text" : "text-text-dim group-hover:text-text")
                   }
                 >
                   {chapter.title}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={"shrink-0 font-mono text-[10.5px] tabular-nums " + (active ? "text-accent" : "text-text-faint")}
+                >
+                  {FUNDAMENTALS_UI.sidebarCount(count, total)}
+                </span>
+                <span className="sr-only">
+                  <T
+                    en={FUNDAMENTALS_UI.sidebarCountSr(count, total)}
+                    bn={FUNDAMENTALS_UI_BN.sidebarCountSr(count, total)}
+                  />
                 </span>
               </Link>
             </li>

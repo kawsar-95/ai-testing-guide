@@ -2,21 +2,24 @@
 
 import { countDone, percent } from "@/lib/prep/progress";
 import type { FlatModuleId } from "@/lib/modules/registry";
-import { ProgressBar } from "@/components/prep/ProgressBar";
+import { ProgressReadout } from "@/components/prep/ProgressReadout";
 import { flatModule, progressHook } from "./useModuleProgress";
 import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
 import { FLAT_UI_BN } from "@/lib/bn/flat";
 
-/** A bar for a set of ids of a module (the topics or the practice questions). It never passes 100. */
+/** A readout for a set of ids of a module (the topics or the practice questions). It never passes 100. */
 export function ProgressSummary({
   moduleId,
   ids,
   kind = "topics",
+  compact = false,
 }: {
   moduleId: FlatModuleId;
   ids: readonly string[];
   kind?: "topics" | "practice";
+  /** The percentage as inline text, for a row of a list. */
+  compact?: boolean;
 }) {
   const m = flatModule(moduleId);
   const { done } = progressHook(m)();
@@ -33,14 +36,13 @@ export function ProgressSummary({
   const ariaLabel = useBn(label, labelBn);
   const valueText = useBn(text, textBn);
   return (
-    <div className="rounded-2xl border border-border bg-bg-raised shadow-sm px-5 py-4">
-      <div className="flex items-baseline justify-between gap-4">
-        <p data-progress-text className="font-mono text-[13px] text-text-dim">
-          <T en={text} bn={textBn} />
-        </p>
-        <p className="font-display text-2xl font-medium tabular-nums text-text">{ui.percentText?.(value)}</p>
-      </div>
-      <ProgressBar value={value} label={ariaLabel} valueText={valueText} className="mt-3" />
-    </div>
+    <ProgressReadout
+      text={<T en={text} bn={textBn} />}
+      percentText={ui.percentText?.(value) ?? `${value}%`}
+      value={value}
+      label={ariaLabel}
+      valueText={valueText}
+      compact={compact}
+    />
   );
 }

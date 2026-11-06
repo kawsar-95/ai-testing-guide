@@ -8,6 +8,7 @@ import { LinkDoneToggle } from "./LinkDoneToggle";
 import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
 import { FLAT_UI_BN } from "@/lib/bn/flat";
+import { partNumber } from "@/lib/ui";
 import { doneHook } from "./useModuleProgress";
 
 /**
@@ -73,39 +74,32 @@ export function FlatSidebarList({
           aria-current={active ? "page" : undefined}
           onClick={onNavigate}
           className={
-            "group block rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
+            "group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
             (toggle ? "min-w-0 flex-1 " : "") +
             (active ? "border-accent bg-bg-raised" : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")
           }
         >
-          {m.progress ? (
-            <span
-              className={
-                "flex items-baseline justify-between gap-2 font-mono text-[10.5px] uppercase tracking-[0.12em] " + tone
-              }
-            >
-              <span>{label}</span>
-              {isDone ? (
-                <>
-                  <span aria-hidden="true" className="text-accent">
-                    ✓
-                  </span>
-                  <span className="sr-only">
-                    <T en={ui.sidebarDone ?? ""} bn={bn.sidebarDone ?? ""} />
-                  </span>
-                </>
-              ) : null}
-            </span>
-          ) : (
-            <span className={"block font-mono text-[10.5px] uppercase tracking-[0.12em] " + tone}>{label}</span>
-          )}
+          <span className={"w-5 shrink-0 font-mono text-[10.5px] tabular-nums " + tone}>
+            <span className="sr-only">{label}</span>
+            <span aria-hidden="true">{partNumber(item.number)}</span>
+          </span>
           <span
             className={
-              "mt-0.5 block text-[13.5px] leading-snug " + (active ? "text-text" : "text-text-dim group-hover:text-text")
+              "min-w-0 flex-1 text-[13.5px] leading-snug " + (active ? "text-text" : "text-text-dim group-hover:text-text")
             }
           >
             {item.title}
           </span>
+          {isDone ? (
+            <>
+              <span aria-hidden="true" className="shrink-0 text-accent">
+                ✓
+              </span>
+              <span className="sr-only">
+                <T en={ui.sidebarDone ?? ""} bn={bn.sidebarDone ?? ""} />
+              </span>
+            </>
+          ) : null}
         </Link>
         {toggle ? <LinkDoneToggle moduleId={m.id} id={item.slug} title={item.title} /> : null}
       </li>

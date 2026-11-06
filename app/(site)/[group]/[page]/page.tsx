@@ -57,20 +57,19 @@ export default async function ContentPage({ params }: PageProps<"/[group]/[page]
             components={{
               PageMeta: () =>
                 info ? (
-                  <>
-                    <MetaLine
-                      sections={sections}
-                      sources={info.sources.length}
-                      updated={info.updated}
-                      editHref={editUrl(group, slug)}
-                    />
-                    <ChapterTools route={page.href} minutes={getReadingMinutes(group, slug)} />
-                  </>
+                  <MetaLine
+                    sections={sections}
+                    sources={info.sources.length}
+                    updated={info.updated}
+                    minutes={getReadingMinutes(group, slug)}
+                  >
+                    <ChapterTools route={page.href} />
+                  </MetaLine>
                 ) : null,
             }}
           />
         </article>
-        {info ? <Sources sources={info.sources} /> : null}
+        {info ? <Sources sources={info.sources} editHref={editUrl(group, slug)} /> : null}
         <div className="mt-12">
           <PrevNext prev={prev} next={next} />
         </div>
