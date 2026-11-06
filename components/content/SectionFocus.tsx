@@ -115,6 +115,7 @@ export function SectionFocus() {
         el.removeAttribute("data-sec-hidden");
         delete el.dataset.sec;
       }
+      article.removeAttribute("data-focus-on");
       top.remove();
       bottom.remove();
     };
@@ -123,6 +124,8 @@ export function SectionFocus() {
   useEffect(() => {
     if (!ready) return;
     const { article, kids, sections, bottom } = ready;
+    // The CSS drops the rule above the one visible section heading: the step bar is already above it.
+    article.toggleAttribute("data-focus-on", on);
     for (const el of kids) {
       const n = Number(el.dataset.sec);
       el.toggleAttribute("data-sec-hidden", on && n !== 0 && n !== active + 1);
@@ -159,21 +162,19 @@ export function SectionFocus() {
 
   const ghost = "btn btn-ghost btn-sm";
   const step = "btn btn-sm min-w-0 flex-1 justify-between gap-3 text-left";
+  // With 12 sections or fewer the bar shares the row with the label and the button on a wide screen, and every
+  // segment stays 24 px or wider. A longer page keeps the bar on its own row.
+  const inline = total <= 12;
 
   return (
     <>
       {createPortal(
         on ? (
-          <div role="group" aria-label={groupLabel} className="mb-6 not-prose">
-            <div className="flex items-center justify-between gap-3">
-              <p className="m-0 font-mono text-[12px] text-text-dim">
-                <T en={sectionOf(active + 1, total)} bn={SHELL_BN.sectionOf(active + 1, total)} />
-              </p>
-              <button type="button" onClick={() => setFocusMode(false)} className={ghost}>
-                <T en={showAllSections} bn={SHELL_BN.showAllSections} />
-              </button>
-            </div>
-            <div className="mt-1 flex gap-1">
+          <div role="group" aria-label={groupLabel} className="not-prose mb-2 flex flex-wrap items-center gap-x-4">
+            <p className="m-0 shrink-0 font-mono text-[12px] text-text-dim">
+              <T en={sectionOf(active + 1, total)} bn={SHELL_BN.sectionOf(active + 1, total)} />
+            </p>
+            <div className={"order-last flex w-full gap-1 " + (inline ? "sm:order-none sm:w-auto sm:min-w-0 sm:flex-1" : "")}>
               {sections.map((s, i) => (
                 <button
                   key={s.heading.id || i}
@@ -192,9 +193,12 @@ export function SectionFocus() {
                 </button>
               ))}
             </div>
+            <button type="button" onClick={() => setFocusMode(false)} className={ghost + " ml-auto shrink-0" + (inline ? " sm:ml-0" : "")}>
+              <T en={showAllSections} bn={SHELL_BN.showAllSections} />
+            </button>
           </div>
         ) : (
-          <div className="mb-6 not-prose">
+          <div className="not-prose mb-2">
             <button type="button" onClick={() => setFocusMode(true)} className={ghost}>
               <T en={oneSectionAtATime} bn={SHELL_BN.oneSectionAtATime} />
             </button>

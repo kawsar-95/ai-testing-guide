@@ -4,6 +4,7 @@ import { getSheet } from "@/lib/linux/sheets";
 import { ALL_TOPIC_IDS, STAGES } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
 import { LINUX_UI_BN as BN } from "@/lib/bn/linux";
+import { partNumber } from "@/lib/ui";
 import { T } from "@/components/i18n/T";
 import { ContinueButton } from "@/components/linux/ContinueButton";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
@@ -13,8 +14,10 @@ const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 
 /**
  * The home page of the Linux module: a map of every command. Each stage is a
- * tile with the commands of its sheet as chips, and a chip links to the card
- * of the stage page that teaches it.
+ * ruled block with the commands of its sheet as plain links, and a link goes
+ * to the card of the stage page that teaches it. A command has no box: more
+ * than 250 outlined chips on one page were the loudest thing on it. Each link
+ * is still at least 24 px high.
  */
 export function LinuxHome() {
   const tiles = STAGES.map((stage) => {
@@ -53,22 +56,20 @@ export function LinuxHome() {
       </header>
 
       <section aria-labelledby="stages-heading" className="mt-9">
-        <h2 id="stages-heading" className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}>
+        {/* No rule under this heading: the top rule of each block below is the rule. */}
+        <h2 id="stages-heading" className={`${LABEL} text-text-dim`}>
           <T en={LINUX_UI.stagesHeading} bn={BN.stagesHeading} />
         </h2>
-        <ol role="list" className="mt-4 grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
+        <ol role="list" className="mt-4 grid list-none gap-x-10 gap-y-9 p-0 sm:grid-cols-2 xl:grid-cols-3">
           {tiles.map(({ stage, commands }) => (
             <li key={stage.slug} className="flex">
               <section
                 aria-labelledby={`stage-${stage.slug}`}
-                className="flex w-full flex-col rounded-[10px] border border-border bg-bg-raised p-4 shadow-sm"
+                className="flex w-full flex-col border-t border-border-strong pt-4"
               >
-                <div className="flex items-start gap-2.5">
-                  <span
-                    aria-hidden="true"
-                    className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-soft font-mono text-[12px] font-semibold text-accent"
-                  >
-                    {stage.number}
+                <div className="flex items-baseline gap-3">
+                  <span aria-hidden="true" className="w-6 shrink-0 font-mono text-[12px] tabular-nums text-accent">
+                    {partNumber(stage.number)}
                   </span>
                   <div className="min-w-0 grow">
                     <h3
@@ -98,13 +99,13 @@ export function LinuxHome() {
                 <ul
                   role="list"
                   aria-labelledby={`stage-${stage.slug}`}
-                  className="m-0 mt-3 flex list-none flex-wrap gap-1 p-0"
+                  className="-ml-1.5 mt-2 flex list-none flex-wrap gap-x-0.5 p-0"
                 >
                   {commands.map(({ name, anchor }) => (
                     <li key={name}>
                       <Link
                         href={`${stage.href}#${anchor}`}
-                        className="inline-flex min-h-6 min-w-6 items-center justify-center rounded-md border border-border bg-bg px-1.5 font-mono text-[12px] text-text no-underline hover:border-accent hover:text-accent"
+                        className="inline-flex min-h-6 min-w-6 items-center justify-center rounded px-1.5 font-mono text-[12.5px] text-text no-underline hover:text-accent hover:underline hover:underline-offset-4"
                       >
                         {name}
                       </Link>

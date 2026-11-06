@@ -2,11 +2,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { PAGES } from "../lib/nav.ts";
 import { FUNDAMENTALS_UI } from "../lib/fundamentals/ui.ts";
-import { footerSummary, partLabel, partNumber, searchType, voiceToBangla, voiceToTechnical } from "../lib/ui.ts";
+import { partLabel, partNumber, searchType, voiceToBangla, voiceToTechnical } from "../lib/ui.ts";
 import { VOICE_TOGGLE_TEXT } from "../lib/voice.ts";
 
 test("the page count in the strings comes from PAGES", () => {
-  assert.ok(footerSummary.startsWith(`${PAGES.length} parts`));
   assert.ok(searchType.includes(`the ${PAGES.length} parts`));
 });
 

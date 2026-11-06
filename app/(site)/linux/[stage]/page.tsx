@@ -116,11 +116,13 @@ function SheetStage({ stage, sheet }: { stage: LinuxStage; sheet: Sheet }) {
           sections={stage.topics.length}
           sources={sources.length}
           updated={sheet.updated}
-          editHref={sheetEditUrl(stage.slug)}
-        />
-        <ChapterTools route={stage.href} minutes={sheetMinutes(sheet)} />
+          minutes={sheetMinutes(sheet)}
+          className="mt-8 border-t border-border pt-4"
+        >
+          <ChapterTools route={stage.href} />
+        </MetaLine>
         <ReelsSection reels={reelsFor("linux", stage.slug)} />
-        <SheetSources sources={sources} />
+        <SheetSources sources={sources} editHref={sheetEditUrl(stage.slug)} />
         <StageNav stage={stage} />
       </ChapterLayout>
       <BackToTop />

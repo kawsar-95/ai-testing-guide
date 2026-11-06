@@ -2,22 +2,27 @@ import { T } from "@/components/i18n/T";
 import { SHELL_BN } from "@/lib/bn/shell";
 import type { Source } from "@/lib/page";
 import { sourceAccessed, sourcesHeading } from "@/lib/ui";
+import { EditLink } from "./EditLink";
 
 /**
  * The numbered list of sources at the end of a page. Item k has the id
  * `src-k`: the `<Cite n={k} />` links in the body jump to it. The heading is
  * rendered here, not in the MDX, so it is not part of the "On this page" list.
+ * With `editHref`, the "Suggest an edit" link sits on the heading row.
  */
-export function Sources({ sources }: { sources: Source[] }) {
+export function Sources({ sources, editHref }: { sources: Source[]; editHref?: string }) {
   if (sources.length === 0) return null;
   return (
     <section aria-labelledby="sources" className="mt-12 border-t border-border pt-6">
-      <h2
-        id="sources"
-        className="scroll-mt-20 font-display text-2xl font-medium tracking-[-0.01em] text-text"
-      >
-        <T en={sourcesHeading} bn={SHELL_BN.sourcesHeading} />
-      </h2>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <h2
+          id="sources"
+          className="scroll-mt-20 font-display text-2xl font-medium tracking-[-0.01em] text-text"
+        >
+          <T en={sourcesHeading} bn={SHELL_BN.sourcesHeading} />
+        </h2>
+        {editHref ? <EditLink href={editHref} /> : null}
+      </div>
       <ol role="list" className="mt-4 list-none divide-y divide-border p-0">
         {sources.map((source, index) => (
           <li

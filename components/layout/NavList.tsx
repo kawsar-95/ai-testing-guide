@@ -22,8 +22,9 @@ import { FUNDAMENTALS_UI } from "@/lib/fundamentals/ui";
 import { LINUX_HOME } from "@/lib/linux/stages";
 import { LINUX_UI } from "@/lib/linux/ui";
 import { FlatSidebarList } from "@/components/modules/FlatSidebarList";
+import { CONTENTS_HOME } from "@/lib/contents";
 import { FLAT_MODULES, type FlatModuleId } from "@/lib/modules/registry";
-import { crossToTutorial, sidebarHome } from "@/lib/ui";
+import { crossToTutorial, navAllModules } from "@/lib/ui";
 import { SidebarList } from "./SidebarList";
 
 type Section = "tutorial" | "linux" | "fundamentals" | FlatModuleId;
@@ -58,38 +59,44 @@ function sectionOf(activePath: string | null): Section {
 }
 
 /**
- * The list of the sidebar and the drawer: every module (the tutorial too) as
- * one collapsible section with its pages. The current module is open.
+ * The list of the sidebar and the drawer: the name of the current module (a
+ * link to its home), a link to /contents/ for the other modules, and the pages
+ * of the current module. Only that one module is rendered, so the rail does
+ * not list every module a second time (the header and /contents/ do).
+ * `allModules` is false in the drawer, which already shows the Contents link.
  */
 export function NavList({
   activePath,
   onNavigate,
+  allModules = true,
 }: {
   activePath: string | null;
   onNavigate?: () => void;
+  allModules?: boolean;
 }) {
   const current = sectionOf(activePath);
+  const section = SECTIONS.find((s) => s.id === current)!;
   return (
     <div className="px-3 pt-4">
-      {SECTIONS.map((section) => (
-        // key on current: a new module opens its section and closes the others
-        <details key={`${section.id}-${current}`} open={section.id === current} className="group mb-1 border-b border-border pb-1 last:border-b-0">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md px-3 py-2 text-[14px] font-medium text-text hover:bg-bg-raised/60 [&::-webkit-details-marker]:hidden">
-            <T en={section.label} bn={section.bn} />
-            <span aria-hidden="true" className="text-text-faint transition-transform group-open:rotate-90">
-              ▸
-            </span>
-          </summary>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-3">
+        <Link
+          href={section.href}
+          onClick={onNavigate}
+          className="font-display text-[17px] font-medium leading-snug text-text no-underline hover:text-accent"
+        >
+          <T en={section.label} bn={section.bn} />
+        </Link>
+        {allModules ? (
           <Link
-            href={section.href}
+            href={CONTENTS_HOME}
             onClick={onNavigate}
-            className="mx-3 mt-1 inline-block font-mono text-[11px] uppercase tracking-[0.12em] text-text-dim no-underline hover:text-accent"
+            className="shrink-0 font-mono text-[11px] uppercase tracking-[0.12em] text-text-faint no-underline hover:text-accent"
           >
-            <T en={sidebarHome} bn={SHELL_BN.sidebarHome} /> <span aria-hidden="true">→</span>
+            <T en={navAllModules} bn={SHELL_BN.navAllModules} />
           </Link>
-          {list(section.id)}
-        </details>
-      ))}
+        ) : null}
+      </div>
+      {list(current)}
     </div>
   );
 

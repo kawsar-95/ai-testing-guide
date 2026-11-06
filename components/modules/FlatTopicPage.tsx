@@ -132,9 +132,10 @@ export async function FlatTopicPage({
                       sections={sections}
                       sources={info.sources.length}
                       updated={info.updated}
-                      editHref={editUrl(m.id, topic)}
-                    />
-                    <ChapterTools route={item.href} minutes={getReadingMinutes(m.id, topic)} />
+                      minutes={getReadingMinutes(m.id, topic)}
+                    >
+                      <ChapterTools route={item.href} />
+                    </MetaLine>
                     {practice && m.progress?.extraIds ? (
                       <div className="my-6">
                         <ProgressSummary moduleId={m.id} ids={m.progress.extraIds} kind="practice" />
@@ -147,7 +148,7 @@ export async function FlatTopicPage({
         </article>
         {m.progress && item.kind === "topic" ? <MarkDoneButton moduleId={m.id} id={item.slug} /> : null}
         <ReelsSection reels={reelsFor(m.id, topic)} />
-        {info ? <Sources sources={info.sources} /> : null}
+        {info ? <Sources sources={info.sources} editHref={editUrl(m.id, topic)} /> : null}
         <ItemNav module={m} item={item} />
       </ChapterLayout>
       <BackToTop />

@@ -5,17 +5,20 @@ import { LINUX_UI_BN } from "@/lib/bn/linux";
 import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
 import { countDone, percent } from "@/lib/prep/progress";
-import { ProgressBar } from "@/components/prep/ProgressBar";
+import { ProgressReadout } from "@/components/prep/ProgressReadout";
 import { useLinuxProgress } from "./useLinuxProgress";
 
-/** A bar for a set of topics. It counts only the ids that exist, so it never passes 100. */
+/** A readout for a set of topics. It counts only the ids that exist, so it never passes 100. */
 export function LinuxProgressSummary({
   ids,
   title,
+  compact = false,
 }: {
   ids: readonly string[];
   /** The name of a stage. Without it, the bar is the overall progress. */
   title?: string;
+  /** The percentage as inline text, for a row of a list. */
+  compact?: boolean;
 }) {
   const { done } = useLinuxProgress();
   const total = new Set(ids).size;
@@ -29,16 +32,13 @@ export function LinuxProgressSummary({
   );
   const valueText = useBn(text, textBn);
   return (
-    <div className="rounded-2xl border border-border bg-bg-raised shadow-sm px-5 py-4">
-      <div className="flex items-baseline justify-between gap-4">
-        <p data-progress-text className="font-mono text-[13px] text-text-dim">
-          <T en={text} bn={textBn} />
-        </p>
-        <p className="font-display text-2xl font-medium tabular-nums text-text">
-          {LINUX_UI.percentText(value)}
-        </p>
-      </div>
-      <ProgressBar value={value} label={label} valueText={valueText} className="mt-3" />
-    </div>
+    <ProgressReadout
+      text={<T en={text} bn={textBn} />}
+      percentText={LINUX_UI.percentText(value)}
+      value={value}
+      label={label}
+      valueText={valueText}
+      compact={compact}
+    />
   );
 }

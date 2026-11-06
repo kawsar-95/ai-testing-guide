@@ -12,7 +12,6 @@ export const menuClose = "Close the list of parts";
 export const themeToLight = "Switch to light theme";
 export const themeToDark = "Switch to dark theme";
 export const themeGeneric = "Switch color theme";
-export const footerSummary = `${PAGES.length} parts · Agentic QA`;
 
 /** `05`: the part number, zero-padded to 2 digits. */
 export function partNumber(n: number): string {
@@ -31,8 +30,8 @@ export const searchResults = "Search results";
 export const searchType = `Type to search the ${PAGES.length} parts, the Linux stages, the Fundamentals chapters, the System Design case studies, the Architecture topics, the Course topics, the k6 topics, the AI Engineering topics, the AI Harnesses topics, the AI skills, the AI Concepts topics, the Agent Memory topics, and the AI Agents topics.`;
 /** The text of the link to the tutorial in the drawer of another section. */
 export const crossToTutorial = "Tutorial";
-/** The link to the home of a module in the sidebar. */
-export const sidebarHome = "Module home";
+/** The link at the top of the sidebar that opens /contents/, where every module is listed. */
+export const navAllModules = "All modules";
 export const searchLoading = "Loading the search index…";
 export const searchNone = "No results.";
 export const searchUnavailable = "Search is not available now. Try again later.";
@@ -64,19 +63,16 @@ export const HOME_UI = {
   sub: "A hands-on tutorial for QA engineers and SDETs: install Claude Code, learn how it works, configure and extend it, and automate testing in CI and the browser. Then follow one real QA project from a bug hunt to a second fix PR.",
   startReading: "Start reading",
   seeAll: "See all parts",
-  startHere: "START HERE",
-  step: (n: number) => `STEP ${n}`,
   whyEyebrow: "WHY THIS GUIDE",
   whyTitle: "Learn by doing, with sources",
-  whySub: "Short parts, real commands, and a source for each fact.",
   courseEyebrow: "COURSE STRUCTURE",
-  courseTitle: "Six tutorial groups and twelve modules",
-  courseSub: "Read the tutorial in order, then open a module for Linux, testing fundamentals, system design, architecture, the System Design Course, k6 performance testing, AI engineering, AI harnesses, AI skills, AI concepts, AI agent memory, or how AI agents work.",
+  courseTitle: (groups: number, modules: number) => `${groups} tutorial groups and ${modules} modules`,
+  courseSub: "Read the tutorial in order. Open any module when you need it.",
+  tutorialLabel: "TUTORIAL · READ IN ORDER",
+  modulesLabel: "MODULES · OPEN ANY",
   cardCount: (n: number) => `${n} ${n === 1 ? "page" : "pages"}`,
 };
 
-export const footerColumns = { tutorial: "Tutorial", modules: "Modules", project: "Project" };
-export const footerContents = "Contents";
 export const footerSource = "Source on GitHub";
 
 export const contentsButton = "Contents";

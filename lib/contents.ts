@@ -9,7 +9,7 @@ export const CONTENTS_UI = {
   description: "Every part of the tutorial and every page of the Linux, Fundamentals, System Design, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, AI/ML Testing, and DevOps & Cloud modules on one page.",
   eyebrow: "CONTENTS",
   heading: "All parts and modules",
-  lede: "Start with the tutorial, or open a module. Your progress in Linux, Fundamentals, Architecture, the Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, and AI/ML Testing stays in this browser.",
+  lede: "Start with the tutorial, or open a module. Open a row to see every page in it. Your progress stays in this browser.",
   tutorialHeading: "Tutorial",
   modulesHeading: "Modules",
   groupMeta: (count: number) => `${count} ${count === 1 ? "part" : "parts"}`,

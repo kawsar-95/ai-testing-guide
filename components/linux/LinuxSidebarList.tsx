@@ -7,6 +7,7 @@ import { LINUX_UI_BN } from "@/lib/bn/linux";
 import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
 import { countDone } from "@/lib/prep/progress";
+import { partNumber } from "@/lib/ui";
 import { useLinuxProgress } from "./useLinuxProgress";
 
 /**
@@ -38,33 +39,34 @@ export function LinuxSidebarList({
                 aria-current={active ? "page" : undefined}
                 onClick={onNavigate}
                 className={
-                  "group block rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
+                  "group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
                   (active
                     ? "border-accent bg-bg-raised"
                     : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")
                 }
               >
-                <span
-                  className={
-                    "flex items-baseline justify-between gap-2 font-mono text-[10.5px] uppercase tracking-[0.12em] " +
-                    (active ? "text-accent" : "text-text-faint")
-                  }
-                >
-                  <span>
+                <span className={"w-5 shrink-0 font-mono text-[10.5px] tabular-nums " + (active ? "text-accent" : "text-text-faint")}>
+                  <span className="sr-only">
                     <T en={LINUX_UI.sidebarStageLabel(stage.number)} bn={LINUX_UI_BN.sidebarStageLabel(stage.number)} />
                   </span>
-                  <span aria-hidden="true">{LINUX_UI.sidebarCount(count, total)}</span>
-                  <span className="sr-only">
-                    <T en={LINUX_UI.sidebarCountSr(count, total)} bn={LINUX_UI_BN.sidebarCountSr(count, total)} />
-                  </span>
+                  <span aria-hidden="true">{partNumber(stage.number)}</span>
                 </span>
                 <span
                   className={
-                    "mt-0.5 block text-[13.5px] leading-snug " +
+                    "min-w-0 flex-1 text-[13.5px] leading-snug " +
                     (active ? "text-text" : "text-text-dim group-hover:text-text")
                   }
                 >
                   {stage.title}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={"shrink-0 font-mono text-[10.5px] tabular-nums " + (active ? "text-accent" : "text-text-faint")}
+                >
+                  {LINUX_UI.sidebarCount(count, total)}
+                </span>
+                <span className="sr-only">
+                  <T en={LINUX_UI.sidebarCountSr(count, total)} bn={LINUX_UI_BN.sidebarCountSr(count, total)} />
                 </span>
               </Link>
             </li>

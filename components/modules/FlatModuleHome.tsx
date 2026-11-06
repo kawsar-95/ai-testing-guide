@@ -1,34 +1,24 @@
 import Link from "next/link";
 import type { FlatModule } from "@/lib/modules/flat";
 import type { FlatModuleId } from "@/lib/modules/registry";
-import { Callout } from "@/components/mdx/Callout";
 import { T } from "@/components/i18n/T";
 import { FLAT_UI_BN } from "@/lib/bn/flat";
+import { partNumber } from "@/lib/ui";
 import { DoneMark } from "./DoneMark";
 import { LinkDoneToggle } from "./LinkDoneToggle";
 import { ProgressSummary } from "./ProgressSummary";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 
-/** The home page of a flat module: the header, the progress bar (with progress), and one entry for each item. */
+/**
+ * The home page of a flat module: the header with one quiet note, the progress
+ * readout (with progress), and one row for each item: its number, its title
+ * (the one link of the row), and its description.
+ */
 export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId> }) {
   const ui = m.ui;
   const bn = FLAT_UI_BN[m.id];
   const topics = m.items.filter((item) => item.kind === "topic" || item.kind === "link").length;
-  const note = (
-    <Callout type="note">
-      <p>
-        <T en={ui.sourceNote} bn={bn.sourceNote} />
-      </p>
-      {ui.projectLink && bn.projectLink ? (
-        <p>
-          <a href={ui.projectLink.href}>
-            <T en={ui.projectLink.label} bn={bn.projectLink.label} />
-          </a>
-        </p>
-      ) : null}
-    </Callout>
-  );
   return (
     <div className="mx-auto max-w-4xl px-4 pt-10 pb-6 sm:px-6 sm:pt-14">
       <header className="max-w-3xl">
@@ -41,16 +31,24 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
         <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
           <T en={ui.lede} bn={bn.lede} />
         </p>
+        <p className="mt-4 text-[13px] leading-relaxed text-pretty text-text-faint">
+          <T en={ui.sourceNote} bn={bn.sourceNote} />
+          {ui.projectLink && bn.projectLink ? (
+            <>
+              {" "}
+              <a href={ui.projectLink.href} className="text-accent underline underline-offset-2">
+                <T en={ui.projectLink.label} bn={bn.projectLink.label} />
+              </a>
+            </>
+          ) : null}
+        </p>
       </header>
 
       {m.progress ? (
-        <div className="mt-6 max-w-3xl space-y-6">
+        <div className="mt-6 max-w-3xl">
           <ProgressSummary moduleId={m.id} ids={m.lessonIds} />
-          {note}
         </div>
-      ) : (
-        <div className="mt-6 max-w-3xl">{note}</div>
-      )}
+      ) : null}
 
       <section aria-labelledby={ui.itemsHeadingId} className="mt-9 sm:mt-10">
         <h2 id={ui.itemsHeadingId} className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}>
@@ -62,29 +60,29 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
           const list = (
             <ol key="all" className="m-0 list-none p-0">
               {items.map((item) => (
-                <li key={item.slug} className="border-b border-border py-4">
-                  <p className={`${LABEL} text-accent`}>
-                    {item.kind === "practice" ? (
-                      <T en={ui.practiceEyebrow ?? ""} bn={bn.practiceEyebrow ?? ""} />
-                    ) : (
-                      <T en={ui.itemEyebrow(item.number)} bn={bn.itemEyebrow(item.number)} />
-                    )}
+                <li key={item.slug} className="border-b border-border">
+                  <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-3.5">
+                    <span aria-hidden="true" className="font-mono text-[12px] tabular-nums text-text-faint">
+                      {partNumber(item.number)}
+                    </span>
+                    <div className="min-w-0">
+                      <Title className="m-0 font-display text-xl font-medium leading-snug text-text">
+                        <Link href={item.href} className="text-text no-underline hover:text-accent">
+                          {item.title}
+                        </Link>
+                      </Title>
+                      <p className="mt-0.5 max-w-3xl text-[15px] leading-relaxed text-pretty text-text-dim">
+                        {item.description}
+                      </p>
+                    </div>
+                    {/* Beside the heading, not in it, so the button text is not part of the heading name. */}
                     {m.progress && item.kind === "topic" ? <DoneMark moduleId={m.id} id={item.slug} /> : null}
                     {m.progress && item.kind === "link" ? (
-                      // In the eyebrow, not in the heading, so the button text is not part of the heading name.
-                      <span className="ml-2 inline-flex align-middle">
+                      <span className="inline-flex self-center">
                         <LinkDoneToggle moduleId={m.id} id={item.slug} title={item.title} />
                       </span>
                     ) : null}
-                  </p>
-                  <Title className="mt-1 font-display text-xl font-medium leading-snug text-text">
-                    <Link href={item.href} className="text-text no-underline hover:text-accent">
-                      {item.title}
-                    </Link>
-                  </Title>
-                  <p className="mt-1 max-w-3xl text-[15px] leading-relaxed text-pretty text-text-dim">
-                    {item.description}
-                  </p>
+                  </div>
                 </li>
               ))}
             </ol>

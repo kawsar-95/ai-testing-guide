@@ -27,6 +27,10 @@ const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1
 export function MobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // The list is mounted when the drawer first opens, and it stays mounted. A closed drawer then adds no links
+  // to the page. It also keeps the first render the same on the server and in the browser: the list depends on
+  // the path, and a 404 page is served at a path that is not its own.
+  const [opened, setOpened] = useState(false);
   const [lastPathname, setLastPathname] = useState(pathname);
   const navMainLabel = useBn(navMain, SHELL_BN.navMain);
   const panelId = useId();
@@ -35,6 +39,8 @@ export function MobileNav() {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  if (open && !opened) setOpened(true);
 
   // Close the drawer when the pathname changes (React's "adjust state
   // during render" pattern; no effect needed).
@@ -174,7 +180,9 @@ export function MobileNav() {
                 );
               })}
             </nav>
-            <NavList activePath={withTrailingSlash(pathname)} onNavigate={() => setOpen(false)} />
+            {opened ? (
+              <NavList activePath={withTrailingSlash(pathname)} onNavigate={() => setOpen(false)} allModules={false} />
+            ) : null}
           </div>
         </div>
       </div>
