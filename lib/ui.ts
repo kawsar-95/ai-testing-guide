@@ -88,6 +88,13 @@ export const markRead = "Mark as read";
 export const markedRead = "Read";
 export const chapterNav = "Pages of this section";
 
+// The buttons that close and open the two sidebars of a content page
+// (components/layout/SidebarToggle.tsx). Each name says what a click does.
+export const sidebarLeftHide = "Hide the page list";
+export const sidebarLeftShow = "Show the page list";
+export const sidebarRightHide = "Hide the section list";
+export const sidebarRightShow = "Show the section list";
+
 // One section at a time (components/content/SectionFocus.tsx).
 export const sectionOf = (n: number, total: number) => `Section ${n} of ${total}`;
 export const sectionsGroup = "Sections of this page";

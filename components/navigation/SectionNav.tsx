@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
+import { SidebarToggle } from "@/components/layout/SidebarToggle";
 import { SHELL_BN } from "@/lib/bn/shell";
 import { onThisPage } from "@/lib/ui";
 import type { OutlineItem } from "@/lib/outline";
@@ -67,15 +68,24 @@ export function SectionNav({ items }: { items: OutlineItem[] }) {
   const openSection = active ? parentOf.get(active) : undefined;
 
   return (
+    // -m-1 p-1: room inside the scroll box for the focus ring of the toggle, with no change to the layout.
+    // top-23 is top-24 less that 4 px: the toggle row sticks 96 px from the top, level with the left toggle.
     <nav
       data-toc
       aria-label={navLabel}
-      className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pb-6"
+      className="sticky top-23 -m-1 max-h-[calc(100vh-7.75rem)] overflow-y-auto p-1 pb-6"
     >
-      <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.16em] text-text-faint">
-        <T en={onThisPage} bn={SHELL_BN.onThisPage} />
-      </p>
-      <ol className="m-0 list-none border-l border-border p-0">
+      {/* A closed sidebar is a rail: the label and the list hide, and the toggle stays. */}
+      <div className="mb-1.5 flex min-h-9 items-center justify-end pointer-coarse:min-h-11">
+        <p
+          data-sidebar-body="right"
+          className="mr-auto font-mono text-[11px] uppercase tracking-[0.16em] text-text-faint"
+        >
+          <T en={onThisPage} bn={SHELL_BN.onThisPage} />
+        </p>
+        <SidebarToggle side="right" />
+      </div>
+      <ol data-sidebar-body="right" className="m-0 list-none border-l border-border p-0">
         {items.map((item) => {
           const isActive = item.id === active;
           if (item.level === 3 && parentOf.get(item.id) !== openSection) return null;

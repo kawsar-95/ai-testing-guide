@@ -298,6 +298,14 @@ The default radius for a component is `10px`. When in doubt, use `10px`.
 `--text` on hover. The brand mark is the exception: `bg-accent` with a
 `text-bg` glyph.
 
+**Sidebar toggle.** A bare icon button, with no edge and no ground at rest, at
+the top of each side column of a content page. It is `size-9` (`36px`), and
+`44px` on a touch screen. The glyph is `--text-dim`; on hover it turns `--text`
+on a `--bg-raised-2` ground. The glyph is a rounded window with the divider on
+the side of its sidebar and a chevron that points at the sidebar while it is
+open and away from it while it is closed. A closed sidebar shrinks to a
+`2.75rem` rail that holds only this button.
+
 **Code block.** Fixed dark ground `#22272e` in both themes, `10px` radius,
 `16px 18px` padding, JetBrains Mono at `13px`. The copy button and the
 uppercase language label sit in the top-right corner, 6px from the top and
