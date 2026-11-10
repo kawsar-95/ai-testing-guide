@@ -54,7 +54,11 @@ class RenderSourcesEscapingTests(unittest.TestCase):
         self.assertEqual(numbers, {"fake-key": 1})
 
 
-class RenderPageEscapingTests(unittest.TestCase):
+class PageFixture(unittest.TestCase):
+    """A page with an apostrophe in its title, rendered with a fake source library. No tests."""
+
+    page: dict
+
     def setUp(self):
         self.page = {
             "slug": "test-page",
@@ -87,6 +91,8 @@ class RenderPageEscapingTests(unittest.TestCase):
     def tearDown(self):
         gen.source = self.original_source
 
+
+class RenderPageEscapingTests(PageFixture):
     def test_a_title_apostrophe_does_not_break_the_metadata_line(self):
         rendered = gen.render_page(self.page)
         first_line = rendered.split("\n")[0]
@@ -107,6 +113,16 @@ class RenderPageEscapingTests(unittest.TestCase):
         # The Markdown `# Title` line is not inside a JS string, so it must
         # NOT be escaped there.
         self.assertIn("# Agent Architecture: What You're Testing", rendered)
+
+
+class RenderPageUpdatedTests(PageFixture):
+    def test_a_page_without_updated_gets_the_module_date(self):
+        self.assertIn(f"  updated: '{gen.UPDATED}',", gen.render_page(self.page))
+
+    def test_a_page_with_updated_gets_its_own_date(self):
+        rendered = gen.render_page({**self.page, "updated": "2030-01-02"})
+        self.assertIn("  updated: '2030-01-02',", rendered)
+        self.assertNotIn(f"updated: '{gen.UPDATED}'", rendered)
 
 
 if __name__ == "__main__":

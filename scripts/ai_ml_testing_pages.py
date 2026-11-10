@@ -3,6 +3,9 @@
 One dict per page. The keys of a page:
 
     slug, title, description, lede   the identity of the page
+    updated                          optional: the day the page last changed
+                                     (YYYY-MM-DD); without it, the module date
+                                     UPDATED of ai_ml_testing_pages_gen.py
     sources                          the source keys, in cite order
     sections                         the five sections, each with three panels
     key_words                        the table rows of the Key words section
