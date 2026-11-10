@@ -1,6 +1,6 @@
 export const metadata = { title: 'Environment Variables and Test Data', description: 'Pass settings with __ENV and load test data from a CSV file.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-11',
   sources: [
     { title: 'Environment variables', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/environment-variables/', accessed: '2026-10-27' },
     { title: 'Options reference', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/', accessed: '2026-10-27' },
@@ -432,6 +432,31 @@ secret ফাইল রিপোজিটরির বাইরে রাখু�
 
 **SharedArray.** `SharedArray` from `k6/data` fixes this. It shares the memory between VUs. Its function runs only once, and k6 keeps the result in memory once. When the script asks for an element, k6 gives a copy of it <Cite n={4} />. A `SharedArray` has a small CPU cost to read elements, but the docs say it is negligible next to the time of the requests <Cite n={5} />. You must build it in the init context. It is read-only, so VUs cannot use it to send data to each other <Cite n={4} />.
 
+</Technical>
+<Layman>
+
+A load test with one fixed value is not realistic. Parameterization turns test values into inputs, so each request can use other data. The k6 docs say it also helps to stop server-side caching from affecting the test <Cite n={5} />.
+
+The function `open()` reads a whole file into memory. You can call it only in the init context. This is the code outside the default function <Cite n={3} />. Every VU keeps its own copy of the file <Cite n={3} />. Each VU is a separate JavaScript VM <Cite n={5} />. So a big file can use too much memory <Cite n={5} />.
+
+`SharedArray` from `k6/data` fixes this. It shares the memory between VUs. Its function runs only once, and k6 keeps the result in memory once. When the script asks for an element, k6 gives a copy of it <Cite n={4} />. A `SharedArray` has a small CPU cost to read elements. The docs say this cost is negligible next to the time of the requests <Cite n={5} />. You must build it in the init context. It is read-only, so VUs cannot use it to send data to each other <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+একটা fixed value দিয়ে load test বাস্তবসম্মত হয় না। Parameterization টেস্টের value-কে input বানায়, ফলে প্রতিটা request অন্য data ব্যবহার করতে পারে। k6 docs বলে, এটা server-side caching-কে টেস্টে প্রভাব ফেলা থেকে আটকাতেও সাহায্য করে <Cite n={5} />।
+
+`open()` ফাংশন পুরো ফাইল মেমরিতে পড়ে। আপনি এটা শুধু init context-এ কল করতে পারেন। এটা default function-এর বাইরের কোড <Cite n={3} />। প্রতিটা VU ফাইলের নিজস্ব কপি রাখে <Cite n={3} />। প্রতিটা VU আলাদা JavaScript VM <Cite n={5} />। তাই বড় ফাইল অনেক বেশি মেমরি নিতে পারে <Cite n={5} />।
+
+`k6/data`-র `SharedArray` এর সমাধান। এটা VU-দের মধ্যে মেমরি শেয়ার করে। এর ফাংশন শুধু একবার চলে, আর k6 ফলাফল মেমরিতে একবারই রাখে। স্ক্রিপ্ট কোনো element চাইলে k6 তার একটা কপি দেয় <Cite n={4} />। element পড়তে `SharedArray`-র সামান্য CPU খরচ আছে, কিন্তু docs বলে request-এর সময়ের তুলনায় সেটা নগণ্য <Cite n={5} />। একে init context-এ বানাতে হয়। এটা read-only, তাই VU-রা একে দিয়ে একে অপরকে data পাঠাতে পারে না <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## Example CSV Script Walkthrough
+<Voices>
+<Technical>
+
 Here the file `users.csv` has one user id on each line. The owner's script reads it this way:
 
 ```text
@@ -476,12 +501,6 @@ The `.map()` and `.filter()` calls are inside the constructor, so they run once.
 </Technical>
 <Layman>
 
-A load test with one fixed value is not realistic. Parameterization turns test values into inputs, so each request can use other data. The k6 docs say it also helps to stop server-side caching from affecting the test <Cite n={5} />.
-
-The function `open()` reads a whole file into memory. You can call it only in the init context. This is the code outside the default function <Cite n={3} />. Every VU keeps its own copy of the file <Cite n={3} />. Each VU is a separate JavaScript VM <Cite n={5} />. So a big file can use too much memory <Cite n={5} />.
-
-`SharedArray` from `k6/data` fixes this. It shares the memory between VUs. Its function runs only once, and k6 keeps the result in memory once. When the script asks for an element, k6 gives a copy of it <Cite n={4} />. A `SharedArray` has a small CPU cost to read elements. The docs say this cost is negligible next to the time of the requests <Cite n={5} />. You must build it in the init context. It is read-only, so VUs cannot use it to send data to each other <Cite n={4} />.
-
 Here the file `users.csv` has one user id on each line. The owner's script reads it this way:
 
 ```text
@@ -525,12 +544,6 @@ The `.map()` and `.filter()` calls are inside the constructor, so they run once.
 
 </Layman>
 <Bangla>
-
-একটা fixed value দিয়ে load test বাস্তবসম্মত হয় না। Parameterization টেস্টের value-কে input বানায়, ফলে প্রতিটা request অন্য data ব্যবহার করতে পারে। k6 docs বলে, এটা server-side caching-কে টেস্টে প্রভাব ফেলা থেকে আটকাতেও সাহায্য করে <Cite n={5} />।
-
-`open()` ফাংশন পুরো ফাইল মেমরিতে পড়ে। আপনি এটা শুধু init context-এ কল করতে পারেন। এটা default function-এর বাইরের কোড <Cite n={3} />। প্রতিটা VU ফাইলের নিজস্ব কপি রাখে <Cite n={3} />। প্রতিটা VU আলাদা JavaScript VM <Cite n={5} />। তাই বড় ফাইল অনেক বেশি মেমরি নিতে পারে <Cite n={5} />।
-
-`k6/data`-র `SharedArray` এর সমাধান। এটা VU-দের মধ্যে মেমরি শেয়ার করে। এর ফাংশন শুধু একবার চলে, আর k6 ফলাফল মেমরিতে একবারই রাখে। স্ক্রিপ্ট কোনো element চাইলে k6 তার একটা কপি দেয় <Cite n={4} />। element পড়তে `SharedArray`-র সামান্য CPU খরচ আছে, কিন্তু docs বলে request-এর সময়ের তুলনায় সেটা নগণ্য <Cite n={5} />। একে init context-এ বানাতে হয়। এটা read-only, তাই VU-রা একে দিয়ে একে অপরকে data পাঠাতে পারে না <Cite n={4} />।
 
 এখানে `users.csv` ফাইলের প্রতি লাইনে একটা user id আছে। owner-এর স্ক্রিপ্ট এভাবে পড়ে:
 

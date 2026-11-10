@@ -94,4 +94,22 @@ None.
 |---|---|---|
 | T1 | PASS | The facts, code, callout and cites are unchanged. The "so they can change" split keeps the same meaning. The split cite sentence puts a cite after each part. The two bold labels match the text under them. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Section split (2026-11-11)
+
+The cognitive-load audit of 2026-11-11 left 1 section of this page HUGE after the readability edit: `The four stages`. Each was split into two `##` sections at a block boundary. The first part keeps its heading and anchor; the second has a new `##` heading (or a promoted `###` heading) and its own `<Voices>` block. No text was rewritten: a script cut the Technical, Layman, and Bangla panels between blocks. This round is a script check, not an agent check, because no claim changed.
+
+### FAILs
+
+None.
+
+### Checks
+
+| Check | Result |
+|---|---|
+| Every word of the old section is in the new sections, and none is added except the new heading | PASS |
+| `voiceErrors` (panel order, cites in a panel are cited by its Technical text, language of each panel) on the page | PASS |
+| Code blocks, tables, callouts, and list items are whole in one part | PASS |
+
 Open FAILs: 0

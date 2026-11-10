@@ -153,4 +153,22 @@ None.
 | T1 | PASS | Added the bold label "The hook request." and turned the three log results into a list. Facts, cites, code and the Callout are unchanged. |
 | T2 | PASS | Split the request sentence and added bold labels ("The request.", "Who writes the report.", "Delegation."), each matching its text. The quotes, cites, YAML, table and gate block are unchanged. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Section split (2026-11-11)
+
+The cognitive-load audit of 2026-11-11 left 2 sections of this page HUGE after the readability edit: `A hook that adds graph context`; `The read-only reviewer and its gate`. Each was split into two `##` sections at a block boundary. The first part keeps its heading and anchor; the second has a new `##` heading (or a promoted `###` heading) and its own `<Voices>` block. No text was rewritten: a script cut the Technical, Layman, and Bangla panels between blocks. This round is a script check, not an agent check, because no claim changed.
+
+### FAILs
+
+None.
+
+### Checks
+
+| Check | Result |
+|---|---|
+| Every word of the old section is in the new sections, and none is added except the new heading | PASS |
+| `voiceErrors` (panel order, cites in a panel are cited by its Technical text, language of each panel) on the page | PASS |
+| Code blocks, tables, callouts, and list items are whole in one part | PASS |
+
 Open FAILs: 0
