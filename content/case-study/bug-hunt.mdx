@@ -219,6 +219,27 @@ This entry is in the `PreToolUse` list of `.claude/settings.json` (shortened). T
 - For a server from a plugin, `server` takes the scoped name `plugin:<plugin-name>:<server-name>`, not the bare key. <Cite n={1} /> The session log records the same lesson: the name had to be `plugin:serena:serena`.
 - String values in `input` support `${path}` substitution from the hook's JSON input. <Cite n={1} />
 
+</Technical>
+<Layman>
+
+At 16:51, Claude did not use Serena and graphify, but the workspace had both. A hook gives deterministic control: the action always happens and does not depend on the model's choice <Cite n={4} />.
+
+The owner asked for hooks at 18:52 and 18:55. The second design makes the tool calls in the hook itself. A `PreToolUse` entry with the matcher `Skill` runs a shell script and an `mcp_tool` hook that calls Serena's `activate_project`. `PreToolUse` runs before the tool call runs <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+16:51-এর উত্তর একটি ফাঁক দেখিয়েছিল: workspace-এ Serena আর graphify ছিল, কিন্তু Claude সেগুলো ব্যবহার করেনি। Hook deterministic control দেয়: একটি action সবসময় ঘটে, আর এটি model-এর পছন্দের উপর নির্ভর করে না <Cite n={4} />।
+
+Owner 18:52 আর 18:55-এ hook চেয়েছিলেন। প্রথম design-এ Claude tool-গুলো call না করা পর্যন্ত skill block থাকত। দ্বিতীয় design-এ hook নিজেই call-গুলো করে। `.claude/settings.json`-এর `PreToolUse` list-এ matcher `Skill` সহ একটি entry আছে। এটি একটি shell script চালায়, আর একটি `mcp_tool` hook দিয়ে Serena-র `activate_project` call করে। Claude tool parameter তৈরি করার পরে এবং tool call চলার আগে `PreToolUse` চলে <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## What the Hook Script Does
+<Voices>
+<Technical>
+
 The command hook is a shell script. This is its core (lines cut with `…`):
 
 ```bash
@@ -262,20 +283,12 @@ The [Hooks](/extend/hooks/) page explains events, matchers, and decisions.
 </Technical>
 <Layman>
 
-At 16:51, Claude did not use Serena and graphify, but the workspace had both. A hook gives deterministic control: the action always happens and does not depend on the model's choice <Cite n={4} />.
-
-The owner asked for hooks at 18:52 and 18:55. The second design makes the tool calls in the hook itself. A `PreToolUse` entry with the matcher `Skill` runs a shell script and an `mcp_tool` hook that calls Serena's `activate_project`. `PreToolUse` runs before the tool call runs <Cite n={1} />.
-
 The script acts only for `test-design` and `find-bug`. It queries the graph with the skill arguments. It also adds the graph date and the date of the last commit, so Claude can see if the graph is stale. Claude Code adds this text to Claude's context as `additionalContext`, with a cap of 10,000 characters <Cite n={1} />.
 
 Be careful: if you type `/skillname` directly, `PreToolUse` does not fire. A `command` or `mcp_tool` hook that times out does not block the tool call <Cite n={1} />. Use this hook to add context, not as proof that a rule ran.
 
 </Layman>
 <Bangla>
-
-16:51-এর উত্তর একটি ফাঁক দেখিয়েছিল: workspace-এ Serena আর graphify ছিল, কিন্তু Claude সেগুলো ব্যবহার করেনি। Hook deterministic control দেয়: একটি action সবসময় ঘটে, আর এটি model-এর পছন্দের উপর নির্ভর করে না <Cite n={4} />।
-
-Owner 18:52 আর 18:55-এ hook চেয়েছিলেন। প্রথম design-এ Claude tool-গুলো call না করা পর্যন্ত skill block থাকত। দ্বিতীয় design-এ hook নিজেই call-গুলো করে। `.claude/settings.json`-এর `PreToolUse` list-এ matcher `Skill` সহ একটি entry আছে। এটি একটি shell script চালায়, আর একটি `mcp_tool` hook দিয়ে Serena-র `activate_project` call করে। Claude tool parameter তৈরি করার পরে এবং tool call চলার আগে `PreToolUse` চলে <Cite n={1} />।
 
 Script-টি শুধু `test-design` আর `find-bug`-এর জন্য কাজ করে। এটি skill-এর argument দিয়ে graph query করে; argument না থাকলে graph report-এর উপরের অংশ পড়ে। এটি graph-এর তারিখ আর শেষ commit-এর তারিখও যোগ করে, যাতে Claude বুঝতে পারে graph পুরোনো কি না। Claude Code এই লেখা `additionalContext` হিসেবে Claude-এর context-এ যোগ করে, যার সীমা 10,000 character <Cite n={1} />। Serena hook শুধু project activate করে; এটি Claude-কে symbol tool call করতে বাধ্য করতে পারে না।
 
@@ -311,7 +324,28 @@ The `tools` list names 14 read-only Serena tools. It has no Write, Edit, or Bash
 - Tools of an MCP server from a plugin are named `mcp__plugin_<plugin-name>_<server-name>__<tool>`. <Cite n={1} /> That explains the long Serena names.
 - `model` accepts an alias such as `opus`, a full model ID, or `inherit`. <Cite n={2} />
 
-### Ten checks and a gate
+</Technical>
+<Layman>
+
+On 2026-10-04 the owner asked for a reviewer. Its job is to check the bugs Claude reports. It does this before the file `bug.md` is created. It uses the Opus 5.5 model. It cannot write files, so it can only read and check.
+
+The reviewer is called `qa-reviewer-agent`. It is a helper that runs on its own, with its own instructions and its own set of tools. Its `tools` list holds 14 read-only Serena tools. It has no Write, Edit, or Bash.
+
+The `tools` list is an allowlist. That means only the tools on the list can be used. A tool that is not in the list is not available <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+2026-10-04 তারিখে owner একটি reviewer চেয়েছিলেন: Opus 5.5 model-এর উপর একটি adversarial subagent। `bug.md` তৈরি হওয়ার আগে এটি Claude-এর report করা bug-গুলো review করে। এর কোনো write permission নেই, তাই এটি শুধু পড়ে আর যাচাই করে। দ্বিতীয় একটি prompt reviewer-এর knowledge base হিসেবে graphify যোগ করেছিল।
+
+`qa-reviewer-agent`-এর `tools` list-এ 14টি read-only Serena tool আছে, কিন্তু Write, Edit বা Bash নেই। একটি subagent নিজের context window, system prompt, tool access আর permission নিয়ে চলে <Cite n={2} />। `tools` একটি allowlist: list-এ না থাকা tool পাওয়া যায় না <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Ten checks and a gate
+<Voices>
+<Technical>
 
 The reviewer tries to disprove each bug. A bug that fails one check gets the verdict FLAGGED.
 
@@ -338,12 +372,6 @@ Gate rules:
 </Technical>
 <Layman>
 
-On 2026-10-04 the owner asked for a reviewer. Its job is to check the bugs Claude reports. It does this before the file `bug.md` is created. It uses the Opus 5.5 model. It cannot write files, so it can only read and check.
-
-The reviewer is called `qa-reviewer-agent`. It is a helper that runs on its own, with its own instructions and its own set of tools. Its `tools` list holds 14 read-only Serena tools. It has no Write, Edit, or Bash.
-
-The `tools` list is an allowlist. That means only the tools on the list can be used. A tool that is not in the list is not available <Cite n={2} />.
-
 The reviewer tries to prove each bug wrong. It runs ten checks on every bug. A bug that fails one check is FLAGGED. Each bug gets one verdict:
 
 - APPROVED
@@ -361,10 +389,6 @@ You can also name the reviewer in a prompt. Even then, Claude still decides whet
 
 </Layman>
 <Bangla>
-
-2026-10-04 তারিখে owner একটি reviewer চেয়েছিলেন: Opus 5.5 model-এর উপর একটি adversarial subagent। `bug.md` তৈরি হওয়ার আগে এটি Claude-এর report করা bug-গুলো review করে। এর কোনো write permission নেই, তাই এটি শুধু পড়ে আর যাচাই করে। দ্বিতীয় একটি prompt reviewer-এর knowledge base হিসেবে graphify যোগ করেছিল।
-
-`qa-reviewer-agent`-এর `tools` list-এ 14টি read-only Serena tool আছে, কিন্তু Write, Edit বা Bash নেই। একটি subagent নিজের context window, system prompt, tool access আর permission নিয়ে চলে <Cite n={2} />। `tools` একটি allowlist: list-এ না থাকা tool পাওয়া যায় না <Cite n={2} />।
 
 Reviewer দশটি check দিয়ে প্রতিটি bug ভুল প্রমাণ করার চেষ্টা করে। একটি check-এ fail করলেই bug-টি FLAGGED হয়। প্রতিটি bug পায় APPROVED, FLAGGED অথবা REJECTED। তারপর reviewer পুরো draft-এর জন্য একটি gate ঠিক করে:
 

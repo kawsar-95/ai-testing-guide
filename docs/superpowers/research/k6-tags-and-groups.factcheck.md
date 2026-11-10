@@ -95,4 +95,22 @@ None.
 | T1 | PASS | Bold labels match their paragraphs. The four ways to set test-wide tags are all kept in the list, and the cite still follows them. Code, table and Callout are unchanged. |
 | T2 | PASS | Labels "Threshold key." and "Summary output." fit their text. The parenthetical became its own sentence with the same facts. Code and Callout are unchanged. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Section split (2026-11-11)
+
+The cognitive-load audit of 2026-11-11 left 1 section of this page HUGE after the readability edit: `Tags`. Each was split into two `##` sections at a block boundary. The first part keeps its heading and anchor; the second has a new `##` heading (or a promoted `###` heading) and its own `<Voices>` block. No text was rewritten: a script cut the Technical, Layman, and Bangla panels between blocks. This round is a script check, not an agent check, because no claim changed.
+
+### FAILs
+
+None.
+
+### Checks
+
+| Check | Result |
+|---|---|
+| Every word of the old section is in the new sections, and none is added except the new heading | PASS |
+| `voiceErrors` (panel order, cites in a panel are cited by its Technical text, language of each panel) on the page | PASS |
+| Code blocks, tables, callouts, and list items are whole in one part | PASS |
+
 Open FAILs: 0

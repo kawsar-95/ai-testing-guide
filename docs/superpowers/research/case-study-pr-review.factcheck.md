@@ -105,4 +105,22 @@ None.
 |---|---|---|
 | T1 | PASS | The only change is the callout sentence "To enforce the rule, define…", now under the bold label "Enforce the rule." The facts and cites are unchanged, and the label matches the text under it. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Section split (2026-11-11)
+
+The cognitive-load audit of 2026-11-11 left 1 section of this page HUGE after the readability edit: `The pr-review skill`. Each was split into two `##` sections at a block boundary. The first part keeps its heading and anchor; the second has a new `##` heading (or a promoted `###` heading) and its own `<Voices>` block. No text was rewritten: a script cut the Technical, Layman, and Bangla panels between blocks. This round is a script check, not an agent check, because no claim changed.
+
+### FAILs
+
+None.
+
+### Checks
+
+| Check | Result |
+|---|---|
+| Every word of the old section is in the new sections, and none is added except the new heading | PASS |
+| `voiceErrors` (panel order, cites in a panel are cited by its Technical text, language of each panel) on the page | PASS |
+| Code blocks, tables, callouts, and list items are whole in one part | PASS |
+
 Open FAILs: 0
