@@ -27,7 +27,8 @@ import { reelsFor } from "@/lib/reels/index";
 type MdxPage = { default: MDXContent; metadata: Metadata; page?: PageInfo };
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
-const NAV_LINK = "text-accent underline underline-offset-2";
+// leading-6: each link of the page nav is a 24 px target (the same row as PrevNext).
+const NAV_LINK = "inline-block leading-6 text-accent underline underline-offset-2";
 
 export const dynamicParams = false;
 

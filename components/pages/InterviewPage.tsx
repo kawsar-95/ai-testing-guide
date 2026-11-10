@@ -13,10 +13,10 @@ export function InterviewPage() {
         <p className={`${LABEL} text-accent`}>
           <T en={INTERVIEW_UI.eyebrow} bn={INTERVIEW_UI_BN.eyebrow} />
         </p>
-        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-text">
+        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
           <T en={INTERVIEW_UI.heading} bn={INTERVIEW_UI_BN.heading} />
         </h1>
-        <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim">
+        <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
           <T en={INTERVIEW_UI.lede} bn={INTERVIEW_UI_BN.lede} />
         </p>
       </header>

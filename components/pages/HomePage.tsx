@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CONTENTS_HOME } from "@/lib/contents";
+import { CONTENTS_HOME, CONTENTS_UI } from "@/lib/contents";
 import { MODULE_CARDS, START_STEPS, TUTORIAL_CARDS, WHY_ITEMS } from "@/lib/home";
 import { HOME_UI } from "@/lib/ui";
 import { T } from "@/components/i18n/T";
+import { CONTENTS_UI_BN } from "@/lib/bn/contents";
 import { HOME_UI_BN, WHY_ITEMS_BN } from "@/lib/bn/home";
 import { MODULE_TAGLINES_BN } from "@/lib/bn/stats";
 import { MODULES } from "@/lib/stats";
@@ -27,6 +28,7 @@ function renderInlineCode(text: string): ReactNode[] {
 
 type Pair = readonly [en: string, bn: string];
 type Card = (typeof TUTORIAL_CARDS)[number];
+type Count = readonly [en: (n: number) => string, bn: (n: number) => string];
 
 function SectionHeading({ id, eyebrow, title, sub }: { id: string; eyebrow: Pair; title: ReactNode; sub?: Pair }) {
   return (
@@ -54,10 +56,11 @@ function taglineBn(card: { tagline: string; href: string }): string {
 
 /**
  * A ruled list of numbered rows: the number, the title (the one link of the
- * row, stretched over it), the page count, and a two-line tagline. A row is
- * not a box: the hairlines are the only chrome.
+ * row, stretched over it), the count, and a two-line tagline. A row is
+ * not a box: the hairlines are the only chrome. `count` names the unit with
+ * the words of /contents/: a tutorial group has parts, a module has pages.
  */
-function CourseRows({ id, label, cards }: { id: string; label: Pair; cards: readonly Card[] }) {
+function CourseRows({ id, label, cards, count }: { id: string; label: Pair; cards: readonly Card[]; count: Count }) {
   return (
     <div className="mt-10 first:mt-8">
       <h3 id={id} className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}>
@@ -74,12 +77,12 @@ function CourseRows({ id, label, cards }: { id: string; label: Pair; cards: read
                 <h4 className="m-0 flex items-baseline justify-between gap-3">
                   <Link
                     href={card.href}
-                    className="font-display text-[19px] font-semibold leading-snug text-text no-underline after:absolute after:inset-0 after:content-[''] hover:text-accent"
+                    className="font-display text-xl font-medium leading-snug text-text no-underline after:absolute after:inset-0 after:content-[''] hover:text-accent"
                   >
                     {card.title}
                   </Link>
                   <span className="shrink-0 font-mono text-[12px] font-normal text-text-faint">
-                    <T en={HOME_UI.cardCount(card.count)} bn={HOME_UI_BN.cardCount(card.count)} />
+                    <T en={count[0](card.count)} bn={count[1](card.count)} />
                   </span>
                 </h4>
                 <p data-home-tagline className="mt-1 line-clamp-2 text-[14px] leading-relaxed text-pretty text-text-dim">
@@ -144,7 +147,7 @@ export function HomePage() {
           <ul className="m-0 mt-8 grid list-none gap-x-10 gap-y-8 p-0 sm:grid-cols-2 lg:grid-cols-3">
             {WHY_ITEMS.map((item, i) => (
               <li key={item.title} className="border-t border-border-strong pt-4">
-                <h3 className="m-0 font-display text-[20px] font-semibold leading-snug text-text">
+                <h3 className="m-0 font-display text-xl font-medium leading-snug text-text">
                   <T en={item.title} bn={WHY_ITEMS_BN[i].title} />
                 </h3>
                 <p className="mt-1.5 text-[15px] leading-relaxed text-pretty text-text-dim">
@@ -167,8 +170,18 @@ export function HomePage() {
             }
             sub={[HOME_UI.courseSub, HOME_UI_BN.courseSub]}
           />
-          <CourseRows id="course-tutorial" label={[HOME_UI.tutorialLabel, HOME_UI_BN.tutorialLabel]} cards={TUTORIAL_CARDS} />
-          <CourseRows id="course-modules" label={[HOME_UI.modulesLabel, HOME_UI_BN.modulesLabel]} cards={MODULE_CARDS} />
+          <CourseRows
+            id="course-tutorial"
+            label={[HOME_UI.tutorialLabel, HOME_UI_BN.tutorialLabel]}
+            cards={TUTORIAL_CARDS}
+            count={[CONTENTS_UI.groupMeta, CONTENTS_UI_BN.groupMeta]}
+          />
+          <CourseRows
+            id="course-modules"
+            label={[HOME_UI.modulesLabel, HOME_UI_BN.modulesLabel]}
+            cards={MODULE_CARDS}
+            count={[HOME_UI.cardCount, HOME_UI_BN.cardCount]}
+          />
         </section>
       </div>
     </div>

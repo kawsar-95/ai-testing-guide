@@ -29,7 +29,8 @@ export function SidebarList({
     <nav aria-label={useBn(partsNav, SHELL_BN.partsNav)} className="px-3 py-4">
       {GROUPS.map((group) => (
         <div key={group.slug} className="mb-4 last:mb-0">
-          <p className="mb-1 px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-text-faint">
+          {/* The same label as a part of a module list (FlatSidebarList). */}
+          <p className="px-3 pb-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-text-dim">
             {group.title}
           </p>
           <ol className="m-0 list-none space-y-px p-0">
