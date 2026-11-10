@@ -59,4 +59,22 @@ Copy check: `scripts/linux_overlap.py` (8-word runs) against all 9 fetched sourc
 
 FAILs found: 3. Fixed: 3.
 
+Open FAILs at the end of the rounds above: 0
+
+## Section split (2026-11-11)
+
+The cognitive-load audit of 2026-11-11 left `How it works` HUGE after the readability edit. The section was split into two `##` sections at a block boundary: the first part keeps its heading and anchor, the second has a new heading (or a promoted `###` heading) and its own `<Voices>` block. No text was rewritten: a script cut the Technical, Layman, and Bangla panels between blocks, so this round is a script check, not an agent check.
+
+### FAILs
+
+None.
+
+### Checks
+
+| Check | Result |
+|---|---|
+| Every word of the old section is in the new sections, and none is added except the new heading | PASS |
+| `voiceErrors` on the page | PASS |
+| The page-shape test accepts the continuation section (`sectionsWithSplits`) | PASS |
+
 Open FAILs: 0

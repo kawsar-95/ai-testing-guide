@@ -1,6 +1,6 @@
 export const metadata = { title: 'Tool Calling', description: 'How a model calls your functions through tool schemas, how your code runs the call and returns errors, and how to limit what a tool can do.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-11',
   sources: [
     { title: 'Tool use with Claude', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview', accessed: '2026-10-28' },
     { title: 'Define tools', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools', accessed: '2026-10-28' },
@@ -100,7 +100,40 @@ if response.stop_reason == "tool_use":
 
 `get_issue` is your own function. The `tool_result` blocks must come right after the `tool_use` message <Cite n={3} />. They must also come first in the content of the user message <Cite n={3} />.
 
-### Validation and strict mode
+</Technical>
+<Layman>
+
+**The schema.** You list tools in the `tools` parameter. Each tool has a `name`, a `description`, and an `input_schema`. The schema is a JSON Schema object <Cite n={2} />. The description is the most important factor for how well a tool works. Explain its job, the cases for it, and its output <Cite n={2} />. In JSON Schema, a property is optional unless you list it in `required`. Extra properties are allowed unless you set `additionalProperties` to `false` <Cite n={5} />.
+
+**The round trip.**
+
+1. You send the request with `tools`.
+2. The response has `stop_reason: "tool_use"` and at least one `tool_use` block. Each block has an `id`, a `name`, and an `input` <Cite n={3} />.
+3. Your code runs the function. It sends a `tool_result` block with the same `tool_use_id` <Cite n={3} />.
+4. The model uses the result to finish its answer <Cite n={3} />.
+
+The code example defines one tool, `jira_get_issue`, with one required field, `key`. It runs your own function `get_issue`. If the issue is not found, it sends back an error. Then it asks the model again. The `tool_result` blocks must come right after the `tool_use` message. They must also come first in the user message <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+**স্কিমা।** আপনি `tools` প্যারামিটারে টুলগুলোর তালিকা দেন। প্রতিটা টুলের থাকে একটা `name`, একটা `description` আর একটা `input_schema`। স্কিমাটা একটা JSON Schema অবজেক্ট <Cite n={2} />। টুল কতটা ভালো কাজ করবে, তার সবচেয়ে বড় কারণ হলো বর্ণনা। টুল কী করে, কখন ব্যবহার করতে হবে আর কী ফেরত দেয়, তা লিখুন <Cite n={2} />। JSON Schema-তে একটা প্রপার্টি ঐচ্ছিক, যদি না আপনি সেটা `required`-এ রাখেন। বাড়তি প্রপার্টি চলে, যদি না আপনি `additionalProperties`-কে `false` করেন <Cite n={5} />।
+
+**আসা-যাওয়ার ধাপ।**
+
+1. আপনি `tools` সহ রিকুয়েস্ট পাঠান।
+2. মডেল উত্তর দেয় `stop_reason: "tool_use"` আর এক বা একাধিক `tool_use` ব্লক দিয়ে। প্রতিটা ব্লকে থাকে একটা `id`, একটা `name` আর একটা `input` <Cite n={3} />।
+3. আপনার কোড ফাংশনটা চালায়। একই `tool_use_id` সহ একটা `tool_result` ব্লক পাঠায় <Cite n={3} />।
+4. মডেল ফলাফল ব্যবহার করে তার উত্তর শেষ করে <Cite n={3} />।
+
+কোডের উদাহরণে একটা টুল আছে, `jira_get_issue`, যার একটা দরকারি ফিল্ড `key`। এটা আপনার নিজের ফাংশন `get_issue` চালায়। ইস্যু না পেলে একটা এরর ফেরত পাঠায়। তারপর মডেলকে আবার জিজ্ঞেস করে। `tool_result` ব্লকগুলো `tool_use` মেসেজের ঠিক পরেই আসতে হবে। ইউজার মেসেজেও এগুলো প্রথমে থাকতে হবে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Validation and strict mode
+<Voices>
+<Technical>
 
 Without strict mode, a model can send the wrong type (`"2"` and not `2`) or leave out a required field <Cite n={4} />. With `strict: true`, Claude constrains its sampling so that the tool input always matches the schema <Cite n={4} />. Strict mode checks the shape only. Your code must still check the meaning: does the user have access to `QA-123`? The MCP specification says that servers must validate all tool inputs <Cite n={6} />.
 
@@ -130,17 +163,6 @@ On some models, such as Claude Opus 5.5, `any` and `tool` return a 400 error <Ci
 </Technical>
 <Layman>
 
-**The schema.** You list tools in the `tools` parameter. Each tool has a `name`, a `description`, and an `input_schema`. The schema is a JSON Schema object <Cite n={2} />. The description is the most important factor for how well a tool works. Explain its job, the cases for it, and its output <Cite n={2} />. In JSON Schema, a property is optional unless you list it in `required`. Extra properties are allowed unless you set `additionalProperties` to `false` <Cite n={5} />.
-
-**The round trip.**
-
-1. You send the request with `tools`.
-2. The response has `stop_reason: "tool_use"` and at least one `tool_use` block. Each block has an `id`, a `name`, and an `input` <Cite n={3} />.
-3. Your code runs the function. It sends a `tool_result` block with the same `tool_use_id` <Cite n={3} />.
-4. The model uses the result to finish its answer <Cite n={3} />.
-
-The code example defines one tool, `jira_get_issue`, with one required field, `key`. It runs your own function `get_issue`. If the issue is not found, it sends back an error. Then it asks the model again. The `tool_result` blocks must come right after the `tool_use` message. They must also come first in the user message <Cite n={3} />.
-
 **Checks and strict mode.** Without strict mode, a model can send the wrong type, such as `"2"` and not `2`. It can also leave out a required field <Cite n={4} />. With `strict: true`, Claude limits its output so that the tool input always matches the schema <Cite n={4} />. Strict mode checks the shape only. Your code must still check the meaning. For example: can this user see `QA-123`? The MCP specification says that servers must check all tool inputs <Cite n={6} />.
 
 **Errors and retries.** If the tool fails, send the error text in `content` with `"is_error": true` <Cite n={3} />. Write useful messages. Say what went wrong and what to try next, for example "Retry after 60 seconds" <Cite n={3} />. If a call is not valid, Claude tries again 2 to 3 times with fixes. Then it says sorry to the user <Cite n={3} />.
@@ -157,17 +179,6 @@ OWASP calls the main risk **Excessive Agency**. It means too many functions, too
 
 </Layman>
 <Bangla>
-
-**স্কিমা।** আপনি `tools` প্যারামিটারে টুলগুলোর তালিকা দেন। প্রতিটা টুলের থাকে একটা `name`, একটা `description` আর একটা `input_schema`। স্কিমাটা একটা JSON Schema অবজেক্ট <Cite n={2} />। টুল কতটা ভালো কাজ করবে, তার সবচেয়ে বড় কারণ হলো বর্ণনা। টুল কী করে, কখন ব্যবহার করতে হবে আর কী ফেরত দেয়, তা লিখুন <Cite n={2} />। JSON Schema-তে একটা প্রপার্টি ঐচ্ছিক, যদি না আপনি সেটা `required`-এ রাখেন। বাড়তি প্রপার্টি চলে, যদি না আপনি `additionalProperties`-কে `false` করেন <Cite n={5} />।
-
-**আসা-যাওয়ার ধাপ।**
-
-1. আপনি `tools` সহ রিকুয়েস্ট পাঠান।
-2. মডেল উত্তর দেয় `stop_reason: "tool_use"` আর এক বা একাধিক `tool_use` ব্লক দিয়ে। প্রতিটা ব্লকে থাকে একটা `id`, একটা `name` আর একটা `input` <Cite n={3} />।
-3. আপনার কোড ফাংশনটা চালায়। একই `tool_use_id` সহ একটা `tool_result` ব্লক পাঠায় <Cite n={3} />।
-4. মডেল ফলাফল ব্যবহার করে তার উত্তর শেষ করে <Cite n={3} />।
-
-কোডের উদাহরণে একটা টুল আছে, `jira_get_issue`, যার একটা দরকারি ফিল্ড `key`। এটা আপনার নিজের ফাংশন `get_issue` চালায়। ইস্যু না পেলে একটা এরর ফেরত পাঠায়। তারপর মডেলকে আবার জিজ্ঞেস করে। `tool_result` ব্লকগুলো `tool_use` মেসেজের ঠিক পরেই আসতে হবে। ইউজার মেসেজেও এগুলো প্রথমে থাকতে হবে <Cite n={3} />।
 
 **যাচাই আর strict মোড।** Strict মোড ছাড়া মডেল ভুল টাইপ পাঠাতে পারে, যেমন `2`-এর বদলে `"2"`। একটা দরকারি ফিল্ড বাদও দিতে পারে <Cite n={4} />। `strict: true` দিলে Claude তার আউটপুট এমনভাবে সীমিত করে যে টুল ইনপুট সবসময় স্কিমার সঙ্গে মেলে <Cite n={4} />। Strict মোড শুধু আকার যাচাই করে। অর্থ যাচাই আপনার কোডকেই করতে হবে। যেমন: এই ইউজার কি `QA-123` দেখতে পারেন? MCP স্পেসিফিকেশন বলে সার্ভারকে সব টুল ইনপুট যাচাই করতেই হবে <Cite n={6} />।
 

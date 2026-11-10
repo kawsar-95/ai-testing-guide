@@ -590,6 +590,10 @@ Plain English text.
 
 Every page with voices has a report: `docs/superpowers/research/<group>-<slug>.voices.factcheck.md`. An agent that did not write the voices checks them against the Technical text of the same section. The report ends with `Open FAILs: N`. A page with voices is done only when `N` is 0. This is separate from the report of the Technical text.
 
+### Split sections
+
+A long section may be split into two `##` sections, so that a reader sees one topic at a time. The first part keeps its heading and anchor, the second has its own heading and its own `<Voices>` block, and the panels are cut between blocks with no text rewritten. In a module with a fixed page shape (`tests/shape.ts`, `sectionsWithSplits`), a continuation section may sit between the first and the last section of the shape; the shape sections stay in order. Add a "Section split" round to the fact-check report of the page (no claim changes, so a script check of the words is enough).
+
 ### No voices
 
 | Part | Why |

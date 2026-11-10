@@ -1,6 +1,6 @@
 export const metadata = { title: "Cost Optimization", description: "Token budgets, smaller models, and smart routing." }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-11',
   sources: [
     { title: 'Pricing', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/about-claude/pricing', accessed: '2026-10-28' },
     { title: 'Prompt caching', publisher: 'Anthropic (Claude Docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching', accessed: '2026-10-28' },
@@ -88,7 +88,42 @@ A cache write costs more than normal input: 1.25 times the base input price for 
 
 The Batch API gives a 50 % discount on input and output tokens <Cite n={1} />. The work runs asynchronously, so use it only when nobody waits for the answer <Cite n={3} />. The caching multipliers stack with the batch discount <Cite n={2} />.
 
-### Lever 3: count and cap tokens
+</Technical>
+<Layman>
+
+These are the prices of the current models, from the Claude pricing page <Cite n={1} />:
+
+- Claude Opus 5.5: $4 input, $20 output, $0.20 cache hit, for each million tokens.
+- Claude Sonnet 5.5: $2 input, $10 output, $0.10 cache hit, for each million tokens.
+- Claude Haiku 5.5 (prompt up to 100,000 tokens): $0.10 input, $0.50 output, $0.01 cache hit, for each million tokens.
+
+Claude Haiku 5.5 has higher prices for a prompt over 100,000 tokens <Cite n={1} />.
+
+**Lever 1: prompt caching.** A cache write costs more than normal input. It is 1.25 times the base input price for a 5-minute cache. It is 2 times for a 1-hour cache <Cite n={2} />. A cache read costs much less. It is 0.1 times the base input price on most models. It is 0.05 times on Claude Opus 5.5 and Claude Sonnet 5.5 <Cite n={2} />. So cache a long system prompt that every request repeats first.
+
+**Lever 2: batches.** The Batch API gives a 50 % discount on input and output tokens <Cite n={1} />. The work runs in the background. So use it only when nobody waits for the answer <Cite n={3} />. The batch discount also applies on top of the caching prices <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+Claude-এর দামের পেজ থেকে বর্তমান মডেলগুলোর দাম <Cite n={1} />:
+
+- Claude Opus 5.5: প্রতি মিলিয়ন টোকেনে ইনপুট $4, আউটপুট $20, ক্যাশ হিট $0.20।
+- Claude Sonnet 5.5: প্রতি মিলিয়ন টোকেনে ইনপুট $2, আউটপুট $10, ক্যাশ হিট $0.10।
+- Claude Haiku 5.5 (100,000 টোকেন পর্যন্ত প্রম্পট): প্রতি মিলিয়ন টোকেনে ইনপুট $0.10, আউটপুট $0.50, ক্যাশ হিট $0.01।
+
+100,000 টোকেনের বেশি প্রম্পটে Claude Haiku 5.5-এর দাম বেশি <Cite n={1} />।
+
+**উপায় 1: প্রম্পট ক্যাশিং।** একটা ক্যাশ রাইটের দাম সাধারণ ইনপুটের চেয়ে বেশি। 5 মিনিটের ক্যাশে এটা মূল ইনপুট দামের 1.25 গুণ। 1 ঘণ্টার ক্যাশে 2 গুণ <Cite n={2} />। একটা ক্যাশ রিডের দাম অনেক কম। বেশিরভাগ মডেলে এটা মূল ইনপুট দামের 0.1 গুণ। Claude Opus 5.5 ও Claude Sonnet 5.5-এ 0.05 গুণ <Cite n={2} />। তাই প্রতিটা রিকুয়েস্টে যে লম্বা সিস্টেম প্রম্পট আসে, সেটা আগে ক্যাশ করুন।
+
+**উপায় 2: ব্যাচ।** Batch API ইনপুট ও আউটপুট টোকেনে 50 % ছাড় দেয় <Cite n={1} />। কাজটা ব্যাকগ্রাউন্ডে চলে। তাই যখন কেউ উত্তরের জন্য অপেক্ষা করে না, শুধু তখনই এটা ব্যবহার করুন <Cite n={3} />। ক্যাশিংয়ের দামের ওপরও ব্যাচের ছাড় খাটে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Lever 3: count and cap tokens
+<Voices>
+<Technical>
 
 The token counting endpoint returns the number of input tokens of a message before you send it <Cite n={4} />. Use it to find prompts that grew too large. The API ID of Claude Sonnet 5.5 is `claude-sonnet-5-5` <Cite n={7} />.
 
@@ -113,18 +148,6 @@ The Start, Build, and Scale usage tiers each have a monthly spend cap. You can s
 </Technical>
 <Layman>
 
-These are the prices of the current models, from the Claude pricing page <Cite n={1} />:
-
-- Claude Opus 5.5: $4 input, $20 output, $0.20 cache hit, for each million tokens.
-- Claude Sonnet 5.5: $2 input, $10 output, $0.10 cache hit, for each million tokens.
-- Claude Haiku 5.5 (prompt up to 100,000 tokens): $0.10 input, $0.50 output, $0.01 cache hit, for each million tokens.
-
-Claude Haiku 5.5 has higher prices for a prompt over 100,000 tokens <Cite n={1} />.
-
-**Lever 1: prompt caching.** A cache write costs more than normal input. It is 1.25 times the base input price for a 5-minute cache. It is 2 times for a 1-hour cache <Cite n={2} />. A cache read costs much less. It is 0.1 times the base input price on most models. It is 0.05 times on Claude Opus 5.5 and Claude Sonnet 5.5 <Cite n={2} />. So cache a long system prompt that every request repeats first.
-
-**Lever 2: batches.** The Batch API gives a 50 % discount on input and output tokens <Cite n={1} />. The work runs in the background. So use it only when nobody waits for the answer <Cite n={3} />. The batch discount also applies on top of the caching prices <Cite n={2} />.
-
 **Lever 3: count and cap tokens.** The token counting endpoint tells you the number of input tokens of a message before you send it <Cite n={4} />. Use it to find prompts that grew too large. The Technical text has a short Python example of this call.
 
 Every tool definition that you attach is input on every turn <Cite n={5} />. `max_tokens` limits the length of one response. The model cannot see it. So a lower value does not make the model use fewer tokens. A response that was cut off is still billed <Cite n={5} />.
@@ -133,18 +156,6 @@ Every tool definition that you attach is input on every turn <Cite n={5} />. `ma
 
 </Layman>
 <Bangla>
-
-Claude-এর দামের পেজ থেকে বর্তমান মডেলগুলোর দাম <Cite n={1} />:
-
-- Claude Opus 5.5: প্রতি মিলিয়ন টোকেনে ইনপুট $4, আউটপুট $20, ক্যাশ হিট $0.20।
-- Claude Sonnet 5.5: প্রতি মিলিয়ন টোকেনে ইনপুট $2, আউটপুট $10, ক্যাশ হিট $0.10।
-- Claude Haiku 5.5 (100,000 টোকেন পর্যন্ত প্রম্পট): প্রতি মিলিয়ন টোকেনে ইনপুট $0.10, আউটপুট $0.50, ক্যাশ হিট $0.01।
-
-100,000 টোকেনের বেশি প্রম্পটে Claude Haiku 5.5-এর দাম বেশি <Cite n={1} />।
-
-**উপায় 1: প্রম্পট ক্যাশিং।** একটা ক্যাশ রাইটের দাম সাধারণ ইনপুটের চেয়ে বেশি। 5 মিনিটের ক্যাশে এটা মূল ইনপুট দামের 1.25 গুণ। 1 ঘণ্টার ক্যাশে 2 গুণ <Cite n={2} />। একটা ক্যাশ রিডের দাম অনেক কম। বেশিরভাগ মডেলে এটা মূল ইনপুট দামের 0.1 গুণ। Claude Opus 5.5 ও Claude Sonnet 5.5-এ 0.05 গুণ <Cite n={2} />। তাই প্রতিটা রিকুয়েস্টে যে লম্বা সিস্টেম প্রম্পট আসে, সেটা আগে ক্যাশ করুন।
-
-**উপায় 2: ব্যাচ।** Batch API ইনপুট ও আউটপুট টোকেনে 50 % ছাড় দেয় <Cite n={1} />। কাজটা ব্যাকগ্রাউন্ডে চলে। তাই যখন কেউ উত্তরের জন্য অপেক্ষা করে না, শুধু তখনই এটা ব্যবহার করুন <Cite n={3} />। ক্যাশিংয়ের দামের ওপরও ব্যাচের ছাড় খাটে <Cite n={2} />।
 
 **উপায় 3: টোকেন গুনুন ও সীমা দিন।** Token counting এন্ডপয়েন্ট পাঠানোর আগেই একটা মেসেজের ইনপুট টোকেনের সংখ্যা জানায় <Cite n={4} />। যে প্রম্পট অনেক বড় হয়ে গেছে, তা খুঁজতে এটা ব্যবহার করুন। Technical টেক্সটে এই কলের একটা ছোট Python উদাহরণ আছে।
 

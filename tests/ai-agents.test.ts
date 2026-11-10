@@ -1,3 +1,4 @@
+import { sectionsWithSplits } from "./shape.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
@@ -51,9 +52,10 @@ test("each page has the entry title as # heading, the fixed sections, and voices
     const source = read(page.slug);
     assert.ok(source.split("\n").includes(`# ${page.title}`), `${page.slug}: # ${page.title}`);
     const headings = [...source.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
-    assert.deepEqual(headings, SHAPE, page.slug);
+    const { kept, extras } = sectionsWithSplits(headings, SHAPE);
+    assert.deepEqual(kept, SHAPE, page.slug);
     const voices = source.match(/^<Voices>$/gm)?.length ?? 0;
-    assert.equal(voices, SHAPE.length - 1, `${page.slug}: one <Voices> per section but Key words`);
+    assert.equal(voices, SHAPE.length - 1 + extras, `${page.slug}: one <Voices> per section but Key words`);
   }
 });
 
