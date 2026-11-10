@@ -1,6 +1,6 @@
 export const metadata = { title: 'Multi-Turn Conversation Testing', description: 'Test a chatbot that remembers: context retention across turns, topic switching, contradictions, and conversation reset.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Knowledge Retention (multi-turn metrics)', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-knowledge-retention', accessed: '2026-11-01' },
     { title: 'Evaluating multi-turn conversations', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/howtos/applications/evaluating_multi_turn_conversations/', accessed: '2026-11-01' },
@@ -33,17 +33,17 @@ The measurement tools exist for this: DeepEval ships multi-turn metrics (Turn Re
 </Technical>
 <Layman>
 
-multi-turn টেস্টে একসাথে তিনটা বিষয় দেখতে হয়: **ইতিহাস** পাঠানো হচ্ছে কি না, model সেটা **ব্যবহার** করছে কি না, আর উত্তর **বর্তমান টার্নের** প্রাসঙ্গিক কি না।
+A multi-turn test must check three things at once. The app must send the **history**. The model must **use** it. The answer must stay **relevant to the current turn**.
 
-**Context window** হলো কতটা ইতিহাস ঢোকে তার সীমা। প্রতিটা টার্ন token খায়, তাই লম্বা কথোপকথনে শেষে প্রথম টার্নগুলো বাইরে চলে যায়। তখন "আমি আগে কী বলেছিলাম?" প্রশ্নটা ব্যর্থ হয়, আর নীরবে ব্যর্থ হয়, কারণ কিছুই truncation-এর কথা জানায় না।
+The **context window** limits how much history fits. Every turn uses up tokens. In a long chat, the earliest turns get pushed out. Then "what did I say earlier?" fails. It fails silently, because nothing reports the cut.
 
-**Topic switching** দ্বিতীয় অক্ষ। ব্যবহারকারী return নিয়ে জিজ্ঞেস করে, তারপর password নিয়ে, তারপর "আর window কত ছিল?" শেষ প্রশ্নের উত্তর ইতিহাস ছাড়া নেই, আর টেস্টকে ঠিক করতে হবে bot-এর return context password প্রশ্নের ওপর দিয়ে নেওয়া উচিত কি না। দুটো আচরণই যুক্তিসঙ্গত; product-কে একটা বেছে নিতে হবে আর টেস্টে সেটা enforce করতে হবে।
+**Topic switching** is the second axis. A user asks about returns, then about their password, then asks "and what was the window?" That last question makes no sense without the history. The test must decide if the bot carries the return context across the password question. Both choices are defensible. The product picks one, and the test enforces it.
 
-**Contradiction** তৃতীয়। ব্যবহারকারী বলে "আমার অর্ডার নম্বর 1001", তারপর বলে "sorry, 1002"। ভালো bot আগের মান শুধরায়; সরল bot 1001 নিয়েই উত্তর দেয়।
+**Contradiction** is the third. The user says "my order number is 1001", then says "sorry, 1002". A good bot corrects the earlier value. A naive bot still answers about 1001.
 
-**Reset** চতুর্থ। ব্যবহারকারী বলে "আমি যা বলেছি ভুলে গেছো" বা নতুন topic শুরু করে, আর কথোপকথনের ইতিহাস বাদ দেওয়া উচিত। bot পুরোনো order id রাখলে সেটা stale order-এ কাজ করে।
+The **reset** is the fourth. The user says "forget what I told you" or starts a new topic. The history should then be dropped. If the bot keeps the old order id, it acts on a stale order.
 
-মাপার টুল আছে: DeepEval-এ multi-turn metric আছে (Turn Relevancy, Role Adherence, Knowledge Retention, Conversation Completeness) <Cite n={1} />, আর Ragas-এর multi-turn কথোপকথন evaluate করার একটা tutorial আছে <Cite n={2} />।
+Tools exist for measuring this. DeepEval ships multi-turn metrics: Turn Relevancy, Role Adherence, Knowledge Retention, and Conversation Completeness <Cite n={1} />. Ragas has a tutorial on evaluating multi-turn conversations <Cite n={2} />.
 
 </Layman>
 <Bangla>
@@ -89,7 +89,7 @@ The **scratchpad** is the most useful and the least used. A well-built chatbot e
 </Technical>
 <Layman>
 
-কথোপকথনের state-এর তিনটা অংশ আছে, আর প্রতিটা আলাদা করে টেস্ট করা যায়:
+Conversation state has three parts. You can test each one separately:
 
 ```text
 the message list    what is sent to the model, turn by turn
@@ -97,15 +97,15 @@ the summary        the compressed form of older turns, if the app uses one
 the scratchpad      the facts extracted along the way, like an order id
 ```
 
-**message list** টেস্ট করা সবচেয়ে সহজ আর সবচেয়ে সহজে ভুল হয়। assertion request-এর ওপর: তৃতীয় টার্নের পরে request-এ তিনটা user message আর তিনটা assistant message আছে কি না, ক্রম অনুযায়ী, সঠিক role-এ? নিজের উত্তর বাদ দেওয়া chatbot একটা সাধারণ বাগ, আর UI-তে সেটা দেখা যায় না, কারণ UI-তে শুধু user-এর bubble দেখায়।
+The **message list** is the easiest to test. It is also easy to get wrong. Assert on the request. After turn three, the request should hold three user messages and three assistant messages. They must be in order, with the right roles. A common bug drops the assistant's own replies. The UI hides this bug, because it shows only the user's bubbles. A test case holds the expected roles and contents.
 
-**summary**-তে truncation ধরা পড়ে। app যদি পুরোনো টার্নগুলো সংক্ষেপ করে, তাহলে summary-তে গুরুত্বপূর্ণ তথ্য — order id — রাখতে হবে আর ছোট কথাবার্তা বাদ দিতে হবে। টেস্ট একটা লম্বা কথোপকথন লিখে শুরুতে একটা তথ্য লুকিয়ে রাখে আর দেখে সেটা টিকে কি না।
+The **summary** is where truncation shows. If the app summarises older turns, it must keep the facts that matter, like the order id. It should drop the small talk. The test writes a long conversation with one fact buried at the start. Then it checks that the fact survives.
 
-**scratchpad** সবচেয়ে কাজের আর সবচেয়ে কম ব্যবহৃত। ভালো chatbot একবার order id বের করে রাখে, প্রতি টার্নে transcript আবার পড়ে না। এতে bot দ্রুত ও নির্ভুল হয়, আর টেস্ট scratchpad-এর ওপর সরাসরি assert করতে পারে।
+The **scratchpad** is the most useful and the least used. A well-built chatbot extracts the order id once and keeps it. It does not re-read the transcript every turn. That makes the bot faster and more accurate. The test can assert on the scratchpad directly.
 
-**Contradiction** মোকাবিলায় একটা policy প্রশ্ন আছে, তারপর টেস্ট। policy: পরের সংশোধন আগের মানের ওপর প্রাধান্য পায়? টেস্ট: বিরোধী মান দিয়ে দেখা যায় উত্তর নতুন মান ব্যবহার করে কি না।
+**Contradiction handling** needs a policy, then a test. The policy: does a later correction override an earlier value? The test: give the contradicting value, and check that the answer uses the new one.
 
-**Reset**-এর দুটো রূপ আছে। স্পষ্ট রূপ, যেখানে ব্যবহারকারী ভুলে যেতে বলে। অন্তর্নিহিত রূপ, যেখানে app নতুন কথোপকথন শনাক্ত করে। দুটোর টেস্ট দরকার, আর অন্তর্নিহিত রূপটাই দলগুলো ভুলে যায়: নতুন conversation id মানে খালি ইতিহাস, আর দুটো কথোপকথনে একই id ব্যবহার করা টেস্ট সেটা খুঁজে বের করে।
+**Reset** has two forms. The explicit form is when the user asks to forget. The implicit form is when the app detects a new conversation. Both need a test. Teams forget the implicit one. A new conversation id should mean an empty history. A test that reuses the id across two conversations finds that bug.
 
 </Layman>
 <Bangla>
@@ -206,7 +206,7 @@ The last test catches the bug where the conversation id is generated once per se
 </Technical>
 <Layman>
 
-message-list টেস্ট request-এর ওপর assert করে, কারণ ইতিহাস আসলে সেখানেই থাকে:
+The message-list test asserts on the request. That is where the history really lives:
 
 ```python
 def test_the_history_is_sent_in_order(client, conversation):
@@ -220,7 +220,7 @@ def test_the_history_is_sent_in_order(client, conversation):
     assert last["messages"][0]["content"] == "My order number is 1001"
 ```
 
-contradiction টেস্ট, যেটার জন্য আগে policy বলা দরকার:
+The contradiction test needs the policy stated first:
 
 ```python
 def test_a_later_correction_overrides_the_earlier_value(conversation):
@@ -233,7 +233,7 @@ def test_a_later_correction_overrides_the_earlier_value(conversation):
     assert "1001" not in answer, "the bot used the corrected-away order number"
 ```
 
-topic-switch টেস্ট, যেটা product-এর বেছে নেওয়া policy assert করে:
+The topic-switch test asserts the policy the product chose:
 
 ```python
 def test_the_return_context_survives_an_unrelated_question(conversation):
@@ -243,7 +243,7 @@ def test_the_return_context_survives_an_unrelated_question(conversation):
     assert "30 day" in answer.lower(), "the earlier answer was lost"
 ```
 
-scratchpad টেস্ট, যেটাই bot-কে দ্রুত করে আর প্রায় কেউ লেখে না:
+The scratchpad test makes a chatbot fast. It is almost never written:
 
 ```python
 def test_the_order_id_is_extracted_once(conversation, scratchpad):
@@ -252,7 +252,7 @@ def test_the_order_id_is_extracted_once(conversation, scratchpad):
     assert scratchpad["order_id"] == "1001"
 ```
 
-আর reset টেস্ট, দুটো রূপেই:
+The reset test covers both forms. First, the explicit reset:
 
 ```python
 def test_an_explicit_reset_clears_the_history(conversation, client):
@@ -263,6 +263,8 @@ def test_an_explicit_reset_clears_the_history(conversation, client):
     assert "1001" not in str(last["messages"]), "the history survived the reset"
 ```
 
+Then the implicit reset, with a new conversation id:
+
 ```python
 def test_a_new_conversation_id_starts_with_no_history(client):
     client.ask(conversation_id="c1", message="My order number is 1001")
@@ -271,7 +273,7 @@ def test_a_new_conversation_id_starts_with_no_history(client):
     assert len(last["messages"]) == 1, "the second conversation inherited the history"
 ```
 
-শেষ টেস্টটা সেই বাগ ধরে যেখানে conversation id প্রতি session-এ একবার বানানো হয়, প্রতি কথোপকথনে নয়।
+The last test catches a specific bug. The conversation id is made once per session, not once per conversation.
 
 </Layman>
 <Bangla>
@@ -366,17 +368,17 @@ def test_a_new_conversation_id_starts_with_no_history(client):
 </Technical>
 <Layman>
 
-**Mistake 1: শুধু দৃশ্যমান transcript টেস্ট করা।** transcript হলো যা ব্যবহারকারী দেখে; request হলো যা model পায়। দুটো আলাদা।
+**Mistake 1: checking only the visible transcript.** The transcript is what the user sees. The request is what the model gets. They differ.
 
-**Mistake 2: contradiction-এর policy নেই।** "পরের মান কি জেতে?" একটা product সিদ্ধান্ত, আর টেস্টে আপনার বেছে নেওয়া উত্তরই encode করতে হবে।
+**Mistake 2: no policy for contradictions.** "Should the later value win?" is a product decision. The test must encode whichever answer you chose.
 
-**Mistake 3: লম্বা কথোপকথনের টেস্ট নেই।** truncation বাগ শুধু context window ভরার পরে দেখা যায়, আর সেই কথোপকথনটাই কেউ টেস্ট করে না।
+**Mistake 3: no long-conversation test.** The truncation bug only appears after the context window fills. Nobody tests that conversation.
 
-**Mistake 4: reset টেস্ট নেই।** reset-এর পর stale order id ভুল order-এ কাজ করে।
+**Mistake 4: no reset test.** After a reset, a stale order id means the bot acts on the wrong order.
 
-**Mistake 5: কথোপকথনের মধ্যে conversation id পুনঃব্যবহার।** এটা state leak, আর একটি কথোপকথনের টেস্টে অদৃশ্য।
+**Mistake 5: reusing the conversation id across conversations.** This is a state leak. A single-conversation test cannot see it.
 
-**Mistake 6: পুরো কথোপকথনের মূল্যায়ন নেই।** প্রতিটা টার্নের উত্তর আলাদা ঠিক থাকতে পারে আর পুরো কথোপকথন অকার্যকর হতে পারে। DeepEval-এর multi-turn metric, যেমন Conversation Completeness, ঠিক এর জন্যই আছে <Cite n={1} />।
+**Mistake 6: not judging the conversation as a whole.** Each answer can be fine while the conversation is useless. DeepEval's multi-turn metrics, such as Conversation Completeness, exist for that <Cite n={1} />.
 
 </Layman>
 <Bangla>

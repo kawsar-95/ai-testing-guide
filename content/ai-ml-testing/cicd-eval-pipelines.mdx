@@ -1,6 +1,6 @@
 export const metadata = { title: 'CI/CD Eval Pipelines', description: 'Put the evals in the pipeline: a quality gate that blocks the merge, a cost gate, and the PR report that shows the numbers.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'CI/CD integration', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
     { title: 'GitHub Actions documentation', publisher: 'GitHub', url: 'https://docs.github.com/en/actions', accessed: '2026-11-01' },
@@ -37,7 +37,7 @@ The **cost gate** is the third. An eval suite that costs more than the feature i
 </Technical>
 <Layman>
 
-pipeline-এ তিনটা কাজ আছে, আর সেগুলো খরচ বাড়ার ক্রমে চলে:
+The pipeline has three jobs. They run from cheapest to most expensive.
 
 ```text
 on every push    the fast, deterministic checks: schema, format, prompt shape
@@ -45,11 +45,13 @@ on every PR      the eval suite with a threshold: a merge blocks below it
 on a schedule    the expensive evals: the full dataset, the model comparison
 ```
 
-**gate**-ই মূল বিষয়। gate হলো একটা threshold যেটা job-কে ব্যর্থ করায়, যেটা check-কে ব্যর্থ করায়, যেটা merge আটকায়। threshold দলকে প্রথম ব্যর্থতার আগেই ঠিক করতে হবে, আর এটা quality bar থেকে আসতে হবে, বর্তমান স্কোর থেকে নয় — নইলে প্রতিবার কেউ বাড়ালেই bar বাড়ে যাবে।
+The **gate** is the main point. A gate is a threshold that fails the job. A failed job fails the check. A failed check blocks the merge.
 
-**PR report** দ্বিতীয় পয়েন্ট। ব্যর্থ gate-এর সাথে ব্যাখ্যা না থাকলে সেটা একটা দেয়াল। report-এ ব্যর্থ কেসগুলোর নাম, output আর কোন metric সরেছে সেটা থাকতে হবে। Promptfoo-র GitHub Action pull request-এ ফলাফলের link-সহ একটা comment দেয় <Cite n={1} />, আর workflow নিজে থাকে GitHub Actions-এ <Cite n={2} />।
+The team must agree on the threshold number before the first failure. It must come from the quality bar, not from the current score. Otherwise the bar rises every time someone raises it.
 
-**cost gate** তৃতীয়টা। যে eval suite নিজের ফিচারের চেয়ে বেশি খরচ করে সেটা টেকসই নয়, আর prompt পরিবর্তন যেটা নীরবে token সংখ্যা দ্বিগুণ করে দেয় সেটাও অন্য যেকোনো regression-এর মতোই build fail করা উচিত।
+The **PR report** is the second point. A failed gate with no explanation is a wall. The report must name the failing cases, show the outputs, and say which metric moved. Promptfoo's GitHub Action posts a comment on the pull request with a link to the results <Cite n={1} />. The workflow itself lives in GitHub Actions <Cite n={2} />.
+
+The **cost gate** is the third point. An eval suite that costs more than the feature it protects is not sustainable. A prompt change that quietly doubles the token count should fail the build like any other regression.
 
 </Layman>
 <Bangla>
@@ -131,7 +133,7 @@ The last piece is **flakiness control**. An eval that fails randomly will get ig
 </Technical>
 <Layman>
 
-workflow ফাইল একটা সাধারণ GitHub Actions workflow, eval ধাপ যোগ করা। গুরুত্বপূর্ণ বিষয় হলো eval ধাপ **job-কে ব্যর্থ করায়**, কারণ non-zero ছাড়া ব্যর্থতা রিপোর্ট করা job কিছু আটকায় না <Cite n={2} />।
+The workflow file is a normal GitHub Actions workflow with the eval step added. The key detail is that the eval step **fails the job**. A job that reports a failure but does not exit non-zero blocks nothing <Cite n={2} />.
 
 ```yaml
 # .github/workflows/eval.yml
@@ -155,9 +157,9 @@ jobs:
         run: npx promptfoo eval --output results.json
 ```
 
-**paths** ফিল্টারটা গুরুত্বপূর্ণ: এটা ছাড়া প্রতিটা pull request-এর জন্য eval-এর খরচ, আর দল শেখে যায় gate উপেক্ষা করতে।
+The **paths** filter matters. Without it, every pull request pays for the eval. Then the team learns to ignore the gate.
 
-**threshold** config-এর assertion দিয়ে enforce হয়, আলাদা script দিয়ে নয়, যাতে bar কেসগুলোর পাশেই এক জায়গায় থাকে:
+The **threshold** is enforced by the assertions in the config, not by a separate script. So the bar lives in one place, next to the cases:
 
 ```yaml
 defaultTest:
@@ -168,7 +170,7 @@ defaultTest:
       threshold: 0.9
 ```
 
-**cost gate** আরেকটা চেক, আর সেটাই prompt পরিবর্তন যেন নীরবে বিল দ্বিগুণ করে না তা আটকায়। Promptfoo-র `cost` assertion inference cost সীমার ওপরে গেলে কেস ব্যর্থ করে, আর `latency` নির্দিষ্ট millisecond-এর চেয়ে ধীর হলে <Cite n={4} />:
+The **cost gate** is a second check. It stops a prompt change from quietly doubling the bill. Promptfoo's `cost` assertion fails a case whose inference cost is over a limit. The `latency` assertion fails a case that is slower than a number of milliseconds <Cite n={4} />:
 
 ```yaml
 defaultTest:
@@ -179,9 +181,9 @@ defaultTest:
       threshold: 5000
 ```
 
-আর **report**, যেটা লাল চেককে সমাধানযোগ্য সমস্যায় বদলে দেয়। Promptfoo-র GitHub Action prompt ফাইল বদলালে eval চালায় আর pull request-এ ফলাফলের link-সহ comment দেয় <Cite n={1} />।
+The **report** turns a red check into a problem you can fix. Promptfoo's GitHub Action runs the eval when prompt files change. It posts a comment on the pull request with a link to the results <Cite n={1} />.
 
-শেষ অংশ হলো **flakiness control**। যে eval মাঝে মাঝে এলোমেলো ব্যর্থ হয় সেটা উপেক্ষা হয়, আর উপেক্ষিত gate কোনো gate-এর চেয়ে খারাপ। নিয়ন্ত্রণগুলো: model একটা নির্দিষ্ট temperature-এ চালান, প্রতি কেসে কয়েকবার sample নিয়ে স্কোরের গড় নেওয়া, আর flaky কেসগুলো আলাদা suite-এ রাখা যেটা merge না আটকিয়ে নির্ধারিত সময়ে চলে।
+The last piece is **flakiness control**. An eval that fails randomly will get ignored. An ignored gate is worse than no gate. Run the model at a fixed temperature. Average the score over several samples per case. Put the flaky cases in their own suite, which runs on a schedule and does not block the merge.
 
 </Layman>
 <Bangla>
@@ -299,7 +301,7 @@ The stable cases run in the merge gate. The cases that flake run on the schedule
 </Technical>
 <Layman>
 
-workflow eval চালায় আর threshold-এ ব্যর্থ হয়। Promptfoo-র `eval` command অন্তত একটা test case ব্যর্থ হলে বা pass rate `PROMPTFOO_PASS_RATE_THRESHOLD`-এর নিচে গেলে exit code 100 ফেরত দেয়, তাই step নিজেই gate <Cite n={3} />:
+The workflow runs the eval and fails on a threshold. Promptfoo's `eval` command returns exit code 100 when at least one test case fails. It also does this when the pass rate is below `PROMPTFOO_PASS_RATE_THRESHOLD`. So the step itself is the gate <Cite n={3} />:
 
 ```yaml
       - name: Run the eval gate
@@ -308,9 +310,9 @@ workflow eval চালায় আর threshold-এ ব্যর্থ হয�
         run: npx promptfoo eval --output results.json --no-cache
 ```
 
-non-zero exit step ব্যর্থ করায়, যেটা job ব্যর্থ করায়, আর সেই check required হলে merge আটকায় <Cite n={2} />।
+A non-zero exit fails the step. That fails the job. Once the check is required, the failed job blocks the merge <Cite n={2} />.
 
-**pull request-এ report** আসে Promptfoo-র GitHub Action থেকে, যেটার pull-request comment দেওয়ার permission লাগে আর যেটা ফলাফলের link দেয় <Cite n={1} />:
+The **report on the pull request** comes from Promptfoo's GitHub Action. It needs permission to post pull-request comments. It posts a link to the results <Cite n={1} />:
 
 ```yaml
 permissions:
@@ -324,7 +326,7 @@ permissions:
           config: evals/promptfooconfig.yaml
 ```
 
-**cost gate** একই config-এর একটা assertion, আলাদা script নয় <Cite n={4} />:
+The **cost gate** is an assertion in the same config, not a separate script <Cite n={4} />:
 
 ```yaml
 defaultTest:
@@ -335,7 +337,7 @@ defaultTest:
       threshold: 5000
 ```
 
-আর **flaky-case আলাদা করা**, যেটাই gate-কে বিশ্বাসযোগ্য রাখে:
+The **flaky-case isolation** is what keeps people trusting the gate:
 
 ```yaml
 defaultTest:
@@ -347,7 +349,7 @@ defaultTest:
 tests: file://evals/stable-cases.yaml
 ```
 
-স্থায়ী কেসগুলো merge gate-এ চলে। যেসব কেস flaky সেগুলো নির্ধারিত সময়ে চলে, একই assertion-সহ, যাতে সত্যিকারের flaky কেসও মাপা হয়। কিছুকে স্থায়ী পাস দেওয়া হয় না, আর কিছুই এলোমেলো করে merge আটকায় না।
+The stable cases run in the merge gate. The cases that flake run on the schedule, with the same assertions. So a truly flaky case is still measured. Nothing gets a permanent pass, and nothing random blocks a merge.
 
 </Layman>
 <Bangla>
@@ -425,17 +427,17 @@ tests: file://evals/stable-cases.yaml
 </Technical>
 <Layman>
 
-**Mistake ১: threshold ছাড়া gate।** সংখ্যা ছাড়া "eval ব্যর্থ" মানে দল মান নিয়ে ঝগড়া করে, মান নিয়ে নয়।
+**Mistake 1: a gate with no threshold.** Saying "The eval failed" without a number makes the team argue about the bar instead of the quality.
 
-**Mistake ২: threshold বর্তমান স্কোর থেকে ঠিক করা।** তাহলে bar নীরবে প্রতিবার বাড়ে।
+**Mistake 2: the threshold set from the current score.** Then the bar silently rises every time somebody raises it.
 
-**Mistake ৩: প্রতিটা push-এ eval চালানো।** খরচ আসল, আর দল শেখে যায় উপেক্ষা করতে।
+**Mistake 3: running the eval on every push.** The cost is real. The team learns to ignore it.
 
-**Mistake ৪: pull request-এ report নেই।** output ছাড়া লাল চেক একটা দেয়াল <Cite n={1} />।
+**Mistake 4: no report on the pull request.** A red check with no output is a wall <Cite n={1} />.
 
-**Mistake ৫: cost gate নেই।** token সংখ্যা দ্বিগুণ করা prompt পরিবর্তন একটা regression-ই।
+**Mistake 5: no cost gate.** A prompt change that doubles the token count is a regression like any other.
 
-**Mistake ৬: flaky gate।** যে gate এলোমেলো ব্যর্থ হয় সেটা উপেক্ষা হয়, আর উপেক্ষিত gate কোনো gate-এর চেয়ে খারাপ।
+**Mistake 6: a flaky gate.** A gate that fails randomly gets ignored. An ignored gate is worse than no gate.
 
 </Layman>
 <Bangla>

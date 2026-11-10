@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { voiceBlocks, voiceErrors } from "../lib/voice-source.ts";
+import { banglaShare, voiceBlocks, voiceErrors } from "../lib/voice-source.ts";
 import { buildSearchDocs, createIndex, runSearch } from "../lib/search.ts";
 
 const GOOD = [
@@ -153,6 +153,24 @@ test("a ### heading in a fenced code block of <Bangla> is allowed", () => {
 test("two <Voices> blocks under one ## heading are an error", () => {
   const block = GOOD.slice(GOOD.indexOf("<Voices>"));
   assertOneError(GOOD + "\n" + block, "first after ##");
+});
+
+test("<Layman> must be plain English and <Bangla> must be Bangla", () => {
+  // The Bangla text copied into the সহজ English panel, and the English text copied into the বাংলা panel.
+  assertOneError(GOOD.replace("Plain text.", "সহজ ভাষায় বাংলা লেখা।"), "<Layman> must be plain English");
+  assertOneError(GOOD.replace("বাংলা লেখা।", "Plain English text only."), "<Bangla> must be in Bangla");
+  // English terms, code, and cites in a Bangla panel are fine.
+  const bangla = "Playwright দিয়ে `npx playwright test` চালান <Cite n={1} />। এটি সব টেস্ট চালায়।\n\n```bash\nnpx playwright test --project=chromium\n```";
+  assert.deepEqual(voiceErrors(GOOD.replace("বাংলা লেখা।", bangla)), []);
+  // A Bangla word in inline code of a Layman panel does not count.
+  assert.deepEqual(voiceErrors(GOOD.replace("Plain text.", "The button says `বাংলা`.")), []);
+});
+
+test("banglaShare counts the letters a reader reads", () => {
+  assert.equal(banglaShare("Plain English."), 0);
+  assert.equal(banglaShare("বাংলা"), 1);
+  assert.equal(banglaShare("```\nconst x = 1;\n```"), null);
+  assert.equal(banglaShare("[বাংলা](https://example.com/english-only)"), 1);
 });
 
 test("every content/**/*.mdx file follows the voice rules", () => {

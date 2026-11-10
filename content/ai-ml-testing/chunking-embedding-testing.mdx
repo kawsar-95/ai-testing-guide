@@ -1,6 +1,6 @@
 export const metadata = { title: 'Chunking and Embedding Strategy Testing', description: 'Test the choices that decide retrieval quality before it starts: chunk size, overlap, and which embedding model you use.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Introduction', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/', accessed: '2026-11-01' },
     { title: 'MTEB Massive Text Embedding Benchmark', publisher: 'arXiv', url: 'https://arxiv.org/abs/2210.07316', accessed: '2026-11-01' },
@@ -35,17 +35,19 @@ The testing method is a **benchmark**, not an assertion. You hold the documents 
 </Technical>
 <Layman>
 
-**Chunk** হলো একটা document-এর একটা অংশ যেটা embed করে রাখা হয়। retriever আপনার document দেখে না; সে chunk দেখে। তাই chunking-এর সিদ্ধান্তই retrieval quality-এর সীমা ঠিক করে।
+A **chunk** is a piece of a document. Each chunk is embedded and stored. The retriever never sees your whole document. It only sees chunks. So the way you cut the document sets the ceiling on retrieval quality.
 
-chunk তৈরি হয় তিনটা সিদ্ধান্ত থেকে:
+Three choices make a chunk:
 
-1. **আকার।** ছোট chunk নিখুঁত কিন্তু context হারায়। "30 days" লেখা একটা chunk অকার্যকর, কারণ ৩০ দিন কীসের প্রত্যাপ্ত হয় সেটা বাক্য ছাড়া বোঝা যায় না। বড় chunk context বহন করে কিন্তু embedding পাতলা করে, আর প্রশ্নটা chunk-এর ভুল অংশের সাথে মিলে যেতে পারে।
-2. **Overlap।** কিছুটা overlap থাকলে সীমানার মাঝখানে কাটা বাক্য হারায় না। দাম হলো duplicate token আর সামান্য বেশি সম্ভাবনা যে অপ্রয়োজনীয় chunk ভালোটা ঠেলে দেবে।
-3. **কোথায় কাটবেন।** বাক্যের মাঝখানে নয়, বর্যাক্ত অর্থের সীমানায়, heading-এ, বা অনুচ্ছেদের ভাঙায় কাটুন।
+1. **Size.** Small chunks are precise but lose context. A chunk saying "30 days" is useless without the sentence that says what the 30 days applies to. Large chunks carry context but dilute the embedding. The question may match the wrong part of a long chunk.
+2. **Overlap.** Overlapping chunks share some tokens. This keeps a sentence from being lost when it straddles a boundary. The cost is duplicated tokens. A redundant chunk may also crowd out a good one, slightly more often.
+3. **Where to cut.** Cut at a heading, a paragraph break, or another semantic boundary. Do not cut mid-sentence.
 
-**Embedding model** হলো অন্য অর্ধেক। এটা লেখাকে একটা vector বানায়, আর যে দুটো লেখা একই অর্থ বোঝায় তারা কাছে আসা উচিত। মানগুলোর মধ্যে পার্থক্য অনেক, আর MTEB benchmark এদের তুলনা করার জন্যই আছে <Cite n={2} />। ইংরেজিতে চমৎকার model বাংলায় দুর্বল হতে পারে, তাই এই সিদ্ধান্ত প্রতি ভাষায় আলাদা।
+The **embedding model** is the other half. It turns text into a vector. Two texts with the same meaning should land close together. Models differ a lot in quality. The MTEB benchmark exists to compare them <Cite n={2} />. A model that is excellent in English can be poor in Bengali. So you pick the model for each language.
 
-টেস্টিং-এর পদ্ধতি হলো **benchmark**, assertion নয়। document আর প্রশ্ন একই রাখুন, একবারে একটা সিদ্ধান্ত বদলান, আর retrieval quality মাপুন। Chroma এই benchmark চালানোর একটা সহজ database, কারণ এটা আলাদা server ছাড়াই test-এর একই process-এ চলতে পারে (in-memory বা persistent client) <Cite n={1} />। Chroma-র ডকুমেন্টেশনে দেখানো আছে collection কীভাবে query করা হয় আর query option-গুলোর মানে কী <Cite n={3} />, আর Ragas সম্পর্কিত retrieval metric (Context Precision আর Context Recall) সংজ্ঞায়িত করে, যেগুলো rank-aware, নিচের সাধারণ precision@k আর recall@k নয় <Cite n={4} />।
+The testing method is a **benchmark**, not an assertion. Keep the documents and the questions fixed. Change one choice at a time. Measure retrieval quality each time.
+
+Chroma is an easy database for this benchmark. It can run in the same process as the test, as an in-memory or persistent client, with no separate server <Cite n={1} />. Its documentation explains how a collection is queried and what the query options mean <Cite n={3} />. Ragas defines related metrics, Context Precision and Context Recall. These are rank-aware, while the plain precision@k and recall@k used below are not <Cite n={4} />.
 
 </Layman>
 <Bangla>
@@ -102,7 +104,7 @@ And the **cross-encoder reranker** is the third lever. A bi-encoder embeds the q
 </Technical>
 <Layman>
 
-benchmark-এর একটা স্থায়ী অংশ আর একটা বদলানো অংশ আছে:
+The benchmark has one fixed part and one varying part:
 
 ```text
 FIXED      a corpus of documents
@@ -111,11 +113,11 @@ VARYING   the chunk size, the overlap, the boundary rule, the embedding model
 MEASURE   precision@k, recall@k, nDCG@k
 ```
 
-**Ground truth** হলো chunk id, আর এটাই কঠিন অংশ। corpus পড়ে ঠিক করতে হয় কোন chunk কোন প্রশ্নের উত্তর। সস্তা সমীকরণ হলো document চিহ্নিত করা আর তার যেকোনো chunk গ্রহণ করা, যেটা আরও ঢিলা কিন্তু বানানো দ্রুত।
+The **ground truth** is the list of chunk ids. It is the hard part. You must read the corpus and decide which chunks answer which question. A cheaper shortcut is to mark the document and accept any chunk from it. This is looser but much faster to build.
 
-**Precision@k** হলো k ফেরত আসা chunk-এর কতগুলো প্রাসঙ্গিক। **Recall@k** হলো প্রাসঙ্গিক chunk-এর কতগুলো ফিরে এসেছে। **nDCG@k** যোগ করে অবস্থান, কারণ এক নম্বরে থাকা chunk-টাই model সবচেয়ে মনোযোগ দিয়ে পড়ে।
+**Precision@k** is the share of the k retrieved chunks that are relevant. **Recall@k** is the share of the relevant chunks that came back. **nDCG@k** also counts position. The chunk at rank one is the one the model reads most carefully.
 
-একটা দৃষ্টান্তমূলক ফলাফল (বানানো সংখ্যা, আকৃতি দেখানোর জন্য, মাপা data নয়), আর benchmark চালানোর কারণ:
+Here is an illustrative result. The numbers are invented to show the shape. They are not measured data. This is why the benchmark is worth running:
 
 ```text
 chunk size   overlap   precision   recall   nDCG
@@ -125,11 +127,11 @@ chunk size   overlap   precision   recall   nDCG
 500          100       0.51        0.88     0.61
 ```
 
-টেবিলটা পড়ুন: বড় chunk recall বাড়ায় আর precision কমায়। এটাই trade, আর কোন দিক চাই তা নির্ভর করে আপনার প্রশ্নগুলো নির্দিষ্ট না বিস্তৃত। একটাই সঠিক উত্তর থাকলে precision চাই। পুরো একটা section লাগলে recall চাই।
+Bigger chunks raise recall and lower precision. That is the trade. Which side you want depends on whether your questions are specific or broad. A question with one right answer wants high precision. A question that needs a whole section wants high recall.
 
-**Embedding model** তুলনা একই corpus আর একই প্রশ্ন ব্যবহার করে, chunking একই রেখে। এটাই একমাত্র ন্যায্য তুলনার উপায়, কারণ ভালো model খারাপ chunking বাঁচাতে পারে না আর ভালো chunking খারাপ model বাঁচাতে পারে না। MTEB benchmark অনেক dataset ও task type-এর ফলাফল দেয়, যা আপনার নিজের benchmark চালানোর আগে একটা শুরু দেয় <Cite n={2} />।
+The **embedding model** comparison uses the same corpus and the same questions. Keep the chunking fixed. This is the only fair way to compare. A better model cannot rescue bad chunking. Good chunking cannot rescue a bad model. MTEB reports results across many datasets and task types. That gives you a starting point before you run your own <Cite n={2} />.
 
-আর **cross-encoder reranker** হলো তৃতীয় লিভার। bi-encoder query আর chunk আলাদা করে embed করে vector তুলনা করে, যেটা দ্রুত কিন্তু ভোঁতা। cross-encoder query আর chunk একসাথে পড়ে score দেয়, যেটা অনেক বেশি নির্ভুল আর অনেক বেশি ব্যয়বহুল। টেস্ট মাপে rerank নDCG যথেষ্ট বাড়ায় কি না যা তার latency-এর দাম হিসেবে উঠে পড়ে।
+The **cross-encoder reranker** is the third lever. A bi-encoder embeds the query and the chunk separately, then compares the vectors. That is fast but blunt. A cross-encoder reads the query and the chunk together and scores them. It is much more accurate and much more expensive. The test checks whether reranking improves nDCG enough to pay for its latency.
 
 </Layman>
 <Bangla>
@@ -242,7 +244,7 @@ That last assertion is the useful one. It tells you the moment a better strategy
 </Technical>
 <Layman>
 
-benchmark লিখুন যাতে corpus আর প্রশ্ন data হয়, আর strategy একটা parameter:
+Write the benchmark so the corpus and the questions are data. The strategy is a parameter. This code builds an index for one strategy:
 
 ```python
 # benchmarks/chunking.py
@@ -264,7 +266,7 @@ def index(chunk_size: int, overlap: int, embedding_model: str):
     return collection
 ```
 
-তারপর মাপাটা, আর এই অংশটাই benchmark-কে টেস্ট থেকে আলাদা করে:
+Next comes the measurement. This part makes it a benchmark rather than a test:
 
 ```python
 def measure(collection, k: int = 5) -> dict[str, float]:
@@ -286,7 +288,7 @@ def measure(collection, k: int = 5) -> dict[str, float]:
     }
 ```
 
-আর sweep, যেটাই deliverable:
+Then comes the sweep. It is the deliverable:
 
 ```python
 for chunk_size in (100, 200, 500):
@@ -296,7 +298,7 @@ for chunk_size in (100, 200, 500):
             print(chunk_size, overlap, model, scores)
 ```
 
-তারপর **regression টেস্ট** যেটা নির্বাচিত strategy-কে সরে যেতে দেয় না। এটা নির্দিষ্ট স্কোর assert করে না, কারণ corpus বাড়লে সেটা প্রতিবার ব্যর্থ হয়। এটা assert করে যে বর্তমান strategy এখনো বিকল্পগুলোর চেয়ে ভালো:
+Last, add a **regression test**. It keeps the chosen strategy from drifting. It does not assert an absolute score. That would fail every time the corpus grows. It asserts that the current strategy still beats the alternatives:
 
 ```python
 def test_the_chosen_chunking_still_beats_the_others():
@@ -308,7 +310,7 @@ def test_the_chosen_chunking_still_beats_the_others():
         )
 ```
 
-শেষ assertion-টাই কাজেরটা। এটা জানায় ভালো strategy দেখা দিয়েছে ঠিক কখন, আর document যোগ করলেও ব্যর্থ হয় না।
+This last assertion is the useful one. It tells you the moment a better strategy appears. It does not fail when you add a document.
 
 </Layman>
 <Bangla>
@@ -404,17 +406,17 @@ def test_the_chosen_chunking_still_beats_the_others():
 </Technical>
 <Layman>
 
-**Mistake ১: eval set-এর ওপর chunking টিউন করা।** corpus আর প্রশ্ন বেছে নেওয়ার থেকে আলাদা রাখতে হবে, নইলে আপনি টেস্টের ওপরই টিউন করছেন।
+**Mistake 1: tuning chunking on the eval set.** Keep the corpus and questions out of the choice. Otherwise you are tuning on the test.
 
-**Mistake ২: ভিন্ন chunking-এর embedding model তুলনা।** তুলনাটা অর্থহীন। chunking একই রাখুন।
+**Mistake 2: comparing embedding models with different chunking.** The comparison means nothing. Keep the chunking fixed.
 
-**Mistake ৩: শুধু precision মাপা।** precision বেশি recall কম হলে মানে সঠিক chunk কখনোই পাওয়া যায় না।
+**Mistake 3: only measuring precision.** High precision with low recall means the right chunk is never found.
 
-**Mistake ৪: nDCG নেই।** অবস্থান গুরুত্বপূর্ণ, কারণ model প্রথম chunk-টাই সবচেয়ে মনোযোগ দিয়ে পড়ে।
+**Mistake 4: no nDCG.** Position matters. The model reads the first chunk most carefully.
 
-**Mistake ৫: ground truth নেই।** প্রত্যাশিত chunk id ছাড়া মাপার কিছু নেই <Cite n={4} />।
+**Mistake 5: no ground truth.** Without the expected chunk ids, there is nothing to measure against <Cite n={4} />.
 
-**Mistake ৬: এক ভাষা।** ইংরেজিতে যে embedding model জেতে সেটা বাংলায় হেরে যেতে পারে, আর benchmark-এ আপনার যে ভাষায় ship করেন সেটা থাকতে হবে। MTEB নিজে ১১২টা ভাষা কভার করে আর দেখে কোনো একটা embedding method সব task-এ এগিয়ে থাকে না <Cite n={2} />।
+**Mistake 6: one language.** The embedding model that wins in English may lose in Bengali. The benchmark must reflect the languages you ship. MTEB itself spans 112 languages. It finds that no single embedding method dominates across all tasks <Cite n={2} />.
 
 </Layman>
 <Bangla>

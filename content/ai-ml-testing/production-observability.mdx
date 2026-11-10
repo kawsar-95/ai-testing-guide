@@ -1,6 +1,6 @@
 export const metadata = { title: 'Production Observability', description: 'Instrument a live RAG app, build the alerts that matter, and catch model drift, hallucination spikes, and silent model updates.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Introduction', publisher: 'Langfuse (docs)', url: 'https://langfuse.com/docs', accessed: '2026-11-01' },
     { title: 'Evaluations', publisher: 'Arize (Phoenix docs)', url: 'https://arize.com/docs/phoenix/evaluation/llm-evals', accessed: '2026-11-01' },
@@ -31,13 +31,15 @@ One more alert is the one nobody plans for: **a silent model update**. The provi
 </Technical>
 <Layman>
 
-LLM সিস্টেমের observability-এর তিনটা স্তর আছে, আর প্রতিটা আলাদা প্রশ্নের উত্তর দেয়।
+A system built on an LLM needs three layers of observability. Each layer answers a different question.
 
-1. **Tracing।** প্রতিটা model call, প্রতিটা retrieval, প্রতিটা tool use, তার input, output, latency আর token সংখ্যাসহ রেকর্ড করা। LangSmith এগুলোকে trace concept বলে <Cite n={4} />, আর Langfuse একই ধরনের ডেটা ধরে <Cite n={1} />।
-2. **Production-এ evaluation।** নির্দিষ্ট dataset-এর বদলে আসল ট্রাফিকের ওপর metric চালানো। Langfuse evaluation method-গুলো দেখায় <Cite n={3} />, আর Arize Phoenix বলে evaluation production-এর trace-এর ওপর চালানো যায় <Cite n={2} />।
-3. **Alerting।** যেসব শর্তে মানুষ তাকাবে। প্রথম দিনেই চারটা দরকার: hallucination rate বাড়া, faithfulness score কমা, প্রতি request-এর খরচ বাড়া, আর p95 latency বাজেটের ওপরে যাওয়া।
+1. **Tracing.** Record every model call, every retrieval, and every tool use. Save the input, the output, the latency, and the token count for each. LangSmith describes these as the trace concepts <Cite n={4} />. Langfuse captures the same kind of data <Cite n={1} />.
+2. **Evaluation in production.** Run the metrics on real traffic, not on a fixed dataset. Langfuse documents the evaluation methods <Cite n={3} />. Arize Phoenix says evaluations can run on traces from production <Cite n={2} />.
+3. **Alerting.** An alert is a condition that makes a human look at the system. Four alerts are worth having on day one. They fire when the hallucination rate rises, the faithfulness score falls, the cost per request rises, or the p95 latency rises past its budget.
 
-আরেকটা alertই কেউ পরিকল্পনা করে না: **নীরবে model update**। provider একই model id রেখে model বদলে দেয়, আচরণ বদলে যায়, আর আপনার code-এ কিছুই বদলায়নি। একমাত্র প্রতিরক্ষা হলো একটা canary: নির্দিষ্ট ছোট dataset নির্ধারিত সময়ে চালিয়ে আগের স্কোরের সাথে তুলনা।
+There is one more alert, and nobody plans for it: **a silent model update**. The provider changes the model under the same model id. The behaviour shifts, but nothing in your code changed.
+
+The only defence is a canary. A canary is a small fixed dataset that you run on a schedule. You compare each score with the last one.
 
 </Layman>
 <Bangla>
@@ -88,7 +90,7 @@ And the **canary** is that extra alert, done properly. A fixed dataset of real q
 </Technical>
 <Layman>
 
-instrumentation হলো model call-এর ওপর একটা decorator বা wrapper, আর এটা যা কাজের তথ্য ধরবে কিন্তু সংবেদনশীল কিছু ধরবে না:
+The instrumentation is a decorator or a wrapper around the model call. It must capture enough to be useful. It must not capture anything sensitive.
 
 ```python
 # from langfuse import observe
@@ -99,11 +101,11 @@ def answer_question(question: str, policy: str) -> str:
     return call_model(prompt)
 ```
 
-**Trace**-এ তখন থাকে প্রশ্ন, retrieved chunk id, model call, উত্তর, latency আর token সংখ্যা। chunk id উত্তরের চেয়েও জরুরি: ছাড়া সেটা বোঝা যায় না grounding ব্যর্থতা নাকি generation ব্যর্থতা।
+The **trace** then holds the question, the retrieved chunk ids, the model call, the answer, the latency, and the token counts. The chunk ids matter as much as the answer. Without them, you cannot tell a grounding failure from a generation failure.
 
-**Production-এ evaluation** আসল ট্রাফিক sample করে স্কোর করে। sampling-এ **stratified** হতে হবে: confidence-এর ওপর top ১% ট্রাফিক sample করলে শুধু ভালো কেসই দেখবেন। ধরন অনুযায়ী sample করুন, আর ঝুঁকির সবচেয়ে বেশি যেসব ধরন, সেগুলো অল্প হলেও অবশ্যই রাখুন। যেমন, একটা compliance প্রশ্ন ট্রাফিকের ২% আর ঝুঁকির বেশিরভাগ হতে পারে (দৃষ্টান্তমূলক সংখ্যা)।
+**Evaluation in production** samples real traffic and scores it. The sample has to be **stratified**, which means it must cover every category. Say you sample only the top 1% of traffic by confidence. Then you only ever see the good cases. Always include the categories that matter most, even if they are rare. For example, a compliance question might be 2% of traffic and most of the risk (illustrative figures).
 
-**Alert** হলো metric-এর ওপর threshold, আর প্রতিটা alert-এর তিনটা জিনিস দরকার যেগুলো মানুষ ভুলে যায়:
+**Alerts** are thresholds on the metrics. Each one needs three things that people forget:
 
 ```text
 a threshold      the number, and it comes from the baseline, not a guess
@@ -111,9 +113,11 @@ a window         how long the metric must be out of line
 an owner         who gets woken up
 ```
 
-একটা request-এর ওপর threshold হলো শব্দ। এক ঘণ্টার rolling score-এর ওপর threshold, নাম ধরা owner-সহ, হলো সংকেত।
+A threshold on a single request is noise. A threshold on the score over a rolling hour, with a named owner, is a signal.
 
-আর **canary** হলো সেই অতিরিক্ত alert, ঠিকভাবে করা। আসল প্রশ্নের একটা নির্দিষ্ট dataset প্রতি কয়েক ঘণ্টায় production model-এর ওপর চালান, স্কোর সংরক্ষণ করে আর তুলনা করে। চেকটা "স্কোর ভালো কি না" নয়, "স্কোর বদলেছে কি না", কারণ provider id না বদলেই model বদলে দিতে পারে।
+The **canary** is that extra alert, done properly. It is a fixed dataset of real questions. You run it every few hours against the production model. You store the scores and compare them.
+
+The check is not "is the score good". The check is "has the score moved". The provider can change the model without changing the id. The stored score history is what shows it.
 
 </Layman>
 <Bangla>
@@ -237,7 +241,7 @@ That last test is the one that stops the observability system from degrading int
 </Technical>
 <Layman>
 
-production eval ট্রাফিক sample করে, স্কোর করে আর ফলাফল সংরক্ষণ করে। গুরুত্বপূর্ণ অংশ হলো stratification:
+The production eval samples traffic, scores it, and stores the result. The stratification is the part that matters:
 
 ```python
 # app/observability/production_eval.py
@@ -257,7 +261,7 @@ def sample_traffic(rate: float = 0.02) -> list[Trace]:
     return sampled
 ```
 
-আর alert, তার প্রয়োজনীয় তিনটা অংশসহ:
+Next come the alerts. Each one has the three parts it needs: a threshold, a window, and an owner.
 
 ```python
 ALERTS = [
@@ -292,7 +296,7 @@ ALERTS = [
 ]
 ```
 
-এখন **canary**, যেটা নীরব model update ধরে:
+Now the **canary**. This is the test that catches a silent model update:
 
 ```python
 # tests/ai/test_canary.py
@@ -304,9 +308,9 @@ def test_the_production_model_has_not_changed_behaviour(canary, last_run):
     assert scores.hallucination_rate <= last_run.hallucination_rate + 0.01
 ```
 
-লক্ষ্য করুন দিকটা। faithfulness-এ **পতন** regression। hallucination rate-এ **বৃদ্ধি** regression। threshold ছোট রাখা, কারণ নীরব provider change সাধারণত কয়েক পয়েন্ট, কোনো চিহ্ন নয়।
+Notice the direction. A **drop** in faithfulness is a regression. A **rise** in the hallucination rate is a regression. The thresholds are small. A silent provider change is usually a few points, not a cliff.
 
-আর trace assertion, যেটা production-এর ব্যর্থতাকে রহস্য না রেখে নির্ণয়যোগ্য করে:
+Last is the trace assertion. It makes a production failure diagnosable instead of a mystery:
 
 ```python
 def test_the_trace_carries_the_retrieved_chunks(tracer):
@@ -316,7 +320,7 @@ def test_the_trace_carries_the_retrieved_chunks(tracer):
     assert trace.input_tokens > 0 and trace.output_tokens > 0
 ```
 
-শেষ টেস্টটাই observability system-কে log dump-এ পরিণত হওয়া থেকে বাঁচায়। কেউ নতুন code path যোগ করে retrieval instrument করতে ভুলে গেলে সেটা ব্যর্থ হয়।
+This last test stops the observability system from turning into a log dump. It fails when someone adds a new code path and forgets to instrument the retrieval.
 
 </Layman>
 <Bangla>
@@ -425,17 +429,17 @@ def test_the_trace_carries_the_retrieved_chunks(tracer):
 </Technical>
 <Layman>
 
-**Mistake ১: শুধু সহজ ট্রাফিক sample করা।** confidence-এর ওপর weight করা sample কখনো ব্যর্থতা দেখায় না। ধরন অনুযায়ী stratify করুন আর কম দেখা যায় এমন ঝুঁকিপূর্ণগুলো অবশ্যই রাখুন।
+**Mistake 1: sampling only the easy traffic.** A sample weighted by confidence never sees the failures. Sample across every category. Always include the rare, high-risk ones.
 
-**Mistake ২: canary নেই।** নির্ধারিত সময়ে নির্দিষ্ট dataset চালানো না থাকলে নীরব provider পরিবর্তন ব্যবহারকারীরাই আবিষ্কার করে।
+**Mistake 2: no canary.** Without a fixed dataset run on a schedule, your users find the silent provider change first.
 
-**Mistake ৩: একটা request-এর ওপর alert।** একটা খারাপ উত্তর শব্দ। window-এর aggregate-এর ওপর alert করুন।
+**Mistake 3: alerting on a single request.** One bad answer is noise. Alert on a windowed aggregate.
 
-**Mistake ৪: owner নেই।** owner ছাড়া alert হলো এমন notification যা কেউ পড়ে না।
+**Mistake 4: no owner.** An alert with no owner is a notification nobody reads.
 
-**Mistake ৫: prompt আর উত্তর লগ করা কিন্তু chunk নয়।** তাহলে grounding ব্যর্থতা আর generation ব্যর্থতা দেখতে একই <Cite n={4} />।
+**Mistake 5: logging the prompt and the answer but not the chunks.** Then a grounding failure and a generation failure look the same <Cite n={4} />.
 
-**Mistake ৬: cost metric নেই।** cost alert-টাই সেটা আটকায় যে looping agent একদিনে বিল হয়ে যায়।
+**Mistake 6: no cost metric.** The cost alert stops a looping agent from turning into an invoice.
 
 </Layman>
 <Bangla>

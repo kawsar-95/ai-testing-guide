@@ -564,6 +564,7 @@ Plain English text.
 | Each tag is alone on its line at column 0. A blank line follows each opening panel tag and comes before each closing panel tag. | yes |
 | `<Layman>` and `<Bangla>` have no Markdown heading, so the "On this page" outline does not change. A `###` heading in `<Technical>` is allowed. | yes |
 | A `<Cite n>` in `<Layman>` or `<Bangla>` uses only an `n` that `<Technical>` of the same block cites. | yes |
+| `<Layman>` is in English: at most 2 % of the letters that a reader reads are Bangla. `<Bangla>` is in Bangla: at least 20 % of them are. Code, inline code, tags, link targets, and URLs do not count (`banglaShare` in `lib/voice-source.ts`). | yes |
 | `<Layman>` and `<Bangla>` give no fact that `<Technical>` does not give. | no (fact check) |
 | Commands, flags, paths, product names, and common technical terms stay in English in the Bangla text. | no (fact check) |
 | Course pages only: the Bangla text follows the term style of systemdesignbangla.com. Common concept words are in Bangla letters (for example ক্যাশ, ডেটাবেস, লোড ব্যালেন্সার, মাইক্রোসার্ভিস). Acronyms, protocol, product, command, flag, path, and code names stay in English (DNS, TCP, SQL, Redis, `EXPIRE`). The reader is addressed with আপনি. This is a style rule only: no text of that site is copied. | no (fact check) |

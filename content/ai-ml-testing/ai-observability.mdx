@@ -1,6 +1,6 @@
 export const metadata = { title: 'AI Observability and Production Monitoring', description: 'Set up tracing with Arize Phoenix and LangFuse, and know why a clean eval run does not mean a clean production system.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Introduction', publisher: 'Arize (Phoenix docs)', url: 'https://arize.com/docs/phoenix', accessed: '2026-11-01' },
     { title: 'Introduction', publisher: 'Langfuse (docs)', url: 'https://langfuse.com/docs', accessed: '2026-11-01' },
@@ -27,11 +27,13 @@ This page is the introduction: what a trace is, why it matters, and the first se
 </Technical>
 <Layman>
 
-**Observability** হলো একটা live সিস্টেমকে এমনভাবে instrument করার practice যাতে প্রতিটা call, তার input, output, আর timing, রেকর্ড হয় আর পরে query করা যায়। একটা AI application-এর জন্য এটা এমন একটা প্রশ্নের উত্তর দেয় যা eval suite দিতে পারে না: production-এ model-কে আসলে কী জিজ্ঞেস করা হচ্ছে, আর এটা আসলে কীভাবে উত্তর দিচ্ছে, এমন traffic-এ যার জন্য কেউ test case লেখেনি।
+**Observability** means recording every call in a live system. You record the input, the output, and the timing. Later, you can search those records.
 
-**Arize Phoenix** একটা open-source observability টুল, বিশেষভাবে LLM application-এর জন্য বানানো: এটা call trace করে আর live traffic-এ evaluation চালায় failure আর regression খুঁজে পেতে <Cite n={1} />। **LangFuse** একই কাজ করে নিজের tracing আর prompt management-এ focus দিয়ে, আর দুটোই একসাথে বসতে পারে বা স্ট্যাক অনুযায়ী একে অপরকে প্রতিস্থাপন করতে পারে <Cite n={2} />।
+For an AI app, this answers something an eval suite cannot. What is the model really being asked in production? How does it really answer? This includes traffic nobody wrote a test case for.
 
-এই পেজটা ভূমিকা: trace কী, এটা কেন গুরুত্বপূর্ণ, আর প্রথম setup। গভীর সংস্করণ — নির্দিষ্ট alert threshold, drift detection, আর production-এ A/B তুলনা — Phase 2-এর production observability মডিউলে, একবার যে টুল আর agent/RAG ধারণা এটাকে খাওয়ায় সেগুলো জায়গায় থাকলে।
+**Arize Phoenix** is an open-source observability tool built for LLM applications. It traces calls. It also runs evaluations on live traffic to find failures and regressions <Cite n={1} />. **LangFuse** does the same job. It focuses on tracing and prompt management. You can run both together or swap one for the other, depending on your stack <Cite n={2} />.
+
+This page is only the introduction. It covers what a trace is, why it matters, and the first setup. Alert thresholds, drift detection, and A/B comparison in production come later. They are in the Phase 2 module on production observability.
 
 </Layman>
 <Bangla>
@@ -71,7 +73,7 @@ This is the same DeepEval- and Ragas-style metrics from the eval modules, run on
 </Technical>
 <Layman>
 
-একটা trace হলো model-এ একটা call-এর রেকর্ড, call ঘটার মুহূর্তে ধরা:
+A trace is the record of one call to the model. It is captured at the moment the call happens:
 
 ```text
 trace    one record: input, output, latency, token counts, model, timestamp
@@ -79,15 +81,15 @@ span     a sub-step inside a trace, e.g. one retrieval call within a RAG answer
 session  a group of traces belonging to one conversation
 ```
 
-Phoenix <Cite n={1} /> আর LangFuse <Cite n={2} /> দুটোই একটা application-কে instrument করে যা সে ইতিমধ্যে করা call-গুলো মুড়ে, তাই একটা গ্রহণ করা মানে application আবার লেখা নয়: এটা মানে বিদ্যমান model আর retriever call-এর চারপাশে একটা decorator বা context manager যোগ করা।
+Phoenix and LangFuse both work by wrapping the calls your app already makes <Cite n={1} /> <Cite n={2} />. You do not rewrite the app. You add a decorator or a context manager around the existing model and retriever calls.
 
-একবার trace প্রবাহিত হলে, একটা observability setup যে মূল loop সমর্থন করে:
+Once traces flow in, the basic loop looks like this:
 
 ```text
 collect traces -> sample a subset -> run an eval metric on the sample -> alert if it degrades
 ```
 
-এটা eval মডিউলের সেই একই DeepEval- আর Ragas-স্টাইল metric, একটা নির্দিষ্ট test set-এর বদলে live traffic-এ চালানো — mechanism বদলায় না, শুধু data source বদলায়।
+These are the same DeepEval- and Ragas-style metrics from the eval modules. The only change is the data. They run on live traffic, not a fixed test set.
 
 </Layman>
 <Bangla>
@@ -160,7 +162,7 @@ This advice is the tutorial's own. It does not come from the sources.
 </Technical>
 <Layman>
 
-একটা বিদ্যমান OpenAI-স্টাইল call trace করা একটা ন্যূনতম Phoenix setup <Cite n={1} />:
+Here is a minimal Phoenix setup. It traces an existing OpenAI-style call <Cite n={1} />:
 
 ```python
 import phoenix as px
@@ -173,9 +175,9 @@ OpenAIInstrumentor().instrument()  # traces every OpenAI call from here on
 answer = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
 ```
 
-প্রতিটা call এখন Phoenix UI-তে তার input, output, latency, আর token count সহ দেখা যায়, `answer_question()`-এ কোনো পরিবর্তন ছাড়াই।
+Now every call shows up in the Phoenix UI. You see its input, output, latency, and token counts. `answer_question()` itself does not change.
 
-একই ধরনের call decorate করা একটা ন্যূনতম LangFuse setup <Cite n={2} />:
+Here is a minimal LangFuse setup. It decorates the same kind of call <Cite n={2} />:
 
 ```python
 from langfuse.decorators import observe
@@ -188,16 +190,13 @@ def answer_question(question: str) -> str:
     ).choices[0].message.content
 ```
 
-দুটো পদ্ধতিই একই আকারের data সংগ্রহ করে। এদের মধ্যে বেছে নেওয়া সাধারণত নির্ভর করে কারটার UI, pricing, বা self-hosting গল্প দলের সাথে মানানসই তার ওপর, কী ধরা পড়ে তার পার্থক্যের ওপর নয়।
-
-<Callout type="tip" title="Tutorial advice">
+Both ways collect the same kind of data. Pick by what fits your team: the UI, the pricing, or self-hosting. What gets captured is not the difference.
 
 This advice is the tutorial's own. It does not come from the sources.
 
-- প্রথম production ব্যবহারকারীর আগে tracing চালু করুন, প্রথম incident-এর পরে নয়। যে trace ধরা পড়েনি তা পরে review করা যায় না।
-- প্রতিটা trace-কে prompt version আর model দিয়ে ট্যাগ করুন, quality dashboard-এর একই শৃঙ্খলা।
-- কোনো alert বানানোর আগে শুধু হাতে কিছু real trace দেখা শুরু করুন। real traffic-এর বিস্ময়গুলো জানায় কী alert করার যোগ্য।
-</Callout>
+- Turn on tracing before the first production user, not after the first incident. You cannot review a trace you did not capture.
+- Tag every trace with the prompt version and the model. This is the same habit as the quality dashboard.
+- Start by reading a sample of real traces by hand. Do this before building any alert. Surprises in real traffic show you what is worth alerting on.
 
 </Layman>
 <Bangla>
@@ -262,15 +261,15 @@ def answer_question(question: str) -> str:
 </Technical>
 <Layman>
 
-**Mistake ১: পরিষ্কার eval run-কে production ঠিক আছে তার প্রমাণ ভাবা।** eval suite শুধু সেই input কভার করে যা কেউ লেখার কথা ভেবেছিল; production traffic সবসময় বাকিটা খুঁজে পায়।
+**Mistake 1: thinking a clean eval run proves production is fine.** The eval suite only covers inputs someone thought to write. Production traffic always finds the rest.
 
-**Mistake ২: শুধু একটা incident-এর পরে tracing চালু করা।** টুল install হওয়ার আগের trace review করার জন্য থাকে না।
+**Mistake 2: turning on tracing only after an incident.** Traces from before you installed the tool do not exist. You cannot review them.
 
-**Mistake ৩: session grouping ছাড়া tracing।** কথোপকথনের সীমানা ছাড়া পৃথক call-এর একটা স্তূপ একটা multi-turn ব্যর্থতা দেখাতে পারে না।
+**Mistake 3: tracing without session grouping.** A pile of single calls has no conversation boundaries. It cannot show a failure that happens over several turns.
 
-**Mistake ৪: কারো UI না দেখে একটা টুল বেছে নেওয়া।** Phoenix আর LangFuse একই রকম data ধরে কিন্তু আলাদাভাবে দেখায়; commit করার আগে real traffic-এর একটা ছোট অংশে দুটোই চেষ্টা করুন <Cite n={1} /> <Cite n={2} />।
+**Mistake 4: picking a tool before looking at either UI.** Phoenix and LangFuse capture similar data but show it differently. Try both on a small slice of real traffic before you commit <Cite n={1} /> <Cite n={2} />.
 
-**Mistake ৫: trace আর quality dashboard-এর মধ্যে কোনো লিংক নেই।** একটা trace টুল আর একটা metrics dashboard যা cross-reference করা যায় না, একজন টেস্টারকে "metric কমেছে" থেকে "এখানে নির্দিষ্ট call যা এটার কারণ"-এ যেতে অক্ষম রাখে।
+**Mistake 5: no link between a trace and the quality dashboard.** Sometimes the trace tool and the metrics dashboard cannot be cross-checked. Then a tester cannot go from "the metric dropped" to "here is the call that caused it".
 
 </Layman>
 <Bangla>

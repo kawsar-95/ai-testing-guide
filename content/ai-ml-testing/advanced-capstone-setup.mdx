@@ -1,6 +1,6 @@
 export const metadata = { title: 'Advanced Capstone Setup: A Production RAG Application with an Agent Layer', description: 'Build a multi-source RAG application with an agent that can search docs, check order status, and escalate to a human, deployed with conversation history.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'LangGraph overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/overview', accessed: '2026-11-01' },
     { title: 'Graph API overview', publisher: 'LangChain (docs)', url: 'https://docs.langchain.com/oss/python/langgraph/graph-api', accessed: '2026-11-01' },
@@ -27,9 +27,15 @@ That agent layer is what the rest of this module's tests target. A chatbot that 
 </Technical>
 <Layman>
 
-Advanced capstone হলো Phase 1 capstone-এর কঠিন ভাইবোন: তখনও একটা RAG application যা answer time-এ document থেকে retrieve করে <Cite n={3} />, একটা vector store দিয়ে সমর্থিত <Cite n={4} />, কিন্তু দুটো পার্থক্য আছে যা test suite-কে কী কভার করতে হবে তা বদলে দেয়। প্রথমত, এটা একাধিক উৎস থেকে টানে — একটা কোম্পানির knowledge base, product documentation, আর একটা FAQ database — একটার বদলে। দ্বিতীয়ত, chain-এর ওপর LangGraph দিয়ে বানানো একটা agent layer আছে <Cite n={1} />: এটা শুধু উত্তর দেয় না, এটা সিদ্ধান্ত নেয় document খুঁজবে কিনা, একটা tool দিয়ে একটা order-এর status চেক করবে কিনা, নাকি কথোপকথন একজন মানুষের হাতে দেবে কিনা।
+This capstone is a harder version of the Phase 1 capstone. It is still a RAG application. That means it looks up documents when it answers <Cite n={3} />. The documents live in a vector store <Cite n={4} />.
 
-সেই agent layer-ই এই module-এর বাকি টেস্টের লক্ষ্য। একটা chatbot যা শুধু retrieve করে আর উত্তর দেয় একটা তথ্যে ভুল করতে পারে। একটা agent যা কাজও করে *আদৌ কাজ করা উচিত কিনা* তাতে ভুল করতে পারে — আর সেই সিদ্ধান্ত টেস্ট করা একটা উত্তরের সঠিকতা টেস্ট করা থেকে আলাদা সমস্যা।
+Two things are different, and both change what you must test.
+
+First, it uses many sources. These are a company knowledge base, product documentation, and an FAQ database. Phase 1 used only one.
+
+Second, it has an agent layer, built with LangGraph on top of the chain <Cite n={1} />. The agent does more than answer. It decides what to do. It can search documents, check an order's status with a tool, or pass the chat to a human.
+
+The rest of this module tests that agent layer. A chatbot that only answers can get a fact wrong. An agent that also acts can be wrong about *whether to act at all*. Testing that choice is a different job from checking whether an answer is accurate.
 
 </Layman>
 <Bangla>
@@ -63,7 +69,7 @@ The mock order-status tool exists specifically so the agent's tool-use decision 
 </Technical>
 <Layman>
 
-Architecture Phase 1 capstone-এর chain-এর ওপর একটা layer যোগ করে:
+This design adds one layer on top of the Phase 1 chain:
 
 ```text
 question -> agent (LangGraph) -> decides: search docs | check order | escalate
@@ -73,9 +79,11 @@ question -> agent (LangGraph) -> decides: search docs | check order | escalate
                             escalate:    hand off, with the conversation so far
 ```
 
-<Cite n={1} /> Multi-source retrieval মানে retriever একাধিক collection-এ query করে — knowledge base, product docs, FAQ — আর ফলাফল মিশায়, যা একটা নতুন ব্যর্থতা মোড নিয়ে আসে যা একক-উৎস Phase 1 capstone-এর কখনো ছিল না: দুটো উৎস একমত না হওয়া, বা একটা উৎসের chunk অন্য উৎসের একটা বেশি প্রাসঙ্গিক chunk-কে ছাড়িয়ে যাওয়া <Cite n={4} />।
+The agent reads the question first. Then it picks one of three paths <Cite n={1} />.
 
-Mock order-status tool বিশেষভাবে এজন্য আছে যাতে agent-এর tool-use সিদ্ধান্ত একটা real backend ছাড়াই টেস্ট করা যায়: এটা একটা স্থির order state সেট ফেরত দেয়, আর test suite-এর কাজ নিশ্চিত করা agent এটা শুধু তখনই কল করে যখন প্রশ্নটা আসলেই একটা order সম্পর্কে, আর কথোপকথন থেকে বের করা সঠিক order id এটাকে পাঠায়।
+Multi-source retrieval means the retriever searches more than one collection. These are the knowledge base, the product docs, and the FAQ. It then merges the results. This brings a new kind of failure that Phase 1 never had. Two sources can disagree. Or a chunk from one source can rank above a more relevant chunk from another <Cite n={4} />.
+
+The mock order-status tool lets you test the agent's tool choice without a real backend. It returns a fixed set of order states. Your tests must confirm two things. The agent calls the tool only when the question is really about an order. And it passes the right order id, taken from the conversation.
 
 </Layman>
 <Bangla>
@@ -178,7 +186,7 @@ This advice is the tutorial's own. It does not come from the sources.
 </Technical>
 <Layman>
 
-তিনটা শাখা সহ একটা LangGraph agent <Cite n={2} />:
+Here is a LangGraph agent with three branches <Cite n={2} />:
 
 ```python
 import re
@@ -216,7 +224,7 @@ for node in ("search_docs", "check_order", "escalate"):
 agent = graph.compile()
 ```
 
-তিনটা collection মিশিয়ে Multi-source retrieval <Cite n={4} />:
+This next code searches three collections and merges what it finds <Cite n={4} />:
 
 ```python
 def search_docs_node(state: dict) -> dict:
@@ -226,7 +234,7 @@ def search_docs_node(state: dict) -> dict:
     return {**state, "context": hits, "answer": generate(state["question"], hits)}
 ```
 
-কোনো model call-এর আগে routing সিদ্ধান্তের একটা টেস্ট:
+This test checks the routing choice alone. It runs before any model call:
 
 ```python
 import pytest
@@ -242,14 +250,11 @@ def test_the_agent_routes_to_the_correct_branch(question, expected_branch):
     assert route({"question": question}) == expected_branch
 ```
 
-<Callout type="tip" title="Tutorial advice">
+**Tutorial advice.** This advice is the tutorial's own. It does not come from the sources.
 
-This advice is the tutorial's own. It does not come from the sources.
-
-- routing function সরাসরি টেস্ট করুন, পূর্ণ agent run থেকে আলাদা; এটা সস্তা আর এখানেই বেশিরভাগ সিদ্ধান্ত বাগ থাকে।
-- Mock order-status tool-কে deterministic রাখুন, একটা স্থির, documented order id আর state সেট সহ, যাতে একটা test failure কখনো "mock data বদলেছে" না হয়।
-- প্রতিটা real call-এ agent কোন শাখা নিয়েছে তা লগ করুন, টেস্টিং-এর প্রথম দিন থেকেই, একটা routing bug সন্দেহ হলে পরে যোগ করা নয়।
-</Callout>
+- Test the routing function directly, apart from the full agent run. It is cheap, and most decision bugs live there.
+- Keep the mock order-status tool deterministic. Use a fixed, documented set of order ids and states. Then a failure is never "the mock data changed".
+- Log which branch the agent took on every real call. Start on the first day of testing. Do not wait until you suspect a routing bug.
 
 </Layman>
 <Bangla>
@@ -348,15 +353,15 @@ def test_the_agent_routes_to_the_correct_branch(question, expected_branch):
 </Technical>
 <Layman>
 
-**Mistake ১: শুধু চূড়ান্ত উত্তর টেস্ট করা, কখনো routing সিদ্ধান্ত নয়।** ভুল শাখার মধ্য দিয়ে পৌঁছানো একটা সঠিক উত্তর (একটা order lookup যা দুর্ঘটনাক্রমে document search দিয়ে গেছে) তখনও একটা বাগ।
+**Mistake 1: checking only the final answer, never the routing choice.** An answer can be right but reached by the wrong branch. For example, an order lookup may have gone through document search. That is still a bug.
 
-**Mistake ২: একটা non-deterministic mock tool।** যদি mock order-status tool এলোমেলো data ফেরত দেয়, একটা test failure mock noise থেকে আলাদা করা যায় না।
+**Mistake 2: a mock tool that is not deterministic.** If the mock order-status tool returns random data, you cannot tell a real failure from mock noise <Cite n={1} />.
 
-**Mistake ৩: multi-source retrieval-এ source conflict-এর জন্য কোনো টেস্ট নেই।** তিনটা collection যেগুলো একসাথে বিরোধী উত্তরের জন্য কখনো টেস্ট করা হয়নি শেষ পর্যন্ত একটা তৈরি করবে।
+**Mistake 3: no test for sources that disagree.** If you never test three collections together for a contradicting answer, one will eventually appear.
 
-**Mistake ৪: escalation-কে টেস্ট ছাড়া একটা dead end ভাবা।** Handoff-এর পুরো কথোপকথন বহন করা দরকার; একটা টেস্ট নিশ্চিত করা উচিত যে গ্রহণকারী মানুষ আসলেই সেই context পায়, শুধু chat শেষ হয়েছে তা নয়।
+**Mistake 4: treating escalation as a dead end with no test.** The handoff must carry the whole conversation. Your test should confirm the human really receives that context. Checking that the chat ended is not enough.
 
-**Mistake ৫: agent আর test suite ক্রমানুসারে বানানো, একসাথে নয়।** routing function-এর পাশাপাশি routing test case লেখা ship হওয়ার আগে একটা অস্পষ্ট নিয়ম ধরে, পরে নয়।
+**Mistake 5: building the agent first and the tests later.** Write the routing test cases while you write the routing function. This catches an unclear rule before it ships, not after.
 
 </Layman>
 <Bangla>

@@ -22,6 +22,26 @@ const SECTION = /^##\s+(.*)$/;
 const ANY_HEADING = /^\s*#{1,6}\s+/;
 const CITE = /<Cite\s+n=\{(\d+)\}\s*\/?>/g;
 const INLINE_CODE = /`[^`]*`/g;
+/** The most Bangla letters a <Layman> (plain English) panel may have, as a share of its letters. */
+const LAYMAN_MAX_BANGLA = 0.02;
+/** The fewest Bangla letters a <Bangla> panel must have. Its terms, names, and code stay in English. */
+const BANGLA_MIN_BANGLA = 0.2;
+
+/**
+ * The share of Bangla letters among the Bangla and Latin letters of a panel body that a
+ * reader reads: code, tags, link targets, and URLs do not count. `null` if it has no letters.
+ */
+export function banglaShare(body: string): number | null {
+  const text = body
+    .replace(/^\s*(```+|~~~+)[^\n]*\n[\s\S]*?^\s*\1[^\n]*$/gm, " ")
+    .replace(INLINE_CODE, " ")
+    .replace(/<[^>\n]*>/g, " ")
+    .replace(/\]\([^)]*\)/g, "]")
+    .replace(/https?:\/\/\S+/g, " ");
+  const bangla = (text.match(/[\u0980-\u09FF]/g) ?? []).length;
+  const latin = (text.match(/[A-Za-z]/g) ?? []).length;
+  return bangla + latin === 0 ? null : bangla / (bangla + latin);
+}
 
 type Open = {
   block: VoiceBlock;
@@ -31,6 +51,8 @@ type Open = {
   /** Length of the body of `panel` when its opening tag came. */
   bodyStart: number;
   bodies: Record<Panel, string[]>;
+  /** 0-based line of each opening panel tag. */
+  panelLines: Partial<Record<Panel, number>>;
   technicalCites: Set<number>;
   otherCites: { n: number; line: number }[];
 };
@@ -63,6 +85,16 @@ function scan(source: string): { blocks: VoiceBlock[]; errors: string[] } {
     for (const { n, line } of open.otherCites) {
       if (!open.technicalCites.has(n)) fail(line, `cite ${n} is in a panel but <Technical> of the same block does not cite it`);
     }
+    // The সহজ English panel is English and the বাংলা panel is Bangla: a copy of the wrong
+    // text in a panel passes every other rule. Skipped when the panel order is wrong.
+    const lay = open.orderBad ? null : banglaShare(block.layman);
+    if (lay !== null && lay > LAYMAN_MAX_BANGLA && open.panelLines.layman !== undefined) {
+      fail(open.panelLines.layman, `<Layman> must be plain English, but ${Math.round(lay * 100)}% of its letters are Bangla`);
+    }
+    const bn = open.orderBad ? null : banglaShare(block.bangla);
+    if (bn !== null && bn < BANGLA_MIN_BANGLA && open.panelLines.bangla !== undefined) {
+      fail(open.panelLines.bangla, `<Bangla> must be in Bangla, but only ${Math.round(bn * 100)}% of its letters are Bangla`);
+    }
     open = null;
   };
 
@@ -92,6 +124,7 @@ function scan(source: string): { blocks: VoiceBlock[]; errors: string[] } {
           panel: null,
           bodyStart: 0,
           bodies: { technical: [], layman: [], bangla: [] },
+          panelLines: {},
           technicalCites: new Set(),
           otherCites: [],
         };
@@ -121,7 +154,10 @@ function scan(source: string): { blocks: VoiceBlock[]; errors: string[] } {
         } else {
           if (!blank(index + 1)) fail(index, `a blank line must follow ${full}`);
           open.panel = PANELS[ORDER.indexOf(full) / 2] ?? null;
-          if (open.panel) open.bodyStart = open.bodies[open.panel].length;
+          if (open.panel) {
+            open.bodyStart = open.bodies[open.panel].length;
+            open.panelLines[open.panel] ??= index;
+          }
         }
       }
       afterHeading = false;
