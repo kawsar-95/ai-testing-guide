@@ -173,4 +173,22 @@ Flagged items (recheck 1):
 - Layman, "Limits and budgets": "If you stop a run with SIGTERM". The Technical text says "a `claude -p` run". Optional: add "`claude -p`".
 - Layman, "Make CI runs repeatable with --bare": "no approval prompt" can say "no per-server approval prompt", as the Technical text does. Optional.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panel of 1 section was rewritten to lower the reading load: `Output formats`. The cognitive-load audit of 2026-11-10 found it as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Output formats | PASS | Every claim, cite and code name matches the Technical text. Omissions such as the `jq` command and the cost breakdown do not change the meaning. |
+
 Open FAILs: 0

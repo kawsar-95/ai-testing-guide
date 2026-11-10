@@ -112,21 +112,23 @@ In the owner's [k6-performance-testing](https://github.com/kawsar-95/k6-performa
 </Technical>
 <Layman>
 
-After the test, k6 puts the metrics into one JavaScript object. It gives this object to your `handleSummary()` function <Cite n={1} />. You write this function. It is optional. k6 calls it at the end of the test lifecycle <Cite n={1} />.
+After the test, k6 puts all the results into one object. It hands this object to your `handleSummary()` function <Cite n={1} />. You write this function. It is optional. k6 calls it at the end of the test <Cite n={1} />.
 
-The function returns a map. Each key says where the content goes: `stdout`, `stderr`, or a file path. k6 overwrites a file that exists. Each value is a string or an `ArrayBuffer` <Cite n={1} />. One return can have many keys <Cite n={1} />.
+The function returns a map. Each key says where the content goes: `stdout`, `stderr`, or a file path. k6 overwrites a file that already exists. Each value is a string or an `ArrayBuffer` <Cite n={1} />. One return can have many keys <Cite n={1} />.
 
-If your script exports `handleSummary()`, k6 does not print its default summary <Cite n={1} />. To keep a text summary, use `textSummary`, which the k6 JS utilities library exports <Cite n={1} />. The docs use version `0.0.2`. The k6 docs say these helpers can change, so check jslib.k6.io for the latest <Cite n={1} />.
+If your script has `handleSummary()`, k6 does not print its default summary <Cite n={1} />. To keep a text summary, use `textSummary`. It comes from the k6 JS utilities library <Cite n={1} />. The docs use version `0.0.2`. The docs say these helpers can change. Check jslib.k6.io for the latest <Cite n={1} />.
 
-The script in the Technical text prints the text summary and writes all the data to `summary.json`. `textSummary` has 2 options: `indent` and `enableColors` <Cite n={1} />.
+The script in the Technical text prints the text summary. It also writes all the data to `summary.json`. `textSummary` has 2 options: `indent` and `enableColors` <Cite n={1} />.
 
 The output in the Technical text is one short run on the tutorial's machine. Your numbers will differ.
 
-All metrics are in the `metrics` object of `data`. For example, `data.metrics.http_req_duration` is the object of that metric <Cite n={1} />. Each metric has a `type`, a `contains`, and a `values` object. A metric with a threshold also has `thresholds`. Each threshold has an `ok` flag <Cite n={1} />. The keys in `values` for a Trend follow the `summaryTrendStats` option <Cite n={1} />.
+All metrics are in the `metrics` object of `data`. For example, `data.metrics.http_req_duration` holds that metric <Cite n={1} />. Each metric has a `type`, a `contains`, and a `values` object. A metric with a threshold also has `thresholds`. Each threshold has an `ok` flag <Cite n={1} />. For a Trend, the keys in `values` follow the `summaryTrendStats` option <Cite n={1} />.
 
-In the same run, `summary.json` had the keys `root_group`, `options`, `state`, and `metrics`. The docs describe a newer machine-readable format. k6 v1.5.0 added it. You turn it on with the `--new-machine-readable-summary` flag <Cite n={1} />. The docs say it will become the default in k6 v2 <Cite n={1} />. In k6 v2.3.0 it is not yet the default: a 2 VU, 5 second `handleSummary` test against QuickPizza gave the keys `root_group`, `options`, `state`, and `metrics` in the JSON file. k6 also adds `setup_data` when the script has a `setup()` function: a 2 VU, 5 second variant with `setup()` showed it. These are observed results, not from a source. So print the file once with your k6 version before you write code that reads it.
+In the same run, `summary.json` had the keys `root_group`, `options`, `state`, and `metrics`. The docs describe a newer format that machines can read. k6 v1.5.0 added it. You turn it on with the `--new-machine-readable-summary` flag <Cite n={1} />. The docs say it will become the default in k6 v2 <Cite n={1} />.
 
-You can make more than JSON. `handleSummary()` can make JSON, HTML, console text, or XML. It can also send the data to a remote server <Cite n={1} />. The `jUnit` helper of the same library makes a JUnit XML file that says if the thresholds failed <Cite n={1} />.
+In k6 v2.3.0 it is not yet the default. A 2 VU, 5 second `handleSummary` test against QuickPizza gave the keys `root_group`, `options`, `state`, and `metrics` in the JSON file. k6 also adds `setup_data` when the script has a `setup()` function. A 2 VU, 5 second variant with `setup()` showed it. These are observed results, not from a source. So print the file once with your k6 version before you write code that reads it.
+
+You can make more than JSON. `handleSummary()` can make JSON, HTML, console text, or XML. It can also send the data to a remote server <Cite n={1} />. The `jUnit` helper of the same library makes a JUnit XML file. That file says if the thresholds failed <Cite n={1} />.
 
 <Callout type="tip" title="See it in a real project">
 
@@ -324,11 +326,16 @@ These files get large, because they have one line for each sample. A long test w
 
 The summary has only totals. To get every data point, use the `--out` flag. It writes each sample as k6 collects it. The Technical text shows both commands.
 
-A file name that ends in `.gz` gives a gzip file <Cite n={4} /> <Cite n={5} />. You can follow a file live with `tail -f` <Cite n={4} /> <Cite n={5} />.
+A file name that ends in `.gz` gives a compressed file <Cite n={4} /> <Cite n={5} />. You can follow a file live with `tail -f` <Cite n={4} /> <Cite n={5} />.
 
-The JSON file has one JSON object on each line. A `Metric` line says that a metric exists. A `Point` line is one sample <Cite n={4} />. A `Point` has a `time`, a `value`, and `tags`. Time values are in milliseconds <Cite n={4} />. The `jq` tool can filter the lines, for example by the metric name <Cite n={4} />.
+The JSON file has one JSON object on each line:
 
-The CSV file has a header line. The columns start with `metric_name`, `timestamp`, and `metric_value`. They go on with the tags, such as `check`, `error`, `group`, `method`, `status`, and `url` <Cite n={5} />. If an error happens, the `error` and `error_code` fields have a value <Cite n={5} />.
+- A `Metric` line says that a metric exists <Cite n={4} />.
+- A `Point` line is one sample <Cite n={4} />.
+
+A `Point` has a `time`, a `value`, and `tags`. Time values are in milliseconds <Cite n={4} />. The `jq` tool can filter the lines, for example by the metric name <Cite n={4} />.
+
+The CSV file has a header line. The columns start with `metric_name`, `timestamp`, and `metric_value`. Then come the tags, such as `check`, `error`, `group`, `method`, `status`, and `url` <Cite n={5} />. If an error happens, the `error` and `error_code` fields have a value <Cite n={5} />.
 
 These files get large, because they have one line for each sample. A long test with many VUs gives a big file. Use them to look at requests one by one, not as a report to share.
 

@@ -97,4 +97,20 @@ All 30 `topic` values fit their questions and match the table in the notes. Q3 (
 4. Row 49 (Q18): replaced the uncited claim about bots with the tutorial's own reasoning.
 5. Notes: added S19, rows 43–44, and changed row 24 in `architecture-practice.md`.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The answer to "When should you use Vertical Scaling and when should you use Horizontal Scaling?" was edited to lower the reading load: the answer is now two labelled lists, one for vertical and one for horizontal scaling, with the same sentences. The cognitive-load audit of 2026-11-10 had marked it HUGE among the Q&A answers. No claim changed. T1 is that answer. Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Every fact and condition is kept (bottleneck/traffic condition, upper limit, single point of failure, load balancer, stateless app, Redis/tokens, object storage, database bottleneck). Only the form changed to bullets with bold labels. |
+
 Open FAILs: 0

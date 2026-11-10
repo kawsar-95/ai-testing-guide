@@ -152,4 +152,22 @@ Findings:
 
 Recheck 1 (2026-10-20): I read every voice panel again against the current Technical text, with `git diff HEAD` as the list of edits. Fixed since round 1 and verified: row 93 (the Bangla example now names the 3 files of the Technical example); row 89 (Layman "can use a lot of the main context"); row 61 (Bangla `maxTurns` line, no dangling "ওই সংখ্যক"); row 78 (Bangla line now says that the agent's system prompt replaces the default prompt, so "তবুও" has an antecedent); row 116 (Bangla "Hooks page-এ"). I added rows 135 to 137 for the count "3 problems" and for the replaced prompt. Every `<Cite n>` in a voice panel is cited by the Technical panel of the same section and follows the claim it supports. I found no new fact, number, version, flag, command, path, or scope change. Language: no open note that changes the meaning. Optional: the digit style is mixed ("5টি" and "তিনটি"); this is a style choice only.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panel of 1 section was rewritten to lower the reading load: `Create a subagent`. The cognitive-load audit of 2026-11-10 found it as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Create a subagent | PASS | Every claim and cite matches the Technical text. The panel only leaves details out, and none of the omissions changes a meaning. |
+
 Open FAILs: 0

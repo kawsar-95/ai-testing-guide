@@ -290,4 +290,20 @@ Page checked: commit feb84cc. Scope: the two round-2 FAILs and the Q45 review no
 
 Copy check of the three lines: no run of 10 or more words is shared with the syllabus. PASS.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The answer to "Explain the bug life cycle." was edited to lower the reading load: the answer is now three short paragraphs with bold labels, and the sentence about the defect workflow is two sentences, each with its cite. The cognitive-load audit of 2026-11-10 had marked it HUGE among the Q&A answers. No claim changed. T1 is that answer. Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Facts, hedges ("typically"), and cites are preserved. The cite 35 sentence is split and the cite follows both parts. The Callout and link are unchanged. The new bold labels match the text under them. |
+
 Open FAILs: 0

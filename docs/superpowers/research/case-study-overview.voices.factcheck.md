@@ -164,4 +164,24 @@ Notes from the reader:
 
 Language summary: the Bangla text is natural and polite. It uses আপনি forms ("করবেন না", "রাখুন", "আপনার"). Commands, paths, product names, and technical terms stay in English. The hyphen joins English words and Bangla suffixes everywhere ("Workspace-টি", "README-তে", "PR #9-এর"). No language problem changes the meaning.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panels of 3 sections were rewritten to lower the reading load: `The setup inventory`, `How to read parts 20 to 24`, `The workspace`. The cognitive-load audit of 2026-11-10 found them as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The setup inventory | PASS | Counts, names, models, hook behaviour and the README mismatch all match the Technical text. |
+| How to read parts 20 to 24 | PASS | Part list, descriptions and source note match. "Hostile" for "adversarial" is only a word choice. |
+| The workspace | PASS | Dates, commit counts, contents and folder descriptions match the Technical text. |
+
 Open FAILs: 0

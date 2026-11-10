@@ -104,4 +104,22 @@ Language summary: the Bangla text is natural and uses "আপনি". Technical 
 
 Recheck 1 (2026-10-20): I read the 5 `<Voices>` blocks again from the current file and compared every Layman and Bangla sentence with the Technical panel of the same section. `git diff HEAD` shows the whole file as new (130 added lines), so I re-read all voice lines, not only the lines changed since round 1. Changes since round 1: (1) Layman row 51 now repeats the Technical sentence, so the round 1 FAIL is closed; (2) Bangla row 63 now says "এটি চলবে না" and Bangla row 84 now says "আপনাকে অবশ্যই error পেতে হবে", so the two strength notes are closed. All other 83 rows are unchanged and I verified them again. No new claim was added. Cite check again: in each section, every `<Cite n>` of a Layman or Bangla panel uses an n that the Technical panel of the same section cites (In plain words: 1, 2, 3, 5; Common mistakes: 2, 3, 4, 5, 6), and each one follows a claim that the Technical panel supports with the same n. The Layman cite 2 after "Put a version or a hash in the file name" stays PASS: cite 2 is the MDN cache-busting source that the Technical panel gives for the same practice.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panel of 1 section was rewritten to lower the reading load: `A real-life example`. The cognitive-load audit of 2026-11-10 found it as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| A real-life example | PASS | Same facts as the Technical text: files in object storage, CDN serves them, backend handles business logic such as enrollment and payments. |
+
 Open FAILs: 0

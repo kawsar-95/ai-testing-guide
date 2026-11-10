@@ -161,4 +161,55 @@ Language notes (none changes the meaning):
 
 The Bangla text uses the polite form (`করুন`, `রাখুন`, `মনে রাখবেন`) throughout. Commands, flags, paths, file names, and product names stay in English. Common technical terms (`subagent`, `hook`, `permission`, `server`, `skill`, `context`) stay in English.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panels of 2 sections were rewritten to lower the reading load: `Subagents`, `MCP servers`. The cognitive-load audit of 2026-11-10 found them as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+- Subagents: "The agent also had `Read` and `Bash`, so it started without the MCP tools. <Cite n={2} />" — Cite 2 is placed on a claim that the Technical text does not tie to it. In the Technical text, cite 2 supports only "Claude Code usually refuses to launch a subagent when every entry in `tools` fails to match" (and the not-connected-server point). The sentence "This agent also had `Read` and `Bash`, so it started without the MCP tools" carries no cite there. The panel also drops the "usually refuses" context that explains why the agent started at all. Fix: "Claude Code usually refuses to launch a subagent when every entry in `tools` fails to match. <Cite n={2} /> This agent also had `Read` and `Bash`, so it started without the MCP tools."
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Subagents | FAIL | Cite 2 is placed on the "started without the MCP tools" claim, which the Technical text does not tie to cite 2. |
+| MCP servers | PASS | All claims, cites and fixes match the Technical text. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+Each FAIL of the round above was fixed with the checker's own fix. A fresh `claude -p` session (Claude Sonnet, no tools) checked the changed panels again.
+
+### FAILs
+
+- Subagents: "Fix: add allow rules for the two tools in `.claude/settings.json`." — The panel gives the allow-rule advice but drops the warning that limits it. The Technical text says "A Bash rule is not a sandbox", that it "matches the command text", does not match the same program in another form such as `sh -c '…'`, and "is not a security boundary". Without that warning, the advice reads as full enforcement. Fix: "Fix: add allow rules for the two tools in `.claude/settings.json`. But a Bash rule matches only the command text, so it is not a security boundary. For enforcement that does not depend on the text, use sandboxing."
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Subagents | FAIL | The panel drops the "A Bash rule is not a sandbox" warning while still advising allow rules. Everything else matches the Technical text. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Second re-check after the fixes (2026-11-10)
+
+The round above failed a dropped warning (a Bash rule is not a sandbox) in a panel that still gave the advice it limits. The warning is back. A fresh `claude -p` session (Claude Sonnet, no tools) checked the panel again.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Subagents | PASS | All four problems, fixes and cites (3, 2, 1, 4) match the Technical text. Only details are left out, and none of the left-out details limits the advice that is given. |
+
 Open FAILs: 0
