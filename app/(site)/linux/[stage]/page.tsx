@@ -21,7 +21,8 @@ import { ReelsSection } from "@/components/reels/ReelsSection";
 import { reelsFor } from "@/lib/reels/index";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
-const NAV_LINK = "text-accent underline underline-offset-2";
+// leading-6: each link of the page nav is a 24 px target (the same row as PrevNext).
+const NAV_LINK = "inline-block leading-6 text-accent underline underline-offset-2";
 
 export const dynamicParams = false;
 
@@ -92,15 +93,16 @@ function SheetStage({ stage, sheet }: { stage: LinuxStage; sheet: Sheet }) {
         <ContentsButton />
         <header className="mb-6 flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
           <div className="max-w-2xl">
+            {/* The eyebrow, title, and lede of every content page (the `.mdx h1` scale in globals.css). */}
             <p className={`${LABEL} text-accent`}>
               <T en={LINUX_UI.stageEyebrow(stage.number)} bn={BN.stageEyebrow(stage.number)} />
               {" · "}
               <T en={LINUX_UI.sheetMeta(stage.topics.length, commands)} bn={BN.sheetMeta(stage.topics.length, commands)} />
             </p>
-            <h1 className="mt-2 font-display text-[clamp(1.9rem,4.5vw,2.6rem)] font-medium leading-[1.08] tracking-[-0.025em] text-balance text-text">
+            <h1 className="mt-3 font-display text-[clamp(2rem,5.5vw,2.75rem)] font-medium leading-[1.08] tracking-[-0.025em] text-balance text-text">
               {stage.title}
             </h1>
-            <p className="mt-2 text-[16px] leading-relaxed text-pretty text-text-dim">{stage.description}</p>
+            <p className="mt-5 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">{stage.description}</p>
             <p className="mt-2 text-[13px] leading-relaxed text-text-faint">
               <T en={LINUX_UI.legend} bn={BN.legend} />
             </p>

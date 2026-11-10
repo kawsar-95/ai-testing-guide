@@ -28,7 +28,7 @@ export function LinuxHome() {
   const commandTotal = new Set(tiles.flatMap(({ commands }) => commands.map(({ name }) => name))).size;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-6 pb-6 sm:px-6 sm:pt-9">
+    <div className="mx-auto max-w-6xl px-4 pt-10 pb-6 sm:px-6 sm:pt-14">
       <header className="grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-end">
         <div className="max-w-3xl">
           <p className={`${LABEL} text-accent`}>
@@ -37,10 +37,10 @@ export function LinuxHome() {
               bn={BN.eyebrow(STAGES.length, ALL_TOPIC_IDS.length, commandTotal)}
             />
           </p>
-          <h1 className="mt-3 font-display text-[clamp(2rem,4.5vw,3rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
+          <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
             <T en={LINUX_UI.heading} bn={BN.heading} />
           </h1>
-          <p className="mt-3 text-[17px] leading-relaxed text-pretty text-text-dim">
+          <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
             <T en={LINUX_UI.lede} bn={BN.lede} />
           </p>
           <div className="mt-4">
@@ -68,13 +68,14 @@ export function LinuxHome() {
                 className="flex w-full flex-col border-t border-border-strong pt-4"
               >
                 <div className="flex items-baseline gap-3">
-                  <span aria-hidden="true" className="w-6 shrink-0 font-mono text-[12px] tabular-nums text-accent">
+                  {/* An ordinal, not an action: faint like the numbers of the other module homes. */}
+                  <span aria-hidden="true" className="w-6 shrink-0 font-mono text-[12px] tabular-nums text-text-faint">
                     {partNumber(stage.number)}
                   </span>
                   <div className="min-w-0 grow">
                     <h3
                       id={`stage-${stage.slug}`}
-                      className="font-sans text-[16px] font-semibold leading-snug text-text"
+                      className="font-display text-xl font-medium leading-snug text-text"
                     >
                       <Link href={stage.href} className="inline-block py-0.5 text-text no-underline hover:text-accent">
                         {stage.title}

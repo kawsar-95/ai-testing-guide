@@ -19,16 +19,17 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <SiteShell searchSlot={<SearchPalette />}>
-      <div className="mx-auto max-w-2xl px-5 pt-10 pb-8 sm:px-8 sm:pt-16">
+      {/* The same header as the other standalone pages (Contents, Dashboard, a module home). */}
+      <div className="mx-auto max-w-2xl px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
         <p className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-accent">404</p>
-        <h1 className="mt-3 font-display text-[clamp(2rem,6vw,3.25rem)] font-medium leading-[1.05] tracking-[-0.03em] text-text">
+        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
           <T en={notFoundTitle} bn={SHELL_BN.notFoundTitle} />
         </h1>
-        <p className="mt-4 text-lg leading-relaxed text-pretty text-text-dim">
+        <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
           <T en={notFoundText} bn={SHELL_BN.notFoundText} />
         </p>
         <p className="mt-10 flex flex-wrap gap-x-8 gap-y-3 border-t border-border pt-6">
-          <Link href="/" className="font-mono text-sm text-accent no-underline transition-colors hover:text-text">
+          <Link href="/" className="inline-flex min-h-6 items-center font-mono text-sm text-accent no-underline transition-colors hover:text-text">
             <T en={notFoundBack} bn={SHELL_BN.notFoundBack} />
           </Link>
         </p>

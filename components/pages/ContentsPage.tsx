@@ -55,7 +55,7 @@ function IndexRow({
           </span>
           <span className="min-w-0">
             <span className="flex flex-wrap items-baseline justify-between gap-x-4">
-              <span className="font-display text-[21px] font-semibold leading-snug text-text group-hover/sum:text-accent">{title}</span>
+              <span className="font-display text-xl font-medium leading-snug text-text group-hover/sum:text-accent">{title}</span>
               <span className="font-mono text-[12px] text-text-faint">{meta}</span>
             </span>
             {tagline ? (

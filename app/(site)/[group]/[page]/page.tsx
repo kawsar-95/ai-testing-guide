@@ -70,9 +70,7 @@ export default async function ContentPage({ params }: PageProps<"/[group]/[page]
           />
         </article>
         {info ? <Sources sources={info.sources} editHref={editUrl(group, slug)} /> : null}
-        <div className="mt-12">
-          <PrevNext prev={prev} next={next} />
-        </div>
+        <PrevNext prev={prev} next={next} />
       </ChapterLayout>
       <BackToTop />
     </>

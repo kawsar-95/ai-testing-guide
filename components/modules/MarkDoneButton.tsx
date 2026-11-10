@@ -5,7 +5,11 @@ import { flatModule, progressHook } from "./useModuleProgress";
 import { T } from "@/components/i18n/T";
 import { FLAT_UI_BN } from "@/lib/bn/flat";
 
-/** The "Mark this topic as done" toggle at the end of a topic page. */
+/**
+ * The "Mark this topic as done" toggle at the end of a topic page. It is the
+ * outline button of the page tools (ChapterTools), so a progress toggle looks
+ * the same wherever it is.
+ */
 export function MarkDoneButton({ moduleId, id }: { moduleId: FlatModuleId; id: string }) {
   const m = flatModule(moduleId);
   const { done, toggle } = progressHook(m)();
@@ -15,12 +19,7 @@ export function MarkDoneButton({ moduleId, id }: { moduleId: FlatModuleId; id: s
       type="button"
       aria-pressed={isDone}
       onClick={() => toggle(id)}
-      className={
-        "mt-12 inline-flex items-center gap-2 rounded-md border px-4 py-2 text-[15px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
-        (isDone
-          ? "border-accent bg-bg-raised text-accent"
-          : "border-border-strong text-text hover:border-accent hover:text-accent")
-      }
+      className="btn btn-outline mt-12 aria-pressed:border-accent aria-pressed:text-accent"
     >
       <span aria-hidden="true">{isDone ? "✓" : "○"}</span>
       {isDone ? (

@@ -79,10 +79,11 @@ export function NavList({
   return (
     <div className="px-3 pt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-3">
+        {/* min-h-6: both links are 24 px targets, like every other link of the rail. */}
         <Link
           href={section.href}
           onClick={onNavigate}
-          className="font-display text-[17px] font-medium leading-snug text-text no-underline hover:text-accent"
+          className="inline-flex min-h-6 min-w-6 items-center font-display text-[17px] font-medium leading-snug text-text no-underline hover:text-accent"
         >
           <T en={section.label} bn={section.bn} />
         </Link>
@@ -90,7 +91,7 @@ export function NavList({
           <Link
             href={CONTENTS_HOME}
             onClick={onNavigate}
-            className="shrink-0 font-mono text-[11px] uppercase tracking-[0.12em] text-text-faint no-underline hover:text-accent"
+            className="inline-flex min-h-6 shrink-0 items-center font-mono text-[11px] uppercase tracking-[0.12em] text-text-faint no-underline hover:text-accent"
           >
             <T en={navAllModules} bn={SHELL_BN.navAllModules} />
           </Link>

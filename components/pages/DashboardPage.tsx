@@ -171,7 +171,7 @@ export function DashboardPage() {
           <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
             <T en={DASHBOARD_UI.heading} bn={DASHBOARD_UI_BN.heading} />
           </h1>
-          <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-pretty text-text-dim">
+          <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
             <T en={DASHBOARD_UI.lede} bn={DASHBOARD_UI_BN.lede} />
           </p>
         </div>
