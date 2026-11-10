@@ -1,6 +1,6 @@
 export const metadata = { title: 'DeepEval: Pytest for LLMs', description: 'Write LLM tests as Pytest functions with DeepEval metrics, run them with `deepeval test run`, and read the scores.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Getting started', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/getting-started', accessed: '2026-11-01' },
     { title: 'Metrics', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-introduction', accessed: '2026-11-01' },
@@ -60,12 +60,12 @@ Because the file is a Pytest file, Pytest features such as fixtures and parametr
 </Technical>
 <Layman>
 
-DeepEval lets you write LLM tests as normal Pytest tests. The command `deepeval test run` finds and runs them the way `pytest` does <Cite n={1} />. Each test takes the model's answer and checks it with one or more **metrics**. A metric is the check.
+DeepEval lets you write LLM tests as normal Pytest tests. The command `deepeval test run` finds and runs them, as `pytest` would <Cite n={1} />. Each test takes the model's answer and checks it with one or more **metrics**. A metric is the check.
 
 There are two kinds of metrics <Cite n={2} />:
 
-- **Metrics with no right answer needed.** `AnswerRelevancyMetric` checks that the answer is about the question. `FaithfulnessMetric` checks that the answer does not contradict the text your search step found (`retrieval_context`). These fit a chatbot that answers from a knowledge base, and they also work on a live system.
-- **Metrics that need a known truth.** `HallucinationMetric` compares the answer with a trusted `context`. A `GEval` metric can compare the answer with an `expected_output`.
+- **No right answer needed.** `AnswerRelevancyMetric` checks that the answer is about the question. `FaithfulnessMetric` checks that the answer does not contradict the text your search step fetched (`retrieval_context`). These fit a chatbot that answers from a knowledge base. They also work in production.
+- **A known truth is needed.** `HallucinationMetric` compares the answer with a trusted `context`. A `GEval` metric can compare the answer with an `expected_output`.
 
 A test looks like any other test:
 
@@ -94,7 +94,7 @@ Run it like this <Cite n={1} />:
 deepeval test run test_support.py
 ```
 
-Because it is a Pytest file, Pytest tools such as fixtures and parametrisation work too.
+The file is a Pytest file. So Pytest features such as fixtures and parametrisation work in it.
 
 </Layman>
 <Bangla>
@@ -147,11 +147,19 @@ deepeval test run test_support.py
 
 A DeepEval test has three moving parts: the **test case**, the **metric**, and the **`assert_test` call**.
 
-The **test case** (`LLMTestCase`) holds the inputs and the outputs. `input` is the question. `actual_output` is what the model said. `expected_output` is the reference answer, when you have one. `context` is the ground truth that the answer should agree with. `retrieval_context` is what your retriever actually fetched. Different metrics read different fields: `HallucinationMetric` reads `context`, and `FaithfulnessMetric` reads `retrieval_context` <Cite n={2} />.
+The **test case** (`LLMTestCase`) holds the inputs and the outputs. Its fields are:
 
-The **metric** is the check. Each metric gives a score from 0 to 1 and a reason, and it passes when the score meets its threshold. Almost all of the built-in metrics use a model as the judge (LLM-as-a-judge), so they inherit the non-determinism of any other model call <Cite n={2} />.
+- `input` is the question.
+- `actual_output` is what the model said.
+- `expected_output` is the reference answer, when you have one.
+- `context` is the ground truth that the answer should agree with.
+- `retrieval_context` is what your retriever actually fetched.
 
-The **`assert_test` call** runs the metrics on the test case inside a test, so a metric below its threshold fails that test. Everything runs locally; if you are logged in to Confident AI, the results also appear there <Cite n={1} />.
+Different metrics read different fields. `HallucinationMetric` reads `context`, and `FaithfulnessMetric` reads `retrieval_context` <Cite n={2} />.
+
+**Score and reason.** The **metric** is the check. Each metric gives a score from 0 to 1 and a reason, and it passes when the score meets its threshold. Almost all of the built-in metrics use a model as the judge (LLM-as-a-judge) <Cite n={2} />. So they inherit the non-determinism of any other model call <Cite n={2} />.
+
+**Run in a test.** The **`assert_test` call** runs the metrics on the test case inside a test, so a metric below its threshold fails that test. Everything runs locally <Cite n={1} />. If you are logged in to Confident AI, the results also appear there <Cite n={1} />.
 
 Because it is Pytest, you get **parametrisation** for free, and that is how a real suite is built:
 
@@ -171,7 +179,7 @@ def test_answer_is_grounded(case):
     ...
 ```
 
-The practical cost is the **judge calls**. A metric can make more than one model call for each test case: `FaithfulnessMetric`, for example, first extracts the claims from the answer and then checks each claim against the retrieval context <Cite n={2} />. So two metrics on fifty cases is at least a hundred judge calls. The tutorial's advice: run fast deterministic checks on every commit, and the metric tests on a schedule.
+**Judge calls.** The practical cost is the **judge calls**. A metric can make more than one model call for each test case. `FaithfulnessMetric`, for example, first extracts the claims from the answer and then checks each claim against the retrieval context <Cite n={2} />. So two metrics on fifty cases is at least a hundred judge calls. The tutorial's advice: run fast deterministic checks on every commit, and the metric tests on a schedule.
 
 </Technical>
 <Layman>

@@ -72,4 +72,22 @@ Each source 1–8 is cited at least one time. Each cite number (1–8) has a sou
 2. "A real-life example" (all 3 voices): the sandbox refusal of an unknown host is now tied to `dontAsk` mode, as S7 states. In other modes the user gets a prompt or the connection is allowed.
 3. Source 7 title fixed in `page.sources` and in the research notes. A notes row (C25b) records the `dontAsk` claim.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## A real-life example`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | The edit only adds bold labels and splits sentences. Facts, cites, the code block, and wording like "by default" and "even with" are unchanged. |
+
 Open FAILs: 0

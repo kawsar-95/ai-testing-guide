@@ -8,7 +8,7 @@ Restored from the compiled file on 2026-11-02, after the source was lost.
 
 from ai_ml_testing_page import page
 
-page(**{'slug': 'rag-testing-basics',
+page(**{'slug': 'rag-testing-basics', 'updated': '2026-11-10',
  'title': 'RAG Testing Fundamentals',
  'description': 'Test a RAG pipeline end to end: retrieval quality, precision and recall, '
                 'end-to-end faithfulness, and the four failure modes.',
@@ -153,79 +153,87 @@ page(**{'slug': 'rag-testing-basics',
                                            '১ আর ২ ঠিক হয় retriever আর prompt-এ। ৩ ঠিক হয় prompt '
                                            'আর model-এ। ৪ ঠিক হয় knowledge base-এ, আর এটাকেই '
                                            'প্রায়ই ভুল করে model-এর বাগ হিসেবে লেখা হয়।'},
-              'How it works': {'technical': 'Testing a RAG system means testing two components '
-                                            'that have a contract between them. The retriever '
-                                            'promises: "here are the passages that answer this '
-                                            'question." The generator promises: "my answer uses '
-                                            'only these passages." Each promise has its own test.\n'
-                                            '\n'
-                                            '**Retrieval test.** You need a labelled set: a '
-                                            'question, and the ids of the passages that should be '
-                                            'returned. That set is the ground truth. Then:\n'
-                                            '\n'
-                                            '```python\n'
-                                            'def test_retrieval_finds_the_right_chunks(dataset, '
-                                            'retriever):\n'
-                                            '    for case in dataset:\n'
-                                            '        retrieved = retriever.search(case.question, '
-                                            'k=5)\n'
-                                            '        expected = set(case.relevant_chunk_ids)\n'
-                                            '        found = set(retrieved)\n'
-                                            '        recall = len(expected & found) / '
-                                            'len(expected)\n'
-                                            '        precision = len(expected & found) / '
-                                            'len(found)\n'
-                                            '        assert recall >= 0.9, f"{case.id}: recall '
-                                            '{recall:.2f}"\n'
-                                            '        assert precision >= 0.6, f"{case.id}: '
-                                            'precision {precision:.2f}"\n'
-                                            '```\n'
-                                            '\n'
-                                            'The thresholds are a decision, not a fact. A high '
-                                            'recall and a low precision is often the right trade '
-                                            'for a system that can afford a long context; a low '
-                                            'recall is always a bug, because the information '
-                                            'simply is not there.\n'
-                                            '\n'
-                                            '**End-to-end test.** The answer must be supported by '
-                                            'the retrieved context. The Ragas metric set splits '
-                                            'this: Faithfulness checks the answer against the '
-                                            'retrieved context, and Response Relevancy checks it '
-                                            'against the question {{cite:ragas-metrics}}. '
-                                            'Faithfulness is the one that catches a hallucination, '
-                                            'and it uses an LLM as the judge.\n'
-                                            '\n'
-                                            '**The failure-mode triage.** When an answer is wrong, '
-                                            'the test that tells you where to look is the one that '
-                                            'separates the four failure modes:\n'
-                                            '\n'
-                                            '```text\n'
-                                            'was the right passage retrieved?   no  -> retrieval '
-                                            'failure (fix the retriever)\n'
-                                            'was it in the prompt?              no  -> context '
-                                            'mismatch (fix the prompt builder)\n'
-                                            'does the answer match it?          no  -> generation '
-                                            'failure (fix the prompt)\n'
-                                            'did any passage contain it?       no  -> retrieval '
-                                            'gap (fix the knowledge base)\n'
-                                            '```\n'
-                                            '\n'
-                                            '**Retrieval gap** deserves its own test, because it '
-                                            'is the one that is easy to miss and expensive in '
-                                            'production. The question asks about something the '
-                                            'knowledge base does not cover. The correct behaviour '
-                                            'is to say so. The common behaviour is to answer from '
-                                            "the model's memory, which is the failure RAG is meant "
-                                            'to reduce: the RAG paper reports more factual answers '
-                                            'when the model is given retrieved passages '
-                                            '{{cite:rag}}.\n'
-                                            '\n'
-                                            'The final piece is a **cost check**. A retriever that '
-                                            'returns five long passages instead of two short ones '
-                                            'inflates the token count on every call. That is a '
-                                            'quality issue, because more context is more room to '
-                                            'be unfaithful, and it is a money issue at the same '
-                                            'time.',
+              'How it works': {'technical': "Testing a RAG system means testing two "
+                                            "components that have a contract between "
+                                            "them. The retriever promises: \"here are "
+                                            "the passages that answer this question.\" "
+                                            "The generator promises: \"my answer uses "
+                                            "only these passages.\" Each promise has "
+                                            "its own test.\n\n"
+                                            "**Retrieval test.** You need a labelled "
+                                            "set: a question, and the ids of the "
+                                            "passages that should be returned. That "
+                                            "set is the ground truth. Then:\n\n"
+                                            "```python\n"
+                                            "def "
+                                            "test_retrieval_finds_the_right_chunks(dataset, retriever):\n"
+                                            "    for case in dataset:\n"
+                                            "        retrieved = "
+                                            "retriever.search(case.question, k=5)\n"
+                                            "        expected = "
+                                            "set(case.relevant_chunk_ids)\n"
+                                            "        found = set(retrieved)\n"
+                                            "        recall = len(expected & found) / "
+                                            "len(expected)\n"
+                                            "        precision = len(expected & found) "
+                                            "/ len(found)\n"
+                                            "        assert recall >= 0.9, "
+                                            "f\"{case.id}: recall {recall:.2f}\"\n"
+                                            "        assert precision >= 0.6, "
+                                            "f\"{case.id}: precision {precision:.2f}\"\n"
+                                            "```\n\n"
+                                            "The thresholds are a decision, not a "
+                                            "fact. A high recall and a low precision "
+                                            "is often the right trade for a system "
+                                            "that can afford a long context. A low "
+                                            "recall is always a bug, because the "
+                                            "information simply is not there.\n\n"
+                                            "**End-to-end test.** The answer must be "
+                                            "supported by the retrieved context. The "
+                                            "Ragas metric set splits this into two "
+                                            "checks:\n\n"
+                                            "- Faithfulness checks the answer against "
+                                            "the retrieved context "
+                                            "{{cite:ragas-metrics}}.\n"
+                                            "- Response Relevancy checks the answer "
+                                            "against the question "
+                                            "{{cite:ragas-metrics}}.\n\n"
+                                            "Faithfulness is the one that catches a "
+                                            "hallucination, and it uses an LLM as the "
+                                            "judge.\n\n"
+                                            "**The failure-mode triage.** When an "
+                                            "answer is wrong, the test that tells you "
+                                            "where to look is the one that separates "
+                                            "the four failure modes:\n\n"
+                                            "```text\n"
+                                            "was the right passage retrieved?   no  -> "
+                                            "retrieval failure (fix the retriever)\n"
+                                            "was it in the prompt?              no  -> "
+                                            "context mismatch (fix the prompt builder)\n"
+                                            "does the answer match it?          no  -> "
+                                            "generation failure (fix the prompt)\n"
+                                            "did any passage contain it?       no  -> "
+                                            "retrieval gap (fix the knowledge base)\n"
+                                            "```\n\n"
+                                            "**Retrieval gap.** This failure deserves "
+                                            "its own test, because it is the one that "
+                                            "is easy to miss and expensive in "
+                                            "production. The question asks about "
+                                            "something the knowledge base does not "
+                                            "cover. The correct behaviour is to say "
+                                            "so. The common behaviour is to answer "
+                                            "from the model's memory. This is the "
+                                            "failure RAG is meant to reduce: the RAG "
+                                            "paper reports more factual answers when "
+                                            "the model is given retrieved passages "
+                                            "{{cite:rag}}.\n\n"
+                                            "**Cost check.** The final piece is a cost "
+                                            "check. A retriever that returns five long "
+                                            "passages instead of two short ones "
+                                            "inflates the token count on every call. "
+                                            "That is a quality issue, because more "
+                                            "context is more room to be unfaithful. At "
+                                            "the same time, it is a money issue.",
                                'layman': 'Think of two promises. The retriever promises: "these '
                                          'passages answer the question." The model promises: "my '
                                          'answer uses only these passages." Test each promise on '

@@ -39,4 +39,41 @@ Compared every changed Layman and Bangla panel with Technical of the same block.
 - Block 6 (all panels): the new note under the second screenshot is the same in Technical, Layman, and Bangla (owner's run, Grafana on the host, `localhost` and a user and password, versus `http://influxdb:8086` and empty User and Password). No new fact; it matches the screenshot.
 - Script checks repeat clean: no extra cites, no Layman sentence over 25 words, no তুমি.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panels of 4 sections were rewritten to lower the reading load: `Run InfluxDB 1.x with Docker`, `Run Grafana`, `Connect Grafana to InfluxDB`, `The three InfluxDB versions`. The cognitive-load audit of 2026-11-10 found them as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+- Run Grafana: "That name is for Docker Desktop only." — The Technical text says only "This name is for Docker Desktop." The panel adds "only", which makes the claim stronger. Fix: "That name is for Docker Desktop."
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Run InfluxDB 1.x with Docker | PASS | Faithful; the omitted details (the 1500 user/group ID, the `1.13.0` pull) are not rule 2 problems. |
+| Run Grafana | FAIL | An added "only" makes the `host.docker.internal` claim stronger than the Technical text. |
+| Connect Grafana to InfluxDB | PASS | The table, steps, warnings and cites match the Technical text. |
+| The three InfluxDB versions | PASS | The table, cites and warnings match the Technical text. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+Each FAIL of the round above was fixed with the checker's own fix. A fresh `claude -p` session (Claude Sonnet, no tools) checked the changed panels again.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Run Grafana | PASS | Facts, cites (11, 12, 13, 17, 18), command and code block all match the Technical text. Only details were left out (OS families, the `grafana/grafana-oss` note), and none of the omissions changes the meaning. |
+
 Open FAILs: 0

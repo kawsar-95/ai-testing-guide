@@ -1,6 +1,6 @@
 export const metadata = { title: 'Capstone Test Pipeline: Eval, Red Team, and UI, Together', description: 'Write the full test suite for the capstone app: a Promptfoo eval, DeepEval hallucination tests, red teaming, a Giskard scan, and Playwright UI tests, traced with LangFuse.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Configuration reference', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/configuration/reference/', accessed: '2026-11-01' },
     { title: 'HTTP/HTTPS API provider', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/providers/http/', accessed: '2026-11-01' },
@@ -39,7 +39,7 @@ The point of running all six together is not redundancy. Each one tests a differ
 </Technical>
 <Layman>
 
-Capstone-এর test pipeline একটা নতুন কৌশল নয়; এটা পুরো course একসাথে একটা app-এ প্রয়োগ করা:
+The capstone's test pipeline is not a new technique. It is the whole course used on one app at the same time:
 
 ```text
 Promptfoo eval      20 test cases, assertions on the answer <Cite n={1} />
@@ -50,7 +50,12 @@ Playwright          the chat UI end to end <Cite n={6} />
 LangFuse            every call traced, for when a test fails and needs a reason <Cite n={7} />
 ```
 
-ছয়টা একসাথে চালানোর বিষয় redundancy নয়। প্রতিটা আলাদা একটা layer টেস্ট করে: eval আর DeepEval suite সঠিকতা টেস্ট করে, red team আর Giskard scan নিরাপত্তা টেস্ট করে, Playwright ব্যবহারকারী আসলে যা ছোঁয় সেই interface টেস্ট করে, আর LangFuse সেই রেকর্ড যা বাকি পাঁচটার যেকোনো একটায় ব্যর্থতাকে শুধু reproduce নয়, diagnose করা যায় এমন করে তোলে।
+You run all six, but not to repeat the same checks. Each tool tests a different layer.
+
+- The eval and DeepEval suites check that answers are correct.
+- The red team and the Giskard scan check security.
+- Playwright checks the interface the user really touches.
+- LangFuse keeps the record. When any of the other five fails, you can find out why, not just run it again.
 
 </Layman>
 <Bangla>
@@ -93,7 +98,7 @@ The Promptfoo eval config and the red team config are two different files agains
 </Technical>
 <Layman>
 
-চালানোর ক্রম গুরুত্বপূর্ণ: সস্তা আর দ্রুত চেক আগে, যাতে একটা সুস্পষ্ট ব্রেক সেকেন্ডে ব্যর্থ হয়, দশ-মিনিটের red team run-এর পরে নয়।
+Order matters. Run the cheap, fast checks first. An obvious break then fails in seconds, not after a ten-minute red team run.
 
 ```text
 1. Promptfoo eval       fast, deterministic assertions       seconds
@@ -103,9 +108,9 @@ The Promptfoo eval config and the red team config are two different files agains
 5. Giskard scan         a second, independent attack library  several minutes
 ```
 
-LangFuse ধাপ ১ থেকে সবকিছু trace করে <Cite n={7} />, তাই ধাপ ৪ বা ৫ কিছু পেলে, সেই নির্দিষ্ট call-এর trace — prompt, retrieved context, model-এর উত্তর — এক ক্লিক দূরে, অতিরিক্ত logging জুড়ে re-run করার বদলে।
+LangFuse traces everything from step 1 onward <Cite n={7} />. Say step 4 or 5 finds a problem. The trace for that exact call is one click away. It shows the prompt, the retrieved context, and the model's answer. You do not need to re-run with extra logging added.
 
-Promptfoo eval config আর red team config একই target-এর বিপরীতে দুটো আলাদা ফাইল, কারণ তারা আলাদা উদ্দেশ্য সাধন করে: eval config প্রত্যাশিত input-এ সঠিকতা assert করে <Cite n={1} />, red team config adversarial input তৈরি করে <Cite n={4} />।
+The eval config and the red team config are two different files. Both aim at the same target. They have different jobs. The eval config checks correct answers for expected inputs <Cite n={1} />. The red team config generates adversarial inputs <Cite n={4} />.
 
 </Layman>
 <Bangla>
@@ -203,7 +208,7 @@ This advice is the tutorial's own. It does not come from the sources.
 </Technical>
 <Layman>
 
-Eval config, live endpoint-এর বিপরীতে ২০টা কেস <Cite n={1} /> <Cite n={2} />:
+First, the eval config. It runs 20 cases against the live endpoint <Cite n={1} /> <Cite n={2} />:
 
 ```yaml
 # promptfooconfig.yaml
@@ -224,7 +229,7 @@ defaultTest:
       value: "{{expected_fact}}"
 ```
 
-একই endpoint-এর ওপর একটা DeepEval hallucination টেস্ট <Cite n={3} />:
+Next, a DeepEval hallucination test on the same endpoint <Cite n={3} />:
 
 ```python
 from deepeval import assert_test
@@ -243,14 +248,14 @@ def test_the_answer_is_faithful_to_the_retrieved_context(case):
     )
 ```
 
-Red team আর scan, একটা দুই-টুল gate হিসেবে <Cite n={4} /> <Cite n={5} />:
+Then the red team and the scan. Together they form a two-tool gate <Cite n={4} /> <Cite n={5} />:
 
 ```bash
 npx promptfoo redteam run --config redteam-config.yaml
 python -m scripts.run_giskard_scan --target http://localhost:8000/ask
 ```
 
-Chat widget-এর বিপরীতে একটা Playwright UI test <Cite n={6} />:
+Last, a Playwright UI test on the chat widget <Cite n={6} />:
 
 ```python
 from playwright.sync_api import Page, expect
@@ -262,14 +267,11 @@ def test_sending_a_question_renders_an_answer(page: Page):
     expect(page.locator(".bot-message")).to_contain_text("30 day", timeout=10_000)
 ```
 
-<Callout type="tip" title="Tutorial advice">
+**Tutorial advice:** This advice is the tutorial's own. It does not come from the sources.
 
-This advice is the tutorial's own. It does not come from the sources.
-
-- খরচের ক্রমে suite চালান: assertion, তারপর LLM-judged metric, তারপর ধীর adversarial scan।
-- প্রতিটা টেস্ট app-এর একই চলমান instance-এ নির্দেশ করুন, যাতে একটা ব্যর্থতা থেকে LangFuse trace-এর সবসময় পরিদর্শনের জন্য একটা মিলে যাওয়া call থাকে।
-- ২০টা eval কেস আর red team-এর generated কেস আলাদা ফাইলে রাখুন; তাদের মালিক আর update ছন্দ আলাদা।
-</Callout>
+- Run the suites in cost order. Start with assertions, then LLM-judged metrics, then the slower adversarial scans.
+- Point every test at the same running instance of the app. Then a LangFuse trace from a failure always has a matching call to inspect.
+- Keep the 20 eval cases and the red team's generated cases in separate files. They have different owners and different update cadences.
 
 </Layman>
 <Bangla>
@@ -363,15 +365,15 @@ def test_sending_a_question_renders_an_answer(page: Page):
 </Technical>
 <Layman>
 
-**Mistake ১: ধীর scan আগে চালানো।** একটা ভাঙা endpoint-এর eval suite-এর প্রথম কয়েক সেকেন্ডেই ব্যর্থ হওয়া উচিত, এমন একটা app-কে দশ মিনিট red team করার পরে নয় যেটা কখনো পাস করত না।
+**Mistake 1: running the slow scans first.** A broken endpoint should fail in the first seconds of the eval suite. It should not fail after ten minutes of red teaming an app that was never going to pass.
 
-**Mistake ২: suite-গুলোর মধ্যে একটা ভাগাভাগি target নেই।** UI টেস্ট যদি eval suite-এর চেয়ে আলাদা deployment-এর বিপরীতে চলে, একটা পাস করা eval আর একটা ব্যর্থ UI test আসলে পরস্পরবিরোধী নয়।
+**Mistake 2: no shared target between the suites.** Say the UI tests run against a different deployment than the eval suite. Then a passing eval and a failing UI test do not truly contradict each other.
 
-**Mistake ৩: eval আর red team run trace না করা, শুধু production traffic।** একটা test run-এর trace ঠিক সেগুলোই যা একটা টেস্টারের দরকার যখন একটা test ব্যর্থ হয় <Cite n={7} />।
+**Mistake 3: tracing only production traffic, not eval and red team runs.** The traces from a test run are the ones a tester needs when a test fails <Cite n={7} />.
 
-**Mistake ৪: ছয়টার বদলে একটা combined রিপোর্ট।** সঠিকতা, নিরাপত্তা, আর UI finding-কে একটা pass/fail-এ ভেঙে ফেলা লুকায় কোন layer আসলে ভেঙেছে।
+**Mistake 4: one combined report instead of six.** One pass/fail for correctness, security, and UI findings hides which layer broke.
 
-**Mistake ৫: eval suite পাস করেছে বলে Playwright suite বাদ দেওয়া।** একটা API যা সঠিকভাবে উত্তর দেয় তারপরও একটা ভাঙা loading state render করতে পারে বা একটা streamed response-এর দ্বিতীয় অর্ধেক ফেলে দিতে পারে।
+**Mistake 5: skipping the Playwright suite because the eval suite passed.** An API can answer correctly and still show a broken loading state. It can also drop the second half of a streamed response.
 
 </Layman>
 <Bangla>

@@ -23,4 +23,22 @@ Automated checks:
 
 Round 2: the "local server of the owner" change is the same in Technical, Layman and Bangla. PASS.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panel of 1 section was rewritten to lower the reading load: `The owner's local run`. The cognitive-load audit of 2026-11-10 found it as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The owner's local run | PASS | Every claim matches the Technical text: localhost:3000 run, one-run caveat, 200 VU peak, 6-minute stages, all checks passed, iterations equal http_reqs, vus min=1 max=200. Leaving out `vus_max` is not a FAIL. |
+
 Open FAILs: 0

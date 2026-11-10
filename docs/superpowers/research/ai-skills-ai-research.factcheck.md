@@ -41,4 +41,22 @@ Other checks:
 - Each cite points to the source that has the fact.
 - The "Tutorial advice" tip has no cite.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Facts, hedges and cites are intact. The cite for "always on" and the 150-character limit stays after the split sentence, and the new labels match the text under them. |
+
 Open FAILs: 0

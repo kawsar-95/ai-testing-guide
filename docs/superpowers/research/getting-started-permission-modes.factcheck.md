@@ -115,4 +115,24 @@ Scope: `git diff 451b292 HEAD -- content/` (commit 8a78933; later commits 6c7651
 
 Cite numbers: unchanged; cite 1 exists. No other lines changed.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 3 sections was edited to lower the reading load: T1 = `## The six modes`, T2 = `## Which mode you start in`, T3 = `## Allow, ask, and deny rules`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Bold labels and the allow-list bullets keep all facts, cites and code unchanged. |
+| T2 | PASS | The Manual fallback sentence was split in two, and the condition (the flag, a settings file, or the built-in default selects `auto`) is kept. |
+| T3 | PASS | Only bold run-in labels were added, and all text, the table and the cites are unchanged. |
+
 Open FAILs: 0

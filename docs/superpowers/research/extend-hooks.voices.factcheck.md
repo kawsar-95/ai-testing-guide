@@ -200,4 +200,22 @@ I re-read all 9 `<Voices>` blocks and re-checked every row against the current T
 - No other voice line changed a number, a version, a flag, a command, a path, a product name, a scope, or a condition. Each `<Cite n>` in a voice panel is a cite of the Technical panel of the same section. The 33 event names in the Reference section are still 33.
 - Bangla language: polite form (আপনি, "করুন", "দেখুন") throughout, technical terms in English, and hyphens before Bangla suffixes. No new language note.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panel of 1 section was rewritten to lower the reading load: `Debug and stay safe`. The cognitive-load audit of 2026-11-10 found it as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Debug and stay safe | PASS | The steps, commands, numbers and cites match the Technical text. Omitted details (the interactive trust dialog, the security practices, the reason for the Windows matcher) are not rule 2 failures. |
+
 Open FAILs: 0

@@ -1,6 +1,6 @@
 export const metadata = { title: 'Model Drift and A/B Testing', description: 'Detect drift, compare two models in production safely, and know when a difference is real rather than noise.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Evaluation and datasets', publisher: 'Langfuse (docs)', url: 'https://langfuse.com/docs/evaluation/evaluation-methods', accessed: '2026-11-01' },
     { title: 'Self-Consistency Improves Chain of Thought Reasoning in Language Models', publisher: 'arXiv', url: 'https://arxiv.org/abs/2203.11171', accessed: '2026-11-01' },
@@ -37,9 +37,9 @@ The measurement has to be **per category** and the sample has to be big enough. 
 </Technical>
 <Layman>
 
-**Drift** হলো ডেটার পরিবর্তন, code-এর নয়। ব্যবহারকারীরা অন্য প্রশ্ন করতে শুরু করে, knowledge base বদলায়, বা ঋতু বদলায়, আর সিস্টেমের আচরণ বদলে যায় কোনো deployment ছাড়াই। মাপ কেবল বলে *কিছু একটা* সরে গেছে; *কেন* সরে গেছে সেটা বলে না।
+**Drift** means the data changed, not the code. Users ask different questions, the knowledge base changes, or the season changes. The system acts differently, yet nobody deployed anything. The measurements tell you *that* something moved. They do not tell you *why*.
 
-তিনটা ধরন আলাদা করা দরকার, কারণ সমাধান আলাদা:
+There are three kinds of drift. Each one needs a different fix:
 
 ```text
 input drift       the questions changed
@@ -47,11 +47,11 @@ knowledge drift   the documents changed
 output drift      the model's behaviour changed
 ```
 
-output drift-কেই "model খারাপ হয়ে গেছে" বলা হয়, আর সেটা সাধারণত provider পরিবর্তন বা prompt পরিবর্তন। input drift হলো একটা product সংকেত: ব্যবহারকারীরা এমন কিছু চান যা আপনি বানাননি।
+People call output drift "the model got worse". It is usually a provider change or a prompt change. Input drift is a product signal. Your users want something you did not build for.
 
-Production-এ দুটো model-এর **A/B testing** আলাদা সমস্যা। ট্রাফিকের একটা অংশ দুটোর একটায় পাঠান, দুটোই মাপেন, সিদ্ধান্ত নেন। কঠিনতা পরিসংখ্যানগত: কম ট্রাফিকে যে পার্থক্য দেখা যায় সেটা noise হতে পারে। আর ছোট sample-এ গড়ে ভালো model-ও আপনার ব্যবহারকারীদের জন্য খারাপ হতে পারে, কারণ ধরনগুলো আলাদা।
+**A/B testing** compares two models in production. You send a share of the traffic to each model, measure both, and decide. The hard part is statistics. With low traffic, the difference you see can be noise. With a small sample, a model that is better on average can still be worse for your users, because the categories differ.
 
-মাপ অবশ্যই **প্রতি ধরনে** হতে হবে আর sample যথেষ্ট বড় হতে হবে। সম্পর্কিত ধারণাটা উল্টো দিকে: দুটো model না তুলনা করে একটা model-কে একই input-এ কয়েকবার চালানো (self-consistency গবেষণা একটা model থেকে কয়েকটা reasoning path sample করে <Cite n={2} />), আর run-গুলোর মধ্যে ছড়ানোটাই noise floor দেয়।
+So measure **per category**, and use a big enough sample. A related idea works the other way around. You run one model several times on the same input. The self-consistency paper samples several reasoning paths from one model <Cite n={2} />. The spread between runs gives you a noise floor.
 
 </Layman>
 <Bangla>
@@ -87,7 +87,7 @@ what changed?      compare the metric distribution of two periods
 which is better?    compare the metric distribution of two arms
 ```
 
-**Drift detection** needs a baseline. You take the distribution of a metric over a window, and you compare it to the distribution of the same metric over the baseline window. The comparison has to be on the **distribution**, not on the mean, because a distribution can shift without its mean moving much, and a mean can move because of one outlier.
+**Drift detection** needs a baseline. You take the distribution of a metric over a window. Then you compare it to the distribution of the same metric over the baseline window. The comparison has to be on the **distribution**, not on the mean, because a distribution can shift without its mean moving much, and a mean can move because of one outlier.
 
 The **category breakdown** is what makes the finding actionable. A drift in the overall faithfulness might be a drift in one category, and that category is usually a data problem you can fix.
 
@@ -112,23 +112,23 @@ The **analysis** has three requirements:
 2. **A fixed decision rule, written before the test.** A test that looks at the results and then decides what counts as a win is not a test.
 3. **Per-category analysis.** A model that wins on 80% of traffic and loses badly on the other 20% is a decision, not an average.
 
-And the **guardrail metric** has to be checked in both arms. A candidate that scores 0.02 higher on relevance but refuses three times as many requests is not a win, and the average would hide it.
+The **guardrail metric** also has to be checked in both arms. A candidate that scores 0.02 higher on relevance but refuses three times as many requests is not a win. The average would hide it.
 
 </Technical>
 <Layman>
 
-drift টেস্ট আর A/B টেস্ট একই মাপ, আলাদা control — বাস্তবায়নও এক:
+The drift test and the A/B test are the same measurement with a different control. The implementation is the same too:
 
 ```text
 what changed?      compare the metric distribution of two periods
 which is better?    compare the metric distribution of two arms
 ```
 
-**Drift detection**-এর baseline দরকার। কোনো metric-এর window-এর বিতরণ নিয়ে সেটাকে baseline window-এর বিতরণের সাথে তুলনা করেন। তুলনাটা **বিতরণের** ওপর হতে হবে, গড়ের ওপর নয়, কারণ বিতরণ গড় না বদলেও সরে যেতে পারে, আর একটা outlier গড়কে সরাতে পারে।
+**Drift detection** needs a baseline. Take the distribution of a metric over a window of time. Compare it to the same metric over the baseline window. Compare the **distribution**, not the mean. A distribution can shift while its mean barely moves. A mean can also move because of one outlier.
 
-**ধরন অনুযায়ী ভাগ**-ই finding-কে কাজের করে তোলে। সামগ্রিক faithfulness-এ drift হতে পারে একটা ধরনের drift থেকে, আর সেই ধরনটা সাধারণত একটা data সমস্যা যা ঠিক করা যায়।
+The **category breakdown** makes the finding actionable. A drift in overall faithfulness might be a drift in one category. That category is usually a data problem you can fix.
 
-A/B test-এ বাস্তবায়ন হলো model call-এর সামনে একটা **router**, আর arm ট্রেসে রেকর্ড করা:
+For the A/B test, put a **router** in front of the model call. Record the arm on the trace:
 
 ```python
 import hashlib
@@ -141,15 +141,15 @@ def choose_arm(user_id: str) -> str:
     return "control"
 ```
 
-hash **user id**-র ওপর হতে হবে, প্রতি request-এ random নয়, নইলে একই ব্যবহারকারী দুটো model-ই দেখে তুলনা নষ্ট হয়।
+Build the hash from the **user id**. Do not pick randomly per request. Otherwise the same user sees both models, and the comparison is contaminated.
 
-**বিশ্লেষণের** তিনটি শর্ত:
+The **analysis** has three requirements:
 
-1. **যথেষ্ট ট্রাফিক।** noise floor-এর চেয়ে ছোট পার্থক্য পার্থক্য নয়। noise floor আসে বারবার চালানো থেকে: একই input-এ control model কয়েকবার চালিয়ে দেখুন তার নিজের স্কোর কতটা নড়ে।
-2. **আগে থেকে লেখা সিদ্ধান্তের নিয়ম।** ফল দেখে তারপর "জিত" কী বুঝবে তা ঠিক করা টেস্ট নয়।
-3. **প্রতি ধরনে বিশ্লেষণ।** যে model ৮০% ট্রাফিকে জেতে আর বাকি ২০%-এ খারাপ হয় সেটা একটা সিদ্ধান্ত, একটা গড় নয়।
+1. **Enough traffic.** A difference smaller than the noise floor is not a difference. You get the noise floor from repeated runs. Run the control model several times on the same inputs. See how much its own score moves. The scores from both arms sit in the evaluation store. So you compare against stored history, not a number someone remembers <Cite n={1} />.
+2. **A fixed decision rule, written before the test.** A test that looks at the results and then decides what counts as a win is not a test.
+3. **Per-category analysis.** A model that wins on 80% of traffic and loses badly on the other 20% is a decision, not an average.
 
-আর **guardrail metric** দুটো arm-এই যাচাই করতে হবে। যে candidate relevance-এ ০.০২ বেশি স্কোর করে কিন্তু তিনগুণ বেশি অনুরোধ প্রত্যাখ্যান করে সেটা জয় নয়, আর গড় সেটা ঢেকে দেয়।
+Also check the **guardrail metric** in both arms. A candidate that scores 0.02 higher on relevance but refuses three times as many requests is not a win. The average would hide it.
 
 </Layman>
 <Bangla>
@@ -263,7 +263,7 @@ That last assertion is the guardrail check. A candidate that wins on relevance a
 </Technical>
 <Layman>
 
-drift চেক একই metric-এর দুটো window তুলনা করে, আর বিতরণের ওপর কাজ করতে হয়:
+The drift check compares two windows of the same metric. It must look at the distribution, not only the mean:
 
 ```python
 # tests/ai/test_drift.py
@@ -282,7 +282,7 @@ def test_the_faithfulness_distribution_has_not_drifted(trace_store, baseline):
     assert drift < 0.05, f"the distribution moved by {drift:.3f}"
 ```
 
-আর প্রতি ধরনের সংস্করণ, যেটাই বলে দেয় কোথায় তাকাবেন:
+Next is the per-category version. It tells you where to look:
 
 ```python
 @pytest.mark.slow
@@ -296,13 +296,15 @@ def test_no_single_category_has_drifted(trace_store, baseline):
         )
 ```
 
-এখন A/B টেস্ট, arm রেকর্ড করে যাতে বিশ্লেষণে group করা যায়:
+Now the A/B test. The arm is recorded so the analysis can group by it. First, a test that one user always gets the same arm:
 
 ```python
 def test_the_router_is_stable_for_a_user():
     arms = {choose_arm("user-42") for _ in range(50)}
     assert len(arms) == 1, "the user was split across arms"
 ```
+
+Then a test that the arms get roughly the traffic you planned:
 
 ```python
 def test_the_arms_get_roughly_equal_traffic(trace_store):
@@ -312,7 +314,7 @@ def test_the_arms_get_roughly_equal_traffic(trace_store):
     assert 0.35 < share < 0.45, f"the candidate arm got {share:.0%} of traffic"
 ```
 
-আর সিদ্ধান্তের নিয়ম, টেস্ট চালানোর আগেই লেখা, একটা টেস্ট হিসেবে:
+Last, the decision rule. You write it before the test runs, and it is also a test:
 
 ```python
 def test_the_candidate_arm_won_by_the_pre_written_rule(results):
@@ -325,7 +327,7 @@ def test_the_candidate_arm_won_by_the_pre_written_rule(results):
     assert results["candidate_refusal_rate"] <= results["control_refusal_rate"] + 0.01
 ```
 
-শেষ assertionটাই guardrail চেক। যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা জয় নয়, আর গড় স্কোর কখনোই সেটা দেখাত না।
+The last assertion is the guardrail check. A candidate that wins on relevance but refuses more is not a win. The average score would never have shown it.
 
 </Layman>
 <Bangla>
@@ -417,17 +419,17 @@ def test_the_candidate_arm_won_by_the_pre_written_rule(results):
 </Technical>
 <Layman>
 
-**Mistake ১: শুধু গড় তুলনা।** গড় বিতরণের সরণ ঢেকে দেয় আর একটা ধরনের সরণও ঢেকে দেয়।
+**Mistake 1: looking only at means.** The mean hides a shift in the distribution. It also hides a shift in one category.
 
-**Mistake ২: noise floor নেই।** ছাড়া আপনি বুঝতে পারেন না পার্থক্যটা আসল নাকি ভাগ্যকরম।
+**Mistake 2: no noise floor.** Without one, you cannot tell a real difference from a lucky sample.
 
-**Mistake ৩: ফল দেখে তারপর জেতা ঠিক করা।** এটা noise-এর সাথে curve-fitting। আগে নিয়ম লিখুন।
+**Mistake 3: picking the winner after seeing the results.** That fits your rule to noise. Write the rule first.
 
-**Mistake ৪: প্রতি request-এ route।** একই ব্যবহারকারী দুটো model দেখে তুলনা নষ্ট হয়।
+**Mistake 4: routing per request.** The same user sees both models. The comparison is contaminated.
 
-**Mistake ৫: শুধু সামগ্রিক স্কোর।** ধরনগুলো আলাদা, আর যারা গুরুত্বপূর্ণ তারা ছোট ধরনে।
+**Mistake 5: using only the overall score.** The categories differ. The users who matter are in the smaller one.
 
-**Mistake ৬: A/B test-এ guardrail metric নেই।** যে candidate relevance-এ জেতে আর বেশি প্রত্যাখ্যান করে সেটা ছদ্মবেশে regression।
+**Mistake 6: no guardrail metric in the A/B test.** A candidate that wins on relevance but refuses more is a regression in disguise.
 
 </Layman>
 <Bangla>

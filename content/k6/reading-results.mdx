@@ -1,6 +1,6 @@
 export const metadata = { title: 'Reading the k6 Results', description: 'The built-in metrics, p95 and p99, and a checklist to read a result.' }
 export const page = {
-  updated: '2026-10-27',
+  updated: '2026-11-10',
   sources: [
     { title: 'Built-in metrics', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/metrics/reference/', accessed: '2026-10-27' },
     { title: 'End of test', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/results-output/end-of-test/', accessed: '2026-10-27' },
@@ -146,9 +146,9 @@ k6 creates these metrics only when the test makes HTTP requests <Cite n={1} />:
 | `http_req_failed` | Rate | The rate of failed requests, by the rule of `setResponseCallback` <Cite n={1} /> |
 | `http_reqs` | Counter | How many HTTP requests k6 made <Cite n={1} /> |
 
-Note one thing about `http_req_duration`. It does not include the blocked, connecting, and TLS times. The docs say it is the time that the remote server takes to process the request and answer, without the first DNS lookup and connection times <Cite n={1} />. If a request is slow to start, look at `http_req_blocked` and `http_req_connecting` too.
+**Note on `http_req_duration`.** It does not include the blocked, connecting, and TLS times. The docs say it is the time that the remote server takes to process the request and answer <Cite n={1} />. It is measured without the first DNS lookup and connection times <Cite n={1} />. If a request is slow to start, look at `http_req_blocked` and `http_req_connecting` too.
 
-k6 also has metrics for the `k6/browser` module, for WebSocket, and for gRPC <Cite n={1} />. This page does not cover them.
+**Other metrics.** k6 also has metrics for the `k6/browser` module, for WebSocket, and for gRPC <Cite n={1} />. This page does not cover them.
 
 </Technical>
 <Layman>
@@ -157,34 +157,34 @@ k6 has four metric types <Cite n={3} />:
 
 - A **Counter** adds up values.
 - A **Gauge** tracks the smallest, largest, and latest values.
-- A **Rate** tracks how often a non-zero value occurs.
-- A **Trend** calculates statistics, such as the mean and percentiles, over many values.
+- A **Rate** tracks how often a value is not zero.
+- A **Trend** works out numbers like the mean over many values.
 
 k6 always collects these metrics, whatever the protocol <Cite n={1} />:
 
 | Metric | Type | Meaning |
 | --- | --- | --- |
-| `checks` | Rate | The rate of successful checks <Cite n={1} /> |
-| `data_received` | Counter | The amount of received data <Cite n={1} /> |
-| `data_sent` | Counter | The amount of sent data <Cite n={1} /> |
-| `dropped_iterations` | Counter | Iterations that did not start, because k6 had no free VU or no time left <Cite n={1} /> |
-| `iteration_duration` | Trend | The time for one full iteration <Cite n={1} /> |
-| `iterations` | Counter | How many times the VUs ran the default function <Cite n={1} /> |
-| `vus` | Gauge | The current number of active virtual users <Cite n={1} /> |
-| `vus_max` | Gauge | The maximum possible number of VUs <Cite n={1} /> |
+| `checks` | Rate | How often checks pass <Cite n={1} /> |
+| `data_received` | Counter | How much data came in <Cite n={1} /> |
+| `data_sent` | Counter | How much data went out <Cite n={1} /> |
+| `dropped_iterations` | Counter | Runs that did not start, because k6 had no free virtual user or no time left <Cite n={1} /> |
+| `iteration_duration` | Trend | The time for one full run <Cite n={1} /> |
+| `iterations` | Counter | How many times the virtual users ran the default function <Cite n={1} /> |
+| `vus` | Gauge | How many virtual users are active now <Cite n={1} /> |
+| `vus_max` | Gauge | The most virtual users that are possible <Cite n={1} /> |
 
 k6 creates these metrics only when the test makes HTTP requests <Cite n={1} />:
 
 | Metric | Type | Meaning |
 | --- | --- | --- |
-| `http_req_blocked` | Trend | Time blocked, while it waits for a free TCP connection slot, before the request starts <Cite n={1} /> |
-| `http_req_connecting` | Trend | Time to open the TCP connection <Cite n={1} /> |
-| `http_req_tls_handshaking` | Trend | Time for the TLS handshake <Cite n={1} /> |
+| `http_req_blocked` | Trend | Time spent waiting for a free connection slot before the request starts <Cite n={1} /> |
+| `http_req_connecting` | Trend | Time to open the connection to the host <Cite n={1} /> |
+| `http_req_tls_handshaking` | Trend | Time for the secure handshake with the host <Cite n={1} /> |
 | `http_req_sending` | Trend | Time to send data to the host <Cite n={1} /> |
 | `http_req_waiting` | Trend | Time spent waiting for the response, also called "time to first byte" (TTFB) <Cite n={1} /> |
 | `http_req_receiving` | Trend | Time to receive the response data <Cite n={1} /> |
 | `http_req_duration` | Trend | The total time of the request: sending plus waiting plus receiving <Cite n={1} /> |
-| `http_req_failed` | Rate | The rate of failed requests <Cite n={1} /> |
+| `http_req_failed` | Rate | How often requests fail <Cite n={1} /> |
 | `http_reqs` | Counter | How many HTTP requests k6 made <Cite n={1} /> |
 
 Note one thing about `http_req_duration`. It does not include the blocked, connecting, and TLS times <Cite n={1} />. If a request is slow to start, look at `http_req_blocked` and `http_req_connecting` too.
@@ -367,7 +367,7 @@ Threshold-ও সাধারণত percentile ব্যবহার করে, 
 <Voices>
 <Technical>
 
-Not all metrics matter the same. The k6 docs suggest a start: if you are not sure, read the requests, the errors, and the duration, which are the RED method <Cite n={3} />. In k6 these are `http_reqs`, `http_req_failed`, and `http_req_duration` <Cite n={3} />. In other words they measure traffic, availability, and latency <Cite n={3} />.
+Not all metrics matter the same. The k6 docs suggest a start. If you are not sure, read the requests, the errors, and the duration, which are the RED method <Cite n={3} />. In k6 these are `http_reqs`, `http_req_failed`, and `http_req_duration` <Cite n={3} />. In other words they measure traffic, availability, and latency <Cite n={3} />.
 
 The owner's list of the metrics to focus on is longer. This is the owner's own view, not a rule of the docs:
 
@@ -381,14 +381,14 @@ The owner's list of the metrics to focus on is longer. This is the owner's own v
 | `iteration_duration` | How long does one full journey take, such as login, search, and pay? |
 | `vus` and `vus_max` | At what load level did the test run? |
 
-Read `http_req_blocked`, `http_req_connecting`, and `http_req_tls_handshaking` when the start of a request looks slow, and `data_received` when the answers are big.
+Read `http_req_blocked`, `http_req_connecting`, and `http_req_tls_handshaking` when the start of a request looks slow. Read `data_received` when the answers are big.
 
 </Technical>
 <Layman>
 
-Not all metrics matter the same. The k6 docs suggest a start. If you are not sure, read the requests, the errors, and the duration. This is the RED method <Cite n={3} />. In k6 these are `http_reqs`, `http_req_failed`, and `http_req_duration` <Cite n={3} />. In other words they measure traffic, availability, and latency <Cite n={3} />.
+Not all metrics matter the same. The k6 docs suggest a place to start. If you are not sure, read the requests, the errors, and the duration <Cite n={3} />. In k6 these are `http_reqs`, `http_req_failed`, and `http_req_duration` <Cite n={3} />. They measure traffic, availability, and latency <Cite n={3} />.
 
-The owner's list of the metrics to focus on is longer. This is the owner's own view, not a rule of the docs:
+The owner's list of metrics to focus on is longer. This is the owner's own view, not a rule of the docs:
 
 | Metric | What to ask |
 | --- | --- |

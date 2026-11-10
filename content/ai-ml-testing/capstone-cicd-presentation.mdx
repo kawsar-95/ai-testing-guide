@@ -1,6 +1,6 @@
 export const metadata = { title: 'CI/CD Integration and Capstone Presentation', description: 'Put the capstone\'s test pipeline into GitHub Actions on every pull request, build a quality dashboard, and present the results.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'GitHub Actions documentation', publisher: 'GitHub', url: 'https://docs.github.com/en/actions', accessed: '2026-11-01' },
     { title: 'CI/CD integration', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
@@ -28,11 +28,13 @@ The presentation half of this session is not a technical artifact, but it has a 
 </Technical>
 <Layman>
 
-Capstone-এর শেষ প্রযুক্তিগত ধাপ হলো test pipeline-কে নিজে নিজে চালানো, প্রতিটা pull request-এ, কাউকে এটা trigger করার কথা মনে রাখতে না দিয়ে। GitHub Actions হলো সেই CI platform যা একটা pull request-এর মতো repository event-এ একটা নির্ধারিত job চালায় <Cite n={1} />, আর Promptfoo তার eval এই ধরনের pipeline-এর ভেতরে চালানোর জন্য প্রথম-শ্রেণির সমর্থন দেয় <Cite n={2} />।
+The last technical step of the capstone is to make the tests run by themselves. They should run on every pull request. Nobody should have to remember to start them.
 
-CI job-এর কাজ সংকীর্ণ: দ্রুত suite (eval, hallucination test) প্রতিটা PR-এ একটা required check হিসেবে চালান, আর ধীর suite (red team, Giskard scan, পূর্ণ UI suite) একটা schedule-এ বা চাহিদামতো চালান, কারণ সেগুলো প্রতিটা একক commit ব্লক করার জন্য খুব ধীর।
+GitHub Actions is the CI platform for this. It runs a job you define when something happens in a repository, such as a pull request <Cite n={1} />. Promptfoo has built-in support for running its evals inside that kind of pipeline <Cite n={2} />.
 
-এই session-এর presentation অংশ একটা প্রযুক্তিগত artifact নয়, কিন্তু এর একটা প্রযুক্তিগত নির্ভরতা আছে: metrics module-এর quality dashboard আর test pipeline-এর findings table-ই উপস্থাপন করা হয়, সংখ্যা ছাড়া একটা narrative নয়।
+The CI job has a narrow task. Run the fast suites on every PR as a required check. These are the eval and the hallucination tests. Run the slower suites on a schedule or on demand. These are the red team, the Giskard scan, and the full UI suite. They are too slow to block every commit.
+
+The presentation part of this session is not a technical artifact. It still depends on technical work. You present the quality dashboard from the metrics module. You also present the findings table from the test pipeline. You do not present a story with no numbers behind it.
 
 </Layman>
 <Bangla>
@@ -64,14 +66,16 @@ on a schedule, or manually triggered (visible, not blocking)
     full Playwright suite
 ```
 
-`npx promptfoo eval` returns exit code 100 when at least one test case fails (or when the pass rate is below `PROMPTFOO_PASS_RATE_THRESHOLD`), so running it as a CI step is what lets the job fail and block a merge <Cite n={3} />. Promptfoo also ships a GitHub Action that, when prompt files change in a pull request, runs a before-and-after comparison and posts the results to the pull request; it needs `github-token`, `prompts`, and `config` inputs and `pull-requests: write` permission <Cite n={2} />.
+**Exit code.** `npx promptfoo eval` returns exit code 100 when at least one test case fails (or when the pass rate is below `PROMPTFOO_PASS_RATE_THRESHOLD`) <Cite n={3} />. Running it as a CI step is what lets the job fail and block a merge <Cite n={3} />.
 
-The PR comment itself is the smallest version of the quality dashboard from the metrics module: the same numbers, same gate logic, surfaced at the point a human actually makes the merge decision instead of a separate page they would need to remember to check.
+**GitHub Action.** Promptfoo also ships a GitHub Action that, when prompt files change in a pull request, runs a before-and-after comparison and posts the results to the pull request <Cite n={2} />. It needs `github-token`, `prompts`, and `config` inputs and `pull-requests: write` permission <Cite n={2} />.
+
+**PR comment.** The PR comment itself is the smallest version of the quality dashboard from the metrics module. It shows the same numbers and same gate logic, surfaced at the point a human actually makes the merge decision instead of a separate page they would need to remember to check.
 
 </Technical>
 <Layman>
 
-কী merge ব্লক করে আর কী schedule-এ চলে তার বিভাজন <Cite n={1} />:
+Some checks block a merge. Others run on a schedule. Here is the split <Cite n={1} />:
 
 ```text
 on every pull request (required check, blocks merge)
@@ -84,9 +88,11 @@ on a schedule, or manually triggered (visible, not blocking)
     full Playwright suite
 ```
 
-`npx promptfoo eval` অন্তত একটা test case ব্যর্থ হলে (বা pass rate `PROMPTFOO_PASS_RATE_THRESHOLD`-এর নিচে হলে) exit code 100 ফেরত দেয়, তাই এটাকে CI step হিসেবে চালালেই job ব্যর্থ হয়ে merge ব্লক করতে পারে <Cite n={3} />। Promptfoo-র একটা GitHub Action-ও আছে যা pull request-এ prompt ফাইল বদলালে before-and-after তুলনা চালিয়ে ফলাফল pull request-এ পোস্ট করে; এর জন্য `github-token`, `prompts`, `config` input আর `pull-requests: write` permission লাগে <Cite n={2} />।
+`npx promptfoo eval` returns exit code 100 when at least one test case fails. It also does this when the pass rate is below `PROMPTFOO_PASS_RATE_THRESHOLD`. So when you run it as a CI step, the job can fail and block a merge <Cite n={3} />.
 
-PR comment-টাই metrics module-এর quality dashboard-এর সবচেয়ে ছোট সংস্করণ: একই সংখ্যা, একই gate logic, ঠিক সেই বিন্দুতে দেখানো যেখানে একজন মানুষ আসলে merge সিদ্ধান্ত নেয়, একটা আলাদা পেজের বদলে যা তাদের চেক করার কথা মনে রাখতে হতো।
+Promptfoo also has a GitHub Action. It works when prompt files change in a pull request. It compares the results before and after the change. Then it posts them to the pull request. It needs the inputs `github-token`, `prompts`, and `config`. It also needs `pull-requests: write` permission <Cite n={2} />.
+
+The PR comment is the smallest version of the quality dashboard from the metrics module. It shows the same numbers and uses the same gate logic. But it appears where a person decides on the merge. It is not a separate page they must remember to check.
 
 </Layman>
 <Bangla>
@@ -166,7 +172,7 @@ This advice is the tutorial's own. It does not come from the sources.
 </Technical>
 <Layman>
 
-Required-বনাম-scheduled বিভাজন সহ একটা workflow ফাইল <Cite n={1} /> <Cite n={2} />:
+Here is a workflow file that splits required checks from scheduled ones <Cite n={1} /> <Cite n={2} />:
 
 ```yaml
 # .github/workflows/capstone.yml
@@ -193,7 +199,7 @@ jobs:
       - run: python -m pytest tests/ui/
 ```
 
-Suite-এর নিজস্ব output থেকে বানানো একটা সংক্ষিপ্ত presentation outline, স্মৃতি থেকে লেখা নয়:
+Build your presentation outline from the suite's own output. Do not write it from memory. Here is a short outline:
 
 ```text
 1. architecture        the diagram from capstone-project-setup
@@ -204,14 +210,11 @@ Suite-এর নিজস্ব output থেকে বানানো একট
 6. what broke          one real failure found during the capstone, and the fix
 ```
 
-<Callout type="tip" title="Tutorial advice">
+**Tutorial advice.** This advice is the tutorial's own. It does not come from the sources.
 
-This advice is the tutorial's own. It does not come from the sources.
-
-- দ্রুত suite-কে `pull_request`-এ একটা required status check হিসেবে বসান, শুধু চলে এমন একটা workflow নয়; required নয় এমন একটা workflow তবুও merge করে পার হওয়া যায়।
-- nightly suite-এর ফলাফল এমন কোথাও রাখুন যা একজন reviewer জিজ্ঞেস না করেই খুঁজে পায়, যেমন একটা pinned issue বা README-তে একটা status badge।
-- capstone-এর সময় পাওয়া আর ঠিক করা একটা real failure উপস্থাপন করুন; এটা সবসময় green থাকা একটা suite-এর চেয়ে বেশি বিশ্বাসযোগ্য।
-</Callout>
+- Set the fast suite on `pull_request` as a required status check. Do not only run it as a workflow. A workflow that runs but is not required can still be merged past.
+- Keep the nightly suite's results where a reviewer finds them without asking. A pinned issue or a status badge in the README would work.
+- Present the one real failure you found and fixed during the capstone. It is more convincing than a suite that has always been green.
 
 </Layman>
 <Bangla>
@@ -284,15 +287,15 @@ Suite-এর নিজস্ব output থেকে বানানো একট
 </Technical>
 <Layman>
 
-**Mistake ১: চলে কিন্তু required নয় এমন একটা workflow।** GitHub শুধু branch protection-এ স্পষ্টভাবে required চিহ্নিত check-এ merge ব্লক করে <Cite n={1} />।
+**Mistake 1: a workflow that runs but is not required.** GitHub blocks a merge only on checks marked required in branch protection <Cite n={1} />.
 
-**Mistake ২: প্রতিটা PR-এ ধীর suite চালানো।** এটা হয় প্রতিটা PR-কে দশ মিনিট অপেক্ষা করায় অথবা দলকে একটা check উপেক্ষা করতে শেখায় যা merge করতে চাওয়ার সময় সবসময় চলছে থাকে।
+**Mistake 2: running the slow suites on every PR.** Every PR then waits ten minutes. Or the team learns to ignore a check that is still running when they want to merge.
 
-**Mistake ৩: কোনো PR comment নেই, শুধু একটা pass/fail badge।** একজন reviewer যাকে কোন assertion ব্যর্থ হয়েছে দেখতে log-এ ক্লিক করতে হয় সে শেষ পর্যন্ত চেক করা বন্ধ করে দেবে <Cite n={2} />।
+**Mistake 3: no PR comment, only a pass/fail badge.** A reviewer must click into logs to see which assertion failed. Sooner or later, that reviewer stops checking <Cite n={2} />.
 
-**Mistake ৪: কখনো কিছু খুঁজে পায়নি এমন একটা suite উপস্থাপন করা।** এটা untested মনে হয়, high quality নয়; capstone-এ পাওয়া আর ঠিক করা real failure দেখান।
+**Mistake 4: presenting a suite that has never found anything.** It looks untested, not high quality. Show the real failure that you found and fixed.
 
-**Mistake ৫: presentation-এ আসল dashboard থেকে কোনো সংখ্যা নেই।** quality-র একটা narrative বর্ণনা এর প্রমাণ নয়।
+**Mistake 5: the presentation has no numbers from the actual dashboard.** A story about quality is not proof of quality.
 
 </Layman>
 <Bangla>

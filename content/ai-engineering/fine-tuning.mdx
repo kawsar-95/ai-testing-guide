@@ -1,6 +1,6 @@
 export const metadata = { title: 'Fine-Tuning Models', description: 'How fine-tuning trains a model more on your own examples, when it helps, what LoRA is, and what a tester checks before and after a fine-tune.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-10',
   sources: [
     { title: 'Supervised fine-tuning', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/supervised-fine-tuning', accessed: '2026-10-28' },
     { title: 'Fine-tuning best practices', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/fine-tuning-best-practices', accessed: '2026-10-28' },
@@ -77,13 +77,15 @@ OpenAI says to set up evals first. You need a reliable way to see if the fine-tu
 
 ### The data
 
-The training file is **JSONL**: one complete JSON object on each line. It needs at least 10 lines. OpenAI says that many tasks improve with 50 to 100 examples, and suggests a start with 50 good examples <Cite n={1} />. One line in the chat format looks like this:
+The training file is **JSONL**: one complete JSON object on each line. It needs at least 10 lines. OpenAI says that many tasks improve with 50 to 100 examples <Cite n={1} />. It suggests a start with 50 good examples <Cite n={1} />. One line in the chat format looks like this:
 
 ```json
 {"messages": [{"role": "user", "content": "Login button does nothing on Safari 17"}, {"role": "assistant", "content": "UI"}]}
 ```
 
-Quality counts more than size. If you must choose, a small set of good examples usually beats a big set of poor ones <Cite n={2} />. The balance also counts: if 60% of the training answers refuse, but only 5% should refuse in real use, the model will likely refuse too often <Cite n={2} />.
+**Quality.** Quality counts more than size. If you must choose, a small set of good examples usually beats a big set of poor ones <Cite n={2} />.
+
+**Balance.** The balance also counts. If 60% of the training answers refuse, but only 5% should refuse in real use, the model will likely refuse too often <Cite n={2} />.
 
 ### The job
 
@@ -96,7 +98,11 @@ curl https://api.openai.com/v1/fine_tuning/jobs \
   -d '{"training_file": "file-abc123", "model": "gpt-4.1-mini-2025-04-14"}'
 ```
 
-When the job ends, it returns a `fine_tuned_model` ID that starts with `ft:`. You call the model with this ID <Cite n={1} />. The main **hyperparameters** are the epochs (full passes through the data), the learning rate multiplier, and the batch size <Cite n={2} />.
+When the job ends, it returns a `fine_tuned_model` ID that starts with `ft:`. You call the model with this ID <Cite n={1} />. The main **hyperparameters** are:
+
+- the epochs (full passes through the data)
+- the learning rate multiplier
+- the batch size <Cite n={2} />
 
 <Callout type="warning" title="Platform status">
 OpenAI is winding down its fine-tuning platform. New users cannot use it. Eligible existing customers can create jobs until January 6, 2027, unless the base model shuts down earlier. The model of the example, `gpt-4.1-mini-2025-04-14`, and its fine-tuned versions shut down on January 14, 2027 <Cite n={1} />.
@@ -104,9 +110,11 @@ OpenAI is winding down its fine-tuning platform. New users cannot use it. Eligib
 
 ### LoRA: train less, keep the base
 
-Full fine-tuning retrains all parameters of the model. **LoRA** (Low-Rank Adaptation) freezes the original weights and trains two small "update matrices" in each layer <Cite n={3} /> <Cite n={4} />. On GPT-3 175B, LoRA needed 10,000 times fewer trainable parameters and 3 times less GPU memory than full fine-tuning, with no extra inference latency <Cite n={3} />. Because the base stays frozen, you can keep many small LoRA adapters for different tasks on one base model <Cite n={4} />.
+**Full fine-tuning versus LoRA.** Full fine-tuning retrains all parameters of the model. **LoRA** (Low-Rank Adaptation) freezes the original weights and trains two small "update matrices" in each layer <Cite n={3} /> <Cite n={4} />.
 
-The Hugging Face TRL library trains a LoRA adapter when you pass a `LoraConfig` to `SFTTrainer` <Cite n={5} />:
+**Savings.** On GPT-3 175B, LoRA needed 10,000 times fewer trainable parameters and 3 times less GPU memory than full fine-tuning, with no extra inference latency <Cite n={3} />. Because the base stays frozen, you can keep many small LoRA adapters for different tasks on one base model <Cite n={4} />.
+
+**In TRL.** The Hugging Face TRL library trains a LoRA adapter when you pass a `LoraConfig` to `SFTTrainer` <Cite n={5} />:
 
 ```python
 from datasets import load_dataset
@@ -118,7 +126,7 @@ trainer = SFTTrainer("Qwen/Qwen3-0.6B", train_dataset=dataset, peft_config=LoraC
 trainer.train()
 ```
 
-SFT learns by next-token prediction with a cross-entropy loss <Cite n={5} />. For a prompt-completion dataset, TRL counts the loss on the completion tokens only, by default <Cite n={5} />.
+**Loss.** SFT learns by next-token prediction with a cross-entropy loss <Cite n={5} />. For a prompt-completion dataset, TRL counts the loss on the completion tokens only, by default <Cite n={5} />.
 
 </Technical>
 <Layman>

@@ -1,6 +1,6 @@
 export const metadata = { title: 'The Stop Check', description: 'After each step, the loop asks one question: answer now, or keep going? Here is how the loop ends.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-10',
   sources: [
     { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
     { title: 'CLI reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/cli-reference', accessed: '2026-10-28' },
@@ -37,9 +37,13 @@ A run can also end on an error. So the stop check has three exits: **done**, **l
 </Technical>
 <Layman>
 
-The **stop check** is the point where the agent either gives its final answer or goes around the loop again. Usually the model makes this choice through what it writes. In the Claude Agent SDK, the loop goes on until Claude answers with **no tool calls**. That answer is the final result <Cite n={1} />. The OpenAI Agents SDK uses the same rule: an answer of the right type with no tool calls is the final output. Tool calls start the loop again <Cite n={4} />.
+The **stop check** is the point where the agent decides what to do next. It either gives its final answer or goes around the loop again.
 
-The model's choice is not the only way out. Anthropic notes that agents often also have **stopping conditions**, such as a maximum number of rounds, to keep control <Cite n={7} />. Harnesses give you these limits:
+Usually the model makes this choice by what it writes. In the Claude Agent SDK, the loop goes on until Claude answers with **no tool calls**. That answer is the final result <Cite n={1} />.
+
+The OpenAI Agents SDK uses the same rule. An answer of the right type with no tool calls is the final output <Cite n={4} />. Tool calls start the loop again <Cite n={4} />.
+
+The model's choice is not the only way out. Anthropic notes that agents often have **stopping conditions** too. One example is a maximum number of rounds, to keep control <Cite n={7} />. Harnesses give you these limits:
 
 - a **turn limit** (Claude Agent SDK, Claude Code CLI, OpenAI Agents SDK) <Cite n={1} /> <Cite n={2} /> <Cite n={4} />
 - a **budget limit** (Claude Agent SDK, Claude Code CLI) <Cite n={1} /> <Cite n={2} />
@@ -90,9 +94,17 @@ model response
 | OpenAI Agents SDK | `max_turns` | 10 (`DEFAULT_MAX_TURNS`) <Cite n={8} />; `max_turns=None` turns it off | `MaxTurnsExceeded` exception <Cite n={4} /> |
 | LangGraph | `recursion_limit` (super-steps) | 1000 (from version 1.0.6) | `GraphRecursionError` <Cite n={5} /> |
 
-Some details matter for tests. In the Agent SDK, `max_turns` must count one extra turn for the final text-only response. Without it, the run ends with `error_max_turns` and no final response <Cite n={1} />. The budget is checked after each response arrives, so spend can pass the cap by up to the cost of one response <Cite n={1} />. In LangGraph, `recursion_limit` is a top-level config key, not a key inside `configurable` <Cite n={5} />.
+**Details that matter for tests.** In the Agent SDK, `max_turns` must count one extra turn for the final text-only response. Without it, the run ends with `error_max_turns` and no final response <Cite n={1} />. The budget is checked after each response arrives, so spend can pass the cap by up to the cost of one response <Cite n={1} />. In LangGraph, `recursion_limit` is a top-level config key, not a key inside `configurable` <Cite n={5} />.
 
-**What the harness reports.** The Agent SDK result has a `subtype`: `success`, `error_max_turns`, `error_max_budget_usd`, `error_during_execution`, or `error_max_structured_output_retries`. Only `success` has the `result` text. Every subtype has `total_cost_usd`, `usage`, `num_turns`, and `session_id` <Cite n={1} />. A single-shot `query()` raises an error after an error result, and the Claude Code process exits with a nonzero code <Cite n={1} />. The result also has a `stop_reason`, for example `end_turn`, `max_tokens`, or `refusal` <Cite n={1} />.
+**What the harness reports.** The Agent SDK result has a `subtype`:
+
+- `success`
+- `error_max_turns`
+- `error_max_budget_usd`
+- `error_during_execution`
+- `error_max_structured_output_retries`
+
+Only `success` has the `result` text. Every subtype has `total_cost_usd`, `usage`, `num_turns`, and `session_id` <Cite n={1} />. A single-shot `query()` raises an error after an error result, and the Claude Code process exits with a nonzero code <Cite n={1} />. The result also has a `stop_reason`, for example `end_turn`, `max_tokens`, or `refusal` <Cite n={1} />.
 
 **Graceful ends.** The OpenAI Agents SDK accepts `error_handlers`, which can return a controlled final output instead of the error <Cite n={4} />. LangGraph has a `RemainingSteps` value, so a graph can wrap up before it hits the limit <Cite n={5} />.
 

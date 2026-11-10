@@ -1,6 +1,6 @@
 export const metadata = { title: 'Synthetic Data Generation with DSPy', description: 'Generate test questions from your own knowledge base, verify the answers, and turn the result into a golden dataset.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'DSPy', publisher: 'Stanford NLP (DSPy docs)', url: 'https://dspy.ai/', accessed: '2026-11-01' },
     { title: 'Optimizers', publisher: 'Stanford NLP (DSPy docs)', url: 'https://dspy.ai/learn/optimization/optimizers/', accessed: '2026-11-01' },
@@ -42,14 +42,14 @@ The verification stage is what separates a useful synthetic dataset from a large
 </Technical>
 <Layman>
 
-**Synthetic data** হলো সংগ্রহ না করে তৈরি করা test data। AI টেস্টিং-এ এটা আসল সমস্যাটা সমাধান করে: হাতে লেখা eval set ছোট, আপনি যা ভেবেছেন তার দিকে বাঁকানো, আর বড় করা দামি।
+**Synthetic data** is test data you generate instead of collecting it. For AI testing, it fixes a real problem. A hand-written test set is small. It leans toward the ideas you already had. It is costly to grow.
 
-দুটো টুল এটা করে, দুই প্রান্ত থেকে:
+Two tools help, from opposite ends:
 
-- **Giskard-এর quality scan** knowledge base থেকে test scenario তৈরি করে। প্রতিটা generator assistant-এর ভুল করার একটা উপায় probe করে (hallucination, sycophancy, split বা multi-topic প্রশ্ন, out-of-scope প্রশ্ন), আর প্রতিটা scenario ট্যাগ করা থাকে কোন গুণ আর কোন component যাচাই করছে। এটা v2-এর RAGET tool-এর জায়গা নিয়েছে <Cite n={3} /> <Cite n={4} />।
-- **DSPy** একটা metric-এর বিপরীতে একটা prompt program optimize করে। আপনি কাজটা বর্ণনা করেন "এই document-এর উত্তর দেয় এমন একটা প্রশ্ন লেখো", আর সেটা একটা pipeline compile করে যেটা ভালো করে, তাই প্রশ্ন generator বানাতে ব্যবহার করা যায় <Cite n={1} /> <Cite n={2} />।
+- **Giskard's quality scan** makes test scenarios from a knowledge base. Each generator probes one way an assistant goes wrong: hallucination, sycophancy, split or multi-topic questions, and out-of-scope questions. Every scenario is tagged with the quality it tests and the component it stresses. It replaced the v2 RAGET tool <Cite n={3} /> <Cite n={4} />.
+- **DSPy** improves a prompt program against a metric. You describe the task: "write a question that this document answers". It compiles a pipeline that does the task well. So you can use it to build the question generator <Cite n={1} /> <Cite n={2} />.
 
-দুটোকে যোগ করে যে pipeline বানানো হয় তার চারটা ধাপ, আর তৃতীয়টাই গুরুত্বপূর্ণ:
+People usually combine the two into a pipeline with four stages. The third stage matters most:
 
 ```text
 source documents
@@ -59,7 +59,7 @@ source documents
    -> golden dataset          only the questions that survived
 ```
 
-verification ধাপটাই কাজের synthetic dataset আর ভুল টেস্ট কেসের বড় গাদার পার্থক্য। যাচাই না করা synthetic dataset একটা দায়: এটা model-কে আত্মবিশ্বাসী ভুল হতে শেখায়, আর তারপর সেটা দিয়ে আপনাকেই টেস্ট করে।
+The verification stage is what makes a dataset useful. Without it, you get a large pile of wrong test cases. An unverified synthetic dataset is a liability. It teaches the model to be confidently wrong. Then it tests you on that.
 
 </Layman>
 <Bangla>
@@ -112,11 +112,11 @@ The DSPy side has one more thing worth using: the **optimizer**. It compiles a p
 </Technical>
 <Layman>
 
-**তৈরির ধাপ** হলো এমন একটা prompt যা model-কে বলে একটা document-এর উত্তর দেয় এমন প্রশ্ন লিখতে, একটা কঠিনতা আর একটা ধরনসহ। DSPy এটাকে নির্ভরযোগ্য করে metric-এর বিপরীতে prompt program optimize করে, তাই প্রশ্ন উন্নত হয় আপনাকে প্রতিবার prompt হাতে সম্পাদনা না করেই <Cite n={2} />।
+**The generation step** is a prompt. It asks a model to write questions that a document answers, with a difficulty and a type. DSPy makes this dependable. It tunes the prompt program against a metric. The questions get better, and you do not edit the prompt by hand each time <Cite n={2} />.
 
-**উত্তরের ধাপ** দ্বিতীয় একটা model ব্যবহার করে যে document দেখে প্রশ্নের উত্তর দেয়। দুটো model জোড়া দেওয়া ইচ্ছাকৃত: প্রশ্ন লেখা আর উত্তর দেওয়ার failure mode আলাদা, আর একই model নিজের প্রশ্নের উত্তর দিলে confident, self-consistent কিন্তু ভুল জোড়া বানানোর সম্ভাবনা অনেক বেশি।
+**The answer step** uses a second model. It sees the document and answers the question. Using two models is on purpose. The question writer and the answerer fail in different ways. One model answering its own question is much more likely to give a confident, self-consistent, wrong pair.
 
-**verification ধাপ** যেখানে dataset ভরসারযোগ্য হয়, আর এতে তিনটা যাচাই:
+**The verification step** is where the dataset becomes trustworthy. It has three checks:
 
 ```text
 supported    is every claim in the answer in the document?
@@ -124,11 +124,11 @@ answerable   does the document actually contain the answer?
 distinct     is this question different from the ones already in the set?
 ```
 
-তৃতীয় যাচাইটাই মানুষ ভুলে যায়, আর ছাড়া বড় তৈরি dataset বেশিরভাগ একই প্রশ্ন চল্লিশবার। Giskard-এর quality scan প্রতিটা scenario ধরন অনুযায়ী ট্যাগ করে, যেটা দিয়ে দেখা যায় আপনার set কোন ধরনের ব্যর্থতা ইতিমধ্যে কভার করছে <Cite n={3} />।
+People forget the third check. Without it, a big generated dataset is mostly the same question forty times. Giskard's quality scan tags each scenario by kind. That shows you which kinds of failure your set already covers <Cite n={3} />.
 
-**শেষ ধাপ** হলো মানুষের নমুনা। সব নয়: কয়েক ডজন, একজন মানুষ পড়বে, যাতে verification-এর false rate-টা আন্দাজ করা যায়। verification-ও একটা model call, আর উত্তর যাচাই করা model-ও ভুল হতে পারে।
+**The last step** is a human sample. Not every item, just a few dozen. A person reads them to estimate how often the verification is wrong. The verification is itself a model call. A model that verifies answers can be wrong too.
 
-DSPy-এর দিকে আরেকটা ব্যবহারযোগ্য জিনিস আছে: **optimizer**। এটা আপনার metric-এর বিপরীতে একটা prompt program compile করে, তাই প্রশ্ন generator আপনার verifier যা accept করে সেটা বানাতে ভালো হয়, আর metric আলাদা script না থেকে সিস্টেমের অংশ হয় <Cite n={1} />।
+The DSPy side has one more useful part: the **optimizer**. It compiles a prompt program against your metric. The question generator gets better at making questions your verifier accepts. The metric becomes part of the system, not a separate script <Cite n={1} />.
 
 </Layman>
 <Bangla>
@@ -235,7 +235,7 @@ Training the optimizer on the verified examples only is the point: the optimizer
 </Technical>
 <Layman>
 
-তৈরির prompt-টাই ডিজাইন, আর সেটা ধরন আর কঠিনতা চাইতে বলে:
+The generation prompt is the design. It asks for the type and the difficulty:
 
 ```python
 QUESTION_PROGRAM = """Write one question that the document below answers.
@@ -252,7 +252,7 @@ Document:
 """
 ```
 
-verification যেখানে dataset নিরাপদ হয়, আর তিনটা যাচাই আলাদা assertion:
+Verification is what makes the dataset safe. The checks are separate assertions. First, is the answer supported by the document?
 
 ```python
 def test_the_generated_answer_is_supported_by_the_document(question, answer, document):
@@ -260,6 +260,8 @@ def test_the_generated_answer_is_supported_by_the_document(question, answer, doc
     for claim in claims:
         assert claim in document, f"unsupported claim: {claim}"
 ```
+
+Next, is the question a duplicate?
 
 ```python
 def test_the_generated_question_is_not_a_duplicate(question, existing_questions):
@@ -270,9 +272,9 @@ def test_the_generated_question_is_not_a_duplicate(question, existing_questions)
         )
 ```
 
-duplicate চেকটাই dataset-কে সবচেয়ে বেশি বদলায়, আর এতে string তুলনা নয় embedding লাগে, কারণ "How long is the return window?" আর "What is the return period?" একই প্রশ্ন।
+The duplicate check changes the dataset the most. It needs an embedding, not a plain string compare. "How long is the return window?" and "What is the return period?" are the same question.
 
-আর মানুষের নমুনা, যেটা verifier-কেই মাপে:
+Then comes the human sample. It measures the verifier itself:
 
 ```python
 def test_the_verifier_agrees_with_a_human_on_a_sample(verified, human_reviewed):
@@ -283,9 +285,9 @@ def test_the_verifier_agrees_with_a_human_on_a_sample(verified, human_reviewed):
     assert rate < 0.05, f"the verifier disagrees with humans {rate:.1%} of the time"
 ```
 
-শেষ টেস্টটাই পুরো পদ্ধতিটাকে সৎ করে। verifier একটা model, আর উত্তর যাচাই করা model-ও ভুল হতে পারে, তাই তার error rate অনুমান না করে মাপতে হবে।
+This last test keeps the whole approach honest. The verifier is a model, and a model that checks answers can be wrong too. So you measure its error rate. You do not assume it.
 
-তারপর DSPy optimizer সেই একই metric-এর বিপরীতে generator-কে উন্নত করে:
+The DSPy optimizer then improves the generator against that same metric:
 
 ```python
 import dspy
@@ -306,7 +308,7 @@ optimizer = dspy.BootstrapFewShot(metric=verifier_metric, max_bootstrapped_demos
 compiled = optimizer.compile(program, trainset=trainset)
 ```
 
-শুধু যাচাই পাস করা উদাহরণে optimizer train করাটাই পয়েন্ট: optimizer শেখে ভালো প্রশ্ন কেমন হয়, আর যেগুলো ছুঁড়ে ফেলা হয়েছে সেগুলো থেকে নয় <Cite n={2} />।
+Train the optimizer on the verified examples only. That is the point. It learns what a good question looks like from the questions that survived, not from the ones thrown away <Cite n={2} />.
 
 </Layman>
 <Bangla>
@@ -409,19 +411,19 @@ compiled = optimizer.compile(program, trainset=trainset)
 </Technical>
 <Layman>
 
-**Mistake 1: verification ধাপ নেই।** যাচাই না করা synthetic dataset model-কে আত্মবিশ্বাসী ভুল হতে শেখায়, আর তারপর সেটা দিয়ে আপনাকেই টেস্ট করে।
+**Mistake 1: no verification step.** An unverified synthetic dataset teaches the model to be confidently wrong. Then it tests you on that.
 
-**Mistake 2: একই model প্রশ্ন লেখে আর উত্তরও দেয়।** self-consistent আর ভুল একসাথে হওয়াটাই সবচেয়ে খারাপ সমন্বয়।
+**Mistake 2: one model writes the question and answers it.** A pair that is self-consistent and wrong at once is the worst mix.
 
-**Mistake 3: duplicate চেক নেই।** বড় তৈরি set প্রায়ই কয়েক ডজন প্রশ্নের পুনরাবৃত্তি।
+**Mistake 3: no duplicate check.** A large generated set is often a few dozen questions repeated.
 
-**Mistake 4: মানুষের নমুনা নেই।** verifier-ও একটা model, আর তার error rate মাপতে হবে।
+**Mistake 4: no human sample.** The verifier is a model too. You have to measure its error rate.
 
-**Mistake 5: তৈরি set-কেই একমাত্র eval হিসেবে ব্যবহার করা।** model-এর লেখা dataset ওই model-এর ব্যর্থতাগুলোর জন্যই টেস্ট করে।
+**Mistake 5: using the generated set as the only eval.** A dataset written by a model tests for the failures that model has.
 
-**Mistake 6: যাচাই না করা উদাহরণে optimizer train করা।** এটা শেখে ফেলে যে প্রশ্নগুলো ছুঁড়ে ফেলা হবে।
+**Mistake 6: training the optimizer on unverified examples.** It learns from the questions you were going to throw away.
 
-**Mistake 7: প্রতিটা run-এ set আবার তৈরি করা।** eval-এর নির্দিষ্ট থাকতে হবে, নইলে দুটো run তুলনা যায় না।
+**Mistake 7: regenerating the set on every run.** The eval must stay fixed. Otherwise you cannot compare two runs.
 
 </Layman>
 <Bangla>

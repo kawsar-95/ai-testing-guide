@@ -1,6 +1,6 @@
 export const metadata = { title: 'Retrieval Engineering', description: 'How hybrid search, rank fusion, reranking, and metadata filters find the right chunks for a RAG app, and how a tester measures it.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-10',
   sources: [
     { title: 'Introducing Contextual Retrieval', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/contextual-retrieval', accessed: '2026-10-28' },
     { title: 'Reciprocal rank fusion', publisher: 'Elastic Docs', url: 'https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion', accessed: '2026-10-28' },
@@ -71,9 +71,9 @@ Anthropic-এর উদাহরণ দেখুন। কুয়েরি হ
 
 ### Hybrid search and rank fusion
 
-**Hybrid search** runs a vector search and a keyword (BM25) search, then fuses the two result lists <Cite n={3} />. Anthropic's flow: find top chunks with BM25, find top chunks with embeddings, then combine and deduplicate them with rank fusion <Cite n={1} />.
+**Hybrid search** runs a vector search and a keyword (BM25) search, then fuses the two result lists <Cite n={3} />. Anthropic's flow has three steps: find top chunks with BM25, find top chunks with embeddings, then combine and deduplicate them with rank fusion <Cite n={1} />.
 
-**Reciprocal rank fusion** (RRF) is a common fusion method. It needs no tuning, and the two scores do not need to be related <Cite n={2} />. Each document gets `1 / (k + rank)` from each list it is in, and the sums give the final order <Cite n={2} />. In Elasticsearch, `rank_constant` (the `k`) defaults to 60 <Cite n={2} />.
+**Reciprocal rank fusion** (RRF) is a common fusion method. It needs no tuning, and the two scores do not need to be related <Cite n={2} />. Each document gets `1 / (k + rank)` from each list it is in. The sums give the final order <Cite n={2} />. In Elasticsearch, `rank_constant` (the `k`) defaults to 60 <Cite n={2} />.
 
 ```python
 def rrf(result_lists, k=60):
@@ -86,11 +86,15 @@ def rrf(result_lists, k=60):
 rrf([["a", "b", "c"], ["c", "a", "d"]])  # -> ['a', 'c', 'b', 'd']
 ```
 
-Some stores let you weight the two sides. In Weaviate, `alpha=1` is pure vector search and `alpha=0` is pure keyword search <Cite n={3} />.
+**Weighting.** Some stores let you weight the two sides. In Weaviate, `alpha=1` is pure vector search and `alpha=0` is pure keyword search <Cite n={3} />.
 
 ### Reranking
 
-The first search is fast but rough. A **reranker** is a second model that scores each result for relevance to the query and gives back a better order <Cite n={5} />. Anthropic retrieved the top 150 chunks, reranked them, and passed the top 20 to the model <Cite n={1} />. Embeddings, BM25, contextual chunks, and a reranker together cut failed retrievals by 67% in their tests <Cite n={1} />. The cost: reranking adds a step at run time, so it adds latency <Cite n={1} />.
+The first search is fast but rough. A **reranker** is a second model that scores each result for relevance to the query and gives back a better order <Cite n={5} />.
+
+**Anthropic's results.** Anthropic retrieved the top 150 chunks, reranked them, and passed the top 20 to the model <Cite n={1} />. Embeddings, BM25, contextual chunks, and a reranker together cut failed retrievals by 67% in their tests <Cite n={1} />.
+
+**Cost.** Reranking adds a step at run time, so it adds latency <Cite n={1} />.
 
 ### Metadata filters
 

@@ -170,4 +170,24 @@ I read the page again, section by section, and `git diff HEAD -- content/getting
 - Several Bangla sentences start with a lowercase English word (for example "rule তিন রকম।", "plan approve করলে", "action block করতে"). The meaning is clear. A capital letter or a Bangla word at the start would read better. Optional.
 - Section "The six modes", Bangla: "ডিফল্ট হিসেবে" is a Bangla spelling of "default". The rest of the page keeps "default" in English. Optional: write "default হিসেবে" for the same style.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panels of 3 sections were rewritten to lower the reading load: `The six modes`, `Which mode you start in`, `Switch modes`. The cognitive-load audit of 2026-11-10 found them as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The six modes | PASS | Facts, numbers, names and cites all match the Technical text. Omissions are allowed. |
+| Which mode you start in | PASS | The order, versions, feature-flag split, and ignored `auto` and `bypassPermissions` values match. The CI cite 4 is placed correctly. |
+| Switch modes | PASS | The cycle, `dontAsk` exclusion, VS Code `auto` limit, and JetBrains warning match. Cites 1, 2 and 5 are used correctly. |
+
 Open FAILs: 0

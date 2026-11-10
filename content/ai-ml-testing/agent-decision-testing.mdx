@@ -1,6 +1,6 @@
 export const metadata = { title: 'Agent Decision Testing', description: 'Test the two decisions an agent makes: which tool to call, and what to pass to it. The second one breaks more often.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Define tools', publisher: 'Anthropic (docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools', accessed: '2026-11-01' },
     { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
@@ -35,19 +35,19 @@ The measurement for all of these is a **decision accuracy** against a labelled s
 </Technical>
 <Layman>
 
-প্রতিটা ধাপে agent দুটো প্রশ্নের উত্তর দেয়: **কোন tool** আর **কী arguments** দিয়ে। এগুলো আলাদা ভাবে ভাঙে, আর দ্বিতীয়টা বেশি বিপজ্জনক।
+At each step, the agent answers two questions: **which tool** and **with what arguments**. These fail in different ways. The second one is more dangerous.
 
-**Tool বাছা** ভাঙে যখন দুটো tool প্রযোজ্য মনে হয়। "Cancel my order" হয়তো `cancel_order` বা `modify_order` — মিলে, আর model-এর একটা কারণ নেই একটা বেছে নিতে। সমাধান সাধারণত tool-এর বর্ণনায়, যেটা prompt text <Cite n={1} />।
+**Tool selection** fails when two tools both look right. "Cancel my order" might match `cancel_order` or `modify_order`. The model has no reason to prefer one. The fix is usually in the tool descriptions, which are prompt text <Cite n={1} />.
 
-**Argument বের করা** ভাঙে যখন argument কথোপকথনে আছে কিন্তু বলা নেই: "নীলাটা, গত মঙ্গলবার" যখন tool-এর product id আর date দরকার। agent-কে দুটো context জোড়া লাগাতে হয়। এখানেই বানানো argument বিপজ্জনক, কারণ tool-টা সঠিক আর call চলে যায়।
+**Argument extraction** fails when the argument is in the conversation but only hinted at, not stated. One example is "the blue one, last Tuesday" when the tool needs a product id and a date. The agent must connect two pieces of context. A made-up argument here is the dangerous case. The tool is the right one, so the call goes through.
 
-আর তিনটা আচরণ গুরুত্বপূর্ণ:
+Three more behaviours matter:
 
-- **Tool chaining।** কিছু কাজে একটা tool-এর ফলাফল পরের tool-এ যেতে হয়। ভুল ক্রমে ডাকলে confident ভুল উত্তর আসে।
-- **Loop detection।** agent একই tool একই argument দিয়ে আবার ডাকে। এটা হয় যখন tool এমন error দেয় যেটা model বোঝে না, আর বাজেট পুড়ে।
-- **Error recovery।** tool ব্যর্থ হলে agent অন্য কিছু চেষ্টা করা বা ব্যর্থতা জানানো উচিত, একই call না করে।
+- **Tool chaining.** Some tasks need one tool's output to feed the next tool. If the model calls them in the wrong order, it gives a confident wrong answer.
+- **Loop detection.** The agent calls the same tool with the same arguments again. This happens when the tool returns an error the agent does not understand. It uses up the budget.
+- **Error recovery.** When a tool raises an error, the agent should try something else or report the failure. It should not repeat the same call.
 
-এগুলোর মাপ হলো একটা labelled situation set-এর বিপরীতে **decision accuracy**, আর সেটা পরিস্থিতি অনুযায়ী মাপা হয়, সামগ্রিকভাবে নয়।
+The measure for all of these is **decision accuracy** against a labelled set of situations. It is measured per situation, not overall.
 
 </Layman>
 <Bangla>
@@ -140,7 +140,7 @@ The trace is what makes the decision measurable. A trace shows the tool sequence
 </Technical>
 <Layman>
 
-**tool বাছা** টেস্ট বেছে নেওয়া tool-কে প্রত্যাশিত tool-এর সাথে তুলনা করে। dataset হলো পরিস্থিতির তালিকা, প্রতিটিতে কোন tool ডাকা উচিত:
+The **tool selection** test checks the chosen tool against the expected one. The dataset is a list of situations. Each one names the tool that should be called:
 
 ```python
 SELECTION_CASES = [
@@ -152,7 +152,7 @@ SELECTION_CASES = [
 ]
 ```
 
-**argument বের করা** টেস্ট একই গঠনের, আর এতে প্রত্যাশিত arguments-ও লাগে:
+The **argument extraction** test has the same shape. It needs the expected arguments as well as the tool:
 
 ```python
 ARGUMENT_CASES = [
@@ -169,9 +169,9 @@ ARGUMENT_CASES = [
 ]
 ```
 
-দ্বিতীয় কেসটাই আকর্ষণীয়, কারণ order id আসতে হয় এমন জায়গা থেকে যেখানে ব্যবহারকারী প্রশ্নে বলেনি। সেটা কথোপকথন থেকে আসে, তাই টেস্টে আগে কথোপকথন সাজাতে হয়।
+The second case is the interesting one. The user did not state the order id in the question. It comes from the conversation. So the test has to set up the conversation first.
 
-**বানানো argument** ধরা পড়ে এমন টেস্টে যে assert করে argument বানানো হয়নি:
+A **hallucinated argument** is an invented one. A test catches it by asserting that the argument was not made up:
 
 ```python
 def test_the_agent_does_not_invent_an_order_id(agent, trace):
@@ -180,9 +180,9 @@ def test_the_agent_does_not_invent_an_order_id(agent, trace):
     assert cancels == [], "the agent called cancel_order without knowing which order"
 ```
 
-agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।
+The agent should have asked which order. Inventing an id means cancelling someone else's order.
 
-**loop** টেস্ট এমন একটা tool ব্যবহার করে যা সবসময় একই জিনিস ফেরত দেয়, তাই agent-এর নতুন তথ্য হয় না এবং সে থামা উচিত:
+The **loop** test uses a tool that always returns the same thing. The agent gets no new information, so it should stop:
 
 ```python
 def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
@@ -191,7 +191,7 @@ def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
     assert len(calls) <= 3, f"the agent searched {len(calls)} times"
 ```
 
-আর **recovery** টেস্ট tool-কে exception ছুঁড়াতে দেয়:
+The **recovery** test makes the tool raise an error:
 
 ```python
 def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
@@ -201,7 +201,7 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
-trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={2} />।
+The trace makes the decision measurable. It shows the tool sequence with the arguments. So decision accuracy can be computed per situation instead of guessed <Cite n={2} />.
 
 </Layman>
 <Bangla>
@@ -343,7 +343,7 @@ The trace is what makes the decision measurable. A trace shows the tool sequence
 </Technical>
 <Layman>
 
-**tool বাছা** টেস্ট বেছে নেওয়া tool-কে প্রত্যাশিত tool-এর সাথে তুলনা করে, আর dataset হলো পরিস্থিতির তালিকা, প্রতিটিতে কোন tool ডাকা উচিত:
+The tool-selection test checks the chosen tool against the expected one. The dataset is a list of situations, each with the tool that should be called:
 
 ```python
 SELECTION_CASES = [
@@ -355,7 +355,7 @@ SELECTION_CASES = [
 ]
 ```
 
-**argument বের করা** টেস্ট একই গঠনের, আর এতে প্রত্যাশিত arguments-ও লাগে:
+The argument-extraction test has the same shape. It needs the expected arguments as well as the tool:
 
 ```python
 ARGUMENT_CASES = [
@@ -372,9 +372,9 @@ ARGUMENT_CASES = [
 ]
 ```
 
-দ্বিতীয় কেসটাই আকর্ষণীয়, কারণ order id আসতে হয় এমন জায়গা থেকে যেখানে ব্যবহারকারী প্রশ্নে বলেনি। সেটা কথোপকথন থেকে আসে, তাই টেস্টে আগে কথোপকথন সাজাতে হয়।
+The second case is the interesting one. The user did not state the order id in the question. It comes from the conversation. So the test has to set up the conversation first.
 
-**বানানো argument** ধরা পড়ে এমন টেস্টে যে assert করে argument বানানো হয়নি:
+The **hallucinated argument** is an invented one. A test catches it by asserting that the argument was not made up:
 
 ```python
 def test_the_agent_does_not_invent_an_order_id(agent, trace):
@@ -383,9 +383,9 @@ def test_the_agent_does_not_invent_an_order_id(agent, trace):
     assert cancels == [], "the agent called cancel_order without knowing which order"
 ```
 
-agent-এর জিজ্ঞেস করা উচিত ছিল কোন অর্ডার। id বানালে অন্যের অর্ডার বাতিল হয়ে যায়।
+The agent should have asked which order. Inventing an id means cancelling someone else's order.
 
-**loop** টেস্ট এমন একটা tool ব্যবহার করে যা সবসময় একই জিনিস ফেরত দেয়, তাই agent-এর নতুন তথ্য হয় না এবং সে থামা উচিত:
+The **loop** test uses a tool that always returns the same thing. The agent gets no new information, so it should stop:
 
 ```python
 def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
@@ -394,7 +394,7 @@ def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
     assert len(calls) <= 3, f"the agent searched {len(calls)} times"
 ```
 
-আর **recovery** টেস্ট tool-কে exception ছুঁড়াতে দেয়:
+The **recovery** test makes the tool raise an error:
 
 ```python
 def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
@@ -404,7 +404,7 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
-trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={2} />।
+The trace makes the decision measurable. It shows the tool sequence with the arguments. So decision accuracy can be computed per situation instead of guessed <Cite n={2} />.
 
 </Layman>
 <Bangla>
@@ -495,17 +495,17 @@ trace-ই সিদ্ধান্তকে মাপযোগ্য করে�
 </Technical>
 <Layman>
 
-**Mistake 1: শুধু tool বাছা টেস্ট করা।** arguments-এই ক্ষতি হয়, কারণ tool সঠিক আর call তবু চলে যায়।
+**Mistake 1: only testing tool selection.** The damage happens in the arguments. The tool is right, so the call still goes through.
 
-**Mistake 2: tool assert করা কিন্তু arguments নয়।** "cancel_order" ডাকা হয়েছে প্রমাণ করে না কোন অর্ডার বাতিল হলো।
+**Mistake 2: checking the tool but not the arguments.** Seeing "cancel_order" called does not tell you which order was cancelled.
 
-**Mistake 3: বানানো argument-এর কেস নেই।** agent ঘাটতি argument না জিজ্ঞেস করে পূরণ করে দেয়।
+**Mistake 3: no hallucinated-argument case.** The agent fills in a missing argument instead of asking for it.
 
-**Mistake 4: loop কেস নেই।** প্রতিটা test goal সমাধানযোগ্য, তাই শেষ হওয়ার logic কখনোই পরীক্ষিত হয় না।
+**Mistake 4: no loop case.** Every test goal can be solved, so the stopping logic is never exercised.
 
-**Mistake 5: tool error কেস নেই।** সবসময় সফল হওয়া tool recovery বাগ ঢেকে দেয়।
+**Mistake 5: no tool-error case.** A tool that always succeeds hides the recovery bug.
 
-**Mistake 6: সব পরিস্থিতির জন্য একটা accuracy সংখ্যা।** এক-tool কাজে পারফেক্ট আর দুই-tool কাজে ভুল model-ও গড়ে ভালো দেখায়।
+**Mistake 6: one accuracy number for all situations.** A model can be perfect on single-tool tasks and wrong on two-tool tasks. It still looks fine overall.
 
 </Layman>
 <Bangla>

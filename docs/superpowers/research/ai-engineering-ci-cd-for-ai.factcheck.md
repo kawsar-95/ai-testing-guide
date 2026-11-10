@@ -66,4 +66,39 @@ The research notes have S6, S7, and claims C20 and C21.
 | - | Source count and cites | - | PASS | 7 sources, each cited, no `<Cite n>` without a source. |
 | - | Copy check with 7 source texts | - | PASS | No run of 8 or more words. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "The same page gives 3 design rules <Cite n={1} />:" — The cite now sits before the list. In the ORIGINAL it came after the three rules ("...over fewer hand-graded ones <Cite n={1} />"), so the rules themselves no longer carry it. Fix: "The same page gives 3 design rules:" followed by the three bullets, each ending with <Cite n={1} />.
+- T1: "Anthropic names 2 metrics <Cite n={2} />:" — The cite now sits before the list. In the ORIGINAL it followed the two definitions ("...all k tries succeed <Cite n={2} />"), so the pass@k and pass^k bullets are left without it. Fix: "Anthropic names 2 metrics:", then "- **pass@k** is the chance of at least 1 success in k tries <Cite n={2} />." and "- **pass^k** is the chance that all k tries succeed <Cite n={2} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | Facts and code are unchanged, but the cites for the design rules and the pass@k/pass^k definitions moved to the lead-in lines and no longer follow the facts they supported. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## How it works`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Lists split with the cite kept on each item; the code, YAML and table are unchanged; no facts were added, dropped or changed. |
+
 Open FAILs: 0

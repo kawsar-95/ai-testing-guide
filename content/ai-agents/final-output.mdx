@@ -1,6 +1,6 @@
 export const metadata = { title: 'Final Output', description: 'How an agent run ends: an answer, an action taken, or a handoff to a human or another agent.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-10',
   sources: [
     { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
     { title: 'Get structured output from agents', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/structured-outputs', accessed: '2026-10-28' },
@@ -88,7 +88,9 @@ The docs say: always check the subtype before you read `result`. The `stop_reaso
 
 **Structured output (Claude Agent SDK).** Pass a JSON Schema in `outputFormat` (TypeScript) or `output_format` (Python). The agent can use tools first. At the end, the result message has a `structured_output` field. The SDK validates the output. On a mismatch, the agent gets an error and tries again. If no valid output comes within the retry limit, the subtype is `error_max_structured_output_retries`. A `success` result with no `structured_output` is also a failure <Cite n={2} />.
 
-**`final_output` (OpenAI Agents SDK).** The run result has `final_output`: the output of the last agent that ran. Without an `output_type` it is a string. With an `output_type` it is an object of that type <Cite n={4} />. Setting `output_type` makes the model use structured outputs <Cite n={5} />. `final_output` is `None` if the run stopped before a final output, for example on an approval interruption. The pending approvals are in `interruptions` <Cite n={4} />. If the run passes `max_turns`, the SDK raises `MaxTurnsExceeded` <Cite n={3} />.
+**`final_output` (OpenAI Agents SDK).** The run result has `final_output`: the output of the last agent that ran. Without an `output_type` it is a string. With an `output_type` it is an object of that type <Cite n={4} />. Setting `output_type` makes the model use structured outputs <Cite n={5} />.
+
+**Stopped runs.** `final_output` is `None` if the run stopped before a final output, for example on an approval interruption. The pending approvals are in `interruptions` <Cite n={4} />. If the run passes `max_turns`, the SDK raises `MaxTurnsExceeded` <Cite n={3} />.
 
 **Handoffs.** In the OpenAI Agents SDK, a handoff is a tool for the model, named `transfer_to_<agent_name>` by default. By default the new agent gets the whole conversation history <Cite n={6} />. The runner then switches to the new agent and runs the loop again <Cite n={3} />. So `final_output` comes from the last agent, and `last_agent` tells you which one it was <Cite n={4} />.
 
@@ -151,13 +153,19 @@ Later, the team adds a second agent for security bugs with the OpenAI Agents SDK
 </Technical>
 <Layman>
 
-This example is invented. A team builds a triage agent for new bug reports. The agent reads a report, searches the code, and must return one record with three fields: `component`, `severity`, and `next_step`.
+This example is invented. A team builds an agent that sorts new bug reports. The agent reads a report and searches the code. It must return one record with three fields: `component`, `severity`, and `next_step`.
 
-The team uses the Claude Agent SDK and gives this shape as a JSON Schema in `output_format`. Their code reads `structured_output` only when the subtype is `success` and the field is there. Every other result goes to a "needs review" queue <Cite n={2} />.
+The team uses the Claude Agent SDK. They give the record shape as a JSON Schema in `output_format`. Their code reads `structured_output` only when the subtype is `success` and the field is there. Every other result goes to a "needs review" queue <Cite n={2} />.
 
-Three runs show three endings. Run 1 is `success` with `structured_output`, so the ticket is updated. Run 2 hit the turn limit (`error_max_turns`) and has no `result` <Cite n={1} />. In run 3, the `stop_reason` is `refusal`: the model said no to the request. The docs say to check `stop_reason` to find a refusal <Cite n={1} />, so the team checks it as well as the subtype. Runs 2 and 3 go to review.
+Three runs show three endings:
 
-Later, the team adds a second agent for security bugs with the OpenAI Agents SDK. The triage agent hands off with `transfer_to_security_agent`. The team now logs `last_agent` with each `final_output`, so they know which agent wrote the answer <Cite n={4} />.
+- Run 1 is `success` with `structured_output`. The ticket is updated.
+- Run 2 hit the turn limit (`error_max_turns`). It has no `result` <Cite n={1} />. It goes to review.
+- Run 3 has `stop_reason` of `refusal`. The model said no to the request. It goes to review.
+
+The docs say to check `stop_reason` to find a refusal <Cite n={1} />. So the team checks it as well as the subtype.
+
+Later, the team adds a second agent for security bugs. It uses the OpenAI Agents SDK. The first agent hands off with `transfer_to_security_agent`. The team now logs `last_agent` with each `final_output`. This shows which agent wrote the answer <Cite n={4} />.
 
 </Layman>
 <Bangla>

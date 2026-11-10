@@ -86,4 +86,38 @@ Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone
 | One `constant-arrival-rate` scenario for each flow | PASS | line 74-75 `scenarios[...] = { executor: 'constant-arrival-rate',` |
 | `startTime` puts each flow in its time window | PASS | line 77 `startTime: `${(f.window - 1) * WINDOW_S}s`` |
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## A traffic-mix example`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "For a larger test, the docs say that you can split the load over many k6 instances. They also say that Grafana Cloud k6 runs large tests for you <Cite n={5} />." — The ORIGINAL put the cite after both claims in one sentence ("split the load over many k6 instances, and that Grafana Cloud k6 runs large tests for you <Cite n={5} />"). After the split, the first part (splitting the load over many k6 instances) has no cite. Fix: "For a larger test, the docs say that you can split the load over many k6 instances <Cite n={5} />. They also say that Grafana Cloud k6 runs large tests for you <Cite n={5} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | After the sentence split, the "many k6 instances" claim lost its cite <Cite n={5} />. Everything else is unchanged. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## A traffic-mix example`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only bold labels were added and the cite sentence was split, with the cite on both parts. Table, code and facts are unchanged. |
+
 Open FAILs: 0

@@ -45,4 +45,38 @@ Each source is cited at least one time. Each cite number has a source.
 | Tester tip has no cites and says it is the tutorial's advice | PASS |
 | Code matches the current docs | PASS after fix 14 |
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "- Faithfulness checks the answer against the retrieved context." — In the ORIGINAL, the single cite {{cite:ragas-metrics}} followed the whole sentence, so it supported both the Faithfulness claim and the Response Relevancy claim. In the EDITED text the cite sits only on the second bullet, so the Faithfulness claim no longer carries the cite it had. Fix: "- Faithfulness checks the answer against the retrieved context {{cite:ragas-metrics}}." and "- Response Relevancy checks the answer against the question {{cite:ragas-metrics}}."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | The Ragas cite covered both metrics in the ORIGINAL but now follows only the second bullet. Everything else is faithful. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## How it works`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only form changes: sentences split, Ragas metrics turned into two bullets with the cite after each, run-in labels added. Facts, code and cites are unchanged. |
+
 Open FAILs: 0

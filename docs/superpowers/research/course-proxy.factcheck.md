@@ -75,4 +75,22 @@ The page has no NGINX config block. It only names `proxy_pass`, `location`, and 
 | Section order | PASS. Order is In plain words, When you need it, How it works, A real-life example, Common mistakes, What a tester can check, Key words. The 6 required sections are in the required order and Key words is last. One extra section, "How it works", sits between "When you need it" and "A real-life example". |
 | No source is a blog, forum, AI summary, or systemdesignbangla.com | PASS. Sources are IETF, MDN, and NGINX documentation. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only bold labels were added and two colons became sentence breaks. Facts, cites, and the code block are unchanged, and the labels match the text under them. |
+
 Open FAILs: 0

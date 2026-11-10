@@ -126,4 +126,39 @@ Method: compared the sequence of cited URLs at 451b292 and HEAD. The only differ
 
 Cite 1 (82 cites) is not renumbered. Cite numbers: all 3 exist and are cited. First-cite order is 1..3. No cite 2 remains on a Commands claim (the only two cite-2 uses are the new tools-reference note).
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 2 sections was edited to lower the reading load: T1 = `## Write a SKILL.md`, T2 = `## Built-in commands for QA`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T2: "Claude runs it right before each commit, except for changes to docs or tests." — The ORIGINAL says the commit instructions "tell Claude to run it right before each commit, except for changes to docs or tests". The edit states that Claude actually does this, which turns an instruction into a guaranteed behavior and changes the subject from the instructions to Claude. Fix: "If one of your own skills is named `verify` or `simplify`, Claude Code's commit instructions tell Claude to run it. They tell Claude to run it right before each commit, except for changes to docs or tests."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only the Note sentence was split. The cite placement is unchanged and the code and tables are intact. |
+| T2 | FAIL | The callout turns "instructions tell Claude to run it" into "Claude runs it". |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## Built-in commands for QA`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | The table, code, and callout list are unchanged. The alias sentence was split with a cite after each part. The commit-instruction sentence was split without changing its meaning. |
+
 Open FAILs: 0

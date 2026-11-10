@@ -1,6 +1,6 @@
 export const metadata = { title: 'Agent Architecture: What You Are Testing', description: 'Map an agent\'s decision tree before you test it: the nodes, the tools, the state, and where the test points are.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'LangGraph overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/overview', accessed: '2026-11-01' },
     { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
@@ -35,18 +35,20 @@ The reason to draw this before testing is that it tells you where the bugs can l
 </Technical>
 <Layman>
 
-agent model নয়। এটা model-এর চারপাশে একটা **control loop**: model-কে একটা লক্ষ্য আর tool-এর তালিকা দেওয়া হয়, সে ঠিক করে কী করবে, সিস্টেম সেটা করে, আর model আবার ঠিক করে। LangGraph একে বলে graph — ধাপের জন্য node, সংযোগের জন্য edge <Cite n={1} />।
+An agent is not just a model. It is a **control loop** built around a model. The model gets a goal and a list of tools. It decides what to do. The system does it. Then the model decides again.
 
-chain থেকে পার্থক্য হলো **পথ runtime-এ ঠিক হয়**। chain-এর একটাই পথ। agent-এ একটা tree, আর model প্রতিবার branch বাছে।
+LangGraph calls this a graph. The nodes are the steps. The edges are the moves from one step to the next <Cite n={1} />.
 
-চারটা বিষয় architecture-কে ঠিক করে, আর প্রতিটাই আলাদা কিছু টেস্ট করার:
+A chain is different. A chain has one path. An agent has a tree, and the model picks the branch each time. So the **path is decided while it runs**.
 
-1. **Toolগুলো।** agent কী করতে পারে, আর প্রতিটা tool-এর কী দরকার। tool-এর বর্ণনা prompt-এর অংশ, তাই তার ভাষা agent-এর আচরণ বদলে দেয়।
-2. **State।** ধাপগুলোর মাঝে agent কী জানে: লক্ষ্য, বার্তা, সংগ্রহ করা তথ্য।
-3. **সিদ্ধান্তের জায়গা।** যেসব node-এ model বাছে, আর সেই বাছাইগুলো কী।
-4. **শেষ হওয়ার শর্ত।** agent কখন ঠিক করে শেষ, আর সেটা না করলে কোন সীমা থামায়।
+Four things define the architecture. Each one is a separate thing to test:
 
-টেস্টের আগে এটা আঁকার কারণ এতে বোঝা যায় বাগ কোথায় থাকতে পারে। ভুল argument-এর tool আর ভুল tool বাছা model — দুটো আলাদা বাগ, আর trace বলে কোনটা ঘটেছে <Cite n={2} />।
+1. **The tools.** What the agent can do, and what each tool needs. The tool descriptions are part of the prompt. Changing their wording changes how the agent behaves.
+2. **The state.** What the agent knows between steps. This is the goal, the messages, and the facts it has collected.
+3. **The decision points.** The nodes where the model makes a choice, and what the choices are.
+4. **The stopping condition.** When the agent decides it is done. Also the limits that stop it if it never decides.
+
+Draw this before you test. It shows you where the bugs can live. A tool called with the wrong arguments is a different bug from a model that picked the wrong tool. The trace tells you which one happened <Cite n={2} />.
 
 </Layman>
 <Bangla>
@@ -81,9 +83,9 @@ calculate(expression)    returns a number
 send_email(to, body)     changes the world
 ```
 
-`send_email` is the dangerous one, and it is the reason agents need permissions. A tool that changes the world needs a test that asserts it was **not** called when it should not have been, and a human approval step in production.
+**The dangerous tool.** `send_email` is the dangerous one, and it is the reason agents need permissions. A tool that changes the world needs a test that asserts it was **not** called when it should not have been. It also needs a human approval step in production.
 
-The **tool descriptions** are part of the prompt, and this surprises people. Rewriting "Searches the web" as "Searches the web for current information about a product or event" changes which queries the agent runs. The tool descriptions are therefore a test surface of their own <Cite n={3} />.
+**Tool descriptions.** The **tool descriptions** are part of the prompt, and this surprises people. Rewriting "Searches the web" as "Searches the web for current information about a product or event" changes which queries the agent runs. The tool descriptions are therefore a test surface of their own <Cite n={3} />.
 
 The **state** has three parts, and the tests differ:
 
@@ -93,16 +95,16 @@ the messages      the conversation, including every tool result.
 the facts         what the agent has extracted. The scratchpad.
 ```
 
-The **decision points** are where the model acts. A node that decides between two tools needs a test for each branch, plus a test for the case where neither fits. A node that decides whether the task is complete needs a test for a task that is not complete yet, which is the case that produces the endless loop.
+**Decision points.** The **decision points** are where the model acts. A node that decides between two tools needs a test for each branch, plus a test for the case where neither fits. A node that decides whether the task is complete needs a test for a task that is not complete yet. That is the case that produces the endless loop.
 
-The **stopping condition** needs two tests: one where the agent should stop, and one where it must not. The second is the loop test, and it is the one that finds the infinite loop.
+**Stopping condition.** The **stopping condition** needs two tests: one where the agent should stop, and one where it must not. The second is the loop test, and it is the one that finds the infinite loop.
 
-And the **trace** is what makes the architecture visible. A run trace shows the nodes in order with the state at each one, which is how you tell an agent that took a wrong path from an agent that took the right path and then failed <Cite n={2} />.
+**The trace.** The **trace** is what makes the architecture visible. A run trace shows the nodes in order with the state at each one <Cite n={2} />. This is how you tell an agent that took a wrong path from an agent that took the right path and then failed <Cite n={2} />.
 
 </Technical>
 <Layman>
 
-reference agent-এর চারটা tool, আর প্রতিটার টেস্ট পয়েন্ট আলাদা:
+The reference agent has four tools. Each one needs a different test:
 
 ```text
 search_web(query)        returns text
@@ -111,11 +113,11 @@ calculate(expression)    returns a number
 send_email(to, body)     changes the world
 ```
 
-`send_email` সবচেয়ে বিপজ্জনক, আর agent-এর permission দরকার হওয়ার কারণই এটা। যে tool পৃথিবী বদলে দেয়, তার একটা টেস্ট দরকার যে assert করে উচিত না হলে সেটা **বলা হয়নি**, আর production-এ একটা human approval ধাপ দরকার।
+`send_email` is the dangerous one. It is why agents need permissions. A tool that changes the world needs a test that checks it was **not** called when it should not be. In production, it also needs a human to approve it.
 
-**Tool-এর বর্ণনা** prompt-এর অংশ, আর এটা মানুষকে অবাক করে। "Searches the web" কে "Searches the web for current information about a product or event" লিখলে বদলায় কোন query চলে। তাই tool-এর বর্ণনাও নিজে একটা test surface <Cite n={3} />।
+The **tool descriptions** are part of the prompt. This surprises people. Say you rewrite "Searches the web" as "Searches the web for current information about a product or event". That changes which queries the agent runs. So the tool descriptions are a test surface of their own <Cite n={3} />.
 
-**State**-এর তিনটা অংশ, আর টেস্ট আলাদা:
+The **state** has three parts. Each needs different tests:
 
 ```text
 the goal          what the user asked for. Set once, rarely changes.
@@ -123,11 +125,11 @@ the messages      the conversation, including every tool result.
 the facts         what the agent has extracted. The scratchpad.
 ```
 
-**সিদ্ধান্তের জায়গা** যেখানে model কাজ করে। দুটো tool-এর মধ্যে বাছার একটা node-এর প্রতিটা branch-এর টেস্ট দরকার, আর এমন কেসের টেস্টও দরকার যেখানে কোনোটাই মিলে না। কাজ শেষ হয়েছে কি না তা ঠিক করার একটা node-এর টেস্ট দরকার সেই কেসের জন্য যেটা এখনো শেষ হয়নি — এটাই অনন্তকাল loop তৈরি করে।
+The **decision points** are where the model acts. Say a node picks between two tools. Test each choice. Also test the case where neither tool fits. Say a node decides whether the task is done. Test a task that is not done yet. That case is what causes the endless loop.
 
-**শেষ হওয়ার শর্তে** দুটো টেস্ট দরকার: যেখানে agent-এর থামা উচিত, আর যেখানে থামা উচিত নয়। দ্বিতীয়টাই loop টেস্ট, আর এটাই অনন্তকাল loop খুঁজে বের করে।
+The **stopping condition** needs two tests. In one, the agent should stop. In the other, it must not stop. The second is the loop test. It is the one that finds the infinite loop.
 
-আর **trace**-ই architecture-কে দৃশ্যমান করে। একটা run trace nodeগুলো ক্রমে দেখায় আর প্রতিটায় state, যেটা দিয়ে বোঝা যায় ভুল পথে যাওয়া agent আর সঠিক পথে গিয়ে ব্যর্থ হওয়া agent-এর পার্থক্য <Cite n={2} />।
+The **trace** makes the architecture visible. A run trace shows the nodes in order, with the state at each one. With it, you can tell two cases apart. One agent took a wrong path. Another took the right path and then failed <Cite n={2} />.
 
 </Layman>
 <Bangla>
@@ -233,7 +235,7 @@ The second assertion is the point: the clarification node has to run, or the age
 </Technical>
 <Layman>
 
-architecture-টা data হিসেবে লিখুন, যাতে টেস্ট আর agent একই tool-এর তালিকা পড়ে:
+First, write the architecture down as data. Then the test and the agent read the same list of tools:
 
 ```python
 # app/agent/tools.py
@@ -260,7 +262,7 @@ TOOLS = [
 ]
 ```
 
-তারপর architecture টেস্ট, যেটা agent-কে অপরিবর্তনীয় কাজ করতে দেয় না:
+Next is the approval test. It stops the agent from doing something that cannot be undone:
 
 ```python
 def test_the_agent_does_not_email_without_approval(agent, mailbox):
@@ -269,7 +271,7 @@ def test_the_agent_does_not_email_without_approval(agent, mailbox):
     assert agent.state["pending_approval"] is not None
 ```
 
-আর tool-description টেস্ট, যেটা দলগুলো অবাক করে:
+Next is the tool-description test. Teams find this one surprising:
 
 ```python
 def test_a_vague_tool_description_still_picks_the_right_tool(agent):
@@ -283,9 +285,9 @@ def test_a_vague_tool_description_still_picks_the_right_tool(agent):
     assert agent_with_vague_description.tool_calls[0].name == "search_web"
 ```
 
-টেস্টটা assert করে দুটো branch-ই একই tool বাছে, যেটা বলে অস্পষ্ট description এখনো সমস্যা নয়। যেদিন সে অন্য কিছু বাছবে, তখন description আর load-bearing হয়ে গেছে, আর তার নিজস্ব টেস্ট দরকার।
+This test checks that both versions pick the same tool. So the vague description is not a problem yet. Once the agent picks a different tool, the description has become load-bearing. Then it needs a test of its own.
 
-শেষে decision-tree টেস্ট, যেটা assert করে agent উত্তর দেওয়ার আগে প্রশ্ন করেছে:
+Last is the decision-tree test. It checks that the agent asked a question before it acted:
 
 ```python
 def test_the_agent_asks_before_it_acts_on_a_missing_fact(agent, trace):
@@ -294,7 +296,7 @@ def test_the_agent_asks_before_it_acts_on_a_missing_fact(agent, trace):
     assert "clarify" in [node.name for node in trace.nodes]
 ```
 
-দ্বিতীয় assertion-টাই পয়েন্ট: clarification node-কে চলতে হবে, নয়তো agent এমন অর্ডার বাতিল করে যার id সে জানেই না।
+The second assertion is the key one. The clarification node has to run. If it does not, the agent cancels an order without knowing the id.
 
 </Layman>
 <Bangla>
@@ -383,17 +385,17 @@ def test_the_agent_asks_before_it_acts_on_a_missing_fact(agent, trace):
 </Technical>
 <Layman>
 
-**Mistake 1: শুধু শেষ উত্তর টেস্ট করা।** উত্তর সঠিক হতে পারে অপচয় বা ভুল পথের পরেও <Cite n={2} />।
+**Mistake 1: testing only the final answer.** The answer can be right even when the path was wasteful or wrong <Cite n={2} />.
 
-**Mistake 2: পৃথিবী বদলে দেওয়া tool-এর approval টেস্ট নেই।** যে agent না বলেই email পাঠাতে পারে, সে একটা খারাপ prompt থেকে সব customer-কে email করতে পারে।
+**Mistake 2: no approval test for a tool that changes the world.** An agent that can email without asking is one bad prompt away from emailing every customer.
 
-**Mistake 3: tool-এর বর্ণনাকে ডকুমেন্টেশন ভাবা।** এগুলো prompt text, আর একটা বদলালে আচরণ বদলায় <Cite n={3} />।
+**Mistake 3: treating tool descriptions as documentation.** They are prompt text. Rewriting one changes the behaviour <Cite n={3} />.
 
-**Mistake 4: যে কাজ শেষ করা যায় না তার টেস্ট নেই।** শেষ হওয়ার logic কেবল সেই লক্ষ্যেই পরীক্ষিত হয় যেগুলো কখনো সফল হয় না।
+**Mistake 4: no test for a task that cannot be finished.** Only goals that never succeed exercise the stopping logic.
 
-**Mistake 5: tool error ফেরত দেওয়ার টেস্ট নেই।** tool-এর ফলাফল state-এ ঢোকে, আর agent-কে তার কিছু করতে হয়।
+**Mistake 5: no test for a tool that returns an error.** The tool result goes back into the state. The agent has to do something with it.
 
-**Mistake 6: tool call-এর সংখ্যার ক্যাপ নেই।** ক্যাপ না থাকলে agent এক run-এ পুরো বাজেট খরচ করে।
+**Mistake 6: no cap on the number of tool calls.** Without a cap, the agent can spend the whole budget in one run.
 
 </Layman>
 <Bangla>

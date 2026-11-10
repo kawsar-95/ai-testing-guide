@@ -80,4 +80,38 @@ The writer changed three places. I re-read the new text against the sources.
 - Rows 33 and 34 (note): the example now says "Session A counts the seats taken", so 40 then 41 after a new enrolment is consistent. The behavior at Read Committed and Repeatable Read is unchanged and still correct. PASS.
 - All eight sources are still cited, and every `<Cite n>` is 1 to 8. The 8-word copy check on the full page finds only the exact error message `could not serialize access due to concurrent update`, which must match the manual. No other structure change.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## Isolation levels`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "it fails with `could not serialize access due to concurrent update`. The application should then retry the whole transaction <Cite n={7} />." — The ORIGINAL had one sentence with the cite at its end, so the cite supported both the failure error and the retry advice. After the split, the failure-error sentence has no cite, so a fact the ORIGINAL cited is now uncited. Fix: "it fails with `could not serialize access due to concurrent update` <Cite n={7} />. The application should then retry the whole transaction <Cite n={7} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | In the split Repeatable Read sentence, the failure-error part lost its cite. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## Isolation levels`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only the Repeatable Read bullet changed: the retry advice became its own sentence with "then" and keeps cite 7. Everything else, including the table, code and cites, is unchanged. |
+
 Open FAILs: 0

@@ -1,6 +1,6 @@
 export const metadata = { title: 'Advanced Capstone: Production Pipeline and Monitoring', description: 'Wire the test suite into a CI/CD quality gate, deploy LangFuse tracing and Arize Phoenix continuous evaluation, and build cost monitoring and an A/B framework.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'CI/CD integration', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
     { title: 'Command line', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/usage/command-line/', accessed: '2026-11-01' },
@@ -29,9 +29,11 @@ Cost monitoring and an A/B framework are the two pieces that only make sense onc
 </Technical>
 <Layman>
 
-এই session এই course-এ আলাদাভাবে বানানো দুটো জিনিস জোড়া দেয়: eval মডিউল থেকে CI gate, আর monitoring মডিউল থেকে observability টুল, একটা pipeline-এ যা pre-merge আর post-deploy দুটোই কভার করে। Promptfoo-র eval প্রতিটা PR-এ একটা required check হিসেবে চলে <Cite n={1} />, GitHub Actions দিয়ে জোড়া <Cite n={6} />, ঠিক প্রথম capstone-এর মতো। এখানে নতুন যা, deployed app-এ LangFuse tracing <Cite n={3} /> আর Arize Phoenix continuous evaluation <Cite n={4} /> যোগ করা, তাই quality দুইবার চেক হয়: একবার code merge হওয়ার আগে, আর একটানা এটা live হওয়ার পরে।
+This session joins two things you built separately in this course. One is the CI gate from the eval modules. The other is the observability tools from the monitoring modules. Together they make one pipeline. It covers the time before merge and the time after deploy.
 
-Cost monitoring আর একটা A/B framework দুটো অংশ যা শুধু live traffic পরিমাপ করার জন্য থাকলেই অর্থবহ হয়: cost monitoring একটা test suite-এর স্থির case সংখ্যার বদলে real token ব্যবহার যোগ করে, আর একটা A/B framework দুটো model বা prompt version real প্রশ্নে তুলনা করে, একটা হিমায়িত eval সেটে নয়।
+Promptfoo's eval runs as a required check on every PR <Cite n={1} />. It runs through GitHub Actions <Cite n={6} />, just as in the first capstone. The new part is LangFuse tracing <Cite n={3} /> and Arize Phoenix continuous evaluation <Cite n={4} /> on the deployed app. So quality is checked twice. It is checked before the code merges. It is checked again, all the time, once the app is live.
+
+Two pieces only make sense when you have live traffic to measure. They are cost monitoring and an A/B framework. Cost monitoring adds up real token usage. A test suite only has a fixed number of cases. An A/B framework compares two model or prompt versions on real questions. A frozen eval set cannot do that.
 
 </Layman>
 <Bangla>
@@ -68,7 +70,7 @@ The A/B framework works by routing a small percentage of live traffic to a candi
 </Technical>
 <Layman>
 
-pipeline-এর দুটো অর্ধেক, pre-merge আর post-deploy, পাশাপাশি:
+Here are the two halves of the pipeline, side by side:
 
 ```text
 PRE-MERGE (CI, blocks the PR)
@@ -81,9 +83,9 @@ POST-DEPLOY (continuous, does not block anything by itself)
   A/B split: a fraction of traffic on a candidate model or prompt version
 ```
 
-post-deploy অর্ধেক pre-merge gate-কে প্রতিস্থাপন করে না; এটা ধরে যা gate পারে না, কারণ এটা শুধু স্থির eval সেট দেখে, real traffic নয়। একটা quality পতন যা শুধু এমন একটা প্রশ্নে দেখা যায় যার জন্য কেউ test case লেখেনি তা এখানে প্রথম দেখা যায়।
+The post-deploy half does not replace the pre-merge gate. It catches what the gate cannot. The gate only sees the fixed eval set, not real traffic. A quality drop on a question nobody wrote a test case for shows up here first.
 
-A/B framework কাজ করে live traffic-এর একটা ছোট শতাংশ একটা candidate version-এ route করে আর তার traced metric-কে baseline-এর সাথে তুলনা করে, আগে থেকে থাকা একই Phoenix বা LangFuse pipeline-এর ওপর <Cite n={4} /> <Cite n={3} /> — এটার আলাদা tracing setup দরকার নেই, শুধু একটা routing সিদ্ধান্ত আর একটা তুলনা query।
+The A/B framework sends a small share of live traffic to a candidate version. It then compares the candidate's traced metrics with the baseline's. It uses the same Phoenix or LangFuse pipeline you already have <Cite n={4} /> <Cite n={3} />. It needs no separate tracing setup. It only needs a routing decision and a comparison query.
 
 </Layman>
 <Bangla>
@@ -171,7 +173,7 @@ This advice is the tutorial's own. It does not come from the sources.
 </Technical>
 <Layman>
 
-প্রতিটা PR-এ required CI workflow <Cite n={6} /> <Cite n={1} /> <Cite n={2} />:
+This CI workflow is required on every PR <Cite n={6} /> <Cite n={1} /> <Cite n={2} />.
 
 ```yaml
 # .github/workflows/advanced-capstone.yml
@@ -185,7 +187,7 @@ jobs:
       - run: python -m pytest tests/agent_routing/
 ```
 
-Deployed app-এ production tracing আর continuous eval <Cite n={3} /> <Cite n={5} />:
+Next is tracing and continuous eval on the deployed app <Cite n={3} /> <Cite n={5} />.
 
 ```python
 from langfuse import observe
@@ -198,7 +200,7 @@ def handle_request(question: str) -> dict:
     return agent.invoke({"question": question})
 ```
 
-একটা spike-এ alert সহ Cost monitoring:
+This cost check raises an alert when spending spikes.
 
 ```python
 def check_cost_anomaly(today_cost: float, trailing_7_day_avg: float) -> None:
@@ -206,7 +208,7 @@ def check_cost_anomaly(today_cost: float, trailing_7_day_avg: float) -> None:
         alert(f"cost spike: {today_cost:.2f} vs 7-day avg {trailing_7_day_avg:.2f}")
 ```
 
-Baseline-এর বিরুদ্ধে একটা candidate prompt তুলনা করে একটা ন্যূনতম A/B split:
+This is a minimal A/B split. It compares a candidate prompt against the baseline.
 
 ```python
 import random
@@ -217,14 +219,11 @@ def handle_request_ab(question: str) -> dict:
     return {**result, "variant": variant}  # tagged for later comparison in Phoenix/LangFuse
 ```
 
-<Callout type="tip" title="Tutorial advice">
+**Tutorial advice.** This advice is the tutorial's own. It does not come from the sources.
 
-This advice is the tutorial's own. It does not come from the sources.
-
-- CI gate আর production monitoring-কে আলাদা alert সহ আলাদা সিস্টেম হিসেবে রাখুন; মিশিয়ে ফেলা অস্পষ্ট করে কোনটা একটা নির্দিষ্ট সমস্যা ধরেছে।
-- A/B split ছোট শুরু করুন (৫-১০% traffic) আর শুধু candidate-এর traced metric টিকে থাকলেই এটা বড় করুন।
-- quality module-এর একই সংরক্ষিত metric থেকে executive dashboard বানান, যাতে একটাই সত্যের উৎস থাকে, দুটো নয়।
-</Callout>
+- Keep the CI gate and the production monitoring as separate systems with separate alerts. Mixing them makes it unclear which one caught a problem.
+- Start the A/B split small, at 5-10% of traffic. Widen it only when the candidate's traced metrics hold up.
+- Build the executive dashboard from the same stored metrics as the quality module. Then you have one source of truth, not two.
 
 </Layman>
 <Bangla>
@@ -305,15 +304,15 @@ def handle_request_ab(question: str) -> dict:
 </Technical>
 <Layman>
 
-**Mistake ১: CI gate-কে নিজে নিজে যথেষ্ট ভাবা।** এটা শুধু স্থির eval সেট দেখে; production tracing-ই এমন একটা সমস্যা ধরে যা eval সেট কখনো অনুমান করেনি <Cite n={1} />।
+**Mistake 1: trusting the CI gate alone.** It only sees the fixed eval set. Production tracing catches a problem the eval set never expected <Cite n={1} />.
 
-**Mistake ২: ৫০%-এ একটা A/B split শুরু করা।** ৫০% traffic-এ একটা খারাপ candidate ২%-এর চেয়ে পঁচিশ গুণ ক্ষতি করে; ছোট শুরু করুন।
+**Mistake 2: starting an A/B split at 50%.** A bad candidate at 50% of traffic does twenty-five times the damage of one at 2%. Start small.
 
-**Mistake ৩: cost, quality, আর A/B ফলাফলের জন্য আলাদা dashboard।** তিন জায়গা চেক করা একজন reviewer এই সপ্তাহে যা গুরুত্বপূর্ণ ছিল সেটা মিস করে।
+**Mistake 3: separate dashboards for cost, quality, and A/B results.** A reviewer who checks three places can miss the one that mattered this week.
 
-**Mistake ৪: trailing baseline ছাড়া একটা cost spike-এ alert করা।** একটা স্থির ডলার threshold স্বাভাবিক traffic বৃদ্ধি হিসাব করে না; এর বদলে একটা trailing average-এর সাথে তুলনা করুন।
+**Mistake 4: a cost alert with no trailing baseline.** A fixed dollar threshold ignores normal traffic growth. Compare against a trailing average instead.
 
-**Mistake ৫: একটা production alert থেকে একটা trace-এ ফিরে কোনো লিংক নেই।** শুধু "quality কমেছে" বলা একটা alert যাতে কোনো trace id নেই তা diagnose করা যায় না <Cite n={4} /> <Cite n={3} />।
+**Mistake 5: no link from a production alert to a trace.** An alert that only says "quality dropped" has no trace id attached. Nobody can diagnose it <Cite n={4} /> <Cite n={3} />.
 
 </Layman>
 <Bangla>

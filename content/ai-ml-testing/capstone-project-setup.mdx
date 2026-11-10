@@ -1,6 +1,6 @@
 export const metadata = { title: 'Capstone Project Setup: Build the AI App to Test', description: 'Build a customer support RAG chatbot with LangChain and ChromaDB, loaded with FAQ documents and deployed as an API, as the target for the rest of the capstone.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Introduction', publisher: 'LangChain (Python docs)', url: 'https://docs.langchain.com/oss/python/langchain/overview', accessed: '2026-11-01' },
     { title: 'Introduction', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/', accessed: '2026-11-01' },
@@ -28,11 +28,17 @@ The app has three parts: a one-time ingestion step that loads the FAQ documents 
 </Technical>
 <Layman>
 
-Capstone target হলো একটা customer support RAG chatbot: একটা FAQ knowledge base, একটা retriever, আর একটা model, LangChain দিয়ে একসাথে জোড়া <Cite n={1} /> আর একটা ChromaDB vector store দিয়ে সমর্থিত <Cite n={2} />। এটা retrieval-augmented generation — model answer time-এ দেওয়া document থেকে উত্তর দেয়, training-এ যা মুখস্থ করেছে তার বদলে <Cite n={3} /> — কারণ এটাই architecture যা এই course-এর প্রতিটা আগের module ধরে নিয়েছে।
+The app we test is a customer support chatbot. It has a FAQ knowledge base, a retriever, and a model. They are joined with LangChain <Cite n={1} />. The documents are stored in a ChromaDB vector store <Cite n={2} />.
 
-এটা বানানো capstone-এর মূল বিষয় নয়; এটা টেস্ট করাই মূল বিষয়। কিন্তু যে টেস্টার কখনো under-test জিনিসটা বানায়নি সে মিস করে কীভাবে অংশগুলো আসলে একসাথে বসে, আর সেই বোঝাপড়াই test suite-কে সুস্পষ্ট ব্যর্থতার বিন্দুর বদলে আসল ব্যর্থতার বিন্দুতে লক্ষ্য করায়।
+This design is called retrieval-augmented generation, or RAG. The model answers from documents handed to it at answer time. It does not answer from what it memorised in training <Cite n={3} />. Every earlier module in this course assumed this design.
 
-App-টার তিনটা অংশ আছে: একটা এক-বারের ingestion ধাপ যা FAQ document vector store-এ লোড করে, একটা request handler যা প্রাসঙ্গিক chunk retrieve করে আর model-কে সেগুলো থেকে উত্তর দিতে বলে, আর একটা API endpoint যা handler-কে একটা UI বা Postman-এর কাছে প্রকাশ করে।
+The goal is testing the app, not building it. Still, a tester who builds it sees how the pieces fit. That helps you aim your tests at the real weak spots, not the obvious ones.
+
+The app has three parts:
+
+- A one-time ingestion step that loads the FAQ documents into the vector store.
+- A request handler that finds relevant chunks and asks the model to answer from them.
+- An API endpoint that lets a UI or Postman call the handler.
 
 </Layman>
 <Bangla>
@@ -67,7 +73,7 @@ In this tutorial's pipeline, LangChain's job is to compose the retriever, the pr
 </Technical>
 <Layman>
 
-Build pipeline, ক্রমানুসারে:
+The build has four steps, in this order:
 
 ```text
 1. collect the FAQ documents     markdown or text files, one topic each
@@ -76,9 +82,9 @@ Build pipeline, ক্রমানুসারে:
 4. expose it                     a single POST /ask endpoint
 ```
 
-ধাপ ১-২ একটা এক-বারের (বা update-এ) ingestion job, request handling থেকে আলাদা: knowledge base বদলালে ingestion চলে, প্রতিটা ব্যবহারকারীর প্রশ্নে chain চলে, আর দুটোকে মিশিয়ে ফেলা দুটোকেই ধীর আর আলাদাভাবে টেস্ট করা কঠিন করে।
+Steps 1 and 2 are an ingestion job. It runs once, or when the documents change. It is separate from handling requests. The chain runs on every user question. If you mix the two, both get slower and harder to test on their own.
 
-এই টিউটোরিয়ালের pipeline-এ LangChain-এর কাজ retriever, prompt template, আর model call-কে একটা callable chain-এ একত্র করা, তাই request handler তিনটা হাতে জোড়া ধাপের বদলে একটা একক function call। ChromaDB-এর কাজ embed করা chunk সংরক্ষণ করা আর একটা query embedding-এর সবচেয়ে কাছেরগুলো ফেরত দেওয়া <Cite n={2} />।
+In this tutorial, LangChain joins the retriever, the prompt template, and the model call into one chain. The request handler then makes a single call. It does not wire three steps by hand. ChromaDB stores the embedded chunks. It returns the ones closest to the embedding of a query <Cite n={2} />.
 
 </Layman>
 <Bangla>
@@ -171,7 +177,7 @@ This advice is the tutorial's own. It does not come from the sources.
 </Technical>
 <Layman>
 
-FAQ document Chroma-তে লোড করা, Ingestion <Cite n={2} />:
+First, ingestion. It loads the FAQ documents into Chroma <Cite n={2} />:
 
 ```python
 import chromadb
@@ -189,7 +195,7 @@ for doc_path in FAQ_DOCS:
     )
 ```
 
-retrieval-কে generation-এ জোড়া, Chain:
+Next, the chain. It connects retrieval to the model's answer:
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -211,7 +217,7 @@ def answer_question(question: str) -> str:
     return chain.invoke({"context": retrieve(question), "question": question})
 ```
 
-এটা প্রকাশ করা, Endpoint:
+Last, the endpoint. It makes the chain available to callers:
 
 ```python
 from fastapi import FastAPI
@@ -226,14 +232,11 @@ def ask(body: dict):
     return {"answer": answer, "context": chunks}
 ```
 
-<Callout type="tip" title="Tutorial advice">
-
 This advice is the tutorial's own. It does not come from the sources.
 
-- Ingestion আর request handler-কে আলাদা script হিসেবে রাখুন। Ingestion একবার আর handler বারবার টেস্ট করা স্বাভাবিক বিভাজন।
-- FAQ document repo-তে commit করুন, যাতে knowledge base state প্রতিটা test run-এর জন্য reproducible থাকে।
-- `/ask` endpoint-কে উত্তরের সাথে retrieved context ফেরত দিতে লিখুন; capstone-এর বাকি টেস্টের faithfulness চেক করার জন্য এটা দরকার।
-</Callout>
+- Keep ingestion and the request handler as separate scripts. You test ingestion once and the handler many times.
+- Commit the FAQ documents to the repo. Then the knowledge base is the same for every test run.
+- Make the `/ask` endpoint return the retrieved context with the answer. The later capstone tests need it to check faithfulness.
 
 </Layman>
 <Bangla>
@@ -323,15 +326,15 @@ def ask(body: dict):
 </Technical>
 <Layman>
 
-**Mistake ১: পরিমাপ ছাড়া খুব বড় বা খুব ছোট chunking।** এই capstone course-এর আগের chunking-and-embedding পাঠ আবার ব্যবহার করে; deadline capstone বলেই সেই টিউনিং বাদ দেবেন না।
+**Mistake 1: picking chunk sizes without measuring.** Chunks can be too large or too small. This capstone reuses the chunking and embedding lessons from earlier. Do not skip that tuning because it is the capstone.
 
-**Mistake ২: ingestion আর chain-এর মধ্যে বিভাজন নেই।** প্রতিটা request-এ পুরো knowledge base আবার embed করা ধীর আর timing-এ test flaky করে তোলে।
+**Mistake 2: mixing ingestion and the chain.** Re-embedding the whole knowledge base on every request is slow. It also makes tests flaky on timing.
 
-**Mistake ৩: endpoint শুধু উত্তর ফেরত দেয়, context নয়।** Faithfulness আর hallucination টেস্টের উত্তরটা চেক করার জন্য retrieved context দরকার।
+**Mistake 3: returning only the answer.** Faithfulness and hallucination tests need the retrieved context. They check the answer against it.
 
-**Mistake ৪: embedding model-এ কোনো version pin নেই।** Ingestion-এর পরে embedding model বদলালে পুরনো আর নতুন embedding পুরো re-ingest ছাড়া তুলনাযোগ্য হয় না।
+**Mistake 4: not pinning the embedding model version.** If you change the embedding model after ingestion, old and new embeddings cannot be compared. You must re-ingest everything.
 
-**Mistake ৫: শুধু happy path বানানো।** একটা capstone যা শুধু in-scope প্রশ্নের উত্তর দেয় কখনো তার নিজের refusal আচরণ পরীক্ষা করে না, যা module-এর বাকি অংশ সরাসরি টেস্ট করে।
+**Mistake 5: building only the happy path.** If the app only answers in-scope questions, it never shows its refusal behaviour. The rest of the module tests that behaviour directly.
 
 </Layman>
 <Bangla>

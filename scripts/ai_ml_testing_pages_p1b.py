@@ -775,6 +775,7 @@ page(
 
 page(
     slug="structured-outputs",
+    updated="2026-11-10",
     title="Structured Outputs and Validation",
     description="Test JSON mode, function calling, and tool use: the schema check, the field that hallucinates, and the schema the model keeps breaking.",
     lede="Asking a model for JSON gets you JSON most of the time. Testing it is about the times it does not, and about what your code does when it does not.",
@@ -817,23 +818,45 @@ page(
         },
         "How it works": {
             "technical": (
-                "**Schema-constrained output** gives the service the schema itself. OpenAI's guide says that with Structured Outputs the model will always generate responses that adhere to the supplied JSON Schema {{cite:openai-structured}}. The consequence for a tester is important: with a strict schema, a malformed or schema-breaking reply points first at your own plumbing, or at an edge case the guide names, such as a refusal or a response cut at the token limit, and not at the model's formatting. That moves the failure surface to the schema, the prompt, and those edge cases.\n"
-                "\n"
-                "**JSON mode** without a schema gives a weaker guarantee: the guide says JSON mode ensures valid JSON, but not that the output matches any schema {{cite:openai-structured}}. Here the test has to define what the keys should be, and that definition is your contract.\n"
-                "\n"
-                "**Tool use** splits the problem in two. The first decision is *which tool*. The second is *what arguments*. The model's output is a function name and its arguments, as a string in JSON format; the reference warns that this string is not always valid JSON and may contain parameters your schema does not define {{cite:openai-chat}}. Testing the name and testing the arguments are two separate test suites, and a model can pass one and fail the other. A wrong argument is often more dangerous than a wrong tool: the right tool with the wrong account id still does damage.\n"
-                "\n"
-                "Three validation layers belong in the code, and each one is a test target:\n"
-                "\n"
+                "**Schema-constrained output.** This gives the service the schema "
+                "itself. OpenAI's guide says that with Structured Outputs the model "
+                "will always generate responses that adhere to the supplied JSON "
+                "Schema {{cite:openai-structured}}. The consequence for a tester is "
+                "important. With a strict schema, a malformed or schema-breaking reply "
+                "points first at your own plumbing, or at an edge case the guide "
+                "names, such as a refusal or a response cut at the token limit. It "
+                "does not point at the model's formatting. That moves the failure "
+                "surface to the schema, the prompt, and those edge cases.\n\n"
+                "**JSON mode.** Without a schema, JSON mode gives a weaker guarantee. "
+                "The guide says JSON mode ensures valid JSON, but not that the output "
+                "matches any schema {{cite:openai-structured}}. Here the test has to "
+                "define what the keys should be, and that definition is your contract.\n\n"
+                "**Tool use.** Tool use splits the problem in two. The first decision "
+                "is *which tool*. The second is *what arguments*. The model's output "
+                "is a function name and its arguments, as a string in JSON format. The "
+                "reference warns that this string is not always valid JSON and may "
+                "contain parameters your schema does not define {{cite:openai-chat}}. "
+                "Testing the name and testing the arguments are two separate test "
+                "suites, and a model can pass one and fail the other. A wrong argument "
+                "is often more dangerous than a wrong tool: the right tool with the "
+                "wrong account id still does damage.\n\n"
+                "**Validation layers.** Three validation layers belong in the code, "
+                "and each one is a test target:\n\n"
                 "```text\n"
                 "layer 1  parse       is the output valid JSON at all?\n"
                 "layer 2  schema      do the types and required fields match?\n"
                 "layer 3  semantics   are the values sensible for this request?\n"
-                "```\n"
-                "\n"
-                "Layer 3 is the one people skip. A valid schema can hold a perfectly wrong value: `{\"order_id\": \"0000\", \"status\": \"shipped\"}` passes every schema check. Layer 3 needs domain rules, and those rules are the test cases.\n"
-                "\n"
-                "There is a fourth failure that is specific to this area: the **truncated output**. A response that hits the token cap is cut in the middle of the JSON, and the parse fails with a confusing error. Assert on the stop reason before you assert on the content: in the Claude Messages API, `stop_reason` is `max_tokens` {{cite:anthropic-temp}}; in OpenAI Chat Completions, `finish_reason` is `length` {{cite:openai-chat}}."
+                "```\n\n"
+                "Layer 3 is the one people skip. A valid schema can hold a perfectly "
+                "wrong value: `{\"order_id\": \"0000\", \"status\": \"shipped\"}` passes every "
+                "schema check. Layer 3 needs domain rules, and those rules are the "
+                "test cases.\n\n"
+                "**Truncated output.** There is a fourth failure that is specific to "
+                "this area. A response that hits the token cap is cut in the middle of "
+                "the JSON, and the parse fails with a confusing error. Assert on the "
+                "stop reason before you assert on the content. In the Claude Messages "
+                "API, `stop_reason` is `max_tokens` {{cite:anthropic-temp}}. In OpenAI "
+                "Chat Completions, `finish_reason` is `length` {{cite:openai-chat}}."
             ),
             "layman": (
                 "**Schema-constrained output** gives the service the schema itself. OpenAI's guide says the model will then always produce output that follows the schema {{cite:openai-structured}}. For a tester, this matters: with a strict schema, broken JSON points first at your own code, or at a case the guide names, such as a refusal or a reply cut off at the token limit. It is not the model's formatting. So you look for failures in the schema, the prompt, and those special cases.\n"

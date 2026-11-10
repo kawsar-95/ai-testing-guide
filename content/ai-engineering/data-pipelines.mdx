@@ -1,6 +1,6 @@
 export const metadata = { title: 'Data Pipelines', description: 'How an AI app loads, cleans, chunks, and enriches its documents before a model sees them, and what a tester checks at each step.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-10',
   sources: [
     { title: 'Introducing Contextual Retrieval', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/contextual-retrieval', accessed: '2026-10-28' },
     { title: 'Retrieval', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/retrieval', accessed: '2026-10-28' },
@@ -68,11 +68,17 @@ Say the whole knowledge base is under about 200,000 tokens (about 500 pages). Th
 
 ### Load
 
-A **document loader** reads data from a source (for example Slack, Notion, or Google Drive) into one standard format <Cite n={4} />. In LangChain, `load()` reads all documents at once, and `lazy_load()` streams them, for big datasets <Cite n={4} />. Each `Document` has `page_content` (the text) and `metadata` (a dict, for example the source file and the page number) <Cite n={5} />.
+A **document loader** reads data from a source (for example Slack, Notion, or Google Drive) into one standard format <Cite n={4} />. In LangChain, `load()` reads all documents at once <Cite n={4} />. `lazy_load()` streams them, for big datasets <Cite n={4} />. Each `Document` has `page_content` (the text) and `metadata` (a dict, for example the source file and the page number) <Cite n={5} />.
 
 ### Clean and validate
 
-The input can be dirty or hostile. OWASP says to validate the knowledge sources, to accept data only from trusted sources, and to audit the knowledge base for hidden content and data poisoning <Cite n={6} />. Its example: a resume with white text on a white background that tells the model to recommend the candidate <Cite n={6} />.
+The input can be dirty or hostile. OWASP says to:
+
+- validate the knowledge sources <Cite n={6} />
+- accept data only from trusted sources <Cite n={6} />
+- audit the knowledge base for hidden content and data poisoning <Cite n={6} />
+
+Its example: a resume with white text on a white background that tells the model to recommend the candidate <Cite n={6} />.
 
 ### Chunk
 
@@ -87,11 +93,11 @@ splitter = RecursiveCharacterTextSplitter(
 chunks = splitter.split_documents(docs)
 ```
 
-`add_start_index=True` saves the character offset of each chunk in the original document in its metadata <Cite n={5} />. The **overlap** repeats some text at the edge of two chunks. The OpenAI vector store, by default, cuts files into 800-token chunks with a 400-token overlap. You can set your own size from 100 to 4096 tokens, and the overlap should not be more than half of the chunk size <Cite n={2} />.
+`add_start_index=True` saves the character offset of each chunk in the original document in its metadata <Cite n={5} />. The **overlap** repeats some text at the edge of two chunks. The OpenAI vector store, by default, cuts files into 800-token chunks with a 400-token overlap. You can set your own size from 100 to 4096 tokens <Cite n={2} />. The overlap should not be more than half of the chunk size <Cite n={2} />.
 
 ### Enrich
 
-A chunk alone can lose its meaning. Anthropic's example: "revenue grew by 3%" does not say which company or which quarter <Cite n={1} />. **Contextual Retrieval** asks a model to write a short context for each chunk, usually 50 to 100 tokens, and adds it to the front of the chunk before embedding and indexing <Cite n={1} />. In Anthropic's tests, this cut failed retrievals by 49% <Cite n={1} />.
+A chunk alone can lose its meaning. Anthropic's example: "revenue grew by 3%" does not say which company or which quarter <Cite n={1} />. **Contextual Retrieval** asks a model to write a short context for each chunk, usually 50 to 100 tokens <Cite n={1} />. It adds that context to the front of the chunk before embedding and indexing <Cite n={1} />. In Anthropic's tests, this cut failed retrievals by 49% <Cite n={1} />.
 
 You can also add **metadata** for filters. In the OpenAI vector store, each file can have `attributes`, with at most 16 keys <Cite n={2} />. OWASP says to tag and classify the data to control access levels <Cite n={6} />.
 

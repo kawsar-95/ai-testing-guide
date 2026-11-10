@@ -26,4 +26,24 @@ None. R65 is fixed in all three panels (440, 454, 468) and agrees with Technical
 - Bangla addresses the reader with আপনি ("দেখুন", "রাখুন", "ব্যবহার করুন", "চালান"). PASS.
 - `lang="bn"` and panel structure are checked by `tests/voice-source.test.ts`, not here.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panels of 3 sections were rewritten to lower the reading load: `The web app`, `The AI layer`, `The class notes`. The cognitive-load audit of 2026-11-10 found them as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The web app | PASS | Every claim matches the Technical text. Dropped details (shared pages, components, README) are omissions only. |
+| The AI layer | PASS | Skills, subagents, hook, and MCP servers match. Cites 1–4 are placed on the same claims as in the Technical text. |
+| The class notes | PASS | All 8 notes and their code locations match. |
+
 Open FAILs: 0

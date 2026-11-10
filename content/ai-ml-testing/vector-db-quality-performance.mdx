@@ -1,6 +1,6 @@
 export const metadata = { title: 'Vector Database Quality and Performance', description: 'Test retrieval accuracy at scale and the performance envelope: duplicates, load, index rebuilds, and drift.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Search', publisher: 'Qdrant (docs)', url: 'https://qdrant.tech/documentation/search/search/', accessed: '2026-11-01' },
     { title: 'Discounted cumulative gain', publisher: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Discounted_cumulative_gain', accessed: '2026-11-01' },
@@ -35,17 +35,17 @@ The surprising result that teams learn the hard way: **recall can fall as the co
 </Technical>
 <Layman>
 
-**Retrieval quality** বড় scale-এ তিনটা document-এর চেয়ে আলাদা প্রশ্ন। বড় scale-এ corpus-এ near-duplicate, খালি collection আর একাধিক ভাষার document থাকে, আর metric-এর অর্থ বদলায়।
+**Retrieval quality** at scale is a different question from quality on three documents. A big corpus has near-duplicates, empty collections, and documents in several languages. The metrics then mean something different.
 
-আপনার জানা metricগুলো কাজে লাগে, তবে বেশি সাবধানে:
+The metrics you already know still apply, but take more care:
 
-- **precision@k** আর **recall@k** আগের মতো।
-- **nDCG@k** ranked ফলাফলের জন্য, কারণ একশোটা near-duplicate-এর মধ্যে আসল প্রশ্নের উত্তরটা কোন অবস্থানে সেটাই গুরুত্বপূর্ণ। nDCG উপরের দিকে প্রাসঙ্গিক ফলাফলকে বেশি পুরস্কার দেয় আর একই ফলাফল নিচে নামলে কমায় <Cite n={2} />।
-- **MRR** প্রথম প্রাসঙ্গিক ফলাফলের জন্য, যেটা সঠিক মাপ যখন ব্যবহারকারী শুধু প্রথমটাই দেখে।
+- **precision@k** and **recall@k**, as before.
+- **nDCG@k** for the ranked result. With a hundred near-duplicates, the position of the one right answer is what matters. nDCG rewards a relevant result near the top and gives less credit to the same result further down <Cite n={2} />.
+- **MRR** for the first relevant result. Use it when the user only ever sees the first one.
 
-**Performance** আলাদা একটা axis, আর তার নিজস্ব প্রশ্ন আছে: corpus বড়ানোর আগে কত query প্রতি সেকেন্ডে ব্যয়বহুল থাকে, rebuild কত সময় লাগে, আর corpus-এর নিচে বদলে গেলে index-এর কী হয়।
+**Performance** is a separate axis with its own questions. How many queries per second can you run before quality drops? How long does a rebuild take? What happens to the index when the corpus changes underneath it?
 
-দলগুলো যে ফলাফল শক্তা ছাত্রা করে: **corpus বড় হলে recall কমতে পারে**, কারণ approximate index-এর নির্দিষ্ট সংখ্যক candidate list থাকে আর সেটা বেশি vector-এর ওপর ছড়িয়ে যেতে হয়। উদাহরণ হিসেবে, একটা configuration দশ হাজার document-এর ৯৫% আর এক মিলিয়নের ৭০% recall করতে পারে (দৃষ্টান্তমূলক সংখ্যা, মাপা নয়)। তাই code বদলালে নয়, corpus বাড়লেও index parameter আবার benchmark করতে হয়।
+Teams learn one surprise the hard way: **recall can fall as the corpus grows**. An approximate index with a fixed number of candidate lists must spread thinner across more vectors. For example, one setup might recall 95% of ten thousand documents and 70% of a million (illustrative numbers, not a measurement). So re-benchmark the index parameters when the corpus grows, not just when the code changes.
 
 </Layman>
 <Bangla>
@@ -99,9 +99,9 @@ The metrics are the retrieval metrics from the chunking benchmark (precision@k, 
 </Technical>
 <Layman>
 
-চারটা টেস্ট গ্রুপ, আর প্রথমটাই যেটা বাদ দেওয়া হয়।
+There are four test groups. The first one is the one teams skip.
 
-**১. বড় scale-এ quality।** corpus-এ কঠিন কেসগুলো থাকতে হবে, শুধু সহজগুলো নয়:
+**1. Quality at scale.** The corpus must hold the hard cases, not just the easy ones:
 
 ```text
 near-duplicates      the same policy in two versions, or two spellings
@@ -111,19 +111,19 @@ empty collections    a filter that matches nothing
 very long docs       one document larger than the embedding model's limit
 ```
 
-**২. Performance।** load test-এ throughput-এর সাথে সাথে quality-ও মাপতে হবে, কারণ load-এর নিচের database দ্রুততর উত্তর দিতে পারে আর খারাপ, ছোট candidate set ফেরত দিয়ে। Load চালাতে Locust <Cite n={4} />, আর assertion হবো **p95 latency আর recall একসাথে**-র ওপর, শুধু latency-র ওপর নয়।
+**2. Performance.** The load test must measure quality and throughput at the same time. A database under load can answer faster and worse, by returning a smaller candidate set. Locust is the tool that drives the load <Cite n={4} />. Assert on the **p95 latency and the recall together**, not on latency alone.
 
-**৩. Index rebuild।** corpus বদলালে index-ও তার সাথে বদলাতে হবে। টেস্ট একটা document লিখে, index-এর জন্য অপেক্ষা করে, আর নতুন content-এর জন্য query করে:
+**3. Index rebuild.** When the corpus changes, the index must change with it. The test writes a document, waits for the index, and queries for the new content:
 
 ```text
 write the document   -> index it   -> query it   -> the new content must come back
 ```
 
-ব্যর্থতার ধরন হলো একটা lag: write সফল হয়েছে কিন্তু index তাকালো না, তাই নতুন document কিছুক্ষণ অদৃশ্য থাকে। লেখার সাথে সাথে query করা টেস্ট সেটা ধরে, আর অপেক্ষা করা টেস্ট কিছুই ধরে না।
+The failure is a lag. The write worked, but the index has not caught up. So the new document is invisible for a while. A test that queries right after the write catches this. A test that waits catches nothing.
 
-**৪. Drift।** সময়ের সাথে corpus বদলায়, আর retrieval quality তার সাথে বদলায়, প্রায়ই খারাপ দিকে আর কোনো স্পষ্ট সংকেত ছাড়াই। বর্তমান nDCG assert করা টেস্ট সেটার canary, আর এটাই chunking benchmark-এর regression check-এর সাথে এক।
+**4. Drift.** The corpus changes over time, and retrieval quality changes with it. Often it gets worse, with no clear signal. A test that asserts the current nDCG is a canary for this. It is the same test as the chunking benchmark's regression check.
 
-metric হলো chunking benchmark-এর retrieval metric (precision@k, recall@k, আর ranked nDCG@k <Cite n={2} />), যেগুলো হিসাব হয় corpus আর প্রশ্নের যে ground-truth set-এর ওপর যেটা দুটোই share করে।
+The metrics come from the chunking benchmark: precision@k, recall@k, and the ranked nDCG@k <Cite n={2} />. They are computed over a ground-truth set that the corpus and the questions share. Take the measurements on the results each database returns for the same query. That may be Chroma's query interface <Cite n={3} /> or a Qdrant search <Cite n={1} />. Then the numbers are comparable.
 
 </Layman>
 <Bangla>
@@ -222,7 +222,7 @@ The last test pins down a classic application bug: when a filtered search comes 
 </Technical>
 <Layman>
 
-load test-এ quality আর গতি একসাথে মাপতে হবে, কারণ ব্যর্থতা হলো দুটোর সমন্বয়:
+The load test must measure quality and speed together, because the failure is the combination:
 
 ```python
 # tests/ai/test_vector_db_load.py
@@ -251,7 +251,7 @@ def test_quality_holds_under_load(concurrency):
     assert recall >= 0.9, f"recall fell to {recall:.2f} at concurrency {concurrency}"
 ```
 
-index-lag টেস্টটাই সেই production বাগ ধরে:
+The index-lag test is the one that catches the production bug:
 
 ```python
 def test_a_newly_written_document_is_retrievable(collection):
@@ -260,9 +260,9 @@ def test_a_newly_written_document_is_retrievable(collection):
     assert "new#chunk-1" in hits["ids"][0], "the new document was not indexed yet"
 ```
 
-লক্ষ্য করুন, query-এর আগে কোনো sleep নেই। পয়েন্ট হলো write path এতটাই দ্রুত হতে হবে যাতে পরের query সেটা দেখে, নয়তো application-এ স্পষ্ট অপেক্ষা দরকার আর টেস্টে সেটা জানা দরকার।
+Note that there is no sleep before the query. The write path must be synchronous enough for the next query to see the new document. Otherwise the application needs an explicit wait, and the test needs to know about it.
 
-আর বড় scale-এ quality টেস্ট, corpus-এ কঠিন কেস থাকা অবস্থায়:
+Next comes the quality-at-scale test, with the hard cases in the corpus:
 
 ```python
 def test_a_near_duplicate_does_not_push_out_the_right_chunk(collection):
@@ -277,7 +277,7 @@ def test_a_filter_that_matches_nothing_returns_nothing(collection):
     assert hits["ids"][0] == [], "a filter that matches nothing returned results"
 ```
 
-শেষ টেস্টটা একটা পরিচিত application বাগ ধরে: filter দেওয়া search খালি ফিরলে যে code চুপচাপ filter ছাড়া আবার চেষ্টা করে, সে তখন আলাদা বছরের document cite করে। database কিছুই ফেরত দেবে না, আর application বলবে সে কিছু পায়নি।
+The last test pins down a classic application bug. A filtered search comes back empty. Then the code quietly retries without the filter and cites a document from a different year. The database should return nothing, and the application should say it found nothing.
 
 </Layman>
 <Bangla>
@@ -362,17 +362,17 @@ def test_a_filter_that_matches_nothing_returns_nothing(collection):
 </Technical>
 <Layman>
 
-**Mistake ১: recall ছাড়া latency মাপা।** কম ফেরত দিয়ে দ্রুত উত্তর দেওয়া quality regression, speedup নয়।
+**Mistake 1: measuring speed without recall.** A database that answers faster by returning less has a quality regression. That is not a speedup.
 
-**Mistake ২: index rebuild টেস্ট না করা।** write path আর index path আলাদা, আর তাদের মাঝের lag ধরা পড়ে না।
+**Mistake 2: not testing the index rebuild.** The write path and the index path are separate. The lag between them stays invisible until it bites.
 
-**Mistake ৩: corpus-এ near-duplicate নেই।** সবচেয়ে কঠিন retrieval কেসগুলো হলো যেগুলো একে অপরের মতো দেখতে, আর পরিষ্কার corpus সেগুলো তৈরিই করে না।
+**Mistake 3: no near-duplicate in the corpus.** The hardest retrieval cases are the ones that look alike. A clean corpus never produces them.
 
-**Mistake ৪: খালি filter ফলাফল টেস্ট না করা।** একটা পরিচিত নীরব ব্যর্থতা: filter কিছুই না মিললে application unfiltered top-k-তে ফিরে যায়।
+**Mistake 4: not testing an empty filter result.** This is a classic silent failure. When a filter matches nothing, the application falls back to the unfiltered top-k.
 
-**Mistake ৫: শুধু code বদলালে আবার benchmark।** corpus-ও বাড়ে, আর তখানেও কোনো code change ছাড়াই recall কমে।
+**Mistake 5: re-benchmarking only when the code changes.** The corpus grows too. Recall falls with it, even with no code change.
 
-**Mistake ৬: drift canary নেই।** মান মাসের পর মাসে কমতে পারে আর কেউ টের না পায় যতক্ষণ না একজন ব্যবহারকারী অভিযোগ করে।
+**Mistake 6: no drift canary.** Quality can degrade over months. Nothing alerts anyone until a user complains.
 
 </Layman>
 <Bangla>

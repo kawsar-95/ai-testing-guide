@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-11-10',
   sources: [
     { title: 'Hooks reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks', accessed: '2026-10-10' },
     { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-10-10' },
@@ -193,7 +193,7 @@ Claude প্রাসঙ্গিক হলে একটি skill ব্যব�
 
 The 16:51 answer showed a gap: the workspace had Serena and graphify, but Claude did not use them. Hooks give deterministic control: an action always happens and does not depend on the model's choice. <Cite n={4} />
 
-The owner asked for hooks at 18:52 and 18:55. The second prompt was `create 2 hooks for graphify and serena to load before test case design and find bug. must call graphify and serena in prehook`. The first design blocked the skills until Claude called the tools. The second design makes the calls in the hook itself.
+**The hook request.** The owner asked for hooks at 18:52 and 18:55. The second prompt was `create 2 hooks for graphify and serena to load before test case design and find bug. must call graphify and serena in prehook`. The first design blocked the skills until Claude called the tools. The second design makes the calls in the hook itself.
 
 ```json
 {
@@ -245,7 +245,11 @@ fi
 - `additionalContext` is a string that Claude Code adds to Claude's context. <Cite n={1} /> It is capped at 10,000 characters. <Cite n={1} /> The script cuts the query output to 70 lines.
 - `permissionDecision: "allow"` skips the permission prompt. Deny and ask rules still apply. <Cite n={1} />
 
-The log records three results. Both hooks were verified live. The `if` filters that the owner tried never matched, so the script filters by skill name. The Serena hook only activates the project. It cannot make Claude call the symbol tools.
+The log records three results:
+
+- Both hooks were verified live.
+- The `if` filters that the owner tried never matched, so the script filters by skill name.
+- The Serena hook only activates the project. It cannot make Claude call the symbol tools.
 
 <Callout type="warning" title="Common mistake: a context hook is not a gate">
 
@@ -285,7 +289,9 @@ Script-টি শুধু `test-design` আর `find-bug`-এর জন্য �
 <Voices>
 <Technical>
 
-On 2026-10-04 the owner asked for a reviewer. The 2026-10-04 log says that its prompts are lightly cleaned up from what the owner typed. The request was for "an adversarial sub-agent on the Opus 5.5 model" that "reviews the bugs Claude reports before `bug.md` is created" and has "no write permission, so it only reads and verifies". A second prompt added graphify as the reviewer's knowledge base.
+On 2026-10-04 the owner asked for a reviewer. The 2026-10-04 log says that its prompts are lightly cleaned up from what the owner typed.
+
+**The request.** The request was for "an adversarial sub-agent on the Opus 5.5 model". It "reviews the bugs Claude reports before `bug.md` is created" and has "no write permission, so it only reads and verifies". A second prompt added graphify as the reviewer's knowledge base.
 
 ```yaml
 ---
@@ -325,21 +331,31 @@ Gate rules:
 - **BLOCKED** when any bug is FLAGGED or REJECTED (or the draft or requirement is missing). Instruction: "Do NOT write bug.md yet. Update the draft: […], remove rejected bugs, then send the revised draft back to qa-reviewer-agent for re-review." Claude must resubmit until the gate is PASS.
 ```
 
-The reviewer cannot write the report. Only the main session can. The `find-bug` skill does not call the reviewer. So the main session must start the review. When a task matches a subagent's description, Claude delegates to that subagent. <Cite n={2} /> If you name a subagent in a prompt, Claude still decides whether to delegate. An @-mention guarantees that the subagent runs. <Cite n={2} /> The [Subagents](/extend/subagents/) page covers both ways.
+**Who writes the report.** The reviewer cannot write the report. Only the main session can. The `find-bug` skill does not call the reviewer. So the main session must start the review.
+
+**Delegation.** When a task matches a subagent's description, Claude delegates to that subagent. <Cite n={2} /> If you name a subagent in a prompt, Claude still decides whether to delegate. An @-mention guarantees that the subagent runs. <Cite n={2} /> The [Subagents](/extend/subagents/) page covers both ways.
 
 </Technical>
 <Layman>
 
-On 2026-10-04 the owner asked for an adversarial subagent on the Opus 5.5 model. It reviews Claude's bugs before `bug.md` is created. It cannot write, so it only reads and verifies.
+On 2026-10-04 the owner asked for a reviewer. It checks the bugs Claude reports before `bug.md` is created. It uses the Opus 5.5 model. It cannot write files, so it can only read and check.
 
-The `tools` list of `qa-reviewer-agent` names 14 read-only Serena tools and has no Write, Edit, or Bash. `tools` is an allowlist. A tool that is not in the list is not available <Cite n={2} />.
+The reviewer is called `qa-reviewer-agent`. Its `tools` list has 14 read-only Serena tools. It has no Write, Edit, or Bash. `tools` is an allowlist. A tool that is not in the list is not available <Cite n={2} />.
 
-The reviewer tries to disprove each bug with ten checks. A bug that fails one check is FLAGGED. Each bug gets APPROVED, FLAGGED, or REJECTED. Then the reviewer sets one gate for the whole draft:
+The reviewer tries to disprove each bug. It runs ten checks. A bug that fails one check is FLAGGED. Each bug gets one verdict:
+
+- APPROVED
+- FLAGGED
+- REJECTED
+
+Then the reviewer sets one gate for the whole draft:
 
 - PASS: every bug is APPROVED, and no MISSED item is a High priority issue.
-- BLOCKED: any bug is FLAGGED or REJECTED. Claude must update the draft and send it back until the gate is PASS.
+- BLOCKED: any bug is FLAGGED or REJECTED. Claude must fix the draft and send it back. This repeats until the gate is PASS.
 
-The `find-bug` skill does not call the reviewer, so the main session must start the review. If you name a subagent in a prompt, Claude still decides whether to delegate. An @-mention guarantees that the subagent runs <Cite n={2} />.
+The reviewer cannot write the report. Only the main session can. The `find-bug` skill does not call the reviewer. So the main session must start the review.
+
+If you name a subagent in a prompt, Claude still decides whether to hand off the task. An @-mention guarantees that the subagent runs <Cite n={2} />.
 
 </Layman>
 <Bangla>

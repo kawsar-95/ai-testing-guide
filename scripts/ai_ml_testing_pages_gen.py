@@ -54,11 +54,11 @@ def _js_escape(text: str) -> str:
     return text.replace("\\", "\\\\").replace("'", "\\'")
 
 
-def render_sources(keys: list[str]) -> tuple[str, dict[str, int]]:
+def render_sources(keys: list[str], updated: str = UPDATED) -> tuple[str, dict[str, int]]:
     """The `export const page` block and the cite number of each source key."""
     lines = [
         "export const page = {",
-        f"  updated: '{UPDATED}',",
+        f"  updated: '{updated}',",
         "  sources: [",
     ]
     numbers: dict[str, int] = {}
@@ -93,7 +93,8 @@ def render_voices(technical: str, layman: str, bangla: str) -> str:
 
 def render_page(page: dict) -> str:
     """The whole MDX file of one page."""
-    sources_block, numbers = render_sources(page["sources"])
+    # A page that changed after the module date carries its own `updated`.
+    sources_block, numbers = render_sources(page["sources"], page.get("updated", UPDATED))
 
     def cite(match: re.Match) -> str:
         key = match.group(1)

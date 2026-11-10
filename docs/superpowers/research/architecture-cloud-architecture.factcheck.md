@@ -35,4 +35,38 @@ I did not write this page. I read `content/architecture/cloud-architecture.mdx` 
 2. Backup sentence uses "can", as RDS docs do (row 18).
 3. "costs money every hour" changed to "keeps costing money while it runs" (row 22).
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## In plain words`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "- sustainability <Cite n={2} />" — The original cite 2 followed the whole sentence naming all six pillars. In the edited text it sits only on the last bullet, so it no longer follows the intro and the first five pillars. Fix: "The AWS Well-Architected Framework names six pillars of a good design <Cite n={2} />:" followed by the six bullets, with no cite on the last bullet, or put `<Cite n={2} />` after every bullet.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | The cite for the six pillars was moved onto the last bullet only. The labels, table and image are unchanged. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## In plain words`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only two bold labels and a bulleted list of the six pillars were added. Facts, cites, table and image are unchanged. The pillars cite sits on the lead-in sentence that introduces the list. |
+
 Open FAILs: 0

@@ -1,6 +1,6 @@
 export const metadata = { title: 'Vector Database Fundamentals', description: 'Set up ChromaDB and Qdrant, ingest documents, query with different similarity metrics, and know what the database actually does.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Introduction', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/', accessed: '2026-11-01' },
     { title: 'What is Qdrant?', publisher: 'Qdrant (docs)', url: 'https://qdrant.tech/documentation/', accessed: '2026-11-01' },
@@ -24,7 +24,7 @@ A vector database stores vectors and finds the nearest ones. Everything else abo
 
 A vector database does one thing: given a vector, find the stored vectors nearest to it. Everything else is a set of decisions about distance, filtering, and persistence.
 
-**ChromaDB** runs embedded in your process, with a simple client API and a persistent directory on disk. It is the fast way to get a working index <Cite n={1} />. **Qdrant** is a vector search engine, usually run as a local or cloud service, whose docs cover similarity search, filtering, and hybrid queries <Cite n={2} />; filtering works best with payload indexes on the fields you filter on <Cite n={3} />. The two behave differently enough that the filter and persistence tests are worth running against both <Cite n={1} />.
+**ChromaDB** runs embedded in your process, with a simple client API and a persistent directory on disk. It is the fast way to get a working index <Cite n={1} />. **Qdrant** is a vector search engine, usually run as a local or cloud service <Cite n={2} />. Its docs cover similarity search, filtering, and hybrid queries <Cite n={2} />. Filtering works best with payload indexes on the fields you filter on <Cite n={3} />. The two behave differently enough that the filter and persistence tests are worth running against both <Cite n={1} />.
 
 The **similarity metric** decides what "nearest" means, and the choice is not cosmetic:
 
@@ -34,18 +34,18 @@ dot product          the length times the cosine. Favours vectors with large mag
 euclidean distance   the straight-line distance. Sensitive to vector length.
 ```
 
-Text embeddings are normally compared with **cosine similarity**, but the two databases do not share a default. Chroma's `space` defaults to `l2` (squared L2), with `cosine` and `ip` (inner product) as the other values <Cite n={5} />, and Qdrant makes you pick a distance (Cosine, Dot, Euclid, or Manhattan) when the collection is created <Cite n={6} />. Using euclidean on vectors meant for cosine works, but it ranks differently and can rank worse.
+Text embeddings are normally compared with **cosine similarity**, but the two databases do not share a default. Chroma's `space` defaults to `l2` (squared L2), with `cosine` and `ip` (inner product) as the other values <Cite n={5} />. Qdrant makes you pick a distance (Cosine, Dot, Euclid, or Manhattan) when the collection is created <Cite n={6} />. Using euclidean on vectors meant for cosine works, but it ranks differently and can rank worse.
 
-**Metadata filtering** is the other decision, and it is the one that changes how you design the schema. A filter like "only documents from 2026" can be applied before the search, after it, or during it. Applied before or during, it is faster and the result is exact. Applied after, the database searches everything and then throws most away, and the top-k you get back is not the true top-k of the filtered set.
+**Metadata filtering** is the other decision, and it is the one that changes how you design the schema. A filter like "only documents from 2026" can be applied before the search, after it, or during it. Applied before or during, it is faster and the result is exact. Applied after, the database searches everything and then throws most away. So the top-k you get back is not the true top-k of the filtered set.
 
 </Technical>
 <Layman>
 
-vector database একটাই কাজ করে: একটা vector দিলে সবচেয়ে কাছের সংরক্ষিত vectorগুলো খুঁজে বের করে। বাকি সব হলো distance, filtering আর persistence নিয়ে কিছু সিদ্ধান্ত।
+A vector database does one job. You give it a vector, and it finds the stored vectors nearest to it. Everything else is a choice about distance, filtering, and saving data to disk.
 
-**ChromaDB** আপনার প্রসেসের ভেতরেই চলে, সহজ client API আর ডিস্কে একটা persistent directory নিয়ে। কাজ করা index দ্রুত পেতে এটাই সহজ <Cite n={1} />। **Qdrant** একটা vector search engine, সাধারণত local বা cloud service হিসেবে চালানো হয়; এর docs similarity search, filtering আর hybrid query কভার করে <Cite n={2} />; যে field-এ filter করেন সেগুলোতে payload index থাকলে filtering ভালো কাজ করে <Cite n={3} />।
+**ChromaDB** runs inside your own process. It has a simple client API and a folder on disk for saved data. It is the fast way to get a working index <Cite n={1} />. **Qdrant** is a vector search engine. You usually run it as a local or cloud service. Its docs cover similarity search, filtering, and hybrid queries <Cite n={2} />. Filtering works best when you add payload indexes on the fields you filter on <Cite n={3} />. The two behave quite differently. So run the filter and persistence tests against both <Cite n={1} />.
 
-**Similarity metric** ঠিক করে "কাছের" মানে কী, আর এই সিদ্ধান্ত সাজসজ্জার নয়:
+The **similarity metric** decides what "nearest" means. The choice matters a lot:
 
 ```text
 cosine similarity    the angle between the vectors. Scale-independent.
@@ -53,9 +53,9 @@ dot product          the length times the cosine. Favours vectors with large mag
 euclidean distance   the straight-line distance. Sensitive to vector length.
 ```
 
-Text embedding সাধারণত **cosine similarity** দিয়ে তুলনা করা হয়, কিন্তু দুটো database-এর default এক নয়। Chroma-র `space` default `l2` (squared L2), অন্য মান `cosine` আর `ip` (inner product) <Cite n={5} />, আর Qdrant collection বানানোর সময় আপনাকে distance (Cosine, Dot, Euclid, বা Manhattan) বেছে নিতে হয় <Cite n={6} />। cosine-এর জন্য তৈরি vector নিয়ে euclidean ব্যবহার করলে কাজ করে, কিন্তু rank আলাদা হয়, আর rank খারাপও হতে পারে।
+Text embeddings are normally compared with **cosine similarity**. But the two databases do not share a default. In Chroma, `space` defaults to `l2` (squared L2). The other values are `cosine` and `ip` (inner product) <Cite n={5} />. Qdrant makes you pick a distance when you create the collection: Cosine, Dot, Euclid, or Manhattan <Cite n={6} />. Euclidean on vectors meant for cosine still works. But it ranks differently, and the ranking can be worse.
 
-**Metadata filtering** হলো আরেকটি সিদ্ধান্ত, আর এটাই schema কীভাবে ডিজাইন করবেন তা বদলে দেয়। "শুধু ২০২৬-এর document" ফিল্টারটা search-এর আগে, পরে, বা চলাকালে প্রয়োগ করা যায়। আগে বা চলাকালে প্রয়োগ করলে দ্রুত আর ফলাফল নিখুঁত। পরে প্রয়োগ করলে database সব খুঁজে বের করে তারপর বেশিরভাগ ফেলে দেয়, আর যে top-k আপনি পান সেটা filtered set-এর আসল top-k নয়।
+**Metadata filtering** is the other choice. It changes how you design the schema. A filter such as "only documents from 2026" can run before the search, after it, or during it. Before or during is faster, and the result is exact. After the search, the database searches everything and throws most results away. Then the top-k you get is not the true top-k of the filtered set.
 
 </Layman>
 <Bangla>
@@ -99,17 +99,17 @@ The insert-and-query cycle is the same in both databases, and the test is the sa
 </Technical>
 <Layman>
 
-insert আর query-এর চক্র দুটো database-এ এক, আর টেস্টও এক: আপনি জানেন কী দিয়েছেন আর কী ফেরত পাবেন বলে ধারণা করেছেন।
+The insert-and-query steps are the same in both databases. The test is the same too. You know what you put in, and you know what you expect back.
 
-**Ingestion।** প্রতিটা chunk হয় একটা id, একটা vector, আর একটা metadata document। metadata-ই পরে filtering সম্ভব করে, তাই আগে ঠিক করে নিন কোন field-এ filter করবেন: document id, source file, page number, date, language, product, version।
+**Ingestion.** Every chunk becomes an id, a vector, and a metadata document. Metadata is what makes filtering possible later. So decide early which fields you will filter on. Examples are the document id, source file, page number, date, language, product, and version.
 
-**Query।** প্রশ্নটা একই model দিয়ে embed হয় যেটা document embed করেছিল, আর database সেটা সংরক্ষিত vector-এর সাথে তুলনা করে। Chroma-র query interface query text বা embedding নেয়, সাথে result-এর সংখ্যা আর filter <Cite n={4} />। Qdrant-এর search API একই কাজ করে তার filter ভাষা দিয়ে <Cite n={3} />।
+**Query.** You embed the question with the same model that embedded the documents. The database then compares it with the stored vectors. Chroma's query interface takes the query text or an embedding, the number of results, and a filter <Cite n={4} />. Qdrant's search API does the same with its own filter language <Cite n={3} />.
 
-**metric-কে model-এর সাথে মেলাতে হবে।** একটা embedding model এমন vector বানায় যার দৈর্ঘ্য ranking-এর জন্য কোনো তথ্য বহন করে না, তাই text embedding-এ সাধারণত cosine বেছে নেওয়া হয়, আর এটা আপনার বেছে নেওয়া setting, ভরসা করার মতো default নয়। cosine-এর জন্য তৈরি model-এর ওপর euclidean বসালে ফলাফল **সামঞ্জস্যপূর্ণ ও ভুল** হয়: একই query প্রতিবার একই প্রতিবেশী ফেরত দেয়, আর সেই প্রতিবেশীরা অর্থের দিক থেকে সবচেয়ে কাছের নয়।
+**The metric has to match the model.** In an embedding model, vector length carries no information for ranking. So cosine is the usual choice for text embeddings. You must set it yourself. Do not rely on a default. Euclidean on a model meant for cosine can give results that are *consistent* and *wrong*. The same query returns the same neighbours every time. But those neighbours are not the semantically closest ones.
 
-**দুটো database কী অপটিমাইজ করে তা আলাদা।** Chroma embedded আর সহজ: একটা directory, একটা প্রসেস, আলাদা কোনো server চালাতে হয় না। Qdrant একটা service: এর payload index আর একটা combined filterable index আছে যা search-এর সময়ই filter প্রয়োগ করে <Cite n={3} />। টেস্টারের জন্য সিদ্ধান্তটা মূলত এটা যে filter-এর আচরণ আলাদা করে টেস্ট করতে হবে কি না।
+**The two databases optimise different things.** Chroma is embedded and simple. It has one directory, one process, and no separate server to run. Qdrant is a service. It has payload indexes and a combined filterable index that applies filters during the search <Cite n={3} />. For a tester, the choice is mostly about whether you need to test filter behaviour separately.
 
-**Persistence-এর প্রশ্ন।** Chroma-র persistent client একটা directory-তে লেখে; Qdrant নিজস্ব storage-এ রাখে। যেকোনো উপায়ে, টেস্ট করার যোগ্য গুণ একই: **restart-এর পর collection-এ একই vector আছে আর একই query-তে একই প্রতিবেশী ফেরত দেয়**। restart-এ index হারানো vector database একটা নীরব data-loss বাগ, আর তার চিহ্ন হলো "chatbot হঠাৎ কিছু জানতে পারছে না"।
+**The persistence question.** Chroma's persistent client writes to a directory. Qdrant saves to its own storage. Either way, the testable property is the same: **after a restart, the collection holds the same vectors and returns the same neighbours for the same query.** If the index is lost on restart, that is a silent data-loss bug. It shows up as "the chatbot suddenly stopped knowing things".
 
 </Layman>
 <Bangla>
@@ -225,7 +225,7 @@ That test is worth writing because Qdrant applies the filter during the search, 
 </Technical>
 <Layman>
 
-database-কে একটা component হিসেবে টেস্ট করুন, ছোট একটা নির্দিষ্ট corpus দিয়ে যেখানে প্রতিটা query-এর সঠিক উত্তর আপনি জানেন:
+Test the database as a single component. Use a small fixed corpus where you know the right answer for every query:
 
 ```python
 # tests/ai/test_vector_db.py
@@ -247,13 +247,15 @@ def collection(tmp_path):
     return index_documents(client.get_or_create_collection("docs"), CORPUS)
 ```
 
-তারপর গুরুত্বপূর্ণ টেস্টগুলো, কোনটা কত ঘন ঘন কিছু ধরে সেই ক্রমে:
+Next come the tests that matter. They are listed by how often they catch a problem. The first one checks that the closest chunk is the right one:
 
 ```python
 def test_the_closest_chunk_is_the_right_one(collection):
     hits = collection.query(query_texts=["how long is the return window?"], n_results=1)
     assert hits["ids"][0][0] == "returns#chunk-1"
 ```
+
+The second checks that a filter leaves out the other documents:
 
 ```python
 def test_a_filter_excludes_the_other_documents(collection):
@@ -265,12 +267,16 @@ def test_a_filter_excludes_the_other_documents(collection):
     assert all(h.startswith("returns#") for h in hits["ids"][0])
 ```
 
+The third checks that the same query gives the same answer twice:
+
 ```python
 def test_the_query_is_deterministic(collection):
     first = collection.query(query_texts=["return window"], n_results=5)["ids"][0]
     second = collection.query(query_texts=["return window"], n_results=5)["ids"][0]
     assert first == second, "the same query returned different neighbours"
 ```
+
+The fourth checks that the collection survives a restart:
 
 ```python
 def test_the_collection_survives_a_restart(tmp_path):
@@ -284,9 +290,9 @@ def test_the_collection_survives_a_restart(tmp_path):
     assert hits["ids"][0][0] == "returns#chunk-1"
 ```
 
-শেষ টেস্টটাই data loss ধরে, আর দলগুলো বাদ দেয় কারণ এর জন্য নতুন প্রসেস লাগে।
+This last test catches data loss. Teams often skip it because it needs a fresh process.
 
-তারপর **metric তুলনা**, যেটা দেখায় আপনার বেছে নেওয়া space আপনার model-এর জন্য ঠিক কি না:
+Then comes the **metric comparison**. It shows whether the space you chose is right for your model:
 
 ```python
 @pytest.mark.parametrize("space", ["cosine", "l2", "ip"])
@@ -298,7 +304,7 @@ def test_each_space_ranks_the_right_chunk_first(tmp_path, space):
     assert hits["ids"][0][0] == "returns#chunk-1", f"{space} ranked it wrong"
 ```
 
-আর **Qdrant filter** টেস্ট, যেখানে দুটো database-এর সবচেয়ে বেশি পার্থক্য:
+Last is the **Qdrant filter** test. This is where the two databases differ most:
 
 ```python
 def test_qdrant_filters_inside_the_search(qdrant_client):
@@ -311,7 +317,7 @@ def test_qdrant_filters_inside_the_search(qdrant_client):
     assert all(h.payload["source"] == "returns" for h in hits)
 ```
 
-টেস্টটা লেখার দরকার কারণ Qdrant filter-টা search-এর সময়ই প্রয়োগ করে, একটা combined filterable index দিয়ে <Cite n={3} />, আর search-এর পরে filter চালালে একটা ভিন্ন top-k ফেরত আসত।
+Write this test because Qdrant applies the filter during the search, through a combined filterable index <Cite n={3} />. A filter applied after the search would return a different top-k.
 
 </Layman>
 <Bangla>
@@ -427,17 +433,17 @@ def test_qdrant_filters_inside_the_search(qdrant_client):
 </Technical>
 <Layman>
 
-**Mistake ১: ডকুমেন্টে উল্লেখ আছে বলে euclidean ব্যবহার করা।** metric-কে model-এর সাথে মেলাতে হবে যার থেকে vector এসেছে। Chroma-র default space `l2`, আর text embedding সাধারণত cosine দিয়ে তুলনা করা হয়, তাই এটা ইচ্ছাকৃতভাবে সেট করুন <Cite n={5} />।
+**Mistake 1: picking euclidean because the docs mention it.** The metric must match the model that made the vectors. Chroma's default space is l2. Text embeddings are normally compared with cosine. So set the space on purpose <Cite n={5} />.
 
-**Mistake ২: filter টেস্ট নেই।** filtering-এই দুটো database আলাদা আচরণ করে, আর ভুল top-k লুকিয়ে থাকে <Cite n={3} />।
+**Mistake 2: no filter test.** The two databases behave differently when they filter. A wrong top-k can hide there <Cite n={3} />.
 
-**Mistake ৩: restart টেস্ট নেই।** restart-এ index হারানো vector database নীরবে data হারায়।
+**Mistake 3: no restart test.** If a vector database loses its index on restart, it loses data quietly.
 
-**Mistake ৪: search-এর পরে filtering।** তখন যে top-k পাবেন সেটা filtered set-এর নয়, unfiltered set-এর top-k।
+**Mistake 4: filtering after the search.** Then the top-k you get comes from the unfiltered set. It does not come from the filtered one.
 
-**Mistake ৫: metadata schema নেই।** production-এর প্রথম incident-এর পরে কোন field-এ filter করবেন ঠিক করলে সবকিছু আবার index করতে হয়।
+**Mistake 5: no metadata schema.** Suppose you decide on filter fields only after the first production incident. Then you must re-index everything.
 
-**Mistake ৬: live corpus-এর বিপরীতে টেস্ট করা।** টেস্টে নির্দিষ্ট corpus দরকার যেখানে সঠিক উত্তর জানা, যাতে ব্যর্থতা মানে ব্যর্থতা হয় আর আলাদা দিনের ব্যাপার না।
+**Mistake 6: testing against a live corpus.** Use a fixed corpus where the right answer is known. Then a failure is a real failure, and not just a different day.
 
 </Layman>
 <Bangla>

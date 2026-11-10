@@ -1,6 +1,6 @@
 export const metadata = { title: 'Distributed Transactions', description: 'How one business action can change several databases, how two-phase commit and sagas work, and what a tester checks.' }
 export const page = {
-  updated: '2026-10-22',
+  updated: '2026-11-10',
   sources: [
     { title: 'PREPARE TRANSACTION', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-prepare-transaction.html', accessed: '2026-10-22' },
     { title: 'COMMIT PREPARED', publisher: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/current/sql-commit-prepared.html', accessed: '2026-10-22' },
@@ -70,7 +70,7 @@ You need this topic when one user action touches more than one database or servi
 
 ### Two-phase commit
 
-PostgreSQL gives the building blocks of 2PC, but not the whole protocol. The docs say the purpose of these commands is to let an **external transaction manager** run atomic global transactions across several databases or other transactional resources <Cite n={1} />. The docs say that, unless you write a transaction manager, you probably should not use `PREPARE TRANSACTION` <Cite n={1} />.
+PostgreSQL gives the building blocks of 2PC, but not the whole protocol. The docs say the purpose of these commands is to let an **external transaction manager** run atomic global transactions <Cite n={1} />. These can run across several databases or other transactional resources <Cite n={1} />. The docs say that, unless you write a transaction manager, you probably should not use `PREPARE TRANSACTION` <Cite n={1} />.
 
 For each database, the steps look like this:
 
@@ -91,17 +91,17 @@ manager --> database B: PREPARE TRANSACTION 'tx1'
 
 **What 2PC gives you, as the docs state it.** After a prepare, there is a "very high probability" that the commit can succeed, even if the database crashes before the commit <Cite n={1} />. The docs say probability, so do not read it as a guarantee.
 
-**What 2PC costs, as the docs state it.** A prepared transaction keeps the locks that it held <Cite n={1} />. If it stays prepared for a long time, it interferes with `VACUUM` and, in extreme cases, can make the database shut down to prevent transaction ID wraparound <Cite n={1} />. The docs call it unwise to leave a transaction prepared for long <Cite n={1} />.
+**What 2PC costs, as the docs state it.** A prepared transaction keeps the locks that it held <Cite n={1} />. If it stays prepared for a long time, it interferes with `VACUUM` <Cite n={1} />. In extreme cases, it can make the database shut down to prevent transaction ID wraparound <Cite n={1} />. The docs call it unwise to leave a transaction prepared for long <Cite n={1} />.
 
-The feature is off by default: `max_prepared_transactions` is 0, and it can only be set at server start <Cite n={4} />. Without a manager that closes prepared transactions promptly, the docs advise to keep it at 0 <Cite n={1} />. The view `pg_prepared_xacts` lists them <Cite n={1} />.
+**Default setting.** The feature is off by default: `max_prepared_transactions` is 0, and it can only be set at server start <Cite n={4} />. Without a manager that closes prepared transactions promptly, the docs advise to keep it at 0 <Cite n={1} />. The view `pg_prepared_xacts` lists them <Cite n={1} />.
 
 ### Saga
 
-A saga breaks the work into a sequence of **local transactions**. Each one completes in one service, updates that service's database, and starts the next step with an event or a message <Cite n={5} />. If a step fails, the saga runs **compensating transactions** to reverse the changes of the earlier steps <Cite n={5} />.
+**Local transactions.** A saga breaks the work into a sequence of **local transactions**. Each one completes in one service, updates that service's database, and starts the next step with an event or a message <Cite n={5} />. If a step fails, the saga runs **compensating transactions** to reverse the changes of the earlier steps <Cite n={5} />.
 
-A compensating transaction is not a simple rollback. A plain restore of the old state could overwrite changes from other users, so the compensation must be application specific <Cite n={6} />. The system records how to undo each step <Cite n={6} />.
+**Compensation.** A compensating transaction is not a simple rollback. A plain restore of the old state could overwrite changes from other users, so the compensation must be application specific <Cite n={6} />. The system records how to undo each step <Cite n={6} />.
 
-A saga has a **pivot transaction**: the point of no return. After it succeeds, all later steps must finish. These later steps can be retried, and they are idempotent <Cite n={5} />.
+**Point of no return.** A saga has a **pivot transaction**: the point of no return. After it succeeds, all later steps must finish. These later steps can be retried, and they are idempotent <Cite n={5} />.
 
 There are two ways to run a saga <Cite n={5} />:
 

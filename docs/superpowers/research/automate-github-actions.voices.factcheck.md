@@ -145,4 +145,23 @@ Result: no meaning change was found. Two Bangla language notes are listed in the
 | 135 | Upgrade from beta and troubleshoot | Bangla | No reply to `@claude`: the four checks [1] | The four troubleshooting bullets [1] | PASS | OK |
 | 136 | Upgrade from beta and troubleshoot | Bangla | For Bedrock, Google Cloud's Agent Platform, or Microsoft Foundry set `use_bedrock`, `use_vertex`, or `use_foundry` to `"true"` and authenticate with OIDC [1] | "set `use_bedrock`, `use_vertex`, or `use_foundry` to `"true"`, and authenticate through OIDC. [1]" | PASS | OK |
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panels of 2 sections were rewritten to lower the reading load: `Respond to @claude in issues and PRs`, `Set it up`. The cognitive-load audit of 2026-11-10 found them as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Respond to @claude in issues and PRs | PASS | Facts, cites and code names match the Technical text. Omitted details (the `github_token` requirement for `allowed_non_write_users`, the "very limited permissions" advice) are not FAILs. |
+| Set it up | PASS | Steps, secrets, plan requirement, permissions and cites all match the Technical text. Omissions are allowed. |
+
 Open FAILs: 0

@@ -100,4 +100,22 @@ Overlap re-run: 6 runs, all source URLs. `node --test tests/voice-source.test.ts
 
 Row 48 re-checked. The page now lists 4 keys (`root_group`, `options`, `state`, `metrics`) for its script and says k6 adds `setup_data` when the script has `setup()`, labeled as observed results. Both match my runs: the page's script (no `setup()`) gave the 4 keys; a variant with `setup()` returned data gave `metrics`, `setup_data`, `root_group`, `options`, `state`. The 2 sentences no longer conflict. Overlap re-run: 6 runs, all source URLs. `node --test tests/voice-source.test.ts tests/k6.test.ts`: 30 pass, 0 fail.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## Write your own summary with handleSummary`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only bold labels and sentence splits were added. Facts, hedges, cites, code and the Callout are unchanged. The cite on the split v1.5.0/flag sentence follows each part. |
+
 Open FAILs: 0

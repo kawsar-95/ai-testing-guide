@@ -176,4 +176,39 @@ These notes do not change the meaning. None is a FAIL.
 - Row 131: "পেজ" is a transliteration. The rest of the text keeps technical terms in English. "page" would match.
 - Row 135: "low-cost work" can read as "cheap work". "cost-sensitive work" (work where cost matters) is the Technical wording.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panels of 2 sections were rewritten to lower the reading load: `Choose a model`, `Retired and deprecated models`. The cognitive-load audit of 2026-11-10 found them as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+- Choose a model: "5. `ANTHROPIC_DEFAULT_MODEL`" — the panel drops the condition on this item. The Technical text says "`ANTHROPIC_DEFAULT_MODEL` (needs Claude Code v2.1.236 or later)", yet the panel still lists it as a normal part of the order. Fix: "5. `ANTHROPIC_DEFAULT_MODEL` (needs Claude Code v2.1.236 or later)".
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Choose a model | FAIL | The v2.1.236 version requirement for `ANTHROPIC_DEFAULT_MODEL` is dropped. |
+| Retired and deprecated models | PASS | Dates, IDs, replacements, notice period and cites match the Technical text. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+Each FAIL of the round above was fixed with the checker's own fix. A fresh `claude -p` session (Claude Sonnet, no tools) checked the changed panels again.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Choose a model | PASS | Facts, order, cites (5, 7) and commands match the Technical text; only details are left out. |
+
 Open FAILs: 0

@@ -96,4 +96,26 @@ Only the 6 FAIL rows and the changed text were re-checked against the page and t
 
 Other re-checks: the overlap check (8 files) gives 6 runs, all source URLs, no prose run. `node --test tests/voice-source.test.ts tests/k6.test.ts`: 30 pass, 0 fail. No new privacy items. Cites used are still 1 to 7 and each is in `page.sources`.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 5 sections was edited to lower the reading load: T1 = `## The project in plain words`, T2 = `## Pattern: scenarios built from a list of flows`, T3 = `## Pattern: log in once in setup() and check the test data`, T4 = `## Pattern: tags, thresholds for each API, and report-only thresholds`, T5 = `## Pattern: a custom report with handleSummary()`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only bold labels added. Text and table unchanged, and the labels match their paragraphs. |
+| T2 | PASS | The sentence about `preAllocatedVUs` and `maxVUs` is split, and each part keeps Cite 2. Code and bullets are unchanged. |
+| T3 | PASS | The list item and the time-limit sentence are split with no change in meaning. Cite 4 follows both parts. Labels match their text. |
+| T4 | PASS | The three limits became a bullet list with the same values. Labels match their paragraphs. Code and cites are unchanged. |
+| T5 | PASS | The `handleSummary` sentence is split, with Cite 5 on each part. Labels match their text. Code and the image tag are unchanged. |
+
 Open FAILs: 0

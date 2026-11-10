@@ -34,4 +34,23 @@ Changed panels: `handleSummary` section, Layman and Bangla (commit f1ff844). Bot
 
 Layman and Bangla panels of the `handleSummary` section re-read against the Technical panel: same 4 keys, same `setup()` and `setup_data` statement, same "observed results" label, no new fact or cite, no তুমি form, names in English, no Layman sentence over 25 words. PASS.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panels of 2 sections were rewritten to lower the reading load: `Write your own summary with handleSummary`, `Save raw results to a file`. The cognitive-load audit of 2026-11-10 found them as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Write your own summary with handleSummary | PASS | Facts, numbers, flags, version claims and cites all match the Technical text. |
+| Save raw results to a file | PASS | Matches the Technical text. "Compressed" is a fair gloss of gzip. Cites 4 and 5 are used as in the Technical text. |
+
 Open FAILs: 0

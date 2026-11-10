@@ -59,4 +59,38 @@ Fixed (claim 23): the page said spend passes the cap "by up to the cost of that 
 | The text diagram matches the SDK steps (S1) | PASS |
 | `## Key words` rows agree with the claims above | PASS |
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## A real-life example`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "The Claude Code docs describe this kind of task <Cite n={2} />. The agent:" — The ORIGINAL says the docs describe a task where the agent runs the tests, reads the output, and so on, so the cite supports the steps. The edit puts a cite after "this kind of task" and then another after the list, which splits the sentence and leaves "The agent:" as a bare claim about the example agent. The list also no longer reads as what the docs describe. Fix: "The Claude Code docs describe this kind of task: the agent" followed by the list (runs the test suite; reads the error output; searches for the source files; reads them; edits them; runs the tests again to verify <Cite n={2} />), with no extra cite after "task".
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | The cite after "this kind of task" and the framing "The agent:" change what the docs are said to support; the steps are no longer tied to the docs. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## A real-life example`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | The list keeps all six steps in order. The cite stays after the last step, which is where the original sentence ended. The code block, facts and hedges are unchanged, and the bold labels match the text under them. |
+
 Open FAILs: 0

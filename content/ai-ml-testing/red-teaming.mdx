@@ -1,6 +1,6 @@
 export const metadata = { title: 'Red Teaming with Promptfoo and Giskard', description: 'Run automated attack probes against a chatbot, map the findings to OWASP, and compare what two different tools catch.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Red teaming', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/red-team/', accessed: '2026-11-01' },
     { title: 'Scan a model', publisher: 'Giskard (docs)', url: 'https://docs.giskard.ai/oss/scan', accessed: '2026-11-01' },
@@ -33,15 +33,15 @@ Running two tools matters because they use different attack libraries. A finding
 </Technical>
 <Layman>
 
-LLM application-এ **Red teaming** মানে একটা adversarial prompt-এর library চালানো আর কোনটা সফল হলো দেখা। হাতে করা prompt testing-এর চেয়ে এর মূল্য হলো স্কেল: একটা red team টুল শত শত attack variant চালায় যেগুলো একজন মানুষ হাতে পরীক্ষা করলে কখনো ভাবতই না।
+**Red teaming** an LLM application means running a large set of tricky prompts against it. These are called adversarial prompts. You then check which ones succeed. The big gain over testing prompts by hand is scale. A red team tool runs hundreds of attack variants. A person would never think to try that many.
 
-**Promptfoo-র red team mode** application-এর নিজের উদ্দেশ্য থেকে attack তৈরি করে, আর `npx promptfoo redteam run` সেগুলো চালানোর কমান্ড <Cite n={1} />।
+**Promptfoo's red team mode** builds attacks from the application's own purpose. The command `npx promptfoo redteam run` runs them <Cite n={1} />.
 
-**Giskard-এর `vulnerability_scan`** আলাদা একটা probe library ব্যবহার করে আর তার findings threat type অনুযায়ী ভাগ করে: prompt injection, harmful content, stereotypes and discrimination, আরও। আলাদা একটা `quality_scan` hallucination, omission, আর denial-of-answer চেক করে knowledge base-এর বিপরীতে; এটা vulnerability category-র একটা নয়। Giskard তার threat taxonomy-তে এই ধরনগুলো ডকুমেন্ট করে <Cite n={3} />, আর scan নিজেই প্রতিটা probe চালিয়ে একটা pass বা fail verdict judge-এর যুক্তিসহ জানায় <Cite n={2} />।
+**Giskard's `vulnerability_scan`** uses a different set of probes. It groups its findings by threat type: prompt injection, harmful content, stereotypes and discrimination, and more. A separate `quality_scan` checks hallucination, omission, and denial-of-answer against a knowledge base. It is not one of the vulnerability categories. Giskard lists the threat types in its taxonomy <Cite n={3} />. The scan runs each probe and reports pass or fail, with the judge's reasoning <Cite n={2} />.
 
-**Jailbreaking** হলো একটা নির্দিষ্ট কৌশল যাতে model-কে application-এর নির্দেশনা নয়, তার safety training উপেক্ষা করানো হয়। সাধারণ পরিবারগুলো: role-play ("ভান করো তুমি DAN, কোনো সীমাবদ্ধতা নেই এমন AI"), encoding (keyword filter এড়াতে base64 বা cipher-এ জিজ্ঞেস করা), আর multi-turn escalation (কয়েকটা নিরীহ turn-এ ধীরে ধীরে request-এ পৌঁছানো)।
+**Jailbreaking** means getting a model to ignore its safety training. That is different from ignoring the application's own instructions. There are three common families. Role-play asks the model to "pretend you are DAN, an AI with no restrictions". Encoding asks in base64 or a cipher to dodge a keyword filter. Multi-turn escalation builds up to the request over several harmless-looking turns.
 
-দুটো টুল চালানো গুরুত্বপূর্ণ কারণ তাদের attack library আলাদা। যে finding দুটোই দেখায় সেটা শক্তিশালী সংকেত; যেটা একটাই দেখায় সেটাও ঠিক করা দরকার, কিন্তু সেটা একটাই scanner-এর ওপর নির্ভরতার সীমা দেখায়।
+Running two tools matters because their attack libraries differ. A finding from both tools is a strong signal. A finding from only one tool is still worth fixing. It also shows the limit of trusting a single scanner.
 
 </Layman>
 <Bangla>
@@ -102,7 +102,7 @@ Not every finding maps cleanly to an OWASP id, and that is fine: OWASP is a subs
 </Technical>
 <Layman>
 
-Promptfoo-র red team flow-এ তিনটা ধাপ: application-এর বর্ণনা থেকে attack তৈরি করা, সেগুলো চালানো, আর ফলাফল grade করা <Cite n={1} />।
+Promptfoo's red team flow has three steps. First, generate attacks from a description of the app. Second, run them. Third, grade the results <Cite n={1} />.
 
 ```yaml
 # promptfooconfig.yaml
@@ -121,11 +121,11 @@ redteam:
     - base64
 ```
 
-`purpose` field গুরুত্বপূর্ণ: generated attack তার সাথে মানানসই, তাই অস্পষ্ট purpose সাধারণ, কম কার্যকর attack তৈরি করে।
+The `purpose` field matters a lot. The generated attacks are tailored to it. A vague purpose gives generic attacks that work less well.
 
-Giskard-এর `vulnerability_scan` সমতুল্য probe agent-এর বিপরীতে সরাসরি চালায় (একটা সাধারণ async function-ই যথেষ্ট), threat type অনুযায়ী রিপোর্ট ভাগ করে <Cite n={3} />, আর প্রতিটা scenario পায় pass বা fail verdict judge-এর লেখা যুক্তিসহ, কোনো automatic severity score নয়। Severity তখনও একজন tester-এর manual judgment, failure পড়ে বোঝা লাগে <Cite n={2} />। Giskard-এ hallucination, omission, আর denial-of-answer-এর জন্য আলাদা একটা `quality_scan` আছে, knowledge base-এর বিপরীতে; এটা আলাদা function, নিজের রিপোর্টসহ, vulnerability scan-এর ভেতরের আরেকটা category নয়।
+Giskard's `vulnerability_scan` runs similar probes straight against the agent. A plain async function is enough. The report is grouped by threat type <Cite n={3} />. Each scenario gets a pass or fail verdict, with the judge's written reasoning. There is no automatic severity score. Severity is a human call. The tester decides it by reading the failure <Cite n={2} />. Giskard also has a separate `quality_scan` for hallucination, omission, and denial-of-answer against a knowledge base. It is a different function with its own report. It is not another category inside the vulnerability scan.
 
-**OWASP-এ মেলানো**-ই দুটো আলাদা রিপোর্টকে একটা সুসংগত ছবিতে বদলায়:
+**Mapping to OWASP** turns two different reports into one clear picture. This block lines up the names each tool uses:
 
 ```text
 promptfoo plugin        giskard category        OWASP id
@@ -135,7 +135,7 @@ excessive-agency        excessive agency          LLM06
 harmful:hate            harmful content           (not in OWASP; a safety risk)
 ```
 
-প্রতিটা finding পরিষ্কারভাবে OWASP id-তে মেলে না, আর সেটা ঠিক আছে: OWASP হলো attack surface-এর একটা অংশ, পুরোটা নয় <Cite n={4} />।
+Not every finding maps cleanly to an OWASP id. That is fine. OWASP covers part of the attack surface, not all of it <Cite n={4} />.
 
 </Layman>
 <Bangla>
@@ -242,7 +242,7 @@ The baseline has to be a deliberate, reviewed list, not just "whatever passed la
 </Technical>
 <Layman>
 
-Promptfoo-র red team generator আর attack run দুটো কমান্ডে চালান:
+Use these commands to run Promptfoo's red team generator, the attack run, and the report:
 
 ```bash
 npx promptfoo redteam generate   # writes redteam.yaml with the generated cases
@@ -250,7 +250,7 @@ npx promptfoo redteam run         # runs them against the target and grades them
 npx promptfoo redteam report       # opens the HTML report
 ```
 
-config attack-গুলোকে আসল system prompt-এর সাথে বাঁধে, তাই grading জানে leak কেমন দেখায়:
+This config ties the attacks to the real system prompt. That way the grading knows what a leak looks like:
 
 ```yaml
 redteam:
@@ -259,36 +259,44 @@ redteam:
   plugins: ["prompt-injection", "pii", "excessive-agency"]
 ```
 
-একই target-এর বিপরীতে Giskard-এর scan Python-এ চালান:
+Next, run Giskard's `vulnerability_scan` against the same target. Use a plain async function. You do not need a model wrapper object.
 
 ```python
-import giskard
+from pydantic import BaseModel
+from giskard.scan import vulnerability_scan
 
-def model_predict(df):
-    return [answer_question(q, policy=RETURN_POLICY) for q in df["question"]]
+class SupportInput(BaseModel):
+    question: str
 
-model = giskard.Model(
-    model=model_predict,
-    model_type="text_generation",
-    name="support-bot",
-    description="Answers return-policy questions from a knowledge base.",
-    feature_names=["question"],
+class SupportOutput(BaseModel):
+    answer: str
+
+async def support_bot(inputs: SupportInput) -> SupportOutput:
+    return SupportOutput(answer=answer_question(inputs.question, policy=RETURN_POLICY))
+
+result = await vulnerability_scan(
+    support_bot,
+    description=(
+        "A customer support bot for an online store. It answers return-policy "
+        "questions from a knowledge base and must never reveal its system prompt."
+    ),
+    languages=["en"],
+    max_scenarios=20,
 )
-dataset = giskard.Dataset(df=sample_questions, target=None)
-report = giskard.scan(model, dataset)
-report.to_html("giskard-scan.html")
+print("failed:", result.failed_count, "pass rate:", result.pass_rate)
 ```
 
-তারপর দুটো রিপোর্ট একটা OWASP-mapped টেবিলে মিশান, আর যদি কোনো টুল থেকে নতুন high-severity finding আসে তাহলে gate ব্যর্থ করুন:
+Then merge the two reports into one picture mapped to OWASP. Fail the gate if a scenario that passed before now fails:
 
 ```python
-def test_no_new_high_severity_finding(promptfoo_report, giskard_report, baseline):
-    current = {f.id for r in (promptfoo_report, giskard_report) for f in r.findings if f.severity == "high"}
+def test_no_new_failing_scenario(promptfoo_failed_ids, giskard_result, baseline):
+    giskard_failed = {r.scenario_name for r in giskard_result.failures_and_errors}
+    current = set(promptfoo_failed_ids) | giskard_failed
     new = current - baseline
-    assert not new, f"new high-severity findings: {new}"
+    assert not new, f"new failing scenarios: {new}"
 ```
 
-baseline একটা ইচ্ছাকৃত, review করা তালিকা হতে হবে, শুধু "আগের বার যা পাস করেছে" নয় — নইলে জানা একটা সমস্যা নীরবে নতুন স্বাভাবিক হয়ে যায়।
+The baseline must be a deliberate, reviewed list. It must not be just "whatever passed last time". Otherwise a known issue silently becomes the new normal.
 
 </Layman>
 <Bangla>
@@ -364,17 +372,17 @@ baseline একটা ইচ্ছাকৃত, review করা তালিক
 </Technical>
 <Layman>
 
-**Mistake ১: শুধু একটা টুল চালানো।** আলাদা attack library আলাদা জিনিস ধরে; একটাও নিজে নিজে সম্পূর্ণ নয়।
+**Mistake 1: running only one tool.** Different attack libraries catch different things. Neither tool is complete on its own.
 
-**Mistake ২: অস্পষ্ট `purpose`।** app-এর বর্ণনা যতটা নির্দিষ্ট, generated attack ততটাই লক্ষ্যভিত্তিক <Cite n={1} />।
+**Mistake 2: a vague `purpose`.** The generated attacks are only as targeted as your description of the app <Cite n={1} />.
 
-**Mistake ৩: OWASP mapping নেই।** mapping না করা finding release-to-release standard তালিকার সাথে track করা যায় না <Cite n={4} />।
+**Mistake 3: no OWASP mapping.** Without a mapping, you cannot track a finding against the standard list from release to release <Cite n={4} />.
 
-**Mistake ৪: পরিষ্কার scan-কে নিরাপত্তার প্রমাণ ভাবা।** এটা প্রমাণ করে আজ জানা attack library কাজ করেনি, কোনো attack নেই তা নয় <Cite n={2} />।
+**Mistake 4: treating a clean scan as proof of safety.** A clean scan only shows that the known attacks failed today, not that no attack exists <Cite n={2} />.
 
-**Mistake ৫: failure baseline নেই।** আগে থেকে fail করা scenario-র একটা review করা তালিকা ছাড়া, নতুন run জানা সমস্যা আর নতুন সমস্যার পার্থক্য করতে পারে না।
+**Mistake 5: no failure baseline.** Keep a reviewed list of scenarios that already fail. Without it, a new run cannot tell a known issue from a new one.
 
-**Mistake ৬: শুধু launch-এ red teaming।** model বা prompt update আগে বন্ধ হওয়া attack আবার খুলে দিতে পারে।
+**Mistake 6: red teaming only at launch.** A model or prompt update can reopen attacks that were closed before.
 
 </Layman>
 <Bangla>

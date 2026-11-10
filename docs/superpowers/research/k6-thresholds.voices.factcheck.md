@@ -30,4 +30,22 @@ Source: owner repository kawsar-95/k6-performance-testing, commit 51e4b9e (clone
 | Layman: same facts; "3 thresholds" is the count of the 3 listed in Technical (p(95), failure rate, check rate); sentences 25 words or fewer | PASS | longest 18 words |
 | Bangla: same facts, `api`, `p(95)`, `http_req_duration{api:deposit}`, threshold, tag stay English | PASS | matches Technical |
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panel of 1 section was rewritten to lower the reading load: `Threshold syntax by metric type`. The cognitive-load audit of 2026-11-10 found it as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Threshold syntax by metric type | PASS | Every fact, number, name and cite matches the Technical text. Only the callout wording and the code block are left out, which is allowed. |
+
 Open FAILs: 0

@@ -134,4 +134,23 @@ Checker: independent pass. DOC sources were fetched on 2026-10-10 as raw Markdow
 5. Row 33: "six fields and a confidence" changed to "six fields, and one of them is a confidence".
 6. Row 52: two `…` markers added to the hook script excerpt for the omitted `what=` lines. The research note excerpt line was updated to match.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 2 sections was edited to lower the reading load: T1 = `## A hook that adds graph context`, T2 = `## The read-only reviewer and its gate`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Added the bold label "The hook request." and turned the three log results into a list. Facts, cites, code and the Callout are unchanged. |
+| T2 | PASS | Split the request sentence and added bold labels ("The request.", "Who writes the report.", "Delegation."), each matching its text. The quotes, cites, YAML, table and gate block are unchanged. |
+
 Open FAILs: 0

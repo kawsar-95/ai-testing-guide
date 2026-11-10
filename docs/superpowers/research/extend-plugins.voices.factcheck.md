@@ -167,4 +167,38 @@ Flagged items (round 1, all still true after the recheck):
 - I checked every other line again. No new fact, number, flag, command, path, product name, scope, or condition appears in a voice panel. The 7 Technical panels still have the text that the quotes show.
 - Remaining language notes (not FAILs): the Layman and Bangla sentences "The agent may work on its own for a couple of hours at a time" (rows 105 and 121) have no "It also says". The Bangla Superpowers paragraph uses "পেজ" ("আগে এই পেজে"); "page" in English follows the rule for common technical terms better.
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panel of 1 section was rewritten to lower the reading load: `Example: the Superpowers plugin`. The cognitive-load audit of 2026-11-10 found it as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+- Example: the Superpowers plugin: "Two skills matter most for a tester:" — The Technical text ranks no skills. Under "What it gives a tester" it lists three skills (`test-driven-development`, `systematic-debugging` with `verification-before-completion`, and `subagent-driven-development` with `executing-plans`). Saying two "matter most" is new advice and drops the third. Fix: "Here are some of the skills that give a tester something:"
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Example: the Superpowers plugin | FAIL | Adds an unsupported ranking ("matter most"); everything else matches the Technical text and its cites. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+Each FAIL of the round above was fixed with the checker's own fix. A fresh `claude -p` session (Claude Sonnet, no tools) checked the changed panels again.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Example: the Superpowers plugin | PASS | The facts, numbers, commands, quote and cites all match the Technical text. The omissions (second install method, skill table, other tester skills) do not change the meaning. |
+
 Open FAILs: 0

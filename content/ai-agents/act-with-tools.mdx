@@ -1,6 +1,6 @@
 export const metadata = { title: 'Act with Tools', description: 'The model asks for a tool. The harness runs it and sends the result back as the next input.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-10',
   sources: [
     { title: 'Tool use with Claude', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview', accessed: '2026-10-28' },
     { title: 'Handle tool calls', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls', accessed: '2026-10-28' },
@@ -37,16 +37,18 @@ So "act" is the step where the harness turns the model's request into a real act
 </Technical>
 <Layman>
 
-**Tool use** (also called function calling) lets a model call functions. The model reads the request and the tool's description, and it decides when to use a tool. It does not run the tool itself. It sends back a **structured call**. Then your app or the vendor runs it <Cite n={1} />.
+**Tool use** lets a model ask for a tool to be used. It is also called function calling. The model reads the request and the tool's description. Then it decides when a tool is needed.
+
+The model does not run the tool itself. It sends back a **structured call**. Then your app or the vendor runs it <Cite n={1} />.
 
 The main difference between tools is **where the code runs** <Cite n={1} />:
 
 - **Client tools** run in your app. Your code runs the call and sends back a `tool_result`.
-- **Server tools** run on the vendor's computers. In the Claude API, examples are `web_search`, `web_fetch`, and `code_execution` <Cite n={1} />. The OpenAI Agents SDK calls them **hosted tools**, for example `WebSearchTool`, `FileSearchTool`, and `CodeInterpreterTool` <Cite n={6} />.
+- **Server tools** run on the vendor's computers. In the Claude API, examples are `web_search`, `web_fetch`, and `code_execution` <Cite n={1} />. The OpenAI Agents SDK calls them **hosted tools** <Cite n={6} />.
 
-An agent has many kinds of tools. The Claude Agent SDK has tools for files (`Read`, `Edit`, `Write`), search (`Glob`, `Grep`), commands (`Bash`), the web (`WebSearch`, `WebFetch`), and sub-agents (`Agent`). MCP servers connect outside services, such as databases, browsers, and APIs <Cite n={4} />. A memory tool can save and read information in files that you control <Cite n={1} />.
+An agent can have many kinds of tools. The Claude Agent SDK has tools to work with files, search, run commands, use the web, and call sub-agents <Cite n={4} />. MCP servers connect outside services, such as databases, browsers, and APIs <Cite n={4} />. A memory tool can save and read information in files that you control <Cite n={1} />.
 
-So "act" is the step where the harness turns the model's request into a real action and gives back the result. For the request side, see [Tool Calling](/harness/tool-calling/).
+So "act" is the step where the harness turns the model's request into a real action. Then it gives back the result. For the request side, see [Tool Calling](/harness/tool-calling/).
 
 </Layman>
 <Bangla>
@@ -70,11 +72,11 @@ Tool-গুলোর মূল পার্থক্য হলো **কোড �
 <Voices>
 <Technical>
 
-**1. The tool definition.** You give the model a list of tools. Each tool has a `name`, a `description`, and an `input_schema` (a JSON Schema for the arguments) <Cite n={1} />. MCP uses the same idea: a tool has a `name`, a `description`, an `inputSchema`, and optionally an `outputSchema` <Cite n={5} />. Add `strict: true` to a Claude tool definition to make each call match the schema exactly <Cite n={1} />.
+**1. The tool definition.** You give the model a list of tools. Each tool has a `name`, a `description`, and an `input_schema` (a JSON Schema for the arguments) <Cite n={1} />. MCP uses the same idea. A tool has a `name`, a `description`, an `inputSchema`, and optionally an `outputSchema` <Cite n={5} />. Add `strict: true` to a Claude tool definition to make each call match the schema exactly <Cite n={1} />.
 
 **2. The call.** For a client tool, the response has `stop_reason: "tool_use"` and one or more `tool_use` blocks. Each block has an `id`, the tool `name`, and the `input` <Cite n={2} />.
 
-**3. The run and the result.** The harness runs the tool and sends a `tool_result` with the `tool_use_id` of the call, the `content`, and `is_error: true` if the run failed. The result must come directly after the call in the history, and the `tool_result` blocks come first in the message <Cite n={2} />.
+**3. The run and the result.** The harness runs the tool and sends a `tool_result`. It holds the `tool_use_id` of the call, the `content`, and `is_error: true` if the run failed. The result must come directly after the call in the history, and the `tool_result` blocks come first in the message <Cite n={2} />.
 
 ```text
 model   -> tool_use   { id: toolu_01, name: run_tests, input: {...} }
@@ -85,7 +87,7 @@ model   -> reads the result and decides the next step
 
 In MCP, the client finds tools with `tools/list` and runs one with `tools/call` <Cite n={5} />.
 
-**Parallel tool calls.** By default, Claude can call several tools in one response. The API does not set an order: you can run them together or one by one. Return one `tool_result` for each `tool_use`, all in the next user message. A call that you did not run still gets a result, with `is_error: true` <Cite n={3} />. The Agent SDK can run read-only tools (`Read`, `Glob`, `Grep`) at the same time, and runs tools that change state (`Edit`, `Write`, `Bash`) one after another <Cite n={4} />.
+**Parallel tool calls.** By default, Claude can call several tools in one response. The API does not set an order, so you can run them together or one by one. Return one `tool_result` for each `tool_use`, all in the next user message. A call that you did not run still gets a result, with `is_error: true` <Cite n={3} />. The Agent SDK can run read-only tools (`Read`, `Glob`, `Grep`) at the same time. It runs tools that change state (`Edit`, `Write`, `Bash`) one after another <Cite n={4} />.
 
 **Errors.** A tool error goes back to the model as a result, not as a crash. In MCP, a failed API call or bad input is a tool execution error with `isError: true`. An unknown tool is a protocol error <Cite n={5} />. If a call is invalid, Claude retries 2 to 3 times with corrections and then apologizes <Cite n={2} />. When a permission rule denies a tool, Claude gets a rejection message as the tool result <Cite n={4} />.
 

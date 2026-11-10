@@ -135,4 +135,22 @@ Language notes (none changes the meaning, so none is a FAIL):
 - Rows 74 and 75 (Bangla, Jira): "দেখায়" (shows) for "gives access to". "access দেয়" is closer to the source word. The meaning is the same here.
 - Row 82 (Bangla, Playwright): "Node.js 20 বা তার নতুন version" is awkward. Suggested: "Node.js 20 বা তার পরের version".
 
+Open FAILs at the end of the rounds above: 0
+
+## Lighter সহজ English panels (2026-11-10)
+
+The `সহজ English` (Layman) panel of 1 section was rewritten to lower the reading load: `Servers for testing work`. The cognitive-load audit of 2026-11-10 found it as dense in technical terms as the Technical text, or denser, so a reader who switched voice to escape the load met the same terms. The new text keeps to the facts of the Technical text, says a term in plain words or leaves it out when a beginner does not need it, and uses short sentences and lists.
+
+Writer: a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not write the panels, given only the Technical text and the new panel of each section. The Technical text and the Bangla panels did not change. No person has read the new panels yet.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Servers for testing work | PASS | Every claim and cite matches the Technical text. Omissions are allowed. |
+
 Open FAILs: 0

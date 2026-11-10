@@ -1,6 +1,6 @@
 export const metadata = { title: 'Case Study: Testing a Money-Transfer API', description: 'Walk through a real k6 project: 13 scenarios, thresholds for each API, a custom report, and a deadlock that the test found.' }
 export const page = {
-  updated: '2026-10-27',
+  updated: '2026-11-10',
   sources: [
     { title: 'Scenarios', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/', accessed: '2026-10-27' },
     { title: 'Constant arrival rate', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/constant-arrival-rate/', accessed: '2026-10-27' },
@@ -23,11 +23,11 @@ This page walks through one real k6 project, line by line, so that you can copy 
 <Voices>
 <Technical>
 
-The project is [kawsar-95/k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) (commit `51e4b9e`). Every fact about the project on this page comes from its files: the scripts, the `README.md`, and the files in `results/`. These facts have no cite, because they are not k6 documentation. The k6 facts have cites.
+**Source.** The project is [kawsar-95/k6-performance-testing](https://github.com/kawsar-95/k6-performance-testing) (commit `51e4b9e`). Every fact about the project on this page comes from its files: the scripts, the `README.md`, and the files in `results/`. These facts have no cite, because they are not k6 documentation. The k6 facts have cites.
 
-The project tests a practice mobile-wallet API (dMoney) that runs on the local machine. The test drives 3 transaction APIs: deposit, send money, and payment. It uses 6 users: 2 agents, 2 customers, and 2 merchants. The test lasts 2 minutes. It has 4 windows of 30 seconds each, and each window adds or changes the traffic.
+**The test.** The project tests a practice mobile-wallet API (dMoney) that runs on the local machine. The test drives 3 transaction APIs: deposit, send money, and payment. It uses 6 users: 2 agents, 2 customers, and 2 merchants. The test lasts 2 minutes. It has 4 windows of 30 seconds each, and each window adds or changes the traffic.
 
-The goal is to compare the response time, the throughput, and the failure rate of each API as the load changes. The pass or fail result of each API is a threshold.
+**The goal.** The goal is to compare the response time, the throughput, and the failure rate of each API as the load changes. The pass or fail result of each API is a threshold.
 
 | File | Job |
 |---|---|
@@ -123,7 +123,7 @@ window ৩ আর ৪-এর লোড একই: প্রতি সেকে�
 <Voices>
 <Technical>
 
-The script does not write 13 scenarios by hand. It keeps the 13 flows in a `FLOWS` list and builds the `scenarios` object with a loop. Each scenario uses the `constant-arrival-rate` executor, which starts a fixed number of iterations in a period and starts them without waiting for the system to answer <Cite n={2} />. This executor needs `preAllocatedVUs`, and `maxVUs` is the upper limit of VUs that k6 can add to keep the rate <Cite n={2} />.
+The script does not write 13 scenarios by hand. It keeps the 13 flows in a `FLOWS` list and builds the `scenarios` object with a loop. Each scenario uses the `constant-arrival-rate` executor. This executor starts a fixed number of iterations in a period and starts them without waiting for the system to answer <Cite n={2} />. It needs `preAllocatedVUs` <Cite n={2} />. `maxVUs` is the upper limit of VUs that k6 can add to keep the rate <Cite n={2} />.
 
 Excerpt from `dmoney-transactions.k6.js`:
 
@@ -221,7 +221,7 @@ The `setup()` function runs one time, after the init stage and before the VU cod
 The project uses `setup()` for two jobs.
 
 1. **Log in once.** Each of the 6 users logs in with its own credentials, and `setup()` returns the tokens. The 13 scenarios then use the token of the sender, so a transaction does not log in again before each request.
-2. **Check the test data before the load.** The money flows change the balance of the users. If a sender has too little money, the test would fail for a reason that is not a defect in the API. So `setup()` works out the most that each user can send and receive, reads the real balances, and calls `fail()` when the data is not enough.
+2. **Check the test data before the load.** The money flows change the balance of the users. If a sender has too little money, the test would fail for a reason that is not a defect in the API. So `setup()` works out the most that each user can send and receive. It reads the real balances and calls `fail()` when the data is not enough.
 
 Excerpt from `dmoney-transactions.k6.js`:
 
@@ -238,9 +238,9 @@ for (const key of Object.keys(USERS)) {
 if (problems.length) fail(`balance pre-check failed: ${problems.join('; ')}. Run dmoney-seed.k6.js.`);
 ```
 
-The function `fail()` throws an error <Cite n={6} />. An error in `setup()` means that setup ends abnormally, and k6 does not call `teardown()` <Cite n={4} />. The project's `README.md` says that the test stops with a clear message when the pre-check fails. That is the project's own statement. The message also tells you what to do: run the seed script. The pre-check uses an upper bound of the iterations that a scenario can start, plus a fee estimate for each transfer.
+**What fail() does.** The function `fail()` throws an error <Cite n={6} />. An error in `setup()` means that setup ends abnormally, and k6 does not call `teardown()` <Cite n={4} />. The project's `README.md` says that the test stops with a clear message when the pre-check fails. That is the project's own statement. The message also tells you what to do: run the seed script. The pre-check uses an upper bound of the iterations that a scenario can start, plus a fee estimate for each transfer.
 
-A long `setup()` can hit the setup time limit. The `setupTimeout` option (60 seconds by default) is that limit, and the test fails before any VU starts if `setup()` takes longer <Cite n={4} />. The project sets `setupTimeout` to `60s` in its options.
+**Setup time limit.** A long `setup()` can hit the setup time limit. The `setupTimeout` option (60 seconds by default) is that limit <Cite n={4} />. The test fails before any VU starts if `setup()` takes longer <Cite n={4} />. The project sets `setupTimeout` to `60s` in its options.
 
 Read more on [Test Lifecycle](/k6/test-lifecycle/).
 
@@ -376,9 +376,15 @@ for (const [api, cfg] of Object.entries(APIS)) {
 }
 ```
 
-Each API gets 3 limits: p95 of the duration under 1000 ms, a failure rate under 1%, and a check pass rate of 99% or more. The p95 limits are in `APIS`, so you can change them with environment variables. The failure-rate and check-rate limits are fixed in the script. A failed threshold fails the test <Cite n={3} />.
+Each API gets 3 limits:
 
-The project uses a second trick. The per-window report needs numbers for each pair of `window` and `api`. The script's own comment says that k6 adds a sub-metric to the summary only when a threshold names it. So the script adds thresholds that always pass, only to get the numbers.
+- p95 of the duration under 1000 ms
+- a failure rate under 1%
+- a check pass rate of 99% or more
+
+The p95 limits are in `APIS`, so you can change them with environment variables. The failure-rate and check-rate limits are fixed in the script. A failed threshold fails the test <Cite n={3} />.
+
+**Report-only thresholds.** The project uses a second trick. The per-window report needs numbers for each pair of `window` and `api`. The script's own comment says that k6 adds a sub-metric to the summary only when a threshold names it. So the script adds thresholds that always pass, only to get the numbers.
 
 ```js
 const reportOnly = (key, expr) => { thresholds[key] = [expr]; };
@@ -390,7 +396,7 @@ reportOnly(`http_req_failed{${sel}}`, 'rate>=0');
 
 The `sel` value is `window:w3,api:deposit` for example. An expression such as `count>=0` is always true, so it never fails the test. The project keeps a set of the real pass or fail keys (`PASS_FAIL`), so the threshold table of the report skips the report-only ones.
 
-The project's second script, `sendmoney-concurrency.k6.js`, uses a threshold in a different way. It has a `Counter` named `sendmoney_skipped`. The script counts one when it has no slot left for a send. The threshold `sendmoney_skipped: ['count==0']` fails the run when the reusable customers ran out of limit or balance. A counter supports the `count` aggregation <Cite n={3} />. Read more on [Custom Metrics](/k6/custom-metrics/).
+**A counter threshold.** The project's second script, `sendmoney-concurrency.k6.js`, uses a threshold in a different way. It has a `Counter` named `sendmoney_skipped`. The script counts one when it has no slot left for a send. The threshold `sendmoney_skipped: ['count==0']` fails the run when the reusable customers ran out of limit or balance. A counter supports the `count` aggregation <Cite n={3} />. Read more on [Custom Metrics](/k6/custom-metrics/).
 
 Read more on [Thresholds](/k6/thresholds/) and [Tags and Groups](/k6/tags-and-groups/).
 
@@ -432,9 +438,9 @@ Read more on [Thresholds](/k6/thresholds/) and [Tags and Groups](/k6/tags-and-gr
 <Voices>
 <Technical>
 
-At the end of the test, k6 gives the summary data to `handleSummary()`. The function returns a map. A key is `stdout` or a file path, and a value is the text to write. A file write overwrites the file <Cite n={5} />. If a script exports `handleSummary()`, k6 does not print the default summary, so a script that wants it must print it itself <Cite n={5} />. The project keeps the default text with `textSummary` from the k6 JS utilities library, and adds its own report.
+**Custom report.** At the end of the test, k6 gives the summary data to `handleSummary()`. The function returns a map. A key is `stdout` or a file path, and a value is the text to write. A file write overwrites the file <Cite n={5} />. If a script exports `handleSummary()`, k6 does not print the default summary <Cite n={5} />. So a script that wants it must print it itself <Cite n={5} />. The project keeps the default text with `textSummary` from the k6 JS utilities library, and adds its own report.
 
-The summary data has a `metrics` object. Each metric, and each sub-metric, has `values` and `thresholds` <Cite n={5} />. The project's `buildReport()` reads them to build 3 tables: the thresholds, the numbers for each API, and the numbers for each window.
+**Summary data.** The summary data has a `metrics` object. Each metric, and each sub-metric, has `values` and `thresholds` <Cite n={5} />. The project's `buildReport()` reads them to build 3 tables: the thresholds, the numbers for each API, and the numbers for each window.
 
 Excerpt from `dmoney-transactions.k6.js`:
 
@@ -450,9 +456,9 @@ export function handleSummary(data) {
 }
 ```
 
-The excerpt is shortened: the project also writes an HTML report with a third-party library. This module teaches `handleSummary()` and the k6 web dashboard instead, so that part is not a pattern to copy. See [Reports and Dashboard](/k6/reports-and-dashboard/).
+**Shortened excerpt.** The excerpt is shortened: the project also writes an HTML report with a third-party library. This module teaches `handleSummary()` and the k6 web dashboard instead, so that part is not a pattern to copy. See [Reports and Dashboard](/k6/reports-and-dashboard/).
 
-Note the comment on the last key. The project's script says that the data holds the login tokens, so it removes `setup_data` before it saves the JSON. This keeps the tokens out of the saved file. Never save secrets in a report.
+**Login tokens.** Note the comment on the last key. The project's script says that the data holds the login tokens, so it removes `setup_data` before it saves the JSON. This keeps the tokens out of the saved file. Never save secrets in a report.
 
 This image shows the project's report in the terminal, from the run described below.
 
