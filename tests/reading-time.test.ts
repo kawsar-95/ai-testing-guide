@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { contentWords, getReadingMinutes, getReadingMinutesByVersion, readingMinutes } from "../lib/reading-time.ts";
+import { codeLines, contentWords, getReadingMinutes, getReadingMinutesByVersion, readingMinutes } from "../lib/reading-time.ts";
 import { CONTENT_PAGES } from "../lib/reading-state.ts";
 import { sheetMinutes } from "../lib/linux/sheet.ts";
 import { getSheet } from "../lib/linux/sheets/index.ts";
@@ -35,6 +35,27 @@ test("readingMinutes is words / 200 rounded up, at least 1", () => {
   assert.equal(readingMinutes(""), 1);
   assert.equal(readingMinutes("w ".repeat(200)), 1);
   assert.equal(readingMinutes("w ".repeat(201)), 2);
+});
+
+test("codeLines counts the non-blank lines of the code blocks that a reader reads", () => {
+  const block = (n: number) => "```js\n" + "x();\n\n".repeat(n) + "```";
+  assert.equal(codeLines(`Text.\n\n${block(3)}\n\nMore text.`), 3);
+  // A code block in a Layman or Bangla panel, or in the other version, is not read.
+  const voices = `<Voices>\n<Technical>\n\n${block(2)}\n\n</Technical>\n<Layman>\n\n${block(5)}\n\n</Layman>\n<Bangla>\n\n${block(7)}\n\n</Bangla>\n</Voices>`;
+  assert.equal(codeLines(voices), 2);
+  const versions = `<Version of="notes">\n\n${block(4)}\n\n</Version>\n<Version of="istqb">\n\n${block(1)}\n\n</Version>`;
+  assert.equal(codeLines(versions, "istqb"), 1);
+  assert.equal(codeLines(versions, "notes"), 4);
+  // A panel tag inside a code block does not end the panel.
+  assert.equal(codeLines("<Layman>\n\n```mdx\n</Layman>\n```\n\n</Layman>\n\n" + block(2)), 2);
+});
+
+test("readingMinutes adds code lines / 20 to words / 200", () => {
+  const code = (n: number) => "\n\n```text\n" + "line\n".repeat(n) + "```";
+  assert.equal(readingMinutes(code(20)), 1);
+  assert.equal(readingMinutes(code(21)), 2);
+  assert.equal(readingMinutes("w ".repeat(200) + code(20)), 2);
+  assert.equal(readingMinutes("w ".repeat(100) + code(130)), 7);
 });
 
 test("every content page has a reading time", () => {

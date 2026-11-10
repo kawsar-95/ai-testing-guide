@@ -186,7 +186,7 @@ export function sheetWords(sheet: StageSheet): number {
   return count;
 }
 
-/** 200 words a minute, rounded up, 1 at least: the same rule as lib/reading-time.ts. */
+/** 200 words a minute, rounded up, 1 at least: the word rule of lib/reading-time.ts. A sheet has no code blocks. */
 export function sheetMinutes(sheet: StageSheet): number {
   return Math.max(1, Math.ceil(sheetWords(sheet) / 200));
 }
