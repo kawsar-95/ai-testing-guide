@@ -55,4 +55,20 @@ None.
 |---|---|---|
 | How it works | PASS | Facts, numbers, names, commands, and cites all match the Technical text; the changes are plain rewording only. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `How it works` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| How it works | PASS | Facts, numbers, names, commands and cites all match the Technical text. The added glosses (transcript, `deny` rule, managed settings) are supported by it. |
+
 Open FAILs: 0

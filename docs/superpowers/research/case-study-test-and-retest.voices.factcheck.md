@@ -225,4 +225,20 @@ None.
 | Step 2: Test cases with traceability | PASS | Numbers, the title-rule contrast and the README point all match the Technical text. Details are left out but nothing is added or changed. |
 | Step 4: The test-executor subagent | PASS | Prompts, field effects, rules, warning and cites all match the Technical text. Cite 2 is used only on claims it supports in the Technical text. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `Step 4: The test-executor subagent` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Step 4: The test-executor subagent | PASS | Facts, cites (all n=2, which the Technical text uses for these fields) and the warning match the Technical text. Omitted details do not change the meaning. |
+
 Open FAILs: 0

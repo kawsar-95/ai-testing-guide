@@ -211,4 +211,21 @@ None.
 |---|---|---|
 | Choose a model | PASS | Facts, order, cites (5, 7) and commands match the Technical text; only details are left out. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panels of `Choose a model`, `Retired and deprecated models` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Choose a model | PASS | Commands, priority list, v2.1.236 note, fallback, CI tip and cites all match the Technical text. The glosses of "model" and "variable" are plain rewording. |
+| Retired and deprecated models | PASS | All dates, replacement IDs, the 60-day notice and the four states match. The September and October 2027 wording matches the listed dates. Cites 4 and 1 are placed on supported claims. |
+
 Open FAILs: 0

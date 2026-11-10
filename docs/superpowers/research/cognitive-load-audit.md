@@ -29,7 +29,7 @@ What changed (PR #70):
 ## What is left, and why
 
 - **63 sections are still HUGE.** A form edit does not shorten a section, drop its terms, or remove its code and tables. Lowering them means a content decision: split a section or a page, move a reference table to its own page, or cut detail. A split changes heading ids, `N sections`, saved reading progress, and the sections that the fact-check and voices reports name, so it is the owner's call. The list is below.
-- **35 of the 45 rewritten `সহজ English` panels are still as term-dense as their Technical text.** Their terms are the commands, files, and settings that a reader types, which a plain voice must keep. More relief means longer panels that explain each term.
+- **16 `সহজ English` panels (of 58 at the start) are still as term-dense as their Technical text.** A second pass let the panels run longer and explain each kept term; 32 panels were rewritten. The rest keep terms that a reader types (commands, files, settings).
 - **Linux command cards.** The densest cards (Troubleshooting, File Transfer, LVM, Archiving and Compressing, Create, Update, and Delete Users) have 8 rows, the cap of the sheet design (2 to 8 rows a card). They rank high only against other cards. A split would change the topic ids in `linux-progress` and needs a new check of every row, so they are unchanged.
 - **Fundamentals: White-Box Techniques.** The ISTQB version covers the syllabus and stays long; the notes version of the same chapter is the short path, one switch away.
 

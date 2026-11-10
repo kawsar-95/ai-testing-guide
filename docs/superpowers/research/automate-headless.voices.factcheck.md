@@ -191,4 +191,20 @@ None.
 |---|---|---|
 | Output formats | PASS | Every claim, cite and code name matches the Technical text. Omissions such as the `jq` command and the cost breakdown do not change the meaning. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `Output formats` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Output formats | PASS | Facts, flags, and cites match the Technical text. Only details were left out (per-model cost breakdown, `stream-json` flags, the exact error message), and none of those omissions changes the meaning. |
+
 Open FAILs: 0

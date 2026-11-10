@@ -190,4 +190,22 @@ None.
 | Which mode you start in | PASS | The order, versions, feature-flag split, and ignored `auto` and `bypassPermissions` values match. The CI cite 4 is placed correctly. |
 | Switch modes | PASS | The cycle, `dontAsk` exclusion, VS Code `auto` limit, and JetBrains warning match. Cites 1, 2 and 5 are used correctly. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panels of `The six modes`, `Which mode you start in`, `Switch modes` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The six modes | PASS | All claims, numbers and cites match the Technical text. The two glosses (shell command, CI) are short and allowed. |
+| Which mode you start in | PASS | The start order, versions, `claude -p` and Agent SDK behavior, and the settings-file limits all match. The CI cite 4 is correct. |
+| Switch modes | PASS | The cycle, the conditions for joining it, the VS Code setting and the JetBrains warning match. Omitted details are not a FAIL. |
+
 Open FAILs: 0

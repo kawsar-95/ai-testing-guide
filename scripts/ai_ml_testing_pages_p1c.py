@@ -1073,7 +1073,7 @@ page(
 
 page(
     slug="deepeval-pytest",
-    updated="2026-11-10",
+    updated="2026-11-11",
     title="DeepEval: Pytest for LLMs",
     description="Write LLM tests as Pytest functions with DeepEval metrics, run them with `deepeval test run`, and read the scores.",
     lede="Promptfoo gives you a config and a table. DeepEval gives you code. That difference matters the moment your team wants the eval in the normal test suite.",
@@ -1130,20 +1130,31 @@ page(
                 "work in it."
             ),
             "layman": (
-                "DeepEval lets you write LLM tests as normal Pytest tests. The command "
-                "`deepeval test run` finds and runs them, as `pytest` would "
-                "{{cite:deepeval-intro}}. Each test takes the model's answer and "
-                "checks it with one or more **metrics**. A metric is the check.\n\n"
-                "There are two kinds of metrics {{cite:deepeval-metrics}}:\n\n"
-                "- **No right answer needed.** `AnswerRelevancyMetric` checks that the "
-                "answer is about the question. `FaithfulnessMetric` checks that the "
-                "answer does not contradict the text your search step fetched "
-                "(`retrieval_context`). These fit a chatbot that answers from a "
-                "knowledge base. They also work in production.\n"
-                "- **A known truth is needed.** `HallucinationMetric` compares the "
-                "answer with a trusted `context`. A `GEval` metric can compare the "
-                "answer with an `expected_output`.\n\n"
-                "A test looks like any other test:\n\n"
+                "DeepEval lets you write tests for an AI model's answers. You write "
+                "them as normal Pytest tests. Pytest is a common tool for running "
+                "tests.\n\n"
+                "The command `deepeval test run` finds your test files and runs them. "
+                "It works the same way as `pytest` {{cite:deepeval-intro}}.\n\n"
+                "Each test takes the model's answer and checks it. The checks are "
+                "called **metrics**. A metric works like an assertion. It says whether "
+                "the answer is good or not.\n\n"
+                "There are two kinds of metrics. This difference is the one to "
+                "remember {{cite:deepeval-metrics}}.\n\n"
+                "- **No right answer needed.** These checks work without labeled data.\n"
+                "  - `AnswerRelevancyMetric` checks that the answer is about the "
+                "question.\n"
+                "  - `FaithfulnessMetric` checks that the answer does not contradict "
+                "the text your search step fetched. That text is called "
+                "`retrieval_context`.\n"
+                "  - These fit a chatbot that answers from a knowledge base. They also "
+                "work in production.\n"
+                "- **A known truth is needed.** These checks need a trusted right "
+                "answer.\n"
+                "  - `HallucinationMetric` compares the answer with a trusted "
+                "`context`.\n"
+                "  - A `GEval` metric can compare the answer with an `expected_output`.\n\n"
+                "Read the metric catalogue before you design a set of tests.\n\n"
+                "A test looks like any other test. That is the whole point.\n\n"
                 "```python\n"
                 "# test_support.py\n"
                 "from deepeval import assert_test\n"
@@ -1161,12 +1172,12 @@ page(
                 "    assert_test(test_case, [AnswerRelevancyMetric(), "
                 "HallucinationMetric()])\n"
                 "```\n\n"
-                "Run it like this {{cite:deepeval-intro}}:\n\n"
+                "Run the file like this {{cite:deepeval-intro}}:\n\n"
                 "```bash\n"
                 "deepeval test run test_support.py\n"
                 "```\n\n"
-                "The file is a Pytest file. So Pytest features such as fixtures and "
-                "parametrisation work in it."
+                "The file is a Pytest file. So Pytest features also work in it. Two "
+                "examples are fixtures and parametrisation."
             ),
             "bangla": (
                 "DeepEval Pytest-এর সাথে যুক্ত হয়: `deepeval test run` আপনার eval ফাইলগুলো ঠিক "

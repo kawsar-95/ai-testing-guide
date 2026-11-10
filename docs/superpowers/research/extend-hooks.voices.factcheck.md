@@ -218,4 +218,20 @@ None.
 |---|---|---|
 | Debug and stay safe | PASS | The steps, commands, numbers and cites match the Technical text. Omitted details (the interactive trust dialog, the security practices, the reason for the Windows matcher) are not rule 2 failures. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `Debug and stay safe` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Debug and stay safe | PASS | The steps, numbers, cites and commands match the Technical text. The added glosses (event, matcher, JSON, exit code, `-p` or SDK session) are plain restatements. The dropped details (read-only, the interactive trust dialog, the security practices) are omissions, and no advice they limit remains. |
+
 Open FAILs: 0

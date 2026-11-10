@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-11',
   sources: [
     { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-10-10' },
     { title: 'Error reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/errors', accessed: '2026-10-10' },
@@ -151,13 +151,33 @@ Fix: use `model: opus` if the reviewer must follow the newest Opus. Keep the ful
 
 This section has four problems with subagents.
 
-A copied review agent used the wrong server names for its Jira and database tools. So the names matched no tool. A tool name looks like `mcp__<server>__<tool>`. <Cite n={3} /> Claude Code usually refuses to launch a subagent when every entry in `tools` fails to match. <Cite n={2} /> This agent also had `Read` and `Bash`, so it started without the MCP tools. Fix: use the server name from `.mcp.json`.
+**1. Wrong server names in a copied review agent.**
 
-A second copied agent told Claude to hand work to three agents. The workspace does not have them. The old `Task` name still works as another name for `Agent`. <Cite n={1} /> The real problem is that a fresh clone has no agents with those names. Fix: delete each of these rules.
+The agent listed its Jira and database tools with the wrong server names. So the names matched no tool. A tool name looks like `mcp__<server>__<tool>`. <Cite n={3} />
 
-The prompt of `test-executor-agent` says to use only `agent-browser` and `curl` with `Bash`. No permission rule enforces this. A prompt does not change what Claude Code allows. <Cite n={4} /> Fix: add allow rules for the two tools in `.claude/settings.json`. But a Bash rule matches the command text, not the same program in another form such as `sh -c '…'`. So it is not a security boundary. For enforcement that does not depend on the text, use sandboxing. <Cite n={4} />
+Claude Code usually refuses to start a subagent when every entry in `tools` fails to match. <Cite n={2} /> This agent also had `Read` and `Bash`. So it started, but without the MCP tools.
 
-`qa-reviewer-agent` pins one exact model version. Fix: use `model: opus` if the reviewer must follow the newest Opus.
+Fix: use the server name from `.mcp.json`.
+
+**2. Delegation to agents that do not exist.**
+
+A second copied agent told Claude to hand work to three other agents. The workspace does not have them. The old `Task` name still works as another name for `Agent`. <Cite n={1} /> So the old name is not the problem.
+
+The real problem is that a fresh clone has no agents with those names. Fix: delete each of these delegation rules.
+
+**3. A limit that only the prompt enforces.**
+
+The `test-executor-agent` has `Bash`. Its prompt says to use only `agent-browser` for UI steps and `curl` for API steps. No permission rule enforces this.
+
+Claude Code enforces permission rules, not the model. A prompt does not change what Claude Code allows. <Cite n={4} />
+
+Fix: add allow rules for the two tools in `.claude/settings.json`.
+
+Be careful, though. A Bash rule matches the command text. It does not match the same program in another form, such as `sh -c '…'`. So it is not a security boundary. For enforcement that does not depend on the text, use sandboxing. <Cite n={4} />
+
+**4. A model pinned to one exact version.**
+
+The `qa-reviewer-agent` sets one full model ID. That pins one version. <Cite n={8} /> Fix: use `model: opus` if the reviewer must follow the newest Opus.
 
 </Layman>
 <Bangla>
@@ -345,13 +365,31 @@ The Playwright server runs `npx -y @playwright/mcp@latest`. So each start can ru
 
 This section has four problems with MCP servers.
 
-The skills and the README describe read-only database use. But the project server connects as an admin user. It allows `create`, `update`, `delete`, and `execute`. The MCP docs say to use a read-only database user, so queries from Claude cannot change data. <Cite n={6} /> Fix: create a user with only `SELECT` rights, and remove the write permissions.
+**1. A database server that can write.**
 
-`.mcp.json` gives the database server one name. The README and the `pr-review` skill use another. The tool prefix comes from the server name. <Cite n={3} /> Fix: use one name everywhere.
+The skills and the README describe read-only database use. But the project server connects as an admin user. Its permission list allows `create`, `update`, `delete`, and `execute`.
 
-The connection URL reads the password as `${VAR:-}`. That form has an empty default, so it hides a missing password. Fix: write `${DB_PASSWORD}` with no default. Then Claude Code shows a warning if the variable is not set. <Cite n={6} />
+The MCP docs give advice for this. Use a read-only database user, so the queries Claude runs cannot change data. <Cite n={6} />
 
-The Playwright server is not pinned to a version, and nothing uses it. As the tutorial's own advice: remove it, or pin the version.
+Fix: create a user with only `SELECT` rights. Then remove the write permissions.
+
+**2. Different names for one server.**
+
+`.mcp.json` gives the database server one name. The README and the `pr-review` skill use another. The tool prefix comes from the server name. <Cite n={3} /> So the tool name in `pr-review` may not work.
+
+Fix: pick one name and use it everywhere.
+
+**3. A hidden missing password.**
+
+The connection URL reads the password as `${VAR:-}`. That form has an empty default. So it hides a missing password, and the server tries to connect with an empty one.
+
+Fix: write `${DB_PASSWORD}` with no default. Then Claude Code shows a warning if the variable is not set. <Cite n={6} />
+
+**4. A server that is not pinned and not used.**
+
+The Playwright server is not pinned to a version. So each start can run a new version. No skill, agent, or command uses it.
+
+Verify that you trust each server before you connect it. <Cite n={6} /> As the tutorial's own advice: remove a server that nothing uses, or pin its version.
 
 </Layman>
 <Bangla>

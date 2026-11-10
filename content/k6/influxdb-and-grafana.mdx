@@ -1,6 +1,6 @@
 export const metadata = { title: 'Live Results with InfluxDB and Grafana', description: 'Send k6 metrics to InfluxDB and watch them in a Grafana dashboard.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-11',
   sources: [
     { title: 'InfluxDB output', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/results-output/real-time/influxdb/', accessed: '2026-10-27' },
     { title: 'xk6-output-influxdb', publisher: 'Grafana Labs (GitHub)', url: 'https://github.com/grafana/xk6-output-influxdb', accessed: '2026-10-27' },
@@ -191,7 +191,7 @@ Here `response_time` is the measurement, `api=login` is a tag, and `value=250` i
 </Technical>
 <Layman>
 
-Docker is the easy way to start InfluxDB. First check that Docker is installed. Then make a Docker network and start the container. The InfluxData guide shows the volume and the port `8086` <Cite n={6} />:
+Docker is the easy way to start InfluxDB. Docker runs programs in small boxes called containers. First check that Docker is installed. Then make a Docker network and start the container. The InfluxData guide shows the volume and the port `8086` <Cite n={6} />:
 
 ```bash
 docker --version
@@ -199,11 +199,11 @@ docker network create k6net
 docker run -d --name influxdb --network k6net -p 8086:8086 -v influxdb-data:/var/lib/influxdb influxdb:1.13
 ```
 
-The network `k6net` links containers together. Grafana joins it later, so it can find this container by name <Cite n={17} />. This network is the tutorial's own idea. The InfluxData command does not have it.
+The network `k6net` is a private link between containers. Grafana joins it later. Then Grafana can find this container by its name <Cite n={17} />. This network is the tutorial's own idea. The InfluxData command does not have it.
 
-`-p 8086:8086` opens port `8086` on your machine <Cite n={6} />. The volume `influxdb-data` keeps your data after the container stops. On macOS with Docker Desktop, use a named volume or a delegated directory <Cite n={6} />.
+`-p 8086:8086` opens port `8086` on your machine <Cite n={6} />. A port is a door that a program listens on. The volume `influxdb-data` keeps your data after the container stops. On macOS with Docker Desktop, use a named volume or a delegated directory. A directory from your machine must belong to user and group ID 1500 <Cite n={6} />.
 
-The owner used the tag `influxdb:1.8`. It still exists. Today the supported tags on Docker Hub start at `1.11`. The newest is `1.13` <Cite n={5} />. Use `1.13`.
+The owner used the tag `influxdb:1.8`. A tag picks the version of the image. That tag still exists. Today the supported tags on Docker Hub start at `1.11`. The newest is `1.13` <Cite n={5} />. Use `1.13`. It follows the newest `1.13.x` patch <Cite n={5} /> <Cite n={6} />.
 
 Now check that the container runs. Then open the InfluxDB shell inside it <Cite n={6} />:
 
@@ -212,14 +212,23 @@ docker ps
 docker exec -it influxdb influx
 ```
 
-You can make a database by hand in the shell. k6 does not need this. It makes a missing database itself <Cite n={1} />. But it shows you how InfluxDB works. `CREATE DATABASE` makes a database <Cite n={8} />. `SHOW DATABASES` lists them <Cite n={9} />:
+You can make a database by hand in the shell. k6 does not need this step. It makes a missing database by itself <Cite n={1} />. But this way you learn how InfluxDB works.
+
+`CREATE DATABASE` makes a database <Cite n={8} />. `SHOW DATABASES` lists them <Cite n={9} />:
 
 ```text
 CREATE DATABASE k6
 SHOW DATABASES
 ```
 
-Next, save one test value. InfluxDB reads a value in **line protocol**. It has a name, then labels (tags), then values (fields), and an optional time <Cite n={10} />. The `INSERT` command of the shell takes this form <Cite n={10} />:
+Next, save one test value. InfluxDB reads a value in a format called **line protocol**. It has these parts, in this order <Cite n={10} />:
+
+1. A name for the data (the measurement).
+2. Labels (the tags).
+3. Values (the fields).
+4. A time, which is optional.
+
+The `INSERT` command of the shell takes this form <Cite n={10} />:
 
 ```text
 INSERT response_time,api=login value=250
@@ -541,7 +550,9 @@ Fill in the settings <Cite n={14} />:
 </Technical>
 <Layman>
 
-Open the left menu in Grafana. Choose **Connections**, then **Add new connection**. Search for `InfluxDB` and choose it. Then press **Add new data source** at the top right <Cite n={14} />. The screenshot shows the list you see next. It is the owner's screenshot, with Grafana on the host, so it shows `http://localhost:8086`. With the Docker commands of this page, use `http://influxdb:8086`.
+Open the left menu in Grafana. Choose **Connections**, then **Add new connection**. Search for `InfluxDB` and choose it. Then press **Add new data source** at the top right <Cite n={14} />.
+
+The screenshot shows the list you see next. It is the owner's screenshot, with Grafana run on the host. So it shows `http://localhost:8086`. With the Docker commands of this page, use `http://influxdb:8086`.
 
 <MdxImage src="/images/k6/grafana-connections.webp" alt="The Data sources page of Grafana with one InfluxDB data source named influxdb at http://localhost:8086, marked as default." width={1920} height={889} />
 
@@ -558,9 +569,9 @@ Fill in these settings <Cite n={14} />:
 
 The screenshot above is the owner's run, with Grafana on the host. It shows `http://localhost:8086` and a user and password. The steps above use `http://influxdb:8086` and an empty User and Password.
 
-Leave **User** and **Password** empty. The InfluxDB container above has no login. InfluxDB 1.x has login off by default <Cite n={19} />.
+Leave **User** and **Password** empty. The InfluxDB container above has no login. InfluxDB 1.x has login turned off by default <Cite n={19} />.
 
-Press **Save & test** <Cite n={14} />. Do it before you rename a new data source. If you rename first, Grafana shows an error, because the URL is still empty <Cite n={14} />.
+Press **Save & test** <Cite n={14} />. Do this before you rename a new data source. If you rename it first, Grafana checks the whole form. It then shows an error, because the URL has no value yet <Cite n={14} />.
 
 </Layman>
 <Bangla>

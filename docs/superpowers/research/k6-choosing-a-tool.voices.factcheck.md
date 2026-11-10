@@ -53,4 +53,20 @@ None.
 |---|---|---|
 | The tools at a glance | PASS | Every claim and cite matches the Technical text. The "Lua script" for wrk is a fair gloss of "LuaJIT script". |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `The tools at a glance` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The tools at a glance | PASS | Facts, cites (1, 2, 3, 5, 6, 8, 9, 10, 11, 12) and tool names match the Technical text. The glosses (protocols, CI pipeline, benchmarking) are supported by it. |
+
 Open FAILs: 0

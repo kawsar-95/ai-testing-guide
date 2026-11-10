@@ -174,4 +174,20 @@ None.
 |---|---|---|
 | The read-only reviewer and its gate | PASS | Every claim and both cites match the Technical text. The panel leaves out the "draft or requirement is missing" condition of BLOCKED, but that is an omission and does not change the meaning. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `The read-only reviewer and its gate` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The read-only reviewer and its gate | PASS | Every claim matches the Technical text. Both cites use n=2, which the Technical text uses on the same claims. |
+
 Open FAILs: 0

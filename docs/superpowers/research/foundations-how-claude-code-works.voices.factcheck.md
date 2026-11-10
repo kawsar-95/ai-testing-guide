@@ -182,4 +182,36 @@ None.
 |---|---|---|
 | Tools Claude uses | PASS | All facts, tool names and cites match the Technical text. The omitted ripgrep note does not affect any advice given in the panel. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `Tools Claude uses` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+- Tools Claude uses: "<Cite n={1}> Two of them are" — the cite tag is not self-closed (`<Cite n={1}>`). The Technical text uses the self-closing form `<Cite n={1} />`, so this is a malformed tag that is not a valid cite. Fix: "Claude also has tools to start helpers and to ask you questions. <Cite n={1} /> Two of them are `Agent` and `AskUserQuestion`. <Cite n={3} />"
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Tools Claude uses | FAIL | One malformed, non-self-closing `<Cite n={1}>` tag; the content otherwise matches the Technical text. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-11)
+
+The FAILs of the round above (a cite on the wrong claim, an added fact, a malformed cite tag) were fixed. A fresh `claude -p` session checked the changed panels again.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Tools Claude uses | PASS | Categories, permission table, `Bash` exception, `Read` behavior, Glob/Grep platform note, ripgrep syntax and cites all match the Technical text. |
+
 Open FAILs: 0

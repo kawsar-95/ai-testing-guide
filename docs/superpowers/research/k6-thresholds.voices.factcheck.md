@@ -48,4 +48,20 @@ None.
 |---|---|---|
 | Threshold syntax by metric type | PASS | Every fact, number, name and cite matches the Technical text. Only the callout wording and the code block are left out, which is allowed. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `Threshold syntax by metric type` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Threshold syntax by metric type | PASS | Facts, table, examples and cites all match the Technical text. The glosses of "threshold" and "custom metrics" are supported by it. |
+
 Open FAILs: 0

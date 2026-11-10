@@ -184,4 +184,22 @@ None.
 | How to read parts 20 to 24 | PASS | Part list, descriptions and source note match. "Hostile" for "adversarial" is only a word choice. |
 | The workspace | PASS | Dates, commit counts, contents and folder descriptions match the Technical text. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panels of `The setup inventory`, `How to read parts 20 to 24`, `The workspace` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The setup inventory | PASS | Numbers, names, models, tool limits and hook behavior all match the Technical text. The short glosses of skill, subagent, hook, MCP server and Playwright are supported. |
+| How to read parts 20 to 24 | PASS | Part list, page links and the sources note match. "Hostile review" is only a rewording of "adversarial review". |
+| The workspace | PASS | Dates, commit counts, contents and folder descriptions match. The "Git ignores the local graphify output" bullet sits at the wrong level, but its meaning is unchanged. |
+
 Open FAILs: 0
