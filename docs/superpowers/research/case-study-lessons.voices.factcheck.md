@@ -212,4 +212,21 @@ None.
 |---|---|---|
 | Subagents | PASS | All four problems, fixes and cites (3, 2, 1, 4) match the Technical text. Only details are left out, and none of the left-out details limits the advice that is given. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panels of `Subagents`, `MCP servers` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Subagents | PASS | All four problems match the Technical text, and the cites (3, 2, 1, 4, 8) are on claims the Technical text supports. |
+| MCP servers | PASS | The panel keeps to the Technical text. Cites 6 and 3 are on supported claims. "may not work" only softens a conditional claim and does not change its meaning. |
+
 Open FAILs: 0

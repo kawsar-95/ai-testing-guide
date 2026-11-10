@@ -164,4 +164,21 @@ None.
 | Respond to @claude in issues and PRs | PASS | Facts, cites and code names match the Technical text. Omitted details (the `github_token` requirement for `allowed_non_write_users`, the "very limited permissions" advice) are not FAILs. |
 | Set it up | PASS | Steps, secrets, plan requirement, permissions and cites all match the Technical text. Omissions are allowed. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panels of `Respond to @claude in issues and PRs`, `Set it up` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Respond to @claude in issues and PRs | PASS | Facts, cites (1 and 3), and the code names match the Technical text. The write-access line omits "On issue and PR events", which does not change the meaning here. |
+| Set it up | PASS | Steps, secrets, plans, permissions, and advice all match the Technical text. Cites are all 1, as in the reference. |
+
 Open FAILs: 0

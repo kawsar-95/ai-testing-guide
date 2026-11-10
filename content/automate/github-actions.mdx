@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-11',
   sources: [
     { title: 'Claude Code GitHub Actions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/github-actions', accessed: '2026-10-10' },
     { title: 'claude-code-action releases', publisher: 'Anthropic (GitHub)', url: 'https://github.com/anthropics/claude-code-action/releases', accessed: '2026-10-10' },
@@ -101,23 +101,27 @@ For both setup paths, you need admin access to the repository. <Cite n={1} />
 **Quick setup**
 
 1. Open `claude` in the repository and run `/install-github-app`. <Cite n={1} />
-2. The command needs the GitHub CLI, signed in with `gh auth login`. It works only with github.com repositories. <Cite n={1} />
-3. It installs the Claude GitHub App. It saves your credential as a repository secret. <Cite n={1} />
-4. It pushes a branch with the workflow files. It opens a pull request page in your browser. <Cite n={1} />
-5. Create and merge that pull request. Then `@claude` works. <Cite n={1} />
+2. The command needs the GitHub CLI. You must be signed in with `gh auth login`. <Cite n={1} />
+3. The command works only with github.com repositories. <Cite n={1} />
+4. Claude Code installs the Claude GitHub App. It saves your credential as a repository secret. <Cite n={1} />
+5. The secret is `ANTHROPIC_API_KEY` for an API key. It is `CLAUDE_CODE_OAUTH_TOKEN` for a subscription token. <Cite n={1} />
+6. Claude Code pushes a branch with the workflow files. It opens GitHub in your browser with a pull request ready to create. <Cite n={1} />
+7. Create and merge that pull request. Then `@claude` works in the repository. <Cite n={1} />
 
 **Manual setup**
 
 1. Install the Claude GitHub App on the repository. <Cite n={1} />
-2. Add the secret `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`. The token needs a Pro, Max, Team, or Enterprise plan. <Cite n={1} />
-3. Copy `examples/claude.yml` into `.github/workflows/`. <Cite n={1} />
-4. In the workflow, pass the secret to `anthropic_api_key` or `claude_code_oauth_token`. <Cite n={1} />
+2. Add a secret. Use `ANTHROPIC_API_KEY` with a key from the Claude Console. Or use `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token`. <Cite n={1} />
+3. The token needs a Pro, Max, Team, or Enterprise plan. <Cite n={1} />
+4. Copy `examples/claude.yml` from the Action's repository into `.github/workflows/`. <Cite n={1} />
+5. In the workflow, pass the secret to the matching input. Use `anthropic_api_key` or `claude_code_oauth_token`. <Cite n={1} />
 
-The Action uses read and write access to Contents, Issues, and Pull requests. <Cite n={1} />
+**Good to know**
 
-If many repositories share one secret, use a Console API key. An OAuth token belongs to the subscription of one person. <Cite n={1} />
-
-Workload identity federation removes the stored secret. It needs `id-token: write`. <Cite n={1} />
+- The Action uses three permissions of the app: Contents, Issues, and Pull requests. Each has read and write access. <Cite n={1} />
+- The app's full permission list is larger, because other Claude features share it. GitHub does not let you accept only a part. <Cite n={1} />
+- Many repositories may share one secret. Then the docs advise a Console API key. An OAuth token is tied to the subscription of one person. <Cite n={1} />
+- Workload identity federation avoids a stored secret. It needs the `id-token: write` permission. <Cite n={1} />
 
 </Layman>
 <Bangla>
@@ -198,23 +202,32 @@ These comments are example requests from a tester. The docs show the same form, 
 </Technical>
 <Layman>
 
-The docs show a workflow that runs when a new comment contains `@claude`. <Cite n={1} />
+The docs show a workflow. It runs when a new comment contains `@claude`. <Cite n={1} />
 
-Some settings in it matter:
+A few settings in it matter:
 
-- `id-token: write` is required for the default GitHub App sign-in. <Cite n={1} />
-- `actions: read` lets Claude read test results on PRs. <Cite n={1} />
-- `actions/checkout` gives Claude a local copy of the repository. <Cite n={1} />
+- `id-token: write` is required for the default sign-in with the GitHub App. <Cite n={1} />
+- `actions: read` lets Claude read the results of automated checks on PRs. <Cite n={1} />
+- `actions/checkout` gives Claude a copy of the repository to work on. <Cite n={1} />
 
 Claude replies in a comment on the same issue or PR. It updates that comment as it works. <Cite n={1} />
 
-Only a user with write access to the repository can start a run. <Cite n={1} /> The Action rejects a bot that is not in `allowed_bots`. <Cite n={1} /> `allowed_non_write_users` skips the write-access check. The security docs say it is risky. <Cite n={3} />
+**Who can start a run**
 
-A tester can ask `@claude add unit tests for the changes in this PR`. Put your test standards in `CLAUDE.md`. Claude follows its guidelines. <Cite n={1} />
+- The user who starts a run must have write access to the repository. <Cite n={1} />
+- The Action rejects a bot unless you list it in `allowed_bots`. <Cite n={1} />
+- `allowed_non_write_users` skips the write-access check. To use it, you also pass your own `github_token` input. <Cite n={1} />
+- The security docs say this setting is risky. They advise it only for workflows with very limited permissions. <Cite n={3} />
 
-By default, Claude does not create a pull request. It saves its work on a new branch and gives a link. A person then creates the PR. <Cite n={3} />
+**A tester's example**
 
-GitHub does not start workflows on commits made with the default `GITHUB_TOKEN`. To run your tests on Claude's commits, do not pass `github_token: ${{ secrets.GITHUB_TOKEN }}`. <Cite n={1} />
+A tester can write a comment like `@claude add unit tests for the changes in this PR`. The docs show requests in the same form. <Cite n={1} />
+
+Put your test standards in `CLAUDE.md`. Claude follows its guidelines when it creates PRs and answers requests. <Cite n={1} />
+
+By default, Claude does not create a pull request. It saves its work on a new branch. It gives you a link to the page where a PR is created. A person then creates the PR. <Cite n={3} />
+
+GitHub does not start workflows for commits made with the default `GITHUB_TOKEN`. You want your tests to run on Claude's commits. So do not pass `github_token: ${{ secrets.GITHUB_TOKEN }}`. Then the Action signs in as the Claude GitHub App. <Cite n={1} />
 
 </Layman>
 <Bangla>

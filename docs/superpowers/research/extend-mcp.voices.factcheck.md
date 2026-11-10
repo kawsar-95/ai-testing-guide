@@ -153,4 +153,36 @@ None.
 |---|---|---|
 | Servers for testing work | PASS | Every claim and cite matches the Technical text. Omissions are allowed. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `Servers for testing work` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+- Servers for testing work: "It works with PostgreSQL or MySQL, for example. <Cite n={10} />" — The cite is on the wrong claim. In the Technical text, <Cite n={10} /> is on "Its default tools are `execute_sql` and `search_objects`." The sentence that lists the supported databases ("It supports PostgreSQL, MySQL, SQL Server, MariaDB, Oracle, and SQLite.") carries no cite. Fix: "It works with PostgreSQL, MySQL, SQL Server, MariaDB, Oracle, and SQLite." Remove the cite, or move <Cite n={10} /> to a sentence that says its default tools are `execute_sql` and `search_objects`.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Servers for testing work | FAIL | The DBHub database-support line has <Cite n={10} />, but in the Technical text that cite is on the default-tools sentence. The rest matches. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-11)
+
+The FAILs of the round above (a cite on the wrong claim, an added fact, a malformed cite tag) were fixed. A fresh `claude -p` session checked the changed panels again.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Servers for testing work | PASS | Every claim and cite matches the Technical text. The glosses of "endpoint" and "fine-grained token" are short and add no new facts. |
+
 Open FAILs: 0

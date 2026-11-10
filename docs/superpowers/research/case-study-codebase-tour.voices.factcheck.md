@@ -46,4 +46,38 @@ None.
 | The AI layer | PASS | Skills, subagents, hook, and MCP servers match. Cites 1–4 are placed on the same claims as in the Technical text. |
 | The class notes | PASS | All 8 notes and their code locations match. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panels of `The web app`, `The AI layer`, `The class notes` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+- The web app: "The API is the server part of dMoney." — The Technical text never names dMoney and never says what the API is. It only says "The web app calls the API at the address in `NEXT_PUBLIC_API_URL`." Fix: Delete the sentence, or write "The web app calls the API at the address in `NEXT_PUBLIC_API_URL`."
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The web app | FAIL | Adds "the server part of dMoney", which is not in the Technical text. |
+| The AI layer | PASS | Matches the Technical text, and the cites 1–4 are on the same claims. |
+| The class notes | PASS | All 8 notes and their code locations match the Technical text. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-11)
+
+The FAILs of the round above (a cite on the wrong claim, an added fact, a malformed cite tag) were fixed. A fresh `claude -p` session checked the changed panels again.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| The web app | PASS | Every claim matches the Technical text. The JWT gloss is a short explanation of a supported term. Omitted rows are not a FAIL. |
+
 Open FAILs: 0

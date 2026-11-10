@@ -201,4 +201,20 @@ None.
 |---|---|---|
 | Example: the Superpowers plugin | PASS | The facts, numbers, commands, quote and cites all match the Technical text. The omissions (second install method, skill table, other tester skills) do not change the meaning. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `Example: the Superpowers plugin` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Example: the Superpowers plugin | PASS | Facts, commands, cites (4, 9, 10), skill count, workflow endpoints and telemetry variables all match the Technical text. The only additions are short glosses of "skill", "root cause" and "telemetry". |
+
 Open FAILs: 0

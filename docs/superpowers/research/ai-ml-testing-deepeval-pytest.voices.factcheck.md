@@ -38,4 +38,20 @@ None.
 |---|---|---|
 | In plain words | PASS | Facts, metric names, code blocks and cites (deepeval-intro, deepeval-metrics) all match the Technical text. Only the "read the metric catalogue" advice is omitted, which is allowed. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `In plain words` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| In plain words | PASS | Facts, metric names, cites and code blocks all match the Technical text. The panel only adds short glosses (Pytest, "search step" for retriever). |
+
 Open FAILs: 0

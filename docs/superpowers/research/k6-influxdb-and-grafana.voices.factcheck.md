@@ -76,4 +76,21 @@ None.
 |---|---|---|
 | Run Grafana | PASS | Facts, cites (11, 12, 13, 17, 18), command and code block all match the Technical text. Only details were left out (OS families, the `grafana/grafana-oss` note), and none of the omissions changes the meaning. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panels of `Run InfluxDB 1.x with Docker`, `Connect Grafana to InfluxDB` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Run InfluxDB 1.x with Docker | PASS | Code blocks, cites, numbers and conditions match the Technical text. The short glosses of container, port and tag are fine. |
+| Connect Grafana to InfluxDB | PASS | Steps, table values, screenshot notes, authentication and the "Save & test" order all match the Technical text. Cites 14 and 19 are used where the Technical text uses them. |
+
 Open FAILs: 0

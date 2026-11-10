@@ -38,4 +38,20 @@ None.
 |---|---|---|
 | A real-life example | PASS | Facts, code names and cites 1, 2 and 4 all match the Technical text. Nothing is added and no meaning changes. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panel of `A real-life example` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| A real-life example | PASS | Facts, names, code identifiers and cites (1, 2, 4) match the Technical text. The added glosses (JSON Schema, `final_output`) are plain rewording. |
+
 Open FAILs: 0

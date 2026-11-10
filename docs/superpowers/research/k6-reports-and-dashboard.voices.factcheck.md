@@ -53,4 +53,21 @@ None.
 | Write your own summary with handleSummary | PASS | Facts, numbers, flags, version claims and cites all match the Technical text. |
 | Save raw results to a file | PASS | Matches the Technical text. "Compressed" is a fair gloss of gzip. Cites 4 and 5 are used as in the Technical text. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Second pass on the dense সহজ English panels (2026-11-11)
+
+The `সহজ English` panels of `Write your own summary with handleSummary`, `Save raw results to a file` still had as many terms per 100 words as the Technical text after the first pass. They were rewritten again: longer is allowed, each kept term gets a short explanation from the Technical text, and the terms are spread over more sentences. Writer and checker: separate fresh `claude -p` sessions (Claude Sonnet, no tools). No person has read the new panels.
+
+### FAILs
+
+None.
+
+### Table
+
+| Section | Layman | Notes |
+|---|---|---|
+| Write your own summary with handleSummary | PASS | Content, cites, flags, versions and names match the Technical text. The glosses (map, ArrayBuffer, threshold, VU) are short and allowed. |
+| Save raw results to a file | PASS | Content and cites 4 and 5 match the Technical text. "Compressed" is a fair gloss of gzip. |
+
 Open FAILs: 0
