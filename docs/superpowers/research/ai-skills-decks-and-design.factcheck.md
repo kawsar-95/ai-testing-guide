@@ -58,4 +58,38 @@ The changed sentences of the current MDX were checked again against S1 and S4.
 | 1 | Lede: "AI tools can make the first draft of those slides, and AI design tools can turn an idea into a mockup that you test against." | none | PASS | "in minutes" is gone. The rest is a general summary of rows 2–6. The lede is outside `<Voices>`, so no panel restates it. |
 | 24 | Tools table, Technical: "Shows the distance between a selected object and the object under the pointer" | S4 | PASS | S4: "Select the first object in the canvas." and "Hover over the second object." No copied run (the page words differ from S4). |
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "- Import converts existing files, decks, or web pages <Cite n={1} />." — In the ORIGINAL, the single cite followed the whole three-part sentence, so it supported all three ways in. In the EDITED text it sits only on the third bullet, so "Generate drafts from a topic" and "Paste formats text that you already wrote" no longer have the cite. Fix: put the cite on each bullet: "- Generate drafts from a topic <Cite n={1} />.", "- Paste formats text that you already wrote <Cite n={1} />.", "- Import converts existing files, decks, or web pages <Cite n={1} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | The Gamma cite covers only the last bullet, so the first two bullets lose their cite. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## How it works`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Gamma's three ways in became a bulleted list with the cite on each item. All facts, wording and other cites are unchanged. |
+
 Open FAILs: 0

@@ -1,6 +1,6 @@
 export const metadata = { title: 'Tool Calling', description: 'How a model calls your functions through tool schemas, how your code runs the call and returns errors, and how to limit what a tool can do.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-10',
   sources: [
     { title: 'Tool use with Claude', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview', accessed: '2026-10-28' },
     { title: 'Define tools', publisher: 'Claude Platform docs (Anthropic)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools', accessed: '2026-10-28' },
@@ -58,7 +58,9 @@ So tool calling has two sides to test. One is what the model asks for. The other
 
 ### The schema
 
-You list tools in the `tools` parameter. Each tool has a `name`, a `description`, and an `input_schema`, which is a JSON Schema object <Cite n={2} />. The description is the most important factor for tool performance: explain its job, the cases for it, and its output <Cite n={2} />. In JSON Schema, properties are optional unless you list them in `required`, and extra properties are allowed unless you set `additionalProperties` to `false` <Cite n={5} />.
+You list tools in the `tools` parameter. Each tool has a `name`, a `description`, and an `input_schema` <Cite n={2} />. The `input_schema` is a JSON Schema object <Cite n={2} />. The description is the most important factor for tool performance: explain its job, the cases for it, and its output <Cite n={2} />.
+
+In JSON Schema, properties are optional unless you list them in `required` <Cite n={5} />. Extra properties are allowed unless you set `additionalProperties` to `false` <Cite n={5} />.
 
 ### The round trip
 
@@ -96,7 +98,7 @@ if response.stop_reason == "tool_use":
     response = client.messages.create(model="claude-opus-5-5", max_tokens=1024, tools=tools, messages=messages)
 ```
 
-`get_issue` is your own function. The `tool_result` blocks must come right after the `tool_use` message, and first in the content of the user message <Cite n={3} />.
+`get_issue` is your own function. The `tool_result` blocks must come right after the `tool_use` message <Cite n={3} />. They must also come first in the content of the user message <Cite n={3} />.
 
 ### Validation and strict mode
 
@@ -108,9 +110,22 @@ If the tool fails, return the error text in `content` with `"is_error": true` <C
 
 ### Choosing and limiting tools
 
-`tool_choice` controls tool use: `auto` (the default when tools exist), `any`, `tool` (one named tool), or `none` <Cite n={2} />. On some models, such as Claude Opus 5.5, `any` and `tool` return a 400 error; the docs suggest `auto` with strict tool use there <Cite n={2} />.
+`tool_choice` controls tool use. The options are:
 
-OWASP calls the main risk **Excessive Agency**: too much functionality, too many permissions, or too much autonomy <Cite n={7} />. Its advice: give only the tools that are needed, limit their permissions, run them in the context of the user, ask a human to approve high-impact actions, and check authorization in the downstream system, not in the model <Cite n={7} />.
+- `auto` (the default when tools exist) <Cite n={2} />
+- `any` <Cite n={2} />
+- `tool` (one named tool) <Cite n={2} />
+- `none` <Cite n={2} />
+
+On some models, such as Claude Opus 5.5, `any` and `tool` return a 400 error <Cite n={2} />. The docs suggest `auto` with strict tool use there <Cite n={2} />.
+
+**Limiting tools.** OWASP calls the main risk **Excessive Agency**: too much functionality, too many permissions, or too much autonomy <Cite n={7} />. Its advice is to:
+
+- give only the tools that are needed <Cite n={7} />
+- limit their permissions <Cite n={7} />
+- run them in the context of the user <Cite n={7} />
+- ask a human to approve high-impact actions <Cite n={7} />
+- check authorization in the downstream system, not in the model <Cite n={7} />
 
 </Technical>
 <Layman>

@@ -66,4 +66,56 @@ Copy check (manual, all page text against the quotes above): the longest shared 
 
 `node --test tests/voice-source.test.ts tests/ai-engineering.test.ts`: pass 29, fail 0.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "In LangChain, `load()` reads all documents at once." — The ORIGINAL has one sentence with a single <Cite n={4} /> after "for big datasets", covering both `load()` and `lazy_load()`. After the split, the `load()` claim has no cite. Fix: "In LangChain, `load()` reads all documents at once <Cite n={4} />. `lazy_load()` streams them, for big datasets <Cite n={4} />."
+- T1: "You can set your own size from 100 to 4096 tokens." — The ORIGINAL had one sentence ending in <Cite n={2} />, covering both the 100 to 4096 token range and the overlap limit. After the split, the size range has no cite. Fix: "You can set your own size from 100 to 4096 tokens <Cite n={2} />. The overlap should not be more than half of the chunk size <Cite n={2} />."
+- T1: "**Contextual Retrieval** asks a model to write a short context for each chunk, usually 50 to 100 tokens." — The ORIGINAL had one sentence ending in <Cite n={1} />, covering the model writing the context, the 50 to 100 token length, and adding it before embedding. After the split, the first part has no cite. Fix: "**Contextual Retrieval** asks a model to write a short context for each chunk, usually 50 to 100 tokens <Cite n={1} />. It adds that context to the front of the chunk before embedding and indexing <Cite n={1} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | Three split sentences left the first half without its cite (`load()`, size range, context length). No other changes found. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## How it works`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Sentence splits, the OWASP bullet list and the cite placement all keep the original facts, qualifiers and code unchanged. |
+
+Open FAILs at the end of the rounds above: 0
+
+## Second re-check after the fixes (2026-11-10)
+
+A scan of every edited section for a FAIL class found on other pages (a sentence that ended with a cite, turned into a list with the cite on the last item only) found the OWASP list. The cite is now on each item. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## How it works`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Splits and the bulleted list keep every fact, hedge, code block, and cite in place. |
+
 Open FAILs: 0

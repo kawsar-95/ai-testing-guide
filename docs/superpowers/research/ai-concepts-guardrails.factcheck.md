@@ -67,4 +67,54 @@ Every source has a cite, and every cite number (1–6) has a source.
 
 FAILs found: 0. Fixes: none needed in the Technical text.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "For indirect injection, put third-party content only in tool results. Then tell the model in the system prompt that this content is untrusted data <Cite n={3} />." — The ORIGINAL gives two parallel instructions joined by "and", with one cite after both. The EDITED "Then" turns them into an ordered sequence, which the ORIGINAL does not state. The first instruction ("put third-party content only in tool results") also loses its cite <Cite n={3} />. Fix: "For indirect injection, put third-party content only in tool results <Cite n={3} />. Also tell the model in the system prompt that this content is untrusted data <Cite n={3} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | Input screens: "Then" adds an order, and the first split part loses its cite. The rest (rules list, sandbox split) keeps the meaning and cites. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## How it works`.
+
+### FAILs
+
+- T1: "- **deny** blocks it <Cite n={4} />." — In the ORIGINAL, one cite followed the whole sentence that defines all three rule kinds ("allow runs a tool without manual approval, ask prompts for confirmation, and deny blocks it <Cite n={4} />"). In the EDITED list, only the deny bullet carries the cite, so the allow and ask definitions no longer have the support they had. Fix: "- **allow** runs a tool without manual approval <Cite n={4} />.\n- **ask** prompts for confirmation <Cite n={4} />.\n- **deny** blocks it <Cite n={4} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | The cite for the rule-kind definitions was left on the deny bullet only. The other edits keep the meaning. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Second re-check after the fixes (2026-11-10)
+
+The round above failed a list of rule kinds whose cite stayed on the last item only. The cite is now on each item. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## How it works`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Diagram unchanged. The splits and bullets keep every fact, qualifier and cite (cite 4 on each rule bullet, cite 3 on each input-screen part, cite 6 still ends the sandbox passage). |
+
 Open FAILs: 0

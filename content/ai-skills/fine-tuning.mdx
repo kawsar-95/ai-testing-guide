@@ -1,6 +1,6 @@
 export const metadata = { title: 'Fine-Tuning', description: 'Train a model further on your own labeled examples, know when not to, and test the new model against the base model.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-10',
   sources: [
     { title: 'LoRA: Low-Rank Adaptation of Large Language Models (arXiv 2106.09685)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2106.09685', accessed: '2026-10-28' },
     { title: 'QLoRA: Efficient Finetuning of Quantized LLMs (arXiv 2305.14314)', publisher: 'arXiv', url: 'https://arxiv.org/abs/2305.14314', accessed: '2026-10-28' },
@@ -63,18 +63,22 @@ Fine-tuning দিয়ে শুরু করবেন না। একটা 
 <Voices>
 <Technical>
 
-**Full fine-tuning** changes all the weights of the model. That needs a lot of memory and storage. **Parameter-efficient fine-tuning (PEFT)** trains only a small number of extra parameters and keeps the rest. This cuts the compute and storage cost a lot <Cite n={3} />.
+**Full fine-tuning** changes all the weights of the model. That needs a lot of memory and storage.
 
-**LoRA** is one PEFT method. It freezes the pretrained weights and adds small trainable matrices to each layer of the Transformer <Cite n={1} />. In the LoRA paper, compared with full fine-tuning of GPT-3 175B, LoRA needed 10,000 times fewer trainable parameters and 3 times less GPU memory, and it added no extra latency at inference <Cite n={1} />. **QLoRA** goes further: it trains LoRA adapters on top of a frozen base model that is stored in 4-bit form. With it, the authors fine-tuned a 65B model on one 48GB GPU <Cite n={2} />.
+**Parameter-efficient fine-tuning (PEFT).** PEFT trains only a small number of extra parameters and keeps the rest. This cuts the compute and storage cost a lot <Cite n={3} />.
 
-The data is a file of examples. In the Hugging Face TRL library, a row can be plain text or a prompt and a completion, and a conversational row holds a list of messages with roles such as `user` and `assistant` <Cite n={4} />:
+**LoRA.** LoRA is one PEFT method. It freezes the pretrained weights and adds small trainable matrices to each layer of the Transformer <Cite n={1} />. In the LoRA paper, GPT-3 175B was the model compared with full fine-tuning. LoRA needed 10,000 times fewer trainable parameters and 3 times less GPU memory, and it added no extra latency at inference <Cite n={1} />.
+
+**QLoRA.** QLoRA goes further: it trains LoRA adapters on top of a frozen base model that is stored in 4-bit form. With it, the authors fine-tuned a 65B model on one 48GB GPU <Cite n={2} />.
+
+**The data.** The data is a file of examples. In the Hugging Face TRL library, a row can be plain text or a prompt and a completion. A conversational row holds a list of messages with roles such as `user` and `assistant` <Cite n={4} />:
 
 ```json
 {"messages": [{"role": "user", "content": "Classify: login page shows 500 after reset"},
               {"role": "assistant", "content": "severity: high; area: auth"}]}
 ```
 
-During SFT, the model learns to predict the target output token by token, and the trainer measures a token-level cross-entropy loss <Cite n={4} />. The trainer can also take a separate evaluation dataset <Cite n={4} />.
+**Training loss.** During SFT, the model learns to predict the target output token by token, and the trainer measures a token-level cross-entropy loss <Cite n={4} />. The trainer can also take a separate evaluation dataset <Cite n={4} />.
 
 ```text
 labeled examples --> split --+--> train set --> SFT + LoRA --> adapter (new model)

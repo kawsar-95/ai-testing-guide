@@ -50,4 +50,38 @@ Copy check (script, 8-word runs of the page vs each source): the only runs are t
 |---|---|---|---|---|
 | 28 | "A design where a person approves, corrects, or takes over steps of an AI system, for example a human approves high-impact actions before they run" | 1 | PASS | Matches the page definition; the cited part is the example: "require a human to approve high-impact actions before they are taken." |
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "Claude Code shows the same idea as configuration. There are three kinds of rules <Cite n={3} />:" — In the ORIGINAL, the cite follows the claims about what each rule does ("**Allow** rules run a tool with no prompt, **ask** rules prompt for confirmation, and **deny** rules block the tool <Cite n={3} />"). The EDITED text moves the cite onto a new lead-in sentence that states only the number of rule kinds. The three bullets that carry the supported facts have no cite. Fix: "Claude Code shows the same idea as configuration. There are three kinds of rules:\n\n- **Allow** rules run a tool with no prompt <Cite n={3} />.\n- **Ask** rules prompt for confirmation <Cite n={3} />.\n- **Deny** rules block the tool <Cite n={3} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | The allow/ask/deny cite was moved off the facts it supported and onto the lead-in line. Everything else is intact (code, the `thread_id` and `Command` facts, the rerun rule, the deny-first order, OWASP, NIST). |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## How it works`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Facts, hedges, code, headings and cites are preserved. The split sentences and the new bulleted list keep the original meaning, and each rule bullet keeps its cite. |
+
 Open FAILs: 0

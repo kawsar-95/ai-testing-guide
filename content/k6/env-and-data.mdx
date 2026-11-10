@@ -1,6 +1,6 @@
 export const metadata = { title: 'Environment Variables and Test Data', description: 'Pass settings with __ENV and load test data from a CSV file.' }
 export const page = {
-  updated: '2026-10-27',
+  updated: '2026-11-10',
   sources: [
     { title: 'Environment variables', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/environment-variables/', accessed: '2026-10-27' },
     { title: 'Options reference', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/', accessed: '2026-10-27' },
@@ -426,11 +426,11 @@ secret ফাইল রিপোজিটরির বাইরে রাখু�
 <Voices>
 <Technical>
 
-A load test with one fixed value is not realistic. Parameterization turns test values into inputs, so each request can use other data. The k6 docs say it also helps to stop server-side caching from affecting the test <Cite n={5} />.
+**Why parameterize.** A load test with one fixed value is not realistic. Parameterization turns test values into inputs, so each request can use other data. The k6 docs say it also helps to stop server-side caching from affecting the test <Cite n={5} />.
 
-The function `open()` reads a whole file into memory. You can call it only in the init context, which is the code outside the default function <Cite n={3} />. Every VU keeps its own copy of the file <Cite n={3} />. Each VU is a separate JavaScript VM <Cite n={5} />. So a big file can use too much memory <Cite n={5} />.
+**Reading a file.** The function `open()` reads a whole file into memory. You can call it only in the init context, which is the code outside the default function <Cite n={3} />. Every VU keeps its own copy of the file <Cite n={3} />. Each VU is a separate JavaScript VM <Cite n={5} />. So a big file can use too much memory <Cite n={5} />.
 
-`SharedArray` from `k6/data` fixes this. It shares the memory between VUs. Its function runs only once, and k6 keeps the result in memory once. When the script asks for an element, k6 gives a copy of it <Cite n={4} />. A `SharedArray` has a small CPU cost to read elements, but the docs say it is negligible next to the time of the requests <Cite n={5} />. You must build it in the init context. It is read-only, so VUs cannot use it to send data to each other <Cite n={4} />.
+**SharedArray.** `SharedArray` from `k6/data` fixes this. It shares the memory between VUs. Its function runs only once, and k6 keeps the result in memory once. When the script asks for an element, k6 gives a copy of it <Cite n={4} />. A `SharedArray` has a small CPU cost to read elements, but the docs say it is negligible next to the time of the requests <Cite n={5} />. You must build it in the init context. It is read-only, so VUs cannot use it to send data to each other <Cite n={4} />.
 
 Here the file `users.csv` has one user id on each line. The owner's script reads it this way:
 
@@ -694,9 +694,9 @@ parse `SharedArray`-র ফাংশনের ভেতরে, তাই এট�
 <Voices>
 <Technical>
 
-Sometimes a test must not use the same row two times. The `k6/execution` module gives the numbers for this <Cite n={5} />. The property `scenario.iterationInTest` is a zero-based number that is unique for the scenario <Cite n={8} />. The note in the docs says it is unique for each scenario, not for the whole test. With more than one scenario, you may need to split the data for each scenario <Cite n={5} />.
+**Unique rows.** Sometimes a test must not use the same row two times. The `k6/execution` module gives the numbers for this <Cite n={5} />. The property `scenario.iterationInTest` is a zero-based number that is unique for the scenario <Cite n={8} />. The note in the docs says it is unique for each scenario, not for the whole test. With more than one scenario, you may need to split the data for each scenario <Cite n={5} />.
 
-This script uses the `shared-iterations` executor with `iterations: userIds.length`, so each row is used one time <Cite n={5} />:
+**One use per row.** This script uses the `shared-iterations` executor with `iterations: userIds.length`, so each row is used one time <Cite n={5} />:
 
 ```javascript
 import http from 'k6/http';
@@ -727,9 +727,11 @@ export default function () {
 }
 ```
 
-To give each VU its own row, use `exec.vu.idInTest`. It is the VU identifier, and it is unique in the whole test run <Cite n={8} />. VU identifiers start at one and arrays start at zero, so subtract 1 <Cite n={5} />.
+**One row per VU.** To give each VU its own row, use `exec.vu.idInTest`. It is the VU identifier, and it is unique in the whole test run <Cite n={8} />. VU identifiers start at one and arrays start at zero, so subtract 1 <Cite n={5} />.
 
-Older k6 versions have no `k6/execution` module. They use the globals `__VU` and `__ITER` <Cite n={7} />. `__VU` is the VU number, counted from 1. It is 0 in setup and teardown. `__ITER` is the zero-based iteration counter of one VU <Cite n={7} />. Two VUs both have `__ITER` 0 for their first iteration. So `__ITER` alone does not give unique rows across VUs. The tutorial's own check ran k6 v2.3.0 with 2 VUs and 4 iterations. It printed `VU 1 ITER 0`, `VU 1 ITER 1`, `VU 1 ITER 2`, and `VU 2 ITER 0`. The split of iterations between VUs can differ from run to run.
+**Older k6 versions.** Older k6 versions have no `k6/execution` module. They use the globals `__VU` and `__ITER` <Cite n={7} />. `__VU` is the VU number, counted from 1. It is 0 in setup and teardown. `__ITER` is the zero-based iteration counter of one VU <Cite n={7} />. Two VUs both have `__ITER` 0 for their first iteration. So `__ITER` alone does not give unique rows across VUs.
+
+**Tutorial check.** The tutorial's own check ran k6 v2.3.0 with 2 VUs and 4 iterations. It printed `VU 1 ITER 0`, `VU 1 ITER 1`, `VU 1 ITER 2`, and `VU 2 ITER 0`. The split of iterations between VUs can differ from run to run.
 
 </Technical>
 <Layman>

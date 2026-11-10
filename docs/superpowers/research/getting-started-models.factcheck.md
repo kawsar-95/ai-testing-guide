@@ -105,4 +105,41 @@ Scope: `git diff 451b292 HEAD -- content/` (commit 8a78933; later commits 6c7651
 
 Cite numbers: unchanged; all 8 exist and are used.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 4 sections was edited to lower the reading load: T1 = `## The current lineup`, T2 = `## Retired and deprecated models`, T3 = `## Model aliases in Claude Code`, T4 = `## Effort levels`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "To see what a session uses, run `/context` to visualize current context usage. Run `/usage` to show session cost, plan usage limits, and activity stats. <Cite n={3} />" — The ORIGINAL had one sentence with <Cite n={3} /> after both commands. After the split, the cite follows only the `/usage` sentence, so the `/context` sentence has no cite. Fix: "To see what a session uses, run `/context` to visualize current context usage. <Cite n={3} /> Run `/usage` to show session cost, plan usage limits, and activity stats. <Cite n={3} />"
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | Split sentence leaves the `/context` part without its cite. |
+| T2 | PASS | Bold labels match their text, and the cites stay in place. |
+| T3 | PASS | Only run-in labels were added, and the meaning is unchanged. |
+| T4 | PASS | The default-effort sentence was split, the cite follows both parts, and the meaning is unchanged. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## The current lineup`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only the last sentence was split into two, each with the original cite; table, code, Callout, and all facts are unchanged. |
+
 Open FAILs: 0

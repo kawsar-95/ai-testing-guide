@@ -1,6 +1,6 @@
 export const metadata = { title: 'k6 in CI', description: 'Run k6 in GitHub Actions and fail the job when a threshold fails.' }
 export const page = {
-  updated: '2026-10-27',
+  updated: '2026-11-10',
   sources: [
     { title: 'Thresholds', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/thresholds/', accessed: '2026-10-27' },
     { title: 'errext/exitcodes/codes.go', publisher: 'grafana/k6 (GitHub)', url: 'https://github.com/grafana/k6/blob/master/errext/exitcodes/codes.go', accessed: '2026-10-27' },
@@ -114,11 +114,13 @@ Run each test against a test environment, not against production.
 <Voices>
 <Technical>
 
-`grafana/setup-k6-action` installs k6. It uses the latest k6 unless you set `k6-version` <Cite n={5} />. `grafana/run-k6-action` is a wrapper over `k6 run`. It takes a glob in `path` and extra flags in `flags`. It does not install k6 <Cite n={6} />. Use both, in this order. Both READMEs show `@v1` of the actions <Cite n={5} /><Cite n={6} />.
+### Actions and report
 
-Set `K6_WEB_DASHBOARD=true` and `K6_WEB_DASHBOARD_EXPORT=<file>.html` to write an HTML report when the test ends <Cite n={4} />. The report has graphs only if the test runs longer than three times the aggregation period <Cite n={4} />. The upload step publishes the file as an artifact <Cite n={9} />.
+**Installing k6.** `grafana/setup-k6-action` installs k6. It uses the latest k6 unless you set `k6-version` <Cite n={5} />. `grafana/run-k6-action` is a wrapper over `k6 run`. It takes a glob in `path` and extra flags in `flags`. It does not install k6 <Cite n={6} />. Use both, in this order. Both READMEs show `@v1` of the actions <Cite n={5} /><Cite n={6} />.
 
-Save this as `.github/workflows/k6.yml`. The two scripts are `tests/smoke.js` and `tests/load.js` in the same repository.
+**HTML report.** Set `K6_WEB_DASHBOARD=true` and `K6_WEB_DASHBOARD_EXPORT=<file>.html` to write an HTML report when the test ends <Cite n={4} />. The report has graphs only if the test runs longer than three times the aggregation period <Cite n={4} />. The upload step publishes the file as an artifact <Cite n={9} />.
+
+**The file.** Save this as `.github/workflows/k6.yml`. The two scripts are `tests/smoke.js` and `tests/load.js` in the same repository.
 
 ```yaml
 name: k6
@@ -178,7 +180,9 @@ How the file works:
 - `if: always()` runs the upload step even when the test step failed <Cite n={11} />. This keeps the report of a failed run, which is the report you most want to read (the tutorial's own advice).
 - The versions in the file (`@v1`, `@v7`) are the ones in the READMEs on 27 October 2026 <Cite n={5} /><Cite n={6} /><Cite n={9} /><Cite n={12} />. Check each README for the current major version before you copy the file.
 
-The smoke script (`tests/smoke.js`) has three thresholds, so that a slow or failing app fails the job. The `BASE_URL` default is `https://quickpizza.grafana.com`, a host that the k6 docs use in examples. A fork pull request has no secret, so the smoke job then tests this host with 1 VU (the tutorial's own choice):
+### The two scripts
+
+**Smoke script.** The script (`tests/smoke.js`) has three thresholds, so that a slow or failing app fails the job. The `BASE_URL` default is `https://quickpizza.grafana.com`, a host that the k6 docs use in examples. A fork pull request has no secret, so the smoke job then tests this host with 1 VU (the tutorial's own choice):
 
 ```javascript
 import http from 'k6/http';
@@ -203,7 +207,7 @@ export default function () {
 }
 ```
 
-The load script (`tests/load.js`) has the first two thresholds of the smoke script. It uses `stages` instead of `vus` and `duration`: 2 minutes up to 20 VUs, 5 minutes at 20 VUs, and 1 minute down to 0. It has no default host. The `setup()` function calls `fail()` when `BASE_URL` is empty, so k6 stops and exits with a non-zero code (107 in a test run for this page). If the `TEST_BASE_URL` secret is missing, the scheduled job fails and does not load-test the public demo host.
+**Load script.** The script (`tests/load.js`) has the first two thresholds of the smoke script. It uses `stages` instead of `vus` and `duration`: 2 minutes up to 20 VUs, 5 minutes at 20 VUs, and 1 minute down to 0. It has no default host. The `setup()` function calls `fail()` when `BASE_URL` is empty, so k6 stops and exits with a non-zero code (107 in a test run for this page). If the `TEST_BASE_URL` secret is missing, the scheduled job fails and does not load-test the public demo host.
 
 ```javascript
 import http from 'k6/http';
@@ -236,9 +240,11 @@ export default function () {
 }
 ```
 
-The smoke job sets `K6_WEB_DASHBOARD_PERIOD: 1s`. The reason is the report rule: the HTML report has graphs only if the test is longer than three times the aggregation period <Cite n={4} />. The default period is 10 seconds, so a 10 second smoke test would give a report with no graphs. With a period of 1 second, the test is longer than three periods. The load job keeps the default period, because it runs for 8 minutes. See [reports and the dashboard](/k6/reports-and-dashboard/) for the rule.
+### Dashboard settings
 
-Both jobs set `K6_WEB_DASHBOARD_PORT: '-1'`. A CI job needs k6 to quit when the test is over. The docs advise that you switch off the dashboard HTTP port with the value `-1` <Cite n={4} />.
+**Report period.** The smoke job sets `K6_WEB_DASHBOARD_PERIOD: 1s`. The reason is the report rule: the HTML report has graphs only if the test is longer than three times the aggregation period <Cite n={4} />. The default period is 10 seconds, so a 10 second smoke test would give a report with no graphs. With a period of 1 second, the test is longer than three periods. The load job keeps the default period, because it runs for 8 minutes. See [reports and the dashboard](/k6/reports-and-dashboard/) for the rule.
+
+**Dashboard port.** Both jobs set `K6_WEB_DASHBOARD_PORT: '-1'`. A CI job needs k6 to quit when the test is over. The docs advise that you switch off the dashboard HTTP port with the value `-1` <Cite n={4} />.
 
 </Technical>
 <Layman>

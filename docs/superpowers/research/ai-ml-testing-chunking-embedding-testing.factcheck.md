@@ -24,4 +24,22 @@ Page: `content/ai-ml-testing/chunking-embedding-testing.mdx`. Date: 2026-11-02. 
 | 7 | Mistake 6: the model that wins in English may lose in Bengali (cite MTEB). | 2 | FAIL, fixed | The abstract does not say that. It says MTEB spans 112 languages and "no particular text embedding method dominates across all tasks". Prose now keeps the tutorial's point uncited and cites only those two facts. |
 | 8 | Bi-encoder vs cross-encoder definitions; the ground-truth method; sweep code. | none | PASS | Standard definitions and the tutorial's own design; helper names (`split`, `embedding_fn`, `ndcg_at_k`) are the tutorial's. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only bold run-in labels were added and one sentence was split. Facts, code blocks, the table and the {{cite:mteb}} placement are unchanged, and each label matches its paragraph. |
+
 Open FAILs: 0

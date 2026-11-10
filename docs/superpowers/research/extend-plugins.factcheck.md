@@ -159,4 +159,55 @@ Method: compared the sequence of cited URLs on the page at 451b292 and at HEAD. 
 
 Cites 1 and 2 are not renumbered. Cite numbers: all 12 exist and are cited at least once. First-cite order is 1..12.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 2 sections was edited to lower the reading load: T1 = `## Install and manage`, T2 = `## Example: the Superpowers plugin`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | The Updates sentence became a bulleted list with the same three on-by-default groups and the same exception. The off-by-default sentence is unchanged, and the cite is kept. |
+| T2 | PASS | The seven workflow steps became a numbered list in the original order, with "subagent-driven-development or executing-plans" kept as one step. The cite follows the lead-in, as with the 15-skills list. |
+
+Open FAILs at the end of the rounds above: 0
+
+## Re-check after the fixes (2026-11-10)
+
+A scan of every edited section for a FAIL class found on other pages (a sentence that ended with a cite, turned into a list with the cite on the last item only) found the list of marketplaces with auto-update on. The cite is now on each item. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## Install and manage`.
+
+### FAILs
+
+- T1: "- `claude-plugins-official`. <Cite n={7} />" — The ORIGINAL first sentence ("Auto-update is on by default for `claude-plugins-official`, for the other official marketplace names except ... and for marketplaces added from claude.ai.") has no cite. Its only cite follows the second sentence ("It is off by default ... local development marketplaces."). The edit adds `<Cite n={7} />` to all three "on by default" bullets, which puts cites on facts the ORIGINAL did not cite. Fix: Remove the cites from the three bullets and keep the one after the "off by default" sentence: "Auto-update is on by default for:\n\n- `claude-plugins-official`.\n- The other official marketplace names, except `knowledge-work-plugins` and `first-party-plugins`.\n- Marketplaces added from claude.ai.\n\nIt is off by default for every other marketplace, including the community marketplace, third-party marketplaces, and local development marketplaces. <Cite n={7} />"
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | Only the Updates section changed. The list split keeps every fact, but it adds `<Cite n={7} />` to three bullets that had no cite in the ORIGINAL. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Second re-check after the fixes (2026-11-10)
+
+The round above found that the first sentence of the original had no cite (its cite follows the next sentence), so the cites on the items were new. The items have no cite now, as in the original. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## Install and manage`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only the Updates sentence changed, into a three-item list. All facts, exceptions, defaults and the cite position match the original. The rest of the text, code and tables are identical. |
+
 Open FAILs: 0

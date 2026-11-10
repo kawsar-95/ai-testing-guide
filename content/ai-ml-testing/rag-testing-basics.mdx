@@ -1,6 +1,6 @@
 export const metadata = { title: 'RAG Testing Fundamentals', description: 'Test a RAG pipeline end to end: retrieval quality, precision and recall, end-to-end faithfulness, and the four failure modes.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-10',
   sources: [
     { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-11-01' },
     { title: 'What is Ragas?', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/', accessed: '2026-11-01' },
@@ -111,9 +111,14 @@ def test_retrieval_finds_the_right_chunks(dataset, retriever):
         assert precision >= 0.6, f"{case.id}: precision {precision:.2f}"
 ```
 
-The thresholds are a decision, not a fact. A high recall and a low precision is often the right trade for a system that can afford a long context; a low recall is always a bug, because the information simply is not there.
+The thresholds are a decision, not a fact. A high recall and a low precision is often the right trade for a system that can afford a long context. A low recall is always a bug, because the information simply is not there.
 
-**End-to-end test.** The answer must be supported by the retrieved context. The Ragas metric set splits this: Faithfulness checks the answer against the retrieved context, and Response Relevancy checks it against the question <Cite n={3} />. Faithfulness is the one that catches a hallucination, and it uses an LLM as the judge.
+**End-to-end test.** The answer must be supported by the retrieved context. The Ragas metric set splits this into two checks:
+
+- Faithfulness checks the answer against the retrieved context <Cite n={3} />.
+- Response Relevancy checks the answer against the question <Cite n={3} />.
+
+Faithfulness is the one that catches a hallucination, and it uses an LLM as the judge.
 
 **The failure-mode triage.** When an answer is wrong, the test that tells you where to look is the one that separates the four failure modes:
 
@@ -124,9 +129,9 @@ does the answer match it?          no  -> generation failure (fix the prompt)
 did any passage contain it?       no  -> retrieval gap (fix the knowledge base)
 ```
 
-**Retrieval gap** deserves its own test, because it is the one that is easy to miss and expensive in production. The question asks about something the knowledge base does not cover. The correct behaviour is to say so. The common behaviour is to answer from the model's memory, which is the failure RAG is meant to reduce: the RAG paper reports more factual answers when the model is given retrieved passages <Cite n={1} />.
+**Retrieval gap.** This failure deserves its own test, because it is the one that is easy to miss and expensive in production. The question asks about something the knowledge base does not cover. The correct behaviour is to say so. The common behaviour is to answer from the model's memory. This is the failure RAG is meant to reduce: the RAG paper reports more factual answers when the model is given retrieved passages <Cite n={1} />.
 
-The final piece is a **cost check**. A retriever that returns five long passages instead of two short ones inflates the token count on every call. That is a quality issue, because more context is more room to be unfaithful, and it is a money issue at the same time.
+**Cost check.** The final piece is a cost check. A retriever that returns five long passages instead of two short ones inflates the token count on every call. That is a quality issue, because more context is more room to be unfaithful. At the same time, it is a money issue.
 
 </Technical>
 <Layman>

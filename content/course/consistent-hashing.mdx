@@ -1,6 +1,6 @@
 export const metadata = { title: 'Consistent Hashing', description: 'How consistent hashing places keys on a ring so that few keys move when a server joins or leaves, what virtual nodes add, and what a tester checks.' }
 export const page = {
-  updated: '2026-10-22',
+  updated: '2026-11-10',
   sources: [
     { title: 'Consistent Hashing and Random Trees: Distributed Caching Protocols for Relieving Hot Spots on the World Wide Web', publisher: 'Karger et al., STOC 1997 (author-hosted copy)', url: 'https://people.csail.mit.edu/karger/Papers/web.pdf', accessed: '2026-10-22' },
     { title: 'Dynamo: Amazon\'s Highly Available Key-value Store', publisher: 'DeCandia et al., SOSP 2007', url: 'https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf', accessed: '2026-10-22' },
@@ -65,9 +65,9 @@ You need it when data or cache entries are spread over many servers, and servers
 <Voices>
 <Technical>
 
-Dynamo describes the idea this way. The values that the hash function can give are laid out as a fixed circle, a **ring**, where the largest value wraps around to the smallest <Cite n={2} />. Each node gets a random value in this space, which is its position on the ring <Cite n={2} />. To store a key, you hash the key to a position, then walk the ring clockwise to the first node with a larger position <Cite n={2} />. Each node is then responsible for the region between it and the node before it <Cite n={2} />.
+**The ring.** Dynamo describes the idea this way. The values that the hash function can give are laid out as a fixed circle, a **ring**, where the largest value wraps around to the smallest <Cite n={2} />. Each node gets a random value in this space, which is its position on the ring <Cite n={2} />. To store a key, you hash the key to a position, then walk the ring clockwise to the first node with a larger position <Cite n={2} />. Each node is then responsible for the region between it and the node before it <Cite n={2} />.
 
-Cassandra uses the same walk, and calls the ring positions **tokens** <Cite n={3} />. For replication, it keeps walking until it meets as many distinct nodes as the replication factor: with a factor of 3, it walks to three distinct nodes, and these hold the replicas <Cite n={3} />.
+**Replication.** Cassandra uses the same walk, and calls the ring positions **tokens** <Cite n={3} />. For replication, it keeps walking until it meets as many distinct nodes as the replication factor <Cite n={3} />. With a factor of 3, it walks to three distinct nodes, and these hold the replicas <Cite n={3} />.
 
 ```text
 Tutorial example: positions 0 to 99. Clockwise means "up", and 99 wraps to 0.
@@ -84,7 +84,11 @@ A new server E joins at position 55:
 
 ### Why few keys move
 
-In the example above, the ring and the positions are the tutorial's own. When E joins, only the keys between B and E change owner. This is the rule that Dynamo states: the arrival or departure of a node affects only its immediate neighbors, and the other nodes stay unaffected <Cite n={2} />. The paper names a related rule, **monotonicity**: when new buckets are added, an item can move to a new bucket, but never between two old buckets <Cite n={1} />. The paper also describes a **smoothness** goal: when a machine joins or leaves, the expected share of objects that move is the minimum needed to keep the load balanced <Cite n={1} />.
+In the example above, the ring and the positions are the tutorial's own. When E joins, only the keys between B and E change owner. This is the rule that Dynamo states: the arrival or departure of a node affects only its immediate neighbors, and the other nodes stay unaffected <Cite n={2} />.
+
+**Monotonicity.** The paper names a related rule, **monotonicity**. When new buckets are added, an item can move to a new bucket, but never between two old buckets <Cite n={1} />.
+
+**Smoothness.** The paper also describes a **smoothness** goal. When a machine joins or leaves, the expected share of objects that move is the minimum needed to keep the load balanced <Cite n={1} />.
 
 ### Virtual nodes
 
@@ -96,9 +100,9 @@ The Dynamo paper lists these benefits <Cite n={2} />:
 - A new or returning node takes about the same share of work from every other node.
 - The number of virtual nodes of a machine can follow its capacity.
 
-Cassandra adds a view from the small cluster. With few nodes and evenly spaced tokens, it is hard to add just one node and keep the ring balanced <Cite n={3} />. With a node that owns many tokens, a new node takes many small pieces of data from many neighbors <Cite n={3} />. The Karger paper also gives each bucket more than one point on its unit interval <Cite n={1} />.
+**Small clusters.** Cassandra adds a view from the small cluster. With few nodes and evenly spaced tokens, it is hard to add just one node and keep the ring balanced <Cite n={3} />. With a node that owns many tokens, a new node takes many small pieces of data from many neighbors <Cite n={3} />. The Karger paper also gives each bucket more than one point on its unit interval <Cite n={1} />.
 
-Many tokens have a cost. Each token adds up to 2 x (RF - 1) neighbors on the ring, so more combinations of node failures can make part of the ring unavailable, and cluster maintenance can be slower <Cite n={3} />.
+**Cost of many tokens.** Many tokens have a cost. Each token adds up to 2 x (RF - 1) neighbors on the ring <Cite n={3} />. So more combinations of node failures can make part of the ring unavailable, and cluster maintenance can be slower <Cite n={3} />.
 
 </Technical>
 <Layman>

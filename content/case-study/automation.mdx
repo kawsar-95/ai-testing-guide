@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-11-10',
   sources: [
     { title: 'k6 options reference', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/', accessed: '2026-10-10' },
     { title: 'k6 test lifecycle', publisher: 'Grafana Labs (k6 docs)', url: 'https://grafana.com/docs/k6/latest/using-k6/test-lifecycle/', accessed: '2026-10-10' },
@@ -107,7 +107,7 @@ In this script, `setup` does these steps:
 
 1. It lists the users and keeps each customer that is active and has a balance of at least `MIN_BALANCE` (default 1000).
 2. It reads the statement of each customer and counts the outgoing use since the start of the UTC day and the UTC month.
-3. It calculates the capacity of each customer: the smallest of the daily count left, the monthly count left, the daily amount left, the monthly amount left, and the balance. The three amounts are divided by the cost of one send (the amount plus a flat fee).
+3. It calculates the capacity of each customer. The capacity is the smallest of the daily count left, the monthly count left, the daily amount left, the monthly amount left, and the balance. The three amounts are divided by the cost of one send (the amount plus a flat fee).
 4. It keeps a customer only if the capacity is more than 0 and the customer can log in.
 5. It fails the run if fewer than 2 customers are left.
 6. It builds a list of round-robin slots. Each customer gets at most its capacity in slots, and each customer always pays the next customer in the list.
@@ -141,9 +141,9 @@ export const options = {
 };
 ```
 
-In this excerpt and on this page, `send` replaces the original tag value, and `send_skipped` replaces the original counter name. The original names contain the name of the app.
+**Tag names.** In this excerpt and on this page, `send` replaces the original tag value, and `send_skipped` replaces the original counter name. The original names contain the name of the app.
 
-A threshold expression has the form `<aggregation_method> <operator> <value>`. <Cite n={4} /> A threshold can apply to a sub-metric with a tag, in the form `'metric_name{tag_name:tag_value}'`, and to checks with a tag. <Cite n={4} /> The script gives each send request and its checks the tag `name: 'send'`. So the login calls of `setup` do not count.
+**Threshold form.** A threshold expression has the form `<aggregation_method> <operator> <value>`. <Cite n={4} /> A threshold can apply to a sub-metric with a tag, in the form `'metric_name{tag_name:tag_value}'`, and to checks with a tag. <Cite n={4} /> The script gives each send request and its checks the tag `name: 'send'`. So the login calls of `setup` do not count.
 
 | Threshold | Meaning in this test |
 |---|---|
@@ -152,9 +152,9 @@ A threshold expression has the form `<aggregation_method> <operator> <value>`. <
 | `http_req_duration{name:send}` `max<60000` | No send takes 60 s or longer. |
 | `send_skipped` `count==0` | No iteration found its slot empty. |
 
-The checks threshold is necessary. A failed check does not stop the test and does not give a failed exit status. <Cite n={5} /> Each check creates a rate metric, and a threshold on it can fail the test. <Cite n={5} /> The skip counter is a Counter metric, and a threshold on a Counter can use `count`. <Cite n={4} />
+**Checks.** The checks threshold is necessary. A failed check does not stop the test and does not give a failed exit status. <Cite n={5} /> Each check creates a rate metric, and a threshold on it can fail the test. <Cite n={5} /> The skip counter is a Counter metric, and a threshold on a Counter can use `count`. <Cite n={4} />
 
-The requirements define no latency target. The k6 README says to read `p(95)` from the summary as information only. That is why the duration threshold is only a 60 s ceiling.
+**Latency.** The requirements define no latency target. The k6 README says to read `p(95)` from the summary as information only. That is why the duration threshold is only a 60 s ceiling.
 
 ### The result: README only
 
@@ -244,9 +244,15 @@ For several roles, the Playwright docs authenticate several times in one setup p
 
 ### Saved sessions
 
-A saved state covers cookies, local storage, IndexedDB, and passkey authentication. <Cite n={7} /> Each setup in the workspace saves the session cookie and the local-storage keys of its role to `e2e/<role>_auth.json`.
+**Saved state.** A saved state covers cookies, local storage, IndexedDB, and passkey authentication. <Cite n={7} /> Each setup in the workspace saves the session cookie and the local-storage keys of its role to `e2e/<role>_auth.json`.
 
-The Playwright docs say that you must delete the stored state when it expires. <Cite n={7} /> The workspace does this check in code. Each setup skips the login while the saved session is valid: the file exists, it has the correct role, and its token has more than 10 min left. The agent setup needs this most, because each agent login sends a new OTP email.
+**Expiry.** The Playwright docs say that you must delete the stored state when it expires. <Cite n={7} /> The workspace does this check in code. Each setup skips the login while the saved session is valid:
+
+- The file exists.
+- It has the correct role.
+- Its token has more than 10 min left.
+
+The agent setup needs this most, because each agent login sends a new OTP email.
 
 <Callout type="danger" title="A session file is a credential">
 
@@ -277,9 +283,9 @@ Step 2 asserts the exact status, not "any 2xx". The page object notes that the b
 
 ### Web servers and reports
 
-`webServer` launches one or more web servers during the tests. <Cite n={9} /> With `reuseExistingServer: true`, Playwright reuses a server that already runs on the port or URL. <Cite n={9} /> The default timeout is 60000 ms. <Cite n={9} /> The workspace config starts the API and the web app, reuses both when they run, and gives the web app 120 s to start.
+**Web servers.** `webServer` launches one or more web servers during the tests. <Cite n={9} /> With `reuseExistingServer: true`, Playwright reuses a server that already runs on the port or URL. <Cite n={9} /> The default timeout is 60000 ms. <Cite n={9} /> The workspace config starts the API and the web app, reuses both when they run, and gives the web app 120 s to start.
 
-The config keeps traces and screenshots on failure. It writes a list report and an HTML report. In CI, it retries a failed test 2 times.
+**Reports.** The config keeps traces and screenshots on failure. It writes a list report and an HTML report. In CI, it retries a failed test 2 times.
 
 <Callout type="warning" title="No stored Playwright run">
 

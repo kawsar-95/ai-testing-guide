@@ -55,4 +55,38 @@ The writer changed the sentence of row 4 in all 3 panels and added source 10 (Ol
 
 The Layman text is the same as Technical. The Bangla text ("`ollama pull <model>` একটা মডেল ডাউনলোড করে ... `ollama run <model>` একটা মডেল চালায় আর তার সাথে চ্যাট খোলে") has the same facts and cites.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "On a local Ollama install, the API is at `http://localhost:11434/api`." — The ORIGINAL had one sentence with one cite at the end, and that cite supported both the `/api` address and the `/v1` OpenAI-compatible address. After the split, the `/api` claim has no cite, so the cite no longer follows all the words it supported. Fix: "On a local Ollama install, the API is at `http://localhost:11434/api` <Cite n={3} />. An OpenAI-compatible API is at `http://localhost:11434/v1` <Cite n={3} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | The `/api` sentence lost the cite that covered it in the ORIGINAL. The rest is faithful. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## How it works`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | The three-item list, the split sentences and all cites match the original. Code, diagram and bold labels are unchanged or accurate. |
+
 Open FAILs: 0

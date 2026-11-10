@@ -208,4 +208,25 @@ The n-gram check at n = 9 and n = 10 against `ctfl-v4.0.1.txt` finds no run. No 
 
 Round 1: 5 FAILs, all fixed in c232c39. Round 2: no new FAIL.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 4 sections was edited to lower the reading load: T1 = the ISTQB version of `## Statement Coverage`, T2 = the ISTQB version of `## Branch Coverage`, T3 = the ISTQB version of `## Condition Testing`, T4 = the ISTQB version of `## Unit Testing`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only one sentence split; the cite still follows it; code, tables and Callouts are unchanged. |
+| T2 | PASS | Bold run-in labels match their paragraphs; one sentence split; facts, cites, code and tables are unchanged. |
+| T3 | PASS | Labels "Glossary" and "Atomic conditions" fit their text; content and cites are unchanged. |
+| T4 | PASS | A sentence with one cite was split and the cite follows each part; labels fit; code, tables and Callouts are unchanged. |
+
 Open FAILs: 0

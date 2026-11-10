@@ -126,4 +126,41 @@ Checked 2026-10-27 against the last commit.
 
 Overlap check: 2 runs, both source URLs. `node --test tests/voice-source.test.ts tests/k6.test.ts`: pass 30, fail 0.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 4 sections was edited to lower the reading load: T1 = `## The three InfluxDB versions`, T2 = `## Run InfluxDB 1.x with Docker`, T3 = `## Run Grafana`, T4 = `## Connect Grafana to InfluxDB`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+- T1: "The InfluxData docs warn that this tag can change to a different major version." — The ORIGINAL had one sentence ending in <Cite n={4} />, which supported both the warning and the advice to use a specific version tag. After the split, the warning sentence has no cite, and only the second sentence keeps <Cite n={4} />. Fix: "The InfluxData docs warn that this tag can change to a different major version <Cite n={4} />. They tell you to use a specific version tag <Cite n={4} />."
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | After the split, the "can change to a different major version" warning lost its <Cite n={4} />. |
+| T2 | PASS | Only bold labels were added. Text, code and cites are unchanged. |
+| T3 | PASS | Only bold labels were added. Text, code and cites are unchanged. |
+| T4 | PASS | Only bold labels were added. Tables, images and cites are unchanged. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Re-check after the fixes (2026-11-10)
+
+The FAILs of the round above were fixed. Most fixes put a cite back on a part of a split sentence that the split had left without one. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## The three InfluxDB versions`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | The table is unchanged. The new bold labels match their paragraphs. The split Docker-tag sentence puts cite 4 after both parts, which is allowed, and no facts or hedges changed. |
+
 Open FAILs: 0

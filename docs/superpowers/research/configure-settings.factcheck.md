@@ -120,4 +120,55 @@ Scope: `git diff 451b292 HEAD -- content/` (commit 8a78933; later commits 6c7651
 
 Cite numbers: all 9 exist and are used. No other lines changed.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 2 sections was edited to lower the reading load: T1 = `## Settings files`, T2 = `## The settings you will use most`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | The inline list became bullets with the same four items. The cite follows the last item, and the rest is unchanged. |
+| T2 | PASS | Only the first sentence was split, with the cite kept on both parts. Code, tables, the callout and all other cites are unchanged. |
+
+Open FAILs at the end of the rounds above: 0
+
+## Re-check after the fixes (2026-11-10)
+
+A scan of every edited section for a FAIL class found on other pages (a sentence that ended with a cite, turned into a list with the cite on the last item only) found the list of what settings change. The cite is now on the line that introduces the list. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## Settings files`.
+
+### FAILs
+
+- T1: "Settings are the JSON keys that change how Claude Code behaves <Cite n={1} />:" — The ORIGINAL puts the cite at the end of the sentence, after the list "the default model, what runs without asking, which files Claude cannot read, and what an organization enforces". The EDITED text moves it before the colon, so none of the four list items is followed by the cite. Fix: "Settings are the JSON keys that change how Claude Code behaves:" followed by the four bullets, with the last bullet ending "- what an organization enforces <Cite n={1} />" (or with the cite on each bullet).
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | FAIL | Cite moved ahead of the list it supported; the rest is unchanged. |
+
+Open FAILs at the end of the rounds above: 1
+
+## Second re-check after the fixes (2026-11-10)
+
+The round above failed the cite on the line that introduces the list, because none of the items is followed by it. The cite is now on each item. A fresh `claude -p` session (Claude Sonnet, no tools) checked these sections again, old text against new: T1 = `## Settings files`.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | The first sentence became a bulleted list, with the original cite repeated on each item. The table, bullets, `~/.claude.json` paragraph, heading and code block are unchanged. |
+
 Open FAILs: 0

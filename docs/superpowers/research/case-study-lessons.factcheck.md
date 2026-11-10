@@ -116,4 +116,25 @@ Sources fetched 2026-10-10 as raw Markdown (URL plus `.md`): [1] sub-agents, [2]
 - Skills 3: three copied skills exceed 500 lines (508, 549, 660), not two. Note C29 updated.
 - Controller check 'PR #9: 3 files': the page does not state a file count, so no change.
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 4 sections was edited to lower the reading load: T1 = `## Subagents`, T2 = `## Hooks and permissions`, T3 = `## MCP servers`, T4 = `## Skills and commands`. The cognitive-load audit of 2026-11-10 had marked them HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | One sentence split and one "Enforcement." label. Facts, cites, code and Callout are unchanged. |
+| T2 | PASS | Run-in labels added and one sentence split. Cites, code and facts are unchanged. |
+| T3 | PASS | Labels added and one sentence split. Facts, cites, code and Callout are unchanged. |
+| T4 | PASS | Labels added, a colon changed to a sentence break, and cites kept in place. Nothing else changed. |
+
 Open FAILs: 0

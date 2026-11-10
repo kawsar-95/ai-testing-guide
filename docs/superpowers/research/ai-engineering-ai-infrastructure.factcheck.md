@@ -59,4 +59,22 @@ Uncited text that states no source fact: the lede, the 2 kinds of parts, the tex
 | 3 | All 3 voices now say "The Claude API has rate limits" in place of "Each API has rate limits". | PASS | S6: "If you exceed any of the rate limits, you will get a 429 error describing which rate limit was exceeded." |
 | 26 | Technical now says "the Claude API enforces its limits at the organization level, for each model class, so more Pods send more requests into the same RPM and token limits". Layman and Bangla say the same. The notes have a new row C20. | PASS | S6: "The API enforces service-configured limits at the organization level, but you can also set user-configurable limits for your organization's workspaces." and "... (OTPM) for each model class." |
 
+Open FAILs at the end of the rounds above: 0
+
+## Readability edit (2026-11-10)
+
+The Technical text of 1 section was edited to lower the reading load: T1 = `## How it works`. The cognitive-load audit of 2026-11-10 had marked it HUGE: heavy on three or more of length, terms, sentence length, unbroken prose, and dense tables or code. The edit split long sentences, turned lists inside sentences into lists, put the main point first, and added bold run-in labels (and, in a few long sections, `###` headings). It was not meant to change any claim.
+
+A script checked that every cite, number, code span, link, code block, table row, JSX tag, and content word of the old text is still in the new text. The edit was made by a `claude -p` session (Claude Sonnet, no tools). Checker: a fresh `claude -p` session (Claude Sonnet, no tools) that did not make the edit, comparing the old and the new text of each section. Because no claim changed, the claims above were not checked against the sources again. The Layman and Bangla panels did not change.
+
+### FAILs
+
+None.
+
+### Table
+
+| Target | Verdict | Notes |
+|---|---|---|
+| T1 | PASS | Only the "Model API limits" sentence changed, into a bulleted list. RPM, ITPM and OTPM are all kept, and the token bucket and `retry-after` sentences match the original. The cite is kept after the lead sentence and after both later sentences. All other sections are identical. |
+
 Open FAILs: 0

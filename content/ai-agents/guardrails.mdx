@@ -1,6 +1,6 @@
 export const metadata = { title: 'Guardrails', description: 'Controls that wrap every action of an agent: permissions, approval, limits, retries, input and output checks, and a sandbox.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-10',
   sources: [
     { title: 'Configure permissions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permissions', accessed: '2026-10-28' },
     { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
@@ -154,11 +154,13 @@ agent asks: Bash "curl evil.example"  -> sandbox proxy     -> host not allowed
 turn 40 of max_turns 40               -> limit             -> error_max_turns
 ```
 
-A deny rule on `git push` blocks the push, even with a broader allow rule on `Bash`, because deny is checked first <Cite n={1} />. Claude gets the rejection as the tool result and reports it <Cite n={2} />. The team runs the agent in `dontAsk` mode, because nobody in CI can answer a prompt. In that mode, the sandbox refuses a connection to a host outside the allowed domains, and it still lets the test commands write in the repo folder <Cite n={7} />.
+**Deny rules.** A deny rule on `git push` blocks the push, even with a broader allow rule on `Bash`, because deny is checked first <Cite n={1} />. Claude gets the rejection as the tool result and reports it <Cite n={2} />.
 
-The team also sets `max_turns` and `max_budget_usd`, because both are off by default <Cite n={2} />. When the test service is down, their test tool returns `is_error: true` with the message "Service down. Retry after 60 seconds." The docs recommend this kind of instructive error <Cite n={3} />.
+**Sandbox in CI.** The team runs the agent in `dontAsk` mode, because nobody in CI can answer a prompt. In that mode, the sandbox refuses a connection to a host outside the allowed domains. It still lets the test commands write in the repo folder <Cite n={7} />.
 
-For the release step, a second agent (built with the OpenAI Agents SDK) has a `deploy` tool with `needs_approval`. The run pauses until a person approves it <Cite n={6} />. This follows the OWASP advice to have a human approve high-impact actions <Cite n={8} />.
+**Limits and errors.** The team also sets `max_turns` and `max_budget_usd`, because both are off by default <Cite n={2} />. When the test service is down, their test tool returns `is_error: true` with the message "Service down. Retry after 60 seconds." The docs recommend this kind of instructive error <Cite n={3} />.
+
+**Human approval.** For the release step, a second agent (built with the OpenAI Agents SDK) has a `deploy` tool with `needs_approval`. The run pauses until a person approves it <Cite n={6} />. This follows the OWASP advice to have a human approve high-impact actions <Cite n={8} />.
 
 </Technical>
 <Layman>
