@@ -97,4 +97,22 @@ None.
 |---|---|---|
 | T1 | PASS | Only sentence splits. Each split keeps cites 3, 2 and 5 on the parts they supported, and the table, code, headings and the "Tutorial's own view" caveat are unchanged. |
 
+Open FAILs at the end of the rounds above: 0
+
+## Section split (2026-11-11)
+
+The cognitive-load audit of 2026-11-11 left `How it works` HUGE after the readability edit. The section was split into two `##` sections at a block boundary: the first part keeps its heading and anchor, the second has a new heading (or a promoted `###` heading) and its own `<Voices>` block. No text was rewritten: a script cut the Technical, Layman, and Bangla panels between blocks, so this round is a script check, not an agent check.
+
+### FAILs
+
+None.
+
+### Checks
+
+| Check | Result |
+|---|---|
+| Every word of the old section is in the new sections, and none is added except the new heading | PASS |
+| `voiceErrors` on the page | PASS |
+| The page-shape test accepts the continuation section (`sectionsWithSplits`) | PASS |
+
 Open FAILs: 0

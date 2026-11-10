@@ -1,6 +1,6 @@
 export const metadata = { title: 'Production Monitoring', description: 'Watch an AI app after release: the 4 golden signals, token usage and cost, drift, answer quality, and incidents.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-11',
   sources: [
     { title: 'Monitoring Distributed Systems (Site Reliability Engineering, chapter 6)', publisher: 'Google SRE', url: 'https://sre.google/sre-book/monitoring-distributed-systems/', accessed: '2026-10-28' },
     { title: 'Introduction to Model Monitoring (Gemini Enterprise Agent Platform)', publisher: 'Google Cloud Documentation', url: 'https://cloud.google.com/vertex-ai/docs/model-monitoring/overview', accessed: '2026-10-28' },
@@ -81,7 +81,40 @@ group_by[]=model&bucket_width=1d" \
   -H "x-api-key: $ANTHROPIC_ADMIN_KEY"
 ```
 
-### Drift
+</Technical>
+<Layman>
+
+**The service signals.**
+
+- Latency is the time to serve a request. Track the latency of errors too. A slow error is worse than a fast one <Cite n={1} />.
+- Traffic is the demand on the system <Cite n={1} />. One example is chat turns per minute.
+- Errors are failed requests <Cite n={1} />. They include 429 and 5xx answers from the model API.
+- Saturation is how full the service is <Cite n={1} />. One example is a queue that waits for the model.
+
+SRE says a monitoring system answers 2 questions. What is broken? That is the symptom. Why? That is the cause <Cite n={1} />. Every page to the on-call person should lead to an action <Cite n={1} />.
+
+**Token use and cost.** The Claude Usage API reports the token use of an organization. Its endpoint is `/v1/organizations/usage_report/messages` <Cite n={3} />. It groups the data in buckets of `1m`, `1h`, or `1d`. It counts output tokens and 3 kinds of input tokens: uncached, cached, and cache creation. It filters by API key, workspace, and model <Cite n={3} />. It needs an Admin API credential, such as an Admin API key. A workspace API key does not work <Cite n={3} />. The example in the Technical text asks for the daily use of one week, grouped by model.
+
+</Layman>
+<Bangla>
+
+**সার্ভিসের সিগন্যাল।**
+
+- Latency হলো একটা রিকুয়েস্ট সার্ভ করার সময়। এররের latency-ও ট্র্যাক করুন, কারণ ধীর এরর দ্রুত এররের চেয়ে খারাপ <Cite n={1} />।
+- Traffic হলো সিস্টেমের ওপর চাহিদা <Cite n={1} />, যেমন প্রতি মিনিটে চ্যাটের টার্ন।
+- Errors হলো ব্যর্থ রিকুয়েস্ট <Cite n={1} />, মডেল API-র 429 আর 5xx উত্তরসহ।
+- Saturation হলো সার্ভিস কতটা ভরা <Cite n={1} />, যেমন মডেলের জন্য অপেক্ষারত একটা queue।
+
+SRE বলে, মনিটরিং সিস্টেম 2টা প্রশ্নের উত্তর দেবে: কী ভেঙেছে (লক্ষণ), আর কেন (কারণ) <Cite n={1} />। অন-কল মানুষের কাছে প্রতিটা পেজ এমন হবে, যাতে কিছু করার থাকে <Cite n={1} />।
+
+**টোকেন ব্যবহার আর খরচ।** Claude Usage API একটা অর্গানাইজেশনের টোকেন ব্যবহার জানায় `/v1/organizations/usage_report/messages`-এ <Cite n={3} />। এটা ডেটাকে `1m`, `1h` বা `1d`-এর bucket-এ সাজায়, uncached input, cached input, cache creation আর output টোকেন গোনে, আর API key, workspace ও মডেল দিয়ে ফিল্টার করে <Cite n={3} />। এর জন্য একটা Admin API credential লাগে, যেমন Admin API key; workspace API key কাজ করে না <Cite n={3} />। Technical লেখার উদাহরণ এক সপ্তাহের দৈনিক ব্যবহার চায়, মডেল অনুযায়ী সাজানো।
+
+</Bangla>
+</Voices>
+
+## Drift
+<Voices>
+<Technical>
 
 Data changes over time. The features that a model learned from may not be relevant for today's inputs. Google Cloud calls this deviation **drift** <Cite n={2} />. Model Monitoring in Google Cloud (Gemini Enterprise Agent Platform) tracks the quality of tabular models. It compares the distribution of input features, and of the model output, with a baseline <Cite n={2} />. It alerts when the difference passes a threshold <Cite n={2} />.
 
@@ -98,17 +131,6 @@ Common postmortem triggers are user-visible downtime or degradation past a thres
 </Technical>
 <Layman>
 
-**The service signals.**
-
-- Latency is the time to serve a request. Track the latency of errors too. A slow error is worse than a fast one <Cite n={1} />.
-- Traffic is the demand on the system <Cite n={1} />. One example is chat turns per minute.
-- Errors are failed requests <Cite n={1} />. They include 429 and 5xx answers from the model API.
-- Saturation is how full the service is <Cite n={1} />. One example is a queue that waits for the model.
-
-SRE says a monitoring system answers 2 questions. What is broken? That is the symptom. Why? That is the cause <Cite n={1} />. Every page to the on-call person should lead to an action <Cite n={1} />.
-
-**Token use and cost.** The Claude Usage API reports the token use of an organization. Its endpoint is `/v1/organizations/usage_report/messages` <Cite n={3} />. It groups the data in buckets of `1m`, `1h`, or `1d`. It counts output tokens and 3 kinds of input tokens: uncached, cached, and cache creation. It filters by API key, workspace, and model <Cite n={3} />. It needs an Admin API credential, such as an Admin API key. A workspace API key does not work <Cite n={3} />. The example in the Technical text asks for the daily use of one week, grouped by model.
-
 **Drift.** Data changes over time. The features that a model learned from may not fit the inputs of today. Google Cloud calls this change **drift** <Cite n={2} />. Model Monitoring in Google Cloud (Gemini Enterprise Agent Platform) tracks the quality of tabular models. It compares the input features and the model output with a baseline. It sends an alert when the difference goes past a threshold <Cite n={2} />. The tutorial's own view: the source is about tabular models, but the same idea can apply to an LLM app. It can apply to the topics that users ask about, and to the answers. Each week, take a sample of real questions. Compare them with the eval set.
 
 **Quality.** Capability evals with high pass rates can become a regression suite. It runs all the time and catches drift <Cite n={6} />. NIST adds this: users need a way to report problems and to appeal outcomes. This feedback goes into the evaluation metrics <Cite n={5} />.
@@ -117,17 +139,6 @@ SRE says a monitoring system answers 2 questions. What is broken? That is the sy
 
 </Layman>
 <Bangla>
-
-**সার্ভিসের সিগন্যাল।**
-
-- Latency হলো একটা রিকুয়েস্ট সার্ভ করার সময়। এররের latency-ও ট্র্যাক করুন, কারণ ধীর এরর দ্রুত এররের চেয়ে খারাপ <Cite n={1} />।
-- Traffic হলো সিস্টেমের ওপর চাহিদা <Cite n={1} />, যেমন প্রতি মিনিটে চ্যাটের টার্ন।
-- Errors হলো ব্যর্থ রিকুয়েস্ট <Cite n={1} />, মডেল API-র 429 আর 5xx উত্তরসহ।
-- Saturation হলো সার্ভিস কতটা ভরা <Cite n={1} />, যেমন মডেলের জন্য অপেক্ষারত একটা queue।
-
-SRE বলে, মনিটরিং সিস্টেম 2টা প্রশ্নের উত্তর দেবে: কী ভেঙেছে (লক্ষণ), আর কেন (কারণ) <Cite n={1} />। অন-কল মানুষের কাছে প্রতিটা পেজ এমন হবে, যাতে কিছু করার থাকে <Cite n={1} />।
-
-**টোকেন ব্যবহার আর খরচ।** Claude Usage API একটা অর্গানাইজেশনের টোকেন ব্যবহার জানায় `/v1/organizations/usage_report/messages`-এ <Cite n={3} />। এটা ডেটাকে `1m`, `1h` বা `1d`-এর bucket-এ সাজায়, uncached input, cached input, cache creation আর output টোকেন গোনে, আর API key, workspace ও মডেল দিয়ে ফিল্টার করে <Cite n={3} />। এর জন্য একটা Admin API credential লাগে, যেমন Admin API key; workspace API key কাজ করে না <Cite n={3} />। Technical লেখার উদাহরণ এক সপ্তাহের দৈনিক ব্যবহার চায়, মডেল অনুযায়ী সাজানো।
 
 **Drift।** সময়ের সঙ্গে ডেটা বদলায়। মডেল যে feature থেকে শিখেছিল, সেগুলো আজকের ইনপুটে প্রাসঙ্গিক না-ও থাকতে পারে। Google Cloud এই বিচ্যুতিকে **drift** বলে <Cite n={2} />। Google Cloud-এর (Gemini Enterprise Agent Platform) Model Monitoring tabular মডেলের মান ট্র্যাক করে। এটা ইনপুট feature আর মডেলের আউটপুটের বিন্যাস একটা baseline-এর সঙ্গে মেলায়, আর পার্থক্য একটা threshold পার হলে সতর্ক করে <Cite n={2} />। টিউটোরিয়ালের নিজের মত: সোর্সটা tabular মডেল নিয়ে, তবে একই ধারণা একটা LLM অ্যাপেও খাটতে পারে, ইউজাররা যে বিষয়ে প্রশ্ন করেন আর উত্তরগুলোর ওপর। প্রতি সপ্তাহে আসল প্রশ্নের একটা নমুনা নিন, আর eval-সেটের সঙ্গে মেলান।
 

@@ -1,6 +1,6 @@
 export const metadata = { title: 'Data Pipelines', description: 'How an AI app loads, cleans, chunks, and enriches its documents before a model sees them, and what a tester checks at each step.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-11',
   sources: [
     { title: 'Introducing Contextual Retrieval', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/contextual-retrieval', accessed: '2026-10-28' },
     { title: 'Retrieval', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/retrieval', accessed: '2026-10-28' },
@@ -93,6 +93,31 @@ splitter = RecursiveCharacterTextSplitter(
 chunks = splitter.split_documents(docs)
 ```
 
+</Technical>
+<Layman>
+
+**Load.** A **document loader** reads data from a source into one standard format. Examples of sources are Slack, Notion, and Google Drive <Cite n={4} />. In LangChain, `load()` reads all documents at once. `lazy_load()` reads them one by one, for big datasets <Cite n={4} />. Each `Document` has `page_content` (the text) and `metadata`. The metadata is a dict, for example with the source file and the page number <Cite n={5} />.
+
+**Clean and check.** The input can be dirty or even an attack. OWASP says to check the knowledge sources. Accept data only from trusted sources. Audit the knowledge base for hidden content and poisoned data <Cite n={6} />. The OWASP example is a resume with white text on a white background. The hidden text tells the model to recommend the candidate <Cite n={6} />.
+
+**Chunk.** A **text splitter** cuts large documents into chunks. You can find each chunk alone, and each chunk fits the context window <Cite n={3} />. LangChain suggests `RecursiveCharacterTextSplitter` as the start for most cases. It tries to keep paragraphs whole. If a paragraph is too big, it splits by sentences, then by words <Cite n={3} />. For HTML, Markdown, JSON, or code, a splitter can follow the structure, such as the headers <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+**লোড।** একটা **document loader** কোনো সোর্স থেকে ডেটা পড়ে একটা স্ট্যান্ডার্ড ফরম্যাটে আনে। সোর্সের উদাহরণ Slack, Notion আর Google Drive <Cite n={4} />। LangChain-এ `load()` সব ডকুমেন্ট একবারে পড়ে। `lazy_load()` একটা একটা করে পড়ে, বড় ডেটাসেটের জন্য <Cite n={4} />। প্রতিটা `Document`-এ থাকে `page_content` (টেক্সট) আর `metadata`। মেটাডেটা একটা dict, যেমন সোর্স ফাইল আর পৃষ্ঠা নম্বর <Cite n={5} />।
+
+**পরিষ্কার ও যাচাই।** ইনপুট নোংরা হতে পারে, এমনকি আক্রমণও হতে পারে। OWASP বলে নলেজ সোর্সগুলো যাচাই করুন। শুধু বিশ্বস্ত সোর্স থেকে ডেটা নিন। লুকানো কনটেন্ট আর বিষাক্ত (poisoned) ডেটার জন্য নলেজ বেস অডিট করুন <Cite n={6} />। OWASP-এর উদাহরণ হলো সাদা ব্যাকগ্রাউন্ডে সাদা লেখাসহ একটা রেজিউমে। লুকানো লেখাটা মডেলকে ক্যান্ডিডেটকে সুপারিশ করতে বলে <Cite n={6} />।
+
+**চাংক।** একটা **text splitter** বড় ডকুমেন্টকে চাংকে কাটে। প্রতিটা চাংক আলাদাভাবে খুঁজে পাওয়া যায়, আর প্রতিটা কনটেক্সট উইন্ডোতে আঁটে <Cite n={3} />। বেশিরভাগ ক্ষেত্রে শুরু করার জন্য LangChain `RecursiveCharacterTextSplitter`-এর পরামর্শ দেয়। এটা অনুচ্ছেদ পুরো রাখার চেষ্টা করে। অনুচ্ছেদ খুব বড় হলে বাক্য ধরে ভাগ করে, তারপর শব্দ ধরে <Cite n={3} />। HTML, Markdown, JSON বা কোডের জন্য splitter ডকুমেন্টের গঠন, যেমন হেডার, মেনে চলতে পারে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## Overlap and Enrichment
+<Voices>
+<Technical>
+
 `add_start_index=True` saves the character offset of each chunk in the original document in its metadata <Cite n={5} />. The **overlap** repeats some text at the edge of two chunks. The OpenAI vector store, by default, cuts files into 800-token chunks with a 400-token overlap. You can set your own size from 100 to 4096 tokens <Cite n={2} />. The overlap should not be more than half of the chunk size <Cite n={2} />.
 
 ### Enrich
@@ -104,12 +129,6 @@ You can also add **metadata** for filters. In the OpenAI vector store, each file
 </Technical>
 <Layman>
 
-**Load.** A **document loader** reads data from a source into one standard format. Examples of sources are Slack, Notion, and Google Drive <Cite n={4} />. In LangChain, `load()` reads all documents at once. `lazy_load()` reads them one by one, for big datasets <Cite n={4} />. Each `Document` has `page_content` (the text) and `metadata`. The metadata is a dict, for example with the source file and the page number <Cite n={5} />.
-
-**Clean and check.** The input can be dirty or even an attack. OWASP says to check the knowledge sources. Accept data only from trusted sources. Audit the knowledge base for hidden content and poisoned data <Cite n={6} />. The OWASP example is a resume with white text on a white background. The hidden text tells the model to recommend the candidate <Cite n={6} />.
-
-**Chunk.** A **text splitter** cuts large documents into chunks. You can find each chunk alone, and each chunk fits the context window <Cite n={3} />. LangChain suggests `RecursiveCharacterTextSplitter` as the start for most cases. It tries to keep paragraphs whole. If a paragraph is too big, it splits by sentences, then by words <Cite n={3} />. For HTML, Markdown, JSON, or code, a splitter can follow the structure, such as the headers <Cite n={3} />.
-
 In the code example, `add_start_index=True` saves where each chunk starts in the original document. It goes in the metadata <Cite n={5} />. The **overlap** repeats some text at the edge of two chunks. The OpenAI vector store, by default, cuts files into chunks of 800 tokens with 400 tokens of overlap. You can set your own size from 100 to 4096 tokens. The overlap should not be more than half of the chunk size <Cite n={2} />.
 
 **Enrich.** A chunk alone can lose its meaning. The Anthropic example is "revenue grew by 3%". It does not say which company or which quarter <Cite n={1} />. **Contextual Retrieval** asks a model to write a short context for each chunk. The context is usually 50 to 100 tokens. It goes at the front of the chunk, before embedding and indexing <Cite n={1} />. In Anthropic's tests, this cut failed retrievals by 49% <Cite n={1} />.
@@ -118,12 +137,6 @@ You can also add **metadata** for filters. In the OpenAI vector store, each file
 
 </Layman>
 <Bangla>
-
-**লোড।** একটা **document loader** কোনো সোর্স থেকে ডেটা পড়ে একটা স্ট্যান্ডার্ড ফরম্যাটে আনে। সোর্সের উদাহরণ Slack, Notion আর Google Drive <Cite n={4} />। LangChain-এ `load()` সব ডকুমেন্ট একবারে পড়ে। `lazy_load()` একটা একটা করে পড়ে, বড় ডেটাসেটের জন্য <Cite n={4} />। প্রতিটা `Document`-এ থাকে `page_content` (টেক্সট) আর `metadata`। মেটাডেটা একটা dict, যেমন সোর্স ফাইল আর পৃষ্ঠা নম্বর <Cite n={5} />।
-
-**পরিষ্কার ও যাচাই।** ইনপুট নোংরা হতে পারে, এমনকি আক্রমণও হতে পারে। OWASP বলে নলেজ সোর্সগুলো যাচাই করুন। শুধু বিশ্বস্ত সোর্স থেকে ডেটা নিন। লুকানো কনটেন্ট আর বিষাক্ত (poisoned) ডেটার জন্য নলেজ বেস অডিট করুন <Cite n={6} />। OWASP-এর উদাহরণ হলো সাদা ব্যাকগ্রাউন্ডে সাদা লেখাসহ একটা রেজিউমে। লুকানো লেখাটা মডেলকে ক্যান্ডিডেটকে সুপারিশ করতে বলে <Cite n={6} />।
-
-**চাংক।** একটা **text splitter** বড় ডকুমেন্টকে চাংকে কাটে। প্রতিটা চাংক আলাদাভাবে খুঁজে পাওয়া যায়, আর প্রতিটা কনটেক্সট উইন্ডোতে আঁটে <Cite n={3} />। বেশিরভাগ ক্ষেত্রে শুরু করার জন্য LangChain `RecursiveCharacterTextSplitter`-এর পরামর্শ দেয়। এটা অনুচ্ছেদ পুরো রাখার চেষ্টা করে। অনুচ্ছেদ খুব বড় হলে বাক্য ধরে ভাগ করে, তারপর শব্দ ধরে <Cite n={3} />। HTML, Markdown, JSON বা কোডের জন্য splitter ডকুমেন্টের গঠন, যেমন হেডার, মেনে চলতে পারে <Cite n={3} />।
 
 কোডের উদাহরণে `add_start_index=True` মূল ডকুমেন্টে প্রতিটা চাংক কোথায় শুরু, তা মেটাডেটায় রাখে <Cite n={5} />। **Overlap** মানে দুটো চাংকের কিনারায় কিছু টেক্সট দুবার থাকা। OpenAI vector store ডিফল্টভাবে ফাইলকে 800 টোকেনের চাংকে কাটে, 400 টোকেন overlap সহ। আপনি নিজে 100 থেকে 4096 টোকেনের সাইজ দিতে পারেন। Overlap চাংক সাইজের অর্ধেকের বেশি হওয়া উচিত নয় <Cite n={2} />।
 

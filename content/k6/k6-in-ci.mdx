@@ -1,6 +1,6 @@
 export const metadata = { title: 'k6 in CI', description: 'Run k6 in GitHub Actions and fail the job when a threshold fails.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-11',
   sources: [
     { title: 'Thresholds', publisher: 'Grafana k6 documentation', url: 'https://grafana.com/docs/k6/latest/using-k6/thresholds/', accessed: '2026-10-27' },
     { title: 'errext/exitcodes/codes.go', publisher: 'grafana/k6 (GitHub)', url: 'https://github.com/grafana/k6/blob/master/errext/exitcodes/codes.go', accessed: '2026-10-27' },
@@ -180,7 +180,44 @@ How the file works:
 - `if: always()` runs the upload step even when the test step failed <Cite n={11} />. This keeps the report of a failed run, which is the report you most want to read (the tutorial's own advice).
 - The versions in the file (`@v1`, `@v7`) are the ones in the READMEs on 27 October 2026 <Cite n={5} /><Cite n={6} /><Cite n={9} /><Cite n={12} />. Check each README for the current major version before you copy the file.
 
-### The two scripts
+</Technical>
+<Layman>
+
+`grafana/setup-k6-action` installs k6. It uses the latest k6 unless you set `k6-version` <Cite n={5} />. `grafana/run-k6-action` is a wrapper over `k6 run`. It takes a glob in `path` and extra flags in `flags`. It does not install k6 <Cite n={6} />. Use both, in this order.
+
+Set `K6_WEB_DASHBOARD=true` and `K6_WEB_DASHBOARD_EXPORT=<file>.html`. Then k6 writes an HTML report when the test ends <Cite n={4} />. The report has graphs only if the test runs longer than three times the aggregation period <Cite n={4} />. The upload step publishes the file as an artifact <Cite n={9} />.
+
+The file is `.github/workflows/k6.yml`, shown in the Technical text. It uses the scripts `tests/smoke.js` and `tests/load.js`.
+
+How the file works:
+
+- `on: pull_request` starts the `smoke` job on pull request activity <Cite n={7} />. `on: schedule` with a `cron` line starts the `load` job at the set time. A scheduled run starts only when the default branch has the workflow file <Cite n={7} />.
+- A failed threshold gives exit code 99 <Cite n={2} />. The step fails, and so does the job (the tutorial's own reasoning, see the first section).
+- `if: always()` runs the upload step even when the test step failed <Cite n={11} />. You keep the report of a failed run. That is the report you most want to read. This is the tutorial's own advice.
+- Check each README for the current major version of the actions before you copy the file <Cite n={5} /><Cite n={6} /><Cite n={9} /><Cite n={12} />.
+
+</Layman>
+<Bangla>
+
+`grafana/setup-k6-action` k6 ইনস্টল করে। `k6-version` না দিলে এটা সর্বশেষ k6 নেয় <Cite n={5} />। `grafana/run-k6-action` হলো `k6 run`-এর একটা wrapper। এটা `path`-এ glob আর `flags`-এ বাড়তি flag নেয়। এটা k6 ইনস্টল করে না <Cite n={6} />। দুটোই এই ক্রমে ব্যবহার করুন।
+
+`K6_WEB_DASHBOARD=true` আর `K6_WEB_DASHBOARD_EXPORT=<file>.html` সেট করুন। তাহলে টেস্ট শেষে k6 একটা HTML রিপোর্ট লেখে <Cite n={4} />। টেস্ট aggregation period-এর তিন গুণের বেশি চললে তবেই রিপোর্টে গ্রাফ থাকে <Cite n={4} />। upload step ফাইলটাকে artifact হিসেবে প্রকাশ করে <Cite n={9} />।
+
+ফাইলটা `.github/workflows/k6.yml`, Technical লেখায় দেখানো আছে। এটা `tests/smoke.js` আর `tests/load.js` স্ক্রিপ্ট ব্যবহার করে।
+
+ফাইলটা যেভাবে কাজ করে:
+
+- `on: pull_request` pull request-এর কাজে `smoke` job শুরু করে <Cite n={7} />। `cron` লাইনসহ `on: schedule` নির্দিষ্ট সময়ে `load` job শুরু করে। default branch-এ workflow ফাইল থাকলে তবেই scheduled run শুরু হয় <Cite n={7} />।
+- threshold ফেল করলে exit code 99 হয় <Cite n={2} />। step ফেল করে, আর job-ও ফেল করে (এটা tutorial-এর নিজের যুক্তি, প্রথম section দেখুন)।
+- test step ফেল করলেও `if: always()` upload step চালায় <Cite n={11} />। ফেল করা run-এর রিপোর্ট আপনি পেয়ে যান, আর সেটাই সবচেয়ে বেশি পড়া দরকার। এটা tutorial-এর নিজের পরামর্শ।
+- ফাইল কপি করার আগে action-গুলোর বর্তমান major version প্রতিটা README-তে দেখে নিন <Cite n={5} /><Cite n={6} /><Cite n={9} /><Cite n={12} />।
+
+</Bangla>
+</Voices>
+
+## The two scripts
+<Voices>
+<Technical>
 
 **Smoke script.** The script (`tests/smoke.js`) has three thresholds, so that a slow or failing app fails the job. The `BASE_URL` default is `https://quickpizza.grafana.com`, a host that the k6 docs use in examples. A fork pull request has no secret, so the smoke job then tests this host with 1 VU (the tutorial's own choice):
 
@@ -249,19 +286,6 @@ export default function () {
 </Technical>
 <Layman>
 
-`grafana/setup-k6-action` installs k6. It uses the latest k6 unless you set `k6-version` <Cite n={5} />. `grafana/run-k6-action` is a wrapper over `k6 run`. It takes a glob in `path` and extra flags in `flags`. It does not install k6 <Cite n={6} />. Use both, in this order.
-
-Set `K6_WEB_DASHBOARD=true` and `K6_WEB_DASHBOARD_EXPORT=<file>.html`. Then k6 writes an HTML report when the test ends <Cite n={4} />. The report has graphs only if the test runs longer than three times the aggregation period <Cite n={4} />. The upload step publishes the file as an artifact <Cite n={9} />.
-
-The file is `.github/workflows/k6.yml`, shown in the Technical text. It uses the scripts `tests/smoke.js` and `tests/load.js`.
-
-How the file works:
-
-- `on: pull_request` starts the `smoke` job on pull request activity <Cite n={7} />. `on: schedule` with a `cron` line starts the `load` job at the set time. A scheduled run starts only when the default branch has the workflow file <Cite n={7} />.
-- A failed threshold gives exit code 99 <Cite n={2} />. The step fails, and so does the job (the tutorial's own reasoning, see the first section).
-- `if: always()` runs the upload step even when the test step failed <Cite n={11} />. You keep the report of a failed run. That is the report you most want to read. This is the tutorial's own advice.
-- Check each README for the current major version of the actions before you copy the file <Cite n={5} /><Cite n={6} /><Cite n={9} /><Cite n={12} />.
-
 The smoke script has three thresholds. A slow or failing app fails the job. The load script has the first two of them. It uses `stages`: 2 minutes up to 20 VUs, 5 minutes at 20 VUs, and 1 minute down to 0.
 
 The load script has no default host. Its `setup()` function calls `fail()` when `BASE_URL` is empty. Then k6 stops with a non-zero exit code. If the `TEST_BASE_URL` secret is missing, the scheduled job fails. It does not load-test the public demo host.
@@ -272,19 +296,6 @@ Both jobs set `K6_WEB_DASHBOARD_PORT: '-1'`. A CI process must stop when the tes
 
 </Layman>
 <Bangla>
-
-`grafana/setup-k6-action` k6 ইনস্টল করে। `k6-version` না দিলে এটা সর্বশেষ k6 নেয় <Cite n={5} />। `grafana/run-k6-action` হলো `k6 run`-এর একটা wrapper। এটা `path`-এ glob আর `flags`-এ বাড়তি flag নেয়। এটা k6 ইনস্টল করে না <Cite n={6} />। দুটোই এই ক্রমে ব্যবহার করুন।
-
-`K6_WEB_DASHBOARD=true` আর `K6_WEB_DASHBOARD_EXPORT=<file>.html` সেট করুন। তাহলে টেস্ট শেষে k6 একটা HTML রিপোর্ট লেখে <Cite n={4} />। টেস্ট aggregation period-এর তিন গুণের বেশি চললে তবেই রিপোর্টে গ্রাফ থাকে <Cite n={4} />। upload step ফাইলটাকে artifact হিসেবে প্রকাশ করে <Cite n={9} />।
-
-ফাইলটা `.github/workflows/k6.yml`, Technical লেখায় দেখানো আছে। এটা `tests/smoke.js` আর `tests/load.js` স্ক্রিপ্ট ব্যবহার করে।
-
-ফাইলটা যেভাবে কাজ করে:
-
-- `on: pull_request` pull request-এর কাজে `smoke` job শুরু করে <Cite n={7} />। `cron` লাইনসহ `on: schedule` নির্দিষ্ট সময়ে `load` job শুরু করে। default branch-এ workflow ফাইল থাকলে তবেই scheduled run শুরু হয় <Cite n={7} />।
-- threshold ফেল করলে exit code 99 হয় <Cite n={2} />। step ফেল করে, আর job-ও ফেল করে (এটা tutorial-এর নিজের যুক্তি, প্রথম section দেখুন)।
-- test step ফেল করলেও `if: always()` upload step চালায় <Cite n={11} />। ফেল করা run-এর রিপোর্ট আপনি পেয়ে যান, আর সেটাই সবচেয়ে বেশি পড়া দরকার। এটা tutorial-এর নিজের পরামর্শ।
-- ফাইল কপি করার আগে action-গুলোর বর্তমান major version প্রতিটা README-তে দেখে নিন <Cite n={5} /><Cite n={6} /><Cite n={9} /><Cite n={12} />।
 
 smoke স্ক্রিপ্টে তিনটা threshold আছে। অ্যাপ ধীর বা ফেল হলে job ফেল করে। load স্ক্রিপ্টে প্রথম দুটো threshold আছে। সেটা `stages` ব্যবহার করে: 2 মিনিটে 20 VUs পর্যন্ত, 5 মিনিট 20 VUs-এ, আর 1 মিনিটে 0-তে নামা।
 

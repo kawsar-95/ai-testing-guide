@@ -1,3 +1,4 @@
+import { sectionsWithSplits } from "./shape.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -69,7 +70,7 @@ test("each page has the entry title as # heading and the 6 ## sections in order"
     const source = read(page.slug);
     assert.ok(source.split("\n").includes(`# ${page.title}`), `${page.slug}: # ${page.title}`);
     const headings = [...source.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
-    assert.deepEqual(headings, SECTIONS, page.slug);
+    assert.deepEqual(sectionsWithSplits(headings, SECTIONS).kept, SECTIONS, page.slug);
   }
 });
 

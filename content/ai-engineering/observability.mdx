@@ -1,6 +1,6 @@
 export const metadata = { title: "Observability", description: "Trace prompts, tool calls, tokens, and failures." }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-11',
   sources: [
     { title: 'Traces', publisher: 'OpenTelemetry (Docs: Concepts)', url: 'https://opentelemetry.io/docs/concepts/signals/traces/', accessed: '2026-10-28' },
     { title: 'Semantic conventions for GenAI client inference', publisher: 'OpenTelemetry (semantic-conventions-genai on GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/client-inference.md', accessed: '2026-10-28' },
@@ -80,7 +80,50 @@ A tool call gets its own span with the operation name `execute_tool` <Cite n={3}
 
 The text of the prompt and the answer can go into opt-in attributes, such as `gen_ai.input.messages` and `gen_ai.output.messages` <Cite n={2} />. They are opt-in because they are likely to hold sensitive data, including personal data <Cite n={2} />.
 
-### Metrics
+</Technical>
+<Layman>
+
+Record these details for each model call. The OTel GenAI conventions name the span `{gen_ai.operation.name} {gen_ai.request.model}`. An example is `chat claude-sonnet-5-5` <Cite n={2} />. Useful attributes are <Cite n={2} />:
+
+- `gen_ai.operation.name`: the operation, for example `chat`. It is required.
+- `gen_ai.request.model`: the model that the app asked for.
+- `gen_ai.response.model`: the model name in the response.
+- `gen_ai.usage.input_tokens`: all the input tokens, including the cached tokens.
+- `gen_ai.usage.output_tokens`: the output tokens, as the provider reports them.
+- `gen_ai.response.finish_reasons`: why the model stopped.
+- `error.type`: the class of error, if the call failed.
+
+The Claude Messages API returns these numbers in its `usage` object. The total input is the sum of `input_tokens`, `cache_creation_input_tokens`, and `cache_read_input_tokens` <Cite n={5} />. Every Claude API response also has a `request-id` header. Log it, because support asks for it <Cite n={6} />.
+
+A tool call gets its own span. Its operation name is `execute_tool` <Cite n={3} />. Sometimes the client tries a call again after a short failure. Then the span should cover the whole operation, with all the tries <Cite n={3} />.
+
+The text of the prompt and the answer can go into special attributes, such as `gen_ai.input.messages` and `gen_ai.output.messages`. You must turn them on yourself <Cite n={2} />. They are off by default because they are likely to hold sensitive data. This includes personal data <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+প্রতিটা মডেল কলের জন্য এই তথ্যগুলো রেকর্ড করুন। OTel GenAI conventions স্প্যানের নাম দেয় `{gen_ai.operation.name} {gen_ai.request.model}`। একটা উদাহরণ হলো `chat claude-sonnet-5-5` <Cite n={2} />। কাজের অ্যাট্রিবিউটগুলো হলো <Cite n={2} />:
+
+- `gen_ai.operation.name`: অপারেশন, যেমন `chat`। এটা দরকারি।
+- `gen_ai.request.model`: অ্যাপ যে মডেল চেয়েছিল।
+- `gen_ai.response.model`: রেসপন্সে থাকা মডেলের নাম।
+- `gen_ai.usage.input_tokens`: ক্যাশ করা টোকেনসহ সব ইনপুট টোকেন।
+- `gen_ai.usage.output_tokens`: প্রোভাইডারের জানানো আউটপুট টোকেন।
+- `gen_ai.response.finish_reasons`: মডেল কেন থামল।
+- `error.type`: কল ফেল করলে এররের ধরন।
+
+Claude Messages API এই সংখ্যাগুলো তার `usage` অবজেক্টে ফেরত দেয়। মোট ইনপুট হলো `input_tokens`, `cache_creation_input_tokens` ও `cache_read_input_tokens`-এর যোগফল <Cite n={5} />। প্রতিটা Claude API রেসপন্সে একটা `request-id` হেডারও থাকে। এটা লগ করুন, কারণ সাপোর্ট এটা চায় <Cite n={6} />।
+
+একটা টুল কল নিজের একটা স্প্যান পায়। এর অপারেশনের নাম `execute_tool` <Cite n={3} />। কখনো একটা ছোট ব্যর্থতার পর ক্লায়েন্ট কলটা আবার চেষ্টা করে। তখন স্প্যান সব চেষ্টাসহ পুরো অপারেশন ঢেকে রাখবে <Cite n={3} />।
+
+প্রম্পট ও উত্তরের টেক্সট বিশেষ অ্যাট্রিবিউটে যেতে পারে, যেমন `gen_ai.input.messages` ও `gen_ai.output.messages`। এগুলো আপনাকে নিজে চালু করতে হয় <Cite n={2} />। এগুলো ডিফল্টে বন্ধ, কারণ এতে সংবেদনশীল ডেটা থাকার সম্ভাবনা বেশি। এর মধ্যে ব্যক্তিগত ডেটাও আছে <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Metrics
+<Voices>
+<Technical>
 
 Traces explain one request. Metrics show trends. OTel defines `gen_ai.client.operation.duration`, a histogram of how long a GenAI operation takes, in seconds <Cite n={4} />. For streaming, `gen_ai.client.inference.time_to_first_chunk` measures the time from the request to the first chunk <Cite n={2} />.
 
@@ -116,44 +159,12 @@ with tracer.start_as_current_span("chat claude-sonnet-5-5") as span:
 </Technical>
 <Layman>
 
-Record these details for each model call. The OTel GenAI conventions name the span `{gen_ai.operation.name} {gen_ai.request.model}`. An example is `chat claude-sonnet-5-5` <Cite n={2} />. Useful attributes are <Cite n={2} />:
-
-- `gen_ai.operation.name`: the operation, for example `chat`. It is required.
-- `gen_ai.request.model`: the model that the app asked for.
-- `gen_ai.response.model`: the model name in the response.
-- `gen_ai.usage.input_tokens`: all the input tokens, including the cached tokens.
-- `gen_ai.usage.output_tokens`: the output tokens, as the provider reports them.
-- `gen_ai.response.finish_reasons`: why the model stopped.
-- `error.type`: the class of error, if the call failed.
-
-The Claude Messages API returns these numbers in its `usage` object. The total input is the sum of `input_tokens`, `cache_creation_input_tokens`, and `cache_read_input_tokens` <Cite n={5} />. Every Claude API response also has a `request-id` header. Log it, because support asks for it <Cite n={6} />.
-
-A tool call gets its own span. Its operation name is `execute_tool` <Cite n={3} />. Sometimes the client tries a call again after a short failure. Then the span should cover the whole operation, with all the tries <Cite n={3} />.
-
-The text of the prompt and the answer can go into special attributes, such as `gen_ai.input.messages` and `gen_ai.output.messages`. You must turn them on yourself <Cite n={2} />. They are off by default because they are likely to hold sensitive data. This includes personal data <Cite n={2} />.
-
 Traces explain one request. Metrics show trends. OTel defines `gen_ai.client.operation.duration`. It is a histogram of how long a GenAI operation takes, in seconds <Cite n={4} />. For streaming, `gen_ai.client.inference.time_to_first_chunk` measures the time from the request to the first chunk <Cite n={2} />.
 
 In Python, a tracer opens a span with `start_as_current_span`. The method `set_attribute` adds a value to the span <Cite n={7} />. The Technical text has a short Python example. It opens a span, calls the model, and saves the model name, the token counts, and the stop reason on the span.
 
 </Layman>
 <Bangla>
-
-প্রতিটা মডেল কলের জন্য এই তথ্যগুলো রেকর্ড করুন। OTel GenAI conventions স্প্যানের নাম দেয় `{gen_ai.operation.name} {gen_ai.request.model}`। একটা উদাহরণ হলো `chat claude-sonnet-5-5` <Cite n={2} />। কাজের অ্যাট্রিবিউটগুলো হলো <Cite n={2} />:
-
-- `gen_ai.operation.name`: অপারেশন, যেমন `chat`। এটা দরকারি।
-- `gen_ai.request.model`: অ্যাপ যে মডেল চেয়েছিল।
-- `gen_ai.response.model`: রেসপন্সে থাকা মডেলের নাম।
-- `gen_ai.usage.input_tokens`: ক্যাশ করা টোকেনসহ সব ইনপুট টোকেন।
-- `gen_ai.usage.output_tokens`: প্রোভাইডারের জানানো আউটপুট টোকেন।
-- `gen_ai.response.finish_reasons`: মডেল কেন থামল।
-- `error.type`: কল ফেল করলে এররের ধরন।
-
-Claude Messages API এই সংখ্যাগুলো তার `usage` অবজেক্টে ফেরত দেয়। মোট ইনপুট হলো `input_tokens`, `cache_creation_input_tokens` ও `cache_read_input_tokens`-এর যোগফল <Cite n={5} />। প্রতিটা Claude API রেসপন্সে একটা `request-id` হেডারও থাকে। এটা লগ করুন, কারণ সাপোর্ট এটা চায় <Cite n={6} />।
-
-একটা টুল কল নিজের একটা স্প্যান পায়। এর অপারেশনের নাম `execute_tool` <Cite n={3} />। কখনো একটা ছোট ব্যর্থতার পর ক্লায়েন্ট কলটা আবার চেষ্টা করে। তখন স্প্যান সব চেষ্টাসহ পুরো অপারেশন ঢেকে রাখবে <Cite n={3} />।
-
-প্রম্পট ও উত্তরের টেক্সট বিশেষ অ্যাট্রিবিউটে যেতে পারে, যেমন `gen_ai.input.messages` ও `gen_ai.output.messages`। এগুলো আপনাকে নিজে চালু করতে হয় <Cite n={2} />। এগুলো ডিফল্টে বন্ধ, কারণ এতে সংবেদনশীল ডেটা থাকার সম্ভাবনা বেশি। এর মধ্যে ব্যক্তিগত ডেটাও আছে <Cite n={2} />।
 
 ট্রেস একটা রিকুয়েস্ট ব্যাখ্যা করে। মেট্রিক প্রবণতা দেখায়। OTel `gen_ai.client.operation.duration` নির্ধারণ করে। এটা একটা হিস্টোগ্রাম (histogram), যা দেখায় একটা GenAI অপারেশনে কত সেকেন্ড লাগে <Cite n={4} />। স্ট্রিমিংয়ের জন্য `gen_ai.client.inference.time_to_first_chunk` রিকুয়েস্ট থেকে প্রথম চাঙ্ক (chunk) পর্যন্ত সময় মাপে <Cite n={2} />।
 
