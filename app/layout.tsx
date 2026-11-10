@@ -5,6 +5,7 @@ import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { DEFAULT_VERSION, VERSION_INIT_SCRIPT } from "@/lib/fundamentals/version";
 import { VOICE_INIT_SCRIPT } from "@/lib/voice";
+import { SIDEBAR_INIT_SCRIPT } from "@/lib/sidebar";
 import { INSTALL_CAPTURE_SCRIPT } from "@/lib/pwa-install";
 import { RegisterServiceWorker } from "@/components/layout/RegisterServiceWorker";
 import { GA_ID, OWNER, SITE_DESCRIPTION, SITE_NAME, SITE_SHORT_NAME, SITE_URL } from "@/lib/site";
@@ -79,7 +80,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     // The inline scripts change data-theme, data-fundamentals-version, and
     // data-voice-default before React hydrates, so React must accept the DOM
     // values (suppressHydrationWarning). The server value of the voice is
-    // technical.
+    // technical. The sidebar script adds data-sidebar-left and
+    // data-sidebar-right ("closed"). The server HTML has neither: both open.
     <html
       lang="en"
       data-theme="dark"
@@ -92,6 +94,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: VERSION_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: VOICE_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: SIDEBAR_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: INSTALL_CAPTURE_SCRIPT }} />
       </head>
       <body className="min-h-full bg-bg text-text">
