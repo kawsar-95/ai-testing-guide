@@ -135,7 +135,7 @@ The site tracks your work in your browser. It never sends it to a server.
 
 The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 293`) with a progress bar, beside a Continue reading block. Below them, one row for each of the 11 modules with a checklist shows its name, a bar, and `done / total`. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
-![The Dashboard with progress, bookmarks, and Continue reading](docs/assets/dashboard.png)
+![The Dashboard: pages read, Continue reading, and the progress of each module](docs/assets/dashboard.png)
 
 The Dashboard ends with an "About the author" block: a photo, the role, a short bio, and links to the portfolio, LinkedIn, GitHub, X, and the resume.
 
