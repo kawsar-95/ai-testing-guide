@@ -59,7 +59,7 @@ export const HOME_UI = {
   eyebrow: "AGENTIC QA · 2026",
   titleLine1: "Agentic QA",
   titleLine2Before: "with",
-  titleMark: "Claude AI",
+  titleMark: "AI",
   sub: "A hands-on tutorial for QA engineers and SDETs: install Claude Code, learn how it works, configure and extend it, and automate testing in CI and the browser. Then follow one real QA project from a bug hunt to a second fix PR.",
   startReading: "Start reading",
   seeAll: "See all parts",
