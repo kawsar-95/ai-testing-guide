@@ -64,4 +64,22 @@ Changed after this round: The text was not changed. Round 5 is a second fresh ch
 
 Open FAILs after round 5: 0
 
+Changed after this round: On 2026-11-15, a fresh fetch of every source found that the Rook home page no longer has the sentence of row 4. The Rook sentence now cites the Rook documentation (https://rook.io/docs/rook/latest-release/Getting-Started/intro/) and follows its wording: an open source cloud-native storage orchestrator that automates deployment and management of Ceph, to provide self-managing, self-scaling, and self-healing storage services. Round 6 checks the new text.
+
+## Round 6 (2026-11-15)
+
+# Fact check: devops / cncf-runtime-data (round 6)
+
+| # | Section | Claim | Cite | Verdict | Quote or reason |
+|---|---|---|---|---|---|
+| 1 | Description line | The CNCF, containerd, and Rook. | none | N/A | It only names the topics. It gives no fact about a tool. |
+| 2 | Lede | The CNCF, containerd, and Rook. A short explanation with its sources comes first. The reels after it show the topic at work. | none | N/A | It describes the page itself. |
+| 3 | About the projects | The Cloud Native Computing Foundation (CNCF) hosts critical components of the global technology infrastructure. | 1 | PASS | S1: "The Cloud Native Computing Foundation (CNCF) hosts critical components of the global technology infrastructure." |
+| 4 | About the projects | Its graduated and incubating projects are considered stable and are used successfully in production environments. | 2 | PASS | S2: "Graduated and incubating projects are considered stable and are used successfully in production environments." |
+| 5 | About the projects | containerd is an industry-standard container runtime with an emphasis on simplicity, robustness and portability. | 3 | PASS | S3: "An industry-standard container runtime with an emphasis on simplicity, robustness and portability" |
+| 6 | About the projects | Rook is an open source cloud-native storage orchestrator. | 4 | PASS | S4: "Rook is an open source cloud-native storage orchestrator, providing the platform, framework, and support for Ceph storage..." |
+| 7 | About the projects | Rook automates deployment and management of Ceph, a distributed storage system, to provide self-managing, self-scaling, and self-healing storage services. | 4 | PASS | S4: "Rook automates deployment and management of Ceph to provide self-managing, self-scaling, and self-healing storage services." and "Ceph is a distributed storage system that provides file, block and object storage..." |
+
+Open FAILs after round 6: 0
+
 Open FAILs: 0

@@ -5,7 +5,7 @@ For each page `content/devops/<slug>.mdx` (all pages without a slug) it reads th
 `docs/superpowers/research/devops-<slug>.md` (rows: claim | S<n> | "quote"). It fetches each source page once, takes its visible
 text, and looks each quote up in that text. Case, white space, the space before a punctuation mark, curly quotes, and the
 "(opens in a new tab)" link marker do not count as differences. It also prints, for each page, the lowest share of word trigrams
-that a cited sentence of the Technical text has in common with its source. It does not read a page for meaning.
+that a cited sentence of a Technical panel has in common with its source. It does not read a page for meaning.
 Needs a network. The cache is `node_modules/.cache/devops-claimcheck` (or `DEVOPS_CLAIMCHECK_CACHE`, or --cache).
 Exit 0: every quote was found. Exit 1: a quote is missing. Exit 2: a source could not be fetched.
 """
@@ -59,14 +59,15 @@ def claims(research):
 
 
 def technical_sentences(mdx):
-    """(text, n) for each <Cite> of the Technical panel: the words since the previous <Cite> or the start of the sentence."""
-    panel = mdx.split("<Technical>", 1)[1].split("</Technical>", 1)[0]
-    out, last = [], 0
-    for match in CITE.finditer(panel):
-        chunk = CITE.sub("", panel[last:match.start()])
-        chunk = chunk.split(". ")[-1] if ". " in chunk else chunk
-        out.append((chunk.strip(" .\n"), int(match.group(1))))
-        last = match.end()
+    """(text, n) for each <Cite> of every Technical panel: the words since the previous <Cite> or the start of the sentence."""
+    out = []
+    for part in mdx.split("<Technical>")[1:]:
+        panel, last = part.split("</Technical>", 1)[0], 0
+        for match in CITE.finditer(panel):
+            chunk = CITE.sub("", panel[last:match.start()])
+            chunk = chunk.split(". ")[-1] if ". " in chunk else chunk
+            out.append((chunk.strip(" .\n"), int(match.group(1))))
+            last = match.end()
     return out
 
 

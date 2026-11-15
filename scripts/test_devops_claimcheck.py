@@ -32,6 +32,10 @@ class ParseTest(unittest.TestCase):
         two = "<Technical>\n\nX is a tool <Cite n={2} />, and Y is another <Cite n={3} />.\n\n</Technical>"
         self.assertEqual(dc.technical_sentences(two), [("X is a tool", 2), (", and Y is another", 3)])
 
+    def test_every_technical_panel_of_a_page_counts(self):
+        page = self.MDX + "</Voices>\n\n## Next\n\n<Voices>\n<Technical>\n\nC runs D <Cite n={2} />.\n\n</Technical>\n"
+        self.assertEqual(dc.technical_sentences(page), [("A is a thing", 1), ("B is another", 2), ("C runs D", 2)])
+
     def test_claim_rows_with_an_escaped_bar(self):
         research = '## Claims\n\n| Claim | Source | Quote |\n|---|---|---|\n| A \\| B | S2 | "x \\| y" |\n'
         self.assertEqual(dc.claims(research), [("A \\| B", 2, "x | y")])
