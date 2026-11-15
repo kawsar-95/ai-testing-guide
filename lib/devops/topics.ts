@@ -48,7 +48,7 @@ const PARTS: readonly FlatPart[] = [
 const SOURCE: readonly TopicEntry[] = [
   { slug: "what-is-devops", part: 1, title: "What Is DevOps?", description: "What DevOps is, its practices, the five DORA metrics, and where a tester works in a DevOps team." },
   { slug: "git-basics", part: 1, title: "Git Basics", description: "Snapshots, the three states, branches, merges and conflicts, remotes, and how a tester tests a pull request." },
-  { slug: "git-workflows", part: 1, title: "Git Workflows", description: "Rebase, stash, worktrees, bisect, and cherry-pick." },
+  { slug: "git-workflows", part: 1, title: "Git Workflows", description: "Branches by stability, rebase and cherry-pick, stash and worktrees, and git bisect to find the commit that broke a test." },
   { slug: "ci-cd", part: 1, title: "CI/CD Pipelines", description: "What Jenkins and GitHub Actions are." },
   { slug: "gitops", part: 1, title: "GitOps", description: "The OpenGitOps principles, Argo CD, and Flux." },
   { slug: "docker-basics", part: 2, title: "Docker Basics", description: "What Docker is, and how it compares with virtual machines." },
