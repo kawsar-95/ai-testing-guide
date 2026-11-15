@@ -11,6 +11,7 @@ import { AI_ML_TESTING_UI_BN } from "@/lib/bn/ai-ml-testing";
 import { AI_SKILLS_UI_BN } from "@/lib/bn/ai-skills";
 import { DEVOPS_UI_BN } from "@/lib/bn/devops";
 import { HARNESS_UI_BN } from "@/lib/bn/harness";
+import { SECURITY_UI_BN } from "@/lib/bn/security";
 import { FUNDAMENTALS_UI_BN } from "@/lib/bn/fundamentals";
 import { LINUX_UI_BN } from "@/lib/bn/linux";
 import { SHELL_BN } from "@/lib/bn/shell";
@@ -43,6 +44,7 @@ const FLAT_NAME_BN: Record<FlatModuleId, string> = {
   "ai-agents": AI_AGENTS_UI_BN.crossTo,
   "ai-ml-testing": AI_ML_TESTING_UI_BN.crossTo,
   devops: DEVOPS_UI_BN.crossTo,
+  security: SECURITY_UI_BN.crossTo,
 };
 
 const SECTIONS: readonly { id: Section; href: string; label: string; bn: string }[] = [

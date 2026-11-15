@@ -1,6 +1,6 @@
 /**
  * The registry of the flat modules, in the order of the site: System Design,
- * Architecture, the Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, AI/ML Testing, then DevOps & Cloud. The module files must not import this file.
+ * Architecture, the Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, How AI Agents Work, AI/ML Testing, DevOps & Cloud, then Security Testing. The module files must not import this file.
  */
 import { AGENT_MEMORY } from "../agent-memory/topics.ts";
 import { AI_AGENTS } from "../ai-agents/topics.ts";
@@ -13,11 +13,12 @@ import { COURSE } from "../course/topics.ts";
 import { DEVOPS } from "../devops/topics.ts";
 import { HARNESS } from "../harness/topics.ts";
 import { K6 } from "../k6/topics.ts";
+import { SECURITY } from "../security/topics.ts";
 import { SYSTEM_DESIGN } from "../system-design/cases.ts";
 
-export { AGENT_MEMORY, AI_AGENTS, AI_CONCEPTS, AI_ENGINEERING, AI_ML_TESTING, AI_SKILLS, ARCHITECTURE, COURSE, DEVOPS, HARNESS, K6, SYSTEM_DESIGN };
+export { AGENT_MEMORY, AI_AGENTS, AI_CONCEPTS, AI_ENGINEERING, AI_ML_TESTING, AI_SKILLS, ARCHITECTURE, COURSE, DEVOPS, HARNESS, K6, SECURITY, SYSTEM_DESIGN };
 
-export const FLAT_MODULES = [SYSTEM_DESIGN, ARCHITECTURE, COURSE, K6, AI_ENGINEERING, HARNESS, AI_SKILLS, AI_CONCEPTS, AGENT_MEMORY, AI_AGENTS, AI_ML_TESTING, DEVOPS] as const;
+export const FLAT_MODULES = [SYSTEM_DESIGN, ARCHITECTURE, COURSE, K6, AI_ENGINEERING, HARNESS, AI_SKILLS, AI_CONCEPTS, AGENT_MEMORY, AI_AGENTS, AI_ML_TESTING, DEVOPS, SECURITY] as const;
 
 export type FlatModuleId = (typeof FLAT_MODULES)[number]["id"];
 

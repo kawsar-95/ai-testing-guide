@@ -1,0 +1,306 @@
+export const metadata = { title: 'Network Scanning and Server Hardening', description: 'Find the open ports and services of a host with Nmap, then reduce what it exposes: fewer services, SSH keys instead of passwords, and a firewall.' }
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'Port Scanning Basics', publisher: 'Nmap Reference Guide', url: 'https://nmap.org/book/man-port-scanning-basics.html', accessed: '2026-11-15' },
+    { title: 'Port Specification and Scan Order', publisher: 'Nmap Reference Guide', url: 'https://nmap.org/book/man-port-specification.html', accessed: '2026-11-15' },
+    { title: 'Port Scanning Techniques', publisher: 'Nmap Reference Guide', url: 'https://nmap.org/book/man-port-scanning-techniques.html', accessed: '2026-11-15' },
+    { title: 'Service and Version Detection', publisher: 'Nmap Reference Guide', url: 'https://nmap.org/book/man-version-detection.html', accessed: '2026-11-15' },
+    { title: 'Examples', publisher: 'Nmap Reference Guide', url: 'https://nmap.org/book/man-examples.html', accessed: '2026-11-15' },
+    { title: 'Legal Issues', publisher: 'Nmap Network Scanning', url: 'https://nmap.org/book/legal-issues.html', accessed: '2026-11-15' },
+    { title: 'SP 800-123, Guide to General Server Security', publisher: 'NIST', url: 'https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-123.pdf', accessed: '2026-11-15' },
+    { title: 'ss(8)', publisher: 'Linux manual pages (man7.org)', url: 'https://man7.org/linux/man-pages/man8/ss.8.html', accessed: '2026-11-15' },
+    { title: 'sshd_config(5)', publisher: 'OpenBSD manual pages', url: 'https://man.openbsd.org/sshd_config', accessed: '2026-11-15' },
+    { title: 'OpenSSH server', publisher: 'Ubuntu Server documentation', url: 'https://ubuntu.com/server/docs/how-to/security/openssh-server/', accessed: '2026-11-15' },
+    { title: 'Firewall', publisher: 'Ubuntu Server documentation', url: 'https://ubuntu.com/server/docs/how-to/security/firewalls/', accessed: '2026-11-15' },
+    { title: 'ufw(8)', publisher: 'Ubuntu manpages', url: 'https://manpages.ubuntu.com/manpages/noble/en/man8/ufw.8.html', accessed: '2026-11-15' },
+  ],
+}
+
+# Network Scanning and Server Hardening
+
+An attacker starts by asking what a server exposes: which ports answer, and which programs listen behind them. This page shows how a tester answers the same question with Nmap, and how a team then shrinks the answer: fewer services, SSH keys instead of passwords, and a firewall.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+A **port scan** sends probes to the ports of a host and sorts each port by its answer. Nmap recognizes six port states: open, closed, filtered, unfiltered, open|filtered, and closed|filtered <Cite n={1} />. Three of them matter most:
+
+| State | What Nmap means |
+|---|---|
+| open | An application is actively accepting TCP connections, UDP datagrams, or SCTP associations on the port <Cite n={1} /> |
+| closed | The port is reachable, but no application listens on it <Cite n={1} /> |
+| filtered | Nmap cannot tell whether the port is open, because packet filtering stops its probes <Cite n={1} /> |
+
+The Nmap documentation puts the security point plainly: each open port is an avenue for attack <Cite n={1} />.
+
+**Server hardening** is the other half of the job: reduce what the server exposes. NIST SP 800-123 advises removing every service, application, and network protocol that the server does not need, and disabling the ones that cannot be removed <Cite n={7} />. Removing is better than disabling, because an attack that tries to turn a removed service back on cannot work, and a disabled service can be turned on again by human error <Cite n={7} />.
+
+</Technical>
+<Layman>
+
+A **port scan** knocks on the doors (ports) of a computer and notes how each door answers. Nmap knows six answers. Three matter most <Cite n={1} />:
+
+- **open**: a program is waiting behind the door and accepts connections <Cite n={1} />.
+- **closed**: the door can be reached, but no program is behind it <Cite n={1} />.
+- **filtered**: Nmap cannot tell if the door is open, because a filter blocks its knocks <Cite n={1} />.
+
+The Nmap documentation says it plainly: each open port is a way in for an attacker <Cite n={1} />.
+
+**Server hardening** is the other half: make the server show less. NIST says to remove every service, program, and network protocol that the server does not need, and to turn off the ones that cannot be removed <Cite n={7} />. Removing is better than turning off. An attacker cannot turn a removed service back on, and a person can turn a disabled service on again by mistake <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+**Port scan** একটা computer-এর দরজাগুলোতে (port) টোকা দেয় আর দেখে প্রতিটা দরজা কীভাবে সাড়া দেয়। Nmap ছয় রকম অবস্থা চেনে। এর মধ্যে তিনটা সবচেয়ে জরুরি <Cite n={1} />:
+
+- **open**: দরজার পেছনে একটা program অপেক্ষা করছে আর connection নিচ্ছে <Cite n={1} />।
+- **closed**: দরজায় পৌঁছানো যায়, কিন্তু পেছনে কোনো program নেই <Cite n={1} />।
+- **filtered**: Nmap বুঝতে পারে না দরজা খোলা কি না, কারণ একটা filter তার টোকা আটকে দেয় <Cite n={1} />।
+
+Nmap-এর documentation সোজাসুজি বলে: প্রতিটা open port আক্রমণকারীর জন্য ঢোকার একটা পথ <Cite n={1} />।
+
+**Server hardening** হলো কাজের বাকি অর্ধেক: সার্ভার যেন কম জিনিস বাইরে দেখায়। NIST বলে, সার্ভারের যে service, program আর network protocol দরকার নেই, সেগুলো সরিয়ে ফেলুন, আর যেগুলো সরানো যায় না, সেগুলো বন্ধ করুন <Cite n={7} />। বন্ধ করার চেয়ে সরিয়ে ফেলা ভালো। সরিয়ে ফেলা service আক্রমণকারী আবার চালু করতে পারেন না, আর বন্ধ করা service মানুষের ভুলে আবার চালু হয়ে যেতে পারে <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### How Nmap scans
+
+- **Which ports.** By default, Nmap scans the most common 1,000 ports for each protocol. The `-p` option scans the ports that you name instead <Cite n={2} />.
+- **Which scan.** The TCP SYN scan (`-sS`) is the default and most popular scan. It sends raw packets, which needs root access on Unix systems <Cite n={3} />. When a user does not have raw packet privileges, the TCP connect scan (`-sT`) is the default <Cite n={3} />.
+- **What runs there.** `-sV` enables version detection. After the scan finds open ports, version detection interrogates them to learn more about what is actually running <Cite n={4} />. An accurate version number helps a lot in deciding which exploits a server is vulnerable to <Cite n={4} />.
+
+### Permission to scan
+
+The Nmap documentation says that the best way to avoid controversy is to secure written authorization from the target network before any scanning. In a penetration test, this authorization belongs in the Statement of Work <Cite n={6} />. Port scanning without authorization is sometimes against the acceptable use policy of an internet provider <Cite n={6} />.
+
+The Nmap project gives everyone permission to scan one host for practice: `scanme.nmap.org`. The permission covers scanning with Nmap only, not exploits or denial-of-service attacks, and the project asks for no more than a dozen scans of that host per day <Cite n={5} />.
+
+### How a server gets harder to attack
+
+- **See what listens.** `ss` shows sockets: `-t` TCP, `-u` UDP, `-l` only listening sockets, `-p` the process that uses each socket, and `-n` numbers instead of service names <Cite n={8} />.
+- **SSH with keys.** In `sshd_config`, `PasswordAuthentication` allows password logins, and its default is `yes` <Cite n={9} />. `PermitRootLogin` defaults to `prohibit-password`, which turns off password and keyboard-interactive logins for root; `no` stops root logins completely <Cite n={9} />. Ubuntu's guide makes a key pair with `ssh-keygen -t ed25519` and copies the public key to the server with `ssh-copy-id` <Cite n={10} />.
+- **A firewall.** On Ubuntu, `ufw` is the default firewall configuration tool, and it is disabled at first <Cite n={11} />. `ufw default deny incoming` sets the default policy for incoming traffic <Cite n={12} />. A `limit` rule allows a connection but denies an IP address that tries 6 or more connections within 30 seconds, which helps against brute-force logins <Cite n={12} />.
+
+</Technical>
+<Layman>
+
+**How Nmap scans.**
+
+- **Which ports.** By default, Nmap checks the 1,000 most common ports of each protocol. With `-p`, it checks the ports you name <Cite n={2} />.
+- **Which scan.** The SYN scan (`-sS`) is the default and most popular scan. It needs root access on Unix <Cite n={3} />. Without that access, Nmap uses the TCP connect scan (`-sT`) by default <Cite n={3} />.
+- **What runs there.** `-sV` turns on version detection. It asks each open port what is really running there <Cite n={4} />. A correct version number helps a lot to know which attacks would work on the server <Cite n={4} />.
+
+**Permission to scan.** The Nmap documentation says: get written permission from the owner of the network before you scan. In a penetration test, the permission goes in the Statement of Work <Cite n={6} />. Scanning without permission can break the rules of your internet provider <Cite n={6} />.
+
+The Nmap project lets everyone scan one practice host: `scanme.nmap.org`. You may only scan it with Nmap: no exploits and no attacks that stop the service. The project asks for no more than a dozen scans per day <Cite n={5} />.
+
+**How a server gets harder to attack.**
+
+- **See what listens.** `ss -tulpn` lists the listening TCP and UDP sockets, with the program behind each one and numbers instead of names <Cite n={8} />.
+- **SSH with keys.** `PasswordAuthentication` in `sshd_config` allows password logins, and it is `yes` by default <Cite n={9} />. `PermitRootLogin` is `prohibit-password` by default: root cannot log in with a password. With `no`, root cannot log in at all <Cite n={9} />. Ubuntu's guide makes a key with `ssh-keygen -t ed25519` and copies it to the server with `ssh-copy-id` <Cite n={10} />.
+- **A firewall.** `ufw` is Ubuntu's default firewall tool, and it starts turned off <Cite n={11} />. `ufw default deny incoming` sets the default rule for incoming traffic <Cite n={12} />. A `limit` rule blocks an address that tries 6 or more connections in 30 seconds. This helps against password-guessing attacks <Cite n={12} />.
+
+</Layman>
+<Bangla>
+
+**Nmap কীভাবে scan করে।**
+
+- **কোন port।** ডিফল্টভাবে Nmap প্রতিটা protocol-এর সবচেয়ে প্রচলিত 1,000টা port দেখে। `-p` দিলে আপনার বলা port-গুলো দেখে <Cite n={2} />।
+- **কোন scan।** SYN scan (`-sS`) ডিফল্ট আর সবচেয়ে জনপ্রিয় scan। Unix-এ এর জন্য root access লাগে <Cite n={3} />। সেই access না থাকলে Nmap ডিফল্টভাবে TCP connect scan (`-sT`) চালায় <Cite n={3} />।
+- **ভেতরে কী চলছে।** `-sV` version detection চালু করে। এটা প্রতিটা open port-কে জিজ্ঞেস করে সেখানে আসলে কী চলছে <Cite n={4} />। সঠিক version নম্বর জানলে বোঝা অনেক সহজ হয়, সার্ভারে কোন আক্রমণ কাজ করবে <Cite n={4} />।
+
+**Scan করার অনুমতি।** Nmap-এর documentation বলে: scan করার আগে network-এর মালিকের লিখিত অনুমতি নিন। Penetration test-এ এই অনুমতি Statement of Work-এ থাকে <Cite n={6} />। অনুমতি ছাড়া scan করলে আপনার internet provider-এর নিয়ম ভাঙা হতে পারে <Cite n={6} />।
+
+Nmap project সবাইকে একটা প্র্যাকটিস host scan করার অনুমতি দেয়: `scanme.nmap.org`। এটা শুধু Nmap দিয়ে scan করা যাবে: কোনো exploit নয়, service বন্ধ করার আক্রমণও নয়। Project অনুরোধ করে, দিনে এক ডজনের বেশি scan করবেন না <Cite n={5} />।
+
+**সার্ভারকে কীভাবে আক্রমণের জন্য কঠিন করা হয়।**
+
+- **কী শুনছে, দেখুন।** `ss -tulpn` শোনার অবস্থায় থাকা TCP আর UDP socket দেখায়, প্রতিটার পেছনের program সহ, আর নামের বদলে নম্বর দিয়ে <Cite n={8} />।
+- **Key দিয়ে SSH।** `sshd_config`-এর `PasswordAuthentication` password দিয়ে login চালু রাখে, আর এর ডিফল্ট `yes` <Cite n={9} />। `PermitRootLogin`-এর ডিফল্ট `prohibit-password`: root password দিয়ে login করতে পারেন না। `no` দিলে root একেবারেই login করতে পারেন না <Cite n={9} />। Ubuntu-র গাইড `ssh-keygen -t ed25519` দিয়ে key বানায় আর `ssh-copy-id` দিয়ে সেটা সার্ভারে কপি করে <Cite n={10} />।
+- **একটা firewall।** `ufw` Ubuntu-র ডিফল্ট firewall tool, আর শুরুতে এটা বন্ধ থাকে <Cite n={11} />। `ufw default deny incoming` ভেতরে আসা traffic-এর ডিফল্ট নিয়ম ঠিক করে <Cite n={12} />। `limit` নিয়ম এমন address আটকে দেয়, যেটা 30 সেকেন্ডে 6 বা তার বেশি connection চেষ্টা করে। এটা password অনুমান করে ঢোকার আক্রমণ ঠেকাতে সাহায্য করে <Cite n={12} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+**1. Scan the lab target.** From the Kali container of the [practice lab](/security/security-basics-and-lab/):
+
+```bash
+nmap juice                 # the 1,000 most common ports
+nmap -sV -p 3000 juice     # what runs on port 3000
+```
+
+`-p` limits the scan to the ports that you name <Cite n={2} />, and `-sV` asks the open port what is running <Cite n={4} />. To practise on the internet, use only `scanme.nmap.org`, with Nmap only, and no more than a dozen scans a day <Cite n={5} />.
+
+**2. Harden a practice server.** On an Ubuntu virtual machine that you own, first list what listens <Cite n={8} />:
+
+```bash
+sudo ss -tulpn
+```
+
+Then turn on the firewall. Ubuntu's guide opens the SSH port with `sudo ufw allow 22`, turns the firewall on with `sudo ufw enable`, and shows the rules with `sudo ufw status verbose` <Cite n={11} />. On a remote server, add the SSH rule before you enable the firewall. That order is the tutorial's advice, so that the firewall does not cut your own connection:
+
+```bash
+sudo ufw default deny incoming
+sudo ufw limit 22/tcp
+sudo ufw enable
+sudo ufw status verbose
+```
+
+`limit` instead of `allow` adds the rate limit for brute-force logins <Cite n={12} />.
+
+Next, copy your key to the server with `ssh-copy-id`, and check that a key login works <Cite n={10} />. Only then set these two lines in `/etc/ssh/sshd_config`:
+
+```text
+PasswordAuthentication no
+PermitRootLogin no
+```
+
+Check the file before you restart SSH: the Ubuntu guide runs `sudo sshd -t` first, because a broken configuration can cost you the way into the server, and then restarts with `sudo systemctl restart ssh.service` <Cite n={10} />.
+
+**3. Scan again.** Run the same Nmap scan from step 1 against the server and compare: every port that is still open needs a reason.
+
+</Technical>
+<Layman>
+
+**1. Scan the lab target.** From the Kali container of the [practice lab](/security/security-basics-and-lab/), run the two Nmap commands of the Technical view. `-p` scans only the ports you name <Cite n={2} />. `-sV` asks the open port what is running there <Cite n={4} />. On the internet, practise only on `scanme.nmap.org`, only with Nmap, and no more than a dozen scans a day <Cite n={5} />.
+
+**2. Harden a practice server.** On an Ubuntu virtual machine that you own, first run `sudo ss -tulpn` to see what listens <Cite n={8} />.
+
+Then turn on the firewall. Ubuntu's guide opens SSH with `sudo ufw allow 22`, turns the firewall on with `sudo ufw enable`, and shows the rules with `sudo ufw status verbose` <Cite n={11} />. The tutorial's advice: on a remote server, open SSH before you turn the firewall on, so that you do not lock yourself out. The Technical view uses `limit` instead of `allow`, which adds the block for password-guessing attacks <Cite n={12} />.
+
+Next, copy your key to the server with `ssh-copy-id`, and check that a key login works <Cite n={10} />. Only then turn off password logins and root logins in `/etc/ssh/sshd_config`. Check the file with `sudo sshd -t` before you restart SSH with `sudo systemctl restart ssh.service`, because a broken file can lock you out of the server <Cite n={10} />.
+
+**3. Scan again.** Run the same scan and compare. Every port that is still open needs a reason.
+
+</Layman>
+<Bangla>
+
+**1. ল্যাবের target scan করুন।** [প্র্যাকটিস ল্যাবের](/security/security-basics-and-lab/) Kali container থেকে Technical view-এর দুটো Nmap command চালান। `-p` শুধু আপনার বলা port-গুলো scan করে <Cite n={2} />। `-sV` open port-কে জিজ্ঞেস করে সেখানে কী চলছে <Cite n={4} />। Internet-এ শুধু `scanme.nmap.org`-এ প্র্যাকটিস করুন, শুধু Nmap দিয়ে, আর দিনে এক ডজনের বেশি scan নয় <Cite n={5} />।
+
+**2. একটা প্র্যাকটিস সার্ভার hardening করুন।** আপনার নিজের একটা Ubuntu virtual machine-এ আগে `sudo ss -tulpn` চালিয়ে দেখুন কী শুনছে <Cite n={8} />।
+
+এরপর firewall চালু করুন। Ubuntu-র গাইড `sudo ufw allow 22` দিয়ে SSH খোলে, `sudo ufw enable` দিয়ে firewall চালু করে, আর `sudo ufw status verbose` দিয়ে নিয়মগুলো দেখায় <Cite n={11} />। টিউটোরিয়ালের পরামর্শ: দূরের সার্ভারে firewall চালু করার আগে SSH খুলে নিন, যাতে আপনি নিজেই আটকে না যান। Technical view `allow`-এর বদলে `limit` ব্যবহার করে, যেটা password অনুমান করে ঢোকার আক্রমণ আটকানোর নিয়মও যোগ করে <Cite n={12} />।
+
+এরপর `ssh-copy-id` দিয়ে আপনার key সার্ভারে কপি করুন, আর দেখুন key দিয়ে login কাজ করে কি না <Cite n={10} />। তারপরই `/etc/ssh/sshd_config`-এ password login আর root login বন্ধ করুন। SSH restart করার আগে (`sudo systemctl restart ssh.service`) `sudo sshd -t` দিয়ে ফাইলটা যাচাই করুন, কারণ ভুল ফাইল আপনাকে সার্ভার থেকে আটকে দিতে পারে <Cite n={10} />।
+
+**3. আবার scan করুন।** একই scan চালিয়ে তুলনা করুন। যে port এখনো খোলা, তার প্রতিটার একটা কারণ থাকতে হবে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Scanning a network without written permission.** The Nmap documentation advises written authorization before any scanning <Cite n={6} />. For the law, see [Cyber Law and Data Protection](/security/cyber-law-and-data-protection/).
+- **Using the practice host for more than scans.** The permission for `scanme.nmap.org` covers Nmap scans only, not exploits or denial-of-service attacks <Cite n={5} />.
+- **Believing that a plain `nmap` run checked every port.** It checks the most common 1,000 ports for each protocol <Cite n={2} />.
+- **Reading "filtered" as "safe".** Filtered means that Nmap could not tell whether the port is open <Cite n={1} />.
+- **Disabling a service that could be removed.** NIST prefers removal, because a disabled service can be turned on again <Cite n={7} />.
+- **Turning off password logins before a key login works.** In Ubuntu's guide, a key copied with `ssh-copy-id` lets you log in without a password <Cite n={10} />. Test that login before you set `PasswordAuthentication no`.
+- **Restarting SSH without checking the file.** Run `sudo sshd -t` first <Cite n={10} />.
+
+</Technical>
+<Layman>
+
+- **Scanning a network without written permission.** The Nmap documentation says to get written permission first <Cite n={6} />. For the law, see [Cyber Law and Data Protection](/security/cyber-law-and-data-protection/).
+- **Using the practice host for more than scans.** You may only scan `scanme.nmap.org` with Nmap. No exploits and no attacks that stop the service <Cite n={5} />.
+- **Thinking a plain `nmap` run checked every port.** It checks the 1,000 most common ports of each protocol <Cite n={2} />.
+- **Reading "filtered" as "safe".** Filtered means that Nmap could not tell if the port is open <Cite n={1} />.
+- **Turning off a service that could be removed.** NIST prefers removing it, because a turned-off service can be turned on again <Cite n={7} />.
+- **Turning off password logins before a key login works.** In Ubuntu's guide, a key copied with `ssh-copy-id` lets you log in without a password <Cite n={10} />. Test that login before you set `PasswordAuthentication no`.
+- **Restarting SSH without checking the file.** Run `sudo sshd -t` first <Cite n={10} />.
+
+</Layman>
+<Bangla>
+
+- **লিখিত অনুমতি ছাড়া network scan করা।** Nmap-এর documentation বলে, আগে লিখিত অনুমতি নিন <Cite n={6} />। আইন জানতে [Cyber Law and Data Protection](/security/cyber-law-and-data-protection/) দেখুন।
+- **প্র্যাকটিস host-এ scan-এর বেশি কিছু করা।** `scanme.nmap.org` শুধু Nmap দিয়ে scan করা যাবে। কোনো exploit নয়, service বন্ধ করার আক্রমণও নয় <Cite n={5} />।
+- **ভাবা যে সাধারণ `nmap` সব port দেখেছে।** এটা প্রতিটা protocol-এর সবচেয়ে প্রচলিত 1,000টা port দেখে <Cite n={2} />।
+- **"filtered"-কে "নিরাপদ" ভাবা।** Filtered মানে Nmap বুঝতে পারেনি port খোলা কি না <Cite n={1} />।
+- **সরানো যায় এমন service শুধু বন্ধ রাখা।** NIST সরিয়ে ফেলা পছন্দ করে, কারণ বন্ধ service আবার চালু হয়ে যেতে পারে <Cite n={7} />।
+- **Key login কাজ করার আগেই password login বন্ধ করা।** Ubuntu-র গাইডে `ssh-copy-id` দিয়ে কপি করা key থাকলে password ছাড়াই login করা যায় <Cite n={10} />। `PasswordAuthentication no` দেওয়ার আগে সেই login পরীক্ষা করুন।
+- **ফাইল যাচাই না করে SSH restart করা।** আগে `sudo sshd -t` চালান <Cite n={10} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Only the expected ports are open.** Keep a list of the ports that the server should expose, and compare every scan with it.
+- **A scan before and after each change.** Save both outputs with the date (`nmap -oN before.txt ...`) so that the report can show the difference.
+- **Password logins are refused.** `ssh -o PubkeyAuthentication=no user@server` must fail.
+- **Root cannot log in.** `ssh root@server` must fail, also with a key.
+- **The firewall is on, with deny as the default.** `sudo ufw status verbose` shows `Status: active` and the default for incoming traffic.
+- **Versions are current.** Each version that `-sV` reports is checked against the vendor's security advisories.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Only the expected ports are open.** Keep a list of the ports the server should show, and compare every scan with it.
+- **Scan before and after each change.** Save both results with the date, so that the report can show what changed.
+- **Password logins are refused.** A login that refuses to use a key must fail.
+- **Root cannot log in.** A login as `root` must fail, also with a key.
+- **The firewall is on, and it blocks by default.** `sudo ufw status verbose` shows that it is active and what it does with incoming traffic.
+- **Versions are up to date.** Check each version that `-sV` shows against the maker's security notices.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **শুধু প্রত্যাশিত port খোলা।** সার্ভারের কোন port খোলা থাকার কথা, তার একটা তালিকা রাখুন, আর প্রতিটা scan সেটার সঙ্গে মিলিয়ে দেখুন।
+- **প্রতিটা পরিবর্তনের আগে ও পরে scan।** দুটো ফলাফলই তারিখসহ সংরক্ষণ করুন, যাতে রিপোর্টে পার্থক্য দেখানো যায়।
+- **Password login প্রত্যাখ্যাত হয়।** Key ব্যবহার না করা login fail করতে হবে।
+- **Root login করতে পারেন না।** `root` হিসেবে login fail করতে হবে, key দিয়েও।
+- **Firewall চালু, আর ডিফল্টভাবে আটকায়।** `sudo ufw status verbose` দেখায় এটা active কি না আর ভেতরে আসা traffic-এর সঙ্গে কী করে।
+- **Version হালনাগাদ।** `-sV` যে version দেখায়, প্রতিটা নির্মাতার security notice-এর সঙ্গে মিলিয়ে দেখুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Port | A numbered endpoint on a host where a program can listen for connections. |
+| Open port | A port where an application accepts connections. |
+| Closed port | A reachable port with no application listening. |
+| Filtered port | A port that Nmap cannot classify, because a filter blocks its probes. |
+| SYN scan (`-sS`) | Nmap's default scan when it may send raw packets. |
+| Version detection (`-sV`) | Nmap asks the open ports what service and version run there. |
+| Hardening | Making a system expose less: fewer services, fewer ways in. |
+| `sshd_config` | The configuration file of the OpenSSH server. |
+| ufw | Uncomplicated Firewall, Ubuntu's default firewall configuration tool. |
+| Rate limit | A rule that blocks a source that connects too often in a short time. |
+| Statement of Work | The contract of a penetration test, where the scan authorization belongs. |

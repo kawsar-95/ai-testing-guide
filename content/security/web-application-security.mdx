@@ -1,0 +1,250 @@
+export const metadata = { title: 'Web Application Security', description: 'Broken access control, injection, and cross-site scripting from the OWASP Top 10:2025, and how a tester finds them with Burp Suite and ZAP on OWASP Juice Shop.' }
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'OWASP Top 10:2025', publisher: 'OWASP Foundation', url: 'https://top10.owasp.org/2025/', accessed: '2026-11-15' },
+    { title: 'A01:2025 Broken Access Control', publisher: 'OWASP Top 10:2025', url: 'https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/', accessed: '2026-11-15' },
+    { title: 'A05:2025 Injection', publisher: 'OWASP Top 10:2025', url: 'https://top10.owasp.org/2025/A05_2025-Injection/', accessed: '2026-11-15' },
+    { title: 'SQL Injection Prevention Cheat Sheet', publisher: 'OWASP Cheat Sheet Series', url: 'https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html', accessed: '2026-11-15' },
+    { title: 'Cross Site Scripting Prevention Cheat Sheet', publisher: 'OWASP Cheat Sheet Series', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html', accessed: '2026-11-15' },
+    { title: 'Burp Proxy', publisher: 'PortSwigger (Burp Suite documentation)', url: 'https://portswigger.net/burp/documentation/desktop/tools/proxy', accessed: '2026-11-15' },
+    { title: 'Burp Repeater', publisher: 'PortSwigger (Burp Suite documentation)', url: 'https://portswigger.net/burp/documentation/desktop/tools/repeater', accessed: '2026-11-15' },
+    { title: 'Getting Started', publisher: 'ZAP documentation', url: 'https://www.zaproxy.org/getting-started/', accessed: '2026-11-15' },
+    { title: 'Spider', publisher: 'ZAP documentation', url: 'https://www.zaproxy.org/docs/desktop/addons/spider/', accessed: '2026-11-15' },
+    { title: 'Active Scan', publisher: 'ZAP documentation', url: 'https://www.zaproxy.org/docs/desktop/start/features/ascan/', accessed: '2026-11-15' },
+    { title: 'OWASP Juice Shop', publisher: 'OWASP Foundation', url: 'https://owasp.org/projects/juice-shop', accessed: '2026-11-15' },
+  ],
+}
+
+# Web Application Security
+
+Most attacks on a web application go through the same door as its users: the HTTP requests. This page covers three flaws from the OWASP Top 10, shows how an intercepting proxy lets a tester change any request, and walks through each test on the practice app of this module.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The OWASP Top 10 is a standard awareness document that represents a broad consensus about the most critical security risks to web applications. The 2025 edition puts **Broken Access Control** at A01 and **Injection** at A05 <Cite n={1} />.
+
+- **Broken access control.** Access control makes sure that users cannot act outside of their intended permissions. When it fails, the result is usually disclosure, change, or destruction of data, or a business function done outside the user's limits <Cite n={2} />. A common case: a user views or edits someone else's account just by giving its identifier, which is called an insecure direct object reference <Cite n={2} />.
+- **Injection.** An injection vulnerability lets untrusted user input reach an interpreter, such as a browser, a database, or the command line, which then runs parts of that input as commands <Cite n={3} />. SQL injection is the database case.
+- **Cross-site scripting (XSS).** XSS happens when an application puts untrusted data into a page in a way that lets the browser treat it as code <Cite n={5} />. The OWASP Top 10:2025 lists it under Injection <Cite n={3} />.
+
+A tester does not need the source code to find these flaws. All three show up in requests and responses, which a tester can capture and change.
+
+</Technical>
+<Layman>
+
+The OWASP Top 10 is a document that sums up the most critical security risks of web applications. In the 2025 list, **Broken Access Control** is number 1 and **Injection** is number 5 <Cite n={1} />.
+
+- **Broken access control.** Access control makes sure that users can only do what they are allowed to do. When it fails, data can leak, be changed, or be destroyed, or a user can do something beyond their limits <Cite n={2} />. A common case: a user can see or edit someone else's account just by giving that account's ID <Cite n={2} />.
+- **Injection.** User input reaches a program that runs commands, such as a browser, a database, or the command line, and that program runs part of the input as a command <Cite n={3} />. SQL injection is the database case.
+- **Cross-site scripting (XSS).** The app puts user input into a page in a way that lets the browser run it as code <Cite n={5} />. The OWASP Top 10:2025 counts it as a kind of injection <Cite n={3} />.
+
+A tester does not need the source code to find these flaws. All three show up in the requests and the responses, and a tester can catch and change those.
+
+</Layman>
+<Bangla>
+
+OWASP Top 10 হলো একটা document, যেটা web application-এর সবচেয়ে গুরুতর security ঝুঁকিগুলো তুলে ধরে। 2025 সংস্করণে **Broken Access Control** এক নম্বরে আর **Injection** পাঁচ নম্বরে <Cite n={1} />।
+
+- **Broken access control।** Access control নিশ্চিত করে যে user শুধু তাঁর অনুমতির ভেতরের কাজই করতে পারেন। এটা ব্যর্থ হলে data ফাঁস, বদল বা নষ্ট হতে পারে, অথবা user তাঁর সীমার বাইরের কাজ করে ফেলতে পারেন <Cite n={2} />। একটা সাধারণ উদাহরণ: শুধু ID দিয়েই একজন user অন্যের account দেখতে বা বদলাতে পারেন <Cite n={2} />।
+- **Injection।** User-এর input এমন একটা program-এ পৌঁছায়, যেটা command চালায়, যেমন browser, database বা command line, আর সেই program input-এর কিছু অংশকে command হিসেবে চালিয়ে দেয় <Cite n={3} />। Database-এর ক্ষেত্রে এটাকে বলে SQL injection।
+- **Cross-site scripting (XSS)।** App user-এর input পেজে এমনভাবে বসায় যে browser সেটাকে code হিসেবে চালায় <Cite n={5} />। OWASP Top 10:2025 এটাকে injection-এর একটা ধরন হিসেবে ধরে <Cite n={3} />।
+
+এই দুর্বলতাগুলো খুঁজতে টেস্টারের source code লাগে না। তিনটাই request আর response-এ দেখা যায়, আর টেস্টার সেগুলো ধরে বদলে দিতে পারেন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### An intercepting proxy
+
+**Burp Proxy** works as a web proxy server between the browser and the target application. It lets you intercept, inspect, and change the traffic in both directions, also over HTTPS <Cite n={6} />. Burp has its own browser: open it from Proxy > Intercept with Open Browser, and all its traffic goes through Burp <Cite n={6} />. **Burp Repeater** lets you change an interesting HTTP or WebSocket message and send it again and again <Cite n={7} />.
+
+**ZAP** (Zed Attack Proxy, which its site calls ZAP by Checkmarx) is a free, open-source penetration testing tool <Cite n={8} />. It is a manipulator-in-the-middle proxy: it stands between the browser and the web application, so that it can intercept and inspect the messages, change them if needed, and forward them <Cite n={8} />. Its **Spider** discovers new URLs on a site automatically <Cite n={9} />. Its **Active Scan** tries to find vulnerabilities by using known attacks against the targets <Cite n={10} />.
+
+### Why the three flaws happen
+
+- **Access control** fails when the server trusts what the client sends. OWASP lists bypassing the checks by changing the URL, the application state, or the HTML page, or by using an attack tool that changes API requests <Cite n={2} />. The fix starts with a rule: except for public resources, deny by default <Cite n={2} />.
+- **Injection** happens when an application builds a query from untrusted data. OWASP's example builds SQL by joining strings; the input `' OR '1'='1` changes the meaning of the query, so that it returns all records of the table <Cite n={3} />. The preferred fix is a safe API: one that avoids the interpreter, offers a parameterized interface, or uses an ORM <Cite n={3} />. For SQL, the OWASP cheat sheet prefers parameterized queries for dynamic data, and a strict allow-list of fixed values for the parts that cannot be parameterized, such as table names. Escaping input by hand is error-prone and strongly discouraged <Cite n={4} />.
+- **XSS** happens when one output point is not protected. The OWASP cheat sheet says that coverage is what matters: an application that protects 99 places and misses one is still vulnerable <Cite n={5} />. Many frameworks escape every value they render by default, and an output encoding library covers the gaps <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+**An intercepting proxy.** **Burp Proxy** sits between the browser and the app. It lets you stop, read, and change the traffic in both directions, also over HTTPS <Cite n={6} />. Burp has its own browser. Open it from Proxy > Intercept with Open Browser, and all its traffic goes through Burp <Cite n={6} />. **Burp Repeater** lets you change one request and send it again and again <Cite n={7} />.
+
+**ZAP** is a free, open-source testing tool, now called ZAP by Checkmarx <Cite n={8} />. It also sits between the browser and the app, so that it can catch, read, change, and pass on the messages <Cite n={8} />. Its **Spider** finds the pages of a site by itself <Cite n={9} />. Its **Active Scan** tries known attacks on the target to find weak spots <Cite n={10} />.
+
+**Why the three flaws happen.**
+
+- **Access control** fails when the server trusts what the browser sends. OWASP says that attackers get around the checks by changing the URL, the app's state, or the page, or with a tool that changes API requests <Cite n={2} />. The fix starts with one rule: except for public things, say no by default <Cite n={2} />.
+- **Injection** happens when an app builds a query by gluing user input into it. In OWASP's example, the input `' OR '1'='1` changes what the query means, and the query returns every record of the table <Cite n={3} />. The best fix is a safe API: one that does not use the interpreter, or that takes the input as separate parameters, or an ORM <Cite n={3} />. For SQL, the OWASP cheat sheet prefers parameterized queries, and a fixed allow-list for parts such as table names. It strongly advises against escaping input by hand <Cite n={4} />.
+- **XSS** happens when even one output point is not protected. The OWASP cheat sheet says that an app that protects 99 places and misses one is still open to attack <Cite n={5} />. Many frameworks escape the values they show by default, and an encoding library covers the rest <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+**Intercepting proxy।** **Burp Proxy** browser আর app-এর মাঝখানে বসে। এটা দুই দিকের traffic থামাতে, পড়তে আর বদলাতে দেয়, HTTPS-এও <Cite n={6} />। Burp-এর নিজের একটা browser আছে। Proxy > Intercept থেকে Open Browser দিয়ে খুললে তার সব traffic Burp-এর ভেতর দিয়ে যায় <Cite n={6} />। **Burp Repeater** একটা request বদলে বারবার পাঠাতে দেয় <Cite n={7} />।
+
+**ZAP** একটা free, open-source testing tool, এখন এর নাম ZAP by Checkmarx <Cite n={8} />। এটাও browser আর app-এর মাঝখানে বসে, যাতে message ধরতে, পড়তে, বদলাতে আর সামনে পাঠাতে পারে <Cite n={8} />। এর **Spider** নিজে থেকেই একটা site-এর পেজগুলো খুঁজে বের করে <Cite n={9} />। এর **Active Scan** target-এর ওপর পরিচিত আক্রমণ চালিয়ে দুর্বলতা খোঁজে <Cite n={10} />।
+
+**তিনটা দুর্বলতা কেন হয়।**
+
+- **Access control** ব্যর্থ হয় যখন সার্ভার browser-এর পাঠানো তথ্যে অন্ধভাবে বিশ্বাস করে। OWASP বলে, আক্রমণকারীরা URL, app-এর state বা পেজ বদলে, অথবা API request বদলানোর tool দিয়ে যাচাই এড়িয়ে যান <Cite n={2} />। সমাধানের শুরু একটা নিয়ম দিয়ে: public জিনিস ছাড়া বাকি সব ডিফল্টভাবে না <Cite n={2} />।
+- **Injection** হয় যখন app user-এর input জুড়ে দিয়ে query বানায়। OWASP-এর উদাহরণে `' OR '1'='1` input query-র অর্থ বদলে দেয়, আর query table-এর সব record ফেরত দেয় <Cite n={3} />। সবচেয়ে ভালো সমাধান একটা safe API: যেটা interpreter ব্যবহার করে না, বা input-কে আলাদা parameter হিসেবে নেয়, বা একটা ORM <Cite n={3} />। SQL-এর জন্য OWASP cheat sheet parameterized query পছন্দ করে, আর table-এর নামের মতো অংশের জন্য নির্দিষ্ট মানের একটা allow-list। হাতে করে input escape করতে এটা কড়াভাবে নিষেধ করে <Cite n={4} />।
+- **XSS** হয় যখন একটা output জায়গাও অরক্ষিত থাকে। OWASP cheat sheet বলে, যে app 99টা জায়গা রক্ষা করে আর একটা বাদ দেয়, সেটাও আক্রমণের জন্য খোলা <Cite n={5} />। অনেক framework ডিফল্টভাবে দেখানো value escape করে, আর একটা encoding library বাকিটা সামলায় <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+Run these tests only on the Juice Shop container of the [practice lab](/security/security-basics-and-lab/). Juice Shop has vulnerabilities from the entire OWASP Top Ten <Cite n={11} />. ZAP's own guide says to attack only an application that you have permission to test, because an active attack can do real damage to a site's functions and data <Cite n={8} />.
+
+**1. Capture the traffic.** Open Burp's browser from Proxy > Intercept <Cite n={6} />, browse to `http://localhost:3000`, register two users, and use the app as each of them.
+
+**2. Test access control.** Find a request that names an object by its ID, such as an order or a basket of user A. Send it to Repeater <Cite n={7} />, log in as user B, and send it again with user B's session. If user B gets user A's data, access control is broken <Cite n={2} />. This invented request shows the idea:
+
+```http
+GET /api/orders/1002 HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <the token of user B>
+```
+
+**3. Test for SQL injection.** In a search or login field, send OWASP's classic input `' OR '1'='1`. If the result shows more records than it should, the input changed the meaning of the query, as in OWASP's example <Cite n={3} />.
+
+**4. Test for XSS.** Send a harmless marker such as `<b>xss-test</b>` into a field that the app shows again. If the page shows the word in bold instead of the literal text, the app added your HTML to the page instead of showing it as plain text, which is how OWASP describes XSS <Cite n={5} />.
+
+**5. Let ZAP help.** In ZAP, run the Spider on `http://localhost:3000` to find the URLs <Cite n={9} />, then an Active Scan on the lab target only <Cite n={10} />. Check each alert by hand in Burp Repeater. Burp's documentation lists manually verifying the issues that Burp Scanner reports as one use of Repeater <Cite n={7} />.
+
+</Technical>
+<Layman>
+
+Run these tests only on the Juice Shop container of the [practice lab](/security/security-basics-and-lab/). Juice Shop has flaws from the whole OWASP Top Ten <Cite n={11} />. ZAP's own guide says: attack only an app that you have permission to test, because an active attack can really damage a site and its data <Cite n={8} />.
+
+1. **Capture the traffic.** Open Burp's browser from Proxy > Intercept <Cite n={6} />, go to `http://localhost:3000`, make two users, and use the app as each one.
+2. **Test access control.** Find a request with the ID of something that belongs to user A, such as an order. Send it to Repeater <Cite n={7} />, log in as user B, and send it again as user B. If user B sees user A's data, access control is broken <Cite n={2} />. The Technical view shows an invented example request.
+3. **Test for SQL injection.** In a search or login field, send `' OR '1'='1`. If you get more records than you should, the input changed what the query means, as in OWASP's example <Cite n={3} />.
+4. **Test for XSS.** Type a harmless marker such as `<b>xss-test</b>` into a field that the app shows back. If the page shows the word in bold instead of the plain text, the app added your HTML to the page. That is how OWASP describes XSS <Cite n={5} />.
+5. **Let ZAP help.** In ZAP, run the Spider on `http://localhost:3000` to find the pages <Cite n={9} />, then an Active Scan on the lab target only <Cite n={10} />. Check each alert by hand in Burp Repeater. Burp's documentation names checking Burp Scanner's findings by hand as one use of Repeater <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+এই টেস্টগুলো শুধু [প্র্যাকটিস ল্যাবের](/security/security-basics-and-lab/) Juice Shop container-এ চালান। Juice Shop-এ পুরো OWASP Top Ten-এর দুর্বলতা আছে <Cite n={11} />। ZAP-এর নিজের গাইড বলে: শুধু সেই app-এ আক্রমণ করুন, যেটা টেস্ট করার অনুমতি আপনার আছে, কারণ active attack একটা site আর তার data-র সত্যিকারের ক্ষতি করতে পারে <Cite n={8} />।
+
+1. **Traffic ধরুন।** Proxy > Intercept থেকে Burp-এর browser খুলুন <Cite n={6} />, `http://localhost:3000`-এ যান, দুজন user বানান, আর দুজন হিসেবেই app ব্যবহার করুন।
+2. **Access control টেস্ট করুন।** এমন একটা request খুঁজুন, যেখানে user A-এর কোনো জিনিসের ID আছে, যেমন একটা order। সেটা Repeater-এ পাঠান <Cite n={7} />, user B হিসেবে login করুন, আর user B হিসেবে আবার পাঠান। User B যদি user A-এর data দেখতে পান, access control ভাঙা <Cite n={2} />। Technical view-এ একটা বানানো উদাহরণ request আছে।
+3. **SQL injection টেস্ট করুন।** কোনো search বা login field-এ `' OR '1'='1` পাঠান। যদি প্রত্যাশার চেয়ে বেশি record আসে, তাহলে input query-র অর্থ বদলে দিয়েছে, OWASP-এর উদাহরণের মতো <Cite n={3} />।
+4. **XSS টেস্ট করুন।** যে field-এর লেখা app আবার দেখায়, সেখানে `<b>xss-test</b>`-এর মতো একটা নিরীহ চিহ্ন লিখুন। পেজ যদি লেখাটা সাধারণ text-এর বদলে bold দেখায়, তাহলে app আপনার HTML পেজে বসিয়ে দিয়েছে। OWASP XSS-কে এভাবেই বর্ণনা করে <Cite n={5} />।
+5. **ZAP-এর সাহায্য নিন।** ZAP-এ `http://localhost:3000`-এর ওপর Spider চালিয়ে পেজগুলো খুঁজুন <Cite n={9} />, তারপর শুধু ল্যাবের target-এ Active Scan চালান <Cite n={10} />। প্রতিটা alert Burp Repeater-এ হাতে যাচাই করুন। Burp-এর documentation Repeater-এর একটা ব্যবহার হিসেবে Burp Scanner-এর রিপোর্ট হাতে যাচাই করার কথা বলে <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Running an active scan on a site that you do not own.** Active scanning is an attack on the target, and ZAP says not to use it on web applications that you do not own <Cite n={10} />.
+- **Treating the scanner's silence as a pass.** Active scanning can find only certain types of vulnerabilities <Cite n={10} />. Access control flaws need a tester who knows which user may see which data.
+- **Trusting the user interface.** A hidden button is not a control: OWASP lists changing the URL or the API request as a way around access checks <Cite n={2} />.
+- **Escaping SQL input by hand.** The OWASP cheat sheet strongly discourages it. Use parameterized queries <Cite n={4} />.
+- **Fixing XSS in 99 places.** One missed output point is enough <Cite n={5} />.
+- **Testing with one user only.** The classic case is viewing or editing someone else's account through its identifier <Cite n={2} />, so the test needs a second user.
+
+</Technical>
+<Layman>
+
+- **Running an active scan on a site you do not own.** An active scan is an attack, and ZAP says not to use it on web apps you do not own <Cite n={10} />.
+- **Taking a quiet scanner as a pass.** An active scan finds only some kinds of flaws <Cite n={10} />. Access control flaws need a tester who knows which user may see which data.
+- **Trusting the screen.** A hidden button does not protect anything. OWASP says that changing the URL or the API request gets around weak checks <Cite n={2} />.
+- **Escaping SQL input by hand.** The OWASP cheat sheet strongly advises against it. Use parameterized queries <Cite n={4} />.
+- **Fixing XSS in 99 places.** One missed place is enough <Cite n={5} />.
+- **Testing with only one user.** The classic case is seeing or editing someone else's account through its ID <Cite n={2} />, so the test needs a second user.
+
+</Layman>
+<Bangla>
+
+- **আপনার নয় এমন site-এ active scan চালানো।** Active scan একটা আক্রমণ, আর ZAP বলে, আপনার নয় এমন web app-এ এটা চালাবেন না <Cite n={10} />।
+- **Scanner চুপ থাকলে সেটাকে pass ধরা।** Active scan শুধু কিছু ধরনের দুর্বলতা খুঁজে পায় <Cite n={10} />। Access control-এর দুর্বলতা ধরতে এমন একজন টেস্টার লাগে, যিনি জানেন কোন user কোন data দেখতে পারবেন।
+- **Screen-এর ওপর ভরসা করা।** লুকানো button কিছুই রক্ষা করে না। OWASP বলে, URL বা API request বদলে দুর্বল যাচাই এড়ানো যায় <Cite n={2} />।
+- **হাতে করে SQL input escape করা।** OWASP cheat sheet এটা কড়াভাবে নিষেধ করে। Parameterized query ব্যবহার করুন <Cite n={4} />।
+- **99টা জায়গায় XSS ঠিক করা।** একটা জায়গা বাদ পড়লেই যথেষ্ট <Cite n={5} />।
+- **শুধু একজন user দিয়ে টেস্ট করা।** সাধারণ উদাহরণ হলো ID দিয়ে অন্যের account দেখা বা বদলানো <Cite n={2} />, তাই টেস্টে দ্বিতীয় একজন user লাগে।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Every request with an ID is tried as another user.** Keep a table: endpoint, owner, other user, result.
+- **Every endpoint is tried without a session.** Remove the cookie or the `Authorization` header in Repeater and send the request again.
+- **Every input that reaches a query gets the classic payload,** and every input that comes back on a page gets the harmless marker.
+- **Each scanner alert has a manual reproduction** before it goes into the report, with the exact request and response.
+- **Each fix is retested** with the same request that proved the flaw.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Try every request that has an ID as another user.** Keep a table: the request, the owner, the other user, and the result.
+- **Try every request without a login.** In Repeater, remove the cookie or the `Authorization` header, and send it again.
+- **Send the classic payload into every input that reaches a query,** and the harmless marker into every input that comes back on a page.
+- **Reproduce each scanner alert by hand** before it goes into the report, with the exact request and response.
+- **Retest each fix** with the same request that proved the flaw.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **ID আছে এমন প্রতিটা request অন্য user হিসেবে চেষ্টা করুন।** একটা table রাখুন: request, মালিক, অন্য user আর ফলাফল।
+- **প্রতিটা request login ছাড়া চেষ্টা করুন।** Repeater-এ cookie বা `Authorization` header সরিয়ে আবার পাঠান।
+- **যে input query-তে পৌঁছায়, সেখানে classic payload পাঠান,** আর যে input পেজে ফিরে আসে, সেখানে নিরীহ চিহ্নটা পাঠান।
+- **প্রতিটা scanner alert হাতে আবার ঘটিয়ে দেখুন,** রিপোর্টে যাওয়ার আগে, ঠিক request আর response সহ।
+- **প্রতিটা fix আবার টেস্ট করুন,** সেই একই request দিয়ে, যেটা দুর্বলতা প্রমাণ করেছিল।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| OWASP Top 10 | OWASP's list of the most critical web application security risks. The current edition is 2025. |
+| Access control | The checks that keep users inside their permissions. |
+| IDOR | Insecure direct object reference: reaching another user's object by changing its ID. |
+| Injection | Untrusted input that an interpreter runs as a command. |
+| Parameterized query | A query that passes the input as a parameter, apart from the SQL text, so that the input stays data. |
+| XSS | Cross-site scripting: untrusted data that the browser runs as code. |
+| Output encoding | Turning data into text that the browser shows and does not run. |
+| Intercepting proxy | A tool between the browser and the app that can stop and change requests. |
+| Burp Repeater | A Burp tool that changes and resends one request again and again. |
+| Spider | A ZAP tool that discovers the URLs of a site. |
+| Active scan | A scan that sends known attacks to the target. |
