@@ -34,7 +34,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 
 type CourseCard = { n: string; title: string; tagline: string; count: number; href: string };
 
-/** The numbered rows of "Course structure": the 6 tutorial groups, then the 14 modules. */
+/** The numbered rows of "Course structure": the 6 tutorial groups, then the modules. */
 export const COURSE_CARDS: readonly CourseCard[] = [
   ...GROUPS.map((group) => ({
     title: group.title,

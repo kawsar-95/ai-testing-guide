@@ -1,0 +1,254 @@
+export const metadata = { title: 'API, Authentication, and Database Security', description: 'Broken object level authorization (BOLA and IDOR), broken authentication and JWT checks, and safe database access, practised on OWASP crAPI with Postman.' }
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'OWASP Top 10 API Security Risks – 2023', publisher: 'OWASP API Security Project', url: 'https://api-security.owasp.org/editions/2023/en/0x11-t10/', accessed: '2026-11-15' },
+    { title: 'API1:2023 Broken Object Level Authorization', publisher: 'OWASP API Security Project', url: 'https://api-security.owasp.org/editions/2023/en/0xa1-broken-object-level-authorization/', accessed: '2026-11-15' },
+    { title: 'API2:2023 Broken Authentication', publisher: 'OWASP API Security Project', url: 'https://api-security.owasp.org/editions/2023/en/0xa2-broken-authentication/', accessed: '2026-11-15' },
+    { title: 'Insecure Direct Object Reference Prevention Cheat Sheet', publisher: 'OWASP Cheat Sheet Series', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html', accessed: '2026-11-15' },
+    { title: 'RFC 7519: JSON Web Token (JWT)', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc7519.html', accessed: '2026-11-15' },
+    { title: 'RFC 8725: JSON Web Token Best Current Practices', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc8725.html', accessed: '2026-11-15' },
+    { title: 'Authorization types supported by Postman', publisher: 'Postman documentation', url: 'https://learning.postman.com/docs/use/send-requests/authorization/authorization-types/', accessed: '2026-11-15' },
+    { title: 'OWASP crAPI', publisher: 'OWASP Foundation', url: 'https://owasp.org/projects/crapi', accessed: '2026-11-15' },
+    { title: 'crAPI (README)', publisher: 'OWASP crAPI on GitHub', url: 'https://github.com/OWASP/crAPI', accessed: '2026-11-15' },
+    { title: 'SQL Injection Prevention Cheat Sheet', publisher: 'OWASP Cheat Sheet Series', url: 'https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html', accessed: '2026-11-15' },
+  ],
+}
+
+# API, Authentication, and Database Security
+
+An API hands out data by ID to anyone who sends the right request, so its checks must happen on every call. This page explains the top API risk (broken object level authorization), the checks that a login token needs, and how a tester probes both, then looks at the database behind the API.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+The OWASP API Security Top 10 (2023) starts with **API1 Broken Object Level Authorization** and **API2 Broken Authentication** <Cite n={1} />.
+
+- **Object level authorization** checks, usually in the code, that a user can only access the objects that they have permission to access <Cite n={2} />. When it is broken, an attacker changes the ID of an object in the request and gets someone else's object <Cite n={2} />. The OWASP cheat sheet calls the same flaw an **insecure direct object reference (IDOR)**: an object, a reference to it such as an ID, and a missing check that the user may access that object <Cite n={4} />.
+- **Authentication** proves who the caller is. API2 lists the ways it breaks, among them: the API permits brute force or credential stuffing, accepts unsigned or weakly signed JWTs such as `{"alg":"none"}`, or does not validate the JWT expiration date <Cite n={3} />. Attackers who break it can take full control of other users' accounts <Cite n={3} />.
+- A **JSON Web Token (JWT)** is a compact, URL-safe way to send claims between two parties <Cite n={5} />. Many APIs use it as the login token.
+
+Behind the API sits a database. The OWASP SQL injection cheat sheet adds two rules for it: put user data into queries as parameters <Cite n={10} />, and give every database account the smallest privileges that it needs <Cite n={10} />.
+
+</Technical>
+<Layman>
+
+The OWASP API Security Top 10 (2023) starts with two risks: **broken object level authorization** and **broken authentication** <Cite n={1} />.
+
+- **Object level authorization** checks that a user can only reach the things (objects) that they are allowed to reach <Cite n={2} />. When it is broken, an attacker changes the ID in a request and gets someone else's thing <Cite n={2} />. OWASP also calls this an **insecure direct object reference (IDOR)**: a thing, an ID that points to it, and a missing check that the user may see it <Cite n={4} />.
+- **Authentication** proves who the caller is. OWASP lists how it breaks, for example: the API lets an attacker guess passwords over and over, accepts tokens with no real signature such as `{"alg":"none"}`, or never checks when a token runs out <Cite n={3} />. An attacker who breaks it can take full control of other people's accounts <Cite n={3} />.
+- A **JSON Web Token (JWT)** is a short, URL-safe way to send claims from one party to another <Cite n={5} />. Many APIs use it as the login token.
+
+Behind the API is a database. The OWASP SQL injection cheat sheet gives two rules for it: pass user data into queries as parameters <Cite n={10} />, and give every database account only the rights it needs <Cite n={10} />.
+
+</Layman>
+<Bangla>
+
+OWASP API Security Top 10 (2023) শুরু হয় দুটো ঝুঁকি দিয়ে: **broken object level authorization** আর **broken authentication** <Cite n={1} />।
+
+- **Object level authorization** যাচাই করে যে একজন user শুধু সেই জিনিসগুলোই (object) পেতে পারেন, যেগুলোর অনুমতি তাঁর আছে <Cite n={2} />। এটা ভাঙা থাকলে আক্রমণকারী request-এর ID বদলে অন্যের জিনিস পেয়ে যান <Cite n={2} />। OWASP একই দুর্বলতাকে **insecure direct object reference (IDOR)**-ও বলে: একটা জিনিস, তার দিকে নির্দেশ করা একটা ID, আর user সেটা দেখতে পারবেন কি না তার যাচাই না থাকা <Cite n={4} />।
+- **Authentication** প্রমাণ করে কে call করছে। OWASP বলে এটা কীভাবে ভাঙে, যেমন: API বারবার password অনুমান করতে দেয়, আসল signature ছাড়া token নেয় (যেমন `{"alg":"none"}`), বা token-এর মেয়াদ কখন শেষ, সেটা যাচাই করে না <Cite n={3} />। যে আক্রমণকারী এটা ভাঙেন, তিনি অন্যদের account-এর পুরো নিয়ন্ত্রণ নিতে পারেন <Cite n={3} />।
+- **JSON Web Token (JWT)** হলো এক পক্ষ থেকে আরেক পক্ষে claim পাঠানোর একটা ছোট, URL-safe উপায় <Cite n={5} />। অনেক API এটাকে login token হিসেবে ব্যবহার করে।
+
+API-র পেছনে থাকে একটা database। OWASP-এর SQL injection cheat sheet এর জন্য দুটো নিয়ম দেয়: user-এর data query-তে parameter হিসেবে দিন <Cite n={10} />, আর প্রতিটা database account-কে শুধু ততটুকু অধিকার দিন, যতটুকু তার দরকার <Cite n={10} />।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+### Object level authorization
+
+Object IDs can be sequential integers, UUIDs, or plain strings, and whatever their type, they are easy to find in the path, the query string, the headers, or the body of a request <Cite n={2} />. So OWASP asks for an object-level check in every API endpoint that receives an object ID and acts on the object: the check must confirm that the logged-in user may do the requested action on the requested object <Cite n={2} />.
+
+Random IDs help, but they are not the fix. OWASP prefers random, unpredictable IDs <Cite n={2} />, and the IDOR cheat sheet calls complex identifiers a defense-in-depth measure: even with them, the access control check is essential <Cite n={4} />. OWASP also asks for tests of the authorization mechanism, and no deployment of a change that makes those tests fail <Cite n={2} />.
+
+### JWT checks
+
+- **Expiry.** The `exp` claim gives the time on or after which the JWT must not be accepted <Cite n={5} />. An API that does not validate it is listed under broken authentication <Cite n={3} />.
+- **Algorithm.** A JWT names its signing algorithm in the `alg` header. RFC 8725 describes the attack in which an attacker changes it to `none` and some libraries "validate" the token without checking any signature <Cite n={6} />. Libraries must let the caller set the allowed algorithms and must not use any other <Cite n={6} />.
+
+### The database
+
+Parameterized queries keep user data out of the SQL text; for the parts that cannot be parameters, such as table names, the cheat sheet maps the user's choice to a strict allow-list of fixed values <Cite n={10} />. To limit the damage of a successful injection, every database account gets the smallest privileges it needs, and an application account never gets DBA or admin access <Cite n={10} />.
+
+</Technical>
+<Layman>
+
+**Object level authorization.** Object IDs can be counting numbers, UUIDs, or plain text. Whatever kind they are, they are easy to spot in a request: in the path, the query, the headers, or the body <Cite n={2} />. So OWASP asks every API endpoint that gets an object ID to check that the logged-in user may do this action on this object <Cite n={2} />.
+
+Random IDs help, but they do not fix the flaw. OWASP prefers random IDs that nobody can guess <Cite n={2} />. The IDOR cheat sheet calls them an extra layer: the access check is still essential <Cite n={4} />. OWASP also asks for tests of the permission checks, and for no release of a change that breaks those tests <Cite n={2} />.
+
+**JWT checks.**
+
+- **Expiry.** The `exp` claim says when the token stops being valid <Cite n={5} />. OWASP counts an API that ignores it as broken authentication <Cite n={3} />.
+- **Algorithm.** A JWT names its signing method in the `alg` header. In a known attack, the attacker changes it to `none`, and some libraries accept the token without checking any signature <Cite n={6} />. A library must let you choose the allowed methods and must not use any other <Cite n={6} />.
+
+**The database.** Parameterized queries keep user data out of the SQL text. For parts that cannot be parameters, such as table names, the user's choice is matched against a fixed list <Cite n={10} />. To limit the damage of an injection, each database account gets only the rights it needs, and the app's account never gets admin rights <Cite n={10} />.
+
+</Layman>
+<Bangla>
+
+**Object level authorization।** Object-এর ID ক্রমিক সংখ্যা, UUID বা সাধারণ লেখা হতে পারে। যে ধরনেরই হোক, request-এ এগুলো সহজেই চোখে পড়ে: path, query, header বা body-তে <Cite n={2} />। তাই OWASP বলে, যে API endpoint object-এর ID নেয়, তার প্রতিটাকে যাচাই করতে হবে যে login করা user এই object-এ এই কাজটা করতে পারেন কি না <Cite n={2} />।
+
+Random ID সাহায্য করে, কিন্তু দুর্বলতা ঠিক করে না। OWASP এমন random ID পছন্দ করে, যেটা কেউ অনুমান করতে পারে না <Cite n={2} />। IDOR cheat sheet এটাকে একটা বাড়তি স্তর বলে: access যাচাই তবুও অপরিহার্য <Cite n={4} />। OWASP অনুমতি যাচাইয়ের টেস্ট লিখতেও বলে, আর বলে, যে পরিবর্তন সেই টেস্ট ভাঙে, সেটা release করবেন না <Cite n={2} />।
+
+**JWT যাচাই।**
+
+- **মেয়াদ।** `exp` claim বলে token কখন থেকে আর বৈধ নয় <Cite n={5} />। যে API এটা যাচাই করে না, OWASP সেটাকে broken authentication ধরে <Cite n={3} />।
+- **Algorithm।** JWT তার signing পদ্ধতির নাম `alg` header-এ লেখে। একটা পরিচিত আক্রমণে আক্রমণকারী এটা বদলে `none` করে দেন, আর কিছু library কোনো signature যাচাই না করেই token মেনে নেয় <Cite n={6} />। Library-কে অবশ্যই অনুমোদিত পদ্ধতি বেছে দেওয়ার সুযোগ দিতে হবে, আর অন্য কোনো পদ্ধতি ব্যবহার করা চলবে না <Cite n={6} />।
+
+**Database।** Parameterized query user-এর data-কে SQL লেখার বাইরে রাখে। যে অংশ parameter হতে পারে না, যেমন table-এর নাম, সেখানে user-এর পছন্দ একটা নির্দিষ্ট তালিকার সঙ্গে মেলানো হয় <Cite n={10} />। Injection-এর ক্ষতি কম রাখতে প্রতিটা database account শুধু দরকারি অধিকার পায়, আর app-এর account কখনো admin অধিকার পায় না <Cite n={10} />।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+**1. Start the practice API.** OWASP crAPI ("completely ridiculous API") simulates an API-based platform for vehicle owners. It is vulnerable on purpose and is made for practising API security, and it covers the common API vulnerabilities, including all those in the OWASP Top 10 for APIs <Cite n={8} />. Its README starts it with Docker Compose <Cite n={9} />:
+
+```bash
+curl -L -o /tmp/crapi.zip https://github.com/OWASP/crAPI/archive/refs/heads/main.zip
+unzip /tmp/crapi.zip
+cd crAPI-main/deploy/docker
+docker compose pull
+docker compose -f docker-compose.yml --compatibility up -d
+```
+
+Then open `http://localhost:8888`. crAPI sends its emails to a MailHog service at `http://localhost:8025` <Cite n={9} />. The README sets `LISTEN_IP="0.0.0.0"` only to expose the system to all network interfaces, so leave it out for a private lab <Cite n={9} />.
+
+**2. Set up Postman.** Make two users, A and B. In Postman, choose Bearer Token in the Authorization tab; Postman puts the token after the word `Bearer` in the `Authorization` header <Cite n={7} />. Keep each user's token in a variable, for example `tokenA` and `tokenB`, as Postman advises <Cite n={7} />.
+
+**3. Test object level authorization.** As user A, find a request that carries an ID of one of A's objects, such as a vehicle or an order. Send the same request with B's token. If B gets A's object, the API has broken object level authorization <Cite n={2} />.
+
+**4. Test the token.** Send a request with an expired token: it must be rejected <Cite n={5} />. Then decode a token, set its header to `{"alg":"none"}`, drop the signature, and send it: it must be rejected too, because accepting it is the attack that RFC 8725 describes and a case of broken authentication <Cite n={6} /> <Cite n={3} />.
+
+**5. Look at the database side.** Ask the developers two questions, and check the answers in the code and the grants: are all queries parameterized <Cite n={10} />, and does the application's database account have only the privileges it needs, without admin rights <Cite n={10} />?
+
+</Technical>
+<Layman>
+
+1. **Start the practice API.** OWASP crAPI is a fake platform for car owners, built with APIs. It is weak on purpose, for practising API security, and it covers the common API flaws, including all those in the OWASP Top 10 for APIs <Cite n={8} />. Its README starts it with Docker Compose, as the commands in the Technical view show <Cite n={9} />. Then open `http://localhost:8888`. Its emails go to MailHog at `http://localhost:8025` <Cite n={9} />. The README uses `LISTEN_IP="0.0.0.0"` only to open crAPI to all networks, so leave it out for a private lab <Cite n={9} />.
+2. **Set up Postman.** Make two users, A and B. In Postman, pick Bearer Token in the Authorization tab. Postman then sends the token after the word `Bearer` in the `Authorization` header <Cite n={7} />. Keep each token in a variable, as Postman advises <Cite n={7} />.
+3. **Test object level authorization.** As user A, find a request with the ID of one of A's things, such as a car or an order. Send the same request with user B's token. If B gets A's thing, the check is broken <Cite n={2} />.
+4. **Test the token.** Send a request with an expired token. It must be refused <Cite n={5} />. Then change a token's header to `{"alg":"none"}`, remove the signature, and send it. It must be refused too: accepting it is a known attack and a case of broken authentication <Cite n={6} /> <Cite n={3} />.
+5. **Look at the database side.** Ask the developers two questions and check the answers in the code and the database rights: are all queries parameterized <Cite n={10} />, and does the app's database account have only the rights it needs, with no admin rights <Cite n={10} />?
+
+</Layman>
+<Bangla>
+
+1. **প্র্যাকটিস API চালু করুন।** OWASP crAPI হলো API দিয়ে বানানো গাড়ির মালিকদের একটা কাল্পনিক platform। API security প্র্যাকটিস করার জন্য এটা ইচ্ছা করে দুর্বল বানানো, আর এটা API-র সাধারণ দুর্বলতাগুলো ধরে, OWASP Top 10 for APIs-এর সবগুলো সহ <Cite n={8} />। এর README Docker Compose দিয়ে এটা চালু করে, Technical view-এর command-গুলোর মতো <Cite n={9} />। তারপর `http://localhost:8888` খুলুন। এর email যায় `http://localhost:8025`-এর MailHog-এ <Cite n={9} />। README `LISTEN_IP="0.0.0.0"` ব্যবহার করে শুধু crAPI-কে সব network-এ খুলে দিতে, তাই আলাদা ল্যাবে এটা বাদ দিন <Cite n={9} />।
+2. **Postman সেট করুন।** দুজন user বানান, A আর B। Postman-এর Authorization tab-এ Bearer Token বেছে নিন। Postman তখন token-টা `Authorization` header-এ `Bearer` শব্দের পরে পাঠায় <Cite n={7} />। Postman-এর পরামর্শমতো প্রতিটা token একটা variable-এ রাখুন <Cite n={7} />।
+3. **Object level authorization টেস্ট করুন।** User A হিসেবে এমন একটা request খুঁজুন, যেখানে A-এর কোনো জিনিসের ID আছে, যেমন একটা গাড়ি বা order। একই request user B-এর token দিয়ে পাঠান। B যদি A-এর জিনিস পেয়ে যান, যাচাই ভাঙা <Cite n={2} />।
+4. **Token টেস্ট করুন।** মেয়াদ শেষ হওয়া token দিয়ে request পাঠান। এটা প্রত্যাখ্যাত হতে হবে <Cite n={5} />। তারপর একটা token-এর header বদলে `{"alg":"none"}` করুন, signature মুছে পাঠান। এটাও প্রত্যাখ্যাত হতে হবে: এটা মেনে নেওয়া একটা পরিচিত আক্রমণ, আর broken authentication-এর একটা উদাহরণ <Cite n={6} /> <Cite n={3} />।
+5. **Database-এর দিকটা দেখুন।** Developer-দের দুটো প্রশ্ন করুন, আর উত্তরগুলো code আর database-এর অধিকারে মিলিয়ে দেখুন: সব query কি parameterized <Cite n={10} />, আর app-এর database account-এর কি শুধু দরকারি অধিকার আছে, admin অধিকার ছাড়া <Cite n={10} />?
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Trusting UUIDs to hide objects.** IDs of every type are easy to find in requests <Cite n={2} />, and complex IDs are only defense in depth <Cite n={4} />.
+- **Testing with one user.** Attackers exploit this flaw by changing the object ID in a request <Cite n={2} />, so the test needs a second user's token for the first user's objects.
+- **Checking permissions on some endpoints only.** Every endpoint that receives an object ID and acts on the object needs an object-level check <Cite n={2} />.
+- **Accepting a token without checking `exp` or `alg`.** Both are on OWASP's list of broken authentication <Cite n={3} />.
+- **Giving the application's database account admin rights.** The OWASP cheat sheet says never to do this <Cite n={10} />.
+- **Exposing the practice API to the network.** `LISTEN_IP="0.0.0.0"` exposes crAPI to all network interfaces <Cite n={9} />.
+- **Typing tokens into shared collections.** Postman advises storing them in variables <Cite n={7} />.
+
+</Technical>
+<Layman>
+
+- **Trusting UUIDs to hide things.** IDs of every kind are easy to find in requests <Cite n={2} />, and hard-to-guess IDs are only an extra layer <Cite n={4} />.
+- **Testing with one user.** Attackers use this flaw by changing the ID in a request <Cite n={2} />, so the test needs user B's token for user A's things.
+- **Checking permissions on some endpoints only.** Every endpoint that gets an object ID and acts on the object needs its own check <Cite n={2} />.
+- **Accepting a token without checking `exp` or `alg`.** OWASP lists both as broken authentication <Cite n={3} />.
+- **Giving the app's database account admin rights.** The OWASP cheat sheet says never to do this <Cite n={10} />.
+- **Opening the practice API to the network.** `LISTEN_IP="0.0.0.0"` opens crAPI to all networks <Cite n={9} />.
+- **Typing tokens into shared collections.** Postman advises keeping them in variables <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+- **জিনিস লুকাতে UUID-এর ওপর ভরসা করা।** সব ধরনের ID request-এ সহজে খুঁজে পাওয়া যায় <Cite n={2} />, আর অনুমান-কঠিন ID শুধু একটা বাড়তি স্তর <Cite n={4} />।
+- **একজন user দিয়ে টেস্ট করা।** আক্রমণকারীরা request-এর ID বদলে এই দুর্বলতা কাজে লাগান <Cite n={2} />, তাই টেস্টে user A-এর জিনিসের জন্য user B-এর token লাগে।
+- **শুধু কিছু endpoint-এ অনুমতি যাচাই করা।** যে endpoint object-এর ID নিয়ে সেই object-এর ওপর কাজ করে, তার প্রতিটার নিজস্ব যাচাই লাগে <Cite n={2} />।
+- **`exp` বা `alg` যাচাই না করে token নেওয়া।** OWASP দুটোকেই broken authentication-এর তালিকায় রাখে <Cite n={3} />।
+- **App-এর database account-কে admin অধিকার দেওয়া।** OWASP cheat sheet বলে, এটা কখনো করবেন না <Cite n={10} />।
+- **প্র্যাকটিস API network-এ খুলে দেওয়া।** `LISTEN_IP="0.0.0.0"` crAPI-কে সব network-এ খুলে দেয় <Cite n={9} />।
+- **শেয়ার করা collection-এ token লিখে রাখা।** Postman এগুলো variable-এ রাখার পরামর্শ দেয় <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **An authorization matrix.** One row per endpoint, one column per role or user, and the expected result in each cell. Fill it from the specification, then test every cell.
+- **IDs from every place.** Try other users' IDs in the path, the query, the headers, and the JSON body.
+- **Tokens that should fail.** Expired, `alg` set to `none`, signature removed, payload changed, and a token of another user: each must be refused.
+- **Errors that tell too much.** A refused request should not show stack traces, SQL, or whether another user's object exists.
+- **Rate limits on login.** Many wrong passwords in a row should slow down or block the caller.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **A permission table.** One row per endpoint, one column per role or user, and the expected result in each cell. Fill it from the specification, then test every cell.
+- **IDs everywhere.** Try other users' IDs in the path, the query, the headers, and the JSON body.
+- **Tokens that should fail.** Expired, `alg` set to `none`, signature removed, content changed, and another user's token: each must be refused.
+- **Errors that say too much.** A refused request should not show stack traces, SQL, or whether another user's thing exists.
+- **Limits on login.** Many wrong passwords in a row should slow down or block the caller.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **একটা অনুমতির table।** প্রতিটা endpoint-এর জন্য একটা সারি, প্রতিটা role বা user-এর জন্য একটা কলাম, আর প্রতিটা ঘরে প্রত্যাশিত ফলাফল। Specification থেকে এটা পূরণ করুন, তারপর প্রতিটা ঘর টেস্ট করুন।
+- **সব জায়গায় ID।** Path, query, header আর JSON body-তে অন্য user-এর ID দিয়ে চেষ্টা করুন।
+- **যে token fail করার কথা।** মেয়াদ শেষ, `alg`-এ `none`, signature মোছা, ভেতরের লেখা বদলানো, আর অন্য user-এর token: প্রতিটা প্রত্যাখ্যাত হতে হবে।
+- **যে error বেশি বলে দেয়।** প্রত্যাখ্যাত request যেন stack trace, SQL, বা অন্য user-এর জিনিস আছে কি না, তা না দেখায়।
+- **Login-এ সীমা।** পরপর অনেকবার ভুল password দিলে caller-কে ধীর করা বা আটকানো উচিত।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| BOLA | Broken object level authorization: API1:2023. A user reaches another user's object by its ID. |
+| IDOR | Insecure direct object reference: the same flaw, named by the OWASP cheat sheet. |
+| Authentication | Proving who the caller is. |
+| Authorization | Deciding what the caller may do. |
+| JWT | JSON Web Token: a compact, URL-safe set of claims, usually signed. |
+| `exp` | The JWT claim with the time after which the token must not be accepted. |
+| `alg` | The JWT header that names the signing algorithm. |
+| Bearer token | A token sent in the `Authorization` header after the word `Bearer`. |
+| crAPI | OWASP's intentionally vulnerable API for practice. |
+| Least privilege | Giving an account only the rights that it needs. |

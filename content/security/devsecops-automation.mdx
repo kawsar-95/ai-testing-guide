@@ -1,0 +1,303 @@
+export const metadata = { title: 'Security Automation and DevSecOps', description: 'SAST with Semgrep, dependency, secret, and misconfiguration scanning with Trivy and Gitleaks, and a ZAP baseline scan, wired into a CI pipeline that fails on findings.' }
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'Source Code Analysis Tools', publisher: 'OWASP Foundation', url: 'https://community.owasp.org/Source_Code_Analysis_Tools', accessed: '2026-11-15' },
+    { title: 'Vulnerability Scanning Tools', publisher: 'OWASP Foundation', url: 'https://community.owasp.org/Vulnerability_Scanning_Tools', accessed: '2026-11-15' },
+    { title: 'Component Analysis', publisher: 'OWASP Foundation', url: 'https://community.owasp.org/Component_Analysis', accessed: '2026-11-15' },
+    { title: 'Local scans with Semgrep', publisher: 'Semgrep documentation', url: 'https://docs.semgrep.dev/getting-started/cli', accessed: '2026-11-15' },
+    { title: 'CLI reference', publisher: 'Semgrep documentation', url: 'https://docs.semgrep.dev/cli-reference', accessed: '2026-11-15' },
+    { title: 'Sample continuous integration (CI) configurations', publisher: 'Semgrep documentation', url: 'https://docs.semgrep.dev/semgrep-ci/sample-ci-configs', accessed: '2026-11-15' },
+    { title: 'trivy (README)', publisher: 'Aqua Security on GitHub', url: 'https://github.com/aquasecurity/trivy', accessed: '2026-11-15' },
+    { title: 'Others (Exit Code)', publisher: 'Trivy documentation', url: 'https://trivy.dev/docs/latest/configuration/others/', accessed: '2026-11-15' },
+    { title: 'Filtering', publisher: 'Trivy documentation', url: 'https://trivy.dev/docs/latest/configuration/filtering/', accessed: '2026-11-15' },
+    { title: 'Installation', publisher: 'Trivy documentation', url: 'https://trivy.dev/docs/latest/getting-started/installation/', accessed: '2026-11-15' },
+    { title: 'gitleaks (README)', publisher: 'Gitleaks on GitHub', url: 'https://github.com/gitleaks/gitleaks', accessed: '2026-11-15' },
+    { title: 'Baseline Scan', publisher: 'ZAP documentation', url: 'https://www.zaproxy.org/docs/docker/baseline-scan/', accessed: '2026-11-15' },
+    { title: 'Workflow syntax for GitHub Actions', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax', accessed: '2026-11-15' },
+    { title: 'checkout (README)', publisher: 'GitHub Actions on GitHub', url: 'https://github.com/actions/checkout', accessed: '2026-11-15' },
+    { title: 'Secrets Management Cheat Sheet', publisher: 'OWASP Cheat Sheet Series', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html', accessed: '2026-11-15' },
+  ],
+}
+
+# Security Automation and DevSecOps
+
+A manual test finds a flaw once. An automated check looks for it again on every change. This page runs four kinds of security checks from the command line and then puts them into a CI pipeline, so that a pull request with a known flaw fails before anyone merges it.
+
+<PageMeta />
+
+## In plain words
+
+<Voices>
+<Technical>
+
+Four kinds of automated checks cover different parts of an application:
+
+- **SAST (static application security testing)** analyzes source code, or a compiled version of it, to find security flaws <Cite n={1} />. OWASP notes that SAST feedback can save time and effort compared with finding vulnerabilities later in the development cycle <Cite n={1} />. This page uses **Semgrep**.
+- **Component analysis** identifies the risk from third-party and open-source components; its software-only subset is commonly called **software composition analysis (SCA)** <Cite n={3} />. It matters because an organization that uses open-source components takes responsibility for code it did not write <Cite n={3} />. This page uses **Trivy**, which also finds secrets and misconfigurations <Cite n={7} />.
+- **Secret scanning** looks for passwords, API keys, and tokens. **Gitleaks** finds them in git repositories, in files, and in anything piped to it on standard input <Cite n={11} />.
+- **DAST (dynamic application security testing)** tools scan a running web application, normally from the outside, for flaws such as cross-site scripting and SQL injection <Cite n={2} />. This page uses the **ZAP baseline scan** <Cite n={12} />.
+
+A CI pipeline decides by **exit code**. On GitHub Actions, the runner reports each step as failed or succeeded from the exit code of its script <Cite n={13} />. Two of these tools, Semgrep and Trivy, return 0 even when they find issues, until you tell them otherwise <Cite n={4} /> <Cite n={8} />. Setting the exit codes right is the main job of this page.
+
+</Technical>
+<Layman>
+
+Four kinds of automatic checks look at different parts of an app:
+
+- **SAST** reads the source code to find security flaws <Cite n={1} />. OWASP says it saves time and effort compared with finding flaws later <Cite n={1} />. This page uses **Semgrep**.
+- **Component analysis**, often called **SCA**, finds the risk in outside and open-source parts that an app uses <Cite n={3} />. It matters because a team that uses open-source code takes responsibility for code it did not write <Cite n={3} />. This page uses **Trivy**, which also finds secrets and bad settings <Cite n={7} />.
+- **Secret scanning** looks for passwords, API keys, and tokens. **Gitleaks** finds them in git projects, in files, and in text you pipe into it <Cite n={11} />.
+- **DAST** tools test a running web app, normally from the outside, for flaws such as cross-site scripting and SQL injection <Cite n={2} />. This page uses the **ZAP baseline scan** <Cite n={12} />.
+
+A CI pipeline decides by **exit code**: the number a program returns when it ends. On GitHub Actions, a step fails or passes based on that number <Cite n={13} />. Two of these tools, Semgrep and Trivy, return 0 (pass) even when they find problems, unless you tell them otherwise <Cite n={4} /> <Cite n={8} />. Setting that number right is the main job of this page.
+
+</Layman>
+<Bangla>
+
+চার ধরনের স্বয়ংক্রিয় যাচাই একটা app-এর আলাদা আলাদা অংশ দেখে:
+
+- **SAST** source code পড়ে security-র দুর্বলতা খোঁজে <Cite n={1} />। OWASP বলে, পরে দুর্বলতা খোঁজার তুলনায় এতে সময় আর পরিশ্রম বাঁচে <Cite n={1} />। এই পেজে **Semgrep** ব্যবহার করা হয়েছে।
+- **Component analysis**, যাকে প্রায়ই **SCA** বলা হয়, app যে বাইরের আর open-source অংশ ব্যবহার করে, সেগুলোর ঝুঁকি খুঁজে বের করে <Cite n={3} />। এটা জরুরি, কারণ যে দল open-source code ব্যবহার করে, সে এমন code-এর দায়িত্ব নেয়, যেটা সে নিজে লেখেনি <Cite n={3} />। এই পেজে **Trivy** ব্যবহার করা হয়েছে, যেটা secret আর ভুল setting-ও খুঁজে পায় <Cite n={7} />।
+- **Secret scanning** password, API key আর token খোঁজে। **Gitleaks** এগুলো git project-এ, ফাইলে, আর pipe করে দেওয়া লেখায় খুঁজে পায় <Cite n={11} />।
+- **DAST** tool চালু থাকা একটা web app-কে, সাধারণত বাইরে থেকে, cross-site scripting আর SQL injection-এর মতো দুর্বলতার জন্য পরীক্ষা করে <Cite n={2} />। এই পেজে **ZAP baseline scan** ব্যবহার করা হয়েছে <Cite n={12} />।
+
+CI pipeline সিদ্ধান্ত নেয় **exit code** দিয়ে: একটা program শেষ হওয়ার সময় যে সংখ্যা ফেরত দেয়। GitHub Actions-এ একটা step pass না fail, সেটা ঠিক হয় এই সংখ্যা দিয়ে <Cite n={13} />। এর মধ্যে দুটো tool, Semgrep আর Trivy, সমস্যা পেলেও 0 (pass) ফেরত দেয়, যদি না আপনি অন্যভাবে বলেন <Cite n={4} /> <Cite n={8} />। এই সংখ্যা ঠিকভাবে সেট করাই এই পেজের মূল কাজ।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+| Check | Looks at | Command | Default exit code | To fail on findings |
+|---|---|---|---|---|
+| SAST | Source code | `semgrep scan --config "p/default"` <Cite n={5} /> | 0 even when there are findings <Cite n={4} /> | Add `--error` <Cite n={5} /> |
+| Dependencies, secrets, misconfigurations | Files of a project | `trivy fs --scanners vuln,secret,misconfig .` <Cite n={7} /> | 0 even when issues are found <Cite n={8} /> | Add `--exit-code 1`, and `--severity` to choose the levels <Cite n={8} /> <Cite n={9} /> |
+| Secrets in the history | Every commit of a git repository | `gitleaks git -v` <Cite n={11} /> | 1 when leaks are found <Cite n={11} /> | Nothing to add |
+| DAST (passive) | The running web app | `zap-baseline.py -t <url>` <Cite n={12} /> | 1 for a FAIL, 2 for warnings only <Cite n={12} /> | Already non-zero. To fail only on chosen rules, set them to FAIL in a config file and add `-I` <Cite n={12} /> |
+
+### The tools in more detail
+
+- **Semgrep.** `semgrep scan` is the command for local scans and for scans without a Semgrep account; `semgrep ci` needs you to be signed in <Cite n={4} />. `p/default` is the default ruleset <Cite n={5} />. Avoid `--config auto` for private code: it logs in to the Semgrep Registry with your project URL <Cite n={5} />.
+- **Trivy.** Trivy scans container images, file systems, remote git repositories, virtual machine images, and Kubernetes. It finds the software in use (as an SBOM), known vulnerabilities (CVEs), infrastructure-as-code misconfigurations, secrets, and licenses <Cite n={7} />. `--severity HIGH,CRITICAL` limits the report to those levels <Cite n={9} />.
+- **Gitleaks.** It has three modes: `git`, `dir`, and `stdin` <Cite n={11} />. In `git` mode it runs `git log -p` and scans the patches, so it also finds a secret that a later commit deleted <Cite n={11} />. `--redact` hides the secrets in its logs and output <Cite n={11} />.
+- **ZAP baseline.** The script spiders the target for one minute by default, then waits for the passive scan to finish. It does not perform any actual attacks, and it runs for a few minutes at most <Cite n={12} />. `-g` writes a default config file with every rule set to WARN; in a config file passed with `-c`, each rule can be INFO, IGNORE, or FAIL. `-I` stops warnings from returning a failure <Cite n={12} />.
+
+### In the pipeline
+
+On GitHub Actions, `bash` and `sh` steps run with `set -e`, so the first failing command stops the script, and the step's status follows the exit code <Cite n={13} />. A failed step fails the job, unless the step sets `continue-on-error: true` <Cite n={13} />. `actions/checkout` fetches a single commit by default; `fetch-depth: 0` fetches the whole history <Cite n={14} />, which Gitleaks needs to scan every commit.
+
+</Technical>
+<Layman>
+
+**The four tools.**
+
+- **Semgrep (SAST).** `semgrep scan --config "p/default"` scans with the default rules <Cite n={5} />. It returns 0 even when it finds problems <Cite n={4} />. Add `--error` to make it return 1 when it finds something <Cite n={5} />. `semgrep scan` works without a Semgrep account <Cite n={4} />. Avoid `--config auto` for private code: it sends your project's URL to the Semgrep Registry <Cite n={5} />.
+- **Trivy (SCA and more).** Trivy scans container images, folders, git projects, and more. It finds the software in use, known vulnerabilities, bad settings in infrastructure files, secrets, and licenses <Cite n={7} />. It returns 0 even when it finds problems; `--exit-code 1` changes that <Cite n={8} />, and `--severity HIGH,CRITICAL` keeps only those levels <Cite n={9} />.
+- **Gitleaks (secrets).** `gitleaks git -v` scans every commit of a git project <Cite n={11} />. It reads the changes of each commit, so it also finds a secret that a later commit deleted <Cite n={11} />. It returns 1 when it finds a leak <Cite n={11} />. `--redact` hides the secrets in what it prints <Cite n={11} />.
+- **ZAP baseline (DAST).** It explores the site for one minute by default, then waits for the passive scan. It does not attack the site, and it takes a few minutes at most <Cite n={12} />. It returns 1 for a FAIL and 2 when there are only warnings, so it already fails a pipeline <Cite n={12} />. A config file decides which rules count as FAIL, and `-I` stops warnings from failing <Cite n={12} />.
+
+**In the pipeline.** On GitHub Actions, a shell step stops at the first failing command, and the step's result follows the exit code <Cite n={13} />. A failed step fails the job, unless the step has `continue-on-error: true` <Cite n={13} />. `actions/checkout` fetches only the last commit by default; `fetch-depth: 0` fetches the whole history <Cite n={14} />, which Gitleaks needs to check every commit.
+
+</Layman>
+<Bangla>
+
+**চারটা tool।**
+
+- **Semgrep (SAST)।** `semgrep scan --config "p/default"` ডিফল্ট rule দিয়ে scan করে <Cite n={5} />। সমস্যা পেলেও এটা 0 ফেরত দেয় <Cite n={4} />। কিছু পেলে 1 ফেরত দেওয়াতে `--error` যোগ করুন <Cite n={5} />। `semgrep scan` Semgrep account ছাড়াই চলে <Cite n={4} />। Private code-এ `--config auto` এড়িয়ে চলুন: এটা আপনার project-এর URL Semgrep Registry-তে পাঠায় <Cite n={5} />।
+- **Trivy (SCA আর আরও কিছু)।** Trivy container image, folder, git project আর আরও কিছু scan করে। এটা ব্যবহৃত software, পরিচিত দুর্বলতা, infrastructure ফাইলের ভুল setting, secret আর license খুঁজে পায় <Cite n={7} />। সমস্যা পেলেও এটা 0 ফেরত দেয়; `--exit-code 1` সেটা বদলায় <Cite n={8} />, আর `--severity HIGH,CRITICAL` শুধু ওই মাত্রাগুলো রাখে <Cite n={9} />।
+- **Gitleaks (secret)।** `gitleaks git -v` একটা git project-এর প্রতিটা commit scan করে <Cite n={11} />। এটা প্রতিটা commit-এর পরিবর্তন পড়ে, তাই পরের কোনো commit-এ মুছে ফেলা secret-ও খুঁজে পায় <Cite n={11} />। Leak পেলে এটা 1 ফেরত দেয় <Cite n={11} />। `--redact` এর লেখায় secret লুকিয়ে রাখে <Cite n={11} />।
+- **ZAP baseline (DAST)।** এটা ডিফল্টভাবে এক মিনিট site ঘুরে দেখে, তারপর passive scan শেষ হওয়ার অপেক্ষা করে। এটা site-এ আক্রমণ করে না, আর বড়জোর কয়েক মিনিট লাগে <Cite n={12} />। FAIL থাকলে এটা 1 ফেরত দেয়, আর শুধু warning থাকলে 2, তাই এটা এমনিতেই pipeline fail করায় <Cite n={12} />। কোন rule FAIL ধরা হবে, সেটা একটা config ফাইল ঠিক করে, আর `-I` warning-এ fail হওয়া বন্ধ করে <Cite n={12} />।
+
+**Pipeline-এ।** GitHub Actions-এ shell step প্রথম ব্যর্থ command-এ থেমে যায়, আর step-এর ফলাফল exit code মেনে চলে <Cite n={13} />। একটা step ব্যর্থ হলে পুরো job ব্যর্থ হয়, যদি না step-এ `continue-on-error: true` থাকে <Cite n={13} />। `actions/checkout` ডিফল্টভাবে শুধু শেষ commit আনে; `fetch-depth: 0` পুরো history আনে <Cite n={14} />, যেটা Gitleaks-এর প্রতিটা commit যাচাই করতে লাগে।
+
+</Bangla>
+</Voices>
+
+## In practice
+
+<Voices>
+<Technical>
+
+**1. Run each tool on your own machine.** Start in the root of a project that you own.
+
+```bash
+# SAST: install Semgrep with pipx, the recommended way, then scan
+pipx install semgrep
+semgrep scan --config "p/default" --error
+
+# Dependencies, secrets, and misconfigurations, with the official Trivy image
+docker run --rm -v "$PWD":/src aquasec/trivy:0.76.2 \
+  fs --scanners vuln,secret,misconfig --exit-code 1 /src
+
+# Secrets in every commit, with the official Gitleaks image
+docker run --rm -v "$PWD":/path zricethezav/gitleaks:v8.30.1 git -v --redact /path
+```
+
+Semgrep's install line and scan command come from its docs <Cite n={4} /> <Cite n={5} />. Trivy's official images are on Docker Hub, GHCR, and ECR, and its docs pin a version in their own example <Cite n={10} />. The Gitleaks image and its argument order come from its README <Cite n={11} />. Then `echo $?` shows the exit code of the last command.
+
+**2. Scan the practice app with ZAP.** With the [lab](/security/security-basics-and-lab/) running, start the baseline scan on the same Docker network, so that it reaches Juice Shop by name. Mount the current folder to get the HTML report <Cite n={12} />:
+
+```bash
+docker run --rm --network lab -v "$(pwd)":/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable \
+  zap-baseline.py -t http://juice:3000 -r zap-report.html
+```
+
+**3. Run the checks on every pull request.** This GitHub Actions workflow is the tutorial's own example. It is built from the Semgrep sample configuration <Cite n={6} />, the commands above, and `fetch-depth: 0` for Gitleaks <Cite n={14} />:
+
+```yaml
+name: security-checks
+on:
+  pull_request: {}
+permissions:
+  contents: read
+jobs:
+  sast:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v7
+      - run: semgrep scan --config "p/default" --error
+
+  dependencies-and-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Dependencies, secrets, and misconfigurations (Trivy)
+        run: |
+          docker run --rm -v "$PWD":/src aquasec/trivy:0.76.2 \
+            fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --exit-code 1 /src
+      - name: Secrets in every commit (Gitleaks)
+        run: docker run --rm -v "$PWD":/path zricethezav/gitleaks:v8.30.1 git -v --redact /path
+```
+
+The tutorial's advice: run the ZAP baseline in a later job, against a test deployment of the app, not against production. For the basics of pipelines, see [CI/CD Pipelines](/devops/ci-cd/).
+
+**4. Stop secrets before they are committed.** Gitleaks also works as a [pre-commit](https://pre-commit.com/) hook. Put this in `.pre-commit-config.yaml`, run `pre-commit autoupdate` to move to the latest release, and then `pre-commit install` <Cite n={11} />:
+
+```yaml
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
+```
+
+</Technical>
+<Layman>
+
+1. **Run each tool on your own computer.** Start in the main folder of a project you own. The Technical view has the commands: Semgrep, installed with `pipx` as its docs recommend <Cite n={4} />, Trivy and Gitleaks from their official Docker images <Cite n={10} /> <Cite n={11} />. After each one, `echo $?` shows its exit code.
+2. **Scan the practice app with ZAP.** With the [lab](/security/security-basics-and-lab/) running, start the baseline scan on the same Docker network, so that it can reach Juice Shop by name. Mount the current folder to get the HTML report <Cite n={12} />.
+3. **Run the checks on every pull request.** The Technical view has a GitHub Actions workflow. It is the tutorial's own example, built from the Semgrep sample <Cite n={6} />, the same commands, and `fetch-depth: 0` so that Gitleaks sees every commit <Cite n={14} />. The tutorial's advice: run the ZAP baseline later, against a test copy of the app, never against the live site. For the basics of pipelines, see [CI/CD Pipelines](/devops/ci-cd/).
+4. **Stop secrets before they are committed.** Gitleaks also works as a pre-commit hook. Put the snippet from the Technical view in `.pre-commit-config.yaml`, run `pre-commit autoupdate` to get the latest version, and then `pre-commit install` <Cite n={11} />.
+
+</Layman>
+<Bangla>
+
+1. **প্রতিটা tool নিজের computer-এ চালান।** আপনার নিজের একটা project-এর মূল folder থেকে শুরু করুন। Command-গুলো Technical view-এ আছে: Semgrep, এর docs-এর পরামর্শমতো `pipx` দিয়ে install করা <Cite n={4} />, আর Trivy ও Gitleaks তাদের অফিসিয়াল Docker image থেকে <Cite n={10} /> <Cite n={11} />। প্রতিটার পরে `echo $?` তার exit code দেখায়।
+2. **ZAP দিয়ে প্র্যাকটিস app scan করুন।** [ল্যাব](/security/security-basics-and-lab/) চালু রেখে একই Docker network-এ baseline scan শুরু করুন, যাতে এটা নাম দিয়ে Juice Shop-এ পৌঁছাতে পারে। HTML রিপোর্ট পেতে বর্তমান folder mount করুন <Cite n={12} />।
+3. **প্রতিটা pull request-এ যাচাইগুলো চালান।** Technical view-এ একটা GitHub Actions workflow আছে। এটা টিউটোরিয়ালের নিজের উদাহরণ, Semgrep-এর নমুনা <Cite n={6} />, একই command-গুলো, আর `fetch-depth: 0` দিয়ে বানানো, যাতে Gitleaks প্রতিটা commit দেখতে পায় <Cite n={14} />। টিউটোরিয়ালের পরামর্শ: ZAP baseline পরে চালান, app-এর একটা test কপির ওপর, কখনো live site-এ নয়। Pipeline-এর মূল বিষয়গুলোর জন্য [CI/CD Pipelines](/devops/ci-cd/) দেখুন।
+4. **Commit-এর আগেই secret আটকান।** Gitleaks একটা pre-commit hook হিসেবেও কাজ করে। Technical view-এর অংশটা `.pre-commit-config.yaml`-এ রাখুন, সর্বশেষ version পেতে `pre-commit autoupdate` চালান, তারপর `pre-commit install` <Cite n={11} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A green pipeline that never fails.** Semgrep and Trivy return 0 on findings by default; without `--error` and `--exit-code 1`, the job passes with vulnerabilities in it <Cite n={4} /> <Cite n={8} />.
+- **A shallow clone for secret scanning.** `actions/checkout` fetches one commit by default <Cite n={14} />, so Gitleaks would miss a secret that was committed and later deleted.
+- **Deleting a leaked secret and moving on.** The secret stays in the history, where `gitleaks git` finds it, because it scans the patches of every commit <Cite n={11} />. OWASP's containment steps are to revoke the exposed secret at once, create a new one, and remove it from the exposed system <Cite n={15} />.
+- **Skipping the hook as a habit.** `SKIP=gitleaks` disables the pre-commit hook for that commit <Cite n={11} />; keep it for real false positives.
+- **Using `--config auto` on private code.** It logs in to the Semgrep Registry with your project URL <Cite n={5} />.
+- **Treating the baseline as a full DAST test.** The baseline scan does not perform actual attacks <Cite n={12} />; the active scan of [web application security](/security/web-application-security/) still has a place.
+
+</Technical>
+<Layman>
+
+- **A green pipeline that never fails.** Semgrep and Trivy return 0 even when they find problems. Without `--error` and `--exit-code 1`, the job passes with the flaws inside <Cite n={4} /> <Cite n={8} />.
+- **Fetching only the last commit for secret scanning.** `actions/checkout` fetches one commit by default <Cite n={14} />, so Gitleaks would miss a secret that was added and later deleted.
+- **Deleting a leaked secret and moving on.** The secret stays in the history, and `gitleaks git` finds it there, because it reads every commit's changes <Cite n={11} />. OWASP says to cancel the exposed secret at once, make a new one, and remove it from where it leaked <Cite n={15} />.
+- **Skipping the hook out of habit.** `SKIP=gitleaks` turns the hook off for that commit <Cite n={11} />. Keep it for real false alarms.
+- **Using `--config auto` on private code.** It sends your project's URL to the Semgrep Registry <Cite n={5} />.
+- **Taking the baseline as a full test.** The baseline scan does not attack the site <Cite n={12} />. The active scan from [web application security](/security/web-application-security/) still has a place.
+
+</Layman>
+<Bangla>
+
+- **এমন সবুজ pipeline, যেটা কখনো fail করে না।** সমস্যা পেলেও Semgrep আর Trivy 0 ফেরত দেয়। `--error` আর `--exit-code 1` ছাড়া দুর্বলতা নিয়েই job pass হয়ে যায় <Cite n={4} /> <Cite n={8} />।
+- **Secret scanning-এর জন্য শুধু শেষ commit আনা।** `actions/checkout` ডিফল্টভাবে একটা commit আনে <Cite n={14} />, তাই যে secret যোগ করে পরে মুছে ফেলা হয়েছে, Gitleaks সেটা ধরতে পারবে না।
+- **Leak হওয়া secret মুছে দিয়েই থেমে যাওয়া।** Secret-টা history-তে থেকে যায়, আর `gitleaks git` সেখানেই সেটা খুঁজে পায়, কারণ এটা প্রতিটা commit-এর পরিবর্তন পড়ে <Cite n={11} />। OWASP বলে, ফাঁস হওয়া secret সঙ্গে সঙ্গে বাতিল করুন, নতুন একটা বানান, আর যেখানে ফাঁস হয়েছে সেখান থেকে সরিয়ে দিন <Cite n={15} />।
+- **অভ্যাসবশত hook এড়িয়ে যাওয়া।** `SKIP=gitleaks` ওই commit-এর জন্য hook বন্ধ করে দেয় <Cite n={11} />। এটা শুধু সত্যিকারের ভুয়া alert-এর জন্য রাখুন।
+- **Private code-এ `--config auto` ব্যবহার করা।** এটা আপনার project-এর URL Semgrep Registry-তে পাঠায় <Cite n={5} />।
+- **Baseline-কে পূর্ণ টেস্ট ধরে নেওয়া।** Baseline scan site-এ আক্রমণ করে না <Cite n={12} />। [Web application security](/security/web-application-security/)-এর active scan-এর প্রয়োজন তবুও থাকে।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Each check fails on purpose once.** Add a known test secret or a string-built query on a branch, open a pull request, and confirm that the pipeline goes red. Then remove it.
+- **Tool versions are pinned** and updated on purpose, so that a new release cannot change the results without anyone noticing.
+- **Every suppressed finding has a reason** written next to it, with a name and a date.
+- **Reports are kept** as build artifacts, so that a later reviewer can see what was found and when.
+- **Findings reach a person.** A failed check opens or updates a ticket, not only a red mark that someone reruns.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Make each check fail on purpose once.** On a test branch, add a fake secret or a query glued from text, open a pull request, and confirm that the pipeline turns red. Then remove it.
+- **Pin the tool versions** and update them on purpose, so that a new release cannot change the results without anyone noticing.
+- **Every hidden finding has a reason** written next to it, with a name and a date.
+- **Keep the reports** with each build, so that someone can later see what was found and when.
+- **Findings reach a person.** A failed check opens or updates a ticket, not only a red mark that someone runs again.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **প্রতিটা যাচাই একবার ইচ্ছা করে fail করান।** একটা test branch-এ একটা নকল secret বা text জুড়ে বানানো query যোগ করুন, pull request খুলুন, আর নিশ্চিত হন যে pipeline লাল হয়। তারপর সেটা সরিয়ে দিন।
+- **Tool-এর version নির্দিষ্ট করে রাখুন** আর ভেবেচিন্তে update করুন, যাতে নতুন release কারো অজান্তে ফলাফল বদলাতে না পারে।
+- **লুকানো প্রতিটা finding-এর পাশে কারণ লেখা থাকবে,** একটা নাম আর তারিখসহ।
+- **রিপোর্টগুলো রেখে দিন** প্রতিটা build-এর সঙ্গে, যাতে পরে কেউ দেখতে পারেন কী পাওয়া গিয়েছিল আর কখন।
+- **Finding একজন মানুষের কাছে পৌঁছায়।** ব্যর্থ যাচাই একটা ticket খোলে বা update করে, শুধু একটা লাল চিহ্ন নয়, যেটা কেউ আবার চালিয়ে দেন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| DevSecOps | Building security checks into the development and delivery pipeline. |
+| SAST | Static application security testing: analysing source code for security flaws. |
+| DAST | Dynamic application security testing: scanning a running application from the outside. |
+| SCA | Software composition analysis: finding risk in third-party and open-source components. |
+| CVE | An entry in the public list of known vulnerabilities. |
+| SBOM | Software bill of materials: the list of components that a piece of software contains. |
+| Secret scanning | Searching code and history for passwords, keys, and tokens. |
+| Exit code | The number a program returns when it ends. 0 means success. |
+| Baseline scan | ZAP's short passive scan that spiders a site without attacking it. |
+| Pre-commit hook | A check that runs before git records a commit. |
