@@ -50,7 +50,7 @@ const SOURCE: readonly TopicEntry[] = [
   { slug: "git-basics", part: 1, title: "Git Basics", description: "Snapshots, the three states, branches, merges and conflicts, remotes, and how a tester tests a pull request." },
   { slug: "git-workflows", part: 1, title: "Git Workflows", description: "Branches by stability, rebase and cherry-pick, stash and worktrees, and git bisect to find the commit that broke a test." },
   { slug: "ci-cd", part: 1, title: "CI/CD Pipelines", description: "CI, continuous delivery, and continuous deployment, the parts of a pipeline, and your tests in GitHub Actions and Jenkins." },
-  { slug: "gitops", part: 1, title: "GitOps", description: "The OpenGitOps principles, Argo CD, and Flux." },
+  { slug: "gitops", part: 1, title: "GitOps", description: "The four OpenGitOps principles, how Argo CD and Flux sync a cluster to Git, and smoke tests that run after each sync." },
   { slug: "docker-basics", part: 2, title: "Docker Basics", description: "What Docker is, and how it compares with virtual machines." },
   { slug: "docker-images-compose", part: 2, title: "Docker Images and Compose", description: "Dockerfile, Docker Compose, and Bake." },
   { slug: "docker-in-practice", part: 2, title: "Docker in Practice", description: "Docker volumes and bind mounts." },
