@@ -62,4 +62,19 @@ Voices standard of this round: the rule of CLAUDE.md (brief v2): the panel gives
 
 Open FAILs after round 5: 0
 
+Changed after this round: The Rook sentence and its source were changed in all three panels (see the fact report). Round 6 checks the new text.
+
+## Round 6 (2026-11-15)
+
+# Voices fact check: devops / cncf-runtime-data (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| About the projects | Layman | PASS | Every fact is in the Technical panel, and the cites are on the same facts. Left out: "cloud-native" in the Rook description. The wording "setup" stands for "deployment". |
+| About the projects | Bangla | PASS | The meaning matches the Technical panel. The cites are on the same facts, and the product names stay in English. Left out: nothing of substance. "Critical" is kept in brackets. "নিজে নিজেই পরিচালিত হয়" matches "self-managing". |
+
+Open FAILs after round 6: 0
+
+Not checked: I did not invoke the writing-simplified-technical-english skill, and I did not check the S2 lines 33-34 wording against the page. The S2 line 112 quote covers the claim. I could not confirm that S1–S4 are the real pages, only that their text matches.
+
 Open FAILs: 0

@@ -1,15 +1,29 @@
-export const metadata = { title: 'Git Basics', description: 'How Git stores snapshots, and what a merge does.' }
+export const metadata = { title: 'Git Basics', description: 'Snapshots, the three states, branches, merges and conflicts, remotes, and how a tester tests a pull request.' }
 export const page = {
-  updated: '2026-11-05',
+  updated: '2026-11-15',
   sources: [
-    { title: 'What is Git?', publisher: 'Pro Git book', url: 'https://git-scm.com/book/en/v2/Getting-Started-What-is-Git%3F', accessed: '2026-11-05' },
-    { title: 'git-merge', publisher: 'Git documentation', url: 'https://git-scm.com/docs/git-merge', accessed: '2026-11-05' },
+    { title: 'What is Git?', publisher: 'Pro Git book', url: 'https://git-scm.com/book/en/v2/Getting-Started-What-is-Git%3F', accessed: '2026-11-15' },
+    { title: 'git-merge', publisher: 'Git documentation', url: 'https://git-scm.com/docs/git-merge', accessed: '2026-11-15' },
+    { title: 'First-Time Git Setup', publisher: 'Pro Git book', url: 'https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup', accessed: '2026-11-15' },
+    { title: 'Recording Changes to the Repository', publisher: 'Pro Git book', url: 'https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository', accessed: '2026-11-15' },
+    { title: 'Branches in a Nutshell', publisher: 'Pro Git book', url: 'https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell', accessed: '2026-11-15' },
+    { title: 'Basic Branching and Merging', publisher: 'Pro Git book', url: 'https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging', accessed: '2026-11-15' },
+    { title: 'Working with Remotes', publisher: 'Pro Git book', url: 'https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes', accessed: '2026-11-15' },
+    { title: 'Viewing the Commit History', publisher: 'Pro Git book', url: 'https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History', accessed: '2026-11-15' },
+    { title: 'git-switch', publisher: 'Git documentation', url: 'https://git-scm.com/docs/git-switch', accessed: '2026-11-15' },
+    { title: 'git-pull', publisher: 'Git documentation', url: 'https://git-scm.com/docs/git-pull', accessed: '2026-11-15' },
+    { title: 'git-push', publisher: 'Git documentation', url: 'https://git-scm.com/docs/git-push', accessed: '2026-11-15' },
+    { title: 'gitignore', publisher: 'Git documentation', url: 'https://git-scm.com/docs/gitignore', accessed: '2026-11-15' },
+    { title: 'Pull requests', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/pull-requests/reference/pull-requests', accessed: '2026-11-15' },
+    { title: 'Checking out pull requests locally', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/pull-requests/how-tos/review-pull-requests/checking-out-pull-requests-locally', accessed: '2026-11-15' },
+    { title: 'Adding locally hosted code to GitHub', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github', accessed: '2026-11-15' },
+    { title: 'Getting a Git Repository', publisher: 'Pro Git book', url: 'https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository', accessed: '2026-11-15' },
   ],
 }
 
 # Git Basics
 
-How Git stores snapshots, and what a merge does. A short explanation with its sources comes first. The reels after it show the topic at work.
+Your test code, your test plans, and your team's pipeline files live in Git. To test a branch, read what a change did, or name the exact version that has a bug, you need a few Git ideas and a short list of commands. This page gives you both, and a practice run on your own laptop.
 
 <PageMeta />
 
@@ -18,17 +32,540 @@ How Git stores snapshots, and what a merge does. A short explanation with its so
 <Voices>
 <Technical>
 
-Git thinks of its data as a series of snapshots of a miniature filesystem: each time you commit, Git takes a picture of what all your files look like at that moment <Cite n={1} />. A merge joins two or more development histories together <Cite n={2} />.
+The major difference between Git and any other version control system (VCS) is the way that Git thinks about its data <Cite n={1} />. It thinks of its data as a series of **snapshots** of a miniature filesystem: each time you commit, Git takes a picture of what all your files look like at that moment <Cite n={1} />. A **merge** joins two or more development histories together <Cite n={2} />.
+
+**Nearly every operation is local.** Most operations need only local files and resources, and the entire history of the project is on your local disk <Cite n={1} />.
+
+**Everything is checksummed.** Git refers to each stored item by its checksum, a SHA-1 hash: a 40-character string of hexadecimal characters <Cite n={1} />.
+
+A file in a Git project is in one of three states <Cite n={1} />:
+
+| State | Meaning |
+|---|---|
+| Modified | You changed the file, but you have not committed it yet |
+| Staged | You marked the modified file to go into your next commit |
+| Committed | The data is safely stored in your local database |
+
+The three states match the three sections of a Git project <Cite n={1} />:
+
+- The **working tree** is a single checkout of one version of the project. Its files are placed on disk for you to use or modify <Cite n={1} />.
+- The **staging area** is a file, generally in your Git directory, that stores information about what will go into your next commit. Its technical name is the **index** <Cite n={1} />.
+- The **Git directory** is where Git stores the metadata and object database of your project. It is what is copied when you clone a repository <Cite n={1} />.
+
+`git add` stages files <Cite n={4} />. A commit takes the files as they are in the staging area, and stores that snapshot permanently in the Git directory <Cite n={1} />. In a repository that `git init` made, the Git directory is a subdirectory named `.git` <Cite n={16} />:
+
+```text
+working tree  ---- git add ---->  staging area  ---- git commit ---->  Git directory (.git)
+ (modified)                        (staged)                             (committed)
+```
+
+On GitHub, a **pull request** is a proposal to merge code changes into a project, so that people can discuss and review the changes before they are merged <Cite n={13} />.
 
 </Technical>
 <Layman>
 
-Git thinks of its data as a series of snapshots. Each time you commit, Git takes a picture of what all your files look like at that moment <Cite n={1} />. A merge joins two or more development histories together <Cite n={2} />.
+Git is different from other version control systems in how it thinks about its data <Cite n={1} />. It keeps your project as a series of **snapshots**. Each time you commit, Git takes a picture of what all your files look like at that moment <Cite n={1} />. A **merge** joins two or more lines of work together <Cite n={2} />.
+
+**Most work happens on your computer.** Most Git commands need only local files, and the whole history of the project is on your disk <Cite n={1} />.
+
+**Each item has a checksum.** Git names each stored item by a SHA-1 hash: a string of 40 hexadecimal characters <Cite n={1} />.
+
+A file in Git is in one of three states <Cite n={1} />:
+
+| State | Meaning |
+|---|---|
+| Modified | You changed the file, but you did not commit it yet |
+| Staged | You marked the change to go into your next commit |
+| Committed | The change is safely saved in your local database |
+
+The three states match three parts of a Git project <Cite n={1} />:
+
+- The **working tree** is one version of the project, taken out for you. Its files are on your disk to use or change <Cite n={1} />.
+- The **staging area** is a file, usually in your Git directory. It stores what will go into your next commit. Its technical name is the **index** <Cite n={1} />.
+- The **Git directory** is where Git keeps the metadata and the object database of your project. It is what gets copied when you clone a repository <Cite n={1} />.
+
+`git add` stages files <Cite n={4} />. A commit takes the files as they are in the staging area, and saves that snapshot for good in the Git directory <Cite n={1} />. When you make a repository with `git init`, the Git directory is a folder named `.git` <Cite n={16} />:
+
+```text
+working tree  ---- git add ---->  staging area  ---- git commit ---->  Git directory (.git)
+ (modified)                        (staged)                             (committed)
+```
+
+On GitHub, a **pull request** asks to merge code changes into a project. People can discuss and review the changes before the merge <Cite n={13} />.
 
 </Layman>
 <Bangla>
 
-Git তার data-কে snapshot-এর একটা ধারা হিসেবে ভাবে। প্রতিবার আপনি commit করলে Git সেই মুহূর্তে আপনার সব file কেমন দেখতে, তার একটা ছবি তোলে <Cite n={1} />। merge দুই বা তার বেশি development history একসাথে জোড়া লাগায় <Cite n={2} />।
+Git আর অন্য যেকোনো version control system (VCS)-এর প্রধান পার্থক্য হলো Git তার data-কে কীভাবে দেখে <Cite n={1} />। Git data-কে একটা ছোট filesystem-এর ধারাবাহিক **snapshot** হিসেবে দেখে: প্রতিবার commit করলে Git সেই মুহূর্তে আপনার সব ফাইল দেখতে কেমন, তার একটা ছবি তোলে <Cite n={1} />। **merge** দুই বা তার বেশি development history-কে এক করে <Cite n={2} />।
+
+**প্রায় সব কাজ local।** বেশিরভাগ কাজে শুধু local ফাইল আর resource লাগে, আর project-এর পুরো history আপনার local disk-এই থাকে <Cite n={1} />।
+
+**সবকিছুর checksum থাকে।** Git প্রতিটা জমানো জিনিসকে তার checksum দিয়ে চেনে, একটা SHA-1 hash: hexadecimal অক্ষরের ৪০ অক্ষরের একটা string <Cite n={1} />।
+
+Git project-এর একটা ফাইল তিনটা state-এর একটায় থাকে <Cite n={1} />:
+
+| State | মানে |
+|---|---|
+| Modified | আপনি ফাইল বদলেছেন, কিন্তু এখনো commit করেননি |
+| Staged | বদলানো ফাইলটা পরের commit-এ যাওয়ার জন্য চিহ্নিত করেছেন |
+| Committed | data আপনার local database-এ নিরাপদে রাখা আছে |
+
+তিনটা state-এর সাথে Git project-এর তিনটা অংশ মেলে <Cite n={1} />:
+
+- **working tree** হলো project-এর একটা version-এর একটা checkout। এর ফাইলগুলো disk-এ রাখা হয়, যাতে আপনি ব্যবহার বা বদল করতে পারেন <Cite n={1} />।
+- **staging area** হলো একটা ফাইল, সাধারণত আপনার Git directory-র ভেতরে, যেটা পরের commit-এ কী যাবে সেই তথ্য রাখে। এর technical নাম **index** <Cite n={1} />।
+- **Git directory** হলো যেখানে Git আপনার project-এর metadata আর object database রাখে। কোনো repository clone করলে এটাই copy হয় <Cite n={1} />।
+
+`git add` ফাইল stage করে <Cite n={4} />। commit staging area-য় ফাইলগুলো যেমন আছে তেমন নিয়ে সেই snapshot স্থায়ীভাবে Git directory-তে রাখে <Cite n={1} />। `git init` দিয়ে বানানো repository-তে Git directory হলো `.git` নামের একটা subdirectory <Cite n={16} />:
+
+```text
+working tree  ---- git add ---->  staging area  ---- git commit ---->  Git directory (.git)
+ (modified)                        (staged)                             (committed)
+```
+
+GitHub-এ **pull request** হলো একটা project-এ code change merge করার প্রস্তাব, যাতে merge-এর আগে মানুষ change-গুলো নিয়ে আলোচনা আর review করতে পারে <Cite n={13} />।
 
 </Bangla>
 </Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**Branches.** A branch in Git is a lightweight movable pointer to a commit <Cite n={5} />. The default branch name in Git is `master`, and every time you commit, the branch pointer moves forward automatically <Cite n={5} />. A special pointer called `HEAD` points to the local branch you are currently on <Cite n={5} />.
+
+**Switching.** `git switch <branch>` switches to a branch: the working tree and the index are updated to match it, and new commits are added to its tip <Cite n={9} />. `git switch -c <new-branch>` creates a new branch, then switches to it <Cite n={9} />.
+
+**Merging.** There are two kinds of merge <Cite n={6} />:
+
+- **Fast-forward.** If the commit that you merge is directly ahead of the commit you are on, there is no divergent work. Git just moves the pointer forward.
+- **Three-way merge.** If the branches diverged, Git uses the two branch tips and their common ancestor. It creates a new **merge commit**, which has more than one parent.
+
+**Conflicts.** If you changed the same part of the same file differently in the two branches, Git cannot merge them cleanly <Cite n={6} />. It pauses the merge and adds conflict-resolution markers to the file <Cite n={6} />. The part above `=======` is the version in `HEAD`, and the part below it is the version of the other branch <Cite n={6} />. You resolve it, run `git add` on each file to mark it as resolved, then run `git commit` <Cite n={6} />.
+
+**Remotes.** A remote repository is a version of your project that is hosted on the Internet or a network <Cite n={7} />. `origin` is the default name that Git gives to the server you cloned from <Cite n={7} />.
+
+```text
+your laptop                               the server: the remote "origin"
+local repository  <-- git fetch / git pull --  remote repository
+local repository  --------- git push -------->  remote repository
+```
+
+- `git fetch` only downloads the data. It does not merge it with your work or modify what you are working on <Cite n={7} />.
+- `git pull` runs `git fetch`, then integrates the remote branch into your current branch <Cite n={10} />.
+- `git push <remote> <branch>` shares your work <Cite n={7} />. If someone pushed before you, your push is rejected: you fetch their work and incorporate it first <Cite n={7} />.
+
+</Technical>
+<Layman>
+
+**Branches.** A branch is a light pointer to a commit, and it can move <Cite n={5} />. Git's default branch name is `master`. Each time you commit, the branch pointer moves forward by itself <Cite n={5} />. A special pointer called `HEAD` shows which branch you are on <Cite n={5} />.
+
+**Switching.** `git switch <branch>` moves you to a branch. Your files change to match that branch, and new commits go on top of it <Cite n={9} />. `git switch -c <new-branch>` makes a new branch and moves you to it <Cite n={9} />.
+
+**Merging.** A merge happens in one of two ways <Cite n={6} />:
+
+- **Fast-forward.** If the commit that you merge is directly ahead of the commit you are on, no work went two ways. Git just moves your pointer forward.
+- **Three-way merge.** If both branches have new work, Git compares the two branch tips with the commit where they split. It makes a new **merge commit** with more than one parent.
+
+**Conflicts.** If both branches changed the same part of the same file in different ways, Git cannot merge them cleanly <Cite n={6} />. It stops and puts markers in the file <Cite n={6} />. Above `=======` is the version in `HEAD`. Below it is the other branch's version <Cite n={6} />. You fix the text, run `git add` on the file, and then run `git commit` <Cite n={6} />.
+
+**Remotes.** A remote is a version of your project on the Internet or a network <Cite n={7} />. `origin` is the default name that Git gives to the server you cloned from <Cite n={7} />.
+
+```text
+your laptop                               the server: the remote "origin"
+local repository  <-- git fetch / git pull --  remote repository
+local repository  --------- git push -------->  remote repository
+```
+
+- `git fetch` only downloads. It does not change your work <Cite n={7} />.
+- `git pull` runs `git fetch`, then adds the remote branch into your branch <Cite n={10} />.
+- `git push <remote> <branch>` sends your work <Cite n={7} />. If someone pushed first, Git rejects your push. You get their work first, then push <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+**Branch।** Git-এ branch হলো একটা commit-এর দিকে নির্দেশ করা একটা হালকা, সরানো যায় এমন pointer <Cite n={5} />। Git-এ default branch-এর নাম `master`, আর প্রতিবার commit করলে branch pointer নিজে নিজেই সামনে এগোয় <Cite n={5} />। `HEAD` নামের একটা বিশেষ pointer দেখায় আপনি এখন কোন local branch-এ আছেন <Cite n={5} />।
+
+**Switch করা।** `git switch <branch>` একটা branch-এ নিয়ে যায়: working tree আর index সেই branch-এর মতো হয়ে যায়, আর নতুন commit সেই branch-এর মাথায় যোগ হয় <Cite n={9} />। `git switch -c <new-branch>` একটা নতুন branch বানায়, তারপর সেখানে যায় <Cite n={9} />।
+
+**Merge।** merge দুই রকম <Cite n={6} />:
+
+- **Fast-forward।** আপনি যে commit merge করছেন সেটা যদি আপনার এখনকার commit-এর ঠিক সামনে থাকে, তাহলে আলাদা হয়ে যাওয়া কোনো কাজ নেই। Git শুধু pointer সামনে সরিয়ে দেয়।
+- **Three-way merge।** branch দুটো আলাদা হয়ে গেলে Git দুটো branch-এর মাথা আর তাদের common ancestor ব্যবহার করে। এটা একটা নতুন **merge commit** বানায়, যার একাধিক parent থাকে।
+
+**Conflict।** দুই branch-এ একই ফাইলের একই অংশ আলাদাভাবে বদলালে Git পরিষ্কারভাবে merge করতে পারে না <Cite n={6} />। এটা merge থামিয়ে দেয় আর ফাইলে conflict-resolution marker বসায় <Cite n={6} />। `=======`-এর ওপরের অংশ `HEAD`-এর version, আর নিচের অংশ অন্য branch-এর version <Cite n={6} />। আপনি সমাধান করেন, প্রতিটা ফাইলে `git add` চালিয়ে resolved চিহ্নিত করেন, তারপর `git commit` চালান <Cite n={6} />।
+
+**Remote।** remote repository হলো Internet বা network-এ রাখা আপনার project-এর একটা version <Cite n={7} />। যে server থেকে clone করেছেন, Git তার default নাম দেয় `origin` <Cite n={7} />।
+
+```text
+your laptop                               the server: the remote "origin"
+local repository  <-- git fetch / git pull --  remote repository
+local repository  --------- git push -------->  remote repository
+```
+
+- `git fetch` শুধু data download করে। এটা আপনার কাজের সাথে merge করে না, আর আপনি যা নিয়ে কাজ করছেন তা বদলায় না <Cite n={7} />।
+- `git pull` প্রথমে `git fetch` চালায়, তারপর remote branch-কে আপনার current branch-এ যোগ করে <Cite n={10} />।
+- `git push <remote> <branch>` আপনার কাজ share করে <Cite n={7} />। আপনার আগে কেউ push করে থাকলে আপনার push reject হয়: আগে তাদের কাজ fetch করে নিজের কাজে মেলাতে হয় <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+This practice run makes a small repository, a branch, and a merge conflict on purpose. Use an empty folder.
+
+**1. Tell Git who you are.** Do this once. Every commit uses this information <Cite n={3} />:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email you@example.com
+```
+
+**2. Start a repository and commit a file.** You obtain a Git repository in one of two ways: turn a local directory into one, or clone an existing one <Cite n={16} />. Here you do the first. `git init -b main` starts a repository whose first branch is `main` <Cite n={15} />. Create `checklist.txt` with one line, `Login: a valid user can sign in`. Then check the state, stage the file, and commit it <Cite n={4} />. `git log --oneline` shows each commit on one line, with the first few characters of its hash <Cite n={8} />.
+
+```bash
+git init -b main
+git status
+git add checklist.txt
+git commit -m "Add the login checklist"
+git log --oneline
+```
+
+**3. Change the same line on two branches.** `git switch -c` creates a branch and switches to it, and `git switch <branch>` switches back <Cite n={9} />. `git commit -a` stages every file that is already tracked, then commits <Cite n={4} />.
+
+```bash
+git switch -c fix-checklist
+# edit the line to: Login: a valid user can sign in with email
+git commit -a -m "Say how the user signs in"
+git switch main
+# edit the line to: Login: a valid user can sign in and sign out
+git commit -a -m "Add sign out"
+```
+
+**4. Merge, and see the conflict.** Git stops with "Automatic merge failed; fix conflicts and then commit the result", and `git status` lists the unmerged file <Cite n={6} />.
+
+```bash
+git merge fix-checklist
+git status
+```
+
+The file now has the markers <Cite n={6} />:
+
+```text
+<<<<<<< HEAD
+Login: a valid user can sign in and sign out
+=======
+Login: a valid user can sign in with email
+>>>>>>> fix-checklist
+```
+
+**5. Resolve it.** Edit the file to the text that you want, and remove the `<<<<<<<`, `=======`, and `>>>>>>>` lines. Then mark it as resolved and finish the merge commit <Cite n={6} />. `--graph` draws the branch and merge history <Cite n={8} />.
+
+```bash
+git add checklist.txt
+git commit
+git log --oneline --graph
+```
+
+**6. Put it on GitHub.** Create an empty repository on GitHub, with no README, license, or gitignore file, to avoid errors <Cite n={15} />. Copy its URL, then add the remote, check it, and push <Cite n={15} />:
+
+```bash
+git remote add origin REMOTE-URL
+git remote -v
+git push -u origin main
+```
+
+</Technical>
+<Layman>
+
+In this practice run you make a small repository, a branch, and a merge conflict on purpose. Use an empty folder.
+
+**1. Tell Git who you are.** You do this once. Every commit uses this information <Cite n={3} />:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email you@example.com
+```
+
+**2. Start a repository and commit a file.** You get a Git repository in one of two ways: turn a folder into one, or clone one that already exists <Cite n={16} />. Here you do the first. `git init -b main` starts a repository with a first branch called `main` <Cite n={15} />. Make a file `checklist.txt` with one line: `Login: a valid user can sign in`. Then look at the state, stage the file, and commit it <Cite n={4} />. `git log --oneline` shows each commit on one line, with the start of its hash <Cite n={8} />.
+
+```bash
+git init -b main
+git status
+git add checklist.txt
+git commit -m "Add the login checklist"
+git log --oneline
+```
+
+**3. Change the same line on two branches.** `git switch -c` makes a branch and moves you to it. `git switch <branch>` moves you back <Cite n={9} />. `git commit -a` stages every file that Git already tracks, then commits <Cite n={4} />.
+
+```bash
+git switch -c fix-checklist
+# edit the line to: Login: a valid user can sign in with email
+git commit -a -m "Say how the user signs in"
+git switch main
+# edit the line to: Login: a valid user can sign in and sign out
+git commit -a -m "Add sign out"
+```
+
+**4. Merge, and see the conflict.** Git stops with "Automatic merge failed; fix conflicts and then commit the result". `git status` lists the file that is not merged <Cite n={6} />.
+
+```bash
+git merge fix-checklist
+git status
+```
+
+The file now has markers <Cite n={6} />:
+
+```text
+<<<<<<< HEAD
+Login: a valid user can sign in and sign out
+=======
+Login: a valid user can sign in with email
+>>>>>>> fix-checklist
+```
+
+**5. Fix it.** Change the file to the text that you want, and delete the `<<<<<<<`, `=======`, and `>>>>>>>` lines. Then mark it as fixed and finish the merge commit <Cite n={6} />. `--graph` draws the branches and the merge <Cite n={8} />.
+
+```bash
+git add checklist.txt
+git commit
+git log --oneline --graph
+```
+
+**6. Put it on GitHub.** Make an empty repository on GitHub. Do not add a README, license, or gitignore file, to avoid errors <Cite n={15} />. Copy its URL. Then add the remote, check it, and push <Cite n={15} />:
+
+```bash
+git remote add origin REMOTE-URL
+git remote -v
+git push -u origin main
+```
+
+</Layman>
+<Bangla>
+
+এই practice-এ আপনি একটা ছোট repository, একটা branch আর ইচ্ছা করে একটা merge conflict বানাবেন। একটা খালি ফোল্ডার ব্যবহার করুন।
+
+**১. Git-কে আপনার পরিচয় দিন।** এটা একবারই করতে হয়। প্রতিটা commit এই তথ্য ব্যবহার করে <Cite n={3} />:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email you@example.com
+```
+
+**২. repository শুরু করে একটা ফাইল commit করুন।** Git repository দুইভাবে পাওয়া যায়: একটা local directory-কে repository বানিয়ে, অথবা আগে থেকে থাকা একটা repository clone করে <Cite n={16} />। এখানে আপনি প্রথমটা করবেন। `git init -b main` এমন একটা repository শুরু করে, যার প্রথম branch `main` <Cite n={15} />। `checklist.txt` নামে একটা ফাইল বানান, তাতে এক লাইন লিখুন: `Login: a valid user can sign in`। তারপর state দেখুন, ফাইলটা stage করুন আর commit করুন <Cite n={4} />। `git log --oneline` প্রতিটা commit এক লাইনে দেখায়, hash-এর প্রথম কয়েকটা অক্ষরসহ <Cite n={8} />।
+
+```bash
+git init -b main
+git status
+git add checklist.txt
+git commit -m "Add the login checklist"
+git log --oneline
+```
+
+**৩. দুই branch-এ একই লাইন বদলান।** `git switch -c` একটা branch বানিয়ে সেখানে নিয়ে যায়, আর `git switch <branch>` আবার ফিরিয়ে আনে <Cite n={9} />। `git commit -a` আগে থেকে track হওয়া সব ফাইল stage করে, তারপর commit করে <Cite n={4} />।
+
+```bash
+git switch -c fix-checklist
+# edit the line to: Login: a valid user can sign in with email
+git commit -a -m "Say how the user signs in"
+git switch main
+# edit the line to: Login: a valid user can sign in and sign out
+git commit -a -m "Add sign out"
+```
+
+**৪. merge করুন, conflict দেখুন।** Git "Automatic merge failed; fix conflicts and then commit the result" বলে থেমে যায়, আর `git status` merge না হওয়া ফাইলটা দেখায় <Cite n={6} />।
+
+```bash
+git merge fix-checklist
+git status
+```
+
+ফাইলে এখন marker আছে <Cite n={6} />:
+
+```text
+<<<<<<< HEAD
+Login: a valid user can sign in and sign out
+=======
+Login: a valid user can sign in with email
+>>>>>>> fix-checklist
+```
+
+**৫. সমাধান করুন।** ফাইলটা আপনার পছন্দের লেখায় বদলান, আর `<<<<<<<`, `=======` ও `>>>>>>>` লাইনগুলো মুছে দিন। তারপর resolved চিহ্নিত করে merge commit শেষ করুন <Cite n={6} />। `--graph` branch আর merge-এর history আঁকে <Cite n={8} />।
+
+```bash
+git add checklist.txt
+git commit
+git log --oneline --graph
+```
+
+**৬. GitHub-এ রাখুন।** GitHub-এ একটা খালি repository বানান, README, license বা gitignore ফাইল ছাড়া, যাতে error না হয় <Cite n={15} />। এর URL কপি করুন, তারপর remote যোগ করুন, যাচাই করুন আর push করুন <Cite n={15} />:
+
+```bash
+git remote add origin REMOTE-URL
+git remote -v
+git push -u origin main
+```
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Test a pull request on your machine.** Anyone can work with an open pull request to continue working on it or to test it <Cite n={14} />. Find its ID number, the digits after its title <Cite n={14} />. Then fetch it into a new local branch, switch to it, and run your tests <Cite n={14} />:
+
+```bash
+git fetch origin pull/ID/head:BRANCH_NAME
+git switch BRANCH_NAME
+```
+
+**Read what changed.** A pull request has tabs: **Commits** shows how the branch changed over time, **Checks** shows the automated tests, builds, and other validations, and **Files changed** shows the diff <Cite n={13} />. On your machine, `git log -p` shows the patch of each commit, and `git log --stat` lists the changed files and the number of added and removed lines <Cite n={8} />. `git diff` shows what you changed but did not stage yet, and `git diff --staged` shows what goes into your next commit <Cite n={4} />.
+
+**Name the exact version.** `git log` lists each commit with its SHA-1 checksum <Cite n={8} />. Put it, or the short form that `git log --oneline` shows, in the bug report <Cite n={8} />. A branch name does not say exactly what you tested, because the branch pointer moves forward with every commit <Cite n={5} />.
+
+**Keep test output out of the repository.** A `.gitignore` file lists patterns of intentionally untracked files that Git should ignore <Cite n={12} />. They are usually generated files, such as log files or files that your build produces <Cite n={4} />. The tutorial's advice: list test reports, screenshots, and videos in `.gitignore` too.
+
+</Technical>
+<Layman>
+
+**Test a pull request on your computer.** Anyone can work with an open pull request, for example to test it <Cite n={14} />. Find its ID number: the digits after its title <Cite n={14} />. Then fetch it into a new branch on your computer, switch to it, and run your tests <Cite n={14} />:
+
+```bash
+git fetch origin pull/ID/head:BRANCH_NAME
+git switch BRANCH_NAME
+```
+
+**See what changed.** A pull request has tabs. **Commits** shows how the branch changed. **Checks** shows the automated tests and builds. **Files changed** shows the diff <Cite n={13} />. On your computer, `git log -p` shows the changes of each commit. `git log --stat` lists the changed files and how many lines were added and removed <Cite n={8} />. `git diff` shows your changes that are not staged yet. `git diff --staged` shows what goes into your next commit <Cite n={4} />.
+
+**Name the exact version.** `git log` lists each commit with its SHA-1 checksum <Cite n={8} />. Write it, or the short form from `git log --oneline`, in your bug report <Cite n={8} />. A branch name does not say exactly what you tested, because the branch pointer moves with every commit <Cite n={5} />.
+
+**Keep test output out of the repository.** A `.gitignore` file lists patterns of files that Git should ignore <Cite n={12} />. These are usually generated files, such as log files or files that your build makes <Cite n={4} />. The tutorial's advice: list test reports, screenshots, and videos in `.gitignore` too.
+
+</Layman>
+<Bangla>
+
+**নিজের computer-এ একটা pull request test করুন।** যে কেউ একটা খোলা pull request নিয়ে কাজ চালিয়ে যেতে বা সেটা test করতে পারে <Cite n={14} />। এর ID নম্বর খুঁজুন, title-এর পরের সংখ্যাগুলো <Cite n={14} />। তারপর এটাকে একটা নতুন local branch-এ fetch করুন, সেখানে switch করুন, আর আপনার test চালান <Cite n={14} />:
+
+```bash
+git fetch origin pull/ID/head:BRANCH_NAME
+git switch BRANCH_NAME
+```
+
+**কী বদলেছে পড়ুন।** pull request-এ কয়েকটা tab আছে: **Commits** দেখায় branch সময়ের সাথে কীভাবে বদলেছে, **Checks** দেখায় automated test, build আর অন্য validation, আর **Files changed** দেখায় diff <Cite n={13} />। আপনার machine-এ `git log -p` প্রতিটা commit-এর patch দেখায়, আর `git log --stat` বদলানো ফাইল আর যোগ ও বাদ যাওয়া লাইনের সংখ্যা দেখায় <Cite n={8} />। `git diff` দেখায় কী বদলেছেন কিন্তু এখনো stage করেননি, আর `git diff --staged` দেখায় পরের commit-এ কী যাবে <Cite n={4} />।
+
+**ঠিক কোন version, সেটা বলুন।** `git log` প্রতিটা commit-কে তার SHA-1 checksum-সহ দেখায় <Cite n={8} />। bug report-এ এটা লিখুন, অথবা `git log --oneline` যে ছোট রূপ দেখায় সেটা <Cite n={8} />। branch-এর নাম ঠিক বলে না আপনি কী test করেছেন, কারণ প্রতিটা commit-এর সাথে branch pointer সামনে সরে যায় <Cite n={5} />।
+
+**test output repository-র বাইরে রাখুন।** `.gitignore` ফাইলে এমন ফাইলের pattern থাকে, যেগুলো ইচ্ছা করে untracked রাখা হয় আর Git উপেক্ষা করে <Cite n={12} />। এগুলো সাধারণত generated ফাইল, যেমন log ফাইল বা build-এর বানানো ফাইল <Cite n={4} />। টিউটোরিয়ালের পরামর্শ: test report, screenshot আর video-ও `.gitignore`-এ রাখুন।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Adding a tracked file to `.gitignore`.** Files that Git already tracks are not affected by `.gitignore` <Cite n={12} />. Run `git rm --cached` on the file to stop tracking it, then add it to `.gitignore` <Cite n={12} />.
+- **`git push --force` on a shared branch.** It disables the check that stops a push of a branch that is not an ancestor of the commit being pushed, and it can cause the remote repository to lose commits <Cite n={11} />.
+- **Testing old code.** `git fetch` downloads, but it does not change your work <Cite n={7} />. Run `git pull`, which fetches and then integrates the remote branch, before you test <Cite n={10} />.
+- **Committing what you did not stage.** A commit records the snapshot in your staging area, not every change in your working tree <Cite n={4} />. `git status` is the main tool to see which files are in which state <Cite n={4} />.
+- **No name and email.** Every commit uses them, and they are immutably baked into the commits that you create <Cite n={3} />.
+- **Leaving conflict markers in a file.** In a resolved file, the `<<<<<<<`, `=======`, and `>>>>>>>` lines are completely removed <Cite n={6} />. Check the file before you run `git add`, because staging the file marks it as resolved in Git <Cite n={6} />.
+
+</Technical>
+<Layman>
+
+- **Adding a tracked file to `.gitignore`.** `.gitignore` does not affect files that Git already tracks <Cite n={12} />. Run `git rm --cached` on the file to stop tracking it, then add it to `.gitignore` <Cite n={12} />.
+- **`git push --force` on a shared branch.** It turns off a safety check, and the remote repository can lose commits <Cite n={11} />.
+- **Testing old code.** `git fetch` downloads, but it does not change your work <Cite n={7} />. Run `git pull` before you test. It fetches and then adds the remote changes to your branch <Cite n={10} />.
+- **Committing what you did not stage.** A commit saves what is in your staging area, not every change in your files <Cite n={4} />. `git status` is the main tool to see which files are in which state <Cite n={4} />.
+- **No name and email.** Every commit uses them, and they stay in your commits for good <Cite n={3} />.
+- **Leaving conflict markers in a file.** A fixed file has no `<<<<<<<`, `=======`, or `>>>>>>>` lines left <Cite n={6} />. Check the file before you run `git add`. Staging the file tells Git that the conflict is fixed <Cite n={6} />.
+
+</Layman>
+<Bangla>
+
+- **track হওয়া ফাইল `.gitignore`-এ যোগ করা।** Git আগে থেকেই যেসব ফাইল track করে, `.gitignore` সেগুলোর ওপর কাজ করে না <Cite n={12} />। ফাইলটার tracking বন্ধ করতে `git rm --cached` চালান, তারপর `.gitignore`-এ যোগ করুন <Cite n={12} />।
+- **shared branch-এ `git push --force`।** এটা সেই check বন্ধ করে দেয় যেটা push হওয়া commit-এর ancestor নয় এমন branch update আটকায়, আর এতে remote repository commit হারাতে পারে <Cite n={11} />।
+- **পুরোনো code test করা।** `git fetch` download করে, কিন্তু আপনার কাজ বদলায় না <Cite n={7} />। test করার আগে `git pull` চালান, যেটা fetch করে তারপর remote branch যোগ করে <Cite n={10} />।
+- **stage না করা জিনিস commit হবে ভাবা।** commit রেকর্ড করে staging area-র snapshot, working tree-র সব change নয় <Cite n={4} />। কোন ফাইল কোন state-এ আছে তা দেখার প্রধান tool হলো `git status` <Cite n={4} />।
+- **নাম আর email না দেওয়া।** প্রতিটা commit এগুলো ব্যবহার করে, আর আপনার বানানো commit-এ এগুলো স্থায়ীভাবে বসে যায় <Cite n={3} />।
+- **ফাইলে conflict marker রেখে দেওয়া।** সমাধান করা ফাইল থেকে `<<<<<<<`, `=======` আর `>>>>>>>` লাইন পুরোপুরি মুছে ফেলা হয় <Cite n={6} />। `git add` চালানোর আগে ফাইলটা দেখে নিন, কারণ ফাইল stage করলেই Git সেটাকে resolved ধরে নেয় <Cite n={6} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester who joins a team that uses Git.
+
+- Ask which branch each test environment runs, and write its commit hash in every bug report.
+- Before you test a pull request, read its Files changed tab, so that you know which tests matter.
+- Check that test reports, screenshots, videos, and files with passwords are in `.gitignore`.
+- After you fix a merge conflict in a test file, run the tests before you push.
+- Ask that test code goes through pull request review, the same as product code.
+- Ask the team which branches are protected and who may force push.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester who joins a team that uses Git.
+
+- Ask which branch each test environment runs. Write its commit hash in every bug report.
+- Before you test a pull request, read its Files changed tab. Then you know which tests matter.
+- Check that test reports, screenshots, videos, and files with passwords are in `.gitignore`.
+- After you fix a merge conflict in a test file, run the tests before you push.
+- Ask that test code gets a pull request review, the same as product code.
+- Ask which branches are protected and who may force push.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, Git ব্যবহার করে এমন টিমে যোগ দেওয়া একজন tester-এর জন্য।
+
+- জিজ্ঞেস করুন কোন test environment কোন branch চালায়, আর প্রতিটা bug report-এ তার commit hash লিখুন।
+- একটা pull request test করার আগে তার Files changed tab পড়ুন, যাতে বোঝেন কোন test গুরুত্বপূর্ণ।
+- দেখুন test report, screenshot, video আর password-ওয়ালা ফাইল `.gitignore`-এ আছে কি না।
+- test ফাইলে merge conflict ঠিক করার পর push করার আগে test চালান।
+- বলুন test code-ও product code-এর মতো pull request review পার হোক।
+- জিজ্ঞেস করুন কোন branch protected, আর কে force push করতে পারে।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Repository | A project under Git: you make one with `git init` or clone one, and its whole history is on your disk |
+| Commit | A snapshot of the files, stored in the Git directory |
+| SHA-1 hash | The 40-character checksum by which Git refers to a stored item, such as a commit |
+| Working tree | A single checkout of one version of the project, on disk for you to use or modify |
+| Staging area (index) | A file that stores what will go into your next commit |
+| Branch | A movable pointer to a commit |
+| HEAD | The pointer to the branch you are on |
+| Merge | Joining two or more development histories |
+| Fast-forward | A merge that only moves the pointer forward |
+| Merge commit | A commit with more than one parent, made by a three-way merge |
+| Merge conflict | The same part of a file changed differently on two branches |
+| Remote | A version of the project on the Internet or a network |
+| origin | The default name of the remote that you cloned from |
+| fetch / pull / push | Download / download and integrate / share your commits |
+| Pull request | A proposal on GitHub to merge changes, with review and checks |
+| `.gitignore` | A file of patterns of files that Git should not track |
