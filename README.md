@@ -25,11 +25,11 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 320 pages. 301 of them are lessons in 16 sections: the tutorial and 15 modules. The other 19 are the home page, the 15 module home pages, and 3 helper pages.
+The site has 330 pages. 311 of them are lessons in 16 sections: the tutorial and 15 modules. The other 19 are the home page, the 15 module home pages, and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
-| [Tutorial](https://kawsar-95.github.io/ai-testing-guide/getting-started/setup/) | 24 | Claude Code for software testing (the 6 groups below) |
+| [Tutorial](https://kawsar-95.github.io/ai-testing-guide/getting-started/setup/) | 34 | Claude Code for software testing (the 7 groups below) |
 | [Linux](https://kawsar-95.github.io/ai-testing-guide/linux/) | 12 stages, 103 topics | A command sheet for each stage: one card per topic, one row per command, a tick on each card |
 | [Fundamentals](https://kawsar-95.github.io/ai-testing-guide/fundamentals/) | 11 chapters, 117 topics | Manual testing. In chapters 1–10, each topic has the author's notes and an ISTQB version, with a switch. Chapter 11 is 50 interview questions. |
 | [System Design](https://kawsar-95.github.io/ai-testing-guide/system-design/) | 15 case studies | How well-known systems work (Kafka, YouTube, WhatsApp, and more) |
@@ -50,7 +50,7 @@ Three helper pages sit beside the sections: [Contents](https://kawsar-95.github.
 
 ### The Claude Code tutorial
 
-The tutorial has 24 parts in 6 groups. Each part is one page.
+The tutorial has 34 parts in 7 groups. Each part is one page.
 
 | Group | Parts |
 |---|---|
@@ -60,8 +60,9 @@ The tutorial has 24 parts in 6 groups. Each part is one page.
 | **Extend** | 10 [Skills & Commands](https://kawsar-95.github.io/ai-testing-guide/extend/skills/) · 11 [Subagents](https://kawsar-95.github.io/ai-testing-guide/extend/subagents/) · 12 [Hooks](https://kawsar-95.github.io/ai-testing-guide/extend/hooks/) · 13 [MCP Servers](https://kawsar-95.github.io/ai-testing-guide/extend/mcp/) · 14 [Plugins & Marketplaces](https://kawsar-95.github.io/ai-testing-guide/extend/plugins/) |
 | **Automate** | 15 [Headless & CI](https://kawsar-95.github.io/ai-testing-guide/automate/headless/) · 16 [GitHub Actions](https://kawsar-95.github.io/ai-testing-guide/automate/github-actions/) · 17 [Browser Testing with Playwright](https://kawsar-95.github.io/ai-testing-guide/automate/playwright/) |
 | **Case Study** | 18 [The Practice Project](https://kawsar-95.github.io/ai-testing-guide/case-study/overview/) · 19 [The dMoney Codebase](https://kawsar-95.github.io/ai-testing-guide/case-study/codebase-tour/) · 20 [Bug Hunting with a Review Gate](https://kawsar-95.github.io/ai-testing-guide/case-study/bug-hunt/) · 21 [From Issue to Reviewed PR](https://kawsar-95.github.io/ai-testing-guide/case-study/pr-review/) · 22 [Design, Execute, Fix, Retest](https://kawsar-95.github.io/ai-testing-guide/case-study/test-and-retest/) · 23 [Load and Browser Automation](https://kawsar-95.github.io/ai-testing-guide/case-study/automation/) · 24 [What to Fix in the Setup](https://kawsar-95.github.io/ai-testing-guide/case-study/lessons/) |
+| **Agentic QA** | 25 [Claude for Professional QA](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/claude-for-qa/) · 26 [QA Workspace & Tooling](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/qa-workspace/) · 27 [Project, Jira, GitHub & MCP Setup](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/project-setup/) · 28 [Requirement Analysis & Acceptance Criteria](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/requirements/) · 29 [Test Design & Blast Radius](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/blast-radius/) · 30 [Exploring Features with Test Charters](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/test-charters/) · 31 [Test Execution & Bug Investigation](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/test-execution/) · 32 [A Multi-Agent QA System](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/multi-agent-qa/) · 33 [Playwright Automation with Claude](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/playwright-with-claude/) · 34 [Playwright Framework & the Agentic QA Workflow](https://kawsar-95.github.io/ai-testing-guide/agentic-qa/playwright-framework/) |
 
-New to Claude Code? Start with parts 01, 03, and 04. To see the features work together in one real QA project, read parts 18–24.
+New to Claude Code? Start with parts 01, 03, and 04. To see the features work together in one real QA project, read parts 18–24. To run the whole agentic QA workflow, from a story to a filed bug, read parts 25–34.
 
 ## Features
 
@@ -91,7 +92,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 
 ### Three voices for every section
 
-All 289 MDX pages (every content page except the 12 Linux command sheets) let you read each `##` section in three voices:
+All 299 MDX pages (every content page except the 12 Linux command sheets) let you read each `##` section in three voices:
 
 | Voice | What it is |
 |---|---|
@@ -134,7 +135,7 @@ The site tracks your work in your browser. It never sends it to a server.
 ![The Linux home: a ruled block for each stage, with its commands as links](docs/assets/linux.png)
 ![A Linux stage page: one card for each topic, one row for each command](docs/assets/linux-stage.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 301`) with a progress bar, beside a Continue reading block. Below them, one row for each of the 12 modules with a checklist shows its name, a bar, and `done / total`. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 311`) with a progress bar, beside a Continue reading block. Below them, one row for each of the 12 modules with a checklist shows its name, a bar, and `done / total`. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard: pages read, Continue reading, and the progress of each module](docs/assets/dashboard.png)
 
@@ -188,7 +189,7 @@ The layout adapts to phone widths. Below 1200 px the top navigation moves into t
 
 ### Install it and read offline
 
-The site is a progressive web app (PWA). Chromium browsers show an install button (a download icon) in the header. After the first visit, the service worker has all 320 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
+The site is a progressive web app (PWA). Chromium browsers show an install button (a download icon) in the header. After the first visit, the service worker has all 330 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
 
 ### Accessibility
 
@@ -208,6 +209,7 @@ Every page states facts that a reader can check.
 - **Voices:** each page has a second report. An agent that did not write the voices checked them against the Technical text. `npm test` checks that each `সহজ English` panel is in English and each `বাংলা` panel is in Bangla.
 - **Readability:** a cognitive-load audit ranked every `##` section by its length, its density of terms, and the length of its sentences. The densest sections were split in two with no text rewritten, or their Technical text was edited for form only; fresh agents checked that the edits changed no claim. [docs/superpowers/research/cognitive-load-audit.md](docs/superpowers/research/cognitive-load-audit.md) has the method, the numbers, and what is left.
 - **Case study:** parts 18 and 20–24 describe the author's private practice workspace. Part 19 tours its public version, kawsar-95/genAI-project. Facts about that workspace have no citation link. A separate agent checked each one against the workspace files. Emails, phone numbers, and similar values are replaced with placeholders.
+- **Agentic QA:** parts 25–34 use the same public dMoney repository for their exercises. Facts about it have no citation link and were checked against its files. Every other fact links to an official source fetched on 2026-11-15.
 - **Dates:** each page shows the date of its last update. "Suggest an edit" opens the page source on GitHub.
 
 Claude Code changes often. If a page is out of date, open an issue or a pull request.
@@ -256,7 +258,7 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `python3 scripts/check_routes.py out` | Checks that every route of the route maps has a built page. |
 | `python3 scripts/check_links.py out` | Checks internal links and assets. |
 | `python3 scripts/check_outline.py out` | Checks that every "On this page" link has a target. |
-| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 301 pages checked, 0 skipped`. |
+| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 311 pages checked, 0 skipped`. |
 
 Run the `out` checks after `npm run build`, on a build without a base path.
 
@@ -265,7 +267,7 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 ```text
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
-content/<group>/     The 289 MDX pages: 24 tutorial, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts, 7 Agent Memory, 10 AI Agents, 47 AI/ML Testing, 24 DevOps & Cloud, 8 Security Testing
+content/<group>/     The 299 MDX pages: 34 tutorial, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts, 7 Agent Memory, 10 AI Agents, 47 AI/ML Testing, 24 DevOps & Cloud, 8 Security Testing
 lib/                 nav.ts (tutorial page order), one data file for each module, the Linux command sheets (linux/sheets/), the reels (reels/), search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
 scripts/             Check scripts (Python and Node), the route maps (one JSON file for the tutorial, each module, and each helper page), the AI/ML Testing page generator, and research tools

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PAGES } from "../lib/nav.ts";
 import { getOutline, outlineFromSource } from "../lib/outline.ts";
+import { sourceLines } from "../lib/headings.ts";
 import { CHAPTERS } from "../lib/fundamentals/chapters.ts";
 import { STAGES } from "../lib/linux/stages.ts";
 import { getSheet } from "../lib/linux/sheets/index.ts";
@@ -21,6 +22,16 @@ import type { SearchDoc } from "../lib/search.ts";
 
 const read = (group: string, slug: string) => readFileSync(join("content", group, `${slug}.mdx`), "utf8");
 const docs = buildSearchDocs(PAGES.map((page) => ({ page, source: read(page.group, page.slug) })));
+/** The same docs built from the text outside code blocks: a code example may import a package. */
+const proseDocs = buildSearchDocs(
+  PAGES.map((page) => ({
+    page,
+    source: sourceLines(read(page.group, page.slug))
+      .filter((line) => line.kind === "text")
+      .map((line) => line.text)
+      .join("\n"),
+  })),
+);
 
 /** The search text of a Linux stage: its command sheet. */
 const linuxSource = (stage: (typeof STAGES)[number]) => sheetSource(stage, getSheet(stage.slug)!);
@@ -65,10 +76,12 @@ test("doc ids are unique and every doc has its page fields", () => {
 
 test("no doc text has an import line, the metadata block, or a closing tag", () => {
   for (const doc of docs) {
-    // An import statement, not the English word "import" in prose.
-    assert.ok(!/\bimport\s+[\w{*][^"']*\bfrom\s+["']/.test(doc.text), `${doc.id} has an import line`);
     assert.ok(!doc.text.includes("</"), `${doc.id} has "</"`);
     assert.ok(!doc.text.includes("export const metadata"), `${doc.id} has the metadata block`);
+  }
+  // An import statement, not the English word "import" in prose. Only the text outside code blocks counts.
+  for (const doc of proseDocs) {
+    assert.ok(!/\bimport\s+[\w{*][^"']*\bfrom\s+["']/.test(doc.text), `${doc.id} has an import line`);
   }
 });
 

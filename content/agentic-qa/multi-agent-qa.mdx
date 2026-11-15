@@ -1,0 +1,665 @@
+export const metadata = {
+  title: 'A Multi-Agent QA System',
+  description: 'Design four specialized QA agents in Claude Code, pass work between them as files, and add the permission rules, hooks, and approval points that keep them safe.',
+}
+
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-11-15' },
+    { title: 'Best practices for Claude Code', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/best-practices', accessed: '2026-11-15' },
+    { title: 'Manage costs effectively', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/costs', accessed: '2026-11-15' },
+    { title: 'Orchestrate teams of Claude Code sessions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/agent-teams', accessed: '2026-11-15' },
+    { title: 'Configure permissions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permissions', accessed: '2026-11-15' },
+    { title: 'Hooks reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks', accessed: '2026-11-15' },
+    { title: 'Choose a permission mode', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permission-modes', accessed: '2026-11-15' },
+    { title: 'Configure the sandboxed Bash tool', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sandboxing', accessed: '2026-11-15' },
+    { title: 'Orchestrate subagents at scale with dynamic workflows', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/workflows', accessed: '2026-11-15' },
+    { title: 'Run Claude Code programmatically', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/headless', accessed: '2026-11-15' },
+  ],
+}
+
+# A Multi-Agent QA System
+
+One Claude session can analyze a story, design tests, run them, and judge the result. But when one session does every step, it also grades its own work. This page splits the work across four specialized agents: a requirement analyst, a test designer, a test executor, and an adversarial reviewer. You learn how to define each agent in Claude Code, how to pass work between them as files, where a person must approve, and which guardrails keep a reviewer read-only and the application code safe.
+
+<PageMeta />
+
+## Why several agents
+
+<Voices>
+<Technical>
+
+A subagent is a specialist inside one Claude Code session. Each subagent runs in its own context window with a custom system prompt, specific tool access, and independent permissions. <Cite n={1} />
+
+**What you gain**
+
+- **Separate contexts.** A long test log stays in the agent that made it. Only the summary comes back. <Cite n={1} />
+- **Specialization.** A focused system prompt shapes one job, and a tool list limits what the agent can do. <Cite n={1} />
+- **Parallel work.** Independent pieces of work run at the same time. <Cite n={2} />
+- **An independent review.** You get a reviewer that has not seen how the work was made. <Cite n={2} />
+
+**What it costs**
+
+- **Tokens.** The cost is mostly tokens. Each subagent sends its own requests, and they count against the same usage as your main conversation. <Cite n={1} /> <Cite n={2} />
+- **Time.** A fresh subagent first gathers context that your conversation already had, so it can be slower. <Cite n={2} />
+- **No extra intelligence.** You get parallelism or a fresh pair of eyes, but not a smarter answer. <Cite n={2} />
+- **Context on return.** Many subagents that each return detailed results can fill your main context. <Cite n={1} />
+- **Coordination.** Agent teams add coordination overhead and use significantly more tokens than a single session. <Cite n={4} /> With teammates in plan mode, the docs give about 7x the tokens of a standard session. <Cite n={3} />
+
+<Callout type="tip" title="The tutorial's advice">
+
+Split QA work into agents only where a split buys something: a clean context for a noisy job, a tool limit, or a judge who did not do the work. A small story with three test cases does not need four agents. One session and the [Subagents](/extend/subagents/) basics are enough.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+A subagent is a helper inside one Claude Code session. Each helper has its own context window. It has its own instructions, its own tools, and its own permissions. <Cite n={1} />
+
+Why use several helpers?
+
+- A long test log stays with the helper that made it. Only a short summary comes back. <Cite n={1} />
+- Each helper does one job well, and it can only use the tools you give it. <Cite n={1} />
+- Separate jobs can run at the same time. <Cite n={2} />
+- A reviewer can check work it did not see being made. <Cite n={2} />
+
+What does it cost?
+
+- More tokens. Each helper counts against the same usage as your main chat. <Cite n={1} /> <Cite n={2} />
+- Sometimes more time, because a new helper must first learn the context. <Cite n={2} />
+- No smarter answer. You get speed or fresh eyes, not more intelligence. <Cite n={2} />
+- Teams of full sessions use many more tokens. <Cite n={4} /> <Cite n={3} />
+
+The tutorial's advice: split the work only when the split helps. A tiny story does not need four helpers.
+
+</Layman>
+<Bangla>
+
+Subagent হলো একটি Claude Code session-এর ভেতরের একজন বিশেষজ্ঞ সাহায্যকারী। প্রতিটি subagent নিজের context window-এ চলে, তার নিজের system prompt, নিজের tool access এবং আলাদা permission থাকে। <Cite n={1} />
+
+কয়েকটি agent ব্যবহার করলে আপনি কী পান:
+
+- লম্বা test log সেই agent-এর কাছেই থাকে, শুধু summary ফিরে আসে। <Cite n={1} />
+- প্রতিটি agent একটি কাজে মনোযোগ দেয়, আর tool list তার ক্ষমতা সীমিত রাখে। <Cite n={1} />
+- আলাদা কাজ একসাথে চলে। <Cite n={2} />
+- এমন একজন reviewer পান, যে কাজটি কীভাবে তৈরি হয়েছে তা দেখেনি। <Cite n={2} />
+
+খরচ কী:
+
+- মূল খরচ token। প্রতিটি subagent-এর request আপনার main conversation-এর একই usage থেকে কাটে। <Cite n={1} /> <Cite n={2} />
+- নতুন subagent-কে আগে context জোগাড় করতে হয়, তাই কখনো সময় বেশি লাগে। <Cite n={2} />
+- আপনি parallelism বা নতুন চোখ পান, কিন্তু বেশি বুদ্ধিমান উত্তর পান না। <Cite n={2} />
+- Agent team একটি session-এর চেয়ে অনেক বেশি token খরচ করে। <Cite n={4} /> <Cite n={3} />
+
+Tutorial-এর পরামর্শ: ভাগ করলে যেখানে সত্যিই লাভ হয়, শুধু সেখানেই কাজ ভাগ করুন। ছোট একটি story-র জন্য চারটি agent লাগে না।
+
+</Bangla>
+</Voices>
+
+## Four QA roles
+
+<Voices>
+<Technical>
+
+The table is the tutorial's own design. Each agent reads files from the step before it and writes one file for the step after it. The tools, skills, and model columns use the agent file fields that the next section lists. <Cite n={1} />
+
+| Agent | Job | Reads | Writes | Tools | Model |
+|---|---|---|---|---|---|
+| `requirement-analyst` | Turns a story into rules, acceptance criteria, and open questions. See [Requirements](/agentic-qa/requirements/). | The story text, the docs | `analysis.md` | `Read, Grep, Glob, Write` | `opus` |
+| `test-designer` | Turns the analysis into test cases and a blast radius. See [Blast Radius](/agentic-qa/blast-radius/). | `analysis.md`, the code | `test-cases.md` | `Read, Grep, Glob, Write` | `sonnet` |
+| `test-executor` | Runs the cases on a test environment and records results. See [Test Execution](/agentic-qa/test-execution/). | `test-cases.md` | `test-result.md` | `Read, Write, Bash` | `sonnet` |
+| `qa-reviewer` | Tries to disprove each case or result. Returns a gate: PASS or BLOCKED. | All three files | nothing | `Read, Grep, Glob` | `opus` |
+
+**Rules for the design**
+
+- **One job each.** The executor does not design tests. The designer does not run them.
+- **Files on disk.** Put the hand-off files in one folder per story, for example `qa-work/STORY-123/`.
+- **A reviewer that cannot write.** Its verdict comes back as its final report, and the main session writes it to `review.md`.
+- **Skills hold the method.** Each agent preloads the skill for its step, for example a `test-design` skill.
+
+<Callout type="note" title="Where these facts come from">
+
+The dMoney practice repo (commit 51db34a, see the [Codebase Tour](/case-study/codebase-tour/)) already has two of these roles in `.claude/agents/`. `qa-reviewer-agent` has only `Read, Grep, Glob, Skill`, runs on `claude-opus-5-5`, and returns APPROVED, FLAGGED, or REJECTED per bug plus a PASS or BLOCKED gate. `test-executor-agent` has `Read, Write, Glob, Grep, Bash, Skill`, runs on `sonnet`, preloads the `execute-test` skill, writes a result file under `.artifacts/`, and does not design tests or raise bugs. The repo also has the skills `understand-task`, `test-design`, `blast-radius`, and `find-bug`. The [Bug Hunt](/case-study/bug-hunt/) and [Test and Retest](/case-study/test-and-retest/) pages show them at work.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+This table is the tutorial's own design. Each helper reads the files of the step before it. It writes one file for the next step.
+
+- **requirement-analyst** reads the story. It writes `analysis.md` with rules, acceptance criteria, and open questions. See [Requirements](/agentic-qa/requirements/).
+- **test-designer** reads `analysis.md`. It writes `test-cases.md`. See [Blast Radius](/agentic-qa/blast-radius/).
+- **test-executor** runs the test cases on a test system. It writes `test-result.md`. See [Test Execution](/agentic-qa/test-execution/).
+- **qa-reviewer** tries to prove each case or result wrong. It writes nothing. It says PASS or BLOCKED.
+
+Each helper does one job. The work moves as files in one folder per story. The reviewer cannot write files, so the main session saves its answer.
+
+The dMoney practice project already has two of these helpers: a read-only reviewer and a test executor. See the [Codebase Tour](/case-study/codebase-tour/), [Bug Hunt](/case-study/bug-hunt/), and [Test and Retest](/case-study/test-and-retest/) pages.
+
+</Layman>
+<Bangla>
+
+এই table-টি tutorial-এর নিজের design। প্রতিটি agent আগের ধাপের file পড়ে এবং পরের ধাপের জন্য একটি file লেখে।
+
+- **requirement-analyst** story পড়ে, তারপর rule, acceptance criteria আর খোলা প্রশ্নসহ `analysis.md` লেখে। দেখুন [Requirements](/agentic-qa/requirements/)।
+- **test-designer** `analysis.md` পড়ে `test-cases.md` লেখে। দেখুন [Blast Radius](/agentic-qa/blast-radius/)।
+- **test-executor** test environment-এ case চালায় এবং `test-result.md` লেখে। দেখুন [Test Execution](/agentic-qa/test-execution/)।
+- **qa-reviewer** প্রতিটি case বা result ভুল প্রমাণ করার চেষ্টা করে। সে কিছু লেখে না, শুধু PASS বা BLOCKED gate ফেরত দেয়।
+
+প্রতিটি agent-এর একটিই কাজ। কাজ এক story-র এক folder-এ file হিসেবে এগোয়। Reviewer file লিখতে পারে না, তাই main session তার রায় `review.md`-এ লেখে।
+
+dMoney practice repo-তে এর দুটি role আগে থেকেই আছে: একটি read-only reviewer আর একটি test executor। বিস্তারিত দেখুন [Codebase Tour](/case-study/codebase-tour/), [Bug Hunt](/case-study/bug-hunt/) এবং [Test and Retest](/case-study/test-and-retest/) page-এ।
+
+</Bangla>
+</Voices>
+
+## Write an agent file
+
+<Voices>
+<Technical>
+
+A subagent is a Markdown file with YAML frontmatter between `---` markers at the top. <Cite n={1} /> Put a project agent in `.claude/agents/`, so the team shares it through version control. Put a personal one in `~/.claude/agents/`. <Cite n={1} /> Only `name` and `description` are required. The body under the frontmatter becomes the system prompt. <Cite n={1} />
+
+| Field | What it sets |
+|---|---|
+| `name`, `description` | The id, and when Claude should delegate to the agent <Cite n={1} /> |
+| `tools`, `disallowedTools` | An allowlist and a denylist of tools. With no `tools`, the agent inherits every tool available to subagents. <Cite n={1} /> |
+| `model` | `sonnet`, `opus`, `haiku`, `fable`, a full model ID, or `inherit` <Cite n={1} /> |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan`, or `manual` <Cite n={1} /> |
+| `skills` | Skills to preload. The full skill content goes into the context at startup. <Cite n={1} /> |
+| `mcpServers` | MCP servers for this agent: a configured server name or an inline definition <Cite n={1} /> |
+| `hooks` | Hooks that run only while this agent is active <Cite n={1} /> |
+| `memory` | A persistent memory directory: `user`, `project`, or `local` <Cite n={1} /> |
+| `maxTurns` | The most agentic turns before the agent stops <Cite n={1} /> |
+| `effort`, `isolation`, `background`, `omitClaudeMd` | Effort level, a temporary git worktree, always in the background, start without CLAUDE.md files <Cite n={1} /> |
+| `color`, `initialPrompt`, `autoCompactWindow`, `experimental` | Display color, a first turn for a main-session agent, a lower auto-compact window, experimental options <Cite n={1} /> |
+
+**Watch for these**
+
+- Claude Code ignores a field it does not recognize, with no error. Spell `disallowedTools` and `permissionMode` exactly. <Cite n={1} />
+- A plugin agent ignores `hooks`, `mcpServers`, and `permissionMode`. <Cite n={1} />
+- An edited agent file loads with no restart. The first file in a new `agents` directory needs a restart. <Cite n={1} />
+- With `memory: project`, the agent keeps notes in `.claude/agent-memory/<name-of-agent>/`. <Cite n={1} />
+- Keep descriptions short. Claude Code warns when the combined descriptions pass 15,000 tokens. <Cite n={1} />
+
+</Technical>
+<Layman>
+
+An agent file is a Markdown file. At the top it has settings between `---` lines. This top part is called frontmatter. <Cite n={1} /> Put a shared agent in `.claude/agents/` in the project. Put a personal one in `~/.claude/agents/`. <Cite n={1} /> Only `name` and `description` are required. The text under the settings becomes the agent's instructions. <Cite n={1} />
+
+Other useful settings: <Cite n={1} />
+
+- `tools` and `disallowedTools`: which tools the agent may or may not use.
+- `model`: which Claude model it runs on.
+- `permissionMode`: how it asks for permission.
+- `skills`: skills it loads at the start.
+- `mcpServers`: connections to outside tools, only for this agent.
+- `hooks`: hooks that run only while this agent works.
+- `memory`: a folder where it keeps notes between sessions.
+- `maxTurns`: how many steps it may take before it stops.
+
+Be careful with spelling. Claude Code silently skips a setting name it does not know. <Cite n={1} /> Keep each description short. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+Subagent হলো একটি Markdown file, যার শুরুতে YAML frontmatter থাকে। <Cite n={1} /> Team-এর সাথে ভাগ করতে project-এর `.claude/agents/`-এ রাখুন, আর নিজের জন্য রাখুন `~/.claude/agents/`-এ। <Cite n={1} /> শুধু `name` আর `description` বাধ্যতামূলক। Frontmatter-এর নিচের লেখা agent-এর system prompt হয়ে যায়। <Cite n={1} />
+
+গুরুত্বপূর্ণ field: <Cite n={1} />
+
+- `tools` আর `disallowedTools`: কোন tool চলবে আর কোনটি চলবে না।
+- `model`: `sonnet`, `opus`, `haiku`, `fable`, পুরো model ID, অথবা `inherit`।
+- `permissionMode`: agent কোন permission mode-এ চলবে।
+- `skills`: শুরুতেই যে skill পুরোপুরি load হবে।
+- `mcpServers`: শুধু এই agent-এর জন্য MCP server।
+- `hooks`: এই agent চলার সময় যে hook চলে।
+- `memory`: session-এর পরেও থাকা note-এর folder।
+- `maxTurns`: থামার আগে সর্বোচ্চ কতগুলো turn।
+
+সাবধান: Claude Code অচেনা field কোনো error ছাড়াই উপেক্ষা করে, তাই বানান ঠিক রাখুন। <Cite n={1} /> Plugin agent `hooks`, `mcpServers` আর `permissionMode` উপেক্ষা করে। <Cite n={1} /> Description ছোট রাখুন। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
+## Delegation and built-in agents
+
+<Voices>
+<Technical>
+
+### Built-in subagents
+
+| Agent | What the docs say |
+|---|---|
+| Explore | A fast, read-only agent for searching and analyzing codebases. Write and Edit are denied. <Cite n={1} /> |
+| Plan | A research agent used during plan mode to gather context before it presents a plan. Write and Edit are denied. <Cite n={1} /> |
+| general-purpose | For complex, multi-step tasks that need both exploration and action. <Cite n={1} /> |
+
+Explore and Plan start without your CLAUDE.md files and the git status snapshot. <Cite n={1} /> So do not expect them to follow a QA rule that lives only in CLAUDE.md.
+
+### How Claude picks an agent
+
+Claude delegates on its own from three inputs: your request, the `description` field of each agent, and the current context. A phrase such as "use proactively" in the description encourages it. <Cite n={1} />
+
+To choose the agent yourself, use one of three ways: <Cite n={1} />
+
+- **Natural language.** Name the agent in the prompt. Claude still decides.
+- **@-mention.** Type `@` and pick the agent, or type `@agent-<name>`. This guarantees that the agent runs for one task.
+- **Whole session.** Start with `claude --agent <name>`, or set `agent` in settings. The main thread then takes on the agent's tool limits and model.
+
+### Preload a skill
+
+The `skills` field injects the full content of each listed skill at startup. A skill with `disable-model-invocation: true` cannot be preloaded. Without the field, the agent can still find and invoke skills through the Skill tool. <Cite n={1} />
+
+<Callout type="tip" title="The tutorial's advice">
+
+For a QA pipeline, invoke each agent by @-mention. Automatic delegation is useful, but a gate step must not depend on whether Claude decides to delegate.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Claude Code has built-in helpers: <Cite n={1} />
+
+- **Explore** searches the code fast. It cannot write or edit files.
+- **Plan** collects facts in plan mode before Claude shows a plan. It cannot write or edit files.
+- **general-purpose** does bigger jobs that need both reading and changing things.
+
+Explore and Plan start without your CLAUDE.md file. <Cite n={1} />
+
+Claude picks a helper by itself. It looks at your request, each helper's description, and the current context. <Cite n={1} /> You can also choose one yourself: <Cite n={1} />
+
+- Name the helper in your prompt. Claude still decides.
+- Use an @-mention, `@agent-<name>`. Then the helper surely runs for that task.
+- Start the whole session as that helper with `claude --agent <name>`.
+
+The `skills` setting loads a skill's full text at the start. <Cite n={1} />
+
+The tutorial's advice: use an @-mention for the gate steps, so the right helper always runs.
+
+</Layman>
+<Bangla>
+
+Claude Code-এ কিছু built-in subagent আছে: <Cite n={1} />
+
+- **Explore** দ্রুত codebase খোঁজে ও বিশ্লেষণ করে। এটি read-only, Write আর Edit বন্ধ।
+- **Plan** plan mode-এ plan দেখানোর আগে তথ্য জোগাড় করে। এটিও Write আর Edit করতে পারে না।
+- **general-purpose** এমন জটিল কাজ করে, যেখানে খোঁজা আর পরিবর্তন দুটোই লাগে।
+
+Explore আর Plan আপনার CLAUDE.md file ছাড়াই শুরু হয়। <Cite n={1} />
+
+Claude নিজে থেকেই আপনার request, প্রতিটি agent-এর `description` আর বর্তমান context দেখে কাজ ভাগ করে দেয়। <Cite n={1} /> নিজে agent বেছে নিতে চাইলে তিনটি উপায় আছে: <Cite n={1} />
+
+- Prompt-এ agent-এর নাম লিখুন, তবে সিদ্ধান্ত Claude নেবে।
+- `@agent-<name>` দিয়ে @-mention করুন, তাহলে ওই agent নিশ্চিতভাবে চলবে।
+- `claude --agent <name>` দিয়ে পুরো session ওই agent হিসেবে চালান।
+
+`skills` field শুরুতেই প্রতিটি skill-এর পুরো লেখা load করে। <Cite n={1} />
+
+Tutorial-এর পরামর্শ: gate-এর ধাপে সবসময় @-mention ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## Context and hand-offs
+
+<Voices>
+<Technical>
+
+**What a subagent knows.** Each subagent starts with a fresh, isolated context. It does not see your conversation history, the skills you invoked, or the files Claude already read. Claude writes a delegation message that summarizes the task. <Cite n={1} /> If a rule must reach the agent, restate it in the prompt you give Claude when you delegate. <Cite n={1} />
+
+**What comes back.** The verbose output stays in the subagent. Only the summary returns to the main conversation. <Cite n={1} /> Claude Code scans each final report before Claude reads it, but the scan does not judge whether the content is malicious. <Cite n={1} />
+
+**Pass work as files.** A delegation message is a summary, and a summary can lose a detail. The tutorial suggests that each agent writes its full output to a file and returns only the path and a short status. The next agent reads the file. Then the evidence survives, and you can open it yourself.
+
+**Keep the reviewer independent.** The docs give the reason: `/code-review` reviews a diff in a fresh subagent that never saw your conversation, so the reasoning that produced the code does not sway it. <Cite n={2} /> Apply the same rule to QA:
+
+- Give the reviewer the output files and the requirement source. Do not paste the writer's reasoning.
+- Ask for a fixed shape: a verdict per item, then one gate line.
+- Tell it what to skip. The docs warn that a reviewer asked to find problems will always find something. <Cite n={2} />
+
+<Callout type="note" title="The tutorial's hand-off template">
+
+Each agent ends its report with three lines: `Status: done | blocked`, `Output: <path>`, and `Open questions: <count>`. A blocked status or an open question stops the chain, and the main session asks you.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Each helper starts fresh. It does not see your chat, your skills, or the files Claude has read. Claude writes it a short task message. <Cite n={1} /> If a rule is important, repeat it in the task. <Cite n={1} />
+
+Only a summary comes back to your main chat. <Cite n={1} /> Claude Code scans that report, but the scan does not decide if the text is harmful. <Cite n={1} />
+
+The tutorial suggests passing work as files. Each helper saves its full result in a file. It returns only the file path and a short status. Then the evidence is kept.
+
+Keep the reviewer independent. Give it the result files and the requirement. Do not give it the writer's thinking. A reviewer that never saw the work is not swayed by it. <Cite n={2} /> Also tell it what to skip, because a reviewer asked to find problems always finds something. <Cite n={2} />
+
+The tutorial's template: each helper ends with its status, its output path, and its number of open questions. A "blocked" status or an open question stops the chain.
+
+</Layman>
+<Bangla>
+
+প্রতিটি subagent একদম নতুন context নিয়ে শুরু করে। আপনার conversation history, আগে invoke করা skill বা Claude যে file পড়েছে, সেগুলো সে দেখে না। Claude তার জন্য একটি delegation message লেখে। <Cite n={1} /> কোনো নিয়ম জরুরি হলে delegate করার prompt-এ সেটি আবার লিখুন। <Cite n={1} />
+
+Main conversation-এ শুধু summary ফেরত আসে। <Cite n={1} /> Claude Code প্রতিটি report scan করে, কিন্তু content ক্ষতিকর কিনা সেটা বিচার করে না। <Cite n={1} />
+
+Tutorial-এর পরামর্শ: কাজ file হিসেবে পাঠান। প্রতিটি agent তার পুরো ফলাফল একটি file-এ লেখে, আর শুধু path ও ছোট একটি status ফেরত দেয়। এতে কোনো প্রমাণ হারায় না।
+
+Reviewer-কে স্বাধীন রাখুন। তাকে output file আর requirement দিন, writer-এর যুক্তি দেবেন না। যে reviewer কাজ তৈরি হতে দেখেনি, সে সেই যুক্তিতে প্রভাবিত হয় না। <Cite n={2} /> কী বাদ দেবে সেটাও বলে দিন, কারণ সমস্যা খুঁজতে বললে reviewer সবসময় কিছু না কিছু খুঁজে পায়। <Cite n={2} />
+
+Tutorial-এর template: প্রতিটি agent status, output path আর খোলা প্রশ্নের সংখ্যা দিয়ে report শেষ করে। Blocked status বা খোলা প্রশ্ন থাকলে chain থামে, আর main session আপনাকে জিজ্ঞেস করে।
+
+</Bangla>
+</Voices>
+
+## Escalation and approval points
+
+<Voices>
+<Technical>
+
+An agent must stop and hand the decision to a person in four cases. This list is the tutorial's own rule:
+
+1. The requirement is ambiguous or two sources disagree.
+2. The agent's confidence in a verdict is low.
+3. The next action deletes data or writes to a database.
+4. The next action posts to a shared system: Jira, a GitHub issue, a pull request, a chat channel.
+
+A subagent never gets the `AskUserQuestion` tool, even if you list it. <Cite n={1} /> So cases 1 and 2 go in the agent prompt: "stop and return your open questions". Cases 3 and 4 need a control that Claude Code enforces:
+
+| Control | How it stops an agent |
+|---|---|
+| Ask rule | Prompts for confirmation before a matching tool call. Rules run in order: deny, then ask, then allow. <Cite n={5} /> |
+| `PreToolUse` hook | Returns allow, deny, ask, or defer for each tool call. `ask` prompts the user. <Cite n={6} /> A hook in `settings.json` runs before every tool that a subagent uses. <Cite n={1} /> |
+| `SubagentStop` hook | Runs when a subagent finishes, matches on the agent type, receives its final message, and can stop it from finishing. <Cite n={6} /> |
+| Plan mode | Claude researches and proposes but does not edit. Edits wait until you approve the plan. <Cite n={7} /> When the main session is in plan mode, a subagent stays in plan mode too. <Cite n={1} /> |
+
+**Where the prompt appears.** By default, a spawned subagent runs in the background, and its permission prompts show in your main session. <Cite n={1} /> In a `claude -p` run, no one can answer, so an ask is denied and Claude reads the reason in the tool result. <Cite n={6} />
+
+**Hooks in an agent file.** A `Stop` hook in frontmatter becomes a `SubagentStop` hook. <Cite n={1} /> Claude Code skips the frontmatter hooks of a project agent until you trust its folder. <Cite n={1} />
+
+<Callout type="warning" title="The tutorial's advice">
+
+Approval comes before anything is written to a shared system. Keep the posting step out of the agents. The main session drafts the Jira comment or the issue, you read it, and only then does it post.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+The tutorial's rule: a helper must stop and ask a person when:
+
+1. The requirement is unclear, or two sources disagree.
+2. It is not sure about its verdict.
+3. The next step would delete data or change a database.
+4. The next step would post to a shared system, like Jira or GitHub.
+
+A helper cannot ask you a question directly. That tool is removed from helpers. <Cite n={1} /> So its instructions say: stop and list your questions.
+
+For risky steps, use controls that Claude Code enforces:
+
+- An **ask rule** makes Claude Code ask you first. <Cite n={5} />
+- A **`PreToolUse` hook** checks each tool call. It can allow, deny, ask you, or defer. <Cite n={6} /> It also runs for helpers. <Cite n={1} />
+- A **`SubagentStop` hook** runs when a helper finishes. It can refuse to let the helper stop. <Cite n={6} />
+- **Plan mode** lets Claude look and plan, but not edit, until you approve. <Cite n={7} />
+
+The tutorial's advice: you approve before anything goes to a shared system.
+
+</Layman>
+<Bangla>
+
+Tutorial-এর নিজের নিয়ম: চারটি ক্ষেত্রে agent থামবে এবং সিদ্ধান্ত একজন মানুষের হাতে দেবে:
+
+1. Requirement অস্পষ্ট, বা দুটি source একমত নয়।
+2. নিজের verdict নিয়ে agent-এর আত্মবিশ্বাস কম।
+3. পরের কাজে data মুছে যাবে বা database-এ লেখা হবে।
+4. পরের কাজে Jira, GitHub issue বা pull request-এর মতো shared system-এ post হবে।
+
+Subagent কখনো `AskUserQuestion` tool পায় না। <Cite n={1} /> তাই প্রথম দুটি ক্ষেত্র agent-এর prompt-এ লিখুন: "থামো এবং খোলা প্রশ্নগুলো ফেরত দাও"। বাকি দুটির জন্য Claude Code-এর enforce করা control লাগে:
+
+- **Ask rule** মিলে যাওয়া tool call-এর আগে আপনার অনুমতি চায়। Rule-এর ক্রম: deny, তারপর ask, তারপর allow। <Cite n={5} />
+- **`PreToolUse` hook** প্রতিটি tool call-এ allow, deny, ask বা defer ফেরত দিতে পারে। <Cite n={6} /> `settings.json`-এর hook subagent-এর প্রতিটি tool-এর আগেও চলে। <Cite n={1} />
+- **`SubagentStop` hook** subagent শেষ হলে চলে, তার শেষ message পায়, আর তাকে থামতে বাধা দিতে পারে। <Cite n={6} />
+- **Plan mode**-এ Claude শুধু খোঁজে আর প্রস্তাব দেয়; আপনি plan approve না করা পর্যন্ত edit বন্ধ থাকে। <Cite n={7} />
+
+`claude -p` run-এ উত্তর দেওয়ার কেউ থাকে না, তাই ask deny হয়ে যায়। <Cite n={6} />
+
+Tutorial-এর পরামর্শ: shared system-এ কিছু লেখার আগে আপনার approval লাগবে।
+
+</Bangla>
+</Voices>
+
+## Guardrails for each agent
+
+<Voices>
+<Technical>
+
+**Least privilege.** Give each agent only the tools its job needs. A reviewer with `tools: Read, Grep, Glob` cannot edit anything, and Claude Code enforces that limit, not the prompt. <Cite n={2} /> Omit `Agent` from its tools too, so it cannot spawn helpers. By default, subagents can nest up to three layers below the main conversation. <Cite n={1} />
+
+**Block commands with settings, not `disallowedTools`.** A `disallowedTools` entry with a specifier, such as `Bash(git push *)`, removes the whole Bash tool. To keep Bash and block one command, add a Bash deny rule in settings. <Cite n={1} />
+
+**Protect the application code.** Permission rules are enforced by Claude Code, not by the model. <Cite n={5} /> `Edit` rules apply to all built-in tools that edit files. <Cite n={5} /> Deny rules hold in every permission mode, including auto and `bypassPermissions`. <Cite n={2} /> An example for a QA repo where the app lives in `src/`:
+
+```json
+{
+  "permissions": {
+    "ask": ["Bash(git push *)", "Bash(gh issue create *)", "Bash(gh pr create *)"],
+    "deny": ["Edit(/src/**)", "Read(./.env)"]
+  }
+}
+```
+
+A Bash rule is not a security boundary around the program: the same program in another form can slip past it. <Cite n={5} /> For a hard limit, add the sandbox.
+
+**Sandbox the executor.** The Bash sandbox is a boundary that the operating system enforces around the shell commands Claude runs. It is off by default, and it covers shell commands only. File tools, MCP servers, and hooks run outside it. <Cite n={8} /> Its allowed network domains start empty, so list only the test environment. <Cite n={8} />
+
+**Scope MCP per agent.** `disallowedTools: mcp__*` withholds every MCP tool from an agent. An MCP server defined inline in an agent's `mcpServers` reaches that agent and not the parent conversation. <Cite n={1} />
+
+**Mind the parent mode.** When the main session runs in `bypassPermissions`, `acceptEdits`, or auto mode, the agent runs in that mode and its own `permissionMode` is ignored. <Cite n={1} />
+
+</Technical>
+<Layman>
+
+Give each helper only the tools it needs. A reviewer with only `Read, Grep, Glob` cannot edit anything. Claude Code enforces this, not the instructions. <Cite n={2} /> Leave out `Agent`, so it cannot start more helpers. <Cite n={1} />
+
+To block one command, use a deny rule in settings. A `disallowedTools` entry like `Bash(git push *)` removes all of Bash. <Cite n={1} />
+
+Claude Code enforces permission rules, not the model. <Cite n={5} /> A deny rule on `Edit(/src/**)` keeps every built-in editing tool away from the app code. <Cite n={5} /> Deny rules hold in every permission mode. <Cite n={2} /> But a Bash rule is not a full wall. <Cite n={5} />
+
+The sandbox is that wall for shell commands. The operating system enforces it. It is off by default. It does not cover file tools, MCP servers, or hooks. <Cite n={8} />
+
+You can also keep MCP tools away from a helper, or give one helper its own MCP server. <Cite n={1} />
+
+One more trap: if the main session runs in `bypassPermissions`, `acceptEdits`, or auto mode, the helper's own permission mode is ignored. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+প্রতিটি agent-কে শুধু তার কাজের জন্য দরকারি tool দিন। শুধু `Read, Grep, Glob` থাকলে reviewer কিছুই edit করতে পারে না, আর এই সীমা prompt নয়, Claude Code নিজে enforce করে। <Cite n={2} /> `Agent`-ও বাদ দিন, যাতে সে নতুন subagent চালু করতে না পারে। <Cite n={1} />
+
+একটি command আটকাতে settings-এ Bash deny rule দিন। `disallowedTools`-এ `Bash(git push *)` লিখলে পুরো Bash tool-ই সরে যায়। <Cite n={1} />
+
+Permission rule model নয়, Claude Code enforce করে। <Cite n={5} /> `Edit(/src/**)` deny rule সব built-in editing tool-কে application code থেকে দূরে রাখে। <Cite n={5} /> Deny rule auto আর `bypassPermissions` সহ সব mode-এ কাজ করে। <Cite n={2} /> তবে Bash rule পুরো নিরাপত্তা দেয় না। <Cite n={5} />
+
+Shell command-এর জন্য শক্ত সীমা হলো sandbox, যা operating system enforce করে। এটি default-এ বন্ধ থাকে, আর file tool, MCP server ও hook এর বাইরে চলে। <Cite n={8} /> Network-এ শুধু test environment-এর domain allow করুন। <Cite n={8} />
+
+`disallowedTools: mcp__*` দিলে agent কোনো MCP tool পায় না। Agent-এর `mcpServers`-এ inline server দিলে শুধু সেই agent সেটি পায়। <Cite n={1} />
+
+সতর্কতা: main session `bypassPermissions`, `acceptEdits` বা auto mode-এ চললে agent-এর নিজের `permissionMode` উপেক্ষা হয়। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
+## Orchestration choices
+
+<Voices>
+<Technical>
+
+| Option | What it is | Status and limits |
+|---|---|---|
+| Subagents in one session | Claude spawns workers, and results return to the caller. <Cite n={4} /> | By default, 20 running subagents is the concurrent limit. <Cite n={1} /> |
+| Agent teams | One session is the lead. Teammates have their own context and message each other directly. <Cite n={4} /> | Experimental and disabled by default. Enable with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. <Cite n={4} /> |
+| Dynamic workflows | A JavaScript script that orchestrates many subagents. The script decides what runs next. <Cite n={9} /> | Dozens to hundreds of agents per run. <Cite n={9} /> |
+| `claude -p` pipeline | Claude Code runs non-interactively. `--allowedTools` pre-approves tools. <Cite n={10} /> | Exit code 0 on success, non-zero on failure. <Cite n={10} /> |
+
+**Agent teams.** For sequential tasks, same-file edits, or work with many dependencies, the docs prefer a single session or subagents. <Cite n={4} /> Two teammates that edit the same file overwrite each other. <Cite n={4} /> Keep teams small and use Sonnet for teammates. <Cite n={3} /> A teammate can reuse a subagent definition. <Cite n={1} />
+
+**Workflows.** A workflow can have independent agents adversarially review each other's findings before they are reported. <Cite n={9} />
+
+**Scripted pipelines.** In `-p` mode, `--agents` also accepts the path to a JSON file of agent definitions. <Cite n={1} /> `--bare` skips the auto-discovery of hooks, skills, subagents, MCP servers, and CLAUDE.md. <Cite n={10} /> Without `--bare`, a `-p` session runs the hooks in the project's `.claude/settings.json`, even in a folder you have not trusted. <Cite n={10} />
+
+<Callout type="tip" title="The tutorial's advice">
+
+- **Start with subagents in one session.** The QA chain is sequential: analysis, design, execution, review. For sequential tasks, the docs say that a single session or subagents are more effective than an agent team. <Cite n={4} />
+- **Use a `claude -p` script** when the same chain runs on every story in CI. Each step is one call, and the script checks the exit code and the gate line.
+- **Use a workflow** for a wide sweep, such as reviewing 40 old test cases with one reviewer each.
+- **Use an agent team** only when testers must challenge each other, such as competing theories about one flaky test.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+You can run several helpers in four ways:
+
+- **Subagents in one session.** Claude starts helpers, and their results come back to it. <Cite n={4} /> Up to 20 can run at once by default. <Cite n={1} />
+- **Agent teams.** One session leads. The other sessions talk to each other directly. <Cite n={4} /> This feature is experimental and off by default. <Cite n={4} /> Teams are a poor fit for step-by-step work or for edits to the same file. <Cite n={4} /> Keep teams small. <Cite n={3} />
+- **Dynamic workflows.** A script runs many helpers, and the script decides what runs next. <Cite n={9} /> It can make helpers check each other's findings. <Cite n={9} />
+- **A `claude -p` script.** Claude Code runs with no chat window. It returns exit code 0 when it works. <Cite n={10} /> The `--bare` option skips the automatic search for hooks, skills, and helpers. <Cite n={10} />
+
+The tutorial's advice: start with subagents in one session. QA work goes step by step, so that fits. Use a `claude -p` script to run the same chain in CI. Use a workflow for a big sweep. Use a team only when testers must argue about one problem.
+
+</Layman>
+<Bangla>
+
+কয়েকটি agent চালানোর চারটি উপায়:
+
+- **এক session-এ subagent।** Claude worker চালু করে, আর ফলাফল তার কাছেই ফেরত আসে। <Cite n={4} /> Default-এ একসাথে 20টি subagent চলতে পারে। <Cite n={1} />
+- **Agent team।** একটি session lead হয়, teammate-রা নিজেদের মধ্যে সরাসরি message পাঠায়। <Cite n={4} /> এটি experimental এবং default-এ বন্ধ; `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` দিয়ে চালু করতে হয়। <Cite n={4} /> ধাপে ধাপে কাজ বা একই file edit-এর জন্য এটি ভালো নয়। <Cite n={4} /> Team ছোট রাখুন। <Cite n={3} />
+- **Dynamic workflow।** একটি JavaScript script অনেক subagent চালায়, আর পরের কাজ script ঠিক করে। <Cite n={9} /> এতে স্বাধীন agent একে অপরের finding যাচাই করতে পারে। <Cite n={9} />
+- **`claude -p` pipeline।** Claude Code non-interactive চলে, সফল হলে exit code 0 দেয়। <Cite n={10} /> `--bare` hook, skill, subagent আর CLAUDE.md-এর auto-discovery বাদ দেয়। <Cite n={10} />
+
+Tutorial-এর পরামর্শ: এক session-এর subagent দিয়ে শুরু করুন, কারণ QA chain ধাপে ধাপে চলে। প্রতিটি story-তে CI-তে একই chain চালাতে `claude -p` script, বড় sweep-এর জন্য workflow, আর tester-দের মধ্যে তর্কের দরকার হলে তবেই agent team ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## Practice
+
+<Voices>
+<Technical>
+
+<Callout type="note" title="The tutorial's exercise">
+
+This exercise is the tutorial's own. Use a scratch copy of your project or of the dMoney practice repo ([Codebase Tour](/case-study/codebase-tour/)). Run the executor only against a test environment, such as `https://staging.example.com`, with a QA test user.
+
+</Callout>
+
+1. **Create the folders.** In the scratch repo, create `.claude/agents/` and `qa-work/STORY-1/`. Restart Claude Code after the first agent file, because a new `agents` directory needs a restart. <Cite n={1} />
+2. **Write four agent files.** Use the roles table above. The reviewer is the important one. An example:
+
+```markdown
+---
+name: qa-reviewer
+description: Read-only adversarial reviewer of test cases and test results. Use after test design and after execution.
+tools: Read, Grep, Glob
+model: opus
+---
+
+You review QA work that you did not write. Read the files you are given and the requirement.
+For each test case, try to disprove it: no requirement basis, a vague expected result,
+missing test data, a duplicate. Give APPROVED, FLAGGED, or REJECTED with a reason.
+Skip style. End with one line: "Gate: PASS" or "Gate: BLOCKED".
+```
+
+3. **Run the analyst.** Paste a story into `qa-work/STORY-1/story.md`. Type: `@agent-requirement-analyst analyze qa-work/STORY-1/story.md and write qa-work/STORY-1/analysis.md`. Expect a list of rules, acceptance criteria, and open questions. Answer the questions yourself.
+4. **Run the designer.** Type: `@agent-test-designer write qa-work/STORY-1/test-cases.md from analysis.md`. Then add one weak case by hand: "TC-99: Check that the form works. Expected: it works."
+5. **Run the reviewer.** Type: `@agent-qa-reviewer review qa-work/STORY-1/test-cases.md against analysis.md`. Expect TC-99 to come back REJECTED or FLAGGED, and the gate to be BLOCKED.
+6. **Fix and repeat.** Remove TC-99, run the reviewer again, and wait for `Gate: PASS`. Only then run the executor.
+7. **Check the guardrails.** Ask the reviewer to fix a case itself. It has no Edit or Write tool, so it cannot. <Cite n={1} /> Run `/permissions` to see your ask and deny rules and the file that each one comes from. <Cite n={5} />
+
+</Technical>
+<Layman>
+
+This is the tutorial's own exercise. Use a scratch copy of your project or of the dMoney practice repo. Run tests only on a test system, with a QA test user.
+
+1. Make the folders `.claude/agents/` and `qa-work/STORY-1/`. Restart Claude Code after the first agent file. <Cite n={1} />
+2. Write four agent files from the roles table. Give the reviewer only `Read, Grep, Glob`.
+3. Put a story in `story.md`. Ask the analyst, by @-mention, to write `analysis.md`. Answer its open questions.
+4. Ask the designer to write `test-cases.md`. Then add one weak case by hand, like "Check that the form works."
+5. Ask the reviewer to review the test cases. The weak case should be rejected or flagged. The gate should say BLOCKED.
+6. Remove the weak case. Review again until the gate says PASS. Only then run the executor.
+7. Ask the reviewer to fix a case itself. It cannot, because it has no editing tool. <Cite n={1} /> Run `/permissions` to see your rules. <Cite n={5} />
+
+</Layman>
+<Bangla>
+
+এটি tutorial-এর নিজের exercise। আপনার project বা dMoney practice repo-র একটি scratch copy ব্যবহার করুন। Test শুধু test environment-এ, QA test user দিয়ে চালান।
+
+1. `.claude/agents/` আর `qa-work/STORY-1/` folder বানান। প্রথম agent file-এর পরে Claude Code restart করুন। <Cite n={1} />
+2. Roles table দেখে চারটি agent file লিখুন। Reviewer-কে শুধু `Read, Grep, Glob` দিন।
+3. `story.md`-এ একটি story রাখুন। @-mention দিয়ে analyst-কে `analysis.md` লিখতে বলুন, তারপর তার খোলা প্রশ্নের উত্তর দিন।
+4. Designer-কে `test-cases.md` লিখতে বলুন। তারপর হাতে একটি দুর্বল case যোগ করুন, যেমন "form কাজ করে কিনা দেখুন"।
+5. Reviewer-কে test case review করতে বলুন। দুর্বল case-টি REJECTED বা FLAGGED হওয়া উচিত, আর gate হবে BLOCKED।
+6. দুর্বল case মুছে আবার review চালান, যতক্ষণ না gate PASS হয়। তারপরই executor চালান।
+7. Reviewer-কে নিজে একটি case ঠিক করতে বলুন। Edit বা Write tool না থাকায় সে পারবে না। <Cite n={1} /> `/permissions` চালিয়ে আপনার rule-গুলো দেখুন। <Cite n={5} />
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **The writer reviews its own work.** A reviewer in the same context is swayed by the reasoning that made the work. Fix: a separate reviewer agent with a fresh context. <Cite n={2} />
+- **A read-only rule that lives only in the prompt.** A prompt shapes what Claude tries, but permission rules are what Claude Code enforces. <Cite n={5} /> Fix: set `tools: Read, Grep, Glob` on the reviewer. <Cite n={2} />
+- **A misspelled field.** `disallowed-tools` or `permission_mode` is ignored with no error, so the limit you wanted is not there. <Cite n={1} /> Fix: use the exact camelCase names.
+- **`Bash(git push *)` in `disallowedTools`.** It removes the whole Bash tool. <Cite n={1} /> Fix: put the command in a settings deny or ask rule.
+- **Expecting the agent's `permissionMode` to hold.** Under `bypassPermissions`, `acceptEdits`, or auto mode in the main session, it is ignored. <Cite n={1} /> Fix: run the QA chain in default mode, and use deny rules, which hold in every mode. <Cite n={2} />
+- **Too many agents for a small task.** Each one costs tokens and startup time. <Cite n={2} /> Fix (the tutorial's advice): one session for a small story; four agents for a story with real risk.
+- **Hand-offs only in chat.** A summary can drop the evidence. Fix (the tutorial's advice): every agent writes a file and returns its path.
+
+</Technical>
+<Layman>
+
+- **The writer checks its own work.** It is swayed by its own reasoning. Use a separate reviewer that starts fresh. <Cite n={2} />
+- **"Read-only" only in the instructions.** Instructions are not enforced. Permission rules are. <Cite n={5} /> Give the reviewer only `Read, Grep, Glob`. <Cite n={2} />
+- **A misspelled setting name.** Claude Code skips it with no error. <Cite n={1} />
+- **`Bash(git push *)` in `disallowedTools`.** That removes all of Bash. <Cite n={1} /> Use a deny rule in settings instead.
+- **Trusting the helper's permission mode.** Some main session modes override it. <Cite n={1} /> Deny rules hold in every mode. <Cite n={2} />
+- **Too many helpers.** Each one costs tokens and time. <Cite n={2} />
+- **Passing work only in chat.** The tutorial's advice: save every result to a file.
+
+</Layman>
+<Bangla>
+
+- **যে লিখেছে সে-ই review করে।** নিজের যুক্তিতে সে প্রভাবিত হয়। নতুন context-এর আলাদা reviewer ব্যবহার করুন। <Cite n={2} />
+- **Read-only নিয়ম শুধু prompt-এ।** Prompt enforce হয় না, permission rule হয়। <Cite n={5} /> Reviewer-কে শুধু `Read, Grep, Glob` দিন। <Cite n={2} />
+- **Field-এর ভুল বানান।** Claude Code কোনো error ছাড়াই সেটি উপেক্ষা করে। <Cite n={1} /> ঠিক camelCase নাম লিখুন।
+- **`disallowedTools`-এ `Bash(git push *)`।** এতে পুরো Bash সরে যায়। <Cite n={1} /> বদলে settings-এ deny বা ask rule দিন।
+- **Agent-এর `permissionMode`-এর ওপর ভরসা।** Main session-এর কিছু mode এটি উপেক্ষা করায়। <Cite n={1} /> Deny rule সব mode-এ কাজ করে। <Cite n={2} />
+- **ছোট কাজে বেশি agent।** প্রতিটি agent token আর সময় খরচ করে। <Cite n={2} />
+- **শুধু chat-এ hand-off।** Tutorial-এর পরামর্শ: প্রতিটি ফলাফল file-এ লিখুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Subagent | A specialist inside one Claude Code session, with its own context window, system prompt, tools, and permissions |
+| Agent file | A Markdown file with YAML frontmatter in `.claude/agents/` or `~/.claude/agents/`; only `name` and `description` are required |
+| Frontmatter | The settings between `---` lines at the top of an agent file, such as `tools`, `model`, `skills`, and `hooks` |
+| Delegation message | The task summary that Claude writes for a subagent, which starts with a fresh context |
+| Adversarial reviewer | A read-only agent that tries to disprove each test case or result and returns a gate |
+| Gate | The reviewer's final verdict line: PASS or BLOCKED |
+| Ask rule | A permission rule that prompts for confirmation before a matching tool call |
+| `SubagentStop` hook | A hook that runs when a subagent finishes and can stop it from finishing |
+| Bash sandbox | An operating-system boundary around shell commands; off by default |
+| Agent team | Several Claude Code sessions with a lead; experimental and disabled by default |
+| Dynamic workflow | A JavaScript script that orchestrates many subagents and decides what runs next |

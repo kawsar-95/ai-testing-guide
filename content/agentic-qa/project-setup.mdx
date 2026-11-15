@@ -1,0 +1,689 @@
+export const metadata = {
+  title: 'Project, Jira, GitHub & MCP Setup',
+  description: 'Set up the dMoney practice project and connect Claude Code to Jira, a read-only test database, and GitHub with MCP servers, the GitHub CLI, and permission rules.',
+}
+
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'What is the Model Context Protocol (MCP)?', publisher: 'Model Context Protocol (modelcontextprotocol.io)', url: 'https://modelcontextprotocol.io/docs/getting-started/intro', accessed: '2026-11-15' },
+    { title: 'Connect Claude Code to tools via MCP', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/mcp', accessed: '2026-11-15' },
+    { title: 'Commands', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/commands', accessed: '2026-11-15' },
+    { title: 'Atlassian MCP Server README', publisher: 'Atlassian (GitHub)', url: 'https://github.com/atlassian/atlassian-mcp-server', accessed: '2026-11-15' },
+    { title: 'Get started with the Atlassian MCP server', publisher: 'Atlassian (support.atlassian.com)', url: 'https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/', accessed: '2026-11-15' },
+    { title: 'Atlassian MCP server: supported tools', publisher: 'Atlassian (support.atlassian.com)', url: 'https://support.atlassian.com/atlassian-rovo-mcp-server/docs/supported-tools/', accessed: '2026-11-15' },
+    { title: 'MySQL MCP Server README', publisher: 'berthojoris (GitHub)', url: 'https://github.com/berthojoris/mysql-mcp', accessed: '2026-11-15' },
+    { title: 'GitHub CLI README', publisher: 'GitHub (GitHub)', url: 'https://github.com/cli/cli', accessed: '2026-11-15' },
+    { title: 'gh auth login', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_auth_login', accessed: '2026-11-15' },
+    { title: 'gh issue view', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_issue_view', accessed: '2026-11-15' },
+    { title: 'gh issue list', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_issue_list', accessed: '2026-11-15' },
+    { title: 'gh pr view', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_pr_view', accessed: '2026-11-15' },
+    { title: 'gh pr diff', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_pr_diff', accessed: '2026-11-15' },
+    { title: 'gh issue create', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_issue_create', accessed: '2026-11-15' },
+    { title: 'gh pr create', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_pr_create', accessed: '2026-11-15' },
+    { title: 'Configure permissions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permissions', accessed: '2026-11-15' },
+    { title: 'How Claude remembers your project', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/memory', accessed: '2026-11-15' },
+    { title: 'Settings files and precedence', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/settings', accessed: '2026-11-15' },
+    { title: 'Use advanced search with Jira Query Language (JQL)', publisher: 'Atlassian (support.atlassian.com)', url: 'https://support.atlassian.com/jira-software-cloud/docs/use-advanced-search-with-jira-query-language-jql/', accessed: '2026-11-15' },
+    { title: 'All settings', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/settings-reference', accessed: '2026-11-15' },
+  ],
+}
+
+# Project, Jira, GitHub & MCP Setup
+
+An agent can only test what it can reach. This page sets up a real practice project, then connects Claude Code to the three systems that a tester uses every day: the issue tracker, the test database, and the code host. The tutorial gives each connection only the access that the work needs.
+
+<PageMeta />
+
+## The practice project
+
+<Voices>
+<Technical>
+
+The practice project is dMoney, in the public repository [kawsar-95/genAI-project](https://github.com/kawsar-95/genAI-project). dMoney is a mobile financial service: a REST API and a web frontend.
+
+| Part | Folder | Stack |
+|---|---|---|
+| API | `dmoney-transaction-api/` | Node.js, Express, Sequelize, MySQL |
+| Web app | `dmoney-web-react/` | Next.js 15, TypeScript, MUI, Tailwind 4 |
+| Database dump | `sql_scripts/` | A MySQL dump of `dmoneydb` with schema and seed data |
+| Claude setup | `.claude/`, `.mcp.json`, one `CLAUDE.md` per project | Skills, subagents, a hook, and the project MCP servers |
+
+**How the parts fit.** The web app calls the API. The API reads and writes the MySQL database `dmoneydb`. Claude Code works on all three: it reads the code, drives the web app, queries the database, and reads tickets.
+
+**What this page sets up.** Three connections from Claude Code, in this order of risk:
+
+1. **Jira**, through the `jira` server in `.mcp.json`.
+2. **The test database**, through the `dmoney-db` server in `.mcp.json`.
+3. **GitHub**, through the `gh` CLI. The `understand-task` and `pr-review` skills use it.
+
+<Callout type="danger" title="A practice target only">
+
+The README says that dMoney has bugs and security flaws on purpose. It says: do not deploy it to production or expose it to the internet. Run it on your own machine only.
+
+</Callout>
+
+<Callout type="note" title="Where these facts come from">
+
+The facts about dMoney come from the repository files at commit `51db34a`: `README.md`, `.mcp.json`, `.claude/settings.json`, the two `CLAUDE.md` files, the two `.env.example` files, and the two `package.json` files. They have no cite. The [dMoney Codebase](/case-study/codebase-tour/) page gives the full tour of the code, and the [Case Study](/case-study/overview/) shows the workspace in use.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+The practice project is called dMoney. It is a mobile money service. It has two parts: an API (the server that does the work) and a web app (the pages that people use). A MySQL database stores the data.
+
+- The API is in `dmoney-transaction-api/`.
+- The web app is in `dmoney-web-react/`.
+- `sql_scripts/` has a copy of the database, with its tables and sample data.
+- `.claude/`, `.mcp.json`, and the `CLAUDE.md` files hold the Claude Code setup.
+
+This page connects Claude Code to three systems: Jira, the test database, and GitHub. GitHub uses the `gh` command-line tool.
+
+The README warns that dMoney has bugs and security holes on purpose. Never put it on the internet. Run it only on your own computer.
+
+These facts come from the files of the repository. The [dMoney Codebase](/case-study/codebase-tour/) page explains the code in detail.
+
+</Layman>
+<Bangla>
+
+Practice project-টির নাম dMoney। এটি একটি mobile financial service: একটি REST API আর একটি web frontend। Data থাকে MySQL database `dmoneydb`-এ।
+
+- API আছে `dmoney-transaction-api/` folder-এ (Node.js, Express, Sequelize, MySQL)।
+- Web app আছে `dmoney-web-react/` folder-এ (Next.js 15, TypeScript, MUI, Tailwind 4)।
+- `sql_scripts/`-এ database-এর একটি MySQL dump আছে, schema আর seed data সহ।
+- `.claude/`, `.mcp.json` এবং প্রতিটি project-এর `CLAUDE.md`-এ Claude Code-এর setup আছে।
+
+Web app API-কে call করে, আর API database-এ পড়ে ও লেখে। এই পেজে আপনি Claude Code-কে তিনটি system-এর সাথে যুক্ত করবেন: Jira, test database এবং GitHub (`gh` CLI দিয়ে)।
+
+README সতর্ক করে: dMoney-তে ইচ্ছা করে bug আর security flaw রাখা হয়েছে। এটি production-এ deploy করবেন না, internet-এও খোলা রাখবেন না। শুধু নিজের computer-এ চালান। এই তথ্যগুলো repository-র file থেকে নেওয়া। পুরো code-এর বর্ণনা [dMoney Codebase](/case-study/codebase-tour/) পেজে আছে।
+
+</Bangla>
+</Voices>
+
+## Install and run dMoney
+
+<Voices>
+<Technical>
+
+**Prerequisites.** Node.js 20.x or newer, npm, and MySQL 8.x or a compatible MariaDB. You need a Stripe test account only for the bank cash-in feature. SMTP is optional, because the API also prints OTPs to its console. If a step needs a tool that you do not have, read along and come back later.
+
+**1. Clone and create the database.** Clone the repository, then create the database:
+
+```sql
+CREATE DATABASE dmoneydb;
+```
+
+**2. Restore the dump.** Import `sql_scripts/local-dmoneydb-202604201925.sql` into `dmoneydb` with any MySQL client. The dump was exported on Windows, so its table names are lowercase. On Linux, follow the README's rename step before the import. Restoring is optional: with an empty `dmoneydb`, the API creates the tables and seeds the test accounts on first start.
+
+**3. Configure the API.** In `dmoney-transaction-api/`, copy `.env.example` to both `.env` and `.env.dev`. `db.js` reads `.env.dev`, and the rest of the code reads `.env`. Set the same database values in both files:
+
+```bash
+DB_HOST=localhost
+DB_NAME=dmoneydb
+DB_USER=<your-mysql-user>
+DB_PASSWORD=<your-mysql-password>
+```
+
+**4. Start the API.** Run `npm install`, then `npm run dev` (nodemon). The API listens on `PORT`, default 5000. Check it with `GET http://localhost:5000/`.
+
+**5. Configure and start the web app.** In `dmoney-web-react/`, copy `.env.example` to `.env`. Set `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SECRET_KEY`, and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` from the README and your own Stripe test account. Run `npm install` and `npm run dev`. The app opens at `http://localhost:3000`.
+
+**6. Find the test accounts.** They are in the "Test accounts" section of the README and in `dmoney-transaction-api/endpoints.md`. For an Agent, Customer, or Merchant login, the OTP shows in the API console.
+
+<Callout type="warning" title="The tutorial's advice">
+
+The README and the env files hold practice values. Keep your own `.env` files out of git, and never paste their values into a prompt, a ticket, or a page. This page shows only placeholders such as `<your-mysql-password>`.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+You need Node.js 20 or newer, npm, and MySQL 8 (or MariaDB). Stripe is only for the bank cash-in feature. Email setup is optional, because the API prints one-time codes (OTPs) in its console. If you lack a tool, just read along.
+
+1. Clone the repository. Create a database called `dmoneydb`.
+2. Load the dump file from `sql_scripts/` into it. On Linux, follow the rename step in the README first, because the table names are lowercase. You can skip the dump: with an empty database, the API creates the tables and test accounts itself.
+3. In the API folder, copy `.env.example` to `.env` and to `.env.dev`. Put the same database values in both.
+4. Start the API with `npm run dev`. It runs on port 5000 by default.
+5. In the web app folder, copy `.env.example` to `.env` and fill it in. Start it with `npm run dev`. Open `http://localhost:3000`.
+6. The test accounts are in the README and in `endpoints.md`. For an Agent, Customer, or Merchant login, the code shows in the API console.
+
+The tutorial's advice: keep your `.env` files out of git. Never paste their values into a prompt.
+
+</Layman>
+<Bangla>
+
+যা লাগবে: Node.js 20.x বা নতুন, npm, আর MySQL 8.x (বা compatible MariaDB)। Stripe test account শুধু bank cash-in feature-এর জন্য লাগে। SMTP ঐচ্ছিক, কারণ API তার console-এ OTP দেখায়। কোনো tool না থাকলে শুধু পড়ে যান।
+
+1. Repository clone করুন, তারপর `CREATE DATABASE dmoneydb;` দিয়ে database বানান।
+2. `sql_scripts/local-dmoneydb-202604201925.sql` dump-টি `dmoneydb`-এ import করুন। Dump-টি Windows-এ export করা, তাই table name ছোট হাতের অক্ষরে। Linux-এ import-এর আগে README-র rename ধাপটি অনুসরণ করুন। Database খালি থাকলে API প্রথমবার চালুর সময় নিজেই table বানায় আর test account seed করে।
+3. `dmoney-transaction-api/`-এ `.env.example` থেকে `.env` আর `.env.dev` দুটোই বানান। `db.js` পড়ে `.env.dev`, বাকি code পড়ে `.env`। দুই file-এ একই `DB_*` মান দিন।
+4. `npm run dev` দিয়ে API চালু করুন। ডিফল্টভাবে এটি port 5000-এ চলে।
+5. `dmoney-web-react/`-এ `.env` বানিয়ে `NEXT_PUBLIC_*` মানগুলো দিন, তারপর `npm run dev` চালান। App খুলবে `http://localhost:3000`-এ।
+6. Test account-গুলো README-র "Test accounts" অংশে আর `endpoints.md`-এ আছে। Agent, Customer বা Merchant login-এর OTP API console-এ দেখা যায়।
+
+Tutorial-এর পরামর্শ: নিজের `.env` file git-এর বাইরে রাখুন, আর এর কোনো মান prompt-এ paste করবেন না।
+
+</Bangla>
+</Voices>
+
+## MCP scopes and .mcp.json
+
+<Voices>
+<Technical>
+
+MCP (Model Context Protocol) is an open-source standard for connecting AI applications to external systems. <Cite n={1} /> Claude Code adds servers with `claude mcp add`. <Cite n={2} />
+
+```bash
+# A remote server
+claude mcp add --transport http <name> <url>
+# A local stdio server: everything after -- goes to the server
+claude mcp add [options] <name> -- <command> [args...]
+```
+
+The scope decides where the server is stored and who gets it: <Cite n={2} />
+
+| Scope | Flag | Stored in | Who gets it |
+|---|---|---|---|
+| Local (default) | `--scope local` | `~/.claude.json` | You, in this project only <Cite n={2} /> |
+| Project | `--scope project` | `.mcp.json` in the project root | Everyone, through version control <Cite n={2} /> |
+| User | `--scope user` | `~/.claude.json` | You, in all your projects <Cite n={2} /> |
+
+- `--scope project` creates or updates `.mcp.json`. <Cite n={2} />
+- In an interactive session, Claude Code asks you to approve each `.mcp.json` server before it uses it. `claude mcp reset-project-choices` resets your choices. <Cite n={2} /> In a `claude -p` run, it loads them without asking. <Cite n={2} />
+- Verify that you trust each server before you connect it. <Cite n={2} />
+
+### Keep secrets out of git
+
+`.mcp.json` expands `${VAR}` and `${VAR:-default}` in `command`, `args`, `env`, `url`, and `headers`. <Cite n={2} /> So the team commits the file, and each tester keeps the secret in the shell.
+
+- An unset variable with no default does not stop the config. `claude mcp list` shows a missing-variable warning. <Cite n={2} />
+- An empty string counts as set, so `${VAR:-default}` then gives the empty string. <Cite n={2} />
+
+The dMoney `.mcp.json` puts the database password in `${DMONEY_DB_PASS:-}`. The default is empty, so with the variable unset the server tries an empty password.
+
+The [MCP Servers](/extend/mcp/) page covers transports, OAuth, and trust in more detail.
+
+</Technical>
+<Layman>
+
+MCP (Model Context Protocol) is an open standard. It connects AI apps to other systems. <Cite n={1} /> You add a server to Claude Code with `claude mcp add`. <Cite n={2} />
+
+The scope says who gets the server: <Cite n={2} />
+
+- **Local** is the default. Only you get it, in this project only.
+- **Project** writes the server to `.mcp.json` in the project folder. Everyone who clones the repository gets it.
+- **User** is for you, in all your projects.
+
+In a normal, interactive session, Claude Code asks you to approve each server from `.mcp.json` before it uses it. A `claude -p` run does not ask. <Cite n={2} /> Trust a server before you connect it. <Cite n={2} />
+
+Do not write a password into `.mcp.json`. Write `${VAR}` instead. Claude Code fills in the value of the environment variable (a value that you set in your shell). <Cite n={2} /> If the variable is missing and has no default, `claude mcp list` warns you. An empty value still counts as set. <Cite n={2} />
+
+The dMoney file uses `${DMONEY_DB_PASS:-}`. Its default is empty, so an unset variable gives an empty password.
+
+</Layman>
+<Bangla>
+
+MCP (Model Context Protocol) হলো AI application-কে বাইরের system-এর সাথে যুক্ত করার একটি open-source standard। <Cite n={1} /> Claude Code-এ server যোগ করতে `claude mcp add` ব্যবহার করুন। Remote server-এর জন্য `--transport http`, আর local stdio server-এর জন্য server command-এর আগে `--` দিন। <Cite n={2} />
+
+Scope ঠিক করে server কোথায় থাকবে আর কে পাবে: <Cite n={2} />
+
+- **Local** (default): `~/.claude.json`-এ থাকে, শুধু আপনার জন্য, শুধু এই project-এ।
+- **Project**: project root-এর `.mcp.json`-এ থাকে, version control দিয়ে পুরো team পায়।
+- **User**: `~/.claude.json`-এ থাকে, আপনার সব project-এ।
+
+Interactive session-এ `.mcp.json`-এর প্রতিটি server ব্যবহারের আগে Claude Code আপনার approval চায়, কিন্তু `claude -p` run-এ জিজ্ঞেস না করেই load করে। <Cite n={2} /> Connect করার আগে server-টি বিশ্বাসযোগ্য কি না যাচাই করুন। <Cite n={2} />
+
+Secret git-এর বাইরে রাখতে `.mcp.json`-এ `${VAR}` বা `${VAR:-default}` লিখুন। <Cite n={2} /> Default ছাড়া কোনো variable set না থাকলে `claude mcp list` warning দেখায়, আর empty string-কেও set ধরা হয়। <Cite n={2} /> dMoney-র `.mcp.json` password নেয় `${DMONEY_DB_PASS:-}` থেকে, যার default খালি। তাই variable set না থাকলে server খালি password দিয়ে চেষ্টা করে।
+
+</Bangla>
+</Voices>
+
+## Check servers, sign in, and watch the context
+
+<Voices>
+<Technical>
+
+**Check from the shell.** `claude mcp list` shows a health status next to each server, such as `✔ Connected`, `! Needs authentication`, or `✘ Failed to connect`. <Cite n={2} /> A `.mcp.json` server that you have not approved yet shows `⏸ Pending approval`. <Cite n={2} /> To check one server, run `claude mcp get <name>`. <Cite n={2} />
+
+```bash
+claude mcp list
+claude mcp get jira
+```
+
+**Check and sign in from a session.** `/mcp` manages server connections and OAuth sign-in. It also takes `reconnect`, `enable`, and `disable`. <Cite n={3} /> Claude Code supports OAuth 2.0 for remote servers. <Cite n={2} /> A `claude -p` run cannot do the OAuth flow, so sign in first from an interactive session: `/mcp` in the session, or `claude mcp login <name>` in the shell. <Cite n={2} />
+
+**Context cost.** Tool search is on by default. It defers tool definitions until Claude needs them, so only tool names and server instructions load at session start. <Cite n={2} /> Large tool results still cost context. Claude Code warns when an MCP tool output exceeds 10,000 tokens, and it limits output to 25,000 tokens by default. `MAX_MCP_OUTPUT_TOKENS` changes the limit. <Cite n={2} />
+
+`/context` shows the current context usage as a colored grid. <Cite n={3} /> Run it after you connect a server, and again after a large query.
+
+<Callout type="tip" title="The tutorial's advice">
+
+Ask for small results. Add a limit to a Jira search and to a SQL query, and ask for the columns that you need. A short result keeps room in the context for the test work.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+To check your servers from the shell, run `claude mcp list`. It shows the state of each server, for example connected, needs sign-in, or failed. <Cite n={2} /> A server from `.mcp.json` that you have not approved shows "Pending approval". <Cite n={2} /> `claude mcp get <name>` checks one server. <Cite n={2} />
+
+Inside a session, `/mcp` manages the connections and the sign-in. <Cite n={3} /> Sign-in uses OAuth. <Cite n={2} /> A `claude -p` run cannot sign in, so sign in from a normal session first. <Cite n={2} />
+
+Claude's context is limited. Tool search is on by default. Claude loads only the tool names and server instructions at the start, and the full tool details when it needs them. <Cite n={2} /> Big tool results still take space. Claude Code warns above 10,000 tokens. <Cite n={2} /> `/context` shows how full the context is. <Cite n={3} />
+
+The tutorial's advice: ask for small results, with a limit.
+
+</Layman>
+<Bangla>
+
+Shell থেকে যাচাই করতে `claude mcp list` চালান। এটি প্রতিটি server-এর পাশে health status দেখায়, যেমন `✔ Connected`, `! Needs authentication` বা `✘ Failed to connect`। Approve না করা `.mcp.json` server দেখায় `⏸ Pending approval`। একটি server যাচাই করতে `claude mcp get <name>` চালান। <Cite n={2} />
+
+Session-এর ভেতরে `/mcp` server connection আর OAuth sign-in manage করে। <Cite n={3} /> Claude Code remote server-এর জন্য OAuth 2.0 support করে। `claude -p` run-এ OAuth flow চলে না, তাই আগে interactive session-এ `/mcp` দিয়ে, বা shell-এ `claude mcp login <name>` দিয়ে sign in করুন। <Cite n={2} />
+
+Tool search default-ভাবে চালু থাকে: session শুরুতে শুধু tool name আর server instruction load হয়, পুরো definition লাগলে তখন আসে। <Cite n={2} /> তবে বড় tool result context খরচ করে। MCP tool output 10,000 token ছাড়ালে Claude Code warning দেয়, আর default-ভাবে 25,000 token-এ থামায়। <Cite n={2} /> `/context` বর্তমান context usage একটি রঙিন grid হিসেবে দেখায়। <Cite n={3} />
+
+Tutorial-এর পরামর্শ: Jira search আর SQL query-তে limit দিন, শুধু দরকারি column চান।
+
+</Bangla>
+</Voices>
+
+## Jira through the Atlassian MCP server
+
+<Voices>
+<Technical>
+
+The official Atlassian MCP Server is a cloud-based bridge between your Atlassian Cloud site and compatible external tools. It signs in with OAuth 2.1 or API tokens. <Cite n={4} /> New setups should use the v2 URL. The README gives this command for Claude Code, then `/mcp` to sign in: <Cite n={4} />
+
+```bash
+claude mcp add --transport http atlassian https://mcp.atlassian.com/v2/mcp
+```
+
+Sign in when Claude Code starts the Atlassian authentication flow. <Cite n={5} />
+
+**Compare with dMoney.** The dMoney `.mcp.json` names the server `jira` and uses `https://mcp.atlassian.com/v1/mcp`. That v1 endpoint is still supported, and v1 connections use the v2 tools. <Cite n={4} /> The old SSE endpoint `https://mcp.atlassian.com/v1/sse` is not supported after 30 June 2026. <Cite n={4} /> The tutorial suggests the v2 URL for new setups. Keep the name `jira` if the skills and agents of the project use it.
+
+**What Claude can do.** The server exposes the most-used tools and lets the client discover the rest. <Cite n={4} />
+
+| Tool | What it does |
+|---|---|
+| `searchJiraIssuesUsingJql` | Searches Jira work items with JQL <Cite n={6} />, the Jira Query Language <Cite n={19} /> |
+| `getJiraIssue` | Gets a work item by ID or key <Cite n={6} /> |
+| `listJiraProjects` | Lists the Jira spaces that you can see <Cite n={6} /> |
+| `createJiraIssue` | Creates a work item <Cite n={6} /> |
+| `addOrEditJiraIssueComment` | Adds a comment, or edits one <Cite n={6} /> |
+| `transitionJiraIssue` | Moves a work item to a new status <Cite n={6} /> |
+
+**Whose permissions.** The server can reach only the data that you can already view in Atlassian Cloud. <Cite n={4} /> MCP clients act with your existing permissions. <Cite n={5} /> The Jira permission groups are `read_jira`, `write_jira`, and `search_jira`. `delete_jira` and `manage_jira` are off by default. <Cite n={4} /> Each tool call goes into the audit log of your organization. <Cite n={4} />
+
+<Callout type="warning" title="Writes to Jira are real">
+
+Creating a work item, a comment, or a transition changes a shared system under your name. Atlassian advises human confirmation for any high-impact or destructive action. <Cite n={4} /> Practise on a test project, and approve each write yourself.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Atlassian runs an official MCP server in the cloud. It connects compatible tools, such as Claude Code, to your Atlassian Cloud site. You sign in with OAuth or an API token. <Cite n={4} /> Atlassian says new setups should use the v2 address, `https://mcp.atlassian.com/v2/mcp`. Add it with `claude mcp add`, then sign in with `/mcp`. <Cite n={4} /> <Cite n={5} />
+
+The dMoney project uses the older v1 address. It still works. <Cite n={4} /> The tutorial suggests v2 for new setups.
+
+Claude can search Jira with JQL (Jira's query language), read a ticket by its key, list your projects, create a ticket, add a comment, and change a ticket's status. <Cite n={6} />
+
+The server sees only what you can already see in Jira. It acts with your own permissions. <Cite n={4} /> <Cite n={5} /> The delete and manage tools are off by default. <Cite n={4} />
+
+A write to Jira is real and carries your name. Atlassian advises a human check before any high-impact action. <Cite n={4} /> Approve each write yourself.
+
+</Layman>
+<Bangla>
+
+Atlassian-এর official MCP Server হলো আপনার Atlassian Cloud site আর compatible বাইরের tool-এর মধ্যে একটি cloud-based bridge। এটি OAuth 2.1 বা API token দিয়ে sign in করে। <Cite n={4} /> নতুন setup-এ v2 URL ব্যবহার করতে বলা হয়েছে: `claude mcp add --transport http atlassian https://mcp.atlassian.com/v2/mcp`, তারপর `/mcp` দিয়ে sign in। <Cite n={4} /> <Cite n={5} />
+
+dMoney-র `.mcp.json` server-টির নাম রেখেছে `jira` আর v1 URL `https://mcp.atlassian.com/v1/mcp` ব্যবহার করে। এই v1 endpoint এখনও support পায়। কিন্তু পুরোনো SSE endpoint `/v1/sse` 30 June 2026-এর পরে আর support করা হয় না। <Cite n={4} /> Tutorial নতুন setup-এ v2 URL ব্যবহারের পরামর্শ দেয়।
+
+Claude JQL দিয়ে Jira work item search করতে পারে (`searchJiraIssuesUsingJql`), key দিয়ে একটি item পড়তে পারে (`getJiraIssue`), item বানাতে পারে (`createJiraIssue`), comment যোগ করতে পারে (`addOrEditJiraIssueComment`) এবং status বদলাতে পারে (`transitionJiraIssue`)। <Cite n={6} />
+
+Server শুধু সেই data দেখে, যা আপনি Atlassian Cloud-এ আগে থেকেই দেখতে পারেন, আর আপনার নিজের permission দিয়ে কাজ করে। <Cite n={4} /> <Cite n={5} /> `delete_jira` আর `manage_jira` default-ভাবে বন্ধ। <Cite n={4} /> Jira-তে লেখা মানে আপনার নামে একটি shared system বদলানো। High-impact কাজের আগে মানুষের confirmation নিতে Atlassian পরামর্শ দেয়। <Cite n={4} />
+
+</Bangla>
+</Voices>
+
+## The test database through MySQL MCP
+
+<Voices>
+<Technical>
+
+The dMoney `.mcp.json` runs the MySQL MCP server `@berthojoris/mcp-mysql-server@1.43.2` with the permission list `list,read,utility,create,update,delete,execute`. The README of dMoney lists only `playwright` and `jira` as the project servers, and it describes a separate user-level `dmoneydb` server as read-only. It does not describe this project server, whose list includes write actions. The [What to Fix in the Setup](/case-study/lessons/) page records this finding.
+
+**What the permissions mean.** The server takes the connection string, then a permission list, then an optional category list. <Cite n={7} />
+
+| Permission | Allows |
+|---|---|
+| `list` | Listing databases, tables, and schemas <Cite n={7} /> |
+| `read` | SELECT queries <Cite n={7} /> |
+| `utility` | Connection tests and diagnostics <Cite n={7} /> |
+| `create`, `update`, `delete` | INSERT, UPDATE, and DELETE of records <Cite n={7} /> |
+| `execute` | Custom INSERT and UPDATE SQL <Cite n={7} /> |
+| `ddl` | CREATE, ALTER, and DROP of tables <Cite n={7} /> |
+
+Since v1.44.0, a server with no permissions and no categories enables only `list,read,utility`. <Cite n={7} /> dMoney pins 1.43.2, and it passes its own list, so that default does not help it.
+
+**A read-only version.** This example keeps the dMoney entry, pins version 1.46.0, and lists only the read permissions. It takes the user and the password from your shell:
+
+```json
+{
+  "mcpServers": {
+    "dmoney-db": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@berthojoris/mcp-mysql-server@1.46.0",
+        "mysql://${DMONEY_DB_USER}:${DMONEY_DB_PASS}@localhost:3306/dmoneydb",
+        "list,read,utility"
+      ]
+    }
+  }
+}
+```
+
+- Versions 1.43.3 and 1.43.4 tightened the permission checks. For example, `EXPLAIN ANALYZE` runs the statement it wraps (MySQL 8.0.18 and later), so since v1.43.4 it needs that statement's permission. <Cite n={7} /> The tutorial suggests a version with these changes, such as 1.46.0, for a read-only setup.
+- From v1.44.0, `WITH` (CTE) queries are supported, and in read queries they need `execute`, so a read-only list cannot run them. <Cite n={7} /> Write the query without `WITH`.
+- `MCP_REQUIRE_READONLY_DB_USER=true` makes the server fail at startup if the MySQL user can write. <Cite n={7} />
+- Ask Claude to call `list_all_tools` first. It returns the enabled tools and the active permission profile. <Cite n={7} />
+
+<Callout type="danger" title="The tutorial's advice: a SELECT-only user">
+
+The permission list is the first lock. A database user that has only the SELECT privilege is the second. Create one for Claude, and point the server at it. Never connect Claude to a production database.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+dMoney's `.mcp.json` sets up a MySQL server for Claude. Its permission list includes write actions: create, update, delete, and execute. The dMoney README does not describe this server. It calls only a different, user-level database server read-only. The [What to Fix in the Setup](/case-study/lessons/) page records this finding.
+
+The permission list sets what Claude may do: <Cite n={7} />
+
+- `list`, `read`, and `utility` only look at the data and test the connection.
+- `create`, `update`, `delete`, and `execute` change the data.
+- `ddl` changes the tables themselves.
+
+To make the server read-only, keep only `list,read,utility`. <Cite n={7} /> Take the user name and password from your shell with `${...}` variables. Use a newer version of the server, such as 1.46.0, because newer versions check permissions more strictly. On that version, queries that start with `WITH` need `execute`, so they will not run. <Cite n={7} /> The setting `MCP_REQUIRE_READONLY_DB_USER=true` stops the server if the database user can write. <Cite n={7} />
+
+The tutorial's advice: also make a database user that can only read (SELECT). The permission list is the first lock. This user is a second lock. Never connect Claude to production.
+
+</Layman>
+<Bangla>
+
+dMoney-র `.mcp.json` MySQL MCP server `@berthojoris/mcp-mysql-server@1.43.2` চালায়, permission list `list,read,utility,create,update,delete,execute` দিয়ে। dMoney README এই project server-এর কথা বলে না। README শুধু আলাদা একটি user-level `dmoneydb` server-কে read-only বলে, অথচ এই server-এর list-এ write action আছে। [What to Fix in the Setup](/case-study/lessons/) পেজে এই finding লেখা আছে।
+
+Server connection string-এর পরে একটি permission list নেয়, তারপর ঐচ্ছিক category list। <Cite n={7} /> `list`, `read` আর `utility` শুধু data দেখে ও connection test করে। `create`, `update`, `delete` আর `execute` data বদলায়, আর `ddl` table নিজেই বদলায়। <Cite n={7} />
+
+Read-only করতে শুধু `list,read,utility` রাখুন, আর user ও password shell-এর `${DMONEY_DB_USER}` ও `${DMONEY_DB_PASS}` থেকে নিন। <Cite n={7} /> Server-এর নতুন version ব্যবহার করুন, যেমন 1.46.0, কারণ v1.43.3 ও v1.43.4 permission check আরও কড়া করেছে। v1.44.0 থেকে read query-তে `WITH` (CTE) চালাতে `execute` লাগে, তাই read-only list-এ তা চলবে না। `MCP_REQUIRE_READONLY_DB_USER=true` দিলে database user লিখতে পারলে server চালুই হয় না। শুরুতে Claude-কে `list_all_tools` call করতে বলুন। <Cite n={7} />
+
+Tutorial-এর পরামর্শ: Claude-এর জন্য এমন একটি database user বানান, যার শুধু SELECT privilege আছে। Production database-এ কখনো Claude-কে যুক্ত করবেন না।
+
+</Bangla>
+</Voices>
+
+## GitHub through the gh CLI
+
+<Voices>
+<Technical>
+
+GitHub CLI (`gh`) is GitHub on the command line, for macOS, Windows, and Linux. <Cite n={8} /> The README lists Homebrew for macOS, Debian, Ubuntu, and RPM packages for Linux, and WinGet for Windows. GitHub-hosted runners have it pre-installed. <Cite n={8} />
+
+**Sign in.** `gh auth login` uses a web browser flow by default and stores the token in the system credential store. <Cite n={9} /> `--with-token` reads a classic token from standard input. For a fine-grained token, the manual favours `GH_TOKEN`. <Cite n={9} />
+
+**Read commands** (safe to allow):
+
+| Command | What it shows |
+|---|---|
+| `gh issue view 7 --comments` | The title, body, and other data of an issue, with its comments <Cite n={10} /> |
+| `gh issue list --state all --label bug` | Issues filtered by state and label. The default is open issues only. <Cite n={11} /> |
+| `gh pr view 8` | The title, body, and other data of a pull request <Cite n={12} /> |
+| `gh pr diff 8 --name-only` | The changes of a pull request, here only the file names <Cite n={13} /> |
+
+**Write commands** (ask first): `gh issue create --title ...` creates an issue. <Cite n={14} /> `gh pr create --draft` creates a pull request as a draft. <Cite n={15} />
+
+**Let Claude use gh through Bash.** Claude Code evaluates rules in this order: deny, then ask, then allow. <Cite n={16} /> Put the `*` after the subcommand: `Bash(git *)` allows every git command. <Cite n={16} /> A trailing ` *` also matches the bare command. <Cite n={16} /> The `permissions` object of a settings file takes `allow`, `ask`, and `deny` arrays. <Cite n={20} /> This example, the tutorial's own, lets Claude read without a prompt and asks before each write:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh issue view *)",
+      "Bash(gh issue list *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr diff *)"
+    ],
+    "ask": [
+      "Bash(gh issue create *)",
+      "Bash(gh pr create *)"
+    ]
+  }
+}
+```
+
+An ask rule applies when any subcommand matches it, also inside a chained command. <Cite n={16} />
+
+</Technical>
+<Layman>
+
+GitHub CLI, or `gh`, lets you use GitHub from the terminal. It runs on macOS, Windows, and Linux. <Cite n={8} />
+
+Sign in with `gh auth login`. It opens your browser by default, and it stores the token in the system credential store. <Cite n={9} />
+
+Commands that only read:
+
+- `gh issue view` shows an issue. `--comments` adds its comments. <Cite n={10} />
+- `gh issue list` lists the open issues by default. `--state` and `--label` filter them. <Cite n={11} />
+- `gh pr view` shows a pull request. <Cite n={12} />
+- `gh pr diff` shows its changes. <Cite n={13} />
+
+Commands that write: `gh issue create` and `gh pr create`. <Cite n={14} /> <Cite n={15} />
+
+Permission rules control what Claude may run. Claude Code checks deny rules first, then ask, then allow. <Cite n={16} /> So you can allow the read commands and add an ask rule for each write command. Then Claude reads freely and asks you before it writes.
+
+</Layman>
+<Bangla>
+
+GitHub CLI (`gh`) হলো command line-এ GitHub, macOS, Windows আর Linux-এ চলে। <Cite n={8} /> `gh auth login` default-ভাবে browser-এ sign in করায় আর token system credential store-এ রাখে। Fine-grained token-এর জন্য manual `GH_TOKEN` ব্যবহারের পরামর্শ দেয়। <Cite n={9} />
+
+পড়ার command:
+
+- `gh issue view` issue-এর title, body ও অন্য তথ্য দেখায়, `--comments` দিলে comment-ও। <Cite n={10} />
+- `gh issue list` default-ভাবে শুধু open issue দেখায়; `--state` আর `--label` দিয়ে filter করা যায়। <Cite n={11} />
+- `gh pr view` pull request দেখায়, আর `gh pr diff` তার পরিবর্তন দেখায়। `--name-only` শুধু file-এর নাম দেখায়। <Cite n={12} /> <Cite n={13} />
+
+লেখার command: `gh issue create` issue বানায়, `gh pr create --draft` draft pull request বানায়। <Cite n={14} /> <Cite n={15} />
+
+Claude Code rule-গুলো এই ক্রমে দেখে: deny, তারপর ask, তারপর allow। `*` subcommand-এর পরে দিন, কারণ `Bash(git *)` সব git command allow করে। <Cite n={16} /> তাই read command-গুলো `allow`-এ আর write command-গুলো `ask`-এ রাখুন। তখন Claude নির্দ্বিধায় পড়বে, কিন্তু লেখার আগে আপনাকে জিজ্ঞেস করবে।
+
+</Bangla>
+</Voices>
+
+## The Claude environment for the project
+
+<Voices>
+<Technical>
+
+**One CLAUDE.md per sub-project.** dMoney has a `CLAUDE.md` in `dmoney-transaction-api/` and one in `dmoney-web-react/`, with architecture notes and conventions. A `CLAUDE.md` in a subdirectory loads on demand: when Claude reads, writes, or edits a file in that subdirectory. <Cite n={17} /> So start Claude Code at the workspace root, and each project brings its own notes when Claude works there. `/memory` opens the `CLAUDE.md` files for editing. <Cite n={3} />
+
+**Settings with permission rules.** <Cite n={18} />
+
+| File | Who gets it |
+|---|---|
+| `.claude/settings.json` | Everyone in the repository. Commit it. <Cite n={18} /> |
+| `.claude/settings.local.json` | You, in this project. Claude Code keeps it out of git when it creates it. <Cite n={18} /> |
+| `~/.claude/settings.json` | You, in every project on this machine <Cite n={18} /> |
+
+The dMoney root `.claude/settings.json` holds a `PreToolUse` hook for graphify and no permission rules. Add the `gh` rules from the section above, and rules for the MCP tools. `mcp__<server>` matches every tool of a server, and `mcp__<server>__<tool>` matches one tool. <Cite n={16} /> For example, `mcp__jira__createJiraIssue` in `ask`. `/permissions` shows and edits the rules. <Cite n={3} />
+
+Do not mix up the two kinds of "local". A local MCP server lives in `~/.claude.json`. Local settings live in `.claude/settings.local.json`. <Cite n={2} />
+
+**Check that everything works.**
+
+| Check | Where | You expect |
+|---|---|---|
+| `claude mcp list` | Shell | `✔ Connected` for `jira`, `dmoney-db`, and `playwright`, or `! Needs authentication` for Jira before sign-in <Cite n={2} /> |
+| `/mcp` | Session | Each server, its state, and the sign-in for Jira <Cite n={3} /> |
+| `/context` | Session | The context grid, with room left for the work <Cite n={3} /> |
+| `gh issue list` | Shell | The open issues of the repository <Cite n={11} /> |
+
+</Technical>
+<Layman>
+
+dMoney has one `CLAUDE.md` file in each project folder. It holds notes about the code. A `CLAUDE.md` in a subfolder loads when Claude works on a file in that folder. <Cite n={17} /> So start Claude Code in the main folder. `/memory` lets you edit these files. <Cite n={3} />
+
+Settings files hold the permission rules: <Cite n={18} />
+
+- `.claude/settings.json` is for the whole team. Commit it.
+- `.claude/settings.local.json` is only for you. Claude Code keeps it out of git when it creates it.
+- `~/.claude/settings.json` is for you, in all your projects.
+
+The dMoney settings file has no permission rules yet. Add the `gh` rules. You can also write rules for MCP tools. `mcp__jira` covers every Jira tool. `mcp__jira__createJiraIssue` covers one tool. <Cite n={16} /> `/permissions` shows your rules. <Cite n={3} />
+
+To check your setup, run `claude mcp list` in the shell. <Cite n={2} /> In a session, run `/mcp` and `/context`. <Cite n={3} /> Then run `gh issue list`. <Cite n={11} />
+
+</Layman>
+<Bangla>
+
+dMoney-র প্রতিটি project-এ একটি করে `CLAUDE.md` আছে, যাতে architecture note আর convention লেখা। Subdirectory-র `CLAUDE.md` on demand load হয়: Claude যখন সেই subdirectory-র কোনো file পড়ে, লেখে বা edit করে। <Cite n={17} /> তাই workspace root থেকে Claude Code চালু করুন। `/memory` দিয়ে `CLAUDE.md` file edit করা যায়। <Cite n={3} />
+
+Permission rule থাকে settings file-এ: <Cite n={18} />
+
+- `.claude/settings.json` পুরো team-এর জন্য, commit করুন।
+- `.claude/settings.local.json` শুধু আপনার জন্য, Claude Code ফাইলটি তৈরি করলে এটি git-এর বাইরে রাখে।
+- `~/.claude/settings.json` এই machine-এর সব project-এ আপনার জন্য।
+
+dMoney-র root `.claude/settings.json`-এ একটি `PreToolUse` hook আছে, কিন্তু কোনো permission rule নেই। আগের অংশের `gh` rule যোগ করুন। MCP tool-এর জন্য `mcp__<server>` server-এর সব tool ধরে, আর `mcp__<server>__<tool>` একটি tool ধরে। <Cite n={16} /> `/permissions` rule দেখায় ও edit করতে দেয়। <Cite n={3} /> মনে রাখবেন, local MCP server থাকে `~/.claude.json`-এ, আর local settings থাকে `.claude/settings.local.json`-এ। <Cite n={2} />
+
+সব ঠিক আছে কি না দেখতে shell-এ `claude mcp list` চালান <Cite n={2} />, session-এ `/mcp` আর `/context` চালান <Cite n={3} />, আর `gh issue list` চালান। <Cite n={11} />
+
+</Bangla>
+</Voices>
+
+## Practice
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="The tutorial's exercise">
+
+This exercise is the tutorial's own. Use the dMoney practice app from the [dMoney Codebase](/case-study/codebase-tour/) page, or your own project with a test Jira project and a test database. Every prompt below only reads.
+
+</Callout>
+
+1. **Run the app.** Follow "Install and run dMoney". Open `http://localhost:3000` and sign in with a test account from the README.
+2. **Make the database read-only.** Change the `dmoney-db` version to 1.46.0 and its permission list to `list,read,utility`. <Cite n={7} /> Export `DMONEY_DB_USER` and `DMONEY_DB_PASS` in your shell. Restart Claude Code.
+3. **Check the servers.** Run `claude mcp list`. <Cite n={2} /> Start `claude`, approve the `.mcp.json` servers, and run `/mcp`. Sign in to Jira when the flow starts. <Cite n={3} /> <Cite n={5} />
+4. **Jira, one read.** Type:
+
+   ```text
+   Use the jira server. List my 5 newest open issues in project QA with JQL, and show the key, summary, and status of each. Do not create or change anything.
+   ```
+
+   Expect a short table from `searchJiraIssuesUsingJql`. <Cite n={6} /> Check one key in the Jira web page.
+5. **Database, one read.** Type:
+
+   ```text
+   Use the dmoney-db server. Call list_all_tools, then list the tables of dmoneydb and describe the columns of Transactions. Run no write query.
+   ```
+
+   Expect the tool list with only read tools enabled, then the tables. <Cite n={7} /> If a write tool shows as enabled, step 2 did not take effect.
+6. **Browser, one read.** Type: `Use the playwright server. Open http://localhost:3000 and describe the login page. Do not submit the form.` See [Browser Testing with Playwright](/automate/playwright/).
+7. **GitHub, one read.** Add the `gh` rules from this page to `.claude/settings.local.json`, then ask Claude to run `gh issue list --state all`. <Cite n={11} /> It should run with no prompt. Ask for `gh issue create`: it must ask you first. Answer no.
+8. **Check the context.** Run `/context` and note how much the servers use. <Cite n={3} />
+
+</Technical>
+<Layman>
+
+This is the tutorial's own exercise. Every prompt only reads.
+
+1. Run dMoney and sign in with a test account.
+2. Change the database server to `list,read,utility`. <Cite n={7} /> Set the user and password in your shell. Restart Claude Code.
+3. Run `claude mcp list`. <Cite n={2} /> In a session, approve the servers and run `/mcp`. Sign in to Jira. <Cite n={3} />
+4. Ask Claude to list your 5 newest open Jira issues with JQL, without changes. Compare one key with the Jira web page.
+5. Ask Claude to call `list_all_tools`, then describe the tables. Only read tools should be on. <Cite n={7} />
+6. Ask Claude to open the login page with Playwright and describe it.
+7. Add the `gh` rules. Ask Claude to run `gh issue list`. It should run with no question. Ask for `gh issue create`. Claude must ask you first. Say no.
+8. Run `/context` to see how much space the servers use. <Cite n={3} />
+
+</Layman>
+<Bangla>
+
+এই exercise tutorial-এর নিজের। নিচের প্রতিটি prompt শুধু পড়ে, কিছু লেখে না।
+
+1. dMoney চালু করুন আর README-র একটি test account দিয়ে sign in করুন।
+2. `dmoney-db` server-এর permission list `list,read,utility` করুন। <Cite n={7} /> Shell-এ `DMONEY_DB_USER` আর `DMONEY_DB_PASS` set করে Claude Code আবার চালু করুন।
+3. `claude mcp list` চালান। <Cite n={2} /> Session-এ server approve করে `/mcp` চালান, আর Jira-তে sign in করুন। <Cite n={3} />
+4. Claude-কে বলুন JQL দিয়ে project QA-র সবচেয়ে নতুন ৫টি open issue-এর key, summary আর status দেখাতে, কিছু না বদলে। একটি key Jira web page-এ মিলিয়ে দেখুন। <Cite n={6} />
+5. Claude-কে বলুন `list_all_tools` call করে `dmoneydb`-এর table আর `Transactions`-এর column বর্ণনা করতে। শুধু read tool চালু থাকা উচিত। <Cite n={7} />
+6. Playwright দিয়ে login page খুলে বর্ণনা করতে বলুন, form submit না করে।
+7. `gh` rule যোগ করে `gh issue list --state all` চালাতে বলুন; এটি প্রশ্ন ছাড়াই চলবে। <Cite n={11} /> তারপর `gh issue create` চাইলে Claude আগে আপনাকে জিজ্ঞেস করবে। "না" বলুন।
+8. `/context` চালিয়ে দেখুন server-গুলো কতটা জায়গা নেয়। <Cite n={3} />
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+| Mistake | Fix |
+|---|---|
+| A password written into `.mcp.json` and committed | Use `${VAR}` in `args`, `env`, `url`, or `headers`, and set the value in your shell. <Cite n={2} /> |
+| An empty default such as `${DMONEY_DB_PASS:-}` hides a missing value | Leave out the default, so `claude mcp list` warns when the variable is unset. An empty value counts as set. <Cite n={2} /> |
+| A database server with write permissions | Use `list,read,utility` <Cite n={7} />, and, as the tutorial advises, a SELECT-only database user. See [What to Fix in the Setup](/case-study/lessons/). |
+| The old Atlassian SSE endpoint `/v1/sse` | It is not supported after 30 June 2026. Use `https://mcp.atlassian.com/v2/mcp`. <Cite n={4} /> |
+| Jira tools missing in a `claude -p` run | Sign in first from an interactive session with `/mcp` or `claude mcp login <name>`. <Cite n={2} /> |
+| `Bash(gh *)` in `allow` | It allows every `gh` command, writes too. Put the `*` after the subcommand. <Cite n={16} /> |
+| One server under two names | The tutorial's advice: keep the server names of `.mcp.json` (`jira`, `dmoney-db`) in the skills, agents, and rules, so `mcp__jira` matches. <Cite n={16} /> |
+
+</Technical>
+<Layman>
+
+- **A password in `.mcp.json`.** Use `${VAR}` and set the value in your shell. <Cite n={2} />
+- **An empty default.** It hides a missing password. Without a default, `claude mcp list` warns you. <Cite n={2} />
+- **A database server that can write.** Keep only `list,read,utility`. <Cite n={7} /> The tutorial also advises a database user that can only read.
+- **The old Atlassian SSE address `/v1/sse`.** It is not supported after 30 June 2026. Use the v2 address. <Cite n={4} />
+- **No Jira tools in `claude -p`.** Sign in from a normal session first. <Cite n={2} />
+- **`Bash(gh *)` in allow.** It allows every `gh` command, also the writes. Name the subcommand. <Cite n={16} />
+- **Two names for one server.** The tutorial's advice: use the names from `.mcp.json` in the skills, agents, and rules.
+
+</Layman>
+<Bangla>
+
+- **`.mcp.json`-এ password লিখে commit করা।** `${VAR}` লিখুন আর মানটি shell-এ set করুন। <Cite n={2} />
+- **`${DMONEY_DB_PASS:-}`-এর মতো খালি default।** এটি হারানো password লুকিয়ে রাখে। Default বাদ দিলে variable না থাকলে `claude mcp list` warning দেয়। <Cite n={2} />
+- **Write permission সহ database server।** `list,read,utility` ব্যবহার করুন। <Cite n={7} /> Tutorial আরও পরামর্শ দেয়: শুধু SELECT করতে পারে এমন database user।
+- **পুরোনো Atlassian SSE endpoint `/v1/sse`।** 30 June 2026-এর পরে এটি support করা হয় না, `https://mcp.atlassian.com/v2/mcp` ব্যবহার করুন। <Cite n={4} />
+- **`claude -p` run-এ Jira tool নেই।** আগে interactive session-এ `/mcp` বা `claude mcp login <name>` দিয়ে sign in করুন। <Cite n={2} />
+- **`allow`-এ `Bash(gh *)`।** এটি write সহ সব `gh` command allow করে। `*` subcommand-এর পরে দিন। <Cite n={16} />
+- **এক server-এর দুই নাম।** Tutorial-এর পরামর্শ: skill, agent আর rule-এ `.mcp.json`-এর নামই (`jira`, `dmoney-db`) ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| MCP | An open-source standard for connecting AI applications to external systems |
+| Scope | Where Claude Code stores an MCP server and who gets it: local (default), project, or user |
+| `.mcp.json` | The file in the project root that holds the project-scoped servers. Claude Code asks you to approve them in an interactive session. |
+| Variable expansion | `${VAR}` and `${VAR:-default}` in `.mcp.json`, so secrets stay in your shell and out of git |
+| `/mcp` | The session command that manages MCP connections and OAuth sign-in |
+| Tool search | Loads only tool names and server instructions at start, and the full definitions when Claude needs them |
+| Atlassian MCP Server | Atlassian's cloud-based MCP server. It connects your Atlassian Cloud site to compatible external tools and acts with your existing permissions. |
+| JQL | The Jira Query Language, which `searchJiraIssuesUsingJql` uses to search Jira work items |
+| Permission list | The MySQL MCP argument that sets what Claude may do. `list,read,utility` is read-only. |
+| `gh` | GitHub CLI: GitHub on the command line, with read commands such as `gh issue view` and write commands such as `gh pr create` |
+| Permission rule | An allow, ask, or deny entry in settings. Claude Code checks deny, then ask, then allow. |
+| `CLAUDE.md` | The notes file of a project. In a subdirectory, it loads when Claude works on a file there. |

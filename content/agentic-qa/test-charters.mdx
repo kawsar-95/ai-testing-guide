@@ -1,0 +1,638 @@
+export const metadata = {
+  title: 'Exploring Features with Test Charters',
+  description: 'Test a feature with weak or missing requirements: explore it read-only with Claude, write time-boxed test charters, and derive the expected behavior and hidden business rules with evidence.',
+}
+
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'ISTQB Glossary: test oracle', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-oracle', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: test oracle problem', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-oracle-problem', accessed: '2026-11-15' },
+    { title: 'ISTQB Certified Tester Foundation Level Syllabus v4.0.1', publisher: 'ISTQB', url: 'https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: exploratory testing', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/exploratory-testing', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: session-based testing', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/session-based-testing', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: test charter', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-charter', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: test session', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-session', accessed: '2026-11-15' },
+    { title: 'Choose a permission mode', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permission-modes', accessed: '2026-11-15' },
+    { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-11-15' },
+    { title: 'API testing', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/api-testing', accessed: '2026-11-15' },
+    { title: 'Connect Claude Code to tools via MCP', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/mcp', accessed: '2026-11-15' },
+    { title: 'MySQL MCP Server README', publisher: 'berthojoris (GitHub)', url: 'https://github.com/berthojoris/mysql-mcp', accessed: '2026-11-15' },
+    { title: 'Playwright MCP README', publisher: 'Microsoft (GitHub)', url: 'https://github.com/microsoft/playwright-mcp', accessed: '2026-11-15' },
+    { title: 'agent-browser README', publisher: 'Vercel Labs (GitHub)', url: 'https://github.com/vercel-labs/agent-browser', accessed: '2026-11-15' },
+    { title: 'Use Claude Code with Chrome', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/chrome', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: test log', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-log', accessed: '2026-11-15' },
+  ],
+}
+
+# Exploring Features with Test Charters
+
+Many features reach a tester with a thin ticket, an old wiki page, or no requirement at all. This page shows how to test such a feature: explore it with Claude without changing anything, plan the work as short test charters, and turn what you find into expected results, hidden business rules, questions, and suspected defects. Each rule keeps its evidence, so a stakeholder can confirm it before it becomes the basis of a test.
+
+<PageMeta />
+
+## The oracle problem
+
+<Voices>
+<Technical>
+
+A test compares an actual result with an expected result. When there is no spec, you must first find the expected result.
+
+- A **test oracle** is a source to determine an expected result. <Cite n={1} />
+- The **test oracle problem** is the challenge of deciding whether a test passed or failed for given inputs and state. <Cite n={2} />
+- Exploratory testing is useful when there are few or inadequate specifications, or significant time pressure. <Cite n={3} />
+
+### Where expected behavior can come from
+
+The list below is the tutorial's own. Use more than one source for each rule.
+
+| Source | What it tells you | Watch out for |
+|---|---|---|
+| Current behavior | What the system does now | It can be a bug that nobody reported |
+| Code | Validations, limits, fees, error messages | It says what was built, not what was meant |
+| API docs | The request and response contract | Docs can be older than the code |
+| Database constraints | Types, `NOT NULL`, enums, unique keys, seed rules | Data rules can differ from code rules |
+| Similar features | Rules that a sibling flow applies | The two flows can differ on purpose |
+| User docs and help text | What users were told | Marketing text is not a rule |
+| Stakeholders | The intent | Memory is not always correct |
+
+<Callout type="warning" title="The tutorial's advice: the code is not the spec">
+
+When Claude reads the code, it can describe the current behavior very fast. That makes it easy to turn every line into an expected result. Then each test passes, and each bug in the code becomes a "rule". Treat a rule that only the code supports as a question, not as an expected result.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+A test compares what happens with what should happen. With no spec, you must first find out what should happen.
+
+- A **test oracle** is any source that tells you the expected result. <Cite n={1} />
+- The **test oracle problem** is the hard part: deciding if a test passed or failed. <Cite n={2} />
+- Exploratory testing helps when specs are missing or weak, or when time is short. <Cite n={3} />
+
+The tutorial lists places to look for expected behavior. These are the current behavior, the code, the API docs, and the database rules. Similar features, user help text, and stakeholders help too. Each source has a weak spot. Current behavior can be a bug. Code shows what was built, not what was meant. Docs can be out of date.
+
+The tutorial warns about one trap. Claude reads code fast. So it is tempting to copy each line of code into an expected result. Then every test passes, and every bug becomes a "rule". If only the code supports a rule, treat it as a question.
+
+</Layman>
+<Bangla>
+
+একটি test আসল ফলাফলকে প্রত্যাশিত ফলাফলের সাথে মেলায়। Spec না থাকলে আগে আপনাকে প্রত্যাশিত ফলাফলটি খুঁজে বের করতে হবে।
+
+- **Test oracle** হলো এমন একটি উৎস, যা থেকে প্রত্যাশিত ফলাফল ঠিক করা যায়। <Cite n={1} />
+- **Test oracle problem** হলো নির্দিষ্ট input আর state-এর জন্য একটি test pass করল না fail করল, তা ঠিক করার চ্যালেঞ্জ। <Cite n={2} />
+- Specification কম বা অপর্যাপ্ত হলে, অথবা সময়ের চাপ বেশি থাকলে exploratory testing কাজে লাগে। <Cite n={3} />
+
+Tutorial-এর নিজের তালিকায় প্রত্যাশিত আচরণের উৎসগুলো হলো: বর্তমান আচরণ, code, API docs, database constraint, একই রকম অন্য feature, user docs আর stakeholder। প্রতিটি উৎসের দুর্বলতা আছে। বর্তমান আচরণ নিজেই একটি bug হতে পারে। Code বলে কী বানানো হয়েছে, কী বোঝানো হয়েছিল তা নয়। Docs code-এর চেয়ে পুরোনো হতে পারে।
+
+Tutorial-এর পরামর্শ: code-কে spec ভাববেন না। Claude খুব দ্রুত code পড়ে বর্তমান আচরণ বলে দিতে পারে। তখন code-এর প্রতিটি লাইনকে expected result বানিয়ে ফেলা সহজ। এতে সব test pass করে, আর code-এর প্রতিটি bug একটি "rule" হয়ে যায়। যে rule-কে শুধু code সমর্থন করে, সেটিকে প্রশ্ন হিসেবে রাখুন।
+
+</Bangla>
+</Voices>
+
+## Exploratory testing and test charters
+
+<Voices>
+<Technical>
+
+The ISTQB terms give the session its shape.
+
+| Term | What ISTQB says |
+|---|---|
+| Exploratory testing | Tests are designed, executed, and evaluated at the same time, while the tester learns about the test object. <Cite n={3} /> The glossary adds that the design is dynamic and uses the tester's knowledge, exploration of the test item, and previous results. <Cite n={4} /> |
+| Session-based testing | An approach in which test activities are planned as test sessions. <Cite n={5} /> The exploratory testing happens within a defined time box. <Cite n={3} /> |
+| Test charter | A mission statement that guides an exploratory test session. <Cite n={6} /> It contains the test objectives. <Cite n={3} /> |
+| Test session | An uninterrupted period of time spent executing tests. <Cite n={7} /> |
+| Debriefing | Usually follows the session: the tester and the interested stakeholders discuss the results. <Cite n={3} /> |
+| Test session sheet | The tester may use it to record the steps followed and the discoveries made. <Cite n={3} /> |
+
+More points from the syllabus:
+
+- Test objectives may be treated as high-level test conditions. <Cite n={3} />
+- Exploratory testing can use other test techniques, for example equivalence partitioning. <Cite n={3} />
+- It is more effective when the tester is experienced and has domain knowledge. <Cite n={3} />
+- It also complements more formal test techniques. <Cite n={3} />
+
+Claude does not replace the tester here. The tutorial asks Claude to read code and data and to draft notes. You keep the judgment about what is a problem.
+
+<Callout type="tip" title="Related pages">
+
+[Experience-based Techniques](/fundamentals/experience-based/) covers exploratory testing in the Fundamentals module. [Test and Retest](/case-study/test-and-retest/) shows charters that a skill wrote for one pull request.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+ISTQB gives names to each part of a session:
+
+- **Exploratory testing**: you design, run, and judge tests at the same time, while you learn the product. <Cite n={3} /> You choose the next test from what you know and what you just saw. <Cite n={4} />
+- **Session-based testing**: you plan the work as test sessions. <Cite n={5} /> Each session has a fixed length, called a time box. <Cite n={3} />
+- **Test charter**: a mission statement that guides one session. <Cite n={6} /> It holds the test objectives. <Cite n={3} />
+- **Test session**: a period of testing with no breaks. <Cite n={7} />
+- **Debriefing**: usually a talk after the session. You and interested people discuss what you found. <Cite n={3} />
+- **Test session sheet**: you may use it to note the steps you took and what you found. <Cite n={3} />
+
+You can also use other techniques inside a session, such as equivalence partitioning. Experience and domain knowledge make the session better. <Cite n={3} />
+
+Claude does not replace you. The tutorial asks it to read code and data and to draft notes. You decide what is a problem.
+
+</Layman>
+<Bangla>
+
+ISTQB-এর term-গুলো session-কে একটি কাঠামো দেয়:
+
+- **Exploratory testing**: tester test object সম্পর্কে শিখতে শিখতে একই সময়ে test design, execute আর evaluate করেন। <Cite n={3} /> Glossary বলে, tester-এর জ্ঞান, exploration আর আগের ফলাফল থেকে test তৈরি হয়। <Cite n={4} />
+- **Session-based testing**: test-এর কাজ test session হিসেবে পরিকল্পনা করা হয়। <Cite n={5} /> Exploratory testing একটি নির্দিষ্ট time box-এর মধ্যে হয়। <Cite n={3} />
+- **Test charter**: একটি mission statement, যা একটি exploratory test session-কে পথ দেখায়। <Cite n={6} /> এতে test objective থাকে। <Cite n={3} />
+- **Test session**: test চালানোর জন্য বিরতিহীন একটি সময়। <Cite n={7} />
+- **Debriefing**: সাধারণত session-এর পরে হয়। Tester আর আগ্রহী stakeholder-রা ফলাফল নিয়ে আলোচনা করেন। <Cite n={3} />
+- **Test session sheet**: এতে tester নেওয়া step আর পাওয়া discovery লিখে রাখতে পারেন। <Cite n={3} />
+
+Test objective-কে high-level test condition হিসেবে ধরা যায়। Session-এর মধ্যে equivalence partitioning-এর মতো অন্য technique-ও ব্যবহার করা যায়। Tester অভিজ্ঞ হলে আর domain জ্ঞান থাকলে exploratory testing বেশি কার্যকর হয়। <Cite n={3} />
+
+এখানে Claude tester-এর জায়গা নেয় না। Tutorial Claude-কে দিয়ে code আর data পড়ায় এবং note-এর খসড়া লেখায়। কোনটি সমস্যা, সেই বিচার আপনার।
+
+</Bangla>
+</Voices>
+
+## Explore the code read-only with Claude
+
+<Voices>
+<Technical>
+
+Start every exploration so that Claude cannot change the project.
+
+**Plan mode.** In plan mode, Claude reads files, runs shell commands to explore, and writes a plan, but does not edit your source. <Cite n={8} /> Press `Shift+Tab`, prefix one prompt with `/plan`, or start the session in plan mode: <Cite n={8} />
+
+```bash
+claude --permission-mode plan
+```
+
+Plan mode blocks edits, not every command. When auto mode is available, a classifier reviews shell commands during planning, and approved commands run. <Cite n={8} /> Without auto mode, commands outside the built-in read-only set ask for approval. <Cite n={8} /> A `POST` request is still a write to the system under test, so read each command before you approve it.
+
+**The Explore subagent.** Explore is a built-in, read-only agent for searching and analyzing codebases. <Cite n={9} />
+
+- Its tools are read-only. Write and Edit are denied. <Cite n={9} />
+- Claude gives it a thoroughness level: quick, medium, or very thorough. <Cite n={9} />
+- Its results stay out of your main conversation context. <Cite n={9} />
+- It starts without your CLAUDE.md files and the git status snapshot. <Cite n={9} /> Put the domain words that it needs in your prompt.
+
+**Read the request path.** The tutorial suggests that you follow one request from the outside in: the route, the middleware (authentication, roles), the controller (validation, rules, error messages), and the model or table that stores the result. An example prompt:
+
+```text
+Use the Explore agent, very thorough. Map the request path of the cash out
+feature: the route, the middleware, the controller, the services it calls,
+and the tables it reads and writes. For each validation, give the file, the
+line, the condition, the HTTP status, and the message. Do not change any file.
+```
+
+[A Tour of the Codebase](/case-study/codebase-tour/) shows how the practice app is organized.
+
+</Technical>
+<Layman>
+
+Start each exploration in a way that Claude cannot change the project.
+
+**Plan mode.** In plan mode, Claude reads files, runs shell commands to explore, and writes a plan. It does not edit your source. <Cite n={8} /> Press `Shift+Tab`, start a prompt with `/plan`, or run `claude --permission-mode plan`. <Cite n={8} />
+
+Plan mode stops edits, not every command. Some shell commands can still run after a check or your approval. <Cite n={8} /> A `POST` request still changes the system under test. So read each command before you approve it.
+
+**The Explore subagent.** Explore is a built-in helper that only reads code. It cannot write or edit files. <Cite n={9} /> Claude tells it how deep to search: quick, medium, or very thorough. Its results do not fill your main conversation. It starts without your CLAUDE.md files. <Cite n={9} /> So put the business words it needs in your prompt.
+
+**Follow one request.** The tutorial suggests that you trace one request from the outside in. Start at the route. Then read the login and role checks. Then read the controller with its checks and error messages. End at the table that stores the result. Ask Claude for the file and line of each check.
+
+</Layman>
+<Bangla>
+
+প্রতিটি exploration এমনভাবে শুরু করুন, যাতে Claude project-এ কিছু বদলাতে না পারে।
+
+**Plan mode:** Plan mode-এ Claude file পড়ে, explore করতে shell command চালায় এবং একটি plan লেখে, কিন্তু আপনার source edit করে না। <Cite n={8} /> `Shift+Tab` চাপুন, একটি prompt-এর শুরুতে `/plan` দিন, অথবা `claude --permission-mode plan` দিয়ে session শুরু করুন। <Cite n={8} />
+
+মনে রাখবেন, plan mode edit আটকায়, সব command নয়। Auto mode থাকলে একটি classifier shell command যাচাই করে, আর অনুমোদিত command চলে। Auto mode না থাকলে built-in read-only set-এর বাইরের command approval চায়। <Cite n={8} /> `POST` request তবুও system under test-এ write করে, তাই approve করার আগে প্রতিটি command পড়ুন।
+
+**Explore subagent:** Explore একটি built-in, read-only agent, যা codebase খোঁজা আর বিশ্লেষণের জন্য তৈরি। এর tool-গুলো read-only, Write আর Edit নিষিদ্ধ। Claude একে quick, medium বা very thorough level দেয়। এর ফলাফল আপনার main conversation context-এর বাইরে থাকে। এটি আপনার CLAUDE.md file ছাড়াই শুরু হয়। <Cite n={9} /> তাই দরকারি domain শব্দগুলো prompt-এ দিন।
+
+**Request path পড়ুন:** Tutorial-এর পরামর্শ হলো, একটি request বাইরে থেকে ভেতরে অনুসরণ করুন: route, middleware (authentication, role), controller (validation, rule, error message), আর যে model বা table ফলাফল রাখে। প্রতিটি check-এর file আর line নম্বর Claude-এর কাছে চান।
+
+</Bangla>
+</Voices>
+
+## Probe the API, the database, and the UI
+
+<Voices>
+<Technical>
+
+After the code, look at the running system. Use a test environment and test accounts only.
+
+**The API.** Start from the repo's own endpoint docs. The tutorial sends requests with `curl`, or with Playwright: it can send requests to the server directly from Node.js without loading a page, through `APIRequestContext`. <Cite n={10} /> A read request (`GET`) is safe. A `POST` creates data, so it belongs in the session plan, not in a quick check.
+
+**The database.** A database MCP server such as the MySQL one can list databases, tables, and schemas, and run SELECT queries. <Cite n={12} /> Give it read access only.
+
+- A project-scoped server lives in `.mcp.json` at the project root. <Cite n={11} /> Claude Code asks for approval in interactive sessions before it uses such a server. <Cite n={11} />
+- `.mcp.json` can reference environment variables as `${VAR}` in `command`, `args`, `env`, `url`, and `headers`. <Cite n={11} />
+- The MySQL MCP server takes a connection string and a permission list. `list` lists databases, tables, and schemas. `read` allows `SELECT` queries. <Cite n={12} /> `create`, `update`, and `delete` change records. <Cite n={12} />
+- Since v1.44.0, with no permissions and no categories, it enables only `list`, `read`, and `utility`. <Cite n={12} />
+- `MCP_REQUIRE_READONLY_DB_USER=true` makes startup fail if the MySQL user can write. <Cite n={12} />
+
+An example entry, with a read-only database user:
+
+```json
+{
+  "mcpServers": {
+    "app-db-readonly": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@berthojoris/mcp-mysql-server",
+        "mysql://qa_reader:${DB_PASSWORD}@localhost:3306/appdb",
+        "list,read,utility"
+      ],
+      "env": { "MCP_REQUIRE_READONLY_DB_USER": "true" }
+    }
+  }
+}
+```
+
+**The UI.** Pick one browser tool:
+
+- Playwright MCP works with web pages through structured accessibility snapshots. <Cite n={13} />
+- agent-browser is a CLI that an agent drives one command at a time. `snapshot` returns the page as text with a ref such as `@e1` for each element. <Cite n={14} /> After navigation or a DOM change, take a new snapshot before you use refs again. <Cite n={14} />
+- Claude in Chrome can read console errors and DOM state. <Cite n={15} /> It shares your browser login state, so it can reach any site you are signed in to. <Cite n={15} />
+
+[Browser Testing with Playwright](/automate/playwright/) compares the browser tools. [Project, Jira, GitHub & MCP Setup](/agentic-qa/project-setup/) sets up the servers.
+
+</Technical>
+<Layman>
+
+After the code, look at the running system. Use only a test environment and test accounts.
+
+**The API.** Start with the endpoint docs of the repo. The tutorial sends requests with `curl` or with Playwright. Playwright can call the server without opening a page. <Cite n={10} /> A `GET` only reads. A `POST` creates data, so plan it in the session.
+
+**The database.** A database MCP server lets Claude list tables and read data. <Cite n={12} /> Give it read access only. A project-scoped server goes in `.mcp.json` at the project root. In interactive sessions, Claude Code asks for approval before it uses it. `.mcp.json` can use environment variables, written as `${VAR}`. <Cite n={11} /> The MySQL server takes a list of permissions. `list` and `read` only look. `create`, `update`, and `delete` change records. Since v1.44.0, with no permissions and no categories, it enables only `list`, `read`, and `utility`. You can also make it refuse to start if its database user can write. <Cite n={12} />
+
+**The UI.** Pick one browser tool:
+
+- Playwright MCP reads pages as structured accessibility snapshots. <Cite n={13} />
+- agent-browser is a command-line tool. Its `snapshot` command gives each element a short ref, such as `@e1`. Take a new snapshot after the page changes. <Cite n={14} />
+- Claude in Chrome can read console errors and the page structure. It uses your browser login, so it can reach every site where you are signed in. <Cite n={15} />
+
+</Layman>
+<Bangla>
+
+Code দেখার পরে চলমান system দেখুন। শুধু test environment আর test account ব্যবহার করুন।
+
+**API:** Repo-র নিজের endpoint docs দিয়ে শুরু করুন। Tutorial `curl` বা Playwright দিয়ে request পাঠায়। Playwright কোনো page load না করেই Node.js থেকে সরাসরি server-এ request পাঠাতে পারে, `APIRequestContext`-এর মাধ্যমে। <Cite n={10} /> `GET` শুধু পড়ে। `POST` data তৈরি করে, তাই এটি session plan-এর অংশ, দ্রুত যাচাইয়ের নয়।
+
+**Database:** একটি database MCP server database, table আর schema-র তালিকা দেখাতে এবং SELECT query চালাতে পারে। <Cite n={12} /> একে শুধু read access দিন। Project-scoped server project root-এর `.mcp.json`-এ থাকে, আর interactive session-এ ব্যবহারের আগে Claude Code approval চায়। `.mcp.json`-এ environment variable `${VAR}` আকারে লেখা যায়। <Cite n={11} /> MySQL MCP server একটি permission list নেয়। `list` আর `read` শুধু দেখে, `create`, `update` আর `delete` record বদলায়। কোনো permission বা category না দিলে v1.44.0 থেকে এটি শুধু `list`, `read` আর `utility` চালু করে। `MCP_REQUIRE_READONLY_DB_USER=true` দিলে MySQL user write করতে পারলে server চালুই হয় না। <Cite n={12} />
+
+**UI:** একটি browser tool বাছুন:
+
+- Playwright MCP structured accessibility snapshot দিয়ে web page-এ কাজ করে। <Cite n={13} />
+- agent-browser একটি CLI। এর `snapshot` প্রতিটি element-কে `@e1`-এর মতো একটি ref দেয়। Page বদলালে ref ব্যবহারের আগে নতুন snapshot নিন। <Cite n={14} />
+- Claude in Chrome console error আর DOM state পড়তে পারে। এটি আপনার browser-এর login state শেয়ার করে, তাই আপনি যেসব site-এ sign in করা আছেন, সেখানে ঢুকতে পারে। <Cite n={15} />
+
+</Bangla>
+</Voices>
+
+## Write the charters
+
+<Voices>
+<Technical>
+
+A charter is a test design work product, like a test case. <Cite n={3} /> It is a mission for one session, not a script. <Cite n={6} /> The dMoney practice repo has a `test-charter` skill that writes each mission as "Explore … with … to discover …".
+
+<Callout type="tip" title="The tutorial's charter template">
+
+```markdown
+## CH-<n>: <short title>
+Mission:    Explore <area> with <data, tools, techniques>
+            to discover <the information or risk>
+Time box:   45 min
+Risk:       <what can go wrong, and who is hurt>
+Entry:      <page, endpoint, table>
+Oracles:    <how you will know that something is wrong>
+Setup:      <accounts, roles, balances, environment>
+Out of scope: <what this session does not cover>
+Trace:      <ticket, question, or rule ID>
+```
+
+</Callout>
+
+### Three example charters for a money-transfer app
+
+These three charters are the tutorial's own examples.
+
+| ID | Mission | Oracles |
+|---|---|---|
+| CH-1 Cash out amounts and fees | Explore cash out with amounts below, at, and above the minimum, decimals, and large values, through the API, to discover the minimum, the fee rule, and the rounding. | The fee rule in the database; the ledger rows of the transaction; the balance before and after. |
+| CH-2 Cash out roles and account states | Explore cash out with each sender role, each receiver role, an inactive account, and a sender that is not the token owner, to discover who may cash out to whom, and which status and message each case returns. | The role checks in the controller; the same checks in a sibling flow such as send money. |
+| CH-3 Daily limit under repeated cash outs | Explore repeated and parallel cash outs close to the daily limit, to discover how the limit counts the fee and whether two requests can pass the limit together. | The limit table; the sum of the day's debits; the error message. |
+
+Each charter covers one risk. Each fits one time box. The oracles are things you can check, not "works correctly".
+
+</Technical>
+<Layman>
+
+A charter is a test design product, like a test case. <Cite n={3} /> It is a mission for one session, not a step-by-step script. <Cite n={6} /> The dMoney practice repo has a `test-charter` skill. It writes each mission as "Explore … with … to discover …".
+
+The tutorial gives a charter template. It has these parts: a mission, a time box, the risk, the entry points, the oracles, the setup, what is out of scope, and a link to a ticket or question.
+
+The tutorial also gives three example charters for a money-transfer app:
+
+- **CH-1 Cash out amounts and fees.** Try amounts below, at, and above the minimum. Try decimals and large values. Find the minimum, the fee, and the rounding. Check against the fee rule in the database and the balance before and after.
+- **CH-2 Cash out roles and account states.** Try each sender role and receiver role, an inactive account, and a sender who does not own the token. Find who may cash out to whom, and which error each case gives.
+- **CH-3 Daily limit under repeated cash outs.** Send many cash outs close to the daily limit, also at the same time. Find if the limit counts the fee, and if two requests can pass the limit together.
+
+Each charter covers one risk and fits one time box.
+
+</Layman>
+<Bangla>
+
+Test case-এর মতো charter-ও একটি test design work product। <Cite n={3} /> এটি একটি session-এর mission, ধাপে ধাপে লেখা script নয়। <Cite n={6} /> dMoney practice repo-তে একটি `test-charter` skill আছে, যা প্রতিটি mission লেখে "Explore … with … to discover …" আকারে।
+
+Tutorial-এর charter template-এ এই অংশগুলো থাকে: mission, time box, risk, entry point, oracle, setup, out of scope, আর ticket বা প্রশ্নের সাথে trace।
+
+একটি money-transfer app-এর জন্য tutorial-এর নিজের তিনটি উদাহরণ:
+
+- **CH-1 Cash out-এর amount আর fee:** minimum-এর নিচে, ঠিক minimum-এ আর ওপরে amount, দশমিক আর বড় মান দিয়ে API-তে cash out explore করুন। Minimum, fee rule আর rounding খুঁজুন। Oracle: database-এর fee rule, ledger row, আগের ও পরের balance।
+- **CH-2 Cash out-এর role আর account state:** প্রতিটি sender role, receiver role, inactive account, আর token-এর মালিক নয় এমন sender দিয়ে চেষ্টা করুন। কে কাকে cash out করতে পারে, আর প্রতিটি case কোন status ও message দেয়, তা খুঁজুন।
+- **CH-3 বারবার cash out-এ daily limit:** Daily limit-এর কাছাকাছি বারবার আর একসাথে cash out পাঠান। Limit fee গোনে কি না, আর দুটি request একসাথে limit পার হতে পারে কি না, তা খুঁজুন।
+
+প্রতিটি charter একটি risk কভার করে এবং একটি time box-এ শেষ হয়।
+
+</Bangla>
+</Voices>
+
+## Derive expected behavior and hidden rules
+
+<Voices>
+<Technical>
+
+A hidden rule is a business rule that the system applies but no document states. Record each one with its evidence and a confidence.
+
+<Callout type="note" title="The tutorial's advice: evidence and confidence">
+
+- **Evidence**: a file and line, a query result, a request and response, or an observed screen.
+- **High**: two independent sources agree, for example the code and the seed data.
+- **Medium**: one source only.
+- **Low**: inferred from a name or a comment.
+- **Status**: every rule starts as "to confirm". Only a stakeholder's answer makes it an expected result.
+
+</Callout>
+
+### Example: cash out in dMoney
+
+<Callout type="note" title="Where these facts come from">
+
+The dMoney facts below come from the files of the public practice repo at commit 51db34a. They have no cites, because a cite links to an official source.
+
+</Callout>
+
+The cash out endpoint is `POST /transaction/withdraw`, behind `authenticateJWT` (`routes/transaction.route.js:20`).
+
+| Rule | Evidence | Confidence |
+|---|---|---|
+| R1: The minimum cash out is 10 Tk. | `withdraw.controller.js:23` falls back to 10; the seed rule has `min_txn_amount` 10.00 | High |
+| R2: The fee is 1%, at least 5 Tk, paid by the customer. | Seed rule "System takes 1% (min 5 BDT) from payer"; the debit is amount plus fee (`withdraw.controller.js:113`) | High |
+| R3: The agent gets 2.5% on top, charged to the platform. | Seed rule (`create_commission_table.js:75`); the agent credit is amount plus commission (`withdraw.controller.js:124`) | Medium |
+| R4: Customers only: daily 5,000 Tk and 10 transactions; the check counts amount plus fee. | `create_transaction_limits.js:4-6`; `withdraw.controller.js:93` | Medium |
+| R5: The receiver must be an Agent. | `withdraw.controller.js:57-59` | High |
+| R6: No balance returns HTTP 208 "Insufficient balance". | `withdraw.controller.js:153-155` | Medium |
+
+Two rules raise questions:
+
+- **R3**: no account is debited for the commission. Who funds it? That is a question for the business, not an expected result.
+- **R6**: HTTP 208 for a failed cash out looks odd. Treat it as a suspected defect until someone confirms it.
+
+The docs also conflict with the code. The `endpoints.md` example body has no `to_account`, but the controller reads `to_account`. A defect report about a defect in the test basis is a test analysis work product. <Cite n={3} /> Record it, and ask which one is right.
+
+</Technical>
+<Layman>
+
+A hidden rule is a business rule that the system applies, but no document states. Write down each rule with its evidence and a confidence level.
+
+The tutorial gives this method. Evidence is a file and line, a query result, a request and response, or a screen you saw. High confidence means two separate sources agree. Medium means one source. Low means a guess from a name or a comment. Each rule starts as "to confirm". Only an answer from the business makes it an expected result.
+
+**Example: cash out in dMoney.** These facts come from the public practice repo. They have no cites. The repo shows these rules:
+
+- The minimum cash out is 10 Tk.
+- The fee is 1%, at least 5 Tk. The customer pays it.
+- The agent gets 2.5% extra. No account pays for it in the code. Who funds it? Ask.
+- Customers have a daily limit of 5,000 Tk and 10 transactions. The check counts the fee too.
+- The receiver must be an Agent.
+- No balance gives HTTP 208. That looks odd. Treat it as a suspected bug until someone confirms it.
+
+The docs and the code also disagree. The docs example sends no `to_account`, but the controller reads `to_account`. A defect report about the test basis is an output of test analysis. <Cite n={3} /> Write it down and ask which one is right.
+
+</Layman>
+<Bangla>
+
+Hidden rule হলো এমন business rule, যা system মানে, কিন্তু কোনো document-এ লেখা নেই। প্রতিটি rule-কে তার evidence আর একটি confidence-সহ লিখে রাখুন।
+
+Tutorial-এর পদ্ধতি: evidence হলো file আর line, query result, request ও response, অথবা দেখা একটি screen। দুটি আলাদা উৎস মিললে confidence High, একটি উৎস হলে Medium, নাম বা comment থেকে অনুমান হলে Low। প্রতিটি rule "to confirm" অবস্থায় শুরু হয়। শুধু stakeholder-এর উত্তর পেলে এটি expected result হয়।
+
+**উদাহরণ: dMoney-তে cash out।** এই তথ্যগুলো public practice repo-র file থেকে নেওয়া, তাই এদের cite নেই।
+
+- সর্বনিম্ন cash out 10 Tk।
+- Fee 1%, কমপক্ষে 5 Tk, customer দেন।
+- Agent ওপরে 2.5% পান। Code-এ কোনো account থেকে এই টাকা কাটা হয় না। টাকাটা কে দেয়? এটি business-এর জন্য প্রশ্ন।
+- শুধু customer-এর জন্য daily limit 5,000 Tk আর 10টি transaction, আর check-এ amount-এর সাথে fee-ও গোনা হয়।
+- Receiver-কে অবশ্যই Agent হতে হবে।
+- Balance না থাকলে HTTP 208 "Insufficient balance" আসে। এটি অদ্ভুত, তাই নিশ্চিত না হওয়া পর্যন্ত suspected defect হিসেবে রাখুন।
+
+Docs আর code-এর মধ্যেও অমিল আছে। `endpoints.md`-এর উদাহরণে `to_account` নেই, কিন্তু controller `to_account` পড়ে। Test basis-এর defect report test analysis-এর একটি work product। <Cite n={3} /> এটি লিখে রাখুন, আর জিজ্ঞেস করুন কোনটি ঠিক।
+
+</Bangla>
+</Voices>
+
+## From a session to work products
+
+<Voices>
+<Technical>
+
+A session ends with four kinds of output. Each one goes to a different place.
+
+| Output | What it is | Where it goes next |
+|---|---|---|
+| Session notes | A test log: a chronological record of relevant details about test execution. <Cite n={16} /> Test logs are test execution work products. <Cite n={3} /> | The debriefing, then the ticket |
+| Derived rules and questions | The rule table with evidence, confidence, and status | A stakeholder, for confirmation |
+| Test cases | Scripted cases for confirmed rules. Test cases are test design work products. <Cite n={3} /> | [Test Design & Blast Radius](/agentic-qa/blast-radius/) |
+| Suspected defects | A failure with its steps and evidence. Defect reports are test execution work products. <Cite n={3} /> | [Test Execution & Bug Investigation](/agentic-qa/test-execution/) |
+
+<Callout type="tip" title="The tutorial's session notes template">
+
+```markdown
+# Session: CH-1 Cash out amounts and fees
+Tester: QA test user    Date: <yyyy-mm-dd>    Build: <commit or version>
+Time box: 45 min        Actual: <min>         On charter: <percent>
+
+## Log
+- <hh:mm> POST cash out, amount 9   -> <status> <message>
+- <hh:mm> POST cash out, amount 10  -> <status> <fee> <balance>
+- <hh:mm> SELECT the fee rule       -> <rate> <min_fee>
+
+## Rules found        -> rules table (R1, R2)
+## Questions          -> Q1: who funds the agent commission?
+## Suspected defects  -> D1: insufficient balance returns 208
+## New charter ideas  -> limit and fee under parallel requests
+```
+
+</Callout>
+
+Ask Claude to draft the notes from the commands and outputs of the session. Then read them against the real outputs. In the debriefing, the tester and the stakeholders discuss the results. <Cite n={3} />
+
+</Technical>
+<Layman>
+
+A session ends with four kinds of output:
+
+- **Session notes.** A test log is a record, in time order, of the relevant details of a test run. <Cite n={16} /> It is an output of test execution. <Cite n={3} /> It goes to the debriefing.
+- **Rules and questions.** The rule table with its evidence and confidence. It goes to the business for confirmation.
+- **Test cases.** Scripted cases for the confirmed rules. A test case is an output of test design. <Cite n={3} /> Test cases go next to the [Test Design & Blast Radius](/agentic-qa/blast-radius/) page.
+- **Suspected defects.** Each one has its steps and evidence. A defect report is an output of test execution. <Cite n={3} /> Suspected defects go next to the [Test Execution & Bug Investigation](/agentic-qa/test-execution/) page.
+
+The tutorial gives a template for notes. It holds the charter, the time, a timed log of each request and result, the rules found, the questions, the suspected defects, and ideas for new charters.
+
+Ask Claude to draft the notes from the session. Then compare them with the real outputs. In the debriefing, you discuss the results with the people who care about them. <Cite n={3} />
+
+</Layman>
+<Bangla>
+
+একটি session চার ধরনের output দিয়ে শেষ হয়:
+
+- **Session note:** Test log হলো test execution-এর প্রাসঙ্গিক তথ্যের সময়ক্রম অনুযায়ী রেকর্ড। <Cite n={16} /> এটি test execution-এর work product। <Cite n={3} /> এটি debriefing-এ যায়।
+- **Rule আর প্রশ্ন:** Evidence, confidence আর status-সহ rule table। এটি confirmation-এর জন্য stakeholder-এর কাছে যায়।
+- **Test case:** Confirm হওয়া rule-এর জন্য scripted case। Test case test design-এর work product। <Cite n={3} /> এরপর এটি [Test Design & Blast Radius](/agentic-qa/blast-radius/) পেজে যায়।
+- **Suspected defect:** Step আর evidence-সহ একটি failure। Defect report test execution-এর work product। <Cite n={3} /> এরপর এটি [Test Execution & Bug Investigation](/agentic-qa/test-execution/) পেজে যায়।
+
+Tutorial-এর session note template-এ থাকে charter, সময়, প্রতিটি request আর ফলাফলের সময়সহ log, পাওয়া rule, প্রশ্ন, suspected defect আর নতুন charter-এর ধারণা।
+
+Session-এর command আর output থেকে Claude-কে note-এর খসড়া লিখতে বলুন। তারপর আসল output-এর সাথে মিলিয়ে পড়ুন। Debriefing-এ tester আর stakeholder-রা ফলাফল নিয়ে আলোচনা করেন। <Cite n={3} />
+
+</Bangla>
+</Voices>
+
+## Practice
+
+<Voices>
+<Technical>
+
+<Callout type="note" title="The tutorial's exercise">
+
+This exercise is the tutorial's own. Run one 45-minute charter on the cash out feature of the dMoney practice app, or on a similar feature of your own project. [A Tour of the Codebase](/case-study/codebase-tour/) describes the app. Use a local copy with test data only.
+
+</Callout>
+
+1. **Start read-only.** Open the project and start Claude Code in plan mode. <Cite n={8} />
+
+   ```bash
+   claude --permission-mode plan
+   ```
+
+2. **Map the request path.** Give the Explore prompt from "Explore the code read-only with Claude". Expect a list of checks with file, line, status, and message. Check two of them in the files yourself.
+
+3. **Read the data rules.** Add a database server with `list,read,utility` only, and a read-only database user. <Cite n={12} /> The dMoney `.mcp.json` gives its `dmoney-db` server `create`, `update`, `delete`, and `execute` too, so do not reuse it as it is. Then ask:
+
+   ```text
+   Show the schema of the tables that the cash out flow uses, with their
+   constraints and enum values. Show the seed rows of the fee and limit
+   tables. Use SELECT queries only.
+   ```
+
+4. **Write the charter.** Ask Claude for CH-1 with the template on this page. Cut anything that reads like a script.
+
+5. **Run the session.** Set a 45-minute timer. Ask Claude to propose each request before it runs. Approve each `POST` yourself, and only against the local test database.
+
+6. **Debrief.** Ask Claude to draft the session notes, the rules table, the questions, three test cases for the High rules, and the suspected defects.
+
+**Check the result.** Each rule has evidence and a confidence. Each test case traces to a rule. Each "to confirm" rule is in the questions list, not in an expected result.
+
+</Technical>
+<Layman>
+
+This exercise is the tutorial's own. Run one 45-minute charter on the cash out feature of the dMoney practice app, or on a similar feature of your own project. Use a local copy with test data only.
+
+1. **Start read-only.** Run `claude --permission-mode plan`. <Cite n={8} />
+2. **Map the request path.** Use the Explore prompt from above. You get a list of checks with file and line. Check two of them yourself.
+3. **Read the data rules.** Add a database server with `list,read,utility` only, and a database user that can only read. <Cite n={12} /> The dMoney `.mcp.json` lets its server write too, so do not reuse it as it is. Ask for the tables, their rules, and the seed rows.
+4. **Write the charter.** Ask Claude for CH-1 with the template. Remove anything that reads like a script.
+5. **Run the session.** Set a 45-minute timer. Ask Claude to show each request before it runs. Approve each `POST` yourself, on the local test database only.
+6. **Debrief.** Ask for the notes, the rules table, the questions, three test cases, and the suspected defects.
+
+**Check the result.** Each rule has evidence and a confidence. Each test case links to a rule. Each unconfirmed rule is a question, not an expected result.
+
+</Layman>
+<Bangla>
+
+এই exercise tutorial-এর নিজের। dMoney practice app-এর cash out feature-এ, অথবা আপনার নিজের project-এর একই রকম feature-এ, 45 মিনিটের একটি charter চালান। শুধু test data-সহ একটি local copy ব্যবহার করুন।
+
+1. **Read-only দিয়ে শুরু:** `claude --permission-mode plan` চালান। <Cite n={8} />
+2. **Request path map করুন:** ওপরের Explore prompt দিন। File, line, status আর message-সহ check-এর তালিকা আসবে। এর দুটি নিজে file খুলে যাচাই করুন।
+3. **Data rule পড়ুন:** শুধু `list,read,utility` আর একটি read-only database user দিয়ে database server যোগ করুন। <Cite n={12} /> dMoney-র `.mcp.json` তার `dmoney-db` server-কে `create`, `update`, `delete` আর `execute`-ও দেয়, তাই সেটি যেমন আছে তেমন ব্যবহার করবেন না। তারপর table, constraint আর seed row দেখতে চান, শুধু SELECT query দিয়ে।
+4. **Charter লিখুন:** এই পেজের template দিয়ে Claude-এর কাছে CH-1 চান। Script-এর মতো যা লাগে, তা বাদ দিন।
+5. **Session চালান:** 45 মিনিটের timer দিন। প্রতিটি request চালানোর আগে Claude-কে দেখাতে বলুন। প্রতিটি `POST` নিজে approve করুন, শুধু local test database-এ।
+6. **Debrief:** Session note, rule table, প্রশ্ন, High rule-এর জন্য তিনটি test case আর suspected defect-এর খসড়া চান।
+
+**ফলাফল যাচাই:** প্রতিটি rule-এর evidence আর confidence আছে। প্রতিটি test case একটি rule-এ trace করে। প্রতিটি "to confirm" rule প্রশ্নের তালিকায় আছে, expected result-এ নয়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+| Mistake | Fix |
+|---|---|
+| Copying the code into expected results | The tutorial's advice: a rule that only the code supports is a question. Confirm it with a stakeholder first. |
+| Exploring with write access | Plan mode blocks edits, but approved shell commands still run. <Cite n={8} /> Give the database server `list,read,utility` only, and set `MCP_REQUIRE_READONLY_DB_USER=true`. <Cite n={12} /> |
+| A charter that is a script | A charter is a mission for one session. <Cite n={6} /> Name the area, the resources, and the information to find, not the clicks. |
+| No time box and no notes | Session-based testing uses a defined time box, and session sheets record the steps and discoveries. <Cite n={3} /> |
+| Trusting Claude's summary of a session | The tutorial's advice: compare each line of the notes with the real request, response, or query output. |
+| Exploring with a personal browser profile | Claude in Chrome shares your browser login state. <Cite n={15} /> Sign in only with test accounts in that browser. |
+| Skipping the debriefing | The debriefing is where the tester and stakeholders discuss the results. <Cite n={3} /> Bring the questions list to it. |
+
+</Technical>
+<Layman>
+
+- **Copying code into expected results.** The tutorial's advice: if only the code supports a rule, ask a person before you test against it.
+- **Exploring with write access.** Plan mode stops edits, but approved commands still run. <Cite n={8} /> Give the database server read permissions only. <Cite n={12} />
+- **Writing the charter as a script.** A charter is a mission for one session. <Cite n={6} /> Name what to explore and what to find, not each click.
+- **No time box and no notes.** A session has a fixed length, and notes record what you did and found. <Cite n={3} />
+- **Trusting Claude's summary.** The tutorial's advice: compare each note with the real outputs.
+- **Using your own browser login.** Claude in Chrome uses your browser login. <Cite n={15} /> Use test accounts only.
+- **Skipping the debriefing.** That is where you discuss results with the people who care. <Cite n={3} /> Bring your questions.
+
+</Layman>
+<Bangla>
+
+- **Code থেকে expected result কপি করা:** Tutorial-এর পরামর্শ: যে rule-কে শুধু code সমর্থন করে, সেটি নিয়ে test করার আগে stakeholder-কে জিজ্ঞেস করুন।
+- **Write access দিয়ে explore করা:** Plan mode edit আটকায়, কিন্তু approve করা shell command তবুও চলে। <Cite n={8} /> Database server-কে শুধু `list,read,utility` দিন, আর `MCP_REQUIRE_READONLY_DB_USER=true` set করুন। <Cite n={12} />
+- **Charter-কে script বানানো:** Charter একটি session-এর mission। <Cite n={6} /> কোথায় দেখবেন আর কী খুঁজবেন তা লিখুন, প্রতিটি click নয়।
+- **Time box আর note না রাখা:** Session-based testing-এ নির্দিষ্ট time box থাকে, আর session sheet-এ step ও discovery লেখা হয়। <Cite n={3} />
+- **Claude-এর summary-তে ভরসা করা:** Tutorial-এর পরামর্শ: note-এর প্রতিটি লাইন আসল request, response বা query output-এর সাথে মিলিয়ে দেখুন।
+- **নিজের browser login দিয়ে explore করা:** Claude in Chrome আপনার browser-এর login state শেয়ার করে। <Cite n={15} /> সেই browser-এ শুধু test account দিয়ে sign in করুন।
+- **Debriefing বাদ দেওয়া:** Debriefing-এ tester আর stakeholder-রা ফলাফল নিয়ে আলোচনা করেন। <Cite n={3} /> প্রশ্নের তালিকা সাথে নিন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Test oracle | A source to determine an expected result. |
+| Test oracle problem | The challenge of deciding whether a test passed or failed for given inputs and state. |
+| Exploratory testing | Testing in which tests are designed, executed, and evaluated at the same time, while the tester learns about the test object. |
+| Session-based testing | An approach in which test activities are planned as test sessions, each within a time box. |
+| Test charter | A mission statement that guides an exploratory test session. It holds the test objectives. |
+| Test session | An uninterrupted period of time spent executing tests. |
+| Debriefing | The discussion of the session results between the tester and the interested stakeholders. |
+| Test log | A chronological record of relevant details about test execution. |
+| Plan mode | A permission mode in which Claude reads files, runs shell commands to explore, and writes a plan, but does not edit your source. |
+| Explore subagent | A built-in, read-only Claude Code agent for searching and analyzing codebases. |
+| Hidden rule | A business rule that the system applies but no document states. Record it with evidence and a confidence, and confirm it with a stakeholder. |
