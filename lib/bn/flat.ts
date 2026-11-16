@@ -13,6 +13,7 @@ import { COURSE_UI_BN } from "./course.ts";
 import { HARNESS_UI_BN } from "./harness.ts";
 import { K6_UI_BN } from "./k6.ts";
 import { SECURITY_UI_BN } from "./security.ts";
+import { SDET_UI_BN } from "./sdet.ts";
 import { SYSTEM_DESIGN_UI_BN } from "./system-design.ts";
 
 /** The Bangla twin of the `ui` of each flat module, by module id. */
@@ -30,4 +31,5 @@ export const FLAT_UI_BN: Record<FlatModuleId, Bn<FlatModuleUI & Partial<FlatProg
   "ai-ml-testing": AI_ML_TESTING_UI_BN,
   devops: DEVOPS_UI_BN,
   security: SECURITY_UI_BN,
+  sdet: SDET_UI_BN,
 };

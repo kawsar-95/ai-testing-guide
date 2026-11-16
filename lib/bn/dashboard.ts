@@ -43,5 +43,6 @@ export const DASHBOARD_UI_BN: Bn<typeof DASHBOARD_UI> = {
     "ai-ml-testing": "AI/ML Testing",
     devops: "DevOps & Cloud",
     security: "Security Testing",
+    sdet: "SDET Roadmap",
   },
 };

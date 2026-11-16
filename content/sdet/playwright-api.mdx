@@ -1,0 +1,352 @@
+export const metadata = { title: 'API Automation with Playwright', description: 'API tests in Playwright Test, with no browser page: send requests with the request fixture, check the status and the JSON body, set up test data, and log in once.' }
+export const page = {
+  updated: '2026-11-16',
+  sources: [
+    { title: 'API testing', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/api-testing', accessed: '2026-11-15' },
+    { title: 'APIRequestContext', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/api/class-apirequestcontext', accessed: '2026-11-15' },
+    { title: 'APIResponse', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/api/class-apiresponse', accessed: '2026-11-15' },
+    { title: 'APIResponseAssertions', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/api/class-apiresponseassertions', accessed: '2026-11-15' },
+    { title: 'Authentication', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/auth', accessed: '2026-11-15' },
+    { title: 'Fixtures', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/test-fixtures', accessed: '2026-11-15' },
+    { title: 'Configuration (use)', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/test-use-options', accessed: '2026-11-15' },
+    { title: 'Test requests in Postman using the Echo API', publisher: 'Postman', url: 'https://learning.postman.com/docs/developer/echo-api/', accessed: '2026-11-15' },
+    { title: 'Parameterize tests', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/test-parameterize', accessed: '2026-11-15' },
+  ],
+}
+
+# API Automation with Playwright
+
+This page shows how Playwright Test calls an API with no browser page in between: how the request fixture sends requests, how a test checks the status and the JSON body, how API calls set up test data for UI tests, and how one login can serve a whole suite.
+
+<PageMeta />
+
+## What it is
+
+<Voices>
+<Technical>
+
+Playwright can access the REST API of your application <Cite n={1} />. A test sends requests to the server directly from Node.js, without loading a page <Cite n={1} />. The Playwright docs name three uses <Cite n={1} />:
+
+- test your server API
+- prepare server-side state before a test visits the web app
+- check server-side results after actions in the browser
+
+The class behind it is `APIRequestContext`. It can trigger API endpoints, configure microservices, and prepare the environment of an end-to-end test <Cite n={2} />. Playwright Test comes with a built-in `request` fixture, ready to send requests <Cite n={1} />, and test fixtures are isolated between tests <Cite n={6} />.
+
+New to HTTP methods and status codes? Start with [API Testing with Postman](/sdet/api-testing-postman/).
+
+</Technical>
+<Layman>
+
+Playwright can talk to your app's REST API <Cite n={1} />. A test sends requests straight to the server, with no web page open <Cite n={1} />. You can use this in three ways <Cite n={1} />:
+
+- test the API itself
+- set up data on the server before a UI test
+- check the server after a UI test clicks around
+
+The tool for this is `APIRequestContext` <Cite n={2} />. Playwright Test has a built-in `request` fixture for it <Cite n={1} />, and the fixtures of one test are kept apart from other tests <Cite n={6} />.
+
+New to HTTP? Start with [API Testing with Postman](/sdet/api-testing-postman/).
+
+</Layman>
+<Bangla>
+
+Playwright দিয়ে আপনার app-এর REST API সরাসরি ব্যবহার করা যায় <Cite n={1} />। টেস্ট কোনো পেজ না খুলেই Node.js থেকে সরাসরি server-এ request পাঠায় <Cite n={1} />। Playwright-এর docs এর তিনটা ব্যবহার বলে <Cite n={1} />:
+
+- server-এর API টেস্ট করা
+- UI টেস্ট web app-এ ঢোকার আগে server-এ দরকারি অবস্থা তৈরি করা
+- browser-এ কাজের পর server-এর ফলাফল যাচাই করা
+
+এর পেছনের class হলো `APIRequestContext`। এটা API endpoint চালাতে, microservice কনফিগার করতে আর end-to-end টেস্টের পরিবেশ তৈরি করতে পারে <Cite n={2} />। Playwright Test-এ একটা built-in `request` fixture আছে, যেটা request পাঠাতে তৈরি <Cite n={1} />, আর test fixture এক টেস্ট থেকে আরেক টেস্টে আলাদা থাকে <Cite n={6} />।
+
+HTTP method আর status code নতুন হলে আগে [API Testing with Postman](/sdet/api-testing-postman/) পড়ুন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+- **The fixture.** A test names the fixtures that it needs in its arguments, as `{ page }` does for the page fixture <Cite n={6} />; the API tests take `{ request }` <Cite n={1} />. The fixture respects the config options `baseURL` and `extraHTTPHeaders` <Cite n={1} />, and `extraHTTPHeaders` holds additional HTTP headers to be sent with every request <Cite n={7} />.
+- **The request.** `request.get()`, `request.post()`, and the other methods take options. `params` adds query parameters to the URL <Cite n={2} />. `data` sets the body: an object is serialized to JSON, and the `content-type` header becomes `application/json` unless you set it <Cite n={2} />.
+- **The response.** `status()` is the status code <Cite n={3} />. `ok()` is `true` when the status is in the range 200–299 <Cite n={3} />. `json()` returns the body as JSON, and throws if the body is not valid JSON; `text()` returns it as text <Cite n={3} />.
+- **The assertion.** `await expect(response).toBeOK()` checks that the status is in the range 200..299 <Cite n={4} />.
+- **An error status is not an exception.** By default, the call returns a response for every status code. With the `failOnStatusCode` option, it throws on codes other than 2xx and 3xx <Cite n={2} />.
+
+```text
+test('…', async ({ request }) => …)
+        │
+        ▼
+request.post('/post', { data: { title: 'Buy milk' } })   body as JSON
+        │
+        ▼
+APIResponse ── status()  200
+           ├── ok()      true for 200–299
+           └── json()    the body as an object
+        │
+        ▼
+await expect(response).toBeOK()
+```
+
+</Technical>
+<Layman>
+
+- **The fixture.** A test names what it needs in its arguments, like `{ page }` for a page <Cite n={6} />; an API test takes `{ request }` <Cite n={1} />. It uses the `baseURL` and `extraHTTPHeaders` from your config <Cite n={1} />; `extraHTTPHeaders` are extra headers sent with every request <Cite n={7} />.
+- **The request.** Methods like `request.get()` and `request.post()` take options. `params` adds query parameters to the URL. `data` is the body; an object is sent as JSON <Cite n={2} />.
+- **The response.** `status()` gives the status code. `ok()` is `true` for 200 to 299. `json()` reads the body as JSON and fails if it is not JSON. `text()` reads it as text <Cite n={3} />.
+- **The check.** `await expect(response).toBeOK()` checks for a status from 200 to 299 <Cite n={4} />.
+- **An error status is not an exception.** By default, you get a response back for every status code. The `failOnStatusCode` option makes the call throw on codes other than 2xx and 3xx <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+- **Fixture।** টেস্টের argument-এ যে fixture-এর নাম থাকে, টেস্ট সেটাই পায়, যেমন page fixture-এর জন্য `{ page }` <Cite n={6} />; API টেস্ট নেয় `{ request }` <Cite n={1} />। এটা config-এর `baseURL` আর `extraHTTPHeaders` মেনে চলে <Cite n={1} />; `extraHTTPHeaders`-এ থাকে বাড়তি HTTP header, যেগুলো প্রতিটা request-এর সাথে যায় <Cite n={7} />।
+- **Request।** `request.get()`, `request.post()` আর অন্য method-গুলো option নেয়। `params` URL-এ query parameter যোগ করে। `data` হলো body: object দিলে সেটা JSON হয়ে যায়, আর আপনি না দিলে `content-type` header হয় `application/json` <Cite n={2} />।
+- **Response।** `status()` হলো status code। Status 200–299-এর মধ্যে হলে `ok()` হয় `true`। `json()` body-টা JSON হিসেবে দেয়, আর body ঠিক JSON না হলে error দেয়; `text()` দেয় text হিসেবে <Cite n={3} />।
+- **Assertion।** `await expect(response).toBeOK()` দেখে status 200..299-এর মধ্যে কি না <Cite n={4} />।
+- **Error status মানেই exception নয়।** ডিফল্টভাবে যেকোনো status code-এ response ফেরত আসে। `failOnStatusCode` option দিলে 2xx আর 3xx ছাড়া অন্য code-এ call নিজেই error দেয় <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+Use a Playwright project; [UI Automation with Playwright](/sdet/playwright-ui/) shows how to create one. The test calls the Postman Echo service <Cite n={8} />. It returns a JSON response with the details of the request that you sent <Cite n={8} />, and it needs no authentication <Cite n={8} />.
+
+1. **Set the base URL.** `test.use()` in the test file sets `baseURL` for its tests, to simplify them <Cite n={1} />: each request below gives only the path, such as `/post`.
+2. **Write two tests.** Save this as `tests/echo.spec.ts`:
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test.use({ baseURL: 'https://postman-echo.com' });
+
+test('GET sends the query parameters', async ({ request }) => {
+  const response = await request.get('/get', { params: { course: 'sdet', step: 17 } });
+  await expect(response).toBeOK();
+  const body = await response.json();
+  expect(body.args).toEqual({ course: 'sdet', step: '17' });
+});
+
+test('POST sends a JSON body', async ({ request }) => {
+  const response = await request.post('/post', { data: { title: 'Buy milk', done: false } });
+  expect(response.status()).toBe(200);
+  const body = await response.json();
+  expect(body.json).toEqual({ title: 'Buy milk', done: false });
+});
+```
+
+3. **Run them.** `npx playwright test tests/echo.spec.ts`. The tests send their requests without loading a page <Cite n={1} />.
+4. **Break one on purpose.** Change `'Buy milk'` in the last line to `'Buy bread'` and run again. Read the failure: compare what the test expected with what it received.
+
+</Technical>
+<Layman>
+
+Use a Playwright project; [UI Automation with Playwright](/sdet/playwright-ui/) shows how to make one. The test calls Postman Echo. It sends back, as JSON, what your request contained <Cite n={8} />. It needs no login <Cite n={8} />.
+
+1. **Set the base URL.** `test.use()` sets `baseURL` for the tests in the file, to make them simpler <Cite n={1} />: each request below gives only the path, such as `/post`.
+2. **Write two tests.** Save this as `tests/echo.spec.ts`:
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test.use({ baseURL: 'https://postman-echo.com' });
+
+test('GET sends the query parameters', async ({ request }) => {
+  const response = await request.get('/get', { params: { course: 'sdet', step: 17 } });
+  await expect(response).toBeOK();
+  const body = await response.json();
+  expect(body.args).toEqual({ course: 'sdet', step: '17' });
+});
+
+test('POST sends a JSON body', async ({ request }) => {
+  const response = await request.post('/post', { data: { title: 'Buy milk', done: false } });
+  expect(response.status()).toBe(200);
+  const body = await response.json();
+  expect(body.json).toEqual({ title: 'Buy milk', done: false });
+});
+```
+
+3. **Run them.** `npx playwright test tests/echo.spec.ts`. The tests send their requests without loading a page <Cite n={1} />.
+4. **Make one fail.** Change `'Buy milk'` in the last line to `'Buy bread'` and run again. Read the error: compare what the test expected with what it got.
+
+</Layman>
+<Bangla>
+
+একটা Playwright project নিন; কীভাবে বানাবেন তা [UI Automation with Playwright](/sdet/playwright-ui/)-এ আছে। টেস্টটা Postman Echo service-কে call করে <Cite n={8} />। আপনি যে request পাঠান, তার খুঁটিনাটি এটা JSON হিসেবে ফেরত দেয় <Cite n={8} />, আর এর জন্য কোনো authentication লাগে না <Cite n={8} />।
+
+1. **Base URL ঠিক করুন।** টেস্ট সহজ করতে test file-এ `test.use()` দিয়ে সেই file-এর টেস্টগুলোর `baseURL` ঠিক করা হয় <Cite n={1} />: নিচের প্রতিটা request শুধু path দেয়, যেমন `/post`।
+2. **দুটো টেস্ট লিখুন।** এটা `tests/echo.spec.ts` নামে সেভ করুন:
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test.use({ baseURL: 'https://postman-echo.com' });
+
+test('GET sends the query parameters', async ({ request }) => {
+  const response = await request.get('/get', { params: { course: 'sdet', step: 17 } });
+  await expect(response).toBeOK();
+  const body = await response.json();
+  expect(body.args).toEqual({ course: 'sdet', step: '17' });
+});
+
+test('POST sends a JSON body', async ({ request }) => {
+  const response = await request.post('/post', { data: { title: 'Buy milk', done: false } });
+  expect(response.status()).toBe(200);
+  const body = await response.json();
+  expect(body.json).toEqual({ title: 'Buy milk', done: false });
+});
+```
+
+3. **চালান।** `npx playwright test tests/echo.spec.ts`। টেস্টগুলো কোনো পেজ load না করেই request পাঠায় <Cite n={1} />।
+4. **ইচ্ছা করে একটা fail করান।** শেষ লাইনের `'Buy milk'` বদলে `'Buy bread'` করে আবার চালান। Error পড়ুন: টেস্ট কী আশা করেছিল আর কী পেয়েছে, মিলিয়ে দেখুন।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+- **Set up and clean up the data.** Create what the tests need before they run, and delete it afterwards, with the `beforeAll` and `afterAll` hooks <Cite n={1} />.
+- **Mix API and UI.** Prepare the server state with an API call before a UI test visits the app. Or act in the browser, then check the server-side result with an API call <Cite n={1} />.
+- **Log in once.** If the app can log in through an API faster than through the UI, send the login request with `APIRequestContext` and save the authenticated state <Cite n={5} />. A setup project logs in once, and each test starts already logged in <Cite n={5} />. Storage state works in both a `BrowserContext` and an `APIRequestContext` <Cite n={1} />.
+- **Run one test with many data sets.** You can parameterize a test at the test level <Cite n={9} />, for example with a loop over cases:
+
+```ts
+const cases = [
+  { course: 'sdet', step: '17' },
+  { course: 'qa', step: '2' },
+];
+
+for (const query of cases) {
+  test(`echoes ${query.course} step ${query.step}`, async ({ request }) => {
+    const response = await request.get('/get', { params: query });
+    await expect(response).toBeOK();
+    expect((await response.json()).args).toEqual(query);
+  });
+}
+```
+
+- **Keep the token out of the code.** The Playwright docs read the API token from an environment variable, `process.env.API_TOKEN`, and send it in `extraHTTPHeaders` <Cite n={1} />.
+
+</Technical>
+<Layman>
+
+- **Make and remove test data.** Create what the tests need before they run, and delete it after, with `beforeAll` and `afterAll` <Cite n={1} />.
+- **Mix API and UI.** Set up the server with an API call, then open the app in a UI test. Or click in the browser, then check the server with an API call <Cite n={1} />.
+- **Log in once.** If logging in by API is faster than by the UI, log in once with an API call and save the logged-in state <Cite n={5} />. Then every test starts already logged in <Cite n={5} />.
+- **One test, many data sets.** You can parameterize a test at the test level, for example with a loop over cases <Cite n={9} />.
+- **No token in the code.** The Playwright docs read the token from an environment variable, `process.env.API_TOKEN` <Cite n={1} />.
+
+</Layman>
+<Bangla>
+
+- **টেস্ট ডেটা তৈরি আর মুছে ফেলা।** টেস্টের আগে যা লাগবে তা `beforeAll` hook-এ তৈরি করুন, আর পরে `afterAll` hook-এ মুছে দিন <Cite n={1} />।
+- **API আর UI একসাথে।** UI টেস্ট app খোলার আগে API call দিয়ে server-এর অবস্থা তৈরি করুন। অথবা browser-এ কাজ করে API call দিয়ে server-এর ফলাফল যাচাই করুন <Cite n={1} />।
+- **একবার login।** UI-এর চেয়ে API দিয়ে login দ্রুত হলে, `APIRequestContext` দিয়ে login request পাঠিয়ে logged-in অবস্থাটা সেভ করুন <Cite n={5} />। একটা setup project একবার login করে, আর প্রতিটা টেস্ট আগে থেকেই logged-in অবস্থায় শুরু হয় <Cite n={5} />।
+- **এক টেস্ট, অনেক ডেটা।** Test level-এ একটা টেস্টকে parameterize করা যায়, যেমন case-এর একটা list-এর ওপর loop চালিয়ে <Cite n={9} />।
+- **কোডে token রাখবেন না।** Playwright-এর docs API token নেয় একটা environment variable থেকে, `process.env.API_TOKEN`, আর সেটা `extraHTTPHeaders`-এ পাঠায় <Cite n={1} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Waiting for a 404 to throw.** By default, a request returns a response for every status code <Cite n={2} />. Assert the status, or set `failOnStatusCode` <Cite n={2} />.
+- **Calling `json()` on a body that is not JSON.** `json()` throws if the body cannot be parsed <Cite n={3} />. `text()` returns the body as text <Cite n={3} />, so log it to see what came back.
+- **A missing `await` before `toBeOK()`.** The documented usage is `await expect(response).toBeOK()`, and it returns a Promise <Cite n={4} />.
+- **Tests that share data.** Fixtures are isolated between tests <Cite n={6} />. Create the data that the tests need in a `beforeAll` hook, and delete it in an `afterAll` hook <Cite n={1} />.
+- **The login state in Git.** The saved state file can hold cookies that let someone act as your test account. The Playwright docs strongly advise against committing it <Cite n={5} />.
+
+</Technical>
+<Layman>
+
+- **Waiting for a 404 to throw an error.** By default, you get a response back for every status code <Cite n={2} />. Check the status yourself, or turn on `failOnStatusCode` <Cite n={2} />.
+- **Reading JSON that is not JSON.** `json()` fails if the body is not JSON. `text()` gives the body as text <Cite n={3} />: log it to see what came back.
+- **No `await` before `toBeOK()`.** Write `await expect(response).toBeOK()`: it gives back a Promise <Cite n={4} />.
+- **Tests that share data.** Each test gets its own fixtures <Cite n={6} />. Make the data the tests need in a `beforeAll` hook, and delete it in an `afterAll` hook <Cite n={1} />.
+- **The login file in Git.** It can hold cookies that let someone act as your test account. Playwright strongly advises not to commit it <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+- **404 পেলে error হবে ভেবে বসে থাকা।** ডিফল্টভাবে যেকোনো status code-এ response ফেরত আসে <Cite n={2} />। Status নিজে assert করুন, অথবা `failOnStatusCode` চালু করুন <Cite n={2} />।
+- **JSON নয় এমন body-তে `json()` ডাকা।** Body parse না হলে `json()` error দেয় <Cite n={3} />। `text()` body-টা text হিসেবে দেয় <Cite n={3} />, তাই কী এল দেখতে সেটা log করুন।
+- **`toBeOK()`-এর আগে `await` না দেওয়া।** Docs-এ এর ব্যবহার `await expect(response).toBeOK()`, আর এটা একটা Promise ফেরত দেয় <Cite n={4} />।
+- **টেস্টগুলোর মধ্যে ডেটা ভাগ করা।** প্রতিটা টেস্টের fixture আলাদা <Cite n={6} />। টেস্টের দরকারি ডেটা একটা `beforeAll` hook-এ তৈরি করুন, আর `afterAll` hook-এ মুছে দিন <Cite n={1} />।
+- **Login state file Git-এ রাখা।** এই file-এ এমন cookie থাকতে পারে, যা দিয়ে কেউ আপনার test account হয়ে কাজ করতে পারে। Playwright এটা commit করতে জোরালোভাবে নিষেধ করে <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Depth of the checks.** Does each test check the status and the fields of the body, not only that the call was OK?
+- **Negative cases.** Are there tests for a missing field, a wrong type, no token, an expired token, and the id of another user's record?
+- **Own data.** Does each test create the data it needs and remove it, so the suite runs on an empty system and twice in a row?
+- **Secrets.** Are tokens read from the environment, and kept out of the logs, the HTML report, and Git?
+- **One login.** Does the suite log in once and reuse the state, instead of logging in inside every test?
+- **Useful failures.** When a call fails, does the report show the request and the response body?
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Real checks.** Does each test check the status and the fields of the body, not only "OK"?
+- **Bad cases.** Are there tests for a missing field, a wrong type, no token, an expired token, and another user's record?
+- **Own data.** Does each test make and remove its own data, so the suite can run twice in a row?
+- **Secrets.** Are tokens read from the environment, and kept out of the logs, the report, and Git?
+- **One login.** Does the suite log in once, not in every test?
+- **Clear failures.** When a call fails, can you see the request and the response?
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **চেক কতটা গভীর।** প্রতিটা টেস্ট কি status আর body-র field-গুলো চেক করে, শুধু call OK হলো কি না সেটা নয়?
+- **Negative case।** Field না থাকা, ভুল type, token না থাকা, মেয়াদ শেষ token, আর অন্য user-এর record-এর id, এগুলোর টেস্ট আছে কি?
+- **নিজের ডেটা।** প্রতিটা টেস্ট কি নিজের ডেটা তৈরি করে আর মুছে দেয়, যাতে suite খালি system-এ আর পরপর দুবার চলতে পারে?
+- **Secret।** Token কি environment থেকে পড়া হয়, আর log, HTML report আর Git-এর বাইরে রাখা হয়?
+- **একবার login।** Suite কি একবার login করে সেই state আবার ব্যবহার করে, নাকি প্রতিটা টেস্টে login করে?
+- **কাজের failure।** একটা call fail করলে report-এ কি request আর response body দেখা যায়?
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| `APIRequestContext` | The Playwright class that sends HTTP requests to an API, with no page. |
+| `request` fixture | The built-in fixture of Playwright Test that sends API requests; it respects `baseURL` and `extraHTTPHeaders`. |
+| `APIResponse` | The response of a request: `status()`, `ok()`, `json()`, and `text()`. |
+| `toBeOK()` | The assertion that the status is in the range 200..299. |
+| `baseURL` | The base URL that the `request` fixture respects; the requests then give only the path. |
+| `extraHTTPHeaders` | Additional HTTP headers to be sent with every request, such as a token. |
+| `failOnStatusCode` | The option that makes a request throw on codes other than 2xx and 3xx. |
+| Storage state | The saved authenticated state; it works in both a `BrowserContext` and an `APIRequestContext`. |
+| Setup project | A project that logs in once, so that each test starts already logged in. |
+| Parameterized test | A test parameterized at the test level, for example with a loop over cases. |

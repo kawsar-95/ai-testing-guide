@@ -1,0 +1,341 @@
+export const metadata = { title: 'TypeScript for Testers', description: 'Types for test code: annotations, interfaces, unions, optional values, strict checks, and why tsc should run next to Node.js and Playwright.' }
+export const page = {
+  updated: '2026-11-16',
+  sources: [
+    { title: 'TypeScript for JavaScript Programmers', publisher: 'TypeScript (Microsoft)', url: 'https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html', accessed: '2026-11-15' },
+    { title: 'The Basics', publisher: 'TypeScript (Microsoft)', url: 'https://www.typescriptlang.org/docs/handbook/2/basic-types.html', accessed: '2026-11-15' },
+    { title: 'Everyday Types', publisher: 'TypeScript (Microsoft)', url: 'https://www.typescriptlang.org/docs/handbook/2/everyday-types.html', accessed: '2026-11-15' },
+    { title: 'Object Types', publisher: 'TypeScript (Microsoft)', url: 'https://www.typescriptlang.org/docs/handbook/2/objects.html', accessed: '2026-11-15' },
+    { title: 'Narrowing', publisher: 'TypeScript (Microsoft)', url: 'https://www.typescriptlang.org/docs/handbook/2/narrowing.html', accessed: '2026-11-15' },
+    { title: 'TSConfig Option: strict', publisher: 'TypeScript (Microsoft)', url: 'https://www.typescriptlang.org/tsconfig/strict.html', accessed: '2026-11-15' },
+    { title: 'Modules: TypeScript', publisher: 'Node.js (OpenJS Foundation)', url: 'https://nodejs.org/api/typescript.html', accessed: '2026-11-15' },
+    { title: 'TypeScript', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/test-typescript', accessed: '2026-11-15' },
+    { title: 'Generics', publisher: 'TypeScript (Microsoft)', url: 'https://www.typescriptlang.org/docs/handbook/2/generics.html', accessed: '2026-11-15' },
+  ],
+}
+
+# TypeScript for Testers
+
+This page shows the types that a tester needs, how `tsc` checks them, and how to run that check next to Node.js and Playwright.
+
+<PageMeta />
+
+## What it is
+
+<Voices>
+<Technical>
+
+**TypeScript** has all the features of JavaScript, with a type system on top of them <Cite n={1} />. A static type system predicts what the code is expected to do before it runs <Cite n={2} />, and a static type-checker like TypeScript helps find bugs before the code runs <Cite n={2} />. In many cases TypeScript can infer the types by itself, even when the code leaves them out <Cite n={2} />.
+
+The checker is `tsc`, the TypeScript compiler <Cite n={2} />. Type annotations, such as `person: string` on a parameter, describe what types of values a function can be called with <Cite n={2} />. Type annotations never change the runtime behaviour of a program <Cite n={2} />.
+
+For a tester, this matters because the test tools run TypeScript directly. Playwright reads a TypeScript test, transforms it to JavaScript, and runs it <Cite n={8} />. Node.js can run a TypeScript file too <Cite n={7} />. Read [JavaScript for Testers](/sdet/javascript/) first.
+
+</Technical>
+<Layman>
+
+**TypeScript** is JavaScript plus types <Cite n={1} />. Types let a tool find mistakes before the code runs <Cite n={2} />. Often TypeScript works out the types by itself, even when you leave them out <Cite n={2} />.
+
+The tool that checks is called `tsc` <Cite n={2} />. A type annotation, like `person: string`, says what kind of value a function takes <Cite n={2} />. Type annotations never change what the program does when it runs <Cite n={2} />.
+
+This matters for testers because test tools run TypeScript directly. Playwright turns a TypeScript test into JavaScript and runs it <Cite n={8} />. Node.js can run a TypeScript file too <Cite n={7} />. Read [JavaScript for Testers](/sdet/javascript/) first.
+
+</Layman>
+<Bangla>
+
+**TypeScript**-এ JavaScript-এর সব feature আছে, আর তার ওপরে একটা type system <Cite n={1} />। Static type system কোড চালানোর আগেই অনুমান করে, কোডটা কী করবে বলে আশা করা যায় <Cite n={2} />, আর TypeScript-এর মতো static type-checker কোড চালানোর আগেই bug খুঁজে পেতে সাহায্য করে <Cite n={2} />। অনেক ক্ষেত্রে type লেখা না থাকলেও TypeScript নিজেই type বের করে নিতে পারে <Cite n={2} />।
+
+Check করে `tsc`, অর্থাৎ TypeScript compiler <Cite n={2} />। Type annotation, যেমন parameter-এ `person: string`, বলে দেয় function-টা কোন type-এর value দিয়ে call করা যায় <Cite n={2} />। Type annotation কখনো program চলার সময়ের আচরণ বদলায় না <Cite n={2} />।
+
+টেস্টারের জন্য এটা জরুরি, কারণ টেস্ট টুলগুলো TypeScript সরাসরি চালায়। Playwright একটা TypeScript টেস্ট পড়ে, JavaScript-এ রূপান্তর করে চালায় <Cite n={8} />। Node.js-ও TypeScript file চালাতে পারে <Cite n={7} />। আগে [JavaScript for Testers](/sdet/javascript/) পড়ে নিন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+- **Type aliases and interfaces.** A type alias is a name for any type <Cite n={3} />. An interface is another way to name an object type <Cite n={3} />.
+- **Unions and literal types.** A union type is made from two or more types, and a value may be any one of them <Cite n={3} />. A literal type names one exact string or number <Cite n={3} />. Combined in a union, literals express a set of known values, such as `'tester' | 'developer'` <Cite n={3} />.
+- **Optional properties.** A `?` after the property name makes the property optional <Cite n={3} />.
+- **`readonly`.** TypeScript does not let you write to a `readonly` property during type-checking, but nothing changes at run time <Cite n={4} />.
+- **Narrowing.** TypeScript understands checks such as `typeof` and uses them to narrow a type inside a branch <Cite n={5} />.
+- **Generics.** A generic component works over many types rather than a single one <Cite n={9} />.
+- **`any`.** A value of type `any` is not type-checked <Cite n={3} />. The `noImplicitAny` flag makes an implicit `any` an error <Cite n={3} />.
+- **Null checks.** By default, `null` and `undefined` are assignable to any other type <Cite n={2} />. With `strictNullChecks` on, you must test for them before you use a method or property of the value <Cite n={3} />. The `strict` flag turns on the whole family of strict checks <Cite n={6} />; the two biggest are `noImplicitAny` and `strictNullChecks` <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+- **Names for types.** A type alias gives a name to any type <Cite n={3} />. An interface names the shape of an object <Cite n={3} />.
+- **A closed list.** A union type says "one of these" <Cite n={3} />. With exact values, like `'tester' | 'developer'`, it gives a set of known values <Cite n={3} />.
+- **Optional fields.** A `?` after a field name means the field may be missing <Cite n={3} />.
+- **`readonly`.** The checker stops you from writing to a `readonly` field. The running program does not change <Cite n={4} />.
+- **Narrowing.** After a check such as `typeof`, TypeScript knows the type inside that branch <Cite n={5} />.
+- **Generics.** A generic piece of code works with many types, not just one <Cite n={9} />.
+- **`any`.** `any` switches the check off for that value <Cite n={3} />. The `noImplicitAny` flag turns a hidden `any` into an error <Cite n={3} />.
+- **Missing values.** By default, `null` and `undefined` can go anywhere <Cite n={2} />. With `strictNullChecks` on, you must check for them before you use a method or property of the value <Cite n={3} />. `strict` turns on all the strict checks at once <Cite n={6} />, and the two biggest are `noImplicitAny` and `strictNullChecks` <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+- **Type alias আর interface।** Type alias যেকোনো type-এর একটা নাম <Cite n={3} />। Interface হলো object type-এর নাম দেওয়ার আরেকটা উপায় <Cite n={3} />।
+- **Union আর literal type।** Union type দুই বা তার বেশি type দিয়ে তৈরি, আর value হতে পারে তাদের যেকোনো একটা <Cite n={3} />। Literal type একটা নির্দিষ্ট string বা number-এর নাম <Cite n={3} />। Literal-গুলো union-এ মেলালে জানা value-এর একটা নির্দিষ্ট set পাওয়া যায়, যেমন `'tester' | 'developer'` <Cite n={3} />।
+- **Optional property।** Property-র নামের পরে `?` দিলে property-টা optional হয় <Cite n={3} />।
+- **`readonly`।** Type-checking-এর সময় TypeScript `readonly` property-তে লিখতে দেয় না, কিন্তু চলার সময় কিছুই বদলায় না <Cite n={4} />।
+- **Narrowing।** TypeScript `typeof`-এর মতো চেক বোঝে, আর সেটা দিয়ে একটা branch-এর ভেতরে type সরু করে আনে <Cite n={5} />।
+- **Generic।** Generic component একটা type নয়, অনেক type নিয়ে কাজ করে <Cite n={9} />।
+- **`any`।** `any` type-এর value type-check হয় না <Cite n={3} />। `noImplicitAny` flag অপ্রকাশ্য `any`-কে error বানায় <Cite n={3} />।
+- **Null check।** ডিফল্টভাবে `null` আর `undefined` যেকোনো type-এ বসানো যায় <Cite n={2} />। `strictNullChecks` চালু থাকলে value-র method বা property ব্যবহারের আগে এগুলোর জন্য চেক করতে হয় <Cite n={3} />। `strict` flag পুরো strict check-এর পরিবারটা চালু করে <Cite n={6} />; এর সবচেয়ে বড় দুটো হলো `noImplicitAny` আর `strictNullChecks` <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+Save this as `users.ts`. You need Node.js and TypeScript (`npm install -D typescript`).
+
+```ts
+type Role = 'tester' | 'developer';
+
+interface User {
+  name: string;
+  role: Role;
+  email?: string;
+}
+
+function label(user: User): string {
+  return `${user.name} (${user.role})`;
+}
+
+function emailDomain(user: User): string {
+  if (user.email === undefined) return 'none';
+  return user.email.split('@')[1];
+}
+
+const users: User[] = [
+  { name: 'Asha', role: 'tester' },
+  { name: 'Rafi', role: 'developer', email: 'rafi@example.com' },
+];
+
+console.log(users.map(label));
+console.log(users.map(emailDomain));
+```
+
+1. Check it with `npx tsc --noEmit --strict users.ts`. It finds no errors.
+2. Run it with `node users.ts`. By default, Node.js runs TypeScript files that contain only erasable TypeScript syntax <Cite n={7} />. It prints `[ 'Asha (tester)', 'Rafi (developer)' ]` and `[ 'none', 'example.com' ]`.
+3. Change Asha's role to `'manager'`. `tsc` now reports `Type '"manager"' is not assignable to type 'Role'.` But `node users.ts` still runs and prints `Asha (manager)`. Node.js replaces the TypeScript syntax with whitespace and does no type checking <Cite n={7} />.
+4. Put the role back and delete the `if (user.email === undefined)` line. `tsc` reports `'user.email' is possibly 'undefined'.` `node` now crashes with `TypeError: Cannot read properties of undefined (reading 'split')`. This is the bug that the null check exists to catch <Cite n={3} />.
+
+</Technical>
+<Layman>
+
+Save this as `users.ts`. You need Node.js and TypeScript (`npm install -D typescript`).
+
+```ts
+type Role = 'tester' | 'developer';
+
+interface User {
+  name: string;
+  role: Role;
+  email?: string;
+}
+
+function label(user: User): string {
+  return `${user.name} (${user.role})`;
+}
+
+function emailDomain(user: User): string {
+  if (user.email === undefined) return 'none';
+  return user.email.split('@')[1];
+}
+
+const users: User[] = [
+  { name: 'Asha', role: 'tester' },
+  { name: 'Rafi', role: 'developer', email: 'rafi@example.com' },
+];
+
+console.log(users.map(label));
+console.log(users.map(emailDomain));
+```
+
+1. Check it: `npx tsc --noEmit --strict users.ts`. No errors.
+2. Run it: `node users.ts`. By default, Node.js runs TypeScript files that contain only erasable TypeScript syntax <Cite n={7} />. You see `[ 'Asha (tester)', 'Rafi (developer)' ]` and `[ 'none', 'example.com' ]`.
+3. Change Asha's role to `'manager'`. `tsc` says `"manager"` is not allowed. But `node` still runs it and prints `Asha (manager)`, because Node.js does not check types <Cite n={7} />.
+4. Put the role back, and delete the `if (user.email === undefined)` line. `tsc` warns that `user.email` may be `undefined`. `node` now crashes with a `TypeError`. The null check is there to catch exactly this <Cite n={3} />.
+
+</Layman>
+<Bangla>
+
+এটা `users.ts` নামে সেভ করুন। Node.js আর TypeScript লাগবে (`npm install -D typescript`)।
+
+```ts
+type Role = 'tester' | 'developer';
+
+interface User {
+  name: string;
+  role: Role;
+  email?: string;
+}
+
+function label(user: User): string {
+  return `${user.name} (${user.role})`;
+}
+
+function emailDomain(user: User): string {
+  if (user.email === undefined) return 'none';
+  return user.email.split('@')[1];
+}
+
+const users: User[] = [
+  { name: 'Asha', role: 'tester' },
+  { name: 'Rafi', role: 'developer', email: 'rafi@example.com' },
+];
+
+console.log(users.map(label));
+console.log(users.map(emailDomain));
+```
+
+1. `npx tsc --noEmit --strict users.ts` দিয়ে check করুন। কোনো error নেই।
+2. `node users.ts` দিয়ে চালান। ডিফল্টভাবে Node.js সেই TypeScript file চালায়, যেখানে শুধু মুছে ফেলা যায় এমন (erasable) TypeScript syntax আছে <Cite n={7} />। Output: `[ 'Asha (tester)', 'Rafi (developer)' ]` আর `[ 'none', 'example.com' ]`।
+3. Asha-র role বদলে `'manager'` করুন। `tsc` এবার বলবে `Type '"manager"' is not assignable to type 'Role'.` কিন্তু `node users.ts` তবুও চলে আর `Asha (manager)` দেখায়। Node.js TypeScript syntax-কে whitespace দিয়ে বদলে দেয়, কোনো type check করে না <Cite n={7} />।
+4. Role আগের মতো করে `if (user.email === undefined)` লাইনটা মুছে দিন। `tsc` বলবে `'user.email' is possibly 'undefined'.` আর `node` এবার `TypeError: Cannot read properties of undefined (reading 'split')` দিয়ে crash করবে। Null check ঠিক এই bug ধরার জন্যই আছে <Cite n={3} />।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+- **Run `tsc` next to the tests.** Playwright does not check types, and it runs tests even when there are non-critical compile errors. Its docs recommend that you run the TypeScript compiler alongside it <Cite n={8} />. In CI, that is `npx tsc -p tsconfig.json --noEmit` before `npx playwright test` <Cite n={8} />.
+- **Watch while you write.** Locally, `npx tsc -p tsconfig.json --noEmit -w` keeps checking as you save <Cite n={8} />.
+- **Type the API responses.** An interface declaration describes the shape of an object <Cite n={1} />: write one for each response body that a test reads. Reading a field that does not exist gives `undefined` in JavaScript, but an error in TypeScript <Cite n={2} />, so a typo in a field name fails the check.
+- **Close the lists.** A union of literal types, such as the allowed roles or statuses, rejects any value that is not on the list <Cite n={3} />.
+- **Mark the missing.** Optional properties show which fields can be absent <Cite n={3} />, and `strictNullChecks` makes the code check for them <Cite n={3} />.
+- **Reuse helpers.** A generic component can work over a variety of types rather than a single one <Cite n={9} />.
+
+</Technical>
+<Layman>
+
+- **Run `tsc` next to the tests.** Playwright does not check types, and runs tests even with some type errors. Its docs say to run the TypeScript compiler alongside <Cite n={8} />. In CI, run `npx tsc -p tsconfig.json --noEmit` before the tests <Cite n={8} />.
+- **Check while you type.** Add `-w` to keep checking every time you save <Cite n={8} />.
+- **Describe the API answers.** An interface describes the shape of an object <Cite n={1} />: write one for each response body. A wrong field name then fails the check, instead of giving `undefined` <Cite n={2} />.
+- **Close the lists.** A union of exact values, like the allowed roles, rejects anything else <Cite n={3} />.
+- **Mark what can be missing.** Use `?` for fields that may be absent <Cite n={3} />, and let strict null checks make the code handle them <Cite n={3} />.
+- **Reuse helpers.** A generic helper works with many types <Cite n={9} />.
+
+</Layman>
+<Bangla>
+
+- **টেস্টের পাশে `tsc` চালান।** Playwright type check করে না, আর ছোটখাটো compile error থাকলেও টেস্ট চালায়। এর docs পাশাপাশি TypeScript compiler চালাতে বলে <Cite n={8} />। CI-তে সেটা হলো `npx playwright test`-এর আগে `npx tsc -p tsconfig.json --noEmit` <Cite n={8} />।
+- **লেখার সময়ই check।** Local-এ `npx tsc -p tsconfig.json --noEmit -w` প্রতিবার সেভ করার সাথে সাথে check করতে থাকে <Cite n={8} />।
+- **API response-এর type দিন।** Interface declaration একটা object-এর আকার বর্ণনা করে <Cite n={1} />: টেস্ট যে response body পড়ে, তার প্রতিটার জন্য একটা লিখুন। নেই এমন field পড়লে JavaScript-এ `undefined` আসে, কিন্তু TypeScript-এ error হয় <Cite n={2} />, তাই field-এর নামে ভুল থাকলে check fail করে।
+- **তালিকা বন্ধ রাখুন।** Allowed role বা status-এর মতো literal type-এর union তালিকার বাইরের যেকোনো value বাতিল করে <Cite n={3} />।
+- **যা না থাকতে পারে, তা চিহ্নিত করুন।** Optional property দেখায় কোন field না-ও থাকতে পারে <Cite n={3} />, আর `strictNullChecks` কোডকে সেগুলো চেক করতে বাধ্য করে <Cite n={3} />।
+- **Helper আবার ব্যবহার করুন।** Generic component একটা type-এর বদলে নানা type নিয়ে কাজ করতে পারে <Cite n={9} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Trusting a green run.** Playwright runs tests even when there are non-critical type errors <Cite n={8} />, and Node.js does no type checking <Cite n={7} />. Run `tsc` as well, as the Playwright docs recommend <Cite n={8} />.
+- **`any` to silence an error.** A value of type `any` is not type-checked <Cite n={3} />. Fix the type instead.
+- **`strict` turned off.** Without `strictNullChecks`, `null` and `undefined` are assignable to any other type, and forgetting to handle them is the cause of countless bugs <Cite n={2} />. Step 4 of Try it shows one: a `TypeError` at run time.
+- **Expecting types to check data at run time.** Type annotations never change the runtime behaviour <Cite n={2} />. Check the shape of an API response with an assertion in the test.
+- **`readonly` as protection.** A `readonly` property is checked only during type-checking; nothing changes at run time <Cite n={4} />.
+
+</Technical>
+<Layman>
+
+- **Trusting a green run.** Playwright runs tests even with some type errors <Cite n={8} />, and Node.js checks no types <Cite n={7} />. Run `tsc` too, as the Playwright docs say <Cite n={8} />.
+- **Using `any` to hide an error.** `any` switches the check off for that value <Cite n={3} />. Fix the type instead.
+- **Turning `strict` off.** Then `null` and `undefined` can go anywhere, and forgetting them causes countless bugs <Cite n={2} />. Step 4 of Try it shows one.
+- **Thinking types check real data.** Type annotations never change what runs <Cite n={2} />. Check the API answer with an assertion.
+- **Trusting `readonly` at run time.** It is checked only by the checker <Cite n={4} />.
+
+</Layman>
+<Bangla>
+
+- **সবুজ run-এ ভরসা করা।** ছোটখাটো type error থাকলেও Playwright টেস্ট চালায় <Cite n={8} />, আর Node.js কোনো type check করে না <Cite n={7} />। Playwright-এর docs যেমন বলে, `tsc`-ও চালান <Cite n={8} />।
+- **Error চাপা দিতে `any`।** `any` type-এর value type-check হয় না <Cite n={3} />। তার বদলে type ঠিক করুন।
+- **`strict` বন্ধ রাখা।** `strictNullChecks` ছাড়া `null` আর `undefined` যেকোনো type-এ বসানো যায়, আর এগুলো সামলাতে ভুলে যাওয়া অসংখ্য bug-এর কারণ <Cite n={2} />। Try it-এর ধাপ 4-এ এমন একটা দেখা গেছে: চলার সময় `TypeError`।
+- **ভাবা যে type চলার সময় ডেটা চেক করে।** Type annotation কখনো চলার সময়ের আচরণ বদলায় না <Cite n={2} />। API response-এর shape টেস্টে assertion দিয়ে চেক করুন।
+- **`readonly`-কে সুরক্ষা ভাবা।** `readonly` শুধু type-checking-এর সময় চেক হয়; চলার সময় কিছু বদলায় না <Cite n={4} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **A type-check step.** Does CI run `tsc --noEmit`, and does a type error fail the build?
+- **`strict`.** Is `strict` on in the `tsconfig.json` of the tests?
+- **`any`.** How many `any` types are in the test code, and does each one have a reason?
+- **Response types.** Do the API tests describe their response bodies with interfaces or types?
+- **Closed lists.** Are statuses and roles unions of literal types, not plain strings?
+- **Runtime checks.** Does each test still assert on the real data, not only on the types?
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Type check.** Does CI run `tsc --noEmit`, and does an error stop the build?
+- **`strict`.** Is `strict` turned on for the tests?
+- **`any`.** How many `any` types are there, and does each have a reason?
+- **Response types.** Do API tests describe the response bodies?
+- **Closed lists.** Are statuses and roles lists of exact values?
+- **Real checks.** Do the tests still check the real data?
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **Type-check-এর ধাপ।** CI কি `tsc --noEmit` চালায়, আর type error হলে কি build fail হয়?
+- **`strict`।** টেস্টের `tsconfig.json`-এ কি `strict` চালু?
+- **`any`।** টেস্ট কোডে কতগুলো `any` আছে, আর প্রতিটার কি কোনো কারণ আছে?
+- **Response type।** API টেস্টগুলো কি interface বা type দিয়ে response body বর্ণনা করে?
+- **বন্ধ তালিকা।** Status আর role কি literal type-এর union, সাধারণ string নয়?
+- **চলার সময়ের চেক।** প্রতিটা টেস্ট কি শুধু type নয়, আসল ডেটার ওপরও assert করে?
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| TypeScript | JavaScript with a type system on top. |
+| `tsc` | The TypeScript compiler, the tool that checks the types. |
+| Type annotation | A type such as `person: string` on a parameter, which describes what values the function can be called with; it does not change how the code runs. |
+| Type alias | A name for any type: `type Role = ...`. |
+| Interface | A name for an object type. |
+| Union type | A value that may be any one of two or more types. |
+| Literal type | One exact string or number used as a type. |
+| Optional property | A property marked with `?` that may be missing. |
+| `any` | A type that is not checked. |
+| `strict` | The flag that turns on the strict family of checks, including `strictNullChecks`. |
+| Narrowing | TypeScript working out a more exact type after a check such as `typeof`. |
+| Type stripping | Node.js removing the types and running the code, with no type check. |

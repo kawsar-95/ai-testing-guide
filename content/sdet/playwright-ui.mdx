@@ -1,0 +1,360 @@
+export const metadata = { title: 'UI Automation with Playwright', description: 'UI tests in Playwright Test: locators, auto-waiting, web-first assertions, page objects, and traces, and a first test on a demo app.' }
+export const page = {
+  updated: '2026-11-16',
+  sources: [
+    { title: 'Installation', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/intro', accessed: '2026-11-15' },
+    { title: 'Writing tests', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/writing-tests', accessed: '2026-11-15' },
+    { title: 'Locators', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/locators', accessed: '2026-11-15' },
+    { title: 'Auto-waiting', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/actionability', accessed: '2026-11-15' },
+    { title: 'Assertions', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/test-assertions', accessed: '2026-11-15' },
+    { title: 'Page object models', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/pom', accessed: '2026-11-15' },
+    { title: 'Generating tests', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/codegen-intro', accessed: '2026-11-15' },
+    { title: 'Trace viewer', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/trace-viewer-intro', accessed: '2026-11-15' },
+    { title: 'Best Practices', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/best-practices', accessed: '2026-11-15' },
+    { title: 'Isolation', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/browser-contexts', accessed: '2026-11-15' },
+    { title: 'Running and debugging tests', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/running-tests', accessed: '2026-11-15' },
+    { title: 'UI Mode', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/test-ui-mode', accessed: '2026-11-15' },
+  ],
+}
+
+# UI Automation with Playwright
+
+This page explains how a test finds an element and waits for it, walks you through a first test on a demo app, and shows how a tester keeps a growing suite readable and easy to debug.
+
+<PageMeta />
+
+## What it is
+
+<Voices>
+<Technical>
+
+**Playwright Test** is an end-to-end test framework for web apps. It bundles a test runner, assertions, isolation, parallel runs, and tools <Cite n={1} />. It runs tests on Chromium, WebKit, and Firefox, on Windows, Linux, and macOS. It runs locally or in CI, headless or headed <Cite n={1} />.
+
+A test does two things: it performs actions, and it checks the state against expectations <Cite n={2} />. Playwright waits for the actionability checks to pass before each action, so you do not add manual waits <Cite n={2} />.
+
+Each test runs in its own **browser context**: a clean, incognito-like profile <Cite n={10} />. It has its own local storage, session storage, and cookies <Cite n={10} />. So the pages of two tests are isolated from each other <Cite n={2} />.
+
+This page covers the test runner itself. For Playwright with Claude Code, see [Browser Testing with Playwright](/automate/playwright/).
+
+</Technical>
+<Layman>
+
+**Playwright Test** is a tool that tests a web app from end to end. It comes with what a test needs: a test runner, checks, separate test runs, many tests at once, and tools <Cite n={1} />. It works with the Chromium, WebKit, and Firefox browsers, on Windows, Linux, and macOS. It works on your computer or in CI, with the browser window shown or hidden <Cite n={1} />.
+
+A test does something on the page, then checks the result <Cite n={2} />. Playwright waits for each element before it acts, so you do not add waits <Cite n={2} />.
+
+Each test gets a clean browser profile, like a private window <Cite n={10} />. It has its own storage and cookies <Cite n={10} />. So two tests never share a page <Cite n={2} />.
+
+This page is about the test runner. For Playwright with Claude Code, see [Browser Testing with Playwright](/automate/playwright/).
+
+</Layman>
+<Bangla>
+
+**Playwright Test** হলো web app-এর end-to-end টেস্টের একটা framework। এর ভেতরেই আছে test runner, assertion, isolation, একসাথে অনেক টেস্ট চালানো আর দরকারি টুল <Cite n={1} />। এটা Chromium, WebKit আর Firefox-এ চলে, Windows, Linux আর macOS-এ। নিজের কম্পিউটারে বা CI-তে, browser দেখিয়ে (headed) বা না দেখিয়ে (headless), দুইভাবেই চালানো যায় <Cite n={1} />।
+
+একটা টেস্ট দুটো কাজ করে: পেজে action করে, তারপর অবস্থাটা প্রত্যাশার সাথে মিলিয়ে দেখে <Cite n={2} />। প্রতিটা action-এর আগে Playwright নিজেই অপেক্ষা করে, তাই আপনাকে হাতে wait লিখতে হয় না <Cite n={2} />।
+
+প্রতিটা টেস্ট নিজের আলাদা **browser context**-এ চলে: incognito-র মতো একটা পরিষ্কার profile <Cite n={10} />। এর local storage, session storage আর cookie আলাদা <Cite n={10} />। তাই দুটো টেস্টের পেজ একে অপরের থেকে আলাদা থাকে <Cite n={2} />।
+
+এই পেজে শুধু test runner-এর কথা। Claude Code-এর সাথে Playwright-এর জন্য [Browser Testing with Playwright](/automate/playwright/) পেজটা দেখুন।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+Four ideas carry most tests.
+
+- **Locators find elements.** A locator is a way to find elements on the page at any moment <Cite n={3} />. The recommended built-in locators include `page.getByRole()`, `page.getByText()`, `page.getByLabel()`, `page.getByPlaceholder()`, and `page.getByTestId()` <Cite n={3} />. By default, `getByTestId()` finds an element by its `data-testid` attribute <Cite n={3} />. Playwright recommends user-facing attributes, such as the role, first <Cite n={3} />.
+- **Locators are strict.** An action on a locator throws an error if more than one element matches <Cite n={3} />.
+- **Actions wait.** Before an action, Playwright runs actionability checks <Cite n={4} />. For `locator.click()`, the locator must resolve to exactly one element. The element must be visible, stable (not animating), not covered by other elements, and enabled <Cite n={4} />. If the checks do not pass in time, the action fails with a `TimeoutError` <Cite n={4} />.
+- **Assertions retry.** An auto-retrying assertion such as `await expect(locator).toBeVisible()` retries until it passes or its timeout is reached <Cite n={5} />. The best practices call them web-first assertions <Cite n={9} />. The default assertion timeout is 5 seconds <Cite n={5} />.
+
+```text
+page.getByRole('button', { name: 'Save' })   a locator: how to find the button
+        │
+        ▼
+await locator.click()                    waits: one element, visible, stable,
+        │                                not covered, enabled
+        ▼
+await expect(message).toBeVisible()      retries until true, or fails after 5 s
+```
+
+</Technical>
+<Layman>
+
+Four ideas do most of the work.
+
+- **Locators find elements.** A locator tells Playwright how to find something on the page <Cite n={3} />. The recommended built-in ones include `page.getByRole()`, `page.getByText()`, `page.getByLabel()`, `page.getByPlaceholder()`, and `page.getByTestId()` <Cite n={3} />. By default, `page.getByTestId()` uses the `data-testid` attribute <Cite n={3} />. Playwright says to use what the user sees first, such as the role <Cite n={3} />.
+- **Locators are strict.** If a locator finds more than one element, the action stops with an error <Cite n={3} />.
+- **Actions wait.** Before a click, Playwright checks that there is exactly one element. It must be visible, not moving, not covered, and enabled <Cite n={4} />. If that does not happen in time, the click fails with a `TimeoutError` <Cite n={4} />.
+- **Checks try again.** `await expect(locator).toBeVisible()` keeps checking until it passes or time runs out <Cite n={5} />. The default time is 5 seconds <Cite n={5} />.
+
+</Layman>
+<Bangla>
+
+বেশিরভাগ টেস্ট চারটা ধারণার ওপর চলে।
+
+- **Locator element খুঁজে দেয়।** Locator হলো পেজে যেকোনো মুহূর্তে element খোঁজার একটা উপায় <Cite n={3} />। প্রস্তাবিত built-in locator-এর মধ্যে আছে `page.getByRole()`, `page.getByText()`, `page.getByLabel()`, `page.getByPlaceholder()` আর `page.getByTestId()` <Cite n={3} />। `page.getByTestId()` element খোঁজে তার `data-testid` attribute দিয়ে <Cite n={3} />। Playwright আগে ব্যবহারকারী যা দেখেন সেটা দিয়ে খুঁজতে বলে, যেমন role <Cite n={3} />।
+- **Locator কড়া (strict)।** একটা locator একাধিক element পেলে action একটা error দিয়ে থেমে যায় <Cite n={3} />।
+- **Action অপেক্ষা করে।** Click-এর আগে Playwright দেখে যে element ঠিক একটা কি না। Element-কে দৃশ্যমান, স্থির (animation চলছে না), অন্য কিছুর নিচে ঢাকা নয় আর enabled হতে হবে <Cite n={4} />। সময়ের মধ্যে এগুলো না মিললে click একটা `TimeoutError` দিয়ে fail করে <Cite n={4} />।
+- **Assertion বারবার চেষ্টা করে।** `await expect(locator).toBeVisible()` পাস না করা বা সময় শেষ না হওয়া পর্যন্ত বারবার চেক করে <Cite n={5} />। ডিফল্ট সময় ৫ সেকেন্ড <Cite n={5} />।
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+You need Node.js: the latest 22.x, 24.x, or 26.x <Cite n={1} />.
+
+1. **Create a project.** Make a new folder, and run `npm init playwright@latest` in it. The command creates a new project, or adds Playwright to an existing one <Cite n={1} />. It asks for TypeScript or JavaScript; the default is TypeScript <Cite n={1} />. It creates `playwright.config.ts` and a first test, `tests/example.spec.ts` <Cite n={1} />. The config holds the browsers, timeouts, retries, projects, and reporters <Cite n={1} />.
+2. **Run the example.** By default, `npx playwright test` runs the tests headless, in parallel, on Chromium, Firefox, and WebKit <Cite n={1} />. Add `--headed` to see the browser, or `--ui` to open UI Mode <Cite n={1} />. `npx playwright show-report` opens the HTML report <Cite n={1} />.
+3. **Record your steps.** `npx playwright codegen demo.playwright.dev/todomvc` opens a browser and the Playwright Inspector <Cite n={7} />. Click and type in the demo app, and Playwright writes the code for your actions <Cite n={7} />.
+4. **Write a test.** Save this as `tests/todo.spec.ts` and run `npx playwright test`. It uses built-in locators <Cite n={3} /> and auto-retrying assertions <Cite n={5} />.
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test('a new todo shows in the list', async ({ page }) => {
+  await page.goto('https://demo.playwright.dev/todomvc');
+  const newTodo = page.getByPlaceholder('What needs to be done?');
+  await newTodo.fill('Buy milk');
+  await newTodo.press('Enter');
+  await expect(page.getByTestId('todo-title')).toHaveText(['Buy milk']);
+  await expect(page.getByText('1 item left')).toBeVisible();
+});
+```
+
+5. **Debug it.** `npx playwright test --debug` opens a browser and the Playwright Inspector <Cite n={11} />. Its step over button steps through the test <Cite n={11} />. UI Mode lets you explore, run, and debug tests, with time travel and a watch mode <Cite n={12} />.
+
+</Technical>
+<Layman>
+
+You need Node.js: the latest 22.x, 24.x, or 26.x <Cite n={1} />.
+
+1. **Make a project.** Make a new folder, and run `npm init playwright@latest` in it <Cite n={1} />. It asks for TypeScript or JavaScript; TypeScript is the default <Cite n={1} />. You get `playwright.config.ts` and a first test, `tests/example.spec.ts` <Cite n={1} />.
+2. **Run it.** By default, `npx playwright test` runs the tests on three browsers at once, with no window <Cite n={1} />. Add `--headed` to watch, or `--ui` for UI Mode. `npx playwright show-report` opens the report <Cite n={1} />.
+3. **Record your clicks.** `npx playwright codegen demo.playwright.dev/todomvc` opens a browser and the Inspector. Use the demo app, and Playwright writes the code for you <Cite n={7} />.
+4. **Write a test.** Save this as `tests/todo.spec.ts` and run `npx playwright test`. It uses built-in locators <Cite n={3} /> and auto-retrying assertions <Cite n={5} />.
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test('a new todo shows in the list', async ({ page }) => {
+  await page.goto('https://demo.playwright.dev/todomvc');
+  const newTodo = page.getByPlaceholder('What needs to be done?');
+  await newTodo.fill('Buy milk');
+  await newTodo.press('Enter');
+  await expect(page.getByTestId('todo-title')).toHaveText(['Buy milk']);
+  await expect(page.getByText('1 item left')).toBeVisible();
+});
+```
+
+5. **Find a problem.** `npx playwright test --debug` opens the browser and the Inspector. You can go through the test one step at a time <Cite n={11} />. UI Mode lets you explore, run, and debug tests, go back in time, and use a watch mode <Cite n={12} />.
+
+</Layman>
+<Bangla>
+
+আপনার Node.js লাগবে: সর্বশেষ 22.x, 24.x বা 26.x <Cite n={1} />।
+
+1. **একটা project বানান।** একটা নতুন folder বানিয়ে তাতে `npm init playwright@latest` চালান <Cite n={1} />। এটা জানতে চায় TypeScript না JavaScript; ডিফল্ট হলো TypeScript <Cite n={1} />। আপনি পাবেন `playwright.config.ts` আর প্রথম টেস্ট `tests/example.spec.ts` <Cite n={1} />।
+2. **চালিয়ে দেখুন।** ডিফল্টভাবে `npx playwright test` তিনটা browser-এ একসাথে, window ছাড়া (headless) টেস্ট চালায় <Cite n={1} />। দেখতে চাইলে `--headed` যোগ করুন, আর UI Mode-এর জন্য `--ui`। রিপোর্ট খুলতে `npx playwright show-report` <Cite n={1} />।
+3. **আপনার ক্লিক রেকর্ড করুন।** `npx playwright codegen demo.playwright.dev/todomvc` একটা browser আর Playwright Inspector খোলে। Demo app-এ ক্লিক আর টাইপ করুন, Playwright নিজেই কোড লিখে দেবে <Cite n={7} />।
+4. **একটা টেস্ট লিখুন।** নিচের কোডটা `tests/todo.spec.ts` নামে সেভ করে `npx playwright test` চালান। এতে আছে built-in locator <Cite n={3} /> আর নিজে থেকে retry করা assertion <Cite n={5} />।
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test('a new todo shows in the list', async ({ page }) => {
+  await page.goto('https://demo.playwright.dev/todomvc');
+  const newTodo = page.getByPlaceholder('What needs to be done?');
+  await newTodo.fill('Buy milk');
+  await newTodo.press('Enter');
+  await expect(page.getByTestId('todo-title')).toHaveText(['Buy milk']);
+  await expect(page.getByText('1 item left')).toBeVisible();
+});
+```
+
+5. **সমস্যা খুঁজুন।** `npx playwright test --debug` browser আর Inspector খোলে, আর আপনি ধাপে ধাপে টেস্টটা চালাতে পারেন <Cite n={11} />। UI Mode দিয়ে টেস্ট ঘুরে দেখা, চালানো আর debug করা যায়, সাথে আছে সময়ে পিছিয়ে দেখা (time travel) আর watch mode <Cite n={12} />।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+- **Test what the user sees.** A test should check that the app works for its end users, and not rely on implementation details <Cite n={9} />. Prefer user-facing attributes to XPath or CSS selectors <Cite n={9} />. The DOM can easily change, and a test that depends on its structure then fails <Cite n={9} />.
+- **Keep the suite readable with page objects.** A page object gives one page a higher-level API and keeps its selectors in one place <Cite n={6} />. Playwright's own example builds it as a helper class <Cite n={6} />. The test then reads like the steps of a user:
+
+```ts
+// tests/todo-page.ts
+import type { Locator, Page } from '@playwright/test';
+
+export class TodoPage {
+  readonly page: Page;
+  readonly newTodo: Locator;
+  readonly titles: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.newTodo = page.getByPlaceholder('What needs to be done?');
+    this.titles = page.getByTestId('todo-title');
+  }
+
+  async goto() {
+    await this.page.goto('https://demo.playwright.dev/todomvc');
+  }
+
+  async add(text: string) {
+    await this.newTodo.fill(text);
+    await this.newTodo.press('Enter');
+  }
+}
+```
+
+```ts
+// tests/todo-pom.spec.ts
+import { test, expect } from '@playwright/test';
+import { TodoPage } from './todo-page';
+
+test('two todos keep their order', async ({ page }) => {
+  const todos = new TodoPage(page);
+  await todos.goto();
+  await todos.add('Buy milk');
+  await todos.add('Pay bills');
+  await expect(todos.titles).toHaveText(['Buy milk', 'Pay bills']);
+});
+```
+
+- **Share the setup.** `test.describe` declares a group of tests. `test.beforeEach` and `test.afterEach` run before and after each test <Cite n={2} />.
+- **Read failures from CI.** The default config records a trace on the first retry of a failed test (`on-first-retry`) <Cite n={8} />. Retries are 2 on CI and 0 locally <Cite n={8} />. You open a trace from the trace icon in the HTML report <Cite n={8} />. Locally, `--trace on` forces tracing <Cite n={8} />.
+- **Test only what you control.** Do not test links to external sites or third-party servers that you do not control <Cite n={9} />.
+
+</Technical>
+<Layman>
+
+- **Test what the user sees.** A test should check that the app works for the people who use it, not how the code is built <Cite n={9} />. Prefer what a user sees to XPath or CSS selectors <Cite n={9} />. The page structure can easily change, and then such a test breaks <Cite n={9} />.
+- **Use page objects.** In Playwright's example, a page object is a helper class for one page <Cite n={6} />. It gives you simple steps for that page, and keeps the selectors in one place <Cite n={6} />.
+- **Share the setup.** `test.describe` groups tests. `test.beforeEach` and `test.afterEach` run before and after each test <Cite n={2} />.
+- **Read failures from CI.** By default, a trace is recorded when a failed test runs again the first time <Cite n={8} />. CI tries a failed test 2 more times; your computer does not retry <Cite n={8} />. Open the trace from the HTML report. On your computer, `--trace on` turns tracing on <Cite n={8} />.
+- **Test only what you control.** Do not test links to external sites or third-party servers that you do not control <Cite n={9} />.
+
+</Layman>
+<Bangla>
+
+- **ব্যবহারকারী যা দেখেন, সেটাই টেস্ট করুন।** টেস্ট দেখবে app তার ব্যবহারকারীদের জন্য ঠিকমতো কাজ করে কি না; কোড ভেতরে কীভাবে বানানো, সেটার ওপর নির্ভর করবে না <Cite n={9} />। XPath বা CSS selector-এর বদলে ব্যবহারকারী যা দেখেন সেটা দিয়ে element খুঁজুন। DOM সহজেই বদলায়, আর তখন DOM-এর গঠনের ওপর নির্ভর করা টেস্ট fail করে <Cite n={9} />।
+- **Page object ব্যবহার করুন।** Playwright-এর উদাহরণে page object হলো একটা পেজের জন্য একটা helper class <Cite n={6} />। এটা সেই পেজের জন্য সহজ ধাপ দেয়, আর selector-গুলো এক জায়গায় রাখে <Cite n={6} />।
+- **Setup ভাগ করে নিন।** `test.describe` টেস্টগুলোকে একটা group-এ রাখে। `test.beforeEach` আর `test.afterEach` প্রতিটা টেস্টের আগে আর পরে চলে <Cite n={2} />।
+- **CI-এর fail বুঝুন।** ডিফল্ট config-এ fail করা টেস্ট প্রথমবার আবার চলার সময় trace রেকর্ড হয় (`on-first-retry`) <Cite n={8} />। CI-তে retry ২ বার, আর নিজের কম্পিউটারে ০ বার <Cite n={8} />। HTML report থেকে trace খুলুন। নিজের কম্পিউটারে `--trace on` দিলে trace জোর করে চালু হয় <Cite n={8} />।
+- **শুধু নিজের জিনিস টেস্ট করুন।** যে বাইরের site-এর link বা third-party server আপনার নিয়ন্ত্রণে নেই, সেগুলো টেস্ট করবেন না <Cite n={9} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A manual assertion.** `expect(await page.getByText('welcome').isVisible()).toBe(true)` does not wait: it checks once and returns at once <Cite n={9} />. Write `await expect(page.getByText('welcome')).toBeVisible()` instead, which waits until the condition is met <Cite n={9} />.
+- **A missing `await`.** Retrying assertions are async, so you must await them <Cite n={5} />.
+- **A sleep in the test.** Playwright already waits for the actionability checks, so a test needs no manual waits <Cite n={2} />.
+- **CSS classes or XPath as selectors.** They tie the test to the DOM structure, which can easily change <Cite n={9} />. Use the user-facing locators instead <Cite n={3} />.
+- **A locator that matches many elements.** The action throws, because locators are strict <Cite n={3} />. Narrow the locator, for example with `locator.filter()` <Cite n={3} />. `locator.first()` skips the strictness check, and the docs do not recommend it <Cite n={3} />.
+- **Tests that depend on each other.** Each test should be completely isolated and run on its own <Cite n={9} />.
+
+</Technical>
+<Layman>
+
+- **A check that does not wait.** `expect(await page.getByText('welcome').isVisible()).toBe(true)` looks once and moves on <Cite n={9} />. Write `await expect(page.getByText('welcome')).toBeVisible()`, which waits <Cite n={9} />.
+- **A missing `await`.** The checks that try again need `await` in front <Cite n={5} />.
+- **A sleep in the test.** Playwright already waits before each action, so do not add waits <Cite n={2} />.
+- **CSS classes or XPath to find elements.** They tie the test to the page structure, which can easily change <Cite n={9} />. Use the user-facing locators instead <Cite n={3} />.
+- **A locator that finds many elements.** The action fails <Cite n={3} />. Make the locator narrower, for example with `locator.filter()` <Cite n={3} />. The docs do not recommend `locator.first()`, which skips the check <Cite n={3} />.
+- **Tests that need each other.** Each test should work alone <Cite n={9} />.
+
+</Layman>
+<Bangla>
+
+- **হাতে লেখা assertion।** `expect(await page.getByText('welcome').isVisible()).toBe(true)` অপেক্ষা করে না: একবার দেখে সাথে সাথে ফিরে আসে <Cite n={9} />। এর বদলে লিখুন `await expect(page.getByText('welcome')).toBeVisible()`, যেটা শর্ত পূরণ না হওয়া পর্যন্ত অপেক্ষা করে <Cite n={9} />।
+- **`await` বাদ পড়া।** যে assertion বারবার চেষ্টা করে, সেগুলো async, তাই এগুলোর আগে `await` দিতেই হবে <Cite n={5} />।
+- **টেস্টে sleep রাখা।** Playwright নিজেই action-এর আগে অপেক্ষা করে, তাই হাতে wait লাগে না <Cite n={2} />।
+- **CSS class বা XPath দিয়ে element খোঁজা।** এগুলো টেস্টকে DOM-এর গঠনের সাথে বেঁধে দেয়, আর DOM সহজেই বদলায় <Cite n={9} />। এর বদলে ব্যবহারকারী যা দেখেন সেই locator ব্যবহার করুন <Cite n={3} />।
+- **একাধিক element-এ মেলা locator।** Locator strict, তাই action error দেয় <Cite n={3} />। Locator সরু করুন, যেমন `locator.filter()` দিয়ে <Cite n={3} />। `locator.first()` strictness check এড়িয়ে যায়, আর docs এটা ব্যবহারের পরামর্শ দেয় না <Cite n={3} />।
+- **একটা টেস্ট আরেকটার ওপর নির্ভর করা।** প্রতিটা টেস্ট পুরো আলাদা থাকবে আর নিজে নিজে চলবে <Cite n={9} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Locators.** Do the tests find elements by role, label, text, or test id? Count the CSS classes and XPath selectors that are left.
+- **Assertions.** Does every check of the page start with `await expect(`? Search for `isVisible()` inside an `expect(`.
+- **Waits.** Search the suite for `waitForTimeout`. Each one is a sleep that a web-first assertion can replace.
+- **Isolation.** Run one test alone, then the whole suite. A test that passes alone but fails in the suite, or the other way round, shares state with another test.
+- **CI evidence.** Does a failed CI run keep the HTML report and the trace as artifacts?
+- **Page objects.** Does each page object hold only the locators and steps of its own page?
+- **Scope.** Do the tests stop at your app, or do they also test sites that you do not own?
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Locators.** Do the tests find elements by role, label, text, or test id? Count the CSS classes and XPath that are left.
+- **Checks.** Does every check start with `await expect(`? Look for `isVisible()` inside an `expect(`.
+- **Waits.** Look for `waitForTimeout`. Each one is a sleep that a waiting check can replace.
+- **Separate tests.** Run one test alone, then all of them. A test that passes alone but fails with the others, or the other way round, shares something with another test.
+- **CI proof.** Does a failed CI run keep the report and the trace?
+- **Page objects.** Does each page object hold only its own page?
+- **Scope.** Do the tests stay on your app, or do they also test sites you do not own?
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **Locator।** টেস্টগুলো কি role, label, text বা test id দিয়ে element খোঁজে? কতগুলো CSS class আর XPath selector রয়ে গেছে, গুনে দেখুন।
+- **Assertion।** পেজের প্রতিটা চেক কি `await expect(` দিয়ে শুরু হয়? `expect(`-এর ভেতরে `isVisible()` খুঁজুন।
+- **Wait।** পুরো suite-এ `waitForTimeout` খুঁজুন। প্রতিটা একটা sleep, যার জায়গায় web-first assertion বসানো যায়।
+- **Isolation।** একটা টেস্ট একা চালান, তারপর পুরো suite। যে টেস্ট একা পাস করে কিন্তু suite-এ fail করে, বা উল্টোটা, সেটা অন্য কোনো টেস্টের সাথে state ভাগ করছে।
+- **CI-এর প্রমাণ।** CI-তে fail হলে কি HTML report আর trace artifact হিসেবে থেকে যায়?
+- **Page object।** প্রতিটা page object কি শুধু নিজের পেজের locator আর ধাপ রাখে?
+- **Scope।** টেস্টগুলো কি আপনার app-এই থামে, নাকি আপনার নয় এমন site-ও টেস্ট করে?
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Playwright Test | An end-to-end test framework for web apps, with its own test runner and assertions. |
+| Locator | A way to find elements on the page at any moment, such as `page.getByRole()`. |
+| Strict locator | An action on a locator throws an error if more than one element matches. |
+| Actionability checks | The checks before an action: one element, visible, stable, not covered, and enabled. |
+| Web-first assertion | An `await expect(...)` check that retries until it passes or times out (5 seconds by default). |
+| Browser context | The clean, incognito-like profile that each test gets, with its own storage and cookies. |
+| Page object | A class that gives one page a higher-level API and keeps its selectors in one place. |
+| Codegen | The test generator: it records your actions in a browser as test code. |
+| Trace | Recorded on the first retry of a failed test by the default config; you open it from the trace icon in the HTML report. |
+| UI Mode | A mode to explore, run, and debug tests, with time travel and a watch mode. |

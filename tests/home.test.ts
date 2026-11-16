@@ -32,10 +32,10 @@ test("the why grid has 6 items with a title and a text", () => {
   }
 });
 
-test("the course cards are the 7 groups, then the 15 modules", () => {
+test("the course cards are the 7 groups, then the 16 modules", () => {
   assert.deepEqual(
     COURSE_CARDS.map((c) => c.n),
-    ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"],
+    ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"],
   );
   assert.deepEqual(
     COURSE_CARDS.slice(0, 7).map((c) => c.count),
@@ -43,7 +43,7 @@ test("the course cards are the 7 groups, then the 15 modules", () => {
   );
   assert.deepEqual(
     COURSE_CARDS.slice(7).map((c) => c.count),
-    [12, 11, 15, 20, 40, 20, 28, 6, 20, 9, 7, 10, 47, 24, 8],
+    [12, 11, 15, 20, 40, 20, 28, 6, 20, 9, 7, 10, 47, 24, 8, 10],
   );
   assert.equal(COURSE_CARDS[0].href, "/getting-started/setup/");
   assert.equal(COURSE_CARDS[6].href, "/agentic-qa/claude-for-qa/");
