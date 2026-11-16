@@ -9,7 +9,8 @@ export type GroupSlug =
   | "configure"
   | "extend"
   | "automate"
-  | "case-study";
+  | "case-study"
+  | "agentic-qa";
 
 export type NavPage = {
   group: GroupSlug;
@@ -211,6 +212,72 @@ const SOURCE: { slug: GroupSlug; title: string; pages: PageEntry[] }[] = [
         title: "What to Fix in the Setup",
         description: "The mistakes found later in the workspace setup — MCP tool names, tool lists, hooks, settings — and the fixes.",
         tagline: "learn from the setup's own mistakes",
+      },
+    ],
+  },
+  {
+    slug: "agentic-qa",
+    title: "Agentic QA",
+    pages: [
+      {
+        slug: "claude-for-qa",
+        title: "Claude for Professional QA",
+        description: "The agentic loop, the harness, the context window, memory, tokens, and safe habits on a real project.",
+        tagline: "how a tester works with an agent",
+      },
+      {
+        slug: "qa-workspace",
+        title: "QA Workspace & Tooling",
+        description: "The .claude folder, rules, permissions, and guardrails, and when to add Superpowers, Context7, graphify, or Serena.",
+        tagline: "set up the workspace before the work",
+      },
+      {
+        slug: "project-setup",
+        title: "Project, Jira, GitHub & MCP Setup",
+        description: "Run the dMoney practice app and connect Claude to Jira, the test database, and GitHub.",
+        tagline: "connect Claude to the project's systems",
+      },
+      {
+        slug: "requirements",
+        title: "Requirement Analysis & Acceptance Criteria",
+        description: "Find ambiguity, missing rules, and risks in a story, and write acceptance criteria that can be tested.",
+        tagline: "test the requirement before the code",
+      },
+      {
+        slug: "blast-radius",
+        title: "Test Design & Blast Radius",
+        description: "Trace what a change can break, then design positive, negative, boundary, integration, regression, and adversarial tests.",
+        tagline: "test what the change can reach",
+      },
+      {
+        slug: "test-charters",
+        title: "Exploring Features with Test Charters",
+        description: "Explore a feature with no full spec: charters, sessions, expected behavior, and hidden business rules.",
+        tagline: "learn the rules the spec left out",
+      },
+      {
+        slug: "test-execution",
+        title: "Test Execution & Bug Investigation",
+        description: "Run tests with an agent in the browser, check the API and the database, collect evidence, and report bugs.",
+        tagline: "run, check, and prove each result",
+      },
+      {
+        slug: "multi-agent-qa",
+        title: "A Multi-Agent QA System",
+        description: "An analyst, a designer, an executor, and a reviewer: roles, context boundaries, escalation, and approval points.",
+        tagline: "split the work between specialists",
+      },
+      {
+        slug: "playwright-with-claude",
+        title: "Playwright Automation with Claude",
+        description: "Playwright Test basics — locators, assertions, waits, and fixtures — and how to review the code Claude writes.",
+        tagline: "write tests you understand",
+      },
+      {
+        slug: "playwright-framework",
+        title: "Playwright Framework & the Agentic QA Workflow",
+        description: "A page-object suite, regression runs, failure triage, and bugs filed through an approval step.",
+        tagline: "from approved cases to filed bugs",
       },
     ],
   },

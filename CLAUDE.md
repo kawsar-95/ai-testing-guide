@@ -118,7 +118,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
 | `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture, Course, k6, AI Engineering, Agent Memory, AI Agents). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 320 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (all 330 routes, the 404 page, the search index), and the source of the service worker |
 | `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels, the three first pages (`START_STEPS`: the hero button opens the first), `WHY_ITEMS`, `COURSE_CARDS`, `TUTORIAL_CARDS`, and `MODULE_CARDS` |
@@ -137,7 +137,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/scroll-lock.ts` | One page-scroll lock, shared by the drawer and the search dialog |
 | `mdx-components.tsx` | Registers the MDX components |
 | `public/images/<group>/` | The images of the content pages, for example `public/images/fundamentals/`. A page refers to one as `/images/<group>/<file>`. |
-| `content/<group>/<page>.mdx` | The 24 tutorial pages |
+| `content/<group>/<page>.mdx` | The 34 tutorial pages |
 | `content/system-design/<slug>.mdx` | The 15 System Design case pages |
 | `content/fundamentals/<chapter>.mdx` | The 11 Fundamentals chapter pages |
 | `content/course/<slug>.mdx` | The 40 Course topic pages |
@@ -178,9 +178,9 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `scripts/interview-route-map.json` | The 1 interview route: `/interview/`. Same identity map. |
 | `scripts/fundamentals-route-map.json` | The 12 Fundamentals routes: `/fundamentals/` and the 11 chapters. Same identity map as `route-map.json`. |
 
-`lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the part numbers (`PART 01`…`PART 24`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
+`lib/nav.ts` is the one ordered list of groups and pages (slug, title, description, tagline). It drives the drawer, the part numbers (`PART 01`…`PART 34`, continuous across the groups), prev/next, the home contents, the search index, the sitemap, and the static params.
 
-The site has 320 routes:
+The site has 330 routes:
 
 | Routes | Count |
 |---|---|
@@ -188,7 +188,7 @@ The site has 320 routes:
 | `/contents/` | 1 |
 | `/dashboard/` | 1 |
 | `/interview/` | 1 |
-| `/<group>/<page>/` for the 24 tutorial pages | 23 |
+| `/<group>/<page>/` for the 34 tutorial pages | 34 |
 | `/linux/` and the 12 Linux stages | 13 |
 | `/system-design/` and the 15 case studies | 16 |
 | `/fundamentals/` and the 11 Fundamentals chapters | 12 |
@@ -213,6 +213,7 @@ The site has 320 routes:
 | Extend | `content/extend/` | `skills`, `subagents`, `hooks`, `mcp`, `plugins` |
 | Automate | `content/automate/` | `headless`, `github-actions`, `playwright` |
 | Case Study | `content/case-study/` | `overview`, `bug-hunt`, `pr-review`, `test-and-retest`, `automation`, `lessons`, `codebase-tour` |
+| Agentic QA | `content/agentic-qa/` | `claude-for-qa`, `qa-workspace`, `project-setup`, `requirements`, `blast-radius`, `test-charters`, `test-execution`, `multi-agent-qa`, `playwright-with-claude`, `playwright-framework` |
 
 ## Navigation
 
@@ -220,7 +221,7 @@ The site has 320 routes:
 |---|---|
 | Header | Sticky, 64 px. The brand mark in a teal tile, then the top nav (from the `nav` breakpoint), then search, voice, install, theme, and the menu button (below `nav`). |
 | Top nav | `HEADER_NAV`: 4 plain links: Home, Contents, Dashboard, and Interview. The current item has a teal underline (`activeNavId`). A tutorial or module page has no current item. A module is reached from the home page and `/contents/`. Below the `nav` breakpoint, the drawer shows the same 4 links above its list (`MobileNav`). |
-| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 301 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the name of the current module (a link to its home), an "All modules" link to /contents/ (the left list only), and one line for each page of the module: its number, its title, and its progress mark. It does not list the other modules: the home page and /contents/ do. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
+| Left list | `ChapterLayout` (`components/content/ChapterLayout.tsx`): the 3 columns of the 311 content pages. From the `chapter` breakpoint (51.25rem, 820 px), the left list (`ChapterList`, 240 px, sticky, its own scroll) shows `NavList`: the name of the current module (a link to its home), an "All modules" link to /contents/ (the left list only), and one line for each page of the module: its number, its title, and its progress mark. It does not list the other modules: the home page and /contents/ do. From `toc` (80rem, 1280 px), "On this page" (`SectionNav`, 280 px) shows. The page passes its route to `ChapterLayout`, so the static HTML has the right list. The layout is at most 1400 px wide; the text column at most 720 px. |
 | Closing the sidebars | Each side column of `ChapterLayout` has a toggle button (`SidebarToggle`): a bare icon of a window with the divider on the sidebar's side and a chevron, 36 px (44 px on a touch screen). The left button is the first item of the left column. The right button is in the heading row of "On this page" (`SectionNav`). A closed column shrinks to a 2.75 rem rail that holds only its button, so the same button opens it again, and the button keeps its place and its focus. The text column keeps its 720 px width. The state is on `<html>` (`data-sidebar-left` and `data-sidebar-right`, value `closed`; an open sidebar has no attribute) and in `localStorage` (`sidebar-left`, `sidebar-right`). `SIDEBAR_INIT_SCRIPT` (`lib/sidebar.ts`) sets the attributes in `<head>` before the first paint, so a saved choice shows with no flash and no shift. `app/globals.css` turns the attributes into `--sb-left` and `--sb-right` (the grid columns), hides the body (`data-sidebar-body`), and picks the chevron. `useSidebar` (`useSyncExternalStore` on the attribute, and the `storage` event for other tabs) only drives the label of the button. `ChapterList` scrolls the current page into view again when the left list opens, because a hidden list forgets its scroll position. A page with no outline has no right toggle. The names ("Hide the page list" and three more) are in `lib/ui.ts` and `lib/bn/shell.ts`. |
 | Drawer | `MobileNav`, on every width. The menu button opens it below `nav`. Below `chapter`, `ContentsButton` above the title of a content page opens it with the `OPEN_NAV_EVENT` window event. It shows `NavList`: the pages of the current module. The list mounts when the drawer first opens, so a closed drawer adds no links, and a 404 page that the server renders at a module path does not mismatch on hydration (the list depends on the path). On close, the focus goes back to the button that opened it. |
 | One section at a time | `SectionFocus` (in `ChapterLayout`) groups the flat children of `article[data-content]` by `##` heading and hides all sections but one (`data-sec-hidden`, CSS in `app/globals.css`, screen only). The text before the first `##` stays visible. A one-line step bar (the label, the segments, and "Show all sections") sits above the section, and Previous and Next buttons below it. While it is on, `SectionFocus` sets `data-focus-on` on the article, and the CSS drops the rule above the one visible `##` heading. "Show all sections" turns it off (`localStorage` key `section-focus`). A hash or an in-page link into a hidden section shows it. Pages with fewer than 3 sections, and pages with no JavaScript, show everything. The strings are in `lib/ui.ts` and `lib/bn/shell.ts`. |
@@ -232,8 +233,8 @@ The site has 320 routes:
 |---|---|
 | `MetaLine`, `ChapterTools` | The one meta row of each content page (in the `PageMeta` slot): `N min read · N sections · N sources · updated Mon YYYY` on the left (`MetaLine`), and the toggles Bookmark and Mark as read (`aria-pressed`, no emoji) on the right (`ChapterTools`, a child of `MetaLine`). `ChapterTools` saves the page to `last-page` on mount. `MetaLine` is the only `[data-page-meta]` element, which `check_sources.py` reads. |
 | Reading time | `lib/reading-time.ts`: the words of the Technical text (no code, export statements, tags, or link URLs) / 200, plus the non-blank lines of its code blocks / 20 (the tutorial's own estimate of how fast a reader works through code), rounded up, 1 at least. A Fundamentals chapter gets one value per version (`getReadingMinutesByVersion`), and the version CSS shows the one of the switch. Computed at build time. |
-| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 301 content pages. |
-| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 301`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, and Security Testing (12 rows, counted from the same ids and stores as the module home pages), Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. The page is flat: ruled blocks with no frames, and a module row has a bar and `done / total` with no percent. Export downloads `progress-YYYY-MM-DD.json` with the 15 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 15 keys. |
+| Storage | `page-read` and `page-bookmarks` (lists of routes, `createUseProgress`) and `last-page` (one route). Hooks: `components/reading/useReadingState.ts`. `CONTENT_PAGES` (`lib/reading-state.ts`) is the list of the 311 content pages. |
+| `/dashboard/` | `components/pages/DashboardPage.tsx`: pages read (`N / 311`), bookmarks, the topic progress of Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, and Security Testing (12 rows, counted from the same ids and stores as the module home pages), Continue reading (`continueTarget`: an unknown `last-page` gives the first tutorial page), the bookmarks, and the pages read by module. The page is flat: ruled blocks with no frames, and a module row has a bar and `done / total` with no percent. Export downloads `progress-YYYY-MM-DD.json` with the 15 keys of `PROGRESS_KEYS`. Reset asks with `confirm`, then clears the 15 keys. |
 | Strings | `lib/dashboard.ts` (`DASHBOARD_UI`, the route). The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle. |
 
 ## Linux Module
@@ -491,6 +492,22 @@ The Security Testing module is the home at `/security/` and 8 topic pages at `/s
 
 To add a topic, add it to `lib/security/topics.ts` and to `SecuritySlug`, create `content/security/<slug>.mdx`, and add its route to `scripts/security-route-map.json`. `npm test` checks that the three agree.
 
+## Agentic QA Group
+
+The Agentic QA group is the 7th tutorial group: parts 25 to 34 at `/agentic-qa/<slug>/`, after Case Study. It runs the whole agentic QA workflow, one stage a page: Claude for a tester, the workspace and its tools, the project and MCP setup, requirement analysis, test design and blast radius, test charters, test execution, a multi-agent system, Playwright with Claude, and a Playwright framework with the end-to-end workflow. The topic order follows the 10-module outline of an agentic QA course that the owner gave. Only the topic names come from it: the pages do not name the course, its school, or its website, and no course text is copied. The design is `docs/superpowers/specs/2026-11-15-agentic-qa-group-design.md`.
+
+The pages are tutorial pages: `lib/nav.ts`, `content/agentic-qa/<slug>.mdx`, and `scripts/route-map.json`. A page links to the tutorial page that already explains a mechanism (for example `/extend/subagents/`) and goes broader on the QA work.
+
+| Rule | Detail |
+|---|---|
+| Page shape | A lede, 4 to 8 topic sections, then `## Practice` (the tutorial's own exercise), `## Common mistakes`, and `## Key words` (a table, last). Each `##` section except `## Key words` has `<Voices>`. `npm test` (`tests/agentic-qa.test.ts`) checks the order of the group, the files, the route map, the titles, the last three sections, the voices, and that the cites and the sources agree. |
+| Sources | Official docs and primary sources: code.claude.com/docs, playwright.dev, cli.github.com, docs.github.com, support.atlassian.com, modelcontextprotocol.io, the GitHub repo of each named tool (Superpowers, Context7, the CLAUDE.md management plugin, Caveman, graphify, Serena, agent-browser, the Atlassian and MySQL MCP servers, Playwright MCP and CLI), the ISTQB CTFL v4.0.1 syllabus and glossary, OWASP, and cucumber.io. No blogs, forums, videos, AI summaries, or prices. Every source was fetched on 2026-11-15. |
+| Advice | Workflows, checklists, templates, and exercises are the tutorial's own, and a callout or a sentence says so. |
+| dMoney | The practice app is the public repo `kawsar-95/genAI-project` at commit `51db34a`. Facts about it have no `<Cite>`, and a "Where these facts come from" callout says so, as on `/case-study/codebase-tour/`. No password, key, or env value of the repo is repeated. |
+| Research notes | `docs/superpowers/research/agentic-qa-<slug>.md`, `agentic-qa-<slug>.factcheck.md`, and `agentic-qa-<slug>.voices.factcheck.md`; the checker briefs are in `agentic-qa-factcheck-brief.md`. A page is done only when both reports end with `Open FAILs: 0`, written by an agent that did not write the page. All 10 pages are done by that rule. Rounds 1 to 3 checked every page in full and found 181, 67, and 54 FAILs (most in the voices). Each full round found problems that the one before had missed, so the later rounds re-checked only the open rows and the changed lines, until 0 rows were open (round 4, 5, or 6). Each fix is listed in the research note. |
+
+To add a page, add it to the `agentic-qa` group in `lib/nav.ts`, create `content/agentic-qa/<slug>.mdx`, add its route to `scripts/route-map.json`, and add its slug to `SLUGS` in `tests/agentic-qa.test.ts`.
+
 ## Architecture Module
 
 The System Architecture Foundations module is the home at `/architecture/`, 19 topic pages, and a practice page with 30 questions, all at `/architecture/<slug>/`. It teaches the building blocks of system architecture in plain words for testers. The base is the owner's notes (`docs/superpowers/research/architecture-owner-notes.md`) and the owner's diagrams. The design is `docs/superpowers/specs/2026-10-20-architecture-module-design.md`.
@@ -527,7 +544,7 @@ To add a reel, add its entry to the list of its page, then run `npm test` and `n
 
 ## Voices
 
-A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 289 pages have voices: every MDX page in `content/` (the 24 tutorial pages, the 15 System Design cases, the 11 Fundamentals chapters, the 20 Architecture pages, the 40 Course topics, the 20 k6 topics, the 28 AI Engineering topics, the 6 AI Harnesses topics, the 20 AI Skills pages, the 9 AI Concepts topics, the 7 Agent Memory topics, the 10 AI Agents topics, the 47 AI/ML Testing topics, the 24 DevOps & Cloud topics, and the 8 Security Testing topics). Every `##` section has voices except `## Key words`. In a Fundamentals topic, the notes and ISTQB versions are inside the voices. The Linux stage pages are command sheets, not MDX: they have no voices, and the header button switches their English and Bangla glosses (see "Command sheets"). A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
+A `##` section can have 3 voices of its text: Technical (the current text), `সহজ English` (plain English), and `বাংলা` (Bangla). 299 pages have voices: every MDX page in `content/` (the 34 tutorial pages, the 15 System Design cases, the 11 Fundamentals chapters, the 20 Architecture pages, the 40 Course topics, the 20 k6 topics, the 28 AI Engineering topics, the 6 AI Harnesses topics, the 20 AI Skills pages, the 9 AI Concepts topics, the 7 Agent Memory topics, the 10 AI Agents topics, the 47 AI/ML Testing topics, the 24 DevOps & Cloud topics, and the 8 Security Testing topics). Every `##` section has voices except `## Key words`. In a Fundamentals topic, the notes and ISTQB versions are inside the voices. The Linux stage pages are command sheets, not MDX: they have no voices, and the header button switches their English and Bangla glosses (see "Command sheets"). A new page with voices needs its own `<group>-<slug>.voices.factcheck.md`. The design is `docs/superpowers/specs/2026-10-20-voices-design.md`.
 
 ### What the reader sees
 
@@ -815,7 +832,7 @@ Claude Code asks for approval once per project on first run.
 
 The site installs as an app and is offline first.
 
-- The service worker caches all 320 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
+- The service worker caches all 330 routes at install, with the build files and the `/images/` files that their HTML uses (`assetPattern`).
 - Pages, RSC payloads, and the search index use stale-while-revalidate: the cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. Files in `/_next/static/` use cache first, because their names have a content hash.
 - Offline, a page that is not in the cache gets the 404 page.
 - Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
@@ -836,7 +853,7 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 | Command | Purpose |
 |---|---|
-| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`), progress (`tests/linux-progress.test.ts`), and command sheets (`tests/linux-sheets.test.ts`: the shape and limits; `tests/linux-sheets-warn.test.ts`: the red `!`; `tests/verify-linux-sheets.test.ts`: the verifier on a fixture), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), the reels data, wiring, and live-check logic (`tests/reels.test.ts`), the Course data, page shape, search, and precache (`tests/course.test.ts`), the k6 data, page shape, search, and precache (`tests/k6.test.ts`), the AI Engineering data, page shape, search, and precache (`tests/ai-engineering.test.ts`), the DevOps & Cloud data, page shape, cites, search, and precache (`tests/devops.test.ts`), the Security Testing data, page shape, cites, progress ids, search, and precache (`tests/security.test.ts`), the voice helpers and head script (`tests/voice.test.ts`), the sidebar state, head script, and wiring (`tests/sidebar.test.ts`), the authoring rules of `<Voices>` in every MDX file (`tests/voice-source.test.ts`), the contents page and stats (`tests/contents.test.ts`), the top nav (`tests/header-nav.test.ts`), the token contrast (`tests/contrast.test.ts`), the color tokens of `DESIGN.md` against `app/globals.css` (`tests/design-tokens.test.ts`), and the page and route-map lists |
+| `npm test` | Unit tests for `lib/home.ts`, `lib/nav.ts`, `lib/outline.ts`, `lib/page.ts`, `lib/pwa.ts`, `lib/sitemap.ts`, `lib/reading.ts`, `lib/search.ts`, `lib/theme.ts`, `lib/ui.ts`, the Linux data (`tests/linux-data.test.ts`), progress (`tests/linux-progress.test.ts`), and command sheets (`tests/linux-sheets.test.ts`: the shape and limits; `tests/linux-sheets-warn.test.ts`: the red `!`; `tests/verify-linux-sheets.test.ts`: the verifier on a fixture), the Fundamentals data, version logic, and chapter structure (`tests/fundamentals-*.test.ts`), the System Design data, search, and precache (`tests/system-design.test.ts`), the Architecture data, images, practice questions, search, and precache (`tests/architecture.test.ts`), the reels data, wiring, and live-check logic (`tests/reels.test.ts`), the Course data, page shape, search, and precache (`tests/course.test.ts`), the k6 data, page shape, search, and precache (`tests/k6.test.ts`), the AI Engineering data, page shape, search, and precache (`tests/ai-engineering.test.ts`), the DevOps & Cloud data, page shape, cites, search, and precache (`tests/devops.test.ts`), the Security Testing data, page shape, cites, progress ids, search, and precache (`tests/security.test.ts`), the Agentic QA group order, files, route map, titles, last three sections, voices, and cites (`tests/agentic-qa.test.ts`), the voice helpers and head script (`tests/voice.test.ts`), the sidebar state, head script, and wiring (`tests/sidebar.test.ts`), the authoring rules of `<Voices>` in every MDX file (`tests/voice-source.test.ts`), the contents page and stats (`tests/contents.test.ts`), the top nav (`tests/header-nav.test.ts`), the token contrast (`tests/contrast.test.ts`), the color tokens of `DESIGN.md` against `app/globals.css` (`tests/design-tokens.test.ts`), and the page and route-map lists |
 | `python3 -m unittest scripts/test_checks.py` | Unit tests of the Python checks |
 | `python3 -m unittest scripts/test_linux_scripts.py` | Unit tests of `linux_fetch.py` and `linux_overlap.py` |
 | `node scripts/verify_linux_sheets.mjs [stage ...]` | Fetches the pages that the cards of the Linux sheets cite, and checks that each command, subcommand, and flag of a row is in their text. It needs the network. The cache is `node_modules/.cache/linux-sheets` (or `LINUX_SHEETS_CACHE`). It is not part of `npm test`; `tests/verify-linux-sheets.test.ts` tests it on a fixture. |
@@ -853,7 +870,7 @@ Both variables are optional. The build passes without them. `lib/site.ts` reads 
 
 The Python scripts need only Python 3. Run the `out` checks after `npm run build`.
 
-Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 301 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
+Run `check_sources.py` without flags. The normal command is `python3 scripts/check_sources.py out`, and it must print `OK 311 pages checked, 0 skipped`. The `--allow-missing` flag skips a page that has no meta line and no sources. It exists for skeleton pages during a rewrite and for the unit tests. Do not use it for a release.
 
 `compare_text.py` is a historical record of the phase-3 migration. It compared the visible text of the old build (`.baseline/out`) with the new build. `.baseline/out` is deleted, and the old routes no longer exist, so the script cannot run now.
 
@@ -865,6 +882,7 @@ Run `check_sources.py` without flags. The normal command is `python3 scripts/che
 - `docs/superpowers/audits/2026-10-09-content-audit.md` lists the outdated claims in the old tutorial text. Its "Resolution (2026-10-10)" section maps each High and Med row to the new page that fixes it.
 - `docs/superpowers/specs/2026-10-10-content-refresh-design.md` and `docs/superpowers/plans/2026-10-10-content-refresh.md` are phase 2 (content refresh): the 17 pages, the cite and sources model, and the reading aids.
 - `docs/superpowers/specs/2026-10-10-case-study-design.md` and `docs/superpowers/plans/2026-10-10-case-study.md` are the Case Study group (parts 18–24). Its spec section 3 has the publishing rules for facts from the private practice workspace. Section 5 says how those facts are checked: against the workspace files, with no `<Cite>`.
+- `docs/superpowers/specs/2026-11-15-agentic-qa-group-design.md` is the Agentic QA group (parts 25–34): the pages, the shape, the writing rules, and how the pages were written and checked.
 - `docs/superpowers/research/` holds the research notes and the fact-check reports of each page.
 - `docs/superpowers/specs/2026-11-07-declutter-design.md` is the declutter pass: the page matrix, the numbers before and after, the rules, and what was left alone.
 - `docs/superpowers/specs/2026-11-04-linux-command-sheets-design.md` is the design of the Linux command sheets. `docs/superpowers/research/linux-sheets.factcheck.md` is the author's check, and `docs/superpowers/research/linux-sheets-<stage>.factcheck.md` is the independent check of each stage.

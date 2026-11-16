@@ -77,6 +77,16 @@ test("the order of the pages is pinned", () => {
       "/case-study/test-and-retest/",
       "/case-study/automation/",
       "/case-study/lessons/",
+      "/agentic-qa/claude-for-qa/",
+      "/agentic-qa/qa-workspace/",
+      "/agentic-qa/project-setup/",
+      "/agentic-qa/requirements/",
+      "/agentic-qa/blast-radius/",
+      "/agentic-qa/test-charters/",
+      "/agentic-qa/test-execution/",
+      "/agentic-qa/multi-agent-qa/",
+      "/agentic-qa/playwright-with-claude/",
+      "/agentic-qa/playwright-framework/",
     ],
   );
 });
@@ -109,6 +119,16 @@ test("the page titles are pinned", () => {
       "Design, Execute, Fix, Retest",
       "Load and Browser Automation",
       "What to Fix in the Setup",
+      "Claude for Professional QA",
+      "QA Workspace & Tooling",
+      "Project, Jira, GitHub & MCP Setup",
+      "Requirement Analysis & Acceptance Criteria",
+      "Test Design & Blast Radius",
+      "Exploring Features with Test Charters",
+      "Test Execution & Bug Investigation",
+      "A Multi-Agent QA System",
+      "Playwright Automation with Claude",
+      "Playwright Framework & the Agentic QA Workflow",
     ],
   );
 });
@@ -116,11 +136,11 @@ test("the page titles are pinned", () => {
 test("groups are in sidebar order", () => {
   assert.deepEqual(
     GROUPS.map((g) => g.slug),
-    ["getting-started", "foundations", "configure", "extend", "automate", "case-study"],
+    ["getting-started", "foundations", "configure", "extend", "automate", "case-study", "agentic-qa"],
   );
   assert.deepEqual(
     GROUPS.map((g) => g.pages.length),
-    [3, 4, 2, 5, 3, 7],
+    [3, 4, 2, 5, 3, 7, 10],
   );
 });
 
@@ -157,11 +177,13 @@ test("getPage finds a page and rejects unknown params", () => {
   assert.equal(getPage("nope", "hooks"), undefined);
 });
 
-test("getNeighbors: the chain starts at setup and ends at the case study lessons", () => {
+test("getNeighbors: the chain starts at setup and ends at the last Agentic QA page", () => {
   assert.equal(getNeighbors("getting-started", "setup").prev, undefined);
   assert.equal(getNeighbors("getting-started", "setup").next?.slug, "models");
-  assert.equal(getNeighbors("case-study", "lessons").next, undefined);
+  assert.equal(getNeighbors("case-study", "lessons").next?.slug, "claude-for-qa");
   assert.equal(getNeighbors("case-study", "lessons").prev?.slug, "automation");
+  assert.equal(getNeighbors("agentic-qa", "playwright-framework").next, undefined);
+  assert.equal(getNeighbors("agentic-qa", "playwright-framework").prev?.slug, "playwright-with-claude");
 });
 
 test("getNeighbors crosses group borders", () => {
@@ -171,7 +193,7 @@ test("getNeighbors crosses group borders", () => {
 });
 
 test("every page has a tagline of 1 to 8 words", () => {
-  assert.equal(PAGES.length, 24);
+  assert.equal(PAGES.length, 34);
   for (const page of PAGES) {
     const words = page.tagline.trim().split(/\s+/).filter(Boolean);
     assert.ok(words.length >= 1 && words.length <= 8, `${page.href}: "${page.tagline}" has ${words.length} words`);

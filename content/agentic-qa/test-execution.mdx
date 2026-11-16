@@ -1,0 +1,765 @@
+export const metadata = {
+  title: 'Test Execution & Bug Investigation',
+  description: 'Run test cases with an agent in the browser, check the UI, API, and database, collect evidence, investigate failures, and report results and defects in a fixed structure.',
+}
+
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'agent-browser README', publisher: 'vercel-labs (GitHub)', url: 'https://github.com/vercel-labs/agent-browser', accessed: '2026-11-15' },
+    { title: 'Playwright MCP README', publisher: 'Microsoft (GitHub)', url: 'https://github.com/microsoft/playwright-mcp', accessed: '2026-11-15' },
+    { title: 'Use Claude Code with Chrome', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/chrome', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: test environment', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-environment', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: test data', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-data', accessed: '2026-11-15' },
+    { title: 'API testing', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/api-testing', accessed: '2026-11-15' },
+    { title: 'MySQL MCP Server README', publisher: 'berthojoris (GitHub)', url: 'https://github.com/berthojoris/mysql-mcp', accessed: '2026-11-15' },
+    { title: 'Certified Tester Foundation Level Syllabus v4.0.1', publisher: 'ISTQB', url: 'https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: failure', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/failure', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: defect', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/defect', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: false-positive result', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/false-positive-result', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: false-negative result', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/false-negative-result', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: root cause analysis', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/root-cause-analysis', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: defect report', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/defect-report', accessed: '2026-11-15' },
+    { title: 'gh issue list', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_issue_list', accessed: '2026-11-15' },
+    { title: 'gh issue create', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_issue_create', accessed: '2026-11-15' },
+    { title: 'Atlassian MCP Server README', publisher: 'Atlassian (GitHub)', url: 'https://github.com/atlassian/atlassian-mcp-server', accessed: '2026-11-15' },
+    { title: 'Getting started with the Atlassian Rovo MCP Server', publisher: 'Atlassian (support.atlassian.com)', url: 'https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: test log', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-log', accessed: '2026-11-15' },
+    { title: 'Configure permissions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permissions', accessed: '2026-11-15' },
+    { title: 'Automate actions with hooks', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks-guide', accessed: '2026-11-15' },
+    { title: 'CLI reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/cli-reference', accessed: '2026-11-15' },
+    { title: 'All settings', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/settings-reference', accessed: '2026-11-15' },
+  ],
+}
+
+# Test Execution & Bug Investigation
+
+An agent can run your test cases in a real browser, call the API, and read the database. That saves time, but only if you can trust what it reports. This page shows how to pick a browser tool, check each result in three layers, keep evidence, find the cause of a failure, and write the results and the defect reports in a fixed shape that a person approves.
+
+<PageMeta />
+
+## Choose a browser tool for the agent
+
+<Voices>
+<Technical>
+
+Three tools let Claude drive a browser. Each one fits a different job.
+
+| Tool | What it is | Good for |
+|---|---|---|
+| agent-browser | A native Rust CLI. The agent drives the browser one shell command at a time. <Cite n={1} /> | Running written test cases step by step, with short calls |
+| Playwright MCP | An MCP server. Claude works with pages through structured accessibility snapshots, not screenshots. <Cite n={2} /> | Long exploratory sessions that keep the browser state |
+| Claude in Chrome | Claude Code connected to the Claude in Chrome extension in your own browser. <Cite n={3} /> | Debugging by hand, in a visible window |
+
+**Context cost.** The Playwright MCP README says a CLI with skills is more token-efficient than MCP. It says MCP suits exploratory automation and long-running autonomous workflows. <Cite n={2} />
+
+**Your login.** Claude in Chrome shares the login state of your browser. Its actions run in a visible Chrome window. <Cite n={3} /> It pauses at a login page or a CAPTCHA and asks you to handle it. <Cite n={3} />
+
+**Limits of Claude in Chrome.** It works with Google Chrome and Microsoft Edge, and it is not supported in WSL. <Cite n={3} /> It needs a `/login` sign-in. With an API key or a long-lived token, Claude Code keeps it off. <Cite n={3} /> `claude setup-token` makes the long-lived token for CI and scripts, <Cite n={22} /> so a CI job that signs in with that token or an API key cannot use Claude in Chrome.
+
+<Callout type="tip" title="The tutorial's advice">
+
+Use agent-browser or Playwright MCP to run test cases. Use Claude in Chrome when you debug one failure with your own eyes. Never point any of them at production. The [Browser Testing with Playwright](/automate/playwright/) page sets up Playwright MCP in detail.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Claude can drive a browser with three tools:
+
+- **agent-browser** is a command-line tool. The agent sends it one short command at a time. <Cite n={1} />
+- **Playwright MCP** is an MCP server. Claude reads the page as a structured snapshot, not as a screenshot. <Cite n={2} />
+- **Claude in Chrome** links Claude Code to an extension in your own browser. <Cite n={3} />
+
+The Playwright MCP README says a command-line tool with skills uses fewer tokens than MCP. It says MCP fits long, exploring sessions. <Cite n={2} />
+
+Claude in Chrome uses the logins you already have. You can watch it work in a Chrome window. It stops at a login page or a CAPTCHA and waits for you. <Cite n={3} /> It works in Chrome and Edge, not in WSL. It needs a `/login` sign-in, and it stays off with an API key or a long-lived token. <Cite n={3} /> The long-lived token is the one made for CI and scripts. <Cite n={22} />
+
+The tutorial suggests this: run test cases with agent-browser or Playwright MCP. Use Claude in Chrome to look at one failure by hand. Never use any of them on production. See [Browser Testing with Playwright](/automate/playwright/) for the Playwright MCP setup.
+
+</Layman>
+<Bangla>
+
+Claude তিনটি tool দিয়ে browser চালাতে পারে:
+
+- **agent-browser** একটি native Rust CLI। Agent একবারে একটি shell command দিয়ে browser চালায়। <Cite n={1} />
+- **Playwright MCP** একটি MCP server। Claude screenshot নয়, structured accessibility snapshot দিয়ে page পড়ে। <Cite n={2} />
+- **Claude in Chrome** আপনার নিজের browser-এর extension-এর সাথে Claude Code-কে যুক্ত করে। <Cite n={3} />
+
+Playwright MCP README বলে, skill-সহ CLI বেশি token-efficient। আর লম্বা exploratory কাজের জন্য MCP ভালো। <Cite n={2} />
+
+Claude in Chrome আপনার browser-এর login state ব্যবহার করে, আর একটি দৃশ্যমান Chrome window-এ কাজ করে। Login page বা CAPTCHA এলে এটি থেমে আপনাকে করতে বলে। <Cite n={3} /> এটি Chrome আর Edge-এ চলে, WSL-এ নয়। এর জন্য `/login` sign-in লাগে। API key বা long-lived token দিয়ে sign in করলে Claude Code এটি বন্ধ রাখে। <Cite n={3} /> Long-lived token বানানো হয় CI আর script-এর জন্য। <Cite n={22} />
+
+Tutorial-এর পরামর্শ: test case চালাতে agent-browser বা Playwright MCP ব্যবহার করুন। একটি failure নিজের চোখে দেখতে Claude in Chrome ব্যবহার করুন। কোনোটিই production-এ চালাবেন না। Playwright MCP-এর setup [Browser Testing with Playwright](/automate/playwright/) page-এ আছে।
+
+</Bangla>
+</Voices>
+
+## Drive the browser with agent-browser
+
+<Voices>
+<Technical>
+
+**Install.** The README gives two commands. The second one downloads Chrome for Testing the first time. <Cite n={1} />
+
+```bash
+npm install -g agent-browser
+agent-browser install
+```
+
+**The loop.** `snapshot` returns the page as compact text, with a ref such as `@e1` for each element. The agent acts on a ref, reads the page again, and repeats. <Cite n={1} /> The browser stays open between commands. <Cite n={1} /> The README's quick start looks like this: <Cite n={1} />
+
+```bash
+agent-browser open example.com
+agent-browser snapshot -i       # interactive elements, each with a ref
+agent-browser click @e1         # act on a ref from that snapshot
+agent-browser get url           # check the result
+agent-browser close
+```
+
+**Rules that matter for testing:**
+
+- A ref describes the page at the time of the snapshot. After a navigation or a DOM change, take a new snapshot. <Cite n={1} />
+- A click fails, and does not report success, when the target is hidden, disabled, outside the viewport, or covered. <Cite n={1} /> A failed click is a finding, not noise.
+- Each `--session` gets its own daemon and browser. <Cite n={1} /> Use one session per test user.
+
+**Commands for evidence.** The capture group has `screenshot`, `pdf`, `record`, `download`, and `diff`. The debug group has `console` and `errors`. The page state group has `network`. <Cite n={1} />
+
+**Teach the agent.** `agent-browser skills get core` prints the core loop and common workflows for the installed version. <Cite n={1} /> `agent-browser mcp` starts an MCP server over stdio, for an MCP client. <Cite n={1} />
+
+</Technical>
+<Layman>
+
+You install agent-browser with `npm install -g agent-browser`. Then `agent-browser install` downloads a test copy of Chrome. <Cite n={1} />
+
+The agent works in a loop. `snapshot` gives the page as short text. Each element gets a label, called a ref, such as `@e1`. The agent clicks a ref, reads the page again, and repeats. The browser stays open between commands. <Cite n={1} />
+
+Three rules help in testing:
+
+- A ref is only good for the page it came from. After the page changes, take a new snapshot. <Cite n={1} />
+- A click fails if the target is hidden, disabled, off screen, or covered. <Cite n={1} /> Treat that as a finding.
+- Each `--session` has its own browser. <Cite n={1} /> Use one session for each test user.
+
+For evidence, use `screenshot`, `record`, `console`, `errors`, and `network`. <Cite n={1} /> `agent-browser skills get core` teaches the agent the basic loop. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+`npm install -g agent-browser` দিয়ে install করুন। তারপর `agent-browser install` প্রথমবার Chrome for Testing download করে। <Cite n={1} />
+
+Agent একটি loop-এ কাজ করে। `snapshot` page-টিকে ছোট text হিসেবে দেয়, আর প্রতিটি element-কে `@e1`-এর মতো একটি ref দেয়। Agent একটি ref-এ কাজ করে, page আবার পড়ে, তারপর আবার করে। Command-এর মাঝে browser খোলা থাকে। <Cite n={1} />
+
+Testing-এর জন্য তিনটি নিয়ম:
+
+- Ref শুধু snapshot নেওয়ার সময়ের page-এর জন্য ঠিক। Navigation বা DOM change-এর পরে নতুন snapshot নিন। <Cite n={1} />
+- Target hidden, disabled, viewport-এর বাইরে বা ঢাকা থাকলে click fail করে। <Cite n={1} /> এটিকে finding হিসেবে ধরুন।
+- প্রতিটি `--session`-এর নিজের daemon আর browser আছে। <Cite n={1} /> প্রতিটি test user-এর জন্য আলাদা session নিন।
+
+Evidence-এর জন্য `screenshot`, `record`, `console`, `errors` আর `network` ব্যবহার করুন। <Cite n={1} /> `agent-browser skills get core` agent-কে মূল loop শেখায়। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
+## Check the result in three layers
+
+<Voices>
+<Technical>
+
+A green screen does not prove that the data is right. The tutorial suggests three checks for each test case that changes data:
+
+1. **UI.** Read the visible result from a fresh snapshot.
+2. **API.** Call the endpoint that returns the same data, and compare.
+3. **Database.** Run one read-only query, and compare again.
+
+**The test environment.** ISTQB defines a test environment as an environment containing hardware, instrumentation, simulators, software tools, and other support elements needed to perform a test. <Cite n={4} /> Name it in the prompt, for example `https://staging.example.com`. Never let the agent run against production.
+
+**Test data.** ISTQB defines test data as data needed for test execution. <Cite n={5} /> The tutorial suggests this order: create the data before the run, use only test accounts, and remove or reset the data after the run. Write each step down, so a person can repeat it.
+
+**API checks.** Playwright Test has a built-in `request` fixture. It respects options such as `baseURL` and `extraHTTPHeaders`. <Cite n={6} /> The tutorial also uses a plain `curl` call for a quick check.
+
+**Database checks.** Give the agent read-only access. One example is the MySQL MCP server:
+
+- `MCP_PERMISSIONS=list,read,utility` keeps only the list, read, and utility tools. <Cite n={7} />
+- `MCP_REQUIRE_READONLY_DB_USER=true` makes the server fail at startup if the MySQL user can write. <Cite n={7} />
+- Every tool reports `readOnlyHint` and `destructiveHint`. <Cite n={7} />
+
+<Callout type="warning" title="The tutorial's rule">
+
+Use a database user that can only read, in a test environment. Keep the password in an environment variable such as `${DB_PASSWORD}`, never in a prompt or a report.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+A good screen does not prove the data is right. The tutorial suggests three checks:
+
+1. **UI.** Read the result on the page.
+2. **API.** Ask the server for the same data.
+3. **Database.** Read the stored row and compare.
+
+ISTQB calls the place where you test the test environment. It has the hardware, instrumentation, simulators, software tools, and other support elements that a test needs. <Cite n={4} /> Tell the agent its address, such as `https://staging.example.com`. Never test on production.
+
+Test data is the data a test run needs. <Cite n={5} /> The tutorial suggests: make the data first, use test accounts only, and clean up after.
+
+For the API, Playwright Test has a `request` fixture. It uses your settings such as `baseURL`. <Cite n={6} /> The tutorial also uses `curl` for a quick check.
+
+For the database, give read-only access. The MySQL MCP server can keep only the list, read, and utility tools with `MCP_PERMISSIONS=list,read,utility`. It can also refuse to start if its database user can write. <Cite n={7} /> Keep the password in a variable such as `${DB_PASSWORD}`.
+
+</Layman>
+<Bangla>
+
+Screen-এ সফল দেখালেই data ঠিক, তা প্রমাণ হয় না। Tutorial তিনটি check-এর পরামর্শ দেয়:
+
+1. **UI.** নতুন snapshot থেকে দৃশ্যমান result পড়ুন।
+2. **API.** একই data ফেরত দেয় এমন endpoint call করে মিলিয়ে দেখুন।
+3. **Database.** একটি read-only query চালিয়ে আবার মিলিয়ে দেখুন।
+
+ISTQB-এর মতে test environment হলো test চালাতে যে hardware, instrumentation, simulator, software tool আর অন্যান্য সহায়ক উপাদান লাগে। <Cite n={4} /> Prompt-এ environment-এর নাম দিন, যেমন `https://staging.example.com`। Production-এ কখনো চালাবেন না।
+
+ISTQB-এর মতে test data হলো test execution-এর জন্য দরকারি data। <Cite n={5} /> Tutorial-এর পরামর্শ: run-এর আগে data তৈরি করুন, শুধু test account ব্যবহার করুন, আর run-এর পরে data মুছে বা reset করে দিন।
+
+API check-এর জন্য Playwright Test-এ built-in `request` fixture আছে, যেটি `baseURL` আর `extraHTTPHeaders` মেনে চলে। <Cite n={6} /> দ্রুত check-এর জন্য tutorial `curl`-ও ব্যবহার করে।
+
+Database-এ agent-কে শুধু read-only access দিন। MySQL MCP server-এ `MCP_PERMISSIONS=list,read,utility` শুধু list, read আর utility tool রাখে। `MCP_REQUIRE_READONLY_DB_USER=true` থাকলে MySQL user write করতে পারলে server চালু হয় না। <Cite n={7} /> Password `${DB_PASSWORD}`-এর মতো environment variable-এ রাখুন, prompt বা report-এ নয়।
+
+</Bangla>
+</Voices>
+
+## Collect evidence
+
+<Voices>
+<Technical>
+
+The CTFL syllabus says a defect report holds the test steps and any relevant test logs, database dumps, screenshots, or recordings. <Cite n={8} /> So collect them while the test runs, not later.
+
+| Evidence | How to get it |
+|---|---|
+| Screenshot or recording | agent-browser `screenshot` and `record` <Cite n={1} />. Playwright MCP `browser_take_screenshot`. <Cite n={2} /> |
+| Console log | agent-browser `console` and `errors` <Cite n={1} />. Playwright MCP `browser_console_messages`, with a `level` and a `filename` to save it. <Cite n={2} /> |
+| Network log | agent-browser `network` <Cite n={1} />. Playwright MCP `browser_network_requests`, with a `filter` regexp and a `filename`. <Cite n={2} /> |
+| Database result | The query and its rows, from a read-only user |
+| Run facts | The time, the environment URL, the build or commit, and the test user role |
+
+**Where files go.** Playwright MCP `--output-dir` sets the folder for files that get an automatic name, such as a screenshot with no file name. <Cite n={2} /> `--isolated` keeps the browser profile in memory, not on disk. <Cite n={2} /> The tutorial suggests one folder per run, for example `evidence/<run-id>/<test-id>/`.
+
+**Keep secrets out.** Playwright MCP `--redact-url-params` replaces the values of named URL parameters with `<redacted>` in tool responses. <Cite n={2} /> A Claude in Chrome GIF captures everything visible, including account details on logged-in pages. Review it before you share it outside your team. <Cite n={3} />
+
+**Ask for focus.** The Claude in Chrome docs say to tell Claude what console patterns to look for, because logs can be verbose. <Cite n={3} />
+
+<Callout type="tip" title="The tutorial's checklist">
+
+Before you close a test case, check that each piece of evidence has the test id, a time, and the build. Remove tokens, passwords, and personal data from logs and screenshots.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+The CTFL syllabus says a defect report holds the test steps and useful logs, database dumps, screenshots, or recordings. <Cite n={8} /> So save them while the test runs.
+
+- **Pictures.** Use agent-browser `screenshot` or `record`. <Cite n={1} /> In Playwright MCP, use `browser_take_screenshot`. <Cite n={2} />
+- **Console log.** Use agent-browser `console` and `errors`. <Cite n={1} /> Playwright MCP has `browser_console_messages`, which can save to a file. <Cite n={2} />
+- **Network log.** Use agent-browser `network` <Cite n={1} /> or Playwright MCP `browser_network_requests`. <Cite n={2} />
+- **Database result.** Save the query and the rows.
+- **Run facts.** Note the time, the address, the build, and the test user.
+
+Playwright MCP `--output-dir` picks the folder for files with an automatic name. <Cite n={2} /> `--redact-url-params` hides the values of chosen URL parts in tool responses. <Cite n={2} /> A Claude in Chrome GIF shows everything on screen, account details too. Check it before you share it outside your team. <Cite n={3} />
+
+The tutorial suggests one folder per run. Remove tokens, passwords, and personal data.
+
+</Layman>
+<Bangla>
+
+CTFL syllabus বলে, একটি defect report-এ test step আর প্রাসঙ্গিক test log, database dump, screenshot বা recording থাকে। <Cite n={8} /> তাই test চলার সময়েই এগুলো সংগ্রহ করুন।
+
+- **Screenshot বা recording.** agent-browser-এর `screenshot` আর `record`। <Cite n={1} /> Playwright MCP-এর `browser_take_screenshot`। <Cite n={2} />
+- **Console log.** agent-browser-এর `console` আর `errors`। <Cite n={1} /> Playwright MCP-এর `browser_console_messages`, `level` আর file-এ রাখার জন্য `filename`-সহ। <Cite n={2} />
+- **Network log.** agent-browser-এর `network`। <Cite n={1} /> Playwright MCP-এর `browser_network_requests`, `filter` regexp আর `filename`-সহ। <Cite n={2} />
+- **Database result.** Read-only user দিয়ে চালানো query আর তার row।
+- **Run-এর তথ্য.** সময়, environment URL, build বা commit, আর test user-এর role।
+
+Playwright MCP-এর `--output-dir` স্বয়ংক্রিয় নামের file-এর folder ঠিক করে। `--redact-url-params` tool response-এ নির্দিষ্ট URL parameter-এর মান `<redacted>` দিয়ে বদলে দেয়। <Cite n={2} /> Claude in Chrome-এর GIF screen-এর সবকিছু ধরে, account-এর তথ্যও। Team-এর বাইরে share করার আগে দেখে নিন। <Cite n={3} />
+
+Tutorial-এর পরামর্শ: প্রতিটি run-এর জন্য একটি folder রাখুন, আর log ও screenshot থেকে token, password আর ব্যক্তিগত data সরিয়ে দিন।
+
+</Bangla>
+</Voices>
+
+## Investigate a failure
+
+<Voices>
+<Technical>
+
+In test execution, actual results are compared with expected results. The results are logged, and anomalies are analyzed to find their likely causes. <Cite n={8} /> Use the ISTQB words, so the team means the same thing:
+
+| Term | ISTQB meaning |
+|---|---|
+| Failure | An event in which a component or system does not meet its requirements within specified limits during its execution <Cite n={9} /> |
+| Defect | An imperfection or deficiency in a work product. "Bug" is a synonym. <Cite n={10} /> |
+| False-positive result | A defect is reported, but no such defect exists in the test object <Cite n={11} /> |
+| False-negative result | The test fails to find a defect that is present <Cite n={12} /> |
+| Root cause analysis | The process used to find the root cause of a defect <Cite n={13} /> |
+
+The syllabus also says a reported anomaly may turn out to be a real defect or something else. <Cite n={8} /> So the tutorial asks you to check each finding before you report it.
+
+**The tutorial's method** for one failure:
+
+1. **Reproduce.** Run the steps again in a fresh session. Cut every step that is not needed.
+2. **Isolate the layer.** Ask where the result first goes wrong.
+3. **Find the cause.** Read the logs and the code. Ask Claude to explain, not to fix.
+4. **Decide.** Defect, false positive, or a problem with the environment or the test.
+
+| If this is true | The layer is probably |
+|---|---|
+| The API returns the right data, but the page shows it wrong | UI |
+| The API returns wrong data, or the wrong status | API or business logic |
+| The API and the page agree, but the stored row is wrong | Data |
+| The same steps pass on another environment | Environment |
+| A manual run passes, and the agent run fails | The test or the agent |
+
+</Technical>
+<Layman>
+
+When a test runs, you compare what happened with what should happen. You log the result. Then you look for the likely cause of anything odd. <Cite n={8} />
+
+ISTQB gives exact words:
+
+- A **failure** is an event where a component or system does not meet its requirements within specified limits while it runs. <Cite n={9} />
+- A **defect** is a fault in a work product. "Bug" means the same. <Cite n={10} />
+- A **false-positive result** reports a defect that is not there. <Cite n={11} />
+- A **false-negative result** misses a defect that is there. <Cite n={12} />
+- **Root cause analysis** is how you find the real cause of a defect. <Cite n={13} />
+
+A reported problem may not be a real defect. <Cite n={8} /> So check each finding before you report it.
+
+The tutorial suggests four steps. Repeat the steps in a fresh session, with as few steps as you can. Find the first layer where the result goes wrong: the page, the API, the stored data, or the environment. Read the logs and ask Claude to explain, not fix. Then decide: real defect, false alarm, or a problem with the setup or the test.
+
+</Layman>
+<Bangla>
+
+Test execution-এ actual result আর expected result মেলানো হয়। Result log করা হয়, আর অস্বাভাবিক কিছুর সম্ভাব্য কারণ খোঁজা হয়। <Cite n={8} /> Team যেন একই অর্থ বোঝে, তাই ISTQB-এর শব্দ ব্যবহার করুন:
+
+- **Failure**: একটি ঘটনা, যেখানে execution-এর সময় component বা system নির্দিষ্ট সীমার মধ্যে তার requirement পূরণ করে না। <Cite n={9} />
+- **Defect**: একটি work product-এর ত্রুটি। "Bug" এর সমার্থক। <Cite n={10} />
+- **False-positive result**: defect report হয়েছে, কিন্তু test object-এ এমন কোনো defect নেই। <Cite n={11} />
+- **False-negative result**: test object-এ defect আছে, কিন্তু test তা ধরতে পারেনি। <Cite n={12} />
+- **Root cause analysis**: একটি defect-এর মূল কারণ খোঁজার process। <Cite n={13} />
+
+Syllabus বলে, report করা anomaly আসল defect হতে পারে, আবার অন্য কিছুও হতে পারে। <Cite n={8} /> তাই tutorial বলে, report-এর আগে প্রতিটি finding যাচাই করুন।
+
+Tutorial-এর পদ্ধতি: নতুন session-এ সবচেয়ে কম step দিয়ে আবার reproduce করুন। কোন layer-এ result প্রথম ভুল হয় তা খুঁজুন: UI, API, data, environment, নাকি test নিজেই। Log আর code পড়ুন, Claude-কে fix নয়, ব্যাখ্যা করতে বলুন। তারপর ঠিক করুন: defect, false positive, নাকি environment বা test-এর সমস্যা।
+
+</Bangla>
+</Voices>
+
+## Write the defect report
+
+<Voices>
+<Technical>
+
+ISTQB defines a defect report as documentation of the occurrence, nature, and status of a defect. <Cite n={14} /> The CTFL syllabus lists what a report from dynamic testing typically includes: <Cite n={8} />
+
+- A unique identifier, and a title with a short summary
+- The date, the issuing organization, and the author with their role
+- The test object and the test environment
+- The context, for example the test case and the test data
+- A description that lets someone reproduce it, with the steps and the evidence
+- The expected and actual results
+- The severity, the priority to fix, and the status
+- References, for example to the test case
+
+Defect management tools may fill in some fields, such as the identifier, the date, the author, and the initial status. <Cite n={8} />
+
+**Search first.** Ask Claude to look for a duplicate before it drafts. On GitHub, `gh issue list --search` searches issues, and `--state all` includes closed ones. <Cite n={15} />
+
+**Draft, approve, then file.** Claude writes the draft to a file. You read it and change it. Then it is filed:
+
+- **GitHub:** `gh issue create` takes `--title`, `--label`, and `--body-file`, which reads the body from a file. <Cite n={16} />
+- **Jira:** the Atlassian MCP server can create and update work items. Its Jira permission groups include `read_jira`, `write_jira`, and `search_jira`. <Cite n={17} />
+
+Atlassian says MCP clients act with your existing permissions, and asks you to use least privilege. <Cite n={18} />
+
+<Callout type="warning" title="Before you file">
+
+Filing posts to a shared system. Add an ask rule for the filing tool (see "Guardrails while tests run" below), and read the draft before you approve it.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+ISTQB says a defect report records that a defect happened, what it is, and its status. <Cite n={14} /> The CTFL syllabus lists what a report usually holds: <Cite n={8} />
+
+- An id and a short title
+- The date and the author
+- What was tested, and where
+- The test case and the test data used
+- Steps to repeat it, with the evidence
+- What should happen, and what did happen
+- How bad it is, how soon to fix it, and its status
+- Links, for example to the test case
+
+A bug tracker may fill in some fields for you, such as the id and the date. <Cite n={8} />
+
+First, look for a copy of the same bug. `gh issue list --search` searches GitHub issues. <Cite n={15} />
+
+Then Claude writes a draft to a file. You read it and fix it. Only then is it filed. `gh issue create --body-file` reads the text from that file. <Cite n={16} /> For Jira, the Atlassian MCP server can create work items. <Cite n={17} /> MCP clients act with your own rights, so give them as few as they need. <Cite n={18} />
+
+</Layman>
+<Bangla>
+
+ISTQB-এর মতে defect report হলো একটি defect ঘটার তথ্য, তার ধরন আর তার status-এর documentation। <Cite n={14} /> CTFL syllabus অনুযায়ী dynamic testing-এর একটি report-এ সাধারণত থাকে: <Cite n={8} />
+
+- একটি unique identifier, আর ছোট summary-সহ title
+- তারিখ, প্রতিষ্ঠান, আর role-সহ author
+- Test object আর test environment
+- Context, যেমন test case আর test data
+- Reproduce করার মতো বর্ণনা, step আর evidence-সহ
+- Expected result আর actual result
+- Severity, fix-এর priority, আর status
+- Reference, যেমন test case-এর link
+
+Defect management tool কিছু field নিজেই ভরে দিতে পারে, যেমন identifier, তারিখ, author আর প্রথম status। <Cite n={8} />
+
+Draft-এর আগে duplicate খুঁজুন। GitHub-এ `gh issue list --search` issue খোঁজে, আর `--state all` বন্ধ issue-ও দেখায়। <Cite n={15} />
+
+Claude একটি file-এ draft লেখে, আপনি পড়ে ঠিক করেন, তারপর file হয়। `gh issue create`-এ `--title`, `--label` আর `--body-file` আছে; `--body-file` file থেকে body পড়ে। <Cite n={16} /> Jira-র জন্য Atlassian MCP server work item তৈরি ও update করতে পারে। <Cite n={17} /> MCP client আপনার নিজের permission দিয়ে কাজ করে, তাই least privilege ব্যবহার করুন। <Cite n={18} />
+
+</Bangla>
+</Voices>
+
+## A defect report template
+
+<Voices>
+<Technical>
+
+This template is the tutorial's own. It follows the CTFL list in the section above. Ask Claude to fill it from the evidence folder, and to write "unknown" for any field it cannot prove.
+
+```markdown
+# <Short summary: what fails, where, for whom>
+
+- ID: (set by the tracker)
+- Reported: <YYYY-MM-DD HH:MM>, <your role>
+- Environment: https://staging.example.com, build <commit or version>
+- Test case: <test id and title>
+- Test data: <test user role, input values; no passwords or tokens>
+- Severity: <critical | major | minor>   Priority: <high | medium | low>
+- Status: Open
+
+## Steps to reproduce
+1. ...
+2. ...
+
+## Expected result
+...
+
+## Actual result
+...
+
+## Evidence
+- evidence/<run-id>/<test-id>/screenshot.png
+- evidence/<run-id>/<test-id>/console.txt
+- evidence/<run-id>/<test-id>/network.txt
+- Query and rows: ...
+
+## Layer and likely cause
+<UI | API | data | environment>, and why. Mark a guess as a guess.
+
+## Duplicates checked
+<the search you ran, and the result>
+```
+
+<Callout type="note" title="The tutorial's advice">
+
+Keep one defect per report. Severity is the impact on the stakeholders; priority is how soon to fix it. The syllabus lists them as two fields. <Cite n={8} />
+
+</Callout>
+
+</Technical>
+<Layman>
+
+The tutorial gives its own template. It follows the CTFL list above. Ask Claude to fill it from the evidence folder. Ask it to write "unknown" when it cannot prove a field. It adds two parts to the list: the likely layer, and the duplicate search you ran. Mark any guess as a guess.
+
+Keep one defect in each report. Severity means how much harm it does. Priority means how soon to fix it. The syllabus lists them as two separate fields. <Cite n={8} />
+
+</Layman>
+<Bangla>
+
+এই template tutorial-এর নিজের। এটি ওপরের section-এর CTFL তালিকা মেনে চলে। Evidence folder থেকে এটি ভরতে Claude-কে বলুন, আর যে field প্রমাণ করা যায় না সেখানে "unknown" লিখতে বলুন।
+
+এতে CTFL তালিকার বাইরে দুটি অংশ আছে: সম্ভাব্য layer আর কারণ, এবং আপনি যে duplicate search চালিয়েছেন। অনুমান হলে তা অনুমান বলে লিখুন।
+
+প্রতিটি report-এ একটি defect রাখুন। Severity হলো stakeholder-এর ওপর প্রভাব, আর priority হলো কত দ্রুত fix করতে হবে। Syllabus এ দুটিকে আলাদা field হিসেবে দেখায়। <Cite n={8} />
+
+</Bangla>
+</Voices>
+
+## Record the execution results
+
+<Voices>
+<Technical>
+
+ISTQB defines a test log as a chronological record of relevant details about test execution. <Cite n={19} /> The syllabus names test logs and defect reports as work products of test execution. <Cite n={8} /> Its test progress metrics include the number of test cases run and not run, and passed and failed. <Cite n={8} />
+
+The tutorial suggests one results file per run, in a fixed shape. A fixed shape lets a person, a script, or the next agent read it. The statuses are the tutorial's own:
+
+- **pass**: the actual result matches the expected result in every layer.
+- **fail**: the case ran, and a result did not match.
+- **blocked**: the case could not run to the end. The note says why.
+
+Example results file (the tutorial's own format):
+
+```json
+{
+  "run": "2026-11-15-staging-01",
+  "environment": "https://staging.example.com",
+  "build": "<commit or version>",
+  "started": "2026-11-15T10:02:00Z",
+  "results": [
+    {
+      "test_id": "TC-01",
+      "status": "pass",
+      "evidence": ["evidence/2026-11-15-staging-01/TC-01/screenshot.png"],
+      "defects": [],
+      "notes": "UI, API, and database agree."
+    },
+    {
+      "test_id": "TC-02",
+      "status": "fail",
+      "evidence": ["evidence/2026-11-15-staging-01/TC-02/network.txt"],
+      "defects": ["DRAFT-1"],
+      "notes": "Fee shown on the page differs from the stored row."
+    }
+  ]
+}
+```
+
+The same data fits a Markdown table with the columns test id, status, evidence, defects, and notes. Ask Claude for both: the JSON for scripts and the table for people.
+
+</Technical>
+<Layman>
+
+ISTQB says a test log is a record, in time order, of the details of a test run. <Cite n={19} /> The syllabus says test logs and defect reports are what test execution produces. <Cite n={8} /> It counts tests that ran or did not run, and that passed or failed. <Cite n={8} />
+
+The tutorial suggests one results file for each run, always in the same shape. Then a person, a script, or another agent can read it.
+
+The tutorial uses three statuses:
+
+- **pass**: everything matched, in every layer.
+- **fail**: the test ran, and something did not match.
+- **blocked**: the test could not finish. The note says why.
+
+Each row holds the test id, the status, links to the evidence, any defect ids, and a short note. Ask Claude for a JSON file for scripts and a table for people.
+
+</Layman>
+<Bangla>
+
+ISTQB-এর মতে test log হলো test execution-এর প্রাসঙ্গিক তথ্যের সময়ক্রম অনুযায়ী একটি record। <Cite n={19} /> Syllabus বলে, test log আর defect report হলো test execution-এর work product। <Cite n={8} /> এর test progress metric-এ কতগুলো test case চলেছে বা চলেনি, আর pass বা fail করেছে, তা থাকে। <Cite n={8} />
+
+Tutorial-এর পরামর্শ: প্রতিটি run-এর জন্য একটি নির্দিষ্ট আকারের results file রাখুন, যাতে মানুষ, script বা পরের agent সহজে পড়তে পারে। Status তিনটি tutorial-এর নিজের:
+
+- **pass**: প্রতিটি layer-এ actual result আর expected result মেলে।
+- **fail**: case চলেছে, কিন্তু একটি result মেলেনি।
+- **blocked**: case শেষ পর্যন্ত চালানো যায়নি; note-এ কারণ লেখা থাকে।
+
+প্রতিটি row-তে test id, status, evidence link, defect id আর note থাকে। Claude-কে script-এর জন্য JSON আর মানুষের জন্য Markdown table, দুটিই দিতে বলুন।
+
+</Bangla>
+</Voices>
+
+## Guardrails while tests run
+
+<Voices>
+<Technical>
+
+The tutorial's concern: a test agent can see the code, so when a test fails, it may try to "fix" the app so that the test passes. Block that with permission rules and a hook. See [Hooks](/extend/hooks/) for more.
+
+**Permission rules.** Rules are evaluated in order: deny, then ask, then allow. The first match decides. <Cite n={20} /> Ask rules prompt for confirmation. <Cite n={20} /> File edits are checked against `Edit(path)` rules, and an `Edit` rule also covers `Write`. <Cite n={20} /> Bash rules match the whole command text, with `*` for any text. <Cite n={20} /> `mcp__<server>__*` matches every tool of one MCP server. <Cite n={20} />
+
+The `permissions` object of a settings file takes `allow`, `ask`, and `deny` arrays. <Cite n={23} /> Example `.claude/settings.json` for a test run (the paths and the `jira` server name are examples):
+
+```json
+{
+  "permissions": {
+    "deny": ["Edit(/src/**)", "Edit(/api/**)"],
+    "ask": ["Bash(gh issue create *)", "mcp__jira__*"]
+  }
+}
+```
+
+**A hook.** A `PreToolUse` hook runs before a tool call and can block it. Exit code 2 blocks the action. <Cite n={21} /> The hooks guide shows a script that a `PreToolUse` hook in `.claude/settings.json` runs before each `Edit` or `Write` call. It exits 2 for a protected path. <Cite n={21} /> Hook decisions do not bypass deny and ask rules. <Cite n={20} />
+
+**Shell commands.** The hooks guide warns that Claude can still change protected files with shell commands. <Cite n={21} /> So keep the deny rules too, and do not allow broad Bash patterns during a test run.
+
+<Callout type="warning" title="The tutorial's rule">
+
+During execution, the agent reads code and runs tests. It does not edit application code, write to the database, or file a defect without your approval. If a fix is needed, that is a separate task with a separate review.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+The tutorial's concern: a test agent can see the code. When a test fails, it may change the app so the test passes. Stop it with permission rules and a hook. The [Hooks](/extend/hooks/) page has more.
+
+Permission rules are checked in this order: deny, then ask, then allow. The first match wins. <Cite n={20} /> An ask rule makes Claude Code ask you first. <Cite n={20} /> An `Edit` rule covers file edits, and also `Write`. <Cite n={20} /> A rule such as `mcp__jira__*` covers every tool of one MCP server. <Cite n={20} />
+
+So you can deny edits to the app folders. You can also add ask rules for `gh issue create` and the Jira tools.
+
+A `PreToolUse` hook runs before a tool call. If it exits with code 2, the call is blocked. <Cite n={21} /> The hooks guide shows one that blocks edits to protected files. <Cite n={21} />
+
+The guide warns that Claude can still change protected files with shell commands. <Cite n={21} /> So keep the deny rules as well.
+
+The tutorial's rule: during a test run, the agent does not edit the app, write to the database, or file a bug without your OK.
+
+</Layman>
+<Bangla>
+
+Tutorial-এর আশঙ্কা: test agent code দেখতে পায়, তাই test fail করলে সে app বদলে test pass করাতে চাইতে পারে। Permission rule আর hook দিয়ে এটি আটকান। বিস্তারিত [Hooks](/extend/hooks/) page-এ আছে।
+
+Rule-এর ক্রম: আগে deny, তারপর ask, তারপর allow; প্রথম match-ই ফল ঠিক করে। <Cite n={20} /> Ask rule confirmation চায়। <Cite n={20} /> File edit `Edit(path)` rule দিয়ে check হয়, আর `Edit` rule `Write`-ও ঢাকে। <Cite n={20} /> Bash rule পুরো command text মেলায়, `*` মানে যেকোনো text। `mcp__<server>__*` একটি MCP server-এর সব tool ধরে। <Cite n={20} />
+
+তাই app-এর folder-এ edit deny করুন, আর `gh issue create` ও Jira tool-এর জন্য ask rule দিন।
+
+`PreToolUse` hook একটি tool call-এর আগে চলে এবং তা block করতে পারে; exit code 2 call-টি block করে। <Cite n={21} /> Hook-এর সিদ্ধান্ত deny আর ask rule এড়াতে পারে না। <Cite n={20} />
+
+Hooks guide সতর্ক করে যে Claude shell command দিয়ে তবুও protected file বদলাতে পারে। <Cite n={21} /> তাই deny rule-ও রাখুন।
+
+Tutorial-এর নিয়ম: execution-এর সময় agent আপনার অনুমতি ছাড়া app code edit করে না, database-এ write করে না, আর defect file করে না।
+
+</Bangla>
+</Voices>
+
+## Practice
+
+<Voices>
+<Technical>
+
+<Callout type="note" title="The tutorial's exercise">
+
+This exercise is the tutorial's own. Use your own project in a test environment, or the dMoney practice app. The [Codebase Tour](/case-study/codebase-tour/) explains how to run dMoney.
+
+</Callout>
+
+<Callout type="note" title="Where these facts come from">
+
+The dMoney facts below come from the files of the public repository at commit 51db34a. They have no cites, because a cite links to an official source. dMoney has bugs and security flaws on purpose. Run it only on your own machine, and never deploy it.
+
+</Callout>
+
+**The setup.** The dMoney web app runs at `http://localhost:3000`, the API at `http://localhost:5000`, and the data is in the MySQL database `dmoneydb`. A balance is not a column: it is `SUM(credit) - SUM(debit)` over the `Transactions` ledger. `GET /transaction/balance/:account` returns the current balance. The repository has its own `test-executor-agent`, which runs UI steps with agent-browser and API steps with curl. Its results use `pass`, `failed`, and `not executed`.
+
+1. **Pick five test cases.** Take them from your test design, or ask Claude for five on one feature, such as a deposit.
+2. **Add the guardrails.** Put the deny and ask rules of the section above into `.claude/settings.json`.
+3. **Run them.** Type this prompt (an example):
+
+```text
+Run TC-01 to TC-05 on http://localhost:3000 with agent-browser.
+Use one --session per test user. Take a new snapshot after each action.
+For each case: check the page, then the balance endpoint, then one
+read-only SELECT on the Transactions table. Save a screenshot, the
+console errors, and the network log to evidence/<run-id>/<test-id>/.
+Do not edit any file outside evidence/ and results/.
+Write results/<run-id>.json and a Markdown table.
+```
+
+4. **Check the result.** Open the evidence folder. Each case needs at least one screenshot. Compare one balance yourself with a read-only `SELECT`.
+5. **Investigate one failure.** Ask Claude to reproduce it in a fresh session with the fewest steps, and to name the layer.
+6. **Draft one defect report** with the template. Search for a duplicate first with `gh issue list --search`. <Cite n={15} /> Read the draft, and approve it before anything is filed with `gh issue create --body-file`. <Cite n={16} />
+
+**How to check your work:** five rows in the results file, each with a status and evidence; one draft report with steps, expected and actual results, and evidence links; no password or token in any file.
+
+</Technical>
+<Layman>
+
+This is the tutorial's own exercise. Use your own project in a test environment, or the dMoney practice app. The [Codebase Tour](/case-study/codebase-tour/) shows how to run dMoney.
+
+The dMoney facts here come from its public repository at commit 51db34a, so they have no cites. dMoney has bugs on purpose. Run it only on your own machine.
+
+The web app runs at `http://localhost:3000` and the API at `http://localhost:5000`. A balance is the sum of credits minus the sum of debits in the `Transactions` table. `GET /transaction/balance/:account` returns it. The repository has its own test agent. It uses agent-browser for pages and curl for the API.
+
+1. Pick five test cases, for example on a deposit.
+2. Add the deny and ask rules from the section above.
+3. Ask Claude to run them with agent-browser. Ask it to check the page, the API, and one read-only database query. Ask it to save a screenshot, the console errors, and the network log for each case.
+4. Open the evidence folder. Check one balance yourself.
+5. Ask Claude to repeat one failure in a fresh session and name the layer.
+6. Draft one defect report with the template. Search for a copy first with `gh issue list --search`. <Cite n={15} /> Read and approve it before `gh issue create` files it. <Cite n={16} />
+
+You are done when the results file has five rows with a status and evidence, and the report has steps, results, and evidence. No file may hold a password or a token.
+
+</Layman>
+<Bangla>
+
+এটি tutorial-এর নিজের exercise। Test environment-এ আপনার নিজের project, অথবা dMoney practice app ব্যবহার করুন। dMoney কীভাবে চালাবেন তা [Codebase Tour](/case-study/codebase-tour/) page-এ আছে।
+
+dMoney-র তথ্যগুলো public repository-র commit 51db34a-এর file থেকে নেওয়া, তাই এদের cite নেই। dMoney-তে ইচ্ছা করে bug রাখা আছে, তাই শুধু নিজের machine-এ চালান।
+
+Web app চলে `http://localhost:3000`-এ, API চলে `http://localhost:5000`-এ, আর data থাকে MySQL database `dmoneydb`-এ। Balance কোনো column নয়: `Transactions` ledger-এর `SUM(credit) - SUM(debit)`। `GET /transaction/balance/:account` বর্তমান balance দেয়। Repository-র নিজের `test-executor-agent` UI step agent-browser দিয়ে আর API step curl দিয়ে চালায়।
+
+1. আপনার test design থেকে পাঁচটি test case নিন, অথবা একটি feature-এর জন্য, যেমন deposit, Claude-কে পাঁচটি test case লিখতে বলুন।
+2. ওপরের section-এর deny আর ask rule `.claude/settings.json`-এ দিন।
+3. Claude-কে agent-browser দিয়ে case-গুলো চালাতে বলুন: page, তারপর balance endpoint, তারপর একটি read-only `SELECT`। প্রতিটি case-এর screenshot, console error আর network log `evidence/` folder-এ রাখতে বলুন।
+4. Evidence folder খুলে দেখুন, আর নিজে একটি balance মিলিয়ে দেখুন।
+5. একটি failure নতুন session-এ সবচেয়ে কম step দিয়ে reproduce করে layer-এর নাম বলতে বলুন।
+6. Template দিয়ে একটি defect report-এর draft লিখুন। আগে `gh issue list --search` দিয়ে duplicate খুঁজুন। <Cite n={15} /> `gh issue create --body-file` দিয়ে file করার আগে draft পড়ে approve করুন। <Cite n={16} />
+
+কাজ শেষ, যখন results file-এ status আর evidence-সহ পাঁচটি row থাকে, report-এ step, result আর evidence থাকে, আর কোনো file-এ password বা token থাকে না।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+1. **Trusting the UI alone.** The page says "Success", but the stored data is wrong. Fix: check the UI, the API, and the database for each case (the tutorial's advice).
+2. **Reusing old refs.** A ref describes the page at the time of its snapshot. <Cite n={1} /> Fix: take a new snapshot after each navigation or DOM change.
+3. **Reporting a false positive.** A reported anomaly may turn out to be something other than a real defect. <Cite n={8} /> Fix: reproduce it in a fresh session before you draft a report.
+4. **Letting the agent fix the app.** A changed app hides the defect. Fix: deny `Edit` on the application folders. Remember that the hooks guide says shell commands can still change files. <Cite n={21} />
+5. **Secrets in the evidence.** A Chrome GIF captures account details on logged-in pages. <Cite n={3} /> Fix: use test accounts, `--redact-url-params` in Playwright MCP <Cite n={2} />, and read each file before you share it.
+6. **Filing without review.** A filed issue reaches the whole team at once. Fix: an ask rule for the filing tool <Cite n={20} />, and a duplicate search first. <Cite n={15} />
+7. **A database user that can write.** Fix: a read-only user, and `MCP_REQUIRE_READONLY_DB_USER=true` on the MySQL MCP server. <Cite n={7} />
+
+</Technical>
+<Layman>
+
+1. **Trusting the page alone.** It may say "Success" while the data is wrong. The tutorial says: check the page, the API, and the database.
+2. **Using an old ref.** A ref is only good for its snapshot. <Cite n={1} /> Take a new snapshot after the page changes.
+3. **Reporting a false alarm.** A problem may not be a real defect. <Cite n={8} /> Repeat it in a fresh session first.
+4. **Letting the agent fix the app.** That hides the bug. Deny edits to the app folders. Shell commands can still change files, so keep the deny rules. <Cite n={21} />
+5. **Secrets in the evidence.** A Chrome GIF shows account details on logged-in pages. <Cite n={3} /> Use test accounts and hide URL secrets with `--redact-url-params`. <Cite n={2} />
+6. **Filing without review.** Add an ask rule for the filing tool. <Cite n={20} /> Search for a copy first. <Cite n={15} />
+7. **A database user that can write.** Use a read-only user. The MySQL MCP server can refuse to start with a user that can write. <Cite n={7} />
+
+</Layman>
+<Bangla>
+
+1. **শুধু UI-তে বিশ্বাস করা।** Page "Success" দেখায়, কিন্তু data ভুল। সমাধান: প্রতিটি case-এ UI, API আর database check করুন (tutorial-এর পরামর্শ)।
+2. **পুরোনো ref ব্যবহার করা।** Ref শুধু তার snapshot-এর সময়ের page বোঝায়। <Cite n={1} /> সমাধান: navigation বা DOM change-এর পরে নতুন snapshot নিন।
+3. **False positive report করা।** Report করা anomaly আসল defect না-ও হতে পারে। <Cite n={8} /> সমাধান: draft-এর আগে নতুন session-এ reproduce করুন।
+4. **Agent-কে app fix করতে দেওয়া।** এতে defect লুকিয়ে যায়। সমাধান: app-এর folder-এ `Edit` deny করুন। Shell command দিয়ে তবুও file বদলানো যায়, মনে রাখুন। <Cite n={21} />
+5. **Evidence-এ secret।** Chrome GIF logged-in page-এর account তথ্য ধরে। <Cite n={3} /> সমাধান: test account, Playwright MCP-এর `--redact-url-params` <Cite n={2} />, আর share-এর আগে প্রতিটি file পড়া।
+6. **Review ছাড়া file করা।** সমাধান: filing tool-এর জন্য ask rule <Cite n={20} />, আর আগে duplicate search। <Cite n={15} />
+7. **Write করতে পারে এমন database user।** সমাধান: read-only user, আর MySQL MCP server-এ `MCP_REQUIRE_READONLY_DB_USER=true`। <Cite n={7} />
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Failure | An event in which a component or system does not meet its requirements within specified limits during its execution |
+| Defect | An imperfection or deficiency in a work product; "bug" is a synonym |
+| False-positive result | A result that reports a defect that does not exist in the test object |
+| False-negative result | A result that misses a defect that is present in the test object |
+| Root cause analysis | The process used to find the root cause of a defect |
+| Test environment | An environment containing hardware, instrumentation, simulators, software tools, and other support elements needed to perform a test |
+| Test data | Data needed for test execution |
+| Test log | A chronological record of relevant details about test execution |
+| Defect report | Documentation of the occurrence, nature, and status of a defect |
+| Ref | The id, such as `@e1`, that an agent-browser snapshot gives each element; valid only for that snapshot |
+| Ask rule | A permission rule that makes Claude Code ask for confirmation before a tool call |

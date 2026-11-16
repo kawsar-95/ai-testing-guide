@@ -1,0 +1,577 @@
+export const metadata = {
+  title: 'QA Workspace & Tooling',
+  description: 'Set up a Claude Code workspace for test work: the .claude folder, rules, permissions, hooks, plugins, and the community tools that testers add, with their trade-offs.',
+}
+
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'Explore the .claude directory', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/claude-directory', accessed: '2026-11-15' },
+    { title: 'How Claude remembers your project', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/memory', accessed: '2026-11-15' },
+    { title: 'Connect Claude Code to tools via MCP', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/mcp', accessed: '2026-11-15' },
+    { title: 'Extend Claude Code', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/features-overview', accessed: '2026-11-15' },
+    { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-11-15' },
+    { title: 'Configure permissions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permissions', accessed: '2026-11-15' },
+    { title: 'Configure the sandboxed Bash tool', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sandboxing', accessed: '2026-11-15' },
+    { title: 'Automate actions with hooks', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks-guide', accessed: '2026-11-15' },
+    { title: 'Security', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/security', accessed: '2026-11-15' },
+    { title: 'Plugins overview', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/plugins/overview', accessed: '2026-11-15' },
+    { title: 'Anthropic marketplaces', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/plugins/anthropic-marketplaces', accessed: '2026-11-15' },
+    { title: 'Plugin security and trust', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/plugins/security', accessed: '2026-11-15' },
+    { title: 'Superpowers README', publisher: 'obra (GitHub)', url: 'https://github.com/obra/superpowers', accessed: '2026-11-15' },
+    { title: 'Context7 README', publisher: 'upstash (GitHub)', url: 'https://github.com/upstash/context7', accessed: '2026-11-15' },
+    { title: 'CLAUDE.md Management Plugin README', publisher: 'Anthropic (GitHub)', url: 'https://github.com/anthropics/claude-plugins-official/blob/main/plugins/claude-md-management/README.md', accessed: '2026-11-15' },
+    { title: 'Caveman README', publisher: 'JuliusBrussee (GitHub)', url: 'https://github.com/JuliusBrussee/caveman', accessed: '2026-11-15' },
+    { title: 'graphify README', publisher: 'safishamsi (GitHub)', url: 'https://github.com/safishamsi/graphify', accessed: '2026-11-15' },
+    { title: 'Serena README', publisher: 'oraios (GitHub)', url: 'https://github.com/oraios/serena', accessed: '2026-11-15' },
+    { title: 'Code intelligence plugins', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/plugins/code-intelligence', accessed: '2026-11-15' },
+  ],
+}
+
+# QA Workspace & Tooling
+
+A tester who uses Claude every day needs a workspace, not a blank chat. This page shows where each piece of a Claude Code setup lives, which mechanism fits which test task, and how to fence the agent in so that it cannot read secrets or change the application code by accident. It then looks at seven tools that testers often add, with what each one is good for and what it can cost you in evidence, privacy, or trust.
+
+<PageMeta />
+
+## What goes where in a project
+
+<Voices>
+<Technical>
+
+Claude Code reads its setup from your project and from `~/.claude` in your home directory. Commit the project files to share them. Files in `~/.claude` are personal and apply to all your projects. <Cite n={1} />
+
+| File | What it holds | Commit? |
+|---|---|---|
+| `CLAUDE.md` (or `.claude/CLAUDE.md`) | Instructions loaded every session <Cite n={1} /> <Cite n={2} /> | Yes |
+| `CLAUDE.local.md` | Your private preferences for this project; add it to `.gitignore` <Cite n={1} /> | No |
+| `.claude/settings.json` | Permissions, hooks, env vars, model defaults <Cite n={1} /> | Yes |
+| `.claude/settings.local.json` | Your personal overrides; gitignored when Claude Code saves a setting to it <Cite n={1} /> | No |
+| `.claude/rules/*.md` | Topic-scoped instructions, optionally limited to some paths <Cite n={1} /> | Yes |
+| `.claude/skills/<name>/SKILL.md` | Reusable prompts that you run with `/name`, or that Claude loads by itself <Cite n={1} /> | Yes |
+| `.claude/commands/*.md` | Single-file prompts, the same mechanism as skills <Cite n={1} /> | Yes |
+| `.claude/agents/*.md` | Subagents with their own prompt and tools <Cite n={1} /> | Yes |
+| `.claude/output-styles/*.md` | How Claude formats its responses <Cite n={1} /> | Yes |
+| `.mcp.json` (project root) | Team-shared MCP servers <Cite n={1} /> | Yes |
+| `~/.claude.json` | App state, account details, personal MCP servers <Cite n={1} /> | No |
+
+**Secrets.** `.mcp.json` supports environment variable expansion, so a team can share a server entry without its API key. `${VAR}` expands to the value of `VAR`. <Cite n={3} /> Transcripts are plain text: if a tool reads a `.env` file, the value goes into the transcript. The docs suggest permission rules that deny reads of credential files. <Cite n={1} />
+
+<Callout type="note" title="Where these facts come from">
+
+The next paragraph comes from the files of the public dMoney practice repository at commit 51db34a. It has no cites, because a cite links to an official source.
+
+</Callout>
+
+The dMoney repo ([Codebase Tour](/case-study/codebase-tour/)) is a real QA workspace. Its `.claude/` folder has `agents/`, `commands/`, `hooks/`, `skills/`, and `settings.json`. Its `.mcp.json` names three servers: `jira`, `playwright`, and `dmoney-db`. Its reviewer subagent is read-only, with the tools `Read, Grep, Glob, Skill`. Its `.gitignore` keeps `graphify-out/` and `.serena/` out of git. Its `settings.json` holds one PreToolUse hook and no `permissions` block, so nothing denies reads of secrets.
+
+</Technical>
+<Layman>
+
+Claude Code reads its setup from your project and from `~/.claude` in your home folder. Commit the project files, so the team shares them. The home files are only yours. <Cite n={1} />
+
+- `CLAUDE.md` holds instructions for every session. <Cite n={2} /> `CLAUDE.local.md` holds your private notes. <Cite n={1} />
+- `.claude/settings.json` holds permissions and hooks. `.claude/settings.local.json` holds your own overrides. Do not commit the local files. <Cite n={1} />
+- `.claude/rules/`, `skills/`, and `agents/` hold rules, saved prompts, and helpers. `.mcp.json` lists the shared MCP servers. <Cite n={1} />
+
+In `.mcp.json`, write `${VAR}` instead of a key. Claude Code puts in the value of `VAR`. <Cite n={3} /> Transcripts are plain text, so deny reads of secret files. <Cite n={1} />
+
+The dMoney practice repo has agents, commands, hooks, skills, and three MCP servers. But it has no rule that blocks reads of secrets.
+
+</Layman>
+<Bangla>
+
+Claude Code আপনার project আর home folder-এর `~/.claude` থেকে setup পড়ে। Project file commit করুন, যাতে team শেয়ার করতে পারে। `~/.claude`-এর file শুধু আপনার। <Cite n={1} />
+
+- `CLAUDE.md`-এ প্রতিটি session-এর নির্দেশনা থাকে। <Cite n={2} /> `CLAUDE.local.md`-এ আপনার ব্যক্তিগত পছন্দ, এটি `.gitignore`-এ দিন। <Cite n={1} />
+- `.claude/settings.json`-এ permission ও hook থাকে। `.claude/settings.local.json` আপনার নিজের override, commit করবেন না। <Cite n={1} />
+- `.claude/rules/`, `skills/`, `agents/`-এ rule, skill আর subagent থাকে। `.mcp.json`-এ team-এর MCP server থাকে। <Cite n={1} />
+
+`.mcp.json`-এ key-এর বদলে `${VAR}` লিখুন, Claude Code সেখানে `VAR`-এর মান বসায়। <Cite n={3} /> Transcript plain text-এ থাকে, তাই secret file পড়া deny করুন। <Cite n={1} />
+
+dMoney practice repo-তে agents, commands, hooks, skills আর তিনটি MCP server আছে। কিন্তু secret পড়া আটকানোর কোনো `permissions` block নেই।
+
+</Bangla>
+</Voices>
+
+## Pick the right mechanism for each QA job
+
+<Voices>
+<Technical>
+
+The Claude Code docs compare the extension types. CLAUDE.md is persistent context loaded every conversation. A subagent is an isolated context that returns a summary. A hook is automation that must run on every matching event. MCP connects to external services. <Cite n={4} />
+
+| QA job | Mechanism | Why |
+|---|---|---|
+| Test conventions: framework, folder, run command | `CLAUDE.md` | Every session needs them. <Cite n={4} /> |
+| Rules only for test files or one folder | `.claude/rules/` with `paths` | For directory-specific guidelines <Cite n={4} /> |
+| A test-design procedure, such as boundary values | Skill | A repeatable task that you run with `/name` <Cite n={4} /> |
+| An independent reviewer of bug reports | Subagent with `tools: Read, Grep, Glob` | Own context; the docs use this tool list for a read-only subagent <Cite n={5} /> |
+| A block on edits to application code | `PreToolUse` hook, <Cite n={4} /> or a deny rule <Cite n={6} /> | A hook that blocks the edit is enforcement. <Cite n={4} /> |
+| A lint or type check after each edit | `PostToolUse` hook | The docs example: run ESLint after every file edit <Cite n={4} /> |
+| Jira or database access | MCP server, plus a skill for how to use it | MCP gives the tools, a skill the know-how <Cite n={4} /> |
+| Shorter or reformatted answers | Output style | Sets role, tone, and response format <Cite n={4} /> |
+| The same setup in a second repo | Plugin | Bundles skills, hooks, subagents, and MCP servers <Cite n={4} /> |
+
+**Instructions are not guardrails.** An instruction such as "never edit `.env`" in CLAUDE.md or a skill is a request, not a guarantee. <Cite n={4} /> Put anything that must always hold into a hook or a permission rule.
+
+**Skills with side effects.** Set `disable-model-invocation: true` on a skill that writes to Jira or a database. <Cite n={4} /> Then it runs only when you type its name.
+
+Project subagents live in `.claude/agents/`, checked into version control. <Cite n={5} /> The [Subagents](/extend/subagents/) and [Skills](/extend/skills/) pages show how to write them.
+
+</Technical>
+<Layman>
+
+Each extension type has one job: <Cite n={4} />
+
+- **CLAUDE.md** is always loaded. Put test conventions there.
+- **A rule** can apply only to some files, such as test files.
+- **A skill** is a saved procedure that you start with `/name`.
+- **A subagent** is a helper with its own context. A bug-report reviewer with only `Read, Grep, Glob` is a good one. <Cite n={5} />
+- **A hook** runs on every matching event. It can block edits to app code or run a linter.
+- **MCP** connects Claude to Jira or a database.
+- **A plugin** packs skills, hooks, subagents, and MCP servers for another repo.
+
+An instruction in CLAUDE.md is a request, not a guarantee. If a rule must always hold, use a hook or a permission rule. If a skill writes to Jira, set `disable-model-invocation: true`. <Cite n={4} />
+
+</Layman>
+<Bangla>
+
+প্রতিটি extension-এর কাজ আলাদা: <Cite n={4} />
+
+- **CLAUDE.md** সবসময় load হয়, এখানে test convention রাখুন।
+- **Rule** (`paths` সহ) শুধু নির্দিষ্ট file-এর জন্য, যেমন test file।
+- **Skill** একটি procedure, যেমন boundary value দিয়ে test design। `/name` দিয়ে চালান।
+- **Subagent** নিজস্ব context-এ কাজ করে summary দেয়। শুধু `Read, Grep, Glob` সহ bug report reviewer এর ভালো উদাহরণ। <Cite n={5} />
+- **Hook** প্রতিটি মিলে যাওয়া event-এ চলে, যেমন app code edit আটকানো বা lint চালানো।
+- **MCP** Jira বা database-এর সাথে যুক্ত করে।
+- **Plugin** skill, hook, subagent আর MCP server bundle করে আরেকটি repo-তে নিয়ে যায়।
+
+CLAUDE.md-এর নির্দেশনা অনুরোধ, guarantee নয়। জরুরি নিয়ম hook বা permission rule-এ রাখুন। Jira-তে লেখে এমন skill-এ `disable-model-invocation: true` দিন। <Cite n={4} />
+
+</Bangla>
+</Voices>
+
+## CLAUDE.md and rules for test work
+
+<Voices>
+<Technical>
+
+**CLAUDE.md.** A project CLAUDE.md can be `./CLAUDE.md` or `./.claude/CLAUDE.md`. Run `/init` to generate a first version. <Cite n={2} /> Claude treats CLAUDE.md as context, not enforced configuration. Target under 200 lines per file, because longer files use more context and reduce adherence. <Cite n={2} /> To confirm that it loaded, run `/context all` and check the list under **Memory files**. <Cite n={2} />
+
+**Rules.** Put one topic in each file in `.claude/rules/`, for example `testing.md`. Claude Code finds all `.md` files there, in subfolders too. <Cite n={2} /> A rule without `paths` loads at launch. A rule with `paths` loads only when Claude reads, writes, or edits a matching file. <Cite n={2} /> `paths` is the only frontmatter field of a rule. <Cite n={1} />
+
+An example rule for Playwright specs (the tutorial's own example):
+
+```markdown
+---
+paths:
+  - "tests/**/*.spec.ts"
+---
+
+# Playwright test rules
+
+- Use role-based locators first. Use a test ID only when no role fits.
+- One behaviour per test. Name the test after the behaviour.
+- Never hard-code a password. Read test users from environment variables.
+- Do not add a fixed wait. Wait for a visible state instead.
+```
+
+**Personal rules.** Rules in `~/.claude/rules/` apply to every project on your machine. <Cite n={2} />
+
+**Audit.** `/doctor prompt-audit` asks Claude to find outdated or conflicting instructions. It needs Claude Code v2.1.283 or later. <Cite n={2} />
+
+<Callout type="tip" title="The tutorial's advice">
+
+Write test rules that a reviewer can check: "use `getByRole` first" is checkable, "write good tests" is not. When Claude makes the same test mistake twice, add one line to the rule file.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Put CLAUDE.md at `./CLAUDE.md` or `./.claude/CLAUDE.md`. Run `/init` for a first version. Keep it under 200 lines, because Claude follows long files less well. Run `/context all` to check that it loaded. <Cite n={2} />
+
+Rules are small files in `.claude/rules/`, one topic each. A rule with `paths` loads only when Claude works on a matching file. <Cite n={2} /> So a rule for `tests/**/*.spec.ts` loads only for your Playwright specs. The example rule on this page is the tutorial's own.
+
+Your own rules go in `~/.claude/rules/`. `/doctor prompt-audit` finds old or conflicting lines. <Cite n={2} /> The tutorial suggests rules that a reviewer can check.
+
+</Layman>
+<Bangla>
+
+CLAUDE.md `./CLAUDE.md` বা `./.claude/CLAUDE.md`-এ রাখুন, প্রথম version-এর জন্য `/init` চালান। ২০০ line-এর নিচে রাখুন, কারণ লম্বা file Claude কম মানে। Load হয়েছে কি না দেখতে `/context all` চালান। <Cite n={2} />
+
+Rule হলো `.claude/rules/`-এ এক-একটি বিষয়ের ছোট file। `paths` থাকলে rule শুধু মিলে যাওয়া file-এ কাজের সময় load হয়। <Cite n={2} /> Frontmatter field একটিই: `paths`। <Cite n={1} /> উদাহরণের rule-টি tutorial-এর নিজের।
+
+ব্যক্তিগত rule `~/.claude/rules/`-এ রাখুন। `/doctor prompt-audit` পুরনো বা পরস্পরবিরোধী নির্দেশনা খোঁজে। <Cite n={2} /> Tutorial-এর পরামর্শ: এমন rule লিখুন, যা reviewer যাচাই করতে পারেন।
+
+</Bangla>
+</Voices>
+
+## Permissions and the sandbox
+
+<Voices>
+<Technical>
+
+**Allow, ask, deny.** An allow rule lets a tool run without approval, an ask rule prompts, and a deny rule blocks. <Cite n={6} /> Claude Code checks deny first, then ask, then allow, and the first match wins. An allow rule cannot carve an exception out of a deny rule. <Cite n={6} /> Claude Code enforces these rules, not the model. <Cite n={6} />
+
+An example `.claude/settings.json` for a QA workspace (the tutorial's own example; the rule syntax is from the docs <Cite n={6} />):
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Edit(./src/**)"
+    ],
+    "ask": ["Bash(git push *)"],
+    "allow": ["Bash(npx playwright test *)"]
+  }
+}
+```
+
+- `Read(./.env)` and `Read(./secrets/**)` are the docs examples for blocking reads. A Read deny rule also blocks Edit and Write on that path. <Cite n={6} />
+- A `.claudeignore` file has no effect. <Cite n={6} />
+- `/permissions` lists every rule and its file. When the approval saves permanently, such as for a Bash command, "Yes, and don't ask again" saves the rule to `.claude/settings.local.json`. <Cite n={6} />
+
+<Callout type="warning" title="Deny rules do not stop scripts">
+
+Read and Edit deny rules do not apply to a subprocess that opens files itself, such as a Python or Node script. For OS-level enforcement, the docs say to enable the sandbox. <Cite n={6} />
+
+</Callout>
+
+**The sandbox.** The Bash sandbox is an operating-system boundary around Claude's shell commands. <Cite n={7} /> It is off by default; turn it on with `/sandbox`. It runs on macOS, Linux, and WSL2. <Cite n={7} /> By default, sandboxed commands can still read most of the machine, including `~/.ssh`, and the allowed network domains start empty. The file tools, MCP servers, and hooks run outside it. <Cite n={7} />
+
+**Modes.** `default` (Manual) prompts on first use. `plan` explores and does not edit source files. `bypassPermissions` belongs only in isolated containers or VMs. <Cite n={6} /> See [Permission Modes](/getting-started/permission-modes/) and [Settings](/configure/settings/).
+
+</Technical>
+<Layman>
+
+Allow rules let a tool run. Ask rules make Claude Code ask you. Deny rules block. Deny wins over ask and allow. Claude Code enforces the rules, not the model. <Cite n={6} />
+
+The example on this page is the tutorial's own. It blocks reads of `.env` and `secrets/`, blocks edits to `src/`, asks before `git push`, and allows Playwright runs. A `.claudeignore` file does nothing. <Cite n={6} />
+
+Deny rules do not stop a script that opens files by itself. For that, turn on the sandbox. <Cite n={6} /> The sandbox is a wall that the operating system puts around shell commands. It is off by default. By default, it still lets commands read most files, even `~/.ssh`. <Cite n={7} />
+
+Plan mode does not edit source files. Use `bypassPermissions` only in a container or a VM. <Cite n={6} />
+
+</Layman>
+<Bangla>
+
+Allow rule approval ছাড়া চালাতে দেয়, ask rule জিজ্ঞেস করে, deny rule আটকায়। আগে deny দেখা হয়, আর allow দিয়ে deny-তে ফাঁক তৈরি করা যায় না। Rule model নয়, Claude Code নিজে enforce করে। <Cite n={6} />
+
+উদাহরণের `settings.json` tutorial-এর নিজের: `.env` ও `secrets/` পড়া বন্ধ, `src/`-এ edit বন্ধ, `git push`-এর আগে প্রশ্ন, Playwright test চালানো allow। `.claudeignore`-এর কোনো প্রভাব নেই। <Cite n={6} />
+
+সতর্ক থাকুন: Python বা Node script নিজে file খুললে deny rule আটকায় না, এর জন্য sandbox চালু করুন। <Cite n={6} /> Sandbox shell command-এর চারপাশে OS-এর boundary। এটি default-এ বন্ধ, `/sandbox` দিয়ে চালু করুন। Default-এ এটি `~/.ssh` সহ বেশিরভাগ file পড়তে দেয়। File tool, MCP server আর hook এর বাইরে চলে। <Cite n={7} />
+
+Plan mode source file edit করে না। `bypassPermissions` শুধু container বা VM-এ চালান। <Cite n={6} />
+
+</Bangla>
+</Voices>
+
+## Hooks and untrusted content
+
+<Voices>
+<Technical>
+
+### A hook that protects application code
+
+The hooks guide has a `PreToolUse` hook, registered in `.claude/settings.json` with the matcher `Edit|Write`. Its script exits with code 2 to block the edit, and Claude gets the reason as feedback. <Cite n={8} /> The script must be executable. <Cite n={8} />
+
+The docs example protects `.env`, `package-lock.json`, and `.git/`. <Cite n={8} /> The tutorial suggests the same script with your application folders in the list, so that Claude writes tests and reports but does not "fix" the product. Claude can still change protected files with shell commands, so add an Edit deny rule for each path too. <Cite n={8} /> The [Hooks](/extend/hooks/) page shows the format.
+
+### Prompt injection
+
+Prompt injection is an attack that inserts text to override the assistant's instructions. <Cite n={9} /> The security docs list these safeguards and limits:
+
+- In Manual mode, sensitive operations need your approval. `curl` and `wget` are not auto-approved by default. <Cite n={9} />
+- Servers in a project's `.mcp.json` have their own approval prompt, but a `-p` session shows no trust prompts. <Cite n={9} />
+- Anthropic does not security-audit or manage any MCP server. <Cite n={9} />
+- Avoid piping untrusted content directly to Claude. No system is completely immune. <Cite n={9} />
+
+<Callout type="warning" title="The tutorial's advice">
+
+In test work, much of what Claude reads is untrusted: a user bug report, a Jira comment, a page of the app under test, a log line. Treat it as data. Keep write tools behind an ask rule, and read every command before you approve it.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+A `PreToolUse` hook can run a script before each edit. If the script exits with code 2, the edit is blocked, and Claude is told why. <Cite n={8} /> The tutorial suggests a list of your app folders, so Claude writes tests but does not change the product. Shell commands can still change files, so add Edit deny rules too. <Cite n={8} />
+
+Prompt injection means inserted text that tries to override Claude's instructions. <Cite n={9} /> In Manual mode, risky actions need your approval. A `-p` session shows no trust prompts. Anthropic does not audit MCP servers. No system is fully safe. <Cite n={9} />
+
+The tutorial's advice: bug reports, Jira comments, app pages, and logs are untrusted. Treat them as data.
+
+</Layman>
+<Bangla>
+
+`PreToolUse` hook প্রতিটি edit-এর আগে একটি script চালাতে পারে। Script code 2 দিয়ে exit করলে edit আটকে যায়, আর Claude কারণ জানতে পারে। <Cite n={8} /> Tutorial-এর পরামর্শ: তালিকায় app-এর folder দিন, যাতে Claude test লেখে কিন্তু product বদলায় না। Shell command দিয়ে তবুও file বদলানো যায়, তাই Edit deny rule-ও দিন। <Cite n={8} />
+
+Prompt injection হলো text ঢুকিয়ে assistant-এর নির্দেশনা বদলানোর আক্রমণ। <Cite n={9} /> Manual mode-এ ঝুঁকির কাজে approval লাগে, তবে `-p` session-এ trust prompt আসে না। Anthropic MCP server audit করে না, আর কোনো system পুরোপুরি নিরাপদ নয়। <Cite n={9} />
+
+Tutorial-এর পরামর্শ: bug report, Jira comment, app page আর log হলো untrusted, এগুলোকে data হিসেবে দেখুন।
+
+</Bangla>
+</Voices>
+
+## Plugins and marketplaces
+
+<Voices>
+<Technical>
+
+**What a plugin is.** A plugin is a directory of components, usually with a manifest at `.claude-plugin/plugin.json`. <Cite n={10} /> It bundles skills, hooks, subagents, and MCP servers. Its skills are namespaced, such as `/my-plugin:review`. <Cite n={4} />
+
+**Scopes.** User scope: you, in every project. Project scope: everyone in the repo, through the committed `.claude/settings.json`; each collaborator still installs it. Local scope: you, in this repo only. <Cite n={10} />
+
+**Marketplaces.** Install with the marketplace name after `@`, for example `/plugin install commit-commands@claude-plugins-official`. By default, Claude Code adds the official marketplace the first time you start an interactive terminal session. The **Discover** tab of `/plugin` lists the plugins. <Cite n={11} /> Anthropic does not review third-party marketplaces. <Cite n={11} />
+
+**Trust.** A plugin can execute arbitrary code on your machine with your user privileges. <Cite n={12} /> Permission rules and the sandbox cover Claude's tool calls, not the code a plugin runs by itself. With auto-update on, the files you reviewed can change. <Cite n={12} />
+
+Review a plugin before you install it: <Cite n={12} />
+
+1. In `/plugin`, select it and read the **Will install** section.
+2. Read its `hooks/hooks.json`, its `.mcp.json`, and every file in `bin/`.
+3. After the install, run `claude plugin details <plugin name>`.
+4. To remove it, run `claude plugin uninstall <plugin>` with the scope you used.
+
+The [Plugins](/extend/plugins/) page covers building and sharing one.
+
+</Technical>
+<Layman>
+
+A plugin is a folder that packs skills, hooks, subagents, and MCP servers. <Cite n={10} /> <Cite n={4} /> Project scope shares it through `.claude/settings.json`, but each person still installs it. <Cite n={10} />
+
+You install from a marketplace, with its name after `@`. Claude Code adds the official one by itself. Anthropic does not review third-party marketplaces. <Cite n={11} />
+
+A plugin can run any code with your rights, and permission rules do not cover that code. So read its **Will install** list, its hooks, and its `bin/` files first. <Cite n={12} />
+
+</Layman>
+<Bangla>
+
+Plugin হলো skill, hook, subagent আর MCP server-এর একটি package। <Cite n={10} /> <Cite n={4} /> Project scope-এ এটি `.claude/settings.json` দিয়ে শেয়ার হয়, তবে প্রত্যেককে নিজে install করতে হয়। <Cite n={10} />
+
+`@`-এর পরে marketplace-এর নাম দিয়ে install করুন, যেমন `/plugin install commit-commands@claude-plugins-official`। Official marketplace Claude Code নিজেই যোগ করে। Third-party marketplace Anthropic review করে না। <Cite n={11} />
+
+সতর্ক থাকুন: plugin আপনার privilege নিয়ে যেকোনো code চালাতে পারে, আর permission rule সেই code ঢাকে না। Install-এর আগে **Will install**, `hooks/hooks.json`, `.mcp.json` আর `bin/` পড়ুন। <Cite n={12} />
+
+</Bangla>
+</Voices>
+
+## Community tools: workflow, docs, and memory
+
+<Voices>
+<Technical>
+
+### Superpowers (obra/superpowers)
+
+- **What it is.** A software development methodology built on composable skills. Install it with `/plugin install superpowers@claude-plugins-official`. <Cite n={13} />
+- **How it works.** Its skills fire in order: brainstorming, git worktrees, writing plans, subagent-driven development, test-driven development, code review, and finishing the branch. The README calls them "Mandatory workflows, not suggestions." <Cite n={13} />
+- **Tester use.** `systematic-debugging` is a 4-phase root cause process. `verification-before-completion` checks that a fix really works. <Cite n={13} />
+- **Cost or risk.** The test-driven-development skill deletes code written before tests. The optional visual companion loads a logo from the authors' website; `SUPERPOWERS_DISABLE_TELEMETRY` turns that off. <Cite n={13} />
+
+### Context7 (upstash/context7)
+
+- **What it is.** It pulls up-to-date, version-specific library docs into the agent's context. <Cite n={14} />
+- **Setup.** `npx ctx7 setup` installs a CLI with a skill, or an MCP server. The CLI needs Node.js 22.13 or newer, and an API key is recommended. The MCP tools are `resolve-library-id` and `query-docs`. <Cite n={14} />
+- **Tester use.** Current API docs for Playwright or a test runner, when Claude suggests an old method.
+- **Cost or risk.** The README says that it cannot guarantee the accuracy, completeness, or security of the docs. <Cite n={14} />
+
+### CLAUDE.md management (Anthropic plugin)
+
+- **What it is.** An Anthropic plugin with two tools. The `claude-md-improver` skill audits CLAUDE.md files against the current codebase. `/revise-claude-md` captures what the session taught. <Cite n={15} />
+- **Tester use.** After Claude ran the wrong test command, capture the right one.
+- **Cost or risk.** `/revise-claude-md` writes what the session taught into CLAUDE.md, <Cite n={15} /> and a project CLAUDE.md holds team-shared instructions. <Cite n={2} /> The tutorial suggests that you review its diff like any other change.
+
+</Technical>
+<Layman>
+
+**Superpowers** is a way of working built from skills. <Cite n={13} /> Its skills run in a fixed order: brainstorm, plan, build, test first, review. They are mandatory, not suggestions. The debugging skill is a 4-phase root cause process. But the test-first skill deletes code written before its tests. <Cite n={13} />
+
+**Context7** brings current library docs into Claude's context. Run `npx ctx7 setup`. It cannot promise that the docs are correct or safe. <Cite n={14} />
+
+**CLAUDE.md management** is an Anthropic plugin. One skill checks CLAUDE.md against the code. `/revise-claude-md` saves what you learned in the session. <Cite n={15} /> Review its edits before you commit them.
+
+</Layman>
+<Bangla>
+
+**Superpowers** skill দিয়ে তৈরি একটি development পদ্ধতি, official marketplace থেকে install হয়। এর skill নির্দিষ্ট ক্রমে চলে, আর README বলে এগুলো বাধ্যতামূলক। `systematic-debugging` একটি ৪ ধাপের root cause process। সতর্ক থাকুন: test-driven-development skill test-এর আগে লেখা code মুছে দেয়। <Cite n={13} />
+
+**Context7** library-র হালনাগাদ docs Claude-এর context-এ আনে। `npx ctx7 setup` চালান। তবে docs-এর নির্ভুলতা বা নিরাপত্তার guarantee এটি দেয় না। <Cite n={14} />
+
+**CLAUDE.md management** একটি Anthropic plugin। একটি skill CLAUDE.md-কে code-এর সাথে মিলিয়ে দেখে, আর `/revise-claude-md` session-এর শিক্ষা ধরে রাখে। <Cite n={15} /> Commit-এর আগে এর edit review করুন।
+
+</Bangla>
+</Voices>
+
+## Community tools: tokens and code navigation
+
+<Voices>
+<Technical>
+
+### Caveman (JuliusBrussee/caveman)
+
+- **What it is.** A tool that makes the agent "say less and read less". `npx @caveman-ai/cli@latest` installs six parts, all on after install, and needs Node.js 22.13 or later. `npx skills add JuliusBrussee/caveman -g` installs only the short-answer skill. <Cite n={16} />
+- **How it works.** One part shrinks logs, JSON, CSV, and test output before the model reads them; the originals stay on disk. Security warnings and irreversible actions still get full sentences. <Cite n={16} />
+- **Cost or risk.** The CLI sends usage stats by default; `caveman telemetry off` stops them. `caveman off <part>` turns one part off. <Cite n={16} /> A shrunk log can drop the one line that a bug report needs, so the tutorial suggests turning input shrinking off during bug investigation.
+
+### graphify (safishamsi/graphify)
+
+- **What it is.** A Claude Code skill: `/graphify` reads your files and builds a knowledge graph in `graphify-out/`. Install it with `pip install graphifyy && graphify install`. <Cite n={17} />
+- **How it works.** Code is parsed locally; docs and images go through Claude. Each edge is tagged `EXTRACTED`, `INFERRED`, or `AMBIGUOUS`. `--update` re-extracts changed files, and `graphify hook install` rebuilds after every commit. <Cite n={17} />
+- **Cost or risk.** Every edge is tagged `EXTRACTED`, `INFERRED`, or `AMBIGUOUS`, so you know what was found and what was guessed. `--update` re-extracts the changed files. <Cite n={17} /> The tutorial suggests that you rerun it after the code changes, and that you never put an `INFERRED` edge in a bug report as a fact.
+
+### Serena (oraios/serena)
+
+- **What it is.** An MCP server with symbol-level code retrieval, editing, and refactoring tools, on language servers for over 40 languages. <Cite n={18} />
+- **Setup.** `uv tool install -p 3.13 serena-agent`, then `serena init`. The README says not to install it from an MCP or plugin marketplace. <Cite n={18} />
+- **Cost or risk.** Its editing tools can change code, and it keeps its own memory. <Cite n={18} /> Keep its edit tools behind deny or ask rules.
+
+### Code intelligence (LSP) plugins
+
+Each plugin connects Claude Code to a language server for one language, from the official marketplace. The plugin does not include the server: for TypeScript, run `npm install -g typescript-language-server typescript`, then `/plugin install typescript-lsp@claude-plugins-official`. <Cite n={19} /> Claude then sees type errors after its edits and gets a read-only `LSP` tool. It works in terminal sessions, not cloud sessions. <Cite n={19} />
+
+### Compare the tools
+
+| Tool | Type | A tester uses it for | Watch out for |
+|---|---|---|---|
+| Superpowers | Skills plugin | Debugging and verification discipline | Mandatory process <Cite n={13} /> |
+| Context7 | CLI skill or MCP | Current library docs | No accuracy guarantee <Cite n={14} /> |
+| CLAUDE.md management | Anthropic plugin | Keeping CLAUDE.md current | Edits to a shared file <Cite n={15} /> |
+| Caveman | CLI, skill, plugin | Shorter answers and outputs | Usage stats on by default <Cite n={16} /> |
+| graphify | Skill | A knowledge graph of your files | Stale graph, guessed edges <Cite n={17} /> |
+| Serena | MCP server | Finding symbols and references | Edit tools, own memory <Cite n={18} /> |
+| LSP plugins | Official plugins | Type errors in test code | Terminal only <Cite n={19} /> |
+
+</Technical>
+<Layman>
+
+**Caveman** makes the agent say less and read less. It shrinks logs and test output before Claude reads them, and keeps the originals. Its CLI sends usage stats by default. <Cite n={16} /> The tutorial warns that a shrunk log can lose the line your bug report needs.
+
+**graphify** reads your files and builds a knowledge graph. <Cite n={17} /> Each link is marked as found, guessed, or unclear. <Cite n={17} /> An old graph can mislead you.
+
+**Serena** is an MCP server that finds and edits code by symbol. Its edit tools can change code. <Cite n={18} />
+
+**LSP plugins** connect Claude to a language server. Then Claude sees type errors after each edit. <Cite n={19} />
+
+</Layman>
+<Bangla>
+
+**Caveman** agent-কে কম বলায় আর কম পড়ায়। এটি log ও test output ছোট করে, তবে মূল file রেখে দেয়। এর CLI default-এ usage stats পাঠায়। <Cite n={16} /> Tutorial-এর সতর্কতা: ছোট করা log থেকে bug report-এর দরকারি line হারাতে পারে।
+
+**graphify** আপনার file থেকে `graphify-out/`-এ knowledge graph বানায়। প্রতিটি edge-এ `EXTRACTED`, `INFERRED` বা `AMBIGUOUS` tag থাকে। <Cite n={17} /> Update না করলে graph পুরনো হয়, আর `INFERRED` edge একটি অনুমান।
+
+**Serena** একটি MCP server, যা symbol ধরে code খোঁজে ও edit করে। এর edit tool code বদলাতে পারে। <Cite n={18} />
+
+**LSP plugin** Claude Code-কে language server-এর সাথে যুক্ত করে, ফলে প্রতিটি edit-এর পরে Claude type error দেখে। এটি শুধু terminal session-এ চলে। <Cite n={19} />
+
+</Bangla>
+</Voices>
+
+## Practice
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="The tutorial's exercise">
+
+Build a minimal QA workspace in a scratch repository, or in a fresh clone of the dMoney practice app ([Codebase Tour](/case-study/codebase-tour/)). Do not connect it to a shared database or a real Jira project.
+
+</Callout>
+
+1. **CLAUDE.md.** Run `/init`. <Cite n={2} /> Keep the test command, the test folder, and the test-user rule. Run `/context all` and check the file under **Memory files**. <Cite n={2} />
+2. **Deny rules.** Create `.claude/settings.json` with the deny rules from "Permissions and the sandbox". Run `/permissions` and check each rule. <Cite n={6} /> Then type `Read the .env file and tell me the database host.` and expect the permission system to block the read.
+3. **One rule.** Save the Playwright rule as `.claude/rules/tests.md`. It loads when Claude reads or edits a matching spec. <Cite n={2} /> Ask: `Open one spec in tests/ and list which of our test rules it breaks.`
+4. **One skill.** Create `.claude/skills/test-design/SKILL.md` with your boundary-value checklist and `disable-model-invocation: true`. <Cite n={4} /> Run `/test-design` on one form field.
+5. **A read-only reviewer.** Create `.claude/agents/qa-reviewer.md` with `tools: Read, Grep, Glob`. <Cite n={5} /> Ask: `Use the qa-reviewer subagent to check this draft bug report against the code.`
+6. **One plugin.** Install the language server, then `/plugin install typescript-lsp@claude-plugins-official`. <Cite n={19} /> Read **Will install** first, and run `claude plugin details typescript-lsp` after. <Cite n={12} />
+7. **Commit.** Commit `CLAUDE.md`, `.claude/settings.json`, the rule, the skill, and the agent. Keep `.claude/settings.local.json` and `CLAUDE.local.md` out of git. <Cite n={1} />
+
+**Check the result.** A fresh clone gets the conventions, the deny rules, the rule, the skill, and the reviewer. Each person still installs the plugin. <Cite n={10} />
+
+</Technical>
+<Layman>
+
+This is the tutorial's exercise. Use a scratch repo, not a shared database or a real Jira project.
+
+1. Run `/init`, then `/context all`. <Cite n={2} />
+2. Add the deny rules and check them with `/permissions`. <Cite n={6} /> Ask Claude to read `.env`. It should be blocked.
+3. Save the Playwright rule in `.claude/rules/`. <Cite n={2} />
+4. Make a test-design skill with `disable-model-invocation: true`. <Cite n={4} />
+5. Make a reviewer subagent with only `Read, Grep, Glob`. <Cite n={5} />
+6. Install the `typescript-lsp` plugin, then run `claude plugin details typescript-lsp`. <Cite n={19} /> <Cite n={12} />
+7. Commit the shared files, not the local ones. <Cite n={1} />
+
+</Layman>
+<Bangla>
+
+এটি tutorial-এর অনুশীলন। Scratch repo ব্যবহার করুন, shared database বা আসল Jira project নয়।
+
+1. `/init` চালান, তারপর `/context all`। <Cite n={2} />
+2. Deny rule যোগ করে `/permissions` দিয়ে দেখুন। <Cite n={6} /> Claude-কে `.env` পড়তে বলুন, পড়া আটকে যাওয়ার কথা।
+3. Playwright rule `.claude/rules/`-এ save করুন। <Cite n={2} />
+4. `disable-model-invocation: true` সহ test-design skill বানান। <Cite n={4} />
+5. শুধু `Read, Grep, Glob` সহ reviewer subagent বানান। <Cite n={5} />
+6. `typescript-lsp` plugin install করে `claude plugin details typescript-lsp` চালান। <Cite n={19} /> <Cite n={12} />
+7. Shared file commit করুন, local file নয়। <Cite n={1} />
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+1. **A guardrail written only in CLAUDE.md.** An instruction is a request, not a guarantee. <Cite n={4} /> **Fix:** use a deny rule or a `PreToolUse` hook, which Claude Code enforces. <Cite n={6} />
+2. **Trusting `.claudeignore`.** It has no effect. <Cite n={6} /> **Fix:** move its entries into `Read(...)` deny rules.
+3. **Thinking a Read deny rule stops every process.** It does not cover a script that opens files itself. <Cite n={6} /> **Fix:** turn on the sandbox and add `filesystem.denyRead` for credential paths. <Cite n={7} />
+4. **A secret in a shared file.** `.mcp.json` and `.claude/settings.json` are committed. <Cite n={1} /> **Fix:** use `${VAR}` in `.mcp.json`, and keep personal overrides in `.claude/settings.local.json`. <Cite n={3} />
+5. **Installing a plugin on trust.** A plugin runs code with your privileges, outside your permission rules. <Cite n={12} /> **Fix:** read **Will install**, the hooks, and `bin/` first.
+6. **Evidence from a summary.** A shrunk log or an `INFERRED` graph edge is not evidence. <Cite n={16} /> <Cite n={17} /> **Fix (the tutorial's advice):** attach the original output and the code line to each bug report.
+7. **A CLAUDE.md that keeps growing.** Long files reduce adherence. <Cite n={2} /> **Fix:** move folder-specific parts into path-scoped rules, and procedures into skills. <Cite n={2} />
+
+</Technical>
+<Layman>
+
+1. A safety rule only in CLAUDE.md is a request. <Cite n={4} /> Use a deny rule or a hook. <Cite n={6} />
+2. `.claudeignore` does nothing. <Cite n={6} />
+3. Deny rules do not stop scripts. Turn on the sandbox. <Cite n={7} />
+4. Do not put secrets in shared files. Use `${VAR}`. <Cite n={3} />
+5. Check a plugin before you install it. <Cite n={12} />
+6. A shrunk log or a guessed graph link is not evidence. <Cite n={16} /> <Cite n={17} />
+7. Keep CLAUDE.md short. <Cite n={2} />
+
+</Layman>
+<Bangla>
+
+1. শুধু CLAUDE.md-এ guardrail লেখা একটি অনুরোধ মাত্র। <Cite n={4} /> Deny rule বা hook ব্যবহার করুন। <Cite n={6} />
+2. `.claudeignore`-এর কোনো প্রভাব নেই। <Cite n={6} />
+3. Deny rule script আটকায় না, sandbox চালু করুন। <Cite n={7} />
+4. Shared file-এ secret রাখবেন না, `${VAR}` ব্যবহার করুন। <Cite n={3} />
+5. Install-এর আগে plugin যাচাই করুন। <Cite n={12} />
+6. ছোট করা log বা `INFERRED` edge প্রমাণ নয়। <Cite n={16} /> <Cite n={17} />
+7. CLAUDE.md ছোট রাখুন। <Cite n={2} />
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| `.claude/` folder | The project folder for settings, rules, skills, agents, and commands that the team commits |
+| `settings.local.json` | Your personal overrides for one project, kept out of git |
+| Rule | An instruction file in `.claude/rules/`; with `paths`, it loads only for matching files |
+| Skill | A saved prompt or procedure that you run with `/name`, or that Claude loads when it fits |
+| Subagent | A helper with its own context, prompt, and tools that returns a summary |
+| Deny rule | A permission rule that blocks a tool call; Claude Code checks it before ask and allow rules |
+| Sandbox | An operating-system boundary around Claude's shell commands; off by default |
+| Hook | A command that Claude Code runs on an event; a `PreToolUse` hook can block an edit |
+| Prompt injection | Inserted text that tries to override the assistant's instructions |
+| Plugin | A package of skills, hooks, subagents, and MCP servers, installed from a marketplace |
+| Marketplace | A catalog of plugins; the official one is `claude-plugins-official` |
+| LSP plugin | An official plugin that connects Claude to a language server for type errors after edits |

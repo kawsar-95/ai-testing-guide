@@ -1,0 +1,566 @@
+export const metadata = {
+  title: 'Claude for Professional QA',
+  description: 'How Claude Code works as an agentic tool for testers: the loop, the harness, the context window, memory, token cost, and safe habits on a real project.',
+}
+
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'Claude Code overview', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/overview', accessed: '2026-11-15' },
+    { title: 'How Claude Code works', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/how-claude-code-works', accessed: '2026-11-15' },
+    { title: 'Glossary', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/glossary', accessed: '2026-11-15' },
+    { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-11-15' },
+    { title: 'Explore the context window', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/context-window', accessed: '2026-11-15' },
+    { title: 'Commands', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/commands', accessed: '2026-11-15' },
+    { title: 'Best practices for Claude Code', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/best-practices', accessed: '2026-11-15' },
+    { title: 'How Claude remembers your project', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/memory', accessed: '2026-11-15' },
+    { title: 'Manage costs effectively', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/costs', accessed: '2026-11-15' },
+    { title: 'How Claude Code uses prompt caching', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/prompt-caching', accessed: '2026-11-15' },
+    { title: 'Choose a permission mode', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permission-modes', accessed: '2026-11-15' },
+    { title: 'Checkpointing', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/checkpointing', accessed: '2026-11-15' },
+    { title: 'Manage sessions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sessions', accessed: '2026-11-15' },
+    { title: 'Run parallel sessions with git worktrees', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/worktrees', accessed: '2026-11-15' },
+  ],
+}
+
+# Claude for Professional QA
+
+An agentic tool does not only answer questions. It reads your code, runs commands such as your tests, and edits files. <Cite n={1} /> That makes it a strong partner for test work, and a risk if you use it without a plan. This page explains how Claude Code works as a tool for a tester: the loop it runs, the harness around the model, the context window that limits what it knows, the memory that it loads, what costs tokens, and the habits that keep a real project safe. The other nine pages of the Agentic QA group build on it.
+
+<PageMeta />
+
+## What Claude Code is
+
+<Voices>
+<Technical>
+
+Claude Code is an agentic coding tool. It reads your codebase, edits files, and runs commands. <Cite n={1} />
+
+**Where it runs.** It runs in the terminal, in IDE extensions, in a desktop app, and on the web. <Cite n={1} />
+
+- The web surface runs in your browser with no local setup. It can work on repos that you do not have locally. <Cite n={1} />
+- On Ubuntu or Debian, the desktop app is in beta. <Cite n={1} />
+- The agentic loop, the tools, and the capabilities are the same on every surface. <Cite n={2} />
+
+**Agentic, not chat.** A chat assistant only gives you text, and you apply it yourself. An agentic tool acts. <Cite n={3} /> When you run `claude` in a directory, Claude can run any command that you could run: build tools, git, package managers, and scripts. It also sees your git state: the current branch, uncommitted changes, and recent commits. <Cite n={2} />
+
+**What this means for a tester.** Claude can read files, edit code, run tests, and run shell commands. <Cite n={2} /> The same power cuts both ways:
+
+| Claude can | So you must |
+|---|---|
+| Read the code and the tests | Tell it which part matters |
+| Run the test suite and read the errors | Give it a test environment, not production |
+| Edit test files and source files | Review every diff |
+| Run any shell command | Control commands with a permission mode |
+
+<Callout type="note" title="The tutorial's advice">
+
+The right column is the tutorial's own advice. The [How Claude Code Works](/foundations/how-claude-code-works/) page gives the basics of the tool. This page adds the view of a QA team.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Claude Code is an agentic coding tool. It reads your code, edits files, and runs commands. <Cite n={1} />
+
+You can use it in four places: the terminal, an IDE extension, a desktop app, and the web. <Cite n={1} /> The web version needs no local setup. The desktop app for Ubuntu and Debian is still in beta. <Cite n={1} /> The way Claude works is the same in each place. <Cite n={2} />
+
+A chat assistant only gives you text. You apply it yourself. An agentic tool acts. <Cite n={3} /> Claude can run any command that you can run. It also sees your git branch and your changes that are not committed yet. <Cite n={2} />
+
+For a tester, this power has two sides. Claude can run your tests and edit your files. So you must point it at the right part, use a test environment, and review each change. That last part is the tutorial's advice.
+
+</Layman>
+<Bangla>
+
+Claude Code একটি agentic coding tool। এটি আপনার codebase পড়ে, file edit করে এবং command চালায়। <Cite n={1} />
+
+এটি চারটি জায়গায় চলে: terminal, IDE extension, desktop app এবং web। <Cite n={1} /> Web-এ কোনো local setup লাগে না, আর Ubuntu বা Debian-এ desktop app এখনও beta-তে আছে। <Cite n={1} /> সব জায়গায় agentic loop, tool আর ক্ষমতা একই। <Cite n={2} />
+
+Chat assistant শুধু text দেয়, সেটি আপনাকে নিজে প্রয়োগ করতে হয়। Agentic tool নিজে কাজ করে। <Cite n={3} /> আপনি যে command চালাতে পারেন, Claude-ও তা চালাতে পারে: build tool, git, package manager, script। এটি আপনার git branch, uncommitted change আর সাম্প্রতিক commit-ও দেখে। <Cite n={2} />
+
+Tester হিসেবে মনে রাখুন, এই ক্ষমতার দুটি দিক আছে। Claude test চালাতে ও file বদলাতে পারে। তাই আপনি কোন অংশ জরুরি তা বলে দিন, production নয় বরং test environment দিন, আর প্রতিটি diff review করুন। এটি tutorial-এর নিজের পরামর্শ।
+
+</Bangla>
+</Voices>
+
+## The agentic loop and the harness
+
+<Voices>
+<Technical>
+
+**The loop.** For each task, Claude works in three phases: gather context, take action, and verify results. <Cite n={2} /> For "fix the failing tests", Claude might run the suite, read the errors, search and read the source, edit the files, and run the tests again. <Cite n={2} /> You can interrupt at any point. `Esc` stops Claude at once. <Cite n={2} />
+
+**Turns.** In the Agent SDK, a turn is one pass through the loop. The loop ends when Claude replies with no tool calls. <Cite n={4} /> Read-only tools such as `Read`, `Glob`, and `Grep` can run at the same time. `Edit`, `Write`, and `Bash` run one after another. <Cite n={4} /> A script can cap the loop with `max_turns` or `maxTurns`. <Cite n={4} />
+
+**The harness.** Claude Code uses Claude models to understand your code and reason about tasks. It is the layer around the model: it provides the tools and manages the context that the model sees. <Cite n={2} /> The docs call this layer the agentic harness: the tools, the context management, and the execution environment. It supplies file access, shell execution, permission gating, memory loading, and the loop. <Cite n={3} />
+
+The built-in tools fall into five groups: file operations, search, execution, web, and code intelligence. <Cite n={2} /> The pages [The Agent Loop](/harness/agent-loop/) and [Agent Basics](/ai-agents/agent-basics/) explain the loop and the harness in more depth.
+
+**The risks for test work.**
+
+- Checkpoints cannot undo actions on remote systems: databases, APIs, and deployments. <Cite n={2} /> You control those with your permission mode and permission rules. <Cite n={2} /> The tutorial's reading: a test that writes to a shared database stays written.
+- Prompt injection is hostile text in a file, a web page, or a tool result that tries to redirect Claude. <Cite n={3} /> Bug reports, logs, and web pages that Claude reads are data, not orders.
+
+</Technical>
+<Layman>
+
+Claude works in a loop with three steps. First it gathers context. Then it acts. Then it checks the result. <Cite n={2} /> For example, to fix failing tests it runs the tests, reads the errors, reads the code, edits it, and runs the tests again. <Cite n={2} /> You can stop it at any time with `Esc`. <Cite n={2} />
+
+In the Agent SDK, one pass through the loop is a turn. The loop ends when Claude answers without a tool call. <Cite n={4} /> Tools that only read can run together. Tools such as Edit, Write, and Bash run one by one. <Cite n={4} />
+
+The harness is everything around the model. It holds the tools, manages the context, and controls permissions. <Cite n={3} /> Claude Code is the harness. Claude is the model inside it. <Cite n={2} />
+
+Two risks matter for testers. A checkpoint cannot undo a change in a database or an API. <Cite n={2} /> And text in a file or a web page can try to trick Claude. This is prompt injection. <Cite n={3} />
+
+</Layman>
+<Bangla>
+
+প্রতিটি কাজে Claude তিনটি ধাপে চলে: context সংগ্রহ, action নেওয়া এবং ফলাফল যাচাই। <Cite n={2} /> যেমন fail করা test ঠিক করতে এটি test suite চালায়, error পড়ে, source খুঁজে পড়ে, file edit করে, তারপর আবার test চালায়। <Cite n={2} /> আপনি যেকোনো সময় থামাতে পারেন, `Esc` চাপলেই Claude সঙ্গে সঙ্গে থামে। <Cite n={2} />
+
+Agent SDK-তে loop-এর একটি পাক হলো একটি turn। Claude যখন tool call ছাড়া উত্তর দেয়, loop শেষ হয়। <Cite n={4} /> `Read`, `Glob`, `Grep`-এর মতো read-only tool একসাথে চলতে পারে, কিন্তু `Edit`, `Write` আর `Bash` একটির পর একটি চলে। <Cite n={4} />
+
+Model-এর চারপাশের স্তরকে docs agentic harness বলে: tool, context management আর execution environment। এটি file access, shell execution, permission gating, memory loading আর loop দেয়। <Cite n={3} /> Claude Code হলো harness, Claude হলো তার ভেতরের model। <Cite n={2} />
+
+Tester-এর জন্য দুটি ঝুঁকি আছে। Database, API বা deployment-এর কাজ checkpoint দিয়ে ফেরানো যায় না। <Cite n={2} /> আর file, web page বা tool result-এর ভেতরের ক্ষতিকর text Claude-কে ভুল পথে নিতে চাইতে পারে, একে prompt injection বলে। <Cite n={3} />
+
+</Bangla>
+</Voices>
+
+## The context window
+
+<Voices>
+<Technical>
+
+The context window holds the conversation, the file contents, and the command outputs. <Cite n={2} /> It does not reset between turns. Everything accumulates. <Cite n={4} />
+
+**What loads before you type.** CLAUDE.md, auto memory, the MCP tool names, and the skill descriptions. <Cite n={5} />
+
+**What loads as Claude works.**
+
+- Each file that Claude reads. <Cite n={5} />
+- The output of each command, for example a test run. <Cite n={2} />
+- The full content of a skill, but only when the skill is used. <Cite n={2} />
+- An MCP tool definition, by default only when Claude uses that tool. Until then, only tool names and server instructions use context. <Cite n={2} />
+
+**See it.** Run `/context`. It shows the context use as a colored grid, with suggestions for heavy tools and memory. `/context all` expands the list. <Cite n={6} />
+
+**Why long sessions get worse.** Near the limit, Claude Code compacts the conversation into a summary. Detailed instructions from early in the conversation may be lost. <Cite n={2} /> Old conversation also crowds out the files that you need next, and it costs tokens on every message. <Cite n={5} />
+
+The window is large. Most current models have a 1M-token window, so running out is rare. But a focused context still gets better answers and costs less. <Cite n={7} />
+
+</Technical>
+<Layman>
+
+The context window holds the chat, the files Claude read, and the command output. <Cite n={2} /> It keeps growing during a session. <Cite n={4} />
+
+Some things load before you type: CLAUDE.md, auto memory, MCP tool names, and skill descriptions. <Cite n={5} /> More loads as Claude works: each file it reads <Cite n={5} /> and each command output, such as a test run. <Cite n={2} />
+
+To see what fills it, type `/context`. It draws a colored grid and gives tips. <Cite n={6} />
+
+Long sessions get worse. When the window is nearly full, Claude Code turns the chat into a summary. Early details can get lost. <Cite n={2} /> Old chat also pushes out the files you need, and it costs tokens on each message. <Cite n={5} /> Most current models have a very big window. Still, a focused context gives better answers and costs less. <Cite n={7} />
+
+</Layman>
+<Bangla>
+
+Context window-এ থাকে conversation, file-এর content আর command-এর output। <Cite n={2} /> Turn-এর মাঝে এটি reset হয় না, সবকিছু জমতে থাকে। <Cite n={4} />
+
+আপনি কিছু লেখার আগেই load হয় CLAUDE.md, auto memory, MCP tool-এর নাম আর skill-এর description। <Cite n={5} /> কাজের সময় Claude যে file পড়ে, তা যোগ হয়। <Cite n={5} /> Test run-এর মতো প্রতিটি command output-ও যোগ হয়। কোনো skill-এর পুরো content শুধু ব্যবহারের সময় load হয়, আর default-এ কোনো MCP tool-এর definition-ও তাই। <Cite n={2} />
+
+কী জায়গা নিচ্ছে দেখতে `/context` চালান। এটি রঙিন grid আর পরামর্শ দেখায়, আর `/context all` পুরো তালিকা খোলে। <Cite n={6} />
+
+লম্বা session কেন খারাপ হয়? সীমার কাছে গেলে Claude Code conversation-কে summary-তে compact করে, তখন শুরুর দিকের বিস্তারিত নির্দেশ হারিয়ে যেতে পারে। <Cite n={2} /> পুরোনো conversation দরকারি file-এর জায়গা দখল করে এবং প্রতিটি message-এ token খরচ করে। <Cite n={5} /> এখনকার বেশিরভাগ model-এর window 1M token, তাই জায়গা ফুরানো বিরল। তবু focused context ভালো উত্তর দেয় এবং খরচ কম হয়। <Cite n={7} />
+
+</Bangla>
+</Voices>
+
+## Compaction, clearing, and context engineering
+
+<Voices>
+<Technical>
+
+| Tool | What it does |
+|---|---|
+| Auto-compaction | Runs as you approach the limit and summarizes the conversation. <Cite n={2} /> |
+| `/compact [instructions]` | Summarizes now, with an optional focus, for example `/compact focus on the auth bug fix`. <Cite n={5} /> |
+| Compact Instructions | A section in CLAUDE.md that tells compaction what to keep. <Cite n={2} /> |
+| `/clear [name]` | Starts a new conversation with empty context. A name labels the old one in the `/resume` picker. <Cite n={6} /> |
+| Subagent | Works in its own context. Its tool calls stay out of yours, and Claude gets back a summary. <Cite n={2} /> |
+
+**What survives compaction.** The project-root CLAUDE.md and auto memory survive. Instructions given only in the conversation may not. <Cite n={3} /> Claude Code re-reads up to five of the files that Claude read or edited, the most recently modified first. <Cite n={5} />
+
+**Context engineering for testers.** Give Claude the right context, not all of it:
+
+- **Point at files.** Name the spec, the test file, and the failing test. Vague requests trigger broad scanning. <Cite n={9} />
+- **Delegate big reads.** Test runs, docs, and log files can use a lot of context. Send them to a subagent, so only a summary comes back. <Cite n={9} />
+- **Keep rules in CLAUDE.md, not in the chat.** Chat rules can be lost in a summary. <Cite n={3} />
+- **Clear between tasks.** Use `/clear` when you move from one ticket to the next. <Cite n={5} />
+
+The pages [Context Management](/harness/context-management/) and [Context Engineering](/ai-engineering/context-engineering/) go deeper.
+
+</Technical>
+<Layman>
+
+Claude Code summarizes the chat on its own when the window is nearly full. <Cite n={2} /> You can also do it yourself with `/compact`. Add a focus, such as `/compact focus on the auth bug fix`. <Cite n={5} /> `/clear` starts a new chat with an empty context. <Cite n={6} /> A subagent is a helper with its own context. It does a job and sends back a short summary. <Cite n={2} />
+
+After a summary, the main CLAUDE.md and auto memory stay. Rules you only typed in the chat may be lost. <Cite n={3} />
+
+Give Claude the right context, not all of it. Name the exact files. Vague requests make Claude search widely. <Cite n={9} /> Send big logs and long test runs to a subagent. <Cite n={9} /> Put lasting rules in CLAUDE.md. <Cite n={3} /> Use `/clear` when you start a new task. <Cite n={5} />
+
+</Layman>
+<Bangla>
+
+Window প্রায় ভরে গেলে Claude Code নিজেই conversation-এর summary বানায়। <Cite n={2} /> আপনি নিজেও `/compact` চালাতে পারেন, সাথে focus দিন, যেমন `/compact focus on the auth bug fix`। <Cite n={5} /> CLAUDE.md-তে একটি Compact Instructions section লিখে বলে দিতে পারেন compaction কী রাখবে। <Cite n={2} /> `/clear` খালি context নিয়ে নতুন conversation শুরু করে। <Cite n={6} /> Subagent নিজের context-এ কাজ করে, তার tool call আপনার context-এ আসে না, শুধু summary ফেরে। <Cite n={2} />
+
+Compaction-এর পরে project-root CLAUDE.md আর auto memory থাকে, কিন্তু শুধু conversation-এ দেওয়া নির্দেশ হারাতে পারে। <Cite n={3} /> Claude যে file পড়েছে বা edit করেছে, তার মধ্যে সবচেয়ে সম্প্রতি বদলানো সর্বোচ্চ পাঁচটি file Claude Code আবার পড়ে। <Cite n={5} />
+
+Tester-এর জন্য context engineering মানে সব নয়, সঠিক context দেওয়া। নির্দিষ্ট file-এর নাম বলুন, কারণ অস্পষ্ট request-এ Claude বিস্তৃতভাবে খোঁজে। <Cite n={9} /> বড় log আর test run subagent-কে দিন। <Cite n={9} /> স্থায়ী নিয়ম CLAUDE.md-তে রাখুন। <Cite n={3} /> নতুন কাজে যাওয়ার আগে `/clear` চালান। <Cite n={5} />
+
+</Bangla>
+</Voices>
+
+## Memory for a QA team
+
+<Voices>
+<Technical>
+
+**CLAUDE.md files.** Claude reads them at the start of every session. <Cite n={8} />
+
+| Scope | Location |
+|---|---|
+| User | `~/.claude/CLAUDE.md` <Cite n={8} /> |
+| Project (shared in git) | `./CLAUDE.md` or `./.claude/CLAUDE.md` <Cite n={8} /> |
+| Local (personal, add to `.gitignore`) | `./CLAUDE.local.md` <Cite n={8} /> |
+
+- **Load order.** The files are joined, not overridden. They go from the filesystem root down to your working directory, and `CLAUDE.local.md` comes after `CLAUDE.md`. <Cite n={8} /> A CLAUDE.md in a subfolder loads when Claude reads, writes, or edits a file in that folder. <Cite n={8} />
+- **Imports.** `@path/to/import` pulls in another file, up to four hops deep. Imports do not reduce the context cost. <Cite n={8} />
+- **Rules.** Files in `.claude/rules/` hold one topic each. A rule with `paths` frontmatter loads only for matching files. <Cite n={8} />
+- **Auto memory.** Notes that Claude writes for itself. It is on by default in local sessions and lives in `~/.claude/projects/<project>/memory/`. The first 200 lines or 25KB of `MEMORY.md` load in each session. <Cite n={8} />
+- **Commands.** `/init` writes a starting CLAUDE.md, or suggests improvements to an existing one. <Cite n={8} /> `/memory` edits the files and turns auto memory on or off. <Cite n={6} />
+
+**Keep it lean.** Aim for under 200 lines. <Cite n={8} /> CLAUDE.md is context, not enforced configuration. <Cite n={8} /> The file works best when it holds what Claude could not work out from the code, such as the exact test, typecheck, and lint commands, and how to run one test file. <Cite n={7} />
+
+Example of a QA section (the tutorial's own example):
+
+```markdown
+# QA
+- Run one API test: npm test -- tests/api/login.test.js
+- Test environment: https://staging.example.com (never production)
+- Test data: use the QA test user; never real customer data
+- DB access: read-only queries only; ask before any write
+- Bug reports: steps, expected, actual, environment, evidence
+```
+
+The [CLAUDE.md](/configure/claude-md/) page is the full reference.
+
+</Technical>
+<Layman>
+
+CLAUDE.md is a file of rules that Claude reads at the start of every session. <Cite n={8} /> You can keep one for yourself in `~/.claude/CLAUDE.md`. The team shares one in `./CLAUDE.md`. Your private notes for one project go in `./CLAUDE.local.md`, which you keep out of git. <Cite n={8} />
+
+All the files are joined together. A file in a subfolder loads when Claude works in that folder. <Cite n={8} /> You can pull in another file with `@path`. This does not save space. <Cite n={8} /> Rules in `.claude/rules/` can apply only to some files. <Cite n={8} />
+
+Auto memory is a set of notes that Claude writes itself. It is on by default in local sessions. <Cite n={8} /> `/init` writes a first CLAUDE.md for you. <Cite n={8} /> `/memory` opens your memory files. <Cite n={6} />
+
+Keep CLAUDE.md under 200 lines. Claude reads it as advice, not as a hard rule. <Cite n={8} /> It works best with what Claude cannot work out from the code, such as the exact test commands. <Cite n={7} /> The tutorial's example adds the test site, the test user, read-only database access, and a bug report format.
+
+</Layman>
+<Bangla>
+
+CLAUDE.md হলো নির্দেশের file, যা Claude প্রতিটি session-এর শুরুতে পড়ে। <Cite n={8} /> নিজের জন্য `~/.claude/CLAUDE.md`, team-এর জন্য `./CLAUDE.md` বা `./.claude/CLAUDE.md`, আর একটি project-এ নিজের ব্যক্তিগত নোটের জন্য `./CLAUDE.local.md`, যা `.gitignore`-এ যোগ করবেন। <Cite n={8} />
+
+সব file একসাথে যুক্ত হয়, একটি আরেকটিকে বাতিল করে না। Subfolder-এর CLAUDE.md তখন load হয়, যখন Claude সেই folder-এর কোনো file নিয়ে কাজ করে। <Cite n={8} /> `@path` দিয়ে অন্য file import করা যায়, তবে এতে context খরচ কমে না। <Cite n={8} /> `.claude/rules/`-এর rule-এ `paths` থাকলে সেটি শুধু মিলে যাওয়া file-এর জন্য load হয়। <Cite n={8} />
+
+Auto memory হলো Claude-এর নিজের লেখা নোট, local session-এ এটি default-এ চালু থাকে। <Cite n={8} /> `/init` প্রথম CLAUDE.md বানায় <Cite n={8} />, আর `/memory` দিয়ে file edit করা যায়। <Cite n={6} />
+
+File 200 line-এর কম রাখুন। Claude CLAUDE.md-কে context হিসেবে পড়ে, বাধ্যতামূলক configuration হিসেবে নয়। <Cite n={8} /> Code দেখে Claude যা বুঝতে পারে না, যেমন সঠিক test, typecheck ও lint command, সেগুলো রাখলেই file-টি সবচেয়ে ভালো কাজ করে। <Cite n={7} /> Tutorial-এর উদাহরণে QA section-এ আছে test environment, test user, read-only database access আর bug report-এর format।
+
+</Bangla>
+</Voices>
+
+## Tokens and cost
+
+<Voices>
+<Technical>
+
+**What uses tokens.** Token costs scale with context size. <Cite n={9} /> Claude Code re-sends the full context with every request. <Cite n={10} /> So a big file, a long log, or a long test run costs tokens again on each later message. <Cite n={9} />
+
+**See your usage.** `/usage` shows the session cost, plan usage limits, and activity stats. `/cost` and `/stats` are aliases. <Cite n={6} /> Its Session block shows API token usage and is meant for API users. <Cite n={9} />
+
+**Prompt caching.** The API caches by matching the start of each request, the prefix. <Cite n={10} /> A switch of model recomputes the whole request. <Cite n={10} /> The docs suggest that you pick your model and effort level at the top of a session. <Cite n={10} /> The cache lasts about an hour on a subscription and five minutes on an API key. <Cite n={7} />
+
+**Model and effort.** Sonnet handles most coding tasks well and costs less than Opus. For simple subagent tasks, set `model: haiku`. <Cite n={9} /> Higher effort means more thinking tokens. Lower effort is faster and cheaper. <Cite n={3} /> Change it with `/effort` or in `/model`. <Cite n={9} /> The [Models](/getting-started/models/) page covers the choice.
+
+**The docs' tips that matter most for testers.** <Cite n={9} />
+
+- Prefer CLI tools such as `gh` to MCP servers. CLI tools are more context-efficient.
+- Run `/mcp` and disable the servers that you do not use.
+- Let a hook filter a big log, for example grep for `ERROR` and return only those lines.
+- Send test runs and log files to a subagent.
+- `/compact` reads the whole conversation that it summarizes. `/clear` costs nothing.
+
+</Technical>
+<Layman>
+
+The more context Claude has, the more tokens you use. <Cite n={9} /> Claude Code sends the whole context again with every request. <Cite n={10} /> So a big log you pasted early keeps costing you.
+
+Type `/usage` to see your cost and limits. <Cite n={6} />
+
+The API reuses the start of each request from a cache. <Cite n={10} /> If you switch models, it must process everything again. So pick your model and effort at the start. <Cite n={10} />
+
+Sonnet does most coding well and costs less than Opus. <Cite n={9} /> Low effort is faster and cheaper. High effort thinks more. <Cite n={3} />
+
+To save tokens, use command-line tools like `gh` instead of MCP servers. Turn off MCP servers you do not use. Let a hook cut a big log down to its errors. Send test runs to a subagent. And use `/clear`, which costs nothing. <Cite n={9} />
+
+</Layman>
+<Bangla>
+
+Context যত বড়, token খরচ তত বেশি। <Cite n={9} /> Claude Code প্রতিটি request-এ পুরো context আবার পাঠায়। <Cite n={10} /> তাই শুরুতে পড়া একটি বড় log পরের প্রতিটি message-এ আবার খরচ বাড়ায়।
+
+খরচ আর limit দেখতে `/usage` চালান; `/cost` আর `/stats` এর alias। <Cite n={6} />
+
+API প্রতিটি request-এর শুরুর অংশ, অর্থাৎ prefix, cache থেকে মেলায়। <Cite n={10} /> Model বদলালে পুরো request আবার process হয়, তাই session-এর শুরুতেই model আর effort ঠিক করুন। <Cite n={10} /> Subscription-এ cache প্রায় এক ঘণ্টা থাকে, API key-তে পাঁচ মিনিট। <Cite n={7} />
+
+Sonnet বেশিরভাগ coding কাজ ভালো করে এবং Opus-এর চেয়ে কম খরচ করে। সহজ subagent কাজের জন্য `model: haiku` দিন। <Cite n={9} /> বেশি effort মানে বেশি thinking token, কম effort দ্রুত ও সস্তা। <Cite n={3} />
+
+Token বাঁচাতে MCP server-এর বদলে `gh`-এর মতো CLI tool ব্যবহার করুন, অব্যবহৃত server `/mcp` দিয়ে বন্ধ করুন, hook দিয়ে বড় log থেকে শুধু `ERROR` line রাখুন, আর test run subagent-কে দিন। `/clear`-এ কোনো খরচ নেই। <Cite n={9} />
+
+</Bangla>
+</Voices>
+
+## Plan, permissions, and checkpoints
+
+<Voices>
+<Technical>
+
+**Plan first.** In plan mode, Claude researches and proposes changes without editing your source files. Enter it with `/plan` or `Shift+Tab`. <Cite n={3} /> To start a session in plan mode, run `claude --permission-mode plan`. Press `Ctrl+G` to edit the proposed plan in your text editor. <Cite n={11} />
+
+**Permission modes.** <Cite n={11} />
+
+| Mode | Runs without asking | Fit for test work |
+|---|---|---|
+| `default` (Manual) | Reads only | Sensitive work, a new project |
+| `acceptEdits` | Reads, file edits, common filesystem commands | Editing tests that you review |
+| `plan` | Reads, plus classifier-approved commands when auto mode is available | Analysis before a change |
+| `auto` | Everything, with background safety checks | Long tasks |
+| `dontAsk` | File reads and pre-approved tools | Locked-down CI and scripts |
+| `bypassPermissions` | Everything | Isolated containers and VMs only |
+
+In auto mode, a classifier reviews actions in the background and blocks the risky ones. From Claude Code v2.1.283, it is the built-in starting mode for terminal and VS Code sessions. <Cite n={2} /> Deny rules block in every mode. <Cite n={11} /> You can allow trusted commands, such as `npm test`, in `.claude/settings.json`. <Cite n={2} /> The [Permission Modes](/getting-started/permission-modes/) page has the details.
+
+**Checkpoints.** Run `/rewind` (alias `/undo`), or press `Esc` twice on an empty prompt, to restore the code, the conversation, or both. <Cite n={12} />
+
+<Callout type="warning" title="Checkpoints have limits">
+
+A file that only Bash commands changed is not tracked. Checkpoints are for quick recovery in a session, not a replacement for git. <Cite n={12} /> Actions on databases, APIs, and deployments cannot be undone with a checkpoint. <Cite n={2} />
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Plan mode lets Claude study and suggest changes without editing your source files. Turn it on with `/plan` or `Shift+Tab`. <Cite n={3} /> You can also start with `claude --permission-mode plan`. <Cite n={11} />
+
+A permission mode sets what Claude may do without asking you. <Cite n={11} />
+
+- `default` lets Claude only read. <Cite n={11} />
+- `acceptEdits` also lets it edit files. <Cite n={11} />
+- `auto` lets it do everything, with safety checks in the background. <Cite n={11} />
+- `bypassPermissions` lets it run everything without asking. Use it only in an isolated container or virtual machine. <Cite n={11} />
+
+Rules that deny an action work in every mode. <Cite n={11} /> You can allow safe commands like `npm test` in `.claude/settings.json`. <Cite n={2} />
+
+To undo Claude's edits, run `/rewind` or press `Esc` twice on an empty prompt. <Cite n={12} /> But a file changed only by a shell command is not saved. Keep using git. <Cite n={12} /> A change in a database or an API cannot be undone this way. <Cite n={2} />
+
+</Layman>
+<Bangla>
+
+Plan mode-এ Claude আপনার source file edit না করে খোঁজ করে এবং পরিবর্তনের প্রস্তাব দেয়। `/plan` বা `Shift+Tab` দিয়ে চালু করুন। <Cite n={3} /> শুরু থেকেই চাইলে `claude --permission-mode plan` চালান, আর `Ctrl+G` চেপে plan নিজের editor-এ বদলান। <Cite n={11} />
+
+Permission mode ঠিক করে Claude কী জিজ্ঞেস না করে করতে পারবে। <Cite n={11} /> `default` শুধু পড়তে দেয়। `acceptEdits` file edit আর সাধারণ filesystem command-ও চালায়। `auto` background safety check-সহ সব চালায়। `dontAsk` locked-down CI-এর জন্য। `bypassPermissions` শুধু isolated container বা VM-এ ব্যবহার করুন। Deny rule প্রতিটি mode-এ কাজ করে। <Cite n={11} /> Auto mode-এ একটি classifier ঝুঁকিপূর্ণ action আটকায়। <Cite n={2} /> `npm test`-এর মতো বিশ্বস্ত command `.claude/settings.json`-এ allow করা যায়। <Cite n={2} />
+
+Edit ফেরাতে `/rewind` চালান বা খালি prompt-এ `Esc` দুবার চাপুন। <Cite n={12} /> তবে শুধু Bash command দিয়ে বদলানো file track হয় না, আর checkpoint git-এর বিকল্প নয়। <Cite n={12} /> Database, API বা deployment-এর কাজ checkpoint দিয়ে ফেরানো যায় না। <Cite n={2} />
+
+</Bangla>
+</Voices>
+
+## Sessions, branches, and a working agreement
+
+<Voices>
+<Technical>
+
+**Sessions.** Each new session starts with a fresh context window. <Cite n={2} /> Claude Code saves each conversation as a JSONL file under `~/.claude/projects/`. <Cite n={2} />
+
+| Command | What it does |
+|---|---|
+| `claude --continue` | Reopens the most recent session in the current directory <Cite n={13} /> |
+| `claude --resume` | Opens the session picker <Cite n={13} /> |
+| `claude -n login-bugs` | Starts a session with a name <Cite n={13} /> |
+| `/rename login-bugs` | Names the session that is open <Cite n={13} /> |
+
+**Branches and worktrees.** `claude --worktree <name>` (or `-w`) creates an isolated worktree and starts Claude in it, on a new branch named `worktree-<name>`. <Cite n={14} /> Add `.claude/worktrees/` to your `.gitignore`. <Cite n={14} />
+
+**Verify with tests.** Give Claude something to run that comes back pass or fail. <Cite n={7} /> Without such a check, only the agent decides that it is finished. <Cite n={3} /> After two failed corrections, run `/clear` and write a better prompt. <Cite n={7} />
+
+<Callout type="tip" title="The tutorial's advice: a working agreement for a QA team">
+
+1. Start each task in plan mode, and read the plan before you approve it.
+2. Work on a branch or a worktree, never on `main`.
+3. Point Claude at a test environment and test accounts. Never production.
+4. Allow read-only database access only. A person approves any write.
+5. A person approves anything posted to Jira, GitHub, or another shared system.
+6. Each change ends with a test run that Claude can read.
+7. Name the session after the ticket, and `/clear` between tickets.
+8. A person reviews every diff before it is merged.
+
+</Callout>
+
+The [Principles](/foundations/principles/) and [Prompting](/foundations/prompting/) pages give more habits. The next page, [QA Workspace and Tooling](/agentic-qa/qa-workspace/), sets up the tools.
+
+</Technical>
+<Layman>
+
+Each new session starts with an empty context. <Cite n={2} /> `claude --continue` opens the most recent session in the current directory. `claude --resume` lets you pick one. You can name a session with `claude -n` or `/rename`. <Cite n={13} />
+
+`claude --worktree <name>` makes an isolated worktree on a new branch and starts Claude there. <Cite n={14} />
+
+Give Claude a check that says pass or fail, such as a test. <Cite n={7} /> Without it, only Claude decides when it is done. <Cite n={3} /> If you correct Claude twice and it is still wrong, run `/clear` and write a better prompt. <Cite n={7} />
+
+The tutorial suggests a team agreement. Plan first. Work on a branch. Use a test environment and test accounts. Allow only read-only database access. A person approves every post to Jira or GitHub. Finish each change with a test run. Clear between tickets. A person reviews every change before merge.
+
+</Layman>
+<Bangla>
+
+প্রতিটি নতুন session নতুন context window নিয়ে শুরু হয়। <Cite n={2} /> `claude --continue` বর্তমান directory-র সাম্প্রতিক session খোলে, `claude --resume` session picker খোলে। `claude -n` বা `/rename` দিয়ে session-এর নাম দিন। <Cite n={13} />
+
+`claude --worktree <name>` একটি আলাদা worktree বানায় এবং `worktree-<name>` নামের নতুন branch-এ Claude চালু করে। <Cite n={14} /> `.claude/worktrees/` আপনার `.gitignore`-এ যোগ করুন। <Cite n={14} />
+
+Claude-কে এমন কিছু দিন যা pass বা fail ফল দেয়, যেমন test। <Cite n={7} /> এমন check না থাকলে কাজ শেষ কি না, তা শুধু agent নিজেই ঠিক করে। <Cite n={3} /> দুবার সংশোধনের পরেও ভুল থাকলে `/clear` চালিয়ে আরও ভালো prompt লিখুন। <Cite n={7} />
+
+Tutorial একটি team agreement-এর পরামর্শ দেয়: আগে plan, কাজ branch বা worktree-এ, শুধু test environment আর test account, database-এ শুধু read-only access, Jira বা GitHub-এ কিছু পাঠানোর আগে মানুষের অনুমোদন, প্রতিটি পরিবর্তনের শেষে test run, ticket বদলালে `/clear`, আর merge-এর আগে প্রতিটি diff মানুষ review করবেন।
+
+</Bangla>
+</Voices>
+
+## Practice
+
+<Voices>
+<Technical>
+
+<Callout type="note" title="The tutorial's exercise">
+
+This exercise is the tutorial's own. Use your own small project, or the dMoney practice app that the [Codebase Tour](/case-study/codebase-tour/) describes.
+
+</Callout>
+
+<Callout type="note" title="Where these facts come from">
+
+The dMoney facts come from the files of the public repo `kawsar-95/genAI-project` at commit `51db34a`. They have no cite. dMoney has a Node.js, Express, Sequelize, and MySQL backend, and a Next.js 15 web app. Its README says that it has known bugs and security flaws on purpose, and that you must not deploy it to production or expose it to the internet.
+
+</Callout>
+
+1. **Start in plan mode.** Run `claude --permission-mode plan` in the project folder. <Cite n={11} />
+2. **Make a CLAUDE.md.** Run `/init`. It writes a starting CLAUDE.md, or suggests improvements to the one you have. <Cite n={8} /> Read the result. Remove any line that Claude can work out from the code.
+3. **Look at the context.** Run `/context all`. Note the total and the memory files. <Cite n={6} />
+4. **Add a QA section.** Run `/memory` and open the project CLAUDE.md. <Cite n={6} /> Add 5 lines like the example in "Memory for a QA team". Start a new session and run `/context all` again to confirm that the file loaded. <Cite n={8} />
+5. **Ask for a test-plan outline.** Type:
+
+   ```text
+   Read the login and send-money code. Do not edit anything.
+   Give me a test-plan outline for send money: scope, risks,
+   test types, and 10 test ideas with boundary values.
+   ```
+
+   Expect a plan, not file edits. Check that every test idea names a real rule in the code.
+6. **Measure a big read.** Note the `/context` total. Ask Claude to read one big log file, then run `/context` again. Compare the two totals.
+7. **Recover.** Run `/compact focus on the test plan` <Cite n={5} />, or `/clear` to start fresh. <Cite n={6} /> Then run `/usage` to see what the session cost. <Cite n={6} />
+
+**How to check.** `CLAUDE.md` shows under **Memory files** in `/context all`. <Cite n={8} /> The plan step made no file changes. The log read shows as a clear jump in the context total.
+
+</Technical>
+<Layman>
+
+This exercise is the tutorial's own. Use a small project of your own, or the dMoney practice app. dMoney has bugs on purpose. Never put it on the internet.
+
+1. Run `claude --permission-mode plan` in the project folder. <Cite n={11} />
+2. Run `/init` to get a first CLAUDE.md. <Cite n={8} /> Read it and remove what Claude can learn from the code.
+3. Run `/context all` and note the numbers. <Cite n={6} />
+4. Use `/memory` to add a short QA section. <Cite n={6} /> Start a new session and check that it loaded. <Cite n={8} />
+5. Ask for a test-plan outline for one feature. Tell Claude not to edit anything.
+6. Note the `/context` total. Ask Claude to read a big log file. Check `/context` again and compare.
+7. Run `/compact` with a focus <Cite n={5} />, or `/clear`. Then check `/usage`. <Cite n={6} />
+
+You pass when the QA section loads, the plan step changes no files, and the log read shows a clear jump.
+
+</Layman>
+<Bangla>
+
+এই অনুশীলনটি tutorial-এর নিজের। নিজের ছোট project বা dMoney practice app ব্যবহার করুন। dMoney-তে ইচ্ছা করে bug রাখা আছে, তাই এটি production-এ বা internet-এ কখনো দেবেন না।
+
+1. Project folder-এ `claude --permission-mode plan` চালান। <Cite n={11} />
+2. `/init` চালিয়ে প্রথম CLAUDE.md নিন। <Cite n={8} /> পড়ুন, আর code থেকে যা বোঝা যায় সেই line মুছে দিন।
+3. `/context all` চালিয়ে মোট সংখ্যা আর memory file লিখে রাখুন। <Cite n={6} />
+4. `/memory` দিয়ে একটি ছোট QA section যোগ করুন। <Cite n={6} /> নতুন session-এ আবার `/context all` চালিয়ে দেখুন file load হয়েছে কি না। <Cite n={8} />
+5. কোনো file edit না করে একটি feature-এর test-plan outline চান। ফল হবে একটি plan, কোনো file পরিবর্তন নয়।
+6. `/context`-এর মোট সংখ্যা দেখুন, একটি বড় log file পড়তে বলুন, তারপর আবার `/context` চালিয়ে তুলনা করুন।
+7. Focus দিয়ে `/compact` চালান <Cite n={5} />, বা নতুন করে শুরু করতে `/clear`। তারপর `/usage` দেখুন। <Cite n={6} />
+
+QA section load হলে, plan ধাপে কোনো file না বদলালে আর log পড়ার পরে context স্পষ্টভাবে বাড়লে আপনি সফল।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+1. **One endless session.** Old conversation crowds out the files you need and costs tokens on every message. <Cite n={5} /> **Fix:** `/clear` between tasks, and name sessions so that you can resume them. <Cite n={13} />
+2. **Rules only in the chat.** Instructions given only in the conversation may not survive compaction. <Cite n={3} /> **Fix:** put lasting rules in the project CLAUDE.md.
+3. **A huge CLAUDE.md.** Longer files use more context and reduce adherence. <Cite n={8} /> **Fix:** stay under 200 lines, and move topic rules to `.claude/rules/`. <Cite n={8} />
+4. **Pasting whole logs.** Log files and test runs can use a lot of context. <Cite n={9} /> **Fix:** send them to a subagent, or filter them with a hook. <Cite n={9} />
+5. **Trusting checkpoints for everything.** Bash changes and remote actions are not restored. <Cite n={12} /> <Cite n={2} /> **Fix:** use git, and keep Claude away from shared databases.
+6. **No check to run.** Without one, only the agent decides that it is finished. <Cite n={3} /> **Fix:** give the exact test command in CLAUDE.md and in the prompt. <Cite n={7} />
+7. **Switching models mid-task.** A model switch recomputes the whole request. <Cite n={10} /> **Fix:** pick the model and effort at the start of the session. <Cite n={10} />
+
+</Technical>
+<Layman>
+
+1. **One long session for everything.** Old chat pushes out what you need and costs tokens. <Cite n={5} /> Use `/clear` between tasks.
+2. **Rules only in the chat.** They can be lost in a summary. <Cite n={3} /> Put them in CLAUDE.md.
+3. **A huge CLAUDE.md.** It uses space and Claude follows it less well. <Cite n={8} /> Keep it under 200 lines.
+4. **Pasting whole logs.** They can use a lot of context. <Cite n={9} /> Use a subagent or a filter.
+5. **Trusting undo for everything.** Shell changes and database changes are not undone. <Cite n={12} /> <Cite n={2} /> Use git.
+6. **No test to run.** Then only Claude decides it is done. <Cite n={3} /> Give the test command. <Cite n={7} />
+7. **Changing models in the middle.** The whole request is processed again. <Cite n={10} /> Choose the model at the start.
+
+</Layman>
+<Bangla>
+
+1. **একটি অন্তহীন session:** পুরোনো conversation দরকারি file-এর জায়গা নেয় এবং token খরচ বাড়ায়। <Cite n={5} /> কাজের মাঝে `/clear` চালান, আর session-এর নাম দিন। <Cite n={13} />
+2. **নিয়ম শুধু chat-এ:** compaction-এর পরে তা হারাতে পারে। <Cite n={3} /> CLAUDE.md-তে রাখুন।
+3. **বিশাল CLAUDE.md:** বেশি context খায় এবং মানা কমে যায়। <Cite n={8} /> 200 line-এর কম রাখুন, বিষয়ভিত্তিক নিয়ম `.claude/rules/`-এ দিন। <Cite n={8} />
+4. **পুরো log paste করা:** log আর test run অনেক context নেয়। <Cite n={9} /> Subagent বা hook ব্যবহার করুন। <Cite n={9} />
+5. **সবকিছুতে checkpoint-এ ভরসা:** Bash-এর পরিবর্তন আর remote action ফেরে না। <Cite n={12} /> <Cite n={2} /> Git ব্যবহার করুন।
+6. **চালানোর মতো কোনো check নেই:** তখন শুধু agent ঠিক করে কাজ শেষ। <Cite n={3} /> সঠিক test command দিন। <Cite n={7} />
+7. **কাজের মাঝে model বদলানো:** পুরো request আবার process হয়। <Cite n={10} /> শুরুতেই model আর effort ঠিক করুন। <Cite n={10} />
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Agentic coding tool | A tool that reads code, edits files, and runs commands, not only writes text |
+| Agentic loop | Gather context, take action, verify results, and repeat |
+| Agentic harness | The tools, context management, and execution environment around the model |
+| Turn | One pass through the loop; it ends when Claude replies with no tool calls |
+| Context window | What Claude holds in a session: the conversation, files read, and command outputs |
+| Compaction | A summary of the conversation that frees space near the limit, or with `/compact` |
+| CLAUDE.md | A file of instructions that Claude reads at the start of every session |
+| Auto memory | Notes that Claude writes for itself; the start of `MEMORY.md` loads each session |
+| Prompt caching | Reuse of the unchanged start (prefix) of each request |
+| Plan mode | A permission mode where Claude proposes changes without editing source files |
+| Checkpoint | A restore point used with `/rewind` to restore the code, the conversation, or both |
+| Worktree | A separate checkout on its own branch, made with `claude --worktree` |

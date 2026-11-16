@@ -1,0 +1,632 @@
+export const metadata = {
+  title: 'Test Design & Blast Radius',
+  description: 'Find what a code change can break with Claude, map its blast radius, and turn acceptance criteria and the impact map into scenarios and structured test cases.',
+}
+
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'ISTQB Certified Tester Foundation Level Syllabus v4.0.1', publisher: 'ISTQB', url: 'https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: test condition', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-condition', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: test case', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-case', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: impact analysis', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/impact-analysis', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: regression testing', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/regression-testing', accessed: '2026-11-15' },
+    { title: 'gh pr diff', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_pr_diff', accessed: '2026-11-15' },
+    { title: 'gh pr view', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_pr_view', accessed: '2026-11-15' },
+    { title: 'Code intelligence plugins', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/plugins/code-intelligence', accessed: '2026-11-15' },
+    { title: 'Tools reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/tools-reference', accessed: '2026-11-15' },
+    { title: 'Serena README', publisher: 'oraios (GitHub)', url: 'https://github.com/oraios/serena', accessed: '2026-11-15' },
+    { title: 'graphify README', publisher: 'safishamsi (GitHub)', url: 'https://github.com/safishamsi/graphify', accessed: '2026-11-15' },
+    { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: integration testing', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/integration-testing', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: negative testing', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/negative-testing', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: boundary value analysis', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/boundary-value-analysis', accessed: '2026-11-15' },
+    { title: 'WSTG v4.2: Introduction to Business Logic', publisher: 'OWASP', url: 'https://github.com/OWASP/wstg/blob/v4.2/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/00-Introduction_to_Business_Logic.md', accessed: '2026-11-15' },
+    { title: 'WSTG v4.2: Test Business Logic Data Validation', publisher: 'OWASP', url: 'https://github.com/OWASP/wstg/blob/v4.2/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/01-Test_Business_Logic_Data_Validation.md', accessed: '2026-11-15' },
+    { title: 'WSTG v4.2: Test Number of Times a Function Can Be Used Limits', publisher: 'OWASP', url: 'https://github.com/OWASP/wstg/blob/v4.2/document/4-Web_Application_Security_Testing/10-Business_Logic_Testing/05-Test_Number_of_Times_a_Function_Can_Be_Used_Limits.md', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: traceability', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/traceability', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: risk-based testing', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/risk-based-testing', accessed: '2026-11-15' },
+    { title: 'Extend Claude with skills', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/skills', accessed: '2026-11-15' },
+    { title: 'Best practices for Claude Code', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/best-practices', accessed: '2026-11-15' },
+    { title: 'Pull requests (GraphQL API reference)', publisher: 'GitHub (docs.github.com)', url: 'https://docs.github.com/en/graphql/reference/pulls', accessed: '2026-11-15' },
+  ],
+}
+
+# Test Design & Blast Radius
+
+A change rarely breaks only the lines that it touches. This page shows how to work with Claude to find what a change can affect, which this tutorial calls its blast radius, and how to turn acceptance criteria and that impact map into scenarios and structured test cases. You learn which tools trace callers and dependents, which scenario categories a money transfer needs, and how to check what Claude writes before you trust it.
+
+<PageMeta />
+
+<Callout type="note" title="Where these facts come from">
+
+The dMoney examples on this page come from the files of the public practice repository [kawsar-95/genAI-project](https://github.com/kawsar-95/genAI-project) at commit `51db34a`. They have no cite. [The dMoney Codebase](/case-study/codebase-tour/) describes the repository. Facts about ISTQB, OWASP, and the tools link to their official sources.
+
+</Callout>
+
+## From acceptance criteria to test cases
+
+<Voices>
+<Technical>
+
+The ISTQB test process gives one activity to each question. <Cite n={1} />
+
+- **Test analysis** answers "what to test?". It analyzes the test basis to find testable features. It defines test conditions and prioritizes them by risk. <Cite n={1} />
+- **Test design** answers "how to test?". It turns test conditions into test cases and other testware, such as test charters. <Cite n={1} />
+- Test design also defines the test data requirements and designs the test environment. <Cite n={1} />
+
+A **test condition** is "a testable aspect of a component or system that is intended to be tested". <Cite n={2} /> The syllabus names acceptance criteria as an example of a test condition. <Cite n={1} /> A **test case** is a set of preconditions, inputs, actions, expected results, and postconditions, developed from test conditions. <Cite n={3} />
+
+So the chain on this page has three steps. The example column is the tutorial's own.
+
+| Step | What it is | Example for a money transfer |
+|---|---|---|
+| Acceptance criterion | A test condition <Cite n={1} /> | "A customer cannot send more than the daily limit." |
+| Scenario | The tutorial's word for one situation to test | Send an amount that crosses the daily limit |
+| Test case | Preconditions, inputs, actions, expected results, postconditions <Cite n={3} /> | The used amount, the exact amount sent, the steps, the status, and both balances |
+
+This page does not repeat the techniques. [Test Design with Claude](/foundations/test-design/) and [Black-Box Techniques](/fundamentals/black-box/) explain them. [Requirement Analysis & Acceptance Criteria](/agentic-qa/requirements/) shows how to get good criteria. This page adds the question that a code change brings: what else can break?
+
+</Technical>
+<Layman>
+
+Testers answer two questions before they write tests. <Cite n={1} />
+
+- **Test analysis** finds out what to test. You read the test basis and list the things to check. You rank them by risk.
+- **Test design** finds out how to test. You turn each thing to check into test cases.
+
+A **test condition** is one thing in the system that you intend to test. <Cite n={2} /> An acceptance criterion is one example. <Cite n={1} /> A **test case** gives the starting state, the inputs, the actions, the expected results, and the end state. <Cite n={3} />
+
+This page follows one chain: a criterion, then a scenario (one situation to test), then a test case. The test techniques are on [Test Design with Claude](/foundations/test-design/). This page adds one question: when the code changes, what else can break?
+
+</Layman>
+<Bangla>
+
+ISTQB test process-এ দুটি প্রশ্নের জন্য দুটি আলাদা কাজ আছে। <Cite n={1} />
+
+- **Test analysis** উত্তর দেয় "কী test করবেন?"। এটি test basis বিশ্লেষণ করে testable feature খুঁজে বের করে, test condition ঠিক করে এবং risk অনুযায়ী সেগুলোর অগ্রাধিকার দেয়।
+- **Test design** উত্তর দেয় "কীভাবে test করবেন?"। এটি test condition-কে test case ও অন্যান্য testware-এ (যেমন test charter) রূপ দেয়। এটি test data-র প্রয়োজন এবং test environment-ও ঠিক করে।
+
+**Test condition** হলো কোনো component বা system-এর এমন একটি দিক, যা test করার উদ্দেশ্য আছে। <Cite n={2} /> Syllabus acceptance criteria-কে test condition-এর একটি উদাহরণ বলে। <Cite n={1} /> **Test case** হলো precondition, input, action, expected result এবং postcondition-এর একটি সেট, যা test condition থেকে তৈরি হয়। <Cite n={3} />
+
+এই পেজের ধারা তিন ধাপের: acceptance criterion, তারপর scenario (test করার একটি পরিস্থিতি, tutorial-এর নিজের শব্দ), তারপর test case। Technique-গুলো এখানে আবার বলা হয়নি; সেগুলো [Test Design with Claude](/foundations/test-design/) পেজে আছে। এই পেজ একটি নতুন প্রশ্ন যোগ করে: code বদলালে আর কী ভাঙতে পারে?
+
+</Bangla>
+</Voices>
+
+## Blast radius is impact analysis
+
+<Voices>
+<Technical>
+
+This tutorial uses "blast radius" for the result of an impact analysis on one change.
+
+- **Impact analysis** is "the identification of all work products affected by a change, including an estimate of the resources needed to accomplish the change". <Cite n={4} />
+- **Regression testing** is change-related testing that detects whether defects have been introduced or uncovered in unchanged areas of the software. <Cite n={5} />
+- A change can harm the same component, other components in the same system, or other connected systems. The syllabus advises an impact analysis first, to find the extent of the regression testing. <Cite n={1} />
+
+**Maintenance testing** is the same idea for a system in operation. Its scope typically depends on the risk of the change, the size of the system, and the size of the change. <Cite n={1} /> It checks the change and looks for regressions in the unchanged parts, which are usually most of the system. <Cite n={1} /> Its triggers include modifications such as hot fixes, upgrades or migrations of the environment, and retirement. When data from another application is migrated into the system, data conversion can need tests. <Cite n={1} />
+
+<Callout type="tip" title="The tutorial's impact map">
+
+Ask Claude to sort every finding into three rings. Each row names its evidence as `file:line`.
+
+```markdown
+## Impact map: <PR or commit>
+| Ring | Item | Evidence (file:line) | Entry point (endpoint or page) | Risk |
+|---|---|---|---|---|
+| Directly changed | Symbols and files in the diff | | | |
+| Indirectly affected | Callers, importers, and readers of a changed item | | | |
+| Unchanged but risky | Shares data, a lock, a config, or a rule; no traced call | | | |
+
+### Assumptions
+- A-1: <what Claude could not prove from the code>
+
+### Unresolved
+- <dynamic calls, string-built paths, anything the trace could not follow>
+```
+
+</Callout>
+
+[Test Types](/fundamentals/test-types/) explains change-related testing. [From Issue to Reviewed PR](/case-study/pr-review/) shows a real blast-radius report.
+
+</Technical>
+<Layman>
+
+The tutorial uses "blast radius" for the result of an impact analysis on one change. In **impact analysis**, you find every work product that a change affects, and you estimate the resources that the change needs. <Cite n={4} />
+
+**Regression testing** checks that a change did not add or uncover defects in the parts that did not change. <Cite n={5} /> A change can harm its own component, other components, or other connected systems. So the syllabus advises: do the impact analysis first, then decide how much regression testing you need. <Cite n={1} />
+
+For a live system, this is **maintenance testing**. Its size typically depends on the risk of the change, the size of the system, and the size of the change. Most of the system usually stays unchanged. When data from another application moves into the system, data conversion can need tests. <Cite n={1} />
+
+The tutorial suggests an impact map with three rings. The first ring is what the diff changed. The second ring is what calls or reads the changed parts. The third ring did not change, but it shares data, a lock, a setting, or a rule with the change. Each row names the file and the line that proves it.
+
+</Layman>
+<Bangla>
+
+একটি change-এর impact analysis-এর ফলাফলকে tutorial "blast radius" নাম দেয়।
+
+- ISTQB অনুযায়ী **impact analysis** হলো একটি change যেসব work product-কে প্রভাবিত করে, সেগুলো সব খুঁজে বের করা, এবং change-টি করতে কত resource লাগবে তার একটি হিসাব। <Cite n={4} />
+- **Regression testing** হলো change-সম্পর্কিত testing, যা দেখে software-এর অপরিবর্তিত অংশে কোনো defect ঢুকেছে বা প্রকাশ পেয়েছে কি না। <Cite n={5} />
+- একটি change একই component, একই system-এর অন্য component, এমনকি যুক্ত অন্য system-এরও ক্ষতি করতে পারে। তাই syllabus আগে impact analysis করে regression testing-এর পরিধি ঠিক করার পরামর্শ দেয়। <Cite n={1} />
+
+চালু system-এ এটিই **maintenance testing**। এর পরিধি সাধারণত নির্ভর করে change-এর risk, system-এর আকার এবং change-এর আকারের ওপর। এটি change যাচাই করে এবং অপরিবর্তিত অংশে regression খোঁজে, যা সাধারণত system-এর বেশিরভাগ অংশ। Hot fix, environment-এর upgrade বা migration এবং retirement এর trigger। অন্য application-এর data system-এ migrate করা হলে data conversion test লাগতে পারে। <Cite n={1} />
+
+Tutorial-এর পরামর্শ: Claude-কে প্রতিটি finding তিনটি ring-এ সাজাতে বলুন — সরাসরি পরিবর্তিত, পরোক্ষভাবে প্রভাবিত, এবং অপরিবর্তিত কিন্তু ঝুঁকিপূর্ণ। প্রতিটি row-তে প্রমাণ হিসেবে `file:line` থাকবে। যা code থেকে প্রমাণ করা যায়নি, তা Assumptions বা Unresolved অংশে যাবে।
+
+</Bangla>
+</Voices>
+
+## Get the change
+
+<Voices>
+<Technical>
+
+Impact analysis starts from the exact change, not from the ticket title. For a pull request, the GitHub CLI gives you the change.
+
+- `gh pr diff` views the changes in a pull request. With no argument, it uses the pull request of the current branch. <Cite n={6} />
+- `--name-only` displays only the names of the changed files. `--exclude` removes files that match a glob pattern, and you can repeat it. <Cite n={6} />
+- `gh pr view --json <fields>` prints JSON. Its fields include `files`, `changedFiles`, and `closingIssuesReferences`. <Cite n={7} />
+- `-R` or `--repo` selects another repository in the `OWNER/REPO` format. <Cite n={6} />
+
+An example for pull request 8 of a repository:
+
+```bash
+gh pr diff 8 --name-only --exclude '*.generated.*'
+gh pr view 8 --json files,closingIssuesReferences
+gh pr diff 8 --exclude '*.generated.*'
+```
+
+`closingIssuesReferences` is the list of issues that may be closed by the pull request. <Cite n={23} /> Those issues hold the acceptance criteria that the test cases trace to.
+
+<Callout type="tip" title="The tutorial's advice">
+
+If the branch has no pull request yet, ask Claude to compare the branch with its merge base on `main`, and to include staged, unstaged, and untracked files. The dMoney `blast-radius` skill collects all four sources. It is read-only: "never edit, stage, stash, or commit".
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Start from the real change, not from the ticket title. For a pull request, the GitHub CLI shows the change.
+
+- `gh pr diff` shows the changes in a pull request. Without an argument, it uses the pull request of your current branch.
+- `--name-only` shows only the names of the changed files. `--exclude` hides files that match a pattern.
+- `--repo` picks another repository. <Cite n={6} />
+
+`gh pr view --json` prints details as JSON. The fields include `files` and `closingIssuesReferences`. <Cite n={7} /> `closingIssuesReferences` lists the issues that the pull request may close. <Cite n={23} /> Those issues hold the acceptance criteria.
+
+The tutorial suggests: if the branch has no pull request yet, ask Claude to compare it with `main`. Include files that are staged, unstaged, and untracked. The dMoney skill does this, and it never edits, stages, or commits.
+
+</Layman>
+<Bangla>
+
+Impact analysis শুরু হয় আসল change থেকে, ticket-এর title থেকে নয়। Pull request-এর জন্য GitHub CLI change-টি দেখায়।
+
+- `gh pr diff` একটি pull request-এর change দেখায়। কোনো argument না দিলে এটি current branch-এর pull request নেয়।
+- `--name-only` শুধু পরিবর্তিত file-এর নাম দেখায়। `--exclude` একটি glob pattern-এর সাথে মেলে এমন file বাদ দেয়, আর এটি একাধিকবার দেওয়া যায়।
+- `-R` বা `--repo` দিয়ে অন্য repository বেছে নিতে পারেন। <Cite n={6} />
+
+`gh pr view --json` JSON আকারে তথ্য দেয়। এর field-এর মধ্যে আছে `files`, `changedFiles` এবং `closingIssuesReferences`। <Cite n={7} /> `closingIssuesReferences` হলো সেই issue-গুলোর তালিকা, যেগুলো pull request-টি বন্ধ করতে পারে। <Cite n={23} /> ওই issue-গুলোতে acceptance criteria থাকে।
+
+Tutorial-এর পরামর্শ: branch-এর এখনও pull request না থাকলে Claude-কে `main`-এর merge base-এর সাথে তুলনা করতে বলুন, এবং staged, unstaged ও untracked file-ও ধরতে বলুন। dMoney-এর `blast-radius` skill চারটি উৎসই নেয়, এবং এটি read-only।
+
+</Bangla>
+</Voices>
+
+## Trace callers and dependents
+
+<Voices>
+<Technical>
+
+The second ring needs the callers, importers, and readers of each changed symbol. Four ways to find them:
+
+| Way | What it gives Claude | Limits |
+|---|---|---|
+| Text search | Every line that names the file or the symbol | Comments and same-name matches need a filter (the tutorial's note) |
+| Code intelligence plugin | An `LSP` tool that finds all references, traces call hierarchies, and finds implementations <Cite n={9} /> | Inactive until you install a plugin for your language <Cite n={9} />; not started in cloud sessions <Cite n={8} /> |
+| Serena | An MCP server with symbol-level tools, such as "find referencing symbols" <Cite n={10} /> | Uses language servers by default, for over 40 languages <Cite n={10} /> |
+| graphify | A Claude Code skill that builds a knowledge graph; code goes through tree-sitter and a call-graph pass <Cite n={11} /> | Rebuild it after a change (the tutorial's note); `graphify hook install` rebuilds it after every commit <Cite n={11} /> |
+
+**Code intelligence.** A plugin lets Claude find definitions and references by symbol instead of by text search. <Cite n={8} /> The plugin does not include the language server: install the binary first, then the plugin. <Cite n={8} /> For TypeScript and JavaScript: <Cite n={8} />
+
+```text
+/plugin install typescript-lsp@claude-plugins-official
+```
+
+The `LSP` tool is read-only. <Cite n={8} />
+
+**graphify edges.** Every edge is tagged `EXTRACTED`, `INFERRED`, or `AMBIGUOUS`, so you know what was found and what was guessed. <Cite n={11} /> Treat an `INFERRED` edge as an assumption until you open the code.
+
+**Explore.** Claude delegates to the built-in Explore subagent when it needs to search or understand a codebase without making changes. <Cite n={12} />
+
+**dMoney example.** The `blast-radius` skill counts fan-in: what depends on a symbol. Its report for PR #8 names `checkCustomerLimits` as the changed symbol with the highest fan-in: "3 callers → 3 endpoints → 5 pages". That is why Payment and Withdraw are in the report as "Medium (regression only)", although their own code did not change.
+
+</Technical>
+<Layman>
+
+The second ring needs everything that calls, imports, or reads a changed part. You can find it in four ways:
+
+- **Text search** finds every line with the name. It also finds comments and other things with the same name, so you must filter the results.
+- **A code intelligence plugin** gives Claude an `LSP` tool. It finds all references and traces call chains. <Cite n={9} /> It finds them by symbol, not by text. <Cite n={8} /> It does nothing until you install a plugin for your language. <Cite n={9} /> Install the language server first, then the plugin. <Cite n={8} /> The tool only reads.
+- **Serena** is an MCP server with symbol tools, such as "find referencing symbols". <Cite n={10} />
+- **graphify** is a Claude Code skill that builds a knowledge graph. Each link in the graph is marked as found, guessed, or unclear. <Cite n={11} /> Check a guessed link in the code before you trust it.
+
+Claude can also hand the search to its built-in Explore helper, which searches without changing anything. <Cite n={12} />
+
+In dMoney, the report for PR #8 found that, of the changed symbols, `checkCustomerLimits` had the most dependents: 3 callers, 3 endpoints, and 5 pages. So Payment and Withdraw needed regression tests, although their own code did not change.
+
+</Layman>
+<Bangla>
+
+দ্বিতীয় ring-এর জন্য প্রতিটি পরিবর্তিত symbol-এর caller, importer ও reader খুঁজতে হয়। চারটি উপায় আছে:
+
+- **Text search** নাম আছে এমন প্রতিটি line খুঁজে দেয়। তবে comment ও একই নামের অন্য জিনিসও আসে, তাই ফলাফল ছেঁকে নিতে হয়।
+- **Code intelligence plugin** Claude-কে একটি `LSP` tool দেয়, যা সব reference খুঁজে বের করে এবং call hierarchy trace করে। <Cite n={9} /> এটি text নয়, symbol দিয়ে খোঁজে। <Cite n={8} /> Plugin-এ language server থাকে না: আগে binary install করুন, তারপর plugin (যেমন `/plugin install typescript-lsp@claude-plugins-official`)। Cloud session-এ এটি চালু হয় না। Tool-টি read-only। <Cite n={8} />
+- **Serena** একটি MCP server, যাতে "find referencing symbols"-এর মতো symbol-স্তরের tool আছে। <Cite n={10} />
+- **graphify** একটি Claude Code skill, যা knowledge graph বানায়। প্রতিটি edge-এ `EXTRACTED`, `INFERRED` বা `AMBIGUOUS` tag থাকে। <Cite n={11} /> `INFERRED` edge-কে code খুলে দেখার আগে পর্যন্ত assumption ধরুন।
+
+কোনো পরিবর্তন না করে codebase খুঁজতে Claude built-in Explore subagent-কে কাজ দেয়। <Cite n={12} />
+
+dMoney-তে PR #8-এর report বলে, পরিবর্তিত symbol-গুলোর মধ্যে `checkCustomerLimits`-এর fan-in সবচেয়ে বেশি: 3টি caller → 3টি endpoint → 5টি page। তাই Payment ও Withdraw-এর নিজের code না বদলালেও সেগুলো regression test-এর তালিকায় আসে।
+
+</Bangla>
+</Voices>
+
+## Data, contracts, UI, and configuration
+
+<Voices>
+<Technical>
+
+An import chain is not the whole radius. The tutorial suggests that Claude also checks these four areas, with `file:line` evidence for each finding.
+
+| Area | Questions to ask | dMoney example |
+|---|---|---|
+| Data and database | Does the change touch a model, a column, a seed, or a migration? Which queries read that table? | The skill rates a migration as DB-wide. For a model column change, it checks every query on the table, raw SQL too, and asks if a migration is needed. |
+| API contract | Did a request field, a response key, or a status code change? Do the docs still agree? | The PR #8 report found that `swaggerTrnx.yaml` documented only 201, 208, and 404 for sendmoney, so the new 400s were undocumented. |
+| UI flows | Which pages call the changed endpoint, and which roles see them? | The report maps each endpoint to its pages and roles, for example `/customer/send-money` for the Customer role. |
+| Shared modules and configuration | Is a shared service, middleware, environment variable, or dependency version in the change? | The skill treats `package.json`, the lockfile, `.env.example`, and workflow files as project-wide config. |
+
+**Integration testing** is a test level that focuses on interactions between components or systems. <Cite n={13} /> The tutorial takes the integration scenarios from the contract and UI rows.
+
+<Callout type="danger" title="Read-only data checks">
+
+To check data impact, give Claude a read-only database user on a test environment. Never let Claude write to a shared database while it explores. The dMoney PR #8 report confirmed one finding "with a read-only query". This is the tutorial's advice.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+The code links are not the whole radius. The tutorial suggests four more areas to check, each with the file and line as proof:
+
+- **Data:** Does the change touch a table, a column, or a migration? Which queries read that table? The dMoney skill treats a migration as a risk for the whole database.
+- **API contract:** Did a field, a response, or a status code change? Do the docs still match? In dMoney, the docs listed only three status codes for Send Money, so the new 400 errors were not documented.
+- **UI flows:** Which pages call the changed endpoint? Which user roles see them?
+- **Shared parts and settings:** Is a shared service, a setting, an environment variable, or a dependency version in the change?
+
+**Integration testing** looks at how parts and systems work together. <Cite n={13} /> The tutorial takes the integration scenarios from the contract and UI checks.
+
+The tutorial's advice: to check data impact, give Claude a read-only database user on a test environment. Never let it write to a shared database while it explores.
+
+</Layman>
+<Bangla>
+
+শুধু import chain দিয়ে পুরো radius পাওয়া যায় না। Tutorial-এর পরামর্শ: Claude-কে আরও চারটি area দেখতে বলুন, এবং প্রতিটি finding-এ `file:line` প্রমাণ চান।
+
+- **Data ও database:** change কি কোনো model, column, seed বা migration ছোঁয়? কোন query সেই table পড়ে? dMoney-এর skill migration-কে DB-wide ঝুঁকি ধরে।
+- **API contract:** কোনো request field, response key বা status code কি বদলেছে? Docs কি এখনও মেলে? PR #8-এর report দেখায়, `swaggerTrnx.yaml` sendmoney-এর জন্য শুধু 201, 208 ও 404 লিখেছিল, তাই নতুন 400-গুলো undocumented ছিল।
+- **UI flow:** কোন page পরিবর্তিত endpoint call করে, আর কোন role সেগুলো দেখে?
+- **Shared module ও configuration:** shared service, middleware, environment variable বা dependency version কি change-এ আছে?
+
+**Integration testing** হলো এমন একটি test level, যা component বা system-এর মধ্যে interaction-এ মনোযোগ দেয়। <Cite n={13} /> Tutorial integration scenario নেয় contract ও UI-এর প্রশ্ন থেকে।
+
+সতর্কতা (tutorial-এর পরামর্শ): data যাচাই করতে Claude-কে test environment-এ শুধু একটি read-only database user দিন। Claude explore করার সময় shared database-এ তাকে কখনো লিখতে দেবেন না।
+
+</Bangla>
+</Voices>
+
+## Scenario categories for a money transfer
+
+<Voices>
+<Technical>
+
+Cover each acceptance criterion and each impact ring with these six categories. The examples for a money transfer are the tutorial's own.
+
+| Category | What it proves | Example for a transfer |
+|---|---|---|
+| Positive | The intended use works | Send a valid amount to another customer; both balances change by the right amounts |
+| Negative | A test type that uses the system in a way that it is not intended <Cite n={14} /> | Send to your own account; send `0`; send text as the amount |
+| Boundary | Boundary value analysis, a black-box test technique: the test conditions are boundary values <Cite n={15} /> | The amounts just below, at, and just above the daily limit from the criterion |
+| Integration | Interactions between components or systems <Cite n={13} /> | The transfer writes the ledger rows, and the statement page shows them |
+| Regression | No new defects in unchanged areas <Cite n={5} /> | Payment and withdraw, which share the limit check |
+| Adversarial | Abuse and misuse of the business logic <Cite n={16} /> | Skip a step, repeat a one-time action, or send parallel requests |
+
+**Adversarial cases come from OWASP.** Business logic testing asks testers to develop abuse and misuse cases. <Cite n={16} /> A vulnerability scanner cannot detect this type of flaw. <Cite n={16} /> Ideas to adapt:
+
+- Go from step 1 straight to step 3 of a flow. <Cite n={16} />
+- Use a function more times than allowed, such as a one-time discount. <Cite n={18} />
+- Check that all checks run on the back end and cannot be bypassed. <Cite n={17} />
+- Use one card at several places very quickly to exceed a limit. <Cite n={17} /> For a transfer, that is parallel requests against one daily limit.
+
+<Callout type="warning" title="Test only where you are allowed to">
+
+Run adversarial and parallel-request tests only on a test environment that you are allowed to test, with test accounts. This is the tutorial's advice.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+The tutorial suggests six kinds of scenarios for each criterion and each ring:
+
+- **Positive:** the normal use works. Example: send a valid amount, and both balances change correctly.
+- **Negative:** use the system in a way that it is not meant for. <Cite n={14} /> Example: send money to your own account, or send zero.
+- **Boundary:** test the values at the edges. <Cite n={15} /> Example: just below, at, and just above the daily limit.
+- **Integration:** check how the parts work together. <Cite n={13} /> Example: the statement page shows the new rows.
+- **Regression:** check the parts that did not change. <Cite n={5} /> Example: payment and withdraw, which share the limit check.
+- **Adversarial:** try to abuse the business rules. <Cite n={16} />
+
+OWASP asks testers to write abuse and misuse cases. A scanner cannot find these flaws. <Cite n={16} /> Try to skip a step in a flow. <Cite n={16} /> Try to use a one-time action more than once. <Cite n={18} /> Check that the server does all checks. <Cite n={17} /> Send many requests at the same time to pass a limit. <Cite n={17} />
+
+Do this only on a test environment that you may test.
+
+</Layman>
+<Bangla>
+
+প্রতিটি acceptance criterion ও প্রতিটি impact ring-এর জন্য ছয় ধরনের scenario ভাবুন। Transfer-এর উদাহরণগুলো tutorial-এর নিজের।
+
+- **Positive:** স্বাভাবিক ব্যবহার কাজ করে। যেমন, অন্য customer-কে সঠিক amount পাঠালে দুজনের balance ঠিকভাবে বদলায়।
+- **Negative:** system-কে এমনভাবে ব্যবহার করা, যেভাবে ব্যবহারের কথা নয়। <Cite n={14} /> যেমন, নিজের account-এ পাঠানো, `0` পাঠানো, বা amount-এ text দেওয়া।
+- **Boundary:** boundary value analysis একটি black-box test technique, এতে test condition হলো boundary value। <Cite n={15} /> যেমন, daily limit-এর ঠিক নিচে, ঠিক সমান এবং ঠিক ওপরে।
+- **Integration:** component বা system-এর interaction। <Cite n={13} /> যেমন, transfer ledger row লেখে, আর statement page সেগুলো দেখায়।
+- **Regression:** অপরিবর্তিত অংশে নতুন defect নেই। <Cite n={5} /> যেমন, একই limit check ব্যবহার করে এমন payment ও withdraw।
+- **Adversarial:** business logic-এর অপব্যবহার। <Cite n={16} />
+
+OWASP business logic testing-এ abuse ও misuse case তৈরি করতে বলে, আর vulnerability scanner এই ধরনের ত্রুটি ধরতে পারে না। <Cite n={16} /> একটি flow-এর step 1 থেকে সরাসরি step 3-এ যান। <Cite n={16} /> একবারের কাজ একাধিকবার করে দেখুন। <Cite n={18} /> সব check back end-এ হয় কি না এবং bypass করা যায় কি না দেখুন। <Cite n={17} /> খুব দ্রুত কয়েক জায়গা থেকে চেষ্টা করে limit পার হওয়া যায় কি না দেখুন — transfer-এ এর মানে একই daily limit-এর ওপর parallel request। <Cite n={17} />
+
+শুধু অনুমতি আছে এমন test environment-এ, test account দিয়ে এসব চালান।
+
+</Bangla>
+</Voices>
+
+## Structured test cases
+
+<Voices>
+<Technical>
+
+A structured test case has the ISTQB parts: preconditions, inputs, actions, expected results, and postconditions. <Cite n={3} /> Add two more fields: a trace link and a priority.
+
+- **Traceability** is the ability to establish explicit relationships between related work products. <Cite n={19} /> Tracing test cases to requirements shows that the requirements are covered. Good traceability also makes it possible to determine the impact of changes. <Cite n={1} />
+- **Risk-based testing** selects, prioritizes, and manages test activities by risk types and risk levels. <Cite n={20} /> The risk level comes from two factors: the likelihood of the risk and its impact. <Cite n={1} />
+- With risk-based prioritization, the test cases that cover the most important risks run first. If a high-priority case depends on a low-priority case, the low-priority case must run first. <Cite n={1} />
+
+A template, the tutorial's own:
+
+```markdown
+### TC-007: Verify transfer that crosses the daily limit
+- Traces to: AC-3 (daily limit) · Impact ring: directly changed
+- Category: Boundary · Priority: High (moves money)
+- Preconditions: Customer A has used <limit minus 10> today and has enough balance; Customer B exists
+- Inputs: amount = 11, to = Customer B
+- Actions:
+  1. Sign in as Customer A on https://staging.example.com
+  2. Send 11 to Customer B
+- Expected results: the limit error from AC-3; no new ledger row
+- Postconditions: the balances of A and B are unchanged
+- Evidence: <the file:line of the limit check, from the impact map>
+```
+
+The dMoney `test-design` skill adds a title rule: a title starts with "Verify" and does not give away the expected result. Its self-check asks that "every requirement highlight is covered by ≥ 1 test case".
+
+[Test Levels, Pyramid and Quadrants](/fundamentals/levels/) shows where each case runs. [Design, Execute, Fix, Retest](/case-study/test-and-retest/) shows cases like these in use.
+
+</Technical>
+<Layman>
+
+A good test case has the five ISTQB parts: the starting state, the inputs, the actions, the expected results, and the end state. <Cite n={3} /> The tutorial adds two fields:
+
+- **A trace link.** Traceability means a clear link between related work products. <Cite n={19} /> A link from each test case to its requirement shows what is covered. It also helps you see what a later change affects. <Cite n={1} />
+- **A priority.** Risk-based testing picks and orders tests by risk. <Cite n={20} /> The risk level comes from how likely the problem is and how much harm it does. Tests for the biggest risks run first. If an important test depends on a less important test, the less important test runs first. <Cite n={1} />
+
+The tutorial gives a template. It has the test case ID and title, the criterion it traces to, the ring, the category, the priority, the starting state, the inputs, the steps, the expected results, the end state, and the file and line that proves the impact.
+
+The dMoney test-design skill has a title rule: a title starts with "Verify" and does not tell the result.
+
+</Layman>
+<Bangla>
+
+একটি structured test case-এ ISTQB-এর অংশগুলো থাকে: precondition, input, action, expected result এবং postcondition। <Cite n={3} /> Tutorial আরও দুটি field যোগ করতে বলে:
+
+- **Trace link:** traceability হলো সম্পর্কিত work product-এর মধ্যে স্পষ্ট সম্পর্ক তৈরি করার ক্ষমতা। <Cite n={19} /> Test case থেকে requirement পর্যন্ত trace দেখায় requirement cover হয়েছে কি না। ভালো traceability পরের change-এর impact বোঝাও সম্ভব করে। <Cite n={1} />
+- **Priority:** risk-based testing risk-এর ধরন ও মাত্রা অনুযায়ী test বাছাই, অগ্রাধিকার ও পরিচালনা করে। <Cite n={20} /> Risk level আসে দুটি বিষয় থেকে: risk ঘটার সম্ভাবনা এবং তার প্রভাব। সবচেয়ে গুরুত্বপূর্ণ risk-এর test আগে চলে। তবে বেশি priority-র কোনো case কম priority-র case-এর ওপর নির্ভর করলে কম priority-র case-টি আগে চালাতে হয়। <Cite n={1} />
+
+Technical panel-এর template tutorial-এর নিজের: ID ও title, কোন AC-তে trace করে, কোন ring, category, priority, precondition, input, action, expected result, postcondition, এবং impact map থেকে `file:line` প্রমাণ।
+
+dMoney-এর `test-design` skill-এ প্রতিটি title "Verify" দিয়ে শুরু হয় এবং expected result আগেই বলে দেয় না।
+
+</Bangla>
+</Voices>
+
+## Make Claude do it well
+
+<Voices>
+<Technical>
+
+Put the method in a skill, so every run follows it. A skill is a `SKILL.md` file: YAML frontmatter, then the instructions. The `description` helps Claude decide when to load the skill. <Cite n={21} /> `allowed-tools` lists tools that Claude can use without asking permission during the turn that invokes the skill, and `context: fork` runs the skill in its own subagent context. <Cite n={21} />
+
+An example prompt, the tutorial's own:
+
+```text
+Read-only. Do not edit, stage, or commit anything.
+1. Get the change: gh pr diff 8 --name-only, then the full diff.
+2. Build the impact map with three rings. For each row, give the evidence
+   as file:line that you opened. No row without a traced chain.
+3. Check data, API contract, UI pages, and config.
+4. Read the acceptance criteria in the issues that the PR closes.
+5. Give a coverage matrix: criteria as rows, the six scenario categories
+   as columns, and the scenario IDs in the cells. Mark empty cells.
+6. Write test cases with the template in docs/test-case-template.md.
+7. Mark every assumption as ASSUMPTION. Put unknown rules under
+   Open questions. Do not invent limits or messages.
+```
+
+**Review the output** before you use it. The tutorial's checklist:
+
+- Open each `file:line`. Delete a row whose file, line, or symbol does not exist.
+- Merge cases that test the same input class with the same outcome.
+- Check that every criterion has at least one case, and every ring has a regression case.
+- Check that each boundary value comes from a criterion or the code, not a guess.
+
+**Get a second reader.** A custom subagent with only `tools: Read, Grep, Glob` is a reviewer that cannot edit anything, and Claude Code enforces that limit. <Cite n={22} /> `/code-review` reviews a diff in a fresh subagent that never saw your conversation. <Cite n={22} /> [A Multi-Agent QA System](/agentic-qa/multi-agent-qa/) builds this reviewer step.
+
+</Technical>
+<Layman>
+
+Write the method into a skill, so each run follows the same steps. A skill is a `SKILL.md` file. It starts with settings, then gives the instructions. Its description helps Claude decide when to use it. <Cite n={21} />
+
+The tutorial gives an example prompt. It tells Claude to stay read-only, get the change, build the three-ring map with a file and line for each row, check data, contracts, pages, and settings, and read the criteria. Then it asks for a coverage matrix: criteria in rows, scenario kinds in columns. Claude must mark each guess as an assumption and must not invent limits or messages.
+
+Then the tutorial suggests that you check the output yourself:
+
+- Open each file and line. Delete a row that points to nothing.
+- Merge test cases that test the same thing with the same result.
+- Check that each criterion has a test case.
+- Check that each edge value comes from a criterion or the code.
+
+Ask a second reviewer too. A helper agent that can only read cannot change anything. <Cite n={22} /> `/code-review` reviews the change in a fresh helper that did not see your chat. <Cite n={22} />
+
+</Layman>
+<Bangla>
+
+পদ্ধতিটি একটি skill-এ লিখে রাখুন, যাতে প্রতিবার একই ধাপ মানা হয়। Skill হলো একটি `SKILL.md` file: শুরুতে YAML frontmatter, তারপর instruction। `description` Claude-কে বুঝতে সাহায্য করে কখন skill-টি load করতে হবে। `context: fork` skill-টিকে তার নিজের subagent context-এ চালায়। <Cite n={21} />
+
+Technical panel-এর prompt tutorial-এর নিজের উদাহরণ। এটি Claude-কে read-only থাকতে, change আনতে, প্রতিটি row-তে `file:line` সহ তিন ring-এর impact map বানাতে, data, contract, page ও config দেখতে বলে। তারপর একটি coverage matrix চায়: row-তে criteria, column-এ ছয়টি scenario category। প্রতিটি অনুমানকে ASSUMPTION চিহ্ন দিতে হবে, আর limit বা message বানিয়ে বলা যাবে না।
+
+ব্যবহারের আগে নিজে output যাচাই করুন (tutorial-এর checklist):
+
+- প্রতিটি `file:line` খুলে দেখুন। যে file, line বা symbol নেই, সেই row মুছে দিন।
+- একই input class ও একই ফলাফলের case এক করুন।
+- প্রতিটি criterion-এর অন্তত একটি case আছে কি না দেখুন।
+- প্রতিটি boundary value criterion বা code থেকে এসেছে কি না দেখুন।
+
+দ্বিতীয় একজন reviewer নিন। শুধু `tools: Read, Grep, Glob` আছে এমন custom subagent কিছু edit করতে পারে না, আর এই সীমা Claude Code নিজেই প্রয়োগ করে। <Cite n={22} /> `/code-review` একটি fresh subagent-এ diff review করে, যে আপনার conversation দেখেনি। <Cite n={22} />
+
+</Bangla>
+</Voices>
+
+## Practice
+
+<Voices>
+<Technical>
+
+<Callout type="note" title="The tutorial's exercise">
+
+This exercise is the tutorial's own. It uses pull request 8 of the dMoney practice repository, which changed Send Money. You can use a pull request of your own project instead. Run it on a test environment only.
+
+</Callout>
+
+1. **Open the repository.** Clone it and start Claude Code in it. [The dMoney Codebase](/case-study/codebase-tour/) explains its folders.
+2. **Get the change.** `--repo` selects the repository. <Cite n={6} />
+
+   ```bash
+   gh pr view 8 --repo kawsar-95/genAI-project --json files,closingIssuesReferences
+   gh pr diff 8 --repo kawsar-95/genAI-project --name-only
+   ```
+
+   Expect JSON with the changed files and the issues that the pull request may close. <Cite n={7} /> <Cite n={23} />
+3. **Build the impact map.** Type the prompt from "Make Claude do it well". Expect three rings with `file:line` evidence.
+4. **Check the map.** Open every `file:line`. Compare your map with the repository's own report, `dmoney-transaction-api/.artifacts/PR-8_blast-radius.md`. It names `checkCustomerLimits` as the symbol with the highest fan-in. Did your map find its other callers?
+5. **List scenarios.** Ask: `For each acceptance criterion, list one scenario per category: positive, negative, boundary, integration, regression, adversarial. Mark a category that does not apply.`
+6. **Write 8 to 10 test cases** with the template from "Structured test cases". Ask for the coverage matrix.
+7. **Review.** Use the checklist, then ask a read-only reviewer subagent to find duplicates, invented paths, and criteria with no case. <Cite n={22} />
+
+**How to check the result:** every criterion has a case, every row of the map has evidence that you opened, and every boundary value comes from a criterion or the code.
+
+</Technical>
+<Layman>
+
+This is the tutorial's own exercise. It uses pull request 8 of the dMoney practice repository. You can use your own project instead. Use only a test environment.
+
+1. Clone the repository and start Claude Code in it. The dMoney Codebase page explains the folders.
+2. Get the change with `gh pr view 8 --repo kawsar-95/genAI-project --json files,closingIssuesReferences` and `gh pr diff 8 --repo kawsar-95/genAI-project --name-only`. <Cite n={6} /> You get JSON with the changed files and the issues that the pull request may close. <Cite n={7} /> <Cite n={23} />
+3. Give Claude the prompt from "Make Claude do it well". You get a map with three rings.
+4. Open every file and line in the map. Compare it with the report in the repository, `PR-8_blast-radius.md`. Did your map find the callers of `checkCustomerLimits`?
+5. Ask for one scenario per category for each criterion.
+6. Write 8 to 10 test cases with the template. Ask for the coverage matrix.
+7. Check them with the checklist. Then ask a reviewer that can only read. <Cite n={22} />
+
+You are done when each criterion has a test case, you opened the proof for each row, and each edge value comes from a criterion or the code.
+
+</Layman>
+<Bangla>
+
+এটি tutorial-এর নিজের exercise। এটি dMoney practice repository-র pull request 8 ব্যবহার করে, যা Send Money বদলেছিল। চাইলে নিজের project-এর একটি pull request নিন। শুধু test environment-এ চালান।
+
+1. Repository clone করে তার ভেতরে Claude Code চালু করুন। Folder-গুলোর ব্যাখ্যা [The dMoney Codebase](/case-study/codebase-tour/) পেজে আছে।
+2. Change আনুন: `gh pr view 8 --repo kawsar-95/genAI-project --json files,closingIssuesReferences` এবং `gh pr diff 8 --repo kawsar-95/genAI-project --name-only`। <Cite n={6} /> আপনি JSON-এ পরিবর্তিত file-এর তালিকা ও pull request যে issue বন্ধ করতে পারে তা পাবেন। <Cite n={7} /> <Cite n={23} />
+3. "Make Claude do it well" অংশের prompt দিন। `file:line` প্রমাণসহ তিন ring-এর map আশা করুন।
+4. Map-এর প্রতিটি `file:line` খুলুন। Repository-র নিজের report `PR-8_blast-radius.md`-এর সাথে মিলিয়ে দেখুন। আপনার map কি `checkCustomerLimits`-এর অন্য caller-গুলো খুঁজে পেয়েছে?
+5. প্রতিটি criterion-এর জন্য প্রতিটি category-তে একটি করে scenario চান।
+6. Template দিয়ে 8 থেকে 10টি test case লিখুন এবং coverage matrix চান।
+7. Checklist দিয়ে যাচাই করুন, তারপর একটি read-only reviewer subagent দিয়ে duplicate, বানানো path ও case-হীন criterion খুঁজুন। <Cite n={22} />
+
+ফলাফল ঠিক আছে যদি প্রতিটি criterion-এর case থাকে, map-এর প্রতিটি row-এর প্রমাণ আপনি নিজে খুলে দেখে থাকেন, আর প্রতিটি boundary value criterion বা code থেকে আসে।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Testing only the diff.** A change can harm other components and connected systems. <Cite n={1} /> Fix: add a regression case for each entry point in the second ring.
+- **Trusting a dependent that nothing proves.** A path or a caller can be invented, and a graph edge can be `INFERRED`. <Cite n={11} /> Fix: ask for `file:line` on every row and open it. This is the tutorial's advice.
+- **Relying on text search alone.** It returns comments and same-name matches. Fix: use the `LSP` tool to find all references and trace call hierarchies. <Cite n={9} /> List dynamic calls under Unresolved.
+- **Guessing boundary values.** Fix: take each limit from a criterion or the code. Put an unknown limit under Open questions. This is the tutorial's advice.
+- **Test cases with no trace or priority.** Fix: trace each case to a criterion, and run the cases for the most important risks first. <Cite n={1} />
+- **Letting the writer review its own work.** Fix: use a fresh, read-only reviewer subagent. <Cite n={22} />
+- **Exploring data with write access.** Fix: a read-only database user on a test environment. This is the tutorial's advice.
+
+</Technical>
+<Layman>
+
+- **You test only the changed lines.** A change can harm other parts and other systems. <Cite n={1} /> Add regression tests for the second ring.
+- **You trust a link that nothing proves.** A graph can guess a link. <Cite n={11} /> The tutorial says: ask for the file and line, and open it.
+- **You use only text search.** It also finds comments and other names. Use the `LSP` tool to find all references. <Cite n={9} />
+- **You guess the edge values.** The tutorial says: take each limit from a criterion or the code, or list it under Open questions.
+- **Your test cases have no link or priority.** Link each case to a criterion, and run the biggest risks first. <Cite n={1} />
+- **The writer checks its own work.** Use a fresh reviewer that can only read. <Cite n={22} />
+- **Claude can write to the database.** The tutorial says: use a read-only user on a test environment.
+
+</Layman>
+<Bangla>
+
+- **শুধু diff test করা।** একটি change অন্য component ও যুক্ত system-এরও ক্ষতি করতে পারে। <Cite n={1} /> সমাধান: দ্বিতীয় ring-এর প্রতিটি entry point-এর জন্য regression case যোগ করুন।
+- **প্রমাণহীন dependent-এ ভরসা করা।** Path বা caller বানানো হতে পারে, আর graph edge `INFERRED` হতে পারে। <Cite n={11} /> সমাধান (tutorial-এর পরামর্শ): প্রতিটি row-তে `file:line` চান এবং খুলে দেখুন।
+- **শুধু text search-এ নির্ভর করা।** এতে comment ও একই নামের জিনিসও আসে। সমাধান: সব reference ও call hierarchy-র জন্য `LSP` tool ব্যবহার করুন। <Cite n={9} />
+- **Boundary value অনুমান করা।** সমাধান (tutorial-এর পরামর্শ): প্রতিটি limit criterion বা code থেকে নিন; অজানা হলে Open questions-এ রাখুন।
+- **Trace ও priority ছাড়া test case।** সমাধান: প্রতিটি case-কে criterion-এর সাথে যুক্ত করুন, আর সবচেয়ে গুরুত্বপূর্ণ risk-এর case আগে চালান। <Cite n={1} />
+- **লেখক নিজেই নিজের কাজ review করা।** সমাধান: fresh, read-only reviewer subagent। <Cite n={22} />
+- **Write access নিয়ে data explore করা।** সমাধান (tutorial-এর পরামর্শ): test environment-এ read-only database user।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Blast radius | The tutorial's name for the result of an impact analysis on one change |
+| Impact analysis | Finding all work products that a change affects, with an estimate of the resources that the change needs |
+| Impact map | The tutorial's three rings: directly changed, indirectly affected, and unchanged but risky, each row with `file:line` evidence |
+| Regression testing | Change-related testing that looks for defects introduced or uncovered in unchanged areas |
+| Maintenance testing | Testing a change to an operational system, including regressions in its unchanged parts |
+| Test condition | A testable aspect of a component or system that is intended to be tested, such as an acceptance criterion |
+| Test case | Preconditions, inputs, actions, expected results, and postconditions, developed from test conditions |
+| Traceability | The ability to establish explicit relationships between related work products |
+| Risk-based testing | Selecting, prioritizing, and managing test activities by risk types and risk levels |
+| Negative testing | Using a component or system in a way that it is not intended |
+| Boundary value analysis | A black-box technique whose test conditions are boundary values |
+| Fan-in | What depends on a symbol |

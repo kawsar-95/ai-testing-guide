@@ -1,0 +1,736 @@
+export const metadata = {
+  title: 'Playwright Framework & the Agentic QA Workflow',
+  description: 'Build a maintainable Playwright framework with page objects, fixtures, and saved sign-in, then run the whole agentic QA workflow from approved test cases to regression, triage, and bugs filed after human approval.',
+}
+
+export const page = {
+  updated: '2026-11-15',
+  sources: [
+    { title: 'ISTQB Glossary: test automation framework', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/test-automation-framework', accessed: '2026-11-15' },
+    { title: 'Page object models', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/pom', accessed: '2026-11-15' },
+    { title: 'Fixtures', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/test-fixtures', accessed: '2026-11-15' },
+    { title: 'Best Practices', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/best-practices', accessed: '2026-11-15' },
+    { title: 'Configuration', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/test-configuration', accessed: '2026-11-15' },
+    { title: 'Configuration (use)', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/test-use-options', accessed: '2026-11-15' },
+    { title: 'Projects', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/test-projects', accessed: '2026-11-15' },
+    { title: 'Authentication', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/auth', accessed: '2026-11-15' },
+    { title: 'Playwright MCP', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/getting-started-mcp', accessed: '2026-11-15' },
+    { title: 'Playwright MCP README', publisher: 'Microsoft (GitHub)', url: 'https://github.com/microsoft/playwright-mcp', accessed: '2026-11-15' },
+    { title: 'Connect Claude Code to tools via MCP', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/mcp', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: traceability', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/traceability', accessed: '2026-11-15' },
+    { title: 'Annotations', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/test-annotations', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: regression testing', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/regression-testing', accessed: '2026-11-15' },
+    { title: 'Parallelism', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/test-parallel', accessed: '2026-11-15' },
+    { title: 'Continuous Integration', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/ci', accessed: '2026-11-15' },
+    { title: 'Retries', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/test-retries', accessed: '2026-11-15' },
+    { title: 'Trace viewer', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/trace-viewer', accessed: '2026-11-15' },
+    { title: 'Reporters', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/test-reporters', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: false-positive result', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/false-positive-result', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: false-negative result', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/false-negative-result', accessed: '2026-11-15' },
+    { title: 'Playwright Test Agents', publisher: 'Microsoft (playwright.dev)', url: 'https://playwright.dev/docs/test-agents', accessed: '2026-11-15' },
+    { title: 'ISTQB Certified Tester Foundation Level Syllabus v4.0.1', publisher: 'ISTQB', url: 'https://istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf', accessed: '2026-11-15' },
+    { title: 'Configure permissions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permissions', accessed: '2026-11-15' },
+    { title: 'Atlassian Rovo MCP Server README', publisher: 'Atlassian (GitHub)', url: 'https://github.com/atlassian/atlassian-mcp-server', accessed: '2026-11-15' },
+    { title: 'gh issue list', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_issue_list', accessed: '2026-11-15' },
+    { title: 'gh issue create', publisher: 'GitHub (cli.github.com)', url: 'https://cli.github.com/manual/gh_issue_create', accessed: '2026-11-15' },
+    { title: 'ISTQB Glossary: confirmation testing', publisher: 'ISTQB', url: 'https://glossary.istqb.org/en_US/term/confirmation-testing', accessed: '2026-11-15' },
+  ],
+}
+
+# Playwright Framework & the Agentic QA Workflow
+
+A few Playwright tests are easy to write. A suite that a team trusts for months is harder: it needs a clear structure, one place for each locator, saved sign-in, and a fast way to tell a real product bug from a broken test. This page builds that framework and then runs the whole agentic QA workflow of this group with it, from approved test cases to a regression suite, failure triage, and a bug that a human approves before it is filed.
+
+<PageMeta />
+
+## Framework structure: page objects and fixtures
+
+<Voices>
+<Technical>
+
+ISTQB defines a test automation framework as "a set of test harnesses and test libraries for test automation". <Cite n={1} /> In Playwright, three parts carry most of the weight.
+
+**Page objects.** A page object represents a part of your web application. <Cite n={2} /> It gives tests a higher-level API and keeps the element selectors in one place. <Cite n={2} /> When the UI changes, you fix the selector in one place. <Cite n={2} />
+
+**Fixtures.** You create a fixture with `test.extend()`. <Cite n={3} /> A fixture can build a page object, so the test gets it ready to use. <Cite n={3} /> Fixtures keep setup and teardown in the same place. <Cite n={3} /> They are on demand: Playwright sets up only the fixtures that a test needs. <Cite n={3} />
+
+**Locators.** Playwright recommends user-facing attributes and explicit contracts, such as `page.getByRole()`. <Cite n={4} /> Each test should be isolated, with its own local storage, session storage, data, and cookies. <Cite n={4} />
+
+Example: a page object and a fixture that creates it.
+
+```ts
+// pages/LoginPage.ts (example)
+import { type Locator, type Page } from '@playwright/test';
+export class LoginPage {
+  readonly email: Locator;
+  readonly password: Locator;
+  readonly submit: Locator;
+  constructor(readonly page: Page) {
+    this.email = page.getByLabel('Email');
+    this.password = page.getByLabel('Password');
+    this.submit = page.getByRole('button', { name: 'Log in' });
+  }
+  async goto() { await this.page.goto('/login'); }
+  async login(user: string, pass: string) {
+    await this.email.fill(user);
+    await this.password.fill(pass);
+    await this.submit.click();
+  }
+}
+
+// fixtures.ts (example)
+import { test as base } from '@playwright/test';
+import { LoginPage } from './pages/LoginPage';
+export const test = base.extend<{ loginPage: LoginPage }>({
+  loginPage: async ({ page }, use) => { await use(new LoginPage(page)); },
+});
+export { expect } from '@playwright/test';
+```
+
+<Callout type="tip" title="The tutorial's advice: a folder layout">
+
+Keep `pages/` for page objects, `fixtures.ts` for fixtures, `test-data/` for data builders, `tests/<area>/` for specs, and `playwright.config.ts` at the root. Specs hold the assertions. Page objects hold locators and user actions, not checks.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+ISTQB calls a test automation framework "a set of test harnesses and test libraries for test automation". <Cite n={1} /> In Playwright, three parts matter most.
+
+- **A page object** stands for one part of your web app. It holds the selectors in one place. When the screen changes, you fix the selector in one place. <Cite n={2} />
+- **A fixture** is a ready-made helper that a test asks for. You make one with `test.extend()`. <Cite n={3} /> A fixture can build a page object for the test. Playwright sets up only the fixtures that a test uses. <Cite n={3} />
+- **Locators.** Playwright recommends user-facing attributes, such as `page.getByRole()`. <Cite n={4} />
+
+Each test should stand alone, with its own storage, data, and cookies. <Cite n={4} />
+
+The tutorial suggests this layout: `pages/`, `fixtures.ts`, `test-data/`, `tests/<area>/`, and `playwright.config.ts`. Put checks in the specs, not in the page objects.
+
+</Layman>
+<Bangla>
+
+ISTQB-এর সংজ্ঞায় test automation framework হলো test automation-এর জন্য কিছু test harness আর test library-র একটি set। <Cite n={1} /> Playwright-এ তিনটি অংশ সবচেয়ে গুরুত্বপূর্ণ।
+
+- **Page object** আপনার web application-এর একটি অংশকে বোঝায়। <Cite n={2} /> এটি সব element selector এক জায়গায় রাখে, আর test-কে একটি উঁচু স্তরের API দেয়। UI বদলালে আপনি এক জায়গায় selector ঠিক করেন। <Cite n={2} />
+- **Fixture** তৈরি হয় `test.extend()` দিয়ে। <Cite n={3} /> একটি fixture page object বানিয়ে test-কে তৈরি অবস্থায় দিতে পারে। Setup আর teardown এক জায়গায় থাকে, আর Playwright শুধু সেই fixture-গুলোই চালায় যা test-এর দরকার। <Cite n={3} />
+- **Locator** খোঁজার সময় user যা দেখে সেই attribute ব্যবহার করুন, যেমন `page.getByRole()`। <Cite n={4} />
+
+প্রতিটি test আলাদা থাকা উচিত: নিজস্ব local storage, session storage, data আর cookie নিয়ে। <Cite n={4} />
+
+Tutorial-এর পরামর্শ: `pages/`, `fixtures.ts`, `test-data/`, `tests/<area>/` আর root-এ `playwright.config.ts` রাখুন। Assertion থাকবে spec-এ; page object-এ থাকবে শুধু locator আর user action।
+
+</Bangla>
+</Voices>
+
+## Configuration, environments, and sign-in
+
+<Voices>
+<Technical>
+
+### `playwright.config.ts`
+
+Test runner options are top-level, and they must not go in the `use` section. <Cite n={5} /> Options for the browser and the browser context, such as emulation, network, and recording, are passed to `use`. <Cite n={6} />
+
+| Option | What it does |
+|---|---|
+| `retries` | The maximum number of retry attempts per test <Cite n={5} /> |
+| `reporter` | The reporter to use <Cite n={5} /> |
+| `forbidOnly` | Exits with an error if a test is marked `test.only`; useful on CI <Cite n={5} /> |
+| `use.baseURL` | Lets a test navigate with a path, for example `page.goto('/settings')` <Cite n={6} /> |
+| `use.trace`, `use.screenshot`, `use.video` | Recording of traces, screenshots, and videos. All are off by default. <Cite n={6} /> |
+
+The Playwright docs show `retries: process.env.CI ? 2 : 0`, so the config reads environment variables. <Cite n={5} /> A project can set its own `baseURL` and `retries`, for example `staging` with 2 retries. <Cite n={7} /> Run one project with `--project`. <Cite n={7} />
+
+### Saved sign-in per role
+
+Tests can load an existing authenticated state, so they do not sign in each time. <Cite n={8} /> The docs recommend a `playwright/.auth` directory in `.gitignore`. <Cite n={8} /> The state file may hold sensitive cookies and headers, so do not commit it. <Cite n={8} />
+
+- A **setup project** (`testMatch: /.*\.setup\.ts/`) signs in and calls `storageState({ path })`. <Cite n={8} />
+- The test projects list it in `dependencies`, so it always runs first. <Cite n={8} />
+- For more than one role, sign in once per role in the setup project. Then set `test.use({ storageState: 'playwright/.auth/admin.json' })` per file or group. <Cite n={8} />
+- If a dependency fails, the tests that rely on it do not run. <Cite n={7} />
+
+<Callout type="note" title="Where these facts come from">
+
+The dMoney facts come from the files of the public practice repository at commit `51db34a`. They have no cites. In `dmoney-web-react/playwright.config.ts`, the projects `admin-setup` and `agent-setup` sign in, and the projects `admin` and `agent` depend on them and load the saved session. `baseURL` comes from `process.env.BASE_URL`, with `http://localhost:3000` as the fallback. The `.gitignore` lists `/e2e/*_auth.json`.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Runner settings sit at the top. <Cite n={5} /> Browser settings sit in `use`. <Cite n={6} />
+
+- `retries` is how many times a failed test may run again. `reporter` picks the report. <Cite n={5} />
+- `baseURL` lets a test open a path, like `/settings`. <Cite n={6} />
+- `trace`, `screenshot`, and `video` record what happened. They are off by default. <Cite n={6} />
+- The config can read environment variables, such as `process.env.CI`. <Cite n={5} />
+- A `staging` project can have its own `baseURL` and retries. <Cite n={7} />
+
+Tests can load a saved sign-in, so they do not sign in each time. A **setup project** signs in once and saves the session to a file. <Cite n={8} /> The other projects list it as a dependency, so it runs first. For two roles, save one file per role. <Cite n={8} /> Keep these files out of Git: they may hold sensitive cookies and headers. <Cite n={8} />
+
+In the dMoney repo, `admin-setup` and `agent-setup` save one session for each role. The repo ignores `/e2e/*_auth.json` in Git.
+
+</Layman>
+<Bangla>
+
+Test runner-এর option থাকে উপরের স্তরে। <Cite n={5} /> Browser আর browser context-এর option থাকে `use` অংশে। <Cite n={6} />
+
+- `retries` ঠিক করে একটি test সর্বোচ্চ কতবার আবার চলবে; `reporter` ঠিক করে কোন report হবে; `test.only` থাকলে `forbidOnly` error দিয়ে বেরিয়ে যায়, CI-তে এটি কাজের। <Cite n={5} />
+- `baseURL` থাকলে test শুধু path দিয়ে page খুলতে পারে, যেমন `page.goto('/settings')`। <Cite n={6} />
+- `trace`, `screenshot` আর `video` default-এ বন্ধ থাকে। <Cite n={6} />
+- Config environment variable পড়তে পারে, যেমন `process.env.CI`। <Cite n={5} /> একটি project-এর নিজস্ব `baseURL` আর `retries` থাকতে পারে, আর `--project` দিয়ে একটি project চালানো যায়। <Cite n={7} />
+
+Test-গুলো আগে থেকে save করা login state নিতে পারে, তাই প্রতিবার login করতে হয় না। একটি **setup project** একবার login করে session একটি file-এ save করে, আর বাকি project-গুলো `dependencies`-এ সেটি রাখে। <Cite n={8} /> একাধিক role হলে প্রতিটি role-এর জন্য আলাদা file রাখুন। <Cite n={8} /> এই file-এ sensitive cookie থাকতে পারে, তাই `playwright/.auth` folder `.gitignore`-এ রাখুন এবং commit করবেন না। <Cite n={8} /> Dependency fail করলে তার ওপর নির্ভর করা test চলে না। <Cite n={7} />
+
+dMoney repo-তে `admin-setup` আর `agent-setup` প্রতিটি role-এর session save করে, আর `.gitignore`-এ `/e2e/*_auth.json` আছে।
+
+</Bangla>
+</Voices>
+
+## Playwright MCP in the workflow
+
+<Voices>
+<Technical>
+
+Playwright MCP lets an LLM work with web pages through structured accessibility snapshots, with no vision model. <Cite n={9} /> [Browser Testing with Playwright](/automate/playwright/) covers its options. Here is its place in a framework.
+
+**Add it to Claude Code.** The README gives this command: <Cite n={10} />
+
+```bash
+claude mcp add playwright npx @playwright/mcp@latest
+```
+
+By default the command writes to local scope. Add `--scope project` to store the server in `.mcp.json` and share it with the team. <Cite n={11} /> Claude Code asks for approval in interactive sessions before it uses a project-scoped server from `.mcp.json`. <Cite n={11} />
+
+**Sign in with the saved state.** `--storage-state <path>` loads a storage state file into an isolated session. <Cite n={10} /> The README links this storage state to the Playwright authentication guide. <Cite n={10} /> The tutorial uses it to give the MCP browser the same role files as the tests.
+
+**Use it for:**
+
+- **Explore** a flow before you automate it, step by step.
+- **Find locators.** A snapshot shows the page elements, their roles, and their text. <Cite n={9} /> The tutorial turns those roles and names into `getByRole` and `getByLabel` locators.
+- **Check a flow** by hand after a fix, before you change a spec.
+
+<Callout type="danger" title="Not a security boundary">
+
+The README states that Playwright MCP is not a security boundary. <Cite n={10} /> `--allowed-origins` and `--blocked-origins` do not serve as a security boundary and do not affect redirects. <Cite n={10} /> Servers that fetch external content can expose you to prompt injection. <Cite n={11} /> Use a test environment and test accounts only.
+
+</Callout>
+
+<Callout type="tip" title="The tutorial's advice">
+
+Use MCP to learn the page. Keep the result in code: a page object and a spec that CI can run again. [Playwright Automation with Claude](/agentic-qa/playwright-with-claude/) shows the writing loop.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+Playwright MCP lets an LLM use a web page through a structured map of the page, called an accessibility snapshot. It needs no vision model. <Cite n={9} />
+
+Add it with the README command: `claude mcp add playwright npx @playwright/mcp@latest`. <Cite n={10} /> Add `--scope project` to share it with your team in `.mcp.json`. In interactive sessions, Claude Code asks you before it uses a project-scoped server from that file. <Cite n={11} /> `--storage-state` lets the MCP browser start signed in with a saved session file. <Cite n={10} />
+
+Use it to explore a flow and to check a flow by hand. It also helps you find locator names: the snapshot shows each element with its role and text. <Cite n={9} />
+
+Playwright MCP is not a security boundary, and its origin lists are not one either. <Cite n={10} /> A server that reads outside content can expose you to prompt injection. <Cite n={11} /> Use test accounts only.
+
+The tutorial suggests: learn the page with MCP, then keep the result as code that CI can run.
+
+</Layman>
+<Bangla>
+
+Playwright MCP একটি LLM-কে structured accessibility snapshot দিয়ে web page-এ কাজ করতে দেয়; কোনো vision model লাগে না। <Cite n={9} />
+
+README-র command দিয়ে যোগ করুন: `claude mcp add playwright npx @playwright/mcp@latest`। <Cite n={10} /> Default-এ এটি local scope-এ যায়; team-এর সাথে ভাগ করতে `--scope project` দিন, তাহলে server `.mcp.json`-এ থাকবে। Interactive session-এ `.mcp.json`-এর server ব্যবহারের আগে Claude Code approval চায়। <Cite n={11} /> `--storage-state <path>` দিয়ে একটি saved storage state file load করা যায়। <Cite n={10} /> Tutorial এতে test-এর একই role file ব্যবহার করে, যাতে MCP browser signed in অবস্থায় শুরু হয়।
+
+এটি ব্যবহার করুন flow explore করতে আর fix-এর পরে হাতে flow যাচাই করতে। Locator খুঁজতেও এটি কাজে লাগে: snapshot-এ প্রতিটি element-এর role আর text থাকে। <Cite n={9} />
+
+মনে রাখবেন, Playwright MCP কোনো security boundary নয়, আর `--allowed-origins` বা `--blocked-origins`-ও নয়। <Cite n={10} /> External content আনে এমন server আপনাকে prompt injection-এর ঝুঁকিতে ফেলতে পারে। <Cite n={11} /> শুধু test environment আর test account ব্যবহার করুন।
+
+Tutorial-এর পরামর্শ: MCP দিয়ে page চিনুন, তারপর ফলাফল code হিসেবে রাখুন, যা CI আবার চালাতে পারে।
+
+</Bangla>
+</Voices>
+
+## From approved test cases to a regression suite
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="The tutorial's advice: the entry gate">
+
+Automate only test cases whose status is **Approved** by a human reviewer. A draft case can still change, and code built on it turns a guess into a permanent check. Give Claude the approved case, with its id, and nothing else as the oracle.
+
+</Callout>
+
+### Traceability with tags and annotations
+
+ISTQB defines traceability as "the ability to establish explicit relationships between related work products". <Cite n={12} /> In Playwright, a test can carry tags and annotations that the report shows. <Cite n={13} />
+
+- A **tag** must start with `@`. Add it in the details object (`tag: '@smoke'`) or in the title. <Cite n={13} />
+- An **annotation** has a `type` and a `description`. The HTML reporter shows all annotations except types that start with `_`. <Cite n={13} />
+
+Example: link a test to its test case and its story.
+
+```ts
+test('agent cashes in 100 to a customer', {
+  tag: ['@regression', '@TC-CASHIN-001'],
+  annotation: [
+    { type: 'testcase', description: 'TC-CASHIN-001' },
+    { type: 'story', description: 'https://<your-site>.atlassian.net/browse/DM-42' },
+  ],
+}, async ({ cashInPage }) => { /* ... */ });
+```
+
+### Running the regression suite
+
+Regression testing detects "whether defects have been introduced or uncovered in unchanged areas". <Cite n={14} />
+
+| Need | Command or setting |
+|---|---|
+| Run one tag | `npx playwright test --grep @smoke` <Cite n={13} /> |
+| Skip a tag | `npx playwright test --grep-invert @slow` <Cite n={13} /> |
+| One role or environment | `npx playwright test --project=agent` <Cite n={7} /> |
+| Limit workers | `npx playwright test --workers 4` <Cite n={15} /> |
+| All tests in parallel | `fullyParallel: true` <Cite n={15} /> |
+
+By default, test files run in parallel, and tests in one file run in order. <Cite n={15} /> The CI guide recommends one worker on CI for stability, and sharding for wider runs. <Cite n={16} /> Its GitHub Actions example runs `npx playwright test` and uploads `playwright-report/` as an artifact. <Cite n={16} /> [GitHub Actions](/automate/github-actions/) shows how Claude fits into that pipeline.
+
+</Technical>
+<Layman>
+
+The tutorial gives one entry rule: automate a test case only when a human has marked it **Approved**. A draft can still change.
+
+ISTQB defines traceability as the ability to set up clear links between related work products. <Cite n={12} /> In Playwright, you can put tags and annotations on a test. The report shows them. <Cite n={13} />
+
+- A **tag** is a short label that starts with `@`, like `@smoke`. <Cite n={13} />
+- An **annotation** is a note with a type and a description, like a test case id or a story link. <Cite n={13} />
+
+Regression testing checks whether defects were introduced or uncovered in unchanged areas. <Cite n={14} /> To run part of the suite:
+
+- `--grep @smoke` runs tests with that tag. `--grep-invert` skips them. <Cite n={13} />
+- `--project=agent` runs one project. <Cite n={7} />
+- `--workers` sets how many test processes run at the same time. <Cite n={15} />
+
+Files run in parallel by default. Tests in one file run in order. <Cite n={15} /> The CI guide suggests one worker on CI. Its GitHub Actions example saves `playwright-report/` as an artifact. <Cite n={16} />
+
+</Layman>
+<Bangla>
+
+Tutorial-এর একটি entry নিয়ম আছে: শুধু সেই test case automate করুন, যার status একজন মানুষ reviewer **Approved** করেছেন। Draft case এখনও বদলাতে পারে।
+
+ISTQB-এর সংজ্ঞায় traceability হলো সম্পর্কিত work product-এর মধ্যে স্পষ্ট সম্পর্ক তৈরি করার ক্ষমতা। <Cite n={12} /> Playwright-এ একটি test-এ tag আর annotation দেওয়া যায়, আর report-এ সেগুলো দেখা যায়। <Cite n={13} />
+
+- **Tag** অবশ্যই `@` দিয়ে শুরু হয়, যেমন `@smoke`। <Cite n={13} />
+- **Annotation**-এর একটি `type` আর একটি `description` থাকে, যেমন test case id বা story-র link। `_` দিয়ে শুরু হওয়া type HTML report দেখায় না। <Cite n={13} />
+
+Regression testing দেখে, যে অংশ বদলায়নি সেখানে নতুন defect এসেছে কি না। <Cite n={14} /> Suite-এর একটি অংশ চালাতে:
+
+- `--grep @smoke` ওই tag-এর test চালায়, `--grep-invert` সেগুলো বাদ দেয়। <Cite n={13} />
+- `--project=agent` একটি project চালায়। <Cite n={7} />
+- `--workers` ঠিক করে একসাথে কয়টি worker process চলবে; `fullyParallel: true` সব test parallel-এ চালায়। <Cite n={15} />
+
+Default-এ test file-গুলো parallel-এ চলে, কিন্তু একটি file-এর test ক্রমানুসারে চলে। <Cite n={15} /> CI guide stability-র জন্য CI-তে একটি worker রাখতে বলে, আর এর GitHub Actions উদাহরণ `playwright-report/` artifact হিসেবে upload করে। <Cite n={16} />
+
+</Bangla>
+</Voices>
+
+## Failure analysis: retries, traces, and reports
+
+<Voices>
+<Technical>
+
+### Retries and flaky tests
+
+By default, failing tests are not retried. <Cite n={17} /> With retries on, Playwright sorts each test into one of three groups: <Cite n={17} />
+
+- **passed**: passed on the first run.
+- **flaky**: failed on the first run, but passed when retried.
+- **failed**: failed on the first run and on all retries.
+
+When a test fails, Playwright discards the whole worker process and its browser, and starts a new one. <Cite n={17} /> A test that failed on the first run but passed when retried is reported as "flaky". <Cite n={17} />
+
+### Recording on failure
+
+| Option | Useful values |
+|---|---|
+| `trace` | `'on-first-retry'` records on the first retry only. `'retain-on-failure'` records every run and keeps a failed run. <Cite n={6} /> |
+| `screenshot` | `'only-on-failure'` <Cite n={6} /> |
+| `video` | The same modes as `trace` <Cite n={6} /> |
+
+Traces, screenshots, and videos go to the test output directory, typically `test-results`. <Cite n={6} />
+
+### The trace viewer
+
+Open a trace with `npx playwright show-trace path/to/trace.zip`. <Cite n={18} /> The viewer has these tabs:
+
+- **Actions**: the locator of each action, its time, and DOM snapshots before and after. <Cite n={18} />
+- **Errors**: the error message, with a red line on the timeline where it occurred. <Cite n={18} />
+- **Console** and **Network**: browser logs, and each request with its status, headers, and body. <Cite n={18} />
+
+### Reporters
+
+| Reporter | Output |
+|---|---|
+| `html` | A report in `playwright-report`; open it with `npx playwright show-report` <Cite n={19} /> |
+| `junit` | An XML file: `['junit', { outputFile: 'results.xml' }]` <Cite n={19} /> |
+| `json` | A JSON file: `['json', { outputFile: 'results.json' }]` <Cite n={19} /> |
+| `dot` | One character per passed test; the default on CI <Cite n={19} /> |
+
+You can use more than one reporter at the same time. <Cite n={19} /> The tutorial adds a JSON or JUnit reporter, so that a triage step can read the results from a file.
+
+</Technical>
+<Layman>
+
+By default, Playwright does not run a failed test again. <Cite n={17} /> With retries on, each test gets one of three results: <Cite n={17} />
+
+- **passed** on the first try,
+- **flaky**: failed first, then passed on a retry,
+- **failed** on every try.
+
+A failed test also gets a fresh browser for the next test. <Cite n={17} />
+
+Turn on recordings for failures. `trace: 'retain-on-failure'` keeps the trace of a failed run. `screenshot: 'only-on-failure'` saves a picture. Video has the same modes as trace. <Cite n={6} />
+
+Open a **trace** with `npx playwright show-trace`. It shows each action, the page before and after, the error, the browser console, and each network request. <Cite n={18} />
+
+Reporters write the results. `html` makes a web page report. `junit` makes an XML file. `json` makes a JSON file. You can use several at once. <Cite n={19} />
+
+</Layman>
+<Bangla>
+
+Default-এ Playwright fail করা test আবার চালায় না। <Cite n={17} /> Retry চালু থাকলে প্রতিটি test তিনটি দলের একটিতে পড়ে: **passed** (প্রথমবারেই pass), **flaky** (প্রথমবার fail, retry-তে pass), আর **failed** (প্রথমবার এবং সব retry-তে fail)। <Cite n={17} /> Test fail করলে Playwright পুরো worker process আর browser ফেলে দিয়ে নতুন একটি শুরু করে। <Cite n={17} />
+
+Failure-এর প্রমাণ রাখতে recording চালু করুন: `trace: 'retain-on-failure'` প্রতিটি run record করে আর fail করা run রেখে দেয়, `trace: 'on-first-retry'` শুধু প্রথম retry record করে, `screenshot: 'only-on-failure'` ছবি রাখে, আর `video`-র mode `trace`-এর মতোই। এগুলো সাধারণত `test-results` folder-এ যায়। <Cite n={6} />
+
+`npx playwright show-trace path/to/trace.zip` দিয়ে trace খুলুন। <Cite n={18} /> **Actions** tab-এ প্রতিটি action-এর locator, সময় আর আগে-পরের DOM snapshot থাকে; **Errors** tab-এ error message আর timeline-এ লাল দাগ; **Console** আর **Network** tab-এ browser log আর প্রতিটি request-এর status, header আর body। <Cite n={18} />
+
+Report-এর জন্য `html` (`npx playwright show-report` দিয়ে খোলে), `junit` (XML file), `json` (JSON file) আর `dot` (CI-তে default) আছে। একসাথে একাধিক reporter ব্যবহার করা যায়। <Cite n={19} />
+
+</Bangla>
+</Voices>
+
+## Application defect or automation defect
+
+<Voices>
+<Technical>
+
+A red test is not yet a bug. ISTQB names the two ways a result can mislead:
+
+- A **false-positive result** reports a defect "although no such defect actually exists in the test object". <Cite n={20} /> In the tutorial's examples, a broken locator or bad test data gives one.
+- A **false-negative result** "fails to identify a defect that is actually present". <Cite n={21} /> In the tutorial's examples, a weak assertion, or a healed test that now checks less, gives one.
+
+The trace holds the signals. Errors shows where the test failed; Network shows each request with its status code and response body; Console shows browser logs. <Cite n={18} />
+
+<Callout type="tip" title="The tutorial's decision table">
+
+| Signal in the trace | Likely cause | Next step |
+|---|---|---|
+| Locator not found; the page in the snapshot looks correct; the element has a new name | Automation defect | Fix the page object |
+| The API returns 4xx or 5xx, or the body contains an error | Application defect | Draft a bug |
+| The page shows a wrong value; the request was correct | Application defect | Draft a bug |
+| Fails, then passes on retry (flaky) | Timing, data, or shared state | Find the cause; do not just add retries |
+| Precondition failed (balance, missing user) | Test data or environment | Fix data; no bug |
+| The test passes, but the approved case expects a different result | Possible false negative | Strengthen the assertion |
+
+</Callout>
+
+### The healer needs review
+
+The Playwright **healer** agent replays the failing steps, inspects the current UI for equivalent elements, suggests a patch, and re-runs the test until it passes or guardrails stop the loop. <Cite n={22} /> Its output is a passing test, or a skipped test if it believes the functionality is broken. <Cite n={22} /> A patch can be a locator update, a wait adjustment, or a data fix. <Cite n={22} />
+
+<Callout type="warning" title="The tutorial's advice: review every heal">
+
+A patched locator can hide a changed requirement, and a skipped test can hide a real bug. Read the diff against the approved test case before you merge it. [Test Execution & Bug Investigation](/agentic-qa/test-execution/) covers manual investigation.
+
+</Callout>
+
+</Technical>
+<Layman>
+
+A failed test is not always a bug. ISTQB names two kinds of wrong result:
+
+- A **false-positive result** reports a defect that does not exist. <Cite n={20} /> In the tutorial's example, a broken locator causes one.
+- A **false-negative result** misses a defect that is really there. <Cite n={21} /> In the tutorial's example, a weak check causes one.
+
+Look in the trace. The Errors tab shows where it failed. The Network tab shows each request and its status code. The Console tab shows browser logs. <Cite n={18} />
+
+The tutorial gives a simple rule. If the element only got a new name, fix the test. If the server returned an error, or the page shows a wrong value although the request was correct, draft a bug. If it passes on a retry, find the cause. If the test data was wrong, fix the data.
+
+The Playwright **healer** agent replays a failed test, looks for the same element in the new screen, and suggests a patch. <Cite n={22} /> It returns a passing test, or skips the test if it thinks the feature is broken. <Cite n={22} />
+
+The tutorial's advice: read every healer change. A new locator can hide a changed requirement. A skipped test can hide a real bug.
+
+</Layman>
+<Bangla>
+
+লাল test মানেই bug নয়। ISTQB দুই ধরনের ভুল ফলাফলের নাম দেয়:
+
+- **False-positive result** এমন defect report করে, যা test object-এ আসলে নেই। <Cite n={20} /> Tutorial-এর উদাহরণে, ভাঙা locator বা ভুল test data থেকে এটি হয়।
+- **False-negative result** test object-এ আসলেই থাকা defect ধরতে পারে না। <Cite n={21} /> Tutorial-এর উদাহরণে, দুর্বল assertion থেকে এটি হয়।
+
+সংকেত থাকে trace-এ: Errors tab দেখায় test কোথায় fail করেছে, Network tab প্রতিটি request-এর status code আর response body দেখায়, আর Console tab browser log দেখায়। <Cite n={18} />
+
+Tutorial-এর decision table সংক্ষেপে: element-এর শুধু নাম বদলালে page object ঠিক করুন; API 4xx বা 5xx দিলে, বা request ঠিক থাকা সত্ত্বেও page ভুল value দেখালে bug-এর draft লিখুন; retry-তে pass করলে কারণ খুঁজুন, শুধু retry বাড়াবেন না; precondition ভুল হলে data ঠিক করুন।
+
+Playwright-এর **healer** agent fail করা step আবার চালায়, নতুন UI-তে সমতুল্য element খোঁজে, একটি patch প্রস্তাব করে, আর guardrail না থামানো পর্যন্ত test আবার চালায়। <Cite n={22} /> এটি একটি passing test দেয়, অথবা functionality ভাঙা মনে করলে test skip করে। <Cite n={22} />
+
+Tutorial-এর পরামর্শ: merge করার আগে approved test case-এর সাথে মিলিয়ে healer-এর প্রতিটি diff পড়ুন।
+
+</Bangla>
+</Voices>
+
+## Evidence and bug filing through an approval step
+
+<Voices>
+<Technical>
+
+### Collect the evidence
+
+The ISTQB syllabus lists what a defect report typically includes. <Cite n={23} /> Among them:
+
+- a unique identifier and a short title,
+- the test object and the test environment,
+- the context, such as the test case being run,
+- steps to reproduce, with "relevant test logs, database dumps, screenshots, or recordings",
+- expected results and actual results, severity, and priority,
+- references, for example to the test case. <Cite n={23} />
+
+From a Playwright run, attach the trace, the screenshot, the failing request from Network, and the test case id from the annotation.
+
+### Make writes ask first
+
+Claude Code has three kinds of permission rules: allow, ask, and deny. **Ask** rules prompt for confirmation before the tool runs. <Cite n={24} /> Rules are evaluated in the order deny, then ask, then allow, so a matching ask rule prompts even when a more specific allow rule also matches. <Cite n={24} /> `mcp__<server>__*` matches every tool of one MCP server. <Cite n={24} />
+
+Example `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(gh issue list *)", "Bash(npx playwright test *)"],
+    "ask": ["Bash(gh issue create *)", "mcp__atlassian__*"]
+  }
+}
+```
+
+The `atlassian` name assumes that you added the Atlassian server under that name. The README shows `claude mcp add --transport http atlassian https://mcp.atlassian.com/v2/mcp`. <Cite n={25} /> The Atlassian server only reaches data that the user already has permission to view. <Cite n={25} />
+
+### Avoid duplicates, then file
+
+Search first: `gh issue list --search "<error text>" --state all`. <Cite n={26} /> If no issue matches, draft the bug for review.
+
+<Callout type="warning" title="This command writes to GitHub">
+
+Run it only after a human has read the draft and approved it.
+
+</Callout>
+
+```bash
+gh issue create --title "Cash in shows success but balance does not change" --body-file bug.md --label bug
+```
+
+`--body-file` reads the body from a file, and `--label` adds labels by name. <Cite n={27} />
+
+</Technical>
+<Layman>
+
+The ISTQB syllabus lists what a defect report usually holds. <Cite n={23} /> It has an id and a short title, the test environment, the test case that was running, and the steps. It has logs, screenshots, or recordings, the expected and actual results, and the severity and priority. <Cite n={23} />
+
+From Playwright, add the trace, the screenshot, the failed request, and the test case id.
+
+Claude Code has three kinds of permission rules: allow, ask, and deny. An **ask** rule makes Claude Code ask you before the tool runs. <Cite n={24} /> Deny is checked first, then ask, then allow. So an ask rule still asks, even if an allow rule also matches. <Cite n={24} /> Put `Bash(gh issue create *)` and the Atlassian MCP tools under `ask`. `mcp__atlassian__*` covers every tool of a server named `atlassian`. <Cite n={24} />
+
+Search for an old issue first with `gh issue list --search`. <Cite n={26} /> If none matches, write a draft. A person reads it and approves it. Only then run `gh issue create` with `--body-file` and `--label`. <Cite n={27} />
+
+</Layman>
+<Bangla>
+
+ISTQB syllabus বলে, একটি defect report-এ সাধারণত থাকে: unique identifier আর ছোট title, test object আর test environment, কোন test case চলছিল সেই context, reproduce করার step সহ test log, database dump, screenshot বা recording, expected আর actual result, severity, priority আর test case-এর reference। <Cite n={23} />
+
+Playwright run থেকে trace, screenshot, Network-এর fail করা request আর annotation-এর test case id যোগ করুন।
+
+Claude Code-এ তিন ধরনের permission rule আছে: allow, ask আর deny। **Ask** rule tool চালানোর আগে আপনার confirmation চায়। <Cite n={24} /> Rule যাচাইয়ের ক্রম হলো deny, তারপর ask, তারপর allow; তাই আরও নির্দিষ্ট allow rule মিললেও ask rule প্রশ্ন করবেই। <Cite n={24} /> `mcp__<server>__*` একটি MCP server-এর সব tool ধরে। <Cite n={24} /> Atlassian server শুধু সেই data দেখে, যা দেখার permission user-এর আগে থেকেই আছে। <Cite n={25} />
+
+Duplicate এড়াতে আগে `gh issue list --search "<error text>" --state all` চালান। <Cite n={26} /> মিল না পেলে bug-এর draft লিখুন। একজন মানুষ draft পড়ে approve করার পরেই `gh issue create` চালান; `--body-file` file থেকে body পড়ে আর `--label` নাম দিয়ে label যোগ করে। <Cite n={27} />
+
+</Bangla>
+</Voices>
+
+## The end-to-end agentic workflow
+
+<Voices>
+<Technical>
+
+<Callout type="note" title="The tutorial's synthesis">
+
+This table joins the stages of this group into one loop. The stage order, the agent roles, and the approval points are the tutorial's own design, not a documented standard.
+
+</Callout>
+
+| # | Stage | Group page | Who does it | Human approves |
+|---|---|---|---|---|
+| 1 | Requirement | [Project setup](/agentic-qa/project-setup/) | Claude reads the ticket through MCP | |
+| 2 | Analysis | [Requirements](/agentic-qa/requirements/) | Analysis agent drafts acceptance criteria | Yes: the criteria |
+| 3 | Design | [Blast radius](/agentic-qa/blast-radius/) | Design agent drafts test cases and impact | Yes: case status Approved |
+| 4 | Exploration | [Test charters](/agentic-qa/test-charters/) | Claude explores with Playwright MCP | Yes: the session notes |
+| 5 | Execution | [Test execution](/agentic-qa/test-execution/) | Claude runs the approved cases | |
+| 6 | Automation | [Playwright with Claude](/agentic-qa/playwright-with-claude/) | Claude writes page objects and specs | Yes: the pull request |
+| 7 | Regression | This page | CI runs tagged suites | |
+| 8 | Triage | This page | Triage agent reads traces and reports | Yes: the verdict |
+| 9 | Bug | This page | Claude drafts the report | Yes: before `gh issue create` or Jira |
+| 10 | Retest | This page | Claude re-runs the linked tests | Yes: closing the bug |
+
+Stage 10 is confirmation testing: ISTQB defines it as testing "performed after fixing a defect to confirm that a failure caused by that defect does not reoccur". <Cite n={28} /> Run the test with the bug's tag, then the whole regression tag, because regression testing looks at the unchanged areas. <Cite n={14} />
+
+[A Multi-Agent QA System](/agentic-qa/multi-agent-qa/) shows how to split these stages across subagents. [Headless & CI](/automate/headless/) shows how to run the triage stage in a pipeline. [Load and Browser Automation](/case-study/automation/) shows the dMoney suite in practice.
+
+</Technical>
+<Layman>
+
+The tutorial joins all the pages of this group into one loop. This is the tutorial's own design.
+
+1. **Requirement.** Claude reads the ticket.
+2. **Analysis.** An agent drafts acceptance criteria. A human approves them.
+3. **Design.** An agent drafts test cases. A human marks them Approved.
+4. **Exploration.** Claude explores with Playwright MCP. A human approves the session notes.
+5. **Execution.** Claude runs the approved cases.
+6. **Automation.** Claude writes page objects and specs. A human approves the pull request.
+7. **Regression.** CI runs the tagged suites.
+8. **Triage.** An agent reads traces and reports. A human approves the verdict.
+9. **Bug.** Claude drafts the report. A human approves it before it is filed.
+10. **Retest.** Claude runs the linked tests again. A human approves closing the bug.
+
+Step 10 is confirmation testing: a test after a fix that checks the failure does not come back. <Cite n={28} /> Then run the full regression tag too, because regression testing checks the parts that did not change. <Cite n={14} />
+
+</Layman>
+<Bangla>
+
+এই group-এর সব ধাপ tutorial একটি loop-এ জুড়েছে। ধাপের ক্রম, agent-এর ভূমিকা আর approval-এর জায়গাগুলো tutorial-এর নিজস্ব design।
+
+1. **Requirement:** Claude MCP দিয়ে ticket পড়ে।
+2. **Analysis:** একটি agent acceptance criteria-র draft লেখে; একজন মানুষ approve করেন।
+3. **Design:** একটি agent test case লেখে; মানুষ status **Approved** করেন।
+4. **Exploration:** Claude Playwright MCP দিয়ে explore করে; মানুষ session note approve করেন।
+5. **Execution:** Claude approved case চালায়।
+6. **Automation:** Claude page object আর spec লেখে; মানুষ pull request approve করেন।
+7. **Regression:** CI tag দেওয়া suite চালায়।
+8. **Triage:** একটি agent trace আর report পড়ে; মানুষ সিদ্ধান্ত approve করেন।
+9. **Bug:** Claude report-এর draft লেখে; `gh issue create` বা Jira-র আগে মানুষ approve করেন।
+10. **Retest:** Claude linked test আবার চালায়; মানুষ bug বন্ধ করা approve করেন।
+
+ধাপ ১০ হলো confirmation testing: defect ঠিক করার পরে যাচাই করা যে সেই failure আর ফিরে আসে না। <Cite n={28} /> তারপর পুরো regression tag চালান, কারণ regression testing অপরিবর্তিত অংশে নতুন defect খোঁজে। <Cite n={14} />
+
+</Bangla>
+</Voices>
+
+## Practice
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="The tutorial's exercise">
+
+This exercise is the tutorial's own. Use the dMoney practice app ([Codebase Tour](/case-study/codebase-tour/)) on your own machine, or your own project in a test environment. Never point it at production.
+
+</Callout>
+
+1. **Read the existing framework.** Prompt: `Read dmoney-web-react/playwright.config.ts and e2e/. List the projects, the page objects, and how each role signs in. Do not change files.` Expect the setup projects and role projects from the dMoney callout above.
+2. **Add a customer role.** Prompt: `Add a customer-setup project and a customer project, like the agent ones. Save the session under e2e/, and make sure .gitignore covers it.` A setup project signs in once and saves the state; test projects depend on it. <Cite n={8} />
+3. **Write page objects.** Prompt: `Use Playwright MCP to open /customer/send-money as the customer. List the fields with role and name. Then write a SendMoneyPage page object with getByRole and getByLabel locators.` <Cite n={4} />
+4. **Write two approved cases.** Write the login case and the send money case yourself, with ids. Then prompt: `Write specs for TC-LOGIN-001 and TC-SEND-001. Tag them @regression and the case id, and add a testcase annotation.` <Cite n={13} />
+5. **Run headless with tags.** `npx playwright test --grep @regression` <Cite n={13} /> Then open the report with `npx playwright show-report`. <Cite n={19} />
+6. **Break a locator on purpose.** Change one label in `SendMoneyPage` to a wrong name. Run again with `trace: 'retain-on-failure'`. <Cite n={6} /> Open the trace with `npx playwright show-trace`. <Cite n={18} /> Expect a locator error, and a correct page in the snapshot.
+7. **Inject a product failure.** Restore the locator. In your local copy of the API, make the send money endpoint return an error for one amount. Run again. Expect the Network tab to show the failing response. <Cite n={18} />
+8. **Triage both.** Prompt: `Read both traces. For each failure, say application defect or automation defect, with the trace signal that proves it. Draft a bug only for the application defect. Do not file it.`
+
+**Check the result.** The locator failure is an automation defect with no bug draft. The API failure has a draft with steps, expected and actual results, the trace, and the test case id. Revert the API change when you finish.
+
+</Technical>
+<Layman>
+
+This is the tutorial's own exercise. Use the dMoney practice app on your machine, or your own test project. Never use production.
+
+1. Ask Claude to read the config and the `e2e/` folder and list the projects. It should change nothing.
+2. Add a customer role. A setup project signs in once and saves the session. <Cite n={8} />
+3. Use Playwright MCP to open the send money page. Write a page object with role and label locators. <Cite n={4} />
+4. Write the login case and the send money case yourself, with ids. Ask Claude for specs with `@regression` and the case id as tags. <Cite n={13} />
+5. Run `npx playwright test --grep @regression`. <Cite n={13} /> Open the report with `npx playwright show-report`. <Cite n={19} />
+6. Break one locator on purpose. Keep traces for failures, and open the trace. <Cite n={6} /> <Cite n={18} /> You should see a locator error on a correct page.
+7. Fix the locator. Make your local API return an error for one amount. The Network tab should show the error. <Cite n={18} />
+8. Ask Claude to sort each failure: product bug or test bug. It drafts a bug only for the product bug, and files nothing.
+
+At the end, undo your API change.
+
+</Layman>
+<Bangla>
+
+এই exercise tutorial-এর নিজের। আপনার machine-এ dMoney practice app, অথবা test environment-এ আপনার নিজের project ব্যবহার করুন। কখনো production-এ চালাবেন না।
+
+1. Claude-কে config আর `e2e/` folder পড়ে project, page object আর প্রতিটি role-এর login পদ্ধতির তালিকা দিতে বলুন; কোনো file বদলাবে না।
+2. একটি customer role যোগ করুন। Setup project একবার login করে session save করে, আর test project তার ওপর নির্ভর করে। <Cite n={8} />
+3. Playwright MCP দিয়ে customer হিসেবে send money page খুলুন, তারপর `getByRole` আর `getByLabel` locator দিয়ে একটি page object লিখুন। <Cite n={4} />
+4. Login আর send money-র দুটি test case নিজে id সহ লিখুন। তারপর Claude-কে `@regression` আর case id tag দিয়ে spec লিখতে বলুন। <Cite n={13} />
+5. `npx playwright test --grep @regression` চালান <Cite n={13} />, তারপর `npx playwright show-report` দিয়ে report খুলুন। <Cite n={19} />
+6. ইচ্ছা করে একটি locator ভাঙুন, `trace: 'retain-on-failure'` দিয়ে চালান আর trace খুলুন। <Cite n={6} /> <Cite n={18} /> আপনি সঠিক page-এ একটি locator error দেখবেন।
+7. Locator ঠিক করুন। নিজের local API-তে একটি amount-এর জন্য error ফেরত দিন। Network tab-এ সেই error দেখা যাবে। <Cite n={18} />
+8. Claude-কে দুটি failure ভাগ করতে বলুন: application defect না automation defect। শুধু application defect-এর জন্য draft হবে, কিছুই file হবে না।
+
+শেষে API-র পরিবর্তন ফিরিয়ে নিন।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+1. **Committing the saved sign-in.** The state file may hold sensitive cookies and headers. Fix: add `playwright/.auth` to `.gitignore`. <Cite n={8} />
+2. **Hiding flaky tests with retries.** A test that passes on retry is reported as flaky, not fixed. <Cite n={17} /> Fix (the tutorial's advice): treat each flaky test as a ticket and find its cause.
+3. **Assertions inside page objects.** Fix (the tutorial's advice): page objects hold locators and actions; specs hold the checks against the approved case.
+4. **CSS or XPath selectors that can break when the DOM changes.** Fix: prefer user-facing attributes, such as `getByRole`. <Cite n={4} />
+5. **Merging a healer patch without review.** The healer can patch a locator, a wait, or data, or skip a test it believes is broken. <Cite n={22} /> Fix (the tutorial's advice): compare each heal with the approved case.
+6. **Letting Claude file bugs without asking.** Fix: put `gh issue create` and the Jira tools under `ask` rules. <Cite n={24} />
+7. **Trusting Playwright MCP origin lists for safety.** They are not a security boundary. <Cite n={10} /> Fix: use a test environment and test accounts.
+
+</Technical>
+<Layman>
+
+1. **Saving the login file in Git.** It may hold sensitive cookies and headers. Add `playwright/.auth` to `.gitignore`. <Cite n={8} />
+2. **Using retries to hide flaky tests.** A test that passes on a retry is still reported as flaky. <Cite n={17} /> The tutorial says: find the cause.
+3. **Checks inside page objects.** The tutorial says: keep the checks in the specs.
+4. **Fragile selectors.** Use what the user sees, like a role and a name. <Cite n={4} />
+5. **Merging healer changes without reading them.** The healer can change a locator, a wait, or data, or skip a test. <Cite n={22} /> The tutorial says: compare each change with the approved case.
+6. **Letting Claude file bugs alone.** Use `ask` rules for `gh issue create` and the Jira tools. <Cite n={24} />
+7. **Thinking origin lists keep you safe.** They are not a security boundary. <Cite n={10} /> Use test accounts.
+
+</Layman>
+<Bangla>
+
+1. **Saved login file Git-এ commit করা।** এতে sensitive cookie থাকতে পারে; `playwright/.auth` `.gitignore`-এ রাখুন। <Cite n={8} />
+2. **Retry দিয়ে flaky test লুকানো।** Retry-তে pass করা test report-এ flaky হিসেবেই থাকে। <Cite n={17} /> Tutorial-এর পরামর্শ: কারণ খুঁজুন।
+3. **Page object-এর ভেতরে assertion রাখা।** Tutorial-এর পরামর্শ: assertion রাখুন spec-এ।
+4. **CSS বা XPath selector, যা DOM বদলালে ভাঙতে পারে।** User যা দেখে সেই attribute ব্যবহার করুন, যেমন `getByRole`। <Cite n={4} />
+5. **Review ছাড়া healer-এর patch merge করা।** Healer locator, wait বা data বদলাতে পারে, অথবা test skip করতে পারে। <Cite n={22} /> Tutorial-এর পরামর্শ: approved case-এর সাথে মিলিয়ে দেখুন।
+6. **Claude-কে না জিজ্ঞেস করে bug file করতে দেওয়া।** `gh issue create` আর Jira tool `ask` rule-এ রাখুন। <Cite n={24} />
+7. **Playwright MCP-র origin list-কে নিরাপত্তা ভাবা।** এগুলো security boundary নয়। <Cite n={10} /> Test account ব্যবহার করুন।
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Test automation framework | A set of test harnesses and test libraries for test automation (ISTQB) |
+| Page object | A class that represents a part of the web app and keeps its selectors in one place |
+| Fixture | A helper that a test asks for, created with `test.extend()`; it can build a page object |
+| Setup project | A project that signs in, saves the storage state, and runs first as a dependency |
+| Storage state | A saved file of the authenticated browser state that lets a test start signed in; it may hold sensitive cookies and headers |
+| Tag | A label that starts with `@`; `--grep` selects tests by tag |
+| Annotation | A type and a description on a test, for example a test case id |
+| Flaky test | A test that failed on the first run but passed when retried |
+| Trace | A recording of a run that the trace viewer opens, with actions, errors, console, and network |
+| False-positive result | A result that reports a defect that does not exist |
+| False-negative result | A result that misses a defect that is really present |
+| Confirmation testing | Testing after a fix to confirm that the failure does not come back |

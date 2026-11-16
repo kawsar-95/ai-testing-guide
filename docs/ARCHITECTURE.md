@@ -10,9 +10,9 @@ The site is a static export of a Next.js 16 App Router project. There is no serv
 flowchart LR
   nav["lib/nav.ts<br/>(tutorial groups and pages)"]
   mods["lib/linux, lib/fundamentals,<br/>lib/system-design, lib/architecture,<br/>lib/course, lib/k6,<br/>lib/ai-engineering, lib/harness,<br/>lib/ai-skills, lib/ai-concepts,<br/>lib/agent-memory, lib/ai-agents,<br/>lib/ai-ml-testing, lib/devops,<br/>lib/security<br/>(one ordered list for each module)"]
-  mdx["content/&lt;group&gt;/&lt;slug&gt;.mdx<br/>(301 pages)"]
+  mdx["content/&lt;group&gt;/&lt;slug&gt;.mdx<br/>(311 pages)"]
   build["next build<br/>(output: export)"]
-  out["out/<br/>320 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
+  out["out/<br/>330 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
   pages["GitHub Pages"]
 
   nav --> build
@@ -26,7 +26,7 @@ The ordered lists and the MDX files are the inputs. Everything else is code that
 
 ## Routes
 
-The site has 320 routes.
+The site has 330 routes.
 
 | Route | Source | Output |
 |---|---|---|
@@ -34,7 +34,7 @@ The site has 320 routes.
 | `/contents/` | `app/(site)/contents/page.tsx` → `ContentsPage` | All groups and modules as one ruled index of closed rows, with the progress percent of each module |
 | `/dashboard/` | `app/(site)/dashboard/page.tsx` → `DashboardPage` | The progress of the reader, and the author block |
 | `/interview/` | `app/(site)/interview/page.tsx` → `InterviewPage` | Three cards that link to the interview material. It has no MDX file. |
-| `/<group>/<slug>/` | `app/(site)/[group]/[page]/page.tsx` | The 24 tutorial pages |
+| `/<group>/<slug>/` | `app/(site)/[group]/[page]/page.tsx` | The 34 tutorial pages |
 | `/linux/`, `/linux/<stage>/` | `app/(site)/linux/` | The roadmap and the 12 stages (13 routes) |
 | `/fundamentals/`, `/fundamentals/<chapter>/` | `app/(site)/fundamentals/` | The home and the 11 chapters (12 routes) |
 | `/system-design/`, `/system-design/<slug>/` | `app/(site)/system-design/` | The home and the 15 case studies (16 routes) |
@@ -157,7 +157,7 @@ The "On this page" list and the search results link to heading ids. Those ids mu
 
 ## Page layout and navigation parts
 
-`ChapterLayout` (`components/content/`) has three columns for the 301 content pages.
+`ChapterLayout` (`components/content/`) has three columns for the 311 content pages.
 
 | Column | Shows | From |
 |---|---|---|
@@ -182,7 +182,7 @@ The whole layout is 1400 px wide at most. The page passes its route to `ChapterL
 
 ## Voices
 
-A `##` section can have three voices of its text: Technical, plain English (`Layman`), and Bangla. 289 pages have voices: every MDX page in `content/`. Every `##` section has them except `## Key words`. The Linux stage pages are command sheets, not MDX: the header button switches their English and Bangla glosses.
+A `##` section can have three voices of its text: Technical, plain English (`Layman`), and Bangla. 299 pages have voices: every MDX page in `content/`. Every `##` section has them except `## Key words`. The Linux stage pages are command sheets, not MDX: the header button switches their English and Bangla glosses.
 
 | Part | Where | Job |
 |---|---|---|
@@ -213,7 +213,7 @@ All progress is client-side. The shared code keeps its old `prep` names (`lib/pr
 
 `MetaLine` shows the reading time, sections, sources, and update date in one row, and `ChapterTools` (Bookmark and Mark as read) sits at the right end of that row. The "Suggest an edit" link is on the heading row of the Sources list. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
 
-The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 301`), the bookmarks, the topic progress of the twelve modules with a progress store (Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, and Security Testing), and a Continue reading block. The module rows count the same ids and read the same stores as the module home pages, so the numbers match. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
+The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 311`), the bookmarks, the topic progress of the twelve modules with a progress store (Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, and Security Testing), and a Continue reading block. The module rows count the same ids and read the same stores as the module home pages, so the numbers match. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
 
 ## Fundamentals version switch
 
@@ -252,7 +252,7 @@ The look follows the reference site [systemdesignbangla.com](https://www.systemd
 
 | Part | Behavior |
 |---|---|
-| Install | Caches all 320 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
+| Install | Caches all 330 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
 | Pages, RSC payloads, and the search index | Stale-while-revalidate. The cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. |
 | `/_next/static/` files | Cache first. Their file names have a content hash. |
 | Offline, page not cached | Shows the cached 404 page |
@@ -309,7 +309,7 @@ The Python checks are not part of the workflow, because they expect a build with
 | `check_routes.py out` | Build check | Every route of the route maps has a page |
 | `check_links.py out` | Build check | No broken internal links or assets |
 | `check_outline.py out` | Build check | Every "On this page" link has a target id |
-| `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 301 pages checked, 0 skipped`. |
+| `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 311 pages checked, 0 skipped`. |
 
 The route maps in `scripts/` list the routes that the build checks read: `route-map.json` (tutorial) and one file each for Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, DevOps & Cloud, Security Testing, contents, dashboard, and interview. `npm test` checks that each page is in its map.
 
@@ -335,6 +335,7 @@ The design documents in `docs/superpowers/` record how the site got here. The sp
 | Editorial redesign (custom shell) | [spec](superpowers/specs/2026-10-09-editorial-redesign-design.md) | [plan](superpowers/plans/2026-10-09-editorial-redesign.md) |
 | Content refresh (17 cited pages) | [spec](superpowers/specs/2026-10-10-content-refresh-design.md) | [plan](superpowers/plans/2026-10-10-content-refresh.md) |
 | Case Study group (parts 18–24) | [spec](superpowers/specs/2026-10-10-case-study-design.md) | [plan](superpowers/plans/2026-10-10-case-study.md) |
+| Agentic QA group (parts 25–34) | [spec](superpowers/specs/2026-11-15-agentic-qa-group-design.md) | none |
 | Interview Prep module (removed on 2026-10-20; the current `/interview/` page is a small new page, not this module) | [spec](superpowers/specs/2026-10-13-prep-module-design.md) | [plan](superpowers/plans/2026-10-13-prep-module.md) |
 | Linux module | [spec](superpowers/specs/2026-10-16-linux-module-design.md) | [plan](superpowers/plans/2026-10-16-linux-module.md) |
 | Linux module revamp (lessons, page voice, Continue) | [spec](superpowers/specs/2026-10-27-linux-revamp-design.md) | [plan](superpowers/plans/2026-10-27-linux-revamp.md) |
