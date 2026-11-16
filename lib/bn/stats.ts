@@ -29,4 +29,6 @@ export const MODULE_TAGLINES_BN: Record<ModuleId, string> = {
     "DevOps ও ক্লাউডের টুলগুলো সহজ ভাষায়: Git, CI/CD, Docker, Kubernetes, AWS, Terraform, Ansible, monitoring ও CNCF প্রজেক্ট, প্রতিটায় সোর্সসহ ব্যাখ্যা আর KodeKloud Shorts।",
   security:
     "টেস্টারদের জন্য সিকিউরিটি টেস্টিং: নিরাপদ ল্যাব, Nmap দিয়ে স্ক্যান ও সার্ভার হার্ডেনিং, ওয়েব, API ও ডেটাবেসের দুর্বলতা, AI-এর সাহায্য, CI/CD-তে স্ক্যান, সাইবার আইন আর একটা প্র্যাকটিস পেনিট্রেশন টেস্ট।",
+  sdet:
+    "টেস্টার থেকে full stack SDET হওয়ার ধাপে ধাপে পথ: ম্যানুয়াল ও API টেস্টিং, JavaScript, TypeScript, SQL, যে backend ও frontend আপনি টেস্ট করেন, সিস্টেম ডিজাইন, Linux, সিকিউরিটি, ক্লাউড, Playwright অটোমেশন, CI/CD ও ইন্টারভিউ।",
 };

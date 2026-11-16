@@ -1,0 +1,585 @@
+export const metadata = { title: 'Backend with Node.js and Express', description: 'A small REST API in Express: routes, middleware, JSON bodies, a login check, and error handling, with the tests a tester writes against it.' }
+export const page = {
+  updated: '2026-11-16',
+  sources: [
+    { title: 'Hello world example', publisher: 'Express (OpenJS Foundation)', url: 'https://expressjs.com/en/starter/hello-world.html', accessed: '2026-11-15' },
+    { title: 'Installing', publisher: 'Express (OpenJS Foundation)', url: 'https://expressjs.com/en/starter/installing.html', accessed: '2026-11-15' },
+    { title: 'Routing', publisher: 'Express (OpenJS Foundation)', url: 'https://expressjs.com/en/guide/routing.html', accessed: '2026-11-15' },
+    { title: 'Using middleware', publisher: 'Express (OpenJS Foundation)', url: 'https://expressjs.com/en/guide/using-middleware.html', accessed: '2026-11-15' },
+    { title: 'Express Object (5.x API)', publisher: 'Express (OpenJS Foundation)', url: 'https://expressjs.com/en/5x/api/express/', accessed: '2026-11-15' },
+    { title: 'Request Object (5.x API)', publisher: 'Express (OpenJS Foundation)', url: 'https://expressjs.com/en/5x/api/request/', accessed: '2026-11-15' },
+    { title: 'Response (5.x API)', publisher: 'Express (OpenJS Foundation)', url: 'https://expressjs.com/en/5x/api/response/', accessed: '2026-11-15' },
+    { title: 'Error Handling', publisher: 'Express (OpenJS Foundation)', url: 'https://expressjs.com/en/guide/error-handling.html', accessed: '2026-11-15' },
+    { title: 'Production Best Practices: Security', publisher: 'Express (OpenJS Foundation)', url: 'https://expressjs.com/en/advanced/best-practice-security.html', accessed: '2026-11-15' },
+    { title: 'Authorization header', publisher: 'MDN Web Docs (Mozilla)', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Authorization', accessed: '2026-11-15' },
+    { title: 'REST', publisher: 'MDN Web Docs (Mozilla), Glossary', url: 'https://developer.mozilla.org/en-US/docs/Glossary/REST', accessed: '2026-11-15' },
+    { title: 'HTTP response status codes', publisher: 'MDN Web Docs (Mozilla)', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status', accessed: '2026-11-15' },
+    { title: 'Net', publisher: 'Node.js (OpenJS Foundation)', url: 'https://nodejs.org/api/net.html', accessed: '2026-11-15' },
+    { title: 'Test runner', publisher: 'Node.js (OpenJS Foundation)', url: 'https://nodejs.org/api/test.html', accessed: '2026-11-15' },
+  ],
+}
+
+# Backend with Node.js and Express
+
+The API that a tester sends requests to is code on a server. When you have built a small one yourself, its status codes, its checks, and its error messages stop being a mystery. This page builds a small REST API in Express, then tests it the way an SDET would.
+
+<PageMeta />
+
+## What it is
+
+<Voices>
+<Technical>
+
+**Express** is a routing and middleware web framework <Cite n={4} />. An Express application is a series of middleware calls that run during the request-response cycle <Cite n={4} />. Express needs Node.js 18 or higher, and you install it with `npm install express` <Cite n={2} />.
+
+**Routing** is how the endpoints of an app respond to client requests <Cite n={3} />. You define routes with methods of the app that match the HTTP methods, such as `app.get()` and `app.post()` <Cite n={3} />. A route path, together with a request method, defines an endpoint where requests can be made <Cite n={3} />.
+
+**REST** is a set of architecture constraints for distributed systems <Cite n={11} />. Beginners can take a REST API to mean an HTTP service that standard web libraries and tools can call <Cite n={11} />.
+
+[API Testing with Postman](/sdet/api-testing-postman/) explains HTTP methods and status codes. This page is the other side: the server that sends them.
+
+</Technical>
+<Layman>
+
+**Express** is a web framework built around routes and middleware <Cite n={4} />. It needs Node.js 18 or newer, and you install it with `npm install express` <Cite n={2} />.
+
+**Routing** is how the endpoints of an app answer client requests <Cite n={3} />. You write routes with app methods named after the HTTP methods, like `app.get()` or `app.post()`, and a method plus a path makes one endpoint <Cite n={3} />.
+
+**REST** is a set of design rules for distributed systems <Cite n={11} />. As a beginner, you can think of a REST API as an HTTP service that normal web tools can call <Cite n={11} />.
+
+[API Testing with Postman](/sdet/api-testing-postman/) explains methods and status codes. This page shows the server that sends them.
+
+</Layman>
+<Bangla>
+
+**Express** হলো একটা routing আর middleware web framework <Cite n={4} />। একটা Express application আসলে কিছু middleware call-এর ধারা, যেগুলো request-response cycle-এর সময় চলে <Cite n={4} />। Express-এর জন্য Node.js 18 বা তার পরের version লাগে, আর install করা হয় `npm install express` দিয়ে <Cite n={2} />।
+
+**Routing** হলো একটা app-এর endpoint-গুলো client-এর request-এ কীভাবে উত্তর দেয় <Cite n={3} />। HTTP method-এর সাথে মেলে এমন app-এর method দিয়ে route লেখা হয়, যেমন `app.get()` আর `app.post()` <Cite n={3} />। একটা route path আর একটা request method মিলে একটা endpoint ঠিক করে, যেখানে request পাঠানো যায় <Cite n={3} />।
+
+**REST** হলো distributed system-এর জন্য কিছু architecture constraint-এর সমষ্টি <Cite n={11} />। নতুনরা REST API বলতে ধরে নিতে পারেন এমন একটা HTTP service, যেটা সাধারণ web library আর tool দিয়ে call করা যায় <Cite n={11} />।
+
+HTTP method আর status code [API Testing with Postman](/sdet/api-testing-postman/)-এ ব্যাখ্যা করা আছে। এই পেজ অন্য দিকটা দেখায়: যে server সেগুলো পাঠায়।
+
+</Bangla>
+</Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+- **Middleware.** A middleware function gets the request (`req`), the response (`res`), and `next`, the next middleware function <Cite n={4} />. It must end the request-response cycle or call `next()`; otherwise, the request is left hanging <Cite n={4} />.
+- **JSON bodies.** `express.json()` parses requests with JSON payloads <Cite n={5} />. It looks only at requests whose `Content-Type` header matches <Cite n={5} />. The parsed body is in `req.body`, which is `undefined` when no body parser ran <Cite n={6} />.
+- **Untrusted input.** Every property and value of `req.body` comes from the user, and must be validated before you trust it <Cite n={6} />.
+- **Route parameters.** A route parameter, such as `:id` in `/orders/:id`, captures a part of the URL into `req.params` <Cite n={3} />.
+- **Unknown paths.** The Hello World app of the Express guide answers every path other than `/` with `404 Not Found` <Cite n={1} />. The API of this page did the same for an unknown path in the lab.
+- **Answers.** `res.status()` sets the HTTP status <Cite n={7} />, and `res.json()` sends a value as a JSON response <Cite n={7} />.
+- **Login.** The `Authorization` request header carries the credentials that give access to protected resources <Cite n={10} />. `req.get()` reads a request header <Cite n={6} />.
+- **Errors.** Express catches an error that synchronous code throws <Cite n={8} />. Handlers that return a promise call `next(value)` when they reject or throw, and async functions always return a promise, so their errors reach Express with no extra work <Cite n={8} />. An error handler is middleware with four arguments: `(err, req, res, next)` <Cite n={8} />.
+
+</Technical>
+<Layman>
+
+- **Middleware.** A middleware function sees the request, the response, and `next` <Cite n={4} />. It must answer, or call `next()` to pass the request on. If it does neither, the request just hangs <Cite n={4} />.
+- **JSON bodies.** `express.json()` reads JSON bodies <Cite n={5} />, but only for requests whose `Content-Type` header matches <Cite n={5} />. The result is in `req.body` <Cite n={6} />.
+- **Never trust the body.** Everything in `req.body` comes from the user, so check it first <Cite n={6} />.
+- **Route parameters.** In `/orders/:id`, the `:id` part of the URL lands in `req.params` <Cite n={3} />.
+- **Unknown paths.** In the Express Hello World app, every path other than `/` gets `404 Not Found` <Cite n={1} />. This page's API did the same in the lab.
+- **Answers.** `res.status()` sets the status code <Cite n={7} />, and `res.json()` sends JSON <Cite n={7} />.
+- **Login.** The `Authorization` header carries the login details <Cite n={10} />. `req.get()` reads a header <Cite n={6} />.
+- **Errors.** Express catches errors in normal code <Cite n={8} />, and in async functions too <Cite n={8} />. An error handler takes four arguments: `(err, req, res, next)` <Cite n={8} />.
+
+</Layman>
+<Bangla>
+
+- **Middleware।** একটা middleware function request (`req`), response (`res`) আর পরের middleware function `next` পায় <Cite n={4} />। হয় এটাকে request-response cycle শেষ করতে হবে, নয়তো `next()` call করতে হবে; না হলে request ঝুলে থাকে <Cite n={4} />।
+- **JSON body।** `express.json()` JSON payload-সহ request parse করে <Cite n={5} />। এটা শুধু সেই request দেখে, যার `Content-Type` header মেলে <Cite n={5} />। Parse করা body থাকে `req.body`-তে, আর কোনো body parser না চললে এটা `undefined` <Cite n={6} />।
+- **অবিশ্বস্ত input।** `req.body`-এর প্রতিটা property আর value user-এর কাছ থেকে আসে, তাই বিশ্বাস করার আগে validate করতে হবে <Cite n={6} />।
+- **Route parameter।** `/orders/:id`-এর `:id`-এর মতো route parameter URL-এর একটা অংশ `req.params`-এ তুলে নেয় <Cite n={3} />।
+- **অজানা path।** Express-এর Hello World app `/` ছাড়া অন্য প্রতিটা path-এ `404 Not Found` দেয় <Cite n={1} />। Lab-এ এই পেজের API-ও অজানা path-এ তাই দিয়েছে।
+- **উত্তর।** `res.status()` HTTP status ঠিক করে <Cite n={7} />, আর `res.json()` একটা value JSON response হিসেবে পাঠায় <Cite n={7} />।
+- **Login।** `Authorization` request header সেই credential বহন করে, যেটা protected resource-এ access দেয় <Cite n={10} />। `req.get()` একটা request header পড়ে <Cite n={6} />।
+- **Error।** Synchronous কোড error throw করলে Express সেটা ধরে <Cite n={8} />। যে handler promise ফেরত দেয়, সেটা reject বা throw করলে নিজে থেকেই `next(value)` call করে, আর async function সবসময় promise ফেরত দেয়, তাই তাদের error বাড়তি কিছু ছাড়াই Express-এর কাছে পৌঁছায় <Cite n={8} />। Error handler হলো চারটা argument-এর middleware: `(err, req, res, next)` <Cite n={8} />।
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+Make a folder and run `npm init`. RETURN accepts the default for most of its questions; at the entry point, type a file name, or press RETURN to keep `index.js` <Cite n={2} />. Install Express with `npm install express` <Cite n={2} />. Save the API as `app.mjs`:
+
+```js
+import express from 'express';
+
+const USERS = [{ email: 'asha@example.com', password: 'secret123', token: 'token-asha' }];
+const orders = [];
+
+export const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.post('/login', (req, res) => {
+  const { email, password } = req.body ?? {};
+  const user = USERS.find((u) => u.email === email && u.password === password);
+  if (!user) return res.status(401).json({ error: 'Wrong email or password' });
+  res.json({ token: user.token });
+});
+
+function requireLogin(req, res, next) {
+  const token = req.get('Authorization')?.replace('Bearer ', '');
+  if (!USERS.some((u) => u.token === token)) {
+    return res.status(401).json({ error: 'Log in first' });
+  }
+  next();
+}
+
+app.post('/orders', requireLogin, (req, res) => {
+  const total = req.body?.total;
+  if (typeof total !== 'number' || total <= 0) {
+    return res.status(400).json({ error: 'total must be a positive number' });
+  }
+  const order = { id: orders.length + 1, total };
+  orders.push(order);
+  res.status(201).json(order);
+});
+
+app.get('/orders/:id', requireLogin, (req, res) => {
+  const order = orders.find((o) => o.id === Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  res.json(order);
+});
+
+app.use((err, req, res, next) => {
+  const status = err.status ?? 500;
+  res.status(status).json({ error: status === 500 ? 'Something went wrong' : err.message });
+});
+```
+
+The users are a fixed list, to keep the example short. A real API stores hashed passwords in a database and issues real tokens. To start the API, save this as `server.mjs` and run `node server.mjs`:
+
+```js
+import { app } from './app.mjs';
+
+const port = process.env.PORT ?? 3000;
+app.listen(port, () => {
+  console.log(`API on http://localhost:${port}`);
+});
+```
+
+Now test it. Save this as `app.test.mjs` and run `node --test`:
+
+```js
+import test, { before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { app } from './app.mjs';
+
+let server;
+let base;
+
+before(async () => {
+  server = app.listen(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+  base = `http://localhost:${server.address().port}`;
+});
+
+after(() => server.close());
+
+function post(path, body, token) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const data = typeof body === 'string' ? body : JSON.stringify(body);
+  return fetch(`${base}${path}`, { method: 'POST', headers, body: data });
+}
+
+test('a wrong password gets 401', async () => {
+  const res = await post('/login', { email: 'asha@example.com', password: 'nope' });
+  assert.equal(res.status, 401);
+});
+
+test('an order needs a login', async () => {
+  const res = await post('/orders', { total: 500 });
+  assert.equal(res.status, 401);
+});
+
+test('a valid order gets 201, and a bad total gets 400', async () => {
+  const login = await post('/login', { email: 'asha@example.com', password: 'secret123' });
+  const { token } = await login.json();
+  assert.equal((await post('/orders', { total: 500 }, token)).status, 201);
+  assert.equal((await post('/orders', { total: -5 }, token)).status, 400);
+});
+
+test('broken JSON gets 400, not 500', async () => {
+  const res = await post('/login', '{"email": "asha@example.com"');
+  assert.equal(res.status, 400);
+});
+```
+
+The `before` hook runs before the tests, and `after` runs after them <Cite n={14} />. Port `0` makes the operating system assign an unused port, which `server.address().port` returns <Cite n={13} />, so the test gets a port that is not in use. All four tests pass.
+
+</Technical>
+<Layman>
+
+Make a folder and run `npm init`. Press RETURN to take the default for most of its questions; at the entry point, RETURN keeps `index.js` <Cite n={2} />. Then run `npm install express` <Cite n={2} />. Save the API as `app.mjs`:
+
+```js
+import express from 'express';
+
+const USERS = [{ email: 'asha@example.com', password: 'secret123', token: 'token-asha' }];
+const orders = [];
+
+export const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.post('/login', (req, res) => {
+  const { email, password } = req.body ?? {};
+  const user = USERS.find((u) => u.email === email && u.password === password);
+  if (!user) return res.status(401).json({ error: 'Wrong email or password' });
+  res.json({ token: user.token });
+});
+
+function requireLogin(req, res, next) {
+  const token = req.get('Authorization')?.replace('Bearer ', '');
+  if (!USERS.some((u) => u.token === token)) {
+    return res.status(401).json({ error: 'Log in first' });
+  }
+  next();
+}
+
+app.post('/orders', requireLogin, (req, res) => {
+  const total = req.body?.total;
+  if (typeof total !== 'number' || total <= 0) {
+    return res.status(400).json({ error: 'total must be a positive number' });
+  }
+  const order = { id: orders.length + 1, total };
+  orders.push(order);
+  res.status(201).json(order);
+});
+
+app.get('/orders/:id', requireLogin, (req, res) => {
+  const order = orders.find((o) => o.id === Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  res.json(order);
+});
+
+app.use((err, req, res, next) => {
+  const status = err.status ?? 500;
+  res.status(status).json({ error: status === 500 ? 'Something went wrong' : err.message });
+});
+```
+
+The users are a fixed list to keep it short. A real API keeps hashed passwords in a database. To start it, save this as `server.mjs` and run `node server.mjs`:
+
+```js
+import { app } from './app.mjs';
+
+const port = process.env.PORT ?? 3000;
+app.listen(port, () => {
+  console.log(`API on http://localhost:${port}`);
+});
+```
+
+Now test it. Save this as `app.test.mjs` and run `node --test`:
+
+```js
+import test, { before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { app } from './app.mjs';
+
+let server;
+let base;
+
+before(async () => {
+  server = app.listen(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+  base = `http://localhost:${server.address().port}`;
+});
+
+after(() => server.close());
+
+function post(path, body, token) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const data = typeof body === 'string' ? body : JSON.stringify(body);
+  return fetch(`${base}${path}`, { method: 'POST', headers, body: data });
+}
+
+test('a wrong password gets 401', async () => {
+  const res = await post('/login', { email: 'asha@example.com', password: 'nope' });
+  assert.equal(res.status, 401);
+});
+
+test('an order needs a login', async () => {
+  const res = await post('/orders', { total: 500 });
+  assert.equal(res.status, 401);
+});
+
+test('a valid order gets 201, and a bad total gets 400', async () => {
+  const login = await post('/login', { email: 'asha@example.com', password: 'secret123' });
+  const { token } = await login.json();
+  assert.equal((await post('/orders', { total: 500 }, token)).status, 201);
+  assert.equal((await post('/orders', { total: -5 }, token)).status, 400);
+});
+
+test('broken JSON gets 400, not 500', async () => {
+  const res = await post('/login', '{"email": "asha@example.com"');
+  assert.equal(res.status, 400);
+});
+```
+
+`before` runs first and `after` runs last <Cite n={14} />. Port `0` lets the operating system pick an unused port <Cite n={13} />, so the test gets a port that is not in use. All four tests pass.
+
+</Layman>
+<Bangla>
+
+একটা ফোল্ডার বানিয়ে `npm init` চালান। বেশিরভাগ প্রশ্নে ডিফল্ট মেনে নিতে RETURN চাপুন; entry point-এ একটা file নাম লিখুন, বা RETURN চেপে `index.js` রাখুন <Cite n={2} />। তারপর `npm install express` দিয়ে Express install করুন <Cite n={2} />। API-টা `app.mjs` নামে সেভ করুন:
+
+```js
+import express from 'express';
+
+const USERS = [{ email: 'asha@example.com', password: 'secret123', token: 'token-asha' }];
+const orders = [];
+
+export const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.post('/login', (req, res) => {
+  const { email, password } = req.body ?? {};
+  const user = USERS.find((u) => u.email === email && u.password === password);
+  if (!user) return res.status(401).json({ error: 'Wrong email or password' });
+  res.json({ token: user.token });
+});
+
+function requireLogin(req, res, next) {
+  const token = req.get('Authorization')?.replace('Bearer ', '');
+  if (!USERS.some((u) => u.token === token)) {
+    return res.status(401).json({ error: 'Log in first' });
+  }
+  next();
+}
+
+app.post('/orders', requireLogin, (req, res) => {
+  const total = req.body?.total;
+  if (typeof total !== 'number' || total <= 0) {
+    return res.status(400).json({ error: 'total must be a positive number' });
+  }
+  const order = { id: orders.length + 1, total };
+  orders.push(order);
+  res.status(201).json(order);
+});
+
+app.get('/orders/:id', requireLogin, (req, res) => {
+  const order = orders.find((o) => o.id === Number(req.params.id));
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  res.json(order);
+});
+
+app.use((err, req, res, next) => {
+  const status = err.status ?? 500;
+  res.status(status).json({ error: status === 500 ? 'Something went wrong' : err.message });
+});
+```
+
+উদাহরণ ছোট রাখতে user-রা একটা স্থির list। আসল API hash করা password database-এ রাখে আর আসল token দেয়। API চালু করতে এটা `server.mjs` নামে সেভ করে `node server.mjs` চালান:
+
+```js
+import { app } from './app.mjs';
+
+const port = process.env.PORT ?? 3000;
+app.listen(port, () => {
+  console.log(`API on http://localhost:${port}`);
+});
+```
+
+এবার টেস্ট করুন। এটা `app.test.mjs` নামে সেভ করে `node --test` চালান:
+
+```js
+import test, { before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { app } from './app.mjs';
+
+let server;
+let base;
+
+before(async () => {
+  server = app.listen(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+  base = `http://localhost:${server.address().port}`;
+});
+
+after(() => server.close());
+
+function post(path, body, token) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const data = typeof body === 'string' ? body : JSON.stringify(body);
+  return fetch(`${base}${path}`, { method: 'POST', headers, body: data });
+}
+
+test('a wrong password gets 401', async () => {
+  const res = await post('/login', { email: 'asha@example.com', password: 'nope' });
+  assert.equal(res.status, 401);
+});
+
+test('an order needs a login', async () => {
+  const res = await post('/orders', { total: 500 });
+  assert.equal(res.status, 401);
+});
+
+test('a valid order gets 201, and a bad total gets 400', async () => {
+  const login = await post('/login', { email: 'asha@example.com', password: 'secret123' });
+  const { token } = await login.json();
+  assert.equal((await post('/orders', { total: 500 }, token)).status, 201);
+  assert.equal((await post('/orders', { total: -5 }, token)).status, 400);
+});
+
+test('broken JSON gets 400, not 500', async () => {
+  const res = await post('/login', '{"email": "asha@example.com"');
+  assert.equal(res.status, 400);
+});
+```
+
+`before` hook টেস্টগুলোর আগে চলে, আর `after` চলে পরে <Cite n={14} />। Port `0` দিলে operating system একটা অব্যবহৃত port দেয়, যেটা `server.address().port` ফেরত দেয় <Cite n={13} />, তাই টেস্ট এমন একটা port পায়, যেটা কেউ ব্যবহার করছে না। চারটা টেস্টই pass করে।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+- **One test per status code.** A good API answers each case with its own code: `201` for a created resource <Cite n={12} />, `400` for a client error <Cite n={12} />, and `401` when the client must authenticate <Cite n={12} />. The tests above check each of them.
+- **Attack the body.** `req.body` is user-controlled input <Cite n={6} />. Send a missing field, a string where a number belongs, a negative number, and broken JSON. The tests send `-5` and broken JSON.
+- **Look for leaked stack traces.** The built-in error handler writes the stack trace to the client, except in the production environment <Cite n={8} />. Send a broken body to a staging server and read the answer: it should not name files or libraries.
+- **Check the security basics.** Helmet is middleware that sets security-related response headers <Cite n={9} />, and login endpoints should be protected against brute-force attempts <Cite n={9} />. Ask whether both are in place, and test the second with many wrong passwords.
+- **Run the real app in tests.** Start the app on port `0` <Cite n={13} /> in a `before` hook <Cite n={14} />, and send real HTTP requests. The same checks can then move to [API Automation with Playwright](/sdet/playwright-api/).
+
+</Technical>
+<Layman>
+
+- **One test per status code.** `201` means created, `400` means the request was wrong, and `401` means "log in first" <Cite n={12} />. Test each one.
+- **Attack the body.** The body comes from the user <Cite n={6} />. Send missing fields, wrong types, negative numbers, and broken JSON.
+- **Look for leaked stack traces.** Express's built-in error page shows the stack trace, except in production <Cite n={8} />. Send a broken body and check that the answer names no files.
+- **Check the security basics.** Helmet sets security headers <Cite n={9} />, and the login should resist password guessing <Cite n={9} />.
+- **Run the real app in tests.** Start it on port `0` <Cite n={13} /> in a `before` hook <Cite n={14} />, and send real requests. Later, move the checks to [API Automation with Playwright](/sdet/playwright-api/).
+
+</Layman>
+<Bangla>
+
+- **প্রতিটা status code-এর জন্য একটা টেস্ট।** ভালো API প্রতিটা ক্ষেত্রে নিজস্ব code দিয়ে উত্তর দেয়: নতুন resource তৈরি হলে `201` <Cite n={12} />, client-এর ভুলে `400` <Cite n={12} />, আর client-কে পরিচয় প্রমাণ করতে হলে `401` <Cite n={12} />। ওপরের টেস্টগুলো প্রতিটাই চেক করে।
+- **Body-কে আক্রমণ করুন।** `req.body` user-এর নিয়ন্ত্রণে থাকা input <Cite n={6} />। Field বাদ দিয়ে, number-এর জায়গায় string, negative number আর ভাঙা JSON পাঠান। ওপরের টেস্ট `-5` আর ভাঙা JSON পাঠায়।
+- **ফাঁস হওয়া stack trace খুঁজুন।** Built-in error handler client-কে stack trace লিখে পাঠায়, শুধু production environment ছাড়া <Cite n={8} />। Staging server-এ ভাঙা body পাঠিয়ে উত্তর পড়ুন: তাতে কোনো file বা library-র নাম থাকা উচিত নয়।
+- **নিরাপত্তার মৌলিক বিষয় চেক করুন।** Helmet একটা middleware, যেটা নিরাপত্তা-সংক্রান্ত response header বসায় <Cite n={9} />, আর login endpoint-কে brute-force চেষ্টা থেকে রক্ষা করা উচিত <Cite n={9} />। দুটোই আছে কি না জিজ্ঞেস করুন, আর দ্বিতীয়টা অনেকগুলো ভুল password দিয়ে টেস্ট করুন।
+- **টেস্টে আসল app চালান।** একটা `before` hook-এ <Cite n={14} /> app-টা port `0`-তে চালু করুন <Cite n={13} />, আর আসল HTTP request পাঠান। তারপর একই চেক [API Automation with Playwright](/sdet/playwright-api/)-এ নেওয়া যায়।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A middleware that never calls `next()`.** If it does not end the cycle and does not call `next()`, the request is left hanging <Cite n={4} />.
+- **No body parser.** Without `express.json()`, `req.body` is `undefined` <Cite n={6} />. The same happens when the client sends the wrong `Content-Type`, because the parser looks only at matching requests <Cite n={5} />.
+- **Trusting `req.body`.** Its properties and values are untrusted until they are validated <Cite n={6} />. A total of `'500'` or `-5` must get `400`, not an order.
+- **Stack traces in production.** Without `NODE_ENV=production`, the built-in error handler sends the stack trace to the client <Cite n={8} />.
+- **A test on a fixed port.** The port may already be in use. Port `0` lets the operating system assign an unused one <Cite n={13} />.
+
+</Technical>
+<Layman>
+
+- **A middleware that never calls `next()`.** If it does not end the cycle either, the request just hangs <Cite n={4} />.
+- **No body parser.** Without `express.json()`, `req.body` is `undefined` <Cite n={6} />. A wrong `Content-Type` does the same <Cite n={5} />.
+- **Trusting the body.** Check every value first <Cite n={6} />. A total of `'500'` or `-5` must get `400`.
+- **Stack traces in production.** Without `NODE_ENV=production`, the error page shows the stack trace <Cite n={8} />.
+- **A fixed port in tests.** The port may already be taken. With port `0`, the operating system picks an unused one <Cite n={13} />.
+
+</Layman>
+<Bangla>
+
+- **যে middleware কখনো `next()` call করে না।** এটা cycle শেষ না করলে আর `next()` call না করলে request ঝুলে থাকে <Cite n={4} />।
+- **Body parser নেই।** `express.json()` ছাড়া `req.body` থাকে `undefined` <Cite n={6} />। Client ভুল `Content-Type` পাঠালেও একই ঘটে, কারণ parser শুধু মেলে এমন request দেখে <Cite n={5} />।
+- **`req.body`-কে বিশ্বাস করা।** Validate না করা পর্যন্ত এর property আর value অবিশ্বস্ত <Cite n={6} />। `'500'` বা `-5` total-এর উত্তর হতে হবে `400`, কোনো order নয়।
+- **Production-এ stack trace।** `NODE_ENV=production` ছাড়া built-in error handler client-কে stack trace পাঠায় <Cite n={8} />।
+- **টেস্টে স্থির port।** Port-টা হয়তো আগে থেকেই ব্যবহার হচ্ছে। Port `0` দিলে operating system একটা অব্যবহৃত port দেয় <Cite n={13} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Status codes.** Does every route answer each case with the right code, and does each code have a test?
+- **Validation.** Is every field of every body checked for presence, type, and range?
+- **Auth.** Does every protected route reject a missing token, a wrong token, and a token of another user?
+- **Errors.** Do error answers use the same JSON shape, with no stack trace and no internal names?
+- **Hanging requests.** Does every request end, even on an error, within a time limit?
+- **Data.** After a `201`, can the new resource be read back with the same values?
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice, not a fact from a source.
+
+- **Status codes.** Does each case get the right code, and is there a test for it?
+- **Validation.** Is every field checked for presence, type, and range?
+- **Login.** Do protected routes refuse no token, a wrong token, and another user's token?
+- **Errors.** Do errors look the same, with no stack trace?
+- **Hanging.** Does every request end in time, even on an error?
+- **Data.** After a `201`, can you read the new item back?
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, কোনো source থেকে নেওয়া তথ্য নয়।
+
+- **Status code।** প্রতিটা route কি প্রতিটা ক্ষেত্রে ঠিক code দিয়ে উত্তর দেয়, আর প্রতিটা code-এর কি একটা টেস্ট আছে?
+- **Validation।** প্রতিটা body-র প্রতিটা field কি উপস্থিতি, type আর সীমার জন্য চেক করা হয়?
+- **Auth।** প্রতিটা protected route কি token না থাকা, ভুল token আর অন্য user-এর token বাতিল করে?
+- **Error।** Error-এর উত্তর কি একই JSON আকারের, stack trace আর ভেতরের নাম ছাড়া?
+- **ঝুলে থাকা request।** Error হলেও কি প্রতিটা request একটা সময়সীমার মধ্যে শেষ হয়?
+- **ডেটা।** `201`-এর পর নতুন resource কি একই value নিয়ে আবার পড়া যায়?
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Express | A routing and middleware web framework; it needs Node.js 18 or higher. |
+| Route | A request method and a route path, which together define one endpoint, such as `POST /orders`. |
+| Route parameter | A named part of the path, such as `:id`, read from `req.params`. |
+| Middleware | A function with `req`, `res`, and `next` that runs during the request-response cycle. |
+| `express.json()` | The middleware that parses JSON bodies into `req.body`. |
+| `res.status()` / `res.json()` | Set the status code / send a JSON answer. |
+| `Authorization` header | The request header that carries the credentials for protected resources. |
+| Error handler | Middleware with four arguments, `(err, req, res, next)`. |
+| `NODE_ENV=production` | Production mode; the built-in error handler then hides the stack trace. |
+| REST | A set of architecture constraints for distributed systems; for a beginner, a REST API is an HTTP service that standard web tools can call. |
+| Port `0` | Lets the operating system pick a free port. |
