@@ -52,7 +52,7 @@ const SOURCE: readonly TopicEntry[] = [
   { slug: "ci-cd", part: 1, title: "CI/CD Pipelines", description: "CI, continuous delivery, and continuous deployment, the parts of a pipeline, and your tests in GitHub Actions and Jenkins." },
   { slug: "gitops", part: 1, title: "GitOps", description: "The four OpenGitOps principles, how Argo CD and Flux sync a cluster to Git, and smoke tests that run after each sync." },
   { slug: "docker-basics", part: 2, title: "Docker Basics", description: "Containers, images, and registries, how the Docker client and daemon run a container, and the first commands that a tester uses." },
-  { slug: "docker-images-compose", part: 2, title: "Docker Images and Compose", description: "Dockerfile, Docker Compose, and Bake." },
+  { slug: "docker-images-compose", part: 2, title: "Docker Images and Compose", description: "How a Dockerfile builds an image, how the build cache works, and how Docker Compose starts a whole test environment from one file, with Bake for builds." },
   { slug: "docker-in-practice", part: 2, title: "Docker in Practice", description: "Docker volumes and bind mounts." },
   { slug: "kubernetes-basics", part: 3, title: "Kubernetes Basics", description: "Pods, ReplicaSets, and Deployments." },
   { slug: "kubernetes-architecture", part: 3, title: "Kubernetes Architecture", description: "etcd and Operators." },
