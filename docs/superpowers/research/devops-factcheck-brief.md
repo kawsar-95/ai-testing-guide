@@ -88,6 +88,8 @@ The checkers are agents. No person has read the pages, and no person who reads B
 
 From 2026-11-15 the pages become full lessons, one by one (`docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md`). A full page has a lede and seven sections, so its checker gets a longer `page.md` (the sources, the description line, the lede, then each section with its panels) and the brief below. The same brief checked round 6 of `cncf-runtime-data`, a one-section page whose Rook source had to change. TASK B is the rule of brief v2, applied to each section. The command is the one above, with `--max-budget-usd 5.0`.
 
+From 2026-11-16 (round 10 of `docker-images-compose` and round 8 of `docker-in-practice`), the N/A rule of TASK A names the record of the page's own practice run. The spec already asks that real command output says when it was run, and the checkers of the earlier rounds of the full pages marked such output N/A, but the brief did not say it, and round 9 of `docker-images-compose` marked 5 labelled outputs of its run as FAILs. The page was not changed for those 5 rows: a second run of the Quickstart on 2026-11-16 gave the same versions, log lines, and counts.
+
 You are an independent fact-checker. You did NOT write this page. Your evidence is ONLY the files in this folder:
 `page.md` (the page) and `pages/S1.txt`, `pages/S2.txt`, ... (the visible text of the sources that the page cites; `page.md` lists
 which number is which source). Do not browse. Do not use your memory to give a PASS: a PASS needs a quote from a file in `pages/`.
@@ -106,7 +108,10 @@ file name, path, key, and value in it against the source. For each claim:
   that the source does not give), or the claim needs a different source than the one cited. A fact with no cite is a FAIL, unless the
   cite of the same sentence or of the sentence that it explains covers it.
 - N/A: only text that is not a fact about a tool, product, command, or number (a sentence that describes the page itself, a framing
-  sentence, or a step of the reader's own work such as "open three recent pull requests").
+  sentence, or a step of the reader's own work such as "open three recent pull requests"), and the record of the page's own practice
+  run: the output, versions, and values that the page labels as what happened in its run (for example "In the tutorial's run, ..."),
+  after a sentence that says when and with what the run was made. A sentence of that record that says how a tool works in general is
+  a fact, and needs a cite.
 Two sections have no cites on purpose. `What a tester can check` is the tutorial's own advice in a callout titled "Tutorial advice":
 PASS if it says so and gives no fact about a tool that the rest of the page does not support; FAIL if it states such a fact.
 `Key words` is a table that restates the page: PASS for a row whose meaning a Technical panel of the page gives (quote that page

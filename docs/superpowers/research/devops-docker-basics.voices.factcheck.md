@@ -66,4 +66,79 @@ Open FAILs after round 5: 0
 
 I checked the facts against S1 only. I did not check the cites against anything else.
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-16)
+
+# Voices fact check: devops / docker-basics (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | FAIL | "so you can run more apps on fewer machines" changes "less infrastructure" (Technical and S2) to "fewer machines". That is a different noun. Left out: "lightweight"; "all of the" before "files". |
+| What it is | Bangla | PASS | Meaning matches the Technical panel. Cites match. Nothing is added. Left out: nothing of note. |
+| How it works | Layman | PASS | Facts and cites match. Left out: "Docker API" wording; "(assuming default registry)" detail; "all" before "files created" in the container-layer sentence; "immutable" for the image layers; "(\"Docker Hub by default\")" is only in the diagram, which is the same as in the Technical panel. Code block is identical. |
+| How it works | Bangla | PASS | Facts and cites match. Code block is identical. Left out: nothing of note. |
+| Try it | Layman | PASS | Facts and cites match. Code blocks are identical. Left out: "one or more" for stop and rm; "Docker Engine" and "as a default" for `:latest`; the 'exits' wording became 'stops'; "Right after" is a small added timing word, but it agrees with "until you follow the post-installation steps". |
+| Try it | Bangla | PASS | Facts and cites match. Code blocks are identical. Left out: nothing of note. |
+| How a tester uses it | Layman | PASS | Facts and cites match. "Playwright recommends" restates "is recommended" from the Playwright docs (S19). "detailed" restates "low-level". Left out: "open source" shown, but "RFC3339Nano" kept; "should be installed" became "you install it yourself" (not stronger). Code block is identical. |
+| How a tester uses it | Bangla | FAIL | "Playwright package image-এ থাকে না, এটা আলাদা করে install করতে হয়" says the package "has to" be installed separately. The Technical panel and S19 say "should be installed separately". The limit "should" became a stronger "must". The rest matches. Code block is identical. |
+| Common mistakes | Layman | PASS | Facts and cites match. Left out: "or tests" in the Playwright version-match item ("your project" only); "browser executables" became "the browsers"; "Docker Engine" and "as a default" for `:latest`. |
+| Common mistakes | Bangla | PASS | Facts and cites match. Left out: "or tests" in the Playwright item is kept; nothing else of note. |
+| What a tester can check | Layman | PASS | Same six items, with the callout title and intro kept. Small change: "the time window of a failure" became "the time when a test failed". It adds no tool fact. |
+| What a tester can check | Bangla | PASS | Same six items, with the callout title and intro kept. No added fact. |
+
+Open FAILs after round 6: 2
+
+Skipped: I did not read S2, S4, S7 and S19 in full; I used grep hits for those. The tutorial's own run records (date, version, output blocks) are marked N/A because no file in `pages/` can confirm them.
+
+Changed after this round: Both FAILs were fixed: the Layman panel says "less infrastructure" (S2's words), not "fewer machines", and keeps "lightweight"; the Bangla panel says that the Playwright package "should" be installed separately (উচিত), not that it has to be.
+
+## Round 7 (2026-11-16)
+
+# Voices fact check: devops / docker-basics (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel. The wording is plainer ("building" for "developing", "computer" for "host"). Left out: "everything needed" wording is kept. Left out: "be sure that" in the sharing sentence. |
+| What it is | Bangla | PASS | Every sentence matches the Technical panel. The meaning is the same. Left out: nothing of note. |
+| How it works | Layman | PASS | The diagram and code are identical. Left out: "immutable" for the image layers. Left out: "Docker API" requests. Left out: "which includes assigning" wording. Left out: "aspect" (it says "part"). |
+| How it works | Bangla | PASS | The diagram and code are identical to the Technical panel. All facts and limits are kept ("default-ভাবে", "সীমিত"). Left out: nothing of note. |
+| Try it | Layman | PASS | The code blocks are identical. Left out: "Docker Engine" in the `:latest` sentence. Left out: "as a default". Left out: "one or more" for stop and rm. "message that all is well" restates "confirmation message", and it is slightly loose. |
+| Try it | Bangla | PASS | The code blocks are identical. It keeps "default হিসেবে", "এক বা একাধিক" and the `sudo` limit. Left out: nothing of note. |
+| How a tester uses it | Layman | FAIL | "The Playwright package itself is not in the image; you install it yourself" drops "should" from "should be installed separately". It turns a recommendation into a plain statement, which is stronger than S19. Fix: "…and should be installed separately." Other sentences pass. Left out: "lightweight" is kept; "low-level" becomes "detailed". |
+| How a tester uses it | Bangla | PASS | "উচিত" keeps the "should". All facts match. Left out: nothing of note. |
+| Common mistakes | Layman | PASS | All facts match. Left out: "browser executables" becomes "the browsers". Left out: "Docker Engine" and "as a default". |
+| Common mistakes | Bangla | PASS | All facts and limits match ("default-ভাবে অনিরাপদ"). Left out: nothing of note. |
+| What a tester can check | Layman | PASS | The callout is the same advice with plainer words ("open" for "publish"). It adds no fact. |
+| What a tester can check | Bangla | PASS | The six bullets match the Technical advice. It adds no fact. |
+
+Open FAILs after round 7: 1
+
+I only grepped S5–S19 and checked the matches. I did not read those files in full. I did not check whether `docker ps` is listed as an alias on the S11 page.
+
+Changed after this round: The FAIL was fixed: the Layman panel says that you "should install it separately", keeping S19's "should". The Layman `docker inspect` sentence also keeps "low-level".
+
+## Round 8 (2026-11-16)
+
+# Voices fact check: devops / docker-basics (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact and cite matches the Technical panel. Left out: "loosely isolated" is kept as "loosely separated"; "you can share containers and be sure" becomes "everyone gets the same container"; the word "instance" is dropped from "runnable instance". |
+| What it is | Bangla | PASS | Meaning matches the Technical panel. Left out: "be sure" is kept as "নিশ্চিত থাকতে পারেন", so nothing is lost there. Nothing is added. |
+| How it works | Layman | PASS | Meaning and cites match. Left out: "configured" before registry; "immutable" for the image layers; "Docker API" requests; "a technology" is kept. "Nothing outside the host can reach them" is a plain restatement of "not accessible from outside the host". The diagram and code are identical to the Technical panel. |
+| How it works | Bangla | PASS | Meaning and cites match. Nothing is added. The diagram is identical to the Technical panel. I can read the Bangla well enough to judge it. |
+| Try it | Layman | PASS | Facts and cites match. Left out: "one or more" for stop and rm; "Docker Engine" and "as a default" for `:latest`; "Right after you install" is a plain restatement of "After you install". The code blocks are identical to the Technical panel. |
+| Try it | Bangla | PASS | Meaning and cites match. Nothing is added. The code blocks are identical to the Technical panel. |
+| How a tester uses it | Layman | PASS | Facts and cites match. Left out: "RFC3339Nano" is kept; "date" becomes "time" for `--since`; "browser executables" is not used here (that is in Common mistakes). "Playwright recommends" restates "is recommended" from the Playwright source. The code block is identical. |
+| How a tester uses it | Bangla | PASS | Meaning and cites match. Nothing is added. The code block is identical to the Technical panel. |
+| Common mistakes | Layman | PASS | Facts and cites match. Left out: "Docker Engine" and "as a default"; "browser executables" becomes "the browsers"; "after the timeout elapses" becomes "when the wait time is over". None of these makes the claim stronger. |
+| Common mistakes | Bangla | PASS | Meaning and cites match. Nothing is added. |
+| What a tester can check | Layman | PASS | The six advice items match the Technical panel with plainer words ("open" for "publish", "when a test failed" for "the time window of a failure"). Nothing is added. |
+| What a tester can check | Bangla | PASS | The six advice items match the Technical panel. Nothing is added. |
+
+Open FAILs after round 8: 0
+
+Not checked: rows 25 and 28 (How it works, steps 2 and 5) have no exact S1 quote. I only confirmed the surrounding step lines in S1, so treat those two PASS verdicts as weaker than the rest.
+
 Open FAILs: 0

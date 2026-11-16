@@ -1,16 +1,31 @@
-export const metadata = { title: 'Docker Images and Compose', description: 'Dockerfile, Docker Compose, and Bake.' }
+export const metadata = { title: 'Docker Images and Compose', description: 'How a Dockerfile builds an image, how the build cache works, and how Docker Compose starts a whole test environment from one file, with Bake for builds.' }
 export const page = {
-  updated: '2026-11-05',
+  updated: '2026-11-16',
   sources: [
-    { title: 'Dockerfile reference', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/dockerfile/', accessed: '2026-11-05' },
-    { title: 'Docker Compose', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/', accessed: '2026-11-05' },
-    { title: 'Bake', publisher: 'Docker Docs', url: 'https://docs.docker.com/build/bake/', accessed: '2026-11-05' },
+    { title: 'Dockerfile reference', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/dockerfile/', accessed: '2026-11-16' },
+    { title: 'docker buildx build', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/cli/docker/buildx/build/', accessed: '2026-11-16' },
+    { title: 'Build context', publisher: 'Docker Docs', url: 'https://docs.docker.com/build/concepts/context/', accessed: '2026-11-16' },
+    { title: 'Docker build cache', publisher: 'Docker Docs', url: 'https://docs.docker.com/build/cache/', accessed: '2026-11-16' },
+    { title: 'Optimize cache usage in builds', publisher: 'Docker Docs', url: 'https://docs.docker.com/build/cache/optimize/', accessed: '2026-11-16' },
+    { title: 'Multi-stage builds', publisher: 'Docker Docs', url: 'https://docs.docker.com/build/building/multi-stage/', accessed: '2026-11-16' },
+    { title: 'Build secrets', publisher: 'Docker Docs', url: 'https://docs.docker.com/build/building/secrets/', accessed: '2026-11-16' },
+    { title: 'Building best practices', publisher: 'Docker Docs', url: 'https://docs.docker.com/build/building/best-practices/', accessed: '2026-11-16' },
+    { title: 'Docker Compose', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/', accessed: '2026-11-16' },
+    { title: 'How Compose works', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/intro/compose-application-model/', accessed: '2026-11-16' },
+    { title: 'Docker Compose Quickstart', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/gettingstarted/', accessed: '2026-11-16' },
+    { title: 'Define services in Docker Compose', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/compose-file/services/', accessed: '2026-11-16' },
+    { title: 'Control startup and shutdown order in Compose', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/how-tos/startup-order/', accessed: '2026-11-16' },
+    { title: 'Networking in Compose', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/how-tos/networking/', accessed: '2026-11-16' },
+    { title: 'docker compose up', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/cli/docker/compose/up/', accessed: '2026-11-16' },
+    { title: 'docker compose down', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/cli/docker/compose/down/', accessed: '2026-11-16' },
+    { title: 'docker compose logs', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/cli/docker/compose/logs/', accessed: '2026-11-16' },
+    { title: 'Bake', publisher: 'Docker Docs', url: 'https://docs.docker.com/build/bake/', accessed: '2026-11-16' },
   ],
 }
 
 # Docker Images and Compose
 
-Dockerfile, Docker Compose, and Bake. A short explanation with its sources comes first. The reels after it show the topic at work.
+This page explains how a test environment is built and started: how a Dockerfile builds an image, why the order of its instructions matters, and how Docker Compose starts an application and the services that it needs from one file, with a practice run of Docker's own Compose Quickstart. It builds on [Docker Basics](/devops/docker-basics/); [Docker in Practice](/devops/docker-in-practice/) goes deeper into volumes and networks.
 
 <PageMeta />
 
@@ -19,17 +34,808 @@ Dockerfile, Docker Compose, and Bake. A short explanation with its sources comes
 <Voices>
 <Technical>
 
-A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image <Cite n={1} />. Docker Compose is a tool for defining and running multi-container applications <Cite n={2} />. Bake is a feature of Docker Buildx that lets you define your build configuration using a declarative file <Cite n={3} />.
+**Dockerfile.** A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image <Cite n={1} />. Docker runs instructions in a Dockerfile in order <Cite n={1} />. A Dockerfile must begin with a `FROM` instruction <Cite n={1} />.
+
+**`docker build`.** `docker build` is an alias of `docker buildx build`, which starts a build using BuildKit <Cite n={2} />. Its `-t` (`--tag`) option sets the image identifier, in the format `[registry/]repository[:tag]` <Cite n={2} />.
+
+**Docker Compose.** Docker Compose is a tool for defining and running multi-container applications <Cite n={9} />. It manages services, networks, and volumes in a single YAML configuration file <Cite n={9} />. With a single command, you create and start all the services from your configuration file <Cite n={9} />. The default path for a Compose file is `compose.yaml` (preferred) or `compose.yml` in the working directory <Cite n={10} />. Compose works in all environments: production, staging, development, testing, as well as CI workflows <Cite n={9} />.
+
+**Bake.** Bake is a feature of Docker Buildx that lets you define your build configuration using a declarative file, as opposed to specifying a complex CLI expression <Cite n={18} />. It also lets you run multiple builds concurrently with a single invocation <Cite n={18} />. A Bake file can be written in HCL or JSON format, and Bake can also build directly from a Docker Compose file <Cite n={18} />.
+
+| Tool | Reads | Command |
+|---|---|---|
+| Docker build | A `Dockerfile` <Cite n={1} /> | `docker build` <Cite n={2} /> |
+| Docker Compose | A `compose.yaml` <Cite n={10} /> | `docker compose up` <Cite n={11} /> |
+| Bake | A Bake file in HCL or JSON, or a Compose file <Cite n={18} /> | `docker buildx bake` <Cite n={18} /> |
 
 </Technical>
 <Layman>
 
-A Dockerfile is a text file. It holds all the commands that a user could run on the command line to assemble an image <Cite n={1} />. Docker Compose is a tool for defining and running applications that have more than one container <Cite n={2} />. Bake is a feature of Docker Buildx. You define your build configuration in a declarative file <Cite n={3} />.
+**Dockerfile.** A Dockerfile is a text file. It holds all the commands that a user could run on the command line to make an image <Cite n={1} />. Docker runs the instructions of a Dockerfile in order <Cite n={1} />. A Dockerfile must start with a `FROM` instruction <Cite n={1} />.
+
+**`docker build`.** `docker build` is another name for `docker buildx build`, which starts a build with BuildKit <Cite n={2} />. Its `-t` (`--tag`) option gives the image its name, in the form `[registry/]repository[:tag]` <Cite n={2} />.
+
+**Docker Compose.** Docker Compose is a tool for defining and running applications that have more than one container <Cite n={9} />. It manages services, networks, and volumes in one YAML file <Cite n={9} />. With one command, you create and start all the services of that file <Cite n={9} />. By default, the Compose file is `compose.yaml` (preferred) or `compose.yml`, in the folder that you work in <Cite n={10} />. Compose works in all environments: production, staging, development, testing, and CI workflows <Cite n={9} />.
+
+**Bake.** Bake is a feature of Docker Buildx. You write your build settings in a declarative file, instead of a complex command line <Cite n={18} />. It can also run many builds at the same time with one command <Cite n={18} />. A Bake file can be in HCL or JSON, and Bake can also build straight from a Docker Compose file <Cite n={18} />.
+
+| Tool | Reads | Command |
+|---|---|---|
+| Docker build | A `Dockerfile` <Cite n={1} /> | `docker build` <Cite n={2} /> |
+| Docker Compose | A `compose.yaml` <Cite n={10} /> | `docker compose up` <Cite n={11} /> |
+| Bake | A Bake file in HCL or JSON, or a Compose file <Cite n={18} /> | `docker buildx bake` <Cite n={18} /> |
 
 </Layman>
 <Bangla>
 
-Dockerfile হলো একটা text file। image assemble করার জন্য একজন user command line-এ যত command চালাতে পারে, সবগুলো এতে থাকে <Cite n={1} />। Docker Compose এমন একটা tool, যা দিয়ে একাধিক container-এর application define ও run করা যায় <Cite n={2} />। Bake হলো Docker Buildx-এর একটা feature। একটা declarative file-এ আপনি আপনার build configuration define করেন <Cite n={3} />।
+**Dockerfile।** Dockerfile হলো একটা text document, যাতে image assemble করার জন্য একজন user command line-এ যত command চালাতে পারে, সব থাকে <Cite n={1} />। Docker একটা Dockerfile-এর instruction-গুলো ক্রম অনুযায়ী চালায় <Cite n={1} />। একটা Dockerfile অবশ্যই `FROM` instruction দিয়ে শুরু হতে হবে <Cite n={1} />।
+
+**`docker build`।** `docker build` হলো `docker buildx build`-এর আরেক নাম (alias), যা BuildKit দিয়ে একটা build শুরু করে <Cite n={2} />। এর `-t` (`--tag`) option image-এর identifier ঠিক করে, `[registry/]repository[:tag]` format-এ <Cite n={2} />।
+
+**Docker Compose।** Docker Compose হলো একাধিক container-এর application define আর run করার একটা tool <Cite n={9} />। এটা একটা YAML configuration file-এ service, network আর volume পরিচালনা করে <Cite n={9} />। একটা command দিয়েই আপনি configuration file-এর সব service তৈরি করে চালু করেন <Cite n={9} />। Compose file-এর default path হলো working directory-তে রাখা `compose.yaml` (পছন্দনীয়) বা `compose.yml` <Cite n={10} />। Compose সব environment-এ কাজ করে: production, staging, development, testing, আর CI workflow-তেও <Cite n={9} />।
+
+**Bake।** Bake হলো Docker Buildx-এর একটা feature, যা দিয়ে জটিল CLI expression না লিখে একটা declarative file-এ build configuration define করা যায় <Cite n={18} />। এটা একবারের invocation-এ একাধিক build একসাথে চালাতেও দেয় <Cite n={18} />। Bake file HCL বা JSON format-এ লেখা যায়, আর Bake সরাসরি একটা Docker Compose file থেকেও build করতে পারে <Cite n={18} />।
+
+| Tool | কী পড়ে | Command |
+|---|---|---|
+| Docker build | একটা `Dockerfile` <Cite n={1} /> | `docker build` <Cite n={2} /> |
+| Docker Compose | একটা `compose.yaml` <Cite n={10} /> | `docker compose up` <Cite n={11} /> |
+| Bake | HCL বা JSON-এ একটা Bake file, বা একটা Compose file <Cite n={18} /> | `docker buildx bake` <Cite n={18} /> |
 
 </Bangla>
 </Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**The instructions of a Dockerfile.** These are the instructions of the Dockerfile in the practice run below:
+
+| Instruction | What it does |
+|---|---|
+| `FROM` | Specifies the base image from which you are building <Cite n={1} /> |
+| `WORKDIR` | Sets the working directory for any `RUN`, `CMD`, `ENTRYPOINT`, `COPY` and `ADD` instructions that follow it <Cite n={1} /> |
+| `ENV` | Sets the environment variable `<key>` to the value `<value>` <Cite n={1} /> |
+| `RUN` | Executes any commands to create a new layer on top of the current image <Cite n={1} /> |
+| `COPY` | Copies new files or directories from `<src>` and adds them to the filesystem of the image at the path `<dest>` <Cite n={1} /> |
+| `EXPOSE` | Doesn't actually publish the port. It is documentation about which ports are intended to be published <Cite n={1} /> |
+| `CMD` | Provides defaults for an executing container. If you list more than one `CMD`, only the last one takes effect <Cite n={1} /> |
+
+**The build context.** The build context is the set of files that your build can access <Cite n={3} />. Docker sends everything in your project directory to the daemon when it builds an image <Cite n={11} />. A `.dockerignore` file is a newline-separated list of patterns similar to the file globs of Unix shells <Cite n={3} />. It keeps unneeded files out of the build context <Cite n={11} />.
+
+**The build cache.** If a layer changes, all other layers that come after it are also affected <Cite n={4} />. So make expensive steps appear near the beginning of the Dockerfile, and steps that change often near the end <Cite n={5} />. Docker's own example: copy the package management files first, then install the dependencies, and only then copy the project source code, which is subject to frequent change <Cite n={5} />.
+
+**Multi-stage builds.** With multi-stage builds, you use multiple `FROM` statements in your Dockerfile <Cite n={6} />. You can selectively copy artifacts from one stage to another, leaving behind everything you don't want in the final image <Cite n={6} />.
+
+**How Compose starts services.** By default, Compose sets up a single network for your app <Cite n={14} />. Each container for a service joins that network, and it is reachable by other containers on it and discoverable by its service name <Cite n={14} />. Compose always starts and stops containers in dependency order <Cite n={13} />. But on startup, Compose does not wait until a container is "ready", only until it's running <Cite n={13} />. To wait for a dependency, use the `condition` attribute: with `service_healthy`, the dependency must be "healthy", as defined with `healthcheck`, before the dependent service starts <Cite n={13} />.
+
+This diagram is the tutorial's own picture of the practice run below:
+
+```text
+compose.yaml ── docker compose up ──> network: compose-demo_default
+                                         │
+                 redis (image: redis:alpine)   healthcheck: redis-cli ping
+                    ▲  becomes healthy
+                    │  depends_on: condition: service_healthy
+                 web (build: .)   port 8000 on the host ──> 5000 in the container
+                 redis keeps its data in the named volume redis-data
+```
+
+</Technical>
+<Layman>
+
+**The instructions of a Dockerfile.** These are the instructions of the Dockerfile in the practice run below:
+
+| Instruction | What it does |
+|---|---|
+| `FROM` | Names the base image that you build on <Cite n={1} /> |
+| `WORKDIR` | Sets the working folder for the `RUN`, `CMD`, `ENTRYPOINT`, `COPY` and `ADD` instructions after it <Cite n={1} /> |
+| `ENV` | Sets an environment variable to a value <Cite n={1} /> |
+| `RUN` | Runs commands, and makes a new layer on top of the image so far <Cite n={1} /> |
+| `COPY` | Copies files or folders from `<src>` into the image at the path `<dest>` <Cite n={1} /> |
+| `EXPOSE` | Does not really publish the port. It only notes which ports are meant to be published <Cite n={1} /> |
+| `CMD` | Gives the default for a running container. If there is more than one `CMD`, only the last one counts <Cite n={1} /> |
+
+**The build context.** The build context is the set of files that your build can use <Cite n={3} />. When Docker builds an image, it sends everything in your project folder to the daemon <Cite n={11} />. A `.dockerignore` file is a list of patterns, one per line, like the file patterns of Unix shells <Cite n={3} />. It keeps files that the build does not need out of the build context <Cite n={11} />.
+
+**The build cache.** If a layer changes, all the layers after it are affected too <Cite n={4} />. So put expensive steps near the top of the Dockerfile, and steps that change often near the end <Cite n={5} />. Docker's own example: first copy the files that list the packages, then install the packages, and only then copy the source code, which changes often <Cite n={5} />.
+
+**Multi-stage builds.** In a multi-stage build, the Dockerfile has more than one `FROM` <Cite n={6} />. You can pick which files to copy from one stage to the next, and leave the rest out of the final image <Cite n={6} />.
+
+**How Compose starts services.** By default, Compose makes one network for your app <Cite n={14} />. Each service container joins it. Other containers on it can reach the container, and find it by its service name <Cite n={14} />. Compose always starts and stops containers in the order of their dependencies <Cite n={13} />. But when it starts them, it waits only until a container is running, not until it is "ready" <Cite n={13} />. To wait for a dependency, use `condition`: with `service_healthy`, the dependency must be "healthy" first, as its `healthcheck` defines <Cite n={13} />.
+
+This diagram is the tutorial's own picture of the practice run below:
+
+```text
+compose.yaml ── docker compose up ──> network: compose-demo_default
+                                         │
+                 redis (image: redis:alpine)   healthcheck: redis-cli ping
+                    ▲  becomes healthy
+                    │  depends_on: condition: service_healthy
+                 web (build: .)   port 8000 on the host ──> 5000 in the container
+                 redis keeps its data in the named volume redis-data
+```
+
+</Layman>
+<Bangla>
+
+**Dockerfile-এর instruction।** নিচের practice run-এর Dockerfile-এ এই instruction-গুলো আছে:
+
+| Instruction | কী করে |
+|---|---|
+| `FROM` | কোন base image থেকে build করছেন, তা নির্দিষ্ট করে <Cite n={1} /> |
+| `WORKDIR` | পরের সব `RUN`, `CMD`, `ENTRYPOINT`, `COPY` আর `ADD` instruction-এর working directory ঠিক করে <Cite n={1} /> |
+| `ENV` | environment variable `<key>`-এর মান `<value>` করে <Cite n={1} /> |
+| `RUN` | যেকোনো command চালায়, আর বর্তমান image-এর ওপরে একটা নতুন layer তৈরি করে <Cite n={1} /> |
+| `COPY` | `<src>` থেকে নতুন file বা directory copy করে image-এর filesystem-এ `<dest>` path-এ যোগ করে <Cite n={1} /> |
+| `EXPOSE` | আসলে port publish করে না। কোন port publish করার কথা, এটা তার একটা documentation <Cite n={1} /> |
+| `CMD` | চলমান container-এর default দেয়। একাধিক `CMD` থাকলে শুধু শেষটা কার্যকর হয় <Cite n={1} /> |
+
+**Build context।** build context হলো file-এর সেই set, যেগুলো আপনার build পড়তে পারে <Cite n={3} />। image build করার সময় Docker আপনার project directory-র সবকিছু daemon-এর কাছে পাঠায় <Cite n={11} />। `.dockerignore` file হলো Unix shell-এর file glob-এর মতো pattern-এর একটা তালিকা, প্রতি লাইনে একটা <Cite n={3} />। এটা অদরকারি file build context-এর বাইরে রাখে <Cite n={11} />।
+
+**Build cache।** একটা layer বদলালে তার পরের সব layer-ও প্রভাবিত হয় <Cite n={4} />। তাই ব্যয়বহুল ধাপ Dockerfile-এর শুরুর দিকে রাখুন, আর ঘনঘন বদলায় এমন ধাপ শেষের দিকে <Cite n={5} />। Docker-এর নিজের উদাহরণ: আগে package management file copy করুন, তারপর dependency install করুন, আর একদম শেষে project-এর source code copy করুন, যেটা ঘনঘন বদলায় <Cite n={5} />।
+
+**Multi-stage build।** multi-stage build-এ Dockerfile-এ একাধিক `FROM` statement থাকে <Cite n={6} />। এক stage থেকে আরেক stage-এ বেছে বেছে artifact copy করা যায়, আর final image-এ যা চান না তা পেছনে রেখে আসা যায় <Cite n={6} />।
+
+**Compose কীভাবে service চালু করে।** default-ভাবে Compose আপনার app-এর জন্য একটা network তৈরি করে <Cite n={14} />। প্রতিটা service-এর container সেই network-এ যুক্ত হয়, আর সেখানকার অন্য container তাকে পৌঁছাতে পারে, আর service-এর নাম দিয়ে খুঁজে পায় <Cite n={14} />। Compose সবসময় dependency-র ক্রম অনুযায়ী container চালু ও বন্ধ করে <Cite n={13} />। কিন্তু চালু করার সময় Compose একটা container "ready" হওয়া পর্যন্ত অপেক্ষা করে না, শুধু running হওয়া পর্যন্ত করে <Cite n={13} />। কোনো dependency-র জন্য অপেক্ষা করতে `condition` attribute ব্যবহার করুন: `service_healthy` দিলে dependent service চালুর আগে dependency-কে "healthy" হতে হয়, যেটা `healthcheck` দিয়ে define করা <Cite n={13} />।
+
+এই diagram নিচের practice run-এর টিউটোরিয়ালের নিজের ছবি:
+
+```text
+compose.yaml ── docker compose up ──> network: compose-demo_default
+                                         │
+                 redis (image: redis:alpine)   healthcheck: redis-cli ping
+                    ▲  becomes healthy
+                    │  depends_on: condition: service_healthy
+                 web (build: .)   port 8000 on the host ──> 5000 in the container
+                 redis keeps its data in the named volume redis-data
+```
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+This practice run is Docker's Compose Quickstart: a small Flask web app that counts visits in Redis <Cite n={11} />. It needs Docker Compose <Cite n={11} />. The tutorial ran it on 2026-11-16 with Docker Engine 29.9.3 and Docker Compose v5.5.1 on Linux. It leaves out the Quickstart's Compose Watch step and its step on multiple Compose files.
+
+**1. Make the project.** Create a folder and the app <Cite n={11} />:
+
+```bash
+mkdir compose-demo
+cd compose-demo
+```
+
+`app.py` reads its Redis connection details from environment variables, with defaults <Cite n={11} />:
+
+```python
+import os
+import redis
+from flask import Flask
+
+app = Flask(__name__)
+cache = redis.Redis(
+    host=os.getenv("REDIS_HOST", "redis"),
+    port=int(os.getenv("REDIS_PORT", "6379")),
+)
+
+@app.route("/")
+def hello():
+    count = cache.incr("hits")
+    return f"Hello from Docker! I have been seen {count} time(s).\n"
+```
+
+`requirements.txt` lists the two Python packages <Cite n={11} />:
+
+```text
+flask
+redis
+```
+
+**2. Write the Dockerfile.** This is the Quickstart's `Dockerfile`, without its comments <Cite n={11} />. Name the file `Dockerfile` with no extension: some editors add `.txt` automatically, which causes the build to fail <Cite n={11} />.
+
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM python:3.12-alpine
+WORKDIR /code
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+RUN apk add --no-cache gcc musl-dev linux-headers
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["flask", "run", "--debug"]
+```
+
+Note the order: `requirements.txt` is copied and installed before the rest of the code is copied.
+
+**3. Keep settings and secrets apart.** A `.env` file holds configuration values, and Compose reads it automatically for interpolation in your `compose.yaml` <Cite n={11} />. The `.dockerignore` keeps the `.env` file, which may contain secrets, and cached Python bytecode out of the build context <Cite n={11} />:
+
+```text
+# .env
+APP_PORT=8000
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
+
+```text
+# .dockerignore
+.env
+*.pyc
+__pycache__
+redis-data
+```
+
+**4. Write `compose.yaml`.** This is the Quickstart's file with its health check and its named volume, without the `develop.watch` block <Cite n={11} />:
+
+```yaml
+services:
+  web:
+    build: .
+    ports:
+      - "${APP_PORT}:5000"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  redis-data:
+```
+
+The `web` service uses an image built from the Dockerfile in the current directory, and maps port 8000 on the host to port 5000 in the container <Cite n={11} />. The `redis` service uses a public Redis image from Docker Hub <Cite n={11} />. `redis-cli ping` expects a `PONG` response; with `interval: 5s` and `retries: 5`, Compose waits up to 25 seconds before giving up <Cite n={11} />. The `redis-data:/data` entry mounts the named volume at `/data`, the path where Redis writes its data files <Cite n={11} />.
+
+**5. Check what Compose will apply.** `docker compose config` works purely from your files, and the variables of `.env` are replaced with their values <Cite n={11} />:
+
+```bash
+docker compose config
+```
+
+**6. Start it.** `-d` runs the containers in the background <Cite n={15} />:
+
+```bash
+docker compose up -d
+```
+
+In the tutorial's run, `web` started only after `redis` was healthy:
+
+```text
+ Container compose-demo-redis-1 Started
+ Container compose-demo-redis-1 Waiting
+ Container compose-demo-redis-1 Healthy
+ Container compose-demo-web-1 Starting
+ Container compose-demo-web-1 Started
+```
+
+Open `http://localhost:8000` and refresh: the counter increments on each visit <Cite n={11} />. The tutorial's run gave `Hello from Docker! I have been seen 1 time(s).`, then 2, then 3.
+
+**7. Look inside.** `docker compose logs -f` follows the log stream; pass a service name to follow one service <Cite n={11} />. `docker compose exec` runs a command inside an already-running container without starting a new one <Cite n={11} />:
+
+```bash
+docker compose logs -f web
+docker compose exec web env | grep REDIS
+docker compose exec redis redis-cli GET hits
+```
+
+Press Ctrl+C to stop following the logs; the containers keep running <Cite n={11} />. In the tutorial's run, `env` showed `REDIS_HOST=redis` and `REDIS_PORT=6379`, and `GET hits` returned `3`.
+
+**8. Stop it, start it again, and reset it.** The named volume persists between `compose down` and `compose up` cycles <Cite n={11} />. `--wait` waits for services to be running or healthy, and implies detached mode <Cite n={15} />:
+
+```bash
+docker compose down
+docker compose up -d --wait
+```
+
+The counter continues from where it left off <Cite n={11} />. In the tutorial's run, the next visit gave `I have been seen 4 time(s).`
+
+<Callout type="warning" title="This deletes data">
+`docker compose down -v` removes named volumes along with the containers: it permanently deletes the stored data <Cite n={11} />.
+</Callout>
+
+```bash
+docker compose down -v
+```
+
+</Technical>
+<Layman>
+
+This practice run is Docker's Compose Quickstart: a small Flask web app that counts visits in Redis <Cite n={11} />. You need Docker Compose <Cite n={11} />. The tutorial ran it on 2026-11-16 with Docker Engine 29.9.3 and Docker Compose v5.5.1 on Linux. It leaves out the Quickstart's Compose Watch step and its step on more than one Compose file.
+
+**1. Make the project.** Create a folder and the app <Cite n={11} />:
+
+```bash
+mkdir compose-demo
+cd compose-demo
+```
+
+`app.py` gets the Redis address from environment variables, and has defaults <Cite n={11} />:
+
+```python
+import os
+import redis
+from flask import Flask
+
+app = Flask(__name__)
+cache = redis.Redis(
+    host=os.getenv("REDIS_HOST", "redis"),
+    port=int(os.getenv("REDIS_PORT", "6379")),
+)
+
+@app.route("/")
+def hello():
+    count = cache.incr("hits")
+    return f"Hello from Docker! I have been seen {count} time(s).\n"
+```
+
+`requirements.txt` lists the two Python packages <Cite n={11} />:
+
+```text
+flask
+redis
+```
+
+**2. Write the Dockerfile.** This is the Quickstart's `Dockerfile`, without its comments <Cite n={11} />. Name the file `Dockerfile`, with no extension: some editors add `.txt` by themselves, and then the build fails <Cite n={11} />.
+
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM python:3.12-alpine
+WORKDIR /code
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+RUN apk add --no-cache gcc musl-dev linux-headers
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["flask", "run", "--debug"]
+```
+
+Note the order: `requirements.txt` is copied and installed before the rest of the code is copied.
+
+**3. Keep settings and secrets apart.** A `.env` file holds settings, and Compose reads it by itself to fill in the values in your `compose.yaml` <Cite n={11} />. The `.dockerignore` keeps the `.env` file, which may hold secrets, and cached Python bytecode out of the build context <Cite n={11} />:
+
+```text
+# .env
+APP_PORT=8000
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
+
+```text
+# .dockerignore
+.env
+*.pyc
+__pycache__
+redis-data
+```
+
+**4. Write `compose.yaml`.** This is the Quickstart's file with its health check and its named volume, without the `develop.watch` block <Cite n={11} />:
+
+```yaml
+services:
+  web:
+    build: .
+    ports:
+      - "${APP_PORT}:5000"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  redis-data:
+```
+
+The `web` service uses an image built from the Dockerfile in this folder, and connects port 8000 on the host to port 5000 in the container <Cite n={11} />. The `redis` service uses a public Redis image from Docker Hub <Cite n={11} />. `redis-cli ping` expects the answer `PONG`; with `interval: 5s` and `retries: 5`, Compose waits up to 25 seconds before it gives up <Cite n={11} />. `redis-data:/data` mounts the named volume at `/data`, where Redis writes its data files <Cite n={11} />.
+
+**5. Check what Compose will apply.** `docker compose config` works only from your files, and puts in the values of `.env` <Cite n={11} />:
+
+```bash
+docker compose config
+```
+
+**6. Start it.** `-d` runs the containers in the background <Cite n={15} />:
+
+```bash
+docker compose up -d
+```
+
+In the tutorial's run, `web` started only after `redis` was healthy:
+
+```text
+ Container compose-demo-redis-1 Started
+ Container compose-demo-redis-1 Waiting
+ Container compose-demo-redis-1 Healthy
+ Container compose-demo-web-1 Starting
+ Container compose-demo-web-1 Started
+```
+
+Open `http://localhost:8000` and refresh: the counter goes up on each visit <Cite n={11} />. The tutorial's run gave `Hello from Docker! I have been seen 1 time(s).`, then 2, then 3.
+
+**7. Look inside.** `docker compose logs -f` follows the logs; add a service name to follow only that service <Cite n={11} />. `docker compose exec` runs a command in a container that is already running, without starting a new one <Cite n={11} />:
+
+```bash
+docker compose logs -f web
+docker compose exec web env | grep REDIS
+docker compose exec redis redis-cli GET hits
+```
+
+Press Ctrl+C to stop following the logs; the containers keep running <Cite n={11} />. In the tutorial's run, `env` showed `REDIS_HOST=redis` and `REDIS_PORT=6379`, and `GET hits` returned `3`.
+
+**8. Stop it, start it again, and reset it.** The named volume stays between `compose down` and `compose up` <Cite n={11} />. `--wait` waits until the services are running or healthy, and runs them in the background <Cite n={15} />:
+
+```bash
+docker compose down
+docker compose up -d --wait
+```
+
+The counter goes on from where it stopped <Cite n={11} />. In the tutorial's run, the next visit gave `I have been seen 4 time(s).`
+
+<Callout type="warning" title="This deletes data">
+`docker compose down -v` removes the named volumes with the containers: it deletes the stored data for good <Cite n={11} />.
+</Callout>
+
+```bash
+docker compose down -v
+```
+
+</Layman>
+<Bangla>
+
+এই practice run হলো Docker-এর Compose Quickstart: একটা ছোট Flask web app, যা Redis-এ visit গোনে <Cite n={11} />। এর জন্য Docker Compose লাগে <Cite n={11} />। টিউটোরিয়াল এটা 2026-11-16 তারিখে Linux-এ Docker Engine 29.9.3 আর Docker Compose v5.5.1 দিয়ে চালিয়েছে। এখানে Quickstart-এর Compose Watch ধাপ আর একাধিক Compose file-এর ধাপ বাদ দেওয়া হয়েছে।
+
+**১. project তৈরি করুন।** একটা folder আর app তৈরি করুন <Cite n={11} />:
+
+```bash
+mkdir compose-demo
+cd compose-demo
+```
+
+`app.py` Redis connection-এর তথ্য environment variable থেকে পড়ে, default মানসহ <Cite n={11} />:
+
+```python
+import os
+import redis
+from flask import Flask
+
+app = Flask(__name__)
+cache = redis.Redis(
+    host=os.getenv("REDIS_HOST", "redis"),
+    port=int(os.getenv("REDIS_PORT", "6379")),
+)
+
+@app.route("/")
+def hello():
+    count = cache.incr("hits")
+    return f"Hello from Docker! I have been seen {count} time(s).\n"
+```
+
+`requirements.txt`-এ দুটো Python package-এর নাম থাকে <Cite n={11} />:
+
+```text
+flask
+redis
+```
+
+**২. Dockerfile লিখুন।** এটা Quickstart-এর `Dockerfile`, comment ছাড়া <Cite n={11} />। file-এর নাম কোনো extension ছাড়া `Dockerfile` রাখুন: কিছু editor নিজে থেকে `.txt` যোগ করে, তাতে build ফেল করে <Cite n={11} />।
+
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM python:3.12-alpine
+WORKDIR /code
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+RUN apk add --no-cache gcc musl-dev linux-headers
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["flask", "run", "--debug"]
+```
+
+ক্রমটা খেয়াল করুন: বাকি code copy করার আগে `requirements.txt` copy করে install করা হয়।
+
+**৩. setting আর secret আলাদা রাখুন।** একটা `.env` file configuration-এর মান রাখে, আর Compose নিজে থেকেই সেটা পড়ে আপনার `compose.yaml`-এ interpolation-এর জন্য দেয় <Cite n={11} />। `.dockerignore` `.env` file (যাতে secret থাকতে পারে) আর cache করা Python bytecode build context-এর বাইরে রাখে <Cite n={11} />:
+
+```text
+# .env
+APP_PORT=8000
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
+
+```text
+# .dockerignore
+.env
+*.pyc
+__pycache__
+redis-data
+```
+
+**৪. `compose.yaml` লিখুন।** এটা Quickstart-এর file, health check আর named volume-সহ, `develop.watch` block ছাড়া <Cite n={11} />:
+
+```yaml
+services:
+  web:
+    build: .
+    ports:
+      - "${APP_PORT}:5000"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  redis-data:
+```
+
+`web` service বর্তমান directory-র Dockerfile থেকে build করা image ব্যবহার করে, আর host-এর port 8000-কে container-এর port 5000-এর সাথে map করে <Cite n={11} />। `redis` service Docker Hub-এর একটা public Redis image ব্যবহার করে <Cite n={11} />। `redis-cli ping` একটা `PONG` উত্তর আশা করে; `interval: 5s` আর `retries: 5` থাকলে হাল ছাড়ার আগে Compose সর্বোচ্চ 25 সেকেন্ড অপেক্ষা করে <Cite n={11} />। `redis-data:/data` named volume-টা `/data`-তে mount করে, যেখানে Redis তার data file লেখে <Cite n={11} />।
+
+**৫. Compose কী প্রয়োগ করবে, দেখে নিন।** `docker compose config` শুধু আপনার file থেকে কাজ করে, আর `.env`-এর variable-গুলোর জায়গায় তাদের মান বসায় <Cite n={11} />:
+
+```bash
+docker compose config
+```
+
+**৬. চালু করুন।** `-d` container-গুলো background-এ চালায় <Cite n={15} />:
+
+```bash
+docker compose up -d
+```
+
+টিউটোরিয়ালের run-এ `redis` healthy হওয়ার পরেই `web` চালু হয়েছে:
+
+```text
+ Container compose-demo-redis-1 Started
+ Container compose-demo-redis-1 Waiting
+ Container compose-demo-redis-1 Healthy
+ Container compose-demo-web-1 Starting
+ Container compose-demo-web-1 Started
+```
+
+`http://localhost:8000` খুলে refresh করুন: প্রতিবার visit-এ counter বাড়ে <Cite n={11} />। টিউটোরিয়ালের run-এ এসেছে `Hello from Docker! I have been seen 1 time(s).`, তারপর 2, তারপর 3।
+
+**৭. ভেতরে দেখুন।** `docker compose logs -f` log-এর ধারা অনুসরণ করে; একটা service-এর নাম দিলে শুধু সেটারই log দেখায় <Cite n={11} />। `docker compose exec` নতুন container চালু না করে আগে থেকে চলা একটা container-এর ভেতরে command চালায় <Cite n={11} />:
+
+```bash
+docker compose logs -f web
+docker compose exec web env | grep REDIS
+docker compose exec redis redis-cli GET hits
+```
+
+log অনুসরণ থামাতে Ctrl+C চাপুন; container চলতেই থাকে <Cite n={11} />। টিউটোরিয়ালের run-এ `env` দেখিয়েছে `REDIS_HOST=redis` আর `REDIS_PORT=6379`, আর `GET hits` দিয়েছে `3`।
+
+**৮. থামান, আবার চালু করুন, তারপর reset করুন।** named volume `compose down` আর `compose up`-এর মাঝেও টিকে থাকে <Cite n={11} />। `--wait` service-গুলো running বা healthy হওয়া পর্যন্ত অপেক্ষা করে, আর detached mode-ও বোঝায় <Cite n={15} />:
+
+```bash
+docker compose down
+docker compose up -d --wait
+```
+
+counter যেখানে থেমেছিল, সেখান থেকে চলতে থাকে <Cite n={11} />। টিউটোরিয়ালের run-এ পরের visit দিয়েছে `I have been seen 4 time(s).`
+
+<Callout type="warning" title="This deletes data">
+`docker compose down -v` container-এর সাথে named volume-ও মুছে দেয়: জমা data স্থায়ীভাবে মুছে যায় <Cite n={11} />।
+</Callout>
+
+```bash
+docker compose down -v
+```
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**One file for the whole test environment.** Compose manages services, networks, and volumes in a single YAML configuration file <Cite n={9} />. With a custom project name, the same `compose.yaml` file can be deployed twice on the same infrastructure, without changes <Cite n={10} />. You can set the project name with the `--project-name` flag or the `COMPOSE_PROJECT_NAME` environment variable <Cite n={14} />.
+
+**Start the tests only when the services are ready.** `docker compose up --wait` waits for services to be running or healthy <Cite n={15} />. `--wait-timeout` sets the maximum duration in seconds to wait <Cite n={15} />. Healthy needs a `healthcheck` on the service <Cite n={13} />.
+
+**Use a test container's exit code.** `--exit-code-from` returns the exit code of the selected service container <Cite n={15} />. It implies `--abort-on-container-exit`, which stops all containers if any container was stopped <Cite n={15} />. If the `up` process itself encounters an error, its exit code is 1 <Cite n={15} />.
+
+**Reset data between runs.** By default, `docker compose down` removes only the containers for services, the networks defined in the Compose file, and the default network <Cite n={16} />. `-v` (`--volumes`) also removes named volumes declared in the `volumes` section and anonymous volumes attached to containers <Cite n={16} />.
+
+**Find out what was really running.** `docker compose config` shows the fully resolved configuration <Cite n={11} />. `docker compose logs` views output from containers, and `-t` shows timestamps <Cite n={17} />. `docker compose exec` is the primary tool for live debugging <Cite n={11} />.
+
+**Build a fresh image to test.** The `--pull` flag forces Docker to check for and download a newer version of the base image <Cite n={8} />. The `--no-cache` flag disables the build cache, forcing Docker to rebuild all layers from scratch <Cite n={8} />. Docker's example uses both <Cite n={8} />:
+
+```bash
+docker build --pull --no-cache -t my-image:my-tag .
+```
+
+**Builds and tests in Bake.** The Bake documentation lists workflows such as running tests and lint checks, and exporting build artifacts <Cite n={18} />.
+
+</Technical>
+<Layman>
+
+**One file for the whole test environment.** Compose manages services, networks, and volumes in one YAML file <Cite n={9} />. With its own project name, the same `compose.yaml` can run twice on the same infrastructure, with no changes <Cite n={10} />. You can set the project name with the `--project-name` flag or the `COMPOSE_PROJECT_NAME` environment variable <Cite n={14} />.
+
+**Start the tests only when the services are ready.** `docker compose up --wait` waits until the services are running or healthy <Cite n={15} />. `--wait-timeout` sets the longest wait, in seconds <Cite n={15} />. To be healthy, a service needs a `healthcheck` <Cite n={13} />.
+
+**Use a test container's exit code.** `--exit-code-from` returns the exit code of the service container that you name <Cite n={15} />. It also turns on `--abort-on-container-exit`, which stops all containers when any container stops <Cite n={15} />. If `up` itself hits an error, it exits with code 1 <Cite n={15} />.
+
+**Reset data between runs.** By default, `docker compose down` removes only the service containers, the networks of the Compose file, and the default network <Cite n={16} />. `-v` (`--volumes`) also removes the named volumes of the `volumes` section and the anonymous volumes of the containers <Cite n={16} />.
+
+**Find out what was really running.** `docker compose config` shows the full, final configuration <Cite n={11} />. `docker compose logs` shows the output of the containers, and `-t` adds timestamps <Cite n={17} />. `docker compose exec` is the main tool for debugging while the stack runs <Cite n={11} />.
+
+**Build a fresh image to test.** `--pull` makes Docker check for a newer base image and download it <Cite n={8} />. `--no-cache` turns off the build cache, so Docker builds all layers again <Cite n={8} />. Docker's example uses both <Cite n={8} />:
+
+```bash
+docker build --pull --no-cache -t my-image:my-tag .
+```
+
+**Builds and tests in Bake.** The Bake documentation lists workflows such as running tests and lint checks, and exporting build artifacts <Cite n={18} />.
+
+</Layman>
+<Bangla>
+
+**পুরো test environment একটা file-এ।** Compose একটা YAML configuration file-এ service, network আর volume পরিচালনা করে <Cite n={9} />। আলাদা একটা project name দিলে একই `compose.yaml` file কোনো পরিবর্তন ছাড়াই একই infrastructure-এ দুবার deploy করা যায় <Cite n={10} />। project name `--project-name` flag বা `COMPOSE_PROJECT_NAME` environment variable দিয়ে ঠিক করা যায় <Cite n={14} />।
+
+**service ready হলে তবেই test শুরু করুন।** `docker compose up --wait` service-গুলো running বা healthy হওয়া পর্যন্ত অপেক্ষা করে <Cite n={15} />। `--wait-timeout` সর্বোচ্চ কত সেকেন্ড অপেক্ষা করবে, তা ঠিক করে <Cite n={15} />। healthy হতে service-এ একটা `healthcheck` লাগে <Cite n={13} />।
+
+**test container-এর exit code কাজে লাগান।** `--exit-code-from` বেছে নেওয়া service container-এর exit code ফেরত দেয় <Cite n={15} />। এটা `--abort-on-container-exit`-ও বোঝায়, যেটা কোনো container থেমে গেলে সব container থামিয়ে দেয় <Cite n={15} />। `up` process নিজে কোনো error-এ পড়লে তার exit code হয় 1 <Cite n={15} />।
+
+**দুই run-এর মাঝে data reset করুন।** default-ভাবে `docker compose down` শুধু service-এর container, Compose file-এ define করা network আর default network মোছে <Cite n={16} />। `-v` (`--volumes`) `volumes` section-এ ঘোষণা করা named volume আর container-এর সাথে যুক্ত anonymous volume-ও মুছে দেয় <Cite n={16} />।
+
+**আসলে কী চলছিল, জানুন।** `docker compose config` পুরোপুরি resolve করা configuration দেখায় <Cite n={11} />। `docker compose logs` container-এর output দেখায়, আর `-t` timestamp দেখায় <Cite n={17} />। চলন্ত অবস্থায় debugging-এর প্রধান tool হলো `docker compose exec` <Cite n={11} />।
+
+**test করার জন্য একটা নতুন image build করুন।** `--pull` flag Docker-কে base image-এর নতুন version খুঁজে download করতে বাধ্য করে <Cite n={8} />। `--no-cache` flag build cache বন্ধ করে, ফলে Docker সব layer শুরু থেকে আবার build করে <Cite n={8} />। Docker-এর উদাহরণে দুটোই আছে <Cite n={8} />:
+
+```bash
+docker build --pull --no-cache -t my-image:my-tag .
+```
+
+**Bake-এ build আর test।** Bake-এর documentation-এ test আর lint check চালানো, আর build artifact export করার মতো workflow-এর তালিকা আছে <Cite n={18} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Trusting `depends_on` alone.** With the short syntax, Compose does not wait for dependency services to be "healthy" before starting a dependent service <Cite n={12} />. If an application starts before its database, it may not find a database able to handle its SQL statements <Cite n={13} />. Add a `healthcheck` and `condition: service_healthy` <Cite n={13} />.
+- **Unquoted ports.** `HOST:CONTAINER` should always be specified as a quoted string, to avoid conflicts with the YAML base-60 float <Cite n={12} />.
+- **Ports open to everyone.** If you do not specify a host IP (such as `127.0.0.1`), Docker binds to all interfaces (`0.0.0.0`), bypassing host firewall rules <Cite n={12} />. A short-syntax example with a host IP is `"127.0.0.1:8001:8001"` <Cite n={12} />.
+- **Secrets in build arguments or `ENV`.** Build arguments and environment variables are inappropriate for passing secrets to your build, because they persist in the final image <Cite n={7} />.
+- **Copying all the source before installing dependencies.** Then updating any file causes a reinstall of all dependencies every time you build the image <Cite n={5} />.
+- **Expecting `docker compose down` to clear the data.** Named volumes stay unless you add `-v` <Cite n={16} />. Anonymous volumes are not removed by default either <Cite n={16} />.
+- **Trusting a tag in `FROM`.** Image tags are mutable: a publisher can update a tag to point to a new image <Cite n={8} />. Pinning to a digest guarantees the same image version <Cite n={8} />.
+
+</Technical>
+<Layman>
+
+- **Trusting `depends_on` alone.** With the short form, Compose does not wait for a dependency to be "healthy" before it starts the service that needs it <Cite n={12} />. If an app starts before its database, it may find no database that can take its SQL statements <Cite n={13} />. Add a `healthcheck` and `condition: service_healthy` <Cite n={13} />.
+- **Ports without quotes.** Always write `HOST:CONTAINER` as a string in quotes, to avoid conflicts with the YAML base-60 float <Cite n={12} />.
+- **Ports open to everyone.** If you give no host IP (such as `127.0.0.1`), Docker opens the port on all interfaces (`0.0.0.0`) and goes around the host's firewall rules <Cite n={12} />. An example with a host IP is `"127.0.0.1:8001:8001"` <Cite n={12} />.
+- **Secrets in build arguments or `ENV`.** Do not pass secrets to a build in build arguments or environment variables: they stay in the final image <Cite n={7} />.
+- **Copying all the source before installing the packages.** Then a change to any file installs all the packages again on every build <Cite n={5} />.
+- **Expecting `docker compose down` to clear the data.** Named volumes stay unless you add `-v` <Cite n={16} />. Anonymous volumes are not removed by default either <Cite n={16} />.
+- **Trusting a tag in `FROM`.** Image tags can change: a publisher can move a tag to a new image <Cite n={8} />. Pinning to a digest makes sure that you always get the same image <Cite n={8} />.
+
+</Layman>
+<Bangla>
+
+- **শুধু `depends_on`-এর ওপর ভরসা করা।** short syntax-এ Compose dependent service চালুর আগে dependency service-গুলো "healthy" হওয়ার জন্য অপেক্ষা করে না <Cite n={12} />। একটা application তার database-এর আগে চালু হলে SQL statement সামলাতে পারে এমন database খুঁজে না-ও পেতে পারে <Cite n={13} />। একটা `healthcheck` আর `condition: service_healthy` যোগ করুন <Cite n={13} />।
+- **quote ছাড়া port।** YAML-এর base-60 float-এর সাথে গোলমাল এড়াতে `HOST:CONTAINER` সবসময় quote করা string হিসেবে লিখুন <Cite n={12} />।
+- **সবার জন্য খোলা port।** host IP (যেমন `127.0.0.1`) না দিলে Docker সব interface-এ (`0.0.0.0`) bind করে, host-এর firewall rule এড়িয়ে <Cite n={12} />। host IP-সহ short syntax-এর একটা উদাহরণ হলো `"127.0.0.1:8001:8001"` <Cite n={12} />।
+- **build argument বা `ENV`-এ secret।** build-এ secret পাঠানোর জন্য build argument আর environment variable উপযুক্ত নয়, কারণ এগুলো final image-এ থেকে যায় <Cite n={7} />।
+- **dependency install-এর আগে সব source copy করা।** তাহলে যেকোনো file বদলালেই প্রতিটা build-এ সব dependency আবার install হয় <Cite n={5} />।
+- **`docker compose down` data মুছে দেবে ভাবা।** `-v` না দিলে named volume থেকে যায় <Cite n={16} />। default-ভাবে anonymous volume-ও মোছে না <Cite n={16} />।
+- **`FROM`-এর tag-এ ভরসা করা।** image tag বদলানো যায়: একজন publisher একটা tag-কে নতুন image-এর দিকে সরিয়ে দিতে পারে <Cite n={8} />। digest-এ pin করলে নিশ্চিতভাবে সবসময় একই image version পাওয়া যায় <Cite n={8} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester on a team that uses Dockerfiles and Compose.
+
+- Ask for a `healthcheck` on each service that the tests depend on, and for `condition: service_healthy` in `depends_on`.
+- In CI, start the stack with `docker compose up --wait` before the tests run.
+- Give each parallel test environment its own project name.
+- Ask that base images in `FROM` are pinned, and record the digest of the image under test.
+- Check that `.dockerignore` keeps `.env` files and other secrets out of the build context.
+- Use `docker compose down -v` only when you mean to delete the test data.
+- Attach the output of `docker compose config` to a bug report about the environment.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester on a team that uses Dockerfiles and Compose.
+
+- Ask for a `healthcheck` on each service that the tests depend on, and for `condition: service_healthy` in `depends_on`.
+- In CI, start the stack with `docker compose up --wait` before the tests run.
+- Give each test environment that runs at the same time its own project name.
+- Ask that base images in `FROM` are pinned, and write down the digest of the image under test.
+- Check that `.dockerignore` keeps `.env` files and other secrets out of the build context.
+- Use `docker compose down -v` only when you really want to delete the test data.
+- Add the output of `docker compose config` to a bug report about the environment.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, Dockerfile আর Compose ব্যবহার করা টিমের একজন tester-এর জন্য।
+
+- test যেসব service-এর ওপর নির্ভর করে, সেগুলোর প্রতিটায় একটা `healthcheck`, আর `depends_on`-এ `condition: service_healthy` চান।
+- CI-তে test চালানোর আগে `docker compose up --wait` দিয়ে stack চালু করুন।
+- একসাথে চলা প্রতিটা test environment-কে আলাদা project name দিন।
+- `FROM`-এর base image যেন pin করা হয়, তা চান, আর test করা image-এর digest লিখে রাখুন।
+- দেখুন `.dockerignore` `.env` file আর অন্য secret build context-এর বাইরে রাখে কি না।
+- test data সত্যিই মুছতে চাইলে তবেই `docker compose down -v` ব্যবহার করুন।
+- environment নিয়ে bug report-এ `docker compose config`-এর output যোগ করুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Dockerfile | A text document with all the commands a user could call on the command line to assemble an image |
+| `docker build` | An alias of `docker buildx build`, which starts a build using BuildKit |
+| Build context | The set of files that your build can access |
+| `.dockerignore` | A newline-separated list of patterns that keeps files out of the build context |
+| Build cache | If a layer changes, all other layers that come after it are also affected, so the order of the instructions matters |
+| Multi-stage build | A Dockerfile with multiple `FROM` statements that copies only the artifacts it needs into the final image |
+| Docker Compose | A tool for defining and running multi-container applications |
+| `compose.yaml` | The default Compose file in the working directory |
+| Service | An entry under `services` in `compose.yaml`, such as `web` or `redis`; its containers are discoverable by the service name |
+| `healthcheck` | How Compose tests whether a service is healthy, such as `redis-cli ping` |
+| `condition: service_healthy` | Starts a dependent service only after the dependency is healthy |
+| Project name | The name that lets the same `compose.yaml` run twice on the same infrastructure |
+| Named volume | Storage that keeps data between `compose down` and `compose up` |
+| Bake | A feature of Docker Buildx that defines builds in a declarative file |
