@@ -1,6 +1,6 @@
 # Agentic QA
 
-A free site that teaches QA engineers and SDETs how to use Claude Code for software testing. It also has modules on Linux, manual testing, system design, performance testing with k6, AI engineering and agents, testing AI and ML systems, DevOps and the cloud, and security and penetration testing, in plain words for testers.
+A free site that teaches QA engineers and SDETs how to use Claude Code for software testing. It also has modules on Linux, manual testing, system design, performance testing with k6, AI engineering and agents, testing AI and ML systems, DevOps and the cloud, security and penetration testing, and an SDET roadmap from Postman to Playwright, in plain words for testers.
 
 **Read it:** https://kawsar-95.github.io/ai-testing-guide/
 
@@ -25,7 +25,7 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 330 pages. 311 of them are lessons in 16 sections: the tutorial and 15 modules. The other 19 are the home page, the 15 module home pages, and 3 helper pages.
+The site has 341 pages. 321 of them are lessons in 17 sections: the tutorial and 16 modules. The other 20 are the home page, the 16 module home pages, and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
@@ -45,6 +45,7 @@ The site has 330 pages. 311 of them are lessons in 16 sections: the tutorial and
 | [AI/ML Testing](https://kawsar-95.github.io/ai-testing-guide/ai-ml-testing/) | 47 topics in 2 phases | Testing AI and ML systems: LLM behavior, prompt testing, automated evals, hallucination detection, RAG and agent testing, red teaming, observability, and CI/CD eval gates |
 | [DevOps & Cloud](https://kawsar-95.github.io/ai-testing-guide/devops/) | 24 topics in 7 parts | Git, CI/CD, Docker, Kubernetes, AWS, Terraform, Ansible, monitoring, and CNCF projects. The 8 pages of Parts 1 and 2 are full lessons for testers, with a practice run; the others are a short sourced explanation. Every page ends with KodeKloud Shorts |
 | [Security Testing](https://kawsar-95.github.io/ai-testing-guide/security/) | 8 topics | Security and penetration testing: a safe lab, Nmap and server hardening, web, API, and database flaws with Burp Suite and ZAP, AI-assisted testing, DevSecOps scans in CI/CD, Bangladesh's cyber and data protection laws, and a practice penetration test with a report |
+| [SDET Roadmap](https://kawsar-95.github.io/ai-testing-guide/sdet/) | 20 steps in 7 parts | The steps of an SDET course in order: 10 new pages (Postman, JavaScript, TypeScript, MySQL, problem solving, Express, Next.js, Burp Suite, and Playwright for the UI and for APIs), and links to the modules that teach the other 10 steps |
 
 Three helper pages sit beside the sections: [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) lists everything, [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows your progress, and [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) links to the interview material.
 
@@ -72,7 +73,7 @@ The top navigation has four plain links: **Home**, **Contents**, **Dashboard**, 
 
 The home page has a hero with a stats row (tutorial parts, modules, pages, and text voices), a "Why this guide" block, and the course structure as two ruled lists: the tutorial groups (read in order) and the modules (open any).
 
-The [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) page shows every tutorial group and every module as one row. Open a row to see its pages. The 12 modules with a checklist show your progress as a percent on their row. System Design, AI Harnesses, and DevOps & Cloud have no checklist.
+The [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) page shows every tutorial group and every module as one row. Open a row to see its pages. The 13 modules with a checklist show your progress as a percent on their row. System Design, AI Harnesses, and DevOps & Cloud have no checklist.
 
 ![The Contents page: one row for each tutorial group and each module, with the progress percent of each module that has a checklist](docs/assets/contents.png)
 
@@ -92,7 +93,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 
 ### Three voices for every section
 
-All 299 MDX pages (every content page except the 12 Linux command sheets) let you read each `##` section in three voices:
+All 309 MDX pages (every content page except the 12 Linux command sheets) let you read each `##` section in three voices:
 
 | Voice | What it is |
 |---|---|
@@ -128,14 +129,14 @@ The ISTQB version has seven inline diagrams, for example the test pyramid, the t
 
 The site tracks your work in your browser. It never sends it to a server.
 
-- **Topic checklists:** 12 modules show your progress with a bar: Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, and Security Testing. Linux and Fundamentals have a checkbox for each topic. The other ten have a mark-as-done button at the end of each page, and Architecture also has a checkbox for each of its 30 practice questions. System Design, AI Harnesses, and DevOps & Cloud have no checklist.
+- **Topic checklists:** 13 modules show your progress with a bar: Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, Security Testing, and SDET Roadmap. Linux and Fundamentals have a checkbox for each topic. The other eleven have a mark-as-done button at the end of each page, and Architecture also has a checkbox for each of its 30 practice questions. System Design, AI Harnesses, and DevOps & Cloud have no checklist.
 - **Pages read and bookmarks:** each content page has a **Mark as read** toggle and a **Bookmark** toggle in its meta row.
 - **Last page:** the site remembers the last content page that you opened.
 
 ![The Linux home: a ruled block for each stage, with its commands as links](docs/assets/linux.png)
 ![A Linux stage page: one card for each topic, one row for each command](docs/assets/linux-stage.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 311`) with a progress bar, beside a Continue reading block. Below them, one row for each of the 12 modules with a checklist shows its name, a bar, and `done / total`. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 321`) with a progress bar, beside a Continue reading block. Below them, one row for each of the 13 modules with a checklist shows its name, a bar, and `done / total`. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard: pages read, Continue reading, and the progress of each module](docs/assets/dashboard.png)
 
@@ -189,7 +190,7 @@ The layout adapts to phone widths. Below 1200 px the top navigation moves into t
 
 ### Install it and read offline
 
-The site is a progressive web app (PWA). Chromium browsers show an install button (a download icon) in the header. After the first visit, the service worker has all 330 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
+The site is a progressive web app (PWA). Chromium browsers show an install button (a download icon) in the header. After the first visit, the service worker has all 341 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
 
 ### Accessibility
 
@@ -254,11 +255,13 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `python3 scripts/ai_ml_testing_check_sources.py` | Checks that each source URL of the AI/ML Testing module resolves. It needs a network. |
 | `python3 -m unittest scripts/test_devops_claimcheck.py` | Runs the unit tests of the DevOps & Cloud quote checker. |
 | `python3 scripts/devops_claimcheck.py` | Looks each quote of the DevOps & Cloud research notes up in the text of the source page that it cites. It needs a network. |
+| `python3 -m unittest scripts/test_sdet_claimcheck.py` | Runs the unit tests of the SDET Roadmap quote checker. |
+| `python3 scripts/sdet_claimcheck.py` | Looks each quote of the SDET Roadmap research notes up in the text of the source page that it cites. It needs a network, or its cache. |
 | `node scripts/check-reels.ts` | Asks YouTube about every reel on the pages of the 13 modules that have reels: still public and embeddable, same title and channel, still a Short. It needs a network, so it is not part of `npm test`. Exit code 2 means that the check could not be done. |
 | `python3 scripts/check_routes.py out` | Checks that every route of the route maps has a built page. |
 | `python3 scripts/check_links.py out` | Checks internal links and assets. |
 | `python3 scripts/check_outline.py out` | Checks that every "On this page" link has a target. |
-| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 311 pages checked, 0 skipped`. |
+| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 321 pages checked, 0 skipped`. |
 
 Run the `out` checks after `npm run build`, on a build without a base path.
 
@@ -267,7 +270,7 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 ```text
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
-content/<group>/     The 299 MDX pages: 34 tutorial, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts, 7 Agent Memory, 10 AI Agents, 47 AI/ML Testing, 24 DevOps & Cloud, 8 Security Testing
+content/<group>/     The 309 MDX pages: 34 tutorial, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts, 7 Agent Memory, 10 AI Agents, 47 AI/ML Testing, 24 DevOps & Cloud, 8 Security Testing, 10 SDET Roadmap
 lib/                 nav.ts (tutorial page order), one data file for each module, the Linux command sheets (linux/sheets/), the reels (reels/), search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
 scripts/             Check scripts (Python and Node), the route maps (one JSON file for the tutorial, each module, and each helper page), the AI/ML Testing page generator, and research tools
@@ -288,7 +291,7 @@ For a tutorial page:
 3. Give each fact a `<Cite n={k} />` and a matching entry in `page.sources`.
 4. Run `npm test`, `npm run build`, and the checks above.
 
-The other modules keep their page lists in their own data files: `lib/linux/stages.ts`, `lib/fundamentals/chapters.ts`, `lib/system-design/cases.ts`, `lib/architecture/topics.ts`, `lib/course/topics.ts`, `lib/k6/topics.ts`, `lib/ai-engineering/topics.ts`, `lib/harness/topics.ts`, `lib/ai-skills/topics.ts`, `lib/ai-concepts/topics.ts`, `lib/agent-memory/topics.ts`, `lib/ai-agents/topics.ts`, `lib/ai-ml-testing/topics.ts`, and `lib/devops/topics.ts`. Each module has its own route map in `scripts/`. A page with voices also needs a voice fact-check report. In a module with reels, a new page also needs its entry in `lib/reels/<module>.ts`, except in the Course, where only a topic with a clip has one. `npm test` checks that the lists, the MDX files, the route maps, and the reels files agree. To add a whole module, follow [Flat modules](CLAUDE.md#flat-modules) in CLAUDE.md.
+The other modules keep their page lists in their own data files: `lib/linux/stages.ts`, `lib/fundamentals/chapters.ts`, `lib/system-design/cases.ts`, `lib/architecture/topics.ts`, `lib/course/topics.ts`, `lib/k6/topics.ts`, `lib/ai-engineering/topics.ts`, `lib/harness/topics.ts`, `lib/ai-skills/topics.ts`, `lib/ai-concepts/topics.ts`, `lib/agent-memory/topics.ts`, `lib/ai-agents/topics.ts`, `lib/ai-ml-testing/topics.ts`, `lib/devops/topics.ts`, and `lib/sdet/topics.ts`. Each module has its own route map in `scripts/`. A page with voices also needs a voice fact-check report. In a module with reels, a new page also needs its entry in `lib/reels/<module>.ts`, except in the Course, where only a topic with a clip has one. `npm test` checks that the lists, the MDX files, the route maps, and the reels files agree. To add a whole module, follow [Flat modules](CLAUDE.md#flat-modules) in CLAUDE.md.
 
 The AI/ML Testing pages are generated, so do not edit `content/ai-ml-testing/*.mdx` by hand. To add or change a page, edit its data in `scripts/ai_ml_testing_pages_p*.py` (the sources are in `scripts/ai_ml_testing_sources.py`) and the list in `lib/ai-ml-testing/topics.ts`. Then run `python3 scripts/ai_ml_testing_pages_gen.py` to write the MDX pages, and `python3 scripts/ai_ml_testing_gen.py` to write `scripts/ai-ml-testing-route-map.json` and `tests/ai-ml-testing.test.ts` from the list. A page that changes after the module date gets its own `updated` date in its data; without one, it shows the module date (`UPDATED` in `scripts/ai_ml_testing_pages_gen.py`).
 
