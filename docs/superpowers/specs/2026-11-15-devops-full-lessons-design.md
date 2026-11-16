@@ -63,7 +63,8 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 - **Keep the limits of the source.** "Only", "by default", "UTC", "each at its own path": a word that the source does not have is a new claim. Use the source's own wording for defaults, limits, and conditions.
 - **Label invented examples.** Diagrams, file names, sample data, and scripts that are the tutorial's own say so, and real command output says when it was run.
 - **The Layman and Bangla panels add nothing.** "Your branch's version", "line by line", "a running copy": a plainer word must not add a fact.
-- **The round script** must see every source: it stops now when it parses fewer sources than the page has (a title in double quotes was skipped once). Quotes in the research notes must avoid text that the page's markup splits, such as `exit(-1)` inside a code span.
+- **The round script** must see every source: it stops now when it parses fewer sources than the page has (a title in double quotes was skipped once). Quotes in the research notes must avoid text that the page's markup splits, such as `exit(-1)` inside a code span, or quote it as the quote checker reads it: the code highlighting of the Docker docs puts a space before and after each `=` of a syntax line (`--mount type = volume,src = <volume-name>`).
+- **Real output of the page's own run** says when, and with which versions, it was run, and each output says that it is from the tutorial's run. From round 10 of `docker-images-compose`, the brief names such a record as N/A; a sentence in it that says how a tool works in general still needs a cite. Keep the run's logs until the page is done: a checker may ask for the output again.
 
 ## Pages
 
@@ -74,7 +75,9 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 | 1 | git-workflows | done: 14 sources, rounds 6 to 16 |
 | 1 | ci-cd | done: 17 sources, rounds 6 to 10 |
 | 1 | gitops | done: 8 sources, rounds 6 to 12 |
-| 2 | docker-basics, docker-images-compose, docker-in-practice | to do |
+| 2 | docker-basics | done: 19 sources, rounds 6 to 8 |
+| 2 | docker-images-compose | done: 18 sources, rounds 6 to 11 |
+| 2 | docker-in-practice | done: 12 sources, rounds 6 to 8 |
 | 3 | kubernetes-basics, kubernetes-architecture, kubernetes-networking-storage, kubernetes-operations, kubernetes-security-troubleshooting | to do |
 | 4 | cloud-concepts, aws-compute-storage, aws-networking, aws-identity-security, aws-data-serverless | to do |
 | 5 | terraform-iac, ansible | to do |
