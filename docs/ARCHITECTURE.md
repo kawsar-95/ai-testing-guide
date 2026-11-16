@@ -79,7 +79,7 @@ Each part of the site has one ordered list. The lists drive the drawer, the home
 | Agent Memory | `lib/agent-memory/topics.ts` | 7 topics, one for each type of agent memory. A flat module. |
 | How AI Agents Work | `lib/ai-agents/topics.ts` | 10 topics, one for each part of the agent loop. A flat module. |
 | AI/ML Testing | `lib/ai-ml-testing/topics.ts` | 47 topics from LLM basics to agent testing. A flat module. The MDX is generated from `scripts/ai_ml_testing_pages_p1*.py` and `_p2*.py`. |
-| DevOps & Cloud | `lib/devops/topics.ts` | 24 topics in 7 parts, one shelf for each topic: a short sourced text, then KodeKloud Shorts. A flat module with no progress store. |
+| DevOps & Cloud | `lib/devops/topics.ts` | 24 topics in 7 parts. The 5 topics of Part 1 are full lessons for testers, and the other 19 a short sourced text; every topic ends with KodeKloud Shorts. A flat module with no progress store. |
 | Security Testing | `lib/security/topics.ts` | 8 topics, from a safe practice lab to a practice penetration test, in the order of the 8 modules of the course "Cyber Security and Penetration Testing with AI" (Road to SDET). A flat module with a progress store. |
 
 The top nav comes from `lib/header-nav.ts` (`HEADER_NAV`). It has four plain links: Home, Contents, Dashboard, and Interview. `activeNavId` marks the current item, and a tutorial or module page has none. A reader reaches a module from the home page or the contents page. `lib/interview.ts` holds the strings and the three cards of the interview page.
