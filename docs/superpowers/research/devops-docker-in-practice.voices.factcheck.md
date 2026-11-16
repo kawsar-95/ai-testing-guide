@@ -66,4 +66,79 @@ Open FAILs after round 5: 0
 
 Not checked: The only risk is that the Note wording may not follow that style.
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-16)
+
+# Voices fact check: devops / docker-in-practice (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | FAIL | "every file that a container creates goes into its own writable layer" adds "its own". The Technical panel says only "a writable container layer". S1 says the layer is unique per container, but the Technical panel does not. Fix: "goes into a writable layer". Left out: "among them" is kept; the "no matter which type" limit is kept. Left out: the `--link` option is called "old", not "legacy". |
+| What it is | Bangla | PASS | Meaning matches the Technical panel; every cite is on the same fact. Left out: nothing of substance. Product names and flags stay in English. |
+| How it works | Layman | PASS | Facts match. Left out: "In general" is turned into "Most of the time" (same strength). Left out: the Technical qualifier "in the container in which files or directories exist" is shortened to "a folder that already has files". The diagram sentence is the same. |
+| How it works | Bangla | PASS | Meaning matches the Technical panel. Left out: nothing of substance. Code blocks are identical to the Technical panel. |
+| Try it | Layman | PASS | Facts match the Technical panel. Code blocks are identical. Left out: "executable" becomes "program"; "user-defined" becomes "that you create". Left out: nothing else. |
+| Try it | Bangla | PASS | Meaning matches the Technical panel. Code blocks are identical. The Bangla is readable and consistent. Left out: nothing of substance. |
+| How a tester uses it | Layman | PASS | Facts match. Left out: "UID:GID" becomes "belong to the user"; "more safely" becomes "safer"; "kernel scheduler" becomes "kernel"; the CPU wording is shortened. |
+| How a tester uses it | Bangla | PASS | Meaning matches the Technical panel. Left out: nothing of substance. |
+| Common mistakes | Layman | PASS | Facts match the Technical panel. The sentence "The container then gets an empty folder instead of your files" is word for word in the Technical panel (it has no cite there, see FAIL in #81). Left out: "(both dangling and unused)" is kept; "at least one" becomes "no container uses". |
+| Common mistakes | Bangla | PASS | Meaning matches the Technical panel, including the uncited "empty folder" sentence. Left out: nothing of substance. |
+| What a tester can check | Layman | PASS | Same list as the Technical callout. The only change is "user-defined network" becoming "network that you create". |
+| What a tester can check | Bangla | PASS | Same list and meaning as the Technical callout. Left out: nothing of substance. |
+
+Open FAILs after round 6: 1
+
+I did not run any commands from the page. I judged the Bangla by meaning and read all of it without trouble.
+
+Changed after this round: The FAIL was fixed: the Layman panel says that a file goes into "a writable layer", not into "its own" writable layer.
+
+## Round 7 (2026-11-16)
+
+# Voices fact check: devops / docker-in-practice (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | FAIL | The bind mount "Use it for" cell says "between your computer and a container". The Technical panel says "between a development environment on the Docker host and a container". "Your computer" is a different noun, and the host can be a remote daemon (S3). Fix: "between the Docker host and a container". Also: "find each other by name" for user-defined bridges is not in this section's Technical panel, which says only "automatic DNS resolution between containers". The How it works section gives it. Left out: "persistent" wording, "from the host" in the bind mount definition, "development environment", "legacy" as a label (it says "old"). |
+| What it is | Bangla | PASS | All facts match the Technical panel, and the limits ("default-ভাবে", "শুধু") are kept. Left out: nothing of note. |
+| How it works | Layman | PASS | All facts match. Left out: "simultaneously", "(copied)", the "tutorial's own picture" claim is kept. "Most of the time" stands for "In general". The `--mount` and `--volume` flags and all code blocks are identical to the Technical panel. |
+| How it works | Bangla | PASS | All facts match, and the code blocks are identical. Left out: nothing of note. |
+| Try it | Layman | FAIL | Step 2 says "A bind mount puts a folder of your computer into the container". The Technical panel says "a host folder". "Your computer" changes the noun (see What it is). Fix: "a folder of the host". Other changes are fine: "program" for "executable", "stops with an error" for "produces an error", "no limits" for "no resource constraints". Left out: "Docker's own example" detail is kept. Nothing else of note. |
+| Try it | Bangla | PASS | Meaning matches the Technical panel for every step, and the code blocks are identical. Left out: nothing of note. |
+| How a tester uses it | Layman | PASS | All facts match. Minor note: "makes the container faster" restates "increases the container's performance"; I judged this the same meaning. Left out: "consider" (the Technical panel also omits it), "scheduler" in "kernel scheduler", "local filesystem" (it says "your computer", which is fine for the local machine in `docker cp`), "UID:GID" (it says "belong to the user"). |
+| How a tester uses it | Bangla | PASS | All facts match, and the code block is identical. Left out: nothing of note. |
+| Common mistakes | Layman | PASS | All facts match. Left out: "straightforward" (it says "easy"), "pre-existing", "prunes" (it says "removes"). |
+| Common mistakes | Bangla | PASS | All facts match, including the `docker system prune` lists and flags. Left out: nothing of note. |
+| What a tester can check | Layman | PASS | The list is the same as the Technical panel. The only change is "a network that you create" for "user-defined network". |
+| What a tester can check | Bangla | PASS | The list is the same as the Technical panel in Bangla. Left out: nothing of note. |
+
+Open FAILs after round 7: 2
+
+Skipped or not checked: the tutorial's own run observations (exit codes 125, 0 and 1, `root` ownership, the stats and df output, Docker Engine 29.9.3) are not in any source. I marked them N/A because the page labels them as the tutorial's own run, so a reviewer who wants them cited should treat them as open. My judgment of the Bangla is based on meaning, and I read it well enough to judge every sentence.
+
+Changed after this round: Both FAILs were fixed: the Layman panels say "the Docker host" and "a folder of the host", not "your computer"; the Layman `docker cp` sentences say "the local file system" and "the local machine"; and the Layman sentence about networks in `## What it is` says only what its Technical panel says, automatic DNS resolution between the containers.
+
+## Round 8 (2026-11-16)
+
+# Voices fact check: devops / docker-in-practice (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel. "Joins the default bridge" matches "attached to". "A bridge network that you create yourself" matches "user-defined bridges". Left out: the table's phrase "persistent" for volumes becomes "that lasts"; "legacy" becomes "old". No added facts. |
+| What it is | Bangla | PASS | The meaning matches. The cites are on the same facts. Left out: nothing of substance. |
+| How it works | Layman | PASS | Meaning is kept. "Most of the time" matches "in general". "Hides" matches "obscured". "Only for names that you give" matches "only resolves custom names". The code blocks and diagram are identical to the Technical panel. Left out: "propagated" as a term, the "simultaneously" wording, and the word "automatically" in the final sentence of "A volume lives longer...". |
+| How it works | Bangla | PASS | The meaning matches every Technical sentence. The code blocks and diagram are identical. Left out: nothing of substance. |
+| Try it | Layman | PASS | The record paragraphs are the same. "Program" stands for "executable", and "no limits" for "no resource constraints". Both are fine. The code blocks are identical. Left out: the word "executable" and the term "resource constraints". |
+| Try it | Bangla | PASS | Bangla meaning is the same as the Technical panel in every step. The code blocks and output blocks are identical. Left out: nothing of substance. |
+| How a tester uses it | Layman | PASS | Meaning is kept. "Belong to the user who ran `docker cp`" restates "created with the UID:GID of the user". "The host's kernel allows" drops the word "scheduler"; the sentence is still true. Left out: "UID:GID", "scheduler", "available" before "CPU resources". |
+| How a tester uses it | Bangla | PASS | Meaning matches the Technical panel. The code block is identical. Left out: nothing of substance. |
+| Common mistakes | Layman | PASS | "Gone" restates "won't be persisted" for a removed tmpfs mount. "If you ask" matches "optionally". "All networks that no container uses" matches "not used by at least one container". Left out: the bullet on `readonly` keeps its limit. |
+| Common mistakes | Bangla | PASS | Bangla meaning matches. The network phrase "অন্তত একটা container ব্যবহার করছে না" mirrors the source wording. Left out: nothing of substance. |
+| What a tester can check | Layman | PASS | Same eight tips as the Technical panel. Only change: "one network that you create" for "one user-defined network". No added fact. |
+| What a tester can check | Bangla | PASS | Same eight tips, and the callout title and the "tutorial's own advice" statement are kept. No added fact. |
+
+Open FAILs after round 8: 0
+
+I did not check the Bangla grammar beyond meaning. Rows 41 and 70 rest on S7's `docker cp` synopsis (CONTAINER:SRC_PATH DEST_PATH); I saw it only through line matches, not a full read of that block.
+
 Open FAILs: 0

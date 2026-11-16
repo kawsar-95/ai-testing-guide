@@ -53,7 +53,7 @@ const SOURCE: readonly TopicEntry[] = [
   { slug: "gitops", part: 1, title: "GitOps", description: "The four OpenGitOps principles, how Argo CD and Flux sync a cluster to Git, and smoke tests that run after each sync." },
   { slug: "docker-basics", part: 2, title: "Docker Basics", description: "Containers, images, and registries, how the Docker client and daemon run a container, and the first commands that a tester uses." },
   { slug: "docker-images-compose", part: 2, title: "Docker Images and Compose", description: "How a Dockerfile builds an image, how the build cache works, and how Docker Compose starts a whole test environment from one file, with Bake for builds." },
-  { slug: "docker-in-practice", part: 2, title: "Docker in Practice", description: "Docker volumes and bind mounts." },
+  { slug: "docker-in-practice", part: 2, title: "Docker in Practice", description: "Volumes, bind mounts, and tmpfs for test data, networks where containers find each other by name, and the commands to look into a container and clean up." },
   { slug: "kubernetes-basics", part: 3, title: "Kubernetes Basics", description: "Pods, ReplicaSets, and Deployments." },
   { slug: "kubernetes-architecture", part: 3, title: "Kubernetes Architecture", description: "etcd and Operators." },
   { slug: "kubernetes-networking-storage", part: 3, title: "Kubernetes Networking and Storage", description: "Services, DNS records, and volumes." },
