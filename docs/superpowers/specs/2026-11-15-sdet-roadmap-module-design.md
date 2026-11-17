@@ -31,7 +31,7 @@ Only the order of the 20 steps and the names of the subjects. No sentence, list,
 | 11 | `performance-testing` | Performance Testing with k6 | link | `/k6/` |
 | 12 | `system-design-in-practice` | System Design in Practice | link | `/architecture/` |
 | 13 | `linux` | Linux | link | `/linux/` |
-| 14 | `security-testing` | Security Testing with Burp Suite | topic | new page |
+| 14 | `security-testing` | Security Testing | link | `/security/` |
 | 15 | `aws` | AWS Basics | link | `/devops/cloud-concepts/` |
 | 16 | `playwright-ui` | UI Automation with Playwright | topic | new page |
 | 17 | `playwright-api` | API Automation with Playwright | topic | new page |
@@ -84,16 +84,14 @@ The shape of the DevOps & Cloud full pages (`docs/superpowers/specs/2026-11-15-d
 | api-testing-postman | done | Open FAILs: 0 (round 3) | Open FAILs: 0 (round 3) |
 | javascript | done | Open FAILs: 0 (round 5) | Open FAILs: 0 (round 5) |
 | typescript | done | Open FAILs: 0 (round 5) | Open FAILs: 0 (round 5) |
-| sql-mysql | done | Open FAILs: 0 (round 8) | Open FAILs: 0 (round 8) |
+| sql-mysql | done | Open FAILs: 0 (round 9) | Open FAILs: 0 (round 9) |
 | problem-solving | done | Open FAILs: 0 (round 3) | Open FAILs: 0 (round 3) |
 | backend-node-express | done | Open FAILs: 0 (round 4) | Open FAILs: 0 (round 4) |
 | frontend-nextjs | done | Open FAILs: 0 (round 5) | Open FAILs: 0 (round 5) |
-| security-testing | done | Open FAILs: 0 (round 7) | Open FAILs: 0 (round 7) |
 | playwright-ui | done | Open FAILs: 0 (round 8) | Open FAILs: 0 (round 8) |
 | playwright-api | done | Open FAILs: 0 (round 5) | Open FAILs: 0 (round 5) |
 
 ## Changes after the first draft
 
-- #80 added a Security Testing module while this module was written. Its Web Application Security page also tests with Burp Suite on Juice Shop. Step 14 keeps its own page, which now links to that module. Turning step 14 into a `link` entry to `/security/web-application-security/` is the other option.
+- #80 added a Security Testing module while this module was written. It teaches the subject in 8 pages, and its Web Application Security page also tests with Burp Suite on Juice Shop. After #85, the owner chose to make step 14 a `link` entry to `/security/`. The step-14 page (`content/sdet/security-testing.mdx`), its research note, and its two fact-check reports were removed; #85 has them. The SQL page linked to that page for the SQL injection test; it now links to Web Application Security, and round 9 of its reports checked the changed lines.
 - `create-next-app` 16.4.6 turns Cache Components on by default, and the dynamic route of the frontend page then fails `npm run build`. The page creates the app with `--no-cache-components`. `sdet-frontend-nextjs.md` has the runs.
-- The checker of the security page was stopped by a safety classifier three times (the first try of round 2, and rounds 3 and 4), while it quoted or searched for the injection steps of "Try it". From round 5 it got a copy of the page in which the three attack strings are placeholders. `sdet-factcheck-brief.md` says how.

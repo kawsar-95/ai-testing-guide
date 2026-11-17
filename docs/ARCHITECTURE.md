@@ -10,9 +10,9 @@ The site is a static export of a Next.js 16 App Router project. There is no serv
 flowchart LR
   nav["lib/nav.ts<br/>(tutorial groups and pages)"]
   mods["lib/linux, lib/fundamentals,<br/>lib/system-design, lib/architecture,<br/>lib/course, lib/k6,<br/>lib/ai-engineering, lib/harness,<br/>lib/ai-skills, lib/ai-concepts,<br/>lib/agent-memory, lib/ai-agents,<br/>lib/ai-ml-testing, lib/devops,<br/>lib/security, lib/sdet<br/>(one ordered list for each module)"]
-  mdx["content/&lt;group&gt;/&lt;slug&gt;.mdx<br/>(321 pages)"]
+  mdx["content/&lt;group&gt;/&lt;slug&gt;.mdx<br/>(320 pages)"]
   build["next build<br/>(output: export)"]
-  out["out/<br/>341 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
+  out["out/<br/>340 routes<br/>search-index.json<br/>sitemap.xml, robots.txt<br/>manifest, sw.js"]
   pages["GitHub Pages"]
 
   nav --> build
@@ -26,7 +26,7 @@ The ordered lists and the MDX files are the inputs. Everything else is code that
 
 ## Routes
 
-The site has 341 routes.
+The site has 340 routes.
 
 | Route | Source | Output |
 |---|---|---|
@@ -50,7 +50,7 @@ The site has 341 routes.
 | `/ai-ml-testing/`, `/ai-ml-testing/<slug>/` | `app/(site)/ai-ml-testing/` | The home and the 47 topics (48 routes) |
 | `/devops/`, `/devops/<slug>/` | `app/(site)/devops/` | The home and the 24 topics (25 routes) |
 | `/security/`, `/security/<slug>/` | `app/(site)/security/` | The home and the 8 topics (9 routes) |
-| `/sdet/`, `/sdet/<slug>/` | `app/(site)/sdet/` | The home and the 10 topics (11 routes) |
+| `/sdet/`, `/sdet/<slug>/` | `app/(site)/sdet/` | The home and the 9 topics (10 routes) |
 | `/search-index.json` | `app/search-index.json/route.ts` | The search documents (static) |
 | `/sitemap.xml`, `/robots.txt` | `app/sitemap.ts`, `app/robots.ts` | SEO files |
 | `/manifest.webmanifest`, `/sw.js` | `app/manifest.ts`, `app/sw.js/route.ts` | The installable app and its service worker |
@@ -82,7 +82,7 @@ Each part of the site has one ordered list. The lists drive the drawer, the home
 | AI/ML Testing | `lib/ai-ml-testing/topics.ts` | 47 topics from LLM basics to agent testing. A flat module. The MDX is generated from `scripts/ai_ml_testing_pages_p1*.py` and `_p2*.py`. |
 | DevOps & Cloud | `lib/devops/topics.ts` | 24 topics in 7 parts. The 8 topics of Parts 1 and 2 are full lessons for testers, and the other 16 a short sourced text; every topic ends with KodeKloud Shorts. A flat module with no progress store. |
 | Security Testing | `lib/security/topics.ts` | 8 topics, from a safe practice lab to a practice penetration test, in the order of the 8 modules of the course "Cyber Security and Penetration Testing with AI" (Road to SDET). A flat module with a progress store. |
-| SDET Roadmap | `lib/sdet/topics.ts` | 20 steps in 7 parts, in the order of an SDET course curriculum: 10 new topic pages and 10 links to the modules and pages that already teach a step. A flat module with a progress store (`sdet-progress`). |
+| SDET Roadmap | `lib/sdet/topics.ts` | 20 steps in 7 parts, in the order of an SDET course curriculum: 9 new topic pages and 11 links to the modules and pages that already teach a step. A flat module with a progress store (`sdet-progress`). |
 
 The top nav comes from `lib/header-nav.ts` (`HEADER_NAV`). It has four plain links: Home, Contents, Dashboard, and Interview. `activeNavId` marks the current item, and a tutorial or module page has none. A reader reaches a module from the home page or the contents page. `lib/interview.ts` holds the strings and the three cards of the interview page.
 
@@ -159,7 +159,7 @@ The "On this page" list and the search results link to heading ids. Those ids mu
 
 ## Page layout and navigation parts
 
-`ChapterLayout` (`components/content/`) has three columns for the 321 content pages.
+`ChapterLayout` (`components/content/`) has three columns for the 320 content pages.
 
 | Column | Shows | From |
 |---|---|---|
@@ -184,7 +184,7 @@ The whole layout is 1400 px wide at most. The page passes its route to `ChapterL
 
 ## Voices
 
-A `##` section can have three voices of its text: Technical, plain English (`Layman`), and Bangla. 309 pages have voices: every MDX page in `content/`. Every `##` section has them except `## Key words`. The Linux stage pages are command sheets, not MDX: the header button switches their English and Bangla glosses.
+A `##` section can have three voices of its text: Technical, plain English (`Layman`), and Bangla. 308 pages have voices: every MDX page in `content/`. Every `##` section has them except `## Key words`. The Linux stage pages are command sheets, not MDX: the header button switches their English and Bangla glosses.
 
 | Part | Where | Job |
 |---|---|---|
@@ -215,7 +215,7 @@ All progress is client-side. The shared code keeps its old `prep` names (`lib/pr
 
 `MetaLine` shows the reading time, sections, sources, and update date in one row, and `ChapterTools` (Bookmark and Mark as read) sits at the right end of that row. The "Suggest an edit" link is on the heading row of the Sources list. Reading time comes from `lib/reading-time.ts`: the words of the technical text, without code, export statements, tags, or link URLs. A Fundamentals chapter has one value for each version, and the CSS shows the one of the switch.
 
-The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 321`), the bookmarks, the topic progress of the thirteen modules with a progress store (Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, Security Testing, and SDET Roadmap), and a Continue reading block. The module rows count the same ids and read the same stores as the module home pages, so the numbers match. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
+The Dashboard (`components/pages/DashboardPage.tsx`) shows the pages read (`N / 320`), the bookmarks, the topic progress of the thirteen modules with a progress store (Linux, Fundamentals, Architecture, Course, k6, AI Engineering, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, Security Testing, and SDET Roadmap), and a Continue reading block. The module rows count the same ids and read the same stores as the module home pages, so the numbers match. It ends with an "About the author" block: the `AUTHOR` object in `lib/site.ts` and a photo in `public/images/author/`. Export downloads `progress-YYYY-MM-DD.json` with the keys of `PROGRESS_KEYS` (`lib/reading-state.ts`). Reset asks first, then clears those keys. The helpers are in `lib/dashboard-data.ts`, so `lib/sitemap.ts` has no import cycle.
 
 ## Fundamentals version switch
 
@@ -254,7 +254,7 @@ The look follows the reference site [systemdesignbangla.com](https://www.systemd
 
 | Part | Behavior |
 |---|---|
-| Install | Caches all 341 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
+| Install | Caches all 340 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
 | Pages, RSC payloads, and the search index | Stale-while-revalidate. The cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. |
 | `/_next/static/` files | Cache first. Their file names have a content hash. |
 | Offline, page not cached | Shows the cached 404 page |
@@ -311,7 +311,7 @@ The Python checks are not part of the workflow, because they expect a build with
 | `check_routes.py out` | Build check | Every route of the route maps has a page |
 | `check_links.py out` | Build check | No broken internal links or assets |
 | `check_outline.py out` | Build check | Every "On this page" link has a target id |
-| `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 321 pages checked, 0 skipped`. |
+| `check_sources.py out` | Build check | Each content page has one meta line, at least one source, a source for every `[n]` cite, a cite for every source, and `https://` source links. It prints `OK 320 pages checked, 0 skipped`. |
 
 The route maps in `scripts/` list the routes that the build checks read: `route-map.json` (tutorial) and one file each for Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, DevOps & Cloud, Security Testing, SDET Roadmap, contents, dashboard, and interview. `npm test` checks that each page is in its map.
 

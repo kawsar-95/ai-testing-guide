@@ -198,4 +198,19 @@ Not checked: S3 item 3 and the item 4 and 5 outputs are the page's own example r
 
 FAILs in round 8: 0.
 
+## Round 9 (2026-11-18)
+
+Verification of the changed lines only. Step 14 of the SDET Roadmap became a link to the Security Testing module, and its page was removed. The link at the end of the "Test for SQL injection" bullet pointed to that page; it now points to Web Application Security (`/security/web-application-security/`), in the three voices. A fresh checker (claude-sonnet-5-5; Read, Grep, and Glob only; no web) got the changed lines before and after, and the "In practice" section of the target page.
+
+### Voices fact check: sdet / sql-mysql (round 9, changed lines only)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| How a tester uses it | সহজ English | PASS | "See [Web Application Security]" points to the same page as the Technical sentence. It adds no new fact. The rest of the bullet is unchanged. |
+| How a tester uses it | বাংলা | PASS | "কীভাবে টেস্ট করবেন, তা … -এ আছে" says the same as "shows how to test for it". The link text and target are the same as in the Technical line. It adds no new fact. |
+
+Open FAILs: 0
+
+FAILs in round 9: 0.
+
 Open FAILs: 0
