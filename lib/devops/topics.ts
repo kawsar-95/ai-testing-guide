@@ -57,7 +57,7 @@ const SOURCE: readonly TopicEntry[] = [
   { slug: "kubernetes-basics", part: 3, title: "Kubernetes Basics", description: "Pods, ReplicaSets, and Deployments, how Kubernetes keeps the state that you ask for, and how to watch, break, and roll back a rollout on a local kind cluster." },
   { slug: "kubernetes-architecture", part: 3, title: "Kubernetes Architecture", description: "The control plane, the nodes, and etcd, how the scheduler and the kubelet place and run Pods, how custom resources and Operators extend the API, and how a tester checks each part on a local kind cluster." },
   { slug: "kubernetes-networking-storage", part: 3, title: "Kubernetes Networking and Storage", description: "Services, DNS names, and EndpointSlices, how traffic reaches a Pod from inside and outside the cluster, how persistent volumes outlive a Pod, and how a tester checks each part on a local kind cluster." },
-  { slug: "kubernetes-operations", part: 3, title: "Kubernetes Operations", description: "Liveness probes, autoscaling, and resource limits." },
+  { slug: "kubernetes-operations", part: 3, title: "Kubernetes Operations", description: "Liveness and readiness probes, memory and CPU requests and limits, Jobs that run a task to the end, and the HorizontalPodAutoscaler, with a tester's practice run of each on a local kind cluster." },
   { slug: "kubernetes-security-troubleshooting", part: 3, title: "Kubernetes Security and Troubleshooting", description: "Kubernetes Secrets, and how they are stored by default." },
   { slug: "cloud-concepts", part: 4, title: "Cloud Concepts", description: "What cloud computing is, and the twelve-factor app." },
   { slug: "aws-compute-storage", part: 4, title: "AWS Compute and Storage", description: "EC2, S3, and EBS." },
