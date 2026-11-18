@@ -62,4 +62,96 @@ Voices standard of this round: the rule of CLAUDE.md (brief v2): the panel gives
 
 Open FAILs after round 5: 0
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-networking-storage (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Faithful. Left out: "dynamically", "Kubernetes volume abstraction" detail kept, "possibly" kept as "maybe"; no added facts. |
+| What it is | Bangla | PASS | Faithful in meaning. No added facts. Left out: the "usually" in the Service-selector line is kept as "সাধারণত". |
+| How it works | Layman | FAIL | "Pods use storage by mounting the claim as a volume" adds "mounting". The Technical panel says "using the claim as a volume". Fix: "Pods use storage by using the claim as a volume". Also: "Kubernetes itself does not come with a load balancer" drops "directly" and "component". "search line" replaces "search option". Left out: "cluster IP … virtual IP address mechanism" is kept; "any necessary" updates. |
+| How it works | Bangla | PASS | Faithful. Table, notes and diagram match the Technical panel. No added facts. |
+| Try it | Layman | FAIL | "Pods use storage by mounting the claim as a volume" adds "mounting". The Technical panel says "using the claim as a volume". Fix: "Pods use storage by using the claim as a volume". Also: "deletes resources by type and name" restates "resources and names". "search line" replaces "search option". Left out: "specific" in `kubectl wait`, "verbose output" wording. |
+| Try it | Bangla | PASS | Faithful. Code blocks and run records are identical to the Technical panel. Left out: nothing that changes the meaning. |
+| How a tester uses it | Layman | PASS | Faithful. "Among other things" for "among other questions". Left out: "namespace-qualified" wording. |
+| How a tester uses it | Bangla | PASS | Faithful. No added facts. |
+| Common mistakes | Layman | PASS | Faithful. "Kubernetes itself does not come with a load balancer" drops "directly", but the meaning stays close. Left out: "indefinitely" (replaced by "for as long as no matching volume exists"). |
+| Common mistakes | Bangla | PASS | Faithful. No added facts. |
+| What a tester can check | Layman | PASS | The callout is identical to the Technical panel. |
+| What a tester can check | Bangla | PASS | Translation of the same seven items. It adds no fact. |
+
+Open FAILs after round 6: 2
+
+Changed after this round: How it works and Try it, Layman: "Pods use storage by mounting the claim as a volume" became "Pods use storage by using the claim as a volume". The comments of the checker on the same panels were taken too: "Kubernetes itself does not come with a load balancer" became "Kubernetes does not directly offer a load balancing component" (also in Common mistakes), "the `search` line" became "the `search` option", and "deletes resources by type and name" became "deletes resources by resources and names".
+
+## Round 7 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-networking-storage (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | FAIL | "can make and remove Pods at any time" is stronger than the Technical "dynamically". Other sentences keep the meaning and cites. Left out: "(a method for)", "usually" kept; the node and "at its core" detail is kept. Fix: "make and remove Pods on the fly". |
+| What it is | Bangla | FAIL | "যেকোনো সময় Pod তৈরি করতে ও মুছে ফেলতে পারে" has the same "at any time" problem against "dynamically". Other sentences match the Technical panel. |
+| How it works | Layman | PASS | All facts, numbers, and cites match the Technical panel. Left out: "Kubernetes 1.37" kept; leaves out "(depending on the mode)" nuance only lightly. The diagram is identical. |
+| How it works | Bangla | PASS | Facts and cites match. Limits like "by default", "typically", "may" are kept. The diagram is identical. |
+| Try it | Layman | PASS | Same commands, same cites, same facts. Leaves out exact flag wording, for example "the length of time". Run record is unchanged. |
+| Try it | Bangla | PASS | Read in full. Meaning matches the Technical panel. Code blocks are the same. Details left out: exact flag definition words. |
+| How a tester uses it | Layman | PASS | Same facts and limits. Left out: "namespace-qualified" wording and "in the external infrastructure". |
+| How a tester uses it | Bangla | PASS | Same facts and cites. Details left out: "associated storage asset" is kept. |
+| Common mistakes | Layman | PASS | Same six items and cites. Left out: "selects for" is rephrased as "matches". |
+| Common mistakes | Bangla | PASS | Same six items and cites. Meaning is not changed. |
+| What a tester can check | Layman | PASS | The list is identical to the Technical panel. |
+| What a tester can check | Bangla | PASS | Each of the seven items matches its Technical item. |
+
+Open FAILs after round 7: 2
+
+Changed after this round: What it is, Layman: "it can make and remove Pods at any time" became "it can make and remove Pods on the fly", and in Bangla "যেকোনো সময়" became "dynamically (গতিশীলভাবে)". The Layman and Bangla panels also got the diagram sentence and the sentence about the image tag of the fact fix of this round.
+
+## Round 8 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-networking-storage (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel. Left out: "dynamically", "cluster-wide", "possibly" (volume), "provisioned" wording, "abstraction" detail. Added "they do not last" only restates "ephemeral". |
+| What it is | Bangla | PASS | Read and compared sentence by sentence. Same facts as the Technical panel. Left out: nothing beyond wording. |
+| How it works | Layman | FAIL | "the Pod's `/etc/resolv.conf`, which the kubelet writes for each Pod": the Technical panel and S2 say kubelet "configures" the file, not "writes" it. Fix: "which the kubelet configures for each Pod". Left out: "continuously" (scan), "typically" (Pods), "indefinitely" (replaced by "for as long as"), "any necessary" (updates), "if possible" kept. |
+| How it works | Bangla | PASS | Same facts as the Technical panel. Left out: nothing that changes meaning. The two limits "default" and "may wait up to" are kept. |
+| Try it | Layman | PASS | Same facts and cites as the Technical panel. Left out: "the length of time" detail, "verbose output" (now "long, detailed description"), "specific condition" (now "a condition"), "`kubectl port-forward`'s 'Kubernetes' in service wording". The record sentences match the Technical panel. |
+| Try it | Bangla | PASS | Same facts, code blocks, and cites as the Technical panel. Left out: nothing that changes meaning. |
+| How a tester uses it | Layman | PASS | Same facts as the Technical panel. Left out: "limited to" (now "only looks in"), the plugin limit is absent in both panels (see FAIL 107 in the first table), "external infrastructure" (now "the real storage behind the volume"), "Debug Services asks, among other questions" (now "among other things"). |
+| How a tester uses it | Bangla | PASS | Same facts as the Technical panel. Left out: "among other questions" kept, "separate" terminal wording. The unqualified Delete claim matches the Technical panel (see FAIL 107). |
+| Common mistakes | Layman | PASS | Same facts as the Technical panel. Left out: "indefinitely", "selects for" (now "really matches"), "directly" (kept), "integrate" (now "connect"). |
+| Common mistakes | Bangla | PASS | Same facts as the Technical panel. Left out: nothing that changes meaning. |
+| What a tester can check | Layman | PASS | The callout is the same text as the Technical panel. Left out: nothing. |
+| What a tester can check | Bangla | PASS | Read and compared: same seven pieces of advice and the same title. Left out: nothing. |
+
+Open FAILs after round 8: 1
+
+Changed after this round: How it works, Layman: "which the kubelet writes for each Pod" became "which the kubelet configures for each Pod", as in the Technical panel. The Layman and Bangla sentences about the reclaim policy `Delete` got the same limit as the Technical sentence.
+
+## Round 9 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-networking-storage (round 9)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | All facts and cites match the Technical panel. Left out: "dynamically", "usually" is kept, "consistent" becomes "stays the same", "possibly" becomes "maybe". |
+| What it is | Bangla | PASS | Read in full, and the meaning matches the Technical panel on every sentence. Left out: nothing of note. |
+| How it works | Layman | PASS | Same facts and cites as the Technical panel. "Stays unbound for as long as no matching volume exists" is a looser form of "remain unbound indefinitely". It adds no fact. Left out: "continuously", "calls appropriate APIs" is shortened, the word "indefinitely", and "mapping" in "one-to-one mapping". The diagram is identical. |
+| How it works | Bangla | PASS | Meaning matches the Technical panel on every sentence. The diagram is identical. Left out: nothing of note. |
+| Try it | Layman | PASS | Each sentence restates the Technical one, and the code blocks are identical. "The type is `ClusterIP` unless you say otherwise" restates "default type". Left out: "length of time" becomes "how long", and the S11 line that its example uses `hostnames`. |
+| Try it | Bangla | PASS | Meaning matches the Technical panel. Code blocks and output are identical. Left out: nothing of note. |
+| How a tester uses it | Layman | PASS | Each sentence matches the Technical panel, and the cites are the same. Left out: "of any individual Pod" is shortened to "any single Pod"; "separate terminal" becomes "its own terminal". |
+| How a tester uses it | Bangla | PASS | Meaning matches the Technical panel. Left out: nothing of note. |
+| Common mistakes | Layman | PASS | Each bullet matches the Technical panel. "A claim stays unbound for as long as no matching volume exists" is a looser form of "indefinitely". It adds no fact. Left out: "indefinitely". |
+| Common mistakes | Bangla | PASS | Meaning matches the Technical panel. Left out: nothing of note. |
+| What a tester can check | Layman | PASS | Callout text is identical to the Technical panel. |
+| What a tester can check | Bangla | PASS | The seven advice bullets match the Technical panel in meaning. Left out: nothing. |
+
+Open FAILs after round 9: 0
+
 Open FAILs: 0
