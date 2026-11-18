@@ -676,4 +676,24 @@ Open FAILs: 0
 
 FAILs in round 8: 0.
 
+## Round 9 (2026-11-18)
+
+Verification of the changed lines only. Step 14 of the SDET Roadmap became a link to the Security Testing module, and its page was removed. The link at the end of the "Test for SQL injection" bullet pointed to that page; it now points to Web Application Security (`/security/web-application-security/`), in the three voices. A fresh checker (claude-sonnet-5-5; Read, Grep, and Glob only; no web) got the changed lines before and after, and the "In practice" section of the target page.
+
+### Fact check: sdet / sql-mysql (round 9, changed lines only)
+
+| # | Changed line | Verdict | Quote or reason |
+|---|---|---|---|
+| 1 | Technical: "[Web Application Security](/security/web-application-security/) shows how to test for it." | PASS | Step 3 in the Technical voice: "**3. Test for SQL injection.** In a search or login field, send OWASP's classic input … If the result shows more records than it should, the input changed the meaning of the query". The link text names the target page. |
+| 2 | সহজ English: "See [Web Application Security](/security/web-application-security/)." | PASS | Step 3 in the Layman voice: "**Test for SQL injection.** In a search or login field, send … If you get more records than you should, the input changed what the query means". The link text names the target page. |
+| 3 | বাংলা: "কীভাবে টেস্ট করবেন, তা [Web Application Security](/security/web-application-security/)-এ আছে।" | PASS | Step 3 in the Bangla voice: "**SQL injection টেস্ট করুন।** কোনো search বা login field-এ … পাঠান। যদি প্রত্যাশার চেয়ে বেশি record আসে". The link text names the target page. |
+
+Open FAILs: 0
+
+Item 3 (other changes): in all three lines, the only difference from the old text is the link, which changed from `[Security Testing](/sdet/security-testing/)` to `[Web Application Security](/security/web-application-security/)`. The rest of each bullet, including the `<Cite n={11} />` marks, is word for word the same. `changes.md` also says the page's `updated` date changed. That line is not in this folder, so I did not check it.
+
+I checked only that the target page shows a step for testing SQL injection. I did not check the SQL injection string, because it is replaced by a placeholder.
+
+FAILs in round 9: 0.
+
 Open FAILs: 0

@@ -139,9 +139,10 @@ const entries: readonly FlatEntry<SdetSlug>[] = [
   },
   {
     slug: "security-testing",
-    title: "Security Testing with Burp Suite",
-    description: "The OWASP Top 10 and the Burp Suite proxy, Repeater, and Intruder, on apps that you may test.",
-    kind: "topic",
+    title: "Security Testing",
+    description: "A safe practice lab, Nmap, web flaws tested with Burp Suite and ZAP, API and database security, security scans in CI, and a practice penetration test: the Security Testing module.",
+    kind: "link",
+    href: "/security/",
     part: 5,
   },
   {

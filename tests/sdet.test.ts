@@ -23,7 +23,7 @@ const STEPS = [
   ["performance-testing", "link"],
   ["system-design-in-practice", "link"],
   ["linux", "link"],
-  ["security-testing", "topic"],
+  ["security-testing", "link"],
   ["aws", "link"],
   ["playwright-ui", "topic"],
   ["playwright-api", "topic"],
@@ -49,9 +49,9 @@ const SHAPE = [
 const dir = new URL("../content/sdet/", import.meta.url);
 const read = (slug: string) => readFileSync(new URL(`${slug}.mdx`, dir), "utf8");
 
-test("there are 20 steps in curriculum order: 10 pages and 10 links", () => {
+test("there are 20 steps in curriculum order: 9 pages and 11 links", () => {
   assert.deepEqual(SDET.items.map((i) => [i.slug, i.kind]), STEPS.map(([slug, kind]) => [slug, kind]));
-  assert.equal(SDET.pages.length, 10);
+  assert.equal(SDET.pages.length, 9);
 });
 
 test("the steps are in 7 parts, in order, with the listed sizes", () => {
@@ -69,7 +69,7 @@ test("every link step points to a page or a module home of this site", () => {
   }
 });
 
-test("content/sdet has exactly the 10 files, and the route map is SDET.routes", () => {
+test("content/sdet has exactly the 9 files, and the route map is SDET.routes", () => {
   assert.deepEqual(readdirSync(dir).sort(), TOPICS.map((s) => `${s}.mdx`).sort());
   assert.deepEqual(SDET.routes, ["/sdet/", ...TOPICS.map((s) => `/sdet/${s}/`)]);
   const map: Record<string, string> = JSON.parse(
@@ -116,7 +116,7 @@ test("the progress ids are the 20 step slugs, links too, under sdet-progress", (
   assert.deepEqual(SDET.lessonIds, STEPS.map(([slug]) => slug));
 });
 
-test("precacheUrls includes /sdet/ and the 10 page routes", () => {
+test("precacheUrls includes /sdet/ and the 9 page routes", () => {
   const urls = precacheUrls("");
   for (const route of SDET.routes) assert.ok(urls.includes(route), route);
 });

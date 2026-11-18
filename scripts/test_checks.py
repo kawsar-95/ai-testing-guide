@@ -142,7 +142,7 @@ class LinuxRouteMapTest(unittest.TestCase):
 
     def test_default_routes_has_the_tutorial_pages_and_the_stage_and_chapter_pages_without_the_homes(self):
         routes = check_outline.default_routes()
-        self.assertEqual(len(routes), 321)
+        self.assertEqual(len(routes), 320)
         self.assertNotIn("/security/", routes)
         self.assertIn("/security/security-basics-and-lab/", routes)
         self.assertNotIn("/agent-memory/", routes)

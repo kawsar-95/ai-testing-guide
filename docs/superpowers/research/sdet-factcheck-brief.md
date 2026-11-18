@@ -70,7 +70,3 @@ Open FAILs: N
 ## Limits
 
 The checkers are agents. No person has read the pages, and no person who reads Bangla has read the Bangla. A checker of a looser standard passes more, so the left-out details that it lists are the part a person should read.
-
-## The security page
-
-The checker of `security-testing` was stopped by a safety classifier three times (the first try of round 2, and rounds 3 and 4), while it quoted or searched for the injection steps of "Try it". A stopped run gave no verdicts, and the round was run again or counted as stopped. From round 2, its brief asked for short quotes. From round 4, a paragraph before the brief said that the page teaches testers to test their own app or a training app, and asked for both tables without stopping. From round 5, its copy of `page.md` had three placeholders instead of the attack strings: `<PAYLOAD-A>` for the email of step 3, and `<COND-TRUE>` and `<COND-FALSE>` for the two Boolean conditions that the PortSwigger page names. The sentences around them, and their cites, were checked as usual.

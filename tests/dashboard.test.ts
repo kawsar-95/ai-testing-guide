@@ -20,7 +20,7 @@ test("readByModule counts only known routes, per module", () => {
   );
   assert.deepEqual(
     rows.map((r) => r.total),
-    [34, 12, 11, 15, 20, 40, 20, 28, 6, 20, 9, 7, 10, 47, 24, 8, 10],
+    [34, 12, 11, 15, 20, 40, 20, 28, 6, 20, 9, 7, 10, 47, 24, 8, 9],
   );
   assert.deepEqual(
     rows.map((r) => r.read),

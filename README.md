@@ -25,7 +25,7 @@ A free site that teaches QA engineers and SDETs how to use Claude Code for softw
 
 ## What you learn
 
-The site has 341 pages. 321 of them are lessons in 17 sections: the tutorial and 16 modules. The other 20 are the home page, the 16 module home pages, and 3 helper pages.
+The site has 340 pages. 320 of them are lessons in 17 sections: the tutorial and 16 modules. The other 20 are the home page, the 16 module home pages, and 3 helper pages.
 
 | Section | Pages | What it teaches |
 |---|---|---|
@@ -45,7 +45,7 @@ The site has 341 pages. 321 of them are lessons in 17 sections: the tutorial and
 | [AI/ML Testing](https://kawsar-95.github.io/ai-testing-guide/ai-ml-testing/) | 47 topics in 2 phases | Testing AI and ML systems: LLM behavior, prompt testing, automated evals, hallucination detection, RAG and agent testing, red teaming, observability, and CI/CD eval gates |
 | [DevOps & Cloud](https://kawsar-95.github.io/ai-testing-guide/devops/) | 24 topics in 7 parts | Git, CI/CD, Docker, Kubernetes, AWS, Terraform, Ansible, monitoring, and CNCF projects. The 8 pages of Parts 1 and 2 are full lessons for testers, with a practice run; the others are a short sourced explanation. Every page ends with KodeKloud Shorts |
 | [Security Testing](https://kawsar-95.github.io/ai-testing-guide/security/) | 8 topics | Security and penetration testing: a safe lab, Nmap and server hardening, web, API, and database flaws with Burp Suite and ZAP, AI-assisted testing, DevSecOps scans in CI/CD, Bangladesh's cyber and data protection laws, and a practice penetration test with a report |
-| [SDET Roadmap](https://kawsar-95.github.io/ai-testing-guide/sdet/) | 20 steps in 7 parts | The steps of an SDET course in order: 10 new pages (Postman, JavaScript, TypeScript, MySQL, problem solving, Express, Next.js, Burp Suite, and Playwright for the UI and for APIs), and links to the modules that teach the other 10 steps |
+| [SDET Roadmap](https://kawsar-95.github.io/ai-testing-guide/sdet/) | 20 steps in 7 parts | The steps of an SDET course in order: 9 new pages (Postman, JavaScript, TypeScript, MySQL, problem solving, Express, Next.js, and Playwright for the UI and for APIs), and links to the modules that teach the other 11 steps |
 
 Three helper pages sit beside the sections: [Contents](https://kawsar-95.github.io/ai-testing-guide/contents/) lists everything, [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows your progress, and [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) links to the interview material.
 
@@ -93,7 +93,7 @@ The [Interview](https://kawsar-95.github.io/ai-testing-guide/interview/) page ha
 
 ### Three voices for every section
 
-All 309 MDX pages (every content page except the 12 Linux command sheets) let you read each `##` section in three voices:
+All 308 MDX pages (every content page except the 12 Linux command sheets) let you read each `##` section in three voices:
 
 | Voice | What it is |
 |---|---|
@@ -136,7 +136,7 @@ The site tracks your work in your browser. It never sends it to a server.
 ![The Linux home: a ruled block for each stage, with its commands as links](docs/assets/linux.png)
 ![A Linux stage page: one card for each topic, one row for each command](docs/assets/linux-stage.png)
 
-The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 321`) with a progress bar, beside a Continue reading block. Below them, one row for each of the 13 modules with a checklist shows its name, a bar, and `done / total`. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
+The [Dashboard](https://kawsar-95.github.io/ai-testing-guide/dashboard/) shows the pages you read (`N / 320`) with a progress bar, beside a Continue reading block. Below them, one row for each of the 13 modules with a checklist shows its name, a bar, and `done / total`. Then come your bookmarks and the pages you read in each module. **Export** downloads your progress as `progress-YYYY-MM-DD.json`. **Reset** asks for confirmation, then clears all progress.
 
 ![The Dashboard: pages read, Continue reading, and the progress of each module](docs/assets/dashboard.png)
 
@@ -190,7 +190,7 @@ The layout adapts to phone widths. Below 1200 px the top navigation moves into t
 
 ### Install it and read offline
 
-The site is a progressive web app (PWA). Chromium browsers show an install button (a download icon) in the header. After the first visit, the service worker has all 341 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
+The site is a progressive web app (PWA). Chromium browsers show an install button (a download icon) in the header. After the first visit, the service worker has all 340 pages, the search index, and the images of the pages in its cache. Pages open from the cache first and update in the background. A page that is not in the cache shows the 404 page. Each new build replaces the old cache.
 
 ### Accessibility
 
@@ -261,7 +261,7 @@ python3 -m http.server 8000 -d out     # serves it at http://localhost:8000
 | `python3 scripts/check_routes.py out` | Checks that every route of the route maps has a built page. |
 | `python3 scripts/check_links.py out` | Checks internal links and assets. |
 | `python3 scripts/check_outline.py out` | Checks that every "On this page" link has a target. |
-| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 321 pages checked, 0 skipped`. |
+| `python3 scripts/check_sources.py out` | Checks the meta line, the citations, and the Sources list of each content page. It must print `OK 320 pages checked, 0 skipped`. |
 
 Run the `out` checks after `npm run build`, on a build without a base path.
 
@@ -270,7 +270,7 @@ Run the `out` checks after `npm run build`, on a build without a base path.
 ```text
 app/                 Routes, root layout, global styles, sitemap, robots, search index, PWA files
 components/          Site shell, navigation, page parts, MDX components, voices, progress, module pages
-content/<group>/     The 309 MDX pages: 34 tutorial, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts, 7 Agent Memory, 10 AI Agents, 47 AI/ML Testing, 24 DevOps & Cloud, 8 Security Testing, 10 SDET Roadmap
+content/<group>/     The 308 MDX pages: 34 tutorial, 11 Fundamentals, 15 System Design, 20 Architecture, 40 Course, 20 k6, 28 AI Engineering, 6 AI Harnesses, 20 AI Skills, 9 AI Concepts, 7 Agent Memory, 10 AI Agents, 47 AI/ML Testing, 24 DevOps & Cloud, 8 Security Testing, 9 SDET Roadmap
 lib/                 nav.ts (tutorial page order), one data file for each module, the Linux command sheets (linux/sheets/), the reels (reels/), search, voices, the Bangla twins of the UI text (bn/), PWA, and other helpers
 tests/               Unit tests (node --test)
 scripts/             Check scripts (Python and Node), the route maps (one JSON file for the tutorial, each module, and each helper page), the AI/ML Testing page generator, and research tools
