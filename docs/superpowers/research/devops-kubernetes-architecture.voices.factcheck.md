@@ -66,4 +66,73 @@ Open FAILs after round 5: 0
 
 Not checked: I did not read the rest of S1 or S2. I only confirmed the two cited sentences.
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-architecture (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | FAIL | "so that it keeps working when one part fails" is an explanation that the Technical panel does not give. The Technical panel says only "providing fault-tolerance and high availability". Left out: "containerized", "in order to", "multiple computers" (now "several computers"), the "kube-proxy (optional)" meaning is kept. Also "Operators are add-on programs" is a paraphrase of "software extensions" (accepted). |
+| What it is | Bangla | PASS | Faithful to the Technical panel. Product names stay in English. Left out: nothing of substance. |
+| How it works | Layman | PASS | Every fact is in the Technical panel. Left out: "optimal" (now "best"), "RESTful", the word "leader-based" (now "with a leader"), "common approach" for kubeadm (now "often"), "automatically" for the mirror Pod (now "tries to"), the exact "2-step" count (kept as "two steps"), "PodSpecs" (now "Pod specs"), "otherwise False" is not in either panel. The PIDPressure and DiskPressure wording is plainer ("running out of space") but the same meaning. The diagram is identical. |
+| How it works | Bangla | PASS | Faithful to the Technical panel. Code block is identical. Left out: nothing of substance. |
+| Try it | Layman | PASS | Every fact is in the Technical panel, with the same cites. The Lease-listing sentence copies the Technical panel, so it carries the same source problem as claim 60. "A long, detailed description" restates "verbose output". Left out: "specific" (before "condition"), "can" (before "be obtained"), the "ETCDCTL_API=3" detail is kept. Code blocks are identical. |
+| Try it | Bangla | PASS | Faithful to the Technical panel. Code blocks are identical. The Lease-listing sentence carries the same source problem as claim 60. Left out: nothing of substance. |
+| How a tester uses it | Layman | PASS | Every fact is in the Technical panel. The "short of disk, memory, or processes" sentence copies the Technical panel, so it carries the same source problem as claim 86. Left out: "usually", "the verbose output... 'intended'", "periodically" (now "regular"), "backing store" (now "keeps its data in etcd"). |
+| How a tester uses it | Bangla | PASS | Faithful to the Technical panel. The "process-এর টান পড়লে" wording carries the same source problem as claim 86. Left out: nothing of substance. |
+| Common mistakes | Layman | PASS | Every fact is in the Technical panel. Left out: "more specific" (before `livez` and `readyz`), "the static Pod directory has no file-extension filtering" is kept as "whatever its extension". |
+| Common mistakes | Bangla | PASS | Faithful to the Technical panel. Left out: nothing of substance. |
+| What a tester can check | Layman | PASS | The callout text is identical to the Technical panel. |
+| What a tester can check | Bangla | PASS | A faithful translation of the seven pieces of advice in the Technical panel. Nothing added. |
+
+Open FAILs after round 6: 1
+
+Changed after this round: What it is, Layman: "so that it keeps working when one part fails" became "which gives fault-tolerance and high availability". The Layman and Bangla panels of `Try it` and `How a tester uses it` also got the fact fixes of this round.
+
+## Round 7 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-architecture (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | FAIL | "A node runs the kubelet, a container runtime, and the kube-proxy." The Technical panel says the components on a node "include" these three, and marks kube-proxy "(optional)". Dropping "include" turns an open list into a full list. It also says every node runs kube-proxy, which contradicts the table. Fix: "The components on a node include the kubelet, a container runtime, and the kube-proxy." Left out: "such as" before containerd and CRI-O; "usually" is kept; "not necessarily" becomes "may not". "Add-on programs" is a plainer word for "software extensions". |
+| What it is | Bangla | PASS | Every sentence matches the Technical panel, with "include" and "(optional)" kept. Left out: nothing of note. |
+| How it works | Layman | PASS | Every sentence matches the Technical panel, and the diagram is the same. Left out: "designed to", "optimal" (becomes "best"), "2-step", "feasible", the "default" wording for the kubelet-created mirror Pod, and "automatically" in "tries to make a mirror Pod". The Condition table is simplified: the `False` meaning is shortened to "if not", and "otherwise False" was never stated. |
+| How it works | Bangla | PASS | Every sentence matches the Technical panel, and the diagram is the same. Left out: nothing of note. Minor: the Bangla keeps all limits. |
+| Try it | Layman | PASS | All code blocks are the same as in the Technical panel. Every fact matches. Left out: "kubectl describe nodes" is "long, detailed" instead of "verbose output"; "specific" before "condition" in `kubectl wait`; "the Kubernetes Service concept"; "more specific" for `livez` and `readyz` is not present here. |
+| Try it | Bangla | PASS | All code blocks are the same as in the Technical panel. Every fact matches. Left out: nothing of note. One run-record phrase ("দুটোর শুরুর দুটো space") is awkward, but it only describes the page's own run and gives no new fact. |
+| How a tester uses it | Layman | PASS | Every sentence matches the Technical panel. Left out: "Machines", "temporarily", "optimal"; "Periodically" becomes "Regular"; "make sure" becomes "have a plan". |
+| How a tester uses it | Bangla | PASS | Every sentence matches the Technical panel. Left out: nothing of note. |
+| Common mistakes | Layman | PASS | Every bullet matches the Technical panel. Left out: "more specific" before `livez` and `readyz`; "attempt" becomes "tries"; the line about no filtering by extension becomes "whatever its extension". |
+| Common mistakes | Bangla | PASS | Every bullet matches the Technical panel. Left out: nothing of note. |
+| What a tester can check | Layman | PASS | The callout text is the same as in the Technical panel. Left out: nothing. |
+| What a tester can check | Bangla | PASS | A faithful translation of the seven pieces of advice and the lead sentence. Left out: nothing. |
+
+Open FAILs after round 7: 1
+
+Changed after this round: What it is, Layman: "A node runs the kubelet, a container runtime, and the kube-proxy" became "The components on a node include the kubelet, a container runtime, and the kube-proxy".
+
+## Round 8 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-architecture (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel and every cite matches. "Add-on programs" for "software extensions" is plainer wording of the same idea. Left out: "containerized" (it says "in containers"), "In production environments" is shortened to "In production", kube-proxy's "implementing part of the Service concept" is reworded, and "usually" is kept. |
+| What it is | Bangla | PASS | Meaning follows the Technical panel sentence by sentence, with the same cites and limits ("সাধারণত", "optional", "নাও থাকতে পারে", "উচিত"). Nothing is added. |
+| How it works | Layman | PASS | All facts and cites match the Technical panel. Left out: "scale horizontally" (it says "grow sideways"), the "Heartbeats help determine availability" detail is kept, "The kubelet … PodSpecs" becomes "Pod specs", the Ready row's "is not accepting Pods" is shortened to "if not", and the Disk and Memory rows say "running out" instead of "capacity is low". The code blocks and the diagram match. "Often" for the kubeadm point is within "common approach". |
+| How it works | Bangla | PASS | Matches the Technical panel, with the same cites, numbers (50 সেকেন্ড), and limits ("প্রায়ই", "নির্দিষ্ট node"). The code blocks and the diagram are identical. Nothing is added. |
+| Try it | Layman | PASS | Restates the Technical panel with the same cites. All commands, YAML, and outputs are identical to the Technical panel. Left out: "Names are suffixed…" wording is reworded, and the "Exposes … `-o wide` lists with more details" becomes "shows more details". "Without a name … of the type" is kept. |
+| Try it | Bangla | PASS | Meaning and cites follow the Technical panel. The code blocks and outputs are identical. Nothing is added. Limits are kept ("যেকোনো সময়ে", "এক বা একাধিক", "নির্দিষ্ট condition"). |
+| How a tester uses it | Layman | PASS | Facts and cites match. Left out: "Machines" becomes "A program", and "temporarily" becomes "for now". The "fails" wording for "returns a failure status code" is the same meaning. "When you combine" is shortened to "together with". |
+| How a tester uses it | Bangla | PASS | Matches the Technical panel with the same cites and limits. Nothing is added. |
+| Common mistakes | Layman | PASS | Facts and cites match. Left out: "more specific" for `livez` and `readyz`, and the "there is no filtering by file extension" wording is shortened to "whatever its extension". "Attempt to create" becomes "tries to make". |
+| Common mistakes | Bangla | PASS | Matches the Technical panel with the same cites and the v1.16 detail. Nothing is added. |
+| What a tester can check | Layman | PASS | The callout text and the list are identical to the Technical panel. |
+| What a tester can check | Bangla | PASS | A Bangla rendering of the same callout and the same seven points. Nothing is added. |
+
+Open FAILs after round 8: 0
+
 Open FAILs: 0

@@ -55,7 +55,7 @@ const SOURCE: readonly TopicEntry[] = [
   { slug: "docker-images-compose", part: 2, title: "Docker Images and Compose", description: "How a Dockerfile builds an image, how the build cache works, and how Docker Compose starts a whole test environment from one file, with Bake for builds." },
   { slug: "docker-in-practice", part: 2, title: "Docker in Practice", description: "Volumes, bind mounts, and tmpfs for test data, networks where containers find each other by name, and the commands to look into a container and clean up." },
   { slug: "kubernetes-basics", part: 3, title: "Kubernetes Basics", description: "Pods, ReplicaSets, and Deployments, how Kubernetes keeps the state that you ask for, and how to watch, break, and roll back a rollout on a local kind cluster." },
-  { slug: "kubernetes-architecture", part: 3, title: "Kubernetes Architecture", description: "etcd and Operators." },
+  { slug: "kubernetes-architecture", part: 3, title: "Kubernetes Architecture", description: "The control plane, the nodes, and etcd, how the scheduler and the kubelet place and run Pods, how custom resources and Operators extend the API, and how a tester checks each part on a local kind cluster." },
   { slug: "kubernetes-networking-storage", part: 3, title: "Kubernetes Networking and Storage", description: "Services, DNS records, and volumes." },
   { slug: "kubernetes-operations", part: 3, title: "Kubernetes Operations", description: "Liveness probes, autoscaling, and resource limits." },
   { slug: "kubernetes-security-troubleshooting", part: 3, title: "Kubernetes Security and Troubleshooting", description: "Kubernetes Secrets, and how they are stored by default." },
