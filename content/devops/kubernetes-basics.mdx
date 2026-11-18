@@ -1,16 +1,29 @@
-export const metadata = { title: 'Kubernetes Basics', description: 'Pods, ReplicaSets, and Deployments.' }
+export const metadata = { title: 'Kubernetes Basics', description: 'Pods, ReplicaSets, and Deployments, how Kubernetes keeps the state that you ask for, and how to watch, break, and roll back a rollout on a local kind cluster.' }
 export const page = {
-  updated: '2026-11-05',
+  updated: '2026-11-18',
   sources: [
-    { title: 'Pods', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/pods/', accessed: '2026-11-05' },
-    { title: 'ReplicaSet', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/', accessed: '2026-11-05' },
-    { title: 'Deployments', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/', accessed: '2026-11-05' },
+    { title: 'Overview', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/overview/', accessed: '2026-11-18' },
+    { title: 'Objects In Kubernetes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/overview/working-with-objects/', accessed: '2026-11-18' },
+    { title: 'Pods', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/pods/', accessed: '2026-11-18' },
+    { title: 'ReplicaSet', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/', accessed: '2026-11-18' },
+    { title: 'Deployments', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/', accessed: '2026-11-18' },
+    { title: 'Labels and Selectors', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/', accessed: '2026-11-18' },
+    { title: 'Namespaces', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/', accessed: '2026-11-18' },
+    { title: 'Pod Lifecycle', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/', accessed: '2026-11-18' },
+    { title: 'Images', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/containers/images/', accessed: '2026-11-18' },
+    { title: 'Controllers', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/architecture/controller/', accessed: '2026-11-18' },
+    { title: 'Command line tool (kubectl)', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/', accessed: '2026-11-18' },
+    { title: 'Install and Set Up kubectl on Linux', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/', accessed: '2026-11-18' },
+    { title: 'kubectl rollout status', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_rollout/kubectl_rollout_status/', accessed: '2026-11-18' },
+    { title: 'kubectl Quick Reference', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/quick-reference/', accessed: '2026-11-18' },
+    { title: 'kind', publisher: 'kind documentation', url: 'https://kind.sigs.k8s.io/', accessed: '2026-11-18' },
+    { title: 'Quick Start', publisher: 'kind documentation', url: 'https://kind.sigs.k8s.io/docs/user/quick-start/', accessed: '2026-11-18' },
   ],
 }
 
 # Kubernetes Basics
 
-Pods, ReplicaSets, and Deployments. A short explanation with its sources comes first. The reels after it show the topic at work.
+This page is about the first Kubernetes objects that a tester meets: Pods, ReplicaSets, and Deployments, how Kubernetes keeps them in the state that you ask for, and how to watch a rollout, break it on purpose, and roll it back, with a practice run on a local cluster. It builds on [Docker Basics](/devops/docker-basics/).
 
 <PageMeta />
 
@@ -19,17 +32,784 @@ Pods, ReplicaSets, and Deployments. A short explanation with its sources comes f
 <Voices>
 <Technical>
 
-Pods are the smallest deployable units of computing that you can create and manage in Kubernetes <Cite n={1} />. A ReplicaSet's purpose is to maintain a stable set of replica Pods running at any given time <Cite n={2} />. A Deployment provides declarative updates for Pods and ReplicaSets <Cite n={3} />.
+**Kubernetes.** Kubernetes is a portable, extensible, open source platform for managing containerized workloads and services <Cite n={1} />. It facilitates both declarative configuration and automation <Cite n={1} />. Among other things, Kubernetes provides:
+
+- **Service discovery and load balancing.** Kubernetes can expose a container using a DNS name or its own IP address <Cite n={1} />.
+- **Automated rollouts and rollbacks.** You describe the desired state for your deployed containers, and Kubernetes can change the actual state to the desired state at a controlled rate <Cite n={1} />.
+- **Self-healing.** Kubernetes restarts containers that fail, replaces containers, kills containers that don't respond to your user-defined health check, and doesn't advertise them to clients until they are ready to serve <Cite n={1} />.
+
+**The first objects.**
+
+| Object | What it is |
+|---|---|
+| Pod | The smallest deployable unit of computing that you can create and manage in Kubernetes: a group of one or more containers, with shared storage and network resources, and a specification for how to run the containers <Cite n={3} /> |
+| ReplicaSet | An object whose purpose is to maintain a stable set of replica Pods running at any given time <Cite n={4} /> |
+| Deployment | An object that provides declarative updates for Pods and ReplicaSets <Cite n={5} /> |
+| Label | A key/value pair that is attached to an object such as a Pod <Cite n={6} /> |
+| Namespace | A mechanism for isolating groups of resources within a single cluster <Cite n={7} /> |
+
+The "one-container-per-Pod" model is the most common Kubernetes use case: you can think of a Pod as a wrapper around a single container <Cite n={3} />. Kubernetes manages Pods rather than managing the containers directly <Cite n={3} />.
+
+**The tools.** kubectl is the command line tool for communicating with a Kubernetes cluster's control plane, using the Kubernetes API <Cite n={11} />. kind is a tool for running local Kubernetes clusters using Docker container "nodes" <Cite n={15} />. kind was primarily designed for testing Kubernetes itself, but may be used for local development or CI <Cite n={15} />.
 
 </Technical>
 <Layman>
 
-A Pod is the smallest deployable unit of computing in Kubernetes. You can create and manage Pods <Cite n={1} />. The purpose of a ReplicaSet is to keep a stable set of replica Pods running at any given time <Cite n={2} />. A Deployment gives declarative updates for Pods and ReplicaSets <Cite n={3} />.
+**Kubernetes.** Kubernetes is an open source platform for managing workloads and services that run in containers <Cite n={1} />. It is portable and can be extended <Cite n={1} />. It supports both declarative configuration and automation <Cite n={1} />. Among other things, Kubernetes gives you:
+
+- **Finding apps and sharing the load.** Kubernetes can make a container reachable by a DNS name or by its own IP address <Cite n={1} />.
+- **Rollouts and rollbacks.** You describe the state that you want, and Kubernetes can move the real state toward it at a controlled pace <Cite n={1} />.
+- **Self-healing.** Kubernetes restarts containers that fail and replaces containers. It kills a container that does not answer your health check, and does not advertise a container to clients until it is ready to serve <Cite n={1} />.
+
+**The first objects.**
+
+| Object | What it is |
+|---|---|
+| Pod | The smallest unit that you can create and manage in Kubernetes: one or more containers that share storage and network, and the instructions for running them <Cite n={3} /> |
+| ReplicaSet | Keeps a stable set of replica Pods running at any given time <Cite n={4} /> |
+| Deployment | Gives declarative updates for Pods and ReplicaSets <Cite n={5} /> |
+| Label | A key and a value attached to an object, such as a Pod <Cite n={6} /> |
+| Namespace | A way to keep groups of resources apart inside one cluster <Cite n={7} /> |
+
+Most often, a Pod runs one container: think of the Pod as a wrapper around it <Cite n={3} />. Kubernetes manages the Pods, not the containers directly <Cite n={3} />.
+
+**The tools.** kubectl is the command line tool that talks to a cluster's control plane through the Kubernetes API <Cite n={11} />. kind runs a local Kubernetes cluster whose "nodes" are Docker containers <Cite n={15} />. kind was made mainly to test Kubernetes itself, but you can also use it to develop on your own computer, or in CI <Cite n={15} />.
 
 </Layman>
 <Bangla>
 
-Pod হলো Kubernetes-এ computing-এর সবচেয়ে ছোট deployable একক। আপনি Pod তৈরি ও পরিচালনা করতে পারেন <Cite n={1} />। ReplicaSet-এর উদ্দেশ্য হলো যেকোনো সময়ে replica Pod-এর একটা stable set চালু রাখা <Cite n={2} />। Deployment, Pod ও ReplicaSet-এর জন্য declarative update দেয় <Cite n={3} />।
+**Kubernetes।** Kubernetes হলো containerized workload আর service পরিচালনার জন্য একটা portable, extensible, open source platform <Cite n={1} />। এটা declarative configuration আর automation, দুটোই সহজ করে <Cite n={1} />। অন্যান্য সুবিধার মধ্যে Kubernetes দেয়:
+
+- **Service discovery আর load balancing।** Kubernetes একটা container-কে একটা DNS নাম বা তার নিজের IP address দিয়ে expose করতে পারে <Cite n={1} />।
+- **Automated rollout আর rollback।** আপনি deploy করা container-গুলোর desired state বর্ণনা করেন, আর Kubernetes নিয়ন্ত্রিত গতিতে actual state-কে desired state-এ বদলাতে পারে <Cite n={1} />।
+- **Self-healing।** Kubernetes ফেল করা container restart করে, container replace করে, আপনার নির্ধারিত health check-এ সাড়া না দেওয়া container বন্ধ করে, আর container serve করার জন্য প্রস্তুত না হওয়া পর্যন্ত client-দের কাছে সেটা প্রচার করে না <Cite n={1} />।
+
+**প্রথম object-গুলো।**
+
+| Object | এটা কী |
+|---|---|
+| Pod | Kubernetes-এ তৈরি ও পরিচালনা করা যায় এমন সবচেয়ে ছোট deployable computing একক: এক বা একাধিক container-এর একটা group, shared storage ও network resource-সহ, আর container-গুলো কীভাবে চলবে তার একটা specification <Cite n={3} /> |
+| ReplicaSet | এমন একটা object, যার উদ্দেশ্য যেকোনো সময়ে replica Pod-এর একটা stable set চালু রাখা <Cite n={4} /> |
+| Deployment | এমন একটা object, যা Pod আর ReplicaSet-এর জন্য declarative update দেয় <Cite n={5} /> |
+| Label | Pod-এর মতো একটা object-এর সাথে যুক্ত একটা key/value জোড়া <Cite n={6} /> |
+| Namespace | একটা cluster-এর ভেতরে resource-এর group-গুলো আলাদা রাখার একটা ব্যবস্থা <Cite n={7} /> |
+
+"one-container-per-Pod" model হলো Kubernetes-এর সবচেয়ে প্রচলিত ব্যবহার: Pod-কে একটা single container-এর wrapper হিসেবে ভাবতে পারেন <Cite n={3} />। Kubernetes সরাসরি container নয়, Pod পরিচালনা করে <Cite n={3} />।
+
+**টুলগুলো।** kubectl হলো Kubernetes API ব্যবহার করে একটা Kubernetes cluster-এর control plane-এর সাথে যোগাযোগের command line tool <Cite n={11} />। kind হলো Docker container "node" দিয়ে local Kubernetes cluster চালানোর একটা tool <Cite n={15} />। kind মূলত Kubernetes নিজেকে test করার জন্য বানানো, তবে local development বা CI-তেও ব্যবহার করা যায় <Cite n={15} />।
 
 </Bangla>
 </Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**Desired state.** A Kubernetes object is a "record of intent": once you create the object, the Kubernetes system will constantly work to ensure that the object exists <Cite n={2} />. By creating an object, you tell Kubernetes what you want your cluster's workload to look like: this is your cluster's desired state <Cite n={2} />. Almost every object has two nested fields, the object spec and the object status <Cite n={2} />. The control plane continually and actively manages every object's actual state to match the desired state you supplied <Cite n={2} />. Controllers are control loops that watch the state of your cluster, then make or request changes where needed <Cite n={10} />. Each controller tries to move the current cluster state closer to the desired state <Cite n={10} />.
+
+**A Deployment, its ReplicaSet, and its Pods.** A Deployment rolls out a ReplicaSet, and the ReplicaSet creates the Pods in the background <Cite n={5} />. A ReplicaSet has a selector that specifies how to identify Pods it can acquire, a number of replicas, and a Pod template <Cite n={4} />. It creates and deletes Pods as needed to reach the desired number, and it uses its Pod template when it needs new Pods <Cite n={4} />. The name of the ReplicaSet is always formatted as `[DEPLOYMENT-NAME]-[HASH]`, and the hash is the same as the `pod-template-hash` label on the ReplicaSet <Cite n={5} />. This diagram is the tutorial's own picture of step 3 of the practice run below, with the names from the tutorial's run; `…` stands for `nginx-deployment`:
+
+```text
+Deployment nginx-deployment
+└─ ReplicaSet …-54fd4d6d4c
+   ├─ Pod …-54fd4d6d4c-9s5hc
+   ├─ Pod …-54fd4d6d4c-mgvjk
+   └─ Pod …-54fd4d6d4c-vbfn4
+```
+
+**Labels and selectors.** Via a label selector, a client or user can identify a set of objects <Cite n={6} />. The label selector is the core grouping primitive in Kubernetes <Cite n={6} />. In a Deployment, the `.spec.selector` field defines how the created ReplicaSet finds which Pods to manage <Cite n={5} />.
+
+**A rolling update.** A Deployment's rollout is triggered if and only if its Pod template (`.spec.template`) is changed, for example if the labels or container images of the template are updated <Cite n={5} />. Other updates, such as scaling the Deployment, do not trigger a rollout <Cite n={5} />. In a rollout, a new ReplicaSet is created, and the Deployment gradually scales it up while scaling down the old ReplicaSet <Cite n={5} />. By default, at least 75% of the desired number of Pods are up (25% max unavailable), and at most 125% of the desired number of Pods are up (25% max surge) <Cite n={5} />. Each new ReplicaSet updates the revision of the Deployment, and you can roll back to an earlier revision <Cite n={5} />.
+
+**Pods come and go.** Pods are designed as relatively ephemeral, disposable entities <Cite n={3} />. If a node fails, a controller notices that the Pods on that node have stopped working and creates a replacement Pod <Cite n={3} />. A Pod has a `restartPolicy` with the possible values `Always`, `OnFailure`, and `Never`; the default value is `Always` <Cite n={8} />. Four of the phases of a Pod:
+
+| Phase | Meaning |
+|---|---|
+| `Pending` | The Pod has been accepted by the cluster, but one or more of its containers has not been set up and made ready to run, including the time spent waiting to be scheduled and downloading images <Cite n={8} /> |
+| `Running` | The Pod has been bound to a node, and all of its containers have been created; at least one is still running, or is starting or restarting <Cite n={8} /> |
+| `Succeeded` | All containers in the Pod have terminated in success, and will not be restarted <Cite n={8} /> |
+| `Failed` | All containers in the Pod have terminated, and at least one container has terminated in failure <Cite n={8} /> |
+
+</Technical>
+<Layman>
+
+**The state that you want.** An object in Kubernetes is a "record of intent": once you create it, Kubernetes keeps working to make sure that it exists <Cite n={2} />. When you create an object, you tell Kubernetes how you want your cluster's work to look: that is the desired state <Cite n={2} />. Almost every object has two parts, the spec and the status <Cite n={2} />. The control plane keeps working to make each object's real state match the state that you asked for <Cite n={2} />. Controllers are loops that watch the cluster and make or ask for changes where needed <Cite n={10} />. Each controller tries to move the cluster closer to the desired state <Cite n={10} />.
+
+**A Deployment, its ReplicaSet, and its Pods.** A Deployment rolls out a ReplicaSet, and the ReplicaSet makes the Pods <Cite n={5} />. A ReplicaSet has a selector that says which Pods it can take over, a number of copies, and a Pod template <Cite n={4} />. It makes and deletes Pods until the number is right, and it uses the template for each new Pod <Cite n={4} />. The ReplicaSet is always named `[DEPLOYMENT-NAME]-[HASH]`, and the hash is the same as its `pod-template-hash` label <Cite n={5} />. This diagram is the tutorial's own picture of step 3 of the practice run below, with the names from the tutorial's run; `…` stands for `nginx-deployment`:
+
+```text
+Deployment nginx-deployment
+└─ ReplicaSet …-54fd4d6d4c
+   ├─ Pod …-54fd4d6d4c-9s5hc
+   ├─ Pod …-54fd4d6d4c-mgvjk
+   └─ Pod …-54fd4d6d4c-vbfn4
+```
+
+**Labels and selectors.** With a label selector, you can pick out a set of objects <Cite n={6} />. The label selector is the main way to group things in Kubernetes <Cite n={6} />. In a Deployment, the `.spec.selector` field tells the ReplicaSet which Pods it manages <Cite n={5} />.
+
+**A rolling update.** A Deployment starts a rollout only when its Pod template (`.spec.template`) changes, for example when the labels or the container image of the template change <Cite n={5} />. Other changes, such as scaling, do not start a rollout <Cite n={5} />. In a rollout, a new ReplicaSet is made; the Deployment slowly grows it while it shrinks the old one <Cite n={5} />. By default, at least 75% of the wanted Pods stay up (25% max unavailable), and at most 125% are up (25% max surge) <Cite n={5} />. Each new ReplicaSet gives the Deployment a new revision, and you can go back to an earlier one <Cite n={5} />.
+
+**Pods come and go.** Pods are built to be short-lived and replaceable <Cite n={3} />. If a node fails, a controller notices that its Pods stopped working and makes a replacement Pod <Cite n={3} />. A Pod's `restartPolicy` can be `Always`, `OnFailure`, or `Never`; the default is `Always` <Cite n={8} />. Four of the phases of a Pod:
+
+| Phase | Meaning |
+|---|---|
+| `Pending` | The cluster accepted the Pod, but at least one container is not set up and ready yet; this includes waiting for a node and downloading images <Cite n={8} /> |
+| `Running` | The Pod is on a node and all its containers exist; at least one is running, starting, or restarting <Cite n={8} /> |
+| `Succeeded` | All containers ended with success and will not restart <Cite n={8} /> |
+| `Failed` | All containers ended, and at least one ended with a failure <Cite n={8} /> |
+
+</Layman>
+<Bangla>
+
+**Desired state।** Kubernetes object হলো একটা "record of intent": object তৈরি করার পর Kubernetes system সেটা যাতে থাকে, তা নিশ্চিত করতে অবিরাম কাজ করে <Cite n={2} />। একটা object তৈরি করে আপনি Kubernetes-কে জানান যে আপনার cluster-এর workload কেমন দেখতে চান: এটাই আপনার cluster-এর desired state <Cite n={2} />। প্রায় প্রতিটা object-এ দুটো nested field থাকে, object spec আর object status <Cite n={2} />। control plane অবিরাম ও সক্রিয়ভাবে প্রতিটা object-এর actual state-কে আপনার দেওয়া desired state-এর সাথে মেলায় <Cite n={2} />। Controller হলো control loop, যা আপনার cluster-এর state দেখে, তারপর দরকার হলে পরিবর্তন করে বা পরিবর্তনের অনুরোধ করে <Cite n={10} />। প্রতিটা controller বর্তমান cluster state-কে desired state-এর কাছাকাছি নিতে চেষ্টা করে <Cite n={10} />।
+
+**একটা Deployment, তার ReplicaSet আর তার Pod।** একটা Deployment একটা ReplicaSet rollout করে, আর ReplicaSet পেছনে Pod-গুলো তৈরি করে <Cite n={5} />। একটা ReplicaSet-এ থাকে একটা selector, যা বলে কোন Pod সে নিতে পারে, replica-র একটা সংখ্যা, আর একটা Pod template <Cite n={4} />। কাঙ্ক্ষিত সংখ্যায় পৌঁছাতে সে দরকারমতো Pod তৈরি ও মুছে ফেলে, আর নতুন Pod দরকার হলে তার Pod template ব্যবহার করে <Cite n={4} />। ReplicaSet-এর নাম সবসময় `[DEPLOYMENT-NAME]-[HASH]` ধাঁচের হয়, আর hash-টা ReplicaSet-এর `pod-template-hash` label-এর সমান <Cite n={5} />। এই diagram নিচের practice run-এর ধাপ ৩-এর টিউটোরিয়ালের নিজের ছবি, নামগুলো টিউটোরিয়ালের run থেকে নেওয়া; `…` মানে `nginx-deployment`:
+
+```text
+Deployment nginx-deployment
+└─ ReplicaSet …-54fd4d6d4c
+   ├─ Pod …-54fd4d6d4c-9s5hc
+   ├─ Pod …-54fd4d6d4c-mgvjk
+   └─ Pod …-54fd4d6d4c-vbfn4
+```
+
+**Label আর selector।** একটা label selector দিয়ে client বা user কিছু object-এর একটা set চিহ্নিত করতে পারে <Cite n={6} />। label selector হলো Kubernetes-এ group করার মূল primitive <Cite n={6} />। একটা Deployment-এ `.spec.selector` field ঠিক করে, তৈরি হওয়া ReplicaSet কোন Pod-গুলো পরিচালনা করবে তা কীভাবে খুঁজে পাবে <Cite n={5} />।
+
+**Rolling update।** একটা Deployment-এর rollout শুরু হয় যদি এবং কেবল যদি তার Pod template (`.spec.template`) বদলায়, যেমন template-এর label বা container image আপডেট হলে <Cite n={5} />। অন্য আপডেট, যেমন Deployment scale করা, rollout শুরু করে না <Cite n={5} />। rollout-এ একটা নতুন ReplicaSet তৈরি হয়, আর Deployment ধীরে ধীরে সেটাকে scale up করে, একই সাথে পুরোনো ReplicaSet scale down করে <Cite n={5} />। default-ভাবে কাঙ্ক্ষিত Pod সংখ্যার অন্তত 75% চালু থাকে (25% max unavailable), আর সর্বোচ্চ 125% চালু থাকে (25% max surge) <Cite n={5} />। প্রতিটা নতুন ReplicaSet Deployment-এর revision আপডেট করে, আর আপনি আগের একটা revision-এ rollback করতে পারেন <Cite n={5} />।
+
+**Pod আসে আর যায়।** Pod-গুলো তুলনামূলকভাবে ক্ষণস্থায়ী, ফেলে দেওয়ার মতো entity হিসেবে বানানো <Cite n={3} />। একটা node ফেল করলে একটা controller খেয়াল করে যে সেই node-এর Pod-গুলো কাজ করা বন্ধ করেছে, আর একটা replacement Pod তৈরি করে <Cite n={3} />। Pod-এর একটা `restartPolicy` থাকে, যার সম্ভাব্য মান `Always`, `OnFailure` আর `Never`; default মান `Always` <Cite n={8} />। Pod-এর চারটা phase:
+
+| Phase | অর্থ |
+|---|---|
+| `Pending` | cluster Pod-টা গ্রহণ করেছে, কিন্তু এক বা একাধিক container এখনো set up হয়ে চলার জন্য প্রস্তুত হয়নি; schedule হওয়ার অপেক্ষা আর image download-এর সময়ও এর মধ্যে <Cite n={8} /> |
+| `Running` | Pod একটা node-এ bind হয়েছে, আর সব container তৈরি হয়েছে; অন্তত একটা এখনো চলছে, বা শুরু বা restart হচ্ছে <Cite n={8} /> |
+| `Succeeded` | Pod-এর সব container সফলভাবে শেষ হয়েছে, আর restart হবে না <Cite n={8} /> |
+| `Failed` | Pod-এর সব container শেষ হয়েছে, আর অন্তত একটা container ব্যর্থ হয়ে শেষ হয়েছে <Cite n={8} /> |
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+The tutorial ran these steps on 2026-11-18 on Linux, with Docker 29.10.0, kind v0.33.0, and kubectl v1.37.2; the cluster ran Kubernetes v1.37.0. The Deployment is the example of the Kubernetes documentation. Pod names, hashes, and ages differ on your machine.
+
+**1. Install the tools.** kind does not require kubectl, but you will not be able to perform some of the examples in kind's docs without it <Cite n={16} />. Use a kubectl version that is within one minor version of your cluster: a v1.37 client can communicate with v1.36, v1.37, and v1.38 control planes <Cite n={12} />. Follow the install pages of kubectl and kind; the tutorial used the release binaries of both, and checked them against their SHA-256 checksums.
+
+**2. Create a cluster.** `kind create cluster` bootstraps a Kubernetes cluster using a pre-built node image <Cite n={16} />. By default the cluster is named `kind`; the `--name` flag gives it another name <Cite n={16} />. For configuration, kubectl looks for a file named `config` in the `$HOME/.kube` directory <Cite n={11} />, and by default kind stores the cluster access configuration in `${HOME}/.kube/config` if the `$KUBECONFIG` environment variable is not set <Cite n={16} />. kubectl commands have the form `kubectl [command] [TYPE] [NAME] [flags]`: the command is an operation such as `create`, `get`, `describe`, or `delete`, and the type can be given in the singular, plural, or abbreviated form <Cite n={11} />. If the name is omitted, details for all resources of the type are displayed <Cite n={11} />. The block below creates the cluster and talks to it through its context, as the kind docs do with `kubectl cluster-info --context kind-kind` <Cite n={16} />, then gets all nodes and all namespaces <Cite n={11} />:
+
+```bash
+kind create cluster --name qa-lab
+kubectl cluster-info --context kind-qa-lab
+kubectl get nodes
+kubectl get namespaces
+```
+
+In the tutorial's run, kind printed `Set kubectl context to "kind-qa-lab"`. There was no `~/.kube` folder before the run; afterwards, there was a `~/.kube/config` file. The one node, `qa-lab-control-plane`, was `Ready` with version `v1.37.0`. Kubernetes starts with four namespaces: `default`, `kube-node-lease`, `kube-public`, and `kube-system` <Cite n={7} />. The run listed those four and a fifth, `local-path-storage`.
+
+**3. Create a Deployment.** The example Deployment of the Kubernetes docs creates a ReplicaSet to bring up three nginx Pods <Cite n={5} />:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+```
+
+The docs create it, check the rollout, and list the Deployment, its ReplicaSet, and the labels of its Pods <Cite n={5} />:
+
+```bash
+kubectl apply -f https://k8s.io/examples/controllers/nginx-deployment.yaml
+kubectl rollout status deployment/nginx-deployment
+kubectl get deployments
+kubectl get rs
+kubectl get pods --show-labels
+```
+
+`READY` shows how many replicas of the application are available to your users, as ready/desired <Cite n={5} />. In the tutorial's run, `kubectl get deployments` printed this after the rollout:
+
+```text
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3/3     3            3           35s
+```
+
+Each Pod had the labels `app=nginx` and `pod-template-hash=54fd4d6d4c`.
+
+**4. Delete one Pod.** A ReplicaSet creates and deletes Pods as needed to reach the desired number <Cite n={4} />. `kubectl delete` with a resource type and a name performs the delete operation on that resource <Cite n={11} />, and `-l` selects the Pods by label <Cite n={6} />:
+
+```bash
+kubectl delete pod nginx-deployment-54fd4d6d4c-9s5hc
+kubectl get pods -l app=nginx
+```
+
+Use a Pod name from your own list. In the tutorial's run, a new Pod, `nginx-deployment-54fd4d6d4c-69bwz`, was `Running` 3 seconds later, and there were three Pods again.
+
+**5. Roll out a new image.** `kubectl set image` changes the image of the Pod template, so it starts a rollout <Cite n={5} />. `-o wide` lists with more details <Cite n={14} />:
+
+```bash
+kubectl set image deployment/nginx-deployment nginx=nginx:1.16.1
+kubectl rollout status deployment/nginx-deployment
+kubectl get rs
+kubectl get deployment nginx-deployment -o wide
+```
+
+In the tutorial's run, the new ReplicaSet had all three Pods, and the old one had none:
+
+```text
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-54fd4d6d4c   0         0         0       77s
+nginx-deployment-76df5b8bb8   3         3         3       39s
+```
+
+The `IMAGES` column of `-o wide` showed `nginx:1.16.1`.
+
+**6. Break the rollout on purpose.** This is the docs' own example: a typo in the image, `nginx:1.161` instead of `nginx:1.16.1`, and the rollout gets stuck <Cite n={5} />. By default, `rollout status` watches the latest rollout until it is done; `--timeout` sets the length of time to wait before ending the watch <Cite n={13} />. `kubectl describe` describes a resource with verbose output <Cite n={14} />:
+
+```bash
+kubectl set image deployment/nginx-deployment nginx=nginx:1.161
+kubectl rollout status deployment/nginx-deployment --timeout=60s
+kubectl get pods -l app=nginx
+kubectl describe pod <name-of-the-pod-that-does-not-start>
+```
+
+In the tutorial's run, `rollout status` printed these two lines and exited with code 1:
+
+```text
+Waiting for deployment "nginx-deployment" rollout to finish: 1 out of 3 new replicas have been updated...
+error: timed out waiting for the condition
+```
+
+The three Pods of the old ReplicaSet kept running. The new Pod showed `ErrImagePull`. Its Events said `Failed to pull image "nginx:1.161"`, and the message ended in `docker.io/library/nginx:1.161: not found`. The last two lines of its Events were:
+
+```text
+Normal   BackOff    1s (x3 over 58s)   kubelet            spec.containers{nginx}: Back-off pulling image "nginx:1.161"
+Warning  Failed     1s (x3 over 58s)   kubelet            spec.containers{nginx}: Error: ImagePullBackOff
+```
+
+`ImagePullBackOff` means that a container could not start because Kubernetes could not pull a container image, for reasons such as an invalid image name <Cite n={9} />. Kubernetes keeps trying with an increasing back-off delay, up to a compiled-in limit of 300 seconds <Cite n={9} />. The Deployment controller stops the bad rollout automatically, and stops scaling up the new ReplicaSet <Cite n={5} />.
+
+**7. Roll back.** `kubectl rollout history` lists the revisions, and `kubectl rollout undo` rolls back to the previous one <Cite n={5} />:
+
+```bash
+kubectl rollout history deployment/nginx-deployment
+kubectl rollout undo deployment/nginx-deployment
+kubectl rollout status deployment/nginx-deployment
+kubectl get deployment nginx-deployment -o wide
+```
+
+In the tutorial's run, `undo` printed:
+
+```text
+Warning: resource deployments/nginx-deployment was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/nginx-deployment rolled back
+```
+
+The image was `nginx:1.16.1` again. The history listed the revisions 1, 3, and 4: revision 2 was no longer in the list.
+
+**8. Scale, then clean up.** `kubectl scale` changes the number of replicas <Cite n={5} />. Scaling does not trigger a rollout <Cite n={5} />. `kubectl delete` with a resource type and a name performs the delete operation on that resource <Cite n={11} />:
+
+```bash
+kubectl scale deployment/nginx-deployment --replicas=5
+kubectl get deployment nginx-deployment
+kubectl delete deployment nginx-deployment
+kubectl get pods -l app=nginx
+```
+
+In the tutorial's run, the Deployment showed `5/5`, and after the delete, `kubectl get pods` printed `No resources found in default namespace.`
+
+**Keep the cluster.** The next Kubernetes pages use the same cluster. When you are done with them, `kind delete cluster --name qa-lab` deletes it; without `--name`, kind deletes the cluster named `kind` <Cite n={16} />.
+
+</Technical>
+<Layman>
+
+The tutorial ran these steps on 2026-11-18 on Linux, with Docker 29.10.0, kind v0.33.0, and kubectl v1.37.2; the cluster ran Kubernetes v1.37.0. The Deployment is the example of the Kubernetes documentation. Pod names, hashes, and ages differ on your machine.
+
+**1. Install the tools.** kind works without kubectl, but some examples in kind's docs need it <Cite n={16} />. Use a kubectl that is at most one minor version away from your cluster: a v1.37 kubectl works with v1.36, v1.37, and v1.38 control planes <Cite n={12} />. Follow the install pages of kubectl and kind; the tutorial used the release binaries of both, and checked them against their SHA-256 checksums.
+
+**2. Create a cluster.** `kind create cluster` starts a Kubernetes cluster from a ready-made node image <Cite n={16} />. Without `--name`, the cluster is called `kind` <Cite n={16} />. kubectl reads its settings from a file named `config` in the `$HOME/.kube` folder <Cite n={11} />, and kind saves the access settings of the cluster in `${HOME}/.kube/config` by default, unless `$KUBECONFIG` is set <Cite n={16} />. kubectl commands look like `kubectl [command] [TYPE] [NAME] [flags]`: the command is an action such as `create`, `get`, `describe`, or `delete`, and the type can be singular, plural, or short <Cite n={11} />. Without a name, kubectl shows details for all resources of that type <Cite n={11} />. The block below makes the cluster and talks to it through its context, as the kind docs do with `kubectl cluster-info --context kind-kind` <Cite n={16} />, then gets all nodes and all namespaces <Cite n={11} />:
+
+```bash
+kind create cluster --name qa-lab
+kubectl cluster-info --context kind-qa-lab
+kubectl get nodes
+kubectl get namespaces
+```
+
+In the tutorial's run, kind printed `Set kubectl context to "kind-qa-lab"`. There was no `~/.kube` folder before the run; afterwards, there was a `~/.kube/config` file. The one node, `qa-lab-control-plane`, was `Ready` with version `v1.37.0`. Kubernetes starts with four namespaces: `default`, `kube-node-lease`, `kube-public`, and `kube-system` <Cite n={7} />. The run listed those four and a fifth, `local-path-storage`.
+
+**3. Create a Deployment.** The example Deployment of the Kubernetes docs makes a ReplicaSet that starts three nginx Pods <Cite n={5} />:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+```
+
+The docs create it, check the rollout, and list the Deployment, its ReplicaSet, and the labels of its Pods <Cite n={5} />:
+
+```bash
+kubectl apply -f https://k8s.io/examples/controllers/nginx-deployment.yaml
+kubectl rollout status deployment/nginx-deployment
+kubectl get deployments
+kubectl get rs
+kubectl get pods --show-labels
+```
+
+`READY` shows how many copies of the app your users can reach, as ready/wanted <Cite n={5} />. In the tutorial's run, `kubectl get deployments` printed this after the rollout:
+
+```text
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3/3     3            3           35s
+```
+
+Each Pod had the labels `app=nginx` and `pod-template-hash=54fd4d6d4c`.
+
+**4. Delete one Pod.** A ReplicaSet makes and deletes Pods until the number is right <Cite n={4} />. `kubectl delete` with a type and a name deletes that resource <Cite n={11} />, and `-l` picks the Pods by their label <Cite n={6} />:
+
+```bash
+kubectl delete pod nginx-deployment-54fd4d6d4c-9s5hc
+kubectl get pods -l app=nginx
+```
+
+Use a Pod name from your own list. In the tutorial's run, a new Pod, `nginx-deployment-54fd4d6d4c-69bwz`, was `Running` 3 seconds later, and there were three Pods again.
+
+**5. Roll out a new image.** `kubectl set image` changes the image in the Pod template, so a rollout starts <Cite n={5} />. `-o wide` shows more details <Cite n={14} />:
+
+```bash
+kubectl set image deployment/nginx-deployment nginx=nginx:1.16.1
+kubectl rollout status deployment/nginx-deployment
+kubectl get rs
+kubectl get deployment nginx-deployment -o wide
+```
+
+In the tutorial's run, the new ReplicaSet had all three Pods, and the old one had none:
+
+```text
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-54fd4d6d4c   0         0         0       77s
+nginx-deployment-76df5b8bb8   3         3         3       39s
+```
+
+The `IMAGES` column of `-o wide` showed `nginx:1.16.1`.
+
+**6. Break the rollout on purpose.** This is the docs' own example: a typo in the image, `nginx:1.161` instead of `nginx:1.16.1`, and the rollout gets stuck <Cite n={5} />. By default, `rollout status` watches the latest rollout until it is done; `--timeout` sets how long it waits before it stops watching <Cite n={13} />. `kubectl describe` describes a resource with verbose output <Cite n={14} />:
+
+```bash
+kubectl set image deployment/nginx-deployment nginx=nginx:1.161
+kubectl rollout status deployment/nginx-deployment --timeout=60s
+kubectl get pods -l app=nginx
+kubectl describe pod <name-of-the-pod-that-does-not-start>
+```
+
+In the tutorial's run, `rollout status` printed these two lines and exited with code 1:
+
+```text
+Waiting for deployment "nginx-deployment" rollout to finish: 1 out of 3 new replicas have been updated...
+error: timed out waiting for the condition
+```
+
+The three Pods of the old ReplicaSet kept running. The new Pod showed `ErrImagePull`. Its Events said `Failed to pull image "nginx:1.161"`, and the message ended in `docker.io/library/nginx:1.161: not found`. The last two lines of its Events were:
+
+```text
+Normal   BackOff    1s (x3 over 58s)   kubelet            spec.containers{nginx}: Back-off pulling image "nginx:1.161"
+Warning  Failed     1s (x3 over 58s)   kubelet            spec.containers{nginx}: Error: ImagePullBackOff
+```
+
+`ImagePullBackOff` means that a container could not start because Kubernetes could not pull its image, for example because the image name is wrong <Cite n={9} />. Kubernetes keeps trying, and waits longer each time, up to a built-in limit of 300 seconds <Cite n={9} />. The Deployment controller stops the bad rollout by itself, and stops growing the new ReplicaSet <Cite n={5} />.
+
+**7. Roll back.** `kubectl rollout history` lists the revisions, and `kubectl rollout undo` goes back to the previous one <Cite n={5} />:
+
+```bash
+kubectl rollout history deployment/nginx-deployment
+kubectl rollout undo deployment/nginx-deployment
+kubectl rollout status deployment/nginx-deployment
+kubectl get deployment nginx-deployment -o wide
+```
+
+In the tutorial's run, `undo` printed:
+
+```text
+Warning: resource deployments/nginx-deployment was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/nginx-deployment rolled back
+```
+
+The image was `nginx:1.16.1` again. The history listed the revisions 1, 3, and 4: revision 2 was no longer in the list.
+
+**8. Scale, then clean up.** `kubectl scale` changes the number of copies <Cite n={5} />. Scaling does not start a rollout <Cite n={5} />. `kubectl delete` with a type and a name deletes that resource <Cite n={11} />:
+
+```bash
+kubectl scale deployment/nginx-deployment --replicas=5
+kubectl get deployment nginx-deployment
+kubectl delete deployment nginx-deployment
+kubectl get pods -l app=nginx
+```
+
+In the tutorial's run, the Deployment showed `5/5`, and after the delete, `kubectl get pods` printed `No resources found in default namespace.`
+
+**Keep the cluster.** The next Kubernetes pages use the same cluster. When you are done with them, `kind delete cluster --name qa-lab` deletes it; without `--name`, kind deletes the cluster named `kind` <Cite n={16} />.
+
+</Layman>
+<Bangla>
+
+টিউটোরিয়াল এই ধাপগুলো 2026-11-18 তারিখে Linux-এ Docker 29.10.0, kind v0.33.0 আর kubectl v1.37.2 দিয়ে চালিয়েছে; cluster-এ চলেছে Kubernetes v1.37.0। Deployment-টা Kubernetes documentation-এর উদাহরণ। Pod-এর নাম, hash আর age আপনার machine-এ আলাদা হবে।
+
+**১. টুলগুলো install করুন।** kind-এর kubectl লাগে না, তবে kubectl ছাড়া kind-এর docs-এর কিছু উদাহরণ চালাতে পারবেন না <Cite n={16} />। আপনার cluster থেকে এক minor version-এর মধ্যে থাকা kubectl ব্যবহার করুন: v1.37 client v1.36, v1.37 আর v1.38 control plane-এর সাথে যোগাযোগ করতে পারে <Cite n={12} />। kubectl আর kind-এর install page অনুসরণ করুন; টিউটোরিয়াল দুটোরই release binary ব্যবহার করেছে, আর তাদের SHA-256 checksum মিলিয়ে দেখেছে।
+
+**২. একটা cluster তৈরি করুন।** `kind create cluster` একটা pre-built node image দিয়ে একটা Kubernetes cluster চালু করে <Cite n={16} />। default-ভাবে cluster-এর নাম `kind`; `--name` flag অন্য নাম দেয় <Cite n={16} />। configuration-এর জন্য kubectl `$HOME/.kube` directory-তে `config` নামের একটা file খোঁজে <Cite n={11} />, আর `$KUBECONFIG` environment variable set না থাকলে kind default-ভাবে cluster access configuration `${HOME}/.kube/config`-এ রাখে <Cite n={16} />। kubectl command-এর গঠন `kubectl [command] [TYPE] [NAME] [flags]`: command হলো `create`, `get`, `describe` বা `delete`-এর মতো একটা operation, আর TYPE singular, plural বা abbreviated রূপে দেওয়া যায় <Cite n={11} />। নাম না দিলে ওই type-এর সব resource-এর details দেখানো হয় <Cite n={11} />। নিচের block cluster তৈরি করে আর তার context দিয়ে তার সাথে কথা বলে, যেমন kind docs `kubectl cluster-info --context kind-kind` দিয়ে করে <Cite n={16} />, তারপর সব node আর সব namespace দেখায় <Cite n={11} />:
+
+```bash
+kind create cluster --name qa-lab
+kubectl cluster-info --context kind-qa-lab
+kubectl get nodes
+kubectl get namespaces
+```
+
+টিউটোরিয়ালের run-এ kind print করেছে `Set kubectl context to "kind-qa-lab"`। run-এর আগে কোনো `~/.kube` folder ছিল না; পরে একটা `~/.kube/config` file ছিল। একমাত্র node `qa-lab-control-plane` ছিল `Ready`, version `v1.37.0`। Kubernetes চারটা namespace দিয়ে শুরু হয়: `default`, `kube-node-lease`, `kube-public` আর `kube-system` <Cite n={7} />। run-এ এই চারটা আর পঞ্চম একটা, `local-path-storage`, দেখা গেছে।
+
+**৩. একটা Deployment তৈরি করুন।** Kubernetes docs-এর উদাহরণ Deployment তিনটা nginx Pod চালু করতে একটা ReplicaSet তৈরি করে <Cite n={5} />:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+```
+
+docs এটা তৈরি করে, rollout দেখে, আর Deployment, তার ReplicaSet আর তার Pod-গুলোর label-এর তালিকা দেখায় <Cite n={5} />:
+
+```bash
+kubectl apply -f https://k8s.io/examples/controllers/nginx-deployment.yaml
+kubectl rollout status deployment/nginx-deployment
+kubectl get deployments
+kubectl get rs
+kubectl get pods --show-labels
+```
+
+`READY` দেখায় application-এর কতগুলো replica আপনার user-দের জন্য available, ready/desired আকারে <Cite n={5} />। টিউটোরিয়ালের run-এ rollout-এর পর `kubectl get deployments` এটা print করেছে:
+
+```text
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3/3     3            3           35s
+```
+
+প্রতিটা Pod-এর label ছিল `app=nginx` আর `pod-template-hash=54fd4d6d4c`।
+
+**৪. একটা Pod মুছে ফেলুন।** কাঙ্ক্ষিত সংখ্যায় পৌঁছাতে ReplicaSet দরকারমতো Pod তৈরি ও মুছে ফেলে <Cite n={4} />। resource type আর নাম দিয়ে `kubectl delete` ওই resource-এর ওপর delete operation চালায় <Cite n={11} />, আর `-l` label দিয়ে Pod বাছাই করে <Cite n={6} />:
+
+```bash
+kubectl delete pod nginx-deployment-54fd4d6d4c-9s5hc
+kubectl get pods -l app=nginx
+```
+
+আপনার নিজের তালিকা থেকে একটা Pod-এর নাম নিন। টিউটোরিয়ালের run-এ ৩ সেকেন্ড পরে একটা নতুন Pod, `nginx-deployment-54fd4d6d4c-69bwz`, `Running` ছিল, আর আবার তিনটা Pod হয়ে গিয়েছিল।
+
+**৫. নতুন image rollout করুন।** `kubectl set image` Pod template-এর image বদলায়, তাই একটা rollout শুরু হয় <Cite n={5} />। `-o wide` আরও বিস্তারিত দেখায় <Cite n={14} />:
+
+```bash
+kubectl set image deployment/nginx-deployment nginx=nginx:1.16.1
+kubectl rollout status deployment/nginx-deployment
+kubectl get rs
+kubectl get deployment nginx-deployment -o wide
+```
+
+টিউটোরিয়ালের run-এ নতুন ReplicaSet-এ তিনটা Pod-ই ছিল, আর পুরোনোটায় একটাও না:
+
+```text
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-54fd4d6d4c   0         0         0       77s
+nginx-deployment-76df5b8bb8   3         3         3       39s
+```
+
+`-o wide`-এর `IMAGES` column দেখিয়েছে `nginx:1.16.1`।
+
+**৬. ইচ্ছা করে rollout ভেঙে দিন।** এটা docs-এর নিজের উদাহরণ: image-এ বানান ভুল, `nginx:1.16.1`-এর বদলে `nginx:1.161`, আর rollout আটকে যায় <Cite n={5} />। default-ভাবে `rollout status` সর্বশেষ rollout শেষ না হওয়া পর্যন্ত দেখতে থাকে; `--timeout` ঠিক করে দেখা বন্ধ করার আগে কতক্ষণ অপেক্ষা করবে <Cite n={13} />। `kubectl describe` verbose output দিয়ে একটা resource-এর বর্ণনা দেয় <Cite n={14} />:
+
+```bash
+kubectl set image deployment/nginx-deployment nginx=nginx:1.161
+kubectl rollout status deployment/nginx-deployment --timeout=60s
+kubectl get pods -l app=nginx
+kubectl describe pod <name-of-the-pod-that-does-not-start>
+```
+
+টিউটোরিয়ালের run-এ `rollout status` এই দুটো লাইন print করেছে, আর exit code 1 দিয়ে শেষ হয়েছে:
+
+```text
+Waiting for deployment "nginx-deployment" rollout to finish: 1 out of 3 new replicas have been updated...
+error: timed out waiting for the condition
+```
+
+পুরোনো ReplicaSet-এর তিনটা Pod চলতে থেকেছে। নতুন Pod দেখিয়েছে `ErrImagePull`। তার Events বলেছে `Failed to pull image "nginx:1.161"`, আর message-টা শেষ হয়েছে `docker.io/library/nginx:1.161: not found` দিয়ে। তার Events-এর শেষ দুটো লাইন ছিল:
+
+```text
+Normal   BackOff    1s (x3 over 58s)   kubelet            spec.containers{nginx}: Back-off pulling image "nginx:1.161"
+Warning  Failed     1s (x3 over 58s)   kubelet            spec.containers{nginx}: Error: ImagePullBackOff
+```
+
+`ImagePullBackOff` মানে Kubernetes একটা container image pull করতে পারেনি বলে container চালু হতে পারেনি, যেমন image-এর নাম ভুল হলে <Cite n={9} />। Kubernetes ক্রমবর্ধমান back-off delay দিয়ে চেষ্টা চালিয়ে যায়, compiled-in একটা সীমা, 300 সেকেন্ড পর্যন্ত <Cite n={9} />। Deployment controller খারাপ rollout নিজে থেকে থামিয়ে দেয়, আর নতুন ReplicaSet scale up করা বন্ধ করে <Cite n={5} />।
+
+**৭. Rollback করুন।** `kubectl rollout history` revision-গুলোর তালিকা দেয়, আর `kubectl rollout undo` আগের revision-এ ফিরে যায় <Cite n={5} />:
+
+```bash
+kubectl rollout history deployment/nginx-deployment
+kubectl rollout undo deployment/nginx-deployment
+kubectl rollout status deployment/nginx-deployment
+kubectl get deployment nginx-deployment -o wide
+```
+
+টিউটোরিয়ালের run-এ `undo` print করেছে:
+
+```text
+Warning: resource deployments/nginx-deployment was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/nginx-deployment rolled back
+```
+
+image আবার `nginx:1.16.1` হয়েছে। history-তে revision 1, 3 আর 4 দেখা গেছে: revision 2 আর তালিকায় ছিল না।
+
+**৮. Scale করুন, তারপর পরিষ্কার করুন।** `kubectl scale` replica-র সংখ্যা বদলায় <Cite n={5} />। scale করলে rollout শুরু হয় না <Cite n={5} />। resource type আর নাম দিয়ে `kubectl delete` ওই resource-এর ওপর delete operation চালায় <Cite n={11} />:
+
+```bash
+kubectl scale deployment/nginx-deployment --replicas=5
+kubectl get deployment nginx-deployment
+kubectl delete deployment nginx-deployment
+kubectl get pods -l app=nginx
+```
+
+টিউটোরিয়ালের run-এ Deployment দেখিয়েছে `5/5`, আর delete-এর পর `kubectl get pods` print করেছে `No resources found in default namespace.`
+
+**cluster-টা রেখে দিন।** পরের Kubernetes page-গুলো একই cluster ব্যবহার করে। ওগুলো শেষ হলে `kind delete cluster --name qa-lab` cluster-টা মুছে দেয়; `--name` না দিলে kind `kind` নামের cluster-টা মুছে দেয় <Cite n={16} />।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Gate the tests on the rollout.** If the rollout completed successfully, `kubectl rollout status` returns a zero exit code <Cite n={5} />. It returns a non-zero exit code if the Deployment has exceeded the progression deadline <Cite n={5} />. The deadline is `.spec.progressDeadlineSeconds`, and it defaults to 600 <Cite n={5} />. With `--timeout`, the watch ends after the time that you give <Cite n={13} />; in step 6, it ended a stuck rollout with exit code 1.
+
+**Know which version you test.** You should avoid the `:latest` tag when deploying containers in production, as it is harder to track which version of the image is running and more difficult to roll back properly <Cite n={9} />. Instead, specify a meaningful tag such as `v1.42.0` and/or a digest <Cite n={9} />. `kubectl rollout history` lists the revisions of a Deployment <Cite n={5} />, and `-o wide` lists with more details <Cite n={14} />. In step 5 of the tutorial's run, the `IMAGES` column of `-o wide` showed the image.
+
+**Test your own build in a throwaway cluster.** kind may be used for local development or CI <Cite n={15} />. You can load one or more images into your kind cluster; for a named cluster such as `qa-lab`, you need to specify the name of the cluster with `--name` <Cite n={16} />. The kind docs show this workflow <Cite n={16} />:
+
+```bash
+docker build -t my-custom-image:unique-tag ./my-image-dir
+kind load docker-image my-custom-image:unique-tag
+kubectl apply -f my-manifest-using-my-image.yaml
+```
+
+With `--wait`, `kind create cluster` blocks until the control plane reaches a ready status; to wait for 30 seconds, use `--wait 30s` <Cite n={16} />.
+
+**One cluster, many test environments.** Names of resources need to be unique within a namespace, but not across namespaces <Cite n={7} />.
+
+**Check the self-healing.** A ReplicaSet creates and deletes Pods as needed to reach the desired number <Cite n={4} />. Step 4 shows a test of it: delete a Pod, then count the Pods again.
+
+**Read the Events first.** `kubectl get events --sort-by=.metadata.creationTimestamp` lists Events sorted by timestamp, and `kubectl events --types=Warning` lists all warning events <Cite n={14} />. In step 6, the Events of the Pod named the image that could not be pulled.
+
+</Technical>
+<Layman>
+
+**Wait for the rollout before the tests.** When a rollout finishes well, `kubectl rollout status` ends with exit code 0 <Cite n={5} />. It ends with another code when the Deployment goes past its progress deadline <Cite n={5} />. That deadline is `.spec.progressDeadlineSeconds`, 600 by default <Cite n={5} />. With `--timeout`, the command stops watching after the time that you give <Cite n={13} />; in step 6, it stopped a stuck rollout with exit code 1.
+
+**Know which version you test.** Avoid the `:latest` tag in production: with it, it is harder to see which version of the image runs, and harder to roll back <Cite n={9} />. Use a clear tag such as `v1.42.0`, a digest, or both <Cite n={9} />. `kubectl rollout history` lists a Deployment's revisions <Cite n={5} />, and `-o wide` shows more details <Cite n={14} />. In step 5 of the tutorial's run, the `IMAGES` column of `-o wide` showed the image.
+
+**Test your own build in a cluster that you throw away.** You can use kind on your own computer or in CI <Cite n={15} />. You can load one or more images into your kind cluster; for a cluster with a name, such as `qa-lab`, give that name with `--name` <Cite n={16} />. The kind docs show this workflow <Cite n={16} />:
+
+```bash
+docker build -t my-custom-image:unique-tag ./my-image-dir
+kind load docker-image my-custom-image:unique-tag
+kubectl apply -f my-manifest-using-my-image.yaml
+```
+
+With `--wait`, `kind create cluster` waits until the control plane is ready; for 30 seconds, use `--wait 30s` <Cite n={16} />.
+
+**One cluster, many test environments.** A name must be unique inside its namespace, but the same name can be used in another namespace <Cite n={7} />.
+
+**Check the self-healing.** A ReplicaSet makes and deletes Pods until the number is right <Cite n={4} />. Step 4 shows a test of it: delete a Pod, then count the Pods again.
+
+**Read the Events first.** `kubectl get events --sort-by=.metadata.creationTimestamp` lists the Events by time, and `kubectl events --types=Warning` lists all the warnings <Cite n={14} />. In step 6, the Pod's Events named the image that could not be pulled.
+
+</Layman>
+<Bangla>
+
+**rollout-এর ওপর test আটকে রাখুন।** rollout সফলভাবে শেষ হলে `kubectl rollout status` zero exit code ফেরত দেয় <Cite n={5} />। Deployment progression deadline পেরিয়ে গেলে এটা non-zero exit code ফেরত দেয় <Cite n={5} />। deadline-টা হলো `.spec.progressDeadlineSeconds`, আর এর default 600 <Cite n={5} />। `--timeout` দিলে আপনার দেওয়া সময় পরে watch শেষ হয় <Cite n={13} />; ধাপ ৬-এ এটা একটা আটকে যাওয়া rollout exit code 1 দিয়ে শেষ করেছে।
+
+**কোন version test করছেন, জানুন।** production-এ container deploy করার সময় `:latest` tag এড়িয়ে চলা উচিত, কারণ তাতে image-এর কোন version চলছে তা track করা কঠিন, আর ঠিকমতো rollback করাও কঠিন <Cite n={9} />। এর বদলে `v1.42.0`-এর মতো অর্থবহ একটা tag আর/বা একটা digest দিন <Cite n={9} />। `kubectl rollout history` একটা Deployment-এর revision-গুলোর তালিকা দেয় <Cite n={5} />, আর `-o wide` আরও বিস্তারিত দেখায় <Cite n={14} />। টিউটোরিয়ালের run-এর ধাপ ৫-এ `-o wide`-এর `IMAGES` column image দেখিয়েছে।
+
+**নিজের build ফেলে দেওয়ার মতো একটা cluster-এ test করুন।** kind local development বা CI-তে ব্যবহার করা যায় <Cite n={15} />। আপনার kind cluster-এ এক বা একাধিক image load করা যায়; `qa-lab`-এর মতো নাম দেওয়া cluster-এর ক্ষেত্রে `--name` দিয়ে cluster-এর নাম বলে দিতে হয় <Cite n={16} />। kind docs এই workflow দেখায় <Cite n={16} />:
+
+```bash
+docker build -t my-custom-image:unique-tag ./my-image-dir
+kind load docker-image my-custom-image:unique-tag
+kubectl apply -f my-manifest-using-my-image.yaml
+```
+
+`--wait` দিলে control plane ready status-এ না পৌঁছানো পর্যন্ত `kind create cluster` অপেক্ষা করে; ৩০ সেকেন্ড অপেক্ষার জন্য `--wait 30s` <Cite n={16} />।
+
+**এক cluster, অনেক test environment।** resource-এর নাম একটা namespace-এর ভেতরে unique হতে হয়, কিন্তু namespace-গুলোর মধ্যে নয় <Cite n={7} />।
+
+**Self-healing যাচাই করুন।** কাঙ্ক্ষিত সংখ্যায় পৌঁছাতে ReplicaSet দরকারমতো Pod তৈরি ও মুছে ফেলে <Cite n={4} />। ধাপ ৪ এর একটা test দেখায়: একটা Pod মুছে আবার Pod গুনুন।
+
+**আগে Events পড়ুন।** `kubectl get events --sort-by=.metadata.creationTimestamp` timestamp অনুযায়ী সাজানো Events-এর তালিকা দেয়, আর `kubectl events --types=Warning` সব warning event-এর তালিকা দেয় <Cite n={14} />। ধাপ ৬-এ Pod-এর Events সেই image-এর নাম বলেছে, যা pull করা যায়নি।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **Creating Pods by hand.** Usually you don't need to create Pods directly, even singleton Pods; instead, create them using workload resources such as Deployment or Job <Cite n={3} />. Pods are designed as relatively ephemeral, disposable entities <Cite n={3} />.
+- **Changing the ReplicaSet of a Deployment.** Do not manage ReplicaSets owned by a Deployment <Cite n={5} />.
+- **Testing `:latest`.** It is harder to track which version of the image is running <Cite n={9} />. The Kubernetes default pull policy is `IfNotPresent` unless the image tag is `:latest` or omitted, in which case it is `Always` <Cite n={16} />. `IfNotPresent` causes the kubelet to skip pulling an image if it already exists <Cite n={16} />. For images that you loaded into kind to work as expected, don't use a `:latest` tag, and/or set `imagePullPolicy: IfNotPresent` or `imagePullPolicy: Never` on your containers <Cite n={16} />.
+- **Changing the selector of a Deployment.** `.spec.selector` is immutable after creation of the Deployment in `apps/v1` <Cite n={5} />.
+- **Waiting with no limit.** By default, `rollout status` watches the latest rollout until it is done <Cite n={13} />. In the docs' example, a typo in the image makes the rollout get stuck <Cite n={5} />. Add `--timeout` <Cite n={13} />.
+- **A kubectl far from the cluster's version.** Use a kubectl version that is within one minor version difference of your cluster <Cite n={12} />.
+
+</Technical>
+<Layman>
+
+- **Making Pods by hand.** You usually don't need to make Pods yourself, not even a single one; let a workload resource such as a Deployment or a Job make them <Cite n={3} />. Pods are built to be short-lived and replaceable <Cite n={3} />.
+- **Changing the ReplicaSet of a Deployment.** Do not manage a ReplicaSet that a Deployment owns <Cite n={5} />.
+- **Testing `:latest`.** With it, it is harder to see which version of the image runs <Cite n={9} />. By default, Kubernetes skips pulling an image that is already there (`IfNotPresent`), but when the tag is `:latest` or missing, the default is to always pull (`Always`) <Cite n={16} />. For images that you loaded into kind to work as expected, don't use a `:latest` tag, and/or set `imagePullPolicy: IfNotPresent` or `imagePullPolicy: Never` on your containers <Cite n={16} />.
+- **Changing the selector of a Deployment.** In `apps/v1`, `.spec.selector` cannot be changed after the Deployment is created <Cite n={5} />.
+- **Waiting with no limit.** By default, `rollout status` watches the latest rollout until it is done <Cite n={13} />. In the docs' example, a typo in the image makes the rollout get stuck <Cite n={5} />. Add `--timeout` <Cite n={13} />.
+- **A kubectl far from the cluster's version.** Use a kubectl that is at most one minor version away from your cluster <Cite n={12} />.
+
+</Layman>
+<Bangla>
+
+- **হাতে Pod তৈরি করা।** সাধারণত সরাসরি Pod তৈরি করার দরকার হয় না, এমনকি একটা Pod-ও না; এর বদলে Deployment বা Job-এর মতো workload resource দিয়ে তৈরি করুন <Cite n={3} />। Pod-গুলো তুলনামূলকভাবে ক্ষণস্থায়ী, ফেলে দেওয়ার মতো entity হিসেবে বানানো <Cite n={3} />।
+- **Deployment-এর ReplicaSet বদলানো।** কোনো Deployment-এর মালিকানাধীন ReplicaSet নিজে পরিচালনা করবেন না <Cite n={5} />।
+- **`:latest` test করা।** এতে image-এর কোন version চলছে তা track করা কঠিন <Cite n={9} />। Kubernetes-এর default pull policy `IfNotPresent`, যদি না image tag `:latest` হয় বা tag না থাকে; সেক্ষেত্রে default policy `Always` <Cite n={16} />। kind-এ load করা image যাতে ঠিকমতো কাজ করে, তার জন্য `:latest` tag ব্যবহার করবেন না, আর/অথবা আপনার container-এ `imagePullPolicy: IfNotPresent` বা `imagePullPolicy: Never` দিন <Cite n={16} />।
+- **Deployment-এর selector বদলানো।** `apps/v1`-এ Deployment তৈরির পর `.spec.selector` আর বদলানো যায় না <Cite n={5} />।
+- **সীমাহীন অপেক্ষা।** default-ভাবে `rollout status` সর্বশেষ rollout শেষ না হওয়া পর্যন্ত দেখতে থাকে <Cite n={13} />। docs-এর উদাহরণে image-এ বানান ভুল থাকায় rollout আটকে যায় <Cite n={5} />। `--timeout` যোগ করুন <Cite n={13} />।
+- **cluster-এর version থেকে দূরের kubectl।** আপনার cluster থেকে এক minor version-এর মধ্যে থাকা kubectl ব্যবহার করুন <Cite n={12} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester whose app runs on Kubernetes.
+
+- Ask which image tag each test environment runs, and check it with `kubectl get deployment -o wide`.
+- Run `kubectl rollout status` with `--timeout` before the tests start, and stop the test job when it fails.
+- Ask how long the pipeline waits for a stuck rollout, and who is told when it fails.
+- Give each test run its own namespace or its own kind cluster, and delete it afterwards.
+- When a Pod does not start, read its Events with `kubectl describe pod` before you read its logs.
+- Delete one Pod during a test, and check that the Deployment brings the count back.
+- Keep kubectl within one minor version of the cluster on the machines that run the tests.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester whose app runs on Kubernetes.
+
+- Ask which image tag each test environment runs, and check it with `kubectl get deployment -o wide`.
+- Run `kubectl rollout status` with `--timeout` before the tests start, and stop the test job when it fails.
+- Ask how long the pipeline waits for a stuck rollout, and who is told when it fails.
+- Give each test run its own namespace or its own kind cluster, and delete it afterwards.
+- When a Pod does not start, read its Events with `kubectl describe pod` before you read its logs.
+- Delete one Pod during a test, and check that the Deployment brings the count back.
+- Keep kubectl within one minor version of the cluster on the machines that run the tests.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, এমন একজন tester-এর জন্য যার app Kubernetes-এ চলে।
+
+- জিজ্ঞেস করুন কোন test environment-এ কোন image tag চলছে, আর `kubectl get deployment -o wide` দিয়ে যাচাই করুন।
+- test শুরুর আগে `--timeout`-সহ `kubectl rollout status` চালান, আর এটা ফেল করলে test job থামিয়ে দিন।
+- জিজ্ঞেস করুন pipeline একটা আটকে যাওয়া rollout-এর জন্য কতক্ষণ অপেক্ষা করে, আর ফেল করলে কাকে জানানো হয়।
+- প্রতিটা test run-কে তার নিজের namespace বা নিজের kind cluster দিন, আর পরে মুছে ফেলুন।
+- একটা Pod চালু না হলে তার log পড়ার আগে `kubectl describe pod` দিয়ে তার Events পড়ুন।
+- test চলার সময় একটা Pod মুছে দিন, আর দেখুন Deployment সংখ্যাটা আবার ফিরিয়ে আনে কি না।
+- যে machine-গুলো test চালায়, সেখানে kubectl-কে cluster থেকে এক minor version-এর মধ্যে রাখুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Kubernetes | A portable, extensible, open source platform for managing containerized workloads and services |
+| Pod | The smallest deployable unit of computing in Kubernetes: one or more containers with shared storage and network resources |
+| ReplicaSet | Maintains a stable set of replica Pods running at any given time |
+| Deployment | Provides declarative updates for Pods and ReplicaSets; it rolls out a ReplicaSet, which creates the Pods |
+| Label | A key/value pair attached to an object such as a Pod |
+| Label selector | How a client or user identifies a set of objects; the core grouping primitive of Kubernetes |
+| Namespace | A mechanism for isolating groups of resources within a single cluster |
+| Desired state | What you want your cluster's workload to look like, as you describe it by creating an object |
+| Controller | A control loop that moves the current cluster state closer to the desired state |
+| Rollout | Starts when the Pod template changes: a new ReplicaSet scales up while the old one scales down |
+| Revision | Each new ReplicaSet updates it; you can roll back to an earlier one |
+| `ImagePullBackOff` | A container could not start because Kubernetes could not pull its image; Kubernetes keeps trying with an increasing delay |
+| kubectl | The command line tool that communicates with a cluster's control plane through the Kubernetes API |
+| kind | A tool for running local Kubernetes clusters using Docker container "nodes" |
