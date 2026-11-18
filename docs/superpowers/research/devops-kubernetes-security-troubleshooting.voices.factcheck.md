@@ -66,4 +66,119 @@ Open FAILs after round 5: 0
 
 I skipped nothing in the checks. The only source is S1, and I read only the lines that matched these claims, not the whole file.
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-security-troubleshooting (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel and the cites match. Left out: "different" in "three different policies"; "at the IP address or port level" is kept. "retrieve or modify" becomes "read or change", which keeps the meaning. |
+| What it is | Bangla | PASS | Meaning matches the Technical panel sentence by sentence. "By default" is kept as "ডিফল্টভাবে". Left out: "different" before "policies". Nothing is added. |
+| How it works | Layman | PASS | Facts, numbers (300 s, 10 min, v1.37), tables and code blocks match the Technical panel. Dropped limit words: "must be" becomes "is" for MODE and LEVEL, and "particular" becomes "one" for a Role's namespace. Both are still true and say no more. Left out: "This policy allows for known privilege escalations" was never in the Technical panel. |
+| How it works | Bangla | PASS | Meaning, numbers, commands and tables match the Technical panel. Left out: nothing of substance. "must" in MODE/LEVEL is rendered as a plain statement, which is still true. |
+| Try it | Layman | PASS | The run-record paragraph, commands and code blocks are identical to the Technical panel. Wording changes ("makes" for "creates", "to get an Opaque type" for "to indicate", "will be different" for "differ") keep the meaning. Left out: nothing of substance. |
+| Try it | Bangla | PASS | Every sentence matches the Technical panel, including dates, versions, counts (22 lines, 6 shown, 3 starts, 4 violations, 5 s) and the code blocks. The table headers are translated only. Left out: nothing of substance. |
+| How a tester uses it | Layman | PASS | Each paragraph restates the Technical paragraph with the same cites. "is insufficient" becomes "is not enough". The "always" before "sets permissions" is kept. Left out: nothing. |
+| How a tester uses it | Bangla | PASS | Meaning and cites match the Technical panel. "always" is kept as "সবসময়". Step numbers (১–৫) match the run record. Left out: nothing of substance. |
+| Common mistakes | Layman | PASS | All eight bullets restate the Technical bullets with the same cites. Left out: nothing. |
+| Common mistakes | Bangla | PASS | All eight bullets restate the Technical bullets with the same meaning and cites. Left out: nothing. |
+| What a tester can check | Layman | PASS | Identical to the Technical panel. |
+| What a tester can check | Bangla | PASS | The six items and the "Tutorial advice" callout match the Technical panel. Left out: nothing. |
+
+Open FAILs after round 6: 0
+
+Changed after this round: Round 6 had no voices FAIL. The two Key words rows above are not in a voices panel.
+
+## Round 7 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-security-troubleshooting (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every sentence restates the Technical sentence with the same cite. Left out: the word "stored" (it says "stores Secrets without encryption"); the phrase "to broadly cover" is kept as "broadly cover". |
+| What it is | Bangla | PASS | Meaning matches the Technical panel. "ডিফল্টভাবে" keeps "by default" and "ভাবতে পারেন" keeps "might consider". Left out: the words "individual" before "users" and "particular" are reduced to "আলাদা আলাদা" and "নির্দিষ্ট". Nothing is added. |
+| How it works | Layman | PASS | Same facts, same cites, same code and table blocks. Changes are small: "has to be prefixed" becomes "has to start with"; "must be the additional arguments" becomes "stands for the extra arguments that are needed". Left out: nothing of substance; "must" on `[...]` is softened but the meaning holds. |
+| How it works | Bangla | PASS | All facts and cites match the Technical panel; code blocks are identical. Command and table meaning kept ("ক্রমযোজ্য (cumulative)", "সম্পূর্ণ যোগাত্মক"). No added claims. Left out: nothing beyond wording. |
+| Try it | Layman | PASS | Restates every Technical sentence with the same cites; code, output, and tables are identical. Only wording changes ("makes", "will be different"). The #114 sentence has the same cite problem as the Technical panel (exit code not in S15/S18); that is a Technical-panel fault, not a voice change. Left out: nothing. |
+| Try it | Bangla | PASS | Same facts, numbers, cites, and code as the Technical panel. Step numbers use Bangla digits (১–৭) and "ধাপ ৩" for step 3, which match. The #114 cite problem is carried over unchanged from the Technical panel. Left out: nothing. |
+| How a tester uses it | Layman | PASS | Same sentences and cites as the Technical panel. Wording only ("not enough" for "insufficient", "one namespace" for "a particular namespace"). Left out: nothing. |
+| How a tester uses it | Bangla | PASS | Meaning and cites match each Technical sentence. "সবসময়" keeps "always". Left out: nothing. |
+| Common mistakes | Layman | PASS | Each bullet restates the Technical bullet with the same cite. Left out: nothing. |
+| Common mistakes | Bangla | PASS | Each bullet matches in meaning and cite. Left out: nothing. |
+| What a tester can check | Layman | PASS | Identical to the Technical callout, which is the "Tutorial advice". No tool fact added. |
+| What a tester can check | Bangla | PASS | All six bullets and the callout title match the Technical callout. No fact added. Left out: nothing. |
+
+Open FAILs after round 7: 0
+
+Changed after this round: Round 7 had no voices FAIL; the changed sentence was written in the three voices together.
+
+## Round 8 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-security-troubleshooting (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every sentence restates the Technical sentence with the same cite. Left out: "(etcd)" is kept, nothing material is dropped. |
+| What it is | Bangla | PASS | Meaning matches. "By default" is kept ("ডিফল্টভাবে"). "might consider" is kept ("ভাবতে পারেন"). Left out: nothing material. |
+| How it works | Layman | PASS | Same facts, same cites, same code blocks. Left out: nothing material. The row 123-type problem does not occur here. |
+| How it works | Bangla | PASS | Meaning matches, limits kept ("সবসময়", "শুধু", "ডিফল্টভাবে"). Code blocks and tables are identical. Left out: nothing material. |
+| Try it | Layman | PASS | Same as Technical, with plainer verbs (makes, given). Code blocks are identical. Left out: nothing material. |
+| Try it | Bangla | PASS | Meaning matches the Technical panel. Code blocks are identical. Left out: nothing material. |
+| How a tester uses it | Layman | PASS | Same facts. "is not enough" for "insufficient" keeps the meaning. The Technical-panel wording issue in the last paragraph (profile advice) is copied, not made worse. Left out: nothing material. |
+| How a tester uses it | Bangla | PASS | Meaning matches. The same profile-advice sentence is copied from Technical, with the same issue. Left out: nothing material. |
+| Common mistakes | Layman | PASS | Each bullet restates the Technical bullet with the same cite. |
+| Common mistakes | Bangla | PASS | Each bullet matches the Technical meaning. |
+| What a tester can check | Layman | PASS | The callout is identical to the Technical panel. |
+| What a tester can check | Bangla | PASS | Same six items as Technical. The callout title is kept. |
+
+Open FAILs after round 8: 0
+
+Changed after this round: Round 8 had no voices FAIL; the changed sentence was written in the three voices together.
+
+## Round 9 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-security-troubleshooting (round 9)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Same facts and cites as the Technical panel. Leaves out: "retrieve or modify" becomes "read or change". Nothing added. |
+| What it is | Bangla | PASS | Meaning matches the Technical panel. No added facts. Nothing material left out. |
+| How it works | Layman | PASS | Restates each Technical sentence, and the code blocks, tables and diagram are the same. Leaves out: "currently" in the CrashLoopBackOff sentence, and the "particular" wording for Role namespace, which is still true as "one namespace". |
+| How it works | Bangla | PASS | Meaning matches. Tables, code, and diagram are the same as in the Technical panel. Leaves out the same small limiters ("currently"). |
+| Try it | Layman | PASS | Same run record, same tables and code. "to get an Opaque Secret type" is close to "to indicate". Leaves out: "creates" becomes "makes". Nothing added. |
+| Try it | Bangla | PASS | Meaning matches, including the run date, versions, 22 lines, tables, and commands. No added facts. |
+| How a tester uses it | Layman | PASS | Same facts and cites. Leaves out: "particular" namespace (becomes "one"), "will have no effect" (becomes "has no effect"). |
+| How a tester uses it | Bangla | PASS | Meaning matches. No added facts. |
+| Common mistakes | Layman | PASS | Same eight bullets with the same cites. |
+| Common mistakes | Bangla | PASS | Same eight bullets. Meaning matches. |
+| What a tester can check | Layman | PASS | Same callout and bullets as the Technical panel. |
+| What a tester can check | Bangla | PASS | Same six advice bullets and the "tutorial's own advice" framing. |
+
+Open FAILs after round 9: 0
+
+Changed after this round: Round 9 had no voices FAIL; the added sentences were written in the three voices together.
+
+## Round 10 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-security-troubleshooting (round 10)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel, and the cites match. The limit "by default" is kept. Left out: "such as" is kept, but "(etcd)" is moved into a longer clause. No other detail is lost. |
+| What it is | Bangla | PASS | The meaning is the same as the Technical panel. "By default" (ডিফল্টভাবে) is kept. "might consider" is kept (ভাবতে পারেন). No fact is added. |
+| How it works | Layman | PASS | Same facts, same cites, same code and tables. Left out: "for the operation" in the `--as` row. "a set of" before "labels" is dropped. "Must" becomes "stands for the extra arguments that are needed". The meaning is not changed. |
+| How it works | Bangla | PASS | Same facts, same cites, same code blocks. Left out: "for the operation" in the `--as` row, and "a set of" before "labels". The limits "by default", "always", "only", "may appear" are kept. Bangla read and judged by meaning. |
+| Try it | Layman | PASS | Same facts, same code, same tables, same cites. Small word changes only ("will be different", "Everything that the run made"). No fact added. |
+| Try it | Bangla | PASS | Same facts, same code, same cites, same tables with translated headers. The limit "defaults to Always" is kept (ডিফল্টভাবে Always). No fact added. Bangla read and judged by meaning. |
+| How a tester uses it | Layman | PASS | Same facts and cites. "Insufficient" becomes "not enough". "Always" in "a Role always sets permissions" is kept. |
+| How a tester uses it | Bangla | PASS | Same facts and cites. "Always" (সবসময়) is kept. "Enforce ... only" (শুধু) is kept. No fact added. Bangla read and judged by meaning. |
+| Common mistakes | Layman | PASS | Each bullet restates the Technical bullet with the same cite. Left out: "will" becomes "has no effect". No fact change. |
+| Common mistakes | Bangla | PASS | Each bullet matches the Technical bullet and cite. No limit is dropped. Bangla read and judged by meaning. |
+| What a tester can check | Layman | PASS | Same callout, word for word. No cite and no tool fact added. |
+| What a tester can check | Bangla | PASS | Same six items as the Technical callout. No fact added. Bangla read and judged by meaning. |
+
+Open FAILs after round 10: 0
+
 Open FAILs: 0

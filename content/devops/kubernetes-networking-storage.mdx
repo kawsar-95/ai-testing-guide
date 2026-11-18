@@ -1,16 +1,36 @@
-export const metadata = { title: 'Kubernetes Networking and Storage', description: 'Services, DNS records, and volumes.' }
+export const metadata = { title: 'Kubernetes Networking and Storage', description: 'Services, DNS names, and EndpointSlices, how traffic reaches a Pod from inside and outside the cluster, how persistent volumes outlive a Pod, and how a tester checks each part on a local kind cluster.' }
 export const page = {
-  updated: '2026-11-05',
+  updated: '2026-11-18',
   sources: [
-    { title: 'Service', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/service/', accessed: '2026-11-05' },
-    { title: 'DNS for Services and Pods', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/', accessed: '2026-11-05' },
-    { title: 'Volumes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/storage/volumes/', accessed: '2026-11-05' },
+    { title: 'Service', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/service/', accessed: '2026-11-18' },
+    { title: 'DNS for Services and Pods', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/', accessed: '2026-11-18' },
+    { title: 'Volumes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/storage/volumes/', accessed: '2026-11-18' },
+    { title: 'Services, Load Balancing, and Networking', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/', accessed: '2026-11-18' },
+    { title: 'EndpointSlices', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/', accessed: '2026-11-18' },
+    { title: 'Virtual IPs and Service Proxies', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/networking/virtual-ips/', accessed: '2026-11-18' },
+    { title: 'Ingress', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/ingress/', accessed: '2026-11-18' },
+    { title: 'Gateway API', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/gateway/', accessed: '2026-11-18' },
+    { title: 'Persistent Volumes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/storage/persistent-volumes/', accessed: '2026-11-18' },
+    { title: 'Storage Classes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/storage/storage-classes/', accessed: '2026-11-18' },
+    { title: 'Debug Services', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/debug/debug-application/debug-service/', accessed: '2026-11-18' },
+    { title: 'Debugging DNS Resolution', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/', accessed: '2026-11-18' },
+    { title: 'Use Port Forwarding to Access Applications in a Cluster', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/', accessed: '2026-11-18' },
+    { title: 'Share a Cluster with Namespaces', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/administer-cluster/namespaces/', accessed: '2026-11-18' },
+    { title: 'kubectl expose', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_expose/', accessed: '2026-11-18' },
+    { title: 'kubectl create deployment', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_deployment/', accessed: '2026-11-18' },
+    { title: 'kubectl rollout status', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_rollout/kubectl_rollout_status/', accessed: '2026-11-18' },
+    { title: 'kubectl wait', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_wait/', accessed: '2026-11-18' },
+    { title: 'kubectl logs', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/', accessed: '2026-11-18' },
+    { title: 'kubectl delete', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_delete/', accessed: '2026-11-18' },
+    { title: 'kubectl Quick Reference', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/quick-reference/', accessed: '2026-11-18' },
+    { title: 'LoadBalancer', publisher: 'kind documentation', url: 'https://kind.sigs.k8s.io/docs/user/loadbalancer/', accessed: '2026-11-18' },
+    { title: 'Command line tool (kubectl)', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/', accessed: '2026-11-18' },
   ],
 }
 
 # Kubernetes Networking and Storage
 
-Services, DNS records, and volumes. A short explanation with its sources comes first. The reels after it show the topic at work.
+This page is about how Pods are reached over the network, through Services and DNS names, and how data is kept when a Pod goes away, through volumes, with a practice run on the local cluster of [Kubernetes Basics](/devops/kubernetes-basics/).
 
 <PageMeta />
 
@@ -19,17 +39,1430 @@ Services, DNS records, and volumes. A short explanation with its sources comes f
 <Voices>
 <Technical>
 
-In Kubernetes, a Service is a method for exposing a network application that is running as one or more Pods in your cluster <Cite n={1} />. Kubernetes creates DNS records for Services and Pods <Cite n={2} />. On-disk files in a container are ephemeral <Cite n={3} />. One problem occurs when a container crashes or is stopped; the container state is not saved, so all of the files that were created or modified during the lifetime of the container are lost <Cite n={3} />. Another problem occurs when multiple containers are running in a Pod and need to share files <Cite n={3} />. The Kubernetes volume abstraction can help you to solve both of these problems <Cite n={3} />.
+**Pods come and go.** If you use a Deployment to run your app, that Deployment can create and destroy Pods dynamically <Cite n={1} />. Each Pod gets its own IP address, and the set of Pods running in one moment in time could be different from the set of Pods running that application a moment later <Cite n={1} />.
+
+**The Pod network.** Each pod in a cluster gets its own unique cluster-wide IP address <Cite n={4} />. All pods can communicate with all other pods, whether they are on the same node or on different nodes, directly, without the use of proxies or address translation (NAT) <Cite n={4} />.
+
+**A Service.** In Kubernetes, a Service is a method for exposing a network application that is running as one or more Pods in your cluster <Cite n={1} />. The set of Pods targeted by a Service is usually determined by a selector that you define <Cite n={1} />. Kubernetes creates DNS records for Services and Pods <Cite n={2} />. You can contact Services with consistent DNS names instead of IP addresses <Cite n={2} />.
+
+**Traffic from outside.** Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster <Cite n={7} />. The Kubernetes project recommends using Gateway instead of Ingress, and the Ingress API has been frozen <Cite n={7} />. Gateway API is a family of API kinds that provide dynamic infrastructure provisioning and advanced traffic routing <Cite n={8} />.
+
+**Storage.** On-disk files in a container are ephemeral <Cite n={3} />. One problem occurs when a container crashes or is stopped; the container state is not saved, so all of the files that were created or modified during the lifetime of the container are lost <Cite n={3} />. After a crash, kubelet restarts the container with a clean state <Cite n={3} />. Another problem occurs when multiple containers are running in a Pod and need to share files <Cite n={3} />. The Kubernetes volume abstraction can help you to solve both of these problems <Cite n={3} />. At its core, a volume is a directory, possibly with some data in it, which is accessible to the containers in a Pod <Cite n={3} />.
+
+| Object | What it is |
+|---|---|
+| Ephemeral volume, such as `emptyDir` | Has a lifetime linked to a specific Pod; `emptyDir` is empty scratch space that is initialized when the Pod is assigned to a node, and is deleted when the Pod is removed from that node <Cite n={3} /> |
+| PersistentVolume (PV) | A piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes <Cite n={9} /> |
+| PersistentVolumeClaim (PVC) | A request for storage by a user <Cite n={9} /> |
+| StorageClass | A way for administrators to describe the classes of storage they offer <Cite n={10} /> |
+
+When a Pod ceases to exist, Kubernetes destroys ephemeral volumes; however, Kubernetes does not destroy persistent volumes <Cite n={3} />.
 
 </Technical>
 <Layman>
 
-A Service is a way to expose a network application. The application runs as one or more Pods in your cluster <Cite n={1} />. Kubernetes creates DNS records for Services and Pods <Cite n={2} />. Files that a container keeps on its disk are ephemeral. They do not last <Cite n={3} />. Problem one: when a container crashes or is stopped, its state is not saved. All the files that it created or changed while it ran are lost <Cite n={3} />. Problem two happens when multiple containers run in one Pod and need to share files <Cite n={3} />. The Kubernetes volume abstraction can help you solve both problems <Cite n={3} />.
+**Pods come and go.** If a Deployment runs your app, it can make and remove Pods on the fly <Cite n={1} />. Each Pod gets its own IP address, and the Pods that run the app now may not be the same Pods that run it a moment later <Cite n={1} />.
+
+**The Pod network.** Each Pod in a cluster gets its own IP address, unique in the whole cluster <Cite n={4} />. Every Pod can talk to every other Pod, on the same node or on another node, directly, without a proxy and without address translation (NAT) <Cite n={4} />.
+
+**A Service.** A Service is a way to expose a network application that runs as one or more Pods in your cluster <Cite n={1} />. The Pods of a Service are usually picked by a selector that you write <Cite n={1} />. Kubernetes creates DNS records for Services and Pods <Cite n={2} />. So you can reach a Service by a name that stays the same, instead of by an IP address <Cite n={2} />.
+
+**Traffic from outside.** An Ingress exposes HTTP and HTTPS routes from outside the cluster to Services inside it <Cite n={7} />. The Kubernetes project recommends Gateway instead of Ingress, and the Ingress API is frozen <Cite n={7} />. Gateway API is a family of API kinds that set up infrastructure on demand and route traffic in advanced ways <Cite n={8} />.
+
+**Storage.** Files that a container keeps on its disk are ephemeral: they do not last <Cite n={3} />. Problem one: when a container crashes or is stopped, its state is not saved, and all the files that it made or changed while it ran are lost <Cite n={3} />. After a crash, the kubelet restarts the container with a clean state <Cite n={3} />. Problem two: several containers run in one Pod and need to share files <Cite n={3} />. The Kubernetes volume abstraction can help you solve both problems <Cite n={3} />. At its core, a volume is a folder, maybe with some data in it, that the containers in a Pod can use <Cite n={3} />.
+
+| Object | What it is |
+|---|---|
+| Ephemeral volume, such as `emptyDir` | Lives as long as one Pod; `emptyDir` is empty scratch space, made when the Pod is placed on a node and deleted when the Pod is removed from that node <Cite n={3} /> |
+| PersistentVolume (PV) | A piece of storage in the cluster, set up by an administrator, or set up on demand through a StorageClass <Cite n={9} /> |
+| PersistentVolumeClaim (PVC) | A user's request for storage <Cite n={9} /> |
+| StorageClass | A way for administrators to describe the kinds of storage that they offer <Cite n={10} /> |
+
+When a Pod stops existing, Kubernetes destroys its ephemeral volumes, but it does not destroy persistent volumes <Cite n={3} />.
 
 </Layman>
 <Bangla>
 
-Service হলো একটা network application প্রকাশ (expose) করার উপায়। application-টা আপনার cluster-এ এক বা একাধিক Pod হিসেবে চলে <Cite n={1} />। Kubernetes Service ও Pod-এর জন্য DNS record তৈরি করে <Cite n={2} />। Container disk-এ যে file রাখে, সেগুলো ephemeral (অস্থায়ী), অর্থাৎ টেকে না <Cite n={3} />। প্রথম সমস্যা: container crash করলে বা বন্ধ হলে তার state সংরক্ষিত হয় না। চলার সময় সে যেসব file তৈরি বা পরিবর্তন করেছিল, সব হারিয়ে যায় <Cite n={3} />। দ্বিতীয় সমস্যা হয় যখন একটা Pod-এ একাধিক container চলে এবং তাদের file share করতে হয় <Cite n={3} />। Kubernetes volume abstraction এই দুটি সমস্যাই সমাধান করতে সাহায্য করতে পারে <Cite n={3} />।
+**Pod আসে আর যায়।** আপনার app চালাতে একটা Deployment ব্যবহার করলে, সেই Deployment dynamically (গতিশীলভাবে) Pod তৈরি করতে ও মুছে ফেলতে পারে <Cite n={1} />। প্রতিটা Pod নিজের একটা IP address পায়, আর এক মুহূর্তে যে Pod-গুলো চলছে, পরের মুহূর্তে সেই application-এর চলমান Pod-গুলো আলাদা হতে পারে <Cite n={1} />।
+
+**Pod network।** cluster-এর প্রতিটা Pod পুরো cluster জুড়ে নিজের একটা আলাদা IP address পায় <Cite n={4} />। সব Pod অন্য সব Pod-এর সাথে যোগাযোগ করতে পারে, একই node-এ হোক বা আলাদা node-এ, সরাসরি, কোনো proxy বা address translation (NAT) ছাড়াই <Cite n={4} />।
+
+**Service।** Kubernetes-এ Service হলো এমন একটা network application প্রকাশ (expose) করার উপায়, যা আপনার cluster-এ এক বা একাধিক Pod হিসেবে চলে <Cite n={1} />। একটা Service কোন Pod-গুলোকে লক্ষ্য করবে, তা সাধারণত আপনার দেওয়া একটা selector ঠিক করে <Cite n={1} />। Kubernetes Service ও Pod-এর জন্য DNS record তৈরি করে <Cite n={2} />। তাই IP address-এর বদলে স্থির DNS নাম দিয়ে Service-এর সাথে যোগাযোগ করা যায় <Cite n={2} />।
+
+**বাইরে থেকে traffic।** Ingress cluster-এর বাইরে থেকে ভেতরের service-গুলোতে HTTP আর HTTPS route প্রকাশ করে <Cite n={7} />। Kubernetes project Ingress-এর বদলে Gateway ব্যবহারের পরামর্শ দেয়, আর Ingress API freeze করা হয়েছে <Cite n={7} />। Gateway API হলো কয়েকটা API kind-এর একটা পরিবার, যা dynamic infrastructure provisioning আর advanced traffic routing দেয় <Cite n={8} />।
+
+**Storage।** container-এর disk-এর file ephemeral (অস্থায়ী) <Cite n={3} />। প্রথম সমস্যা: container crash করলে বা বন্ধ হলে তার state সংরক্ষিত হয় না, তাই container চলার সময় তৈরি বা পরিবর্তিত সব file হারিয়ে যায় <Cite n={3} />। crash-এর পরে kubelet container-টা পরিষ্কার state-এ আবার চালু করে <Cite n={3} />। দ্বিতীয় সমস্যা হয় যখন একটা Pod-এ একাধিক container চলে আর তাদের file share করতে হয় <Cite n={3} />। Kubernetes volume abstraction এই দুটি সমস্যাই সমাধান করতে সাহায্য করতে পারে <Cite n={3} />। মূলত একটা volume হলো একটা directory, হয়তো তাতে কিছু data আছে, যা একটা Pod-এর container-গুলো ব্যবহার করতে পারে <Cite n={3} />।
+
+| Object | এটা কী |
+|---|---|
+| Ephemeral volume, যেমন `emptyDir` | এর আয়ু একটা নির্দিষ্ট Pod-এর সাথে বাঁধা; `emptyDir` হলো খালি scratch space, Pod একটা node-এ বসানো হলে তৈরি হয়, আর Pod সেই node থেকে সরানো হলে মুছে যায় <Cite n={3} /> |
+| PersistentVolume (PV) | cluster-এর storage-এর একটা অংশ, যা একজন administrator তৈরি করেছেন, অথবা Storage Class দিয়ে dynamically তৈরি হয়েছে <Cite n={9} /> |
+| PersistentVolumeClaim (PVC) | একজন user-এর storage-এর অনুরোধ <Cite n={9} /> |
+| StorageClass | administrator-রা কোন কোন ধরনের storage দেন, তা বর্ণনা করার উপায় <Cite n={10} /> |
+
+একটা Pod-এর অস্তিত্ব শেষ হলে Kubernetes ephemeral volume ধ্বংস করে, কিন্তু persistent volume ধ্বংস করে না <Cite n={3} />।
 
 </Bangla>
 </Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**A Service gets an address and a list of Pods.** Kubernetes assigns a Service an IP address, the cluster IP, that is used by the virtual IP address mechanism <Cite n={1} />. The controller for that Service continuously scans for Pods that match its selector, and then makes any necessary updates to the set of EndpointSlices for the Service <Cite n={1} />. EndpointSlices track the IP addresses of backend endpoints; they are normally associated with a Service, and the backend endpoints typically represent Pods <Cite n={5} />. A Service can map any incoming port to a `targetPort`; by default, the `targetPort` is set to the same value as the `port` field <Cite n={1} />.
+
+**kube-proxy sends the traffic.** Each instance of kube-proxy watches the Kubernetes control plane for the addition and removal of Service and EndpointSlice objects <Cite n={6} />. For each Service, kube-proxy calls appropriate APIs, depending on the kube-proxy mode, to configure the node to capture traffic to the Service's clusterIP and port, and redirect that traffic to one of the Service's endpoints <Cite n={6} />. If you do not choose a mode explicitly, kube-proxy uses the recommended default: in Kubernetes 1.37, this is iptables, but a future version of Kubernetes will change the default to nftables <Cite n={6} />. In iptables mode, each change may wait up to the full `minSyncPeriod` before it is processed, so the rules can be out of sync with the API server for that time; the default value of `minSyncPeriod` is 1s <Cite n={6} />.
+
+**Four types of Service** <Cite n={1} />:
+
+| Type | What it does |
+|---|---|
+| `ClusterIP` | Exposes the Service on a cluster-internal IP, which makes it only reachable from within the cluster; this is the default type |
+| `NodePort` | Exposes the Service on each Node's IP at a static port, the NodePort; the control plane allocates the port from a range, by default 30000-32767 |
+| `LoadBalancer` | Exposes the Service externally using an external load balancer; Kubernetes does not directly offer a load balancing component |
+| `ExternalName` | Maps the Service to the contents of the `externalName` field, for example a hostname; no proxying of any kind is set up |
+
+To implement a Service of type `LoadBalancer`, Kubernetes typically starts off by making the changes that are equivalent to requesting a Service of type `NodePort`; the cloud-controller-manager then configures the external load balancer to forward traffic to that node port <Cite n={1} />.
+
+**DNS names.** A normal Service is assigned DNS A and/or AAAA records with a name of the form `my-svc.my-namespace.svc.cluster-domain.example`, which resolves to the cluster IP of the Service <Cite n={2} />. DNS queries that don't specify a namespace are limited to the Pod's namespace, and you access Services in other namespaces by specifying the namespace in the DNS query <Cite n={2} />. DNS queries may be expanded using the Pod's `/etc/resolv.conf`, which the kubelet configures for each Pod; the values of its `search` option are used to expand queries <Cite n={2} />.
+
+**Storage is claimed, then bound.** A control loop in the control plane watches for new PVCs, finds a matching PV if possible, and binds them together <Cite n={9} />. A PVC to PV binding is a one-to-one mapping <Cite n={9} />, and claims will remain unbound indefinitely if a matching volume does not exist <Cite n={9} />. An administrator can specify a default StorageClass that applies to any PVCs that don't request a specific class <Cite n={10} />. The `WaitForFirstConsumer` mode delays the binding and provisioning of a PersistentVolume until a Pod using the PersistentVolumeClaim is created <Cite n={10} />. Pods access storage by using the claim as a volume, and claims must exist in the same namespace as the Pod using the claim <Cite n={9} />.
+
+**Access modes** <Cite n={9} />:
+
+| Access mode | Meaning |
+|---|---|
+| `ReadWriteOnce` | The volume can be mounted as read-write by a single node; it can still allow multiple Pods to access the volume when the Pods are running on the same node |
+| `ReadOnlyMany` | The volume can be mounted as read-only by many nodes |
+| `ReadWriteMany` | The volume can be mounted as read-write by many nodes |
+| `ReadWriteOncePod` | The volume can be mounted as read-write by a single Pod |
+
+**What happens to the data.** When a user is done with their volume, they can delete the PVC objects, and the reclaim policy of a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim <Cite n={9} />. Volumes that were dynamically provisioned inherit the reclaim policy of their StorageClass, which defaults to `Delete` <Cite n={9} />. For volume plugins that support it, `Delete` removes both the PersistentVolume object from Kubernetes and the associated storage asset in the external infrastructure <Cite n={9} />. With `Retain`, the PersistentVolume still exists when the PersistentVolumeClaim is deleted, and the volume is considered "released" <Cite n={9} />.
+
+In step 2 of the tutorial's run below, a Pod asked for the Service `web` by its name. This diagram is the tutorial's own picture of that request, with the addresses of the run; in its step 3, kube-proxy configures the node to capture traffic to the Service's clusterIP and port, and to redirect it to one of the Service's endpoints <Cite n={6} />:
+
+```text
+Pod client (namespace net-lab)
+│ 1. asks the name server 10.96.0.10 for "web"
+│    answer: 10.96.62.252, web.net-lab.svc.cluster.local
+│ 2. connects to 10.96.62.252:80, the cluster IP
+▼
+the rules on the node, written by kube-proxy
+│ 3. send to one endpoint of the EndpointSlice web-qr4xj
+▼
+Pod web-…-kh6pn 10.244.0.32:80   or   Pod web-…-nvqf9 10.244.0.33:80
+```
+
+</Technical>
+<Layman>
+
+**A Service gets an address and a list of Pods.** Kubernetes gives a Service an IP address, the cluster IP, which its virtual IP address mechanism uses <Cite n={1} />. The controller of the Service keeps looking for Pods that match its selector, and updates the EndpointSlices of the Service to match <Cite n={1} />. EndpointSlices track the IP addresses of the backend endpoints; they usually belong to a Service, and the endpoints are usually Pods <Cite n={5} />. A Service can send any incoming port to a `targetPort`; by default, the `targetPort` is the same as the `port` <Cite n={1} />.
+
+**kube-proxy sends the traffic.** Each kube-proxy watches the control plane for Services and EndpointSlices being added and removed <Cite n={6} />. For each Service, kube-proxy calls the right APIs for its mode, so that the node catches the traffic to the Service's cluster IP and port and sends it on to one of the Service's endpoints <Cite n={6} />. If you do not pick a mode, kube-proxy uses the recommended default: in Kubernetes 1.37, that is iptables, but a later version will make nftables the default <Cite n={6} />. In iptables mode, each change may wait up to the full `minSyncPeriod` before it is handled, so for that time the rules can be behind the API server; `minSyncPeriod` is 1s by default <Cite n={6} />.
+
+**Four types of Service** <Cite n={1} />:
+
+| Type | What it does |
+|---|---|
+| `ClusterIP` | Exposes the Service on an IP address inside the cluster, so it can only be reached from inside; this is the default type |
+| `NodePort` | Exposes the Service on each node's IP address at a fixed port, the NodePort; the control plane picks the port from a range, by default 30000-32767 |
+| `LoadBalancer` | Exposes the Service outside through an external load balancer; Kubernetes does not directly offer a load balancing component |
+| `ExternalName` | Points the Service at the value of the `externalName` field, for example a hostname; nothing is proxied |
+
+For a `LoadBalancer` Service, Kubernetes usually starts by making the same changes as for a `NodePort` Service; then the cloud-controller-manager sets up the external load balancer to send traffic to that node port <Cite n={1} />.
+
+**DNS names.** A normal Service gets DNS A and/or AAAA records with a name like `my-svc.my-namespace.svc.cluster-domain.example`, which points to the cluster IP of the Service <Cite n={2} />. A DNS query that names no namespace only looks in the Pod's own namespace; to reach a Service in another namespace, put the namespace in the query <Cite n={2} />. A query may be expanded with the Pod's `/etc/resolv.conf`, which the kubelet configures for each Pod; the values of its `search` option are used to expand queries <Cite n={2} />.
+
+**Storage is claimed, then bound.** A control loop in the control plane watches for new PVCs, finds a matching PV if it can, and binds the two together <Cite n={9} />. One PVC is bound to one PV <Cite n={9} />, and a claim stays unbound for as long as no matching volume exists <Cite n={9} />. An administrator can set a default StorageClass for every PVC that does not ask for a class <Cite n={10} />. The `WaitForFirstConsumer` mode waits with binding and making a PersistentVolume until a Pod that uses the claim is created <Cite n={10} />. Pods use storage by using the claim as a volume, and the claim must be in the same namespace as the Pod <Cite n={9} />.
+
+**Access modes** <Cite n={9} />:
+
+| Access mode | Meaning |
+|---|---|
+| `ReadWriteOnce` | One node can mount the volume to read and write; several Pods can still use it if they run on that same node |
+| `ReadOnlyMany` | Many nodes can mount the volume to read only |
+| `ReadWriteMany` | Many nodes can mount the volume to read and write |
+| `ReadWriteOncePod` | One Pod can mount the volume to read and write |
+
+**What happens to the data.** When users are done with a volume, they can delete their PVC, and the reclaim policy of the PersistentVolume tells the cluster what to do with the volume once its claim lets go of it <Cite n={9} />. A volume that was made on demand takes the reclaim policy of its StorageClass, which is `Delete` by default <Cite n={9} />. Where the volume plugin supports it, `Delete` removes both the PersistentVolume object and the real storage behind it <Cite n={9} />. With `Retain`, the PersistentVolume is still there after the claim is deleted, and the volume counts as "released" <Cite n={9} />.
+
+In step 2 of the tutorial's run below, a Pod asked for the Service `web` by its name. This diagram is the tutorial's own picture of that request, with the addresses of the run; in its step 3, kube-proxy configures the node to capture traffic to the Service's clusterIP and port, and to redirect it to one of the Service's endpoints <Cite n={6} />:
+
+```text
+Pod client (namespace net-lab)
+│ 1. asks the name server 10.96.0.10 for "web"
+│    answer: 10.96.62.252, web.net-lab.svc.cluster.local
+│ 2. connects to 10.96.62.252:80, the cluster IP
+▼
+the rules on the node, written by kube-proxy
+│ 3. send to one endpoint of the EndpointSlice web-qr4xj
+▼
+Pod web-…-kh6pn 10.244.0.32:80   or   Pod web-…-nvqf9 10.244.0.33:80
+```
+
+</Layman>
+<Bangla>
+
+**Service একটা address আর Pod-এর একটা তালিকা পায়।** Kubernetes একটা Service-কে একটা IP address দেয়, cluster IP, যা virtual IP address mechanism ব্যবহার করে <Cite n={1} />। সেই Service-এর controller ক্রমাগত তার selector-এর সাথে মেলে এমন Pod খোঁজে, তারপর Service-এর EndpointSlice-গুলোতে দরকারি update করে <Cite n={1} />। EndpointSlice backend endpoint-গুলোর IP address track করে; এগুলো সাধারণত একটা Service-এর সাথে যুক্ত থাকে, আর backend endpoint-গুলো সাধারণত Pod <Cite n={5} />। একটা Service যেকোনো incoming port-কে একটা `targetPort`-এ map করতে পারে; default-এ `targetPort` `port` field-এর সমান মান পায় <Cite n={1} />।
+
+**kube-proxy traffic পাঠায়।** প্রতিটা kube-proxy Kubernetes control plane-এ Service আর EndpointSlice object যোগ হওয়া আর সরে যাওয়ার দিকে নজর রাখে <Cite n={6} />। প্রতিটা Service-এর জন্য kube-proxy তার mode অনুযায়ী উপযুক্ত API call করে, যাতে node Service-এর clusterIP আর port-এর traffic ধরে, আর সেই traffic Service-এর একটা endpoint-এ পাঠায় <Cite n={6} />। আপনি স্পষ্ট করে mode বেছে না নিলে kube-proxy recommended default ব্যবহার করে: Kubernetes 1.37-এ এটা iptables, তবে Kubernetes-এর পরের কোনো version default বদলে nftables করবে <Cite n={6} />। iptables mode-এ প্রতিটা পরিবর্তন process হওয়ার আগে পুরো `minSyncPeriod` পর্যন্ত অপেক্ষা করতে পারে, তাই সেই সময়টুকু rule-গুলো API server-এর সাথে মেলে না থাকতে পারে; `minSyncPeriod`-এর default মান 1s <Cite n={6} />।
+
+**Service-এর চার type** <Cite n={1} />:
+
+| Type | কী করে |
+|---|---|
+| `ClusterIP` | Service-কে cluster-এর ভেতরের একটা IP-তে প্রকাশ করে, ফলে শুধু cluster-এর ভেতর থেকে পৌঁছানো যায়; এটাই default type |
+| `NodePort` | Service-কে প্রতিটা Node-এর IP-তে একটা স্থির port-এ প্রকাশ করে, NodePort; control plane port-টা একটা range থেকে দেয়, default 30000-32767 |
+| `LoadBalancer` | একটা external load balancer দিয়ে Service-কে বাইরে প্রকাশ করে; Kubernetes নিজে সরাসরি কোনো load balancing component দেয় না |
+| `ExternalName` | Service-কে `externalName` field-এর মানে map করে, যেমন একটা hostname; কোনো ধরনের proxying হয় না |
+
+`LoadBalancer` type-এর Service তৈরিতে Kubernetes সাধারণত শুরুতে `NodePort` type-এর Service চাওয়ার সমান পরিবর্তনগুলো করে; তারপর cloud-controller-manager external load balancer-কে সেই node port-এ traffic পাঠাতে configure করে <Cite n={1} />।
+
+**DNS নাম।** একটা সাধারণ Service `my-svc.my-namespace.svc.cluster-domain.example` ধরনের নামে DNS A এবং/বা AAAA record পায়, যা Service-এর cluster IP-তে resolve হয় <Cite n={2} />। যে DNS query namespace বলে না, তা Pod-এর নিজের namespace-এ সীমিত থাকে; অন্য namespace-এর Service-এ পৌঁছাতে DNS query-তে namespace দিন <Cite n={2} />। DNS query Pod-এর `/etc/resolv.conf` দিয়ে বাড়ানো (expand) হতে পারে, যা kubelet প্রতিটা Pod-এর জন্য configure করে; এর `search` option-এর মানগুলো দিয়ে query expand হয় <Cite n={2} />।
+
+**Storage আগে claim, তারপর bind।** control plane-এর একটা control loop নতুন PVC-র দিকে নজর রাখে, সম্ভব হলে মেলে এমন একটা PV খুঁজে বের করে, আর দুটোকে bind করে <Cite n={9} />। PVC আর PV-র binding এক-এক (one-to-one) <Cite n={9} />, আর মেলে এমন volume না থাকলে claim অনির্দিষ্টকাল unbound থাকে <Cite n={9} />। একজন administrator একটা default StorageClass ঠিক করে দিতে পারেন, যা নির্দিষ্ট class না চাওয়া সব PVC-তে খাটে <Cite n={10} />। `WaitForFirstConsumer` mode PersistentVolume-এর binding আর provisioning পিছিয়ে দেয়, যতক্ষণ না PersistentVolumeClaim ব্যবহার করা একটা Pod তৈরি হয় <Cite n={10} />। Pod claim-কে volume হিসেবে ব্যবহার করে storage পায়, আর claim-কে Pod-এর একই namespace-এ থাকতে হয় <Cite n={9} />।
+
+**Access mode** <Cite n={9} />:
+
+| Access mode | অর্থ |
+|---|---|
+| `ReadWriteOnce` | একটা node volume-টা read-write হিসেবে mount করতে পারে; Pod-গুলো একই node-এ চললে একাধিক Pod তখনও volume-টা ব্যবহার করতে পারে |
+| `ReadOnlyMany` | অনেক node volume-টা read-only হিসেবে mount করতে পারে |
+| `ReadWriteMany` | অনেক node volume-টা read-write হিসেবে mount করতে পারে |
+| `ReadWriteOncePod` | একটা Pod volume-টা read-write হিসেবে mount করতে পারে |
+
+**Data-র কী হয়।** volume-এর কাজ শেষ হলে user PVC object মুছতে পারেন, আর claim থেকে ছাড়া পাওয়ার পর volume নিয়ে কী করতে হবে, তা PersistentVolume-এর reclaim policy cluster-কে বলে <Cite n={9} />। dynamically তৈরি volume তার StorageClass-এর reclaim policy পায়, যার default `Delete` <Cite n={9} />। যে volume plugin এটা support করে, তাতে `Delete` Kubernetes থেকে PersistentVolume object আর external infrastructure-এর সংশ্লিষ্ট storage asset, দুটোই সরিয়ে দেয় <Cite n={9} />। `Retain`-এ PersistentVolumeClaim মোছার পরও PersistentVolume থেকে যায়, আর volume-টাকে "released" ধরা হয় <Cite n={9} />।
+
+নিচে টিউটোরিয়ালের run-এর ধাপ ২-এ একটা Pod `web` Service-কে তার নাম দিয়ে চেয়েছে। এই diagram সেই request-এর টিউটোরিয়ালের নিজের ছবি, run-এর address-সহ; এর ৩ নম্বর ধাপে kube-proxy Service-এর clusterIP আর port-এর traffic ধরতে এবং সেটা Service-এর একটা endpoint-এ পাঠাতে node-কে configure করে <Cite n={6} />:
+
+```text
+Pod client (namespace net-lab)
+│ 1. asks the name server 10.96.0.10 for "web"
+│    answer: 10.96.62.252, web.net-lab.svc.cluster.local
+│ 2. connects to 10.96.62.252:80, the cluster IP
+▼
+the rules on the node, written by kube-proxy
+│ 3. send to one endpoint of the EndpointSlice web-qr4xj
+▼
+Pod web-…-kh6pn 10.244.0.32:80   or   Pod web-…-nvqf9 10.244.0.33:80
+```
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+The tutorial ran these steps on 2026-11-18 on Linux, on the kind cluster `qa-lab` of [Kubernetes Basics](/devops/kubernetes-basics/), with Docker 29.10.0, kind v0.33.0, and kubectl v1.37.2; the cluster ran Kubernetes v1.37.0. Names, hashes, IP addresses, ports, and ages differ on your machine. All the objects of the run were in the namespace `net-lab`, and step 6 deleted it.
+
+**1. Run two Pods behind a Service.** `kubectl create namespace` creates a namespace <Cite n={14} />. `kubectl create deployment` creates a deployment with the specified name, and `--replicas` is the number of replicas to create <Cite n={16} />. `kubectl rollout status` shows the status of the rollout, and `--timeout` is the length of time to wait before ending the watch <Cite n={17} />. `kubectl expose` exposes a resource as a new Kubernetes service <Cite n={15} />; with no `--selector`, it infers the selector from the resource being exposed, and the default type is `ClusterIP` <Cite n={15} />. The image tag `nginx:1.16.1` is the tutorial's own choice:
+
+```bash
+kubectl create namespace net-lab
+kubectl create deployment web --image=nginx:1.16.1 --replicas=2 -n net-lab
+kubectl rollout status deployment/web -n net-lab --timeout=120s
+kubectl expose deployment web --port=80 -n net-lab
+kubectl get service web -n net-lab
+```
+
+In the tutorial's run, the Service got a cluster IP:
+
+```text
+NAME   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+web    ClusterIP   10.96.62.252   <none>        80/TCP    0s
+```
+
+`-o wide` lists with more details, `--show-labels` shows the labels, and `kubectl describe` describes an object with verbose output <Cite n={21} />:
+
+```bash
+kubectl get pods -n net-lab -o wide
+kubectl get pods -n net-lab --show-labels
+kubectl describe service web -n net-lab
+```
+
+In the run, the two Pods had their own IP addresses and the label `app=web`. These are the first six of the nine columns of `-o wide`, then the labels:
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE   IP
+web-66956f5f5f-kh6pn   1/1     Running   0          1s    10.244.0.32
+web-66956f5f5f-nvqf9   1/1     Running   0          1s    10.244.0.33
+```
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE   LABELS
+web-66956f5f5f-kh6pn   1/1     Running   0          1s    app=web,pod-template-hash=66956f5f5f
+web-66956f5f5f-nvqf9   1/1     Running   0          1s    app=web,pod-template-hash=66956f5f5f
+```
+
+These are six of the lines of `kubectl describe service`. The selector was `app=web`, and the target port was the same as the port <Cite n={1} />:
+
+```text
+Selector:                 app=web
+Type:                     ClusterIP
+IP:                       10.96.62.252
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+Endpoints:                10.244.0.32:80,10.244.0.33:80
+```
+
+The Debug Services page lists the EndpointSlices of a Service with `kubectl get endpointslices -l kubernetes.io/service-name=hostnames` <Cite n={11} />:
+
+```bash
+kubectl get endpointslices -n net-lab -l kubernetes.io/service-name=web
+```
+
+```text
+NAME        ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+web-qr4xj   IPv4          80      10.244.0.32,10.244.0.33   0s
+```
+
+**2. Find the Service by its name.** Debug Services runs a test Pod with `kubectl run` and `--restart=Never` <Cite n={11} />, and the quick reference runs the image `busybox:1.28` <Cite n={21} />. `kubectl wait` waits for a specific condition on one or many resources <Cite n={18} />, and `kubectl exec` runs a command in an existing Pod <Cite n={21} />:
+
+```bash
+kubectl run client -n net-lab --image=busybox:1.28 --restart=Never -- sleep 3600
+kubectl wait --for=condition=Ready pod/client -n net-lab --timeout=120s
+kubectl exec -n net-lab client -- nslookup web
+kubectl exec -n net-lab client -- nslookup web.net-lab.svc.cluster.local
+kubectl exec -n net-lab client -- sh -c 'wget -qO- http://web | grep "<title>"'
+```
+
+In the tutorial's run, the short name and the full name gave the same address, the cluster IP of the Service. This was the answer for `web`:
+
+```text
+Server:    10.96.0.10
+Address 1: 10.96.0.10 kube-dns.kube-system.svc.cluster.local
+
+Name:      web
+Address 1: 10.96.62.252 web.net-lab.svc.cluster.local
+```
+
+`wget` printed `<title>Welcome to nginx!</title>`.
+
+Next, a Service in another namespace. The DNS debugging page checks DNS with `nslookup kubernetes.default`, and looks at the `/etc/resolv.conf` of a Pod <Cite n={12} />:
+
+```bash
+kubectl exec -n net-lab client -- nslookup kubernetes
+kubectl exec -n net-lab client -- nslookup kubernetes.default
+kubectl exec -n net-lab client -- cat /etc/resolv.conf
+```
+
+In the run, the short name failed:
+
+```text
+Server:    10.96.0.10
+Address 1: 10.96.0.10 kube-dns.kube-system.svc.cluster.local
+
+nslookup: can't resolve 'kubernetes'
+command terminated with exit code 1
+```
+
+The name with the namespace worked:
+
+```text
+Name:      kubernetes.default
+Address 1: 10.96.0.1 kubernetes.default.svc.cluster.local
+```
+
+And the Pod's `/etc/resolv.conf` was:
+
+```text
+search net-lab.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+```
+
+The full name in the answer shows that the Service `kubernetes` is in the namespace `default`. DNS queries that don't specify a namespace are limited to the Pod's namespace <Cite n={2} />, and the Pod ran in `net-lab`. The values of the `search` option are used to expand queries <Cite n={2} />, and the first value was `net-lab.svc.cluster.local`. Debug Services gives the same advice: if the short name fails, perhaps your Pod and Service are in different namespaces, so try a namespace-qualified name <Cite n={11} />.
+
+**3. Break the selector.** `--selector` gives a label selector to use for the Service, and `--name` gives the name of the new object <Cite n={15} />. The run gave a new Service the selector `app=wbe`, a typo of `app=web`:
+
+```bash
+kubectl expose deployment web -n net-lab --name=web-typo --port=80 --selector=app=wbe
+kubectl get service web-typo -n net-lab -o wide
+kubectl get endpointslices -n net-lab -l kubernetes.io/service-name=web-typo
+kubectl exec -n net-lab client -- sh -c 'wget -qO- -T 5 http://web-typo | grep "<title>"'
+```
+
+In the run, the Service got a cluster IP, and `-o wide` showed its selector:
+
+```text
+NAME       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+web-typo   ClusterIP   10.96.137.174   <none>        80/TCP    1s    app=wbe
+```
+
+Its EndpointSlice had no endpoints:
+
+```text
+NAME             ADDRESSTYPE   PORTS     ENDPOINTS   AGE
+web-typo-fgm7g   IPv4          <unset>   <unset>     1s
+```
+
+And the request failed:
+
+```text
+wget: can't connect to remote host (10.96.137.174): Connection refused
+command terminated with exit code 1
+```
+
+Debug Services says: if the ENDPOINTS column is `<none>`, check that the `spec.selector` field of your Service actually selects for `metadata.labels` values on your Pods; a common mistake is to have a typo or other error <Cite n={11} />. kubectl v1.37.2 printed `<unset>` where that page shows `<none>`.
+
+**4. Reach the Service from your own machine.** First with a port forward. `kubectl port-forward` can use a resource name to select a matching Pod to forward to, and the docs forward to a Service with `kubectl port-forward service/mongo 28015:27017` <Cite n={13} />:
+
+```bash
+kubectl port-forward -n net-lab service/web 18080:80
+```
+
+```text
+Forwarding from 127.0.0.1:18080 -> 80
+Forwarding from [::1]:18080 -> 80
+```
+
+`kubectl port-forward` does not return, and the docs open another terminal for the next commands <Cite n={13} />. The run started it in the background, sent one request, and stopped it:
+
+```bash
+curl -s http://127.0.0.1:18080 | grep '<title>'
+```
+
+This printed `<title>Welcome to nginx!</title>`.
+
+Next, the mode of kube-proxy. `kubectl logs` prints the logs for a container in a pod or specified resource, named as `POD` or `TYPE/NAME` <Cite n={19} />. Debug Services shows a kube-proxy log line `Using iptables Proxier` <Cite n={11} />:
+
+```bash
+kubectl logs -n kube-system daemonset/kube-proxy | grep Proxier
+```
+
+```text
+I1117 21:33:00.947333       1 server_linux.go:144] "Using iptables Proxier"
+```
+
+Then a `NodePort` Service. A NodePort Service reports the allocated port in its `.spec.ports[*].nodePort` field <Cite n={1} />. `-o jsonpath` prints the fields defined in a jsonpath expression, and the quick reference uses it to get the addresses of nodes <Cite n={21} />:
+
+```bash
+kubectl expose deployment web -n net-lab --name=web-np --type=NodePort --port=80
+kubectl get service web-np -n net-lab
+kubectl get node qa-lab-control-plane -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}'
+```
+
+In the run, the node port was 30756, after the port in the `PORT(S)` column, and the node's address was `172.22.0.2`:
+
+```text
+NAME     TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+web-np   NodePort   10.96.21.63   <none>        80:30756/TCP   0s
+```
+
+The run sent a request from the host at once, and the same request 2 seconds later:
+
+```bash
+curl -s --max-time 3 -o /dev/null -w '%{http_code} %{errormsg}\n' http://172.22.0.2:30756
+sleep 2
+curl -s --max-time 3 http://172.22.0.2:30756 | grep '<title>'
+```
+
+```text
+000 Failed to connect to 172.22.0.2 port 30756 after 0 ms: Could not connect to server
+<title>Welcome to nginx!</title>
+```
+
+The first `curl` exited with code 7. The tutorial ran these steps three times that day, and each time the first request right after `kubectl expose` failed. In iptables mode, each change may wait up to the full `minSyncPeriod` before it is processed <Cite n={6} />.
+
+Last, a `LoadBalancer` Service:
+
+```bash
+kubectl expose deployment web -n net-lab --name=web-lb --type=LoadBalancer --port=80
+kubectl get service web-lb -n net-lab
+```
+
+Ten seconds later, the run printed:
+
+```text
+NAME     TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+web-lb   LoadBalancer   10.96.255.118   <pending>     80:32398/TCP   10s
+```
+
+On cloud providers which support external load balancers, the type `LoadBalancer` provisions a load balancer for your Service; the creation happens asynchronously, and information about the balancer is published in the Service's `.status.loadBalancer` field <Cite n={1} />. kind's LoadBalancer guide uses Cloud Provider KIND, which runs as a standalone binary on your host and provisions new Load Balancer containers for your Services <Cite n={22} />. The run did not install it. The Service also got a node port, 32398, as `LoadBalancer` starts with the changes of a `NodePort` Service <Cite n={1} />.
+
+**5. Keep data after the Pod is gone.** `kubectl get` with a type and no name displays all resources of that type, and a type can be given in its singular, plural, or abbreviated form <Cite n={23} />:
+
+```bash
+kubectl get storageclass
+```
+
+```text
+NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  58m
+```
+
+The cluster had one class, `standard`, marked as the default, with the reclaim policy `Delete` and the binding mode `WaitForFirstConsumer`. This claim, `net-pvc.yaml`, names no class, so the default class applies to it <Cite n={10} />:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+  namespace: net-lab
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+```
+
+`kubectl apply -f` creates the resources of a file <Cite n={21} />:
+
+```bash
+kubectl apply -f net-pvc.yaml
+kubectl get pvc data -n net-lab
+kubectl describe pvc data -n net-lab
+```
+
+In the run, the claim was `Pending`:
+
+```text
+NAME   STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data   Pending                                      standard       <unset>                 3s
+```
+
+These are the last lines of `kubectl describe pvc`; the run printed them with `sed`:
+
+```text
+Events:
+  Type    Reason                Age   From                         Message
+  ----    ------                ----  ----                         -------
+  Normal  WaitForFirstConsumer  3s    persistentvolume-controller  waiting for first consumer to be created before binding
+```
+
+`WaitForFirstConsumer` delays the binding and provisioning of a PersistentVolume until a Pod using the PersistentVolumeClaim is created <Cite n={10} />. Pods access storage by using the claim as a volume <Cite n={9} />. This Pod, `net-writer.yaml`, writes one line to the volume:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+  namespace: net-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: writer
+    image: busybox:1.28
+    command: ["sh", "-c", "echo 'run 1: 12 passed' > /data/result.txt"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: data
+```
+
+`net-reader.yaml` is the same file with the name `reader`, and with the command `cat /data/result.txt`. The `kubectl wait` reference waits for a field with `--for=jsonpath='{.status.phase}'=Running` <Cite n={18} />:
+
+```bash
+kubectl apply -f net-writer.yaml
+kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/writer -n net-lab --timeout=180s
+kubectl get pvc data -n net-lab
+kubectl get pv
+```
+
+In the run, the claim was now `Bound` to a new volume:
+
+```text
+NAME   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data   Bound    pvc-7a5da938-3dee-449b-bd14-8bf257ec5e43   100Mi      RWO            standard       <unset>                 8s
+```
+
+These are the first six of the ten columns of `kubectl get pv`:
+
+```text
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM
+pvc-7a5da938-3dee-449b-bd14-8bf257ec5e43   100Mi      RWO            Delete           Bound    net-lab/data
+```
+
+The volume took the reclaim policy `Delete` of its StorageClass <Cite n={9} />. Then the run deleted the writer and read the file with a new Pod. `kubectl delete` deletes resources by resources and names <Cite n={20} />, and `kubectl logs` dumps the logs of a Pod <Cite n={21} />:
+
+```bash
+kubectl delete pod writer -n net-lab
+kubectl apply -f net-reader.yaml
+kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/reader -n net-lab --timeout=120s
+kubectl logs reader -n net-lab
+```
+
+```text
+run 1: 12 passed
+```
+
+The Pod that wrote the file was gone, and a new Pod read the file: persistent volumes exist beyond the lifetime of any individual Pod <Cite n={3} />.
+
+**6. Clean up.** `kubectl delete namespaces` deletes a namespace, and this deletes everything under the namespace <Cite n={14} />. `--timeout` is the length of time to wait before giving up on a delete <Cite n={20} />:
+
+```bash
+kubectl delete namespace net-lab --timeout=180s
+kubectl get pv
+```
+
+Ten seconds after the namespace was deleted, `kubectl get pv` printed `No resources found`. The claim was deleted with the namespace, and the reclaim policy tells the cluster what to do with a volume after it has been released of its claim <Cite n={9} />; here it was `Delete`.
+
+</Technical>
+<Layman>
+
+The tutorial ran these steps on 2026-11-18 on Linux, on the kind cluster `qa-lab` of [Kubernetes Basics](/devops/kubernetes-basics/), with Docker 29.10.0, kind v0.33.0, and kubectl v1.37.2; the cluster ran Kubernetes v1.37.0. Names, hashes, IP addresses, ports, and ages will be different on your machine. Everything that the run made was in the namespace `net-lab`, and step 6 deleted it.
+
+**1. Run two Pods behind a Service.** `kubectl create namespace` makes a namespace <Cite n={14} />. `kubectl create deployment` makes a Deployment with the name that you give, and `--replicas` is how many copies to make <Cite n={16} />. `kubectl rollout status` shows how the rollout is going, and `--timeout` is how long to watch before it stops <Cite n={17} />. `kubectl expose` exposes a resource as a new Service <Cite n={15} />; without `--selector`, it takes the selector from the resource that it exposes, and the type is `ClusterIP` unless you say otherwise <Cite n={15} />. The image tag `nginx:1.16.1` is the tutorial's own choice:
+
+```bash
+kubectl create namespace net-lab
+kubectl create deployment web --image=nginx:1.16.1 --replicas=2 -n net-lab
+kubectl rollout status deployment/web -n net-lab --timeout=120s
+kubectl expose deployment web --port=80 -n net-lab
+kubectl get service web -n net-lab
+```
+
+In the tutorial's run, the Service got a cluster IP:
+
+```text
+NAME   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+web    ClusterIP   10.96.62.252   <none>        80/TCP    0s
+```
+
+`-o wide` lists more details, `--show-labels` shows the labels, and `kubectl describe` gives a long, detailed description <Cite n={21} />:
+
+```bash
+kubectl get pods -n net-lab -o wide
+kubectl get pods -n net-lab --show-labels
+kubectl describe service web -n net-lab
+```
+
+In the run, each of the two Pods had its own IP address, and both had the label `app=web`. These are the first six of the nine columns of `-o wide`, then the labels:
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE   IP
+web-66956f5f5f-kh6pn   1/1     Running   0          1s    10.244.0.32
+web-66956f5f5f-nvqf9   1/1     Running   0          1s    10.244.0.33
+```
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE   LABELS
+web-66956f5f5f-kh6pn   1/1     Running   0          1s    app=web,pod-template-hash=66956f5f5f
+web-66956f5f5f-nvqf9   1/1     Running   0          1s    app=web,pod-template-hash=66956f5f5f
+```
+
+These are six of the lines of `kubectl describe service`. The selector was `app=web`, and the target port was the same as the port <Cite n={1} />:
+
+```text
+Selector:                 app=web
+Type:                     ClusterIP
+IP:                       10.96.62.252
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+Endpoints:                10.244.0.32:80,10.244.0.33:80
+```
+
+The Debug Services page lists the EndpointSlices of a Service with `kubectl get endpointslices -l kubernetes.io/service-name=hostnames` <Cite n={11} />:
+
+```bash
+kubectl get endpointslices -n net-lab -l kubernetes.io/service-name=web
+```
+
+```text
+NAME        ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+web-qr4xj   IPv4          80      10.244.0.32,10.244.0.33   0s
+```
+
+**2. Find the Service by its name.** Debug Services starts a test Pod with `kubectl run` and `--restart=Never` <Cite n={11} />, and the quick reference runs the image `busybox:1.28` <Cite n={21} />. `kubectl wait` waits until one or more resources reach a condition <Cite n={18} />, and `kubectl exec` runs a command in a Pod that already exists <Cite n={21} />:
+
+```bash
+kubectl run client -n net-lab --image=busybox:1.28 --restart=Never -- sleep 3600
+kubectl wait --for=condition=Ready pod/client -n net-lab --timeout=120s
+kubectl exec -n net-lab client -- nslookup web
+kubectl exec -n net-lab client -- nslookup web.net-lab.svc.cluster.local
+kubectl exec -n net-lab client -- sh -c 'wget -qO- http://web | grep "<title>"'
+```
+
+In the tutorial's run, the short name and the full name gave the same address, the cluster IP of the Service. This was the answer for `web`:
+
+```text
+Server:    10.96.0.10
+Address 1: 10.96.0.10 kube-dns.kube-system.svc.cluster.local
+
+Name:      web
+Address 1: 10.96.62.252 web.net-lab.svc.cluster.local
+```
+
+`wget` printed `<title>Welcome to nginx!</title>`.
+
+Next, a Service in another namespace. The DNS debugging page tests DNS with `nslookup kubernetes.default`, and looks at a Pod's `/etc/resolv.conf` <Cite n={12} />:
+
+```bash
+kubectl exec -n net-lab client -- nslookup kubernetes
+kubectl exec -n net-lab client -- nslookup kubernetes.default
+kubectl exec -n net-lab client -- cat /etc/resolv.conf
+```
+
+In the run, the short name failed:
+
+```text
+Server:    10.96.0.10
+Address 1: 10.96.0.10 kube-dns.kube-system.svc.cluster.local
+
+nslookup: can't resolve 'kubernetes'
+command terminated with exit code 1
+```
+
+The name with the namespace worked:
+
+```text
+Name:      kubernetes.default
+Address 1: 10.96.0.1 kubernetes.default.svc.cluster.local
+```
+
+And the Pod's `/etc/resolv.conf` was:
+
+```text
+search net-lab.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+```
+
+The full name in the answer shows that the Service `kubernetes` lives in the namespace `default`. A DNS query that names no namespace only looks in the Pod's own namespace <Cite n={2} />, and this Pod ran in `net-lab`. The values of the `search` option are used to expand queries <Cite n={2} />, and the first one was `net-lab.svc.cluster.local`. Debug Services says the same: if the short name fails, your Pod and Service may be in different namespaces, so try the name with the namespace <Cite n={11} />.
+
+**3. Break the selector.** `--selector` sets the label selector of the Service, and `--name` names the new object <Cite n={15} />. The run gave a new Service the selector `app=wbe`, a typo of `app=web`:
+
+```bash
+kubectl expose deployment web -n net-lab --name=web-typo --port=80 --selector=app=wbe
+kubectl get service web-typo -n net-lab -o wide
+kubectl get endpointslices -n net-lab -l kubernetes.io/service-name=web-typo
+kubectl exec -n net-lab client -- sh -c 'wget -qO- -T 5 http://web-typo | grep "<title>"'
+```
+
+In the run, the Service got a cluster IP, and `-o wide` showed its selector:
+
+```text
+NAME       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+web-typo   ClusterIP   10.96.137.174   <none>        80/TCP    1s    app=wbe
+```
+
+Its EndpointSlice had no endpoints:
+
+```text
+NAME             ADDRESSTYPE   PORTS     ENDPOINTS   AGE
+web-typo-fgm7g   IPv4          <unset>   <unset>     1s
+```
+
+And the request failed:
+
+```text
+wget: can't connect to remote host (10.96.137.174): Connection refused
+command terminated with exit code 1
+```
+
+Debug Services says: if the ENDPOINTS column is `<none>`, check that the `spec.selector` field of your Service really matches the `metadata.labels` of your Pods; a common mistake is a typo or another error <Cite n={11} />. kubectl v1.37.2 printed `<unset>` where that page shows `<none>`.
+
+**4. Reach the Service from your own machine.** First with a port forward. `kubectl port-forward` can take a resource name and pick a matching Pod to forward to, and the docs forward to a Service with `kubectl port-forward service/mongo 28015:27017` <Cite n={13} />:
+
+```bash
+kubectl port-forward -n net-lab service/web 18080:80
+```
+
+```text
+Forwarding from 127.0.0.1:18080 -> 80
+Forwarding from [::1]:18080 -> 80
+```
+
+`kubectl port-forward` does not return, and the docs open a second terminal for the next commands <Cite n={13} />. The run started it in the background, sent one request, and stopped it:
+
+```bash
+curl -s http://127.0.0.1:18080 | grep '<title>'
+```
+
+This printed `<title>Welcome to nginx!</title>`.
+
+Next, the mode of kube-proxy. `kubectl logs` prints the logs of a container in a Pod or in a named resource, given as `POD` or `TYPE/NAME` <Cite n={19} />. Debug Services shows a kube-proxy log line `Using iptables Proxier` <Cite n={11} />:
+
+```bash
+kubectl logs -n kube-system daemonset/kube-proxy | grep Proxier
+```
+
+```text
+I1117 21:33:00.947333       1 server_linux.go:144] "Using iptables Proxier"
+```
+
+Then a `NodePort` Service. A NodePort Service shows the port that it got in its `.spec.ports[*].nodePort` field <Cite n={1} />. `-o jsonpath` prints the fields picked by a JSONPath expression, and the quick reference uses it to get the addresses of nodes <Cite n={21} />:
+
+```bash
+kubectl expose deployment web -n net-lab --name=web-np --type=NodePort --port=80
+kubectl get service web-np -n net-lab
+kubectl get node qa-lab-control-plane -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}'
+```
+
+In the run, the node port was 30756, after the port in the `PORT(S)` column, and the node's address was `172.22.0.2`:
+
+```text
+NAME     TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+web-np   NodePort   10.96.21.63   <none>        80:30756/TCP   0s
+```
+
+The run sent a request from the host at once, and the same request 2 seconds later:
+
+```bash
+curl -s --max-time 3 -o /dev/null -w '%{http_code} %{errormsg}\n' http://172.22.0.2:30756
+sleep 2
+curl -s --max-time 3 http://172.22.0.2:30756 | grep '<title>'
+```
+
+```text
+000 Failed to connect to 172.22.0.2 port 30756 after 0 ms: Could not connect to server
+<title>Welcome to nginx!</title>
+```
+
+The first `curl` ended with exit code 7. The tutorial ran these steps three times that day, and each time the first request right after `kubectl expose` failed. In iptables mode, each change may wait up to the full `minSyncPeriod` before it is handled <Cite n={6} />.
+
+Last, a `LoadBalancer` Service:
+
+```bash
+kubectl expose deployment web -n net-lab --name=web-lb --type=LoadBalancer --port=80
+kubectl get service web-lb -n net-lab
+```
+
+Ten seconds later, the run printed:
+
+```text
+NAME     TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+web-lb   LoadBalancer   10.96.255.118   <pending>     80:32398/TCP   10s
+```
+
+On a cloud provider that supports external load balancers, the type `LoadBalancer` sets up a load balancer for your Service; this happens in the background, and the details of the balancer appear in the Service's `.status.loadBalancer` field <Cite n={1} />. kind's LoadBalancer guide uses Cloud Provider KIND, a separate program on your host that makes Load Balancer containers for your Services <Cite n={22} />. The run did not install it. The Service also got a node port, 32398, because `LoadBalancer` starts with the same changes as a `NodePort` Service <Cite n={1} />.
+
+**5. Keep data after the Pod is gone.** `kubectl get` with a type and no name shows all the resources of that type, and the type can be written singular, plural, or short <Cite n={23} />:
+
+```bash
+kubectl get storageclass
+```
+
+```text
+NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  58m
+```
+
+The cluster had one class, `standard`, marked as the default, with the reclaim policy `Delete` and the binding mode `WaitForFirstConsumer`. This claim, `net-pvc.yaml`, asks for no class, so the default class is used <Cite n={10} />:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+  namespace: net-lab
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+```
+
+`kubectl apply -f` creates the resources in a file <Cite n={21} />:
+
+```bash
+kubectl apply -f net-pvc.yaml
+kubectl get pvc data -n net-lab
+kubectl describe pvc data -n net-lab
+```
+
+In the run, the claim was `Pending`:
+
+```text
+NAME   STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data   Pending                                      standard       <unset>                 3s
+```
+
+These are the last lines of `kubectl describe pvc`; the run printed them with `sed`:
+
+```text
+Events:
+  Type    Reason                Age   From                         Message
+  ----    ------                ----  ----                         -------
+  Normal  WaitForFirstConsumer  3s    persistentvolume-controller  waiting for first consumer to be created before binding
+```
+
+`WaitForFirstConsumer` waits with binding and making a PersistentVolume until a Pod that uses the claim is created <Cite n={10} />. Pods use storage by using the claim as a volume <Cite n={9} />. This Pod, `net-writer.yaml`, writes one line to the volume:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+  namespace: net-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: writer
+    image: busybox:1.28
+    command: ["sh", "-c", "echo 'run 1: 12 passed' > /data/result.txt"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: data
+```
+
+`net-reader.yaml` is the same file with the name `reader`, and with the command `cat /data/result.txt`. The `kubectl wait` reference waits for a field with `--for=jsonpath='{.status.phase}'=Running` <Cite n={18} />:
+
+```bash
+kubectl apply -f net-writer.yaml
+kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/writer -n net-lab --timeout=180s
+kubectl get pvc data -n net-lab
+kubectl get pv
+```
+
+In the run, the claim was now `Bound` to a new volume:
+
+```text
+NAME   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data   Bound    pvc-7a5da938-3dee-449b-bd14-8bf257ec5e43   100Mi      RWO            standard       <unset>                 8s
+```
+
+These are the first six of the ten columns of `kubectl get pv`:
+
+```text
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM
+pvc-7a5da938-3dee-449b-bd14-8bf257ec5e43   100Mi      RWO            Delete           Bound    net-lab/data
+```
+
+The volume took the reclaim policy `Delete` from its StorageClass <Cite n={9} />. Then the run deleted the writer and read the file with a new Pod. `kubectl delete` deletes resources by resources and names <Cite n={20} />, and `kubectl logs` prints a Pod's logs <Cite n={21} />:
+
+```bash
+kubectl delete pod writer -n net-lab
+kubectl apply -f net-reader.yaml
+kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/reader -n net-lab --timeout=120s
+kubectl logs reader -n net-lab
+```
+
+```text
+run 1: 12 passed
+```
+
+The Pod that wrote the file was gone, and a new Pod read the file: persistent volumes outlive any single Pod <Cite n={3} />.
+
+**6. Clean up.** `kubectl delete namespaces` deletes a namespace, and with it everything in that namespace <Cite n={14} />. `--timeout` is how long to wait before giving up on the delete <Cite n={20} />:
+
+```bash
+kubectl delete namespace net-lab --timeout=180s
+kubectl get pv
+```
+
+Ten seconds after the namespace was deleted, `kubectl get pv` printed `No resources found`. The claim went with the namespace, and the reclaim policy tells the cluster what to do with a volume once its claim lets go of it <Cite n={9} />; here it was `Delete`.
+
+</Layman>
+<Bangla>
+
+টিউটোরিয়াল এই ধাপগুলো 2026-11-18 তারিখে Linux-এ, [Kubernetes Basics](/devops/kubernetes-basics/)-এর kind cluster `qa-lab`-এ, Docker 29.10.0, kind v0.33.0 আর kubectl v1.37.2 দিয়ে চালিয়েছে; cluster-এ Kubernetes v1.37.0 চলছিল। আপনার machine-এ নাম, hash, IP address, port আর age আলাদা হবে। run-এর সব object `net-lab` namespace-এ ছিল, আর ধাপ ৬ সেটা মুছে দিয়েছে।
+
+**১. একটা Service-এর পেছনে দুটো Pod চালান।** `kubectl create namespace` একটা namespace তৈরি করে <Cite n={14} />। `kubectl create deployment` দেওয়া নামে একটা deployment তৈরি করে, আর `--replicas` হলো কয়টা replica তৈরি হবে <Cite n={16} />। `kubectl rollout status` rollout-এর status দেখায়, আর `--timeout` হলো watch শেষ করার আগে কতক্ষণ অপেক্ষা করবে <Cite n={17} />। `kubectl expose` একটা resource-কে নতুন Kubernetes service হিসেবে প্রকাশ করে <Cite n={15} />; `--selector` না দিলে প্রকাশ করা resource থেকে selector বের করে নেয়, আর default type হলো `ClusterIP` <Cite n={15} />। image tag `nginx:1.16.1` টিউটোরিয়ালের নিজের বেছে নেওয়া:
+
+```bash
+kubectl create namespace net-lab
+kubectl create deployment web --image=nginx:1.16.1 --replicas=2 -n net-lab
+kubectl rollout status deployment/web -n net-lab --timeout=120s
+kubectl expose deployment web --port=80 -n net-lab
+kubectl get service web -n net-lab
+```
+
+টিউটোরিয়ালের run-এ Service একটা cluster IP পেয়েছে:
+
+```text
+NAME   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+web    ClusterIP   10.96.62.252   <none>        80/TCP    0s
+```
+
+`-o wide` আরও details-সহ তালিকা দেয়, `--show-labels` label দেখায়, আর `kubectl describe` verbose output দিয়ে একটা object-এর বর্ণনা দেয় <Cite n={21} />:
+
+```bash
+kubectl get pods -n net-lab -o wide
+kubectl get pods -n net-lab --show-labels
+kubectl describe service web -n net-lab
+```
+
+run-এ দুটো Pod-এর নিজের নিজের IP address আর `app=web` label ছিল। এগুলো `-o wide`-এর নয়টা column-এর প্রথম ছয়টা, তারপর label:
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE   IP
+web-66956f5f5f-kh6pn   1/1     Running   0          1s    10.244.0.32
+web-66956f5f5f-nvqf9   1/1     Running   0          1s    10.244.0.33
+```
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE   LABELS
+web-66956f5f5f-kh6pn   1/1     Running   0          1s    app=web,pod-template-hash=66956f5f5f
+web-66956f5f5f-nvqf9   1/1     Running   0          1s    app=web,pod-template-hash=66956f5f5f
+```
+
+এগুলো `kubectl describe service`-এর ছয়টা লাইন। selector ছিল `app=web`, আর target port port-এর সমান ছিল <Cite n={1} />:
+
+```text
+Selector:                 app=web
+Type:                     ClusterIP
+IP:                       10.96.62.252
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+Endpoints:                10.244.0.32:80,10.244.0.33:80
+```
+
+Debug Services page `kubectl get endpointslices -l kubernetes.io/service-name=hostnames` দিয়ে একটা Service-এর EndpointSlice-এর তালিকা দেখায় <Cite n={11} />:
+
+```bash
+kubectl get endpointslices -n net-lab -l kubernetes.io/service-name=web
+```
+
+```text
+NAME        ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+web-qr4xj   IPv4          80      10.244.0.32,10.244.0.33   0s
+```
+
+**২. নাম দিয়ে Service খুঁজুন।** Debug Services `kubectl run` আর `--restart=Never` দিয়ে একটা test Pod চালায় <Cite n={11} />, আর quick reference `busybox:1.28` image চালায় <Cite n={21} />। `kubectl wait` এক বা একাধিক resource-এর একটা নির্দিষ্ট condition-এর জন্য অপেক্ষা করে <Cite n={18} />, আর `kubectl exec` একটা বিদ্যমান Pod-এ একটা command চালায় <Cite n={21} />:
+
+```bash
+kubectl run client -n net-lab --image=busybox:1.28 --restart=Never -- sleep 3600
+kubectl wait --for=condition=Ready pod/client -n net-lab --timeout=120s
+kubectl exec -n net-lab client -- nslookup web
+kubectl exec -n net-lab client -- nslookup web.net-lab.svc.cluster.local
+kubectl exec -n net-lab client -- sh -c 'wget -qO- http://web | grep "<title>"'
+```
+
+টিউটোরিয়ালের run-এ ছোট নাম আর পুরো নাম একই address দিয়েছে, Service-এর cluster IP। `web`-এর উত্তর ছিল:
+
+```text
+Server:    10.96.0.10
+Address 1: 10.96.0.10 kube-dns.kube-system.svc.cluster.local
+
+Name:      web
+Address 1: 10.96.62.252 web.net-lab.svc.cluster.local
+```
+
+`wget` print করেছে `<title>Welcome to nginx!</title>`।
+
+এরপর অন্য namespace-এর একটা Service। DNS debugging page `nslookup kubernetes.default` দিয়ে DNS যাচাই করে, আর একটা Pod-এর `/etc/resolv.conf` দেখে <Cite n={12} />:
+
+```bash
+kubectl exec -n net-lab client -- nslookup kubernetes
+kubectl exec -n net-lab client -- nslookup kubernetes.default
+kubectl exec -n net-lab client -- cat /etc/resolv.conf
+```
+
+run-এ ছোট নামটা ব্যর্থ হয়েছে:
+
+```text
+Server:    10.96.0.10
+Address 1: 10.96.0.10 kube-dns.kube-system.svc.cluster.local
+
+nslookup: can't resolve 'kubernetes'
+command terminated with exit code 1
+```
+
+namespace-সহ নাম কাজ করেছে:
+
+```text
+Name:      kubernetes.default
+Address 1: 10.96.0.1 kubernetes.default.svc.cluster.local
+```
+
+আর Pod-এর `/etc/resolv.conf` ছিল:
+
+```text
+search net-lab.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+```
+
+উত্তরের পুরো নাম দেখায় যে `kubernetes` Service `default` namespace-এ আছে। যে DNS query namespace বলে না, তা Pod-এর namespace-এ সীমিত থাকে <Cite n={2} />, আর Pod-টা `net-lab`-এ চলছিল। `search` option-এর মানগুলো দিয়ে query expand হয় <Cite n={2} />, আর প্রথম মান ছিল `net-lab.svc.cluster.local`। Debug Services-ও একই পরামর্শ দেয়: ছোট নাম ব্যর্থ হলে হয়তো আপনার Pod আর Service আলাদা namespace-এ আছে, তাই namespace-সহ নাম চেষ্টা করুন <Cite n={11} />।
+
+**৩. Selector ভেঙে দিন।** `--selector` Service-এর জন্য একটা label selector দেয়, আর `--name` নতুন object-এর নাম দেয় <Cite n={15} />। run একটা নতুন Service-কে `app=wbe` selector দিয়েছে, `app=web`-এর একটা typo:
+
+```bash
+kubectl expose deployment web -n net-lab --name=web-typo --port=80 --selector=app=wbe
+kubectl get service web-typo -n net-lab -o wide
+kubectl get endpointslices -n net-lab -l kubernetes.io/service-name=web-typo
+kubectl exec -n net-lab client -- sh -c 'wget -qO- -T 5 http://web-typo | grep "<title>"'
+```
+
+run-এ Service একটা cluster IP পেয়েছে, আর `-o wide` তার selector দেখিয়েছে:
+
+```text
+NAME       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+web-typo   ClusterIP   10.96.137.174   <none>        80/TCP    1s    app=wbe
+```
+
+তার EndpointSlice-এ কোনো endpoint ছিল না:
+
+```text
+NAME             ADDRESSTYPE   PORTS     ENDPOINTS   AGE
+web-typo-fgm7g   IPv4          <unset>   <unset>     1s
+```
+
+আর request ব্যর্থ হয়েছে:
+
+```text
+wget: can't connect to remote host (10.96.137.174): Connection refused
+command terminated with exit code 1
+```
+
+Debug Services বলে: ENDPOINTS column `<none>` হলে যাচাই করুন যে আপনার Service-এর `spec.selector` field সত্যিই আপনার Pod-গুলোর `metadata.labels`-এর মান বাছাই করে; একটা সাধারণ ভুল হলো typo বা অন্য কোনো ভুল <Cite n={11} />। যেখানে ওই page `<none>` দেখায়, kubectl v1.37.2 সেখানে `<unset>` print করেছে।
+
+**৪. নিজের machine থেকে Service-এ পৌঁছান।** প্রথমে port forward দিয়ে। `kubectl port-forward` একটা resource-এর নাম দিয়ে forward করার জন্য মেলে এমন একটা Pod বেছে নিতে পারে, আর docs `kubectl port-forward service/mongo 28015:27017` দিয়ে একটা Service-এ forward করে <Cite n={13} />:
+
+```bash
+kubectl port-forward -n net-lab service/web 18080:80
+```
+
+```text
+Forwarding from 127.0.0.1:18080 -> 80
+Forwarding from [::1]:18080 -> 80
+```
+
+`kubectl port-forward` ফেরত আসে না, আর docs পরের command-গুলোর জন্য আরেকটা terminal খোলে <Cite n={13} />। run এটা background-এ চালু করেছে, একটা request পাঠিয়েছে, তারপর থামিয়েছে:
+
+```bash
+curl -s http://127.0.0.1:18080 | grep '<title>'
+```
+
+এটা print করেছে `<title>Welcome to nginx!</title>`।
+
+এরপর kube-proxy-র mode। `kubectl logs` একটা pod বা নির্দিষ্ট resource-এর একটা container-এর log print করে, `POD` বা `TYPE/NAME` হিসেবে দেওয়া <Cite n={19} />। Debug Services kube-proxy-র একটা log লাইন `Using iptables Proxier` দেখায় <Cite n={11} />:
+
+```bash
+kubectl logs -n kube-system daemonset/kube-proxy | grep Proxier
+```
+
+```text
+I1117 21:33:00.947333       1 server_linux.go:144] "Using iptables Proxier"
+```
+
+তারপর একটা `NodePort` Service। একটা NodePort Service বরাদ্দ পাওয়া port তার `.spec.ports[*].nodePort` field-এ জানায় <Cite n={1} />। `-o jsonpath` একটা jsonpath expression-এ বলা field-গুলো print করে, আর quick reference এটা দিয়ে node-গুলোর address বের করে <Cite n={21} />:
+
+```bash
+kubectl expose deployment web -n net-lab --name=web-np --type=NodePort --port=80
+kubectl get service web-np -n net-lab
+kubectl get node qa-lab-control-plane -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}'
+```
+
+run-এ node port ছিল 30756, `PORT(S)` column-এ port-এর পরে, আর node-এর address ছিল `172.22.0.2`:
+
+```text
+NAME     TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+web-np   NodePort   10.96.21.63   <none>        80:30756/TCP   0s
+```
+
+run host থেকে সঙ্গে সঙ্গে একটা request পাঠিয়েছে, আর ২ সেকেন্ড পরে একই request:
+
+```bash
+curl -s --max-time 3 -o /dev/null -w '%{http_code} %{errormsg}\n' http://172.22.0.2:30756
+sleep 2
+curl -s --max-time 3 http://172.22.0.2:30756 | grep '<title>'
+```
+
+```text
+000 Failed to connect to 172.22.0.2 port 30756 after 0 ms: Could not connect to server
+<title>Welcome to nginx!</title>
+```
+
+প্রথম `curl` exit code 7 দিয়ে শেষ হয়েছে। টিউটোরিয়াল সেদিন এই ধাপগুলো তিনবার চালিয়েছে, আর প্রতিবার `kubectl expose`-এর ঠিক পরের প্রথম request ব্যর্থ হয়েছে। iptables mode-এ প্রতিটা পরিবর্তন process হওয়ার আগে পুরো `minSyncPeriod` পর্যন্ত অপেক্ষা করতে পারে <Cite n={6} />।
+
+শেষে একটা `LoadBalancer` Service:
+
+```bash
+kubectl expose deployment web -n net-lab --name=web-lb --type=LoadBalancer --port=80
+kubectl get service web-lb -n net-lab
+```
+
+দশ সেকেন্ড পরে run print করেছে:
+
+```text
+NAME     TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+web-lb   LoadBalancer   10.96.255.118   <pending>     80:32398/TCP   10s
+```
+
+যে cloud provider external load balancer support করে, সেখানে `LoadBalancer` type আপনার Service-এর জন্য একটা load balancer তৈরি করে; এটা asynchronously হয়, আর balancer-এর তথ্য Service-এর `.status.loadBalancer` field-এ প্রকাশ হয় <Cite n={1} />। kind-এর LoadBalancer guide Cloud Provider KIND ব্যবহার করে, যা আপনার host-এ একটা আলাদা binary হিসেবে চলে আর আপনার Service-গুলোর জন্য নতুন Load Balancer container তৈরি করে <Cite n={22} />। run এটা install করেনি। Service একটা node port-ও পেয়েছে, 32398, কারণ `LoadBalancer` একটা `NodePort` Service-এর পরিবর্তনগুলো দিয়ে শুরু করে <Cite n={1} />।
+
+**৫. Pod চলে গেলেও data রাখুন।** type দিয়ে আর নাম ছাড়া `kubectl get` ওই type-এর সব resource দেখায়, আর type একবচন, বহুবচন বা সংক্ষিপ্ত রূপে দেওয়া যায় <Cite n={23} />:
+
+```bash
+kubectl get storageclass
+```
+
+```text
+NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  58m
+```
+
+cluster-এ একটা class ছিল, `standard`, default হিসেবে চিহ্নিত, reclaim policy `Delete` আর binding mode `WaitForFirstConsumer`। এই claim, `net-pvc.yaml`, কোনো class বলে না, তাই default class এতে খাটে <Cite n={10} />:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+  namespace: net-lab
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+```
+
+`kubectl apply -f` একটা file-এর resource-গুলো তৈরি করে <Cite n={21} />:
+
+```bash
+kubectl apply -f net-pvc.yaml
+kubectl get pvc data -n net-lab
+kubectl describe pvc data -n net-lab
+```
+
+run-এ claim `Pending` ছিল:
+
+```text
+NAME   STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data   Pending                                      standard       <unset>                 3s
+```
+
+এগুলো `kubectl describe pvc`-এর শেষ লাইনগুলো; run এগুলো `sed` দিয়ে print করেছে:
+
+```text
+Events:
+  Type    Reason                Age   From                         Message
+  ----    ------                ----  ----                         -------
+  Normal  WaitForFirstConsumer  3s    persistentvolume-controller  waiting for first consumer to be created before binding
+```
+
+`WaitForFirstConsumer` PersistentVolume-এর binding আর provisioning পিছিয়ে দেয়, যতক্ষণ না PersistentVolumeClaim ব্যবহার করা একটা Pod তৈরি হয় <Cite n={10} />। Pod claim-কে volume হিসেবে ব্যবহার করে storage পায় <Cite n={9} />। এই Pod, `net-writer.yaml`, volume-এ একটা লাইন লেখে:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+  namespace: net-lab
+spec:
+  restartPolicy: Never
+  containers:
+  - name: writer
+    image: busybox:1.28
+    command: ["sh", "-c", "echo 'run 1: 12 passed' > /data/result.txt"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: data
+```
+
+`net-reader.yaml` একই file, নাম `reader` আর command `cat /data/result.txt`। `kubectl wait` reference `--for=jsonpath='{.status.phase}'=Running` দিয়ে একটা field-এর জন্য অপেক্ষা করে <Cite n={18} />:
+
+```bash
+kubectl apply -f net-writer.yaml
+kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/writer -n net-lab --timeout=180s
+kubectl get pvc data -n net-lab
+kubectl get pv
+```
+
+run-এ claim এখন একটা নতুন volume-এ `Bound`:
+
+```text
+NAME   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data   Bound    pvc-7a5da938-3dee-449b-bd14-8bf257ec5e43   100Mi      RWO            standard       <unset>                 8s
+```
+
+এগুলো `kubectl get pv`-এর দশটা column-এর প্রথম ছয়টা:
+
+```text
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM
+pvc-7a5da938-3dee-449b-bd14-8bf257ec5e43   100Mi      RWO            Delete           Bound    net-lab/data
+```
+
+volume-টা তার StorageClass-এর reclaim policy `Delete` পেয়েছে <Cite n={9} />। তারপর run writer মুছে একটা নতুন Pod দিয়ে file-টা পড়েছে। `kubectl delete` resource আর নাম দিয়ে resource মোছে <Cite n={20} />, আর `kubectl logs` একটা Pod-এর log দেখায় <Cite n={21} />:
+
+```bash
+kubectl delete pod writer -n net-lab
+kubectl apply -f net-reader.yaml
+kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/reader -n net-lab --timeout=120s
+kubectl logs reader -n net-lab
+```
+
+```text
+run 1: 12 passed
+```
+
+যে Pod file-টা লিখেছিল, সেটা আর ছিল না, আর একটা নতুন Pod file-টা পড়েছে: persistent volume কোনো একক Pod-এর আয়ুর পরেও টিকে থাকে <Cite n={3} />।
+
+**৬. পরিষ্কার করুন।** `kubectl delete namespaces` একটা namespace মোছে, আর এতে namespace-এর ভেতরের সবকিছু মুছে যায় <Cite n={14} />। `--timeout` হলো delete ছেড়ে দেওয়ার আগে কতক্ষণ অপেক্ষা করবে <Cite n={20} />:
+
+```bash
+kubectl delete namespace net-lab --timeout=180s
+kubectl get pv
+```
+
+namespace মোছার দশ সেকেন্ড পরে `kubectl get pv` print করেছে `No resources found`। namespace-এর সাথে claim মুছে গেছে, আর claim থেকে ছাড়া পাওয়ার পর volume নিয়ে কী করতে হবে, তা reclaim policy cluster-কে বলে <Cite n={9} />; এখানে সেটা ছিল `Delete`।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Test the way clients call the app.** One of the most common ways that clients consume a Service is through a DNS name <Cite n={11} />. From a test Pod in another namespace, use a namespace-qualified name such as `web.net-lab`: DNS queries that don't specify a namespace are limited to the Pod's namespace <Cite n={2} />.
+
+**When a Service gives no response, go down the list.** Debug Services asks, among other questions: Does the Service exist? Does the Service work by DNS name? Does the Service have any EndpointSlices? Are the Pods working? <Cite n={11} /> To check the Pods alone, you can bypass the Service mechanism and go straight to the Pods <Cite n={11} />. In step 3, the Service existed and had a cluster IP, and its EndpointSlice was empty.
+
+**Expect a short delay after a change.** In iptables mode, each change may wait up to the full `minSyncPeriod` before it is processed; the default is 1s <Cite n={6} />. In step 4, the first request to a new NodePort failed, and the same request 2 seconds later worked.
+
+**Know what a port forward tests.** With a Service name, `kubectl port-forward` selects a matching Pod to forward to <Cite n={13} />. A test through it reaches that Pod, and the docs open a separate terminal for it, because it does not return <Cite n={13} />.
+
+**Check that data outlives a Pod.** For any kind of volume in a given Pod, data is preserved across container restarts, and persistent volumes exist beyond the lifetime of any individual Pod <Cite n={3} />. Step 5 tested this: one Pod wrote a file, and a new Pod read it after the first was deleted.
+
+**Know what clean-up deletes.** Deleting a namespace deletes everything under the namespace <Cite n={14} />. For volume plugins that support the `Delete` reclaim policy, deletion also removes the associated storage asset in the external infrastructure <Cite n={9} />. With `Retain`, the PersistentVolume still exists when the PersistentVolumeClaim is deleted <Cite n={9} />.
+
+</Technical>
+<Layman>
+
+**Test the way clients call the app.** One of the most common ways for clients to use a Service is by its DNS name <Cite n={11} />. From a test Pod in another namespace, use the name with the namespace, such as `web.net-lab`: a DNS query that names no namespace only looks in the Pod's own namespace <Cite n={2} />.
+
+**When a Service gives no response, go down the list.** Debug Services asks, among other things: Does the Service exist? Does the Service work by DNS name? Does the Service have any EndpointSlices? Are the Pods working? <Cite n={11} /> To check the Pods alone, you can skip the Service and go straight to the Pods <Cite n={11} />. In step 3, the Service existed and had a cluster IP, and its EndpointSlice was empty.
+
+**Expect a short delay after a change.** In iptables mode, each change may wait up to the full `minSyncPeriod` before it is handled; by default, that is 1s <Cite n={6} />. In step 4, the first request to a new NodePort failed, and the same request 2 seconds later worked.
+
+**Know what a port forward tests.** Given a Service name, `kubectl port-forward` picks a matching Pod to forward to <Cite n={13} />. A test through it reaches that Pod, and the docs give it its own terminal, because it does not return <Cite n={13} />.
+
+**Check that data outlives a Pod.** With any kind of volume in a Pod, the data stays when a container restarts, and persistent volumes outlive any single Pod <Cite n={3} />. Step 5 tested this: one Pod wrote a file, and a new Pod read it after the first was deleted.
+
+**Know what clean-up deletes.** Deleting a namespace deletes everything in it <Cite n={14} />. For volume plugins that support the `Delete` reclaim policy, the delete also removes the real storage behind the volume <Cite n={9} />. With `Retain`, the PersistentVolume is still there after the claim is deleted <Cite n={9} />.
+
+</Layman>
+<Bangla>
+
+**Client যেভাবে app call করে, সেভাবে test করুন।** client-রা Service ব্যবহার করে যেসব উপায়ে, তার সবচেয়ে সাধারণগুলোর একটা হলো DNS নাম <Cite n={11} />। অন্য namespace-এর একটা test Pod থেকে `web.net-lab`-এর মতো namespace-সহ নাম ব্যবহার করুন: যে DNS query namespace বলে না, তা Pod-এর namespace-এ সীমিত থাকে <Cite n={2} />।
+
+**Service সাড়া না দিলে তালিকা ধরে এগোন।** Debug Services অন্য প্রশ্নের সাথে জিজ্ঞেস করে: Service কি আছে? Service কি DNS নামে কাজ করে? Service-এর কি কোনো EndpointSlice আছে? Pod-গুলো কি কাজ করছে? <Cite n={11} /> শুধু Pod-গুলো যাচাই করতে Service mechanism এড়িয়ে সরাসরি Pod-এ যেতে পারেন <Cite n={11} />। ধাপ ৩-এ Service ছিল, তার cluster IP ছিল, আর তার EndpointSlice খালি ছিল।
+
+**পরিবর্তনের পরে একটু দেরি আশা করুন।** iptables mode-এ প্রতিটা পরিবর্তন process হওয়ার আগে পুরো `minSyncPeriod` পর্যন্ত অপেক্ষা করতে পারে; default 1s <Cite n={6} />। ধাপ ৪-এ একটা নতুন NodePort-এ প্রথম request ব্যর্থ হয়েছে, আর ২ সেকেন্ড পরে একই request কাজ করেছে।
+
+**Port forward কী test করে, জানুন।** Service-এর নাম দিলে `kubectl port-forward` forward করার জন্য মেলে এমন একটা Pod বেছে নেয় <Cite n={13} />। এর মধ্য দিয়ে একটা test সেই Pod-এ পৌঁছায়, আর docs এর জন্য আলাদা terminal খোলে, কারণ এটা ফেরত আসে না <Cite n={13} />।
+
+**Data একটা Pod-এর পরেও টেকে কি না, যাচাই করুন।** একটা Pod-এর যেকোনো ধরনের volume-এ container restart হলেও data থেকে যায়, আর persistent volume কোনো একক Pod-এর আয়ুর পরেও টিকে থাকে <Cite n={3} />। ধাপ ৫ এটা test করেছে: একটা Pod একটা file লিখেছে, আর প্রথমটা মোছার পরে একটা নতুন Pod সেটা পড়েছে।
+
+**Clean-up কী মোছে, জানুন।** একটা namespace মুছলে namespace-এর ভেতরের সবকিছু মুছে যায় <Cite n={14} />। যে volume plugin `Delete` reclaim policy support করে, তাতে মোছার সময় external infrastructure-এর সংশ্লিষ্ট storage asset-ও সরে যায় <Cite n={9} />। `Retain`-এ PersistentVolumeClaim মোছার পরও PersistentVolume থেকে যায় <Cite n={9} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A typo in the selector.** If the ENDPOINTS column is `<none>`, check that the selector of the Service selects for the labels on your Pods; a common mistake is to have a typo <Cite n={11} />. In step 3, the request was refused.
+- **A short DNS name across namespaces.** DNS queries that don't specify a namespace are limited to the Pod's namespace <Cite n={2} />.
+- **Waiting for an external IP on a local cluster.** Kubernetes does not directly offer a load balancing component; you must provide one, or you can integrate your Kubernetes cluster with a cloud provider <Cite n={1} />. kind's guide uses Cloud Provider KIND for this <Cite n={22} />.
+- **Reading a `Pending` claim as a failure, or a fault as normal.** With `WaitForFirstConsumer`, the binding and provisioning wait until a Pod using the claim is created <Cite n={10} />. But claims will remain unbound indefinitely if a matching volume does not exist <Cite n={9} />, so read the Events of the claim.
+- **Keeping test data in the files of a container.** After a crash, kubelet restarts the container with a clean state <Cite n={3} />.
+- **Starting new work on Ingress.** The Kubernetes project recommends using Gateway instead of Ingress, and the Ingress API has been frozen <Cite n={7} />.
+
+</Technical>
+<Layman>
+
+- **A typo in the selector.** If the ENDPOINTS column is `<none>`, check that the Service's selector really matches the labels on your Pods; a typo is a common mistake <Cite n={11} />. In step 3, the request was refused.
+- **A short DNS name across namespaces.** A DNS query that names no namespace only looks in the Pod's own namespace <Cite n={2} />.
+- **Waiting for an external IP on a local cluster.** Kubernetes does not directly offer a load balancing component; you must provide one, or connect your cluster to a cloud provider <Cite n={1} />. kind's guide uses Cloud Provider KIND for this <Cite n={22} />.
+- **Reading a `Pending` claim as a failure, or a fault as normal.** With `WaitForFirstConsumer`, binding and making the volume wait until a Pod that uses the claim is created <Cite n={10} />. But a claim stays unbound for as long as no matching volume exists <Cite n={9} />, so read the Events of the claim.
+- **Keeping test data in a container's own files.** After a crash, the kubelet restarts the container with a clean state <Cite n={3} />.
+- **Starting new work on Ingress.** The Kubernetes project recommends Gateway instead of Ingress, and the Ingress API is frozen <Cite n={7} />.
+
+</Layman>
+<Bangla>
+
+- **Selector-এ typo।** ENDPOINTS column `<none>` হলে যাচাই করুন যে Service-এর selector আপনার Pod-গুলোর label বাছাই করে কি না; একটা সাধারণ ভুল হলো typo <Cite n={11} />। ধাপ ৩-এ request refuse হয়েছে।
+- **অন্য namespace-এ ছোট DNS নাম।** যে DNS query namespace বলে না, তা Pod-এর namespace-এ সীমিত থাকে <Cite n={2} />।
+- **Local cluster-এ external IP-র জন্য অপেক্ষা।** Kubernetes নিজে সরাসরি কোনো load balancing component দেয় না; আপনাকে একটা দিতে হবে, অথবা আপনার Kubernetes cluster-কে একটা cloud provider-এর সাথে যুক্ত করতে পারেন <Cite n={1} />। kind-এর guide এর জন্য Cloud Provider KIND ব্যবহার করে <Cite n={22} />।
+- **`Pending` claim-কে failure ভাবা, বা কোনো ত্রুটিকে স্বাভাবিক ভাবা।** `WaitForFirstConsumer`-এ claim ব্যবহার করা একটা Pod তৈরি না হওয়া পর্যন্ত binding আর provisioning অপেক্ষা করে <Cite n={10} />। কিন্তু মেলে এমন volume না থাকলে claim অনির্দিষ্টকাল unbound থাকে <Cite n={9} />, তাই claim-এর Events পড়ুন।
+- **Container-এর নিজের file-এ test data রাখা।** crash-এর পরে kubelet container-টা পরিষ্কার state-এ আবার চালু করে <Cite n={3} />।
+- **Ingress দিয়ে নতুন কাজ শুরু করা।** Kubernetes project Ingress-এর বদলে Gateway ব্যবহারের পরামর্শ দেয়, আর Ingress API freeze করা হয়েছে <Cite n={7} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester whose app runs on Kubernetes.
+
+- For each Service, check that its EndpointSlices list the Pods that you expect; an empty list points to the selector or the labels.
+- Call a Service by its DNS name from a test Pod, and use the name with the namespace across namespaces.
+- After a test creates or changes a Service, poll it until it answers, with a time limit, before the first real check.
+- Test a NodePort or LoadBalancer Service from outside the cluster, and find out first whether the cluster can provide a load balancer at all.
+- Use a port forward for a quick look at one Pod, not to test how a Service spreads the requests.
+- Delete the Pod that wrote some data, and check that a new Pod reads the same data.
+- Before a test deletes a namespace, check the reclaim policy of its volumes, so that no data that is needed later is deleted.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester whose app runs on Kubernetes.
+
+- For each Service, check that its EndpointSlices list the Pods that you expect; an empty list points to the selector or the labels.
+- Call a Service by its DNS name from a test Pod, and use the name with the namespace across namespaces.
+- After a test creates or changes a Service, poll it until it answers, with a time limit, before the first real check.
+- Test a NodePort or LoadBalancer Service from outside the cluster, and find out first whether the cluster can provide a load balancer at all.
+- Use a port forward for a quick look at one Pod, not to test how a Service spreads the requests.
+- Delete the Pod that wrote some data, and check that a new Pod reads the same data.
+- Before a test deletes a namespace, check the reclaim policy of its volumes, so that no data that is needed later is deleted.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, এমন একজন tester-এর জন্য যার app Kubernetes-এ চলে।
+
+- প্রতিটা Service-এর EndpointSlice-এ প্রত্যাশিত Pod-গুলো আছে কি না, যাচাই করুন; খালি তালিকা selector বা label-এর দিকে ইঙ্গিত করে।
+- একটা test Pod থেকে Service-কে তার DNS নাম দিয়ে call করুন, আর অন্য namespace-এ namespace-সহ নাম ব্যবহার করুন।
+- একটা test কোনো Service তৈরি বা পরিবর্তন করার পরে, প্রথম আসল যাচাইয়ের আগে একটা সময়সীমার মধ্যে সেটা সাড়া না দেওয়া পর্যন্ত বারবার চেষ্টা করুন।
+- NodePort বা LoadBalancer Service cluster-এর বাইরে থেকে test করুন, আর আগে জেনে নিন cluster আদৌ load balancer দিতে পারে কি না।
+- port forward একটা Pod-এ দ্রুত দেখার জন্য ব্যবহার করুন, Service request কীভাবে ভাগ করে, তা test করতে নয়।
+- যে Pod কিছু data লিখেছে, সেটা মুছে দিন, আর যাচাই করুন যে একটা নতুন Pod একই data পড়ে।
+- একটা test কোনো namespace মোছার আগে তার volume-গুলোর reclaim policy দেখুন, যাতে পরে দরকার এমন কোনো data মুছে না যায়।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Service | Exposes a network application that runs as one or more Pods, usually picked by a selector |
+| Cluster IP | The IP address that Kubernetes assigns to a Service, used by the virtual IP address mechanism |
+| EndpointSlice | Tracks the IP addresses of the backend endpoints of a Service, typically Pods |
+| Selector | The labels that pick the Pods of a Service |
+| kube-proxy | Watches Services and EndpointSlices, and configures each node to send Service traffic to an endpoint |
+| `ClusterIP`, `NodePort`, `LoadBalancer`, `ExternalName` | The four types of Service; `ClusterIP` is the default |
+| Service DNS name | `my-svc.my-namespace.svc.cluster-domain.example`; resolves to the cluster IP |
+| Port forward | `kubectl port-forward`: forwards a local port to a matching Pod |
+| Ingress | Exposes HTTP and HTTPS routes from outside the cluster to Services; frozen, and Gateway is recommended instead |
+| Gateway API | A family of API kinds for dynamic infrastructure provisioning and advanced traffic routing |
+| Volume | A directory, possibly with some data in it, that the containers in a Pod can use |
+| `emptyDir` | Empty scratch space that lives as long as the Pod stays on its node |
+| PersistentVolume (PV) | A piece of storage in the cluster, provisioned by an administrator or dynamically through a StorageClass |
+| PersistentVolumeClaim (PVC) | A request for storage by a user |
+| StorageClass | Describes a class of storage; can make volumes on demand |
+| `WaitForFirstConsumer` | Delays binding and provisioning until a Pod that uses the claim is created |
+| Access mode | `ReadWriteOnce`, `ReadOnlyMany`, `ReadWriteMany`, or `ReadWriteOncePod` |
+| Reclaim policy | What the cluster does with a volume after its claim is deleted, such as `Delete` or `Retain` |

@@ -79,4 +79,96 @@ Voices standard of this round: the rule of CLAUDE.md (brief v2): the panel gives
 
 Open FAILs after round 5: 0
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-operations (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel and the cites match. Left out: "with the aim of" (HPA), "automatically" before "scaling capacity". |
+| What it is | Bangla | PASS | Meaning matches the Technical panel. Left out: the same details as the Layman panel. |
+| How it works | Layman | PASS | Meaning matches, and the code blocks are the same. Left out: the "Minimum"/"at least" wording on `failureThreshold` is softened to "once"; "aggregates" (metrics-server); "intermittently" becomes "at intervals". Added only a plain gloss: "slowing the container down" for CPU throttling. The terminationGracePeriodSeconds sentence copies the Technical panel, so its source problem (fact-check row 12) is not counted again here. |
+| How it works | Bangla | PASS | Meaning matches, and the code blocks are the same. Left out: "aggregates" (metrics-server), "essentially" before "shortcut". The terminationGracePeriodSeconds sentence copies the Technical panel (see fact-check row 12). |
+| Try it | Layman | PASS | Meaning matches, and all code blocks are the same. Left out: "a Deployment that requests" becomes "asks for"; "unavailable" becomes "missing". The terminationGracePeriodSeconds sentence copies the Technical panel (fact-check row 44). |
+| Try it | Bangla | FAIL | The memory-limit run sentence says the container restarted "9 সেকেন্ডের মধ্যে" (within 9 seconds). The Technical panel says "restarted once after 9 seconds". "Within" and "after" are different. Everything else matches, and the code blocks are the same. The terminationGracePeriodSeconds sentence copies the Technical panel (fact-check row 44). Left out: nothing else of note. |
+| How a tester uses it | Layman | PASS | Meaning matches. Left out: "at least" before `failureThreshold`; "can" kept for the OOM stop. "waits for the condition that matters to a test" is kept as is (fact-check row 68). |
+| How a tester uses it | Bangla | PASS | Meaning matches. Left out: "at any time" style limits are not present; "unavailable" becomes "পাওয়া না-ও যেতে পারে" (may not be found), which keeps the "may". |
+| Common mistakes | Layman | PASS | Meaning matches. Left out: "truly" becomes "really"; "cascading" becomes "failures that spread". The "seven runs" sentence copies the Technical panel (fact-check row 79). |
+| Common mistakes | Bangla | PASS | Meaning matches. Left out: nothing of note. The "seven runs" sentence copies the Technical panel (fact-check row 79). |
+| What a tester can check | Layman | PASS | Same as the Technical panel, word for word, and still titled "Tutorial advice". |
+| What a tester can check | Bangla | PASS | Each of the six bullets matches the Technical panel, and the intro says it is the tutorial's own advice. Left out: nothing. |
+
+Open FAILs after round 6: 1
+
+Changed after this round: Try it, Bangla: "9 সেকেন্ডের মধ্যে" (within 9 seconds) became "9 সেকেন্ড পরে" (after 9 seconds), as in the Technical panel. The Layman and Bangla sentences about `terminationGracePeriodSeconds`, `kubectl wait` and `backoffLimit` follow the new Technical sentences.
+
+## Round 7 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-operations (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Facts and cites match the Technical panel. Left out: "with the aim of" before the scaling claim. "by itself" stands for "automatically". |
+| What it is | Bangla | PASS | Meaning and cites match the Technical panel. Left out: nothing of weight. "লক্ষ্যে" keeps the "aim" wording. |
+| How it works | Layman | FAIL | "the kubelet evicts BestEffort Pods first if it can" adds "first". The Technical panel says only "The kubelet prefers to evict BestEffort Pods if the node comes under resource pressure". Fix: "the kubelet prefers to evict BestEffort Pods". Other sentences match. Left out: "aggregates" (metrics-server), "at any given time"-style limits, and "terminationGracePeriodSeconds" detail wording. |
+| How it works | Bangla | FAIL | "kubelet আগে BestEffort Pod evict করতে চায়" adds the order "আগে" (first). The Technical panel says only that the kubelet "prefers to evict". Fix: "kubelet BestEffort Pod evict করতে পছন্দ করে". Other sentences match. Left out: "aggregates" (metrics-server). |
+| Try it | Layman | PASS | Facts, commands, and code blocks match the Technical panel. The line "step 6 deleted it all" is consistent with the step 6 block of the Technical panel. Left out: nothing of weight. |
+| Try it | Bangla | PASS | Meaning, cites, and code match the Technical panel. Left out: nothing of weight. |
+| How a tester uses it | Layman | PASS | Matches the Technical panel. Left out: "at least" before `failureThreshold`, and "can" before "be stopped" is kept. |
+| How a tester uses it | Bangla | PASS | Matches the Technical panel. Left out: nothing of weight. |
+| Common mistakes | Layman | PASS | Matches the Technical panel. "failures that spread" renders "cascading failures". Left out: "exponential". |
+| Common mistakes | Bangla | PASS | Matches the Technical panel. Left out: nothing of weight. |
+| What a tester can check | Layman | PASS | The callout is identical to the Technical panel. |
+| What a tester can check | Bangla | PASS | The six bullets translate the Technical bullets with no added fact. |
+
+Open FAILs after round 7: 2
+
+Changed after this round: How it works, Layman: "the kubelet evicts BestEffort Pods first if it can" became "When a node comes under resource pressure, the kubelet prefers to evict BestEffort Pods", as in the Technical panel. Bangla: "আগে ... করতে চায়" became "BestEffort Pod evict করতে পছন্দ করে".
+
+## Round 8 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-operations (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel. Left out: "with the aim of" for the HPA. "To scale capacity to match demand" reads as a purpose, not a promise. Also left out: the word "automatically" is replaced by "by itself". |
+| What it is | Bangla | PASS | Meaning matches. It keeps "লক্ষ্যে" (aim) for the HPA. Nothing is added. |
+| How it works | Layman | PASS | Every fact is in the Technical panel, and the cites match. Left out: "at least" before `failureThreshold`; "aggregates" for metrics-server; "typically" is kept; "marked as" restartable. "Slowing the container down (CPU throttling)" is a plain-word gloss of throttling, not a new fact. The diagram and code are identical to the Technical panel. |
+| How it works | Bangla | PASS | Meaning matches sentence by sentence, including the tables, formula, defaults and diagram. Left out: nothing that changes a claim. |
+| Try it | Layman | PASS | Every fact is in the Technical panel. Code blocks and run output are identical. Changes in wording only: "differ" becomes "will be different"; "can be restarted" becomes "may be restarted"; "utilization" becomes "use". Left out: "deployed and configured" for the Metrics Server; "specific" before "condition". The step-5 curl URL is the same as in the Technical panel, so the FAIL in the fact table applies here too. |
+| Try it | Bangla | PASS | Meaning matches. Code blocks are identical. Left out: nothing that changes a claim. The step-5 curl URL FAIL applies here too. |
+| How a tester uses it | Layman | PASS | Same facts as the Technical panel. Left out: "at least" before `failureThreshold`. "Out-of-memory system" for "subsystem". The "pipeline can wait" clause is carried over from the Technical panel, so the fact-table FAIL applies here too. |
+| How a tester uses it | Bangla | PASS | Meaning matches. "অন্তত" (at least) is kept. The "pipeline can wait" clause is carried over, so the fact-table FAIL applies here too. |
+| Common mistakes | Layman | PASS | Same facts and cites as the Technical panel. Left out: "for example" is kept as "such as". "Truly indicate" becomes "really show". Nothing is added. |
+| Common mistakes | Bangla | PASS | Meaning matches. Left out: nothing that changes a claim. |
+| What a tester can check | Layman | PASS | Identical to the Technical callout. |
+| What a tester can check | Bangla | PASS | The six items translate the Technical items. Nothing is added. |
+
+Open FAILs after round 8: 0
+
+Changed after this round: Round 8 had no voices FAIL; the changed sentences were written in the three voices together.
+
+## Round 9 (2026-11-18)
+
+# Voices fact check: devops / kubernetes-operations (round 9)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel. "with the aim of" is turned into a plain purpose clause: "to scale capacity to match demand". "automatically" is kept as "by itself". Left out: "automatically" before "scaling", "the response to increased load is to deploy" is reworded as "more load is answered with more Pods". |
+| What it is | Bangla | PASS | Meaning matches the Technical panel on all points. The aim ("লক্ষ্যে") is kept. Nothing is added. |
+| How it works | Layman | PASS | No added fact. Two glosses are accurate to the Technical text: "slowing the container down (CPU throttling)" keeps the term, and "the Pod has no CPU utilization" stands for "will not be defined". Left out: "and allowed", "(and aggregates)", the `ceil` wording "the autoscaler will not take any action" is kept as "does nothing", "typically" is kept as "usually". |
+| How it works | Bangla | PASS | Faithful to the Technical panel, including "অন্তত", "সাধারণত", "default" and the 5-minute and 15-second values. The diagram block is identical. Left out: "aggregates" (in the metrics-server sentence). |
+| Try it | Layman | PASS | Code blocks and outputs are identical to the Technical panel. Wording is plainer ("will be different", "endless loop", "skips checking the CA"). Left out: "specific" before "condition" in the `kubectl wait` sentence, "deployed and configured" is shortened to "set up", "utilization" is shortened to "use" in the 50% sentence. |
+| Try it | Bangla | PASS | Meaning matches, including the numbers, dates, versions and commands. Code blocks are identical. Left out: "specific" before "condition" is kept, nothing dropped except the wording "by default" is never in the source sentence. |
+| How a tester uses it | Layman | PASS | Every fact is in the Technical panel. "at least" is shortened to "Once `failureThreshold` ... have failed" and "unavailable" to "missing"; neither says more. Left out: "at least", "unavailable". |
+| How a tester uses it | Bangla | PASS | Meaning matches. "অন্তত" and "default-এ" are kept. Nothing is added. |
+| Common mistakes | Layman | PASS | No added fact. "failures that spread" glosses "cascading failures"; "has no CPU utilization" glosses "will not be defined". Left out: "truly" is kept as "really"; "(10s, 20s, 40s ...)" is kept; nothing is dropped. |
+| Common mistakes | Bangla | PASS | Meaning matches. "cascading failure" and "ten minutes" are kept in English. Nothing is added. |
+| What a tester can check | Layman | PASS | The callout is identical to the Technical panel. |
+| What a tester can check | Bangla | PASS | Each bullet matches the Technical bullet by meaning. Nothing is added. |
+
+Open FAILs after round 9: 0
+
 Open FAILs: 0

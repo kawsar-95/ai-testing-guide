@@ -1,16 +1,31 @@
-export const metadata = { title: 'Kubernetes Operations', description: 'Liveness probes, autoscaling, and resource limits.' }
+export const metadata = { title: 'Kubernetes Operations', description: 'Liveness and readiness probes, memory and CPU requests and limits, Jobs that run a task to the end, and the HorizontalPodAutoscaler, with a tester\'s practice run of each on a local kind cluster.' }
 export const page = {
-  updated: '2026-11-05',
+  updated: '2026-11-18',
   sources: [
-    { title: 'Liveness, Readiness, and Startup Probes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/', accessed: '2026-11-05' },
-    { title: 'Horizontal Pod Autoscaling', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/', accessed: '2026-11-05' },
-    { title: 'Resource Management for Pods and Containers', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/', accessed: '2026-11-05' },
+    { title: 'Configure Liveness, Readiness and Startup Probes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/', accessed: '2026-11-18' },
+    { title: 'Horizontal Pod Autoscaling', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/', accessed: '2026-11-18' },
+    { title: 'Resource Management for Pods and Containers', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/', accessed: '2026-11-18' },
+    { title: 'Liveness, Readiness, and Startup Probes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/pods/probes/', accessed: '2026-11-18' },
+    { title: 'EndpointSlices', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/', accessed: '2026-11-18' },
+    { title: 'Assign Memory Resources to Containers and Pods', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/', accessed: '2026-11-18' },
+    { title: 'Pod Quality of Service Classes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/', accessed: '2026-11-18' },
+    { title: 'Jobs', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/controllers/job/', accessed: '2026-11-18' },
+    { title: 'HorizontalPodAutoscaler Walkthrough', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/', accessed: '2026-11-18' },
+    { title: 'Resource metrics pipeline', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/', accessed: '2026-11-18' },
+    { title: 'Kubernetes Metrics Server', publisher: 'kubernetes-sigs on GitHub', url: 'https://github.com/kubernetes-sigs/metrics-server', accessed: '2026-11-18' },
+    { title: 'kubectl top pod', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_top/kubectl_top_pod/', accessed: '2026-11-18' },
+    { title: 'kubectl Quick Reference', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/quick-reference/', accessed: '2026-11-18' },
+    { title: 'kubectl wait', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_wait/', accessed: '2026-11-18' },
+    { title: 'kubectl logs', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/', accessed: '2026-11-18' },
+    { title: 'Share a Cluster with Namespaces', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/administer-cluster/namespaces/', accessed: '2026-11-18' },
+    { title: 'kubectl delete', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_delete/', accessed: '2026-11-18' },
+    { title: 'kubectl rollout status', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_rollout/kubectl_rollout_status/', accessed: '2026-11-18' },
   ],
 }
 
 # Kubernetes Operations
 
-Liveness probes, autoscaling, and resource limits. A short explanation with its sources comes first. The reels after it show the topic at work.
+This page is about keeping an app healthy once it runs on Kubernetes: probes that restart a container or hold it back from traffic, memory and CPU requests and limits, Jobs that run a task to the end, and autoscaling, with a practice run on the local cluster of [Kubernetes Basics](/devops/kubernetes-basics/).
 
 <PageMeta />
 
@@ -19,17 +34,1494 @@ Liveness probes, autoscaling, and resource limits. A short explanation with its 
 <Voices>
 <Technical>
 
-Many applications running for long periods of time eventually transition to broken states, and cannot recover except by being restarted. Kubernetes provides liveness probes to detect and remedy such situations <Cite n={1} />. A HorizontalPodAutoscaler automatically updates a workload resource, such as a Deployment or StatefulSet, with the aim of automatically scaling capacity to match demand <Cite n={2} />. When you specify a resource limit for a container, the kubelet enforces it, so the running container is not allowed to use more of that resource than the limit you set <Cite n={3} />.
+**Probes.** Many applications running for long periods of time eventually transition to broken states, and cannot recover except by being restarted; Kubernetes provides liveness probes to detect and remedy such situations <Cite n={1} />. There are three kinds of probe <Cite n={4} />:
+
+| Probe | What it does |
+|---|---|
+| Liveness | Determines when to restart a container |
+| Readiness | Determines when a container is ready to accept traffic |
+| Startup | Verifies whether the application within a container is started |
+
+**Requests and limits.** When you specify the resource request for containers in a Pod, the kube-scheduler uses this information to decide which node to place the Pod on <Cite n={3} />. When you specify a resource limit for a container, the kubelet enforces those limits so that the running container is not allowed to use more of that resource than the limit you set <Cite n={3} />.
+
+**Jobs.** A Job creates one or more Pods and will continue to retry execution of the Pods until a specified number of them successfully terminate <Cite n={8} />.
+
+**Autoscaling.** A HorizontalPodAutoscaler automatically updates a workload resource, such as a Deployment or StatefulSet, with the aim of automatically scaling capacity to match demand <Cite n={2} />. Horizontal scaling means that the response to increased load is to deploy more Pods <Cite n={2} />.
 
 </Technical>
 <Layman>
 
-Many applications that run for a long time end up in a broken state. They cannot recover unless someone restarts them. Kubernetes provides liveness probes to detect and fix such cases <Cite n={1} />. A HorizontalPodAutoscaler updates a workload resource, such as a Deployment or StatefulSet, by itself. Its aim is to scale capacity to match demand <Cite n={2} />. You can set a resource limit for a container. The kubelet enforces it: a running container may not use more of that resource than the limit <Cite n={3} />.
+**Probes.** Many apps that run for a long time end up in a broken state, and only a restart brings them back; Kubernetes provides liveness probes to find and fix such cases <Cite n={1} />. There are three kinds of probe <Cite n={4} />:
+
+| Probe | What it does |
+|---|---|
+| Liveness | Decides when to restart a container |
+| Readiness | Decides when a container is ready to take traffic |
+| Startup | Checks whether the app in a container has started |
+
+**Requests and limits.** When you set the resource request of the containers in a Pod, the kube-scheduler uses it to pick the node for the Pod <Cite n={3} />. When you set a resource limit for a container, the kubelet enforces it, so the running container may not use more of that resource than the limit <Cite n={3} />.
+
+**Jobs.** A Job makes one or more Pods, and keeps retrying them until a set number of them end with success <Cite n={8} />.
+
+**Autoscaling.** A HorizontalPodAutoscaler updates a workload resource, such as a Deployment or StatefulSet, by itself, to scale capacity to match demand <Cite n={2} />. Horizontal scaling means that more load is answered with more Pods <Cite n={2} />.
 
 </Layman>
 <Bangla>
 
-অনেক application দীর্ঘ সময় চলতে চলতে শেষে broken অবস্থায় চলে যায়। restart করা ছাড়া সেগুলো আর সুস্থ হতে পারে না। এমন ক্ষেত্র শনাক্ত করতে ও ঠিক করতে Kubernetes liveness probe দেয় <Cite n={1} />। HorizontalPodAutoscaler নিজে থেকেই একটা workload resource (যেমন Deployment বা StatefulSet) update করে। এর লক্ষ্য হলো চাহিদার সাথে মিলিয়ে capacity scale করা <Cite n={2} />। আপনি একটা container-এর জন্য resource limit ঠিক করে দিতে পারেন। kubelet সেটা প্রয়োগ করে: চলমান container ওই limit-এর বেশি সেই resource ব্যবহার করতে পারে না <Cite n={3} />।
+**Probe।** অনেক application দীর্ঘ সময় চলতে চলতে শেষে broken অবস্থায় চলে যায়, আর restart ছাড়া সুস্থ হতে পারে না; এমন অবস্থা শনাক্ত ও ঠিক করতে Kubernetes liveness probe দেয় <Cite n={1} />। probe তিন ধরনের <Cite n={4} />:
+
+| Probe | কী করে |
+|---|---|
+| Liveness | কখন একটা container restart করতে হবে, তা ঠিক করে |
+| Readiness | একটা container কখন traffic নিতে প্রস্তুত, তা ঠিক করে |
+| Startup | container-এর ভেতরের application চালু হয়েছে কি না, তা যাচাই করে |
+
+**Request আর limit।** একটা Pod-এর container-গুলোর resource request দিলে kube-scheduler এই তথ্য দিয়ে ঠিক করে Pod-টা কোন node-এ বসবে <Cite n={3} />। একটা container-এর resource limit দিলে kubelet সেই limit প্রয়োগ করে, ফলে চলমান container limit-এর বেশি সেই resource ব্যবহার করতে পারে না <Cite n={3} />।
+
+**Job।** একটা Job এক বা একাধিক Pod তৈরি করে, আর নির্দিষ্ট সংখ্যক Pod সফলভাবে শেষ না হওয়া পর্যন্ত Pod চালানোর চেষ্টা চালিয়ে যায় <Cite n={8} />।
+
+**Autoscaling।** HorizontalPodAutoscaler নিজে থেকেই একটা workload resource (যেমন Deployment বা StatefulSet) update করে, চাহিদার সাথে মিলিয়ে capacity scale করার লক্ষ্যে <Cite n={2} />। Horizontal scaling মানে বাড়তি load-এর জবাবে আরও Pod deploy করা <Cite n={2} />।
 
 </Bangla>
 </Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**How a probe decides.** These fields control a probe <Cite n={4} />:
+
+| Field | Meaning | Default |
+|---|---|---|
+| `initialDelaySeconds` | Number of seconds after the container has started before startup, liveness or readiness probes are initiated | 0 |
+| `periodSeconds` | How often (in seconds) to perform the probe | 10 |
+| `timeoutSeconds` | Number of seconds after which the probe times out | 1 |
+| `failureThreshold` | After a probe fails this many times in a row, Kubernetes considers that the overall check has failed | 3 |
+
+For a startup or liveness probe, if at least `failureThreshold` probes have failed, Kubernetes treats the container as unhealthy and triggers a restart for that specific container <Cite n={4} />. The kubelet honors the `terminationGracePeriodSeconds` setting for that container <Cite n={4} />. The default is to inherit the Pod-level value (30 seconds if not specified), and when both a Pod-level and a probe-level value are set, the kubelet uses the probe-level value <Cite n={4} />. If a startup probe is configured, Kubernetes does not execute liveness or readiness probes until the startup probe succeeds <Cite n={4} />. Liveness probes do not wait for readiness probes to succeed <Cite n={4} />.
+
+**Readiness decides the traffic.** Readiness probes run on the container during its whole lifecycle <Cite n={4} />. For a failed readiness probe, the kubelet continues running the container that failed checks, and also continues to run more probes; because the check failed, the kubelet sets the Ready condition on the Pod to false <Cite n={4} />. In an EndpointSlice, the serving condition indicates that the endpoint should be used as a target for Service traffic, and for an endpoint backed by a Pod, it maps to the Pod's Ready condition; the ready condition is essentially a shortcut for checking "serving and not terminating" <Cite n={5} />.
+
+**How limits are enforced.** If the node where a Pod is running has enough of a resource available, it's possible (and allowed) for a container to use more resource than its request for that resource specifies <Cite n={3} />. CPU limits are enforced by CPU throttling <Cite n={3} />, and container runtimes don't terminate Pods or containers for excessive CPU usage <Cite n={3} />. If the container tries to allocate more memory than its limit, the Linux kernel out-of-memory subsystem activates and, typically, intervenes by stopping one of the processes in the container that tried to allocate memory; if that process is the container's PID 1, and the container is marked as restartable, Kubernetes restarts the container <Cite n={3} />.
+
+**Quality of Service classes.** Kubernetes classifies the Pods that you run and allocates each Pod into a specific quality of service (QoS) class <Cite n={7} />. The classes are Guaranteed, Burstable, and BestEffort <Cite n={7} />:
+
+| Class | When |
+|---|---|
+| Guaranteed | Every container has a memory limit and request, and a CPU limit and request, and each limit equals its request |
+| Burstable | The Pod is not Guaranteed, and at least one container has a memory or CPU request or limit |
+| BestEffort | No container has a memory or CPU limit or request |
+
+The kubelet prefers to evict BestEffort Pods if the node comes under resource pressure <Cite n={7} />.
+
+**Jobs retry, then fail.** `.spec.backoffLimit` sets the number of retries before considering a Job as failed, and it is set by default to 6 <Cite n={8} />. Failed Pods are recreated by the Job controller with an exponential back-off delay (10s, 20s, 40s ...) capped at ten minutes <Cite n={8} />. A Job has two terminal states: on success, the Job condition `Complete`; on failure, the Job condition `Failed` <Cite n={8} />. Once a Job reaches `activeDeadlineSeconds`, all of its running Pods are terminated, and the Job status becomes `Failed` with the reason `DeadlineExceeded` <Cite n={8} />.
+
+**The autoscaler.** The HorizontalPodAutoscaler controller runs intermittently, and the default interval is 15 seconds <Cite n={2} />. It computes the desired number of replicas as `ceil(currentReplicas × currentMetricValue / desiredMetricValue)`: for example, if the current metric value is 200m and the desired value is 100m, the number of replicas will be doubled <Cite n={2} />. If some of the Pod's containers do not have the relevant resource request set, CPU utilization for the Pod will not be defined, and the autoscaler will not take any action for that metric <Cite n={2} />. For scaling up there is no stabilization window, and by default 4 pods or 100% of the currently running replicas may at most be added every 15 seconds <Cite n={2} />. Scale-downs wait for a stabilization window, which defaults to 5 minutes <Cite n={2} />.
+
+**Where the numbers come from.** metrics-server is a cluster addon component that collects and aggregates resource metrics pulled from each kubelet, and the API server serves the Metrics API for use by HPA, VPA, and the `kubectl top` command <Cite n={10} />.
+
+In step 5 of the tutorial's run below, the autoscaler grew a Deployment from 1 to 10 Pods. This diagram is the tutorial's own picture of that loop; metrics-server collects the metrics from each kubelet <Cite n={10} />, and once during each period, the controller manager queries the resource utilization against the metrics specified in each HorizontalPodAutoscaler definition <Cite n={2} />:
+
+```text
+kubelet ──▶ metrics-server ──▶ Metrics API
+                                   │ read by the HPA controller every 15 s
+                                   ▼
+            HorizontalPodAutoscaler php-apache (target: 50% of the CPU request)
+                                   │ desired = ceil(current × used / target)
+                                   ▼
+            Deployment php-apache: 1 → 4 → 5 → 10 replicas
+```
+
+</Technical>
+<Layman>
+
+**How a probe decides.** These fields control a probe <Cite n={4} />:
+
+| Field | Meaning | Default |
+|---|---|---|
+| `initialDelaySeconds` | Seconds after the container has started before startup, liveness or readiness probes begin | 0 |
+| `periodSeconds` | How often, in seconds, to probe | 10 |
+| `timeoutSeconds` | Seconds before a probe times out | 1 |
+| `failureThreshold` | After this many failures in a row, the check counts as failed | 3 |
+
+For a startup or liveness probe, once `failureThreshold` probes have failed, Kubernetes treats the container as unhealthy and restarts that container <Cite n={4} />. The kubelet keeps to the `terminationGracePeriodSeconds` setting for that container <Cite n={4} />. By default the container inherits the Pod-level value (30 seconds if not set), and when both a Pod-level and a probe-level value are set, the kubelet uses the probe-level value <Cite n={4} />. If there is a startup probe, Kubernetes runs no liveness or readiness probes until the startup probe succeeds <Cite n={4} />. Liveness probes do not wait for readiness probes to succeed <Cite n={4} />.
+
+**Readiness decides the traffic.** Readiness probes run for the whole life of the container <Cite n={4} />. When a readiness probe fails, the kubelet keeps the container running, and also keeps running more probes; because the check failed, the kubelet sets the Ready condition of the Pod to false <Cite n={4} />. In an EndpointSlice, the serving condition says that the endpoint should get Service traffic, and for a Pod it follows the Pod's Ready condition; the ready condition is a shortcut for "serving and not terminating" <Cite n={5} />.
+
+**How limits are enforced.** If the node has enough of a resource free, a container may use more of it than its request <Cite n={3} />. CPU limits are enforced by slowing the container down (CPU throttling) <Cite n={3} />, and container runtimes do not kill Pods or containers for using too much CPU <Cite n={3} />. If the container tries to use more memory than its limit, the Linux kernel's out-of-memory system steps in and usually stops one of the processes in the container that asked for the memory; if that process is the container's PID 1, and the container may be restarted, Kubernetes restarts it <Cite n={3} />.
+
+**Quality of Service classes.** Kubernetes classifies the Pods that you run and allocates each Pod into a specific quality of service (QoS) class <Cite n={7} />. The classes are Guaranteed, Burstable, and BestEffort <Cite n={7} />:
+
+| Class | When |
+|---|---|
+| Guaranteed | Every container has a memory limit and request, and a CPU limit and request, and each limit equals its request |
+| Burstable | The Pod is not Guaranteed, and at least one container has a memory or CPU request or limit |
+| BestEffort | No container has a memory or CPU limit or request |
+
+When a node comes under resource pressure, the kubelet prefers to evict BestEffort Pods <Cite n={7} />.
+
+**Jobs retry, then fail.** `.spec.backoffLimit` is how many retries happen before a Job counts as failed, and it is 6 by default <Cite n={8} />. The Job controller makes failed Pods again after a growing delay (10s, 20s, 40s ...), at most ten minutes <Cite n={8} />. A Job ends in one of two states: on success, the Job condition `Complete`; on failure, the Job condition `Failed` <Cite n={8} />. When a Job reaches `activeDeadlineSeconds`, all its running Pods are stopped, and the Job becomes `Failed` with the reason `DeadlineExceeded` <Cite n={8} />.
+
+**The autoscaler.** The HorizontalPodAutoscaler controller runs at intervals, by default every 15 seconds <Cite n={2} />. It works out the desired number of replicas as `ceil(currentReplicas × currentMetricValue / desiredMetricValue)`: for example, if the metric is at 200m and the target is 100m, the number of replicas doubles <Cite n={2} />. If some containers of the Pod have no request set for that resource, the Pod has no CPU utilization, and the autoscaler does nothing for that metric <Cite n={2} />. Scaling up has no stabilization window, and by default at most 4 Pods or 100% of the running replicas may be added every 15 seconds <Cite n={2} />. Scaling down waits for a stabilization window, 5 minutes by default <Cite n={2} />.
+
+**Where the numbers come from.** metrics-server is a cluster add-on that collects resource metrics from each kubelet, and the API server serves the Metrics API to the HPA, the VPA, and the `kubectl top` command <Cite n={10} />.
+
+In step 5 of the tutorial's run below, the autoscaler grew a Deployment from 1 to 10 Pods. This diagram is the tutorial's own picture of that loop; metrics-server collects the metrics from each kubelet <Cite n={10} />, and once during each period, the controller manager queries the resource utilization against the metrics specified in each HorizontalPodAutoscaler definition <Cite n={2} />:
+
+```text
+kubelet ──▶ metrics-server ──▶ Metrics API
+                                   │ read by the HPA controller every 15 s
+                                   ▼
+            HorizontalPodAutoscaler php-apache (target: 50% of the CPU request)
+                                   │ desired = ceil(current × used / target)
+                                   ▼
+            Deployment php-apache: 1 → 4 → 5 → 10 replicas
+```
+
+</Layman>
+<Bangla>
+
+**Probe কীভাবে সিদ্ধান্ত নেয়।** এই field-গুলো একটা probe নিয়ন্ত্রণ করে <Cite n={4} />:
+
+| Field | অর্থ | Default |
+|---|---|---|
+| `initialDelaySeconds` | container চালু হওয়ার কত সেকেন্ড পরে startup, liveness বা readiness probe শুরু হবে | 0 |
+| `periodSeconds` | কত ঘন ঘন (সেকেন্ডে) probe চালানো হবে | 10 |
+| `timeoutSeconds` | কত সেকেন্ড পরে probe time out হবে | 1 |
+| `failureThreshold` | পরপর এতবার probe ব্যর্থ হলে Kubernetes পুরো check-কে ব্যর্থ ধরে | 3 |
+
+startup বা liveness probe-এর ক্ষেত্রে অন্তত `failureThreshold`-সংখ্যক probe ব্যর্থ হলে Kubernetes container-টাকে unhealthy ধরে আর ঠিক সেই container restart করায় <Cite n={4} />। kubelet সেই container-এর `terminationGracePeriodSeconds` setting মেনে চলে <Cite n={4} />। default হলো Pod-level মান inherit করা (না দিলে 30 সেকেন্ড), আর Pod-level ও probe-level দুটো মানই দেওয়া থাকলে kubelet probe-level মানটা ব্যবহার করে <Cite n={4} />। startup probe থাকলে সেটা সফল না হওয়া পর্যন্ত Kubernetes কোনো liveness বা readiness probe চালায় না <Cite n={4} />। liveness probe readiness probe সফল হওয়ার জন্য অপেক্ষা করে না <Cite n={4} />।
+
+**Readiness traffic ঠিক করে।** readiness probe container-এর পুরো জীবনকাল জুড়ে চলে <Cite n={4} />। readiness probe ব্যর্থ হলে kubelet ব্যর্থ container-টা চালিয়ে যায় এবং আরও probe চালিয়ে যায়; check ব্যর্থ হয়েছে বলে kubelet Pod-এর Ready condition false করে <Cite n={4} />। একটা EndpointSlice-এ serving condition বলে endpoint-টাকে Service traffic-এর লক্ষ্য হিসেবে ব্যবহার করা উচিত কি না, আর Pod-এর endpoint-এর ক্ষেত্রে এটা Pod-এর Ready condition অনুসরণ করে; ready condition মূলত "serving এবং terminating নয়" যাচাইয়ের একটা সংক্ষিপ্ত রূপ <Cite n={5} />।
+
+**Limit কীভাবে প্রয়োগ হয়।** Pod যে node-এ চলছে সেখানে যথেষ্ট resource থাকলে একটা container তার request-এর চেয়ে বেশি resource ব্যবহার করতে পারে, আর এটা অনুমোদিত <Cite n={3} />। CPU limit প্রয়োগ হয় CPU throttling দিয়ে <Cite n={3} />, আর বেশি CPU ব্যবহারের জন্য container runtime কোনো Pod বা container বন্ধ করে না <Cite n={3} />। container তার limit-এর বেশি memory নিতে চাইলে Linux kernel-এর out-of-memory subsystem সক্রিয় হয়, আর সাধারণত container-এর যে process memory চেয়েছিল, তাদের একটাকে থামিয়ে দেয়; সেই process container-এর PID 1 হলে আর container restart-যোগ্য হলে Kubernetes container-টা restart করে <Cite n={3} />।
+
+**Quality of Service class।** Kubernetes আপনার চালানো Pod-গুলোকে classify করে আর প্রতিটা Pod-কে একটা নির্দিষ্ট quality of service (QoS) class-এ রাখে <Cite n={7} />। class-গুলো হলো Guaranteed, Burstable আর BestEffort <Cite n={7} />:
+
+| Class | কখন |
+|---|---|
+| Guaranteed | প্রতিটা container-এর memory limit ও request আর CPU limit ও request আছে, আর প্রতিটা limit তার request-এর সমান |
+| Burstable | Pod Guaranteed নয়, আর অন্তত একটা container-এর memory বা CPU request বা limit আছে |
+| BestEffort | কোনো container-এর memory বা CPU limit বা request নেই |
+
+node-এ resource-এর চাপ পড়লে kubelet BestEffort Pod evict করতে পছন্দ করে <Cite n={7} />।
+
+**Job আবার চেষ্টা করে, তারপর ব্যর্থ হয়।** `.spec.backoffLimit` ঠিক করে একটা Job-কে ব্যর্থ ধরার আগে কতবার আবার চেষ্টা হবে, আর এর default 6 <Cite n={8} />। Job controller ব্যর্থ Pod-গুলো exponential back-off delay (10s, 20s, 40s ...) দিয়ে আবার তৈরি করে, সর্বোচ্চ দশ মিনিট <Cite n={8} />। একটা Job-এর দুটো শেষ অবস্থা আছে: সফল হলে Job condition `Complete`; ব্যর্থ হলে Job condition `Failed` <Cite n={8} />। একটা Job `activeDeadlineSeconds`-এ পৌঁছালে তার সব চলমান Pod বন্ধ হয়, আর Job-এর status `DeadlineExceeded` reason-সহ `Failed` হয় <Cite n={8} />।
+
+**Autoscaler।** HorizontalPodAutoscaler controller বিরতি দিয়ে চলে, আর default interval 15 সেকেন্ড <Cite n={2} />। এটা কাঙ্ক্ষিত replica-সংখ্যা হিসাব করে `ceil(currentReplicas × currentMetricValue / desiredMetricValue)` দিয়ে: যেমন বর্তমান metric মান 200m আর কাঙ্ক্ষিত মান 100m হলে replica-সংখ্যা দ্বিগুণ হবে <Cite n={2} />। Pod-এর কিছু container-এ সংশ্লিষ্ট resource request না থাকলে Pod-এর CPU utilization নির্ধারিত হয় না, আর autoscaler সেই metric-এর জন্য কিছুই করে না <Cite n={2} />। scale up-এর কোনো stabilization window নেই, আর default-এ প্রতি 15 সেকেন্ডে সর্বোচ্চ 4টা pod বা চলমান replica-র 100% যোগ হতে পারে <Cite n={2} />। scale down একটা stabilization window-এর জন্য অপেক্ষা করে, যার default 5 মিনিট <Cite n={2} />।
+
+**সংখ্যাগুলো কোথা থেকে আসে।** metrics-server একটা cluster addon component, যা প্রতিটা kubelet থেকে resource metric সংগ্রহ ও একত্র করে, আর API server HPA, VPA আর `kubectl top` command-এর জন্য Metrics API দেয় <Cite n={10} />।
+
+নিচে টিউটোরিয়ালের run-এর ধাপ ৫-এ autoscaler একটা Deployment-কে 1 থেকে 10টা Pod-এ বাড়িয়েছে। এই diagram সেই loop-এর টিউটোরিয়ালের নিজের ছবি; metrics-server প্রতিটা kubelet থেকে metric সংগ্রহ করে <Cite n={10} />, আর প্রতিটা period-এ একবার controller manager প্রতিটা HorizontalPodAutoscaler definition-এ উল্লেখ করা metric-এর বিপরীতে resource utilization জিজ্ঞেস করে <Cite n={2} />:
+
+```text
+kubelet ──▶ metrics-server ──▶ Metrics API
+                                   │ read by the HPA controller every 15 s
+                                   ▼
+            HorizontalPodAutoscaler php-apache (target: 50% of the CPU request)
+                                   │ desired = ceil(current × used / target)
+                                   ▼
+            Deployment php-apache: 1 → 4 → 5 → 10 replicas
+```
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+The tutorial ran these steps on 2026-11-18 on Linux, on the kind cluster `qa-lab` of [Kubernetes Basics](/devops/kubernetes-basics/), with Docker 29.10.0, kind v0.33.0, kubectl v1.37.2, and metrics-server v0.9.1; the cluster ran Kubernetes v1.37.0. Names, hashes, IP addresses, ages, and the numbers of the CPU load differ on your machine. All the objects of the run were in the namespace `ops-lab`, apart from metrics-server, and step 6 deleted them.
+
+**1. Watch a liveness probe restart a container.** The docs' example `exec-liveness.yaml` makes a file `/tmp/healthy` and deletes it after 30 seconds; its probe runs `cat /tmp/healthy` every 5 seconds, after waiting 5 seconds for the first probe <Cite n={1} />. The run added the namespace to the file:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-exec
+  namespace: ops-lab
+spec:
+  containers:
+  - name: liveness
+    image: registry.k8s.io/busybox:1.27.2
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 30; rm -f /tmp/healthy; sleep 600
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 5
+      periodSeconds: 5
+```
+
+`kubectl create namespace` creates a namespace <Cite n={16} />. `kubectl wait` waits for a specific condition on one or many resources, and `--for=jsonpath=` waits for a field to have a value <Cite n={14} />:
+
+```bash
+kubectl create namespace ops-lab
+kubectl apply -f ops-liveness.yaml
+kubectl wait --for=condition=Ready pod/liveness-exec -n ops-lab --timeout=120s
+kubectl wait --for=jsonpath='{.status.containerStatuses[0].restartCount}'=1 pod/liveness-exec -n ops-lab --timeout=180s
+kubectl get pod liveness-exec -n ops-lab
+kubectl describe pod liveness-exec -n ops-lab
+```
+
+In the tutorial's run, the container was restarted once, 75 seconds after the Pod was made:
+
+```text
+NAME            READY   STATUS    RESTARTS     AGE
+liveness-exec   1/1     Running   1 (0s ago)   75s
+```
+
+These are two of the Events of `kubectl describe pod`:
+
+```text
+  Warning  Unhealthy  30s (x3 over 40s)  kubelet            spec.containers{liveness}: Liveness probe failed: cat: can't open '/tmp/healthy': No such file or directory
+  Normal   Killing    30s                kubelet            spec.containers{liveness}: Container liveness failed liveness probe, will be restarted
+```
+
+The probe failed three times, the default `failureThreshold` <Cite n={4} />. The `Killing` Event came 30 seconds before the new container started. The kubelet honors the `terminationGracePeriodSeconds` setting for that container, and the default is to inherit the Pod-level value (30 seconds if not specified) <Cite n={4} />.
+
+**2. Keep a Pod away from traffic with a readiness probe.** This Deployment, `ops-ready.yaml`, has two nginx Pods with a readiness probe on `/ready.html`, a page that nginx does not have, and a Service:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: ops-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.16.1
+        readinessProbe:
+          httpGet:
+            path: /ready.html
+            port: 80
+          periodSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: ops-lab
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+```
+
+```bash
+kubectl apply -f ops-ready.yaml
+kubectl get pods -n ops-lab -l app=web
+kubectl describe pod web-696d5f9cd5-sf4rh -n ops-lab
+```
+
+In the run, both Pods were `Running`, and neither was ready:
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE
+web-696d5f9cd5-qfgx9   0/1     Running   0          6s
+web-696d5f9cd5-sf4rh   0/1     Running   0          6s
+```
+
+These are the two `Unhealthy` Events of the second Pod. The first came before nginx listened:
+
+```text
+  Warning  Unhealthy  5s               kubelet            spec.containers{nginx}: Readiness probe failed: Get "http://10.244.0.41:80/ready.html": dial tcp 10.244.0.41:80: connect: connection refused
+  Warning  Unhealthy  1s (x3 over 5s)  kubelet            spec.containers{nginx}: Readiness probe failed: HTTP probe failed with statuscode: 404
+```
+
+Next, the run made the page in the first Pod only, and looked at the EndpointSlice of the Service. `kubectl exec` runs a command in an existing Pod, and `-o jsonpath` prints the fields defined in a jsonpath expression <Cite n={13} />:
+
+```bash
+kubectl exec -n ops-lab web-696d5f9cd5-qfgx9 -- sh -c 'echo ok > /usr/share/nginx/html/ready.html'
+kubectl wait --for=condition=Ready pod/web-696d5f9cd5-qfgx9 -n ops-lab --timeout=60s
+kubectl get pods -n ops-lab -l app=web -o wide
+kubectl get endpointslices -n ops-lab -l kubernetes.io/service-name=web -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]} ready={.conditions.ready}{"\n"}{end}'
+kubectl describe service web -n ops-lab
+```
+
+These are the first six columns of `-o wide`:
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE   IP
+web-696d5f9cd5-qfgx9   1/1     Running   0          8s    10.244.0.40
+web-696d5f9cd5-sf4rh   0/1     Running   0          8s    10.244.0.41
+```
+
+The EndpointSlice kept both addresses, and marked only the ready one:
+
+```text
+10.244.0.41 ready=false
+10.244.0.40 ready=true
+```
+
+The `Endpoints` line of `kubectl describe service` listed only the ready Pod:
+
+```text
+Endpoints:                10.244.0.40:80
+```
+
+**3. Go over a memory limit.** The docs' example `memory-request-limit-2.yaml` asks for 50 MiB, has a limit of 100 MiB, and tries to allocate 250 MiB <Cite n={6} />. The run put it in `ops-lab`:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-demo-2
+  namespace: ops-lab
+spec:
+  containers:
+  - name: memory-demo-2-ctr
+    image: polinux/stress
+    resources:
+      requests:
+        memory: "50Mi"
+      limits:
+        memory: "100Mi"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "250M", "--vm-hang", "1"]
+```
+
+```bash
+kubectl apply -f ops-memory.yaml
+kubectl wait --for=jsonpath='{.status.containerStatuses[0].restartCount}'=1 pod/memory-demo-2 -n ops-lab --timeout=180s
+kubectl get pod memory-demo-2 -n ops-lab
+kubectl get pod memory-demo-2 -n ops-lab -o jsonpath='{.status.containerStatuses[0].lastState.terminated.reason} {.status.containerStatuses[0].lastState.terminated.exitCode}{"\n"}'
+kubectl get pod memory-demo-2 -n ops-lab -o jsonpath='{.status.qosClass}{"\n"}'
+kubectl get pod liveness-exec -n ops-lab -o jsonpath='{.status.qosClass}{"\n"}'
+```
+
+In the run, the container had been restarted once after 9 seconds, and its last state was `OOMKilled` with the exit code 137:
+
+```text
+NAME            READY   STATUS    RESTARTS     AGE
+memory-demo-2   1/1     Running   1 (2s ago)   9s
+```
+
+```text
+OOMKilled 137
+```
+
+The container in this exercise can be restarted, so the kubelet restarts it <Cite n={6} />. The class of `memory-demo-2` was `Burstable`, and the class of `liveness-exec`, which has no requests or limits, was `BestEffort`.
+
+**4. Run a test suite as a Job.** These two Jobs stand for a test run: each prints two test results, and the second Job ends with the exit code 1. Each has `backoffLimit: 2`. This is `ops-job-fail.yaml`; `ops-job-pass.yaml` is the same with the name `tests-pass`, the line `test_search: passed`, and `exit 0`:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tests-fail
+  namespace: ops-lab
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: tests
+        image: busybox:1.28
+        command: ["sh", "-c", "echo 'test_login: passed'; echo 'test_search: FAILED'; exit 1"]
+```
+
+`kubectl logs job/hello` returns the logs of the first container of a Job named `hello` <Cite n={15} />:
+
+```bash
+kubectl apply -f ops-job-pass.yaml
+kubectl wait --for=condition=Complete job/tests-pass -n ops-lab --timeout=120s
+kubectl get job tests-pass -n ops-lab
+kubectl logs job/tests-pass -n ops-lab
+```
+
+```text
+NAME         STATUS     COMPLETIONS   DURATION   AGE
+tests-pass   Complete   1/1           3s         3s
+```
+
+```text
+test_login: passed
+test_search: passed
+```
+
+```bash
+kubectl apply -f ops-job-fail.yaml
+kubectl wait --for=condition=Failed job/tests-fail -n ops-lab --timeout=300s
+kubectl get job tests-fail -n ops-lab
+kubectl get pods -n ops-lab -l job-name=tests-fail
+kubectl logs job/tests-fail -n ops-lab
+kubectl get job tests-fail -n ops-lab -o jsonpath='{.status.conditions[?(@.type=="Failed")].reason}{"\n"}'
+kubectl describe job tests-fail -n ops-lab
+```
+
+In the run, the Job failed after 33 seconds, with three Pods:
+
+```text
+NAME         STATUS   COMPLETIONS   DURATION   AGE
+tests-fail   Failed   0/1           33s        33s
+```
+
+```text
+NAME               READY   STATUS   RESTARTS   AGE
+tests-fail-4zmh5   0/1     Error    0          3s
+tests-fail-d9zb4   0/1     Error    0          23s
+tests-fail-lmvgs   0/1     Error    0          33s
+```
+
+The second Pod came 10 seconds after the first, and the third 20 seconds after the second, as the back-off delay of the Job controller (10s, 20s, 40s ...) <Cite n={8} />. `kubectl logs` printed the logs of the first Pod:
+
+```text
+Found 3 pods, using pod/tests-fail-lmvgs
+test_login: passed
+test_search: FAILED
+```
+
+The reason of the `Failed` condition was `BackoffLimitExceeded`, and the last Event of the Job was:
+
+```text
+  Warning  BackoffLimitExceeded  0s    job-controller  Job has reached the specified backoff limit
+```
+
+**5. Scale on CPU.** The walkthrough needs a cluster that has a Metrics Server deployed and configured <Cite n={9} />. metrics-server needs kubelet serving certificates signed by the cluster Certificate Authority, or `--kubelet-insecure-tls`, which does not verify the CA of serving certificates presented by Kubelets, for testing purposes only <Cite n={11} />. Release 0.9.x supports Kubernetes 1.34+ <Cite n={11} />. To install the latest Metrics Server release from the `components.yaml` manifest, the page runs `kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml` <Cite n={11} />. The run installed a fixed release instead, v0.9.1: it downloaded `components.yaml` of that release (the URL of that file is the tutorial's own choice), applied it, and added the flag with a JSON patch, as the quick reference patches a Deployment <Cite n={13} />:
+
+```bash
+curl -sSL -o metrics-server-v0.9.1.yaml https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.9.1/components.yaml
+kubectl apply -f metrics-server-v0.9.1.yaml
+kubectl patch deployment metrics-server -n kube-system --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+kubectl rollout status deployment/metrics-server -n kube-system --timeout=180s
+kubectl top nodes
+```
+
+`kubectl top node` shows metrics for all nodes <Cite n={13} />. About 10 seconds after the rollout, the run printed:
+
+```text
+NAME                   CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)
+qa-lab-control-plane   277m         2%       792Mi           2%
+```
+
+Then the walkthrough's `php-apache.yaml`, a Deployment that requests 200 milli-CPU, with a Service <Cite n={9} />; the run added the namespace. `kubectl rollout status` shows the status of the rollout <Cite n={18} />:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+  namespace: ops-lab
+spec:
+  selector:
+    matchLabels:
+      run: php-apache
+  template:
+    metadata:
+      labels:
+        run: php-apache
+    spec:
+      containers:
+      - name: php-apache
+        image: registry.k8s.io/hpa-example
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-apache
+  namespace: ops-lab
+  labels:
+    run: php-apache
+spec:
+  ports:
+  - port: 80
+  selector:
+    run: php-apache
+```
+
+The walkthrough's autoscaler keeps between 1 and 10 replicas, at an average CPU utilization across all Pods of 50% <Cite n={9} />:
+
+```bash
+kubectl apply -f ops-php-apache.yaml
+kubectl rollout status deployment/php-apache -n ops-lab --timeout=180s
+kubectl autoscale deployment php-apache -n ops-lab --cpu=50% --min=1 --max=10
+kubectl get hpa php-apache -n ops-lab
+```
+
+45 seconds later, the run printed:
+
+```text
+NAME         REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+php-apache   Deployment/php-apache   cpu: 4%/50%   1         10        1          45s
+```
+
+The walkthrough's load generator is a Pod that sends queries to the Service in an infinite loop <Cite n={9} />. The run started it without `-i --tty --rm`, and printed the autoscaler every 30 seconds:
+
+```bash
+kubectl run load-generator -n ops-lab --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+kubectl get hpa php-apache -n ops-lab --no-headers
+```
+
+The load started at 05:00:23. These are the first four lines and the last line, after the time:
+
+```text
+05:00:54  php-apache   Deployment/php-apache   cpu: 186%/50%   1     10    1     76s
+05:01:24  php-apache   Deployment/php-apache   cpu: 250%/50%   1     10    4     106s
+05:01:54  php-apache   Deployment/php-apache   cpu: 67%/50%   1     10    10    2m16s
+05:02:24  php-apache   Deployment/php-apache   cpu: 31%/50%   1     10    10    2m46s
+05:05:24  php-apache   Deployment/php-apache   cpu: 32%/50%   1     10    10    5m46s
+```
+
+`kubectl describe hpa php-apache -n ops-lab` printed these Events:
+
+```text
+  Warning  FailedGetResourceMetric       5m31s (x2 over 5m46s)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  5m31s (x2 over 5m46s)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Normal   SuccessfulRescale             4m31s                  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             4m15s                  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             4m                     horizontal-pod-autoscaler  New size: 10; reason: cpu resource utilization (percentage of request) above target
+```
+
+The two warnings came in the first seconds of the autoscaler: pod metrics may be unavailable for a few minutes since pod creation, due to the metrics pipeline delay <Cite n={12} />. The first step went from 1 to 4 replicas: 4 pods may at most be added every 15 seconds <Cite n={2} />. `kubectl get deployment php-apache` then showed `10/10` ready, and `kubectl top pods -n ops-lab` showed each of the ten `php-apache` Pods using between 53m and 94m of CPU. The run deleted the load generator with `kubectl delete pod load-generator -n ops-lab`.
+
+**6. Clean up.** `kubectl delete namespaces` deletes a namespace, and this deletes everything under the namespace <Cite n={16} />. `kubectl delete` also deletes resources by file names, and `--timeout` is the length of time to wait before giving up on a delete <Cite n={17} />:
+
+```bash
+kubectl delete namespace ops-lab --timeout=180s
+kubectl delete -f metrics-server-v0.9.1.yaml
+kubectl get apiservice v1beta1.metrics.k8s.io
+```
+
+In the run, `kubectl delete -f` deleted the nine objects of the manifest, and the last command printed `Error from server (NotFound)`.
+
+</Technical>
+<Layman>
+
+The tutorial ran these steps on 2026-11-18 on Linux, on the kind cluster `qa-lab` of [Kubernetes Basics](/devops/kubernetes-basics/), with Docker 29.10.0, kind v0.33.0, kubectl v1.37.2, and metrics-server v0.9.1; the cluster ran Kubernetes v1.37.0. Names, hashes, IP addresses, ages, and the numbers of the CPU load will be different on your machine. Everything that the run made was in the namespace `ops-lab`, apart from metrics-server, and step 6 deleted it all.
+
+**1. Watch a liveness probe restart a container.** The docs' example `exec-liveness.yaml` makes a file `/tmp/healthy` and deletes it after 30 seconds; its probe runs `cat /tmp/healthy` every 5 seconds, after a first wait of 5 seconds <Cite n={1} />. The run added the namespace to the file:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-exec
+  namespace: ops-lab
+spec:
+  containers:
+  - name: liveness
+    image: registry.k8s.io/busybox:1.27.2
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 30; rm -f /tmp/healthy; sleep 600
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 5
+      periodSeconds: 5
+```
+
+`kubectl create namespace` makes a namespace <Cite n={16} />. `kubectl wait` waits until one or more resources reach a condition, and `--for=jsonpath=` waits until a field has a value <Cite n={14} />:
+
+```bash
+kubectl create namespace ops-lab
+kubectl apply -f ops-liveness.yaml
+kubectl wait --for=condition=Ready pod/liveness-exec -n ops-lab --timeout=120s
+kubectl wait --for=jsonpath='{.status.containerStatuses[0].restartCount}'=1 pod/liveness-exec -n ops-lab --timeout=180s
+kubectl get pod liveness-exec -n ops-lab
+kubectl describe pod liveness-exec -n ops-lab
+```
+
+In the tutorial's run, the container was restarted once, 75 seconds after the Pod was made:
+
+```text
+NAME            READY   STATUS    RESTARTS     AGE
+liveness-exec   1/1     Running   1 (0s ago)   75s
+```
+
+These are two of the Events of `kubectl describe pod`:
+
+```text
+  Warning  Unhealthy  30s (x3 over 40s)  kubelet            spec.containers{liveness}: Liveness probe failed: cat: can't open '/tmp/healthy': No such file or directory
+  Normal   Killing    30s                kubelet            spec.containers{liveness}: Container liveness failed liveness probe, will be restarted
+```
+
+The probe failed three times, the default `failureThreshold` <Cite n={4} />. The `Killing` Event came 30 seconds before the new container started. The kubelet keeps to the `terminationGracePeriodSeconds` setting for that container, and by default the container inherits the Pod-level value (30 seconds if not set) <Cite n={4} />.
+
+**2. Keep a Pod away from traffic with a readiness probe.** This Deployment, `ops-ready.yaml`, has two nginx Pods with a readiness probe on `/ready.html`, a page that nginx does not have, and a Service:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: ops-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.16.1
+        readinessProbe:
+          httpGet:
+            path: /ready.html
+            port: 80
+          periodSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: ops-lab
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+```
+
+```bash
+kubectl apply -f ops-ready.yaml
+kubectl get pods -n ops-lab -l app=web
+kubectl describe pod web-696d5f9cd5-sf4rh -n ops-lab
+```
+
+In the run, both Pods were `Running`, and neither was ready:
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE
+web-696d5f9cd5-qfgx9   0/1     Running   0          6s
+web-696d5f9cd5-sf4rh   0/1     Running   0          6s
+```
+
+These are the two `Unhealthy` Events of the second Pod. The first came before nginx listened:
+
+```text
+  Warning  Unhealthy  5s               kubelet            spec.containers{nginx}: Readiness probe failed: Get "http://10.244.0.41:80/ready.html": dial tcp 10.244.0.41:80: connect: connection refused
+  Warning  Unhealthy  1s (x3 over 5s)  kubelet            spec.containers{nginx}: Readiness probe failed: HTTP probe failed with statuscode: 404
+```
+
+Next, the run made the page in the first Pod only, and looked at the EndpointSlice of the Service. `kubectl exec` runs a command in a Pod that already exists, and `-o jsonpath` prints the fields picked by a JSONPath expression <Cite n={13} />:
+
+```bash
+kubectl exec -n ops-lab web-696d5f9cd5-qfgx9 -- sh -c 'echo ok > /usr/share/nginx/html/ready.html'
+kubectl wait --for=condition=Ready pod/web-696d5f9cd5-qfgx9 -n ops-lab --timeout=60s
+kubectl get pods -n ops-lab -l app=web -o wide
+kubectl get endpointslices -n ops-lab -l kubernetes.io/service-name=web -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]} ready={.conditions.ready}{"\n"}{end}'
+kubectl describe service web -n ops-lab
+```
+
+These are the first six columns of `-o wide`:
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE   IP
+web-696d5f9cd5-qfgx9   1/1     Running   0          8s    10.244.0.40
+web-696d5f9cd5-sf4rh   0/1     Running   0          8s    10.244.0.41
+```
+
+The EndpointSlice kept both addresses, and marked only the ready one:
+
+```text
+10.244.0.41 ready=false
+10.244.0.40 ready=true
+```
+
+The `Endpoints` line of `kubectl describe service` listed only the ready Pod:
+
+```text
+Endpoints:                10.244.0.40:80
+```
+
+**3. Go over a memory limit.** The docs' example `memory-request-limit-2.yaml` asks for 50 MiB, has a limit of 100 MiB, and tries to take 250 MiB <Cite n={6} />. The run put it in `ops-lab`:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-demo-2
+  namespace: ops-lab
+spec:
+  containers:
+  - name: memory-demo-2-ctr
+    image: polinux/stress
+    resources:
+      requests:
+        memory: "50Mi"
+      limits:
+        memory: "100Mi"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "250M", "--vm-hang", "1"]
+```
+
+```bash
+kubectl apply -f ops-memory.yaml
+kubectl wait --for=jsonpath='{.status.containerStatuses[0].restartCount}'=1 pod/memory-demo-2 -n ops-lab --timeout=180s
+kubectl get pod memory-demo-2 -n ops-lab
+kubectl get pod memory-demo-2 -n ops-lab -o jsonpath='{.status.containerStatuses[0].lastState.terminated.reason} {.status.containerStatuses[0].lastState.terminated.exitCode}{"\n"}'
+kubectl get pod memory-demo-2 -n ops-lab -o jsonpath='{.status.qosClass}{"\n"}'
+kubectl get pod liveness-exec -n ops-lab -o jsonpath='{.status.qosClass}{"\n"}'
+```
+
+In the run, the container had been restarted once after 9 seconds, and its last state was `OOMKilled` with the exit code 137:
+
+```text
+NAME            READY   STATUS    RESTARTS     AGE
+memory-demo-2   1/1     Running   1 (2s ago)   9s
+```
+
+```text
+OOMKilled 137
+```
+
+This container may be restarted, so the kubelet restarts it <Cite n={6} />. The class of `memory-demo-2` was `Burstable`, and the class of `liveness-exec`, which has no requests or limits, was `BestEffort`.
+
+**4. Run a test suite as a Job.** These two Jobs stand for a test run: each prints two test results, and the second Job ends with the exit code 1. Each has `backoffLimit: 2`. This is `ops-job-fail.yaml`; `ops-job-pass.yaml` is the same with the name `tests-pass`, the line `test_search: passed`, and `exit 0`:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tests-fail
+  namespace: ops-lab
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: tests
+        image: busybox:1.28
+        command: ["sh", "-c", "echo 'test_login: passed'; echo 'test_search: FAILED'; exit 1"]
+```
+
+`kubectl logs job/hello` returns the logs of the first container of a Job named `hello` <Cite n={15} />:
+
+```bash
+kubectl apply -f ops-job-pass.yaml
+kubectl wait --for=condition=Complete job/tests-pass -n ops-lab --timeout=120s
+kubectl get job tests-pass -n ops-lab
+kubectl logs job/tests-pass -n ops-lab
+```
+
+```text
+NAME         STATUS     COMPLETIONS   DURATION   AGE
+tests-pass   Complete   1/1           3s         3s
+```
+
+```text
+test_login: passed
+test_search: passed
+```
+
+```bash
+kubectl apply -f ops-job-fail.yaml
+kubectl wait --for=condition=Failed job/tests-fail -n ops-lab --timeout=300s
+kubectl get job tests-fail -n ops-lab
+kubectl get pods -n ops-lab -l job-name=tests-fail
+kubectl logs job/tests-fail -n ops-lab
+kubectl get job tests-fail -n ops-lab -o jsonpath='{.status.conditions[?(@.type=="Failed")].reason}{"\n"}'
+kubectl describe job tests-fail -n ops-lab
+```
+
+In the run, the Job failed after 33 seconds, with three Pods:
+
+```text
+NAME         STATUS   COMPLETIONS   DURATION   AGE
+tests-fail   Failed   0/1           33s        33s
+```
+
+```text
+NAME               READY   STATUS   RESTARTS   AGE
+tests-fail-4zmh5   0/1     Error    0          3s
+tests-fail-d9zb4   0/1     Error    0          23s
+tests-fail-lmvgs   0/1     Error    0          33s
+```
+
+The second Pod came 10 seconds after the first, and the third 20 seconds after the second, as the growing delay of the Job controller (10s, 20s, 40s ...) <Cite n={8} />. `kubectl logs` printed the logs of the first Pod:
+
+```text
+Found 3 pods, using pod/tests-fail-lmvgs
+test_login: passed
+test_search: FAILED
+```
+
+The reason of the `Failed` condition was `BackoffLimitExceeded`, and the last Event of the Job was:
+
+```text
+  Warning  BackoffLimitExceeded  0s    job-controller  Job has reached the specified backoff limit
+```
+
+**5. Scale on CPU.** The walkthrough needs a cluster with a Metrics Server set up <Cite n={9} />. metrics-server needs kubelet serving certificates signed by the cluster's Certificate Authority, or `--kubelet-insecure-tls`, which skips checking the CA of the kubelets' serving certificates and is for testing only <Cite n={11} />. Release 0.9.x supports Kubernetes 1.34+ <Cite n={11} />. To install the latest Metrics Server release from the `components.yaml` manifest, the page runs `kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml` <Cite n={11} />. The run installed a fixed release instead, v0.9.1: it downloaded `components.yaml` of that release (the URL of that file is the tutorial's own choice), applied it, and added the flag with a JSON patch, as the quick reference patches a Deployment <Cite n={13} />:
+
+```bash
+curl -sSL -o metrics-server-v0.9.1.yaml https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.9.1/components.yaml
+kubectl apply -f metrics-server-v0.9.1.yaml
+kubectl patch deployment metrics-server -n kube-system --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+kubectl rollout status deployment/metrics-server -n kube-system --timeout=180s
+kubectl top nodes
+```
+
+`kubectl top node` shows the metrics of all nodes <Cite n={13} />. About 10 seconds after the rollout, the run printed:
+
+```text
+NAME                   CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)
+qa-lab-control-plane   277m         2%       792Mi           2%
+```
+
+Then the walkthrough's `php-apache.yaml`, a Deployment that asks for 200 milli-CPU, with a Service <Cite n={9} />; the run added the namespace. `kubectl rollout status` shows how the rollout is going <Cite n={18} />:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+  namespace: ops-lab
+spec:
+  selector:
+    matchLabels:
+      run: php-apache
+  template:
+    metadata:
+      labels:
+        run: php-apache
+    spec:
+      containers:
+      - name: php-apache
+        image: registry.k8s.io/hpa-example
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-apache
+  namespace: ops-lab
+  labels:
+    run: php-apache
+spec:
+  ports:
+  - port: 80
+  selector:
+    run: php-apache
+```
+
+The walkthrough's autoscaler keeps between 1 and 10 replicas, at an average CPU use of 50% across all Pods <Cite n={9} />:
+
+```bash
+kubectl apply -f ops-php-apache.yaml
+kubectl rollout status deployment/php-apache -n ops-lab --timeout=180s
+kubectl autoscale deployment php-apache -n ops-lab --cpu=50% --min=1 --max=10
+kubectl get hpa php-apache -n ops-lab
+```
+
+45 seconds later, the run printed:
+
+```text
+NAME         REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+php-apache   Deployment/php-apache   cpu: 4%/50%   1         10        1          45s
+```
+
+The walkthrough's load generator is a Pod that sends queries to the Service in an endless loop <Cite n={9} />. The run started it without `-i --tty --rm`, and printed the autoscaler every 30 seconds:
+
+```bash
+kubectl run load-generator -n ops-lab --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+kubectl get hpa php-apache -n ops-lab --no-headers
+```
+
+The load started at 05:00:23. These are the first four lines and the last line, after the time:
+
+```text
+05:00:54  php-apache   Deployment/php-apache   cpu: 186%/50%   1     10    1     76s
+05:01:24  php-apache   Deployment/php-apache   cpu: 250%/50%   1     10    4     106s
+05:01:54  php-apache   Deployment/php-apache   cpu: 67%/50%   1     10    10    2m16s
+05:02:24  php-apache   Deployment/php-apache   cpu: 31%/50%   1     10    10    2m46s
+05:05:24  php-apache   Deployment/php-apache   cpu: 32%/50%   1     10    10    5m46s
+```
+
+`kubectl describe hpa php-apache -n ops-lab` printed these Events:
+
+```text
+  Warning  FailedGetResourceMetric       5m31s (x2 over 5m46s)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  5m31s (x2 over 5m46s)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Normal   SuccessfulRescale             4m31s                  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             4m15s                  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             4m                     horizontal-pod-autoscaler  New size: 10; reason: cpu resource utilization (percentage of request) above target
+```
+
+The two warnings came in the first seconds of the autoscaler: because of the delay of the metrics pipeline, pod metrics may be missing for a few minutes after a Pod is made <Cite n={12} />. The first step went from 1 to 4 replicas: at most 4 Pods may be added every 15 seconds <Cite n={2} />. `kubectl get deployment php-apache` then showed `10/10` ready, and `kubectl top pods -n ops-lab` showed each of the ten `php-apache` Pods using between 53m and 94m of CPU. The run deleted the load generator with `kubectl delete pod load-generator -n ops-lab`.
+
+**6. Clean up.** `kubectl delete namespaces` deletes a namespace, and with it everything in that namespace <Cite n={16} />. `kubectl delete` can also delete what a file names, and `--timeout` is how long to wait before giving up on the delete <Cite n={17} />:
+
+```bash
+kubectl delete namespace ops-lab --timeout=180s
+kubectl delete -f metrics-server-v0.9.1.yaml
+kubectl get apiservice v1beta1.metrics.k8s.io
+```
+
+In the run, `kubectl delete -f` deleted the nine objects of the manifest, and the last command printed `Error from server (NotFound)`.
+
+</Layman>
+<Bangla>
+
+টিউটোরিয়াল এই ধাপগুলো 2026-11-18 তারিখে Linux-এ, [Kubernetes Basics](/devops/kubernetes-basics/)-এর kind cluster `qa-lab`-এ, Docker 29.10.0, kind v0.33.0, kubectl v1.37.2 আর metrics-server v0.9.1 দিয়ে চালিয়েছে; cluster-এ Kubernetes v1.37.0 চলছিল। আপনার machine-এ নাম, hash, IP address, age আর CPU load-এর সংখ্যা আলাদা হবে। metrics-server ছাড়া run-এর সব object `ops-lab` namespace-এ ছিল, আর ধাপ ৬ সেগুলো মুছে দিয়েছে।
+
+**১. Liveness probe-কে একটা container restart করতে দেখুন।** docs-এর উদাহরণ `exec-liveness.yaml` একটা file `/tmp/healthy` তৈরি করে আর 30 সেকেন্ড পরে মুছে দেয়; এর probe প্রথম probe-এর আগে 5 সেকেন্ড অপেক্ষা করে, তারপর প্রতি 5 সেকেন্ডে `cat /tmp/healthy` চালায় <Cite n={1} />। run file-টাতে namespace যোগ করেছে:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-exec
+  namespace: ops-lab
+spec:
+  containers:
+  - name: liveness
+    image: registry.k8s.io/busybox:1.27.2
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 30; rm -f /tmp/healthy; sleep 600
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 5
+      periodSeconds: 5
+```
+
+`kubectl create namespace` একটা namespace তৈরি করে <Cite n={16} />। `kubectl wait` এক বা একাধিক resource-এর একটা নির্দিষ্ট condition-এর জন্য অপেক্ষা করে, আর `--for=jsonpath=` একটা field একটা মান না পাওয়া পর্যন্ত অপেক্ষা করে <Cite n={14} />:
+
+```bash
+kubectl create namespace ops-lab
+kubectl apply -f ops-liveness.yaml
+kubectl wait --for=condition=Ready pod/liveness-exec -n ops-lab --timeout=120s
+kubectl wait --for=jsonpath='{.status.containerStatuses[0].restartCount}'=1 pod/liveness-exec -n ops-lab --timeout=180s
+kubectl get pod liveness-exec -n ops-lab
+kubectl describe pod liveness-exec -n ops-lab
+```
+
+টিউটোরিয়ালের run-এ Pod তৈরির 75 সেকেন্ড পরে container একবার restart হয়েছে:
+
+```text
+NAME            READY   STATUS    RESTARTS     AGE
+liveness-exec   1/1     Running   1 (0s ago)   75s
+```
+
+এগুলো `kubectl describe pod`-এর দুটো Event:
+
+```text
+  Warning  Unhealthy  30s (x3 over 40s)  kubelet            spec.containers{liveness}: Liveness probe failed: cat: can't open '/tmp/healthy': No such file or directory
+  Normal   Killing    30s                kubelet            spec.containers{liveness}: Container liveness failed liveness probe, will be restarted
+```
+
+probe তিনবার ব্যর্থ হয়েছে, যা default `failureThreshold` <Cite n={4} />। `Killing` Event নতুন container চালু হওয়ার 30 সেকেন্ড আগে এসেছে। kubelet সেই container-এর `terminationGracePeriodSeconds` setting মেনে চলে, আর default হলো Pod-level মান inherit করা (না দিলে 30 সেকেন্ড) <Cite n={4} />।
+
+**২. Readiness probe দিয়ে একটা Pod-কে traffic থেকে দূরে রাখুন।** এই Deployment, `ops-ready.yaml`, দুটো nginx Pod চালায়, যাদের readiness probe `/ready.html`-এ, এমন একটা page যা nginx-এর নেই, আর সাথে একটা Service:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: ops-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.16.1
+        readinessProbe:
+          httpGet:
+            path: /ready.html
+            port: 80
+          periodSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: ops-lab
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+```
+
+```bash
+kubectl apply -f ops-ready.yaml
+kubectl get pods -n ops-lab -l app=web
+kubectl describe pod web-696d5f9cd5-sf4rh -n ops-lab
+```
+
+run-এ দুটো Pod-ই `Running` ছিল, আর কোনোটাই ready ছিল না:
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE
+web-696d5f9cd5-qfgx9   0/1     Running   0          6s
+web-696d5f9cd5-sf4rh   0/1     Running   0          6s
+```
+
+এগুলো দ্বিতীয় Pod-এর দুটো `Unhealthy` Event। প্রথমটা এসেছে nginx শোনা (listen) শুরুর আগে:
+
+```text
+  Warning  Unhealthy  5s               kubelet            spec.containers{nginx}: Readiness probe failed: Get "http://10.244.0.41:80/ready.html": dial tcp 10.244.0.41:80: connect: connection refused
+  Warning  Unhealthy  1s (x3 over 5s)  kubelet            spec.containers{nginx}: Readiness probe failed: HTTP probe failed with statuscode: 404
+```
+
+এরপর run শুধু প্রথম Pod-এ page-টা তৈরি করেছে, আর Service-এর EndpointSlice দেখেছে। `kubectl exec` একটা বিদ্যমান Pod-এ একটা command চালায়, আর `-o jsonpath` একটা jsonpath expression-এ বলা field-গুলো print করে <Cite n={13} />:
+
+```bash
+kubectl exec -n ops-lab web-696d5f9cd5-qfgx9 -- sh -c 'echo ok > /usr/share/nginx/html/ready.html'
+kubectl wait --for=condition=Ready pod/web-696d5f9cd5-qfgx9 -n ops-lab --timeout=60s
+kubectl get pods -n ops-lab -l app=web -o wide
+kubectl get endpointslices -n ops-lab -l kubernetes.io/service-name=web -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]} ready={.conditions.ready}{"\n"}{end}'
+kubectl describe service web -n ops-lab
+```
+
+এগুলো `-o wide`-এর প্রথম ছয়টা column:
+
+```text
+NAME                   READY   STATUS    RESTARTS   AGE   IP
+web-696d5f9cd5-qfgx9   1/1     Running   0          8s    10.244.0.40
+web-696d5f9cd5-sf4rh   0/1     Running   0          8s    10.244.0.41
+```
+
+EndpointSlice দুটো address-ই রেখেছে, আর শুধু ready-টাকে চিহ্নিত করেছে:
+
+```text
+10.244.0.41 ready=false
+10.244.0.40 ready=true
+```
+
+`kubectl describe service`-এর `Endpoints` লাইনে শুধু ready Pod ছিল:
+
+```text
+Endpoints:                10.244.0.40:80
+```
+
+**৩. একটা memory limit পার হয়ে যান।** docs-এর উদাহরণ `memory-request-limit-2.yaml` 50 MiB চায়, এর limit 100 MiB, আর এটা 250 MiB allocate করার চেষ্টা করে <Cite n={6} />। run এটা `ops-lab`-এ রেখেছে:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-demo-2
+  namespace: ops-lab
+spec:
+  containers:
+  - name: memory-demo-2-ctr
+    image: polinux/stress
+    resources:
+      requests:
+        memory: "50Mi"
+      limits:
+        memory: "100Mi"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "250M", "--vm-hang", "1"]
+```
+
+```bash
+kubectl apply -f ops-memory.yaml
+kubectl wait --for=jsonpath='{.status.containerStatuses[0].restartCount}'=1 pod/memory-demo-2 -n ops-lab --timeout=180s
+kubectl get pod memory-demo-2 -n ops-lab
+kubectl get pod memory-demo-2 -n ops-lab -o jsonpath='{.status.containerStatuses[0].lastState.terminated.reason} {.status.containerStatuses[0].lastState.terminated.exitCode}{"\n"}'
+kubectl get pod memory-demo-2 -n ops-lab -o jsonpath='{.status.qosClass}{"\n"}'
+kubectl get pod liveness-exec -n ops-lab -o jsonpath='{.status.qosClass}{"\n"}'
+```
+
+run-এ 9 সেকেন্ড পরে container একবার restart হয়েছিল, আর তার শেষ state ছিল `OOMKilled`, exit code 137:
+
+```text
+NAME            READY   STATUS    RESTARTS     AGE
+memory-demo-2   1/1     Running   1 (2s ago)   9s
+```
+
+```text
+OOMKilled 137
+```
+
+এই অনুশীলনের container restart করা যায়, তাই kubelet এটা restart করে <Cite n={6} />। `memory-demo-2`-এর class ছিল `Burstable`, আর `liveness-exec`-এর, যার কোনো request বা limit নেই, class ছিল `BestEffort`।
+
+**৪. একটা test suite Job হিসেবে চালান।** এই দুটো Job একটা test run-এর প্রতিনিধি: প্রতিটা দুটো test result print করে, আর দ্বিতীয় Job exit code 1 দিয়ে শেষ হয়। প্রতিটার `backoffLimit: 2`। এটা `ops-job-fail.yaml`; `ops-job-pass.yaml` একই, তবে নাম `tests-pass`, লাইন `test_search: passed` আর `exit 0`:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tests-fail
+  namespace: ops-lab
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: tests
+        image: busybox:1.28
+        command: ["sh", "-c", "echo 'test_login: passed'; echo 'test_search: FAILED'; exit 1"]
+```
+
+`kubectl logs job/hello` `hello` নামের একটা Job-এর প্রথম container-এর log ফেরত দেয় <Cite n={15} />:
+
+```bash
+kubectl apply -f ops-job-pass.yaml
+kubectl wait --for=condition=Complete job/tests-pass -n ops-lab --timeout=120s
+kubectl get job tests-pass -n ops-lab
+kubectl logs job/tests-pass -n ops-lab
+```
+
+```text
+NAME         STATUS     COMPLETIONS   DURATION   AGE
+tests-pass   Complete   1/1           3s         3s
+```
+
+```text
+test_login: passed
+test_search: passed
+```
+
+```bash
+kubectl apply -f ops-job-fail.yaml
+kubectl wait --for=condition=Failed job/tests-fail -n ops-lab --timeout=300s
+kubectl get job tests-fail -n ops-lab
+kubectl get pods -n ops-lab -l job-name=tests-fail
+kubectl logs job/tests-fail -n ops-lab
+kubectl get job tests-fail -n ops-lab -o jsonpath='{.status.conditions[?(@.type=="Failed")].reason}{"\n"}'
+kubectl describe job tests-fail -n ops-lab
+```
+
+run-এ Job 33 সেকেন্ড পরে তিনটা Pod-সহ ব্যর্থ হয়েছে:
+
+```text
+NAME         STATUS   COMPLETIONS   DURATION   AGE
+tests-fail   Failed   0/1           33s        33s
+```
+
+```text
+NAME               READY   STATUS   RESTARTS   AGE
+tests-fail-4zmh5   0/1     Error    0          3s
+tests-fail-d9zb4   0/1     Error    0          23s
+tests-fail-lmvgs   0/1     Error    0          33s
+```
+
+দ্বিতীয় Pod প্রথমটার 10 সেকেন্ড পরে এসেছে, আর তৃতীয়টা দ্বিতীয়টার 20 সেকেন্ড পরে, Job controller-এর back-off delay (10s, 20s, 40s ...) অনুযায়ী <Cite n={8} />। `kubectl logs` প্রথম Pod-এর log print করেছে:
+
+```text
+Found 3 pods, using pod/tests-fail-lmvgs
+test_login: passed
+test_search: FAILED
+```
+
+`Failed` condition-এর reason ছিল `BackoffLimitExceeded`, আর Job-এর শেষ Event ছিল:
+
+```text
+  Warning  BackoffLimitExceeded  0s    job-controller  Job has reached the specified backoff limit
+```
+
+**৫. CPU অনুযায়ী scale করুন।** walkthrough-এর জন্য এমন একটা cluster দরকার, যেখানে একটা Metrics Server deploy ও configure করা আছে <Cite n={9} />। metrics-server-এর দরকার cluster-এর Certificate Authority দিয়ে sign করা kubelet serving certificate, অথবা `--kubelet-insecure-tls`, যা kubelet-এর দেখানো serving certificate-এর CA যাচাই করে না, শুধু testing-এর জন্য <Cite n={11} />। release 0.9.x Kubernetes 1.34+ support করে <Cite n={11} />। latest Metrics Server release `components.yaml` manifest থেকে install করতে পাতাটা চালায় `kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml` <Cite n={11} />। run তার বদলে একটা নির্দিষ্ট release, v0.9.1, install করেছে: সেই release-এর `components.yaml` download করেছে (ওই file-এর URL টিউটোরিয়ালের নিজের বেছে নেওয়া), apply করেছে, আর quick reference যেভাবে একটা Deployment patch করে, সেভাবে একটা JSON patch দিয়ে flag-টা যোগ করেছে <Cite n={13} />:
+
+```bash
+curl -sSL -o metrics-server-v0.9.1.yaml https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.9.1/components.yaml
+kubectl apply -f metrics-server-v0.9.1.yaml
+kubectl patch deployment metrics-server -n kube-system --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+kubectl rollout status deployment/metrics-server -n kube-system --timeout=180s
+kubectl top nodes
+```
+
+`kubectl top node` সব node-এর metric দেখায় <Cite n={13} />। rollout-এর প্রায় 10 সেকেন্ড পরে run print করেছে:
+
+```text
+NAME                   CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)
+qa-lab-control-plane   277m         2%       792Mi           2%
+```
+
+তারপর walkthrough-এর `php-apache.yaml`, একটা Deployment যা 200 milli-CPU চায়, সাথে একটা Service <Cite n={9} />; run এতে namespace যোগ করেছে। `kubectl rollout status` rollout-এর status দেখায় <Cite n={18} />:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+  namespace: ops-lab
+spec:
+  selector:
+    matchLabels:
+      run: php-apache
+  template:
+    metadata:
+      labels:
+        run: php-apache
+    spec:
+      containers:
+      - name: php-apache
+        image: registry.k8s.io/hpa-example
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-apache
+  namespace: ops-lab
+  labels:
+    run: php-apache
+spec:
+  ports:
+  - port: 80
+  selector:
+    run: php-apache
+```
+
+walkthrough-এর autoscaler 1 থেকে 10টা replica রাখে, সব Pod জুড়ে গড়ে 50% CPU utilization বজায় রাখতে <Cite n={9} />:
+
+```bash
+kubectl apply -f ops-php-apache.yaml
+kubectl rollout status deployment/php-apache -n ops-lab --timeout=180s
+kubectl autoscale deployment php-apache -n ops-lab --cpu=50% --min=1 --max=10
+kubectl get hpa php-apache -n ops-lab
+```
+
+45 সেকেন্ড পরে run print করেছে:
+
+```text
+NAME         REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+php-apache   Deployment/php-apache   cpu: 4%/50%   1         10        1          45s
+```
+
+walkthrough-এর load generator একটা Pod, যা একটা অসীম loop-এ Service-এ query পাঠায় <Cite n={9} />। run এটা `-i --tty --rm` ছাড়া চালু করেছে, আর প্রতি 30 সেকেন্ডে autoscaler print করেছে:
+
+```bash
+kubectl run load-generator -n ops-lab --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+kubectl get hpa php-apache -n ops-lab --no-headers
+```
+
+load শুরু হয়েছে 05:00:23-এ। এগুলো সময়ের পরে প্রথম চারটা লাইন আর শেষ লাইন:
+
+```text
+05:00:54  php-apache   Deployment/php-apache   cpu: 186%/50%   1     10    1     76s
+05:01:24  php-apache   Deployment/php-apache   cpu: 250%/50%   1     10    4     106s
+05:01:54  php-apache   Deployment/php-apache   cpu: 67%/50%   1     10    10    2m16s
+05:02:24  php-apache   Deployment/php-apache   cpu: 31%/50%   1     10    10    2m46s
+05:05:24  php-apache   Deployment/php-apache   cpu: 32%/50%   1     10    10    5m46s
+```
+
+`kubectl describe hpa php-apache -n ops-lab` এই Event-গুলো print করেছে:
+
+```text
+  Warning  FailedGetResourceMetric       5m31s (x2 over 5m46s)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  5m31s (x2 over 5m46s)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Normal   SuccessfulRescale             4m31s                  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             4m15s                  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             4m                     horizontal-pod-autoscaler  New size: 10; reason: cpu resource utilization (percentage of request) above target
+```
+
+দুটো warning এসেছে autoscaler-এর প্রথম কয়েক সেকেন্ডে: metrics pipeline-এর দেরির কারণে pod তৈরির পরে কয়েক মিনিট pod metric পাওয়া না-ও যেতে পারে <Cite n={12} />। প্রথম ধাপে 1 থেকে 4টা replica হয়েছে: প্রতি 15 সেকেন্ডে সর্বোচ্চ 4টা pod যোগ হতে পারে <Cite n={2} />। এরপর `kubectl get deployment php-apache` দেখিয়েছে `10/10` ready, আর `kubectl top pods -n ops-lab` দেখিয়েছে দশটা `php-apache` Pod-এর প্রতিটা 53m থেকে 94m CPU ব্যবহার করছে। run `kubectl delete pod load-generator -n ops-lab` দিয়ে load generator মুছে দিয়েছে।
+
+**৬. পরিষ্কার করুন।** `kubectl delete namespaces` একটা namespace মোছে, আর এতে namespace-এর ভেতরের সবকিছু মুছে যায় <Cite n={16} />। `kubectl delete` file-এর নাম দিয়েও resource মোছে, আর `--timeout` হলো delete ছেড়ে দেওয়ার আগে কতক্ষণ অপেক্ষা করবে <Cite n={17} />:
+
+```bash
+kubectl delete namespace ops-lab --timeout=180s
+kubectl delete -f metrics-server-v0.9.1.yaml
+kubectl get apiservice v1beta1.metrics.k8s.io
+```
+
+run-এ `kubectl delete -f` manifest-এর নয়টা object মুছেছে, আর শেষ command print করেছে `Error from server (NotFound)`।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Wait for ready, not for running.** For a failed readiness probe, the kubelet continues running the container and sets the Ready condition on the Pod to false <Cite n={4} />. In step 2, both Pods were `Running` and `0/1` ready. `kubectl wait --for=condition=Ready` waits for the Ready condition <Cite n={14} />.
+
+**Count the restarts.** If at least `failureThreshold` liveness probes have failed, Kubernetes restarts the container <Cite n={4} />, and a container that goes over its memory limit can be stopped by the out-of-memory subsystem and restarted <Cite n={3} />. A Pod can look healthy between the restarts: in step 3, the Pod was `Running` with one restart, and its last state was `OOMKilled`.
+
+**Read the result of a test Job from its condition.** A Job ends with the condition `Complete` or `Failed` <Cite n={8} />, and `kubectl wait` waits for a specific condition on one or many resources <Cite n={14} />, so a pipeline can wait for one of the two. `.spec.backoffLimit` is the number of retries before considering a Job as failed, 6 by default <Cite n={8} />: in step 4, the failing tests ran three times with `backoffLimit: 2`.
+
+**Load test with the autoscaler in mind.** If a container has no request for the resource, CPU utilization will not be defined, and the autoscaler will not take any action for that metric <Cite n={2} />. The controller runs every 15 seconds by default, and scale-downs wait for a stabilization window of 5 minutes by default <Cite n={2} />. In step 5, the autoscaler grew the Deployment from 1 to 10 replicas within about 90 seconds of load.
+
+**Know where the numbers come from.** metrics-server serves the numbers of the autoscaler and of `kubectl top` <Cite n={10} />, and pod metrics may be unavailable for a few minutes since pod creation <Cite n={12} />.
+
+</Technical>
+<Layman>
+
+**Wait for ready, not for running.** When a readiness probe fails, the kubelet keeps the container running, and sets the Ready condition of the Pod to false <Cite n={4} />. In step 2, both Pods were `Running` and `0/1` ready. `kubectl wait --for=condition=Ready` waits for the Ready condition <Cite n={14} />.
+
+**Count the restarts.** Once `failureThreshold` liveness probes have failed, Kubernetes restarts the container <Cite n={4} />, and a container that uses more memory than its limit can be stopped by the out-of-memory system and restarted <Cite n={3} />. A Pod can look healthy between restarts: in step 3, the Pod was `Running` with one restart, and its last state was `OOMKilled`.
+
+**Read the result of a test Job from its condition.** A Job ends with the condition `Complete` or `Failed` <Cite n={8} />, and `kubectl wait` waits until one or more resources reach a condition <Cite n={14} />, so a pipeline can wait for one of the two. `.spec.backoffLimit` is how many retries happen before the Job counts as failed, 6 by default <Cite n={8} />: in step 4, the failing tests ran three times with `backoffLimit: 2`.
+
+**Load test with the autoscaler in mind.** If a container sets no request for the resource, the Pod has no CPU utilization, and the autoscaler does nothing for that metric <Cite n={2} />. The controller runs every 15 seconds by default, and scaling down waits for a stabilization window, 5 minutes by default <Cite n={2} />. In step 5, the autoscaler grew the Deployment from 1 to 10 replicas within about 90 seconds of load.
+
+**Know where the numbers come from.** metrics-server gives the numbers to the autoscaler and to `kubectl top` <Cite n={10} />, and pod metrics may be missing for a few minutes after a Pod is made <Cite n={12} />.
+
+</Layman>
+<Bangla>
+
+**Running নয়, ready-র জন্য অপেক্ষা করুন।** readiness probe ব্যর্থ হলে kubelet container চালিয়ে যায়, আর Pod-এর Ready condition false করে <Cite n={4} />। ধাপ ২-এ দুটো Pod-ই `Running` আর `0/1` ready ছিল। `kubectl wait --for=condition=Ready` Ready condition-এর জন্য অপেক্ষা করে <Cite n={14} />।
+
+**Restart গুনুন।** অন্তত `failureThreshold`-সংখ্যক liveness probe ব্যর্থ হলে Kubernetes container restart করে <Cite n={4} />, আর memory limit পার হওয়া container-কে out-of-memory subsystem থামিয়ে দিতে পারে, তারপর সেটা restart হয় <Cite n={3} />। দুই restart-এর মাঝে একটা Pod সুস্থ দেখাতে পারে: ধাপ ৩-এ Pod একটা restart-সহ `Running` ছিল, আর তার শেষ state ছিল `OOMKilled`।
+
+**Test Job-এর ফল তার condition থেকে পড়ুন।** একটা Job `Complete` বা `Failed` condition নিয়ে শেষ হয় <Cite n={8} />, আর `kubectl wait` এক বা একাধিক resource-এর একটা নির্দিষ্ট condition-এর জন্য অপেক্ষা করে <Cite n={14} />, তাই একটা pipeline এ দুটোর একটার জন্য অপেক্ষা করতে পারে। `.spec.backoffLimit` হলো Job-কে ব্যর্থ ধরার আগে কতবার আবার চেষ্টা হবে, default 6 <Cite n={8} />: ধাপ ৪-এ `backoffLimit: 2` দিয়ে ব্যর্থ test-গুলো তিনবার চলেছে।
+
+**Autoscaler মাথায় রেখে load test করুন।** container-এ resource-এর request না থাকলে CPU utilization নির্ধারিত হয় না, আর autoscaler সেই metric-এর জন্য কিছুই করে না <Cite n={2} />। controller default-এ প্রতি 15 সেকেন্ডে চলে, আর scale down default-এ 5 মিনিটের stabilization window-এর জন্য অপেক্ষা করে <Cite n={2} />। ধাপ ৫-এ load-এর প্রায় 90 সেকেন্ডের মধ্যে autoscaler Deployment-কে 1 থেকে 10টা replica-তে বাড়িয়েছে।
+
+**সংখ্যাগুলো কোথা থেকে আসে, জানুন।** metrics-server autoscaler আর `kubectl top`-এর সংখ্যা দেয় <Cite n={10} />, আর pod তৈরির পরে কয়েক মিনিট pod metric পাওয়া না-ও যেতে পারে <Cite n={12} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A liveness probe that does more than it should.** Liveness probes must be configured carefully to ensure that they truly indicate unrecoverable application failure, for example a deadlock; incorrect implementation of liveness probes can lead to cascading failures <Cite n={4} />.
+- **No resource request on a Pod that should scale.** CPU utilization for the Pod will not be defined, and the autoscaler will not take any action for that metric <Cite n={2} />.
+- **Reading `Running` as ready.** A Pod whose readiness probe fails keeps running, with its Ready condition false <Cite n={4} />.
+- **Keeping the default retries for a test Job.** The `.spec.backoffLimit` is set by default to 6 <Cite n={8} />, and failed Pods are recreated with an exponential back-off delay (10s, 20s, 40s ...) capped at ten minutes <Cite n={8} />. In step 4, `backoffLimit: 2` was followed by three Pods, and the Job became `Failed` after 33 seconds.
+- **Checking the autoscaler right after the deploy.** Pod metrics may be unavailable for a few minutes since pod creation <Cite n={12} />.
+- **Using `--kubelet-insecure-tls` outside a test cluster.** It does not verify the CA of serving certificates presented by Kubelets, and it is for testing purposes only <Cite n={11} />.
+
+</Technical>
+<Layman>
+
+- **A liveness probe that does more than it should.** Liveness probes must be set up carefully, so that they really show a failure that the app cannot recover from, such as a deadlock; a wrong liveness probe can lead to failures that spread <Cite n={4} />.
+- **No resource request on a Pod that should scale.** The Pod then has no CPU utilization, and the autoscaler does nothing for that metric <Cite n={2} />.
+- **Reading `Running` as ready.** A Pod whose readiness probe fails keeps running, with its Ready condition false <Cite n={4} />.
+- **Keeping the default retries for a test Job.** `.spec.backoffLimit` is 6 by default <Cite n={8} />, and the Job controller recreates failed Pods with a growing delay (10s, 20s, 40s ...) that is capped at ten minutes <Cite n={8} />. In step 4, `backoffLimit: 2` was followed by three Pods, and the Job became `Failed` after 33 seconds.
+- **Checking the autoscaler right after the deploy.** Pod metrics may be missing for a few minutes after a Pod is made <Cite n={12} />.
+- **Using `--kubelet-insecure-tls` outside a test cluster.** It skips checking the CA of the kubelets' serving certificates, and it is for testing only <Cite n={11} />.
+
+</Layman>
+<Bangla>
+
+- **যে liveness probe যতটা উচিত তার বেশি করে।** liveness probe সাবধানে configure করতে হবে, যাতে সেটা সত্যিই এমন failure বোঝায় যা থেকে application ফিরতে পারে না, যেমন একটা deadlock; ভুলভাবে বানানো liveness probe cascading failure ঘটাতে পারে <Cite n={4} />।
+- **Scale হওয়ার কথা এমন Pod-এ resource request নেই।** তখন Pod-এর CPU utilization নির্ধারিত হয় না, আর autoscaler সেই metric-এর জন্য কিছুই করে না <Cite n={2} />।
+- **`Running`-কে ready ভাবা।** readiness probe ব্যর্থ হওয়া একটা Pod চলতে থাকে, তার Ready condition false থাকে <Cite n={4} />।
+- **Test Job-এ default retry রেখে দেওয়া।** `.spec.backoffLimit`-এর default 6 <Cite n={8} />, আর ব্যর্থ Pod-কে Job controller exponential back-off delay দিয়ে (10s, 20s, 40s ...) আবার তৈরি করে, যা ten minutes-এ সীমিত <Cite n={8} />। ধাপ ৪-এ `backoffLimit: 2`-এর পরে তিনটা Pod হয়েছে, আর Job 33 সেকেন্ড পরে `Failed` হয়েছে।
+- **Deploy-এর ঠিক পরেই autoscaler যাচাই করা।** pod তৈরির পরে কয়েক মিনিট pod metric পাওয়া না-ও যেতে পারে <Cite n={12} />।
+- **Test cluster-এর বাইরে `--kubelet-insecure-tls` ব্যবহার করা।** এটা kubelet-এর দেখানো serving certificate-এর CA যাচাই করে না, আর এটা শুধু testing-এর জন্য <Cite n={11} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester whose app runs on Kubernetes.
+
+- Before a test sends traffic, wait for the Pods to be ready, not only running.
+- Check what each liveness probe tests, and that it does not fail when a dependency is slow.
+- After a test run, check the restart counts and the last state of the containers; a restart with `OOMKilled` is a finding.
+- Check that every container that should scale has a CPU request.
+- Run a test suite as a Job with a small `backoffLimit`, read the result from its condition, and report how often it was retried.
+- In a load test, wait for the metrics before the first check of the autoscaler, and watch the scale-down too.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester whose app runs on Kubernetes.
+
+- Before a test sends traffic, wait for the Pods to be ready, not only running.
+- Check what each liveness probe tests, and that it does not fail when a dependency is slow.
+- After a test run, check the restart counts and the last state of the containers; a restart with `OOMKilled` is a finding.
+- Check that every container that should scale has a CPU request.
+- Run a test suite as a Job with a small `backoffLimit`, read the result from its condition, and report how often it was retried.
+- In a load test, wait for the metrics before the first check of the autoscaler, and watch the scale-down too.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, এমন একজন tester-এর জন্য যার app Kubernetes-এ চলে।
+
+- একটা test traffic পাঠানোর আগে Pod-গুলো শুধু running নয়, ready হওয়া পর্যন্ত অপেক্ষা করুন।
+- প্রতিটা liveness probe কী test করে, আর কোনো dependency ধীর হলে সেটা ব্যর্থ হয় কি না, যাচাই করুন।
+- একটা test run-এর পরে container-গুলোর restart-সংখ্যা আর শেষ state দেখুন; `OOMKilled`-সহ একটা restart একটা finding।
+- scale হওয়ার কথা এমন প্রতিটা container-এ CPU request আছে কি না, যাচাই করুন।
+- একটা test suite ছোট `backoffLimit`-সহ Job হিসেবে চালান, তার condition থেকে ফল পড়ুন, আর কতবার আবার চেষ্টা হয়েছে, তা জানান।
+- একটা load test-এ autoscaler-এর প্রথম যাচাইয়ের আগে metric আসার জন্য অপেক্ষা করুন, আর scale down-ও দেখুন।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Liveness probe | Determines when to restart a container |
+| Readiness probe | Determines when a container is ready to accept traffic |
+| Startup probe | Verifies whether the application in a container has started; holds back the other probes until then |
+| `failureThreshold` | How many failures in a row make the check fail; 3 by default |
+| Resource request | What the scheduler uses to place a Pod on a node |
+| Resource limit | What the kubelet does not let a running container go over |
+| `OOMKilled` | The last state of the container in step 3 after it went over its memory limit; exit code 137 in the run |
+| QoS class | `Guaranteed`, `Burstable`, or `BestEffort`, from the requests and limits of a Pod |
+| Job | Runs Pods until a set number of them end with success, or until it fails |
+| `backoffLimit` | The number of retries before a Job counts as failed; 6 by default |
+| HorizontalPodAutoscaler | Scales a workload resource to match demand; more load is answered with more Pods |
+| metrics-server | The cluster add-on that collects resource metrics from the kubelets for the Metrics API |
+| `kubectl top` | Shows metrics for the nodes; in the run it also showed the CPU use of Pods |

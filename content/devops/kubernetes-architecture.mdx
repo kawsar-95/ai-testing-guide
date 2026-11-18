@@ -1,15 +1,32 @@
-export const metadata = { title: 'Kubernetes Architecture', description: 'etcd and Operators.' }
+export const metadata = { title: 'Kubernetes Architecture', description: 'The control plane, the nodes, and etcd, how the scheduler and the kubelet place and run Pods, how custom resources and Operators extend the API, and how a tester checks each part on a local kind cluster.' }
 export const page = {
-  updated: '2026-11-05',
+  updated: '2026-11-18',
   sources: [
-    { title: 'Cluster Architecture', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/architecture/', accessed: '2026-11-05' },
-    { title: 'Operator pattern', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/extend-kubernetes/operator/', accessed: '2026-11-05' },
+    { title: 'Cluster Architecture', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/architecture/', accessed: '2026-11-18' },
+    { title: 'Operator pattern', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/extend-kubernetes/operator/', accessed: '2026-11-18' },
+    { title: 'Nodes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/architecture/nodes/', accessed: '2026-11-18' },
+    { title: 'Node Status', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/node/node-status/', accessed: '2026-11-18' },
+    { title: 'Leases', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/architecture/leases/', accessed: '2026-11-18' },
+    { title: 'Kubernetes Scheduler', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/', accessed: '2026-11-18' },
+    { title: 'Assigning Pods to Nodes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/', accessed: '2026-11-18' },
+    { title: 'Assign Pods to Nodes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/', accessed: '2026-11-18' },
+    { title: 'Static Pods', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/workloads/pods/static-pods/', accessed: '2026-11-18' },
+    { title: 'Create static Pods', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/', accessed: '2026-11-18' },
+    { title: 'Kubernetes API health endpoints', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/using-api/health-checks/', accessed: '2026-11-18' },
+    { title: 'Custom Resources', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/', accessed: '2026-11-18' },
+    { title: 'Extend the Kubernetes API with CustomResourceDefinitions', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/', accessed: '2026-11-18' },
+    { title: 'Operating etcd clusters for Kubernetes', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/', accessed: '2026-11-18' },
+    { title: 'Command line tool (kubectl)', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/', accessed: '2026-11-18' },
+    { title: 'kubectl Quick Reference', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/quick-reference/', accessed: '2026-11-18' },
+    { title: 'kubectl wait', publisher: 'Kubernetes documentation', url: 'https://kubernetes.io/docs/reference/kubectl/generated/kubectl_wait/', accessed: '2026-11-18' },
+    { title: 'kind', publisher: 'kind documentation', url: 'https://kind.sigs.k8s.io/', accessed: '2026-11-18' },
+    { title: 'docker container exec', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/cli/docker/container/exec/', accessed: '2026-11-18' },
   ],
 }
 
 # Kubernetes Architecture
 
-etcd and Operators. A short explanation with its sources comes first. The reels after it show the topic at work.
+This page is about the parts of a Kubernetes cluster: the control plane, the nodes, and etcd, how they work together to place and run Pods, and how custom resources and Operators extend the API, with a practice run that looks at each part of the local cluster of [Kubernetes Basics](/devops/kubernetes-basics/).
 
 <PageMeta />
 
@@ -18,17 +35,1218 @@ etcd and Operators. A short explanation with its sources comes first. The reels 
 <Voices>
 <Technical>
 
-etcd is a consistent and highly-available key value store used as Kubernetes' backing store for all cluster data <Cite n={1} />. Operators are software extensions to Kubernetes that make use of custom resources to manage applications and their components <Cite n={2} />.
+**A cluster.** A Kubernetes cluster consists of a control plane plus a set of worker machines, called nodes, that run containerized applications <Cite n={1} />. Every cluster needs at least one worker node in order to run Pods <Cite n={1} />. The control plane manages the worker nodes and the Pods in the cluster <Cite n={1} />. In production environments, the control plane usually runs across multiple computers and a cluster usually runs multiple nodes, providing fault-tolerance and high availability <Cite n={1} />.
+
+**The control plane.**
+
+| Component | What it does |
+|---|---|
+| kube-apiserver | Exposes the Kubernetes API; the API server is the front end for the Kubernetes control plane <Cite n={1} /> |
+| etcd | A consistent and highly-available key value store used as Kubernetes' backing store for all cluster data <Cite n={1} /> |
+| kube-scheduler | Watches for newly created Pods with no assigned node, and selects a node for them to run on <Cite n={1} /> |
+| kube-controller-manager | Runs controller processes <Cite n={1} /> |
+| cloud-controller-manager | Embeds cloud-specific control logic, and lets you link your cluster into your cloud provider's API <Cite n={1} /> |
+
+**The node components.** The components on a node include the kubelet, a container runtime, and the kube-proxy <Cite n={3} />.
+
+| Component | What it does |
+|---|---|
+| kubelet | An agent that runs on each node in the cluster; it makes sure that containers are running in a Pod <Cite n={1} /> |
+| kube-proxy (optional) | A network proxy that runs on each node, implementing part of the Kubernetes Service concept <Cite n={1} /> |
+| Container runtime | Manages the execution and lifecycle of containers; Kubernetes supports container runtimes such as containerd, CRI-O, and any other implementation of the Kubernetes CRI <Cite n={1} /> |
+
+**Add-ons.** All Kubernetes clusters should have cluster DNS, as many examples rely on it <Cite n={1} />. Namespaced resources for addons belong within the `kube-system` namespace <Cite n={1} />.
+
+**Extending the API.** A custom resource is an extension of the Kubernetes API that is not necessarily available in a default Kubernetes installation <Cite n={12} />. Operators are software extensions to Kubernetes that make use of custom resources to manage applications and their components <Cite n={2} />. Operators follow Kubernetes principles, notably the control loop <Cite n={2} />.
 
 </Technical>
 <Layman>
 
-etcd is a key value store. It is consistent and highly available. Kubernetes uses it as the backing store for all cluster data <Cite n={1} />. Operators are software extensions to Kubernetes. They use custom resources to manage applications and their components <Cite n={2} />.
+**A cluster.** A Kubernetes cluster is a control plane plus a set of worker machines, called nodes, that run apps in containers <Cite n={1} />. Every cluster needs at least one worker node to run Pods <Cite n={1} />. The control plane manages the worker nodes and the Pods <Cite n={1} />. In production, the control plane usually runs on several computers, and a cluster usually has several nodes, which gives fault-tolerance and high availability <Cite n={1} />.
+
+**The control plane.**
+
+| Component | What it does |
+|---|---|
+| kube-apiserver | Offers the Kubernetes API; it is the front door of the control plane <Cite n={1} /> |
+| etcd | A consistent, highly available key value store that holds all the data of the cluster <Cite n={1} /> |
+| kube-scheduler | Watches for new Pods that have no node yet, and picks a node for each one <Cite n={1} /> |
+| kube-controller-manager | Runs the controllers <Cite n={1} /> |
+| cloud-controller-manager | Holds the control logic for a cloud, and links your cluster to your cloud provider's API <Cite n={1} /> |
+
+**The node components.** The components on a node include the kubelet, a container runtime, and the kube-proxy <Cite n={3} />.
+
+| Component | What it does |
+|---|---|
+| kubelet | An agent on each node; it makes sure that containers are running in a Pod <Cite n={1} /> |
+| kube-proxy (optional) | A network proxy on each node that does part of the work of a Kubernetes Service <Cite n={1} /> |
+| Container runtime | Runs the containers and manages their life; Kubernetes supports containerd, CRI-O, and any other implementation of the Kubernetes CRI <Cite n={1} /> |
+
+**Add-ons.** Every Kubernetes cluster should have cluster DNS, because many examples need it <Cite n={1} />. Add-ons keep their namespaced resources in the `kube-system` namespace <Cite n={1} />.
+
+**Extending the API.** A custom resource adds to the Kubernetes API; a default installation may not have it <Cite n={12} />. Operators are add-on programs for Kubernetes that use custom resources to manage apps and their parts <Cite n={2} />. Operators follow the ideas of Kubernetes, most of all the control loop <Cite n={2} />.
 
 </Layman>
 <Bangla>
 
-etcd হলো একটা key value store। এটা consistent আর highly available। Kubernetes এটাকে তার সব cluster data-র backing store হিসেবে ব্যবহার করে <Cite n={1} />। Operator হলো Kubernetes-এর software extension। এগুলো custom resource ব্যবহার করে application ও তার component পরিচালনা করে <Cite n={2} />।
+**একটা cluster।** একটা Kubernetes cluster-এ থাকে একটা control plane আর worker machine-এর একটা set, যাদের node বলে, যেগুলো containerized application চালায় <Cite n={1} />। Pod চালাতে প্রতিটা cluster-এর অন্তত একটা worker node লাগে <Cite n={1} />। control plane worker node আর cluster-এর Pod-গুলো পরিচালনা করে <Cite n={1} />। production environment-এ control plane সাধারণত একাধিক computer জুড়ে চলে, আর একটা cluster সাধারণত একাধিক node চালায়, যাতে fault-tolerance আর high availability পাওয়া যায় <Cite n={1} />।
+
+**Control plane।**
+
+| Component | কী করে |
+|---|---|
+| kube-apiserver | Kubernetes API expose করে; API server হলো Kubernetes control plane-এর front end <Cite n={1} /> |
+| etcd | একটা consistent আর highly-available key value store, যা Kubernetes সব cluster data-র backing store হিসেবে ব্যবহার করে <Cite n={1} /> |
+| kube-scheduler | নতুন তৈরি হওয়া, node বরাদ্দ না হওয়া Pod-গুলোর দিকে নজর রাখে, আর তাদের চলার জন্য একটা node বেছে নেয় <Cite n={1} /> |
+| kube-controller-manager | controller process চালায় <Cite n={1} /> |
+| cloud-controller-manager | cloud-নির্দিষ্ট control logic ধারণ করে, আর আপনার cluster-কে আপনার cloud provider-এর API-এর সাথে যুক্ত করতে দেয় <Cite n={1} /> |
+
+**Node component।** একটা node-এর component-গুলোর মধ্যে আছে kubelet, একটা container runtime আর kube-proxy <Cite n={3} />।
+
+| Component | কী করে |
+|---|---|
+| kubelet | cluster-এর প্রতিটা node-এ চলা একটা agent; এটা নিশ্চিত করে যে container-গুলো একটা Pod-এ চলছে <Cite n={1} /> |
+| kube-proxy (optional) | প্রতিটা node-এ চলা একটা network proxy, যা Kubernetes Service ধারণার একটা অংশ বাস্তবায়ন করে <Cite n={1} /> |
+| Container runtime | container-এর execution আর lifecycle পরিচালনা করে; Kubernetes containerd, CRI-O, আর Kubernetes CRI-এর অন্য যেকোনো implementation-এর মতো container runtime support করে <Cite n={1} /> |
+
+**Add-on।** সব Kubernetes cluster-এ cluster DNS থাকা উচিত, কারণ অনেক উদাহরণ এর ওপর নির্ভর করে <Cite n={1} />। add-on-এর namespaced resource-গুলো `kube-system` namespace-এ থাকে <Cite n={1} />।
+
+**API বাড়ানো।** custom resource হলো Kubernetes API-এর একটা extension, যা default Kubernetes installation-এ নাও থাকতে পারে <Cite n={12} />। Operator হলো Kubernetes-এর software extension, যা custom resource ব্যবহার করে application আর তার component পরিচালনা করে <Cite n={2} />। Operator Kubernetes-এর নীতি মেনে চলে, বিশেষ করে control loop <Cite n={2} />।
 
 </Bangla>
 </Voices>
+
+## How it works
+
+<Voices>
+<Technical>
+
+**The API server is the front end.** kube-apiserver exposes the Kubernetes API, and the API server is the front end for the control plane <Cite n={1} />. kube-apiserver is designed to scale horizontally: it scales by deploying more instances <Cite n={1} />.
+
+**etcd keeps the state.** All Kubernetes objects are stored in etcd <Cite n={14} />. etcd is a leader-based distributed system <Cite n={14} />.
+
+**The scheduler places Pods.** kube-scheduler is the default scheduler for Kubernetes and runs as part of the control plane <Cite n={6} />. It selects an optimal node to run newly created or not yet scheduled Pods <Cite n={6} />. It selects a node in a 2-step operation: filtering finds the set of Nodes where it's feasible to schedule the Pod, and scoring ranks the remaining nodes to choose the most suitable Pod placement <Cite n={6} />. If none of the nodes are suitable, the Pod remains unscheduled until the scheduler is able to place it <Cite n={6} />. With the `nodeSelector` field of a Pod, you list the node labels that you want the target node to have, and Kubernetes only schedules the Pod onto nodes that have each of the labels you specify <Cite n={7} />.
+
+**The controllers react.** kube-controller-manager runs controller processes: logically, each controller is a separate process, but they are all compiled into a single binary and run in a single process <Cite n={1} />. One of them, the Node controller, is responsible for noticing and responding when nodes go down <Cite n={1} />.
+
+**The kubelet runs the Pods, and reports.** The kubelet takes a set of PodSpecs and ensures that the containers described in those PodSpecs are running and healthy <Cite n={1} />. Heartbeats, sent by Kubernetes nodes, help your cluster determine the availability of each node <Cite n={3} />. For nodes there are two forms of heartbeats: updates to the `.status` of a Node, and Lease objects within the `kube-node-lease` namespace <Cite n={3} />. Every kubelet heartbeat is an update request to its Lease object, updating the `spec.renewTime` field of the Lease <Cite n={5} />. Four of the conditions of a node <Cite n={4} />:
+
+| Condition | Meaning |
+|---|---|
+| `Ready` | `True` if the node is healthy and ready to accept Pods; `False` if it is not healthy and is not accepting Pods; `Unknown` if the node controller has not heard from the node in the last `node-monitor-grace-period` (default is 50 seconds) |
+| `DiskPressure` | `True` if pressure exists on the disk size, that is, if the disk capacity is low |
+| `MemoryPressure` | `True` if pressure exists on the node memory, that is, if the node memory is low |
+| `PIDPressure` | `True` if pressure exists on the processes, that is, if there are too many processes on the node |
+
+**Static Pods.** The control plane components can be deployed as static Pods, managed by the kubelet on specific nodes; this is a common approach used by tools like kubeadm <Cite n={1} />. Static Pods are managed directly by the kubelet daemon on a specific node, without the API server observing them <Cite n={9} />. The kubelet watches each static Pod and restarts it if it fails <Cite n={9} />. The `staticPodPath` field of the kubelet configuration file names a directory; the kubelet periodically scans it and creates or deletes static Pods as YAML or JSON files appear or disappear there <Cite n={10} />. The kubelet automatically tries to create a mirror Pod on the API server for each static Pod: the Pods are visible on the API server, but cannot be controlled from there <Cite n={9} />. Their names are suffixed with the node hostname with a leading hyphen, and they have the `kubernetes.io/config.mirror` annotation <Cite n={9} />.
+
+**Who runs the control plane.** Cloud providers often abstract away the control plane, managing its components as part of their service offering <Cite n={1} />. If you are running Kubernetes on your own premises, or in a learning environment inside your own PC, the cluster does not have a cloud controller manager <Cite n={1} />.
+
+**The API can grow.** When you create a CustomResourceDefinition, a new RESTful API endpoint is created for its objects <Cite n={13} />. On their own, custom resources let you store and retrieve structured data; when you combine a custom resource with a custom controller, custom resources provide a true declarative API <Cite n={12} />.
+
+In the tutorial's run below, the one node, `qa-lab-control-plane`, ran all the parts. This diagram is the tutorial's own picture of it:
+
+```text
+qa-lab-control-plane
+├─ control plane, static Pods
+│  ├─ kube-apiserver
+│  ├─ etcd
+│  ├─ kube-scheduler
+│  └─ kube-controller-manager
+├─ node components
+│  ├─ kubelet
+│  ├─ containerd
+│  └─ kube-proxy
+└─ add-ons: coredns, kindnet
+```
+
+</Technical>
+<Layman>
+
+**The API server is the front door.** kube-apiserver offers the Kubernetes API, and it is the front door of the control plane <Cite n={1} />. It is built to grow sideways: you run more copies of it <Cite n={1} />.
+
+**etcd keeps the state.** Every Kubernetes object is stored in etcd <Cite n={14} />. etcd is a distributed system with a leader <Cite n={14} />.
+
+**The scheduler places Pods.** kube-scheduler is the default scheduler of Kubernetes, and it runs as part of the control plane <Cite n={6} />. It picks the best node for each new Pod, or for a Pod that has no node yet <Cite n={6} />. It does this in two steps: filtering finds the nodes where the Pod can run, and scoring ranks them to pick the best place <Cite n={6} />. If no node fits, the Pod stays unplaced until the scheduler can place it <Cite n={6} />. In the `nodeSelector` field of a Pod, you list the labels that the node must have, and Kubernetes only places the Pod on a node that has each of them <Cite n={7} />.
+
+**The controllers react.** kube-controller-manager runs the controllers: each is its own process in theory, but they are built into one program that runs as one process <Cite n={1} />. One of them, the Node controller, notices and responds when nodes go down <Cite n={1} />.
+
+**The kubelet runs the Pods, and reports.** The kubelet takes the Pod specs that it gets and makes sure that their containers are running and healthy <Cite n={1} />. Nodes send heartbeats, which help the cluster see whether each node is available <Cite n={3} />. There are two kinds of heartbeat: updates to the `.status` of the Node, and Lease objects in the `kube-node-lease` namespace <Cite n={3} />. Each heartbeat of the kubelet updates the `spec.renewTime` field of its Lease <Cite n={5} />. Four of the conditions of a node <Cite n={4} />:
+
+| Condition | Meaning |
+|---|---|
+| `Ready` | `True` if the node is healthy and can take Pods; `False` if not; `Unknown` if the node controller has not heard from the node in the last `node-monitor-grace-period` (50 seconds by default) |
+| `DiskPressure` | `True` if the disk is running out of space |
+| `MemoryPressure` | `True` if the node is running out of memory |
+| `PIDPressure` | `True` if there are too many processes on the node |
+
+**Static Pods.** The control plane can run as static Pods, which the kubelet manages on certain nodes; tools like kubeadm often do this <Cite n={1} />. The kubelet on one node manages a static Pod directly, and the API server does not watch it <Cite n={9} />. The kubelet watches each static Pod and restarts it if it fails <Cite n={9} />. The `staticPodPath` field of the kubelet's configuration file names a folder; the kubelet checks it from time to time, and creates or deletes static Pods as YAML or JSON files appear or disappear there <Cite n={10} />. For each static Pod, the kubelet tries to make a mirror Pod on the API server: you can see it there, but you cannot control it from there <Cite n={9} />. Its name ends with a hyphen and the node's hostname, and it has the `kubernetes.io/config.mirror` annotation <Cite n={9} />.
+
+**Who runs the control plane.** Cloud providers often hide the control plane and run its parts as part of their service <Cite n={1} />. If you run Kubernetes on your own machines, or to learn on your own PC, the cluster has no cloud controller manager <Cite n={1} />.
+
+**The API can grow.** When you create a CustomResourceDefinition, the API gets a new endpoint for its objects <Cite n={13} />. On their own, custom resources let you store data and get it back; with a custom controller, they become a true declarative API <Cite n={12} />.
+
+In the tutorial's run below, the one node, `qa-lab-control-plane`, ran all the parts. This diagram is the tutorial's own picture of it:
+
+```text
+qa-lab-control-plane
+├─ control plane, static Pods
+│  ├─ kube-apiserver
+│  ├─ etcd
+│  ├─ kube-scheduler
+│  └─ kube-controller-manager
+├─ node components
+│  ├─ kubelet
+│  ├─ containerd
+│  └─ kube-proxy
+└─ add-ons: coredns, kindnet
+```
+
+</Layman>
+<Bangla>
+
+**API server হলো front end।** kube-apiserver Kubernetes API expose করে, আর API server হলো control plane-এর front end <Cite n={1} />। kube-apiserver horizontally scale করার জন্য বানানো: আরও instance deploy করে এটা scale করে <Cite n={1} />।
+
+**etcd state ধরে রাখে।** সব Kubernetes object etcd-তে store করা থাকে <Cite n={14} />। etcd একটা leader-based distributed system <Cite n={14} />।
+
+**Scheduler Pod বসায়।** kube-scheduler হলো Kubernetes-এর default scheduler, আর এটা control plane-এর অংশ হিসেবে চলে <Cite n={6} />। নতুন তৈরি হওয়া বা এখনো schedule না হওয়া Pod চালানোর জন্য এটা একটা optimal node বেছে নেয় <Cite n={6} />। এটা দুই ধাপে node বাছে: filtering সেই Node-গুলো খুঁজে বের করে যেখানে Pod schedule করা সম্ভব, আর scoring বাকি node-গুলোকে র‍্যাঙ্ক করে সবচেয়ে উপযুক্ত জায়গা বেছে নেয় <Cite n={6} />। কোনো node উপযুক্ত না হলে, scheduler বসাতে না পারা পর্যন্ত Pod unscheduled থাকে <Cite n={6} />। Pod-এর `nodeSelector` field-এ আপনি target node-এ যে node label চান তা লেখেন, আর Kubernetes Pod-কে কেবল সেই node-এ schedule করে, যেখানে আপনার দেওয়া প্রতিটা label আছে <Cite n={7} />।
+
+**Controller সাড়া দেয়।** kube-controller-manager controller process চালায়: যুক্তির দিক থেকে প্রতিটা controller আলাদা process, কিন্তু সবগুলো একটা binary-তে compile হয়ে একটা process-এ চলে <Cite n={1} />। এদের একটা, Node controller, node বন্ধ হয়ে গেলে তা খেয়াল করে সাড়া দেয় <Cite n={1} />।
+
+**kubelet Pod চালায়, আর খবর দেয়।** kubelet কিছু PodSpec নেয়, আর নিশ্চিত করে যে ওই PodSpec-এ বর্ণিত container-গুলো চলছে আর healthy <Cite n={1} />। Kubernetes node-এর পাঠানো heartbeat cluster-কে প্রতিটা node-এর availability বুঝতে সাহায্য করে <Cite n={3} />। node-এর heartbeat দুই রকম: Node-এর `.status`-এর আপডেট, আর `kube-node-lease` namespace-এর Lease object <Cite n={3} />। kubelet-এর প্রতিটা heartbeat তার Lease object-এর একটা update request, যা Lease-এর `spec.renewTime` field আপডেট করে <Cite n={5} />। একটা node-এর চারটা condition <Cite n={4} />:
+
+| Condition | অর্থ |
+|---|---|
+| `Ready` | node healthy আর Pod নিতে প্রস্তুত হলে `True`; healthy না হলে আর Pod না নিলে `False`; শেষ `node-monitor-grace-period`-এ (default 50 সেকেন্ড) node controller node-এর কোনো খবর না পেলে `Unknown` |
+| `DiskPressure` | disk size-এ চাপ থাকলে, মানে disk capacity কম হলে `True` |
+| `MemoryPressure` | node memory-তে চাপ থাকলে, মানে node memory কম হলে `True` |
+| `PIDPressure` | process-এ চাপ থাকলে, মানে node-এ অনেক বেশি process থাকলে `True` |
+
+**Static Pod।** control plane component-গুলো static Pod হিসেবে deploy করা যায়, যা নির্দিষ্ট node-এ kubelet পরিচালনা করে; kubeadm-এর মতো tool এই পদ্ধতি প্রায়ই ব্যবহার করে <Cite n={1} />। Static Pod নির্দিষ্ট একটা node-এর kubelet daemon সরাসরি পরিচালনা করে, API server সেগুলো observe করে না <Cite n={9} />। kubelet প্রতিটা static Pod-এর দিকে নজর রাখে, আর ফেল করলে restart করে <Cite n={9} />। kubelet configuration file-এর `staticPodPath` field একটা directory-র নাম দেয়; kubelet নিয়মিত সেটা scan করে, আর সেখানে YAML বা JSON file আসলে বা চলে গেলে static Pod তৈরি করে বা মুছে দেয় <Cite n={10} />। প্রতিটা static Pod-এর জন্য kubelet নিজে থেকে API server-এ একটা mirror Pod তৈরির চেষ্টা করে: Pod-গুলো API server-এ দেখা যায়, কিন্তু সেখান থেকে নিয়ন্ত্রণ করা যায় না <Cite n={9} />। তাদের নামের শেষে একটা hyphen আর node-এর hostname যোগ হয়, আর তাদের `kubernetes.io/config.mirror` annotation থাকে <Cite n={9} />।
+
+**Control plane কে চালায়।** cloud provider-রা প্রায়ই control plane আড়াল করে রাখে, আর তার component-গুলো তাদের service-এর অংশ হিসেবে পরিচালনা করে <Cite n={1} />। আপনি নিজের premises-এ, বা নিজের PC-র ভেতরে একটা learning environment-এ Kubernetes চালালে cluster-এ কোনো cloud controller manager থাকে না <Cite n={1} />।
+
+**API বাড়তে পারে।** একটা CustomResourceDefinition তৈরি করলে তার object-গুলোর জন্য একটা নতুন RESTful API endpoint তৈরি হয় <Cite n={13} />। custom resource নিজে থেকে structured data store আর retrieve করতে দেয়; একটা custom resource-কে একটা custom controller-এর সাথে মেলালে custom resource একটা সত্যিকারের declarative API দেয় <Cite n={12} />।
+
+নিচের টিউটোরিয়ালের run-এ একমাত্র node `qa-lab-control-plane` সব অংশ চালিয়েছে। এই diagram তার টিউটোরিয়ালের নিজের ছবি:
+
+```text
+qa-lab-control-plane
+├─ control plane, static Pods
+│  ├─ kube-apiserver
+│  ├─ etcd
+│  ├─ kube-scheduler
+│  └─ kube-controller-manager
+├─ node components
+│  ├─ kubelet
+│  ├─ containerd
+│  └─ kube-proxy
+└─ add-ons: coredns, kindnet
+```
+
+</Bangla>
+</Voices>
+
+## Try it
+
+<Voices>
+<Technical>
+
+The tutorial ran these steps on 2026-11-18 on Linux, on the kind cluster `qa-lab` of [Kubernetes Basics](/devops/kubernetes-basics/), with Docker 29.10.0, kind v0.33.0, and kubectl v1.37.2; the cluster ran Kubernetes v1.37.0, and its etcd reported the version 3.7.0. Names, hashes, IP addresses, and ages differ on your machine. The run undid each of its changes.
+
+**1. List the parts.** Namespaced resources for addons belong within the `kube-system` namespace <Cite n={1} />. `-o wide` lists with more details <Cite n={16} />:
+
+```bash
+kubectl get pods -n kube-system -o wide
+```
+
+In the tutorial's run, all eight Pods ran on the node `qa-lab-control-plane`. These are the first five of the nine columns:
+
+```text
+NAME                                           READY   STATUS    RESTARTS   AGE
+coredns-559f6c778d-5qgx5                       1/1     Running   0          30m
+coredns-559f6c778d-plrdk                       1/1     Running   0          30m
+etcd-qa-lab-control-plane                      1/1     Running   0          30m
+kindnet-bqpft                                  1/1     Running   0          30m
+kube-apiserver-qa-lab-control-plane            1/1     Running   0          30m
+kube-controller-manager-qa-lab-control-plane   1/1     Running   0          30m
+kube-proxy-q7hmq                               1/1     Running   0          30m
+kube-scheduler-qa-lab-control-plane            1/1     Running   0          30m
+```
+
+There was no `cloud-controller-manager`: a cluster in a learning environment inside your own PC does not have a cloud controller manager <Cite n={1} />.
+
+**2. Find the static Pods.** kind runs local Kubernetes clusters using Docker container "nodes" <Cite n={18} />, and `docker exec` executes a command in a running container <Cite n={19} />. `-o yaml` gets a Pod's YAML <Cite n={16} />:
+
+```bash
+docker exec qa-lab-control-plane ls /etc/kubernetes/manifests
+kubectl get pod -n kube-system kube-scheduler-qa-lab-control-plane -o yaml
+```
+
+In the tutorial's run, the folder held four files:
+
+```text
+etcd.yaml
+kube-apiserver.yaml
+kube-controller-manager.yaml
+kube-scheduler.yaml
+```
+
+The mirror Pods of static Pods have the `kubernetes.io/config.mirror` annotation <Cite n={9} />. In the tutorial's run, the `annotations` of the YAML were:
+
+```text
+  annotations:
+    kubernetes.io/config.hash: 8a81d58baca001374dacad117e49f652
+    kubernetes.io/config.mirror: 8a81d58baca001374dacad117e49f652
+    kubernetes.io/config.seen: "2026-11-17T21:32:44.103897564Z"
+    kubernetes.io/config.source: file
+```
+
+**3. Ask the API server whether it is ready.** The API server provides the endpoints `livez` and `readyz` to indicate its current status; the `healthz` endpoint is deprecated <Cite n={11} />. For all endpoints, the `verbose` parameter prints out the checks and their status <Cite n={11} />:
+
+```bash
+kubectl get --raw='/readyz?verbose'
+kubectl get --raw='/livez'
+```
+
+In the tutorial's run, `readyz` listed 37 checks, each `ok`. These are its first five lines and its last two; the `...` stands for the 31 lines between them:
+
+```text
+[+]ping ok
+[+]log ok
+[+]etcd ok
+[+]etcd-readiness ok
+[+]informer-sync ok
+...
+[+]shutdown ok
+readyz check passed
+```
+
+`livez` printed `ok`.
+
+**4. Look at the node and its heartbeat.** `kubectl describe nodes` describes a node with verbose output <Cite n={16} />. A kubelet heartbeat updates the Lease of its node in `kube-node-lease` <Cite n={5} />. If the name is omitted, `kubectl get` displays details for all resources of the type <Cite n={15} />; the Leases page lists the Leases of the API servers with `kubectl -n kube-system get lease -l apiserver.kubernetes.io/identity=kube-apiserver` <Cite n={5} />:
+
+```bash
+kubectl describe node qa-lab-control-plane
+kubectl get lease -n kube-node-lease
+kubectl get lease -n kube-system
+```
+
+In the tutorial's run, the `Conditions` of the node were `MemoryPressure False`, `DiskPressure False`, `PIDPressure False`, and `Ready True`, with the message `kubelet is posting ready status`. The node had one Lease:
+
+```text
+NAME                   HOLDER                 AGE
+qa-lab-control-plane   qa-lab-control-plane   30m
+```
+
+`kube-system` had three: `kube-controller-manager`, `kube-scheduler`, and `apiserver-6tdpjhz7azl24rq4t7kzmedf3a`. Kubernetes uses Leases to ensure only one instance of a component is running at any given time; control plane components like kube-controller-manager and kube-scheduler use this in HA configurations <Cite n={5} />. Each kube-apiserver uses the Lease API to publish its identity <Cite n={5} />.
+
+**5. Give the scheduler a Pod that it cannot place.** `kubectl explain` gets the documentation for Pod manifests <Cite n={16} />. The tutorial asked for one field:
+
+```bash
+kubectl explain pod.spec.nodeSelector
+```
+
+In the tutorial's run, it printed:
+
+```text
+KIND:       Pod
+VERSION:    v1
+
+FIELD: nodeSelector <map[string]string>
+
+
+DESCRIPTION:
+    NodeSelector is a selector which must be true for the pod to fit on a node.
+    Selector which must match a node's labels for the pod to be scheduled on
+    that node. More info:
+    https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+```
+
+The tutorial's own Pod, `picky`, asks for a node with the label `disktype=ssd`, and the node of the run had no such label. `kubectl apply -f` creates resources from a file <Cite n={16} />. kubectl commands have the form `kubectl [command] [TYPE] [NAME] [flags]`, and `create`, `get`, `describe`, and `delete` are among the operations <Cite n={15} />:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: picky
+  namespace: arch-lab
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.16.1
+  nodeSelector:
+    disktype: ssd
+```
+
+```bash
+kubectl create namespace arch-lab
+kubectl apply -f arch-picky.yaml
+kubectl get pod picky -n arch-lab
+kubectl describe pod picky -n arch-lab
+```
+
+In the tutorial's run, the Pod was `Pending` after 8 seconds. Its Events had one line; here it is with its header, without their two leading spaces:
+
+```text
+Type     Reason            Age   From               Message
+Warning  FailedScheduling  8s    default-scheduler  0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+```
+
+Then the tutorial gave the node the label, with the command of the docs' own example <Cite n={8} />, and waited for the Pod. `kubectl wait` waits for a specific condition on one or many resources, and `--timeout` is the length of time to wait before giving up <Cite n={17} />:
+
+```bash
+kubectl label nodes qa-lab-control-plane disktype=ssd
+kubectl wait --for=condition=Ready pod/picky -n arch-lab --timeout=90s
+kubectl get pod picky -n arch-lab -o wide
+```
+
+In the tutorial's run, `kubectl wait` printed `pod/picky condition met`, and the Pod was `Running` on `qa-lab-control-plane`, 9 seconds old. Then the tutorial removed the label and the namespace. A `-` after the name of a label removes the label <Cite n={16} />:
+
+```bash
+kubectl label nodes qa-lab-control-plane disktype-
+kubectl delete namespace arch-lab
+```
+
+**6. Add a custom resource.** This is the CronTab example of the Kubernetes docs, a CustomResourceDefinition in `resourcedefinition.yaml` and an object in `my-crontab.yaml` <Cite n={13} />. Here the definition is without its comments:
+
+```yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: crontabs.stable.example.com
+spec:
+  group: stable.example.com
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                cronSpec:
+                  type: string
+                image:
+                  type: string
+                replicas:
+                  type: integer
+  scope: Namespaced
+  names:
+    plural: crontabs
+    singular: crontab
+    kind: CronTab
+    shortNames:
+    - ct
+```
+
+```yaml
+apiVersion: "stable.example.com/v1"
+kind: CronTab
+metadata:
+  name: my-new-cron-object
+spec:
+  cronSpec: "* * * * */5"
+  image: my-awesome-cron-image
+```
+
+Once the `Established` condition of the CustomResourceDefinition becomes true, the endpoint serving starts <Cite n={13} />. `kubectl api-resources --api-group` lists all resources in an API group <Cite n={16} />. `shortNames` allow a shorter string to match the resource on the CLI <Cite n={13} />, and `-o jsonpath` prints the fields of a JSONPath expression <Cite n={16} />:
+
+```bash
+kubectl apply -f resourcedefinition.yaml
+kubectl wait --for=condition=Established crd/crontabs.stable.example.com --timeout=60s
+kubectl api-resources --api-group=stable.example.com
+kubectl apply -f my-crontab.yaml
+kubectl get crontab
+kubectl get ct my-new-cron-object -o jsonpath='{.spec}{"\n"}'
+kubectl get pods
+```
+
+In the tutorial's run, the new type was listed with its short name:
+
+```text
+NAME       SHORTNAMES   APIVERSION              NAMESPACED   KIND
+crontabs   ct           stable.example.com/v1   true         CronTab
+```
+
+`kubectl get crontab` listed `my-new-cron-object`, and its `spec` was `{"cronSpec":"* * * * */5","image":"my-awesome-cron-image"}`. `kubectl get pods` printed `No resources found in default namespace.` On their own, custom resources let you store and retrieve structured data <Cite n={12} />. When you delete a CustomResourceDefinition, the server will uninstall the RESTful API endpoint and delete all custom objects stored in it <Cite n={13} />:
+
+```bash
+kubectl delete -f resourcedefinition.yaml
+kubectl get crontabs
+```
+
+In the tutorial's run, `kubectl get crontabs` then printed an `Error from server (NotFound)` and exited with code 1.
+
+**7. Look at etcd, and take a snapshot.** For `etcdctl`, the trusted CA file, the cert file, and the key file can be obtained from the description of the etcd Pod <Cite n={14} />:
+
+```bash
+kubectl describe pod -n kube-system etcd-qa-lab-control-plane
+```
+
+In the tutorial's run, these were four of its flags, shown without their leading spaces:
+
+```text
+--cert-file=/etc/kubernetes/pki/etcd/server.crt
+--key-file=/etc/kubernetes/pki/etcd/server.key
+--listen-client-urls=https://127.0.0.1:2379,https://172.22.0.2:2379
+--trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+```
+
+The docs show `etcdctl` with these files: `member list`, and `snapshot save` to create a snapshot <Cite n={14} />. `kubectl exec` runs a command in an existing Pod <Cite n={16} />. The tutorial ran `etcdctl` in the etcd Pod, without the `ETCDCTL_API=3` of the docs' examples:
+
+```bash
+kubectl exec -n kube-system etcd-qa-lab-control-plane -- etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  member list
+kubectl exec -n kube-system etcd-qa-lab-control-plane -- etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  snapshot save /var/lib/etcd/qa-lab-snapshot.db
+docker exec qa-lab-control-plane ls -l /var/lib/etcd/qa-lab-snapshot.db
+docker exec qa-lab-control-plane rm /var/lib/etcd/qa-lab-snapshot.db
+```
+
+In the tutorial's run, `member list` printed one member:
+
+```text
+77eb8262bc33c2de, started, qa-lab-control-plane, https://172.22.0.2:2380, https://172.22.0.2:2379, false
+```
+
+`snapshot save` printed six lines of log, then:
+
+```text
+Snapshot saved at /var/lib/etcd/qa-lab-snapshot.db
+Server version 3.7.0
+```
+
+The snapshot file was 2883616 bytes, and the last command deleted it. At the end of the run, the namespace `arch-lab`, the CustomResourceDefinition, the label, and the snapshot file were gone.
+
+</Technical>
+<Layman>
+
+The tutorial ran these steps on 2026-11-18 on Linux, on the kind cluster `qa-lab` of [Kubernetes Basics](/devops/kubernetes-basics/), with Docker 29.10.0, kind v0.33.0, and kubectl v1.37.2; the cluster ran Kubernetes v1.37.0, and its etcd reported the version 3.7.0. Names, hashes, IP addresses, and ages differ on your machine. The run undid each of its changes.
+
+**1. List the parts.** Add-ons keep their namespaced resources in the `kube-system` namespace <Cite n={1} />. `-o wide` shows more details <Cite n={16} />:
+
+```bash
+kubectl get pods -n kube-system -o wide
+```
+
+In the tutorial's run, all eight Pods ran on the node `qa-lab-control-plane`. These are the first five of the nine columns:
+
+```text
+NAME                                           READY   STATUS    RESTARTS   AGE
+coredns-559f6c778d-5qgx5                       1/1     Running   0          30m
+coredns-559f6c778d-plrdk                       1/1     Running   0          30m
+etcd-qa-lab-control-plane                      1/1     Running   0          30m
+kindnet-bqpft                                  1/1     Running   0          30m
+kube-apiserver-qa-lab-control-plane            1/1     Running   0          30m
+kube-controller-manager-qa-lab-control-plane   1/1     Running   0          30m
+kube-proxy-q7hmq                               1/1     Running   0          30m
+kube-scheduler-qa-lab-control-plane            1/1     Running   0          30m
+```
+
+There was no `cloud-controller-manager`: a cluster for learning on your own PC has none <Cite n={1} />.
+
+**2. Find the static Pods.** kind runs local Kubernetes clusters whose "nodes" are Docker containers <Cite n={18} />, and `docker exec` runs a command in a running container <Cite n={19} />. `-o yaml` shows a Pod's YAML <Cite n={16} />:
+
+```bash
+docker exec qa-lab-control-plane ls /etc/kubernetes/manifests
+kubectl get pod -n kube-system kube-scheduler-qa-lab-control-plane -o yaml
+```
+
+In the tutorial's run, the folder held four files:
+
+```text
+etcd.yaml
+kube-apiserver.yaml
+kube-controller-manager.yaml
+kube-scheduler.yaml
+```
+
+The mirror Pod of a static Pod has the `kubernetes.io/config.mirror` annotation <Cite n={9} />. In the tutorial's run, the `annotations` of the YAML were:
+
+```text
+  annotations:
+    kubernetes.io/config.hash: 8a81d58baca001374dacad117e49f652
+    kubernetes.io/config.mirror: 8a81d58baca001374dacad117e49f652
+    kubernetes.io/config.seen: "2026-11-17T21:32:44.103897564Z"
+    kubernetes.io/config.source: file
+```
+
+**3. Ask the API server whether it is ready.** The API server has the endpoints `livez` and `readyz`, which show its current status; the `healthz` endpoint is deprecated <Cite n={11} />. On every endpoint, the `verbose` parameter prints the checks and their status <Cite n={11} />:
+
+```bash
+kubectl get --raw='/readyz?verbose'
+kubectl get --raw='/livez'
+```
+
+In the tutorial's run, `readyz` listed 37 checks, each `ok`. These are its first five lines and its last two; the `...` stands for the 31 lines between them:
+
+```text
+[+]ping ok
+[+]log ok
+[+]etcd ok
+[+]etcd-readiness ok
+[+]informer-sync ok
+...
+[+]shutdown ok
+readyz check passed
+```
+
+`livez` printed `ok`.
+
+**4. Look at the node and its heartbeat.** `kubectl describe nodes` gives a long, detailed description of a node <Cite n={16} />. Each heartbeat of a kubelet updates its node's Lease in `kube-node-lease` <Cite n={5} />. Without a name, `kubectl get` shows details for all resources of the type <Cite n={15} />; the Leases page lists the Leases of the API servers with `kubectl -n kube-system get lease -l apiserver.kubernetes.io/identity=kube-apiserver` <Cite n={5} />:
+
+```bash
+kubectl describe node qa-lab-control-plane
+kubectl get lease -n kube-node-lease
+kubectl get lease -n kube-system
+```
+
+In the tutorial's run, the `Conditions` of the node were `MemoryPressure False`, `DiskPressure False`, `PIDPressure False`, and `Ready True`, with the message `kubelet is posting ready status`. The node had one Lease:
+
+```text
+NAME                   HOLDER                 AGE
+qa-lab-control-plane   qa-lab-control-plane   30m
+```
+
+`kube-system` had three: `kube-controller-manager`, `kube-scheduler`, and `apiserver-6tdpjhz7azl24rq4t7kzmedf3a`. Kubernetes uses Leases so that only one copy of a component is active at any given time; control plane parts like kube-controller-manager and kube-scheduler do this when they run in HA setups <Cite n={5} />. Each kube-apiserver uses the Lease API to tell the rest of the system who it is <Cite n={5} />.
+
+**5. Give the scheduler a Pod that it cannot place.** `kubectl explain` shows the documentation of Pod manifests <Cite n={16} />. The tutorial asked for one field:
+
+```bash
+kubectl explain pod.spec.nodeSelector
+```
+
+In the tutorial's run, it printed:
+
+```text
+KIND:       Pod
+VERSION:    v1
+
+FIELD: nodeSelector <map[string]string>
+
+
+DESCRIPTION:
+    NodeSelector is a selector which must be true for the pod to fit on a node.
+    Selector which must match a node's labels for the pod to be scheduled on
+    that node. More info:
+    https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+```
+
+The tutorial's own Pod, `picky`, asks for a node with the label `disktype=ssd`, and the node of the run had no such label. `kubectl apply -f` creates resources from a file <Cite n={16} />. kubectl commands look like `kubectl [command] [TYPE] [NAME] [flags]`, and `create`, `get`, `describe`, and `delete` are among the actions <Cite n={15} />:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: picky
+  namespace: arch-lab
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.16.1
+  nodeSelector:
+    disktype: ssd
+```
+
+```bash
+kubectl create namespace arch-lab
+kubectl apply -f arch-picky.yaml
+kubectl get pod picky -n arch-lab
+kubectl describe pod picky -n arch-lab
+```
+
+In the tutorial's run, the Pod was `Pending` after 8 seconds. Its Events had one line; here it is with its header, without their two leading spaces:
+
+```text
+Type     Reason            Age   From               Message
+Warning  FailedScheduling  8s    default-scheduler  0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+```
+
+Then the tutorial gave the node the label, with the command of the docs' own example <Cite n={8} />, and waited for the Pod. `kubectl wait` waits until one or more resources meet a condition, and `--timeout` says how long to wait before it gives up <Cite n={17} />:
+
+```bash
+kubectl label nodes qa-lab-control-plane disktype=ssd
+kubectl wait --for=condition=Ready pod/picky -n arch-lab --timeout=90s
+kubectl get pod picky -n arch-lab -o wide
+```
+
+In the tutorial's run, `kubectl wait` printed `pod/picky condition met`, and the Pod was `Running` on `qa-lab-control-plane`, 9 seconds old. Then the tutorial removed the label and the namespace. A `-` after the name of a label removes the label <Cite n={16} />:
+
+```bash
+kubectl label nodes qa-lab-control-plane disktype-
+kubectl delete namespace arch-lab
+```
+
+**6. Add a custom resource.** This is the CronTab example of the Kubernetes docs: a CustomResourceDefinition in `resourcedefinition.yaml`, and an object in `my-crontab.yaml` <Cite n={13} />. Here the definition is without its comments:
+
+```yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: crontabs.stable.example.com
+spec:
+  group: stable.example.com
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                cronSpec:
+                  type: string
+                image:
+                  type: string
+                replicas:
+                  type: integer
+  scope: Namespaced
+  names:
+    plural: crontabs
+    singular: crontab
+    kind: CronTab
+    shortNames:
+    - ct
+```
+
+```yaml
+apiVersion: "stable.example.com/v1"
+kind: CronTab
+metadata:
+  name: my-new-cron-object
+spec:
+  cronSpec: "* * * * */5"
+  image: my-awesome-cron-image
+```
+
+When the `Established` condition of the CustomResourceDefinition becomes true, the new endpoint starts to serve <Cite n={13} />. `kubectl api-resources --api-group` lists all resources in an API group <Cite n={16} />. `shortNames` give the type a shorter name for the command line <Cite n={13} />, and `-o jsonpath` prints the fields of a JSONPath expression <Cite n={16} />:
+
+```bash
+kubectl apply -f resourcedefinition.yaml
+kubectl wait --for=condition=Established crd/crontabs.stable.example.com --timeout=60s
+kubectl api-resources --api-group=stable.example.com
+kubectl apply -f my-crontab.yaml
+kubectl get crontab
+kubectl get ct my-new-cron-object -o jsonpath='{.spec}{"\n"}'
+kubectl get pods
+```
+
+In the tutorial's run, the new type was listed with its short name:
+
+```text
+NAME       SHORTNAMES   APIVERSION              NAMESPACED   KIND
+crontabs   ct           stable.example.com/v1   true         CronTab
+```
+
+`kubectl get crontab` listed `my-new-cron-object`, and its `spec` was `{"cronSpec":"* * * * */5","image":"my-awesome-cron-image"}`. `kubectl get pods` printed `No resources found in default namespace.` On their own, custom resources let you store data and get it back <Cite n={12} />. When you delete a CustomResourceDefinition, the server removes its endpoint and deletes all the custom objects stored in it <Cite n={13} />:
+
+```bash
+kubectl delete -f resourcedefinition.yaml
+kubectl get crontabs
+```
+
+In the tutorial's run, `kubectl get crontabs` then printed an `Error from server (NotFound)` and exited with code 1.
+
+**7. Look at etcd, and take a snapshot.** For `etcdctl`, you find the trusted CA file, the cert file, and the key file in the description of the etcd Pod <Cite n={14} />:
+
+```bash
+kubectl describe pod -n kube-system etcd-qa-lab-control-plane
+```
+
+In the tutorial's run, these were four of its flags, shown without their leading spaces:
+
+```text
+--cert-file=/etc/kubernetes/pki/etcd/server.crt
+--key-file=/etc/kubernetes/pki/etcd/server.key
+--listen-client-urls=https://127.0.0.1:2379,https://172.22.0.2:2379
+--trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+```
+
+The docs show `etcdctl` with these files: `member list`, and `snapshot save` to make a snapshot <Cite n={14} />. `kubectl exec` runs a command in a Pod that already exists <Cite n={16} />. The tutorial ran `etcdctl` in the etcd Pod, without the `ETCDCTL_API=3` of the docs' examples:
+
+```bash
+kubectl exec -n kube-system etcd-qa-lab-control-plane -- etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  member list
+kubectl exec -n kube-system etcd-qa-lab-control-plane -- etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  snapshot save /var/lib/etcd/qa-lab-snapshot.db
+docker exec qa-lab-control-plane ls -l /var/lib/etcd/qa-lab-snapshot.db
+docker exec qa-lab-control-plane rm /var/lib/etcd/qa-lab-snapshot.db
+```
+
+In the tutorial's run, `member list` printed one member:
+
+```text
+77eb8262bc33c2de, started, qa-lab-control-plane, https://172.22.0.2:2380, https://172.22.0.2:2379, false
+```
+
+`snapshot save` printed six lines of log, then:
+
+```text
+Snapshot saved at /var/lib/etcd/qa-lab-snapshot.db
+Server version 3.7.0
+```
+
+The snapshot file was 2883616 bytes, and the last command deleted it. At the end of the run, the namespace `arch-lab`, the CustomResourceDefinition, the label, and the snapshot file were gone.
+
+</Layman>
+<Bangla>
+
+টিউটোরিয়াল এই ধাপগুলো 2026-11-18 তারিখে Linux-এ, [Kubernetes Basics](/devops/kubernetes-basics/)-এর kind cluster `qa-lab`-এ, Docker 29.10.0, kind v0.33.0 আর kubectl v1.37.2 দিয়ে চালিয়েছে; cluster-এ চলেছে Kubernetes v1.37.0, আর তার etcd version 3.7.0 জানিয়েছে। নাম, hash, IP address আর age আপনার machine-এ আলাদা হবে। run তার প্রতিটা পরিবর্তন ফিরিয়ে নিয়েছে।
+
+**১. অংশগুলোর তালিকা দেখুন।** add-on-এর namespaced resource-গুলো `kube-system` namespace-এ থাকে <Cite n={1} />। `-o wide` আরও বিস্তারিত দেখায় <Cite n={16} />:
+
+```bash
+kubectl get pods -n kube-system -o wide
+```
+
+টিউটোরিয়ালের run-এ আটটা Pod-ই `qa-lab-control-plane` node-এ চলেছে। এগুলো নয়টা column-এর প্রথম পাঁচটা:
+
+```text
+NAME                                           READY   STATUS    RESTARTS   AGE
+coredns-559f6c778d-5qgx5                       1/1     Running   0          30m
+coredns-559f6c778d-plrdk                       1/1     Running   0          30m
+etcd-qa-lab-control-plane                      1/1     Running   0          30m
+kindnet-bqpft                                  1/1     Running   0          30m
+kube-apiserver-qa-lab-control-plane            1/1     Running   0          30m
+kube-controller-manager-qa-lab-control-plane   1/1     Running   0          30m
+kube-proxy-q7hmq                               1/1     Running   0          30m
+kube-scheduler-qa-lab-control-plane            1/1     Running   0          30m
+```
+
+কোনো `cloud-controller-manager` ছিল না: নিজের PC-র ভেতরে একটা learning environment-এর cluster-এ cloud controller manager থাকে না <Cite n={1} />।
+
+**২. Static Pod খুঁজুন।** kind Docker container "node" দিয়ে local Kubernetes cluster চালায় <Cite n={18} />, আর `docker exec` একটা চলমান container-এ একটা command চালায় <Cite n={19} />। `-o yaml` একটা Pod-এর YAML দেখায় <Cite n={16} />:
+
+```bash
+docker exec qa-lab-control-plane ls /etc/kubernetes/manifests
+kubectl get pod -n kube-system kube-scheduler-qa-lab-control-plane -o yaml
+```
+
+টিউটোরিয়ালের run-এ folder-টায় চারটা file ছিল:
+
+```text
+etcd.yaml
+kube-apiserver.yaml
+kube-controller-manager.yaml
+kube-scheduler.yaml
+```
+
+static Pod-এর mirror Pod-এ `kubernetes.io/config.mirror` annotation থাকে <Cite n={9} />। টিউটোরিয়ালের run-এ YAML-এর `annotations` ছিল:
+
+```text
+  annotations:
+    kubernetes.io/config.hash: 8a81d58baca001374dacad117e49f652
+    kubernetes.io/config.mirror: 8a81d58baca001374dacad117e49f652
+    kubernetes.io/config.seen: "2026-11-17T21:32:44.103897564Z"
+    kubernetes.io/config.source: file
+```
+
+**৩. API server প্রস্তুত কি না, জিজ্ঞেস করুন।** API server তার বর্তমান অবস্থা জানাতে `livez` আর `readyz` endpoint দেয়; `healthz` endpoint deprecated <Cite n={11} />। সব endpoint-এ `verbose` parameter check-গুলো আর তাদের status print করে <Cite n={11} />:
+
+```bash
+kubectl get --raw='/readyz?verbose'
+kubectl get --raw='/livez'
+```
+
+টিউটোরিয়ালের run-এ `readyz` 37টা check দেখিয়েছে, প্রতিটা `ok`। এগুলো তার প্রথম পাঁচটা আর শেষ দুটো লাইন; `...` মাঝের 31টা লাইনের জায়গায়:
+
+```text
+[+]ping ok
+[+]log ok
+[+]etcd ok
+[+]etcd-readiness ok
+[+]informer-sync ok
+...
+[+]shutdown ok
+readyz check passed
+```
+
+`livez` print করেছে `ok`।
+
+**৪. Node আর তার heartbeat দেখুন।** `kubectl describe nodes` verbose output দিয়ে একটা node-এর বর্ণনা দেয় <Cite n={16} />। kubelet-এর heartbeat `kube-node-lease`-এ তার node-এর Lease আপডেট করে <Cite n={5} />। নাম না দিলে `kubectl get` ওই type-এর সব resource-এর details দেখায় <Cite n={15} />; Leases page `kubectl -n kube-system get lease -l apiserver.kubernetes.io/identity=kube-apiserver` দিয়ে API server-গুলোর Lease-এর তালিকা দেখায় <Cite n={5} />:
+
+```bash
+kubectl describe node qa-lab-control-plane
+kubectl get lease -n kube-node-lease
+kubectl get lease -n kube-system
+```
+
+টিউটোরিয়ালের run-এ node-এর `Conditions` ছিল `MemoryPressure False`, `DiskPressure False`, `PIDPressure False` আর `Ready True`, message `kubelet is posting ready status`। node-এর একটা Lease ছিল:
+
+```text
+NAME                   HOLDER                 AGE
+qa-lab-control-plane   qa-lab-control-plane   30m
+```
+
+`kube-system`-এ ছিল তিনটা: `kube-controller-manager`, `kube-scheduler` আর `apiserver-6tdpjhz7azl24rq4t7kzmedf3a`। যেকোনো সময়ে একটা component-এর কেবল একটা instance চলছে, তা নিশ্চিত করতে Kubernetes Lease ব্যবহার করে; HA configuration-এ kube-controller-manager আর kube-scheduler-এর মতো control plane component এটা ব্যবহার করে <Cite n={5} />। প্রতিটা kube-apiserver নিজের পরিচয় প্রকাশ করতে Lease API ব্যবহার করে <Cite n={5} />।
+
+**৫. Scheduler-কে এমন একটা Pod দিন, যা সে বসাতে পারে না।** `kubectl explain` Pod manifest-এর documentation দেখায় <Cite n={16} />। টিউটোরিয়াল একটা field জানতে চেয়েছে:
+
+```bash
+kubectl explain pod.spec.nodeSelector
+```
+
+টিউটোরিয়ালের run-এ এটা print করেছে:
+
+```text
+KIND:       Pod
+VERSION:    v1
+
+FIELD: nodeSelector <map[string]string>
+
+
+DESCRIPTION:
+    NodeSelector is a selector which must be true for the pod to fit on a node.
+    Selector which must match a node's labels for the pod to be scheduled on
+    that node. More info:
+    https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+```
+
+টিউটোরিয়ালের নিজের Pod `picky` এমন একটা node চায়, যার label `disktype=ssd`, আর run-এর node-এ এমন কোনো label ছিল না। `kubectl apply -f` একটা file থেকে resource তৈরি করে <Cite n={16} />। kubectl command-এর গঠন `kubectl [command] [TYPE] [NAME] [flags]`, আর `create`, `get`, `describe` আর `delete` operation-গুলোর মধ্যে আছে <Cite n={15} />:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: picky
+  namespace: arch-lab
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.16.1
+  nodeSelector:
+    disktype: ssd
+```
+
+```bash
+kubectl create namespace arch-lab
+kubectl apply -f arch-picky.yaml
+kubectl get pod picky -n arch-lab
+kubectl describe pod picky -n arch-lab
+```
+
+টিউটোরিয়ালের run-এ ৮ সেকেন্ড পরে Pod ছিল `Pending`। তার Events-এ একটা লাইন ছিল; এখানে সেটা header-সহ, দুটোর শুরুর দুটো space ছাড়া:
+
+```text
+Type     Reason            Age   From               Message
+Warning  FailedScheduling  8s    default-scheduler  0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+```
+
+তারপর টিউটোরিয়াল docs-এর নিজের উদাহরণের command দিয়ে node-কে label দিয়েছে <Cite n={8} />, আর Pod-এর জন্য অপেক্ষা করেছে। `kubectl wait` এক বা একাধিক resource-এর ওপর একটা নির্দিষ্ট condition-এর জন্য অপেক্ষা করে, আর `--timeout` হলো হাল ছাড়ার আগে অপেক্ষার সময় <Cite n={17} />:
+
+```bash
+kubectl label nodes qa-lab-control-plane disktype=ssd
+kubectl wait --for=condition=Ready pod/picky -n arch-lab --timeout=90s
+kubectl get pod picky -n arch-lab -o wide
+```
+
+টিউটোরিয়ালের run-এ `kubectl wait` print করেছে `pod/picky condition met`, আর Pod `qa-lab-control-plane`-এ `Running` ছিল, বয়স ৯ সেকেন্ড। তারপর টিউটোরিয়াল label আর namespace সরিয়ে দিয়েছে। label-এর নামের পরে একটা `-` দিলে label-টা সরে যায় <Cite n={16} />:
+
+```bash
+kubectl label nodes qa-lab-control-plane disktype-
+kubectl delete namespace arch-lab
+```
+
+**৬. একটা custom resource যোগ করুন।** এটা Kubernetes docs-এর CronTab উদাহরণ: `resourcedefinition.yaml`-এ একটা CustomResourceDefinition, আর `my-crontab.yaml`-এ একটা object <Cite n={13} />। এখানে definition-টা comment ছাড়া:
+
+```yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: crontabs.stable.example.com
+spec:
+  group: stable.example.com
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                cronSpec:
+                  type: string
+                image:
+                  type: string
+                replicas:
+                  type: integer
+  scope: Namespaced
+  names:
+    plural: crontabs
+    singular: crontab
+    kind: CronTab
+    shortNames:
+    - ct
+```
+
+```yaml
+apiVersion: "stable.example.com/v1"
+kind: CronTab
+metadata:
+  name: my-new-cron-object
+spec:
+  cronSpec: "* * * * */5"
+  image: my-awesome-cron-image
+```
+
+CustomResourceDefinition-এর `Established` condition true হলে endpoint serve করা শুরু হয় <Cite n={13} />। `kubectl api-resources --api-group` একটা API group-এর সব resource-এর তালিকা দেয় <Cite n={16} />। `shortNames` CLI-তে resource-কে একটা ছোট নামে মেলাতে দেয় <Cite n={13} />, আর `-o jsonpath` একটা JSONPath expression-এর field-গুলো print করে <Cite n={16} />:
+
+```bash
+kubectl apply -f resourcedefinition.yaml
+kubectl wait --for=condition=Established crd/crontabs.stable.example.com --timeout=60s
+kubectl api-resources --api-group=stable.example.com
+kubectl apply -f my-crontab.yaml
+kubectl get crontab
+kubectl get ct my-new-cron-object -o jsonpath='{.spec}{"\n"}'
+kubectl get pods
+```
+
+টিউটোরিয়ালের run-এ নতুন type-টা তার ছোট নাম-সহ তালিকায় এসেছে:
+
+```text
+NAME       SHORTNAMES   APIVERSION              NAMESPACED   KIND
+crontabs   ct           stable.example.com/v1   true         CronTab
+```
+
+`kubectl get crontab` তালিকায় `my-new-cron-object` দেখিয়েছে, আর তার `spec` ছিল `{"cronSpec":"* * * * */5","image":"my-awesome-cron-image"}`। `kubectl get pods` print করেছে `No resources found in default namespace.` custom resource নিজে থেকে structured data store আর retrieve করতে দেয় <Cite n={12} />। একটা CustomResourceDefinition মুছলে server RESTful API endpoint-টা uninstall করে, আর তাতে store করা সব custom object মুছে দেয় <Cite n={13} />:
+
+```bash
+kubectl delete -f resourcedefinition.yaml
+kubectl get crontabs
+```
+
+টিউটোরিয়ালের run-এ এরপর `kubectl get crontabs` একটা `Error from server (NotFound)` print করেছে, আর exit code 1 দিয়ে শেষ হয়েছে।
+
+**৭. etcd দেখুন, আর একটা snapshot নিন।** `etcdctl`-এর জন্য trusted CA file, cert file আর key file etcd Pod-এর description থেকে পাওয়া যায় <Cite n={14} />:
+
+```bash
+kubectl describe pod -n kube-system etcd-qa-lab-control-plane
+```
+
+টিউটোরিয়ালের run-এ এগুলো ছিল তার চারটা flag, শুরুর space ছাড়া:
+
+```text
+--cert-file=/etc/kubernetes/pki/etcd/server.crt
+--key-file=/etc/kubernetes/pki/etcd/server.key
+--listen-client-urls=https://127.0.0.1:2379,https://172.22.0.2:2379
+--trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+```
+
+docs এই file-গুলো দিয়ে `etcdctl` দেখায়: `member list`, আর snapshot তৈরির জন্য `snapshot save` <Cite n={14} />। `kubectl exec` একটা বিদ্যমান Pod-এ একটা command চালায় <Cite n={16} />। টিউটোরিয়াল etcd Pod-এ `etcdctl` চালিয়েছে, docs-এর উদাহরণের `ETCDCTL_API=3` ছাড়া:
+
+```bash
+kubectl exec -n kube-system etcd-qa-lab-control-plane -- etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  member list
+kubectl exec -n kube-system etcd-qa-lab-control-plane -- etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  snapshot save /var/lib/etcd/qa-lab-snapshot.db
+docker exec qa-lab-control-plane ls -l /var/lib/etcd/qa-lab-snapshot.db
+docker exec qa-lab-control-plane rm /var/lib/etcd/qa-lab-snapshot.db
+```
+
+টিউটোরিয়ালের run-এ `member list` একটা member দেখিয়েছে:
+
+```text
+77eb8262bc33c2de, started, qa-lab-control-plane, https://172.22.0.2:2380, https://172.22.0.2:2379, false
+```
+
+`snapshot save` ছয় লাইনের log print করেছে, তারপর:
+
+```text
+Snapshot saved at /var/lib/etcd/qa-lab-snapshot.db
+Server version 3.7.0
+```
+
+snapshot file-টা ছিল 2883616 byte, আর শেষ command সেটা মুছে দিয়েছে। run-এর শেষে namespace `arch-lab`, CustomResourceDefinition, label আর snapshot file, কোনোটাই আর ছিল না।
+
+</Bangla>
+</Voices>
+
+## How a tester uses it
+
+<Voices>
+<Technical>
+
+**Check the cluster before the tests.** Machines that check the health of the API server should rely on the HTTP status code: a status code 200 indicates that the API server is healthy, live, or ready, depending on the endpoint <Cite n={11} />. If `/readyz` returns a failure status code, the server is still initializing or temporarily unable to serve requests, and traffic should be routed away from it <Cite n={11} />. The `verbose` output is for a human operator, and it is not intended to be consumed by a machine <Cite n={11} />.
+
+**When a Pod stays Pending, ask the scheduler.** If none of the nodes are suitable, the Pod remains unscheduled until the scheduler is able to place it <Cite n={6} />. In step 5, the `FailedScheduling` Event named the rule that the node did not meet.
+
+**Watch the nodes.** A node is `Unknown` when the node controller has not heard from it in the last `node-monitor-grace-period`, and `DiskPressure`, `MemoryPressure`, or `PIDPressure` is `True` when the disk capacity is low, the node memory is low, or there are too many processes on the node <Cite n={4} />.
+
+**Know what you cannot see.** Cloud providers often abstract away the control plane, managing its components as part of their service offering <Cite n={1} />. On such a cluster, ask what the provider shows of it.
+
+**Back up before you break things.** If your cluster uses etcd as its backing store, make sure you have a back up plan for the data <Cite n={1} />. Periodically backing up the etcd cluster data is important to recover Kubernetes clusters under disaster scenarios <Cite n={14} />. `etcdctl snapshot save` creates a snapshot, as in step 7 <Cite n={14} />.
+
+**Test the Operator, not only its resource.** When you combine a custom resource with a custom controller, custom resources provide a true declarative API <Cite n={12} />. In step 6, the API accepted the CronTab object, and no Pod ran. Among the things that you can use an Operator to automate are deploying an application on demand, taking and restoring backups of that application's state, and simulating failure in all or part of your cluster to test its resilience <Cite n={2} />.
+
+</Technical>
+<Layman>
+
+**Check the cluster before the tests.** A program that checks the API server should look at the HTTP status code: 200 means healthy, live, or ready, depending on the endpoint <Cite n={11} />. If `/readyz` fails, the server is still starting or cannot serve requests for now, and traffic should go elsewhere <Cite n={11} />. The `verbose` output is for a person, not for a program to read <Cite n={11} />.
+
+**When a Pod stays Pending, ask the scheduler.** If no node fits, the Pod stays unplaced until the scheduler can place it <Cite n={6} />. In step 5, the `FailedScheduling` Event named the rule that the node did not meet.
+
+**Watch the nodes.** A node is `Unknown` when the node controller has not heard from it in the last `node-monitor-grace-period`, and `DiskPressure`, `MemoryPressure`, or `PIDPressure` is `True` when the disk capacity is low, the node memory is low, or there are too many processes on the node <Cite n={4} />.
+
+**Know what you cannot see.** Cloud providers often hide the control plane and run its parts as part of their service <Cite n={1} />. On such a cluster, ask what the provider shows of it.
+
+**Back up before you break things.** If your cluster keeps its data in etcd, have a plan to back that data up <Cite n={1} />. Regular backups of etcd matter, because they let you bring a cluster back after a disaster <Cite n={14} />. `etcdctl snapshot save` makes a snapshot, as in step 7 <Cite n={14} />.
+
+**Test the Operator, not only its resource.** A custom resource together with a custom controller gives a true declarative API <Cite n={12} />. In step 6, the API accepted the CronTab object, and no Pod ran. An Operator can automate things such as deploying an app on demand, taking and restoring backups of the app's state, and simulating failures in all or part of your cluster to test how well it holds up <Cite n={2} />.
+
+</Layman>
+<Bangla>
+
+**Test-এর আগে cluster যাচাই করুন।** API server-এর health যাচাই করা machine-গুলোর HTTP status code-এর ওপর নির্ভর করা উচিত: endpoint অনুযায়ী status code 200 মানে API server healthy, live বা ready <Cite n={11} />। `/readyz` failure status code ফেরত দিলে server এখনো চালু হচ্ছে বা সাময়িকভাবে request serve করতে পারছে না, আর traffic তার থেকে সরিয়ে নেওয়া উচিত <Cite n={11} />। `verbose` output একজন মানুষ operator-এর জন্য, কোনো machine-এর ব্যবহারের জন্য নয় <Cite n={11} />।
+
+**Pod Pending থাকলে scheduler-কে জিজ্ঞেস করুন।** কোনো node উপযুক্ত না হলে, scheduler বসাতে না পারা পর্যন্ত Pod unscheduled থাকে <Cite n={6} />। ধাপ ৫-এ `FailedScheduling` Event সেই নিয়মের নাম বলেছে, যা node পূরণ করেনি।
+
+**Node-এর দিকে নজর রাখুন।** শেষ `node-monitor-grace-period`-এ node controller কোনো node-এর খবর না পেলে সেটা `Unknown` হয়, আর disk capacity কম হলে, node memory কম হলে বা node-এ অনেক বেশি process থাকলে `DiskPressure`, `MemoryPressure` বা `PIDPressure` `True` হয় <Cite n={4} />।
+
+**কী দেখতে পাবেন না, জানুন।** cloud provider-রা প্রায়ই control plane আড়াল করে রাখে, আর তার component-গুলো তাদের service-এর অংশ হিসেবে পরিচালনা করে <Cite n={1} />। এমন cluster-এ জিজ্ঞেস করুন provider তার কতটা দেখায়।
+
+**কিছু ভাঙার আগে backup নিন।** আপনার cluster backing store হিসেবে etcd ব্যবহার করলে data-র একটা backup plan রাখুন <Cite n={1} />। দুর্যোগের পরিস্থিতিতে Kubernetes cluster ফিরিয়ে আনতে etcd cluster data-র নিয়মিত backup জরুরি <Cite n={14} />। ধাপ ৭-এর মতো `etcdctl snapshot save` একটা snapshot তৈরি করে <Cite n={14} />।
+
+**শুধু resource নয়, Operator test করুন।** একটা custom resource-কে একটা custom controller-এর সাথে মেলালে custom resource একটা সত্যিকারের declarative API দেয় <Cite n={12} />। ধাপ ৬-এ API CronTab object গ্রহণ করেছে, আর কোনো Pod চলেনি। Operator দিয়ে যা automate করা যায়, তার মধ্যে আছে চাহিদামতো application deploy করা, সেই application-এর state-এর backup নেওয়া ও restore করা, আর cluster-এর পুরোটায় বা একটা অংশে failure simulate করে তার resilience test করা <Cite n={2} />।
+
+</Bangla>
+</Voices>
+
+## Common mistakes
+
+<Voices>
+<Technical>
+
+- **A backup file next to a static Pod manifest.** The kubelet processes all files not starting with a dot in the static Pod directory; there is no filtering by file extension <Cite n={10} />. If you copy `kube-apiserver.yaml` to `kube-apiserver.yaml.backup`, the kubelet will read both files and attempt to create a static Pod from each <Cite n={10} />.
+- **Deleting a mirror Pod to restart a component.** If you use kubectl to delete the mirror Pod from the API server, the kubelet doesn't remove the static Pod <Cite n={10} />.
+- **Reading the verbose health output in a script.** The `verbose` output is not intended to be consumed by a machine; machines should rely on the HTTP status code <Cite n={11} />.
+- **Using `/healthz`.** The `healthz` endpoint is deprecated (since Kubernetes v1.16); use the more specific `livez` and `readyz` endpoints instead <Cite n={11} />.
+- **Deleting a CustomResourceDefinition in a test clean-up.** The server will uninstall the RESTful API endpoint and delete all custom objects stored in it <Cite n={13} />.
+- **Leaving a test label on a node.** Kubernetes only schedules a Pod onto nodes that have each of the labels of its `nodeSelector` <Cite n={7} />. A `-` after the name of a label removes it <Cite n={16} />.
+
+</Technical>
+<Layman>
+
+- **A backup file next to a static Pod manifest.** The kubelet reads every file in the static Pod folder whose name does not start with a dot, whatever its extension <Cite n={10} />. If you copy `kube-apiserver.yaml` to `kube-apiserver.yaml.backup`, the kubelet reads both and tries to make a static Pod from each <Cite n={10} />.
+- **Deleting a mirror Pod to restart a component.** If you delete the mirror Pod with kubectl, the kubelet does not remove the static Pod <Cite n={10} />.
+- **Reading the verbose health output in a script.** The `verbose` output is not for programs; they should look at the HTTP status code <Cite n={11} />.
+- **Using `/healthz`.** The `healthz` endpoint is deprecated (since Kubernetes v1.16); use `livez` and `readyz` <Cite n={11} />.
+- **Deleting a CustomResourceDefinition in a test clean-up.** The server removes the endpoint and deletes all the custom objects stored in it <Cite n={13} />.
+- **Leaving a test label on a node.** Kubernetes only places a Pod on a node that has each label of its `nodeSelector` <Cite n={7} />. A `-` after the name of a label removes it <Cite n={16} />.
+
+</Layman>
+<Bangla>
+
+- **Static Pod manifest-এর পাশে backup file।** kubelet static Pod directory-র এমন সব file process করে, যাদের নাম dot দিয়ে শুরু হয় না; file extension দিয়ে কোনো বাছাই হয় না <Cite n={10} />। `kube-apiserver.yaml`-কে `kube-apiserver.yaml.backup`-এ copy করলে kubelet দুটো file-ই পড়বে, আর প্রতিটা থেকে একটা static Pod তৈরির চেষ্টা করবে <Cite n={10} />।
+- **Component restart করতে mirror Pod মোছা।** kubectl দিয়ে API server থেকে mirror Pod মুছলে kubelet static Pod সরায় না <Cite n={10} />।
+- **Script-এ verbose health output পড়া।** `verbose` output কোনো machine-এর ব্যবহারের জন্য নয়; machine-গুলোর HTTP status code-এর ওপর নির্ভর করা উচিত <Cite n={11} />।
+- **`/healthz` ব্যবহার করা।** `healthz` endpoint deprecated (Kubernetes v1.16 থেকে); এর বদলে আরও নির্দিষ্ট `livez` আর `readyz` endpoint ব্যবহার করুন <Cite n={11} />।
+- **Test clean-up-এ CustomResourceDefinition মোছা।** server RESTful API endpoint uninstall করবে, আর তাতে store করা সব custom object মুছে দেবে <Cite n={13} />।
+- **Node-এ test-এর label রেখে দেওয়া।** Kubernetes একটা Pod-কে কেবল সেই node-এ schedule করে, যেখানে তার `nodeSelector`-এর প্রতিটা label আছে <Cite n={7} />। label-এর নামের পরে একটা `-` দিলে label-টা সরে যায় <Cite n={16} />।
+
+</Bangla>
+</Voices>
+
+## What a tester can check
+
+<Voices>
+<Technical>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester whose app runs on Kubernetes.
+
+- Before a test run, call `/readyz` and use its status code; keep `?verbose` for a person.
+- When a Pod stays `Pending`, read its Events for `FailedScheduling` first.
+- Check the conditions of the nodes, and that the Lease of each node in `kube-node-lease` is renewed.
+- Ask whether etcd is backed up, how often, and whether a restore was ever tested.
+- On a managed cluster, ask what the provider shows of the control plane.
+- For an Operator, test what its controller does with a custom resource, not only that the API accepts the resource.
+- Remove every label, namespace, and custom object that a test adds, and never delete a CustomResourceDefinition that other tests use.
+</Callout>
+
+</Technical>
+<Layman>
+
+<Callout type="tip" title="Tutorial advice">
+This list is the tutorial's own advice for a tester whose app runs on Kubernetes.
+
+- Before a test run, call `/readyz` and use its status code; keep `?verbose` for a person.
+- When a Pod stays `Pending`, read its Events for `FailedScheduling` first.
+- Check the conditions of the nodes, and that the Lease of each node in `kube-node-lease` is renewed.
+- Ask whether etcd is backed up, how often, and whether a restore was ever tested.
+- On a managed cluster, ask what the provider shows of the control plane.
+- For an Operator, test what its controller does with a custom resource, not only that the API accepts the resource.
+- Remove every label, namespace, and custom object that a test adds, and never delete a CustomResourceDefinition that other tests use.
+</Callout>
+
+</Layman>
+<Bangla>
+
+<Callout type="tip" title="Tutorial advice">
+এই তালিকা টিউটোরিয়ালের নিজের পরামর্শ, এমন একজন tester-এর জন্য যার app Kubernetes-এ চলে।
+
+- test run-এর আগে `/readyz` call করুন আর তার status code ব্যবহার করুন; `?verbose` একজন মানুষের জন্য রাখুন।
+- একটা Pod `Pending` থাকলে আগে তার Events-এ `FailedScheduling` খুঁজুন।
+- node-গুলোর condition দেখুন, আর `kube-node-lease`-এ প্রতিটা node-এর Lease renew হচ্ছে কি না, যাচাই করুন।
+- জিজ্ঞেস করুন etcd-এর backup নেওয়া হয় কি না, কত ঘন ঘন, আর কখনো restore test করা হয়েছে কি না।
+- managed cluster-এ জিজ্ঞেস করুন provider control plane-এর কতটা দেখায়।
+- একটা Operator-এর ক্ষেত্রে শুধু API resource গ্রহণ করে কি না নয়, তার controller একটা custom resource নিয়ে কী করে, তা test করুন।
+- test যে label, namespace আর custom object যোগ করে, তার প্রতিটা সরিয়ে দিন, আর অন্য test ব্যবহার করে এমন CustomResourceDefinition কখনো মুছবেন না।
+</Callout>
+
+</Bangla>
+</Voices>
+
+## Key words
+
+| Term | Meaning |
+|---|---|
+| Control plane | Manages the worker nodes and the Pods in the cluster |
+| Node | A worker machine that runs containerized applications |
+| kube-apiserver | Exposes the Kubernetes API; the front end for the control plane |
+| etcd | The consistent and highly-available key value store that is Kubernetes' backing store for all cluster data |
+| kube-scheduler | Selects a node for each newly created Pod with no assigned node |
+| kube-controller-manager | Runs the controller processes, compiled into a single binary |
+| kubelet | The agent on each node that makes sure that containers are running in a Pod |
+| kube-proxy | An optional network proxy on each node that implements part of the Service concept |
+| Static Pod | A Pod managed directly by the kubelet on a specific node, without the API server observing it |
+| Mirror Pod | The Pod that the kubelet creates on the API server for a static Pod; visible there, but not controlled from there |
+| Lease | An object that carries a node's heartbeat, or makes sure that only one instance of a component is running |
+| Node condition | A status of a node, such as `Ready`, `DiskPressure`, `MemoryPressure`, or `PIDPressure` |
+| `livez`, `readyz` | API server endpoints that indicate its current status; `healthz` is deprecated |
+| Custom resource | An extension of the Kubernetes API that is not necessarily in a default installation |
+| CustomResourceDefinition | Creates a new API endpoint for a custom resource; deleting it deletes all its objects |
+| Operator | A software extension that uses custom resources to manage an application and its components |
