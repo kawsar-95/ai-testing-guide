@@ -62,4 +62,73 @@ Open FAILs after round 5: 0
 
 Not checked: the claims were checked against the first lines of S1 to S4 only. I did not read the rest of those files.
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-18)
+
+# Voices fact check: devops / aws-identity-security (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | The panel is a word-for-word copy of the Technical panel, with the same cites. It adds no fact and leaves nothing out. It is not plainer or shorter. |
+| What it is | Bangla | PASS | Every sentence matches the Technical meaning and keeps the same cites. It leaves nothing out. |
+| How it works | Layman | PASS | The panel is a word-for-word copy of the Technical panel, with the same cites. It adds no fact and leaves nothing out. It is not plainer or shorter. |
+| How it works | Bangla | PASS | All sentences match the Technical meaning and keep the limit words ("by default", "up to", "only", "at least", "as often as"). "Maintain its key policies" appears as "রাখতে ও বদলাতে" (keep and change), which is slightly looser but not wrong. Details left out: none found. |
+| Try it | Layman | PASS | The panel is a word-for-word copy of the Technical panel. The code blocks are the same as in the Technical panel. It adds no fact and leaves nothing out. |
+| Try it | Bangla | PASS | The code blocks are the same as in the Technical panel. The prose matches the Technical meaning, including the run record, the "tutorial's own" labels and the cost warnings. Details left out: none found. |
+| How a tester uses it | Layman | PASS | The panel is a word-for-word copy of the Technical panel, with the same cites. It leaves nothing out. |
+| How a tester uses it | Bangla | PASS | All 11 bullets match the Technical meaning and cites. "At least 15 minutes before" keeps its limit. Details left out: none found. |
+| Common mistakes | Layman | PASS | The panel is a word-for-word copy of the Technical panel, with the same cites. It leaves nothing out. |
+| Common mistakes | Bangla | FAIL | The "default ভুলে যাওয়া" bullet adds "শুধু AWS account root user বাদে, যার পূর্ণ প্রবেশাধিকার আছে" (except the root user, who has full access). The Technical bullet says only "By default, all requests are implicitly denied". The root-user exception is not in the Technical panel of this section. Fix: end the bullet at "By default সব request implicitly denied হয়". All other bullets match the Technical meaning. |
+| What a tester can check | Layman | PASS | The callout is a word-for-word copy of the Technical callout. It adds no fact and leaves nothing out. |
+| What a tester can check | Bangla | PASS | The Bangla callout has the same intro line and 12 bullets. Each bullet matches its Technical bullet in meaning. Details left out: none found. |
+
+Open FAILs after round 6: 1
+
+Changed after this round: Common mistakes, Bangla: the bullet on the default added the root user exception, which the Technical bullet did not have. The Technical bullet now says that by default all requests are implicitly denied, with the exception of the AWS account root user, which has full access (S12), as the Bangla bullet did. The Layman and Bangla panels of Try it got the same changes as the Technical panel.
+
+## Round 7 (2026-11-19)
+
+# Voices fact check: devops / aws-identity-security (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Word for word the same as the Technical panel, with the same cites. It adds no fact. It is not plainer, and it leaves out no detail. |
+| What it is | Bangla | PASS | Each sentence matches one Technical sentence and keeps the same cite. Meaning, numbers, and limits are the same. Product names stay in English. Left out: nothing. |
+| How it works | Layman | PASS | Word for word the same as the Technical panel, with the same cites. It adds no fact. It is not plainer, and it leaves out no detail. |
+| How it works | Bangla | PASS | Every sentence matches the Technical meaning. Limits kept: "by default", "only", "up to eight", "maximum of two", "at least 15 minutes", "(except managed rotation)", "as often as every four hours". The code-free bullets and the Effect, Action, Resource, Principal, Condition list match. "key policy রাখতে ও বদলাতে" renders "maintain its key policies"; "বদলাতে" is a slight widening but within "maintain". Left out: nothing found. |
+| Try it | Layman | PASS | Word for word the same as the Technical panel, including all code and output blocks. It adds no fact. It is not plainer, and it leaves out no detail. |
+| Try it | Bangla | PASS | Text, run record, bullets, and steps 1 to 6 match the Technical panel in meaning, with the same cites. The python, bash, and text blocks are identical to the Technical blocks. Numbers (7 to 30, 15 minutes, seven days, 65536 not used here) are the same. Left out: nothing found. |
+| How a tester uses it | Layman | PASS | Word for word the same as the Technical panel, with the same cites. It adds no fact. It is not plainer, and it leaves out no detail. |
+| How a tester uses it | Bangla | PASS | Each bullet matches the Technical bullet, including "অন্তত ১৫ মিনিট আগে", "প্রতি চার ঘণ্টায়ও", and the CloudWatch alarm bullets. Cites are the same. Left out: nothing found. |
+| Common mistakes | Layman | PASS | Word for word the same as the Technical panel. It repeats the dropped limit on the Lambda charge (see FAIL CM-20 in the fact check). It adds nothing beyond the Technical panel. Left out: nothing. |
+| Common mistakes | Bangla | PASS | Each bullet matches the Technical bullet in meaning, with the same cites. "স্বয়ংক্রিয় rotation থাকলে rotation function-এর জন্য বর্তমান Lambda হারে খরচ হয়" repeats the Technical wording without "except managed rotation"; the error comes from the Technical panel (CM-20). Left out: nothing else. |
+| What a tester can check | Layman | PASS | Same callout as the Technical panel, same title, and all twelve advice items are the same. It adds no fact. Not plainer. |
+| What a tester can check | Bangla | PASS | The intro line and all twelve advice items match the Technical advice in meaning. The callout title is the same. It adds no tool fact. Left out: nothing. |
+
+Open FAILs after round 7: 0
+
+Changed after this round: No FAIL in this round. The Bangla panel of Common mistakes got the same limit as the Technical panel.
+
+## Round 8 (2026-11-19)
+
+# Voices fact check: devops / aws-identity-security (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every sentence, cite, and bold lead-in is word for word the same as the Technical panel, so no fact is added or changed. The panel is not in plainer words or shorter sentences. Nothing is left out. |
+| What it is | Bangla | PASS | Each sentence has the same meaning and the same cite as the Technical sentence. Product names stay in English. Nothing is left out. |
+| How it works | Layman | PASS | The panel is an exact copy of the Technical panel, including the bullet list, so it adds no fact and drops no limit. It is not in plainer words. Nothing is left out. |
+| How it works | Bangla | PASS | I read every sentence, and each keeps its limit and cite ("by default", "only", "up to eight", "as often as every four hours", "at least 15 minutes", "might not"). The gloss "সবচেয়ে কম সুবিধার (least privileged)" restates "least privileged access" and adds no fact. Nothing is left out. |
+| Try it | Layman | PASS | The panel is an exact copy of the Technical panel. I checked the three code blocks and the output blocks: they are the same. Nothing is left out. It is not in plainer words. |
+| Try it | Bangla | PASS | The three code blocks and the output blocks match the Technical panel. I read every sentence, and each has the same meaning and cite. Left out: in step 6 the cost line says "scheduled for deletion" and drops "that you manage". The record sentence "Choosing them is the tutorial's own choice" is kept. |
+| How a tester uses it | Layman | PASS | The panel is an exact copy of the Technical panel, with the same cites. Nothing is left out. |
+| How a tester uses it | Bangla | PASS | Each bullet matches the Technical bullet in meaning and cite. "AWS ... MFA-র সুপারিশ করে" follows "AWS recommends MFA". Nothing is left out. |
+| Common mistakes | Layman | PASS | The panel is an exact copy of the Technical panel. Nothing is left out. |
+| Common mistakes | Bangla | PASS | Each bullet has the same meaning and cite as the Technical bullet, and the `Principal` and `openssl enc` names stay in English. Nothing is left out. |
+| What a tester can check | Layman | PASS | The callout is an exact copy and still says "Tutorial advice". It adds no tool fact. |
+| What a tester can check | Bangla | PASS | The callout title and all twelve items match the Technical panel in meaning. It adds no tool fact. |
+
+Open FAILs after round 8: 0
+
 Open FAILs: 0
