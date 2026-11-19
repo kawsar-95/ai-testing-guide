@@ -69,6 +69,12 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 - **A modal or an exception of the source is part of the claim.** "Should always have a unique release ID" became "has", and "when you turn on automatic rotation (except managed rotation)" lost its exception: both got FAILs, in the facts and in the voices. Copy "should", "typically", "might", and "except ..." as the source has them.
 - **A name or a command that no source explains is the tutorial's own.** Say so, and do not explain what it means unless a cited page does (the trust policy of a role was "AssumeRolePolicyDocument" by name only, and "the CLI reads no credential file" was an effect that no page promises). Match a name to a page by its text, and say that the match is by name only.
 - **A practice run that calls an API leaves files.** The AWS CLI created `~/.aws/cli/cache/session.db` at the first real call, even to a local endpoint. Record what the run created and removed, and do not write "no `~/.aws` before or after" for such a run.
+- **A consequence is a claim.** "Can leak a secret into a bug report" and "a test that reads this JSON can fail when a plan deletes an object" went beyond their sources and got FAILs. Say what the source says ("can contain a secret"), and keep the advice in the Tutorial advice tips.
+- **A command that a step runs needs its own cite.** `terraform state list` and `crossplane version --client` were run on the page and described without a cite until a checker asked. Cite the page of each command that a step runs.
+- **If a step hides a warning, record the step without the hiding line too.** ansible-lint 26.11.0 printed two deprecation warnings about callbacks that the tutorial's files do not use. The step sets `ANSIBLE_DEPRECATION_WARNINGS=false`, and the runner records the same command without it, so that the page shows what a reader sees and says why the line is there.
+- **A tool writes to the home folder even in a local run.** Ansible makes `~/.ansible/tmp`, and ansible-lint makes `~/.cache/ansible-lint/latest.json`. Run the practice with an empty `HOME`, record the files that it leaves, and say so.
+- **The repo claim check and the page fetcher read markup differently.** An italic word of a command becomes `[ pattern ]`, a code span splits `name:` from `’s`, and a `|` is escaped in the notes table. Quote the nearest plain text, or split the quote with `||`.
+- **Keep the limit of a source in the sentence.** `thinks`, `by default`, `unless configured otherwise`, `numerous`, `always`, and `should` are claims too. The checkers raised two sentences that had dropped one (`thinks`). A re-read of the two pages against their quotes, after round 7, found eleven more (five in `terraform-iac` and six in `ansible`). Compare each Technical sentence with its quote for a missing limit, and keep the limit in the Bangla sentence too (`parity.py` counts `should` against `উচিত` and looks for a hedge next to each `can` or `would`).
 - **A plainer word must not add an order or a limit.** "First", "always", "within" for "after": the Layman and Bangla panels got FAILs for each.
 - **Real output of the page's own run** says when, and with which versions, it was run, and each output says that it is from the tutorial's run. From round 10 of `docker-images-compose`, the brief names such a record as N/A; a sentence in it that says how a tool works in general still needs a cite. Keep the run's logs until the page is done: a checker may ask for the output again.
 
@@ -94,7 +100,8 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 | 4 | aws-networking | done: 30 sources, rounds 6 to 8 |
 | 4 | aws-identity-security | done: 33 sources, rounds 6 to 8 |
 | 4 | aws-data-serverless | done: 44 sources, rounds 6 to 7 |
-| 5 | terraform-iac, ansible | to do |
+| 5 | terraform-iac | done: 57 sources, rounds 6 to 9 |
+| 5 | ansible | done: 45 sources, rounds 6 to 9 |
 | 6 | monitoring-observability | to do |
 | 7 | cncf-build-deliver, cncf-runtime-data, cncf-network-security-observability | to do (cncf-runtime-data: the Rook sentence was fixed, round 6) |
 
