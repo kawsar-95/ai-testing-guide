@@ -59,7 +59,7 @@ const SOURCE: readonly TopicEntry[] = [
   { slug: "kubernetes-networking-storage", part: 3, title: "Kubernetes Networking and Storage", description: "Services, DNS names, and EndpointSlices, how traffic reaches a Pod from inside and outside the cluster, how persistent volumes outlive a Pod, and how a tester checks each part on a local kind cluster." },
   { slug: "kubernetes-operations", part: 3, title: "Kubernetes Operations", description: "Liveness and readiness probes, memory and CPU requests and limits, Jobs that run a task to the end, and the HorizontalPodAutoscaler, with a tester's practice run of each on a local kind cluster." },
   { slug: "kubernetes-security-troubleshooting", part: 3, title: "Kubernetes Security and Troubleshooting", description: "Kubernetes Secrets, RBAC, Pod Security admission, and NetworkPolicy, and the commands that show why a Pod fails, with a tester's practice run of each on a local kind cluster." },
-  { slug: "cloud-concepts", part: 4, title: "Cloud Concepts", description: "What cloud computing is, and the twelve-factor app." },
+  { slug: "cloud-concepts", part: 4, title: "Cloud Concepts", description: "What cloud computing is, how AWS splits the work between itself and you, what AWS says about testing in the cloud, and the twelve-factor app, with a tester's practice run of a tiny app on your own machine." },
   { slug: "aws-compute-storage", part: 4, title: "AWS Compute and Storage", description: "EC2, S3, and EBS." },
   { slug: "aws-networking", part: 4, title: "AWS Networking and Delivery", description: "VPC, Elastic Load Balancing, Route 53, and CloudFront." },
   { slug: "aws-identity-security", part: 4, title: "AWS Identity and Security", description: "IAM and IAM roles, KMS, and Secrets Manager." },
