@@ -1,8 +1,8 @@
 /**
  * The one ordered list of the DevOps & Cloud topics. Each topic is served at
  * /devops/<slug>/ and has its text in content/devops/<slug>.mdx. The topics are grouped in parts.
- * A page is a full lesson for testers (the FULL list of tests/devops.test.ts) or a shelf: a short explanation
- * with its sources. Every page ends with the reels of one creator (KodeKloud).
+ * Every page is a full lesson for testers (the shape that tests/devops.test.ts checks). Every page ends with
+ * the reels of one creator (KodeKloud).
  */
 import { defineFlatModule, type FlatEntry, type FlatPart } from "../modules/flat.ts";
 import { DEVOPS_UI } from "./ui.ts";
