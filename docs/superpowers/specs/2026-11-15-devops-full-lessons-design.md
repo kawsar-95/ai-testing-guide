@@ -66,6 +66,9 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 - **The round script** must see every source: it stops now when it parses fewer sources than the page has (a title in double quotes was skipped once). Quotes in the research notes must avoid text that the page's markup splits, such as `exit(-1)` inside a code span, or quote it as the quote checker reads it: the code highlighting of the Docker docs puts a space before and after each `=` of a syntax line (`--mount type = volume,src = <volume-name>`).
 - **No arithmetic that the source does not do.** "One first run and 6 retries, so seven runs" got a FAIL: the source gives the number of retries, not the number of runs. State the source's number, and the run's own count as the run's.
 - **A shortened command is not the docs' command.** Show the whole command that the docs show, or say "a command like"; a copy that drops flags reads as a quote.
+- **A modal or an exception of the source is part of the claim.** "Should always have a unique release ID" became "has", and "when you turn on automatic rotation (except managed rotation)" lost its exception: both got FAILs, in the facts and in the voices. Copy "should", "typically", "might", and "except ..." as the source has them.
+- **A name or a command that no source explains is the tutorial's own.** Say so, and do not explain what it means unless a cited page does (the trust policy of a role was "AssumeRolePolicyDocument" by name only, and "the CLI reads no credential file" was an effect that no page promises). Match a name to a page by its text, and say that the match is by name only.
+- **A practice run that calls an API leaves files.** The AWS CLI created `~/.aws/cli/cache/session.db` at the first real call, even to a local endpoint. Record what the run created and removed, and do not write "no `~/.aws` before or after" for such a run.
 - **A plainer word must not add an order or a limit.** "First", "always", "within" for "after": the Layman and Bangla panels got FAILs for each.
 - **Real output of the page's own run** says when, and with which versions, it was run, and each output says that it is from the tutorial's run. From round 10 of `docker-images-compose`, the brief names such a record as N/A; a sentence in it that says how a tool works in general still needs a cite. Keep the run's logs until the page is done: a checker may ask for the output again.
 
@@ -86,7 +89,11 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 | 3 | kubernetes-networking-storage | done: 23 sources, rounds 6 to 9 |
 | 3 | kubernetes-operations | done: 18 sources, rounds 6 to 9 |
 | 3 | kubernetes-security-troubleshooting | done: 29 sources, rounds 6 to 10 |
-| 4 | cloud-concepts, aws-compute-storage, aws-networking, aws-identity-security, aws-data-serverless | to do |
+| 4 | cloud-concepts | done: 27 sources, rounds 6 to 8 |
+| 4 | aws-compute-storage | done: 24 sources, rounds 6 to 10 |
+| 4 | aws-networking | done: 30 sources, rounds 6 to 8 |
+| 4 | aws-identity-security | done: 33 sources, rounds 6 to 8 |
+| 4 | aws-data-serverless | done: 44 sources, rounds 6 to 7 |
 | 5 | terraform-iac, ansible | to do |
 | 6 | monitoring-observability | to do |
 | 7 | cncf-build-deliver, cncf-runtime-data, cncf-network-security-observability | to do (cncf-runtime-data: the Rook sentence was fixed, round 6) |
