@@ -64,4 +64,69 @@ Open FAILs after round 5: 0
 
 Ponytail: I did not read the rest of S1 or S2, only the passages that the claims cite. The risk is small because the page has only two facts.
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-18)
+
+# Voices fact check: devops / cloud-concepts (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel and the cites match. Left out: "technology" before "services"; "for maximum agility" (twelve-factor); "ubiquitous" is not used. "Method" for "methodology" and "start up" for "spin up" are plain words with the same meaning. |
+| What it is | Bangla | PASS | Meaning matches the Technical panel for every sentence. Left out: "technology"; "for maximum agility"; the "minimum of" wording is rendered as "অন্তত" (same meaning). Product names stay in English. |
+| How it works | Layman | PASS | Same facts and cites as the Technical panel. Left out: "categorized as" (EC2 is IaaS); "implicit existence" becomes "happen to exist" (same meaning); "Twelve-factor" before "processes" in factor VI; "(thereby refusing any new requests)" is not in either panel. Code and sketch blocks are identical. |
+| How it works | Bangla | PASS | Meaning matches the Technical panel. Left out: "Twelve-factor" before "processes" in table factor VI; "implicit existence" (rendered as "system-wide package থাকার ওপর ভরসা করে না"). Code blocks are identical. |
+| Try it | Layman | PASS | Same steps, facts and cites. Step 4 repeats the Technical panel's uncited "`wait` returns the exit status" claim (FAIL row 97 in the FACTCHECK table). It adds nothing new. Code blocks are identical. |
+| Try it | Bangla | PASS | Meaning matches the Technical panel. Same uncited `wait` claim as the Technical panel (row 97). Code blocks are identical. Left out: nothing of substance. |
+| How a tester uses it | Layman | FAIL | Parity bullet: the Technical panel says the differences cause "tiny incompatibilities crop up, causing code that worked and passed tests ... to fail in production". The Layman panel says code "can fail in production". Adding "can" makes the claim weaker. Fix: "... Then code that worked and passed tests in development or staging fails in production". Other bullets match. Left out: "In a cloud computing environment" shortened to "cloud environment". |
+| How a tester uses it | Bangla | FAIL | Same problem in the parity bullet: "ব্যর্থ হতে পারে" ("can fail") is weaker than the Technical panel's "causing ... to fail". Other bullets match. Left out: "computing" in "cloud computing environment". |
+| Common mistakes | Layman | PASS | Every fact matches the Technical panel. Plain words used: "breaks the twelve-factor rules" for "violation"; "small, separate controls" for "granular controls"; "should hide the differences" for "theoretically abstract away". Left out: "theoretically" is softened but the meaning holds. |
+| Common mistakes | Bangla | PASS | Meaning matches. "overwhelm" is rendered "ঠেসে ধরতে", which is loose but not a different claim. Left out: "theoretically" is carried by "কথা থাকলেও". |
+| What a tester can check | Layman | PASS | Same ten pieces of advice, reworded and some split into two sentences. Callout title and the "tutorial's own advice" line are kept. No new fact. |
+| What a tester can check | Bangla | PASS | Same ten pieces of advice and the same callout. No new fact. |
+
+Open FAILs after round 6: 2
+
+## Round 7 (2026-11-18)
+
+# Voices fact check: devops / cloud-concepts (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every sentence matches the Technical panel and its cite. Left out: "maximum" in "maximum portability" and "maximum agility" (the Layman text says "as portable as possible" and "enables continuous deployment"). |
+| What it is | Bangla | PASS | Read and judged by meaning. All facts and cites match the Technical panel. Left out: "maximum" portability and agility. "সহজে নেওয়া যায়" is a plain-words version of "portability", with no added claim. |
+| How it works | Layman | PASS | Meaning and cites match. Left out: "categorized as" (EC2 is "Infrastructure as a Service"); "aggregated" in the logs sentence. Table II says "never relies on system-wide packages that happen to exist", which keeps the "implicit" idea. Code blocks are identical to the Technical panel. |
+| How it works | Bangla | FAIL | Table row II (S17): "twelve-factor app কখনো system-wide package থাকার ওপর ভরসা করে না" drops "implicit". It now says the app never relies on system-wide packages at all, which is stronger than "never relies on implicit existence of system-wide packages". Fix: "system-wide package আছে বলে ধরে নেওয়ার ওপর কখনো ভরসা করে না". Other sentences match. Code blocks are identical. |
+| Try it | Layman | PASS | Same facts, same cites, same code blocks, same run record. Nothing left out. |
+| Try it | Bangla | PASS | Read and judged by meaning. Same facts, cites and code blocks as the Technical panel. Left out: nothing of substance. |
+| How a tester uses it | Layman | FAIL | "every release has a unique release ID" copies the Technical sentence, but S20 says "should always have". The limit is dropped, and the cite does not support the stronger claim (see FACTCHECK row 98). Other bullets match; the Technical panel also says "cloud computing environment", which is shortened here. |
+| How a tester uses it | Bangla | FAIL | "প্রতিটা release-এর একটা অনন্য release ID আছে" has the same problem: it drops "should always" and the S20 cite does not support it. Other bullets match the Technical panel. Left out: nothing else of substance. |
+| Common mistakes | Layman | PASS | All facts and cites match the Technical panel. "Litmus test" becomes "simple test" and "violation of twelve-factor" becomes "breaks the twelve-factor rules"; both keep the meaning. |
+| Common mistakes | Bangla | PASS | Read and judged by meaning. All facts and cites match the Technical panel. Left out: nothing of substance. |
+| What a tester can check | Layman | PASS | Same ten pieces of advice as the Technical callout, titled "Tutorial advice". No tool fact added. |
+| What a tester can check | Bangla | PASS | Same ten pieces of advice. No tool fact added. |
+
+Open FAILs after round 7: 3
+
+## Round 8 (2026-11-18)
+
+# Voices fact check: devops / cloud-concepts (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact and every cite matches the Technical panel. Left out: "for maximum agility" (parity bullet); "rapidly" becomes "quickly". |
+| What it is | Bangla | PASS | Meaning and cites match the Technical panel. Left out: "for maximum agility"; "maximum portability" is softened to "সহজে নেওয়া যায়". |
+| How it works | Layman | PASS | Meaning and cites match, and the code blocks are identical. Left out: "categorized as" for EC2; the "theoretically" and "continuous deployment for maximum agility" nuances are not in this panel. |
+| How it works | Bangla | PASS | Meaning and cites match, and the code blocks are identical. Left out: "categorized as" for EC2; the exact SIGTERM/shutdown wording is shortened. |
+| Try it | Layman | PASS | Same code blocks and commands. Cites match the Technical panel. Nothing added. |
+| Try it | Bangla | PASS | Same code blocks. The record and the cites match the Technical panel. Nothing added. |
+| How a tester uses it | Layman | PASS | Cites and meaning match. "cloud computing environment" becomes "cloud environment". |
+| How a tester uses it | Bangla | PASS | Cites and meaning match. Nothing added. |
+| Common mistakes | Layman | PASS | Meaning and cites match. "Theoretically abstract away" becomes "should hide", which is close in meaning. "Litmus test" becomes "simple test". |
+| Common mistakes | Bangla | PASS | Meaning and cites match. Nothing added. |
+| What a tester can check | Layman | PASS | The advice list is the same. It has the same "Tutorial advice" title. |
+| What a tester can check | Bangla | PASS | The advice list is the same, in Bangla. Nothing added. |
+
+Open FAILs after round 8: 0
+
 Open FAILs: 0

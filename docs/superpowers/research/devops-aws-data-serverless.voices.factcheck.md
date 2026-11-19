@@ -66,4 +66,50 @@ Open FAILs after round 5: 0
 
 I did not check the cited AWS pages beyond the quoted lines. I only searched the four source files, as you asked.
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-19)
+
+# Voices fact check: devops / aws-data-serverless (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Word for word the same as the Technical panel. No fact added. It is not simplified, and nothing is left out. |
+| What it is | Bangla | PASS | Same facts and cites. "automatically manages" is shown as "নিজে পরিচালনা করে". Nothing added. No detail left out. |
+| How it works | Layman | PASS | Word for word the same as the Technical panel, with the same cites. Nothing left out. |
+| How it works | Bangla | PASS | Meaning matches the Technical panel sentence by sentence, including the limits: always, must, by default, typically, only. Small changes: "Provisioned concurrency কিছু environment instance..." adds "some"; "সম্ভবত একাধিকবার চলতে পারে" is a double hedge. Both are within the Technical meaning. Left out: none worth noting. |
+| Try it | Layman | PASS | Word for word the same as the Technical panel. Code blocks are the same. Nothing left out. |
+| Try it | Bangla | FAIL | "AWS বলে, একটা handler ... data বের করে যাচাই করবে, তারপর input পাঠাবে" drops "should" from "a handler should extract and validate". It now reads as a plain statement. Elsewhere this panel uses "উচিত" for "should". Fix: "...যাচাই করা উচিত ... পাঠানো উচিত". The rest matches. The code blocks are the same as in the Technical panel. The FAIL in the Technical panel (Docker `-p`) is repeated here without change; it adds no new fact. Left out: none. |
+| How a tester uses it | Layman | PASS | Word for word the same as the Technical panel. Nothing left out. |
+| How a tester uses it | Bangla | FAIL | "should" is dropped in two places. "Automated test processes should create..." became "প্রতিটা stack-এর জন্য অনন্য নামের resource বানাবে". "It should extract and validate..." became "এটা ... যাচাই করবে". Both now read as a statement of what happens. Other lines use "উচিত". Fix: "বানানো উচিত" and "যাচাই করা উচিত". The rest matches. Left out: none. |
+| Common mistakes | Layman | PASS | Word for word the same as the Technical panel. Nothing left out. |
+| Common mistakes | Bangla | PASS | Matches the Technical panel on each point, with the limits kept (must, should avoid, by default, only). Nothing added. Left out: none. |
+| What a tester can check | Layman | PASS | Word for word the same as the Technical panel. Nothing left out. |
+| What a tester can check | Bangla | PASS | The callout title is kept and all 12 advice lines match. No fact added. Left out: none. |
+
+Open FAILs after round 6: 2
+
+Changed after this round: Try it and How a tester uses it, Bangla: the Bangla lines dropped "should" in three places (a handler should extract and validate data, automated test processes should create uniquely named resources, and the handler bullet of How a tester uses it). They now use "উচিত", as the Technical panel does. A script over the three panels found no other place where "should", "might", "typically", "may", or "can potentially" lost its Bangla word. The Layman and Bangla panels of Try it got the same changes as the Technical panel.
+
+## Round 7 (2026-11-19)
+
+# Voices fact check: devops / aws-data-serverless (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | The text is word for word the same as the Technical panel, so it adds no fact and the cites are the same. Left out: nothing. It is not simpler than the Technical panel, but this check is about facts only. |
+| What it is | Bangla | PASS | Every sentence has the same meaning and the same cite as its Technical sentence. Limits are kept ("automatically", "only"). Left out: nothing. |
+| How it works | Layman | PASS | Same text as the Technical panel, in all paragraphs. I compared it by reading, and the prose and the code of the panels match. Left out: nothing. |
+| How it works | Bangla | PASS | All sentences match the Technical panel in number, scope, and limit ("by default", "must", "typically", "might"). The Bangla of "Provisioned concurrency pre-initializes environment instances" says "কিছু" (some), which is a small extra word and does not change the meaning. Left out: nothing. |
+| Try it | Layman | PASS | Prose and code blocks are the same as in the Technical panel. I checked the code by line pattern: `docker run`, exports, `ddb`, the wait loop, the sort-key check, `docker ps`, the skeleton loop, and the output blocks are at the same offsets. Left out: nothing. |
+| Try it | Bangla | PASS | Every paragraph and bullet carries the same facts and cites as the Technical panel. The numbers, versions, the image digest, the `~/.aws` record, and the model outputs agree. The code blocks match the Technical panel. Small point: "একটা test case হলো test-এর একটা এককে" is a grammar slip but the meaning is correct. Left out: nothing. |
+| How a tester uses it | Layman | PASS | Same text as the Technical panel, including the uncited own-run sentences. Left out: nothing. |
+| How a tester uses it | Bangla | PASS | All 15 bullets match the Technical bullets. Limits are kept ("সবসময়", "সম্ভবত", "এখনো কিছু"). Left out: nothing. |
+| Common mistakes | Layman | PASS | Same text as the Technical panel. Left out: nothing. |
+| Common mistakes | Bangla | PASS | All 22 bullets match the Technical bullets, with "by default", "must", "may", and "typically" kept. Left out: nothing. |
+| What a tester can check | Layman | PASS | The callout is the same as the Technical callout (12 advice lines, with the "Tutorial advice" title). Left out: nothing. |
+| What a tester can check | Bangla | PASS | All 12 advice lines and the intro line match the Technical callout in meaning, and the title is kept. Left out: nothing. |
+
+Open FAILs after round 7: 0
+
 Open FAILs: 0
