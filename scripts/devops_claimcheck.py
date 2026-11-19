@@ -14,11 +14,13 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+FALLBACK_UA = "devops-claimcheck (+https://github.com/kawsar-95/ai-testing-guide)"  # for a site that answers the browser UA with 403 (www.w3.org does)
 CLAIM_ROW = re.compile(r'^\| (.*) \| S(\d+) \| "(.*)" \|$')
 CITE = re.compile(r"<Cite n=\{(\d+)\} />")
 
@@ -71,13 +73,40 @@ def technical_sentences(mdx):
     return out
 
 
+def get(url, user_agent):
+    request = urllib.request.Request(url, headers={"User-Agent": user_agent, "Accept-Language": "en-US,en;q=0.9"})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return response.read().decode("utf-8", errors="replace")
+
+
+def retry_wait(error, attempt):
+    """Seconds to wait before the next try of a 429: the Retry-After of the server when it is a number, else 5, 15, 45."""
+    asked = (error.headers.get("Retry-After") if error.headers else None) or ""
+    return min(int(asked) if asked.isdigit() else 5 * 3 ** attempt, 60)
+
+
+def get_page(url):
+    """The raw page. A 403 is tried once more with a plain user agent (www.w3.org refuses the browser one).
+    A 429 (github.com answers it when many pages are read in a row) is tried again after a wait, three times at most."""
+    for attempt in range(4):
+        try:
+            try:
+                return get(url, UA)
+            except urllib.error.HTTPError as error:
+                if error.code != 403:
+                    raise
+                return get(url, FALLBACK_UA)
+        except urllib.error.HTTPError as error:
+            if error.code != 429 or attempt == 3:
+                raise
+            time.sleep(retry_wait(error, attempt))
+
+
 def fetch(url, cache):
     path = cache / (re.sub(r"[^a-z0-9]+", "-", url.lower().split("://", 1)[1]).strip("-")[:120] + ".txt")
     if path.exists() and path.stat().st_size > 200:
         return path.read_text(encoding="utf-8")
-    request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "en-US,en;q=0.9"})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        text = visible_text(response.read().decode("utf-8", errors="replace"))
+    text = visible_text(get_page(url))
     cache.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
     time.sleep(0.3)

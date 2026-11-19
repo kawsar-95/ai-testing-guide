@@ -1,6 +1,9 @@
 import sys
+import tempfile
 import unittest
+import urllib.error
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -42,6 +45,102 @@ class ParseTest(unittest.TestCase):
 
     def test_trigrams_ignore_punctuation(self):
         self.assertEqual(dc.trigrams("Run (CI/CD) now."), ["run ci cd", "ci cd now"])
+
+
+class FetchTest(unittest.TestCase):
+    PAGE = b"<p>Hello world. " + b"This page is long enough to be cached. " * 10 + b"</p>"
+
+    def run_fetch(self, fail_with):
+        seen = []
+
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self):
+                return FetchTest.PAGE
+
+        def fake_urlopen(request, timeout):
+            seen.append(request.get_header("User-agent"))
+            if request.get_header("User-agent") == dc.UA and fail_with:
+                raise urllib.error.HTTPError(request.full_url, fail_with, "error", {}, None)
+            return Response()
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(dc.urllib.request, "urlopen", fake_urlopen), mock.patch.object(dc.time, "sleep"):
+            try:
+                text = dc.fetch("https://example.org/a", Path(tmp))
+            except urllib.error.HTTPError as error:
+                text = error.code
+        return text, seen
+
+    def test_a_403_is_retried_once_with_the_plain_user_agent(self):
+        text, seen = self.run_fetch(403)
+        self.assertIn("Hello world.", text)
+        self.assertEqual(seen, [dc.UA, dc.FALLBACK_UA])
+
+    def test_a_404_is_not_retried(self):
+        text, seen = self.run_fetch(404)
+        self.assertEqual(text, 404)
+        self.assertEqual(seen, [dc.UA])
+
+    def test_a_page_that_answers_the_browser_user_agent_is_fetched_once(self):
+        text, seen = self.run_fetch(None)
+        self.assertIn("Hello world.", text)
+        self.assertEqual(seen, [dc.UA])
+
+
+class RetryTest(unittest.TestCase):
+    PAGE = b"<p>" + b"This page is long enough to be cached. " * 12 + b"</p>"
+
+    def run_fetch(self, answers):
+        """answers: one entry per request, an HTTP status to raise or None for the page. Returns the text or the error code, and the waits."""
+        calls = []
+        waits = []
+
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self):
+                return RetryTest.PAGE
+
+        def fake_urlopen(request, timeout):
+            status = answers[min(len(calls), len(answers) - 1)]
+            calls.append(request.get_header("User-agent"))
+            if status:
+                raise urllib.error.HTTPError(request.full_url, status[0], "error", {"Retry-After": status[1]} if len(status) > 1 else {}, None)
+            return Response()
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(dc.urllib.request, "urlopen", fake_urlopen), mock.patch.object(dc.time, "sleep", waits.append):
+            try:
+                result = dc.fetch("https://example.org/b", Path(tmp))
+            except urllib.error.HTTPError as error:
+                result = error.code
+        return result, len(calls), [w for w in waits if w != 0.3]
+
+    def test_a_429_is_tried_again_after_the_wait_that_the_server_asks_for(self):
+        result, calls, waits = self.run_fetch([(429, "2"), None])
+        self.assertIn("This page is long enough", result)
+        self.assertEqual((calls, waits), (2, [2]))
+
+    def test_a_429_without_a_wait_uses_5_15_and_45_seconds(self):
+        result, calls, waits = self.run_fetch([(429,), (429,), (429,), None])
+        self.assertIn("This page is long enough", result)
+        self.assertEqual((calls, waits), (4, [5, 15, 45]))
+
+    def test_a_429_that_does_not_stop_is_raised_after_three_tries_again(self):
+        result, calls, waits = self.run_fetch([(429,)])
+        self.assertEqual((result, calls, waits), (429, 4, [5, 15, 45]))
+
+    def test_a_wait_of_more_than_a_minute_is_cut_to_a_minute(self):
+        result, calls, waits = self.run_fetch([(429, "600"), None])
+        self.assertEqual(waits, [60])
 
 
 if __name__ == "__main__":

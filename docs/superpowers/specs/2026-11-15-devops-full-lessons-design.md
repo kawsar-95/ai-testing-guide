@@ -75,6 +75,12 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 - **A tool writes to the home folder even in a local run.** Ansible makes `~/.ansible/tmp`, and ansible-lint makes `~/.cache/ansible-lint/latest.json`. Run the practice with an empty `HOME`, record the files that it leaves, and say so.
 - **The repo claim check and the page fetcher read markup differently.** An italic word of a command becomes `[ pattern ]`, a code span splits `name:` from `’s`, and a `|` is escaped in the notes table. Quote the nearest plain text, or split the quote with `||`.
 - **Keep the limit of a source in the sentence.** `thinks`, `by default`, `unless configured otherwise`, `numerous`, `always`, and `should` are claims too. The checkers raised two sentences that had dropped one (`thinks`). A re-read of the two pages against their quotes, after round 7, found eleven more (five in `terraform-iac` and six in `ansible`). Compare each Technical sentence with its quote for a missing limit, and keep the limit in the Bangla sentence too (`parity.py` counts `should` against `উচিত` and looks for a hedge next to each `can` or `would`).
+- **A claim of absence needs a source or the run.** "No page that the tutorial read describes X" was wrong twice (the exit statuses of `promtool`, and `amtool config routes`), and the checkers found the pages that do describe them. Say what the run showed, cite the page that has it, or leave the sentence out.
+- **A fact that is not in the run record cannot be checked.** A sentence about the `--help` text of a tool, read after the run, got a FAIL. Put the command in a step, so that its output is in the record, or leave the sentence out.
+- **A quote that crosses a YAML comment line has a `# ` inside it in the source.** Split it with `||`. The checker joins the pieces and prints "quote not in sources" for them. That note is expected, and the row is PASS.
+- **A page that answers a browser user agent with 403 can still be read.** `www.w3.org` does. `scripts/devops_claimcheck.py` now retries a 403 once with a plain user agent, and a 429 (`github.com` answers it when many of its pages are read in a row) up to three times after a wait.
+- **An effect in a Try-it explanation is a claim.** "It checked `rules.yml` too, because the configuration lists it" got a FAIL. Show the printed lines that prove it, cite the page, or say it as the tutorial's own observation.
+- **A Bangla word keeps the meaning of the English word.** "জমা করে" (collect) stood for "aggregate" in a sentence about rules and got a FAIL. Check the verbs of a definition against the Bangla verbs one by one.
 - **A plainer word must not add an order or a limit.** "First", "always", "within" for "after": the Layman and Bangla panels got FAILs for each.
 - **Real output of the page's own run** says when, and with which versions, it was run, and each output says that it is from the tutorial's run. From round 10 of `docker-images-compose`, the brief names such a record as N/A; a sentence in it that says how a tool works in general still needs a cite. Keep the run's logs until the page is done: a checker may ask for the output again.
 
@@ -102,7 +108,7 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 | 4 | aws-data-serverless | done: 44 sources, rounds 6 to 7 |
 | 5 | terraform-iac | done: 57 sources, rounds 6 to 9 |
 | 5 | ansible | done: 45 sources, rounds 6 to 9 |
-| 6 | monitoring-observability | to do |
+| 6 | monitoring-observability | done: 41 sources, rounds 6 to 13 |
 | 7 | cncf-build-deliver, cncf-runtime-data, cncf-network-security-observability | to do (cncf-runtime-data: the Rook sentence was fixed, round 6) |
 
 When the last page is done, the `FULL` list of the test becomes the rule for every page, and this table is removed.
