@@ -62,4 +62,73 @@ Voices standard of this round: the rule of CLAUDE.md (brief v2): the panel gives
 
 Open FAILs after round 5: 0
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-18)
+
+# Voices fact check: devops / aws-networking (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | The text is word for word the same as the Technical panel, with the same cites. It adds no fact and leaves nothing out. It is not plainer or shorter. That is a style gap, not a fact error. |
+| What it is | Bangla | PASS | Every sentence matches the Technical panel in meaning, and the cites are on the same facts. Nothing is added. Details left out: none. |
+| How it works | Layman | PASS | Word for word the same as the Technical panel, including the code and output blocks. Nothing is left out. It is not plainer. |
+| How it works | Bangla | PASS | The meaning matches the Technical panel throughout. Limits are kept: "only", "at a time", "default", "up to eight", and "might". Small note: "launch-এর সময় স্পষ্টভাবে একটা public address" adds "স্পষ্টভাবে" (explicitly), which the Technical panel does not say. It does not change the meaning. Details left out: none. |
+| Try it | Layman | PASS | Word for word the same as the Technical panel. The code blocks, commands, and outputs are the same. Nothing is left out. It is not plainer. |
+| Try it | Bangla | PASS | The meaning matches the Technical panel. The code blocks, commands, and outputs are the same as in the Technical panel. The cites are on the same facts. Details left out: none. |
+| How a tester uses it | Layman | PASS | Word for word the same as the Technical panel. Nothing is left out. It is not plainer. |
+| How a tester uses it | Bangla | PASS | The meaning matches the Technical panel, and the cites are on the same facts. Details left out: none. |
+| Common mistakes | Layman | PASS | Word for word the same as the Technical panel. The "Testing a changed file..." bullet gives the same "until the cache duration ... passes" claim as the Technical panel. That bullet is an open FAIL in the fact check (row 218). |
+| Common mistakes | Bangla | PASS | The meaning matches the Technical panel. The CloudFront bullet repeats the Technical wording without "Typically" (see fact-check row 218). Details left out: none. |
+| What a tester can check | Layman | PASS | Word for word the same as the Technical callout. It is the same "Tutorial advice" callout, with the same 12 items. Nothing is left out. |
+| What a tester can check | Bangla | PASS | The intro line and all 12 items match the Technical callout in meaning. Details left out: none. |
+
+Open FAILs after round 6: 0
+
+Changed after this round: No FAIL in this round. The Layman and Bangla panels got the same edits as the Technical panel, with Bangla sentences for the new CIDR notation and flow log facts and for "Typically".
+
+## Round 7 (2026-11-18)
+
+# Voices fact check: devops / aws-networking (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | The panel is a word-for-word copy of the Technical panel. It adds no fact, and the cites match. Nothing is left out. It uses no plainer words or shorter sentences, so it does not meet the repo's plain-language aim. |
+| What it is | Bangla | PASS | Every sentence matches a Technical sentence in meaning, with the same cite. Nothing is left out. |
+| How it works | Layman | PASS | It is a word-for-word copy of the Technical panel, including the lists. No fact is added or changed. Nothing is left out, and the text is not simplified. |
+| How it works | Bangla | FAIL | One added word: "আপনি launch-এর সময় স্পষ্টভাবে একটা public address দিতে পারেন" says "explicitly" assign. The Technical panel says only "You can assign a public address at launch". Fix: remove "স্পষ্টভাবে". The rest matches. Left out: nothing. |
+| Try it | Layman | PASS | It is a word-for-word copy of the Technical panel, including all code blocks. No fact is added. It repeats the step-2 code-block problem from the fact check (`create-security-group` is not in the cited source). It is not simplified. |
+| Try it | Bangla | PASS | The code blocks are identical to the Technical panel. Every sentence matches in meaning and cite. Left out: nothing. |
+| How a tester uses it | Layman | PASS | It is a word-for-word copy of the Technical panel. No fact is added. Nothing is left out, and the text is not simplified. |
+| How a tester uses it | Bangla | PASS | Every bullet matches the Technical bullet in meaning and cite. Nothing is left out. |
+| Common mistakes | Layman | PASS | It is a word-for-word copy of the Technical panel. No fact is added. Nothing is left out, and the text is not simplified. |
+| Common mistakes | Bangla | PASS | Every bullet matches the Technical bullet in meaning and cite. The words "by default" and "typically" ("সাধারণত") are kept. Nothing is left out. |
+| What a tester can check | Layman | PASS | It is a word-for-word copy of the callout. No fact is added. Nothing is left out. |
+| What a tester can check | Bangla | PASS | All 12 advice items match the Technical callout in meaning. Nothing is left out. |
+
+Open FAILs after round 7: 1
+
+Changed after this round: How it works, Bangla: the sentence on assigning a public address at launch no longer says "স্পষ্টভাবে" (explicitly), as the Technical panel. The Layman and Bangla panels of step 2 and step 3 got the new sentences of the fact fix.
+
+## Round 8 (2026-11-18)
+
+# Voices fact check: devops / aws-networking (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | The text is word for word the same as the Technical panel. It adds no fact and each cite is on the same fact. It does not use plainer words or shorter sentences. Nothing is left out. |
+| What it is | Bangla | PASS | The meaning matches the Technical panel sentence by sentence, with the same cites. Nothing is added, and "automatically", "allowed", "one or more" are kept. Nothing is left out. |
+| How it works | Layman | PASS | The text is word for word the same as the Technical panel. It adds no fact. It does not use plainer words. Nothing is left out. |
+| How it works | Bangla | PASS | The meaning, numbers, code names, and cites match the Technical panel. The limits "by default", "only", "might", "typically" are kept. The Bangla gives no new fact. Nothing is left out. |
+| Try it | Layman | PASS | The text is word for word the same as the Technical panel. The code blocks are the same. It adds no fact. It does not use plainer words. Nothing is left out. |
+| Try it | Bangla | PASS | The meaning, numbers, and cites match the Technical panel. The code blocks are the same as in the Technical panel. The Bangla adds no new fact. Nothing is left out. |
+| How a tester uses it | Layman | PASS | The text is word for word the same as the Technical panel. It adds no fact. It does not use plainer words. Nothing is left out. |
+| How a tester uses it | Bangla | PASS | The meaning and cites match the Technical panel. "might" is kept as "পারে". Nothing is added. Nothing is left out. |
+| Common mistakes | Layman | PASS | The text is word for word the same as the Technical panel. It adds no fact. It does not use plainer words. Nothing is left out. |
+| Common mistakes | Bangla | PASS | The meaning and cites match the Technical panel. "Typically" is kept as "সাধারণত". Nothing is added. Nothing is left out. |
+| What a tester can check | Layman | PASS | The callout is word for word the same as the Technical panel. It adds no fact. Nothing is left out. |
+| What a tester can check | Bangla | PASS | Each advice line has the same meaning as in the Technical panel. Nothing is added, and the callout title is kept. Nothing is left out. |
+
+Open FAILs after round 8: 0
+
 Open FAILs: 0
