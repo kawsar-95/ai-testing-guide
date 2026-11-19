@@ -66,4 +66,48 @@ Open FAILs after round 5: 0
 
 Not checked: I read only the matching passages in S1–S5 and not the whole files. Risk: the Layman and Bangla panels share the Technical panel's cites, so they are only as good as those quotes.
 
+## Round 6 (2026-11-19)
+
+# Voices fact check: devops / cncf-build-deliver (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | It is a word-for-word copy of the Technical panel (same sentences, same cites). It adds no fact. It is not plainer. It carries the same FAIL source gaps as the Technical panel: none in this section. Nothing is left out. |
+| What it is | Bangla | FAIL | In the Backstage catalog sentence it adds "(service, website, library, data pipeline ইত্যাদি)". The Technical panel does not give this list (S27 does, but the Technical panel does not). Fix: remove the parenthesis. Left out: "the nonprofit" is kept; no other details were left out. The rest matches the Technical panel. |
+| How it works | Layman | PASS | A word-for-word copy of the Technical panel. It adds nothing. Because it is a copy, it also keeps the Technical FAIL on the name format (no "by default"). It is not plainer. |
+| How it works | Bangla | FAIL | (1) The `helm package` sentence adds "আর তারপর সেই directory-টা package করে" ("and then package that directory"). The Technical panel does not give it. (2) In stitching, "processor-দের ছাড়া সব data জোড়া লেগে" can be read as "without the processors", not "the data the processors emitted". The meaning is different or unclear, so FAIL. (3) The name-format sentence also drops the "by default" limit, as the Technical panel does. Left out: "(if specified)" is not given in either panel; "the nonprofit" and similar details are kept; the "which can be listed as ... lifecycle values" detail is kept. |
+| Try it | Layman | PASS | A word-for-word copy of the Technical panel (checked by matching line offsets and by sampling bullets and the code blocks). It adds nothing. It is not plainer. It keeps the Technical FAIL on "The docs allow sequences of letters and digits ..." (no "by default"). |
+| Try it | Bangla | PASS | Prose and bullets follow the Technical panel on meaning. Code blocks of steps 1-5 are the same as in the Technical panel; the later code blocks were not compared line by line, only by position and length. Left out: the "error (1-99, 101+)" range in the step 8 detect bullet; "among other forms" is also absent from the Technical bullet. It keeps the Technical FAIL on the name-character sentence (no "by default"). |
+| How a tester uses it | Layman | PASS | A word-for-word copy of the Technical panel. It adds nothing. It is not plainer. |
+| How a tester uses it | Bangla | PASS | Each sentence matches the Technical panel, with cites on the same facts. Left out: nothing of note. |
+| Common mistakes | Layman | PASS | A word-for-word copy of the Technical panel. It keeps the Technical FAIL on the name bullet (no "by default"). It is not plainer. |
+| Common mistakes | Bangla | PASS | Each bullet matches the Technical panel. It keeps the Technical FAIL on the name bullet (no "by default"). Left out: nothing of note. |
+| What a tester can check | Layman | PASS | A word-for-word copy of the Technical callout. It adds nothing. |
+| What a tester can check | Bangla | PASS | All 10 advice items match the Technical callout in meaning. The title line keeps "Tutorial advice". Nothing is left out. |
+
+Open FAILs after round 6: 2
+
+Changed after this round: Two FAILs. The Bangla of the catalog sentence had a list of examples (service, website, library, data pipeline) that the Technical text does not give, and it is removed. The Bangla of `helm package` had a last step (package that directory) that the Technical text does not give, and it is removed. The stitching sentence was unclear ("processor-দের ছাড়া"), and it now says that the data that the processors emitted is assembled into the final output entity. The Bangla of the name rule now says "ডিফল্টভাবে", as the Technical text says "By default".
+
+## Round 7 (2026-11-19)
+
+# Voices fact check: devops / cncf-build-deliver (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every sentence and cite matches the Technical panel word for word. No fact is added or changed, and no limit is dropped. Nothing is left out. The panel is a copy and does not use plainer words or shorter sentences. |
+| What it is | Bangla | PASS | I read the Bangla and it matches the Technical meaning. The dates, the 4 stages, and the "can change" advice are the same. Cites are on the same facts. Left out: nothing found. "Out of the box" is rendered "শুরু থেকেই". |
+| How it works | Layman | PASS | A copy of the Technical panel, with the same cites. Nothing is added, changed, or left out. It does not use plainer words. |
+| How it works | Bangla | PASS | The meaning matches in every sentence. Limits are kept: "must", "should", "by default", "may", "can", "optionally". Cites are on the same facts. Left out: nothing found. |
+| Try it | Layman | PASS | A copy of the Technical panel. The code blocks, run record, and cites are identical. Nothing is added, changed, or left out. It does not use plainer words. |
+| Try it | Bangla | PASS | The prose matches the Technical panel. The code blocks and output are the same as in the Technical panel. Cites are on the same facts. Left out: nothing found. |
+| How a tester uses it | Layman | PASS | A copy of the Technical panel with the same cites. Nothing is added, changed, or left out. It does not use plainer words. |
+| How a tester uses it | Bangla | PASS | The meaning matches. "must be checked at every level" is "যাচাই করতে হয়", which is the same strength. Cites are on the same facts. Left out: nothing found. |
+| Common mistakes | Layman | PASS | A copy of the Technical panel with the same cites. Nothing is added, changed, or left out. It does not use plainer words. |
+| Common mistakes | Bangla | PASS | The meaning matches, including the "suppose" case for the creator and the exit-status reasoning. Cites are on the same facts. Left out: nothing found. |
+| What a tester can check | Layman | PASS | The callout is a copy of the Technical callout. It is the same "Tutorial advice" with the same ten tips. Nothing is added or left out. |
+| What a tester can check | Bangla | PASS | All ten tips and the framing sentence translate the Technical callout. Nothing is added. Left out: nothing found. |
+
+Open FAILs after round 7: 0
+
 Open FAILs: 0
