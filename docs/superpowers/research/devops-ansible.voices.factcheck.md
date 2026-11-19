@@ -66,4 +66,96 @@ Open FAILs after round 5: 0
 
 Not checked: I did not open any source other than S1, because `page.md` lists only S1. Risk: the lede has no cite, so a later edit could change it with no source tied to it.
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-19)
+
+# Voices fact check: devops / ansible (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | This panel is a word-for-word copy of the Technical panel. It adds no fact and the cites match. It is not plainer than the Technical panel, but the rule only fails added or changed facts. Nothing is left out. It repeats the Technical use-case list, which leaves out "Eliminate repetition and simplify workflows". |
+| What it is | Bangla | PASS | Every sentence matches the Technical meaning and has the same cite. "এর সাধারণ ব্যবহারের মধ্যে আছে" ("among its common uses are") is not stronger than the Technical sentence. Left out: nothing of substance. The Bangla panel also lacks the fourth use case. |
+| How it works | Layman | PASS | This panel is a word-for-word copy of the Technical panel, including cites. It adds nothing and changes nothing. It is not plainer than the Technical panel. Nothing is left out. |
+| How it works | Bangla | PASS | All sentences keep the Technical meaning, limits, cites, and code spans. Limits such as "by default", "only", "can", and "most" are kept. Left out: "regardless of how many tasks notify it" (handlers). "performs a syntax check" is left out in the Common mistakes and tester copies, not here. |
+| Try it | Layman | PASS | This panel is a word-for-word copy of the Technical panel. The code blocks, run record, cites, and "No page that the tutorial read..." remarks are the same. It adds nothing. It is not plainer than the Technical panel. Nothing is left out. |
+| Try it | Bangla | PASS | Prose matches the Technical panel sentence by sentence. The code blocks are the same, including all outputs. Limits are kept: "may have used the network", "typically", "by default", "always win precedence", "thinks". Left out: nothing of substance. I read all of the Bangla and could judge every sentence. |
+| How a tester uses it | Layman | PASS | This panel is a word-for-word copy of the Technical panel. The cites match. It adds nothing. It is not plainer than the Technical panel. Nothing is left out. |
+| How a tester uses it | Bangla | PASS | The meaning, limits ("Ordinarily" is rendered as "সাধারণত"), and cites match. Left out: "performs a syntax check on the playbook" (the Bangla says only that `--syntax-check` does not run the playbook). |
+| Common mistakes | Layman | PASS | This panel is a word-for-word copy of the Technical panel. The cites match. It adds nothing. It is not plainer than the Technical panel. Nothing is left out. |
+| Common mistakes | Bangla | PASS | The meaning, limits, and cites match. The uncited sentence about `no-changed-when` has the same weakness as the Technical panel. Left out: "regardless of how many tasks notify it" (handler runs once). |
+| What a tester can check | Layman | PASS | This panel is a word-for-word copy of the Technical callout. The "Tutorial advice" title and all twelve bullets are the same. It adds nothing. It is not plainer than the Technical panel. Nothing is left out. |
+| What a tester can check | Bangla | PASS | All twelve bullets and the intro keep the Technical meaning. The commands and code spans are the same. "বানানো মান" means made-up values and matches. Left out: nothing of substance. |
+
+Open FAILs after round 6: 0
+
+Changed after this round: No FAIL in round 6. The Layman and Bangla panels got the same changes as the Technical panel (the four use cases, the cite of S35, and the fixes that the writer made after the round).
+
+## Round 7 (2026-11-19)
+
+# Voices fact check: devops / ansible (round 7)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | The panel is word for word the same as the Technical panel. It adds no fact and leaves out no detail. It is not simpler than the Technical panel. |
+| What it is | Bangla | FAIL | "SSH, Powershell remoting আর আরও অনেক transport" means "many more transports". The Technical panel says only "and other transports", so "অনেক" adds a quantity. Fix: use "আর অন্যান্য transport". Everything else matches the Technical panel. Nothing was left out. |
+| How it works | Layman | PASS | The panel is word for word the same as the Technical panel. Nothing was left out. All cites match. It is not simpler than the Technical panel. |
+| How it works | Bangla | PASS | Each sentence keeps its Technical meaning and cite. The qualifiers "by default", "most", "can", "only" and "usually" are kept. Left out: "so that Ansible receives a string" (octal quoting), "regardless of how many tasks notify it", and the "(default)" detail for `auto`. "মান ধরনের style" is an awkward rendering of "standard styles" but the meaning holds. |
+| Try it | Layman | PASS | The panel is word for word the same as the Technical panel. That includes the code blocks, the run record and the cites. Nothing was left out. It is not simpler than the Technical panel. |
+| Try it | Bangla | PASS | The panel follows the Technical panel sentence by sentence. The code blocks and outputs are the same. Cites are on the same facts. The run-record sentences and the step 5 "thinks" wording are kept. No facts were added or changed. "মান ধরনের style" is awkward but the meaning holds. No omissions found. |
+| How a tester uses it | Layman | PASS | The panel is word for word the same as the Technical panel. Nothing was left out. |
+| How a tester uses it | Bangla | PASS | The meaning and cites are kept. The limits "ordinarily" (সাধারণত), "can" and "should" are kept. Left out: in the `--syntax-check` bullet, the "performs a syntax check" half is dropped and only "does not run it" is said. The step 7 line "0 for the two good files and 2 for the bad file" is kept. |
+| Common mistakes | Layman | PASS | The panel is word for word the same as the Technical panel. Nothing was left out. |
+| Common mistakes | Bangla | PASS | Each bullet keeps the Technical meaning and cite. Limits are kept ("always" as সবসময়, "only", "ordinarily"). Defaults `~/.ansible` and `~/.ansible/tmp` are kept. No omissions found. |
+| What a tester can check | Layman | PASS | The callout and all 12 advice items are word for word the same as the Technical panel. No tool fact was added. |
+| What a tester can check | Bangla | PASS | All 12 items are rendered with the same meaning. The callout says this is the tutorial's own advice. No fact was added or changed. No omissions found. |
+
+Open FAILs after round 7: 1
+
+Changed after this round: Round 7 had one FAIL: the Bangla panel said "আরও অনেক transport" (many more transports) where the Technical panel said "other transports". The Technical panel now says "numerous other transports", as its source does, and says that Ansible "can" manage machines, and the Bangla panel says the same ("পারে"). The other changes of this round are in both panels.
+
+## Round 8 (2026-11-19)
+
+# Voices fact check: devops / ansible (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Word-for-word copy of the Technical panel, with the same cites. It adds no fact. It is not plainer than the Technical panel. Nothing is left out. |
+| What it is | Bangla | PASS | Each sentence keeps the meaning, numbers, names, and cites of the Technical sentence. Left out: nothing of note. "a set of built-in modules and plugins" becomes "কিছু built-in module আর plugin", which is a fair paraphrase. |
+| How it works | Layman | PASS | Word-for-word copy of the Technical panel, with the same cites. It adds no fact. It is not plainer. Nothing is left out. |
+| How it works | Bangla | PASS | Every sentence matches its Technical sentence, and limits such as "by default", "only", "most", "normally", and "ordinarily" are kept. Left out: "regardless of how many tasks notify it" (handlers); "autodetected" is kept. The sentence about checks with `--check` follows the Technical wording, so it carries the same issue as Technical row 145 without adding to it. |
+| Try it | Layman | PASS | Word-for-word copy of the Technical panel. I read lines 778-1097 in full. For the rest I checked that the panel has the same line count (543) as the Technical panel, and that 7 sentences from steps 3 to 8 each appear twice, in Technical and Layman. I did not read lines 1098-1320 in full. No added fact found. Not plainer. |
+| Try it | Bangla | PASS | I read the whole panel. Code blocks are the same as in Technical. Facts, numbers, file names, and cites match. Sentences about the run are translated faithfully. Left out: the word "customized" in the `success_msg` and `fail_msg` sentence; "autodetected" in the `--project-dir` sentence. |
+| How a tester uses it | Layman | PASS | Word-for-word copy of the Technical panel. It adds no fact. It is not plainer. Nothing is left out. |
+| How a tester uses it | Bangla | PASS | Meaning and cites match. Left out: for `--syntax-check`, the Bangla says only that it does not run the playbook and drops "performs a syntax check". The `--check` sentence keeps the Technical wording. |
+| Common mistakes | Layman | PASS | Word-for-word copy of the Technical panel. It adds no fact. It is not plainer. Nothing is left out. |
+| Common mistakes | Bangla | PASS | Every item matches the Technical item in meaning, limits, and cites. Left out: nothing of note. |
+| What a tester can check | Layman | PASS | Word-for-word copy of the callout, with the title "Tutorial advice". It adds no fact. |
+| What a tester can check | Bangla | PASS | The callout has the same 12 items and the same meaning, and it says the list is the tutorial's own advice. No fact is added. Left out: nothing. |
+
+Open FAILs after round 8: 0
+
+Changed after this round: No FAIL in round 8. The Bangla panel got the same hedge in both sentences ("তার ধারণা অনুযায়ী" and "বলে তার ধারণা হলে").
+
+## Round 9 (2026-11-19)
+
+# Voices fact check: devops / ansible (round 9)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | The panel is a word-for-word copy of the Technical panel. Every cite matches. Nothing is left out. The text is not plainer than the Technical panel, but it adds no fact. |
+| What it is | Bangla | PASS | The meaning matches the Technical panel sentence by sentence, and the cites sit on the same facts. Left out: nothing of note. Product and command names stay in English. |
+| How it works | Layman | PASS | The panel is a word-for-word copy of the Technical panel. Every cite matches. Nothing is left out, and no fact is added. |
+| How it works | Bangla | PASS | The meaning matches the Technical panel, and the cites match. Left out: "so that Ansible receives a string" (octal quoting); "regardless of how many tasks notify it" (handler runs once); "Ansible-specific" appears but "gradually" and similar limits are kept. Wording: "অনির্ভরযোগ্য" for "unpredictable" is slightly different ("unreliable"); "অনির্ধারিত" would be closer. I judge it not a changed fact. "মান ধরনের style" for "standard styles" is awkward but readable. |
+| Try it | Layman | PASS | The panel is a word-for-word copy of the Technical panel. The code blocks and outputs are identical. Every cite matches. No fact is added. |
+| Try it | Bangla | PASS | The meaning matches the Technical panel. The code blocks and outputs are identical to the Technical panel. The cites are on the same facts. Left out: nothing of note. The "three variables" count and the own-run statements are the same as in the Technical panel. |
+| How a tester uses it | Layman | PASS | The panel is a word-for-word copy of the Technical panel. Every cite matches. No fact is added. |
+| How a tester uses it | Bangla | PASS | The meaning matches the Technical panel and the cites match. Left out: "but does not execute it" is shortened to "playbook চালায় না" for `--syntax-check`; the meaning is kept. No fact is added. |
+| Common mistakes | Layman | PASS | The panel is a word-for-word copy of the Technical panel. Every cite matches. No fact is added. |
+| Common mistakes | Bangla | PASS | The meaning matches the Technical panel and the cites match. Left out: "so that Ansible receives a string" is kept; no limit is dropped. No fact is added. |
+| What a tester can check | Layman | PASS | The panel is a word-for-word copy of the Technical panel callout "Tutorial advice". It has no cites and gives no tool fact. |
+| What a tester can check | Bangla | PASS | The panel is a faithful Bangla version of the callout. It says it is the tutorial's own advice. It adds no fact and has no cites. |
+
+Open FAILs after round 9: 0
+
 Open FAILs: 0
