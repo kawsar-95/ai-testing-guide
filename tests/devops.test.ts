@@ -40,7 +40,7 @@ const PART_SIZES = [5, 3, 5, 5, 2, 1, 3];
  * The pages that are full lessons (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md).
  * The other pages are still a short text in one section. When every page is here, the full shape is the rule.
  */
-const FULL: ReadonlySet<string> = new Set<string>(["what-is-devops", "git-basics", "git-workflows", "ci-cd", "gitops", "docker-basics", "docker-images-compose", "docker-in-practice", "kubernetes-basics", "kubernetes-architecture", "kubernetes-networking-storage", "kubernetes-operations", "kubernetes-security-troubleshooting", "cloud-concepts", "aws-compute-storage", "aws-networking", "aws-identity-security", "aws-data-serverless", "terraform-iac", "ansible", "monitoring-observability", "cncf-build-deliver"]);
+const FULL: ReadonlySet<string> = new Set<string>(["what-is-devops", "git-basics", "git-workflows", "ci-cd", "gitops", "docker-basics", "docker-images-compose", "docker-in-practice", "kubernetes-basics", "kubernetes-architecture", "kubernetes-networking-storage", "kubernetes-operations", "kubernetes-security-troubleshooting", "cloud-concepts", "aws-compute-storage", "aws-networking", "aws-identity-security", "aws-data-serverless", "terraform-iac", "ansible", "monitoring-observability", "cncf-build-deliver", "cncf-runtime-data"]);
 /** The sections of a full page, in order. A long section may be followed by a continuation section. */
 const SHAPE = ["What it is", "How it works", "Try it", "How a tester uses it", "Common mistakes", "What a tester can check", "Key words"];
 
