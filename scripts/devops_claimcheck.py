@@ -14,6 +14,7 @@ import os
 import re
 import sys
 import time
+import http.client
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -87,7 +88,8 @@ def retry_wait(error, attempt):
 
 def get_page(url):
     """The raw page. A 403 is tried once more with a plain user agent (www.w3.org refuses the browser one).
-    A 429 (github.com answers it when many pages are read in a row) is tried again after a wait, three times at most."""
+    A 429 (github.com answers it when many pages are read in a row) is tried again after a wait, three times at most.
+    A dropped connection or a timeout (helm.sh closes one now and then) is tried again after 5, 15, and 45 seconds, the same way."""
     for attempt in range(4):
         try:
             try:
@@ -100,6 +102,10 @@ def get_page(url):
             if error.code != 429 or attempt == 3:
                 raise
             time.sleep(retry_wait(error, attempt))
+        except (ConnectionError, TimeoutError, http.client.IncompleteRead, urllib.error.URLError):
+            if attempt == 3:
+                raise
+            time.sleep(5 * 3 ** attempt)
 
 
 def fetch(url, cache):
