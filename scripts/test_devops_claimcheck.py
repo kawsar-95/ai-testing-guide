@@ -143,6 +143,24 @@ class RetryTest(unittest.TestCase):
         result, calls, waits = self.run_fetch([(429,)])
         self.assertEqual((result, calls, waits), (429, 4, [5, 15, 45]))
 
+    def test_a_503_is_tried_again_after_5_seconds(self):
+        result, calls, waits = self.run_fetch([(503,), None])
+        self.assertIn("This page is long enough", str(result))
+        self.assertEqual((calls, waits), (2, [5]))
+
+    def test_a_502_and_a_504_are_tried_again_after_5_and_15_seconds(self):
+        result, calls, waits = self.run_fetch([(502,), (504,), None])
+        self.assertIn("This page is long enough", str(result))
+        self.assertEqual((calls, waits), (3, [5, 15]))
+
+    def test_a_503_that_does_not_stop_is_raised_after_three_tries_again(self):
+        result, calls, waits = self.run_fetch([(503,)])
+        self.assertEqual((result, calls, waits), (503, 4, [5, 15, 45]))
+
+    def test_a_404_is_not_tried_again(self):
+        result, calls, waits = self.run_fetch([(404,)])
+        self.assertEqual((result, calls, waits), (404, 1, []))
+
     def test_a_wait_of_more_than_a_minute_is_cut_to_a_minute(self):
         result, calls, waits = self.run_fetch([(429, "600"), None])
         self.assertEqual(waits, [60])
