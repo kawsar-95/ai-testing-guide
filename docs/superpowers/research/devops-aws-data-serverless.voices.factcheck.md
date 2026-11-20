@@ -112,4 +112,96 @@ Changed after this round: Try it and How a tester uses it, Bangla: the Bangla li
 
 Open FAILs after round 7: 0
 
+Changed after this round: The Bangla text got the same numbers as the Technical text, and one Bangla sentence for the 5,400 seconds.
+
+## Round 8 (2026-11-20)
+
+# Voices fact check: devops / aws-data-serverless (round 8)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Word for word the same as the Technical panel, so it adds no fact and drops no limit. It is not in plainer words. Nothing left out. |
+| What it is | Bangla | PASS | Each sentence matches its Technical sentence, and the cites are the same. Left out: nothing. The words "automatically" and "only" are kept. |
+| How it works | Layman | PASS | Word for word the same as the Technical panel. Nothing left out. |
+| How it works | Bangla | PASS | Meaning matches the Technical panel for every sentence. The limits are kept: "সবসময়" (always), "by default", "সাধারণত" (typically), "যেকোনো সময়" (at any time). Left out: nothing. |
+| Try it | Layman | FAIL | Word for word the same as the Technical panel, and the code blocks are identical. It repeats the unsupported sentence "the page tells you to wait for the status `ACTIVE`" (S14), so it has a cite on a sentence that S14 does not support (see FACTCHECK #216). Fix with #216. Nothing left out. |
+| Try it | Bangla | FAIL | Meaning, code blocks and run outputs match the Technical panel. It repeats the unsupported sentence "page বলে `ACTIVE` status-এর জন্য অপেক্ষা করতে" ("the page says to wait for the `ACTIVE` status") with the S14 cite (see FACTCHECK #216). Fix with #216. Left out: nothing. |
+| How a tester uses it | Layman | PASS | Word for word the same as the Technical panel. Nothing left out. |
+| How a tester uses it | Bangla | PASS | Each bullet matches the Technical bullet. The limits are kept: "সবসময়" (always), "সাধারণত" (typically), "এখনো" (not yet). Left out: nothing. |
+| Common mistakes | Layman | PASS | Word for word the same as the Technical panel. Nothing left out. |
+| Common mistakes | Bangla | PASS | Each bullet matches the Technical bullet and keeps its limits ("by default", "may", "only"). Left out: nothing. |
+| What a tester can check | Layman | PASS | Word for word the same as the Technical callout. It adds no fact. Nothing left out. |
+| What a tester can check | Bangla | PASS | The callout title and all 12 items match the Technical callout in meaning. It adds no fact. Nothing left out. |
+
+Open FAILs after round 8: 2
+
+Changed after this round: The Layman and Bangla texts of Try it carried the same unsupported sentence, and have the same fix.
+
+## Round 9 (2026-11-20)
+
+# Voices fact check: devops / aws-data-serverless (round 9)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Word for word the same as the Technical panel, with the same cites (11 lines each). It adds no fact and leaves nothing out. It is not plainer or shorter than the Technical panel. |
+| What it is | Bangla | PASS | Each sentence matches the Technical sentence and its cite. Numbers, product names and limits are kept ("single-digit", "automatically" as "নিজে"). Nothing is left out. |
+| How it works | Layman | PASS | Word for word the same as the Technical panel, including code, numbers and cites (59 lines each). Nothing is left out. It is not plainer than the Technical panel. |
+| How it works | Bangla | PASS | Every sentence follows the Technical one: numbers (৩, ১,৮০০, ৫,৪০০, ১০, ১,০০০, ২০, ৫, ৪৫ days, one year, five minutes), limits ("by default", "only", "typically") and cites are kept. Nothing is left out. I read the Bangla well enough to judge it. |
+| Try it | Layman | PASS | Word for word the same as the Technical panel, including all code blocks and run output (418 lines each). Nothing is left out. The uncited sentence "Each needs an AWS account, and each can cost money" is the same open FAIL as row 217. |
+| Try it | Bangla | PASS | Code blocks are the same as in the Technical panel. Each sentence keeps the Technical meaning, numbers, run record and cites. Nothing is left out. Row 217 applies here too ("প্রতিটার জন্য AWS account লাগে" has no cite). |
+| How a tester uses it | Layman | PASS | Word for word the same as the Technical panel, with the same cites (18 lines each). Nothing is left out. |
+| How a tester uses it | Bangla | FAIL | The timeout bullet adds "আপনার workload-এর জন্য" ("for your workload") to the "upper bounds of what is reasonably expected". The Technical panel does not say this. Fix: drop "আপনার workload-এর জন্য". The other bullets match. Nothing is left out. |
+| Common mistakes | Layman | PASS | Word for word the same as the Technical panel, with the same cites (24 lines each). Nothing is left out. |
+| Common mistakes | Bangla | PASS | Each bullet matches the Technical one and its cite, with limits kept ("must", "may", "by default"). Nothing is left out. |
+| What a tester can check | Layman | PASS | Same callout, title and 12 advice items as the Technical panel. No cites needed. Nothing is left out. |
+| What a tester can check | Bangla | PASS | Same callout and the same 12 items. Meaning is kept. Nothing is left out. |
+
+Open FAILs after round 9: 1
+
+Changed after this round: The Bangla bullet "Test timeouts with realistic data" said "for your workload" (আপনার workload-এর জন্য), which the Technical text does not say (its quote has the words, and the Technical text leaves them out). The Bangla text no longer says it. The Layman and Bangla texts of step 6 have the same two new sentences as the Technical text.
+
+## Round 10 (2026-11-20)
+
+# Voices fact check: devops / aws-data-serverless (round 10)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | A word-for-word copy of the Technical panel, with the same cites. No fact is added or changed, and nothing is left out. It is not in plainer words, but the rule checks facts only. |
+| What it is | Bangla | PASS | Every sentence has the same meaning, numbers, names and cites as the Technical panel. Qualifiers are kept ("automatically" as নিজে, "only" as শুধু). Left out: nothing. |
+| How it works | Layman | PASS | A word-for-word copy of the Technical panel, with the same cites and the same code. Nothing is left out. |
+| How it works | Bangla | PASS | The meaning matches the Technical panel sentence by sentence. Qualifiers are kept: "always" as সবসময়, "by default" as by default, "typically" as সাধারণত, "must" as হয়/হবে, "only" as শুধু, "potentially" as সম্ভবত. The one small change: "pre-initializes environment instances" becomes "কিছু environment instance" (adds "some"), which adds no fact. Left out: nothing of substance. |
+| Try it | Layman | PASS | A word-for-word copy of the Technical panel, including all three code blocks and run outputs, with the same cites. The Technical FAIL in row 246 is repeated in the same words, so the Layman panel adds nothing new. Nothing is left out. |
+| Try it | Bangla | PASS | Every sentence, number, name and cite matches the Technical panel. The code blocks and output blocks are the same as in the Technical panel (22 distinctive lines each occur 3 times in the file). The `mock` and `context` heading claim is repeated as in the Technical panel, so the Technical FAIL (row 246) applies here too. Left out: nothing. |
+| How a tester uses it | Layman | PASS | A word-for-word copy of the Technical panel, with the same cites. Nothing is left out. |
+| How a tester uses it | Bangla | PASS | The meaning matches the Technical panel. Limits are kept: "always" as সবসময়, "some of the enhancements" as কিছু উন্নতি. The "So a test can pass on a reused environment..." and "A local run therefore cannot show..." sentences are carried over without new facts. Left out: nothing. |
+| Common mistakes | Layman | PASS | A word-for-word copy of the Technical panel, with the same cites. Nothing is left out. |
+| Common mistakes | Bangla | PASS | Every item has the same meaning and cites as the Technical panel. "must" is kept (উল্লেখ করতেই হয়), and "By default" is kept. Left out: nothing. |
+| What a tester can check | Layman | PASS | A word-for-word copy of the callout, with the same title and the same 12 items. Nothing is left out. |
+| What a tester can check | Bangla | PASS | The intro sentence and all 12 items carry the same advice as the Technical panel. No tool fact is added. Left out: nothing. |
+
+Open FAILs after round 10: 0
+
+Changed after this round: No FAILs. The Layman and Bangla texts have the same two sentences as the Technical text.
+
+## Round 11 (2026-11-20)
+
+# Voices fact check: devops / aws-data-serverless (round 11)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Word-for-word copy of the Technical panel, with the same cites. No fact is added or changed, and no detail is left out. It is not plainer than the Technical panel. |
+| What it is | Bangla | PASS | Faithful translation, sentence by sentence, same cites. Nothing added. Nothing left out. Limits are kept ("automatically", "only for the queries"). |
+| How it works | Layman | PASS | Word-for-word copy of the Technical panel (all code and cites the same). No fact added or dropped. It is not plainer. |
+| How it works | Bangla | PASS | All sentences match the Technical panel in number, scope and limit ("always", "by default", "typically", "at any time", "only", "potentially"). Nothing added. Nothing left out. |
+| Try it | Layman | PASS | Word-for-word copy of the Technical panel. The code blocks and run output are the same, and the cites are the same. Nothing left out. It is not plainer. |
+| Try it | Bangla | PASS | Prose is a faithful translation, with the same cites on the same facts. Code blocks, commands and run output are identical to the Technical panel. Numbers and values are the same (780 MB, 3.3.2, 674670 and 224890 bytes, ports, dates). Nothing added. Nothing left out. |
+| How a tester uses it | Layman | PASS | Word-for-word copy of the Technical panel with the same cites. Nothing left out. It is not plainer. |
+| How a tester uses it | Bangla | PASS | Each bullet matches the Technical bullet and carries the same cites. "always" in the GSI bullet is kept. Limits are kept ("might", "typically"). Nothing added. Nothing left out. |
+| Common mistakes | Layman | PASS | Word-for-word copy of the Technical panel with the same cites. Nothing left out. It is not plainer. |
+| Common mistakes | Bangla | PASS | Each bullet matches the Technical bullet. Limits are kept ("by default", "may affect", "must"). Same cites. Nothing added. Nothing left out. |
+| What a tester can check | Layman | PASS | Word-for-word copy of the callout. Same 12 advice items. Nothing added or left out. |
+| What a tester can check | Bangla | PASS | Translation of the same callout and the same 12 items. No tool fact added. Nothing left out. |
+
+Open FAILs after round 11: 0
+
 Open FAILs: 0
