@@ -36,11 +36,6 @@ const SLUGS = [
 /** How many topics each part holds, in order. */
 const PART_SIZES = [5, 3, 5, 5, 2, 1, 3];
 
-/**
- * The pages that are full lessons (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md).
- * The other pages are still a short text in one section. When every page is here, the full shape is the rule.
- */
-const FULL: ReadonlySet<string> = new Set<string>(["what-is-devops", "git-basics", "git-workflows", "ci-cd", "gitops", "docker-basics", "docker-images-compose", "docker-in-practice", "kubernetes-basics", "kubernetes-architecture", "kubernetes-networking-storage", "kubernetes-operations", "kubernetes-security-troubleshooting", "cloud-concepts", "aws-compute-storage", "aws-networking", "aws-identity-security", "aws-data-serverless", "terraform-iac", "ansible", "monitoring-observability"]);
 /** The sections of a full page, in order. A long section may be followed by a continuation section. */
 const SHAPE = ["What it is", "How it works", "Try it", "How a tester uses it", "Common mistakes", "What a tester can check", "Key words"];
 
@@ -73,19 +68,8 @@ test("content/devops has exactly the 24 files, and the route map is DEVOPS.route
   assert.deepEqual(Object.values(map), [...DEVOPS.routes]);
 });
 
-test("each page has the entry title as # heading; a short page has one section with voices", () => {
+test("every page has the entry title as # heading, the fixed sections, voices in each but Key words, and tips with no cites", () => {
   for (const page of DEVOPS.pages) {
-    if (FULL.has(page.slug)) continue;
-    const source = read(page.slug);
-    assert.ok(source.split("\n").includes(`# ${page.title}`), `${page.slug}: # ${page.title}`);
-    assert.equal(headingsOf(source).length, 1, `${page.slug}: one ## section`);
-    assert.equal(voiceBlocks(source).length, 1, `${page.slug}: one <Voices> block`);
-  }
-});
-
-test("a full page has the fixed sections, voices in each but Key words, and tips with no cites", () => {
-  for (const slug of FULL) assert.ok(SLUGS.includes(slug), `FULL lists a known page: ${slug}`);
-  for (const page of DEVOPS.pages.filter((p) => FULL.has(p.slug))) {
     const source = read(page.slug);
     assert.ok(source.split("\n").includes(`# ${page.title}`), `${page.slug}: # ${page.title}`);
     const headings = headingsOf(source);

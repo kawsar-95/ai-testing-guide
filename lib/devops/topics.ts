@@ -1,8 +1,8 @@
 /**
  * The one ordered list of the DevOps & Cloud topics. Each topic is served at
  * /devops/<slug>/ and has its text in content/devops/<slug>.mdx. The topics are grouped in parts.
- * A page is a full lesson for testers (the FULL list of tests/devops.test.ts) or a shelf: a short explanation
- * with its sources. Every page ends with the reels of one creator (KodeKloud).
+ * Every page is a full lesson for testers (the shape that tests/devops.test.ts checks). Every page ends with
+ * the reels of one creator (KodeKloud).
  */
 import { defineFlatModule, type FlatEntry, type FlatPart } from "../modules/flat.ts";
 import { DEVOPS_UI } from "./ui.ts";
@@ -67,9 +67,9 @@ const SOURCE: readonly TopicEntry[] = [
   { slug: "terraform-iac", part: 5, title: "Terraform and Infrastructure as Code", description: "Terraform's write, plan, and apply workflow, providers, state, and tests, then Packer machine images and Crossplane compositions, with a practice run on your own machine (Terraform with local files, a Packer build of a Docker image, and the Crossplane CLI) and no cloud account." },
   { slug: "ansible", part: 5, title: "Ansible", description: "Ansible's inventory, playbooks, modules, handlers, check mode, and vault, with a practice run on your own machine (two playbooks against localhost, tests with the assert module, ansible-lint, and Ansible Vault) and no remote host." },
   { slug: "monitoring-observability", part: 6, title: "Monitoring and Observability", description: "Observability and its three signals, Prometheus (metrics, PromQL, rules, and promtool tests), Alertmanager, Loki, and the trace context of OpenTelemetry, with a practice run on your own machine (a small web app, alerts that fire, log queries, and a trace header) and no cloud account." },
-  { slug: "cncf-build-deliver", part: 7, title: "CNCF Projects: Build and Deliver", description: "The CNCF, Helm, Backstage, and Cloud Native Buildpacks." },
-  { slug: "cncf-runtime-data", part: 7, title: "CNCF Projects: Runtime, Scheduling, and Data", description: "The CNCF, containerd, and Rook." },
-  { slug: "cncf-network-security-observability", part: 7, title: "CNCF Projects: Networking, Security, and Observability", description: "The CNCF, Istio, Falco, and the Open Policy Agent." },
+  { slug: "cncf-build-deliver", part: 7, title: "CNCF Projects: Build and Deliver", description: "The CNCF and three of its projects for building and delivering software: Helm charts, the Backstage software catalog, and Cloud Native Buildpacks, with a practice run on your own machine (a chart that is linted, rendered, and tested, catalog files that are validated, and a buildpack that builds an image) and no cluster or cloud account." },
+  { slug: "cncf-runtime-data", part: 7, title: "CNCF Projects: Runtime, Scheduling, and Data", description: "The CNCF and two of its projects, containerd and Rook, with a practice run on your own machine (containerd started as a normal user, its content store and namespaces explored, the Rook charts rendered, and a short-lived kind cluster used to watch the scheduler and to check Rook custom resources against their schema) and no cloud account." },
+  { slug: "cncf-network-security-observability", part: 7, title: "CNCF Projects: Networking, Security, and Observability", description: "The CNCF and three of its projects, Istio, Falco, and the Open Policy Agent, with Gatekeeper, and a practice run on your own machine (the Istio configuration checked offline, policies written and tested with OPA and Gatekeeper, and Falco rules validated and run over Kubernetes audit events) with no cluster, no root rights, and no cloud account." },
 ];
 
 const entries: readonly FlatEntry<DevopsSlug>[] = SOURCE.map((entry) => ({ ...entry, kind: "topic" }));

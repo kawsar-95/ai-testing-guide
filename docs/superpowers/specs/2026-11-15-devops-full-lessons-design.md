@@ -1,6 +1,6 @@
 # DevOps & Cloud: full lessons for testers
 
-Date: 2026-11-15. Status: in progress (see "Pages").
+Date: 2026-11-15. Status: done on 2026-11-20, all 24 pages (see "Pages").
 
 ## Why
 
@@ -47,7 +47,7 @@ A long section may be split into a continuation section (`tests/shape.ts`), as i
 
 ## Checks
 
-1. `npm test`: `tests/devops.test.ts` checks the full shape for the pages in its `FULL` list, the one section for the others, and that the cites of all Technical panels and the sources agree.
+1. `npm test`: `tests/devops.test.ts` checks the full shape of every page, and that the cites of all Technical panels and the sources agree.
 2. `python3 scripts/devops_claimcheck.py <slug>`: every quote of the research notes is in its source. The overlap figure covers the cited text of every Technical panel.
 3. An independent fact check: a fresh `claude -p` session per page that did not write it, read-only, with the page and the text of its sources only. The brief is in `docs/superpowers/research/devops-factcheck-brief.md` ("The brief of the full pages"). A script recounts the FAILs and looks each quoted phrase of a PASS up in the sources.
 4. A page is done when both reports end with `Open FAILs: 0`. The new rounds are added to the old reports of the page.
@@ -73,12 +73,19 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 - **A command that a step runs needs its own cite.** `terraform state list` and `crossplane version --client` were run on the page and described without a cite until a checker asked. Cite the page of each command that a step runs.
 - **If a step hides a warning, record the step without the hiding line too.** ansible-lint 26.11.0 printed two deprecation warnings about callbacks that the tutorial's files do not use. The step sets `ANSIBLE_DEPRECATION_WARNINGS=false`, and the runner records the same command without it, so that the page shows what a reader sees and says why the line is there.
 - **A tool writes to the home folder even in a local run.** Ansible makes `~/.ansible/tmp`, and ansible-lint makes `~/.cache/ansible-lint/latest.json`. Run the practice with an empty `HOME`, record the files that it leaves, and say so.
-- **The repo claim check and the page fetcher read markup differently.** An italic word of a command becomes `[ pattern ]`, a code span splits `name:` from `’s`, and a `|` is escaped in the notes table. Quote the nearest plain text, or split the quote with `||`.
+- **The repo claim check and the page fetcher read markup differently.** An italic word of a command becomes `[ pattern ]`, a code span splits `name:` from `’s`, and a `|` is escaped in the notes table. Quote the nearest plain text, or split the quote with `||`. On the live pages of OPA, Gatekeeper, and Falco, the anchor link of a heading leaves a zero-width space after it, so a quote that crosses a heading is not found. An inline code span has a space on each side (`non-true` is `non- true`, `{}` is `{ }`, and `rego.v1/future.keywords` is `rego.v1 / future.keywords`), and each token of a code example does too. Quote one paragraph of prose, and split a quote around a code span with `||`. Run `scripts/devops_claimcheck.py` before the first checker round: it found 9 such quotes on `cncf-network-security-observability`.
 - **Keep the limit of a source in the sentence.** `thinks`, `by default`, `unless configured otherwise`, `numerous`, `always`, and `should` are claims too. The checkers raised two sentences that had dropped one (`thinks`). A re-read of the two pages against their quotes, after round 7, found eleven more (five in `terraform-iac` and six in `ansible`). Compare each Technical sentence with its quote for a missing limit, and keep the limit in the Bangla sentence too (`parity.py` counts `should` against `উচিত` and looks for a hedge next to each `can` or `would`).
+- **A closing "So ..." sentence is a claim too.** "So the scheduler chooses the node, and the runtime on that node runs the containers" (`cncf-runtime-data`) and "So a policy that you test with `opa` may use another syntax than the Rego in a ConstraintTemplate" (`cncf-network-security-observability`) each linked two cited facts and had no cite of its own. Cut the sentence, or let the reader link the facts.
+- **The causal word of a source goes with its sentence.** "Because of that", "since", "meaning", and "and therefore loaded": "so" or "then" in their place says more or less than the quote. Copy the source's word, or split the sentence into cited parts.
+- **A hedged source keeps its hedge, also in a heading.** The Rook page says that an odd number of mons gives the highest availability, and that an even number "can be specified although availability may be lower". A heading that called an even number a mistake got a FAIL; the item says what the page says.
+- **A quote has the scope that it has.** "The syscall collection performs a variety of suspect actions detected by the default Falco ruleset" became a sentence about the whole `event-generator` and got a FAIL. Use the sentence of the source that is about the whole tool, or keep the sentence to the collection.
+- **Whose words a sentence is, needs a source.** "The words 'de facto' on the Falco page are the project's own words about itself" got a FAIL: no source says whose words they are.
+- **A reading of a run result is a claim.** "The tutorial's reading is that the Pod became request metadata" had no source and no output behind it. Say what the run printed, cite the page that has the rule, and say that the tutorial did not trace why.
+- **Check the install against the script that did it.** The page says what the install compared (a checksum file from the same host, or a signature and a key from two hosts), says that the fingerprint of the key was not compared with a second source, and says that these checks find a damaged or swapped archive, and not who built it.
 - **A claim of absence needs a source or the run.** "No page that the tutorial read describes X" was wrong twice (the exit statuses of `promtool`, and `amtool config routes`), and the checkers found the pages that do describe them. Say what the run showed, cite the page that has it, or leave the sentence out.
 - **A fact that is not in the run record cannot be checked.** A sentence about the `--help` text of a tool, read after the run, got a FAIL. Put the command in a step, so that its output is in the record, or leave the sentence out.
 - **A quote that crosses a YAML comment line has a `# ` inside it in the source.** Split it with `||`. The checker joins the pieces and prints "quote not in sources" for them. That note is expected, and the row is PASS.
-- **A page that answers a browser user agent with 403 can still be read.** `www.w3.org` does. `scripts/devops_claimcheck.py` now retries a 403 once with a plain user agent, and a 429 (`github.com` answers it when many of its pages are read in a row) up to three times after a wait.
+- **A page that answers a browser user agent with 403 can still be read.** `www.w3.org` does. `scripts/devops_claimcheck.py` now retries a 403 once with a plain user agent, and a 429 (`github.com` answers it when many of its pages are read in a row), a 502, a 503, a 504, a dropped connection, or a timeout up to three times after a wait of 5, 15, and 45 seconds.
 - **An effect in a Try-it explanation is a claim.** "It checked `rules.yml` too, because the configuration lists it" got a FAIL. Show the printed lines that prove it, cite the page, or say it as the tutorial's own observation.
 - **A Bangla word keeps the meaning of the English word.** "জমা করে" (collect) stood for "aggregate" in a sentence about rules and got a FAIL. Check the verbs of a definition against the Bangla verbs one by one.
 - **A plainer word must not add an order or a limit.** "First", "always", "within" for "after": the Layman and Bangla panels got FAILs for each.
@@ -109,6 +116,8 @@ The checkers of the Part 1 pages kept finding the same kinds of slips. Avoid the
 | 5 | terraform-iac | done: 57 sources, rounds 6 to 9 |
 | 5 | ansible | done: 45 sources, rounds 6 to 9 |
 | 6 | monitoring-observability | done: 41 sources, rounds 6 to 13 |
-| 7 | cncf-build-deliver, cncf-runtime-data, cncf-network-security-observability | to do (cncf-runtime-data: the Rook sentence was fixed, round 6) |
+| 7 | cncf-build-deliver | done: 49 sources, rounds 6 to 7 |
+| 7 | cncf-runtime-data | done: 41 sources, rounds 7 to 11 |
+| 7 | cncf-network-security-observability | done: 47 sources, rounds 6 to 7 |
 
-When the last page is done, the `FULL` list of the test becomes the rule for every page, and this table is removed.
+The last page is done, so the `FULL` list of the test is gone and the full shape is the rule for every page. The table stays as the record of the sources and rounds of each page.

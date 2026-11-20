@@ -62,4 +62,52 @@ Open FAILs after round 5: 0
 
 Not checked: the claims were not run against any text outside `pages/`. The "Istio is a service mesh" claim passes on S3's title and heading, not on a sentence that says it directly.
 
+Changed after this round: The page was rewritten as a full lesson for testers (docs/superpowers/specs/2026-11-15-devops-full-lessons-design.md). Round 6 and later check the new text with the brief of the full pages.
+
+## Round 6 (2026-11-20)
+
+# Voices fact check: devops / cncf-network-security-observability (round 6)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Word-for-word copy of the Technical panel, with the same cites. It adds no fact. It uses no plainer words. It leaves nothing out. The "de facto" sentence is uncited in Technical too. |
+| What it is | Bangla | PASS | I read every sentence. Dates, stages, quotes, and cites match the Technical panel. Nothing is added or stronger. Left out: nothing of substance. |
+| How it works | Layman | FAIL | Word-for-word copy of the Technical panel. It adds no fact. It leaves nothing out. It repeats the unsupported S39 cite on the `event-generator` sentence. It also repeats the uncited "Each message has a code ... and a level." |
+| How it works | Bangla | FAIL | (1) It repeats the unsupported S39 cite: "`event-generator` ... default Falco ruleset ধরে". (2) In Permissive mode it adds a link not in Technical: "ফলে operator ধীরে ধীরে ..." ("as a result"). (3) In Authorization policy it adds "workload-এ বেশি প্রবেশাধিকার খোলা" ("to open more access to the workload"). Technical only says "incrementally add more ALLOW policies". Otherwise the sentences match. Left out: nothing of substance. |
+| Try it | Layman | PASS | Word-for-word copy of the Technical panel. Layman line n is Technical line n+1122. I read lines 1473–1852 in full. For the rest I checked bullet lines and code lines by grep; they sit at the same offset. The stray "]" typo in the `falco-audit.yaml` bullet is copied too. Left out: nothing. |
+| Try it | Bangla | PASS | I read every prose line and the bullets. Meaning, numbers, exit codes, and cites match the Technical panel. I did not diff the code blocks line by line. Spot checks of 12 distinctive code lines found them identical at offset +2244. Left out: nothing of substance. |
+| How a tester uses it | Layman | FAIL | Word-for-word copy of the Technical panel. It repeats the unsupported S39 cite on the `event-generator` sentence ("the default Falco ruleset detects"). Left out: nothing. |
+| How a tester uses it | Bangla | FAIL | It repeats the unsupported S39 cite: "`event-generator` ... default Falco ruleset ধরে". The other sentences match the Technical panel. Left out: nothing of substance. |
+| Common mistakes | Layman | PASS | Word-for-word copy of the Technical panel. It adds no fact. It leaves nothing out. |
+| Common mistakes | Bangla | PASS | All 12 bullets match the Technical panel in meaning, numbers, and cites. Left out: nothing. |
+| What a tester can check | Layman | PASS | Word-for-word copy of the callout. It adds no fact. |
+| What a tester can check | Bangla | PASS | All 15 items and the intro line match the Technical callout. It adds no fact. |
+
+Open FAILs after round 6: 4
+
+Changed after this round: Four FAILs. The Layman and Bangla panels of "How it works" and of "How a tester uses it" repeated the sentence on the `event-generator`, and they now repeat the corrected sentence. The Bangla panel of "How it works" added "ফলে" (as a result) to a sentence on the permissive mode, and a clause about opening more access to the workload to the sentence on the allow-nothing policy. The first is removed, and the second is now in the Technical sentence, which has it in its quote.
+
+## Round 7 (2026-11-20)
+
+# Voices fact check: devops / cncf-network-security-observability (round 7)
+
+I did not diff every Layman line, so the Layman PASS for How it works and Try it rests on matching line counts and sampled sentences. I read the other Layman panels and every Bangla panel in full. For the Try it Bangla panel I read the intro and all the bullets. I did not diff its code blocks and code comments line by line. Every Layman panel is a word-for-word copy of its Technical panel. It adds no fact, but it also uses no plainer words and no shorter sentences.
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Verbatim copy of the Technical panel (read in full). It adds nothing and leaves nothing out. The wording is not plainer. |
+| What it is | Bangla | PASS | Every date, number, stage name, and cite matches the Technical panel. Nothing is stronger or weaker. It leaves out nothing of substance. |
+| How it works | Layman | PASS | Same line count as the Technical panel (76 lines). Sampled sentences (Aborts/OPA-Envoy/sidecar co-exist/disable-source) each appear in both panels. It looks like a verbatim copy. Nothing is added or left out. It is not plainer. |
+| How it works | Bangla | PASS | Read every paragraph against the Technical panel. Limits such as "by default", "only", "can", "currently", and "at the same time" are kept. Numbers (TLSv1_2, 5.8, 0.36.0, GLIBC 2.28) are the same. Nothing is added. |
+| Try it | Layman | PASS | Same line count as the Technical panel (1122 lines). Sampled sentences (glibc 2.43, `load_plugins` sample, "did not trace the query", lists sentence, "exited with 0 in both runs") appear in both panels. It looks like a verbatim copy. Code blocks match. Nothing is added or left out. |
+| Try it | Bangla | PASS | The intro and all bullets match the Technical panel in facts, numbers, exit codes, line numbers, file names, and cites. The "run record" sentences stay labelled as the run's own. The code blocks I viewed match. Left out: nothing of substance. |
+| How a tester uses it | Layman | PASS | Verbatim copy of the Technical panel (read in full). Nothing is added or left out. The wording is not plainer. |
+| How a tester uses it | Bangla | PASS | Each sentence matches the Technical panel, including "by default" and "at least one ALLOW policy". Cites are on the same facts. Nothing is added. |
+| Common mistakes | Layman | PASS | Verbatim copy of the Technical panel (read in full). The wording is not plainer. |
+| Common mistakes | Bangla | PASS | All 13 bullets match the Technical panel, with numbers, exit codes, and cites unchanged. The words "ডিফল্টভাবে" and "কেবল" keep the "by default" and "only" limits. |
+| What a tester can check | Layman | PASS | Verbatim copy of the Technical callout, with the same title and the same 15 bullets. It adds no tool fact. |
+| What a tester can check | Bangla | PASS | The title is the same, and all 15 bullets and the intro line match the Technical callout. No new fact appears. |
+
+Open FAILs after round 7: 0
+
 Open FAILs: 0

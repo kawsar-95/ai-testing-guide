@@ -1,4 +1,5 @@
 import sys
+import http.client
 import tempfile
 import unittest
 import urllib.error
@@ -113,6 +114,8 @@ class RetryTest(unittest.TestCase):
         def fake_urlopen(request, timeout):
             status = answers[min(len(calls), len(answers) - 1)]
             calls.append(request.get_header("User-agent"))
+            if status == "drop":
+                raise http.client.RemoteDisconnected("Remote end closed connection without response")
             if status:
                 raise urllib.error.HTTPError(request.full_url, status[0], "error", {"Retry-After": status[1]} if len(status) > 1 else {}, None)
             return Response()
@@ -122,6 +125,8 @@ class RetryTest(unittest.TestCase):
                 result = dc.fetch("https://example.org/b", Path(tmp))
             except urllib.error.HTTPError as error:
                 result = error.code
+            except http.client.RemoteDisconnected:
+                result = "dropped"
         return result, len(calls), [w for w in waits if w != 0.3]
 
     def test_a_429_is_tried_again_after_the_wait_that_the_server_asks_for(self):
@@ -138,9 +143,36 @@ class RetryTest(unittest.TestCase):
         result, calls, waits = self.run_fetch([(429,)])
         self.assertEqual((result, calls, waits), (429, 4, [5, 15, 45]))
 
+    def test_a_503_is_tried_again_after_5_seconds(self):
+        result, calls, waits = self.run_fetch([(503,), None])
+        self.assertIn("This page is long enough", str(result))
+        self.assertEqual((calls, waits), (2, [5]))
+
+    def test_a_502_and_a_504_are_tried_again_after_5_and_15_seconds(self):
+        result, calls, waits = self.run_fetch([(502,), (504,), None])
+        self.assertIn("This page is long enough", str(result))
+        self.assertEqual((calls, waits), (3, [5, 15]))
+
+    def test_a_503_that_does_not_stop_is_raised_after_three_tries_again(self):
+        result, calls, waits = self.run_fetch([(503,)])
+        self.assertEqual((result, calls, waits), (503, 4, [5, 15, 45]))
+
+    def test_a_404_is_not_tried_again(self):
+        result, calls, waits = self.run_fetch([(404,)])
+        self.assertEqual((result, calls, waits), (404, 1, []))
+
     def test_a_wait_of_more_than_a_minute_is_cut_to_a_minute(self):
         result, calls, waits = self.run_fetch([(429, "600"), None])
         self.assertEqual(waits, [60])
+
+    def test_a_dropped_connection_is_tried_again_after_5_seconds(self):
+        result, calls, waits = self.run_fetch(["drop", None])
+        self.assertIn("This page is long enough", result)
+        self.assertEqual((calls, waits), (2, [5]))
+
+    def test_a_connection_that_keeps_dropping_is_raised_after_three_tries_again(self):
+        result, calls, waits = self.run_fetch(["drop"])
+        self.assertEqual((result, calls, waits), ("dropped", 4, [5, 15, 45]))
 
 
 if __name__ == "__main__":

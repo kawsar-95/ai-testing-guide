@@ -14,6 +14,7 @@ import os
 import re
 import sys
 import time
+import http.client
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -79,15 +80,19 @@ def get(url, user_agent):
         return response.read().decode("utf-8", errors="replace")
 
 
+RETRY_CODES = (429, 502, 503, 504)  # a server that is busy or has a hiccup: github.com answers a 429 or a 503 when many pages are read in a row
+
+
 def retry_wait(error, attempt):
-    """Seconds to wait before the next try of a 429: the Retry-After of the server when it is a number, else 5, 15, 45."""
+    """Seconds to wait before the next try of a 429, 502, 503, or 504: the Retry-After of the server when it is a number, else 5, 15, 45."""
     asked = (error.headers.get("Retry-After") if error.headers else None) or ""
     return min(int(asked) if asked.isdigit() else 5 * 3 ** attempt, 60)
 
 
 def get_page(url):
     """The raw page. A 403 is tried once more with a plain user agent (www.w3.org refuses the browser one).
-    A 429 (github.com answers it when many pages are read in a row) is tried again after a wait, three times at most."""
+    A 429, 502, 503, or 504 (github.com answers a 429 or a 503 when many pages are read in a row) is tried again after a wait, three times at most.
+    A dropped connection or a timeout (helm.sh closes one now and then) is tried again after 5, 15, and 45 seconds, the same way."""
     for attempt in range(4):
         try:
             try:
@@ -97,9 +102,13 @@ def get_page(url):
                     raise
                 return get(url, FALLBACK_UA)
         except urllib.error.HTTPError as error:
-            if error.code != 429 or attempt == 3:
+            if error.code not in RETRY_CODES or attempt == 3:
                 raise
             time.sleep(retry_wait(error, attempt))
+        except (ConnectionError, TimeoutError, http.client.IncompleteRead, urllib.error.URLError):
+            if attempt == 3:
+                raise
+            time.sleep(5 * 3 ** attempt)
 
 
 def fetch(url, cache):

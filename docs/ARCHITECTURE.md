@@ -80,7 +80,7 @@ Each part of the site has one ordered list. The lists drive the drawer, the home
 | Agent Memory | `lib/agent-memory/topics.ts` | 7 topics, one for each type of agent memory. A flat module. |
 | How AI Agents Work | `lib/ai-agents/topics.ts` | 10 topics, one for each part of the agent loop. A flat module. |
 | AI/ML Testing | `lib/ai-ml-testing/topics.ts` | 47 topics from LLM basics to agent testing. A flat module. The MDX is generated from `scripts/ai_ml_testing_pages_p1*.py` and `_p2*.py`. |
-| DevOps & Cloud | `lib/devops/topics.ts` | 24 topics in 7 parts. The 21 topics of Parts 1 to 6 are full lessons for testers, and the other 3 a short sourced text; every topic ends with KodeKloud Shorts. A flat module with no progress store. |
+| DevOps & Cloud | `lib/devops/topics.ts` | 24 topics in 7 parts. All 24 topics are full lessons for testers; every topic ends with KodeKloud Shorts. A flat module with no progress store. |
 | Security Testing | `lib/security/topics.ts` | 8 topics, from a safe practice lab to a practice penetration test, in the order of the 8 modules of the course "Cyber Security and Penetration Testing with AI" (Road to SDET). A flat module with a progress store. |
 | SDET Roadmap | `lib/sdet/topics.ts` | 20 steps in 7 parts, in the order of an SDET course curriculum: 9 new topic pages and 11 links to the modules and pages that already teach a step. A flat module with a progress store (`sdet-progress`). |
 
