@@ -141,4 +141,73 @@ Open FAILs after round 8: 0
 
 Not checked: rows 25 and 28 (How it works, steps 2 and 5) have no exact S1 quote. I only confirmed the surrounding step lines in S1, so treat those two PASS verdicts as weaker than the rest.
 
+Changed after this round: The Layman and Bangla panels of What it is, How it works, Try it, and Common mistakes were rewritten from the new Technical text, with the same cites, and the Key words table follows the new Technical text. Round 9 checks them.
+
+## Round 9 (2026-11-20)
+
+# Voices fact check: devops / docker-basics (round 9)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | All facts and cites match the Technical panel. Left out: "containerization" is reworded as "putting them into containers". "Provides" becomes "has" for Docker Hub. |
+| What it is | Bangla | PASS | Meaning matches sentence by sentence. Cites are the same as in the Technical panel. Nothing of substance is left out. |
+| How it works | Layman | PASS | Same facts and cites. Left out: "acts as" is reworded as "works as". "Immutable" is dropped from the image layers in the container-layer sentence. "Nothing outside the host can reach them" means the same as "not accessible from outside the host". The diagram is identical to the Technical one. It has the same problem as claim 34, which is a source problem and not a voice problem. |
+| How it works | Bangla | PASS | Meaning matches. The Unix socket, REST, `SIGKILL`-free sentences, ports, and isolation sentences are faithful. Left out: nothing of substance. The diagram is identical to the Technical one. |
+| Try it | Layman | PASS | Same facts, cites, and code blocks. Left out: "one or more" for `docker stop` and `docker rm`. "Docker Engine" is dropped from the `:latest` sentence. "A confirmation message" is reworded as "a message that all is well". "Exits" is reworded as "stops". |
+| Try it | Bangla | PASS | Same facts, cites, and code blocks. Left out: nothing of substance. Meaning matches, including the `docker` group and `sudo` sentence. |
+| How a tester uses it | Layman | PASS | Same facts and cites. Left out: "throwaway" is reworded as "short-lived". "Relative time" is reworded as "time span such as `42m`". "Is recommended" is attributed to Playwright, which is the cited source. The `ubuntu:24.04` sentence is the same. |
+| How a tester uses it | Bangla | PASS | Meaning matches. Code block is identical. Left out: nothing of substance. |
+| Common mistakes | Layman | PASS | Same facts and cites. Left out: the Playwright bullet drops "or tests" and says "browsers" for "browser executables". "Docker Engine" is dropped from the `:latest` sentence. |
+| Common mistakes | Bangla | PASS | Meaning matches. Cites are the same. Nothing of substance is left out. |
+| What a tester can check | Layman | PASS | Same advice items. Left out: "time window of a failure" is reworded as "the time when a test failed". "Publish" is reworded as "open". No new fact. |
+| What a tester can check | Bangla | PASS | Same six advice items, no new fact. Meaning matches. |
+
+Open FAILs after round 9: 0
+
+Changed after this round: No FAILs. The Bangla introduction of the diagram follows the new Technical introduction.
+
+## Round 10 (2026-11-20)
+
+# Voices fact check: devops / docker-basics (round 10)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel and the cites match. Left out: "containerization" wording ("putting them into containers" is used instead). |
+| What it is | Bangla | PASS | Same facts, no additions. Table, VM trade-off and cloud-server claims match the Technical panel. |
+| How it works | Layman | PASS | Facts and code are the same as the Technical panel. The diagram is identical. "Opens a port to the outside" and "connects" restate "makes a port available outside the host" and "maps". Left out: "immutable" for the image layers, and "RESTful" does not appear in the Technical sentence either. |
+| How it works | Bangla | PASS | Facts, diagram and cites match. Left out: "immutable" in the Container-layer sentence is kept, and nothing is added. |
+| Try it | Layman | PASS | Code blocks are identical. Wording is slightly looser: "a message that all is well" for "a confirmation message", "stops" for "exits", and "Right after you install" for "After you install". The "as a default" limit is dropped from the `:latest` sentence, which stays true. Left out: "Engine" in "Docker Engine uses", and "one or more" for `docker stop` and `docker rm`. |
+| Try it | Bangla | PASS | Code blocks are identical. Facts and cites match. Nothing is added. |
+| How a tester uses it | Layman | PASS | "Short-lived" restates "throwaway". "A time span such as 42m" restates "a relative time". Left out: "date" in `--since`, "browser system dependencies" as exact wording, and "RFC3339Nano" is kept. |
+| How a tester uses it | Bangla | PASS | Facts and cites match. Left out: nothing of substance. |
+| Common mistakes | Layman | PASS | "Cannot find the browsers" is looser than "unable to locate browser executables", and "your project or tests" is shortened to "your project". Left out: "by default" in the `:latest` sentence (stays true), "Engine". |
+| Common mistakes | Bangla | PASS | Facts and cites match. Nothing is added. |
+| What a tester can check | Layman | PASS | Same six advice items. "The time when a test failed" is narrower in wording than "the time window of a failure". "Open test ports" restates "publish". |
+| What a tester can check | Bangla | PASS | Same six advice items. Nothing is added. |
+
+Open FAILs after round 10: 0
+
+Changed after this round: No FAILs. The Bangla sentence of `docker pull` follows the Technical sentence.
+
+## Round 11 (2026-11-20)
+
+# Voices fact check: devops / docker-basics (round 11)
+
+| Section | Panel | Verdict | Note |
+|---|---|---|---|
+| What it is | Layman | PASS | Every fact is in the Technical panel. Left out: "containerization" is reworded as "putting them into containers"; the S2 sentence on Docker Hub as a container registry is shortened to "has a container registry". |
+| What it is | Bangla | PASS | Meaning is the same as the Technical panel. Product names stay in English. Left out: no detail of substance. |
+| How it works | Layman | PASS | Same facts, same cites, same code block. Left out: "one or more" is dropped; the Technical panel's "all files" becomes "the files"; the ports sentence leaves out nothing but the "-p 8080:80" example text, which is kept. The "Nothing outside the host can reach them" wording matches "not accessible from outside the host". |
+| How it works | Bangla | PASS | Meaning is the same as the Technical panel. The diagram caption is translated; the code block is identical. Left out: no detail of substance. |
+| Try it | Layman | PASS | Same facts, same code blocks. Left out: "Engine" in "Docker Engine uses :latest"; "one or more" for stop and rm. "Right after you install" is a small rewording of "After you install". The "prints a message that all is well" is a plain restatement of "confirmation message". |
+| Try it | Bangla | PASS | Meaning is the same as the Technical panel. Code blocks are identical. Left out: no detail of substance. |
+| How a tester uses it | Layman | PASS | Same facts and cites. "Playwright recommends" attributes the source's recommendation. Left out: "date" in `--since` ("after a given time"); "lightweight" kept; "RFC3339Nano" kept. |
+| How a tester uses it | Bangla | PASS | Meaning is the same as the Technical panel. Code block is identical. Left out: "date" in `--since`; no other detail of substance. |
+| Common mistakes | Layman | PASS | Same facts and cites. Left out: "Engine" in "Docker Engine uses"; "browser executables" is reworded as "the browsers". |
+| Common mistakes | Bangla | PASS | Meaning is the same as the Technical panel. Left out: no detail of substance. |
+| What a tester can check | Layman | PASS | Same six items. Small rewordings: "time window of a failure" becomes "the time when a test failed" (the window is left out; "a failure" is narrowed to "a test failed"); "publish" becomes "open". The panel adds no fact. |
+| What a tester can check | Bangla | PASS | Same six items. "Time window" is left out ("a failure's time"). The panel adds no fact. |
+
+Open FAILs after round 11: 0
+
 Open FAILs: 0
