@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { GROUPS, PAGES } from "../lib/nav.ts";
 import { headingsFromSource } from "../lib/headings.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { voiceBlocks } from "../lib/voice-source.ts";
 
 const SLUGS = [
@@ -77,9 +76,4 @@ test("every <Cite n> has a source, and the Technical text cites every source", (
     assert.deepEqual([...all].sort((a, b) => a - b), expected, `${slug}: cites and sources`);
     assert.deepEqual([...technical].sort((a, b) => a - b), expected, `${slug}: Technical cites every source`);
   }
-});
-
-test("precacheUrls includes the 10 routes", () => {
-  const urls = precacheUrls("");
-  for (const slug of SLUGS) assert.ok(urls.includes(`/agentic-qa/${slug}/`), slug);
 });

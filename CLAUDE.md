@@ -120,7 +120,7 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/base-path.ts` | `withBasePath(path, base)`: adds the base path to a path that starts with `/`. See "Deploy". |
 | `lib/site.ts` | `SITE_URL`, `GA_ID`, `BASE_PATH`, `SITE_NAME`, `SITE_SHORT_NAME`, `SITE_DESCRIPTION`, `OWNER` |
 | `lib/sitemap.ts` | `sitemapPaths()`: the paths of `app/sitemap.ts` (home, tutorial pages, Linux, Fundamentals, System Design, Architecture, Course, k6, AI Engineering, Agent Memory, AI Agents). It has relative `.ts` imports, so `node --test` can load it. |
-| `lib/pwa.ts` | The web manifest, the precache list (all 340 routes, the 404 page, the search index), and the source of the service worker |
+| `lib/pwa.ts` | The web manifest, the precache list (the app shell only: the home page, contents, dashboard, interview, the 404 page; every other page is cached when first opened), and the source of the service worker |
 | `lib/pwa-install.ts` | `INSTALL_CAPTURE_SCRIPT`: a head script that keeps an early `beforeinstallprompt` event on `window.__installPrompt` for `InstallButton` |
 | `lib/page.ts` | The `page` export type (`updated`, `sources`), `formatUpdated`, `editUrl` (the "Suggest an edit" link) |
 | `lib/home.ts` | The home group labels, the three first pages (`START_STEPS`: the hero button opens the first), `WHY_ITEMS`, `COURSE_CARDS`, `TUTORIAL_CARDS`, and `MODULE_CARDS` |
@@ -857,7 +857,7 @@ The site installs as an app and is offline first.
 - Each build writes a new cache version into `/sw.js`. The browser finds the new `/sw.js` on the next visit. Its install caches all pages again, and it deletes the old caches.
 - `tests/pwa.test.ts` runs the worker source with a fake `caches` and `fetch`.
 - Only production builds register the service worker. `npm run dev` has none. To test it, run `npm run build` and serve `out/`.
-- A new page in `lib/nav.ts`, a new stage in `lib/linux/stages.ts`, a new chapter in `lib/fundamentals/chapters.ts`, or a new page of a flat module in `lib/modules/registry.ts` goes into the precache list automatically.
+- A new page in `lib/nav.ts`, a new stage in `lib/linux/stages.ts`, a new chapter in `lib/fundamentals/chapters.ts`, or a new page of a flat module in `lib/modules/registry.ts` needs nothing for the service worker: a page is cached when the reader first opens it.
 
 ## Environment Variables
 

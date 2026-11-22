@@ -5,37 +5,27 @@ import { join } from "node:path";
 import { CHAPTERS, FUNDAMENTALS_ROUTES } from "../lib/fundamentals/chapters.ts";
 import { LINUX_ROUTES, STAGES } from "../lib/linux/stages.ts";
 import { PAGES } from "../lib/nav.ts";
+import { FLAT_MODULES } from "../lib/modules/registry.ts";
 import { assetPattern, precacheUrls, serviceWorkerSource, webManifest } from "../lib/pwa.ts";
 
 const SITE = { name: "Name", shortName: "Short", description: "Description" };
 
-test("the precache list has the home page, every page, the 404 page, and the search index", () => {
+test("the precache list is the app shell: the home page, the 404 page, and the manifest", () => {
   const urls = precacheUrls("");
-  for (const url of ["/", "/404.html", "/search-index.json", ...PAGES.map((page) => page.href)]) {
+  for (const url of ["/", "/contents/", "/dashboard/", "/interview/", "/404.html", "/manifest.webmanifest"]) {
     assert.ok(urls.includes(url), url);
   }
   assert.equal(new Set(urls).size, urls.length, "no duplicates");
 });
 
-test("precacheUrls includes /linux/ and the 12 stage routes", () => {
-  assert.equal(STAGES.length, 12);
-  assert.equal(LINUX_ROUTES.length, 13);
-  for (const basePath of ["", "/repo"]) {
-    const urls = precacheUrls(basePath);
-    assert.ok(urls.includes(`${basePath}/linux/`));
-    for (const stage of STAGES) assert.ok(urls.includes(`${basePath}${stage.href}`), stage.href);
-    for (const route of LINUX_ROUTES) assert.ok(urls.includes(`${basePath}${route}`), route);
-    assert.equal(new Set(urls).size, urls.length, "no duplicates");
-  }
-});
-
-test("precacheUrls includes /fundamentals/ and the 11 chapter routes", () => {
-  assert.equal(CHAPTERS.length, 11);
-  assert.equal(FUNDAMENTALS_ROUTES.length, 12);
-  for (const basePath of ["", "/repo"]) {
-    const urls = precacheUrls(basePath);
-    for (const route of FUNDAMENTALS_ROUTES) assert.ok(urls.includes(`${basePath}${route}`), route);
-    assert.equal(new Set(urls).size, urls.length, "no duplicates");
+test("the precache list stays small: no content page and no search index", () => {
+  // 341 pages are about 109 MB. Caching them at install made a first visit that heavy.
+  const urls = precacheUrls("");
+  assert.ok(urls.length <= 12, `${urls.length} URLs`);
+  assert.ok(!urls.includes("/search-index.json"));
+  for (const page of PAGES) assert.ok(!urls.includes(page.href), page.href);
+  for (const route of [...LINUX_ROUTES, ...FUNDAMENTALS_ROUTES, ...FLAT_MODULES.flatMap((m) => m.routes)]) {
+    assert.ok(!urls.includes(route), route);
   }
 });
 
@@ -188,4 +178,13 @@ test("offline, a page that is not in the cache gets the 404 page", async () => {
   await worker.install();
   worker.state.online = false;
   assert.equal(await worker.get("/unknown/"), "not found");
+});
+
+test("a page the reader opens is cached then, and opens offline later", async () => {
+  const worker = fakeWorker({ "/": "home", "/linux/": "linux stage" });
+  await worker.install();
+  assert.ok(!worker.has("/linux/"), "not cached at install");
+  assert.equal(await worker.get("/linux/"), "linux stage");
+  worker.state.online = false;
+  assert.equal(await worker.get("/linux/"), "linux stage");
 });

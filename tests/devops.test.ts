@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { DEVOPS } from "../lib/devops/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 import { voiceBlocks } from "../lib/voice-source.ts";
 import { sectionsWithSplits } from "./shape.ts";
@@ -95,11 +94,6 @@ test("every <Cite n> of the Technical text has a source, and every source is cit
     assert.ok(sources >= 1, `${page.slug}: has sources`);
     assert.deepEqual([...cites].sort((a, b) => a - b), Array.from({ length: sources }, (_, i) => i + 1), `${page.slug}: cites and sources`);
   }
-});
-
-test("precacheUrls includes /devops/ and the 24 page routes", () => {
-  const urls = precacheUrls("");
-  for (const route of DEVOPS.routes) assert.ok(urls.includes(route), route);
 });
 
 test("buildFlatSearchDocs gives docs with group 'devops' for every page", () => {

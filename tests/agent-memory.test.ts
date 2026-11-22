@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { AGENT_MEMORY } from "../lib/agent-memory/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 
 /** The 7 types, in the order of the infographic. */
@@ -58,12 +57,6 @@ test("each page has the entry title as # heading, the fixed sections, and voices
 test("the progress ids are the 7 slugs, under agent-memory-progress", () => {
   assert.equal(AGENT_MEMORY.progress?.storageKey, "agent-memory-progress");
   assert.deepEqual(AGENT_MEMORY.lessonIds, [...SLUGS]);
-});
-
-test("precacheUrls includes /agent-memory/ and the 7 page routes", () => {
-  const urls = precacheUrls("");
-  assert.ok(urls.includes("/agent-memory/"));
-  for (const slug of SLUGS) assert.ok(urls.includes(`/agent-memory/${slug}/`), slug);
 });
 
 test("buildFlatSearchDocs gives docs with group 'agent memory' for every page", () => {

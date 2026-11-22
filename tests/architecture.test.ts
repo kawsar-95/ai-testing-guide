@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { ARCHITECTURE, PRACTICE_COUNT, PRACTICE_IDS, practiceId } from "../lib/architecture/topics.ts";
 import { getOutline } from "../lib/outline.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs, createIndex, runSearch } from "../lib/search.ts";
 
 const SLUGS = [
@@ -135,12 +134,4 @@ test("buildFlatSearchDocs gives an intro doc and one doc per ## section, with gr
   }
   const hit = runSearch(createIndex(docs), "idempotency").find((h) => h.href.startsWith("/architecture/idempotency/"));
   assert.ok(hit);
-});
-
-test("precacheUrls includes /architecture/ and every topic route", () => {
-  for (const basePath of ["", "/repo"]) {
-    const urls = precacheUrls(basePath);
-    for (const route of ARCHITECTURE.routes) assert.ok(urls.includes(`${basePath}${route}`), route);
-    assert.equal(new Set(urls).size, urls.length, "no duplicates");
-  }
 });
