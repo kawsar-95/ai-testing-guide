@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { COURSE } from "../lib/course/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 import { sitemapPaths } from "../lib/sitemap.ts";
 
@@ -139,12 +138,6 @@ test("the progress ids are the 55 entries, under course-progress", () => {
   assert.equal(COURSE.progress?.storageKey, "course-progress");
   assert.equal(COURSE.lessonIds.length, 55);
   assert.deepEqual(COURSE.lessonIds, ENTRIES.map((e) => e[0]));
-});
-
-test("precacheUrls includes /course/ and the 40 page routes", () => {
-  const urls = precacheUrls("");
-  assert.ok(urls.includes("/course/"));
-  for (const slug of TOPICS) assert.ok(urls.includes(`/course/${slug}/`), slug);
 });
 
 test("buildFlatSearchDocs gives docs with group 'course' for every page", () => {

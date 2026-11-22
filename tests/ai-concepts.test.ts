@@ -3,7 +3,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { AI_CONCEPTS } from "../lib/ai-concepts/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 
 /** The 9 topics, in the order of the source infographic. */
@@ -47,11 +46,6 @@ test("each page has its title as # heading and the fixed section order", () => {
 test("the progress ids are the 9 slugs, under ai-concepts-progress", () => {
   assert.equal(AI_CONCEPTS.progress?.storageKey, "ai-concepts-progress");
   assert.deepEqual(AI_CONCEPTS.lessonIds, [...SLUGS]);
-});
-
-test("precacheUrls includes /ai-concepts/ and the 9 page routes", () => {
-  const urls = precacheUrls("");
-  for (const route of AI_CONCEPTS.routes) assert.ok(urls.includes(route), route);
 });
 
 test("buildFlatSearchDocs gives docs with group 'ai concepts' for every page", () => {

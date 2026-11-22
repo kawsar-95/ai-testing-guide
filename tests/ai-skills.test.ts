@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { AI_SKILLS } from "../lib/ai-skills/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 
 /** Spec "Data": slug and part (tier). Every entry is a topic. */
@@ -86,12 +85,6 @@ test("each section except Key words has voices", () => {
 test("the progress ids are the 20 slugs, under ai-skills-progress", () => {
   assert.equal(AI_SKILLS.progress?.storageKey, "ai-skills-progress");
   assert.deepEqual(AI_SKILLS.lessonIds, ENTRIES.map((e) => e[0]));
-});
-
-test("precacheUrls includes /ai-skills/ and the 20 page routes", () => {
-  const urls = precacheUrls("");
-  assert.ok(urls.includes("/ai-skills/"));
-  for (const [slug] of ENTRIES) assert.ok(urls.includes(`/ai-skills/${slug}/`), slug);
 });
 
 test("buildFlatSearchDocs gives docs with group 'ai skills' for every page", () => {

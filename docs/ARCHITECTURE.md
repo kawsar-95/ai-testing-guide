@@ -254,14 +254,15 @@ The look follows the reference site [systemdesignbangla.com](https://www.systemd
 
 | Part | Behavior |
 |---|---|
-| Install | Caches all 340 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
+| Install | Caches only the app shell (the home page, `/contents/`, `/dashboard/`, `/interview/`, the 404 page, the manifest, and the icons), plus the build files and the `/images/` files that those pages use: about 1.8 MB. The 340 pages are about 109 MB, so they are not cached at install. |
+| Visited pages | A page, and the search index, is cached when the reader first opens it, so it opens offline afterwards. A page never opened is not available offline. |
 | Pages, RSC payloads, and the search index | Stale-while-revalidate. The cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. |
 | `/_next/static/` files | Cache first. Their file names have a content hash. |
 | Offline, page not cached | Shows the cached 404 page |
-| New build | `/sw.js` gets a new cache version. The new worker caches all pages again and deletes older caches. |
+| New build | `/sw.js` gets a new cache version. The new worker caches the shell again, deletes older caches, and caches pages again as they are visited. |
 | Install button | `INSTALL_CAPTURE_SCRIPT` (`lib/pwa-install.ts`) keeps an early `beforeinstallprompt` event. `InstallButton` shows only after that event (Chromium). |
 
-Only production builds register the service worker. `npm run dev` has none, so dev pages never come from an old cache. A new page in any ordered list goes into the precache list by itself.
+Only production builds register the service worker. `npm run dev` has none, so dev pages never come from an old cache. A new page needs nothing: it is cached when first opened.
 
 ## SEO and environment variables
 

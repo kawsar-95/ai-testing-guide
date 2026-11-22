@@ -3,7 +3,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { SDET } from "../lib/sdet/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 import { sitemapPaths } from "../lib/sitemap.ts";
 import { voiceBlocks } from "../lib/voice-source.ts";
@@ -114,11 +113,6 @@ test("the advice section cites nothing and says that it is the tutorial's advice
 test("the progress ids are the 20 step slugs, links too, under sdet-progress", () => {
   assert.equal(SDET.progress?.storageKey, "sdet-progress");
   assert.deepEqual(SDET.lessonIds, STEPS.map(([slug]) => slug));
-});
-
-test("precacheUrls includes /sdet/ and the 9 page routes", () => {
-  const urls = precacheUrls("");
-  for (const route of SDET.routes) assert.ok(urls.includes(route), route);
 });
 
 test("buildFlatSearchDocs gives docs with group 'sdet' for every page", () => {

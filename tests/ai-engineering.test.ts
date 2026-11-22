@@ -3,7 +3,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { AI_ENGINEERING } from "../lib/ai-engineering/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 
 /** Slug and part, in the order of the iceberg. Every entry is a topic. */
@@ -85,12 +84,6 @@ test("each MdxImage src in content/ai-engineering is a file in public/", () => {
 test("the progress ids are the 28 slugs, under ai-engineering-progress", () => {
   assert.equal(AI_ENGINEERING.progress?.storageKey, "ai-engineering-progress");
   assert.deepEqual(AI_ENGINEERING.lessonIds, ENTRIES.map((e) => e[0]));
-});
-
-test("precacheUrls includes /ai-engineering/ and the 28 page routes", () => {
-  const urls = precacheUrls("");
-  assert.ok(urls.includes("/ai-engineering/"));
-  for (const [slug] of ENTRIES) assert.ok(urls.includes(`/ai-engineering/${slug}/`), slug);
 });
 
 test("buildFlatSearchDocs gives docs with group 'ai engineering' for every page", () => {

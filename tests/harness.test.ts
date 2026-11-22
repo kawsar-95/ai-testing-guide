@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { HARNESS } from "../lib/harness/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 
 const SLUGS = [
@@ -39,11 +38,6 @@ test("each page has the entry title as # heading, the tester tip, and Key words 
     const headings = [...source.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
     assert.deepEqual(headings.slice(-2), ["What a tester can check", "Key words"], page.slug);
   }
-});
-
-test("precacheUrls includes /harness/ and the 6 page routes", () => {
-  const urls = precacheUrls("");
-  for (const route of HARNESS.routes) assert.ok(urls.includes(route), route);
 });
 
 test("buildFlatSearchDocs gives docs with group 'harness' for every page", () => {

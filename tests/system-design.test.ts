@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { getOutline } from "../lib/outline.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs, createIndex, runSearch } from "../lib/search.ts";
 import { SYSTEM_DESIGN } from "../lib/system-design/cases.ts";
 
@@ -85,12 +84,4 @@ test("buildFlatSearchDocs gives an intro doc and one doc per ## section, with gr
   }
   const hit = runSearch(createIndex(docs), "Kafka").find((h) => h.href.startsWith("/system-design/kafka/"));
   assert.ok(hit);
-});
-
-test("precacheUrls includes /system-design/ and every case route", () => {
-  for (const basePath of ["", "/repo"]) {
-    const urls = precacheUrls(basePath);
-    for (const route of SYSTEM_DESIGN.routes) assert.ok(urls.includes(`${basePath}${route}`), route);
-    assert.equal(new Set(urls).size, urls.length, "no duplicates");
-  }
 });

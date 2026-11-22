@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { K6 } from "../lib/k6/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 
 /** Spec §3: slug and part. Every entry is a topic. */
@@ -73,12 +72,6 @@ test("each MdxImage src in content/k6 is a file in public/", () => {
 test("the progress ids are the 20 slugs, under k6-progress", () => {
   assert.equal(K6.progress?.storageKey, "k6-progress");
   assert.deepEqual(K6.lessonIds, ENTRIES.map((e) => e[0]));
-});
-
-test("precacheUrls includes /k6/ and the 20 page routes", () => {
-  const urls = precacheUrls("");
-  assert.ok(urls.includes("/k6/"));
-  for (const [slug] of ENTRIES) assert.ok(urls.includes(`/k6/${slug}/`), slug);
 });
 
 test("buildFlatSearchDocs gives docs with group 'k6' for every page", () => {

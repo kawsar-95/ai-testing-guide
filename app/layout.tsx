@@ -27,6 +27,8 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono-jb",
   subsets: ["latin"],
   display: "swap",
+  // Code and small labels only: no preload, so it does not compete with the text fonts.
+  preload: false,
 });
 
 // The Bengali font draws only Bengali letters. It comes after each Latin font
