@@ -45,7 +45,7 @@ export function FundamentalsSidebarList({
                     : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")
                 }
               >
-                <span className={"w-5 shrink-0 font-mono text-[11px] tabular-nums " + (active ? "text-accent" : "text-text-faint")}>
+                <span className={"w-5 shrink-0 font-mono text-[12px] tabular-nums " + (active ? "text-accent" : "text-text-faint")}>
                   <span className="sr-only">
                     <T
                       en={FUNDAMENTALS_UI.sidebarChapterLabel(chapter.number)}
@@ -64,7 +64,7 @@ export function FundamentalsSidebarList({
                 </span>
                 <span
                   aria-hidden="true"
-                  className={"shrink-0 font-mono text-[11px] tabular-nums " + (active ? "text-accent" : "text-text-faint")}
+                  className={"shrink-0 font-mono text-[12px] tabular-nums " + (active ? "text-accent" : "text-text-faint")}
                 >
                   {FUNDAMENTALS_UI.sidebarCount(count, total)}
                 </span>

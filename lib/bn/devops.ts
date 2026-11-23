@@ -8,7 +8,7 @@ export const DEVOPS_UI_BN: Bn<typeof DEVOPS_UI> = {
   siteTitle: "DevOps & Cloud",
   description:
     "Git, CI/CD, Docker, Kubernetes, AWS, Terraform, Ansible, monitoring, and CNCF projects: a sourced explanation of each topic for testers, then KodeKloud Shorts to watch.",
-  eyebrow: (topics) => `DEVOPS & CLOUD · ${topics}টি টপিক`,
+  eyebrow: (topics) => `DevOps & Cloud · ${topics}টি টপিক`,
   heading: "DevOps & Cloud",
   lede: "এই মডিউলে একটা delivery pipeline-এর চারপাশের টুলগুলো ব্যাখ্যা করা হয়েছে: version control, CI/CD, container, Kubernetes, ক্লাউড, infrastructure as code আর monitoring। প্রতিটা পেজ tester-দের জন্য পূর্ণ পাঠ: হাতে-কলমে অনুশীলন, প্রতিটা টুল কোন test-এর কাজে লাগে, আর সাধারণ ভুল। প্রতিটা পেজের শেষে KodeKloud Shorts আছে, যেখানে বিষয়টা কাজে দেখা যায়।",
   sourceNote:
@@ -16,7 +16,7 @@ export const DEVOPS_UI_BN: Bn<typeof DEVOPS_UI> = {
   itemsHeading: "টপিকসমূহ",
   itemsHeadingId: "topics-heading",
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · DEVOPS & CLOUD`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · DevOps & Cloud`,
   itemNav: "DevOps & Cloud-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",

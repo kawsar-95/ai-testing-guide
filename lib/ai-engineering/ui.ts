@@ -6,7 +6,7 @@ export const AI_ENGINEERING_UI = {
   siteTitle: "AI Engineering",
   description:
     "What AI engineering really involves, from prompts and RAG to evals, guardrails, observability, and system design, for testers.",
-  eyebrow: (topics: number) => `AI ENGINEERING · ${topics} TOPICS`,
+  eyebrow: (topics: number) => `AI engineering · ${topics} topics`,
   heading: "AI Engineering",
   lede: "Calling a model is only the top of the iceberg. Learn the 8 topics that newcomers see, then the 20 topics under the waterline that make an AI system work in production. Each topic shows what a tester can check.",
   sourceNote:
@@ -18,7 +18,7 @@ export const AI_ENGINEERING_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · AI ENGINEERING`,
+  itemEyebrow: (number: number) => `Topic ${pad(number)} · AI engineering`,
   itemNav: "AI Engineering topics",
   allItems: "All topics",
   previousItem: "Previous topic",
@@ -28,7 +28,7 @@ export const AI_ENGINEERING_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "AI Engineering topics",
-  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Topic ${pad(number)}`,
   sidebarDone: "done",
   headerLink: "AI Engineering",
   crossTo: "AI Engineering",

@@ -195,7 +195,7 @@ export function SearchPalette() {
         </span>
         <kbd
           aria-hidden="true"
-          className="hidden rounded border border-border-strong px-1.5 py-0.5 font-mono text-[11px] leading-none text-text-faint sm:inline nav:hidden wide:inline"
+          className="hidden rounded border border-border-strong px-1.5 py-0.5 font-mono text-[12px] leading-none text-text-faint sm:inline nav:hidden wide:inline"
         >
           {apple ? "⌘ K" : "Ctrl K"}
         </kbd>
@@ -206,7 +206,7 @@ export function SearchPalette() {
           <div
             aria-hidden="true"
             onClick={() => setOpen(false)}
-            className="backdrop-in absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+            className="backdrop-in absolute inset-0 bg-black/60"
           />
           <div
             ref={dialogRef}
@@ -251,7 +251,7 @@ export function SearchPalette() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded border border-border-strong px-1.5 py-1 font-mono text-[11px] leading-none text-text-faint transition-colors hover:text-text"
+                className="rounded border border-border-strong px-1.5 py-1 font-mono text-[12px] leading-none text-text-faint transition-colors hover:text-text"
               >
                 <span aria-hidden="true">Esc</span>
                 <span className="sr-only">

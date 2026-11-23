@@ -60,7 +60,7 @@ export function VoiceSwitcher({
             lang={v === "bangla" ? "bn" : undefined}
             style={style}
             className={
-              "rounded-lg border px-3 py-1.5 text-[13px] leading-5 font-medium transition-colors duration-[150ms] " +
+              "rounded-lg border px-3 py-1.5 text-[13px] leading-5 font-medium transition-colors duration-[150ms] pointer-coarse:min-h-11 " +
               (active ? "" : "border-transparent text-text-dim hover:bg-bg-raised-2 hover:text-text")
             }
           >

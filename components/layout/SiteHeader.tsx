@@ -32,19 +32,16 @@ function MenuButtonPlaceholder() {
  */
 export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
   return (
-    <header className="sticky top-0 z-40 h-16 border-b border-border">
-      {/* The blur sits on its own layer. A backdrop-filter on the header
-          itself would trap the fixed-position drawer inside the header. */}
-      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-bg/90 backdrop-blur-md backdrop-saturate-150" />
+    <header className="sticky top-0 z-40 h-16 border-b border-border bg-bg">
       <div className="mx-auto flex h-full max-w-[1440px] items-center gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5 text-text no-underline" data-reveal="fade">
+        <Link href="/" className="flex min-w-0 items-center gap-2.5 text-text no-underline pointer-coarse:min-h-11" data-reveal="fade">
           <span
             aria-hidden="true"
             className="grid size-[34px] shrink-0 place-items-center rounded-lg bg-accent text-bg max-[360px]:hidden"
           >
             <BrandMark className="size-5" mono />
           </span>
-          <span className="truncate font-display text-[17px] font-medium tracking-tight sm:text-[18px]">{SITE_NAME}</span>
+          <span className="truncate font-display text-[17px] font-medium sm:text-[18px]">{SITE_NAME}</span>
         </Link>
         <Suspense fallback={<NavItems activeId={null} />}>
           <HeaderNav />

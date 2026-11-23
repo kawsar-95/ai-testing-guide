@@ -6,7 +6,7 @@ export const AI_ML_TESTING_UI = {
   siteTitle: "AI/ML Testing",
   description:
     "Testing AI and ML systems for QA engineers, SDETs, and test leads: LLM behavior, prompt testing, automated evals, hallucination detection, RAG and agent testing, red teaming, observability, and CI/CD eval gates.",
-  eyebrow: (topics: number) => `AI/ML TESTING · ${topics} TOPICS`,
+  eyebrow: (topics: number) => `AI/ML testing · ${topics} topics`,
   heading: "AI and ML Testing",
   lede:
     "An AI system does not have one right answer, so the tester cannot check the output alone. This module covers the whole job: what the model is doing, how to break it on purpose, how to score it automatically, and how to keep the score from falling.",
@@ -19,7 +19,7 @@ export const AI_ML_TESTING_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · AI/ML TESTING`,
+  itemEyebrow: (number: number) => `Topic ${pad(number)} · AI/ML testing`,
   itemNav: "AI/ML Testing topics",
   allItems: "All topics",
   previousItem: "Previous topic",
@@ -29,7 +29,7 @@ export const AI_ML_TESTING_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "AI/ML Testing topics",
-  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Topic ${pad(number)}`,
   sidebarDone: "done",
   headerLink: "AI/ML Testing",
   crossTo: "AI/ML Testing",

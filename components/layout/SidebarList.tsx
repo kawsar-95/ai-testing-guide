@@ -52,7 +52,7 @@ export function SidebarList({
                   >
                     <span
                       className={
-                        "w-5 shrink-0 font-mono text-[11px] tabular-nums " +
+                        "w-5 shrink-0 font-mono text-[12px] tabular-nums " +
                         (active ? "text-accent" : "text-text-faint")
                       }
                     >

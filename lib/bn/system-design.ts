@@ -8,7 +8,7 @@ export const SYSTEM_DESIGN_UI_BN: Bn<typeof SYSTEM_DESIGN_UI> = {
   siteTitle: "System Design",
   description:
     "How 15 well-known systems work, in plain words: Kafka, Google Search, YouTube, WhatsApp, Uber, payments, and more.",
-  eyebrow: (cases) => `SYSTEM DESIGN · ${cases}টি কেস স্টাডি`,
+  eyebrow: (cases) => `System design · ${cases}টি কেস স্টাডি`,
   heading: "System Design",
   lede: "প্রতিটা কেস স্টাডি একটা পরিচিত প্রোডাক্ট নিয়ে সহজ ভাষায় বুঝিয়ে দেয় ভেতরে সেটা কীভাবে কাজ করে। আপনাকে আর্কিটেক্ট হতে হবে না। যেকোনো ক্রমে পড়তে পারেন।",
   sourceNote:
@@ -16,7 +16,7 @@ export const SYSTEM_DESIGN_UI_BN: Bn<typeof SYSTEM_DESIGN_UI> = {
   itemsHeading: "কেস স্টাডিসমূহ",
   itemsHeadingId: "cases-heading",
 
-  itemEyebrow: (number) => `কেস ${pad(number)} · SYSTEM DESIGN`,
+  itemEyebrow: (number) => `কেস ${pad(number)} · System design`,
   itemNav: "System Design-এর কেস স্টাডিসমূহ",
   allItems: "সব কেস স্টাডি",
   previousItem: "আগের কেস স্টাডি",

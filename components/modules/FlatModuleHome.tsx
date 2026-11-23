@@ -26,7 +26,7 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
         <p className={`${LABEL} text-accent`}>
           <T en={ui.eyebrow(topics)} bn={bn.eyebrow(topics)} />
         </p>
-        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
+        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">
           <T en={ui.heading} bn={bn.heading} />
         </h1>
         <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
@@ -92,7 +92,7 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
           return (
             <div key={part.num}>
               <h3 className={`${LABEL} mt-8 text-text-dim`} {...reveal("up", 0)}>
-                <T en={`PART ${part.num}`} bn={`পার্ট ${part.num}`} /> · {part.title}
+                <T en={`Part ${part.num}`} bn={`পার্ট ${part.num}`} /> · {part.title}
               </h3>
               {list}
             </div>

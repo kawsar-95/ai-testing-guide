@@ -8,7 +8,7 @@ export const AI_ML_TESTING_UI_BN: Bn<typeof AI_ML_TESTING_UI> = {
   siteTitle: "AI/ML Testing",
   description:
     "Testing AI and ML systems for QA engineers, SDETs, and test leads: LLM behavior, prompt testing, automated evals, hallucination detection, RAG and agent testing, red teaming, observability, and CI/CD eval gates.",
-  eyebrow: (topics) => `AI/ML TESTING · ${topics}টি টপিক`,
+  eyebrow: (topics) => `AI/ML testing · ${topics}টি টপিক`,
   heading: "AI ও ML টেস্টিং",
   lede:
     "একটা AI সিস্টেমের একটাই সঠিক উত্তর নেই, তাই টেস্টার শুধু আউটপুট দেখে চেক করতে পারেন না। এই মডিউলে পুরো কাজটা আছে: মডেল আসলে কী করছে, কীভাবে ইচ্ছাকৃতভাবে ভাঙবেন, কীভাবে স্বয়ংক্রিয়ভাবে স্কোর দেবেন, আর স্কোর যেন কমে না পড়ে।",
@@ -20,7 +20,7 @@ export const AI_ML_TESTING_UI_BN: Bn<typeof AI_ML_TESTING_UI> = {
   summaryText: (done, total) => `${total}টির মধ্যে ${done}টি টপিক সম্পন্ন`,
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · AI/ML TESTING`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · AI/ML testing`,
   itemNav: "AI/ML Testing-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",

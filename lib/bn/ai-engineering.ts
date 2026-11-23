@@ -8,7 +8,7 @@ export const AI_ENGINEERING_UI_BN: Bn<typeof AI_ENGINEERING_UI> = {
   siteTitle: "AI Engineering",
   description:
     "What AI engineering really involves, from prompts and RAG to evals, guardrails, observability, and system design, for testers.",
-  eyebrow: (topics) => `AI ENGINEERING · ${topics}টি টপিক`,
+  eyebrow: (topics) => `AI engineering · ${topics}টি টপিক`,
   heading: "AI Engineering",
   lede: "মডেল কল করা হলো আইসবার্গের শুধু চূড়া। প্রথমে নতুনরা যে 8টি টপিক দেখে সেগুলো শিখুন, তারপর পানির নিচের 20টি টপিক, যেগুলো প্রোডাকশনে একটা AI সিস্টেম চালায়। প্রতিটা টপিকে আছে একজন টেস্টার কী চেক করতে পারে।",
   sourceNote:
@@ -19,7 +19,7 @@ export const AI_ENGINEERING_UI_BN: Bn<typeof AI_ENGINEERING_UI> = {
   summaryText: (done, total) => `${total}টির মধ্যে ${done}টি টপিক সম্পন্ন`,
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · AI ENGINEERING`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · AI engineering`,
   itemNav: "AI Engineering-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",

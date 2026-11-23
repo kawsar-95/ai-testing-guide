@@ -6,7 +6,7 @@ export const AI_SKILLS_UI = {
   siteTitle: "AI Skills for Testers",
   description:
     "20 AI skills in 4 tiers, from prompting to fine-tuning, each with how a tester can use it.",
-  eyebrow: (topics: number) => `AI SKILLS · ${topics} SKILLS`,
+  eyebrow: (topics: number) => `AI skills · ${topics} skills`,
   heading: "AI Skills for Testers",
   lede: "Learn 20 AI skills in 4 tiers. Start with the skills that pay off fastest, and learn the specialist skills only when you have a clear need. Each skill has a page that explains it and shows how a tester can use it.",
   sourceNote:
@@ -18,7 +18,7 @@ export const AI_SKILLS_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  itemEyebrow: (number: number) => `SKILL ${pad(number)} · AI SKILLS`,
+  itemEyebrow: (number: number) => `Skill ${pad(number)} · AI skills`,
   itemNav: "AI skills",
   allItems: "All skills",
   previousItem: "Previous skill",
@@ -28,7 +28,7 @@ export const AI_SKILLS_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "AI skills",
-  sidebarItemLabel: (number: number) => `SKILL ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Skill ${pad(number)}`,
   sidebarDone: "done",
   headerLink: "AI Skills",
   crossTo: "AI Skills",

@@ -29,7 +29,7 @@ type Params = Promise<{ topic: string }>;
 
 const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 // leading-6: each link of the page nav is a 24 px target (the same row as PrevNext).
-const NAV_LINK = "inline-block leading-6 text-accent underline underline-offset-2";
+const NAV_LINK = "inline-block leading-6 text-accent underline underline-offset-2 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center";
 
 /** The static params of the `[topic]` route: one for each page of the module. */
 export function staticParams(m: FlatModule) {

@@ -37,7 +37,7 @@ export function SheetSources({ sources, editHref }: { sources: Source[]; editHre
             id={`src-${index + 1}`}
             className="flex scroll-mt-20 break-inside-avoid gap-2 text-[13px] leading-snug target:bg-accent/10"
           >
-            <span className="w-7 shrink-0 py-[3px] text-right font-mono text-[11px] leading-[1.6] text-text-dim">
+            <span className="w-7 shrink-0 py-[3px] text-right font-mono text-[12px] leading-[1.6] text-text-dim">
               [{index + 1}]
             </span>
             <a

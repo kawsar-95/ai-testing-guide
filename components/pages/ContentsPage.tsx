@@ -85,7 +85,7 @@ function IndexRow({
                   href={page.href}
                   className="group/page flex min-h-6 items-baseline gap-2.5 py-1 text-[14px] leading-snug text-text-dim no-underline hover:text-accent"
                 >
-                  <span className="w-6 shrink-0 font-mono text-[11px] tabular-nums text-text-faint group-hover/page:text-accent">
+                  <span className="w-6 shrink-0 font-mono text-[12px] tabular-nums text-text-faint group-hover/page:text-accent">
                     {pad(start + i)}
                   </span>
                   <span className="min-w-0">{page.title}</span>

@@ -6,7 +6,7 @@ export const AI_AGENTS_UI = {
   siteTitle: "How AI Agents Work",
   description:
     "How an AI agent works, step by step: the trigger, the context, the model's decision, the tools, the stop check, memory, guardrails, observability, and the final output.",
-  eyebrow: (topics: number) => `AI AGENTS · ${topics} TOPICS`,
+  eyebrow: (topics: number) => `AI agents · ${topics} topics`,
   heading: "How AI Agents Work",
   lede: "An agent is a model plus a harness that runs a loop. Each topic explains one part of that loop: what it does, how it fails, and what a tester can check.",
   sourceNote:
@@ -18,7 +18,7 @@ export const AI_AGENTS_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · AI AGENTS`,
+  itemEyebrow: (number: number) => `Topic ${pad(number)} · AI agents`,
   itemNav: "AI Agents topics",
   allItems: "All topics",
   previousItem: "Previous topic",
@@ -28,7 +28,7 @@ export const AI_AGENTS_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "AI Agents topics",
-  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Topic ${pad(number)}`,
   sidebarDone: "done",
   headerLink: "AI Agents",
   crossTo: "AI Agents",

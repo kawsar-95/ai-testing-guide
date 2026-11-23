@@ -6,7 +6,7 @@ export const COURSE_UI = {
   siteTitle: "System Design Course",
   description:
     "System design from the ground up, in plain words for testers: networks, DNS, proxies, clustering, availability, databases, consistency, system architecture, reliability, security, case studies, and interviews.",
-  eyebrow: (topics: number) => `COURSE · ${topics} TOPICS`,
+  eyebrow: (topics: number) => `Course · ${topics} topics`,
   heading: "System Design Course",
   lede: "Learn system design one topic at a time, in order. Each topic gives one idea in plain words, a real example, the common mistakes, and what a tester can check. Some topics link to a page of the Architecture or System Design module.",
   sourceNote:
@@ -18,7 +18,7 @@ export const COURSE_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · COURSE`,
+  itemEyebrow: (number: number) => `Topic ${pad(number)} · Course`,
   itemNav: "Course topics",
   allItems: "All topics",
   previousItem: "Previous topic",
@@ -28,7 +28,7 @@ export const COURSE_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "Course topics",
-  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Topic ${pad(number)}`,
   sidebarDone: "done",
   headerLink: "Course",
   crossTo: "Course",

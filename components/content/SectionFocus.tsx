@@ -185,7 +185,7 @@ export function SectionFocus() {
                     aria-label={s.title}
                     aria-current={i === active ? "step" : undefined}
                     onClick={() => go(i)}
-                    className="group flex h-6 min-w-0 flex-1 items-center"
+                    className="group flex h-6 min-w-0 flex-1 items-center pointer-coarse:h-11"
                   >
                     <span
                       className={
@@ -242,7 +242,7 @@ export function SectionFocus() {
                 <button type="button" onClick={() => go(active - 1)} className={step + " btn-outline"}>
                   <span aria-hidden="true">←</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-mono text-[11px] text-text-dim">
+                    <span className="block font-mono text-[12px] text-text-dim">
                       <T en={sectionPrevious} bn={SHELL_BN.sectionPrevious} />
                     </span>
                     <span className="block truncate">{sections[active - 1].title}</span>
@@ -252,7 +252,7 @@ export function SectionFocus() {
               {active < total - 1 ? (
                 <button type="button" onClick={() => go(active + 1)} className={step + " btn-primary"}>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-mono text-[11px] opacity-80">
+                    <span className="block font-mono text-[12px] opacity-80">
                       <T en={sectionNext} bn={SHELL_BN.sectionNext} />
                     </span>
                     <span className="block truncate">{sections[active + 1].title}</span>

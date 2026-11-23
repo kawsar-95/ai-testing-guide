@@ -8,7 +8,7 @@ export const AGENT_MEMORY_UI_BN: Bn<typeof AGENT_MEMORY_UI> = {
   siteTitle: "Agent Memory",
   description:
     "The 7 types of memory of an AI agent in plain words: working, semantic, episodic, procedural, retrieval, parametric, and prospective.",
-  eyebrow: (topics) => `AGENT MEMORY · ${topics}টি টপিক`,
+  eyebrow: (topics) => `Agent memory · ${topics}টি টপিক`,
   heading: "এজেন্ট মেমরির ৭টি ধরন",
   lede: "দুইটা কলের মাঝে একটা AI এজেন্ট সবকিছু ভুলে যায়, যদি না কিছু একটা তা ধরে রাখে। প্রতিটা টপিকে এক ধরনের মেমরি: এটা কী, এজেন্ট কীভাবে পায়, কীভাবে ব্যর্থ হয়, আর একজন টেস্টার কী চেক করতে পারেন।",
   sourceNote:
@@ -19,7 +19,7 @@ export const AGENT_MEMORY_UI_BN: Bn<typeof AGENT_MEMORY_UI> = {
   summaryText: (done, total) => `${total}টির মধ্যে ${done}টি টপিক সম্পন্ন`,
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · AGENT MEMORY`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · Agent memory`,
   itemNav: "Agent Memory-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",

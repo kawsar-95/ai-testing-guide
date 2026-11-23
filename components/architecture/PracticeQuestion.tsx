@@ -55,7 +55,7 @@ export function PracticeQuestion({
           </p>
           <p className="mt-1.5 mb-0 text-[16px] font-medium leading-snug text-text">{question}</p>
           <details className="mt-3">
-            <summary>
+            <summary className="pointer-coarse:py-3">
               <T en={ARCHITECTURE_UI.showAnswer} bn={ARCHITECTURE_UI_BN.showAnswer} />
             </summary>
             <div className="practice-answer">{children}</div>

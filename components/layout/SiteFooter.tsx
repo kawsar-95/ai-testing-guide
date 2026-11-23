@@ -15,14 +15,14 @@ export function SiteFooter() {
   return (
     <footer className="mt-12 border-t border-border" data-reveal="fade">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-3 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5 text-text no-underline">
+        <Link href="/" className="flex items-center gap-2.5 text-text no-underline pointer-coarse:min-h-11">
           <span aria-hidden="true" className="grid size-7 place-items-center rounded-md bg-accent text-bg">
             <BrandMark className="size-4" mono />
           </span>
-          <span className="font-display text-base font-medium tracking-tight">{SITE_NAME}</span>
+          <span className="font-display text-base font-medium">{SITE_NAME}</span>
         </Link>
         <p className="m-0 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-xs text-text-faint">
-          <a href={REPO_URL} className="inline-flex min-h-6 items-center underline underline-offset-2 hover:text-accent">
+          <a href={REPO_URL} className="inline-flex min-h-6 items-center underline underline-offset-2 hover:text-accent pointer-coarse:min-h-11">
             <T en={footerSource} bn={SHELL_BN.footerSource} />
           </a>
           <span>

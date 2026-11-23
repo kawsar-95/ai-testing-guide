@@ -8,7 +8,7 @@ export const ARCHITECTURE_UI_BN: Bn<typeof ARCHITECTURE_UI> = {
   siteTitle: "System Architecture Foundations",
   description:
     "The building blocks of system architecture in plain words: scaling, load balancers, caches, queues, idempotency, and monitoring.",
-  eyebrow: (lessons) => `ARCHITECTURE · ${lessons}টি টপিক + প্র্যাকটিস`,
+  eyebrow: (lessons) => `Architecture · ${lessons}টি টপিক + প্র্যাকটিস`,
   heading: "System Architecture Foundations",
   lede: "কোড একটা ফিচার বানায়। আর্কিটেকচার সেই ফিচারকে বাঁচিয়ে রাখে, যখন 10,000 ইউজার আসে, একটা সার্ভার বন্ধ হয়ে যায়, বা একটা পেমেন্ট কলব্যাক দুইবার আসে। প্রতিটা টপিকে সময় লাগে প্রায় 5 মিনিট: একটা আইডিয়া, একটা ডায়াগ্রাম, একটা বাস্তব উদাহরণ, সাধারণ ভুল, আর একজন টেস্টার কী যাচাই করতে পারেন।",
   sourceNote:
@@ -21,7 +21,7 @@ export const ARCHITECTURE_UI_BN: Bn<typeof ARCHITECTURE_UI> = {
   practiceLabel: "সম্পন্ন প্র্যাকটিস প্রশ্ন",
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · ARCHITECTURE`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · Architecture`,
   practiceEyebrow: "প্র্যাকটিস · Architecture",
   itemNav: "Architecture-এর টপিকসমূহ",
   allItems: "সব টপিক",

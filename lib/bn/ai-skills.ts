@@ -7,7 +7,7 @@ const pad = (number: number) => String(number).padStart(2, "0");
 export const AI_SKILLS_UI_BN: Bn<typeof AI_SKILLS_UI> = {
   siteTitle: "AI Skills for Testers",
   description: "20 AI skills in 4 tiers, from prompting to fine-tuning, each with how a tester can use it.",
-  eyebrow: (topics) => `AI SKILLS · ${topics}টি স্কিল`,
+  eyebrow: (topics) => `AI skills · ${topics}টি স্কিল`,
   heading: "AI Skills for Testers",
   lede: "৪টি ধাপে ২০টি AI স্কিল শিখুন। যে স্কিলগুলো সবচেয়ে দ্রুত কাজে দেয় সেগুলো দিয়ে শুরু করুন, আর স্পেশালিস্ট স্কিলগুলো শিখুন শুধু তখনই যখন স্পষ্ট দরকার হয়। প্রতিটা স্কিলের একটা পেজ আছে, যেখানে স্কিলটা বোঝানো হয়েছে আর একজন টেস্টার কীভাবে এটা ব্যবহার করতে পারেন তা দেখানো হয়েছে।",
   sourceNote:
@@ -18,7 +18,7 @@ export const AI_SKILLS_UI_BN: Bn<typeof AI_SKILLS_UI> = {
   summaryText: (done, total) => `${total}টির মধ্যে ${done}টি স্কিল সম্পন্ন`,
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `স্কিল ${pad(number)} · AI SKILLS`,
+  itemEyebrow: (number) => `স্কিল ${pad(number)} · AI skills`,
   itemNav: "AI স্কিলসমূহ",
   allItems: "সব স্কিল",
   previousItem: "আগের স্কিল",

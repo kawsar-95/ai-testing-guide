@@ -6,7 +6,7 @@ export const FUNDAMENTALS_UI_BN: Bn<typeof FUNDAMENTALS_UI> = {
   siteTitle: "Fundamentals",
   description:
     "Learn software testing in 11 chapters: the basics, defects, life cycles, test types, levels, test techniques, planning, test cases, bugs, and interview questions. Your progress stays in your browser.",
-  eyebrow: (chapters, topics) => `FUNDAMENTALS · ${chapters}টি চ্যাপ্টার · ${topics}টি টপিক`,
+  eyebrow: (chapters, topics) => `Fundamentals · ${chapters}টি চ্যাপ্টার · ${topics}টি টপিক`,
   heading: "Software Testing Fundamentals",
   lede: "চ্যাপ্টারগুলো ক্রমানুসারে শেষ করুন, অথবা যেটা দরকার সরাসরি সেখানে যান। প্রতিটা চ্যাপ্টারে টপিকের একটা তালিকা আছে। নোট না দেখে ব্যাখ্যা করতে পারলে টপিকটা সম্পন্ন হিসেবে চিহ্নিত করুন।",
   privacyNote: "আপনার প্রগ্রেস শুধু এই ব্রাউজারে থাকে। এটা কোনো সার্ভারে পাঠানো হয় না।",
@@ -17,7 +17,7 @@ export const FUNDAMENTALS_UI_BN: Bn<typeof FUNDAMENTALS_UI> = {
   chapterCount: (done, total) => `${done} / ${total} সম্পন্ন`,
   chapterMeta: (topics) => `${topics}টি টপিক`,
 
-  chapterEyebrow: (number) => `চ্যাপ্টার ${String(number).padStart(2, "0")} · FUNDAMENTALS`,
+  chapterEyebrow: (number) => `চ্যাপ্টার ${String(number).padStart(2, "0")} · Fundamentals`,
   chapterNav: "Fundamentals-এর চ্যাপ্টারসমূহ",
   allChapters: "সব চ্যাপ্টার",
   previousChapter: "আগের চ্যাপ্টার",

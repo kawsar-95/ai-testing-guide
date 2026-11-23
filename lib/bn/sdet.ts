@@ -8,7 +8,7 @@ export const SDET_UI_BN: Bn<typeof SDET_UI> = {
   siteTitle: "SDET Roadmap",
   description:
     "A step-by-step path from tester to full stack SDET: manual and API testing, JavaScript, TypeScript, SQL, the backend and frontend you test, system design, Linux, security, the cloud, Playwright automation, CI/CD, and interviews.",
-  eyebrow: (steps) => `SDET ROADMAP · ${steps}টি ধাপ`,
+  eyebrow: (steps) => `SDET roadmap · ${steps}টি ধাপ`,
   heading: "SDET Roadmap",
   lede: "টেস্টার থেকে full stack SDET হওয়ার বিশটি ধাপ, ক্রমানুসারে। যে ধাপ এই সাইটের অন্য কোনো মডিউলে আগেই শেখানো হয়েছে, সেটা সেই মডিউলে লিংক করে। বাকি ধাপগুলোর নিজের পেজ আছে: টুল বা স্কিলটা কী, কীভাবে কাজ করে, নিজের ল্যাপটপে প্রথমবার চালিয়ে দেখা, একজন টেস্টার এটা কীভাবে ব্যবহার করেন, সাধারণ ভুল, আর কী চেক করবেন।",
   sourceNote:
@@ -19,7 +19,7 @@ export const SDET_UI_BN: Bn<typeof SDET_UI> = {
   summaryText: (done, total) => `${total}টির মধ্যে ${done}টি ধাপ সম্পন্ন`,
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `ধাপ ${pad(number)} · SDET ROADMAP`,
+  itemEyebrow: (number) => `ধাপ ${pad(number)} · SDET roadmap`,
   itemNav: "SDET Roadmap-এর ধাপসমূহ",
   allItems: "সব ধাপ",
   previousItem: "আগের ধাপ",

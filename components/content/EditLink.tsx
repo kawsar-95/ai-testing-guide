@@ -7,7 +7,7 @@ export function EditLink({ href }: { href: string }) {
   return (
     <a
       href={href}
-      className="inline-flex min-h-6 items-center font-mono text-xs text-text-dim underline decoration-border-strong underline-offset-4 hover:text-accent"
+      className="inline-flex min-h-6 items-center pointer-coarse:min-h-11 font-mono text-xs text-text-dim underline decoration-border-strong underline-offset-4 hover:text-accent"
     >
       <T en={suggestEdit} bn={SHELL_BN.suggestEdit} />
     </a>
