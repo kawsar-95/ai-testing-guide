@@ -13,6 +13,7 @@ export const HOME_UI_BN: Bn<typeof HOME_UI> = {
   whyEyebrow: "কেন এই গাইড",
   whyTitle: "হাতে-কলমে শিখুন, সোর্সসহ",
   courseEyebrow: "কোর্সের কাঠামো",
+  authorEyebrow: "লেখক",
   courseTitle: (groups, modules) => `${groups}টি টিউটোরিয়াল গ্রুপ ও ${modules}টি মডিউল`,
   courseSub: "টিউটোরিয়াল ক্রমানুসারে পড়ুন। দরকার হলে যেকোনো মডিউল খুলুন।",
   tutorialLabel: "টিউটোরিয়াল · ক্রমানুসারে পড়ুন",

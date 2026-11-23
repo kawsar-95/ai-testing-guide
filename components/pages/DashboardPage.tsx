@@ -15,11 +15,10 @@ import { contentPage, continueTarget, exportFileName, readByModule } from "@/lib
 import { countDone, percent } from "@/lib/prep/progress";
 import { ALL_FUNDAMENTALS_TOPIC_IDS, FUNDAMENTALS_HOME } from "@/lib/fundamentals/chapters";
 import { ALL_TOPIC_IDS, LINUX_HOME } from "@/lib/linux/stages";
-import { withBasePath } from "@/lib/base-path";
 import { PROGRESS_MODULES } from "@/lib/modules/registry";
 import { CONTENT_PAGES, exportProgress } from "@/lib/reading-state";
-import { AUTHOR } from "@/lib/site";
 import { reveal } from "@/components/motion/reveal";
+import { AuthorCard } from "./AuthorCard";
 
 const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 const NO_STORAGE = { getItem: () => null };
@@ -124,7 +123,6 @@ export function DashboardPage() {
   const rows = readByModule(read.done);
   const readRows = rows.filter((row) => row.read > 0);
   const siteTitle = useBn(DASHBOARD_UI.siteTitle, DASHBOARD_UI_BN.siteTitle);
-  const authorPhotoAlt = useBn(DASHBOARD_UI.authorPhotoAlt, DASHBOARD_UI_BN.authorPhotoAlt);
   const resetConfirm = useBn(DASHBOARD_UI.resetConfirm, DASHBOARD_UI_BN.resetConfirm);
   const progressWord = useBn(DASHBOARD_UI.progressWord, DASHBOARD_UI_BN.progressWord);
   const statReadLabel = useBn(DASHBOARD_UI.statRead, DASHBOARD_UI_BN.statRead);
@@ -353,30 +351,7 @@ export function DashboardPage() {
         <SectionTitle id="author-heading">
           <T en={DASHBOARD_UI.authorHeading} bn={DASHBOARD_UI_BN.authorHeading} />
         </SectionTitle>
-        <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-start">
-          {/* eslint-disable-next-line @next/next/no-img-element -- static export: a plain img with the base path added */}
-          <img
-            src={withBasePath(AUTHOR.photo)}
-            alt={authorPhotoAlt}
-            width={112}
-            height={112}
-            className="size-28 shrink-0 rounded-full border border-border object-cover"
-          />
-          <div className="min-w-0">
-            <p className="font-display text-2xl font-semibold text-text">{AUTHOR.name}</p>
-            <p className="mt-1 text-[15px] text-text-dim">{AUTHOR.role}</p>
-            <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-text-dim">{AUTHOR.bio}</p>
-            <ul className="m-0 mt-5 flex list-none flex-wrap gap-2 p-0">
-              {AUTHOR.links.map((link) => (
-                <li key={link.href}>
-                  <a href={link.href} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <AuthorCard />
       </section>
     </div>
   );

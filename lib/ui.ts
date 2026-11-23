@@ -66,6 +66,7 @@ export const HOME_UI = {
   whyEyebrow: "Why this guide",
   whyTitle: "Learn by doing, with sources",
   courseEyebrow: "Course structure",
+  authorEyebrow: "The author",
   courseTitle: (groups: number, modules: number) => `${groups} tutorial groups and ${modules} modules`,
   courseSub: "Read the tutorial in order. Open any module when you need it.",
   tutorialLabel: "Tutorial · read in order",
