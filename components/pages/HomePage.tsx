@@ -11,6 +11,9 @@ import { MODULES } from "@/lib/stats";
 import { reveal, stagger } from "@/components/motion/reveal";
 import { StatsRow } from "./StatsRow";
 import { HeroPreview } from "./HeroPreview";
+import { AuthorCard } from "./AuthorCard";
+import { DASHBOARD_UI } from "@/lib/dashboard";
+import { DASHBOARD_UI_BN } from "@/lib/bn/dashboard";
 
 const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 
@@ -189,6 +192,17 @@ export function HomePage() {
             cards={MODULE_CARDS}
             count={[HOME_UI.cardCount, HOME_UI_BN.cardCount]}
           />
+        </section>
+
+        <section aria-labelledby="author-heading" className="pt-14 pb-16 sm:pt-16 sm:pb-20">
+          <SectionHeading
+            id="author-heading"
+            eyebrow={[HOME_UI.authorEyebrow, HOME_UI_BN.authorEyebrow]}
+            title={<T en={DASHBOARD_UI.authorHeading} bn={DASHBOARD_UI_BN.authorHeading} />}
+          />
+          <div {...reveal("up", 1)}>
+            <AuthorCard />
+          </div>
         </section>
       </div>
     </div>
