@@ -46,7 +46,7 @@ export function FlatSidebarList({
         if (!part) return list;
         return (
           <div key={part.num} className="mt-4 first:mt-0">
-            <p id={`${uid}-part-${part.num}`} className="px-3 pb-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-text-dim">
+            <p id={`${uid}-part-${part.num}`} className="px-3 pb-1 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-text-dim">
               <T en={`PART ${part.num}`} bn={`পার্ট ${part.num}`} /> · {part.title}
             </p>
             {list}
@@ -74,12 +74,12 @@ export function FlatSidebarList({
           aria-current={active ? "page" : undefined}
           onClick={onNavigate}
           className={
-            "group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
+            "rail-active group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
             (toggle ? "min-w-0 flex-1 " : "") +
             (active ? "border-accent bg-bg-raised" : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")
           }
         >
-          <span className={"w-5 shrink-0 font-mono text-[10.5px] tabular-nums " + tone}>
+          <span className={"w-5 shrink-0 font-mono text-[11px] tabular-nums " + tone}>
             <span className="sr-only">{label}</span>
             <span aria-hidden="true">{partNumber(item.number)}</span>
           </span>

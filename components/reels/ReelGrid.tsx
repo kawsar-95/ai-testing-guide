@@ -64,10 +64,11 @@ function ReelList({
     <ul
       role="list"
       aria-labelledby={labelled ? "reels" : undefined}
+      data-stagger
       className="mt-5 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,12.5rem),1fr))] gap-x-4 gap-y-8 p-0"
     >
       {reels.map((reel) => (
-        <li key={reel.id} className="min-w-0 max-w-[17rem]">
+        <li key={reel.id} className="min-w-0 max-w-[17rem]" data-reveal="up">
           <ReelCard reel={reel} playing={playing === reel.id} onPlay={() => onPlay(reel.id)} />
         </li>
       ))}

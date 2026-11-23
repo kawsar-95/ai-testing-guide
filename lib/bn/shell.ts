@@ -65,6 +65,7 @@ export const SHELL_BN: Omit<Bn<typeof ui>, "HOME_UI"> = {
   sidebarRightShow: "সেকশনের তালিকা দেখান",
   sectionOf: (n, total) => `সেকশন ${n} / ${total}`,
   sectionsGroup: "এই পেজের সেকশনসমূহ",
+  jumpToSection: "সেকশনে যান",
   sectionPrevious: "আগের",
   sectionNext: "পরের",
   showAllSections: "সব সেকশন দেখান",
@@ -76,5 +77,6 @@ export const SHELL_BN: Omit<Bn<typeof ui>, "HOME_UI"> = {
   copyWords: { idle: "কপি", copied: "কপি হয়েছে", selected: "সিলেক্ট হয়েছে" },
   notFoundTitle: "পেজটি পাওয়া যায়নি",
   notFoundText: "এই পেজটি নেই। এটি সরানো হয়ে থাকতে পারে, অথবা ঠিকানায় টাইপের ভুল থাকতে পারে।",
-  notFoundBack: "সূচিপত্রে ফিরে যান",
+  notFoundBack: "হোম পেজে ফিরে যান",
+  notFoundContents: "সব টপিক দেখুন",
 };

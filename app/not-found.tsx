@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { T } from "@/components/i18n/T";
 import { SHELL_BN } from "@/lib/bn/shell";
-import { notFoundBack, notFoundText, notFoundTitle } from "@/lib/ui";
+import { notFoundBack, notFoundContents, notFoundText, notFoundTitle } from "@/lib/ui";
+import { CONTENTS_HOME } from "@/lib/contents";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { SearchPalette } from "@/components/navigation/SearchPalette";
 
@@ -29,8 +30,11 @@ export default function NotFound() {
           <T en={notFoundText} bn={SHELL_BN.notFoundText} />
         </p>
         <p className="mt-10 flex flex-wrap gap-x-8 gap-y-3 border-t border-border pt-6">
-          <Link href="/" className="inline-flex min-h-6 items-center font-mono text-sm text-accent no-underline transition-colors hover:text-text">
+          <Link href="/" className="inline-flex min-h-6 pointer-coarse:min-h-11 items-center font-mono text-sm text-accent no-underline transition-colors hover:text-text">
             <T en={notFoundBack} bn={SHELL_BN.notFoundBack} />
+          </Link>
+          <Link href={CONTENTS_HOME} className="inline-flex min-h-6 pointer-coarse:min-h-11 items-center font-mono text-sm text-accent no-underline transition-colors hover:text-text">
+            <T en={notFoundContents} bn={SHELL_BN.notFoundContents} />
           </Link>
         </p>
       </div>

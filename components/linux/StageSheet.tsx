@@ -66,6 +66,7 @@ function Card({
       id={topic.anchor}
       aria-labelledby={`${topic.anchor}-title`}
       className="group @container flex scroll-mt-20 flex-col rounded-[10px] border border-border bg-bg-raised p-4 shadow-sm has-checked:border-accent/60 target:border-accent target:ring-2 target:ring-accent/25 data-target:border-accent data-target:ring-2 data-target:ring-accent/25"
+      data-reveal="scale"
     >
       <header className="flex items-center gap-2.5">
         <span
@@ -114,7 +115,7 @@ export function StageSheet({
   numberOf: (key: string) => number;
 }) {
   return (
-    <div className="sheet grid grid-cols-[repeat(auto-fill,minmax(min(100%,28rem),1fr))] gap-4">
+    <div className="sheet grid grid-cols-[repeat(auto-fill,minmax(min(100%,28rem),1fr))] gap-4" data-stagger>
       <TargetMark />
       {sheet.cards.map((card, index) => (
         <Card key={card.topic} stage={stage} index={index} card={card} numberOf={numberOf} />

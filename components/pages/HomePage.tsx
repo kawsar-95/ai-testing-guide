@@ -8,6 +8,7 @@ import { CONTENTS_UI_BN } from "@/lib/bn/contents";
 import { HOME_UI_BN, WHY_ITEMS_BN } from "@/lib/bn/home";
 import { MODULE_TAGLINES_BN } from "@/lib/bn/stats";
 import { MODULES } from "@/lib/stats";
+import { reveal, stagger } from "@/components/motion/reveal";
 import { AiLogos } from "./AiLogos";
 import { StatsRow } from "./StatsRow";
 
@@ -32,7 +33,7 @@ type Count = readonly [en: (n: number) => string, bn: (n: number) => string];
 
 function SectionHeading({ id, eyebrow, title, sub }: { id: string; eyebrow: Pair; title: ReactNode; sub?: Pair }) {
   return (
-    <header className="max-w-2xl">
+    <header className="max-w-2xl" {...reveal("up", 0)}>
       <p className={`${LABEL} text-accent`}>
         <T en={eyebrow[0]} bn={eyebrow[1]} />
       </p>
@@ -67,8 +68,8 @@ function CourseRows({ id, label, cards, count }: { id: string; label: Pair; card
         <T en={label[0]} bn={label[1]} />
       </h3>
       <ol aria-labelledby={id} className="m-0 grid list-none gap-x-12 p-0 md:grid-cols-2">
-        {cards.map((card) => (
-          <li key={card.n} data-home-row className="relative border-b border-border">
+        {cards.map((card, index) => (
+          <li key={card.n} data-home-row className="row-hover relative border-b border-border" {...reveal("up", index)}>
             <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-baseline gap-x-3 py-4">
               <span aria-hidden="true" className="font-display text-[22px] font-bold leading-none text-accent-2 tabular-nums">
                 {card.n}
@@ -107,12 +108,13 @@ export function HomePage() {
       <section aria-labelledby="hero-heading" className="relative overflow-hidden border-b border-border">
         <div aria-hidden="true" className="hero-grid-bg" />
         <div className="relative z-10 mx-auto max-w-[1200px] px-4 pt-14 pb-14 sm:px-6 sm:pt-20 sm:pb-16">
-          <p className={`${LABEL} text-accent`}>
+          <p className={`${LABEL} text-accent`} {...reveal("up", 0)}>
             <T en={HOME_UI.eyebrow} bn={HOME_UI_BN.eyebrow} />
           </p>
           <h1
             id="hero-heading"
             className="mt-4 max-w-4xl font-display text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text"
+            {...reveal("up", 1)}
           >
             <span className="block">
               <AiLogos />
@@ -122,10 +124,10 @@ export function HomePage() {
               <T en={HOME_UI.titleLine2Before} bn={HOME_UI_BN.titleLine2Before} /> <em className="hero-mark">{HOME_UI.titleMark}</em>
             </span>
           </h1>
-          <p className="mt-6 max-w-[560px] text-[17px] leading-relaxed text-pretty text-text-dim sm:text-[19px]">
+          <p className="mt-6 max-w-[560px] text-[17px] leading-relaxed text-pretty text-text-dim sm:text-[19px]" {...reveal("up", 2)}>
             <T en={HOME_UI.sub} bn={HOME_UI_BN.sub} />
           </p>
-          <div className="mt-8 flex flex-wrap gap-3.5">
+          <div className="mt-8 flex flex-wrap gap-3.5" {...reveal("up", 3)}>
             <Link href={START_STEPS[0].href} className="btn btn-primary">
               <T en={HOME_UI.startReading} bn={HOME_UI_BN.startReading} />
             </Link>
@@ -146,7 +148,7 @@ export function HomePage() {
           />
           <ul className="m-0 mt-8 grid list-none gap-x-10 gap-y-8 p-0 sm:grid-cols-2 lg:grid-cols-3">
             {WHY_ITEMS.map((item, i) => (
-              <li key={item.title} className="border-t border-border-strong pt-4">
+              <li key={item.title} className="border-t border-border-strong pt-4" {...reveal("up", i)}>
                 <h3 className="m-0 font-display text-xl font-medium leading-snug text-text">
                   <T en={item.title} bn={WHY_ITEMS_BN[i].title} />
                 </h3>

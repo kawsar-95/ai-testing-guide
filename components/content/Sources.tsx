@@ -1,4 +1,5 @@
 import { T } from "@/components/i18n/T";
+import { reveal } from "@/components/motion/reveal";
 import { SHELL_BN } from "@/lib/bn/shell";
 import type { Source } from "@/lib/page";
 import { sourceAccessed, sourcesHeading } from "@/lib/ui";
@@ -13,7 +14,7 @@ import { EditLink } from "./EditLink";
 export function Sources({ sources, editHref }: { sources: Source[]; editHref?: string }) {
   if (sources.length === 0) return null;
   return (
-    <section aria-labelledby="sources" className="mt-12 border-t border-border pt-6">
+    <section aria-labelledby="sources" className="mt-12 border-t border-border pt-6" {...reveal("up")}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
         <h2
           id="sources"
@@ -23,12 +24,13 @@ export function Sources({ sources, editHref }: { sources: Source[]; editHref?: s
         </h2>
         {editHref ? <EditLink href={editHref} /> : null}
       </div>
-      <ol role="list" className="mt-4 list-none divide-y divide-border p-0">
+      <ol role="list" data-stagger className="mt-4 list-none divide-y divide-border p-0">
         {sources.map((source, index) => (
           <li
             key={`${index}-${source.url}`}
             id={`src-${index + 1}`}
             className="grid scroll-mt-20 grid-cols-[2.75rem_minmax(0,1fr)] gap-x-2 py-3 text-sm leading-relaxed target:bg-accent/10"
+            {...reveal("fade", index)}
           >
             <span className="pl-1 font-mono text-xs leading-relaxed text-text-dim">[{index + 1}]</span>
             <div className="min-w-0">

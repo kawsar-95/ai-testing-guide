@@ -2,6 +2,7 @@ import Link from "next/link";
 import { T } from "@/components/i18n/T";
 import { INTERVIEW_UI_BN } from "@/lib/bn/interview";
 import { INTERVIEW_UI } from "@/lib/interview";
+import { reveal } from "@/components/motion/reveal";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 
@@ -9,7 +10,7 @@ const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 export function InterviewPage() {
   return (
     <div className="mx-auto max-w-[1200px] px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
-      <header className="max-w-2xl">
+      <header className="max-w-2xl" {...reveal("up", 0)}>
         <p className={`${LABEL} text-accent`}>
           <T en={INTERVIEW_UI.eyebrow} bn={INTERVIEW_UI_BN.eyebrow} />
         </p>
@@ -22,10 +23,10 @@ export function InterviewPage() {
       </header>
       <ul className="m-0 mt-10 grid list-none gap-5 p-0 md:grid-cols-3">
         {INTERVIEW_UI.cards.map((card, i) => (
-          <li key={card.href}>
+          <li key={card.href} {...reveal("scale", i)}>
             <Link
               href={card.href}
-              className="flex h-full flex-col rounded-2xl border border-border bg-bg-raised p-5 text-text no-underline shadow-sm transition-shadow hover:shadow-md sm:p-6"
+              className="card-hover flex h-full flex-col rounded-2xl border border-border bg-bg-raised p-5 text-text no-underline shadow-sm sm:p-6"
             >
               <span className="font-display text-2xl font-semibold leading-tight">
                 <T en={card.title} bn={INTERVIEW_UI_BN.cards[i].title} />

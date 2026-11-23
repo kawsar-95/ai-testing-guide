@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { AI_ML_TESTING } from "../lib/ai-ml-testing/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 
 /** The 47 topics, in the order of the course syllabus. */
@@ -124,12 +123,6 @@ test("every page exports its metadata, a page date, and at least one https sourc
 test("the progress ids are the 47 slugs, under ai-ml-testing-progress", () => {
   assert.equal(AI_ML_TESTING.progress?.storageKey, "ai-ml-testing-progress");
   assert.deepEqual(AI_ML_TESTING.lessonIds, [...SLUGS]);
-});
-
-test("precacheUrls includes /ai-ml-testing/ and the 47 page routes", () => {
-  const urls = precacheUrls("");
-  assert.ok(urls.includes("/ai-ml-testing/"));
-  for (const slug of SLUGS) assert.ok(urls.includes(`/ai-ml-testing/${slug}/`), slug);
 });
 
 test("buildFlatSearchDocs gives docs with group 'ai ml testing' for every page", () => {

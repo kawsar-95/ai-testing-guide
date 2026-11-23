@@ -22,7 +22,7 @@ export function LinkDoneToggle({ moduleId, id, title }: { moduleId: FlatModuleId
       aria-label={name}
       onClick={() => toggle(id)}
       className={
-        "inline-flex size-6 shrink-0 items-center justify-center rounded-md border text-[13px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
+        "inline-flex size-6 pointer-coarse:size-11 shrink-0 items-center justify-center rounded-md border text-[13px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
         (isDone ? "border-accent text-accent" : "border-border-strong text-text-faint hover:border-accent hover:text-accent")
       }
     >

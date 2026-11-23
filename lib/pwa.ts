@@ -3,10 +3,6 @@
  * starts with the basePath ("" locally, "/<repo-name>" on GitHub Pages).
  */
 import type { MetadataRoute } from "next";
-import { FUNDAMENTALS_ROUTES } from "./fundamentals/chapters.ts";
-import { LINUX_ROUTES } from "./linux/stages.ts";
-import { PAGES } from "./nav.ts";
-import { FLAT_MODULES } from "./modules/registry.ts";
 import { CONTENTS_ROUTES } from "./contents.ts";
 import { DASHBOARD_ROUTES } from "./dashboard.ts";
 import { INTERVIEW_ROUTES } from "./interview.ts";
@@ -46,19 +42,19 @@ export function webManifest(
 /** The 404 page. The service worker shows it for a page that is not in the cache when the reader is offline. */
 export const offlinePage = (basePath: string) => `${basePath}/404.html`;
 
-/** The URLs that the service worker caches at install, so that every page opens offline. */
+/**
+ * The URLs that the service worker caches at install: the app shell only (the home page, the
+ * contents, dashboard and interview pages, the 404 page, the manifest, and the icons).
+ * Every other page, and the search index, is cached the first time the reader opens it. The
+ * 341 pages are about 109 MB, so caching all of them at install cost a first visit that much.
+ */
 export function precacheUrls(basePath: string): string[] {
   return [
     `${basePath}/`,
     ...CONTENTS_ROUTES.map((route) => `${basePath}${route}`),
     ...DASHBOARD_ROUTES.map((route) => `${basePath}${route}`),
     ...INTERVIEW_ROUTES.map((route) => `${basePath}${route}`),
-    ...PAGES.map((page) => `${basePath}${page.href}`),
-    ...LINUX_ROUTES.map((route) => `${basePath}${route}`),
-    ...FUNDAMENTALS_ROUTES.map((route) => `${basePath}${route}`),
-    ...FLAT_MODULES.flatMap((m) => m.routes).map((route) => `${basePath}${route}`),
     offlinePage(basePath),
-    `${basePath}/search-index.json`,
     `${basePath}/manifest.webmanifest`,
     ...ICONS.map((icon) => `${basePath}/icons/${icon.file}`),
   ];
@@ -77,14 +73,15 @@ export function assetPattern(basePath: string): string {
 
 /**
  * The source of /sw.js. The site is offline first.
- * - Install: cache the pages of precacheUrls and the files that they use.
+ * - Install: cache the app shell of precacheUrls and the files that it uses.
+ * - A page that the reader opens is cached then, so it opens offline later.
  * - /_next/static/: cache first. The file names have a content hash.
  * - Other requests: the cache answers first, and the worker updates the cache from the
  *   network in the background (stale-while-revalidate). The query string is not part of
  *   the cache key, because the files are static. A request that is not in the cache goes
  *   to the network. Offline, a page that is not in the cache gets the 404 page.
  * - Activate: delete the caches of older versions. A new build has a new /sw.js,
- *   so its install caches every page again.
+ *   so its install caches the shell again and the pages are cached as they are visited.
  */
 export function serviceWorkerSource(basePath: string, version: string): string {
   const constants = {

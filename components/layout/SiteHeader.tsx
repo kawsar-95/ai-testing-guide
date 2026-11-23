@@ -37,7 +37,7 @@ export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
           itself would trap the fixed-position drawer inside the header. */}
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-bg/90 backdrop-blur-md backdrop-saturate-150" />
       <div className="mx-auto flex h-full max-w-[1440px] items-center gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5 text-text no-underline">
+        <Link href="/" className="flex min-w-0 items-center gap-2.5 text-text no-underline" data-reveal="fade">
           <span
             aria-hidden="true"
             className="grid size-[34px] shrink-0 place-items-center rounded-lg bg-accent text-bg max-[360px]:hidden"

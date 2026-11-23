@@ -184,7 +184,7 @@ export function SearchPalette() {
         aria-expanded={open}
         aria-keyshortcuts="Control+K Meta+K"
         onClick={openPalette}
-        className="flex h-9 items-center gap-2 rounded-lg border border-border bg-bg-raised px-2.5 text-sm text-text-dim transition-colors hover:border-border-strong hover:bg-bg-raised-2 hover:text-text md:min-w-52 nav:min-w-0 wide:min-w-52"
+        className="flex h-9 pointer-coarse:h-11 items-center gap-2 rounded-lg border border-border bg-bg-raised px-2.5 text-sm text-text-dim transition-colors hover:border-border-strong hover:bg-bg-raised-2 hover:text-text md:min-w-52 nav:min-w-0 wide:min-w-52"
       >
         <svg aria-hidden="true" viewBox="0 0 20 20" className="size-4 shrink-0" fill="none">
           <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.6" />
@@ -206,7 +206,7 @@ export function SearchPalette() {
           <div
             aria-hidden="true"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+            className="backdrop-in absolute inset-0 bg-black/60 backdrop-blur-[2px]"
           />
           <div
             ref={dialogRef}
@@ -214,7 +214,7 @@ export function SearchPalette() {
             aria-modal="true"
             aria-labelledby={titleId}
             onKeyDown={onDialogKeyDown}
-            className="relative flex max-h-[min(34rem,80vh)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-border-strong bg-bg-raised shadow-2xl shadow-black/60"
+            className="dialog-in relative flex max-h-[min(34rem,80vh)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-border-strong bg-bg-raised shadow-2xl shadow-black/60"
           >
             <h2 id={titleId} className="sr-only">
               <T en={searchAll} bn={SHELL_BN.searchAll} />
@@ -277,7 +277,7 @@ export function SearchPalette() {
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => go(hit.href)}
                   className={
-                    "cursor-pointer rounded-md px-3 py-2.5 " +
+                    "cursor-pointer rounded-md px-3 py-2.5 transition-colors duration-[150ms] " +
                     (i === active
                       ? "bg-bg-raised-2 shadow-[inset_2px_0_0_var(--accent)]"
                       : "")
@@ -310,6 +310,17 @@ export function SearchPalette() {
             >
               {message && <T en={message.en} bn={message.bn} />}
             </p>
+
+            {/* While the index loads, a few empty rows shimmer in its place.
+                The rows are decoration: they are hidden from a screen
+                reader, and the message above says what is happening. */}
+            {status === "loading" ? (
+              <div aria-hidden="true" className="space-y-2 px-2 pb-2">
+                {[0, 1, 2].map((row) => (
+                  <div key={row} className="shimmer h-11 rounded-md" />
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       )}

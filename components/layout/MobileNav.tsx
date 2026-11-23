@@ -100,7 +100,7 @@ export function MobileNav() {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen(true)}
-        className="grid size-9 place-items-center rounded-lg border border-border text-text-dim transition-colors hover:bg-bg-raised-2 hover:text-text nav:hidden"
+        className="grid size-9 pointer-coarse:size-11 place-items-center rounded-lg border border-border text-text-dim transition-colors hover:bg-bg-raised-2 hover:text-text nav:hidden"
       >
         <span className="sr-only">
           <T en={menuOpen} bn={SHELL_BN.menuOpen} />
@@ -124,7 +124,7 @@ export function MobileNav() {
           aria-hidden="true"
           onClick={() => setOpen(false)}
           className={
-            "absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity duration-200 motion-reduce:transition-none " +
+            "absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity duration-[220ms] ease-[cubic-bezier(.2,.7,.2,1)] motion-reduce:transition-none " +
             (open ? "opacity-100" : "opacity-0")
           }
         />
@@ -135,7 +135,7 @@ export function MobileNav() {
           aria-modal="true"
           aria-labelledby={titleId}
           className={
-            "absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] flex-col border-r border-border bg-bg shadow-2xl shadow-black/50 transition-transform duration-200 ease-out motion-reduce:transition-none " +
+            "absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] flex-col border-r border-border bg-bg shadow-2xl shadow-black/50 transition-transform duration-[340ms] ease-[cubic-bezier(.2,.7,.2,1)] motion-reduce:transition-none " +
             (open ? "translate-x-0" : "-translate-x-full")
           }
         >
@@ -147,7 +147,7 @@ export function MobileNav() {
               ref={closeRef}
               type="button"
               onClick={() => setOpen(false)}
-              className="-mr-2 grid size-9 place-items-center rounded-md text-text-dim transition-colors hover:bg-bg-raised hover:text-text"
+              className="-mr-2 grid size-9 pointer-coarse:size-11 place-items-center rounded-md text-text-dim transition-colors hover:bg-bg-raised hover:text-text"
             >
               <span className="sr-only">
                 <T en={menuClose} bn={SHELL_BN.menuClose} />
@@ -159,8 +159,12 @@ export function MobileNav() {
           </div>
           <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {/* The top nav is hidden below 1200 px, so its links go in the drawer. */}
-            <nav aria-label={navMainLabel} className="flex flex-wrap gap-1.5 border-b border-border px-3 py-3 nav:hidden">
-              {HEADER_NAV.map((item) => {
+            <nav
+              aria-label={navMainLabel}
+              className="drawer-stagger flex flex-wrap gap-1.5 border-b border-border px-3 py-3 nav:hidden"
+              data-open={open ? "true" : "false"}
+            >
+              {HEADER_NAV.map((item, index) => {
                 const active = item.id === activeNavId(withTrailingSlash(pathname) ?? "/");
                 return (
                   <Link
@@ -169,11 +173,12 @@ export function MobileNav() {
                     aria-current={active ? "page" : undefined}
                     onClick={() => setOpen(false)}
                     className={
-                      "rounded-full border px-3 py-1 text-[13px] no-underline transition-colors " +
+                      "inline-flex items-center rounded-full border px-3 py-1 pointer-coarse:min-h-11 text-[13px] no-underline transition-colors duration-[150ms] " +
                       (active
                         ? "border-accent text-accent"
                         : "border-border text-text-dim hover:border-accent hover:text-accent")
                     }
+                    style={{ "--i": index } as React.CSSProperties}
                   >
                     <T en={item.label} bn={NAV_LABEL_BN[item.id]} />
                   </Link>

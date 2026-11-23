@@ -19,6 +19,7 @@ import { withBasePath } from "@/lib/base-path";
 import { PROGRESS_MODULES } from "@/lib/modules/registry";
 import { CONTENT_PAGES, exportProgress } from "@/lib/reading-state";
 import { AUTHOR } from "@/lib/site";
+import { reveal } from "@/components/motion/reveal";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 const NO_STORAGE = { getItem: () => null };
@@ -163,7 +164,7 @@ export function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
-      <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
+      <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5" {...reveal("up", 0)}>
         <div className="max-w-2xl">
           <p className={`${LABEL} text-accent`}>
             <T en={DASHBOARD_UI.eyebrow} bn={DASHBOARD_UI_BN.eyebrow} />
@@ -188,7 +189,7 @@ export function DashboardPage() {
       </header>
 
       <section aria-label={siteTitle} className="mt-10 grid gap-x-12 gap-y-8 lg:grid-cols-[1.4fr_1fr]">
-        <div className="flex flex-col border-t border-border-strong pt-5">
+        <div className="flex flex-col border-t border-border-strong pt-5" {...reveal("up", 1)}>
           <p className={`${LABEL} text-text-faint`}>
             <T en={DASHBOARD_UI.statRead} bn={DASHBOARD_UI_BN.statRead} />
           </p>
@@ -211,6 +212,7 @@ export function DashboardPage() {
           href={next.href}
           data-continue
           className="group flex flex-col justify-between gap-6 border-t border-border-strong pt-5 no-underline"
+          {...reveal("up", 2)}
         >
           <span className="min-w-0">
             <span className={`${LABEL} block text-accent`}>
@@ -249,10 +251,11 @@ export function DashboardPage() {
           <T en={DASHBOARD_UI.modulesLede} bn={DASHBOARD_UI_BN.modulesLede} />
         </p>
         <ul className="m-0 mt-3 list-none p-0">
-          {moduleRows.map((row) => (
+          {moduleRows.map((row, index) => (
             <li
               key={row.id}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 border-b border-border py-3 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_5.5rem]"
+              className="row-hover grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 border-b border-border py-3 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_5.5rem]"
+              {...reveal("up", index)}
             >
               <Link
                 href={row.href}
@@ -285,9 +288,9 @@ export function DashboardPage() {
               <T en={DASHBOARD_UI.bookmarksEmpty} bn={DASHBOARD_UI_BN.bookmarksEmpty} />
             </p>
           ) : (
-            <ul className="m-0 mt-3 list-none p-0">
+            <ul className="m-0 mt-3 list-none p-0" data-stagger>
               {bookmarks.map((page) => (
-                <li key={page.href} className="border-b border-border last:border-b-0">
+                <li key={page.href} className="row-hover border-b border-border last:border-b-0">
                   <Link
                     href={page.href}
                     className="flex items-baseline justify-between gap-3 py-2.5 text-[15px] text-text no-underline hover:text-accent"
@@ -327,9 +330,9 @@ export function DashboardPage() {
                       {row.read} / {row.total}
                     </span>
                   </p>
-                  <ul className="m-0 mt-1 list-none border-t border-border p-0">
+                  <ul className="m-0 mt-1 list-none border-t border-border p-0" data-stagger>
                     {pages.map((page) => (
-                      <li key={page.href} className="border-b border-border last:border-b-0">
+                      <li key={page.href} className="row-hover border-b border-border last:border-b-0">
                         <Link
                           href={page.href}
                           className="block py-2 text-[15px] text-text-dim no-underline hover:text-accent"
@@ -346,7 +349,7 @@ export function DashboardPage() {
         </section>
       </div>
 
-      <section aria-labelledby="author-heading" className="mt-16">
+      <section aria-labelledby="author-heading" className="mt-16" {...reveal("up")}>
         <SectionTitle id="author-heading">
           <T en={DASHBOARD_UI.authorHeading} bn={DASHBOARD_UI_BN.authorHeading} />
         </SectionTitle>

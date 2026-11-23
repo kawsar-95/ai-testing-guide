@@ -51,6 +51,9 @@ export function BackToTop() {
       data-back-to-top
       aria-label={label}
       className="fixed right-4 bottom-4 z-30 rounded-md border border-border-strong bg-bg-raised px-3 py-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-text transition-colors hover:border-accent hover:text-accent sm:right-6 sm:bottom-6"
+      // The button arrives from below, so a new page does not show it
+      // sitting in the corner.
+      style={{ animation: "back-to-top-in var(--motion-dur-slow) var(--motion-ease-spring) both" }}
     >
       <T en={backToTopLabel} bn={SHELL_BN.backToTopLabel} />
     </button>

@@ -6,6 +6,7 @@ import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
 import { SHELL_BN } from "@/lib/bn/shell";
 import {
+  jumpToSection,
   oneSectionAtATime,
   sectionNext,
   sectionOf,
@@ -53,6 +54,7 @@ export function SectionFocus() {
   const [active, setActive] = useState(0);
   const [on, setOn] = useState(true);
   const groupLabel = useBn(sectionsGroup, SHELL_BN.sectionsGroup);
+  const jumpLabel = useBn(jumpToSection, SHELL_BN.jumpToSection);
   // Set by a click on a button or a link: scroll and move focus after the render.
   const pending = useRef<HTMLElement | "top" | null>(null);
 
@@ -174,25 +176,52 @@ export function SectionFocus() {
             <p className="m-0 shrink-0 font-mono text-[12px] text-text-dim">
               <T en={sectionOf(active + 1, total)} bn={SHELL_BN.sectionOf(active + 1, total)} />
             </p>
-            <div className={"order-last flex w-full gap-1 " + (inline ? "sm:order-none sm:w-auto sm:min-w-0 sm:flex-1" : "")}>
-              {sections.map((s, i) => (
-                <button
-                  key={s.heading.id || i}
-                  type="button"
-                  aria-label={s.title}
-                  aria-current={i === active ? "step" : undefined}
-                  onClick={() => go(i)}
-                  className="group flex h-6 min-w-0 flex-1 items-center"
+            {inline ? (
+              <div className="order-last flex w-full gap-1 sm:order-none sm:w-auto sm:min-w-0 sm:flex-1">
+                {sections.map((s, i) => (
+                  <button
+                    key={s.heading.id || i}
+                    type="button"
+                    aria-label={s.title}
+                    aria-current={i === active ? "step" : undefined}
+                    onClick={() => go(i)}
+                    className="group flex h-6 min-w-0 flex-1 items-center"
+                  >
+                    <span
+                      className={
+                        "h-1.5 w-full rounded-full transition-colors " +
+                        (i === active ? "bg-accent" : i < active ? "bg-accent/40" : "bg-border-strong group-hover:bg-text-faint")
+                      }
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* A long page has too many segments to tap: the bar only shows where the reader is, and a
+                    list jumps to a section. */}
+                <select
+                  aria-label={jumpLabel}
+                  value={active}
+                  onChange={(event) => go(Number(event.target.value))}
+                  className="order-last h-9 w-full min-w-0 rounded-lg border border-border bg-bg-raised px-2 text-[13px] text-text-dim pointer-coarse:h-11 sm:order-none sm:w-auto sm:max-w-[16rem]"
                 >
-                  <span
-                    className={
-                      "h-1.5 w-full rounded-full transition-colors " +
-                      (i === active ? "bg-accent" : i < active ? "bg-accent/40" : "bg-border-strong group-hover:bg-text-faint")
-                    }
-                  />
-                </button>
-              ))}
-            </div>
+                  {sections.map((s, i) => (
+                    <option key={s.heading.id || i} value={i}>
+                      {i + 1}. {s.title}
+                    </option>
+                  ))}
+                </select>
+                <div aria-hidden="true" className="order-last flex w-full gap-px">
+                  {sections.map((s, i) => (
+                    <span
+                      key={s.heading.id || i}
+                      className={"h-1.5 min-w-0 flex-1 transition-colors " + (i === active ? "bg-accent" : i < active ? "bg-accent/40" : "bg-border-strong")}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
             <button type="button" onClick={() => setFocusMode(false)} className={ghost + " ml-auto shrink-0" + (inline ? " sm:ml-0" : "")}>
               <T en={showAllSections} bn={SHELL_BN.showAllSections} />
             </button>

@@ -9,6 +9,7 @@ import { T } from "@/components/i18n/T";
 import { ContinueButton } from "@/components/linux/ContinueButton";
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
 import { StageProgress } from "@/components/linux/StageProgress";
+import { reveal } from "@/components/motion/reveal";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 
@@ -29,7 +30,7 @@ export function LinuxHome() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-10 pb-6 sm:px-6 sm:pt-14">
-      <header className="grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-end">
+      <header className="grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-end" {...reveal("up", 0)}>
         <div className="max-w-3xl">
           <p className={`${LABEL} text-accent`}>
             <T
@@ -61,8 +62,8 @@ export function LinuxHome() {
           <T en={LINUX_UI.stagesHeading} bn={BN.stagesHeading} />
         </h2>
         <ol role="list" className="mt-4 grid list-none gap-x-10 gap-y-9 p-0 sm:grid-cols-2 xl:grid-cols-3">
-          {tiles.map(({ stage, commands }) => (
-            <li key={stage.slug} className="flex">
+          {tiles.map(({ stage, commands }, index) => (
+            <li key={stage.slug} className="flex" {...reveal("up", index)}>
               <section
                 aria-labelledby={`stage-${stage.slug}`}
                 className="flex w-full flex-col border-t border-border-strong pt-4"
@@ -102,8 +103,8 @@ export function LinuxHome() {
                   aria-labelledby={`stage-${stage.slug}`}
                   className="-ml-1.5 mt-2 flex list-none flex-wrap gap-x-0.5 p-0"
                 >
-                  {commands.map(({ name, anchor }) => (
-                    <li key={name}>
+                  {commands.map(({ name, anchor }, index) => (
+                    <li key={name} {...reveal("fade", index)}>
                       <Link
                         href={`${stage.href}#${anchor}`}
                         className="inline-flex min-h-6 min-w-6 items-center justify-center rounded px-1.5 font-mono text-[12.5px] text-text no-underline hover:text-accent hover:underline hover:underline-offset-4"

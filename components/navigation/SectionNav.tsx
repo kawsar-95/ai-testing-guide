@@ -95,7 +95,7 @@ export function SectionNav({ items }: { items: OutlineItem[] }) {
                 href={`#${item.id}`}
                 aria-current={isActive ? "location" : undefined}
                 className={
-                  "-ml-px block border-l-2 py-1.5 pr-2 leading-snug no-underline transition-colors " +
+                  "rail-active -ml-px block border-l-2 py-1.5 pr-2 leading-snug no-underline transition-colors " +
                   (item.level === 3 ? "pl-7 text-[12.5px] " : "pl-4 text-[13.5px] ") +
                   (isActive
                     ? "border-accent text-text"

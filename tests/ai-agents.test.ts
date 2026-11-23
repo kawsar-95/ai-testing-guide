@@ -3,7 +3,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { AI_AGENTS } from "../lib/ai-agents/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 
 /** The 10 topics, in the order of the infographic. */
@@ -62,12 +61,6 @@ test("each page has the entry title as # heading, the fixed sections, and voices
 test("the progress ids are the 10 slugs, under ai-agents-progress", () => {
   assert.equal(AI_AGENTS.progress?.storageKey, "ai-agents-progress");
   assert.deepEqual(AI_AGENTS.lessonIds, [...SLUGS]);
-});
-
-test("precacheUrls includes /ai-agents/ and the 10 page routes", () => {
-  const urls = precacheUrls("");
-  assert.ok(urls.includes("/ai-agents/"));
-  for (const slug of SLUGS) assert.ok(urls.includes(`/ai-agents/${slug}/`), slug);
 });
 
 test("buildFlatSearchDocs gives docs with group 'ai agents' for every page", () => {

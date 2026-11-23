@@ -3,7 +3,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { SECURITY } from "../lib/security/topics.ts";
-import { precacheUrls } from "../lib/pwa.ts";
 import { buildFlatSearchDocs } from "../lib/search.ts";
 import { voiceBlocks } from "../lib/voice-source.ts";
 
@@ -85,12 +84,6 @@ test("What a tester can check is a Tutorial advice tip with no cites in any voic
 test("the progress ids are the 8 slugs, under security-progress", () => {
   assert.equal(SECURITY.progress?.storageKey, "security-progress");
   assert.deepEqual(SECURITY.lessonIds, [...SLUGS]);
-});
-
-test("precacheUrls includes /security/ and the 8 page routes", () => {
-  const urls = precacheUrls("");
-  assert.ok(urls.includes("/security/"));
-  for (const slug of SLUGS) assert.ok(urls.includes(`/security/${slug}/`), slug);
 });
 
 test("buildFlatSearchDocs gives docs with group 'security' for every page", () => {

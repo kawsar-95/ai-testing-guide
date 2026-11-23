@@ -5,7 +5,7 @@ import { SHELL_BN } from "@/lib/bn/shell";
 import { T } from "@/components/i18n/T";
 
 const CARD =
-  "group block rounded-2xl border border-border bg-bg-raised px-5 py-4 no-underline shadow-sm transition-shadow hover:border-border-strong hover:shadow-md";
+  "card-hover group block rounded-2xl border border-border bg-bg-raised px-5 py-4 no-underline shadow-sm";
 
 /** Cards that link to the previous and the next part. */
 export function PrevNext({ prev, next }: { prev?: NavPage; next?: NavPage }) {

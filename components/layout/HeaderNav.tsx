@@ -20,12 +20,12 @@ export const NAV_LABEL_BN: Record<HeaderNavId, string> = {
 };
 
 const ITEM =
-  "relative flex h-16 items-center whitespace-nowrap text-[15px] font-medium no-underline transition-colors " +
-  "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-accent after:transition-opacity";
+  "nav-underline relative flex h-16 items-center whitespace-nowrap text-[15px] font-medium no-underline transition-colors " +
+  "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-accent";
 
 /** The look of a top nav item: dim, and the teal underline when it is current or hovered. */
 function navItemClass(active: boolean): string {
-  return `${ITEM} ${active ? "text-text after:opacity-100" : "text-text-dim hover:text-text after:opacity-0 hover:after:opacity-100"}`;
+  return `${ITEM} ${active ? "text-text" : "text-text-dim hover:text-text"}`;
 }
 
 /** The top nav at 1200 px and wider. usePathname can suspend, so the header wraps this in Suspense. */

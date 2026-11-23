@@ -5,6 +5,7 @@ import { CONTENTS_HOME, CONTENTS_ROUTES } from "../lib/contents.ts";
 import { precacheUrls } from "../lib/pwa.ts";
 import { sitemapPaths } from "../lib/sitemap.ts";
 import { MODULES, siteStats } from "../lib/stats.ts";
+import { CONTENT_PAGES } from "../lib/reading-state.ts";
 
 test("the sitemap and the precache have /contents/", () => {
   assert.equal(CONTENTS_HOME, "/contents/");
@@ -14,7 +15,9 @@ test("the sitemap and the precache have /contents/", () => {
 });
 
 test("siteStats counts from the data", () => {
-  assert.deepEqual(siteStats(), { parts: 34, modules: 16, pages: 340, voices: 3 });
+  assert.deepEqual(siteStats(), { parts: 34, modules: 16, pages: 320, voices: 3 });
+  // The home page and the dashboard must show the same number of pages.
+  assert.equal(siteStats().pages, CONTENT_PAGES.length);
 });
 
 test("MODULES lists every module page once", () => {

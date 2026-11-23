@@ -18,6 +18,7 @@ import { Sources } from "@/components/content/Sources";
 import { ReelsSection } from "@/components/reels/ReelsSection";
 import { reelsFor } from "@/lib/reels/index";
 import { MarkDoneButton } from "./MarkDoneButton";
+import { reveal } from "@/components/motion/reveal";
 import { T } from "@/components/i18n/T";
 import { FLAT_UI_BN } from "@/lib/bn/flat";
 import { ProgressSummary } from "./ProgressSummary";
@@ -57,6 +58,7 @@ function ItemNav({ module: m, item }: { module: FlatModule<FlatModuleId>; item: 
     <nav
       aria-labelledby="item-nav-label"
       className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-6 text-[15px]"
+      {...reveal("fade")}
     >
       <span id="item-nav-label" className="sr-only">
         <T en={m.ui.itemNav} bn={bn.itemNav} />
@@ -115,7 +117,7 @@ export async function FlatTopicPage({
       <ReadingProgress />
       <ChapterLayout outline={outline} route={item.href}>
         <ContentsButton />
-        <p className={`mb-3 ${LABEL} text-accent`}>
+        <p className={`mb-3 ${LABEL} text-accent`} {...reveal("up", 0)}>
           {practice ? (
             <T en={m.ui.practiceEyebrow ?? ""} bn={FLAT_UI_BN[m.id].practiceEyebrow ?? ""} />
           ) : (

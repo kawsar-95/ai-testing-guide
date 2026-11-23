@@ -248,20 +248,33 @@ Chapters 1–10 of Fundamentals have two versions of each topic: the owner's not
 
 The look follows the reference site [systemdesignbangla.com](https://www.systemdesignbangla.com/). It is a style reference only: no CSS, text, or art is copied. The earlier editorial shell came from the owner's [All Necessary Topics Related to AI Engineering](https://github.com/kawsar-95/All-Necessary-Topics-Related-to-AI-Engineering) site.
 
+## The motion system
+
+One vocabulary for the whole site: three curves, four durations, and entrances that fade in while they rise a few pixels. The vocabulary comes from the owner's reference site (designed-to-scale.vercel.app). `docs/ANIMATION.md` is the contract: the tokens, the rules, the checklist of every module, and the acceptance criteria of each one.
+
+- `lib/motion.ts` holds the curves and the durations for the client, and `MOTION_INIT_SCRIPT`. The script runs in `<head>` before the first paint and sets `data-motion="on"` on `<html>`, or `"off"` when the reader asked for reduced motion. It listens for a change of that setting.
+- `app/globals.css` holds the same tokens as `--motion-*` variables and the whole motion layer. Every rule sits inside `@media (prefers-reduced-motion: no-preference)`, so a reader who asked for less motion gets the same page, still and complete.
+- `components/motion/reveal.ts` returns the attributes of an element that should settle: `reveal("up")`, `reveal("up", index)` for a group, and `data-stagger` on a container whose items take their turn. It adds no markup, so no layout changes.
+- `components/motion/MotionObserver.tsx` is the one observer of the site. It holds a single `IntersectionObserver` and writes `data-revealed` straight to the DOM, so a scroll costs no React reconciliation. It settles the elements that are on screen before the CSS is allowed to hide the ones that are still waiting, so the first paint and the largest contentful paint are never blank. It also settles what a panel hides and shows again: one section at a time, the voice switcher, and a `<details>` box.
+- `components/motion/PageTransition.tsx` is the page transition: the new page arrives 10 px up. The first page of a visit does not animate.
+- Only `transform` and `opacity` move. No width, height, margin or padding is ever animated, so an animation never shifts the layout. `tests/motion.test.ts` checks this, the tokens, the reduced-motion rule, and the checklist of the modules.
+- The `##` heading of a content page settles through `mdx-components.tsx`, so all 320 content pages settle their sections without a change to a single MDX file.
+
 ## Installable app (PWA)
 
 `lib/pwa.ts` builds the web manifest, the precache list, and the service worker source.
 
 | Part | Behavior |
 |---|---|
-| Install | Caches all 340 routes, the 404 page, the search index, the manifest, and the icons, plus the build files and the `/images/` files that the pages use |
+| Install | Caches only the app shell (the home page, `/contents/`, `/dashboard/`, `/interview/`, the 404 page, the manifest, and the icons), plus the build files and the `/images/` files that those pages use: about 1.8 MB. The 340 pages are about 109 MB, so they are not cached at install. |
+| Visited pages | A page, and the search index, is cached when the reader first opens it, so it opens offline afterwards. A page never opened is not available offline. |
 | Pages, RSC payloads, and the search index | Stale-while-revalidate. The cache answers first, and the worker updates the cache from the network in the background. The cache key has no query string. |
 | `/_next/static/` files | Cache first. Their file names have a content hash. |
 | Offline, page not cached | Shows the cached 404 page |
-| New build | `/sw.js` gets a new cache version. The new worker caches all pages again and deletes older caches. |
+| New build | `/sw.js` gets a new cache version. The new worker caches the shell again, deletes older caches, and caches pages again as they are visited. |
 | Install button | `INSTALL_CAPTURE_SCRIPT` (`lib/pwa-install.ts`) keeps an early `beforeinstallprompt` event. `InstallButton` shows only after that event (Chromium). |
 
-Only production builds register the service worker. `npm run dev` has none, so dev pages never come from an old cache. A new page in any ordered list goes into the precache list by itself.
+Only production builds register the service worker. `npm run dev` has none, so dev pages never come from an old cache. A new page needs nothing: it is cached when first opened.
 
 ## SEO and environment variables
 
