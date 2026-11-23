@@ -1,5 +1,6 @@
 import { Children, cloneElement, isValidElement } from "react";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
+import { reveal } from "@/components/motion/reveal";
 
 // The table elements of MDX: plain tags whose props this file sets (role, data-label).
 type WithChildren = { children?: ReactNode; [prop: string]: unknown };
@@ -28,12 +29,14 @@ export function MdxTable({ children, ...props }: ComponentProps<"table">) {
   const headerRow = thead ? elementsOf(thead.props.children)[0] : undefined;
   const labels = headerRow ? elementsOf(headerRow.props.children).map((th) => textOf(th).trim()) : [];
 
+  let rowIndex = 0;
   const rows = sections.map((section) =>
     cloneElement(section, {
       role: "rowgroup",
       children: elementsOf(section.props.children).map((tr) =>
         cloneElement(tr, {
           role: "row",
+          ...reveal("fade", rowIndex++),
           children: elementsOf(tr.props.children).map((cell, i) =>
             cloneElement(cell, {
               role: cell.type === "th" ? "columnheader" : "cell",
@@ -46,7 +49,7 @@ export function MdxTable({ children, ...props }: ComponentProps<"table">) {
   );
 
   return (
-    <div className="mdx-table">
+    <div className="mdx-table" {...reveal("up")}>
       <table role="table" {...props}>
         {rows}
       </table>

@@ -292,11 +292,24 @@ body {
        when the chip sits on a callout tint or on --bg-raised. */
     color: color-mix(in srgb, var(--accent) 80%, var(--text));
     font-family: var(--font-mono-jb), var(--font-noto-bengali), ui-monospace, monospace;
-    font-size: 0.9em;
+    /* Never below 11 px: in a small context (a table cell, a caption) 0.9em gave 9.5 px. */
+    font-size: max(0.9em, 11px);
     line-height: 0;
     /* The chip wraps as one piece. Its hidden "Source n" text is a break
        point, so a chip at the end of a line left an empty stub on the next. */
     white-space: nowrap;
+  }
+  /* On a touch screen the chip is 27 x 17 px. An invisible layer around it gives a thumb a 24 px+ target (WCAG 2.5.8)
+     without changing how the chip looks or how the line sits. */
+  @media (pointer: coarse) {
+    .mdx a.cite {
+      position: relative;
+    }
+    .mdx a.cite::after {
+      content: "";
+      position: absolute;
+      inset: -6px -3px;
+    }
   }
   .mdx a.cite:hover,
   .sheet a.cite:hover {
@@ -701,7 +714,7 @@ html[data-voice-default="bangla"] .i18n-bn {
   }
 }
 .voices[data-voice-user] [data-panel] {
-  animation: voice-fade 180ms ease-out both;
+  animation: voice-fade var(--motion-dur-base) var(--motion-ease-out) both;
 }
 @media (prefers-reduced-motion: reduce) {
   .voices[data-voice-user] [data-panel] {
@@ -766,6 +779,11 @@ html[data-sidebar-right="closed"] [data-sidebar-toggle="right"] .sb-chevron-show
   .btn:hover {
     transform: translateY(-1px);
   }
+  /* The press: the button goes down a pixel and comes back. It is the only
+     motion a button has, and it tells the reader that the click landed. */
+  .btn:active {
+    transform: translateY(0) scale(0.985);
+  }
   .btn-sm {
     padding: 0.5rem 0.875rem;
     font-size: 14px;
@@ -798,7 +816,8 @@ html[data-sidebar-right="closed"] [data-sidebar-toggle="right"] .sb-chevron-show
   }
   @media (prefers-reduced-motion: reduce) {
     .btn,
-    .btn:hover {
+    .btn:hover,
+    .btn:active {
       transform: none;
       transition: none;
     }
@@ -845,5 +864,379 @@ html[data-sidebar-right="closed"] [data-sidebar-toggle="right"] .sb-chevron-show
     z-index: -1;
     height: 0.12em;
     background: color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   The motion system.
+
+   One vocabulary for the whole site: the three curves and the four durations
+   of lib/motion.ts, the reveal contract, and the micro-interactions.
+
+   The tokens are theme-independent, so they live in their own :root block
+   after the two theme blocks. app/globals.css keeps the theme blocks for
+   colours only.
+
+   Rules:
+   - Only `transform` and `opacity` move. Nothing animates a width, a height,
+     a margin or a padding, so an animation never moves a line of text and
+     never shifts the layout.
+   - Every rule below is inside `@media (prefers-reduced-motion: no-preference)`
+     and needs `html[data-motion="on"]`, which the script in lib/motion.ts
+     sets only when the reader has not asked for reduced motion. A reader who
+     asked for it gets the same page, still and complete.
+   - The reveal state is applied only after the observer has booted
+     (`data-reveal-ready`). Until then the page is painted complete, so the
+     first paint and the largest contentful paint are never blank.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  /* The three curves. See lib/motion.ts for the same values in TypeScript. */
+  --motion-ease-out: cubic-bezier(.2, .7, .2, 1);
+  --motion-ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --motion-ease-inout: cubic-bezier(.65, 0, .35, 1);
+
+  /* The four durations. */
+  --motion-dur-fast: 150ms;
+  --motion-dur-base: 220ms;
+  --motion-dur-slow: 340ms;
+  --motion-dur-slower: 450ms;
+
+  /* The pause between two items of a staggered group. */
+  --motion-stagger: 60ms;
+
+  /* How far an element travels when it enters. */
+  --motion-rise: 10px;
+}
+
+/* ── The reveal contract ────────────────────────────────────────────────
+   An element that carries `data-reveal` is hidden (a few pixels down and
+   transparent) until it enters the viewport, then it settles. The observer
+   in components/motion/MotionObserver.tsx sets `data-revealed` on it.
+
+   The variant is the attribute value: up (the default), fade, scale, left,
+   right or pop. A list sets `--i` on each item, and the delay grows with it.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-motion="on"][data-reveal-ready] [data-reveal] {
+    opacity: 0;
+    transform: translate3d(var(--reveal-x, 0), var(--reveal-y, var(--motion-rise)), 0)
+      scale(var(--reveal-scale, 1));
+    transition:
+      opacity var(--motion-dur-base) var(--motion-ease-out),
+      transform var(--motion-dur-base) var(--motion-ease-out);
+    transition-delay: calc(var(--i, 0) * var(--motion-stagger));
+  }
+
+  html[data-motion="on"][data-reveal-ready] [data-reveal][data-revealed] {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  /* The variants. Each one only moves the axes it needs. */
+  [data-reveal="fade"] {
+    --reveal-y: 0px;
+  }
+
+  /* The fade variant changes the opacity alone. A table row gets no
+     transform at all: a transform on a <tr> breaks the table layout in
+     some browsers. */
+  html[data-motion="on"][data-reveal-ready] [data-reveal="fade"] {
+    transform: none;
+  }
+  html[data-motion="on"][data-reveal-ready] [data-reveal="fade"][data-revealed] {
+    transform: none;
+  }
+
+  [data-reveal="scale"] {
+    --reveal-y: 8px;
+    --reveal-scale: 0.985;
+  }
+  [data-reveal="pop"] {
+    --reveal-y: 6px;
+    --reveal-scale: 0.96;
+  }
+  [data-reveal="left"] {
+    --reveal-x: -14px;
+    --reveal-y: 0px;
+  }
+  [data-reveal="right"] {
+    --reveal-x: 14px;
+    --reveal-y: 0px;
+  }
+
+  /* A staggered group: each child takes its turn. The index stops at eight,
+     so a long list does not leave its tail waiting. The children are the
+     grid items or the list items themselves, so nothing is wrapped. */
+  [data-stagger] > * {
+    --i: 0;
+  }
+  [data-stagger] > *:nth-child(1) {
+    --i: 0;
+  }
+  [data-stagger] > *:nth-child(2) {
+    --i: 1;
+  }
+  [data-stagger] > *:nth-child(3) {
+    --i: 2;
+  }
+  [data-stagger] > *:nth-child(4) {
+    --i: 3;
+  }
+  [data-stagger] > *:nth-child(5) {
+    --i: 4;
+  }
+  [data-stagger] > *:nth-child(6) {
+    --i: 5;
+  }
+  [data-stagger] > *:nth-child(n + 7) {
+    --i: 6;
+  }
+
+  /* The row of a table and the item of a list lift a little on hover. */
+  [data-hover="lift"] {
+    transition:
+      transform var(--motion-dur-fast) var(--motion-ease-out),
+      background-color var(--motion-dur-fast) var(--motion-ease-out),
+      border-color var(--motion-dur-fast) var(--motion-ease-out),
+      box-shadow var(--motion-dur-fast) var(--motion-ease-out);
+  }
+  [data-hover="lift"]:hover {
+    transform: translateY(-2px);
+  }
+
+  /* The drawer and the search dialog: a spring, because they arrive. */
+  [data-motion="spring"] {
+    transition-timing-function: var(--motion-ease-spring);
+  }
+}
+
+/* ── The progress bar of the dashboard ─────────────────────────────────
+   The fill is a rect that scales from the left. It grows when the page
+   opens and follows the value when the reader marks a page as read.
+   ───────────────────────────────────────────────────────────────────────── */
+.progress-fill {
+  transform-box: fill-box;
+  transform-origin: left center;
+  transform: scaleX(var(--fill, 0));
+  transition: transform var(--motion-dur-slower) var(--motion-ease-out);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .progress-fill {
+    animation: progress-grow var(--motion-dur-slower) var(--motion-ease-out) backwards;
+  }
+}
+@keyframes progress-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(var(--fill, 0));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-fill {
+    transform: scaleX(var(--fill, 0));
+  }
+}
+
+/* ── The page transition ───────────────────────────────────────────────
+   The reader follows a link: the new page arrives a few pixels up and the
+   old page fades out. It is one element, so it costs no layout and it never
+   disturbs the fixed header, the drawer or the reading progress bar.
+
+   The attribute is on the content column (components/motion/PageTransition.tsx)
+   and it is removed once the animation is over.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-motion="on"] [data-page-enter] {
+    animation: page-enter var(--motion-dur-slow) var(--motion-ease-out) both;
+  }
+}
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── The opening of a <details> ────────────────────────────────────────
+   The body of the box fades in as it opens. The <summary> keeps its own
+   marker, which turns (see the .mdx summary rule above). The children are
+   the real markup of the MDX files, so nothing is wrapped.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .mdx details[open] > *:not(summary) {
+    animation: details-in var(--motion-dur-base) var(--motion-ease-out) both;
+  }
+}
+@keyframes details-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── The shimmer of a loading row ──────────────────────────────────────
+   The search dialog shows it while the index loads.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--bg-raised-2) 0%,
+      var(--border) 40%,
+      var(--bg-raised-2) 80%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.4s var(--motion-ease-inout) infinite;
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ── The micro-interactions ────────────────────────────────────────────
+   Hover states that are a change of colour and a hair of movement. Every
+   one of them is a transition on transform or opacity, so none of them
+   costs a layout.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .row-hover {
+    transition:
+      background-color var(--motion-dur-fast) var(--motion-ease-out),
+      border-color var(--motion-dur-fast) var(--motion-ease-out),
+      transform var(--motion-dur-fast) var(--motion-ease-out);
+  }
+  .row-hover:hover {
+    transform: translateX(3px);
+    border-color: var(--border-strong);
+  }
+
+  .card-hover {
+    transition:
+      transform var(--motion-dur-base) var(--motion-ease-out),
+      box-shadow var(--motion-dur-base) var(--motion-ease-out),
+      border-color var(--motion-dur-base) var(--motion-ease-out);
+  }
+  .card-hover:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: var(--raise-md);
+  }
+
+  /* The underline of a top nav item grows from the left. */
+  .nav-underline::after {
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--motion-dur-base) var(--motion-ease-out);
+  }
+  .nav-underline:hover::after,
+  .nav-underline[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+
+  /* The accent rule of the active row of a sidebar grows in place. */
+  .rail-active {
+    transition:
+      background-color var(--motion-dur-base) var(--motion-ease-out),
+      border-color var(--motion-dur-base) var(--motion-ease-out);
+  }
+
+  /* The button of a table row and the cell of a table. */
+  .mdx tbody tr {
+    transition: background-color var(--motion-dur-fast) var(--motion-ease-out);
+  }
+  .mdx tbody tr:hover {
+    background: color-mix(in srgb, var(--accent) 5%, var(--bg-raised));
+  }
+
+  /* The copy button of a code block. */
+  .code-copy {
+    transition:
+      opacity var(--motion-dur-fast) var(--motion-ease-out),
+      transform var(--motion-dur-fast) var(--motion-ease-out);
+  }
+  .code-block:hover .code-copy {
+    transform: translateY(-1px);
+  }
+
+  /* The search dialog and the drawer arrive. */
+  .dialog-in {
+    animation: dialog-in var(--motion-dur-slow) var(--motion-ease-spring) backwards;
+  }
+  .backdrop-in {
+    animation: backdrop-in var(--motion-dur-base) var(--motion-ease-out) backwards;
+  }
+  /* The drawer arrives, and its links take their turn. The `data-open`
+     attribute is added when the drawer opens and removed when it closes, so
+     the animation plays again every time the drawer opens. */
+  .drawer-stagger[data-open="true"] > * {
+    animation: drawer-in var(--motion-dur-slow) var(--motion-ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * var(--motion-stagger));
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes back-to-top-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Print ──────────────────────────────────────────────────────────────
+   Print and "Save as PDF" never scroll, so the reveal observer never marks
+   the blocks below the first screen. Without this rule they print as blank
+   paper. It is after the reveal rules and uses !important, so every variant
+   (up, fade, scale, left, right, pop) is covered. */
+@media print {
+  [data-reveal],
+  [data-reveal][data-revealed] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }

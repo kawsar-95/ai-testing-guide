@@ -3,6 +3,7 @@
 import { Children, isValidElement, useRef } from "react";
 import type { ComponentProps } from "react";
 import { CopyButton } from "@/components/content/CopyButton";
+import { reveal } from "@/components/motion/reveal";
 import { SHELL_BN } from "@/lib/bn/shell";
 import { copyCode } from "@/lib/ui";
 
@@ -32,7 +33,7 @@ export function CodeBlock({ children, className, style, tabIndex }: ComponentPro
   const lang = languageOf(children);
 
   return (
-    <div className="code-block">
+    <div className="code-block" {...reveal("up")}>
       <div className="code-tools">
         <span className="code-copy">
           <CopyButton

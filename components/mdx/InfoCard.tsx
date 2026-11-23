@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { T } from "@/components/i18n/T";
 import { SHELL_BN } from "@/lib/bn/shell";
 import { doLabel, dontLabel } from "@/lib/ui";
+import { reveal } from "@/components/motion/reveal";
 
 const TONE = {
   good: { border: "border-t-2 border-t-good", mark: "✓", color: "text-good", label: doLabel, bn: SHELL_BN.doLabel },
@@ -21,7 +22,10 @@ export function InfoCard({
 }) {
   const marker = tone ? TONE[tone] : null;
   return (
-    <section className={`rounded-2xl border border-border bg-bg-raised p-5 shadow-sm ${marker?.border ?? ""}`}>
+    <section
+      className={`card-hover rounded-2xl border border-border bg-bg-raised p-5 shadow-sm ${marker?.border ?? ""}`}
+      {...reveal("scale")}
+    >
       <p className="mb-2 text-base font-semibold text-text">
         {marker ? (
           <>

@@ -114,6 +114,8 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `lib/outline.ts`, `lib/headings.ts` | The `##`/`###` outline of an MDX file, with the same ids as `rehype-slug` |
 | `lib/search.ts` | Builds the search docs, the index, and runs a search |
 | `lib/voice.ts` | The voice types, the labels, `VOICE_STORAGE_KEY`, `resolveVoiceDefault`, `PAGE_VOICE_STORAGE_KEY`, and `VOICE_INIT_SCRIPT`. See "Voices". |
+| `lib/motion.ts` | The motion tokens: the three curves, the four durations, the stagger step, and `MOTION_INIT_SCRIPT`. See "The motion system". |
+| `components/motion/` | `reveal.ts` (the attributes of an element that settles), `MotionObserver.tsx` (the one IntersectionObserver of the site), and `PageTransition.tsx` (the page transition). See "The motion system". |
 | `lib/voice-source.ts` | The authoring check for `<Voices>` blocks. `npm test` uses it. |
 | `lib/theme.ts` | The theme init script, `resolveTheme`, `nextTheme` |
 | `lib/sidebar.ts` | `SidebarSide`, `resolveSidebar`, `nextSidebar`, the storage key (`sidebar-left`, `sidebar-right`) and attribute (`data-sidebar-left`, `data-sidebar-right`) of each sidebar, and `SIDEBAR_INIT_SCRIPT`. See "Navigation". |
@@ -155,8 +157,9 @@ To preview the Pages build locally: `PAGES_BASE_PATH=/ai-testing-guide npm run b
 | `content/security/<slug>.mdx` | The 8 Security Testing topic pages. Each has the 6 sections of the fixed shape, 3 voices, and the sources of its facts. |
 | `content/sdet/<slug>.mdx` | The 9 SDET Roadmap topic pages. Each has a lede, 6 sections with 3 voices, a Key words table, and the sources of its facts. |
 | `public/images/fundamentals/` | The images of the owner's notes |
-| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-sheets`, `linux-sheets-warn`, `verify-linux-sheets`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `design-tokens`, `contents`, `header-nav`, `interview`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard`, `flat-module`, `course`, `k6`, `ai-engineering`, `harness`, `ai-skills`, `ai-concepts`, `agent-memory`, `ai-agents`, `ai-ml-testing` |
+| `tests/` | `node --test` tests for `home`, `nav`, `outline`, `page`, `pwa`, `sitemap`, `reading`, `search`, `theme`, `ui`, `progress`, `base-path`, `linux-data`, `linux-sheets`, `linux-sheets-warn`, `verify-linux-sheets`, `linux-progress`, `fundamentals-data`, `fundamentals-version`, `fundamentals-structure`, `fundamentals-diagrams`, `system-design`, `architecture`, `voice`, `voice-source`, `pwa-install`, `contrast`, `design-tokens`, `contents`, `header-nav`, `interview`, `fonts`, `reading-time`, `reading-state`, `chapter-layout`, `dashboard`, `flat-module`, `course`, `k6`, `ai-engineering`, `harness`, `ai-skills`, `ai-concepts`, `agent-memory`, `ai-agents`, `ai-ml-testing`, `motion` |
 | `docs/ARCHITECTURE.md` | How the site is built, for developers. Update it when a route, a module, or a shared mechanism changes. |
+| `docs/ANIMATION.md` | The motion system: the tokens, the rules, the checklist of every module, and the acceptance criteria of each one. See "The motion system". |
 | `docs/assets/` | The screenshots of `README.md` (1280×800, and 390×844 for the phone ones). Take them again when the look changes. Use a root build and seed demo progress in `localStorage`. |
 | `docs/superpowers/research/` | The research notes and fact-check reports of each page. See "Content Workflow". |
 | `scripts/` | Python check scripts. See below. |
@@ -219,6 +222,25 @@ The site has 340 routes:
 | Automate | `content/automate/` | `headless`, `github-actions`, `playwright` |
 | Case Study | `content/case-study/` | `overview`, `bug-hunt`, `pr-review`, `test-and-retest`, `automation`, `lessons`, `codebase-tour` |
 | Agentic QA | `content/agentic-qa/` | `claude-for-qa`, `qa-workspace`, `project-setup`, `requirements`, `blast-radius`, `test-charters`, `test-execution`, `multi-agent-qa`, `playwright-with-claude`, `playwright-framework` |
+
+## The motion system
+
+One vocabulary for the whole site: three curves, four durations, and entrances that fade in while they rise a few pixels. The vocabulary comes from the owner's reference site (designed-to-scale.vercel.app). `docs/ANIMATION.md` is the contract: the tokens, the rules, the checklist of every module, and the acceptance criteria of each one.
+
+| Part | Behavior |
+|---|---|
+| Tokens | `lib/motion.ts` holds the three curves (`MOTION_EASE.out`, `.spring`, `.inout`), the four durations (`MOTION_DURATION.fast` 150 ms, `.base` 220 ms, `.slow` 340 ms, `.slower` 450 ms), the stagger step, and `MOTION_INIT_SCRIPT`. `app/globals.css` holds the same values as `--motion-*` variables. `tests/motion.test.ts` keeps the two copies in step. |
+| The init script | `MOTION_INIT_SCRIPT` runs in `<head>` before the first paint and sets `data-motion="on"` on `<html>`, or `"off"` when the reader asked for reduced motion. It listens for a change of that setting. It never throws: a browser without `matchMedia` gets a still page. |
+| The reveal | An element with `data-reveal` starts a few pixels down and transparent, and settles when it reaches the viewport. `components/motion/reveal.ts` returns the attributes: `reveal("up")`, `reveal("up", index)` for one item of a group, and `data-stagger` on a container whose items take their turn. The variants are `up`, `fade`, `scale`, `pop`, `left`, and `right`. `fade` moves nothing at all, because a transform on a `<tr>` breaks the table layout in some browsers. The helper adds no markup, so no grid or flex layout changes. |
+| The observer | `components/motion/MotionObserver.tsx` is the one observer of the site. It holds a single `IntersectionObserver` and writes `data-revealed` straight to the DOM, so a scroll costs no React reconciliation. A revealed element is unobserved and never seen again. |
+| No blank paint | The observer settles the elements that are already on screen **before** the CSS is allowed to hide the ones that are still waiting. The CSS needs both `data-motion="on"` and `data-reveal-ready` (set after that first settle) before it hides anything, so the first paint and the largest contentful paint are never blank. |
+| Hidden content | The observer also settles what a panel hides and shows again: one section at a time (`data-sec-hidden`), the voice switcher (`data-voice`), and a `<details>` box (`open`). A reader who jumps to the end of a page settles the content they passed over. |
+| The page transition | `components/motion/PageTransition.tsx` is the page transition: the new page arrives 10 px up and the old one fades out. It is a CSS animation on the content column, so it never disturbs the fixed header, the drawer, or the reading progress bar. The first page of a visit does not animate. |
+| The micro-interactions | The top nav underline grows from the left, the active row of a sidebar settles its colour, a row lifts on hover, a card lifts and raises its shadow, the drawer arrives and its links take their turn, the search dialog arrives with a spring, a button presses, and a `<details>` box fades its body in. |
+| The progress bar | The fill of a bar is an SVG rect that scales from the left, so it grows without a layout and follows its value when the reader marks a page as read. |
+| The `##` heading | `mdx-components.tsx` registers the `##` heading, so all 320 content pages settle their sections without a change to a single MDX file. The heading keeps its element and its props, so its anchor and the outline are unchanged. |
+| Reduced motion | Every rule sits inside `@media (prefers-reduced-motion: no-preference)`. A reader who asked for less motion gets the same page, still and complete: nothing fades, nothing moves, and nothing is hidden. |
+| The rule | Only `transform` and `opacity` move. No width, height, margin, or padding is ever animated, so an animation never shifts the layout. `tests/motion.test.ts` checks this, the tokens, the reduced-motion rule, and the checklist of the modules. |
 
 ## Navigation
 

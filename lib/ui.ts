@@ -98,6 +98,7 @@ export const sidebarRightShow = "Show the section list";
 // One section at a time (components/content/SectionFocus.tsx).
 export const sectionOf = (n: number, total: number) => `Section ${n} of ${total}`;
 export const sectionsGroup = "Sections of this page";
+export const jumpToSection = "Jump to section";
 export const sectionPrevious = "Previous";
 export const sectionNext = "Next";
 export const showAllSections = "Show all sections";
@@ -109,4 +110,5 @@ export const copyCode = "Copy code";
 export const copyWords = { idle: "Copy", copied: "Copied", selected: "Selected" };
 export const notFoundTitle = "Page not found";
 export const notFoundText = "This page does not exist. It may have moved, or the address may have a typing error.";
-export const notFoundBack = "Back to the contents";
+export const notFoundBack = "Back to the home page";
+export const notFoundContents = "Browse all topics";

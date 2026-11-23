@@ -7,6 +7,7 @@ import { DEFAULT_VERSION, VERSION_INIT_SCRIPT } from "@/lib/fundamentals/version
 import { VOICE_INIT_SCRIPT } from "@/lib/voice";
 import { SIDEBAR_INIT_SCRIPT } from "@/lib/sidebar";
 import { INSTALL_CAPTURE_SCRIPT } from "@/lib/pwa-install";
+import { MOTION_INIT_SCRIPT } from "@/lib/motion";
 import { RegisterServiceWorker } from "@/components/layout/RegisterServiceWorker";
 import { GA_ID, OWNER, SITE_DESCRIPTION, SITE_NAME, SITE_SHORT_NAME, SITE_URL } from "@/lib/site";
 
@@ -98,6 +99,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: VOICE_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: SIDEBAR_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: INSTALL_CAPTURE_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: MOTION_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full bg-bg text-text">
         {children}

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { T } from "@/components/i18n/T";
 import { SHELL_BN } from "@/lib/bn/shell";
 import { skipLink } from "@/lib/ui";
+import { MotionObserver } from "@/components/motion/MotionObserver";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
@@ -23,6 +24,9 @@ export function SiteShell({ children, searchSlot }: { children: ReactNode; searc
         </main>
         <SiteFooter />
       </div>
+      {/* The one observer of the site: it settles the elements that carry
+          data-reveal as they reach the viewport. */}
+      <MotionObserver />
     </div>
   );
 }

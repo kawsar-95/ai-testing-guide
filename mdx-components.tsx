@@ -1,4 +1,5 @@
 import type { MDXComponents } from "mdx/types";
+import type { ComponentProps } from "react";
 import Link from "next/link";
 import { BugLifeCycleDiagram } from "@/components/fundamentals/diagrams/BugLifeCycleDiagram";
 import { PinStateDiagram } from "@/components/fundamentals/diagrams/PinStateDiagram";
@@ -18,6 +19,19 @@ import { MdxTable } from "@/components/mdx/MdxTable";
 import { Bangla, Layman, Technical } from "@/components/voice/panels";
 import { Voices } from "@/components/voice/Voices";
 
+/**
+ * A heading of a content page. The `##` heading marks a section, so it
+ * settles when the reader reaches it (app/globals.css reads the
+ * `data-reveal` attribute).
+ *
+ * The heading keeps its own element and its own props, so the id that
+ * rehype-slug gave it (the anchor of "On this page") and the text that
+ * SectionFocus reads are both unchanged.
+ */
+function Heading2(props: ComponentProps<"h2">) {
+  return <h2 data-reveal="up" {...props} />;
+}
+
 // The custom components the MDX files in content/ use without an import.
 const components: MDXComponents = {
   BugLifeCycleDiagram,
@@ -34,6 +48,8 @@ const components: MDXComponents = {
   TestingClassificationDiagram,
   // The two versions of a Fundamentals topic (notes and ISTQB).
   Version,
+  // The `##` heading of a section. It settles when the reader reaches it.
+  h2: Heading2,
   // One ## section in three voices. See components/voice/Voices.tsx.
   Voices,
   Technical,

@@ -269,6 +269,39 @@ paper ground shows shadow less harshly than a blue-black one.
 
 Never stack a shadow on a heavy border. Pick one.
 
+## Motion
+
+Motion is one vocabulary for the whole site, and it comes from the owner's
+reference site (designed-to-scale.vercel.app). Three curves, four durations,
+and entrances that fade in while they rise a few pixels. The tokens live in
+`app/globals.css` as `--motion-*` variables, and in `lib/motion.ts` for the
+client. `docs/ANIMATION.md` is the full contract.
+
+| Token | Value | Use |
+|---|---|---|
+| `--motion-ease-out` | `cubic-bezier(.2, .7, .2, 1)` | Almost everything: an entrance, a hover, a drawer. |
+| `--motion-ease-spring` | `cubic-bezier(.34, 1.56, .64, 1)` | The moments that pop: the search dialog, the back-to-top button. |
+| `--motion-ease-inout` | `cubic-bezier(.65, 0, .35, 1)` | A move that goes both ways, and the shimmer. |
+| `--motion-dur-fast` | `150ms` | A colour, a border, a small state change. |
+| `--motion-dur-base` | `220ms` | The default: an entrance, a hover. |
+| `--motion-dur-slow` | `340ms` | A larger move: a panel, a card that lifts. |
+| `--motion-dur-slower` | `450ms` | The longest one: a page, a bar that grows. |
+| `--motion-stagger` | `60ms` | The pause between two items of a group. |
+| `--motion-rise` | `10px` | How far an element travels when it enters. |
+
+Three rules hold the whole thing together:
+
+1. **Only `transform` and `opacity` move.** No width, height, margin or
+   padding is ever animated, so an animation never shifts the layout of the
+   page around it.
+2. **Motion is opt-out, never opt-in.** Every rule sits inside
+   `@media (prefers-reduced-motion: no-preference)`, and the init script sets
+   `data-motion="off"` on `<html>` for a reader who asked for less motion.
+   They get the same page, still and complete.
+3. **The first paint is never blank.** The observer settles what is on screen
+   before the stylesheet is allowed to hide what is still waiting, so the
+   largest contentful paint is never hidden.
+
 ## Shapes
 
 | Radius | Value | Use |

@@ -4,6 +4,7 @@ import type { FlatModuleId } from "@/lib/modules/registry";
 import { T } from "@/components/i18n/T";
 import { FLAT_UI_BN } from "@/lib/bn/flat";
 import { partNumber } from "@/lib/ui";
+import { reveal } from "@/components/motion/reveal";
 import { DoneMark } from "./DoneMark";
 import { LinkDoneToggle } from "./LinkDoneToggle";
 import { ProgressSummary } from "./ProgressSummary";
@@ -21,7 +22,7 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
   const topics = m.items.filter((item) => item.kind === "topic" || item.kind === "link").length;
   return (
     <div className="mx-auto max-w-4xl px-4 pt-10 pb-6 sm:px-6 sm:pt-14">
-      <header className="max-w-3xl">
+      <header className="max-w-3xl" {...reveal("up", 0)}>
         <p className={`${LABEL} text-accent`}>
           <T en={ui.eyebrow(topics)} bn={bn.eyebrow(topics)} />
         </p>
@@ -59,8 +60,8 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
           const Title = part ? "h4" : "h3";
           const list = (
             <ol key="all" className="m-0 list-none p-0">
-              {items.map((item) => (
-                <li key={item.slug} className="border-b border-border">
+              {items.map((item, index) => (
+                <li key={item.slug} className="row-hover border-b border-border" {...reveal("up", index)}>
                   <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-3.5">
                     <span aria-hidden="true" className="font-mono text-[12px] tabular-nums text-text-faint">
                       {partNumber(item.number)}
@@ -90,7 +91,7 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
           if (!part) return list;
           return (
             <div key={part.num}>
-              <h3 className={`${LABEL} mt-8 text-text-dim`}>
+              <h3 className={`${LABEL} mt-8 text-text-dim`} {...reveal("up", 0)}>
                 <T en={`PART ${part.num}`} bn={`পার্ট ${part.num}`} /> · {part.title}
               </h3>
               {list}

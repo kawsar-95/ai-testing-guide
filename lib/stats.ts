@@ -4,7 +4,6 @@ import { LINUX_HOME, STAGES } from "./linux/stages.ts";
 import { LINUX_UI } from "./linux/ui.ts";
 import { FLAT_MODULES, type FlatModuleId } from "./modules/registry.ts";
 import { PAGES } from "./nav.ts";
-import { sitemapPaths } from "./sitemap.ts";
 
 export type ModuleId = "linux" | "fundamentals" | FlatModuleId;
 
@@ -43,5 +42,9 @@ const VOICE_COUNT = 3;
 
 /** The numbers of the stats row on the home page and the contents page. */
 export function siteStats(): { parts: number; modules: number; pages: number; voices: number } {
-  return { parts: PAGES.length, modules: MODULES.length, pages: sitemapPaths().length, voices: VOICE_COUNT };
+  // The pages a reader can read, the same count as the dashboard's "pages read" total (CONTENT_PAGES in
+  // reading-state.ts: the tutorial parts plus the pages of every module). The sitemap has more routes, for
+  // example the homes, the contents page and the dashboard, which are not reading pages.
+  const pages = PAGES.length + MODULES.reduce((sum, module) => sum + module.pages.length, 0);
+  return { parts: PAGES.length, modules: MODULES.length, pages, voices: VOICE_COUNT };
 }

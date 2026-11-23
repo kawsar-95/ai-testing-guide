@@ -6,6 +6,7 @@ import { T } from "@/components/i18n/T";
 import { ChapterProgress } from "@/components/fundamentals/ChapterProgress";
 import { FundamentalsProgressSummary } from "@/components/fundamentals/FundamentalsProgressSummary";
 import { TopicChecklist } from "@/components/fundamentals/TopicChecklist";
+import { reveal } from "@/components/motion/reveal";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 
@@ -13,7 +14,7 @@ const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
 export function FundamentalsHome() {
   return (
     <div className="mx-auto max-w-4xl px-4 pt-10 pb-6 sm:px-6 sm:pt-14">
-      <header className="max-w-3xl">
+      <header className="max-w-3xl" {...reveal("up", 0)}>
         <p className={`${LABEL} text-accent`}>
           <T
             en={FUNDAMENTALS_UI.eyebrow(CHAPTERS.length, ALL_FUNDAMENTALS_TOPIC_IDS.length)}
@@ -39,11 +40,12 @@ export function FundamentalsHome() {
         <h2 id="chapters-heading" className={`${LABEL} border-b border-border-strong pb-3 text-text-dim`}>
           <T en={FUNDAMENTALS_UI.chaptersHeading} bn={BN.chaptersHeading} />
         </h2>
-        {CHAPTERS.map((chapter) => (
+        {CHAPTERS.map((chapter, index) => (
           <section
             key={chapter.slug}
             aria-labelledby={`chapter-${chapter.slug}`}
             className="border-b border-border py-5"
+            {...reveal("up", index)}
           >
             <p className={`${LABEL} text-accent`}>
               <T en={FUNDAMENTALS_UI.chapterEyebrow(chapter.number)} bn={BN.chapterEyebrow(chapter.number)} />

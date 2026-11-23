@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { reveal } from "@/components/motion/reveal";
 
 export type CalloutType = "note" | "tip" | "warning" | "danger";
 /** `info` and `error` are the old names of `note` and `danger`. */
@@ -75,6 +76,7 @@ export function Callout({
   return (
     <div
       className={`my-[18px] flex gap-3 rounded-[10px] border-l-[3px] px-[18px] py-3.5 text-sm shadow-sm ${style.box}`}
+      {...reveal("up")}
     >
       <svg
         aria-hidden="true"

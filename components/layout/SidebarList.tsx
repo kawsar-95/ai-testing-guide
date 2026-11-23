@@ -6,6 +6,7 @@ import { useBn } from "@/components/i18n/useBn";
 import { SHELL_BN } from "@/lib/bn/shell";
 import { GROUPS } from "@/lib/nav";
 import { partLabel, partNumber, partsNav } from "@/lib/ui";
+import { reveal } from "@/components/motion/reveal";
 
 /** The export uses trailing slashes, but usePathname may not return one. */
 export function withTrailingSlash(pathname: string | null): string | null {
@@ -30,7 +31,7 @@ export function SidebarList({
       {GROUPS.map((group) => (
         <div key={group.slug} className="mb-4 last:mb-0">
           {/* The same label as a part of a module list (FlatSidebarList). */}
-          <p className="px-3 pb-1 font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-text-dim">
+          <p className="px-3 pb-1 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-text-dim">
             {group.title}
           </p>
           <ol className="m-0 list-none space-y-px p-0">
@@ -43,7 +44,7 @@ export function SidebarList({
                     aria-current={active ? "page" : undefined}
                     onClick={onNavigate}
                     className={
-                      "group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
+                      "rail-active group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 pointer-coarse:items-center pointer-coarse:py-2.5 no-underline transition-colors " +
                       (active
                         ? "border-accent bg-bg-raised"
                         : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")
@@ -51,7 +52,7 @@ export function SidebarList({
                   >
                     <span
                       className={
-                        "w-5 shrink-0 font-mono text-[10.5px] tabular-nums " +
+                        "w-5 shrink-0 font-mono text-[11px] tabular-nums " +
                         (active ? "text-accent" : "text-text-faint")
                       }
                     >

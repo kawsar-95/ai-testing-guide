@@ -12,6 +12,7 @@ import { ALL_TOPIC_IDS } from "@/lib/linux/stages";
 import { PROGRESS_MODULES } from "@/lib/modules/registry";
 import { GROUPS } from "@/lib/nav";
 import { MODULES, type ModuleId } from "@/lib/stats";
+import { reveal } from "@/components/motion/reveal";
 import { StatsRow } from "./StatsRow";
 
 const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
@@ -37,6 +38,7 @@ function IndexRow({
   tagline,
   pages,
   start = 1,
+  index,
 }: {
   id: string;
   title: string;
@@ -45,12 +47,17 @@ function IndexRow({
   tagline?: ReactNode;
   pages: readonly { href: string; title: string }[];
   start?: number;
+  /** The position of the row in the index, for the stagger. */
+  index: number;
 }) {
   return (
-    <li id={id} className="scroll-mt-20 border-b border-border">
+    <li id={id} className="row-hover scroll-mt-20 border-b border-border" {...reveal("up", index)}>
       <details className="group">
         <summary className="group/sum grid cursor-pointer list-none grid-cols-[1.25rem_minmax(0,1fr)] items-baseline gap-x-2 py-4 [&::-webkit-details-marker]:hidden">
-          <span aria-hidden="true" className="text-[14px] leading-none text-text-dim transition-transform group-open:rotate-90">
+          <span
+            aria-hidden="true"
+            className="text-[14px] leading-none text-text-dim transition-transform duration-[220ms] ease-[cubic-bezier(.2,.7,.2,1)] group-open:rotate-90 motion-reduce:transition-none"
+          >
             ▸
           </span>
           <span className="min-w-0">
@@ -114,10 +121,11 @@ export function ContentsPage() {
           <T en={CONTENTS_UI.tutorialHeading} bn={CONTENTS_UI_BN.tutorialHeading} />
         </h2>
         <ol className="m-0 list-none p-0">
-          {GROUPS.map((group) => (
+          {GROUPS.map((group, index) => (
             <IndexRow
               key={group.slug}
               id={`group-${group.slug}`}
+              index={index}
               title={group.title}
               href={group.pages[0].href}
               meta={<T en={CONTENTS_UI.groupMeta(group.pages.length)} bn={CONTENTS_UI_BN.groupMeta(group.pages.length)} />}
@@ -133,10 +141,11 @@ export function ContentsPage() {
           <T en={CONTENTS_UI.modulesHeading} bn={CONTENTS_UI_BN.modulesHeading} />
         </h2>
         <ol className="m-0 list-none p-0">
-          {MODULES.map((module) => (
+          {MODULES.map((module, index) => (
             <IndexRow
               key={module.id}
               id={`module-${module.id}`}
+              index={GROUPS.length + index}
               title={module.title}
               href={module.href}
               meta={

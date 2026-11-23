@@ -14,7 +14,8 @@ export function TopicChecklist({ chapter }: { chapter: FundamentalsChapter }) {
   return (
     <ul className="m-0 grid list-none gap-1 p-0 sm:grid-cols-2">
       {chapter.topics.map((topic) => (
-        <li key={topic.id} id={topic.id} className="flex items-center gap-3 py-1.5">
+        <li key={topic.id} id={topic.id} className="flex items-center gap-1 py-0.5">
+          <label className="-m-0 grid size-9 shrink-0 cursor-pointer place-items-center pointer-coarse:size-11">
           <input
             type="checkbox"
             checked={done.includes(topic.id)}
@@ -22,6 +23,7 @@ export function TopicChecklist({ chapter }: { chapter: FundamentalsChapter }) {
             aria-label={(bn ? FUNDAMENTALS_UI_BN : FUNDAMENTALS_UI).checklistLabel(topic.title)}
             className="size-4 shrink-0 cursor-pointer accent-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
+          </label>
           <Link
             href={`${chapter.href}#${topic.anchor}`}
             className="text-[15px] leading-snug text-text no-underline hover:text-accent hover:underline"
