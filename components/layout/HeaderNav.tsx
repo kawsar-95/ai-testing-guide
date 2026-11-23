@@ -7,6 +7,7 @@ import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
 import { SHELL_BN } from "@/lib/bn/shell";
 import { DASHBOARD_UI_BN } from "@/lib/bn/dashboard";
+import { AI_ROADMAP_UI_BN } from "@/lib/bn/ai-roadmap";
 import { INTERVIEW_UI_BN } from "@/lib/bn/interview";
 import { navMain } from "@/lib/ui";
 import { withTrailingSlash } from "./SidebarList";
@@ -17,6 +18,7 @@ export const NAV_LABEL_BN: Record<HeaderNavId, string> = {
   contents: SHELL_BN.contentsButton,
   dashboard: DASHBOARD_UI_BN.navLabel,
   interview: INTERVIEW_UI_BN.navLabel,
+  "ai-roadmap": AI_ROADMAP_UI_BN.navLabel,
 };
 
 const ITEM =

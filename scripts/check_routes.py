@@ -9,7 +9,7 @@ HERE = Path(__file__).resolve().parent
 
 
 def load_routes():
-    """The routes of these maps, in order: tutorial, Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, DevOps & Cloud, Security Testing, SDET Roadmap, the contents page, the dashboard, then the interview page."""
+    """The routes of these maps, in order: tutorial, Linux, System Design, Fundamentals, Architecture, Course, k6, AI Engineering, AI Harnesses, AI Skills, AI Concepts, Agent Memory, AI Agents, AI/ML Testing, DevOps & Cloud, Security Testing, SDET Roadmap, the contents page, the dashboard, the interview page, then the AI roadmap pages."""
     routes = []
     for name in (
         "route-map.json",
@@ -32,6 +32,7 @@ def load_routes():
         "contents-route-map.json",
         "dashboard-route-map.json",
         "interview-route-map.json",
+        "ai-roadmap-route-map.json",
     ):
         routes.extend(json.loads((HERE / name).read_text()).values())
     return routes

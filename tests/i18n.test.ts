@@ -35,6 +35,8 @@ import { K6_UI } from "../lib/k6/ui.ts";
 import { K6_UI_BN } from "../lib/bn/k6.ts";
 import { SYSTEM_DESIGN_UI } from "../lib/system-design/ui.ts";
 import { SYSTEM_DESIGN_UI_BN } from "../lib/bn/system-design.ts";
+import { AI_ROADMAP_UI } from "../lib/ai-roadmap/ui.ts";
+import { AI_ROADMAP_UI_BN } from "../lib/bn/ai-roadmap.ts";
 import { REELS_UI } from "../lib/reels/ui.ts";
 import { REELS_UI_BN } from "../lib/bn/reels.ts";
 import { WHY_ITEMS } from "../lib/home.ts";
@@ -87,6 +89,7 @@ const PAIRS: [string, unknown, unknown][] = [
   ["AI_CONCEPTS_UI", AI_CONCEPTS_UI, AI_CONCEPTS_UI_BN],
   ["SYSTEM_DESIGN_UI", SYSTEM_DESIGN_UI, SYSTEM_DESIGN_UI_BN],
   ["REELS_UI", REELS_UI, REELS_UI_BN],
+  ["AI_ROADMAP_UI", AI_ROADMAP_UI, AI_ROADMAP_UI_BN],
 ];
 
 for (const [name, en, bn] of PAIRS) {

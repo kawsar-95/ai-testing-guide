@@ -4,6 +4,9 @@ import type { FlatModuleId } from "@/lib/modules/registry";
 import { T } from "@/components/i18n/T";
 import { FLAT_UI_BN } from "@/lib/bn/flat";
 import { partNumber } from "@/lib/ui";
+import { AI_ROADMAP_HOME, getRoadmap } from "@/lib/ai-roadmap/roadmaps";
+import { AI_ROADMAP_UI } from "@/lib/ai-roadmap/ui";
+import { AI_ROADMAP_UI_BN } from "@/lib/bn/ai-roadmap";
 import { reveal } from "@/components/motion/reveal";
 import { DoneMark } from "./DoneMark";
 import { LinkDoneToggle } from "./LinkDoneToggle";
@@ -43,6 +46,13 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
             </>
           ) : null}
         </p>
+        {getRoadmap(m.id) ? (
+          <p className="mt-3 text-[13px] leading-relaxed text-text-faint">
+            <Link href={`${AI_ROADMAP_HOME}${m.id}/`} className="text-accent underline underline-offset-2">
+              <T en={AI_ROADMAP_UI.seeRoadmap} bn={AI_ROADMAP_UI_BN.seeRoadmap} />
+            </Link>
+          </p>
+        ) : null}
       </header>
 
       {m.progress ? (

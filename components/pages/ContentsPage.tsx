@@ -4,6 +4,9 @@ import { FundamentalsProgressSummary } from "@/components/fundamentals/Fundament
 import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
 import { ProgressSummary } from "@/components/modules/ProgressSummary";
 import { T } from "@/components/i18n/T";
+import { AI_ROADMAP_HOME } from "@/lib/ai-roadmap/roadmaps";
+import { AI_ROADMAP_UI } from "@/lib/ai-roadmap/ui";
+import { AI_ROADMAP_UI_BN } from "@/lib/bn/ai-roadmap";
 import { CONTENTS_UI_BN } from "@/lib/bn/contents";
 import { MODULE_TAGLINES_BN } from "@/lib/bn/stats";
 import { CONTENTS_UI } from "@/lib/contents";
@@ -112,6 +115,11 @@ export function ContentsPage() {
         </h1>
         <p className="mt-4 max-w-[600px] text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg">
           <T en={CONTENTS_UI.lede} bn={CONTENTS_UI_BN.lede} />
+        </p>
+        <p className="mt-3 text-[15px]">
+          <Link href={AI_ROADMAP_HOME} className="text-accent underline underline-offset-2">
+            <T en={AI_ROADMAP_UI.siteTitle} bn={AI_ROADMAP_UI_BN.siteTitle} />
+          </Link>
         </p>
         <StatsRow className="mt-8" />
       </header>
