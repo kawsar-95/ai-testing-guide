@@ -8,7 +8,7 @@ export const AI_AGENTS_UI_BN: Bn<typeof AI_AGENTS_UI> = {
   siteTitle: "How AI Agents Work",
   description:
     "How an AI agent works, step by step: the trigger, the context, the model's decision, the tools, the stop check, memory, guardrails, observability, and the final output.",
-  eyebrow: (topics) => `AI AGENTS · ${topics}টি টপিক`,
+  eyebrow: (topics) => `AI agents · ${topics}টি টপিক`,
   heading: "AI এজেন্ট কীভাবে কাজ করে",
   lede: "একটা এজেন্ট হলো একটা মডেল আর একটা harness, যেটা একটা loop চালায়। প্রতিটা টপিকে সেই loop-এর একটা অংশ: এটা কী করে, কীভাবে ব্যর্থ হয়, আর একজন টেস্টার কী চেক করতে পারেন।",
   sourceNote:
@@ -19,7 +19,7 @@ export const AI_AGENTS_UI_BN: Bn<typeof AI_AGENTS_UI> = {
   summaryText: (done, total) => `${total}টির মধ্যে ${done}টি টপিক সম্পন্ন`,
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · AI AGENTS`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · AI agents`,
   itemNav: "AI Agents-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",

@@ -296,7 +296,7 @@ export function DashboardPage() {
                     className="flex items-baseline justify-between gap-3 py-2.5 text-[15px] text-text no-underline hover:text-accent"
                   >
                     <span className="min-w-0">{page.title}</span>
-                    <span className="shrink-0 font-mono text-[11px] text-text-faint">
+                    <span className="shrink-0 font-mono text-[12px] text-text-faint">
                       {DASHBOARD_UI.moduleLabels[page.module]}
                     </span>
                   </Link>

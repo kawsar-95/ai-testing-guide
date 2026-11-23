@@ -8,7 +8,7 @@ export const HARNESS_UI_BN: Bn<typeof HARNESS_UI> = {
   siteTitle: "AI Harnesses",
   description:
     "Six terms that explain how an AI harness works: the agent loop, tool calling, context, checkpoints, permissions, and guardrails.",
-  eyebrow: (topics) => `AI HARNESSES · ${topics}টি টপিক`,
+  eyebrow: (topics) => `AI harnesses · ${topics}টি টপিক`,
   heading: "AI Harnesses",
   lede: "হারনেস হলো মডেলের চারপাশের সফটওয়্যারের স্তর। এটা মডেলকে টুল দেয়, মডেল কী দেখবে তা নিয়ন্ত্রণ করে, আর মডেল কী কী ছুঁতে পারবে তা ঠিক করে। ছয়টি টার্ম ক্রমানুসারে শিখুন, তারপর সেগুলো মাথায় রেখে একটা এজেন্ট টেস্ট করুন।",
   sourceNote:
@@ -16,7 +16,7 @@ export const HARNESS_UI_BN: Bn<typeof HARNESS_UI> = {
   itemsHeading: "টপিকসমূহ",
   itemsHeadingId: "topics-heading",
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · AI HARNESSES`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · AI harnesses`,
   itemNav: "AI Harnesses-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",

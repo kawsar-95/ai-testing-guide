@@ -6,7 +6,7 @@ export const LINUX_UI_BN: Bn<typeof LINUX_UI> = {
   siteTitle: "Linux",
   description:
     "A command sheet for each of 12 Linux stages, from the shell to containers: one card per topic, one row per command. Your progress stays in your browser.",
-  eyebrow: (stages, topics, commands) => `LINUX · ${stages}টি ধাপ · ${topics}টি টপিক · ${commands}টি কমান্ড`,
+  eyebrow: (stages, topics, commands) => `Linux · ${stages}টি ধাপ · ${topics}টি টপিক · ${commands}টি কমান্ড`,
   heading: "Linux",
   lede: "প্রতিটা ধাপের জন্য একটা পাতা, আর প্রতিটা কার্ডে সেই টপিকের সব কমান্ড। কমান্ডে ক্লিক করলে তার কার্ডে যাবেন, আর জানা হলে কার্ডে টিক দিন।",
   continueStart: "Shell Basics দিয়ে শুরু করুন",
@@ -20,7 +20,7 @@ export const LINUX_UI_BN: Bn<typeof LINUX_UI> = {
   percentText: (value) => `${value}%`,
   stageCount: (done, total) => `${done} / ${total} সম্পন্ন`,
 
-  stageEyebrow: (number) => `ধাপ ${String(number).padStart(2, "0")} · LINUX`,
+  stageEyebrow: (number) => `ধাপ ${String(number).padStart(2, "0")} · Linux`,
   sheetMeta: (topics, commands) => `${topics}টি টপিক · ${commands}টি কমান্ড`,
   legend: "UPPERCASE = আপনার নিজের মান · লাল ! = data নষ্ট করতে পারে · জানা হলে কার্ডে টিক দিন",
   warnLabel: "সতর্কতা",

@@ -6,7 +6,7 @@ export const SYSTEM_DESIGN_UI = {
   siteTitle: "System Design",
   description:
     "How 15 well-known systems work, in plain words: Kafka, Google Search, YouTube, WhatsApp, Uber, payments, and more.",
-  eyebrow: (cases: number) => `SYSTEM DESIGN · ${cases} CASE STUDIES`,
+  eyebrow: (cases: number) => `System design · ${cases} case studies`,
   heading: "System Design",
   lede: "Each case study takes one well-known product and explains how it works inside, in plain words. You do not need to be an architect. Read them in any order.",
   sourceNote:
@@ -15,7 +15,7 @@ export const SYSTEM_DESIGN_UI = {
   itemsHeadingId: "cases-heading",
 
   // The case page.
-  itemEyebrow: (number: number) => `CASE ${pad(number)} · SYSTEM DESIGN`,
+  itemEyebrow: (number: number) => `Case ${pad(number)} · System design`,
   itemNav: "System Design case studies",
   allItems: "All case studies",
   previousItem: "Previous case study",
@@ -23,7 +23,7 @@ export const SYSTEM_DESIGN_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "Case studies",
-  sidebarItemLabel: (number: number) => `CASE ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Case ${pad(number)}`,
   headerLink: "System Design",
   crossTo: "System Design",
 } as const;

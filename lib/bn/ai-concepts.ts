@@ -8,7 +8,7 @@ export const AI_CONCEPTS_UI_BN: Bn<typeof AI_CONCEPTS_UI> = {
   siteTitle: "AI Concepts for 2027",
   description:
     "Nine AI engineering ideas in plain words for testers: agent loops, MCP, subagents, gateways, cost, evals, guardrails, observability, and the harness.",
-  eyebrow: (topics) => `AI CONCEPTS · ${topics}টি টপিক`,
+  eyebrow: (topics) => `AI concepts · ${topics}টি টপিক`,
   heading: "AI Concepts for 2027",
   lede: "নয়টি আইডিয়া, যা দেখায় বাস্তব প্রোডাক্টে AI agent কীভাবে কাজ করে, আর একজন টেস্টার সেগুলো কীভাবে যাচাই করতে পারেন। প্রতিটা টপিকে আছে আইডিয়া, কীভাবে কাজ করে, একটা উদাহরণ, সাধারণ ভুল, আর কী টেস্ট করবেন।",
   sourceNote:
@@ -19,7 +19,7 @@ export const AI_CONCEPTS_UI_BN: Bn<typeof AI_CONCEPTS_UI> = {
   summaryText: (done, total) => `${total}টির মধ্যে ${done}টি টপিক সম্পন্ন`,
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · AI CONCEPTS`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · AI concepts`,
   itemNav: "AI Concepts-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",

@@ -6,7 +6,7 @@ export const ARCHITECTURE_UI = {
   siteTitle: "System Architecture Foundations",
   description:
     "The building blocks of system architecture in plain words: scaling, load balancers, caches, queues, idempotency, and monitoring.",
-  eyebrow: (lessons: number) => `ARCHITECTURE · ${lessons} TOPICS + PRACTICE`,
+  eyebrow: (lessons: number) => `Architecture · ${lessons} topics + practice`,
   heading: "System Architecture Foundations",
   lede: "Code builds a feature. Architecture keeps it alive when 10,000 users arrive, a server dies, or a payment callback comes two times. Each topic takes about 5 minutes: one idea, one diagram, one real example, the common mistakes, and what a tester can check.",
   sourceNote:
@@ -20,7 +20,7 @@ export const ARCHITECTURE_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · ARCHITECTURE`,
+  itemEyebrow: (number: number) => `Topic ${pad(number)} · Architecture`,
   practiceEyebrow: "Practice · architecture",
   itemNav: "Architecture topics",
   allItems: "All topics",
@@ -37,7 +37,7 @@ export const ARCHITECTURE_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "Architecture topics",
-  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Topic ${pad(number)}`,
   sidebarPracticeLabel: "Practice",
   sidebarDone: "done",
   headerLink: "Architecture",

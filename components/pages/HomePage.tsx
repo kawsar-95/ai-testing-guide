@@ -71,7 +71,7 @@ function CourseRows({ id, label, cards, count }: { id: string; label: Pair; card
         {cards.map((card, index) => (
           <li key={card.n} data-home-row className="row-hover relative border-b border-border" {...reveal("up", index)}>
             <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-baseline gap-x-3 py-4">
-              <span aria-hidden="true" className="font-display text-[22px] font-bold leading-none text-accent-2 tabular-nums">
+              <span aria-hidden="true" className="font-display text-[22px] font-medium leading-none text-accent-2 tabular-nums">
                 {card.n}
               </span>
               <div className="min-w-0">

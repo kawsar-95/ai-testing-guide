@@ -31,7 +31,7 @@ export function StatsRow({
             <dt className="mt-1 text-[13px] leading-snug text-text-faint">
               <T en={CONTENTS_UI.stats[key]} bn={CONTENTS_UI_BN.stats[key]} />
             </dt>
-            <dd className="m-0 font-display text-[28px] font-bold leading-none text-text tabular-nums">{value}</dd>
+            <dd className="m-0 font-display text-[28px] font-medium leading-none text-text tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>

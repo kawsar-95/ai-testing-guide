@@ -6,7 +6,7 @@ export const SECURITY_UI = {
   siteTitle: "Security Testing and Penetration Testing",
   description:
     "Security testing for QA engineers and SDETs: the basics and a safe lab, network scanning and server hardening, web, API, and database flaws, AI-assisted testing, DevSecOps scans in CI/CD, cyber law, and a practice penetration test.",
-  eyebrow: (topics: number) => `SECURITY · ${topics} TOPICS`,
+  eyebrow: (topics: number) => `Security · ${topics} topics`,
   heading: "Security Testing and Penetration Testing",
   lede: "A penetration tester attacks a system the way a real attacker would, but only with written permission and only inside the agreed scope. These topics go from a safe practice lab to a full practice test with a report.",
   sourceNote:
@@ -18,7 +18,7 @@ export const SECURITY_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · SECURITY`,
+  itemEyebrow: (number: number) => `Topic ${pad(number)} · Security`,
   itemNav: "Security Testing topics",
   allItems: "All topics",
   previousItem: "Previous topic",
@@ -28,7 +28,7 @@ export const SECURITY_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "Security Testing topics",
-  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Topic ${pad(number)}`,
   sidebarDone: "done",
   headerLink: "Security Testing",
   crossTo: "Security Testing",

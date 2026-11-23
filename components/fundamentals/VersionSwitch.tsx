@@ -71,7 +71,7 @@ export function VersionSwitch() {
           aria-pressed={current === option.value}
           onClick={() => setVersion(option.value)}
           className={
-            "rounded px-3 py-1.5 font-mono text-[12px] uppercase tracking-[0.12em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
+            "rounded px-3 py-1.5 font-mono text-[12px] tracking-normal transition-colors pointer-coarse:min-h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
             (current === option.value
               ? "bg-bg-raised-2 text-text shadow-[inset_0_-2px_0_var(--accent)]"
               : "text-text-dim hover:text-accent")

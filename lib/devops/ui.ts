@@ -6,7 +6,7 @@ export const DEVOPS_UI = {
   siteTitle: "DevOps & Cloud",
   description:
     "Git, CI/CD, Docker, Kubernetes, AWS, Terraform, Ansible, monitoring, and CNCF projects: a sourced explanation of each topic for testers, then KodeKloud Shorts to watch.",
-  eyebrow: (topics: number) => `DEVOPS & CLOUD · ${topics} TOPICS`,
+  eyebrow: (topics: number) => `DevOps & Cloud · ${topics} topics`,
   heading: "DevOps & Cloud",
   lede: "This module explains the tools around a delivery pipeline: version control, CI/CD, containers, Kubernetes, the cloud, infrastructure as code, and monitoring. Every page is a full lesson for testers, with a practice run, the test work that each tool serves, and common mistakes, and it ends with KodeKloud Shorts that show the topic at work.",
   sourceNote:
@@ -15,7 +15,7 @@ export const DEVOPS_UI = {
   itemsHeadingId: "topics-heading",
 
   // The topic page.
-  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · DEVOPS & CLOUD`,
+  itemEyebrow: (number: number) => `Topic ${pad(number)} · DevOps & Cloud`,
   itemNav: "DevOps & Cloud topics",
   allItems: "All topics",
   previousItem: "Previous topic",
@@ -23,7 +23,7 @@ export const DEVOPS_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "DevOps & Cloud topics",
-  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Topic ${pad(number)}`,
   headerLink: "DevOps & Cloud",
   crossTo: "DevOps & Cloud",
 } as const;

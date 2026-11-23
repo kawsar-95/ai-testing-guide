@@ -8,7 +8,7 @@ export const SECURITY_UI_BN: Bn<typeof SECURITY_UI> = {
   siteTitle: "Security Testing and Penetration Testing",
   description:
     "Security testing for QA engineers and SDETs: the basics and a safe lab, network scanning and server hardening, web, API, and database flaws, AI-assisted testing, DevSecOps scans in CI/CD, cyber law, and a practice penetration test.",
-  eyebrow: (topics) => `SECURITY · ${topics}টি টপিক`,
+  eyebrow: (topics) => `Security · ${topics}টি টপিক`,
   heading: "সিকিউরিটি টেস্টিং ও পেনিট্রেশন টেস্টিং",
   lede: "একজন পেনিট্রেশন টেস্টার একটা সিস্টেমে আসল আক্রমণকারীর মতো করেই আক্রমণ করেন, কিন্তু শুধু লিখিত অনুমতি নিয়ে এবং শুধু ঠিক করা scope-এর ভেতরে। এই টপিকগুলো একটা নিরাপদ প্র্যাকটিস ল্যাব থেকে শুরু করে রিপোর্টসহ একটা পুরো প্র্যাকটিস টেস্ট পর্যন্ত যায়।",
   sourceNote:
@@ -19,7 +19,7 @@ export const SECURITY_UI_BN: Bn<typeof SECURITY_UI> = {
   summaryText: (done, total) => `${total}টির মধ্যে ${done}টি টপিক সম্পন্ন`,
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · SECURITY`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · Security`,
   itemNav: "Security Testing-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",

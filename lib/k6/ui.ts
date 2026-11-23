@@ -6,7 +6,7 @@ export const K6_UI = {
   siteTitle: "k6 Performance Testing",
   description:
     "Performance testing and k6 from the first script to live dashboards and CI.",
-  eyebrow: (topics: number) => `K6 · ${topics} TOPICS`,
+  eyebrow: (topics: number) => `K6 · ${topics} topics`,
   heading: "k6 Performance Testing",
   lede: "Learn performance testing and k6 one topic at a time, in order. Each topic gives one idea, a script that you can run, and the result that you should see.",
   sourceNote:
@@ -18,7 +18,7 @@ export const K6_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · K6`,
+  itemEyebrow: (number: number) => `Topic ${pad(number)} · K6`,
   itemNav: "k6 topics",
   allItems: "All topics",
   previousItem: "Previous topic",
@@ -28,7 +28,7 @@ export const K6_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "k6 topics",
-  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Topic ${pad(number)}`,
   sidebarDone: "done",
   headerLink: "k6",
   crossTo: "k6",

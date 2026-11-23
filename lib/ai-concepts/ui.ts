@@ -6,7 +6,7 @@ export const AI_CONCEPTS_UI = {
   siteTitle: "AI Concepts for 2027",
   description:
     "Nine AI engineering ideas in plain words for testers: agent loops, MCP, subagents, gateways, cost, evals, guardrails, observability, and the harness.",
-  eyebrow: (topics: number) => `AI CONCEPTS · ${topics} TOPICS`,
+  eyebrow: (topics: number) => `AI concepts · ${topics} topics`,
   heading: "AI Concepts for 2027",
   lede: "Nine ideas that explain how AI agents work in real products, and how a tester can check them. Each topic gives the idea, how it works, an example, common mistakes, and what to test.",
   sourceNote:
@@ -18,7 +18,7 @@ export const AI_CONCEPTS_UI = {
   percentText: (value: number) => `${value}%`,
 
   // The topic page.
-  itemEyebrow: (number: number) => `TOPIC ${pad(number)} · AI CONCEPTS`,
+  itemEyebrow: (number: number) => `Topic ${pad(number)} · AI concepts`,
   itemNav: "AI Concepts topics",
   allItems: "All topics",
   previousItem: "Previous topic",
@@ -28,7 +28,7 @@ export const AI_CONCEPTS_UI = {
 
   // The sidebar, the drawer, and the header.
   sidebarNav: "AI Concepts topics",
-  sidebarItemLabel: (number: number) => `TOPIC ${pad(number)}`,
+  sidebarItemLabel: (number: number) => `Topic ${pad(number)}`,
   sidebarDone: "done",
   headerLink: "AI Concepts",
   crossTo: "AI Concepts",

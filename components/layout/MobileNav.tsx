@@ -124,7 +124,7 @@ export function MobileNav() {
           aria-hidden="true"
           onClick={() => setOpen(false)}
           className={
-            "absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity duration-[220ms] ease-[cubic-bezier(.2,.7,.2,1)] motion-reduce:transition-none " +
+            "absolute inset-0 bg-black/60 transition-opacity duration-[220ms] ease-[cubic-bezier(.2,.7,.2,1)] motion-reduce:transition-none " +
             (open ? "opacity-100" : "opacity-0")
           }
         />
@@ -140,7 +140,7 @@ export function MobileNav() {
           }
         >
           <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
-            <span id={titleId} className="font-display text-[17px] font-semibold tracking-tight text-text">
+            <span id={titleId} className="font-display text-[17px] font-medium text-text">
               {SITE_NAME}
             </span>
             <button

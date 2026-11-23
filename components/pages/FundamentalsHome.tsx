@@ -69,7 +69,7 @@ export function FundamentalsHome() {
             </div>
             {/* Closed: 117 checkboxes on one page are too much to read at once. */}
             <details className="mt-4">
-              <summary className="cursor-pointer font-mono text-[12px] text-accent">
+              <summary className="cursor-pointer font-mono text-[12px] text-accent pointer-coarse:py-3">
                 <T en={FUNDAMENTALS_UI.checklistHeading} bn={BN.checklistHeading} />
               </summary>
               <div className="mt-2">

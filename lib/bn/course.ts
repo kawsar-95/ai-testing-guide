@@ -8,7 +8,7 @@ export const COURSE_UI_BN: Bn<typeof COURSE_UI> = {
   siteTitle: "System Design Course",
   description:
     "System design from the ground up, in plain words for testers: networks, DNS, proxies, clustering, availability, databases, consistency, system architecture, reliability, security, case studies, and interviews.",
-  eyebrow: (topics) => `COURSE · ${topics}টি টপিক`,
+  eyebrow: (topics) => `Course · ${topics}টি টপিক`,
   heading: "System Design Course",
   lede: "একটা একটা করে টপিক ধরে ক্রমানুসারে সিস্টেম ডিজাইন শিখুন। প্রতিটা টপিকে আছে একটা আইডিয়া সহজ ভাষায়, একটা বাস্তব উদাহরণ, সাধারণ ভুল, আর একজন টেস্টার কী যাচাই করতে পারেন। কিছু টপিক Architecture বা System Design মডিউলের একটা পেজে লিংক করে।",
   sourceNote:
@@ -19,7 +19,7 @@ export const COURSE_UI_BN: Bn<typeof COURSE_UI> = {
   summaryText: (done, total) => `${total}টির মধ্যে ${done}টি টপিক সম্পন্ন`,
   percentText: (value) => `${value}%`,
 
-  itemEyebrow: (number) => `টপিক ${pad(number)} · COURSE`,
+  itemEyebrow: (number) => `টপিক ${pad(number)} · Course`,
   itemNav: "Course-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",
