@@ -286,9 +286,9 @@ export function SearchPalette() {
                   {/* A hit with no part (linux, fundamentals): its label is the group and the page.
                       An intro hit has the page title as its title: the label
                       line then shows only the part, so the title shows once. */}
-                  <div className="font-mono text-[11px] uppercase tracking-wide text-text-faint">
+                  <div className="font-mono text-[12px] tracking-normal text-text-faint">
                     {hit.part === null ? (
-                      `${hit.group.toUpperCase()} · ${hit.page}`
+                      `${hit.group} · ${hit.page}`
                     ) : (
                       <>
                         <T en={partLabel(hit.part)} bn={SHELL_BN.partLabel(hit.part)} />

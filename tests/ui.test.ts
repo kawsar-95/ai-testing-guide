@@ -25,10 +25,10 @@ test("chapterMeta gives the topic count of a chapter", () => {
   assert.equal(FUNDAMENTALS_UI.chapterMeta(50), "50 topics");
 });
 
-test("partNumber pads to 2 digits and partLabel adds PART", () => {
+test("partNumber pads to 2 digits and partLabel adds Part", () => {
   assert.equal(partNumber(5), "05");
   assert.equal(partNumber(23), "23");
-  assert.equal(partLabel(5), "PART 05");
+  assert.equal(partLabel(5), "Part 05");
 });
 
 test("the accessible name of the voice toggle starts with its visible word (WCAG 2.5.3)", () => {

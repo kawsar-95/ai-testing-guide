@@ -17,7 +17,7 @@ export function PrevNext({ prev, next }: { prev?: NavPage; next?: NavPage }) {
       </span>
       {prev && (
         <Link href={prev.href} rel="prev" className={CARD}>
-          <span className="block font-mono text-[11px] uppercase tracking-[0.14em] text-text-faint">
+          <span className="block font-mono text-[12px] tracking-normal text-text-faint">
             ← <T en={partLabel(prev.part)} bn={SHELL_BN.partLabel(prev.part)} />
           </span>
           <span className="mt-1 block font-display text-lg leading-snug text-text transition-colors group-hover:text-accent">
@@ -27,7 +27,7 @@ export function PrevNext({ prev, next }: { prev?: NavPage; next?: NavPage }) {
       )}
       {next && (
         <Link href={next.href} rel="next" className={CARD + " sm:col-start-2 sm:text-right"}>
-          <span className="block font-mono text-[11px] uppercase tracking-[0.14em] text-text-faint">
+          <span className="block font-mono text-[12px] tracking-normal text-text-faint">
             <T en={partLabel(next.part)} bn={SHELL_BN.partLabel(next.part)} /> →
           </span>
           <span className="mt-1 block font-display text-lg leading-snug text-text transition-colors group-hover:text-accent">

@@ -11,7 +11,7 @@ export function DoneMark({ moduleId, id }: { moduleId: FlatModuleId; id: string 
   const { done } = progressHook(m)();
   if (!done.includes(id)) return null;
   return (
-    <span className="ml-2 font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
+    <span className="ml-2 font-mono text-[12px] tracking-normal text-accent">
       <span aria-hidden="true">✓ </span>
       <T en={m.ui.sidebarDone ?? ""} bn={FLAT_UI_BN[moduleId].sidebarDone ?? ""} />
     </span>

@@ -227,10 +227,9 @@ home hero's large statistic is the one deliberate exception - it is bold on
 purpose.
 
 The eyebrow label is the one micro-label in the system, used above a page title
-and for the section labels on the home and contents pages. On the home, contents,
-dashboard, interview and module pages it is sentence case, 12px mono, normal
-tracking. The `PART 05 · CONFIGURE` line from `PageHeader` still uses the older
-uppercase style.
+and for the section labels on the home and contents pages. It is sentence case, 12px mono,
+normal tracking everywhere, including the `Part 05 · Configure` line from
+`PageHeader` and table headers. Bangla headings get a line height of 1.3.
 
 ## Layout
 

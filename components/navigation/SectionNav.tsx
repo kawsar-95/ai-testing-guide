@@ -79,7 +79,7 @@ export function SectionNav({ items }: { items: OutlineItem[] }) {
       <div className="mb-1.5 flex min-h-9 items-center justify-end pointer-coarse:min-h-11">
         <p
           data-sidebar-body="right"
-          className="mr-auto font-mono text-[11px] uppercase tracking-[0.16em] text-text-faint"
+          className="mr-auto font-mono text-[12px] tracking-normal text-text-faint"
         >
           <T en={onThisPage} bn={SHELL_BN.onThisPage} />
         </p>

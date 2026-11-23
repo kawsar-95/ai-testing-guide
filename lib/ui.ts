@@ -18,9 +18,9 @@ export function partNumber(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-/** `PART 05`: the part number with its label. */
+/** `Part 05`: the part number with its label. */
 export function partLabel(n: number): string {
-  return `PART ${partNumber(n)}`;
+  return `Part ${partNumber(n)}`;
 }
 
 export const search = "Search";
