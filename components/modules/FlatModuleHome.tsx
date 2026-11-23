@@ -9,7 +9,7 @@ import { DoneMark } from "./DoneMark";
 import { LinkDoneToggle } from "./LinkDoneToggle";
 import { ProgressSummary } from "./ProgressSummary";
 
-const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
+const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 
 /**
  * The home page of a flat module: the header with one quiet note, the progress

@@ -2,9 +2,9 @@ import { GROUPS, PAGES } from "./nav.ts";
 import type { NavPage } from "./nav.ts";
 import { MODULES } from "./stats.ts";
 
-/** The label of a group on the home page: `GETTING STARTED · 3 PARTS`. */
+/** The label of a group on the home page: `Getting Started · 3 parts`. */
 export function groupLabel(title: string, count: number): string {
-  return `${title.toUpperCase()} · ${count} ${count === 1 ? "PART" : "PARTS"}`;
+  return `${title} · ${count} ${count === 1 ? "part" : "parts"}`;
 }
 
 const START_HREFS = [

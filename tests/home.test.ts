@@ -4,15 +4,15 @@ import { GROUPS, PAGES } from "../lib/nav.ts";
 import { COURSE_CARDS, MODULE_CARDS, START_STEPS, TUTORIAL_CARDS, WHY_ITEMS, groupLabel } from "../lib/home.ts";
 import { sitemapPaths } from "../lib/sitemap.ts";
 
-test("groupLabel is the uppercase title and the count of parts", () => {
-  assert.equal(groupLabel("Getting Started", 3), "GETTING STARTED · 3 PARTS");
-  assert.equal(groupLabel("Extend", 1), "EXTEND · 1 PART");
+test("groupLabel is the title and the count of parts", () => {
+  assert.equal(groupLabel("Getting Started", 3), "Getting Started · 3 parts");
+  assert.equal(groupLabel("Extend", 1), "Extend · 1 part");
 });
 
 test("every group gets a label with its own count", () => {
   assert.deepEqual(
     GROUPS.map((g) => groupLabel(g.title, g.pages.length)),
-    ["GETTING STARTED · 3 PARTS", "FOUNDATIONS · 4 PARTS", "CONFIGURE · 2 PARTS", "EXTEND · 5 PARTS", "AUTOMATE · 3 PARTS", "CASE STUDY · 7 PARTS", "AGENTIC QA · 10 PARTS"],
+    ["Getting Started · 3 parts", "Foundations · 4 parts", "Configure · 2 parts", "Extend · 5 parts", "Automate · 3 parts", "Case Study · 7 parts", "Agentic QA · 10 parts"],
   );
 });
 

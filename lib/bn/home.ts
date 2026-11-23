@@ -30,7 +30,7 @@ export const WHY_ITEMS_BN: readonly { title: string; text: string }[] = [
   { title: "ডার্ক ও লাইট", text: "সাইট আপনার ডিভাইসের থিম অনুসরণ করে। হেডারের বাটন দিয়ে থিম বদলানো যায়।" },
 ];
 
-/** The Bangla twin of `groupLabel`. The group title stays English. Only the word PART/PARTS changes. */
+/** The Bangla twin of `groupLabel`. The group title stays English. Only the word for parts changes. */
 export function groupLabelBn(title: string, count: number): string {
-  return `${title.toUpperCase()} · ${count}টি পর্ব`;
+  return `${title} · ${count}টি পর্ব`;
 }

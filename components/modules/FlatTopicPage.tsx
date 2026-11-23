@@ -27,7 +27,7 @@ export type MdxPage = { default: MDXContent; metadata: Metadata; page?: PageInfo
 type Load = (slug: string) => Promise<MdxPage>;
 type Params = Promise<{ topic: string }>;
 
-const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
+const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 // leading-6: each link of the page nav is a 24 px target (the same row as PrevNext).
 const NAV_LINK = "inline-block leading-6 text-accent underline underline-offset-2";
 

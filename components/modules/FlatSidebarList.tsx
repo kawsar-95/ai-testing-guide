@@ -46,7 +46,7 @@ export function FlatSidebarList({
         if (!part) return list;
         return (
           <div key={part.num} className="mt-4 first:mt-0">
-            <p id={`${uid}-part-${part.num}`} className="px-3 pb-1 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-text-dim">
+            <p id={`${uid}-part-${part.num}`} className="px-3 pb-1 font-mono text-[12px] font-medium tracking-normal text-text-dim">
               <T en={`PART ${part.num}`} bn={`পার্ট ${part.num}`} /> · {part.title}
             </p>
             {list}
