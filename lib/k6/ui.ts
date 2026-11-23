@@ -11,7 +11,7 @@ export const K6_UI = {
   lede: "Learn performance testing and k6 one topic at a time, in order. Each topic gives one idea, a script that you can run, and the result that you should see.",
   sourceNote:
     "The base is the owner's notes on k6. Each fact on a page links to an official source, mostly the Grafana k6 docs.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
   overallLabel: "Topics done",
   summaryText: (done: number, total: number) => `${done} of ${total} topics done`,

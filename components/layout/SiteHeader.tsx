@@ -44,7 +44,7 @@ export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
           >
             <BrandMark className="size-5" mono />
           </span>
-          <span className="truncate font-display text-[17px] font-bold tracking-tight sm:text-[18px]">{SITE_NAME}</span>
+          <span className="truncate font-display text-[17px] font-medium tracking-tight sm:text-[18px]">{SITE_NAME}</span>
         </Link>
         <Suspense fallback={<NavItems activeId={null} />}>
           <HeaderNav />

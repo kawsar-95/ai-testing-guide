@@ -11,7 +11,7 @@ export const COURSE_UI = {
   lede: "Learn system design one topic at a time, in order. Each topic gives one idea in plain words, a real example, the common mistakes, and what a tester can check. Some topics link to a page of the Architecture or System Design module.",
   sourceNote:
     "The topic order follows systemdesignbangla.com. The text is the tutorial's own, and each fact on a page links to an official source.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
   overallLabel: "Topics done",
   summaryText: (done: number, total: number) => `${done} of ${total} topics done`,

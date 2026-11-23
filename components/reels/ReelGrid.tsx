@@ -30,7 +30,7 @@ export function ReelGrid({ reels }: { reels: readonly Reel[] }) {
             if (!event.currentTarget.open && more.some((reel) => reel.id === playing)) setPlaying(null);
           }}
         >
-          <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-md border border-border bg-bg-raised px-4 py-1.5 font-mono text-[12px] font-medium uppercase tracking-[0.12em] text-accent transition-colors hover:bg-bg-raised-2 motion-reduce:transition-none [&::-webkit-details-marker]:hidden [@media(pointer:coarse)]:min-h-11">
+          <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-md border border-border bg-bg-raised px-4 py-1.5 font-mono text-[12px] font-medium tracking-normal text-accent transition-colors hover:bg-bg-raised-2 motion-reduce:transition-none [&::-webkit-details-marker]:hidden [@media(pointer:coarse)]:min-h-11">
             <span aria-hidden="true" className="transition-transform group-open:rotate-90 motion-reduce:transition-none">
               ▸
             </span>
@@ -120,7 +120,7 @@ function ReelCard({ reel, playing, onPlay }: { reel: Reel; playing: boolean; onP
           </button>
         )}
       </div>
-      <p className="mt-3 flex flex-wrap items-center gap-x-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-text-dim">
+      <p className="mt-3 flex flex-wrap items-center gap-x-2 font-mono text-[12px] font-medium tracking-normal text-text-dim">
         <span>
           <T en={REELS_UI.kinds[reel.kind]} bn={REELS_UI_BN.kinds[reel.kind]} />
         </span>

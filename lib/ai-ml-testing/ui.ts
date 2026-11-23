@@ -12,7 +12,7 @@ export const AI_ML_TESTING_UI = {
     "An AI system does not have one right answer, so the tester cannot check the output alone. This module covers the whole job: what the model is doing, how to break it on purpose, how to score it automatically, and how to keep the score from falling.",
   sourceNote:
     "The topics follow the syllabus of the AI & ML Testing Professional Course (QodeBench — Journey to Automation): 17 course modules and 47 sessions, Phase 1 Foundations first, then Phase 2 Mastery. The text of each page is the tutorial's own. Every fact links to an official source, such as the tool's documentation, OWASP, NIST, or the original paper.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
   overallLabel: "Topics done",
   summaryText: (done: number, total: number) => `${done} of ${total} topics done`,

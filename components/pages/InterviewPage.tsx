@@ -4,7 +4,7 @@ import { INTERVIEW_UI_BN } from "@/lib/bn/interview";
 import { INTERVIEW_UI } from "@/lib/interview";
 import { reveal } from "@/components/motion/reveal";
 
-const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
+const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 
 /** The interview page: one card for each place on the site that helps with an interview. */
 export function InterviewPage() {
@@ -14,7 +14,7 @@ export function InterviewPage() {
         <p className={`${LABEL} text-accent`}>
           <T en={INTERVIEW_UI.eyebrow} bn={INTERVIEW_UI_BN.eyebrow} />
         </p>
-        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
+        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">
           <T en={INTERVIEW_UI.heading} bn={INTERVIEW_UI_BN.heading} />
         </h1>
         <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">

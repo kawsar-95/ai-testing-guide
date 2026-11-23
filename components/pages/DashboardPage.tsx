@@ -21,7 +21,7 @@ import { CONTENT_PAGES, exportProgress } from "@/lib/reading-state";
 import { AUTHOR } from "@/lib/site";
 import { reveal } from "@/components/motion/reveal";
 
-const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
+const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 const NO_STORAGE = { getItem: () => null };
 
 /** The download icon of the Export button. */
@@ -169,7 +169,7 @@ export function DashboardPage() {
           <p className={`${LABEL} text-accent`}>
             <T en={DASHBOARD_UI.eyebrow} bn={DASHBOARD_UI_BN.eyebrow} />
           </p>
-          <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
+          <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">
             <T en={DASHBOARD_UI.heading} bn={DASHBOARD_UI_BN.heading} />
           </h1>
           <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">
@@ -195,7 +195,7 @@ export function DashboardPage() {
           </p>
           <p
             data-stat="read"
-            className="mt-3 font-display text-[44px] font-bold leading-none tracking-[-0.02em] text-text tabular-nums"
+            className="mt-3 font-display text-[44px] font-medium leading-none tracking-[-0.02em] text-text tabular-nums"
           >
             {readPages.length}
             <span className="text-[20px] text-text-faint"> / {CONTENT_PAGES.length}</span>

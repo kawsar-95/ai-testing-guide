@@ -11,7 +11,7 @@ export const HARNESS_UI = {
   lede: "A harness is the layer of software around the model. It gives the model tools, controls what the model sees, and decides what the model can touch. Learn the six terms in order, then test an agent with them in mind.",
   sourceNote:
     "Each fact on a page links to an official source: the Claude Code docs, the Claude API docs, the OpenAI Agents SDK docs, or the LangGraph docs.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
 
   // The topic page.

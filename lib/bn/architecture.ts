@@ -22,7 +22,7 @@ export const ARCHITECTURE_UI_BN: Bn<typeof ARCHITECTURE_UI> = {
   percentText: (value) => `${value}%`,
 
   itemEyebrow: (number) => `টপিক ${pad(number)} · ARCHITECTURE`,
-  practiceEyebrow: "প্র্যাকটিস · ARCHITECTURE",
+  practiceEyebrow: "প্র্যাকটিস · Architecture",
   itemNav: "Architecture-এর টপিকসমূহ",
   allItems: "সব টপিক",
   previousItem: "আগের টপিক",

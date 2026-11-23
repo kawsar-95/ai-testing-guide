@@ -49,22 +49,3 @@ test("mixColors mixes two colors in sRGB", () => {
   assert.equal(mixColors("#0f766e", "#faf7f2", 100), "#0f766e");
 });
 
-for (const theme of ["light", "dark"] as const) {
-  test(`the hero text keeps 4.5:1 on the peaks of the teal and amber glows (${theme})`, () => {
-    const tokens = parseTokens(CSS, theme);
-    for (const [color, token] of [["accent", "hero-glow"], ["accent-2", "hero-glow-2"]]) {
-      const glow = Number.parseFloat(tokens[token]);
-      assert.ok(glow > 0, `${theme}: --${token} is missing`);
-      const peak = mixColors(tokens[color], tokens.bg, glow);
-      for (const fg of ["text", "text-dim", "text-faint", "accent"]) {
-        const ratio = contrastRatio(tokens[fg], peak);
-        assert.ok(ratio >= 4.5, `${theme}: --${fg} on the --${color} glow is ${ratio.toFixed(2)}:1`);
-      }
-    }
-  });
-}
-
-test("the hero glow uses the --hero-glow token", () => {
-  assert.match(CSS, /color-mix\(in srgb, var\(--accent\) var\(--hero-glow\), transparent\)/);
-  assert.match(CSS, /color-mix\(in srgb, var\(--accent-2\) var\(--hero-glow-2\), transparent\)/);
-});

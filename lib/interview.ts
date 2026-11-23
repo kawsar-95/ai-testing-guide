@@ -8,7 +8,7 @@ export const INTERVIEW_UI = {
   navLabel: "Interview",
   siteTitle: "Interview",
   description: "Interview questions for testers: the manual testing questions, the system design practice questions, and how to answer a design interview.",
-  eyebrow: "INTERVIEW",
+  eyebrow: "Interview",
   heading: "Interview preparation",
   lede: "Three places on this site help you to prepare. Start with the testing questions, then practice system design.",
   cards: [

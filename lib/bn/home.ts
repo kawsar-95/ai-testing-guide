@@ -3,7 +3,7 @@ import type { HOME_UI } from "../ui.ts";
 
 /** The Bangla twin of HOME_UI. `titleMark` stays English. */
 export const HOME_UI_BN: Bn<typeof HOME_UI> = {
-  eyebrow: "AGENTIC QA · 2026",
+  eyebrow: "Agentic QA · 2026",
   titleLine1: "Agentic QA",
   titleLine2Before: "শিখুন",
   titleMark: "AI",
