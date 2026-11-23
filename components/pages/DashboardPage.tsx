@@ -18,7 +18,6 @@ import { ALL_TOPIC_IDS, LINUX_HOME } from "@/lib/linux/stages";
 import { PROGRESS_MODULES } from "@/lib/modules/registry";
 import { CONTENT_PAGES, exportProgress } from "@/lib/reading-state";
 import { reveal } from "@/components/motion/reveal";
-import { AuthorCard } from "./AuthorCard";
 
 const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 const NO_STORAGE = { getItem: () => null };
@@ -346,13 +345,6 @@ export function DashboardPage() {
           )}
         </section>
       </div>
-
-      <section aria-labelledby="author-heading" className="mt-16" {...reveal("up")}>
-        <SectionTitle id="author-heading">
-          <T en={DASHBOARD_UI.authorHeading} bn={DASHBOARD_UI_BN.authorHeading} />
-        </SectionTitle>
-        <AuthorCard />
-      </section>
     </div>
   );
 }
