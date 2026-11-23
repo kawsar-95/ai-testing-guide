@@ -19,7 +19,7 @@ export function SiteFooter() {
           <span aria-hidden="true" className="grid size-7 place-items-center rounded-md bg-accent text-bg">
             <BrandMark className="size-4" mono />
           </span>
-          <span className="font-display text-base font-bold tracking-tight">{SITE_NAME}</span>
+          <span className="font-display text-base font-medium tracking-tight">{SITE_NAME}</span>
         </Link>
         <p className="m-0 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-xs text-text-faint">
           <a href={REPO_URL} className="inline-flex min-h-6 items-center underline underline-offset-2 hover:text-accent">

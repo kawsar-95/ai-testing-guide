@@ -183,7 +183,7 @@ component.** Use the Tailwind token, and add a token first if none fits.
 | `--text-dim` | `#b8bfc7` | `#4a5158` | Secondary copy, captions, meta lines. |
 | `--text-faint` | `#8b939e` | `#5f656b` | Tertiary: eyebrow labels, hints, placeholders. |
 | `--accent` | `#2dd4bf` | `#0f766e` | The teal. Links, primary actions, active state. |
-| `--accent-2` | `#f59e0b` | `#a14a07` | The amber. Numbers that carry weight, the hero's second glow. |
+| `--accent-2` | `#f59e0b` | `#a14a07` | The amber. Numbers that carry weight. |
 | `--accent-soft` | `#134e4a` | `#ccfbf1` | Tinted accent ground for badges and chips. |
 | `--good` / `--warn` / `--danger` | `#4ade80` / `#fbbf24` / `#f87171` | `#166534` / `#a14a07` / `#b91c1c` | State only. Never decorative. |
 | `--code-bg` | `#22272e` | `#22272e` | Code blocks. Dark in both themes. |
@@ -226,9 +226,11 @@ Bold text means emphasis; it does not mean "the designer's choice". The
 home hero's large statistic is the one deliberate exception - it is bold on
 purpose.
 
-The eyebrow label (`0.8rem`, weight 600, uppercase) is the one micro-label in
-the system, used for the `PART 05 · CONFIGURE` style line above a page title
-and for the section labels on the home and contents pages.
+The eyebrow label is the one micro-label in the system, used above a page title
+and for the section labels on the home and contents pages. On the home, contents,
+dashboard, interview and module pages it is sentence case, 12px mono, normal
+tracking. The `PART 05 · CONFIGURE` line from `PageHeader` still uses the older
+uppercase style.
 
 ## Layout
 

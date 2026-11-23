@@ -31,7 +31,7 @@ export function SidebarList({
       {GROUPS.map((group) => (
         <div key={group.slug} className="mb-4 last:mb-0">
           {/* The same label as a part of a module list (FlatSidebarList). */}
-          <p className="px-3 pb-1 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-text-dim">
+          <p className="px-3 pb-1 font-mono text-[12px] font-medium tracking-normal text-text-dim">
             {group.title}
           </p>
           <ol className="m-0 list-none space-y-px p-0">

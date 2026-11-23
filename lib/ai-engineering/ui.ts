@@ -11,7 +11,7 @@ export const AI_ENGINEERING_UI = {
   lede: "Calling a model is only the top of the iceberg. Learn the 8 topics that newcomers see, then the 20 topics under the waterline that make an AI system work in production. Each topic shows what a tester can check.",
   sourceNote:
     "The topic list follows \"The AI Engineering Iceberg\" by Jean Lee. The text is the tutorial's own. Each fact on a page links to an official source.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
   overallLabel: "Topics done",
   summaryText: (done: number, total: number) => `${done} of ${total} topics done`,

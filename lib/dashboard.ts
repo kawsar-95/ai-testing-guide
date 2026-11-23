@@ -18,7 +18,7 @@ export const DASHBOARD_UI = {
   navLabel: "Dashboard",
   siteTitle: "Dashboard",
   description: "Your reading progress, bookmarks, and module progress. All data stays in this browser.",
-  eyebrow: "DASHBOARD",
+  eyebrow: "Dashboard",
   heading: "Your progress",
   lede: "Pages you read, pages you bookmarked, and your topic progress. All data stays in this browser. Export it to keep a copy.",
   export: "Export",

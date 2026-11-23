@@ -11,7 +11,7 @@ export const AI_AGENTS_UI = {
   lede: "An agent is a model plus a harness that runs a loop. Each topic explains one part of that loop: what it does, how it fails, and what a tester can check.",
   sourceNote:
     "The topics follow the infographic \"How AI Agents Work\" by Basia Kubicka. Each fact on a page links to an official source, such as the Anthropic, OpenAI, or LangGraph docs.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
   overallLabel: "Topics done",
   summaryText: (done: number, total: number) => `${done} of ${total} topics done`,

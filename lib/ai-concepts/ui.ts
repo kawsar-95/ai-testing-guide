@@ -11,7 +11,7 @@ export const AI_CONCEPTS_UI = {
   lede: "Nine ideas that explain how AI agents work in real products, and how a tester can check them. Each topic gives the idea, how it works, an example, common mistakes, and what to test.",
   sourceNote:
     "The topic list follows a GenAI.works infographic (October 2026). The text is the tutorial's own, and each fact on a page links to an official source.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
   overallLabel: "Topics done",
   summaryText: (done: number, total: number) => `${done} of ${total} topics done`,

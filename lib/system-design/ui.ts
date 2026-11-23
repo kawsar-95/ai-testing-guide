@@ -11,7 +11,7 @@ export const SYSTEM_DESIGN_UI = {
   lede: "Each case study takes one well-known product and explains how it works inside, in plain words. You do not need to be an architect. Read them in any order.",
   sourceNote:
     "Each case study is based on one article of The System Design Newsletter by Neo Kim. The text is our own summary. The article is the first source of each page.",
-  itemsHeading: "CASE STUDIES",
+  itemsHeading: "Case studies",
   itemsHeadingId: "cases-heading",
 
   // The case page.

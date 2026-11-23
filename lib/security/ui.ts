@@ -11,7 +11,7 @@ export const SECURITY_UI = {
   lede: "A penetration tester attacks a system the way a real attacker would, but only with written permission and only inside the agreed scope. These topics go from a safe practice lab to a full practice test with a report.",
   sourceNote:
     "The topics follow the curriculum of the course \"Cyber Security and Penetration Testing with AI\" (Road to SDET): 8 course modules, in their order. The text of each page is the tutorial's own. Every fact links to an official source, such as NIST, OWASP, the tool's own documentation, or the text of the law.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
   overallLabel: "Topics done",
   summaryText: (done: number, total: number) => `${done} of ${total} topics done`,

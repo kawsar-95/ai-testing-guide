@@ -11,7 +11,7 @@ export const AI_SKILLS_UI = {
   lede: "Learn 20 AI skills in 4 tiers. Start with the skills that pay off fastest, and learn the specialist skills only when you have a clear need. Each skill has a page that explains it and shows how a tester can use it.",
   sourceNote:
     "The list of skills and the 4 tiers follow the infographic “20 AI Skills Your Team Must Master in 2026” by AI for Leaders. The text is the tutorial's own. Each fact on a page links to an official source.",
-  itemsHeading: "SKILLS",
+  itemsHeading: "Skills",
   itemsHeadingId: "skills-heading",
   overallLabel: "Skills done",
   summaryText: (done: number, total: number) => `${done} of ${total} skills done`,

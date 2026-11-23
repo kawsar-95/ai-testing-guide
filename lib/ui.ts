@@ -56,20 +56,20 @@ export const installApp = "Install this site as an app";
 
 /** The strings of the home page. */
 export const HOME_UI = {
-  eyebrow: "AGENTIC QA · 2026",
+  eyebrow: "Agentic QA · 2026",
   titleLine1: "Agentic QA",
   titleLine2Before: "with",
   titleMark: "AI",
   sub: "A hands-on tutorial for QA engineers and SDETs: install Claude Code, learn how it works, configure and extend it, and automate testing in CI and the browser. Then follow one real QA project from a bug hunt to a second fix PR.",
   startReading: "Start reading",
   seeAll: "See all parts",
-  whyEyebrow: "WHY THIS GUIDE",
+  whyEyebrow: "Why this guide",
   whyTitle: "Learn by doing, with sources",
-  courseEyebrow: "COURSE STRUCTURE",
+  courseEyebrow: "Course structure",
   courseTitle: (groups: number, modules: number) => `${groups} tutorial groups and ${modules} modules`,
   courseSub: "Read the tutorial in order. Open any module when you need it.",
-  tutorialLabel: "TUTORIAL · READ IN ORDER",
-  modulesLabel: "MODULES · OPEN ANY",
+  tutorialLabel: "Tutorial · read in order",
+  modulesLabel: "Modules · open any",
   cardCount: (n: number) => `${n} ${n === 1 ? "page" : "pages"}`,
 };
 

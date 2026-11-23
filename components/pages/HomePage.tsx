@@ -9,10 +9,10 @@ import { HOME_UI_BN, WHY_ITEMS_BN } from "@/lib/bn/home";
 import { MODULE_TAGLINES_BN } from "@/lib/bn/stats";
 import { MODULES } from "@/lib/stats";
 import { reveal, stagger } from "@/components/motion/reveal";
-import { AiLogos } from "./AiLogos";
 import { StatsRow } from "./StatsRow";
+import { HeroPreview } from "./HeroPreview";
 
-const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
+const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 
 /** Render `text` with each backtick span as a small <code> element. */
 function renderInlineCode(text: string): ReactNode[] {
@@ -37,7 +37,7 @@ function SectionHeading({ id, eyebrow, title, sub }: { id: string; eyebrow: Pair
       <p className={`${LABEL} text-accent`}>
         <T en={eyebrow[0]} bn={eyebrow[1]} />
       </p>
-      <h2 id={id} className="mt-3 font-display text-[clamp(1.875rem,4vw,2.75rem)] font-bold leading-[1.1] tracking-[-0.02em] text-balance text-text">
+      <h2 id={id} className="mt-3 font-display text-[clamp(1.875rem,4vw,2.75rem)] font-medium leading-[1.1] tracking-[-0.02em] text-balance text-text">
         {title}
       </h2>
       {sub ? (
@@ -106,18 +106,18 @@ export function HomePage() {
   return (
     <div>
       <section aria-labelledby="hero-heading" className="relative overflow-hidden border-b border-border">
-        <div aria-hidden="true" className="hero-grid-bg" />
         <div className="relative z-10 mx-auto max-w-[1200px] px-4 pt-14 pb-14 sm:px-6 sm:pt-20 sm:pb-16">
+          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
+            <div>
           <p className={`${LABEL} text-accent`} {...reveal("up", 0)}>
             <T en={HOME_UI.eyebrow} bn={HOME_UI_BN.eyebrow} />
           </p>
           <h1
             id="hero-heading"
-            className="mt-4 max-w-4xl font-display text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text"
+            className="mt-4 max-w-4xl font-display text-[clamp(2.5rem,6vw,4.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text"
             {...reveal("up", 1)}
           >
             <span className="block">
-              <AiLogos />
               <T en={HOME_UI.titleLine1} bn={HOME_UI_BN.titleLine1} />
             </span>
             <span className="block text-text-dim">
@@ -134,6 +134,11 @@ export function HomePage() {
             <Link href={CONTENTS_HOME} className="btn btn-outline">
               <T en={HOME_UI.seeAll} bn={HOME_UI_BN.seeAll} /> <span aria-hidden="true">→</span>
             </Link>
+          </div>
+            </div>
+            <div className="hidden lg:block" {...reveal("up", 2)}>
+              <HeroPreview />
+            </div>
           </div>
           <StatsRow className="mt-12" />
         </div>

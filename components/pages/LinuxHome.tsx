@@ -11,7 +11,7 @@ import { LinuxProgressSummary } from "@/components/linux/LinuxProgressSummary";
 import { StageProgress } from "@/components/linux/StageProgress";
 import { reveal } from "@/components/motion/reveal";
 
-const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
+const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 
 /**
  * The home page of the Linux module: a map of every command. Each stage is a
@@ -38,7 +38,7 @@ export function LinuxHome() {
               bn={BN.eyebrow(STAGES.length, ALL_TOPIC_IDS.length, commandTotal)}
             />
           </p>
-          <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
+          <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">
             <T en={LINUX_UI.heading} bn={BN.heading} />
           </h1>
           <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">

@@ -8,7 +8,7 @@ import { FundamentalsProgressSummary } from "@/components/fundamentals/Fundament
 import { TopicChecklist } from "@/components/fundamentals/TopicChecklist";
 import { reveal } from "@/components/motion/reveal";
 
-const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
+const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 
 /** The home page of the Fundamentals module: the overall progress and one section for each chapter. */
 export function FundamentalsHome() {
@@ -21,7 +21,7 @@ export function FundamentalsHome() {
             bn={BN.eyebrow(CHAPTERS.length, ALL_FUNDAMENTALS_TOPIC_IDS.length)}
           />
         </p>
-        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
+        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">
           <T en={FUNDAMENTALS_UI.heading} bn={BN.heading} />
         </h1>
         <p className="mt-4 text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg sm:leading-relaxed">

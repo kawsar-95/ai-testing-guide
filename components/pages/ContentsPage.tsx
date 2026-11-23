@@ -15,7 +15,7 @@ import { MODULES, type ModuleId } from "@/lib/stats";
 import { reveal } from "@/components/motion/reveal";
 import { StatsRow } from "./StatsRow";
 
-const LABEL = "font-mono text-[11px] font-medium uppercase tracking-[0.2em]";
+const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** The percentage of a module, as inline text. System Design has no progress. Same ids as the module home pages. */
@@ -73,7 +73,7 @@ function IndexRow({
         <div className="pb-5 pl-[1.75rem]">
           <Link
             href={href}
-            className="inline-flex min-h-6 items-center font-mono text-[12px] uppercase tracking-[0.12em] text-accent no-underline hover:underline"
+            className="inline-flex min-h-6 items-center font-mono text-[12px] tracking-normal text-accent no-underline hover:underline"
           >
             <T en={CONTENTS_UI.openModule} bn={CONTENTS_UI_BN.openModule} />
             <span aria-hidden="true">&nbsp;→</span>
@@ -107,7 +107,7 @@ export function ContentsPage() {
         <p className={`${LABEL} text-accent`}>
           <T en={CONTENTS_UI.eyebrow} bn={CONTENTS_UI_BN.eyebrow} />
         </p>
-        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-balance text-text">
+        <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">
           <T en={CONTENTS_UI.heading} bn={CONTENTS_UI_BN.heading} />
         </h1>
         <p className="mt-4 max-w-[600px] text-[17px] leading-relaxed text-pretty text-text-dim sm:text-lg">

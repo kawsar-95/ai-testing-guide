@@ -11,7 +11,7 @@ export const DEVOPS_UI = {
   lede: "This module explains the tools around a delivery pipeline: version control, CI/CD, containers, Kubernetes, the cloud, infrastructure as code, and monitoring. Every page is a full lesson for testers, with a practice run, the test work that each tool serves, and common mistakes, and it ends with KodeKloud Shorts that show the topic at work.",
   sourceNote:
     "Each fact on a page links to the official documentation of the tool or the foundation behind it. The reels under a page are KodeKloud Shorts: another creator's videos, not part of the checked text.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
 
   // The topic page.

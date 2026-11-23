@@ -11,7 +11,7 @@ export const AGENT_MEMORY_UI = {
   lede: "An AI agent forgets everything between two calls, unless something keeps it. Each topic explains one type of memory: what it is, how an agent gets it, how it fails, and what a tester can check.",
   sourceNote:
     "The 7 types follow the infographic \"7 Types of Agent Memory\" by Neo Kim and Telnyx. Each fact on a page links to a primary source, such as a research paper or the Anthropic or LangGraph docs.",
-  itemsHeading: "TOPICS",
+  itemsHeading: "Topics",
   itemsHeadingId: "topics-heading",
   overallLabel: "Topics done",
   summaryText: (done: number, total: number) => `${done} of ${total} topics done`,

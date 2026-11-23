@@ -95,7 +95,7 @@ export function NavList({
           <Link
             href={CONTENTS_HOME}
             onClick={onNavigate}
-            className="inline-flex min-h-6 shrink-0 items-center font-mono text-[11px] uppercase tracking-[0.12em] text-text-faint no-underline hover:text-accent"
+            className="inline-flex min-h-6 shrink-0 items-center font-mono text-[12px] tracking-normal text-text-faint no-underline hover:text-accent"
           >
             <T en={navAllModules} bn={SHELL_BN.navAllModules} />
           </Link>
