@@ -48,7 +48,7 @@ export function RoadmapStages({ roadmap }: { roadmap: Roadmap }) {
               number += 1;
               return (
                 <li key={slug} className="row-hover border-b border-border">
-                  <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-3.5">
+                  <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-3">
                     <span aria-hidden="true" className="font-mono text-[12px] tabular-nums text-text-faint">
                       {partNumber(number)}
                     </span>

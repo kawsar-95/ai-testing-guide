@@ -44,7 +44,7 @@ export function SidebarList({
                     aria-current={active ? "page" : undefined}
                     onClick={onNavigate}
                     className={
-                      "rail-active group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 pointer-coarse:items-center pointer-coarse:py-2.5 no-underline transition-colors " +
+                      "rail-active group flex items-baseline gap-2 rounded-r-md border-l-2 px-3 py-1.5 pointer-coarse:items-center pointer-coarse:py-2.5 no-underline transition-colors " +
                       (active
                         ? "border-accent bg-bg-raised"
                         : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")

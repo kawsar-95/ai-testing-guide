@@ -54,7 +54,7 @@ export function FundamentalsHome() {
               id={`chapter-${chapter.slug}`}
               className="mt-1 font-display text-xl font-medium leading-snug text-text"
             >
-              <Link href={chapter.href} className="text-text no-underline hover:text-accent">
+              <Link href={chapter.href} className="inline-block py-1 -my-1 text-text no-underline hover:text-accent pointer-coarse:py-2.5 pointer-coarse:-my-2.5">
                 {chapter.title}
               </Link>
             </h3>

@@ -34,7 +34,7 @@ export function SiteHeader({ searchSlot }: { searchSlot?: ReactNode }) {
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-border bg-bg">
       <div className="mx-auto flex h-full max-w-[1440px] items-center gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5 text-text no-underline pointer-coarse:min-h-11" data-reveal="fade">
+        <Link href="/" className="flex min-w-0 items-center gap-2 text-text no-underline pointer-coarse:min-h-11" data-reveal="fade">
           <span
             aria-hidden="true"
             className="grid size-[34px] shrink-0 place-items-center rounded-lg bg-accent text-bg max-[360px]:hidden"

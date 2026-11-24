@@ -26,7 +26,7 @@ export function TopicChecklist({ chapter }: { chapter: FundamentalsChapter }) {
           </label>
           <Link
             href={`${chapter.href}#${topic.anchor}`}
-            className="text-[15px] leading-snug text-text no-underline hover:text-accent hover:underline"
+            className="inline-flex items-center text-[15px] leading-snug text-text no-underline hover:text-accent hover:underline pointer-coarse:min-h-11"
           >
             {topic.title}
           </Link>

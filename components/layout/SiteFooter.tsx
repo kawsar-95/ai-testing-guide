@@ -15,7 +15,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-12 border-t border-border" data-reveal="fade">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-3 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5 text-text no-underline pointer-coarse:min-h-11">
+        <Link href="/" className="flex items-center gap-2 text-text no-underline pointer-coarse:min-h-11">
           <span aria-hidden="true" className="grid size-7 place-items-center rounded-md bg-accent text-bg">
             <BrandMark className="size-4" mono />
           </span>

@@ -27,7 +27,7 @@ export function StatsRow({
         {...(rest as Record<string, never>)}
       >
         {items.map(([value, key], i) => (
-          <div key={key} className="flex flex-col-reverse border-l-2 border-accent pl-3.5" {...reveal("up", i)}>
+          <div key={key} className="flex flex-col-reverse border-l-2 border-accent pl-4" {...reveal("up", i)}>
             <dt className="mt-1 text-[13px] leading-snug text-text-faint">
               <T en={CONTENTS_UI.stats[key]} bn={CONTENTS_UI_BN.stats[key]} />
             </dt>

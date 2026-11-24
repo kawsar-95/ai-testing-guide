@@ -74,7 +74,7 @@ export function FlatSidebarList({
           aria-current={active ? "page" : undefined}
           onClick={onNavigate}
           className={
-            "rail-active group flex items-baseline gap-2.5 rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
+            "rail-active group flex items-baseline gap-2 rounded-r-md border-l-2 px-3 py-1.5 no-underline transition-colors " +
             (toggle ? "min-w-0 flex-1 " : "") +
             (active ? "border-accent bg-bg-raised" : "border-transparent hover:border-border-strong hover:bg-bg-raised/60")
           }

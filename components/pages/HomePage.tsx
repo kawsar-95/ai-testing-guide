@@ -130,7 +130,7 @@ export function HomePage() {
           <p className="mt-6 max-w-[560px] text-[17px] leading-relaxed text-pretty text-text-dim sm:text-[19px]" {...reveal("up", 2)}>
             <T en={HOME_UI.sub} bn={HOME_UI_BN.sub} />
           </p>
-          <div className="mt-8 flex flex-wrap gap-3.5" {...reveal("up", 3)}>
+          <div className="mt-8 flex flex-wrap gap-4" {...reveal("up", 3)}>
             <Link href={START_STEPS[0].href} className="btn btn-primary">
               <T en={HOME_UI.startReading} bn={HOME_UI_BN.startReading} />
             </Link>

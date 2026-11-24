@@ -9,7 +9,7 @@ import { copyCode } from "@/lib/ui";
 
 // Code blocks stay dark in both themes, so the button colors are fixed.
 const BUTTON_CLASS =
-  "rounded-md border border-[#444c56] bg-(--code-bg) px-2.5 py-1 font-mono text-[12px] font-medium tracking-normal text-[#adbac7] transition-colors pointer-coarse:min-h-11 hover:border-[#5ec8d8] hover:text-[#5ec8d8]";
+  "rounded-md border border-[#444c56] bg-(--code-bg) px-3 py-1 font-mono text-[12px] font-medium tracking-normal text-[#adbac7] transition-colors pointer-coarse:min-h-11 hover:border-[#5ec8d8] hover:text-[#5ec8d8]";
 
 /** The language of a fenced block, from the `language-<lang>` class on its <code>. */
 function languageOf(children: ComponentProps<"pre">["children"]): string | undefined {

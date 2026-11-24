@@ -68,7 +68,7 @@ function Card({
       className="group @container flex scroll-mt-20 flex-col rounded-[10px] border border-border bg-bg-raised p-4 shadow-sm has-checked:border-accent/60 target:border-accent target:ring-2 target:ring-accent/25 data-target:border-accent data-target:ring-2 data-target:ring-accent/25"
       data-reveal="scale"
     >
-      <header className="flex items-center gap-2.5">
+      <header className="flex items-center gap-2">
         <span
           aria-hidden="true"
           className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-soft font-mono text-[12px] font-medium text-accent group-has-checked:bg-accent group-has-checked:text-bg"
@@ -88,7 +88,7 @@ function Card({
           <Row key={row[0]} row={row} />
         ))}
       </dl>
-      <p className="m-0 mt-auto flex flex-wrap justify-end gap-1 pt-2.5">
+      <p className="m-0 mt-auto flex flex-wrap justify-end gap-1 pt-3">
         {card.src.map((key) => (
           <Cite key={key} n={numberOf(key)} />
         ))}

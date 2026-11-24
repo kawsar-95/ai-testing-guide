@@ -173,7 +173,7 @@ export function DashboardPage() {
             <T en={DASHBOARD_UI.lede} bn={DASHBOARD_UI_BN.lede} />
           </p>
         </div>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-2">
           <button type="button" onClick={downloadExport} className="btn btn-outline btn-sm">
             <ExportIcon />
             <T en={DASHBOARD_UI.export} bn={DASHBOARD_UI_BN.export} />

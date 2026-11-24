@@ -26,8 +26,8 @@ export function resolvePage(id: RoadmapId, slug: string): ResolvedPage | undefin
   return item && { slug, title: item.title, description: item.description, href: item.href };
 }
 
-/** The home of a roadmap's module. */
+/** The home of a roadmap's module. Agentic QA has no index page of its own: its home is the tutorial home. */
 export function moduleHome(id: RoadmapId): string {
   const flat = flatIdOf(id);
-  return flat ? (FLAT_MODULES.find((m) => m.id === flat)?.home ?? `/${id}/`) : "/agentic-qa/";
+  return flat ? (FLAT_MODULES.find((m) => m.id === flat)?.home ?? `/${id}/`) : "/";
 }

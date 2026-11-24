@@ -50,7 +50,7 @@ test("the roadmap routes are in the sitemap and have a roadmap for each id", () 
 });
 
 test("moduleHome points at a real module home", () => {
-  const homes = new Set(["/agentic-qa/", ...FLAT_MODULES.map((m) => m.home)]);
+  const homes = new Set(["/", ...FLAT_MODULES.map((m) => m.home)]);
   for (const id of IDS) assert.ok(homes.has(moduleHome(id as never)), id);
 });
 
