@@ -117,7 +117,7 @@ export async function FlatTopicPage({
       <ReadingProgress />
       <ChapterLayout outline={outline} route={item.href}>
         <ContentsButton />
-        <p className={`mb-3 ${LABEL} text-accent`} {...reveal("up", 0)}>
+        <p className={`mb-3 ${LABEL} text-text-faint`} {...reveal("up", 0)}>
           {practice ? (
             <T en={m.ui.practiceEyebrow ?? ""} bn={FLAT_UI_BN[m.id].practiceEyebrow ?? ""} />
           ) : (

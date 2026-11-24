@@ -11,7 +11,7 @@ export function InterviewPage() {
   return (
     <div className="mx-auto max-w-[1200px] px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
       <header className="max-w-2xl" {...reveal("up", 0)}>
-        <p className={`${LABEL} text-accent`}>
+        <p className={`${LABEL} text-text-faint`}>
           <T en={INTERVIEW_UI.eyebrow} bn={INTERVIEW_UI_BN.eyebrow} />
         </p>
         <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">

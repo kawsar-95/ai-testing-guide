@@ -8,7 +8,7 @@ import { T } from "@/components/i18n/T";
 export function PageHeader({ page }: { page: NavPage }) {
   const group = GROUPS.find((g) => g.slug === page.group);
   return (
-    <p className="mb-3 font-mono text-[12px] font-medium tracking-normal text-accent">
+    <p className="mb-3 font-mono text-[12px] font-medium tracking-normal text-text-faint">
       <T en={partLabel(page.part)} bn={SHELL_BN.partLabel(page.part)} /> · {group?.title ?? page.group}
     </p>
   );

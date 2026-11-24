@@ -277,7 +277,7 @@ export function SearchPalette() {
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => go(hit.href)}
                   className={
-                    "cursor-pointer rounded-md px-3 py-2.5 transition-colors duration-[150ms] " +
+                    "cursor-pointer rounded-md px-3 py-2 transition-colors duration-[150ms] " +
                     (i === active
                       ? "bg-bg-raised-2 shadow-[inset_2px_0_0_var(--accent)]"
                       : "")

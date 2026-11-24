@@ -23,13 +23,13 @@ export function HeroPreview({ className = "" }: { className?: string }) {
       aria-hidden="true"
       className={`overflow-hidden rounded-xl border border-border-strong bg-(--code-bg) ${className}`}
     >
-      <div className="flex items-center gap-2 border-b border-[#2d333b] px-4 py-3">
+      <div className="flex items-center gap-2 border-b border-[#2d333b] px-6 py-4">
         <span className="size-2 rounded-full bg-[#444c56]" />
         <span className="size-2 rounded-full bg-[#444c56]" />
         <span className="size-2 rounded-full bg-[#444c56]" />
         <span className="ms-3 font-mono text-[12px] text-[#8b939e]">Part 17 · Automate</span>
       </div>
-      <div className="space-y-2 px-5 py-5 font-mono text-[13px] leading-relaxed">
+      <div className="space-y-3 px-6 py-6 font-mono text-[14px] leading-relaxed">
         {LINES.map((l) => (
           <p key={l.text} className={`m-0 whitespace-pre ${COLOR[l.kind]}`}>
             {l.kind === "prompt" ? <span className="me-2 text-[#2dd4bf]">&gt;</span> : null}

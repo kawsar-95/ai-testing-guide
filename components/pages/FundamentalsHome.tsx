@@ -15,7 +15,7 @@ export function FundamentalsHome() {
   return (
     <div className="mx-auto max-w-4xl px-4 pt-10 pb-6 sm:px-6 sm:pt-14">
       <header className="max-w-3xl" {...reveal("up", 0)}>
-        <p className={`${LABEL} text-accent`}>
+        <p className={`${LABEL} text-text-faint`}>
           <T
             en={FUNDAMENTALS_UI.eyebrow(CHAPTERS.length, ALL_FUNDAMENTALS_TOPIC_IDS.length)}
             bn={BN.eyebrow(CHAPTERS.length, ALL_FUNDAMENTALS_TOPIC_IDS.length)}
@@ -47,7 +47,7 @@ export function FundamentalsHome() {
             className="border-b border-border py-5"
             {...reveal("up", index)}
           >
-            <p className={`${LABEL} text-accent`}>
+            <p className={`${LABEL} text-text-faint`}>
               <T en={FUNDAMENTALS_UI.chapterEyebrow(chapter.number)} bn={BN.chapterEyebrow(chapter.number)} />
             </p>
             <h3
