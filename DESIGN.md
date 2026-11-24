@@ -74,7 +74,7 @@ components:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.bg}"
     rounded: "{rounded.md}"
-    padding: "12px 22px"
+    padding: "12px 24px"
   button-primary-hover:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.bg}"
@@ -82,7 +82,7 @@ components:
     backgroundColor: "{colors.bg-raised}"
     textColor: "{colors.text}"
     rounded: "{rounded.md}"
-    padding: "12px 22px"
+    padding: "12px 24px"
   button-outline-hover:
     backgroundColor: "{colors.bg-raised}"
     textColor: "{colors.primary}"
@@ -90,20 +90,20 @@ components:
     backgroundColor: "{colors.bg}"
     textColor: "{colors.text-dim}"
     rounded: "{rounded.md}"
-    padding: "12px 22px"
+    padding: "12px 24px"
   code-block:
     backgroundColor: "{colors.code-bg}"
     textColor: "{colors.text}"
     rounded: "{rounded.md}"
-    padding: "16px 18px"
+    padding: "16px 20px"
   table-cell:
     backgroundColor: "{colors.bg-raised}"
     textColor: "{colors.text}"
-    padding: "10px 14px"
+    padding: "12px 16px"
   table-header:
     backgroundColor: "{colors.bg-raised-2}"
     textColor: "{colors.text}"
-    padding: "10px 14px"
+    padding: "12px 16px"
   callout-note:
     backgroundColor: "{colors.bg-raised}"
     textColor: "{colors.primary}"
@@ -253,7 +253,7 @@ card per row, with the column name from `data-label` above each value.
 
 Vertical rhythm comes from a small set of gaps: `8px` between tight items,
 `16px` inside a component, `24px` between blocks, `32px` between sections.
-Code blocks get `16px 0 22px` of margin so they breathe.
+Code blocks get `16px 0 24px` of margin so they breathe.
 
 ## Elevation & Depth
 
@@ -341,17 +341,17 @@ open and away from it while it is closed. A closed sidebar shrinks to a
 `2.75rem` rail that holds only this button.
 
 **Code block.** Fixed dark ground `#22272e` in both themes, `10px` radius,
-`16px 18px` padding, JetBrains Mono at `13px`. The copy button and the
+`16px 20px` padding, JetBrains Mono at `13px`. The copy button and the
 uppercase language label sit in the top-right corner, 6px from the top and
 10px from the right. The copy button is invisible until hover or keyboard
 focus, and always visible on touch (`@media (hover: none)`).
 
 **Table.** Wrapped in a `.mdx-table` box with a `--border` edge, `--bg-raised`
 ground, and `--raise-sm`. Header cells sit on `--bg-raised-2`, are `0.75rem`,
-weight 600, uppercase, and carry `0.04em` tracking.
+weight 500, sentence case, no tracking.
 
 **Callout.** `--bg-raised` ground, `--border` edge, `10px` radius. The four
-types are `note`, `tip`, `warning`, and `danger`. Each sets a 3px left border
+types are `note`, `tip`, `warning`, and `danger`. Each has a hairline border
 and a 10% tint of its own color over `--bg-raised`, and the icon takes that
 color too: `--accent` for `note`, `--good` for `tip`, `--warn` for `warning`,
 `--danger` for `danger`.

@@ -35,7 +35,7 @@ function Row({ row }: { row: SheetRow }) {
       <dd className="m-0 min-w-0 text-[13.5px] leading-snug text-text-dim">
         {warn ? (
           <>
-            <span aria-hidden="true" className="mr-1.5 font-mono font-semibold text-danger">
+            <span aria-hidden="true" className="mr-1.5 font-mono font-medium text-danger">
               !
             </span>
             <span className="sr-only">
@@ -71,13 +71,13 @@ function Card({
       <header className="flex items-center gap-2.5">
         <span
           aria-hidden="true"
-          className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-soft font-mono text-[12px] font-semibold text-accent group-has-checked:bg-accent group-has-checked:text-bg"
+          className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-soft font-mono text-[12px] font-medium text-accent group-has-checked:bg-accent group-has-checked:text-bg"
         >
           {index + 1}
         </span>
         <h2
           id={`${topic.anchor}-title`}
-          className="min-w-0 grow font-sans text-[15px] font-semibold leading-snug text-text"
+          className="min-w-0 grow font-sans text-[15px] font-medium leading-snug text-text"
         >
           {topic.title}
         </h2>
