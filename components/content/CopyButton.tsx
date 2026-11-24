@@ -7,7 +7,7 @@ import { SHELL_BN } from "@/lib/bn/shell";
 import { copyWords } from "@/lib/ui";
 
 const DEFAULT_CLASS =
-  "rounded-md border border-border-strong px-2.5 py-1 font-mono text-[12px] font-medium tracking-normal text-text-dim transition-colors pointer-coarse:min-h-11 hover:border-accent hover:text-accent";
+  "rounded-md border border-border-strong px-3 py-1 font-mono text-[12px] font-medium tracking-normal text-text-dim transition-colors pointer-coarse:min-h-11 hover:border-accent hover:text-accent";
 
 /**
  * Copies text to the clipboard. `getText` runs at click time. If the

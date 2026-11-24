@@ -72,7 +72,7 @@ export function FlatModuleHome({ module: m }: { module: FlatModule<FlatModuleId>
             <ol key="all" className="m-0 list-none p-0">
               {items.map((item, index) => (
                 <li key={item.slug} className="row-hover border-b border-border" {...reveal("up", index)}>
-                  <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-3.5">
+                  <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-3">
                     <span aria-hidden="true" className="font-mono text-[12px] tabular-nums text-text-faint">
                       {partNumber(item.number)}
                     </span>

@@ -75,7 +75,7 @@ export function AiRoadmapPage() {
         <ul className="m-0 list-none p-0">
           {ROADMAPS.map((roadmap, i) => (
             <li key={roadmap.id} className="row-hover border-b border-border" {...reveal("up", i)}>
-              <div className="py-3.5">
+              <div className="py-3">
                 <h3 className="m-0 font-display text-xl font-medium leading-snug text-text">
                   <Link href={`${AI_ROADMAP_HOME}${roadmap.id}/`} className="text-text no-underline hover:text-accent">
                     {roadmap.title}

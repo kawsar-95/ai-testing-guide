@@ -31,7 +31,7 @@ export function ProgressBar({
       className={`${thin ? "h-1" : "h-2"} overflow-hidden rounded-full ${className}`}
     >
       <svg aria-hidden="true" className="block h-full w-full">
-        <rect width="100%" height="100%" className="fill-border" />
+        <rect width="100%" height="100%" className="fill-border-strong" />
         {/* The fill scales from the left, so it grows without a layout. */}
         <rect
           width="100%"

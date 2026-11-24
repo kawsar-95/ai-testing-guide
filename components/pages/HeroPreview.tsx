@@ -21,12 +21,12 @@ export function HeroPreview({ className = "" }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={`overflow-hidden rounded-xl border border-border-strong bg-[#22272e] ${className}`}
+      className={`overflow-hidden rounded-xl border border-border-strong bg-(--code-bg) ${className}`}
     >
       <div className="flex items-center gap-2 border-b border-[#2d333b] px-4 py-3">
-        <span className="size-2.5 rounded-full bg-[#444c56]" />
-        <span className="size-2.5 rounded-full bg-[#444c56]" />
-        <span className="size-2.5 rounded-full bg-[#444c56]" />
+        <span className="size-2 rounded-full bg-[#444c56]" />
+        <span className="size-2 rounded-full bg-[#444c56]" />
+        <span className="size-2 rounded-full bg-[#444c56]" />
         <span className="ms-3 font-mono text-[12px] text-[#8b939e]">Part 17 · Automate</span>
       </div>
       <div className="space-y-2 px-5 py-5 font-mono text-[13px] leading-relaxed">
