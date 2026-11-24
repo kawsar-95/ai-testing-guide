@@ -23,7 +23,7 @@ export function InfoCard({
   const marker = tone ? TONE[tone] : null;
   return (
     <section
-      className={`card-hover rounded-2xl border border-border bg-bg-raised p-5 shadow-sm ${marker?.border ?? ""}`}
+      className={`card-hover rounded-xl border border-border bg-bg-raised p-5 shadow-sm ${marker?.border ?? ""}`}
       {...reveal("scale")}
     >
       <p className="mb-2 text-base font-medium text-text">

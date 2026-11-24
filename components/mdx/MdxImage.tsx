@@ -28,7 +28,7 @@ export function MdxImage({ src, alt = "", width, height }: MdxImageProps) {
         className="h-auto max-w-full rounded-md border border-border"
       />
       <span className="mt-2 block text-sm">
-        <a href={url} target="_blank" rel="noopener noreferrer">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-6 items-center pointer-coarse:min-h-11">
           <T en={openImageFullSize} bn={SHELL_BN.openImageFullSize} />
         </a>
       </span>

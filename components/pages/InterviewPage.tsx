@@ -26,7 +26,7 @@ export function InterviewPage() {
           <li key={card.href} {...reveal("scale", i)}>
             <Link
               href={card.href}
-              className="card-hover flex h-full flex-col rounded-2xl border border-border bg-bg-raised p-5 text-text no-underline shadow-sm sm:p-6"
+              className="card-hover flex h-full flex-col rounded-xl border border-border bg-bg-raised p-5 text-text no-underline shadow-sm sm:p-6"
             >
               <span className="font-display text-2xl font-medium leading-tight">
                 <T en={card.title} bn={INTERVIEW_UI_BN.cards[i].title} />

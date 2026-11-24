@@ -42,7 +42,7 @@ export function PracticeQuestion({
           className="mt-1.5 size-4 shrink-0 cursor-pointer accent-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         />
         <div className="min-w-0 flex-1">
-          <p className="m-0 font-mono text-[12px] tracking-normal text-accent">
+          <p className="m-0 font-mono text-[12px] tracking-normal text-text-faint">
             <T en={ARCHITECTURE_UI.questionLabel(n)} bn={ARCHITECTURE_UI_BN.questionLabel(n)} />
             {item ? (
               <>

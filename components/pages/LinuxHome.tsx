@@ -78,7 +78,7 @@ export function LinuxHome() {
                       id={`stage-${stage.slug}`}
                       className="font-display text-xl font-medium leading-snug text-text"
                     >
-                      <Link href={stage.href} className="inline-block py-0.5 text-text no-underline hover:text-accent">
+                      <Link href={stage.href} className="inline-block py-0.5 pointer-coarse:py-3 text-text no-underline hover:text-accent">
                         {stage.title}
                       </Link>
                       {stage.number === 1 && (
@@ -107,7 +107,7 @@ export function LinuxHome() {
                     <li key={name} {...reveal("fade", index)}>
                       <Link
                         href={`${stage.href}#${anchor}`}
-                        className="inline-flex min-h-6 min-w-6 items-center justify-center rounded px-1.5 font-mono text-[12.5px] text-text no-underline hover:text-accent hover:underline hover:underline-offset-4"
+                        className="inline-flex min-h-6 min-w-6 items-center justify-center rounded px-1.5 pointer-coarse:min-h-11 pointer-coarse:min-w-11 font-mono text-[12px] text-text no-underline hover:text-accent hover:underline hover:underline-offset-4"
                       >
                         {name}
                       </Link>

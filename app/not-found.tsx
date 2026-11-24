@@ -22,7 +22,7 @@ export default function NotFound() {
     <SiteShell searchSlot={<SearchPalette />}>
       {/* The same header as the other standalone pages (Contents, Dashboard, a module home). */}
       <div className="mx-auto max-w-2xl px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
-        <p className="font-mono text-[12px] font-medium tracking-normal text-accent">404</p>
+        <p className="font-mono text-[12px] font-medium tracking-normal text-text-faint">404</p>
         <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">
           <T en={notFoundTitle} bn={SHELL_BN.notFoundTitle} />
         </h1>

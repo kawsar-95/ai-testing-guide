@@ -75,7 +75,7 @@ export function Callout({
   const style = TYPE_CLASS[kind];
   return (
     <div
-      className={`my-5 flex gap-3 rounded-[10px] border border-border px-5 py-3 text-sm ${style.box}`}
+      className={`my-5 flex gap-3 rounded-[10px] border border-border px-5 py-3 text-sm shadow-sm ${style.box}`}
       {...reveal("up")}
     >
       <svg

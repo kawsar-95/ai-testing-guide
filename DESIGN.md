@@ -32,7 +32,7 @@ typography:
     lineHeight: 1.2
     letterSpacing: "-0.015em"
   h3:
-    fontFamily: "Inter, Noto Sans Bengali, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Crimson Pro, Noto Sans Bengali, ui-serif, Georgia, serif"
     fontSize: "1.1875rem"
     fontWeight: 500
     lineHeight: 1.25
@@ -48,10 +48,10 @@ typography:
     fontWeight: 400
     lineHeight: 1.5
   eyebrow:
-    fontFamily: "Inter, Noto Sans Bengali, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "0.8rem"
-    fontWeight: 600
-    lineHeight: 1
+    fontFamily: "JetBrains Mono, Noto Sans Bengali, ui-monospace, monospace"
+    fontSize: "12px"
+    fontWeight: 500
+    lineHeight: 1.5
     letterSpacing: "0em"
   code:
     fontFamily: "JetBrains Mono, Noto Sans Bengali, ui-monospace, monospace"
@@ -187,6 +187,12 @@ component.** Use the Tailwind token, and add a token first if none fits.
 | `--accent-soft` | `#134e4a` | `#ccfbf1` | Tinted accent ground for badges and chips. |
 | `--good` / `--warn` / `--danger` | `#4ade80` / `#fbbf24` / `#f87171` | `#166534` / `#a14a07` / `#b91c1c` | State only. Never decorative. |
 | `--code-bg` | `#22272e` | `#22272e` | Code blocks. Dark in both themes. |
+| `--code-fg` | `#adbac7` | `#adbac7` | Text on a code ground: command output, the copy button. |
+| `--code-fg-strong` | `#e6e6e6` | `#e6e6e6` | The typed line on a code ground. |
+| `--code-fg-dim` | `#8b939e` | `#8b939e` | Captions on a code ground. |
+| `--code-edge` | `#444c56` | `#444c56` | Edges and dots on a code ground. |
+| `--code-rule` | `#2d333b` | `#2d333b` | The hairline under a code window's title bar. |
+| `--code-accent` | `#2dd4bf` | `#2dd4bf` | The prompt and the copy button on hover, on a code ground. |
 | `--voice-layman` / `--voice-bangla` | `#b9a3f0` / `#4ade80` | `#6a4bc0` / `#166534` | The extra reading panels and their switcher. |
 
 The teal is the only color that marks an action. If something is clickable, it
@@ -211,13 +217,13 @@ browser fetches it the first time Bengali text appears.
 |---|---|---|---|---|---|
 | Page title (`.mdx h1`) | Crimson Pro | `clamp(2rem, 5.5vw, 2.75rem)` | 500 | 1.08 | `-0.025em` |
 | Section (`.mdx h2`) | Crimson Pro | `clamp(1.4rem, 3.2vw, 1.75rem)` | 500 | 1.2 | `-0.015em` |
-| Subsection (`.mdx h3`) | Inter | `1.1875rem` | 500 | 1.25 | `-0.01em` |
+| Subsection (`.mdx h3`) | Crimson Pro | `1.1875rem` | 500 | 1.25 | `-0.01em` |
 | Body | Inter | `1.0625rem` | 400 | 1.625 | 0 |
 | Small / table body | Inter | `0.875rem` | 400 | 1.5 | 0 |
-| Eyebrow / label | Inter | `0.8rem` | 600 | 1 | 0 |
+| Eyebrow / label | JetBrains Mono | `12px` | 500 | 1.5 | 0 |
 | Code | JetBrains Mono | `13px` | 400 | 1.6 | 0 |
 
-Crimson Pro is the serif and it carries the editorial voice: titles only.
+Crimson Pro is the serif and it carries the editorial voice: page titles and the section and subsection headings.
 Inter carries everything functional. JetBrains Mono carries code, the language
 label, and nothing else.
 
@@ -307,18 +313,20 @@ Three rules hold the whole thing together:
 
 | Radius | Value | Use |
 |---|---|---|
-| `4px` | Inline code, tags, tiny chips. |
-| `10px` | Cards, code blocks, tables, every `.btn`. The default. |
-| `12px` | Larger panels, the home hero cards. |
+| `4px` | Inline code, tags, tiny chips, keycaps. |
+| `6px` | Small controls: the copy button, the row-number badges. |
+| `8px` | Icon buttons and the voice and search controls in the header. |
+| `10px` | Code blocks, tables, callouts, every `.btn`. The default. |
+| `12px` | Cards, larger panels, the hero preview, the voice switch. |
 | `9999px` | Pills and round icon badges. |
 
-The default radius for a component is `10px`. When in doubt, use `10px`.
+The default radius for a button or a block is `10px`; a card is `12px`. When in doubt, use `10px`.
 
 ## Components
 
 **`.btn`** is the button base: `inline-flex`, `gap 0.5rem`, `padding 0.75rem
-1.375rem`, `10px` radius, `15px` weight 600, and a `translateY(-1px)` hover.
-`.btn-sm` is `0.5rem 0.875rem` at `14px`. Under
+1.5rem`, `10px` radius, `15px` weight 500, and a `translateY(-1px)` hover.
+`.btn-sm` is `0.5rem 1rem` at `14px`. Under
 `prefers-reduced-motion: reduce` the transform and transition are removed.
 
 | Variant | Ground | Label | Hover |
@@ -342,7 +350,7 @@ open and away from it while it is closed. A closed sidebar shrinks to a
 
 **Code block.** Fixed dark ground `#22272e` in both themes, `10px` radius,
 `16px 20px` padding, JetBrains Mono at `13px`. The copy button and the
-uppercase language label sit in the top-right corner, 6px from the top and
+language label (as written in the fence, for example `js`) sit in the top-right corner, 6px from the top and
 10px from the right. The copy button is invisible until hover or keyboard
 focus, and always visible on touch (`@media (hover: none)`).
 
