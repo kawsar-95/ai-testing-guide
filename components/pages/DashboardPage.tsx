@@ -219,7 +219,7 @@ export function DashboardPage() {
                 <T en={DASHBOARD_UI.startHeading} bn={DASHBOARD_UI_BN.startHeading} />
               )}
             </span>
-            <span className="mt-2 block font-display text-[clamp(1.375rem,2.4vw,1.75rem)] font-semibold leading-tight text-text transition-colors group-hover:text-accent">
+            <span className="mt-2 block font-display text-[clamp(1.375rem,2.4vw,1.75rem)] font-medium leading-tight text-text transition-colors group-hover:text-accent">
               {next.title}
             </span>
             <span className="mt-2 block text-[14px] text-text-dim">

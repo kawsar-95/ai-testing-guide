@@ -25,7 +25,7 @@ export function Figure({
     <figure className="my-8 rounded-md border border-border bg-bg-raised p-4">
       {children}
       <figcaption className="mt-4 text-sm leading-relaxed text-text-dim">
-        <strong className="font-semibold text-text">{title}.</strong> {description}
+        <strong className="font-medium text-text">{title}.</strong> {description}
       </figcaption>
     </figure>
   );

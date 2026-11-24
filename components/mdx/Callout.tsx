@@ -14,22 +14,22 @@ const ALIAS: Record<CalloutInput, CalloutType> = {
   error: "danger",
 };
 
-// Each type sets a 3px left border, a 10% tint over --bg-raised, and the color of the icon.
+// Each type sets a 10% tint over --bg-raised and the color of the icon, inside a hairline border.
 const TYPE_CLASS: Record<CalloutType, { box: string; icon: string }> = {
   note: {
-    box: "border-l-accent bg-[color-mix(in_srgb,var(--accent)_10%,var(--bg-raised))]",
+    box: "bg-[color-mix(in_srgb,var(--accent)_10%,var(--bg-raised))]",
     icon: "text-accent",
   },
   tip: {
-    box: "border-l-good bg-[color-mix(in_srgb,var(--good)_10%,var(--bg-raised))]",
+    box: "bg-[color-mix(in_srgb,var(--good)_10%,var(--bg-raised))]",
     icon: "text-good",
   },
   warning: {
-    box: "border-l-warn bg-[color-mix(in_srgb,var(--warn)_10%,var(--bg-raised))]",
+    box: "bg-[color-mix(in_srgb,var(--warn)_10%,var(--bg-raised))]",
     icon: "text-warn",
   },
   danger: {
-    box: "border-l-danger bg-[color-mix(in_srgb,var(--danger)_10%,var(--bg-raised))]",
+    box: "bg-[color-mix(in_srgb,var(--danger)_10%,var(--bg-raised))]",
     icon: "text-danger",
   },
 };
@@ -75,7 +75,7 @@ export function Callout({
   const style = TYPE_CLASS[kind];
   return (
     <div
-      className={`my-[18px] flex gap-3 rounded-[10px] border-l-[3px] px-[18px] py-3.5 text-sm shadow-sm ${style.box}`}
+      className={`my-5 flex gap-3 rounded-[10px] border border-border px-5 py-3 text-sm ${style.box}`}
       {...reveal("up")}
     >
       <svg
@@ -88,12 +88,12 @@ export function Callout({
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`mt-[3px] shrink-0 ${style.icon}`}
+        className={`mt-1 shrink-0 ${style.icon}`}
       >
         {ICON[kind]}
       </svg>
       <div className="min-w-0 flex-1 [&>:first-child]:mt-0 [&>:last-child]:mb-0">
-        {title ? <p className="mb-1.5 font-semibold text-text">{title}</p> : null}
+        {title ? <p className="mb-1.5 font-medium text-text">{title}</p> : null}
         {children}
       </div>
     </div>

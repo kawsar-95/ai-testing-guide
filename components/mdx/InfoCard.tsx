@@ -26,10 +26,10 @@ export function InfoCard({
       className={`card-hover rounded-2xl border border-border bg-bg-raised p-5 shadow-sm ${marker?.border ?? ""}`}
       {...reveal("scale")}
     >
-      <p className="mb-2 text-base font-semibold text-text">
+      <p className="mb-2 text-base font-medium text-text">
         {marker ? (
           <>
-            <span aria-hidden="true" className={`mr-2 font-bold ${marker.color}`}>
+            <span aria-hidden="true" className={`mr-2 font-medium ${marker.color}`}>
               {marker.mark}
             </span>
             <span className="sr-only">

@@ -20,7 +20,7 @@ export function AuthorCard() {
         className="size-28 shrink-0 rounded-full border border-border object-cover"
       />
       <div className="min-w-0">
-        <p className="font-display text-2xl font-semibold text-text">{AUTHOR.name}</p>
+        <p className="font-display text-2xl font-medium text-text">{AUTHOR.name}</p>
         <p className="mt-1 text-[15px] text-text-dim">{AUTHOR.role}</p>
         <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-text-dim">{AUTHOR.bio}</p>
         <ul className="m-0 mt-5 flex list-none flex-wrap gap-2 p-0">
