@@ -115,7 +115,7 @@ export function StageSheet({
   numberOf: (key: string) => number;
 }) {
   return (
-    <div className="sheet grid grid-cols-[repeat(auto-fill,minmax(min(100%,28rem),1fr))] gap-4" data-stagger>
+    <div className="sheet grid grid-cols-[repeat(auto-fill,minmax(min(100%,28rem),1fr))] gap-4 items-start" data-stagger>
       <TargetMark />
       {sheet.cards.map((card, index) => (
         <Card key={card.topic} stage={stage} index={index} card={card} numberOf={numberOf} />
