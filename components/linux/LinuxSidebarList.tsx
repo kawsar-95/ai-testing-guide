@@ -53,7 +53,7 @@ export function LinuxSidebarList({
                 </span>
                 <span
                   className={
-                    "min-w-0 flex-1 text-[13.5px] leading-snug " +
+                    "min-w-0 flex-1 text-[14px] leading-snug " +
                     (active ? "text-text" : "text-text-dim group-hover:text-text")
                   }
                 >

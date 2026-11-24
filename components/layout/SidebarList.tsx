@@ -61,7 +61,7 @@ export function SidebarList({
                     </span>
                     <span
                       className={
-                        "min-w-0 text-[13.5px] leading-snug " +
+                        "min-w-0 text-[14px] leading-snug " +
                         (active ? "text-text" : "text-text-dim group-hover:text-text")
                       }
                     >

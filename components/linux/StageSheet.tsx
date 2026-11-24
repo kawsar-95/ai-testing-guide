@@ -32,7 +32,7 @@ function Row({ row }: { row: SheetRow }) {
       <dt className="min-w-0 font-mono text-[13px] leading-snug @min-[22rem]:min-w-28">
         <Cmd cmd={cmd} />
       </dt>
-      <dd className="m-0 min-w-0 text-[13.5px] leading-snug text-text-dim">
+      <dd className="m-0 min-w-0 text-[14px] leading-snug text-text-dim">
         {warn ? (
           <>
             <span aria-hidden="true" className="mr-1.5 font-mono font-medium text-danger">

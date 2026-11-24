@@ -75,7 +75,7 @@ function IndexRow({
         <div className="pb-5 pl-[1.75rem]">
           <Link
             href={href}
-            className="inline-flex min-h-6 items-center font-mono text-[12px] tracking-normal text-accent no-underline hover:underline"
+            className="inline-flex min-h-6 items-center font-mono text-[12px] tracking-normal text-accent no-underline hover:underline pointer-coarse:min-h-11"
           >
             <T en={CONTENTS_UI.openModule} bn={CONTENTS_UI_BN.openModule} />
             <span aria-hidden="true">&nbsp;→</span>
@@ -85,7 +85,7 @@ function IndexRow({
               <li key={page.href}>
                 <Link
                   href={page.href}
-                  className="group/page flex min-h-6 items-baseline gap-2 py-1 text-[14px] leading-snug text-text-dim no-underline hover:text-accent"
+                  className="group/page flex min-h-6 items-baseline gap-2 py-1 pointer-coarse:min-h-11 pointer-coarse:items-center text-[14px] leading-snug text-text-dim no-underline hover:text-accent"
                 >
                   <span className="w-6 shrink-0 font-mono text-[12px] tabular-nums text-text-faint group-hover/page:text-accent">
                     {pad(start + i)}
