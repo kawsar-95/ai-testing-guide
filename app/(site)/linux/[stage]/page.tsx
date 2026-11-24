@@ -94,7 +94,7 @@ function SheetStage({ stage, sheet }: { stage: LinuxStage; sheet: Sheet }) {
         <header className="mb-6 flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
           <div className="max-w-2xl">
             {/* The eyebrow, title, and lede of every content page (the `.mdx h1` scale in globals.css). */}
-            <p className={`${LABEL} text-accent`}>
+            <p className={`${LABEL} text-text-faint`}>
               <T en={LINUX_UI.stageEyebrow(stage.number)} bn={BN.stageEyebrow(stage.number)} />
               {" · "}
               <T en={LINUX_UI.sheetMeta(stage.topics.length, commands)} bn={BN.sheetMeta(stage.topics.length, commands)} />

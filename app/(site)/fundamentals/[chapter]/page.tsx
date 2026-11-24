@@ -102,7 +102,7 @@ export default async function ChapterPage({ params }: PageProps<"/fundamentals/[
       <ReadingProgress />
       <ChapterLayout outline={outline} route={chapter.href}>
         <ContentsButton />
-        <p className={`mb-3 ${LABEL} text-accent`}>
+        <p className={`mb-3 ${LABEL} text-text-faint`}>
           <T en={FUNDAMENTALS_UI.chapterEyebrow(chapter.number)} bn={BN.chapterEyebrow(chapter.number)} />
         </p>
         {/* On a phone the checklist at the end of the page shows the same progress. */}

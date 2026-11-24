@@ -32,7 +32,7 @@ export function LinuxHome() {
     <div className="mx-auto max-w-6xl px-4 pt-10 pb-6 sm:px-6 sm:pt-14">
       <header className="grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-end" {...reveal("up", 0)}>
         <div className="max-w-3xl">
-          <p className={`${LABEL} text-accent`}>
+          <p className={`${LABEL} text-text-faint`}>
             <T
               en={LINUX_UI.eyebrow(STAGES.length, ALL_TOPIC_IDS.length, commandTotal)}
               bn={BN.eyebrow(STAGES.length, ALL_TOPIC_IDS.length, commandTotal)}

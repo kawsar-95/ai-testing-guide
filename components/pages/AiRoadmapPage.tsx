@@ -18,7 +18,7 @@ export function AiRoadmapPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
       <header className="max-w-3xl" {...reveal("up", 0)}>
-        <p className={`${LABEL} text-accent`}>
+        <p className={`${LABEL} text-text-faint`}>
           <T en={ui.eyebrow} bn={bn.eyebrow} />
         </p>
         <h1 className={H1}>

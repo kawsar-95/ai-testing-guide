@@ -16,7 +16,6 @@ import { PROGRESS_MODULES } from "@/lib/modules/registry";
 import { GROUPS } from "@/lib/nav";
 import { MODULES, type ModuleId } from "@/lib/stats";
 import { reveal } from "@/components/motion/reveal";
-import { StatsRow } from "./StatsRow";
 
 const LABEL = "font-mono text-[12px] font-medium tracking-normal";
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -102,12 +101,12 @@ function IndexRow({
   );
 }
 
-/** The contents page: the stats, then the tutorial groups and the modules as one ruled index of closed rows. */
+/** The contents page: the the tutorial groups and the modules as one ruled index of closed rows. */
 export function ContentsPage() {
   return (
     <div className="mx-auto max-w-[1200px] px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
       <header className="max-w-3xl">
-        <p className={`${LABEL} text-accent`}>
+        <p className={`${LABEL} text-text-faint`}>
           <T en={CONTENTS_UI.eyebrow} bn={CONTENTS_UI_BN.eyebrow} />
         </p>
         <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">
@@ -121,7 +120,6 @@ export function ContentsPage() {
             <T en={AI_ROADMAP_UI.siteTitle} bn={AI_ROADMAP_UI_BN.siteTitle} />
           </Link>
         </p>
-        <StatsRow className="mt-8" />
       </header>
 
       <section aria-labelledby="contents-tutorial" className="mt-12">

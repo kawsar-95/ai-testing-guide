@@ -163,7 +163,7 @@ export function DashboardPage() {
     <div className="mx-auto max-w-[1200px] px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
       <header className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5" {...reveal("up", 0)}>
         <div className="max-w-2xl">
-          <p className={`${LABEL} text-accent`}>
+          <p className={`${LABEL} text-text-faint`}>
             <T en={DASHBOARD_UI.eyebrow} bn={DASHBOARD_UI_BN.eyebrow} />
           </p>
           <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.025em] text-balance text-text">
@@ -185,7 +185,7 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <section aria-label={siteTitle} className="mt-10 grid gap-x-12 gap-y-8 lg:grid-cols-[1.4fr_1fr]">
+      <section aria-label={siteTitle} className="mt-10 grid items-start gap-x-12 gap-y-8 lg:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col border-t border-border-strong pt-5" {...reveal("up", 1)}>
           <p className={`${LABEL} text-text-faint`}>
             <T en={DASHBOARD_UI.statRead} bn={DASHBOARD_UI_BN.statRead} />
@@ -208,7 +208,7 @@ export function DashboardPage() {
         <Link
           href={next.href}
           data-continue
-          className="group flex flex-col justify-between gap-6 border-t border-border-strong pt-5 no-underline"
+          className="group flex flex-col gap-6 border-t border-border-strong pt-5 no-underline"
           {...reveal("up", 2)}
         >
           <span className="min-w-0">
@@ -290,7 +290,7 @@ export function DashboardPage() {
                 <li key={page.href} className="row-hover border-b border-border last:border-b-0">
                   <Link
                     href={page.href}
-                    className="flex items-baseline justify-between gap-3 py-2.5 text-[15px] text-text no-underline hover:text-accent"
+                    className="flex items-baseline justify-between gap-3 py-3 text-[15px] text-text no-underline hover:text-accent"
                   >
                     <span className="min-w-0">{page.title}</span>
                     <span className="shrink-0 font-mono text-[12px] text-text-faint">

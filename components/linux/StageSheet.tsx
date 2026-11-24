@@ -71,7 +71,7 @@ function Card({
       <header className="flex items-center gap-2">
         <span
           aria-hidden="true"
-          className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-soft font-mono text-[12px] font-medium text-accent group-has-checked:bg-accent group-has-checked:text-bg"
+          className="grid size-6 shrink-0 place-items-center rounded-full bg-bg-raised-2 font-mono text-[12px] font-medium text-text-dim group-has-checked:bg-accent group-has-checked:text-bg"
         >
           {index + 1}
         </span>
@@ -83,7 +83,7 @@ function Card({
         </h2>
         <DoneToggle id={topic.id} title={topic.title} />
       </header>
-      <dl className="m-0 mt-2.5 grid grid-cols-1 @min-[22rem]:grid-cols-[fit-content(46%)_minmax(0,1fr)] @min-[22rem]:gap-x-4">
+      <dl className="m-0 mt-3 grid grid-cols-1 @min-[22rem]:grid-cols-[fit-content(46%)_minmax(0,1fr)] @min-[22rem]:gap-x-4">
         {card.rows.map((row) => (
           <Row key={row[0]} row={row} />
         ))}

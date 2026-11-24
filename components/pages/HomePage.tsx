@@ -37,7 +37,7 @@ type Count = readonly [en: (n: number) => string, bn: (n: number) => string];
 function SectionHeading({ id, eyebrow, title, sub }: { id: string; eyebrow: Pair; title: ReactNode; sub?: Pair }) {
   return (
     <header className="max-w-2xl" {...reveal("up", 0)}>
-      <p className={`${LABEL} text-accent`}>
+      <p className={`${LABEL} text-text-faint`}>
         <T en={eyebrow[0]} bn={eyebrow[1]} />
       </p>
       <h2 id={id} className="mt-3 font-display text-[clamp(1.875rem,4vw,2.75rem)] font-medium leading-[1.1] tracking-[-0.02em] text-balance text-text">
@@ -110,9 +110,9 @@ export function HomePage() {
     <div>
       <section aria-labelledby="hero-heading" className="relative overflow-hidden border-b border-border">
         <div className="relative z-10 mx-auto max-w-[1200px] px-4 pt-14 pb-14 sm:px-6 sm:pt-20 sm:pb-16">
-          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
+          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
             <div>
-          <p className={`${LABEL} text-accent`} {...reveal("up", 0)}>
+          <p className={`${LABEL} text-text-faint`} {...reveal("up", 0)}>
             <T en={HOME_UI.eyebrow} bn={HOME_UI_BN.eyebrow} />
           </p>
           <h1
