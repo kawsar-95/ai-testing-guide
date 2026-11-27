@@ -1,6 +1,6 @@
 export const metadata = { title: 'Why System Design Matters', description: 'Why a working feature is not yet a working system, what system design is, and when a team must think about it.' }
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-11-27',
   sources: [
     { title: 'How to Use the Azure Well-Architected Framework Documentation', publisher: 'Microsoft Learn', url: 'https://learn.microsoft.com/en-us/azure/well-architected/what-is-well-architected-framework', accessed: '2026-10-20' },
     { title: 'AWS Well-Architected Framework: Introduction', publisher: 'Amazon Web Services', url: 'https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html', accessed: '2026-10-20' },
@@ -39,7 +39,7 @@ A beginner often thinks: login works, the payment button works, and file upload 
 - Which work can run in the background, so that users do not wait?
 - How will we find a problem before customers report it?
 
-These are not rare cases. Microsoft's reliability guide says that failures happen no matter how many layers of protection you add <Cite n={6} />. One job of monitoring is alerting: it tells the team that something is broken, or that something might break soon <Cite n={7} />.
+These are not rare cases. Microsoft's failure mode analysis guide says that failures happen no matter how many layers of resiliency you apply <Cite n={6} />. One job of monitoring is alerting: it tells the team that something is broken, or that something might break soon <Cite n={7} />.
 
 In this module, **system design** means the high-level plan of a software system. It shows how the main parts work together. A design plan usually covers how traffic comes in, the network, compute (the servers that run code), data, storage, and supporting services such as login and messaging <Cite n={6} />. In this module, the main parts are the client, the backend, the database, the cache, the queue, file storage, monitoring, security, and deployment.
 
@@ -47,7 +47,7 @@ System design is not only drawing diagrams. The real work is making **trade-offs
 
 | Trade-off | What it means |
 |---|---|
-| Simplicity vs scalability | A system that splits its work across many parts can grow, but the split adds complexity to the design <Cite n={5} />. |
+| Simplicity vs scalability | A system that partitions its data across many stores can scale, but partitioning adds complexity to the design and development of the workload <Cite n={5} />. |
 | Cost vs availability | More spare copies of each part keep the system up, but more redundancy means more cost <Cite n={4} />. |
 | Performance vs consistency | In a distributed database, the consistency level sets the trade-off between consistency and performance <Cite n={5} />. Consistency means that all copies have the same data at the same time <Cite n={5} />. |
 | Synchronous vs asynchronous | In synchronous work, the caller waits until the work ends. Asynchronous code asks for a task to run without stopping to wait for it to complete <Cite n={8} />. With a message queue, parts can do their tasks independently, at their own pace <Cite n={5} />. |
@@ -78,7 +78,7 @@ Software শেখার সময় বেশিরভাগ মানুষ �
 
 একজন beginner ভাবতে পারেন: login, payment button আর file upload কাজ করছে, তাই system সম্পূর্ণ। একজন engineer আরও প্রশ্ন করেন। একসাথে 10,000 user এলে কী হবে? Server হঠাৎ বন্ধ হলে কী হবে? Payment সফল হলো, কিন্তু confirmation message fail করলে কী হবে? একজন user প্রতি মিনিটে হাজার হাজার request পাঠালে কী হবে? কোন data কখনো হারানো যাবে না? Customer জানানোর আগে আমরা problem কীভাবে খুঁজে পাব?
 
-এগুলো বিরল ঘটনা নয়। Microsoft-এর reliability guide বলে, যত স্তরের সুরক্ষাই যোগ করুন, failure ঘটবেই <Cite n={6} />। Monitoring-এর একটি কাজ হলো alerting: কিছু নষ্ট হয়েছে, বা শিগগির নষ্ট হতে পারে, তা team-কে জানানো <Cite n={7} />।
+এগুলো বিরল ঘটনা নয়। Microsoft-এর failure mode analysis guide বলে, যত স্তরের resiliency-ই প্রয়োগ করুন, failure ঘটবেই <Cite n={6} />। Monitoring-এর একটি কাজ হলো alerting: কিছু নষ্ট হয়েছে, বা শিগগির নষ্ট হতে পারে, তা team-কে জানানো <Cite n={7} />।
 
 এই module-এ **system design** মানে একটি software system-এর high-level পরিকল্পনা, যা দেখায় মূল অংশগুলো কীভাবে একসাথে কাজ করে। এখানে মূল অংশগুলো হলো client, backend, database, cache, queue, file storage, monitoring, security এবং deployment।
 
@@ -143,7 +143,7 @@ The team sees these problems:
 - Certificate downloads time out.
 - The database is overloaded.
 
-These are not only coding bugs. Many of them are architecture risks. The login code can be correct and still be slow, because every request waits for the same busy database. A system that cannot grow can be slow at peak times <Cite n={5} />.
+These are not only coding bugs. Many of them are architecture risks. The login code can be correct and still be slow, because every request waits for the same busy database. A workload that scales well can handle increased traffic without performance degradation <Cite n={5} />, so one that cannot scale is at risk at peak times.
 
 </Technical>
 <Layman>
@@ -152,7 +152,7 @@ Think of an online learning platform, or LMS (learning management system). It wo
 
 Login is slow. The payment callback is late. (The callback is the message from the payment provider that confirms a payment.) Videos do not load. Certificate downloads time out. The database is overloaded.
 
-These problems are not only coding bugs. Many of them are architecture risks. The login code can be correct and still be slow, because every request waits for the same busy database. A system that cannot grow can be slow at peak times <Cite n={5} />.
+These problems are not only coding bugs. Many of them are architecture risks. The login code can be correct and still be slow, because every request waits for the same busy database. A workload that scales well can handle increased traffic without performance degradation <Cite n={5} />, so one that cannot scale is at risk at peak times.
 
 </Layman>
 <Bangla>
@@ -161,7 +161,7 @@ These problems are not only coding bugs. Many of them are architecture risks. Th
 
 Team এই problem-গুলো দেখে: login ধীর; payment callback দেরিতে আসে (callback হলো payment provider-এর পাঠানো message, যা payment নিশ্চিত করে); video load হয় না; certificate download time out হয়; database overloaded হয়।
 
-এগুলো শুধু coding bug নয়। এর অনেকগুলোই architecture-এর ঝুঁকি। Login code ঠিক থাকলেও ধীর হতে পারে, কারণ প্রতিটি request একই ব্যস্ত database-এর জন্য অপেক্ষা করে। যে system বড় হতে পারে না, সেটি peak সময়ে ধীর হতে পারে <Cite n={5} />।
+এগুলো শুধু coding bug নয়। এর অনেকগুলোই architecture-এর ঝুঁকি। Login code ঠিক থাকলেও ধীর হতে পারে, কারণ প্রতিটি request একই ব্যস্ত database-এর জন্য অপেক্ষা করে। যে workload ভালোভাবে scale করে, সেটি বাড়তি traffic-এও performance degradation ছাড়া চলতে পারে <Cite n={5} />, তাই যেটি scale করতে পারে না, সেটি peak সময়ে ঝুঁকিতে থাকে।
 
 </Bangla>
 </Voices>
