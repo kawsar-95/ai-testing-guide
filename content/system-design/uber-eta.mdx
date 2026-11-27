@@ -1,6 +1,6 @@
 export const metadata = { title: 'How Uber Computes ETA', description: 'How Uber turns a road map into a graph, adds traffic, cleans GPS data, and corrects its estimate with a learning model at huge scale.' }
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-11-27',
   sources: [
     { title: 'How Uber Computes ETA at Half a Million Requests per Second', publisher: 'The System Design Newsletter (Neo Kim)', url: 'https://newsletter.systemdesign.one/p/uber-eta', accessed: '2026-10-20' },
     { title: 'DeepETA: How Uber Predicts Arrival Times Using Deep Learning', publisher: 'Uber Engineering Blog', url: 'https://www.uber.com/blog/deepeta-how-uber-predicts-arrival-times/', accessed: '2026-10-20' },
@@ -29,7 +29,7 @@ ETA means the expected time of arrival: the time to travel from point A to point
 
 Uber also uses ETAs to calculate fares, match riders to drivers, and plan deliveries <Cite n={2} />.
 
-The scale is large. One trip usually needs about 1,000 ETA requests <Cite n={1} />. More than 18 million Uber trips finish each day, and the system handles half a million ETA requests per second <Cite n={1} />. The task is hard because a trip is not a straight line. It follows streets and highways <Cite n={1} />. Accuracy matters for the business too. If a trip takes longer than promised, the rider may not book again, and the article says bad ETAs could cost billions of dollars <Cite n={1} />.
+The scale is large. One trip usually needs about 1,000 ETA requests <Cite n={1} />. In 2023 the article said that more than 18 million Uber trips finish each day, and that the system handles half a million ETA requests per second <Cite n={1} />. Uber's own Q3 2025 results show 3.5 billion trips in the quarter, about 38 million a day. The task is hard because a trip is not a straight line. It follows streets and highways <Cite n={1} />. Accuracy matters for the business too. If a trip takes longer than promised, the rider may not book again, and the article says bad ETAs could cost billions of dollars <Cite n={1} />.
 
 </Technical>
 <Layman>
@@ -43,7 +43,7 @@ ETA means the expected time of arrival. It is the time to travel from point A to
 
 Uber also uses ETAs to calculate fares, match riders to drivers, and plan deliveries <Cite n={2} />.
 
-The scale is large. One trip usually needs about 1,000 ETA requests. More than 18 million Uber trips finish each day, and the system handles half a million ETA requests per second <Cite n={1} />. The task is hard because a trip follows streets and highways, not a straight line <Cite n={1} />. If a trip takes longer than promised, the rider may not book again. The article says that bad ETAs could cost billions of dollars <Cite n={1} />.
+The scale is large. One trip usually needs about 1,000 ETA requests <Cite n={1} />. In 2023 the article said that more than 18 million Uber trips finish each day, and that the system handles half a million ETA requests per second <Cite n={1} />. Uber's own Q3 2025 results show 3.5 billion trips in the quarter, about 38 million a day. The task is hard because a trip follows streets and highways, not a straight line <Cite n={1} />. If a trip takes longer than promised, the rider may not book again. The article says that bad ETAs could cost billions of dollars <Cite n={1} />.
 
 </Layman>
 <Bangla>
@@ -57,7 +57,7 @@ ETA মানে expected time of arrival, অর্থাৎ point A থেক�
 
 Uber ভাড়া হিসাব করতে, rider-কে driver-এর সাথে মেলাতে এবং delivery-র পরিকল্পনা করতেও ETA ব্যবহার করে <Cite n={2} />।
 
-এর scale অনেক বড়। একটি trip-এ সাধারণত প্রায় 1,000টি ETA request লাগে। প্রতিদিন 18 million-এর বেশি Uber trip শেষ হয়, আর system প্রতি সেকেন্ডে half a million ETA request সামলায় <Cite n={1} />। কাজটি কঠিন, কারণ একটি trip সরলরেখায় চলে না; এটি রাস্তা আর highway ধরে চলে <Cite n={1} />। Business-এর জন্যও accuracy জরুরি। Trip প্রতিশ্রুত সময়ের চেয়ে বেশি সময় নিলে rider হয়তো আর book করবেন না, আর article বলে, ভুল ETA-র কারণে billions of dollars ক্ষতি হতে পারে <Cite n={1} />।
+এর scale অনেক বড়। একটি trip-এ সাধারণত প্রায় 1,000টি ETA request লাগে <Cite n={1} />। ২০২৩ সালে article বলেছিল, প্রতিদিন 18 million-এর বেশি Uber trip শেষ হয়, আর system প্রতি সেকেন্ডে half a million ETA request সামলায় <Cite n={1} />। Uber-এর নিজস্ব Q3 2025 ফলাফলে ত্রৈমাসিকে 3.5 billion trip, অর্থাৎ দিনে প্রায় 38 million। কাজটি কঠিন, কারণ একটি trip সরলরেখায় চলে না; এটি রাস্তা আর highway ধরে চলে <Cite n={1} />। Business-এর জন্যও accuracy জরুরি। Trip প্রতিশ্রুত সময়ের চেয়ে বেশি সময় নিলে rider হয়তো আর book করবেন না, আর article বলে, ভুল ETA-র কারণে billions of dollars ক্ষতি হতে পারে <Cite n={1} />।
 
 </Bangla>
 </Voices>
@@ -263,10 +263,12 @@ A road graph is only a model of the real world. It cannot show every condition o
 
 Uber's blog says <Cite n={2} />:
 
-- The model must answer within a few milliseconds.
+- The inputs are the origin, the destination, the time of the request, live traffic, and the kind of request, such as a delivery or a ride pickup.
+- The model must answer within a few milliseconds. It gets the highest number of queries per second at Uber.
 - The old model used gradient-boosted trees in XGBoost. They became too big to grow further.
 - The new model is a linear transformer. A full transformer was too slow.
 - It has hundreds of millions of parameters. Each prediction uses only about 0.25 % of them.
+- The team tested 7 types of neural network before it chose this design.
 
 The model scores its mistakes with an asymmetric Huber loss. A setting called omega sets the cost of a too-low guess against a too-high guess <Cite n={2} />. Uber trains and serves the model on Michelangelo, its machine learning platform, and retrains it on a schedule <Cite n={2} />.
 
