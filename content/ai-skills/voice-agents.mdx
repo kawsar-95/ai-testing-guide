@@ -1,11 +1,11 @@
 export const metadata = { title: 'Voice Agents', description: 'AI agents that talk with people on the phone or in an app, and how a tester checks latency, interruptions, accents, noise, and transcripts.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-27',
   sources: [
     { title: 'Realtime API: voice agents', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/realtime', accessed: '2026-10-28' },
     { title: 'Realtime API: voice activity detection', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/realtime-vad', accessed: '2026-10-28' },
     { title: 'Realtime API: conversations', publisher: 'OpenAI API docs', url: 'https://developers.openai.com/api/docs/guides/realtime-conversations', accessed: '2026-10-28' },
-    { title: 'Agent testing', publisher: 'ElevenLabs Agents docs', url: 'https://elevenlabs.io/docs/agents-platform/customization/agent-testing', accessed: '2026-10-28' },
+    { title: 'Agent testing', publisher: 'ElevenLabs Agents docs', url: 'https://elevenlabs.io/docs/eleven-agents/customization/agent-testing', accessed: '2026-10-28' },
     { title: 'Media Streams overview', publisher: 'Twilio docs', url: 'https://www.twilio.com/docs/voice/media-streams', accessed: '2026-10-28' },
     { title: 'Media Streams: WebSocket messages', publisher: 'Twilio docs', url: 'https://www.twilio.com/docs/voice/media-streams/websocket-messages', accessed: '2026-10-28' },
     { title: 'Pipecat', publisher: 'Pipecat (GitHub)', url: 'https://github.com/pipecat-ai/pipecat', accessed: '2026-10-28' },
@@ -64,7 +64,7 @@ For a tester, a voice agent can fail in more ways than a chat bot. It can answer
 <Voices>
 <Technical>
 
-A voice agent is a pipeline. Some products chain three models: speech-to-text, a language model, and text-to-speech <Cite n={7} />. Others use one speech-to-speech model, such as the OpenAI Realtime API <Cite n={1} />.
+A voice agent is a pipeline. Some products chain three models: speech-to-text, a language model, and text-to-speech. Frameworks such as Pipecat build agents from separate speech-recognition, language-model, and text-to-speech services <Cite n={7} />. Others use one speech-to-speech model, such as the OpenAI Realtime API <Cite n={1} />.
 
 ```text
 caller --audio--> phone or app --> transport --> agent
@@ -76,32 +76,32 @@ caller <--audio-- phone or app <-- transport <-----+
 
 - **Transport.** In an app, the Realtime API connects over WebRTC in the browser or over WebSocket on a server <Cite n={1} />. On a phone line, Twilio Media Streams send the raw audio of a call to your WebSocket server <Cite n={5} />. A bidirectional stream can also send audio back <Cite n={5} />. Phone audio is `audio/x-mulaw` at 8000 Hz, base64 encoded <Cite n={6} />, which is lower quality than app audio.
 - **Turn detection.** Voice activity detection (VAD) finds when the caller starts and stops speaking <Cite n={2} />. `server_vad` splits the audio at silences, and `semantic_vad` uses a classifier on the words to guess that the caller has finished <Cite n={2} />. A higher `threshold` needs louder speech and can help in noise; a shorter `silence_duration_ms` ends the turn sooner <Cite n={2} />.
-- **Interruptions.** If the caller speaks while the agent talks, the Realtime server cancels the answer and sends a `response.cancelled` event <Cite n={3} />. Over WebRTC the server cuts the audio that was not played; over WebSocket your code must stop playback and send `conversation.item.truncate` <Cite n={3} />. On a Twilio stream, a `clear` message empties the audio buffer <Cite n={6} />.
-- **Transcripts.** The model cannot exactly match the transcript to the audio, and a cut answer does not get a cut transcript <Cite n={3} />. So the log can hold words that the caller never heard.
+- **Interruptions.** If the caller speaks while the agent talks, the Realtime server cancels the answer and sends a `response.done` event with `response.status` set to `cancelled` <Cite n={3} />. Over WebRTC the server cuts the audio that was not played; over WebSocket your code must stop playback and send `conversation.item.truncate` <Cite n={3} />. On a Twilio stream, a `clear` message empties the audio buffer <Cite n={6} />.
+- **Transcripts.** The model cannot align the transcript exactly with the audio. `conversation.item.truncate` cuts the audio and removes the text for the unplayed part, but it does not give a truncated transcript <Cite n={3} />. So the transcript may not match what the caller actually heard.
 
 </Technical>
 <Layman>
 
-A voice agent is a chain of steps. Some products chain three models: speech to text, a language model, and text to speech <Cite n={7} />. Others use one model that goes from speech to speech, such as the OpenAI Realtime API <Cite n={1} />.
+A voice agent is a chain of steps. Some products chain three models: speech to text, a language model, and text to speech. Frameworks such as Pipecat build agents from separate speech-recognition, language-model, and text-to-speech services <Cite n={7} />. Others use one model that goes from speech to speech, such as the OpenAI Realtime API <Cite n={1} />.
 
 The flow is this. The caller speaks into a phone or an app. The audio goes over a transport to the agent. The agent finds the end of the turn, understands the request, calls tools, and speaks the answer. The answer goes back the same way.
 
 - **Transport.** In an app, the Realtime API connects over WebRTC in the browser, or over WebSocket on a server <Cite n={1} />. On a phone line, Twilio Media Streams send the raw audio of a call to your WebSocket server <Cite n={5} />. A two-way stream can also send audio back <Cite n={5} />. Phone audio is `audio/x-mulaw` at 8000 Hz, base64 encoded <Cite n={6} />. Its quality is lower than app audio.
 - **Turn detection.** Voice activity detection (VAD) finds when the caller starts and stops speaking <Cite n={2} />. `server_vad` splits the audio at silences. `semantic_vad` looks at the words to guess that the caller has finished <Cite n={2} />. A higher `threshold` needs louder speech and can help in noise. A shorter `silence_duration_ms` ends the turn sooner <Cite n={2} />.
-- **Interruptions.** The caller may speak while the agent talks. Then the Realtime server stops the answer and sends a `response.cancelled` event <Cite n={3} />. Over WebRTC, the server cuts the audio that was not played. Over WebSocket, your code must stop the sound and send `conversation.item.truncate` <Cite n={3} />. On a Twilio stream, a `clear` message empties the audio buffer <Cite n={6} />.
-- **Transcripts.** The model cannot exactly match the transcript to the audio. A cut answer does not get a cut transcript <Cite n={3} />. So the log can hold words that the caller never heard.
+- **Interruptions.** The caller may speak while the agent talks. Then the Realtime server stops the answer and sends a `response.done` event whose status is `cancelled` <Cite n={3} />. Over WebRTC, the server cuts the audio that was not played. Over WebSocket, your code must stop the sound and send `conversation.item.truncate` <Cite n={3} />. On a Twilio stream, a `clear` message empties the audio buffer <Cite n={6} />.
+- **Transcripts.** The model cannot align the transcript exactly with the audio. `conversation.item.truncate` cuts the audio and removes the text for the unplayed part, but it does not give a truncated transcript <Cite n={3} />. So the transcript may not match what the caller actually heard.
 
 </Layman>
 <Bangla>
 
-একটা voice agent হলো ধাপের একটা শিকল। কিছু প্রোডাক্ট তিনটা মডেল জোড়া দেয়: speech-to-text, একটা ভাষা মডেল, আর text-to-speech <Cite n={7} />। অন্যরা একটাই speech-to-speech মডেল ব্যবহার করে, যেমন OpenAI Realtime API <Cite n={1} />।
+একটা voice agent হলো ধাপের একটা শিকল। কিছু প্রোডাক্ট তিনটা মডেল জোড়া দেয়: speech-to-text, একটা ভাষা মডেল, আর text-to-speech। Pipecat-এর মতো ফ্রেমওয়ার্ক আলাদা speech-recognition, language-model আর text-to-speech সার্ভিস দিয়ে এজেন্ট বানায় <Cite n={7} />। অন্যরা একটাই speech-to-speech মডেল ব্যবহার করে, যেমন OpenAI Realtime API <Cite n={1} />।
 
 ধাপগুলো এমন। কলার ফোনে বা অ্যাপে কথা বলে। অডিও একটা transport দিয়ে এজেন্টের কাছে যায়। এজেন্ট পালা শেষ হওয়া ধরে, অনুরোধটা বোঝে, টুল কল করে, আর উত্তরটা বলে। উত্তর একই পথে ফিরে আসে।
 
 - **Transport।** অ্যাপে Realtime API ব্রাউজারে WebRTC দিয়ে, বা সার্ভারে WebSocket দিয়ে যুক্ত হয় <Cite n={1} />। ফোন লাইনে Twilio Media Streams একটা কলের কাঁচা অডিও আপনার WebSocket সার্ভারে পাঠায় <Cite n={5} />। দুই-মুখী stream অডিও ফেরতও পাঠাতে পারে <Cite n={5} />। ফোনের অডিও হলো `audio/x-mulaw`, 8000 Hz, base64 এনকোড করা <Cite n={6} />। এর মান অ্যাপের অডিওর চেয়ে কম।
 - **পালা শনাক্ত করা।** Voice activity detection (VAD) ধরে কলার কখন কথা শুরু করে আর কখন থামে <Cite n={2} />। `server_vad` নীরবতার জায়গায় অডিও ভাগ করে। `semantic_vad` শব্দগুলো দেখে আন্দাজ করে কলারের কথা শেষ হয়েছে কিনা <Cite n={2} />। বেশি `threshold` হলে জোরে কথা বলতে হয়, এটা গোলমালে সাহায্য করতে পারে। ছোট `silence_duration_ms` পালা তাড়াতাড়ি শেষ করে <Cite n={2} />।
-- **মাঝখানে বাধা।** এজেন্ট কথা বলার সময় কলার কথা বলে উঠতে পারে। তখন Realtime সার্ভার উত্তরটা থামায় আর একটা `response.cancelled` ইভেন্ট পাঠায় <Cite n={3} />। WebRTC-তে সার্ভার না-বাজানো অডিও কেটে দেয়। WebSocket-এ আপনার কোডকে আওয়াজ থামাতে হয় আর `conversation.item.truncate` পাঠাতে হয় <Cite n={3} />। Twilio stream-এ একটা `clear` মেসেজ অডিও বাফার খালি করে <Cite n={6} />।
-- **ট্রান্সক্রিপ্ট।** মডেল ট্রান্সক্রিপ্টকে অডিওর সাথে ঠিকঠাক মেলাতে পারে না। কেটে দেওয়া উত্তরের ট্রান্সক্রিপ্ট কাটা হয় না <Cite n={3} />। তাই লগে এমন শব্দ থাকতে পারে, যা কলার কখনো শোনেনি।
+- **মাঝখানে বাধা।** এজেন্ট কথা বলার সময় কলার কথা বলে উঠতে পারে। তখন Realtime সার্ভার উত্তরটা থামায় আর `response.status` `cancelled` সহ একটা `response.done` ইভেন্ট পাঠায় <Cite n={3} />। WebRTC-তে সার্ভার না-বাজানো অডিও কেটে দেয়। WebSocket-এ আপনার কোডকে আওয়াজ থামাতে হয় আর `conversation.item.truncate` পাঠাতে হয় <Cite n={3} />। Twilio stream-এ একটা `clear` মেসেজ অডিও বাফার খালি করে <Cite n={6} />।
+- **ট্রান্সক্রিপ্ট।** মডেল ট্রান্সক্রিপ্টকে অডিওর সাথে ঠিকঠাক মেলাতে পারে না। `conversation.item.truncate` অডিও কাটে আর না-বাজানো অংশের টেক্সট সরায়, কিন্তু কাটা ট্রান্সক্রিপ্ট দেয় না <Cite n={3} />। তাই ট্রান্সক্রিপ্ট কলার আসলে যা শুনেছে তার সাথে নাও মিলতে পারে।
 
 </Bangla>
 </Voices>
@@ -114,7 +114,7 @@ The flow is this. The caller speaks into a phone or an app. The audio goes over 
 1. **Measure latency.** Record the time from the end of the caller's speech to the first audio of the answer, for each turn. A fast first audio is one of the core needs of a voice agent <Cite n={1} />. Agree on a target with the team, and track the slowest turns, not only the average. In the tutorial's view, tool calls are a common cause of slow turns, so log them.
 2. **Test interruptions.** Cut in while the agent talks. Check that the agent stops, listens, and answers the new question <Cite n={3} />. Check that it does not cut in on a caller who pauses to think: compare `silence_duration_ms` values and `semantic_vad` on the same recordings <Cite n={2} />.
 3. **Test accents, noise, and phone audio.** Build a set of recorded calls: different accents, a quiet room, a street, a car, a bad line. Play them over a real phone path too, because phone audio is 8000 Hz mu-law <Cite n={6} />. Score the transcripts with **word error rate (WER)**: substitutions plus deletions plus insertions, divided by the words in the reference <Cite n={9} />. Lower is better, and 0 is perfect <Cite n={9} />.
-4. **Check transcripts and tool calls.** Compare the log with what the caller really heard: after an interruption, the transcript can hold words that were never played <Cite n={3} />. Check that each tool call has the right tool and the right parameters <Cite n={4} />.
+4. **Check transcripts and tool calls.** Compare the log with what the caller really heard: after an interruption, the transcript may not match what was played <Cite n={3} />. Check that each tool call has the right tool and the right parameters <Cite n={4} />.
 5. **Automate the conversations.** Write scripted callers. ElevenLabs Agents can run multi-turn simulations with a simulated user, next-reply tests, and tool-call tests <Cite n={4} />, with mocked tools <Cite n={4} />. LiveKit Agents has a test framework with judges <Cite n={8} />. Run these in CI, as in [Headless & CI](/automate/headless/).
 
 <Callout type="tip" title="Tutorial advice">
@@ -127,7 +127,7 @@ This is the tutorial's own advice. Keep a library of real (consented and anonymi
 1. **Measure the delay.** For each turn, record the time from the end of the caller's speech to the first sound of the answer. A fast first sound is one of the core needs of a voice agent <Cite n={1} />. Agree on a target with the team. Track the slowest turns, not only the average. In the tutorial's view, tool calls often cause slow turns. So log them.
 2. **Test interruptions.** Cut in while the agent talks. Check that the agent stops, listens, and answers the new question <Cite n={3} />. Check that it does not cut in on a caller who pauses to think. Compare `silence_duration_ms` values and `semantic_vad` on the same recordings <Cite n={2} />.
 3. **Test accents, noise, and phone audio.** Build a set of recorded calls: different accents, a quiet room, a street, a car, a bad line. Also play them over a real phone path, because phone audio is 8000 Hz mu-law <Cite n={6} />. Score the transcripts with **word error rate (WER)**. It counts the words that were swapped, dropped, or added, and divides by the words in the correct text <Cite n={9} />. Lower is better. 0 is perfect <Cite n={9} />.
-4. **Check transcripts and tool calls.** Compare the log with what the caller really heard. After an interruption, the transcript can hold words that were never played <Cite n={3} />. Check that each tool call has the right tool and the right parameters <Cite n={4} />.
+4. **Check transcripts and tool calls.** Compare the log with what the caller really heard. After an interruption, the transcript may not match what was played <Cite n={3} />. Check that each tool call has the right tool and the right parameters <Cite n={4} />.
 5. **Automate the conversations.** Write callers that follow a script. ElevenLabs Agents can run conversations of many turns with a simulated user, tests of the next reply, and tests of tool calls <Cite n={4} />. It can use fake tools <Cite n={4} />. LiveKit Agents has a test framework with judges <Cite n={8} />. Run these in CI, as in [Headless & CI](/automate/headless/).
 
 This is the tutorial's own advice. Keep a library of real call recordings as your regression set. The callers must agree, and the recordings must be anonymized. Each time the prompt, the model, or the VAD settings change, play the whole library again. Compare the delay, the WER, and the task success rate with the last run.
@@ -138,7 +138,7 @@ This is the tutorial's own advice. Keep a library of real call recordings as you
 1. **দেরি মাপুন।** প্রতিটা পালায় কলারের কথা শেষ হওয়া থেকে উত্তরের প্রথম আওয়াজ পর্যন্ত সময় লিখে রাখুন। দ্রুত প্রথম আওয়াজ একটা voice agent-এর মূল প্রয়োজনগুলোর একটা <Cite n={1} />। টিমের সাথে একটা লক্ষ্য ঠিক করুন। শুধু গড় নয়, সবচেয়ে ধীর পালাগুলোও খেয়াল করুন। টিউটোরিয়ালের মতে, ধীর পালার একটা সাধারণ কারণ হলো টুল কল। তাই সেগুলো লগ করুন।
 2. **মাঝখানে বাধা টেস্ট করুন।** এজেন্ট কথা বলার সময় কথা বলে ঢুকে পড়ুন। দেখুন এজেন্ট থামে, শোনে, আর নতুন প্রশ্নের উত্তর দেয় কিনা <Cite n={3} />। দেখুন, যে কলার ভাবার জন্য থামে, এজেন্ট তার কথার মাঝে ঢুকে পড়ে কিনা। একই রেকর্ডিংয়ে `silence_duration_ms`-এর বিভিন্ন মান আর `semantic_vad` তুলনা করুন <Cite n={2} />।
 3. **উচ্চারণ, গোলমাল আর ফোনের অডিও টেস্ট করুন।** রেকর্ড করা কলের একটা সেট বানান: বিভিন্ন উচ্চারণ, শান্ত ঘর, রাস্তা, গাড়ি, খারাপ লাইন। আসল ফোনের পথেও এগুলো বাজান, কারণ ফোনের অডিও 8000 Hz mu-law <Cite n={6} />। ট্রান্সক্রিপ্টের স্কোর নিন **word error rate (WER)** দিয়ে। এটা বদলে যাওয়া, বাদ পড়া আর বাড়তি শব্দ গোনে, তারপর সঠিক টেক্সটের শব্দসংখ্যা দিয়ে ভাগ করে <Cite n={9} />। কম হলে ভালো। 0 মানে নিখুঁত <Cite n={9} />।
-4. **ট্রান্সক্রিপ্ট আর টুল কল চেক করুন।** কলার আসলে যা শুনেছে, তার সাথে লগ মিলিয়ে দেখুন। বাধার পরে ট্রান্সক্রিপ্টে এমন শব্দ থাকতে পারে, যা কখনো বাজানো হয়নি <Cite n={3} />। দেখুন প্রতিটা টুল কলে ঠিক টুল আর ঠিক প্যারামিটার আছে কিনা <Cite n={4} />।
+4. **ট্রান্সক্রিপ্ট আর টুল কল চেক করুন।** কলার আসলে যা শুনেছে, তার সাথে লগ মিলিয়ে দেখুন। বাধার পরে ট্রান্সক্রিপ্ট যা বাজানো হয়েছে তার সাথে নাও মিলতে পারে <Cite n={3} />। দেখুন প্রতিটা টুল কলে ঠিক টুল আর ঠিক প্যারামিটার আছে কিনা <Cite n={4} />।
 5. **কথোপকথন অটোমেট করুন।** স্ক্রিপ্ট মেনে চলা কলার লিখুন। ElevenLabs Agents একটা সিমুলেটেড ইউজার দিয়ে অনেক পালার কথোপকথন, পরের উত্তরের টেস্ট, আর টুল কলের টেস্ট চালাতে পারে <Cite n={4} />। এটা নকল টুল ব্যবহার করতে পারে <Cite n={4} />। LiveKit Agents-এ judge সহ একটা টেস্ট ফ্রেমওয়ার্ক আছে <Cite n={8} />। এগুলো CI-তে চালান, যেমন [Headless & CI](/automate/headless/)-এ আছে।
 
 এটা টিউটোরিয়ালের নিজের পরামর্শ। আসল কল রেকর্ডিংয়ের একটা লাইব্রেরি আপনার regression set হিসেবে রাখুন। কলারদের সম্মতি থাকতে হবে, আর রেকর্ডিং anonymize করা থাকতে হবে। প্রম্পট, মডেল বা VAD সেটিং বদলালে পুরো লাইব্রেরি আবার বাজান। আগের রানের সাথে দেরি, WER আর কাজ সফল হওয়ার হার তুলনা করুন।
