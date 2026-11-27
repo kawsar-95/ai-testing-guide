@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-11-11',
+  updated: '2026-11-27',
   sources: [
     { title: 'Settings files and precedence', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/settings', accessed: '2026-10-10' },
     { title: 'Explore the .claude directory', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/claude-directory', accessed: '2026-10-10' },
@@ -50,7 +50,7 @@ There are four settings scopes: <Cite n={1} />
 - Claude Code writes `.claude/settings.local.json` the first time you give a standing approval ("Yes, and don't ask again"). <Cite n={1} />
 - On Windows, `~/.claude` means `%USERPROFILE%\.claude`. `CLAUDE_CONFIG_DIR` moves the settings, the session history, and the plugins to another folder. <Cite n={1} />
 
-`~/.claude.json` is a fifth file that Claude Code writes for itself. It holds your sign-in session, MCP server configurations, per-project state such as trust decisions, and global config keys. You do not need to edit it. <Cite n={1} /> When Claude Code rewrites `~/.claude.json`, it copies earlier versions into `~/.claude/backups/`. It keeps the five newest, and also a copy of any version that it could not parse. <Cite n={2} />
+`~/.claude.json` is a fifth file that Claude Code writes for itself. It holds your account details, MCP server configurations, per-project state such as trust decisions, and the global config keys that `/config` writes for you. You do not need to edit it. <Cite n={1} /> When Claude Code rewrites `~/.claude.json`, it copies earlier versions into `~/.claude/backups/`. It keeps the five newest, and also a copy of any version that it could not parse. <Cite n={2} />
 
 ### Write valid JSON
 
@@ -94,7 +94,7 @@ Settings-এর চারটি scope আছে: <Cite n={1} />
 
 Claude Code install করলে কোনো settings file তৈরি হয় না। আপনি প্রথমবার `/config`-এ কোনো user option বদলালে Claude Code `~/.claude/settings.json` লেখে। প্রথমবার স্থায়ী অনুমতি ("Yes, and don't ask again") দিলে Claude Code `.claude/settings.local.json` লেখে। <Cite n={1} /> Windows-এ `~/.claude` মানে `%USERPROFILE%\.claude`। <Cite n={1} />
 
-`~/.claude.json` হলো পঞ্চম একটি file, যা Claude Code নিজের জন্য লেখে। এতে আপনার sign-in session, MCP server configuration, project-ভিত্তিক state (যেমন trust decision) এবং global config key থাকে। এটি edit করার দরকার নেই। <Cite n={1} />
+`~/.claude.json` হলো পঞ্চম একটি file, যা Claude Code নিজের জন্য লেখে। এতে আপনার account details, MCP server configuration, project-ভিত্তিক state (যেমন trust decision) এবং global config key থাকে। এটি edit করার দরকার নেই। <Cite n={1} />
 
 Settings file হলো strict JSON। `//` comment বা trailing comma থাকলে syntax error হয়। Editor-এ autocomplete ও validation পেতে `$schema` key যোগ করুন। <Cite n={1} />
 
@@ -226,7 +226,7 @@ Example: a test team can set the URL of its test environment in `env`, for examp
 
 `hooks` is an object keyed by hook event. Each value is an array of groups with a `matcher` and a `hooks` list. <Cite n={3} /> The handler `type` can be `command`, `prompt`, `agent`, `http`, or `mcp_tool`. Hooks from different files merge. <Cite n={3} />
 
-The docs show a `PostToolUse` hook in `.claude/settings.json` with the matcher `Edit|Write` and a `command` handler that runs Prettier. <Cite n={2} /> Example with a script from your own repository:
+This example uses a script from your own repository. Its shape follows the `hooks` key in the settings reference:
 
 ```json
 {
@@ -457,7 +457,7 @@ claude mcp add --transport http shared-server --scope project https://example.co
 
 In interactive sessions, Claude Code asks for approval before it uses a project-scoped server. <Cite n={9} />
 
-`.mcp.json` supports references to environment variables such as `${NOTION_TOKEN}`, so secrets stay out of the file. <Cite n={2} /> <Cite n={9} /> Example: a QA team writes `${QA_DB_DSN}` for its test database server, and each tester sets the real value in the shell. Its Atlassian server for Jira is a remote server that signs in with OAuth: run `/mcp` and follow the steps in your browser, so the file holds no Jira token. <Cite n={9} /> The [MCP Servers](/extend/mcp/) page covers MCP servers in detail.
+`.mcp.json` supports references to environment variables such as `${API_KEY}`, with an optional default in the form `${VAR:-default}`, so secrets stay out of the file. <Cite n={2} /> <Cite n={9} /> Example: a QA team writes `${QA_DB_DSN}` for its test database server, and each tester sets the real value in the shell. A remote server that needs OAuth, such as one for Jira, signs in through `/mcp`: run `/mcp` and follow the steps in your browser, so the file holds no Jira token. <Cite n={9} /> The [MCP Servers](/extend/mcp/) page covers MCP servers in detail.
 
 </Technical>
 <Layman>
@@ -470,7 +470,7 @@ MCP servers have three scopes: <Cite n={9} />
 
 `.mcp.json` is at the project root, not in `.claude/`. Commit it to share the servers with the team. <Cite n={9} /> <Cite n={2} /> The command `claude mcp add` with `--scope project` writes a server to `.mcp.json`. <Cite n={9} /> In interactive sessions, Claude Code asks for approval before it uses a project-scoped server. <Cite n={9} />
 
-`.mcp.json` can refer to environment variables such as `${NOTION_TOKEN}`. Thus secrets stay out of the file. <Cite n={2} /> <Cite n={9} /> For example, a QA team writes `${QA_DB_DSN}` for its test database server, and each tester sets the real value in the shell. Its Atlassian server for Jira signs in with OAuth: run `/mcp` and follow the steps in your browser. Thus the file holds no Jira token. <Cite n={9} />
+`.mcp.json` can refer to environment variables such as `${API_KEY}`, with an optional default in the form `${VAR:-default}`. Thus secrets stay out of the file. <Cite n={2} /> <Cite n={9} /> For example, a QA team writes `${QA_DB_DSN}` for its test database server, and each tester sets the real value in the shell. A remote server that needs OAuth, such as one for Jira, signs in through `/mcp`: run `/mcp` and follow the steps in your browser. Thus the file holds no Jira token. <Cite n={9} />
 
 </Layman>
 <Bangla>
@@ -483,7 +483,7 @@ MCP server-এর তিনটি scope আছে: <Cite n={9} />
 
 `.mcp.json` থাকে project root-এ, `.claude/`-এর ভেতরে নয়। Team-এর সাথে server share করতে এটি commit করুন। <Cite n={9} /> <Cite n={2} /> `--scope project`-সহ `claude mcp add` command একটি server-কে `.mcp.json`-এ লেখে। <Cite n={9} /> Interactive session-এ project-scoped server ব্যবহারের আগে Claude Code অনুমতি চায়। <Cite n={9} />
 
-`.mcp.json`-এ `${NOTION_TOKEN}`-এর মতো environment variable-এর reference দেওয়া যায়, তাই secret file-এর বাইরে থাকে। <Cite n={2} /> <Cite n={9} /> উদাহরণ: একটি QA team তার test database server-এর জন্য `${QA_DB_DSN}` লেখে, আর প্রত্যেক tester নিজের shell-এ আসল value set করেন। Jira-র জন্য তাদের Atlassian server একটি remote server, যা OAuth দিয়ে sign in করে: `/mcp` চালিয়ে browser-এর ধাপগুলো অনুসরণ করুন। ফলে file-এ কোনো Jira token থাকে না। <Cite n={9} />
+`.mcp.json`-এ `${API_KEY}`-এর মতো environment variable-এর reference দেওয়া যায় (`${VAR:-default}` দিয়ে default-ও দেওয়া যায়), তাই secret file-এর বাইরে থাকে। <Cite n={2} /> <Cite n={9} /> উদাহরণ: একটি QA team তার test database server-এর জন্য `${QA_DB_DSN}` লেখে, আর প্রত্যেক tester নিজের shell-এ আসল value set করেন। OAuth লাগে এমন remote server (যেমন Jira-র জন্য একটি) `/mcp` দিয়ে sign in করে: `/mcp` চালিয়ে browser-এর ধাপগুলো অনুসরণ করুন। ফলে file-এ কোনো Jira token থাকে না। <Cite n={9} />
 
 </Bangla>
 </Voices>
