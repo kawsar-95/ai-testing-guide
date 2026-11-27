@@ -1,6 +1,6 @@
 export const metadata = { title: 'Docker Images and Compose', description: 'How a Dockerfile builds an image, how the build cache works, and how Docker Compose starts a whole test environment from one file, with Bake for builds.' }
 export const page = {
-  updated: '2026-11-16',
+  updated: '2026-11-27',
   sources: [
     { title: 'Dockerfile reference', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/dockerfile/', accessed: '2026-11-16' },
     { title: 'docker buildx build', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/cli/docker/buildx/build/', accessed: '2026-11-16' },
@@ -13,7 +13,7 @@ export const page = {
     { title: 'Docker Compose', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/', accessed: '2026-11-16' },
     { title: 'How Compose works', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/intro/compose-application-model/', accessed: '2026-11-16' },
     { title: 'Docker Compose Quickstart', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/gettingstarted/', accessed: '2026-11-16' },
-    { title: 'Define services in Docker Compose', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/compose-file/services/', accessed: '2026-11-16' },
+    { title: 'Workload specification', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/compose-file/workload-spec/', accessed: '2026-11-27' },
     { title: 'Control startup and shutdown order in Compose', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/how-tos/startup-order/', accessed: '2026-11-16' },
     { title: 'Networking in Compose', publisher: 'Docker Docs', url: 'https://docs.docker.com/compose/how-tos/networking/', accessed: '2026-11-16' },
     { title: 'docker compose up', publisher: 'Docker Docs', url: 'https://docs.docker.com/reference/cli/docker/compose/up/', accessed: '2026-11-16' },
@@ -299,7 +299,7 @@ volumes:
   redis-data:
 ```
 
-The `web` service uses an image built from the Dockerfile in the current directory, and maps port 8000 on the host to port 5000 in the container <Cite n={11} />. The `redis` service uses a public Redis image from Docker Hub <Cite n={11} />. `redis-cli ping` expects a `PONG` response; with `interval: 5s` and `retries: 5`, Compose waits up to 25 seconds before giving up <Cite n={11} />. The `redis-data:/data` entry mounts the named volume at `/data`, the path where Redis writes its data files <Cite n={11} />.
+The `web` service uses an image built from the Dockerfile in the current directory, and maps port 8000 on the host to port 5000 in the container <Cite n={11} />. The `redis` service uses a public Redis image from Docker Hub <Cite n={11} />. `redis-cli ping` expects a `PONG` response; with `interval: 5s` and `retries: 5`, the Quickstart says Compose waits up to 25 seconds before giving up <Cite n={11} />. The same file also sets a 10-second `start_period` and a 3-second `timeout` for each check, so the real wait can be longer. The `redis-data:/data` entry mounts the named volume at `/data`, the path where Redis writes its data files <Cite n={11} />.
 
 **5. Check what Compose will apply.** `docker compose config` works purely from your files, and the variables of `.env` are replaced with their values <Cite n={11} />:
 
@@ -335,7 +335,7 @@ docker compose exec redis redis-cli GET hits
 
 Press Ctrl+C to stop following the logs; the containers keep running <Cite n={11} />. In the tutorial's run, `env` showed `REDIS_HOST=redis` and `REDIS_PORT=6379`, and `GET hits` returned `3`.
 
-**8. Stop it, start it again, and reset it.** The named volume persists between `compose down` and `compose up` cycles <Cite n={11} />. `--wait` waits for services to be running or healthy, and implies detached mode <Cite n={15} />:
+**8. Stop it, start it again, and reset it.** The named volume persists between `compose down` and `compose up` cycles <Cite n={11} />. `--wait` waits for services to be running or healthy, and streams their logs unless `--detach` is set <Cite n={15} />:
 
 ```bash
 docker compose down
@@ -454,7 +454,7 @@ volumes:
   redis-data:
 ```
 
-The `web` service uses an image built from the Dockerfile in this folder, and connects port 8000 on the host to port 5000 in the container <Cite n={11} />. The `redis` service uses a public Redis image from Docker Hub <Cite n={11} />. `redis-cli ping` expects the answer `PONG`; with `interval: 5s` and `retries: 5`, Compose waits up to 25 seconds before it gives up <Cite n={11} />. `redis-data:/data` mounts the named volume at `/data`, where Redis writes its data files <Cite n={11} />.
+The `web` service uses an image built from the Dockerfile in this folder, and connects port 8000 on the host to port 5000 in the container <Cite n={11} />. The `redis` service uses a public Redis image from Docker Hub <Cite n={11} />. `redis-cli ping` expects the answer `PONG`; with `interval: 5s` and `retries: 5`, the Quickstart says Compose waits up to 25 seconds before it gives up <Cite n={11} />. The same file also sets a 10-second `start_period` and a 3-second `timeout` for each check, so the real wait can be longer. `redis-data:/data` mounts the named volume at `/data`, where Redis writes its data files <Cite n={11} />.
 
 **5. Check what Compose will apply.** `docker compose config` works only from your files, and puts in the values of `.env` <Cite n={11} />:
 
@@ -490,7 +490,7 @@ docker compose exec redis redis-cli GET hits
 
 Press Ctrl+C to stop following the logs; the containers keep running <Cite n={11} />. In the tutorial's run, `env` showed `REDIS_HOST=redis` and `REDIS_PORT=6379`, and `GET hits` returned `3`.
 
-**8. Stop it, start it again, and reset it.** The named volume stays between `compose down` and `compose up` <Cite n={11} />. `--wait` waits until the services are running or healthy, and runs them in the background <Cite n={15} />:
+**8. Stop it, start it again, and reset it.** The named volume stays between `compose down` and `compose up` <Cite n={11} />. `--wait` waits until the services are running or healthy, and shows their logs unless you also use `-d` <Cite n={15} />:
 
 ```bash
 docker compose down
@@ -609,7 +609,7 @@ volumes:
   redis-data:
 ```
 
-`web` service বর্তমান directory-র Dockerfile থেকে build করা image ব্যবহার করে, আর host-এর port 8000-কে container-এর port 5000-এর সাথে map করে <Cite n={11} />। `redis` service Docker Hub-এর একটা public Redis image ব্যবহার করে <Cite n={11} />। `redis-cli ping` একটা `PONG` উত্তর আশা করে; `interval: 5s` আর `retries: 5` থাকলে হাল ছাড়ার আগে Compose সর্বোচ্চ 25 সেকেন্ড অপেক্ষা করে <Cite n={11} />। `redis-data:/data` named volume-টা `/data`-তে mount করে, যেখানে Redis তার data file লেখে <Cite n={11} />।
+`web` service বর্তমান directory-র Dockerfile থেকে build করা image ব্যবহার করে, আর host-এর port 8000-কে container-এর port 5000-এর সাথে map করে <Cite n={11} />। `redis` service Docker Hub-এর একটা public Redis image ব্যবহার করে <Cite n={11} />। `redis-cli ping` একটা `PONG` উত্তর আশা করে; `interval: 5s` আর `retries: 5` থাকলে Quickstart বলে হাল ছাড়ার আগে Compose সর্বোচ্চ 25 সেকেন্ড অপেক্ষা করে <Cite n={11} />। একই ফাইলে 10 সেকেন্ডের `start_period` আর প্রতি check-এর জন্য 3 সেকেন্ডের `timeout`-ও আছে, তাই আসল অপেক্ষা আরও বেশি হতে পারে। `redis-data:/data` named volume-টা `/data`-তে mount করে, যেখানে Redis তার data file লেখে <Cite n={11} />।
 
 **৫. Compose কী প্রয়োগ করবে, দেখে নিন।** `docker compose config` শুধু আপনার file থেকে কাজ করে, আর `.env`-এর variable-গুলোর জায়গায় তাদের মান বসায় <Cite n={11} />:
 
@@ -645,7 +645,7 @@ docker compose exec redis redis-cli GET hits
 
 log অনুসরণ থামাতে Ctrl+C চাপুন; container চলতেই থাকে <Cite n={11} />। টিউটোরিয়ালের run-এ `env` দেখিয়েছে `REDIS_HOST=redis` আর `REDIS_PORT=6379`, আর `GET hits` দিয়েছে `3`।
 
-**৮. থামান, আবার চালু করুন, তারপর reset করুন।** named volume `compose down` আর `compose up`-এর মাঝেও টিকে থাকে <Cite n={11} />। `--wait` service-গুলো running বা healthy হওয়া পর্যন্ত অপেক্ষা করে, আর detached mode-ও বোঝায় <Cite n={15} />:
+**৮. থামান, আবার চালু করুন, তারপর reset করুন।** named volume `compose down` আর `compose up`-এর মাঝেও টিকে থাকে <Cite n={11} />। `--wait` service-গুলো running বা healthy হওয়া পর্যন্ত অপেক্ষা করে; `--detach` না দিলে সেগুলোর log দেখায় <Cite n={15} />:
 
 ```bash
 docker compose down
