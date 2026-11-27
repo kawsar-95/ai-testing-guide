@@ -1,6 +1,6 @@
 export const metadata = { title: "Observability", description: "Trace prompts, tool calls, tokens, and failures." }
 export const page = {
-  updated: '2026-11-11',
+  updated: '2026-11-27',
   sources: [
     { title: 'Traces', publisher: 'OpenTelemetry (Docs: Concepts)', url: 'https://opentelemetry.io/docs/concepts/signals/traces/', accessed: '2026-10-28' },
     { title: 'Semantic conventions for GenAI client inference', publisher: 'OpenTelemetry (semantic-conventions-genai on GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/client-inference.md', accessed: '2026-10-28' },
@@ -63,6 +63,7 @@ The OTel GenAI conventions name the span `{gen_ai.operation.name} {gen_ai.reques
 | Attribute | What it holds |
 |---|---|
 | `gen_ai.operation.name` | The operation, for example `chat` (required) |
+| `gen_ai.provider.name` | The provider, for example `anthropic` (required) |
 | `gen_ai.request.model` | The model that the app asked for |
 | `gen_ai.response.model` | The model name in the response |
 | `gen_ai.usage.input_tokens` | All input tokens, including cached tokens |
@@ -86,6 +87,7 @@ The text of the prompt and the answer can go into opt-in attributes, such as `ge
 Record these details for each model call. The OTel GenAI conventions name the span `{gen_ai.operation.name} {gen_ai.request.model}`. An example is `chat claude-sonnet-5-5` <Cite n={2} />. Useful attributes are <Cite n={2} />:
 
 - `gen_ai.operation.name`: the operation, for example `chat`. It is required.
+- `gen_ai.provider.name`: the provider, for example `anthropic`. It is required.
 - `gen_ai.request.model`: the model that the app asked for.
 - `gen_ai.response.model`: the model name in the response.
 - `gen_ai.usage.input_tokens`: all the input tokens, including the cached tokens.
@@ -105,6 +107,7 @@ The text of the prompt and the answer can go into special attributes, such as `g
 প্রতিটা মডেল কলের জন্য এই তথ্যগুলো রেকর্ড করুন। OTel GenAI conventions স্প্যানের নাম দেয় `{gen_ai.operation.name} {gen_ai.request.model}`। একটা উদাহরণ হলো `chat claude-sonnet-5-5` <Cite n={2} />। কাজের অ্যাট্রিবিউটগুলো হলো <Cite n={2} />:
 
 - `gen_ai.operation.name`: অপারেশন, যেমন `chat`। এটা দরকারি।
+- `gen_ai.provider.name`: প্রোভাইডার, যেমন `anthropic`। এটা দরকারি।
 - `gen_ai.request.model`: অ্যাপ যে মডেল চেয়েছিল।
 - `gen_ai.response.model`: রেসপন্সে থাকা মডেলের নাম।
 - `gen_ai.usage.input_tokens`: ক্যাশ করা টোকেনসহ সব ইনপুট টোকেন।
@@ -125,7 +128,7 @@ Claude Messages API এই সংখ্যাগুলো তার `usage` অ�
 <Voices>
 <Technical>
 
-Traces explain one request. Metrics show trends. OTel defines `gen_ai.client.operation.duration`, a histogram of how long a GenAI operation takes, in seconds <Cite n={4} />. For streaming, `gen_ai.client.inference.time_to_first_chunk` measures the time from the request to the first chunk <Cite n={2} />.
+Traces explain one request. Metrics show trends <Cite n={4} />. OTel defines `gen_ai.client.inference.duration`, a histogram of how long a model call takes, in seconds <Cite n={2} />. For streaming, `gen_ai.client.inference.time_to_first_chunk` measures the time from the request to the first chunk <Cite n={2} />.
 
 In Python, a tracer opens a span with `start_as_current_span`, and `set_attribute` adds a value to the span <Cite n={7} />:
 
@@ -139,6 +142,7 @@ client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 with tracer.start_as_current_span("chat claude-sonnet-5-5") as span:
     span.set_attribute("gen_ai.operation.name", "chat")
+    span.set_attribute("gen_ai.provider.name", "anthropic")
     span.set_attribute("gen_ai.request.model", "claude-sonnet-5-5")
     msg = client.messages.create(
         model="claude-sonnet-5-5",
@@ -159,14 +163,14 @@ with tracer.start_as_current_span("chat claude-sonnet-5-5") as span:
 </Technical>
 <Layman>
 
-Traces explain one request. Metrics show trends. OTel defines `gen_ai.client.operation.duration`. It is a histogram of how long a GenAI operation takes, in seconds <Cite n={4} />. For streaming, `gen_ai.client.inference.time_to_first_chunk` measures the time from the request to the first chunk <Cite n={2} />.
+Traces explain one request. Metrics show trends. OTel defines `gen_ai.client.inference.duration`. It is a histogram of how long a model call takes, in seconds <Cite n={2} />. For streaming, `gen_ai.client.inference.time_to_first_chunk` measures the time from the request to the first chunk <Cite n={2} />.
 
 In Python, a tracer opens a span with `start_as_current_span`. The method `set_attribute` adds a value to the span <Cite n={7} />. The Technical text has a short Python example. It opens a span, calls the model, and saves the model name, the token counts, and the stop reason on the span.
 
 </Layman>
 <Bangla>
 
-ট্রেস একটা রিকুয়েস্ট ব্যাখ্যা করে। মেট্রিক প্রবণতা দেখায়। OTel `gen_ai.client.operation.duration` নির্ধারণ করে। এটা একটা হিস্টোগ্রাম (histogram), যা দেখায় একটা GenAI অপারেশনে কত সেকেন্ড লাগে <Cite n={4} />। স্ট্রিমিংয়ের জন্য `gen_ai.client.inference.time_to_first_chunk` রিকুয়েস্ট থেকে প্রথম চাঙ্ক (chunk) পর্যন্ত সময় মাপে <Cite n={2} />।
+ট্রেস একটা রিকুয়েস্ট ব্যাখ্যা করে। মেট্রিক প্রবণতা দেখায় <Cite n={4} />। OTel `gen_ai.client.inference.duration` নির্ধারণ করে। এটা একটা হিস্টোগ্রাম (histogram), যা দেখায় একটা মডেল কলে কত সেকেন্ড লাগে <Cite n={2} />। স্ট্রিমিংয়ের জন্য `gen_ai.client.inference.time_to_first_chunk` রিকুয়েস্ট থেকে প্রথম চাঙ্ক (chunk) পর্যন্ত সময় মাপে <Cite n={2} />।
 
 Python-এ একটা tracer `start_as_current_span` দিয়ে একটা স্প্যান খোলে। `set_attribute` মেথড স্প্যানে একটা মান যোগ করে <Cite n={7} />। Technical টেক্সটে একটা ছোট Python উদাহরণ আছে। এটা একটা স্প্যান খোলে, মডেল কল করে, এবং স্প্যানে মডেলের নাম, টোকেনের সংখ্যা ও থামার কারণ সেভ করে।
 
@@ -297,7 +301,7 @@ These test ideas are the tutorial's own advice.
 | Span | One unit of work in a trace, with a start, an end, and attributes <Cite n={1} /> |
 | Semantic conventions | Shared attribute names, for example `gen_ai.usage.input_tokens` <Cite n={2} /> |
 | `execute_tool` | The operation name of a tool call span <Cite n={3} /> |
-| `gen_ai.client.operation.duration` | A metric for the duration of a GenAI operation, in seconds <Cite n={4} /> |
+| `gen_ai.client.inference.duration` | A metric for the duration of a model call, in seconds <Cite n={2} /> |
 | `usage` | The token counts in a Claude API response <Cite n={5} /> |
 | `request-id` | The unique id header of each Claude API response <Cite n={6} /> |
 | Tracer | The object that creates spans <Cite n={7} /> |
