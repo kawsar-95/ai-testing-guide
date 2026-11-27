@@ -1,6 +1,6 @@
 export const metadata = { title: 'Final Output', description: 'How an agent run ends: an answer, an action taken, or a handoff to a human or another agent.' }
 export const page = {
-  updated: '2026-11-11',
+  updated: '2026-11-27',
   sources: [
     { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
     { title: 'Get structured output from agents', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/structured-outputs', accessed: '2026-10-28' },
@@ -9,7 +9,7 @@ export const page = {
     { title: 'Agents', publisher: 'OpenAI Agents SDK (Python)', url: 'https://openai.github.io/openai-agents-python/agents/', accessed: '2026-10-28' },
     { title: 'Handoffs', publisher: 'OpenAI Agents SDK (Python)', url: 'https://openai.github.io/openai-agents-python/handoffs/', accessed: '2026-10-28' },
     { title: 'Interrupts', publisher: 'LangGraph Docs (LangChain)', url: 'https://docs.langchain.com/oss/python/langgraph/interrupts', accessed: '2026-10-28' },
-    { title: 'LLM05:2025 Improper Output Handling', publisher: 'OWASP GenAI Security Project', url: 'https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/', accessed: '2026-10-28' },
+    { title: 'LLM10:2026 Improper Output Handling', publisher: 'OWASP GenAI Security Project', url: 'https://github.com/GenAI-Security-Project/GenAI-LLM-Top10/blob/main/2026/final/LLM10_ImproperOutputHandling.md', accessed: '2026-10-28' },
   ],
 }
 
@@ -84,9 +84,9 @@ For the loop that comes before this, see [Agentic Loops](/ai-concepts/agentic-lo
 | `error_during_execution` | An error stopped the loop | No |
 | `error_max_structured_output_retries` | No valid structured output | No |
 
-The docs say: always check the subtype before you read `result`. The `stop_reason` field adds detail, for example `end_turn`, `max_tokens`, or `refusal` <Cite n={1} />.
+The docs say the `subtype` is the primary way to check how the run ended. The `stop_reason` field adds detail, for example `end_turn`, `max_tokens`, or `refusal` <Cite n={1} />.
 
-**Structured output (Claude Agent SDK).** Pass a JSON Schema in `outputFormat` (TypeScript) or `output_format` (Python). The agent can use tools first. At the end, the result message has a `structured_output` field. The SDK validates the output. On a mismatch, the agent gets an error and tries again. If no valid output comes within the retry limit, the subtype is `error_max_structured_output_retries`. A `success` result with no `structured_output` is also a failure <Cite n={2} />.
+**Structured output (Claude Agent SDK).** Pass a JSON Schema in `outputFormat` (TypeScript) or `output_format` (Python). The agent can use tools first. At the end, the result message has a `structured_output` field. The SDK validates the output. On a mismatch, the agent gets an error and tries again. If no valid output comes within the retry limit, the subtype is `error_max_structured_output_retries`. A `success` result is also a failure when `is_error` is `true` or `structured_output` is absent <Cite n={2} />.
 
 **`final_output` (OpenAI Agents SDK).** The run result has `final_output`: the output of the last agent that ran. Without an `output_type` it is a string. With an `output_type` it is an object of that type <Cite n={4} />. Setting `output_type` makes the model use structured outputs <Cite n={5} />.
 
@@ -99,9 +99,9 @@ The docs say: always check the subtype before you read `result`. The `stop_reaso
 </Technical>
 <Layman>
 
-**The result message (Claude Agent SDK).** The `ResultMessage` has the final text, the token usage, the cost, and the session ID. Its `subtype` says how the run ended <Cite n={1} />. `success` means Claude finished the task. The other subtypes are errors: the turn limit (`error_max_turns`), the budget limit (`error_max_budget_usd`), an error during the run (`error_during_execution`), or no valid structured output (`error_max_structured_output_retries`). Only `success` has the `result` text. The docs say: always check the subtype first. The `stop_reason` field adds detail, for example `end_turn`, `max_tokens`, or `refusal` <Cite n={1} />.
+**The result message (Claude Agent SDK).** The `ResultMessage` has the final text, the token usage, the cost, and the session ID. Its `subtype` says how the run ended <Cite n={1} />. `success` means Claude finished the task. The other subtypes are errors: the turn limit (`error_max_turns`), the budget limit (`error_max_budget_usd`), an error during the run (`error_during_execution`), or no valid structured output (`error_max_structured_output_retries`). Only `success` has the `result` text. The docs say the subtype is the main way to check how the run ended. The `stop_reason` field adds detail, for example `end_turn`, `max_tokens`, or `refusal` <Cite n={1} />.
 
-**Structured output (Claude Agent SDK).** You give a JSON Schema in `outputFormat` or `output_format`. The agent can use tools first. At the end, the result message has a `structured_output` field. The SDK checks the output. If it does not match, the agent gets an error and tries again. If no valid output comes within the retry limit, the subtype is `error_max_structured_output_retries`. A `success` result with no `structured_output` is also a failure <Cite n={2} />.
+**Structured output (Claude Agent SDK).** You give a JSON Schema in `outputFormat` or `output_format`. The agent can use tools first. At the end, the result message has a `structured_output` field. The SDK checks the output. If it does not match, the agent gets an error and tries again. If no valid output comes within the retry limit, the subtype is `error_max_structured_output_retries`. A `success` result is also a failure when `is_error` is `true` or `structured_output` is absent <Cite n={2} />.
 
 **`final_output` (OpenAI Agents SDK).** The run result has `final_output`: the output of the last agent that ran. Without an `output_type` it is a string. With an `output_type` it is an object of that type <Cite n={4} />. `output_type` makes the model use structured outputs <Cite n={5} />. `final_output` is `None` if the run stopped early, for example to wait for an approval. The approvals that wait are in `interruptions` <Cite n={4} />. If the run goes past `max_turns`, the SDK raises `MaxTurnsExceeded` <Cite n={3} />.
 
@@ -112,9 +112,9 @@ The docs say: always check the subtype before you read `result`. The `stop_reaso
 </Layman>
 <Bangla>
 
-**Result message (Claude Agent SDK)।** `ResultMessage`-এ final text, token usage, খরচ আর session ID থাকে। এর `subtype` বলে run কীভাবে শেষ হলো <Cite n={1} />। `success` মানে Claude কাজ শেষ করেছে। বাকি subtype-গুলো error: turn-এর সীমা (`error_max_turns`), budget-এর সীমা (`error_max_budget_usd`), run চলার সময় error (`error_during_execution`), বা কোনো valid structured output নেই (`error_max_structured_output_retries`)। শুধু `success`-এ `result` text থাকে। Docs বলে: সবসময় আগে subtype দেখুন। `stop_reason` field আরও তথ্য দেয়, যেমন `end_turn`, `max_tokens`, বা `refusal` <Cite n={1} />।
+**Result message (Claude Agent SDK)।** `ResultMessage`-এ final text, token usage, খরচ আর session ID থাকে। এর `subtype` বলে run কীভাবে শেষ হলো <Cite n={1} />। `success` মানে Claude কাজ শেষ করেছে। বাকি subtype-গুলো error: turn-এর সীমা (`error_max_turns`), budget-এর সীমা (`error_max_budget_usd`), run চলার সময় error (`error_during_execution`), বা কোনো valid structured output নেই (`error_max_structured_output_retries`)। শুধু `success`-এ `result` text থাকে। Docs বলে, run কীভাবে শেষ হলো তা দেখার প্রধান উপায় হলো `subtype`। `stop_reason` field আরও তথ্য দেয়, যেমন `end_turn`, `max_tokens`, বা `refusal` <Cite n={1} />।
 
-**Structured output (Claude Agent SDK)।** আপনি `outputFormat` বা `output_format`-এ একটা JSON Schema দেন। Agent আগে tool ব্যবহার করতে পারে। শেষে result message-এ একটা `structured_output` field থাকে। SDK output যাচাই করে। না মিললে agent একটা error পায় আর আবার চেষ্টা করে। Retry-এর সীমার মধ্যে valid output না এলে subtype হয় `error_max_structured_output_retries`। `structured_output` ছাড়া একটা `success` result-ও ব্যর্থতা <Cite n={2} />।
+**Structured output (Claude Agent SDK)।** আপনি `outputFormat` বা `output_format`-এ একটা JSON Schema দেন। Agent আগে tool ব্যবহার করতে পারে। শেষে result message-এ একটা `structured_output` field থাকে। SDK output যাচাই করে। না মিললে agent একটা error পায় আর আবার চেষ্টা করে। Retry-এর সীমার মধ্যে valid output না এলে subtype হয় `error_max_structured_output_retries`। `is_error` `true` হলে বা `structured_output` না থাকলে একটা `success` result-ও ব্যর্থতা <Cite n={2} />।
 
 **`final_output` (OpenAI Agents SDK)।** Run result-এ `final_output` থাকে: শেষ যে agent চলেছে তার output। `output_type` না থাকলে এটা একটা string। `output_type` থাকলে এটা সেই ধরনের একটা object <Cite n={4} />। `output_type` দিলে model structured output ব্যবহার করে <Cite n={5} />। Run আগেই থেমে গেলে `final_output` হয় `None`, যেমন একটা approval-এর জন্য অপেক্ষা করলে। অপেক্ষায় থাকা approval-গুলো `interruptions`-এ থাকে <Cite n={4} />। Run `max_turns` পার হলে SDK `MaxTurnsExceeded` raise করে <Cite n={3} />।
 
@@ -136,7 +136,7 @@ This example is invented. A team builds a triage agent for new bug reports. The 
 { "component": "checkout", "severity": "high", "next_step": "assign" }
 ```
 
-The team runs it with the Claude Agent SDK and passes this shape as a JSON Schema in `output_format`. Their code reads `structured_output` only when the subtype is `success` and the field is present. Every other result goes to a "needs review" queue <Cite n={2} />.
+The team runs it with the Claude Agent SDK and passes this shape as a JSON Schema in `output_format`. Their code reads `structured_output` only when the subtype is `success`, `is_error` is false, and the field is present. Every other result goes to a "needs review" queue <Cite n={2} />.
 
 Three runs show the three ways a run can end:
 
@@ -148,7 +148,7 @@ run 3  stop_reason = refusal                -> needs review
 
 Run 2 hit the turn limit and has no `result` <Cite n={1} />. In run 3, `stop_reason` is `refusal`: the model declined the request. The docs say to check `stop_reason` to detect a refusal <Cite n={1} />, so the team checks it as well as the subtype.
 
-Later, the team adds a second agent for security bugs with the OpenAI Agents SDK. The triage agent hands off with `transfer_to_security_agent`. The team now logs `last_agent` with each `final_output`, so they know which agent wrote the answer <Cite n={4} />.
+Later, the team moves the triage agent to the OpenAI Agents SDK and adds a second agent, named `Security agent`, for security bugs. The triage agent hands off with the tool `transfer_to_security_agent`. The team now logs `last_agent` with each `final_output`, so they know which agent wrote the answer <Cite n={4} />.
 
 </Technical>
 <Layman>
@@ -157,7 +157,7 @@ This example is invented. A team builds an agent that sorts new bug reports. The
 
 The team uses the Claude Agent SDK. They describe the shape of the record with a JSON Schema. This is a set of rules for what the record must look like. They pass it in `output_format`.
 
-Their code reads `structured_output` only in two cases. The subtype must be `success`. The field must also be there. Every other result goes to a "needs review" queue <Cite n={2} />.
+Their code reads `structured_output` only in two cases. The subtype must be `success`, `is_error` must be false, and the field must be there. Every other result goes to a "needs review" queue <Cite n={2} />.
 
 Three runs show three ways a run can end:
 
@@ -167,7 +167,7 @@ Three runs show three ways a run can end:
 
 The docs say to check `stop_reason` to find a refusal <Cite n={1} />. So the team checks it as well as the subtype.
 
-Later, the team adds a second agent for security bugs. This agent uses the OpenAI Agents SDK. The first agent passes the work to it with `transfer_to_security_agent`.
+Later, the team moves the triage agent to the OpenAI Agents SDK. They add a second agent, named `Security agent`, for security bugs. The triage agent passes the work to it with the tool `transfer_to_security_agent`.
 
 The team now logs `last_agent` with each `final_output`. The `final_output` is the answer the run gives back. The log shows which agent wrote that answer <Cite n={4} />.
 
@@ -176,11 +176,11 @@ The team now logs `last_agent` with each `final_output`. The `final_output` is t
 
 এই উদাহরণটা বানানো। একটা টিম নতুন bug report-এর জন্য একটা triage agent বানায়। Agent একটা report পড়ে, code খোঁজে, আর তিনটা field সহ একটা রেকর্ড ফেরত দিতে হয়: `component`, `severity` আর `next_step`।
 
-টিমটা Claude Agent SDK ব্যবহার করে, আর এই আকারটা `output_format`-এ একটা JSON Schema হিসেবে দেয়। তাদের code শুধু তখনই `structured_output` পড়ে, যখন subtype `success` আর field-টা আছে। বাকি সব result একটা "needs review" queue-তে যায় <Cite n={2} />।
+টিমটা Claude Agent SDK ব্যবহার করে, আর এই আকারটা `output_format`-এ একটা JSON Schema হিসেবে দেয়। তাদের code শুধু তখনই `structured_output` পড়ে, যখন subtype `success`, `is_error` false আর field-টা আছে। বাকি সব result একটা "needs review" queue-তে যায় <Cite n={2} />।
 
 তিনটা run তিন রকম শেষ দেখায়। Run 1 হলো `structured_output` সহ `success`, তাই ticket আপডেট হয়। Run 2 turn-এর সীমায় পৌঁছেছে (`error_max_turns`), আর তার কোনো `result` নেই <Cite n={1} />। Run 3-এ `stop_reason` হলো `refusal`, মানে model অনুরোধটা প্রত্যাখ্যান করেছে। Docs বলে, refusal ধরতে `stop_reason` দেখতে হয় <Cite n={1} />, তাই টিমটা subtype-এর সঙ্গে এটাও দেখে। Run 2 আর 3 review-তে যায়।
 
-পরে টিমটা OpenAI Agents SDK দিয়ে security bug-এর জন্য দ্বিতীয় একটা agent যোগ করে। Triage agent `transfer_to_security_agent` দিয়ে handoff করে। টিমটা এখন প্রতিটা `final_output`-এর সঙ্গে `last_agent` log করে, যাতে জানা যায় কোন agent উত্তরটা লিখেছে <Cite n={4} />।
+পরে টিমটা triage agent-কে OpenAI Agents SDK-তে সরায় আর security bug-এর জন্য `Security agent` নামে দ্বিতীয় একটা agent যোগ করে। Triage agent `transfer_to_security_agent` tool দিয়ে handoff করে। টিমটা এখন প্রতিটা `final_output`-এর সঙ্গে `last_agent` log করে, যাতে জানা যায় কোন agent উত্তরটা লিখেছে <Cite n={4} />।
 
 </Bangla>
 </Voices>
@@ -191,7 +191,7 @@ The team now logs `last_agent` with each `final_output`. The `final_output` is t
 <Technical>
 
 - **Reading `result` without the subtype.** Only `success` has `result`. A run that hit a limit has no final answer <Cite n={1} />.
-- **Trusting `success` alone.** A `success` result can have no `structured_output`, and the docs say to treat that as a failure <Cite n={2} />. Check `stop_reason` for `refusal` too <Cite n={1} />.
+- **Trusting `success` alone.** A `success` result is still a failure when `is_error` is `true` or `structured_output` is absent <Cite n={2} />. Check `stop_reason` for `refusal` too <Cite n={1} />.
 - **Parsing free text when code needs data.** Agents return free-form text by default. Use an output schema when another program reads the output <Cite n={2} />.
 - **Passing the output straight to another system.** OWASP calls this improper output handling: the output goes downstream without enough validation. Treat the model as any other user, with zero trust <Cite n={8} />. A valid shape does not make the content safe. Output in a shell can lead to remote code execution, output in a web page to XSS, and output in SQL to SQL injection <Cite n={8} />.
 - **Assuming `final_output` is always set.** In the OpenAI Agents SDK it is `None` when the run paused for an approval <Cite n={4} />.
@@ -201,7 +201,7 @@ The team now logs `last_agent` with each `final_output`. The `final_output` is t
 <Layman>
 
 - **Reading `result` without the subtype.** Only `success` has `result`. A run that hit a limit has no final answer <Cite n={1} />.
-- **Trusting `success` alone.** A `success` result can have no `structured_output`. The docs say to treat that as a failure <Cite n={2} />. Check `stop_reason` for `refusal` too <Cite n={1} />.
+- **Trusting `success` alone.** A `success` result is still a failure when `is_error` is `true` or `structured_output` is absent. The docs say to treat that as a failure <Cite n={2} />. Check `stop_reason` for `refusal` too <Cite n={1} />.
 - **Reading free text when code needs data.** By default an agent gives free-form text. Use an output schema when another program reads the output <Cite n={2} />.
 - **Sending the output straight to another system.** OWASP calls this improper output handling: the output goes on without enough checks. Treat the model like any other user, with zero trust <Cite n={8} />. A correct shape does not make the content safe. Output in a shell can run harmful code, output in a web page can cause XSS, and output in SQL can cause SQL injection <Cite n={8} />.
 - **Thinking `final_output` is always there.** In the OpenAI Agents SDK it is `None` when the run waits for an approval <Cite n={4} />.
@@ -211,7 +211,7 @@ The team now logs `last_agent` with each `final_output`. The `final_output` is t
 <Bangla>
 
 - **Subtype না দেখে `result` পড়া।** শুধু `success`-এ `result` থাকে। যে run সীমায় পৌঁছেছে, তার কোনো final উত্তর নেই <Cite n={1} />।
-- **শুধু `success` দেখে বিশ্বাস করা।** একটা `success` result-এ `structured_output` না-ও থাকতে পারে, আর docs বলে সেটাকে ব্যর্থতা ধরতে <Cite n={2} />। `stop_reason`-এ `refusal` আছে কি না সেটাও দেখুন <Cite n={1} />।
+- **শুধু `success` দেখে বিশ্বাস করা।** একটা `success` result-ও ব্যর্থতা, যদি `is_error` `true` হয় বা `structured_output` না থাকে, আর docs বলে সেটাকে ব্যর্থতা ধরতে <Cite n={2} />। `stop_reason`-এ `refusal` আছে কি না সেটাও দেখুন <Cite n={1} />।
 - **Code-এর data দরকার, অথচ মুক্ত text পার্স করা।** ডিফল্টভাবে agent মুক্ত text দেয়। অন্য কোনো program output পড়লে একটা output schema ব্যবহার করুন <Cite n={2} />।
 - **Output সরাসরি অন্য সিস্টেমে পাঠানো।** OWASP একে বলে improper output handling: যথেষ্ট যাচাই ছাড়া output পরের ধাপে চলে যায়। Model-কে অন্য যেকোনো ব্যবহারকারীর মতো দেখুন, zero trust নিয়ে <Cite n={8} />। আকার ঠিক থাকলেই বিষয়বস্তু নিরাপদ হয় না। Shell-এ output গেলে ক্ষতিকর code চলতে পারে, web page-এ গেলে XSS হতে পারে, আর SQL-এ গেলে SQL injection হতে পারে <Cite n={8} />।
 - **ভাবা যে `final_output` সবসময় থাকে।** OpenAI Agents SDK-তে run একটা approval-এর জন্য থামলে এটা `None` হয় <Cite n={4} />।
