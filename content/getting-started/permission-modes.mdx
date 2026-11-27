@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-11-11',
+  updated: '2026-11-27',
   sources: [
     { title: 'Choose a permission mode', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permission-modes', accessed: '2026-10-10' },
     { title: 'CLI reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/cli-reference', accessed: '2026-10-10' },
@@ -159,8 +159,8 @@ In auto mode, a second model, the classifier, reviews actions instead of you. <C
 
 Auto mode needs a supported model: <Cite n={1} />
 
-- On the Anthropic API: Opus 4.6 or later, Sonnet 4.6 or later, Haiku 5.5, or a Fable model.
-- On Bedrock, Agent Platform, Foundry, and gateway sessions: Sonnet 5 or later, Opus 4.7 or later, Haiku 5.5, or Fable.
+- On the Anthropic API, Claude Platform on AWS, and Claude Models on Google Cloud (Anthropic managed): Opus 4.6 or later, Sonnet 4.6 or later, Haiku 5.5, or a Fable model.
+- On Bedrock, Agent Platform, Foundry, and signed-in Claude apps gateway sessions: only Sonnet 5 or later, Opus 4.7 or later, Haiku 5.5, or Fable.
 - Older models, including Sonnet 4.5, Opus 4.5, Haiku 4.5, and claude-3 models, are not supported on any provider.
 
 <Callout type="warning" title="Auto mode is not a review">
@@ -185,7 +185,7 @@ By default, it allows these actions: <Cite n={1} />
 - Local file operations in the working directory
 - Installing dependencies from lock files and manifests
 - Read-only HTTP requests
-- Pushes to any branch of the current repository
+- Pushes to any branch of the current repository, except branches whose names mark a deploy target, such as `production` or `gh-pages`
 
 To print the full default rules as JSON, run `claude auto-mode defaults`. <Cite n={2} />
 
@@ -257,11 +257,11 @@ Claude Code picks the starting mode in this order: <Cite n={1} />
 
 With Claude Code v2.1.283 or later, `auto` is the built-in starting mode for interactive terminal and VS Code sessions. <Cite n={1} /> Claude Code starts in Manual if auto mode is not available to the session. <Cite n={1} /> This applies when the flag, a settings file, or the built-in default selects `auto`. <Cite n={1} />
 
-`claude -p` and the Agent SDK start in `default` in sessions that fetch feature flags. In sessions that do not, such as on a third-party provider or with telemetry off, they start in `auto` on v2.1.285 or later. <Cite n={1} />
+`claude -p` and the Agent SDK start in Manual (`default`) when you set no permission mode. This applies from Claude Code v2.1.302 or later. Before v2.1.302, these runs could start in `auto` in sessions that did not fetch feature flags, such as on a third-party provider or with telemetry off. <Cite n={1} />
 
 <Callout type="tip" title="Always set the mode in CI">
 
-A run where nothing sets a permission mode takes the built-in starting mode, which can be `auto`. Pass the mode you want. <Cite n={4} />
+A `-p` run where nothing sets a permission mode starts in Manual from v2.1.302. Calls that need approval are denied, and the run cannot ask you. Pass the mode you want, plus an allowlist. <Cite n={1} />
 
 </Callout>
 
@@ -288,9 +288,9 @@ Claude Code picks the mode to start in. It checks these places in this order: <C
 
 From Claude Code v2.1.283, the built-in start mode is `auto`. This is for interactive terminal and VS Code sessions. <Cite n={1} /> If auto mode is not available to the session, Claude Code starts in Manual. <Cite n={1} />
 
-`claude -p` and the Agent SDK work differently. In sessions that fetch feature flags, they start in `default`. <Cite n={1} /> Other sessions start in `auto` on v2.1.285 or later. <Cite n={1} />
+`claude -p` and the Agent SDK work differently. From v2.1.302 they start in Manual (`default`) when no mode is set. Before v2.1.302 they could start in `auto` in some sessions. <Cite n={1} />
 
-So always set the mode in CI. If nothing sets a mode, the built-in start mode is used. <Cite n={4} />
+So always set the mode in CI. From v2.1.302, a `-p` run with no mode starts in Manual and denies calls that need approval. <Cite n={1} />
 
 To set your own default, add `permissions.defaultMode` to `~/.claude/settings.json`. <Cite n={1} />
 
@@ -303,7 +303,7 @@ Claude Code শুরুর mode এই ক্রমে বেছে নেয�
 
 Claude Code v2.1.283 বা তার পরের version-এ interactive terminal এবং VS Code session-এর built-in শুরুর mode হলো `auto`। শুরুর mode `auto` হলেও session-এ auto mode available না থাকলে Claude Code Manual mode-এ শুরু হয়। <Cite n={1} />
 
-যে session feature flag fetch করে, সেখানে `claude -p` এবং Agent SDK `default`-এ শুরু হয়। যে session তা করে না (যেমন third-party provider-এ বা telemetry বন্ধ থাকলে), সেখানে v2.1.285 বা তার পরের version-এ এরা `auto`-তে শুরু হয়। <Cite n={1} /> তাই CI-তে সবসময় নিজে mode দিন। <Cite n={4} />
+v2.1.302 বা তার পরের version-এ `claude -p` এবং Agent SDK কোনো mode সেট না করলে Manual (`default`) mode-এ শুরু হয়; তার আগের version-এ কিছু session-এ এরা `auto`-তে শুরু হতে পারত। <Cite n={1} /> তাই CI-তে সবসময় নিজে mode দিন। <Cite n={1} />
 
 নিজের default ঠিক করতে `~/.claude/settings.json`-এ `permissions.defaultMode` যোগ করুন। কোনো project তার `.claude/settings.json`-এ `plan` দিতে পারে। কিন্তু `.claude/settings.json` বা `.claude/settings.local.json`-এ `"auto"` বা `"bypassPermissions"` দিলে তা কাজ করে না। `auto` default করতে এটি `~/.claude/settings.json`-এ দিন। <Cite n={1} />
 
@@ -414,7 +414,7 @@ Example: rules for a test project.
 | `Bash(npm test)` | allow | Claude runs the test suite without a prompt |
 | `Bash(git diff *)` | allow | Claude runs `git diff` with any arguments without a prompt |
 
-**The space before the star.** In `Bash(git diff *)`, the space before `*` is important. Without it, `Bash(git diff*)` also matches `git diff-index`. <Cite n={4} /> The docs also warn that Bash patterns that try to constrain command arguments are fragile. <Cite n={6} />
+**The space before the star.** In `Bash(git diff *)`, the space before `*` is important. It is part of the rule. The docs give this example: `Bash(ls *)` does not match `lsof`, but `Bash(ls*)` does. <Cite n={6} /> By the same logic, `Bash(git diff*)` has no space and also matches `git diff-index`. The docs also warn that Bash patterns that try to constrain command arguments are fragile. <Cite n={6} />
 
 **Commands without a prompt.** Some commands run without a prompt in every mode: `ls`, `cat`, `echo`, `pwd`, `head`, `tail`, `grep`, `find`, `wc`, `which`, `diff`, `stat`, `du`, `cd`, and read-only forms of `git`. You cannot configure this set. To change it, add an `ask` or `deny` rule. <Cite n={6} />
 
@@ -439,7 +439,7 @@ Rules work together with the mode. There are three types. An allow rule lets a t
 
 Claude Code checks deny rules first, then ask rules, then allow rules. The first rule that matches decides. Thus an allow rule cannot make an exception to a deny rule. <Cite n={6} />
 
-A rule looks like `Tool` or `Tool(specifier)`, for example `Read(./.env)` or `Bash(npm test)`. In `Bash(git diff *)`, keep the space before `*`. Without it, the rule also matches `git diff-index`. <Cite n={4} />
+A rule looks like `Tool` or `Tool(specifier)`, for example `Read(./.env)` or `Bash(npm test)`. In `Bash(git diff *)`, keep the space before `*`. The space is part of the rule: `Bash(ls *)` does not match `lsof`, but `Bash(ls*)` does. <Cite n={6} />
 
 Settings files keep rules under `permissions.allow`, `permissions.ask`, and `permissions.deny`. Use `/permissions` to see and edit them. <Cite n={6} />
 
@@ -452,7 +452,7 @@ Permission rule mode-এর পাশাপাশি কাজ করে। rule
 
 Claude Code rule-গুলো এই ক্রমে দেখে: deny, ask, allow। প্রথম যে rule মেলে, সেটিই ফল ঠিক করে। তাই allow rule দিয়ে deny rule-এর ব্যতিক্রম করা যায় না। <Cite n={6} />
 
-Rule-এর format `Tool` বা `Tool(specifier)`, যেমন `Read(./.env)` বা `Bash(npm test)`। `Bash(git diff *)`-এ `*`-এর আগের space জরুরি; space না থাকলে rule-টি `git diff-index`-এর সাথেও মিলে যায়। <Cite n={4} />
+Rule-এর format `Tool` বা `Tool(specifier)`, যেমন `Read(./.env)` বা `Bash(npm test)`। `Bash(git diff *)`-এ `*`-এর আগের space জরুরি; space rule-এরই অংশ: `Bash(ls *)` `lsof`-এর সাথে মেলে না, কিন্তু `Bash(ls*)` মেলে। <Cite n={6} />
 
 Settings file-এ rule থাকে `permissions.allow`, `permissions.ask` এবং `permissions.deny`-এর নিচে। `/permissions` দিয়ে rule দেখা ও বদলানো যায়। <Cite n={6} />
 
