@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-11-11',
+  updated: '2026-11-27',
   sources: [
     { title: 'Hooks reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks', accessed: '2026-10-10' },
     { title: 'Create custom subagents', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/sub-agents', accessed: '2026-10-10' },
@@ -274,7 +274,7 @@ The log records three results:
 
 <Callout type="warning" title="Common mistake: a context hook is not a gate">
 
-A `PreToolUse` hook on `Skill` fires only when Claude calls the tool. If you type `/skillname` directly, `PreToolUse` does not fire. The `UserPromptExpansion` event covers that path. <Cite n={1} /> A timed-out `command` or `mcp_tool` hook also does not block the tool call. <Cite n={1} /> Use a hook like this one to add context, not to prove that a rule ran.
+A `PreToolUse` hook on `Skill` fires only when Claude calls the tool. If you type `/skillname` directly, `PreToolUse` does not fire. The `UserPromptExpansion` event covers that path. <Cite n={1} /> A timed-out `command`, `http`, or `mcp_tool` hook also does not block the tool call, unless it sets `onFailure: "block"`. <Cite n={1} /> Use a hook like this one to add context, not to prove that a rule ran.
 
 </Callout>
 
@@ -285,14 +285,14 @@ The [Hooks](/extend/hooks/) page explains events, matchers, and decisions.
 
 The script acts only for `test-design` and `find-bug`. It queries the graph with the skill arguments. It also adds the graph date and the date of the last commit, so Claude can see if the graph is stale. Claude Code adds this text to Claude's context as `additionalContext`, with a cap of 10,000 characters <Cite n={1} />.
 
-Be careful: if you type `/skillname` directly, `PreToolUse` does not fire. A `command` or `mcp_tool` hook that times out does not block the tool call <Cite n={1} />. Use this hook to add context, not as proof that a rule ran.
+Be careful: if you type `/skillname` directly, `PreToolUse` does not fire. A `command`, `http`, or `mcp_tool` hook that times out does not block the tool call, unless `onFailure: "block"` is set <Cite n={1} />. Use this hook to add context, not as proof that a rule ran.
 
 </Layman>
 <Bangla>
 
 Script-টি শুধু `test-design` আর `find-bug`-এর জন্য কাজ করে। এটি skill-এর argument দিয়ে graph query করে; argument না থাকলে graph report-এর উপরের অংশ পড়ে। এটি graph-এর তারিখ আর শেষ commit-এর তারিখও যোগ করে, যাতে Claude বুঝতে পারে graph পুরোনো কি না। Claude Code এই লেখা `additionalContext` হিসেবে Claude-এর context-এ যোগ করে, যার সীমা 10,000 character <Cite n={1} />। Serena hook শুধু project activate করে; এটি Claude-কে symbol tool call করতে বাধ্য করতে পারে না।
 
-সাবধান: আপনি সরাসরি `/skillname` লিখলে `PreToolUse` fire করে না। Timeout হওয়া একটি `command` বা `mcp_tool` hook-ও tool call block করে না <Cite n={1} />। তাই এই ধরনের hook context যোগ করতে ব্যবহার করুন, কোনো নিয়ম চলেছে তার প্রমাণ হিসেবে নয়।
+সাবধান: আপনি সরাসরি `/skillname` লিখলে `PreToolUse` fire করে না। Timeout হওয়া একটি `command`, `http` বা `mcp_tool` hook-ও tool call block করে না, তবে `onFailure: "block"` সেট করা থাকলে করে <Cite n={1} />। তাই এই ধরনের hook context যোগ করতে ব্যবহার করুন, কোনো নিয়ম চলেছে তার প্রমাণ হিসেবে নয়।
 
 </Bangla>
 </Voices>
@@ -319,7 +319,7 @@ The `tools` list names 14 read-only Serena tools. It has no Write, Edit, or Bash
 
 - A subagent runs in its own context window with its own system prompt, tool access, and permissions. <Cite n={2} />
 - `tools` is an allowlist. If you omit it, the subagent gets every tool that is available to subagents. <Cite n={2} />
-- A tool that is not in the list is not available. The docs give an example: with Read, Grep, Glob, and Bash only, the subagent cannot edit files, write files, or use MCP tools. <Cite n={2} />
+- A tool that is not in the list is not available. The docs give an example: with Read, Grep, Glob, and Bash only, the subagent has no Edit, Write, or MCP tools, but it can still change files through Bash. <Cite n={2} /> This is why the reviewer's list has no Bash.
 - `tools` accepts exact tool names, so it can name single MCP tools. <Cite n={2} />
 - Tools of an MCP server from a plugin are named `mcp__plugin_<plugin-name>_<server-name>__<tool>`. <Cite n={1} /> That explains the long Serena names.
 - `model` accepts an alias such as `opus`, a full model ID, or `inherit`. <Cite n={2} />
@@ -367,7 +367,7 @@ Gate rules:
 
 **Who writes the report.** The reviewer cannot write the report. Only the main session can. The `find-bug` skill does not call the reviewer. So the main session must start the review.
 
-**Delegation.** When a task matches a subagent's description, Claude delegates to that subagent. <Cite n={2} /> If you name a subagent in a prompt, Claude still decides whether to delegate. An @-mention guarantees that the subagent runs. <Cite n={2} /> The [Subagents](/extend/subagents/) page covers both ways.
+**Delegation.** When a task matches a subagent's description, Claude delegates to that subagent. <Cite n={2} /> If you name a subagent in a prompt, Claude still decides whether to delegate. An @-mention tells Claude to run that subagent for the task. <Cite n={2} /> The [Subagents](/extend/subagents/) page covers both ways.
 
 </Technical>
 <Layman>
@@ -385,7 +385,7 @@ Then the reviewer gives one gate to the whole draft. The gate is a final stop or
 
 The reviewer cannot write the report. Only the main session can. The `find-bug` skill does not call the reviewer. So the main session must start the review.
 
-You can also name the reviewer in a prompt. Even then, Claude still decides whether to hand the task over. An @-mention is different. It guarantees that the reviewer runs <Cite n={2} />.
+You can also name the reviewer in a prompt. Even then, Claude still decides whether to hand the task over. An @-mention is different. It tells Claude to run the reviewer for that task <Cite n={2} />.
 
 </Layman>
 <Bangla>
@@ -395,7 +395,7 @@ Reviewer দশটি check দিয়ে প্রতিটি bug ভুল 
 - PASS: সব bug APPROVED, এবং কোনো MISSED item High priority issue নয়।
 - BLOCKED: কোনো bug FLAGGED বা REJECTED। তখন Claude-কে draft ঠিক করে আবার পাঠাতে হয়, যতক্ষণ না gate PASS হয়।
 
-Reviewer report লিখতে পারে না; শুধু main session পারে। `find-bug` skill reviewer-কে call করে না, তাই main session-কেই review শুরু করতে হয়। Prompt-এ subagent-এর নাম লিখলেও delegate করবে কি না, তা Claude নিজে ঠিক করে। একটি @-mention নিশ্চিত করে যে subagent-টি চলবে <Cite n={2} />।
+Reviewer report লিখতে পারে না; শুধু main session পারে। `find-bug` skill reviewer-কে call করে না, তাই main session-কেই review শুরু করতে হয়। Prompt-এ subagent-এর নাম লিখলেও delegate করবে কি না, তা Claude নিজে ঠিক করে। একটি @-mention Claude-কে সেই কাজের জন্য subagent-টি চালাতে বলে <Cite n={2} />।
 
 </Bangla>
 </Voices>
