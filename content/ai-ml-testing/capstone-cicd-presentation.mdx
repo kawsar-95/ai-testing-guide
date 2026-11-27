@@ -1,10 +1,11 @@
 export const metadata = { title: 'CI/CD Integration and Capstone Presentation', description: 'Put the capstone\'s test pipeline into GitHub Actions on every pull request, build a quality dashboard, and present the results.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'GitHub Actions documentation', publisher: 'GitHub', url: 'https://docs.github.com/en/actions', accessed: '2026-11-01' },
     { title: 'CI/CD integration', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
     { title: 'Command line', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/usage/command-line/', accessed: '2026-11-01' },
+    { title: 'About protected branches', publisher: 'GitHub Docs', url: 'https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches', accessed: '2026-11-27' },
   ],
 }
 
@@ -68,7 +69,7 @@ on a schedule, or manually triggered (visible, not blocking)
 
 **Exit code.** `npx promptfoo eval` returns exit code 100 when at least one test case fails (or when the pass rate is below `PROMPTFOO_PASS_RATE_THRESHOLD`) <Cite n={3} />. Running it as a CI step is what lets the job fail and block a merge <Cite n={3} />.
 
-**GitHub Action.** Promptfoo also ships a GitHub Action that, when prompt files change in a pull request, runs a before-and-after comparison and posts the results to the pull request <Cite n={2} />. It needs `github-token`, `prompts`, and `config` inputs and `pull-requests: write` permission <Cite n={2} />.
+**GitHub Action.** Promptfoo also ships a GitHub Action that, when prompt files change in a pull request, runs a before-and-after comparison and posts a comment with a link to the results on the pull request <Cite n={2} />. It needs `github-token`, `prompts`, and `config` inputs and `pull-requests: write` permission <Cite n={2} />.
 
 **PR comment.** The PR comment itself is the smallest version of the quality dashboard from the metrics module. It shows the same numbers and same gate logic, surfaced at the point a human actually makes the merge decision instead of a separate page they would need to remember to check.
 
@@ -90,7 +91,7 @@ on a schedule, or manually triggered (visible, not blocking)
 
 `npx promptfoo eval` returns exit code 100 when at least one test case fails. It also does this when the pass rate is below `PROMPTFOO_PASS_RATE_THRESHOLD`. So when you run it as a CI step, the job can fail and block a merge <Cite n={3} />.
 
-Promptfoo also has a GitHub Action. It works when prompt files change in a pull request. It compares the results before and after the change. Then it posts them to the pull request. It needs the inputs `github-token`, `prompts`, and `config`. It also needs `pull-requests: write` permission <Cite n={2} />.
+Promptfoo also has a GitHub Action. It works when prompt files change in a pull request. It compares the results before and after the change. Then it posts a comment with a link to the results on the pull request. It needs the inputs `github-token`, `prompts`, and `config`. It also needs `pull-requests: write` permission <Cite n={2} />.
 
 The PR comment is the smallest version of the quality dashboard from the metrics module. It shows the same numbers and uses the same gate logic. But it appears where a person decides on the merge. It is not a separate page they must remember to check.
 
@@ -110,7 +111,7 @@ on a schedule, or manually triggered (visible, not blocking)
     full Playwright suite
 ```
 
-`npx promptfoo eval` অন্তত একটা test case ব্যর্থ হলে (বা pass rate `PROMPTFOO_PASS_RATE_THRESHOLD`-এর নিচে হলে) exit code 100 ফেরত দেয়, তাই এটাকে CI step হিসেবে চালালেই job ব্যর্থ হয়ে merge ব্লক করতে পারে <Cite n={3} />। Promptfoo-র একটা GitHub Action-ও আছে যা pull request-এ prompt ফাইল বদলালে before-and-after তুলনা চালিয়ে ফলাফল pull request-এ পোস্ট করে; এর জন্য `github-token`, `prompts`, `config` input আর `pull-requests: write` permission লাগে <Cite n={2} />।
+`npx promptfoo eval` অন্তত একটা test case ব্যর্থ হলে (বা pass rate `PROMPTFOO_PASS_RATE_THRESHOLD`-এর নিচে হলে) exit code 100 ফেরত দেয়, তাই এটাকে CI step হিসেবে চালালেই job ব্যর্থ হয়ে merge ব্লক করতে পারে <Cite n={3} />। Promptfoo-র একটা GitHub Action-ও আছে যা pull request-এ prompt ফাইল বদলালে before-and-after তুলনা চালিয়ে pull request-এ ফলাফলের লিংকসহ একটা comment পোস্ট করে; এর জন্য `github-token`, `prompts`, `config` input আর `pull-requests: write` permission লাগে <Cite n={2} />।
 
 PR comment-টাই metrics module-এর quality dashboard-এর সবচেয়ে ছোট সংস্করণ: একই সংখ্যা, একই gate logic, ঠিক সেই বিন্দুতে দেখানো যেখানে একজন মানুষ আসলে merge সিদ্ধান্ত নেয়, একটা আলাদা পেজের বদলে যা তাদের চেক করার কথা মনে রাখতে হতো।
 
@@ -136,15 +137,33 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
       - run: npx promptfoo eval -c promptfooconfig.yaml   # exit code 100 on any failing test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - run: python -m pytest tests/hallucination/
   nightly-slow-suite:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
       - run: npx promptfoo redteam run --config redteam-config.yaml
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - run: python -m scripts.run_giskard_scan
       - run: python -m pytest tests/ui/
 ```
@@ -186,15 +205,33 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
       - run: npx promptfoo eval -c promptfooconfig.yaml   # exit code 100 on any failing test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - run: python -m pytest tests/hallucination/
   nightly-slow-suite:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
       - run: npx promptfoo redteam run --config redteam-config.yaml
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - run: python -m scripts.run_giskard_scan
       - run: python -m pytest tests/ui/
 ```
@@ -233,15 +270,33 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
       - run: npx promptfoo eval -c promptfooconfig.yaml   # exit code 100 on any failing test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - run: python -m pytest tests/hallucination/
   nightly-slow-suite:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
       - run: npx promptfoo redteam run --config redteam-config.yaml
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - run: python -m scripts.run_giskard_scan
       - run: python -m pytest tests/ui/
 ```
@@ -274,11 +329,11 @@ Suite-এর নিজস্ব output থেকে বানানো একট
 <Voices>
 <Technical>
 
-**Mistake 1: a workflow that runs but is not required.** GitHub only blocks a merge on checks explicitly marked required in branch protection <Cite n={1} />.
+**Mistake 1: a workflow that runs but is not required.** GitHub blocks a merge only on required status checks (set in branch protection or a ruleset) <Cite n={4} />.
 
 **Mistake 2: running the slow suites on every PR.** This either makes every PR wait ten minutes or teaches the team to ignore a check that is always still running when they want to merge.
 
-**Mistake 3: no PR comment, only a pass/fail badge.** A reviewer who has to click into logs to see which assertion failed will eventually stop checking <Cite n={2} />.
+**Mistake 3: no PR comment, only a pass/fail badge.** A reviewer who has to click into logs to see which assertion failed will eventually stop checking. This is the tutorial's own view.
 
 **Mistake 4: presenting a suite that has never found anything.** It reads as untested, not as high quality; show the real failure that was found and fixed.
 
@@ -287,11 +342,11 @@ Suite-এর নিজস্ব output থেকে বানানো একট
 </Technical>
 <Layman>
 
-**Mistake 1: a workflow that runs but is not required.** GitHub blocks a merge only on checks marked required in branch protection <Cite n={1} />.
+**Mistake 1: a workflow that runs but is not required.** GitHub blocks a merge only on required status checks (set in branch protection or a ruleset) <Cite n={4} />.
 
 **Mistake 2: running the slow suites on every PR.** Every PR then waits ten minutes. Or the team learns to ignore a check that is still running when they want to merge.
 
-**Mistake 3: no PR comment, only a pass/fail badge.** A reviewer must click into logs to see which assertion failed. Sooner or later, that reviewer stops checking <Cite n={2} />.
+**Mistake 3: no PR comment, only a pass/fail badge.** A reviewer must click into logs to see which assertion failed. Sooner or later, that reviewer stops checking. This is the tutorial's own view.
 
 **Mistake 4: presenting a suite that has never found anything.** It looks untested, not high quality. Show the real failure that you found and fixed.
 
@@ -300,11 +355,11 @@ Suite-এর নিজস্ব output থেকে বানানো একট
 </Layman>
 <Bangla>
 
-**ভুল ১: চলে কিন্তু required নয় এমন একটা workflow।** GitHub শুধু branch protection-এ স্পষ্টভাবে required চিহ্নিত check-এ merge ব্লক করে <Cite n={1} />।
+**ভুল ১: চলে কিন্তু required নয় এমন একটা workflow।** GitHub শুধু required status check-এ merge ব্লক করে (branch protection বা ruleset-এ সেট করা) <Cite n={4} />।
 
 **ভুল ২: প্রতিটা PR-এ ধীর suite চালানো।** এটা হয় প্রতিটা PR-কে দশ মিনিট অপেক্ষা করায় অথবা দলকে একটা check উপেক্ষা করতে শেখায় যা merge করতে চাওয়ার সময় সবসময় চলছে থাকে।
 
-**ভুল ৩: কোনো PR comment নেই, শুধু একটা pass/fail badge।** একজন reviewer যাকে কোন assertion ব্যর্থ হয়েছে দেখতে log-এ ক্লিক করতে হয় সে শেষ পর্যন্ত চেক করা বন্ধ করে দেবে <Cite n={2} />।
+**ভুল ৩: কোনো PR comment নেই, শুধু একটা pass/fail badge।** একজন reviewer যাকে কোন assertion ব্যর্থ হয়েছে দেখতে log-এ ক্লিক করতে হয় সে শেষ পর্যন্ত চেক করা বন্ধ করে দেবে। এটা টিউটোরিয়ালের নিজস্ব মত।
 
 **ভুল ৪: কখনো কিছু খুঁজে পায়নি এমন একটা suite উপস্থাপন করা।** এটা untested মনে হয়, high quality নয়; capstone-এ পাওয়া আর ঠিক করা real failure দেখান।
 
