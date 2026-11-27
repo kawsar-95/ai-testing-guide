@@ -1,6 +1,6 @@
 export const metadata = { title: 'Advanced RAG Failure Modes', description: 'Break a RAG system on purpose: contradictory documents, duplicates, multi-hop questions, stale content, and cross-language retrieval.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-11-01' },
     { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
@@ -34,7 +34,7 @@ cross-language retrieval   the question is in Bengali, the documents in English
 context dilution           the right chunk is in the prompt, buried in 40 others
 ```
 
-The first five are data and retrieval problems. The last one is a different beast: the chunk is retrieved and placed in the prompt correctly, and the model still ignores it. Research on long contexts found that models attend reliably to the beginning and the end of a long input and less reliably to the middle <Cite n={3} />, which is exactly where a retrieved chunk tends to land in a large context.
+The first five are data and retrieval problems. The last one is a different beast: the chunk is retrieved and placed in the prompt correctly, and the model still ignores it. Research on long contexts found that models attend reliably to the beginning and the end of a long input and less reliably to the middle <Cite n={3} />. In a prompt with many retrieved chunks, the relevant one can end up in that middle.
 
 Giskard's RAG evaluation tutorial shows one way to test these cases: a Giskard Checks suite that validates retrieval quality, groundedness, and handling of out-of-scope questions, and inspects the retrieved documents separately from the answer <Cite n={4} />.
 
@@ -58,7 +58,7 @@ context dilution           the right chunk is in the prompt, buried in 40 others
 
 The first five are data and retrieval problems. The last one is different. The chunk is retrieved and placed in the prompt correctly. The model still ignores it.
 
-Research on long inputs found that models attend reliably to the beginning and the end. They attend less reliably to the middle <Cite n={3} />. A retrieved chunk tends to land in the middle of a large context.
+Research on long inputs found that models attend reliably to the beginning and the end. They attend less reliably to the middle <Cite n={3} />. A retrieved chunk can land in the middle of a large context.
 
 Giskard's RAG evaluation tutorial shows one way to test these cases. It uses a Giskard Checks suite. The suite validates retrieval quality, groundedness, and handling of out-of-scope questions. It also inspects the retrieved documents separately from the answer <Cite n={4} />.
 
@@ -78,7 +78,7 @@ cross-language retrieval   the question is in Bengali, the documents in English
 context dilution           the right chunk is in the prompt, buried in 40 others
 ```
 
-প্রথম পাঁচটা data আর retrieval-এর সমস্যা। শেষটা আলাদা জিনিস: chunk ঠিকভাবে ফিরে আসে আর prompt-এ ঠিকভাবে বসে, তবু model সেটা উপেক্ষা করে। লম্বা context নিয়ে গবেষণায় দেখা গেছে model বড় input-এর শুরু আর শেষে ভালো নজর দেয়, মাঝখানে কম <Cite n={3} />, আর retrieved chunk ঠিক ঠিক মাঝখানেই বসে।
+প্রথম পাঁচটা data আর retrieval-এর সমস্যা। শেষটা আলাদা জিনিস: chunk ঠিকভাবে ফিরে আসে আর prompt-এ ঠিকভাবে বসে, তবু model সেটা উপেক্ষা করে। লম্বা context নিয়ে গবেষণায় দেখা গেছে model বড় input-এর শুরু আর শেষে ভালো নজর দেয়, মাঝখানে কম <Cite n={3} />, আর retrieved chunk অনেক সময় মাঝখানেই বসে।
 
 Giskard-এর RAG evaluation টিউটোরিয়াল এই কেসগুলো টেস্ট করার একটা উপায় দেখায়: একটা Giskard Checks suite যা retrieval quality, groundedness, আর out-of-scope প্রশ্ন সামলানো যাচাই করে, আর retrieved document answer থেকে আলাদাভাবে দেখে <Cite n={4} />।
 
@@ -154,7 +154,7 @@ cross-language         no                no              answered from memory
 context dilution       yes               yes            ignored it
 ```
 
-তিনটা কলাম তিনটা আলাদা টেস্ট, আর সারি বলে দেয় কোনটা ব্যর্থ হয়েছে। **Contradiction** সবচেয়ে খারাপ, কারণ pipeline একদম ঠিকভাবে কাজ করেছে: দুটো chunk-ই এসেছে, দুটোই prompt-এ ছিল, আর model ভুলটা বেছে নিয়েছে। সমাধান data বা prompt-এ, আর prompt-এর সমাধান সাধারণত বলা দেওয়া কোন document জেতে আর chunk-গুলো তারিখ দেওয়া।
+তিনটা কলাম তিনটা আলাদা টেস্ট, আর সারি বলে দেয় কোনটা ব্যর্থ হয়েছে। **Contradiction** সবচেয়ে খারাপ, কারণ pipeline একদম ঠিকভাবে কাজ করেছে: দুটো chunk-ই এসেছে, দুটোই prompt-এ ছিল, আর model ভুলটা বেছে নিয়েছে। সমাধান data বা prompt-এ, আর prompt-এর সমাধান সাধারণত বলে দেওয়া কোন document জেতে আর chunk-গুলো তারিখ দেওয়া।
 
 **Stale content** একটা data-pipeline বাগ যার টেস্টিং উত্তর আছে। chunk id-তে version বা তারিখ থাকে, আর টেস্ট assert করে retrieved chunk-এর version বর্তমান live version-এর সাথে মেলে। এই একটা assertion প্রতিটা stale-index বাগ ব্যবহারকারীর আগেই ধরে ফেলে।
 
@@ -231,6 +231,8 @@ And the dilution test, which is the one that needs a model:
 ```python
 def test_the_model_uses_the_retrieved_chunk_not_its_memory(case, pipeline):
     answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    # faithfulness() stands for a Ragas Faithfulness scorer: (await Faithfulness(llm=llm).ascore(
+    #     user_input=q, response=answer, retrieved_contexts=texts)).value
     score = faithfulness(answer, [chunk.text for chunk in chunks])
     assert score > 0.9, "the answer was not grounded in the retrieved chunk"
 ```
@@ -308,6 +310,8 @@ The dilution test is the one that needs a model:
 ```python
 def test_the_model_uses_the_retrieved_chunk_not_its_memory(case, pipeline):
     answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    # faithfulness() stands for a Ragas Faithfulness scorer: (await Faithfulness(llm=llm).ascore(
+    #     user_input=q, response=answer, retrieved_contexts=texts)).value
     score = faithfulness(answer, [chunk.text for chunk in chunks])
     assert score > 0.9, "the answer was not grounded in the retrieved chunk"
 ```
@@ -385,6 +389,8 @@ def test_a_multi_hop_question_gets_both_chunks(case, pipeline):
 ```python
 def test_the_model_uses_the_retrieved_chunk_not_its_memory(case, pipeline):
     answer, chunks = pipeline.run(case["question"], docs=case["docs"])
+    # faithfulness() stands for a Ragas Faithfulness scorer: (await Faithfulness(llm=llm).ascore(
+    #     user_input=q, response=answer, retrieved_contexts=texts)).value
     score = faithfulness(answer, [chunk.text for chunk in chunks])
     assert score > 0.9, "the answer was not grounded in the retrieved chunk"
 ```
@@ -418,7 +424,7 @@ def test_retrieval_works_for_a_bengali_question(pipeline):
 
 **Mistake 5: treating dilution as a retrieval bug.** The chunk was retrieved. The test must assert on the generation side <Cite n={3} />.
 
-**Mistake 6: not generating the cases adversarially.** Hand-written cases cover the failures you imagined. A tool that generates questions from the knowledge base finds the ones you did not <Cite n={5} />.
+**Mistake 6: not generating the cases from the knowledge base.** Hand-written cases cover the failures you imagined. A tool that generates questions from your documents, such as Giskard's quality scan, finds the ones you did not <Cite n={5} />.
 
 </Technical>
 <Layman>
@@ -433,7 +439,7 @@ def test_retrieval_works_for_a_bengali_question(pipeline):
 
 **Mistake 5: treating dilution as a retrieval bug.** The chunk was retrieved. The test must assert on the generation side <Cite n={3} />.
 
-**Mistake 6: not generating the cases adversarially.** Hand-written cases cover the failures you imagined. A tool that generates questions from the knowledge base finds the ones you did not <Cite n={5} />.
+**Mistake 6: not generating the cases from the knowledge base.** Hand-written cases cover the failures you imagined. A tool that generates questions from your documents, such as Giskard's quality scan, finds the ones you did not <Cite n={5} />.
 
 </Layman>
 <Bangla>
@@ -446,9 +452,9 @@ def test_retrieval_works_for_a_bengali_question(pipeline):
 
 **Mistake 4: এক ভাষায় শুধু টেস্ট করা।** cross-language retrieval embedding model-এর আলাদা সক্ষমতা, আর সেটা নিজে থেকেই ব্যর্থ হয়।
 
-**Mistake 5: dilution-কে retrieval বাগ ভাবা।** chunk আসে গেছে। টেস্ট generation-এর দিকে assert করতে হবে <Cite n={3} />।
+**Mistake 5: dilution-কে retrieval বাগ ভাবা।** chunk এসে গেছে। টেস্ট generation-এর দিকে assert করতে হবে <Cite n={3} />।
 
-**Mistake 6: কেসগুলো adversarially তৈরি না করা।** হাতে লেখা কেস কেবল আপনার কল্পিত ব্যর্থতা ঢাকে। knowledge base থেকে প্রশ্ন বানানো টুল বানানো ব্যর্থতাও খুঁজে বের করে <Cite n={5} />।
+**Mistake 6: কেসগুলো knowledge base থেকে তৈরি না করা।** হাতে লেখা কেস কেবল আপনার কল্পিত ব্যর্থতা ঢাকে। আপনার document থেকে প্রশ্ন বানানো টুল, যেমন Giskard-এর quality scan, যেসব ব্যর্থতা আপনি ভাবেননি সেগুলোও খুঁজে বের করে <Cite n={5} />।
 
 </Bangla>
 </Voices>
@@ -514,4 +520,4 @@ This advice is the tutorial's own. It does not come from the sources.
 | Cross-language retrieval | Searching in one language over documents in another |
 | Context dilution | The right chunk is in the prompt but the model ignores it |
 | Chunk version | The version or date carried by a chunk, which makes staleness detectable |
-| RAGAS | The metric set that covers context precision, context recall, faithfulness, and relevancy |
+| Ragas | The metric library that covers context precision, context recall, faithfulness, and response relevancy |
