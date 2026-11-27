@@ -1,6 +1,6 @@
 export const metadata = { title: 'Guardrails', description: 'Controls that wrap every action of an agent: permissions, approval, limits, retries, input and output checks, and a sandbox.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'Configure permissions', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/permissions', accessed: '2026-10-28' },
     { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
@@ -26,7 +26,7 @@ The model decides what to do, but the harness decides what is allowed to run. Gu
 
 An agent acts through tools. A **guardrail** is a control in the harness that checks, limits, or blocks those actions. The model can ask for anything. The guardrails decide what really runs.
 
-OWASP names the risk that guardrails address: **Excessive Agency**. It is the vulnerability that lets an LLM system do damaging actions after an unexpected, ambiguous, or manipulated model output. OWASP lists three root causes: excessive functionality, excessive permissions, and excessive autonomy <Cite n={8} />.
+OWASP names the risk that guardrails address: **Excessive Agency**. It is the vulnerability that lets an LLM system do damaging actions after an unexpected, ambiguous, or manipulated model output. OWASP lists three root causes: excessive functionality, excessive permissions, and excessive autonomy <Cite n={8} /> (this is the 2025 edition, where it is LLM06; the 2026 edition lists it as LLM03).
 
 So a harness needs controls on each of these:
 
@@ -46,7 +46,7 @@ For prompt injection, see [Guardrails in AI Concepts](/ai-concepts/guardrails/).
 
 An agent does its work through tools. A **guardrail** is a control in the harness that checks, limits, or stops those actions. The model can ask for anything. The guardrails decide what really happens.
 
-OWASP gives the risk a name: **Excessive Agency**. It means an AI system can do harmful actions after the model gives an output that is unexpected, unclear, or changed by an attacker. OWASP gives three causes: the agent has too many functions, too many permissions, or too much freedom to act alone <Cite n={8} />.
+OWASP gives the risk a name: **Excessive Agency**. It means an AI system can do harmful actions after the model gives an output that is unexpected, unclear, or changed by an attacker. OWASP gives three causes: the agent has too many functions, too many permissions, or too much freedom to act alone <Cite n={8} />. (This is the 2025 edition, where it is LLM06. The 2026 edition lists it as LLM03.)
 
 So a harness needs controls for each part:
 
@@ -64,7 +64,7 @@ For prompt injection, see [Guardrails in AI Concepts](/ai-concepts/guardrails/).
 
 একটা agent tool দিয়ে কাজ করে। **Guardrail** হলো harness-এর ভেতরের একটা নিয়ন্ত্রণ, যেটা এসব action যাচাই করে, সীমিত করে, বা আটকে দেয়। Model যেকোনো কিছু চাইতে পারে। আসলে কী চলবে, সেটা guardrail ঠিক করে।
 
-OWASP এই ঝুঁকির একটা নাম দিয়েছে: **Excessive Agency**। এর মানে, model অপ্রত্যাশিত, অস্পষ্ট, বা কারো দ্বারা বদলে দেওয়া output দিলে AI সিস্টেম ক্ষতিকর action করে ফেলতে পারে। OWASP তিনটা কারণ বলে: agent-এর বেশি function, বেশি permission, বা একা কাজ করার বেশি স্বাধীনতা <Cite n={8} />।
+OWASP এই ঝুঁকির একটা নাম দিয়েছে: **Excessive Agency**। এর মানে, model অপ্রত্যাশিত, অস্পষ্ট, বা কারো দ্বারা বদলে দেওয়া output দিলে AI সিস্টেম ক্ষতিকর action করে ফেলতে পারে। OWASP তিনটা কারণ বলে: agent-এর বেশি function, বেশি permission, বা একা কাজ করার বেশি স্বাধীনতা <Cite n={8} />। (এটা 2025 edition, যেখানে এর নম্বর LLM06। 2026 edition-এ এটা LLM03।)
 
 তাই harness-এ প্রতিটা অংশের জন্য নিয়ন্ত্রণ লাগে:
 
@@ -93,8 +93,8 @@ Prompt injection নিয়ে জানতে [AI Concepts-এর Guardrails]
 
 **Errors and retries.** There are two layers:
 
-- **API errors.** The official Claude SDK retries transient failures (connection errors, rate limits, 5xx errors) with exponential backoff, twice by default. `max_retries` changes this <Cite n={4} />.
-- **Tool errors.** When a tool fails, your code returns a `tool_result` with `is_error: true`. Write an error message that says what went wrong and what to try next <Cite n={3} />. If a tool call is invalid, for example a required parameter is missing, Claude retries 2–3 times with corrections before it apologizes <Cite n={3} />.
+- **API errors.** The official Claude SDK retries transient failures (connection errors, timeouts, and the statuses 408, 409, 429, and 5xx) with exponential backoff, twice by default. `max_retries` changes this <Cite n={4} />.
+- **Tool errors.** When a tool fails, your code returns a `tool_result` with `is_error: true`. Write an error message that says what went wrong and what to try next <Cite n={3} />. If a tool call is invalid, for example a required parameter is missing, Claude might call the tool again with corrections. Limit how many retries your loop allows <Cite n={3} />.
 
 **Input and output guardrails.** In the OpenAI Agents SDK, input guardrails run on the first user input, and output guardrails run on the final agent output <Cite n={5} />. A failed check trips a **tripwire**, and the runner raises `InputGuardrailTripwireTriggered` or `OutputGuardrailTripwireTriggered` <Cite n={5} />. Tool guardrails run on every call of a guarded function tool. An input guardrail runs in parallel with the agent by default. In blocking mode, the agent never runs if the tripwire triggers <Cite n={5} />.
 
@@ -103,7 +103,7 @@ Prompt injection নিয়ে জানতে [AI Concepts-এর Guardrails]
 </Technical>
 <Layman>
 
-**Permissions.** Claude Code has levels of permission. Tools that only read, such as file reads and Grep, need no approval inside the working folders. In Manual mode (the `default` mode), Bash commands ask first, except a few built-in read-only commands. File edits also ask first <Cite n={1} />. You can write `allow`, `ask`, and `deny` rules. Claude Code checks deny first, then ask, then allow. The first match wins. An allow rule cannot make a hole in a deny rule <Cite n={1} />. When a tool is denied, Claude gets a "rejected" message back. It usually tries another way, or says that it cannot go on <Cite n={2} />.
+**Permissions.** Claude Code has levels of permission. Tools that only read, such as file reads and Grep, need no approval inside the working folders. In Manual mode (the `default` mode), Bash commands ask first, except a few built-in read-only commands. File edits also ask first <Cite n={1} />. You can write `allow`, `ask`, and `deny` rules. Claude Code checks deny first, then ask, then allow. The first match wins. An allow rule cannot make a hole in a deny rule <Cite n={1} />. When a tool is denied, Claude gets a rejection message back. It usually tries another way, or says that it cannot go on <Cite n={2} />.
 
 **Human approval.** In the OpenAI Agents SDK, you set `needs_approval` on a tool. When the agent calls that tool, the run pauses. The call shows up in `interruptions`. You approve or reject it. Then the run goes on from where it stopped <Cite n={6} />. In the Claude Agent SDK, the `default` mode sends such calls to your `canUseTool` function. The `dontAsk` mode says no to every call that would ask <Cite n={2} />.
 
@@ -112,7 +112,7 @@ Prompt injection নিয়ে জানতে [AI Concepts-এর Guardrails]
 **Errors and retries.** There are two levels:
 
 - **API errors.** The official Claude SDK tries again after short failures, such as a lost connection, a rate limit, or a 5xx error. It waits longer each time and tries twice by default. You change this with `max_retries` <Cite n={4} />.
-- **Tool errors.** When a tool fails, your code sends back a `tool_result` with `is_error: true`. The message should say what went wrong and what to try next <Cite n={3} />. If a tool call is wrong, for example a required value is missing, Claude tries again 2–3 times with fixes. Then it apologizes <Cite n={3} />.
+- **Tool errors.** When a tool fails, your code sends back a `tool_result` with `is_error: true`. The message should say what went wrong and what to try next <Cite n={3} />. If a tool call is wrong, for example a required value is missing, Claude might call the tool again with fixes. Limit how many retries your own loop allows <Cite n={3} />.
 
 **Input and output checks.** In the OpenAI Agents SDK, input guardrails check the first user input. Output guardrails check the final answer of the agent <Cite n={5} />. A failed check trips a **tripwire**. The runner then raises `InputGuardrailTripwireTriggered` or `OutputGuardrailTripwireTriggered` <Cite n={5} />. Tool guardrails check every call of a guarded tool. By default, an input guardrail runs at the same time as the agent. In blocking mode, the agent does not run at all if the tripwire trips <Cite n={5} />.
 
@@ -121,7 +121,7 @@ Prompt injection নিয়ে জানতে [AI Concepts-এর Guardrails]
 </Layman>
 <Bangla>
 
-**Permission।** Claude Code-এ permission-এর কয়েকটা স্তর আছে। শুধু পড়ার tool, যেমন file read আর Grep, working ফোল্ডারের ভেতরে approval ছাড়াই চলে। Manual mode-এ (`default` mode) Bash command আগে জিজ্ঞেস করে, শুধু কিছু built-in read-only command ছাড়া। File edit-ও আগে জিজ্ঞেস করে <Cite n={1} />। আপনি `allow`, `ask`, আর `deny` নিয়ম লিখতে পারেন। Claude Code আগে deny, তারপর ask, তারপর allow দেখে। প্রথম যেটা মেলে, সেটাই জেতে। একটা allow নিয়ম কোনো deny নিয়মে ফাঁক তৈরি করতে পারে না <Cite n={1} />। কোনো tool deny হলে Claude একটা "rejected" message ফেরত পায়। সাধারণত সে অন্য উপায় চেষ্টা করে, বা জানায় যে আর এগোতে পারছে না <Cite n={2} />।
+**Permission।** Claude Code-এ permission-এর কয়েকটা স্তর আছে। শুধু পড়ার tool, যেমন file read আর Grep, working ফোল্ডারের ভেতরে approval ছাড়াই চলে। Manual mode-এ (`default` mode) Bash command আগে জিজ্ঞেস করে, শুধু কিছু built-in read-only command ছাড়া। File edit-ও আগে জিজ্ঞেস করে <Cite n={1} />। আপনি `allow`, `ask`, আর `deny` নিয়ম লিখতে পারেন। Claude Code আগে deny, তারপর ask, তারপর allow দেখে। প্রথম যেটা মেলে, সেটাই জেতে। একটা allow নিয়ম কোনো deny নিয়মে ফাঁক তৈরি করতে পারে না <Cite n={1} />। কোনো tool deny হলে Claude একটা rejection message ফেরত পায়। সাধারণত সে অন্য উপায় চেষ্টা করে, বা জানায় যে আর এগোতে পারছে না <Cite n={2} />।
 
 **মানুষের approval।** OpenAI Agents SDK-তে আপনি একটা tool-এ `needs_approval` দেন। Agent সেই tool call করলে run থেমে যায়। Call-টা `interruptions`-এ দেখা যায়। আপনি approve বা reject করেন। তারপর run যেখানে থেমেছিল, সেখান থেকে চলে <Cite n={6} />। Claude Agent SDK-তে `default` mode এমন call আপনার `canUseTool` function-এ পাঠায়। `dontAsk` mode এমন প্রতিটা call-কে না বলে, যেটা অন্যথায় জিজ্ঞেস করত <Cite n={2} />।
 
@@ -130,7 +130,7 @@ Prompt injection নিয়ে জানতে [AI Concepts-এর Guardrails]
 **Error আর retry।** এর দুটো স্তর আছে:
 
 - **API error।** অফিসিয়াল Claude SDK অল্প সময়ের failure-এর পর আবার চেষ্টা করে, যেমন connection হারানো, rate limit, বা 5xx error। প্রতিবার সে আরও বেশি অপেক্ষা করে, আর ডিফল্টভাবে দুবার চেষ্টা করে। `max_retries` দিয়ে এটা বদলানো যায় <Cite n={4} />।
-- **Tool error।** একটা tool fail করলে আপনার কোড `is_error: true` সহ একটা `tool_result` ফেরত দেয়। Message-এ বলুন কী ভুল হয়েছে আর এরপর কী চেষ্টা করতে হবে <Cite n={3} />। Tool call ভুল হলে, যেমন একটা দরকারি value নেই, Claude ঠিক করে 2–3 বার আবার চেষ্টা করে। তারপর ক্ষমা চায় <Cite n={3} />।
+- **Tool error।** একটা tool fail করলে আপনার কোড `is_error: true` সহ একটা `tool_result` ফেরত দেয়। Message-এ বলুন কী ভুল হয়েছে আর এরপর কী চেষ্টা করতে হবে <Cite n={3} />। Tool call ভুল হলে, যেমন একটা দরকারি value নেই, Claude ঠিক করে tool আবার call করতে পারে। আপনার নিজের loop-এ retry-র সংখ্যা সীমিত রাখুন <Cite n={3} />।
 
 **Input আর output যাচাই।** OpenAI Agents SDK-তে input guardrail user-এর প্রথম input যাচাই করে। Output guardrail agent-এর চূড়ান্ত উত্তর যাচাই করে <Cite n={5} />। যাচাই fail করলে একটা **tripwire** ট্রিগার হয়। তখন runner `InputGuardrailTripwireTriggered` বা `OutputGuardrailTripwireTriggered` raise করে <Cite n={5} />। Tool guardrail একটা guarded tool-এর প্রতিটা call যাচাই করে। ডিফল্টভাবে input guardrail agent-এর সঙ্গে একসাথে চলে। Blocking mode-এ tripwire ট্রিগার হলে agent একদমই চলে না <Cite n={5} />।
 
@@ -167,7 +167,7 @@ turn 40 of max_turns 40               -> limit             -> error_max_turns
 
 This example is invented. A QA team runs a Claude agent in CI to fix flaky tests. They put a control around every action.
 
-The agent may run `npm test` and edit `src/login.ts`, because allow rules permit them. It asks for `git push --force`. A deny rule blocks it. The deny rule wins even over a wider allow rule on `Bash`, because deny is checked first <Cite n={1} />. Claude gets the "rejected" message and reports it <Cite n={2} />. The agent tries to reach an unknown website. The team runs the agent in `dontAsk` mode, because nobody in CI can answer a prompt. So the sandbox refuses the connection, because the host is not on the allowed list. The sandbox still lets the tests write in the repo folder <Cite n={7} />.
+The agent may run `npm test` and edit `src/login.ts`, because allow rules permit them. It asks for `git push --force`. A deny rule blocks it. The deny rule wins even over a wider allow rule on `Bash`, because deny is checked first <Cite n={1} />. Claude gets the rejection message and reports it <Cite n={2} />. The agent tries to reach an unknown website. The team runs the agent in `dontAsk` mode, because nobody in CI can answer a prompt. So the sandbox refuses the connection, because the host is not on the allowed list. The sandbox still lets the tests write in the repo folder <Cite n={7} />.
 
 The team sets `max_turns` and `max_budget_usd`, because both are off by default <Cite n={2} />. When the test service is down, their test tool sends `is_error: true` with "Service down. Retry after 60 seconds." The docs recommend this kind of clear error message <Cite n={3} />.
 
@@ -178,7 +178,7 @@ For the release, a second agent (built with the OpenAI Agents SDK) has a `deploy
 
 এই উদাহরণটা বানানো। একটা QA টিম flaky test ঠিক করতে CI-তে একটা Claude agent চালায়। তারা প্রতিটা action-এর চারপাশে নিয়ন্ত্রণ বসায়।
 
-Allow নিয়ম থাকায় agent `npm test` চালাতে আর `src/login.ts` edit করতে পারে। সে `git push --force` চায়। একটা deny নিয়ম এটা আটকে দেয়। `Bash`-এর একটা বড় allow নিয়ম থাকলেও deny জেতে, কারণ deny আগে যাচাই হয় <Cite n={1} />। Claude "rejected" message পায় আর সেটা রিপোর্ট করে <Cite n={2} />। Agent একটা অচেনা website-এ যেতে চায়। CI-তে prompt-এর উত্তর দেওয়ার কেউ নেই, তাই টিম agent-কে `dontAsk` mode-এ চালায়। তাই sandbox connection-টা আটকে দেয়, কারণ host-টা allowed তালিকায় নেই। তবুও sandbox টেস্টগুলোকে repo ফোল্ডারে লিখতে দেয় <Cite n={7} />।
+Allow নিয়ম থাকায় agent `npm test` চালাতে আর `src/login.ts` edit করতে পারে। সে `git push --force` চায়। একটা deny নিয়ম এটা আটকে দেয়। `Bash`-এর একটা বড় allow নিয়ম থাকলেও deny জেতে, কারণ deny আগে যাচাই হয় <Cite n={1} />। Claude rejection message পায় আর সেটা রিপোর্ট করে <Cite n={2} />। Agent একটা অচেনা website-এ যেতে চায়। CI-তে prompt-এর উত্তর দেওয়ার কেউ নেই, তাই টিম agent-কে `dontAsk` mode-এ চালায়। তাই sandbox connection-টা আটকে দেয়, কারণ host-টা allowed তালিকায় নেই। তবুও sandbox টেস্টগুলোকে repo ফোল্ডারে লিখতে দেয় <Cite n={7} />।
 
 টিম `max_turns` আর `max_budget_usd` সেট করে, কারণ ডিফল্টভাবে দুটোই বন্ধ <Cite n={2} />। Test service বন্ধ থাকলে তাদের test tool `is_error: true` সহ "Service down. Retry after 60 seconds." পাঠায়। Docs এমন পরিষ্কার error message দিতে বলে <Cite n={3} />।
 
@@ -286,7 +286,7 @@ This list is the tutorial's own advice, not a fact from a source.
 | Term | Meaning |
 |---|---|
 | Guardrail | A control in the harness that checks, limits, or blocks an action of the agent. |
-| Excessive Agency | OWASP LLM06: an LLM system can do damaging actions because of too much functionality, permission, or autonomy. |
+| Excessive Agency | OWASP LLM06:2025 (LLM03 in the 2026 edition): an LLM system can do damaging actions because of too much functionality, permission, or autonomy. |
 | Permission rule | An `allow`, `ask`, or `deny` rule. Claude Code checks deny first. |
 | Permission mode | How much the harness asks, for example `default`, `dontAsk`, or `bypassPermissions`. |
 | Human-in-the-loop | A person approves or rejects a tool call before it runs. |
