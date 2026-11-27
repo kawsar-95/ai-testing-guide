@@ -1,6 +1,6 @@
 export const metadata = { title: 'Testing LangGraph Agents', description: 'Test a multi-step agent: the decision at each node, the tool it picks, the arguments it passes, loop detection, and error recovery.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-27',
   sources: [
     { title: 'LangGraph overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/overview', accessed: '2026-11-01' },
     { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
@@ -96,7 +96,8 @@ def test_the_agent_searches_before_it_calculates(agent, fake_tools):
 
 ```python
 def test_the_agent_stops_after_two_searches(agent):
-    # a graph that reaches the recursion limit raises GraphRecursionError
+    # if the agent loops, invoke() raises GraphRecursionError at the limit, so the test fails there;
+    # the assert below checks the agent also stopped early on its own
     state = agent.invoke(
         {"messages": [{"role": "user", "content": "..."}]},
         config={"recursion_limit": 20},
@@ -163,7 +164,8 @@ def test_the_agent_searches_before_it_calculates(agent, fake_tools):
 
 ```python
 def test_the_agent_stops_after_two_searches(agent):
-    # a graph that reaches the recursion limit raises GraphRecursionError
+    # if the agent loops, invoke() raises GraphRecursionError at the limit, so the test fails there;
+    # the assert below checks the agent also stopped early on its own
     state = agent.invoke(
         {"messages": [{"role": "user", "content": "..."}]},
         config={"recursion_limit": 20},
@@ -255,7 +257,10 @@ def test_the_agent_does_not_loop(agent, empty_search):
 
 
 def test_the_agent_reports_that_it_could_not_find_the_answer(agent, empty_search):
-    state = agent.invoke({"messages": [{"role": "user", "content": QUESTION}]})
+    state = agent.invoke(
+        {"messages": [{"role": "user", "content": QUESTION}]},
+        config={"recursion_limit": 20},
+    )
     assert "could not find" in state["messages"][-1].content.lower()
 ```
 
@@ -362,7 +367,10 @@ def test_the_agent_does_not_loop(agent, empty_search):
 
 
 def test_the_agent_reports_that_it_could_not_find_the_answer(agent, empty_search):
-    state = agent.invoke({"messages": [{"role": "user", "content": QUESTION}]})
+    state = agent.invoke(
+        {"messages": [{"role": "user", "content": QUESTION}]},
+        config={"recursion_limit": 20},
+    )
     assert "could not find" in state["messages"][-1].content.lower()
 ```
 
@@ -503,6 +511,5 @@ This advice is the tutorial's own. It does not come from the sources.
 | Tool call | The agent's request to run a tool, with its arguments |
 | Termination | The agent stopping when it should, instead of looping |
 | Recursion limit | The maximum number of steps the graph will take before it gives up |
-| Excessive agency | The agent taking more action than the user asked for |
 | Recovery path | The branch that handles a tool failure |
 | Model call budget | The maximum number of model calls one agent run may make |
