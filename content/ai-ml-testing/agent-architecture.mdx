@@ -1,6 +1,6 @@
 export const metadata = { title: 'Agent Architecture: What You Are Testing', description: 'Map an agent\'s decision tree before you test it: the nodes, the tools, the state, and where the test points are.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'LangGraph overview', publisher: 'LangChain (LangGraph docs)', url: 'https://docs.langchain.com/oss/python/langgraph/overview', accessed: '2026-11-01' },
     { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
@@ -74,13 +74,14 @@ chain থেকে পার্থক্য হলো **পথ runtime-এ ঠ�
 <Voices>
 <Technical>
 
-The reference agent has four tools, and the test point for each is different:
+The reference agent has five tools, and the test point for each is different:
 
 ```text
 search_web(query)        returns text
 query_database(sql)      returns rows
 calculate(expression)    returns a number
 send_email(to, body)     changes the world
+cancel_order(order_id)   changes the world
 ```
 
 **The dangerous tool.** `send_email` is the dangerous one, and it is the reason agents need permissions. A tool that changes the world needs a test that asserts it was **not** called when it should not have been. It also needs a human approval step in production.
@@ -99,18 +100,19 @@ the facts         what the agent has extracted. The scratchpad.
 
 **Stopping condition.** The **stopping condition** needs two tests: one where the agent should stop, and one where it must not. The second is the loop test, and it is the one that finds the infinite loop.
 
-**The trace.** The **trace** is what makes the architecture visible. A run trace shows the nodes in order with the state at each one <Cite n={2} />. This is how you tell an agent that took a wrong path from an agent that took the right path and then failed <Cite n={2} />.
+**The trace.** The **trace** is what makes the architecture visible. A run trace records every run (model call, tool call) for one operation, with its inputs and outputs <Cite n={2} />. Read in order, it shows which path the agent took. This is how you tell an agent that took a wrong path from an agent that took the right path and then failed.
 
 </Technical>
 <Layman>
 
-The reference agent has four tools. Each one needs a different test:
+The reference agent has five tools. Each one needs a different test:
 
 ```text
 search_web(query)        returns text
 query_database(sql)      returns rows
 calculate(expression)    returns a number
 send_email(to, body)     changes the world
+cancel_order(order_id)   changes the world
 ```
 
 `send_email` is the dangerous one. It is why agents need permissions. A tool that changes the world needs a test that checks it was **not** called when it should not be. In production, it also needs a human to approve it.
@@ -129,18 +131,19 @@ The **decision points** are where the model acts. Say a node picks between two t
 
 The **stopping condition** needs two tests. In one, the agent should stop. In the other, it must not stop. The second is the loop test. It is the one that finds the infinite loop.
 
-The **trace** makes the architecture visible. A run trace shows the nodes in order, with the state at each one. With it, you can tell two cases apart. One agent took a wrong path. Another took the right path and then failed <Cite n={2} />.
+The **trace** makes the architecture visible. A run trace records every run (model call, tool call) for one operation, with its inputs and outputs <Cite n={2} />. Read in order, it shows which path the agent took. With it, you can tell two cases apart. One agent took a wrong path. Another took the right path and then failed.
 
 </Layman>
 <Bangla>
 
-reference agent-এর চারটা tool, আর প্রতিটার টেস্ট পয়েন্ট আলাদা:
+reference agent-এর পাঁচটা tool, আর প্রতিটার টেস্ট পয়েন্ট আলাদা:
 
 ```text
 search_web(query)        returns text
 query_database(sql)      returns rows
 calculate(expression)    returns a number
 send_email(to, body)     changes the world
+cancel_order(order_id)   changes the world
 ```
 
 `send_email` সবচেয়ে বিপজ্জনক, আর agent-এর permission দরকার হওয়ার কারণই এটা। যে tool পৃথিবী বদলে দেয়, তার একটা টেস্ট দরকার যে assert করে উচিত না হলে সেটা **বলা হয়নি**, আর production-এ একটা human approval ধাপ দরকার।
@@ -159,7 +162,7 @@ the facts         what the agent has extracted. The scratchpad.
 
 **শেষ হওয়ার শর্তে** দুটো টেস্ট দরকার: যেখানে agent-এর থামা উচিত, আর যেখানে থামা উচিত নয়। দ্বিতীয়টাই loop টেস্ট, আর এটাই অনন্তকাল loop খুঁজে বের করে।
 
-আর **trace**-ই architecture-কে দৃশ্যমান করে। একটা run trace nodeগুলো ক্রমে দেখায় আর প্রতিটায় state, যেটা দিয়ে বোঝা যায় ভুল পথে যাওয়া agent আর সঠিক পথে গিয়ে ব্যর্থ হওয়া agent-এর পার্থক্য <Cite n={2} />।
+আর **trace**-ই architecture-কে দৃশ্যমান করে। একটা run trace একটা operation-এর প্রতিটা run (model call, tool call) তার input ও output সহ রেকর্ড করে <Cite n={2} />। ক্রমে পড়লে দেখা যায় agent কোন পথ নিয়েছে। এটা দিয়েই বোঝা যায় ভুল পথে যাওয়া agent আর সঠিক পথে গিয়ে ব্যর্থ হওয়া agent-এর পার্থক্য।
 
 </Bangla>
 </Voices>
@@ -173,7 +176,7 @@ Write the architecture down as data, so the test and the agent read the same lis
 
 ```python
 # app/agent/tools.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Tool(BaseModel):
@@ -182,6 +185,14 @@ class Tool(BaseModel):
     parameters: dict
 
 
+def with_description(tools, name, description):
+    return [
+        t.model_copy(update={"description": description}) if t.name == name else t
+        for t in tools
+    ]
+
+
+# An excerpt: two of the five tools in the reference agent.
 TOOLS = [
     Tool(
         name="search_web",
@@ -213,7 +224,7 @@ def test_a_vague_tool_description_still_picks_the_right_tool(agent):
     assert agent.tool_calls[0].name == "search_web"
 
     agent_with_vague_description = agent.with_tools(
-        replace(TOOLS, name="search_web", description="Searches.")
+        with_description(TOOLS, "search_web", "Searches.")
     )
     agent_with_vague_description.run("What happened in the news today?")
     assert agent_with_vague_description.tool_calls[0].name == "search_web"
@@ -226,11 +237,11 @@ Finally, the decision-tree test, which asserts that the agent asked the question
 ```python
 def test_the_agent_asks_before_it_acts_on_a_missing_fact(agent, trace):
     agent.run("Cancel my order")
-    assert "cancel_order" in [call.name for call in trace.tool_calls]
+    assert "cancel_order" not in [call.name for call in trace.tool_calls]
     assert "clarify" in [node.name for node in trace.nodes]
 ```
 
-The second assertion is the point: the clarification node has to run, or the agent cancels an order it did not know the id of.
+The second assertion is the point: the clarification node has to run, or the agent cancels an order it did not know the id of. The agent must not call `cancel_order` for this prompt until the user has given the order id.
 
 </Technical>
 <Layman>
@@ -239,7 +250,7 @@ First, write the architecture down as data. Then the test and the agent read the
 
 ```python
 # app/agent/tools.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Tool(BaseModel):
@@ -248,6 +259,14 @@ class Tool(BaseModel):
     parameters: dict
 
 
+def with_description(tools, name, description):
+    return [
+        t.model_copy(update={"description": description}) if t.name == name else t
+        for t in tools
+    ]
+
+
+# An excerpt: two of the five tools in the reference agent.
 TOOLS = [
     Tool(
         name="search_web",
@@ -279,7 +298,7 @@ def test_a_vague_tool_description_still_picks_the_right_tool(agent):
     assert agent.tool_calls[0].name == "search_web"
 
     agent_with_vague_description = agent.with_tools(
-        replace(TOOLS, name="search_web", description="Searches.")
+        with_description(TOOLS, "search_web", "Searches.")
     )
     agent_with_vague_description.run("What happened in the news today?")
     assert agent_with_vague_description.tool_calls[0].name == "search_web"
@@ -292,11 +311,11 @@ Last is the decision-tree test. It checks that the agent asked a question before
 ```python
 def test_the_agent_asks_before_it_acts_on_a_missing_fact(agent, trace):
     agent.run("Cancel my order")
-    assert "cancel_order" in [call.name for call in trace.tool_calls]
+    assert "cancel_order" not in [call.name for call in trace.tool_calls]
     assert "clarify" in [node.name for node in trace.nodes]
 ```
 
-The second assertion is the key one. The clarification node has to run. If it does not, the agent cancels an order without knowing the id.
+The second assertion is the key one. The clarification node has to run. If it does not, the agent cancels an order without knowing the id. The agent must not call `cancel_order` for this prompt until the user has given the order id.
 
 </Layman>
 <Bangla>
@@ -305,7 +324,7 @@ architecture-টা data হিসেবে লিখুন, যাতে টে
 
 ```python
 # app/agent/tools.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Tool(BaseModel):
@@ -314,6 +333,14 @@ class Tool(BaseModel):
     parameters: dict
 
 
+def with_description(tools, name, description):
+    return [
+        t.model_copy(update={"description": description}) if t.name == name else t
+        for t in tools
+    ]
+
+
+# An excerpt: two of the five tools in the reference agent.
 TOOLS = [
     Tool(
         name="search_web",
@@ -345,7 +372,7 @@ def test_a_vague_tool_description_still_picks_the_right_tool(agent):
     assert agent.tool_calls[0].name == "search_web"
 
     agent_with_vague_description = agent.with_tools(
-        replace(TOOLS, name="search_web", description="Searches.")
+        with_description(TOOLS, "search_web", "Searches.")
     )
     agent_with_vague_description.run("What happened in the news today?")
     assert agent_with_vague_description.tool_calls[0].name == "search_web"
@@ -358,7 +385,7 @@ def test_a_vague_tool_description_still_picks_the_right_tool(agent):
 ```python
 def test_the_agent_asks_before_it_acts_on_a_missing_fact(agent, trace):
     agent.run("Cancel my order")
-    assert "cancel_order" in [call.name for call in trace.tool_calls]
+    assert "cancel_order" not in [call.name for call in trace.tool_calls]
     assert "clarify" in [node.name for node in trace.nodes]
 ```
 
@@ -370,7 +397,7 @@ def test_the_agent_asks_before_it_acts_on_a_missing_fact(agent, trace):
 <Voices>
 <Technical>
 
-**Mistake 1: testing only the final answer.** The answer can be right after a wasteful or wrong path <Cite n={2} />.
+**Mistake 1: testing only the final answer.** The trace shows the steps taken, not only the final answer <Cite n={2} />.
 
 **Mistake 2: no approval test for a tool that changes the world.** An agent that can email without asking is one bad prompt away from emailing every customer.
 
@@ -385,7 +412,7 @@ def test_the_agent_asks_before_it_acts_on_a_missing_fact(agent, trace):
 </Technical>
 <Layman>
 
-**Mistake 1: testing only the final answer.** The answer can be right even when the path was wasteful or wrong <Cite n={2} />.
+**Mistake 1: testing only the final answer.** The trace shows the steps taken, not only the final answer <Cite n={2} />.
 
 **Mistake 2: no approval test for a tool that changes the world.** An agent that can email without asking is one bad prompt away from emailing every customer.
 
@@ -400,7 +427,7 @@ def test_the_agent_asks_before_it_acts_on_a_missing_fact(agent, trace):
 </Layman>
 <Bangla>
 
-**Mistake 1: শুধু শেষ উত্তর টেস্ট করা।** উত্তর সঠিক হতে পারে অপচয় বা ভুল পথের পরেও <Cite n={2} />।
+**Mistake 1: শুধু শেষ উত্তর টেস্ট করা।** trace দেখায় কোন ধাপগুলো নেওয়া হয়েছে, শুধু শেষ উত্তর নয় <Cite n={2} />।
 
 **Mistake 2: পৃথিবী বদলে দেওয়া tool-এর approval টেস্ট নেই।** যে agent না বলেই email পাঠাতে পারে, সে একটা খারাপ prompt থেকে সব customer-কে email করতে পারে।
 
@@ -475,5 +502,5 @@ This advice is the tutorial's own. It does not come from the sources.
 | State | What the agent carries between steps: the goal, the messages, the collected facts |
 | Approval step | A human gate before a tool that changes something irreversible |
 | Stopping condition | The rule that ends the agent loop, and the limit that caps it |
-| Trace | The ordered record of node executions and the state at each one |
+| Trace | The record of every run (model call, tool call) in one operation, with inputs and outputs |
 | Irreversible tool | A tool whose effect cannot be undone, like sending an email |
