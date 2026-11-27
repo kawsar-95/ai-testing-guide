@@ -1,6 +1,6 @@
 export const metadata = { title: 'Checkpointing', description: 'Save the state of the work outside the model, so the agent can rewind or resume after an interruption.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-27',
   sources: [
     { title: 'Checkpointing', publisher: 'Claude Code documentation', url: 'https://code.claude.com/docs/en/checkpointing', accessed: '2026-10-28' },
     { title: 'How Claude Code works', publisher: 'Claude Code documentation', url: 'https://code.claude.com/docs/en/how-claude-code-works', accessed: '2026-10-28' },
@@ -46,7 +46,7 @@ Two kinds of checkpoint are common:
 
 The model does not save anything <Cite n={6} />. If the program stops, the work is lost, unless the harness saved it first. A saved state is a **checkpoint**.
 
-A checkpoint helps an agent to continue a chat, to restart after a stop, to recover from a failure, and to remember things between sessions <Cite n={5} />. It also lets a person look at the work at any time <Cite n={4} />.
+Persistence in LangGraph helps an agent to continue a chat, to restart after a stop, to recover from a failure, and to remember things between chats <Cite n={5} />. Checkpoints cover one thread; a separate store keeps long-term memory <Cite n={5} />. It also lets a person look at the work at any time <Cite n={4} />.
 
 There are two common kinds. One saves the **files** that the agent changed, so you can undo them. Claude Code does this <Cite n={1} />. The other saves the **state of the run**, so the run can continue later. LangGraph does this <Cite n={4} />.
 
@@ -55,7 +55,7 @@ There are two common kinds. One saves the **files** that the agent changed, so y
 
 মডেল নিজে কিছু সেভ করে না <Cite n={6} />। প্রোগ্রাম বন্ধ হয়ে গেলে কাজ হারিয়ে যায়, যদি না harness আগে সেটা সেভ করে রাখে। সেভ করা এই অবস্থাকে বলে **checkpoint**।
 
-checkpoint একটা এজেন্টকে চ্যাট চালিয়ে যেতে, থেমে যাওয়ার পর আবার শুরু করতে, ফেইলিওর থেকে ফিরে আসতে আর এক সেশন থেকে আরেক সেশনে কিছু মনে রাখতে সাহায্য করে <Cite n={5} />। এতে একজন মানুষ যেকোনো সময় কাজের অবস্থা দেখতে পারে <Cite n={4} />।
+checkpoint একটা এজেন্টকে চ্যাট চালিয়ে যেতে, থেমে যাওয়ার পর আবার শুরু করতে, ফেইলিওর থেকে ফিরে আসতে আর এক চ্যাট থেকে আরেক চ্যাটে কিছু মনে রাখতে সাহায্য করে <Cite n={5} />। checkpoint শুধু একটা thread-এর জন্য; দীর্ঘমেয়াদি মেমরি রাখে আলাদা একটা store <Cite n={5} />। এতে একজন মানুষ যেকোনো সময় কাজের অবস্থা দেখতে পারে <Cite n={4} />।
 
 সাধারণত দুই ধরনের checkpoint হয়। একটা এজেন্টের বদলানো **ফাইল** সেভ করে, যাতে বদলগুলো undo করা যায়। Claude Code এটা করে <Cite n={1} />। আরেকটা **রানের অবস্থা** সেভ করে, যাতে রানটা পরে আবার চলতে পারে। LangGraph এটা করে <Cite n={4} />।
 
@@ -72,7 +72,7 @@ Claude Code captures the state of your code before each prompt that starts a tur
 Run `/rewind`, or press `Esc` two times when the prompt input is empty, to open the rewind menu <Cite n={1} />. You can restore the code and the conversation, only the conversation, or only the code <Cite n={1} />. The checkpoints are saved with the conversation, so `/rewind` works also after you resume a session with `claude --continue` or `claude --resume` <Cite n={1} /> <Cite n={2} />.
 
 <Callout type="warning" title="What a checkpoint does not undo">
-A file that only Bash commands changed is not tracked <Cite n={1} />. Actions on remote systems (databases, APIs, deployments) cannot be checkpointed <Cite n={2} />. Changes outside Claude Code are normally not captured <Cite n={1} />. Checkpoints are for quick recovery in a session. Keep using Git for permanent history <Cite n={1} />.
+A file that only Bash commands changed is not tracked <Cite n={1} />. Actions on remote systems (databases, APIs, deployments) cannot be checkpointed <Cite n={2} />. Changes outside Claude Code are normally not captured <Cite n={1} />. Edits made by most subagents, and symlinked or hard-linked files, are not restored <Cite n={1} />. Checkpoints are for quick recovery in a session. Keep using Git for permanent history <Cite n={1} />.
 </Callout>
 
 </Technical>
@@ -83,7 +83,7 @@ Claude Code saves the state of your code before each prompt that starts a turn <
 To go back, run `/rewind`, or press `Esc` two times in an empty prompt <Cite n={1} />. You can go back with the code and the chat, only the chat, or only the code <Cite n={1} />. This works also after you reopen an old session <Cite n={1} />.
 
 <Callout type="warning" title="What a checkpoint does not undo">
-A file that only a Bash command changed is not saved <Cite n={1} />. A change to a database, an API, or a deployment cannot be undone <Cite n={2} />. Keep using Git for real history <Cite n={1} />.
+A file that only a Bash command changed is not saved <Cite n={1} />. A change to a database, an API, or a deployment cannot be undone <Cite n={2} />. Edits made by most subagents, and symlinked or hard-linked files, are not restored <Cite n={1} />. Keep using Git for real history <Cite n={1} />.
 </Callout>
 
 </Layman>
@@ -91,10 +91,10 @@ A file that only a Bash command changed is not saved <Cite n={1} />. A change to
 
 যে prompt একটা নতুন turn শুরু করে, তার আগে Claude Code আপনার কোডের অবস্থা সেভ করে <Cite n={1} />। Claude কোনো ফাইল বদলানোর আগে ফাইলটার একটা কপি সেভ করে <Cite n={2} />।
 
-আগের অবস্থায় ফিরতে `/rewind` চালান, অথবা খালি prompt-এ দুবার `Esc` চাপুন <Cite n={1} />। আপনি কোড আর চ্যাট দুটোই, শুধু চ্যাট, অথবা শুধু কোড ফিরিয়ে আনতে পারেন <Cite n={1} />। `claude --continue` বা `claude --resume` দিয়ে পুরোনো সেশন খুললেও এটা কাজ করে <Cite n={1} />।
+আগের অবস্থায় ফিরতে `/rewind` চালান, অথবা খালি prompt-এ দুবার `Esc` চাপুন <Cite n={1} />। আপনি কোড আর চ্যাট দুটোই, শুধু চ্যাট, অথবা শুধু কোড ফিরিয়ে আনতে পারেন <Cite n={1} />। `claude --continue` বা `claude --resume` দিয়ে পুরোনো সেশন খুললেও এটা কাজ করে <Cite n={1} /> <Cite n={2} />।
 
 <Callout type="warning" title="checkpoint যা undo করে না">
-যে ফাইল শুধু একটা Bash কমান্ড বদলেছে, সেটা সেভ হয় না <Cite n={1} />। ডেটাবেস, API বা deployment-এ করা বদল undo করা যায় না <Cite n={2} />। আসল হিস্টোরির জন্য Git ব্যবহার করতে থাকুন <Cite n={1} />।
+যে ফাইল শুধু একটা Bash কমান্ড বদলেছে, সেটা সেভ হয় না <Cite n={1} />। ডেটাবেস, API বা deployment-এ করা বদল undo করা যায় না <Cite n={2} />। বেশিরভাগ subagent-এর করা এডিট এবং symlink বা hard link করা ফাইল ফিরিয়ে আনা হয় না <Cite n={1} />। আসল হিস্টোরির জন্য Git ব্যবহার করতে থাকুন <Cite n={1} />।
 </Callout>
 
 </Bangla>
@@ -105,7 +105,7 @@ A file that only a Bash command changed is not saved <Cite n={1} />. A change to
 <Voices>
 <Technical>
 
-The Claude Agent SDK tracks file changes when you set `enable_file_checkpointing=True` (Python) or `enableFileCheckpointing: true` (TypeScript) <Cite n={3} />. To go back, call `rewind_files()` or `rewindFiles()` with the checkpoint UUID <Cite n={3} />. File rewinding restores the files on disk. It does not rewind the conversation <Cite n={3} />.
+The Claude Agent SDK tracks file changes when you set `enable_file_checkpointing=True` (Python) or `enableFileCheckpointing: true` (TypeScript) <Cite n={3} />. To go back, call `rewind_files()` or `rewindFiles()` with the checkpoint UUID <Cite n={3} />. To receive the checkpoint UUIDs in the stream, also set `extra_args={"replay-user-messages": None}` (Python) or `extraArgs: { 'replay-user-messages': null }` (TypeScript) <Cite n={3} />. File rewinding restores the files on disk. It does not rewind the conversation <Cite n={3} />.
 
 LangGraph saves the run state. A checkpointer saves a snapshot of the graph state at each super-step, organized into threads <Cite n={4} />. When you invoke a graph with a checkpointer, you must give a `thread_id` in the `configurable` part of the config <Cite n={4} />:
 
@@ -128,7 +128,7 @@ If a step fails, the run can start again from the last step that worked <Cite n=
 </Layman>
 <Bangla>
 
-file checkpointing চালু করলে (`enable_file_checkpointing=True`) Claude Agent SDK ফাইলের বদলগুলো সেভ করে <Cite n={3} />। পরে `rewind_files()` দিয়ে ফাইলগুলো আগের অবস্থায় ফেরানো যায়। এতে চ্যাট আগের অবস্থায় ফেরে না <Cite n={3} />।
+file checkpointing চালু করলে (`enable_file_checkpointing=True`) Claude Agent SDK ফাইলের বদলগুলো সেভ করে <Cite n={3} />। পরে `rewind_files()` দিয়ে ফাইলগুলো আগের অবস্থায় ফেরানো যায়। এতে চ্যাট আগের অবস্থায় ফেরে না <Cite n={3} />। stream-এ checkpoint UUID পেতে `extra_args={"replay-user-messages": None}` (Python) বা `extraArgs: { 'replay-user-messages': null }` (TypeScript)-ও সেট করুন <Cite n={3} />।
 
 LangGraph প্রতিটা ধাপের (super-step) পরে পুরো রানের অবস্থা সেভ করে <Cite n={4} />। প্রতিটা কথোপকথন একটা thread, যার নিজের একটা `thread_id` থাকে, আর তার সেভ করা অবস্থাগুলো সেই `thread_id`-এর নিচে রাখা হয় <Cite n={4} />।
 
