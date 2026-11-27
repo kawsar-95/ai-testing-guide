@@ -1,6 +1,6 @@
 export const metadata = { title: 'Advanced Capstone: Production Pipeline and Monitoring', description: 'Wire the test suite into a CI/CD quality gate, deploy LangFuse tracing and Arize Phoenix continuous evaluation, and build cost monitoring and an A/B framework.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'CI/CD integration', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
     { title: 'Command line', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/usage/command-line/', accessed: '2026-11-01' },
@@ -22,7 +22,7 @@ The pipeline does not stop at merge. It watches the model in production, too.
 <Voices>
 <Technical>
 
-This session connects two things built separately in this course: the CI gate from the eval modules, and the observability tools from the monitoring modules, into one pipeline that covers both pre-merge and post-deploy. Promptfoo's eval runs as a required check on every PR <Cite n={1} />, wired through GitHub Actions <Cite n={6} />, exactly as in the first capstone. What is new here is adding LangFuse tracing <Cite n={3} /> and Arize Phoenix continuous evaluation <Cite n={4} /> on the deployed app, so quality is checked twice: once before the code merges, and continuously after it is live.
+This session connects two things built separately in this course: the CI gate from the eval modules, and the observability tools from the monitoring modules, into one pipeline that covers both pre-merge and post-deploy. Promptfoo's eval runs on every PR <Cite n={1} />, wired through GitHub Actions <Cite n={6} />, exactly as in the first capstone. Marking that job as a required status check is a branch-protection setting in GitHub <Cite n={6} />. What is new here is adding LangFuse tracing <Cite n={3} /> and Arize Phoenix continuous evaluation <Cite n={4} /> on the deployed app, so quality is checked twice: once before the code merges, and continuously after it is live.
 
 Cost monitoring and an A/B framework are the two pieces that only make sense once there is live traffic to measure: cost monitoring sums real token usage instead of a test suite's fixed case count, and an A/B framework compares two model or prompt versions on real questions instead of a frozen eval set.
 
@@ -31,14 +31,14 @@ Cost monitoring and an A/B framework are the two pieces that only make sense onc
 
 This session joins two things you built separately in this course. One is the CI gate from the eval modules. The other is the observability tools from the monitoring modules. Together they make one pipeline. It covers the time before merge and the time after deploy.
 
-Promptfoo's eval runs as a required check on every PR <Cite n={1} />. It runs through GitHub Actions <Cite n={6} />, just as in the first capstone. The new part is LangFuse tracing <Cite n={3} /> and Arize Phoenix continuous evaluation <Cite n={4} /> on the deployed app. So quality is checked twice. It is checked before the code merges. It is checked again, all the time, once the app is live.
+Promptfoo's eval runs on every PR <Cite n={1} />. It runs through GitHub Actions <Cite n={6} />, just as in the first capstone. Marking that job as a required check is a branch-protection setting in GitHub <Cite n={6} />. The new part is LangFuse tracing <Cite n={3} /> and Arize Phoenix continuous evaluation <Cite n={4} /> on the deployed app. So quality is checked twice. It is checked before the code merges. It is checked again, all the time, once the app is live.
 
 Two pieces only make sense when you have live traffic to measure. They are cost monitoring and an A/B framework. Cost monitoring adds up real token usage. A test suite only has a fixed number of cases. An A/B framework compares two model or prompt versions on real questions. A frozen eval set cannot do that.
 
 </Layman>
 <Bangla>
 
-এই session এই course-এ আলাদাভাবে বানানো দুটো জিনিস জোড়া দেয়: eval মডিউল থেকে CI gate, আর monitoring মডিউল থেকে observability টুল, একটা pipeline-এ যা pre-merge আর post-deploy দুটোই কভার করে। Promptfoo-র eval প্রতিটা PR-এ একটা required check হিসেবে চলে <Cite n={1} />, GitHub Actions দিয়ে জোড়া <Cite n={6} />, ঠিক প্রথম capstone-এর মতো। এখানে নতুন যা, deployed app-এ LangFuse tracing <Cite n={3} /> আর Arize Phoenix continuous evaluation <Cite n={4} /> যোগ করা, তাই quality দুইবার চেক হয়: একবার code merge হওয়ার আগে, আর একটানা এটা live হওয়ার পরে।
+এই session এই course-এ আলাদাভাবে বানানো দুটো জিনিস জোড়া দেয়: eval মডিউল থেকে CI gate, আর monitoring মডিউল থেকে observability টুল, একটা pipeline-এ যা pre-merge আর post-deploy দুটোই কভার করে। Promptfoo-র eval প্রতিটা PR-এ চলে <Cite n={1} />, GitHub Actions দিয়ে জোড়া <Cite n={6} />, ঠিক প্রথম capstone-এর মতো। সেই job-কে required status check হিসেবে চিহ্নিত করা GitHub-এর branch-protection setting <Cite n={6} />। এখানে নতুন যা, deployed app-এ LangFuse tracing <Cite n={3} /> আর Arize Phoenix continuous evaluation <Cite n={4} /> যোগ করা, তাই quality দুইবার চেক হয়: একবার code merge হওয়ার আগে, আর একটানা এটা live হওয়ার পরে।
 
 Cost monitoring আর একটা A/B framework দুটো অংশ যা শুধু live traffic পরিমাপ করার জন্য থাকলেই অর্থবহ হয়: cost monitoring একটা test suite-এর স্থির case সংখ্যার বদলে real token ব্যবহার যোগ করে, আর একটা A/B framework দুটো model বা prompt version real প্রশ্নে তুলনা করে, একটা হিমায়িত eval সেটে নয়।
 
@@ -54,7 +54,8 @@ The two halves of the pipeline, pre-merge and post-deploy, side by side:
 
 ```text
 PRE-MERGE (CI, blocks the PR)
-  Promptfoo eval + agent decision tests -> exit code 100 fails the check
+  Promptfoo eval -> exit code 100 fails the check
+  agent decision tests (pytest) -> non-zero exit fails the check
 
 POST-DEPLOY (continuous, does not block anything by itself)
   every call traced via Langfuse
@@ -74,7 +75,8 @@ Here are the two halves of the pipeline, side by side:
 
 ```text
 PRE-MERGE (CI, blocks the PR)
-  Promptfoo eval + agent decision tests -> exit code 100 fails the check
+  Promptfoo eval -> exit code 100 fails the check
+  agent decision tests (pytest) -> non-zero exit fails the check
 
 POST-DEPLOY (continuous, does not block anything by itself)
   every call traced via Langfuse
@@ -94,7 +96,8 @@ pipeline-এর দুটো অর্ধেক, pre-merge আর post-deploy, �
 
 ```text
 PRE-MERGE (CI, blocks the PR)
-  Promptfoo eval + agent decision tests -> exit code 100 fails the check
+  Promptfoo eval -> exit code 100 fails the check
+  agent decision tests (pytest) -> non-zero exit fails the check
 
 POST-DEPLOY (continuous, does not block anything by itself)
   every call traced via Langfuse
@@ -115,7 +118,7 @@ A/B framework কাজ করে live traffic-এর একটা ছোট শ
 <Voices>
 <Technical>
 
-The CI workflow, required on every PR <Cite n={6} /> <Cite n={1} /> <Cite n={2} />:
+The CI workflow, which you mark as a required check on every PR <Cite n={6} /> <Cite n={1} /> <Cite n={2} />:
 
 ```yaml
 # .github/workflows/advanced-capstone.yml
@@ -124,9 +127,9 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: npx promptfoo eval -c promptfooconfig.yaml  # exit code 100 fails the job
-      - run: python -m pytest tests/agent_routing/
+      - run: python -m pytest tests/agent_routing/  # non-zero exit fails the job
 ```
 
 Production tracing and continuous eval on the deployed app <Cite n={3} /> <Cite n={5} />:
@@ -156,7 +159,7 @@ A minimal A/B split, comparing a candidate prompt against the baseline:
 import random
 
 def handle_request_ab(question: str) -> dict:
-    variant = "candidate" if random.random() < 0.1 else "baseline"
+    variant = "candidate" if random.random() < 0.05 else "baseline"
     result = agent_variants[variant].invoke({"question": question})
     return {**result, "variant": variant}  # tagged for later comparison in Phoenix/LangFuse
 ```
@@ -173,7 +176,7 @@ This advice is the tutorial's own. It does not come from the sources.
 </Technical>
 <Layman>
 
-This CI workflow is required on every PR <Cite n={6} /> <Cite n={1} /> <Cite n={2} />.
+This CI workflow is one you mark as a required check on every PR <Cite n={6} /> <Cite n={1} /> <Cite n={2} />.
 
 ```yaml
 # .github/workflows/advanced-capstone.yml
@@ -182,9 +185,9 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: npx promptfoo eval -c promptfooconfig.yaml  # exit code 100 fails the job
-      - run: python -m pytest tests/agent_routing/
+      - run: python -m pytest tests/agent_routing/  # non-zero exit fails the job
 ```
 
 Next is tracing and continuous eval on the deployed app <Cite n={3} /> <Cite n={5} />.
@@ -214,7 +217,7 @@ This is a minimal A/B split. It compares a candidate prompt against the baseline
 import random
 
 def handle_request_ab(question: str) -> dict:
-    variant = "candidate" if random.random() < 0.1 else "baseline"
+    variant = "candidate" if random.random() < 0.05 else "baseline"
     result = agent_variants[variant].invoke({"question": question})
     return {**result, "variant": variant}  # tagged for later comparison in Phoenix/LangFuse
 ```
@@ -228,7 +231,7 @@ def handle_request_ab(question: str) -> dict:
 </Layman>
 <Bangla>
 
-প্রতিটা PR-এ required CI workflow <Cite n={6} /> <Cite n={1} /> <Cite n={2} />:
+এই CI workflow-কে আপনি প্রতিটা PR-এ required check হিসেবে চিহ্নিত করবেন <Cite n={6} /> <Cite n={1} /> <Cite n={2} />:
 
 ```yaml
 # .github/workflows/advanced-capstone.yml
@@ -237,9 +240,9 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: npx promptfoo eval -c promptfooconfig.yaml  # exit code 100 fails the job
-      - run: python -m pytest tests/agent_routing/
+      - run: python -m pytest tests/agent_routing/  # non-zero exit fails the job
 ```
 
 Deployed app-এ production tracing আর continuous eval <Cite n={3} /> <Cite n={5} />:
@@ -269,7 +272,7 @@ Baseline-এর বিরুদ্ধে একটা candidate prompt তুল
 import random
 
 def handle_request_ab(question: str) -> dict:
-    variant = "candidate" if random.random() < 0.1 else "baseline"
+    variant = "candidate" if random.random() < 0.05 else "baseline"
     result = agent_variants[variant].invoke({"question": question})
     return {**result, "variant": variant}  # tagged for later comparison in Phoenix/LangFuse
 ```
@@ -291,7 +294,7 @@ def handle_request_ab(question: str) -> dict:
 <Voices>
 <Technical>
 
-**Mistake 1: treating the CI gate as sufficient on its own.** It only sees the fixed eval set; production tracing is what catches a problem the eval set never anticipated <Cite n={1} />.
+**Mistake 1: treating the CI gate as sufficient on its own.** It only sees the fixed eval set; production tracing is what catches a problem the eval set never anticipated <Cite n={3} /> <Cite n={4} />.
 
 **Mistake 2: starting an A/B split at 50%.** A bad candidate at 50% traffic does twenty-five times the damage of one at 2%; start small.
 
@@ -304,7 +307,7 @@ def handle_request_ab(question: str) -> dict:
 </Technical>
 <Layman>
 
-**Mistake 1: trusting the CI gate alone.** It only sees the fixed eval set. Production tracing catches a problem the eval set never expected <Cite n={1} />.
+**Mistake 1: trusting the CI gate alone.** It only sees the fixed eval set. Production tracing catches a problem the eval set never expected <Cite n={3} /> <Cite n={4} />.
 
 **Mistake 2: starting an A/B split at 50%.** A bad candidate at 50% of traffic does twenty-five times the damage of one at 2%. Start small.
 
@@ -317,7 +320,7 @@ def handle_request_ab(question: str) -> dict:
 </Layman>
 <Bangla>
 
-**ভুল ১: CI gate-কে নিজে নিজে যথেষ্ট ভাবা।** এটা শুধু স্থির eval সেট দেখে; production tracing-ই এমন একটা সমস্যা ধরে যা eval সেট কখনো অনুমান করেনি <Cite n={1} />।
+**ভুল ১: CI gate-কে নিজে নিজে যথেষ্ট ভাবা।** এটা শুধু স্থির eval সেট দেখে; production tracing-ই এমন একটা সমস্যা ধরে যা eval সেট কখনো অনুমান করেনি <Cite n={3} /> <Cite n={4} />।
 
 **ভুল ২: ৫০%-এ একটা A/B split শুরু করা।** ৫০% traffic-এ একটা খারাপ candidate ২%-এর চেয়ে পঁচিশ গুণ ক্ষতি করে; ছোট শুরু করুন।
 
