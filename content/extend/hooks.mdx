@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-11-11',
+  updated: '2026-11-27',
   sources: [
     { title: 'Hooks reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/hooks', accessed: '2026-10-10' },
     { title: 'Extend Claude with skills', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/skills', accessed: '2026-10-10' },
@@ -213,13 +213,13 @@ Hook scripts do get some environment variables, for example `CLAUDE_PROJECT_DIR`
 
 | Exit code | Meaning | Effect |
 |---|---|---|
-| `0` | Success | For most events, stdout goes to the debug log, not to the transcript. <Cite n={1} /> |
+| `0` | Success | For most events, Claude does not see the stdout. On `UserPromptSubmit`, `UserPromptExpansion`, `SessionStart`, and `PostModelSwitch`, plain stdout becomes context for Claude. <Cite n={1} /> |
 | `2` | Blocking error | On `PreToolUse`, the tool call is blocked. Claude gets the stderr text as the reason. <Cite n={1} /> |
 | Any other, including `1` | Non-blocking error | For most events, the action continues. The transcript shows the first line of stderr. <Cite n={1} /> |
 
 <Callout type="danger" title="Exit 1 does not block">
 
-Claude Code treats exit code 1 as a non-blocking error and continues the action, even though 1 is the usual Unix failure code. <Cite n={1} /> A hook that cannot start, for example because of a wrong path, is also a non-blocking error. The transcript shows a hook error notice with the interpreter's message. Watch for this notice on the first run of a policy hook. <Cite n={1} /> To make a failed hook block the action, set `"onFailure": "block"` on a `command` or `http` hook (Claude Code v2.1.295 or later). Then Claude Code blocks the action when the hook cannot start, exits with a code other than 0 or 2, or times out. <Cite n={1} /> Test each blocking hook with sample input.
+Claude Code treats exit code 1 as a non-blocking error and continues the action, even though 1 is the usual Unix failure code. <Cite n={1} /> A hook that cannot start, for example because of a wrong path, is also a non-blocking error. The transcript shows a hook error notice with the interpreter's message. Watch for this notice on the first run of a policy hook. <Cite n={1} /> To make a failed hook block the action, set `"onFailure": "block"` on a `command`, `http`, or `mcp_tool` hook (Claude Code v2.1.295 or later; v2.1.328 or later for `mcp_tool`). Then Claude Code blocks the action when the hook cannot start, exits with a code other than 0 or 2, or times out. <Cite n={1} /> Test each blocking hook with sample input.
 
 </Callout>
 
@@ -231,14 +231,14 @@ Claude Code treats exit code 1 as a non-blocking error and continues the action,
 </Technical>
 <Layman>
 
-A hook answers with an exit code. Exit code `0` means success. Exit code `2` is a blocking error. On `PreToolUse`, it blocks the tool call, and Claude gets the stderr text as the reason. Any other code, including `1`, is a non-blocking error. For most events, the action continues. <Cite n={1} /> A hook that cannot start, for example because of a wrong path, also does not block. To make a failed hook block the action, set `"onFailure": "block"` on a `command` or `http` hook (Claude Code v2.1.295 or later). <Cite n={1} /> Test each blocking hook with sample input.
+A hook answers with an exit code. Exit code `0` means success. Exit code `2` is a blocking error. On `PreToolUse`, it blocks the tool call, and Claude gets the stderr text as the reason. Any other code, including `1`, is a non-blocking error. For most events, the action continues. <Cite n={1} /> A hook that cannot start, for example because of a wrong path, also does not block. To make a failed hook block the action, set `"onFailure": "block"` on a `command`, `http`, or `mcp_tool` hook (Claude Code v2.1.295 or later; v2.1.328 or later for `mcp_tool`). <Cite n={1} /> Test each blocking hook with sample input.
 
 Exit code 2 wins over JSON output. <Cite n={1} /> On `PostToolUse`, the tool already ran, so the hook cannot undo the action. <Cite n={1} /> <Cite n={3} />
 
 </Layman>
 <Bangla>
 
-Hook একটি exit code দিয়ে উত্তর দেয়। Exit code `0` মানে success। Exit code `2` হলো blocking error: `PreToolUse`-এ tool call block হয়, আর Claude stderr-এর লেখাটি কারণ হিসেবে পায়। `1`-সহ অন্য যেকোনো code হলো non-blocking error। বেশিরভাগ event-এ action চলতে থাকে। <Cite n={1} /> যে hook শুরুই হতে পারে না (যেমন ভুল path-এর কারণে), সেটিও block করে না। Failed hook দিয়ে action block করাতে একটি `command` বা `http` hook-এ `"onFailure": "block"` set করুন (Claude Code v2.1.295 বা পরের version)। <Cite n={1} /> প্রতিটি blocking hook sample input দিয়ে test করুন।
+Hook একটি exit code দিয়ে উত্তর দেয়। Exit code `0` মানে success। Exit code `2` হলো blocking error: `PreToolUse`-এ tool call block হয়, আর Claude stderr-এর লেখাটি কারণ হিসেবে পায়। `1`-সহ অন্য যেকোনো code হলো non-blocking error। বেশিরভাগ event-এ action চলতে থাকে। <Cite n={1} /> যে hook শুরুই হতে পারে না (যেমন ভুল path-এর কারণে), সেটিও block করে না। Failed hook দিয়ে action block করাতে একটি `command` বা `http` hook-এ `"onFailure": "block"` set করুন (Claude Code v2.1.295 বা পরের version; `mcp_tool`-এর জন্য v2.1.328 বা পরের)। <Cite n={1} /> প্রতিটি blocking hook sample input দিয়ে test করুন।
 
 Exit code 2 JSON output-এর চেয়ে অগ্রাধিকার পায়। <Cite n={1} /> `PostToolUse`-এ tool আগেই চালানো হয়ে গেছে, তাই hook action-টি undo করতে পারে না। <Cite n={1} /> <Cite n={3} />
 
@@ -294,7 +294,7 @@ A hook that returns `deny` blocks the tool even in `bypassPermissions` mode. <Ci
 <Voices>
 <Technical>
 
-The hooks reference documents 33 events. <Cite n={1} /> These are the events that QA work uses most:
+The hooks reference documents 34 events. <Cite n={1} /> These are the events that QA work uses most:
 
 | Event | When it runs |
 |---|---|
@@ -310,7 +310,7 @@ The full list is in the [Reference](#reference).
 </Technical>
 <Layman>
 
-The hooks reference documents 33 events. <Cite n={1} /> QA work uses these events the most: <Cite n={1} />
+The hooks reference documents 34 events. <Cite n={1} /> QA work uses these events the most: <Cite n={1} />
 
 - `SessionStart`: a session begins or resumes.
 - `PreToolUse`: before a tool call runs. It can block the call.
@@ -324,7 +324,7 @@ The full list is in the [Reference](#reference).
 </Layman>
 <Bangla>
 
-Hooks reference-এ 33টি event-এর বর্ণনা আছে। <Cite n={1} /> QA কাজে এই event-গুলো সবচেয়ে বেশি লাগে: <Cite n={1} />
+Hooks reference-এ 34টি event-এর বর্ণনা আছে। <Cite n={1} /> QA কাজে এই event-গুলো সবচেয়ে বেশি লাগে: <Cite n={1} />
 
 - `SessionStart`: session শুরু বা resume হলে।
 - `PreToolUse`: tool call চলার আগে। এটি call-টি block করতে পারে।
@@ -450,7 +450,7 @@ These rules do not cover any script. For blocking at the operating system level,
 
 ### Format after edits
 
-The hooks guide runs Prettier on every file that Claude edits or writes: <Cite n={3} />
+This example is adapted from the hooks guide, which runs Prettier on every file that Claude edits or writes: <Cite n={3} />
 
 ```json
 {
@@ -461,7 +461,7 @@ The hooks guide runs Prettier on every file that Claude edits or writes: <Cite n
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path' | xargs npx prettier --write"
+            "command": "f=$(jq -r '.tool_input.file_path') && npx prettier --write --ignore-unknown \"$f\""
           }
         ]
       }
@@ -606,7 +606,7 @@ Command hooks run shell commands with your full user permissions. <Cite n={1} />
 The docs give these security practices for hook scripts: validate input, quote shell variables, block `..` in paths, use absolute paths, and skip sensitive files such as `.env`, `.git/`, and keys. <Cite n={1} />
 
 - `"disableAllHooks": true` in settings turns hooks off. It cannot turn off managed hooks from user or project settings. <Cite n={1} />
-- On Windows without Git Bash, the Bash tool is not registered, so a hook that matches only `Bash` never fires. Use the matcher `Bash|PowerShell` and `"shell": "powershell"`. <Cite n={1} />
+- On Windows without Git Bash, hooks run in PowerShell by default. Use the matcher `Bash|PowerShell` and `"shell": "powershell"`. <Cite n={1} />
 
 <Callout type="tip" title="See it in practice">
 The case study has a `PreToolUse` hook that adds context before a skill runs, in [Bug Hunting with a Review Gate](/case-study/bug-hunt/). [What to Fix in the Setup](/case-study/lessons/) shows hook mistakes and their fixes.
@@ -633,7 +633,7 @@ Take care with a repository you did not write. Before you run Claude Code on it 
 
 `"disableAllHooks": true` in settings turns hooks off. It cannot turn off managed hooks from user or project settings. <Cite n={1} />
 
-On Windows without Git Bash, the Bash tool is not registered. So a hook that matches only `Bash` never fires. Use the matcher `Bash|PowerShell` and `"shell": "powershell"`. <Cite n={1} />
+On Windows without Git Bash, hooks run in PowerShell by default. Use the matcher `Bash|PowerShell` and `"shell": "powershell"`. <Cite n={1} />
 
 </Layman>
 <Bangla>
@@ -659,13 +659,13 @@ Settings-এ `"disableAllHooks": true` hook বন্ধ করে। User ব�
 <Voices>
 <Technical>
 
-### All 33 events
+### All 34 events
 
-`SessionStart`, `Setup`, `InstructionsLoaded`, `UserPromptSubmit`, `UserPromptExpansion`, `MessageDisplay`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `PermissionDenied`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `Stop`, `StopFailure`, `TeammateIdle`, `ConfigChange`, `CwdChanged`, `DirectoryAdded`, `FileChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `PreModelSwitch`, `PostModelSwitch`, `Elicitation`, `ElicitationResult`, `SessionEnd`. <Cite n={1} />
+`SessionStart`, `Setup`, `InstructionsLoaded`, `UserPromptSubmit`, `UserPromptExpansion`, `PreSkillShellCommand`, `MessageDisplay`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `PermissionDenied`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `Stop`, `StopFailure`, `TeammateIdle`, `ConfigChange`, `CwdChanged`, `DirectoryAdded`, `FileChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `PreModelSwitch`, `PostModelSwitch`, `Elicitation`, `ElicitationResult`, `SessionEnd`. <Cite n={1} />
 
 ### More options
 
-- `if` filters a tool event with permission-rule syntax, for example `"Bash(git *)"` or `"Edit(*.ts)"`. One rule per `if`. On other events, a hook with `if` never runs. <Cite n={1} /> `"Edit(src/**)"` matches only `src` in the working directory. Use `"Edit(**/src/**)"` for any depth (v2.1.214 or later). <Cite n={1} />
+- `if` filters a tool event with permission-rule syntax, for example `"Bash(git *)"` or `"Edit(*.ts)"`. One rule per `if`. On other events, a hook with `if` never runs. <Cite n={1} /> `"Edit(src/**)"` matches only `src` in the working directory. Use `"Edit(**/src/**)"` for any depth. <Cite n={1} />
 - Exec form: `command` plus an `args` list, for example `"command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/check-style.sh", "args": []`. It needs no shell quotes. <Cite n={1} />
 - `asyncRewake` runs the hook in the background and wakes Claude on exit code 2. <Cite n={1} />
 - `PostToolUse` can replace the tool output with `updatedToolOutput`. <Cite n={1} />
@@ -677,7 +677,7 @@ Settings-এ `"disableAllHooks": true` hook বন্ধ করে। User ব�
 </Technical>
 <Layman>
 
-The hooks reference lists 33 events in all. <Cite n={1} /> Some more options:
+The hooks reference lists 34 events in all. <Cite n={1} /> Some more options:
 
 - `if` filters a tool event with permission-rule syntax, for example `"Bash(git *)"`. <Cite n={1} />
 - `asyncRewake` runs the hook in the background and wakes Claude on exit code 2. <Cite n={1} />
@@ -688,7 +688,7 @@ The hooks reference lists 33 events in all. <Cite n={1} /> Some more options:
 </Layman>
 <Bangla>
 
-Hooks reference-এ মোট 33টি event আছে। <Cite n={1} /> আরও কিছু option:
+Hooks reference-এ মোট 34টি event আছে। <Cite n={1} /> আরও কিছু option:
 
 - `if` permission-rule syntax দিয়ে একটি tool event filter করে, যেমন `"Bash(git *)"`। <Cite n={1} />
 - `asyncRewake` hook-টি background-এ চালায় এবং exit code 2-এ Claude-কে জাগিয়ে তোলে। <Cite n={1} />
