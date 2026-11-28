@@ -1,6 +1,6 @@
 export const metadata = { title: 'The Stop Check', description: 'After each step, the loop asks one question: answer now, or keep going? Here is how the loop ends.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'How the agent loop works', publisher: 'Anthropic (Claude Code docs, Agent SDK)', url: 'https://code.claude.com/docs/en/agent-sdk/agent-loop', accessed: '2026-10-28' },
     { title: 'CLI reference', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/cli-reference', accessed: '2026-10-28' },
@@ -90,9 +90,9 @@ model response
 | Harness | Limit | Default | At the limit |
 |---|---|---|---|
 | Claude Agent SDK | `max_turns`, `max_budget_usd` | No limit | Result subtype `error_max_turns` or `error_max_budget_usd` <Cite n={1} /> |
-| Claude Code CLI | `--max-turns`, `--max-budget-usd` (print mode only) | No limit for `--max-turns` | `--max-turns` exits with an error <Cite n={2} /> |
+| Claude Code CLI | `--max-turns`, `--max-budget-usd` (print mode only) | No limit for `--max-turns` | `--max-turns` ends the run with an error result and a nonzero exit code <Cite n={1} /> |
 | OpenAI Agents SDK | `max_turns` | 10 (`DEFAULT_MAX_TURNS`) <Cite n={8} />; `max_turns=None` turns it off | `MaxTurnsExceeded` exception <Cite n={4} /> |
-| LangGraph | `recursion_limit` (super-steps) | 1000 (from version 1.0.6) | `GraphRecursionError` <Cite n={5} /> |
+| LangGraph | `recursion_limit` (super-steps) | 10,007 (from version 1.1.4; 10,000 in 1.0.6–1.1.3) | `GraphRecursionError` <Cite n={5} /> |
 
 **Details that matter for tests.** In the Agent SDK, `max_turns` must count one extra turn for the final text-only response. Without it, the run ends with `error_max_turns` and no final response <Cite n={1} />. The budget is checked after each response arrives, so spend can pass the cap by up to the cost of one response <Cite n={1} />. In LangGraph, `recursion_limit` is a top-level config key, not a key inside `configurable` <Cite n={5} />.
 
@@ -118,9 +118,9 @@ Only `success` has the `result` text. Every subtype has `total_cost_usd`, `usage
 **The hard limits.**
 
 - **Claude Agent SDK:** `max_turns` and `max_budget_usd`. No limit by default. At a limit, the result subtype is `error_max_turns` or `error_max_budget_usd` <Cite n={1} />.
-- **Claude Code CLI:** `--max-turns` and `--max-budget-usd`, in print mode only. `--max-turns` has no limit by default. `--max-turns` exits with an error at the limit <Cite n={2} />.
+- **Claude Code CLI:** `--max-turns` and `--max-budget-usd`, in print mode only. `--max-turns` has no limit by default. `--max-turns` ends the run with an error result and a nonzero exit code at the limit <Cite n={1} />.
 - **OpenAI Agents SDK:** `max_turns`. The default is 10 (`DEFAULT_MAX_TURNS`) <Cite n={8} />, and `max_turns=None` turns the limit off. Past the limit, you get a `MaxTurnsExceeded` exception <Cite n={4} />.
-- **LangGraph:** `recursion_limit` counts super-steps. The default is 1000 (from version 1.0.6). Past the limit, you get `GraphRecursionError` <Cite n={5} />.
+- **LangGraph:** `recursion_limit` counts super-steps. The default is 10,007 (from version 1.1.4; it was 10,000 from 1.0.6 to 1.1.3). Past the limit, you get `GraphRecursionError` <Cite n={5} />.
 
 Some details matter for tests. In the Agent SDK, `max_turns` must count one extra turn for the final text answer. If not, the run ends with `error_max_turns` and no final answer <Cite n={1} />. The budget is checked after each response comes back, so spend can go past the cap by up to the cost of one response <Cite n={1} />. In LangGraph, `recursion_limit` is a top-level config key, not a key inside `configurable` <Cite n={5} />.
 
@@ -138,9 +138,9 @@ Some details matter for tests. In the Agent SDK, `max_turns` must count one extr
 **কড়া সীমাগুলো।**
 
 - **Claude Agent SDK:** `max_turns` আর `max_budget_usd`। ডিফল্টভাবে কোনো সীমা নেই। সীমায় পৌঁছালে result subtype হয় `error_max_turns` বা `error_max_budget_usd` <Cite n={1} />।
-- **Claude Code CLI:** `--max-turns` আর `--max-budget-usd`, শুধু print mode-এ। ডিফল্টভাবে `--max-turns`-এর কোনো সীমা নেই। সীমায় পৌঁছালে `--max-turns` একটা error দিয়ে বের হয়ে যায় <Cite n={2} />।
+- **Claude Code CLI:** `--max-turns` আর `--max-budget-usd`, শুধু print mode-এ। ডিফল্টভাবে `--max-turns`-এর কোনো সীমা নেই। সীমায় পৌঁছালে `--max-turns` একটা error result আর nonzero exit code দিয়ে run শেষ করে <Cite n={1} />।
 - **OpenAI Agents SDK:** `max_turns`। ডিফল্ট হলো 10 (`DEFAULT_MAX_TURNS`) <Cite n={8} />, আর `max_turns=None` দিলে সীমা বন্ধ হয়। সীমা পার হলে একটা `MaxTurnsExceeded` exception আসে <Cite n={4} />।
-- **LangGraph:** `recursion_limit` super-step গোনে। ডিফল্ট হলো 1000 (version 1.0.6 থেকে)। সীমা পার হলে `GraphRecursionError` আসে <Cite n={5} />।
+- **LangGraph:** `recursion_limit` super-step গোনে। ডিফল্ট হলো 10,007 (version 1.1.4 থেকে; 1.0.6 থেকে 1.1.3 পর্যন্ত ছিল 10,000)। সীমা পার হলে `GraphRecursionError` আসে <Cite n={5} />।
 
 টেস্টের জন্য কিছু খুঁটিনাটি জরুরি। Agent SDK-তে `max_turns`-এ শেষ text উত্তরের জন্য একটা বাড়তি turn গুনতে হয়। না গুনলে run `error_max_turns` দিয়ে শেষ হয়, কোনো চূড়ান্ত উত্তর ছাড়া <Cite n={1} />। প্রতিটা response আসার পরে budget যাচাই হয়, তাই খরচ একটা response-এর খরচ পর্যন্ত সীমা পার হতে পারে <Cite n={1} />। LangGraph-এ `recursion_limit` হলো config-এর top-level key, `configurable`-এর ভেতরের key নয় <Cite n={5} />।
 
@@ -162,7 +162,7 @@ This example is invented. A team runs a test-fixing agent in CI with `claude -p 
 
 **Run 1: done.** The agent runs the tests, fixes one file, runs the tests again, and answers with no tool call. The subtype is `success` <Cite n={1} />.
 
-**Run 2: the turn limit.** A test depends on a service that is down, so the test can never pass. The agent tries again and again. At turn 20, the CLI exits with an error <Cite n={2} />. The result has no `result` text, but it still has `num_turns`, `total_cost_usd`, and `session_id` <Cite n={1} />. The CI job fails, and the log shows the subtype `error_max_turns`.
+**Run 2: the turn limit.** A test depends on a service that is down, so the test can never pass. The agent tries again and again. At turn 20, the CLI exits with an error and a nonzero exit code <Cite n={1} />. The result has no `result` text, but it still has `num_turns`, `total_cost_usd`, and `session_id` <Cite n={1} />. The CI job fails, and the log shows the subtype `error_max_turns`.
 
 **Run 3: the budget.** A large refactor uses many tokens. The run stops with `error_max_budget_usd`. The final cost is a little above 3.00, because the response that reached the cap still completes <Cite n={1} />.
 
@@ -175,7 +175,7 @@ This example is invented. A team runs a test-fixing agent in CI with `claude -p 
 
 **Run 1: done.** The agent runs the tests, fixes one file, runs the tests again, and answers with no tool call. The subtype is `success` <Cite n={1} />.
 
-**Run 2: the turn limit.** A test needs a service that is down, so the test can never pass. The agent tries again and again. At turn 20, the CLI exits with an error <Cite n={2} />. The result has no `result` text. It still has `num_turns`, `total_cost_usd`, and `session_id` <Cite n={1} />. The CI job fails, and the log shows `error_max_turns`.
+**Run 2: the turn limit.** A test needs a service that is down, so the test can never pass. The agent tries again and again. At turn 20, the CLI exits with an error and a nonzero exit code <Cite n={1} />. The result has no `result` text. It still has `num_turns`, `total_cost_usd`, and `session_id` <Cite n={1} />. The CI job fails, and the log shows `error_max_turns`.
 
 **Run 3: the budget.** A big refactor uses many tokens. The run stops with `error_max_budget_usd`. The final cost is a little over 3.00, because the response that reached the cap still finishes <Cite n={1} />.
 
@@ -188,7 +188,7 @@ The team also wants proof before "done". Anthropic says an agent must get **grou
 
 **Run 1: কাজ শেষ।** Agent টেস্ট চালায়, একটা file ঠিক করে, আবার টেস্ট চালায়, আর কোনো tool call ছাড়া উত্তর দেয়। Subtype হয় `success` <Cite n={1} />।
 
-**Run 2: turn-এর সীমা।** একটা টেস্ট এমন একটা service-এর ওপর নির্ভর করে, যেটা বন্ধ। তাই টেস্টটা কখনো pass করবে না। Agent বারবার চেষ্টা করে। Turn 20-এ CLI একটা error দিয়ে বের হয়ে যায় <Cite n={2} />। Result-এ কোনো `result` text থাকে না, কিন্তু `num_turns`, `total_cost_usd` আর `session_id` থাকে <Cite n={1} />। CI job fail করে, আর log-এ `error_max_turns` দেখা যায়।
+**Run 2: turn-এর সীমা।** একটা টেস্ট এমন একটা service-এর ওপর নির্ভর করে, যেটা বন্ধ। তাই টেস্টটা কখনো pass করবে না। Agent বারবার চেষ্টা করে। Turn 20-এ CLI একটা error আর nonzero exit code দিয়ে বের হয়ে যায় <Cite n={1} />। Result-এ কোনো `result` text থাকে না, কিন্তু `num_turns`, `total_cost_usd` আর `session_id` থাকে <Cite n={1} />। CI job fail করে, আর log-এ `error_max_turns` দেখা যায়।
 
 **Run 3: budget।** একটা বড় refactor অনেক token খরচ করে। Run `error_max_budget_usd` দিয়ে থামে। চূড়ান্ত খরচ 3.00-এর একটু বেশি হয়, কারণ যে response সীমায় পৌঁছায়, সেটা তবুও শেষ হয় <Cite n={1} />।
 

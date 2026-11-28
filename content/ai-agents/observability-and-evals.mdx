@@ -1,6 +1,6 @@
 export const metadata = { title: 'Observability and Evals', description: 'Traces, logs, cost, and latency show what an agent did. Evals show whether the result was any good.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-27',
   sources: [
     { title: 'Semantic Conventions for GenAI agent and framework spans', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-agent-spans.md', accessed: '2026-10-28' },
     { title: 'Semantic conventions for generative AI metrics', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md', accessed: '2026-10-28' },
@@ -8,6 +8,7 @@ export const page = {
     { title: 'Monitoring', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/monitoring-usage', accessed: '2026-10-28' },
     { title: 'Demystifying evals for AI agents', publisher: 'Anthropic (Engineering)', url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents', accessed: '2026-10-28' },
     { title: 'Semantic conventions for generative AI client inference', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/client-inference.md', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for GenAI tool execution spans', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/execute-tool.md', accessed: '2026-11-27' },
   ],
 }
 
@@ -81,16 +82,16 @@ Evals-এর জন্য Anthropic কয়েকটা পরিষ্কা�
 <Voices>
 <Technical>
 
-**Traces with OpenTelemetry.** OpenTelemetry has semantic conventions for GenAI agents. Their status is Development, so names can still change <Cite n={1} />. Two span types map to the agent loop <Cite n={1} />:
+**Traces with OpenTelemetry.** OpenTelemetry has semantic conventions for GenAI agents. Their status is Development, so names can still change <Cite n={1} />. Two span types map to the agent loop:
 
 | Span name | Step of the loop |
 |---|---|
-| `invoke_agent {gen_ai.agent.name}` | One call of the agent |
-| `execute_tool {gen_ai.tool.name}` | One tool call |
+| `invoke_agent {gen_ai.agent.name}` | One call of the agent <Cite n={1} /> |
+| `execute_tool {gen_ai.tool.name}` | One tool call <Cite n={7} /> |
 
 An agent span can carry the token counts `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`. It carries `error.type` if the operation ended in an error <Cite n={1} />. For latency, the metric `gen_ai.client.operation.duration` records the duration of a GenAI operation in seconds. A server metric, `gen_ai.server.time_to_first_token`, records the time to the first token <Cite n={2} />.
 
-**Traces in an agent SDK.** In the OpenAI Agents SDK, tracing is on by default. Set `OPENAI_AGENTS_DISABLE_TRACING=1` to turn it off. By default the SDK makes spans for each agent run, each LLM call (a generation span), each function tool call, each guardrail, and each handoff <Cite n={3} />.
+**Traces in an agent SDK.** In the OpenAI Agents SDK, tracing is on by default. Set `OPENAI_AGENTS_DISABLE_TRACING=1` to turn it off. By default the SDK makes spans for each agent run, each LLM call (a generation span), each function tool call, each guardrail, and each handoff, plus spans for each runner invocation and model turn <Cite n={3} />. Tracing is not available for organizations under a Zero Data Retention (ZDR) policy.
 
 **Cost and latency in Claude Code.** Claude Code exports OpenTelemetry data only when you set `CLAUDE_CODE_ENABLE_TELEMETRY=1` <Cite n={4} />. It has these signals <Cite n={4} />:
 
@@ -98,7 +99,7 @@ An agent span can carry the token counts `gen_ai.usage.input_tokens` and `gen_ai
 - The event `claude_code.api_request` with `duration_ms` and `cost_usd`. The cost is an estimate.
 - The event `claude_code.tool_result` with `tool_name`, `success`, and `duration_ms`.
 
-Tracing in Claude Code is a beta feature and is off by default <Cite n={4} />.
+Tracing in Claude Code is a beta feature and is off by default. To turn it on, also set `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and `OTEL_TRACES_EXPORTER` <Cite n={4} />.
 
 **Evals.** An eval runs tasks, often with several trials each, and graders score them <Cite n={5} />. There are three types of grader <Cite n={5} />:
 
@@ -113,13 +114,13 @@ An agent does not give the same answer each time, so one trial is not enough. **
 </Technical>
 <Layman>
 
-**Traces with OpenTelemetry.** OpenTelemetry has naming rules for GenAI agents. They are still in Development, so the names can change <Cite n={1} />. Two kinds of span match the agent loop <Cite n={1} />. `invoke_agent` is one call of the agent. `execute_tool` is one tool call.
+**Traces with OpenTelemetry.** OpenTelemetry has naming rules for GenAI agents. They are still in Development, so the names can change <Cite n={1} />. Two kinds of span match the agent loop. `invoke_agent` is one call of the agent <Cite n={1} />. `execute_tool` is one tool call <Cite n={7} />.
 
 An agent span can hold the number of input and output tokens. It holds `error.type` if the step ended in an error <Cite n={1} />. For speed, the metric `gen_ai.client.operation.duration` records how long a GenAI step took, in seconds. A server metric records the time to the first token <Cite n={2} />.
 
-**Traces in an agent SDK.** In the OpenAI Agents SDK, tracing is on by default. `OPENAI_AGENTS_DISABLE_TRACING=1` turns it off. The SDK makes a span for each agent run, each model call, each tool call, each guardrail, and each handoff <Cite n={3} />.
+**Traces in an agent SDK.** In the OpenAI Agents SDK, tracing is on by default. `OPENAI_AGENTS_DISABLE_TRACING=1` turns it off. The SDK makes a span for each agent run, each model call, each tool call, each guardrail, and each handoff. It also makes spans for each runner invocation and model turn <Cite n={3} />. Tracing is not available for organizations under a Zero Data Retention (ZDR) policy.
 
-**Cost and speed in Claude Code.** Claude Code sends OpenTelemetry data only when you set `CLAUDE_CODE_ENABLE_TELEMETRY=1` <Cite n={4} />. It records the cost in USD and the number of tokens. For each model request, it records the time (`duration_ms`) and an estimated cost (`cost_usd`). For each tool result, it records the tool name, whether it worked, and the time. Tracing in Claude Code is in beta and is off by default <Cite n={4} />.
+**Cost and speed in Claude Code.** Claude Code sends OpenTelemetry data only when you set `CLAUDE_CODE_ENABLE_TELEMETRY=1` <Cite n={4} />. It records the cost in USD and the number of tokens. For each model request, it records the time (`duration_ms`) and an estimated cost (`cost_usd`). For each tool result, it records the tool name, whether it worked, and the time. Tracing in Claude Code is in beta and is off by default. To turn it on, also set `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and `OTEL_TRACES_EXPORTER` <Cite n={4} />.
 
 **Evals.** An eval runs tasks, often with several tries each, and graders score them <Cite n={5} />. There are three kinds of grader <Cite n={5} />:
 
@@ -132,13 +133,13 @@ An agent does not give the same answer each time, so one try is not enough. **pa
 </Layman>
 <Bangla>
 
-**OpenTelemetry দিয়ে trace।** OpenTelemetry-তে GenAI agent-এর জন্য নামকরণের নিয়ম (semantic conventions) আছে। এগুলো এখনো Development অবস্থায়, তাই নাম বদলাতে পারে <Cite n={1} />। দুই ধরনের span agent loop-এর সঙ্গে মেলে <Cite n={1} />। `invoke_agent` হলো agent-এর একটা call। `execute_tool` হলো একটা tool call।
+**OpenTelemetry দিয়ে trace।** OpenTelemetry-তে GenAI agent-এর জন্য নামকরণের নিয়ম (semantic conventions) আছে। এগুলো এখনো Development অবস্থায়, তাই নাম বদলাতে পারে <Cite n={1} />। দুই ধরনের span agent loop-এর সঙ্গে মেলে। `invoke_agent` হলো agent-এর একটা call <Cite n={1} />। `execute_tool` হলো একটা tool call <Cite n={7} />।
 
 একটা agent span-এ input আর output token-এর সংখ্যা থাকতে পারে। ধাপটা error-এ শেষ হলে তাতে `error.type` থাকে <Cite n={1} />। গতির জন্য `gen_ai.client.operation.duration` metric একটা GenAI ধাপে কত সেকেন্ড লাগল সেটা রেকর্ড করে। একটা server metric প্রথম token আসতে কত সময় লাগল সেটা রেকর্ড করে <Cite n={2} />।
 
-**Agent SDK-তে trace।** OpenAI Agents SDK-তে tracing ডিফল্টভাবে চালু থাকে। `OPENAI_AGENTS_DISABLE_TRACING=1` দিলে বন্ধ হয়। SDK প্রতিটা agent run, প্রতিটা model call, প্রতিটা tool call, প্রতিটা guardrail আর প্রতিটা handoff-এর জন্য একটা span বানায় <Cite n={3} />।
+**Agent SDK-তে trace।** OpenAI Agents SDK-তে tracing ডিফল্টভাবে চালু থাকে। `OPENAI_AGENTS_DISABLE_TRACING=1` দিলে বন্ধ হয়। SDK প্রতিটা agent run, প্রতিটা model call, প্রতিটা tool call, প্রতিটা guardrail আর প্রতিটা handoff-এর জন্য একটা span বানায়। এছাড়া প্রতিটা runner invocation আর model turn-এর জন্যও span বানায় <Cite n={3} />। Zero Data Retention (ZDR) নীতির অধীনে থাকা organization-এর জন্য tracing পাওয়া যায় না।
 
-**Claude Code-এ খরচ আর গতি।** আপনি `CLAUDE_CODE_ENABLE_TELEMETRY=1` দিলে তবেই Claude Code OpenTelemetry data পাঠায় <Cite n={4} />। এটা USD-তে খরচ আর token-এর সংখ্যা রেকর্ড করে। প্রতিটা model request-এর জন্য সময় (`duration_ms`) আর আনুমানিক খরচ (`cost_usd`) রেকর্ড করে। প্রতিটা tool result-এর জন্য tool-এর নাম, কাজ হলো কি না, আর সময় রেকর্ড করে। Claude Code-এ tracing এখনো beta, আর ডিফল্টভাবে বন্ধ <Cite n={4} />।
+**Claude Code-এ খরচ আর গতি।** আপনি `CLAUDE_CODE_ENABLE_TELEMETRY=1` দিলে তবেই Claude Code OpenTelemetry data পাঠায় <Cite n={4} />। এটা USD-তে খরচ আর token-এর সংখ্যা রেকর্ড করে। প্রতিটা model request-এর জন্য সময় (`duration_ms`) আর আনুমানিক খরচ (`cost_usd`) রেকর্ড করে। প্রতিটা tool result-এর জন্য tool-এর নাম, কাজ হলো কি না, আর সময় রেকর্ড করে। Claude Code-এ tracing এখনো beta, আর ডিফল্টভাবে বন্ধ। চালু করতে `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` আর `OTEL_TRACES_EXPORTER`-ও সেট করুন <Cite n={4} />।
 
 **Evals।** একটা eval কয়েকটা task চালায়, প্রায়ই প্রতিটা কয়েকবার, আর grader-রা score দেয় <Cite n={5} />। Grader তিন ধরনের <Cite n={5} />:
 
@@ -167,7 +168,7 @@ invoke_agent support_agent          9.8 s
   chat example-model                0.7 s
 ```
 
-The trace shows that the tool, not the model, takes most of the time. The agent and tool span names follow the OpenTelemetry conventions <Cite n={1} />. A model call span is named `{gen_ai.operation.name} {gen_ai.request.model}`: here `chat` and an invented model name <Cite n={6} />. In Claude Code, the `duration_ms` of `claude_code.tool_result` gives the same kind of number for each tool <Cite n={4} />.
+The trace shows that the tool, not the model, takes most of the time. The agent and tool span names follow the OpenTelemetry conventions <Cite n={1} /> <Cite n={7} />. A model call span is named `{gen_ai.operation.name} {gen_ai.request.model}`: here `chat` and an invented model name <Cite n={6} />. In Claude Code, the `duration_ms` of `claude_code.tool_result` gives the same kind of number for each tool <Cite n={4} />.
 
 Next, the team builds an eval for the wrong answers. Anthropic says that 20 to 50 simple tasks from real failures are a great start <Cite n={5} />. The team writes 30 tasks from real tickets. A code-based grader checks the order status in the final answer. Each task runs 5 trials, and the team reports pass@5 and pass^5 <Cite n={5} />.
 
@@ -178,7 +179,7 @@ The team then reads the transcripts of the failed trials. Anthropic says that yo
 
 This example is invented. A team runs a support agent that answers questions about orders. Users say that some answers are slow and some are wrong.
 
-First, the team turns on tracing. One slow trace shows that the agent call took about 10 seconds, and one tool call (`lookup_order`) took almost 8 of them. So the tool is slow, not the model. The span names follow the OpenTelemetry rules <Cite n={1} /> <Cite n={6} />. A model call span has the operation (`chat`) and the model name. In Claude Code, `duration_ms` on each tool result gives the same kind of number <Cite n={4} />.
+First, the team turns on tracing. One slow trace shows that the agent call took about 10 seconds, and one tool call (`lookup_order`) took almost 8 of them. So the tool is slow, not the model. The span names follow the OpenTelemetry rules <Cite n={1} /> <Cite n={6} /> <Cite n={7} />. A model call span has the operation (`chat`) and the model name. In Claude Code, `duration_ms` on each tool result gives the same kind of number <Cite n={4} />.
 
 Next, the team builds an eval for the wrong answers. Anthropic says that 20 to 50 simple tasks from real failures are a great start <Cite n={5} />. The team writes 30 tasks from real tickets. A code-based grader checks the order status in the final answer. Each task runs 5 times. The team reports pass@5 and pass^5 <Cite n={5} />.
 
@@ -189,7 +190,7 @@ Then the team reads the records of the failed tries. Anthropic says that you onl
 
 এই উদাহরণটা বানানো। একটা টিম একটা support agent চালায়, যেটা order নিয়ে প্রশ্নের উত্তর দেয়। ব্যবহারকারীরা বলে, কিছু উত্তর ধীর আর কিছু উত্তর ভুল।
 
-প্রথমে টিমটা tracing চালু করে। একটা ধীর trace দেখায়, agent call-এ প্রায় 10 সেকেন্ড লেগেছে, আর তার প্রায় 8 সেকেন্ড নিয়েছে একটা tool call (`lookup_order`)। তাই ধীর হলো tool, model নয়। Span-এর নামগুলো OpenTelemetry-র নিয়ম মেনে চলে <Cite n={1} /> <Cite n={6} />। একটা model call-এর span-এর নামে operation (`chat`) আর model-এর নাম থাকে। Claude Code-এ প্রতিটা tool result-এর `duration_ms` একই ধরনের সংখ্যা দেয় <Cite n={4} />।
+প্রথমে টিমটা tracing চালু করে। একটা ধীর trace দেখায়, agent call-এ প্রায় 10 সেকেন্ড লেগেছে, আর তার প্রায় 8 সেকেন্ড নিয়েছে একটা tool call (`lookup_order`)। তাই ধীর হলো tool, model নয়। Span-এর নামগুলো OpenTelemetry-র নিয়ম মেনে চলে <Cite n={1} /> <Cite n={6} /> <Cite n={7} />। একটা model call-এর span-এর নামে operation (`chat`) আর model-এর নাম থাকে। Claude Code-এ প্রতিটা tool result-এর `duration_ms` একই ধরনের সংখ্যা দেয় <Cite n={4} />।
 
 এরপর টিমটা ভুল উত্তরের জন্য একটা eval বানায়। Anthropic বলে, আসল ব্যর্থতা থেকে নেওয়া 20 থেকে 50টা সহজ task দিয়ে শুরু করাই ভালো <Cite n={5} />। টিমটা আসল ticket থেকে 30টা task লেখে। একটা code-based grader চূড়ান্ত উত্তরে order status যাচাই করে। প্রতিটা task 5 বার চলে। টিমটা pass@5 আর pass^5 রিপোর্ট করে <Cite n={5} />।
 
