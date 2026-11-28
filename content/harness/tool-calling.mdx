@@ -1,9 +1,9 @@
 export const metadata = { title: 'Tool Calling', description: 'The model asks for an action by tool name and arguments. The harness checks it, runs it, and returns the result.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-27',
   sources: [
     { title: 'Tool use with Claude', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview', accessed: '2026-10-28' },
-    { title: 'Define tools', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use', accessed: '2026-10-28' },
+    { title: 'Define tools', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools', accessed: '2026-11-27' },
     { title: 'Handle tool calls', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls', accessed: '2026-10-28' },
     { title: 'Parallel tool use', publisher: 'Claude API documentation', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use', accessed: '2026-10-28' },
   ],
@@ -82,7 +82,7 @@ If you add `strict: true` to the definition, the requests of the model always ma
 <Voices>
 <Technical>
 
-When Claude wants a tool, the response has `stop_reason: "tool_use"` and one or more `tool_use` blocks. Your code runs the operation and sends back a `tool_result` <Cite n={1} />. A `tool_use` block has an `id`, the `name` of the tool, and an `input` object that follows the `input_schema` <Cite n={3} />:
+When Claude wants a tool, the response has `stop_reason: "tool_use"` and one or more `tool_use` blocks. Your code runs the operation and sends back a `tool_result` <Cite n={1} />. A `tool_use` block has an `id`, the `name` of the tool, and an `input` object that Claude builds from the `input_schema` <Cite n={3} />. Without `strict: true` it can still be invalid, so validate it:
 
 ```json
 { "type": "tool_use", "id": "toolu_01A", "name": "get_order", "input": { "order_id": "A-1001" } }
@@ -96,7 +96,7 @@ Your code runs the tool that has that name, with that input <Cite n={3} />. Then
 
 The model uses the result in its reply, for example "Your order was delivered."
 
-If the tool fails, set `is_error` to `true` and put the error message in `content` <Cite n={3} />. Claude then uses the error in its reply to the user <Cite n={3} />.
+If the tool fails, set `is_error` to `true` and put the error message in `content` <Cite n={3} />. Claude can then call the tool again or tell the user what happened <Cite n={3} />. Limit how many retries your loop allows.
 
 </Technical>
 <Layman>
@@ -108,7 +108,7 @@ The steps of one tool call are <Cite n={1} />:
 3. Your code sends the result back, with the ID of the request, so the model knows which request it answers <Cite n={3} />.
 4. The model writes the reply: "Your order was delivered."
 
-If the lookup fails, your code says so with `is_error: true` and an error message <Cite n={3} />. Then the model uses the error in its reply to the user <Cite n={3} />.
+If the lookup fails, your code says so with `is_error: true` and an error message <Cite n={3} />. Then the model can try the tool again or tell the user about the error <Cite n={3} />.
 
 </Layman>
 <Bangla>
@@ -120,7 +120,7 @@ If the lookup fails, your code says so with `is_error: true` and an error messag
 3. আপনার কোড একটা `tool_result` ফেরত পাঠায়, সাথে রিকোয়েস্টের ID (`tool_use_id`), যাতে মডেল বোঝে কোন রিকোয়েস্টের উত্তর এটা <Cite n={3} />।
 4. মডেল উত্তর লেখে: "আপনার অর্ডার ডেলিভারি হয়ে গেছে।"
 
-lookup ফেল করলে আপনার কোড `is_error: true` আর একটা এরর মেসেজ দিয়ে সেটা জানায় <Cite n={3} />। তখন মডেল তার উত্তরে ইউজারকে এররটা জানায় <Cite n={3} />।
+lookup ফেল করলে আপনার কোড `is_error: true` আর একটা এরর মেসেজ দিয়ে সেটা জানায় <Cite n={3} />। তখন মডেল আবার টুলটা চাইতে পারে, অথবা ইউজারকে এররটা জানাতে পারে <Cite n={3} />।
 
 </Bangla>
 </Voices>

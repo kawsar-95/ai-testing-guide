@@ -1,6 +1,6 @@
 export const metadata = { title: 'UI Automation with Playwright', description: 'UI tests in Playwright Test: locators, auto-waiting, web-first assertions, page objects, and traces, and a first test on a demo app.' }
 export const page = {
-  updated: '2026-11-16',
+  updated: '2026-11-27',
   sources: [
     { title: 'Installation', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/intro', accessed: '2026-11-15' },
     { title: 'Writing tests', publisher: 'Playwright (Microsoft)', url: 'https://playwright.dev/docs/writing-tests', accessed: '2026-11-15' },
@@ -70,7 +70,7 @@ Four ideas carry most tests.
 
 - **Locators find elements.** A locator is a way to find elements on the page at any moment <Cite n={3} />. The recommended built-in locators include `page.getByRole()`, `page.getByText()`, `page.getByLabel()`, `page.getByPlaceholder()`, and `page.getByTestId()` <Cite n={3} />. By default, `getByTestId()` finds an element by its `data-testid` attribute <Cite n={3} />. Playwright recommends user-facing attributes, such as the role, first <Cite n={3} />.
 - **Locators are strict.** An action on a locator throws an error if more than one element matches <Cite n={3} />.
-- **Actions wait.** Before an action, Playwright runs actionability checks <Cite n={4} />. For `locator.click()`, the locator must resolve to exactly one element. The element must be visible, stable (not animating), not covered by other elements, and enabled <Cite n={4} />. If the checks do not pass in time, the action fails with a `TimeoutError` <Cite n={4} />.
+- **Actions wait.** Before an action, Playwright runs actionability checks <Cite n={4} />. For `locator.click()`, the locator must resolve to exactly one element. The element must be visible, stable (not animating), not covered by other elements, enabled, and not inert <Cite n={4} />. If the checks do not pass in time, the action fails with a `TimeoutError` <Cite n={4} />.
 - **Assertions retry.** An auto-retrying assertion such as `await expect(locator).toBeVisible()` retries until it passes or its timeout is reached <Cite n={5} />. The best practices call them web-first assertions <Cite n={9} />. The default assertion timeout is 5 seconds <Cite n={5} />.
 
 ```text
@@ -78,7 +78,7 @@ page.getByRole('button', { name: 'Save' })   a locator: how to find the button
         │
         ▼
 await locator.click()                    waits: one element, visible, stable,
-        │                                not covered, enabled
+        │                                not covered, enabled, not inert
         ▼
 await expect(message).toBeVisible()      retries until true, or fails after 5 s
 ```
@@ -90,7 +90,7 @@ Four ideas do most of the work.
 
 - **Locators find elements.** A locator tells Playwright how to find something on the page <Cite n={3} />. The recommended built-in ones include `page.getByRole()`, `page.getByText()`, `page.getByLabel()`, `page.getByPlaceholder()`, and `page.getByTestId()` <Cite n={3} />. By default, `page.getByTestId()` uses the `data-testid` attribute <Cite n={3} />. Playwright says to use what the user sees first, such as the role <Cite n={3} />.
 - **Locators are strict.** If a locator finds more than one element, the action stops with an error <Cite n={3} />.
-- **Actions wait.** Before a click, Playwright checks that there is exactly one element. It must be visible, not moving, not covered, and enabled <Cite n={4} />. If that does not happen in time, the click fails with a `TimeoutError` <Cite n={4} />.
+- **Actions wait.** Before a click, Playwright checks that there is exactly one element. It must be visible, not moving, not covered, enabled, and not inert (not blocked from user input) <Cite n={4} />. If that does not happen in time, the click fails with a `TimeoutError` <Cite n={4} />.
 - **Checks try again.** `await expect(locator).toBeVisible()` keeps checking until it passes or time runs out <Cite n={5} />. The default time is 5 seconds <Cite n={5} />.
 
 </Layman>
@@ -100,7 +100,7 @@ Four ideas do most of the work.
 
 - **Locator element খুঁজে দেয়।** Locator হলো পেজে যেকোনো মুহূর্তে element খোঁজার একটা উপায় <Cite n={3} />। প্রস্তাবিত built-in locator-এর মধ্যে আছে `page.getByRole()`, `page.getByText()`, `page.getByLabel()`, `page.getByPlaceholder()` আর `page.getByTestId()` <Cite n={3} />। `page.getByTestId()` element খোঁজে তার `data-testid` attribute দিয়ে <Cite n={3} />। Playwright আগে ব্যবহারকারী যা দেখেন সেটা দিয়ে খুঁজতে বলে, যেমন role <Cite n={3} />।
 - **Locator কড়া (strict)।** একটা locator একাধিক element পেলে action একটা error দিয়ে থেমে যায় <Cite n={3} />।
-- **Action অপেক্ষা করে।** Click-এর আগে Playwright দেখে যে element ঠিক একটা কি না। Element-কে দৃশ্যমান, স্থির (animation চলছে না), অন্য কিছুর নিচে ঢাকা নয় আর enabled হতে হবে <Cite n={4} />। সময়ের মধ্যে এগুলো না মিললে click একটা `TimeoutError` দিয়ে fail করে <Cite n={4} />।
+- **Action অপেক্ষা করে।** Click-এর আগে Playwright দেখে যে element ঠিক একটা কি না। Element-কে দৃশ্যমান, স্থির (animation চলছে না), অন্য কিছুর নিচে ঢাকা নয়, enabled আর inert নয় হতে হবে <Cite n={4} />। সময়ের মধ্যে এগুলো না মিললে click একটা `TimeoutError` দিয়ে fail করে <Cite n={4} />।
 - **Assertion বারবার চেষ্টা করে।** `await expect(locator).toBeVisible()` পাস না করা বা সময় শেষ না হওয়া পর্যন্ত বারবার চেক করে <Cite n={5} />। ডিফল্ট সময় ৫ সেকেন্ড <Cite n={5} />।
 
 </Bangla>
@@ -351,7 +351,7 @@ This list is the tutorial's own advice, not a fact from a source.
 | Playwright Test | An end-to-end test framework for web apps, with its own test runner and assertions. |
 | Locator | A way to find elements on the page at any moment, such as `page.getByRole()`. |
 | Strict locator | An action on a locator throws an error if more than one element matches. |
-| Actionability checks | The checks before an action: one element, visible, stable, not covered, and enabled. |
+| Actionability checks | The checks before an action: one element, visible, stable, not covered, enabled, and not inert. |
 | Web-first assertion | An `await expect(...)` check that retries until it passes or times out (5 seconds by default). |
 | Browser context | The clean, incognito-like profile that each test gets, with its own storage and cookies. |
 | Page object | A class that gives one page a higher-level API and keeps its selectors in one place. |

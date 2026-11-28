@@ -1,6 +1,6 @@
 export const metadata = { title: 'Permissions and Sandboxing', description: 'Which tools, files, and actions the agent can use, and where its commands run.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-27',
   sources: [
     { title: 'Configure permissions', publisher: 'Claude Code documentation', url: 'https://code.claude.com/docs/en/permissions', accessed: '2026-10-28' },
     { title: 'Configure the sandboxed Bash tool', publisher: 'Claude Code documentation', url: 'https://code.claude.com/docs/en/sandboxing', accessed: '2026-10-28' },
@@ -64,9 +64,11 @@ A permission mode sets the default behavior for the calls that no rule decides <
 
 | Mode | Behavior |
 |---|---|
-| `default` | Asks for permission on the first use of each tool |
+| `default` | Prompts before most edits, shell commands, and network requests. Shown as Manual in the CLI; `manual` is an accepted alias |
 | `acceptEdits` | Accepts file edits and common filesystem commands, such as `mkdir` and `mv`, for paths in the working directory |
 | `plan` | Reads files and runs read-only shell commands, but does not edit your source files |
+| `auto` | Runs without routine prompts. A background classifier checks actions such as shell commands and network requests before they run |
+| `dontAsk` | Denies every call that would otherwise prompt. Pre-approved tools and reads in the working directory still run |
 | `bypassPermissions` | Skips the permission prompts, except for the actions that no mode approves automatically |
 
 <Callout type="danger" title="bypassPermissions">
@@ -80,9 +82,11 @@ The Agent SDK checks a tool call in this order: hooks, deny rules, ask rules, th
 
 A **permission mode** decides what happens when no rule matches <Cite n={1} />:
 
-- `default` asks you the first time that Claude uses each tool.
+- `default` asks you before most edits, shell commands, and network requests.
 - `acceptEdits` accepts file edits in the project without a question.
 - `plan` only reads and plans. It does not edit your files.
+- `auto` runs without routine questions. A background check reviews risky actions first.
+- `dontAsk` refuses every call that would otherwise ask you.
 - `bypassPermissions` does not ask at all, except for a few actions.
 
 <Callout type="danger" title="bypassPermissions">
@@ -96,9 +100,11 @@ In the Agent SDK, a deny rule always wins. A denied call never gets to your own 
 
 কোনো rule না মিললে কী হবে, সেটা ঠিক করে **permission mode** <Cite n={1} />:
 
-- `default` প্রতিটা টুল প্রথমবার ব্যবহারের সময় আপনাকে জিজ্ঞেস করে।
+- `default` বেশিরভাগ ফাইল এডিট, shell কমান্ড আর নেটওয়ার্ক রিকোয়েস্টের আগে আপনাকে জিজ্ঞেস করে।
 - `acceptEdits` প্রজেক্টের ফাইল এডিট কোনো প্রশ্ন ছাড়াই মেনে নেয়।
 - `plan` শুধু পড়ে আর প্ল্যান করে। আপনার ফাইল এডিট করে না।
+- `auto` সাধারণ প্রশ্ন ছাড়াই চলে। একটা ব্যাকগ্রাউন্ড চেক ঝুঁকিপূর্ণ কাজ আগে দেখে নেয়।
+- `dontAsk` যে কল সাধারণত জিজ্ঞেস করত, সেটা সরাসরি প্রত্যাখ্যান করে।
 - `bypassPermissions` কয়েকটা কাজ ছাড়া কিছুই জিজ্ঞেস করে না।
 
 <Callout type="danger" title="bypassPermissions">
@@ -122,7 +128,7 @@ The Bash sandbox is a boundary that the operating system enforces around the she
 | Part | Detail |
 |---|---|
 | Default | The sandbox is off by default <Cite n={2} />. |
-| Writes | By default, sandboxed commands can write to the current working directory and the per-user temp directory <Cite n={2} />. |
+| Writes | By default, sandboxed commands can write to the current working directory, the per-user temp directory, and directories you add. Protected paths such as `.claude` settings stay write-denied <Cite n={2} />. |
 | Network | No direct route out. A proxy checks each host against your allowed domains, which start empty <Cite n={2} />. |
 | macOS | The built-in Seatbelt framework <Cite n={2} /> |
 | Linux and WSL2 | `bubblewrap` and `socat` <Cite n={2} /> |
@@ -137,7 +143,7 @@ A permission rule controls the tools of Claude, but a command can start other pr
 
 The **sandbox** is a wall that the operating system puts around the shell commands of Claude <Cite n={2} />. It has two parts <Cite n={2} />:
 
-- **Files:** by default, a command can write to the project folder and the temp folder <Cite n={2} />.
+- **Files:** by default, a command can write to the project folder, the temp folder, and folders you add. Protected paths stay write-denied <Cite n={2} />.
 - **Network:** a command can reach only the domains that you allow. The list starts empty <Cite n={2} />.
 
 The sandbox is off by default <Cite n={2} />. It works on macOS, Linux, and WSL2, but not on native Windows <Cite n={2} />. It covers only shell commands, so you still need permission rules for the other tools <Cite n={2} />.
@@ -149,7 +155,7 @@ permission rule Claude-এর টুলগুলো নিয়ন্ত্র�
 
 **sandbox** হলো একটা দেয়াল, যেটা অপারেটিং সিস্টেম Claude-এর shell কমান্ডগুলোর চারপাশে বসায় <Cite n={2} />। এর দুটো অংশ <Cite n={2} />:
 
-- **ফাইল:** ডিফল্টভাবে একটা কমান্ড প্রজেক্ট ফোল্ডার আর temp ফোল্ডারে লিখতে পারে <Cite n={2} />।
+- **ফাইল:** ডিফল্টভাবে একটা কমান্ড প্রজেক্ট ফোল্ডার, temp ফোল্ডার আর আপনার যোগ করা ফোল্ডারে লিখতে পারে। সুরক্ষিত path-এ লেখা নিষেধই থাকে <Cite n={2} />।
 - **নেটওয়ার্ক:** একটা কমান্ড শুধু আপনার অনুমতি দেওয়া ডোমেইনে যেতে পারে। লিস্টটা শুরুতে খালি থাকে <Cite n={2} />।
 
 sandbox ডিফল্টভাবে বন্ধ থাকে <Cite n={2} />। এটা macOS (Seatbelt), Linux আর WSL2-তে (`bubblewrap`) কাজ করে, native Windows-এ না <Cite n={2} />। এটা শুধু shell কমান্ড কভার করে, তাই অন্য টুলের জন্য permission rule লাগবেই <Cite n={2} />।
