@@ -1,6 +1,6 @@
 export const metadata = { title: 'Message Queue and Async Processing', description: 'How a queue lets background workers do slow work, so the API answers fast, and what happens when a worker fails.' }
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-11-27',
   sources: [
     { title: 'What is a Message Queue?', publisher: 'AWS', url: 'https://aws.amazon.com/message-queue/', accessed: '2026-10-20' },
     { title: 'Queue-Based Load Leveling pattern', publisher: 'Microsoft Azure Architecture Center', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/queue-based-load-leveling', accessed: '2026-10-20' },
@@ -125,7 +125,7 @@ A student clicks **Generate Certificate**.
 **Better design.** The API puts a job in the queue and answers at once:
 
 ```text
-POST /certificates          -> 202 Accepted, { "jobId": "c-981", "status": "processing" }
+POST /certificates          -> 202 Accepted, Location: /certificates/c-981, { "jobId": "c-981", "status": "processing" }
 GET  /certificates/c-981    -> 200 OK, { "status": "processing" }
 GET  /certificates/c-981    -> 200 OK, { "status": "done", "url": "..." }
 ```
@@ -139,7 +139,7 @@ A student clicks **Generate Certificate**.
 
 **Bad design.** The request waits 20 to 30 seconds. In that time, the server makes the PDF, uploads it, and sends the email. If the browser times out, the student clicks again and gets two certificates.
 
-**Better design.** The API puts a job in the queue and answers at once. The answer to `POST /certificates` is `202 Accepted`, with the job ID `c-981` and the status `processing`. The client then asks `GET /certificates/c-981`. The answer is `200 OK` with the status `processing`, and later with the status `done` and a URL.
+**Better design.** The API puts a job in the queue and answers at once. The answer to `POST /certificates` is `202 Accepted`, with a `Location` header that points to the status endpoint, the job ID `c-981` and the status `processing`. The client then asks `GET /certificates/c-981`. The answer is `200 OK` with the status `processing`, and later with the status `done` and a URL.
 
 A worker makes the PDF, uploads it to object storage, sends the email, and sets the status to `done`. Until then, the page shows "Processing".
 
@@ -150,7 +150,7 @@ A worker makes the PDF, uploads it to object storage, sends the email, and sets 
 
 **খারাপ design।** Request-টি 20 থেকে 30 সেকেন্ড অপেক্ষা করে। এই সময়ে server PDF তৈরি করে, upload করে এবং email পাঠায়। Browser time out হলে শিক্ষার্থী আবার click করেন এবং দুটি certificate পান।
 
-**ভালো design।** API queue-তে একটি job রাখে এবং সঙ্গে সঙ্গে উত্তর দেয়। `POST /certificates`-এর উত্তর হলো `202 Accepted`, সাথে job ID `c-981` এবং status `processing`। এরপর client `GET /certificates/c-981` দিয়ে জানতে চায়। উত্তর আসে `200 OK`, status `processing`; পরে status `done` এবং একটি URL।
+**ভালো design।** API queue-তে একটি job রাখে এবং সঙ্গে সঙ্গে উত্তর দেয়। `POST /certificates`-এর উত্তর হলো `202 Accepted`, সাথে status endpoint-এর দিকে নির্দেশ করা একটি `Location` header, job ID `c-981` এবং status `processing`। এরপর client `GET /certificates/c-981` দিয়ে জানতে চায়। উত্তর আসে `200 OK`, status `processing`; পরে status `done` এবং একটি URL।
 
 একটি worker PDF তৈরি করে, object storage-এ upload করে, email পাঠায় এবং status `done` করে দেয়। ততক্ষণ পর্যন্ত page-টি "Processing" দেখায়।
 

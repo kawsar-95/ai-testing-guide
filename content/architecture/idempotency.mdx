@@ -1,6 +1,6 @@
 export const metadata = { title: 'Idempotency', description: 'Why the same request can arrive twice, and how idempotency keys, unique IDs, and status checks stop double payments and double emails.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'RFC 9110: HTTP Semantics (Idempotent Methods)', publisher: 'IETF', url: 'https://www.rfc-editor.org/rfc/rfc9110.html#name-idempotent-methods', accessed: '2026-10-20' },
     { title: 'Idempotent (Glossary)', publisher: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Glossary/Idempotent', accessed: '2026-10-20' },
@@ -38,11 +38,11 @@ Four tools stop duplicate side effects:
 | Tool | How it works |
 |---|---|
 | Idempotency key | The client makes a unique key and sends it with the request. The server uses it to spot retries <Cite n={3} />. Stripe suggests a random V4 UUID <Cite n={3} />. AWS calls this a client request identifier <Cite n={5} />. |
-| Transaction ID | The gateway's own ID for one payment, such as `TX123`. Stripe advises to log the event IDs that you processed and to skip the ones that are already logged <Cite n={4} />. |
+| Transaction ID | The gateway's own ID for one payment, such as `TX123`. Stripe advises you to log the IDs of the events that you processed (an event ID is not the same as a payment ID) and to skip the events that are already logged <Cite n={4} />. |
 | Unique constraint | A database rule that keeps a column unique among all rows <Cite n={6} />. A second insert of the same ID fails, even if the code has a bug. |
 | Status check | Before the work, read the current status. If it is already `paid`, do nothing more. |
 
-**Same answer for a retry.** A good server also returns the same answer for a retry. In its API v1, Stripe saves the status code and body of the first request and returns the saved answer for each retry with the same key <Cite n={3} />. If the same key comes with different data, Stripe returns an error <Cite n={3} />.
+**Same answer for a retry.** A good server also returns the same answer for a retry. In its API v1, Stripe saves the status code and body of the first request made with a key, once the endpoint starts to run. Each retry with the same key returns the saved response, even a 500 error <Cite n={3} />. If the same key comes with different data, Stripe returns an error <Cite n={3} />.
 
 <MdxImage src="/images/architecture/16-idempotency.webp" alt="A sequence diagram with a payment gateway, a payment API, and a database. The gateway sends 'Callback TX123 Success'. The API checks transaction TX123 in the database. If it is not processed, the API marks it paid and unlocks the course. If it is already processed, the API returns OK without a duplicate action. A second, duplicate callback for TX123 gets 'Already processed, no duplicate enrollment'." width={1400} height={933} />
 
@@ -57,7 +57,7 @@ In a distributed system, expect duplicate requests: a double-click on **Pay**, a
 
 Four tools stop duplicate side effects: an idempotency key from the client <Cite n={3} />, the gateway's transaction ID, a unique constraint in the database <Cite n={6} />, and a status check before the work.
 
-In its API v1, Stripe also returns the saved first answer for each retry with the same key <Cite n={3} />.
+In its API v1, Stripe also returns the saved first response for each retry with the same key, once the endpoint has started to run, even if it was a 500 error <Cite n={3} />.
 
 </Layman>
 <Bangla>
@@ -70,7 +70,7 @@ Distributed system-এ duplicate request আসবে, এটি ধরে ন�
 
 চারটি উপায় duplicate side effect থামায়: client-এর তৈরি একটি unique idempotency key, যা দিয়ে server retry চিনতে পারে <Cite n={3} />; gateway-এর নিজস্ব transaction ID, যেমন `TX123`; database-এর unique constraint, যা একটি column-কে সব row-এর মধ্যে unique রাখে <Cite n={6} />; আর কাজের আগে status check, যাতে status আগে থেকেই `paid` হলে আর কিছু করা না হয়।
 
-একটি ভালো server retry-এর জন্যও একই উত্তর ফেরত দেয়। Stripe তার API v1-এ প্রথম request-এর status code ও body সংরক্ষণ করে, এবং একই key-এর প্রতিটি retry-তে সেই সংরক্ষিত উত্তরই ফেরত দেয় <Cite n={3} />। একই key ভিন্ন data নিয়ে এলে Stripe একটি error ফেরত দেয় <Cite n={3} />।
+একটি ভালো server retry-এর জন্যও একই উত্তর ফেরত দেয়। Stripe তার API v1-এ একটি key দিয়ে করা প্রথম request-এর status code ও body সংরক্ষণ করে, তবে endpoint চলা শুরু হওয়ার পর। একই key-এর প্রতিটি retry-তে সেই সংরক্ষিত উত্তরই ফেরত আসে, এমনকি 500 error হলেও <Cite n={3} />। একই key ভিন্ন data নিয়ে এলে Stripe একটি error ফেরত দেয় <Cite n={3} />।
 
 </Bangla>
 </Voices>

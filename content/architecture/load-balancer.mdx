@@ -1,6 +1,6 @@
 export const metadata = { title: 'Load Balancer', description: 'The component that spreads requests across many app servers, checks their health, and stops traffic to a broken server.' }
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-11-27',
   sources: [
     { title: 'What is Elastic Load Balancing?', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html', accessed: '2026-10-20' },
     { title: 'Health checks for Application Load Balancer target groups', publisher: 'AWS Documentation', url: 'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html', accessed: '2026-10-20' },
@@ -41,15 +41,15 @@ The traffic of an `https://` site is encrypted. "TLS termination" means that the
 
 The load balancer uses a rule, called an algorithm, to pick the next server. NGINX, a web server that can also work as a load balancer, supports these methods <Cite n={3} />:
 
-- **Round Robin.** The requests go evenly across the servers, one after the other. This is the NGINX default <Cite n={3} />.
+- **Round Robin.** The requests go evenly across the servers, one after the other, with server weights taken into account. This is the NGINX default <Cite n={3} />.
 - **Least Connections.** The request goes to the server with the fewest active connections <Cite n={3} />.
 - **IP Hash.** The client's IP address picks the server. So requests from the same address go to the same server, unless that server is not available <Cite n={3} />.
 
 ### How a health check works
 
-The AWS Application Load Balancer sends a test request to each server about every 30 seconds by default <Cite n={2} />. By default, 2 failed checks in a row make a server "unhealthy", and 5 good checks in a row make it "healthy" again <Cite n={2} />. The result of each check lasts for the whole interval <Cite n={2} />. So a server that breaks can still get traffic until it fails 2 checks in a row.
+The AWS Application Load Balancer sends a test request to each server about every 30 seconds by default (for instance and IP targets) <Cite n={2} />. By default, 2 failed checks in a row make a server "unhealthy", and 5 good checks in a row make it "healthy" again <Cite n={2} />. The result of each check lasts for the whole interval <Cite n={2} />. So a server that breaks can still get traffic until it fails 2 checks in a row.
 
-Watch one special case. If all the servers in a group are unhealthy, the AWS load balancer sends requests to all of them anyway <Cite n={2} />.
+Watch one special case. If all the servers in a group are unhealthy in all enabled Availability Zones, the AWS load balancer fails open and sends requests to all of them anyway <Cite n={2} />.
 
 <MdxImage src="/images/architecture/06-load-balancer.webp" alt="Diagram: Users send requests to a Load Balancer. Green arrows marked Healthy go to App Server 1 and App Server 2, which have check marks. A red arrow marked Unhealthy - No Traffic points to App Server 3, which is marked Down. App Servers 1 and 2 connect to one Database." width={1181} height={1331} />
 
@@ -64,7 +64,7 @@ A rule picks the next server <Cite n={3} />:
 - **Least Connections.** The server with the fewest active connections gets the request.
 - **IP Hash.** The IP address that sends the request picks the server. Requests from one address go to the same server, if that server is available.
 
-On the AWS Application Load Balancer, a health check is a test request to each server, about every 30 seconds by default. By default, 2 failed checks in a row make a server "unhealthy", and 5 good checks in a row make it "healthy" again <Cite n={2} />. If all servers in a group are unhealthy, AWS sends requests to all of them anyway <Cite n={2} />.
+On the AWS Application Load Balancer, a health check is a test request to each server, about every 30 seconds by default (for instance and IP targets). By default, 2 failed checks in a row make a server "unhealthy", and 5 good checks in a row make it "healthy" again <Cite n={2} />. If all servers in a group are unhealthy in all enabled zones, AWS sends requests to all of them anyway <Cite n={2} />.
 
 </Layman>
 <Bangla>
@@ -73,9 +73,9 @@ Load balancer হলো এমন একটি component, যা আসা reque
 
 Load balancer আরও কিছু কাজ করতে পারে। এটি `https` traffic decrypt করতে পারে (TLS termination), যাতে app server-কে এই কাজ করতে না হয় <Cite n={1} />। এটি URL path-এর মতো content দেখে request আলাদা server group-এ পাঠাতে পারে <Cite n={5} />। আর যে server সরে যাচ্ছে, তার খোলা request-গুলো শেষ করার সময় দিতে পারে (draining; AWS-এ default হিসেবে সর্বোচ্চ 300 সেকেন্ড) <Cite n={4} />।
 
-পরের server বাছাই করতে load balancer একটি নিয়ম, অর্থাৎ algorithm, ব্যবহার করে <Cite n={3} />। Round Robin-এ request-গুলো একটির পর একটি server-এ সমানভাবে যায়; এটি NGINX-এর default। Least Connections-এ request যায় সবচেয়ে কম active connection থাকা server-এ। IP Hash-এ client-এর IP address দেখে server ঠিক হয়, তাই একই address-এর request একই server-এ যায়, যদি না সেই server unavailable থাকে।
+পরের server বাছাই করতে load balancer একটি নিয়ম, অর্থাৎ algorithm, ব্যবহার করে <Cite n={3} />। Round Robin-এ request-গুলো একটির পর একটি server-এ সমানভাবে যায়, তবে server weight হিসাবে ধরা হয়; এটি NGINX-এর default। Least Connections-এ request যায় সবচেয়ে কম active connection থাকা server-এ। IP Hash-এ client-এর IP address দেখে server ঠিক হয়, তাই একই address-এর request একই server-এ যায়, যদি না সেই server unavailable থাকে।
 
-AWS Application Load Balancer default হিসেবে প্রায় প্রতি 30 সেকেন্ডে প্রতিটি server-এ একটি test request পাঠায়। Default হিসেবে পরপর 2টি check fail করলে server "unhealthy" হয়, আর পরপর 5টি check সফল হলে আবার "healthy" হয় <Cite n={2} />। তাই একটি নষ্ট server পরপর 2টি check fail করার আগ পর্যন্ত traffic পেতে পারে। একটি বিশেষ ক্ষেত্র মনে রাখুন: group-এর সব server unhealthy হলে AWS load balancer তবুও সবগুলোতে request পাঠায় <Cite n={2} />।
+AWS Application Load Balancer default হিসেবে (instance ও IP target-এর জন্য) প্রায় প্রতি 30 সেকেন্ডে প্রতিটি server-এ একটি test request পাঠায়। Default হিসেবে পরপর 2টি check fail করলে server "unhealthy" হয়, আর পরপর 5টি check সফল হলে আবার "healthy" হয় <Cite n={2} />। তাই একটি নষ্ট server পরপর 2টি check fail করার আগ পর্যন্ত traffic পেতে পারে। একটি বিশেষ ক্ষেত্র মনে রাখুন: সব enabled zone-এ group-এর সব server unhealthy হলে AWS load balancer তবুও সবগুলোতে request পাঠায় <Cite n={2} />।
 
 </Bangla>
 </Voices>

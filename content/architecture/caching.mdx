@@ -1,6 +1,6 @@
 export const metadata = { title: 'Caching with Redis', description: 'How a Redis cache keeps popular data in fast memory, what TTL and invalidation mean, and what a tester checks.' }
 export const page = {
-  updated: '2026-10-20',
+  updated: '2026-11-27',
   sources: [
     { title: 'What is Caching and How it Works', publisher: 'Amazon Web Services', url: 'https://aws.amazon.com/caching/', accessed: '2026-10-20' },
     { title: 'Get started with Redis', publisher: 'Redis Docs', url: 'https://redis.io/docs/latest/get-started/', accessed: '2026-10-20' },
@@ -29,7 +29,7 @@ A **cache** is a fast storage layer that keeps a part of your data, so the next 
 
 Two words describe each lookup:
 
-- **Cache hit:** the data is in the cache. The app returns it at once <Cite n={1} />.
+- **Cache hit:** the data is in the cache <Cite n={1} />. The app returns it from the cache, with no trip to the main store.
 - **Cache miss:** the data is not in the cache <Cite n={1} />. The app must get it from the database or the source API.
 
 A common way to use a cache is the **cache-aside** pattern. The app loads data into the cache on demand, when somebody asks for it <Cite n={6} />:
@@ -58,7 +58,7 @@ Memory is limited. If you set an eviction policy, Redis removes keys by itself w
 
 A cache is a fast storage layer. It keeps a part of your data, so the next request for that data is faster than a trip to the main store <Cite n={1} />. Redis is an in-memory data store that many teams use as a cache <Cite n={2} />.
 
-A cache hit means that the data is in the cache. The app returns it at once. A cache miss means that the data is not in the cache <Cite n={1} />. Then the app gets it from the database or the source API.
+A cache hit means that the data is in the cache <Cite n={1} />. The app returns it from the cache, with no trip to the main store. A cache miss means that the data is not in the cache <Cite n={1} />. Then the app gets it from the database or the source API.
 
 In the cache-aside pattern, the app loads data into the cache on demand. When the app changes data, it writes to the database first. Then it removes or updates the old copy in the cache <Cite n={6} />.
 
@@ -69,7 +69,7 @@ TTL (time to live) is the expiry time of a cached item <Cite n={1} />. In Redis,
 
 Cache হলো একটি দ্রুত storage layer। এটি আপনার data-র একটি অংশ রেখে দেয়, যাতে সেই data-র পরের request মূল store-এ যাওয়ার চেয়ে দ্রুত হয় <Cite n={1} />। Data সাধারণত দ্রুত memory-তে (RAM) রাখা হয় <Cite n={1} />। মূল store প্রায়ই একটি database, তবে cache API request-এর ফলাফলও রাখতে পারে <Cite n={1} />। Redis হলো একটি in-memory data store, আর অনেক team এটিকে cache হিসেবে ব্যবহার করে <Cite n={2} />।
 
-Data cache-এ থাকলে তাকে cache hit বলে, আর app সাথে সাথে data ফেরত দেয়। Data cache-এ না থাকলে তাকে cache miss বলে <Cite n={1} />। তখন app-কে database বা source API থেকে data আনতে হয়।
+Data cache-এ থাকলে তাকে cache hit বলে <Cite n={1} />। App মূল store-এ না গিয়ে cache থেকেই data ফেরত দেয়। Data cache-এ না থাকলে তাকে cache miss বলে <Cite n={1} />। তখন app-কে database বা source API থেকে data আনতে হয়।
 
 Cache-aside pattern-এ কেউ data চাইলে তখনই app সেটি cache-এ load করে। App data বদলালে আগে database-এ লেখে। তারপর cache item-টি invalidate করে, অর্থাৎ পুরোনো copy মুছে ফেলে বা update করে। পরের read নতুন data load করে আবার cache করে <Cite n={6} />।
 
@@ -88,7 +88,7 @@ Memory সীমিত। আপনি একটি eviction policy ঠিক �
 - The same data is read often.
 - The database load is high.
 - Response time must improve.
-- The data does not change very often. Caching works best for data that is read a lot, changes rarely, and can be a little old <Cite n={6} />.
+- The data does not change very often. Caching works best for relatively static data or data that is read often <Cite n={6} />. It is also best if the data can be a little old (tutorial advice).
 - External API calls are expensive or slow.
 
 </Technical>
@@ -99,7 +99,7 @@ A cache helps in these cases:
 - The app reads the same data often.
 - The database has a high load.
 - The response time must be better.
-- The data does not change very often. Caching works best for data that the app reads a lot, that changes rarely, and that can be a little old <Cite n={6} />.
+- The data does not change very often. Caching works best for relatively static data or data that the app reads often <Cite n={6} />. It is also best if the data can be a little old (tutorial advice).
 - Calls to external APIs are expensive or slow.
 
 </Layman>
@@ -110,7 +110,7 @@ A cache helps in these cases:
 - একই data বারবার পড়া হয়।
 - Database-এর load বেশি।
 - Response time উন্নত করা দরকার।
-- Data খুব বেশি বদলায় না। যে data অনেক পড়া হয়, কদাচিৎ বদলায়, এবং একটু পুরোনো হলেও চলে, সেই data-র জন্য caching সবচেয়ে ভালো কাজ করে <Cite n={6} />।
+- Data খুব বেশি বদলায় না। যে data তুলনামূলক static বা প্রায়ই পড়া হয়, সেই data-র জন্য caching সবচেয়ে ভালো কাজ করে <Cite n={6} />। Data একটু পুরোনো হলেও চললে আরও ভালো (এটি tutorial-এর নিজস্ব পরামর্শ)।
 - External API call ব্যয়বহুল বা ধীর।
 
 </Bangla>
@@ -157,7 +157,7 @@ Then an admin changes the price of a course. If the app does not invalidate the 
 - **Using a very long TTL.** If the expiry is too long, the cached data becomes stale. If it is too short, the app keeps going back to the database <Cite n={6} />.
 - **No invalidation plan.** Cache-aside does not guarantee that the cache and the database agree <Cite n={6} />. Decide which change deletes which keys.
 - **Making the whole app fail when Redis is down.** The app should keep working if the cache is not available <Cite n={7} />. It should fall back to the database <Cite n={7} />. But plan for the extra load: while the cache recovers, the database can get too many requests and time out <Cite n={7} />.
-- **Confusing speed with correctness.** A fast answer is not always a correct answer. Right after a write, a reader can briefly see stale data <Cite n={6} />. Do not use the cache as the only store of critical data. Save every important change to a persistent store <Cite n={7} />.
+- **Confusing speed with correctness.** A fast answer is not always a correct answer. The cache and the database can disagree for a while. A change made outside the app does not show in the cache until the item loads again <Cite n={6} />. Do not use the cache as the only store of critical data. Save every important change to a persistent store <Cite n={7} />.
 
 </Technical>
 <Layman>
@@ -166,7 +166,7 @@ Then an admin changes the price of a course. If the app does not invalidate the 
 - **Using a very long TTL.** If the expiry is too long, the cached data becomes old (stale). If it is too short, the app goes to the database too often <Cite n={6} />.
 - **No invalidation plan.** Cache-aside does not make sure that the cache and the database agree <Cite n={6} />. Decide which change deletes which keys.
 - **The whole app fails when Redis is down.** When the cache is not available, the app should continue to work and use the database <Cite n={7} />. But while the cache recovers, the database can get too many requests and time out <Cite n={7} />.
-- **Fast is not the same as correct.** Right after a write, a reader can see stale data for a short time <Cite n={6} />. Do not keep critical data only in the cache. Save each important change to a persistent store <Cite n={7} />.
+- **Fast is not the same as correct.** The cache and the database can disagree for a while. A change made outside the app does not show in the cache until the item loads again <Cite n={6} />. Do not keep critical data only in the cache. Save each important change to a persistent store <Cite n={7} />.
 
 </Layman>
 <Bangla>
@@ -177,7 +177,7 @@ Then an admin changes the price of a course. If the app does not invalidate the 
 - **খুব লম্বা TTL ব্যবহার করা।** Expiry খুব লম্বা হলে cached data stale, অর্থাৎ পুরোনো, হয়ে যায়। খুব ছোট হলে app বারবার database-এ ফিরে যায় <Cite n={6} />।
 - **Invalidation-এর কোনো পরিকল্পনা না থাকা।** Cache-aside নিশ্চিত করে না যে cache আর database একই data রাখবে <Cite n={6} />। কোন পরিবর্তনে কোন key মুছবে, তা আগে ঠিক করুন।
 - **Redis down হলে পুরো app fail করা।** Cache না পাওয়া গেলেও app-কে কাজ চালিয়ে যেতে হবে এবং database-এ fall back করতে হবে <Cite n={7} />। তবে বাড়তি load-এর জন্য পরিকল্পনা রাখুন: cache recover করার সময় database-এ অনেক বেশি request এসে time out হতে পারে <Cite n={7} />।
-- **গতি আর সঠিকতাকে গুলিয়ে ফেলা।** দ্রুত উত্তর মানেই সবসময় সঠিক উত্তর নয়। একটি write-এর ঠিক পরে একজন reader অল্প সময়ের জন্য stale data দেখতে পারেন <Cite n={6} />। গুরুত্বপূর্ণ data শুধু cache-এ রাখবেন না। প্রতিটি গুরুত্বপূর্ণ পরিবর্তন একটি persistent store-এ save করুন <Cite n={7} />।
+- **গতি আর সঠিকতাকে গুলিয়ে ফেলা।** দ্রুত উত্তর মানেই সবসময় সঠিক উত্তর নয়। Cache আর database কিছু সময় একমত নাও থাকতে পারে। App-এর বাইরে করা কোনো পরিবর্তন item আবার load না হওয়া পর্যন্ত cache-এ দেখা যায় না <Cite n={6} />। গুরুত্বপূর্ণ data শুধু cache-এ রাখবেন না। প্রতিটি গুরুত্বপূর্ণ পরিবর্তন একটি persistent store-এ save করুন <Cite n={7} />।
 
 </Bangla>
 </Voices>
