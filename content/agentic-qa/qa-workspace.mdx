@@ -4,7 +4,7 @@ export const metadata = {
 }
 
 export const page = {
-  updated: '2026-11-15',
+  updated: '2026-11-27',
   sources: [
     { title: 'Explore the .claude directory', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/claude-directory', accessed: '2026-11-15' },
     { title: 'How Claude remembers your project', publisher: 'Anthropic (Claude Code docs)', url: 'https://code.claude.com/docs/en/memory', accessed: '2026-11-15' },
@@ -106,7 +106,7 @@ The Claude Code docs compare the extension types. CLAUDE.md is persistent contex
 | Test conventions: framework, folder, run command | `CLAUDE.md` | Every session needs them. <Cite n={4} /> |
 | Rules only for test files or one folder | `.claude/rules/` with `paths` | For directory-specific guidelines <Cite n={4} /> |
 | A test-design procedure, such as boundary values | Skill | A repeatable task that you run with `/name` <Cite n={4} /> |
-| An independent reviewer of bug reports | Subagent with `tools: Read, Grep, Glob` | Own context; the docs use this tool list for a read-only subagent <Cite n={5} /> |
+| An independent reviewer of bug reports | Subagent with `tools: Read, Grep, Glob` | Own context; `Read, Grep, Glob` are read-only tools, and the docs' `code-improver` example uses this list <Cite n={5} /> |
 | A block on edits to application code | `PreToolUse` hook, <Cite n={4} /> or a deny rule <Cite n={6} /> | A hook that blocks the edit is enforcement. <Cite n={4} /> |
 | A lint or type check after each edit | `PostToolUse` hook | The docs example: run ESLint after every file edit <Cite n={4} /> |
 | Jira or database access | MCP server, plus a skill for how to use it | MCP gives the tools, a skill the know-how <Cite n={4} /> |
@@ -420,9 +420,9 @@ Plugin হলো skill, hook, subagent আর MCP server-এর একটি pac
 
 ### graphify (safishamsi/graphify)
 
-- **What it is.** A Claude Code skill: `/graphify` reads your files and builds a knowledge graph in `graphify-out/`. Install it with `pip install graphifyy && graphify install`. <Cite n={17} />
-- **How it works.** Code is parsed locally; docs and images go through Claude. Each edge is tagged `EXTRACTED`, `INFERRED`, or `AMBIGUOUS`. `--update` re-extracts changed files, and `graphify hook install` rebuilds after every commit. <Cite n={17} />
-- **Cost or risk.** Every edge is tagged `EXTRACTED`, `INFERRED`, or `AMBIGUOUS`, so you know what was found and what was guessed. `--update` re-extracts the changed files. <Cite n={17} /> The tutorial suggests that you rerun it after the code changes, and that you never put an `INFERRED` edge in a bug report as a fact.
+- **What it is.** A Claude Code skill: `/graphify` reads your files and builds a knowledge graph in `graphify-out/`. Install it with `uv tool install graphifyy && graphify install` (or `pipx install graphifyy`; it needs Python 3.11.5 to 3.14). <Cite n={17} />
+- **How it works.** Code is parsed locally; docs and images go through Claude. Each edge is tagged `EXTRACTED` or `INFERRED`, so you know what was found and what was guessed. `--update` re-extracts changed files, and `graphify hook install` rebuilds after every commit. <Cite n={17} />
+- **Cost or risk.** A graph goes stale when the code changes. <Cite n={17} /> The tutorial suggests that you rerun it after the code changes, and that you never put an `INFERRED` edge in a bug report as a fact.
 
 ### Serena (oraios/serena)
 
@@ -462,7 +462,7 @@ Each plugin connects Claude Code to a language server for one language, from the
 
 **Caveman** agent-কে কম বলায় আর কম পড়ায়। এটি log ও test output ছোট করে, তবে মূল file রেখে দেয়। এর CLI default-এ usage stats পাঠায়। <Cite n={16} /> Tutorial-এর সতর্কতা: ছোট করা log থেকে bug report-এর দরকারি line হারাতে পারে।
 
-**graphify** আপনার file থেকে `graphify-out/`-এ knowledge graph বানায়। প্রতিটি edge-এ `EXTRACTED`, `INFERRED` বা `AMBIGUOUS` tag থাকে। <Cite n={17} /> Update না করলে graph পুরনো হয়, আর `INFERRED` edge একটি অনুমান।
+**graphify** আপনার file থেকে `graphify-out/`-এ knowledge graph বানায়। প্রতিটি edge-এ `EXTRACTED` বা `INFERRED` tag থাকে। <Cite n={17} /> Update না করলে graph পুরনো হয়, আর `INFERRED` edge একটি অনুমান।
 
 **Serena** একটি MCP server, যা symbol ধরে code খোঁজে ও edit করে। এর edit tool code বদলাতে পারে। <Cite n={18} />
 
@@ -528,7 +528,7 @@ This is the tutorial's exercise. Use a scratch repo, not a shared database or a 
 
 1. **A guardrail written only in CLAUDE.md.** An instruction is a request, not a guarantee. <Cite n={4} /> **Fix:** use a deny rule or a `PreToolUse` hook, which Claude Code enforces. <Cite n={6} />
 2. **Trusting `.claudeignore`.** It has no effect. <Cite n={6} /> **Fix:** move its entries into `Read(...)` deny rules.
-3. **Thinking a Read deny rule stops every process.** It does not cover a script that opens files itself. <Cite n={6} /> **Fix:** turn on the sandbox and add `filesystem.denyRead` for credential paths. <Cite n={7} />
+3. **Thinking a Read deny rule stops every process.** It does not cover a script that opens files itself. <Cite n={6} /> **Fix:** turn on the sandbox and add `sandbox.filesystem.denyRead` for credential paths. <Cite n={7} />
 4. **A secret in a shared file.** `.mcp.json` and `.claude/settings.json` are committed. <Cite n={1} /> **Fix:** use `${VAR}` in `.mcp.json`, and keep personal overrides in `.claude/settings.local.json`. <Cite n={3} />
 5. **Installing a plugin on trust.** A plugin runs code with your privileges, outside your permission rules. <Cite n={12} /> **Fix:** read **Will install**, the hooks, and `bin/` first.
 6. **Evidence from a summary.** A shrunk log or an `INFERRED` graph edge is not evidence. <Cite n={16} /> <Cite n={17} /> **Fix (the tutorial's advice):** attach the original output and the code line to each bug report.
