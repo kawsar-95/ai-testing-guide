@@ -8,19 +8,15 @@ import {
   MONTH_MINUTES,
   NINES_PPM,
   REGION_PPM,
-  SINGLE_INSTANCE_PPM,
-  SLO_PPM,
-  SUBMISSIONS,
   YEAR_MINUTES,
   creditPercent,
   downtimeMinutes,
   durationText,
-  errorBudgetCount,
   logBarLength,
   percentText,
   sceneFor,
 } from "@/lib/visuals/availability";
-import type { Chip, StageProps } from "./StepVisual";
+import type { StageProps } from "./StepVisual";
 
 const WIDTH = 360;
 const BAR_X = 10;
@@ -32,53 +28,8 @@ const TIERS = [
   { ppm: Infinity, credit: 100, label: "< 95.0 %" },
 ] as const;
 
-/**
- * The live numbers of each step. The chips cannot see the slider, so on the slider steps they show
- * the fixed facts around it (the period lengths, the page's three-row table, the credit tiers);
- * the stage itself shows the number for the slider position.
- */
-export function availabilityChips(step: number): readonly Chip[] {
-  const at = (index: number) => NINES_PPM[index]!;
-  const year = (index: number): Chip => ({
-    label: { en: `${percentText(at(index))} % / year`, bn: `${percentText(at(index))} % / বছর` },
-    value: durationText(downtimeMinutes(at(index), YEAR_MINUTES)),
-  });
-  switch (step) {
-    case 0:
-      return [
-        { label: { en: "Availability", bn: "অ্যাভেইলেবিলিটি" }, value: `${percentText(at(DEFAULT_NINES))} %` },
-        { label: { en: "Downtime / year", bn: "ডাউনটাইম / বছর" }, value: durationText(downtimeMinutes(at(DEFAULT_NINES), YEAR_MINUTES)) },
-      ];
-    case 1:
-      return [
-        { label: { en: "Minutes in a year", bn: "বছরে মিনিট" }, value: YEAR_MINUTES.toLocaleString("en-US") },
-        { label: { en: "In a month", bn: "মাসে" }, value: MONTH_MINUTES.toLocaleString("en-US") },
-        { label: { en: "In a day", bn: "দিনে" }, value: DAY_MINUTES.toLocaleString("en-US") },
-      ];
-    case 2:
-      return [year(1), year(2), year(3)];
-    case 3:
-      return [
-        { label: { en: "SLO", bn: "SLO" }, value: `${percentText(SLO_PPM)} %` },
-        { label: { en: "Error budget", bn: "এরর বাজেট" }, value: `${Number((SLO_PPM / 10_000).toFixed(3))} %` },
-        { label: { en: "May fail of 10,000", bn: "10,000-এর মধ্যে ব্যর্থ হতে পারে" }, value: String(errorBudgetCount(SLO_PPM, SUBMISSIONS)) },
-      ];
-    case 4:
-      return [
-        { label: { en: "One instance / month", bn: "একক ইনস্ট্যান্স / মাস" }, value: durationText(downtimeMinutes(SINGLE_INSTANCE_PPM, MONTH_MINUTES)) },
-        { label: { en: "Two+ zones / month", bn: "দুই+ জোন / মাস" }, value: durationText(downtimeMinutes(REGION_PPM, MONTH_MINUTES)) },
-      ];
-    default:
-      return [
-        { label: { en: "Below 99.99 %", bn: "99.99 %-এর নিচে" }, value: `${creditPercent(10_000)} %` },
-        { label: { en: "Below 99.0 %", bn: "99.0 %-এর নিচে" }, value: `${creditPercent(50_000)} %` },
-        { label: { en: "Below 95.0 %", bn: "95.0 %-এর নিচে" }, value: `${creditPercent(60_000)} %` },
-      ];
-  }
-}
-
 /** The bars, the tiles, and the slider of the availability visual. */
-export function AvailabilityStage({ step, reduced }: StageProps) {
+export function AvailabilityStage({ step, reduced, onLive }: StageProps) {
   const [index, setIndex] = useState(DEFAULT_NINES);
   const scene = sceneFor(step, index);
   const ppm = NINES_PPM[index] ?? NINES_PPM[DEFAULT_NINES]!;
@@ -185,7 +136,11 @@ export function AvailabilityStage({ step, reduced }: StageProps) {
             max={NINES_PPM.length - 1}
             step={1}
             value={index}
-            onChange={(e) => setIndex(Number(e.target.value))}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              setIndex(next);
+              onLive(next);
+            }}
             aria-label="Target availability, from 99 to 99.999 percent"
             aria-valuetext={`${percentText(ppm)} percent`}
             className="w-full"

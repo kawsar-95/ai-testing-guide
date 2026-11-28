@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DEF } from "../lib/visuals/def-dns.ts";
+import { dnsChips } from "../lib/visuals/dns-chips.ts";
 import { hops, hopsSoFar, msSoFar, pathFor, reachedCount, totalMs, TTL_SECONDS } from "../lib/visuals/dns.ts";
 
 test("not cached the lookup visits all six nodes, cached it stops at the recursive server", () => {
@@ -40,9 +41,19 @@ test("the DNS def has 5 to 8 steps with the right id", () => {
   for (const s of DEF.steps) assert.ok(s.body.en.split(/\s+/).length <= 40);
 });
 
-test("the chips function returns chips for every step", async () => {
-  const { dnsChips } = await import("../components/visuals/DnsStage.tsx");
-  for (let s = 0; s < DEF.steps.length; s++) assert.ok(dnsChips(s).length >= 2);
-  assert.equal(dnsChips(0)[0]?.value, "5 / 2");
-  assert.equal(dnsChips(6).length, 3);
+test("the chips follow the cache switch on every step", () => {
+  for (let s = 0; s < DEF.steps.length; s++) {
+    for (const live of [undefined, false, true]) {
+      const chips = dnsChips(s, live);
+      assert.ok(chips.length >= 1);
+      for (const c of chips) assert.ok(c.label.en && c.label.bn && c.value);
+    }
+  }
+  assert.equal(dnsChips(0, undefined)[0]?.value, "5");
+  assert.equal(dnsChips(0, false)[0]?.value, "5");
+  assert.equal(dnsChips(0, true)[0]?.value, "2");
+  assert.equal(dnsChips(0, false)[1]?.value, "101 ms");
+  assert.equal(dnsChips(0, true)[1]?.value, "11 ms");
+  assert.equal(dnsChips(6, true).length, 3);
+  assert.equal(dnsChips(6, true)[2]?.value, "86400 s");
 });

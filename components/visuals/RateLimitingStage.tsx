@@ -7,36 +7,19 @@ import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
   MIN_LIMIT,
-  WINDOW_S,
   refillSeconds,
   retryAfterSeconds,
   runBurst,
   sceneFor,
 } from "@/lib/visuals/rate-limiting";
-import type { Chip, StageProps } from "./StepVisual";
+import type { StageProps } from "./StepVisual";
 
 const LAST_STEP = 6;
 const WIDTH = 360;
 const HEIGHT = 230;
 
-/** The live numbers of each step, from the same scene that the stage draws (limit of the page's example). */
-export function rateLimitingChips(step: number): readonly Chip[] {
-  const scene = sceneFor(step);
-  const run = runBurst(DEFAULT_LIMIT);
-  const tokens: Chip = { label: { en: "Tokens", bn: "টোকেন" }, value: `${scene.tokens} / ${scene.limit}` };
-  if (step === 0) return [tokens, { label: { en: "Window", bn: "window" }, value: `${WINDOW_S / 60} min` }];
-  if (step === 1) return [tokens, { label: { en: "Burst", bn: "burst" }, value: String(BURST) }];
-  if (step === 2) return [tokens, { label: { en: "Passed", bn: "pass" }, value: `${run.passed} / ${BURST}` }];
-  if (step === 3) {
-    return [tokens, { label: { en: "429 answers", bn: "429 উত্তর" }, value: `${run.rejected} / ${BURST}` }, { label: { en: "Retry-After", bn: "Retry-After" }, value: `${retryAfterSeconds(DEFAULT_LIMIT)} s` }];
-  }
-  if (step === 4) return [tokens, { label: { en: "Waited", bn: "অপেক্ষা" }, value: `${scene.waited} s` }];
-  if (step === 5) return [tokens, { label: { en: "Waited", bn: "অপেক্ষা" }, value: `${scene.waited} s` }];
-  return [{ label: { en: "Window", bn: "window" }, value: `${WINDOW_S / 60} min` }, { label: { en: "Burst", bn: "burst" }, value: String(BURST) }];
-}
-
 /** The bucket, the burst, and the answers of the rate-limiting visual. */
-export function RateLimitingStage({ step, reduced }: StageProps) {
+export function RateLimitingStage({ step, reduced, onLive }: StageProps) {
   const [limit, setLimit] = useState(DEFAULT_LIMIT);
   const live = step === LAST_STEP;
   const scene = sceneFor(step, live ? limit : DEFAULT_LIMIT);
@@ -125,7 +108,11 @@ export function RateLimitingStage({ step, reduced }: StageProps) {
               step={1}
               value={limit}
               aria-label="Limit per 5 minutes"
-              onChange={(e) => setLimit(Number(e.target.value))}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setLimit(next);
+                onLive(next);
+              }}
               className="w-full"
             />
           </label>

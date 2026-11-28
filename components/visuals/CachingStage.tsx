@@ -3,37 +3,9 @@
 import { useState } from "react";
 import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
-import {
-  CACHE_MS,
-  DB_MS,
-  DEFAULT_HIT_PERCENT,
-  MISS_MS,
-  READS,
-  SLIDER_STEP,
-  averageMs,
-  dbReads,
-  hitPercentFor,
-  sceneFor,
-} from "@/lib/visuals/caching";
-import type { Chip, StageProps } from "./StepVisual";
-
-const fmt = (ms: number) => `${Number.isInteger(ms) ? ms : ms.toFixed(1)} ms`;
-
-/** The live numbers of each step, from the same rules that the stage draws. */
-export function cachingChips(step: number): readonly Chip[] {
-  if (step === 0) return [{ label: { en: "Database read", bn: "Database read" }, value: fmt(DB_MS) }, { label: { en: "Cache read", bn: "Cache read" }, value: fmt(CACHE_MS) }];
-  if (step === 1) return [{ label: { en: "Read time", bn: "Read time" }, value: fmt(CACHE_MS) }, { label: { en: "Database reads", bn: "Database read" }, value: `0 / 1` }];
-  if (step === 2) return [{ label: { en: "Read time", bn: "Read time" }, value: fmt(MISS_MS) }, { label: { en: "Database reads", bn: "Database read" }, value: `1 / 1` }];
-  if (step === 3) return [{ label: { en: "This read", bn: "এই read" }, value: fmt(MISS_MS) }, { label: { en: "Next read", bn: "পরের read" }, value: fmt(CACHE_MS) }];
-  if (step === SLIDER_STEP) return [{ label: { en: "Hit read", bn: "Hit read" }, value: fmt(CACHE_MS) }, { label: { en: "Miss read", bn: "Miss read" }, value: fmt(MISS_MS) }];
-  if (step === 5) return [{ label: { en: "Old copy", bn: "পুরোনো copy" }, value: "0 / 1" }, { label: { en: "Next read", bn: "পরের read" }, value: fmt(MISS_MS) }];
-  const h = hitPercentFor(6, DEFAULT_HIT_PERCENT);
-  return [
-    { label: { en: "Hit rate", bn: "Hit rate" }, value: `${h} %` },
-    { label: { en: "Average read", bn: "গড় read" }, value: fmt(averageMs(h)) },
-    { label: { en: "Database reads", bn: "Database read" }, value: `${dbReads(h)} / ${READS}` },
-  ];
-}
+import { DEFAULT_HIT_PERCENT, READS, SLIDER_STEP, averageMs, dbReads, hitPercentFor, sceneFor } from "@/lib/visuals/caching";
+import { fmt } from "@/lib/visuals/caching-chips";
+import type { StageProps } from "./StepVisual";
 
 const NODE = { app: { x: 14, y: 100 }, redis: { x: 226, y: 20 }, db: { x: 226, y: 180 } };
 const W = 120;
@@ -49,7 +21,7 @@ const LABELS: Record<number, { redis: string; db: string }> = {
 };
 
 /** App, Redis, and database, with the path of the read in each step. */
-export function CachingStage({ step, reduced }: StageProps) {
+export function CachingStage({ step, reduced, onLive }: StageProps) {
   const [slider, setSlider] = useState(DEFAULT_HIT_PERCENT);
   const sliderLabel = useBn("Hit rate", "Hit rate");
   const scene = sceneFor(step);
@@ -126,7 +98,11 @@ export function CachingStage({ step, reduced }: StageProps) {
             step={1}
             value={slider}
             aria-label={sliderLabel}
-            onChange={(e) => setSlider(Number(e.target.value))}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setSlider(v);
+              onLive(v);
+            }}
             className="mt-2 w-full"
             style={{ accentColor: "var(--accent)" }}
           />

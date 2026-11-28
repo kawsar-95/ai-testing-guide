@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { T } from "@/components/i18n/T";
 import { ANSWER, LINK_MS, NODE_IDS, TTL_SECONDS, hops, hopsSoFar, msSoFar, reachedCount, totalMs, type NodeId } from "@/lib/visuals/dns";
-import type { Chip, StageProps } from "./StepVisual";
+import type { StageProps } from "./StepVisual";
 
 const ROW = 48;
 const TOP = 12;
@@ -20,16 +20,6 @@ const NAME: Record<NodeId, string> = {
   auth: "“example.com” server",
 };
 
-/** The live numbers of each step. Both cases show, because the chips do not know the switch. */
-export function dnsChips(step: number): readonly Chip[] {
-  const chips: Chip[] = [
-    { label: { en: "Hops: not cached / cached", bn: "হপ: ক্যাশ ছাড়া / ক্যাশসহ" }, value: `${hops(false)} / ${hops(true)}` },
-    { label: { en: "Time: not cached / cached", bn: "সময়: ক্যাশ ছাড়া / ক্যাশসহ" }, value: `${totalMs(false)} ms / ${totalMs(true)} ms` },
-  ];
-  if (step >= 6) chips.push({ label: { en: "TTL", bn: "TTL" }, value: `${TTL_SECONDS} s` });
-  return chips;
-}
-
 /** What each node says at this step, in the selected case. */
 function note(id: NodeId, step: number, cached: boolean): string {
   if (id === "recursive") {
@@ -45,7 +35,7 @@ function note(id: NodeId, step: number, cached: boolean): string {
 }
 
 /** The path of one lookup, with a switch for a cached or a not cached answer. */
-export function DnsStage({ step, reduced }: StageProps) {
+export function DnsStage({ step, reduced, onLive }: StageProps) {
   const [cached, setCached] = useState(false);
   const reached = reachedCount(step, cached);
   const transition = reduced ? undefined : "fill 300ms ease, stroke 300ms ease, opacity 300ms ease";
@@ -103,10 +93,16 @@ export function DnsStage({ step, reduced }: StageProps) {
         <span className="text-sm text-[var(--text-dim)]">
           <T en="Answer in the cache?" bn="উত্তর কি ক্যাশে আছে?" />
         </span>
-        <button type="button" className="btn btn-outline" aria-pressed={!cached} aria-label="Not cached" onClick={() => setCached(false)}>
+        <button type="button" className="btn btn-outline" aria-pressed={!cached} aria-label="Not cached" onClick={() => {
+            setCached(false);
+            onLive(false);
+          }}>
           <T en="Not cached" bn="ক্যাশে নেই" />
         </button>
-        <button type="button" className="btn btn-outline" aria-pressed={cached} aria-label="Cached" onClick={() => setCached(true)}>
+        <button type="button" className="btn btn-outline" aria-pressed={cached} aria-label="Cached" onClick={() => {
+            setCached(true);
+            onLive(true);
+          }}>
           <T en="Cached" bn="ক্যাশে আছে" />
         </button>
       </div>

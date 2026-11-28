@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { visualDef } from "../lib/visuals/defs.ts";
 import { DEF } from "../lib/visuals/def-rate-limiting.ts";
+import { rateLimitingChips } from "../lib/visuals/rate-limiting-chips.ts";
 import { BURST, DEFAULT_LIMIT, STEP_COUNT, WINDOW_S, refillSeconds, retryAfterSeconds, runBurst, sceneFor, tokensAfter } from "../lib/visuals/rate-limiting.ts";
 
 test("the aha: a burst of 5 on a limit of 3 gets 3 passes and 2 answers of 429", () => {
@@ -50,10 +51,28 @@ test("the definition has 5 to 8 steps that match the scenes", () => {
   assert.equal(DEF.steps.length, STEP_COUNT);
 });
 
-test("the chips function returns a value for every step", () => {
-  const source = readFileSync(new URL("../components/visuals/RateLimitingStage.tsx", import.meta.url), "utf8");
-  assert.match(source, /export function rateLimitingChips/);
-  assert.match(source, /export function RateLimitingStage/);
+test("the chips function returns chips for every step", () => {
+  for (let step = 0; step < STEP_COUNT; step += 1) {
+    const chips = rateLimitingChips(step, undefined);
+    assert.ok(chips.length >= 1);
+    for (const chip of chips) {
+      assert.ok(chip.label.en.length > 0 && chip.label.bn.length > 0 && chip.value.length > 0);
+    }
+  }
+});
+
+test("the chips follow the slider on the last step", () => {
+  const value = (live: unknown, label: string) => rateLimitingChips(6, live).find((c) => c.label.en === label)?.value;
+  assert.equal(value(undefined, "Passed"), `3 / ${BURST}`);
+  assert.equal(value(5, "Passed"), `5 / ${BURST}`);
+  assert.equal(value(5, "429 answers"), `0 / ${BURST}`);
+  assert.equal(value(1, "429 answers"), `4 / ${BURST}`);
+  assert.equal(value(6, "One token every"), "50 s");
+  assert.equal(value(4, "One token every"), "75 s");
+});
+
+test("the other steps ignore the slider, like the stage", () => {
+  assert.deepEqual(rateLimitingChips(3, 8), rateLimitingChips(3, undefined));
 });
 
 test("the page shows the visual after PageMeta and before the first section", () => {

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DEF } from "../lib/visuals/def-idempotency.ts";
+import { idempotencyChips } from "../lib/visuals/idempotency-chips.ts";
 import { EMPTY_SERVER, LAST_STEP, AMOUNT, OTHER_AMOUNT, chargeCount, handle, sceneFor } from "../lib/visuals/idempotency.ts";
 
 test("the DEF has id idempotency, 5 to 8 steps, English and Bangla", () => {
@@ -44,4 +45,25 @@ test("the rules are deterministic", () => {
 
 test("the message list grows with the step", () => {
   for (let s = 1; s <= 3; s++) assert.ok(sceneFor(s, true).messages.length >= sceneFor(s - 1, true).messages.length);
+});
+
+test("chips: every step has bilingual labels and values", () => {
+  for (let s = 0; s <= LAST_STEP; s++) {
+    for (const live of [undefined, false, true]) {
+      const chips = idempotencyChips(s, live);
+      assert.ok(chips.length >= 1);
+      for (const c of chips) {
+        assert.ok(c.label.en.length > 0 && c.label.bn.length > 0 && c.value.length > 0);
+      }
+    }
+  }
+});
+
+test("chips follow the key toggle: step 3 charges 2 without a key and 1 with a key", () => {
+  const charges = (live: unknown) => Number(idempotencyChips(3, live)[1].value);
+  assert.equal(charges(undefined), 2);
+  assert.equal(charges(false), 2);
+  assert.equal(charges(true), 1);
+  assert.equal(charges(false) - charges(true), 1);
+  assert.equal(charges("bad"), charges(false));
 });

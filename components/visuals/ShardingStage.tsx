@@ -8,14 +8,13 @@ import {
   SHARD_COUNT,
   assignment,
   counts,
-  hotLoadPercent,
   hotShard,
   isHot,
   weekIndexes,
   weekShards,
 } from "@/lib/visuals/sharding";
 import type { Strategy } from "@/lib/visuals/sharding";
-import type { Chip, StageProps } from "./StepVisual";
+import type { StageProps } from "./StepVisual";
 
 const COLOR = ["var(--accent)", "var(--accent-2)", "var(--voice-layman)", "var(--voice-bangla)"] as const;
 const WIDTH = 360;
@@ -29,35 +28,6 @@ const SHARD_H = 94;
 const TRAY_COLS = 12;
 
 const shardX = (s: number) => 4 + s * (SHARD_W + SHARD_GAP - 4);
-
-/** The live numbers of each step, from the same rules that the stage draws. */
-export function shardingChips(step: number): readonly Chip[] {
-  const rows: Chip = { label: { en: "Rows", bn: "সারি" }, value: String(RUN_COUNT) };
-  const shards: Chip = { label: { en: "Shards", bn: "শার্ড" }, value: String(step === 0 ? 1 : SHARD_COUNT) };
-  if (step <= 1) return [rows, shards];
-  if (step === 2) {
-    return [
-      { label: { en: "Date key: rows per shard", bn: "ডেট কী: প্রতি শার্ডে সারি" }, value: counts("range").join(" / ") },
-      { label: { en: "Hash key: rows per shard", bn: "হ্যাশ কী: প্রতি শার্ডে সারি" }, value: counts("hash").join(" / ") },
-    ];
-  }
-  if (step === 3) {
-    return [
-      { label: { en: "Date key: hottest shard", bn: "ডেট কী: সবচেয়ে ব্যস্ত শার্ড" }, value: `${hotLoadPercent("range")} %` },
-      { label: { en: "Hash key: hottest shard", bn: "হ্যাশ কী: সবচেয়ে ব্যস্ত শার্ড" }, value: `${hotLoadPercent("hash")} %` },
-    ];
-  }
-  return [
-    { label: { en: "Date key: shards asked", bn: "ডেট কী: জিজ্ঞেস করা শার্ড" }, value: `${weekShards("range").length} / ${SHARD_COUNT}` },
-    { label: { en: "Hash key: shards asked", bn: "হ্যাশ কী: জিজ্ঞেস করা শার্ড" }, value: `${weekShards("hash").length} / ${SHARD_COUNT}` },
-    ...(step === 5
-      ? [
-          { label: { en: "Date key: hottest shard", bn: "ডেট কী: সবচেয়ে ব্যস্ত শার্ড" }, value: `${hotLoadPercent("range")} %` },
-          { label: { en: "Hash key: hottest shard", bn: "হ্যাশ কী: সবচেয়ে ব্যস্ত শার্ড" }, value: `${hotLoadPercent("hash")} %` },
-        ]
-      : []),
-  ];
-}
 
 /** Where a row sits: in the tray (one server) or inside its shard. */
 function place(i: number, step: number, strategy: Strategy): { x: number; y: number } {
@@ -75,7 +45,7 @@ function place(i: number, step: number, strategy: Strategy): { x: number; y: num
 }
 
 /** The 24 rows, the shards, and the key switch of the sharding visual. */
-export function ShardingStage({ step, reduced }: StageProps) {
+export function ShardingStage({ step, reduced, onLive }: StageProps) {
   const [strategy, setStrategy] = useState<Strategy>("range");
   const transition = reduced ? undefined : "transform 420ms cubic-bezier(.2,.7,.2,1), fill 340ms ease";
   const boxTransition = reduced ? undefined : "stroke 340ms ease, opacity 340ms ease";
@@ -192,10 +162,16 @@ export function ShardingStage({ step, reduced }: StageProps) {
           <span className="text-sm text-text-dim">
             <T en="Shard key:" bn="শার্ড কী:" />
           </span>
-          <button type="button" className="btn btn-outline" aria-pressed={strategy === "range"} aria-label="Shard key: run date, ranged" onClick={() => setStrategy("range")}>
+          <button type="button" className="btn btn-outline" aria-pressed={strategy === "range"} aria-label="Shard key: run date, ranged" onClick={() => {
+            setStrategy("range");
+            onLive("range");
+          }}>
             <T en="Run date (ranged)" bn="রান ডেট (ranged)" />
           </button>
-          <button type="button" className="btn btn-outline" aria-pressed={strategy === "hash"} aria-label="Shard key: hash of run ID" onClick={() => setStrategy("hash")}>
+          <button type="button" className="btn btn-outline" aria-pressed={strategy === "hash"} aria-label="Shard key: hash of run ID" onClick={() => {
+            setStrategy("hash");
+            onLive("hash");
+          }}>
             <T en="Hash of run ID" bn="রান আইডির হ্যাশ" />
           </button>
         </div>

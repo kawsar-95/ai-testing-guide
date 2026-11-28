@@ -4,7 +4,7 @@ import { useState } from "react";
 import { T } from "@/components/i18n/T";
 import { LAST_STEP, chargeCount, sceneFor } from "@/lib/visuals/idempotency";
 import type { Message } from "@/lib/visuals/idempotency";
-import type { Chip, StageProps } from "./StepVisual";
+import type { StageProps } from "./StepVisual";
 
 const X = { client: 50, api: 180, db: 310 } as const;
 const TOP = 96;
@@ -17,18 +17,8 @@ const COLOR: Record<Message["kind"], string> = {
   bad: "var(--danger)",
 };
 
-/** The live numbers of each step: the charges for both cases, from the same rules that the stage draws. */
-export function idempotencyChips(step: number): readonly Chip[] {
-  const without = chargeCount(sceneFor(step, false));
-  const withKey = chargeCount(sceneFor(step, true));
-  return [
-    { label: { en: "Requests sent", bn: "পাঠানো request" }, value: String(sceneFor(step, false).sent) },
-    { label: { en: "Charges: no key / key", bn: "চার্জ: key ছাড়া / key সহ" }, value: `${without} / ${withKey}` },
-  ];
-}
-
 /** A sequence diagram: client, payment API, and the charges in the database. */
-export function IdempotencyStage({ step, reduced }: StageProps) {
+export function IdempotencyStage({ step, reduced, onLive }: StageProps) {
   const [useKey, setUseKey] = useState(false);
   const keyOn = useKey || step === LAST_STEP;
   const scene = sceneFor(step, useKey);
@@ -88,7 +78,10 @@ export function IdempotencyStage({ step, reduced }: StageProps) {
           aria-pressed={keyOn}
           aria-label="Idempotency key"
           disabled={step === LAST_STEP}
-          onClick={() => setUseKey((v) => !v)}
+          onClick={() => {
+            onLive(!useKey);
+            setUseKey(!useKey);
+          }}
         >
           <T en={keyOn ? "Idempotency key: on" : "Idempotency key: off"} bn={keyOn ? "Idempotency key: চালু" : "Idempotency key: বন্ধ"} />
         </button>

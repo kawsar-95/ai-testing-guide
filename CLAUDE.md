@@ -44,7 +44,7 @@ npm test         # node --test on tests/*.test.ts
 | The picture of a topic | `components/visuals/<Topic>Stage.tsx` |
 | The binding of a name to its picture | `components/visuals/Visual.tsx` |
 
-To add a visual: add its definition to `VISUAL_DEFS`, write its stage and chips, register both in `Visual.tsx`, and add the tag to the page. `tests/visuals.test.ts` checks the English and Bangla text, the step count, and that every tag in `content/` names a visual that exists. Draft ideas for every page are in `graphify-out/visuals/ALL.md` (local only).
+To add a visual: write `lib/visuals/def-<id>.ts` and add it to `lib/visuals/defs.ts`, write `lib/visuals/<id>-chips.ts` (pure, `chips(step, live)`), write its stage (it calls `onLive(value)` from the control's handler so the chips follow it), register both in `Visual.tsx`, and add the tag to the page. `tests/visuals.test.ts` checks the English and Bangla text, the step count, and that every tag in `content/` names a visual that exists. Draft ideas for every page are in `graphify-out/visuals/ALL.md` (local only).
 
 ## Deploy (GitHub Pages)
 
@@ -943,3 +943,5 @@ Run `check_sources.py` without flags. The normal command is `python3 scripts/che
 - `docs/superpowers/research/` holds the research notes and the fact-check reports of each page.
 - `docs/superpowers/specs/2026-11-07-declutter-design.md` is the declutter pass: the page matrix, the numbers before and after, the rules, and what was left alone.
 - `docs/superpowers/specs/2026-11-04-linux-command-sheets-design.md` is the design of the Linux command sheets. `docs/superpowers/research/linux-sheets.factcheck.md` is the author's check, and `docs/superpowers/research/linux-sheets-<stage>.factcheck.md` is the independent check of each stage.
+
+Tests never import a `.tsx` file or an `@/` path: CI runs plain `node --test`, which cannot load them. Keep logic in `lib/`. Check with Node 24 locally: `npx -y node@24 --test "tests/**/*.test.ts"`.

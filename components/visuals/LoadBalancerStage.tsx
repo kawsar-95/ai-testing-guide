@@ -2,29 +2,9 @@
 
 import { useState } from "react";
 import { T } from "@/components/i18n/T";
-import { SERVICE_TICKS, SERVER_COUNT, STEP_ALGORITHM, STEP_TICKS, TOTAL_REQUESTS, longestQueue, simulate } from "@/lib/visuals/load-balancer";
+import { SERVICE_TICKS, SERVER_COUNT, STEP_ALGORITHM, STEP_TICKS, TOTAL_REQUESTS, simulate } from "@/lib/visuals/load-balancer";
 import type { Algorithm } from "@/lib/visuals/load-balancer";
-import type { Chip, StageProps } from "./StepVisual";
-
-const join = (values: readonly number[]) => values.join(" / ");
-
-/** The live numbers of each step, from the same simulation that the stage draws. */
-export function loadBalancerChips(step: number): readonly Chip[] {
-  const at = Math.max(0, Math.min(STEP_TICKS.length - 1, step));
-  const ticks = STEP_TICKS[at];
-  const rr = simulate("round-robin", ticks);
-  const lc = simulate("least-connections", ticks);
-  const speed: Chip = { label: { en: "Ticks per request", bn: "প্রতি request-এ tick" }, value: join(SERVICE_TICKS) };
-  if (at === 0) return [{ label: { en: "Servers", bn: "সার্ভার" }, value: String(SERVER_COUNT) }, speed, { label: { en: "Requests", bn: "Request" }, value: String(TOTAL_REQUESTS) }];
-  if (at === 1) return [{ label: { en: "Sent", bn: "পাঠানো" }, value: join(rr.sent) }, { label: { en: "Queue", bn: "Queue" }, value: join(rr.queue) }];
-  if (at === 2) return [{ label: { en: "Queue", bn: "Queue" }, value: join(rr.queue) }, { label: { en: "Longest queue", bn: "সবচেয়ে লম্বা queue" }, value: String(longestQueue(rr)) }];
-  if (at === 3) return [{ label: { en: "Queue", bn: "Queue" }, value: join(lc.queue) }, { label: { en: "Longest queue", bn: "সবচেয়ে লম্বা queue" }, value: String(longestQueue(lc)) }];
-  if (at === 4) return [{ label: { en: "Longest queue: Round Robin / Least Connections", bn: "সবচেয়ে লম্বা queue: Round Robin / Least Connections" }, value: `${longestQueue(rr)} / ${longestQueue(lc)}` }];
-  return [
-    { label: { en: "Round Robin per server", bn: "Round Robin, সার্ভার প্রতি" }, value: join(rr.sent) },
-    { label: { en: "Least Connections per server", bn: "Least Connections, সার্ভার প্রতি" }, value: join(lc.sent) },
-  ];
-}
+import type { StageProps } from "./StepVisual";
 
 const WIDTH = 360;
 const ROW_Y = [70, 130, 190] as const;
@@ -34,7 +14,7 @@ const MAX_BOXES = 9;
 const QUEUE_X = 130;
 
 /** The balancer, three servers of different speed, and their queues. */
-export function LoadBalancerStage({ step, reduced }: StageProps) {
+export function LoadBalancerStage({ step, reduced, onLive }: StageProps) {
   const [choice, setChoice] = useState<Algorithm>("round-robin");
   const at = Math.max(0, Math.min(STEP_TICKS.length - 1, step));
   const forced = STEP_ALGORITHM[at];
@@ -82,10 +62,10 @@ export function LoadBalancerStage({ step, reduced }: StageProps) {
           <span className="text-sm text-[var(--text-dim)]">
             <T en="Algorithm" bn="Algorithm" />
           </span>
-          <button type="button" className="btn btn-outline" aria-pressed={algorithm === "round-robin"} aria-label="Round Robin" onClick={() => setChoice("round-robin")}>
+          <button type="button" className="btn btn-outline" aria-pressed={algorithm === "round-robin"} aria-label="Round Robin" onClick={() => { setChoice("round-robin"); onLive("round-robin"); }}>
             <T en="Round Robin" bn="Round Robin" />
           </button>
-          <button type="button" className="btn btn-outline" aria-pressed={algorithm === "least-connections"} aria-label="Least Connections" onClick={() => setChoice("least-connections")}>
+          <button type="button" className="btn btn-outline" aria-pressed={algorithm === "least-connections"} aria-label="Least Connections" onClick={() => { setChoice("least-connections"); onLive("least-connections"); }}>
             <T en="Least Connections" bn="Least Connections" />
           </button>
         </div>
