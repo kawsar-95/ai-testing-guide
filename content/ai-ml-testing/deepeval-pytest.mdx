@@ -1,10 +1,12 @@
 export const metadata = { title: 'DeepEval: Pytest for LLMs', description: 'Write LLM tests as Pytest functions with DeepEval metrics, run them with `deepeval test run`, and read the scores.' }
 export const page = {
-  updated: '2026-11-11',
+  updated: '2026-11-27',
   sources: [
     { title: 'Getting started', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/getting-started', accessed: '2026-11-01' },
     { title: 'Metrics', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-introduction', accessed: '2026-11-01' },
     { title: 'Challenges in evaluating AI systems', publisher: 'Anthropic (Research)', url: 'https://www.anthropic.com/research/evaluating-ai-systems', accessed: '2026-11-01' },
+    { title: 'Hallucination metric', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-hallucination', accessed: '2026-11-27' },
+    { title: 'Faithfulness metric', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-faithfulness', accessed: '2026-11-27' },
   ],
 }
 
@@ -21,10 +23,10 @@ Promptfoo gives you a config and a table. DeepEval gives you code. That differen
 
 DeepEval plugs into Pytest: `deepeval test run` collects and runs your eval files the same way `pytest` would <Cite n={1} />. A test function builds a test case from the model's answer and checks it with one or more metrics. The metrics are the assertions.
 
-DeepEval sorts its metrics into two kinds, and the difference is the one to remember <Cite n={2} />:
+DeepEval separates reference-based metrics (they need ground truth) from referenceless metrics (they need no labeled data) <Cite n={2} />. That difference is the one to remember. Which kind each metric below belongs to is the tutorial's own classification:
 
 - **Referenceless metrics** work without labeled data. `AnswerRelevancyMetric` asks whether the answer addresses the input. `FaithfulnessMetric` asks whether the answer contradicts the `retrieval_context`, the text your retriever fetched. These suit a chatbot that answers from a knowledge base, and they also work in production.
-- **Reference-based metrics** need ground truth. `HallucinationMetric` compares the answer with a ground-truth `context`. A `GEval` metric can compare the answer with an `expected_output`.
+- **Reference-based metrics** need ground truth. `HallucinationMetric` compares the answer with a ground-truth `context` <Cite n={4} />. A `GEval` metric can compare the answer with an `expected_output`.
 
 The metric catalogue is the reference to read before you design a suite.
 
@@ -55,7 +57,7 @@ Run the file with `deepeval test run` <Cite n={1} />:
 deepeval test run test_support.py
 ```
 
-Because the file is a Pytest file, Pytest features such as fixtures and parametrisation work in it.
+Because the file is a Pytest file, Pytest features such as parametrisation work in it.
 
 </Technical>
 <Layman>
@@ -66,14 +68,14 @@ The command `deepeval test run` finds your test files and runs them. It works th
 
 Each test takes the model's answer and checks it. The checks are called **metrics**. A metric works like an assertion. It says whether the answer is good or not.
 
-There are two kinds of metrics. This difference is the one to remember <Cite n={2} />.
+DeepEval separates reference-based metrics (they need ground truth) from referenceless metrics (they need no labeled data) <Cite n={2} />. This difference is the one to remember. Which kind each metric below belongs to is the tutorial's own classification.
 
 - **No right answer needed.** These checks work without labeled data.
   - `AnswerRelevancyMetric` checks that the answer is about the question.
   - `FaithfulnessMetric` checks that the answer does not contradict the text your search step fetched. That text is called `retrieval_context`.
   - These fit a chatbot that answers from a knowledge base. They also work in production.
 - **A known truth is needed.** These checks need a trusted right answer.
-  - `HallucinationMetric` compares the answer with a trusted `context`.
+  - `HallucinationMetric` compares the answer with a trusted `context` <Cite n={4} />.
   - A `GEval` metric can compare the answer with an `expected_output`.
 
 Read the metric catalogue before you design a set of tests.
@@ -105,17 +107,17 @@ Run the file like this <Cite n={1} />:
 deepeval test run test_support.py
 ```
 
-The file is a Pytest file. So Pytest features also work in it. Two examples are fixtures and parametrisation.
+The file is a Pytest file. So Pytest features also work in it. One example is parametrisation.
 
 </Layman>
 <Bangla>
 
 DeepEval Pytest-এর সাথে যুক্ত হয়: `deepeval test run` আপনার eval ফাইলগুলো ঠিক `pytest`-এর মতো করেই খুঁজে নিয়ে চালায় <Cite n={1} />। একটা টেস্ট ফাংশন model-এর উত্তর থেকে একটা test case বানায়, আর এক বা একাধিক metric দিয়ে সেটা যাচাই করে। metric-গুলোই assertion।
 
-DeepEval তার metric-গুলোকে দুই ভাগে ভাগ করে, আর এই পার্থক্যটাই মনে রাখার মতো <Cite n={2} />:
+DeepEval reference-based metric (ground truth লাগে) আর referenceless metric (labeled data লাগে না) আলাদা করে <Cite n={2} />। এই পার্থক্যটাই মনে রাখার মতো। নিচের কোন metric কোন ধরনের, সেই ভাগটা টিউটোরিয়ালের নিজস্ব:
 
 - **Referenceless metric** labeled data ছাড়াই কাজ করে। `AnswerRelevancyMetric` দেখে উত্তরটা input-এর প্রশ্নের জবাব দেয় কি না। `FaithfulnessMetric` দেখে উত্তরটা `retrieval_context`-এর, মানে আপনার retriever যে লেখা এনেছে তার, বিরোধিতা করে কি না। knowledge base থেকে উত্তর দেওয়া chatbot-এর জন্য এগুলো মানায়, আর production-এও এগুলো চলে।
-- **Reference-based metric**-এর ground truth লাগে। `HallucinationMetric` উত্তরকে একটা ground-truth `context`-এর সাথে তুলনা করে। একটা `GEval` metric উত্তরকে `expected_output`-এর সাথে তুলনা করতে পারে।
+- **Reference-based metric**-এর ground truth লাগে। `HallucinationMetric` উত্তরকে একটা ground-truth `context`-এর সাথে তুলনা করে <Cite n={4} />। একটা `GEval` metric উত্তরকে `expected_output`-এর সাথে তুলনা করতে পারে।
 
 suite ডিজাইন করার আগে metric-এর তালিকাটা পড়ে নিন।
 
@@ -146,7 +148,7 @@ def test_support_answer_is_relevant_and_grounded():
 deepeval test run test_support.py
 ```
 
-ফাইলটা যেহেতু Pytest ফাইল, তাই fixture আর parametrisation-এর মতো Pytest-এর সুবিধাগুলো এতে কাজ করে।
+ফাইলটা যেহেতু Pytest ফাইল, তাই parametrisation-এর মতো Pytest-এর সুবিধাগুলো এতে কাজ করে।
 
 </Bangla>
 </Voices>
@@ -166,7 +168,7 @@ The **test case** (`LLMTestCase`) holds the inputs and the outputs. Its fields a
 - `context` is the ground truth that the answer should agree with.
 - `retrieval_context` is what your retriever actually fetched.
 
-Different metrics read different fields. `HallucinationMetric` reads `context`, and `FaithfulnessMetric` reads `retrieval_context` <Cite n={2} />.
+Different metrics read different fields. `HallucinationMetric` reads `context` <Cite n={4} />, and `FaithfulnessMetric` reads `retrieval_context` <Cite n={5} />.
 
 **Score and reason.** The **metric** is the check. Each metric gives a score from 0 to 1 and a reason, and it passes when the score meets its threshold. Almost all of the built-in metrics use a model as the judge (LLM-as-a-judge) <Cite n={2} />. So they inherit the non-determinism of any other model call <Cite n={2} />.
 
@@ -190,14 +192,14 @@ def test_answer_is_grounded(case):
     ...
 ```
 
-**Judge calls.** The practical cost is the **judge calls**. A metric can make more than one model call for each test case. `FaithfulnessMetric`, for example, first extracts the claims from the answer and then checks each claim against the retrieval context <Cite n={2} />. So two metrics on fifty cases is at least a hundred judge calls. The tutorial's advice: run fast deterministic checks on every commit, and the metric tests on a schedule.
+**Judge calls.** The practical cost is the **judge calls**. A metric can make more than one model call for each test case. `FaithfulnessMetric`, for example, first extracts the claims from the answer and then checks each claim against the retrieval context <Cite n={5} />. So two metrics on fifty cases is at least a hundred judge calls. The tutorial's advice: run fast deterministic checks on every commit, and the metric tests on a schedule.
 
 </Technical>
 <Layman>
 
 A DeepEval test has three parts: the **test case**, the **metric**, and the **`assert_test` call**.
 
-The **test case** holds what went in and what came out. `input` is the question. `actual_output` is the model's answer. `expected_output` is the right answer, if you have one. `context` is the trusted truth the answer should agree with. `retrieval_context` is what your search step really found. Each metric reads its own fields: `HallucinationMetric` reads `context`, and `FaithfulnessMetric` reads `retrieval_context` <Cite n={2} />.
+The **test case** holds what went in and what came out. `input` is the question. `actual_output` is the model's answer. `expected_output` is the right answer, if you have one. `context` is the trusted truth the answer should agree with. `retrieval_context` is what your search step really found. Each metric reads its own fields: `HallucinationMetric` reads `context` <Cite n={4} />, and `FaithfulnessMetric` reads `retrieval_context` <Cite n={5} />.
 
 The **metric** is the check. It gives a score from 0 to 1 and a reason, and it passes when the score reaches its threshold. Almost all built-in metrics ask a model to judge, so the result can vary like any model answer <Cite n={2} />.
 
@@ -221,14 +223,14 @@ def test_answer_is_grounded(case):
     ...
 ```
 
-The real cost is the judge calls. One metric can call the model more than once per case. `FaithfulnessMetric`, for example, first pulls out the claims and then checks each one <Cite n={2} />. So two metrics on fifty cases means at least a hundred judge calls. The tutorial's advice: run quick rule checks on every commit, and the metric tests on a schedule.
+The real cost is the judge calls. One metric can call the model more than once per case. `FaithfulnessMetric`, for example, first pulls out the claims and then checks each one <Cite n={5} />. So two metrics on fifty cases means at least a hundred judge calls. The tutorial's advice: run quick rule checks on every commit, and the metric tests on a schedule.
 
 </Layman>
 <Bangla>
 
 একটা DeepEval টেস্টের তিনটা অংশ: **test case**, **metric**, আর **`assert_test` call**।
 
-**Test case** (`LLMTestCase`)-এ থাকে input আর output। `input` হলো প্রশ্ন। `actual_output` হলো model যা বলেছে। `expected_output` হলো reference উত্তর, যদি থাকে। `context` হলো সেই ground truth, যার সাথে উত্তরটা মিলতে হবে। `retrieval_context` হলো আপনার retriever আসলে যা এনেছে। আলাদা metric আলাদা field পড়ে: `HallucinationMetric` পড়ে `context`, আর `FaithfulnessMetric` পড়ে `retrieval_context` <Cite n={2} />।
+**Test case** (`LLMTestCase`)-এ থাকে input আর output। `input` হলো প্রশ্ন। `actual_output` হলো model যা বলেছে। `expected_output` হলো reference উত্তর, যদি থাকে। `context` হলো সেই ground truth, যার সাথে উত্তরটা মিলতে হবে। `retrieval_context` হলো আপনার retriever আসলে যা এনেছে। আলাদা metric আলাদা field পড়ে: `HallucinationMetric` পড়ে `context` <Cite n={4} />, আর `FaithfulnessMetric` পড়ে `retrieval_context` <Cite n={5} />।
 
 **Metric** হলো চেক। প্রতিটা metric ০ থেকে ১-এর মধ্যে একটা স্কোর আর একটা কারণ দেয়, আর স্কোর threshold ছুঁলে pass করে। প্রায় সব built-in metric বিচারক হিসেবে একটা model ব্যবহার করে (LLM-as-a-judge), তাই অন্য যেকোনো model call-এর মতো এদের ফলাফলও বদলাতে পারে <Cite n={2} />।
 
@@ -252,7 +254,7 @@ def test_answer_is_grounded(case):
     ...
 ```
 
-বাস্তব খরচ হলো **judge call**। একটা metric প্রতি test case-এ একাধিক model call করতে পারে: যেমন `FaithfulnessMetric` আগে উত্তর থেকে দাবিগুলো বের করে, তারপর প্রতিটা দাবি retrieval context-এর সাথে মিলিয়ে দেখে <Cite n={2} />। তাই পঞ্চাশটা কেসে দুটো metric মানে অন্তত একশোটা judge call। টিউটোরিয়ালের পরামর্শ: প্রতিটা commit-এ দ্রুত deterministic চেক চালান, আর metric টেস্ট চালান নির্দিষ্ট সময় পরপর।
+বাস্তব খরচ হলো **judge call**। একটা metric প্রতি test case-এ একাধিক model call করতে পারে: যেমন `FaithfulnessMetric` আগে উত্তর থেকে দাবিগুলো বের করে, তারপর প্রতিটা দাবি retrieval context-এর সাথে মিলিয়ে দেখে <Cite n={5} />। তাই পঞ্চাশটা কেসে দুটো metric মানে অন্তত একশোটা judge call। টিউটোরিয়ালের পরামর্শ: প্রতিটা commit-এ দ্রুত deterministic চেক চালান, আর metric টেস্ট চালান নির্দিষ্ট সময় পরপর।
 
 </Bangla>
 </Voices>
@@ -457,11 +459,11 @@ deepeval test run tests/ai/test_faithfulness.py   # nightly
 
 **Mistake 2: running every metric test on every commit.** Each metric makes one or more judge calls. Put the expensive ones on a schedule and keep only deterministic checks in the inner loop.
 
-**Mistake 3: confusing `context` and `retrieval_context`.** `context` is the ground truth and `retrieval_context` is what the retriever fetched, and different metrics read different fields <Cite n={2} />. Copying one into the other hides a retrieval bug.
+**Mistake 3: confusing `context` and `retrieval_context`.** `context` is the ground truth and `retrieval_context` is what the retriever fetched, and different metrics read different fields (`HallucinationMetric` reads `context` <Cite n={4} />, `FaithfulnessMetric` reads `retrieval_context` <Cite n={5} />). Copying one into the other hides a retrieval bug.
 
 **Mistake 4: one big test function.** When it fails you do not know which case or which metric failed. Parametrise.
 
-**Mistake 5: no reference answers.** Without an expected output you can only measure relevance, not correctness. Keep a reference for at least the important cases.
+**Mistake 5: no reference answers.** Without ground truth (`context`, `retrieval_context` or `expected_output`) you can only measure relevance, not correctness. Keep a reference for at least the important cases.
 
 **Mistake 6: treating the score as absolute.** A 0.8 faithfulness score means nothing without the distribution behind it and the previous run to compare it to.
 
@@ -472,11 +474,11 @@ deepeval test run tests/ai/test_faithfulness.py   # nightly
 
 **Mistake 2: running every metric test on every commit.** Each metric makes one or more judge calls. Run the expensive ones on a schedule, and keep quick rule checks for every commit.
 
-**Mistake 3: mixing up `context` and `retrieval_context`.** The first is the trusted truth. The second is what your search step found. Each metric reads its own field <Cite n={2} />. If you copy one into the other, you hide a search bug.
+**Mistake 3: mixing up `context` and `retrieval_context`.** The first is the trusted truth. The second is what your search step found. Each metric reads its own field: `HallucinationMetric` reads `context` <Cite n={4} />, and `FaithfulnessMetric` reads `retrieval_context` <Cite n={5} />. If you copy one into the other, you hide a search bug.
 
 **Mistake 4: one big test.** When it fails, you do not know which case or which metric failed. Use parametrisation.
 
-**Mistake 5: no right answers.** Without an expected answer you can only check that the answer is on topic, not that it is correct. Keep right answers for the important cases.
+**Mistake 5: no right answers.** Without a trusted source or right answer you can only check that the answer is on topic, not that it is correct. Keep right answers for the important cases.
 
 **Mistake 6: reading a score on its own.** A faithfulness score of 0.8 means nothing without the other scores and the last run to compare it with.
 
@@ -487,11 +489,11 @@ deepeval test run tests/ai/test_faithfulness.py   # nightly
 
 **ভুল ২: প্রতিটা commit-এ সব metric টেস্ট চালানো।** প্রতিটা metric এক বা একাধিক judge call করে। ব্যয়বহুলগুলো নির্ধারিত সময়ে রাখুন আর ভেতরের লুপে শুধু নির্দিষ্ট চেক রাখুন।
 
-**ভুল ৩: `context` আর `retrieval_context` গুলিয়ে ফেলা।** `context` হলো ground truth, আর `retrieval_context` হলো retriever যা এনেছে; আলাদা metric আলাদা field পড়ে <Cite n={2} />। একটাকে অন্যটায় কপি করলে retrieval বাগ ঢাকা পড়ে।
+**ভুল ৩: `context` আর `retrieval_context` গুলিয়ে ফেলা।** `context` হলো ground truth, আর `retrieval_context` হলো retriever যা এনেছে; আলাদা metric আলাদা field পড়ে (`HallucinationMetric` পড়ে `context` <Cite n={4} />, `FaithfulnessMetric` পড়ে `retrieval_context` <Cite n={5} />)। একটাকে অন্যটায় কপি করলে retrieval বাগ ঢাকা পড়ে।
 
 **ভুল ৪: একটা বড় টেস্ট ফাংশন।** ব্যর্থ হলে কোন কেস বা কোন metric ব্যর্থ হলো বোঝা যায় না। parametrise করুন।
 
-**ভুল ৫: reference উত্তর না থাকা।** expected output ছাড়া আপনি শুধু relevancy মাপতে পারেন, সঠিকতা নয়। গুরুত্বপূর্ণ কেসগুলোর জন্য একটা reference রাখুন।
+**ভুল ৫: reference উত্তর না থাকা।** ground truth (`context`, `retrieval_context` বা expected output) ছাড়া আপনি শুধু relevancy মাপতে পারেন, সঠিকতা নয়। গুরুত্বপূর্ণ কেসগুলোর জন্য একটা reference রাখুন।
 
 **ভুল ৬: স্কোরকে একা একা পড়া।** 0.8 faithfulness স্কোরের পিছনের বিতরণ আর আগের run না দেখে কিছু মানে আসে না।
 

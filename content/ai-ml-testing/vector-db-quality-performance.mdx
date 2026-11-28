@@ -1,11 +1,12 @@
 export const metadata = { title: 'Vector Database Quality and Performance', description: 'Test retrieval accuracy at scale and the performance envelope: duplicates, load, index rebuilds, and drift.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'Search', publisher: 'Qdrant (docs)', url: 'https://qdrant.tech/documentation/search/search/', accessed: '2026-11-01' },
     { title: 'Discounted cumulative gain', publisher: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Discounted_cumulative_gain', accessed: '2026-11-01' },
-    { title: 'Querying collections', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/docs/querying-collections', accessed: '2026-11-01' },
+    { title: 'Query and Get', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/docs/querying-collections/query-and-get', accessed: '2026-11-01' },
     { title: 'Locust documentation', publisher: 'Locust', url: 'https://docs.locust.io/en/stable/', accessed: '2026-11-01' },
+    { title: 'Configure collections', publisher: 'Chroma (docs)', url: 'https://docs.trychroma.com/docs/collections/configure', accessed: '2026-11-27' },
   ],
 }
 
@@ -30,7 +31,7 @@ The metrics you already know apply, but with more care:
 
 **Performance** is a separate axis with its own questions: how many queries per second before the quality degrades, how long a rebuild takes, and what happens to the index when the corpus changes underneath it.
 
-The surprising result that teams learn the hard way: **recall can fall as the corpus grows**, because an approximate index with a fixed number of candidate lists has to spread itself thinner across more vectors. For example, a configuration might recall 95% of ten thousand documents and 70% of a million (illustrative numbers, not a measurement). So the index parameters have to be re-benchmarked when the corpus grows, not just when the code changes.
+The surprising result that teams learn the hard way: **recall can fall as the corpus grows**, because an approximate index with a fixed search width (Chroma's `ef_search`, Qdrant's `hnsw_ef`) has to spread itself thinner across more vectors, and a wider search normally improves recall but slows queries <Cite n={5} />. For example, a configuration might recall 95% of ten thousand documents and 70% of a million (illustrative numbers, not a measurement). So the index parameters have to be re-benchmarked when the corpus grows, not just when the code changes.
 
 </Technical>
 <Layman>
@@ -45,7 +46,7 @@ The metrics you already know still apply, but take more care:
 
 **Performance** is a separate axis with its own questions. How many queries per second can you run before quality drops? How long does a rebuild take? What happens to the index when the corpus changes underneath it?
 
-Teams learn one surprise the hard way: **recall can fall as the corpus grows**. An approximate index with a fixed number of candidate lists must spread thinner across more vectors. For example, one setup might recall 95% of ten thousand documents and 70% of a million (illustrative numbers, not a measurement). So re-benchmark the index parameters when the corpus grows, not just when the code changes.
+Teams learn one surprise the hard way: **recall can fall as the corpus grows**. An approximate index with a fixed search width (Chroma's `ef_search`, Qdrant's `hnsw_ef`) must spread thinner across more vectors. A wider search normally improves recall but slows queries <Cite n={5} />. For example, one setup might recall 95% of ten thousand documents and 70% of a million (illustrative numbers, not a measurement). So re-benchmark the index parameters when the corpus grows, not just when the code changes.
 
 </Layman>
 <Bangla>
@@ -60,7 +61,7 @@ Teams learn one surprise the hard way: **recall can fall as the corpus grows**. 
 
 **Performance** আলাদা একটা axis, আর তার নিজস্ব প্রশ্ন আছে: corpus বড়ানোর আগে কত query প্রতি সেকেন্ডে ব্যয়বহুল থাকে, rebuild কত সময় লাগে, আর corpus-এর নিচে বদলে গেলে index-এর কী হয়।
 
-দলগুলো যে ফলাফল শক্তা ছাত্রা করে: **corpus বড় হলে recall কমতে পারে**, কারণ approximate index-এর নির্দিষ্ট সংখ্যক candidate list থাকে আর সেটা বেশি vector-এর ওপর ছড়িয়ে যেতে হয়। উদাহরণ হিসেবে, একটা configuration দশ হাজার document-এর ৯৫% আর এক মিলিয়নের ৭০% recall করতে পারে (দৃষ্টান্তমূলক সংখ্যা, মাপা নয়)। তাই code বদলালে নয়, corpus বাড়লেও index parameter আবার benchmark করতে হয়।
+যে চমকপ্রদ ফলাফল দলগুলো কষ্ট করে শেখে: **corpus বড় হলে recall কমতে পারে**, কারণ approximate index-এর search width নির্দিষ্ট (Chroma-র `ef_search`, Qdrant-এর `hnsw_ef`) আর সেটা বেশি vector-এর ওপর ছড়িয়ে যেতে হয়; বেশি width সাধারণত recall বাড়ায় কিন্তু query ধীর করে <Cite n={5} />। উদাহরণ হিসেবে, একটা configuration দশ হাজার document-এর ৯৫% আর এক মিলিয়নের ৭০% recall করতে পারে (দৃষ্টান্তমূলক সংখ্যা, মাপা নয়)। তাই code বদলালে নয়, corpus বাড়লেও index parameter আবার benchmark করতে হয়।
 
 </Bangla>
 </Voices>
@@ -82,7 +83,7 @@ empty collections    a filter that matches nothing
 very long docs       one document larger than the embedding model's limit
 ```
 
-**2. Performance.** The load test has to measure quality at the same time as throughput, because a database under load can answer faster and worse by returning a smaller candidate set. Locust is the tool for driving the load <Cite n={4} />, and the assertion is on the **p95 latency and the recall together**, not on the latency alone.
+**2. Performance.** The load test has to measure quality at the same time as throughput, because a tuned-down index (a smaller `hnsw_ef`/`ef_search`, or a timeout fallback) can answer faster and worse. Locust is one tool for driving the load <Cite n={4} />; the example below uses a plain thread pool to stay short. The assertion is on the **p95 latency and the recall together**, not on the latency alone.
 
 **3. Index rebuild.** When the corpus changes, the index has to change with it. The test writes a document, waits for the index, and queries for the new content:
 
@@ -111,7 +112,7 @@ empty collections    a filter that matches nothing
 very long docs       one document larger than the embedding model's limit
 ```
 
-**2. Performance.** The load test must measure quality and throughput at the same time. A database under load can answer faster and worse, by returning a smaller candidate set. Locust is the tool that drives the load <Cite n={4} />. Assert on the **p95 latency and the recall together**, not on latency alone.
+**2. Performance.** The load test must measure quality and throughput at the same time. A tuned-down index (a smaller `hnsw_ef`/`ef_search`, or a timeout fallback) can answer faster and worse. Locust is one tool that drives the load <Cite n={4} />. The example below uses a plain thread pool to stay short. Assert on the **p95 latency and the recall together**, not on latency alone.
 
 **3. Index rebuild.** When the corpus changes, the index must change with it. The test writes a document, waits for the index, and queries for the new content:
 
@@ -140,7 +141,7 @@ empty collections    a filter that matches nothing
 very long docs       one document larger than the embedding model's limit
 ```
 
-**২. Performance।** load test-এ throughput-এর সাথে সাথে quality-ও মাপতে হবে, কারণ load-এর নিচের database দ্রুততর উত্তর দিতে পারে আর খারাপ, ছোট candidate set ফেরত দিয়ে। Load চালাতে Locust <Cite n={4} />, আর assertion হবো **p95 latency আর recall একসাথে**-র ওপর, শুধু latency-র ওপর নয়।
+**২. Performance।** load test-এ throughput-এর সাথে সাথে quality-ও মাপতে হবে, কারণ tuned-down index (ছোট `hnsw_ef`/`ef_search`, বা timeout fallback) দ্রুত কিন্তু খারাপ উত্তর দিতে পারে। Load চালাতে Locust একটা টুল <Cite n={4} />; নিচের উদাহরণে সহজ থাকার জন্য thread pool ব্যবহার হয়েছে। assertion হবে **p95 latency আর recall একসাথে**-র ওপর, শুধু latency-র ওপর নয়।
 
 **৩. Index rebuild।** corpus বদলালে index-ও তার সাথে বদলাতে হবে। টেস্ট একটা document লিখে, index-এর জন্য অপেক্ষা করে, আর নতুন content-এর জন্য query করে:
 
@@ -148,7 +149,7 @@ very long docs       one document larger than the embedding model's limit
 write the document   -> index it   -> query it   -> the new content must come back
 ```
 
-ব্যর্থতার ধরন হলো একটা lag: write সফল হয়েছে কিন্তু index তাকালো না, তাই নতুন document কিছুক্ষণ অদৃশ্য থাকে। লেখার সাথে সাথে query করা টেস্ট সেটা ধরে, আর অপেক্ষা করা টেস্ট কিছুই ধরে না।
+ব্যর্থতার ধরন হলো একটা lag: write সফল হয়েছে কিন্তু index এখনো ধরতে পারেনি, তাই নতুন document কিছুক্ষণ অদৃশ্য থাকে। লেখার সাথে সাথে query করা টেস্ট সেটা ধরে, আর অপেক্ষা করা টেস্ট কিছুই ধরে না।
 
 **৪. Drift।** সময়ের সাথে corpus বদলায়, আর retrieval quality তার সাথে বদলায়, প্রায়ই খারাপ দিকে আর কোনো স্পষ্ট সংকেত ছাড়াই। বর্তমান nDCG assert করা টেস্ট সেটার canary, আর এটাই chunking benchmark-এর regression check-এর সাথে এক।
 
@@ -171,7 +172,14 @@ from concurrent.futures import ThreadPoolExecutor
 from statistics import mean
 import pytest
 
-from app.knowledge import collection, embed
+from app.knowledge import collection
+
+QUESTION = "how long is the return window?"
+EXPECTED = {"returns#chunk-1"}
+
+
+def recall_at_k(hits, expected):
+    return len(expected & set(hits["ids"][0])) / len(expected)
 
 
 @pytest.mark.slow
@@ -231,7 +239,14 @@ from concurrent.futures import ThreadPoolExecutor
 from statistics import mean
 import pytest
 
-from app.knowledge import collection, embed
+from app.knowledge import collection
+
+QUESTION = "how long is the return window?"
+EXPECTED = {"returns#chunk-1"}
+
+
+def recall_at_k(hits, expected):
+    return len(expected & set(hits["ids"][0])) / len(expected)
 
 
 @pytest.mark.slow
@@ -291,7 +306,14 @@ from concurrent.futures import ThreadPoolExecutor
 from statistics import mean
 import pytest
 
-from app.knowledge import collection, embed
+from app.knowledge import collection
+
+QUESTION = "how long is the return window?"
+EXPECTED = {"returns#chunk-1"}
+
+
+def recall_at_k(hits, expected):
+    return len(expected & set(hits["ids"][0])) / len(expected)
 
 
 @pytest.mark.slow
@@ -454,4 +476,4 @@ This advice is the tutorial's own. It does not come from the sources.
 | Candidate list | The vectors an approximate index compares against, whose size controls the accuracy trade |
 | Drift | Retrieval quality changing over time as the corpus changes |
 | Throughput | How many queries per second the database serves |
-| Locust | The load-testing tool used to drive concurrent queries |
+| Locust | A load-testing tool that can drive concurrent queries |

@@ -1,6 +1,6 @@
 export const metadata = { title: 'Agent Decision Testing', description: 'Test the two decisions an agent makes: which tool to call, and what to pass to it. The second one breaks more often.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'Define tools', publisher: 'Anthropic (docs)', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools', accessed: '2026-11-01' },
     { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
@@ -30,7 +30,7 @@ Three more decision behaviours matter:
 - **Loop detection.** The agent calls the same tool with the same arguments again. It happens when the tool returns an error the agent does not understand, and it burns the budget.
 - **Error recovery.** When a tool raises, the agent should try something else or report the failure, not repeat the same call.
 
-The measurement for all of these is a **decision accuracy** against a labelled set of situations, and it is measured per situation, not overall .
+The measurement for all of these is a **decision accuracy** against a labelled set of situations, and it is measured per situation, not overall.
 
 </Technical>
 <Layman>
@@ -54,7 +54,7 @@ The measure for all of these is **decision accuracy** against a labelled set of 
 
 প্রতিটা ধাপে agent দুটো প্রশ্নের উত্তর দেয়: **কোন tool** আর **কী arguments** দিয়ে। এগুলো আলাদা ভাবে ভাঙে, আর দ্বিতীয়টা বেশি বিপজ্জনক।
 
-**Tool বাছা** ভাঙে যখন দুটো tool প্রযোজ্য মনে হয়। "Cancel my order" হয়তো `cancel_order` বা `modify_order` — মিলে, আর model-এর একটা কারণ নেই একটা বেছে নিতে। সমাধান সাধারণত tool-এর বর্ণনায়, যেটা prompt text <Cite n={1} />।
+**Tool বাছা** ভাঙে যখন দুটো tool প্রযোজ্য মনে হয়। "Cancel my order" হয়তো `cancel_order` বা `modify_order` — দুটোর সাথেই মিলে যায়, আর model-এর একটাকে বেছে নেওয়ার কোনো কারণ নেই। সমাধান সাধারণত tool-এর বর্ণনায়, যেটা prompt text <Cite n={1} />।
 
 **Argument বের করা** ভাঙে যখন argument কথোপকথনে আছে কিন্তু বলা নেই: "নীলাটা, গত মঙ্গলবার" যখন tool-এর product id আর date দরকার। agent-কে দুটো context জোড়া লাগাতে হয়। এখানেই বানানো argument বিপজ্জনক, কারণ tool-টা সঠিক আর call চলে যায়।
 
@@ -77,8 +77,9 @@ The measure for all of these is **decision accuracy** against a labelled set of 
 The **tool selection** test compares the chosen tool against the expected one. The dataset is a list of situations, each with the tool that should be called:
 
 ```python
+# These tool names belong to an example order-support agent.
 SELECTION_CASES = [
-    ("Cancel my order", "cancel_order"),
+    ("Cancel order 1001, I changed my mind", "cancel_order"),
     ("Where is my order?", "track_order"),
     ("I want to change my delivery address", "modify_order"),
     ("How much is 17 percent of 420?", "calculate"),
@@ -91,7 +92,7 @@ The **argument extraction** test is the same shape, and it needs the expected ar
 ```python
 ARGUMENT_CASES = [
     (
-        "Cancel my order",
+        "Cancel order 1001, I changed my mind",
         "cancel_order",
         {"order_id": "1001", "reason": "changed_mind"},
     ),
@@ -119,7 +120,7 @@ The agent should have asked which order. Inventing an id means cancelling someon
 The **loop** test uses a tool that always returns the same thing, so the agent has no new information and should stop:
 
 ```python
-def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
+def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace, constant_search_tool):
     agent.run("Find a laptop under 500 with no reviews")
     calls = [c for c in trace.tool_calls if c.name == "search_web"]
     assert len(calls) <= 3, f"the agent searched {len(calls)} times"
@@ -135,6 +136,8 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
+`constant_search_tool`, `broken_tools`, `trace.used_other_tool` and `trace.called_same_tool_repeatedly_more_than` are the tutorial's own fixtures and trace helpers, not a library API. `constant_search_tool` is a stub `search_web` that always returns the same result.
+
 The trace is what makes the decision measurable. A trace shows the tool sequence with the arguments, so the decision accuracy can be computed per situation rather than guessed <Cite n={2} />.
 
 </Technical>
@@ -143,8 +146,9 @@ The trace is what makes the decision measurable. A trace shows the tool sequence
 The **tool selection** test checks the chosen tool against the expected one. The dataset is a list of situations. Each one names the tool that should be called:
 
 ```python
+# These tool names belong to an example order-support agent.
 SELECTION_CASES = [
-    ("Cancel my order", "cancel_order"),
+    ("Cancel order 1001, I changed my mind", "cancel_order"),
     ("Where is my order?", "track_order"),
     ("I want to change my delivery address", "modify_order"),
     ("How much is 17 percent of 420?", "calculate"),
@@ -157,7 +161,7 @@ The **argument extraction** test has the same shape. It needs the expected argum
 ```python
 ARGUMENT_CASES = [
     (
-        "Cancel my order",
+        "Cancel order 1001, I changed my mind",
         "cancel_order",
         {"order_id": "1001", "reason": "changed_mind"},
     ),
@@ -185,7 +189,7 @@ The agent should have asked which order. Inventing an id means cancelling someon
 The **loop** test uses a tool that always returns the same thing. The agent gets no new information, so it should stop:
 
 ```python
-def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
+def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace, constant_search_tool):
     agent.run("Find a laptop under 500 with no reviews")
     calls = [c for c in trace.tool_calls if c.name == "search_web"]
     assert len(calls) <= 3, f"the agent searched {len(calls)} times"
@@ -201,6 +205,8 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
+`constant_search_tool`, `broken_tools`, `trace.used_other_tool` and `trace.called_same_tool_repeatedly_more_than` are the tutorial's own fixtures and trace helpers. They are not a library API. `constant_search_tool` is a stub `search_web` that always returns the same result.
+
 The trace makes the decision measurable. It shows the tool sequence with the arguments. So decision accuracy can be computed per situation instead of guessed <Cite n={2} />.
 
 </Layman>
@@ -209,8 +215,9 @@ The trace makes the decision measurable. It shows the tool sequence with the arg
 **tool বাছা** টেস্ট বেছে নেওয়া tool-কে প্রত্যাশিত tool-এর সাথে তুলনা করে। dataset হলো পরিস্থিতির তালিকা, প্রতিটিতে কোন tool ডাকা উচিত:
 
 ```python
+# এই tool-এর নামগুলো একটা উদাহরণ order-support agent-এর।
 SELECTION_CASES = [
-    ("Cancel my order", "cancel_order"),
+    ("Cancel order 1001, I changed my mind", "cancel_order"),
     ("Where is my order?", "track_order"),
     ("I want to change my delivery address", "modify_order"),
     ("How much is 17 percent of 420?", "calculate"),
@@ -223,7 +230,7 @@ SELECTION_CASES = [
 ```python
 ARGUMENT_CASES = [
     (
-        "Cancel my order",
+        "Cancel order 1001, I changed my mind",
         "cancel_order",
         {"order_id": "1001", "reason": "changed_mind"},
     ),
@@ -251,7 +258,7 @@ agent-এর জিজ্ঞেস করা উচিত ছিল কোন �
 **loop** টেস্ট এমন একটা tool ব্যবহার করে যা সবসময় একই জিনিস ফেরত দেয়, তাই agent-এর নতুন তথ্য হয় না এবং সে থামা উচিত:
 
 ```python
-def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
+def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace, constant_search_tool):
     agent.run("Find a laptop under 500 with no reviews")
     calls = [c for c in trace.tool_calls if c.name == "search_web"]
     assert len(calls) <= 3, f"the agent searched {len(calls)} times"
@@ -267,6 +274,8 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
+`constant_search_tool`, `broken_tools`, `trace.used_other_tool` আর `trace.called_same_tool_repeatedly_more_than` টিউটোরিয়ালের নিজস্ব fixture ও trace helper, কোনো library API নয়। `constant_search_tool` একটা stub `search_web` যা সবসময় একই ফলাফল দেয়।
+
 trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={2} />।
 
 </Bangla>
@@ -280,8 +289,9 @@ trace-ই সিদ্ধান্তকে মাপযোগ্য করে�
 The tool-selection test compares the chosen tool against the expected one, and the dataset is a list of situations with the tool that should be called:
 
 ```python
+# These tool names belong to an example order-support agent.
 SELECTION_CASES = [
-    ("Cancel my order", "cancel_order"),
+    ("Cancel order 1001, I changed my mind", "cancel_order"),
     ("Where is my order?", "track_order"),
     ("I want to change my delivery address", "modify_order"),
     ("How much is 17 percent of 420?", "calculate"),
@@ -294,7 +304,7 @@ The argument-extraction test is the same shape, and it needs the expected argume
 ```python
 ARGUMENT_CASES = [
     (
-        "Cancel my order",
+        "Cancel order 1001, I changed my mind",
         "cancel_order",
         {"order_id": "1001", "reason": "changed_mind"},
     ),
@@ -322,7 +332,7 @@ The agent should have asked which order. Inventing an id means cancelling someon
 The **loop** test uses a tool that always returns the same thing, so the agent has no new information and should stop:
 
 ```python
-def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
+def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace, constant_search_tool):
     agent.run("Find a laptop under 500 with no reviews")
     calls = [c for c in trace.tool_calls if c.name == "search_web"]
     assert len(calls) <= 3, f"the agent searched {len(calls)} times"
@@ -338,6 +348,8 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
+`constant_search_tool`, `broken_tools`, `trace.used_other_tool` and `trace.called_same_tool_repeatedly_more_than` are the tutorial's own fixtures and trace helpers, not a library API. `constant_search_tool` is a stub `search_web` that always returns the same result.
+
 The trace is what makes the decision measurable. A trace shows the tool sequence with the arguments, so the decision accuracy can be computed per situation rather than guessed <Cite n={2} />.
 
 </Technical>
@@ -346,8 +358,9 @@ The trace is what makes the decision measurable. A trace shows the tool sequence
 The tool-selection test checks the chosen tool against the expected one. The dataset is a list of situations, each with the tool that should be called:
 
 ```python
+# These tool names belong to an example order-support agent.
 SELECTION_CASES = [
-    ("Cancel my order", "cancel_order"),
+    ("Cancel order 1001, I changed my mind", "cancel_order"),
     ("Where is my order?", "track_order"),
     ("I want to change my delivery address", "modify_order"),
     ("How much is 17 percent of 420?", "calculate"),
@@ -360,7 +373,7 @@ The argument-extraction test has the same shape. It needs the expected arguments
 ```python
 ARGUMENT_CASES = [
     (
-        "Cancel my order",
+        "Cancel order 1001, I changed my mind",
         "cancel_order",
         {"order_id": "1001", "reason": "changed_mind"},
     ),
@@ -388,7 +401,7 @@ The agent should have asked which order. Inventing an id means cancelling someon
 The **loop** test uses a tool that always returns the same thing. The agent gets no new information, so it should stop:
 
 ```python
-def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
+def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace, constant_search_tool):
     agent.run("Find a laptop under 500 with no reviews")
     calls = [c for c in trace.tool_calls if c.name == "search_web"]
     assert len(calls) <= 3, f"the agent searched {len(calls)} times"
@@ -404,6 +417,8 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
 
+`constant_search_tool`, `broken_tools`, `trace.used_other_tool` and `trace.called_same_tool_repeatedly_more_than` are the tutorial's own fixtures and trace helpers. They are not a library API. `constant_search_tool` is a stub `search_web` that always returns the same result.
+
 The trace makes the decision measurable. It shows the tool sequence with the arguments. So decision accuracy can be computed per situation instead of guessed <Cite n={2} />.
 
 </Layman>
@@ -412,8 +427,9 @@ The trace makes the decision measurable. It shows the tool sequence with the arg
 **tool বাছা** টেস্ট বেছে নেওয়া tool-কে প্রত্যাশিত tool-এর সাথে তুলনা করে, আর dataset হলো পরিস্থিতির তালিকা, প্রতিটিতে কোন tool ডাকা উচিত:
 
 ```python
+# এই tool-এর নামগুলো একটা উদাহরণ order-support agent-এর।
 SELECTION_CASES = [
-    ("Cancel my order", "cancel_order"),
+    ("Cancel order 1001, I changed my mind", "cancel_order"),
     ("Where is my order?", "track_order"),
     ("I want to change my delivery address", "modify_order"),
     ("How much is 17 percent of 420?", "calculate"),
@@ -426,7 +442,7 @@ SELECTION_CASES = [
 ```python
 ARGUMENT_CASES = [
     (
-        "Cancel my order",
+        "Cancel order 1001, I changed my mind",
         "cancel_order",
         {"order_id": "1001", "reason": "changed_mind"},
     ),
@@ -454,7 +470,7 @@ agent-এর জিজ্ঞেস করা উচিত ছিল কোন �
 **loop** টেস্ট এমন একটা tool ব্যবহার করে যা সবসময় একই জিনিস ফেরত দেয়, তাই agent-এর নতুন তথ্য হয় না এবং সে থামা উচিত:
 
 ```python
-def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace):
+def test_the_agent_stops_when_the_tool_stops_being_useful(agent, trace, constant_search_tool):
     agent.run("Find a laptop under 500 with no reviews")
     calls = [c for c in trace.tool_calls if c.name == "search_web"]
     assert len(calls) <= 3, f"the agent searched {len(calls)} times"
@@ -469,6 +485,8 @@ def test_the_agent_recovers_from_a_tool_error(agent, trace, broken_tools):
     assert "could not" in answer.lower() or trace.used_other_tool
     assert not trace.called_same_tool_repeatedly_more_than(2)
 ```
+
+`constant_search_tool`, `broken_tools`, `trace.used_other_tool` আর `trace.called_same_tool_repeatedly_more_than` টিউটোরিয়ালের নিজস্ব fixture ও trace helper, কোনো library API নয়। `constant_search_tool` একটা stub `search_web` যা সবসময় একই ফলাফল দেয়।
 
 trace-ই সিদ্ধান্তকে মাপযোগ্য করে। একটা trace দেখায় tool-এর ক্রম আর arguments সহ, তাই পরিস্থিতি অনুযায়ী decision accuracy হিসাব করা যায় অনুমান না করে <Cite n={2} />।
 
@@ -490,7 +508,7 @@ trace-ই সিদ্ধান্তকে মাপযোগ্য করে�
 
 **Mistake 5: no tool-error case.** The tool that always succeeds hides the recovery bug.
 
-**Mistake 6: one accuracy number for all situations.** A model that is perfect on single-tool tasks and wrong on two-tool tasks still looks fine overall .
+**Mistake 6: one accuracy number for all situations.** A model that is perfect on single-tool tasks and wrong on two-tool tasks still looks fine overall.
 
 </Technical>
 <Layman>

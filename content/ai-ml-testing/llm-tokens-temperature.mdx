@@ -1,6 +1,6 @@
 export const metadata = { title: 'Tokens, Probabilities, and Temperature', description: 'How an LLM turns text into tokens, what temperature actually changes, and how the two decide what a tester sees.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-27',
   sources: [
     { title: 'Token counting', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/build-with-claude/token-counting', accessed: '2026-11-01' },
     { title: 'Messages API reference', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-11-01' },
@@ -23,7 +23,7 @@ A **token** is the unit the model works with. It is not a word and not a charact
 
 Inside the model, each token becomes a vector of numbers called an **embedding**. The model then produces, at each step, a probability for every token in its vocabulary. The service takes that distribution and picks one token, then repeats. The whole answer is built one token at a time.
 
-**Temperature** changes how the pick is made. At temperature 0 the service almost always takes the highest-probability token. Above 0 the distribution is flattened before the sample, so lower-probability tokens get picked more often. This paragraph and the one before it are the tutorial's own simplified explanation.
+**Temperature** (on providers that expose it) changes how the pick is made. At temperature 0 the service almost always takes the highest-probability token. Above 0 the distribution is flattened before the sample, so lower-probability tokens get picked more often. This paragraph and the one before it are the tutorial's own simplified explanation.
 
 Two consequences matter for a tester. First, **cost and context are measured in tokens, not characters**. Anthropic names cost and rate limits as reasons to count tokens <Cite n={1} />. Do not guess the count from the word count: measure your own text, in each language and format your product uses. Second, **the same idea can cost different amounts depending on how it is written**, so a prompt change can move your bill and your latency without changing a single character of the output.
 
@@ -34,7 +34,7 @@ A **token** is the piece the model actually works with. It is not a word and not
 
 Inside the model, each token turns into a list of numbers called an **embedding**. The model then works out how likely each possible next token is. The service picks one and repeats. The whole answer is built one piece at a time.
 
-**Temperature** changes how that pick is made. At temperature 0 the service nearly always takes the most likely piece. Above 0, the scores get flattened first, so less likely pieces get picked more often. This paragraph and the one before it are the tutorial's own simple explanation.
+**Temperature** (on providers that expose it) changes how that pick is made. At temperature 0 the service nearly always takes the most likely piece. Above 0, the scores get flattened first, so less likely pieces get picked more often. This paragraph and the one before it are the tutorial's own simple explanation.
 
 Two things matter for a tester. First, **cost and context are counted in tokens, not characters**. Anthropic gives cost and rate limits as reasons to count tokens <Cite n={1} />. Do not guess from the number of words: measure your own text, in every language and format your product uses. Second, **the same idea can cost different amounts depending on how it is written**, so editing a prompt can move your bill and your speed without changing the output at all.
 
@@ -45,7 +45,7 @@ Two things matter for a tester. First, **cost and context are counted in tokens,
 
 model-এর ভেতরে প্রতিটি token সংখ্যার একটা তালিকায় পরিণত হয়, যেটাকে **embedding** বলে। তারপর model বের করে পরের token-গুলো কতটা সম্ভাব্য। service সেখান থেকে একটা বেছে নেয়, তারপর আবার। পুরো উত্তর এভাবে একটা একটা করে তৈরি হয়।
 
-**Temperature** ঠিক করে সেই বাছাই কীভাবে হবে। temperature 0 হলে service প্রায় সবসময় সবচেয়ে সম্ভাব্য token-টাই নেয়। 0-এর বেশি হলে আগে সম্ভাবনাগুলো কাছাকাছি করে দেওয়া হয়, তাই কম সম্ভাব্য token-ও বেশি বেছে নেওয়া হয়। এই অনুচ্ছেদ আর আগেরটা টিউটোরিয়ালের নিজস্ব সহজ ব্যাখ্যা।
+**Temperature** (যেসব provider এটা দেয়) ঠিক করে সেই বাছাই কীভাবে হবে। temperature 0 হলে service প্রায় সবসময় সবচেয়ে সম্ভাব্য token-টাই নেয়। 0-এর বেশি হলে আগে সম্ভাবনাগুলো কাছাকাছি করে দেওয়া হয়, তাই কম সম্ভাব্য token-ও বেশি বেছে নেওয়া হয়। এই অনুচ্ছেদ আর আগেরটা টিউটোরিয়ালের নিজস্ব সহজ ব্যাখ্যা।
 
 টেস্টারের জন্য দুটো বিষয় গুরুত্বপূর্ণ। প্রথমত, **খরচ আর context token-এ মাপা হয়, অক্ষরে নয়**। Anthropic খরচ আর rate limit সামলানোকে token গোনার কারণ হিসেবে বলে <Cite n={1} />। শব্দ গুনে token আন্দাজ করবেন না: আপনার product যেসব ভাষা আর ফরম্যাট ব্যবহার করে, সেগুলোর লেখা নিজে মেপে দেখুন। দ্বিতীয়ত, **একই কথা লেখার ধরনের ওপর নির্ভর করে খরচ বদলাতে পারে**, তাই prompt বদলালে উত্তরের একটা অক্ষরও না বদলে বিল আর গতি বদলে যেতে পারে।
 
@@ -137,24 +137,22 @@ count = client.messages.count_tokens(
 print(count.input_tokens)
 ```
 
-Then measure the temperature effect, holding everything else fixed:
+Then measure the natural variation of the answers, holding everything else fixed:
 
 ```python
-def answer(temperature: float) -> str:
+def answer() -> str:
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=100,
-        temperature=temperature,
         messages=[{"role": "user", "content": PROMPT}],
     )
     return message.content[0].text
 
-for temperature in (0.0, 0.5, 1.0):
-    runs = [answer(temperature) for _ in range(5)]
-    print(temperature, len(set(runs)), "distinct answers out of 5")
+runs = [answer() for _ in range(5)]
+print(len(set(runs)), "distinct answers out of 5")
 ```
 
-The number of distinct answers is the signal you want in a test. Expect fewer distinct answers at 0 than at 1; the exact numbers depend on the model and the prompt. If a production prompt is written at temperature 1 and your eval runs at 0, the eval is measuring a system nobody runs.
+The number of distinct answers is the signal you want in a test; the exact number depends on the model and the prompt. On a provider that still lets you set temperature, expect fewer distinct answers at 0 than at 1, and if production runs at temperature 1 while your eval runs at 0, the eval is measuring a system nobody runs. Claude Opus 4.7 and later, and every request on API version 2026-10-21, no longer accept `temperature`, `top_p` or `top_k`; a request that sends them returns a 400. The loop above therefore sends no temperature and measures the natural variation. The older experiment (looping over temperatures 0.0, 0.5 and 1.0) works only on API version 2023-06-01 with a model that still accepts the parameter, such as Claude Sonnet 4.6.
 
 Finally, assert on the stop reason, not just the text:
 
@@ -189,24 +187,22 @@ count = client.messages.count_tokens(
 print(count.input_tokens)
 ```
 
-Then measure the temperature effect, holding everything else the same:
+Then measure the natural variation of the answers, holding everything else the same:
 
 ```python
-def answer(temperature: float) -> str:
+def answer() -> str:
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=100,
-        temperature=temperature,
         messages=[{"role": "user", "content": PROMPT}],
     )
     return message.content[0].text
 
-for temperature in (0.0, 0.5, 1.0):
-    runs = [answer(temperature) for _ in range(5)]
-    print(temperature, len(set(runs)), "distinct answers out of 5")
+runs = [answer() for _ in range(5)]
+print(len(set(runs)), "distinct answers out of 5")
 ```
 
-The number of different answers is the signal you want in a test. Expect fewer different answers at 0 than at 1; the exact numbers depend on the model and the prompt. If production runs a prompt at temperature 1 and your check runs at 0, you are testing a system nobody uses.
+The number of different answers is the signal you want in a test; the exact number depends on the model and the prompt. On a provider that still lets you set temperature, expect fewer different answers at 0 than at 1, and if production runs at temperature 1 while your check runs at 0, you are testing a system nobody uses. Claude Opus 4.7 and later, and every request on API version 2026-10-21, no longer accept `temperature`, `top_p` or `top_k`; a request that sends them returns a 400. The loop above therefore sends no temperature and measures the natural variation. The older experiment (looping over temperatures 0.0, 0.5 and 1.0) works only on API version 2023-06-01 with a model that still accepts the parameter, such as Claude Sonnet 4.6.
 
 Finally, check the reason the answer stopped, not just the answer:
 
@@ -241,24 +237,22 @@ count = client.messages.count_tokens(
 print(count.input_tokens)
 ```
 
-তারপর temperature-এর প্রভাব মাপুন, বাকি সব একই রেখে:
+তারপর উত্তরের স্বাভাবিক তারতম্য মাপুন, বাকি সব একই রেখে:
 
 ```python
-def answer(temperature: float) -> str:
+def answer() -> str:
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=100,
-        temperature=temperature,
         messages=[{"role": "user", "content": PROMPT}],
     )
     return message.content[0].text
 
-for temperature in (0.0, 0.5, 1.0):
-    runs = [answer(temperature) for _ in range(5)]
-    print(temperature, len(set(runs)), "distinct answers out of 5")
+runs = [answer() for _ in range(5)]
+print(len(set(runs)), "distinct answers out of 5")
 ```
 
-ভিন্ন উত্তরের সংখ্যাই হলো সেই সংকেত যা টেস্টে দরকার। 0-এ 1-এর চেয়ে কম ভিন্ন উত্তর আশা করুন; ঠিক কত, সেটা model আর prompt-এর ওপর নির্ভর করে। production-এ যদি prompt temperature 1-এ চলে আর আপনার eval 0-এ চলে, তাহলে আপনি এমন একটা সিস্টেম টেস্ট করছেন যা কেউ ব্যবহার করে না।
+ভিন্ন উত্তরের সংখ্যাই হলো সেই সংকেত যা টেস্টে দরকার; ঠিক কত, সেটা model আর prompt-এর ওপর নির্ভর করে। যে provider এখনো temperature সেট করতে দেয় সেখানে 0-এ 1-এর চেয়ে কম ভিন্ন উত্তর আশা করুন, আর production 1-এ চললে আর আপনার eval 0-এ চললে আপনি এমন একটা সিস্টেম টেস্ট করছেন যা কেউ ব্যবহার করে না। Claude Opus 4.7 এবং পরের model, আর API version 2026-10-21-এর প্রতিটি request, আর `temperature`, `top_p` বা `top_k` নেয় না; এগুলো পাঠালে 400 ফেরত আসে। তাই উপরের loop কোনো temperature পাঠায় না এবং উত্তরের স্বাভাবিক তারতম্য মাপে। পুরনো পরীক্ষাটা (temperature 0.0, 0.5, 1.0 দিয়ে loop) শুধু API version 2023-06-01-এ এমন model-এ চলে যা এখনো parameter-টা নেয়, যেমন Claude Sonnet 4.6।
 
 শেষে, শুধু উত্তর নয়, উত্তর কেন থামল সেটাও দেখুন:
 
@@ -285,45 +279,45 @@ assert message.stop_reason != "max_tokens", "the answer was cut off"
 
 **Mistake 1: measuring context in characters or words.** The API limit is in tokens. The number of words that fit depends on the text and on the model's tokenizer: the same text gives about 30 percent more tokens on Claude 4.7 and later models than on earlier ones. Use the counting endpoint <Cite n={1} />.
 
-**Mistake 2: evaluating at a temperature production does not use.** A temperature of 0 in the eval and 1 in production means the eval never sees the variance the users see. The eval must run at the production setting, and usually several times.
+**Mistake 2: evaluating at a temperature production does not use.** On providers that still let you set it, a temperature of 0 in the eval and 1 in production means the eval never sees the variance the users see. The eval must run at the production setting, and usually several times.
 
 **Mistake 3: ignoring the stop reason.** An answer cut off at `max_tokens` can still satisfy a keyword check. Assert on `stop_reason` <Cite n={2} />.
 
-**Mistake 4: not counting the system prompt.** It is part of the input tokens of every request <Cite n={1} />. A long system prompt with a long conversation fills the window faster than the conversation alone suggests.
+**Mistake 4: not counting the system prompt.** It is part of the input tokens <Cite n={1} />, and every request sends it again (the tutorial's own inference). A long system prompt with a long conversation fills the window faster than the conversation alone suggests.
 
 **Mistake 5: putting the important instruction in the middle.** In long inputs, models often do worst on information in the middle <Cite n={3} />. Put the instruction at the start or the end, and repeat the constraint that matters most.
 
-**Mistake 6: assuming temperature 0 means the same answer every time.** Check it with repeated runs before a test depends on it.
+**Mistake 6: assuming temperature 0 means the same answer every time.** This is the tutorial's own advice, not documented provider behaviour: check it with repeated runs before a test depends on it.
 
 </Technical>
 <Layman>
 
 **Mistake 1: measuring context in letters or words.** The API limit is in tokens. How many words fit depends on the text and on the model: the same text gives about 30 percent more tokens on Claude 4.7 and later models. Use the counting endpoint <Cite n={1} />.
 
-**Mistake 2: testing at a temperature production does not use.** A temperature of 0 in the check and 1 in production means the check never sees the variety users see. Run the check at the production setting, and usually several times.
+**Mistake 2: testing at a temperature production does not use.** On providers that still let you set it, a temperature of 0 in the check and 1 in production means the check never sees the variety users see. Run the check at the production setting, and usually several times.
 
 **Mistake 3: ignoring why the answer stopped.** An answer cut off at `max_tokens` can still pass a keyword check. Check `stop_reason` <Cite n={2} />.
 
-**Mistake 4: not counting the system prompt.** It is part of the input of every request <Cite n={1} />. A long system prompt plus a long conversation fills the space faster than the conversation alone suggests.
+**Mistake 4: not counting the system prompt.** It is part of the input <Cite n={1} />, and every request sends it again (the tutorial's own inference). A long system prompt plus a long conversation fills the space faster than the conversation alone suggests.
 
 **Mistake 5: putting the important instruction in the middle.** In long inputs, models often do worst on what sits in the middle <Cite n={3} />. Put the instruction at the start or the end, and repeat the most important rule.
 
-**Mistake 6: assuming temperature 0 means the same answer every time.** Check it with repeated runs before a test depends on it.
+**Mistake 6: assuming temperature 0 means the same answer every time.** This is the tutorial's own advice, not documented provider behaviour: check it with repeated runs before a test depends on it.
 
 </Layman>
 <Bangla>
 
 **ভুল ১: context অক্ষর বা শব্দে মাপা।** API-র সীমা token-এ। কতগুলো শব্দ ধরবে, সেটা লেখা আর model-এর tokenizer-এর ওপর নির্ভর করে: Claude 4.7 আর পরের model-এ একই লেখায় প্রায় ৩০ শতাংশ বেশি token হয়। counting endpoint ব্যবহার করুন <Cite n={1} />।
 
-**ভুল ২: production যে temperature ব্যবহার করে না, সেটায় eval চালানো।** eval-এ 0 আর production-এ 1 হলে eval কখনোই ব্যবহারকারীর দেখা বৈচিত্র্য দেখে না। eval production-এর সেটিংয়ে চালাতে হবে, আর সাধারণত কয়েকবার।
+**ভুল ২: production যে temperature ব্যবহার করে না, সেটায় eval চালানো।** যে provider এখনো সেট করতে দেয় সেখানে eval-এ 0 আর production-এ 1 হলে eval কখনোই ব্যবহারকারীর দেখা বৈচিত্র্য দেখে না। eval production-এর সেটিংয়ে চালাতে হবে, আর সাধারণত কয়েকবার।
 
 **ভুল ৩: উত্তর কেন থামল সেটা উপেক্ষা করা।** `max_tokens`-এ কেটে যাওয়া উত্তরও keyword check পাস করতে পারে। `stop_reason`-এর ওপর assert করুন <Cite n={2} />।
 
-**ভুল ৪: system prompt না গোনা।** সেটা প্রতিটা request-এর input token-এর অংশ <Cite n={1} />। লম্বা system prompt আর লম্বা কথোপকথন মিলে window আগেই ভরে যায়।
+**ভুল ৪: system prompt না গোনা।** সেটা input token-এর অংশ <Cite n={1} />, আর প্রতিটা request-এ সেটা আবার পাঠানো হয় (টিউটোরিয়ালের নিজস্ব অনুমান)। লম্বা system prompt আর লম্বা কথোপকথন মিলে window আগেই ভরে যায়।
 
 **ভুল ৫: গুরুত্বপূর্ণ নির্দেশনা মাঝখানে রাখা।** লম্বা input-এ মাঝখানের তথ্যে model প্রায়ই সবচেয়ে খারাপ করে <Cite n={3} />। নির্দেশনা শুরুতে বা শেষে রাখুন, আর সবচেয়ে জরুরি শর্তটা আবার লিখুন।
 
-**ভুল ৬: ধরে নেওয়া যে temperature 0 মানে প্রতিবার একই উত্তর।** কোনো টেস্ট এর ওপর নির্ভর করার আগে কয়েকবার চালিয়ে যাচাই করুন।
+**ভুল ৬: ধরে নেওয়া যে temperature 0 মানে প্রতিবার একই উত্তর।** এটা টিউটোরিয়ালের নিজস্ব পরামর্শ, provider-এর নথিভুক্ত আচরণ নয়: কোনো টেস্ট এর ওপর নির্ভর করার আগে কয়েকবার চালিয়ে যাচাই করুন।
 
 </Bangla>
 </Voices>
@@ -339,7 +333,7 @@ This advice is the tutorial's own. It does not come from the sources.
 
 - Log the input token count, the output token count, and the stop reason for every call in the test run. A trend line is worth more than a single number.
 - Assert that the prompt plus the system prompt plus the conversation stays inside the context window with room to spare.
-- Run the eval at the same temperature as production, and run it more than once.
+- Run the eval at the same sampling settings as production (temperature, where the provider exposes it), and run it more than once.
 - Put the task instruction at the start or the end of a long prompt, and repeat the critical constraint.
 - Add a test with a deliberately tight `max_tokens` so that the truncated case is covered before production finds it.
 - Track the cost per eval run in the report, next to the quality score. A quality gain that costs ten times more is a product decision, not a testing decision.
@@ -354,7 +348,7 @@ This advice is the tutorial's own. It does not come from the sources.
 
 - Log the input token count, the output token count, and the reason the answer stopped for every call in the test run. A trend is worth more than one number.
 - Check that the prompt, the system prompt, and the conversation together leave room inside the context limit.
-- Run the eval at the same temperature as production, and run it more than once.
+- Run the eval at the same sampling settings as production (temperature, where the provider exposes it), and run it more than once.
 - Put the instruction at the start or the end of a long prompt, and repeat the critical constraint.
 - Add a test with a deliberately tight `max_tokens`, so the cut-off case is covered before production finds it.
 - Track the cost of each eval run next to the quality score. A quality gain that costs ten times more is a product decision, not a testing decision.
@@ -369,7 +363,7 @@ This advice is the tutorial's own. It does not come from the sources.
 
 - টেস্ট রানের প্রতিটি কলের ইনপুট token সংখ্যা, আউটপুট token সংখ্যা আর উত্তর কেন থামল সেটা লিখে রাখুন। একটা সংখ্যার চেয়ে trend বেশি মূল্যবান।
 - prompt, system prompt আর কথোপকথন মিলে context সীমার ভেতরে যথেষ্ট জায়গা থাকে কি না যাচাই করুন।
-- eval চালান production-এর temperature-এ, আর একবারের বেশি।
+- eval চালান production-এর sampling সেটিংয়ে (যেখানে provider temperature দেয়), আর একবারের বেশি।
 - লম্বা prompt-এর শুরুতে বা শেষে নির্দেশনা রাখুন, আর সবচেয়ে জরুরি শর্তটা আবার লিখুন।
 - ইচ্ছা করে ছোট `max_tokens` দিয়ে একটা টেস্ট রাখুন, যাতে production-এ ধরা পড়ার আগেই কাটা উত্তরের কেস কভার হয়।
 - প্রতিটি eval run-এর খরচ মানের স্কোরের পাশে রাখুন। দশগুণ বেশি খরচে পাওয়া মান উন্নতি একটা প্রোডাক্ট সিদ্ধান্ত, টেস্টিং সিদ্ধান্ত নয়।
@@ -389,6 +383,6 @@ This advice is the tutorial's own. It does not come from the sources.
 | max_tokens | The cap on the output length. Hitting it truncates the answer |
 | stop_reason | Why the model stopped. `max_tokens` means the answer was cut off |
 | Truncation | An answer that hit the length cap and ends mid-sentence |
-| Argmax | Always picking the highest-probability token. What temperature 0 approximates |
+| Argmax | Always picking the highest-probability token. What temperature 0 approximates, where a provider lets you set it |
 | System prompt | The instruction that sits before the conversation and is counted on every turn |
 | Sampling | The act of choosing a token from the probability distribution |

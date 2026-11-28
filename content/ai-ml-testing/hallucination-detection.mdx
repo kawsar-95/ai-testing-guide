@@ -1,9 +1,9 @@
 export const metadata = { title: 'Hallucination Detection', description: 'Build a hallucination test suite: factual accuracy, grounding checks, cross-reference validation, and the temperature effect.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-27',
   sources: [
-    { title: 'SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Large Language Models', publisher: 'arXiv', url: 'https://arxiv.org/abs/2303.08896', accessed: '2026-11-01' },
-    { title: 'Available metrics', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/', accessed: '2026-11-01' },
+    { title: 'SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Generative Large Language Models', publisher: 'arXiv', url: 'https://arxiv.org/abs/2303.08896', accessed: '2026-11-01' },
+    { title: 'Faithfulness', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/faithfulness/', accessed: '2026-11-27' },
     { title: 'Challenges in evaluating AI systems', publisher: 'Anthropic (Research)', url: 'https://www.anthropic.com/research/evaluating-ai-systems', accessed: '2026-11-01' },
     { title: 'Metrics', publisher: 'DeepEval docs', url: 'https://deepeval.com/docs/metrics-introduction', accessed: '2026-11-01' },
   ],
@@ -25,7 +25,7 @@ A **hallucination** is a fluent statement that is not true. In an LLM system the
 Three detection techniques, ordered by how reliable they are in the tutorial's view:
 
 1. **Cross-reference validation.** You have an external source of truth: a database, a second retrieval, a lookup API. You check the claims in the answer against it. It needs a source of truth for your domain.
-2. **Grounding check.** You check whether every claim in the output is supported by the context the model was given. The faithfulness metrics of Ragas and DeepEval work this way <Cite n={2} /> <Cite n={4} />.
+2. **Grounding check.** You check whether every claim in the output is supported by the context the model was given. The faithfulness metrics of Ragas and DeepEval both extract claims and check them against the context <Cite n={2} /> <Cite n={4} />.
 3. **Self-consistency.** You ask the same question several times and look for disagreement. The SelfCheckGPT paper samples the model several times and uses the consistency of the answers to detect non-factual sentences, without an external database <Cite n={1} />.
 
 The last one is appealing because it needs no ground truth. Its blind spot follows from how it works (this is the tutorial's reasoning, not a result of the paper): if the model gives the same wrong answer every time, the samples agree, and the method has nothing to flag.
@@ -40,7 +40,7 @@ A **hallucination** is when the model says something smooth and confident that i
 Three ways to find hallucinations, from most to least reliable in the tutorial's view:
 
 1. **Check against a trusted source.** Compare the claims with a database, a second search, or a lookup service. You need such a source for your field.
-2. **Check against the given information.** Check that each claim is backed by the text the model received. The faithfulness metrics of Ragas and DeepEval do this <Cite n={2} /> <Cite n={4} />.
+2. **Check against the given information.** Check that each claim is backed by the text the model received. The faithfulness metrics of Ragas and DeepEval both split the answer into claims and check them against the text <Cite n={2} /> <Cite n={4} />.
 3. **Ask several times.** Ask the same question again and again and look for answers that disagree. The SelfCheckGPT paper uses this to find false sentences without any outside database <Cite n={1} />.
 
 The third way is attractive because it needs no trusted source. But in the tutorial's reasoning it has a blind spot: if the model gives the same wrong answer every time, the answers agree, and nothing gets flagged.
@@ -55,7 +55,7 @@ Also test the temperature (the tutorial's reasoning). A higher temperature makes
 শনাক্ত করার তিনটা কৌশল, টিউটোরিয়ালের মতে বেশি নির্ভরযোগ্য থেকে কম নির্ভরযোগ্য ক্রমে:
 
 1. **Cross-reference validation।** আপনার কাছে বাইরের একটা সত্যের উৎস আছে: database, দ্বিতীয় একটা retrieval, বা lookup API। উত্তরের দাবিগুলো সেটার সাথে যাচাই করুন। এর জন্য আপনার domain-এর একটা সত্যের উৎস লাগে।
-2. **Grounding check।** উত্তরের প্রতিটা দাবি model-কে দেওয়া context দিয়ে সমর্থিত কি না, তা যাচাই করুন। Ragas আর DeepEval-এর faithfulness metric এভাবেই কাজ করে <Cite n={2} /> <Cite n={4} />।
+2. **Grounding check।** উত্তরের প্রতিটা দাবি model-কে দেওয়া context দিয়ে সমর্থিত কি না, তা যাচাই করুন। Ragas আর DeepEval-এর faithfulness metric দুটোই দাবি আলাদা করে context-এর সাথে মেলায় <Cite n={2} /> <Cite n={4} />।
 3. **Self-consistency।** একই প্রশ্ন কয়েকবার করে উত্তরগুলোর অমিল খুঁজুন। SelfCheckGPT paper model থেকে কয়েকবার sample নিয়ে উত্তরগুলোর সামঞ্জস্য দিয়ে ভুল তথ্যের বাক্য শনাক্ত করে, কোনো বাইরের database ছাড়াই <Cite n={1} />।
 
 শেষ কৌশলটা আকর্ষণীয়, কারণ এতে কোনো ground truth লাগে না। কিন্তু এর একটা অন্ধ জায়গা আছে, যা এর কাজের ধরন থেকেই আসে (এটা টিউটোরিয়ালের যুক্তি, paper-এর ফলাফল নয়): model প্রতিবার একই ভুল উত্তর দিলে sample-গুলো মিলে যায়, আর ধরার মতো কিছু থাকে না।
@@ -74,9 +74,9 @@ A hallucination suite has three parts, and they are not equally strong.
 
 **Part 1: the claim extraction.** Before you can check a claim, you have to separate the answer into atomic claims. "You can return it within 30 days, excluding items marked final sale" is two claims. A grounding metric works on the decomposed form, because a partly-supported answer is not supported.
 
-**Part 2: the support check.** For each claim, ask whether the context supports it. Ragas defines its faithfulness score this way: identify the claims in the response, check whether each one can be inferred from the retrieved context, and divide the supported claims by all the claims <Cite n={2} />. DeepEval's `FaithfulnessMetric` has the same shape <Cite n={4} />.
+**Part 2: the support check.** For each claim, ask whether the context supports it. Ragas defines its faithfulness score this way: identify the claims in the response, check whether each one can be inferred from the retrieved context, and divide the supported claims by all the claims <Cite n={2} />. DeepEval's `FaithfulnessMetric` also extracts claims and checks each against the `retrieval_context`, but it counts a claim as truthful if it does not contradict the context <Cite n={4} />, which is a weaker test than Ragas's "can be inferred".
 
-**Part 3: the external check.** Where a source of truth exists, use it. A customer id must exist. A price must match the price table. A policy clause must be in the version of the policy that is live today. Of the three methods, it is the only one that can catch an answer that is wrong in the same way every time.
+**Part 3: the external check.** Where a source of truth exists, use it. A customer id must exist. A price must match the price table. A policy clause must be in the version of the policy that is live today. Of the three methods, it is the one that checks against the truth rather than against the context or the model's own samples, so it can catch an answer that is wrong in the same way every time and is also wrong in the context.
 
 **Self-consistency** works on a different signal. You sample the model several times and measure how much the answers agree. SelfCheckGPT uses this signal to find non-factual sentences without an external database <Cite n={1} />. The blind spot is the model that is wrong in the same way every time.
 
@@ -97,9 +97,9 @@ A hallucination test suite has three parts, and they are not equally strong.
 
 **Part 1: split the answer into claims.** "You can return it within 30 days, except final-sale items" is two claims. You check each one, because an answer that is only partly backed is not backed.
 
-**Part 2: check each claim against the given text.** Ragas scores faithfulness this way: find the claims, check whether each one follows from the retrieved text, and divide the backed claims by all claims <Cite n={2} />. DeepEval's `FaithfulnessMetric` works the same way <Cite n={4} />.
+**Part 2: check each claim against the given text.** Ragas scores faithfulness this way: find the claims, check whether each one follows from the retrieved text, and divide the backed claims by all claims <Cite n={2} />. DeepEval's `FaithfulnessMetric` also splits the answer into claims, but it only checks that a claim does not contradict the text, which is a weaker test <Cite n={4} />.
 
-**Part 3: check against a trusted source.** If you have one, use it. A customer id must exist. A price must match the price list. A policy rule must be in today's policy. This is the only one of the three that can catch an answer that is wrong the same way every time.
+**Part 3: check against a trusted source.** If you have one, use it. A customer id must exist. A price must match the price list. A policy rule must be in today's policy. This is the only one that checks the real world. A grounding check only checks the given text, so a wrong source text would pass.
 
 **Asking several times** uses a different signal: do the answers agree? SelfCheckGPT uses this to find false sentences without an outside database <Cite n={1} />. It misses a model that is wrong the same way every time.
 
@@ -120,9 +120,9 @@ In the tutorial's view, each number has its own fix. A grounding failure points 
 
 **অংশ ১: দাবি আলাদা করা।** দাবি যাচাই করার আগে উত্তরটাকে ছোট ছোট (atomic) দাবিতে ভাঙতে হয়। "এটা ৩০ দিনের মধ্যে ফেরত দেওয়া যাবে, তবে final sale চিহ্নিত জিনিস বাদে" — এখানে দুটো দাবি। আংশিকভাবে সমর্থিত উত্তর সমর্থিত নয়, তাই grounding metric ভাঙা রূপের ওপরই কাজ করে।
 
-**অংশ ২: সমর্থনের যাচাই।** প্রতিটা দাবির জন্য দেখুন context সেটা সমর্থন করে কি না। Ragas তার faithfulness স্কোর এভাবেই সংজ্ঞায়িত করে: উত্তরের দাবিগুলো বের করা, প্রতিটা দাবি retrieved context থেকে অনুমান করা যায় কি না দেখা, আর সমর্থিত দাবির সংখ্যাকে মোট দাবির সংখ্যা দিয়ে ভাগ করা <Cite n={2} />। DeepEval-এর `FaithfulnessMetric`-ও একই গঠনে কাজ করে <Cite n={4} />।
+**অংশ ২: সমর্থনের যাচাই।** প্রতিটা দাবির জন্য দেখুন context সেটা সমর্থন করে কি না। Ragas তার faithfulness স্কোর এভাবেই সংজ্ঞায়িত করে: উত্তরের দাবিগুলো বের করা, প্রতিটা দাবি retrieved context থেকে অনুমান করা যায় কি না দেখা, আর সমর্থিত দাবির সংখ্যাকে মোট দাবির সংখ্যা দিয়ে ভাগ করা <Cite n={2} />। DeepEval-এর `FaithfulnessMetric`-ও দাবি আলাদা করে, তবে একটা দাবি তখনই truthful ধরে যখন সেটা `retrieval_context`-এর কোনো তথ্যের বিরোধিতা করে না <Cite n={4} />; এটা Ragas-এর 'অনুমান করা যায়' পরীক্ষার চেয়ে দুর্বল।
 
-**অংশ ৩: বাইরের যাচাই।** যেখানে সত্যের উৎস আছে, সেটা ব্যবহার করুন। customer id আসলেই থাকতে হবে। দাম price table-এর সাথে মিলতে হবে। policy clause আজকের চালু policy-র version-এ থাকতে হবে। তিনটা পদ্ধতির মধ্যে শুধু এটাই এমন উত্তর ধরতে পারে, যা প্রতিবার একইভাবে ভুল।
+**অংশ ৩: বাইরের যাচাই।** যেখানে সত্যের উৎস আছে, সেটা ব্যবহার করুন। customer id আসলেই থাকতে হবে। দাম price table-এর সাথে মিলতে হবে। policy clause আজকের চালু policy-র version-এ থাকতে হবে। এটাই একমাত্র পদ্ধতি যা বাস্তব দুনিয়ার সাথে মেলায়। grounding check শুধু দেওয়া লেখা মেলায়, তাই ভুল source text পাস করে যাবে।
 
 **Self-consistency** আলাদা একটা সংকেত ব্যবহার করে। model থেকে কয়েকবার sample নিয়ে মাপুন উত্তরগুলো কতটা মেলে। SelfCheckGPT এই সংকেত দিয়ে বাইরের database ছাড়াই ভুল তথ্যের বাক্য খুঁজে বের করে <Cite n={1} />। এর অন্ধ জায়গা হলো সেই model, যা প্রতিবার একইভাবে ভুল।
 
@@ -143,6 +143,8 @@ consistency failures   the model disagrees with itself across samples
 
 <Voices>
 <Technical>
+
+These examples assume fixtures and helpers (`policy`, `question`, `order_id`, `db`, `dataset`, `answer_question`, `extract_facts`, `grounding_score` and so on) that you define yourself.
 
 Build the suite as three separate test files, because they fail for different reasons:
 
@@ -175,7 +177,8 @@ def test_order_status_matches_the_database(order_id, db):
 def test_answer_is_stable_across_samples(question):
     answers = [answer_question(question, temperature=1.0) for _ in range(5)]
     facts = [frozenset(extract_facts(a)) for a in answers]
-    assert len(set(facts)) == 1, f"the answer changed: {facts}"
+    agreement = max(facts.count(f) for f in facts) / len(facts)
+    assert agreement >= 0.8, f"the answer changed: {facts}"
 ```
 
 Then measure the temperature effect, because it changes the base rate of every other number:
@@ -195,7 +198,7 @@ And add a **known-wrong** case to every file. A suite that only sees good answer
 ```python
 def test_the_check_catches_a_planted_hallucination():
     planted = "You can return any item within 90 days, including opened ones."
-    score = grounding_score(planted, context=RETURN_POLICY)
+    score = grounding_score(planted, context=RETURN_POLICY)  # same scorer as the grounding test
     assert score < 0.5, "the grounding check missed a planted hallucination"
 ```
 
@@ -203,6 +206,8 @@ That last test is the one that keeps the other tests honest.
 
 </Technical>
 <Layman>
+
+These examples assume fixtures and helpers (`policy`, `question`, `order_id`, `db`, `dataset`, `answer_question`, `extract_facts`, `grounding_score` and so on) that you define yourself.
 
 Build the suite as three separate test files, because each one fails for a different reason:
 
@@ -235,7 +240,8 @@ def test_order_status_matches_the_database(order_id, db):
 def test_answer_is_stable_across_samples(question):
     answers = [answer_question(question, temperature=1.0) for _ in range(5)]
     facts = [frozenset(extract_facts(a)) for a in answers]
-    assert len(set(facts)) == 1, f"the answer changed: {facts}"
+    agreement = max(facts.count(f) for f in facts) / len(facts)
+    assert agreement >= 0.8, f"the answer changed: {facts}"
 ```
 
 Then measure how the temperature changes the result, because it changes every other number:
@@ -255,7 +261,7 @@ And add one answer that you know is wrong to every file. If the tests only ever 
 ```python
 def test_the_check_catches_a_planted_hallucination():
     planted = "You can return any item within 90 days, including opened ones."
-    score = grounding_score(planted, context=RETURN_POLICY)
+    score = grounding_score(planted, context=RETURN_POLICY)  # same scorer as the grounding test
     assert score < 0.5, "the grounding check missed a planted hallucination"
 ```
 
@@ -263,6 +269,8 @@ That last test keeps the other tests honest.
 
 </Layman>
 <Bangla>
+
+এই উদাহরণগুলো ধরে নেয় যে `policy`, `question`, `order_id`, `db`, `dataset`, `answer_question`, `extract_facts`, `grounding_score` ইত্যাদি fixture ও helper আপনি নিজে বানিয়েছেন।
 
 suite তিনটি আলাদা টেস্ট ফাইলে বানান, কারণ ব্যর্থ হওয়ার কারণ আলাদা:
 
@@ -295,7 +303,8 @@ def test_order_status_matches_the_database(order_id, db):
 def test_answer_is_stable_across_samples(question):
     answers = [answer_question(question, temperature=1.0) for _ in range(5)]
     facts = [frozenset(extract_facts(a)) for a in answers]
-    assert len(set(facts)) == 1, f"the answer changed: {facts}"
+    agreement = max(facts.count(f) for f in facts) / len(facts)
+    assert agreement >= 0.8, f"the answer changed: {facts}"
 ```
 
 তারপর temperature-এর প্রভাব মাপুন, কারণ এটা বাকি প্রতিটি সংখ্যার base rate বদলায়:
@@ -315,7 +324,7 @@ def test_hallucination_rate_by_temperature(temperature, dataset):
 ```python
 def test_the_check_catches_a_planted_hallucination():
     planted = "You can return any item within 90 days, including opened ones."
-    score = grounding_score(planted, context=RETURN_POLICY)
+    score = grounding_score(planted, context=RETURN_POLICY)  # same scorer as the grounding test
     assert score < 0.5, "the grounding check missed a planted hallucination"
 ```
 
@@ -430,7 +439,7 @@ This advice is the tutorial's own. It does not come from the sources.
 | --- | --- |
 | Hallucination | A claim in the output that the supplied context does not support |
 | Grounding check | Checking every claim in the output against the context |
-| Faithfulness | The share of the claims in an answer that the retrieved context supports |
+| Faithfulness | The share of the claims in an answer that the retrieved context supports (Ragas); DeepEval counts the claims that do not contradict it |
 | Self-consistency | Sampling several times and measuring how much the answers agree |
 | SelfCheckGPT | A sampling-based method that finds non-factual sentences without an external database |
 | Atomic claim | One indivisible statement, split out of a longer answer |

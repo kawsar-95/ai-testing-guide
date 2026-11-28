@@ -1,6 +1,6 @@
 export const metadata = { title: 'RAG Testing Fundamentals', description: 'Test a RAG pipeline end to end: retrieval quality, precision and recall, end-to-end faithfulness, and the four failure modes.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks', publisher: 'arXiv', url: 'https://arxiv.org/abs/2005.11401', accessed: '2026-11-01' },
     { title: 'What is Ragas?', publisher: 'Ragas (docs)', url: 'https://docs.ragas.io/en/stable/', accessed: '2026-11-01' },
@@ -33,7 +33,7 @@ question -> retriever -> context -> prompt -> model -> answer
 - **Recall@k**: of all the relevant passages, how many did the retriever find? Low recall means the answer is missing information, and the model can make something up to fill the gap.
 - **Context precision**: a Ragas metric for the order of the results: are the relevant chunks ranked above the irrelevant ones <Cite n={3} />?
 
-**End-to-end quality** is the second. Does the answer match the context that was given? The Ragas metric catalogue keeps these apart: Context Precision and Context Recall measure the retriever, and Faithfulness and Response Relevancy measure the answer <Cite n={3} />. Ragas says its aim is to move from "vibe checks" to systematic evaluation loops <Cite n={2} />.
+**End-to-end quality** is the second. Does the answer match the context that was given? Ragas's RAG metrics include Context Precision, Context Recall, Faithfulness and Response Relevancy (also called Answer Relevancy) <Cite n={3} />. In this tutorial's grouping, the first two measure the retriever and the last two measure the answer. Ragas says its aim is to move from "vibe checks" to systematic evaluation loops <Cite n={2} />.
 
 The four failure modes to look for:
 
@@ -55,7 +55,7 @@ Test the search part first. If it brings back the wrong passages, the answer tes
 - **Recall@k**: of all the useful passages, how many came back? Low recall means missing facts, and the model can fill the gap with made-up text.
 - **Context precision**: a Ragas score for the order of the results: are the useful passages near the top <Cite n={3} />?
 
-Then test the writing part: does the answer stick to the passages? Ragas keeps these scores apart, some for the search part and some for the answer <Cite n={3} />.
+Then test the writing part: does the answer stick to the passages? Ragas has several RAG scores <Cite n={3} />. In this tutorial's grouping, some are for the search part and some are for the answer.
 
 There are four ways it goes wrong. The right passage was not found. It was found but not put into the prompt. It was in the prompt but the answer ignored it. Or no passage had the answer, and the model made one up. The last one is fixed in the knowledge base, not in the model.
 
@@ -76,7 +76,7 @@ question -> retriever -> context -> prompt -> model -> answer
 - **Recall@k**: সব প্রাসঙ্গিক অংশের কতগুলো পাওয়া গেল? recall কম হলে তথ্য অনুপস্থিত, আর model ফাঁকটা বানিয়ে পূরণ করতে পারে।
 - **Context precision**: ফলাফলের ক্রম মাপার একটা Ragas metric: প্রাসঙ্গিক chunk-গুলো কি অপ্রাসঙ্গিকগুলোর আগে আছে <Cite n={3} />?
 
-**End-to-end quality** হলো দ্বিতীয়টা। উত্তর কি দেওয়া context-এর সাথে মেলে? Ragas-এর metric তালিকা এগুলো আলাদা রাখে: Context Precision আর Context Recall মাপে retriever, আর Faithfulness ও Response Relevancy মাপে উত্তর <Cite n={3} />। Ragas বলে, এর লক্ষ্য হলো "vibe check" থেকে পদ্ধতিগত evaluation loop-এ যাওয়া <Cite n={2} />।
+**End-to-end quality** হলো দ্বিতীয়টা। উত্তর কি দেওয়া context-এর সাথে মেলে? Ragas-এর RAG metric-এর মধ্যে আছে Context Precision, Context Recall, Faithfulness ও Response Relevancy (Answer Relevancy নামেও পরিচিত) <Cite n={3} />। এই টিউটোরিয়ালের ভাগে প্রথম দুটো retriever মাপে, আর শেষ দুটো উত্তর মাপে। Ragas বলে, এর লক্ষ্য হলো "vibe check" থেকে পদ্ধতিগত evaluation loop-এ যাওয়া <Cite n={2} />।
 
 চারটা failure mode খুঁজুন:
 
@@ -102,9 +102,10 @@ Testing a RAG system means testing two components that have a contract between t
 ```python
 def test_retrieval_finds_the_right_chunks(dataset, retriever):
     for case in dataset:
+        # search returns chunk objects with .id and .text
         retrieved = retriever.search(case.question, k=5)
         expected = set(case.relevant_chunk_ids)
-        found = set(retrieved)
+        found = {chunk.id for chunk in retrieved}
         recall = len(expected & found) / len(expected)
         precision = len(expected & found) / len(found)
         assert recall >= 0.9, f"{case.id}: recall {recall:.2f}"
@@ -116,7 +117,7 @@ The thresholds are a decision, not a fact. A high recall and a low precision is 
 **End-to-end test.** The answer must be supported by the retrieved context. The Ragas metric set splits this into two checks:
 
 - Faithfulness checks the answer against the retrieved context <Cite n={3} />.
-- Response Relevancy checks the answer against the question <Cite n={3} />.
+- Response Relevancy (also called Answer Relevancy) checks the answer against the question <Cite n={3} />.
 
 Faithfulness is the one that catches a hallucination, and it uses an LLM as the judge.
 
@@ -140,7 +141,7 @@ Think of two promises. The retriever promises: "these passages answer the questi
 
 For the retriever, keep a labelled list: each question with the ids of the passages that should come back. Measure recall and precision against it. The pass marks are a team decision, not a fact.
 
-For the answer, check that the passages support it. Ragas has a Faithfulness score for this, and a separate score for whether the answer fits the question <Cite n={3} />. Faithfulness is the one that catches made-up facts, and it uses an LLM as the judge.
+For the answer, check that the passages support it. Ragas has a Faithfulness score for this, and a separate score for whether the answer fits the question (Response Relevancy, also called Answer Relevancy) <Cite n={3} />. Faithfulness is the one that catches made-up facts, and it uses an LLM as the judge.
 
 When an answer is wrong, ask in order: was the right passage found? Was it in the prompt? Does the answer match it? Did any passage have the answer at all? The first "no" tells you what to fix.
 
@@ -156,9 +157,10 @@ Always test a question that the knowledge base cannot answer. The right reply is
 ```python
 def test_retrieval_finds_the_right_chunks(dataset, retriever):
     for case in dataset:
+        # search returns chunk objects with .id and .text
         retrieved = retriever.search(case.question, k=5)
         expected = set(case.relevant_chunk_ids)
-        found = set(retrieved)
+        found = {chunk.id for chunk in retrieved}
         recall = len(expected & found) / len(expected)
         precision = len(expected & found) / len(found)
         assert recall >= 0.9, f"{case.id}: recall {recall:.2f}"
@@ -167,7 +169,7 @@ def test_retrieval_finds_the_right_chunks(dataset, retriever):
 
 Threshold দুটো একটা সিদ্ধান্ত, কোনো তথ্য নয়। বেশি recall আর কম precision অনেক সময়ই সঠিক বিনিময়, যদি সিস্টেম লম্বা context সামলাতে পারে। কম recall সবসময় বাগ, কারণ তথ্যটা সেখানেই নেই।
 
-**End-to-end test।** উত্তর retrieved context দিয়ে সমর্থিত হতে হবে। Ragas-এর metric সেট এটা ভাগ করে: Faithfulness উত্তরকে retrieved context-এর সাথে মেলায়, আর Response Relevancy উত্তরকে প্রশ্নের সাথে মেলায় <Cite n={3} />। Faithfulness-ই hallucination ধরে, আর এটা judge হিসেবে একটা LLM ব্যবহার করে।
+**End-to-end test।** উত্তর retrieved context দিয়ে সমর্থিত হতে হবে। Ragas-এর metric সেট এটা ভাগ করে: Faithfulness উত্তরকে retrieved context-এর সাথে মেলায়, আর Response Relevancy (Answer Relevancy নামেও পরিচিত) উত্তরকে প্রশ্নের সাথে মেলায় <Cite n={3} />। Faithfulness-ই hallucination ধরে, আর এটা judge হিসেবে একটা LLM ব্যবহার করে।
 
 **Failure mode triage।** উত্তর ভুল হলে কোথায় তাকাতে হবে সেটা বলে দেয় যে টেস্টটি চারটা failure mode আলাদা করে:
 
@@ -218,7 +220,8 @@ Then the retrieval test and the end-to-end test as separate files:
 # tests/ai/test_retrieval.py
 def test_retrieval_quality(retriever):
     for case in CASES:
-        found = set(retriever.search(case["question"], k=5))
+        # search returns chunk objects with .id and .text
+        found = {chunk.id for chunk in retriever.search(case["question"], k=5)}
         expected = set(case["relevant_chunk_ids"])
         assert expected <= found, (
             f"{case['id']}: missing {expected - found}"
@@ -250,8 +253,8 @@ And the retrieval-gap test, which is the one that catches the expensive failure:
 
 ```python
 def test_says_it_does_not_know_when_the_base_has_no_answer(rag_chain):
-    result = rag_chain.answer("What is your policy for returning a yacht?")
-    assert "don't have" in result.lower() or "not covered" in result.lower()
+    answer = rag_chain.answer("What is your policy for returning a yacht?").text.lower()
+    assert "don't have" in answer or "not covered" in answer
 ```
 
 Finally, check the token cost of the retrieval, because it is the number that scales:
@@ -310,7 +313,8 @@ CASES = [
 # tests/ai/test_retrieval.py
 def test_retrieval_quality(retriever):
     for case in CASES:
-        found = set(retriever.search(case["question"], k=5))
+        # search returns chunk objects with .id and .text
+        found = {chunk.id for chunk in retriever.search(case["question"], k=5)}
         expected = set(case["relevant_chunk_ids"])
         assert expected <= found, (
             f"{case['id']}: missing {expected - found}"
@@ -342,8 +346,8 @@ def test_answer_is_faithful_to_the_retrieved_context(rag_chain):
 
 ```python
 def test_says_it_does_not_know_when_the_base_has_no_answer(rag_chain):
-    result = rag_chain.answer("What is your policy for returning a yacht?")
-    assert "don't have" in result.lower() or "not covered" in result.lower()
+    answer = rag_chain.answer("What is your policy for returning a yacht?").text.lower()
+    assert "don't have" in answer or "not covered" in answer
 ```
 
 শেষে, retrieval-এর token খরচ যাচাই করুন, কারণ এটাই স্কেলে যাওয়া সংখ্যা:
@@ -365,7 +369,7 @@ def test_retrieval_does_not_bloat_the_context(retriever):
 <Voices>
 <Technical>
 
-**Mistake 1: testing only the answer.** If the answer is wrong, the failure could be in either half. Test the retrieval separately <Cite n={3} />.
+**Mistake 1: testing only the answer.** If the answer is wrong, the failure could be in either half. Test the retrieval separately. Ragas lists Context Precision and Context Recall as separate metrics from Faithfulness <Cite n={3} />.
 
 **Mistake 2: no labelled retrieval set.** Without known-relevant chunks you cannot measure precision or recall at all.
 
@@ -380,7 +384,7 @@ def test_retrieval_does_not_bloat_the_context(retriever):
 </Technical>
 <Layman>
 
-**Mistake 1: testing only the answer.** A wrong answer can come from either half. Test the search part on its own too <Cite n={3} />.
+**Mistake 1: testing only the answer.** A wrong answer can come from either half. Test the search part on its own too. Ragas lists Context Precision and Context Recall as separate scores from Faithfulness <Cite n={3} />.
 
 **Mistake 2: no labelled question list.** Without it you cannot measure precision or recall.
 
@@ -395,7 +399,7 @@ def test_retrieval_does_not_bloat_the_context(retriever):
 </Layman>
 <Bangla>
 
-**ভুল ১: শুধু উত্তর টেস্ট করা।** উত্তর ভুল হলে ব্যর্থতা যেকোনো অর্ধেকে হতে পারে। retrieval আলাদা করে টেস্ট করুন <Cite n={3} />।
+**ভুল ১: শুধু উত্তর টেস্ট করা।** উত্তর ভুল হলে ব্যর্থতা যেকোনো অর্ধেকে হতে পারে। retrieval আলাদা করে টেস্ট করুন। Ragas Context Precision আর Context Recall-কে Faithfulness থেকে আলাদা metric হিসেবে তালিকাভুক্ত করে <Cite n={3} />।
 
 **ভুল ২: লেবেল করা retrieval set নেই।** কোন অংশ প্রাসঙ্গিক সেটা না জানলে precision বা recall মাপাই যায় না।
 

@@ -1,8 +1,8 @@
 export const metadata = { title: 'CI/CD Eval Pipelines', description: 'Put the evals in the pipeline: a quality gate that blocks the merge, a cost gate, and the PR report that shows the numbers.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
-    { title: 'CI/CD integration', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
+    { title: 'Testing Prompts with GitHub Actions', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/integrations/github-action/', accessed: '2026-11-01' },
     { title: 'GitHub Actions documentation', publisher: 'GitHub', url: 'https://docs.github.com/en/actions', accessed: '2026-11-01' },
     { title: 'Command line', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/usage/command-line/', accessed: '2026-11-01' },
     { title: 'Deterministic assertions', publisher: 'Promptfoo (docs)', url: 'https://www.promptfoo.dev/docs/configuration/expected-outputs/deterministic/', accessed: '2026-11-01' },
@@ -78,7 +78,7 @@ on a schedule    the expensive evals: the full dataset, the model comparison
 <Voices>
 <Technical>
 
-The workflow file is a normal GitHub Actions workflow with the eval step added. The important detail is that the eval step **fails the job**, because a job that reports a failure without exiting non-zero does not block anything <Cite n={2} />.
+The workflow file is a normal GitHub Actions workflow with the eval step added. The important detail is that the eval step **fails the job**, because a job that reports a failure without exiting non-zero does not block anything.
 
 ```yaml
 # .github/workflows/eval.yml
@@ -91,15 +91,15 @@ jobs:
   eval:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
       - run: npm ci
       - name: Run the eval gate
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: npx promptfoo eval --output results.json
+        run: npx promptfoo eval --output results.json --no-cache
 ```
 
 The **paths** filter matters. Without it, every pull request pays for the eval, and the team learns to ignore the gate.
@@ -109,6 +109,7 @@ The **threshold** is enforced by the assertions in the config rather than by a s
 ```yaml
 defaultTest:
   assert:
+    # llm-rubric is model-graded: set a grader provider and its API key
     - type: llm-rubric
       value: The answer only uses the policy
       metric: faithfulness
@@ -126,6 +127,8 @@ defaultTest:
       threshold: 5000
 ```
 
+The latency assertion needs `--no-cache` <Cite n={4} />.
+
 And the **report** is what turns a red check into a fixable problem. Promptfoo's GitHub Action runs the eval when prompt files change. It also posts a comment on the pull request with a link to the results <Cite n={1} />.
 
 The last piece is **flakiness control**. An eval that fails randomly will get ignored, and an ignored gate is worse than no gate. The controls are:
@@ -137,7 +140,7 @@ The last piece is **flakiness control**. An eval that fails randomly will get ig
 </Technical>
 <Layman>
 
-The workflow file is a normal GitHub Actions workflow with the eval step added. The key detail is that the eval step **fails the job**. A job that reports a failure but does not exit non-zero blocks nothing <Cite n={2} />.
+The workflow file is a normal GitHub Actions workflow with the eval step added. The key detail is that the eval step **fails the job**. A job that reports a failure but does not exit non-zero blocks nothing.
 
 ```yaml
 # .github/workflows/eval.yml
@@ -150,15 +153,15 @@ jobs:
   eval:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
       - run: npm ci
       - name: Run the eval gate
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: npx promptfoo eval --output results.json
+        run: npx promptfoo eval --output results.json --no-cache
 ```
 
 The **paths** filter matters. Without it, every pull request pays for the eval. Then the team learns to ignore the gate.
@@ -168,6 +171,7 @@ The **threshold** is enforced by the assertions in the config, not by a separate
 ```yaml
 defaultTest:
   assert:
+    # llm-rubric is model-graded: set a grader provider and its API key
     - type: llm-rubric
       value: The answer only uses the policy
       metric: faithfulness
@@ -185,6 +189,8 @@ defaultTest:
       threshold: 5000
 ```
 
+The latency assertion needs `--no-cache` <Cite n={4} />.
+
 The **report** turns a red check into a problem you can fix. Promptfoo's GitHub Action runs the eval when prompt files change. It posts a comment on the pull request with a link to the results <Cite n={1} />.
 
 The last piece is **flakiness control**. An eval that fails randomly will get ignored. An ignored gate is worse than no gate. Run the model at a fixed temperature. Average the score over several samples per case. Put the flaky cases in their own suite, which runs on a schedule and does not block the merge.
@@ -192,7 +198,7 @@ The last piece is **flakiness control**. An eval that fails randomly will get ig
 </Layman>
 <Bangla>
 
-workflow ফাইল একটা সাধারণ GitHub Actions workflow, eval ধাপ যোগ করা। গুরুত্বপূর্ণ বিষয় হলো eval ধাপ **job-কে ব্যর্থ করায়**, কারণ non-zero ছাড়া ব্যর্থতা রিপোর্ট করা job কিছু আটকায় না <Cite n={2} />।
+workflow ফাইল একটা সাধারণ GitHub Actions workflow, eval ধাপ যোগ করা। গুরুত্বপূর্ণ বিষয় হলো eval ধাপ **job-কে ব্যর্থ করায়**, কারণ non-zero ছাড়া ব্যর্থতা রিপোর্ট করা job কিছু আটকায় না।
 
 ```yaml
 # .github/workflows/eval.yml
@@ -205,15 +211,15 @@ jobs:
   eval:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
       - run: npm ci
       - name: Run the eval gate
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: npx promptfoo eval --output results.json
+        run: npx promptfoo eval --output results.json --no-cache
 ```
 
 **paths** ফিল্টারটা গুরুত্বপূর্ণ: এটা ছাড়া প্রতিটা pull request-এর জন্য eval-এর খরচ, আর দল শেখে যায় gate উপেক্ষা করতে।
@@ -223,6 +229,7 @@ jobs:
 ```yaml
 defaultTest:
   assert:
+    # llm-rubric is model-graded: set a grader provider and its API key
     - type: llm-rubric
       value: The answer only uses the policy
       metric: faithfulness
@@ -239,6 +246,8 @@ defaultTest:
     - type: latency
       threshold: 5000
 ```
+
+latency assertion-এর জন্য `--no-cache` লাগে <Cite n={4} />।
 
 আর **report**, যেটা লাল চেককে সমাধানযোগ্য সমস্যায় বদলে দেয়। Promptfoo-র GitHub Action prompt ফাইল বদলালে eval চালায় আর pull request-এ ফলাফলের link-সহ comment দেয় <Cite n={1} />।
 
@@ -261,7 +270,7 @@ The workflow runs the eval and fails on a threshold. Promptfoo's `eval` command 
         run: npx promptfoo eval --output results.json --no-cache
 ```
 
-A non-zero exit fails the step, which fails the job, which blocks the merge once that check is required <Cite n={2} />.
+A non-zero exit fails the step, which fails the job, which blocks the merge once that check is required.
 
 The **report on the pull request** comes from Promptfoo's GitHub Action, which needs permission to post pull-request comments and posts a link to the results <Cite n={1} />:
 
@@ -293,6 +302,7 @@ And the **flaky-case isolation**, which is what keeps the gate trusted:
 ```yaml
 defaultTest:
   assert:
+    # llm-rubric is model-graded: set a grader provider and its API key
     - type: llm-rubric
       value: The answer only uses the policy
       metric: faithfulness
@@ -314,7 +324,7 @@ The workflow runs the eval and fails on a threshold. Promptfoo's `eval` command 
         run: npx promptfoo eval --output results.json --no-cache
 ```
 
-A non-zero exit fails the step. That fails the job. Once the check is required, the failed job blocks the merge <Cite n={2} />.
+A non-zero exit fails the step. That fails the job. Once the check is required, the failed job blocks the merge.
 
 The **report on the pull request** comes from Promptfoo's GitHub Action. It needs permission to post pull-request comments. It posts a link to the results <Cite n={1} />:
 
@@ -346,6 +356,7 @@ The **flaky-case isolation** is what keeps people trusting the gate:
 ```yaml
 defaultTest:
   assert:
+    # llm-rubric is model-graded: set a grader provider and its API key
     - type: llm-rubric
       value: The answer only uses the policy
       metric: faithfulness
@@ -367,7 +378,7 @@ workflow eval চালায় আর threshold-এ ব্যর্থ হয�
         run: npx promptfoo eval --output results.json --no-cache
 ```
 
-non-zero exit step ব্যর্থ করায়, যেটা job ব্যর্থ করায়, আর সেই check required হলে merge আটকায় <Cite n={2} />।
+non-zero exit step ব্যর্থ করায়, যেটা job ব্যর্থ করায়, আর সেই check required হলে merge আটকায়।
 
 **pull request-এ report** আসে Promptfoo-র GitHub Action থেকে, যেটার pull-request comment দেওয়ার permission লাগে আর যেটা ফলাফলের link দেয় <Cite n={1} />:
 
@@ -399,6 +410,7 @@ defaultTest:
 ```yaml
 defaultTest:
   assert:
+    # llm-rubric is model-graded: set a grader provider and its API key
     - type: llm-rubric
       value: The answer only uses the policy
       metric: faithfulness

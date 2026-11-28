@@ -1,6 +1,6 @@
 export const metadata = { title: 'Load Testing AI Systems', description: 'Load test an LLM endpoint: throughput, time to first token, tokens per second, rate limits, and the quality cost of load.' }
 export const page = {
-  updated: '2026-11-10',
+  updated: '2026-11-27',
   sources: [
     { title: 'Locust documentation', publisher: 'Locust', url: 'https://docs.locust.io/en/stable/', accessed: '2026-11-01' },
     { title: 'Messages API reference', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-11-01' },
@@ -19,45 +19,45 @@ An LLM endpoint does not have one latency. It has a time to first token and a to
 <Voices>
 <Technical>
 
-Load testing an AI system measures three things that a normal API load test does not.
+Load testing an AI system measures five things that a normal API load test does not.
 
 1. **Time to first token (TTFT).** How long until the user sees the first word. This is what the user perceives as responsiveness. A request that takes ten seconds total but gives its first token in 300ms feels fast.
 2. **Tokens per second (TPS).** How fast the model produces the rest. This is what determines how long a long answer takes to arrive.
 3. **Total latency.** The sum, and it is a function of the output length, not just of the server. A prompt that produces 800 tokens takes longer than one that produces 50, on the same machine.
 
-The consequence is that **the load test has to fix the output length**, or it is not comparing like with like. `max_tokens` is the control, and it has to be the same on every arm.
+The consequence is that **the load test has to control the output length**, or it is not comparing like with like. `max_tokens` caps the output length, and it has to be the same on every arm <Cite n={2} />. The model can still stop earlier, so also record `output_tokens`.
 
-The fourth thing is **rate limiting**. Every provider limits you, and the limit is often measured in tokens per minute rather than requests per minute. A load test that ignores the token rate will hit the limit and measure your retry logic instead of your server <Cite n={3} />.
+The fourth thing is **rate limiting**. Every provider limits you, and the limit is measured in requests per minute and in input and output tokens per minute, and the token limits are often the ones you hit first <Cite n={3} />. A load test that ignores the token rate will hit the limit and measure your retry logic instead of your server.
 
 And the fifth is that **load has a quality cost**. A server under strain can degrade by truncating, by serving a shorter answer, or by falling back to a smaller model. A load test that only checks the status code misses all three.
 
 </Technical>
 <Layman>
 
-Load testing an AI system measures three things that a normal API load test does not.
+Load testing an AI system measures five things that a normal API load test does not.
 
 1. **Time to first token (TTFT).** How long until the user sees the first word. This is how fast the system feels. A request that takes ten seconds in total but shows its first token in 300ms feels fast.
 2. **Tokens per second (TPS).** How fast the model writes the rest of the answer. It decides how long a long answer takes to arrive.
 3. **Total latency.** The two added together. It depends on the output length, not only on the server. A prompt that gives 800 tokens takes longer than one that gives 50, on the same machine.
 
-So the load test has to fix the output length. Otherwise you are not comparing like with like. `max_tokens` is the control. It must be the same on every arm of the test.
+So the load test has to control the output length. Otherwise you are not comparing like with like. `max_tokens` caps the output length. It must be the same on every arm of the test <Cite n={2} />. The model can still stop earlier, so also record `output_tokens`.
 
-The fourth thing is **rate limiting**. Every provider limits you. The limit is often counted in tokens per minute, not requests per minute. If the test ignores the token rate, it hits the limit and measures your retry logic instead of your server <Cite n={3} />.
+The fourth thing is **rate limiting**. Every provider limits you. The limit is counted in requests per minute and in input and output tokens per minute. The token limits are often the ones you hit first <Cite n={3} />. If the test ignores the token rate, it hits the limit and measures your retry logic instead of your server.
 
 The fifth is that **load has a quality cost**. A strained server can cut answers short, give a shorter answer, or fall back to a smaller model. A test that only checks the status code misses all three.
 
 </Layman>
 <Bangla>
 
-AI সিস্টেমের load test তিনটা জিনিস মাপে যেগুলো সাধারণ API load test মাপে না:
+AI সিস্টেমের load test পাঁচটা জিনিস মাপে যেগুলো সাধারণ API load test মাপে না:
 
 1. **Time to first token (TTFT)।** ব্যবহারকারী প্রথম শব্দ কবে দেখে। এটাই ব্যবহারকারীর কাছে দ্রুততার অনুভূতি। মোট দশ সেকেন্ড লাগলেও প্রথম token ৩০০ms-এ এলে দ্রুত মনে হয়।
 2. **Tokens per second (TPS)।** বাকি উত্তর model কত দ্রুত বানায়। লম্বা উত্তর কত সময়ে আসবে তা এটা নির্ধারণ করে।
 3. **মোট latency।** দুটোর যোগ, আর এটা আউটপুট দৈর্ঘ্যের ফলাফল, শুধু server-এর নয়। ৮০০ token উৎপন্ন করা prompt একই মেশিনে ৫০ token উৎপন্ন করা prompt-এর চেয়ে বেশি সময় নেয়।
 
-ফলে **load test-এ আউটপুট দৈর্ঘ্য স্থির করতে হবে**, নইলে তুলনা তুলনা হবে না। `max_tokens` হলো control, আর প্রতিটা arm-এ এটা একই রাখতে হবে।
+ফলে **load test-এ আউটপুট দৈর্ঘ্য নিয়ন্ত্রণ করতে হবে**, নইলে তুলনা তুলনা হবে না। `max_tokens` আউটপুট দৈর্ঘ্যের ঊর্ধ্বসীমা ঠিক করে, আর প্রতিটা arm-এ এটা একই রাখতে হবে <Cite n={2} />। model তবু আগে থামতে পারে, তাই `output_tokens`-ও রেকর্ড করুন।
 
-চতুর্থ বিষয় হলো **rate limiting**। প্রতিটা provider আপনাকে সীমা দেয়, আর সেই সীমা প্রায়ই প্রতি মিনিটে request নয়, প্রতি মিনিটে token দিয়ে মাপা হয়। যে load test token rate উপেক্ষা করে সেটা সীমায় ঠেকে গিয়ে আপনার server নয়, retry logic মাপবে <Cite n={3} />।
+চতুর্থ বিষয় হলো **rate limiting**। প্রতিটা provider আপনাকে সীমা দেয়, আর সেই সীমা মাপা হয় প্রতি মিনিটে request আর প্রতি মিনিটে input ও output token দিয়ে, আর token সীমাতেই প্রায়ই আগে ঠেকতে হয় <Cite n={3} />। যে load test token rate উপেক্ষা করে সেটা সীমায় ঠেকে গিয়ে আপনার server নয়, retry logic মাপবে।
 
 আর পঞ্চম হলো **load-এর একটা মানের দাম আছে**। চাপের নিচের server উত্তর কেটে দিতে পারে, ছোট উত্তর দিতে পারে, বা ছোট model-এ ফিরে যেতে পারে। শুধু status code দেখা একটা load test তিনটিই মিস করে।
 
@@ -75,6 +75,8 @@ Locust drives the load and gives you the percentile numbers <Cite n={1} />:
 
 ```python
 from locust import HttpUser, task, between
+
+LONG_POLICY_QUESTION = "Explain the full return, refund, and warranty policy for laptops, including every exception."
 
 
 class SupportUser(HttpUser):
@@ -97,25 +99,49 @@ class SupportUser(HttpUser):
 
 The weighted mix matters: the long question is about one request in six (weights 10 and 2) but a much larger share of the tokens and of the wall-clock time. A load test with only short questions will never find the bottleneck.
 
-**The measurement** has to separate TTFT from total time, and that means the client has to read the stream rather than wait for the body:
+**The measurement** has to separate TTFT from total time, and that means the client has to read the stream rather than wait for the body. Locust's `self.client.post` does not stream, so use a separate streaming client such as this one for the timing:
 
 ```python
-async def measure_one(client, payload) -> dict[str, float]:
+import json
+import time
+
+import httpx
+
+
+async def measure_one(client: httpx.AsyncClient, payload: dict) -> dict:
+    # Assumes /api/chat forwards the Anthropic streaming events as server-sent events.
     start = time.perf_counter()
     first_token_at = None
-    tokens = 0
+    input_tokens = 0
+    output_tokens = 0
+    stop_reason = None
+    model = None
     async with client.stream("POST", "/api/chat", json=payload) as response:
         async for line in response.aiter_lines():
             if not line.startswith("data: "):
                 continue
-            if first_token_at is None:
-                first_token_at = time.perf_counter()
-            tokens += 1  # counts stream events, a proxy for tokens
+            event = json.loads(line[len("data: "):])
+            kind = event.get("type")
+            if kind == "message_start":
+                model = event["message"]["model"]
+                input_tokens = event["message"]["usage"]["input_tokens"]
+            elif kind == "content_block_delta" and event["delta"].get("type") == "text_delta":
+                if first_token_at is None:
+                    first_token_at = time.perf_counter()  # first text, not message_start
+            elif kind == "message_delta":
+                stop_reason = event["delta"].get("stop_reason")
+                output_tokens = event["usage"]["output_tokens"]
     end = time.perf_counter()
+    first_token_at = first_token_at or end
     return {
+        "started_at": start,
         "ttft_ms": (first_token_at - start) * 1000,
         "total_ms": (end - start) * 1000,
-        "tps": tokens / max(end - start, 1e-6),
+        "tps": output_tokens / max(end - first_token_at, 1e-6),
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "stop_reason": stop_reason,
+        "model": model,
     }
 ```
 
@@ -123,6 +149,7 @@ The **quality under load** check is the one nobody writes. The test asserts that
 
 ```python
 def test_the_answer_is_still_complete_under_load(load_results):
+    # load_results: the list of dicts that measure_one returned during the run
     truncated = [r for r in load_results if r["stop_reason"] == "max_tokens"]
     assert len(truncated) / len(load_results) < 0.01, (
         f"{len(truncated)} answers were truncated under load"
@@ -140,6 +167,8 @@ Locust drives the load and gives you the percentile numbers <Cite n={1} />:
 
 ```python
 from locust import HttpUser, task, between
+
+LONG_POLICY_QUESTION = "Explain the full return, refund, and warranty policy for laptops, including every exception."
 
 
 class SupportUser(HttpUser):
@@ -162,25 +191,49 @@ class SupportUser(HttpUser):
 
 The mix is weighted. The long question is about one request in six (weights 10 and 2). But it takes a much larger share of the tokens and of the waiting time. A test with only short questions never finds the bottleneck.
 
-**The measurement** must separate TTFT from total time. So the client has to read the stream instead of waiting for the whole body:
+**The measurement** must separate TTFT from total time. So the client has to read the stream instead of waiting for the whole body. Locust's `self.client.post` does not stream, so use a separate streaming client such as this one for the timing:
 
 ```python
-async def measure_one(client, payload) -> dict[str, float]:
+import json
+import time
+
+import httpx
+
+
+async def measure_one(client: httpx.AsyncClient, payload: dict) -> dict:
+    # Assumes /api/chat forwards the Anthropic streaming events as server-sent events.
     start = time.perf_counter()
     first_token_at = None
-    tokens = 0
+    input_tokens = 0
+    output_tokens = 0
+    stop_reason = None
+    model = None
     async with client.stream("POST", "/api/chat", json=payload) as response:
         async for line in response.aiter_lines():
             if not line.startswith("data: "):
                 continue
-            if first_token_at is None:
-                first_token_at = time.perf_counter()
-            tokens += 1  # counts stream events, a proxy for tokens
+            event = json.loads(line[len("data: "):])
+            kind = event.get("type")
+            if kind == "message_start":
+                model = event["message"]["model"]
+                input_tokens = event["message"]["usage"]["input_tokens"]
+            elif kind == "content_block_delta" and event["delta"].get("type") == "text_delta":
+                if first_token_at is None:
+                    first_token_at = time.perf_counter()  # first text, not message_start
+            elif kind == "message_delta":
+                stop_reason = event["delta"].get("stop_reason")
+                output_tokens = event["usage"]["output_tokens"]
     end = time.perf_counter()
+    first_token_at = first_token_at or end
     return {
+        "started_at": start,
         "ttft_ms": (first_token_at - start) * 1000,
         "total_ms": (end - start) * 1000,
-        "tps": tokens / max(end - start, 1e-6),
+        "tps": output_tokens / max(end - first_token_at, 1e-6),
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "stop_reason": stop_reason,
+        "model": model,
     }
 ```
 
@@ -188,6 +241,7 @@ The **quality under load** check is the one nobody writes. The test asserts that
 
 ```python
 def test_the_answer_is_still_complete_under_load(load_results):
+    # load_results: the list of dicts that measure_one returned during the run
     truncated = [r for r in load_results if r["stop_reason"] == "max_tokens"]
     assert len(truncated) / len(load_results) < 0.01, (
         f"{len(truncated)} answers were truncated under load"
@@ -205,6 +259,8 @@ Locust load চালায় আর percentile সংখ্যা দেয়
 
 ```python
 from locust import HttpUser, task, between
+
+LONG_POLICY_QUESTION = "Explain the full return, refund, and warranty policy for laptops, including every exception."
 
 
 class SupportUser(HttpUser):
@@ -227,25 +283,49 @@ class SupportUser(HttpUser):
 
 weighted mix গুরুত্বপূর্ণ: লম্বা প্রশ্ন প্রায় ছয়টা অনুরোধের একটা (weight ১০ আর ২) কিন্তু token-এর আর wall-clock সময়ের অনেক বেশি। শুধু ছোট প্রশ্নের load test কখনো bottleneck খুঁজে পাবে না।
 
-**মাপ** TTFT আর মোট সময় আলাদা করতে হয়, আর তার জন্য client-কে body-এর জন্য অপেক্ষা না করে stream পড়তে হয়:
+**মাপ** TTFT আর মোট সময় আলাদা করতে হয়, আর তার জন্য client-কে body-এর জন্য অপেক্ষা না করে stream পড়তে হয়। Locust-এর `self.client.post` stream করে না, তাই timing-এর জন্য এটার মতো আলাদা streaming client ব্যবহার করুন:
 
 ```python
-async def measure_one(client, payload) -> dict[str, float]:
+import json
+import time
+
+import httpx
+
+
+async def measure_one(client: httpx.AsyncClient, payload: dict) -> dict:
+    # Assumes /api/chat forwards the Anthropic streaming events as server-sent events.
     start = time.perf_counter()
     first_token_at = None
-    tokens = 0
+    input_tokens = 0
+    output_tokens = 0
+    stop_reason = None
+    model = None
     async with client.stream("POST", "/api/chat", json=payload) as response:
         async for line in response.aiter_lines():
             if not line.startswith("data: "):
                 continue
-            if first_token_at is None:
-                first_token_at = time.perf_counter()
-            tokens += 1  # counts stream events, a proxy for tokens
+            event = json.loads(line[len("data: "):])
+            kind = event.get("type")
+            if kind == "message_start":
+                model = event["message"]["model"]
+                input_tokens = event["message"]["usage"]["input_tokens"]
+            elif kind == "content_block_delta" and event["delta"].get("type") == "text_delta":
+                if first_token_at is None:
+                    first_token_at = time.perf_counter()  # first text, not message_start
+            elif kind == "message_delta":
+                stop_reason = event["delta"].get("stop_reason")
+                output_tokens = event["usage"]["output_tokens"]
     end = time.perf_counter()
+    first_token_at = first_token_at or end
     return {
+        "started_at": start,
         "ttft_ms": (first_token_at - start) * 1000,
         "total_ms": (end - start) * 1000,
-        "tps": tokens / max(end - start, 1e-6),
+        "tps": output_tokens / max(end - first_token_at, 1e-6),
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "stop_reason": stop_reason,
+        "model": model,
     }
 ```
 
@@ -253,6 +333,7 @@ async def measure_one(client, payload) -> dict[str, float]:
 
 ```python
 def test_the_answer_is_still_complete_under_load(load_results):
+    # load_results: the list of dicts that measure_one returned during the run
     truncated = [r for r in load_results if r["stop_reason"] == "max_tokens"]
     assert len(truncated) / len(load_results) < 0.01, (
         f"{len(truncated)} answers were truncated under load"
@@ -273,13 +354,33 @@ The load test asserts on percentiles, not on the average, and it asserts TTFT an
 
 ```python
 # tests/perf/test_chat_load.py
+import statistics
+from collections import defaultdict
+
 import pytest
 
+EXPECTED_MODEL = "claude-sonnet-5-5"  # the model your app is configured to use
+INPUT_TOKENS_PER_MINUTE = 400_000  # example values: set these to your own limits
+OUTPUT_TOKENS_PER_MINUTE = 80_000
 
+
+def percentile(values, p):
+    return statistics.quantiles(values, n=100)[p - 1]
+
+
+def per_minute(results, key):
+    t0 = min(r["started_at"] for r in results)
+    buckets = defaultdict(int)
+    for r in results:
+        buckets[int((r["started_at"] - t0) // 60)] += r[key]
+    return buckets
+
+
+# `results` is a fixture that returns the list of dicts from measure_one for one run.
 @pytest.mark.perf
 def test_the_p95_latency_is_within_budget(results):
-    ttft = percentile(results["ttft_ms"], 95)
-    total = percentile(results["total_ms"], 95)
+    ttft = percentile([r["ttft_ms"] for r in results], 95)
+    total = percentile([r["total_ms"] for r in results], 95)
     assert ttft < 800, f"p95 time to first token is {ttft:.0f}ms"
     assert total < 6000, f"p95 total latency is {total:.0f}ms"
 ```
@@ -291,10 +392,10 @@ The **rate limit** test is the one that stops the load test from measuring your 
 ```python
 @pytest.mark.perf
 def test_the_rate_limit_is_respected_not_exceeded(results):
-    total_tokens = sum(r["output_tokens"] for r in results)
-    assert total_tokens <= TOKEN_LIMIT_PER_MINUTE, (
-        f"the test sent {total_tokens} tokens, over the limit"
-    )
+    peak_input = max(per_minute(results, "input_tokens").values())
+    peak_output = max(per_minute(results, "output_tokens").values())
+    assert peak_input <= INPUT_TOKENS_PER_MINUTE, f"peak input was {peak_input} tokens a minute"
+    assert peak_output <= OUTPUT_TOKENS_PER_MINUTE, f"peak output was {peak_output} tokens a minute"
 ```
 
 And the **quality under load** check, the one that catches the degradation that a status code cannot:
@@ -303,7 +404,7 @@ And the **quality under load** check, the one that catches the degradation that 
 @pytest.mark.perf
 def test_no_answer_was_truncated_under_load(results):
     truncated = [r for r in results if r["stop_reason"] == "max_tokens"]
-    assert len(truncated) == 0, f"{len(truncated)} of {len(results)} were truncated"
+    assert len(truncated) / len(results) < 0.01, f"{len(truncated)} of {len(results)} were truncated"
 ```
 
 ```python
@@ -335,13 +436,33 @@ Assert on percentiles, not on the average. Check TTFT and total time as two sepa
 
 ```python
 # tests/perf/test_chat_load.py
+import statistics
+from collections import defaultdict
+
 import pytest
 
+EXPECTED_MODEL = "claude-sonnet-5-5"  # the model your app is configured to use
+INPUT_TOKENS_PER_MINUTE = 400_000  # example values: set these to your own limits
+OUTPUT_TOKENS_PER_MINUTE = 80_000
 
+
+def percentile(values, p):
+    return statistics.quantiles(values, n=100)[p - 1]
+
+
+def per_minute(results, key):
+    t0 = min(r["started_at"] for r in results)
+    buckets = defaultdict(int)
+    for r in results:
+        buckets[int((r["started_at"] - t0) // 60)] += r[key]
+    return buckets
+
+
+# `results` is a fixture that returns the list of dicts from measure_one for one run.
 @pytest.mark.perf
 def test_the_p95_latency_is_within_budget(results):
-    ttft = percentile(results["ttft_ms"], 95)
-    total = percentile(results["total_ms"], 95)
+    ttft = percentile([r["ttft_ms"] for r in results], 95)
+    total = percentile([r["total_ms"] for r in results], 95)
     assert ttft < 800, f"p95 time to first token is {ttft:.0f}ms"
     assert total < 6000, f"p95 total latency is {total:.0f}ms"
 ```
@@ -353,10 +474,10 @@ The **rate limit** test keeps the load test from measuring your retry logic:
 ```python
 @pytest.mark.perf
 def test_the_rate_limit_is_respected_not_exceeded(results):
-    total_tokens = sum(r["output_tokens"] for r in results)
-    assert total_tokens <= TOKEN_LIMIT_PER_MINUTE, (
-        f"the test sent {total_tokens} tokens, over the limit"
-    )
+    peak_input = max(per_minute(results, "input_tokens").values())
+    peak_output = max(per_minute(results, "output_tokens").values())
+    assert peak_input <= INPUT_TOKENS_PER_MINUTE, f"peak input was {peak_input} tokens a minute"
+    assert peak_output <= OUTPUT_TOKENS_PER_MINUTE, f"peak output was {peak_output} tokens a minute"
 ```
 
 Next is the **quality under load** check. It catches the damage that a status code cannot see:
@@ -365,7 +486,7 @@ Next is the **quality under load** check. It catches the damage that a status co
 @pytest.mark.perf
 def test_no_answer_was_truncated_under_load(results):
     truncated = [r for r in results if r["stop_reason"] == "max_tokens"]
-    assert len(truncated) == 0, f"{len(truncated)} of {len(results)} were truncated"
+    assert len(truncated) / len(results) < 0.01, f"{len(truncated)} of {len(results)} were truncated"
 ```
 
 ```python
@@ -397,13 +518,33 @@ load test assert করে গড়ের ওপর নয়, percentile-এ�
 
 ```python
 # tests/perf/test_chat_load.py
+import statistics
+from collections import defaultdict
+
 import pytest
 
+EXPECTED_MODEL = "claude-sonnet-5-5"  # the model your app is configured to use
+INPUT_TOKENS_PER_MINUTE = 400_000  # example values: set these to your own limits
+OUTPUT_TOKENS_PER_MINUTE = 80_000
 
+
+def percentile(values, p):
+    return statistics.quantiles(values, n=100)[p - 1]
+
+
+def per_minute(results, key):
+    t0 = min(r["started_at"] for r in results)
+    buckets = defaultdict(int)
+    for r in results:
+        buckets[int((r["started_at"] - t0) // 60)] += r[key]
+    return buckets
+
+
+# `results` is a fixture that returns the list of dicts from measure_one for one run.
 @pytest.mark.perf
 def test_the_p95_latency_is_within_budget(results):
-    ttft = percentile(results["ttft_ms"], 95)
-    total = percentile(results["total_ms"], 95)
+    ttft = percentile([r["ttft_ms"] for r in results], 95)
+    total = percentile([r["total_ms"] for r in results], 95)
     assert ttft < 800, f"p95 time to first token is {ttft:.0f}ms"
     assert total < 6000, f"p95 total latency is {total:.0f}ms"
 ```
@@ -415,10 +556,10 @@ TTFT বাজেট আর মোট বাজেট আলাদা সংখ�
 ```python
 @pytest.mark.perf
 def test_the_rate_limit_is_respected_not_exceeded(results):
-    total_tokens = sum(r["output_tokens"] for r in results)
-    assert total_tokens <= TOKEN_LIMIT_PER_MINUTE, (
-        f"the test sent {total_tokens} tokens, over the limit"
-    )
+    peak_input = max(per_minute(results, "input_tokens").values())
+    peak_output = max(per_minute(results, "output_tokens").values())
+    assert peak_input <= INPUT_TOKENS_PER_MINUTE, f"peak input was {peak_input} tokens a minute"
+    assert peak_output <= OUTPUT_TOKENS_PER_MINUTE, f"peak output was {peak_output} tokens a minute"
 ```
 
 আর **load-এর নিচে মানের** চেক, যেটা status code-এ ধরা যায় না এমন degradation ধরে:
@@ -427,7 +568,7 @@ def test_the_rate_limit_is_respected_not_exceeded(results):
 @pytest.mark.perf
 def test_no_answer_was_truncated_under_load(results):
     truncated = [r for r in results if r["stop_reason"] == "max_tokens"]
-    assert len(truncated) == 0, f"{len(truncated)} of {len(results)} were truncated"
+    assert len(truncated) / len(results) < 0.01, f"{len(truncated)} of {len(results)} were truncated"
 ```
 
 ```python
@@ -464,13 +605,13 @@ def test_the_generation_rate_is_fast_enough(results):
 
 **Mistake 2: measuring only total latency.** The user perceives the first token, and the two budgets are different numbers.
 
-**Mistake 3: not fixing `max_tokens`.** Then the arms are not comparable, because the output lengths differ <Cite n={2} />.
+**Mistake 3: not fixing `max_tokens`.** Then the arms are not comparable, because the output lengths can differ. A fixed cap alone does not make them equal, because the model can stop earlier, so also record `output_tokens` <Cite n={2} />.
 
 **Mistake 4: ignoring the token rate limit.** The provider cuts you off and the test measures your retry behaviour instead of your server.
 
 **Mistake 5: only checking the status code.** A truncated or downgraded answer is a 200.
 
-**Mistake 6: running the load test against production traffic.** A load test against live users is a self-inflicted outage <Cite n={1} />.
+**Mistake 6: running the load test against production traffic.** A load test shares your organization's rate limit with live traffic, so it can push real users into 429 errors <Cite n={3} />.
 
 </Technical>
 <Layman>
@@ -479,13 +620,13 @@ def test_the_generation_rate_is_fast_enough(results):
 
 **Mistake 2: measuring only total latency.** The user feels the first token. The two budgets are different numbers.
 
-**Mistake 3: not fixing `max_tokens`.** Then the arms cannot be compared, because the output lengths differ <Cite n={2} />.
+**Mistake 3: not fixing `max_tokens`.** Then the arms cannot be compared, because the output lengths can differ. A fixed cap alone does not make them equal, because the model can stop earlier. So also record `output_tokens` <Cite n={2} />.
 
 **Mistake 4: ignoring the token rate limit.** The provider cuts you off. The test then measures your retry behaviour, not your server.
 
 **Mistake 5: only checking the status code.** A truncated or downgraded answer is still a 200.
 
-**Mistake 6: running the load test against production traffic.** A load test against live users is a self-inflicted outage <Cite n={1} />.
+**Mistake 6: running the load test against production traffic.** A load test shares your organization's rate limit with live traffic, so it can push real users into 429 errors <Cite n={3} />.
 
 </Layman>
 <Bangla>
@@ -494,13 +635,13 @@ def test_the_generation_rate_is_fast_enough(results):
 
 **Mistake ২: শুধু মোট latency মাপা।** ব্যবহারকারী প্রথম token দেখে, আর দুটো বাজেট আলাদা সংখ্যা।
 
-**Mistake ৩: `max_tokens` স্থির না করা।** তাহলে arm দুটো তুলনাযোগ্য নয়, কারণ আউটপুট দৈর্ঘ্য আলাদা <Cite n={2} />।
+**Mistake ৩: `max_tokens` স্থির না করা।** তাহলে arm দুটো তুলনাযোগ্য নয়, কারণ আউটপুট দৈর্ঘ্য আলাদা হতে পারে। শুধু একটা ক্যাপ দিলেই দৈর্ঘ্য সমান হয় না, কারণ model আগে থামতে পারে, তাই `output_tokens`-ও রেকর্ড করুন <Cite n={2} />।
 
 **Mistake ৪: token rate limit উপেক্ষা করা।** provider আপনাকে কেটে দেয় আর টেস্ট আপনার server নয়, retry আচরণ মাপে।
 
 **Mistake ৫: শুধু status code দেখা।** কাটা বা ছোট model-এ নামানো উত্তরও 200।
 
-**Mistake ৬: production traffic-এর ওপর load test।** live ব্যবহারকারীদের ওপর load test নিজেই ঘটানো outage <Cite n={1} />।
+**Mistake ৬: production traffic-এর ওপর load test।** load test আপনার organization-এর rate limit live traffic-এর সাথে ভাগ করে, তাই আসল ব্যবহারকারীদের 429 error-এ ঠেলে দিতে পারে <Cite n={3} />।
 
 </Bangla>
 </Voices>
@@ -563,7 +704,7 @@ This advice is the tutorial's own. It does not come from the sources.
 | Tokens per second | How fast the model produces the rest of the answer |
 | Load profile | The shape of the traffic a load test generates |
 | Bursty traffic | Traffic that arrives in bursts rather than evenly |
-| Token rate limit | A provider limit measured in tokens per minute rather than requests |
+| Token rate limit | A provider limit measured in tokens per minute (input and output separately), in addition to requests per minute |
 | p95 | The value that 95 percent of measurements are under |
 | Truncation under load | The server cutting answers short when it is under strain |
 | Fallback model | A smaller model used when the primary one cannot serve the request |

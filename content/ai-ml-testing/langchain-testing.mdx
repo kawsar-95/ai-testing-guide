@@ -1,9 +1,9 @@
 export const metadata = { title: 'Testing LangChain Chains', description: 'Test a LangChain chain component by component and end to end, and use LangSmith traces to see which step failed.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-27',
   sources: [
-    { title: 'Introduction', publisher: 'LangChain (Python docs)', url: 'https://docs.langchain.com/oss/python/langchain/overview', accessed: '2026-11-01' },
-    { title: 'Trace concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
+    { title: 'LangChain overview', publisher: 'LangChain (Python docs)', url: 'https://docs.langchain.com/oss/python/langchain/overview', accessed: '2026-11-01' },
+    { title: 'Observability concepts', publisher: 'LangSmith (docs)', url: 'https://docs.langchain.com/langsmith/observability-concepts', accessed: '2026-11-01' },
   ],
 }
 
@@ -28,7 +28,7 @@ That structure is a gift to a tester, because it gives three levels of test:
 
 The failure this prevents is the most common one in any pipeline system: the chain is correct in the test and wrong in the app, because the app passes the argument in the wrong position.
 
-**Tracing** is what makes a chain failure diagnosable. In LangSmith, a run is a single unit of work, such as a model call or a retrieval, and a trace is the collection of runs for one operation, with their inputs and outputs <Cite n={2} />. When the answer is wrong, the trace shows which step produced the bad value. Without a trace, you are left guessing which of the five steps did it.
+**Tracing** is what makes a chain failure diagnosable. In LangSmith, a run is a single unit of work, such as a model call or a retrieval, and a trace is the collection of runs for one operation, with their inputs and outputs <Cite n={2} />. When the answer is wrong, the trace shows which step produced the bad value. Without a trace, you are left guessing which of the steps did it.
 
 </Technical>
 <Layman>
@@ -58,7 +58,7 @@ The tutorial's rule is to test the parts before the whole. A common bug: the cha
 
 এতে যে ব্যর্থতা ঠেকে যায় সেটাই যেকোনো pipeline সিস্টেমের সবচেয়ে সাধারণ: chain টেস্টে সঠিক, অ্যাপে ভুল, কারণ অ্যাপ argument-টা ভুল জায়গায় দেয়।
 
-**Tracing** একটা chain-এর ব্যর্থতা নির্ণয়যোগ্য করে। LangSmith-এ run হলো কাজের একটা একক, যেমন একটা model call বা একটা retrieval, আর trace হলো একটা operation-এর সব run-এর সংগ্রহ, তাদের input আর output সহ <Cite n={2} />। উত্তর ভুল হলে trace দেখায় কোন step খারাপ মান বানিয়েছে। trace ছাড়া আপনি অনুমান করছেন যে পাঁচটার কোনটা ভুল করেছে।
+**Tracing** একটা chain-এর ব্যর্থতা নির্ণয়যোগ্য করে। LangSmith-এ run হলো কাজের একটা একক, যেমন একটা model call বা একটা retrieval, আর trace হলো একটা operation-এর সব run-এর সংগ্রহ, তাদের input আর output সহ <Cite n={2} />। উত্তর ভুল হলে trace দেখায় কোন step খারাপ মান বানিয়েছে। trace ছাড়া আপনি অনুমান করছেন কোন step এটা করেছে।
 
 </Bangla>
 </Voices>
@@ -81,11 +81,11 @@ The chain is a directed graph of steps. Testing it has three levels, and each le
 ```text
 1. the final answer is wrong
 2. open the trace for that run
-3. walk the runs from the first to the last
+3. walk the runs in order of execution (runs are nested, so start from the top)
 4. the first run whose output is wrong is the culprit
 ```
 
-That last step is the whole value. Without it, a chain with five steps and a non-deterministic model in the middle is nearly impossible to debug, because the only way to find the bad step is to change one thing and re-run.
+That last step is the whole value. Without it, a chain with several steps and a non-deterministic model in the middle is nearly impossible to debug, because the only way to find the bad step is to change one thing and re-run.
 
 **The mock boundary.** A chain test should not call a real model, because a real model is slow, costs money, and is non-deterministic. You replace the model with a fake that returns a known output, and you assert on what the rest of the chain did with it. Then you have a separate, slower test that calls the real model, marked so it does not run on every commit.
 
@@ -100,7 +100,7 @@ That last step is the whole value. Without it, a chain with five steps and a non
 
 **Level 3: the app.** Call the app's real entry point. This catches inputs in the wrong place and missing settings.
 
-**The trace.** A LangSmith trace holds one run for each unit of work, with its inputs and outputs <Cite n={2} />. When the answer is wrong, open the trace and go through the runs in order. The first one with a wrong output is the culprit.
+**The trace.** A LangSmith trace holds one run for each unit of work, with its inputs and outputs <Cite n={2} />. When the answer is wrong, open the trace and go through the runs in order. Runs are nested, so start from the top. The first one with a wrong output is the culprit.
 
 **Use a fake model in fast tests.** A real model is slow, costs money, and gives different answers. A fake one returns a fixed answer, so you test what the rest of the chain does with it. Keep a separate, slower test with the real model.
 
@@ -122,11 +122,11 @@ chain হলো step-এর একটা দিকনির্দেশিত gr
 ```text
 1. the final answer is wrong
 2. open the trace for that run
-3. walk the runs from the first to the last
+3. walk the runs in order of execution (runs are nested, so start from the top)
 4. the first run whose output is wrong is the culprit
 ```
 
-শেষ ধাপটাই আসল মূল্য। এটা ছাড়া পাঁচটা step আর মাঝখানে non-deterministic model থাকা একটা chain প্রায় ডিবাগ করাই যায় না, কারণ খারাপ step খুঁজতে একটা জিনিস বদলে আবার চালাতে হয়।
+শেষ ধাপটাই আসল মূল্য। এটা ছাড়া কয়েকটা step আর মাঝখানে non-deterministic model থাকা একটা chain প্রায় ডিবাগ করাই যায় না, কারণ খারাপ step খুঁজতে একটা জিনিস বদলে আবার চালাতে হয়।
 
 **Mock boundary।** chain টেস্টে আসল model ডাকা উচিত নয়, কারণ আসল model ধীর, খরচসাপেক্ষ আর non-deterministic। model-টা একটা fake দিয়ে বদলান যেটা জানা output দেয়, আর বাকি chain সেটার সাথে কী করল সেটা assert করুন। তারপর আসল model ডাকে একটা আলাদা ধীর টেস্ট রাখুন, যেটা প্রতিটা commit-এ চলে না।
 
@@ -338,7 +338,7 @@ def test_every_chain_step_ran(executed_run):
 
 **Mistake 3: asserting on exact wording from a real model.** The assertion passes on a good day and fails on a bad one.
 
-**Mistake 4: no trace.** Without the trace, finding the bad step means changing one thing and re-running, over and over <Cite n={2} />.
+**Mistake 4: no trace.** Without the trace, finding the bad step means changing one thing and re-running, over and over.
 
 **Mistake 5: testing the chain but not the application.** The chain can be correct and the call site wrong.
 
@@ -353,7 +353,7 @@ def test_every_chain_step_ran(executed_run):
 
 **Mistake 3: checking the exact words of a real model.** The test passes one day and fails the next.
 
-**Mistake 4: no trace.** Then finding the bad step means changing one thing and running again, over and over <Cite n={2} />.
+**Mistake 4: no trace.** Then finding the bad step means changing one thing and running again, over and over.
 
 **Mistake 5: testing the chain but not the app.** The chain can be right and the call to it wrong.
 
@@ -368,7 +368,7 @@ def test_every_chain_step_ran(executed_run):
 
 **ভুল ৩: আসল model থেকে exact wording-এ assert করা।** ভালো দিনে পাস করে, খারাপ দিনে ফেইল করে।
 
-**ভুল ৪: trace নেই।** trace ছাড়া খারাপ step খুঁজতে হয় বারবার একটা জিনিস বদলে আবার চালাতে হয় <Cite n={2} />।
+**ভুল ৪: trace নেই।** trace ছাড়া খারাপ step খুঁজতে হয় বারবার একটা জিনিস বদলে আবার চালাতে হয়।
 
 **ভুল ৫: chain টেস্ট করা, application নয়।** chain সঠিক আর call site ভুল হতে পারে।
 

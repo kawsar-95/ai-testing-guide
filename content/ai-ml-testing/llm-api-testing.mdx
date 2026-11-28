@@ -1,6 +1,6 @@
 export const metadata = { title: 'Testing LLM APIs', description: 'Test OpenAI, Anthropic, and Gemini endpoints: the request shape, the errors, the rate limits, the streaming, and the response times.' }
 export const page = {
-  updated: '2026-11-01',
+  updated: '2026-11-27',
   sources: [
     { title: 'Chat API reference', publisher: 'OpenAI (API docs)', url: 'https://platform.openai.com/docs/api-reference/chat', accessed: '2026-11-01' },
     { title: 'Messages API reference', publisher: 'Anthropic (Claude API docs)', url: 'https://platform.claude.com/docs/en/api/messages', accessed: '2026-11-01' },
@@ -24,15 +24,17 @@ An LLM endpoint looks like any other HTTP API with three differences: the reques
 
 That gives a test plan with four parts.
 
-**The request contract.** The shape of the request is a schema like any other: the model id, the messages, the max tokens, the temperature, and the optional parameters. The chat completions reference is the contract <Cite n={1} />. A missing required field, a wrong type, and an unknown model id all have to fail loudly rather than be silently ignored.
+**The request contract.** The shape of the request is a schema like any other: the model id, the messages, the max tokens, the temperature, and the optional parameters. The chat completions reference is the contract for that endpoint <Cite n={1} />. OpenAI now recommends its Responses API for new projects, so check which endpoint your product uses. A missing required field, a wrong type, and an unknown model id all have to fail loudly rather than be silently ignored.
 
 **The error paths.** An API has a set of failures, and each one has its own status. The retry rules below are the tutorial's own advice:
 
 ```text
 400  the request is malformed          fix it, never retry
 401  the key is wrong or missing       fix the config, never retry
-429  too many requests or quota        wait and retry with backoff
-500  the provider had an internal error retry with backoff
+429  too many requests or quota        wait and retry with backoff (a spend-cap 429 will not clear by waiting)
+500  the provider had an internal error retry with backoff unless x-should-retry is false
+504  the request timed out             retry with backoff, or stream
+529  the API is overloaded             retry with backoff
 ```
 
 The test that matters most is the last one: **the timeout**. A request that never comes back is worse than one that comes back wrong, and it is the failure a user notices first.
@@ -48,8 +50,8 @@ An LLM API is an ordinary web API with three twists: you send plain language, yo
 
 Test four things:
 
-- **The request.** The model name, the messages, the length limit, and the temperature form a contract, like any API schema <Cite n={1} />. A missing field or an unknown model name must fail loudly.
-- **The errors.** 400 means the request is wrong: fix it, do not retry. 401 means the key is wrong: fix the setup, do not retry. 429 (too many requests) and 500 (a server error) can be retried after a wait. These retry rules are the tutorial's own advice. The most important case is the timeout: a request that never comes back.
+- **The request.** The model name, the messages, the length limit, and the temperature form a contract, like any API schema <Cite n={1} /> (the chat completions reference is the contract for that endpoint; OpenAI now recommends its Responses API for new projects, so check which endpoint your product uses). A missing field or an unknown model name must fail loudly.
+- **The errors.** 400 means the request is wrong: fix it, do not retry. 401 means the key is wrong: fix the setup, do not retry. 429 (too many requests) and 500 (a server error) can be retried after a wait, but a spend-cap 429 will not clear by waiting. These retry rules are the tutorial's own advice. The most important case is the timeout: a request that never comes back.
 - **Streaming.** The answer can arrive in pieces. Test a normal stream, a stream that is cut in the middle, and a stream that sends an error after the first piece.
 - **Speed.** Look at the spread of response times, not one number. In the tutorial's view, the wait for the first word matters most, because that is when the page feels alive.
 
@@ -60,15 +62,17 @@ Test four things:
 
 তাই টেস্ট পরিকল্পনা চারটা অংশে ভাগ হয়।
 
-**Request contract।** request-এর গঠন অন্য যেকোনো API-র মতো একটা schema: model id, messages, max tokens, temperature, আর ঐচ্ছিক parameter। chat completions reference-ই সেই contract <Cite n={1} />। আবশ্যিক field না থাকা, ভুল টাইপ, আর অজানা model id — তিনটাই নীরবে উপেক্ষা না হয়ে জোরে ব্যর্থ হওয়া উচিত।
+**Request contract।** request-এর গঠন অন্য যেকোনো API-র মতো একটা schema: model id, messages, max tokens, temperature, আর ঐচ্ছিক parameter। chat completions reference-ই সেই endpoint-এর contract <Cite n={1} />। OpenAI এখন নতুন প্রকল্পের জন্য তাদের Responses API সুপারিশ করে, তাই আপনার প্রোডাক্ট কোন endpoint ব্যবহার করে তা যাচাই করুন। আবশ্যিক field না থাকা, ভুল টাইপ, আর অজানা model id — তিনটাই নীরবে উপেক্ষা না হয়ে জোরে ব্যর্থ হওয়া উচিত।
 
 **Error path।** একটা API-র ব্যর্থতার একটা সেট আছে, আর প্রতিটার নিজস্ব status আছে। নিচের retry নিয়মগুলো টিউটোরিয়ালের নিজস্ব পরামর্শ:
 
 ```text
 400  the request is malformed          fix it, never retry
 401  the key is wrong or missing       fix the config, never retry
-429  too many requests or quota        wait and retry with backoff
-500  the provider had an internal error retry with backoff
+429  too many requests or quota        wait and retry with backoff (a spend-cap 429 will not clear by waiting)
+500  the provider had an internal error retry with backoff unless x-should-retry is false
+504  the request timed out             retry with backoff, or stream
+529  the API is overloaded             retry with backoff
 ```
 
 সবচেয়ে গুরুত্বপূর্ণ টেস্টটি শেষেরটা: **timeout**। যে request কখনো ফেরত আসে না, সেটা ভুল উত্তরের চেয়ে খারাপ, আর সেটাই ব্যবহারকারী সবার আগে বোঝেন।
@@ -102,7 +106,7 @@ The client's job is to notice the missing end and say so rather than showing a t
 
 **The token accounting.** The response reports how many tokens went in and how many came out. The Claude Messages API describes this `usage` field as billing and rate-limit usage <Cite n={2} />, and its token counting endpoint counts the tokens of a message before you send it <Cite n={3} />. A test that asserts the response reports usage, and a second test that asserts the cost per call stays under a limit, are both worth having.
 
-**The provider matrix.** The three providers differ in the details. For example, the Claude Messages API takes the system prompt as a top-level `system` parameter <Cite n={2} />, OpenAI Chat Completions takes it as a `developer` message in the list (older models use `system`) <Cite n={1} />, and the Gemini API has its own SDKs and request format <Cite n={4} />. What they share is the shape of the contract. That is why the test suite should have a shared interface with a provider-specific configuration, and why the test cases themselves should be provider-agnostic.
+**The provider matrix.** The three providers differ in the details. For example, the Claude Messages API takes the system prompt as a top-level `system` parameter <Cite n={2} />, OpenAI Chat Completions takes it as a `developer` message in the list (older models use `system`) <Cite n={1} />, and the Gemini API has its own SDKs and request format (its current quickstart uses an `interactions` endpoint) <Cite n={4} />. What they share is the shape of the contract. That is why the test suite should have a shared interface with a provider-specific configuration, and why the test cases themselves should be provider-agnostic.
 
 **The latency measurement.** Report the distribution, not the mean. A mean of 2 seconds hides the 15-second tail that a user noticed. Report the median and the 95th percentile, and measure the time to first token separately from the total time.
 
@@ -117,7 +121,7 @@ A 429 tells you that you send too much traffic. A retry loop with no wait turns 
 
 Each response reports how many tokens went in and out. Claude's API calls this billing and rate-limit usage <Cite n={2} />, and you can also count tokens before you send <Cite n={3} />. Test that the count is there and that the cost per call stays under a limit.
 
-The providers differ in details. For example, Claude takes the system prompt as a separate `system` field <Cite n={2} />, OpenAI puts it in the message list <Cite n={1} />, and Gemini has its own request format <Cite n={4} />. Write one shared test suite with a small setup for each provider.
+The providers differ in details. For example, Claude takes the system prompt as a separate `system` field <Cite n={2} />, OpenAI puts it in the message list <Cite n={1} />, and Gemini has its own request format (its current quickstart uses an `interactions` endpoint) <Cite n={4} />. Write one shared test suite with a small setup for each provider.
 
 For speed, report the median and the 95th percentile, and measure the first token apart from the total time.
 
@@ -141,7 +145,7 @@ client-এর কাজ হলো শেষ marker না দেখে বুঝ
 
 **Token accounting।** response জানায় কতগুলো token ঢুকেছে আর কতগুলো বেরিয়েছে। Claude Messages API এই `usage` field-কে billing আর rate-limit usage বলে বর্ণনা করে <Cite n={2} />, আর এর token counting endpoint পাঠানোর আগেই একটা message-এর token গোনে <Cite n={3} />। response usage জানায় কি না assert করা, আর প্রতি call-এর খরচ একটা সীমার নিচে আছে কি না assert করা — দুটোই থাকা উচিত।
 
-**Provider matrix।** তিন provider-এর বিবরণ আলাদা। যেমন, Claude Messages API system prompt নেয় top-level `system` parameter হিসেবে <Cite n={2} />, OpenAI Chat Completions নেয় list-এর ভেতরে একটা `developer` message হিসেবে (পুরনো model-এ `system`) <Cite n={1} />, আর Gemini API-র নিজস্ব SDK আর request format আছে <Cite n={4} />। যা সাধারণ তা হলো contract-এর গঠন। তাই টেস্ট suite-এ একটা shared interface থাকা উচিত provider-নির্দিষ্ট configuration সহ, আর কেসগুলো নিজেরাই provider-এর ওপর নির্ভরশীল না হওয়া উচিত।
+**Provider matrix।** তিন provider-এর বিবরণ আলাদা। যেমন, Claude Messages API system prompt নেয় top-level `system` parameter হিসেবে <Cite n={2} />, OpenAI Chat Completions নেয় list-এর ভেতরে একটা `developer` message হিসেবে (পুরনো model-এ `system`) <Cite n={1} />, আর Gemini API-র নিজস্ব SDK আর request format আছে (এর বর্তমান quickstart একটা `interactions` endpoint ব্যবহার করে) <Cite n={4} />। যা সাধারণ তা হলো contract-এর গঠন। তাই টেস্ট suite-এ একটা shared interface থাকা উচিত provider-নির্দিষ্ট configuration সহ, আর কেসগুলো নিজেরাই provider-এর ওপর নির্ভরশীল না হওয়া উচিত।
 
 **Latency measurement।** গড় নয়, বিতরণ জানান। ২ সেকেন্ডের গড় লুকায় সেই ১৫ সেকেন্ডের tail-টা যেটা ব্যবহারকারী দেখেছিল। median আর 95th percentile জানান, আর মোট সময় থেকে প্রথম token-এর সময় আলাদা করে মাপুন।
 
@@ -446,7 +450,7 @@ This advice is the tutorial's own. It does not come from the sources.
 | Time to first token | How long the user waits before anything appears. The latency a user feels |
 | TTFT | The short name for time to first token |
 | Backoff | Waiting longer between each retry, so a rate limit does not become an outage |
-| 429 | Too many requests. Retry it after a wait, with backoff |
+| 429 | Too many requests. Retry it after a wait, with backoff (a spend-cap 429 will not clear by waiting) |
 | 400 | A malformed request. Fix it; never retry it |
 | Truncated stream | A stream that stops before its end marker, leaving a partial answer |
 | Token usage | The input and output token counts the response reports |
