@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DEF } from "../lib/visuals/def-sharding.ts";
+import { shardingChips } from "../lib/visuals/sharding-chips.ts";
 import {
   RUNS,
   RUN_COUNT,
@@ -43,11 +44,26 @@ test("the rules are deterministic", () => {
   assert.deepEqual(assignment("hash"), assignment("hash"));
 });
 
-test("the DEF has 5 to 8 steps and the chips function returns a value for each", async () => {
+test("the DEF has 5 to 8 steps and every step has chips", () => {
   assert.ok(DEF.steps.length >= 5 && DEF.steps.length <= 8);
   assert.equal(DEF.id, "sharding");
-  // The stage imports "@/..." paths, so the chips are checked through the rules they read.
   for (let step = 0; step < DEF.steps.length; step++) {
-    assert.ok(Number.isInteger(step));
+    for (const live of [undefined, "range", "hash"]) {
+      const chips = shardingChips(step, live);
+      assert.ok(chips.length >= 1);
+      for (const c of chips) {
+        assert.ok(c.label.en.length > 0 && c.label.bn.length > 0 && c.value.length > 0);
+      }
+    }
   }
+});
+
+test("the chips follow the shard key on steps 2 to 4", () => {
+  assert.equal(shardingChips(2, "range")[0].value, counts("range").join(" / "));
+  assert.equal(shardingChips(2, "hash")[0].value, counts("hash").join(" / "));
+  assert.equal(shardingChips(3, "range")[0].value, "100 %");
+  assert.equal(shardingChips(3, "hash")[0].value, `${hotLoadPercent("hash")} %`);
+  assert.equal(shardingChips(4, "range")[0].value, `1 / ${SHARD_COUNT}`);
+  assert.equal(shardingChips(4, "hash")[0].value, `${SHARD_COUNT} / ${SHARD_COUNT}`);
+  assert.equal(shardingChips(3, undefined)[0].value, shardingChips(3, "range")[0].value);
 });

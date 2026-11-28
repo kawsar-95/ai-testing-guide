@@ -6,11 +6,16 @@ import { T } from "@/components/i18n/T";
 import { useBn } from "@/components/i18n/useBn";
 import type { VisualDef } from "@/lib/visuals/defs";
 
-/** One live number above the stage. */
-export type Chip = { label: { en: string; bn: string }; value: string };
+import type { Chip } from "@/lib/visuals/chips";
 
-/** The picture of a visual: it gets the current step and draws only what that step shows. */
-export type StageProps = { step: number; reduced: boolean };
+export type { Chip };
+
+/**
+ * The picture of a visual: it gets the current step and draws only what that step shows.
+ * `onLive` tells the shell the value of the stage's own control (a slider or a toggle) so the
+ * chips can follow it. Call it from the event handler, with the same value the stage keeps.
+ */
+export type StageProps = { step: number; reduced: boolean; onLive: (value: unknown) => void };
 
 const STEP_MS = 4500;
 
@@ -44,11 +49,12 @@ export function StepVisual({
   stage,
 }: {
   def: VisualDef;
-  chips: (step: number) => readonly Chip[];
+  chips: (step: number, live: unknown) => readonly Chip[];
   stage: (props: StageProps) => ReactNode;
 }) {
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [live, setLive] = useState<unknown>(undefined);
   const reduced = useReducedMotion();
   const last = def.steps.length - 1;
   const current = def.steps[step];
@@ -84,7 +90,7 @@ export function StepVisual({
       </header>
 
       <ul className="m-0 mt-4 flex list-none flex-wrap gap-2 p-0" aria-label={useBn("Live numbers", "লাইভ সংখ্যা")}>
-        {chips(step).map((chip) => (
+        {chips(step, live).map((chip) => (
           <li key={chip.label.en} className="m-0 rounded-md border border-border bg-bg-raised-2 px-3 py-1.5 text-sm">
             <span className="text-text-faint">
               <T en={chip.label.en} bn={chip.label.bn} />
@@ -94,7 +100,7 @@ export function StepVisual({
         ))}
       </ul>
 
-      <div className="mt-4">{stage({ step, reduced })}</div>
+      <div className="mt-4">{stage({ step, reduced, onLive: setLive })}</div>
 
       <div className="mt-4" aria-live="polite">
         <p className="mb-0 text-xs text-text-faint">

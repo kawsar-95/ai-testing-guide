@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { T } from "@/components/i18n/T";
 import { sceneFor, type Choice } from "@/lib/visuals/cap";
-import type { Chip, StageProps } from "./StepVisual";
+import type { StageProps } from "./StepVisual";
 
 const W = 360;
 const H = 200;
@@ -13,32 +13,8 @@ const AX = 20;
 const BX = W - 20 - NODE_W;
 const NODE_Y = 70;
 
-/** The live numbers of each step, from the same scene that the stage draws. */
-export function capTheoremChips(step: number): readonly Chip[] {
-  const scene = sceneFor(step, "C");
-  const { a, b } = scene.cluster;
-  const copies: Chip[] = [
-    { label: { en: "Value on A", bn: "A-র মান" }, value: String(a) },
-    { label: { en: "Value on B", bn: "B-র মান" }, value: String(b) },
-  ];
-  if (step === 0 || step === 4) {
-    const read = scene.read;
-    return [...copies, { label: { en: "Read on B", bn: "B-তে রিড" }, value: read?.served ? String(read.value) : "–" }];
-  }
-  if (step === 3) {
-    const c = sceneFor(3, "C").read;
-    const av = sceneFor(3, "A").read;
-    return [
-      { label: { en: "Read served, choose C", bn: "রিড উত্তর পেল, C" }, value: `${c?.served ? 1 : 0} / 1` },
-      { label: { en: "Read served, choose A", bn: "রিড উত্তর পেল, A" }, value: `${av?.served ? 1 : 0} / 1` },
-      { label: { en: "Value returned, choose A", bn: "ফেরত মান, A" }, value: av?.served ? String(av.value) : "–" },
-    ];
-  }
-  return copies;
-}
-
 /** The two nodes, the link, the write, and the read of the CAP visual. */
-export function CapTheoremStage({ step, reduced }: StageProps) {
+export function CapTheoremStage({ step, reduced, onLive }: StageProps) {
   const [choice, setChoice] = useState<Choice>("C");
   const scene = sceneFor(step, choice);
   const { cluster, read } = scene;
@@ -133,10 +109,16 @@ export function CapTheoremStage({ step, reduced }: StageProps) {
             <T en="During the partition, choose:" bn="পার্টিশনের সময় বাছুন:" />
           </div>
           <div className="flex justify-center gap-2" role="group" aria-label="Choose consistency or availability">
-            <button type="button" className="btn btn-outline" aria-pressed={choice === "C"} onClick={() => setChoice("C")}>
+            <button type="button" className="btn btn-outline" aria-pressed={choice === "C"} onClick={() => {
+                setChoice("C");
+                onLive("C");
+              }}>
               <T en="Consistency (C)" bn="কনসিসটেন্সি (C)" />
             </button>
-            <button type="button" className="btn btn-outline" aria-pressed={choice === "A"} onClick={() => setChoice("A")}>
+            <button type="button" className="btn btn-outline" aria-pressed={choice === "A"} onClick={() => {
+                setChoice("A");
+                onLive("A");
+              }}>
               <T en="Availability (A)" bn="অ্যাভেইলেবিলিটি (A)" />
             </button>
           </div>

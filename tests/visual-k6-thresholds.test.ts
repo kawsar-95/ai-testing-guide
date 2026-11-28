@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { k6ThresholdsChips } from "../lib/visuals/k6-thresholds-chips.ts";
 import { DEF } from "../lib/visuals/def-k6-thresholds.ts";
 import {
   ABORT_LIMIT_MS,
@@ -72,8 +73,26 @@ test("the definition has 5 to 8 steps with English and Bangla text", () => {
   for (const s of DEF.steps) assert.ok(s.body.en.split(/\s+/).length <= 40, s.title.en);
 });
 
-test("the chips function returns chips for every step", async () => {
-  const mod = await import("../components/visuals/K6ThresholdsStage.tsx").catch(() => null);
-  if (!mod) return; // the stage uses the "@/..." alias, which plain node cannot resolve
-  for (let i = 0; i < DEF.steps.length; i++) assert.ok(mod.k6ThresholdsChips(i).length > 0);
+test("every step has chips with text and a value", () => {
+  for (let i = 0; i < DEF.steps.length; i++) {
+    const chips = k6ThresholdsChips(i, undefined);
+    assert.ok(chips.length > 0, `step ${i}`);
+    for (const c of chips) {
+      assert.ok(c.label.en.length > 0 && c.label.bn.length > 0 && c.value.length > 0, `step ${i}`);
+    }
+  }
+});
+
+test("the chips follow the limit slider", () => {
+  const verdictOf = (step: number, live: unknown) => k6ThresholdsChips(step, live).find((c) => c.label.en === "Verdict")!.value;
+  const limitOf = (step: number, live: unknown) => k6ThresholdsChips(step, live).find((c) => c.label.en === "Limit")!.value;
+  assert.equal(limitOf(3, undefined), `${DEFAULT_LIMIT_MS} ms`);
+  assert.equal(limitOf(3, 300), "300 ms");
+  assert.equal(limitOf(3, 700), "700 ms");
+  assert.equal(verdictOf(3, P99_FINAL), "✗");
+  assert.equal(verdictOf(3, P99_FINAL + 10), "✓");
+  const exit = (live: number) => k6ThresholdsChips(6, live).find((c) => c.label.en === "Exit code")!.value;
+  assert.equal(exit(P99_FINAL), `exit ${EXIT_FAIL}`);
+  assert.equal(exit(P99_FINAL + 10), `exit ${EXIT_PASS}`);
+  assert.equal(k6ThresholdsChips(3, "x")[1].value, `${DEFAULT_LIMIT_MS} ms`);
 });

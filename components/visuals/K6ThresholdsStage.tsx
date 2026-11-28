@@ -7,19 +7,16 @@ import {
   DEFAULT_LIMIT_MS,
   DELAY_ABORT_EVAL_S,
   DURATION_S,
-  EXIT_FAIL,
-  EXIT_PASS,
   LIMIT_MAX_MS,
   LIMIT_MIN_MS,
   LIMIT_STEP_MS,
   SAMPLES,
-  SAMPLE_COUNT,
   abortSecond,
   clampLimit,
   runningP99,
   verdictAt,
 } from "@/lib/visuals/k6-thresholds";
-import type { Chip, StageProps } from "./StepVisual";
+import type { StageProps } from "./StepVisual";
 
 const W = 360;
 const H = 250;
@@ -35,38 +32,8 @@ const yOf = (ms: number) => BOTTOM - (Math.min(ms, LIMIT_MAX_MS) / LIMIT_MAX_MS)
 
 const mark = (pass: boolean) => (pass ? "✓" : "✗");
 
-/** The live numbers of each step, from the same rules that the stage draws. The slider does not change them. */
-export function k6ThresholdsChips(step: number): readonly Chip[] {
-  const v = verdictAt(DEFAULT_LIMIT_MS);
-  const p99: Chip = { label: { en: "p(99)", bn: "p(99)" }, value: `${v.value} ms` };
-  const requests: Chip = { label: { en: "Requests", bn: "Request" }, value: String(SAMPLE_COUNT) };
-  if (step === 0) return [requests, { label: { en: "Run", bn: "Run" }, value: `${DURATION_S} s` }];
-  if (step === 1) return [p99, requests];
-  if (step === 2) {
-    return [p99, { label: { en: "Limit", bn: "Limit" }, value: `${DEFAULT_LIMIT_MS} ms` }, { label: { en: "Verdict", bn: "Verdict" }, value: mark(v.pass) }];
-  }
-  if (step === 3) {
-    return [p99, { label: { en: "Passes above", bn: "Pass হয় এর ওপরে" }, value: `${v.value} ms` }];
-  }
-  if (step === 4) {
-    return [{ label: { en: "Judged at", bn: "বিচার হয়" }, value: `${DURATION_S} s` }, { label: { en: "Verdict", bn: "Verdict" }, value: mark(v.pass) }];
-  }
-  if (step === 5) {
-    const at = abortSecond(ABORT_LIMIT_MS) ?? DURATION_S;
-    return [
-      { label: { en: "Limit", bn: "Limit" }, value: `${ABORT_LIMIT_MS} ms` },
-      { label: { en: "Stopped at", bn: "থেমেছে" }, value: `${at} s` },
-      { label: { en: "Run lasted", bn: "run চলেছে" }, value: `${at} / ${DURATION_S} s` },
-    ];
-  }
-  return [
-    { label: { en: "All pass", bn: "সব pass" }, value: `exit ${EXIT_PASS}` },
-    { label: { en: "One fails", bn: "একটা fail" }, value: `exit ${EXIT_FAIL}` },
-  ];
-}
-
 /** The dots of one run, the p(99) gauge, and the limit line of the k6 thresholds visual. */
-export function K6ThresholdsStage({ step, reduced }: StageProps) {
+export function K6ThresholdsStage({ step, reduced, onLive }: StageProps) {
   const [limitState, setLimit] = useState(DEFAULT_LIMIT_MS);
   const aborting = step === 5;
   const limit = aborting ? ABORT_LIMIT_MS : limitState;
@@ -203,7 +170,11 @@ export function K6ThresholdsStage({ step, reduced }: StageProps) {
             max={LIMIT_MAX_MS}
             step={LIMIT_STEP_MS}
             value={limitState}
-            onChange={(e) => setLimit(clampLimit(Number(e.target.value)))}
+            onChange={(e) => {
+              const next = clampLimit(Number(e.target.value));
+              setLimit(next);
+              onLive(next);
+            }}
             className="min-w-0 flex-1"
           />
           <span className="w-14 shrink-0 text-right tabular-nums">{limitState} ms</span>

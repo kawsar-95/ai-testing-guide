@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DEF } from "../lib/visuals/def-circuit-breaker.ts";
+import { circuitBreakerChips } from "../lib/visuals/circuit-breaker-chips.ts";
 import { CONFIG, STEP_TICKS, sceneFor, simulate } from "../lib/visuals/circuit-breaker.ts";
 
 test("the breaker opens after the threshold of failures in a row", () => {
@@ -45,4 +46,19 @@ test("the DEF has 5 to 8 steps with English and Bangla", () => {
   assert.ok(DEF.steps.length >= 5 && DEF.steps.length <= 8);
   assert.equal(DEF.steps.length, STEP_TICKS.length);
   for (const s of DEF.steps) assert.ok(s.body.en.split(/\s+/).length <= 40);
+});
+
+test("chips: every step has bilingual chips, and follow the broken toggle", () => {
+  for (let i = 0; i < STEP_TICKS.length; i++) {
+    for (const live of [undefined, true, false]) {
+      const chips = circuitBreakerChips(i, live);
+      assert.ok(chips.length >= 1);
+      for (const c of chips) assert.ok(c.label.en && c.label.bn && c.value);
+    }
+  }
+  const fails = (live: unknown) => circuitBreakerChips(1, live)[0]?.value;
+  assert.equal(fails(true), `2 / ${CONFIG.threshold}`);
+  assert.equal(fails(false), `0 / ${CONFIG.threshold}`);
+  assert.equal(fails(undefined), fails(true));
+  assert.equal(circuitBreakerChips(6, false)[2]?.value, String(STEP_TICKS[6]));
 });

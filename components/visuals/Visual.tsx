@@ -2,22 +2,33 @@
 
 import type { ReactNode } from "react";
 import { visualDef } from "@/lib/visuals/defs";
-import { AvailabilityStage, availabilityChips } from "./AvailabilityStage";
-import { CapTheoremStage, capTheoremChips } from "./CapTheoremStage";
-import { CachingStage, cachingChips } from "./CachingStage";
-import { CircuitBreakerStage, circuitBreakerChips } from "./CircuitBreakerStage";
-import { ConsistentHashingStage, consistentHashingChips } from "./ConsistentHashingStage";
-import { DnsStage, dnsChips } from "./DnsStage";
-import { IdempotencyStage, idempotencyChips } from "./IdempotencyStage";
-import { K6ThresholdsStage, k6ThresholdsChips } from "./K6ThresholdsStage";
-import { LoadBalancerStage, loadBalancerChips } from "./LoadBalancerStage";
-import { RateLimitingStage, rateLimitingChips } from "./RateLimitingStage";
-import { ShardingStage, shardingChips } from "./ShardingStage";
+import { AvailabilityStage } from "./AvailabilityStage";
+import { availabilityChips } from "@/lib/visuals/availability-chips";
+import { CapTheoremStage } from "./CapTheoremStage";
+import { capTheoremChips } from "@/lib/visuals/cap-theorem-chips";
+import { CachingStage } from "./CachingStage";
+import { cachingChips } from "@/lib/visuals/caching-chips";
+import { CircuitBreakerStage } from "./CircuitBreakerStage";
+import { circuitBreakerChips } from "@/lib/visuals/circuit-breaker-chips";
+import { ConsistentHashingStage } from "./ConsistentHashingStage";
+import { consistentHashingChips } from "@/lib/visuals/consistent-hashing-chips";
+import { DnsStage } from "./DnsStage";
+import { dnsChips } from "@/lib/visuals/dns-chips";
+import { IdempotencyStage } from "./IdempotencyStage";
+import { idempotencyChips } from "@/lib/visuals/idempotency-chips";
+import { K6ThresholdsStage } from "./K6ThresholdsStage";
+import { k6ThresholdsChips } from "@/lib/visuals/k6-thresholds-chips";
+import { LoadBalancerStage } from "./LoadBalancerStage";
+import { loadBalancerChips } from "@/lib/visuals/load-balancer-chips";
+import { RateLimitingStage } from "./RateLimitingStage";
+import { rateLimitingChips } from "@/lib/visuals/rate-limiting-chips";
+import { ShardingStage } from "./ShardingStage";
+import { shardingChips } from "@/lib/visuals/sharding-chips";
 import { StepVisual } from "./StepVisual";
 import type { Chip, StageProps } from "./StepVisual";
 
 type Picture = {
-  chips: (step: number) => readonly Chip[];
+  chips: (step: number, live: unknown) => readonly Chip[];
   stage: (props: StageProps) => ReactNode;
 };
 

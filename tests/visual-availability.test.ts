@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { availabilityChips } from "../lib/visuals/availability-chips.ts";
 import { DEF } from "../lib/visuals/def-availability.ts";
 import {
   DAY_MINUTES,
@@ -86,8 +87,34 @@ test("the definition has 5 to 8 steps, short captions, and Bangla", () => {
   }
 });
 
-test("the chips function returns chips for every step", async () => {
-  const { availabilityChips } = await import("../components/visuals/AvailabilityStage.tsx").catch(() => ({ availabilityChips: null }));
-  if (!availabilityChips) return; // the stage needs the Next.js path alias; the rules above are what matter
-  for (let i = 0; i < DEF.steps.length; i++) assert.ok(availabilityChips(i).length > 0);
+test("the chips function returns chips for every step", () => {
+  for (let i = 0; i < DEF.steps.length; i++) {
+    const chips = availabilityChips(i, undefined);
+    assert.ok(chips.length > 0, `step ${i}`);
+    for (const c of chips) {
+      assert.ok(c.label.en.length > 0 && c.label.bn.length > 0 && c.value.length > 0, `step ${i}`);
+    }
+  }
+});
+
+test("the chips follow the slider on steps 1, 2 and 5", () => {
+  const value = (step: number, live: unknown, label: string) =>
+    availabilityChips(step, live).find((c) => c.label.en === label)?.value;
+  // step 1: 99 % -> 5,256 min/year = 3.65 d; 99.999 % -> 5.256 min
+  assert.equal(value(1, 0, "Downtime / year"), durationText(downtimeMinutes(NINES_PPM[0]!, YEAR_MINUTES)));
+  assert.equal(value(1, 3, "Downtime / year"), "5.256 min");
+  assert.equal(value(1, undefined, "Downtime / year"), "525.6 min");
+  assert.equal(value(1, 1, "Downtime / month"), "43.8 min");
+  assert.equal(value(1, 1, "Downtime / day"), "1.44 min");
+  assert.equal(value(2, 2, "Target"), "99.99 %");
+  assert.equal(value(2, 2, "Downtime / year"), "52.56 min");
+  assert.equal(value(2, 2, "vs one nine fewer"), "÷ 10");
+  assert.notEqual(value(2, 0, "Downtime / year"), value(2, 3, "Downtime / year"));
+  // step 5: credit tiers
+  assert.equal(value(5, 1, "Service credit"), `${creditPercent(1000)} %`);
+  assert.equal(value(5, 0, "Service credit"), "10 %");
+  assert.equal(value(5, 2, "Service credit"), "0 %");
+  // bad input falls back to the default
+  assert.equal(value(1, "x", "Target"), "99.9 %");
+  assert.equal(value(1, 99, "Target"), "99.9 %");
 });

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { T } from "@/components/i18n/T";
-import { KEYS, KEY_COUNT, loadSpread, loads, sceneFor } from "@/lib/visuals/ring";
-import type { Chip, StageProps } from "./StepVisual";
+import { KEYS, KEY_COUNT, loads, sceneFor } from "@/lib/visuals/ring";
+import type { StageProps } from "./StepVisual";
 
 const SIZE = 360;
 const CENTER = SIZE / 2;
@@ -23,38 +23,13 @@ function point(angle: number, radius: number): { x: number; y: number } {
   return { x: CENTER + radius * Math.cos(rad), y: CENTER + radius * Math.sin(rad) };
 }
 
-/** The live numbers of each step, from the same scene that the stage draws. */
-export function consistentHashingChips(step: number): readonly Chip[] {
-  const scene = sceneFor(step);
-  const servers: Chip = { label: { en: "Servers", bn: "সার্ভার" }, value: String(scene.servers.length) };
-  const keys: Chip = { label: { en: "Keys", bn: "কী" }, value: String(KEY_COUNT) };
-  if (step === 3) {
-    return [servers, keys, { label: { en: "Keys moved", bn: "সরেছে" }, value: `${scene.movedRing} / ${KEY_COUNT}` }];
-  }
-  if (step === 4) {
-    return [
-      servers,
-      { label: { en: "Ring moved", bn: "রিংয়ে সরেছে" }, value: `${scene.movedRing} / ${KEY_COUNT}` },
-      { label: { en: "Modulo moved", bn: "মডুলোতে সরেছে" }, value: `${scene.movedModulo} / ${KEY_COUNT}` },
-    ];
-  }
-  if (step === 5) {
-    return [servers, keys, { label: { en: "Keys moved", bn: "সরেছে" }, value: `${scene.movedRing} / ${KEY_COUNT}` }];
-  }
-  if (step >= 6) {
-    const spread = loadSpread(scene.owners, scene.servers);
-    return [servers, { label: { en: "Most keys on one server", bn: "এক সার্ভারে সর্বোচ্চ কী" }, value: String(spread.max) }, { label: { en: "Fewest", bn: "সবচেয়ে কম" }, value: String(spread.min) }];
-  }
-  if (step === 2) {
-    const spread = loadSpread(scene.owners, scene.servers);
-    return [servers, keys, { label: { en: "Most / fewest per server", bn: "সর্বোচ্চ / সর্বনিম্ন" }, value: `${spread.max} / ${spread.min}` }];
-  }
-  return [servers, keys];
-}
-
 /** The ring, the keys, and the servers of the consistent-hashing visual. */
-export function ConsistentHashingStage({ step, reduced }: StageProps) {
+export function ConsistentHashingStage({ step, reduced, onLive }: StageProps) {
   const [rule, setRule] = useState<"ring" | "modulo">("ring");
+  const choose = (next: "ring" | "modulo") => {
+    setRule(next);
+    onLive(next);
+  };
   const scene = sceneFor(step, step === 4 ? rule : "ring");
   const transition = reduced ? undefined : "fill 340ms cubic-bezier(.2,.7,.2,1), stroke 340ms cubic-bezier(.2,.7,.2,1)";
   const counts = loads(scene.owners, scene.servers);
@@ -115,10 +90,10 @@ export function ConsistentHashingStage({ step, reduced }: StageProps) {
       </svg>
       {comparing ? (
         <div className="mt-3 flex justify-center gap-2" role="group" aria-label="Rule">
-          <button type="button" className="btn btn-outline" aria-pressed={rule === "ring"} onClick={() => setRule("ring")}>
+          <button type="button" className="btn btn-outline" aria-pressed={rule === "ring"} onClick={() => choose("ring")}>
             <T en="Ring" bn="রিং" />
           </button>
-          <button type="button" className="btn btn-outline" aria-pressed={rule === "modulo"} onClick={() => setRule("modulo")}>
+          <button type="button" className="btn btn-outline" aria-pressed={rule === "modulo"} onClick={() => choose("modulo")}>
             <T en="Hash mod N" bn="হ্যাশ মডুলো N" />
           </button>
         </div>

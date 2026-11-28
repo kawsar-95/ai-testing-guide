@@ -3,20 +3,9 @@
 import { useState } from "react";
 import { T } from "@/components/i18n/T";
 import { CONFIG, sceneFor, type BreakerState, type Outcome } from "@/lib/visuals/circuit-breaker";
-import type { Chip, StageProps } from "./StepVisual";
+import type { StageProps } from "./StepVisual";
 
 const STATE_NAME: Record<BreakerState, string> = { closed: "Closed", open: "Open", "half-open": "Half-Open" };
-
-/** The live numbers of each step, from the same scene that the stage draws. */
-export function circuitBreakerChips(step: number): readonly Chip[] {
-  const scene = sceneFor(step);
-  return [
-    { label: { en: "Failures in a row", bn: "পরপর ফেইলিউর" }, value: `${scene.failRun} / ${CONFIG.threshold}` },
-    { label: { en: "State", bn: "স্টেট" }, value: STATE_NAME[scene.state] },
-    { label: { en: "Calls reaching the service", bn: "সার্ভিসে পৌঁছানো কল" }, value: String(scene.reached) },
-    { label: { en: "Failed at once", bn: "সঙ্গে সঙ্গে ব্যর্থ" }, value: String(scene.rejected) },
-  ];
-}
 
 const NODES: Record<BreakerState, { x: number; y: number; color: string }> = {
   closed: { x: 62, y: 44, color: "var(--good)" },
@@ -33,7 +22,7 @@ const CELL: Record<Outcome, { fill: string; glyph: string }> = {
 };
 
 /** The state machine and the stream of calls of the circuit-breaker visual. */
-export function CircuitBreakerStage({ step, reduced }: StageProps) {
+export function CircuitBreakerStage({ step, reduced, onLive }: StageProps) {
   const [broken, setBroken] = useState(true);
   const scene = sceneFor(step, broken);
   const transition = reduced ? undefined : "fill 300ms ease, stroke 300ms ease, opacity 300ms ease";
@@ -159,7 +148,10 @@ export function CircuitBreakerStage({ step, reduced }: StageProps) {
           className="btn btn-outline"
           aria-pressed={broken}
           aria-label={broken ? "Fix the service" : "Break the service"}
-          onClick={() => setBroken((b) => !b)}
+          onClick={() => {
+            setBroken(!broken);
+            onLive(!broken);
+          }}
         >
           {broken ? <T en="Fix the service" bn="সার্ভিস ঠিক করুন" /> : <T en="Break the service" bn="সার্ভিস ভাঙুন" />}
         </button>
