@@ -1,6 +1,6 @@
 export const metadata = { title: 'CNCF Projects: Networking, Security, and Observability', description: 'The CNCF and three of its projects, Istio, Falco, and the Open Policy Agent, with Gatekeeper, and a practice run on your own machine (the Istio configuration checked offline, policies written and tested with OPA and Gatekeeper, and Falco rules validated and run over Kubernetes audit events) with no cluster, no root rights, and no cloud account.' }
 export const page = {
-  updated: '2026-11-20',
+  updated: '2026-11-27',
   sources: [
     { title: 'Who we are', publisher: 'Cloud Native Computing Foundation', url: 'https://www.cncf.io/about/who-we-are/', accessed: '2026-11-20' },
     { title: 'Graduated and incubating projects', publisher: 'Cloud Native Computing Foundation', url: 'https://www.cncf.io/projects/', accessed: '2026-11-20' },
@@ -1233,7 +1233,7 @@ exit=0
 - `falco -V` with the default configuration printed `Error: Plugin requirement not satisfied, must load one of: container (>= 0.4.0)` and exited with 1. The `falco.yaml` of the archive has `load_plugins: []` at line 588.
 - The second command loaded the plugin with two `-o` options. The docs say that any configuration option can be overridden on the command line with `-o/--option key=value` <Cite n={44} />. They say that you can override a specific entry of a list by index, as in `--option key.subkey[0]=value` <Cite n={44} />. The docs say that the `plugins` property defines the set of plugins that Falco can load, and that the `load_plugins` property controls which plugins are loaded when Falco starts <Cite n={46} />.
 - With the plugin, Falco printed `Loaded plugin 'container@0.7.6'` and `falco_rules.yaml: Ok`, and it exited with 0. The step left out 14 log lines of the plugin.
-- The packages page says that on systems with glibc older than 2.34, the bundled container plugin may fail to load with an undefined symbol <Cite n={41} />. The glibc of the tutorial's machine is 2.43.
+- The packages page says that on RHEL 8 / UBI 8 systems with glibc older than 2.34, the container plugin bundled with Falco 0.42 to 0.44.x may fail to load with an undefined symbol, and that Falco 0.45.0 bundles a fixed version <Cite n={41} />. The glibc of the tutorial's machine is 2.43.
 - `qa_rules.yaml` is the tutorial's own file. It has a list, a macro, and a rule with the priority `WARNING`. The docs say that a rules file is a YAML file with mainly three types of elements <Cite n={22} />. Falco validated it with `qa_rules.yaml: Ok` and exit code 0. A rule has at least the fields `rule`, `desc`, `condition`, `output`, and `priority` <Cite n={23} />.
 - `falco -r qa_rules.yaml -L` printed the name and the description of the rule. The reference says that `-L` shows the name and description of all rules and exits <Cite n={25} />.
 
@@ -1309,7 +1309,7 @@ LOAD_ERR_YAML_VALIDATE (Error validating internal structure of YAML file): Inval
 exit=1
 ```
 
-- `qa_bad_field.yaml` has `fd.nam` in place of `fd.name`. Falco printed `Invalid`, then `LOAD_ERR_COMPILE_CONDITION (Error compiling condition): filter_check called with nonexistent field fd.nam`. It printed the condition with a `^` under the place of the error, and the exit code was 1. The reference says that `--list` lists all defined fields and exits <Cite n={25} />.
+- `qa_bad_field.yaml` has `fd.nam` in place of `fd.name`. Falco printed `Invalid`, then `LOAD_ERR_COMPILE_CONDITION (Error compiling condition): filter_check called with nonexistent field fd.nam`. It printed the condition with a `^` under the place of the error, and the exit code was 1. The docs say that `--list` lists all defined fields, so you can look up the right field name <Cite n={25} />. The tutorial did not run it.
 - `qa_bad_macro.yaml` has `qa_open_writes` in place of `qa_open_write`. Falco printed `LOAD_ERR_VALIDATE (Error validating rule/macro/list/exception objects): Undefined macro 'qa_open_writes' used in filter.`, and the exit code was 1. The docs say that macros are rule condition snippets that can be re-used inside rules and even other macros <Cite n={22} />.
 - `qa_bad_priority.yaml` has `priority: LOUD`. Falco printed `3 Schema warnings`, `1 Errors`, and `LOAD_ERR_YAML_VALIDATE (Error validating internal structure of YAML file): Invalid priority`, and the exit code was 1. The docs list the available priorities <Cite n={23} />.
 - Each output starts with the file name and the word `Invalid`. The step printed stdout only, and it dropped stderr.
@@ -1318,7 +1318,7 @@ exit=1
 
 ```bash
 mkdir plugins rules state assets
-# The log lines start with a date and a time. sed removes them, so that the output is the same in each run.
+# The log lines start with a date and a time. sed removes them. The order of the three artifacts can differ from run to run.
 falcoctl artifact install k8saudit:0.18.0 json:0.7.4 k8saudit-rules:0.18.0 \
   --config falco-0.45.2-x86_64/etc/falcoctl/falcoctl.yaml \
   --plugins-dir plugins --rulesfiles-dir rules --state-dir state --assets-dir assets \
@@ -1474,7 +1474,7 @@ exit=0
 
 - `event-privileged.json` is one audit event. The user `kubernetes-admin` creates the Pod `qa-privileged` with a privileged container (verb `create`, resource `pods`, response code 201). `event-other-user.json` is the same event from the user `qa-user`. `event-plain.json` is the same event with `privileged` set to `false`. `audit.jsonl` has the three events, one on each line. The events are the tutorial's own.
 - The README of the plugin says that it supports Kubernetes audit events from the Webhook backend or from a file <Cite n={45} />. For a file, the plugin expects JSONL, where each line is a JSON object with one or more audit events <Cite n={45} />. The README says that the expected way to use the plugin with Falco is a Webhook, and that file reading can be used for testing and development <Cite n={45} />. The Falco docs say that, to receive Kubernetes audit events, the plugin embeds a webserver that listens on a configurable port and accepts POST requests on a configurable endpoint <Cite n={47} />. The tutorial read a file and ran no webserver.
-- `falco-audit.yaml` is the tutorial's own configuration. It lists the rules file of step 14, `load_plugins: [k8saudit, json]`, the two plugins with their library paths, and the file in `open_params`. The README says that a parameter with no scheme is read as a file path <Cite n={45} />. Its sample has the same `load_plugins` list <Cite n={45} />].
+- `falco-audit.yaml` is the tutorial's own configuration. It lists the rules file of step 14, `load_plugins: [k8saudit, json]`, the two plugins with their library paths, and the file in `open_params`. The README says that a parameter with no scheme is read as a file path <Cite n={45} />. Its sample has the same `load_plugins` list <Cite n={45} />.
 - The `--disable-source` option turns off a specific event source <Cite n={25} />. The step gave it `syscall`. The docs say that for plugin-based deployments, you disable syscall explicitly or enable only the desired plugin-based sources <Cite n={19} />.
 - With the default setting, Falco printed two alerts for the three events, and `Events detected: 2`. The first event raised `Pod started with privileged container` for `kubernetes-admin`. The second event raised `K8s Operation performed by user not in allowed list of users` for `qa-user`. The third event raised no alert. The step removed the time at the start of each alert line.
 - The second event is a privileged Pod too, and in the default setting it did not raise `Create Privileged Pod`. In the rules file of step 14, `Disallowed K8s User` is defined at line 154 and `Create Privileged Pod` at line 247. The docs say that by default Falco applies rules per event type on a "first match wins" basis <Cite n={24} />. They say that the way to control the order in which rules are triggered is to change the order in which the rules are defined, and therefore loaded <Cite n={23} />. In this run, the alert of the second event came from the rule that is defined first.
@@ -2356,7 +2356,7 @@ exit=0
 - `falco -V` with the default configuration printed `Error: Plugin requirement not satisfied, must load one of: container (>= 0.4.0)` and exited with 1. The `falco.yaml` of the archive has `load_plugins: []` at line 588.
 - The second command loaded the plugin with two `-o` options. The docs say that any configuration option can be overridden on the command line with `-o/--option key=value` <Cite n={44} />. They say that you can override a specific entry of a list by index, as in `--option key.subkey[0]=value` <Cite n={44} />. The docs say that the `plugins` property defines the set of plugins that Falco can load, and that the `load_plugins` property controls which plugins are loaded when Falco starts <Cite n={46} />.
 - With the plugin, Falco printed `Loaded plugin 'container@0.7.6'` and `falco_rules.yaml: Ok`, and it exited with 0. The step left out 14 log lines of the plugin.
-- The packages page says that on systems with glibc older than 2.34, the bundled container plugin may fail to load with an undefined symbol <Cite n={41} />. The glibc of the tutorial's machine is 2.43.
+- The packages page says that on RHEL 8 / UBI 8 systems with glibc older than 2.34, the container plugin bundled with Falco 0.42 to 0.44.x may fail to load with an undefined symbol, and that Falco 0.45.0 bundles a fixed version <Cite n={41} />. The glibc of the tutorial's machine is 2.43.
 - `qa_rules.yaml` is the tutorial's own file. It has a list, a macro, and a rule with the priority `WARNING`. The docs say that a rules file is a YAML file with mainly three types of elements <Cite n={22} />. Falco validated it with `qa_rules.yaml: Ok` and exit code 0. A rule has at least the fields `rule`, `desc`, `condition`, `output`, and `priority` <Cite n={23} />.
 - `falco -r qa_rules.yaml -L` printed the name and the description of the rule. The reference says that `-L` shows the name and description of all rules and exits <Cite n={25} />.
 
@@ -2432,7 +2432,7 @@ LOAD_ERR_YAML_VALIDATE (Error validating internal structure of YAML file): Inval
 exit=1
 ```
 
-- `qa_bad_field.yaml` has `fd.nam` in place of `fd.name`. Falco printed `Invalid`, then `LOAD_ERR_COMPILE_CONDITION (Error compiling condition): filter_check called with nonexistent field fd.nam`. It printed the condition with a `^` under the place of the error, and the exit code was 1. The reference says that `--list` lists all defined fields and exits <Cite n={25} />.
+- `qa_bad_field.yaml` has `fd.nam` in place of `fd.name`. Falco printed `Invalid`, then `LOAD_ERR_COMPILE_CONDITION (Error compiling condition): filter_check called with nonexistent field fd.nam`. It printed the condition with a `^` under the place of the error, and the exit code was 1. The docs say that `--list` lists all defined fields, so you can look up the right field name <Cite n={25} />. The tutorial did not run it.
 - `qa_bad_macro.yaml` has `qa_open_writes` in place of `qa_open_write`. Falco printed `LOAD_ERR_VALIDATE (Error validating rule/macro/list/exception objects): Undefined macro 'qa_open_writes' used in filter.`, and the exit code was 1. The docs say that macros are rule condition snippets that can be re-used inside rules and even other macros <Cite n={22} />.
 - `qa_bad_priority.yaml` has `priority: LOUD`. Falco printed `3 Schema warnings`, `1 Errors`, and `LOAD_ERR_YAML_VALIDATE (Error validating internal structure of YAML file): Invalid priority`, and the exit code was 1. The docs list the available priorities <Cite n={23} />.
 - Each output starts with the file name and the word `Invalid`. The step printed stdout only, and it dropped stderr.
@@ -2441,7 +2441,7 @@ exit=1
 
 ```bash
 mkdir plugins rules state assets
-# The log lines start with a date and a time. sed removes them, so that the output is the same in each run.
+# The log lines start with a date and a time. sed removes them. The order of the three artifacts can differ from run to run.
 falcoctl artifact install k8saudit:0.18.0 json:0.7.4 k8saudit-rules:0.18.0 \
   --config falco-0.45.2-x86_64/etc/falcoctl/falcoctl.yaml \
   --plugins-dir plugins --rulesfiles-dir rules --state-dir state --assets-dir assets \
@@ -2597,7 +2597,7 @@ exit=0
 
 - `event-privileged.json` is one audit event. The user `kubernetes-admin` creates the Pod `qa-privileged` with a privileged container (verb `create`, resource `pods`, response code 201). `event-other-user.json` is the same event from the user `qa-user`. `event-plain.json` is the same event with `privileged` set to `false`. `audit.jsonl` has the three events, one on each line. The events are the tutorial's own.
 - The README of the plugin says that it supports Kubernetes audit events from the Webhook backend or from a file <Cite n={45} />. For a file, the plugin expects JSONL, where each line is a JSON object with one or more audit events <Cite n={45} />. The README says that the expected way to use the plugin with Falco is a Webhook, and that file reading can be used for testing and development <Cite n={45} />. The Falco docs say that, to receive Kubernetes audit events, the plugin embeds a webserver that listens on a configurable port and accepts POST requests on a configurable endpoint <Cite n={47} />. The tutorial read a file and ran no webserver.
-- `falco-audit.yaml` is the tutorial's own configuration. It lists the rules file of step 14, `load_plugins: [k8saudit, json]`, the two plugins with their library paths, and the file in `open_params`. The README says that a parameter with no scheme is read as a file path <Cite n={45} />. Its sample has the same `load_plugins` list <Cite n={45} />].
+- `falco-audit.yaml` is the tutorial's own configuration. It lists the rules file of step 14, `load_plugins: [k8saudit, json]`, the two plugins with their library paths, and the file in `open_params`. The README says that a parameter with no scheme is read as a file path <Cite n={45} />. Its sample has the same `load_plugins` list <Cite n={45} />.
 - The `--disable-source` option turns off a specific event source <Cite n={25} />. The step gave it `syscall`. The docs say that for plugin-based deployments, you disable syscall explicitly or enable only the desired plugin-based sources <Cite n={19} />.
 - With the default setting, Falco printed two alerts for the three events, and `Events detected: 2`. The first event raised `Pod started with privileged container` for `kubernetes-admin`. The second event raised `K8s Operation performed by user not in allowed list of users` for `qa-user`. The third event raised no alert. The step removed the time at the start of each alert line.
 - The second event is a privileged Pod too, and in the default setting it did not raise `Create Privileged Pod`. In the rules file of step 14, `Disallowed K8s User` is defined at line 154 and `Create Privileged Pod` at line 247. The docs say that by default Falco applies rules per event type on a "first match wins" basis <Cite n={24} />. They say that the way to control the order in which rules are triggered is to change the order in which the rules are defined, and therefore loaded <Cite n={23} />. In this run, the alert of the second event came from the rule that is defined first.
@@ -3479,7 +3479,7 @@ exit=0
 - default configuration দিয়ে `falco -V` ছাপিয়েছে `Error: Plugin requirement not satisfied, must load one of: container (>= 0.4.0)` আর 1 দিয়ে বেরিয়েছে। archive-এর `falco.yaml`-এ ৫৮৮ নম্বর লাইনে আছে `load_plugins: []`।
 - দ্বিতীয় command দুটো `-o` option দিয়ে plugin load করেছে। docs বলে, `-o/--option key=value` দিয়ে command line থেকে যেকোনো configuration option override করা যায় <Cite n={44} />। তারা বলে, একটা তালিকার নির্দিষ্ট entry index ধরে override করা যায়, যেমন `--option key.subkey[0]=value` <Cite n={44} />। docs বলে, `plugins` property ঠিক করে Falco কোন plugin load করতে পারে, আর `load_plugins` property নিয়ন্ত্রণ করে Falco চালু হওয়ার সময় কোনগুলো load হয় <Cite n={46} />।
 - plugin-সহ Falco ছাপিয়েছে `Loaded plugin 'container@0.7.6'` আর `falco_rules.yaml: Ok`, আর 0 দিয়ে বেরিয়েছে। ধাপটা plugin-এর ১৪টা log লাইন বাদ দিয়েছে।
-- packages page বলে, glibc ২.৩৪-এর পুরোনো system-এ bundled container plugin একটা undefined symbol-সহ load হতে ব্যর্থ হতে পারে <Cite n={41} />। টিউটোরিয়ালের machine-এর glibc 2.43।
+- packages page বলে, RHEL 8 / UBI 8 system-এ glibc ২.৩৪-এর পুরোনো হলে Falco 0.42 থেকে 0.44.x-এর সাথে bundled container plugin একটা undefined symbol-সহ load হতে ব্যর্থ হতে পারে, আর Falco 0.45.0 একটা ঠিক করা version bundle করে <Cite n={41} />। টিউটোরিয়ালের machine-এর glibc 2.43।
 - `qa_rules.yaml` টিউটোরিয়ালের নিজের file। তাতে আছে একটা list, একটা macro, আর `WARNING` priority-র একটা rule। docs বলে, একটা rules file হলো একটা YAML file, যাতে প্রধানত তিন ধরনের উপাদান থাকে <Cite n={22} />। Falco তাকে যাচাই করেছে `qa_rules.yaml: Ok` আর exit code 0 দিয়ে। একটা rule-এ অন্তত `rule`, `desc`, `condition`, `output` আর `priority` field থাকে <Cite n={23} />।
 - `falco -r qa_rules.yaml -L` rule-টার নাম আর বর্ণনা ছাপিয়েছে। reference বলে, `-L` সব rule-এর নাম আর বর্ণনা দেখায় আর বেরিয়ে যায় <Cite n={25} />।
 
@@ -3555,7 +3555,7 @@ LOAD_ERR_YAML_VALIDATE (Error validating internal structure of YAML file): Inval
 exit=1
 ```
 
-- `qa_bad_field.yaml`-এ `fd.name`-এর জায়গায় আছে `fd.nam`। Falco ছাপিয়েছে `Invalid`, তারপর `LOAD_ERR_COMPILE_CONDITION (Error compiling condition): filter_check called with nonexistent field fd.nam`। সে condition-টা ছাপিয়েছে ভুলের জায়গার নিচে একটা `^`-সহ, আর exit code ছিল 1। reference বলে, `--list` সংজ্ঞায়িত সব field-এর তালিকা দেয় আর বেরিয়ে যায় <Cite n={25} />।
+- `qa_bad_field.yaml`-এ `fd.name`-এর জায়গায় আছে `fd.nam`। Falco ছাপিয়েছে `Invalid`, তারপর `LOAD_ERR_COMPILE_CONDITION (Error compiling condition): filter_check called with nonexistent field fd.nam`। সে condition-টা ছাপিয়েছে ভুলের জায়গার নিচে একটা `^`-সহ, আর exit code ছিল 1। docs বলে, `--list` সংজ্ঞায়িত সব field-এর তালিকা দেয়, তাই সঠিক field-এর নাম খুঁজে নেওয়া যায় <Cite n={25} />। টিউটোরিয়াল এটা চালায়নি।
 - `qa_bad_macro.yaml`-এ `qa_open_write`-এর জায়গায় আছে `qa_open_writes`। Falco ছাপিয়েছে `LOAD_ERR_VALIDATE (Error validating rule/macro/list/exception objects): Undefined macro 'qa_open_writes' used in filter.`, আর exit code ছিল 1। docs বলে, macro হলো rule-এর condition-এর টুকরো, যা rule-এর ভেতরে আর এমনকি অন্য macro-র ভেতরেও আবার ব্যবহার করা যায় <Cite n={22} />।
 - `qa_bad_priority.yaml`-এ আছে `priority: LOUD`। Falco ছাপিয়েছে `3 Schema warnings`, `1 Errors` আর `LOAD_ERR_YAML_VALIDATE (Error validating internal structure of YAML file): Invalid priority`, আর exit code ছিল 1। docs পাওয়া priority-গুলোর তালিকা দেয় <Cite n={23} />।
 - প্রতিটা output শুরু হয় file-এর নাম আর `Invalid` শব্দ দিয়ে। ধাপটা শুধু stdout ছাপিয়েছে, আর stderr বাদ দিয়েছে।
@@ -3564,7 +3564,7 @@ exit=1
 
 ```bash
 mkdir plugins rules state assets
-# The log lines start with a date and a time. sed removes them, so that the output is the same in each run.
+# The log lines start with a date and a time. sed removes them. The order of the three artifacts can differ from run to run.
 falcoctl artifact install k8saudit:0.18.0 json:0.7.4 k8saudit-rules:0.18.0 \
   --config falco-0.45.2-x86_64/etc/falcoctl/falcoctl.yaml \
   --plugins-dir plugins --rulesfiles-dir rules --state-dir state --assets-dir assets \
