@@ -1,7 +1,7 @@
 import type { StageSheet } from "../sheet.ts";
 
 export const CONTAINERS: StageSheet = {
-  updated: "2026-11-04",
+  updated: "2026-11-27",
   sources: {
     namespaces: ["namespaces(7) - overview of Linux namespaces", "man7.org (man-pages)", "https://man7.org/linux/man-pages/man7/namespaces.7.html"],
     unshare: ["unshare(1) - run program in new namespaces", "man7.org (Linux man-pages)", "https://man7.org/linux/man-pages/man1/unshare.1.html"],
@@ -48,7 +48,7 @@ export const CONTAINERS: StageSheet = {
       src: ["docker_info", "docker_ls", "docker_inspect", "podman_ps", "containerd", "runc"],
       rows: [
         ["docker → containerd → runc", "the stack: CLI, manager, low-level runtime", "stack: CLI, manager, নিচের স্তরের runtime"],
-        ["docker info", "the runtimes and storage in use", "ব্যবহৃত runtime ও storage"],
+        ["docker info", "system-wide info: kernel, container and image counts", "পুরো Docker-এর তথ্য: kernel, container ও image সংখ্যা"],
         ["docker ps", "running containers", "চলমান container"],
         ["docker inspect NAME", "everything about one container, as JSON", "একটি container-এর সব তথ্য, JSON-এ"],
         ["podman ps", "list running containers with Podman", "Podman দিয়ে চলমান container-এর তালিকা"],
@@ -65,7 +65,7 @@ export const CONTAINERS: StageSheet = {
         ["docker stop NAME", "stop it", "বন্ধ করে"],
         ["docker rm NAME", "delete a stopped container", "বন্ধ container মোছে", "!"],
         ["docker build -t IMAGE .", "build an image from a Dockerfile here", "এখানকার Dockerfile থেকে image বানায়"],
-        ["docker system prune", "remove stopped containers, unused networks, dangling images", "বন্ধ container, অব্যবহৃত network ও dangling image মোছে", "!"],
+        ["docker system prune", "remove stopped containers, networks, dangling images, cache", "বন্ধ container, অব্যবহৃত network, dangling image ও build cache মোছে", "!"],
       ],
     },
     {

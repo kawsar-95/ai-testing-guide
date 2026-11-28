@@ -1,7 +1,7 @@
 import type { StageSheet } from "../sheet.ts";
 
 export const FILES: StageSheet = {
-  updated: "2026-11-03",
+  updated: "2026-11-27",
   sources: {
     bash: ["bash(1) - GNU Bourne-Again SHell", "man7.org (bash)", "https://man7.org/linux/man-pages/man1/bash.1.html"],
     cat: ["cat(1) - concatenate files and print on the standard output", "man7.org (coreutils)", "https://man7.org/linux/man-pages/man1/cat.1.html"],
@@ -64,7 +64,7 @@ export const FILES: StageSheet = {
       rows: [
         ["cp FILE DST", "copy a file; replaces an existing DST", "file কপি করে; DST থাকলে তা বদলে যায়", "!"],
         ["cp -r DIR DST", "copy a directory and all inside it", "directory ও ভেতরের সব কপি করে", "!"],
-        ["cp -a SRC DST", "copy, keeping permissions and times", "permission ও সময় ঠিক রেখে কপি করে", "!"],
+        ["cp -a SRC DST", "copy, keeping permissions, times, owners, links", "permission, সময়, মালিক ও link ঠিক রেখে কপি করে", "!"],
         ["cp -i FILE DST", "ask before overwriting", "overwrite-এর আগে জিজ্ঞেস করে"],
         ["mv OLD NEW", "rename it; replaces an existing NEW", "নাম বদলায়; NEW থাকলে তা বদলে যায়", "!"],
         ["mv -n OLD NEW", "rename, never overwrite", "নাম বদলায়, overwrite করে না"],
@@ -125,7 +125,7 @@ export const FILES: StageSheet = {
     },
     {
       topic: "Soft and Hard Links",
-      src: ["ln", "readlink", "find", "stat", "ls", "inode"],
+      src: ["ln", "readlink", "find", "ls", "inode"],
       rows: [
         ["ln -s TARGET LINK", "symbolic link: a shortcut by path", "symbolic link: path ধরে shortcut"],
         ["ln FILE LINK", "hard link: another name for the same data", "hard link: একই data-র আরেকটি নাম"],
@@ -144,7 +144,7 @@ export const FILES: StageSheet = {
         ["tar -tf NAME.tar.gz", "list the contents first", "আগে ভেতরের তালিকা দেখায়"],
         ["tar -xzf NAME.tar.gz -C DIR", "extract into a directory", "নির্দিষ্ট directory-তে খোলে", "!"],
         ["gzip -k FILE", "compress, keep the original", "মূল file রেখে compress করে"],
-        ["gunzip FILE.gz", "decompress", "decompress করে"],
+        ["gunzip FILE.gz", "decompress; the .gz is removed", "decompress করে; .gz file মুছে যায়"],
         ["zip -r NAME.zip DIR", "zip a directory", "directory zip করে"],
         ["unzip NAME.zip", "extract a zip", "zip খোলে"],
       ],

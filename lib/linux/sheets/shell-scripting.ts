@@ -1,7 +1,7 @@
 import type { StageSheet } from "../sheet.ts";
 
 export const SHELL_SCRIPTING: StageSheet = {
-  updated: "2026-11-03",
+  updated: "2026-11-27",
   sources: {
     bashref: ["Bash Reference Manual", "GNU Project", "https://www.gnu.org/software/bash/manual/bash.html"],
     bash: ["bash(1) - GNU Bourne-Again SHell", "man7.org (bash)", "https://man7.org/linux/man-pages/man1/bash.1.html"],
@@ -22,7 +22,7 @@ export const SHELL_SCRIPTING: StageSheet = {
         ["bash script.sh", "run it without the executable bit", "executable bit ছাড়া চালায়"],
         ["$1  $@  $#  $?", "first argument · all arguments · count · last exit code", "প্রথম argument · সব argument · সংখ্যা · শেষ exit code"],
         ["exit 1", "stop with a status (0 = success)", "status দিয়ে থামে (0 = সফল)"],
-        ["set -euo pipefail", "stop on errors and unset variables", "error বা unset variable পেলে থামে"],
+        ["set -euo pipefail", "stop on errors, unset variables, failed pipes", "error, unset variable বা pipe ব্যর্থ হলে থামে"],
         ["source FILE", "run a file in the current shell", "file বর্তমান shell-এ চালায়"],
       ],
     },
@@ -89,7 +89,7 @@ export const SHELL_SCRIPTING: StageSheet = {
         ["bash -x script.sh", "print each command as it runs", "প্রতিটি command চলার সময় ছাপে"],
         ["set -x  /  set +x", "trace on · trace off, inside a script", "trace চালু · বন্ধ, script-এর ভেতরে"],
         ["bash -n script.sh", "check the syntax, run nothing", "syntax দেখে, কিছু চালায় না"],
-        ["set -e", "stop at the first failing command", "প্রথম ব্যর্থ command-এই থামে"],
+        ["set -e", "stop when a command fails (not in if/&&/||)", "command ব্যর্থ হলে থামে (if/&&/|| পরীক্ষায় নয়)"],
         ["trap 'echo line $LINENO' ERR", "report where a command failed", "কোথায় command ব্যর্থ হলো তা জানায়"],
         ['echo "x=$x" >&2', "debug print to stderr", "stderr-এ debug print করে"],
         ["PS4='+ $LINENO: '", "change the trace prefix", "trace-এর prefix বদলায়"],

@@ -1,7 +1,7 @@
 import type { StageSheet } from "../sheet.ts";
 
 export const USERS_PERMISSIONS: StageSheet = {
-  updated: "2026-11-03",
+  updated: "2026-11-27",
   sources: {
     bash: ["bash(1) - GNU Bourne-Again SHell", "man7.org (bash)", "https://man7.org/linux/man-pages/man1/bash.1.html"],
     whoami: ["whoami(1) - print effective user name", "man7.org (coreutils)", "https://man7.org/linux/man-pages/man1/whoami.1.html"],
@@ -122,7 +122,7 @@ export const USERS_PERMISSIONS: StageSheet = {
         ["600", "private to the owner: keys, secrets", "শুধু owner-এর: key, secret"],
         ["chmod u+s FILE", "setuid: runs as the file's owner", "setuid: file-এর owner হিসেবে চলে"],
         ["chmod g+s DIR", "setgid: new files get the directory's group", "setgid: নতুন file directory-র group পায়"],
-        ["chmod +t DIR", "sticky: only the file or directory owner can delete", "sticky: শুধু file বা directory-র owner মুছতে পারে"],
+        ["chmod +t DIR", "sticky: only file owner, dir owner, root can delete", "sticky: শুধু file-এর owner, directory-র owner বা root মুছতে পারে"],
         ["s  S  t  T", "ls -l: small = also x, capital = no x", "ls -l-এ: ছোট হাতের = x-ও আছে, বড় হাতের = x নেই"],
       ],
     },

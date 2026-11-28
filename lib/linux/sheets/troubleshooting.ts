@@ -1,7 +1,7 @@
 import type { StageSheet } from "../sheet.ts";
 
 export const TROUBLESHOOTING: StageSheet = {
-  updated: "2026-11-04",
+  updated: "2026-11-27",
   sources: {
     uptime: ["uptime(1) - Tell how long the system has been running.", "man7.org (procps-ng)", "https://man7.org/linux/man-pages/man1/uptime.1.html"],
     free: ["free(1) - Display amount of free and used memory in the system", "man7.org (procps-ng)", "https://man7.org/linux/man-pages/man1/free.1.html"],
@@ -40,7 +40,7 @@ export const TROUBLESHOOTING: StageSheet = {
         ["free -h", "memory; read the available column", "memory; available column দেখুন"],
         ["df -h", "disk space per filesystem", "প্রতিটি filesystem-এর ফাঁকা জায়গা"],
         ["top", "who uses CPU and memory; q quits", "কে CPU ও memory নিচ্ছে; q বন্ধ করে"],
-        ["dmesg -T --level=err,warn", "kernel errors and warnings", "kernel-এর error ও warning"],
+        ["dmesg -T --level=err,warn", "kernel errors, warnings (may need sudo)", "kernel-এর error ও warning (sudo লাগতে পারে)"],
         ["journalctl -p err -b", "errors since boot", "boot-এর পর থেকে error"],
         ["systemctl --failed", "failed services", "ব্যর্থ service"],
         ["ss -tulpn", "what is listening", "কী শুনছে"],
@@ -80,7 +80,7 @@ export const TROUBLESHOOTING: StageSheet = {
         ['journalctl --since "1 hour ago"', "the last hour", "শেষ ১ ঘণ্টা"],
         ["journalctl -k", "kernel messages only", "শুধু kernel message"],
         ["journalctl --disk-usage", "how much space the journal uses", "journal কত জায়গা নিয়েছে"],
-        ["dmesg -T", "kernel ring buffer, readable times", "kernel ring buffer, পড়ার মতো সময়"],
+        ["dmesg -T", "kernel ring buffer, readable times; may need sudo", "kernel ring buffer, পড়ার মতো সময়; sudo লাগতে পারে"],
         ["/var/log/journal", "the journal survives reboots if this exists", "এটি থাকলে journal reboot-এর পরেও থাকে"],
         ["/var/log/messages", "the main text log (Red Hat family)", "প্রধান টেক্সট log (Red Hat পরিবার)"],
       ],
@@ -92,7 +92,7 @@ export const TROUBLESHOOTING: StageSheet = {
         ["last", "recent logins, from /var/log/wtmp", "সাম্প্রতিক login, /var/log/wtmp থেকে"],
         ["last -n 10", "only the last 10 logins", "শুধু শেষ ১০টি login"],
         ["sudo lastb", "failed logins, from /var/log/btmp", "ব্যর্থ login, /var/log/btmp থেকে"],
-        ["lastlog", "the last login of each user", "প্রতিটি user-এর শেষ login"],
+        ["lastlog", "each user's last login; absent on some distros", "প্রতিটি user-এর শেষ login; কিছু distro-তে নেই"],
         ["sudo faillock --user USER", "a user's failed-login records", "একজন user-এর ব্যর্থ login-এর রেকর্ড"],
         ["journalctl -u ssh", "the SSH log (the unit is ssh on Ubuntu)", "SSH log (Ubuntu-তে unit-এর নাম ssh)"],
         ["/var/log/secure", "authentication messages (Red Hat family)", "authentication message (Red Hat পরিবার)"],
