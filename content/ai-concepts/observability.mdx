@@ -1,6 +1,6 @@
 export const metadata = { title: 'Observability for AI Agents', description: 'Trace every step of an agent run, and fix problems with evidence.' }
 export const page = {
-  updated: '2026-10-28',
+  updated: '2026-11-27',
   sources: [
     { title: 'Observability primer', publisher: 'OpenTelemetry', url: 'https://opentelemetry.io/docs/concepts/observability-primer/', accessed: '2026-10-28' },
     { title: 'Signals', publisher: 'OpenTelemetry', url: 'https://opentelemetry.io/docs/concepts/signals/', accessed: '2026-10-28' },
@@ -12,6 +12,7 @@ export const page = {
     { title: 'Versioning and stability for OpenTelemetry clients', publisher: 'OpenTelemetry', url: 'https://opentelemetry.io/docs/specs/otel/versioning-and-stability/', accessed: '2026-10-28' },
     { title: 'Monitoring', publisher: 'Claude Code Docs (Anthropic)', url: 'https://code.claude.com/docs/en/monitoring-usage', accessed: '2026-10-28' },
     { title: 'Demystifying evals for AI agents', publisher: 'Anthropic Engineering', url: 'https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents', accessed: '2026-10-28' },
+    { title: 'Semantic conventions for GenAI tool execution', publisher: 'OpenTelemetry (GitHub)', url: 'https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/execute-tool.md', accessed: '2026-11-27' },
   ],
 }
 
@@ -70,7 +71,7 @@ OpenTelemetry-তে model call আর agent-এর ডেটার জন্য
 <Voices>
 <Technical>
 
-**1. The agent run becomes a tree of spans.** The OpenTelemetry GenAI conventions name the operations. `invoke_agent` is one agent invocation, `chat` is one chat model call, and `execute_tool` is one tool call <Cite n={5} />. The agent span is named `invoke_agent {gen_ai.agent.name}` <Cite n={4} />, and a tool span is named `execute_tool {gen_ai.tool.name}` <Cite n={5} />:
+**1. The agent run becomes a tree of spans.** The OpenTelemetry GenAI conventions name the operations. `invoke_agent` is one agent invocation, `chat` is one chat model call, and `execute_tool` is one tool call <Cite n={5} />. The agent span is named `invoke_agent {gen_ai.agent.name}` <Cite n={4} />, and a tool span is named `execute_tool {gen_ai.tool.name}` <Cite n={11} />:
 
 ```text
 invoke_agent test-fixer                one agent run (root span)
@@ -80,9 +81,9 @@ invoke_agent test-fixer                one agent run (root span)
 └── execute_tool run_tests             step 4: a tool call, error.type if it fails
 ```
 
-**2. Each span carries attributes.** An agent span can record `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens` <Cite n={4} />. If the operation ends in an error, the span gets `error.type` <Cite n={4} />. A tool span must have `gen_ai.tool.name` <Cite n={5} />.
+**2. Each span carries attributes.** An agent span can record `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens` <Cite n={4} />. If the operation ends in an error, the span gets `error.type` <Cite n={4} />. A tool span must have `gen_ai.tool.name` <Cite n={11} />.
 
-**3. Metrics sum up many runs.** The conventions define `gen_ai.invoke_agent.duration` (the end-to-end time of one agent run), `gen_ai.invoke_agent.tool_calls` (the tool calls in one run), and `gen_ai.execute_tool.duration` (the time of one tool call) <Cite n={6} />.
+**3. Metrics sum up many runs.** The conventions define `gen_ai.invoke_agent.duration` (the end-to-end time of one agent run), `gen_ai.invoke_agent.tool_calls` (the tool calls in one run), and `gen_ai.execute_tool.duration` (the time of one tool call) <Cite n={6} /> <Cite n={11} />.
 
 **4. Feedback becomes an event.** The `gen_ai.evaluation.result` event records the result of an evaluation of a model output, with a score or a label such as `pass` or `fail` <Cite n={7} />.
 
@@ -93,11 +94,11 @@ invoke_agent test-fixer                one agent run (root span)
 </Technical>
 <Layman>
 
-**1. The agent run becomes a tree of spans.** OpenTelemetry gives each kind of step a name. `invoke_agent` is one run of an agent. `chat` is one call to a chat model. `execute_tool` is one tool call <Cite n={5} />. The agent span is named `invoke_agent` plus the agent name <Cite n={4} />. A tool span is named `execute_tool` plus the tool name <Cite n={5} />. In the tree, the agent run is at the top. Steps 1 and 3 are model calls. Steps 2 and 4 are tool calls.
+**1. The agent run becomes a tree of spans.** OpenTelemetry gives each kind of step a name. `invoke_agent` is one run of an agent. `chat` is one call to a chat model. `execute_tool` is one tool call <Cite n={5} />. The agent span is named `invoke_agent` plus the agent name <Cite n={4} />. A tool span is named `execute_tool` plus the tool name <Cite n={11} />. In the tree, the agent run is at the top. Steps 1 and 3 are model calls. Steps 2 and 4 are tool calls.
 
-**2. Each span carries details.** An agent span can record how many tokens went in and how many came out <Cite n={4} />. If the step ends in an error, the span gets `error.type` <Cite n={4} />. A tool span must have the name of the tool <Cite n={5} />.
+**2. Each span carries details.** An agent span can record how many tokens went in and how many came out <Cite n={4} />. If the step ends in an error, the span gets `error.type` <Cite n={4} />. A tool span must have the name of the tool <Cite n={11} />.
 
-**3. Metrics sum up many runs.** There are standard metrics for the full time of one agent run, the number of tool calls in one run, and the time of one tool call <Cite n={6} />.
+**3. Metrics sum up many runs.** There are standard metrics for the full time of one agent run, the number of tool calls in one run, and the time of one tool call <Cite n={6} /> <Cite n={11} />.
 
 **4. Feedback becomes an event.** The `gen_ai.evaluation.result` event records how an output was graded. It has a score or a label such as `pass` or `fail` <Cite n={7} />.
 
@@ -108,11 +109,11 @@ invoke_agent test-fixer                one agent run (root span)
 </Layman>
 <Bangla>
 
-**১. Agent run একটা span-এর ট্রি হয়ে যায়।** OpenTelemetry প্রতিটা ধাপের একটা নাম দেয়। `invoke_agent` মানে agent-এর একটা run। `chat` মানে একটা chat model-কে একবার কল করা। `execute_tool` মানে একটা tool call <Cite n={5} />। Agent span-এর নাম হয় `invoke_agent` আর তার পরে agent-এর নাম <Cite n={4} />। Tool span-এর নাম হয় `execute_tool` আর তার পরে tool-এর নাম <Cite n={5} />। ট্রি-র মাথায় থাকে agent run। ধাপ ১ আর ৩ হলো model call। ধাপ ২ আর ৪ হলো tool call।
+**১. Agent run একটা span-এর ট্রি হয়ে যায়।** OpenTelemetry প্রতিটা ধাপের একটা নাম দেয়। `invoke_agent` মানে agent-এর একটা run। `chat` মানে একটা chat model-কে একবার কল করা। `execute_tool` মানে একটা tool call <Cite n={5} />। Agent span-এর নাম হয় `invoke_agent` আর তার পরে agent-এর নাম <Cite n={4} />। Tool span-এর নাম হয় `execute_tool` আর তার পরে tool-এর নাম <Cite n={11} />। ট্রি-র মাথায় থাকে agent run। ধাপ ১ আর ৩ হলো model call। ধাপ ২ আর ৪ হলো tool call।
 
-**২. প্রতিটা span-এ তথ্য থাকে।** একটা agent span-এ লেখা থাকতে পারে কত token ঢুকেছে আর কত token বের হয়েছে <Cite n={4} />। কোনো ধাপ error-এ শেষ হলে span-এ `error.type` বসে <Cite n={4} />। একটা tool span-এ tool-এর নাম থাকতেই হবে <Cite n={5} />।
+**২. প্রতিটা span-এ তথ্য থাকে।** একটা agent span-এ লেখা থাকতে পারে কত token ঢুকেছে আর কত token বের হয়েছে <Cite n={4} />। কোনো ধাপ error-এ শেষ হলে span-এ `error.type` বসে <Cite n={4} />। একটা tool span-এ tool-এর নাম থাকতেই হবে <Cite n={11} />।
 
-**৩. Metric অনেকগুলো run-এর হিসাব দেয়।** একটা agent run-এর পুরো সময়, একটা run-এ কয়টা tool call হলো, আর একটা tool call-এর সময়ের জন্য স্ট্যান্ডার্ড metric আছে <Cite n={6} />।
+**৩. Metric অনেকগুলো run-এর হিসাব দেয়।** একটা agent run-এর পুরো সময়, একটা run-এ কয়টা tool call হলো, আর একটা tool call-এর সময়ের জন্য স্ট্যান্ডার্ড metric আছে <Cite n={6} /> <Cite n={11} />।
 
 **৪. Feedback একটা event হয়ে যায়।** `gen_ai.evaluation.result` event রেকর্ড করে একটা আউটপুটকে কীভাবে মূল্যায়ন করা হলো। এতে একটা score বা `pass` বা `fail`-এর মতো একটা label থাকে <Cite n={7} />।
 
@@ -173,7 +174,7 @@ invoke_agent test-fixer                     41 s
 └── execute_tool run_tests                  30 s   error.type=timeout
 ```
 
-The tester sees three facts at once. The edit happened. The test run ended in an error, not a pass, because the tool span has `error.type` <Cite n={5} />. And no `chat` span follows the failed `run_tests` span, so the agent wrote its "fixed" report without reading the test result. The bug is in the agent loop, not in the locator.
+The tester sees three facts at once. The edit happened. The test run ended in an error, not a pass, because the tool span has `error.type` <Cite n={11} />. And no `chat` span follows the failed `run_tests` span, so the agent wrote its "fixed" report without reading the test result. The bug is in the agent loop, not in the locator.
 
 The team then does two things. They add a check to the agent: no "fixed" report without a passing test run. And they turn this run into an eval case, because user-reported failures that become test cases keep an eval suite close to real use <Cite n={10} />.
 
@@ -184,7 +185,7 @@ This is an invented example. A team runs a test-automation agent in CI. Its job 
 
 The final answer does not help. The trace of the run does. It shows five steps under the agent run: a model call, a file read, a model call, a file edit, and a test run. The test run took 30 seconds and has `error.type=timeout`.
 
-The tester sees three facts at once. The edit happened. The test run ended in an error, not a pass, because the tool span has `error.type` <Cite n={5} />. And no model call comes after the failed test run. So the agent said "fixed" without reading the test result. The bug is in the agent loop, not in the locator.
+The tester sees three facts at once. The edit happened. The test run ended in an error, not a pass, because the tool span has `error.type` <Cite n={11} />. And no model call comes after the failed test run. So the agent said "fixed" without reading the test result. The bug is in the agent loop, not in the locator.
 
 The team then does two things. They add a rule to the agent: no "fixed" report without a test run that passes. And they turn this run into an eval case. When failures that users report become test cases, the eval suite stays close to real use <Cite n={10} />.
 
@@ -195,7 +196,7 @@ The team then does two things. They add a rule to the agent: no "fixed" report w
 
 শেষ উত্তরটা কোনো কাজে আসে না। Run-এর trace কাজে আসে। এটা agent run-এর নিচে পাঁচটা ধাপ দেখায়: একটা model call, একটা ফাইল পড়া, একটা model call, একটা ফাইল এডিট, আর একটা টেস্ট রান। টেস্ট রানে ৩০ সেকেন্ড লেগেছে, আর এতে `error.type=timeout` আছে।
 
-টেস্টার একসাথে তিনটা জিনিস দেখেন। এডিট হয়েছে। টেস্ট রান pass না করে error-এ শেষ হয়েছে, কারণ tool span-এ `error.type` আছে <Cite n={5} />। আর fail করা টেস্ট রানের পরে কোনো model call নেই। মানে agent টেস্টের ফলাফল না পড়েই "fixed" বলেছে। Bug-টা agent-এর loop-এ, locator-এ না।
+টেস্টার একসাথে তিনটা জিনিস দেখেন। এডিট হয়েছে। টেস্ট রান pass না করে error-এ শেষ হয়েছে, কারণ tool span-এ `error.type` আছে <Cite n={11} />। আর fail করা টেস্ট রানের পরে কোনো model call নেই। মানে agent টেস্টের ফলাফল না পড়েই "fixed" বলেছে। Bug-টা agent-এর loop-এ, locator-এ না।
 
 তারপর টিম দুটো কাজ করে। তারা agent-এ একটা নিয়ম যোগ করে: টেস্ট pass না করলে "fixed" রিপোর্ট নয়। আর তারা এই run-টাকে একটা eval case বানায়। ইউজারের জানানো fail-গুলো test case হলে eval suite আসল ব্যবহারের কাছাকাছি থাকে <Cite n={10} />।
 
@@ -208,8 +209,8 @@ The team then does two things. They add a rule to the agent: no "fixed" report w
 <Technical>
 
 - **Only the final answer is logged.** Then you cannot see which step failed. A transcript needs the tool calls and intermediate results too <Cite n={10} />.
-- **Some tool calls are not traced.** Automatic instrumentation does not cover every tool. The conventions ask developers to instrument by hand the tool calls that it misses <Cite n={5} />. A missing span looks like a step that never happened.
-- **Prompts and tool inputs are logged in production with no review.** They are sensitive and can hold personal data <Cite n={5} /> <Cite n={4} />. Also, with OAuth sign-in, Claude Code puts `user.email` in its telemetry attributes <Cite n={9} />. Check what your backend stores and who can read it.
+- **Some tool calls are not traced.** Automatic instrumentation does not cover every tool. The conventions ask developers to instrument by hand the tool calls that it misses <Cite n={11} />. A missing span looks like a step that never happened.
+- **Prompts and tool inputs are logged in production with no review.** They are sensitive and can hold personal data <Cite n={5} /> <Cite n={4} />. Also, Claude Code puts `user.email` (from your sign-in) in its telemetry attributes <Cite n={9} />. Check what your backend stores and who can read it.
 - **The cost number is treated as the bill.** In Claude Code, `cost_usd` is an estimate <Cite n={9} />. Use the provider's billing for money; use telemetry to spot trends.
 - **The GenAI names are treated as stable.** They are in Development <Cite n={3} />, and breaking changes can occur <Cite n={8} />. Pin the version you depend on, and check dashboards after an upgrade.
 - **Traces are collected but never read.** Anthropic's advice for evals is to read the transcripts; you cannot know if graders work otherwise <Cite n={10} />.
@@ -218,8 +219,8 @@ The team then does two things. They add a rule to the agent: no "fixed" report w
 <Layman>
 
 - **Only the final answer is logged.** Then you cannot see which step failed. A transcript needs the tool calls and the results in between too <Cite n={10} />.
-- **Some tool calls are not traced.** Automatic tools do not cover every tool call. The standard asks developers to add the missing ones by hand <Cite n={5} />. A missing span looks like a step that never happened.
-- **Prompts and tool inputs are logged in production with no review.** They are sensitive and can hold personal data <Cite n={5} /> <Cite n={4} />. Also, when you sign in with OAuth, Claude Code puts `user.email` in its telemetry <Cite n={9} />. Check what your backend keeps and who can read it.
+- **Some tool calls are not traced.** Automatic tools do not cover every tool call. The standard asks developers to add the missing ones by hand <Cite n={11} />. A missing span looks like a step that never happened.
+- **Prompts and tool inputs are logged in production with no review.** They are sensitive and can hold personal data <Cite n={5} /> <Cite n={4} />. Also, when you are signed in, Claude Code puts `user.email` in its telemetry <Cite n={9} />. Check what your backend keeps and who can read it.
 - **The cost number is treated as the bill.** In Claude Code, `cost_usd` is an estimate <Cite n={9} />. Use the bill of the provider for money. Use telemetry to see trends.
 - **The standard names are treated as fixed.** They are in Development <Cite n={3} />, and changes that break things can happen <Cite n={8} />. Pin the version you use. Check your dashboards after an upgrade.
 - **Traces are collected but nobody reads them.** Anthropic's advice for evals is to read the transcripts. Otherwise you cannot know if the graders work <Cite n={10} />.
@@ -228,8 +229,8 @@ The team then does two things. They add a rule to the agent: no "fixed" report w
 <Bangla>
 
 - **শুধু শেষ উত্তর log করা হয়।** তখন কোন ধাপ fail করেছে তা দেখা যায় না। একটা transcript-এ tool call আর মাঝের ফলাফলও লাগে <Cite n={10} />।
-- **কিছু tool call trace করা হয় না।** অটোমেটিক instrumentation সব tool call ধরে না। স্ট্যান্ডার্ড বলে, যেগুলো বাদ পড়ে সেগুলো ডেভেলপার নিজে হাতে যোগ করবেন <Cite n={5} />। একটা span না থাকলে মনে হয় ধাপটা কখনো হয়ইনি।
-- **কোনো রিভিউ ছাড়াই production-এ prompt আর tool input log করা হয়।** এগুলো sensitive, আর এতে ব্যক্তিগত ডেটা থাকতে পারে <Cite n={5} /> <Cite n={4} />। তাছাড়া OAuth দিয়ে sign in করলে Claude Code তার telemetry-তে `user.email` রাখে <Cite n={9} />। আপনার backend কী জমা রাখে আর কে তা পড়তে পারে, দেখে নিন।
+- **কিছু tool call trace করা হয় না।** অটোমেটিক instrumentation সব tool call ধরে না। স্ট্যান্ডার্ড বলে, যেগুলো বাদ পড়ে সেগুলো ডেভেলপার নিজে হাতে যোগ করবেন <Cite n={11} />। একটা span না থাকলে মনে হয় ধাপটা কখনো হয়ইনি।
+- **কোনো রিভিউ ছাড়াই production-এ prompt আর tool input log করা হয়।** এগুলো sensitive, আর এতে ব্যক্তিগত ডেটা থাকতে পারে <Cite n={5} /> <Cite n={4} />। তাছাড়া sign in করা থাকলে Claude Code তার telemetry-তে `user.email` রাখে <Cite n={9} />। আপনার backend কী জমা রাখে আর কে তা পড়তে পারে, দেখে নিন।
 - **Cost-এর সংখ্যাকে বিল ধরে নেওয়া হয়।** Claude Code-এ `cost_usd` একটা আনুমানিক হিসাব <Cite n={9} />। টাকার হিসাবের জন্য provider-এর বিল দেখুন। Telemetry দিয়ে ট্রেন্ড দেখুন।
 - **স্ট্যান্ডার্ড নামগুলোকে স্থায়ী ধরে নেওয়া হয়।** এগুলো Development অবস্থায় আছে <Cite n={3} />, আর breaking change হতে পারে <Cite n={8} />। আপনি যে ভার্সন ব্যবহার করেন সেটা পিন করুন। আপগ্রেডের পরে dashboard চেক করুন।
 - **Trace জমা হয়, কিন্তু কেউ পড়ে না।** Eval নিয়ে Anthropic-এর পরামর্শ হলো transcript পড়া। না পড়লে grader ঠিকমতো কাজ করছে কিনা আপনি জানতে পারবেন না <Cite n={10} />।
