@@ -32,6 +32,20 @@ npm test         # node --test on tests/*.test.ts
 
 `next.config.ts` sets `output: 'export'`, `trailingSlash: true` and `images.unoptimized`. The MDX plugins are given by name (strings), because Turbopack passes their options to Rust and they must be serializable.
 
+## Animated visuals
+
+`<Visual name="..." />` in an MDX page shows a step-by-step animated lesson (a stage, live number chips, a caption for each step, Back/Next/Play). Put it after `<PageMeta />` and before the first `##` heading, never inside `<Voices>`.
+
+| Part | File |
+|---|---|
+| Text (English and Bangla) of each visual: title, promise, steps, recap | `lib/visuals/defs.ts` |
+| Data and rules of a visual, as plain code that `npm test` can run | `lib/visuals/<topic>.ts` (the first is `ring.ts`) |
+| The shell: chips, caption, stepper, autoplay (off with reduced motion) | `components/visuals/StepVisual.tsx` |
+| The picture of a topic | `components/visuals/<Topic>Stage.tsx` |
+| The binding of a name to its picture | `components/visuals/Visual.tsx` |
+
+To add a visual: add its definition to `VISUAL_DEFS`, write its stage and chips, register both in `Visual.tsx`, and add the tag to the page. `tests/visuals.test.ts` checks the English and Bangla text, the step count, and that every tag in `content/` names a visual that exists. Draft ideas for every page are in `graphify-out/visuals/ALL.md` (local only).
+
 ## Deploy (GitHub Pages)
 
 `.github/workflows/deploy-pages.yml` deploys every push to `main` to https://kawsar-95.github.io/ai-testing-guide/. It runs `npm ci`, `npm test`, and `npm run build` with two env vars from `actions/configure-pages`:

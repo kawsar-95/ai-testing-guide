@@ -16,6 +16,7 @@ import { CardGrid } from "@/components/mdx/CardGrid";
 import { InfoCard } from "@/components/mdx/InfoCard";
 import { MdxImage } from "@/components/mdx/MdxImage";
 import { MdxTable } from "@/components/mdx/MdxTable";
+import { Visual } from "@/components/visuals/Visual";
 import { Bangla, Layman, Technical } from "@/components/voice/panels";
 import { Voices } from "@/components/voice/Voices";
 
@@ -46,6 +47,8 @@ const components: MDXComponents = {
   TestPyramidDiagram,
   TestQuadrantsDiagram,
   TestingClassificationDiagram,
+  // An animated lesson: <Visual name="..." /> after <PageMeta />. See components/visuals/Visual.tsx.
+  Visual,
   // The two versions of a Fundamentals topic (notes and ISTQB).
   Version,
   // The `##` heading of a section. It settles when the reader reaches it.
