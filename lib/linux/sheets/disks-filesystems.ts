@@ -1,7 +1,7 @@
 import type { StageSheet } from "../sheet.ts";
 
 export const DISKS_FILESYSTEMS: StageSheet = {
-  updated: "2026-11-04",
+  updated: "2026-11-27",
   sources: {
     lsblk: ["lsblk(8) - list block devices", "man7.org (Linux man-pages)", "https://man7.org/linux/man-pages/man8/lsblk.8.html"],
     df: ["df(1) - report file system space usage", "man7.org (coreutils)", "https://man7.org/linux/man-pages/man1/df.1.html"],
@@ -63,7 +63,7 @@ export const DISKS_FILESYSTEMS: StageSheet = {
         ["sudo mkfs.xfs DEV", "create an XFS filesystem; erases DEV", "XFS filesystem বানায়; DEV-এর সব মুছে যায়", "!"],
         ["sudo fsck DEV", "check and repair; unmount it first", "পরীক্ষা ও মেরামত করে; আগে unmount করুন"],
         ["sudo tune2fs -l DEV", "details of an ext filesystem", "ext filesystem-এর বিস্তারিত"],
-        ["sudo resize2fs DEV", "grow or shrink an ext filesystem", "ext filesystem-এর size বদলায়"],
+        ["sudo resize2fs DEV", "grow or shrink ext fs; shrink needs unmount", "ext filesystem-এর size বদলায়; ছোট করতে আগে unmount করুন"],
         ["sudo e2label DEV NAME", "set the label of an ext filesystem", "ext filesystem-এর label ঠিক করে"],
       ],
     },
@@ -113,7 +113,7 @@ export const DISKS_FILESYSTEMS: StageSheet = {
       rows: [
         ["swapon --show", "the active swap", "চালু swap"],
         ["free -h", "memory and swap use", "memory ও swap ব্যবহার"],
-        ["sudo fallocate -l 1G /swapfile", "create a 1 GB file", "১ GB-এর file বানায়"],
+        ["sudo fallocate -l 1G /swapfile", "create a 1 GiB file (not on Btrfs)", "১ GiB-এর file বানায় (Btrfs-এ নয়)"],
         ["sudo chmod 600 /swapfile", "only its owner can read and write it", "শুধু owner পড়তে ও লিখতে পারে"],
         ["sudo mkswap /swapfile", "format it as swap", "swap হিসেবে format করে", "!"],
         ["sudo swapon /swapfile", "turn it on", "চালু করে"],
