@@ -107,3 +107,14 @@ test("every <Visual> in the content names a visual that exists", () => {
   }
   assert.ok(found >= 1);
 });
+
+test("a Stage calls its hooks before the JSX return, never inside it (a hook in a conditional crashes when the step changes)", () => {
+  const dir = new URL("../components/visuals/", import.meta.url);
+  for (const file of readdirSync(dir).filter((f) => f.endsWith("Stage.tsx"))) {
+    const source = readFileSync(new URL(file, dir), "utf8");
+    const ret = source.lastIndexOf("\n  return (");
+    assert.ok(ret > 0, `${file}: no return`);
+    const after = source.slice(ret);
+    assert.ok(!/\buse(Bn|State|Memo|Effect|Ref)\(/.test(after), `${file}: a hook is called inside the JSX`);
+  }
+});

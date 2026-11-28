@@ -24,23 +24,55 @@ export type VisualDef = {
   recap: Text;
 };
 
+import { DEF as acidBase } from "./def-acid-base.ts";
 import { DEF as availability } from "./def-availability.ts";
-import { DEF as capTheorem } from "./def-cap-theorem.ts";
 import { DEF as caching } from "./def-caching.ts";
+import { DEF as capTheorem } from "./def-cap-theorem.ts";
+import { DEF as cdn } from "./def-cdn.ts";
 import { DEF as circuitBreaker } from "./def-circuit-breaker.ts";
 import { DEF as consistentHashing } from "./def-consistent-hashing.ts";
+import { DEF as databaseReplication } from "./def-database-replication.ts";
 import { DEF as dns } from "./def-dns.ts";
+import { DEF as horizontalScaling } from "./def-horizontal-scaling.ts";
 import { DEF as idempotency } from "./def-idempotency.ts";
+import { DEF as indexes } from "./def-indexes.ts";
 import { DEF as k6Thresholds } from "./def-k6-thresholds.ts";
 import { DEF as loadBalancer } from "./def-load-balancer.ts";
+import { DEF as messageQueue } from "./def-message-queue.ts";
+import { DEF as oauthOidc } from "./def-oauth-oidc.ts";
+import { DEF as pubSub } from "./def-pub-sub.ts";
 import { DEF as rateLimiting } from "./def-rate-limiting.ts";
 import { DEF as sharding } from "./def-sharding.ts";
+import { DEF as slaSloSli } from "./def-sla-slo-sli.ts";
+import { DEF as tcpUdp } from "./def-tcp-udp.ts";
 
 /**
  * Every visual, by id. To add one: write `lib/visuals/def-<id>.ts` (it exports `DEF`) and add it here.
  * A def file imports only the types of this file, so there is no import cycle at run time.
  */
-const ALL: readonly VisualDef[] = [availability, capTheorem, caching, circuitBreaker, consistentHashing, dns, idempotency, k6Thresholds, loadBalancer, rateLimiting, sharding];
+const ALL: readonly VisualDef[] = [
+  acidBase,
+  availability,
+  caching,
+  capTheorem,
+  cdn,
+  circuitBreaker,
+  consistentHashing,
+  databaseReplication,
+  dns,
+  horizontalScaling,
+  idempotency,
+  indexes,
+  k6Thresholds,
+  loadBalancer,
+  messageQueue,
+  oauthOidc,
+  pubSub,
+  rateLimiting,
+  sharding,
+  slaSloSli,
+  tcpUdp,
+];
 
 export const VISUAL_DEFS: Readonly<Record<string, VisualDef>> = Object.fromEntries(ALL.map((def) => [def.id, def]));
 
