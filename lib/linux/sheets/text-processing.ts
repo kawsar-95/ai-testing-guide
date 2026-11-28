@@ -1,7 +1,7 @@
 import type { StageSheet } from "../sheet.ts";
 
 export const TEXT_PROCESSING: StageSheet = {
-  updated: "2026-11-03",
+  updated: "2026-11-27",
   sources: {
     bash: ["bash(1) - GNU Bourne-Again SHell", "man7.org (bash)", "https://man7.org/linux/man-pages/man1/bash.1.html"],
     cat: ["cat(1) - concatenate files and print on the standard output", "man7.org (coreutils)", "https://man7.org/linux/man-pages/man1/cat.1.html"],
@@ -133,7 +133,7 @@ export const TEXT_PROCESSING: StageSheet = {
         ["sort -n FILE", "sort by number", "সংখ্যা অনুযায়ী সাজায়"],
         ["sort -rn FILE", "largest number first", "বড় সংখ্যা আগে রাখে"],
         ["sort -u FILE", "sort and drop duplicates", "সাজিয়ে duplicate বাদ দেয়"],
-        ["sort -k2 FILE", "sort by the 2nd field", "২ নম্বর field ধরে সাজায়"],
+        ["sort -k2,2 FILE", "sort by the 2nd field", "২ নম্বর field ধরে সাজায়"],
         ["sort -t, -k2n FILE", "comma-separated, 2nd field as a number", "comma-separated, ২য় field সংখ্যা ধরে"],
         ["sort -h FILE", "sort sizes like 1K, 2M, 3G", "1K, 2M, 3G-এর মতো size অনুযায়ী সাজায়"],
         ["sort -R FILE", "shuffle the lines", "লাইনগুলো এলোমেলো করে"],
