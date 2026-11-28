@@ -1,7 +1,7 @@
 import type { StageSheet } from "../sheet.ts";
 
 export const PROCESSES: StageSheet = {
-  updated: "2026-11-03",
+  updated: "2026-11-27",
   sources: {
     bash: ["bash(1) - GNU Bourne-Again SHell", "man7.org (bash)", "https://man7.org/linux/man-pages/man1/bash.1.html"],
     ps: ["ps(1) - report a snapshot of the current processes", "man7.org (procps-ng)", "https://man7.org/linux/man-pages/man1/ps.1.html"],
@@ -111,7 +111,7 @@ export const PROCESSES: StageSheet = {
         ["ps -o pid,ppid,cmd", "PID and parent PID columns", "PID ও parent PID column"],
         ["echo $$ $PPID", "this shell's PID and its parent's", "এই shell-এর PID ও তার parent-এর PID"],
         ["bash -c 'echo $$'", "a child shell has a new PID", "child shell-এর নতুন PID থাকে"],
-        ["strace -f -e trace=clone,execve CMD", "watch forks and execs", "fork ও exec ঘটনা দেখায়"],
+        ["strace -f -e trace=process CMD", "watch forks and execs", "fork ও exec ঘটনা দেখায়"],
       ],
     },
     {
