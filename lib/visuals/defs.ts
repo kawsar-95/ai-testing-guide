@@ -24,13 +24,23 @@ export type VisualDef = {
   recap: Text;
 };
 
+import { DEF as availability } from "./def-availability.ts";
+import { DEF as capTheorem } from "./def-cap-theorem.ts";
+import { DEF as caching } from "./def-caching.ts";
+import { DEF as circuitBreaker } from "./def-circuit-breaker.ts";
 import { DEF as consistentHashing } from "./def-consistent-hashing.ts";
+import { DEF as dns } from "./def-dns.ts";
+import { DEF as idempotency } from "./def-idempotency.ts";
+import { DEF as k6Thresholds } from "./def-k6-thresholds.ts";
+import { DEF as loadBalancer } from "./def-load-balancer.ts";
+import { DEF as rateLimiting } from "./def-rate-limiting.ts";
+import { DEF as sharding } from "./def-sharding.ts";
 
 /**
  * Every visual, by id. To add one: write `lib/visuals/def-<id>.ts` (it exports `DEF`) and add it here.
  * A def file imports only the types of this file, so there is no import cycle at run time.
  */
-const ALL: readonly VisualDef[] = [consistentHashing];
+const ALL: readonly VisualDef[] = [availability, capTheorem, caching, circuitBreaker, consistentHashing, dns, idempotency, k6Thresholds, loadBalancer, rateLimiting, sharding];
 
 export const VISUAL_DEFS: Readonly<Record<string, VisualDef>> = Object.fromEntries(ALL.map((def) => [def.id, def]));
 
