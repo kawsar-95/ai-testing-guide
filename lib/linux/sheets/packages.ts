@@ -1,7 +1,7 @@
 import type { StageSheet } from "../sheet.ts";
 
 export const PACKAGES: StageSheet = {
-  updated: "2026-11-03",
+  updated: "2026-11-27",
   sources: {
     osrelease: ["os-release(5) - operating system identification", "man7.org (systemd)", "https://man7.org/linux/man-pages/man5/os-release.5.html"],
     apt: ["apt(8) - command-line interface", "Debian Manpages (apt)", "https://manpages.debian.org/unstable/apt/apt.8.en.html"],
@@ -34,7 +34,7 @@ export const PACKAGES: StageSheet = {
       topic: "Package Repositories",
       src: ["sourceslist", "apt", "aptcache", "addaptrepo", "ppa", "dnf", "dnfconf"],
       rows: [
-        ["/etc/apt/sources.list", "where APT looks for packages (Debian)", "APT কোথায় package খোঁজে (Debian)"],
+        ["/etc/apt/sources.list", "where APT looks (Debian); newer systems use .sources", "APT কোথায় খোঁজে (Debian); নতুন সিস্টেমে .sources file"],
         ["ls /etc/apt/sources.list.d/", "the extra repositories", "অতিরিক্ত repository"],
         ["sudo apt update", "refresh the package lists", "package তালিকা হালনাগাদ করে"],
         ["apt-cache policy PKG", "which repository a package comes from", "package কোন repository থেকে আসে"],
